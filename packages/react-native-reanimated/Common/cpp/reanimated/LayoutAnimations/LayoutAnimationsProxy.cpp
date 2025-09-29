@@ -24,6 +24,8 @@ using ScrollState = ConcreteState<ScrollViewState>;
 
 namespace reanimated {
 
+// MARK: MountingOverrideDelegate
+
 std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     SurfaceId surfaceId,
     MountingTransaction::Number transactionNumber,
@@ -112,6 +114,153 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
       surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 
+bool LayoutAnimationsProxy::shouldOverridePullTransaction() const {
+  return true;
+}
+
+// MARK: Light Tree
+
+void LayoutAnimationsProxy::updateLightTree(
+    const PropsParserContext &propsParserContext,
+    const ShadowViewMutationList &mutations,
+    ShadowViewMutationList &filteredMutations) const {
+  ReanimatedSystraceSection s("updateLightTree");
+  std::unordered_set<Tag> moved, deleted;
+  for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
+    const auto &mutation = *it;
+    switch (mutation.type) {
+      case ShadowViewMutation::Delete: {
+        deleted.insert(mutation.oldChildShadowView.tag);
+        break;
+      }
+      case ShadowViewMutation::Insert: {
+        moved.insert(mutation.newChildShadowView.tag);
+        break;
+      }
+      case ShadowViewMutation::Remove: {
+        const auto tag = mutation.oldChildShadowView.tag;
+        if (deleted.contains(tag)) {
+          lightNodes_[tag]->intent = TO_DELETE;
+        } else if (moved.contains(tag)) {
+          lightNodes_[tag]->intent = TO_MOVE;
+        }
+        break;
+      }
+      default: {
+      }
+    }
+  }
+
+  for (auto &mutation : mutations) {
+    maybeUpdateWindowDimensions(mutation);
+    switch (mutation.type) {
+      case ShadowViewMutation::Update: {
+        auto &node = lightNodes_[mutation.newChildShadowView.tag];
+        if (!node) {
+          node = std::make_shared<LightNode>();
+        }
+        node->previous = mutation.oldChildShadowView;
+#ifdef ANDROID
+        if (node->current.props) {
+          // on android rawProps are used to store the diffed props
+          // so we need to merge them
+          // this should soon be replaced in RN with Props 2.0 (the diffing will
+          // be done at the end of the pipeline)
+          auto &currentRawProps = node->current.props->rawProps;
+          auto mergedRawProps = folly::dynamic::merge(
+              currentRawProps, mutation.newChildShadowView.props->rawProps);
+          node->current = mutation.newChildShadowView;
+          node->current.props =
+              getComponentDescriptorForShadowView(node->current)
+                  .cloneProps(
+                      propsParserContext,
+                      mutation.newChildShadowView.props,
+                      RawProps(mergedRawProps));
+        } else {
+          node->current = mutation.newChildShadowView;
+        }
+#else
+        node->current = mutation.newChildShadowView;
+#endif
+        auto tag = mutation.newChildShadowView.tag;
+        if (layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
+          layout_.push_back(node);
+        } else {
+          filteredMutations.push_back(mutation);
+        }
+        break;
+      }
+      case ShadowViewMutation::Create: {
+        auto &node = lightNodes_[mutation.newChildShadowView.tag];
+        node = std::make_shared<LightNode>();
+        node->current = mutation.newChildShadowView;
+        filteredMutations.push_back(mutation);
+        break;
+      }
+      case ShadowViewMutation::Delete: {
+        //            lightNodes_.erase(mutation.oldChildShadowView.tag);
+        break;
+      }
+      case ShadowViewMutation::Insert: {
+        transferConfigFromNativeID(
+            mutation.newChildShadowView.props->nativeId,
+            mutation.newChildShadowView.tag);
+        auto &node = lightNodes_[mutation.newChildShadowView.tag];
+        auto &parent = lightNodes_[mutation.parentTag];
+        parent->children.insert(
+            parent->children.begin() + mutation.index, node);
+        node->parent = parent;
+        const auto tag = mutation.newChildShadowView.tag;
+        if (node->intent == TO_MOVE &&
+            layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
+          // TODO: figure out if that's true
+          // we are not starting the animation here because any update will come
+          // from the UPDATE mutation
+          //          layout_.push_back(node);
+          filteredMutations.push_back(mutation);
+          //          node->previous = node->current;
+          //          node->current = mutation.newChildShadowView;
+        } else if (layoutAnimationsManager_->hasLayoutAnimation(
+                       tag, ENTERING)) {
+          entering_.push_back(node);
+          filteredMutations.push_back(mutation);
+        } else {
+          filteredMutations.push_back(mutation);
+        }
+        break;
+      }
+      case ShadowViewMutation::Remove: {
+        auto &node = lightNodes_[mutation.oldChildShadowView.tag];
+        auto &parent = lightNodes_[mutation.parentTag];
+
+        if (node->intent == TO_DELETE && parent->intent != TO_DELETE) {
+          exiting_.push_back(node);
+          if (parent->children[mutation.index]->current.tag ==
+              mutation.oldChildShadowView.tag) {
+            filteredMutations.push_back(mutation);
+          } else {
+            throw "cos jest nie tak z indexami";
+          }
+          parent->children.erase(parent->children.begin() + mutation.index);
+        } else if (node->intent != TO_DELETE) {
+          if (parent->children[mutation.index]->current.tag ==
+              mutation.oldChildShadowView.tag) {
+            filteredMutations.push_back(mutation);
+          } else {
+            throw "cos jest nie tak z indexami";
+          }
+          parent->children.erase(parent->children.begin() + mutation.index);
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }
+}
+
+// MARK: Shared Element Transitions
+
 LightNode::Unshared LayoutAnimationsProxy::findTopScreen(
     LightNode::Unshared node) const {
   LightNode::Unshared result = nullptr;
@@ -170,168 +319,6 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
   for (auto &child : node->children) {
     findSharedElementsOnScreen(child, index);
   }
-}
-
-std::vector<react::Point>
-LayoutAnimationsProxy::getAbsolutePositionsForRootPathView(
-    const LightNode::Unshared &node) const {
-  std::vector<react::Point> viewsAbsolutePositions;
-  auto currentNode = node;
-  while (currentNode) {
-    react::Point viewPosition;
-    if (!strcmp(currentNode->current.componentName, "ScrollView")) {
-      auto state = std::static_pointer_cast<const ScrollState>(
-          currentNode->current.state);
-      auto data = state->getData();
-      viewPosition -= data.contentOffset;
-    }
-    if (!strcmp(currentNode->current.componentName, "RNSScreen") &&
-        currentNode->children.size() >= 2) {
-      const auto &parent = currentNode->parent.lock();
-      if (parent) {
-        float headerHeight = parent->current.layoutMetrics.frame.size.height -
-            currentNode->current.layoutMetrics.frame.size.height;
-        viewPosition.y += headerHeight;
-      }
-    }
-    viewPosition += currentNode->current.layoutMetrics.frame.origin;
-    viewsAbsolutePositions.emplace_back(viewPosition);
-    currentNode = currentNode->parent.lock();
-  }
-  for (long int i = viewsAbsolutePositions.size() - 2; i >= 0; --i) {
-    viewsAbsolutePositions[i] += viewsAbsolutePositions[i + 1];
-  }
-  return viewsAbsolutePositions;
-}
-
-void LayoutAnimationsProxy::parseParentTransforms(
-    const LightNode::Unshared &node,
-    const std::vector<react::Point> &absolutePositions) const {
-  std::vector<std::pair<Transform, TransformOrigin>> transforms;
-  auto currentNode = node;
-  while (currentNode) {
-    const auto &props =
-        static_cast<const ViewProps &>(*currentNode->current.props);
-    auto origin = props.transformOrigin;
-    const auto &viewSize = currentNode->current.layoutMetrics.frame.size;
-    if (origin.xy[0].unit == facebook::react::UnitType::Percent) {
-      origin.xy[0] = {
-          static_cast<float>(viewSize.width * origin.xy[0].value / 100),
-          UnitType::Point};
-    } else if (origin.xy[0].unit == facebook::react::UnitType::Undefined) {
-      origin.xy[0] = {
-          static_cast<float>(viewSize.width * 0.5), UnitType::Point};
-    }
-    if (origin.xy[1].unit == facebook::react::UnitType::Percent) {
-      origin.xy[1] = {
-          static_cast<float>(viewSize.height * origin.xy[1].value / 100),
-          UnitType::Point};
-    } else if (origin.xy[1].unit == facebook::react::UnitType::Undefined) {
-      origin.xy[1] = {
-          static_cast<float>(viewSize.height * 0.5), UnitType::Point};
-    }
-    transforms.emplace_back(props.transform, origin);
-    currentNode = currentNode->parent.lock();
-  }
-
-  const auto &targetViewPosition = absolutePositions[0];
-  Transform combinedMatrix;
-  bool parentHasTransform = false;
-  for (long int i = transforms.size() - 1; i >= 0; --i) {
-    auto &[transform, transformOrigin] = transforms[i];
-    if (transform.operations.empty()) {
-      continue;
-    } else if (i > 0) {
-      parentHasTransform = true;
-    }
-    if (i == 0 && !parentHasTransform) {
-      // If only target view has transform, lets skip it, to matrix
-      // decomposition in JS
-      break;
-    }
-    transformOrigin.xy[0].value -=
-        targetViewPosition.x - absolutePositions[i].x;
-    transformOrigin.xy[1].value -=
-        targetViewPosition.y - absolutePositions[i].y;
-    combinedMatrix =
-        combinedMatrix *
-        resolveTransform(
-            node->current.layoutMetrics, transform, transformOrigin);
-    combinedMatrix.operations.clear();
-  }
-  if (parentHasTransform) {
-    transformForNode_[node->current.tag] = Transform::FromTransformOperation(
-        react::TransformOperation(TransformOperationType::Arbitrary),
-        {},
-        combinedMatrix);
-  }
-}
-
-// The methods resolveTransform and getTranslateForTransformOrigin are sourced
-// from:
-// https://github.com/facebook/react-native/blob/v0.80.0/packages/react-native/ReactCommon/react/renderer/components/view/BaseViewProps.cpp#L548
-// We need a copy of these methods to modify the `resolveTransform` method
-// to accept the transform origin as a parameter instead of as a class field.
-react::Transform LayoutAnimationsProxy::resolveTransform(
-    const LayoutMetrics &layoutMetrics,
-    const Transform &transform,
-    const TransformOrigin &transformOrigin) const {
-  const auto &frameSize = layoutMetrics.frame.size;
-  auto transformMatrix = Transform{};
-  if (frameSize.width == 0 && frameSize.height == 0) {
-    return transformMatrix;
-  }
-
-  if (transform.operations.size() == 1 &&
-      transform.operations[0].type ==
-          facebook::react::TransformOperationType::Arbitrary) {
-    transformMatrix = transform;
-  } else {
-    for (const auto &operation : transform.operations) {
-      transformMatrix = transformMatrix *
-          Transform::FromTransformOperation(
-                            operation, layoutMetrics.frame.size, transform);
-    }
-  }
-
-  if (transformOrigin.isSet()) {
-    std::array<float, 3> translateOffsets = getTranslateForTransformOrigin(
-        frameSize.width, frameSize.height, transformOrigin);
-    transformMatrix =
-        Transform::Translate(
-            translateOffsets[0], translateOffsets[1], translateOffsets[2]) *
-        transformMatrix *
-        Transform::Translate(
-            -translateOffsets[0], -translateOffsets[1], -translateOffsets[2]);
-  }
-
-  return transformMatrix;
-}
-
-std::array<float, 3> LayoutAnimationsProxy::getTranslateForTransformOrigin(
-    float viewWidth,
-    float viewHeight,
-    const TransformOrigin &transformOrigin) const {
-  float viewCenterX = viewWidth / 2;
-  float viewCenterY = viewHeight / 2;
-
-  std::array<float, 3> origin = {viewCenterX, viewCenterY, transformOrigin.z};
-
-  for (size_t i = 0; i < transformOrigin.xy.size(); ++i) {
-    const auto &currentOrigin = transformOrigin.xy[i];
-    if (currentOrigin.unit == UnitType::Point) {
-      origin[i] = currentOrigin.value;
-    } else if (currentOrigin.unit == UnitType::Percent) {
-      origin[i] =
-          ((i == 0) ? viewWidth : viewHeight) * currentOrigin.value / 100.0f;
-    }
-  }
-
-  float newTranslateX = -viewCenterX + origin[0];
-  float newTranslateY = -viewCenterY + origin[1];
-  float newTranslateZ = origin[2];
-
-  return {newTranslateX, newTranslateY, newTranslateZ};
 }
 
 void LayoutAnimationsProxy::handleProgressTransition(
@@ -472,145 +459,6 @@ void LayoutAnimationsProxy::handleProgressTransition(
       sharedTransitionManager_->groups_.clear();
       activeTransitions_.clear();
       transitionState_ = NONE;
-    }
-  }
-}
-
-void LayoutAnimationsProxy::updateLightTree(
-    const PropsParserContext &propsParserContext,
-    const ShadowViewMutationList &mutations,
-    ShadowViewMutationList &filteredMutations) const {
-  ReanimatedSystraceSection s("updateLightTree");
-  std::unordered_set<Tag> moved, deleted;
-  for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
-    const auto &mutation = *it;
-    switch (mutation.type) {
-      case ShadowViewMutation::Delete: {
-        deleted.insert(mutation.oldChildShadowView.tag);
-        break;
-      }
-      case ShadowViewMutation::Insert: {
-        moved.insert(mutation.newChildShadowView.tag);
-        break;
-      }
-      case ShadowViewMutation::Remove: {
-        const auto tag = mutation.oldChildShadowView.tag;
-        if (deleted.contains(tag)) {
-          lightNodes_[tag]->intent = TO_DELETE;
-        } else if (moved.contains(tag)) {
-          lightNodes_[tag]->intent = TO_MOVE;
-        }
-        break;
-      }
-      default: {
-      }
-    }
-  }
-
-  for (auto &mutation : mutations) {
-    maybeUpdateWindowDimensions(mutation);
-    switch (mutation.type) {
-      case ShadowViewMutation::Update: {
-        auto &node = lightNodes_[mutation.newChildShadowView.tag];
-        if (!node) {
-          node = std::make_shared<LightNode>();
-        }
-        node->previous = mutation.oldChildShadowView;
-#ifdef ANDROID
-        if (node->current.props) {
-          // on android rawProps are used to store the diffed props
-          // so we need to merge them
-          // this should soon be replaced in RN with Props 2.0 (the diffing will
-          // be done at the end of the pipeline)
-          auto &currentRawProps = node->current.props->rawProps;
-          auto mergedRawProps = folly::dynamic::merge(
-              currentRawProps, mutation.newChildShadowView.props->rawProps);
-          node->current = mutation.newChildShadowView;
-          node->current.props =
-              getComponentDescriptorForShadowView(node->current)
-                  .cloneProps(
-                      propsParserContext,
-                      mutation.newChildShadowView.props,
-                      RawProps(mergedRawProps));
-        } else {
-          node->current = mutation.newChildShadowView;
-        }
-#else
-        node->current = mutation.newChildShadowView;
-#endif
-        auto tag = mutation.newChildShadowView.tag;
-        if (layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
-          layout_.push_back(node);
-        } else {
-          filteredMutations.push_back(mutation);
-        }
-        break;
-      }
-      case ShadowViewMutation::Create: {
-        auto &node = lightNodes_[mutation.newChildShadowView.tag];
-        node = std::make_shared<LightNode>();
-        node->current = mutation.newChildShadowView;
-        filteredMutations.push_back(mutation);
-        break;
-      }
-      case ShadowViewMutation::Delete: {
-        //            lightNodes_.erase(mutation.oldChildShadowView.tag);
-        break;
-      }
-      case ShadowViewMutation::Insert: {
-        transferConfigFromNativeID(
-            mutation.newChildShadowView.props->nativeId,
-            mutation.newChildShadowView.tag);
-        auto &node = lightNodes_[mutation.newChildShadowView.tag];
-        auto &parent = lightNodes_[mutation.parentTag];
-        parent->children.insert(
-            parent->children.begin() + mutation.index, node);
-        node->parent = parent;
-        const auto tag = mutation.newChildShadowView.tag;
-        if (node->intent == TO_MOVE &&
-            layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
-          // TODO: figure out if that's true
-          // we are not starting the animation here because any update will come
-          // from the UPDATE mutation
-          //          layout_.push_back(node);
-          filteredMutations.push_back(mutation);
-          //          node->previous = node->current;
-          //          node->current = mutation.newChildShadowView;
-        } else if (layoutAnimationsManager_->hasLayoutAnimation(
-                       tag, ENTERING)) {
-          entering_.push_back(node);
-          filteredMutations.push_back(mutation);
-        } else {
-          filteredMutations.push_back(mutation);
-        }
-        break;
-      }
-      case ShadowViewMutation::Remove: {
-        auto &node = lightNodes_[mutation.oldChildShadowView.tag];
-        auto &parent = lightNodes_[mutation.parentTag];
-
-        if (node->intent == TO_DELETE && parent->intent != TO_DELETE) {
-          exiting_.push_back(node);
-          if (parent->children[mutation.index]->current.tag ==
-              mutation.oldChildShadowView.tag) {
-            filteredMutations.push_back(mutation);
-          } else {
-            throw "cos jest nie tak z indexami";
-          }
-          parent->children.erase(parent->children.begin() + mutation.index);
-        } else if (node->intent != TO_DELETE) {
-          if (parent->children[mutation.index]->current.tag ==
-              mutation.oldChildShadowView.tag) {
-            filteredMutations.push_back(mutation);
-          } else {
-            throw "cos jest nie tak z indexami";
-          }
-          parent->children.erase(parent->children.begin() + mutation.index);
-        }
-        break;
-      }
-      default:
-        break;
     }
   }
 }
@@ -773,6 +621,53 @@ void LayoutAnimationsProxy::hideTransitioningViews(
   }
 }
 
+std::optional<SurfaceId> LayoutAnimationsProxy::onTransitionProgress(
+    int tag,
+    double progress,
+    bool isClosing,
+    bool isGoingForward,
+    bool isSwiping) {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  transitionUpdated_ = true;
+  bool isAndroid;
+#ifdef ANDROID
+  isAndroid = true;
+#else
+  isAndroid = false;
+#endif
+  // TODO: this new approach causes all back transitions to be progress
+  // transitions
+  if (!isClosing && !isGoingForward && !isAndroid) {
+    transitionProgress_ = progress;
+    if (transitionState_ == NONE && progress < 1) {
+      transitionState_ = START;
+      transitionTag_ = tag;
+    }
+    //    else if (transitionState_ == ACTIVE && progress < eps){
+    //      transitionState_ = CANCELLED;
+    //    }
+    else if (transitionState_ == ACTIVE && progress == 1) {
+      transitionState_ = END;
+    }
+    // TODO: unfix
+    return 1;
+  }
+  return {};
+}
+
+std::optional<SurfaceId> LayoutAnimationsProxy::onGestureCancel() {
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  if (transitionState_) {
+    transitionState_ = CANCELLED;
+    transitionUpdated_ = true;
+    // TODO: unfix
+    return 1;
+  }
+  return {};
+}
+
+// MARK: Layout Animation Updates
+
 std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(
     int tag,
     const jsi::Object &newStyle) {
@@ -854,51 +749,6 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
   deadNodes.insert(node);
 
   return surfaceId;
-}
-
-std::optional<SurfaceId> LayoutAnimationsProxy::onTransitionProgress(
-    int tag,
-    double progress,
-    bool isClosing,
-    bool isGoingForward,
-    bool isSwiping) {
-  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  transitionUpdated_ = true;
-  bool isAndroid;
-#ifdef ANDROID
-  isAndroid = true;
-#else
-  isAndroid = false;
-#endif
-  // TODO: this new approach causes all back transitions to be progress
-  // transitions
-  if (!isClosing && !isGoingForward && !isAndroid) {
-    transitionProgress_ = progress;
-    if (transitionState_ == NONE && progress < 1) {
-      transitionState_ = START;
-      transitionTag_ = tag;
-    }
-    //    else if (transitionState_ == ACTIVE && progress < eps){
-    //      transitionState_ = CANCELLED;
-    //    }
-    else if (transitionState_ == ACTIVE && progress == 1) {
-      transitionState_ = END;
-    }
-    // TODO: unfix
-    return 1;
-  }
-  return {};
-}
-
-std::optional<SurfaceId> LayoutAnimationsProxy::onGestureCancel() {
-  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  if (transitionState_) {
-    transitionState_ = CANCELLED;
-    transitionUpdated_ = true;
-    // TODO: unfix
-    return 1;
-  }
-  return {};
 }
 
 void LayoutAnimationsProxy::handleRemovals(
@@ -1114,9 +964,91 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
   return wantAnimateExit;
 }
 
-bool LayoutAnimationsProxy::shouldOverridePullTransaction() const {
-  return true;
+void LayoutAnimationsProxy::updateOngoingAnimationTarget(
+    const int tag,
+    const ShadowViewMutation &mutation) const {
+  layoutAnimations_[tag].finalView = mutation.newChildShadowView;
 }
+
+void LayoutAnimationsProxy::maybeCancelAnimation(const int tag) const {
+  if (!layoutAnimations_.contains(tag)) {
+    return;
+  }
+  layoutAnimations_.erase(tag);
+  uiScheduler_->scheduleOnUI([weakThis = weak_from_this(), tag]() {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    auto &uiRuntime = strongThis->uiRuntime_;
+    strongThis->layoutAnimationsManager_->cancelLayoutAnimation(uiRuntime, tag);
+  });
+}
+
+void LayoutAnimationsProxy::transferConfigFromNativeID(
+    const std::string nativeIdString,
+    const int tag) const {
+  if (nativeIdString.empty()) {
+    return;
+  }
+  try {
+    auto nativeId = stoi(nativeIdString);
+    layoutAnimationsManager_->transferConfigFromNativeID(nativeId, tag);
+  } catch (std::invalid_argument) {
+  } catch (std::out_of_range) {
+  }
+}
+
+// When entering animations start, we temporarily set opacity to 0
+// so that we can immediately insert the view at the right position
+// and schedule the animation on the UI thread
+std::shared_ptr<ShadowView> LayoutAnimationsProxy::cloneViewWithoutOpacity(
+    facebook::react::ShadowViewMutation &mutation,
+    const PropsParserContext &propsParserContext) const {
+  auto newView = std::make_shared<ShadowView>(mutation.newChildShadowView);
+  folly::dynamic opacity = folly::dynamic::object("opacity", 0);
+  auto newProps = getComponentDescriptorForShadowView(*newView).cloneProps(
+      propsParserContext, newView->props, RawProps(opacity));
+  newView->props = newProps;
+  return newView;
+}
+
+std::shared_ptr<ShadowView> LayoutAnimationsProxy::cloneViewWithOpacity(
+    facebook::react::ShadowViewMutation &mutation,
+    const PropsParserContext &propsParserContext) const {
+  auto newView = std::make_shared<ShadowView>(mutation.newChildShadowView);
+  const auto &props = static_cast<const ViewProps &>(*newView.get()->props);
+  folly::dynamic opacity = folly::dynamic::object("opacity", props.opacity);
+  auto newProps = getComponentDescriptorForShadowView(*newView).cloneProps(
+      propsParserContext, newView->props, RawProps(opacity));
+  newView->props = newProps;
+  return newView;
+}
+
+void LayoutAnimationsProxy::maybeRestoreOpacity(
+    LayoutAnimation &layoutAnimation,
+    const jsi::Object &newStyle) const {
+  if (layoutAnimation.opacity && !newStyle.hasProperty(uiRuntime_, "opacity")) {
+    newStyle.setProperty(
+        uiRuntime_, "opacity", jsi::Value(*layoutAnimation.opacity));
+    layoutAnimation.opacity.reset();
+  }
+}
+
+void LayoutAnimationsProxy::maybeUpdateWindowDimensions(
+    const facebook::react::ShadowViewMutation &mutation) const {
+  if (mutation.type == ShadowViewMutation::Update &&
+      !std::strcmp(
+          mutation.oldChildShadowView.componentName, RootComponentName)) {
+    surfaceManager.updateWindow(
+        mutation.newChildShadowView.tag,
+        mutation.newChildShadowView.layoutMetrics.frame.size.width,
+        mutation.newChildShadowView.layoutMetrics.frame.size.height);
+  }
+}
+
+// MARK: Start Animation
 
 ShadowView LayoutAnimationsProxy::createLayoutAnimation(ShadowView &before, const ShadowView& after, const Tag parentTag) const {
   auto count = 1;
@@ -1359,88 +1291,168 @@ void LayoutAnimationsProxy::startProgressTransition(
       });
 }
 
-void LayoutAnimationsProxy::updateOngoingAnimationTarget(
-    const int tag,
-    const ShadowViewMutation &mutation) const {
-  layoutAnimations_[tag].finalView = mutation.newChildShadowView;
-}
+// MARK: Position Calculation
 
-void LayoutAnimationsProxy::maybeCancelAnimation(const int tag) const {
-  if (!layoutAnimations_.contains(tag)) {
-    return;
-  }
-  layoutAnimations_.erase(tag);
-  uiScheduler_->scheduleOnUI([weakThis = weak_from_this(), tag]() {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
+std::vector<react::Point>
+LayoutAnimationsProxy::getAbsolutePositionsForRootPathView(
+    const LightNode::Unshared &node) const {
+  std::vector<react::Point> viewsAbsolutePositions;
+  auto currentNode = node;
+  while (currentNode) {
+    react::Point viewPosition;
+    if (!strcmp(currentNode->current.componentName, "ScrollView")) {
+      auto state = std::static_pointer_cast<const ScrollState>(
+          currentNode->current.state);
+      auto data = state->getData();
+      viewPosition -= data.contentOffset;
     }
-
-    auto &uiRuntime = strongThis->uiRuntime_;
-    strongThis->layoutAnimationsManager_->cancelLayoutAnimation(uiRuntime, tag);
-  });
-}
-
-void LayoutAnimationsProxy::transferConfigFromNativeID(
-    const std::string nativeIdString,
-    const int tag) const {
-  if (nativeIdString.empty()) {
-    return;
+    if (!strcmp(currentNode->current.componentName, "RNSScreen") &&
+        currentNode->children.size() >= 2) {
+      const auto &parent = currentNode->parent.lock();
+      if (parent) {
+        float headerHeight = parent->current.layoutMetrics.frame.size.height -
+            currentNode->current.layoutMetrics.frame.size.height;
+        viewPosition.y += headerHeight;
+      }
+    }
+    viewPosition += currentNode->current.layoutMetrics.frame.origin;
+    viewsAbsolutePositions.emplace_back(viewPosition);
+    currentNode = currentNode->parent.lock();
   }
-  try {
-    auto nativeId = stoi(nativeIdString);
-    layoutAnimationsManager_->transferConfigFromNativeID(nativeId, tag);
-  } catch (std::invalid_argument) {
-  } catch (std::out_of_range) {
+  for (long int i = viewsAbsolutePositions.size() - 2; i >= 0; --i) {
+    viewsAbsolutePositions[i] += viewsAbsolutePositions[i + 1];
+  }
+  return viewsAbsolutePositions;
+}
+
+void LayoutAnimationsProxy::parseParentTransforms(
+    const LightNode::Unshared &node,
+    const std::vector<react::Point> &absolutePositions) const {
+  std::vector<std::pair<Transform, TransformOrigin>> transforms;
+  auto currentNode = node;
+  while (currentNode) {
+    const auto &props =
+        static_cast<const ViewProps &>(*currentNode->current.props);
+    auto origin = props.transformOrigin;
+    const auto &viewSize = currentNode->current.layoutMetrics.frame.size;
+    if (origin.xy[0].unit == facebook::react::UnitType::Percent) {
+      origin.xy[0] = {
+          static_cast<float>(viewSize.width * origin.xy[0].value / 100),
+          UnitType::Point};
+    } else if (origin.xy[0].unit == facebook::react::UnitType::Undefined) {
+      origin.xy[0] = {
+          static_cast<float>(viewSize.width * 0.5), UnitType::Point};
+    }
+    if (origin.xy[1].unit == facebook::react::UnitType::Percent) {
+      origin.xy[1] = {
+          static_cast<float>(viewSize.height * origin.xy[1].value / 100),
+          UnitType::Point};
+    } else if (origin.xy[1].unit == facebook::react::UnitType::Undefined) {
+      origin.xy[1] = {
+          static_cast<float>(viewSize.height * 0.5), UnitType::Point};
+    }
+    transforms.emplace_back(props.transform, origin);
+    currentNode = currentNode->parent.lock();
+  }
+
+  const auto &targetViewPosition = absolutePositions[0];
+  Transform combinedMatrix;
+  bool parentHasTransform = false;
+  for (long int i = transforms.size() - 1; i >= 0; --i) {
+    auto &[transform, transformOrigin] = transforms[i];
+    if (transform.operations.empty()) {
+      continue;
+    } else if (i > 0) {
+      parentHasTransform = true;
+    }
+    if (i == 0 && !parentHasTransform) {
+      // If only target view has transform, lets skip it, to matrix
+      // decomposition in JS
+      break;
+    }
+    transformOrigin.xy[0].value -=
+        targetViewPosition.x - absolutePositions[i].x;
+    transformOrigin.xy[1].value -=
+        targetViewPosition.y - absolutePositions[i].y;
+    combinedMatrix =
+        combinedMatrix *
+        resolveTransform(
+            node->current.layoutMetrics, transform, transformOrigin);
+    combinedMatrix.operations.clear();
+  }
+  if (parentHasTransform) {
+    transformForNode_[node->current.tag] = Transform::FromTransformOperation(
+        react::TransformOperation(TransformOperationType::Arbitrary),
+        {},
+        combinedMatrix);
   }
 }
 
-// When entering animations start, we temporarily set opacity to 0
-// so that we can immediately insert the view at the right position
-// and schedule the animation on the UI thread
-std::shared_ptr<ShadowView> LayoutAnimationsProxy::cloneViewWithoutOpacity(
-    facebook::react::ShadowViewMutation &mutation,
-    const PropsParserContext &propsParserContext) const {
-  auto newView = std::make_shared<ShadowView>(mutation.newChildShadowView);
-  folly::dynamic opacity = folly::dynamic::object("opacity", 0);
-  auto newProps = getComponentDescriptorForShadowView(*newView).cloneProps(
-      propsParserContext, newView->props, RawProps(opacity));
-  newView->props = newProps;
-  return newView;
-}
-
-std::shared_ptr<ShadowView> LayoutAnimationsProxy::cloneViewWithOpacity(
-    facebook::react::ShadowViewMutation &mutation,
-    const PropsParserContext &propsParserContext) const {
-  auto newView = std::make_shared<ShadowView>(mutation.newChildShadowView);
-  const auto &props = static_cast<const ViewProps &>(*newView.get()->props);
-  folly::dynamic opacity = folly::dynamic::object("opacity", props.opacity);
-  auto newProps = getComponentDescriptorForShadowView(*newView).cloneProps(
-      propsParserContext, newView->props, RawProps(opacity));
-  newView->props = newProps;
-  return newView;
-}
-
-void LayoutAnimationsProxy::maybeRestoreOpacity(
-    LayoutAnimation &layoutAnimation,
-    const jsi::Object &newStyle) const {
-  if (layoutAnimation.opacity && !newStyle.hasProperty(uiRuntime_, "opacity")) {
-    newStyle.setProperty(
-        uiRuntime_, "opacity", jsi::Value(*layoutAnimation.opacity));
-    layoutAnimation.opacity.reset();
+// The methods resolveTransform and getTranslateForTransformOrigin are sourced
+// from:
+// https://github.com/facebook/react-native/blob/v0.80.0/packages/react-native/ReactCommon/react/renderer/components/view/BaseViewProps.cpp#L548
+// We need a copy of these methods to modify the `resolveTransform` method
+// to accept the transform origin as a parameter instead of as a class field.
+react::Transform LayoutAnimationsProxy::resolveTransform(
+    const LayoutMetrics &layoutMetrics,
+    const Transform &transform,
+    const TransformOrigin &transformOrigin) const {
+  const auto &frameSize = layoutMetrics.frame.size;
+  auto transformMatrix = Transform{};
+  if (frameSize.width == 0 && frameSize.height == 0) {
+    return transformMatrix;
   }
+
+  if (transform.operations.size() == 1 &&
+      transform.operations[0].type ==
+          facebook::react::TransformOperationType::Arbitrary) {
+    transformMatrix = transform;
+  } else {
+    for (const auto &operation : transform.operations) {
+      transformMatrix = transformMatrix *
+          Transform::FromTransformOperation(
+                            operation, layoutMetrics.frame.size, transform);
+    }
+  }
+
+  if (transformOrigin.isSet()) {
+    std::array<float, 3> translateOffsets = getTranslateForTransformOrigin(
+        frameSize.width, frameSize.height, transformOrigin);
+    transformMatrix =
+        Transform::Translate(
+            translateOffsets[0], translateOffsets[1], translateOffsets[2]) *
+        transformMatrix *
+        Transform::Translate(
+            -translateOffsets[0], -translateOffsets[1], -translateOffsets[2]);
+  }
+
+  return transformMatrix;
 }
 
-void LayoutAnimationsProxy::maybeUpdateWindowDimensions(
-    const facebook::react::ShadowViewMutation &mutation) const {
-  if (mutation.type == ShadowViewMutation::Update &&
-      !std::strcmp(
-          mutation.oldChildShadowView.componentName, RootComponentName)) {
-    surfaceManager.updateWindow(
-        mutation.newChildShadowView.tag,
-        mutation.newChildShadowView.layoutMetrics.frame.size.width,
-        mutation.newChildShadowView.layoutMetrics.frame.size.height);
+std::array<float, 3> LayoutAnimationsProxy::getTranslateForTransformOrigin(
+    float viewWidth,
+    float viewHeight,
+    const TransformOrigin &transformOrigin) const {
+  float viewCenterX = viewWidth / 2;
+  float viewCenterY = viewHeight / 2;
+
+  std::array<float, 3> origin = {viewCenterX, viewCenterY, transformOrigin.z};
+
+  for (size_t i = 0; i < transformOrigin.xy.size(); ++i) {
+    const auto &currentOrigin = transformOrigin.xy[i];
+    if (currentOrigin.unit == UnitType::Point) {
+      origin[i] = currentOrigin.value;
+    } else if (currentOrigin.unit == UnitType::Percent) {
+      origin[i] =
+          ((i == 0) ? viewWidth : viewHeight) * currentOrigin.value / 100.0f;
+    }
   }
+
+  float newTranslateX = -viewCenterX + origin[0];
+  float newTranslateY = -viewCenterY + origin[1];
+  float newTranslateZ = origin[2];
+
+  return {newTranslateX, newTranslateY, newTranslateZ};
 }
 
 } // namespace reanimated
