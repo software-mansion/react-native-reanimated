@@ -29,12 +29,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     MountingTransaction::Number transactionNumber,
     const TransactionTelemetry &telemetry,
     ShadowViewMutationList mutations) const {
-#ifdef LAYOUT_ANIMATIONS_LOGS
-  LOG(INFO) << std::endl;
-  LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " "
-            << surfaceId << std::endl;
-#endif
-  LOG(INFO) << "pullTransaction";
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   ReanimatedSystraceSection d("pullTransaction");
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
@@ -126,31 +120,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
       surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 
-Tag LayoutAnimationsProxy::findVisible(
-    std::shared_ptr<LightNode> node,
-    int &count) const {
-  //  auto group =
-  //  sharedTransitionManager_->groups_[sharedTransitionManager_->tagToName_[node->current.tag]];
-  //  while (node != nullptr){
-  //    if (!strcmp(node->current.componentName, "RNSScreenStack")){
-  //
-  //    }
-  //    node = node->parent.lock();
-  //  }
-  int c = count;
-  if (!strcmp(node->current.componentName, "RNSScreen")) {
-    LOG(INFO) << c << " begin screen tag: " << node->current.tag << std::endl;
-    count++;
-  }
-  for (auto &child : node->children) {
-    findVisible(child, count);
-  }
-  if (!strcmp(node->current.componentName, "RNSScreen")) {
-    LOG(INFO) << c << " end screen" << std::endl;
-  }
-  return -1;
-}
-
 LightNode::Unshared LayoutAnimationsProxy::findTopScreen(
     LightNode::Unshared node) const {
   LightNode::Unshared result = nullptr;
@@ -211,11 +180,6 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
   }
 }
 
-// struct S{
-//   const react::Size frameSize{};
-//   react::Point contentOffset;
-// };
-
 std::vector<react::Point>
 LayoutAnimationsProxy::getAbsolutePositionsForRootPathView(
     const LightNode::Unshared &node) const {
@@ -227,8 +191,6 @@ LayoutAnimationsProxy::getAbsolutePositionsForRootPathView(
       auto state = std::static_pointer_cast<const ScrollState>(
           currentNode->current.state);
       auto data = state->getData();
-      //      LOG(INFO) << node->current.tag << " content offset:" <<
-      //      data.contentOffset.x << " " << data.contentOffset.y;
       viewPosition -= data.contentOffset;
     }
     if (!strcmp(currentNode->current.componentName, "RNSScreen") &&
@@ -238,10 +200,6 @@ LayoutAnimationsProxy::getAbsolutePositionsForRootPathView(
         float headerHeight = parent->current.layoutMetrics.frame.size.height -
             currentNode->current.layoutMetrics.frame.size.height;
         viewPosition.y += headerHeight;
-        //        auto state = std::reinterpret_pointer_cast<const
-        //        ConcreteState<S>>(currentNode->current.state); LOG(INFO)
-        //        <<"state: " <<state->getData().contentOffset.y; viewPosition.y
-        //        += state->getData().contentOffset.y;
       }
     }
     viewPosition += currentNode->current.layoutMetrics.frame.origin;
@@ -389,7 +347,6 @@ void LayoutAnimationsProxy::handleProgressTransition(
     const ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext,
     SurfaceId surfaceId) const {
-  LOG(INFO) << "Transition state: " << transitionState_;
   if (!transitionUpdated_) {
     return;
   }
@@ -401,10 +358,6 @@ void LayoutAnimationsProxy::handleProgressTransition(
       auto beforeTopScreen = topScreen[surfaceId];
       auto afterTopScreen = lightNodes_[transitionTag_];
       if (beforeTopScreen && afterTopScreen) {
-        LOG(INFO) << "start progress transition: "
-                  << beforeTopScreen->current.tag << " -> "
-                  << afterTopScreen->current.tag;
-
         findSharedElementsOnScreen(beforeTopScreen, 0);
         findSharedElementsOnScreen(afterTopScreen, 1);
 
@@ -535,6 +488,7 @@ void LayoutAnimationsProxy::updateLightTree(
     const PropsParserContext &propsParserContext,
     const ShadowViewMutationList &mutations,
     ShadowViewMutationList &filteredMutations) const {
+  ReanimatedSystraceSection s("updateLightTree");
   std::unordered_set<Tag> moved, deleted;
   for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
     const auto &mutation = *it;
@@ -645,7 +599,6 @@ void LayoutAnimationsProxy::updateLightTree(
 
         if (node->intent == TO_DELETE && parent->intent != TO_DELETE) {
           exiting_.push_back(node);
-          LOG(INFO) << "remove3 " << node->current.tag;
           if (parent->children[mutation.index]->current.tag ==
               mutation.oldChildShadowView.tag) {
             filteredMutations.push_back(mutation);
@@ -654,7 +607,6 @@ void LayoutAnimationsProxy::updateLightTree(
           }
           parent->children.erase(parent->children.begin() + mutation.index);
         } else if (node->intent != TO_DELETE) {
-          LOG(INFO) << "remove4 " << node->current.tag;
           if (parent->children[mutation.index]->current.tag ==
               mutation.oldChildShadowView.tag) {
             filteredMutations.push_back(mutation);
@@ -671,32 +623,6 @@ void LayoutAnimationsProxy::updateLightTree(
   }
 }
 
-void printTree(LightNode::Unshared &node, int level) {
-  if (!(strcmp(node->current.componentName, "RNSScreen"))) {
-//        bool isActive = false;
-#ifdef ANDROID
-    float f =
-        node->current.props->rawProps.getDefault("activityState", 0).asDouble();
-//        isActive = f == 2.0f;
-#else
-    float f =
-        std::static_pointer_cast<const RNSScreenProps>(node->current.props)
-            ->activityState;
-#endif
-    LOG(INFO) << "screen start (activityState: " << f << ") "
-              << node->current.tag << " " << level;
-  } else {
-    //        LOG(INFO) << node->current.componentName << " " <<
-    //        node->current.tag << " " << level;
-  }
-  for (auto &child : node->children) {
-    printTree(child, level + 1);
-  }
-  if (!(strcmp(node->current.componentName, "RNSScreen"))) {
-    LOG(INFO) << "screen end" << " " << node->current.tag;
-  }
-}
-
 void LayoutAnimationsProxy::handleSharedTransitionsStart(
     const LightNode::Unshared &afterTopScreen,
     const LightNode::Unshared &beforeTopScreen,
@@ -709,12 +635,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
 
     if (beforeTopScreen && afterTopScreen &&
         beforeTopScreen->current.tag != afterTopScreen->current.tag) {
-      LOG(INFO) << "different tags";
-      LOG(INFO) << "start transition: " << beforeTopScreen->current.tag
-                << " -> " << afterTopScreen->current.tag;
-
       for (auto &[sharedTag, transition] : transitions_) {
-        LOG(INFO) << "sharedTag: " << sharedTag;
         const auto &[before, after] = transition.snapshot;
         const auto &[beforeParentTag, afterParentTag] = transition.parentTag;
 
@@ -791,7 +712,6 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
     } else if (
         mutations.size() && beforeTopScreen && afterTopScreen &&
         beforeTopScreen->current.tag == afterTopScreen->current.tag) {
-      LOG(INFO) << "same tag";
       for (auto &[sharedTag, transition] : transitions_) {
         const auto &[_, after] = transition.snapshot;
 
@@ -839,7 +759,6 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
             ShadowViewMutation::RemoveMutation(surfaceId, child->current, i));
         filteredMutations.push_back(
             ShadowViewMutation::DeleteMutation(child->current));
-        LOG(INFO) << "delete container " << tag;
         root->children.erase(root->children.begin() + i);
       }
     }
@@ -865,9 +784,6 @@ void LayoutAnimationsProxy::hideTransitioningViews(
 std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(
     int tag,
     const jsi::Object &newStyle) {
-  // #ifdef LAYOUT_ANIMATIONS_LOGS
-  LOG(INFO) << "progress layout animation for tag " << tag << std::endl;
-  // #endif
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   auto layoutAnimationIt = layoutAnimations_.find(tag);
 
@@ -905,10 +821,6 @@ std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(
 std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
     int tag,
     bool shouldRemove) {
-#ifdef LAYOUT_ANIMATIONS_LOGS
-  LOG(INFO) << "end layout animation for " << tag << " - should remove "
-            << shouldRemove << std::endl;
-#endif
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   auto layoutAnimationIt = layoutAnimations_.find(tag);
 
@@ -960,9 +872,6 @@ std::optional<SurfaceId> LayoutAnimationsProxy::onTransitionProgress(
     bool isSwiping) {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   transitionUpdated_ = true;
-  //  LOG(INFO) << "notifyTransitionProgress ("<< tag <<"): " << progress << ",
-  //  closing: " << isClosing << ", goingForward: " << isGoingForward << ",
-  //  isSwiping: " <<isSwiping;
   bool isAndroid;
 #ifdef ANDROID
   isAndroid = true;
@@ -1027,9 +936,6 @@ void LayoutAnimationsProxy::handleRemovals(
       maybeCancelAnimation(node->current.tag);
       filteredMutations.push_back(
           ShadowViewMutation::DeleteMutation(node->current));
-#ifdef LAYOUT_ANIMATIONS_LOGS
-      LOG(INFO) << "delete " << node->tag << std::endl;
-#endif
     }
   }
 
@@ -1072,8 +978,6 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     }
     updateLayoutMetrics(newView->layoutMetrics, updateValues.frame);
 
-    LOG(INFO) << "(addOngoing) " << tag;
-
     mutations.push_back(ShadowViewMutation::UpdateMutation(
         *layoutAnimation.currentView, *newView, layoutAnimation.parentTag));
     layoutAnimation.currentView = newView;
@@ -1098,13 +1002,8 @@ void LayoutAnimationsProxy::endAnimationsRecursively(
     }
   }
   node->children.clear();
-  LOG(INFO) << "remove1 " << node->current.tag;
   mutations.push_back(ShadowViewMutation::RemoveMutation(
       node->parent.lock()->current.tag, node->current, index));
-//  nodeForTag_.erase(node->tag);
-#ifdef LAYOUT_ANIMATIONS_LOGS
-  LOG(INFO) << "delete " << node->tag << std::endl;
-#endif
   mutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
 }
 
@@ -1133,13 +1032,9 @@ void LayoutAnimationsProxy::maybeDropAncestors(
     auto pp = parent->parent.lock();
     for (int i = 0; i < pp->children.size(); i++) {
       if (pp->children[i]->current.tag == parent->current.tag) {
-        LOG(INFO) << "remove2 " << parent->current.tag << ", " << parent->state;
         cleanupMutations.push_back(ShadowViewMutation::RemoveMutation(
             pp->current.tag, parent->current, i));
         maybeCancelAnimation(parent->current.tag);
-#ifdef LAYOUT_ANIMATIONS_LOGS
-        LOG(INFO) << "delete " << node->tag << std::endl;
-#endif
         cleanupMutations.push_back(
             ShadowViewMutation::DeleteMutation(parent->current));
         maybeDropAncestors(parent->parent.lock(), parent, cleanupMutations);
@@ -1184,11 +1079,6 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
   for (auto it = node->children.rbegin(); it != node->children.rend(); it++) {
     index--;
     auto &subNode = *it;
-#ifdef LAYOUT_ANIMATIONS_LOGS
-    LOG(INFO) << "child " << subNode->tag << " "
-              << " " << shouldAnimate << " "
-              << shouldRemoveSubviewsWithoutAnimations << std::endl;
-#endif
     if (subNode->state != UNDEFINED) {
       if (shouldAnimate && subNode->state != DEAD) {
         hasAnimatedChildren = true;
@@ -1202,23 +1092,14 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
                    shouldAnimate,
                    isScreenPop,
                    mutations)) {
-#ifdef LAYOUT_ANIMATIONS_LOGS
-      LOG(INFO) << "child " << subNode->tag
-                << " start animations returned true " << std::endl;
-#endif
       hasAnimatedChildren = true;
     } else if (shouldRemoveSubviewsWithoutAnimations) {
       maybeCancelAnimation(subNode->current.tag);
-      LOG(INFO) << "remove " << subNode->current.tag << " from "
-                << node->current.tag << " at " << index;
       mutations.push_back(ShadowViewMutation::RemoveMutation(
           node->current.tag, subNode->current, index));
       toBeRemoved.push_back(subNode);
       subNode->state = DELETED;
-//      nodeForTag_.erase(subNode->tag);
-#ifdef LAYOUT_ANIMATIONS_LOGS
-      LOG(INFO) << "delete " << subNode->tag << std::endl;
-#endif
+      //      nodeForTag_.erase(subNode->tag);
       mutations.push_back(ShadowViewMutation::DeleteMutation(subNode->current));
     } else {
       subNode->state = WAITING;
@@ -1278,9 +1159,6 @@ void LayoutAnimationsProxy::createLayoutAnimation(
 void LayoutAnimationsProxy::startEnteringAnimation(
     const int tag,
     const ShadowViewMutation &mutation) const {
-#ifdef LAYOUT_ANIMATIONS_LOGS
-  LOG(INFO) << "start entering animation for tag " << tag << std::endl;
-#endif
   auto finalView = std::make_shared<ShadowView>(mutation.newChildShadowView);
   auto current = std::make_shared<ShadowView>(mutation.newChildShadowView);
 
@@ -1330,9 +1208,6 @@ void LayoutAnimationsProxy::startEnteringAnimation(
 void LayoutAnimationsProxy::startExitingAnimation(
     const int tag,
     const ShadowViewMutation &mutation) const {
-#ifdef LAYOUT_ANIMATIONS_LOGS
-  LOG(INFO) << "start exiting animation for tag " << tag << std::endl;
-#endif
   auto surfaceId = mutation.oldChildShadowView.surfaceId;
 
   uiScheduler_->scheduleOnUI(
@@ -1372,9 +1247,6 @@ void LayoutAnimationsProxy::startExitingAnimation(
 void LayoutAnimationsProxy::startLayoutAnimation(
     const int tag,
     const ShadowViewMutation &mutation) const {
-#ifdef LAYOUT_ANIMATIONS_LOGS
-  LOG(INFO) << "start layout animation for tag " << tag << std::endl;
-#endif
   auto surfaceId = mutation.oldChildShadowView.surfaceId;
 
   uiScheduler_->scheduleOnUI([weakThis = weak_from_this(),
@@ -1459,8 +1331,6 @@ void LayoutAnimationsProxy::startSharedTransition(
       propsDiffer.overrideTargetTransforms(
           strongThis->transformForNode_[tagAfter]);
     } else {
-      LOG(INFO) << "start with overriden transforms " << tag << " " << tagBefore
-                << " -> " << tagAfter;
       propsDiffer.overrideSourceTransforms(
           strongThis->transformForNode_[tagBefore]);
       propsDiffer.overrideTargetTransforms(

@@ -147,8 +147,6 @@ struct LayoutAnimationsProxy
 
   void maybeCancelAnimation(const int tag) const;
 
-  Tag findVisible(std::shared_ptr<LightNode> node, int &count) const;
-
   LightNode::Unshared findTopScreen(LightNode::Unshared node) const;
 
   void findSharedElementsOnScreen(const LightNode::Unshared &node, int index)
