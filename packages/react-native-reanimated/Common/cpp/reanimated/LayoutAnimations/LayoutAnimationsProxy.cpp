@@ -296,19 +296,20 @@ LightNode::Unshared LayoutAnimationsProxy::findTopScreen(
   return result;
 }
 
-void LayoutAnimationsProxy::findSharedElementsOnScreen(
-    const LightNode::Unshared &node,
-    int index) const {
+void LayoutAnimationsProxy::findSharedElementsOnScreen(const LightNode::Unshared &node, int index) const {
   if (sharedTransitionManager_->tagToName_.contains(node->current.tag)) {
+    
     ShadowView copy = node->current;
     std::vector<react::Point> absolutePositions;
     absolutePositions = getAbsolutePositionsForRootPathView(node);
     copy.layoutMetrics.frame.origin = absolutePositions[0];
+    
     auto sharedTag = sharedTransitionManager_->tagToName_[node->current.tag];
     auto &transition = transitionMap_[sharedTag];
     transition.snapshot[index] = copy;
     transition.parentTag[index] = node->parent.lock()->current.tag;
     parseParentTransforms(node, absolutePositions);
+    
     if (transition.parentTag[0] && transition.parentTag[1]) {
       transitions_.push_back({sharedTag, transition});
     } else if (transition.parentTag[1]) {
