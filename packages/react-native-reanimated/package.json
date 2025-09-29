@@ -147,7 +147,7 @@
     "madge": "^5.0.1",
     "prettier": "^3.3.3",
     "react": "19.1.1",
-    "react-native": "patch:react-native@npm%3A0.82.0-rc.4#~/.yarn/patches/react-native-npm-0.82.0-rc.4-228ad0ffa7.patch",
+    "react-native": "0.82.0-rc.4",
     "react-native-builder-bob": "0.40.13",
     "react-native-gesture-handler": "2.28.0",
     "react-native-svg": "15.12.1",
