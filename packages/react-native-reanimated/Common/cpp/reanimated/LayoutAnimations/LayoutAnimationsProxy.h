@@ -24,7 +24,7 @@ class ReanimatedModuleProxy;
 using namespace facebook;
 
 struct LayoutAnimation {
-  std::shared_ptr<ShadowView> finalView, currentView, startView;
+  ShadowView finalView, currentView, startView;
   Tag parentTag;
   std::optional<double> opacity;
   int count = 1;
@@ -84,11 +84,11 @@ struct LayoutAnimationsProxy
     lightNodes_[11] = std::make_shared<LightNode>();
   }
 
-  void startEnteringAnimation(const int tag, const ShadowViewMutation &mutation)
+  void startEnteringAnimation(const LightNode::Unshared& node)
       const;
-  void startExitingAnimation(const int tag, const ShadowViewMutation &mutation)
+  void startExitingAnimation(const LightNode::Unshared& node)
       const;
-  void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation)
+  void startLayoutAnimation(const LightNode::Unshared& node)
       const;
   void startSharedTransition(
       const int tag,
@@ -189,11 +189,7 @@ struct LayoutAnimationsProxy
       const jsi::Object &newStyle) const;
   void maybeUpdateWindowDimensions(
       const facebook::react::ShadowViewMutation &mutation) const;
-  void createLayoutAnimation(
-      const ShadowViewMutation &mutation,
-      ShadowView &oldView,
-      const SurfaceId &surfaceId,
-      const int tag) const;
+  ShadowView createLayoutAnimation(ShadowView &before, const ShadowView& after, const Tag parentTag) const;
 
   bool startAnimationsRecursively(
       std::shared_ptr<LightNode> node,
