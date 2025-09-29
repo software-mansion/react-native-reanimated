@@ -239,7 +239,7 @@ void LayoutAnimationsProxy::updateLightTree(
               mutation.oldChildShadowView.tag) {
             filteredMutations.push_back(mutation);
           } else {
-            throw "cos jest nie tak z indexami";
+            throw std::runtime_error("cos jest nie tak z indexami");
           }
           parent->children.erase(parent->children.begin() + mutation.index);
         } else if (node->intent != TO_DELETE) {
@@ -247,7 +247,7 @@ void LayoutAnimationsProxy::updateLightTree(
               mutation.oldChildShadowView.tag) {
             filteredMutations.push_back(mutation);
           } else {
-            throw "cos jest nie tak z indexami";
+            throw std::runtime_error("cos jest nie tak z indexami");
           }
           parent->children.erase(parent->children.begin() + mutation.index);
         }
