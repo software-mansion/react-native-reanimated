@@ -74,49 +74,18 @@ index cb4f1c4adc..b05b824d9c 100644
  
  module.exports = wrapWithReanimatedMetroConfig(
    mergeConfig(getDefaultConfig(__dirname), config)
-diff --git a/apps/fabric-example/package.json b/apps/fabric-example/package.json
-index 7810a059bc..b8095d694e 100644
---- a/apps/fabric-example/package.json
-+++ b/apps/fabric-example/package.json
-@@ -11,7 +11,7 @@
-   },
-   "dependencies": {
-     "common-app": "workspace:*",
--    "react-native": "0.82.0-rc.0"
-+    "react-native": "patch:react-native@npm%3A0.82.0-rc.0#~/.yarn/patches/react-native-npm-0.82.0-rc.0-4775a171a4.patch"
-   },
-   "devDependencies": {
-     "prettier": "^3.3.3"
 diff --git a/package.json b/package.json
-index 6a77357267..fa77b14543 100644
+index 6a77357267..df6817cce5 100644
 --- a/package.json
 +++ b/package.json
-@@ -49,5 +49,28 @@
+@@ -49,5 +49,10 @@
      "prettier": "^3.3.3",
      "prettier-plugin-jsdoc": "^1.3.0",
      "typescript": "5.8.3"
 +  },
 +  "resolutions": {
-+    "@react-native/community-cli-plugin@npm:0.80.0": "patch:@react-native/community-cli-plugin@npm%3A0.80.0#~/.yarn/patches/@react-native-community-cli-plugin-npm-0.80.0-4137b3f35c.patch",
-+    "metro@npm:^0.82.0": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
-+    "metro@npm:^0.82.2": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
-+    "metro@npm:0.82.4": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
-+    "metro@npm:0.80.12": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
-+    "metro@npm:0.82.1": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
-+    "metro@npm:0.82.3": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
-+    "metro@npm:^0.80.3": "patch:metro@npm%3A0.82.4#~/.yarn/patches/metro-npm-0.82.4-2c6a795208.patch",
-+    "metro@npm:^0.83.1": "patch:metro@npm%3A0.83.1#~/.yarn/patches/metro-npm-0.83.1-241fe42591.patch",
-+    "metro@npm:0.83.1": "patch:metro@npm%3A0.83.1#~/.yarn/patches/metro-npm-0.83.1-241fe42591.patch",
-+    "metro@npm:0.82.5": "patch:metro@npm%3A0.83.1#~/.yarn/patches/metro-npm-0.83.1-241fe42591.patch",
-+    "metro-runtime@npm:^0.80.3": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch",
-+    "metro-runtime@npm:0.80.12": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch",
-+    "metro-runtime@npm:0.82.1": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch",
-+    "metro-runtime@npm:0.82.3": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch",
-+    "metro-runtime@npm:^0.82.0": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch",
-+    "metro-runtime@npm:^0.82.2": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch",
-+    "metro-runtime@npm:0.82.4": "patch:metro-runtime@npm%3A0.82.4#~/.yarn/patches/metro-runtime-npm-0.82.4-32e8f779f8.patch",
-+    "metro-runtime@npm:^0.83.1": "patch:metro-runtime@npm%3A0.83.1#~/.yarn/patches/metro-runtime-npm-0.83.1-c3d616063e.patch",
-+    "metro-runtime@npm:0.83.1": "patch:metro-runtime@npm%3A0.83.1#~/.yarn/patches/metro-runtime-npm-0.83.1-c3d616063e.patch",
-+    "metro-runtime@npm:0.82.5": "patch:metro-runtime@npm%3A0.83.1#~/.yarn/patches/metro-runtime-npm-0.83.1-c3d616063e.patch"
++    "metro": "patch:metro@npm%3A0.83.1#~/.yarn/patches/metro-npm-0.83.1-241fe42591.patch",
++    "metro-runtime": "patch:metro-runtime@npm%3A0.83.1#~/.yarn/patches/metro-runtime-npm-0.83.1-c3d616063e.patch",
++    "react-native": "patch:react-native@npm%3A0.82.0-rc.4#~/.yarn/patches/react-native-npm-0.82.0-rc.4-228ad0ffa7.patch"
    }
  }
