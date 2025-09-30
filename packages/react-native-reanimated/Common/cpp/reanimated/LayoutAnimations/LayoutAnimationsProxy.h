@@ -94,9 +94,7 @@ struct LayoutAnimationsProxy
       const int tag,
       const ShadowView &before,
       const ShadowView &after,
-      SurfaceId surfaceId,
-      const int tagBefore,
-      const int tagAfter) const;
+      SurfaceId surfaceId) const;
   void startProgressTransition(
       const int tag,
       const ShadowView &before,
@@ -149,13 +147,15 @@ struct LayoutAnimationsProxy
 
   LightNode::Unshared findTopScreen(LightNode::Unshared node) const;
 
-  void findSharedElementsOnScreen(const LightNode::Unshared &node, int index)
+  void findSharedElementsOnScreen(const LightNode::Unshared &node, int index, const PropsParserContext &propsParserContext)
       const;
 
   std::vector<react::Point> getAbsolutePositionsForRootPathView(
       const LightNode::Unshared &node) const;
+        
+  void overrideTransform(ShadowView &shadowView, const Transform &transform, const PropsParserContext &propsParserContext) const;
 
-  void parseParentTransforms(
+  std::optional<Transform> parseParentTransforms(
       const LightNode::Unshared &node,
       const std::vector<react::Point> &absolutePositions) const;
   react::Transform resolveTransform(

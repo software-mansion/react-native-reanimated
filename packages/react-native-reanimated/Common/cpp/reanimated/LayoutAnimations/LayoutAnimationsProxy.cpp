@@ -53,7 +53,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     auto root = lightNodes_[surfaceId];
     auto beforeTopScreen = topScreen[surfaceId];
     if (beforeTopScreen) {
-      findSharedElementsOnScreen(beforeTopScreen, 0);
+      findSharedElementsOnScreen(beforeTopScreen, 0, propsParserContext);
     }
 
     updateLightTree(propsParserContext, mutations, filteredMutations);
@@ -62,7 +62,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     auto afterTopScreen = findTopScreen(root);
     topScreen[surfaceId] = afterTopScreen;
     if (afterTopScreen) {
-      findSharedElementsOnScreen(afterTopScreen, 1);
+      findSharedElementsOnScreen(afterTopScreen, 1, propsParserContext);
     }
     bool shouldTransitionStart = beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen;
 
@@ -267,8 +267,7 @@ LightNode::Unshared LayoutAnimationsProxy::findTopScreen(
   if (!node->current.componentName) {
     return result;
   }
-  if (!(strcmp(node->current.componentName, "RNSScreen")) ||
-      !(strcmp(node->current.componentName, "RNSModalScreen"))) {
+  if (isRNSScreen(node)) {
     bool isActive = false;
 #ifdef ANDROID
     // TODO: this looks like a RNSScreens bug - sometimes there is no active
@@ -285,18 +284,17 @@ LightNode::Unshared LayoutAnimationsProxy::findTopScreen(
       result = node;
     }
   }
-
-  for (auto it = node->children.rbegin(); it != node->children.rend(); it++) {
-    auto t = findTopScreen(*it);
-    if (t) {
-      return t;
+  for (auto child: std::views::reverse(node->children)) {
+    auto top = findTopScreen(child);
+    if (top) {
+      return top;
     }
   }
 
   return result;
 }
 
-void LayoutAnimationsProxy::findSharedElementsOnScreen(const LightNode::Unshared &node, int index) const {
+void LayoutAnimationsProxy::findSharedElementsOnScreen(const LightNode::Unshared &node, int index, const PropsParserContext &propsParserContext) const {
   if (sharedTransitionManager_->tagToName_.contains(node->current.tag)) {
     
     ShadowView copy = node->current;
@@ -306,9 +304,12 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(const LightNode::Unshared
     
     auto sharedTag = sharedTransitionManager_->tagToName_[node->current.tag];
     auto &transition = transitionMap_[sharedTag];
+    auto transform = parseParentTransforms(node, absolutePositions);
+    if (transform){
+      overrideTransform(copy, *transform, propsParserContext);
+    }
     transition.snapshot[index] = copy;
     transition.parentTag[index] = node->parent.lock()->current.tag;
-    parseParentTransforms(node, absolutePositions);
     
     if (transition.parentTag[0] && transition.parentTag[1]) {
       transitions_.push_back({sharedTag, transition});
@@ -318,7 +319,7 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(const LightNode::Unshared
     }
   }
   for (auto &child : node->children) {
-    findSharedElementsOnScreen(child, index);
+    findSharedElementsOnScreen(child, index, propsParserContext);
   }
 }
 
@@ -338,8 +339,8 @@ void LayoutAnimationsProxy::handleProgressTransition(
       auto beforeTopScreen = topScreen[surfaceId];
       auto afterTopScreen = lightNodes_[transitionTag_];
       if (beforeTopScreen && afterTopScreen) {
-        findSharedElementsOnScreen(beforeTopScreen, 0);
-        findSharedElementsOnScreen(afterTopScreen, 1);
+        findSharedElementsOnScreen(beforeTopScreen, 0, propsParserContext);
+        findSharedElementsOnScreen(afterTopScreen, 1, propsParserContext);
 
         if (beforeTopScreen->current.tag != afterTopScreen->current.tag) {
           for (auto &[sharedTag, transition] : transitions_) {
@@ -457,6 +458,27 @@ void LayoutAnimationsProxy::handleProgressTransition(
   }
 }
 
+void LayoutAnimationsProxy::overrideTransform(ShadowView &shadowView, const Transform &transform, const PropsParserContext &propsParserContext) const {
+#ifdef ANDROID
+            auto array = folly::dynamic::array(folly::dynamic::object(
+                "matrix",
+                transform.operator folly::dynamic()));
+            folly::dynamic newTransformDynamic =
+                folly::dynamic::object("transform", array);
+            auto newRawProps =
+                folly::dynamic::merge(shadowView.props->rawProps, newTransformDynamic);
+            auto newProps = getComponentDescriptorForShadowView(shadowView).cloneProps(
+                propsParserContext, shadowView.props, RawProps(newRawProps));
+            auto viewProps = std::const_pointer_cast<ViewProps>(
+                std::static_pointer_cast<const ViewProps>(newProps));
+#else
+  auto newProps = getComponentDescriptorForShadowView(shadowView).cloneProps(propsParserContext, shadowView.props, {});
+  auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));
+  viewProps->transform = transform;
+#endif
+  shadowView.props = newProps;
+}
+
 void LayoutAnimationsProxy::handleSharedTransitionsStart(
     const LightNode::Unshared &afterTopScreen,
     const LightNode::Unshared &beforeTopScreen,
@@ -464,51 +486,25 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
     const ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext,
     SurfaceId surfaceId) const {
-  {
-    ReanimatedSystraceSection s1("moj narzut 2");
+    ReanimatedSystraceSection s1("LayoutAnimationsProxy::handleSharedTransitionsStart");
+      
+    if (!beforeTopScreen || !afterTopScreen){
+      return;
+    }
 
-    if (beforeTopScreen && afterTopScreen &&
-        beforeTopScreen->current.tag != afterTopScreen->current.tag) {
+    if (beforeTopScreen != afterTopScreen) {
       for (auto &[sharedTag, transition] : transitions_) {
         const auto &[before, after] = transition.snapshot;
         const auto &[beforeParentTag, afterParentTag] = transition.parentTag;
-
-        auto fakeTag = sharedTransitionManager_->groups_[sharedTag].fakeTag;
-        auto shouldCreateContainer =
-            (fakeTag == -1 || !layoutAnimations_.contains(fakeTag));
+        auto containerTag = sharedTransitionManager_->groups_[sharedTag].fakeTag;
+        auto shouldCreateContainer = (containerTag == -1 || !layoutAnimations_.contains(containerTag));
+        
         if (shouldCreateContainer) {
           auto &root = lightNodes_[surfaceId];
           ShadowView s = before;
-          auto beforeViewProps = std::const_pointer_cast<ViewProps>(
-              std::static_pointer_cast<const ViewProps>(s.props));
-          auto afterViewProps = std::const_pointer_cast<ViewProps>(
-              std::static_pointer_cast<const ViewProps>(after.props));
 
           s.tag = myTag;
 
-          if (transformForNode_.contains(before.tag)) {
-#ifdef ANDROID
-
-            auto array = folly::dynamic::array(folly::dynamic::object(
-                "matrix",
-                transformForNode_[before.tag].operator folly::dynamic()));
-            folly::dynamic newTransformDynamic =
-                folly::dynamic::object("transform", array);
-            auto newRawProps =
-                folly::dynamic::merge(s.props->rawProps, newTransformDynamic);
-            auto newProps = getComponentDescriptorForShadowView(s).cloneProps(
-                propsParserContext, s.props, RawProps(newRawProps));
-            auto viewProps = std::const_pointer_cast<ViewProps>(
-                std::static_pointer_cast<const ViewProps>(newProps));
-#else
-            auto newProps = getComponentDescriptorForShadowView(s).cloneProps(
-                propsParserContext, s.props, {});
-            auto viewProps = std::const_pointer_cast<ViewProps>(
-                std::static_pointer_cast<const ViewProps>(newProps));
-            viewProps->transform = transformForNode_[before.tag];
-#endif
-            s.props = newProps;
-          }
           filteredMutations.push_back(ShadowViewMutation::CreateMutation(s));
           filteredMutations.push_back(ShadowViewMutation::InsertMutation(
               surfaceId, s, root->children.size()));
@@ -525,27 +521,25 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
           node->current = s;
           lightNodes_[myTag] = node;
           root->children.push_back(node);
-          fakeTag = myTag;
+          containerTag = myTag;
         }
         layoutAnimationsManager_->getConfigsForType(
-            LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[fakeTag] =
+            LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[containerTag] =
             layoutAnimationsManager_->getConfigsForType(
                 LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[before.tag];
         ShadowView copy = after;
-        copy.tag = fakeTag;
+        copy.tag = containerTag;
         auto copy2 = before;
-        copy2.tag = fakeTag;
+        copy2.tag = containerTag;
         startSharedTransition(
-            fakeTag, copy2, copy, surfaceId, before.tag, after.tag);
-        restoreMap_[fakeTag][1] = after.tag;
+            containerTag, copy2, copy, surfaceId);
+        restoreMap_[containerTag][1] = after.tag;
         if (shouldCreateContainer) {
           sharedTransitionManager_->groups_[sharedTag].fakeTag = myTag;
           myTag += 2;
         }
       }
-    } else if (
-        mutations.size() && beforeTopScreen && afterTopScreen &&
-        beforeTopScreen->current.tag == afterTopScreen->current.tag) {
+    } else if (!mutations.empty()) {
       for (auto &[sharedTag, transition] : transitions_) {
         const auto &[_, after] = transition.snapshot;
 
@@ -558,11 +552,10 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         auto &la = layoutAnimations_[fakeTag];
         if (la.finalView.layoutMetrics != copy.layoutMetrics) {
           startSharedTransition(
-              fakeTag, copy, copy, surfaceId, la.finalView.tag, after.tag);
+              fakeTag, copy, copy, surfaceId);
         }
       }
     }
-  }
 }
 
 void LayoutAnimationsProxy::cleanupSharedTransitions(
@@ -882,7 +875,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
     bool shouldAnimate,
     bool isScreenPop,
     ShadowViewMutationList &mutations) const {
-  if (isRNSScreen(node)) {
+  if (isRNSScreenOrStack(node)) {
     isScreenPop = true;
   }
 
@@ -1199,16 +1192,12 @@ void LayoutAnimationsProxy::startSharedTransition(
     const int tag,
     const ShadowView &before,
     const ShadowView &after,
-    SurfaceId surfaceId,
-    const int tagBefore,
-    const int tagAfter) const {
+    SurfaceId surfaceId) const {
   uiScheduler_->scheduleOnUI([weakThis = weak_from_this(),
                               before,
                               after,
                               surfaceId,
-                              tag,
-                              tagBefore,
-                              tagAfter]() {
+                              tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -1225,16 +1214,6 @@ void LayoutAnimationsProxy::startSharedTransition(
 
     auto &uiRuntime = strongThis->uiRuntime_;
     auto propsDiffer = PropsDiffer(uiRuntime, oldView, after);
-
-    if (tagBefore == -1) {
-      propsDiffer.overrideTargetTransforms(
-          strongThis->transformForNode_[tagAfter]);
-    } else {
-      propsDiffer.overrideSourceTransforms(
-          strongThis->transformForNode_[tagBefore]);
-      propsDiffer.overrideTargetTransforms(
-          strongThis->transformForNode_[tagAfter]);
-    }
 
     const auto &propsDiff = propsDiffer.computeDiff(uiRuntime);
 
@@ -1306,7 +1285,7 @@ LayoutAnimationsProxy::getAbsolutePositionsForRootPathView(
   return viewsAbsolutePositions;
 }
 
-void LayoutAnimationsProxy::parseParentTransforms(
+std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     const LightNode::Unshared &node,
     const std::vector<react::Point> &absolutePositions) const {
   std::vector<std::pair<Transform, TransformOrigin>> transforms;
@@ -1362,11 +1341,13 @@ void LayoutAnimationsProxy::parseParentTransforms(
     combinedMatrix.operations.clear();
   }
   if (parentHasTransform) {
-    transformForNode_[node->current.tag] = Transform::FromTransformOperation(
+    return Transform::FromTransformOperation(
         react::TransformOperation(TransformOperationType::Arbitrary),
         {},
         combinedMatrix);
   }
+      
+  return {};
 }
 
 // The methods resolveTransform and getTranslateForTransformOrigin are sourced
