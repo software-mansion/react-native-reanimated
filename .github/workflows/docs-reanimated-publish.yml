@@ -18,7 +18,6 @@ jobs:
     env:
       REANIMATED_DOCS_DIR: packages/docs-reanimated
       WORKLETS_DOCS_DIR: packages/docs-worklets
-      REANIMATED_DIR: packages/react-native-reanimated
     steps:
       - name: Check out
         uses: actions/checkout@v4
@@ -28,33 +27,20 @@ jobs:
           git config --local user.email "action@github.com"
           && git config --local user.name "GitHub Action"
 
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          cache: 'yarn'
-
-      - name: Clear annotations
-        run: .github/workflows/helper/clear-annotations.sh
-
       - name: Install monorepo node dependencies
-        working-directory: ${{ env.REANIMATED_DIR }}
         run: yarn install
-
-      - name: Build Reanimated package
-        working-directory: ${{ env.REANIMATED_DIR }}
-          yarn build
 
       - name: Build Reanimated docs
         working-directory: ${{ env.REANIMATED_DOCS_DIR }}
-        run: yarn && yarn build
+        run: yarn build
 
       - name: Build Worklets docs
         working-directory: ${{ env.WORKLETS_DOCS_DIR }}
-        run: yarn && yarn build
+        run: yarn build
 
       - name: Publish generated content to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
-          FOLDER: packages/docs-reanimated/build/react-native-reanimated
+          FOLDER: packages/docs-reanimated/build
           BRANCH: gh-pages
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
