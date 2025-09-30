@@ -4,6 +4,7 @@ const {
 } = require('react-native-reanimated/metro-config');
 
 const path = require('path');
+// @ts-expect-error
 const exclusionList = require('metro-config/private/defaults/exclusionList');
 const escape = require('escape-string-regexp');
 
@@ -19,8 +20,7 @@ const config = {
   // We need to make sure that only one version is loaded for peerDependencies
   // So we exclude them at the root, and alias them to the versions in example's node_modules
   resolver: {
-    // @ts-expect-error
-    blockList: exclusionList(
+    blackListRE: exclusionList(
       modules.map(
         (m) =>
           new RegExp(`^${escape(path.join(root, 'node_modules', m))}\\/.*$`)

@@ -4,6 +4,7 @@ const {
 } = require('react-native-reanimated/metro-config');
 
 const path = require('path');
+// @ts-expect-error deep import
 const exclusionList = require('metro-config/private/defaults/exclusionList');
 const escape = require('escape-string-regexp');
 
@@ -29,7 +30,7 @@ const hasReactNative = require.resolve('react-native/package.json', {
 if (!hasReactNative) {
   const modulesToBlock = ['@react-native'];
   // @ts-expect-error
-  config.resolver.blockList = exclusionList(
+  config.resolver.blackListRE = exclusionList(
     modulesToBlock.map(
       (m) =>
         new RegExp(
