@@ -168,14 +168,14 @@ static inline void updateLayoutMetrics(
   }
 }
 
-static inline bool isRNSScreenOrStack(std::shared_ptr<LightNode>& node) {
+static inline bool isRNSScreenOrStack(std::shared_ptr<LightNode> &node) {
   const auto &componentName = node->current.componentName;
   return !std::strcmp(componentName, "RNSScreenStack") ||
       !std::strcmp(componentName, "RNSScreen") ||
       !std::strcmp(componentName, "RNSModalScreen");
 }
 
-static inline bool isRNSScreen(std::shared_ptr<LightNode>& node) {
+static inline bool isRNSScreen(std::shared_ptr<LightNode> &node) {
   const auto &componentName = node->current.componentName;
   return !std::strcmp(componentName, "RNSScreen") ||
       !std::strcmp(componentName, "RNSModalScreen");

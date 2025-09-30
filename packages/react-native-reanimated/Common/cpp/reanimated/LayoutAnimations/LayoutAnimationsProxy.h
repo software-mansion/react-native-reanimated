@@ -84,12 +84,9 @@ struct LayoutAnimationsProxy
     lightNodes_[11] = std::make_shared<LightNode>();
   }
 
-  void startEnteringAnimation(const LightNode::Unshared& node)
-      const;
-  void startExitingAnimation(const LightNode::Unshared& node)
-      const;
-  void startLayoutAnimation(const LightNode::Unshared& node)
-      const;
+  void startEnteringAnimation(const LightNode::Unshared &node) const;
+  void startExitingAnimation(const LightNode::Unshared &node) const;
+  void startLayoutAnimation(const LightNode::Unshared &node) const;
   void startSharedTransition(
       const int tag,
       const ShadowView &before,
@@ -147,13 +144,18 @@ struct LayoutAnimationsProxy
 
   LightNode::Unshared findTopScreen(LightNode::Unshared node) const;
 
-  void findSharedElementsOnScreen(const LightNode::Unshared &node, int index, const PropsParserContext &propsParserContext)
-      const;
+  void findSharedElementsOnScreen(
+      const LightNode::Unshared &node,
+      int index,
+      const PropsParserContext &propsParserContext) const;
 
   std::vector<react::Point> getAbsolutePositionsForRootPathView(
       const LightNode::Unshared &node) const;
-        
-  void overrideTransform(ShadowView &shadowView, const Transform &transform, const PropsParserContext &propsParserContext) const;
+
+  void overrideTransform(
+      ShadowView &shadowView,
+      const Transform &transform,
+      const PropsParserContext &propsParserContext) const;
 
   std::optional<Transform> parseParentTransforms(
       const LightNode::Unshared &node,
@@ -189,7 +191,10 @@ struct LayoutAnimationsProxy
       const jsi::Object &newStyle) const;
   void maybeUpdateWindowDimensions(
       const facebook::react::ShadowViewMutation &mutation) const;
-  ShadowView createLayoutAnimation(ShadowView &before, const ShadowView& after, const Tag parentTag) const;
+  ShadowView createLayoutAnimation(
+      ShadowView &before,
+      const ShadowView &after,
+      const Tag parentTag) const;
 
   bool startAnimationsRecursively(
       std::shared_ptr<LightNode> node,
