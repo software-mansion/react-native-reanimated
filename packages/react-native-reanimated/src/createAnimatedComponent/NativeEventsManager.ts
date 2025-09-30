@@ -115,8 +115,8 @@ export class NativeEventsManager implements INativeEventsManager {
         __nativeTag is used by Fabric components.
       */
       return (
-        componentAnimatedRef?.__nativeTag ??
-        componentAnimatedRef?._nativeTag ??
+        componentAnimatedRef.__nativeTag ??
+        componentAnimatedRef._nativeTag ??
         -1
       );
     }
