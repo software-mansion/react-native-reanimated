@@ -153,6 +153,8 @@ struct LayoutAnimationsProxy
       const LightNode::Unshared &node) const;
 
   void transferConfigToContainer(Tag containerTag, Tag beforeTag) const;
+        
+        Tag getOrCreateContainer(const ShadowView& before, SharedTag sharedTag, ShadowViewMutationList &filteredMutations, SurfaceId surfaceId) const;
 
   void overrideTransform(
       ShadowView &shadowView,

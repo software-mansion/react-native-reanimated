@@ -501,6 +501,31 @@ void LayoutAnimationsProxy::transferConfigToContainer(
           LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[beforeTag];
 }
 
+Tag LayoutAnimationsProxy::getOrCreateContainer(const ShadowView& before, SharedTag sharedTag, ShadowViewMutationList &filteredMutations, SurfaceId surfaceId) const {
+  auto containerTag =
+  sharedTransitionManager_->groups_[sharedTag].containerTag;
+  auto shouldCreateContainer =
+  (containerTag == -1 || !layoutAnimations_.contains(containerTag));
+  
+  if (shouldCreateContainer) {
+    auto &root = lightNodes_[surfaceId];
+    ShadowView container = before;
+    containerTag = myTag;
+    
+    container.tag = containerTag;
+    filteredMutations.push_back(ShadowViewMutation::CreateMutation(container));
+    filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId, container, root->children.size()));
+    auto node = std::make_shared<LightNode>();
+    node->current = std::move(container);
+    root->children.push_back(node);
+    lightNodes_[myTag] = std::move(node);
+    
+    sharedTransitionManager_->groups_[sharedTag].containerTag = containerTag;
+    myTag += 2;
+  }
+  return containerTag;
+}
+
 void LayoutAnimationsProxy::handleSharedTransitionsStart(
     const LightNode::Unshared &afterTopScreen,
     const LightNode::Unshared &beforeTopScreen,
@@ -518,36 +543,13 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
   if (beforeTopScreen != afterTopScreen) {
     for (auto &[sharedTag, transition] : transitions_) {
       auto &[before, after] = transition.snapshot;
-      //      const auto &[beforeParentTag, afterParentTag] =
-      //      transition.parentTag;
-      auto containerTag =
-          sharedTransitionManager_->groups_[sharedTag].containerTag;
-      auto shouldCreateContainer =
-          (containerTag == -1 || !layoutAnimations_.contains(containerTag));
-
-      if (shouldCreateContainer) {
-        auto &root = lightNodes_[surfaceId];
-        ShadowView container = before;
-        containerTag = myTag;
-
-        container.tag = containerTag;
-        filteredMutations.push_back(
-            ShadowViewMutation::CreateMutation(container));
-        filteredMutations.push_back(ShadowViewMutation::InsertMutation(
-            surfaceId, container, root->children.size()));
-        auto node = std::make_shared<LightNode>();
-        node->current = std::move(container);
-        root->children.push_back(node);
-        lightNodes_[myTag] = std::move(node);
-
-        sharedTransitionManager_->groups_[sharedTag].containerTag =
-            containerTag;
-        myTag += 2;
-      }
+      auto containerTag = getOrCreateContainer(before, sharedTag, filteredMutations, surfaceId);
+      
       transferConfigToContainer(containerTag, before.tag);
       restoreMap_[containerTag][1] = after.tag;
       before.tag = containerTag;
       after.tag = containerTag;
+      
       startSharedTransition(containerTag, before, after, surfaceId);
     }
   } else if (!mutations.empty()) {
