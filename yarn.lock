@@ -15478,10 +15478,10 @@ __metadata:
     react-dom: "npm:^19.1.1"
     react-native: "npm:0.71.4"
     react-native-gesture-handler: "npm:^2.28.0"
-    react-native-reanimated: "npm:4.1.2"
+    react-native-reanimated: "npm:4.0.0"
     react-native-svg: "npm:15.12.0"
     react-native-web: "npm:^0.21.1"
-    react-native-worklets: "npm:0.6.0"
+    react-native-worklets: "npm:0.4.0"
     source-map: "npm:0.7.4"
     source-map-loader: "npm:4.0.1"
     usehooks-ts: "npm:2.9.1"
@@ -15532,10 +15532,10 @@ __metadata:
     react-dom: "npm:^19.1.1"
     react-native: "npm:0.71.4"
     react-native-gesture-handler: "npm:^2.28.0"
-    react-native-reanimated: "npm:4.1.2"
+    react-native-reanimated: "npm:4.0.0"
     react-native-svg: "npm:15.12.0"
     react-native-web: "npm:^0.21.1"
-    react-native-worklets: "npm:0.6.0"
+    react-native-worklets: "npm:0.4.0"
     source-map: "npm:0.7.4"
     source-map-loader: "npm:4.0.1"
     usehooks-ts: "npm:2.9.1"
@@ -29041,9 +29041,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"react-native-reanimated@npm:4.1.2":
-  version: 4.1.2
-  resolution: "react-native-reanimated@npm:4.1.2"
+"react-native-reanimated@npm:4.0.0":
+  version: 4.0.0
+  resolution: "react-native-reanimated@npm:4.0.0"
   dependencies:
     react-native-is-edge-to-edge: "npm:^1.2.1"
     semver: "npm:7.7.2"
@@ -29051,8 +29051,8 @@ __metadata:
     "@babel/core": ^7.0.0-0
     react: "*"
     react-native: "*"
-    react-native-worklets: ">=0.5.0"
-  checksum: 10/aba5481b4020b7296e34e629e026d883dbd04831d5980f90b93907e32ce8b2af6b811f9022c269704b585cd9a68760025cab580c5d77c74f438d4c958099d7d4
+    react-native-worklets: ">=0.3.0"
+  checksum: 10/bf7e10967e9a205934bfa507282f9d3923f5a1fef3896e6e804ed20ea9afcae1f6ce3c96be8674b482ad6296e2c419718027cf75b6f86b350b7229107e967756
   languageName: node
   linkType: hard
 
@@ -29214,9 +29214,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-worklets@npm:0.6.0":
-  version: 0.6.0
-  resolution: "react-native-worklets@npm:0.6.0"
+"react-native-worklets@npm:0.4.0":
+  version: 0.4.0
+  resolution: "react-native-worklets@npm:0.4.0"
   dependencies:
     "@babel/plugin-transform-arrow-functions": "npm:^7.0.0-0"
     "@babel/plugin-transform-class-properties": "npm:^7.0.0-0"
@@ -29228,12 +29228,11 @@ __metadata:
     "@babel/plugin-transform-unicode-regex": "npm:^7.0.0-0"
     "@babel/preset-typescript": "npm:^7.16.7"
     convert-source-map: "npm:^2.0.0"
-    semver: "npm:7.7.2"
   peerDependencies:
     "@babel/core": ^7.0.0-0
     react: "*"
     react-native: "*"
-  checksum: 10/6dd4444bc62687a5191aad20e7af0fbf9ba6fa20d785947694e1c52f2b7c867b55b0a1afbfa020355a5006e06ad9515acbccf81b833f81e22348ca2514ee7884
+  checksum: 10/c0cdf0356eeab1851701d380099913944081fb7560e58c715babfd90edbc320a93578c22b35498f34d623640a271cee541f240d004fbc05ec556f583fdc0678b
   languageName: node
   linkType: hard
 
