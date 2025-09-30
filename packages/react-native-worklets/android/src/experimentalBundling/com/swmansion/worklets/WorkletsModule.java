@@ -19,8 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuppressWarnings("JavaJniMissingFunction")
 @ReactModule(name = WorkletsModule.NAME)
-public class WorkletsModule extends NativeWorkletsModuleSpec
-    implements LifecycleEventListener {
+public class WorkletsModule extends NativeWorkletsModuleSpec implements LifecycleEventListener {
   static {
     SoLoader.loadLibrary("worklets");
   }
