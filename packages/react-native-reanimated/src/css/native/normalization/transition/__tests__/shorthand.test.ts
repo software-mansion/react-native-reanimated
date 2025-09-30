@@ -20,7 +20,7 @@ describe(parseTransitionShorthand, () => {
   });
 
   describe('single transition', () => {
-    it.each([
+    test.each([
       // Source: https://developer.mozilla.org/en-US/docs/Web/CSS/transition
       [
         'margin-right 4s',
@@ -97,7 +97,7 @@ describe(parseTransitionShorthand, () => {
   });
 
   describe('multiple transitions', () => {
-    it.each([
+    test.each([
       [
         'width 1s, height 2s, opacity 3s',
         {
@@ -157,7 +157,7 @@ describe(parseTransitionShorthand, () => {
   });
 
   describe('parametrized timing functions', () => {
-    it.each([
+    test.each([
       [
         'cubic-bezier(0.2, 0.8, 0.4, 1)',
         {

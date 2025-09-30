@@ -9,7 +9,7 @@ logger.warn = warn;
 
 describe(LinearEasing, () => {
   describe('constructor', () => {
-    it('throws error if points count is less than 2', () => {
+    test('throws error if points count is less than 2', () => {
       expect(() => new LinearEasing([])).toThrow(
         ERROR_MESSAGES.invalidPointsCount()
       );
@@ -20,7 +20,7 @@ describe(LinearEasing, () => {
   });
 
   describe('toString', () => {
-    it.each([
+    test.each([
       [[0, 1], 'linear(0, 1)'],
       [[0, 0.5, 1], 'linear(0, 0.5, 1)'],
       [[0, 0.25, 0.5, 0.75, 1], 'linear(0, 0.25, 0.5, 0.75, 1)'],
@@ -40,21 +40,21 @@ describe(LinearEasing, () => {
 
   describe('normalize', () => {
     describe('input progress', () => {
-      it('Throws error if input progress is lower than 0%', () => {
+      test('Throws error if input progress is lower than 0%', () => {
         const easing = new LinearEasing([[0, '-10%'], 1]);
         expect(() => easing.normalize()).toThrow(
           ERROR_MESSAGES.invalidInputProgressValue('-10%')
         );
       });
 
-      it('Throws error if input progress is greater than 100%', () => {
+      test('Throws error if input progress is greater than 100%', () => {
         const easing = new LinearEasing([[0, '110%'], 1]);
         expect(() => easing.normalize()).toThrow(
           ERROR_MESSAGES.invalidInputProgressValue('110%')
         );
       });
 
-      it('Throws error if input progress is not a percentage', () => {
+      test('Throws error if input progress is not a percentage', () => {
         const easing = new LinearEasing([[0, '10' as Percentage], 1]);
         expect(() => easing.normalize()).toThrow(
           ERROR_MESSAGES.invalidInputProgressValue('10')
@@ -67,17 +67,17 @@ describe(LinearEasing, () => {
         warn.mockClear();
       });
 
-      it('Sets output progress of the first point to 0 if it is not set', () => {
+      test('Sets output progress of the first point to 0 if it is not set', () => {
         const easing = new LinearEasing([0.25, 1]);
         expect(easing.normalize().points[0]).toEqual({ x: 0, y: 0.25 });
       });
 
-      it('Sets output progress of the last point to 1 if it is not set', () => {
+      test('Sets output progress of the last point to 1 if it is not set', () => {
         const easing = new LinearEasing([0, 0.25]);
         expect(easing.normalize().points[1]).toEqual({ x: 1, y: 0.25 });
       });
 
-      it('sets max preceding input progress if the input progress of the point is less than the input progress of the preceding point', () => {
+      test('sets max preceding input progress if the input progress of the point is less than the input progress of the preceding point', () => {
         const easing = new LinearEasing([
           0,
           [0.25, '90%'],
@@ -95,7 +95,7 @@ describe(LinearEasing, () => {
         ]);
       });
 
-      it('warns if the input progress of the point is less than the input progress of the preceding point and is overridden', () => {
+      test('warns if the input progress of the point is less than the input progress of the preceding point and is overridden', () => {
         new LinearEasing([
           0,
           [0.25, '90%'],
@@ -115,7 +115,7 @@ describe(LinearEasing, () => {
         );
       });
 
-      it('spaces points evenly on the x axis between 2 known points', () => {
+      test('spaces points evenly on the x axis between 2 known points', () => {
         const easing = new LinearEasing([
           0,
           [0.5, '20%'],

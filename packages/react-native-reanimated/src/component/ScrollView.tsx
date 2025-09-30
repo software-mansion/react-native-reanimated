@@ -1,5 +1,5 @@
 'use strict';
-import type { Ref } from 'react';
+import type { ComponentRef, Ref } from 'react';
 import React from 'react';
 import type { ScrollViewProps } from 'react-native';
 import { ScrollView } from 'react-native';
@@ -10,10 +10,12 @@ import type { AnimatedProps } from '../helperTypes';
 import type { AnimatedRef } from '../hook';
 import { useAnimatedRef, useScrollOffset } from '../hook';
 
+type ScrollViewInstance = ComponentRef<typeof ScrollView>;
+
 export interface AnimatedScrollViewProps
   extends AnimatedProps<ScrollViewProps> {
   scrollViewOffset?: SharedValue<number>;
-  ref?: Ref<AnimatedScrollView> | null;
+  ref?: Ref<ScrollViewInstance> | null;
 }
 
 // Since createAnimatedComponent return type is ComponentClass that has the props of the argument,

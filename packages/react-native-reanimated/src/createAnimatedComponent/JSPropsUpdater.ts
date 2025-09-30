@@ -4,7 +4,7 @@ import { runOnUI } from 'react-native-worklets';
 import { SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatedComponentProps,
-  AnimatedComponentType,
+  AnimatedComponentTypeInternal,
   IAnimatedComponentInternal,
   IJSPropsUpdater,
   InitialComponentProps,
@@ -14,11 +14,11 @@ import type {
 class JSPropsUpdaterNative implements IJSPropsUpdater {
   private static _tagToComponentMapping = new Map<
     number,
-    AnimatedComponentType
+    AnimatedComponentTypeInternal
   >();
 
   public registerComponent(
-    animatedComponent: AnimatedComponentType,
+    animatedComponent: AnimatedComponentTypeInternal,
     jsProps: string[]
   ) {
     const viewTag = animatedComponent.getComponentViewTag();
@@ -31,7 +31,7 @@ class JSPropsUpdaterNative implements IJSPropsUpdater {
     })();
   }
 
-  public unregisterComponent(animatedComponent: AnimatedComponentType) {
+  public unregisterComponent(animatedComponent: AnimatedComponentTypeInternal) {
     const viewTag = animatedComponent.getComponentViewTag();
     JSPropsUpdaterNative._tagToComponentMapping.delete(viewTag);
 

@@ -1,6 +1,6 @@
 {
   "name": "react-native-worklets",
-  "version": "0.6.0-main",
+  "version": "0.7.0-main",
   "description": "The React Native multithreading library",
   "keywords": [
     "react-native",
@@ -71,7 +71,7 @@
     "@babel/cli": "^7.20.0",
     "@babel/core": "^7.25.2",
     "@react-native-community/cli": "20.0.0",
-    "@react-native/eslint-config": "0.82.0-rc.0",
+    "@react-native/eslint-config": "0.82.0-rc.4",
     "@types/jest": "^29.5.5",
     "@types/react": "^19.1.1",
     "babel-plugin-worklets": "workspace:*",
@@ -83,8 +83,8 @@
     "madge": "^5.0.1",
     "prettier": "^3.3.3",
     "react": "19.1.1",
-    "react-native": "patch:react-native@npm%3A0.82.0-rc.0#~/.yarn/patches/react-native-npm-0.82.0-rc.0-4775a171a4.patch",
-    "react-native-builder-bob": "patch:react-native-builder-bob@npm%3A0.33.1#~/.yarn/patches/react-native-builder-bob-npm-0.33.1-383d9e23a5.patch",
+    "react-native": "0.82.0-rc.4",
+    "react-native-builder-bob": "0.40.13",
     "typescript": "5.8.3"
   },
   "main": "./lib/module/index",
@@ -124,8 +124,8 @@
       [
         "module",
         {
-          "esm": true,
-          "jsxRuntime": "classic"
+          "esm": false,
+          "jsxRuntime": "automatic"
         }
       ],
       "typescript"

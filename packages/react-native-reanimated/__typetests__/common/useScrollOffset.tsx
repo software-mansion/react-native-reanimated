@@ -1,6 +1,3 @@
-/* eslint-disable no-unused-expressions */
-/* eslint-disable @typescript-eslint/no-empty-function */
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useRef } from 'react';
 import { Button, FlatList, ScrollView } from 'react-native';
@@ -15,7 +12,6 @@ function useScrollOffsetTest() {
     const offset = useScrollOffset(scrollViewRef);
 
     return (
-      // @ts-expect-error Cannot assign plain ref to Animated ref.
       <Animated.ScrollView ref={scrollViewRef}>
         <Animated.View style={{ opacity: offset.value }} />
       </Animated.ScrollView>

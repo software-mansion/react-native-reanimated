@@ -140,6 +140,7 @@ describe('Wardrobe with drawers', () => {
             await wait(10);
             expect(1).toBe(1);
           });
+
           test('Test 2 of page 1 of book 1 of box 1 of drawer 1 - ✅ ', async () => {
             await render(<AnimatedComponent />);
             await wait(10);
@@ -153,6 +154,7 @@ describe('Wardrobe with drawers', () => {
             await wait(10);
             expect(1).toBe(1);
           });
+
           test('Test 2 of page 2 of book 1 of box 1 of drawer 1 - ✅', async () => {
             await render(<AnimatedComponent />);
             await wait(10);
@@ -173,6 +175,7 @@ describe('Wardrobe with drawers', () => {
             await wait(10);
             expect(1).toBe(1);
           });
+
           test('Test 2 of page 2 of book 1 of box 1 of drawer 2 - ✅', async () => {
             await render(<AnimatedComponent />);
             await wait(10);
@@ -368,6 +371,7 @@ describe('Tests of Test Framework', () => {
         console.error('OH, NO!');
       }).toThrow('OH, NO!');
     });
+
     test('console.error  with with error message - ❌', async () => {
       await expect(() => {
         console.error('OH, NO!');

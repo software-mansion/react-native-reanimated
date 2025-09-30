@@ -4,6 +4,7 @@ import { executeOnUIRuntimeSync } from 'react-native-worklets';
 import {
   DEFAULT_LOGGER_CONFIG,
   IS_WEB,
+  ReanimatedError,
   registerLoggerConfig,
   SHOULD_BE_USE_WEB,
 } from './common';
