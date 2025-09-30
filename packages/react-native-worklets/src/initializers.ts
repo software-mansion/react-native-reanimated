@@ -3,10 +3,8 @@
 import { bundleValueUnpacker } from './bundleUnpacker';
 import { setupCallGuard } from './callGuard';
 import { registerReportFatalRemoteError } from './errors';
-import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { setupSetImmediate } from './runLoop/common/setImmediatePolyfill';
 import { setupSetInterval } from './runLoop/common/setIntervalPolyfill';
-import { mockedRequestAnimationFrame } from './runLoop/uiRuntime/mockedRequestAnimationFrame';
 import { setupRequestAnimationFrame } from './runLoop/uiRuntime/requestAnimationFrame';
 import { setupSetTimeout } from './runLoop/uiRuntime/setTimeoutPolyfill';
 import { RuntimeKind } from './runtimeKind';
@@ -16,6 +14,12 @@ import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
 import type { ValueUnpacker } from './workletTypes';
+
+if (globalThis.__RUNTIME_KIND === undefined) {
+  // The only runtime that doesn't have `__RUNTIME_KIND` preconfigured
+  // is the RN Runtime. We must set it as soon as possible.
+  globalThis.__RUNTIME_KIND = RuntimeKind.ReactNative;
+}
 
 let capturableConsole: typeof console;
 
@@ -85,25 +89,13 @@ export function init() {
   }
   initialized = true;
 
-  if (globalThis.__RUNTIME_KIND === undefined) {
-    // The only runtime that doesn't have `__RUNTIME_KIND` preconfigured
-    // is the RN Runtime. We must set it as soon as possible.
-    globalThis.__RUNTIME_KIND = RuntimeKind.ReactNative;
-  }
-
   initializeRuntime();
-
-  if (SHOULD_BE_USE_WEB) {
-    initializeRuntimeOnWeb();
-  }
 
   if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
     initializeWorkletRuntime();
   } else {
     initializeRNRuntime();
-    if (!SHOULD_BE_USE_WEB) {
-      installRNBindingsOnUIRuntime();
-    }
+    installRNBindingsOnUIRuntime();
   }
 }
 
@@ -117,7 +109,7 @@ function initializeRuntime() {
 
 /** A function that should be run only on React Native runtime. */
 function initializeRNRuntime() {
-  if (__DEV__ && !SHOULD_BE_USE_WEB) {
+  if (__DEV__) {
     const testWorklet = () => {
       'worklet';
     };
@@ -198,22 +190,6 @@ function initializeWorkletRuntime() {
 
       modules.set(ReactNativeModuleId, mod);
     }
-  }
-}
-
-/** A function that should be run only on RN Runtime in web implementation. */
-function initializeRuntimeOnWeb() {
-  globalThis._WORKLET = false;
-  globalThis._log = console.log;
-  globalThis._getAnimationTimestamp = () => performance.now();
-  if (IS_JEST) {
-    // requestAnimationFrame react-native jest's setup is incorrect as it polyfills
-    // the method directly using setTimeout, therefore the callback doesn't get the
-    // expected timestamp as the only argument: https://github.com/facebook/react-native/blob/main/packages/react-native/jest/setup.js#L28
-    // We override this setup here to make sure that callbacks get the proper timestamps
-    // when executed. For non-jest environments we define requestAnimationFrame in setupRequestAnimationFrame
-    // @ts-ignore TypeScript uses Node definition for rAF, setTimeout, etc which returns a Timeout object rather than a number
-    globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
   }
 }
 

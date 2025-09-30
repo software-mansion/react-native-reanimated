@@ -1,5 +1,5 @@
 'use strict';
-import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
+
 import { RuntimeKind } from './runtimeKind';
 import {
   createSerializable,
@@ -52,11 +52,7 @@ function callMicrotasksOnUIThread() {
   global.__callMicrotasks();
 }
 
-export const callMicrotasks = SHOULD_BE_USE_WEB
-  ? () => {
-      // on web flushing is a noop as immediates are handled by the browser
-    }
-  : callMicrotasksOnUIThread;
+export const callMicrotasks = callMicrotasksOnUIThread;
 
 /**
  * Lets you schedule a function to be executed on the [UI
@@ -114,31 +110,12 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => void {
   if (
     __DEV__ &&
-    !SHOULD_BE_USE_WEB &&
     !isWorkletFunction(worklet) &&
     !(worklet as unknown as WorkletImport).__bundleData
   ) {
     throw new WorkletsError('`runOnUI` can only be used with worklets.');
   }
   return (...args) => {
-    if (IS_JEST) {
-      // Mocking time in Jest is tricky as both requestAnimationFrame and queueMicrotask
-      // callbacks run on the same queue and can be interleaved. There is no way
-      // to flush particular queue in Jest and the only control over mocked timers
-      // is by using jest.advanceTimersByTime() method which advances all types
-      // of timers including immediate and animation callbacks. Ideally we'd like
-      // to have some way here to schedule work along with React updates, but
-      // that's not possible, and hence in Jest environment instead of using scheduling
-      // mechanism we just schedule the work ommiting the queue. This is ok for the
-      // uses that we currently have but may not be ok for future tests that we write.
-      WorkletsModule.scheduleOnUI(
-        createSerializable(() => {
-          'worklet';
-          worklet(...args);
-        })
-      );
-      return;
-    }
     if (__DEV__) {
       // in DEV mode we call serializable conversion here because in case the object
       // can't be converted, we will get a meaningful stack-trace as opposed to the
@@ -153,7 +130,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
   };
 }
 
-if (__DEV__ && !SHOULD_BE_USE_WEB) {
+if (__DEV__) {
   function runOnUIWorklet(): void {
     'worklet';
     throw new WorkletsError(
@@ -254,10 +231,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => void {
   'worklet';
   type FunDevRemote = Extract<typeof fun, DevRemoteFunction<Args, ReturnValue>>;
-  if (
-    SHOULD_BE_USE_WEB ||
-    globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative
-  ) {
+  if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     // if we are already on the JS thread, we just schedule the worklet on the JS queue
     return (...args) =>
       queueMicrotask(
@@ -354,29 +328,11 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
 export function runOnUIAsync<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue
 ): (...args: Args) => Promise<ReturnValue> {
-  if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
+  if (__DEV__ && !isWorkletFunction(worklet)) {
     throw new WorkletsError('`runOnUIAsync` can only be used with worklets.');
   }
   return (...args: Args) => {
     return new Promise<ReturnValue>((resolve) => {
-      if (IS_JEST) {
-        // Mocking time in Jest is tricky as both requestAnimationFrame and queueMicrotask
-        // callbacks run on the same queue and can be interleaved. There is no way
-        // to flush particular queue in Jest and the only control over mocked timers
-        // is by using jest.advanceTimersByTime() method which advances all types
-        // of timers including immediate and animation callbacks. Ideally we'd like
-        // to have some way here to schedule work along with React updates, but
-        // that's not possible, and hence in Jest environment instead of using scheduling
-        // mechanism we just schedule the work ommiting the queue. This is ok for the
-        // uses that we currently have but may not be ok for future tests that we write.
-        WorkletsModule.scheduleOnUI(
-          createSerializable(() => {
-            'worklet';
-            worklet(...args);
-          })
-        );
-        return;
-      }
       if (__DEV__) {
         // in DEV mode we call serializable conversion here because in case the object
         // can't be converted, we will get a meaningful stack-trace as opposed to the
@@ -392,7 +348,7 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
   };
 }
 
-if (__DEV__ && !SHOULD_BE_USE_WEB) {
+if (__DEV__) {
   function runOnUIAsyncWorklet(): void {
     'worklet';
     throw new WorkletsError(

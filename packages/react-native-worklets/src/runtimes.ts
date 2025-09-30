@@ -2,7 +2,6 @@
 
 import { setupCallGuard } from './callGuard';
 import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
-import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { setupRunLoop } from './runLoop/workletRuntime';
 import { RuntimeKind } from './runtimeKind';
 import {
@@ -110,7 +109,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => void {
   'worklet';
-  if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
+  if (__DEV__ && !isWorkletFunction(worklet)) {
     throw new WorkletsError(
       'The function passed to `runOnRuntime` is not a worklet.'
     );
