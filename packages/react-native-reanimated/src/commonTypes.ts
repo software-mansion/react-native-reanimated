@@ -44,8 +44,14 @@ export interface KeyframeProps extends StyleProps {
 }
 
 type FirstFrame =
-  | { 0: KeyframeProps & { easing?: never }; from?: never }
-  | { 0?: never; from: KeyframeProps & { easing?: never } };
+  | {
+      0: KeyframeProps & { easing?: never };
+      from?: never;
+    }
+  | {
+      0?: never;
+      from: KeyframeProps & { easing?: never };
+    };
 
 type LastFrame =
   | { 100?: KeyframeProps; to?: never }
@@ -352,7 +358,9 @@ export enum InterfaceOrientation {
   ROTATION_270 = 270,
 }
 
-export type ShadowNodeWrapper = { __hostObjectShadowNodeWrapper: never };
+export type ShadowNodeWrapper = {
+  __hostObjectShadowNodeWrapper: never;
+};
 
 export enum KeyboardState {
   UNKNOWN = 0,
