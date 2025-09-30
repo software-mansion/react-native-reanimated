@@ -27,7 +27,7 @@ struct SharedTransitionGroup {
   //  std::string name;
   //  std::optional<ShadowView> current;
   std::unordered_map<Tag, ShadowView> tagToView_;
-  Tag fakeTag = -1;
+  Tag containerTag = -1;
 };
 
 struct Transition {

@@ -152,6 +152,8 @@ struct LayoutAnimationsProxy
   std::vector<react::Point> getAbsolutePositionsForRootPathView(
       const LightNode::Unshared &node) const;
 
+  void transferConfigToContainer(Tag containerTag, Tag beforeTag) const;
+
   void overrideTransform(
       ShadowView &shadowView,
       const Transform &transform,
