@@ -490,7 +490,7 @@ Tag LayoutAnimationsProxy::getOrCreateContainer(
     container.tag = containerTag;
     filteredMutations.push_back(ShadowViewMutation::CreateMutation(container));
     filteredMutations.push_back(ShadowViewMutation::InsertMutation(
-        surfaceId, container, root->children.size()));
+        surfaceId, container, (int)root->children.size()));
     auto node = std::make_shared<LightNode>();
     node->current = std::move(container);
     root->children.push_back(node);
@@ -705,8 +705,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
   layoutAnimations_.erase(tag);
   updateMap.erase(tag);
 
-  if (tag >= 10000) {
-    // TODO fix
+  if (sharedTransitionManager_->tagToName_.contains(tag)) {
     auto sharedTag = sharedTransitionManager_->tagToName_[tag];
     sharedTransitionManager_->groups_.erase(sharedTag);
 
@@ -742,7 +741,7 @@ void LayoutAnimationsProxy::handleRemovals(
         current = layoutAnimations_.at(node->current.tag).currentView;
       }
       filteredMutations.push_back(ShadowViewMutation::InsertMutation(
-          parent->current.tag, current, parent->children.size()));
+          parent->current.tag, current, (int)parent->children.size()));
       parent->children.push_back(node);
       parent->animatedChildrenCount++;
       if (node->state == UNDEFINED) {
@@ -810,7 +809,7 @@ void LayoutAnimationsProxy::endAnimationsRecursively(
   // iterate from the end, so that children
   // with higher indices appear first in the mutations list
 
-  int i = node->children.size() - 1;
+  auto i = (int)node->children.size() - 1;
   for (auto it = node->children.rbegin(); it != node->children.rend(); it++) {
     auto &subNode = *it;
     if (subNode->state != DELETED) {
@@ -884,7 +883,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
 
   // iterate from the end, so that children
   // with higher indices appear first in the mutations list
-  auto index = node->children.size();
+  auto index = (int)node->children.size();
   for (auto it = node->children.rbegin(); it != node->children.rend(); it++) {
     index--;
     auto &subNode = *it;
