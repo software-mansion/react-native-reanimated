@@ -132,7 +132,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
   if (currentFrameRate_.preferred != frameRateRange.preferred) {
 #if !TARGET_OS_OSX
     displayLink_.preferredFrameRateRange = frameRateRange;
-#endif
+#endif // !TARGET_OS_OSX
     currentFrameRate_ = frameRateRange;
   }
 }
