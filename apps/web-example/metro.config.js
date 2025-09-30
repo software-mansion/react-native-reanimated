@@ -30,7 +30,7 @@ const hasReactNative = require.resolve('react-native/package.json', {
 if (!hasReactNative) {
   const modulesToBlock = ['@react-native'];
   // @ts-expect-error
-  config.resolver.blackListRE = exclusionList(
+  config.resolver.blacklistRE = exclusionList(
     modulesToBlock.map(
       (m) =>
         new RegExp(
