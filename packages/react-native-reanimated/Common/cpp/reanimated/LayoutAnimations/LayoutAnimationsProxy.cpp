@@ -537,6 +537,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         lightNodes_[myTag] = node;
         root->children.push_back(node);
         containerTag = myTag;
+        sharedTransitionManager_->groups_[sharedTag].fakeTag = containerTag;
+        myTag += 2;
       }
       layoutAnimationsManager_->getConfigsForType(
           LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[containerTag] =
@@ -548,10 +550,6 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       copy2.tag = containerTag;
       startSharedTransition(containerTag, copy2, copy, surfaceId);
       restoreMap_[containerTag][1] = after.tag;
-      if (shouldCreateContainer) {
-        sharedTransitionManager_->groups_[sharedTag].fakeTag = myTag;
-        myTag += 2;
-      }
     }
   } else if (!mutations.empty()) {
     for (auto &[sharedTag, transition] : transitions_) {
