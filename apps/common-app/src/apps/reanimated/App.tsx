@@ -150,8 +150,7 @@ function Navigator() {
           name={name}
           component={EXAMPLES[name].screen}
           options={{
-            // animation must be disabled for now as idk why but animations does not work on macos?
-            // animation: shouldReduceMotion ? 'fade' : 'default',
+            animation: shouldReduceMotion ? 'fade' : 'default',
             headerTitle: EXAMPLES[name].title,
             title: EXAMPLES[name].title,
           }}
