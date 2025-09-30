@@ -122,14 +122,14 @@ export const processTransformOrigin: ValueProcessor<TransformOrigin> = (
   value
 ) => {
   const isArray = Array.isArray(value);
-  const components = typeof value === 'string' ? value.split(/\s+/) : value;
+  let components = typeof value === 'string' ? value.split(/\s+/) : value;
   const customParse = isArray ? () => null : parsePx;
 
   if (components.length < 1 || components.length > 3) {
     throw new ReanimatedError(ERROR_MESSAGES.invalidTransformOrigin(value));
   }
 
-  maybeSwapComponents(components);
+  components = maybeSwapComponents(components);
 
   return [
     parseValue(
