@@ -8,7 +8,7 @@ import {
 } from '../../../../common';
 
 export const ERROR_MESSAGES = {
-  invalidColor: (color: Maybe<ColorValue | number>) =>
+  invalidColor: (color: Readonly<ColorValue | number>) =>
     `Invalid color value: ${String(color)}`,
 };
 

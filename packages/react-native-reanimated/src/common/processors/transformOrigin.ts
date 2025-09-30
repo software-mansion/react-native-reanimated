@@ -51,12 +51,12 @@ function getAllowedValues(axis: Axis, isArray: boolean): string {
 }
 
 export const ERROR_MESSAGES = {
-  invalidTransformOrigin: (value: TransformOrigin) =>
+  invalidTransformOrigin: (value: Readonly<TransformOrigin>) =>
     `Invalid transformOrigin: ${JSON.stringify(value)}. Expected 1-3 values.`,
   invalidValue: (
     value: string | number,
     axis: Axis,
-    origin: TransformOrigin,
+    origin: Readonly<TransformOrigin>,
     isArray: boolean
   ) =>
     `Invalid value "${value}" for the ${axis}-axis in transformOrigin ${JSON.stringify(
@@ -64,13 +64,17 @@ export const ERROR_MESSAGES = {
     )}. Allowed values: ${getAllowedValues(axis, isArray)}.`,
 };
 
-function maybeSwapComponents(components: (string | number)[]) {
+function maybeSwapComponents(components: ReadonlyArray<string | number>) {
   if (
     components[0] in VERTICAL_CONVERSIONS &&
     (components[1] === undefined || components[1] in HORIZONTAL_CONVERSIONS)
   ) {
-    [components[0], components[1]] = [components[1], components[0]];
+    const copy = [...components];
+    [copy[0], copy[1]] = [copy[1], copy[0]];
+    return copy;
   }
+
+  return components;
 }
 
 function parseValue(
@@ -118,7 +122,7 @@ export const processTransformOrigin: ValueProcessor<TransformOrigin> = (
   value
 ) => {
   const isArray = Array.isArray(value);
-  const components = isArray ? value : value.split(/\s+/);
+  const components = typeof value === 'string' ? value.split(/\s+/) : value;
   const customParse = isArray ? () => null : parsePx;
 
   if (components.length < 1 || components.length > 3) {
