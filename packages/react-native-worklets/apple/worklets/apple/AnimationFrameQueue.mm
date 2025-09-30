@@ -5,8 +5,8 @@
 #import <worklets/apple/SlowAnimations.h>
 #import <chrono>
 
-#import <React/RCTAssert.h>
 #import <QuartzCore/CADisplayLink.h>
+#import <React/RCTAssert.h>
 
 constexpr auto TIME_SAMPLES_AMOUNT = 4;
 
@@ -36,14 +36,14 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
   AssertJavaScriptQueue();
   if constexpr (worklets::StaticFeatureFlags::getFlag("IOS_DYNAMIC_FRAMERATE_ENABLED")) {
     bool supportsProMotion = false;
-    #if TARGET_OS_OSX
+#if TARGET_OS_OSX
     NSScreen *screen = [NSScreen mainScreen];
     if (screen) {
-        supportsProMotion = (screen.maximumFramesPerSecond > 60);
+      supportsProMotion = (screen.maximumFramesPerSecond > 60);
     }
-    #else
+#else
     supportsProMotion = [UIScreen mainScreen].maximumFramesPerSecond > 60;
-    #endif // TARGET_OS_OSX
+#endif // TARGET_OS_OSX
 
     SEL frameCallback = supportsProMotion ? @selector(executeQueueForProMotion:) : @selector(executeQueue:);
     currentFrameRate_ = supportsProMotion ? FrameRateRange::BEST : FrameRateRange::STANDARD;
@@ -130,9 +130,9 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
     frameRateRange = FrameRateRange::POOR;
   }
   if (currentFrameRate_.preferred != frameRateRange.preferred) {
-  #if !TARGET_OS_OSX
+#if !TARGET_OS_OSX
     displayLink_.preferredFrameRateRange = frameRateRange;
-  #endif
+#endif
     currentFrameRate_ = frameRateRange;
   }
 }
