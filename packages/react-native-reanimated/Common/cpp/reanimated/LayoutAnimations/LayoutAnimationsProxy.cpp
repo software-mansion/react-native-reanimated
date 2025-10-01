@@ -686,8 +686,7 @@ void LayoutAnimationsProxy::createLayoutAnimation(
   auto parentView = std::make_shared<ShadowView>(mutation.parentShadowView);
   layoutAnimations_.insert_or_assign(
       tag,
-      LayoutAnimation{
-          finalView, currentView, parentView, {}, false, count});
+      LayoutAnimation{finalView, currentView, parentView, {}, false, count});
 #endif // REACT_NATIVE_MINOR_VERSION >= 78
 }
 
