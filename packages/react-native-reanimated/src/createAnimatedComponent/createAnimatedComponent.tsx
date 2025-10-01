@@ -30,6 +30,7 @@ import { ReanimatedError } from '../errors';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import type { AnimateProps } from '../helperTypes';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
+import type { BaseAnimationBuilder } from '../layoutReanimation';
 import { SharedTransition } from '../layoutReanimation';
 import {
   configureWebLayoutAnimations,
@@ -203,11 +204,15 @@ export function createAnimatedComponent(
           saveSnapshot(this._componentDOMRef);
         }
 
-        if (
-          !this.props.entering ||
-          getReducedMotionFromConfig(this.props.entering as CustomConfig)
-        ) {
+        if (!this.props.entering) {
           this._isFirstRender = false;
+          return;
+        }
+
+        if (getReducedMotionFromConfig(this.props.entering as CustomConfig)) {
+          this._isFirstRender = false;
+
+          (this.props.entering as BaseAnimationBuilder).callbackV?.(true);
           return;
         }
 
@@ -252,12 +257,11 @@ export function createAnimatedComponent(
 
       const exiting = this.props.exiting;
 
-      if (
-        IS_WEB &&
-        this._componentDOMRef &&
-        exiting &&
-        !getReducedMotionFromConfig(exiting as CustomConfig)
-      ) {
+      if (IS_WEB && this._componentDOMRef && exiting) {
+        if (getReducedMotionFromConfig(exiting as CustomConfig)) {
+          (exiting as BaseAnimationBuilder).callbackV?.(true);
+          return;
+        }
         addHTMLMutationObserver();
 
         startWebLayoutAnimation(
@@ -480,12 +484,12 @@ export function createAnimatedComponent(
         saveSnapshot(this._componentDOMRef);
       }
 
-      if (
-        IS_WEB &&
-        snapshot &&
-        this.props.layout &&
-        !getReducedMotionFromConfig(this.props.layout as CustomConfig)
-      ) {
+      if (IS_WEB && snapshot && this.props.layout) {
+        if (getReducedMotionFromConfig(this.props.layout as CustomConfig)) {
+          (this.props.layout as BaseAnimationBuilder).callbackV?.(true);
+
+          return;
+        }
         tryActivateLayoutTransition(
           this.props,
           this._componentDOMRef as ReanimatedHTMLElement,
