@@ -1,6 +1,5 @@
 'use strict';
 
-import { IS_JEST } from './PlatformChecker';
 import { mockedRequestAnimationFrame } from './runLoop/uiRuntime/mockedRequestAnimationFrame';
 import { WorkletsError } from './WorkletsError';
 
@@ -19,22 +18,6 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue
 ): (...args: Args) => void {
   return (...args) => {
-    if (IS_JEST) {
-      // Mocking time in Jest is tricky as both requestAnimationFrame and queueMicrotask
-      // callbacks run on the same queue and can be interleaved. There is no way
-      // to flush particular queue in Jest and the only control over mocked timers
-      // is by using jest.advanceTimersByTime() method which advances all types
-      // of timers including immediate and animation callbacks. Ideally we'd like
-      // to have some way here to schedule work along with React updates, but
-      // that's not possible, and hence in Jest environment instead of using scheduling
-      // mechanism we just schedule the work ommiting the queue. This is ok for the
-      // uses that we currently have but may not be ok for future tests that we write.
-      requestAnimationFrameImpl(() => {
-        worklet(...args);
-      });
-      return;
-    }
-
     enqueueUI(worklet, args);
   };
 }
@@ -70,22 +53,6 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => Promise<ReturnValue> {
   return (...args: Args) => {
     return new Promise<ReturnValue>((resolve) => {
-      if (IS_JEST) {
-        // Mocking time in Jest is tricky as both requestAnimationFrame and queueMicrotask
-        // callbacks run on the same queue and can be interleaved. There is no way
-        // to flush particular queue in Jest and the only control over mocked timers
-        // is by using jest.advanceTimersByTime() method which advances all types
-        // of timers including immediate and animation callbacks. Ideally we'd like
-        // to have some way here to schedule work along with React updates, but
-        // that's not possible, and hence in Jest environment instead of using scheduling
-        // mechanism we just schedule the work ommiting the queue. This is ok for the
-        // uses that we currently have but may not be ok for future tests that we write.
-        requestAnimationFrameImpl(() => {
-          worklet(...args);
-        });
-        return;
-      }
-
       enqueueUI(worklet, args, resolve);
     });
   };
@@ -131,7 +98,6 @@ export function unstable_eventLoopTask(): never {
   throw new WorkletsError('`unstable_eventLoopTask` is not supported on web.');
 }
 
-const requestAnimationFrameImpl =
-  IS_JEST || !globalThis.requestAnimationFrame
-    ? mockedRequestAnimationFrame
-    : globalThis.requestAnimationFrame;
+const requestAnimationFrameImpl = !globalThis.requestAnimationFrame
+  ? mockedRequestAnimationFrame
+  : globalThis.requestAnimationFrame;
