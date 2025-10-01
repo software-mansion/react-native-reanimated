@@ -12,7 +12,7 @@ check_and_lint_docs() {
   print "Checking for changes in $docs_name docs..."
   if echo "$staged_files" | grep "^$docs_path/" --silent; then
     print "Changes spotted. Running $docs_name docs lint..."
-    try cd "$docs_path" && yarn install --frozen-lockfile && yarn lint
+    try yarn workspace "$docs_name" lint
     print "Success."
   else
     print "No changes. Skipping $docs_name docs lint."
@@ -60,15 +60,11 @@ else
 fi
 
 # Linting docs
-REANIMATED_DOCS_PATH="packages/docs-reanimated"
-if [ -d "$REANIMATED_DOCS_PATH/node_modules" ]; then
-  check_and_lint_docs "$STAGED_FILES" "$REANIMATED_DOCS_PATH" "Reanimated"
-fi
-
-WORKLETS_DOCS_PATH="packages/docs-worklets"
-if [ -d "$WORKLETS_DOCS_PATH/node_modules" ]; then
-  check_and_lint_docs "$STAGED_FILES" "$WORKLETS_DOCS_PATH" "Worklets"
-fi
+for DOCS in docs-reanimated docs-worklets; do
+  DOCS_PATH="packages/$DOCS"
+  DOCS_NAME=$(basename "$DOCS")
+  check_and_lint_docs "$STAGED_FILES" "$DOCS_PATH" "$DOCS_NAME"
+done
 
 # This automatically builds Reanimated Babel plugin JavaScript files if their
 # TypeScript counterparts were changed. It also adds the output file to the commit
