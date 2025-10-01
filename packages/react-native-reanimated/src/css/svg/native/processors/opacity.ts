@@ -1,7 +1,7 @@
 'use strict';
 import type { NumberProp } from 'react-native-svg';
 
-import type { ValueProcessor } from '../../../native';
+import type { ValueProcessor } from '../../../../common';
 
 export const processOpacity: ValueProcessor<NumberProp, number> = (opacity) => {
   const value =
