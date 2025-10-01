@@ -22,7 +22,7 @@ import type { SharedTransition } from './layoutReanimation/sharedTransitions';
 
 // RegisteredStyle was removed from React Native, provide a fallback type
 // This is only used in a deprecated type definition
-type RegisteredStyle<T> = number & {__registeredStyleBrand: T};
+type RegisteredStyle<T> = number & { __registeredStyleBrand: T };
 
 export type EntryOrExitLayoutType =
   | BaseAnimationBuilder
