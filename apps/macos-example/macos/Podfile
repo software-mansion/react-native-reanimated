@@ -8,7 +8,7 @@ require_relative '../../../packages/react-native-reanimated/scripts/clangd-add-x
 prepare_react_native_project!
 
 target 'MacOSExample-macOS' do
-  platform :macos, '13.0'
+  platform :macos, '14.0'
   use_native_modules!
 
   use_react_native!(
