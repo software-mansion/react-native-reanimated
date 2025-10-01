@@ -211,7 +211,7 @@ export function createAnimatedComponent(
 
         if (getReducedMotionFromConfig(this.props.entering as CustomConfig)) {
           this._isFirstRender = false;
-  
+
           (this.props.entering as BaseAnimationBuilder).callbackV?.(true);
           return;
         }
@@ -487,7 +487,7 @@ export function createAnimatedComponent(
       if (IS_WEB && snapshot && this.props.layout) {
         if (getReducedMotionFromConfig(this.props.layout as CustomConfig)) {
           (this.props.layout as BaseAnimationBuilder).callbackV?.(true);
-  
+
           return;
         }
         tryActivateLayoutTransition(
