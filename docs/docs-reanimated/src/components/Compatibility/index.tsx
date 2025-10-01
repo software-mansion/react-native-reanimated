@@ -1,6 +1,6 @@
 import React from 'react';
 
-import compatibilityData from '../../../../react-native-reanimated/compatibility.json';
+import compatibilityData from '../../../../../packages/react-native-worklets/compatibility.json';
 import styles from './styles.module.css';
 
 export function Yes() {
