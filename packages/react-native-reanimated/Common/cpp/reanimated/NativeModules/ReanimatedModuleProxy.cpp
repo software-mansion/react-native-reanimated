@@ -74,11 +74,11 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       layoutAnimationsManager_(
           std::make_shared<LayoutAnimationsManager>(jsLogger_)),
 #ifdef RCT_NEW_ARCH_ENABLED
-      propsRegistry_(std::make_shared<PropsRegistry>()),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(
           platformDepMethodsHolder.filterUnmountedTagsFunction),
 #endif // ANDROID
+      propsRegistry_(std::make_shared<PropsRegistry>()),
 #else
       obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
       configurePropsPlatformFunction_(

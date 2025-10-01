@@ -680,11 +680,14 @@ void LayoutAnimationsProxy::createLayoutAnimation(
 #if REACT_NATIVE_MINOR_VERSION >= 78
   layoutAnimations_.insert_or_assign(
       tag,
-      LayoutAnimation{finalView, currentView, mutation.parentTag, {}, false, count});
+      LayoutAnimation{
+          finalView, currentView, mutation.parentTag, {}, false, count});
 #else
   auto parentView = std::make_shared<ShadowView>(mutation.parentShadowView);
   layoutAnimations_.insert_or_assign(
-      tag, LayoutAnimation{finalView, currentView, parentView, {}, false, count});
+      tag,
+      LayoutAnimation{
+          finalView, currentView, parentView, {}, false, count});
 #endif // REACT_NATIVE_MINOR_VERSION >= 78
 }
 
