@@ -9,7 +9,7 @@ check_and_lint_docs() {
   local docs_path="$2"
   local docs_name="$3"
 
-  print "Checking for changes in $docs_name docs..."
+  print "Checking for changes in $docs_name..."
   if echo "$staged_files" | grep "^$docs_path/" --silent; then
     print "Changes spotted. Running $docs_name docs lint..."
     try yarn workspace "$docs_name" lint
@@ -62,8 +62,7 @@ fi
 # Linting docs
 for DOCS in docs-reanimated docs-worklets; do
   DOCS_PATH="packages/$DOCS"
-  DOCS_NAME=$(basename "$DOCS")
-  check_and_lint_docs "$STAGED_FILES" "$DOCS_PATH" "$DOCS_NAME"
+  check_and_lint_docs "$STAGED_FILES" "$DOCS_PATH" "$DOCS"
 done
 
 # This automatically builds Reanimated Babel plugin JavaScript files if their
