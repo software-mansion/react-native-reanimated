@@ -26,6 +26,10 @@ import type { Descriptor } from '../hook/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
 
+/**
+ * Usually the `ShareableViewDescriptors` type would be passed, but objects that
+ * have just a `toArray` method are fine too.
+ */
 type ViewDescriptors = {
   toArray: () => Descriptor[];
 };

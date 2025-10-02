@@ -26,20 +26,11 @@ export interface ViewDescriptorsMap {
    * @param viewTag - The tag of the view descriptor to remove
    */
   remove: (viewTag: ViewTag) => void;
-
-  /**
-   * Checks if a view descriptor exists in the set
-   *
-   * @param viewTag - The tag to check for
-   * @returns True if the descriptor exists, false otherwise
-   */
-  has: (viewTag: ViewTag) => boolean;
 }
 
 export function makeViewDescriptorsMap(): ViewDescriptorsMap {
   const sharedDescriptors = makeMutable<Map<ViewTag, Descriptor>>(new Map());
   const cachedArray = makeMutable<Descriptor[] | null>(null);
-  const viewTags = new Set<ViewTag>();
 
   return {
     shareableViewDescriptors: {
@@ -54,7 +45,6 @@ export function makeViewDescriptorsMap(): ViewDescriptorsMap {
     },
 
     add: (item: Descriptor, updaterContainer?: StyleUpdaterContainer) => {
-      viewTags.add(item.tag);
       const updater = updaterContainer?.current;
       sharedDescriptors.modify((descriptors) => {
         'worklet';
@@ -66,7 +56,6 @@ export function makeViewDescriptorsMap(): ViewDescriptorsMap {
     },
 
     remove: (viewTag: ViewTag) => {
-      viewTags.delete(viewTag);
       sharedDescriptors.modify((descriptors) => {
         'worklet';
         descriptors.delete(viewTag);
@@ -74,7 +63,5 @@ export function makeViewDescriptorsMap(): ViewDescriptorsMap {
         return descriptors;
       }, false);
     },
-
-    has: (viewTag: ViewTag) => viewTags.has(viewTag),
   };
 }
