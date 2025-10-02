@@ -72,6 +72,10 @@ public class NativeProxy extends NativeProxyCommon {
 
   public native void performOperations();
 
+  public native boolean preserveMountedTags(int[] tags);
+
+  public native void synchronouslyUpdateUIProps(int[] intBuffer, double[] doubleBuffer);
+
   @Override
   protected HybridData getHybridData() {
     return mHybridData;
