@@ -4,6 +4,7 @@ import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
@@ -31,6 +32,7 @@ public class NativeProxy extends NativeProxyCommon {
    * cost us much to add synchronization for extra safety.
    */
   private final AtomicBoolean mInvalidated = new AtomicBoolean(false);
+  private final FabricUIManager mFabricUIManager;
 
   public @OptIn(markerClass = FrameworkAPI.class) NativeProxy(
       ReactApplicationContext context, WorkletsModule workletsModule) {
@@ -39,6 +41,7 @@ public class NativeProxy extends NativeProxyCommon {
 
     FabricUIManager fabricUIManager =
         (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
+    mFabricUIManager = fabricUIManager;
 
     LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
 
@@ -72,7 +75,20 @@ public class NativeProxy extends NativeProxyCommon {
 
   public native void performOperations();
 
-  public native boolean preserveMountedTags(int[] tags);
+  @DoNotStrip
+  public boolean preserveMountedTags(int[] tags) {
+    if (!UiThreadUtil.isOnUiThread()) {
+      return false;
+    }
+
+    for (int i = 0; i < tags.length; i++) {
+      if (mFabricUIManager.resolveView(tags[i]) == null) {
+        tags[i] = -1;
+      }
+    }
+
+    return true;
+  }
 
   public native void synchronouslyUpdateUIProps(int[] intBuffer, double[] doubleBuffer);
 
