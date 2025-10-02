@@ -240,18 +240,6 @@ std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(
   return region;
 }
 
-void NativeProxy::synchronouslyUpdateUIProps(
-    const std::vector<int> &intBuffer,
-    const std::vector<double> &doubleBuffer) {
-  static const auto method = getJniMethod<void(
-      jni::alias_ref<jni::JArrayInt>, jni::alias_ref<jni::JArrayDouble>)>(
-      "synchronouslyUpdateUIProps");
-  auto jArrayInt = jni::JArrayInt::newArray(intBuffer.size());
-  auto jArrayDouble = jni::JArrayDouble::newArray(doubleBuffer.size());
-  jArrayInt->setRegion(0, intBuffer.size(), intBuffer.data());
-  jArrayDouble->setRegion(0, doubleBuffer.size(), doubleBuffer.data());
-  method(javaPart_.get(), jArrayInt, jArrayDouble);
-}
 #else
 jsi::Value NativeProxy::obtainProp(
     jsi::Runtime &rt,
@@ -467,8 +455,6 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 #ifdef RCT_NEW_ARCH_ENABLED
   auto preserveMountedTags = bindThis(&NativeProxy::preserveMountedTags);
 
-  auto synchronouslyUpdateUIPropsFunction =
-      bindThis(&NativeProxy::synchronouslyUpdateUIProps);
 #else
   auto configurePropsFunction = bindThis(&NativeProxy::configureProps);
 #endif
@@ -503,7 +489,6 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
       preserveMountedTags,
-      synchronouslyUpdateUIPropsFunction,
 #else
       updatePropsFunction,
       scrollToFunction,

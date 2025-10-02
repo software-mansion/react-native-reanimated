@@ -90,8 +90,6 @@ public class NativeProxy extends NativeProxyCommon {
     return true;
   }
 
-  public native void synchronouslyUpdateUIProps(int[] intBuffer, double[] doubleBuffer);
-
   @Override
   protected HybridData getHybridData() {
     return mHybridData;

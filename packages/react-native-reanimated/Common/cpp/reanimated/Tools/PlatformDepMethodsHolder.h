@@ -56,8 +56,6 @@ using ObtainPropFunction =
 using RequestRenderFunction =
     std::function<void(std::function<void(const double)>)>;
 #ifdef ANDROID
-using SynchronouslyUpdateUIPropsFunction =
-    std::function<void(const std::vector<int> &, const std::vector<double> &)>;
 using PreserveMountedTagsFunction =
     std::function<std::optional<std::unique_ptr<int[]>>(std::vector<int> &)>;
 #endif // ANDROID
@@ -85,7 +83,6 @@ struct PlatformDepMethodsHolder {
 #ifdef RCT_NEW_ARCH_ENABLED
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
-  SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
 #endif // ANDROID
 #else
   UpdatePropsFunction updatePropsFunction;
