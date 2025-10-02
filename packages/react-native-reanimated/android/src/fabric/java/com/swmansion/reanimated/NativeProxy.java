@@ -32,6 +32,7 @@ public class NativeProxy extends NativeProxyCommon {
    * cost us much to add synchronization for extra safety.
    */
   private final AtomicBoolean mInvalidated = new AtomicBoolean(false);
+
   private final FabricUIManager mFabricUIManager;
 
   public @OptIn(markerClass = FrameworkAPI.class) NativeProxy(
