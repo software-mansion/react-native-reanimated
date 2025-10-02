@@ -26,8 +26,12 @@ import type { Descriptor } from '../hook/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
 
+type ViewDescriptors = {
+  toArray: () => Descriptor[];
+};
+
 let updateProps: (
-  viewDescriptors: ViewDescriptorsWrapper,
+  viewDescriptors: ViewDescriptors,
   updates: PropUpdates,
   isAnimatedProps?: boolean
 ) => void;
@@ -35,13 +39,13 @@ let updateProps: (
 if (SHOULD_BE_USE_WEB) {
   updateProps = (viewDescriptors, updates, isAnimatedProps) => {
     'worklet';
-    viewDescriptors.value?.forEach((viewDescriptor) => {
+    for (const viewDescriptor of viewDescriptors.toArray()) {
       const component = viewDescriptor.tag as ReanimatedHTMLElement;
       if ('boxShadow' in updates) {
         updates.boxShadow = processBoxShadowWeb(updates.boxShadow);
       }
       _updatePropsJS(updates, component, isAnimatedProps);
-    });
+    }
   };
 } else {
   updateProps = (viewDescriptors, updates) => {
@@ -62,7 +66,7 @@ if (SHOULD_BE_USE_WEB) {
 }
 
 export const updatePropsJestWrapper = (
-  viewDescriptors: ViewDescriptorsWrapper,
+  viewDescriptors: ViewDescriptors,
   updates: AnimatedStyle<any>,
   animatedValues: RefObject<AnimatedStyle<any>>,
   adapters: ((updates: AnimatedStyle<any>) => void)[]
@@ -112,8 +116,8 @@ function createUpdatePropsManager() {
     }, {});
 
   return {
-    update(viewDescriptors: ViewDescriptorsWrapper, updates: PropUpdates) {
-      viewDescriptors.value.forEach(({ tag, shadowNodeWrapper }) => {
+    update(viewDescriptors: ViewDescriptors, updates: PropUpdates) {
+      for (const { tag, shadowNodeWrapper } of viewDescriptors.toArray()) {
         const viewTag = tag as number;
         const { nativePropUpdates, jsPropUpdates } = processViewUpdates(
           viewTag,
@@ -137,7 +141,7 @@ function createUpdatePropsManager() {
           queueMicrotask(this.flush);
           flushPending = true;
         }
-      });
+      }
     },
     flush(this: void) {
       if (nativeOperations.length) {
@@ -178,12 +182,4 @@ if (SHOULD_BE_USE_WEB) {
     'worklet';
     global.UpdatePropsManager = createUpdatePropsManager();
   })();
-}
-
-/**
- * This used to be `SharedValue<Descriptors[]>` but objects holding just a
- * single `value` prop are fine too.
- */
-interface ViewDescriptorsWrapper {
-  value: Readonly<Descriptor[]>;
 }

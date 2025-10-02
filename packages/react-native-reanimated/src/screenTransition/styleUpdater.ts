@@ -21,8 +21,11 @@ function applyStyleForTopScreen(
     screenTransitionConfig;
   const { topScreenStyle: computeTopScreenStyle } = screenTransition;
   const topScreenStyle = computeTopScreenStyle(event, screenDimensions);
+  const viewDescriptorsArray = [
+    createViewDescriptor(topScreenId) as Descriptor,
+  ];
   const topScreenDescriptor = {
-    value: [createViewDescriptor(topScreenId)] as Descriptor[],
+    toArray: () => viewDescriptorsArray,
   };
   updateProps(topScreenDescriptor, topScreenStyle, undefined);
 }
@@ -39,8 +42,11 @@ export function applyStyleForBelowTopScreen(
     event,
     screenDimensions
   );
+  const viewDescriptorsArray = [
+    createViewDescriptor(belowTopScreenId) as Descriptor,
+  ];
   const belowTopScreenDescriptor = {
-    value: [createViewDescriptor(belowTopScreenId)] as Descriptor[],
+    toArray: () => viewDescriptorsArray,
   };
   updateProps(belowTopScreenDescriptor, belowTopScreenStyle, undefined);
 }

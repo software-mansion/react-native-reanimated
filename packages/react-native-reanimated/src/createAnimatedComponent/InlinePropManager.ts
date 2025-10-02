@@ -3,8 +3,8 @@ import type { StyleProps } from '../commonTypes';
 import { isSharedValue } from '../isSharedValue';
 import { startMapper, stopMapper } from '../mappers';
 import { updateProps } from '../updateProps';
-import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
-import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
+import type { ViewDescriptorsMap } from '../ViewDescriptorsMap';
+import { makeViewDescriptorsMap } from '../ViewDescriptorsMap';
 import type {
   AnimatedComponentProps,
   AnimatedComponentTypeInternal,
@@ -124,7 +124,7 @@ export function getInlineStyle(
 }
 
 export class InlinePropManager implements IInlinePropManager {
-  _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
+  _inlinePropsViewDescriptors: ViewDescriptorsMap | null = null;
   _inlinePropsMapperId: number | null = null;
   _inlineProps: StyleProps = {};
 
@@ -138,7 +138,7 @@ export class InlinePropManager implements IInlinePropManager {
 
     if (hasChanged) {
       if (!this._inlinePropsViewDescriptors) {
-        this._inlinePropsViewDescriptors = makeViewDescriptorsSet();
+        this._inlinePropsViewDescriptors = makeViewDescriptorsMap();
 
         const { viewTag, shadowNodeWrapper } = viewInfo;
 
