@@ -2,8 +2,9 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "react-native-worklets": ["./src"]
-    }
+      "react-native-worklets": ["./src"],
+    },
+    "moduleSuffixes": [".native", ".ios", ".android", ""]
   },
   "include": ["src"]
 }

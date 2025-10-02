@@ -140,13 +140,29 @@ const config = tsEslint.config(
     },
     settings: {
       'import/resolver': {
-        'babel-module': { extensions: ['.js', '.jsx', '.ts', '.tsx'] },
+        'babel-module': {
+          extensions: [
+            '.native.js',
+            '.js',
+            '.native.tsx',
+            '.jsx',
+            '.native.ts',
+            '.ts',
+            '.native.tsx',
+            '.tsx',
+          ],
+        },
       },
       react: {
         version: 'detect',
       },
       'import/parsers': {
-        '@typescript-eslint/parser': ['.ts', '.tsx'],
+        '@typescript-eslint/parser': [
+          '.native.ts',
+          '.ts',
+          '.native.ts',
+          '.tsx',
+        ],
       },
       'import/ignore': ['react-native'],
     },

@@ -1,32 +1,7 @@
 'use strict';
 
-import { createSerializable } from './serializable';
-import { WorkletsModule } from './WorkletsModule';
-import type { SerializableRef } from './workletTypes';
+import { WorkletsError } from './WorkletsError';
 
-export function createSynchronizable<TValue>(
-  initialValue: TValue
-): Synchronizable<TValue> {
-  const synchronizableRef = WorkletsModule.createSynchronizable(
-    createSerializable(initialValue)
-  );
-
-  return globalThis.__synchronizableUnpacker(
-    synchronizableRef
-  ) as unknown as Synchronizable<TValue>;
+export function createSynchronizable(): never {
+  throw new WorkletsError('`createSynchronizable` is not supported on web.');
 }
-
-export type SynchronizableRef<TValue = unknown> = {
-  __synchronizableRef: true;
-  __nativeStateSynchronizableJSRef: TValue;
-};
-
-export type Synchronizable<TValue = unknown> = SerializableRef<TValue> &
-  SynchronizableRef<TValue> & {
-    __synchronizableRef: true;
-    getDirty(): TValue;
-    getBlocking(): TValue;
-    setBlocking(value: TValue | ((prev: TValue) => TValue)): void;
-    lock(): void;
-    unlock(): void;
-  };

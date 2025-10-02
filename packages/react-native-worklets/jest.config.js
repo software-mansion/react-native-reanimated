@@ -4,14 +4,5 @@ module.exports = {
   modulePathIgnorePatterns: ['lib'],
   testEnvironment: 'node',
   transformIgnorePatterns: [],
-  moduleFileExtensions: [
-    'web.ts',
-    'web.tsx',
-    'web.js',
-    'ts',
-    'tsx',
-    'js',
-    'jsx',
-    'json',
-  ],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
 };
