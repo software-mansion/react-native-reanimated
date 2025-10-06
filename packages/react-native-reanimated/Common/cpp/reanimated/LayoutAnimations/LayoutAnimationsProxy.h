@@ -54,8 +54,8 @@ struct LayoutAnimationsProxy
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
   jsi::Runtime &uiRuntime_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
-  PreserveMountedTagsFunction preserveMountedTags_;
 #ifdef ANDROID
+  PreserveMountedTagsFunction preserveMountedTags_;
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<CallInvoker> jsInvoker_;
 #endif
