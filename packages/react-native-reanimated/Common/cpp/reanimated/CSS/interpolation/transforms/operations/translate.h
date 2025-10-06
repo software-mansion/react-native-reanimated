@@ -3,6 +3,7 @@
 #include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
+#include <memory>
 #include <string>
 
 namespace reanimated::css {
