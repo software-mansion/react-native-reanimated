@@ -38,8 +38,21 @@ function dispatchCommandNative(
     return;
   }
 
-  const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
-  global._dispatchCommand!(shadowNodeWrapper, commandName, args);
+  const shadowNodeWrapper = animatedRef();
+
+  // This prevents crashes if ref has not been set yet
+  if (!shadowNodeWrapper) {
+    logger.warn(
+      `Tried to dispatch command "${commandName}" with an uninitialized ref. Make sure to pass the animated ref to the component before using it.`
+    );
+    return;
+  }
+
+  global._dispatchCommand!(
+    shadowNodeWrapper as ShadowNodeWrapper,
+    commandName,
+    args
+  );
 }
 
 function dispatchCommandJest() {
