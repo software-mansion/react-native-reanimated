@@ -300,11 +300,6 @@ export function createAnimatedComponent(
       const viewTag = this.getComponentViewTag();
       if (viewTag !== -1 && this._styles !== null) {
         for (const style of this._styles) {
-          console.log(
-            'remove detachStyles',
-            viewTag,
-            style.viewDescriptors.has(viewTag)
-          );
           style.viewDescriptors.remove(viewTag);
         }
         if (this.props.animatedProps?.viewDescriptors) {
