@@ -18,11 +18,13 @@ import { WorkletsError } from './WorkletsError';
  * `_WORKLETS_BUNDLE_MODE` flag.
  */
 export function bundleModeInit() {
-  if (SHOULD_BE_USE_WEB) {
+  // Worklets Babel Plugin replaces `false` with `true` here
+  // when Bundle Mode is enabled.
+  globalThis._WORKLETS_BUNDLE_MODE = false;
+
+  if (SHOULD_BE_USE_WEB || !globalThis._WORKLETS_BUNDLE_MODE) {
     return;
   }
-
-  globalThis._WORKLETS_BUNDLE_MODE = true;
 
   const runtimeKind = globalThis.__RUNTIME_KIND;
   if (runtimeKind && runtimeKind !== RuntimeKind.ReactNative) {
