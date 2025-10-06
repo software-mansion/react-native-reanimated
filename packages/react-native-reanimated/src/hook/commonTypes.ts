@@ -24,12 +24,14 @@ import type {
   AnimatedProps,
 } from '../createAnimatedComponent';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
-import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
+import type { ViewDescriptorsMap } from '../ViewDescriptorsMap';
 
 export type DependencyList = Array<unknown> | undefined;
 
+export type ViewTag = number | ReanimatedHTMLElement;
+
 export interface Descriptor {
-  tag: number | ReanimatedHTMLElement;
+  tag: ViewTag;
   shadowNodeWrapper: ShadowNodeWrapper;
 }
 
@@ -111,7 +113,7 @@ export interface IWorkletEventHandler<Event extends object> {
 export interface AnimatedStyleHandle<
   Style extends DefaultStyle | AnimatedProps = DefaultStyle,
 > {
-  viewDescriptors: ViewDescriptorsSet;
+  viewDescriptors: ViewDescriptorsMap;
   initial: {
     value: AnimatedStyle<Style>;
     updater: () => AnimatedStyle<Style>;

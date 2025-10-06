@@ -12,10 +12,10 @@ import type {
 } from '../commonTypes';
 import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import type { BaseAnimationBuilder } from '../layoutReanimation';
-import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
+import type { ViewDescriptorsMap } from '../ViewDescriptorsMap';
 
 export interface AnimatedProps extends Record<string, unknown> {
-  viewDescriptors?: ViewDescriptorsSet;
+  viewDescriptors?: ViewDescriptorsMap;
   initial?: SharedValue<StyleProps>;
   styleUpdaterContainer?: StyleUpdaterContainer;
 }

@@ -20,13 +20,15 @@ import type {
 import { startMapper, stopMapper } from '../core';
 import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
 import { updateProps, updatePropsJestWrapper } from '../updateProps';
-import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
-import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
+import type {
+  ShareableViewDescriptors,
+  ViewDescriptorsMap,
+} from '../ViewDescriptorsMap';
+import { makeViewDescriptorsMap } from '../ViewDescriptorsMap';
 import type {
   AnimatedStyleHandle,
   DefaultStyle,
   DependencyList,
-  Descriptor,
   JestAnimatedStyleHandle,
 } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
@@ -50,7 +52,7 @@ interface AnimatedUpdaterData {
     updater: () => AnimatedStyle<any>;
   };
   remoteState: AnimatedState;
-  viewDescriptors: ViewDescriptorsSet;
+  viewDescriptors: ViewDescriptorsMap;
   styleUpdaterContainer: StyleUpdaterContainer;
 }
 
@@ -195,7 +197,7 @@ function runAnimations(
 }
 
 function styleUpdater(
-  viewDescriptors: SharedValue<Descriptor[]>,
+  viewDescriptors: ShareableViewDescriptors,
   updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
   animationsActive: SharedValue<boolean>,
@@ -303,7 +305,7 @@ function styleUpdater(
 }
 
 function jestStyleUpdater(
-  viewDescriptors: SharedValue<Descriptor[]>,
+  viewDescriptors: ShareableViewDescriptors,
   updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
   animationsActive: SharedValue<boolean>,
@@ -520,7 +522,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
         isAnimationCancelled: false,
         isAnimationRunning: false,
       }),
-      viewDescriptors: makeViewDescriptorsSet(),
+      viewDescriptors: makeViewDescriptorsMap(),
       styleUpdaterContainer: { current: undefined },
     };
   }
