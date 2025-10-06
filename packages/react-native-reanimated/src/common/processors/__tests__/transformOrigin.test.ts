@@ -165,7 +165,7 @@ describe(processTransformOrigin, () => {
 
     describe.each(validCases)('$name', ({ cases }) => {
       describe.each(cases)('$name', ({ cases: testCases }) => {
-        it.each(testCases)(
+        test.each(testCases)(
           'converts $input to $output',
           ({ input, output }) => {
             expect(processTransformOrigin(input)).toEqual(output);
@@ -343,7 +343,7 @@ describe(processTransformOrigin, () => {
 
     describe.each(invalidCases)('$name', ({ cases }) => {
       describe.each(cases)('$name', ({ cases: testCases }) => {
-        it.each(testCases)(
+        test.each(testCases)(
           'throws error with message "$message" for input "$input"',
           ({ input, message }) => {
             expect(() => processTransformOrigin(input)).toThrow(

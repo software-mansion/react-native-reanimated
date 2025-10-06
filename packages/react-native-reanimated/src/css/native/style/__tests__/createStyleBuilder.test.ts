@@ -12,7 +12,7 @@ describe(createStyleBuilder, () => {
     flexDirection: true,
   });
 
-  it("doesn't include undefined values", () => {
+  test("doesn't include undefined values", () => {
     const style: PlainStyle = {
       width: undefined,
       margin: 'auto',
@@ -26,7 +26,7 @@ describe(createStyleBuilder, () => {
     });
   });
 
-  it("doesn't include properties that are not in the config", () => {
+  test("doesn't include properties that are not in the config", () => {
     const style: PlainStyle = {
       width: 100,
       height: 100, // height is not in the config
