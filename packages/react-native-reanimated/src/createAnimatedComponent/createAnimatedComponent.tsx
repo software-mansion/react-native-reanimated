@@ -398,15 +398,17 @@ export function createAnimatedComponent(
           prevStyles.length === 1 &&
           styles[0] === prevStyles[0];
 
-        if (!hasOneSameStyle && isStyleAttached(prevStyles[0])) {
-          // otherwise, remove each style that is not present in new styles
-          for (const prevStyle of prevStyles) {
-            const isPresent = styles.some(
-              (style) => style === prevStyle && isStyleAttached(style)
-            );
-            if (!isPresent) {
-              prevStyle.viewDescriptors.remove(viewTag);
-            }
+        if (hasOneSameStyle && isStyleAttached(prevStyles[0])) {
+          return;
+        }
+
+        // otherwise, remove each style that is not present in new styles
+        for (const prevStyle of prevStyles) {
+          const isPresent = styles.some(
+            (style) => style === prevStyle && isStyleAttached(style)
+          );
+          if (!isPresent) {
+            prevStyle.viewDescriptors.remove(viewTag);
           }
         }
       }
