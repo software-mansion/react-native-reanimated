@@ -7,10 +7,13 @@ export interface ViewDescriptorsSet {
   shareableViewDescriptors: SharedValue<Descriptor[]>;
   add: (item: Descriptor) => void;
   remove: (viewTag: number) => void;
+  has: (viewTag: number) => boolean;
 }
 
 export function makeViewDescriptorsSet(): ViewDescriptorsSet {
   const shareableViewDescriptors = makeMutable<Descriptor[]>([]);
+  const viewTags = new Set<number>();
+
   const data: ViewDescriptorsSet = {
     shareableViewDescriptors,
     add: (item: Descriptor) => {
@@ -40,6 +43,9 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
         return descriptors;
       }, false);
     },
+
+    has: (viewTag: number) => viewTags.has(viewTag),
   };
+
   return data;
 }
