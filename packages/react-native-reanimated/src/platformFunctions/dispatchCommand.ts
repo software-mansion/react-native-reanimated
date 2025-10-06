@@ -44,8 +44,21 @@ function dispatchCommandFabric(
     return;
   }
 
-  const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
-  global._dispatchCommandFabric!(shadowNodeWrapper, commandName, args);
+  const shadowNodeWrapper = animatedRef();
+
+  // This prevents crashes if ref has not been set yet
+  if (!shadowNodeWrapper) {
+    logger.warn(
+      `Tried to dispatch command "${commandName}" with an uninitialized ref. Make sure to pass the animated ref to the component before using it.`
+    );
+    return;
+  }
+
+  global._dispatchCommandFabric!(
+    shadowNodeWrapper as ShadowNodeWrapper,
+    commandName,
+    args
+  );
 }
 
 function dispatchCommandPaper(
@@ -59,6 +72,14 @@ function dispatchCommandPaper(
   }
 
   const viewTag = animatedRef() as number;
+
+  if (viewTag < 0) {
+    logger.warn(
+      `Tried to dispatch command "${commandName}" with an uninitialized ref. Make sure to pass the animated ref to the component before using it.`
+    );
+    return;
+  }
+
   global._dispatchCommandPaper!(viewTag, commandName, args);
 }
 
