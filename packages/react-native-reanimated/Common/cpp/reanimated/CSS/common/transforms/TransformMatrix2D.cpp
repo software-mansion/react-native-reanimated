@@ -14,7 +14,7 @@ TransformMatrix2D::TransformMatrix2D(jsi::Runtime &rt, const jsi::Value &value)
     for (size_t i = 0; i < SIZE; ++i) {
       matrix_[i] = array.getValueAtIndex(rt, i).asNumber();
     }
-  } else {
+  } else if (size == 16) {
     // Convert 4x4 matrix to 3x3
     // (we should call canConstruct first to ensure that the matrix is
     // convertible to 3x3)
@@ -33,6 +33,10 @@ TransformMatrix2D::TransformMatrix2D(jsi::Runtime &rt, const jsi::Value &value)
     matrix_[7] = array.getValueAtIndex(rt, 13).asNumber();
     matrix_[8] = array.getValueAtIndex(rt, 15).asNumber();
   }
+
+  throw std::invalid_argument(
+      "[Reanimated] TransformMatrix2D: Invalid matrix size: " +
+      std::to_string(size));
 }
 
 TransformMatrix2D::TransformMatrix2D(const folly::dynamic &array)
@@ -44,7 +48,7 @@ TransformMatrix2D::TransformMatrix2D(const folly::dynamic &array)
     for (size_t i = 0; i < SIZE; ++i) {
       matrix_[i] = array[i].asDouble();
     }
-  } else {
+  } else if (size == 16) {
     // Convert 4x4 matrix to 3x3
     // (we should call canConstruct first to ensure that the matrix is
     // convertible to 3x3)
@@ -63,6 +67,10 @@ TransformMatrix2D::TransformMatrix2D(const folly::dynamic &array)
     matrix_[7] = array[13].asDouble();
     matrix_[8] = array[15].asDouble();
   }
+
+  throw std::invalid_argument(
+      "[Reanimated] TransformMatrix2D: Invalid matrix size: " +
+      std::to_string(size));
 }
 
 bool TransformMatrix2D::canConstruct(
