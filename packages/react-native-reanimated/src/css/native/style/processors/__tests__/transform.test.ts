@@ -4,7 +4,7 @@ import type { TransformsArray } from '../../../../types';
 import { ERROR_MESSAGES, processTransform } from '../transform';
 
 describe(processTransform, () => {
-  it('returns the same object if not a string', () => {
+  test('returns the same object if not a string', () => {
     expect(processTransform([{ translateX: 25 }])).toEqual([
       { translateX: 25 },
     ]);
@@ -251,7 +251,7 @@ describe(processTransform, () => {
     ];
 
     describe.each(cases)('$name', ({ cases: testCases }) => {
-      it.each(testCases)('parses $input', ({ input, output }) => {
+      test.each(testCases)('parses $input', ({ input, output }) => {
         expect(processTransform(input)).toEqual(output);
       });
     });
@@ -327,7 +327,7 @@ describe(processTransform, () => {
       },
     ];
 
-    it.each(cases)('parses $input', ({ input, output }) => {
+    test.each(cases)('parses $input', ({ input, output }) => {
       expect(processTransform(input)).toEqual(output);
     });
   });
@@ -385,7 +385,7 @@ describe(processTransform, () => {
       },
     ];
 
-    it.each(cases)(
+    test.each(cases)(
       'throws an error for invalid input: $input',
       ({ input, errorMessage }) => {
         expect(() => processTransform(input)).toThrow(

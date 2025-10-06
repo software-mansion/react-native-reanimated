@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
-import type { ShadowNodeWrapper, WrapperRef } from './commonTypes';
+import type { InternalHostInstance, ShadowNodeWrapper } from './commonTypes';
 import type { HostInstance } from './platform-specific/findHostInstance';
 import { findHostInstance } from './platform-specific/findHostInstance';
 
@@ -9,7 +9,7 @@ let getInternalInstanceHandleFromPublicInstance: (ref: unknown) => {
 };
 
 export function getShadowNodeWrapperFromRef(
-  ref: WrapperRef,
+  ref: InternalHostInstance,
   hostInstance?: HostInstance
 ): ShadowNodeWrapper {
   if (getInternalInstanceHandleFromPublicInstance === undefined) {

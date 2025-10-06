@@ -13,6 +13,7 @@ describe('Test getting static feature flags', () => {
   test('from Reanimated', () => {
     expect(getStaticFeatureFlagReanimated(RUNTIME_TEST_FLAG)).toBe(true);
   });
+
   test('from Worklets', () => {
     expect(getStaticFeatureFlagWorklets(RUNTIME_TEST_FLAG)).toBe(true);
   });

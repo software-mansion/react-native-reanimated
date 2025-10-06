@@ -164,6 +164,7 @@ describe('withTiming snapshots 📸, test EASING', () => {
     expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[easingName]);
     expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
   });
+
   test('Easing.exp', async () => {
     const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(Easing.exp);
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots.exp);

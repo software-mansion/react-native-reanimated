@@ -26,7 +26,7 @@ type TransformType = NonNullable<TransformsStyle['transform']>;
 //
 
 function addPxToTransform(transform: TransformType) {
-  type RNTransformProp = (typeof transform)[number];
+  type RNTransformProp = NonNullable<(typeof transform)[number]>;
 
   // @ts-ignore `existingTransform` cannot be string because in that case
   // we throw error in `extractTransformFromStyle`
