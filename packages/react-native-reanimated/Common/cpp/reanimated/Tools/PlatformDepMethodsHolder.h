@@ -6,6 +6,8 @@
 #include <react/renderer/core/ReactPrimitives.h>
 #endif
 
+#include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -53,6 +55,10 @@ using ObtainPropFunction =
 
 using RequestRenderFunction =
     std::function<void(std::function<void(const double)>)>;
+#ifdef ANDROID
+using PreserveMountedTagsFunction =
+    std::function<std::optional<std::unique_ptr<int[]>>(std::vector<int> &)>;
+#endif // ANDROID
 using GetAnimationTimestampFunction = std::function<double(void)>;
 
 using ProgressLayoutAnimationFunction =
@@ -75,7 +81,9 @@ using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
+#ifdef ANDROID
+  PreserveMountedTagsFunction filterUnmountedTagsFunction;
+#endif // ANDROID
 #else
   UpdatePropsFunction updatePropsFunction;
   ScrollToFunction scrollToFunction;

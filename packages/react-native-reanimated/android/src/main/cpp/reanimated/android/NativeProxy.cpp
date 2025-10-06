@@ -220,7 +220,26 @@ void NativeProxy::maybeFlushUIUpdatesQueue() {
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
-// nothing
+std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(
+    std::vector<int> &tags) {
+  if (tags.empty()) {
+    return {};
+  }
+
+  static const auto method =
+      getJniMethod<jboolean(jni::alias_ref<jni::JArrayInt>)>(
+          "preserveMountedTags");
+  auto jArrayInt = jni::JArrayInt::newArray(tags.size());
+  jArrayInt->setRegion(0, tags.size(), tags.data());
+
+  if (!method(javaPart_.get(), jArrayInt)) {
+    return {};
+  }
+
+  auto region = jArrayInt->getRegion(0, tags.size());
+  return region;
+}
+
 #else
 jsi::Value NativeProxy::obtainProp(
     jsi::Runtime &rt,
@@ -434,7 +453,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto requestRender = bindThis(&NativeProxy::requestRender);
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
+  auto preserveMountedTags = bindThis(&NativeProxy::preserveMountedTags);
+
 #else
   auto configurePropsFunction = bindThis(&NativeProxy::configureProps);
 #endif
@@ -468,7 +488,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   return {
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
-  // nothing
+      preserveMountedTags,
 #else
       updatePropsFunction,
       scrollToFunction,
