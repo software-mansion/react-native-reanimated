@@ -210,7 +210,7 @@ function DropdownContent({
 
     if (alignment === 'left') {
       const maxWidth =
-        flattenedStyle?.maxWidth ??
+        flattenedStyle.maxWidth ??
         windowDimensions.width - toggleMeasurements.x - spacing.sm;
       const calculatedPosition = toggleMeasurements.x + offsetX;
 
@@ -230,7 +230,7 @@ function DropdownContent({
     }
 
     const maxWidth =
-      flattenedStyle?.maxWidth ??
+      flattenedStyle.maxWidth ??
       toggleMeasurements.x + toggleMeasurements.width - spacing.sm;
     const calculatedPosition =
       toggleMeasurements.x +
@@ -256,9 +256,7 @@ function DropdownContent({
     top: toggleMeasurements.y + toggleMeasurements.height + offsetY,
   };
 
-  const [paddingAndMargin, rest] = filterPaddingAndMarginProps(
-    flattenedStyle ?? {}
-  );
+  const [paddingAndMargin, rest] = filterPaddingAndMarginProps(flattenedStyle);
 
   return (
     <Animated.View style={[dropdownStyle, animatedDropdownStyle]}>

@@ -1,5 +1,5 @@
-import React, { ComponentRef } from 'react';
-import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedRef,
   useAnimatedStyle,
@@ -16,7 +16,6 @@ export default function ScrollViewOffsetExample() {
   });
 
   const onButtonPress = () => {
-    (aref.current as unknown as ComponentRef<typeof ScrollView>).scrollTo();
     aref.current?.scrollTo({
       y: Math.random() * 2000,
       animated: true,

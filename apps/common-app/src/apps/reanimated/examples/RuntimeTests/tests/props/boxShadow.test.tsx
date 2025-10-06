@@ -36,10 +36,10 @@ describe('animation of BoxShadow', () => {
     const refActive = useTestRef('ACTIVE');
     const refPassive = useTestRef('PASSIVE');
 
-    const styleActive = useAnimatedStyle<ViewStyle>(() => {
+    const styleActive = useAnimatedStyle(() => {
       return {
         boxShadow: [boxShadowActiveSV.value],
-      } as unknown as DefaultStyle;
+      } as DefaultStyle;
     });
 
     const stylePassive = useAnimatedStyle(() => {

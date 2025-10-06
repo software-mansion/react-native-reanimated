@@ -88,12 +88,12 @@ export enum ComparisonMode {
 
 export type LockObject = { lock: boolean };
 
-type Writeable<T> = {
+type Writable<T> = {
   -readonly [P in keyof T]: T[P];
 };
 
-export type OperationUpdate = Writeable<
-  StyleProps | AnimatedStyle<Writeable<Record<string, unknown>>> | Writeable<Record<string, unknown>>
+export type OperationUpdate = Writable<
+  StyleProps | AnimatedStyle<Writable<Record<string, unknown>>> | Writable<Record<string, unknown>>
 >;
 
 export interface Operation {
