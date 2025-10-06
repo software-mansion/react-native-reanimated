@@ -52,8 +52,7 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler
 #ifdef WORKLETS_BUNDLE_MODE
     ,
-    jni::alias_ref<facebook::react::BigStringBufferWrapper::javaobject>
-        scriptWrapper,
+    jni::alias_ref<facebook::react::BundleWrapper::javaobject> bundleWrapper,
     const std::string &sourceURL
 #endif // WORKLETS_BUNDLE_MODE
 ) {
@@ -63,7 +62,7 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
 
   std::shared_ptr<const BigStringBuffer> script = nullptr;
 #ifdef WORKLETS_BUNDLE_MODE
-  script = scriptWrapper->cthis()->getScript();
+  script = bundleWrapper->cthis()->getBundle();
 #else
   const auto sourceURL = std::string{};
 #endif // WORKLETS_BUNDLE_MODE
