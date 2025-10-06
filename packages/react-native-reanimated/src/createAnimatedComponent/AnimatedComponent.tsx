@@ -207,6 +207,9 @@ export default class AnimatedComponent
     const { viewTag, shadowNodeWrapper } = this._getViewInfo();
     const newStyles = new Set<StyleProps>(currentStyles);
 
+    const isStyleAttached = (style: StyleProps) =>
+      style.viewDescriptors.has(viewTag);
+
     // remove old styles
     if (prevStyles) {
       // in most of the cases, views have only a single animated style and it remains unchanged
@@ -215,14 +218,14 @@ export default class AnimatedComponent
         prevStyles.length === 1 &&
         currentStyles[0] === prevStyles[0];
 
-      if (hasOneSameStyle) {
+      if (hasOneSameStyle && isStyleAttached(prevStyles[0])) {
         return;
       }
 
       // otherwise, remove each style that is not present in new styles
       for (const prevStyle of prevStyles) {
         const isPresent = currentStyles.some((style) => {
-          if (style === prevStyle) {
+          if (style === prevStyle && isStyleAttached(style)) {
             newStyles.delete(style);
             return true;
           }
@@ -233,6 +236,7 @@ export default class AnimatedComponent
         }
       }
     }
+
     newStyles.forEach((style) => {
       style.viewDescriptors.add(
         {
