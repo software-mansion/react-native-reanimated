@@ -46,7 +46,6 @@ export default function ArticleProgressExample() {
     return { width };
   }, []);
 
-
   return (
     <SafeAreaView>
       <Animated.View style={[styles.progressBar, progressBarAnimatedStyle]} />
