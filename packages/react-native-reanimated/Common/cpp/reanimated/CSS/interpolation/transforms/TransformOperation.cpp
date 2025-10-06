@@ -9,17 +9,17 @@
 
 namespace reanimated::css {
 
-#ifndef NDEBUG
-
-std::ostream &operator<<(
-    std::ostream &os,
-    const TransformOperation &operation) {
-  os << operation.getOperationName() << "("
-     << operation.stringifyOperationValue() << ")";
-  return os;
+namespace {
+std::string createConversionErrorMessage(
+    const TransformOp fromType,
+    const TransformOp toType) {
+  return "[Reanimated] Cannot convert transform operation of type: " +
+      getOperationNameFromType(fromType) +
+      " to type: " + getOperationNameFromType(toType);
 }
+} // namespace
 
-#endif // NDEBUG
+TransformOperation::TransformOperation(TransformOp value) : type(value) {}
 
 bool TransformOperation::canConvertTo(const TransformOp targetType) const {
   return false;
@@ -28,24 +28,24 @@ bool TransformOperation::canConvertTo(const TransformOp targetType) const {
 void TransformOperation::assertCanConvertTo(
     const TransformOp targetType) const {
   if (!canConvertTo(targetType)) {
-    throw std::invalid_argument(
-        "[Reanimated] Cannot convert transform operation to type: " +
-        getOperationNameFromType(targetType));
+    throw std::invalid_argument(createConversionErrorMessage(type, targetType));
   }
 }
 
 TransformOperations TransformOperation::convertTo(
     const TransformOp targetType) const {
-  throw std::invalid_argument(
-      "[Reanimated] Cannot convert transform operation to type: " +
-      getOperationNameFromType(targetType));
+  throw std::invalid_argument(createConversionErrorMessage(type, targetType));
 }
 
 std::string TransformOperation::getOperationName() const {
-  return getOperationNameFromType(type());
+  return getOperationNameFromType(type);
 }
 
-bool TransformOperation::isRelative() const {
+bool TransformOperation::shouldResolve() const {
+  return false;
+}
+
+bool TransformOperation::is3D() const {
   return false;
 }
 
@@ -113,8 +113,7 @@ std::shared_ptr<TransformOperation> TransformOperation::fromJSIValue(
       return std::make_shared<SkewYOperation>(
           propertyValue.asString(rt).utf8(rt));
     case TransformOp::Matrix:
-      return std::make_shared<MatrixOperation>(
-          TransformMatrix3D(rt, propertyValue));
+      return std::make_shared<MatrixOperation>(rt, propertyValue);
     default:
       throw std::invalid_argument(
           "[Reanimated] Unknown transform operation: " + propertyName);
@@ -172,8 +171,7 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(
     case TransformOp::SkewY:
       return std::make_shared<SkewYOperation>(propertyValue.getString());
     case TransformOp::Matrix:
-      return std::make_shared<MatrixOperation>(
-          TransformMatrix3D(propertyValue));
+      return std::make_shared<MatrixOperation>(propertyValue);
     default:
       throw std::invalid_argument(
           "[Reanimated] Unknown transform operation: " + propertyName);
@@ -183,43 +181,5 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(
 folly::dynamic TransformOperation::toDynamic() const {
   return folly::dynamic::object(getOperationName(), valueToDynamic());
 }
-
-// Specialization for the matrix operation
-#ifndef NDEBUG
-
-template <TransformOp TOperation, typename TValue>
-std::string
-TransformOperationBase<TOperation, TValue>::stringifyOperationValue() const {
-  std::ostringstream ss;
-  ss << value;
-  return ss.str();
-}
-
-template <>
-std::string TransformOperationBase<
-    TransformOp::Matrix,
-    std::variant<TransformMatrix3D, TransformOperations>>::
-    stringifyOperationValue() const {
-  std::ostringstream ss;
-
-  if (std::holds_alternative<TransformMatrix3D>(value)) {
-    ss << std::get<TransformMatrix3D>(value);
-  } else {
-    const auto &operations = std::get<TransformOperations>(value);
-    std::ostringstream ss;
-    for (const auto &operation : operations) {
-      ss << operation->getOperationName() << "("
-         << operation->stringifyOperationValue() << "), ";
-    }
-  }
-
-  return ss.str();
-}
-
-#endif // NDEBUG
-
-template struct TransformOperationBase<
-    TransformOp::Matrix,
-    std::variant<TransformMatrix3D, TransformOperations>>;
 
 } // namespace reanimated::css
