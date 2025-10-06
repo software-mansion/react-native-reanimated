@@ -52,6 +52,13 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       const folly::dynamic &newStyleValue,
       const folly::dynamic &lastUpdateValue) override;
 
+ protected:
+  folly::dynamic interpolateOperations(
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      double keyframeProgress,
+      const TransformOperations &fromOperations,
+      const TransformOperations &toOperations) const;
+
  private:
   const std::shared_ptr<TransformOperationInterpolators> interpolators_;
   static const TransformOperations defaultStyleValue_;
@@ -85,11 +92,6 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const;
   TransformOperations getFallbackValue(
       const std::shared_ptr<const ShadowNode> &shadowNode) const;
-  folly::dynamic interpolateOperations(
-      const std::shared_ptr<const ShadowNode> &shadowNode,
-      double keyframeProgress,
-      const TransformOperations &fromOperations,
-      const TransformOperations &toOperations) const;
 
   static folly::dynamic convertOperationsToDynamic(
       const TransformOperations &operations);
