@@ -300,6 +300,11 @@ export function createAnimatedComponent(
       const viewTag = this.getComponentViewTag();
       if (viewTag !== -1 && this._styles !== null) {
         for (const style of this._styles) {
+          console.log(
+            'remove detachStyles',
+            viewTag,
+            style.viewDescriptors.has(viewTag)
+          );
           style.viewDescriptors.remove(viewTag);
         }
         if (this.props.animatedProps?.viewDescriptors) {
@@ -387,6 +392,8 @@ export function createAnimatedComponent(
         adaptViewConfig(viewConfig);
       }
 
+      const newStyles = new Set<StyleProps>(styles);
+
       const isStyleAttached = (style: StyleProps) =>
         style.viewDescriptors.has(viewTag);
 
@@ -404,9 +411,13 @@ export function createAnimatedComponent(
 
         // otherwise, remove each style that is not present in new styles
         for (const prevStyle of prevStyles) {
-          const isPresent = styles.some(
-            (style) => style === prevStyle && isStyleAttached(style)
-          );
+          const isPresent = styles.some((style) => {
+            if (style === prevStyle && isStyleAttached(prevStyle)) {
+              newStyles.delete(style);
+              return true;
+            }
+            return false;
+          });
           if (!isPresent) {
             prevStyle.viewDescriptors.remove(viewTag);
           }
@@ -424,7 +435,7 @@ export function createAnimatedComponent(
         }
       }
 
-      styles.forEach((style) => {
+      newStyles.forEach((style) => {
         style.viewDescriptors.add({
           tag: viewTag,
           name: viewName,
