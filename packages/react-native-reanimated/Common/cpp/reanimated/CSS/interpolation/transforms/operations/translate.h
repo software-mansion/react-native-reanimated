@@ -1,7 +1,9 @@
 #pragma once
 
+#include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
+#include <memory>
 #include <string>
 
 namespace reanimated::css {
@@ -11,30 +13,15 @@ struct TranslateOperationBase
     : public TransformOperationBase<TOperation, CSSLength> {
   using TransformOperationBase<TOperation, CSSLength>::TransformOperationBase;
 
-  explicit TranslateOperationBase(double value)
-      : TransformOperationBase<TOperation, CSSLength>(CSSLength(value)) {}
-  explicit TranslateOperationBase(const std::string &value)
-      : TransformOperationBase<TOperation, CSSLength>(CSSLength(value)) {}
+  explicit TranslateOperationBase(double value);
+  explicit TranslateOperationBase(const std::string &value);
 
-  bool isRelative() const override {
-    return this->value.isRelative;
-  }
-
-  folly::dynamic valueToDynamic() const override {
-    return this->value.toDynamic();
-  }
-
-  TransformMatrix3D toMatrix() const override {
-    if (this->value.isRelative) {
-      throw std::invalid_argument(
-          "[Reanimated] Cannot convert relative translate to the matrix.");
-    }
-    return TransformMatrix3D::create<TOperation>(this->value.value);
-  }
+  bool shouldResolve() const override;
+  folly::dynamic valueToDynamic() const override;
+  TransformMatrix::Shared toMatrix(bool force3D) const override;
 };
 
 using TranslateXOperation = TranslateOperationBase<TransformOp::TranslateX>;
-
 using TranslateYOperation = TranslateOperationBase<TransformOp::TranslateY>;
 
 } // namespace reanimated::css

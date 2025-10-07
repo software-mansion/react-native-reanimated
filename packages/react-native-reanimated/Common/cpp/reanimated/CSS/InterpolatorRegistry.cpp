@@ -10,7 +10,7 @@
 #include <reanimated/CSS/common/values/CSSNumber.h>
 #include <reanimated/CSS/common/values/CSSValue.h>
 
-#include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
+#include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
 
 #include <reanimated/CSS/svg/values/SVGLength.h>
@@ -164,8 +164,7 @@ const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
            transformOp<TranslateYOperation>(0, {RelativeTo::Self, "height"})},
           {"skewX", transformOp<SkewXOperation>("0deg")},
           {"skewY", transformOp<SkewYOperation>("0deg")},
-          {"matrix",
-           transformOp<MatrixOperation>(TransformMatrix3D::Identity())}})},
+          {"matrix", transformOp<MatrixOperation>(TransformMatrix2D())}})},
 };
 
 const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
