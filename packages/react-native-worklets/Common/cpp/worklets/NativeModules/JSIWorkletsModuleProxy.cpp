@@ -61,6 +61,15 @@ inline jsi::Value executeOnUIRuntimeSync(
   return jsi::Value::undefined();
 }
 
+inline jsi::Value runOnRuntimeSync(
+    jsi::Runtime &rt,
+    const jsi::Value &workletRuntimeValue,
+    const jsi::Value &serializableWorkletValue) {
+  auto workletRuntime =
+      workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
+  return workletRuntime->executeSync(rt, serializableWorkletValue);
+}
+
 inline jsi::Value createWorkletRuntime(
     jsi::Runtime &originRuntime,
     const std::shared_ptr<RuntimeManager> &runtimeManager,
@@ -202,6 +211,7 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnUI"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "executeOnUIRuntimeSync"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnRuntimeSync"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "createWorkletRuntime"));
   propertyNames.emplace_back(
@@ -494,6 +504,17 @@ jsi::Value JSIWorkletsModuleProxy::get(
             size_t count) {
           return executeOnUIRuntimeSync(uiWorkletRuntime, rt, args[0]);
         });
+  }
+
+  if (name == "runOnRuntimeSync") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi ::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) { return runOnRuntimeSync(rt, args[0], args[1]); });
   }
 
   if (name == "createWorkletRuntime") {
