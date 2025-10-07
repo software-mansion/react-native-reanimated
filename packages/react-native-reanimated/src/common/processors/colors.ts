@@ -26,6 +26,14 @@ type DynamicColorValue = ColorValue & {
   };
 };
 
+type PlatformColorValue = ColorValue & { semantic: Array<string> };
+
+export function PlatformColor(...names: Array<string>): ColorValue {
+  'worklet';
+  const mapped = IS_IOS ? { semantic: names } : { resource_paths: names };
+  return mapped as PlatformColorValue;
+}
+
 export function DynamicColorIOS(
   tuple: DynamicColorIOSTuple
 ): DynamicColorValue {

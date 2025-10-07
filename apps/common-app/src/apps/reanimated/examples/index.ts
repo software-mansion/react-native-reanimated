@@ -32,6 +32,7 @@ import PagerExample from './CustomHandler/PagerExample';
 import DispatchCommandExample from './DispatchCommandExample';
 import DragAndSnapExample from './DragAndSnapExample';
 import DynamicColorIOSExample from './DynamicColorIOSExample';
+import PlatformColorExample from './PlatformColorExample';
 import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
 import ExtrapolationExample from './ExtrapolationExample';
@@ -144,16 +145,8 @@ interface Example {
 
 export const EXAMPLES: Record<string, Example> = {
   // Empty example for test purposes
-  EmptyExample: {
-    icon: '👻',
-    title: 'Empty',
-    screen: EmptyExample,
-  },
-  FpsExample: {
-    icon: '🎞️',
-    title: 'FPS',
-    screen: FpsExample,
-  },
+  EmptyExample: { icon: '👻', title: 'Empty', screen: EmptyExample },
+  FpsExample: { icon: '🎞️', title: 'FPS', screen: FpsExample },
   ThirdPartyComponentsExample: {
     icon: '3️⃣',
     title: 'Third party components',
@@ -169,11 +162,7 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Synchronizable performance',
     screen: SynchronizablePerformanceExample,
   },
-  ReactFreeze: {
-    icon: '❄️',
-    title: 'React freeze',
-    screen: FreezeExample,
-  },
+  ReactFreeze: { icon: '❄️', title: 'React freeze', screen: FreezeExample },
   RunOnUIAsyncExample: {
     icon: '👷‍♂️',
     title: 'runOnUIAsync',
@@ -184,21 +173,13 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Worklet runtime',
     screen: WorkletRuntimeExample,
   },
-  ModifyExample: {
-    icon: '🪛',
-    title: 'Modify',
-    screen: ModifyExample,
-  },
+  ModifyExample: { icon: '🪛', title: 'Modify', screen: ModifyExample },
   CircularSliderExample: {
     icon: '🔘',
     title: 'Circular slider',
     screen: CircularSliderExample,
   },
-  MemoExample: {
-    icon: '🧠',
-    title: 'Memo',
-    screen: MemoExample,
-  },
+  MemoExample: { icon: '🧠', title: 'Memo', screen: MemoExample },
   SerializableFreezingExample: {
     icon: '🥶',
     title: 'Serializable freezing',
@@ -227,34 +208,18 @@ export const EXAMPLES: Record<string, Example> = {
 
   // About
 
-  AboutExample: {
-    icon: 'ℹ️',
-    title: 'About',
-    screen: AboutExample,
-  },
+  AboutExample: { icon: 'ℹ️', title: 'About', screen: AboutExample },
 
   // Showcase
 
-  BokehExample: {
-    icon: '✨',
-    title: 'Bokeh',
-    screen: BokehExample,
-  },
-  BubblesExample: {
-    icon: '🫧',
-    title: 'Bubbles',
-    screen: BubblesExample,
-  },
+  BokehExample: { icon: '✨', title: 'Bokeh', screen: BokehExample },
+  BubblesExample: { icon: '🫧', title: 'Bubbles', screen: BubblesExample },
   OpacityTransformExample: {
     icon: '🌀',
     title: 'opacity & transform',
     screen: OpacityTransformExample,
   },
-  IPodExample: {
-    icon: '🎧',
-    title: 'iPod',
-    screen: IPodExample,
-  },
+  IPodExample: { icon: '🎧', title: 'iPod', screen: IPodExample },
   EmojiWaterfallExample: {
     icon: '💸',
     title: 'Emoji waterfall',
@@ -265,11 +230,7 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Camera roll',
     screen: LightBoxExample,
   },
-  LiquidSwipe: {
-    icon: '♠️',
-    title: 'Liquid swipe',
-    screen: LiquidSwipe,
-  },
+  LiquidSwipe: { icon: '♠️', title: 'Liquid swipe', screen: LiquidSwipe },
   SwipeableListExample: {
     icon: '📞',
     title: 'Swipeable list',
@@ -280,11 +241,7 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Article progress',
     screen: ArticleProgressExample,
   },
-  LettersExample: {
-    icon: '📖',
-    title: 'Letters',
-    screen: LettersExample,
-  },
+  LettersExample: { icon: '📖', title: 'Letters', screen: LettersExample },
   SetNativePropsExample: {
     icon: '🪄',
     title: 'setNativeProps',
@@ -307,31 +264,15 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Animate inner component',
     screen: AnimatableRefExample,
   },
-  AmountExample: {
-    icon: '📈',
-    title: 'Amount',
-    screen: AmountExample,
-  },
-  CounterExample: {
-    icon: '🎰',
-    title: 'Counter',
-    screen: CounterExample,
-  },
+  AmountExample: { icon: '📈', title: 'Amount', screen: AmountExample },
+  CounterExample: { icon: '🎰', title: 'Counter', screen: CounterExample },
   AnimatedTextWidthExample: {
     icon: '✂️',
     title: 'Animate text width',
     screen: AnimatedTextWidthExample,
   },
-  ColorExample: {
-    icon: '🌈',
-    title: 'Animate colors',
-    screen: ColorExample,
-  },
-  FilterExample: {
-    icon: '🖼️',
-    title: 'Animate filter',
-    screen: FilterExample,
-  },
+  ColorExample: { icon: '🌈', title: 'Animate colors', screen: ColorExample },
+  FilterExample: { icon: '🖼️', title: 'Animate filter', screen: FilterExample },
   SynchronousPropsExample: {
     icon: '⚡',
     title: 'Animate synchronous props',
@@ -352,16 +293,8 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Draggable circle',
     screen: GestureHandlerExample,
   },
-  SvgExample: {
-    icon: '🟢',
-    title: 'Animated SVG circle',
-    screen: SvgExample,
-  },
-  PlanetsExample: {
-    icon: '🪐',
-    title: 'Planets',
-    screen: PlanetsExample,
-  },
+  SvgExample: { icon: '🟢', title: 'Animated SVG circle', screen: SvgExample },
+  PlanetsExample: { icon: '🪐', title: 'Planets', screen: PlanetsExample },
   BouncingBoxExample: {
     icon: '📦',
     title: 'Bouncing box',
@@ -407,11 +340,7 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'useAnimatedScrollHandler',
     screen: ScrollViewExample,
   },
-  ScrollToExample: {
-    icon: '🦘',
-    title: 'scrollTo',
-    screen: ScrollToExample,
-  },
+  ScrollToExample: { icon: '🦘', title: 'scrollTo', screen: ScrollToExample },
   ScrollViewOffsetExample: {
     icon: '𝌍',
     title: 'useScrollOffset',
@@ -427,11 +356,7 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Dispatch command',
     screen: DispatchCommandExample,
   },
-  MeasureExample: {
-    icon: '📐',
-    title: 'measure',
-    screen: MeasureExample,
-  },
+  MeasureExample: { icon: '📐', title: 'measure', screen: MeasureExample },
   WorkletExample: {
     icon: '🧵',
     title: 'runOnJS / runOnUI',
@@ -447,11 +372,7 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Transform',
     screen: TransformExample,
   },
-  WidthExample: {
-    icon: '🌲',
-    title: 'Layout props',
-    screen: WidthExample,
-  },
+  WidthExample: { icon: '🌲', title: 'Layout props', screen: WidthExample },
   NonLayoutPropAndRenderExample: {
     icon: '🎭',
     title: 'Non-layout prop and render example',
@@ -462,21 +383,13 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Ref & useImperativeHandle',
     screen: RefExample,
   },
-  ChessExample: {
-    icon: '♟️',
-    title: 'Chess',
-    screen: ChessExample,
-  },
+  ChessExample: { icon: '♟️', title: 'Chess', screen: ChessExample },
   ChessboardExample: {
     icon: '♟️',
     title: 'Chessboard',
     screen: ChessboardExample,
   },
-  Game2048Example: {
-    icon: '🕹️',
-    title: '2048',
-    screen: Game2048Example,
-  },
+  Game2048Example: { icon: '🕹️', title: '2048', screen: Game2048Example },
   OverlappingBoxesExample: {
     icon: '🔝',
     title: 'z-index & elevation',
@@ -487,11 +400,7 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Conditional',
     screen: NewestShadowNodesRegistryRemoveExample,
   },
-  RainbowExample: {
-    icon: '🌈',
-    title: 'Rainbow',
-    screen: RainbowExample,
-  },
+  RainbowExample: { icon: '🌈', title: 'Rainbow', screen: RainbowExample },
   WithoutBabelPluginExample: {
     icon: '🔌',
     title: 'Without Babel plugin',
@@ -533,21 +442,13 @@ export const EXAMPLES: Record<string, Example> = {
     screen: GetViewPropExample,
     missingOnFabric: true,
   },
-  LogExample: {
-    icon: '⌨',
-    title: 'Log test',
-    screen: LogExample,
-  },
+  LogExample: { icon: '⌨', title: 'Log test', screen: LogExample },
   WorkletFactoryCrash: {
     icon: '🏭',
     title: 'Worklet factory crash',
     screen: WorkletFactoryCrash,
   },
-  HabitsExample: {
-    icon: '🧑‍💻',
-    title: 'Habits',
-    screen: HabitsExample,
-  },
+  HabitsExample: { icon: '🧑‍💻', title: 'Habits', screen: HabitsExample },
   PerformanceMonitorExample: {
     icon: '⏱️',
     title: 'Performance monitor',
@@ -568,11 +469,7 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Composed handler internal merging',
     screen: ComposedHandlerInternalMergingExample,
   },
-  BBExample: {
-    icon: '💀',
-    title: 'BB',
-    screen: BBExample,
-  },
+  BBExample: { icon: '💀', title: 'BB', screen: BBExample },
   StrictDOMExample: {
     icon: '👮‍♂️',
     title: 'React Strict DOM',
@@ -583,32 +480,22 @@ export const EXAMPLES: Record<string, Example> = {
     screen: DynamicColorIOSExample,
     icon: '🌗',
   },
+  PlatformColorExample: {
+    title: 'PlatformColor',
+    screen: PlatformColorExample,
+    icon: '🎨',
+  },
 
   // Old examples
   AnimatedStyleUpdateExample: {
     title: 'Animated style update',
     screen: AnimatedStyleUpdateExample,
   },
-  SharedStyleExample: {
-    title: 'Shared style',
-    screen: SharedStyleExample,
-  },
-  AnimatedTabBarExample: {
-    title: 'Tab bar',
-    screen: AnimatedTabBarExample,
-  },
-  ChatHeadsExample: {
-    title: 'Chat heads',
-    screen: ChatHeadsExample,
-  },
-  CubesExample: {
-    title: 'Cubes',
-    screen: CubesExample,
-  },
-  DragAndSnapExample: {
-    title: 'Drag and snap',
-    screen: DragAndSnapExample,
-  },
+  SharedStyleExample: { title: 'Shared style', screen: SharedStyleExample },
+  AnimatedTabBarExample: { title: 'Tab bar', screen: AnimatedTabBarExample },
+  ChatHeadsExample: { title: 'Chat heads', screen: ChatHeadsExample },
+  CubesExample: { title: 'Cubes', screen: CubesExample },
+  DragAndSnapExample: { title: 'Drag and snap', screen: DragAndSnapExample },
   ColorInterpolationExample: {
     title: 'Color interpolation',
     screen: ColorInterpolationExample,
@@ -625,14 +512,8 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Old animated sensor example',
     screen: OldAnimatedSensorExample,
   },
-  OldMeasureExample: {
-    title: 'Accordion',
-    screen: OldMeasureExample,
-  },
-  PinExample: {
-    title: 'PIN example',
-    screen: PinExample,
-  },
+  OldMeasureExample: { title: 'Accordion', screen: OldMeasureExample },
+  PinExample: { title: 'PIN example', screen: PinExample },
   ScrollableViewExample: {
     title: 'Scrollable view example',
     screen: ScrollableViewExample,
@@ -641,14 +522,8 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Scroll event example',
     screen: ScrollEventExample,
   },
-  WobbleExample: {
-    title: 'Wobble example',
-    screen: WobbleExample,
-  },
-  PagerExample: {
-    title: 'Pager example',
-    screen: PagerExample,
-  },
+  WobbleExample: { title: 'Wobble example', screen: WobbleExample },
+  PagerExample: { title: 'Pager example', screen: PagerExample },
   TransformOriginExample: {
     title: 'Transform origin example',
     screen: TransformOriginExample,
@@ -707,10 +582,7 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Custom layout animation',
     screen: CustomLayoutAnimationScreen,
   },
-  ModalNewAPI: {
-    title: '[LA] ModalNewAPI',
-    screen: ModalNewAPI,
-  },
+  ModalNewAPI: { title: '[LA] ModalNewAPI', screen: ModalNewAPI },
   SpringLayoutAnimation: {
     title: '[LA] Spring Layout Animation',
     screen: SpringLayoutAnimation,
@@ -727,22 +599,13 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] List item layout animation',
     screen: ListItemLayoutAnimation,
   },
-  SwipeableList: {
-    title: '[LA] Swipeable list',
-    screen: SwipeableList,
-  },
-  Modal: {
-    title: '[LA] Modal',
-    screen: Modal,
-  },
+  SwipeableList: { title: '[LA] Swipeable list', screen: SwipeableList },
+  Modal: { title: '[LA] Modal', screen: Modal },
   NativeModals: {
     title: '[LA] Native modals (RN and Screens)',
     screen: NativeModals,
   },
-  Carousel: {
-    title: '[LA] Carousel',
-    screen: Carousel,
-  },
+  Carousel: { title: '[LA] Carousel', screen: Carousel },
   ReducedMotionLayoutExample: {
     title: '[LA] Reduced Motion',
     screen: ReducedMotionLayoutExample,
@@ -755,34 +618,19 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] FlatList skip entering & exiting',
     screen: FlatListSkipEnteringExiting,
   },
-  ChangeTheme: {
-    title: '[LA] Change theme',
-    screen: ChangeThemeExample,
-  },
-  BottomTabs: {
-    title: '[LA] Bottom Tabs',
-    screen: BottomTabsExample,
-  },
+  ChangeTheme: { title: '[LA] Change theme', screen: ChangeThemeExample },
+  BottomTabs: { title: '[LA] Bottom Tabs', screen: BottomTabsExample },
   ViewFlattening: {
     title: '[LA] View Flattening',
     screen: ViewFlatteningExample,
   },
-  ViewRecycling: {
-    title: '[LA] View Recycling',
-    screen: ViewRecyclingExample,
-  },
-  ReparentingExample: {
-    title: '[LA] Reparenting',
-    screen: ReparentingExample,
-  },
+  ViewRecycling: { title: '[LA] View Recycling', screen: ViewRecyclingExample },
+  ReparentingExample: { title: '[LA] Reparenting', screen: ReparentingExample },
   ModalExitingExample: {
     title: '[LA] Modal exiting example',
     screen: ModalExitingExample,
   },
-  MoveWithExiting: {
-    title: '[LA] Move with exiting',
-    screen: MoveWithExiting,
-  },
+  MoveWithExiting: { title: '[LA] Move with exiting', screen: MoveWithExiting },
   DurationZeroExample: {
     title: '[LA] Duration zero',
     screen: DurationZeroExample,
