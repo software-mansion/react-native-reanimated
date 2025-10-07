@@ -1,6 +1,9 @@
 #pragma once
 
+#include <reanimated/CSS/common/values/CSSNumber.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
+
+#include <memory>
 
 namespace reanimated::css {
 
@@ -9,17 +12,11 @@ struct PerspectiveOperation final
   using TransformOperationBase<TransformOp::Perspective, CSSDouble>::
       TransformOperationBase;
 
-  explicit PerspectiveOperation(double value)
-      : TransformOperationBase<TransformOp::Perspective, CSSDouble>(
-            CSSDouble(value)) {}
+  explicit PerspectiveOperation(double value);
 
-  folly::dynamic valueToDynamic() const override {
-    return value.value != 0 ? value.toDynamic() : folly::dynamic();
-  }
-
-  TransformMatrix3D toMatrix() const override {
-    return TransformMatrix3D::create<TransformOp::Perspective>(value.value);
-  }
+  bool is3D() const override;
+  folly::dynamic valueToDynamic() const override;
+  TransformMatrix::Shared toMatrix(bool /* force3D */) const override;
 };
 
 } // namespace reanimated::css
