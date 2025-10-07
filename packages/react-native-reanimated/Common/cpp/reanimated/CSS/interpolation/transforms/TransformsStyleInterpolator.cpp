@@ -148,6 +148,34 @@ void TransformsStyleInterpolator::updateKeyframesFromStyleChange(
       parseTransformOperations(newStyleValue).value_or(TransformOperations{})));
 }
 
+folly::dynamic TransformsStyleInterpolator::interpolateOperations(
+    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const double keyframeProgress,
+    const TransformOperations &fromOperations,
+    const TransformOperations &toOperations) const {
+  auto result = folly::dynamic::array();
+  result.reserve(fromOperations.size());
+
+  const auto transformUpdateContext = TransformInterpolationContext{
+      shadowNode, viewStylesRepository_, interpolators_};
+
+  for (size_t i = 0; i < fromOperations.size(); ++i) {
+    const auto &fromOperation = fromOperations[i];
+    const auto &toOperation = toOperations[i];
+
+    // fromOperation and toOperation have the same type
+    const auto &interpolator = interpolators_->at(fromOperation->type);
+    result.push_back(interpolator->interpolate(
+        keyframeProgress, fromOperation, toOperation, transformUpdateContext));
+  }
+
+  if (result.empty()) {
+    return folly::dynamic();
+  }
+
+  return result;
+}
+
 std::optional<TransformOperations>
 TransformsStyleInterpolator::parseTransformOperations(
     jsi::Runtime &rt,
@@ -365,34 +393,6 @@ std::shared_ptr<TransformOperation>
 TransformsStyleInterpolator::getDefaultOperationOfType(
     const TransformOp type) const {
   return interpolators_->at(type)->getDefaultOperation();
-}
-
-folly::dynamic TransformsStyleInterpolator::interpolateOperations(
-    const std::shared_ptr<const ShadowNode> &shadowNode,
-    const double keyframeProgress,
-    const TransformOperations &fromOperations,
-    const TransformOperations &toOperations) const {
-  TransformOperations result;
-  result.reserve(fromOperations.size());
-
-  const auto transformUpdateContext = TransformInterpolationContext{
-      shadowNode, viewStylesRepository_, interpolators_};
-
-  for (size_t i = 0; i < fromOperations.size(); ++i) {
-    const auto &fromOperation = fromOperations[i];
-    const auto &toOperation = toOperations[i];
-
-    // fromOperation and toOperation have the same type
-    const auto &interpolator = interpolators_->at(fromOperation->type);
-    result.emplace_back(interpolator->interpolate(
-        keyframeProgress, fromOperation, toOperation, transformUpdateContext));
-  }
-
-  if (result.empty()) {
-    return folly::dynamic();
-  }
-
-  return convertOperationsToDynamic(result);
 }
 
 folly::dynamic TransformsStyleInterpolator::convertOperationsToDynamic(

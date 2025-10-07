@@ -303,16 +303,20 @@ const InterpolatorFactoriesRecord SVG_CLIP_INTERPOLATORS = {
 };
 
 const InterpolatorFactoriesRecord SVG_TRANSFORM_INTERPOLATORS = {
-    {"translateX", value<SVGLength>(0)},
-    {"translateY", value<SVGLength>(0)},
-    {"originX", value<SVGLength>(0)},
-    {"originY", value<SVGLength>(0)},
-    {"scaleX", value<CSSDouble>(1)},
-    {"scaleY", value<CSSDouble>(1)},
-    {"skewX", value<CSSAngle>(0)},
-    {"skewY", value<CSSAngle>(0)},
-    {"rotation", value<CSSAngle>(0)},
-};
+    {"transform",
+     transforms(
+         {{"rotate", transformOp<RotateOperation>("0deg")},
+          {"rotateZ", transformOp<RotateZOperation>("0deg")},
+          {"scale", transformOp<ScaleOperation>(1)},
+          {"scaleX", transformOp<ScaleXOperation>(1)},
+          {"scaleY", transformOp<ScaleYOperation>(1)},
+          {"translateX",
+           transformOp<TranslateXOperation>(0, {RelativeTo::Self, "width"})},
+          {"translateY",
+           transformOp<TranslateYOperation>(0, {RelativeTo::Self, "height"})},
+          {"skewX", transformOp<SkewXOperation>("0deg")},
+          {"skewY", transformOp<SkewYOperation>("0deg")},
+          {"matrix", transformOp<MatrixOperation>(TransformMatrix2D())}})}};
 
 const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS =
     mergeInterpolators({
