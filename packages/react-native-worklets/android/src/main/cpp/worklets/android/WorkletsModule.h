@@ -6,7 +6,7 @@
 #include <jsireact/JSIExecutor.h>
 #include <react/jni/JMessageQueueThread.h>
 #ifdef WORKLETS_BUNDLE_MODE
-#include <react/fabric/BigStringBufferWrapper.h>
+#include <react/fabric/BundleWrapper.h>
 #endif // WORKLETS_BUNDLE_MODE
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
@@ -35,8 +35,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
           androidUIScheduler
 #ifdef WORKLETS_BUNDLE_MODE
       ,
-      jni::alias_ref<facebook::react::BigStringBufferWrapper::javaobject>
-          scriptWrapper,
+      jni::alias_ref<facebook::react::BundleWrapper::javaobject> bundleWrapper,
       const std::string &sourceURL
 #endif // WORKLETS_BUNDLE_MODE
   );
@@ -54,7 +53,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      const std::shared_ptr<const BigStringBuffer> &script,
+      const std::shared_ptr<const BigStringBuffer> &bundle,
       const std::string &sourceURL);
 
   void invalidateCpp();

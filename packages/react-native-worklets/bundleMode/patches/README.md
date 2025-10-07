@@ -27,7 +27,8 @@ yarn patch react-native
 3. Following the instructions provided by Yarn generate a patch and necessary resolutions based on your changes.
 4. Replace the generated patch contents with the contents of the respective patch file.
 5. Run `yarn install` to re-apply the patch.
-6. Follow these steps for `@react-native/community-cli-plugin`, `metro` and `metro-runtime` as well.
+6. Follow these steps for `metro` and `metro-runtime` as well.
+   - Also `@react-native/community-cli-plugin` if you are using React Native lower than 0.81.
 
 ## Using npm and patch-package
 

@@ -1,5 +1,5 @@
 'use strict';
-import type { ValueProcessor } from '../../../native';
+import type { ValueProcessor } from '../../../../common';
 
 export const convertStringToNumber =
   <S extends string>(
