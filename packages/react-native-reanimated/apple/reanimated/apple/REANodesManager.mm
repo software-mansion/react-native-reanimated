@@ -161,8 +161,7 @@
   RCTAssertMainQueue();
 
   size_t i = 0, d = 0, size = intBuffer.size();
-  int viewTag = -1;
-  NSMutableDictionary *props;
+  UIView<RCTComponentViewProtocol> *componentView;
 
   RCTSurfacePresenter *surfacePresenter = self.surfacePresenter;
   RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
@@ -171,25 +170,15 @@
     const auto command = intBuffer[i++];
     switch (command) {
       case 1: // CMD_START_OF_VIEW
-        viewTag = intBuffer[i++];
-        props = [NSMutableDictionary new];
+        {
+          const auto viewTag = intBuffer[i++];
+          componentView = [componentViewRegistry findComponentViewWithTag:viewTag];
+        }
         break;
 
       case 10: // CMD_OPACITY
-        props[@"opacity"] = @(doubleBuffer[d++]);
-        break;
-
-      case 4: // CMD_END_OF_VIEW
-        UIView<RCTComponentViewProtocol> *componentView = [componentViewRegistry findComponentViewWithTag:viewTag];
-
-        NSSet<NSString *> *propKeysManagedByAnimated =
-            [componentView propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN];
-        [surfacePresenter synchronouslyUpdateViewOnUIThread:@(viewTag) props:props];
-        [componentView setPropKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN:propKeysManagedByAnimated];
-
-        // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
-        // so that's why we need to call `finalizeUpdates` here.
-        [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
+        const auto opacity = doubleBuffer[d++];
+        [componentView setAlpha:opacity];
         break;
     }
   }
