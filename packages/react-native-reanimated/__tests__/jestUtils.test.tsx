@@ -58,4 +58,28 @@ describe('jestUtils', () => {
     const rendered = render(<AnimatedComponent />).toJSON();
     expect(rendered).toMatchSnapshot();
   });
+  it('Can parse arrays containing falsy values', () => {
+    const AnimatedComponent = () => {
+      const style = useAnimatedStyle(() => {
+        return {
+          flex: 1,
+        };
+      });
+
+      return (
+        <View>
+          <Animated.View
+            testID="view"
+            style={[null, false, { backgroundColor: 'black' }, style]}
+          />
+        </View>
+      );
+    };
+
+    const view = render(<AnimatedComponent />).getByTestId('view');
+
+    expect(view).toHaveAnimatedStyle(
+      { flex: 1 },
+      { shouldMatchAllProps: false }
+    );
 });
