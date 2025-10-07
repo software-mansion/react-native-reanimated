@@ -53,8 +53,8 @@ struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
-  SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
 #endif // ANDROID
+  SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   GetAnimationTimestampFunction getAnimationTimestamp;
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;

@@ -42,6 +42,15 @@ RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
   return requestRender;
 }
 
+SynchronouslyUpdateUIPropsFunction makeSynchronouslyUpdateUIPropsFunction(REANodesManager *nodesManager)
+{
+  auto synchronouslyUpdateUIPropsFunction =
+      [nodesManager](const std::vector<int> &intBuffer, const std::vector<double> &doubleBuffer) {
+        [nodesManager synchronouslyUpdateUIProps:intBuffer doubleBuffer:doubleBuffer];
+      };
+  return synchronouslyUpdateUIPropsFunction;
+}
+
 GetAnimationTimestampFunction makeGetAnimationTimestamp()
 {
   auto getAnimationTimestamp = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
@@ -100,6 +109,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 {
   auto requestRender = makeRequestRender(nodesManager);
 
+  auto synchronouslyUpdateUIPropsFunction = makeSynchronouslyUpdateUIPropsFunction(nodesManager);
+
   auto getAnimationTimestamp = makeGetAnimationTimestamp();
 
   ReanimatedSensorContainer *reanimatedSensorContainer = [[ReanimatedSensorContainer alloc] init];
@@ -120,6 +131,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
+      synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,
       unregisterSensorFunction,

@@ -1,7 +1,11 @@
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
 #import <reanimated/apple/REANodesManager.h>
+#import <reanimated/apple/REAUIView.h>
 
+#import <React/RCTComponentViewProtocol.h>
+#import <React/RCTComponentViewRegistry.h>
+#import <React/RCTMountingManager.h>
 #import <React/RCTUtils.h>
 
 @implementation REANodesManager {
@@ -148,6 +152,46 @@
   RCTAssertMainQueue();
   if ([[self getDisplayLink] isPaused]) {
     [self performOperations];
+  }
+}
+
+- (void)synchronouslyUpdateUIProps:(const std::vector<int> &)intBuffer
+                      doubleBuffer:(const std::vector<double> &)doubleBuffer
+{
+  RCTAssertMainQueue();
+
+  size_t i = 0, d = 0, size = intBuffer.size();
+  int viewTag = -1;
+  NSMutableDictionary *props;
+
+  RCTSurfacePresenter *surfacePresenter = self.surfacePresenter;
+  RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
+
+  while (i < size) {
+    const auto command = intBuffer[i++];
+    switch (command) {
+      case 1: // CMD_START_OF_VIEW
+        viewTag = intBuffer[i++];
+        props = [NSMutableDictionary new];
+        break;
+
+      case 10: // CMD_OPACITY
+        props[@"opacity"] = @(doubleBuffer[d++]);
+        break;
+
+      case 4: // CMD_END_OF_VIEW
+        UIView<RCTComponentViewProtocol> *componentView = [componentViewRegistry findComponentViewWithTag:viewTag];
+
+        NSSet<NSString *> *propKeysManagedByAnimated =
+            [componentView propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN];
+        [surfacePresenter synchronouslyUpdateViewOnUIThread:@(viewTag) props:props];
+        [componentView setPropKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN:propKeysManagedByAnimated];
+
+        // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
+        // so that's why we need to call `finalizeUpdates` here.
+        [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
+        break;
+    }
   }
 }
 
