@@ -9,7 +9,7 @@ namespace worklets {
 const char SynchronizableUnpackerCode[] =
     R"DELIMITER__((function () {
   var serializer = !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE ? function (value, _) {
-    return createSerializable(value);
+    return (0, _serializable.createSerializable)(value);
   } : globalThis._createSerializable;
   function synchronizableUnpacker(synchronizableRef) {
     var synchronizable = synchronizableRef;
