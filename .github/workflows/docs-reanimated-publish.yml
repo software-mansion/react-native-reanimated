@@ -27,13 +27,16 @@ jobs:
           git config --local user.email "action@github.com"
           && git config --local user.name "GitHub Action"
 
+      - name: Install monorepo node dependencies
+        run: yarn install
+
       - name: Build Reanimated docs
         working-directory: ${{ env.REANIMATED_DOCS_DIR }}
-        run: yarn && yarn build
+        run: yarn build
 
       - name: Build Worklets docs
         working-directory: ${{ env.WORKLETS_DOCS_DIR }}
-        run: yarn && yarn build
+        run: yarn build
 
       - name: Publish generated content to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@releases/v3
