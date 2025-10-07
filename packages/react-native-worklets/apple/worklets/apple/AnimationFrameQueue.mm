@@ -5,7 +5,12 @@
 #import <worklets/apple/SlowAnimations.h>
 #import <chrono>
 
+#if TARGET_OS_OSX
+
 #import <QuartzCore/CADisplayLink.h>
+
+#endif // TARGET_OS_OSX
+
 #import <React/RCTAssert.h>
 
 constexpr auto TIME_SAMPLES_AMOUNT = 4;
@@ -38,9 +43,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
     bool supportsProMotion = false;
 #if TARGET_OS_OSX
     NSScreen *screen = [NSScreen mainScreen];
-    if (screen) {
-      supportsProMotion = (screen.maximumFramesPerSecond > 60);
-    }
+    supportsProMotion = (screen.maximumFramesPerSecond > 60);
 #else
     supportsProMotion = [UIScreen mainScreen].maximumFramesPerSecond > 60;
 #endif // TARGET_OS_OSX
@@ -130,9 +133,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
     frameRateRange = FrameRateRange::POOR;
   }
   if (currentFrameRate_.preferred != frameRateRange.preferred) {
-#if !TARGET_OS_OSX
     displayLink_.preferredFrameRateRange = frameRateRange;
-#endif // !TARGET_OS_OSX
     currentFrameRate_ = frameRateRange;
   }
 }
