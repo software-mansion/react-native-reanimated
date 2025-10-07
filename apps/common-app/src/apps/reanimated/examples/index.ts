@@ -586,7 +586,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   PlatformColorExample: {
     title: 'PlatformColor',
-    screen: DynamicColorIOSExample,
+    screen: PlatformColorExample,
     icon: '🎨',
   },
 
