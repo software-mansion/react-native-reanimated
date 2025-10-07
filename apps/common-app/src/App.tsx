@@ -37,6 +37,7 @@ export default function App() {
       </View>
     );
   }
+
   const RootApp = IS_MACOS ? ReanimatedApp : Navigator;
 
   return (

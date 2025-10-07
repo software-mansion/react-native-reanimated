@@ -6,9 +6,7 @@
 #import <chrono>
 
 #if TARGET_OS_OSX
-
 #import <QuartzCore/CADisplayLink.h>
-
 #endif // TARGET_OS_OSX
 
 #import <React/RCTAssert.h>
