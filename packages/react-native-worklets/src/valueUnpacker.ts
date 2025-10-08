@@ -68,7 +68,7 @@ function __installUnpacker() {
           : 'anonymous function';
         // eslint-disable-next-line reanimated/use-worklets-error
         throw new Error(`[Worklets] Tried to synchronously call a non-worklet ${label} on the UI thread.
-See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
+See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
       };
       fun.__remoteFunction = objectToUnpack;
       return fun;
