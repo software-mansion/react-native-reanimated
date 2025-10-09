@@ -1,8 +1,29 @@
 import { useDocsVersion } from '@docusaurus/plugin-content-docs/client';
 import React from 'react';
 
-import compatibilityData from '../../../../../packages/react-native-reanimated/compatibility.json';
+import untypedCompatibilityData from '../../../../../packages/react-native-reanimated/compatibility.json';
 import styles from './styles.module.css';
+
+type Architecture = 'paper' | 'fabric';
+
+interface PaperCompatibilityEntry {
+  'react-native': string[];
+}
+
+interface FabricCompatibilityEntry {
+  'react-native': string[];
+  'react-native-worklets'?: string[];
+}
+
+type PaperCompatibilityData = Record<string, PaperCompatibilityEntry>;
+type FabricCompatibilityData = Record<string, FabricCompatibilityEntry>;
+
+type CompatibilityData = {
+  paper: PaperCompatibilityData;
+  fabric: FabricCompatibilityData;
+};
+
+const compatibilityData = untypedCompatibilityData as CompatibilityData;
 
 export function Yes() {
   return <div className={styles.supported}>yes</div>;
@@ -32,24 +53,28 @@ interface CompatibilityItem {
 
 type ReanimatedCompatibilityProps = {
   spacerAfterIndex?: number;
+  architecture?: Architecture;
 };
 
 export function ReanimatedCompatibility({
   spacerAfterIndex,
+  architecture = 'fabric',
 }: ReanimatedCompatibilityProps) {
   const docsVersion = useDocsVersion();
 
   const getCompatibilityEntriesForVersion = (version: string) => {
+    const architectureData = compatibilityData[architecture];
+
     if (version === 'current') {
       // For current version, find the highest major version and include nightly
       const highestMajorVersion = Math.max(
-        ...Object.keys(compatibilityData).map((key) => {
+        ...Object.keys(architectureData).map((key) => {
           const num = key.split('.')[0];
           return isNaN(+num) ? 0 : +num;
         })
       );
 
-      return Object.entries(compatibilityData).filter(
+      return Object.entries(architectureData).filter(
         ([key]) =>
           key === 'nightly' || key.startsWith(`${highestMajorVersion}.`)
       );
@@ -57,7 +82,7 @@ export function ReanimatedCompatibility({
 
     // For versioned docs (e.g. "3.x", "2.x", "1.x"), extract the major version number
     const majorVersion = version.replace('.x', '');
-    return Object.entries(compatibilityData).filter(([key]) =>
+    return Object.entries(architectureData).filter(([key]) =>
       key.startsWith(`${majorVersion}.`)
     );
   };
@@ -75,11 +100,13 @@ export function ReanimatedCompatibility({
   const isVersionSupported = (supportedVersions: string[], version: string) =>
     supportedVersions.includes(version);
 
-  const createCompatibility = (supportedVersions: string[]) => {
+  const createCompatibility = (
+    entry: PaperCompatibilityEntry | FabricCompatibilityEntry
+  ) => {
     const compatibility: Record<string, boolean> = {};
     reactNativeVersions.forEach((version) => {
       compatibility[`rn${version.replace('.', '')}`] = isVersionSupported(
-        supportedVersions,
+        entry['react-native'],
         version
       );
     });
@@ -91,7 +118,7 @@ export function ReanimatedCompatibility({
       return {
         version,
         isSpacer: index === spacerAfterIndex,
-        compatibility: createCompatibility(data['react-native']),
+        compatibility: createCompatibility(data),
       };
     }
   );

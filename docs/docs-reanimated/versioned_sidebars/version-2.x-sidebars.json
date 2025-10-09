@@ -71,7 +71,7 @@
     {
       "type": "category",
       "label": "Guides",
-      "items": ["guide/testing", "guide/debugging"]
+      "items": ["guide/compatibility", "guide/testing", "guide/debugging"]
     },
     {
       "type": "category",
