@@ -26,9 +26,11 @@ type DynamicColorValue = ColorValue & {
   };
 };
 
-type PlatformColorValue = ColorValue & { semantic: Array<string> };
+type PlatformColorValue = ColorValue & { semantic: Array<string> } & {
+  resource_paths: Array<string>;
+};
 
-export function PlatformColor(...names: Array<string>): ColorValue {
+export function PlatformColor(...names: Array<string>): PlatformColorValue {
   'worklet';
   // eslint-disable-next-line camelcase
   const mapped = IS_IOS ? { semantic: names } : { resource_paths: names };
