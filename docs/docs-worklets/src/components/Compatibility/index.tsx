@@ -1,6 +1,6 @@
 import React from 'react';
 
-import compatibilityData from '../../../../react-native-reanimated/compatibility.json';
+import compatibilityData from '../../../../../packages/react-native-worklets/compatibility.json';
 import styles from './styles.module.css';
 
 export function Yes() {
@@ -29,7 +29,7 @@ interface CompatibilityItem {
   compatibility: Record<string, boolean>;
 }
 
-export function ReanimatedCompatibility() {
+export function WorkletsCompatibility() {
   const reactNativeVersions = Array.from(
     new Set(
       Object.keys(compatibilityData).flatMap(

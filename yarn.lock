@@ -17562,9 +17562,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"docs-reanimated@workspace:packages/docs-reanimated":
+"docs-reanimated@workspace:docs/docs-reanimated":
   version: 0.0.0-use.local
-  resolution: "docs-reanimated@workspace:packages/docs-reanimated"
+  resolution: "docs-reanimated@workspace:docs/docs-reanimated"
   dependencies:
     "@babel/core": "npm:^7.28.3"
     "@babel/plugin-proposal-class-properties": "npm:7.18.6"
@@ -17618,9 +17618,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"docs-worklets@workspace:packages/docs-worklets":
+"docs-worklets@workspace:docs/docs-worklets":
   version: 0.0.0-use.local
-  resolution: "docs-worklets@workspace:packages/docs-worklets"
+  resolution: "docs-worklets@workspace:docs/docs-worklets"
   dependencies:
     "@babel/core": "npm:^7.28.3"
     "@babel/plugin-proposal-class-properties": "npm:7.18.6"
