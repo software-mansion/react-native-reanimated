@@ -162,9 +162,9 @@ function runAnimations(
     /*
      * If `animation.current` is a boxShadow object, spread its properties into a new object
      * to avoid modifying the original reference. This ensures when `newValues` has a nested color prop, it stays unparsed
-     * in rgba format, allowing the animation to run correctly.
+     * in rgba format, allowing the animation to run correctly. Additionally we need to check if user animated the whole boxShadow object or only one of its properties.
      */
-    if (forceCopyAnimation) {
+    if (forceCopyAnimation && typeof animation.current === 'object') {
       result[key] = { ...animation.current };
     } else {
       result[key] = animation.current;

@@ -5,15 +5,46 @@
 
 namespace reanimated::css {
 
+TransformMatrix3D::TransformMatrix3D(jsi::Runtime &rt, const jsi::Value &value)
+    : TransformMatrixBase<TransformMatrix3D, MATRIX_3D_DIMENSION>() {
+  const auto &array = value.asObject(rt).asArray(rt);
+  const auto size = array.size(rt);
+
+  if (size != SIZE) {
+    throw std::invalid_argument(
+        "[Reanimated] TransformMatrix3D: Invalid matrix size: " +
+        std::to_string(size));
+  }
+
+  for (size_t i = 0; i < SIZE; ++i) {
+    matrix_[i] = array.getValueAtIndex(rt, i).asNumber();
+  }
+}
+
+TransformMatrix3D::TransformMatrix3D(const folly::dynamic &array)
+    : TransformMatrixBase<TransformMatrix3D, MATRIX_3D_DIMENSION>() {
+  const auto size = array.size();
+
+  if (size != SIZE) {
+    throw std::invalid_argument(
+        "[Reanimated] TransformMatrix3D: Invalid matrix size: " +
+        std::to_string(size));
+  }
+
+  for (size_t i = 0; i < SIZE; ++i) {
+    matrix_[i] = array[i].asDouble();
+  }
+}
+
 TransformMatrix3D::Decomposed TransformMatrix3D::Decomposed::interpolate(
     const double progress,
-    const TransformMatrix3D::Decomposed &other) const {
+    const TransformMatrix3D::Decomposed &to) const {
   return {
-      .scale = scale.interpolate(progress, other.scale),
-      .skew = skew.interpolate(progress, other.skew),
-      .quaternion = quaternion.interpolate(progress, other.quaternion),
-      .translation = translation.interpolate(progress, other.translation),
-      .perspective = perspective.interpolate(progress, other.perspective)};
+      .scale = scale.interpolate(progress, to.scale),
+      .skew = skew.interpolate(progress, to.skew),
+      .quaternion = quaternion.interpolate(progress, to.quaternion),
+      .translation = translation.interpolate(progress, to.translation),
+      .perspective = perspective.interpolate(progress, to.perspective)};
 }
 
 #ifndef NDEBUG
@@ -30,24 +61,13 @@ std::ostream &operator<<(
 
 #endif // NDEBUG
 
-TransformMatrix3D TransformMatrix3D::Identity() {
-  // clang-format off
-  return TransformMatrix3D({
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1
-  });
-  // clang-format on
-}
-
 // Template specializations for TransformMatrix3D::create
 template <>
 TransformMatrix3D TransformMatrix3D::create<TransformOp::Perspective>(
     double v) {
   if (v == 0) {
     // Ignore perspective if it is invalid
-    return TransformMatrix3D::Identity();
+    return TransformMatrix3D();
   }
   // clang-format off
   return TransformMatrix3D({
@@ -199,8 +219,15 @@ TransformMatrix3D TransformMatrix3D::create(double value) {
       getOperationNameFromType(TOperation));
 }
 
-bool TransformMatrix3D::operator==(const TransformMatrix3D &other) const {
-  return matrix_ == other.matrix_;
+TransformMatrix3D TransformMatrix3D::from2D(const TransformMatrix2D &m) {
+  // clang-format off
+  return TransformMatrix3D({
+    m[0], m[1], 0, m[2],
+    m[3], m[4], 0, m[5],
+      0,    0,  1,   0,
+    m[6], m[7], 0, m[8]
+  });
+  // clang-format on
 }
 
 Vector4D operator*(const Vector4D &v, const TransformMatrix3D &m) {
@@ -385,7 +412,7 @@ std::optional<TransformMatrix3D::Decomposed> TransformMatrix3D::decompose()
 
 TransformMatrix3D TransformMatrix3D::recompose(
     const TransformMatrix3D::Decomposed &decomposed) {
-  auto result = TransformMatrix3D::Identity();
+  auto result = TransformMatrix3D();
 
   // Start from applying perspective
   for (size_t i = 0; i < 4; ++i) {
@@ -404,7 +431,7 @@ TransformMatrix3D TransformMatrix3D::recompose(
   auto hasSkewXY = decomposed.skew[0] != 0;
 
   if (hasSkewYZ || hasSkewXZ || hasSkewXY) {
-    auto tmp = TransformMatrix3D::Identity();
+    auto tmp = TransformMatrix3D();
     if (hasSkewYZ) { // YZ
       tmp[9] = decomposed.skew[2];
       result = tmp * result;
@@ -441,7 +468,7 @@ TransformMatrix3D TransformMatrix3D::fromQuaternion(const Quaternion &q) {
     1 - 2 * (yy + zz),     2 * (xy - zw),     2 * (xz + yw), 0,
         2 * (xy + zw), 1 - 2 * (xx + zz),     2 * (yz - xw), 0,
         2 * (xz - yw),     2 * (yz + xw), 1 - 2 * (xx + yy), 0,
-                    0,                    0,              0, 1
+                    0,                 0,                 0, 1
   });
   // clang-format on
 }

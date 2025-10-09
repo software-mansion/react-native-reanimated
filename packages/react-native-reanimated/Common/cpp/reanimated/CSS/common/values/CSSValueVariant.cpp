@@ -14,12 +14,12 @@
 
 namespace reanimated::css {
 
-template <typename... AllowedTypes>
+template <CSSValueDerived... AllowedTypes>
 CSSValueVariant<AllowedTypes...>::CSSValueVariant(
     std::variant<AllowedTypes...> &&storage)
     : storage_(std::move(storage)) {}
 
-template <typename... AllowedTypes>
+template <CSSValueDerived... AllowedTypes>
 CSSValueVariant<AllowedTypes...>::CSSValueVariant(
     jsi::Runtime &rt,
     const jsi::Value &jsiValue) {
@@ -42,7 +42,7 @@ CSSValueVariant<AllowedTypes...>::CSSValueVariant(
   }
 }
 
-template <typename... AllowedTypes>
+template <CSSValueDerived... AllowedTypes>
 CSSValueVariant<AllowedTypes...>::CSSValueVariant(const folly::dynamic &value) {
   auto tryOne = [&]<typename TCSSValue>() -> bool {
     // We have to check in a runtime if the type can be constructed from the
@@ -63,7 +63,7 @@ CSSValueVariant<AllowedTypes...>::CSSValueVariant(const folly::dynamic &value) {
   }
 }
 
-template <typename... AllowedTypes>
+template <CSSValueDerived... AllowedTypes>
 bool CSSValueVariant<AllowedTypes...>::operator==(
     const CSSValueVariant &other) const {
   if (storage_.index() != other.storage_.index()) {
@@ -81,7 +81,7 @@ bool CSSValueVariant<AllowedTypes...>::operator==(
       other.storage_);
 }
 
-template <typename... AllowedTypes>
+template <CSSValueDerived... AllowedTypes>
 bool CSSValueVariant<AllowedTypes...>::operator==(const CSSValue &other) const {
   if (auto *o = dynamic_cast<const CSSValueVariant *>(&other)) {
     return *this == *o;
@@ -89,17 +89,17 @@ bool CSSValueVariant<AllowedTypes...>::operator==(const CSSValue &other) const {
   return false;
 }
 
-template <typename... AllowedTypes>
+template <CSSValueDerived... AllowedTypes>
 folly::dynamic CSSValueVariant<AllowedTypes...>::toDynamic() const {
   return std::visit([](const auto &v) { return v.toDynamic(); }, storage_);
 }
 
-template <typename... AllowedTypes>
+template <CSSValueDerived... AllowedTypes>
 std::string CSSValueVariant<AllowedTypes...>::toString() const {
   return std::visit([](const auto &v) { return v.toString(); }, storage_);
 }
 
-template <typename... AllowedTypes>
+template <CSSValueDerived... AllowedTypes>
 CSSValueVariant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::interpolate(
     const double progress,
     const CSSValueVariant &to,
@@ -126,7 +126,7 @@ CSSValueVariant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::interpolate(
       to.storage_);
 }
 
-template <typename... AllowedTypes>
+template <CSSValueDerived... AllowedTypes>
 CSSValueVariant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::interpolate(
     const double progress,
     const CSSValueVariant &to,
@@ -154,7 +154,7 @@ CSSValueVariant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::interpolate(
       to.storage_);
 }
 
-template <typename... AllowedTypes>
+template <CSSValueDerived... AllowedTypes>
 CSSValueVariant<AllowedTypes...>
 CSSValueVariant<AllowedTypes...>::fallbackInterpolate(
     const double progress,

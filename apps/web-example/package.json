@@ -14,7 +14,7 @@
     "common-app": "workspace:*",
     "expo": "^54.0.0-preview.13",
     "react-dom": "19.1.1",
-    "react-native": "0.82.0-rc.4",
+    "react-native": "0.82.0",
     "react-native-web": "~0.21.1"
   },
   "devDependencies": {

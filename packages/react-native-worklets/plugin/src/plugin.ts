@@ -2,6 +2,7 @@ import type { NodePath, PluginItem } from '@babel/core';
 import type {
   CallExpression,
   ClassDeclaration,
+  ExpressionStatement,
   JSXAttribute,
   ObjectExpression,
   Program,
@@ -11,6 +12,7 @@ import {
   processCalleesAutoworkletizableCallbacks,
   processIfAutoworkletizableCallback,
 } from './autoworkletization';
+import { toggleBundleMode } from './bundleMode';
 import { processIfWorkletClass } from './class';
 import { processIfWorkletContextObject } from './contextObject';
 import { processIfWorkletFile } from './file';
@@ -82,6 +84,16 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
         enter(path: NodePath<Program>, state: ReanimatedPluginPass) {
           runWithTaggedExceptions(() => {
             processIfWorkletFile(path, state);
+          });
+        },
+      },
+      ExpressionStatement: {
+        enter(
+          path: NodePath<ExpressionStatement>,
+          state: ReanimatedPluginPass
+        ) {
+          runWithTaggedExceptions(() => {
+            toggleBundleMode(path, state);
           });
         },
       },
