@@ -1250,6 +1250,37 @@ var require_autoworkletization = __commonJS({
   }
 });
 
+// lib/bundleMode.js
+var require_bundleMode = __commonJS({
+  "lib/bundleMode.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.toggleBundleMode = toggleBundleMode;
+    var types_12 = require("@babel/types");
+    function toggleBundleMode(path, state) {
+      var _a;
+      if (!state.opts.bundleMode || !((_a = state.filename) === null || _a === void 0 ? void 0 : _a.includes("workletRuntimeEntry"))) {
+        return;
+      }
+      const expressionPath = path.get("expression");
+      if (!expressionPath.isAssignmentExpression()) {
+        return;
+      }
+      const left = expressionPath.get("left");
+      if (!left.isMemberExpression()) {
+        return;
+      }
+      const object = left.get("object");
+      const property = left.get("property");
+      if (!object.isIdentifier() || object.node.name !== "globalThis" || !property.isIdentifier() || property.node.name !== "_WORKLETS_BUNDLE_MODE") {
+        return;
+      }
+      const right = expressionPath.get("right");
+      right.replaceWith((0, types_12.booleanLiteral)(true));
+    }
+  }
+});
+
 // lib/class.js
 var require_class = __commonJS({
   "lib/class.js"(exports2) {
@@ -1703,6 +1734,7 @@ var require_webOptimization = __commonJS({
 // lib/plugin.js
 Object.defineProperty(exports, "__esModule", { value: true });
 var autoworkletization_1 = require_autoworkletization();
+var bundleMode_1 = require_bundleMode();
 var class_1 = require_class();
 var contextObject_1 = require_contextObject();
 var file_1 = require_file();
@@ -1763,6 +1795,13 @@ module.exports = function WorkletsBabelPlugin() {
         enter(path, state) {
           runWithTaggedExceptions(() => {
             (0, file_1.processIfWorkletFile)(path, state);
+          });
+        }
+      },
+      ExpressionStatement: {
+        enter(path, state) {
+          runWithTaggedExceptions(() => {
+            (0, bundleMode_1.toggleBundleMode)(path, state);
           });
         }
       },
