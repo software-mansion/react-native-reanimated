@@ -1,3 +1,4 @@
+import { useDocsVersion } from '@docusaurus/plugin-content-docs/client';
 import React from 'react';
 
 import compatibilityData from '../../../../../packages/react-native-reanimated/compatibility.json';
@@ -25,16 +26,49 @@ export function Spacer() {
 
 interface CompatibilityItem {
   version: string;
-  isSpacer?: boolean;
+  isSpacer: boolean;
   compatibility: Record<string, boolean>;
 }
 
-export function ReanimatedCompatibility() {
+type ReanimatedCompatibilityProps = {
+  spacerAfterIndex?: number;
+};
+
+export function ReanimatedCompatibility({
+  spacerAfterIndex,
+}: ReanimatedCompatibilityProps) {
+  const docsVersion = useDocsVersion();
+
+  const getCompatibilityEntriesForVersion = (version: string) => {
+    if (version === 'current') {
+      // For current version, find the highest major version and include nightly
+      const highestMajorVersion = Math.max(
+        ...Object.keys(compatibilityData).map((key) => {
+          const num = key.split('.')[0];
+          return isNaN(+num) ? 0 : +num;
+        })
+      );
+
+      return Object.entries(compatibilityData).filter(
+        ([key]) =>
+          key === 'nightly' || key.startsWith(`${highestMajorVersion}.`)
+      );
+    }
+
+    // For versioned docs (e.g. "3.x", "2.x", "1.x"), extract the major version number
+    const majorVersion = version.replace('.x', '');
+    return Object.entries(compatibilityData).filter(([key]) =>
+      key.startsWith(`${majorVersion}.`)
+    );
+  };
+
+  const filteredCompatibilityData = getCompatibilityEntriesForVersion(
+    docsVersion.version
+  );
+
   const reactNativeVersions = Array.from(
     new Set(
-      Object.keys(compatibilityData).flatMap(
-        (version) => compatibilityData[version]['react-native']
-      )
+      filteredCompatibilityData.flatMap(([, data]) => data['react-native'])
     )
   ).sort();
 
@@ -52,15 +86,15 @@ export function ReanimatedCompatibility() {
     return compatibility;
   };
 
-  const compatibilityItems: CompatibilityItem[] = Object.entries(
-    compatibilityData
-  ).map(([version, data], index) => {
-    return {
-      version,
-      isSpacer: index === 1,
-      compatibility: createCompatibility(data['react-native']),
-    };
-  });
+  const compatibilityItems: CompatibilityItem[] = filteredCompatibilityData.map(
+    ([version, data], index) => {
+      return {
+        version,
+        isSpacer: index === spacerAfterIndex,
+        compatibility: createCompatibility(data['react-native']),
+      };
+    }
+  );
 
   return (
     <div className="compatibility">
