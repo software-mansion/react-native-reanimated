@@ -195,7 +195,7 @@ export default function SynchronousPropsExample() {
         <React.Fragment key={prop}>
           <Text>{prop} [px]</Text>
           <Animated.View
-            // @ts-expect-error TODO: fix types
+            // @ts-ignore - TS incorrectly complains about missing matrix property in transform (fixed in react-native-strict-api)
             style={{
               width: 50,
               height: 50,
@@ -205,7 +205,7 @@ export default function SynchronousPropsExample() {
           />
           <Text>{prop} [%]</Text>
           <Animated.View
-            // @ts-expect-error TODO: fix types
+            // @ts-ignore - TS incorrectly complains about missing matrix property in transform (fixed in react-native-strict-api)
             style={{
               width: 50,
               height: 50,
@@ -220,7 +220,7 @@ export default function SynchronousPropsExample() {
         <React.Fragment key={prop}>
           <Text>{prop}</Text>
           <Animated.View
-            // @ts-expect-error TODO: fix types
+            // @ts-ignore - TS incorrectly complains about missing matrix property in transform (fixed in react-native-strict-api)
             style={{
               width: 50,
               height: 50,
@@ -235,7 +235,7 @@ export default function SynchronousPropsExample() {
         <React.Fragment key={prop}>
           <Text>{prop} [deg]</Text>
           <Animated.View
-            // @ts-expect-error TODO: fix types
+            // @ts-ignore - TS incorrectly complains about missing matrix property in transform (fixed in react-native-strict-api)
             style={{
               width: 50,
               height: 50,
@@ -245,7 +245,7 @@ export default function SynchronousPropsExample() {
           />
           <Text>{prop} [rad]</Text>
           <Animated.View
-            // @ts-expect-error TODO: fix types
+            // @ts-ignore - TS incorrectly complains about missing matrix property in transform (fixed in react-native-strict-api)
             style={{
               width: 50,
               height: 50,
@@ -260,7 +260,7 @@ export default function SynchronousPropsExample() {
         <React.Fragment key={prop}>
           <Text>{prop} [deg] (works incorrectly on Android)</Text>
           <Animated.View
-            // @ts-expect-error TODO: fix types
+            // @ts-ignore - TS incorrectly complains about missing matrix property in transform (fixed in react-native-strict-api)
             style={{
               width: 50,
               height: 50,
@@ -270,7 +270,7 @@ export default function SynchronousPropsExample() {
           />
           <Text>{prop} [rad] (works incorrectly on Android)</Text>
           <Animated.View
-            // @ts-expect-error TODO: fix types
+            // @ts-ignore - TS incorrectly complains about missing matrix property in transform (fixed in react-native-strict-api)
             style={{
               width: 50,
               height: 50,
