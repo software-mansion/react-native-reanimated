@@ -9,7 +9,8 @@ const path = require('path');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'React Native Worklets: Multithreading engine for your apps and libraries',
+  title:
+    'React Native Worklets: Multithreading engine for your apps and libraries',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -30,10 +31,7 @@ const config = {
   // Even if you don't use internalization, you can use this field to set useful
   // metadata like html lang. For example, if your site is Chinese, you may want
   // to replace "en" with "zh-Hans".
-  i18n: {
-    defaultLocale: 'en',
-    locales: ['en'],
-  },
+  i18n: { defaultLocale: 'en', locales: ['en'] },
 
   presets: [
     [
@@ -45,16 +43,10 @@ const config = {
           sidebarPath: require.resolve('./sidebars.js'),
           sidebarCollapsible: false,
           editUrl:
-            'https://github.com/software-mansion/react-native-reanimated/edit/main/packages/docs-worklets',
-          versions: {
-            current: {
-              label: '0.x',
-            },
-          },
+            'https://github.com/software-mansion/react-native-reanimated/edit/main/docs/docs-worklets',
+          versions: { current: { label: '0.x' } },
         },
-        theme: {
-          customCss: require.resolve('./src/css/index.css'),
-        },
+        theme: { customCss: require.resolve('./src/css/index.css') },
         // TODO: Add google analytics
         // gtag: {
         //   trackingID: 'G-RNYQG9GVFJ',
@@ -67,9 +59,7 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       image: 'img/og-image.png',
-      colorMode: {
-        respectPrefersColorScheme: true,
-      },
+      colorMode: { respectPrefersColorScheme: true },
       metadata: [
         { name: 'og:image:width', content: '1200' },
         { name: 'og:image:height', content: '630' },
@@ -165,29 +155,15 @@ const config = {
           raf.polyfill();
 
           return {
-            mergeStrategy: {
-              'resolve.extensions': 'prepend',
-            },
+            mergeStrategy: { 'resolve.extensions': 'prepend' },
             plugins: [
-              new webpack.DefinePlugin({
-                ...processMock,
-                __DEV__: 'false',
-              }),
+              new webpack.DefinePlugin({ ...processMock, __DEV__: 'false' }),
             ],
             module: {
               rules: [
-                {
-                  test: /\.txt$/,
-                  type: 'asset/source',
-                },
-                {
-                  test: /\.tsx?$/,
-                  use: 'babel-loader',
-                },
-                {
-                  test: /\.js$/,
-                  use: 'babel-loader',
-                },
+                { test: /\.txt$/, type: 'asset/source' },
+                { test: /\.tsx?$/, use: 'babel-loader' },
+                { test: /\.js$/, use: 'babel-loader' },
               ],
             },
             resolve: {

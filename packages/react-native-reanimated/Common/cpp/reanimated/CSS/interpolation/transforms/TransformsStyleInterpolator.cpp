@@ -372,7 +372,7 @@ folly::dynamic TransformsStyleInterpolator::interpolateOperations(
     const double keyframeProgress,
     const TransformOperations &fromOperations,
     const TransformOperations &toOperations) const {
-  auto result = folly::dynamic::array();
+  TransformOperations result;
   result.reserve(fromOperations.size());
 
   const auto transformUpdateContext = TransformInterpolationContext{
@@ -384,7 +384,7 @@ folly::dynamic TransformsStyleInterpolator::interpolateOperations(
 
     // fromOperation and toOperation have the same type
     const auto &interpolator = interpolators_->at(fromOperation->type);
-    result.push_back(interpolator->interpolate(
+    result.emplace_back(interpolator->interpolate(
         keyframeProgress, fromOperation, toOperation, transformUpdateContext));
   }
 
@@ -392,7 +392,7 @@ folly::dynamic TransformsStyleInterpolator::interpolateOperations(
     return folly::dynamic();
   }
 
-  return result;
+  return convertOperationsToDynamic(result);
 }
 
 folly::dynamic TransformsStyleInterpolator::convertOperationsToDynamic(

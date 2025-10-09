@@ -51,7 +51,7 @@ const config = {
           sidebarPath: require.resolve('./sidebars.js'),
           sidebarCollapsible: false,
           editUrl:
-            'https://github.com/software-mansion/react-native-reanimated/edit/main/packages/docs-reanimated',
+            'https://github.com/software-mansion/react-native-reanimated/edit/main/docs/docs-reanimated',
           lastVersion: 'current',
           versions: {
             current: {

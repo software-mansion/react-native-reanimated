@@ -86,6 +86,6 @@ index 6a77357267..df6817cce5 100644
 +  "resolutions": {
 +    "metro": "patch:metro@npm%3A0.83.1#~/.yarn/patches/metro-npm-0.83.1-241fe42591.patch",
 +    "metro-runtime": "patch:metro-runtime@npm%3A0.83.1#~/.yarn/patches/metro-runtime-npm-0.83.1-c3d616063e.patch",
-+    "react-native": "patch:react-native@npm%3A0.82.0-rc.4#~/.yarn/patches/react-native-npm-0.82.0-rc.4-228ad0ffa7.patch"
++    "react-native": "patch:react-native@npm%3A0.82.0#~/.yarn/patches/react-native-npm-0.82.0-228ad0ffa7.patch"
    }
  }
