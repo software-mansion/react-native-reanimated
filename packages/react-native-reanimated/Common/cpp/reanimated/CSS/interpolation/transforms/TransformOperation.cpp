@@ -1,5 +1,11 @@
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
+#include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
+#include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
+#include <reanimated/CSS/common/values/CSSAngle.h>
+#include <reanimated/CSS/common/values/CSSLength.h>
+#include <reanimated/CSS/common/values/CSSNumber.h>
+
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
 #include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
 #include <reanimated/CSS/interpolation/transforms/operations/rotate.h>
@@ -7,19 +13,21 @@
 #include <reanimated/CSS/interpolation/transforms/operations/skew.h>
 #include <reanimated/CSS/interpolation/transforms/operations/translate.h>
 
+#include <utility>
+
 namespace reanimated::css {
 
-#ifndef NDEBUG
-
-std::ostream &operator<<(
-    std::ostream &os,
-    const TransformOperation &operation) {
-  os << operation.getOperationName() << "("
-     << operation.stringifyOperationValue() << ")";
-  return os;
+namespace {
+std::string createConversionErrorMessage(
+    const TransformOp fromType,
+    const TransformOp toType) {
+  return "[Reanimated] Cannot convert transform operation of type: " +
+      getOperationNameFromType(fromType) +
+      " to type: " + getOperationNameFromType(toType);
 }
+} // namespace
 
-#endif // NDEBUG
+TransformOperation::TransformOperation(TransformOp value) : type(value) {}
 
 bool TransformOperation::canConvertTo(const TransformOp targetType) const {
   return false;
@@ -28,24 +36,24 @@ bool TransformOperation::canConvertTo(const TransformOp targetType) const {
 void TransformOperation::assertCanConvertTo(
     const TransformOp targetType) const {
   if (!canConvertTo(targetType)) {
-    throw std::invalid_argument(
-        "[Reanimated] Cannot convert transform operation to type: " +
-        getOperationNameFromType(targetType));
+    throw std::invalid_argument(createConversionErrorMessage(type, targetType));
   }
 }
 
 TransformOperations TransformOperation::convertTo(
     const TransformOp targetType) const {
-  throw std::invalid_argument(
-      "[Reanimated] Cannot convert transform operation to type: " +
-      getOperationNameFromType(targetType));
+  throw std::invalid_argument(createConversionErrorMessage(type, targetType));
 }
 
 std::string TransformOperation::getOperationName() const {
-  return getOperationNameFromType(type());
+  return getOperationNameFromType(type);
 }
 
-bool TransformOperation::isRelative() const {
+bool TransformOperation::shouldResolve() const {
+  return false;
+}
+
+bool TransformOperation::is3D() const {
   return false;
 }
 
@@ -113,8 +121,7 @@ std::shared_ptr<TransformOperation> TransformOperation::fromJSIValue(
       return std::make_shared<SkewYOperation>(
           propertyValue.asString(rt).utf8(rt));
     case TransformOp::Matrix:
-      return std::make_shared<MatrixOperation>(
-          TransformMatrix3D(rt, propertyValue));
+      return std::make_shared<MatrixOperation>(rt, propertyValue);
     default:
       throw std::invalid_argument(
           "[Reanimated] Unknown transform operation: " + propertyName);
@@ -172,8 +179,7 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(
     case TransformOp::SkewY:
       return std::make_shared<SkewYOperation>(propertyValue.getString());
     case TransformOp::Matrix:
-      return std::make_shared<MatrixOperation>(
-          TransformMatrix3D(propertyValue));
+      return std::make_shared<MatrixOperation>(propertyValue);
     default:
       throw std::invalid_argument(
           "[Reanimated] Unknown transform operation: " + propertyName);
@@ -184,42 +190,76 @@ folly::dynamic TransformOperation::toDynamic() const {
   return folly::dynamic::object(getOperationName(), valueToDynamic());
 }
 
-// Specialization for the matrix operation
-#ifndef NDEBUG
+// TransformOperationBase implementation
+template <TransformOp TOperation, typename TValue>
+TransformOperationBase<TOperation, TValue>::TransformOperationBase(TValue value)
+    : TransformOperation(TOperation), value(std::move(value)) {}
 
 template <TransformOp TOperation, typename TValue>
-std::string
-TransformOperationBase<TOperation, TValue>::stringifyOperationValue() const {
-  std::ostringstream ss;
-  ss << value;
-  return ss.str();
-}
-
-template <>
-std::string TransformOperationBase<
-    TransformOp::Matrix,
-    std::variant<TransformMatrix3D, TransformOperations>>::
-    stringifyOperationValue() const {
-  std::ostringstream ss;
-
-  if (std::holds_alternative<TransformMatrix3D>(value)) {
-    ss << std::get<TransformMatrix3D>(value);
-  } else {
-    const auto &operations = std::get<TransformOperations>(value);
-    std::ostringstream ss;
-    for (const auto &operation : operations) {
-      ss << operation->getOperationName() << "("
-         << operation->stringifyOperationValue() << "), ";
-    }
+bool TransformOperationBase<TOperation, TValue>::operator==(
+    const TransformOperation &other) const {
+  if (type != other.type) {
+    return false;
   }
-
-  return ss.str();
+  const auto &otherOperation =
+      static_cast<const TransformOperationBase<TOperation, TValue> &>(other);
+  return value == otherOperation.value;
 }
 
-#endif // NDEBUG
+template <TransformOp TOperation, typename TValue>
+TransformMatrix::Shared TransformOperationBase<TOperation, TValue>::toMatrix(
+    bool force3D) const {
+  if constexpr (Resolvable<TValue>) {
+    // Handle resolvable operations
+    throw std::runtime_error(
+        "[Reanimated] Cannot convert resolvable operation to matrix: " +
+        getOperationName());
+  } else {
+    // Handle regular operations
+    const auto shouldBe3D = this->is3D() || force3D;
 
-template struct TransformOperationBase<
-    TransformOp::Matrix,
-    std::variant<TransformMatrix3D, TransformOperations>>;
+    if (cachedMatrix_) {
+      const auto resultDimension =
+          shouldBe3D ? MATRIX_3D_DIMENSION : MATRIX_2D_DIMENSION;
+      if (cachedMatrix_->getDimension() == resultDimension) {
+        return cachedMatrix_;
+      }
+    }
+
+    TransformMatrix::Shared result;
+    if (shouldBe3D) {
+      result = std::make_shared<const TransformMatrix3D>(
+          TransformMatrix3D::create<TOperation>(this->value.value));
+    } else {
+      result = std::make_shared<const TransformMatrix2D>(
+          TransformMatrix2D::create<TOperation>(this->value.value));
+    }
+
+    cachedMatrix_ = result;
+    return result;
+  }
+}
+
+// Rotate operations
+template struct TransformOperationBase<TransformOp::Rotate, CSSAngle>;
+template struct TransformOperationBase<TransformOp::RotateZ, CSSAngle>;
+template struct TransformOperationBase<TransformOp::RotateX, CSSAngle>;
+template struct TransformOperationBase<TransformOp::RotateY, CSSAngle>;
+
+// Translate operations
+template struct TransformOperationBase<TransformOp::TranslateX, CSSLength>;
+template struct TransformOperationBase<TransformOp::TranslateY, CSSLength>;
+
+// Scale operations
+template struct TransformOperationBase<TransformOp::ScaleX, CSSDouble>;
+template struct TransformOperationBase<TransformOp::ScaleY, CSSDouble>;
+template struct TransformOperationBase<TransformOp::Scale, CSSDouble>;
+
+// Skew operations
+template struct TransformOperationBase<TransformOp::SkewX, CSSAngle>;
+template struct TransformOperationBase<TransformOp::SkewY, CSSAngle>;
+
+// Perspective operation
+template struct TransformOperationBase<TransformOp::Perspective, CSSDouble>;
 
 } // namespace reanimated::css

@@ -9,9 +9,7 @@
 
 namespace reanimated::css {
 
-namespace {
 static constexpr size_t MATRIX_2D_DIMENSION = 3; // 3x3 matrix
-}
 
 class TransformMatrix2D
     : public TransformMatrixBase<TransformMatrix2D, MATRIX_2D_DIMENSION> {
@@ -34,12 +32,14 @@ class TransformMatrix2D
   using TransformMatrixBase<TransformMatrix2D, MATRIX_2D_DIMENSION>::
       TransformMatrixBase;
 
-  static TransformMatrix2D Identity();
+  explicit TransformMatrix2D(jsi::Runtime &rt, const jsi::Value &value);
+  explicit TransformMatrix2D(const folly::dynamic &array);
+
+  static bool canConstruct(jsi::Runtime &rt, const jsi::Value &value);
+  static bool canConstruct(const folly::dynamic &array);
 
   template <TransformOp TOperation>
   static TransformMatrix2D create(double value);
-
-  bool operator==(const TransformMatrix2D &other) const override;
 
   double determinant() const override;
   void translate2d(const Vector2D &translation);
