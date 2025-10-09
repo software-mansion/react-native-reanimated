@@ -1,5 +1,5 @@
 'use strict';
-import { SHOULD_BE_USE_WEB } from './PlatformChecker';
+
 import type { SerializableRef } from './workletTypes';
 
 /**
@@ -21,22 +21,11 @@ During cloning we use `Object.entries` to iterate over the keys which throws an 
 For convenience we moved this cache to a separate file so it doesn't scare us with red squiggles.
 */
 
-const cache = SHOULD_BE_USE_WEB
-  ? null
-  : new WeakMap<object, SerializableRef | symbol>();
+const cache = new WeakMap<object, SerializableRef | symbol>();
 
-export const serializableMappingCache = SHOULD_BE_USE_WEB
-  ? {
-      set() {
-        // NOOP
-      },
-      get() {
-        return null;
-      },
-    }
-  : {
-      set(serializable: object, serializableRef?: SerializableRef): void {
-        cache!.set(serializable, serializableRef || serializableMappingFlag);
-      },
-      get: cache!.get.bind(cache),
-    };
+export const serializableMappingCache = {
+  set(serializable: object, serializableRef?: SerializableRef): void {
+    cache.set(serializable, serializableRef || serializableMappingFlag);
+  },
+  get: cache.get.bind(cache),
+};

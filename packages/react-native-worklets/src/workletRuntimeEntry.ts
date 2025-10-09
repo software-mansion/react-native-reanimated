@@ -1,7 +1,6 @@
 'use strict';
 
 import { init } from './initializers';
-import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { RuntimeKind } from './runtimeKind';
 import { WorkletsError } from './WorkletsError';
 
@@ -18,10 +17,6 @@ import { WorkletsError } from './WorkletsError';
  * `_WORKLETS_BUNDLE_MODE` flag.
  */
 export function bundleModeInit() {
-  if (SHOULD_BE_USE_WEB) {
-    return;
-  }
-
   globalThis._WORKLETS_BUNDLE_MODE = true;
 
   const runtimeKind = globalThis.__RUNTIME_KIND;

@@ -2,7 +2,6 @@
 import { registerWorkletStackDetails } from './errors';
 import { isSynchronizable } from './isSynchronizable';
 import { logger } from './logger';
-import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import {
   serializableMappingCache,
   serializableMappingFlag,
@@ -123,42 +122,38 @@ const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // We use it to check if later on the function reenters with the same object
 let processedObjectAtThresholdDepth: unknown;
 
-function createSerializableWeb<T>(value: T): SerializableRef<T> {
-  return value as SerializableRef<T>;
-}
-
-function createSerializableNative<T>(
-  value: T,
+export function createSerializable<TValue>(
+  value: TValue,
   shouldPersistRemote = false,
   depth = 0
-): SerializableRef<T> {
+): SerializableRef<TValue> {
   detectCyclicObject(value, depth);
 
   const isObject = typeof value === 'object';
   const isFunction = typeof value === 'function';
 
   if (typeof value === 'string') {
-    return cloneString(value) as SerializableRef<T>;
+    return cloneString(value) as SerializableRef<TValue>;
   }
 
   if (typeof value === 'number') {
-    return cloneNumber(value) as SerializableRef<T>;
+    return cloneNumber(value) as SerializableRef<TValue>;
   }
 
   if (typeof value === 'boolean') {
-    return cloneBoolean(value) as SerializableRef<T>;
+    return cloneBoolean(value) as SerializableRef<TValue>;
   }
 
   if (typeof value === 'bigint') {
-    return cloneBigInt(value) as SerializableRef<T>;
+    return cloneBigInt(value) as SerializableRef<TValue>;
   }
 
   if (value === undefined) {
-    return cloneUndefined() as SerializableRef<T>;
+    return cloneUndefined() as SerializableRef<TValue>;
   }
 
   if (value === null) {
-    return cloneNull() as SerializableRef<T>;
+    return cloneNull() as SerializableRef<TValue>;
   }
 
   if ((!isObject && !isFunction) || value === null) {
@@ -167,7 +162,7 @@ function createSerializableNative<T>(
 
   const cached = getFromCache(value);
   if (cached !== undefined) {
-    return cached as SerializableRef<T>;
+    return cached as SerializableRef<TValue>;
   }
 
   if (Array.isArray(value)) {
@@ -178,7 +173,7 @@ function createSerializableNative<T>(
     isFunction &&
     (value as WorkletImport).__bundleData
   ) {
-    return cloneImport(value as WorkletImport) as SerializableRef<T>;
+    return cloneImport(value as WorkletImport) as SerializableRef<TValue>;
   }
   if (isFunction && !isWorkletFunction(value)) {
     return cloneRemoteFunction(value);
@@ -196,7 +191,7 @@ function createSerializableNative<T>(
       value,
       shouldPersistRemote,
       depth
-    ) as SerializableRef<T>;
+    ) as SerializableRef<TValue>;
   }
   if (isPlainJSObject(value) && value.__workletContextObjectFactory) {
     return cloneContextObject(value);
@@ -205,7 +200,7 @@ function createSerializableNative<T>(
     return cloneWorklet(value, shouldPersistRemote, depth);
   }
   if (isSynchronizable(value)) {
-    return cloneSynchronizable(value) as SerializableRef<T>;
+    return cloneSynchronizable(value) as SerializableRef<TValue>;
   }
   if (isPlainJSObject(value) || isFunction) {
     return clonePlainJSObject(value, shouldPersistRemote, depth);
@@ -234,25 +229,12 @@ function createSerializableNative<T>(
 
 if (globalThis._WORKLETS_BUNDLE_MODE) {
   // TODO: Do it programatically.
-  createSerializableNative.__bundleData = {
+  createSerializable.__bundleData = {
     imported: 'createSerializable',
     // @ts-expect-error resolveWeak is defined by Metro
     source: require.resolveWeak('./index'),
   };
 }
-
-interface CreateSerializable {
-  <T>(value: T): SerializableRef<T>;
-  <T>(
-    value: T,
-    shouldPersistRemote: boolean,
-    depth: number
-  ): SerializableRef<T>;
-}
-
-export const createSerializable: CreateSerializable = SHOULD_BE_USE_WEB
-  ? createSerializableWeb
-  : createSerializableNative;
 
 function detectCyclicObject(value: unknown, depth: number) {
   if (depth >= DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD) {
@@ -380,11 +362,11 @@ function cloneHostObject<T extends object>(value: T): SerializableRef<T> {
   return clone;
 }
 
-function cloneWorklet<T extends WorkletFunction>(
-  value: T,
+function cloneWorklet<TValue extends WorkletFunction>(
+  value: TValue,
   shouldPersistRemote: boolean,
   depth: number
-): SerializableRef<T> {
+): SerializableRef<TValue> {
   if (__DEV__) {
     const babelVersion = (value as WorkletFunction).__pluginVersion;
     if (babelVersion !== undefined && babelVersion !== jsVersion) {
@@ -427,7 +409,7 @@ function cloneWorklet<T extends WorkletFunction>(
     // TODO: Check after refactor if we can remove shouldPersistRemote parameter (imho it's redundant here since worklets are always persistent)
     // retain all worklets
     true
-  ) as SerializableRef<T>;
+  ) as SerializableRef<TValue>;
   serializableMappingCache.set(value, clone);
   serializableMappingCache.set(clone);
 
@@ -439,23 +421,25 @@ function cloneWorklet<T extends WorkletFunction>(
  * TurboModuleLike objects are JS objects that have a TurboModule as their
  * prototype.
  */
-function cloneTurboModuleLike<T extends object>(
-  value: T,
+function cloneTurboModuleLike<TValue extends object>(
+  value: TValue,
   shouldPersistRemote: boolean,
   depth: number
-): SerializableRef<T> {
+): SerializableRef<TValue> {
   const proto = Object.getPrototypeOf(value);
   const clonedProps = cloneObjectProperties(value, shouldPersistRemote, depth);
   const clone = WorkletsModule.createSerializableTurboModuleLike(
     clonedProps,
     proto
-  ) as SerializableRef<T>;
+  ) as SerializableRef<TValue>;
   return clone;
 }
 
-function cloneContextObject<T extends object>(value: T): SerializableRef<T> {
+function cloneContextObject<TValue extends object>(
+  value: TValue
+): SerializableRef<TValue> {
   const workletContextObjectFactory = (value as Record<string, unknown>)
-    .__workletContextObjectFactory as () => T;
+    .__workletContextObjectFactory as () => TValue;
   const handle = cloneInitializer({
     __init: () => {
       'worklet';
@@ -463,14 +447,14 @@ function cloneContextObject<T extends object>(value: T): SerializableRef<T> {
     },
   });
   serializableMappingCache.set(value, handle);
-  return handle as SerializableRef<T>;
+  return handle as SerializableRef<TValue>;
 }
 
-function clonePlainJSObject<T extends object>(
-  value: T,
+function clonePlainJSObject<TValue extends object>(
+  value: TValue,
   shouldPersistRemote: boolean,
   depth: number
-): SerializableRef<T> {
+): SerializableRef<TValue> {
   const clonedProps: Record<string, unknown> = cloneObjectProperties(
     value,
     shouldPersistRemote,
@@ -480,7 +464,7 @@ function clonePlainJSObject<T extends object>(
     clonedProps,
     shouldPersistRemote,
     value
-  ) as SerializableRef<T>;
+  ) as SerializableRef<TValue>;
   serializableMappingCache.set(value, clone);
   serializableMappingCache.set(clone);
 
@@ -488,9 +472,9 @@ function clonePlainJSObject<T extends object>(
   return clone;
 }
 
-function cloneMap<T extends Map<unknown, unknown>>(
-  value: T
-): SerializableRef<T> {
+function cloneMap<TValue extends Map<unknown, unknown>>(
+  value: TValue
+): SerializableRef<TValue> {
   const clonedKeys: unknown[] = [];
   const clonedValues: unknown[] = [];
   for (const [key, element] of value.entries()) {
@@ -500,7 +484,7 @@ function cloneMap<T extends Map<unknown, unknown>>(
   const clone = WorkletsModule.createSerializableMap(
     clonedKeys,
     clonedValues
-  ) as SerializableRef<T>;
+  ) as SerializableRef<TValue>;
   serializableMappingCache.set(value, clone);
   serializableMappingCache.set(clone);
 
@@ -508,14 +492,16 @@ function cloneMap<T extends Map<unknown, unknown>>(
   return clone;
 }
 
-function cloneSet<T extends Set<unknown>>(value: T): SerializableRef<T> {
+function cloneSet<TValue extends Set<unknown>>(
+  value: TValue
+): SerializableRef<TValue> {
   const clonedElements: unknown[] = [];
   for (const element of value) {
     clonedElements.push(createSerializable(element));
   }
   const clone = WorkletsModule.createSerializableSet(
     clonedElements
-  ) as SerializableRef<T>;
+  ) as SerializableRef<TValue>;
   serializableMappingCache.set(value, clone);
   serializableMappingCache.set(clone);
 
@@ -523,7 +509,9 @@ function cloneSet<T extends Set<unknown>>(value: T): SerializableRef<T> {
   return clone;
 }
 
-function cloneRegExp<T extends RegExp>(value: T): SerializableRef<T> {
+function cloneRegExp<TValue extends RegExp>(
+  value: TValue
+): SerializableRef<TValue> {
   const pattern = value.source;
   const flags = value.flags;
   const handle = cloneInitializer({
@@ -531,13 +519,15 @@ function cloneRegExp<T extends RegExp>(value: T): SerializableRef<T> {
       'worklet';
       return new RegExp(pattern, flags);
     },
-  }) as unknown as SerializableRef<T>;
+  }) as unknown as SerializableRef<TValue>;
   serializableMappingCache.set(value, handle);
 
   return handle;
 }
 
-function cloneError<T extends Error>(value: T): SerializableRef<T> {
+function cloneError<TValue extends Error>(
+  value: TValue
+): SerializableRef<TValue> {
   const { name, message, stack } = value;
   const handle = cloneInitializer({
     __init: () => {
@@ -551,7 +541,7 @@ function cloneError<T extends Error>(value: T): SerializableRef<T> {
     },
   });
   serializableMappingCache.set(value, handle);
-  return handle as unknown as SerializableRef<T>;
+  return handle as unknown as SerializableRef<TValue>;
 }
 
 function cloneArrayBuffer<T extends ArrayBuffer>(
@@ -569,9 +559,9 @@ function cloneArrayBuffer<T extends ArrayBuffer>(
   return clone;
 }
 
-function cloneArrayBufferView<T extends ArrayBufferView>(
-  value: T
-): SerializableRef<T> {
+function cloneArrayBufferView<TValue extends ArrayBufferView>(
+  value: TValue
+): SerializableRef<TValue> {
   const buffer = value.buffer;
   const typeName = value.constructor.name;
   const handle = cloneInitializer({
@@ -586,7 +576,7 @@ function cloneArrayBufferView<T extends ArrayBufferView>(
       }
       return new constructor(buffer);
     },
-  }) as unknown as SerializableRef<T>;
+  }) as unknown as SerializableRef<TValue>;
   serializableMappingCache.set(value, handle);
 
   return handle;
@@ -611,7 +601,9 @@ function cloneImport<TValue extends WorkletImport>(
   return clone as SerializableRef<TValue>;
 }
 
-function inaccessibleObject<T extends object>(value: T): SerializableRef<T> {
+function inaccessibleObject<TValue extends object>(
+  value: TValue
+): SerializableRef<TValue> {
   // This is reached for object types that are not of plain Object.prototype.
   // We don't support such objects from being transferred as serializables to
   // the UI runtime and hence we replace them with "inaccessible object"
@@ -620,7 +612,7 @@ function inaccessibleObject<T extends object>(value: T): SerializableRef<T> {
   // as attributes of objects being captured by worklets but should never
   // be used on the UI runtime regardless. If they are being accessed, the user
   // will get an appropriate error message.
-  const clone = createSerializable<T>(INACCESSIBLE_OBJECT as T);
+  const clone = createSerializable<TValue>(INACCESSIBLE_OBJECT as TValue);
   serializableMappingCache.set(value, clone);
   return clone;
 }
@@ -638,13 +630,13 @@ function getWorkletCode(value: WorkletFunction) {
   return code;
 }
 
-type RemoteFunction<T> = {
-  __remoteFunction: FlatSerializableRef<T>;
+type RemoteFunction<TValue> = {
+  __remoteFunction: FlatSerializableRef<TValue>;
 };
 
-function isRemoteFunction<T>(value: {
+function isRemoteFunction<TValue>(value: {
   __remoteFunction?: unknown;
-}): value is RemoteFunction<T> {
+}): value is RemoteFunction<TValue> {
   'worklet';
   return !!value.__remoteFunction;
 }
@@ -663,7 +655,7 @@ function isRemoteFunction<T>(value: {
  * the UI thread. If the user really wants some objects to be mutable they
  * should use shared values instead.
  */
-function freezeObjectInDev<T extends object>(value: T) {
+function freezeObjectInDev<TValue extends object>(value: TValue) {
   if (!__DEV__) {
     return;
   }
@@ -688,17 +680,12 @@ function freezeObjectInDev<T extends object>(value: T) {
   Object.preventExtensions(value);
 }
 
-function makeShareableCloneOnUIRecursiveLEGACY<T>(
-  value: T
-): FlatSerializableRef<T> {
+function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
+  value: TValue
+): FlatSerializableRef<TValue> {
   'worklet';
-  if (SHOULD_BE_USE_WEB) {
-    // @ts-ignore web is an interesting place where we don't run a secondary VM on the UI thread
-    // see more details in the comment where USE_STUB_IMPLEMENTATION is defined.
-    return value;
-  }
   // eslint-disable-next-line @typescript-eslint/no-shadow
-  function cloneRecursive(value: T): FlatSerializableRef<T> {
+  function cloneRecursive(value: TValue): FlatSerializableRef<TValue> {
     if (
       (typeof value === 'object' && value !== null) ||
       typeof value === 'function'
@@ -708,9 +695,9 @@ function makeShareableCloneOnUIRecursiveLEGACY<T>(
         // inside SerializableJSRef.
         return global._createSerializableHostObject(
           value
-        ) as FlatSerializableRef<T>;
+        ) as FlatSerializableRef<TValue>;
       }
-      if (isRemoteFunction<T>(value)) {
+      if (isRemoteFunction<TValue>(value)) {
         // RemoteFunctions are created by us therefore they are
         // a Serializable out of the box and there is no need to
         // call `_createSerializableClone`.
@@ -719,21 +706,21 @@ function makeShareableCloneOnUIRecursiveLEGACY<T>(
       if (Array.isArray(value)) {
         return global._createSerializableArray(
           value.map(cloneRecursive)
-        ) as FlatSerializableRef<T>;
+        ) as FlatSerializableRef<TValue>;
       }
       if ((value as Record<string, unknown>).__synchronizableRef) {
         return global._createSerializableSynchronizable(
           value
-        ) as FlatSerializableRef<T>;
+        ) as FlatSerializableRef<TValue>;
       }
-      const toAdapt: Record<string, FlatSerializableRef<T>> = {};
+      const toAdapt: Record<string, FlatSerializableRef<TValue>> = {};
       for (const [key, element] of Object.entries(value)) {
         toAdapt[key] = cloneRecursive(element);
       }
       return global._createSerializable(
         toAdapt,
         value
-      ) as FlatSerializableRef<T>;
+      ) as FlatSerializableRef<TValue>;
     }
 
     if (typeof value === 'string') {
@@ -772,11 +759,14 @@ export const makeShareableCloneOnUIRecursive = (
     : makeShareableCloneOnUIRecursiveLEGACY
 ) as typeof makeShareableCloneOnUIRecursiveLEGACY;
 
-function makeShareableJS<T>(value: T): T {
-  return value;
-}
-
-function makeShareableNative<T extends object>(value: T): T {
+/**
+ * This function creates a value on UI with persistent state - changes to it on
+ * the UI thread will be seen by all worklets. Use it when you want to create a
+ * value that is read and written only on the UI thread.
+ *
+ * @deprecated This function is no longer supported.
+ */
+export function makeShareable<TValue extends object>(value: TValue): TValue {
   if (serializableMappingCache.get(value)) {
     return value;
   }
@@ -789,13 +779,3 @@ function makeShareableNative<T extends object>(value: T): T {
   serializableMappingCache.set(value, handle);
   return value;
 }
-
-/**
- * This function creates a value on UI with persistent state - changes to it on
- * the UI thread will be seen by all worklets. Use it when you want to create a
- * value that is read and written only on the UI thread.
- */
-/** @deprecated This function is no longer supported. */
-export const makeShareable = SHOULD_BE_USE_WEB
-  ? makeShareableJS
-  : makeShareableNative;
