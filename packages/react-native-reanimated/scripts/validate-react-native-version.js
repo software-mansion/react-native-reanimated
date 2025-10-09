@@ -10,6 +10,7 @@ const reanimatedVersion = packageJson.version;
 const compatibilityFile = require('../compatibility.json');
 
 const reactNativeVersion = process.argv[2];
+const architecture = 'fabric';
 const supportedRNVersions = [];
 
 if (semverPrerelease(reactNativeVersion)) {
@@ -18,10 +19,12 @@ if (semverPrerelease(reactNativeVersion)) {
   process.exit(0);
 }
 
-for (const key in compatibilityFile) {
+for (const key in compatibilityFile[architecture]) {
   if (semverSatisfies(reanimatedVersion, key)) {
     // @ts-ignore
-    supportedRNVersions.push(...compatibilityFile[key]['react-native']);
+    supportedRNVersions.push(
+      ...compatibilityFile[architecture][key]['react-native']
+    );
   }
 }
 

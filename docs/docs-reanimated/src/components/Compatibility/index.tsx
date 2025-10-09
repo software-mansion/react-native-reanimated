@@ -47,8 +47,8 @@ interface CompatibilityItem {
 }
 
 type ReanimatedCompatibilityProps = {
+  architecture: Architecture;
   spacerAfterIndex?: number;
-  architecture?: Architecture;
 };
 
 const getCompatibilityEntriesForVersion = (
@@ -150,7 +150,7 @@ function CompatibilityTable({ versions, items }: CompatibilityTableProps) {
 
 export function ReanimatedCompatibility({
   spacerAfterIndex,
-  architecture = 'fabric',
+  architecture,
 }: ReanimatedCompatibilityProps) {
   const docsVersion = useDocsVersion();
   const filteredCompatibilityData = getCompatibilityEntriesForVersion(
@@ -178,7 +178,6 @@ export function ReanimatedCompatibility({
   );
 }
 
-// Worklets Compatibility Component
 export function WorkletsCompatibility({
   spacerAfterIndex,
 }: {
