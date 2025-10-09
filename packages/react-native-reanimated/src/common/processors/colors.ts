@@ -26,8 +26,8 @@ type DynamicColorValue = ColorValue & {
   };
 };
 
-type PlatformColorValue = ColorValue & { semantic: Array<string> } & {
-  resource_paths: Array<string>;
+type PlatformColorValue = ColorValue & { semantic?: Array<string> } & {
+  resource_paths?: Array<string>;
 };
 
 export function PlatformColor(...names: Array<string>): PlatformColorValue {
