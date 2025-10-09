@@ -21,8 +21,8 @@ if (semverPrerelease(reactNativeVersion)) {
 
 for (const key in compatibilityFile[architecture]) {
   if (semverSatisfies(reanimatedVersion, key)) {
-    // @ts-ignore
     supportedRNVersions.push(
+      // @ts-ignore
       ...compatibilityFile[architecture][key]['react-native']
     );
   }
