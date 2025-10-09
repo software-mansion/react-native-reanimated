@@ -14,7 +14,7 @@ export function scrollTo<T extends Component>(
   const element = animatedRef();
 
   // This prevents crashes if ref has not been set yet
-  if (element !== -1) {
+  if (element === -1) {
     logger.warn(
       'Called scrollTo() with an uninitialized ref. Make sure to pass the animated ref to the scrollable component before calling scrollTo().'
     );
