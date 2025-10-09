@@ -48,6 +48,7 @@ export default function FilterExample() {
             offsetX: sv.value * 10,
             offsetY: sv.value * 10,
             standardDeviation: sv.value * 10,
+            // TODO: call processColor automatically
             color: processColor(
               interpolateColor(sv.value, [0, 1], ['red', 'blue'])
             ),

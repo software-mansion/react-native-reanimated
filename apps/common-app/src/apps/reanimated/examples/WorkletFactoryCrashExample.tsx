@@ -6,7 +6,7 @@ export default function App() {
   function handleOnPress() {
     function badWorklet() {
       'worklet';
-      // @ts-ignore
+      // @ts-expect-error This is an expected error
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       nonExistingVariable;
     }

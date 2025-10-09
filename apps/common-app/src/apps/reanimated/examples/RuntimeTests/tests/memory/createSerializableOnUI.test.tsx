@@ -375,7 +375,7 @@ describe('Test createSerializableOnUI', () => {
   //   // Arrange & Act
   //   const hostFunction = executeOnUIRuntimeSync(() => {
   //     'worklet';
-  //     // @ts-ignore
+  //     // @ts-expect-error It's ok
   //     return globalThis.__workletsModuleProxy.createSerializableBoolean;
   //   })();
 
@@ -388,7 +388,7 @@ describe('Test createSerializableOnUI', () => {
   // test('createSerializableTurboModuleLike', async () => {
   //   // Arrange & Act
   //   const { obj, reanimatedModuleKeys } = executeOnUIRuntimeSync(() => {
-  //     // @ts-ignore
+  //     // @ts-expect-error This global host object isn't exposed in the types.
   //     const proto = globalThis.__reanimatedModuleProxy;
   //     const _reanimatedModuleKeys = Object.keys(proto);
   //     const _obj = {

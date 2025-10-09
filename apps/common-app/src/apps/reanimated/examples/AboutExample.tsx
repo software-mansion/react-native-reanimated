@@ -67,7 +67,7 @@ export default function AboutExample() {
           <Text style={styles.text}>
             <Text style={styles.bold}>Bundle mode:</Text>{' '}
             {
-              // @ts-ignore
+              // @ts-expect-error This global is not exposed.
               globalThis._WORKLETS_BUNDLE_MODE ? 'Enabled' : 'Disabled'
             }
           </Text>
