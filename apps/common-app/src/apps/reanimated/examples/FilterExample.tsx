@@ -39,7 +39,8 @@ export default function FilterExample() {
     return { filter: [{ contrast: sv.value * 3 }] };
   });
 
-  // @ts-ignore
+  // @ts-ignore - number returned by the processColor function is not assignable
+  // to the color property without react-native-strict-api enabled
   const dropShadow = useAnimatedStyle(() => {
     return {
       filter: [

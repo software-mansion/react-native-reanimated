@@ -597,7 +597,7 @@ describe('Test createSerializable', () => {
 
   test('createSerializableTurboModuleLike', async () => {
     // Arrange
-    // @ts-expect-error It's ok
+    // @ts-expect-error This global host object isn't exposed in the types.
     const proto = globalThis.__reanimatedModuleProxy;
     const reanimatedModuleKeys = Object.keys(proto);
     const obj = {
