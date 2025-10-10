@@ -6,6 +6,7 @@ import {
   getPathFromState,
   NavigationContainer,
 } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Linking, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -40,60 +41,65 @@ export default function App() {
 
   return (
     <NukeContext value={() => setNuked(true)}>
-      <SafeAreaProvider>
-        <GestureHandlerRootView style={flex.fill}>
-          <NavigationContainer
-            initialState={navigationState}
-            linking={{
-              getPathFromState: (state, options) =>
-                getPathFromState(state, options).replace(/%2F/g, '/'),
-              getStateFromPath: (path) => {
-                const chunks = path.split('/').filter(Boolean);
-                if (chunks.length === 0) return { routes: [] };
+      <GestureHandlerRootView style={flex.fill}>
+        <NavigationContainer
+          initialState={navigationState}
+          linking={{
+            getPathFromState: (state, options) =>
+              getPathFromState(state, options).replace(/%2F/g, '/'),
+            getStateFromPath: (path) => {
+              const chunks = path.split('/').filter(Boolean);
+              if (chunks.length === 0) return { routes: [] };
 
-                const drawerRoute = chunks[0];
-                const stackRoutes = chunks.slice(1).map((_, index, array) => ({
-                  name: array.slice(0, index + 1).join('/'),
-                }));
+              const drawerRoute = chunks[0];
+              const stackRoutes = chunks.slice(1).map((_, index, array) => ({
+                name: array.slice(0, index + 1).join('/'),
+              }));
 
-                return {
-                  routes: [
-                    {
-                      name: drawerRoute,
-                      state: {
-                        routes: stackRoutes,
-                      },
-                    },
-                  ],
-                };
-              },
-              prefixes: [],
-            }}
-            onStateChange={updateNavigationState}>
-            <PortalProvider>
+              return {
+                routes: [{ name: drawerRoute, state: { routes: stackRoutes } }],
+              };
+            },
+            prefixes: [],
+          }}
+          onStateChange={updateNavigationState}>
+          <PortalProvider>
+            {IS_MACOS ? (
               <Navigator />
-            </PortalProvider>
-          </NavigationContainer>
-        </GestureHandlerRootView>
-      </SafeAreaProvider>
+            ) : (
+              <SafeAreaProvider>
+                <Navigator />
+              </SafeAreaProvider>
+            )}
+          </PortalProvider>
+        </NavigationContainer>
+      </GestureHandlerRootView>
     </NukeContext>
   );
 }
 
 const SCREENS = [
-  {
-    component: CSSApp,
-    name: 'CSS',
-  },
-  {
-    component: ReanimatedApp,
-    name: 'Reanimated',
-  },
+  { component: CSSApp, name: 'CSS' },
+  { component: ReanimatedApp, name: 'Reanimated' },
 ];
 
 function Navigator() {
   if (IS_MACOS) {
-    return <ReanimatedApp />;
+    const Stack = createStackNavigator();
+
+    return (
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: true,
+          headerStyle: { backgroundColor: colors.background1 },
+          headerTintColor: colors.primary,
+          headerTitleStyle: text.heading4,
+        }}>
+        {SCREENS.map(({ component, name }) => (
+          <Stack.Screen key={name} name={name} component={component} />
+        ))}
+      </Stack.Navigator>
+    );
   }
 
   const Drawer = createDrawerNavigator();
@@ -105,18 +111,14 @@ function Navigator() {
         drawerActiveBackgroundColor: colors.primaryLight,
         drawerActiveTintColor: colors.primaryDark,
         drawerInactiveTintColor: colors.primary,
-        drawerItemStyle: {
-          borderRadius: radius.lg,
-        },
+        drawerItemStyle: { borderRadius: radius.lg },
         drawerLabelStyle: text.heading4,
         drawerPosition: IS_WEB ? 'left' : 'right',
-        drawerStyle: {
-          backgroundColor: colors.background1,
-        },
+        drawerStyle: { backgroundColor: colors.background1 },
         headerShown: false,
       }}>
       {screens.map(({ component, name }) => (
-        <Drawer.Screen component={component} key={name} name={name} />
+        <Drawer.Screen key={name} name={name} component={component} />
       ))}
     </Drawer.Navigator>
   );
@@ -141,7 +143,7 @@ function useNavigationState() {
       try {
         const initialUrl = await Linking.getInitialURL();
 
-        if (!IS_MACOS && !IS_WEB && initialUrl === null) {
+        if (!IS_WEB && initialUrl === null) {
           // Only restore state if there's no deep link and we're not on web
           const savedStateString = await AsyncStorage.getItem(PERSISTENCE_KEY);
           // Erase the state immediately after fetching it.
