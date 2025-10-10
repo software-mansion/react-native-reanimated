@@ -21,9 +21,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Clear annotations
+        run: .github/workflows/helper/clear-annotations.sh
+
       - name: Verify Ruby and CocoaPods versions in lockfiles
         working-directory: ${{ matrix.working-directory }}
         env:
           BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
-        run: |
-          .github/workflows/helper/check-ruby-pods.sh "${{ matrix.working-directory }}" "${{ github.event.pull_request.base.ref }}"
+        run: .github/workflows/helper/check-ruby-pods.sh "${{ matrix.working-directory }}" "${{ github.event.pull_request.base.ref }}"
