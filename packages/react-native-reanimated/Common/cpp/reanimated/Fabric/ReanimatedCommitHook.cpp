@@ -76,7 +76,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   if constexpr (StaticFeatureFlags::getFlag(
                     "USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS")) {
-    // State updates come from the currently committed ShadowTree,
+    // State updates are based on the currently committed ShadowTree,
     // which means that all animation changes are already included.
     // Therefore, there's no need to reapply styles from the props map.
     if (commitOptions.source != ShadowTreeCommitSource::React) {
