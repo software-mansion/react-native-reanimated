@@ -1,6 +1,7 @@
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
+#include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <react/renderer/core/ComponentDescriptor.h>
@@ -71,6 +72,16 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     reaShadowNode->unsetReanimatedCommitTrait();
     reaShadowNode->setReanimatedMountTrait();
     return newRootShadowNode;
+  }
+
+  if constexpr (StaticFeatureFlags::getFlag(
+                    "USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS")) {
+    // State updates are based on the currently committed ShadowTree,
+    // which means that all animation changes are already included.
+    // Therefore, there's no need to reapply styles from the props map.
+    if (commitOptions.source != ShadowTreeCommitSource::React) {
+      return newRootShadowNode;
+    }
   }
 
   // ShadowTree not commited by Reanimated, apply updates from the updates
