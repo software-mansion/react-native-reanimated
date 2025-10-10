@@ -5,9 +5,9 @@ import {
   isSerializableRef,
   makeShareable,
   makeShareableCloneOnUIRecursive,
+  serializableMappingCache,
+  type SerializableRef,
 } from './serializable';
-import { serializableMappingCache } from './serializableMappingCache';
-import type { SerializableRef } from './workletTypes';
 
 /** @deprecated Use {@link SerializableRef} instead. */
 export type ShareableRef<T> = SerializableRef<T>;

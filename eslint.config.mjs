@@ -48,12 +48,12 @@ const tsRules = {
 
   '@typescript-eslint/consistent-type-imports': [
     'error',
-    { prefer: 'type-imports' },
+    { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
   ],
 
   '@typescript-eslint/consistent-type-exports': [
     'error',
-    { fixMixedExportsWithInlineTypeSpecifier: false },
+    { fixMixedExportsWithInlineTypeSpecifier: true },
   ],
 
   '@typescript-eslint/no-non-null-assertion': 'off',
@@ -64,6 +64,7 @@ const tsRules = {
   'no-empty': 'warn',
   'react/jsx-uses-react': 'error',
   camelcase: 'error',
+  strict: ['error', 'global'],
 };
 
 /** @type {import('typescript-eslint').ConfigWithExtends['rules']} */
@@ -142,14 +143,14 @@ const config = tsEslint.config(
       'import/resolver': {
         'babel-module': {
           extensions: [
+            '.native.ts',
+            '.ts',
             '.native.js',
             '.js',
             '.native.tsx',
-            '.jsx',
-            '.native.ts',
-            '.ts',
-            '.native.tsx',
             '.tsx',
+            '.native.jsx',
+            '.jsx',
           ],
         },
       },
@@ -160,7 +161,7 @@ const config = tsEslint.config(
         '@typescript-eslint/parser': [
           '.native.ts',
           '.ts',
-          '.native.ts',
+          '.native.tsx',
           '.tsx',
         ],
       },
@@ -183,6 +184,12 @@ const config = tsEslint.config(
       'react-hooks/exhaustive-deps': 'error',
       'no-eval': 'error',
       'no-var': 'error',
+      'no-duplicate-imports': [
+        'error',
+        {
+          allowSeparateTypeImports: false,
+        },
+      ],
     },
   },
 

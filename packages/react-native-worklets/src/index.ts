@@ -1,31 +1,37 @@
 'use strict';
 
-import './publicGlobals';
-
 import { init } from './initializers';
-import { bundleModeInit } from './workletRuntimeEntry';
 
 init();
 
-export type { MakeShareableClone, ShareableRef } from './deprecated';
 export {
   isShareableRef,
   makeShareable,
+  type MakeShareableClone,
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
   shareableMappingCache,
+  type ShareableRef,
 } from './deprecated';
 export { getStaticFeatureFlag, setDynamicFeatureFlag } from './featureFlags';
-export { isSynchronizable } from './isSynchronizable';
 export { getRuntimeKind, RuntimeKind } from './runtimeKind';
 export {
   createWorkletRuntime,
   runOnRuntime,
   scheduleOnRuntime,
 } from './runtimes';
-export { createSerializable, isSerializableRef } from './serializable';
-export { serializableMappingCache } from './serializableMappingCache';
-export { createSynchronizable } from './synchronizable';
+export {
+  createSerializable,
+  isSerializableRef,
+  serializableMappingCache,
+  type SerializableRef,
+} from './serializable';
+export {
+  createSynchronizable,
+  isSynchronizable,
+  type Synchronizable,
+  type SynchronizableRef,
+} from './synchronizable';
 export {
   callMicrotasks,
   executeOnUIRuntimeSync,
@@ -38,20 +44,14 @@ export {
   // eslint-disable-next-line camelcase
   unstable_eventLoopTask,
 } from './threads';
-export { isWorkletFunction } from './workletFunction';
-export type { IWorkletsModule, WorkletsModuleProxy } from './WorkletsModule';
-export { WorkletsModule } from './WorkletsModule';
 export type {
-  SerializableRef,
-  Synchronizable,
   WorkletFunction,
   WorkletRuntime,
   WorkletStackDetails,
-} from './workletTypes';
-
-// @ts-expect-error We must trick the bundler to include
-// the `workletRuntimeEntry` file the way it cannot optimize it out.
-if (globalThis._ALWAYS_FALSE) {
-  // Bundle mode.
-  bundleModeInit();
-}
+} from './types';
+export { isWorkletFunction } from './workletFunction';
+export {
+  type IWorkletsModule,
+  WorkletsModule,
+  type WorkletsModuleProxy,
+} from './WorkletsModule';

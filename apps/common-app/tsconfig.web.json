@@ -5,7 +5,8 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "moduleSuffixes": [".web", ""]
+    // TODO: Doesn't yet work with Reanimated
+    // "moduleSuffixes": [".web", ""]
   },
   "include": ["src", "index.ts"]
 }

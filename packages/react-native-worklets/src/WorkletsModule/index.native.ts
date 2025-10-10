@@ -1,6 +1,6 @@
 'use strict';
 
-export { WorkletsModule } from './workletsModuleInstance';
+export { WorkletsModule } from './NativeWorklets';
 export type {
   IWorkletsModule,
   WorkletsModuleProxy,
