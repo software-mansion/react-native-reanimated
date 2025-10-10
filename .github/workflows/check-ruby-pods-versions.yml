@@ -26,4 +26,4 @@ jobs:
         env:
           BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
         run: |
-          .github/scripts/check-ruby-pods.sh "${{ matrix.working-directory }}" "${{ github.event.pull_request.base.ref }}"
+          .github/helper/check-ruby-pods.sh "${{ matrix.working-directory }}" "${{ github.event.pull_request.base.ref }}"
