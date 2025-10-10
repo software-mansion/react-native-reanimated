@@ -1,6 +1,6 @@
 'use strict';
-import { logger } from '../debug';
-import { WorkletsModule } from '../WorkletsModule';
+import { logger } from '../debug/logger';
+import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
 import type {
   DynamicFlagName,
   DynamicFlagsType,

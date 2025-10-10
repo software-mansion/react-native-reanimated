@@ -2,21 +2,22 @@
 
 import { bundleValueUnpacker } from '../bundleUnpacker';
 import { setupCallGuard } from '../callGuard';
-import {
-  registerReportFatalRemoteError,
-  registerWorkletsError,
-  WorkletsError,
-} from '../debug';
+import { registerReportFatalRemoteError } from '../debug/errors';
+import { registerWorkletsError, WorkletsError } from '../debug/WorkletsError';
 import { setupSetImmediate } from '../runLoop/common/setImmediatePolyfill';
 import { setupSetInterval } from '../runLoop/common/setIntervalPolyfill';
 import { setupRequestAnimationFrame } from '../runLoop/uiRuntime/requestAnimationFrame';
 import { setupSetTimeout } from '../runLoop/uiRuntime/setTimeoutPolyfill';
 import { RuntimeKind } from '../runtimeKind';
 import { __installUnpacker as installSynchronizableUnpacker } from '../synchronizableUnpacker';
-import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from '../threads';
+import {
+  executeOnUIRuntimeSync,
+  runOnJS,
+  setupMicrotasks,
+} from '../threads/threads';
 import type { ValueUnpacker } from '../types';
 import { isWorkletFunction } from '../workletFunction';
-import { WorkletsModule } from '../WorkletsModule';
+import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
 
 if (globalThis.__RUNTIME_KIND === undefined) {
   // The only runtime that doesn't have `__RUNTIME_KIND` preconfigured

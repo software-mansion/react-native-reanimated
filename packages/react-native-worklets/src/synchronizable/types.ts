@@ -1,6 +1,6 @@
 'use strict';
 
-import type { SerializableRef } from '../serializable';
+import type { SerializableRef } from '../serializable/types';
 
 export type SynchronizableRef<TValue = unknown> = {
   __synchronizableRef: true;

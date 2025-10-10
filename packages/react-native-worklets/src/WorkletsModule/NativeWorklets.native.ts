@@ -1,10 +1,12 @@
 'use strict';
 
-import { checkCppVersion, jsVersion, WorkletsError } from '../debug';
+import { checkCppVersion } from '../debug/checkCppVersion';
+import { jsVersion } from '../debug/jsVersion';
+import { WorkletsError } from '../debug/WorkletsError';
 import { RuntimeKind } from '../runtimeKind';
-import type { SerializableRef } from '../serializable';
+import type { SerializableRef } from '../serializable/types';
 import { WorkletsTurboModule } from '../specs';
-import type { SynchronizableRef } from '../synchronizable';
+import type { SynchronizableRef } from '../synchronizable/types';
 import type { WorkletRuntime } from '../types';
 import type {
   IWorkletsModule,

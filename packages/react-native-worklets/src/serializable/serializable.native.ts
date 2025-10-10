@@ -1,18 +1,18 @@
 'use strict';
-import {
-  jsVersion,
-  logger,
-  registerWorkletStackDetails,
-  WorkletsError,
-} from '../debug';
+
+import { registerWorkletStackDetails } from '../debug/errors';
+import { jsVersion } from '../debug/jsVersion';
+import { logger } from '../debug/logger';
+import { WorkletsError } from '../debug/WorkletsError';
 import {
   serializableMappingCache,
   serializableMappingFlag,
-} from '../serializable';
-import { isSynchronizable, type Synchronizable } from '../synchronizable';
+} from '../serializable/serializableMappingCache';
+import { isSynchronizable } from '../synchronizable/isSynchronizable';
+import { type Synchronizable } from '../synchronizable/types';
 import type { WorkletFunction, WorkletImport } from '../types';
 import { isWorkletFunction } from '../workletFunction';
-import { WorkletsModule } from '../WorkletsModule';
+import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
 import type { FlatSerializableRef, SerializableRef } from './types';
 
 // for web and jest environments this file provides a stub implementation

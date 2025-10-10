@@ -1,7 +1,7 @@
 'use strict';
 
-import { createSerializable } from '../serializable';
-import { WorkletsModule } from '../WorkletsModule';
+import { createSerializable } from '../serializable/serializable';
+import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
 import type { Synchronizable } from './types';
 
 export function createSynchronizable<TValue>(

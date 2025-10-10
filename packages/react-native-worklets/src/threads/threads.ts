@@ -1,6 +1,6 @@
 'use strict';
 
-import { WorkletsError } from '../debug';
+import { WorkletsError } from '../debug/WorkletsError';
 import { mockedRequestAnimationFrame } from '../runLoop/uiRuntime/mockedRequestAnimationFrame';
 
 export function callMicrotasks(): void {

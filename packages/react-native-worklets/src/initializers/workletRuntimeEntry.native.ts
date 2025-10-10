@@ -1,6 +1,6 @@
 'use strict';
 
-import { WorkletsError } from '../debug';
+import { WorkletsError } from '../debug/WorkletsError';
 import { RuntimeKind } from '../runtimeKind';
 import { init } from './initializers';
 
