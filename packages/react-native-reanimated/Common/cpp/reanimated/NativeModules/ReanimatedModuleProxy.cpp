@@ -1106,7 +1106,34 @@ void ReanimatedModuleProxy::performOperations() {
                       "IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
       static const std::unordered_set<std::string> synchronousProps = {
           "opacity",
-          // TODO: populate the list
+          "elevation",
+          "zIndex",
+          "shadowOpacity",
+          "shadowRadius",
+          "backgroundColor",
+          // "color", // TODO: fix animating color of Animated.Text
+          "tintColor",
+          "borderRadius",
+          "borderTopLeftRadius",
+          "borderTopRightRadius",
+          "borderTopStartRadius",
+          "borderTopEndRadius",
+          "borderBottomLeftRadius",
+          "borderBottomRightRadius",
+          "borderBottomStartRadius",
+          "borderBottomEndRadius",
+          "borderStartStartRadius",
+          "borderStartEndRadius",
+          "borderEndStartRadius",
+          "borderEndEndRadius",
+          "borderColor",
+          "borderTopColor",
+          "borderBottomColor",
+          "borderLeftColor",
+          "borderRightColor",
+          "borderStartColor",
+          "borderEndColor",
+          "transform",
       };
 
       UpdatesBatch synchronousUpdatesBatch, shadowTreeUpdatesBatch;
