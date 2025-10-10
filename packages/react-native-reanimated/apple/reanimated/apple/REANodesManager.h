@@ -18,7 +18,7 @@ typedef void (^REAPerformOperations)();
 - (void)postOnAnimation:(REAOnAnimationCallback)clb;
 - (void)registerEventHandler:(REAEventHandler)eventHandler;
 - (void)dispatchEvent:(id<RCTEvent>)event;
-- (void)synchronouslyUpdateUIProps:(const std::vector<int> &)intBuffer doubleBuffer:(const std::vector<double> &)doubleBuffer;
+- (void)synchronouslyUpdateUIProps:(ReactTag)viewTag props:(const folly::dynamic &)props;
 - (void)registerPerformOperations:(REAPerformOperations)performOperations;
 - (void)maybeFlushUIUpdatesQueue;
 

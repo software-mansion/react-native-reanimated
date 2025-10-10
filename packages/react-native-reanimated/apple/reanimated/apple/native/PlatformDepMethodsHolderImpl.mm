@@ -45,8 +45,8 @@ RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
 SynchronouslyUpdateUIPropsFunction makeSynchronouslyUpdateUIPropsFunction(REANodesManager *nodesManager)
 {
   auto synchronouslyUpdateUIPropsFunction =
-      [nodesManager](const std::vector<int> &intBuffer, const std::vector<double> &doubleBuffer) {
-        [nodesManager synchronouslyUpdateUIProps:intBuffer doubleBuffer:doubleBuffer];
+      [nodesManager](const int viewTag, const folly::dynamic &props) {
+        [nodesManager synchronouslyUpdateUIProps:viewTag props:props];
       };
   return synchronouslyUpdateUIPropsFunction;
 }

@@ -155,33 +155,19 @@
   }
 }
 
-- (void)synchronouslyUpdateUIProps:(const std::vector<int> &)intBuffer
-                      doubleBuffer:(const std::vector<double> &)doubleBuffer
+- (void)synchronouslyUpdateUIProps:(ReactTag)viewTag props:(const folly::dynamic &)props
 {
   RCTAssertMainQueue();
 
-  size_t i = 0, d = 0, size = intBuffer.size();
-  UIView<RCTComponentViewProtocol> *componentView;
-
   RCTSurfacePresenter *surfacePresenter = self.surfacePresenter;
   RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
-
-  while (i < size) {
-    const auto command = intBuffer[i++];
-    switch (command) {
-      case 1: // CMD_START_OF_VIEW
-        {
-          const auto viewTag = intBuffer[i++];
-          componentView = [componentViewRegistry findComponentViewWithTag:viewTag];
-        }
-        break;
-
-      case 10: // CMD_OPACITY
-        const auto opacity = doubleBuffer[d++];
-        [componentView setAlpha:opacity];
-        break;
-    }
-  }
+  UIView<RCTComponentViewProtocol> *componentView = [componentViewRegistry findComponentViewWithTag:viewTag];
+  NSSet<NSString *> *propKeysManagedByAnimated = [componentView propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN];
+  [surfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:viewTag props:props];
+  [componentView setPropKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN:propKeysManagedByAnimated];
+  // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
+  // so that's why we need to call `finalizeUpdates` here.
+  [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
 }
 
 @end

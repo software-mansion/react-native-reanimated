@@ -937,6 +937,7 @@ void ReanimatedModuleProxy::performOperations() {
       }
 
       if (!synchronousUpdatesBatch.empty()) {
+#ifdef ANDROID
         std::vector<int> intBuffer;
         std::vector<double> doubleBuffer;
         intBuffer.reserve(1024);
@@ -1093,7 +1094,12 @@ void ReanimatedModuleProxy::performOperations() {
           }
           intBuffer.push_back(CMD_END_OF_VIEW);
         }
-         synchronouslyUpdateUIPropsFunction_(intBuffer, doubleBuffer);
+        synchronouslyUpdateUIPropsFunction_(intBuffer, doubleBuffer);
+#elif __APPLE__
+        for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
+          synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
+        }
+#endif // __APPLE__
       }
 
       updatesBatch = std::move(shadowTreeUpdatesBatch);
