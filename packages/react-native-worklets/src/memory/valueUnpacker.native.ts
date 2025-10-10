@@ -1,5 +1,6 @@
 'use strict';
-import type { ValueUnpacker, WorkletFunction } from './types';
+
+import type { ValueUnpacker, WorkletFunction } from '../types';
 
 declare global {
   var evalWithSourceMap:

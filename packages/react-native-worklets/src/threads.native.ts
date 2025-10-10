@@ -1,15 +1,15 @@
 'use strict';
 
-import { WorkletsError } from '../debug/WorkletsError';
-import { RuntimeKind } from '../runtimeKind';
+import { WorkletsError } from './debug/WorkletsError';
 import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
-} from '../serializable/serializable';
-import { serializableMappingCache } from '../serializable/serializableMappingCache';
-import type { WorkletFunction, WorkletImport } from '../types';
-import { isWorkletFunction } from '../workletFunction';
-import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
+} from './memory/serializable';
+import { serializableMappingCache } from './memory/serializableMappingCache';
+import { RuntimeKind } from './runtimeKind';
+import type { WorkletFunction, WorkletImport } from './types';
+import { isWorkletFunction } from './workletFunction';
+import { WorkletsModule } from './WorkletsModule/NativeWorklets';
 
 type UIJob<Args extends unknown[] = unknown[], ReturnValue = unknown> = [
   worklet: WorkletFunction<Args, ReturnValue>,

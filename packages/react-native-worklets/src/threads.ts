@@ -1,7 +1,7 @@
 'use strict';
 
-import { WorkletsError } from '../debug/WorkletsError';
-import { mockedRequestAnimationFrame } from '../runLoop/uiRuntime/mockedRequestAnimationFrame';
+import { WorkletsError } from './debug/WorkletsError';
+import { mockedRequestAnimationFrame } from './runLoop/uiRuntime/mockedRequestAnimationFrame';
 
 export function callMicrotasks(): void {
   // on web flushing is a noop as immediates are handled by the browser

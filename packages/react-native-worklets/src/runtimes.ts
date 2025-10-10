@@ -1,11 +1,11 @@
 'use strict';
 
-import { WorkletsError } from '../debug/WorkletsError';
+import { WorkletsError } from './debug/WorkletsError';
 import type {
   WorkletFunction,
   WorkletRuntime,
   WorkletRuntimeConfig,
-} from '../types';
+} from './types';
 
 export function createWorkletRuntime(
   config?: WorkletRuntimeConfig

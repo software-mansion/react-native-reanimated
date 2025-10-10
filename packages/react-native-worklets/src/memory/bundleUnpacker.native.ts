@@ -1,8 +1,8 @@
 'use strict';
 
-import { logger } from './debug/logger';
-import { WorkletsError } from './debug/WorkletsError';
-import type { WorkletFactory, WorkletFunction } from './types';
+import { logger } from '../debug/logger';
+import { WorkletsError } from '../debug/WorkletsError';
+import type { WorkletFactory, WorkletFunction } from '../types';
 
 const handleCache = new WeakMap<WorkletFunction, unknown>();
 

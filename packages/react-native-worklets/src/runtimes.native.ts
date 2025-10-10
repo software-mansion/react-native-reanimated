@@ -1,24 +1,24 @@
 'use strict';
 
-import { setupCallGuard } from '../callGuard';
-import { registerWorkletsError, WorkletsError } from '../debug/WorkletsError';
+import { setupCallGuard } from './callGuard';
+import { registerWorkletsError, WorkletsError } from './debug/WorkletsError';
 import {
   getMemorySafeCapturableConsole,
   setupConsole,
-} from '../initializers/initializers';
-import { setupRunLoop } from '../runLoop/workletRuntime';
-import { RuntimeKind } from '../runtimeKind';
+} from './initializers/initializers';
 import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
-} from '../serializable/serializable';
+} from './memory/serializable';
+import { setupRunLoop } from './runLoop/workletRuntime';
+import { RuntimeKind } from './runtimeKind';
 import type {
   WorkletFunction,
   WorkletRuntime,
   WorkletRuntimeConfig,
-} from '../types';
-import { isWorkletFunction } from '../workletFunction';
-import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
+} from './types';
+import { isWorkletFunction } from './workletFunction';
+import { WorkletsModule } from './WorkletsModule/NativeWorklets';
 
 /**
  * Lets you create a new JS runtime which can be used to run worklets possibly

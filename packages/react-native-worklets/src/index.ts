@@ -21,22 +21,25 @@ export {
   shareableMappingCache,
   type ShareableRef,
 } from './deprecated';
-export { getStaticFeatureFlag, setDynamicFeatureFlag } from './featureFlags';
+export {
+  getStaticFeatureFlag,
+  setDynamicFeatureFlag,
+} from './featureFlags/featureFlags';
+export { isSynchronizable } from './memory/isSynchronizable';
+export { createSerializable, isSerializableRef } from './memory/serializable';
+export { serializableMappingCache } from './memory/serializableMappingCache';
+export { createSynchronizable } from './memory/synchronizable';
+export type {
+  SerializableRef,
+  Synchronizable,
+  SynchronizableRef,
+} from './memory/types';
 export { getRuntimeKind, RuntimeKind } from './runtimeKind';
 export {
   createWorkletRuntime,
   runOnRuntime,
   scheduleOnRuntime,
-} from './runtimes/runtimes';
-export {
-  createSerializable,
-  isSerializableRef,
-} from './serializable/serializable';
-export { serializableMappingCache } from './serializable/serializableMappingCache';
-export type { SerializableRef } from './serializable/types';
-export { isSynchronizable } from './synchronizable/isSynchronizable';
-export { createSynchronizable } from './synchronizable/synchronizable';
-export type { Synchronizable, SynchronizableRef } from './synchronizable/types';
+} from './runtimes';
 export {
   callMicrotasks,
   executeOnUIRuntimeSync,
@@ -48,7 +51,7 @@ export {
   scheduleOnUI,
   // eslint-disable-next-line camelcase
   unstable_eventLoopTask,
-} from './threads/threads';
+} from './threads';
 export type {
   WorkletFunction,
   WorkletRuntime,

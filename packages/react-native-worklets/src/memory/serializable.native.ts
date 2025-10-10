@@ -4,16 +4,19 @@ import { registerWorkletStackDetails } from '../debug/errors';
 import { jsVersion } from '../debug/jsVersion';
 import { logger } from '../debug/logger';
 import { WorkletsError } from '../debug/WorkletsError';
-import {
-  serializableMappingCache,
-  serializableMappingFlag,
-} from '../serializable/serializableMappingCache';
-import { isSynchronizable } from '../synchronizable/isSynchronizable';
-import { type Synchronizable } from '../synchronizable/types';
 import type { WorkletFunction, WorkletImport } from '../types';
 import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
-import type { FlatSerializableRef, SerializableRef } from './types';
+import { isSynchronizable } from './isSynchronizable';
+import {
+  serializableMappingCache,
+  serializableMappingFlag,
+} from './serializableMappingCache';
+import type {
+  FlatSerializableRef,
+  SerializableRef,
+  Synchronizable,
+} from './types';
 
 // for web and jest environments this file provides a stub implementation
 // where no serializable references are used. Instead, the objects themselves are used

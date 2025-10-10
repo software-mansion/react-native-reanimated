@@ -1,7 +1,6 @@
 'use strict';
 
-import type { SerializableRef } from '../serializable/types';
-import type { SynchronizableRef } from '../synchronizable/types';
+import type { SerializableRef, SynchronizableRef } from '../memory/types';
 import type { WorkletRuntime } from '../types';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */

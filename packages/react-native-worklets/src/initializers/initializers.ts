@@ -1,6 +1,6 @@
 'use strict';
 
-import { IS_JEST } from '../PlatformChecker/PlatformChecker';
+import { IS_JEST } from '../platformChecker';
 import { mockedRequestAnimationFrame } from '../runLoop/uiRuntime/mockedRequestAnimationFrame';
 import { RuntimeKind } from '../runtimeKind';
 

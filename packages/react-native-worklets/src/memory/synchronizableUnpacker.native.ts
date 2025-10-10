@@ -1,10 +1,7 @@
 'use strict';
 
-import { createSerializable } from './serializable/serializable';
-import {
-  type Synchronizable,
-  type SynchronizableRef,
-} from './synchronizable/types';
+import { createSerializable } from './serializable';
+import { type Synchronizable, type SynchronizableRef } from './types';
 
 export function __installUnpacker() {
   // TODO: Add cache for synchronizables.
