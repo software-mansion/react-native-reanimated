@@ -83,4 +83,8 @@ declare global {
    */
   var __frameTimestamp: number | undefined;
   var ReanimatedError: IReanimatedErrorConstructor;
+  /** Only in Debug builds. */
+  var __getTagFromShadowNodeWrapper: (
+    shadowNodeWrapper: ShadowNodeWrapper
+  ) => number;
 }
