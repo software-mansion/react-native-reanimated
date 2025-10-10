@@ -10,17 +10,11 @@ cd "$WORKING_DIR"
 GEM_LOCK="Gemfile.lock"
 POD_LOCK="Podfile.lock"
 
-case "$WORKING_DIR" in
-  *fabric-example)
-    POD_LOCK="ios/Podfile.lock"
-    ;;
-  *tvos-example)
-    POD_LOCK="ios/Podfile.lock"
-    ;;
-  *macos-example)
-    POD_LOCK="macos/Podfile.lock"
-    ;;
-esac
+if [[ "$WORKING_DIR" == *macos-example ]]; then
+  POD_LOCK="macos/Podfile.lock"
+else
+  POD_LOCK="ios/Podfile.lock"
+fi
 
 HAS_DIFF=false
 
