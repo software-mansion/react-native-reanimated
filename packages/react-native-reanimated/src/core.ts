@@ -92,7 +92,7 @@ export function registerEventHandler<T>(
     // TODO: Fix this and don't call `__flushAnimationFrame` here.
     global.__frameTimestamp = eventTimestamp;
     eventHandler(event);
-    global.__flushAnimationFrame(eventTimestamp);
+    global.__flushAnimationFrame(eventTimestamp, /* isEventReaction = */ true);
     global.__frameTimestamp = undefined;
   }
   return ReanimatedModule.registerEventHandler(
@@ -118,7 +118,7 @@ export function subscribeForKeyboardEvents(
     const now = global._getAnimationTimestamp();
     global.__frameTimestamp = now;
     eventHandler(state, height);
-    global.__flushAnimationFrame(now);
+    global.__flushAnimationFrame(now, /* isEventReaction = */ true);
     global.__frameTimestamp = undefined;
   }
 
