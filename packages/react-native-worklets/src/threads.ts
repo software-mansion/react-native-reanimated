@@ -427,7 +427,7 @@ function flushUIQueue(): void {
         queue.forEach(([workletFunction, workletArgs, jobResolve]) => {
           const result = workletFunction(...workletArgs);
           if (jobResolve) {
-            runOnJS(jobResolve)(result);
+            scheduleOnRN(jobResolve, result);
           }
         });
         callMicrotasks();

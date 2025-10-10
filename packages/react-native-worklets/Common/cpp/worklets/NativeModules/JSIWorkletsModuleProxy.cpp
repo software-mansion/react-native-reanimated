@@ -226,6 +226,8 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "synchronizableLock"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "synchronizableUnlock"));
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "runOnRuntimeAsync"));
 
 #ifdef WORKLETS_BUNDLE_MODE
   propertyNames.emplace_back(
@@ -464,6 +466,22 @@ jsi::Value JSIWorkletsModuleProxy::get(
            size_t count) {
           return makeSerializableWorklet(
               rt, args[0].getObject(rt), args[1].getBool());
+        });
+  }
+
+  if (name == "runOnRuntimeAsync") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        4,
+        [jsScheduler = jsScheduler_](
+            jsi::Runtime &rt,
+            const jsi::Value &thisValue,
+            const jsi::Value *args,
+            size_t count) {
+          runOnRuntimeAsync(
+              rt, jsScheduler, args[0], args[1], args[2], args[3]);
+          return jsi::Value::undefined();
         });
   }
 

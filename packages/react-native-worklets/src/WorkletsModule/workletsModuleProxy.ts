@@ -71,6 +71,13 @@ export interface WorkletsModuleProxy {
 
   scheduleOnUI<TValue>(serializable: SerializableRef<TValue>): void;
 
+  runOnRuntimeAsync<TValue, TReturn>(
+    workletRuntime: WorkletRuntime,
+    worklet: SerializableRef<TValue>,
+    resolve: SerializableRef<(value: TReturn) => void>,
+    reject: SerializableRef<(error: Error) => void>
+  ): void;
+
   executeOnUIRuntimeSync<TValue, TReturn>(
     serializable: SerializableRef<TValue>
   ): TReturn;
