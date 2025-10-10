@@ -1748,7 +1748,7 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - SocketRocket
-  - react-native-pager-view (7.0.0):
+  - react-native-pager-view (6.9.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -1778,7 +1778,7 @@ PODS:
     - Yoga
   - react-native-safe-area-context (5.5.2):
     - React-Core
-  - react-native-slider (4.5.5):
+  - react-native-slider (4.5.7):
     - boost
     - DoubleConversion
     - fast_float
@@ -2575,7 +2575,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNSVG (15.12.0):
+  - RNSVG (15.14.0):
     - React-Core
   - SocketRocket (0.7.1)
   - Yoga (0.0.0)
@@ -2875,9 +2875,9 @@ SPEC CHECKSUMS:
   React-logger: 1767babce2d28c3251039ce05556714a2c8c6ded
   React-Mapbuffer: 33f678ee25b6c0ee2b01b1ecec08e3e02424cefe
   React-microtasksnativemodule: 44b44a4d3cd6ffb85d928abf741acdc26722de2e
-  react-native-pager-view: bf3fd1241df8ba07546b7eb96eeca54a58068853
+  react-native-pager-view: b4e217732fa31c068149a30cada1a0afbeac1807
   react-native-safe-area-context: 63c9a6def15e6f6377e59cea51566148a2774d62
-  react-native-slider: c2f4cdffed81aeaa41b1593316a1c23f33c4b112
+  react-native-slider: f69c02eed05225fa4dda1f8c71d34e674fba61aa
   React-NativeModulesApple: b5d18bc109c45c9a1c6b71664991b5cc3adc4e48
   React-oscompat: 93b5535ea7f7dff46aaee4f78309a70979bdde9d
   React-perflogger: a03d913e3205b00aee4128082abe42fd45ce0c98
@@ -2914,7 +2914,7 @@ SPEC CHECKSUMS:
   RNGestureHandler: 4e01eefc427d3af22b877fdb4f7bc826132daab6
   RNReanimated: 3507bf3765fee3b56d818883773b466f364381ce
   RNScreens: 7db803ea6d6c0bab870bf68bcfa424bd730e7a87
-  RNSVG: 1c8532063aea3a4f6637916742b8ba6206ec13bd
+  RNSVG: c9dd030d3528c9c9c4d53524f397edf2e0314077
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: a3ed390a19db0459bd6839823a6ac6d9c6db198d
 

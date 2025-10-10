@@ -23,7 +23,7 @@
     "react-native": "0.78.3",
     "react-native-gesture-handler": "2.28.0",
     "react-native-macos": "0.78.4",
-    "react-native-pager-view": "7.0.0",
+    "react-native-pager-view": "6.9.1",
     "react-native-reanimated": "workspace:*",
     "react-native-safe-area-context": "5.1.0",
     "react-native-screens": "4.14.1",
