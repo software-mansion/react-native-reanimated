@@ -11,13 +11,13 @@ export default function ScrollPerformanceExample() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {Array.from({ length: 500 }).map((_, index) => (
-        <Box key={index} />
+        <Item key={index} />
       ))}
     </ScrollView>
   );
 }
 
-function Box() {
+function Item() {
   const sv = useSharedValue(0);
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -33,13 +33,7 @@ function Box() {
   }, [sv]);
 
   return (
-    <View
-      style={{
-        flexDirection: 'row',
-        width: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}>
+    <View style={styles.item}>
       <Animated.View
         style={[
           animatedStyle,
@@ -54,6 +48,12 @@ function Box() {
 const styles = StyleSheet.create({
   container: {
     gap: 10,
+  },
+  item: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   box: {
     width: 100,
