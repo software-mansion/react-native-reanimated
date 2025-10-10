@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "react-native-worklets": ["./src"],
+    },
+    "moduleSuffixes": [".web", ""]
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.native.ts", "src/**/*.ios.ts", "src/**/*.android.ts"]
+}

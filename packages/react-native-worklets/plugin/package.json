@@ -14,7 +14,7 @@
     "@types/node": "^18.15.11",
     "@typescript-eslint/parser": "^7.0.2",
     "esbuild": "^0.17.11",
-    "eslint": "^9.29.0",
+    "eslint": "^9.37.0",
     "eslint-plugin-standard": "^5.0.0",
     "prettier": "^3.3.3",
     "tsc-watch": "^6.0.0",

@@ -5,7 +5,7 @@ inputs:
     description: React Native version to test compatibility with
     required: true
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Install monorepo node dependencies
       shell: bash
@@ -19,10 +19,15 @@ runs:
       shell: bash
       run: yarn up react-native@${{ inputs.react-native-version }}
 
-    - name: Check source types
+    - name: Check native source types
       shell: bash
       working-directory: packages/react-native-reanimated
-      run: yarn type:check:src
+      run: yarn type:check:src:native
+
+    - name: Check web source types
+      shell: bash
+      working-directory: packages/react-native-reanimated
+      run: yarn type:check:src:web
 
     - name: Check plugin types
       shell: bash
