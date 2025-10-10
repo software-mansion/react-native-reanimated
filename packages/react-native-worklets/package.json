@@ -36,8 +36,7 @@
     "type:check:src:web": "yarn tsc --noEmit --project tsconfig.web.json",
     "type:check:app": "yarn workspace common-app type:check",
     "type:check:plugin": "yarn workspace babel-plugin-worklets type:check",
-    "type:check:tests": "../../scripts/test-ts.sh __typetests__",
-    "use-strict-check": "node ../../scripts/validate-use-strict.js"
+    "type:check:tests": "../../scripts/test-ts.sh __typetests__"
   },
   "repository": {
     "type": "git",

@@ -26,6 +26,7 @@ const config = tsEslint.config(
       'reanimated/use-worklets-error': 'error',
       'reanimated/use-global-this': 'error',
       'no-bitwise': 'error',
+      strict: ['error', 'global'],
     },
   },
   {
@@ -33,15 +34,6 @@ const config = tsEslint.config(
     rules: {
       '@typescript-eslint/unbound-method': 'off',
       'jest/unbound-method': 'error',
-      // '@typescript-eslint/consistent-type-imports': [
-      //   'error',
-      //   { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
-      // ],
-
-      // '@typescript-eslint/consistent-type-exports': [
-      //   'error',
-      //   { fixMixedExportsWithInlineTypeSpecifier: true },
-      // ],
     },
   }
 );

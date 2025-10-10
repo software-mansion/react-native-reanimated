@@ -64,7 +64,18 @@ const tsRules = {
   'no-empty': 'warn',
   'react/jsx-uses-react': 'error',
   camelcase: 'error',
-  strict: ['error', 'global'],
+  'no-restricted-imports': [
+    'error',
+    {
+      patterns: [
+        {
+          group: ['*.native'],
+          message:
+            "Don't import with platform specifier, use extensionless imports.",
+        },
+      ],
+    },
+  ],
 };
 
 /** @type {import('typescript-eslint').ConfigWithExtends['rules']} */
@@ -184,12 +195,6 @@ const config = tsEslint.config(
       'react-hooks/exhaustive-deps': 'error',
       'no-eval': 'error',
       'no-var': 'error',
-      'no-duplicate-imports': [
-        'error',
-        {
-          allowSeparateTypeImports: false,
-        },
-      ],
     },
   },
 
