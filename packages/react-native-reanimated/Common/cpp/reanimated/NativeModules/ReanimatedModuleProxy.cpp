@@ -969,7 +969,7 @@ void ReanimatedModuleProxy::performOperations() {
               case CMD_BORDER_START_COLOR:
               case CMD_BORDER_END_COLOR:
                 intBuffer.push_back(command);
-                intBuffer.push_back(static_cast<int>(value.asInt()));
+                intBuffer.push_back(value.asInt());
                 break;
 
               case CMD_BORDER_RADIUS:
@@ -1079,7 +1079,7 @@ void ReanimatedModuleProxy::performOperations() {
                       react_native_assert(
                           transformValue.isArray() &&
                           "[Reanimated] Matrix must be an array");
-                      const auto size = static_cast<int>(transformValue.size());
+                      int size = transformValue.size();
                       intBuffer.push_back(size);
                       for (int i = 0; i < size; i++) {
                         doubleBuffer.push_back(transformValue[i].asDouble());
