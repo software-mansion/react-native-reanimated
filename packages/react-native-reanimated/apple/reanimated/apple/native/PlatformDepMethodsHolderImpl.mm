@@ -42,6 +42,14 @@ RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
   return requestRender;
 }
 
+SynchronouslyUpdateUIPropsFunction makeSynchronouslyUpdateUIPropsFunction(REANodesManager *nodesManager)
+{
+  auto synchronouslyUpdateUIPropsFunction = [nodesManager](const int viewTag, const folly::dynamic &props) {
+    [nodesManager synchronouslyUpdateUIProps:viewTag props:props];
+  };
+  return synchronouslyUpdateUIPropsFunction;
+}
+
 GetAnimationTimestampFunction makeGetAnimationTimestamp()
 {
   auto getAnimationTimestamp = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
@@ -100,6 +108,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 {
   auto requestRender = makeRequestRender(nodesManager);
 
+  auto synchronouslyUpdateUIPropsFunction = makeSynchronouslyUpdateUIPropsFunction(nodesManager);
+
   auto getAnimationTimestamp = makeGetAnimationTimestamp();
 
   ReanimatedSensorContainer *reanimatedSensorContainer = [[ReanimatedSensorContainer alloc] init];
@@ -120,6 +130,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
+      synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,
       unregisterSensorFunction,

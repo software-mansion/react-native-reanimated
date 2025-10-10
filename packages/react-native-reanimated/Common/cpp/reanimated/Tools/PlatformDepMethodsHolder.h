@@ -30,8 +30,13 @@ using MeasureFunction = std::function<
 
 using RequestRenderFunction =
     std::function<void(std::function<void(const double)>)>;
+#ifdef ANDROID
 using SynchronouslyUpdateUIPropsFunction =
     std::function<void(const std::vector<int> &, const std::vector<double> &)>;
+#elif __APPLE__
+using SynchronouslyUpdateUIPropsFunction =
+    std::function<void(const int, const folly::dynamic &)>;
+#endif // ANDROID
 using PreserveMountedTagsFunction =
     std::function<std::optional<std::unique_ptr<int[]>>(std::vector<int> &)>;
 using GetAnimationTimestampFunction = std::function<double(void)>;
@@ -53,8 +58,8 @@ struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
-  SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
 #endif // ANDROID
+  SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   GetAnimationTimestampFunction getAnimationTimestamp;
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;

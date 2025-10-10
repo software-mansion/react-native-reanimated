@@ -65,9 +65,9 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
           staticPropsRegistry_,
           getAnimationTimestamp_)),
-#ifdef ANDROID
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
+#ifdef ANDROID
       filterUnmountedTagsFunction_(
           platformDepMethodsHolder.filterUnmountedTagsFunction),
 #endif // ANDROID
@@ -1100,6 +1100,67 @@ void ReanimatedModuleProxy::performOperations() {
       updatesBatch = std::move(shadowTreeUpdatesBatch);
     }
 #endif // ANDROID
+
+#if __APPLE__
+    if constexpr (StaticFeatureFlags::getFlag(
+                      "IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
+      static const std::unordered_set<std::string> synchronousProps = {
+          "opacity",
+          "elevation",
+          "zIndex",
+          "shadowOpacity",
+          "shadowRadius",
+          "backgroundColor",
+          // "color", // TODO: fix animating color of Animated.Text
+          "tintColor",
+          "borderRadius",
+          "borderTopLeftRadius",
+          "borderTopRightRadius",
+          "borderTopStartRadius",
+          "borderTopEndRadius",
+          "borderBottomLeftRadius",
+          "borderBottomRightRadius",
+          "borderBottomStartRadius",
+          "borderBottomEndRadius",
+          "borderStartStartRadius",
+          "borderStartEndRadius",
+          "borderEndStartRadius",
+          "borderEndEndRadius",
+          "borderColor",
+          "borderTopColor",
+          "borderBottomColor",
+          "borderLeftColor",
+          "borderRightColor",
+          "borderStartColor",
+          "borderEndColor",
+          "transform",
+      };
+
+      UpdatesBatch synchronousUpdatesBatch, shadowTreeUpdatesBatch;
+
+      for (const auto &[shadowNode, props] : updatesBatch) {
+        bool hasOnlySynchronousProps = true;
+        for (const auto &key : props.keys()) {
+          const auto keyStr = key.asString();
+          if (!synchronousProps.contains(keyStr)) {
+            hasOnlySynchronousProps = false;
+            break;
+          }
+        }
+        if (hasOnlySynchronousProps) {
+          synchronousUpdatesBatch.emplace_back(shadowNode, props);
+        } else {
+          shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
+        }
+      }
+
+      for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
+        synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
+      }
+
+      updatesBatch = std::move(shadowTreeUpdatesBatch);
+    }
+#endif // __APPLE__
 
     if ((updatesBatch.size() > 0) &&
         updatesRegistryManager_->shouldReanimatedSkipCommit()) {

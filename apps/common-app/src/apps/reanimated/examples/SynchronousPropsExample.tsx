@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { ScrollView, StyleSheet, Text } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text } from 'react-native';
 import Animated, {
   interpolateColor,
   useDerivedValue,
@@ -46,12 +46,22 @@ export default function SynchronousPropsExample() {
       style={styles.container}
       contentContainerStyle={styles.contentContainer}>
       <Text style={styles.summary}>
-        This example tests all styles and props that can be animated using the
-        synchronouslyUpdateViewOnUIThread method when
-        ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS static feature flag is enabled.
-        Make sure to enable this feature flag for testing. Note that the feature
-        flag is Android-only. When the feature flag is disabled on Android (and
-        also always on iOS), the updates will be committed to the ShadowTree.
+        This example tests all styles and props that can be animated using the{' '}
+        <Text style={styles.monospace}>synchronouslyUpdateViewOnUIThread</Text>{' '}
+        or{' '}
+        <Text style={styles.monospace}>
+          [RCTSurfacePresenter
+          schedulerDidSynchronouslyUpdateViewOnUIThread:props:]
+        </Text>{' '}
+        method when{' '}
+        <Text style={styles.monospace}>
+          ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS
+        </Text>{' '}
+        or{' '}
+        <Text style={styles.monospace}>IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS</Text>{' '}
+        (respectively) static feature flag is enabled. Make sure to enable this
+        feature flag for testing. When the feature flag is disabled, the updates
+        will be committed to the ShadowTree.
       </Text>
 
       <Text>opacity</Text>
@@ -313,5 +323,11 @@ const styles = StyleSheet.create({
   },
   summary: {
     padding: 20,
+  },
+  monospace: {
+    fontFamily: Platform.select({
+      ios: 'Menlo',
+      default: 'monospace',
+    }),
   },
 });

@@ -88,6 +88,12 @@ export default function AboutExample() {
               : 'Disabled'}
           </Text>
           <Text style={styles.text}>
+            <Text style={styles.bold}>IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS:</Text>{' '}
+            {getStaticFeatureFlagReanimated('IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS')
+              ? 'Enabled'
+              : 'Disabled'}
+          </Text>
+          <Text style={styles.text}>
             <Text style={styles.bold}>
               EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS:
             </Text>{' '}
