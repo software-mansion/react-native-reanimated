@@ -1,5 +1,5 @@
 import { Portal } from '@gorhom/portal';
-import type { PropsWithChildren, ReactNode } from 'react';
+import type { ComponentRef, PropsWithChildren, ReactNode } from 'react';
 import { useRef, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import {
@@ -92,7 +92,7 @@ export default function ActionSheetDropdown({
   styleOptions,
   ...contentProps
 }: ActionSheetDropdownProps): JSX.Element {
-  const containerRef = useRef<View>(null);
+  const containerRef = useRef<ComponentRef<typeof View>>(null);
   const insets = useSafeAreaInsets();
   const [{ isOpen, toggleMeasurements }, setState] = useState<DropdownState>({
     isOpen: false,
@@ -185,7 +185,10 @@ function DropdownContent({
   style,
   toggleMeasurements,
 }: DropdownContentProps): JSX.Element {
-  const flattenedStyle = StyleSheet.flatten(style);
+  // TODO - fix infinite type recursion or create a repro and report the issue
+  // to the RN team. For now we are casting the type to any.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const flattenedStyle = StyleSheet.flatten(style as any) as ViewStyle;
   const windowDimensions = Dimensions.get('window');
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollOffset = useScrollOffset(scrollRef);

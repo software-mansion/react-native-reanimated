@@ -13,7 +13,13 @@ std::shared_ptr<TransformOperation> TransformInterpolator::resolveOperation(
   return operation;
 }
 
-folly::dynamic
+TransformOperationInterpolator<PerspectiveOperation>::
+    TransformOperationInterpolator(
+        const std::shared_ptr<PerspectiveOperation> &defaultOperation)
+    : TransformOperationInterpolatorBase<PerspectiveOperation>(
+          defaultOperation) {}
+
+std::unique_ptr<TransformOperation>
 TransformOperationInterpolator<PerspectiveOperation>::interpolate(
     double progress,
     const std::shared_ptr<TransformOperation> &from,
@@ -24,16 +30,16 @@ TransformOperationInterpolator<PerspectiveOperation>::interpolate(
   const auto &toValue =
       std::static_pointer_cast<PerspectiveOperation>(to)->value;
 
-  if (fromValue.value == 0)
-    return from->toDynamic();
-  if (toValue.value == 0)
-    return to->toDynamic();
-
-  return PerspectiveOperation(fromValue.interpolate(progress, toValue))
-      .toDynamic();
+  return std::make_unique<PerspectiveOperation>(
+      fromValue.interpolate(progress, toValue));
 }
 
-folly::dynamic TransformOperationInterpolator<MatrixOperation>::interpolate(
+TransformOperationInterpolator<MatrixOperation>::TransformOperationInterpolator(
+    const std::shared_ptr<MatrixOperation> &defaultOperation)
+    : TransformOperationInterpolatorBase<MatrixOperation>(defaultOperation) {}
+
+std::unique_ptr<TransformOperation>
+TransformOperationInterpolator<MatrixOperation>::interpolate(
     double progress,
     const std::shared_ptr<TransformOperation> &from,
     const std::shared_ptr<TransformOperation> &to,
@@ -43,21 +49,18 @@ folly::dynamic TransformOperationInterpolator<MatrixOperation>::interpolate(
   const auto fromMatrix = matrixFromOperation(from, shouldBe3D, context);
   const auto toMatrix = matrixFromOperation(to, shouldBe3D, context);
 
-  folly::dynamic value;
-
   if (shouldBe3D) {
-    value = interpolateMatrix<TransformMatrix3D>(progress, fromMatrix, toMatrix)
-                .toDynamic();
-  } else {
-    // Unfortunately 2D matrices aren't handled properly in RN, so we have to
-    // convert them to 3D
-    // see the issue: https://github.com/facebook/react-native/issues/53639
-    const auto result2D =
-        interpolateMatrix<TransformMatrix2D>(progress, fromMatrix, toMatrix);
-    value = TransformMatrix3D::from2D(result2D).toDynamic();
+    return std::make_unique<MatrixOperation>(
+        interpolateMatrix<TransformMatrix3D>(progress, fromMatrix, toMatrix));
   }
 
-  return folly::dynamic::object(from->getOperationName(), value);
+  const auto result2D =
+      interpolateMatrix<TransformMatrix2D>(progress, fromMatrix, toMatrix);
+
+  // Unfortunately 2D matrices aren't handled properly in RN, so we have to
+  // convert them to 3D
+  // see the issue: https://github.com/facebook/react-native/issues/53639
+  return std::make_unique<MatrixOperation>(TransformMatrix3D::from2D(result2D));
 }
 
 template <typename MatrixType>
@@ -139,21 +142,23 @@ template TransformMatrix3D TransformOperationInterpolator<MatrixOperation>::
         const TransformMatrix::Shared &) const;
 
 // Template implementations
-template <typename OperationType>
-TransformOperationInterpolator<OperationType>::TransformOperationInterpolator(
-    std::shared_ptr<OperationType> defaultOperation)
-    : TransformOperationInterpolatorBase<OperationType>(defaultOperation) {}
+template <typename TOperation>
+TransformOperationInterpolator<TOperation>::TransformOperationInterpolator(
+    const std::shared_ptr<TOperation> &defaultOperation)
+    : TransformOperationInterpolatorBase<TOperation>(defaultOperation) {}
 
-template <typename OperationType>
-folly::dynamic TransformOperationInterpolator<OperationType>::interpolate(
+template <typename TOperation>
+std::unique_ptr<TransformOperation>
+TransformOperationInterpolator<TOperation>::interpolate(
     double progress,
     const std::shared_ptr<TransformOperation> &from,
     const std::shared_ptr<TransformOperation> &to,
     const TransformInterpolationContext &context) const {
-  const auto &fromOp = *std::static_pointer_cast<OperationType>(from);
-  const auto &toOp = *std::static_pointer_cast<OperationType>(to);
-  return OperationType(fromOp.value.interpolate(progress, toOp.value))
-      .toDynamic();
+  const auto &fromOp = *std::static_pointer_cast<TOperation>(from);
+  const auto &toOp = *std::static_pointer_cast<TOperation>(to);
+
+  return std::make_unique<TOperation>(
+      fromOp.value.interpolate(progress, toOp.value));
 }
 
 template <ResolvableTransformOp TOperation>
@@ -164,17 +169,17 @@ TransformOperationInterpolator<TOperation>::TransformOperationInterpolator(
       config_(std::move(config)) {}
 
 template <ResolvableTransformOp TOperation>
-folly::dynamic TransformOperationInterpolator<TOperation>::interpolate(
+std::unique_ptr<TransformOperation>
+TransformOperationInterpolator<TOperation>::interpolate(
     double progress,
     const std::shared_ptr<TransformOperation> &from,
     const std::shared_ptr<TransformOperation> &to,
     const TransformInterpolationContext &context) const {
   const auto &fromOp = *std::static_pointer_cast<TOperation>(from);
   const auto &toOp = *std::static_pointer_cast<TOperation>(to);
-  return TOperation(
-             fromOp.value.interpolate(
-                 progress, toOp.value, getResolvableValueContext(context)))
-      .toDynamic();
+
+  return std::make_unique<TOperation>(fromOp.value.interpolate(
+      progress, toOp.value, getResolvableValueContext(context)));
 }
 
 template <ResolvableTransformOp TOperation>
