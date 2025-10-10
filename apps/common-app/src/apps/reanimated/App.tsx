@@ -126,6 +126,7 @@ function ItemSeparator() {
 
 const Stack = createStack<RootStackParamList>();
 
+// todo: change this
 const screenOptions = {
   headerLeft: IS_MACOS ? undefined : () => <BackButton />,
   headerRight: IS_MACOS ? undefined : () => <DrawerButton />,
@@ -165,13 +166,8 @@ function App() {
 }
 
 const styles = StyleSheet.create({
-  list: {
-    backgroundColor: '#EFEFF4',
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#DBDBE0',
-  },
+  list: { backgroundColor: '#EFEFF4' },
+  separator: { height: 1, backgroundColor: '#DBDBE0' },
   button: {
     flex: 1,
     height: 60,
@@ -180,17 +176,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'white',
   },
-  disabledButton: {
-    backgroundColor: 'grey',
-    opacity: 0.5,
-  },
-  title: {
-    fontSize: 16,
-    color: 'black',
-  },
-  visitedItem: {
-    backgroundColor: '#e6f0f7',
-  },
+  disabledButton: { backgroundColor: 'grey', opacity: 0.5 },
+  title: { fontSize: 16, color: 'black' },
+  visitedItem: { backgroundColor: '#e6f0f7' },
 });
 
 export default memo(App);

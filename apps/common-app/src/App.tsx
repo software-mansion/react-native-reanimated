@@ -6,6 +6,7 @@ import {
   getPathFromState,
   NavigationContainer,
 } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Linking, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -38,8 +39,6 @@ export default function App() {
     );
   }
 
-  const RootApp = IS_MACOS ? ReanimatedApp : Navigator;
-
   return (
     <NukeContext value={() => setNuked(true)}>
       <GestureHandlerRootView style={flex.fill}>
@@ -58,14 +57,7 @@ export default function App() {
               }));
 
               return {
-                routes: [
-                  {
-                    name: drawerRoute,
-                    state: {
-                      routes: stackRoutes,
-                    },
-                  },
-                ],
+                routes: [{ name: drawerRoute, state: { routes: stackRoutes } }],
               };
             },
             prefixes: [],
@@ -73,10 +65,10 @@ export default function App() {
           onStateChange={updateNavigationState}>
           <PortalProvider>
             {IS_MACOS ? (
-              <RootApp />
+              <Navigator />
             ) : (
               <SafeAreaProvider>
-                <RootApp />
+                <Navigator />
               </SafeAreaProvider>
             )}
           </PortalProvider>
@@ -87,17 +79,29 @@ export default function App() {
 }
 
 const SCREENS = [
-  {
-    component: CSSApp,
-    name: 'CSS',
-  },
-  {
-    component: ReanimatedApp,
-    name: 'Reanimated',
-  },
+  { component: CSSApp, name: 'CSS' },
+  { component: ReanimatedApp, name: 'Reanimated' },
 ];
 
 function Navigator() {
+  if (IS_MACOS) {
+    const Stack = createStackNavigator();
+
+    return (
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: true,
+          headerStyle: { backgroundColor: colors.background1 },
+          headerTintColor: colors.primary,
+          headerTitleStyle: text.heading4,
+        }}>
+        {SCREENS.map(({ component, name }) => (
+          <Stack.Screen key={name} name={name} component={component} />
+        ))}
+      </Stack.Navigator>
+    );
+  }
+
   const Drawer = createDrawerNavigator();
   const screens = IS_WEB ? SCREENS : SCREENS.reverse();
 
@@ -107,18 +111,14 @@ function Navigator() {
         drawerActiveBackgroundColor: colors.primaryLight,
         drawerActiveTintColor: colors.primaryDark,
         drawerInactiveTintColor: colors.primary,
-        drawerItemStyle: {
-          borderRadius: radius.lg,
-        },
+        drawerItemStyle: { borderRadius: radius.lg },
         drawerLabelStyle: text.heading4,
         drawerPosition: IS_WEB ? 'left' : 'right',
-        drawerStyle: {
-          backgroundColor: colors.background1,
-        },
+        drawerStyle: { backgroundColor: colors.background1 },
         headerShown: false,
       }}>
       {screens.map(({ component, name }) => (
-        <Drawer.Screen component={component} key={name} name={name} />
+        <Drawer.Screen key={name} name={name} component={component} />
       ))}
     </Drawer.Navigator>
   );
@@ -143,7 +143,7 @@ function useNavigationState() {
       try {
         const initialUrl = await Linking.getInitialURL();
 
-        if (!IS_MACOS && !IS_WEB && initialUrl === null) {
+        if (!IS_WEB && initialUrl === null) {
           // Only restore state if there's no deep link and we're not on web
           const savedStateString = await AsyncStorage.getItem(PERSISTENCE_KEY);
           // Erase the state immediately after fetching it.
