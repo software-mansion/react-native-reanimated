@@ -2,10 +2,10 @@ name: Reanimated release checks
 on:
   pull_request:
     branches:
-      - '[0-9]+.[0-9]+-stable'
+      - "[0-9]+.[0-9]+-stable"
   push:
     branches:
-      - '[0-9]+.[0-9]+-stable'
+      - "[0-9]+.[0-9]+-stable"
   workflow_call:
   workflow_dispatch:
 
@@ -93,7 +93,7 @@ jobs:
   windows_hosted_app_reanimated_build_check_nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
     name: Windows hosted app Reanimated build check [Nightly]
-    uses: ./.github/workflows/windows-hosted-app-reanimated-build-check-nightly.yml
+    uses: ./.github/workflows/windows-hosted-app-reanimated-build-check.yml
 
   yarn_validation:
     if: github.repository == 'software-mansion/react-native-reanimated'
