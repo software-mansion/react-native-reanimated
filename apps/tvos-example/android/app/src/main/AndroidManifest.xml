@@ -13,7 +13,6 @@
       android:roundIcon="@mipmap/ic_launcher_round"
       android:allowBackup="false"
       android:theme="@style/AppTheme"
-      android:usesCleartextTraffic="${usesCleartextTraffic}"
       android:banner="@drawable/tv_banner"
       android:supportsRtl="true">
       <activity
