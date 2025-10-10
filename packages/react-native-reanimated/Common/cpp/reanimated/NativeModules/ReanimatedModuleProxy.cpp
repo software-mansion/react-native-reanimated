@@ -694,6 +694,7 @@ void ReanimatedModuleProxy::performOperations() {
 
     shouldUpdateCssAnimations_ = false;
 
+#ifdef ANDROID
     if constexpr (StaticFeatureFlags::getFlag(
                       "ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
       static const std::unordered_set<std::string> synchronousProps = {
@@ -937,7 +938,6 @@ void ReanimatedModuleProxy::performOperations() {
       }
 
       if (!synchronousUpdatesBatch.empty()) {
-#ifdef ANDROID
         std::vector<int> intBuffer;
         std::vector<double> doubleBuffer;
         intBuffer.reserve(1024);
@@ -1095,15 +1095,45 @@ void ReanimatedModuleProxy::performOperations() {
           intBuffer.push_back(CMD_END_OF_VIEW);
         }
         synchronouslyUpdateUIPropsFunction_(intBuffer, doubleBuffer);
-#elif __APPLE__
-        for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
-          synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
-        }
-#endif // __APPLE__
       }
 
       updatesBatch = std::move(shadowTreeUpdatesBatch);
     }
+#endif // ANDROID
+
+#if __APPLE__
+    if constexpr (StaticFeatureFlags::getFlag(
+                      "IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
+      static const std::unordered_set<std::string> synchronousProps = {
+          "opacity",
+          // TODO: populate the list
+      };
+
+      UpdatesBatch synchronousUpdatesBatch, shadowTreeUpdatesBatch;
+
+      for (const auto &[shadowNode, props] : updatesBatch) {
+        bool hasOnlySynchronousProps = true;
+        for (const auto &key : props.keys()) {
+          const auto keyStr = key.asString();
+          if (!synchronousProps.contains(keyStr)) {
+            hasOnlySynchronousProps = false;
+            break;
+          }
+        }
+        if (hasOnlySynchronousProps) {
+          synchronousUpdatesBatch.emplace_back(shadowNode, props);
+        } else {
+          shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
+        }
+      }
+
+      for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
+        synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
+      }
+
+      updatesBatch = std::move(shadowTreeUpdatesBatch);
+    }
+#endif // __APPLE__
 
     if ((updatesBatch.size() > 0) &&
         updatesRegistryManager_->shouldReanimatedSkipCommit()) {

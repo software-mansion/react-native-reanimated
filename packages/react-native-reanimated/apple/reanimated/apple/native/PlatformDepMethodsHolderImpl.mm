@@ -44,10 +44,9 @@ RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
 
 SynchronouslyUpdateUIPropsFunction makeSynchronouslyUpdateUIPropsFunction(REANodesManager *nodesManager)
 {
-  auto synchronouslyUpdateUIPropsFunction =
-      [nodesManager](const int viewTag, const folly::dynamic &props) {
-        [nodesManager synchronouslyUpdateUIProps:viewTag props:props];
-      };
+  auto synchronouslyUpdateUIPropsFunction = [nodesManager](const int viewTag, const folly::dynamic &props) {
+    [nodesManager synchronouslyUpdateUIProps:viewTag props:props];
+  };
   return synchronouslyUpdateUIPropsFunction;
 }
 

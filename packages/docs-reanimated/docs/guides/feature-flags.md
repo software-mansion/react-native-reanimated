@@ -18,6 +18,7 @@ Feature flags are available since Reanimated 4.
 | --------------------------------------------------------------------------------------------------- | :-----------------------------: | :------: | :--------: | :-----------: |
 | [`DISABLE_COMMIT_PAUSING_MECHANISM`](#disable_commit_pausing_mechanism)                             | [static](#static-feature-flags) |  4.0.0   |  &ndash;   |    `false`    |
 | [`ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#android_synchronously_update_ui_props)                   | [static](#static-feature-flags) |  4.0.0   |  &ndash;   |    `false`    |
+| [`IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#ios_synchronously_update_ui_props)                           | [static](#static-feature-flags) |  4.2.0   |  &ndash;   |    `false`    |
 | [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#experimental_css_animations_for_svg_components) | [static](#static-feature-flags) |  4.1.0   |  &ndash;   |    `false`    |
 | [`USE_SYNCHRONIZABLE_FOR_MUTABLES`](#use_synchronizable_for_mutables)                               | [static](#static-feature-flags) |  4.1.0   |  &ndash;   |    `false`    |
 
@@ -133,6 +134,10 @@ When enabled, non-layout styles will be applied using the `synchronouslyUpdateVi
 Currently, only the following styles can be updated using the fast path: `opacity`, `elevation`, `zIndex`, `backgroundColor`, `tintColor`, `borderRadius` (all sides), `borderColor` (all sides) and `transform` (all transforms). All remaining styles, if present, will be updated via `ShadowTree::commit`.
 
 This feature flag works only on Android and has no effect on iOS. For more details, see [PR #7823](https://github.com/software-mansion/react-native-reanimated/pull/7823).
+
+### `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`
+
+When enabled, non-layout styles will be applied using the `[RCTSurfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:props:]` method (which doesn't involve layout recalculation) instead of than `ShadowTree::commit` method (which requires layout recalculation). Limitations and unwanted side effects are the same as for `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`. For more details, see [PR #8367](https://github.com/software-mansion/react-native-reanimated/pull/8367).
 
 ### `EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`
 
