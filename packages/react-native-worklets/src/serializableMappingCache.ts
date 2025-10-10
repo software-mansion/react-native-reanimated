@@ -1,10 +1,12 @@
 'use strict';
 
+import type { SerializableRef } from './workletTypes';
+
 export const serializableMappingCache = {
-  set() {
+  set(_serializable: object, _serializableRef?: SerializableRef): void {
     // NOOP
   },
-  get() {
-    return null;
+  get(_key: object): object | symbol | SerializableRef {
+    return null!;
   },
 };

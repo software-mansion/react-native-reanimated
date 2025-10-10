@@ -2,11 +2,14 @@
 
 import { RuntimeKind } from '../runtimeKind';
 import { WorkletsTurboModule } from '../specs';
-import type { SynchronizableRef } from '../synchronizable';
 import { checkCppVersion } from '../utils/checkCppVersion';
 import { jsVersion } from '../utils/jsVersion';
 import { WorkletsError } from '../WorkletsError';
-import type { SerializableRef, WorkletRuntime } from '../workletTypes';
+import type {
+  SerializableRef,
+  SynchronizableRef,
+  WorkletRuntime,
+} from '../workletTypes';
 import type {
   IWorkletsModule,
   WorkletsModuleProxy,

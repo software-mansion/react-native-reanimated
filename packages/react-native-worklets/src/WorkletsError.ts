@@ -1,5 +1,7 @@
 'use strict';
 
+import type { IWorkletsErrorConstructor } from './workletTypes';
+
 function WorkletsErrorConstructor(message?: string) {
   const prefix = '[Worklets]';
 
@@ -9,4 +11,5 @@ function WorkletsErrorConstructor(message?: string) {
   return errorInstance;
 }
 
-export const WorkletsError = WorkletsErrorConstructor;
+export const WorkletsError =
+  WorkletsErrorConstructor as IWorkletsErrorConstructor;

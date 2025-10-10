@@ -22,9 +22,18 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
   };
 }
 
+export function runOnUISync<Args extends unknown[], ReturnValue>(
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): ReturnValue;
+
 export function runOnUISync(): never {
   throw new WorkletsError('`runOnUISync` is not supported on web.');
 }
+
+export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
+  worklet: (...args: Args) => ReturnValue
+): (...args: Args) => ReturnValue;
 
 export function executeOnUIRuntimeSync(): never {
   throw new WorkletsError('`executeOnUIRuntimeSync` is not supported on web.');

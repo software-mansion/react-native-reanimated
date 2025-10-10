@@ -1,4 +1,3 @@
-/* eslint-disable reanimated/use-global-this */
 'use strict';
 
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
@@ -7,7 +6,6 @@ import type { callGuardDEV } from './callGuard';
 import type { reportFatalRemoteError } from './errors';
 import type { Queue } from './runLoop/workletRuntime/taskQueue';
 import type { SynchronizableUnpacker } from './synchronizableUnpacker';
-import type { IWorkletsErrorConstructor } from './WorkletsError';
 import type { WorkletsModuleProxy } from './WorkletsModule';
 import type { ValueUnpacker } from './workletTypes';
 
@@ -71,7 +69,6 @@ declare global {
     worklet: SerializableRef<() => void>
   ) => void;
   var _microtaskQueueFinalizers: (() => void)[];
-  var WorkletsError: IWorkletsErrorConstructor;
   var _scheduleTimeoutCallback: (delay: number, handlerId: number) => void;
   var __runTimeoutCallback: (handlerId: number) => void;
   var __flushMicrotasks: () => void;

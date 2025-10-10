@@ -1,7 +1,7 @@
 'use strict';
 
 import { createSerializable } from './serializable';
-import type { Synchronizable, SynchronizableRef } from './synchronizable';
+import type { Synchronizable, SynchronizableRef } from './workletTypes';
 
 export function __installUnpacker() {
   // TODO: Add cache for synchronizables.

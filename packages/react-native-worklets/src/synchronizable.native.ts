@@ -2,7 +2,7 @@
 
 import { createSerializable } from './serializable';
 import { WorkletsModule } from './WorkletsModule';
-import type { SerializableRef } from './workletTypes';
+import type { Synchronizable } from './workletTypes';
 
 export function createSynchronizable<TValue>(
   initialValue: TValue
@@ -15,18 +15,3 @@ export function createSynchronizable<TValue>(
     synchronizableRef
   ) as unknown as Synchronizable<TValue>;
 }
-
-export type SynchronizableRef<TValue = unknown> = {
-  __synchronizableRef: true;
-  __nativeStateSynchronizableJSRef: TValue;
-};
-
-export type Synchronizable<TValue = unknown> = SerializableRef<TValue> &
-  SynchronizableRef<TValue> & {
-    __synchronizableRef: true;
-    getDirty(): TValue;
-    getBlocking(): TValue;
-    setBlocking(value: TValue | ((prev: TValue) => TValue)): void;
-    lock(): void;
-    unlock(): void;
-  };

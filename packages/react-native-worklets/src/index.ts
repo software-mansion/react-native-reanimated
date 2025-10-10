@@ -25,7 +25,6 @@ export {
 } from './runtimes';
 export { createSerializable, isSerializableRef } from './serializable';
 export { serializableMappingCache } from './serializableMappingCache';
-export type { Synchronizable } from './synchronizable';
 export { createSynchronizable } from './synchronizable';
 export {
   callMicrotasks,
@@ -44,6 +43,7 @@ export type { IWorkletsModule, WorkletsModuleProxy } from './WorkletsModule';
 export { WorkletsModule } from './WorkletsModule';
 export type {
   SerializableRef,
+  Synchronizable,
   WorkletFunction,
   WorkletRuntime,
   WorkletStackDetails,

@@ -11,7 +11,11 @@ import {
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
-import type { WorkletFunction, WorkletRuntime } from './workletTypes';
+import type {
+  WorkletFunction,
+  WorkletRuntime,
+  WorkletRuntimeConfig,
+} from './workletTypes';
 
 /**
  * Lets you create a new JS runtime which can be used to run worklets possibly
@@ -168,59 +172,6 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
   'worklet';
   runOnRuntime(workletRuntime, worklet)(...args);
 }
-
-/** Configuration object for creating a worklet runtime. */
-export type WorkletRuntimeConfig = {
-  /** The name of the worklet runtime. */
-  name?: string;
-  /**
-   * A worklet that will be run immediately after the runtime is created and
-   * before any other worklets.
-   */
-  initializer?: () => void;
-  /**
-   * Time interval in milliseconds between polling of frame callbacks scheduled
-   * by requestAnimationFrame. If not specified, it defaults to 16 ms.
-   */
-  animationQueuePollingRate?: number;
-  /**
-   * Determines whether to enable the default Event Loop or not. The Event Loop
-   * provides implementations for `setTimeout`, `setImmediate`, `setInterval`,
-   * `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`,
-   * `clearImmediate`, and `cancelAnimationFrame` methods. If not specified, it
-   * defaults to `true`.
-   */
-  enableEventLoop?: true;
-} & (
-  | {
-      /**
-       * If true, the runtime will use the default queue implementation for
-       * scheduling worklets. Defaults to true.
-       */
-      useDefaultQueue?: true;
-      /**
-       * An optional custom queue to be used for scheduling worklets.
-       *
-       * The queue has to implement the C++ `AsyncQueue` interface from
-       * `<worklets/Public/AsyncQueue.h>`.
-       */
-      customQueue?: never;
-    }
-  | {
-      /**
-       * If true, the runtime will use the default queue implementation for
-       * scheduling worklets. Defaults to true.
-       */
-      useDefaultQueue: false;
-      /**
-       * An optional custom queue to be used for scheduling worklets.
-       *
-       * The queue has to implement the C++ `AsyncQueue` interface from
-       * `<worklets/Public/AsyncQueue.h>`.
-       */
-      customQueue?: object;
-    }
-);
 
 type WorkletRuntimeConfigInternal = WorkletRuntimeConfig & {
   initializer?: WorkletFunction<[], void>;

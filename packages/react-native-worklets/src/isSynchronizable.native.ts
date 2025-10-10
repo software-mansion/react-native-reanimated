@@ -1,6 +1,6 @@
 'use strict';
 
-import type { Synchronizable } from './synchronizable';
+import type { Synchronizable } from './workletTypes';
 
 export function isSynchronizable<TValue>(
   value: unknown

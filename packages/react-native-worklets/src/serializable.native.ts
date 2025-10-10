@@ -6,7 +6,6 @@ import {
   serializableMappingCache,
   serializableMappingFlag,
 } from './serializableMappingCache';
-import type { Synchronizable } from './synchronizable';
 import { jsVersion } from './utils/jsVersion';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsError } from './WorkletsError';
@@ -14,6 +13,7 @@ import { WorkletsModule } from './WorkletsModule';
 import type {
   FlatSerializableRef,
   SerializableRef,
+  Synchronizable,
   WorkletFunction,
   WorkletImport,
 } from './workletTypes';
