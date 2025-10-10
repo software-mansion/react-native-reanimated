@@ -1,4 +1,4 @@
-name: Check Ruby and cocoapods versions
+name: Check Ruby and CocoaPods versions
 on:
   pull_request:
     types: [opened, synchronize]
@@ -25,7 +25,4 @@ jobs:
         run: .github/workflows/helper/clear-annotations.sh
 
       - name: Verify Ruby and CocoaPods versions in lockfiles
-        working-directory: ${{ matrix.working-directory }}
-        env:
-          BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
-        run: .github/workflows/helper/check-ruby-pods.sh "${{ matrix.working-directory }}" "${{ github.event.pull_request.base.ref }}"
+        run: .github/workflows/helper/check-ruby-pods.sh "${{ matrix.working-directory }}"
