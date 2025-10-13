@@ -4,11 +4,11 @@
     "declaration": true,
     "preserveSymlinks": true,
     "target": "es6",
-    "module": "NodeNext",
+    "module": "esnext",
     "jsx": "react-native",
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "bundler",
     "lib": ["es6", "dom", "ES2021"],
     "esModuleInterop": true,
     "strict": true,
@@ -16,7 +16,7 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "checkJs": true,
-    "noEmit": true
+    "noEmit": true,
   },
-  "exclude": ["**/eslint.config.mjs"]
+  "exclude": ["**/eslint.config.mjs", "**/node_modules"]
 }
