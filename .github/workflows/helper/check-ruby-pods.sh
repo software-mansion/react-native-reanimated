@@ -7,7 +7,7 @@ echo "Checking Ruby and cocoapods versions in $WORKING_DIR"
 cd "$WORKING_DIR"
 
 GEM_LOCK="Gemfile.lock"
-POD_LOCK="Podfile.lock"
+POD_LOCK=""
 
 EXPECTED_RUBY="3.3.6p108"
 EXPECTED_PODS="1.15.2"

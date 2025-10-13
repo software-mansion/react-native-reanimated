@@ -2,6 +2,9 @@ name: Check Ruby and CocoaPods versions
 on:
   pull_request:
     types: [opened, synchronize]
+    paths:
+      - 'apps/**/Gemfile.lock'
+      - 'apps/**/**/Podfile.lock'
 
 jobs:
   ruby-pods-version-check:
@@ -9,8 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        working-directory:
-          [apps/fabric-example, apps/macos-example, apps/tvos-example]
+        working-directory: [fabric-example, macos-example, tvos-example]
     concurrency:
       group: ruby-pods-version-check-${{ matrix.working-directory }}-${{ github.ref }}
       cancel-in-progress: true
@@ -25,4 +27,4 @@ jobs:
         run: .github/workflows/helper/clear-annotations.sh
 
       - name: Verify Ruby and CocoaPods versions in lockfiles
-        run: .github/workflows/helper/check-ruby-pods.sh "${{ matrix.working-directory }}"
+        run: .github/workflows/helper/check-ruby-pods.sh "apps/${{ matrix.working-directory }}"
