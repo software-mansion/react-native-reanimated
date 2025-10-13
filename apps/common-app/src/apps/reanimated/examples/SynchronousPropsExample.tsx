@@ -26,6 +26,8 @@ export default function SynchronousPropsExample() {
 
   const radSv = useDerivedValue(() => `${(sv.value * Math.PI) / 4}rad`, [sv]);
 
+  const zIndexSv = useDerivedValue(() => Math.round(sv.value * 10), [sv]);
+
   const colorSv = useDerivedValue(
     () => interpolateColor(sv.value, [0, 1], ['red', 'blue']),
     [sv]
@@ -90,7 +92,7 @@ export default function SynchronousPropsExample() {
           width: 50,
           height: 50,
           borderWidth: 1,
-          zIndex: fiftySv,
+          zIndex: zIndexSv,
         }}
       />
 
