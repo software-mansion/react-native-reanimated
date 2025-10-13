@@ -18,5 +18,5 @@
     "checkJs": true,
     "noEmit": true,
   },
-  "exclude": ["**/eslint.config.mjs", "**/node_modules"]
+  "exclude": ["**/eslint.config.mjs"]
 }
