@@ -1,4 +1,5 @@
 'use strict';
+
 import type { ValueUnpacker, WorkletFunction } from './workletTypes';
 
 declare global {
@@ -19,6 +20,7 @@ function __installUnpacker() {
     category?: string,
     remoteFunctionName?: string
   ): unknown {
+    // eslint-disable-next-line strict
     'use strict';
     const workletHash = objectToUnpack.__workletHash;
     if (workletHash !== undefined) {
