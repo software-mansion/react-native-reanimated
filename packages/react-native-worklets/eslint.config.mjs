@@ -26,6 +26,7 @@ const config = tsEslint.config(
       'reanimated/use-worklets-error': 'error',
       'reanimated/use-global-this': 'error',
       'no-bitwise': 'error',
+      strict: ['error', 'global'],
     },
   },
   {
@@ -34,7 +35,7 @@ const config = tsEslint.config(
       '@typescript-eslint/unbound-method': 'off',
       'jest/unbound-method': 'error',
     },
-  },
+  }
 );
 
 export default config;
