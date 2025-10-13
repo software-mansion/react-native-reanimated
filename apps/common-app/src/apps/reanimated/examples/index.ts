@@ -109,6 +109,7 @@ import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderCo
 import ScreenTransitionExample from './ScreenTransitionExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import ScrollEventExample from './ScrollEventExample';
+import ScrollPerformanceExample from './ScrollPerformanceExample';
 import ScrollToExample from './ScrollToExample';
 import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
@@ -153,6 +154,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🎞️',
     title: 'FPS',
     screen: FpsExample,
+  },
+  ScrollPerformanceExample: {
+    icon: '🚁',
+    title: 'Scroll performance',
+    screen: ScrollPerformanceExample,
   },
   ThirdPartyComponentsExample: {
     icon: '3️⃣',

@@ -110,6 +110,16 @@ export default function AboutExample() {
               : 'Disabled'}
           </Text>
           <Text style={styles.text}>
+            <Text style={styles.bold}>
+              USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS:
+            </Text>{' '}
+            {getStaticFeatureFlagReanimated(
+              'USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS'
+            )
+              ? 'Enabled'
+              : 'Disabled'}
+          </Text>
+          <Text style={styles.text}>
             <Text style={styles.bold}>IOS_DYNAMIC_FRAMERATE_ENABLED:</Text>{' '}
             {getStaticFeatureFlagWorklets('IOS_DYNAMIC_FRAMERATE_ENABLED')
               ? 'Enabled'
