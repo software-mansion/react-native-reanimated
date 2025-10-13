@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
-  "types": "lib",
+  "types": "types/index.d.ts",
   "scripts": {
     "test": "yarn jest",
     "bundle": "yarn esbuild ./public/index.js --external:espree --external:@typescript-eslint --platform=node --bundle --outfile=./index.js",
