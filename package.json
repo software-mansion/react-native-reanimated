@@ -31,6 +31,7 @@
     "lint:root": "eslint . --ignore-pattern 'packages/**' --ignore-pattern 'apps/**' --ignore-pattern 'docs/**' && yarn prettier --check --ignore-path .gitignore --ignore-path .prettierignore --ignore-path .prettiereslintignore ."
   },
   "devDependencies": {
+    "@babel/core": "7.28.4",
     "@eslint/compat": "1.3.1",
     "@types/node": "24.0.14",
     "@types/shelljs": "0.8.17",

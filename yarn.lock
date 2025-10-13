@@ -8588,6 +8588,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:24.7.0":
+  version: 24.7.0
+  resolution: "@types/node@npm:24.7.0"
+  dependencies:
+    undici-types: "npm:~7.14.0"
+  checksum: 10/db0b77e9b132906cdf0350661df660c970e924093ccaa781472d61bc5c448f3d15514b15f55b4df6827254a041aad2418339fe00d45ef10687557ffc0f026d47
+  languageName: node
+  linkType: hard
+
 "@types/node@npm:^17.0.5":
   version: 17.0.45
   resolution: "@types/node@npm:17.0.45"
@@ -8689,21 +8698,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:*":
+"@types/react@npm:*, @types/react@npm:19.2.2":
   version: 19.2.2
   resolution: "@types/react@npm:19.2.2"
   dependencies:
     csstype: "npm:^3.0.2"
   checksum: 10/d6adf8fd4bb23a7e04da5700d96b15dc0f59653727a9c6e940c151d7232fa1dbbab98417d5ac830dcfb6cba3f206efbd4cd83647e6f9a688d7363a90e607f6bf
-  languageName: node
-  linkType: hard
-
-"@types/react@npm:19.1.1":
-  version: 19.1.1
-  resolution: "@types/react@npm:19.1.1"
-  dependencies:
-    csstype: "npm:^3.0.2"
-  checksum: 10/f267c2a7afddd1f463bd4cf18553ddea132c609a6dc29938c5e83ae392c75e0acdbace2d03ad26178183b10da733e476324e2f25f48bd7fa6c232de708c35563
   languageName: node
   linkType: hard
 
@@ -11733,7 +11733,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"browserslist@npm:^4.0.0, browserslist@npm:^4.20.4, browserslist@npm:^4.23.0, browserslist@npm:^4.24.0, browserslist@npm:^4.24.4, browserslist@npm:^4.24.5, browserslist@npm:^4.25.0, browserslist@npm:^4.25.1, browserslist@npm:^4.26.0":
+"browserslist@npm:^4.0.0, browserslist@npm:^4.20.4, browserslist@npm:^4.23.0, browserslist@npm:^4.24.0, browserslist@npm:^4.24.4, browserslist@npm:^4.24.5, browserslist@npm:^4.25.0, browserslist@npm:^4.25.1, browserslist@npm:^4.26.0, browserslist@npm:^4.26.3":
   version: 4.26.3
   resolution: "browserslist@npm:4.26.3"
   dependencies:
@@ -12680,7 +12680,7 @@ __metadata:
     "@tsconfig/react-native": "npm:3.0.0"
     "@types/d3-shape": "npm:3.1.7"
     "@types/jest": "npm:30.0.0"
-    "@types/react": "npm:19.1.1"
+    "@types/react": "npm:19.2.2"
     "@types/react-test-renderer": "npm:19.1.0"
     d3-shape: "npm:3.2.0"
     eslint: "npm:9.37.0"
@@ -12689,6 +12689,7 @@ __metadata:
     madge: "npm:8.0.0"
     prettier: "npm:3.6.2"
     react: "npm:19.1.1"
+    react-dom: "npm:19.1.1"
     react-native: "npm:0.82.0"
     react-native-gesture-handler: "npm:2.28.0"
     react-native-monorepo-tools: "npm:1.2.1"
@@ -13935,6 +13936,7 @@ __metadata:
     "@babel/preset-env": "npm:7.28.3"
     "@babel/preset-flow": "npm:7.25.9"
     "@babel/preset-react": "npm:7.27.1"
+    "@babel/runtime": "npm:7.28.4"
     "@dnd-kit/core": "npm:6.3.1"
     "@dnd-kit/modifiers": "npm:9.0.0"
     "@docusaurus/core": "npm:3.9.1"
@@ -13950,6 +13952,7 @@ __metadata:
     "@react-native/assets-registry": "npm:0.79.1"
     "@shopify/flash-list": "npm:2.1.0"
     "@swmansion/t-rex-ui": "npm:1.1.0"
+    "@types/react": "npm:19.2.2"
     "@vercel/og": "npm:0.6.2"
     babel-loader: "npm:10.0.0"
     babel-polyfill: "npm:6.26.0"
@@ -13976,6 +13979,7 @@ __metadata:
     source-map: "npm:0.7.4"
     source-map-loader: "npm:4.0.1"
     usehooks-ts: "npm:2.9.1"
+    webpack: "npm:5.102.1"
     webpack-cli: "npm:5.0.1"
   languageName: unknown
   linkType: soft
@@ -13990,6 +13994,7 @@ __metadata:
     "@babel/preset-env": "npm:7.28.3"
     "@babel/preset-flow": "npm:7.25.9"
     "@babel/preset-react": "npm:7.27.1"
+    "@babel/runtime": "npm:7.28.4"
     "@docusaurus/core": "npm:3.9.1"
     "@docusaurus/module-type-aliases": "npm:3.9.1"
     "@docusaurus/plugin-debug": "npm:3.9.1"
@@ -14003,6 +14008,7 @@ __metadata:
     "@react-native/assets-registry": "npm:0.79.1"
     "@shopify/flash-list": "npm:2.1.0"
     "@swmansion/t-rex-ui": "npm:1.1.0"
+    "@types/react": "npm:19.2.2"
     "@vercel/og": "npm:0.6.2"
     babel-loader: "npm:10.0.0"
     babel-polyfill: "npm:6.26.0"
@@ -14029,6 +14035,7 @@ __metadata:
     source-map: "npm:0.7.4"
     source-map-loader: "npm:4.0.1"
     usehooks-ts: "npm:2.9.1"
+    webpack: "npm:5.102.1"
     webpack-cli: "npm:5.0.1"
   languageName: unknown
   linkType: soft
@@ -15917,8 +15924,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "fabric-example@workspace:apps/fabric-example"
   dependencies:
+    "@types/react": "npm:19.2.2"
     common-app: "workspace:*"
     prettier: "npm:3.6.2"
+    react: "npm:19.1.1"
     react-native: "npm:0.82.0"
     typescript: "npm:5.8.3"
   languageName: unknown
@@ -20297,6 +20306,7 @@ __metadata:
     "@react-native/metro-config": "npm:0.75.4"
     "@react-native/typescript-config": "npm:0.75.4"
     common-app: "workspace:*"
+    eslint: "npm:9.37.0"
     prettier: "npm:3.6.2"
     react: "npm:18.3.1"
     react-native: "npm:0.80.0"
@@ -23634,11 +23644,13 @@ __metadata:
     prettier: "npm:3.6.2"
     react: "npm:19.1.1"
     react-dom: "npm:19.1.1"
+    react-native: "npm:0.82.0"
     react-native-reanimated: "workspace:*"
     react-native-web: "npm:0.21.1"
     react-native-worklets: "workspace:*"
     start-server-and-test: "npm:2.1.2"
     typescript: "npm:5.8.3"
+    webpack: "npm:5.102.1"
   languageName: unknown
   linkType: soft
 
@@ -26634,6 +26646,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "react-native-reanimated-monorepo@workspace:."
   dependencies:
+    "@babel/core": "npm:7.28.4"
     "@eslint/compat": "npm:1.3.1"
     "@types/node": "npm:24.0.14"
     "@types/shelljs": "npm:0.8.17"
@@ -26705,7 +26718,7 @@ __metadata:
     "@types/convert-source-map": "npm:2.0.3"
     "@types/jest": "npm:30.0.0"
     "@types/node": "npm:24.0.14"
-    "@types/react": "npm:19.1.1"
+    "@types/react": "npm:19.2.2"
     "@types/react-test-renderer": "npm:19.1.0"
     "@types/semver": "npm:7.7.1"
     clang-format-node: "npm:1.3.5"
@@ -26714,7 +26727,8 @@ __metadata:
     knip: "npm:5.61.3"
     madge: "npm:8.0.0"
     prettier: "npm:3.6.2"
-    react: "npm:19.1.0"
+    react: "npm:19.1.1"
+    react-dom: "npm:19.1.1"
     react-native: "npm:0.82.0"
     react-native-builder-bob: "npm:0.40.13"
     react-native-is-edge-to-edge: "npm:1.2.1"
@@ -26827,7 +26841,8 @@ __metadata:
     "@react-native-community/cli": "npm:20.0.0"
     "@react-native/eslint-config": "npm:0.82.0"
     "@types/jest": "npm:30.0.0"
-    "@types/react": "npm:19.1.1"
+    "@types/node": "npm:24.7.0"
+    "@types/react": "npm:19.2.2"
     clang-format-node: "npm:1.3.5"
     code-tag: "npm:1.2.0"
     convert-source-map: "npm:2.0.0"
@@ -26836,7 +26851,7 @@ __metadata:
     knip: "npm:5.61.3"
     madge: "npm:8.0.0"
     prettier: "npm:3.6.2"
-    react: "npm:19.1.0"
+    react: "npm:19.1.1"
     react-native: "npm:0.82.0"
     react-native-builder-bob: "npm:0.40.13"
     semver: "npm:7.7.3"
@@ -28189,6 +28204,18 @@ __metadata:
     ajv-formats: "npm:^2.1.1"
     ajv-keywords: "npm:^5.1.0"
   checksum: 10/02c32c34aae762d48468f98465a96a167fede637772871c7c7d8923671ddb9f20b2cc6f6e8448ae6bef5363e3597493c655212c8b06a4ee73aa099d9452fbd8b
+  languageName: node
+  linkType: hard
+
+"schema-utils@npm:^4.3.3":
+  version: 4.3.3
+  resolution: "schema-utils@npm:4.3.3"
+  dependencies:
+    "@types/json-schema": "npm:^7.0.9"
+    ajv: "npm:^8.9.0"
+    ajv-formats: "npm:^2.1.1"
+    ajv-keywords: "npm:^5.1.0"
+  checksum: 10/dba77a46ad7ff0c906f7f09a1a61109e6cb56388f15a68070b93c47a691f516c6a3eb454f81a8cceb0a0e55b87f8b05770a02bfb1f4e0a3143b5887488b2f900
   languageName: node
   linkType: hard
 
@@ -29688,6 +29715,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tapable@npm:^2.3.0":
+  version: 2.3.0
+  resolution: "tapable@npm:2.3.0"
+  checksum: 10/496a841039960533bb6e44816a01fffc2a1eb428bb2051ecab9e87adf07f19e1f937566cbbbb09dceff31163c0ffd81baafcad84db900b601f0155dd0b37e9f2
+  languageName: node
+  linkType: hard
+
 "tar@npm:^7.4.3":
   version: 7.4.3
   resolution: "tar@npm:7.4.3"
@@ -30187,7 +30221,7 @@ __metadata:
     "@react-native/eslint-config": "npm:0.81.1"
     "@react-native/metro-config": "npm:0.81.1"
     "@react-native/typescript-config": "npm:0.81.1"
-    "@types/react": "npm:19.1.1"
+    "@types/react": "npm:19.2.2"
     "@types/react-test-renderer": "npm:19.1.0"
     babel-jest: "npm:30.2.0"
     eslint: "npm:9.37.0"
@@ -30454,6 +30488,13 @@ __metadata:
   version: 5.26.5
   resolution: "undici-types@npm:5.26.5"
   checksum: 10/0097779d94bc0fd26f0418b3a05472410408877279141ded2bd449167be1aed7ea5b76f756562cb3586a07f251b90799bab22d9019ceba49c037c76445f7cddd
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~7.14.0":
+  version: 7.14.0
+  resolution: "undici-types@npm:7.14.0"
+  checksum: 10/0f8709b21437697af35801e33bddbe9992e0cf1771959c41850b1946f63822b825e03ce99f44bf19e4f5c3ccc5166e0be59f541565c36ce86163dc2c5870bc62
   languageName: node
   linkType: hard
 
@@ -31227,9 +31268,11 @@ __metadata:
   dependencies:
     "@expo/metro-runtime": "npm:6.1.2"
     "@stylexjs/babel-plugin": "npm:0.16.1"
+    "@types/react": "npm:19.2.2"
     common-app: "workspace:*"
     expo: "npm:54.0.13"
     prettier: "npm:3.6.2"
+    react: "npm:19.1.1"
     react-dom: "npm:19.1.1"
     react-native: "npm:0.82.0"
     react-native-web: "npm:0.21.1"
@@ -31433,6 +31476,44 @@ __metadata:
   version: 3.3.3
   resolution: "webpack-sources@npm:3.3.3"
   checksum: 10/ec5d72607e8068467370abccbfff855c596c098baedbe9d198a557ccf198e8546a322836a6f74241492576adba06100286592993a62b63196832cdb53c8bae91
+  languageName: node
+  linkType: hard
+
+"webpack@npm:5.102.1":
+  version: 5.102.1
+  resolution: "webpack@npm:5.102.1"
+  dependencies:
+    "@types/eslint-scope": "npm:^3.7.7"
+    "@types/estree": "npm:^1.0.8"
+    "@types/json-schema": "npm:^7.0.15"
+    "@webassemblyjs/ast": "npm:^1.14.1"
+    "@webassemblyjs/wasm-edit": "npm:^1.14.1"
+    "@webassemblyjs/wasm-parser": "npm:^1.14.1"
+    acorn: "npm:^8.15.0"
+    acorn-import-phases: "npm:^1.0.3"
+    browserslist: "npm:^4.26.3"
+    chrome-trace-event: "npm:^1.0.2"
+    enhanced-resolve: "npm:^5.17.3"
+    es-module-lexer: "npm:^1.2.1"
+    eslint-scope: "npm:5.1.1"
+    events: "npm:^3.2.0"
+    glob-to-regexp: "npm:^0.4.1"
+    graceful-fs: "npm:^4.2.11"
+    json-parse-even-better-errors: "npm:^2.3.1"
+    loader-runner: "npm:^4.2.0"
+    mime-types: "npm:^2.1.27"
+    neo-async: "npm:^2.6.2"
+    schema-utils: "npm:^4.3.3"
+    tapable: "npm:^2.3.0"
+    terser-webpack-plugin: "npm:^5.3.11"
+    watchpack: "npm:^2.4.4"
+    webpack-sources: "npm:^3.3.3"
+  peerDependenciesMeta:
+    webpack-cli:
+      optional: true
+  bin:
+    webpack: bin/webpack.js
+  checksum: 10/4ba737916c4b72812cdd1961ea82d0a6de8ac814134584b54d523a2c4b9e1d377490d63b2c74856e2b9146dbe6d09b05c8878439b0783c3e5195ca3e248b2131
   languageName: node
   linkType: hard
 

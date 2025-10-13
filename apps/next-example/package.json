@@ -19,9 +19,11 @@
     "next": "15.5.4",
     "react": "19.1.1",
     "react-dom": "19.1.1",
+    "react-native": "0.82.0",
     "react-native-reanimated": "workspace:*",
     "react-native-web": "0.21.1",
-    "react-native-worklets": "workspace:*"
+    "react-native-worklets": "workspace:*",
+    "webpack": "5.102.1"
   },
   "devDependencies": {
     "@babel/core": "7.28.4",
