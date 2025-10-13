@@ -26,8 +26,14 @@ const config = tsEslint.config(
       'reanimated/use-worklets-error': 'error',
       'reanimated/use-global-this': 'error',
       'no-bitwise': 'error',
+    },
+  },
+  {
+    rules: {
       strict: ['error', 'global'],
     },
+    files: ['src/**/*.tsx', 'src/**/*.ts'],
+    ignores: ['__tests__', '__mocks__'],
   },
   {
     files: ['**/*.test.ts', '**/*.test.tsx'],
