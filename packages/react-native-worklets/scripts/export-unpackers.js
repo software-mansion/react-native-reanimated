@@ -10,8 +10,8 @@ const path = require('path');
 const fs = require('fs');
 const assert = require('assert').strict;
 
-exportToCpp('valueUnpacker.ts', 'ValueUnpacker');
-exportToCpp('synchronizableUnpacker.ts', 'SynchronizableUnpacker');
+exportToCpp('valueUnpacker.native.ts', 'ValueUnpacker');
+exportToCpp('synchronizableUnpacker.native.ts', 'SynchronizableUnpacker');
 
 /**
  * @param {string} sourceFilePath - The path to the TypeScript source file to
@@ -21,7 +21,7 @@ exportToCpp('synchronizableUnpacker.ts', 'SynchronizableUnpacker');
  */
 function exportToCpp(sourceFilePath, outputFilename) {
   const transformed = transformFileSync(
-    path.resolve(__dirname, `../src/${sourceFilePath}`),
+    path.resolve(__dirname, `../src/memory/${sourceFilePath}`),
     {
       presets: [
         ['@babel/preset-env', { modules: false }],

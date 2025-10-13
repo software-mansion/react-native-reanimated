@@ -1,15 +1,13 @@
-/* eslint-disable reanimated/use-global-this */
 'use strict';
 
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
 import type { callGuardDEV } from './callGuard';
-import type { reportFatalRemoteError } from './errors';
+import type { reportFatalRemoteError } from './debug/errors';
+import type { SynchronizableUnpacker } from './memory/synchronizableUnpacker';
 import type { Queue } from './runLoop/workletRuntime/taskQueue';
-import type { SynchronizableUnpacker } from './synchronizableUnpacker';
-import type { IWorkletsErrorConstructor } from './WorkletsError';
-import type { WorkletsModuleProxy } from './WorkletsModule';
-import type { ValueUnpacker } from './workletTypes';
+import type { ValueUnpacker } from './types';
+import type { WorkletsModuleProxy } from './WorkletsModule/workletsModuleProxy';
 
 declare global {
   /** The only runtime-available require method is `__r` defined by Metro. */
@@ -71,7 +69,6 @@ declare global {
     worklet: SerializableRef<() => void>
   ) => void;
   var _microtaskQueueFinalizers: (() => void)[];
-  var WorkletsError: IWorkletsErrorConstructor;
   var _scheduleTimeoutCallback: (delay: number, handlerId: number) => void;
   var __runTimeoutCallback: (handlerId: number) => void;
   var __flushMicrotasks: () => void;

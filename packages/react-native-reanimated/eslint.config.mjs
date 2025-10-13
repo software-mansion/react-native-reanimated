@@ -17,9 +17,12 @@ const config = tsEslint.config(
     rules: {
       '@typescript-eslint/no-empty-function': 'error',
       '@typescript-eslint/no-unused-expressions': 'error',
-      'n/no-unpublished-import': ['warn', {
-        "ignoreTypeImport": true
-      }],
+      'n/no-unpublished-import': [
+        'warn',
+        {
+          ignoreTypeImport: true,
+        },
+      ],
     },
   },
   {
@@ -38,7 +41,8 @@ const config = tsEslint.config(
       'reanimated/no-logger-message-prefix': 'error',
       'reanimated/use-global-this': 'error',
       'no-unused-expressions': 'error',
-      'camelcase': 'error',
+      camelcase: 'error',
+      strict: ['error', 'global'],
     },
   },
   {
@@ -47,7 +51,7 @@ const config = tsEslint.config(
       '@typescript-eslint/unbound-method': 'off',
       'jest/unbound-method': 'error',
     },
-  },
+  }
 );
 
 export default config;

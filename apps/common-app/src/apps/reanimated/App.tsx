@@ -5,6 +5,7 @@ import type { StackNavigationProp } from '@react-navigation/stack';
 import React, { memo } from 'react';
 import {
   FlatList,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -77,7 +78,7 @@ function HomeScreen({ navigation }: HomeScreenProps) {
               setTimeout(() => setWasClicked([...wasClicked, name]), 500);
             }
           }}
-          missingOnFabric={EXAMPLES[name].missingOnFabric}
+          disabled={EXAMPLES[name].disabledPlatforms?.includes(Platform.OS)}
           wasClicked={wasClicked.includes(name)}
         />
       )}
@@ -91,29 +92,22 @@ function HomeScreen({ navigation }: HomeScreenProps) {
 interface ItemProps {
   icon?: string;
   title: string;
+  disabled?: boolean;
   onPress: () => void;
-  missingOnFabric?: boolean;
   wasClicked?: boolean;
 }
 
-function Item({
-  icon,
-  title,
-  onPress,
-  missingOnFabric,
-  wasClicked,
-}: ItemProps) {
-  const isDisabled = missingOnFabric;
+function Item({ icon, title, onPress, disabled, wasClicked }: ItemProps) {
   const Button = IS_MACOS ? Pressable : RectButton;
   return (
     <Button
       style={[
         styles.button,
-        isDisabled && styles.disabledButton,
+        disabled && styles.disabledButton,
         wasClicked && styles.visitedItem,
       ]}
       onPress={onPress}
-      enabled={!isDisabled}>
+      enabled={!disabled}>
       {icon && <Text style={styles.title}>{icon + '  '}</Text>}
       <Text style={styles.title}>{title}</Text>
     </Button>

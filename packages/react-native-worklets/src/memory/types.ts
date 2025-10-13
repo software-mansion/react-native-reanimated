@@ -1,0 +1,37 @@
+'use strict';
+
+/**
+ * The below type is used for HostObjects returned by the JSI API that don't
+ * have any accessible fields or methods but can carry data that is accessed
+ * from the c++ side. We add a field to the type to make it possible for
+ * typescript to recognize which JSI methods accept those types as arguments and
+ * to be able to correctly type check other methods that may use them. However,
+ * this field is not actually defined nor should be used for anything else as
+ * assigning any data to those objects will throw an error.
+ */
+export type SerializableRef<TValue = unknown> = {
+  __serializableRef: true;
+  __nativeStateSerializableJSRef: TValue;
+};
+
+// In case of objects with depth or arrays of objects or arrays of arrays etc.
+// we add this utility type that makes it a `SharaebleRef` of the outermost type.
+export type FlatSerializableRef<TValue> =
+  TValue extends SerializableRef<infer TRecursive>
+    ? SerializableRef<TRecursive>
+    : SerializableRef<TValue>;
+
+export type SynchronizableRef<TValue = unknown> = {
+  __synchronizableRef: true;
+  __nativeStateSynchronizableJSRef: TValue;
+};
+
+export type Synchronizable<TValue = unknown> = SerializableRef<TValue> &
+  SynchronizableRef<TValue> & {
+    __synchronizableRef: true;
+    getDirty(): TValue;
+    getBlocking(): TValue;
+    setBlocking(value: TValue | ((prev: TValue) => TValue)): void;
+    lock(): void;
+    unlock(): void;
+  };
