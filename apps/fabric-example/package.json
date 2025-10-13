@@ -7,7 +7,8 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "format": "prettier --write --list-different ."
+    "format": "prettier --write --list-different .",
+    "type:check": "tsc --noEmit"
   },
   "dependencies": {
     "common-app": "workspace:*",

@@ -8,6 +8,7 @@ import { Circle, Path, Svg } from 'react-native-svg';
 
 import { ExamplesScreen } from '@/apps/css/components';
 import { colors } from '@/theme';
+import type { JSX } from 'react';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedPath = Animated.createAnimatedComponent(Path);

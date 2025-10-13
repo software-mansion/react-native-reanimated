@@ -1,5 +1,5 @@
 import { Portal } from '@gorhom/portal';
-import type { ComponentRef, PropsWithChildren, ReactNode } from 'react';
+import type { ComponentRef, JSX, PropsWithChildren, ReactNode } from 'react';
 import { useRef, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import {
