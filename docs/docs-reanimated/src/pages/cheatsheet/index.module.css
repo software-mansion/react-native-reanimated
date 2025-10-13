@@ -270,7 +270,9 @@
   font-family: var(--swm-body-font);
   background: var(--swm-background);
   color: var(--ifm-font-color-base);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .input:focus {
@@ -337,7 +339,9 @@
   font-weight: 500;
   color: var(--swm-purple-light-100);
   text-decoration: none;
-  transition: color 0.2s ease, border-color 0.2s ease;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
   align-self: flex-start;
 }
 

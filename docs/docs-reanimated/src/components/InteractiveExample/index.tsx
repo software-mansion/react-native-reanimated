@@ -50,8 +50,8 @@ function compileTSXtoJSX(tsxCode: string) {
       l.trim() === PLACEHOLDER_FOR_EMPTY_LINES
         ? ''
         : l.trim().endsWith(PLACEHOLDER_FOR_BREAKING_LINES)
-        ? l.slice(0, l.indexOf(PLACEHOLDER_FOR_BREAKING_LINES)).trimEnd()
-        : l
+          ? l.slice(0, l.indexOf(PLACEHOLDER_FOR_BREAKING_LINES)).trimEnd()
+          : l
     )
     .join('\n');
 

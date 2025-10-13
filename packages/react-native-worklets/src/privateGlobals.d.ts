@@ -1,4 +1,3 @@
-/* eslint-disable reanimated/use-global-this */
 'use strict';
 
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.

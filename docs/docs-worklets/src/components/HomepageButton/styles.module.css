@@ -9,7 +9,9 @@
   background-color: var(--swm-landing-button);
 
   cursor: pointer;
-  transition: background-color 0.3s, color 0.3s;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
 }
 
 a.homepageButtonLink:hover {

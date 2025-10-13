@@ -2,11 +2,8 @@
   position: absolute;
   bottom: 0;
 
-  background: linear-gradient(
-      180deg,
-      var(--swm-white) 0%,
-      rgba(252, 252, 255, 0) 60.77%
-    ),
+  background:
+    linear-gradient(180deg, var(--swm-white) 0%, rgba(252, 252, 255, 0) 60.77%),
     linear-gradient(
       180deg,
       var(--swm-yellow-light-20) 0%,

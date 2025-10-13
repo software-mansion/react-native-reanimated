@@ -12,18 +12,19 @@
     "common-app": "workspace:*",
     "react": "18.3.1",
     "react-native": "0.80.0",
-    "react-native-macos": "^0.75.13",
+    "react-native-macos": "0.75.13",
     "react-native-reanimated": "workspace:*"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0",
-    "@babel/preset-env": "^7.20.0",
-    "@babel/runtime": "^7.26.10",
+    "@babel/core": "7.28.4",
+    "@babel/preset-env": "7.28.3",
+    "@babel/runtime": "7.28.4",
     "@react-native/babel-preset": "0.75.4",
     "@react-native/eslint-config": "0.75.4",
     "@react-native/metro-config": "0.75.4",
     "@react-native/typescript-config": "0.75.4",
-    "prettier": "^3.3.3"
+    "prettier": "3.6.2",
+    "typescript": "5.8.3"
   },
   "engines": {
     "node": ">=20.13.0"
