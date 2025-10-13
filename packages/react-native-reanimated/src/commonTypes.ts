@@ -1,5 +1,5 @@
 'use strict';
-import type { Component, ElementType, RefObject } from 'react';
+import type { Component, ElementType, JSX, RefObject } from 'react';
 import type {
   FlatList,
   HostInstance,
