@@ -1,7 +1,7 @@
 'use strict';
 import type { BoxShadowValue } from 'react-native';
 
-import { processColor } from '../colors';
+import { processColor } from '../../../../processors/colors';
 import type { ProcessedBoxShadowValue } from '../shadows';
 import { processBoxShadowNative } from '../shadows';
 

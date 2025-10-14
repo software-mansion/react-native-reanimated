@@ -1,7 +1,7 @@
 'use strict';
 'worklet';
-import { ReanimatedError } from '../errors';
-import type { TransformOrigin, ValueProcessor } from '../types';
+import { ReanimatedError } from '../../../errors';
+import type { TransformOrigin, ValueProcessor } from '../../../types';
 
 type Axis = 'x' | 'y' | 'z';
 type ConvertedValue = `${number}%` | number;

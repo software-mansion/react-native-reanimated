@@ -1,7 +1,7 @@
 'use strict';
-import type { ValueProcessor } from '../../../../common';
-import { ReanimatedError } from '../../../../common';
-import { FONT_WEIGHT_MAPPINGS } from '../../../constants';
+import { FONT_WEIGHT_MAPPINGS } from '../../../../css/constants';
+import type { ValueProcessor } from '../../..';
+import { ReanimatedError } from '../../..';
 
 const ERROR_MESSAGES = {
   invalidFontWeight: (weight: string | number) =>

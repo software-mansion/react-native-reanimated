@@ -1,6 +1,6 @@
 'use strict';
 import type { PlainStyle } from '../../common';
-import { processBoxShadowWeb } from '../../common';
+import { processBoxShadowWeb } from '../../common/web/style';
 import type { StyleBuilderConfig } from './style';
 import {
   boxShadowBuilder,
