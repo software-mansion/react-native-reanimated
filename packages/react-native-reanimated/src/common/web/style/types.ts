@@ -1,5 +1,5 @@
 'use strict';
-import type { AnyRecord, Maybe, NonMutable } from '../../../common';
+import type { AnyRecord, Maybe, NonMutable } from '../..';
 
 export type ValueProcessor<V> = (
   value: NonMutable<V>
