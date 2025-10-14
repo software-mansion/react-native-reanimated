@@ -77,7 +77,7 @@ describe('Animating SVG', () => {
   beforeEach(() => {
     jest.useFakeTimers();
   });
-  it('Should animate radius - Circle', () => {
+  test('Should animate radius - Circle', () => {
     const { getByTestId } = render(<AnimatedExample />);
     const circle = getByTestId('circle');
     const pressable = getByTestId('pressable');
@@ -89,7 +89,7 @@ describe('Animating SVG', () => {
 
     expect(circle).toHaveAnimatedProps({ r: 40 });
   });
-  it('Should animate width - Circle', () => {
+  test('Should animate width - Circle', () => {
     const { getByTestId } = render(<AnimatedExample />);
     const pressable = getByTestId('pressable');
     const circle = getByTestId('circle');
@@ -104,7 +104,7 @@ describe('Animating SVG', () => {
 });
 
 describe('Animating wrapper of SVG', () => {
-  it('Should animate opacity - Wrapper', () => {
+  test('Should animate opacity - Wrapper', () => {
     const { getByTestId } = render(<AnimatedSvgWrapper />);
     const wrapper = getByTestId('wrapper');
 
