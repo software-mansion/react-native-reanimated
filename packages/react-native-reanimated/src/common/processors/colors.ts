@@ -60,6 +60,15 @@ function isDynamicColorObject(value: any): boolean {
   );
 }
 
+export function isPlatformColorObject(value: any): boolean {
+  return (
+    value &&
+    typeof value === 'object' &&
+    (('semantic' in value && Array.isArray(value.semantic)) ||
+      ('resource_paths' in value && Array.isArray(value.resource_paths)))
+  );
+}
+
 export function processColor(color: unknown): number | null | undefined {
   let normalizedColor = processColorInitially(color);
   if (normalizedColor === null || normalizedColor === undefined) {

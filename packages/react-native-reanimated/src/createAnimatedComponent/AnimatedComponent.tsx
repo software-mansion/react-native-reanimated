@@ -4,7 +4,7 @@ import '../layoutReanimation/animationsManager';
 import type React from 'react';
 
 import { maybeBuild } from '../animationBuilder';
-import { IS_JEST, IS_WEB, logger } from '../common';
+import { IS_JEST, IS_WEB, isPlatformColorObject, logger } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
@@ -392,6 +392,18 @@ export default class AnimatedComponent
 
   render() {
     const filteredProps = this._PropsFilter.filterNonAnimatedProps(this);
+
+    if (
+      Array.isArray(filteredProps.style) &&
+      filteredProps.style.some((style) =>
+        isPlatformColorObject(style.backgroundColor)
+      )
+    ) {
+      logger.warn(
+        'Animating PlatformColor is not yet supported. It is recommended to use it as a static value.',
+        { strict: true }
+      );
+    }
 
     if (IS_JEST) {
       filteredProps.jestAnimatedStyle = this.jestAnimatedStyle;
