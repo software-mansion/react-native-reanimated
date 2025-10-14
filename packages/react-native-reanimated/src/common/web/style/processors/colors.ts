@@ -2,7 +2,7 @@
 import type { ColorValue } from 'react-native';
 
 import { convertToRGBA, rgbaArrayToRGBAColor } from '../../../../Colors';
-import { isNumber } from '../../../utils';
+import { isNumber } from '../../../../css/utils';
 import type { ValueProcessor } from '../types';
 
 export const processColor: ValueProcessor<ColorValue> = (value) => {

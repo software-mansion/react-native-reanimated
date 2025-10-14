@@ -1,10 +1,10 @@
 'use strict';
 import type { DimensionValue } from 'react-native';
 
-import { parseDimensionValue } from '../../utils';
+import { parseDimensionValue } from '../../../../css/web/utils';
 import type { ValueProcessor } from '../types';
 
-export const processPaddingHorizontal: ValueProcessor<DimensionValue> = (
+export const processMarginHorizontal: ValueProcessor<DimensionValue> = (
   value
 ) => {
   const result = parseDimensionValue(value);
@@ -14,12 +14,12 @@ export const processPaddingHorizontal: ValueProcessor<DimensionValue> = (
   }
 
   return {
-    paddingLeft: result,
-    paddingRight: result,
+    marginLeft: result,
+    marginRight: result,
   };
 };
 
-export const processPaddingVertical: ValueProcessor<DimensionValue> = (
+export const processMarginVertical: ValueProcessor<DimensionValue> = (
   value
 ) => {
   const result = parseDimensionValue(value);
@@ -29,7 +29,7 @@ export const processPaddingVertical: ValueProcessor<DimensionValue> = (
   }
 
   return {
-    paddingTop: result,
-    paddingBottom: result,
+    marginTop: result,
+    marginBottom: result,
   };
 };
