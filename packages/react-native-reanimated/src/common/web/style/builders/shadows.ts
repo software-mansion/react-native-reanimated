@@ -1,9 +1,9 @@
 'use strict';
 import type { TextStyle, ViewStyle } from 'react-native';
 
-import type { ValueProcessor } from '../../../../common';
-import { logger } from '../../../../common';
-import { opacifyColor } from '../../utils';
+import { opacifyColor } from '../../../../css/web/utils';
+import type { ValueProcessor } from '../../..';
+import { logger } from '../../..';
 import { createRuleBuilder } from '../builderFactories';
 import { processColor } from '../processors';
 
