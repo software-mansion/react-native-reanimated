@@ -5,8 +5,8 @@ import type {
   CSSAnimationKeyframeBlock,
   CSSAnimationKeyframes,
 } from '../types';
-import { PROPERTIES_CONFIG } from './config';
-import { createStyleBuilder } from './style';
+import { PROPERTIES_CONFIG } from '../../common/web/style/config';
+import { createStyleBuilder } from '../../common/web/style';
 import { parseTimingFunction } from './utils';
 
 const styleBuilder = createStyleBuilder(PROPERTIES_CONFIG);
