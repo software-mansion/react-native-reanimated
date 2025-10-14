@@ -7,7 +7,7 @@
 
 namespace reanimated::css {
 
-TransformMatrix3D matrixFromOperations3D(TransformOperations &operations) {
+TransformMatrix3D matrixFromOperations3D(const TransformOperations &operations) {
   TransformMatrix3D result;
   for (int i = static_cast<int>(operations.size()) - 1; i >= 0; i--) {
     result *=
@@ -16,7 +16,7 @@ TransformMatrix3D matrixFromOperations3D(TransformOperations &operations) {
   return result;
 }
 
-TransformMatrix2D matrixFromOperations2D(TransformOperations &operations) {
+TransformMatrix2D matrixFromOperations2D(const TransformOperations &operations) {
   TransformMatrix2D result;
   for (int i = static_cast<int>(operations.size()) - 1; i >= 0; i--) {
     result *=

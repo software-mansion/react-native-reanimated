@@ -29,6 +29,10 @@ export const svgPropertiesRoutes = {
         name: 'Stroke',
         Component: svgAnimatedProperties.common.Stroke,
       },
+      Transforms: {
+        name: 'Transforms',
+        Component: svgAnimatedProperties.common.Transforms,
+      },
     },
   },
 } satisfies Routes;

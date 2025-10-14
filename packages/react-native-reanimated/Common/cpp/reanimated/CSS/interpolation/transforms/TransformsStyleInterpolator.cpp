@@ -148,29 +148,13 @@ void TransformsStyleInterpolator::updateKeyframesFromStyleChange(
       parseTransformOperations(newStyleValue).value_or(TransformOperations{})));
 }
 
-folly::dynamic TransformsStyleInterpolator::interpolateOperations(
-    const std::shared_ptr<const ShadowNode> &shadowNode,
-    const double keyframeProgress,
-    const TransformOperations &fromOperations,
-    const TransformOperations &toOperations) const {
+folly::dynamic TransformsStyleInterpolator::convertOperationsToDynamic(
+    const TransformOperations &operations) const {
   auto result = folly::dynamic::array();
-  result.reserve(fromOperations.size());
+  result.reserve(operations.size());
 
-  const auto transformUpdateContext = TransformInterpolationContext{
-      shadowNode, viewStylesRepository_, interpolators_};
-
-  for (size_t i = 0; i < fromOperations.size(); ++i) {
-    const auto &fromOperation = fromOperations[i];
-    const auto &toOperation = toOperations[i];
-
-    // fromOperation and toOperation have the same type
-    const auto &interpolator = interpolators_->at(fromOperation->type);
-    result.push_back(interpolator->interpolate(
-        keyframeProgress, fromOperation, toOperation, transformUpdateContext));
-  }
-
-  if (result.empty()) {
-    return folly::dynamic();
+  for (const auto &operation : operations) {
+    result.push_back(operation->toDynamic());
   }
 
   return result;
@@ -395,16 +379,32 @@ TransformsStyleInterpolator::getDefaultOperationOfType(
   return interpolators_->at(type)->getDefaultOperation();
 }
 
-folly::dynamic TransformsStyleInterpolator::convertOperationsToDynamic(
-    const TransformOperations &operations) {
-  auto result = folly::dynamic::array();
-  result.reserve(operations.size());
+folly::dynamic TransformsStyleInterpolator::interpolateOperations(
+    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const double keyframeProgress,
+    const TransformOperations &fromOperations,
+    const TransformOperations &toOperations) const {
+  TransformOperations result;
+  result.reserve(fromOperations.size());
 
-  for (const auto &operation : operations) {
-    result.push_back(operation->toDynamic());
+  const auto transformUpdateContext = TransformInterpolationContext{
+      shadowNode, viewStylesRepository_, interpolators_};
+
+  for (size_t i = 0; i < fromOperations.size(); ++i) {
+    const auto &fromOperation = fromOperations[i];
+    const auto &toOperation = toOperations[i];
+
+    // fromOperation and toOperation have the same type
+    const auto &interpolator = interpolators_->at(fromOperation->type);
+    result.emplace_back(interpolator->interpolate(
+        keyframeProgress, fromOperation, toOperation, transformUpdateContext));
   }
 
-  return result;
+  if (result.empty()) {
+    return folly::dynamic();
+  }
+
+  return convertOperationsToDynamic(result);
 }
 
 } // namespace reanimated::css
