@@ -1,9 +1,8 @@
 'use strict';
 import type { StyleProp } from 'react-native';
 
-import type { AnyRecord } from '../../common';
+import type { AnyRecord, PlainStyle } from '../../common';
 import type { CSSAnimationProperties } from './animation';
-import type { PlainStyle } from './common';
 import type { CSSTransitionProperties } from './transition';
 
 /*

@@ -1,5 +1,5 @@
 'use strict';
-import type { AnyRecord } from '../../common';
+import type { AnyRecord, PlainStyle } from '../../common';
 import { logger } from '../../common';
 import { isSharedValue } from '../../isSharedValue';
 import type {
@@ -7,7 +7,6 @@ import type {
   CSSStyle,
   CSSTransitionProperties,
   ExistingCSSAnimationProperties,
-  PlainStyle,
 } from '../types';
 import {
   isAnimationProp,

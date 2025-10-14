@@ -1,4 +1,8 @@
 'use strict';
+
+import type { ComponentType } from 'react';
+import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
+
 export type Maybe<T> = T | null | undefined;
 
 /**
@@ -22,3 +26,18 @@ export type NormalizedTransformOrigin = [
   `${number}%` | number,
   number,
 ];
+
+type DeprecatedProps =
+  | 'transformMatrix'
+  | 'rotation'
+  | 'scaleX'
+  | 'scaleY'
+  | 'translateX'
+  | 'translateY';
+
+export type PlainStyle = Omit<
+  ViewStyle & TextStyle & ImageStyle,
+  DeprecatedProps
+>;
+
+export type AnyComponent = ComponentType<any>;
