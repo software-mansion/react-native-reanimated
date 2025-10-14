@@ -162,7 +162,7 @@ struct LayoutAnimationsProxy
 
   void overrideTransform(
       ShadowView &shadowView,
-      const Transform &transform,
+      const std::optional<Transform> &transform,
       const PropsParserContext &propsParserContext) const;
 
   std::optional<Transform> parseParentTransforms(

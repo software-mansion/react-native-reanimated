@@ -1,6 +1,7 @@
 #pragma once
 
 #include <react/renderer/mounting/ShadowView.h>
+#include <react/renderer/graphics/Transform.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 
 #include <worklets/SharedItems/Serializable.h>
@@ -23,27 +24,16 @@ using namespace facebook;
 using namespace worklets;
 using SharedTag = std::string;
 
-struct SharedTransitionGroup {
-  //  std::string name;
-  //  std::optional<ShadowView> current;
-  std::unordered_map<Tag, ShadowView> tagToView_;
-  Tag containerTag = -1;
-};
-
 struct Transition {
   ShadowView snapshot[2];
   Tag parentTag[2] = {0, 0};
+  std::optional<Transform> transform[2];
 };
 
 struct SharedTransitionManager {
-  std::unordered_map<std::string, SharedTransitionGroup> groups_;
+  std::unordered_map<std::string, Tag> containerTags_;
   std::unordered_map<Tag, std::string> tagToName_;
   std::unordered_map<Tag, std::string> nativeIDToName_;
-
-  //  SharedTransitionGroup getGroupForTag();
-  //  int createTransitionContainer(SharedTag sharedTag);
-  //  int removeTransitionContainer(SharedTag sharedTag);
-  //  std::vector<std::pair<ShadowView, ShadowView>> startBackTransition();
 };
 
 using TransitionMap = std::unordered_map<SharedTag, Transition>;

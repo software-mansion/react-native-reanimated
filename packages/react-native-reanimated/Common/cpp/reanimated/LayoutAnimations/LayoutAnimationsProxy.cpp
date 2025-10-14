@@ -308,14 +308,15 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
     auto sharedTag = sharedTransitionManager_->tagToName_[node->current.tag];
     auto &transition = transitionMap_[sharedTag];
     auto transform = parseParentTransforms(node, absolutePositions);
-    if (transform) {
-      overrideTransform(copy, *transform, propsParserContext);
-    }
+    transition.transform[index] = std::move(transform);
     transition.snapshot[index] = copy;
     transition.parentTag[index] = node->parent.lock()->current.tag;
 
     if (transition.parentTag[0] && transition.parentTag[1]) {
-      transitions_.push_back({sharedTag, transition});
+      // TODO: performance - this is costly on android
+      overrideTransform(transition.snapshot[0], transition.transform[0], propsParserContext);
+      overrideTransform(transition.snapshot[1], transition.transform[1], propsParserContext);
+      transitions_.emplace_back(sharedTag, transition);
     } else if (transition.parentTag[1]) {
       // TODO: this is too eager
       tagsToRestore_.push_back(transition.snapshot[1].tag);
@@ -431,7 +432,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
       topScreen[surfaceId] = lightNodes_[transitionTag_];
       synchronized_ = false;
     }
-    sharedTransitionManager_->groups_.clear();
+    sharedTransitionManager_->containerTags_.clear();
     activeTransitions_.clear();
     transitionState_ = NONE;
   }
@@ -439,11 +440,14 @@ void LayoutAnimationsProxy::handleProgressTransition(
 
 void LayoutAnimationsProxy::overrideTransform(
     ShadowView &shadowView,
-    const Transform &transform,
+    const std::optional<Transform> &transform,
     const PropsParserContext &propsParserContext) const {
+    if (!transform) {
+        return;
+    }
 #ifdef ANDROID
   auto array = folly::dynamic::array(
-      folly::dynamic::object("matrix", transform.operator folly::dynamic()));
+      folly::dynamic::object("matrix", transform->operator folly::dynamic()));
   folly::dynamic newTransformDynamic =
       folly::dynamic::object("transform", array);
   auto newRawProps =
@@ -459,7 +463,7 @@ void LayoutAnimationsProxy::overrideTransform(
                       .cloneProps(propsParserContext, shadowView.props, {});
   auto viewProps = std::const_pointer_cast<ViewProps>(
       std::static_pointer_cast<const ViewProps>(newProps));
-  viewProps->transform = transform;
+  viewProps->transform = *transform;
 #endif
   shadowView.props = newProps;
 }
@@ -478,7 +482,7 @@ Tag LayoutAnimationsProxy::getOrCreateContainer(
     SharedTag sharedTag,
     ShadowViewMutationList &filteredMutations,
     SurfaceId surfaceId) const {
-  auto containerTag = sharedTransitionManager_->groups_[sharedTag].containerTag;
+  auto containerTag = sharedTransitionManager_->containerTags_[sharedTag];
   auto shouldCreateContainer =
       (containerTag == -1 || !layoutAnimations_.contains(containerTag));
 
@@ -486,6 +490,7 @@ Tag LayoutAnimationsProxy::getOrCreateContainer(
     auto &root = lightNodes_[surfaceId];
     ShadowView container = before;
     containerTag = myTag;
+    sharedTransitionManager_->tagToName_[containerTag] = sharedTag;
 
     container.tag = containerTag;
     filteredMutations.push_back(ShadowViewMutation::CreateMutation(container));
@@ -496,7 +501,7 @@ Tag LayoutAnimationsProxy::getOrCreateContainer(
     root->children.push_back(node);
     lightNodes_[myTag] = std::move(node);
 
-    sharedTransitionManager_->groups_[sharedTag].containerTag = containerTag;
+    sharedTransitionManager_->containerTags_[sharedTag] = containerTag;
     myTag += 2;
   }
   return containerTag;
@@ -534,7 +539,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       auto &[_, after] = transition.snapshot;
 
       auto containerTag =
-          sharedTransitionManager_->groups_[sharedTag].containerTag;
+          sharedTransitionManager_->containerTags_[sharedTag];
       if (!layoutAnimations_.contains(containerTag)) {
         continue;
       }
@@ -707,7 +712,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
 
   if (sharedTransitionManager_->tagToName_.contains(tag)) {
     auto sharedTag = sharedTransitionManager_->tagToName_[tag];
-    sharedTransitionManager_->groups_.erase(sharedTag);
+    sharedTransitionManager_->containerTags_.erase(sharedTag);
 
     sharedContainersToRemove_.push_back(tag);
     tagsToRestore_.push_back(restoreMap_[tag][1]);
