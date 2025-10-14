@@ -8,6 +8,9 @@ export type Maybe<T> = T | null | undefined;
  */
 export type NonMutable<T> = T extends object ? Readonly<T> : T;
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export type AnyRecord = Record<string, any>;
+
 export type ValueProcessor<V, R = V> = (
   value: NonMutable<V>
 ) => Maybe<R> | Record<string, R>;

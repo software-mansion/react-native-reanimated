@@ -1,7 +1,7 @@
 'use strict';
 
+import type { AnyRecord } from '../../../common';
 import { hasSuffix } from '../../../common';
-import type { AnyRecord } from '../../types';
 import {
   hasProp,
   isConfigPropertyAlias,
@@ -39,7 +39,7 @@ abstract class BuilderBase<P extends AnyRecord, R> {
   add(property: keyof P, value: P[keyof P]) {
     const configValue = this.config[property];
 
-    if (!configValue || !isDefined(value) || configValue === false) {
+    if (!configValue || !isDefined(value)) {
       return;
     }
 

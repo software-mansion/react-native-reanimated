@@ -1,9 +1,6 @@
 'use strict';
-import type {
-  AnyRecord,
-  CSSTransitionProp,
-  CSSTransitionProperties,
-} from '../../types';
+import type { AnyRecord } from '../../../common';
+import type { CSSTransitionProp, CSSTransitionProperties } from '../../types';
 import {
   convertPropertyToArray,
   parseSingleTransitionShorthand,
