@@ -244,7 +244,10 @@ export default class AnimatedComponent
 
     newStyles.forEach((style) => {
       style.viewDescriptors.add(
-        { tag: viewTag, shadowNodeWrapper },
+        {
+          tag: viewTag,
+          shadowNodeWrapper,
+        },
         style.styleUpdaterContainer
       );
       if (IS_JEST) {
@@ -335,7 +338,10 @@ export default class AnimatedComponent
 
       // Add all remaining props to cssStyle object
       // (e.g. SVG components are styled via top level props, not via style object)
-      const mergedProps = { ...props, ...filteredAnimatedProps.cssStyle };
+      const mergedProps = {
+        ...props,
+        ...filteredAnimatedProps.cssStyle,
+      };
       delete mergedProps.style;
       delete mergedProps.animatedProps;
       this._cssStyle = mergedProps;
@@ -422,7 +428,11 @@ export default class AnimatedComponent
         }
       : {};
 
-    return super.render({ nativeID, ...filteredProps, ...jestProps });
+    return super.render({
+      nativeID,
+      ...filteredProps,
+      ...jestProps,
+    });
   }
 }
 
