@@ -2,11 +2,11 @@
 'worklet';
 import type { BoxShadowValue } from 'react-native';
 
-import { IS_ANDROID } from '../constants';
-import { ReanimatedError } from '../errors';
-import type { ValueProcessor } from '../types';
-import { maybeAddSuffix, parseBoxShadowString } from '../utils';
-import { processColor } from './colors';
+import { IS_ANDROID } from '../../../constants';
+import { ReanimatedError } from '../../../errors';
+import { processColor } from '../../../processors/colors';
+import type { ValueProcessor } from '../../../types';
+import { parseBoxShadowString } from '../../../utils';
 
 const ERROR_MESSAGES = {
   notArrayObject: (value: object) =>
@@ -74,35 +74,4 @@ export const processBoxShadowNative: ValueProcessor<
       spreadDistance: parseFloat(spreadDistance as string),
     };
   });
-};
-
-export const processBoxShadowWeb: ValueProcessor<
-  string | ReadonlyArray<BoxShadowValue>,
-  string
-> = (value) => {
-  const parsedShadow =
-    typeof value === 'string' ? parseBoxShadowString(value) : value;
-
-  return parsedShadow
-    .map(
-      ({
-        offsetX,
-        offsetY,
-        color = '#000',
-        blurRadius = '',
-        spreadDistance = '',
-        inset = '',
-      }) =>
-        [
-          maybeAddSuffix(offsetX, 'px'),
-          maybeAddSuffix(offsetY, 'px'),
-          maybeAddSuffix(blurRadius, 'px'),
-          maybeAddSuffix(spreadDistance, 'px'),
-          color,
-          inset ? 'inset' : '',
-        ]
-          .filter(Boolean)
-          .join(' ')
-    )
-    .join(', ');
 };

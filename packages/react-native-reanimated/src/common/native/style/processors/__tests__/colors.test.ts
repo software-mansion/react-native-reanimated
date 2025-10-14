@@ -1,6 +1,10 @@
 'use strict';
-import { ReanimatedError } from '../../errors';
-import { ERROR_MESSAGES, processColor, processColorsInProps } from '../colors';
+import { ReanimatedError } from '../../../../errors';
+import {
+  ERROR_MESSAGES,
+  processColor,
+  processColorsInProps,
+} from '../../../../processors';
 
 describe(processColorsInProps, () => {
   describe('properly converts colors in props', () => {
