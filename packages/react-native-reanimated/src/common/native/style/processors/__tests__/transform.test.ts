@@ -1,6 +1,6 @@
 'use strict';
-import { ReanimatedError } from '../../../../../common';
-import type { TransformsArray } from '../../../../types';
+import type { TransformsArray } from '../../../../../css/types';
+import { ReanimatedError } from '../../../..';
 import { ERROR_MESSAGES, processTransform } from '../transform';
 
 describe(processTransform, () => {

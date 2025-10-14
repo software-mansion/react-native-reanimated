@@ -1,7 +1,13 @@
 'use strict';
 import { ReanimatedError } from '../../common';
-import type { StyleBuilder, StyleBuilderConfig } from './style';
-import { BASE_PROPERTIES_CONFIG, createStyleBuilder } from './style';
+import type {
+  StyleBuilder,
+  StyleBuilderConfig,
+} from '../../common/native/style';
+import {
+  BASE_PROPERTIES_CONFIG,
+  createStyleBuilder,
+} from '../../common/native/style';
 
 export const ERROR_MESSAGES = {
   styleBuilderNotFound: (componentName: string) =>

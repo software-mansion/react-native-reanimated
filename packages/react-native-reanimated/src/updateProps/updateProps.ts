@@ -6,12 +6,12 @@ import { runOnJS, runOnUI } from 'react-native-worklets';
 import {
   IS_JEST,
   processBoxShadowNative,
-  processBoxShadowWeb,
   processColorsInProps,
   processTransformOrigin,
   ReanimatedError,
   SHOULD_BE_USE_WEB,
 } from '../common';
+import { processBoxShadowWeb } from '../common/web/style';
 import type {
   AnimatedStyle,
   ShadowNodeWrapper,
