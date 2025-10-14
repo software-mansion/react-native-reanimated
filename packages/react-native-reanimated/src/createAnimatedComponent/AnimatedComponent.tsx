@@ -4,7 +4,7 @@ import '../layoutReanimation/animationsManager';
 import type React from 'react';
 
 import { maybeBuild } from '../animationBuilder';
-import { IS_JEST, IS_WEB, isPlatformColorObject, logger } from '../common';
+import { IS_JEST, IS_WEB, logger } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
@@ -244,10 +244,7 @@ export default class AnimatedComponent
 
     newStyles.forEach((style) => {
       style.viewDescriptors.add(
-        {
-          tag: viewTag,
-          shadowNodeWrapper,
-        },
+        { tag: viewTag, shadowNodeWrapper },
         style.styleUpdaterContainer
       );
       if (IS_JEST) {
@@ -338,10 +335,7 @@ export default class AnimatedComponent
 
       // Add all remaining props to cssStyle object
       // (e.g. SVG components are styled via top level props, not via style object)
-      const mergedProps = {
-        ...props,
-        ...filteredAnimatedProps.cssStyle,
-      };
+      const mergedProps = { ...props, ...filteredAnimatedProps.cssStyle };
       delete mergedProps.style;
       delete mergedProps.animatedProps;
       this._cssStyle = mergedProps;
@@ -393,18 +387,6 @@ export default class AnimatedComponent
   render() {
     const filteredProps = this._PropsFilter.filterNonAnimatedProps(this);
 
-    if (
-      Array.isArray(filteredProps.style) &&
-      filteredProps.style.some((style) =>
-        isPlatformColorObject(style.backgroundColor)
-      )
-    ) {
-      logger.warn(
-        'Animating PlatformColor is not yet supported. It is recommended to use it as a static value.',
-        { strict: true }
-      );
-    }
-
     if (IS_JEST) {
       filteredProps.jestAnimatedStyle = this.jestAnimatedStyle;
       filteredProps.jestAnimatedProps = this.jestAnimatedProps;
@@ -440,11 +422,7 @@ export default class AnimatedComponent
         }
       : {};
 
-    return super.render({
-      nativeID,
-      ...filteredProps,
-      ...jestProps,
-    });
+    return super.render({ nativeID, ...filteredProps, ...jestProps });
   }
 }
 
