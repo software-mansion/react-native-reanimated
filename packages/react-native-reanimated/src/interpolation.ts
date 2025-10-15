@@ -1,4 +1,5 @@
 'use strict';
+'worklet';
 
 import { ReanimatedError } from './common';
 
@@ -18,11 +19,11 @@ export enum Extrapolation {
 /** Represents the possible values for extrapolation as a string. */
 type ExtrapolationAsString = 'identity' | 'clamp' | 'extend';
 
-interface InterpolationNarrowedInput {
+export interface NarrowedInterpolationRange<TOutput> {
   leftEdgeInput: number;
   rightEdgeInput: number;
-  leftEdgeOutput: number;
-  rightEdgeOutput: number;
+  leftEdgeOutput: TOutput;
+  rightEdgeOutput: TOutput;
 }
 
 /** Allows to specify extrapolation for left and right edge of the interpolation. */
@@ -51,8 +52,6 @@ function getVal(
   rightEdgeOutput: number,
   x: number
 ): number {
-  'worklet';
-
   switch (type) {
     case Extrapolation.IDENTITY:
       return x;
@@ -68,8 +67,6 @@ function getVal(
 }
 
 function isExtrapolate(value: string): value is Extrapolation {
-  'worklet';
-
   return (
     /* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
     value === Extrapolation.EXTEND ||
@@ -81,8 +78,9 @@ function isExtrapolate(value: string): value is Extrapolation {
 
 // validates extrapolations type
 // if type is correct, converts it to ExtrapolationConfig
-function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
-  'worklet';
+export function validateExtrapolationType(
+  type: ExtrapolationType
+): RequiredExtrapolationConfig {
   // initialize extrapolationConfig with default extrapolation
   const extrapolationConfig: RequiredExtrapolationConfig = {
     extrapolateLeft: Extrapolation.EXTEND,
@@ -123,12 +121,11 @@ function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
   return extrapolationConfig;
 }
 
-function internalInterpolate(
+export function internalInterpolate(
   x: number,
-  narrowedInput: InterpolationNarrowedInput,
+  narrowedInput: NarrowedInterpolationRange<number>,
   extrapolationConfig: RequiredExtrapolationConfig
 ) {
-  'worklet';
   const { leftEdgeInput, rightEdgeInput, leftEdgeOutput, rightEdgeOutput } =
     narrowedInput;
   if (rightEdgeInput - leftEdgeInput === 0) {
@@ -161,6 +158,42 @@ function internalInterpolate(
   return val;
 }
 
+export function narrowInterpolationRange<TOutput>(
+  x: number,
+  inputRange: ReadonlyArray<number>,
+  outputRange: ReadonlyArray<TOutput>
+): NarrowedInterpolationRange<TOutput> {
+  const length = inputRange.length;
+  if (x > inputRange[length - 1]) {
+    return {
+      leftEdgeInput: inputRange[length - 2],
+      rightEdgeInput: inputRange[length - 1],
+      leftEdgeOutput: outputRange[length - 2],
+      rightEdgeOutput: outputRange[length - 1],
+    };
+  } else {
+    let left = 0;
+    let right = length - 1;
+
+    while (left < right) {
+      const mid = Math.floor((left + right) / 2);
+      if (x <= inputRange[mid]) {
+        right = mid;
+      } else {
+        left = mid + 1;
+      }
+    }
+
+    const segmentIndex = Math.max(1, left);
+    return {
+      leftEdgeInput: inputRange[segmentIndex - 1],
+      rightEdgeInput: inputRange[segmentIndex],
+      leftEdgeOutput: outputRange[segmentIndex - 1],
+      rightEdgeOutput: outputRange[segmentIndex],
+    };
+  }
+}
+
 /**
  * Lets you map a value from one range to another using linear interpolation.
  *
@@ -182,47 +215,16 @@ export function interpolate(
   outputRange: readonly number[],
   type?: ExtrapolationType
 ): number {
-  'worklet';
   if (inputRange.length < 2 || outputRange.length < 2) {
     throw new ReanimatedError(
       'Interpolation input and output ranges should contain at least two values.'
     );
   }
 
-  const extrapolationConfig = validateType(type);
-  const length = inputRange.length;
-  let narrowedInput: InterpolationNarrowedInput;
+  const extrapolationConfig = validateExtrapolationType(type);
+  const narrowedRange = narrowInterpolationRange(x, inputRange, outputRange);
 
-  if (x > inputRange[length - 1]) {
-    narrowedInput = {
-      leftEdgeInput: inputRange[length - 2],
-      rightEdgeInput: inputRange[length - 1],
-      leftEdgeOutput: outputRange[length - 2],
-      rightEdgeOutput: outputRange[length - 1],
-    };
-  } else {
-    let left = 1;
-    let right = length - 1;
-
-    while (left < right) {
-      const mid = Math.floor((left + right) / 2);
-      if (x <= inputRange[mid]) {
-        right = mid;
-      } else {
-        left = mid + 1;
-      }
-    }
-
-    const segmentIndex = left;
-    narrowedInput = {
-      leftEdgeInput: inputRange[segmentIndex - 1],
-      rightEdgeInput: inputRange[segmentIndex],
-      leftEdgeOutput: outputRange[segmentIndex - 1],
-      rightEdgeOutput: outputRange[segmentIndex],
-    };
-  }
-
-  return internalInterpolate(x, narrowedInput, extrapolationConfig);
+  return internalInterpolate(x, narrowedRange, extrapolationConfig);
 }
 
 /**
@@ -238,6 +240,5 @@ export function interpolate(
  * @see https://docs.swmansion.com/react-native-reanimated/docs/utilities/clamp/
  */
 export function clamp(value: number, min: number, max: number) {
-  'worklet';
   return Math.min(Math.max(value, min), max);
 }
