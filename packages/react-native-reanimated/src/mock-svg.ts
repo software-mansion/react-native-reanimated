@@ -1,21 +1,23 @@
 'use strict';
 import React from 'react';
 
+interface ComponentProps {
+  children?: React.ReactNode;
+}
+
 const createComponent = function (name: string) {
-  return class extends React.Component {
+  return class extends React.Component<ComponentProps> {
     static displayName = name;
 
     render() {
-      // @ts-ignore to-do: it has problem with read-only
-      // eslint-disable-next-line react/prop-types
-      return React.createElement(name, this.props, this.props.children);
+      return React.createElement(name as any, this.props, this.props.children);
     }
 
     setNativeProps(props: any) {
-      const { style } = props;
-      // @ts-ignore to-do: it has problem with read-only
-      this.props = { ...this.props, ...style };
+      this._props = { ...this._props, ...props };
     }
+
+    _props: any;
   };
 };
 
@@ -25,7 +27,6 @@ const Circle = createComponent('Circle');
 const Rect = createComponent('Rect');
 const G = createComponent('G');
 const Line = createComponent('Line');
-// @ts-ignore to-do: it has problem with duplicate
 const Text = createComponent('Text');
 const TSpan = createComponent('TSpan');
 const TextPath = createComponent('TextPath');
@@ -38,7 +39,6 @@ const Polygon = createComponent('Polygon');
 const Polyline = createComponent('Polyline');
 const Ellipse = createComponent('Ellipse');
 const Use = createComponent('Use');
-// @ts-ignore to-do: it has problem with duplicate
 const Image = createComponent('Image');
 
 const SVG = {
