@@ -132,6 +132,82 @@ describe('colors interpolation', () => {
     expect(interpolatedColor).toBe(`rgba(4, 2, 0, 0)`);
   });
 
+  describe('transparent color interpolation', () => {
+    const basicCases = [
+      {
+        name: 'transparent to color at midpoint',
+        value: 0.5,
+        inputRange: [0, 1],
+        outputRange: ['transparent', '#ff0000'],
+        expected: 'rgba(255, 0, 0, 0.5)',
+      },
+      {
+        name: 'transparent at start position',
+        value: 0,
+        inputRange: [0, 1],
+        outputRange: ['transparent', '#ff0000'],
+        expected: 'rgba(255, 0, 0, 0)',
+      },
+      {
+        name: 'color at end position',
+        value: 1,
+        inputRange: [0, 1],
+        outputRange: ['transparent', '#ff0000'],
+        expected: 'rgba(255, 0, 0, 1)',
+      },
+      {
+        name: 'transparent to transparent',
+        value: 0.5,
+        inputRange: [0, 1],
+        outputRange: ['transparent', 'transparent'],
+        expected: 'rgba(0, 0, 0, 0)',
+      },
+    ];
+
+    const colorSpaces: Array<{
+      colorSpace: 'RGB' | 'HSV' | 'LAB';
+      options?: Record<string, unknown>;
+      eps?: number;
+    }> = [
+      { colorSpace: 'RGB' },
+      { colorSpace: 'RGB', options: { gamma: 1 } },
+      { colorSpace: 'HSV' },
+      { colorSpace: 'HSV', options: { useCorrectedHSVInterpolation: false } },
+      // LAB may produce slightly different results, but the differences are usually small
+      { colorSpace: 'LAB', eps: 1e-5 },
+    ];
+
+    colorSpaces.forEach(({ colorSpace, options, eps }) => {
+      test.each(basicCases)(
+        `$name using ${colorSpace}${options ? ` with options ${JSON.stringify(options)}` : ''}`,
+        ({ value, inputRange, outputRange, expected }) => {
+          const result = interpolateColor(
+            value,
+            inputRange,
+            outputRange,
+            colorSpace,
+            options
+          );
+
+          if (eps) {
+            const getChannels = (color: string) =>
+              color
+                .replace('rgba(', '')
+                .replace(')', '')
+                .split(',')
+                .map((v) => parseFloat(v.trim()));
+
+            getChannels(result).forEach((v, i) => {
+              expect(v).toBeCloseTo(getChannels(expected)[i], eps);
+            });
+          } else {
+            expect(result).toBe(expected);
+          }
+        }
+      );
+    });
+  });
+
   function TestComponent() {
     const color = useSharedValue('#105060');
 

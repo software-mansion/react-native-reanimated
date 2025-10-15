@@ -28,5 +28,7 @@ export const processColor: ValueProcessor<
     throw new ReanimatedError(ERROR_MESSAGES.invalidColor(value));
   }
 
+  console.log('>>> normalizedColor', normalizedColor);
+
   return normalizedColor;
 };
