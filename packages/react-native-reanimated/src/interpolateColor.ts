@@ -153,12 +153,7 @@ const interpolateColorsHSV = (
     colors.v,
     Extrapolation.CLAMP
   );
-  const a = interpolateColorChannel(
-    value,
-    inputRange,
-    colors.a,
-    Extrapolation.CLAMP
-  );
+  const a = interpolate(value, inputRange, colors.a, Extrapolation.CLAMP);
   return hsvToColor(h, s, v, a);
 };
 
