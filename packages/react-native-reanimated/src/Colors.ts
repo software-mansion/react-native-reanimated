@@ -168,7 +168,9 @@ export function clampRGBA(RGBA: ParsedColorArray): void {
   }
 }
 
-const names: Record<string, number> = {
+const names: Record<string, number | undefined> = {
+  transparent: undefined,
+
   /* spell-checker: disable */
   // http://www.w3.org/TR/css3-color/#svg-color
   aliceblue: 0xf0f8ffff,
@@ -362,7 +364,7 @@ export const DynamicColorIOSProperties = [
   'highContrastDark',
 ] as const;
 
-export function normalizeColor(color: unknown): number | null {
+export function normalizeColor(color: unknown): number | null | undefined {
   'worklet';
 
   if (typeof color === 'number') {
@@ -383,7 +385,7 @@ export function normalizeColor(color: unknown): number | null {
     return Number.parseInt(match[1] + 'ff', 16) >>> 0;
   }
 
-  if (names[color] !== undefined) {
+  if (color in names) {
     return names[color];
   }
 
@@ -644,12 +646,9 @@ export function processColorInitially(
     colorNumber = color;
   } else {
     const normalizedColor = normalizeColor(color);
-    if (normalizedColor === null || normalizedColor === undefined) {
-      return undefined;
-    }
 
     if (typeof normalizedColor !== 'number') {
-      return null;
+      return normalizedColor;
     }
 
     colorNumber = normalizedColor;
