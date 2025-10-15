@@ -3,8 +3,8 @@ import type { ComponentRef, ComponentType, ReactNode, Ref } from 'react';
 import type React from 'react';
 import type { FlatList, FlatListProps } from 'react-native';
 
+import type { AnyRecord } from '../common';
 import type { InstanceOrElement } from '../commonTypes';
-import type { AnyRecord } from '../css/types';
 import type { AnimatedProps } from '../helperTypes';
 import type { AnimatedRef } from '../hook';
 import type { ExtractElementRef } from '../hook/commonTypes';
