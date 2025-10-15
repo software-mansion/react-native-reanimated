@@ -9,7 +9,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Circle, Svg } from 'react-native-svg';
 
-jest.mock('react-native-svg');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+jest.mock('react-native-svg', () => require('../mock'));
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
