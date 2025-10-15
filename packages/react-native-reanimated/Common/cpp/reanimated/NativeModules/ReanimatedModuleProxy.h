@@ -43,8 +43,8 @@ namespace reanimated {
 using namespace facebook;
 using namespace css;
 
-using UpdatesBatch =
-    std::vector<std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
+using UpdatesBatch = std::vector<
+    std::tuple<std::shared_ptr<const ShadowNode>, folly::dynamic, bool>>;
 
 class ReanimatedModuleProxy
     : public ReanimatedModuleProxySpec,
