@@ -10,10 +10,10 @@ const createComponent = function (name: string) {
     static displayName = name;
 
     render() {
-      return React.createElement(name as any, this.props, this.props.children);
+      return React.createElement(name, this.props, this.props.children);
     }
 
-    setNativeProps(props: any) {
+    setNativeProps(props: Record<string, any>) {
       this._props = { ...this._props, ...props };
     }
 

@@ -78,6 +78,7 @@ describe('Animating SVG', () => {
   beforeEach(() => {
     jest.useFakeTimers();
   });
+
   test('Should animate radius - Circle', () => {
     const { getByTestId } = render(<AnimatedExample />);
     const circle = getByTestId('circle');
@@ -90,6 +91,7 @@ describe('Animating SVG', () => {
 
     expect(circle).toHaveAnimatedProps({ r: 40 });
   });
+
   test('Should animate width - Circle', () => {
     const { getByTestId } = render(<AnimatedExample />);
     const pressable = getByTestId('pressable');
