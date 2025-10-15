@@ -46,11 +46,15 @@ using KeyboardEventSubscribeFunction =
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
+using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
 struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef ANDROID
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
 #endif // ANDROID
+#ifdef __APPLE__
+  ForceScreenSnapshotFunction forceScreenSnapshotFunction;
+#endif
   GetAnimationTimestampFunction getAnimationTimestamp;
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;

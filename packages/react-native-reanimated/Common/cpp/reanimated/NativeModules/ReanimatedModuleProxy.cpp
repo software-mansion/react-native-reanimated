@@ -52,6 +52,10 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       layoutAnimationsManager_(
           std::make_shared<LayoutAnimationsManager>(jsLogger_)),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
+#ifdef __APPLE__
+      forceScreenSnapshot_(
+          platformDepMethodsHolder.forceScreenSnapshotFunction),
+#endif
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(
@@ -1357,6 +1361,10 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         scheduler->getContextContainer(),
         workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
         workletsModuleProxy_->getUIScheduler());
+#ifdef __APPLE__
+    layoutAnimationsProxy_->setForceScreenSnapshotFunction(
+        forceScreenSnapshot_);
+#endif
   }
 }
 

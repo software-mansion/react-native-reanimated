@@ -6,6 +6,14 @@
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 #import <reanimated/apple/native/SetGestureState.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
+#import <reanimated/apple/REAUIView.h>
+
+#import <React/RCTComponentViewProtocol.h>
+#import <React/RCTComponentViewRegistry.h>
+#import <React/RCTMountingManager.h>
+
+// TODO: should be conditional import
+#import <rnscreens/RNSScreen.h>
 
 namespace reanimated {
 
@@ -96,9 +104,22 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
   return unsubscribeFromKeyboardEventsFunction;
 }
 
+ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager){
+  auto f = [=](Tag tag) {
+    RCTSurfacePresenter *surfacePresenter = nodesManager.surfacePresenter;
+    RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
+    UIView<RCTComponentViewProtocol> *componentView = [componentViewRegistry findComponentViewWithTag:tag];
+    RNSScreenView* rnsscreenview = (RNSScreenView*)componentView;
+    [rnsscreenview setSnapshotAfterUpdates:YES];
+  };
+  return f;
+}
+
 PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleRegistry, REANodesManager *nodesManager)
 {
   auto requestRender = makeRequestRender(nodesManager);
+  
+  auto forceScreenSnapshotFunction = makeForceScreenSnapshotFunction(nodesManager);
 
   auto getAnimationTimestamp = makeGetAnimationTimestamp();
 
@@ -120,6 +141,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
+      forceScreenSnapshotFunction,
       getAnimationTimestamp,
       registerSensorFunction,
       unregisterSensorFunction,

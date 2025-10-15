@@ -233,7 +233,9 @@ class ReanimatedModuleProxy
   const std::shared_ptr<JSLogger> jsLogger_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
-
+#ifdef __APPLE__
+  ForceScreenSnapshotFunction forceScreenSnapshot_;
+#endif
   bool cssLoopRunning_{false};
   bool shouldUpdateCssAnimations_{true};
   double currentCssTimestamp_{0};

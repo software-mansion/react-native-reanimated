@@ -35,6 +35,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   ReanimatedSystraceSection d("pullTransaction");
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
+  auto rootChildCount = (int)lightNodes_[surfaceId]->children.size();
   std::vector<std::shared_ptr<MutationNode>> roots;
   bool isInTransition = transitionState_;
 
@@ -63,6 +64,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     topScreen[surfaceId] = afterTopScreen;
     if (afterTopScreen) {
       findSharedElementsOnScreen(afterTopScreen, 1, propsParserContext);
+#ifdef __APPLE__
+      forceScreenSnapshot_(afterTopScreen->current.tag);
+#endif
     }
     bool shouldTransitionStart =
         beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen;
@@ -110,6 +114,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
   transitionMap_.clear();
   transitions_.clear();
+
+  insertContainers(filteredMutations, rootChildCount, surfaceId);
 
   return MountingTransaction{
       surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
@@ -314,8 +320,10 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
 
     if (transition.parentTag[0] && transition.parentTag[1]) {
       // TODO: performance - this is costly on android
-      overrideTransform(transition.snapshot[0], transition.transform[0], propsParserContext);
-      overrideTransform(transition.snapshot[1], transition.transform[1], propsParserContext);
+      overrideTransform(
+          transition.snapshot[0], transition.transform[0], propsParserContext);
+      overrideTransform(
+          transition.snapshot[1], transition.transform[1], propsParserContext);
       transitions_.emplace_back(sharedTag, transition);
     } else if (transition.parentTag[1]) {
       // TODO: this is too eager
@@ -442,9 +450,9 @@ void LayoutAnimationsProxy::overrideTransform(
     ShadowView &shadowView,
     const std::optional<Transform> &transform,
     const PropsParserContext &propsParserContext) const {
-    if (!transform) {
-        return;
-    }
+  if (!transform) {
+    return;
+  }
 #ifdef ANDROID
   auto array = folly::dynamic::array(
       folly::dynamic::object("matrix", transform->operator folly::dynamic()));
@@ -493,12 +501,13 @@ Tag LayoutAnimationsProxy::getOrCreateContainer(
     sharedTransitionManager_->tagToName_[containerTag] = sharedTag;
 
     container.tag = containerTag;
-    filteredMutations.push_back(ShadowViewMutation::CreateMutation(container));
-    filteredMutations.push_back(ShadowViewMutation::InsertMutation(
-        surfaceId, container, (int)root->children.size()));
+    //    filteredMutations.push_back(ShadowViewMutation::CreateMutation(container));
+    //    filteredMutations.push_back(ShadowViewMutation::InsertMutation(
+    //        surfaceId, container, (int)root->children.size()));
     auto node = std::make_shared<LightNode>();
     node->current = std::move(container);
     root->children.push_back(node);
+    containersToInsert_.push_back(node);
     lightNodes_[myTag] = std::move(node);
 
     sharedTransitionManager_->containerTags_[sharedTag] = containerTag;
@@ -538,8 +547,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
     for (auto &[sharedTag, transition] : transitions_) {
       auto &[_, after] = transition.snapshot;
 
-      auto containerTag =
-          sharedTransitionManager_->containerTags_[sharedTag];
+      auto containerTag = sharedTransitionManager_->containerTags_[sharedTag];
       if (!layoutAnimations_.contains(containerTag)) {
         continue;
       }
@@ -644,6 +652,23 @@ std::optional<SurfaceId> LayoutAnimationsProxy::onGestureCancel() {
     return 1;
   }
   return {};
+}
+
+void LayoutAnimationsProxy::insertContainers(
+    ShadowViewMutationList &filteredMutations,
+    int &rootChildCount,
+    SurfaceId surfaceId) const {
+  ShadowViewMutationList temp = std::move(filteredMutations);
+  filteredMutations.reserve(containersToInsert_.size() * 2);
+  auto root = lightNodes_[surfaceId];
+  for (auto &node : containersToInsert_) {
+    filteredMutations.push_back(
+        ShadowViewMutation::CreateMutation(node->current));
+    filteredMutations.push_back(ShadowViewMutation::InsertMutation(
+        surfaceId, node->current, rootChildCount++));
+  }
+  filteredMutations.insert(filteredMutations.end(), temp.begin(), temp.end());
+  containersToInsert_.clear();
 }
 
 // MARK: Layout Animation Updates

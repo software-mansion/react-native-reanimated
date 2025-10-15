@@ -2,6 +2,7 @@
 
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
+#include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <worklets/Tools/UIScheduler.h>
 
@@ -58,10 +59,11 @@ struct LayoutAnimationsProxy
   //  mutable std::unordered_map<
   //        mutable std::optional<ShadowView> previousView;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
-
+  mutable std::vector<LightNode::Unshared> containersToInsert_;
   mutable std::unordered_map<Tag, react::Transform> transformForNode_;
 
   mutable std::vector<Tag> finishedAnimationTags_;
+  mutable ForceScreenSnapshotFunction forceScreenSnapshot_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   std::shared_ptr<const ContextContainer> contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
@@ -121,6 +123,12 @@ struct LayoutAnimationsProxy
       const PropsParserContext &propsParserContext,
       SurfaceId surfaceId) const;
 
+#ifdef __APPLE__
+  void setForceScreenSnapshotFunction(ForceScreenSnapshotFunction f) {
+    forceScreenSnapshot_ = std::move(f);
+  }
+#endif
+
   void hideTransitioningViews(
       int index,
       ShadowViewMutationList &filteredMutations,
@@ -148,6 +156,11 @@ struct LayoutAnimationsProxy
       const LightNode::Unshared &node,
       int index,
       const PropsParserContext &propsParserContext) const;
+
+  void insertContainers(
+      ShadowViewMutationList &filteredMutations,
+      int &rootChildCount,
+      SurfaceId surfaceId) const;
 
   std::vector<react::Point> getAbsolutePositionsForRootPathView(
       const LightNode::Unshared &node) const;
