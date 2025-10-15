@@ -133,7 +133,7 @@ describe('colors interpolation', () => {
   });
 
   describe('transparent color interpolation', () => {
-    const basicCases = [
+    const cases = [
       {
         name: 'transparent to color at midpoint',
         value: 0.5,
@@ -178,7 +178,7 @@ describe('colors interpolation', () => {
     ];
 
     colorSpaces.forEach(({ colorSpace, options, eps }) => {
-      test.each(basicCases)(
+      test.each(cases)(
         `$name using ${colorSpace}${options ? ` with options ${JSON.stringify(options)}` : ''}`,
         ({ value, inputRange, outputRange, expected }) => {
           const result = interpolateColor(
