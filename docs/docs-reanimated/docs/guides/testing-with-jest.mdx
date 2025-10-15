@@ -113,42 +113,12 @@ More examples from `react-native-reanimated` repository:
 
 ## Testing `react-native-svg`
 
-Because of how `react-native-svg` manages its props, it is not possible to test it with Reanimated out of the box.
-To enable testing, create a mock file called `react-native-svg.js` inside your project's `__mocks__` folder, and then use it in your test files with:
+Because of how `react-native-svg` manages its props, it cannot be tested with Reanimated out of the box.
+To enable testing, you can use the mock provided by Reanimated:
 
 ```js
-jest.mock('react-native-svg');
+jest.mock('react-native-svg', () => require('react-native-reanimated/mock'));
 ```
-
-Here's an example implementation of the mock:
-
-```js
-const React = require('react');
-
-const createComponent = function (name) {
-  return class extends React.Component {
-    static displayName = name;
-
-    render() {
-      return React.createElement(name, this.props, this.props.children);
-    }
-
-    setNativeProps(props) {
-      const { style } = props;
-      this.props = { ...this.props, ...style };
-    }
-  };
-};
-
-const Svg = createComponent('Svg');
-const Circle = createComponent('Circle');
-
-module.exports = { Svg, Circle };
-```
-
-:::info
-You can add more components (e.g. Rect, Path etc.) using the same pattern as we've used above.
-:::
 
 ## Remarks
 
