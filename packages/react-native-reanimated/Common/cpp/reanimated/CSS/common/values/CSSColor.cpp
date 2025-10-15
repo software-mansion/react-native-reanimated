@@ -29,21 +29,6 @@ CSSColor::CSSColor(int64_t numberValue)
   colorType = ColorType::Rgba;
 }
 
-CSSColor::CSSColor(const std::string &colorString)
-    : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
-  if (colorString == "transparent") {
-    colorType = ColorType::Transparent;
-  } else if (colorString == "currentColor") {
-    colorType = ColorType::CurrentColor;
-  } else {
-    throw std::invalid_argument(
-        "[Reanimated] CSSColor: Invalid string value: " + colorString);
-  }
-}
-
-CSSColor::CSSColor(const uint8_t r, const uint8_t g, const uint8_t b)
-    : channels{r, g, b, 255}, colorType(ColorType::Rgba) {}
-
 CSSColor::CSSColor(
     const uint8_t r,
     const uint8_t g,
@@ -51,18 +36,13 @@ CSSColor::CSSColor(
     const uint8_t a)
     : channels{r, g, b, a}, colorType(ColorType::Rgba) {}
 
-CSSColor::CSSColor(const ColorChannels &colorChannels)
-    : channels{colorChannels[0], colorChannels[1], colorChannels[2], colorChannels[3]},
-      colorType(ColorType::Rgba) {}
+CSSColor::CSSColor(ColorChannels colorChannels)
+    : channels{std::move(colorChannels)}, colorType(ColorType::Rgba) {}
 
 CSSColor::CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue)
     : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
   if (jsiValue.isNumber()) {
     *this = CSSColor(jsiValue.getNumber());
-  } else if (jsiValue.isString()) {
-    *this = CSSColor(jsiValue.getString(rt).utf8(rt));
-  } else {
-    *this = Transparent;
   }
 }
 
@@ -70,22 +50,17 @@ CSSColor::CSSColor(const folly::dynamic &value)
     : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
   if (value.isNumber()) {
     *this = CSSColor(value.asInt());
-  } else if (value.isString()) {
-    *this = CSSColor(value.getString());
-  } else {
-    *this = Transparent;
   }
 }
 
 bool CSSColor::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  return jsiValue.isNumber() || jsiValue.isUndefined() ||
-      (jsiValue.isString() &&
-       isValidColorString(jsiValue.getString(rt).utf8(rt)));
+  // Undefined if the color is transparent, otherwise a number
+  return jsiValue.isNumber() || jsiValue.isUndefined();
 }
 
 bool CSSColor::canConstruct(const folly::dynamic &value) {
-  return value.isNumber() || value.empty() ||
-      (value.isString() && isValidColorString(value.getString()));
+  // Empty if the color is transparent, otherwise a number
+  return value.isNumber() || value.empty();
 }
 
 folly::dynamic CSSColor::toDynamic() const {
@@ -102,21 +77,11 @@ std::string CSSColor::toString() const {
         std::to_string(channels[1]) + "," + std::to_string(channels[2]) + "," +
         std::to_string(channels[3]) + ")";
   }
-  if (colorType == ColorType::CurrentColor) {
-    return "currentColor";
-  }
   return "transparent";
 }
 
 CSSColor CSSColor::interpolate(const double progress, const CSSColor &to)
     const {
-  if ((to.colorType == ColorType::Transparent &&
-       colorType == ColorType::Transparent) ||
-      colorType == ColorType::CurrentColor ||
-      to.colorType == ColorType::CurrentColor) {
-    return progress < 0.5 ? *this : to;
-  }
-
   ColorChannels fromChannels = channels;
   ColorChannels toChannels = to.channels;
   if (colorType == ColorType::Transparent) {
@@ -131,7 +96,7 @@ CSSColor CSSColor::interpolate(const double progress, const CSSColor &to)
         interpolateChannel(fromChannels[i], toChannels[i], progress);
   }
 
-  return CSSColor(resultChannels);
+  return CSSColor(std::move(resultChannels));
 }
 
 uint8_t CSSColor::interpolateChannel(
@@ -145,9 +110,7 @@ uint8_t CSSColor::interpolateChannel(
 }
 
 bool CSSColor::operator==(const CSSColor &other) const {
-  return colorType == other.colorType && channels[0] == other.channels[0] &&
-      channels[1] == other.channels[1] && channels[2] == other.channels[2] &&
-      channels[3] == other.channels[3];
+  return colorType == other.colorType && channels == other.channels;
 }
 
 #ifndef NDEBUG
@@ -158,9 +121,5 @@ std::ostream &operator<<(std::ostream &os, const CSSColor &colorValue) {
 }
 
 #endif // NDEBUG
-
-bool CSSColor::isValidColorString(const std::string &colorString) {
-  return colorString == "transparent" || colorString == "currentColor";
-}
 
 } // namespace reanimated::css

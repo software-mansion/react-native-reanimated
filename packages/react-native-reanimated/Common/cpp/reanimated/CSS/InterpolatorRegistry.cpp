@@ -32,7 +32,7 @@ namespace {
 
 // Private implementation details
 const auto BLACK = CSSColor(0, 0, 0, 255);
-const auto TRANSPARENT = CSSColor::Transparent;
+const auto TRANSPARENT = CSSColor(ColorType::Transparent);
 
 InterpolatorFactoriesRecord mergeInterpolators(
     const std::vector<InterpolatorFactoriesRecord> &maps) {
