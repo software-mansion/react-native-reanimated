@@ -217,7 +217,8 @@ void LayoutAnimationsProxy::updateLightTree(
           // we are not starting the animation here because any update will come
           // from the UPDATE mutation
           //          layout_.push_back(node);
-          filteredMutations.push_back(mutation);
+          // TODO: this introduces ghosting. Figure out proper reconciliation
+          filteredMutations.push_back(ShadowViewMutation::InsertMutation(mutation.parentTag, node->previous, mutation.index));
           //          node->previous = node->current;
           //          node->current = mutation.newChildShadowView;
         } else if (layoutAnimationsManager_->hasLayoutAnimation(
