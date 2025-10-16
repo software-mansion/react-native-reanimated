@@ -1,9 +1,9 @@
 'use strict';
+import type { PlainStyle } from '../../common';
 import { hasSuffix } from '../../common';
 import type {
   CSSAnimationKeyframeBlock,
   CSSAnimationKeyframes,
-  PlainStyle,
 } from '../types';
 import { PROPERTIES_CONFIG } from './config';
 import { createStyleBuilder } from './style';

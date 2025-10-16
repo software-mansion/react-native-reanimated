@@ -1,7 +1,24 @@
+import { useDocsVersion } from '@docusaurus/plugin-content-docs/client';
 import React from 'react';
 
-import compatibilityData from '../../../../../packages/react-native-reanimated/compatibility.json';
+import untypedCompatibilityData from '../../../../../packages/react-native-reanimated/compatibility.json';
 import styles from './styles.module.css';
+
+type Architecture = 'paper' | 'fabric';
+
+interface CompatibilityEntry {
+  'react-native': string[];
+  'react-native-worklets'?: string[];
+}
+
+type ArchitectureCompatibilityData = Record<string, CompatibilityEntry>;
+
+type CompatibilityData = {
+  paper: ArchitectureCompatibilityData;
+  fabric: ArchitectureCompatibilityData;
+};
+
+const compatibilityData = untypedCompatibilityData as CompatibilityData;
 
 export function Yes() {
   return <div className={styles.supported}>yes</div>;
@@ -25,69 +42,102 @@ export function Spacer() {
 
 interface CompatibilityItem {
   version: string;
-  isSpacer?: boolean;
+  isSpacer: boolean;
   compatibility: Record<string, boolean>;
 }
 
-export function ReanimatedCompatibility() {
-  const reactNativeVersions = Array.from(
-    new Set(
-      Object.keys(compatibilityData).flatMap(
-        (version) => compatibilityData[version]['react-native']
-      )
-    )
-  ).sort();
+type ReanimatedCompatibilityProps = {
+  architecture: Architecture;
+  spacerAfterIndex?: number;
+};
 
-  const isVersionSupported = (supportedVersions: string[], version: string) =>
-    supportedVersions.includes(version);
+const getCompatibilityEntriesForVersion = (
+  architecture: Architecture,
+  version: string,
+  shouldInclude: (data: CompatibilityEntry) => boolean = () => true
+) => {
+  const architectureData = compatibilityData[architecture];
 
-  const createCompatibility = (supportedVersions: string[]) => {
-    const compatibility: Record<string, boolean> = {};
-    reactNativeVersions.forEach((version) => {
-      compatibility[`rn${version.replace('.', '')}`] = isVersionSupported(
-        supportedVersions,
-        version
-      );
-    });
-    return compatibility;
-  };
+  if (version === 'current') {
+    // For current version, find the highest major version and include nightly
+    const highestMajorVersion = Math.max(
+      ...Object.keys(architectureData).map((key) => {
+        const num = key.split('.')[0];
+        return isNaN(+num) ? 0 : +num;
+      })
+    );
 
-  const compatibilityItems: CompatibilityItem[] = Object.entries(
-    compatibilityData
-  ).map(([version, data], index) => {
+    return Object.entries(architectureData).filter(
+      ([key, data]) =>
+        (key === 'nightly' || key.startsWith(`${highestMajorVersion}.`)) &&
+        shouldInclude(data)
+    );
+  }
+
+  // For versioned docs (e.g. "3.x", "2.x", "1.x"), extract the major version number
+  const majorVersion = version.replace('.x', '');
+  return Object.entries(architectureData).filter(
+    ([key, data]) => key.startsWith(`${majorVersion}.`) && shouldInclude(data)
+  );
+};
+
+const extractVersions = (
+  data: [string, CompatibilityEntry][],
+  getVersions: (entry: CompatibilityEntry) => string[]
+): string[] =>
+  Array.from(new Set(data.flatMap(([, entry]) => getVersions(entry)))).sort();
+
+const createCompatibilityItems = (
+  filteredData: [string, CompatibilityEntry][],
+  versions: string[],
+  getSupportedVersions: (data: CompatibilityEntry) => Set<string>,
+  spacerAfterIndex?: number
+): CompatibilityItem[] =>
+  filteredData.map(([version, data], index) => {
+    const supportedVersions = getSupportedVersions(data);
+    const compatibility = Object.fromEntries(
+      versions.map((versionNumber) => [
+        versionNumber,
+        supportedVersions.has(versionNumber),
+      ])
+    );
+
     return {
       version,
-      isSpacer: index === 1,
-      compatibility: createCompatibility(data['react-native']),
+      isSpacer: index === spacerAfterIndex,
+      compatibility,
     };
   });
 
+interface CompatibilityTableProps {
+  versions: string[];
+  items: CompatibilityItem[];
+}
+
+function CompatibilityTable({ versions, items }: CompatibilityTableProps) {
   return (
     <div className="compatibility">
       <table className={styles.table}>
         <thead>
           <tr>
             <th></th>
-            {reactNativeVersions.map((version) => (
+            {versions.map((version) => (
               <th key={version}>{version}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {compatibilityItems.map((item, index) => (
+          {items.map((item, index) => (
             <React.Fragment key={index}>
               <tr>
                 <td>
                   <Version version={item.version} />
                 </td>
-                {reactNativeVersions.map((version) => {
-                  const key = `rn${version.replace('.', '')}`;
-                  return (
-                    <td key={version}>
-                      {item.compatibility[key] ? <Yes /> : <No />}
-                    </td>
-                  );
-                })}
+                {versions.map((version) => (
+                  <td key={version}>
+                    {item.compatibility[version] ? <Yes /> : <No />}
+                  </td>
+                ))}
               </tr>
               {item.isSpacer && <Spacer />}
             </React.Fragment>
@@ -95,5 +145,76 @@ export function ReanimatedCompatibility() {
         </tbody>
       </table>
     </div>
+  );
+}
+
+export function ReanimatedCompatibility({
+  spacerAfterIndex,
+  architecture,
+}: ReanimatedCompatibilityProps) {
+  const docsVersion = useDocsVersion();
+  const filteredCompatibilityData = getCompatibilityEntriesForVersion(
+    architecture,
+    docsVersion.version
+  );
+
+  const reactNativeVersions = extractVersions(
+    filteredCompatibilityData,
+    (data) => data['react-native']
+  );
+
+  const compatibilityItems = createCompatibilityItems(
+    filteredCompatibilityData,
+    reactNativeVersions,
+    (data) => new Set(data['react-native']),
+    spacerAfterIndex
+  );
+
+  return (
+    <CompatibilityTable
+      versions={reactNativeVersions}
+      items={compatibilityItems}
+    />
+  );
+}
+
+export function WorkletsCompatibility({
+  spacerAfterIndex,
+}: {
+  spacerAfterIndex?: number;
+}) {
+  const docsVersion = useDocsVersion();
+
+  const filteredWorkletsData = getCompatibilityEntriesForVersion(
+    'fabric',
+    docsVersion.version,
+    (data) => !!data['react-native-worklets']
+  );
+
+  const workletsVersions = extractVersions(
+    filteredWorkletsData,
+    (data) => data['react-native-worklets'] || []
+  );
+
+  if (workletsVersions.length === 0) {
+    return (
+      <div className="compatibility">
+        <p>
+          No worklets compatibility data available for this version of
+          Reanimated.
+        </p>
+      </div>
+    );
+  }
+
+  const workletsItems = createCompatibilityItems(
+    filteredWorkletsData,
+    workletsVersions,
+    (data) => new Set(data['react-native-worklets'] || []),
+    spacerAfterIndex
+  );
+
+  return (
+    <CompatibilityTable versions={workletsVersions} items={workletsItems} />
   );
 }

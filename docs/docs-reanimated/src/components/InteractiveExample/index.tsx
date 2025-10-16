@@ -16,8 +16,9 @@ import ResetDark from '@site/static/img/reset-dark.svg';
 import styles from './styles.module.css';
 
 import ts from 'typescript';
-import prettier from 'prettier/standalone';
-import babelParser from 'prettier/parser-babel';
+import * as prettier from 'prettier/standalone';
+import * as babelParser from 'prettier/plugins/babel';
+import * as estreeParser from 'prettier/plugins/estree';
 
 function compileTSXtoJSX(tsxCode: string) {
   const PLACEHOLDER_FOR_EMPTY_LINES = '// PLACEHOLDER-FOR-EMPTY-LINES';
@@ -50,8 +51,8 @@ function compileTSXtoJSX(tsxCode: string) {
       l.trim() === PLACEHOLDER_FOR_EMPTY_LINES
         ? ''
         : l.trim().endsWith(PLACEHOLDER_FOR_BREAKING_LINES)
-        ? l.slice(0, l.indexOf(PLACEHOLDER_FOR_BREAKING_LINES)).trimEnd()
-        : l
+          ? l.slice(0, l.indexOf(PLACEHOLDER_FOR_BREAKING_LINES)).trimEnd()
+          : l
     )
     .join('\n');
 
@@ -63,7 +64,7 @@ function compileTSXtoJSX(tsxCode: string) {
     trailingComma: 'es5',
     tabWidth: 2,
     arrowParens: 'always',
-    plugins: [babelParser],
+    plugins: [babelParser, estreeParser],
   });
 }
 
@@ -163,9 +164,14 @@ export default function InteractiveExample({
               icon={<Copy />}
               iconDark={<CopyDark />}
               animation={Animation.FADE_IN_OUT}
-              onClick={(actionPerformed, setActionPerformed) => {
+              onClick={async (actionPerformed, setActionPerformed) => {
                 if (!actionPerformed) {
-                  copy(tab === Tab.JAVASCRIPT ? jsxCode : tsxCode);
+                  if (tab === Tab.JAVASCRIPT) {
+                    const code = await jsxCode;
+                    copy(code);
+                  } else {
+                    copy(tsxCode);
+                  }
                   setActionPerformed(true);
                 }
               }}

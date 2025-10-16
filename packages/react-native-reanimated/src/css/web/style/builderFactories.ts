@@ -1,7 +1,7 @@
 'use strict';
 
+import type { AnyRecord } from '../../../common';
 import { hasSuffix } from '../../../common';
-import type { AnyRecord } from '../../types';
 import {
   hasProp,
   isConfigPropertyAlias,

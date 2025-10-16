@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
-  "types": "lib",
+  "types": "types/index.d.ts",
   "scripts": {
     "test": "yarn jest",
     "bundle": "yarn esbuild ./public/index.js --external:espree --external:@typescript-eslint --platform=node --bundle --outfile=./index.js",
@@ -12,16 +12,16 @@
     "format": "prettier --write --list-different ."
   },
   "devDependencies": {
-    "@types/jest": "^29.5.13",
-    "@types/node": "^20.11.5",
-    "@typescript-eslint/parser": "^8.35.0",
-    "@typescript-eslint/rule-tester": "^8.35.0",
-    "@typescript-eslint/utils": "^8.35.0",
-    "esbuild": "^0.25.0",
-    "eslint": "^9.37.0",
-    "jest": "^29.7.0",
-    "prettier": "^3.3.3",
-    "ts-jest": "^29.1.2",
+    "@types/jest": "30.0.0",
+    "@types/node": "24.0.14",
+    "@typescript-eslint/parser": "8.37.0",
+    "@typescript-eslint/rule-tester": "8.37.0",
+    "@typescript-eslint/utils": "8.37.0",
+    "esbuild": "0.25.10",
+    "eslint": "9.37.0",
+    "jest": "30.2.0",
+    "prettier": "3.6.2",
+    "ts-jest": "29.4.5",
     "typescript": "5.8.3"
   }
 }

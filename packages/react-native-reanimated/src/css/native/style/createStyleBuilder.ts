@@ -1,6 +1,6 @@
 'use strict';
 
-import type { AnyRecord } from '../../types';
+import type { AnyRecord } from '../../../common';
 import { isConfigPropertyAlias, isDefined, isRecord } from '../../utils';
 import type {
   StyleBuilder,

@@ -32,6 +32,7 @@ import PagerExample from './CustomHandler/PagerExample';
 import DispatchCommandExample from './DispatchCommandExample';
 import DragAndSnapExample from './DragAndSnapExample';
 import DynamicColorIOSExample from './DynamicColorIOSExample';
+import PlatformColorExample from './PlatformColorExample';
 import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
 import ExtrapolationExample from './ExtrapolationExample';
@@ -109,6 +110,7 @@ import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderCo
 import ScreenTransitionExample from './ScreenTransitionExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import ScrollEventExample from './ScrollEventExample';
+import ScrollPerformanceExample from './ScrollPerformanceExample';
 import ScrollToExample from './ScrollToExample';
 import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
@@ -167,6 +169,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🎞️',
     title: 'FPS',
     screen: FpsExample,
+  },
+  ScrollPerformanceExample: {
+    icon: '🚁',
+    title: 'Scroll performance',
+    screen: ScrollPerformanceExample,
   },
   ThirdPartyComponentsExample: {
     icon: '3️⃣',
@@ -605,6 +612,11 @@ export const EXAMPLES: Record<string, Example> = {
     screen: DynamicColorIOSExample,
     icon: '🌗',
     disabledPlatforms: [REAPlatform.ANDROID, REAPlatform.WEB],
+  },
+  PlatformColorExample: {
+    title: 'PlatformColor',
+    screen: PlatformColorExample,
+    icon: '🎨',
   },
 
   // Old examples

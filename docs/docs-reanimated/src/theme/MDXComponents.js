@@ -11,6 +11,7 @@ import {
   Version,
   Spacer,
   ReanimatedCompatibility,
+  WorkletsCompatibility,
 } from '@site/src/components/Compatibility';
 import Optional from '@site/src/components/Optional';
 import AvailableFrom from '@site/src/components/AvailableFrom';
@@ -40,4 +41,5 @@ export default {
   Grid,
   ThemedVideo,
   ReanimatedCompatibility,
+  WorkletsCompatibility,
 };

@@ -8,20 +8,24 @@
     "start:noplugin": "DISABLE_BABEL_PLUGIN=1 yarn start",
     "production": "yarn expo export -p web && yarn serve dist --single",
     "format": "prettier --write --list-different .",
-    "build": ""
+    "build": "",
+    "type:check": "tsc --noEmit"
   },
   "dependencies": {
     "common-app": "workspace:*",
-    "expo": "^54.0.0-preview.13",
+    "expo": "54.0.13",
+    "react": "19.1.1",
     "react-dom": "19.1.1",
     "react-native": "0.82.0",
-    "react-native-web": "~0.21.1"
+    "react-native-web": "0.21.1"
   },
   "devDependencies": {
-    "@expo/metro-runtime": "~6.1.1",
-    "@stylexjs/babel-plugin": "^0.10.0",
-    "prettier": "^3.3.3",
-    "serve": "^14.2.3"
+    "@expo/metro-runtime": "6.1.2",
+    "@stylexjs/babel-plugin": "0.16.1",
+    "@types/react": "19.2.2",
+    "prettier": "3.6.2",
+    "serve": "14.2.5",
+    "typescript": "5.8.3"
   },
   "installConfig": {
     "selfReferences": false

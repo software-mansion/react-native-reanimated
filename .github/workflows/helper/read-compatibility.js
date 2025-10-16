@@ -14,7 +14,7 @@ const compatibilityData = JSON.parse(
   fs.readFileSync(compatibilityPath, 'utf8')
 );
 
-const versions = compatibilityData['nightly']['react-native'];
+const versions = compatibilityData['fabric']['nightly']['react-native'];
 const versionsJson = JSON.stringify(versions);
 
 const versionsWithNightly = [...versions, 'nightly'];

@@ -252,8 +252,8 @@ export function DoubleRange({
                   newValue > max[idx]
                     ? max[idx]
                     : newValue <= min[idx]
-                    ? min[idx]
-                    : newValue
+                      ? min[idx]
+                      : newValue
                 );
               }}
             />

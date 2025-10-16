@@ -30,8 +30,14 @@ const config = {
     },
   ],
 
+  markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: 'throw',
+    },
+  },
+
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'throw',
+  onBrokenAnchors: 'throw',
 
   // Even if you don't use internalization, you can use this field to set useful
   // metadata like html lang. For example, if your site is Chinese, you may want
@@ -213,6 +219,24 @@ const config = {
               alias: { 'react-native$': 'react-native-web' },
               extensions: ['.web.js', '...'],
             },
+            ignoreWarnings: [
+              (error) => {
+                /*
+                 * Ignore warning we can't fix:
+                 * "moduleName":"./node_modules/typescript/lib/typescript.js","loc":"50:2440-2459","message":"Critical dependency: the request of a dependency is an expression"
+                 */
+                if (
+                  error.message.includes(
+                    'Critical dependency: the request of a dependency is an expression'
+                  ) &&
+                  // @ts-expect-error Not exposed type.
+                  error?.module?.context?.includes('typescript/lib')
+                ) {
+                  return true;
+                }
+                return false;
+              },
+            ],
           };
         },
       };

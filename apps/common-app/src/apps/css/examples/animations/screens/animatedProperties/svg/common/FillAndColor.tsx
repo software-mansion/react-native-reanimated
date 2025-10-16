@@ -7,6 +7,7 @@ import { Circle, Polygon, Svg } from 'react-native-svg';
 
 import { ExamplesScreen } from '@/apps/css/components';
 import type { AnyRecord } from '@/types';
+import type { JSX } from 'react';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedPolygon = Animated.createAnimatedComponent(Polygon);

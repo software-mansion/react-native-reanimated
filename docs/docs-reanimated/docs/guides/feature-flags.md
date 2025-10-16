@@ -18,8 +18,10 @@ Feature flags are available since Reanimated 4.
 | --------------------------------------------------------------------------------------------------- | :-----------------------------: | :------: | :--------: | :-----------: |
 | [`DISABLE_COMMIT_PAUSING_MECHANISM`](#disable_commit_pausing_mechanism)                             | [static](#static-feature-flags) |  4.0.0   |  &ndash;   |    `false`    |
 | [`ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#android_synchronously_update_ui_props)                   | [static](#static-feature-flags) |  4.0.0   |  &ndash;   |    `false`    |
+| [`IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#ios_synchronously_update_ui_props)                           | [static](#static-feature-flags) |  4.2.0   |  &ndash;   |    `false`    |
 | [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#experimental_css_animations_for_svg_components) | [static](#static-feature-flags) |  4.1.0   |  &ndash;   |    `false`    |
 | [`USE_SYNCHRONIZABLE_FOR_MUTABLES`](#use_synchronizable_for_mutables)                               | [static](#static-feature-flags) |  4.1.0   |  &ndash;   |    `false`    |
+| [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](#use_commit_hook_only_for_react_commits)                 | [static](#static-feature-flags) |  4.2.0   |  &ndash;   |    `false`    |
 
 :::info
 
@@ -134,6 +136,10 @@ Currently, only the following styles can be updated using the fast path: `opacit
 
 This feature flag works only on Android and has no effect on iOS. For more details, see [PR #7823](https://github.com/software-mansion/react-native-reanimated/pull/7823).
 
+### `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`
+
+When enabled, non-layout styles will be applied using the `[RCTSurfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:props:]` method (which doesn't involve layout recalculation) instead of than `ShadowTree::commit` method (which requires layout recalculation). Limitations and unwanted side effects are the same as for `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`. For more details, see [PR #8367](https://github.com/software-mansion/react-native-reanimated/pull/8367).
+
 ### `EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`
 
 When enabled, CSS animations and transitions will also work for a limited set of props of several components from [`react-native-svg`](https://github.com/software-mansion/react-native-svg) library. Currently, `Circle`, `Ellipse`, `Line`, `Path` and `Rect` components are supported.
@@ -141,6 +147,10 @@ When enabled, CSS animations and transitions will also work for a limited set of
 ### `USE_SYNCHRONIZABLE_FOR_MUTABLES`
 
 This feature flag is supposed to speedup shared value reads on the RN runtime by reducing the number of calls to `executeOnUIRuntimeSync`. When enabled, mutables (which are the primitives behind shared values) use `Synchronizable` state to check if they should sync with the UI Runtime. For more details, see [PR #8080](https://github.com/software-mansion/react-native-reanimated/pull/8080).
+
+### `USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`
+
+This feature flag is supposed to fix performance regressions of animations while scrolling. When enabled, `ReanimatedCommitHook` applies latest animated styles and props only for React commits, which means the logic will be skipped for other commits, including state updates.
 
 ## Static feature flags
 

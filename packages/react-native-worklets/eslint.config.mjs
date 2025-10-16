@@ -30,6 +30,13 @@ const config = tsEslint.config(
     },
   },
   {
+    rules: {
+      strict: ['error', 'global'],
+    },
+    files: ['src/**/*.tsx', 'src/**/*.ts'],
+    ignores: ['__tests__', '__mocks__'],
+  },
+  {
     files: ['**/*.test.ts', '**/*.test.tsx'],
     rules: {
       '@typescript-eslint/unbound-method': 'off',
