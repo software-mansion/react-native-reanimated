@@ -1,7 +1,6 @@
 'use strict';
-import type { PlainStyle } from '../../../types';
+import type { PlainStyle } from '../../../../common';
 import createStyleBuilder from '../createStyleBuilder';
-
 // TODO - add more tests
 
 describe(createStyleBuilder, () => {

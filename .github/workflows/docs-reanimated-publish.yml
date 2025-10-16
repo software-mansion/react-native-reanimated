@@ -6,8 +6,8 @@ on:
     branches:
       - main
     paths:
-      - packages/docs-reanimated/**
-      - packages/docs-worklets/**
+      - docs/docs-reanimated/**
+      - docs/docs-worklets/**
       - packages/react-native-reanimated/compatibility.json
   workflow_dispatch:
 
@@ -16,8 +16,8 @@ jobs:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     env:
-      REANIMATED_DOCS_DIR: packages/docs-reanimated
-      WORKLETS_DOCS_DIR: packages/docs-worklets
+      REANIMATED_DOCS_DIR: docs/docs-reanimated
+      WORKLETS_DOCS_DIR: docs/docs-worklets
     steps:
       - name: Check out
         uses: actions/checkout@v4
@@ -41,6 +41,6 @@ jobs:
       - name: Publish generated content to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
-          FOLDER: packages/docs-reanimated/build
+          FOLDER: docs/docs-reanimated/build
           BRANCH: gh-pages
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

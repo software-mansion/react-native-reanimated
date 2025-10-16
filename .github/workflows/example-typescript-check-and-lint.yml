@@ -44,14 +44,13 @@ jobs:
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable
-      - name: Build Reanimated package
-        working-directory: packages/react-native-reanimated
+      - name: Build packages
         run: yarn build
 
       - name: Check types
         working-directory: ${{ matrix.working-directory }}
         if: ${{ contains(env.TYPE_CHECK_DIRECTORIES, matrix.working-directory) }}
-        run: yarn tsc --noEmit
+        run: yarn type:check
       - name: Lint
         working-directory: ${{ matrix.working-directory }}
         if: ${{ contains(env.TYPE_CHECK_DIRECTORIES, matrix.working-directory) }}

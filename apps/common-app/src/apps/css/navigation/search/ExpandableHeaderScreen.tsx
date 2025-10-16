@@ -1,11 +1,5 @@
-import type { Component } from 'react';
 import { isValidElement, useEffect, useMemo } from 'react';
-import type {
-  ScrollView,
-  ScrollViewProps,
-  StyleProp,
-  ViewStyle,
-} from 'react-native';
+import type { ScrollViewProps, StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { AnimatedRef, WithSpringConfig } from 'react-native-reanimated';
@@ -40,9 +34,6 @@ export enum ExpandMode {
   AUTO = 'AUTO',
 }
 
-type ScrollableComponent = Component<Pick<ScrollViewProps, 'onScroll'>> &
-  Pick<ScrollView, 'getScrollableNode'>;
-
 type ExpandableHeaderScreenProps = {
   HeaderComponent: // eslint-disable-next-line @typescript-eslint/no-explicit-any
   React.ComponentType<any> | React.ReactElement | null | undefined;
@@ -52,8 +43,7 @@ type ExpandableHeaderScreenProps = {
     | React.ReactNode
     | ((
         props: Pick<ScrollViewProps, 'onScroll'> & {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ref: AnimatedRef<any>;
+          ref: AnimatedRef;
         }
       ) => React.ReactNode);
   onHeaderShowProgressChange?: (progress: number) => void;
@@ -66,7 +56,7 @@ export default function ExpandableHeaderScreen({
   onHeaderShowProgressChange,
   children,
 }: ExpandableHeaderScreenProps) {
-  const scrollableRef = useAnimatedRef<ScrollableComponent>();
+  const scrollableRef = useAnimatedRef();
   const offsetY = useSharedValue(0);
   const headerHeight = useSharedValue(IS_WEB ? 72 : 0);
   const translateY = useSharedValue(IS_WEB ? 72 : 0);

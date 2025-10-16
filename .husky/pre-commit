@@ -61,7 +61,7 @@ fi
 
 # Linting docs
 for DOCS in docs-reanimated docs-worklets; do
-  DOCS_PATH="packages/$DOCS"
+  DOCS_PATH="docs/$DOCS"
   check_and_lint_docs "$STAGED_FILES" "$DOCS_PATH" "$DOCS"
 done
 

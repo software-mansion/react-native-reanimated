@@ -31,32 +31,7 @@ jobs:
         uses: actions/setup-node@v4
 
       - name: Install monorepo dependencies
-        run: yarn install
+        run: yarn install --immutable
 
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v46
-        with:
-          files: |
-            **/package.json
-            **/yarn.lock
-      - name: Get list of changed directories
-        id: changed-dirs
-        run: |
-          ECHOLIST=()
-          for CHANGE in ${{ steps.changed-files.outputs.all_changed_files }}
-          do
-            DIR=$(dirname "$CHANGE")
-            ECHOLIST+=("$DIR")
-          done
-          ECHOLIST=($(echo "${ECHOLIST[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
-          echo "dirList=${ECHOLIST[*]}" >> $GITHUB_OUTPUT
-      - name: Perform yarn install in changed directories
-        working-directory: ${{ github.workspace }}
-        run: |
-          for DIR in ${{ steps.changed-dirs.outputs.dirList }}
-          do
-            echo "Yarn install in $DIR"
-            echo $(pwd)
-            cd "$DIR" && yarn install --immutable && cd ${{ github.workspace }}
-          done
+      - name: Check for dependency duplication
+        run: yarn dedupe --check
