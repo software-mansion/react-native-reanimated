@@ -189,6 +189,9 @@ void CSSAnimationsRegistry::updateViewAnimations(
     const auto updates = animation->update(timestamp);
     const auto newState = animation->getState(timestamp);
 
+    LOG(INFO) << "Animation: " << animation->getName()
+              << " updates: " << updates;
+
     if (newState == AnimationProgressState::Finished) {
       // Revert changes applied during animation if there is no forwards fill
       // mode

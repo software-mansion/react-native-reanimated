@@ -148,6 +148,18 @@ void TransformsStyleInterpolator::updateKeyframesFromStyleChange(
       parseTransformOperations(newStyleValue).value_or(TransformOperations{})));
 }
 
+folly::dynamic TransformsStyleInterpolator::convertOperationsToDynamic(
+    const TransformOperations &operations) const {
+  auto result = folly::dynamic::array();
+  result.reserve(operations.size());
+
+  for (const auto &operation : operations) {
+    result.push_back(operation->toDynamic());
+  }
+
+  return result;
+}
+
 std::optional<TransformOperations>
 TransformsStyleInterpolator::parseTransformOperations(
     jsi::Runtime &rt,
@@ -393,18 +405,6 @@ folly::dynamic TransformsStyleInterpolator::interpolateOperations(
   }
 
   return convertOperationsToDynamic(result);
-}
-
-folly::dynamic TransformsStyleInterpolator::convertOperationsToDynamic(
-    const TransformOperations &operations) {
-  auto result = folly::dynamic::array();
-  result.reserve(operations.size());
-
-  for (const auto &operation : operations) {
-    result.push_back(operation->toDynamic());
-  }
-
-  return result;
 }
 
 } // namespace reanimated::css

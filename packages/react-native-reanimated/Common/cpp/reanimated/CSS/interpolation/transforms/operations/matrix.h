@@ -17,13 +17,13 @@ using MatrixOperationValue =
  * Multiplies all operations in the vector to a single 3D matrix
  * @param operations - the vector of operations that can be represented in 3D
  */
-TransformMatrix3D matrixFromOperations3D(TransformOperations &operations);
+TransformMatrix3D matrixFromOperations3D(const TransformOperations &operations);
 
 /**
  * Multiplies all operations in the vector to a single 2D matrix
  * @param operations - the vector of operations that can be represented in 2D
  */
-TransformMatrix2D matrixFromOperations2D(TransformOperations &operations);
+TransformMatrix2D matrixFromOperations2D(const TransformOperations &operations);
 
 struct MatrixOperation final : public TransformOperation {
   const MatrixOperationValue value;

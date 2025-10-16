@@ -2,7 +2,6 @@
 
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperationInterpolator.h>
-#include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
 #include <reanimated/CSS/utils/keyframes.h>
 
 #include <memory>
@@ -23,7 +22,7 @@ struct TransformKeyframe {
   const std::optional<TransformOperations> toOperations;
 };
 
-class TransformsStyleInterpolator final : public PropertyInterpolator {
+class TransformsStyleInterpolator : public PropertyInterpolator {
  public:
   TransformsStyleInterpolator(
       const PropertyPath &propertyPath,
@@ -51,6 +50,10 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       const folly::dynamic &oldStyleValue,
       const folly::dynamic &newStyleValue,
       const folly::dynamic &lastUpdateValue) override;
+
+ protected:
+  virtual folly::dynamic convertOperationsToDynamic(
+      const TransformOperations &operations) const;
 
  private:
   const std::shared_ptr<TransformOperationInterpolators> interpolators_;
@@ -85,14 +88,12 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const;
   TransformOperations getFallbackValue(
       const std::shared_ptr<const ShadowNode> &shadowNode) const;
-  folly::dynamic interpolateOperations(
+  virtual folly::dynamic interpolateOperations(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       double keyframeProgress,
       const TransformOperations &fromOperations,
       const TransformOperations &toOperations) const;
 
-  static folly::dynamic convertOperationsToDynamic(
-      const TransformOperations &operations);
   TransformInterpolationContext createUpdateContext(
       const std::shared_ptr<const ShadowNode> &shadowNode) const;
 };

@@ -1,5 +1,9 @@
 #include <reanimated/CSS/InterpolatorRegistry.h>
+
+#include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
 #include <reanimated/Tools/FeatureFlags.h>
+
+#include <reanimated/CSS/interpolation/InterpolatorFactory.h>
 
 #include <reanimated/CSS/common/values/CSSAngle.h>
 #include <reanimated/CSS/common/values/CSSBoolean.h>
@@ -9,20 +13,19 @@
 #include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
 #include <reanimated/CSS/common/values/CSSValue.h>
-
-#include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
 
-#include <reanimated/CSS/svg/values/SVGLength.h>
-#include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
-
-#include <reanimated/CSS/interpolation/InterpolatorFactory.h>
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
 #include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
 #include <reanimated/CSS/interpolation/transforms/operations/rotate.h>
 #include <reanimated/CSS/interpolation/transforms/operations/scale.h>
 #include <reanimated/CSS/interpolation/transforms/operations/skew.h>
 #include <reanimated/CSS/interpolation/transforms/operations/translate.h>
+
+#include <reanimated/CSS/svg/interpolation/InterpolatorFactory.h>
+
+#include <reanimated/CSS/svg/values/SVGLength.h>
+#include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
 #include <vector>
 
@@ -303,23 +306,26 @@ const InterpolatorFactoriesRecord SVG_CLIP_INTERPOLATORS = {
 };
 
 const InterpolatorFactoriesRecord SVG_TRANSFORM_INTERPOLATORS = {
-    {"translateX", value<SVGLength>(0)},
-    {"translateY", value<SVGLength>(0)},
-    {"originX", value<SVGLength>(0)},
-    {"originY", value<SVGLength>(0)},
-    {"scaleX", value<CSSDouble>(1)},
-    {"scaleY", value<CSSDouble>(1)},
-    {"skewX", value<CSSAngle>(0)},
-    {"skewY", value<CSSAngle>(0)},
-    {"rotation", value<CSSAngle>(0)},
-};
+    {"matrix",
+     svg::transforms(
+         {{"rotate", transformOp<RotateOperation>("0deg")},
+          {"rotateZ", transformOp<RotateZOperation>("0deg")},
+          {"scale", transformOp<ScaleOperation>(1)},
+          {"scaleX", transformOp<ScaleXOperation>(1)},
+          {"scaleY", transformOp<ScaleYOperation>(1)},
+          {"translateX",
+           transformOp<TranslateXOperation>(0, {RelativeTo::Self, "width"})},
+          {"translateY",
+           transformOp<TranslateYOperation>(0, {RelativeTo::Self, "height"})},
+          {"skewX", transformOp<SkewXOperation>("0deg")},
+          {"skewY", transformOp<SkewYOperation>("0deg")},
+          {"matrix", transformOp<MatrixOperation>(TransformMatrix2D())}})}};
 
-const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS =
-    mergeInterpolators({
-        SVG_COLOR_INTERPOLATORS,
-        SVG_FILL_INTERPOLATORS,
-        SVG_STROKE_INTERPOLATORS,
-    });
+const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS = mergeInterpolators(
+    {SVG_COLOR_INTERPOLATORS,
+     SVG_FILL_INTERPOLATORS,
+     SVG_STROKE_INTERPOLATORS,
+     SVG_TRANSFORM_INTERPOLATORS});
 
 const InterpolatorFactoriesRecord SVG_CIRCLE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,

@@ -1,8 +1,11 @@
 'use strict';
+import type { TransformProps } from 'react-native-svg';
+
 import type { ValueProcessor } from '../../../../common';
 import { ReanimatedError } from '../../../../common';
-import type { TransformsArray } from '../../../types';
 import { isAngle, isNumber, isNumberArray, isPercentage } from '../../../utils';
+
+type TransformsArray = TransformProps['transform'];
 
 export const ERROR_MESSAGES = {
   invalidTransform: (transform: string) =>
@@ -27,8 +30,6 @@ const parseTransformProperty = (transform: string): TransformsArray => {
     case 'scaleY':
       return parseScaleY(values);
     case 'rotate':
-    case 'rotateX':
-    case 'rotateY':
     case 'rotateZ':
       return parseRotate(key, values);
     case 'skew':
@@ -140,16 +141,12 @@ function parseMatrix(values: (number | string)[]): TransformsArray {
 
   if (isNumberArray(values)) {
     if (values.length === 6) {
-      // TODO - CHANGE TO 2D
       // prettier-ignore
       matrixValues = [
-        values[0], values[1], 0, 0,
-        values[2], values[3], 0, 0,
-        0,         0,         1, 0,
-        values[4], values[5], 0, 1
+        values[0], values[1], 0,
+        values[2], values[3], 0,
+        values[4], values[5], 1
       ];
-    } else if (values.length === 16) {
-      matrixValues = values;
     }
   }
 
