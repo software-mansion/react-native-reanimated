@@ -171,27 +171,27 @@ export function narrowInterpolationRange<TOutput>(
       leftEdgeOutput: outputRange[length - 2],
       rightEdgeOutput: outputRange[length - 1],
     };
-  } else {
-    let left = 0;
-    let right = length - 1;
-
-    while (left < right) {
-      const mid = Math.floor((left + right) / 2);
-      if (x <= inputRange[mid]) {
-        right = mid;
-      } else {
-        left = mid + 1;
-      }
-    }
-
-    const segmentIndex = Math.max(1, left);
-    return {
-      leftEdgeInput: inputRange[segmentIndex - 1],
-      rightEdgeInput: inputRange[segmentIndex],
-      leftEdgeOutput: outputRange[segmentIndex - 1],
-      rightEdgeOutput: outputRange[segmentIndex],
-    };
   }
+
+  let left = 1;
+  let right = length - 1;
+
+  while (left < right) {
+    const mid = Math.floor((left + right) / 2);
+    if (x <= inputRange[mid]) {
+      right = mid;
+    } else {
+      left = mid + 1;
+    }
+  }
+
+  const segmentIndex = left;
+  return {
+    leftEdgeInput: inputRange[segmentIndex - 1],
+    rightEdgeInput: inputRange[segmentIndex],
+    leftEdgeOutput: outputRange[segmentIndex - 1],
+    rightEdgeOutput: outputRange[segmentIndex],
+  };
 }
 
 /**
