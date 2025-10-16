@@ -70,4 +70,4 @@ jobs:
 
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn macos
+        run: yarn macos --scheme "Debug MacOSExample"
