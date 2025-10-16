@@ -7,21 +7,38 @@
 
 namespace reanimated::css {
 
-enum class ColorType {
+// Base class with common color value functionality
+
+template <typename T>
+concept ColorTypeEnum = std::is_enum_v<T> && requires {
+  T::Rgba;
+  T::Transparent;
+};
+
+template <ColorTypeEnum TColorType, typename TDerived>
+struct CSSColorBase : public CSSSimpleValue<TDerived> {
+  ColorChannels channels;
+  TColorType colorType;
+
+  CSSColorBase();
+  explicit CSSColorBase(TColorType colorType);
+  explicit CSSColorBase(int64_t numberValue);
+
+  explicit CSSColorBase(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+  explicit CSSColorBase(ColorChannels colorChannels);
+
+  TDerived interpolate(double progress, const TDerived &to) const override;
+
+  bool operator==(const TDerived &other) const;
+};
+
+enum class CSSColorType {
   Rgba,
   Transparent,
 };
 
-struct CSSColor : public CSSSimpleValue<CSSColor> {
-  ColorChannels channels;
-  ColorType colorType;
-
-  CSSColor();
-  explicit CSSColor(ColorType colorType);
-  explicit CSSColor(int64_t numberValue);
-
-  explicit CSSColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-  explicit CSSColor(ColorChannels colorChannels);
+struct CSSColor : public CSSColorBase<CSSColorType, CSSColor> {
+  using CSSColorBase<CSSColorType, CSSColor>::CSSColorBase;
 
   explicit CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue);
   explicit CSSColor(const folly::dynamic &value);
@@ -31,11 +48,6 @@ struct CSSColor : public CSSSimpleValue<CSSColor> {
 
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
-  CSSColor interpolate(double progress, const CSSColor &to) const override;
-
-  static uint8_t interpolateChannel(uint8_t from, uint8_t to, double progress);
-
-  bool operator==(const CSSColor &other) const;
 
 #ifndef NDEBUG
   friend std::ostream &operator<<(std::ostream &os, const CSSColor &colorValue);

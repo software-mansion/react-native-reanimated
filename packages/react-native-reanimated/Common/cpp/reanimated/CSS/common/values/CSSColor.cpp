@@ -2,14 +2,19 @@
 
 namespace reanimated::css {
 
-CSSColor::CSSColor()
-    : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {}
+// CSSColorBase template implementations
 
-CSSColor::CSSColor(ColorType colorType)
+template <ColorTypeEnum TColorType, typename TDerived>
+CSSColorBase<TColorType, TDerived>::CSSColorBase()
+    : channels{0, 0, 0, 0}, colorType(TColorType::Transparent) {}
+
+template <ColorTypeEnum TColorType, typename TDerived>
+CSSColorBase<TColorType, TDerived>::CSSColorBase(TColorType colorType)
     : channels{0, 0, 0, 0}, colorType(colorType) {}
 
-CSSColor::CSSColor(int64_t numberValue)
-    : channels{0, 0, 0, 0}, colorType(ColorType::Rgba) {
+template <ColorTypeEnum TColorType, typename TDerived>
+CSSColorBase<TColorType, TDerived>::CSSColorBase(int64_t numberValue)
+    : channels{0, 0, 0, 0}, colorType(TColorType::Rgba) {
   uint32_t color;
   // On Android, colors are represented as signed 32-bit integers. In JS, we use
   // a bitwise operation (normalizedColor = normalizedColor | 0x0) to ensure the
@@ -26,28 +31,66 @@ CSSColor::CSSColor(int64_t numberValue)
   channels[1] = (color >> 8) & 0xFF; // Green
   channels[2] = color & 0xFF; // Blue
   channels[3] = (color >> 24) & 0xFF; // Alpha
-  colorType = ColorType::Rgba;
+  colorType = TColorType::Rgba;
 }
 
-CSSColor::CSSColor(
+template <ColorTypeEnum TColorType, typename TDerived>
+CSSColorBase<TColorType, TDerived>::CSSColorBase(
     const uint8_t r,
     const uint8_t g,
     const uint8_t b,
     const uint8_t a)
-    : channels{r, g, b, a}, colorType(ColorType::Rgba) {}
+    : channels{r, g, b, a}, colorType(TColorType::Rgba) {}
 
-CSSColor::CSSColor(ColorChannels colorChannels)
-    : channels{std::move(colorChannels)}, colorType(ColorType::Rgba) {}
+template <ColorTypeEnum TColorType, typename TDerived>
+CSSColorBase<TColorType, TDerived>::CSSColorBase(ColorChannels colorChannels)
+    : channels{std::move(colorChannels)}, colorType(TColorType::Rgba) {}
+
+template <ColorTypeEnum TColorType, typename TDerived>
+TDerived CSSColorBase<TColorType, TDerived>::interpolate(
+    double progress,
+    const TDerived &to) const {
+  ColorChannels fromChannels = channels;
+  ColorChannels toChannels = to.channels;
+
+  if (colorType == TColorType::Transparent) {
+    fromChannels = {toChannels[0], toChannels[1], toChannels[2], 0};
+  } else if (to.colorType == TColorType::Transparent) {
+    toChannels = {fromChannels[0], fromChannels[1], fromChannels[2], 0};
+  }
+
+  ColorChannels resultChannels;
+  for (size_t i = 0; i < 4; ++i) {
+    const auto &from = fromChannels[i];
+    const auto &to = toChannels[i];
+    // Cast one of operands to double to avoid unsigned int subtraction overflow
+    // (when from > to)
+    const double interpolated =
+        (static_cast<double>(to) - from) * progress + from;
+    resultChannels[i] =
+        static_cast<uint8_t>(std::round(std::clamp(interpolated, 0.0, 255.0)));
+  }
+
+  return TDerived(std::move(resultChannels));
+}
+
+template <ColorTypeEnum TColorType, typename TDerived>
+bool CSSColorBase<TColorType, TDerived>::operator==(
+    const TDerived &other) const {
+  return colorType == other.colorType && channels == other.channels;
+}
+
+// CSSColor implementations
 
 CSSColor::CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue)
-    : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
+    : CSSColorBase<CSSColorType, CSSColor>(CSSColorType::Transparent) {
   if (jsiValue.isNumber()) {
     *this = CSSColor(jsiValue.getNumber());
   }
 }
 
 CSSColor::CSSColor(const folly::dynamic &value)
-    : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
+    : CSSColorBase<CSSColorType, CSSColor>(CSSColorType::Transparent) {
   if (value.isNumber()) {
     *this = CSSColor(value.asInt());
   }
@@ -64,7 +107,7 @@ bool CSSColor::canConstruct(const folly::dynamic &value) {
 }
 
 folly::dynamic CSSColor::toDynamic() const {
-  if (colorType == ColorType::Transparent) {
+  if (colorType == CSSColorType::Transparent) {
     return 0x00000000;
   }
   return (channels[3] << 24) | (channels[0] << 16) | (channels[1] << 8) |
@@ -72,45 +115,12 @@ folly::dynamic CSSColor::toDynamic() const {
 }
 
 std::string CSSColor::toString() const {
-  if (colorType == ColorType::Rgba) {
+  if (colorType == CSSColorType::Rgba) {
     return "rgba(" + std::to_string(channels[0]) + "," +
         std::to_string(channels[1]) + "," + std::to_string(channels[2]) + "," +
         std::to_string(channels[3]) + ")";
   }
   return "transparent";
-}
-
-CSSColor CSSColor::interpolate(const double progress, const CSSColor &to)
-    const {
-  ColorChannels fromChannels = channels;
-  ColorChannels toChannels = to.channels;
-  if (colorType == ColorType::Transparent) {
-    fromChannels = {toChannels[0], toChannels[1], toChannels[2], 0};
-  } else if (to.colorType == ColorType::Transparent) {
-    toChannels = {fromChannels[0], fromChannels[1], fromChannels[2], 0};
-  }
-
-  ColorChannels resultChannels;
-  for (size_t i = 0; i < 4; ++i) {
-    resultChannels[i] =
-        interpolateChannel(fromChannels[i], toChannels[i], progress);
-  }
-
-  return CSSColor(std::move(resultChannels));
-}
-
-uint8_t CSSColor::interpolateChannel(
-    const uint8_t from,
-    const uint8_t to,
-    const double progress) {
-  // Cast one of operands to double to avoid unsigned int subtraction overflow
-  // (when from > to)
-  double interpolated = (static_cast<double>(to) - from) * progress + from;
-  return static_cast<uint8_t>(std::round(std::clamp(interpolated, 0.0, 255.0)));
-}
-
-bool CSSColor::operator==(const CSSColor &other) const {
-  return colorType == other.colorType && channels == other.channels;
 }
 
 #ifndef NDEBUG
@@ -121,5 +131,8 @@ std::ostream &operator<<(std::ostream &os, const CSSColor &colorValue) {
 }
 
 #endif // NDEBUG
+
+// Explicit template instantiation
+template struct CSSColorBase<CSSColorType, CSSColor>;
 
 } // namespace reanimated::css
