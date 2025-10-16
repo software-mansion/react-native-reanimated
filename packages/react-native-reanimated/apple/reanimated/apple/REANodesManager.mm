@@ -1,7 +1,11 @@
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
 #import <reanimated/apple/REANodesManager.h>
+#import <reanimated/apple/REAUIView.h>
 
+#import <React/RCTComponentViewProtocol.h>
+#import <React/RCTComponentViewRegistry.h>
+#import <React/RCTMountingManager.h>
 #import <React/RCTUtils.h>
 
 @implementation REANodesManager {
@@ -149,6 +153,23 @@
   if ([[self getDisplayLink] isPaused]) {
     [self performOperations];
   }
+}
+
+- (void)synchronouslyUpdateUIProps:(ReactTag)viewTag props:(const folly::dynamic &)props
+{
+#if !TARGET_OS_OSX
+  RCTAssertMainQueue();
+
+  RCTSurfacePresenter *surfacePresenter = self.surfacePresenter;
+  RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
+  UIView<RCTComponentViewProtocol> *componentView = [componentViewRegistry findComponentViewWithTag:viewTag];
+  NSSet<NSString *> *propKeysManagedByAnimated = [componentView propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN];
+  [surfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:viewTag props:props];
+  [componentView setPropKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN:propKeysManagedByAnimated];
+  // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
+  // so that's why we need to call `finalizeUpdates` here.
+  [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
+#endif // !TARGET_OS_OSX
 }
 
 @end

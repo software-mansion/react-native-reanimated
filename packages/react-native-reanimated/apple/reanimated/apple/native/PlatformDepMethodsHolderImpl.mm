@@ -2,11 +2,11 @@
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/REASlowAnimations.h>
+#import <reanimated/apple/REAUIView.h>
 #import <reanimated/apple/RNGestureHandlerStateManager.h>
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 #import <reanimated/apple/native/SetGestureState.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
-#import <reanimated/apple/REAUIView.h>
 
 #import <React/RCTComponentViewProtocol.h>
 #import <React/RCTComponentViewRegistry.h>
@@ -48,6 +48,14 @@ RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
   };
 
   return requestRender;
+}
+
+SynchronouslyUpdateUIPropsFunction makeSynchronouslyUpdateUIPropsFunction(REANodesManager *nodesManager)
+{
+  auto synchronouslyUpdateUIPropsFunction = [nodesManager](const int viewTag, const folly::dynamic &props) {
+    [nodesManager synchronouslyUpdateUIProps:viewTag props:props];
+  };
+  return synchronouslyUpdateUIPropsFunction;
 }
 
 GetAnimationTimestampFunction makeGetAnimationTimestamp()
@@ -104,12 +112,13 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
   return unsubscribeFromKeyboardEventsFunction;
 }
 
-ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager){
+ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
+{
   auto f = [=](Tag tag) {
     RCTSurfacePresenter *surfacePresenter = nodesManager.surfacePresenter;
     RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
     UIView<RCTComponentViewProtocol> *componentView = [componentViewRegistry findComponentViewWithTag:tag];
-    RNSScreenView* rnsscreenview = (RNSScreenView*)componentView;
+    RNSScreenView *rnsscreenview = (RNSScreenView *)componentView;
     [rnsscreenview setSnapshotAfterUpdates:YES];
   };
   return f;
@@ -118,8 +127,10 @@ ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nod
 PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleRegistry, REANodesManager *nodesManager)
 {
   auto requestRender = makeRequestRender(nodesManager);
-  
+
   auto forceScreenSnapshotFunction = makeForceScreenSnapshotFunction(nodesManager);
+
+  auto synchronouslyUpdateUIPropsFunction = makeSynchronouslyUpdateUIPropsFunction(nodesManager);
 
   auto getAnimationTimestamp = makeGetAnimationTimestamp();
 
@@ -142,6 +153,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       forceScreenSnapshotFunction,
+      synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,
       unregisterSensorFunction,

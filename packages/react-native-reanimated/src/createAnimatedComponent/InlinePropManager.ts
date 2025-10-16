@@ -7,7 +7,7 @@ import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type {
   AnimatedComponentProps,
-  AnimatedComponentType,
+  AnimatedComponentTypeInternal,
   IInlinePropManager,
   ViewInfo,
 } from './commonTypes';
@@ -129,7 +129,7 @@ export class InlinePropManager implements IInlinePropManager {
   _inlineProps: StyleProps = {};
 
   public attachInlineProps(
-    animatedComponent: AnimatedComponentType,
+    animatedComponent: AnimatedComponentTypeInternal,
     viewInfo: ViewInfo
   ) {
     const newInlineProps: Record<string, unknown> =

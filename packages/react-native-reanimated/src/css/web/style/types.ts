@@ -1,9 +1,8 @@
 'use strict';
-import type { Maybe } from '../../../common';
-import type { AnyRecord } from '../../types';
+import type { AnyRecord, Maybe, NonMutable } from '../../../common';
 
 export type ValueProcessor<V> = (
-  value: V
+  value: NonMutable<V>
 ) => Maybe<string> | Record<string, string>;
 
 type ProcessedProps<P extends AnyRecord> = {
@@ -52,7 +51,7 @@ type StyleBuilderPropertyConfig<
   | PropertyValueConfigBase<P>
   | RuleBuilder<P>
   | {
-      process?: ValueProcessor<Required<P>[K]>; // for custom value processing
+      process?: ValueProcessor<NonNullable<P[K]>>; // for custom value processing
       name?: string; // for custom property name
     };
 
@@ -62,15 +61,15 @@ type RuleBuilderPropertyConfig<
 > =
   | PropertyValueConfigBase<P>
   | {
-      process: ValueProcessor<Required<P>[K]>; // for custom value processing
+      process: ValueProcessor<NonNullable<P[K]>>; // for custom value processing
     };
 
 export type StyleBuilderConfig<P extends AnyRecord> = {
-  [K in keyof Required<P>]: StyleBuilderPropertyConfig<P, K>;
+  [K in keyof P]: StyleBuilderPropertyConfig<P, K>;
 };
 
 export type RuleBuilderConfig<P extends AnyRecord> = {
-  [K in keyof Required<P>]: RuleBuilderPropertyConfig<P, K>;
+  [K in keyof P]: RuleBuilderPropertyConfig<P, K>;
 };
 
 export type AnyBuilderConfig<P extends AnyRecord> =

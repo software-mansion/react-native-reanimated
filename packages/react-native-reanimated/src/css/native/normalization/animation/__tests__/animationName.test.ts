@@ -9,7 +9,7 @@ describe(normalizeAnimationKeyframes, () => {
 
   describe('offset normalization', () => {
     describe('when offset is valid', () => {
-      it.each([
+      test.each([
         ['from', 0],
         ['to', 1],
         ['0%', 0],
@@ -32,7 +32,7 @@ describe(normalizeAnimationKeyframes, () => {
     });
 
     describe('when offset type is invalid', () => {
-      it.each(['invalid', NaN, undefined, null])(
+      test.each(['invalid', NaN, undefined, null])(
         'throws an error for %p',
         (offset) => {
           const value = offset as CSSAnimationKeyframeSelector;
@@ -49,20 +49,26 @@ describe(normalizeAnimationKeyframes, () => {
     });
 
     describe('when offset is out of range', () => {
-      it.each([-1, 2, Infinity, '101%'])('throws an error for %p', (offset) => {
-        const value = offset as CSSAnimationKeyframeSelector;
-        expect(() =>
-          normalizeAnimationKeyframes({ [value]: { opacity: 1 } }, styleBuilder)
-        ).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(value))
-        );
-      });
+      test.each([-1, 2, Infinity, '101%'])(
+        'throws an error for %p',
+        (offset) => {
+          const value = offset as CSSAnimationKeyframeSelector;
+          expect(() =>
+            normalizeAnimationKeyframes(
+              { [value]: { opacity: 1 } },
+              styleBuilder
+            )
+          ).toThrow(
+            new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(value))
+          );
+        }
+      );
     });
   });
 
   describe('multi-offset normalization', () => {
     describe('when valid offsets are provided', () => {
-      it.each([
+      test.each([
         ['from, 50%, to', [0, 0.5, 1]],
         ['0%, 25%, 50%, 75%, 100%', [0, 0.25, 0.5, 0.75, 1]],
         ['10%, 30%, 20%', [0.1, 0.2, 0.3]],
@@ -87,7 +93,7 @@ describe(normalizeAnimationKeyframes, () => {
     });
 
     describe('when invalid offsets are provided', () => {
-      it.each([
+      test.each([
         ['from, invalid, to', ERROR_MESSAGES.invalidOffsetType('invalid')],
         ['0%, 25%, 101%, 75%, 100%', ERROR_MESSAGES.invalidOffsetRange('101%')],
         ['0, NaN, 1', ERROR_MESSAGES.invalidOffsetType(NaN)],
@@ -101,7 +107,7 @@ describe(normalizeAnimationKeyframes, () => {
   });
 
   describe('keyframesStyle', () => {
-    it('converts keyframes to style with properties with offset', () => {
+    test('converts keyframes to style with properties with offset', () => {
       expect(
         normalizeAnimationKeyframes(
           {
@@ -123,7 +129,7 @@ describe(normalizeAnimationKeyframes, () => {
       });
     });
 
-    it('handles nested style properties', () => {
+    test('handles nested style properties', () => {
       expect(
         normalizeAnimationKeyframes(
           {
@@ -149,7 +155,7 @@ describe(normalizeAnimationKeyframes, () => {
       });
     });
 
-    it('orders property values by offset', () => {
+    test('orders property values by offset', () => {
       expect(
         normalizeAnimationKeyframes(
           {
@@ -175,7 +181,7 @@ describe(normalizeAnimationKeyframes, () => {
       });
     });
 
-    it('treats array values as primitives', () => {
+    test('treats array values as primitives', () => {
       expect(
         normalizeAnimationKeyframes(
           {
@@ -195,7 +201,7 @@ describe(normalizeAnimationKeyframes, () => {
       });
     });
 
-    it('ignores undefined values', () => {
+    test('ignores undefined values', () => {
       expect(
         normalizeAnimationKeyframes(
           {
@@ -215,7 +221,7 @@ describe(normalizeAnimationKeyframes, () => {
       });
     });
 
-    it('ignores empty keyframes', () => {
+    test('ignores empty keyframes', () => {
       expect(
         normalizeAnimationKeyframes(
           {
@@ -235,7 +241,7 @@ describe(normalizeAnimationKeyframes, () => {
   });
 
   describe('keyframeTimingFunctions', () => {
-    it('moves timing functions from keyframes to keyframeTimingFunctions', () => {
+    test('moves timing functions from keyframes to keyframeTimingFunctions', () => {
       expect(
         normalizeAnimationKeyframes(
           {
@@ -269,7 +275,7 @@ describe(normalizeAnimationKeyframes, () => {
       });
     });
 
-    it('ignores timing function for keyframe with offset 1', () => {
+    test('ignores timing function for keyframe with offset 1', () => {
       expect(
         normalizeAnimationKeyframes(
           {

@@ -4,8 +4,12 @@ import { Component } from 'react';
 import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
+import type { AnyComponent, AnyRecord, PlainStyle } from '../../common';
 import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../../common';
-import type { ShadowNodeWrapper, WrapperRef } from '../../commonTypes';
+import type {
+  InternalHostInstance,
+  ShadowNodeWrapper,
+} from '../../commonTypes';
 import type {
   AnimatedComponentRef,
   IAnimatedComponentInternalBase,
@@ -16,7 +20,7 @@ import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
 import { CSSManager } from '../platform';
-import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
+import type { CSSStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
 
 export type AnimatedComponentProps = Record<string, unknown> & {
@@ -91,7 +95,7 @@ export default class AnimatedComponent<
       viewTag = viewInfo.viewTag ?? -1;
       viewName = viewInfo.viewName;
       shadowNodeWrapper = getShadowNodeWrapperFromRef(
-        this as WrapperRef,
+        this as InternalHostInstance,
         hostInstance
       );
     }

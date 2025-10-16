@@ -88,6 +88,12 @@ export default function AboutExample() {
               : 'Disabled'}
           </Text>
           <Text style={styles.text}>
+            <Text style={styles.bold}>IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS:</Text>{' '}
+            {getStaticFeatureFlagReanimated('IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS')
+              ? 'Enabled'
+              : 'Disabled'}
+          </Text>
+          <Text style={styles.text}>
             <Text style={styles.bold}>
               EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS:
             </Text>{' '}
@@ -100,6 +106,16 @@ export default function AboutExample() {
           <Text style={styles.text}>
             <Text style={styles.bold}>USE_SYNCHRONIZABLE_FOR_MUTABLES:</Text>{' '}
             {getStaticFeatureFlagReanimated('USE_SYNCHRONIZABLE_FOR_MUTABLES')
+              ? 'Enabled'
+              : 'Disabled'}
+          </Text>
+          <Text style={styles.text}>
+            <Text style={styles.bold}>
+              USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS:
+            </Text>{' '}
+            {getStaticFeatureFlagReanimated(
+              'USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS'
+            )
               ? 'Enabled'
               : 'Disabled'}
           </Text>

@@ -72,7 +72,7 @@ class ArrayInterpolatorFactory : public PropertyInterpolatorFactory {
 class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   explicit TransformsInterpolatorFactory(
-      const std::shared_ptr<TransformInterpolators> &interpolators)
+      const std::shared_ptr<TransformOperationInterpolators> &interpolators)
       : PropertyInterpolatorFactory(), interpolators_(interpolators) {}
 
   const CSSValue &getDefaultValue() const override {
@@ -89,8 +89,8 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
   }
 
  private:
-  static TransformMatrix3D &getIdentityMatrix() {
-    static TransformMatrix3D identityMatrix = TransformMatrix3D::Identity();
+  static TransformMatrix2D &getIdentityMatrix() {
+    static TransformMatrix2D identityMatrix = TransformMatrix2D();
     return identityMatrix;
   }
 
@@ -105,7 +105,7 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
     }
   };
 
-  const std::shared_ptr<TransformInterpolators> interpolators_;
+  const std::shared_ptr<TransformOperationInterpolators> interpolators_;
 };
 
 // Non-template function implementations
@@ -123,12 +123,13 @@ std::shared_ptr<PropertyInterpolatorFactory> transforms(
     const std::unordered_map<
         std::string,
         std::shared_ptr<TransformInterpolator>> &interpolators) {
-  TransformInterpolators result;
+  TransformOperationInterpolators result;
+  result.reserve(interpolators.size());
   for (const auto &[property, interpolator] : interpolators) {
-    result[getTransformOperationType(property)] = interpolator;
+    result.emplace(getTransformOperationType(property), interpolator);
   }
   return std::make_shared<TransformsInterpolatorFactory>(
-      std::make_shared<TransformInterpolators>(result));
+      std::make_shared<TransformOperationInterpolators>(std::move(result)));
 }
 
 } // namespace reanimated::css

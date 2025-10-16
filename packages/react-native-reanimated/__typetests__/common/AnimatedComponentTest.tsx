@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-expressions */
-/* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
@@ -55,7 +53,7 @@ function AnimatedComponentPropsTest() {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function AnimatedComponentPropsTestReanimatedProps(prop: any) {
-  class CustomClassComponent extends React.Component<never> {
+  class CustomClassComponent extends React.Component<unknown> {
     render() {
       return null;
     }

@@ -4,16 +4,16 @@ import { ERROR_MESSAGES, processStrokeDashArray } from '../stroke';
 
 describe(processStrokeDashArray, () => {
   describe('single value', () => {
-    it('converts length value to a single-element array', () => {
+    test('converts length value to a single-element array', () => {
       expect(processStrokeDashArray(10)).toEqual([10]);
       expect(processStrokeDashArray('10%')).toEqual(['10%']);
     });
 
-    it('returns "none" for "none" value', () => {
+    test('returns "none" for "none" value', () => {
       expect(processStrokeDashArray('none')).toEqual('none');
     });
 
-    it('throws an error for invalid values', () => {
+    test('throws an error for invalid values', () => {
       expect(() => processStrokeDashArray('invalid')).toThrow(
         new ReanimatedError(ERROR_MESSAGES.invalidDashArray('invalid'))
       );
@@ -21,14 +21,14 @@ describe(processStrokeDashArray, () => {
   });
 
   describe('array value', () => {
-    it('throws an error for invalid values', () => {
+    test('throws an error for invalid values', () => {
       expect(() => processStrokeDashArray([10, '10px'])).toThrow(
         new ReanimatedError(ERROR_MESSAGES.invalidDashArray([10, '10px']))
       );
     });
 
     describe('duplicates the array if it has an odd number of elements (only if there are more than 2 elements)', () => {
-      it.each([
+      test.each([
         [[10], [10]],
         [
           [10, 20],

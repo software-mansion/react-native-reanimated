@@ -1,4 +1,5 @@
 'use strict';
+
 import type { ValueUnpacker, WorkletFunction } from './workletTypes';
 
 declare global {
@@ -19,6 +20,7 @@ function __installUnpacker() {
     category?: string,
     remoteFunctionName?: string
   ): unknown {
+    // eslint-disable-next-line strict
     'use strict';
     const workletHash = objectToUnpack.__workletHash;
     if (workletHash !== undefined) {
@@ -68,7 +70,7 @@ function __installUnpacker() {
           : 'anonymous function';
         // eslint-disable-next-line reanimated/use-worklets-error
         throw new Error(`[Worklets] Tried to synchronously call a non-worklet ${label} on the UI thread.
-See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
+See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
       };
       fun.__remoteFunction = objectToUnpack;
       return fun;

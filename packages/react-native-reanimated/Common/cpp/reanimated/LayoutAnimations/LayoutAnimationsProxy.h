@@ -10,6 +10,8 @@
 #include <react/renderer/graphics/Transform.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
+#include <react/renderer/scheduler/Scheduler.h>
+#include <react/renderer/uimanager/UIManagerBinding.h>
 
 #include <memory>
 #include <stack>
@@ -28,6 +30,7 @@ struct LayoutAnimation {
   ShadowView finalView, currentView, startView;
   Tag parentTag;
   std::optional<double> opacity;
+  bool isViewAlreadyMounted = false;
   int count = 1;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 };
@@ -69,19 +72,37 @@ struct LayoutAnimationsProxy
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
   jsi::Runtime &uiRuntime_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
+  PreserveMountedTagsFunction preserveMountedTags_;
+#ifdef ANDROID
+  std::shared_ptr<UIManager> uiManager_;
+  std::shared_ptr<CallInvoker> jsInvoker_;
+#endif
+
   LayoutAnimationsProxy(
       std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager,
       SharedComponentDescriptorRegistry componentDescriptorRegistry,
       std::shared_ptr<const ContextContainer> contextContainer,
       jsi::Runtime &uiRuntime,
-      const std::shared_ptr<UIScheduler> uiScheduler)
-      : sharedTransitionManager_(
-            layoutAnimationsManager->sharedTransitionManager_),
-        layoutAnimationsManager_(layoutAnimationsManager),
+      const std::shared_ptr<UIScheduler> uiScheduler
+#ifdef ANDROID
+      ,
+      PreserveMountedTagsFunction filterUnmountedTagsFunction,
+      std::shared_ptr<UIManager> uiManager,
+      std::shared_ptr<CallInvoker> jsInvoker
+#endif
+      )
+      : layoutAnimationsManager_(layoutAnimationsManager),
         contextContainer_(contextContainer),
         componentDescriptorRegistry_(componentDescriptorRegistry),
         uiRuntime_(uiRuntime),
-        uiScheduler_(uiScheduler) {
+        uiScheduler_(uiScheduler)
+#ifdef ANDROID
+        ,
+        preserveMountedTags_(filterUnmountedTagsFunction),
+        uiManager_(uiManager),
+        jsInvoker_(jsInvoker)
+#endif // ANDROID
+  {
     lightNodes_[1] = std::make_shared<LightNode>();
     lightNodes_[11] = std::make_shared<LightNode>();
   }
@@ -234,7 +255,11 @@ struct LayoutAnimationsProxy
 
   const ComponentDescriptor &getComponentDescriptorForShadowView(
       const ShadowView &shadowView) const;
-
+#ifdef ANDROID
+  void restoreOpacityInCaseOfFlakyEnteringAnimation(SurfaceId surfaceId) const;
+  const ShadowNode *findInShadowTreeByTag(const ShadowNode &node, Tag tag)
+      const;
+#endif // ANDROID
   // MountingOverrideDelegate
 
   bool shouldOverridePullTransaction() const override;

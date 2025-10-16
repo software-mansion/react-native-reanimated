@@ -5,7 +5,7 @@ import { createSingleCSSAnimationProperties } from '../properties';
 
 describe(createSingleCSSAnimationProperties, () => {
   describe('when there is only a single animation in properties', () => {
-    it('returns properties of a single animation', () => {
+    test('returns properties of a single animation', () => {
       const animationTimingFunction = cubicBezier(0.4, 0, 0.2, 1);
       const config: ExistingCSSAnimationProperties = {
         animationName: {
@@ -38,7 +38,7 @@ describe(createSingleCSSAnimationProperties, () => {
       ]);
     });
 
-    it('returns undefined for unspecified properties', () => {
+    test('returns undefined for unspecified properties', () => {
       const config: ExistingCSSAnimationProperties = {
         animationName: { from: { opacity: 1 }, to: { opacity: 0.5 } },
       };
@@ -59,7 +59,7 @@ describe(createSingleCSSAnimationProperties, () => {
   });
 
   describe('when the config is an array of animations', () => {
-    it('uses provided properties if each animation is provided different values', () => {
+    test('uses provided properties if each animation is provided different values', () => {
       const bezier = cubicBezier(0.4, 0, 0.2, 1);
       const config: ExistingCSSAnimationProperties = {
         animationName: [
@@ -105,7 +105,7 @@ describe(createSingleCSSAnimationProperties, () => {
       ]);
     });
 
-    it('uses the same property value if only one value is provided and undefined for unspecified properties', () => {
+    test('uses the same property value if only one value is provided and undefined for unspecified properties', () => {
       const config: ExistingCSSAnimationProperties = {
         animationName: [
           { from: { opacity: 1 }, to: { opacity: 0.5 } },
@@ -147,7 +147,7 @@ describe(createSingleCSSAnimationProperties, () => {
       ]);
     });
 
-    it('cycles through the provided values if there are more animations than values', () => {
+    test('cycles through the provided values if there are more animations than values', () => {
       const config: ExistingCSSAnimationProperties = {
         animationName: [
           { from: { opacity: 1 }, to: { opacity: 0.5 } },

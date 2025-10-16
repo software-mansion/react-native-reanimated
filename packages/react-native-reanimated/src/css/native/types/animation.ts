@@ -1,10 +1,10 @@
 'use strict';
+import type { PlainStyle } from '../../../common';
 import type { NormalizedCSSTimingFunction } from '../../easing';
 import type {
   CSSAnimationDirection,
   CSSAnimationFillMode,
   CSSAnimationPlayState,
-  PlainStyle,
 } from '../../types';
 
 type CSSKeyframesStyleValue<V> = {

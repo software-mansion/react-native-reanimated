@@ -1,6 +1,7 @@
 'use strict';
+import type { PlainStyle } from '../../../common';
 import { CSSKeyframesRuleBase } from '../../models';
-import type { CSSAnimationKeyframes, PlainStyle } from '../../types';
+import type { CSSAnimationKeyframes } from '../../types';
 import { processKeyframeDefinitions } from '../animationParser';
 
 export default class CSSKeyframesRuleImpl<

@@ -4,6 +4,7 @@
 #include <jsi/jsi.h>
 #include <react/renderer/core/ReactPrimitives.h>
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -29,8 +30,15 @@ using MeasureFunction = std::function<
 
 using RequestRenderFunction =
     std::function<void(std::function<void(const double)>)>;
+#ifdef ANDROID
 using SynchronouslyUpdateUIPropsFunction =
     std::function<void(const std::vector<int> &, const std::vector<double> &)>;
+#elif __APPLE__
+using SynchronouslyUpdateUIPropsFunction =
+    std::function<void(const int, const folly::dynamic &)>;
+#endif // ANDROID
+using PreserveMountedTagsFunction =
+    std::function<std::optional<std::unique_ptr<int[]>>(std::vector<int> &)>;
 using GetAnimationTimestampFunction = std::function<double(void)>;
 
 using ProgressLayoutAnimationFunction =
@@ -50,11 +58,12 @@ using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
 struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef ANDROID
-  SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
+  PreserveMountedTagsFunction filterUnmountedTagsFunction;
 #endif // ANDROID
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshotFunction;
 #endif
+  SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   GetAnimationTimestampFunction getAnimationTimestamp;
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;

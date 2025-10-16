@@ -8,7 +8,6 @@
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registries/StaticPropsRegistry.h>
-#include <reanimated/CSS/svg/configs/init.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
@@ -249,6 +248,7 @@ class ReanimatedModuleProxy
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
 
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
+  const PreserveMountedTagsFunction filterUnmountedTagsFunction_;
 
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
