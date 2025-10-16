@@ -38,8 +38,9 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 {
   AssertJavaScriptQueue();
   if constexpr (worklets::StaticFeatureFlags::getFlag("IOS_DYNAMIC_FRAMERATE_ENABLED")) {
+    bool supportsProMotion = false;
 #if !TARGET_OS_OSX
-    bool supportsProMotion = [UIScreen mainScreen].maximumFramesPerSecond > 60;
+    supportsProMotion = [UIScreen mainScreen].maximumFramesPerSecond > 60;
 #endif // !TARGET_OS_OSX
 
     SEL frameCallback = supportsProMotion ? @selector(executeQueueForProMotion:) : @selector(executeQueue:);
