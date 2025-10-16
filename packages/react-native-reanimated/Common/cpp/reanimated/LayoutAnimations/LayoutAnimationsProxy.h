@@ -30,8 +30,8 @@ struct LayoutAnimation {
   ShadowView finalView, currentView, startView;
   Tag parentTag;
   std::optional<double> opacity;
-  bool isViewAlreadyMounted = false;
   int count = 1;
+  bool isViewAlreadyMounted = false;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 };
 
@@ -91,7 +91,9 @@ struct LayoutAnimationsProxy
       std::shared_ptr<CallInvoker> jsInvoker
 #endif
       )
-      : layoutAnimationsManager_(layoutAnimationsManager),
+      : sharedTransitionManager_(
+            layoutAnimationsManager->sharedTransitionManager_),
+        layoutAnimationsManager_(layoutAnimationsManager),
         contextContainer_(contextContainer),
         componentDescriptorRegistry_(componentDescriptorRegistry),
         uiRuntime_(uiRuntime),
