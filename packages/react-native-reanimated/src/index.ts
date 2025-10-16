@@ -14,6 +14,7 @@ import * as Animated from './Animated';
 
 export default Animated;
 
+export { createAnimatedComponent } from './Animated';
 export type {
   DecayAnimation,
   DelayAnimation,
