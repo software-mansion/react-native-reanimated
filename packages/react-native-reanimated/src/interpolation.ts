@@ -191,29 +191,35 @@ export function interpolate(
 
   const extrapolationConfig = validateType(type);
   const length = inputRange.length;
-  const narrowedInput: InterpolationNarrowedInput = {
-    leftEdgeInput: inputRange[0],
-    rightEdgeInput: inputRange[1],
-    leftEdgeOutput: outputRange[0],
-    rightEdgeOutput: outputRange[1],
-  };
-  if (length > 2) {
-    if (x > inputRange[length - 1]) {
-      narrowedInput.leftEdgeInput = inputRange[length - 2];
-      narrowedInput.rightEdgeInput = inputRange[length - 1];
-      narrowedInput.leftEdgeOutput = outputRange[length - 2];
-      narrowedInput.rightEdgeOutput = outputRange[length - 1];
-    } else {
-      for (let i = 1; i < length; ++i) {
-        if (x <= inputRange[i]) {
-          narrowedInput.leftEdgeInput = inputRange[i - 1];
-          narrowedInput.rightEdgeInput = inputRange[i];
-          narrowedInput.leftEdgeOutput = outputRange[i - 1];
-          narrowedInput.rightEdgeOutput = outputRange[i];
-          break;
-        }
+  let narrowedInput: InterpolationNarrowedInput;
+
+  if (x > inputRange[length - 1]) {
+    narrowedInput = {
+      leftEdgeInput: inputRange[length - 2],
+      rightEdgeInput: inputRange[length - 1],
+      leftEdgeOutput: outputRange[length - 2],
+      rightEdgeOutput: outputRange[length - 1],
+    };
+  } else {
+    let left = 1;
+    let right = length - 1;
+
+    while (left < right) {
+      const mid = Math.floor((left + right) / 2);
+      if (x <= inputRange[mid]) {
+        right = mid;
+      } else {
+        left = mid + 1;
       }
     }
+
+    const segmentIndex = left;
+    narrowedInput = {
+      leftEdgeInput: inputRange[segmentIndex - 1],
+      rightEdgeInput: inputRange[segmentIndex],
+      leftEdgeOutput: outputRange[segmentIndex - 1],
+      rightEdgeOutput: outputRange[segmentIndex],
+    };
   }
 
   return internalInterpolate(x, narrowedInput, extrapolationConfig);

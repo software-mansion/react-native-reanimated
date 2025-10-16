@@ -1,6 +1,7 @@
 'use strict';
+import type { PlainStyle } from '../../../common';
 import { CSSKeyframesRuleBase } from '../../models';
-import type { CSSAnimationKeyframes, PlainStyle } from '../../types';
+import type { CSSAnimationKeyframes } from '../../types';
 import { normalizeAnimationKeyframes } from '../normalization';
 import { getStyleBuilder } from '../registry';
 import type { NormalizedCSSAnimationKeyframesConfig } from '../types';

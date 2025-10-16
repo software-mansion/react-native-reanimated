@@ -32,6 +32,7 @@ import PagerExample from './CustomHandler/PagerExample';
 import DispatchCommandExample from './DispatchCommandExample';
 import DragAndSnapExample from './DragAndSnapExample';
 import DynamicColorIOSExample from './DynamicColorIOSExample';
+import PlatformColorExample from './PlatformColorExample';
 import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
 import ExtrapolationExample from './ExtrapolationExample';
@@ -588,6 +589,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'DynamicColorIOS',
     screen: DynamicColorIOSExample,
     icon: '🌗',
+  },
+  PlatformColorExample: {
+    title: 'PlatformColor',
+    screen: PlatformColorExample,
+    icon: '🎨',
   },
 
   // Old examples
