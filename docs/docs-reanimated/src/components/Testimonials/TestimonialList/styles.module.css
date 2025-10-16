@@ -6,7 +6,9 @@
 .testimonialSlide {
   opacity: 0;
   visibility: hidden;
-  transition: visibility 0.4s, opacity 0.4s ease-in-out;
+  transition:
+    visibility 0.4s,
+    opacity 0.4s ease-in-out;
 }
 
 .activeTestimonialSlide {

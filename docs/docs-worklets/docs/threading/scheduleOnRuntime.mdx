@@ -26,7 +26,7 @@ function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
   workletRuntime: WorkletRuntime,
   worklet: (...args: Args) => ReturnValue,
   ...args: Args
-): void
+): void;
 ```
 
 </details>
@@ -39,11 +39,11 @@ The worklet runtime to schedule the worklet on.
 
 ### worklet
 
-A reference to a function you want to execute on the [Worklet Runtime](/docs/fundamentals/glossary#worklet-runtime).
+A reference to a function you want to execute on the [Worklet Runtime](/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime).
 
 ### args
 
-Arguments to the function you want to execute on the [Worklet Runtime](/docs/fundamentals/glossary#worklet-runtime).
+Arguments to the function you want to execute on the [Worklet Runtime](/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime).
 
 ## Remarks
 
@@ -59,8 +59,8 @@ import { createWorkletRuntime, scheduleOnRuntime } from 'react-native-worklets';
 const workletRuntime = createWorkletRuntime({ name: 'background' });
 
 runOnUI(() => {
-  scheduleOnRuntime(workletRuntime, (greeting: string) => { 
-    console.log(`${greeting} from the background Worklet Runtime`); 
+  scheduleOnRuntime(workletRuntime, (greeting: string) => {
+    console.log(`${greeting} from the background Worklet Runtime`);
   }, 'Hello'); // This will throw an error outside of Bundle Mode 🚨
 });
 ```

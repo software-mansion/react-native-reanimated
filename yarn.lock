@@ -3484,24 +3484,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docusaurus/module-type-aliases@npm:3.8.1":
-  version: 3.8.1
-  resolution: "@docusaurus/module-type-aliases@npm:3.8.1"
-  dependencies:
-    "@docusaurus/types": "npm:3.8.1"
-    "@types/history": "npm:^4.7.11"
-    "@types/react": "npm:*"
-    "@types/react-router-config": "npm:*"
-    "@types/react-router-dom": "npm:*"
-    react-helmet-async: "npm:@slorber/react-helmet-async@1.3.0"
-    react-loadable: "npm:@docusaurus/react-loadable@6.0.0"
-  peerDependencies:
-    react: "*"
-    react-dom: "*"
-  checksum: 10/db3a23763837fc0155ec25053d36179ddd213cca2aeba5f1372894f0e5be82719d625f53057d5e9c5cef1fa862e37fe754a1a83a3005c9e1d22b6bb80c313024
-  languageName: node
-  linkType: hard
-
 "@docusaurus/module-type-aliases@npm:3.9.1, @docusaurus/module-type-aliases@npm:^3.8.1":
   version: 3.9.1
   resolution: "@docusaurus/module-type-aliases@npm:3.9.1"
@@ -3713,7 +3695,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docusaurus/preset-classic@npm:^3.8.1":
+"@docusaurus/preset-classic@npm:3.9.1, @docusaurus/preset-classic@npm:^3.8.1":
   version: 3.9.1
   resolution: "@docusaurus/preset-classic@npm:3.9.1"
   dependencies:
@@ -3836,30 +3818,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docusaurus/tsconfig@npm:3.8.1":
-  version: 3.8.1
-  resolution: "@docusaurus/tsconfig@npm:3.8.1"
-  checksum: 10/86ebebddce95acb1b87239ffc8335f1be72d8eba43b49c3b02107cc1b1d6c4d836e49bb57b505b7601d97a2f5d6596474fbd7b458eff342a4adf05686cadadfc
-  languageName: node
-  linkType: hard
-
-"@docusaurus/types@npm:3.8.1":
-  version: 3.8.1
-  resolution: "@docusaurus/types@npm:3.8.1"
-  dependencies:
-    "@mdx-js/mdx": "npm:^3.0.0"
-    "@types/history": "npm:^4.7.11"
-    "@types/react": "npm:*"
-    commander: "npm:^5.1.0"
-    joi: "npm:^17.9.2"
-    react-helmet-async: "npm:@slorber/react-helmet-async@1.3.0"
-    utility-types: "npm:^3.10.0"
-    webpack: "npm:^5.95.0"
-    webpack-merge: "npm:^5.9.0"
-  peerDependencies:
-    react: ^18.0.0 || ^19.0.0
-    react-dom: ^18.0.0 || ^19.0.0
-  checksum: 10/5c1ad8f888d650edd56f57284a6913c2f69aaa201b4757c81f1e71ee41b3b9957db7a1d3f1d243326d1000d3b3157487f91ca1f3a7c1970ea2aa18f88aa4b011
+"@docusaurus/tsconfig@npm:3.9.1":
+  version: 3.9.1
+  resolution: "@docusaurus/tsconfig@npm:3.9.1"
+  checksum: 10/e37babfa576cf9d95a9dfaa04d159befea46582eff38c748794d7b0369b605615ecfbdcbf2d8c870e6766e28a02f30557889653155b2c6f881d603a60519c74f
   languageName: node
   linkType: hard
 
@@ -11938,7 +11900,7 @@ __metadata:
     esbuild: "npm:^0.17.11"
     eslint: "npm:^9.29.0"
     eslint-plugin-standard: "npm:^5.0.0"
-    prettier: "npm:^3.3.3"
+    prettier: "npm:3.6.2"
     tsc-watch: "npm:^6.0.0"
     typescript: "npm:5.8.3"
   languageName: unknown
@@ -13511,7 +13473,7 @@ __metadata:
     jest: "npm:^29.6.3"
     madge: "npm:^5.0.1"
     patch-package: "npm:^8.0.0"
-    prettier: "npm:^3.3.3"
+    prettier: "npm:3.6.2"
     react: "npm:19.1.1"
     react-native: "npm:0.82.0"
     react-native-gesture-handler: "npm:2.28.0"
@@ -15005,12 +14967,12 @@ __metadata:
     "@babel/preset-react": "npm:7.27.1"
     "@dnd-kit/core": "npm:^6.3.1"
     "@dnd-kit/modifiers": "npm:^9.0.0"
-    "@docusaurus/core": "npm:^3.8.1"
-    "@docusaurus/module-type-aliases": "npm:^3.8.1"
-    "@docusaurus/plugin-debug": "npm:^3.8.1"
-    "@docusaurus/preset-classic": "npm:^3.8.1"
-    "@docusaurus/tsconfig": "npm:3.8.1"
-    "@docusaurus/types": "npm:3.8.1"
+    "@docusaurus/core": "npm:3.9.1"
+    "@docusaurus/module-type-aliases": "npm:3.9.1"
+    "@docusaurus/plugin-debug": "npm:3.9.1"
+    "@docusaurus/preset-classic": "npm:3.9.1"
+    "@docusaurus/tsconfig": "npm:3.9.1"
+    "@docusaurus/types": "npm:3.9.1"
     "@emotion/react": "npm:11.14.0"
     "@emotion/styled": "npm:11.14.0"
     "@mdx-js/react": "npm:3.0.0"
@@ -15029,7 +14991,7 @@ __metadata:
     esbuild-register: "npm:3.5.0"
     eslint-plugin-mdx: "npm:2.2.0"
     glob: "npm:10.4.2"
-    prettier: "npm:2.8.4"
+    prettier: "npm:3.6.2"
     prism-react-renderer: "npm:2.1.0"
     raf: "npm:3.4.1"
     raw-loader: "npm:4.0.2"
@@ -15038,12 +15000,13 @@ __metadata:
     react-dom: "npm:^19.1.1"
     react-native: "npm:0.71.4"
     react-native-gesture-handler: "npm:^2.28.0"
-    react-native-reanimated: "npm:4.0.0"
+    react-native-reanimated: "npm:4.2.0-nightly-20251015-0297d2990"
     react-native-svg: "npm:15.12.0"
     react-native-web: "npm:^0.21.1"
-    react-native-worklets: "npm:0.4.0"
+    react-native-worklets: "npm:0.7.0-nightly-20251015-0297d2990"
     source-map: "npm:0.7.4"
     source-map-loader: "npm:4.0.1"
+    typescript: "npm:5.8.3"
     usehooks-ts: "npm:2.9.1"
     webpack-cli: "npm:5.0.1"
   languageName: unknown
@@ -15059,12 +15022,14 @@ __metadata:
     "@babel/preset-env": "npm:7.24.4"
     "@babel/preset-flow": "npm:7.25.9"
     "@babel/preset-react": "npm:7.27.1"
-    "@docusaurus/core": "npm:^3.8.1"
-    "@docusaurus/module-type-aliases": "npm:3.8.1"
-    "@docusaurus/plugin-debug": "npm:^3.8.1"
-    "@docusaurus/preset-classic": "npm:^3.8.1"
-    "@docusaurus/tsconfig": "npm:3.8.1"
-    "@docusaurus/types": "npm:3.8.1"
+    "@dnd-kit/core": "npm:^6.3.1"
+    "@dnd-kit/modifiers": "npm:^9.0.0"
+    "@docusaurus/core": "npm:3.9.1"
+    "@docusaurus/module-type-aliases": "npm:3.9.1"
+    "@docusaurus/plugin-debug": "npm:3.9.1"
+    "@docusaurus/preset-classic": "npm:3.9.1"
+    "@docusaurus/tsconfig": "npm:3.9.1"
+    "@docusaurus/types": "npm:3.9.1"
     "@emotion/react": "npm:11.14.0"
     "@emotion/styled": "npm:11.14.0"
     "@mdx-js/react": "npm:3.0.0"
@@ -15083,7 +15048,7 @@ __metadata:
     esbuild-register: "npm:3.5.0"
     eslint-plugin-mdx: "npm:2.2.0"
     glob: "npm:10.4.2"
-    prettier: "npm:2.8.4"
+    prettier: "npm:3.6.2"
     prism-react-renderer: "npm:2.1.0"
     raf: "npm:3.4.1"
     raw-loader: "npm:4.0.2"
@@ -15092,12 +15057,13 @@ __metadata:
     react-dom: "npm:^19.1.1"
     react-native: "npm:0.71.4"
     react-native-gesture-handler: "npm:^2.28.0"
-    react-native-reanimated: "npm:4.0.0"
+    react-native-reanimated: "npm:4.2.0-nightly-20251015-0297d2990"
     react-native-svg: "npm:15.12.0"
     react-native-web: "npm:^0.21.1"
-    react-native-worklets: "npm:0.4.0"
+    react-native-worklets: "npm:0.7.0-nightly-20251015-0297d2990"
     source-map: "npm:0.7.4"
     source-map-loader: "npm:4.0.1"
+    typescript: "npm:5.8.3"
     usehooks-ts: "npm:2.9.1"
     webpack-cli: "npm:5.0.1"
   languageName: unknown
@@ -16387,7 +16353,7 @@ __metadata:
     esbuild: "npm:^0.25.0"
     eslint: "npm:^9.29.0"
     jest: "npm:^29.7.0"
-    prettier: "npm:^3.3.3"
+    prettier: "npm:3.6.2"
     ts-jest: "npm:^29.1.2"
     typescript: "npm:5.8.3"
   languageName: unknown
@@ -17260,7 +17226,7 @@ __metadata:
   resolution: "fabric-example@workspace:apps/fabric-example"
   dependencies:
     common-app: "workspace:*"
-    prettier: "npm:^3.3.3"
+    prettier: "npm:3.6.2"
     react-native: "npm:0.82.0"
   languageName: unknown
   linkType: soft
@@ -21830,7 +21796,7 @@ __metadata:
     "@react-native/metro-config": "npm:0.79.6"
     "@react-native/typescript-config": "npm:0.79.6"
     common-app: "workspace:*"
-    prettier: "npm:^3.3.3"
+    prettier: "npm:3.6.2"
     react: "npm:19.0.0"
     react-native: "npm:0.79.6"
     react-native-macos: "patch:react-native-macos@npm%3A0.79.0#~/.yarn/patches/react-native-macos-npm-0.79.0-449930c6bc.patch"
@@ -25089,7 +25055,7 @@ __metadata:
     expo: "npm:~48.0.10"
     next: "npm:latest"
     next-compose-plugins: "npm:^2.2.1"
-    prettier: "npm:^3.3.3"
+    prettier: "npm:3.6.2"
     react: "npm:19.1.1"
     react-dom: "npm:19.1.1"
     react-native-reanimated: "workspace:*"
@@ -27332,34 +27298,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier-plugin-jsdoc@npm:^1.3.0":
-  version: 1.3.2
-  resolution: "prettier-plugin-jsdoc@npm:1.3.2"
+"prettier-plugin-jsdoc@npm:1.3.3":
+  version: 1.3.3
+  resolution: "prettier-plugin-jsdoc@npm:1.3.3"
   dependencies:
     binary-searching: "npm:^2.0.5"
     comment-parser: "npm:^1.4.0"
     mdast-util-from-markdown: "npm:^2.0.0"
   peerDependencies:
     prettier: ^3.0.0
-  checksum: 10/e39f6bb52bf788b7eb261fe7f035e21d7545fae3dad39b3da60492f60cdafcbed7be041a608ce939d0b224e8b917341889a4df849701b795134e61945977847f
+  checksum: 10/916d51e94a4289c0d8190e0692e9af71c99fea03746cff0a49d50802c6b8bc3530b9f102eb2a839b850b64ec9a0dffa45071bc822191284b72d76a3e0f3a81d3
   languageName: node
   linkType: hard
 
-"prettier@npm:2.8.4":
-  version: 2.8.4
-  resolution: "prettier@npm:2.8.4"
-  bin:
-    prettier: bin-prettier.js
-  checksum: 10/57aedf9eea2ea3a4091c7867c8192d268614c395826c323c1fee7841b3ebab6b299c034b5a083f908d8a995ba7fc5c633ecc4b90c8fd56615c0c054a73d8c6b3
-  languageName: node
-  linkType: hard
-
-"prettier@npm:^3.3.3":
-  version: 3.3.3
-  resolution: "prettier@npm:3.3.3"
+"prettier@npm:3.6.2":
+  version: 3.6.2
+  resolution: "prettier@npm:3.6.2"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10/5beac1f30b5b40162532b8e2f7c3a4eb650910a2695e9c8512a62ffdc09dae93190c29db9107fa7f26d1b6c71aad3628ecb9b5de1ecb0911191099be109434d7
+  checksum: 10/1213691706bcef1371d16ef72773c8111106c3533b660b1cc8ec158bd109cdf1462804125f87f981f23c4a3dba053b6efafda30ab0114cc5b4a725606bb9ff26
   languageName: node
   linkType: hard
 
@@ -28189,15 +28146,15 @@ __metadata:
     husky: "npm:^9.0.11"
     lint-staged: "npm:^15.2.2"
     node-fetch: "npm:^3.3.2"
-    prettier: "npm:^3.3.3"
-    prettier-plugin-jsdoc: "npm:^1.3.0"
+    prettier: "npm:3.6.2"
+    prettier-plugin-jsdoc: "npm:1.3.3"
     typescript: "npm:5.8.3"
   languageName: unknown
   linkType: soft
 
-"react-native-reanimated@npm:4.0.0":
-  version: 4.0.0
-  resolution: "react-native-reanimated@npm:4.0.0"
+"react-native-reanimated@npm:4.2.0-nightly-20251015-0297d2990":
+  version: 4.2.0-nightly-20251015-0297d2990
+  resolution: "react-native-reanimated@npm:4.2.0-nightly-20251015-0297d2990"
   dependencies:
     react-native-is-edge-to-edge: "npm:^1.2.1"
     semver: "npm:7.7.2"
@@ -28205,8 +28162,8 @@ __metadata:
     "@babel/core": ^7.0.0-0
     react: "*"
     react-native: "*"
-    react-native-worklets: ">=0.3.0"
-  checksum: 10/bf7e10967e9a205934bfa507282f9d3923f5a1fef3896e6e804ed20ea9afcae1f6ce3c96be8674b482ad6296e2c419718027cf75b6f86b350b7229107e967756
+    react-native-worklets: 0.7.0-nightly-20251015-0297d2990
+  checksum: 10/7fc7151c112db8ce61f2a85470752f63e7c275a08d8ee1372e2bbe5403a4f3148db0623ff96591a2811edffc072d135d391dd3e0c66beca44df809a223c064ea
   languageName: node
   linkType: hard
 
@@ -28258,7 +28215,7 @@ __metadata:
     jest: "npm:^29.0.0"
     knip: "npm:^5.61.3"
     madge: "npm:^5.0.1"
-    prettier: "npm:^3.3.3"
+    prettier: "npm:3.6.2"
     react: "npm:19.1.1"
     react-native: "npm:0.82.0"
     react-native-builder-bob: "npm:0.40.13"
@@ -28368,9 +28325,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-worklets@npm:0.4.0":
-  version: 0.4.0
-  resolution: "react-native-worklets@npm:0.4.0"
+"react-native-worklets@npm:0.7.0-nightly-20251015-0297d2990":
+  version: 0.7.0-nightly-20251015-0297d2990
+  resolution: "react-native-worklets@npm:0.7.0-nightly-20251015-0297d2990"
   dependencies:
     "@babel/plugin-transform-arrow-functions": "npm:^7.0.0-0"
     "@babel/plugin-transform-class-properties": "npm:^7.0.0-0"
@@ -28382,11 +28339,12 @@ __metadata:
     "@babel/plugin-transform-unicode-regex": "npm:^7.0.0-0"
     "@babel/preset-typescript": "npm:^7.16.7"
     convert-source-map: "npm:^2.0.0"
+    semver: "npm:7.7.2"
   peerDependencies:
     "@babel/core": ^7.0.0-0
     react: "*"
     react-native: "*"
-  checksum: 10/c0cdf0356eeab1851701d380099913944081fb7560e58c715babfd90edbc320a93578c22b35498f34d623640a271cee541f240d004fbc05ec556f583fdc0678b
+  checksum: 10/b897496dae743ad36fe5b55e1330a84c9be281e159d2b52ead4cbb848c8fcb4d1d07837545204ad7e569d3df7753e8f2d95c88bd3630b23230854e9de84f71db
   languageName: node
   linkType: hard
 
@@ -28417,7 +28375,7 @@ __metadata:
     jest: "npm:^29.0.0"
     knip: "npm:^5.61.3"
     madge: "npm:^5.0.1"
-    prettier: "npm:^3.3.3"
+    prettier: "npm:3.6.2"
     react: "npm:19.1.1"
     react-native: "npm:0.82.0"
     react-native-builder-bob: "npm:0.40.13"
@@ -31957,7 +31915,7 @@ __metadata:
     babel-jest: "npm:^29.6.3"
     eslint: "npm:^9.29.0"
     jest: "npm:^29.6.3"
-    prettier: "npm:^3.3.3"
+    prettier: "npm:3.6.2"
     react: "npm:19.1.0"
     react-native: "npm:react-native-tvos@0.81.1-1"
     react-native-reanimated: "workspace:*"
@@ -33138,7 +33096,7 @@ __metadata:
     "@stylexjs/babel-plugin": "npm:^0.10.0"
     common-app: "workspace:*"
     expo: "npm:^54.0.0-preview.13"
-    prettier: "npm:^3.3.3"
+    prettier: "npm:3.6.2"
     react-dom: "npm:19.1.1"
     react-native: "npm:0.82.0"
     react-native-web: "npm:~0.21.1"

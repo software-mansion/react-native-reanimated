@@ -81,7 +81,7 @@
     "jest": "^29.0.0",
     "knip": "^5.61.3",
     "madge": "^5.0.1",
-    "prettier": "^3.3.3",
+    "prettier": "3.6.2",
     "react": "19.1.1",
     "react-native": "0.82.0",
     "react-native-builder-bob": "0.40.13",

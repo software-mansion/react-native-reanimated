@@ -21,7 +21,7 @@
   "devDependencies": {
     "@expo/metro-runtime": "~6.1.1",
     "@stylexjs/babel-plugin": "^0.10.0",
-    "prettier": "^3.3.3",
+    "prettier": "3.6.2",
     "serve": "^14.2.3"
   },
   "installConfig": {
