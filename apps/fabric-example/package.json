@@ -15,7 +15,7 @@
     "react-native": "0.82.0"
   },
   "devDependencies": {
-    "prettier": "^3.3.3"
+    "prettier": "3.6.2"
   },
   "engines": {
     "node": ">=20.13.0"
