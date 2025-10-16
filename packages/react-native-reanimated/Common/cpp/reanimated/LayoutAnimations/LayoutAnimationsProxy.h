@@ -118,7 +118,7 @@ struct LayoutAnimationsProxy
       const PropsParserContext &propsParserContext,
       SurfaceId surfaceId) const;
 
-  void cleanupSharedTransitions(
+  void cleanupAnimations(
       ShadowViewMutationList &filteredMutations,
       const PropsParserContext &propsParserContext,
       SurfaceId surfaceId) const;

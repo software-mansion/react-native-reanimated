@@ -101,16 +101,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     exiting_.clear();
   }
 
-  cleanupSharedTransitions(filteredMutations, propsParserContext, surfaceId);
-
   addOngoingAnimations(surfaceId, filteredMutations);
 
-  for (const auto tag : finishedAnimationTags_) {
-    auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
-    layoutAnimations_.erase(tag);
-    updateMap.erase(tag);
-  }
-  finishedAnimationTags_.clear();
+  cleanupAnimations(filteredMutations, propsParserContext, surfaceId);
 
   transitionMap_.clear();
   transitions_.clear();
@@ -560,7 +553,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
   }
 }
 
-void LayoutAnimationsProxy::cleanupSharedTransitions(
+void LayoutAnimationsProxy::cleanupAnimations(
     ShadowViewMutationList &filteredMutations,
     const PropsParserContext &propsParserContext,
     SurfaceId surfaceId) const {
@@ -592,6 +585,13 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
     }
   }
   sharedContainersToRemove_.clear();
+
+  for (const auto tag : finishedAnimationTags_) {
+    auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+    layoutAnimations_.erase(tag);
+    updateMap.erase(tag);
+  }
+  finishedAnimationTags_.clear();
 }
 
 void LayoutAnimationsProxy::hideTransitioningViews(
@@ -731,9 +731,6 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
   }
   finishedAnimationTags_.push_back(tag);
   auto surfaceId = layoutAnimation.finalView.surfaceId;
-  auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
-  layoutAnimations_.erase(tag);
-  updateMap.erase(tag);
 
   if (sharedTransitionManager_->tagToName_.contains(tag)) {
     auto sharedTag = sharedTransitionManager_->tagToName_[tag];
