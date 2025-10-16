@@ -196,11 +196,11 @@ export default function useEnteringExitingPlayground() {
   const code = `
   Entering:
     ${entering.animation}${
-    entering.delay > 0
-      ? `
+      entering.delay > 0
+        ? `
     .delay(${entering.delay})`
-      : ''
-  }
+        : ''
+    }
      ${
        //   ${entering.isSpringBased
        //     ? `.springify()
@@ -214,11 +214,11 @@ export default function useEnteringExitingPlayground() {
 
   Exiting:
     ${exiting.animation}${
-    exiting.delay > 0
-      ? `
+      exiting.delay > 0
+        ? `
     .delay(${exiting.delay})`
-      : ''
-  }
+        : ''
+    }
      ${
        //   ${exiting.isSpringBased
        //     ? `.springify()

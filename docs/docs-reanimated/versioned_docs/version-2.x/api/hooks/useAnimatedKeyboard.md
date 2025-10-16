@@ -29,7 +29,7 @@ Optional object containing additional configuration.
 
 ### Returns
 
-Hook `useAnimatedKeyboard` returns an instance of [[AnimatedKeyboardInfo](#animatedkeyboard-object)];
+Hook `useAnimatedKeyboard` returns an instance of [AnimatedKeyboardInfo](#animatedkeyboardinfo-object);
 
 ### Types
 

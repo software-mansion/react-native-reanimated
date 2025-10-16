@@ -142,7 +142,8 @@
   position: absolute;
   top: 0;
 
-  background: linear-gradient(
+  background:
+    linear-gradient(
       357.23deg,
       var(--swm-white) 2.25%,
       rgba(252, 252, 255, 0) 53.95%

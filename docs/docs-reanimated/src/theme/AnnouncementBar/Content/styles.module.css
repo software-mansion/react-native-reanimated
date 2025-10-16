@@ -51,7 +51,9 @@ a.link {
   padding: 4px 12px;
   border: 1px solid var(--swm-appjs-2025-primary);
   background-color: var(--swm-appjs-2025-primary);
-  transition: border 0.2s ease-in-out, background-color 0.2s ease-in-out;
+  transition:
+    border 0.2s ease-in-out,
+    background-color 0.2s ease-in-out;
   grid-area: link;
   margin-left: auto;
   margin-right: 64px;

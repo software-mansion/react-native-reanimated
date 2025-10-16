@@ -24,7 +24,7 @@
     "@react-native/eslint-config": "0.75.4",
     "@react-native/metro-config": "0.75.4",
     "@react-native/typescript-config": "0.75.4",
-    "prettier": "^3.3.3"
+    "prettier": "3.6.2"
   },
   "engines": {
     "node": ">=20.13.0"
