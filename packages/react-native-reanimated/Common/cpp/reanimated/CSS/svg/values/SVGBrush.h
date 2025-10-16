@@ -14,8 +14,8 @@ enum class SVGBrushType {
 
 struct SVGBrush : public CSSColorBase<SVGBrushType, SVGBrush> {
   using CSSColorBase<SVGBrushType, SVGBrush>::CSSColorBase;
-  using CSSColorBase<SVGBrushType, SVGBrush>::operator==;
 
+  using CSSColorBase<SVGBrushType, SVGBrush>::canConstruct;
   explicit SVGBrush(jsi::Runtime &rt, const jsi::Value &jsiValue);
   explicit SVGBrush(const folly::dynamic &value);
 
