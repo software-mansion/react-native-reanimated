@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunkdocs_reanimated=globalThis.webpackChunkdocs_reanimated||[]).push([[1903],{1912:a=>{a.exports=JSON.parse('{"blogBasePath":"/react-native-reanimated/examples","blogTitle":"Blog","authorsListPath":"/react-native-reanimated/examples/authors"}')}}]);
