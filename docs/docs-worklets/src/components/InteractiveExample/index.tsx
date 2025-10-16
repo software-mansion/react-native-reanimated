@@ -16,8 +16,9 @@ import ResetDark from '@site/static/img/reset-dark.svg';
 import styles from './styles.module.css';
 
 import ts from 'typescript';
-import prettier from 'prettier/standalone';
-import babelParser from 'prettier/parser-babel';
+import * as prettier from 'prettier/standalone';
+import * as babelParser from 'prettier/plugins/babel';
+import * as estreeParser from 'prettier/plugins/estree';
 
 function compileTSXtoJSX(tsxCode: string) {
   const PLACEHOLDER_FOR_EMPTY_LINES = '// PLACEHOLDER-FOR-EMPTY-LINES';
@@ -63,7 +64,7 @@ function compileTSXtoJSX(tsxCode: string) {
     trailingComma: 'es5',
     tabWidth: 2,
     arrowParens: 'always',
-    plugins: [babelParser],
+    plugins: [babelParser, estreeParser],
   });
 }
 

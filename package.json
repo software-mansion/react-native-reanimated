@@ -1,7 +1,7 @@
 {
   "name": "react-native-reanimated-monorepo",
   "version": "0.0.0",
-  "packageManager": "yarn@4.10.3",
+  "packageManager": "yarn@4.1.1",
   "workspaces": {
     "packages": [
       "packages/react-native-reanimated",
