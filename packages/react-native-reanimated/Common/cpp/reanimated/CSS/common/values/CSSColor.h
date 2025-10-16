@@ -27,14 +27,24 @@ struct CSSColorBase : public CSSSimpleValue<TDerived> {
   explicit CSSColorBase(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
   explicit CSSColorBase(ColorChannels colorChannels);
 
+  static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
+  static bool canConstruct(const folly::dynamic &value);
+
   TDerived interpolate(double progress, const TDerived &to) const override;
 
   bool operator==(const TDerived &other) const;
+
+ protected:
+  virtual std::pair<TColorType, jsi::Value> parseJSIValue(
+      jsi::Runtime &rt,
+      const jsi::Value &jsiValue) const;
+  virtual std::pair<TColorType, folly::dynamic> parseDynamicValue(
+      const folly::dynamic &value) const;
 };
 
 enum class CSSColorType {
-  Rgba,
-  Transparent,
+  Rgba = 0,
+  Transparent = 1,
 };
 
 struct CSSColor : public CSSColorBase<CSSColorType, CSSColor> {
@@ -42,9 +52,6 @@ struct CSSColor : public CSSColorBase<CSSColorType, CSSColor> {
 
   explicit CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue);
   explicit CSSColor(const folly::dynamic &value);
-
-  static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
-  static bool canConstruct(const folly::dynamic &value);
 
   folly::dynamic toDynamic() const override;
   std::string toString() const override;

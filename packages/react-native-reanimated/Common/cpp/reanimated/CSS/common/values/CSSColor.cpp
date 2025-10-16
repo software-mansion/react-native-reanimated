@@ -1,4 +1,5 @@
 #include <reanimated/CSS/common/values/CSSColor.h>
+#include <reanimated/CSS/svg/values/SVGBrush.h>
 
 namespace reanimated::css {
 
@@ -47,6 +48,25 @@ CSSColorBase<TColorType, TDerived>::CSSColorBase(ColorChannels colorChannels)
     : channels{std::move(colorChannels)}, colorType(TColorType::Rgba) {}
 
 template <ColorTypeEnum TColorType, typename TDerived>
+bool CSSColorBase<TColorType, TDerived>::canConstruct(
+    jsi::Runtime &rt,
+    const jsi::Value &jsiValue) {
+  if (!jsiValue.isObject()) {
+    return false;
+  }
+  const auto &jsiObject = jsiValue.asObject(rt);
+  return jsiObject.hasProperty(rt, "colorType") &&
+      jsiObject.hasProperty(rt, "value");
+}
+
+template <ColorTypeEnum TColorType, typename TDerived>
+bool CSSColorBase<TColorType, TDerived>::canConstruct(
+    const folly::dynamic &value) {
+  return value.isObject() && value.count("colorType") > 0 &&
+      value.count("value") > 0;
+}
+
+template <ColorTypeEnum TColorType, typename TDerived>
 TDerived CSSColorBase<TColorType, TDerived>::interpolate(
     double progress,
     const TDerived &to) const {
@@ -80,35 +100,46 @@ bool CSSColorBase<TColorType, TDerived>::operator==(
   return colorType == other.colorType && channels == other.channels;
 }
 
+template <ColorTypeEnum TColorType, typename TDerived>
+std::pair<TColorType, jsi::Value>
+CSSColorBase<TColorType, TDerived>::parseJSIValue(
+    jsi::Runtime &rt,
+    const jsi::Value &jsiValue) const {
+  const auto jsiObject = jsiValue.asObject(rt);
+  auto colorType = jsiObject.getProperty(rt, "colorType").asNumber();
+  auto value = jsiObject.getProperty(rt, "value");
+  return {static_cast<TColorType>(colorType), std::move(value)};
+}
+
+template <ColorTypeEnum TColorType, typename TDerived>
+std::pair<TColorType, folly::dynamic>
+CSSColorBase<TColorType, TDerived>::parseDynamicValue(
+    const folly::dynamic &value) const {
+  auto colorType = value.at("colorType").asInt();
+  return {static_cast<TColorType>(colorType), value.at("value")};
+}
+
 // CSSColor implementations
 
 CSSColor::CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue)
     : CSSColorBase<CSSColorType, CSSColor>(CSSColorType::Transparent) {
-  if (jsiValue.isNumber()) {
-    *this = CSSColor(jsiValue.getNumber());
+  const auto [colorType, value] = parseJSIValue(rt, jsiValue);
+  if (colorType == CSSColorType::Rgba) {
+    *this = CSSColor(value.asNumber());
   }
 }
 
-CSSColor::CSSColor(const folly::dynamic &value)
+CSSColor::CSSColor(const folly::dynamic &dynamicValue)
     : CSSColorBase<CSSColorType, CSSColor>(CSSColorType::Transparent) {
-  if (value.isNumber()) {
+  const auto [colorType, value] = parseDynamicValue(dynamicValue);
+  if (colorType == CSSColorType::Rgba) {
     *this = CSSColor(value.asInt());
   }
 }
 
-bool CSSColor::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  // Undefined if the color is transparent, otherwise a number
-  return jsiValue.isNumber() || jsiValue.isUndefined();
-}
-
-bool CSSColor::canConstruct(const folly::dynamic &value) {
-  // Empty if the color is transparent, otherwise a number
-  return value.isNumber() || value.empty();
-}
-
 folly::dynamic CSSColor::toDynamic() const {
   if (colorType == CSSColorType::Transparent) {
-    return 0x00000000;
+    return 0;
   }
   return (channels[3] << 24) | (channels[0] << 16) | (channels[1] << 8) |
       channels[2];
@@ -134,5 +165,6 @@ std::ostream &operator<<(std::ostream &os, const CSSColor &colorValue) {
 
 // Explicit template instantiation
 template struct CSSColorBase<CSSColorType, CSSColor>;
+template struct CSSColorBase<SVGBrushType, SVGBrush>;
 
 } // namespace reanimated::css
