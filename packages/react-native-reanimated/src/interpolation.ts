@@ -201,7 +201,7 @@ export function interpolate(
       rightEdgeOutput: outputRange[length - 1],
     };
   } else {
-    let left = 0;
+    let left = 1;
     let right = length - 1;
 
     while (left < right) {
@@ -213,7 +213,7 @@ export function interpolate(
       }
     }
 
-    const segmentIndex = Math.max(1, left);
+    const segmentIndex = left;
     narrowedInput = {
       leftEdgeInput: inputRange[segmentIndex - 1],
       rightEdgeInput: inputRange[segmentIndex],
