@@ -1,4 +1,3 @@
-/* eslint-disable simple-import-sort/imports */
 import React from 'react';
 import clsx from 'clsx';
 import { useCopyToClipboard } from 'usehooks-ts';

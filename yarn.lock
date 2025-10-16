@@ -13984,6 +13984,8 @@ __metadata:
     "@babel/preset-flow": "npm:7.25.9"
     "@babel/preset-react": "npm:7.27.1"
     "@babel/runtime": "npm:7.28.4"
+    "@dnd-kit/core": "npm:6.3.1"
+    "@dnd-kit/modifiers": "npm:9.0.0"
     "@docusaurus/core": "npm:3.9.1"
     "@docusaurus/module-type-aliases": "npm:3.9.1"
     "@docusaurus/plugin-debug": "npm:3.9.1"

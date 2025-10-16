@@ -23,6 +23,8 @@
     "@babel/preset-env": "7.28.3",
     "@babel/preset-react": "7.27.1",
     "@babel/runtime": "7.28.4",
+    "@dnd-kit/core": "6.3.1",
+    "@dnd-kit/modifiers": "9.0.0",
     "@docusaurus/core": "3.9.1",
     "@docusaurus/plugin-debug": "3.9.1",
     "@docusaurus/preset-classic": "3.9.1",
