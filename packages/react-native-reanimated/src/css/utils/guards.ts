@@ -74,11 +74,6 @@ export const isAngle = (
 export const isDefined = <T>(value: T): value is NonNullable<T> =>
   value !== undefined && value !== null;
 
-export const isRecord = <T extends AnyRecord = AnyRecord>(
-  value: unknown
-): value is T =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
 export const isNumberArray = (value: unknown): value is number[] =>
   Array.isArray(value) && value.every(isNumber);
 

@@ -17,7 +17,7 @@ export type AnyRecord = Record<string, any>;
 
 export type ValueProcessor<V, R = V> = (
   value: NonMutable<V>
-) => Maybe<R> | Record<string, R>;
+) => Maybe<R> | (() => Record<string, R>);
 
 export type TransformOrigin = string | Array<string | number>;
 

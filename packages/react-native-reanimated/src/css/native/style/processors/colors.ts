@@ -12,13 +12,13 @@ export const ERROR_MESSAGES = {
     `Invalid color value: ${String(color)}`,
 };
 
-export enum CSSColorType {
+enum CSSColorType {
   Rgba = 0,
   Transparent = 1,
 }
 
 export type CSSColorValue = {
-  type: number;
+  colorType: number;
   value?: number | string;
 };
 
@@ -28,13 +28,13 @@ export const processColor: ValueProcessor<
 > = (value) => {
   const normalizedColor = processColorInternal(value);
 
+  if (typeof normalizedColor === 'number') {
+    return { colorType: CSSColorType.Rgba, value: normalizedColor };
+  }
+
   if (normalizedColor === null) {
     throw new ReanimatedError(ERROR_MESSAGES.invalidColor(value));
   }
 
-  if (typeof value === 'number') {
-    return { type: CSSColorType.Rgba, value: normalizedColor };
-  }
-
-  return { type: CSSColorType.Transparent };
+  return { colorType: CSSColorType.Transparent };
 };

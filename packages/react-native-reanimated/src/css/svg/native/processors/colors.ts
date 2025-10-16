@@ -21,21 +21,21 @@ export const processBrush: ValueProcessor<
   CSSColorValue
 > = (value) => {
   if (value === 'none' || value === 'transparent') {
-    return { type: SVGBrushType.Transparent };
+    return { colorType: SVGBrushType.Transparent };
   }
   if (value === 'currentColor') {
-    return { type: SVGBrushType.CurrentColor };
+    return { colorType: SVGBrushType.CurrentColor };
   }
   if (value === 'context-fill') {
-    return { type: SVGBrushType.ContextFill };
+    return { colorType: SVGBrushType.ContextFill };
   }
   if (value === 'context-stroke') {
-    return { type: SVGBrushType.ContextStroke };
+    return { colorType: SVGBrushType.ContextStroke };
   }
 
   const brush = typeof value === 'string' && value.match(URL_ID_PATTERN);
   if (brush) {
-    return { type: SVGBrushType.UrlId, value: brush[1] };
+    return { colorType: SVGBrushType.UrlId, value: brush[1] };
   }
 
   return processColor(value);

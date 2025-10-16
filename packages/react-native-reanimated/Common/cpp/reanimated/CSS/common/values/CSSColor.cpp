@@ -55,15 +55,13 @@ bool CSSColorBase<TColorType, TDerived>::canConstruct(
     return false;
   }
   const auto &jsiObject = jsiValue.asObject(rt);
-  return jsiObject.hasProperty(rt, "colorType") &&
-      jsiObject.hasProperty(rt, "value");
+  return jsiObject.hasProperty(rt, "colorType");
 }
 
 template <ColorTypeEnum TColorType, typename TDerived>
 bool CSSColorBase<TColorType, TDerived>::canConstruct(
     const folly::dynamic &value) {
-  return value.isObject() && value.count("colorType") > 0 &&
-      value.count("value") > 0;
+  return value.isObject() && value.count("colorType") > 0;
 }
 
 template <ColorTypeEnum TColorType, typename TDerived>
@@ -106,17 +104,25 @@ CSSColorBase<TColorType, TDerived>::parseJSIValue(
     jsi::Runtime &rt,
     const jsi::Value &jsiValue) const {
   const auto jsiObject = jsiValue.asObject(rt);
-  auto colorType = jsiObject.getProperty(rt, "colorType").asNumber();
-  auto value = jsiObject.getProperty(rt, "value");
-  return {static_cast<TColorType>(colorType), std::move(value)};
+  const auto colorType = static_cast<TColorType>(
+      jsiObject.getProperty(rt, "colorType").asNumber());
+
+  if (colorType == TColorType::Rgba) {
+    return {colorType, jsiObject.getProperty(rt, "value")};
+  }
+  return {colorType, jsi::Value::undefined()};
 }
 
 template <ColorTypeEnum TColorType, typename TDerived>
 std::pair<TColorType, folly::dynamic>
 CSSColorBase<TColorType, TDerived>::parseDynamicValue(
     const folly::dynamic &value) const {
-  auto colorType = value.at("colorType").asInt();
-  return {static_cast<TColorType>(colorType), value.at("value")};
+  const auto colorType = static_cast<TColorType>(value.at("colorType").asInt());
+
+  if (colorType == TColorType::Rgba) {
+    return {colorType, value.at("value")};
+  }
+  return {colorType, folly::dynamic::object()};
 }
 
 // CSSColor implementations
