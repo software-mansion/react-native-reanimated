@@ -11,19 +11,22 @@
   },
   "dependencies": {
     "common-app": "workspace:*",
-    "react": "18.3.1",
-    "react-native": "0.80.0",
-    "react-native-macos": "0.75.13",
-    "react-native-reanimated": "workspace:*"
+    "react": "19.0.0",
+    "react-native": "0.79.6",
+    "react-native-macos": "patch:react-native-macos@npm%3A0.79.0#~/.yarn/patches/react-native-macos-npm-0.79.0-449930c6bc.patch",
+    "react-native-reanimated": "workspace:*",
+    "react-native-worklets": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "7.28.4",
     "@babel/preset-env": "7.28.3",
     "@babel/runtime": "7.28.4",
-    "@react-native/babel-preset": "0.75.4",
-    "@react-native/eslint-config": "0.75.4",
-    "@react-native/metro-config": "0.75.4",
-    "@react-native/typescript-config": "0.75.4",
+    "@react-native-community/cli": "18.0.0",
+    "@react-native-community/cli-platform-ios": "18.0.0",
+    "@react-native/babel-preset": "0.79.6",
+    "@react-native/eslint-config": "0.79.6",
+    "@react-native/metro-config": "0.79.6",
+    "@react-native/typescript-config": "0.79.6",
     "eslint": "9.37.0",
     "prettier": "3.6.2",
     "typescript": "5.8.3"

@@ -157,6 +157,7 @@
 
 - (void)synchronouslyUpdateUIProps:(ReactTag)viewTag props:(const folly::dynamic &)props
 {
+#if !TARGET_OS_OSX
   RCTAssertMainQueue();
 
   RCTSurfacePresenter *surfacePresenter = self.surfacePresenter;
@@ -168,6 +169,7 @@
   // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
   // so that's why we need to call `finalizeUpdates` here.
   [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
+#endif // !TARGET_OS_OSX
 }
 
 @end
