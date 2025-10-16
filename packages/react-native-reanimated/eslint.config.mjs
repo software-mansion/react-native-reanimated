@@ -26,11 +26,6 @@ const config = tsEslint.config(
     },
   },
   {
-    languageOptions: {
-      parserOptions: {
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
     plugins: {
       reanimated,
       'simple-import-sort': simpleImportSort,

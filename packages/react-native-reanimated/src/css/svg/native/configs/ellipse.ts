@@ -1,4 +1,6 @@
 'use strict';
+
+// @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
 import type { EllipseProps } from 'react-native-svg';
 
 import type { SvgStyleBuilderConfig } from './common';

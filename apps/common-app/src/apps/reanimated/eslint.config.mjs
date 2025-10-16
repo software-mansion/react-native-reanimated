@@ -1,10 +1,12 @@
 import jsEslint from '@eslint/js';
 import tsEslint from 'typescript-eslint';
+// @ts-expect-error No types for this package.
 import reactNative from 'eslint-plugin-react-native';
 import { fixupPluginRules } from '@eslint/compat';
 import { globalIgnores } from 'eslint/config';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import reanimated from 'eslint-plugin-reanimated';
+// @ts-expect-error No types for this package.
 import noInlineStyles from 'eslint-plugin-no-inline-styles';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
