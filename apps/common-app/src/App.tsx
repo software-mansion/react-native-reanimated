@@ -145,7 +145,7 @@ function Navigator() {
         headerShown: false,
       }}>
       {screens.map(({ component, name }) => (
-        <Drawer.Screen key={name} name={name} component={component} />
+        <Drawer.Screen component={component} key={name} name={name} />
       ))}
     </Drawer.Navigator>
   );
