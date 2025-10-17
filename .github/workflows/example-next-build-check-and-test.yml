@@ -35,7 +35,7 @@ jobs:
         run: yarn build
       - name: Install Cypress dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn install:cypress
+        run: yarn cypress install
 
       - name: Compile production build
         working-directory: ${{ env.WORKING_DIRECTORY }}
