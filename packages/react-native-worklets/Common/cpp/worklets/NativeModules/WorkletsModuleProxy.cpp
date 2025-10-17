@@ -26,6 +26,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
+    const std::shared_ptr<RuntimeManager> &runtimeManager,
     std::function<bool()> &&isJavaScriptThread,
     RuntimeBindings runtimeBindings,
     const std::shared_ptr<const BigStringBuffer> &script,
@@ -39,9 +40,9 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       uiScheduler_(uiScheduler),
       jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
       runtimeBindings_(runtimeBindings),
+      runtimeManager_(runtimeManager),
       script_(script),
       sourceUrl_(sourceUrl),
-      runtimeManager_(std::make_shared<RuntimeManager>()),
       uiWorkletRuntime_(runtimeManager_->createUninitializedUIRuntime(
           jsQueue_,
           std::make_shared<AsyncQueueUI>(uiScheduler_))) {
@@ -73,7 +74,8 @@ WorkletsModuleProxy::createJSIWorkletsModuleProxy() const {
       jsScheduler_,
       uiScheduler_,
       runtimeManager_,
-      uiWorkletRuntime_);
+      uiWorkletRuntime_,
+      runtimeBindings_);
 }
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {
