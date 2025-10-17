@@ -20,7 +20,7 @@ string(
 string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
 # flags to optimize the binary size
 string(APPEND CMAKE_CXX_FLAGS
-       " -fvisibility=hidden -ffunction-sections -fdata-sections")
+       " -fvisibility=hidden -ffunction-sections -fdata-sections -flto")
 
 if(${REANIMATED_PROFILING})
   string(APPEND CMAKE_CXX_FLAGS " -DREANIMATED_PROFILING")
@@ -90,8 +90,8 @@ set_target_properties(
 )
 
 set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)
-# remove dead code sections
-set_target_properties(reanimated PROPERTIES LINK_FLAGS "-Wl,--gc-sections")
+# remove dead code sections and fold identical functions
+set_target_properties(reanimated PROPERTIES LINK_FLAGS "-Wl,--gc-sections,--icf=safe")
 
 target_link_libraries(
   reanimated
