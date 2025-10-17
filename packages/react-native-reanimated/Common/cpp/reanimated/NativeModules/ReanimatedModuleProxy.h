@@ -15,7 +15,8 @@
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
@@ -251,7 +252,9 @@ class ReanimatedModuleProxy
   const PreserveMountedTagsFunction filterUnmountedTagsFunction_;
 
   std::shared_ptr<UIManager> uiManager_;
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
+  std::shared_ptr<LayoutAnimationsProxy_Legacy> layoutAnimationsProxyLegacy_;
+  std::shared_ptr<reanimated_experimental::LayoutAnimationsProxy_Experimental>
+      layoutAnimationsProxyExperimental_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
   std::set<SurfaceId> layoutAnimationFlushRequests_;

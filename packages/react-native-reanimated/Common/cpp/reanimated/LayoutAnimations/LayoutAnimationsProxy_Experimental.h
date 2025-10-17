@@ -20,11 +20,12 @@
 #include <unordered_set>
 #include <vector>
 
-namespace reanimated {
+namespace reanimated_experimental {
 
 class ReanimatedModuleProxy;
 
 using namespace facebook;
+using namespace reanimated;
 
 struct LayoutAnimation {
   ShadowView finalView, currentView, startView;
@@ -35,9 +36,9 @@ struct LayoutAnimation {
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 };
 
-struct LayoutAnimationsProxy
+struct LayoutAnimationsProxy_Experimental
     : public MountingOverrideDelegate,
-      public std::enable_shared_from_this<LayoutAnimationsProxy> {
+      public std::enable_shared_from_this<LayoutAnimationsProxy_Experimental> {
   mutable std::unordered_map<Tag, std::shared_ptr<Node>> nodeForTag_;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
   mutable std::recursive_mutex mutex;
@@ -78,7 +79,7 @@ struct LayoutAnimationsProxy
   std::shared_ptr<CallInvoker> jsInvoker_;
 #endif
 
-  LayoutAnimationsProxy(
+  LayoutAnimationsProxy_Experimental(
       std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager,
       SharedComponentDescriptorRegistry componentDescriptorRegistry,
       std::shared_ptr<const ContextContainer> contextContainer,
@@ -272,4 +273,4 @@ struct LayoutAnimationsProxy
       ShadowViewMutationList mutations) const override;
 };
 
-} // namespace reanimated
+} // namespace reanimated_experimental

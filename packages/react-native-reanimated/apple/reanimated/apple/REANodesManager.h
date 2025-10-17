@@ -1,8 +1,8 @@
 #import <React/RCTEventDispatcherProtocol.h>
 #import <React/RCTSurfacePresenter.h>
 
-#import <reanimated/apple/READisplayLink.h>
 #import <React/RCTSurfacePresenter.h>
+#import <reanimated/apple/READisplayLink.h>
 
 typedef void (^REAOnAnimationCallback)(READisplayLink *displayLink);
 typedef void (^REAEventHandler)(id<RCTEvent> event);

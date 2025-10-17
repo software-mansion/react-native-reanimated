@@ -16,10 +16,15 @@ namespace reanimated {
 ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-    const std::shared_ptr<LayoutAnimationsProxy> &layoutAnimationsProxy)
+    const std::shared_ptr<LayoutAnimationsProxy_Legacy>
+        &layoutAnimationsProxyLegacy,
+    const std::shared_ptr<
+        reanimated_experimental::LayoutAnimationsProxy_Experimental>
+        &layoutAnimationsProxyExperimental)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
-      layoutAnimationsProxy_(layoutAnimationsProxy) {
+      layoutAnimationsProxyExperimental_(layoutAnimationsProxyExperimental),
+      layoutAnimationsProxyLegacy_(layoutAnimationsProxyLegacy){
   uiManager_->registerCommitHook(*this);
 }
 
@@ -42,8 +47,14 @@ void ReanimatedCommitHook::maybeInitializeLayoutAnimations(
             // shouldn't invoke it twice for the same surface
             return;
           }
-          shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
-              strongThis->layoutAnimationsProxy_);
+          if constexpr (StaticFeatureFlags::getFlag(
+                            "SHARED_ELEMENT_TRANSITIONS")) {
+            shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
+                strongThis->layoutAnimationsProxyExperimental_);
+          } else {
+            shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
+                strongThis->layoutAnimationsProxyLegacy_);
+          }
         });
     currentMaxSurfaceId_ = surfaceId;
   }

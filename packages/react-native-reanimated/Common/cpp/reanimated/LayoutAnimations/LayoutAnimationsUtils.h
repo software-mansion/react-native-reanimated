@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace reanimated {
+namespace reanimated_experimental {
 
 struct Rect {
   double width, height;
@@ -211,4 +211,4 @@ static inline void mergeAndSwap(
   std::swap(A, merged);
 }
 
-} // namespace reanimated
+} // namespace reanimated_experimental

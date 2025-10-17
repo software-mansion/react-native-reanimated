@@ -1,7 +1,8 @@
 #pragma once
 
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 
 #include <react/renderer/uimanager/UIManagerCommitHook.h>
 
@@ -17,8 +18,13 @@ class ReanimatedCommitHook
  public:
   ReanimatedCommitHook(
       const std::shared_ptr<UIManager> &uiManager,
-      const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-      const std::shared_ptr<LayoutAnimationsProxy> &layoutAnimationsProxy);
+      const std::shared_ptr<UpdatesRegistryManager>
+          &updatesRegistryManagerLegacy,
+      const std::shared_ptr<LayoutAnimationsProxy_Legacy>
+          &layoutAnimationsProxy,
+      const std::shared_ptr<
+          reanimated_experimental::LayoutAnimationsProxy_Experimental>
+          &layoutAnimationsProxyExperimental);
 
   ~ReanimatedCommitHook() noexcept override;
 
@@ -41,7 +47,9 @@ class ReanimatedCommitHook
  private:
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
+  std::shared_ptr<reanimated_experimental::LayoutAnimationsProxy_Experimental>
+      layoutAnimationsProxyExperimental_;
+  std::shared_ptr<LayoutAnimationsProxy_Legacy> layoutAnimationsProxyLegacy_;
 
   SurfaceId currentMaxSurfaceId_ = -1;
 

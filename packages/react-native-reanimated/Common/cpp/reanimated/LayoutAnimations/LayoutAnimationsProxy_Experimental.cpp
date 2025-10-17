@@ -1,4 +1,4 @@
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #ifndef ANDROID
@@ -22,11 +22,12 @@
 
 using ScrollState = ConcreteState<ScrollViewState>;
 
-namespace reanimated {
+namespace reanimated_experimental {
 
 // MARK: MountingOverrideDelegate
 
-std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
+std::optional<MountingTransaction>
+LayoutAnimationsProxy_Experimental::pullTransaction(
     SurfaceId surfaceId,
     MountingTransaction::Number transactionNumber,
     const TransactionTelemetry &telemetry,
@@ -114,13 +115,13 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
       surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 
-bool LayoutAnimationsProxy::shouldOverridePullTransaction() const {
+bool LayoutAnimationsProxy_Experimental::shouldOverridePullTransaction() const {
   return true;
 }
 
 // MARK: Light Tree
 
-void LayoutAnimationsProxy::updateLightTree(
+void LayoutAnimationsProxy_Experimental::updateLightTree(
     const PropsParserContext &propsParserContext,
     const ShadowViewMutationList &mutations,
     ShadowViewMutationList &filteredMutations) const {
@@ -263,7 +264,7 @@ void LayoutAnimationsProxy::updateLightTree(
 
 // MARK: Shared Element Transitions
 
-LightNode::Unshared LayoutAnimationsProxy::findTopScreen(
+LightNode::Unshared LayoutAnimationsProxy_Experimental::findTopScreen(
     LightNode::Unshared node) const {
   LightNode::Unshared result = nullptr;
   if (!node->current.componentName) {
@@ -296,7 +297,7 @@ LightNode::Unshared LayoutAnimationsProxy::findTopScreen(
   return result;
 }
 
-void LayoutAnimationsProxy::findSharedElementsOnScreen(
+void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
     const LightNode::Unshared &node,
     int index,
     const PropsParserContext &propsParserContext) const {
@@ -330,7 +331,7 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
   }
 }
 
-void LayoutAnimationsProxy::handleProgressTransition(
+void LayoutAnimationsProxy_Experimental::handleProgressTransition(
     ShadowViewMutationList &filteredMutations,
     const ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext,
@@ -441,7 +442,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
   }
 }
 
-void LayoutAnimationsProxy::overrideTransform(
+void LayoutAnimationsProxy_Experimental::overrideTransform(
     ShadowView &shadowView,
     const std::optional<Transform> &transform,
     const PropsParserContext &propsParserContext) const {
@@ -471,7 +472,7 @@ void LayoutAnimationsProxy::overrideTransform(
   shadowView.props = newProps;
 }
 
-void LayoutAnimationsProxy::transferConfigToContainer(
+void LayoutAnimationsProxy_Experimental::transferConfigToContainer(
     Tag containerTag,
     Tag beforeTag) const {
   layoutAnimationsManager_->getConfigsForType(
@@ -480,7 +481,7 @@ void LayoutAnimationsProxy::transferConfigToContainer(
           LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[beforeTag];
 }
 
-Tag LayoutAnimationsProxy::getOrCreateContainer(
+Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
     const ShadowView &before,
     SharedTag sharedTag,
     ShadowViewMutationList &filteredMutations,
@@ -511,7 +512,7 @@ Tag LayoutAnimationsProxy::getOrCreateContainer(
   return containerTag;
 }
 
-void LayoutAnimationsProxy::handleSharedTransitionsStart(
+void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
     const LightNode::Unshared &afterTopScreen,
     const LightNode::Unshared &beforeTopScreen,
     ShadowViewMutationList &filteredMutations,
@@ -519,7 +520,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
     const PropsParserContext &propsParserContext,
     SurfaceId surfaceId) const {
   ReanimatedSystraceSection s1(
-      "LayoutAnimationsProxy::handleSharedTransitionsStart");
+      "LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart");
 
   if (!beforeTopScreen || !afterTopScreen) {
     return;
@@ -555,7 +556,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
   }
 }
 
-void LayoutAnimationsProxy::cleanupAnimations(
+void LayoutAnimationsProxy_Experimental::cleanupAnimations(
     ShadowViewMutationList &filteredMutations,
     const PropsParserContext &propsParserContext,
     SurfaceId surfaceId) const {
@@ -599,7 +600,7 @@ void LayoutAnimationsProxy::cleanupAnimations(
   finishedAnimationTags_.clear();
 }
 
-void LayoutAnimationsProxy::hideTransitioningViews(
+void LayoutAnimationsProxy_Experimental::hideTransitioningViews(
     int index,
     ShadowViewMutationList &filteredMutations,
     const PropsParserContext &propsParserContext) const {
@@ -614,7 +615,8 @@ void LayoutAnimationsProxy::hideTransitioningViews(
   }
 }
 
-std::optional<SurfaceId> LayoutAnimationsProxy::onTransitionProgress(
+std::optional<SurfaceId>
+LayoutAnimationsProxy_Experimental::onTransitionProgress(
     int tag,
     double progress,
     bool isClosing,
@@ -648,7 +650,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::onTransitionProgress(
   return {};
 }
 
-std::optional<SurfaceId> LayoutAnimationsProxy::onGestureCancel() {
+std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onGestureCancel() {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   if (transitionState_) {
     transitionState_ = CANCELLED;
@@ -659,7 +661,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::onGestureCancel() {
   return {};
 }
 
-void LayoutAnimationsProxy::insertContainers(
+void LayoutAnimationsProxy_Experimental::insertContainers(
     ShadowViewMutationList &filteredMutations,
     int &rootChildCount,
     SurfaceId surfaceId) const {
@@ -678,9 +680,11 @@ void LayoutAnimationsProxy::insertContainers(
 
 // MARK: Layout Animation Updates
 
-std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(
+std::optional<SurfaceId>
+LayoutAnimationsProxy_Experimental::progressLayoutAnimation(
     int tag,
     const jsi::Object &newStyle) {
+  ReanimatedSystraceSection s("progressLayoutAnimation");
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   auto layoutAnimationIt = layoutAnimations_.find(tag);
 
@@ -714,7 +718,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(
   return layoutAnimation.finalView.surfaceId;
 }
 
-std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
+std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
     int tag,
     bool shouldRemove) {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
@@ -756,7 +760,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
   return surfaceId;
 }
 
-void LayoutAnimationsProxy::handleRemovals(
+void LayoutAnimationsProxy_Experimental::handleRemovals(
     ShadowViewMutationList &filteredMutations,
     std::vector<std::shared_ptr<LightNode>> &roots) const {
   // iterate from the end, so that children
@@ -806,7 +810,7 @@ void LayoutAnimationsProxy::handleRemovals(
   deadNodes.clear();
 }
 
-void LayoutAnimationsProxy::addOngoingAnimations(
+void LayoutAnimationsProxy_Experimental::addOngoingAnimations(
     SurfaceId surfaceId,
     ShadowViewMutationList &mutations) const {
   auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
@@ -861,7 +865,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(
   updateMap.clear();
 }
 
-void LayoutAnimationsProxy::endAnimationsRecursively(
+void LayoutAnimationsProxy_Experimental::endAnimationsRecursively(
     std::shared_ptr<LightNode> node,
     int index,
     ShadowViewMutationList &mutations) const {
@@ -883,7 +887,7 @@ void LayoutAnimationsProxy::endAnimationsRecursively(
   mutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
 }
 
-void LayoutAnimationsProxy::maybeDropAncestors(
+void LayoutAnimationsProxy_Experimental::maybeDropAncestors(
     std::shared_ptr<LightNode> parent,
     std::shared_ptr<LightNode> child,
     ShadowViewMutationList &cleanupMutations) const {
@@ -914,12 +918,12 @@ void LayoutAnimationsProxy::maybeDropAncestors(
 }
 
 const ComponentDescriptor &
-LayoutAnimationsProxy::getComponentDescriptorForShadowView(
+LayoutAnimationsProxy_Experimental::getComponentDescriptorForShadowView(
     const ShadowView &shadowView) const {
   return componentDescriptorRegistry_->at(shadowView.componentHandle);
 }
 
-bool LayoutAnimationsProxy::startAnimationsRecursively(
+bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
     std::shared_ptr<LightNode> node,
     bool shouldRemoveSubviewsWithoutAnimations,
     bool shouldAnimate,
@@ -990,13 +994,14 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
   return wantAnimateExit;
 }
 
-void LayoutAnimationsProxy::updateOngoingAnimationTarget(
+void LayoutAnimationsProxy_Experimental::updateOngoingAnimationTarget(
     const int tag,
     const ShadowViewMutation &mutation) const {
   layoutAnimations_[tag].finalView = mutation.newChildShadowView;
 }
 
-void LayoutAnimationsProxy::maybeCancelAnimation(const int tag) const {
+void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(
+    const int tag) const {
   if (!layoutAnimations_.contains(tag)) {
     return;
   }
@@ -1012,7 +1017,7 @@ void LayoutAnimationsProxy::maybeCancelAnimation(const int tag) const {
   });
 }
 
-void LayoutAnimationsProxy::transferConfigFromNativeID(
+void LayoutAnimationsProxy_Experimental::transferConfigFromNativeID(
     const std::string nativeIdString,
     const int tag) const {
   if (nativeIdString.empty()) {
@@ -1029,7 +1034,7 @@ void LayoutAnimationsProxy::transferConfigFromNativeID(
 // When entering animations start, we temporarily set opacity to 0
 // so that we can immediately insert the view at the right position
 // and schedule the animation on the UI thread
-ShadowView LayoutAnimationsProxy::cloneViewWithoutOpacity(
+ShadowView LayoutAnimationsProxy_Experimental::cloneViewWithoutOpacity(
     const ShadowView &shadowView,
     const PropsParserContext &propsParserContext) const {
   auto newView = shadowView;
@@ -1040,7 +1045,7 @@ ShadowView LayoutAnimationsProxy::cloneViewWithoutOpacity(
   return newView;
 }
 
-ShadowView LayoutAnimationsProxy::cloneViewWithOpacity(
+ShadowView LayoutAnimationsProxy_Experimental::cloneViewWithOpacity(
     const ShadowView &shadowView,
     const PropsParserContext &propsParserContext) const {
   auto newView = shadowView;
@@ -1052,7 +1057,7 @@ ShadowView LayoutAnimationsProxy::cloneViewWithOpacity(
   return newView;
 }
 
-void LayoutAnimationsProxy::maybeRestoreOpacity(
+void LayoutAnimationsProxy_Experimental::maybeRestoreOpacity(
     LayoutAnimation &layoutAnimation,
     const jsi::Object &newStyle) const {
   if (layoutAnimation.opacity && !newStyle.hasProperty(uiRuntime_, "opacity")) {
@@ -1067,7 +1072,7 @@ void LayoutAnimationsProxy::maybeRestoreOpacity(
   }
 }
 
-void LayoutAnimationsProxy::maybeUpdateWindowDimensions(
+void LayoutAnimationsProxy_Experimental::maybeUpdateWindowDimensions(
     const facebook::react::ShadowViewMutation &mutation) const {
   if (mutation.type == ShadowViewMutation::Update &&
       !std::strcmp(
@@ -1081,7 +1086,7 @@ void LayoutAnimationsProxy::maybeUpdateWindowDimensions(
 
 // MARK: Start Animation
 
-ShadowView LayoutAnimationsProxy::createLayoutAnimation(
+ShadowView LayoutAnimationsProxy_Experimental::createLayoutAnimation(
     ShadowView &before,
     const ShadowView &after,
     const Tag parentTag) const {
@@ -1108,7 +1113,7 @@ ShadowView LayoutAnimationsProxy::createLayoutAnimation(
   return oldView;
 }
 
-void LayoutAnimationsProxy::startEnteringAnimation(
+void LayoutAnimationsProxy_Experimental::startEnteringAnimation(
     const LightNode::Unshared &node) const {
   auto newChildShadowView = node->current;
   auto finalView = newChildShadowView;
@@ -1162,7 +1167,7 @@ void LayoutAnimationsProxy::startEnteringAnimation(
   });
 }
 
-void LayoutAnimationsProxy::startExitingAnimation(
+void LayoutAnimationsProxy_Experimental::startExitingAnimation(
     const LightNode::Unshared &node) const {
   auto &oldChildShadowView = node->current;
   const auto surfaceId = oldChildShadowView.surfaceId;
@@ -1206,7 +1211,7 @@ void LayoutAnimationsProxy::startExitingAnimation(
   });
 }
 
-void LayoutAnimationsProxy::startLayoutAnimation(
+void LayoutAnimationsProxy_Experimental::startLayoutAnimation(
     const LightNode::Unshared &node) const {
   auto oldChildShadowView = node->previous;
   auto newChildShadowView = node->current;
@@ -1260,7 +1265,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
   });
 }
 
-void LayoutAnimationsProxy::startSharedTransition(
+void LayoutAnimationsProxy_Experimental::startSharedTransition(
     const int tag,
     const ShadowView &before,
     const ShadowView &after,
@@ -1298,7 +1303,7 @@ void LayoutAnimationsProxy::startSharedTransition(
       });
 }
 
-void LayoutAnimationsProxy::startProgressTransition(
+void LayoutAnimationsProxy_Experimental::startProgressTransition(
     const int tag,
     const ShadowView &before,
     const ShadowView &after,
@@ -1325,7 +1330,7 @@ void LayoutAnimationsProxy::startProgressTransition(
 // MARK: Position Calculation
 
 std::vector<react::Point>
-LayoutAnimationsProxy::getAbsolutePositionsForRootPathView(
+LayoutAnimationsProxy_Experimental::getAbsolutePositionsForRootPathView(
     const LightNode::Unshared &node) const {
   std::vector<react::Point> viewsAbsolutePositions;
   auto currentNode = node;
@@ -1356,7 +1361,8 @@ LayoutAnimationsProxy::getAbsolutePositionsForRootPathView(
   return viewsAbsolutePositions;
 }
 
-std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
+std::optional<Transform>
+LayoutAnimationsProxy_Experimental::parseParentTransforms(
     const LightNode::Unshared &node,
     const std::vector<react::Point> &absolutePositions) const {
   std::vector<std::pair<Transform, TransformOrigin>> transforms;
@@ -1426,7 +1432,7 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
 // https://github.com/facebook/react-native/blob/v0.80.0/packages/react-native/ReactCommon/react/renderer/components/view/BaseViewProps.cpp#L548
 // We need a copy of these methods to modify the `resolveTransform` method
 // to accept the transform origin as a parameter instead of as a class field.
-react::Transform LayoutAnimationsProxy::resolveTransform(
+react::Transform LayoutAnimationsProxy_Experimental::resolveTransform(
     const LayoutMetrics &layoutMetrics,
     const Transform &transform,
     const TransformOrigin &transformOrigin) const {
@@ -1462,7 +1468,8 @@ react::Transform LayoutAnimationsProxy::resolveTransform(
   return transformMatrix;
 }
 
-std::array<float, 3> LayoutAnimationsProxy::getTranslateForTransformOrigin(
+std::array<float, 3>
+LayoutAnimationsProxy_Experimental::getTranslateForTransformOrigin(
     float viewWidth,
     float viewHeight,
     const TransformOrigin &transformOrigin) const {
@@ -1496,8 +1503,8 @@ std::array<float, 3> LayoutAnimationsProxy::getTranslateForTransformOrigin(
  * queue where React has already scheduled (but not yet executed) the view
  * mounting, so the opacity update will execute after the view is mounted.
  */
-void LayoutAnimationsProxy::restoreOpacityInCaseOfFlakyEnteringAnimation(
-    SurfaceId surfaceId) const {
+void LayoutAnimationsProxy_Experimental::
+    restoreOpacityInCaseOfFlakyEnteringAnimation(SurfaceId surfaceId) const {
   std::vector<std::pair<double, Tag>> opacityToRestore;
   for (const auto tag : finishedAnimationTags_) {
     const auto &opacity = layoutAnimations_[tag].opacity;
@@ -1544,7 +1551,7 @@ void LayoutAnimationsProxy::restoreOpacityInCaseOfFlakyEnteringAnimation(
   });
 }
 
-const ShadowNode *LayoutAnimationsProxy::findInShadowTreeByTag(
+const ShadowNode *LayoutAnimationsProxy_Experimental::findInShadowTreeByTag(
     const ShadowNode &node,
     Tag tag) const {
   if (node.getTag() == tag) {
@@ -1559,4 +1566,4 @@ const ShadowNode *LayoutAnimationsProxy::findInShadowTreeByTag(
 }
 #endif // ANDROID
 
-} // namespace reanimated
+} // namespace reanimated_experimental

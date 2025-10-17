@@ -1,6 +1,6 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 
-namespace reanimated {
+namespace reanimated_experimental {
 
 std::unordered_map<Tag, UpdateValues> &SurfaceManager::getUpdateMap(
     SurfaceId surfaceId) {
@@ -80,4 +80,4 @@ bool Node::isMutationMode() {
 bool MutationNode::isMutationMode() {
   return true;
 }
-} // namespace reanimated
+} // namespace reanimated_experimental
