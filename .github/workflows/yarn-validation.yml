@@ -30,6 +30,10 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
 
+      - name: Check if all versions are exact
+        working-directory: ${{ github.workspace }}
+        run: ./scripts/disallow-non-exact.sh
+
       - name: Install monorepo dependencies
         run: yarn install --immutable
 

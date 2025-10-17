@@ -18,16 +18,18 @@
     "react-native-worklets": "workspace:*"
   },
   "devDependencies": {
-    "@babel/core": "^7.25.2",
-    "@babel/preset-env": "^7.25.3",
-    "@babel/runtime": "^7.25.0",
+    "@babel/core": "7.28.4",
+    "@babel/preset-env": "7.28.3",
+    "@babel/runtime": "7.28.4",
     "@react-native-community/cli": "18.0.0",
     "@react-native-community/cli-platform-ios": "18.0.0",
     "@react-native/babel-preset": "0.79.6",
     "@react-native/eslint-config": "0.79.6",
     "@react-native/metro-config": "0.79.6",
     "@react-native/typescript-config": "0.79.6",
-    "prettier": "3.6.2"
+    "eslint": "9.37.0",
+    "prettier": "3.6.2",
+    "typescript": "5.8.3"
   },
   "engines": {
     "node": ">=20.13.0"
