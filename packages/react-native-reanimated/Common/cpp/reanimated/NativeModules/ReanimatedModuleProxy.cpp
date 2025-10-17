@@ -619,10 +619,10 @@ bool ReanimatedModuleProxy::handleRawEvent(
       auto progress = payload.getProperty(rt, "progress").asNumber();
       auto closing = payload.getProperty(rt, "closing").asNumber();
       auto goingForward = payload.getProperty(rt, "goingForward").asNumber();
-      auto swiping = payload.getProperty(rt, "swiping").asNumber();
+//      auto swiping = payload.getProperty(rt, "swiping").asNumber();
 
       auto surfaceId = layoutAnimationsProxyExperimental_->onTransitionProgress(
-          tag, progress, closing, goingForward, swiping);
+          tag, progress, closing, goingForward, false);
       if (!surfaceId) {
         return false;
       }
