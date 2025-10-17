@@ -2,6 +2,7 @@
 
 #include <reanimated/CSS/common/values/CSSColor.h>
 
+#include <string>
 namespace reanimated::css {
 
 enum class SVGBrushType {
