@@ -16,13 +16,17 @@ namespace worklets {
 
 using namespace facebook;
 using namespace react;
-#if HERMES_ENABLE_DEBUGGER
+#if HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
 using namespace facebook::hermes::inspector_modern;
-#endif // HERMES_ENABLE_DEBUGGER
+#endif // HERMES_ENABLE_DEBUGGER  && !defined(HERMES_V1_ENABLED)
 
 #if HERMES_ENABLE_DEBUGGER
 
-class HermesExecutorRuntimeAdapter : public RuntimeAdapter {
+class HermesExecutorRuntimeAdapter
+#if HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
+    : public RuntimeAdapter
+#endif // HERMES_ENABLE_DEBUGGER  && !defined(HERMES_V1_ENABLED)
+{
  public:
   explicit HermesExecutorRuntimeAdapter(
       facebook::hermes::HermesRuntime &hermesRuntime,
@@ -34,7 +38,7 @@ class HermesExecutorRuntimeAdapter : public RuntimeAdapter {
     // that the thread was indeed `quit` before
     thread_->quitSynchronous();
   }
-
+#if HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
   facebook::hermes::HermesRuntime &getRuntime() override {
     return hermesRuntime_;
   }
@@ -44,6 +48,7 @@ class HermesExecutorRuntimeAdapter : public RuntimeAdapter {
   // required us to hold a refernce to the runtime inside this adapter which
   // caused issues while reloading the app.
   void tickleJs() override {}
+#endif // HERMES_ENABLE_DEBUGGER  && !defined(HERMES_V1_ENABLED)
 
  public:
   facebook::hermes::HermesRuntime &hermesRuntime_;
@@ -60,11 +65,11 @@ WorkletHermesRuntime::WorkletHermesRuntime(
           *runtime,
           reentrancyCheck_),
       runtime_(std::move(runtime)) {
-#if HERMES_ENABLE_DEBUGGER
+#if HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
   auto adapter =
       std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_, jsQueue);
   debugToken_ = chrome::enableDebugging(std::move(adapter), name);
-#endif // HERMES_ENABLE_DEBUGGER
+#endif // HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
 
 #ifndef NDEBUG
   facebook::hermes::HermesRuntime *wrappedRuntime = runtime_.get();
@@ -97,10 +102,10 @@ WorkletHermesRuntime::WorkletHermesRuntime(
 }
 
 WorkletHermesRuntime::~WorkletHermesRuntime() {
-#if HERMES_ENABLE_DEBUGGER
+#if HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
   // We have to disable debugging before the runtime is destroyed.
   chrome::disableDebugging(debugToken_);
-#endif // HERMES_ENABLE_DEBUGGER
+#endif // HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
 }
 
 } // namespace worklets

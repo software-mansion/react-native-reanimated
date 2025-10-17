@@ -16,13 +16,16 @@ import {
   registerValue,
   render,
   test,
+  createOrderConstraint,
   useTestRef,
+  createTestValue,
   wait,
-  waitForNotify,
+  waitForNotifications,
+  waitForNotification,
 } from '../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../ReJest/types';
 import { Snapshots } from './TestsOfTestingFramework.snapshot';
-import { runOnUI } from 'react-native-worklets';
+import { createWorkletRuntime, runOnRuntime, runOnUI } from 'react-native-worklets';
 
 const AnimatedComponent = () => {
   const widthSV = useSharedValue(0);
@@ -137,6 +140,7 @@ describe('Wardrobe with drawers', () => {
             await wait(10);
             expect(1).toBe(1);
           });
+
           test('Test 2 of page 1 of book 1 of box 1 of drawer 1 - ✅ ', async () => {
             await render(<AnimatedComponent />);
             await wait(10);
@@ -150,6 +154,7 @@ describe('Wardrobe with drawers', () => {
             await wait(10);
             expect(1).toBe(1);
           });
+
           test('Test 2 of page 2 of book 1 of box 1 of drawer 1 - ✅', async () => {
             await render(<AnimatedComponent />);
             await wait(10);
@@ -170,6 +175,7 @@ describe('Wardrobe with drawers', () => {
             await wait(10);
             expect(1).toBe(1);
           });
+
           test('Test 2 of page 2 of book 1 of box 1 of drawer 2 - ✅', async () => {
             await render(<AnimatedComponent />);
             await wait(10);
@@ -322,8 +328,8 @@ describe('Tests of Test Framework', () => {
   test('withTiming - notify - ✅', async () => {
     await render(<AnimatedComponentWithNotify />);
     const component = getTestComponent('BrownComponent');
-    await waitForNotify('notifyJS');
-    await waitForNotify('notifyUI');
+    await waitForNotification('notifyJS');
+    await waitForNotification('notifyUI');
     expect(await component.getAnimatedStyle('width')).toBe(100);
   });
 
@@ -365,6 +371,7 @@ describe('Tests of Test Framework', () => {
         console.error('OH, NO!');
       }).toThrow('OH, NO!');
     });
+
     test('console.error  with with error message - ❌', async () => {
       await expect(() => {
         console.error('OH, NO!');
@@ -387,6 +394,39 @@ describe('Tests of Test Framework', () => {
       await expect(() => {
         throw new Error('OH, NO!');
       }).toThrow('OH, YES!');
+    });
+
+    test('useTestState', async () => {
+      const [state1, setState1] = createTestValue('not_ok');
+      setState1('ok');
+
+      const [state2, setState2] = createTestValue('not_ok');
+      const notification2 = 'notification2';
+      runOnUI(() => {
+        setState2('ok', notification2);
+      })();
+
+      const [state3, setState3] = createTestValue('not_ok');
+      const notification3 = 'notification3';
+      const rt = createWorkletRuntime({ name: 'test' });
+      runOnRuntime(rt, () => {
+        'worklet';
+        setState3('ok', notification3);
+      })();
+
+      await waitForNotifications([notification2, notification3]);
+      expect(state1.value).toBe('ok');
+      expect(state2.value).toBe('ok');
+      expect(state3.value).toBe('ok');
+    });
+
+    test('useOrderConstraint', async () => {
+      const [confirmedOrder, order] = createOrderConstraint();
+      order(1);
+      order(2);
+      order(3, 'finish');
+      await waitForNotification('finish');
+      expect(confirmedOrder.value).toBe(3);
     });
   });
 });

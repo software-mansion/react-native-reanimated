@@ -79,7 +79,8 @@ export interface WorkletsModuleProxy {
     name: string,
     initializer: SerializableRef<() => void>,
     useDefaultQueue: boolean,
-    customQueue: object | undefined
+    customQueue: object | undefined,
+    enableEventLoop: boolean
   ): WorkletRuntime;
 
   scheduleOnRuntime<TValue>(
@@ -116,6 +117,8 @@ export interface WorkletsModuleProxy {
   synchronizableUnlock<TValue>(
     synchronizableRef: SynchronizableRef<TValue>
   ): void;
+
+  getStaticFeatureFlag(name: string): boolean;
 
   setDynamicFeatureFlag(name: string, value: boolean): void;
 }

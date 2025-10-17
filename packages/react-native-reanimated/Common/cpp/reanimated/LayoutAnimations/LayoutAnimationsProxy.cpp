@@ -35,6 +35,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
   addOngoingAnimations(surfaceId, filteredMutations);
 
+#ifdef ANDROID
+  restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId);
+#endif // ANDROID
   for (const auto tag : finishedAnimationTags_) {
     auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
     layoutAnimations_.erase(tag);
@@ -392,7 +395,36 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     SurfaceId surfaceId,
     ShadowViewMutationList &mutations) const {
   auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+#ifdef ANDROID
+  std::vector<int> tagsToUpdate;
   for (auto &[tag, updateValues] : updateMap) {
+    tagsToUpdate.push_back(tag);
+  }
+
+  auto maybeCorrectedTags = preserveMountedTags_(tagsToUpdate);
+  if (!maybeCorrectedTags.has_value()) {
+    return;
+  }
+
+  auto correctedTags = maybeCorrectedTags->get();
+
+  // since the map is not updated, we can assume that the ordering of tags in
+  // correctedTags matches the iterator
+  int i = -1;
+#endif
+  for (auto &[tag, updateValues] : updateMap) {
+#ifdef ANDROID
+    i++;
+    if (correctedTags[i] == -1) {
+      // skip views that have not been mounted yet
+      // on Android we start entering animations from the JS thread
+      // so it might happen, that the first frame of the animation goes through
+      // before the view is first mounted
+      // https://github.com/software-mansion/react-native-reanimated/issues/7493
+      continue;
+    }
+#endif
+
     auto layoutAnimationIt = layoutAnimations_.find(tag);
 
     if (layoutAnimationIt == layoutAnimations_.end()) {
@@ -400,7 +432,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     }
 
     auto &layoutAnimation = layoutAnimationIt->second;
-
+    layoutAnimation.isViewAlreadyMounted = true;
     auto newView = std::make_shared<ShadowView>(*layoutAnimation.finalView);
     newView->props = updateValues.newProps;
     updateLayoutMetrics(newView->layoutMetrics, updateValues.frame);
@@ -625,7 +657,8 @@ void LayoutAnimationsProxy::createLayoutAnimation(
 
   layoutAnimations_.insert_or_assign(
       tag,
-      LayoutAnimation{finalView, currentView, mutation.parentTag, {}, count});
+      LayoutAnimation{
+          finalView, currentView, mutation.parentTag, {}, false, count});
 }
 
 void LayoutAnimationsProxy::startEnteringAnimation(
@@ -829,7 +862,12 @@ void LayoutAnimationsProxy::maybeRestoreOpacity(
   if (layoutAnimation.opacity && !newStyle.hasProperty(uiRuntime_, "opacity")) {
     newStyle.setProperty(
         uiRuntime_, "opacity", jsi::Value(*layoutAnimation.opacity));
-    layoutAnimation.opacity.reset();
+    if (layoutAnimation.isViewAlreadyMounted) {
+      // We want to reset opacity only when we are sure that this update will be
+      // applied to the native view. Otherwise, we want to update opacity using
+      // the `restoreOpacityInCaseOfFlakyEnteringAnimation` method.
+      layoutAnimation.opacity.reset();
+    }
   }
 }
 
@@ -845,5 +883,77 @@ void LayoutAnimationsProxy::maybeUpdateWindowDimensions(
         mutation.newChildShadowView.layoutMetrics.frame.size.height);
   }
 }
+
+#ifdef ANDROID
+/*
+ * It is possible that we may finish the layout animation before the native view
+ * is mounted. If the view wasn't mounted, we wouldn't be able to restore the
+ * opacity of the view. To fix this, we need to schedule a React update that
+ * will restore the view's opacity. This is safe because we'll use the same
+ * queue where React has already scheduled (but not yet executed) the view
+ * mounting, so the opacity update will execute after the view is mounted.
+ */
+void LayoutAnimationsProxy::restoreOpacityInCaseOfFlakyEnteringAnimation(
+    SurfaceId surfaceId) const {
+  std::vector<std::pair<double, Tag>> opacityToRestore;
+  for (const auto tag : finishedAnimationTags_) {
+    const auto &opacity = layoutAnimations_[tag].opacity;
+    if (opacity.has_value()) {
+      opacityToRestore.emplace_back(
+          std::pair<double, Tag>{opacity.value(), tag});
+    }
+  }
+  if (opacityToRestore.empty()) {
+    // Animation was successfully finished, and the opacity was restored, so we
+    // don't need to do anything. Only the Entering animation has a set opacity
+    // value.
+    return;
+  }
+  const auto weakThis = weak_from_this();
+  jsInvoker_->invokeAsync([=](jsi::Runtime &runtime) {
+    const auto self = weakThis.lock();
+    if (!self) {
+      return;
+    }
+    self->uiManager_->getShadowTreeRegistry().visit(
+        surfaceId, [=](ShadowTree const &shadowTree) {
+          shadowTree.commit(
+              [=](RootShadowNode const &oldRootShadowNode) {
+                const auto self = weakThis.lock();
+                if (!self) {
+                  return cloneShadowTreeWithNewProps(oldRootShadowNode, {});
+                }
+                const auto &rootShadowNode =
+                    static_cast<const ShadowNode &>(oldRootShadowNode);
+                PropsMap propsMap;
+                for (const auto &[opacity, tag] : opacityToRestore) {
+                  const auto *targetShadowNode =
+                      self->findInShadowTreeByTag(rootShadowNode, tag);
+                  if (targetShadowNode != nullptr) {
+                    propsMap[&targetShadowNode->getFamily()].emplace_back(
+                        folly::dynamic::object("opacity", opacity));
+                  }
+                }
+                return cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+              },
+              {});
+        });
+  });
+}
+
+const ShadowNode *LayoutAnimationsProxy::findInShadowTreeByTag(
+    const ShadowNode &node,
+    Tag tag) const {
+  if (node.getTag() == tag) {
+    return const_cast<const ShadowNode *>(&node);
+  }
+  for (auto &child : node.getChildren()) {
+    if (const auto result = findInShadowTreeByTag(*child, tag)) {
+      return result;
+    }
+  }
+  return nullptr;
+}
+#endif // ANDROID
 
 } // namespace reanimated

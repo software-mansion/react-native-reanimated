@@ -1,19 +1,16 @@
 #pragma once
 
 #include <reanimated/CSS/common/definitions.h>
-#include <reanimated/CSS/registry/StaticPropsRegistry.h>
+#include <reanimated/CSS/registries/StaticPropsRegistry.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 
 #include <react/renderer/components/view/ViewProps.h>
 #include <react/renderer/core/LayoutableShadowNode.h>
 #include <react/renderer/dom/DOM.h>
 
-#include <map>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 namespace reanimated::css {
 

@@ -1,7 +1,7 @@
 'use strict';
 
 import { IS_JEST } from '../PlatformChecker';
-import { mockedRequestAnimationFrame } from '../runLoop/mockedRequestAnimationFrame';
+import { mockedRequestAnimationFrame } from '../runLoop/uiRuntime/mockedRequestAnimationFrame';
 import { WorkletsError } from '../WorkletsError';
 import type { SerializableRef } from '../workletTypes';
 import type { IWorkletsModule } from './workletsModuleProxy';
@@ -189,7 +189,12 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
-  setDynamicFeatureFlag(_name: string, _value: boolean) {
+  getStaticFeatureFlag(): boolean {
+    // mock implementation
+    return false;
+  }
+
+  setDynamicFeatureFlag() {
     // noop
   }
 }

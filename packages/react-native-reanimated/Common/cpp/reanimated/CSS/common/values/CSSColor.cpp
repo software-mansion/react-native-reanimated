@@ -61,12 +61,8 @@ CSSColor::CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue)
     *this = CSSColor(jsiValue.getNumber());
   } else if (jsiValue.isString()) {
     *this = CSSColor(jsiValue.getString(rt).utf8(rt));
-  } else if (jsiValue.isUndefined()) {
-    *this = Transparent;
   } else {
-    throw std::invalid_argument(
-        "[Reanimated] CSSColor: Invalid value: " +
-        stringifyJSIValue(rt, jsiValue));
+    *this = Transparent;
   }
 }
 
@@ -76,11 +72,8 @@ CSSColor::CSSColor(const folly::dynamic &value)
     *this = CSSColor(value.asInt());
   } else if (value.isString()) {
     *this = CSSColor(value.getString());
-  } else if (value.empty()) {
-    *this = Transparent;
   } else {
-    throw std::invalid_argument(
-        "[Reanimated] CSSColor: Invalid value: " + folly::toJson(value));
+    *this = Transparent;
   }
 }
 

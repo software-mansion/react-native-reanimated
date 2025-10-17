@@ -18,11 +18,16 @@ import { WorkletsError } from './WorkletsError';
  * `_WORKLETS_BUNDLE_MODE` flag.
  */
 export function bundleModeInit() {
-  globalThis._WORKLETS_BUNDLE_MODE = true;
-  if (
-    !SHOULD_BE_USE_WEB &&
-    globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative
-  ) {
+  // Worklets Babel Plugin replaces `false` with `true` here
+  // when Bundle Mode is enabled.
+  globalThis._WORKLETS_BUNDLE_MODE = false;
+
+  if (SHOULD_BE_USE_WEB || !globalThis._WORKLETS_BUNDLE_MODE) {
+    return;
+  }
+
+  const runtimeKind = globalThis.__RUNTIME_KIND;
+  if (runtimeKind && runtimeKind !== RuntimeKind.ReactNative) {
     /**
      * We shouldn't call `init()` on RN Runtime here, as it would initialize our
      * module before React Native has configured the RN Runtime.

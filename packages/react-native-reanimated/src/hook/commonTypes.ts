@@ -1,6 +1,7 @@
 'use strict';
-import type { RefObject } from 'react';
+import type { ComponentRef, ElementType, RefObject } from 'react';
 import type {
+  HostInstance,
   ImageStyle,
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -9,13 +10,19 @@ import type {
 } from 'react-native';
 import type { WorkletFunction } from 'react-native-worklets';
 
+import type { Maybe } from '../common';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedStyle,
+  InstanceOrElement,
+  InternalHostInstance,
   ShadowNodeWrapper,
-  WrapperRef,
+  StyleUpdaterContainer,
 } from '../commonTypes';
-import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
+import type {
+  AnimatedComponentType,
+  AnimatedProps,
+} from '../createAnimatedComponent';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 
@@ -30,17 +37,32 @@ export type MaybeObserverCleanup = (() => void) | undefined;
 
 export type AnimatedRefObserver = (tag: number | null) => MaybeObserverCleanup;
 
-export type AnimatedRef<TRef extends WrapperRef> = {
-  (ref?: TRef | null):
+export type ExtractElementRef<TRef> = TRef extends ElementType
+  ? ComponentRef<TRef> extends never // Ensure that ref type is explicitly defined (is not any)
+    ? TRef
+    : ComponentRef<TRef>
+  : TRef;
+
+// TODO - Replace InstanceOrElement with InternalHostInstance once we drop support for the old
+// types and migrate to the new react-native-strict-api types to align with the useRef type.
+// For now, we need to support the old useAnimatedRef API as well, which uses the ElementType
+// as the type of the ref.
+type AnimatedRefCurrent<TRef> = ExtractElementRef<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TRef extends AnimatedComponentType<any, infer Instance> ? Instance : TRef
+>;
+
+export type AnimatedRef<TRef extends InstanceOrElement = HostInstance> = {
+  (ref?: AnimatedRefCurrent<TRef> | null):
     | ShadowNodeWrapper // Native
     | HTMLElement; // web
-  current: TRef | null;
+  current: AnimatedRefCurrent<TRef> | null;
   observe: (observer: AnimatedRefObserver) => void;
-  getTag?: () => number | null;
+  getTag?: () => Maybe<number>;
 };
 
 // Might make that type generic if it's ever needed.
-export type AnimatedRefOnJS = AnimatedRef<WrapperRef>;
+export type AnimatedRefOnJS = AnimatedRef<InternalHostInstance>;
 
 /**
  * `AnimatedRef` is mapped to this type on the UI thread via a serializable
@@ -95,6 +117,7 @@ export interface AnimatedStyleHandle<
     value: AnimatedStyle<Style>;
     updater: () => AnimatedStyle<Style>;
   };
+  styleUpdaterContainer: StyleUpdaterContainer;
 }
 
 export interface JestAnimatedStyleHandle<

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BoxShadowValue, StyleSheet, View } from 'react-native';
+import { BoxShadowValue, StyleSheet, View, ViewStyle } from 'react-native';
 import type { AnimatableValue } from 'react-native-reanimated';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import type { DefaultStyle } from 'react-native-reanimated/lib/typescript/hook/commonTypes';
@@ -12,8 +12,7 @@ import {
   render,
   test,
   useTestRef,
-  wait,
-  waitForNotify,
+  waitForNotification,
 } from '@/apps/reanimated/examples/RuntimeTests/ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '@/apps/reanimated/examples/RuntimeTests/ReJest/types';
 
@@ -39,17 +38,7 @@ describe('animation of BoxShadow', () => {
 
     const styleActive = useAnimatedStyle(() => {
       return {
-        boxShadow: [
-          withSpring(
-            boxShadowActiveSV.value as unknown as AnimatableValue,
-            {
-              duration: 600,
-            },
-            () => {
-              notify(NOTIFICATION_NAME);
-            },
-          ),
-        ],
+        boxShadow: [boxShadowActiveSV.value],
       } as DefaultStyle;
     });
 
@@ -61,7 +50,15 @@ describe('animation of BoxShadow', () => {
 
     useEffect(() => {
       const timeout = setTimeout(() => {
-        boxShadowActiveSV.value = finalBoxShadow;
+        boxShadowActiveSV.value = withSpring(
+          finalBoxShadow as unknown as AnimatableValue,
+          {
+            duration: 300,
+          },
+          () => {
+            notify(NOTIFICATION_NAME);
+          },
+        ) as unknown as BoxShadowValue;
         boxShadowPassiveSV.value = finalBoxShadow;
       }, 500);
 
@@ -112,7 +109,7 @@ describe('animation of BoxShadow', () => {
     expect(activeBoxShadow).toBe([startBoxShadow], ComparisonMode.ARRAY);
     expect(passiveBoxShadow).toBe([startBoxShadow], ComparisonMode.ARRAY);
 
-    await waitForNotify(NOTIFICATION_NAME);
+    await waitForNotification(NOTIFICATION_NAME);
 
     const passiveBoxShadowFinal = JSON.parse(
       await passiveComponent.getAnimatedStyle('boxShadow'),

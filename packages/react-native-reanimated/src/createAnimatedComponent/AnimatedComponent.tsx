@@ -3,7 +3,6 @@ import '../layoutReanimation/animationsManager';
 
 import type React from 'react';
 
-import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
 import { IS_JEST, IS_WEB, logger } from '../common';
 import type { StyleProps } from '../commonTypes';
@@ -11,6 +10,7 @@ import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
+import type { BaseAnimationBuilder } from '../layoutReanimation';
 import {
   configureWebLayoutAnimations,
   getReducedMotionFromConfig,
@@ -125,11 +125,15 @@ export default class AnimatedComponent
         saveSnapshot(this._componentDOMRef);
       }
 
-      if (
-        !this.props.entering ||
-        getReducedMotionFromConfig(this.props.entering as CustomConfig)
-      ) {
+      if (!this.props.entering) {
         this._isFirstRender = false;
+        return;
+      }
+
+      if (getReducedMotionFromConfig(this.props.entering as CustomConfig)) {
+        this._isFirstRender = false;
+
+        (this.props.entering as BaseAnimationBuilder).callbackV?.(true);
         return;
       }
 
@@ -161,12 +165,12 @@ export default class AnimatedComponent
 
     const exiting = this.props.exiting;
 
-    if (
-      IS_WEB &&
-      this._componentDOMRef &&
-      exiting &&
-      !getReducedMotionFromConfig(exiting as CustomConfig)
-    ) {
+    if (IS_WEB && this._componentDOMRef && exiting) {
+      if (getReducedMotionFromConfig(exiting as CustomConfig)) {
+        (exiting as BaseAnimationBuilder).callbackV?.(true);
+        return;
+      }
+
       addHTMLMutationObserver();
 
       startWebLayoutAnimation(
@@ -202,35 +206,50 @@ export default class AnimatedComponent
 
   _handleAnimatedStylesUpdate(
     prevStyles: StyleProps[],
-    newStyles: StyleProps[],
+    currentStyles: StyleProps[],
     jestAnimatedStyleOrProps: { value: StyleProps }
   ) {
     const { viewTag, shadowNodeWrapper } = this._getViewInfo();
+    const newStyles = new Set<StyleProps>(currentStyles);
+
+    const isStyleAttached = (style: StyleProps) =>
+      style.viewDescriptors.has(viewTag);
 
     // remove old styles
     if (prevStyles) {
       // in most of the cases, views have only a single animated style and it remains unchanged
       const hasOneSameStyle =
-        newStyles.length === 1 &&
+        currentStyles.length === 1 &&
         prevStyles.length === 1 &&
-        newStyles[0] === prevStyles[0];
+        currentStyles[0] === prevStyles[0];
 
-      if (!hasOneSameStyle) {
-        // otherwise, remove each style that is not present in new styles
-        for (const prevStyle of prevStyles) {
-          const isPresent = newStyles.some((style) => style === prevStyle);
-          if (!isPresent) {
-            prevStyle.viewDescriptors.remove(viewTag);
+      if (hasOneSameStyle && isStyleAttached(prevStyles[0])) {
+        return;
+      }
+
+      // otherwise, remove each style that is not present in new styles
+      for (const prevStyle of prevStyles) {
+        const isPresent = currentStyles.some((style) => {
+          if (style === prevStyle && isStyleAttached(style)) {
+            newStyles.delete(style);
+            return true;
           }
+          return false;
+        });
+        if (!isPresent) {
+          prevStyle.viewDescriptors.remove(viewTag);
         }
       }
     }
 
     newStyles.forEach((style) => {
-      style.viewDescriptors.add({
-        tag: viewTag,
-        shadowNodeWrapper,
-      });
+      style.viewDescriptors.add(
+        {
+          tag: viewTag,
+          shadowNodeWrapper,
+        },
+        style.styleUpdaterContainer
+      );
       if (IS_JEST) {
         /**
          * We need to connect Jest's TestObject instance whose contains just
@@ -282,12 +301,13 @@ export default class AnimatedComponent
       saveSnapshot(this._componentDOMRef);
     }
 
-    if (
-      IS_WEB &&
-      snapshot &&
-      this.props.layout &&
-      !getReducedMotionFromConfig(this.props.layout as CustomConfig)
-    ) {
+    if (IS_WEB && snapshot && this.props.layout) {
+      if (getReducedMotionFromConfig(this.props.layout as CustomConfig)) {
+        (this.props.layout as BaseAnimationBuilder).callbackV?.(true);
+
+        return;
+      }
+
       tryActivateLayoutTransition(
         this.props,
         this._componentDOMRef as ReanimatedHTMLElement,
@@ -338,13 +358,6 @@ export default class AnimatedComponent
       return;
     }
 
-    if (this._isReducedMotion(currentConfig)) {
-      if (!previousConfig) {
-        return;
-      }
-      currentConfig = undefined;
-    }
-
     updateLayoutAnimations(
       type === LayoutAnimationType.ENTERING
         ? this.reanimatedID
@@ -359,14 +372,6 @@ export default class AnimatedComponent
           this._displayName
         )
     );
-  }
-
-  _isReducedMotion(config?: LayoutAnimationOrBuilder): boolean {
-    return config &&
-      'getReduceMotion' in config &&
-      typeof config.getReduceMotion === 'function'
-      ? getReduceMotionFromConfig(config.getReduceMotion())
-      : getReduceMotionFromConfig();
   }
 
   // This is a component lifecycle method from React, therefore we are not calling it directly.

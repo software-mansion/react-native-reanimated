@@ -6,24 +6,30 @@
     "macos": "react-native run-macos",
     "build": "cd macos && bundle install && bundle exec pod update",
     "format": "prettier --write --list-different .",
-    "start": "react-native start"
+    "start": "react-native start",
+    "type:check": "tsc --noEmit"
   },
   "dependencies": {
     "common-app": "workspace:*",
-    "react": "18.3.1",
-    "react-native": "patch:react-native@npm%3A0.80.0#~/.yarn/patches/react-native-npm-0.80.0-dababd395b.patch",
-    "react-native-macos": "^0.75.13",
-    "react-native-reanimated": "workspace:*"
+    "react": "19.0.0",
+    "react-native": "0.79.6",
+    "react-native-macos": "patch:react-native-macos@npm%3A0.79.0#~/.yarn/patches/react-native-macos-npm-0.79.0-449930c6bc.patch",
+    "react-native-reanimated": "workspace:*",
+    "react-native-worklets": "workspace:*"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0",
-    "@babel/preset-env": "^7.20.0",
-    "@babel/runtime": "^7.26.10",
-    "@react-native/babel-preset": "0.75.4",
-    "@react-native/eslint-config": "0.75.4",
-    "@react-native/metro-config": "0.75.4",
-    "@react-native/typescript-config": "0.75.4",
-    "prettier": "^3.3.3"
+    "@babel/core": "7.28.4",
+    "@babel/preset-env": "7.28.3",
+    "@babel/runtime": "7.28.4",
+    "@react-native-community/cli": "18.0.0",
+    "@react-native-community/cli-platform-ios": "18.0.0",
+    "@react-native/babel-preset": "0.79.6",
+    "@react-native/eslint-config": "0.79.6",
+    "@react-native/metro-config": "0.79.6",
+    "@react-native/typescript-config": "0.79.6",
+    "eslint": "9.37.0",
+    "prettier": "3.6.2",
+    "typescript": "5.8.3"
   },
   "engines": {
     "node": ">=20.13.0"
@@ -31,5 +37,22 @@
   "installConfig": {
     "hoistingLimits": "workspaces",
     "selfReferences": false
+  },
+  "reanimated": {
+    "staticFeatureFlags": {
+      "RUNTIME_TEST_FLAG": true,
+      "DISABLE_COMMIT_PAUSING_MECHANISM": true,
+      "ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS": true,
+      "IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS": true,
+      "EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS": true,
+      "USE_SYNCHRONIZABLE_FOR_MUTABLES": true,
+      "USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS": true
+    }
+  },
+  "worklets": {
+    "staticFeatureFlags": {
+      "RUNTIME_TEST_FLAG": true,
+      "IOS_DYNAMIC_FRAMERATE_ENABLED": true
+    }
   }
 }

@@ -10,7 +10,7 @@ worklets_assert_new_architecture_enabled($new_arch_enabled)
 
 ios_min_version = '13.4'
 
-feature_flags = "-DWORKLETS_FEATURE_FLAGS=\"#{get_static_feature_flags()}\""
+feature_flags = "-DWORKLETS_FEATURE_FLAGS=\"#{worklets_get_static_feature_flags()}\""
 version_flags = "-DWORKLETS_VERSION=#{package['version']}"
 
 Pod::Spec.new do |s|
@@ -41,6 +41,12 @@ Pod::Spec.new do |s|
   # Use install_modules_dependencies helper to install the dependencies.
   # See https://github.com/facebook/react-native/blob/c925872e72d2422be46670777bfa2111e13c9e4c/packages/react-native/scripts/cocoapods/new_architecture.rb#L71.
   install_modules_dependencies(s)
+
+  s.dependency 'React-jsi'
+  using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
+  if using_hermes && !$worklets_config[:is_tvos_target]
+    s.dependency 'React-hermes'
+  end
 
   # React Native doesn't expose these flags, but not having them
   # can lead to runtime errors due to ABI mismatches.

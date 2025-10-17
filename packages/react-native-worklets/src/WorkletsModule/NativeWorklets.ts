@@ -170,13 +170,15 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     name: string,
     initializer: SerializableRef<() => void>,
     useDefaultQueue: boolean,
-    customQueue: object | undefined
+    customQueue: object | undefined,
+    enableEventLoop: boolean
   ) {
     return this.#workletsModuleProxy.createWorkletRuntime(
       name,
       initializer,
       useDefaultQueue,
-      customQueue
+      customQueue,
+      enableEventLoop
     );
   }
 
@@ -242,6 +244,10 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       name,
       jsEngine
     );
+  }
+
+  getStaticFeatureFlag(name: string): boolean {
+    return this.#workletsModuleProxy.getStaticFeatureFlag(name);
   }
 
   setDynamicFeatureFlag(name: string, value: boolean) {

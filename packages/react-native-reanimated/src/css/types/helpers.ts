@@ -1,7 +1,5 @@
-'use strict';
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export type AnyRecord = Record<string, any>;
+'use strict';
 
 type NoUndef<T> = T extends undefined ? never : T;
 

@@ -13,18 +13,18 @@ import {
   SHOULD_BE_USE_WEB,
 } from '../common';
 import type {
+  InternalHostInstance,
   LayoutAnimationBatchItem,
   ShadowNodeWrapper,
   StyleProps,
   Value3D,
   ValueRotation,
-  WrapperRef,
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-} from '../css/platform/native';
+} from '../css/native';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
@@ -135,7 +135,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   getViewProp<T>(
     viewTag: number,
     propName: string,
-    component: WrapperRef, // required on Fabric
+    component: InternalHostInstance,
     callback?: (result: T) => void
   ) {
     const shadowNodeWrapper = getShadowNodeWrapperFromRef(component);
@@ -159,6 +159,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       viewTag,
       shouldAnimate
     );
+  }
+
+  getStaticFeatureFlag(name: string): boolean {
+    return this.#reanimatedModuleProxy.getStaticFeatureFlag(name);
   }
 
   setDynamicFeatureFlag(name: string, value: boolean) {
@@ -248,6 +252,9 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   configureLayoutAnimationBatch(): void {}
   setShouldAnimateExitingForTag(): void {}
+  getStaticFeatureFlag(): boolean {
+    return false;
+  }
   setDynamicFeatureFlag(): void {}
   subscribeForKeyboardEvents(): number {
     return -1;

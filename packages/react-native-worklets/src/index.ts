@@ -15,10 +15,14 @@ export {
   makeShareableCloneRecursive,
   shareableMappingCache,
 } from './deprecated';
-export { setDynamicFeatureFlag } from './featureFlags/dynamicFlags';
+export { getStaticFeatureFlag, setDynamicFeatureFlag } from './featureFlags';
 export { isSynchronizable } from './isSynchronizable';
 export { getRuntimeKind, RuntimeKind } from './runtimeKind';
-export { createWorkletRuntime, runOnRuntime } from './runtimes';
+export {
+  createWorkletRuntime,
+  runOnRuntime,
+  scheduleOnRuntime,
+} from './runtimes';
 export { createSerializable, isSerializableRef } from './serializable';
 export { serializableMappingCache } from './serializableMappingCache';
 export type { Synchronizable } from './synchronizable';
@@ -29,7 +33,11 @@ export {
   runOnJS,
   runOnUI,
   runOnUIAsync,
+  runOnUISync,
   scheduleOnRN,
+  scheduleOnUI,
+  // eslint-disable-next-line camelcase
+  unstable_eventLoopTask,
 } from './threads';
 export { isWorkletFunction } from './workletFunction';
 export type { IWorkletsModule, WorkletsModuleProxy } from './WorkletsModule';

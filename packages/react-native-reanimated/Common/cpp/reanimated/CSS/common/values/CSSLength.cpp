@@ -25,11 +25,8 @@ CSSLength::CSSLength(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   if (jsiValue.isNumber()) {
     this->value = jsiValue.asNumber();
     this->isRelative = false;
-  } else if (jsiValue.isString()) {
-    std::string strValue = jsiValue.asString(rt).utf8(rt);
-    *this = CSSLength(strValue); // Delegate to the string constructor
   } else {
-    throw std::runtime_error("[Reanimated] CSSLength: Unsupported value type");
+    *this = CSSLength(jsiValue.asString(rt).utf8(rt));
   }
 }
 
@@ -37,11 +34,8 @@ CSSLength::CSSLength(const folly::dynamic &value) {
   if (value.isNumber()) {
     this->value = value.getDouble();
     this->isRelative = false;
-  } else if (value.isString()) {
-    std::string strValue = value.getString();
-    *this = CSSLength(strValue.c_str()); // Delegate to the string constructor
   } else {
-    throw std::runtime_error("[Reanimated] CSSLength: Unsupported value type");
+    *this = CSSLength(value.asString().c_str());
   }
 }
 
@@ -71,16 +65,14 @@ folly::dynamic CSSLength::toDynamic() const {
 }
 
 std::string CSSLength::toString() const {
-  if (isRelative) {
-    return std::to_string(value * 100) + "%";
-  }
-  return std::to_string(value);
+  return isRelative ? (std::to_string(value * 100) + "%")
+                    : std::to_string(value);
 }
 
 CSSLength CSSLength::interpolate(
     const double progress,
     const CSSLength &to,
-    const CSSResolvableValueInterpolationContext &context) const {
+    const ResolvableValueInterpolationContext &context) const {
   // If both value types are the same, we can interpolate without reading the
   // relative value from the shadow node
   // (also, when one of the values is 0, and the other is relative)
@@ -103,7 +95,7 @@ CSSLength CSSLength::interpolate(
 }
 
 std::optional<double> CSSLength::resolve(
-    const CSSResolvableValueInterpolationContext &context) const {
+    const ResolvableValueInterpolationContext &context) const {
   if (!isRelative) {
     return value;
   }

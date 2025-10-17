@@ -1,18 +1,14 @@
 #pragma once
 
-#include <reanimated/CSS/config/CSSTransitionConfig.h>
+#include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 #include <reanimated/CSS/progress/RawProgressProvider.h>
-#include <reanimated/CSS/util/props.h>
+#include <reanimated/CSS/utils/props.h>
 
-#include <limits>
 #include <memory>
-#include <queue>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
-#include <utility>
-#include <vector>
 
 namespace reanimated::css {
 

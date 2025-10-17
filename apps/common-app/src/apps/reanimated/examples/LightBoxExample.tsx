@@ -1,7 +1,7 @@
 import '../types';
 
 import { useHeaderHeight } from '@react-navigation/elements';
-import type { RefObject } from 'react';
+import type { ComponentRef, RefObject } from 'react';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Dimensions,
@@ -52,7 +52,7 @@ type ActiveExampleImage = {
 };
 
 type onItemPressFn = (
-  imageRef: RefObject<Image | null>,
+  imageRef: ComponentRef<typeof Image>,
   item: ExampleImage,
   sv: SharedValue<number>
 ) => void;
@@ -79,7 +79,7 @@ type ListItemProps = {
 };
 
 function ListItem({ item, index, onPress }: ListItemProps) {
-  const ref = useRef<Image>(null);
+  const ref = useRef<ComponentRef<typeof Image>>(null);
   const opacity = useSharedValue(1);
 
   const containerStyle = {
@@ -98,7 +98,7 @@ function ListItem({ item, index, onPress }: ListItemProps) {
   return (
     <TouchableWithoutFeedback
       style={containerStyle}
-      onPress={() => onPress(ref, item, opacity)}>
+      onPress={() => ref.current && onPress(ref.current, item, opacity)}>
       <AnimatedImage ref={ref} source={{ uri: item.uri }} style={styles} />
     </TouchableWithoutFeedback>
   );
@@ -246,11 +246,11 @@ export default function LightBoxExample() {
   );
 
   function onItemPress(
-    imageRef: RefObject<Image | null>,
+    imageRef: ComponentRef<typeof Image>,
     item: ExampleImage,
     sv: SharedValue<number>
   ) {
-    imageRef.current?.measure?.((_x, _y, width, height, pageX, pageY) => {
+    imageRef.measure?.((_x, _y, width, height, pageX, pageY) => {
       if (width === 0 && height === 0) {
         return;
       }

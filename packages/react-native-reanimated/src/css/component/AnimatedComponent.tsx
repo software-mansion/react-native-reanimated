@@ -4,8 +4,12 @@ import { Component } from 'react';
 import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 
+import type { AnyComponent, AnyRecord, PlainStyle } from '../../common';
 import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../../common';
-import type { ShadowNodeWrapper, WrapperRef } from '../../commonTypes';
+import type {
+  InternalHostInstance,
+  ShadowNodeWrapper,
+} from '../../commonTypes';
 import type {
   AnimatedComponentRef,
   IAnimatedComponentInternalBase,
@@ -14,9 +18,9 @@ import type {
 import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
-import { CSSManager } from '../managers';
-import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../platform/native';
-import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
+import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
+import { CSSManager } from '../platform';
+import type { CSSStyle } from '../types';
 import { filterNonCSSStyleProps } from './utils';
 
 export type AnimatedComponentProps = Record<string, unknown> & {
@@ -91,7 +95,7 @@ export default class AnimatedComponent<
       viewTag = viewInfo.viewTag ?? -1;
       viewName = viewInfo.viewName;
       shadowNodeWrapper = getShadowNodeWrapperFromRef(
-        this as WrapperRef,
+        this as InternalHostInstance,
         hostInstance
       );
     }
@@ -208,8 +212,7 @@ export default class AnimatedComponent<
 
     return (
       <ChildComponent
-        {...this.props}
-        {...props}
+        {...(props ?? this.props)}
         {...platformProps}
         style={filterNonCSSStyleProps(props?.style ?? this.props.style)}
         // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.

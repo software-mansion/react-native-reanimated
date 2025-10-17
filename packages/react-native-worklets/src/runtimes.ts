@@ -4,16 +4,12 @@ import { setupCallGuard } from './callGuard';
 import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
 import { initializeNetworking } from './Network';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
-import { setupRequestAnimationFrame } from './runLoop/requestAnimationFrame';
-import { setupSetImmediate } from './runLoop/setImmediatePolyfill';
-import { setupSetInterval } from './runLoop/setIntervalPolyfill';
-import { setupSetTimeout } from './runLoop/setTimeoutPolyfill';
+import { setupRunLoop } from './runLoop/workletRuntime';
 import { RuntimeKind } from './runtimeKind';
 import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
 } from './serializable';
-import { setupMicrotasks } from './threads';
 import { isWorkletFunction } from './workletFunction';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
@@ -62,6 +58,8 @@ export function createWorkletRuntime(
   let initializerFn: (() => void) | undefined;
   let useDefaultQueue = true;
   let customQueue: object | undefined;
+  let animationQueuePollingRate: number;
+  let enableEventLoop = true;
   if (typeof nameOrConfig === 'string') {
     name = nameOrConfig;
     initializerFn = initializer;
@@ -71,6 +69,10 @@ export function createWorkletRuntime(
     initializerFn = nameOrConfig?.initializer;
     useDefaultQueue = nameOrConfig?.useDefaultQueue ?? true;
     customQueue = nameOrConfig?.customQueue;
+    animationQueuePollingRate = Math.round(
+      nameOrConfig?.animationQueuePollingRate ?? 16
+    );
+    enableEventLoop = nameOrConfig?.enableEventLoop ?? true;
   }
 
   if (initializerFn && !isWorkletFunction(initializerFn)) {
@@ -86,19 +88,14 @@ export function createWorkletRuntime(
       setupCallGuard();
       registerWorkletsError();
       setupConsole(runtimeBoundCapturableConsole);
+      if (enableEventLoop) {
+        setupRunLoop(animationQueuePollingRate);
+      }
     }),
     useDefaultQueue,
-    customQueue
+    customQueue,
+    enableEventLoop
   );
-
-  runOnRuntime(workletRuntime, () => {
-    'worklet';
-    setupMicrotasks();
-    setupRequestAnimationFrame();
-    setupSetTimeout();
-    setupSetImmediate();
-    setupSetInterval();
-  })();
 
   runOnRuntime(workletRuntime, initializeNetworking)();
 
@@ -110,6 +107,7 @@ export function createWorkletRuntime(
   return workletRuntime;
 }
 
+/** @deprecated Use `scheduleOnRuntime` instead. */
 // @ts-expect-error Check `runOnUI` overload.
 export function runOnRuntime<Args extends unknown[], ReturnValue>(
   workletRuntime: WorkletRuntime,
@@ -142,8 +140,43 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
       createSerializable(() => {
         'worklet';
         worklet(...args);
+        globalThis.__flushMicrotasks();
       })
     );
+}
+
+/**
+ * Lets you asynchronously run a
+ * [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)
+ * on the [Worker
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime).
+ *
+ * Check
+ * {@link https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds}
+ * for more information about the different runtime kinds.
+ *
+ * - The worklet is scheduled on the Worker Runtime's [Async
+ *   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/Public/AsyncQueue.h)
+ * - The function cannot be scheduled on the Worker Runtime from [UI
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime)
+ *   or another [Worker
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime),
+ *   unless the [Bundle
+ *   Mode](https://docs.swmansion.com/react-native-worklets/docs/experimental/bundleMode)
+ *   is enabled.
+ *
+ * @param workletRuntime - The runtime to schedule the worklet on.
+ * @param worklet - The worklet to schedule.
+ * @param args - The arguments to pass to the worklet.
+ * @returns The return value of the worklet.
+ */
+export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): void {
+  'worklet';
+  runOnRuntime(workletRuntime, worklet)(...args);
 }
 
 /** Configuration object for creating a worklet runtime. */
@@ -155,6 +188,19 @@ export type WorkletRuntimeConfig = {
    * before any other worklets.
    */
   initializer?: () => void;
+  /**
+   * Time interval in milliseconds between polling of frame callbacks scheduled
+   * by requestAnimationFrame. If not specified, it defaults to 16 ms.
+   */
+  animationQueuePollingRate?: number;
+  /**
+   * Determines whether to enable the default Event Loop or not. The Event Loop
+   * provides implementations for `setTimeout`, `setImmediate`, `setInterval`,
+   * `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`,
+   * `clearImmediate`, and `cancelAnimationFrame` methods. If not specified, it
+   * defaults to `true`.
+   */
+  enableEventLoop?: true;
 } & (
   | {
       /**

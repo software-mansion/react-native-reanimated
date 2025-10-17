@@ -17,7 +17,7 @@ import {
   test,
   useTestRef,
   wait,
-  waitForNotify,
+  waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 
@@ -167,13 +167,13 @@ describe('withSequence animation of color', () => {
         expect(await activeComponent.getAnimatedStyle('backgroundColor')).not.toBe(startColor, ComparisonMode.COLOR);
         expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(startColor, ComparisonMode.COLOR);
       }
-      await waitForNotify(START_ANIMATION_NOTIFICATION_NAME);
+      await waitForNotification(START_ANIMATION_NOTIFICATION_NAME);
       expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(finalColor, ComparisonMode.COLOR);
       expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(finalColor, ComparisonMode.COLOR);
-      await waitForNotify(MIDDLE_ANIMATION_NOTIFICATION_NAME);
+      await waitForNotification(MIDDLE_ANIMATION_NOTIFICATION_NAME);
       expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(middleColor, ComparisonMode.COLOR);
       expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(middleColor, ComparisonMode.COLOR);
-      await waitForNotify(FINAL_ANIMATION_NOTIFICATION_NAME);
+      await waitForNotification(FINAL_ANIMATION_NOTIFICATION_NAME);
       expect(await activeComponent.getAnimatedStyle('backgroundColor')).toBe(finalColor, ComparisonMode.COLOR);
       expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(finalColor, ComparisonMode.COLOR);
     },

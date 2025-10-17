@@ -88,7 +88,13 @@ export enum ComparisonMode {
 
 export type LockObject = { lock: boolean };
 
-export type OperationUpdate = StyleProps | AnimatedStyle<Record<string, unknown>> | Record<string, unknown>;
+type Writable<T> = {
+  -readonly [P in keyof T]: T[P];
+};
+
+export type OperationUpdate = Writable<
+  StyleProps | AnimatedStyle<Writable<Record<string, unknown>>> | Writable<Record<string, unknown>>
+>;
 
 export interface Operation {
   tag?: number;
@@ -119,6 +125,9 @@ export type Mismatch = {
   expectedSnapshot: OperationUpdate;
   capturedSnapshot: OperationUpdate;
 };
+
+export type DefaultValue = 'not_ok' | 'ok';
+export type ValueWrapper<T> = { value: T | DefaultValue };
 
 declare global {
   var mockedAnimationTimestamp: number | undefined;

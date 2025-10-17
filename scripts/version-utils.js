@@ -1,5 +1,4 @@
 const fs = require('fs');
-const path = require('path');
 
 /**
  * Updates the package.json version and jsVersion file

@@ -1,18 +1,18 @@
 #pragma once
 
-#include <reanimated/CSS/config/CSSAnimationConfig.h>
-#include <reanimated/CSS/config/CSSKeyframesConfig.h>
+#include <reanimated/CSS/configs/CSSAnimationConfig.h>
+#include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 
 #include <memory>
 #include <string>
-#include <unordered_set>
-#include <utility>
 
 namespace reanimated::css {
 
 class CSSAnimation {
  public:
+  static constexpr double FALLBACK_INTERPOLATION_THRESHOLD = 0.5;
+
   CSSAnimation(
       jsi::Runtime &rt,
       std::shared_ptr<const ShadowNode> shadowNode,

@@ -1,9 +1,8 @@
 #pragma once
 
 #include <reanimated/CSS/interpolation/groups/GroupPropertiesInterpolator.h>
-#include <reanimated/CSS/util/interpolators.h>
+#include <reanimated/CSS/utils/interpolators.h>
 
-#include <algorithm>
 #include <memory>
 
 namespace reanimated::css {

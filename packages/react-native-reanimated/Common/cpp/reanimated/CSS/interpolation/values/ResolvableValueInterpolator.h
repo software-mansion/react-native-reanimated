@@ -1,51 +1,45 @@
 #pragma once
 
-#include <reanimated/CSS/common/values/CSSLength.h>
-#include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
+#include <reanimated/CSS/interpolation/configs.h>
+#include <reanimated/CSS/interpolation/values/SimpleValueInterpolator.h>
 
 #include <memory>
-#include <string>
-#include <utility>
 
 namespace reanimated::css {
 
+/**
+ * Concrete implementation of ValueInterpolator for CSS values that require
+ * resolution before interpolation. This class handles interpolation of relative
+ * values (e.g., percentage length values) that need to be resolved to absolute
+ * values using the context describing the ShadowNode before the interpolation
+ * can occur.
+ */
 template <typename... AllowedTypes>
-class ResolvableValueInterpolator : public ValueInterpolator<AllowedTypes...> {
- public:
-  using ValueType = typename ValueInterpolator<AllowedTypes...>::ValueType;
+class ResolvableValueInterpolator final
+    : public SimpleValueInterpolator<AllowedTypes...> {
+  static_assert(
+      (... && std::is_base_of<CSSValue, AllowedTypes>::value),
+      "[Reanimated] ResolvableValueInterpolator: All interpolated types must inherit from CSSValue");
 
-  ResolvableValueInterpolator(
+ public:
+  using ValueType =
+      typename SimpleValueInterpolator<AllowedTypes...>::ValueType;
+
+  explicit ResolvableValueInterpolator(
       const PropertyPath &propertyPath,
       const ValueType &defaultStyleValue,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      RelativeTo relativeTo,
-      std::string relativeProperty)
-      : ValueInterpolator<AllowedTypes...>(
-            propertyPath,
-            defaultStyleValue,
-            viewStylesRepository),
-        relativeTo_(relativeTo),
-        relativeProperty_(std::move(relativeProperty)) {}
-  virtual ~ResolvableValueInterpolator() = default;
+      const ResolvableValueInterpolatorConfig &config);
 
  protected:
-  ValueType interpolateValue(
+  folly::dynamic interpolateValue(
       double progress,
-      const ValueType &fromValue,
-      const ValueType &toValue,
-      const ValueInterpolatorUpdateContext &context) const override {
-    return fromValue.interpolate(
-        progress,
-        toValue,
-        {.node = context.node,
-         .viewStylesRepository = this->viewStylesRepository_,
-         .relativeProperty = relativeProperty_,
-         .relativeTo = relativeTo_});
-  }
+      const std::shared_ptr<CSSValue> &fromValue,
+      const std::shared_ptr<CSSValue> &toValue,
+      const ValueInterpolationContext &context) const override;
 
  private:
-  RelativeTo relativeTo_;
-  std::string relativeProperty_;
+  const ResolvableValueInterpolatorConfig &config_;
 };
 
 } // namespace reanimated::css

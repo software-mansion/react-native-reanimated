@@ -1,5 +1,9 @@
 #include <reanimated/CSS/common/values/CSSAngle.h>
 
+#include <iomanip>
+#include <regex>
+#include <unordered_map>
+
 namespace reanimated::css {
 
 CSSAngle::CSSAngle() : value(0) {}
@@ -45,23 +49,11 @@ CSSAngle::CSSAngle(const std::string &rotationString) {
 CSSAngle::CSSAngle(const char *cstr) : CSSAngle(std::string_view{cstr}) {}
 
 CSSAngle::CSSAngle(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  if (!jsiValue.isString()) {
-    throw std::invalid_argument(
-        "[Reanimated] CSSAngle: Invalid value type: " +
-        stringifyJSIValue(rt, jsiValue));
-  }
-
-  std::string strValue = jsiValue.asString(rt).utf8(rt);
-  *this = CSSAngle(strValue);
+  *this = CSSAngle(jsiValue.asString(rt).utf8(rt));
 }
 
 CSSAngle::CSSAngle(const folly::dynamic &value) {
-  if (!value.isString()) {
-    throw std::invalid_argument(
-        "[Reanimated] CSSAngle: Invalid value type: " + folly::toJson(value));
-  }
-
-  *this = CSSAngle(value.asString());
+  *this = CSSAngle(value.asString().c_str());
 }
 
 bool CSSAngle::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {

@@ -42,11 +42,15 @@ def resolveReactNativeDirectory() {
     )
 }
 
-def getReactNativeMinorVersion() {
+def getReactNativeVersion() {
     def reactNativeRootDir = resolveReactNativeDirectory()
     def reactProperties = new Properties()
     file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
-    def reactNativeVersion = reactProperties.getProperty("VERSION_NAME")
+    return reactProperties.getProperty("VERSION_NAME")
+}
+
+def getReactNativeMinorVersion() {
+    def reactNativeVersion = getReactNativeVersion()
     return reactNativeVersion.startsWith("0.0.0-") ? 1000 : reactNativeVersion.split("\\.")[1].toInteger()
 }
 
@@ -92,11 +96,13 @@ if (isNewArchitectureEnabled()) {
 def packageDir = project.projectDir.parentFile
 def reactNativeRootDir = resolveReactNativeDirectory()
 def REACT_NATIVE_MINOR_VERSION = getReactNativeMinorVersion()
+def REACT_NATIVE_VERSION = getReactNativeVersion()
 def WORKLETS_VERSION = getWorkletsVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
 def BUNDLE_MODE = safeAppExtGet("workletsBundleMode", false)
 def WORKLETS_FEATURE_FLAGS = getStaticFeatureFlags()
+def HERMES_V1_ENABLED = safeAppExtGet("hermesV1Enabled", false)
 
 // Set version for prefab
 version WORKLETS_VERSION
@@ -191,7 +197,8 @@ android {
                         "-DWORKLETS_BUNDLE_MODE=${BUNDLE_MODE}",
                         "-DWORKLETS_VERSION=${WORKLETS_VERSION}",
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
-                        "-DWORKLETS_FEATURE_FLAGS=${WORKLETS_FEATURE_FLAGS}"
+                        "-DWORKLETS_FEATURE_FLAGS=${WORKLETS_FEATURE_FLAGS}",
+                        "-DHERMES_V1_ENABLED=${HERMES_V1_ENABLED}"
                 abiFilters (*reactNativeArchitectures())
                 targets("worklets")
             }
@@ -239,19 +246,10 @@ android {
                 "**/libc++_shared.so",
                 "**/libfbjni.so",
                 "**/libjsi.so",
-                "**/libfolly_json.so",
-                "**/libfolly_runtime.so",
-                "**/libglog.so",
                 "**/libhermes.so",
-                "**/libhermes-executor-debug.so",
-                "**/libhermes_executor.so",
+                "**/libhermesvm.so",
                 "**/libhermestooling.so",
-                "**/libreactnativejni.so",
-                "**/libturbomodulejsijni.so",
                 "**/libreactnative.so",
-                "**/libreact_nativemodule_core.so",
-                "**/libreact_render*.so",
-                "**/librrc_root.so",
                 "**/libjscexecutor.so",
         ]
     }
@@ -287,12 +285,17 @@ android {
     }
 }
 
+def validateReactNativeVersionResult = providers.exec {
+    workingDir(projectDir.path)
+    commandLine("node", "./../scripts/validate-react-native-version.js", REACT_NATIVE_VERSION.toString())
+    ignoreExitValue = true
+}
+
 task assertMinimalReactNativeVersionTask {
-    // If you change the minimal React Native version remember to update Compatibility Table in docs
-    def minimalReactNativeVersion = 78
-    onlyIf { REACT_NATIVE_MINOR_VERSION < minimalReactNativeVersion }
     doFirst {
-        throw new GradleException("[Worklets] Unsupported React Native version. Please use React Native 0.$minimalReactNativeVersion or newer.")
+        if (validateReactNativeVersionResult.getResult().get().exitValue != 0) {
+            throw new GradleException(validateReactNativeVersionResult.getStandardError().getAsText().get().trim())
+        }
     }
 }
 

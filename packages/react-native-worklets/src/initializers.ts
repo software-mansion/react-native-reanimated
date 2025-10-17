@@ -5,11 +5,11 @@ import { setupCallGuard } from './callGuard';
 import { registerReportFatalRemoteError } from './errors';
 import { initializeNetworking } from './Network';
 import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
-import { mockedRequestAnimationFrame } from './runLoop/mockedRequestAnimationFrame';
-import { setupRequestAnimationFrame } from './runLoop/requestAnimationFrame';
-import { setupSetImmediate } from './runLoop/setImmediatePolyfill';
-import { setupSetInterval } from './runLoop/setIntervalPolyfill';
-import { setupSetTimeout } from './runLoop/setTimeoutPolyfill';
+import { setupSetImmediate } from './runLoop/common/setImmediatePolyfill';
+import { setupSetInterval } from './runLoop/common/setIntervalPolyfill';
+import { mockedRequestAnimationFrame } from './runLoop/uiRuntime/mockedRequestAnimationFrame';
+import { setupRequestAnimationFrame } from './runLoop/uiRuntime/requestAnimationFrame';
+import { setupSetTimeout } from './runLoop/uiRuntime/setTimeoutPolyfill';
 import { RuntimeKind } from './runtimeKind';
 import { __installUnpacker as installSynchronizableUnpacker } from './synchronizableUnpacker';
 import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
@@ -118,7 +118,7 @@ function initializeRuntime() {
 
 /** A function that should be run only on React Native runtime. */
 function initializeRNRuntime() {
-  if (__DEV__) {
+  if (__DEV__ && !SHOULD_BE_USE_WEB) {
     const testWorklet = () => {
       'worklet';
     };

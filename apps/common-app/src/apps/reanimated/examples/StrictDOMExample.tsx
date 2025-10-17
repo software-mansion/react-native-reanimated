@@ -36,8 +36,9 @@ export default function StrictDOMExample() {
   const x = useSharedValue(0);
   const y = useSharedValue(0);
 
-  // @ts-expect-error There's a TypeScript bug in `react-native-dom` that
-  // doesn't allow React-Native-like `transform`, but it works in runtime.
+  // @ts-ignore
+  // There's a TypeScript bug in `react-native-dom` that doesn't allow
+  // React-Native-like `transform`, but it works in runtime.
   // https://github.com/facebook/react-strict-dom/issues/204
   const animatedStyle = useAnimatedStyle(() => {
     return {

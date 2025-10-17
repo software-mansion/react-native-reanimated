@@ -1,7 +1,7 @@
 #pragma once
 
+#include <reanimated/CSS/InterpolatorRegistry.h>
 #include <reanimated/CSS/common/definitions.h>
-#include <reanimated/CSS/config/interpolators/registry.h>
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
@@ -23,7 +23,8 @@ class TransitionStyleInterpolator {
 
   folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,
-      const TransitionProgressProvider &transitionProgressProvider) const;
+      const TransitionProgressProvider &transitionProgressProvider,
+      const std::unordered_set<std::string> &allowDiscreteProperties) const;
 
   void discardFinishedInterpolators(
       const TransitionProgressProvider &transitionProgressProvider);
@@ -42,10 +43,6 @@ class TransitionStyleInterpolator {
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   PropertyInterpolatorsRecord interpolators_;
-
-  folly::dynamic mapInterpolators(
-      const TransitionProgressProvider &transitionProgressProvider,
-      const MapInterpolatorsCallback &callback) const;
 };
 
 } // namespace reanimated::css

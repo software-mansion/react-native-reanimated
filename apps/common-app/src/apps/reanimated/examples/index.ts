@@ -31,10 +31,13 @@ import CubesExample from './CubesExample';
 import PagerExample from './CustomHandler/PagerExample';
 import DispatchCommandExample from './DispatchCommandExample';
 import DragAndSnapExample from './DragAndSnapExample';
+import DynamicColorIOSExample from './DynamicColorIOSExample';
+import PlatformColorExample from './PlatformColorExample';
 import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import FilterExample from './FilterExample';
+import FlatListWithLayoutAnimations from './FlatListWithLayoutAnimationsExample';
 import FpsExample from './FpsExample';
 import FrameCallbackExample from './FrameCallbackExample';
 import FreezeExample from './FreezeExample';
@@ -107,6 +110,7 @@ import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderCo
 import ScreenTransitionExample from './ScreenTransitionExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import ScrollEventExample from './ScrollEventExample';
+import ScrollPerformanceExample from './ScrollPerformanceExample';
 import ScrollToExample from './ScrollToExample';
 import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
@@ -151,6 +155,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🎞️',
     title: 'FPS',
     screen: FpsExample,
+  },
+  ScrollPerformanceExample: {
+    icon: '🚁',
+    title: 'Scroll performance',
+    screen: ScrollPerformanceExample,
   },
   ThirdPartyComponentsExample: {
     icon: '3️⃣',
@@ -216,6 +225,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔄',
     title: 'Copy serializable performance test',
     screen: CopySerializablePerformanceTest,
+  },
+  FlatListWithLayoutAnimations: {
+    icon: '🎻',
+    title: 'FlatList with layout animations',
+    screen: FlatListWithLayoutAnimations,
   },
 
   // About
@@ -570,6 +584,16 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '👮‍♂️',
     title: 'React Strict DOM',
     screen: StrictDOMExample,
+  },
+  DynamicColorIOSExample: {
+    title: 'DynamicColorIOS',
+    screen: DynamicColorIOSExample,
+    icon: '🌗',
+  },
+  PlatformColorExample: {
+    title: 'PlatformColor',
+    screen: PlatformColorExample,
+    icon: '🎨',
   },
 
   // Old examples

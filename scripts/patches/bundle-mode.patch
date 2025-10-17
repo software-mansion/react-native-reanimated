@@ -1,8 +1,8 @@
 diff --git a/apps/fabric-example/android/gradle.properties b/apps/fabric-example/android/gradle.properties
-index efcfd4720d..9f26a1d953 100644
+index d183897bec..7fdf50386b 100644
 --- a/apps/fabric-example/android/gradle.properties
 +++ b/apps/fabric-example/android/gradle.properties
-@@ -44,7 +44,7 @@ isReanimatedExampleApp=true
+@@ -49,7 +49,7 @@ isReanimatedExampleApp=true
  enableReanimatedProfiling=true
  
  # Uncomment the next line to enable bundle mode.
@@ -49,7 +49,7 @@ index 259ed1ad84..ebdbea9d22 100644
      ],
      [
 diff --git a/apps/fabric-example/ios/Podfile b/apps/fabric-example/ios/Podfile
-index f9c832e1f7..d82d448b93 100644
+index 3f8fe4a6e2..e208389ca3 100644
 --- a/apps/fabric-example/ios/Podfile
 +++ b/apps/fabric-example/ios/Podfile
 @@ -10,7 +10,7 @@ require_relative '../../../packages/react-native-reanimated/scripts/clangd-add-x
@@ -74,3 +74,18 @@ index cb4f1c4adc..b05b824d9c 100644
  
  module.exports = wrapWithReanimatedMetroConfig(
    mergeConfig(getDefaultConfig(__dirname), config)
+diff --git a/package.json b/package.json
+index 6a77357267..df6817cce5 100644
+--- a/package.json
++++ b/package.json
+@@ -49,5 +49,10 @@
+     "prettier": "^3.3.3",
+     "prettier-plugin-jsdoc": "^1.3.0",
+     "typescript": "5.8.3"
++  },
++  "resolutions": {
++    "metro": "patch:metro@npm%3A0.83.1#~/.yarn/patches/metro-npm-0.83.1-241fe42591.patch",
++    "metro-runtime": "patch:metro-runtime@npm%3A0.83.1#~/.yarn/patches/metro-runtime-npm-0.83.1-c3d616063e.patch",
++    "react-native": "patch:react-native@npm%3A0.82.0#~/.yarn/patches/react-native-npm-0.82.0-228ad0ffa7.patch"
+   }
+ }

@@ -3,21 +3,20 @@
   "version": "0.0.0",
   "private": true,
   "devDependencies": {
-    "@babel/cli": "^7.20.0",
-    "@babel/core": "^7.25.2",
-    "@babel/plugin-transform-class-properties": "^7.24.7",
-    "@babel/plugin-transform-classes": "^7.24.8",
-    "@babel/plugin-transform-unicode-regex": "^7.24.7",
-    "@babel/traverse": "^7.20.0",
-    "@babel/types": "^7.20.0",
-    "@react-native/eslint-config": "0.81.0",
-    "@types/node": "^18.15.11",
-    "@typescript-eslint/parser": "^7.0.2",
-    "esbuild": "^0.17.11",
-    "eslint": "^9.29.0",
-    "eslint-plugin-standard": "^5.0.0",
-    "prettier": "^3.3.3",
-    "tsc-watch": "^6.0.0",
+    "@babel/cli": "7.28.3",
+    "@babel/core": "7.28.4",
+    "@babel/plugin-transform-class-properties": "7.27.1",
+    "@babel/plugin-transform-classes": "7.28.4",
+    "@babel/plugin-transform-unicode-regex": "7.27.1",
+    "@babel/traverse": "7.28.4",
+    "@babel/types": "7.28.4",
+    "@react-native/eslint-config": "0.80.0",
+    "@types/node": "24.0.14",
+    "@typescript-eslint/parser": "8.37.0",
+    "esbuild": "0.25.10",
+    "eslint": "9.37.0",
+    "prettier": "3.6.2",
+    "tsc-watch": "7.2.0",
     "typescript": "5.8.3"
   },
   "license": "MIT",
@@ -29,5 +28,8 @@
     "watch": "tsc-watch --onSuccess \"yarn bundle\"",
     "lint": "eslint --max-warnings=0 src",
     "type:check": "tsc --noEmit"
+  },
+  "installConfig": {
+    "selfReferences": false
   }
 }

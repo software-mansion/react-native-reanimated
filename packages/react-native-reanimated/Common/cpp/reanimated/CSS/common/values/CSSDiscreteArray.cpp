@@ -1,4 +1,3 @@
-#include <folly/json.h>
 #include <reanimated/CSS/common/values/CSSDiscreteArray.h>
 
 namespace reanimated::css {
@@ -14,12 +13,6 @@ template <CSSValueDerived TValue>
 CSSDiscreteArray<TValue>::CSSDiscreteArray(
     jsi::Runtime &rt,
     const jsi::Value &jsiValue) {
-  if (!canConstruct(rt, jsiValue)) {
-    throw std::invalid_argument(
-        "[Reanimated] CSSDiscreteArray: Invalid value type: " +
-        stringifyJSIValue(rt, jsiValue));
-  }
-
   const auto &array = jsiValue.asObject(rt).asArray(rt);
   values.reserve(array.size(rt));
 
@@ -29,14 +22,7 @@ CSSDiscreteArray<TValue>::CSSDiscreteArray(
 }
 
 template <CSSValueDerived TValue>
-CSSDiscreteArray<TValue>::CSSDiscreteArray(const folly::dynamic &value) {
-  if (!canConstruct(value)) {
-    throw std::invalid_argument(
-        "[Reanimated] CSSDiscreteArray: Invalid value type: " +
-        folly::toJson(value));
-  }
-
-  const auto &array = value;
+CSSDiscreteArray<TValue>::CSSDiscreteArray(const folly::dynamic &array) {
   values.reserve(array.size());
 
   for (size_t i = 0; i < array.size(); i++) {

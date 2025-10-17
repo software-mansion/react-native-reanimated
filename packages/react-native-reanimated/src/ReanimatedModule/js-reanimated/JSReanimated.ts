@@ -14,18 +14,18 @@ import {
   ReanimatedError,
 } from '../../common';
 import type {
+  InternalHostInstance,
   ShadowNodeWrapper,
   StyleProps,
   Value3D,
   ValueRotation,
-  WrapperRef,
 } from '../../commonTypes';
 import { SensorType } from '../../commonTypes';
 import type {
   CSSAnimationUpdates,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-} from '../../css/platform/native';
+} from '../../css/native';
 import { assertWorkletsVersion } from '../../platform-specific/workletsVersion';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
@@ -255,13 +255,18 @@ class JSReanimated implements IReanimatedModule {
   getViewProp<T>(
     _viewTag: number,
     _propName: string,
-    _component?: WrapperRef | null,
+    _component?: InternalHostInstance | null,
     _callback?: (result: T) => void
   ): Promise<T> {
     throw new ReanimatedError('getViewProp is not available in JSReanimated.');
   }
 
-  setDynamicFeatureFlag(_name: string, _value: boolean): void {
+  getStaticFeatureFlag(): boolean {
+    // mock implementation
+    return false;
+  }
+
+  setDynamicFeatureFlag(): void {
     // noop
   }
 

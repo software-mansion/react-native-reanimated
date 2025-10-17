@@ -130,14 +130,12 @@ void UpdatesRegistryManager::collectPropsToRevertBySurface(
       }
 
       const auto &componentName = shadowNode->getComponentName();
-      if (hasInterpolators(componentName)) {
-        const auto &interpolators = getComponentInterpolators(componentName);
-        const auto &it = interpolators.find(propName);
+      const auto &interpolators = getComponentInterpolators(componentName);
+      const auto &it = interpolators.find(propName);
 
-        if (it != interpolators.end()) {
-          filteredStyle[propName] = it->second->getDefaultValue().toDynamic();
-          continue;
-        }
+      if (it != interpolators.end()) {
+        filteredStyle[propName] = it->second->getDefaultValue().toDynamic();
+        continue;
       }
 
       filteredStyle[propName] = nullptr;

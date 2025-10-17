@@ -68,7 +68,8 @@ inline jsi::Value createWorkletRuntime(
     std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
     const std::string &name,
     std::shared_ptr<SerializableWorklet> &initializer,
-    const std::shared_ptr<AsyncQueue> &queue) {
+    const std::shared_ptr<AsyncQueue> &queue,
+    bool enableEventLoop) {
   const auto workletRuntime = runtimeManager->createWorkletRuntime(
       jsiWorkletsModuleProxy, name, initializer, queue);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
@@ -210,6 +211,9 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "scheduleOnRuntime"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "reportFatalErrorOnJS"));
+
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "getStaticFeatureFlag"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "setDynamicFeatureFlag"));
 
@@ -501,7 +505,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
-        4,
+        5,
         [clone = std::make_shared<JSIWorkletsModuleProxy>(*this)](
             jsi::Runtime &rt,
             const jsi::Value &thisValue,
@@ -520,6 +524,8 @@ jsi::Value JSIWorkletsModuleProxy::get(
             asyncQueue = extractAsyncQueue(rt, args[3]);
           }
 
+          const auto enableEventLoop = args[4].asBool();
+
           return createWorkletRuntime(
               rt,
               clone->getRuntimeManager(),
@@ -527,7 +533,8 @@ jsi::Value JSIWorkletsModuleProxy::get(
               clone,
               name,
               serializableInitializer,
-              asyncQueue);
+              asyncQueue,
+              enableEventLoop);
         });
   }
 
@@ -701,6 +708,20 @@ jsi::Value JSIWorkletsModuleProxy::get(
   }
 #endif // WORKLETS_BUNDLE_MODE
 
+  if (name == "getStaticFeatureFlag") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [](jsi::Runtime &rt,
+           const jsi::Value &thisValue,
+           const jsi::Value *args,
+           size_t count) {
+          return worklets::StaticFeatureFlags::getFlag(
+              /* name */ args[0].asString(rt).utf8(rt));
+        });
+  }
+
   if (name == "setDynamicFeatureFlag") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -710,7 +731,7 @@ jsi::Value JSIWorkletsModuleProxy::get(
            const jsi::Value &thisValue,
            const jsi::Value *args,
            size_t count) {
-          DynamicFeatureFlags::setFlag(
+          worklets::DynamicFeatureFlags::setFlag(
               /* name */ args[0].asString(rt).utf8(rt),
               /* value */ args[1].asBool());
           return jsi::Value::undefined();
