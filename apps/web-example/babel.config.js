@@ -24,7 +24,7 @@ module.exports = function (api) {
   }
 
   return {
-    presets: ['babel-preset-expo', rsdPlugin],
+    presets: ['babel-preset-expo', 'react-strict-dom/babel-preset'],
     plugins,
   };
 };
