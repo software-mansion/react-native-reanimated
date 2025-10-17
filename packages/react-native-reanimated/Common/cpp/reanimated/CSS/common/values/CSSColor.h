@@ -41,6 +41,7 @@ enum class CSSColorType {
 
 struct CSSColor : public CSSColorBase<CSSColorType, CSSColor> {
   using CSSColorBase<CSSColorType, CSSColor>::CSSColorBase;
+  using CSSColorBase<CSSColorType, CSSColor>::operator==;
 
   explicit CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue);
   explicit CSSColor(const folly::dynamic &value);
