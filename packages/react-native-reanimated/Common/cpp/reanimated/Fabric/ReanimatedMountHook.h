@@ -4,6 +4,7 @@
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 
 #include <react/renderer/uimanager/UIManagerMountHook.h>
+#include <cxxreact/ReactNativeVersion.h>
 
 #include <memory>
 
@@ -21,11 +22,11 @@ class ReanimatedMountHook : public UIManagerMountHook {
 
   void shadowTreeDidMount(
       RootShadowNode::Shared const &rootShadowNode,
-#if REACT_NATIVE_MINOR_VERSION >= 81
+#if REACT_NATIVE_VERSION_MINOR >= 81
       HighResTimeStamp /*unmountTime*/
 #else
       double /*unmountTime*/
-#endif // REACT_NATIVE_MINOR_VERSION >= 81
+#endif // REACT_NATIVE_VERSION_MINOR >= 81
       ) noexcept override;
 
  private:

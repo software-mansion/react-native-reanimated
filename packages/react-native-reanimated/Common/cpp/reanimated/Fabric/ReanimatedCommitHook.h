@@ -4,6 +4,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 
 #include <react/renderer/uimanager/UIManagerCommitHook.h>
+#include <cxxreact/ReactNativeVersion.h>
 
 #include <memory>
 
@@ -32,10 +33,10 @@ class ReanimatedCommitHook
       ShadowTree const &shadowTree,
       RootShadowNode::Shared const &oldRootShadowNode,
       RootShadowNode::Unshared const &newRootShadowNode
-#if REACT_NATIVE_MINOR_VERSION >= 80
+#if REACT_NATIVE_VERSION_MINOR >= 80
       ,
       const ShadowTreeCommitOptions &commitOptions
-#endif
+#endif // REACT_NATIVE_VERSION_MINOR >= 80
       ) noexcept override;
 
  private:

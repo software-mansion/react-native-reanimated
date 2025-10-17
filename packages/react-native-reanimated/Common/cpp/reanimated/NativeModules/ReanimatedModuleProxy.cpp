@@ -15,6 +15,7 @@
 
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
+#include <cxxreact/ReactNativeVersion.h>
 
 #include <functional>
 #include <iomanip>
@@ -26,14 +27,14 @@
 
 namespace reanimated {
 
-#if REACT_NATIVE_MINOR_VERSION >= 81
+#if REACT_NATIVE_VERSION_MINOR >= 81
 static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper) {
   return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(
       rt, shadowNodeWrapper);
 }
-#endif
+#endif // REACT_NATIVE_VERSION_MINOR >= 81
 
 ReanimatedModuleProxy::ReanimatedModuleProxy(
     const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
