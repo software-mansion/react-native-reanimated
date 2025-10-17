@@ -74,8 +74,9 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     return newRootShadowNode;
   }
 
-  if constexpr (ReactNativeVersion.Minor >= 80 && StaticFeatureFlags::getFlag(
-                    "USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS")) {
+  if constexpr (
+      ReactNativeVersion.Minor >= 80 &&
+      StaticFeatureFlags::getFlag("USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS")) {
     // State updates are based on the currently committed ShadowTree,
     // which means that all animation changes are already included.
     // Therefore, there's no need to reapply styles from the props map.

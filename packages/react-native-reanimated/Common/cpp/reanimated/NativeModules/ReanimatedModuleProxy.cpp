@@ -13,9 +13,9 @@
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
+#include <cxxreact/ReactNativeVersion.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
-#include <cxxreact/ReactNativeVersion.h>
 
 #include <functional>
 #include <iomanip>

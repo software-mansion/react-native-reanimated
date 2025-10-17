@@ -3,8 +3,8 @@
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 
-#include <react/renderer/uimanager/UIManagerCommitHook.h>
 #include <cxxreact/ReactNativeVersion.h>
+#include <react/renderer/uimanager/UIManagerCommitHook.h>
 
 #include <memory>
 
