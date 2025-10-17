@@ -83,7 +83,7 @@ class NativeReanimatedModule implements IReanimatedModule {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    if (!globalThis.RN$Bridgeless && !SHOULD_BE_USE_WEB) {
+    if (__DEV__ && !globalThis.RN$Bridgeless && !SHOULD_BE_USE_WEB) {
       throw new ReanimatedError(
         'Reanimated 4 supports only the React Native New Architecture and web.'
       );
