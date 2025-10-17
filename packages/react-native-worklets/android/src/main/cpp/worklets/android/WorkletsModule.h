@@ -10,6 +10,7 @@
 #endif // WORKLETS_BUNDLE_MODE
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
+#include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/android/AndroidUIScheduler.h>
 
 #include <memory>
@@ -63,8 +64,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
     return javaPart_->getClass()->getMethod<Signature>(methodName.c_str());
   }
 
-  std::function<void(std::function<void(const double)>)>
-  getForwardedRequestAnimationFrame();
+  RuntimeBindings::RequestAnimationFrame getRequestAnimationFrame();
 
   std::function<bool()> getIsOnJSQueueThread();
 
