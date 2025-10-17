@@ -7535,21 +7535,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@stylexjs/babel-plugin@npm:0.16.1":
-  version: 0.16.1
-  resolution: "@stylexjs/babel-plugin@npm:0.16.1"
-  dependencies:
-    "@babel/core": "npm:^7.26.8"
-    "@babel/helper-module-imports": "npm:^7.25.9"
-    "@babel/traverse": "npm:^7.26.8"
-    "@babel/types": "npm:^7.26.8"
-    "@dual-bundle/import-meta-resolve": "npm:^4.1.0"
-    "@stylexjs/stylex": "npm:0.16.1"
-    postcss-value-parser: "npm:^4.1.0"
-  checksum: 10/c7e4c7aacc3cc126a1ac76d367e1895b2a0482554a937dc3d8f278f89e741e126c5b96b551a110ae7d80f7063bc538da0138ef3597603f94d89512f364c77d51
-  languageName: node
-  linkType: hard
-
 "@stylexjs/babel-plugin@npm:^0.15.4":
   version: 0.15.4
   resolution: "@stylexjs/babel-plugin@npm:0.15.4"
@@ -7573,17 +7558,6 @@ __metadata:
     invariant: "npm:^2.2.4"
     styleq: "npm:0.2.1"
   checksum: 10/98ea26b7aea87155f4c04fd3a3441f671ea15b610c186922cf8a60304a73a2a2ce129bfcdb862c86934b83598f131f637802fa580cb506b430f73276cf6ade81
-  languageName: node
-  linkType: hard
-
-"@stylexjs/stylex@npm:0.16.1":
-  version: 0.16.1
-  resolution: "@stylexjs/stylex@npm:0.16.1"
-  dependencies:
-    css-mediaquery: "npm:^0.1.2"
-    invariant: "npm:^2.2.4"
-    styleq: "npm:0.2.1"
-  checksum: 10/265a41980bf329d2f078f8bcf2f94a4a89db6bf0f69714caa120160d881e9edecda3141bdbc1b39284dab02b93821c2e73d071c4c259819c8c377ebf3183d120
   languageName: node
   linkType: hard
 
@@ -30796,7 +30770,6 @@ __metadata:
   resolution: "web-example@workspace:apps/web-example"
   dependencies:
     "@expo/metro-runtime": "npm:6.1.2"
-    "@stylexjs/babel-plugin": "npm:0.16.1"
     "@types/react": "npm:19.2.2"
     common-app: "workspace:*"
     expo: "npm:54.0.13"

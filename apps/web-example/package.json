@@ -21,7 +21,6 @@
   },
   "devDependencies": {
     "@expo/metro-runtime": "6.1.2",
-    "@stylexjs/babel-plugin": "0.16.1",
     "@types/react": "19.2.2",
     "prettier": "3.6.2",
     "serve": "14.2.5",
