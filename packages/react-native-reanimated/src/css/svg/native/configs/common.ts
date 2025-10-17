@@ -19,12 +19,12 @@ import type {
 import type { StyleBuilderConfig } from '../../../native';
 import {
   convertStringToNumber,
-  processColorSVG,
+  processBrush,
   processOpacity,
   processStrokeDashArray,
 } from '../processors';
 
-const colorAttributes = { process: processColorSVG };
+const colorAttributes = { process: processBrush };
 
 const colorProps: StyleBuilderConfig<ColorProps> = {
   color: colorAttributes,

@@ -1,7 +1,7 @@
 'use strict';
 
 import type { AnyRecord } from '../../../common';
-import { isConfigPropertyAlias, isDefined, isRecord } from '../../utils';
+import { isConfigPropertyAlias, isDefined } from '../../utils';
 import type {
   StyleBuilder,
   StyleBuilderConfig,
@@ -50,8 +50,8 @@ class StyleBuilderImpl<P extends AnyRecord> implements StyleBuilder<P> {
         return;
       }
 
-      if (isRecord<P>(processedValue)) {
-        this.maybeAssignProps(processedValue);
+      if (typeof processedValue === 'function') {
+        this.maybeAssignProps(processedValue());
       } else {
         this.maybeAssignProp(property, processedValue);
       }

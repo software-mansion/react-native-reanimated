@@ -2,17 +2,23 @@
 import type { ColorValue } from 'react-native';
 
 import type { ValueProcessor } from '../../../../common';
-import { processColor } from '../../../native';
+import { type CSSColorValue, processColor } from '../../../native';
 
-export const processColorSVG: ValueProcessor<
+enum SVGBrushType {
+  Rgba = 0,
+  Transparent = 1,
+  CurrentColor = 2,
+}
+
+export const processBrush: ValueProcessor<
   ColorValue | number,
-  number | string
+  CSSColorValue
 > = (value) => {
-  if (value === 'none') {
-    return 'transparent';
+  if (value === 'none' || value === 'transparent') {
+    return { colorType: SVGBrushType.Transparent };
   }
   if (value === 'currentColor') {
-    return 'currentColor';
+    return { colorType: SVGBrushType.CurrentColor };
   }
 
   return processColor(value);

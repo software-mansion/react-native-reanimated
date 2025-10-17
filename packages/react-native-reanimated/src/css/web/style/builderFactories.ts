@@ -6,7 +6,6 @@ import {
   hasProp,
   isConfigPropertyAlias,
   isDefined,
-  isRecord,
   kebabizeCamelCase,
 } from '../../utils';
 import type {
@@ -85,8 +84,8 @@ abstract class BuilderBase<P extends AnyRecord, R> {
       return;
     }
 
-    if (isRecord(processedValue)) {
-      this.maybeAssignProps(processedValue);
+    if (typeof processedValue === 'function') {
+      this.maybeAssignProps(processedValue());
     } else {
       this.maybeAssignProp(property, processedValue);
     }

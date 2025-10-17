@@ -13,10 +13,10 @@ export const processPaddingHorizontal: ValueProcessor<DimensionValue> = (
     return;
   }
 
-  return {
+  return () => ({
     paddingLeft: result,
     paddingRight: result,
-  };
+  });
 };
 
 export const processPaddingVertical: ValueProcessor<DimensionValue> = (
@@ -28,8 +28,8 @@ export const processPaddingVertical: ValueProcessor<DimensionValue> = (
     return;
   }
 
-  return {
+  return () => ({
     paddingTop: result,
     paddingBottom: result,
-  };
+  });
 };

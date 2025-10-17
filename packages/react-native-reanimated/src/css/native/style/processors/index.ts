@@ -1,4 +1,5 @@
 'use strict';
+export type { CSSColorValue } from './colors';
 export { processColor } from './colors';
 export { processFontWeight } from './font';
 export { processInset, processInsetBlock, processInsetInline } from './insets';
