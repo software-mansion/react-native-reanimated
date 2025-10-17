@@ -24,7 +24,7 @@ export const processAspectRatio: ValueProcessor<number | string> = (value) => {
   throw new ReanimatedError(ERROR_MESSAGES.unsupportedAspectRatio(value));
 };
 
-export const processGap: ValueProcessor<number | string> = (value) => ({
+export const processGap: ValueProcessor<number | string> = (value) => () => ({
   rowGap: value,
   columnGap: value,
 });

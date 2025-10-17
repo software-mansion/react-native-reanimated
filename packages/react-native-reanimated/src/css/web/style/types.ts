@@ -3,7 +3,7 @@ import type { AnyRecord, Maybe, NonMutable } from '../../../common';
 
 export type ValueProcessor<V> = (
   value: NonMutable<V>
-) => Maybe<string> | Record<string, string>;
+) => Maybe<string> | (() => Record<string, string>);
 
 type ProcessedProps<P extends AnyRecord> = {
   [K in keyof P]: string;

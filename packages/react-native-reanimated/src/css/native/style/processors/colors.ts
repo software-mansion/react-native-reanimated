@@ -1,7 +1,7 @@
 'use strict';
 import type { ColorValue } from 'react-native';
 
-import type { Maybe, ValueProcessor } from '../../../../common';
+import type { ValueProcessor } from '../../../../common';
 import {
   processColor as processColorInternal,
   ReanimatedError,
@@ -12,21 +12,29 @@ export const ERROR_MESSAGES = {
     `Invalid color value: ${String(color)}`,
 };
 
+enum CSSColorType {
+  Rgba = 0,
+  Transparent = 1,
+}
+
+export type CSSColorValue = {
+  colorType: number;
+  value?: number | string;
+};
+
 export const processColor: ValueProcessor<
   ColorValue | number,
-  number | string
+  CSSColorValue
 > = (value) => {
-  let normalizedColor: Maybe<number | string> = null;
+  const normalizedColor = processColorInternal(value);
 
-  if (typeof value === 'string' && value === 'transparent') {
-    normalizedColor = 'transparent';
-  } else {
-    normalizedColor = processColorInternal(value);
+  if (typeof normalizedColor === 'number') {
+    return { colorType: CSSColorType.Rgba, value: normalizedColor };
   }
 
-  if (!normalizedColor && normalizedColor !== 0) {
+  if (normalizedColor === null) {
     throw new ReanimatedError(ERROR_MESSAGES.invalidColor(value));
   }
 
-  return normalizedColor;
+  return { colorType: CSSColorType.Transparent };
 };

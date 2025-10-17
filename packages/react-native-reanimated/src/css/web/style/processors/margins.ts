@@ -13,10 +13,10 @@ export const processMarginHorizontal: ValueProcessor<DimensionValue> = (
     return;
   }
 
-  return {
+  return () => ({
     marginLeft: result,
     marginRight: result,
-  };
+  });
 };
 
 export const processMarginVertical: ValueProcessor<DimensionValue> = (
@@ -28,8 +28,8 @@ export const processMarginVertical: ValueProcessor<DimensionValue> = (
     return;
   }
 
-  return {
+  return () => ({
     marginTop: result,
     marginBottom: result,
-  };
+  });
 };

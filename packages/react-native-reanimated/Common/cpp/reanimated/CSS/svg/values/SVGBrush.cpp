@@ -2,43 +2,60 @@
 
 namespace reanimated::css {
 
-SVGBrush::SVGBrush(jsi::Runtime &rt, const jsi::Value &value)
+SVGBrush::SVGBrush(jsi::Runtime &rt, const jsi::Value &jsiValue)
     : CSSColorBase<SVGBrushType, SVGBrush>(SVGBrushType::Transparent) {
-  if (value.isNumber()) {
-    *this = SVGBrush(value.getNumber());
-  } else if (
-      value.isString() && value.getString(rt).utf8(rt) == "currentColor") {
-    colorType = SVGBrushType::CurrentColor;
+  const auto [type, value] = parseJSIValue(rt, jsiValue);
+  if (type == SVGBrushType::Rgba) {
+    *this = SVGBrush(value.asNumber());
+    return;
   }
+
+  if (type == SVGBrushType::UrlId) {
+    // TODO - handle brush
+  }
+
+  colorType = type;
 }
 
-SVGBrush::SVGBrush(const folly::dynamic &value)
+SVGBrush::SVGBrush(const folly::dynamic &dynamicValue)
     : CSSColorBase<SVGBrushType, SVGBrush>(SVGBrushType::Transparent) {
-  if (value.isNumber()) {
-    *this = SVGBrush(value.getDouble());
-  } else if (value.isString() && value.getString() == "currentColor") {
-    colorType = SVGBrushType::CurrentColor;
+  const auto [type, value] = parseDynamicValue(dynamicValue);
+  if (type == SVGBrushType::Rgba) {
+    *this = SVGBrush(value.asInt());
+    return;
   }
-}
 
-bool SVGBrush::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  return jsiValue.isNumber() || jsiValue.isUndefined() ||
-      (jsiValue.isString() &&
-       isValidColorString(jsiValue.getString(rt).utf8(rt)));
-}
+  if (type == SVGBrushType::UrlId) {
+    // TODO - handle brush
+  }
 
-bool SVGBrush::canConstruct(const folly::dynamic &value) {
-  return value.isNumber() || value.empty() ||
-      isValidColorString(value.asString());
+  colorType = type;
 }
 
 folly::dynamic SVGBrush::toDynamic() const {
+  // if (colorType == SVGBrushType::Rgba) {
+  //   return (channels[3] << 24) | (channels[0] << 16) | (channels[1] << 8) |
+  //       channels[2];
+  // }
+  // if (colorType == SVGBrushType::CurrentColor) {
+  //   return nullptr; // CurrentColor is not a valid dynamic value
+  // }
+  // return 0; // Transparent
   switch (colorType) {
     case SVGBrushType::Rgba:
       return (channels[3] << 24) | (channels[0] << 16) | (channels[1] << 8) |
           channels[2];
     case SVGBrushType::CurrentColor:
       return nullptr; // currentColor is represented as nullptr in SVG
+    // TODO - add support for urlId
+    // case SVGBrushType::UrlId:
+    //   return "url(" + value + ")";
+    case SVGBrushType::ContextFill:
+      // TODO - return correct value
+      return 0;
+    case SVGBrushType::ContextStroke:
+      // TODO - return correct value
+      return 0;
     default:
       return 0; // Transparent
   }
@@ -52,6 +69,13 @@ std::string SVGBrush::toString() const {
           "," + std::to_string(channels[3]) + ")";
     case SVGBrushType::CurrentColor:
       return "currentColor";
+      // TODO - add support for urlId
+    // case SVGBrushType::UrlId:
+    //   return "url(" + value + ")";
+    case SVGBrushType::ContextFill:
+      return "context-fill";
+    case SVGBrushType::ContextStroke:
+      return "context-stroke";
     default:
       return "transparent";
   }
@@ -77,9 +101,5 @@ std::ostream &operator<<(std::ostream &os, const SVGBrush &colorValue) {
 }
 
 #endif // NDEBUG
-
-bool SVGBrush::isValidColorString(const std::string &value) {
-  return value == "transparent" || value == "currentColor";
-}
 
 } // namespace reanimated::css
