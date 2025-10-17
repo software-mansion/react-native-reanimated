@@ -146,9 +146,7 @@ export const getCodeWithOverrides = <C extends AnyRecord, O extends AnyRecord>(
   for (const item of overrides) {
     for (const key in item) {
       if (!excludeSet.has(key)) {
-        if (!propertyOverrides[key]) {
-          propertyOverrides[key] = [];
-        }
+        propertyOverrides[key] ??= [];
         propertyOverrides[key].push(parseOverride(item[key]));
       }
     }
