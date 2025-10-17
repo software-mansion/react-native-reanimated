@@ -1,6 +1,6 @@
 'use strict';
 import { ReanimatedError } from '../../../../../common';
-import { ERROR_MESSAGES, processColor } from '../colors';
+import { CSSColorType, ERROR_MESSAGES, processColor } from '../colors';
 
 describe(processColor, () => {
   describe('converts color strings to numbers for all color props', () => {
@@ -24,7 +24,10 @@ describe(processColor, () => {
       ['tintColor', 'hsl(180, 100%, 25%)', 0x007f80ff],
     ])('converts %p with value %p to %p', (key, value, expected) => {
       const argb = ((expected << 24) | (expected >>> 8)) >>> 0;
-      expect(processColor(value)).toEqual(argb);
+      expect(processColor(value)).toEqual({
+        colorType: CSSColorType.Rgba,
+        value: argb,
+      });
     });
   });
 
@@ -41,6 +44,12 @@ describe(processColor, () => {
       expect(() => processColor(value)).toThrow(
         new ReanimatedError(ERROR_MESSAGES.invalidColor(value))
       );
+    });
+  });
+
+  it('converts "transparent" to { colorType: CSSColorType.Transparent }', () => {
+    expect(processColor('transparent')).toEqual({
+      colorType: CSSColorType.Transparent,
     });
   });
 });

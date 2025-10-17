@@ -12,7 +12,7 @@ export const ERROR_MESSAGES = {
     `Invalid color value: ${String(color)}`,
 };
 
-enum CSSColorType {
+export enum CSSColorType {
   Rgba = 0,
   Transparent = 1,
 }
