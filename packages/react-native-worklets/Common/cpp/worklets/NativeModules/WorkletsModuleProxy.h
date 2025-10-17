@@ -25,9 +25,9 @@ class WorkletsModuleProxy
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      const std::shared_ptr<RuntimeManager> &runtimeManager,
       std::function<bool()> &&isJavaScriptQueue,
       RuntimeBindings runtimeBindings,
+      const std::shared_ptr<RuntimeManager> &runtimeManager,
       const std::shared_ptr<const BigStringBuffer> &script,
       const std::string &sourceUrl);
 
@@ -72,12 +72,12 @@ class WorkletsModuleProxy
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   const std::shared_ptr<JSLogger> jsLogger_;
+  const RuntimeBindings runtimeBindings_;
+  const std::shared_ptr<RuntimeManager> runtimeManager_;
   const std::shared_ptr<const BigStringBuffer> script_;
   const std::string sourceUrl_;
-  const std::shared_ptr<RuntimeManager> runtimeManager_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
   std::shared_ptr<AnimationFrameBatchinator> animationFrameBatchinator_;
-  const RuntimeBindings runtimeBindings_;
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModuleProxy> singleInstanceChecker_;
 #endif // NDEBUG

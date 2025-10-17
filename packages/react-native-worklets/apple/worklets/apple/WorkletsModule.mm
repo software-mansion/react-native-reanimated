@@ -32,8 +32,10 @@ using worklets::WorkletsModuleProxy;
 @implementation WorkletsModule {
   AnimationFrameQueue *animationFrameQueue_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+#ifdef WORKLETS_BUNDLE_MODE
   RCTNetworking *networkingModule_;
   WorkletsNetworking *workletsNetworking_;
+#endif // WORKLETS_BUNDLE_MODE
 #ifndef NDEBUG
   worklets::SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
 #endif // NDEBUG
@@ -75,54 +77,28 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
     throw error;
   });
 
-  networkingModule_ = [moduleRegistry_ moduleForClass:RCTNetworking.class];
 
   std::string sourceURL = "";
   std::shared_ptr<const BigStringBuffer> script = nullptr;
-#ifdef WORKLETS_BUNDLE_MODE
-  script = [bundleProvider_ getBundle];
-  sourceURL = [[bundleProvider_ getSourceURL] UTF8String];
-#endif // WORKLETS_BUNDLE_MODE
 
   auto jsCallInvoker = callInvoker_.callInvoker;
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
   auto runtimeManager = std::make_shared<worklets::RuntimeManager>();
-  workletsNetworking_ = [[WorkletsNetworking alloc] init:runtimeManager rctNetworking:networkingModule_];
   auto isJavaScriptQueue = []() -> bool { return IsJavaScriptQueue(); };
   animationFrameQueue_ = [AnimationFrameQueue new];
-
-  worklets::RuntimeBindings runtimeBindings{
-      .requestAnimationFrame =
-          [animationFrameQueue = animationFrameQueue_](std::function<void(const double)> callback) {
-            [animationFrameQueue requestAnimationFrame:callback];
-          },
-      .sendRequest =
-          [workletsNetworking = workletsNetworking_](
-              jsi::Runtime &rt, const jsi::Value &query, jsi::Function &&responseSender) {
-            [workletsNetworking jsiSendRequest:rt jquery:query responseSender:(std::move(responseSender))];
-            return jsi::Value::undefined();
-          },
-      .abortRequest =
-          [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, const jsi::Value &requestID) {
-            [workletsNetworking jsiAbortRequest:requestID.asNumber()];
-            return jsi::Value::undefined();
-          },
-      .clearCookies =
-          [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, jsi::Function &&responseSender) {
-            [workletsNetworking jsiClearCookies:rt responseSender:(std::move(responseSender))];
-            return jsi::Value::undefined();
-          }};
+  auto runtimeBindings = [self getRuntimeBindings];
+  
+#ifdef WORKLETS_BUNDLE_MODE
+  script = [bundleProvider_ getBundle];
+  sourceURL = [[bundleProvider_ getSourceURL] UTF8String];
+  networkingModule_ = [moduleRegistry_ moduleForClass:RCTNetworking.class];
+  workletsNetworking_ = [[WorkletsNetworking alloc] init:runtimeManager rctNetworking:networkingModule_];
+#endif // WORKLETS_BUNDLE_MODE
 
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
-      rnRuntime,
-      jsQueue,
-      jsCallInvoker,
-      uiScheduler,
-      runtimeManager,
-      std::move(isJavaScriptQueue),
-      runtimeBindings,
-      script,
-      sourceURL);
+      rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(isJavaScriptQueue), runtimeBindings, runtimeManager, script, sourceURL
+      );
+
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy = worklets::jsi_utils::optimizedFromHostObject(
       rnRuntime, std::static_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));
@@ -152,6 +128,35 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   [self checkBridgeless];
   AssertJavaScriptQueue();
   return std::make_shared<facebook::react::NativeWorkletsModuleSpecJSI>(params);
+}
+
+- (worklets::RuntimeBindings)getRuntimeBindings
+{
+  return {
+      .requestAnimationFrame = [animationFrameQueue =
+                                    animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
+        [animationFrameQueue requestAnimationFrame:callback];
+      }
+      #ifdef WORKLETS_BUNDLE_MODE
+      ,
+      .abortRequest =
+          [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, const jsi::Value &requestID) {
+            [workletsNetworking jsiAbortRequest:requestID.asNumber()];
+            return jsi::Value::undefined();
+          },
+      .clearCookies =
+          [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, jsi::Function &&responseSender) {
+            [workletsNetworking jsiClearCookies:rt responseSender:(std::move(responseSender))];
+            return jsi::Value::undefined();
+          },
+      .sendRequest =
+          [workletsNetworking = workletsNetworking_](
+              jsi::Runtime &rt, const jsi::Value &query, jsi::Function &&responseSender) {
+            [workletsNetworking jsiSendRequest:rt jquery:query responseSender:(std::move(responseSender))];
+            return jsi::Value::undefined();
+          }
+      #endif // WORKLETS_BUNDLE_MODE
+  };
 }
 
 @end

@@ -38,11 +38,11 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           jsCallInvoker,
           std::move(isJavaScriptThread))),
       uiScheduler_(uiScheduler),
-      runtimeBindings_(runtimeBindings),
       jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
+      runtimeBindings_(runtimeBindings),
+      runtimeManager_(runtimeManager),
       script_(script),
       sourceUrl_(sourceUrl),
-      runtimeManager_(runtimeManager),
       uiWorkletRuntime_(runtimeManager_->createUninitializedUIRuntime(
           jsQueue_,
           std::make_shared<AsyncQueueUI>(uiScheduler_))) {
