@@ -160,6 +160,20 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.scheduleOnUI(serializable);
   }
 
+  runOnRuntimeAsync<TValue, TReturn>(
+    workletRuntime: WorkletRuntime,
+    worklet: SerializableRef<TValue>,
+    resolve: SerializableRef<(value: TReturn) => void>,
+    reject: SerializableRef<(error: Error) => void>
+  ): void {
+    return this.#workletsModuleProxy.runOnRuntimeAsync(
+      workletRuntime,
+      worklet,
+      resolve,
+      reject
+    );
+  }
+
   executeOnUIRuntimeSync<TValue, TReturn>(
     serializable: SerializableRef<TValue>
   ): TReturn {
