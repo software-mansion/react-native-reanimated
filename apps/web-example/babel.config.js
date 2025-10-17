@@ -1,5 +1,3 @@
-const rsdPlugin = require('react-strict-dom/babel-preset');
-
 /** @type {import('@babel/core').ConfigFunction} */
 module.exports = function (api) {
   const plugins = [
