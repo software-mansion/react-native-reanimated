@@ -277,26 +277,23 @@ index b1c4c68e90c..cc5c353b6e8 100644
  import com.facebook.react.fabric.ComponentFactory
  import com.facebook.react.fabric.FabricUIManager
  import com.facebook.react.fabric.FabricUIManagerBinding
-@@ -288,6 +289,18 @@ internal class ReactInstance(
+@@ -288,6 +290,15 @@ internal class ReactInstance(
      }
    }
  
 +  fun beforeLoad(scriptWrapper: BigStringBufferWrapper, sourceURL: String){
-+    val workletsModule = turboModuleManager.getModule("WorkletsModule")
-+    if (workletsModule != null) {
-+      val setScriptWrapperMethod = workletsModule::class.java.methods.find { it.name == "setScriptWrapper" }
-+      val setSourceURLMethod = workletsModule::class.java.methods.find { it.name == "setSourceURL" }
-+      if (setScriptWrapperMethod != null && setSourceURLMethod != null) {
-+      setScriptWrapperMethod.invoke(workletsModule, scriptWrapper)
-+      setSourceURLMethod.invoke(workletsModule, sourceURL)
-+      }
++    val bundleConsumers = turboModuleManager.getModulesConformingToInterfaceNames(BundleConsumer::class.java)
++    for(name in bundleConsumers) {
++      val module = turboModuleManager.getModule(name) as BundleConsumer
++      module.setScriptWrapper(scriptWrapper);
++      module.setSourceURL(sourceURL);
 +    }
 +  }
 +
    fun loadJSBundle(bundleLoader: JSBundleLoader) {
      Systrace.beginSection(Systrace.TRACE_TAG_REACT, "ReactInstance.loadJSBundle")
      bundleLoader.loadScript(
-@@ -298,11 +311,18 @@ internal class ReactInstance(
+@@ -298,11 +309,18 @@ internal class ReactInstance(
                loadSynchronously: Boolean
            ) {
              context.setSourceURL(sourceURL)
@@ -317,7 +314,7 @@ index b1c4c68e90c..cc5c353b6e8 100644
            }
  
            override fun loadScriptFromAssets(
-@@ -311,7 +331,12 @@ internal class ReactInstance(
+@@ -311,7 +329,12 @@ internal class ReactInstance(
                loadSynchronously: Boolean
            ) {
              context.setSourceURL(assetURL)
@@ -331,7 +328,7 @@ index b1c4c68e90c..cc5c353b6e8 100644
            }
  
            override fun setSourceURLs(deviceURL: String, remoteURL: String) {
-@@ -423,7 +448,7 @@ internal class ReactInstance(
+@@ -423,7 +446,7 @@ internal class ReactInstance(
        reactHostInspectorTarget: ReactHostInspectorTarget?
    ): HybridData
  
@@ -652,13 +649,14 @@ index e76e1d18df9..e5abb247b80 100644
  
 -  auto beforeLoad = [waitUntilModuleSetupComplete = self->_waitUntilModuleSetupComplete](jsi::Runtime &_) {
 +  auto beforeLoad = [waitUntilModuleSetupComplete = self->_waitUntilModuleSetupComplete, turboModuleManager = self->_turboModuleManager, scriptBuffer, url](jsi::Runtime &_) {
-+      @try {
-+        id<RCTBundleConsumer> workletsModule = (id<RCTBundleConsumer>)[turboModuleManager moduleForName:@"WorkletsModule"];
-+        if ([workletsModule respondsToSelector:@selector(setScriptBuffer:setSourceURL:)]) {
-+          [workletsModule setScriptBuffer:scriptBuffer setSourceURL:@(url)];
-+        }
-+      } @catch (NSException *exception) {
-+      }
++    #ifdef WORKLETS_BUNDLE_MODE
++    auto bundleConsumerNames = [RCTModulesConformingToProtocolsProvider bundleConsumerClassNames];
++    for (id name in bundleConsumerNames) {
++      id<RCTBundleConsumer> module = (id<RCTBundleConsumer>)[turboModuleManager moduleForName:[name UTF8String]];
++      module.scriptBuffer = [[NSBigStringBuffer alloc] initWithSharedPtr:scriptBuffer];
++      module.sourceURL = @(url);
++    }
++    #endif // WORKLETS_BUNDLE_MODE
 +    
      if (waitUntilModuleSetupComplete) {
        waitUntilModuleSetupComplete();
