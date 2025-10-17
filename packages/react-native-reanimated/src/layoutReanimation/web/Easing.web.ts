@@ -29,6 +29,10 @@ export function getEasingByName(easingName: WebEasingsNames) {
 export function maybeGetBezierEasing(
   easing: EasingFunctionFactory
 ): null | string {
+  if (typeof easing === 'string') {
+    return null;
+  }
+
   if (!('factory' in easing)) {
     return null;
   }
