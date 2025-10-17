@@ -9,9 +9,6 @@ enum class SVGBrushType {
   Rgba = 0,
   Transparent = 1,
   CurrentColor = 2,
-  UrlId = 3,
-  ContextFill = 4,
-  ContextStroke = 5,
 };
 
 struct SVGBrush : public CSSColorBase<SVGBrushType, SVGBrush> {
