@@ -13744,7 +13744,7 @@ __metadata:
     react-dom: "npm:19.1.1"
     react-native: "npm:0.71.4"
     react-native-gesture-handler: "npm:2.28.0"
-    react-native-reanimated: "npm:4.2.0-nightly-20251015-0297d2990"
+    react-native-reanimated: "npm:4.2.0-nightly-20251017-235c127fd"
     react-native-svg: "npm:15.14.0"
     react-native-web: "npm:0.21.1"
     react-native-worklets: "npm:0.7.0-nightly-20251015-0297d2990"
@@ -13804,7 +13804,7 @@ __metadata:
     react-dom: "npm:19.1.1"
     react-native: "npm:0.71.4"
     react-native-gesture-handler: "npm:2.28.0"
-    react-native-reanimated: "npm:4.2.0-nightly-20251015-0297d2990"
+    react-native-reanimated: "npm:4.2.0-nightly-20251017-235c127fd"
     react-native-svg: "npm:15.14.0"
     react-native-web: "npm:0.21.1"
     react-native-worklets: "npm:0.7.0-nightly-20251015-0297d2990"
@@ -26217,18 +26217,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"react-native-reanimated@npm:4.2.0-nightly-20251015-0297d2990":
-  version: 4.2.0-nightly-20251015-0297d2990
-  resolution: "react-native-reanimated@npm:4.2.0-nightly-20251015-0297d2990"
+"react-native-reanimated@npm:4.2.0-nightly-20251017-235c127fd":
+  version: 4.2.0-nightly-20251017-235c127fd
+  resolution: "react-native-reanimated@npm:4.2.0-nightly-20251017-235c127fd"
   dependencies:
-    react-native-is-edge-to-edge: "npm:^1.2.1"
-    semver: "npm:7.7.2"
+    react-native-is-edge-to-edge: "npm:1.2.1"
+    semver: "npm:7.7.3"
   peerDependencies:
-    "@babel/core": ^7.0.0-0
     react: "*"
     react-native: "*"
-    react-native-worklets: 0.7.0-nightly-20251015-0297d2990
-  checksum: 10/7fc7151c112db8ce61f2a85470752f63e7c275a08d8ee1372e2bbe5403a4f3148db0623ff96591a2811edffc072d135d391dd3e0c66beca44df809a223c064ea
+    react-native-worklets: 0.7.0-nightly-20251017-235c127fd
+  checksum: 10/758d6221e531c95f31e841800de33b4c75d99bf594c32b14fb3012d512053ae09249bde6902897205203510a5b7f7f22c28b1d018a2c5ad62161a083a372f9fd
   languageName: node
   linkType: hard
 
