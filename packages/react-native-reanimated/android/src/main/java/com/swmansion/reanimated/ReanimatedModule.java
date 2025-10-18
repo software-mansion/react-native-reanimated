@@ -13,8 +13,8 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
   public ReanimatedModule(ReactApplicationContext reactContext) {
     super(reactContext);
     reactContext.assertOnJSQueueThread();
-    WorkletsModule mWorkletsModule = reactContext.getNativeModule(WorkletsModule.class);
-    mNodesManager = new NodesManager(reactContext, mWorkletsModule);
+    WorkletsModule workletsModule = reactContext.getNativeModule(WorkletsModule.class);
+    mNodesManager = new NodesManager(reactContext, workletsModule);
   }
 
   @Override
