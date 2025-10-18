@@ -99,6 +99,9 @@ function BottomSun() {
 export default function PlanetsExample() {
   return (
     <View style={styles.container}>
+      {/* TODO: Fix me */}
+      {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+      {/* @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801 */}
       <Svg viewBox="-200 -200 400 400" style={styles.svg}>
         <BottomSun />
         <Planet

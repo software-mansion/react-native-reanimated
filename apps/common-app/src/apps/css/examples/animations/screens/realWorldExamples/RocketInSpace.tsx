@@ -67,7 +67,13 @@ export default function RocketInSpace() {
     <Screen style={styles.container}>
       <View style={styles.scene}>
         <Animated.View style={styles.turbulence}>
+          {/* TODO: Fix me */}
+          {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+          {/* @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801 */}
           <Svg style={styles.rocket}>
+            {/* TODO: Fix me */}
+            {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+            {/* @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801 */}
             <Defs>
               <LinearGradient id="rocket" x1="0" x2="1" y1="0" y2="0">
                 <Stop offset="0" stopColor={COLORS.grayLightest} />
@@ -186,6 +192,9 @@ type FlameProps = {
 function Flame({ height, width }: FlameProps) {
   return (
     <Svg height={height} width={width}>
+      {/* TODO: Fix me */}
+      {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+      {/* @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801 */}
       <Defs>
         <LinearGradient id="flame" x1="0" x2="1" y1="0" y2="0">
           <Stop offset="0" stopColor={COLORS.orange} />

@@ -7,7 +7,9 @@
     "lint": "eslint . --flag v10_config_lookup_from_file",
     "format": "prettier --write --list-different .",
     "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src",
-    "type:check": "tsc --noEmit",
+    "type:check": "yarn type:check:native && yarn type:check:web",
+    "type:check:native": "tsc --noEmit",
+    "type:check:web": "tsc --noEmit --project tsconfig.web.json",
     "type:check:strict": "tsc --noEmit --customConditions react-native-strict-api"
   },
   "peerDependencies": {

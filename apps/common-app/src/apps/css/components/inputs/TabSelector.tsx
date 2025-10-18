@@ -83,6 +83,9 @@ function TabSelector<T extends string>({
     () => (
       <View pointerEvents="none" style={StyleSheet.absoluteFill}>
         <Svg>
+          {/* TODO: Fix me */}
+          {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+          {/* @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801 */}
           <Defs>
             <LinearGradient id="tab-selector" x1="0" x2="1" y1="0" y2="0">
               <Stop

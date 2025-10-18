@@ -1,4 +1,3 @@
 'use strict';
-import { findNodeHandle } from 'react-native';
 
-export { findNodeHandle };
+export { findNodeHandle } from 'react-native';

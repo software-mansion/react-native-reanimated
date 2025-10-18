@@ -84,10 +84,16 @@ function Rocket({ size }: RocketProps) {
   return (
     <Svg
       viewBox="0 0 180 179" // Set the fixed viewBox based on the original SVG dimensions
+      // TODO: Fix me
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
       style={{
         height: size,
         width: size,
       }}>
+      {/* TODO: Fix me */}
+      {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+      {/* @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801 */}
       <Defs>
         <LinearGradient id="rocket-card" x1="0" x2="1" y1="0" y2="0">
           <Stop offset="0" stopColor={colors.background2} />
@@ -131,6 +137,9 @@ type FlameProps = {
 function Flame({ height, width }: FlameProps) {
   return (
     <Svg height={height} width={width}>
+      {/* TODO: Fix me */}
+      {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+      {/* @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801 */}
       <Defs>
         <LinearGradient id="flame-card" x1="0" x2="1" y1="0" y2="0">
           <Stop offset="0" stopColor={colors.primaryLight} />
