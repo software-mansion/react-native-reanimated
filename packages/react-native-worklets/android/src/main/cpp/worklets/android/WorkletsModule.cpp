@@ -28,7 +28,7 @@ WorkletsModule::WorkletsModule(
           jsCallInvoker,
           uiScheduler,
           getIsOnJSQueueThread(),
-          getForwardedRequestAnimationFrame(),
+          RuntimeBindings{.requestAnimationFrame = getRequestAnimationFrame()},
           script,
           sourceURL)) {
   auto jsiWorkletsModuleProxy =
@@ -77,8 +77,8 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
       sourceURL);
 }
 
-std::function<void(std::function<void(const double)>)>
-WorkletsModule::getForwardedRequestAnimationFrame() {
+RuntimeBindings::RequestAnimationFrame
+WorkletsModule::getRequestAnimationFrame() {
   return [javaPart =
               javaPart_](std::function<void(const double)> &&callback) -> void {
     static const auto jRequestAnimationFrame =

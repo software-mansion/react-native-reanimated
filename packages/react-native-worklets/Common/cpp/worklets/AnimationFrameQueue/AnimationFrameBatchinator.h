@@ -2,6 +2,8 @@
 
 #include <jsi/jsi.h>
 #include <worklets/SharedItems/Serializable.h>
+#include <worklets/WorkletRuntime/RuntimeBindings.h>
+
 #include <atomic>
 #include <functional>
 #include <memory>
@@ -21,8 +23,7 @@ class AnimationFrameBatchinator
 
   AnimationFrameBatchinator(
       facebook::jsi::Runtime &uiRuntime,
-      std::function<void(std::function<void(const double)>)>
-          &&forwardedRequestAnimationFrame);
+      RuntimeBindings::RequestAnimationFrame requestAnimationFrame);
 
  private:
   void flush();
