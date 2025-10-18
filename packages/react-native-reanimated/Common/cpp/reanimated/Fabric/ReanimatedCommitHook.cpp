@@ -53,10 +53,10 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ShadowTree const &,
     RootShadowNode::Shared const &,
     RootShadowNode::Unshared const &newRootShadowNode
-#if REACT_NATIVE_MINOR_VERSION >= 80
+#if REACT_NATIVE_VERSION_MINOR >= 80
     ,
     const ShadowTreeCommitOptions &commitOptions
-#endif
+#endif // REACT_NATIVE_VERSION_MINOR >= 80
     ) noexcept {
   ReanimatedSystraceSection s("ReanimatedCommitHook::shadowTreeWillCommit");
 
@@ -74,9 +74,9 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     return newRootShadowNode;
   }
 
-#if REACT_NATIVE_MINOR_VERSION >= 80
-  if constexpr (StaticFeatureFlags::getFlag(
-                    "USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS")) {
+  if constexpr (
+      ReactNativeVersion.Minor >= 80 &&
+      StaticFeatureFlags::getFlag("USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS")) {
     // State updates are based on the currently committed ShadowTree,
     // which means that all animation changes are already included.
     // Therefore, there's no need to reapply styles from the props map.
@@ -84,7 +84,6 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
       return newRootShadowNode;
     }
   }
-#endif
 
   // ShadowTree not commited by Reanimated, apply updates from the updates
   // registry manager

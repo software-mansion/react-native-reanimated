@@ -1,17 +1,19 @@
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 
+#include <cxxreact/ReactNativeVersion.h>
+
 #include <utility>
 
 namespace reanimated {
 
-#if REACT_NATIVE_MINOR_VERSION >= 81
+#if REACT_NATIVE_VERSION_MINOR >= 81
 static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper) {
   return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(
       rt, shadowNodeWrapper);
 }
-#endif
+#endif // REACT_NATIVE_VERSION_MINOR >= 81
 
 void AnimatedPropsRegistry::update(
     jsi::Runtime &rt,

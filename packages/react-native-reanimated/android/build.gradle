@@ -71,11 +71,6 @@ def getReactNativeVersion() {
     return reactProperties.getProperty("VERSION_NAME")
 }
 
-def getReactNativeMinorVersion() {
-    def reactNativeVersion = getReactNativeVersion()
-    return reactNativeVersion.startsWith("0.0.0-") ? 1000 : reactNativeVersion.split("\\.")[1].toInteger()
-}
-
 def getReanimatedVersion() {
     def inputFile = file(projectDir.path + '/../package.json')
     def json = new JsonSlurper().parseText(inputFile.text)
@@ -118,7 +113,6 @@ if (isNewArchitectureEnabled()) {
 def packageDir = project.projectDir.parentFile
 def reactNativeRootDir = resolveReactNativeDirectory()
 def reactNativeWorkletsRootDir = resolveReactNativeWorkletsDirectory()
-def REACT_NATIVE_MINOR_VERSION = getReactNativeMinorVersion()
 def REACT_NATIVE_VERSION = getReactNativeVersion()
 def REANIMATED_VERSION = getReanimatedVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
@@ -190,12 +184,10 @@ android {
         buildConfigField("String", "REANIMATED_VERSION_JAVA", "\"${REANIMATED_VERSION}\"")
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
-        buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
 
         externalNativeBuild {
             cmake {
                 arguments "-DANDROID_STL=c++_shared",
-                        "-DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}",
                         "-DANDROID_TOOLCHAIN=clang",
                         "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
                         "-DREACT_NATIVE_WORKLETS_DIR=${toPlatformFileString(reactNativeWorkletsRootDir.path)}",
