@@ -2,6 +2,7 @@
 
 import { setupCallGuard } from './callGuard';
 import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
+import { initializeNetworking } from './network';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { setupRunLoop } from './runLoop/workletRuntime';
 import { RuntimeKind } from './runtimeKind';
@@ -80,7 +81,7 @@ export function createWorkletRuntime(
     );
   }
 
-  return WorkletsModule.createWorkletRuntime(
+  const workletRuntime = WorkletsModule.createWorkletRuntime(
     name,
     createSerializable(() => {
       'worklet';
@@ -90,12 +91,20 @@ export function createWorkletRuntime(
       if (enableEventLoop) {
         setupRunLoop(animationQueuePollingRate);
       }
-      initializerFn?.();
     }),
     useDefaultQueue,
     customQueue,
     enableEventLoop
   );
+
+  runOnRuntime(workletRuntime, initializeNetworking)();
+
+  runOnRuntime(workletRuntime, () => {
+    'worklet';
+    initializerFn?.();
+  })();
+
+  return workletRuntime;
 }
 
 /** @deprecated Use `scheduleOnRuntime` instead. */
