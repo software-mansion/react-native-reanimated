@@ -145,6 +145,9 @@ export class InlinePropManager implements IInlinePropManager {
         this._inlinePropsViewDescriptors.add({
           tag: viewTag as number,
           shadowNodeWrapper: shadowNodeWrapper!,
+          forceShadowTreeCommit:
+            // @ts-expect-error TODO fix types
+            !!animatedComponent.props.forceShadowTreeCommit,
         });
       }
       const shareableViewDescriptors =

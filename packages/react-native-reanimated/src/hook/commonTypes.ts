@@ -31,6 +31,7 @@ export type DependencyList = Array<unknown> | undefined;
 export interface Descriptor {
   tag: number | ReanimatedHTMLElement;
   shadowNodeWrapper: ShadowNodeWrapper;
+  forceShadowTreeCommit: boolean;
 }
 
 export type MaybeObserverCleanup = (() => void) | undefined;

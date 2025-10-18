@@ -84,6 +84,7 @@ export type AnimatedComponentProps<
   animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
   jestAnimatedValues?: RefObject<AnimatedProps>;
   animatedStyle?: StyleProps;
+  forceShadowTreeCommit?: boolean;
   layout?: (
     | BaseAnimationBuilder
     | ILayoutAnimationBuilder

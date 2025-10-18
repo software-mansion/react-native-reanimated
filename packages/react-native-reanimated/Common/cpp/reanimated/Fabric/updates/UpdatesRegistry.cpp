@@ -17,7 +17,7 @@ folly::dynamic UpdatesRegistry::get(const Tag tag) const {
   if (it == updatesRegistry_.cend()) {
     return nullptr;
   }
-  return it->second.second;
+  return std::get<1>(it->second);
 }
 
 void UpdatesRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
@@ -27,8 +27,9 @@ void UpdatesRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
   // Store all updates in the registry for later use in the commit hook
   flushUpdatesToRegistry(copiedUpdatesBatch);
   // Flush the updates to the updatesBatch used to apply current changes
-  for (auto &[shadowNode, props] : copiedUpdatesBatch) {
-    updatesBatch.emplace_back(shadowNode, std::move(props));
+  for (auto &[shadowNode, props, forceShadowTreeCommit] : copiedUpdatesBatch) {
+    updatesBatch.emplace_back(
+        shadowNode, std::move(props), forceShadowTreeCommit);
   }
 }
 
@@ -36,8 +37,8 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   auto copiedRegistry = updatesRegistry_;
-  for (const auto &[tag, pair] : copiedRegistry) {
-    const auto &[shadowNode, props] = pair;
+  for (const auto &[tag, tuple] : copiedRegistry) {
+    const auto &[shadowNode, props, forceShadowTreeCommit] = tuple;
     auto &family = shadowNode->getFamily();
     auto it = propsMap.find(&family);
 
@@ -53,8 +54,9 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
 
 void UpdatesRegistry::addUpdatesToBatch(
     const std::shared_ptr<const ShadowNode> &shadowNode,
-    const folly::dynamic &props) {
-  updatesBatch_.emplace_back(shadowNode, props);
+    const folly::dynamic &props,
+    const bool forceShadowTreeCommit) {
+  updatesBatch_.emplace_back(shadowNode, props, forceShadowTreeCommit);
 }
 
 void UpdatesRegistry::setInUpdatesRegistry(
@@ -64,7 +66,7 @@ void UpdatesRegistry::setInUpdatesRegistry(
 #ifdef ANDROID
   updatePropsToRevert(tag, &props);
 #endif
-  updatesRegistry_[tag] = std::make_pair(shadowNode, props);
+  updatesRegistry_[tag] = std::make_tuple(shadowNode, props, false);
 }
 
 folly::dynamic UpdatesRegistry::getUpdatesFromRegistry(const Tag tag) const {
@@ -72,7 +74,7 @@ folly::dynamic UpdatesRegistry::getUpdatesFromRegistry(const Tag tag) const {
   if (it == updatesRegistry_.cend()) {
     return folly::dynamic();
   }
-  return it->second.second;
+  return std::get<1>(it->second);
 }
 
 void UpdatesRegistry::removeFromUpdatesRegistry(const Tag tag) {
@@ -83,14 +85,15 @@ void UpdatesRegistry::removeFromUpdatesRegistry(const Tag tag) {
 }
 
 void UpdatesRegistry::flushUpdatesToRegistry(const UpdatesBatch &updatesBatch) {
-  for (auto &[shadowNode, props] : updatesBatch) {
+  for (auto &[shadowNode, props, forceShadowTreeCommit] : updatesBatch) {
     const auto tag = shadowNode->getTag();
     auto it = updatesRegistry_.find(tag);
 
     if (it == updatesRegistry_.cend()) {
-      updatesRegistry_[tag] = std::make_pair(shadowNode, props);
+      updatesRegistry_[tag] =
+          std::make_tuple(shadowNode, props, forceShadowTreeCommit);
     } else {
-      it->second.second.update(props);
+      std::get<1>(it->second).update(props);
     }
   }
 }

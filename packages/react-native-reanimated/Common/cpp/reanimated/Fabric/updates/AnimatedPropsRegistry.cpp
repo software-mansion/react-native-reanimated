@@ -22,9 +22,11 @@ void AnimatedPropsRegistry::update(
     auto item = operationsArray.getValueAtIndex(rt, i).asObject(rt);
     auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
     auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-
     const jsi::Value &updates = item.getProperty(rt, "updates");
-    addUpdatesToBatch(shadowNode, jsi::dynamicFromValue(rt, updates));
+    const auto forceShadowTreeCommit =
+        item.getProperty(rt, "forceShadowTreeCommit").asBool();
+    addUpdatesToBatch(
+        shadowNode, jsi::dynamicFromValue(rt, updates), forceShadowTreeCommit);
   }
 }
 

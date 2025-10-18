@@ -921,6 +921,7 @@ void ReanimatedModuleProxy::performOperations() {
 
       UpdatesBatch synchronousUpdatesBatch, shadowTreeUpdatesBatch;
 
+      // TODO: apply forceShadowTreeCommit changes in Android code too
       for (const auto &[shadowNode, props] : updatesBatch) {
         bool hasOnlySynchronousProps = true;
         for (const auto &key : props.keys()) {
@@ -1138,7 +1139,13 @@ void ReanimatedModuleProxy::performOperations() {
 
       UpdatesBatch synchronousUpdatesBatch, shadowTreeUpdatesBatch;
 
-      for (const auto &[shadowNode, props] : updatesBatch) {
+      for (const auto &[shadowNode, props, forceShadowTreeCommit] :
+           updatesBatch) {
+        if (forceShadowTreeCommit) {
+          // TODO: get rid of passing false here and below
+          shadowTreeUpdatesBatch.emplace_back(shadowNode, props, false);
+          continue;
+        }
         bool hasOnlySynchronousProps = true;
         for (const auto &key : props.keys()) {
           const auto keyStr = key.asString();
@@ -1148,13 +1155,14 @@ void ReanimatedModuleProxy::performOperations() {
           }
         }
         if (hasOnlySynchronousProps) {
-          synchronousUpdatesBatch.emplace_back(shadowNode, props);
+          synchronousUpdatesBatch.emplace_back(shadowNode, props, false);
         } else {
-          shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
+          shadowTreeUpdatesBatch.emplace_back(shadowNode, props, false);
         }
       }
 
-      for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
+      for (const auto &[shadowNode, props, forceShadowTreeCommit] :
+           synchronousUpdatesBatch) {
         synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
       }
 
@@ -1217,7 +1225,8 @@ void ReanimatedModuleProxy::commitUpdates(
       }
     }
   } else {
-    for (auto const &[shadowNode, props] : updatesBatch) {
+    for (auto const &[shadowNode, props, forceShadowTreeCommit] :
+         updatesBatch) {
       SurfaceId surfaceId = shadowNode->getSurfaceId();
       auto family = &shadowNode->getFamily();
       react_native_assert(family->getSurfaceId() == surfaceId);

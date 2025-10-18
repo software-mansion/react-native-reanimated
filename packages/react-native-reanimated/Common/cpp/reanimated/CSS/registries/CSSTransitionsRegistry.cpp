@@ -62,7 +62,8 @@ void CSSTransitionsRegistry::update(const double timestamp) {
 
     const folly::dynamic &updates = transition->update(timestamp);
     if (!updates.empty()) {
-      addUpdatesToBatch(transition->getShadowNode(), updates);
+      // TODO: pass forceShadowTreeCommit instead of true
+      addUpdatesToBatch(transition->getShadowNode(), updates, true);
     }
 
     // We remove transition from running and schedule it when animation of one

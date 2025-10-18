@@ -247,6 +247,7 @@ export default class AnimatedComponent
         {
           tag: viewTag,
           shadowNodeWrapper,
+          forceShadowTreeCommit: !!this.props.forceShadowTreeCommit,
         },
         style.styleUpdaterContainer
       );
