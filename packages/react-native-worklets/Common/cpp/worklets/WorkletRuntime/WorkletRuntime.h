@@ -26,6 +26,18 @@ namespace worklets {
  * Forward declaration to avoid circular dependencies.
  */
 class JSIWorkletsModuleProxy;
+class WorkletRuntime;
+
+class WorkletRuntimeHolderNativeState : public jsi::NativeState {
+ public:
+  explicit WorkletRuntimeHolderNativeState(
+      const std::weak_ptr<WorkletRuntime> &workletRuntime);
+
+  std::weak_ptr<WorkletRuntime> getWorkletRuntime() const;
+
+ private:
+  std::weak_ptr<WorkletRuntime> weakWorkletRuntime_;
+};
 
 class WorkletRuntime : public jsi::HostObject,
                        public std::enable_shared_from_this<WorkletRuntime> {

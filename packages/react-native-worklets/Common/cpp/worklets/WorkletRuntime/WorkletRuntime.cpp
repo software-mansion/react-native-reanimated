@@ -23,6 +23,15 @@
 
 namespace worklets {
 
+WorkletRuntimeHolderNativeState::WorkletRuntimeHolderNativeState(
+    const std::weak_ptr<WorkletRuntime> &workletRuntime)
+    : weakWorkletRuntime_(workletRuntime) {}
+
+std::weak_ptr<WorkletRuntime>
+WorkletRuntimeHolderNativeState::getWorkletRuntime() const {
+  return weakWorkletRuntime_;
+}
+
 class AroundLock {
   const std::shared_ptr<std::recursive_mutex> mutex_;
 
@@ -99,6 +108,13 @@ void WorkletRuntime::init(
 
   auto optimizedJsiWorkletsModuleProxy =
       jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
+
+  auto workletRuntimeHolder = jsi::Object(rt);
+  workletRuntimeHolder.setNativeState(
+      rt, std::make_shared<WorkletRuntimeHolderNativeState>(weak_from_this()));
+
+  rt.global().setProperty(
+      rt, "_WORKLET_RUNTIME_HOLDER", std::move(workletRuntimeHolder));
 
   WorkletRuntimeDecorator::decorate(
       rt,
