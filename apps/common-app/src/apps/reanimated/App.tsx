@@ -150,7 +150,7 @@ function Navigator() {
           name={name}
           component={EXAMPLES[name].screen}
           options={{
-            animation: shouldReduceMotion ? 'fade' : 'default',
+            animation: IS_MACOS ? 'none' : shouldReduceMotion ? 'fade' : 'fade',
             headerTitle: EXAMPLES[name].title,
             title: EXAMPLES[name].title,
           }}
