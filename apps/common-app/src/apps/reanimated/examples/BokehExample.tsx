@@ -7,12 +7,13 @@ import Animated, {
   useSharedValue,
   withRepeat,
   withTiming,
-  type WithTimingConfig,
 } from 'react-native-reanimated';
 
 const { width, height } = Dimensions.get('window');
 
 interface CircleProps {
+  size: number;
+  opacity: number;
   duration: number;
   startX: number;
   startY: number;
@@ -20,8 +21,6 @@ interface CircleProps {
   endY: number;
   startHue: number;
   endHue: number;
-  size: number;
-  opacity: number;
 }
 
 function Circle({
@@ -47,7 +46,7 @@ function Circle({
     hue.value = startHue;
 
     const numberOfReps = shouldReduceMotion ? 1 : -1;
-    const config: WithTimingConfig = { duration, easing: Easing.linear };
+    const config = { duration, easing: Easing.linear };
 
     left.value = withRepeat(withTiming(endX, config), numberOfReps, true);
     top.value = withRepeat(withTiming(endY, config), numberOfReps, true);
@@ -91,7 +90,7 @@ interface BokehProps {
 
 function Bokeh({ count }: BokehProps) {
   const circles = useMemo(
-    () => Array.from({ length: count }, getBokehCircleParams),
+    () => Array.from({ length: count }, makeBokehCircleParams),
     [count]
   );
 
@@ -110,7 +109,7 @@ function randBetween(min: number, max: number) {
   return min + Math.random() * (max - min);
 }
 
-function getBokehCircleParams(): CircleProps {
+function makeBokehCircleParams(): CircleProps {
   const power = randBetween(0, 1);
   const size = 100 + power * 250;
   const opacity = 0.1 + (1 - power) * 0.1;
@@ -142,15 +141,11 @@ function getBokehCircleParams(): CircleProps {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: 'black',
     overflow: 'hidden',
   },
   circle: {
     position: 'absolute',
     borderRadius: 999,
-    left: 0,
-    top: 0,
   },
 });
