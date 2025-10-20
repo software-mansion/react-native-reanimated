@@ -20,7 +20,7 @@ string(
 string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
 # flags to optimize the binary size
 string(APPEND CMAKE_CXX_FLAGS
-       " -fvisibility=hidden -ffunction-sections -fdata-sections")
+       " -fvisibility=hidden")
 
 if(${REANIMATED_PROFILING})
   string(APPEND CMAKE_CXX_FLAGS " -DREANIMATED_PROFILING")
