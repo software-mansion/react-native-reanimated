@@ -144,7 +144,6 @@ function SvgPolygonsDemo({ sv }: { sv: SharedValue<number> }) {
         <G x={100}>
           <AnimatedPolygonNoJSProps
             fill="red"
-            x={100}
             strokeWidth={10}
             animatedProps={animatedProps}
           />
