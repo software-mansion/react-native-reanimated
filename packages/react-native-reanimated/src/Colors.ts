@@ -538,8 +538,8 @@ export const rgbaColor = (
   alpha = 1
 ): number | string => {
   'worklet';
-  // Replace tiny values like 1.234e-11 with 0:
-  const safeAlpha = alpha < 0.001 ? 0 : alpha;
+  // Round alpha to 3 decimal places to avoid floating point precision issues
+  const safeAlpha = Math.round(alpha * 1000) / 1000;
   return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
 };
 

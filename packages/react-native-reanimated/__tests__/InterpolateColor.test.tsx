@@ -106,22 +106,22 @@ describe('colors interpolation', () => {
   test('interpolates semi-transparent colors', () => {
     const colors = ['#10506050', '#60902070'];
     let interpolatedColor = interpolateColor(0.5, [0, 1], colors);
-    expect(interpolatedColor).toBe(`rgba(71, 117, 73, ${96 / 255})`);
+    expect(interpolatedColor).toBe('rgba(71, 117, 73, 0.376)');
 
     interpolatedColor = interpolateColor(0, [0, 1], colors);
-    expect(interpolatedColor).toBe(`rgba(16, 80, 96, ${80 / 255})`);
+    expect(interpolatedColor).toBe('rgba(16, 80, 96, 0.314)');
 
     interpolatedColor = interpolateColor(1, [0, 1], colors);
-    expect(interpolatedColor).toBe(`rgba(96, 144, 32, ${112 / 255})`);
+    expect(interpolatedColor).toBe('rgba(96, 144, 32, 0.439)');
 
     interpolatedColor = interpolateColor(0.5, [0, 1], colors, 'HSV');
-    expect(interpolatedColor).toBe(`rgba(23, 120, 54, ${96 / 255})`);
+    expect(interpolatedColor).toBe('rgba(23, 120, 54, 0.376)');
 
     interpolatedColor = interpolateColor(0, [0, 1], colors, 'HSV');
-    expect(interpolatedColor).toBe(`rgba(16, 80, 96, ${80 / 255})`);
+    expect(interpolatedColor).toBe('rgba(16, 80, 96, 0.314)');
 
     interpolatedColor = interpolateColor(1, [0, 1], colors, 'HSV');
-    expect(interpolatedColor).toBe(`rgba(96, 144, 32, ${112 / 255})`);
+    expect(interpolatedColor).toBe('rgba(96, 144, 32, 0.439)');
   });
 
   test('handles tiny values', () => {
@@ -132,7 +132,7 @@ describe('colors interpolation', () => {
     expect(interpolatedColor).toBe(`rgba(4, 2, 0, 0)`);
   });
 
-  describe('transparent color interpolation', () => {
+  describe('simple transparent to color interpolation', () => {
     const cases = [
       {
         name: 'transparent to color at midpoint',
@@ -205,6 +205,40 @@ describe('colors interpolation', () => {
           }
         }
       );
+    });
+  });
+
+  describe('color interpolation with multiple transparent colors', () => {
+    const inputRange = [0, 0.2, 0.4, 0.6, 0.8, 1];
+    const outputRange = [
+      'transparent',
+      'transparent',
+      'red',
+      'transparent',
+      'blue',
+      '#00ff00',
+    ];
+
+    const cases: [number, string][] = [
+      [0.1, 'rgba(255, 0, 0, 0)'], // red transparent
+      [0.2, 'rgba(255, 0, 0, 0)'], // red transparent
+      [0.3, 'rgba(255, 0, 0, 0.5)'], // between transparent red and red
+      [0.4, 'rgba(255, 0, 0, 1)'], // red
+      [0.5, 'rgba(255, 0, 0, 0.5)'], // between red and transparent red
+      [0.6, 'rgba(255, 0, 0, 0)'], // red transparent
+      [0.6000001, 'rgba(0, 0, 255, 0)'], // blue transparent
+      [0.7, 'rgba(0, 0, 255, 0.5)'], // between transparent blue and blue
+      [0.8, 'rgba(0, 0, 255, 1)'], // blue
+      [0.9, 'rgba(0, 127.5, 127.5, 1)'], // between blue and green
+      [1, 'rgba(0, 255, 0, 1)'], // green
+    ];
+
+    test.each(cases)(`for value %s, the result is %s`, (value, expected) => {
+      expect(
+        interpolateColor(value, inputRange, outputRange, 'RGB', {
+          gamma: 1,
+        })
+      ).toBe(expected);
     });
   });
 

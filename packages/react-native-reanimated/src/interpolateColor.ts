@@ -14,59 +14,10 @@ import type { SharedValue } from './commonTypes';
 import { makeMutable } from './core';
 import culori from './culori';
 import { useSharedValue } from './hook/useSharedValue';
-import type {
-  ExtrapolationType,
-  NarrowedInterpolationRange,
-} from './interpolation';
-import {
-  Extrapolation,
-  internalInterpolate,
-  interpolate,
-  narrowInterpolationRange,
-  validateExtrapolationType,
-} from './interpolation';
+import { Extrapolation, interpolate } from './interpolation';
 
 /** @deprecated Please use Extrapolation instead */
 export const Extrapolate = Extrapolation;
-
-/**
- * Represents a color channel value that can be a number or undefined.
- *
- * Can be undefined if the color is transparent, indicating that the channel
- * value is not applicable for transparent colors.
- */
-type ColorChannel = number | undefined;
-
-function isNumericInterpolationRange(
-  narrowedRange: NarrowedInterpolationRange<ColorChannel>
-): narrowedRange is NarrowedInterpolationRange<number> {
-  return (
-    narrowedRange.leftEdgeOutput !== undefined &&
-    narrowedRange.rightEdgeOutput !== undefined
-  );
-}
-
-function interpolateColorChannel(
-  value: number,
-  inputRange: ReadonlyArray<number>,
-  colorChannel: ReadonlyArray<ColorChannel>,
-  type?: ExtrapolationType
-): number {
-  const extrapolationConfig = validateExtrapolationType(type);
-  const narrowedRange = narrowInterpolationRange(
-    value,
-    inputRange,
-    colorChannel
-  );
-
-  if (isNumericInterpolationRange(narrowedRange)) {
-    return internalInterpolate(value, narrowedRange, extrapolationConfig);
-  }
-
-  // This can happen while interpolating between a 'transparent' and a non-transparent color.
-  // We want to keep color channels unchanged but interpolate only the alpha channel.
-  return narrowedRange.leftEdgeOutput ?? narrowedRange.rightEdgeOutput ?? 0;
-}
 
 /**
  * Options for color interpolation.
@@ -92,40 +43,30 @@ const interpolateColorsHSV = (
     // if the difference between hues in a range is > 180 deg
     // then move the hue at the right end of the range +/- 360 deg
     // and add the next point in the original place + 0.00001 with original hue
-    // not to break the next range
+    // to not break the next range
     const correctedInputRange = [inputRange[0]];
     const originalH = colors.h;
     const correctedH = [originalH[0]];
 
     for (let i = 1; i < originalH.length; ++i) {
-      const currentH = originalH[i];
-      const prevH = originalH[i - 1];
-
-      // Handle undefined values (when the 'transparent' color is used)
-      if (currentH === undefined || prevH === undefined) {
-        correctedInputRange.push(inputRange[i]);
-        correctedH.push(currentH);
-        continue;
-      }
-
-      const d = currentH - prevH;
-      if (currentH > prevH && d > 0.5) {
+      const d = originalH[i] - originalH[i - 1];
+      if (originalH[i] > originalH[i - 1] && d > 0.5) {
         correctedInputRange.push(inputRange[i]);
         correctedInputRange.push(inputRange[i] + 0.00001);
-        correctedH.push(currentH - 1);
-        correctedH.push(currentH);
-      } else if (currentH < prevH && d < -0.5) {
+        correctedH.push(originalH[i] - 1);
+        correctedH.push(originalH[i]);
+      } else if (originalH[i] < originalH[i - 1] && d < -0.5) {
         correctedInputRange.push(inputRange[i]);
         correctedInputRange.push(inputRange[i] + 0.00001);
-        correctedH.push(currentH + 1);
-        correctedH.push(currentH);
+        correctedH.push(originalH[i] + 1);
+        correctedH.push(originalH[i]);
       } else {
         correctedInputRange.push(inputRange[i]);
-        correctedH.push(currentH);
+        correctedH.push(originalH[i]);
       }
     }
     h =
-      (interpolateColorChannel(
+      (interpolate(
         value,
         correctedInputRange,
         correctedH,
@@ -134,34 +75,21 @@ const interpolateColorsHSV = (
         1) %
       1;
   } else {
-    h = interpolateColorChannel(
-      value,
-      inputRange,
-      colors.h,
-      Extrapolation.CLAMP
-    );
+    h = interpolate(value, inputRange, colors.h, Extrapolation.CLAMP);
   }
-  const s = interpolateColorChannel(
-    value,
-    inputRange,
-    colors.s,
-    Extrapolation.CLAMP
-  );
-  const v = interpolateColorChannel(
-    value,
-    inputRange,
-    colors.v,
-    Extrapolation.CLAMP
-  );
+  const s = interpolate(value, inputRange, colors.s, Extrapolation.CLAMP);
+  const v = interpolate(value, inputRange, colors.v, Extrapolation.CLAMP);
   const a = interpolate(value, inputRange, colors.a, Extrapolation.CLAMP);
   return hsvToColor(h, s, v, a);
 };
 
-const toLinearSpace = (x: ColorChannel[], gamma: number): ColorChannel[] =>
-  x.map((v) => v && Math.pow(v / 255, gamma));
+const toLinearSpace = (x: number[], gamma: number): number[] => {
+  return x.map((v) => Math.pow(v / 255, gamma));
+};
 
-const toGammaSpace = (x: number, gamma: number): number =>
-  Math.round(Math.pow(x, 1 / gamma) * 255);
+const toGammaSpace = (x: number, gamma: number): number => {
+  return Math.round(Math.pow(x, 1 / gamma) * 255);
+};
 
 const interpolateColorsRGB = (
   value: number,
@@ -171,37 +99,18 @@ const interpolateColorsRGB = (
 ) => {
   const { gamma = 2.2 } = options;
   let { r: outputR, g: outputG, b: outputB } = colors;
-
   if (gamma !== 1) {
     outputR = toLinearSpace(outputR, gamma);
     outputG = toLinearSpace(outputG, gamma);
     outputB = toLinearSpace(outputB, gamma);
   }
-
-  const r = interpolateColorChannel(
-    value,
-    inputRange,
-    outputR,
-    Extrapolation.CLAMP
-  );
-  const g = interpolateColorChannel(
-    value,
-    inputRange,
-    outputG,
-    Extrapolation.CLAMP
-  );
-  const b = interpolateColorChannel(
-    value,
-    inputRange,
-    outputB,
-    Extrapolation.CLAMP
-  );
+  const r = interpolate(value, inputRange, outputR, Extrapolation.CLAMP);
+  const g = interpolate(value, inputRange, outputG, Extrapolation.CLAMP);
+  const b = interpolate(value, inputRange, outputB, Extrapolation.CLAMP);
   const a = interpolate(value, inputRange, colors.a, Extrapolation.CLAMP);
-
   if (gamma === 1) {
     return rgbaColor(r, g, b, a);
   }
-
   return rgbaColor(
     toGammaSpace(r, gamma),
     toGammaSpace(g, gamma),
@@ -216,80 +125,53 @@ const interpolateColorsLAB = (
   colors: InterpolateLAB,
   _options: InterpolationOptions
 ) => {
-  const l = interpolateColorChannel(
-    value,
-    inputRange,
-    colors.l,
-    Extrapolation.CLAMP
-  );
-  const a = interpolateColorChannel(
-    value,
-    inputRange,
-    colors.a,
-    Extrapolation.CLAMP
-  );
-  const b = interpolateColorChannel(
-    value,
-    inputRange,
-    colors.b,
-    Extrapolation.CLAMP
-  );
+  const l = interpolate(value, inputRange, colors.l, Extrapolation.CLAMP);
+  const a = interpolate(value, inputRange, colors.a, Extrapolation.CLAMP);
+  const b = interpolate(value, inputRange, colors.b, Extrapolation.CLAMP);
   const alpha = interpolate(
     value,
     inputRange,
     colors.alpha,
     Extrapolation.CLAMP
   );
-
   const {
     r: _r,
     g: _g,
     b: _b,
     alpha: _alpha,
   } = culori.oklab.convert.toRgb({ l, a, b, alpha });
-
   return rgbaColor(_r, _g, _b, _alpha);
 };
 
 const _splitColorsIntoChannels = (
-  colors: readonly (string | number)[],
+  processedColors: readonly number[],
   convFromRgb: (color: { r: number; g: number; b: number }) => {
     ch1: number;
     ch2: number;
     ch3: number;
   }
 ): {
-  ch1: ColorChannel[];
-  ch2: ColorChannel[];
-  ch3: ColorChannel[];
+  ch1: number[];
+  ch2: number[];
+  ch3: number[];
   alpha: number[];
 } => {
-  const ch1: ColorChannel[] = [];
-  const ch2: ColorChannel[] = [];
-  const ch3: ColorChannel[] = [];
+  const ch1: number[] = [];
+  const ch2: number[] = [];
+  const ch3: number[] = [];
   const alpha: number[] = [];
 
-  for (let i = 0; i < colors.length; i++) {
-    const color = colors[i];
-    const processedColor = processColor(color);
+  for (const processedColor of processedColors) {
+    const convertedColor = convFromRgb({
+      r: red(processedColor),
+      g: green(processedColor),
+      b: blue(processedColor),
+    });
 
-    if (typeof processedColor === 'number') {
-      const convertedColor = convFromRgb({
-        r: red(processedColor),
-        g: green(processedColor),
-        b: blue(processedColor),
-      });
-
-      ch1.push(convertedColor.ch1);
-      ch2.push(convertedColor.ch2);
-      ch3.push(convertedColor.ch3);
-      alpha.push(opacity(processedColor));
-    } else if (color === 'transparent') {
-      ch1.push(undefined);
-      ch2.push(undefined);
-      ch3.push(undefined);
-      alpha.push(0);
-    }
+    ch1.push(convertedColor.ch1);
+    ch2.push(convertedColor.ch2);
+    ch3.push(convertedColor.ch3);
+    alpha.push(opacity(processedColor));
   }
 
   return {
@@ -301,17 +183,17 @@ const _splitColorsIntoChannels = (
 };
 
 export interface InterpolateRGB {
-  r: ColorChannel[];
-  g: ColorChannel[];
-  b: ColorChannel[];
+  r: number[];
+  g: number[];
+  b: number[];
   a: number[];
 }
 
 const getInterpolateRGB = (
-  colors: readonly (string | number)[]
+  processedColors: readonly number[]
 ): InterpolateRGB => {
   const { ch1, ch2, ch3, alpha } = _splitColorsIntoChannels(
-    colors,
+    processedColors,
     (color) => ({
       ch1: color.r,
       ch2: color.g,
@@ -328,23 +210,26 @@ const getInterpolateRGB = (
 };
 
 export interface InterpolateHSV {
-  h: ColorChannel[];
-  s: ColorChannel[];
-  v: ColorChannel[];
+  h: number[];
+  s: number[];
+  v: number[];
   a: number[];
 }
 
 const getInterpolateHSV = (
-  colors: readonly (string | number)[]
+  processedColors: readonly number[]
 ): InterpolateHSV => {
-  const { ch1, ch2, ch3, alpha } = _splitColorsIntoChannels(colors, (color) => {
-    const hsvColor = RGBtoHSV(color.r, color.g, color.b);
-    return {
-      ch1: hsvColor.h,
-      ch2: hsvColor.s,
-      ch3: hsvColor.v,
-    };
-  });
+  const { ch1, ch2, ch3, alpha } = _splitColorsIntoChannels(
+    processedColors,
+    (color) => {
+      const hsvColor = RGBtoHSV(color.r, color.g, color.b);
+      return {
+        ch1: hsvColor.h,
+        ch2: hsvColor.s,
+        ch3: hsvColor.v,
+      };
+    }
+  );
 
   return {
     h: ch1,
@@ -355,23 +240,26 @@ const getInterpolateHSV = (
 };
 
 interface InterpolateLAB {
-  l: ColorChannel[];
-  a: ColorChannel[];
-  b: ColorChannel[];
+  l: number[];
+  a: number[];
+  b: number[];
   alpha: number[];
 }
 
 const getInterpolateLAB = (
-  colors: readonly (string | number)[]
+  processedColors: readonly number[]
 ): InterpolateLAB => {
-  const { ch1, ch2, ch3, alpha } = _splitColorsIntoChannels(colors, (color) => {
-    const labColor = culori.oklab.convert.fromRgb(color);
-    return {
-      ch1: labColor.l,
-      ch2: labColor.a,
-      ch3: labColor.b,
-    };
-  });
+  const { ch1, ch2, ch3, alpha } = _splitColorsIntoChannels(
+    processedColors,
+    (color) => {
+      const labColor = culori.oklab.convert.fromRgb(color);
+      return {
+        ch1: labColor.l,
+        ch2: labColor.a,
+        ch3: labColor.b,
+      };
+    }
+  );
 
   return {
     l: ch1,
@@ -380,6 +268,58 @@ const getInterpolateLAB = (
     alpha,
   };
 };
+
+const TRANSPARENT_MASK = 0x00ffffff; // AARRGGBB
+
+/**
+ * Processes color ranges to handle transparent color interpolation by replacing
+ * 'transparent' values with RGBA values that preserve the RGB channels from
+ * neighboring colors while setting alpha to 0.
+ *
+ * @example
+ *   // Transparent between colors gets RGB from both neighbors
+ *   ['red', 'transparent', 'blue'] → ['rgba(255, 0, 0, 1)', 'rgba(255, 0, 0, 0)', 'rgba(0, 0, 255, 0)', 'rgba(0, 0, 255, 1)']
+ *
+ *   // Consecutive transparent values are consolidated if possible
+ *   ['transparent', 'transparent', 'red'] → ['rgba(255, 0, 0, 0)', 'rgba(255, 0, 0, 1)']
+ */
+function processColorRanges(
+  inputRange: readonly number[],
+  outputRange: readonly (number | string)[]
+): [number[], number[]] {
+  const processedInputRange: number[] = [];
+  const processedOutputRange: number[] = [];
+  let isPrevTransparent = false;
+
+  for (let i = 0; i < inputRange.length; i++) {
+    const color = outputRange[i];
+    const processedColor = processColor(color);
+
+    const isTransparent = color === 'transparent';
+
+    if (typeof processedColor === 'number') {
+      if (isPrevTransparent) {
+        // Ensure that we animate from the correct RGB values (the same as in the
+        // current color) with alpha 0 when animating from transparent to a color.
+        processedInputRange.push(inputRange[i - 1]);
+        processedOutputRange.push(processedColor & TRANSPARENT_MASK);
+      }
+
+      // Add current color to the output range
+      processedInputRange.push(inputRange[i]);
+      processedOutputRange.push(processedColor);
+    } else if (isTransparent && !isPrevTransparent && i > 0) {
+      const lastProcessedColor =
+        processedOutputRange[processedOutputRange.length - 1];
+      processedInputRange.push(inputRange[i]);
+      processedOutputRange.push(lastProcessedColor & TRANSPARENT_MASK);
+    }
+
+    isPrevTransparent = isTransparent;
+  }
+
+  return [processedInputRange, processedOutputRange];
+}
 
 /**
  * Lets you map a value from a range of numbers to a range of colors using
@@ -422,25 +362,38 @@ export function interpolateColor(
   colorSpace: 'RGB' | 'HSV' | 'LAB' = 'RGB',
   options: InterpolationOptions = {}
 ): string | number {
+  const [processedInputRange, processedOutputRange] = processColorRanges(
+    inputRange,
+    outputRange
+  );
+
+  if (
+    !processedOutputRange.length &&
+    outputRange.every((color) => color === 'transparent')
+  ) {
+    // Handles rare case when all colors are transparent
+    return 'rgba(0, 0, 0, 0)';
+  }
+
   if (colorSpace === 'HSV') {
     return interpolateColorsHSV(
       value,
-      inputRange,
-      getInterpolateHSV(outputRange),
+      processedInputRange,
+      getInterpolateHSV(processedOutputRange),
       options
     );
   } else if (colorSpace === 'RGB') {
     return interpolateColorsRGB(
       value,
-      inputRange,
-      getInterpolateRGB(outputRange),
+      processedInputRange,
+      getInterpolateRGB(processedOutputRange),
       options
     );
   } else if (colorSpace === 'LAB') {
     return interpolateColorsLAB(
       value,
-      inputRange,
-      getInterpolateLAB(outputRange),
+      processedInputRange,
+      getInterpolateLAB(processedOutputRange),
       options
     );
   }
