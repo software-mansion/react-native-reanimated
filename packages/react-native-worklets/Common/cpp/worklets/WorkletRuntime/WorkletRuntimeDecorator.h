@@ -2,7 +2,9 @@
 
 #include <worklets/RunLoop/EventLoop.h>
 #include <worklets/Tools/JSScheduler.h>
+#ifdef WORKLETS_BUNDLE_MODE
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
+#endif // WORKLETS_BUNDLE_MODE
 
 #include <jsi/jsi.h>
 
@@ -27,12 +29,12 @@ class WorkletRuntimeDecorator {
   static void postEvaluateScript(
       jsi::Runtime &rt,
       RuntimeBindings runtimeBindings);
-#endif // WORKLETS_BUNDLE_MODE
 
  private:
   static void installNetworking(
       jsi::Runtime &rt,
       RuntimeBindings runtimeBindings);
+#endif // WORKLETS_BUNDLE_MODE
 };
 
 } // namespace worklets

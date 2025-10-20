@@ -6,16 +6,19 @@
 #import <worklets/apple/AssertJavaScriptQueue.h>
 #import <worklets/apple/AssertTurboModuleManagerQueue.h>
 #import <worklets/apple/IOSUIScheduler.h>
-#import <worklets/apple/Networking/WorkletsNetworking.h>
 #import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
 
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
+
+#ifdef WORKLETS_BUNDLE_MODE
+#import <worklets/apple/Networking/WorkletsNetworking.h>
 #import <React/RCTNetworking.h>
 #import <ReactCommon/RCTTurboModule.h>
 
 #import <FBReactNativeSpec/FBReactNativeSpec.h>
+#endif // WORKLETS_BUNDLE_MODE
 
 #if __has_include(<React/RCTBundleProvider.h>)
 // Bundle mode

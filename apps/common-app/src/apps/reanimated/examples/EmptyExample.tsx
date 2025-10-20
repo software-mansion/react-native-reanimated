@@ -2,11 +2,10 @@ import React from 'react';
 import { StyleSheet, View, Button } from 'react-native';
 import {
   createWorkletRuntime,
-  runOnRuntime,
+  scheduleOnRuntime,
   type WorkletRuntime,
 } from 'react-native-worklets';
 import axios from 'axios';
-import { runOnUI } from 'react-native-worklets';
 
 const mydloRuntime = createWorkletRuntime({
   name: 'mydlo',
@@ -136,7 +135,7 @@ function callback(runtime: WorkletRuntime, count: number) {
         : mydloRuntime;
 
   setTimeout(() => {
-    runOnRuntime(nextRuntime, callback)(nextRuntime, count + 1);
+    scheduleOnRuntime(nextRuntime, callback, nextRuntime, count + 1);
   }, 100);
 }
 
@@ -146,17 +145,17 @@ export default function App() {
       <Button
         title="UNLEASH THE FETCH"
         onPress={() => {
-          runOnRuntime(mydloRuntime, callback)(mydloRuntime, 0);
+          scheduleOnRuntime(mydloRuntime, callback, mydloRuntime, 0);
         }}
       />
       <Button
         title="Test XHR"
         onPress={() => {
-          runOnRuntime(mydloRuntime, testXHR)(false, false, false, false);
-          runOnRuntime(widloRuntime, testXHR)(true, false, false, false);
-          runOnRuntime(powidloRuntime, testXHR)(true, true, false, false);
-          runOnRuntime(mydloRuntime, testXHR)(true, true, true, false);
-          runOnRuntime(widloRuntime, testXHR)(true, true, true, true);
+          scheduleOnRuntime(mydloRuntime, testXHR, false, false, false, false);
+          scheduleOnRuntime(widloRuntime, testXHR, true, false, false, false);
+          scheduleOnRuntime(powidloRuntime, testXHR, true, true, false, false);
+          scheduleOnRuntime(mydloRuntime, testXHR, true, true, true, false);
+          scheduleOnRuntime(widloRuntime, testXHR, true, true, true, true);
         }}
       />
     </View>

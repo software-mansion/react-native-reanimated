@@ -1,3 +1,4 @@
+#ifdef WORKLETS_BUNDLE_MODE
 /*
  * This file is based on RCTNetworking.h from React Native.
  */
@@ -20,3 +21,4 @@
 - (void)jsiClearCookies:(jsi::Runtime &)rt responseSender:(jsi::Function &&)responseSender;
 
 @end
+#endif // WORKLETS_BUNDLE_MODE

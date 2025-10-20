@@ -67,9 +67,7 @@ function getWorkletFromMetroRequire(
   closureVariables: Record<string, unknown>
 ): WorkletFunction {
   const factory = metroRequire(workletHash).default as WorkletFactory;
-  const instance = factory(closureVariables);
-  instance.__workletHash = workletHash;
-  return instance;
+  return factory(closureVariables);
 }
 
 interface ObjectToUnpack extends WorkletFunction {

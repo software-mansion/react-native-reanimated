@@ -81,7 +81,7 @@ export function createWorkletRuntime(
     );
   }
 
-  const workletRuntime = WorkletsModule.createWorkletRuntime(
+  return WorkletsModule.createWorkletRuntime(
     name,
     createSerializable(() => {
       'worklet';
@@ -91,20 +91,15 @@ export function createWorkletRuntime(
       if (enableEventLoop) {
         setupRunLoop(animationQueuePollingRate);
       }
+      if (globalThis._WORKLETS_BUNDLE_MODE) {
+        initializeNetworking();
+      }
+      initializerFn?.();
     }),
     useDefaultQueue,
     customQueue,
     enableEventLoop
   );
-
-  runOnRuntime(workletRuntime, initializeNetworking)();
-
-  runOnRuntime(workletRuntime, () => {
-    'worklet';
-    initializerFn?.();
-  })();
-
-  return workletRuntime;
 }
 
 /** @deprecated Use `scheduleOnRuntime` instead. */

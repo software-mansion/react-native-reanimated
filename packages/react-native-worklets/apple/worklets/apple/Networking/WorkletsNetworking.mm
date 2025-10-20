@@ -1,3 +1,4 @@
+#ifdef WORKLETS_BUNDLE_MODE
 /*
  * This file is based on RCTNetworking.mm from React Native.
  */
@@ -719,3 +720,4 @@ using ArgFactory = std::function<void(facebook::jsi::Runtime &runtime, std::vect
 }
 
 @end
+#endif // WORKLETS_BUNDLE_MODE

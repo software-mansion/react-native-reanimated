@@ -294,10 +294,9 @@ void WorkletRuntimeDecorator::decorate(
         const auto delay = delayJs.asNumber();
         const auto handlerId = handlerIdJs.asNumber();
         const auto job = [handlerId](jsi::Runtime &rt) {
-          auto fn = rt.global().getProperty(rt, "__runTimeoutCallback");
-          //              .call(rt, handlerId);
-
-          worklets::runOnRuntimeGuarded(rt, fn, handlerId);
+          rt.global()
+              .getPropertyAsFunction(rt, "__runTimeoutCallback")
+              .call(rt, handlerId);
         };
         if (auto strongEventLoop = weakEventLoop.lock()) {
           strongEventLoop->pushTimeout(job, delay);
