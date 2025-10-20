@@ -286,7 +286,7 @@ const TRANSPARENCY_MASK = 0x00ffffff; // AARRGGBB
 function processColorRanges(
   inputRange: readonly number[],
   outputRange: readonly (number | string)[]
-): [number[], number[]] {
+): [readonly number[], readonly number[]] {
   const processedInputRange: number[] = [];
   const processedOutputRange: number[] = [];
   let isPrevTransparent = false;
@@ -304,15 +304,25 @@ function processColorRanges(
         processedInputRange.push(inputRange[i - 1]);
         processedOutputRange.push(processedColor & TRANSPARENCY_MASK);
       }
-
       // Add current color to the output range
       processedInputRange.push(inputRange[i]);
       processedOutputRange.push(processedColor);
-    } else if (isTransparent && !isPrevTransparent && i > 0) {
-      const lastProcessedColor =
-        processedOutputRange[processedOutputRange.length - 1];
-      processedInputRange.push(inputRange[i]);
-      processedOutputRange.push(lastProcessedColor & TRANSPARENCY_MASK);
+    } else if (!isPrevTransparent) {
+      // If the transparent color is encountered after the non-transparent color,
+      // then we add the last processed color with alpha 0 to the output range.
+      if (isTransparent && i > 0) {
+        const lastProcessedColor =
+          processedOutputRange[processedOutputRange.length - 1];
+        processedInputRange.push(inputRange[i]);
+        processedOutputRange.push(lastProcessedColor & TRANSPARENCY_MASK);
+      }
+    } else if (i === inputRange.length - 1 && !processedOutputRange.length) {
+      // If the end of the input range is reached, the previous color was transparent
+      // and the output range is empty, that means all colors were transparent,
+      // so we can add just 2 transparent colors to the output range.
+      const lastindex = inputRange.length - 1;
+      processedInputRange.push(inputRange[0], inputRange[lastindex]);
+      processedOutputRange.push(0, 0);
     }
 
     isPrevTransparent = isTransparent;
@@ -366,14 +376,6 @@ export function interpolateColor(
     inputRange,
     outputRange
   );
-
-  if (
-    !processedOutputRange.length &&
-    outputRange.every((color) => color === 'transparent')
-  ) {
-    // Handles rare case when all colors are transparent
-    return 'rgba(0, 0, 0, 0)';
-  }
 
   if (colorSpace === 'HSV') {
     return interpolateColorsHSV(
