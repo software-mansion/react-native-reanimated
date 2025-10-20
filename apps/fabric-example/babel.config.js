@@ -6,8 +6,8 @@ module.exports = {
       'react-native-worklets/plugin',
       {
         // Uncomment the next line to enable bundle mode.
-        bundleMode: true,
-        workletizableModules: ['react-native/Libraries/Core/setUpXHR', 'axios'],
+        // bundleMode: true,
+        // workletizableModules: ['react-native/Libraries/Core/setUpXHR', 'axios'],
       },
     ],
     [
@@ -21,5 +21,3 @@ module.exports = {
     ],
   ],
 };
-
-// workletizableModules: ['react-native/Libraries/Core/setUpXHR', 'axios'],
