@@ -25,12 +25,14 @@ function getBundle() {
 
 function getRuntime() {
   if ('HermesInternal' in global) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const version =
       // @ts-ignore this is fine
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       global.HermesInternal?.getRuntimeProperties?.()['OSS Release Version'];
     return `Hermes (${version})`;
   }
-  return 'JSC';
+  return 'unknown';
 }
 
 function getArchitecture() {
@@ -38,8 +40,9 @@ function getArchitecture() {
 }
 
 function getReactNativeVersion() {
-  const { major, minor, patch } = Platform.constants.reactNativeVersion;
-  return `${major}.${minor}.${patch}`;
+  const { major, minor, patch, prerelease } =
+    Platform.constants.reactNativeVersion;
+  return `${major}.${minor}.${patch}${prerelease ? `-${prerelease}` : ''}`;
 }
 
 export default function AboutExample() {

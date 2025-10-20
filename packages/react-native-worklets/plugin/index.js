@@ -1080,12 +1080,16 @@ var require_referencedWorklets = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.findReferencedWorklet = findReferencedWorklet;
-    var types_12 = require_types();
-    function findReferencedWorklet(workletIdentifier, acceptWorkletizableFunction, acceptObject) {
+    var types_12 = require("@babel/types");
+    var types_2 = require_types();
+    function findReferencedWorklet(workletIdentifier, acceptWorkletizableFunction, acceptObject, state) {
       const workletName = workletIdentifier.node.name;
       const scope = workletIdentifier.scope;
       const workletBinding = scope.getBinding(workletName);
       if (!workletBinding) {
+        return void 0;
+      }
+      if (state.opts.bundleMode && bindingIsWorklet(workletBinding)) {
         return void 0;
       }
       if (acceptWorkletizableFunction && workletBinding.path.isFunctionDeclaration()) {
@@ -1093,43 +1097,46 @@ var require_referencedWorklets = __commonJS({
       }
       const isConstant = workletBinding.constant;
       if (isConstant) {
-        return findReferencedWorkletFromVariableDeclarator(workletBinding, acceptWorkletizableFunction, acceptObject);
+        return findReferencedWorkletFromVariableDeclarator(workletBinding, acceptWorkletizableFunction, acceptObject, state);
       }
-      return findReferencedWorkletFromAssignmentExpression(workletBinding, acceptWorkletizableFunction, acceptObject);
+      return findReferencedWorkletFromAssignmentExpression(workletBinding, acceptWorkletizableFunction, acceptObject, state);
     }
-    function findReferencedWorkletFromVariableDeclarator(workletBinding, acceptWorkletizableFunction, acceptObject) {
+    function findReferencedWorkletFromVariableDeclarator(workletBinding, acceptWorkletizableFunction, acceptObject, state) {
       const workletDeclaration = workletBinding.path;
       if (!workletDeclaration.isVariableDeclarator()) {
         return void 0;
       }
       const worklet = workletDeclaration.get("init");
-      if (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionPath)(worklet)) {
+      if (acceptWorkletizableFunction && (0, types_2.isWorkletizableFunctionPath)(worklet)) {
         return worklet;
       }
-      if (acceptObject && (0, types_12.isWorkletizableObjectPath)(worklet)) {
+      if (acceptObject && (0, types_2.isWorkletizableObjectPath)(worklet)) {
         return worklet;
       }
       if (worklet.isIdentifier() && worklet.isReferencedIdentifier()) {
-        return findReferencedWorklet(worklet, acceptWorkletizableFunction, acceptObject);
+        return findReferencedWorklet(worklet, acceptWorkletizableFunction, acceptObject, state);
       }
       return void 0;
     }
-    function findReferencedWorkletFromAssignmentExpression(workletBinding, acceptWorkletizableFunction, acceptObject) {
-      const workletDeclaration = workletBinding.constantViolations.reverse().find((constantViolation) => constantViolation.isAssignmentExpression() && (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionPath)(constantViolation.get("right")) || acceptObject && (0, types_12.isWorkletizableObjectPath)(constantViolation.get("right"))));
+    function findReferencedWorkletFromAssignmentExpression(workletBinding, acceptWorkletizableFunction, acceptObject, state) {
+      const workletDeclaration = workletBinding.constantViolations.reverse().find((constantViolation) => constantViolation.isAssignmentExpression() && (acceptWorkletizableFunction && (0, types_2.isWorkletizableFunctionPath)(constantViolation.get("right")) || acceptObject && (0, types_2.isWorkletizableObjectPath)(constantViolation.get("right"))));
       if (!workletDeclaration || !workletDeclaration.isAssignmentExpression()) {
         return void 0;
       }
       const workletDefinition = workletDeclaration.get("right");
-      if (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionPath)(workletDefinition)) {
+      if (acceptWorkletizableFunction && (0, types_2.isWorkletizableFunctionPath)(workletDefinition)) {
         return workletDefinition;
       }
-      if (acceptObject && (0, types_12.isWorkletizableObjectPath)(workletDefinition)) {
+      if (acceptObject && (0, types_2.isWorkletizableObjectPath)(workletDefinition)) {
         return workletDefinition;
       }
       if (workletDefinition.isIdentifier() && workletDefinition.isReferencedIdentifier()) {
-        return findReferencedWorklet(workletDefinition, acceptWorkletizableFunction, acceptObject);
+        return findReferencedWorklet(workletDefinition, acceptWorkletizableFunction, acceptObject, state);
       }
       return void 0;
+    }
+    function bindingIsWorklet(binding) {
+      return binding.referencePaths.some((refPath) => !Array.isArray(refPath.container) && (0, types_12.isMemberExpression)(refPath.container) && refPath.container.object === refPath.node && (0, types_12.isIdentifier)(refPath.container.property) && refPath.container.property.name === "__workletHash");
     }
   }
 });
@@ -1217,7 +1224,7 @@ var require_autoworkletization = __commonJS({
     function processArgs(args, state, acceptWorkletizableFunction, acceptObject) {
       args.forEach((arg) => {
         var _a;
-        const maybeWorklet = findWorklet(arg, acceptWorkletizableFunction, acceptObject);
+        const maybeWorklet = findWorklet(arg, acceptWorkletizableFunction, acceptObject, state);
         if (!maybeWorklet || ((_a = maybeWorklet.getFunctionParent()) === null || _a === void 0 ? void 0 : _a.node.workletized)) {
           return;
         }
@@ -1228,7 +1235,7 @@ var require_autoworkletization = __commonJS({
         }
       });
     }
-    function findWorklet(arg, acceptWorkletizableFunction, acceptObject) {
+    function findWorklet(arg, acceptWorkletizableFunction, acceptObject, state) {
       if (acceptWorkletizableFunction && (0, types_2.isWorkletizableFunctionPath)(arg)) {
         return arg;
       }
@@ -1236,7 +1243,7 @@ var require_autoworkletization = __commonJS({
         return arg;
       }
       if (arg.isIdentifier() && arg.isReferencedIdentifier()) {
-        return (0, referencedWorklets_1.findReferencedWorklet)(arg, acceptWorkletizableFunction, acceptObject);
+        return (0, referencedWorklets_1.findReferencedWorklet)(arg, acceptWorkletizableFunction, acceptObject, state);
       }
       return void 0;
     }

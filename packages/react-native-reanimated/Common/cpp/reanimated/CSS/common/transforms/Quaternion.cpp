@@ -1,4 +1,5 @@
 #include <reanimated/CSS/common/transforms/Quaternion.h>
+#include <cmath>
 
 namespace reanimated::css {
 
