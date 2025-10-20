@@ -77,7 +77,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
     throw error;
   });
 
-
   std::string sourceURL = "";
   std::shared_ptr<const BigStringBuffer> script = nullptr;
 
@@ -86,14 +85,13 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   auto runtimeManager = std::make_shared<worklets::RuntimeManager>();
   auto isJavaScriptQueue = []() -> bool { return IsJavaScriptQueue(); };
   animationFrameQueue_ = [AnimationFrameQueue new];
-  auto runtimeBindings = [self getRuntimeBindings];
-  
 #ifdef WORKLETS_BUNDLE_MODE
   script = [bundleProvider_ getBundle];
   sourceURL = [[bundleProvider_ getSourceURL] UTF8String];
   networkingModule_ = [moduleRegistry_ moduleForClass:RCTNetworking.class];
   workletsNetworking_ = [[WorkletsNetworking alloc] init:runtimeManager rctNetworking:networkingModule_];
 #endif // WORKLETS_BUNDLE_MODE
+  auto runtimeBindings = [self getRuntimeBindings];
 
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
       rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(isJavaScriptQueue), runtimeBindings, runtimeManager, script, sourceURL

@@ -232,8 +232,6 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
 
 #ifdef WORKLETS_BUNDLE_MODE
   propertyNames.emplace_back(
-      jsi::PropNameID::forAscii(rt, "requestAnimationFrame"));
-  propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "propagateModuleUpdate"));
 #endif // WORKLETS_BUNDLE_MODE
 
@@ -677,33 +675,6 @@ jsi::Value JSIWorkletsModuleProxy::get(
               runtimeManager,
               /* code */ args[0].asString(rt).utf8(rt),
               /* sourceURL */ args[1].asString(rt).utf8(rt));
-        });
-  }
-
-  if (name == "requestAnimationFrame") {
-    return jsi::Function::createFromHostFunction(
-        rt,
-        propName,
-        1,
-        [runtimeManager = runtimeManager_](
-            jsi::Runtime &rt,
-            const jsi::Value &thisValue,
-            const jsi::Value *args,
-            size_t count) {
-          auto workletRuntime = runtimeManager->getRuntime(&rt);
-          const auto &callback = args[0];
-          rt.global().setProperty(rt, "stupidCallback", callback);
-          auto callbackk = rt.global().getProperty(rt, "stupidCallback");
-          auto calptr = std::make_shared<jsi::Value>(std::move(callbackk));
-          workletRuntime->runOnQueue([calptr](jsi::Runtime &rt) {
-            auto performance =
-                rt.global().getPropertyAsObject(rt, "performance");
-            auto now = performance.getPropertyAsFunction(rt, "now")
-                           .call(rt)
-                           .asNumber();
-            calptr->asObject(rt).asFunction(rt).call(rt, now);
-          });
-          return jsi::Value::undefined();
         });
   }
 #endif // WORKLETS_BUNDLE_MODE

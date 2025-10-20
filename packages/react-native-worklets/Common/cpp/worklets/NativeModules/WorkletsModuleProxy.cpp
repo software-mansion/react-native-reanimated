@@ -26,9 +26,9 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
-    const std::shared_ptr<RuntimeManager> &runtimeManager,
     std::function<bool()> &&isJavaScriptThread,
     RuntimeBindings runtimeBindings,
+    const std::shared_ptr<RuntimeManager> &runtimeManager,
     const std::shared_ptr<const BigStringBuffer> &script,
     const std::string &sourceUrl)
     : isDevBundle_(isDevBundleFromRNRuntime(rnRuntime)),

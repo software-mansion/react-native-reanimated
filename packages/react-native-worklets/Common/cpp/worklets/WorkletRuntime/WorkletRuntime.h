@@ -36,7 +36,6 @@ class WorkletRuntime : public jsi::HostObject,
       const std::string &name,
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
       bool enableEventLoop = true);
-
   void init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy);
 
   jsi::Runtime &getJSIRuntime() const {

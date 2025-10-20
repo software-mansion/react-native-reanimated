@@ -134,7 +134,7 @@ void WorkletRuntime::init(
     }
   }
 
-  WorkletRuntimeDecorator::postScript(rt, runtimeBindings);
+  WorkletRuntimeDecorator::postEvaluateScript(rt, runtimeBindings);
 
 #else
   // Legacy behavior
