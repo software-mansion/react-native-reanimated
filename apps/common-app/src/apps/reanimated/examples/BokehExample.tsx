@@ -23,6 +23,8 @@ interface CircleProps {
 }
 
 function Circle({
+  size,
+  opacity,
   duration,
   startX,
   startY,
@@ -30,8 +32,6 @@ function Circle({
   endY,
   startHue,
   endHue,
-  size,
-  opacity,
 }: CircleProps) {
   const left = useSharedValue(startX);
   const top = useSharedValue(startY);
@@ -110,6 +110,8 @@ function makeBokehCircleParams(): CircleProps {
   const endHue = randBetween(0, 360);
 
   return {
+    size,
+    opacity,
     duration,
     startX,
     startY,
@@ -117,8 +119,6 @@ function makeBokehCircleParams(): CircleProps {
     endY,
     startHue,
     endHue,
-    size,
-    opacity,
   };
 }
 
