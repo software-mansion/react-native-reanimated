@@ -124,7 +124,8 @@ template <typename TResult>
 std::unordered_map<size_t, TResult> parseHelper(
     jsi::Runtime &rt,
     const jsi::Object &settingsObj,
-    std::function<TResult(jsi::Runtime &, const jsi::Value &)> parseFunction) {
+    const std::function<TResult(jsi::Runtime &, const jsi::Value &)>
+        &parseFunction) {
   std::unordered_map<size_t, TResult> result;
 
   const auto animationIndices = settingsObj.getPropertyNames(rt);
@@ -173,14 +174,13 @@ CSSAnimationUpdates parseCSSAnimationUpdates(
   CSSAnimationUpdates result;
 
   if (configObj.hasProperty(rt, "animationNames")) {
-    const auto animationNames =
+    result.animationNames =
         parseAnimationNames(rt, configObj.getProperty(rt, "animationNames"));
-    result.animationNames = std::move(animationNames);
 
     if (configObj.hasProperty(rt, "newAnimationSettings")) {
       result.newAnimationSettings = parseNewAnimationSettings(
           rt,
-          animationNames,
+          result.animationNames.value(),
           configObj.getProperty(rt, "newAnimationSettings"));
     }
   }

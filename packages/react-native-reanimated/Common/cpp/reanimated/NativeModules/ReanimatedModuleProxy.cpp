@@ -242,8 +242,7 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
             eventNameStr,
             emitterReactTagInt,
             handlerSerializable);
-        strongThis->eventHandlerRegistry_->registerEventHandler(
-            std::move(handler));
+        strongThis->eventHandlerRegistry_->registerEventHandler(handler);
       });
 
   return jsi::Value(static_cast<double>(newRegistrationId));
@@ -498,7 +497,7 @@ void ReanimatedModuleProxy::applyCSSAnimations(
         rt,
         shadowNode,
         updates.animationNames,
-        std::move(newAnimations),
+        newAnimations,
         updates.settingsUpdates,
         timestamp);
   }
@@ -595,7 +594,7 @@ bool ReanimatedModuleProxy::handleRawEvent(
   const auto &eventPayload = rawEvent.eventPayload;
   jsi::Value payload = eventPayload->asJSIValue(rt);
 
-  auto res = handleEvent(eventType, tag, std::move(payload), currentTime);
+  auto res = handleEvent(eventType, tag, payload, currentTime);
   // TODO: we should call performOperations conditionally if event is handled
   // (res == true), but for now handleEvent always returns false. Thankfully,
   // performOperations does not trigger a lot of code if there is nothing to
@@ -1221,7 +1220,7 @@ void ReanimatedModuleProxy::commitUpdates(
       SurfaceId surfaceId = shadowNode->getSurfaceId();
       auto family = &shadowNode->getFamily();
       react_native_assert(family->getSurfaceId() == surfaceId);
-      propsMapBySurface[surfaceId][family].emplace_back(std::move(props));
+      propsMapBySurface[surfaceId][family].emplace_back(props);
     }
   }
 

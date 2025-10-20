@@ -269,7 +269,7 @@ void LayoutAnimationsProxy::handleRemovals(
     }
   }
 
-  for (auto node : deadNodes) {
+  for (const auto &node : deadNodes) {
     if (node->state != DELETED) {
       endAnimationsRecursively(node, filteredMutations);
       maybeDropAncestors(node->unflattenedParent, node, filteredMutations);
@@ -397,6 +397,8 @@ void LayoutAnimationsProxy::addOngoingAnimations(
   auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
 #ifdef ANDROID
   std::vector<int> tagsToUpdate;
+  tagsToUpdate.reserve(updateMap.size());
+
   for (auto &[tag, updateValues] : updateMap) {
     tagsToUpdate.push_back(tag);
   }
@@ -445,7 +447,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(
 }
 
 void LayoutAnimationsProxy::endAnimationsRecursively(
-    std::shared_ptr<MutationNode> node,
+    const std::shared_ptr<MutationNode> &node,
     ShadowViewMutationList &mutations) const {
   maybeCancelAnimation(node->tag);
   node->state = DELETED;
@@ -469,10 +471,10 @@ void LayoutAnimationsProxy::endAnimationsRecursively(
 }
 
 void LayoutAnimationsProxy::maybeDropAncestors(
-    std::shared_ptr<Node> parent,
+    const std::shared_ptr<Node> &parent,
     std::shared_ptr<MutationNode> child,
     ShadowViewMutationList &cleanupMutations) const {
-  parent->removeChildFromUnflattenedTree(child);
+  parent->removeChildFromUnflattenedTree(std::move(child));
   if (!parent->isMutationMode()) {
     return;
   }
@@ -500,7 +502,7 @@ LayoutAnimationsProxy::getComponentDescriptorForShadowView(
 }
 
 bool LayoutAnimationsProxy::startAnimationsRecursively(
-    std::shared_ptr<MutationNode> node,
+    const std::shared_ptr<MutationNode> &node,
     bool shouldRemoveSubviewsWithoutAnimations,
     bool shouldAnimate,
     bool isScreenPop,
@@ -576,10 +578,10 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
 
   if (node->state == MOVED) {
     auto replacement = std::make_shared<Node>(*node);
-    for (auto subNode : node->children) {
+    for (const auto &subNode : node->children) {
       subNode->parent = replacement;
     }
-    for (auto subNode : node->unflattenedChildren) {
+    for (const auto &subNode : node->unflattenedChildren) {
       subNode->unflattenedParent = replacement;
     }
     nodeForTag_[replacement->tag] = replacement;
@@ -829,7 +831,7 @@ void LayoutAnimationsProxy::maybeCancelAnimation(const int tag) const {
 }
 
 void LayoutAnimationsProxy::transferConfigFromNativeID(
-    const std::string nativeIdString,
+    const std::string &nativeIdString,
     const int tag) const {
   if (nativeIdString.empty()) {
     return;

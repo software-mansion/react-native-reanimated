@@ -10,7 +10,7 @@ namespace reanimated::css {
 
 using namespace facebook;
 
-enum class RelativeTo {
+enum class RelativeTo : std::uint8_t {
   Parent,
   Self,
 };

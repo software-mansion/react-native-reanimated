@@ -33,8 +33,7 @@ void CSSAnimationsRegistry::apply(
   registry_.emplace(
       viewTag,
       RegistryEntry{
-          std::move(animationsVector),
-          buildAnimationToIndexMap(animationsVector)});
+          animationsVector, buildAnimationToIndexMap(animationsVector)});
   runningAnimationIndicesMap_[viewTag].clear();
 
   std::vector<size_t> updatedIndices;
@@ -93,7 +92,7 @@ CSSAnimationsVector CSSAnimationsRegistry::buildAnimationsVector(
   // the registry
   if (!animationNames.has_value()) {
     if (registryIt != registry_.end()) {
-      return std::move(registryIt->second.animationsVector);
+      return registryIt->second.animationsVector;
     }
   }
 

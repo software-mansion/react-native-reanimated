@@ -7,7 +7,7 @@
 
 namespace reanimated::css {
 
-enum class ColorType {
+enum class ColorType : std::uint8_t {
   Rgba,
   Transparent,
   CurrentColor, // for SVG

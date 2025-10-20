@@ -32,7 +32,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
       "[Reanimated] Sensor event handler must be a worklet.");
 
   int sensorId = platformRegisterSensorFunction_(
-      sensorType,
+      static_cast<int>(sensorType),
       interval.asNumber(),
       iosReferenceFrame.asNumber(),
       [sensorType,

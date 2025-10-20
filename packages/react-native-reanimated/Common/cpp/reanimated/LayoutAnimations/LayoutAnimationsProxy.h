@@ -16,6 +16,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace reanimated {
@@ -59,7 +60,7 @@ struct LayoutAnimationsProxy
       SharedComponentDescriptorRegistry componentDescriptorRegistry,
       std::shared_ptr<const ContextContainer> contextContainer,
       jsi::Runtime &uiRuntime,
-      const std::shared_ptr<UIScheduler> uiScheduler
+      const std::shared_ptr<UIScheduler> &uiScheduler
 #ifdef ANDROID
       ,
       PreserveMountedTagsFunction filterUnmountedTagsFunction,
@@ -67,16 +68,16 @@ struct LayoutAnimationsProxy
       std::shared_ptr<CallInvoker> jsInvoker
 #endif
       )
-      : layoutAnimationsManager_(layoutAnimationsManager),
-        contextContainer_(contextContainer),
-        componentDescriptorRegistry_(componentDescriptorRegistry),
+      : layoutAnimationsManager_(std::move(layoutAnimationsManager)),
+        contextContainer_(std::move(contextContainer)),
+        componentDescriptorRegistry_(std::move(componentDescriptorRegistry)),
         uiRuntime_(uiRuntime),
         uiScheduler_(uiScheduler)
 #ifdef ANDROID
         ,
-        preserveMountedTags_(filterUnmountedTagsFunction),
-        uiManager_(uiManager),
-        jsInvoker_(jsInvoker)
+        preserveMountedTags_(std::move(filterUnmountedTagsFunction)),
+        uiManager_(std::move(uiManager)),
+        jsInvoker_(std::move(jsInvoker))
 #endif // ANDROID
   {
   }
@@ -87,7 +88,7 @@ struct LayoutAnimationsProxy
   void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation)
       const;
 
-  void transferConfigFromNativeID(const std::string nativeId, const int tag)
+  void transferConfigFromNativeID(const std::string &nativeId, const int tag)
       const;
   std::optional<SurfaceId> progressLayoutAnimation(
       int tag,
@@ -136,16 +137,16 @@ struct LayoutAnimationsProxy
       std::shared_ptr<MutationNode> node,
       ShadowViewMutationList &mutations) const;
   bool startAnimationsRecursively(
-      std::shared_ptr<MutationNode> node,
+      const std::shared_ptr<MutationNode> &node,
       const bool shouldRemoveSubviewsWithoutAnimations,
       const bool shouldAnimate,
       const bool isScreenPop,
       ShadowViewMutationList &mutations) const;
   void endAnimationsRecursively(
-      std::shared_ptr<MutationNode> node,
+      const std::shared_ptr<MutationNode> &node,
       ShadowViewMutationList &mutations) const;
   void maybeDropAncestors(
-      std::shared_ptr<Node> node,
+      const std::shared_ptr<Node> &node,
       std::shared_ptr<MutationNode> child,
       ShadowViewMutationList &cleanupMutations) const;
 
