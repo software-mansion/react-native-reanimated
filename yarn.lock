@@ -4307,6 +4307,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@gorhom/bottom-sheet@patch:@gorhom/bottom-sheet@npm%3A5.2.6#~/.yarn/patches/@gorhom-bottom-sheet-npm-5.2.6-c24dba2629.patch":
+  version: 5.2.6
+  resolution: "@gorhom/bottom-sheet@patch:@gorhom/bottom-sheet@npm%3A5.2.6#~/.yarn/patches/@gorhom-bottom-sheet-npm-5.2.6-c24dba2629.patch::version=5.2.6&hash=5dd64e"
+  dependencies:
+    "@gorhom/portal": "npm:1.0.14"
+    invariant: "npm:^2.2.4"
+  peerDependencies:
+    "@types/react": "*"
+    "@types/react-native": "*"
+    react: "*"
+    react-native: "*"
+    react-native-gesture-handler: ">=2.16.1"
+    react-native-reanimated: "*"
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+    "@types/react-native":
+      optional: true
+  checksum: 10/6b08b8c621a629759316198a73eb48cb0cb0bcb9a36f12adb0afe204f8bec9d414a5a7ba9daf1cfaaf06c3027bb391c630bc1444d8a5597d4356ded668e1642f
+  languageName: node
+  linkType: hard
+
 "@gorhom/portal@npm:1.0.14":
   version: 1.0.14
   resolution: "@gorhom/portal@npm:1.0.14"
@@ -7535,21 +7557,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@stylexjs/babel-plugin@npm:0.16.1":
-  version: 0.16.1
-  resolution: "@stylexjs/babel-plugin@npm:0.16.1"
-  dependencies:
-    "@babel/core": "npm:^7.26.8"
-    "@babel/helper-module-imports": "npm:^7.25.9"
-    "@babel/traverse": "npm:^7.26.8"
-    "@babel/types": "npm:^7.26.8"
-    "@dual-bundle/import-meta-resolve": "npm:^4.1.0"
-    "@stylexjs/stylex": "npm:0.16.1"
-    postcss-value-parser: "npm:^4.1.0"
-  checksum: 10/c7e4c7aacc3cc126a1ac76d367e1895b2a0482554a937dc3d8f278f89e741e126c5b96b551a110ae7d80f7063bc538da0138ef3597603f94d89512f364c77d51
-  languageName: node
-  linkType: hard
-
 "@stylexjs/babel-plugin@npm:^0.15.4":
   version: 0.15.4
   resolution: "@stylexjs/babel-plugin@npm:0.15.4"
@@ -7573,17 +7580,6 @@ __metadata:
     invariant: "npm:^2.2.4"
     styleq: "npm:0.2.1"
   checksum: 10/98ea26b7aea87155f4c04fd3a3441f671ea15b610c186922cf8a60304a73a2a2ce129bfcdb862c86934b83598f131f637802fa580cb506b430f73276cf6ade81
-  languageName: node
-  linkType: hard
-
-"@stylexjs/stylex@npm:0.16.1":
-  version: 0.16.1
-  resolution: "@stylexjs/stylex@npm:0.16.1"
-  dependencies:
-    css-mediaquery: "npm:^0.1.2"
-    invariant: "npm:^2.2.4"
-    styleq: "npm:0.2.1"
-  checksum: 10/265a41980bf329d2f078f8bcf2f94a4a89db6bf0f69714caa120160d881e9edecda3141bdbc1b39284dab02b93821c2e73d071c4c259819c8c377ebf3183d120
   languageName: node
   linkType: hard
 
@@ -12430,7 +12426,7 @@ __metadata:
     "@fortawesome/fontawesome-svg-core": "npm:6.5.2"
     "@fortawesome/free-solid-svg-icons": "npm:6.5.2"
     "@fortawesome/react-native-fontawesome": "npm:0.3.2"
-    "@gorhom/bottom-sheet": "npm:5.2.6"
+    "@gorhom/bottom-sheet": "patch:@gorhom/bottom-sheet@npm%3A5.2.6#~/.yarn/patches/@gorhom-bottom-sheet-npm-5.2.6-c24dba2629.patch"
     "@gorhom/portal": "npm:1.0.14"
     "@react-native-async-storage/async-storage": "npm:2.2.0"
     "@react-native-clipboard/clipboard": "npm:1.16.3"
@@ -13744,7 +13740,7 @@ __metadata:
     react-dom: "npm:19.1.1"
     react-native: "npm:0.71.4"
     react-native-gesture-handler: "npm:2.28.0"
-    react-native-reanimated: "npm:4.2.0-nightly-20251015-0297d2990"
+    react-native-reanimated: "npm:4.2.0-nightly-20251017-235c127fd"
     react-native-svg: "npm:15.14.0"
     react-native-web: "npm:0.21.1"
     react-native-worklets: "npm:0.7.0-nightly-20251015-0297d2990"
@@ -13804,7 +13800,7 @@ __metadata:
     react-dom: "npm:19.1.1"
     react-native: "npm:0.71.4"
     react-native-gesture-handler: "npm:2.28.0"
-    react-native-reanimated: "npm:4.2.0-nightly-20251015-0297d2990"
+    react-native-reanimated: "npm:4.2.0-nightly-20251017-235c127fd"
     react-native-svg: "npm:15.14.0"
     react-native-web: "npm:0.21.1"
     react-native-worklets: "npm:0.7.0-nightly-20251015-0297d2990"
@@ -26217,18 +26213,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"react-native-reanimated@npm:4.2.0-nightly-20251015-0297d2990":
-  version: 4.2.0-nightly-20251015-0297d2990
-  resolution: "react-native-reanimated@npm:4.2.0-nightly-20251015-0297d2990"
+"react-native-reanimated@npm:4.2.0-nightly-20251017-235c127fd":
+  version: 4.2.0-nightly-20251017-235c127fd
+  resolution: "react-native-reanimated@npm:4.2.0-nightly-20251017-235c127fd"
   dependencies:
-    react-native-is-edge-to-edge: "npm:^1.2.1"
-    semver: "npm:7.7.2"
+    react-native-is-edge-to-edge: "npm:1.2.1"
+    semver: "npm:7.7.3"
   peerDependencies:
-    "@babel/core": ^7.0.0-0
     react: "*"
     react-native: "*"
-    react-native-worklets: 0.7.0-nightly-20251015-0297d2990
-  checksum: 10/7fc7151c112db8ce61f2a85470752f63e7c275a08d8ee1372e2bbe5403a4f3148db0623ff96591a2811edffc072d135d391dd3e0c66beca44df809a223c064ea
+    react-native-worklets: 0.7.0-nightly-20251017-235c127fd
+  checksum: 10/758d6221e531c95f31e841800de33b4c75d99bf594c32b14fb3012d512053ae09249bde6902897205203510a5b7f7f22c28b1d018a2c5ad62161a083a372f9fd
   languageName: node
   linkType: hard
 
@@ -30797,7 +30792,6 @@ __metadata:
   resolution: "web-example@workspace:apps/web-example"
   dependencies:
     "@expo/metro-runtime": "npm:6.1.2"
-    "@stylexjs/babel-plugin": "npm:0.16.1"
     "@types/react": "npm:19.2.2"
     common-app: "workspace:*"
     expo: "npm:54.0.13"
