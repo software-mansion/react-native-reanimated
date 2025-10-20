@@ -3,7 +3,6 @@ import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -34,8 +33,6 @@ function Circle({
   size,
   opacity,
 }: CircleProps) {
-  const shouldReduceMotion = useReducedMotion();
-
   const left = useSharedValue(startX);
   const top = useSharedValue(startY);
   const hue = useSharedValue(startHue);
@@ -45,25 +42,12 @@ function Circle({
     top.value = startY;
     hue.value = startHue;
 
-    const numberOfReps = shouldReduceMotion ? 1 : -1;
     const config = { duration, easing: Easing.linear };
 
-    left.value = withRepeat(withTiming(endX, config), numberOfReps, true);
-    top.value = withRepeat(withTiming(endY, config), numberOfReps, true);
-    hue.value = withRepeat(withTiming(endHue, config), numberOfReps, true);
-  }, [
-    duration,
-    startX,
-    startY,
-    startHue,
-    endX,
-    endY,
-    endHue,
-    hue,
-    left,
-    top,
-    shouldReduceMotion,
-  ]);
+    left.value = withRepeat(withTiming(endX, config), -1, true);
+    top.value = withRepeat(withTiming(endY, config), -1, true);
+    hue.value = withRepeat(withTiming(endHue, config), -1, true);
+  }, [duration, startX, startY, startHue, endX, endY, endHue, hue, left, top]);
 
   const animatedStyle = useAnimatedStyle(
     () => ({
