@@ -9,6 +9,7 @@ This will not be easy though!
 
 import type { StyleProp } from 'react-native';
 
+import type { PlainStyle } from './common';
 import type {
   AnimatedStyle,
   EntryExitAnimationFunction,
@@ -92,17 +93,23 @@ type AnimatedPropsProp<Props extends object> = RestProps<Props> &
   AnimatedStyleProps<Props> &
   LayoutProps;
 
-export type AnimatedProps<Props extends object> = RestProps<Props> &
-  AnimatedStyleProps<Props> &
-  LayoutProps & {
-    /**
-     * Lets you animate component props.
-     *
-     * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
-     */
-    animatedProps?: AddArrayPropertyType<
-      Partial<AnimatedPropsProp<Props>> | CSSStyle<Props>
-    >;
-  };
+export type AnimatedProps<Props extends object = PlainStyle> =
+  RestProps<Props> &
+    AnimatedStyleProps<Props> &
+    LayoutProps & {
+      /**
+       * Lets you animate component props.
+       *
+       * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
+       */
+      animatedProps?: AddArrayPropertyType<
+        Partial<AnimatedPropsProp<Props>> | CSSStyle<Props>
+      >;
+      /**
+       * When enabled, forces all animation updates to be committed to the
+       * shadow tree.
+       */
+      forceShadowTreeCommit?: boolean;
+    };
 
 // THE LAND OF THE DEPRECATED

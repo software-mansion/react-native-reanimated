@@ -83,7 +83,6 @@ export default function SynchronousPropsExample() {
           backgroundColor: 'navy',
           opacity: sv,
         }}
-        // @ts-expect-error TODO fix types
         forceShadowTreeCommit
       />
       <Animated.View
@@ -105,7 +104,6 @@ export default function SynchronousPropsExample() {
           },
           useAnimatedStyle(() => ({ opacity: sv.value })),
         ]}
-        // @ts-expect-error TODO fix types
         forceShadowTreeCommit
       />
       <Animated.View
@@ -135,7 +133,6 @@ export default function SynchronousPropsExample() {
           animationIterationCount: 'infinite',
           animationDirection: 'alternate',
         }}
-        // @ts-expect-error TODO fix types
         forceShadowTreeCommit
       />
 

@@ -146,7 +146,6 @@ export class InlinePropManager implements IInlinePropManager {
           tag: viewTag as number,
           shadowNodeWrapper: shadowNodeWrapper!,
           forceShadowTreeCommit:
-            // @ts-expect-error TODO fix types
             !!animatedComponent.props.forceShadowTreeCommit,
         });
       }
