@@ -6,24 +6,17 @@ import {
   getPathFromState,
   NavigationContainer,
 } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
 import { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Linking,
-  View,
-  Pressable,
-  Text,
-} from 'react-native';
+import { ActivityIndicator, Linking, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import { colors, flex, radius, text } from '@/theme';
 import { IS_MACOS, IS_WEB, noop } from '@/utils';
 
 import { CSSApp, ReanimatedApp } from './apps';
 import { LeakCheck, NukeContext } from './components';
-import { useNavigation } from '@react-navigation/native';
 
 export default function App() {
   const [nuked, setNuked] = useState(false);
@@ -59,14 +52,19 @@ export default function App() {
               if (chunks.length === 0) return { routes: [] };
 
               const drawerRoute = chunks[0];
-              const stackRoutes = chunks
-                .slice(1)
-                .map((_, index, array) => ({
-                  name: array.slice(0, index + 1).join('/'),
-                }));
+              const stackRoutes = chunks.slice(1).map((_, index, array) => ({
+                name: array.slice(0, index + 1).join('/'),
+              }));
 
               return {
-                routes: [{ name: drawerRoute, state: { routes: stackRoutes } }],
+                routes: [
+                  {
+                    name: drawerRoute,
+                    state: {
+                      routes: stackRoutes,
+                    },
+                  },
+                ],
               };
             },
             prefixes: [],
@@ -88,45 +86,38 @@ export default function App() {
 }
 
 const SCREENS = [
-  { component: CSSApp, name: 'CSS' },
-  { component: ReanimatedApp, name: 'Reanimated' },
+  {
+    component: CSSApp,
+    name: 'CSS',
+  },
+  {
+    component: ReanimatedApp,
+    name: 'Reanimated',
+  },
 ];
-
-function SidebarButton({ name }: { name: string }) {
-  const navigation = useNavigation<any>();
-  const handlePress = () => navigation.navigate(name);
-
-  return (
-    <View style={{ padding: 16 }}>
-      <Pressable onPress={handlePress}>
-        <Text style={{ color: colors.primary, fontWeight: 'bold' }}>
-          {name}
-        </Text>
-      </Pressable>
-    </View>
-  );
-}
 
 function Navigator() {
   if (IS_MACOS) {
-    const Stack = createStackNavigator();
+    const Tab = createBottomTabNavigator();
 
     return (
-      <View style={{ flex: 1, flexDirection: 'row' }}>
-        <View style={{ width: 200, backgroundColor: colors.background1 }}>
-          {SCREENS.map(({ name }) => (
-            <SidebarButton key={name} name={name} />
-          ))}
-        </View>
-
-        <View style={{ flex: 1 }}>
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
-            {SCREENS.map(({ component, name }) => (
-              <Stack.Screen key={name} name={name} component={component} />
-            ))}
-          </Stack.Navigator>
-        </View>
-      </View>
+      <Tab.Navigator
+        screenOptions={{
+          headerShown: false,
+          tabBarActiveTintColor: colors.primaryDark,
+          tabBarInactiveTintColor: colors.primary,
+          tabBarStyle: {
+            backgroundColor: colors.background1,
+            borderTopLeftRadius: radius.lg,
+            borderTopRightRadius: radius.lg,
+            height: 60,
+          },
+          tabBarLabelStyle: text.heading4,
+        }}>
+        {SCREENS.map(({ component, name }) => (
+          <Tab.Screen component={component} key={name} name={name} />
+        ))}
+      </Tab.Navigator>
     );
   }
   const Drawer = createDrawerNavigator();
@@ -138,10 +129,14 @@ function Navigator() {
         drawerActiveBackgroundColor: colors.primaryLight,
         drawerActiveTintColor: colors.primaryDark,
         drawerInactiveTintColor: colors.primary,
-        drawerItemStyle: { borderRadius: radius.lg },
+        drawerItemStyle: {
+          borderRadius: radius.lg,
+        },
         drawerLabelStyle: text.heading4,
         drawerPosition: IS_WEB ? 'left' : 'right',
-        drawerStyle: { backgroundColor: colors.background1 },
+        drawerStyle: {
+          backgroundColor: colors.background1,
+        },
         headerShown: false,
       }}>
       {screens.map(({ component, name }) => (

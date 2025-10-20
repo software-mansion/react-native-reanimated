@@ -8,6 +8,7 @@ import Animated from 'react-native-reanimated';
 import type { RouteCardComponent } from '@/apps/css/components';
 import { RouteCard } from '@/apps/css/components';
 import { colors, flex, radius, sizes, spacing } from '@/theme';
+import { IS_MACOS } from '@/utils';
 
 const scrollAnimation: CSSAnimationProperties = {
   animationIterationCount: 'infinite',
@@ -23,7 +24,7 @@ const AnimatedPropertiesCard: RouteCardComponent = (props) => (
   <RouteCard
     {...props}
     description="Animated properties like **flex styles**, **margins**, **dimensions** and others">
-    <Showcase />
+    {!IS_MACOS && <Showcase />}
   </RouteCard>
 );
 
