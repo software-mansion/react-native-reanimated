@@ -72,14 +72,15 @@ struct Node {
   std::vector<std::shared_ptr<MutationNode>> children, unflattenedChildren;
   std::shared_ptr<Node> parent, unflattenedParent;
   Tag tag;
-  void removeChildFromUnflattenedTree(std::shared_ptr<MutationNode> child);
-  void applyMutationToIndices(ShadowViewMutation mutation);
+  void removeChildFromUnflattenedTree(
+      const std::shared_ptr<MutationNode> &child);
+  void applyMutationToIndices(const ShadowViewMutation &mutation);
   void insertChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
   void insertUnflattenedChildren(
       std::vector<std::shared_ptr<MutationNode>> &newChildren);
   virtual bool isMutationMode();
   explicit Node(const Tag tag) : tag(tag) {}
-  Node(Node &&node)
+  Node(Node &&node) noexcept
       : children(std::move(node.children)),
         unflattenedChildren(std::move(node.unflattenedChildren)),
         tag(node.tag) {}
@@ -134,7 +135,7 @@ static inline void updateLayoutMetrics(
   }
 }
 
-static inline bool isRNSScreen(std::shared_ptr<MutationNode> node) {
+static inline bool isRNSScreen(const std::shared_ptr<MutationNode> &node) {
   const auto &componentName = node->mutation.oldChildShadowView.componentName;
   return !std::strcmp(componentName, "RNSScreenStack") ||
       !std::strcmp(componentName, "RNSScreen") ||
