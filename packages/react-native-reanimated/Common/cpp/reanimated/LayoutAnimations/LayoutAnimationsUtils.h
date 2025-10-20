@@ -53,7 +53,7 @@ struct Snapshot {
   }
 };
 
-typedef enum ExitingState {
+typedef enum class ExitingState : std::uint8_t {
   UNDEFINED = 1,
   WAITING = 2,
   ANIMATING = 4,
@@ -95,7 +95,7 @@ struct Node {
  */
 struct MutationNode : public Node {
   ShadowViewMutation mutation;
-  ExitingState state = UNDEFINED;
+  ExitingState state = ExitingState::UNDEFINED;
   explicit MutationNode(ShadowViewMutation &mutation)
       : Node(mutation.oldChildShadowView.tag), mutation(mutation) {}
   MutationNode(ShadowViewMutation &mutation, Node &&node)

@@ -11,7 +11,7 @@ void LayoutAnimationsManager::configureAnimationBatch(
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   for (const auto &layoutAnimationConfig : layoutAnimationsBatch) {
     const auto &[tag, type, config] = layoutAnimationConfig;
-    if (type == ENTERING) {
+    if (type == LayoutAnimationType::ENTERING) {
       enteringAnimationsForNativeID_[tag] = config;
       continue;
     }
@@ -110,11 +110,11 @@ void LayoutAnimationsManager::transferConfigFromNativeID(
 std::unordered_map<int, std::shared_ptr<Serializable>> &
 LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
   switch (type) {
-    case ENTERING:
+    case LayoutAnimationType::ENTERING:
       return enteringAnimations_;
-    case EXITING:
+    case LayoutAnimationType::EXITING:
       return exitingAnimations_;
-    case LAYOUT:
+    case LayoutAnimationType::LAYOUT:
       return layoutAnimations_;
     default:
       throw std::invalid_argument("[Reanimated] Unknown layout animation type");
