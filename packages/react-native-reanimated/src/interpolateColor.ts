@@ -269,7 +269,7 @@ const getInterpolateLAB = (
   };
 };
 
-const TRANSPARENT_MASK = 0x00ffffff; // AARRGGBB
+const TRANSPARENCY_MASK = 0x00ffffff; // AARRGGBB
 
 /**
  * Processes color ranges to handle transparent color interpolation by replacing
@@ -302,7 +302,7 @@ function processColorRanges(
         // Ensure that we animate from the correct RGB values (the same as in the
         // current color) with alpha 0 when animating from transparent to a color.
         processedInputRange.push(inputRange[i - 1]);
-        processedOutputRange.push(processedColor & TRANSPARENT_MASK);
+        processedOutputRange.push(processedColor & TRANSPARENCY_MASK);
       }
 
       // Add current color to the output range
@@ -312,7 +312,7 @@ function processColorRanges(
       const lastProcessedColor =
         processedOutputRange[processedOutputRange.length - 1];
       processedInputRange.push(inputRange[i]);
-      processedOutputRange.push(lastProcessedColor & TRANSPARENT_MASK);
+      processedOutputRange.push(lastProcessedColor & TRANSPARENCY_MASK);
     }
 
     isPrevTransparent = isTransparent;
