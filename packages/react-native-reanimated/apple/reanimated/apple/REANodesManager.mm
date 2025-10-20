@@ -3,11 +3,11 @@
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/REAUIView.h>
 
-#import <cxxreact/ReactNativeVersion.h>
 #import <React/RCTComponentViewProtocol.h>
 #import <React/RCTComponentViewRegistry.h>
 #import <React/RCTMountingManager.h>
 #import <React/RCTUtils.h>
+#import <cxxreact/ReactNativeVersion.h>
 
 #if REACT_NATIVE_MINOR_VERSION < 81
 #import <React/RCTFollyConvert.h>
