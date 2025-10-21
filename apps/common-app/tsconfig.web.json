@@ -1,13 +1,8 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "./tsconfig.native.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
     "moduleSuffixes": [".web", ""]
   },
-  "include": ["src", "index.ts"],
   "exclude": [
     "src/**/*.native.ts",
     "src/**/*.native.tsx",

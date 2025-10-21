@@ -6973,29 +6973,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native/eslint-config@npm:0.80.0":
-  version: 0.80.0
-  resolution: "@react-native/eslint-config@npm:0.80.0"
-  dependencies:
-    "@babel/core": "npm:^7.25.2"
-    "@babel/eslint-parser": "npm:^7.25.1"
-    "@react-native/eslint-plugin": "npm:0.80.0"
-    "@typescript-eslint/eslint-plugin": "npm:^7.1.1"
-    "@typescript-eslint/parser": "npm:^7.1.1"
-    eslint-config-prettier: "npm:^8.5.0"
-    eslint-plugin-eslint-comments: "npm:^3.2.0"
-    eslint-plugin-ft-flow: "npm:^2.0.1"
-    eslint-plugin-jest: "npm:^27.9.0"
-    eslint-plugin-react: "npm:^7.30.1"
-    eslint-plugin-react-hooks: "npm:^5.2.0"
-    eslint-plugin-react-native: "npm:^4.0.0"
-  peerDependencies:
-    eslint: ">=8"
-    prettier: ">=2"
-  checksum: 10/2a35c3d7d1b7959b46c662310a2e09d134d7562dbf113a8602117ed8ef51ffb7d5844e46ff9ee65d87ff0f741b39945cf6dda114df4b47eb4c9bcc5e59b5d764
-  languageName: node
-  linkType: hard
-
 "@react-native/eslint-config@npm:0.81.1":
   version: 0.81.1
   resolution: "@react-native/eslint-config@npm:0.81.1"
@@ -7046,13 +7023,6 @@ __metadata:
   version: 0.79.6
   resolution: "@react-native/eslint-plugin@npm:0.79.6"
   checksum: 10/ce0a8945a009d8ec2d1cabd9984e276636403bd6e7fd4e48fdea55d0f8d97d8fcb486459a13928d88562f2eb04d0b0d663de4b522b691afcf8142e6fd192e2db
-  languageName: node
-  linkType: hard
-
-"@react-native/eslint-plugin@npm:0.80.0":
-  version: 0.80.0
-  resolution: "@react-native/eslint-plugin@npm:0.80.0"
-  checksum: 10/e6467f003d3ae318c2e23811870821bf00c79cada5a531adf3879e0f210e4aa0bb9703ae8135de1ca5a2c1626806ce5ccccea5b22ff3168e5e230091c37fa226
   languageName: node
   linkType: hard
 
@@ -15726,6 +15696,7 @@ __metadata:
   dependencies:
     "@types/react": "npm:19.2.2"
     common-app: "workspace:*"
+    eslint: "npm:9.37.0"
     prettier: "npm:3.6.2"
     react: "npm:19.1.1"
     react-native: "npm:0.82.0"
@@ -30830,6 +30801,7 @@ __metadata:
     "@stylexjs/babel-plugin": "npm:0.16.1"
     "@types/react": "npm:19.2.2"
     common-app: "workspace:*"
+    eslint: "npm:9.37.0"
     expo: "npm:54.0.13"
     prettier: "npm:3.6.2"
     react: "npm:19.1.1"

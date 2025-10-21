@@ -1,10 +1,9 @@
 const stylexPlugin = require('@stylexjs/babel-plugin');
-const rsdPlugin = require('react-strict-dom/babel');
+const rsdPreset = require('react-strict-dom/babel-preset');
 
 /** @type {import('@babel/core').ConfigFunction} */
 module.exports = function (api) {
   const plugins = [
-    rsdPlugin,
     [
       stylexPlugin,
       {
@@ -36,7 +35,7 @@ module.exports = function (api) {
   }
 
   return {
-    presets: ['babel-preset-expo'],
+    presets: ['babel-preset-expo', rsdPreset],
     plugins,
   };
 };

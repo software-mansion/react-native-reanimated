@@ -19,6 +19,14 @@ export default tsEslint.config(
   eslintPluginPrettierRecommended,
   {
     languageOptions: {
+      parserOptions: {
+        project: ['../../../tsconfig.json', './../../../tsconfig.web.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
+    languageOptions: {
       globals: {
         React: true,
       },
@@ -60,7 +68,6 @@ export default tsEslint.config(
       'import/resolver': {
         typescript: {
           alwaysTryTypes: true,
-          project: '../../../tsconfig.json',
         },
       },
       react: {
@@ -71,12 +78,6 @@ export default tsEslint.config(
   {
     files: ['**/*.ts', '**/*.tsx'],
     extends: [tsEslint.configs.recommendedTypeChecked],
-    languageOptions: {
-      parserOptions: {
-        project: '../../../tsconfig.json',
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
     rules: {
       '@typescript-eslint/no-unused-vars': 'warn',
       '@typescript-eslint/no-var-requires': 'error',

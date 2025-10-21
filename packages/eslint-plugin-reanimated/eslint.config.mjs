@@ -1,7 +1,7 @@
 import tsEslint from 'typescript-eslint';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 
-import eslintConfig from '../../../eslint.config.mjs';
+import eslintConfig from '../../eslint.config.mjs';
 
 /**
  * @type {(
@@ -14,7 +14,7 @@ const config = tsEslint.config(
   {
     languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.json', '../../../tsconfig.json'],
+        project: ['./tsconfig.json', '../../tsconfig.json'],
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -27,14 +27,6 @@ const config = tsEslint.config(
       'no-bitwise': 'error',
     },
     ignores: [],
-  },
-  {
-    files: ['**/*.js', '**/*.jsx'],
-    rules: {
-      'jsdoc/require-jsdoc': 'off',
-      'no-bitwise': 'off',
-      'no-redeclare': 'warn',
-    },
   }
 );
 

@@ -13,6 +13,16 @@ import eslintConfig from '../../eslint.config.mjs';
 const config = tsEslint.config(
   ...eslintConfig,
   {
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+        project: [
+          './tsconfig.json',
+          './tsconfig.web.json',
+          '../../tsconfig.json',
+        ],
+      },
+    },
     plugins: {
       reanimated,
       'simple-import-sort': simpleImportSort,

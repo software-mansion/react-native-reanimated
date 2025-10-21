@@ -8,5 +8,6 @@
     },
     "moduleSuffixes": [".web", ""]
   },
-  "include": ["**/*.ts", "**/*.tsx"]
+  "include": ["."],
+  "exclude": [".expo", "assets"]
 }
