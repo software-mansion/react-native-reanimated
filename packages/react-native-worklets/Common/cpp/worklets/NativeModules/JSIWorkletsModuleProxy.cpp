@@ -14,7 +14,10 @@
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
+#include <memory>
+#include <string>
 #include <utility>
+#include <vector>
 
 using namespace facebook;
 

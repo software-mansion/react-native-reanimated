@@ -1,7 +1,9 @@
 #include <worklets/Tools/VersionUtils.h>
 
 #include <iostream>
+#include <memory>
 #include <regex>
+#include <string>
 
 using namespace facebook;
 

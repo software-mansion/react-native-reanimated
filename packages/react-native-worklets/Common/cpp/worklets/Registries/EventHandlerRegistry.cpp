@@ -1,6 +1,8 @@
 #include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/Tools/WorkletEventHandler.h>
 
+#include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 

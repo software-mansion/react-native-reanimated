@@ -12,6 +12,7 @@
 #endif // __ANDROID__
 
 #include <memory>
+#include <string>
 #include <utility>
 
 using namespace facebook;

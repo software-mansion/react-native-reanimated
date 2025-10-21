@@ -1,5 +1,7 @@
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 
+#include <memory>
+#include <string>
 #include <thread>
 #include <utility>
 

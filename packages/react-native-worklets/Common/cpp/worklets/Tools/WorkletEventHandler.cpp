@@ -1,5 +1,8 @@
 #include <worklets/Tools/WorkletEventHandler.h>
 
+#include <memory>
+#include <string>
+
 namespace worklets {
 
 void WorkletEventHandler::process(

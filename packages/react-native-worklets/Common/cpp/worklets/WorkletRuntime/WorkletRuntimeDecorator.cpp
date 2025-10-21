@@ -6,6 +6,8 @@
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
+#include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 

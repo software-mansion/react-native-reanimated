@@ -1,7 +1,10 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 
+#include <memory>
+#include <string>
 #include <utility>
+#include <vector>
 
 namespace worklets {
 

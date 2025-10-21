@@ -1,6 +1,10 @@
 #include <jsi/jsi.h>
 #include <worklets/SharedItems/Serializable.h>
 
+#include <memory>
+#include <string>
+#include <utility>
+
 using namespace facebook;
 
 namespace worklets {

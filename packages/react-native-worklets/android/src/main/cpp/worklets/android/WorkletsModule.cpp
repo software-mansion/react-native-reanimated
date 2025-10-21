@@ -5,6 +5,7 @@
 #include <worklets/android/WorkletsModule.h>
 
 #include <memory>
+#include <string>
 #include <utility>
 
 namespace worklets {

@@ -1,8 +1,11 @@
 #include <worklets/Tools/JSISerializer.h>
 
 #include <cxxabi.h>
+
 #include <iostream>
 #include <sstream>
+#include <string>
+#include <vector>
 
 namespace worklets {
 

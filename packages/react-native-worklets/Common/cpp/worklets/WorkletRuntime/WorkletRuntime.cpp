@@ -13,7 +13,9 @@
 #include <jsi/jsi.h>
 
 #include <memory>
+#include <string>
 #include <utility>
+#include <vector>
 
 #if JS_RUNTIME_HERMES
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>

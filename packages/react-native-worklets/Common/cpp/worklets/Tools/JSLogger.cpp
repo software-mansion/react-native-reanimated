@@ -1,6 +1,7 @@
 #include <worklets/Tools/JSLogger.h>
 
 #include <memory>
+#include <string>
 #include <utility>
 
 namespace worklets {
