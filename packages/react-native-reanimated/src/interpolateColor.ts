@@ -1,5 +1,4 @@
 'use strict';
-'worklet';
 import {
   blue,
   green,
@@ -37,6 +36,7 @@ const interpolateColorsHSV = (
   colors: InterpolateHSV,
   options: InterpolationOptions
 ) => {
+  'worklet';
   let h = 0;
   const { useCorrectedHSVInterpolation = true } = options;
   if (useCorrectedHSVInterpolation) {
@@ -84,10 +84,12 @@ const interpolateColorsHSV = (
 };
 
 const toLinearSpace = (x: number[], gamma: number): number[] => {
+  'worklet';
   return x.map((v) => Math.pow(v / 255, gamma));
 };
 
 const toGammaSpace = (x: number, gamma: number): number => {
+  'worklet';
   return Math.round(Math.pow(x, 1 / gamma) * 255);
 };
 
@@ -97,6 +99,7 @@ const interpolateColorsRGB = (
   colors: InterpolateRGB,
   options: InterpolationOptions
 ) => {
+  'worklet';
   const { gamma = 2.2 } = options;
   let { r: outputR, g: outputG, b: outputB } = colors;
   if (gamma !== 1) {
@@ -125,6 +128,7 @@ const interpolateColorsLAB = (
   colors: InterpolateLAB,
   _options: InterpolationOptions
 ) => {
+  'worklet';
   const l = interpolate(value, inputRange, colors.l, Extrapolation.CLAMP);
   const a = interpolate(value, inputRange, colors.a, Extrapolation.CLAMP);
   const b = interpolate(value, inputRange, colors.b, Extrapolation.CLAMP);
@@ -156,6 +160,7 @@ const _splitColorsIntoChannels = (
   ch3: number[];
   alpha: number[];
 } => {
+  'worklet';
   const ch1: number[] = [];
   const ch2: number[] = [];
   const ch3: number[] = [];
@@ -192,6 +197,7 @@ export interface InterpolateRGB {
 const getInterpolateRGB = (
   processedColors: readonly number[]
 ): InterpolateRGB => {
+  'worklet';
   const { ch1, ch2, ch3, alpha } = _splitColorsIntoChannels(
     processedColors,
     (color) => ({
@@ -219,6 +225,7 @@ export interface InterpolateHSV {
 const getInterpolateHSV = (
   processedColors: readonly number[]
 ): InterpolateHSV => {
+  'worklet';
   const { ch1, ch2, ch3, alpha } = _splitColorsIntoChannels(
     processedColors,
     (color) => {
@@ -249,6 +256,7 @@ interface InterpolateLAB {
 const getInterpolateLAB = (
   processedColors: readonly number[]
 ): InterpolateLAB => {
+  'worklet';
   const { ch1, ch2, ch3, alpha } = _splitColorsIntoChannels(
     processedColors,
     (color) => {
@@ -287,6 +295,7 @@ function processColorRanges(
   inputRange: readonly number[],
   outputRange: readonly (number | string)[]
 ): [readonly number[], readonly number[]] {
+  'worklet';
   const processedInputRange: number[] = [];
   const processedOutputRange: number[] = [];
   let isPrevTransparent = false;
@@ -372,6 +381,7 @@ export function interpolateColor(
   colorSpace: 'RGB' | 'HSV' | 'LAB' = 'RGB',
   options: InterpolationOptions = {}
 ): string | number {
+  'worklet';
   const [processedInputRange, processedOutputRange] = processColorRanges(
     inputRange,
     outputRange
