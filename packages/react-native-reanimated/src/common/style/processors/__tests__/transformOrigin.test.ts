@@ -1,9 +1,9 @@
 'use strict';
-import { ReanimatedError } from '../../../../errors';
+import { ReanimatedError } from '../../../errors';
 import type {
   NormalizedTransformOrigin,
   TransformOrigin,
-} from '../../../../types';
+} from '../../../types';
 import { ERROR_MESSAGES, processTransformOrigin } from '../transformOrigin';
 
 describe(processTransformOrigin, () => {

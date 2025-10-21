@@ -5,15 +5,11 @@ import type {
   DynamicColorIOS as RNDynamicColorIOS,
 } from 'react-native';
 
-import {
-  ColorProperties,
-  DynamicColorIOSProperties,
-  processColorInitially,
-} from '../../Colors';
-import type { StyleProps } from '../../commonTypes';
-import { IS_ANDROID, IS_IOS } from '../constants';
-import { ReanimatedError } from '../errors';
-import type { Maybe } from '../types';
+import { ColorProperties, processColorInitially } from '../../../Colors';
+import type { StyleProps } from '../../../commonTypes';
+import { IS_ANDROID, IS_IOS } from '../../constants';
+import { ReanimatedError } from '../../errors';
+import type { Maybe } from '../../types';
 
 type DynamicColorIOSTuple = Parameters<typeof RNDynamicColorIOS>[0];
 
@@ -36,6 +32,16 @@ export function PlatformColor(...names: Array<string>): PlatformColorValue {
   const mapped = IS_IOS ? { semantic: names } : { resource_paths: names };
   return mapped as PlatformColorValue;
 }
+
+/* copied from:
+ * https://github.com/facebook/react-native/blob/v0.81.0/packages/react-native/Libraries/StyleSheet/PlatformColorValueTypesIOS.d.ts
+ */
+const DynamicColorIOSProperties = [
+  'light',
+  'dark',
+  'highContrastLight',
+  'highContrastDark',
+] as const;
 
 export function DynamicColorIOS(
   tuple: DynamicColorIOSTuple

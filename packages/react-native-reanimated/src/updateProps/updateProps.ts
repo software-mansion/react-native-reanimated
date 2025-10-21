@@ -7,11 +7,10 @@ import {
   IS_JEST,
   processBoxShadowNative,
   processColorsInProps,
-  processTransformOrigin,
   ReanimatedError,
   SHOULD_BE_USE_WEB,
 } from '../common';
-import { processBoxShadowWeb } from '../common/web/style';
+import { processBoxShadowWeb, processTransformOrigin } from '../common/web';
 import type {
   AnimatedStyle,
   ShadowNodeWrapper,

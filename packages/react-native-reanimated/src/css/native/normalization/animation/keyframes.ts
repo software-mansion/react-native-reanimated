@@ -1,6 +1,6 @@
 'use strict';
-import { type AnyRecord, ReanimatedError } from '../../../../common';
-import type { StyleBuilder } from '../../../../common/native';
+import type { AnyRecord, StyleBuilder } from '../../../../common';
+import { ReanimatedError } from '../../../../common';
 import type { StyleProps } from '../../../../commonTypes';
 import { PERCENTAGE_REGEX } from '../../../constants';
 import type {

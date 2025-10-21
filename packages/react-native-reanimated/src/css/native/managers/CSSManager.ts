@@ -1,7 +1,7 @@
 'use strict';
 import type { AnyRecord } from '../../../common';
 import { ReanimatedError } from '../../../common';
-import type { StyleBuilder } from '../../../common/native/style';
+import type { StyleBuilder } from '../../../common/style';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
 import type { CSSStyle } from '../../types';

@@ -1,8 +1,13 @@
 'use strict';
-import { processColor } from '../../processors';
 import type { PlainStyle } from '../../types';
 import {
   boxShadowBuilder,
+  processTransform,
+  processTransformOrigin,
+  textShadowBuilder,
+} from './builders';
+import {
+  processColor,
   processFilter,
   processFontVariant,
   processFontWeight,
@@ -10,9 +15,6 @@ import {
   processMarginVertical,
   processPaddingHorizontal,
   processPaddingVertical,
-  processTransform,
-  processTransformOrigin,
-  textShadowBuilder,
 } from './processors';
 import { processBoxShadowWeb } from './processors/shadows';
 import type { StyleBuilderConfig } from './types';
