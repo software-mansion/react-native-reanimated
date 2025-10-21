@@ -1,5 +1,5 @@
 'use strict';
-export * from '../../common/native/style';
+export * from '../../common/style';
 export * from './keyframes';
 export * from './managers';
 export * from './normalization';

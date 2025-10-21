@@ -1,5 +1,5 @@
 'use strict';
-import type { PlainStyle } from '../../../../common';
+import type { PlainStyle } from '../..';
 import createStyleBuilder from '../createStyleBuilder';
 // TODO - add more tests
 

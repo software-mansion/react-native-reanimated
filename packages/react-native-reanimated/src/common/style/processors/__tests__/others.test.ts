@@ -1,5 +1,5 @@
 'use strict';
-import { ReanimatedError } from '../../../..';
+import { ReanimatedError } from '../../..';
 import { ERROR_MESSAGES, processAspectRatio } from '../others';
 
 describe(processAspectRatio, () => {

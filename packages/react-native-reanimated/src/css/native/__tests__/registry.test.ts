@@ -1,5 +1,5 @@
 'use strict';
-import { BASE_PROPERTIES_CONFIG } from '../../../common/native/style';
+import { BASE_PROPERTIES_CONFIG } from '../../../common';
 import {
   ERROR_MESSAGES,
   getStyleBuilder,

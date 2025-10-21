@@ -1,13 +1,11 @@
 'use strict';
-import type { PlainStyle } from '../../../common';
-import {
-  IS_ANDROID,
-  processBoxShadowNative,
-  processColor,
-  processTransformOrigin,
-} from '../../../common';
+import type { PlainStyle } from '..';
+import { IS_ANDROID } from '..';
+import { processTransformOrigin } from '../web';
 import {
   processAspectRatio,
+  processBoxShadowNative,
+  processColor,
   processFontWeight,
   processGap,
   processInset,
