@@ -1,8 +1,8 @@
 'use strict';
 import type { DimensionValue } from 'react-native';
 
-import { parseDimensionValue } from '../../../../css/web/utils';
 import type { ValueProcessor } from '../types';
+import { parseDimensionValue } from '../utils';
 
 export const processMarginHorizontal: ValueProcessor<DimensionValue> = (
   value

@@ -1,14 +1,13 @@
 'use strict';
-
+import type { AnyRecord } from '../../types';
 import {
   hasProp,
+  hasSuffix,
   isConfigPropertyAlias,
   isDefined,
   isRecord,
   kebabizeCamelCase,
-} from '../../../css/utils';
-import type { AnyRecord } from '../../types';
-import { hasSuffix } from '../../utils';
+} from '../../utils';
 import type {
   AnyBuilderConfig,
   RuleBuilder,
