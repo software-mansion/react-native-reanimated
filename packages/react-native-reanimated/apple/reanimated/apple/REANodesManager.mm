@@ -168,7 +168,7 @@
   RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
   REAUIView<RCTComponentViewProtocol> *componentView = [componentViewRegistry findComponentViewWithTag:viewTag];
   NSSet<NSString *> *propKeysManagedByAnimated = [componentView propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN];
-#if REACT_NATIVE_VERSION_MINOR >= 81
+#if REACT_NATIVE_MINOR_VERSION >= 81
   [surfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:viewTag props:props];
 #else
   [surfacePresenter synchronouslyUpdateViewOnUIThread:@(viewTag) props:facebook::react::convertFollyDynamicToId(props)];
