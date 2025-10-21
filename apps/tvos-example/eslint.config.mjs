@@ -13,9 +13,6 @@ const config = tsEslint.config(...eslintConfig, {
     parserOptions: {
       project: ['./tsconfig.json'],
       tsconfigRootDir: import.meta.dirname,
-      jsxPragma: 'React',
-      jsxPragmaFrag: 'React.Fragment',
-      ecmaFeatures: { jsx: true },
     },
   },
 });

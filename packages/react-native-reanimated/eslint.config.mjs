@@ -55,12 +55,6 @@ const config = tsEslint.config(
     rules: {
       strict: ['error', 'global'],
     },
-    // languageOptions: {
-    //   parserOptions: {
-    //     tsconfigRootDir: import.meta.dirname,
-    //     project: ['./tsconfig.json', './tsconfig.web.json'],
-    //   },
-    // },
     files: ['src/**/*.tsx', 'src/**/*.ts'],
     ignores: ['__tests__', '__mocks__'],
   },

@@ -130,22 +130,10 @@ const config = tsEslint.config(
         tsconfigRootDir: import.meta.dirname,
         project: ['./tsconfig.json'],
       },
-      // globals: {
-      //   React: true,
-      //   ...reactNative.environments['react-native']['react-native'],
-      //   ...jest.environments.globals.globals,
-      //   ...globals.node,
-      // },
     },
   },
   {
     languageOptions: {
-      // ecmaVersion: 'latest',
-      // parserOptions: {
-      //   ecmaFeatures: { jsx: true },
-      //   tsconfigRootDir: import.meta.dirname,
-      //   project: ['./tsconfig.json'],
-      // },
       globals: {
         React: true,
         ...reactNative.environments['react-native']['react-native'],

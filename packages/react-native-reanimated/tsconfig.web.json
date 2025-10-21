@@ -6,11 +6,11 @@
     }
   },
   "exclude": [
-    "src/**/*.native.ts",
-    "src/**/*.native.tsx",
-    "src/**/*.ios.ts",
-    "src/**/*.ios.tsx",
-    "src/**/*.android.ts",
-    "src/**/*.android.tsx"
+    "**/*.native.ts",
+    "**/*.native.tsx",
+    "**/*.ios.ts",
+    "**/*.ios.tsx",
+    "**/*.android.ts",
+    "**/*.android.tsx"
   ]
 }

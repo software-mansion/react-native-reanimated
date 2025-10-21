@@ -6,5 +6,5 @@
     }
   },
   "include": ["src"],
-  "exclude": ["src/**/*.web.ts", "src/**/*.web.tsx"]
+  "exclude": ["**/*.web.ts", "**/*.web.tsx"]
 }
