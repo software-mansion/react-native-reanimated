@@ -2,7 +2,7 @@
 import type { TextStyle, ViewStyle } from 'react-native';
 
 import { logger } from '../../../logger';
-import { opacifyColor } from '../../../utils';
+import { opacifyColor } from '../../utils';
 import { createRuleBuilder } from '../builderFactories';
 import { processColor } from '../processors';
 import type { ValueProcessor } from '../types';
