@@ -1,13 +1,16 @@
 'use strict';
+import {
+  convertPropertiesToArrays,
+  type ConvertValuesToArrays,
+  kebabizeCamelCase,
+} from '../../../common';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
 import type {
-  ConvertValuesToArrays,
   CSSAnimationKeyframes,
   CSSAnimationSettings,
   ExistingCSSAnimationProperties,
   ICSSAnimationsManager,
 } from '../../types';
-import { convertPropertiesToArrays, kebabizeCamelCase } from '../../utils';
 import { processKeyframeDefinitions } from '../animationParser';
 import {
   configureWebCSSAnimations,

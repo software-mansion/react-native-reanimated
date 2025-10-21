@@ -1,6 +1,5 @@
 'use strict';
-import type { ConvertValuesToArrays } from '../../css/types';
-import type { AnyRecord } from '../types';
+import type { AnyRecord, ConvertValuesToArrays } from '../types';
 
 export function convertPropertyToArray<T>(value: T | undefined): T[] {
   return value !== undefined ? (Array.isArray(value) ? value : [value]) : [];

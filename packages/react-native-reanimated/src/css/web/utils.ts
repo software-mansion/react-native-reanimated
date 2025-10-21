@@ -1,9 +1,13 @@
 'use strict';
-import { maybeAddSuffix, ReanimatedError } from '../../common';
+import type { ConvertValuesToArrays } from '../../common';
+import {
+  kebabizeCamelCase,
+  maybeAddSuffix,
+  ReanimatedError,
+} from '../../common';
 import type { ParametrizedTimingFunction } from '../easing';
 import { CubicBezierEasing, LinearEasing, StepsEasing } from '../easing';
-import type { AddArrayPropertyType, ConvertValuesToArrays } from '../types';
-import { kebabizeCamelCase } from '../utils';
+import type { AddArrayPropertyType } from '../types';
 
 export function maybeAddSuffixes<T, K extends keyof T>(
   object: ConvertValuesToArrays<T>,
