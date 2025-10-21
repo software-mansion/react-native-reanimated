@@ -1,9 +1,9 @@
 'use strict';
-import { ReanimatedError } from '../../../../../common';
-import { ERROR_MESSAGES, processColor } from '../colors';
+import { ReanimatedError } from '../../errors';
+import { ERROR_MESSAGES, processColor, processColorsInProps } from '../colors';
 
 describe(processColor, () => {
-  describe('converts color strings to numbers for all color props', () => {
+  describe('properly converts colors in props', () => {
     test.each([
       ['backgroundColor', 'red', 0xff0000ff],
       ['color', 'rgb(255, 200, 0)', 0xffc800ff],
@@ -24,7 +24,26 @@ describe(processColor, () => {
       ['tintColor', 'hsl(180, 100%, 25%)', 0x007f80ff],
     ])('converts %p with value %p to %p', (key, value, expected) => {
       const argb = ((expected << 24) | (expected >>> 8)) >>> 0;
-      expect(processColor(value)).toEqual(argb);
+      const props = { [key]: value };
+
+      processColorsInProps(props);
+
+      expect(props).toEqual({ [key]: argb });
+    });
+  });
+
+  describe('does not convert non-color properties', () => {
+    test.each([
+      ['width', 'red'],
+      ['height', 'blue'],
+      ['margin', 0x000000ff],
+      ['padding', '#ff0000'],
+    ])('does not convert %p', (key, value) => {
+      const props = { [key]: value };
+
+      processColorsInProps(props);
+
+      expect(props).toEqual({ [key]: value });
     });
   });
 

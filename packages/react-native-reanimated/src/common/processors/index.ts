@@ -1,4 +1,9 @@
 'use strict';
-export * from './colors';
-export * from './shadows';
-export * from './transformOrigin';
+export {
+  DynamicColorIOS,
+  PlatformColor,
+  processColor,
+  processColorsInProps,
+} from './colors';
+export { processBoxShadowNative, processBoxShadowWeb } from './shadows';
+export { processTransformOrigin } from './transformOrigin';
