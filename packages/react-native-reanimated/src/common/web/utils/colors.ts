@@ -1,16 +1,20 @@
 'use strict';
 import type { ColorValue } from 'react-native';
 
-import { processColor } from '../style';
+import { processColorInitially } from '../../../Colors';
 
 export function opacifyColor(
   color: ColorValue,
   opacity: number
 ): string | null {
   'worklet';
-  const colorNumber = processColor(color);
-  if (colorNumber == null) {
+  const colorNumber = processColorInitially(color);
+
+  if (colorNumber === undefined) {
     return null;
+  }
+  if (colorNumber === null) {
+    return 'transparent';
   }
 
   const a = (colorNumber >> 24) & 0xff;
