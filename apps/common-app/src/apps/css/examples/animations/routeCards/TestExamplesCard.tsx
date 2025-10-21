@@ -10,9 +10,11 @@ import { colors, sizes, spacing } from '@/theme';
 import { IS_MACOS } from '@/utils';
 
 const TestExamplesCard: RouteCardComponent = (props) => (
-  <Pressable onPress={() => console.log('PRESSED')}>
-    <Text>TEST</Text>
-  </Pressable>
+  <RouteCard
+    {...props}
+    description="Examples to test **edge cases**, **performance**, etc. (useful for devs)">
+    {!IS_MACOS && <Showcase />}
+  </RouteCard>
 );
 
 const ANIMATION_DURATION = 6000;
