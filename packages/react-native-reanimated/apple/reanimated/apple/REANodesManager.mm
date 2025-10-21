@@ -13,6 +13,8 @@
 #import <React/RCTFollyConvert.h>
 #endif
 
+using namespace facebook::react;
+
 @implementation REANodesManager {
   READisplayLink *_displayLink;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
@@ -171,7 +173,7 @@
 #if REACT_NATIVE_MINOR_VERSION >= 81
   [surfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:viewTag props:props];
 #else
-  [surfacePresenter synchronouslyUpdateViewOnUIThread:@(viewTag) props:facebook::react::convertFollyDynamicToId(props)];
+  [surfacePresenter synchronouslyUpdateViewOnUIThread:@(viewTag) props:convertFollyDynamicToId(props)];
 #endif
   [componentView setPropKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN:propKeysManagedByAnimated];
   // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
