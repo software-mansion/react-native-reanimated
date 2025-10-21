@@ -59,7 +59,7 @@ export const processBoxShadowNative: ValueProcessor<
     } = shadow;
     const processedColor = processColor(color);
 
-    if (processedColor === null) {
+    if (processedColor === undefined) {
       throw new ReanimatedError(
         ERROR_MESSAGES.invalidColor(color, JSON.stringify(shadow))
       );
