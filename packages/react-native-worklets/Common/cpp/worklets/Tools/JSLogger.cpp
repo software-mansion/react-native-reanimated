@@ -19,8 +19,7 @@ void JSLogger::reportFatalErrorOnJS(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     JSErrorData &&jsErrorData,
     bool force) {
-  auto job = [jsErrorData = std::move(jsErrorData),
-              force](jsi::Runtime &rnRuntime) {
+  auto job = [jsErrorData = std::move(jsErrorData), force](jsi::Runtime &rnRuntime) {
     reportFatalErrorOnJS(rnRuntime, jsErrorData, force);
   };
   if (jsScheduler->canInvokeSyncOnJS()) {
@@ -30,38 +29,20 @@ void JSLogger::reportFatalErrorOnJS(
   }
 }
 
-void JSLogger::reportFatalErrorOnJS(
-    jsi::Runtime &rnRuntime,
-    const JSErrorData &jsErrorData,
-    bool force) {
+void JSLogger::reportFatalErrorOnJS(jsi::Runtime &rnRuntime, const JSErrorData &jsErrorData, bool force) {
   const auto &global = rnRuntime.global();
-  const auto errorInstance = rnRuntime.global()
-                                 .getPropertyAsFunction(rnRuntime, "Error")
-                                 .callAsConstructor(rnRuntime)
-                                 .asObject(rnRuntime);
+  const auto errorInstance =
+      rnRuntime.global().getPropertyAsFunction(rnRuntime, "Error").callAsConstructor(rnRuntime).asObject(rnRuntime);
 
-  errorInstance.setProperty(
-      rnRuntime,
-      "message",
-      jsi::String::createFromUtf8(rnRuntime, jsErrorData.message));
+  errorInstance.setProperty(rnRuntime, "message", jsi::String::createFromUtf8(rnRuntime, jsErrorData.message));
 
-  errorInstance.setProperty(
-      rnRuntime,
-      "stack",
-      jsi::String::createFromUtf8(rnRuntime, jsErrorData.stack));
+  errorInstance.setProperty(rnRuntime, "stack", jsi::String::createFromUtf8(rnRuntime, jsErrorData.stack));
 
-  errorInstance.setProperty(
-      rnRuntime,
-      "name",
-      jsi::String::createFromUtf8(rnRuntime, jsErrorData.name));
+  errorInstance.setProperty(rnRuntime, "name", jsi::String::createFromUtf8(rnRuntime, jsErrorData.name));
 
-  errorInstance.setProperty(
-      rnRuntime,
-      "jsEngine",
-      jsi::String::createFromUtf8(rnRuntime, jsErrorData.jsEngine));
+  errorInstance.setProperty(rnRuntime, "jsEngine", jsi::String::createFromUtf8(rnRuntime, jsErrorData.jsEngine));
 
-  const auto &reportFatalErrorFunction =
-      global.getPropertyAsFunction(rnRuntime, "__reportFatalRemoteError");
+  const auto &reportFatalErrorFunction = global.getPropertyAsFunction(rnRuntime, "__reportFatalRemoteError");
   reportFatalErrorFunction.call(rnRuntime, errorInstance, force);
 }
 

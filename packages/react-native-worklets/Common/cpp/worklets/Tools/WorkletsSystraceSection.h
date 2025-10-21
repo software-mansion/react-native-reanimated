@@ -31,9 +31,7 @@ namespace worklets {
 struct WorkletsSystraceSection {
  public:
   template <typename... ConvertsToStringPiece>
-  explicit WorkletsSystraceSection(
-      const char *name,
-      ConvertsToStringPiece &&...args) {
+  explicit WorkletsSystraceSection(const char *name, ConvertsToStringPiece &&...args) {
     ATrace_beginSection(name);
   }
 
@@ -45,8 +43,7 @@ struct WorkletsSystraceSection {
 // The apple part is copied from React Native
 // from
 // https://github.com/facebook/react-native/blob/5697d923a05119314b4cfcd556cb243986637764/packages/react-native/ReactCommon/cxxreact/SystraceSection.h
-#elif defined(__APPLE__) && OS_LOG_TARGET_HAS_10_15_FEATURES && \
-    defined(WORKLETS_PROFILING)
+#elif defined(__APPLE__) && OS_LOG_TARGET_HAS_10_15_FEATURES && defined(WORKLETS_PROFILING)
 
 template <typename T, typename = void>
 struct renderer {
@@ -58,8 +55,7 @@ struct renderer {
 };
 
 template <typename T>
-static auto render(const T &t)
-    -> decltype(renderer<T>::render(std::declval<const T &>())) {
+static auto render(const T &t) -> decltype(renderer<T>::render(std::declval<const T &>())) {
   return renderer<T>::render(t);
 }
 
@@ -67,8 +63,7 @@ inline os_log_t instrumentsLogHandle = nullptr;
 
 static inline os_log_t getOrCreateInstrumentsLogHandle() {
   if (!instrumentsLogHandle) {
-    instrumentsLogHandle = os_log_create(
-        "dev.worklets.instruments", OS_LOG_CATEGORY_POINTS_OF_INTEREST);
+    instrumentsLogHandle = os_log_create("dev.worklets.instruments", OS_LOG_CATEGORY_POINTS_OF_INTEREST);
   }
   return instrumentsLogHandle;
 }
@@ -76,9 +71,7 @@ static inline os_log_t getOrCreateInstrumentsLogHandle() {
 struct WorkletsSystraceSection {
  public:
   template <typename... ConvertsToStringPiece>
-  explicit WorkletsSystraceSection(
-      const char *name,
-      ConvertsToStringPiece &&...args) {
+  explicit WorkletsSystraceSection(const char *name, ConvertsToStringPiece &&...args) {
     os_log_t instrumentsLogHandle = worklets::getOrCreateInstrumentsLogHandle();
 
     // If the log isn't enabled, we don't want the performance overhead of the
@@ -97,22 +90,11 @@ struct WorkletsSystraceSection {
 
     signpostID_ = os_signpost_id_make_with_pointer(instrumentsLogHandle, this);
 
-    os_signpost_interval_begin(
-        instrumentsLogHandle,
-        signpostID_,
-        "Worklets",
-        "%s begin: %s",
-        name,
-        argsString.c_str());
+    os_signpost_interval_begin(instrumentsLogHandle, signpostID_, "Worklets", "%s begin: %s", name, argsString.c_str());
   }
 
   ~WorkletsSystraceSection() {
-    os_signpost_interval_end(
-        worklets::instrumentsLogHandle,
-        signpostID_,
-        "Worklets",
-        "%s end",
-        name_.data());
+    os_signpost_interval_end(worklets::instrumentsLogHandle, signpostID_, "Worklets", "%s end", name_.data());
   }
 
  private:
@@ -125,12 +107,10 @@ struct WorkletsSystraceSection {
 struct WorkletsSystraceSection {
  public:
   template <typename... ConvertsToStringPiece>
-  explicit WorkletsSystraceSection(
-      const char *name,
-      ConvertsToStringPiece &&...args) {}
+  explicit WorkletsSystraceSection(const char *name, ConvertsToStringPiece &&...args) {}
 };
 
-#endif // defined(__APPLE__) && OS_LOG_TARGET_HAS_10_15_FEATURES &&
-       // defined(WORKLETS_PROFILING)
+#endif // defined(__APPLE__) && OS_LOG_TARGET_HAS_10_15_FEATURES && \
+    // defined(WORKLETS_PROFILING)
 
 } // namespace worklets

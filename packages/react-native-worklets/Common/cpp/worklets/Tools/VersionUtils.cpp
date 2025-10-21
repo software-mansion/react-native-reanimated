@@ -9,8 +9,7 @@ namespace worklets {
 
 bool matchVersion(const std::string &version1, const std::string &version2) {
   std::regex pattern("^\\d+\\.\\d+\\.\\d+$");
-  if (std::regex_match(version1, pattern) &&
-      std::regex_match(version2, pattern)) {
+  if (std::regex_match(version1, pattern) && std::regex_match(version2, pattern)) {
     auto majorPattern = std::regex("^\\d+");
     std::smatch major1;
     std::smatch major2;
@@ -63,8 +62,7 @@ void checkJSVersion(
             libraryPrefix +
             "Mismatch between C++ code version and "
             "JavaScript code version (") +
-        cppVersion + " vs. " + jsVersion + " respectively).\n" + "See " +
-        docsBaseUrl +
+        cppVersion + " vs. " + jsVersion + " respectively).\n" + "See " + docsBaseUrl +
         "/guides/"
         "troubleshooting#mismatch-between-c-code-version-and-javascript-code-"
         "version` for more details.");

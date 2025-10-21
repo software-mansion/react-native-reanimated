@@ -22,17 +22,14 @@ using namespace facebook::jni;
 
 class WorkletsModule : public jni::HybridClass<WorkletsModule> {
  public:
-  static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/worklets/WorkletsModule;";
+  static auto constexpr kJavaDescriptor = "Lcom/swmansion/worklets/WorkletsModule;";
 
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> jThis,
       jlong jsContext,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-      jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
-          jsCallInvokerHolder,
-      jni::alias_ref<worklets::AndroidUIScheduler::javaobject>
-          androidUIScheduler
+      jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
+      jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler
 #ifdef WORKLETS_BUNDLE_MODE
       ,
       jni::alias_ref<facebook::react::BundleWrapper::javaobject> bundleWrapper,
@@ -63,8 +60,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
     return javaPart_->getClass()->getMethod<Signature>(methodName.c_str());
   }
 
-  std::function<void(std::function<void(const double)>)>
-  getForwardedRequestAnimationFrame();
+  std::function<void(std::function<void(const double)>)> getForwardedRequestAnimationFrame();
 
   std::function<bool()> getIsOnJSQueueThread();
 

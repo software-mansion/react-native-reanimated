@@ -6,8 +6,7 @@
 namespace worklets {
 
 void JSScheduler::scheduleOnJS(Job job) {
-  jsCallInvoker_->invokeAsync(
-      [job = std::move(job), &rt = rnRuntime_] { job(rt); });
+  jsCallInvoker_->invokeAsync([job = std::move(job), &rt = rnRuntime_] { job(rt); });
 }
 
 bool JSScheduler::canInvokeSyncOnJS() {
@@ -15,9 +14,7 @@ bool JSScheduler::canInvokeSyncOnJS() {
 }
 
 void JSScheduler::invokeSyncOnJS(Job job) {
-  react_native_assert(
-      canInvokeSyncOnJS() &&
-      "JSScheduler::invokeSyncOnJS should only be called from the JS thread");
+  react_native_assert(canInvokeSyncOnJS() && "JSScheduler::invokeSyncOnJS should only be called from the JS thread");
   job(rnRuntime_);
 }
 

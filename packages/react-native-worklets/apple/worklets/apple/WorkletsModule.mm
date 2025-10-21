@@ -63,9 +63,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
-  auto jsQueue = std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
-    throw error;
-  });
+  auto jsQueue =
+      std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) { throw error; });
 
   std::string sourceURL = "";
   std::shared_ptr<const BigStringBuffer> script = nullptr;
@@ -76,7 +75,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
   auto jsCallInvoker = _callInvoker.callInvoker;
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
-  auto isJavaScriptQueue = []() -> bool { return IsJavaScriptQueue(); };
+  auto isJavaScriptQueue = []() -> bool {
+    return IsJavaScriptQueue();
+  };
   animationFrameQueue_ = [AnimationFrameQueue new];
   auto forwardedRequestAnimationFrame = std::function<void(std::function<void(const double)>)>(
       [animationFrameQueue = animationFrameQueue_](std::function<void(const double)> callback) {
