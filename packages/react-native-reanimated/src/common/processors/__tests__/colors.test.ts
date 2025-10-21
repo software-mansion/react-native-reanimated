@@ -2,7 +2,7 @@
 import { ReanimatedError } from '../../errors';
 import { ERROR_MESSAGES, processColor, processColorsInProps } from '../colors';
 
-describe(processColor, () => {
+describe(processColorsInProps, () => {
   describe('properly converts colors in props', () => {
     test.each([
       ['backgroundColor', 'red', 0xff0000ff],
@@ -23,6 +23,7 @@ describe(processColor, () => {
       ['overlayColor', 'hsla(360, 100%, 50%, 0.75)', 0xff0000bf],
       ['tintColor', 'hsl(180, 100%, 25%)', 0x007f80ff],
     ])('converts %p with value %p to %p', (key, value, expected) => {
+      // convert from RGBA to ARGB format
       const argb = ((expected << 24) | (expected >>> 8)) >>> 0;
       const props = { [key]: value };
 
@@ -44,6 +45,25 @@ describe(processColor, () => {
       processColorsInProps(props);
 
       expect(props).toEqual({ [key]: value });
+    });
+  });
+});
+
+describe(processColor, () => {
+  describe('properly converts colors', () => {
+    test.each([
+      ['red', 0xff0000ff],
+      ['rgb(255, 200, 0)', 0xffc800ff],
+      ['rgba(50, 100, 150, 0.6)', 0x32649699],
+      ['#34a', 0x3344aaff],
+      ['hsl(240, 100%, 50%)', 0x0000ffff],
+      ['hsla(120, 50%, 50%, 0.5)', 0x40bf4080],
+      ['hwb(0, 0%, 0%)', 0xff0000ff],
+      ['transparent', null],
+    ])('converts %p to %p', (value, expected) => {
+      // convert from RGBA to ARGB format if not null
+      const argb = expected && ((expected << 24) | (expected >>> 8)) >>> 0;
+      expect(processColor(value)).toEqual(argb);
     });
   });
 
