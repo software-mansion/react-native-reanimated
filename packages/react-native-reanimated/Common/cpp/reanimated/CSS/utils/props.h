@@ -17,9 +17,7 @@ struct ChangedProps {
   const PropertyNames changedPropertyNames;
 };
 
-bool isDiscreteProperty(
-    const std::string &propName,
-    const std::string &componentName);
+bool isDiscreteProperty(const std::string &propName, const std::string &componentName);
 
 // We need to specify it here because there are 2 methods referencing
 // each other in the recursion and areArraysDifferentRecursive must be
@@ -28,9 +26,7 @@ std::pair<folly::dynamic, folly::dynamic> getChangedPropsRecursive(
     const folly::dynamic &oldProp,
     const folly::dynamic &newProp);
 
-ChangedProps getChangedProps(
-    const folly::dynamic &oldProps,
-    const folly::dynamic &newProps,
-    const PropertyNames &allowedProperties);
+ChangedProps
+getChangedProps(const folly::dynamic &oldProps, const folly::dynamic &newProps, const PropertyNames &allowedProperties);
 
 } // namespace reanimated::css

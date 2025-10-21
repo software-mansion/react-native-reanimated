@@ -4,9 +4,9 @@ namespace reanimated::css {
 
 class RecordInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
-  explicit RecordInterpolatorFactory(
-      const InterpolatorFactoriesRecord &factories)
-      : PropertyInterpolatorFactory(), factories_(factories) {}
+  explicit RecordInterpolatorFactory(const InterpolatorFactoriesRecord &factories)
+      : PropertyInterpolatorFactory(),
+        factories_(factories) {}
 
   const CSSValue &getDefaultValue() const override {
     static EmptyObjectValue emptyObjectValue;
@@ -15,10 +15,8 @@ class RecordInterpolatorFactory : public PropertyInterpolatorFactory {
 
   std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      const override {
-    return std::make_shared<RecordPropertiesInterpolator>(
-        factories_, propertyPath, viewStylesRepository);
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
+    return std::make_shared<RecordPropertiesInterpolator>(factories_, propertyPath, viewStylesRepository);
   }
 
  private:
@@ -39,7 +37,8 @@ class RecordInterpolatorFactory : public PropertyInterpolatorFactory {
 class ArrayInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   explicit ArrayInterpolatorFactory(const InterpolatorFactoriesArray &factories)
-      : PropertyInterpolatorFactory(), factories_(factories) {}
+      : PropertyInterpolatorFactory(),
+        factories_(factories) {}
 
   const CSSValue &getDefaultValue() const override {
     static EmptyArrayValue emptyArrayValue;
@@ -48,10 +47,8 @@ class ArrayInterpolatorFactory : public PropertyInterpolatorFactory {
 
   std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      const override {
-    return std::make_shared<ArrayPropertiesInterpolator>(
-        factories_, propertyPath, viewStylesRepository);
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
+    return std::make_shared<ArrayPropertiesInterpolator>(factories_, propertyPath, viewStylesRepository);
   }
 
  private:
@@ -71,9 +68,9 @@ class ArrayInterpolatorFactory : public PropertyInterpolatorFactory {
 
 class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
-  explicit TransformsInterpolatorFactory(
-      const std::shared_ptr<TransformOperationInterpolators> &interpolators)
-      : PropertyInterpolatorFactory(), interpolators_(interpolators) {}
+  explicit TransformsInterpolatorFactory(const std::shared_ptr<TransformOperationInterpolators> &interpolators)
+      : PropertyInterpolatorFactory(),
+        interpolators_(interpolators) {}
 
   const CSSValue &getDefaultValue() const override {
     static EmptyTransformsValue emptyTransformsValue;
@@ -82,10 +79,8 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
 
   std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      const override {
-    return std::make_shared<TransformsStyleInterpolator>(
-        propertyPath, interpolators_, viewStylesRepository);
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
+    return std::make_shared<TransformsStyleInterpolator>(propertyPath, interpolators_, viewStylesRepository);
   }
 
  private:
@@ -109,20 +104,16 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
 };
 
 // Non-template function implementations
-std::shared_ptr<PropertyInterpolatorFactory> record(
-    const InterpolatorFactoriesRecord &factories) {
+std::shared_ptr<PropertyInterpolatorFactory> record(const InterpolatorFactoriesRecord &factories) {
   return std::make_shared<RecordInterpolatorFactory>(factories);
 }
 
-std::shared_ptr<PropertyInterpolatorFactory> array(
-    const InterpolatorFactoriesArray &factories) {
+std::shared_ptr<PropertyInterpolatorFactory> array(const InterpolatorFactoriesArray &factories) {
   return std::make_shared<ArrayInterpolatorFactory>(factories);
 }
 
 std::shared_ptr<PropertyInterpolatorFactory> transforms(
-    const std::unordered_map<
-        std::string,
-        std::shared_ptr<TransformInterpolator>> &interpolators) {
+    const std::unordered_map<std::string, std::shared_ptr<TransformInterpolator>> &interpolators) {
   TransformOperationInterpolators result;
   result.reserve(interpolators.size());
   for (const auto &[property, interpolator] : interpolators) {

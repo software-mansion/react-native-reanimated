@@ -16,8 +16,7 @@ jsi::Value ViewStylesRepository::getNodeProp(
   auto &cachedNode = shadowNodeCache_[tag];
   updateCacheIfNeeded(cachedNode, shadowNode);
 
-  if (propName == "width" || propName == "height" || propName == "top" ||
-      propName == "left") {
+  if (propName == "width" || propName == "height" || propName == "top" || propName == "left") {
     const auto &layoutMetrics = cachedNode.layoutMetrics;
 
     if (propName == "width") {
@@ -35,8 +34,7 @@ jsi::Value ViewStylesRepository::getNodeProp(
     if (propName == "opacity") {
       return {viewProps->opacity};
     } else if (propName == "zIndex") {
-      return viewProps->zIndex.has_value() ? jsi::Value(*viewProps->zIndex)
-                                           : jsi::Value(0);
+      return viewProps->zIndex.has_value() ? jsi::Value(*viewProps->zIndex) : jsi::Value(0);
     } else if (propName == "backgroundColor") {
       return {static_cast<int32_t>(*viewProps->backgroundColor)};
     }
@@ -55,8 +53,7 @@ jsi::Value ViewStylesRepository::getParentNodeProp(
 
   shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
     auto currentRevision = shadowTree.getCurrentRevision();
-    parentNode =
-        dom::getParentNode(currentRevision.rootShadowNode, *shadowNode);
+    parentNode = dom::getParentNode(currentRevision.rootShadowNode, *shadowNode);
   });
 
   if (!parentNode) {
@@ -66,11 +63,8 @@ jsi::Value ViewStylesRepository::getParentNodeProp(
   return getNodeProp(parentNode, propName);
 }
 
-folly::dynamic ViewStylesRepository::getStyleProp(
-    const Tag tag,
-    const PropertyPath &propertyPath) {
-  auto animatedValue =
-      getPropertyValue(animatedPropsRegistry_->get(tag), propertyPath);
+folly::dynamic ViewStylesRepository::getStyleProp(const Tag tag, const PropertyPath &propertyPath) {
+  auto animatedValue = getPropertyValue(animatedPropsRegistry_->get(tag), propertyPath);
   if (!animatedValue.isNull()) {
     return animatedValue;
   }
@@ -85,8 +79,7 @@ void ViewStylesRepository::clearNodesCache() {
 void ViewStylesRepository::updateCacheIfNeeded(
     CachedShadowNode &cachedNode,
     const std::shared_ptr<const ShadowNode> &shadowNode) {
-  auto newestCloneOfShadowNode =
-      uiManager_->getNewestCloneOfShadowNode(*shadowNode);
+  auto newestCloneOfShadowNode = uiManager_->getNewestCloneOfShadowNode(*shadowNode);
 
   // Check if newestCloneOfShadowNode is valid (is already mounted / not
   // yet unmounted)
@@ -94,20 +87,16 @@ void ViewStylesRepository::updateCacheIfNeeded(
     return;
   }
 
-  auto layoutableShadowNode =
-      dynamic_cast<const LayoutableShadowNode *>(newestCloneOfShadowNode.get());
+  auto layoutableShadowNode = dynamic_cast<const LayoutableShadowNode *>(newestCloneOfShadowNode.get());
   if (!layoutableShadowNode) {
     return;
   }
 
   cachedNode.layoutMetrics = layoutableShadowNode->layoutMetrics_;
-  cachedNode.viewProps = std::static_pointer_cast<const ViewProps>(
-      newestCloneOfShadowNode->getProps());
+  cachedNode.viewProps = std::static_pointer_cast<const ViewProps>(newestCloneOfShadowNode->getProps());
 }
 
-folly::dynamic ViewStylesRepository::getPropertyValue(
-    const folly::dynamic &value,
-    const PropertyPath &propertyPath) {
+folly::dynamic ViewStylesRepository::getPropertyValue(const folly::dynamic &value, const PropertyPath &propertyPath) {
   const folly::dynamic *currentValue = &value;
 
   for (size_t i = 0; i < propertyPath.size(); ++i) {

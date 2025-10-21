@@ -10,8 +10,7 @@
 namespace reanimated::css {
 
 // MatrixOperationValue type for matrix operations
-using MatrixOperationValue =
-    std::variant<TransformMatrix::Shared, TransformOperations>;
+using MatrixOperationValue = std::variant<TransformMatrix::Shared, TransformOperations>;
 
 /**
  * Multiplies all operations in the vector to a single 3D matrix
@@ -29,7 +28,8 @@ struct MatrixOperation final : public TransformOperation {
   const MatrixOperationValue value;
 
   explicit MatrixOperation(MatrixOperationValue value)
-      : TransformOperation(TransformOp::Matrix), value(std::move(value)) {}
+      : TransformOperation(TransformOp::Matrix),
+        value(std::move(value)) {}
 
   explicit MatrixOperation(jsi::Runtime &rt, const jsi::Value &value);
   explicit MatrixOperation(const folly::dynamic &value);

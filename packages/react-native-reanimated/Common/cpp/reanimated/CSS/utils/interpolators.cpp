@@ -10,9 +10,7 @@ std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
   auto it = factories.find(propertyName);
 
   if (it == factories.cend()) {
-    throw std::invalid_argument(
-        "[Reanimated] No interpolator factory found for property: " +
-        propertyName);
+    throw std::invalid_argument("[Reanimated] No interpolator factory found for property: " + propertyName);
   }
 
   PropertyPath newPath = propertyPath;
@@ -29,8 +27,7 @@ std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
   PropertyPath newPath = propertyPath;
   newPath.emplace_back(std::to_string(arrayIndex));
 
-  return factories[arrayIndex % factories.size()]->create(
-      newPath, viewStylesRepository);
+  return factories[arrayIndex % factories.size()]->create(newPath, viewStylesRepository);
 }
 
 } // namespace reanimated::css

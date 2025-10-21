@@ -9,8 +9,8 @@ namespace reanimated::css {
 
 // TransformMatrixBase template implementations
 template <typename TDerived, size_t TDimension>
-TransformMatrixBase<TDerived, TDimension>::TransformMatrixBase()
-    : TransformMatrix(), matrix_{} {
+TransformMatrixBase<TDerived, TDimension>::TransformMatrixBase() : TransformMatrix(),
+                                                                   matrix_{} {
   // Create an identity matrix
   for (size_t i = 0; i < TDimension; ++i) {
     matrix_[i * (TDimension + 1)] = 1;
@@ -18,31 +18,28 @@ TransformMatrixBase<TDerived, TDimension>::TransformMatrixBase()
 }
 
 template <typename TDerived, size_t TDimension>
-TransformMatrixBase<TDerived, TDimension>::TransformMatrixBase(
-    MatrixArray matrix)
-    : TransformMatrix(), matrix_(std::move(matrix)) {}
+TransformMatrixBase<TDerived, TDimension>::TransformMatrixBase(MatrixArray matrix)
+    : TransformMatrix(),
+      matrix_(std::move(matrix)) {}
 
 template <typename TDerived, size_t TDimension>
-TransformMatrixBase<TDerived, TDimension>::TransformMatrixBase(
-    const TransformMatrixBase &other)
-    : TransformMatrix(), matrix_(other.matrix_) {}
+TransformMatrixBase<TDerived, TDimension>::TransformMatrixBase(const TransformMatrixBase &other)
+    : TransformMatrix(),
+      matrix_(other.matrix_) {}
 
 template <typename TDerived, size_t TDimension>
-TransformMatrixBase<TDerived, TDimension>::TransformMatrixBase(
-    TransformMatrixBase &&other) noexcept
-    : TransformMatrix(), matrix_(std::move(other.matrix_)) {}
+TransformMatrixBase<TDerived, TDimension>::TransformMatrixBase(TransformMatrixBase &&other) noexcept
+    : TransformMatrix(),
+      matrix_(std::move(other.matrix_)) {}
 
 template <typename TDerived, size_t TDimension>
-bool TransformMatrixBase<TDerived, TDimension>::operator==(
-    const TDerived &other) const {
+bool TransformMatrixBase<TDerived, TDimension>::operator==(const TDerived &other) const {
   return matrix_ == other.matrix_;
 }
 
 template <typename TDerived, size_t TDimension>
-bool TransformMatrixBase<TDerived, TDimension>::operator==(
-    const TransformMatrix &other) const {
-  return TDimension == other.getDimension() &&
-      matrix_ == static_cast<const TDerived &>(other).matrix_;
+bool TransformMatrixBase<TDerived, TDimension>::operator==(const TransformMatrix &other) const {
+  return TDimension == other.getDimension() && matrix_ == static_cast<const TDerived &>(other).matrix_;
 }
 
 template <typename TDerived, size_t TDimension>
@@ -51,8 +48,7 @@ double &TransformMatrixBase<TDerived, TDimension>::operator[](size_t index) {
 }
 
 template <typename TDerived, size_t TDimension>
-const double &TransformMatrixBase<TDerived, TDimension>::operator[](
-    size_t index) const {
+const double &TransformMatrixBase<TDerived, TDimension>::operator[](size_t index) const {
   return matrix_[index];
 }
 
@@ -119,21 +115,18 @@ folly::dynamic TransformMatrixBase<TDerived, TDimension>::toDynamic() const {
 }
 
 template <typename TDerived, size_t TDimension>
-TDerived TransformMatrixBase<TDerived, TDimension>::operator*(
-    const TDerived &rhs) const {
+TDerived TransformMatrixBase<TDerived, TDimension>::operator*(const TDerived &rhs) const {
   return TDerived(multiply(rhs));
 }
 
 template <typename TDerived, size_t TDimension>
-TDerived &TransformMatrixBase<TDerived, TDimension>::operator*=(
-    const TDerived &rhs) {
+TDerived &TransformMatrixBase<TDerived, TDimension>::operator*=(const TDerived &rhs) {
   matrix_ = multiply(rhs);
   return static_cast<TDerived &>(*this);
 }
 
 template <typename TDerived, size_t TDimension>
-TransformMatrixBase<TDerived, TDimension> &
-TransformMatrixBase<TDerived, TDimension>::operator=(
+TransformMatrixBase<TDerived, TDimension> &TransformMatrixBase<TDerived, TDimension>::operator=(
     const TransformMatrixBase &other) {
   if (this != &other) {
     // Note: dimension_ is const, so we can't reassign it
@@ -144,8 +137,7 @@ TransformMatrixBase<TDerived, TDimension>::operator=(
 }
 
 template <typename TDerived, size_t TDimension>
-TransformMatrixBase<TDerived, TDimension> &
-TransformMatrixBase<TDerived, TDimension>::operator=(
+TransformMatrixBase<TDerived, TDimension> &TransformMatrixBase<TDerived, TDimension>::operator=(
     TransformMatrixBase &&other) noexcept {
   if (this != &other) {
     matrix_ = std::move(other.matrix_);
@@ -154,8 +146,8 @@ TransformMatrixBase<TDerived, TDimension>::operator=(
 }
 
 template <typename TDerived, size_t TDimension>
-typename TransformMatrixBase<TDerived, TDimension>::MatrixArray
-TransformMatrixBase<TDerived, TDimension>::multiply(const TDerived &rhs) const {
+typename TransformMatrixBase<TDerived, TDimension>::MatrixArray TransformMatrixBase<TDerived, TDimension>::multiply(
+    const TDerived &rhs) const {
   MatrixArray result{};
 
   for (size_t i = 0; i < TDimension; ++i) {

@@ -2,14 +2,11 @@
 
 namespace reanimated::css {
 
-CSSColor::CSSColor()
-    : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {}
+CSSColor::CSSColor() : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {}
 
-CSSColor::CSSColor(ColorType colorType)
-    : channels{0, 0, 0, 0}, colorType(colorType) {}
+CSSColor::CSSColor(ColorType colorType) : channels{0, 0, 0, 0}, colorType(colorType) {}
 
-CSSColor::CSSColor(int64_t numberValue)
-    : channels{0, 0, 0, 0}, colorType(ColorType::Rgba) {
+CSSColor::CSSColor(int64_t numberValue) : channels{0, 0, 0, 0}, colorType(ColorType::Rgba) {
   uint32_t color;
   // On Android, colors are represented as signed 32-bit integers. In JS, we use
   // a bitwise operation (normalizedColor = normalizedColor | 0x0) to ensure the
@@ -29,34 +26,31 @@ CSSColor::CSSColor(int64_t numberValue)
   colorType = ColorType::Rgba;
 }
 
-CSSColor::CSSColor(const std::string &colorString)
-    : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
+CSSColor::CSSColor(const std::string &colorString) : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
   if (colorString == "transparent") {
     colorType = ColorType::Transparent;
   } else if (colorString == "currentColor") {
     colorType = ColorType::CurrentColor;
   } else {
-    throw std::invalid_argument(
-        "[Reanimated] CSSColor: Invalid string value: " + colorString);
+    throw std::invalid_argument("[Reanimated] CSSColor: Invalid string value: " + colorString);
   }
 }
 
 CSSColor::CSSColor(const uint8_t r, const uint8_t g, const uint8_t b)
-    : channels{r, g, b, 255}, colorType(ColorType::Rgba) {}
+    : channels{r, g, b, 255},
+      colorType(ColorType::Rgba) {}
 
-CSSColor::CSSColor(
-    const uint8_t r,
-    const uint8_t g,
-    const uint8_t b,
-    const uint8_t a)
-    : channels{r, g, b, a}, colorType(ColorType::Rgba) {}
+CSSColor::CSSColor(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
+    : channels{r, g, b, a},
+      colorType(ColorType::Rgba) {}
 
 CSSColor::CSSColor(const ColorChannels &colorChannels)
     : channels{colorChannels[0], colorChannels[1], colorChannels[2], colorChannels[3]},
       colorType(ColorType::Rgba) {}
 
 CSSColor::CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue)
-    : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
+    : channels{0, 0, 0, 0},
+      colorType(ColorType::Transparent) {
   if (jsiValue.isNumber()) {
     *this = CSSColor(jsiValue.getNumber());
   } else if (jsiValue.isString()) {
@@ -66,8 +60,7 @@ CSSColor::CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue)
   }
 }
 
-CSSColor::CSSColor(const folly::dynamic &value)
-    : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
+CSSColor::CSSColor(const folly::dynamic &value) : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
   if (value.isNumber()) {
     *this = CSSColor(value.asInt());
   } else if (value.isString()) {
@@ -79,28 +72,24 @@ CSSColor::CSSColor(const folly::dynamic &value)
 
 bool CSSColor::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   return jsiValue.isNumber() || jsiValue.isUndefined() ||
-      (jsiValue.isString() &&
-       isValidColorString(jsiValue.getString(rt).utf8(rt)));
+      (jsiValue.isString() && isValidColorString(jsiValue.getString(rt).utf8(rt)));
 }
 
 bool CSSColor::canConstruct(const folly::dynamic &value) {
-  return value.isNumber() || value.empty() ||
-      (value.isString() && isValidColorString(value.getString()));
+  return value.isNumber() || value.empty() || (value.isString() && isValidColorString(value.getString()));
 }
 
 folly::dynamic CSSColor::toDynamic() const {
   if (colorType == ColorType::Transparent) {
     return 0x00000000;
   }
-  return (channels[3] << 24) | (channels[0] << 16) | (channels[1] << 8) |
-      channels[2];
+  return (channels[3] << 24) | (channels[0] << 16) | (channels[1] << 8) | channels[2];
 }
 
 std::string CSSColor::toString() const {
   if (colorType == ColorType::Rgba) {
-    return "rgba(" + std::to_string(channels[0]) + "," +
-        std::to_string(channels[1]) + "," + std::to_string(channels[2]) + "," +
-        std::to_string(channels[3]) + ")";
+    return "rgba(" + std::to_string(channels[0]) + "," + std::to_string(channels[1]) + "," +
+        std::to_string(channels[2]) + "," + std::to_string(channels[3]) + ")";
   }
   if (colorType == ColorType::CurrentColor) {
     return "currentColor";
@@ -108,12 +97,9 @@ std::string CSSColor::toString() const {
   return "transparent";
 }
 
-CSSColor CSSColor::interpolate(const double progress, const CSSColor &to)
-    const {
-  if ((to.colorType == ColorType::Transparent &&
-       colorType == ColorType::Transparent) ||
-      colorType == ColorType::CurrentColor ||
-      to.colorType == ColorType::CurrentColor) {
+CSSColor CSSColor::interpolate(const double progress, const CSSColor &to) const {
+  if ((to.colorType == ColorType::Transparent && colorType == ColorType::Transparent) ||
+      colorType == ColorType::CurrentColor || to.colorType == ColorType::CurrentColor) {
     return progress < 0.5 ? *this : to;
   }
 
@@ -127,17 +113,13 @@ CSSColor CSSColor::interpolate(const double progress, const CSSColor &to)
 
   ColorChannels resultChannels;
   for (size_t i = 0; i < 4; ++i) {
-    resultChannels[i] =
-        interpolateChannel(fromChannels[i], toChannels[i], progress);
+    resultChannels[i] = interpolateChannel(fromChannels[i], toChannels[i], progress);
   }
 
   return CSSColor(resultChannels);
 }
 
-uint8_t CSSColor::interpolateChannel(
-    const uint8_t from,
-    const uint8_t to,
-    const double progress) {
+uint8_t CSSColor::interpolateChannel(const uint8_t from, const uint8_t to, const double progress) {
   // Cast one of operands to double to avoid unsigned int subtraction overflow
   // (when from > to)
   double interpolated = (static_cast<double>(to) - from) * progress + from;
@@ -145,9 +127,8 @@ uint8_t CSSColor::interpolateChannel(
 }
 
 bool CSSColor::operator==(const CSSColor &other) const {
-  return colorType == other.colorType && channels[0] == other.channels[0] &&
-      channels[1] == other.channels[1] && channels[2] == other.channels[2] &&
-      channels[3] == other.channels[3];
+  return colorType == other.colorType && channels[0] == other.channels[0] && channels[1] == other.channels[1] &&
+      channels[2] == other.channels[2] && channels[3] == other.channels[3];
 }
 
 #ifndef NDEBUG

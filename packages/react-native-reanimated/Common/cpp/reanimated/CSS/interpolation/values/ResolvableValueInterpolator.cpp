@@ -16,10 +16,7 @@ ResolvableValueInterpolator<AllowedTypes...>::ResolvableValueInterpolator(
     const ValueType &defaultStyleValue,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const ResolvableValueInterpolatorConfig &config)
-    : SimpleValueInterpolator<AllowedTypes...>(
-          propertyPath,
-          defaultStyleValue,
-          viewStylesRepository),
+    : SimpleValueInterpolator<AllowedTypes...>(propertyPath, defaultStyleValue, viewStylesRepository),
       config_(config) {}
 
 template <typename... AllowedTypes>

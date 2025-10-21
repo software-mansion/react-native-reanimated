@@ -40,8 +40,7 @@ TransformOp getTransformOperationType(const std::string &property) {
   if (it != stringToEnumMap.end()) {
     return it->second;
   } else {
-    throw std::invalid_argument(
-        "[Reanimated] Unknown transform operation: " + property);
+    throw std::invalid_argument("[Reanimated] Unknown transform operation: " + property);
   }
 }
 

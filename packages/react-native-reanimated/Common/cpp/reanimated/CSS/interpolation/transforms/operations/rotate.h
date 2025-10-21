@@ -9,8 +9,7 @@
 namespace reanimated::css {
 
 template <TransformOp TOperation>
-struct RotateOperationBase2D
-    : public TransformOperationBase<TOperation, CSSAngle> {
+struct RotateOperationBase2D : public TransformOperationBase<TOperation, CSSAngle> {
   using TransformOperationBase<TOperation, CSSAngle>::TransformOperationBase;
 
   explicit RotateOperationBase2D(const std::string &value);
@@ -19,8 +18,7 @@ struct RotateOperationBase2D
 };
 
 template <TransformOp TOperation>
-struct RotateOperationBase3D
-    : public TransformOperationBase<TOperation, CSSAngle> {
+struct RotateOperationBase3D : public TransformOperationBase<TOperation, CSSAngle> {
   using TransformOperationBase<TOperation, CSSAngle>::TransformOperationBase;
 
   explicit RotateOperationBase3D(const std::string &value);
@@ -34,8 +32,7 @@ using RotateOperation = RotateOperationBase2D<TransformOp::Rotate>;
 using RotateXOperation = RotateOperationBase3D<TransformOp::RotateX>;
 using RotateYOperation = RotateOperationBase3D<TransformOp::RotateY>;
 
-struct RotateZOperation final
-    : public RotateOperationBase2D<TransformOp::RotateZ> {
+struct RotateZOperation final : public RotateOperationBase2D<TransformOp::RotateZ> {
   using RotateOperationBase2D<TransformOp::RotateZ>::RotateOperationBase2D;
 
   bool canConvertTo(TransformOp type) const override;

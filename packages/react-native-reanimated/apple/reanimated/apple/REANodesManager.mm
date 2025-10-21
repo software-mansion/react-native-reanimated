@@ -54,9 +54,7 @@
       // no-op
     };
   }
-  [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) {
-    [displayLink setPaused:YES];
-  }];
+  [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) { [displayLink setPaused:YES]; }];
 
   return self;
 }
@@ -66,9 +64,7 @@
   REAAssertTurboModuleManagerQueue();
 
   _eventHandler = nil;
-  [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) {
-    [displayLink invalidate];
-  }];
+  [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) { [displayLink invalidate]; }];
 }
 
 - (void)postOnAnimation:(REAOnAnimationCallback)clb

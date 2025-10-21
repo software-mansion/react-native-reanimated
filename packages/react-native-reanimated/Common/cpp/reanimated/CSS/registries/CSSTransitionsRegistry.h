@@ -16,9 +16,7 @@
 
 namespace reanimated::css {
 
-class CSSTransitionsRegistry
-    : public UpdatesRegistry,
-      public std::enable_shared_from_this<CSSTransitionsRegistry> {
+class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared_from_this<CSSTransitionsRegistry> {
  public:
   CSSTransitionsRegistry(
       const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
@@ -45,12 +43,9 @@ class CSSTransitionsRegistry
   DelayedItemsManager<Tag> delayedTransitionsManager_;
 
   void activateDelayedTransitions(double timestamp);
-  void scheduleOrActivateTransition(
-      const std::shared_ptr<CSSTransition> &transition);
+  void scheduleOrActivateTransition(const std::shared_ptr<CSSTransition> &transition);
   PropsObserver createPropsObserver(Tag viewTag);
-  void updateInUpdatesRegistry(
-      const std::shared_ptr<CSSTransition> &transition,
-      const folly::dynamic &updates);
+  void updateInUpdatesRegistry(const std::shared_ptr<CSSTransition> &transition, const folly::dynamic &updates);
 };
 
 } // namespace reanimated::css

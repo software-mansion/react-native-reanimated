@@ -17,8 +17,7 @@ using namespace css;
 
 class UpdatesRegistryManager {
  public:
-  explicit UpdatesRegistryManager(
-      const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry);
+  explicit UpdatesRegistryManager(const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry);
 
   std::lock_guard<std::mutex> lock() const;
 
@@ -41,14 +40,12 @@ class UpdatesRegistryManager {
 
 #ifdef ANDROID
   bool hasPropsToRevert();
-  void collectPropsToRevertBySurface(
-      std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
+  void collectPropsToRevertBySurface(std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
   void clearPropsToRevert(SurfaceId surfaceId);
 #endif
 
  private:
-  using RemovableShadowNodes =
-      std::unordered_map<Tag, std::shared_ptr<const ShadowNode>>;
+  using RemovableShadowNodes = std::unordered_map<Tag, std::shared_ptr<const ShadowNode>>;
 
   mutable std::mutex mutex_;
   std::atomic<bool> isPaused_;
@@ -60,10 +57,8 @@ class UpdatesRegistryManager {
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;
 
-  static void addToPropsMap(
-      PropsMap &propsMap,
-      const std::shared_ptr<const ShadowNode> &shadowNode,
-      const folly::dynamic &props);
+  static void
+  addToPropsMap(PropsMap &propsMap, const std::shared_ptr<const ShadowNode> &shadowNode, const folly::dynamic &props);
 #endif
 };
 

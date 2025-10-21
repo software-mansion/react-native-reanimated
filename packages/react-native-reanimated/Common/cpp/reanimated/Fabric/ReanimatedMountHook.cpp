@@ -28,9 +28,8 @@ void ReanimatedMountHook::shadowTreeDidMount(
     ) noexcept {
   ReanimatedSystraceSection s("ReanimatedMountHook::shadowTreeDidMount");
 
-  auto reaShadowNode =
-      std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
-          std::const_pointer_cast<RootShadowNode>(rootShadowNode));
+  auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
+      std::const_pointer_cast<RootShadowNode>(rootShadowNode));
 
   if (reaShadowNode->hasReanimatedMountTrait()) {
     // We mark reanimated commits with ReanimatedMountTrait. We don't want other
