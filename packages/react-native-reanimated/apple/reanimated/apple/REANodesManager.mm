@@ -168,7 +168,7 @@ using namespace facebook::react;
 
   RCTSurfacePresenter *surfacePresenter = self.surfacePresenter;
   RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
-  REAUIView<RCTComponentViewProtocol> *componentView = [componentViewRegistry findComponentViewWithTag:viewTag];
+  REAUIView<RCTComponentViewProtocol> *componentView = [componentViewRegistry findComponentViewWithTag:static_cast<Tag>(viewTag)];
   NSSet<NSString *> *propKeysManagedByAnimated = [componentView propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN];
 #if REACT_NATIVE_MINOR_VERSION >= 81
   [surfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:viewTag props:props];
