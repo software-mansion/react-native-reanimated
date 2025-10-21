@@ -1,5 +1,4 @@
 'use strict';
-
 import type { CSSAnimationProp } from './animation';
 import type { CSSTransitionProp } from './transition';
 
