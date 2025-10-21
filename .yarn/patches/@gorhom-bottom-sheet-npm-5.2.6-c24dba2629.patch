@@ -1,0 +1,66 @@
+diff --git a/lib/commonjs/hooks/useBoundingClientRect.js b/lib/commonjs/hooks/useBoundingClientRect.js
+index b4a90b76ee55bf2cad9cf461017621b1ddab0fe1..ccd592713dbbdf47957d24a5bced0ea4742a82ad 100644
+--- a/lib/commonjs/hooks/useBoundingClientRect.js
++++ b/lib/commonjs/hooks/useBoundingClientRect.js
+@@ -46,7 +46,7 @@ function useBoundingClientRect(ref, handler) {
+     }
+ 
+     // @ts-ignore 👉 https://github.com/facebook/react/commit/53b1f69ba
+-    if (ref.current.unstable_getBoundingClientRect !== null) {
++    if (ref.current.unstable_getBoundingClientRect) {
+       // @ts-ignore https://github.com/facebook/react/commit/53b1f69ba
+       const layout = ref.current.unstable_getBoundingClientRect();
+       handler(layout);
+@@ -54,7 +54,7 @@ function useBoundingClientRect(ref, handler) {
+     }
+ 
+     // @ts-ignore once it `unstable_getBoundingClientRect` gets stable 🤞.
+-    if (ref.current.getBoundingClientRect !== null) {
++    if (ref.current.getBoundingClientRect) {
+       // @ts-ignore once it `unstable_getBoundingClientRect` gets stable.
+       const layout = ref.current.getBoundingClientRect();
+       handler(layout);
+diff --git a/lib/module/hooks/useBoundingClientRect.js b/lib/module/hooks/useBoundingClientRect.js
+index a723aede9d4cfbb46f5985c531e0dae8f517aba8..c11b18b569d67fc9993ac9ab492ee1d967c24867 100644
+--- a/lib/module/hooks/useBoundingClientRect.js
++++ b/lib/module/hooks/useBoundingClientRect.js
+@@ -42,7 +42,7 @@ export function useBoundingClientRect(ref, handler) {
+     }
+ 
+     // @ts-ignore 👉 https://github.com/facebook/react/commit/53b1f69ba
+-    if (ref.current.unstable_getBoundingClientRect !== null) {
++    if (ref.current.unstable_getBoundingClientRect) {
+       // @ts-ignore https://github.com/facebook/react/commit/53b1f69ba
+       const layout = ref.current.unstable_getBoundingClientRect();
+       handler(layout);
+@@ -50,7 +50,7 @@ export function useBoundingClientRect(ref, handler) {
+     }
+ 
+     // @ts-ignore once it `unstable_getBoundingClientRect` gets stable 🤞.
+-    if (ref.current.getBoundingClientRect !== null) {
++    if (ref.current.getBoundingClientRect) {
+       // @ts-ignore once it `unstable_getBoundingClientRect` gets stable.
+       const layout = ref.current.getBoundingClientRect();
+       handler(layout);
+diff --git a/src/hooks/useBoundingClientRect.ts b/src/hooks/useBoundingClientRect.ts
+index cc85c8ced2de8ec514360368ed20af733f8f9aec..c551df2694ef00023a2e4616f8969ffd5e21d695 100644
+--- a/src/hooks/useBoundingClientRect.ts
++++ b/src/hooks/useBoundingClientRect.ts
+@@ -56,7 +56,7 @@ export function useBoundingClientRect(
+     }
+ 
+     // @ts-ignore 👉 https://github.com/facebook/react/commit/53b1f69ba
+-    if (ref.current.unstable_getBoundingClientRect !== null) {
++    if (ref.current.unstable_getBoundingClientRect) {
+       // @ts-ignore https://github.com/facebook/react/commit/53b1f69ba
+       const layout = ref.current.unstable_getBoundingClientRect();
+       handler(layout);
+@@ -64,7 +64,7 @@ export function useBoundingClientRect(
+     }
+ 
+     // @ts-ignore once it `unstable_getBoundingClientRect` gets stable 🤞.
+-    if (ref.current.getBoundingClientRect !== null) {
++    if (ref.current.getBoundingClientRect) {
+       // @ts-ignore once it `unstable_getBoundingClientRect` gets stable.
+       const layout = ref.current.getBoundingClientRect();
+       handler(layout);

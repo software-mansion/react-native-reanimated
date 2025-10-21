@@ -22,7 +22,6 @@
   },
   "devDependencies": {
     "@expo/metro-runtime": "6.1.2",
-    "@stylexjs/babel-plugin": "0.16.1",
     "@types/react": "19.2.2",
     "eslint": "9.37.0",
     "prettier": "3.6.2",

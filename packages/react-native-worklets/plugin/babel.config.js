@@ -8,7 +8,7 @@ module.exports = {
     [
       workletsPlugin,
       {
-        // bundleMode true,
+        // bundleMode: true,
       },
     ],
   ],
