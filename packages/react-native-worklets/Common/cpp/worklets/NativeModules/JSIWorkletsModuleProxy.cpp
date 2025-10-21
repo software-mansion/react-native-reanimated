@@ -135,7 +135,8 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::shared_ptr<RuntimeManager> &runtimeManager,
-    const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime)
+    const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
+    RuntimeBindings runtimeBindings)
     : jsi::HostObject(),
       isDevBundle_(isDevBundle),
       script_(script),
@@ -144,7 +145,8 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
       runtimeManager_(runtimeManager),
-      uiWorkletRuntime_(uiWorkletRuntime) {}
+      uiWorkletRuntime_(uiWorkletRuntime),
+      runtimeBindings_(runtimeBindings) {}
 
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const JSIWorkletsModuleProxy &other)
@@ -156,7 +158,8 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       jsScheduler_(other.jsScheduler_),
       uiScheduler_(other.uiScheduler_),
       runtimeManager_(other.runtimeManager_),
-      uiWorkletRuntime_(other.uiWorkletRuntime_) {}
+      uiWorkletRuntime_(other.uiWorkletRuntime_),
+      runtimeBindings_(other.runtimeBindings_) {}
 
 JSIWorkletsModuleProxy::~JSIWorkletsModuleProxy() = default;
 
@@ -228,6 +231,8 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(
       jsi::PropNameID::forAscii(rt, "synchronizableUnlock"));
 
 #ifdef WORKLETS_BUNDLE_MODE
+  propertyNames.emplace_back(
+      jsi::PropNameID::forAscii(rt, "requestAnimationFrame"));
   propertyNames.emplace_back(
       jsi::PropNameID::forAscii(rt, "propagateModuleUpdate"));
 #endif // WORKLETS_BUNDLE_MODE
@@ -672,6 +677,33 @@ jsi::Value JSIWorkletsModuleProxy::get(
               runtimeManager,
               /* code */ args[0].asString(rt).utf8(rt),
               /* sourceURL */ args[1].asString(rt).utf8(rt));
+        });
+  }
+
+  if (name == "requestAnimationFrame") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        1,
+        [runtimeManager = runtimeManager_](
+            jsi::Runtime &rt,
+            const jsi::Value &thisValue,
+            const jsi::Value *args,
+            size_t count) {
+          auto workletRuntime = runtimeManager->getRuntime(&rt);
+          const auto &callback = args[0];
+          rt.global().setProperty(rt, "stupidCallback", callback);
+          auto callbackk = rt.global().getProperty(rt, "stupidCallback");
+          auto calptr = std::make_shared<jsi::Value>(std::move(callbackk));
+          workletRuntime->runOnQueue([calptr](jsi::Runtime &rt) {
+            auto performance =
+                rt.global().getPropertyAsObject(rt, "performance");
+            auto now = performance.getPropertyAsFunction(rt, "now")
+                           .call(rt)
+                           .asNumber();
+            calptr->asObject(rt).asFunction(rt).call(rt, now);
+          });
+          return jsi::Value::undefined();
         });
   }
 #endif // WORKLETS_BUNDLE_MODE

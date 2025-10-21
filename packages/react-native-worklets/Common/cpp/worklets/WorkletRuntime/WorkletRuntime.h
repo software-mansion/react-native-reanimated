@@ -54,6 +54,10 @@ class WorkletRuntime : public jsi::HostObject,
 
   void runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet);
 
+  void runOnQueue(std::function<void()> &&job);
+
+  void runOnQueue(std::function<void(jsi::Runtime &)> &&job);
+
   jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
 
   jsi::Value executeSync(std::function<jsi::Value(jsi::Runtime &)> &&job) const;
@@ -77,7 +81,7 @@ class WorkletRuntime : public jsi::HostObject,
     return name_;
   }
 
- private:
+ public:
   const uint64_t runtimeId_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
