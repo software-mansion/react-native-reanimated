@@ -3,7 +3,7 @@
 namespace reanimated::css {
 
 template <typename TValue>
-DelayedItem<TValue>::DelayedItem(const double timestamp, const TValue value)
+DelayedItem<TValue>::DelayedItem(double timestamp, TValue value)
     : timestamp(timestamp), value(std::move(value)) {}
 
 template <typename TValue>
