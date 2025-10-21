@@ -1,6 +1,6 @@
 'use strict';
-import type { PlainStyle } from '..';
-import { IS_ANDROID } from '..';
+import { IS_ANDROID } from '../constants';
+import type { PlainStyle } from '../types';
 import { processTransformOrigin } from '../web';
 import {
   processAspectRatio,

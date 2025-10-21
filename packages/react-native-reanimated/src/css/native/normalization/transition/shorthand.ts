@@ -1,5 +1,5 @@
 'use strict';
-import { ReanimatedError } from '../../../../common';
+import { isPercentage, ReanimatedError } from '../../../../common';
 import type { ControlPoint, CSSTimingFunction } from '../../../easing';
 import { cubicBezier, linear, steps } from '../../../easing';
 import type {
@@ -9,7 +9,6 @@ import type {
 import {
   camelizeKebabCase,
   isArrayOfLength,
-  isPercentage,
   isPredefinedTimingFunction,
   isStepsModifier,
   parseSingleTransitionShorthand,

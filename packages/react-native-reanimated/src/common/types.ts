@@ -1,7 +1,11 @@
 'use strict';
-
 import type { ComponentType } from 'react';
-import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
+import type {
+  ImageStyle,
+  TextStyle,
+  TransformsStyle,
+  ViewStyle,
+} from 'react-native';
 
 export type Maybe<T> = T | null | undefined;
 
@@ -40,4 +44,13 @@ export type PlainStyle = Omit<
   DeprecatedProps
 >;
 
+export type TransformsArray = Exclude<
+  TransformsStyle['transform'],
+  string | undefined
+>;
+
 export type AnyComponent = ComponentType<any>;
+
+export type ConfigPropertyAlias<P extends AnyRecord> = {
+  as: keyof P;
+};

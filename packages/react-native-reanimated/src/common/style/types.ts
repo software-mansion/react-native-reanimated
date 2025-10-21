@@ -1,6 +1,5 @@
 'use strict';
-import type { ConfigPropertyAlias } from '../../css/types';
-import type { AnyRecord, ValueProcessor } from '..';
+import type { AnyRecord, ConfigPropertyAlias, ValueProcessor } from '../types';
 
 export type StyleBuildMiddleware<P extends AnyRecord> = (props: P) => P;
 

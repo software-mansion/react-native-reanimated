@@ -1,7 +1,7 @@
 'use strict';
 import type { FontVariant } from 'react-native';
 
-import { FONT_WEIGHT_MAPPINGS } from '../../../../css/constants';
+import { FONT_WEIGHT_MAPPINGS } from '../../../constants';
 import type { ValueProcessor } from '../types';
 
 export const processFontWeight: ValueProcessor<number | string> = (value) => {

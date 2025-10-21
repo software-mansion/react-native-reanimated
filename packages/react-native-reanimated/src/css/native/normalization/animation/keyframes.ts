@@ -1,6 +1,6 @@
 'use strict';
 import type { AnyRecord, StyleBuilder } from '../../../../common';
-import { ReanimatedError } from '../../../../common';
+import { isDefined, isNumber, ReanimatedError } from '../../../../common';
 import type { StyleProps } from '../../../../commonTypes';
 import { PERCENTAGE_REGEX } from '../../../constants';
 import type {
@@ -8,7 +8,6 @@ import type {
   CSSAnimationKeyframeSelector,
   CSSAnimationTimingFunction,
 } from '../../../types';
-import { isDefined, isNumber } from '../../../utils';
 import type {
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSKeyframesStyle,

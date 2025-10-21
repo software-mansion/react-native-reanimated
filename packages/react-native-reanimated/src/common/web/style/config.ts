@@ -7,6 +7,7 @@ import {
   textShadowBuilder,
 } from './builders';
 import {
+  processBoxShadowWeb,
   processColor,
   processFilter,
   processFontVariant,
@@ -16,7 +17,6 @@ import {
   processPaddingHorizontal,
   processPaddingVertical,
 } from './processors';
-import { processBoxShadowWeb } from './processors/shadows';
 import type { StyleBuilderConfig } from './types';
 
 const colorAttributes = { process: processColor };
