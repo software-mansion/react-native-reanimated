@@ -1,7 +1,7 @@
 'use strict';
+import type { AnyRecord } from '../../../../common';
 import { ReanimatedError } from '../../../../common';
 import type {
-  AnyRecord,
   CSSTransitionProperties,
   CSSTransitionProperty,
 } from '../../../types';

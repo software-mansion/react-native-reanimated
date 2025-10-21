@@ -1,5 +1,5 @@
 'use strict';
-import type { Component, ElementType, RefObject } from 'react';
+import type { Component, ElementType, JSX, RefObject } from 'react';
 import type {
   FlatList,
   HostInstance,
@@ -12,9 +12,8 @@ import type {
 } from 'react-native';
 import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 
-import type { Maybe } from './common/types';
+import type { AnyRecord, Maybe } from './common';
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
-import type { AnyRecord } from './css/types';
 import type { EasingFunctionFactory } from './Easing';
 
 type LayoutAnimationOptions =

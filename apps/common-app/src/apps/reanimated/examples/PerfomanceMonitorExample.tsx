@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, type JSX } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { PerformanceMonitor } from 'react-native-reanimated';
 

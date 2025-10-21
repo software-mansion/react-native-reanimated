@@ -25,12 +25,14 @@ function getBundle() {
 
 function getRuntime() {
   if ('HermesInternal' in global) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const version =
       // @ts-ignore this is fine
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       global.HermesInternal?.getRuntimeProperties?.()['OSS Release Version'];
     return `Hermes (${version})`;
   }
-  return 'JSC';
+  return 'unknown';
 }
 
 function getArchitecture() {
@@ -38,8 +40,9 @@ function getArchitecture() {
 }
 
 function getReactNativeVersion() {
-  const { major, minor, patch } = Platform.constants.reactNativeVersion;
-  return `${major}.${minor}.${patch}`;
+  const { major, minor, patch, prerelease } =
+    Platform.constants.reactNativeVersion;
+  return `${major}.${minor}.${patch}${prerelease ? `-${prerelease}` : ''}`;
 }
 
 export default function AboutExample() {
@@ -88,6 +91,12 @@ export default function AboutExample() {
               : 'Disabled'}
           </Text>
           <Text style={styles.text}>
+            <Text style={styles.bold}>IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS:</Text>{' '}
+            {getStaticFeatureFlagReanimated('IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS')
+              ? 'Enabled'
+              : 'Disabled'}
+          </Text>
+          <Text style={styles.text}>
             <Text style={styles.bold}>
               EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS:
             </Text>{' '}
@@ -100,6 +109,16 @@ export default function AboutExample() {
           <Text style={styles.text}>
             <Text style={styles.bold}>USE_SYNCHRONIZABLE_FOR_MUTABLES:</Text>{' '}
             {getStaticFeatureFlagReanimated('USE_SYNCHRONIZABLE_FOR_MUTABLES')
+              ? 'Enabled'
+              : 'Disabled'}
+          </Text>
+          <Text style={styles.text}>
+            <Text style={styles.bold}>
+              USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS:
+            </Text>{' '}
+            {getStaticFeatureFlagReanimated(
+              'USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS'
+            )
               ? 'Enabled'
               : 'Disabled'}
           </Text>

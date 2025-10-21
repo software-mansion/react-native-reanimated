@@ -9,7 +9,8 @@
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write --list-different .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "type:check": "tsc --noEmit"
   },
   "dependencies": {
     "react": "19.1.0",
@@ -18,21 +19,21 @@
     "react-native-worklets": "workspace:*"
   },
   "devDependencies": {
-    "@babel/core": "^7.25.2",
-    "@babel/preset-env": "^7.25.3",
-    "@babel/runtime": "^7.26.10",
+    "@babel/core": "7.28.4",
+    "@babel/preset-env": "7.28.3",
+    "@babel/runtime": "7.28.4",
     "@react-native/babel-preset": "0.81.1",
     "@react-native/eslint-config": "0.81.1",
     "@react-native/metro-config": "0.81.1",
     "@react-native/typescript-config": "0.81.1",
-    "@types/react": "^19.1.0",
-    "@types/react-test-renderer": "^19.1.0",
-    "babel-jest": "^29.6.3",
-    "eslint": "^9.29.0",
-    "jest": "^29.6.3",
-    "prettier": "^3.3.3",
-    "react-test-renderer": "19.1.0",
-    "typescript": "^5.8.3"
+    "@types/react": "19.2.2",
+    "@types/react-test-renderer": "19.1.0",
+    "babel-jest": "30.2.0",
+    "eslint": "9.37.0",
+    "jest": "30.2.0",
+    "prettier": "3.6.2",
+    "react-test-renderer": "19.1.1",
+    "typescript": "5.8.3"
   },
   "engines": {
     "node": ">=20.13.0"
@@ -46,8 +47,10 @@
       "RUNTIME_TEST_FLAG": true,
       "DISABLE_COMMIT_PAUSING_MECHANISM": true,
       "ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS": true,
+      "IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS": true,
       "EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS": true,
-      "USE_SYNCHRONIZABLE_FOR_MUTABLES": true
+      "USE_SYNCHRONIZABLE_FOR_MUTABLES": true,
+      "USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS": true
     }
   },
   "worklets": {

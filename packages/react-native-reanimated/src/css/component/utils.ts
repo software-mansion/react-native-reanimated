@@ -1,7 +1,8 @@
 'use strict';
 import type { StyleProp } from 'react-native';
 
-import type { AnyRecord, CSSStyle } from '../types';
+import type { AnyRecord } from '../../common';
+import type { CSSStyle } from '../types';
 import { isCSSStyleProp } from '../utils/guards';
 
 function filterNonCSSStylePropsRecursive(

@@ -1,4 +1,5 @@
 'use strict';
+import type { AnyRecord } from '../../common';
 import {
   ANIMATION_PROPS,
   TRANSITION_PROPS,
@@ -8,7 +9,6 @@ import {
 } from '../constants';
 import type { PredefinedTimingFunction, StepsModifier } from '../easing/types';
 import type {
-  AnyRecord,
   CSSAnimationKeyframes,
   CSSAnimationProp,
   CSSKeyframesRule,

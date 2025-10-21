@@ -86,9 +86,7 @@ function createRoutesScreen(
     const navigation = useNavigation();
     const localNavigationRef = useLocalNavigationRef();
 
-    if (!localNavigationRef.current) {
-      localNavigationRef.current = navigation;
-    }
+    localNavigationRef.current ??= navigation;
 
     return (
       <SearchScreen>{createRouteCards(routes, path, flatten)}</SearchScreen>
