@@ -3,6 +3,9 @@
 'worklet';
 import { ReanimatedError } from '../errors';
 
+const TRANSFORM_SPLIT_GROUP_REGEX = /(\w+)\((.+?)(px|deg|rad)?\)/g;
+const TRANSFORM_PARTS_REGEX = /(\w+)\((.+?)(px|deg|rad)?\)/;
+
 const ERROR_MESSAGES = {
   invalidTransform: (value: any) =>
     `Invalid transform: ${JSON.stringify(value)}. Expected minimum one value.`,
@@ -11,18 +14,18 @@ const ERROR_MESSAGES = {
 };
 
 export const parseTransformString = (value: string) => {
-  const regex = /(\w+)\((.+?)(px|deg)?\)/g;
   let transformArray: any = [];
 
-  const transforms = value.match(regex) || [];
+  const transforms = value.match(TRANSFORM_SPLIT_GROUP_REGEX) || [];
 
   if (transforms.length < 1) {
     throw new ReanimatedError(ERROR_MESSAGES.invalidTransform(value));
   }
   transforms.map((transform) => {
-    const transformProps = transform.match(/(\w+)\((.+?)(px|deg)?\)/);
+    const transformProps = transform.match(TRANSFORM_PARTS_REGEX);
 
     if (!transformProps) {
+      // what if 2/3 transforms are okay?
       throw new ReanimatedError(ERROR_MESSAGES.invalidTransform(transform));
     }
     if (transformProps.length > 4 || transformProps.length < 3) {
@@ -30,10 +33,15 @@ export const parseTransformString = (value: string) => {
         ERROR_MESSAGES.invalidTransformValue(transform)
       );
     }
+    const unit = transformProps[3];
 
     transformArray.push({
       [transformProps ? transformProps[1] : '']: parseFloat(
-        transformProps ? transformProps[2] : '0'
+        transformProps
+          ? unit
+            ? transformProps[2] + unit
+            : transformProps[2]
+          : '0'
       ),
     });
   });
