@@ -49,7 +49,7 @@ class RuntimeManager {
       const uint64_t runtimeId,
       const std::shared_ptr<WorkletRuntime> &workletRuntime);
 
-  std::atomic_uint64_t nextRuntimeId_{RuntimeData::uiRuntimeId + 1};
+  std::atomic_uint64_t nextRuntimeId_{uiRuntimeId + 1};
   std::map<uint64_t, std::weak_ptr<WorkletRuntime>> weakRuntimes_;
   std::shared_mutex weakRuntimesMutex_;
 #ifdef WORKLETS_BUNDLE_MODE
