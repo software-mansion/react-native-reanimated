@@ -20,7 +20,8 @@ import {
   TextInput,
   TouchableHighlight,
   TouchableOpacity,
-  TouchableWithoutFeedback,
+  // TouchableWithoutFeedback doesn't accept refs.
+  // TouchableWithoutFeedback,
   View,
   VirtualizedList,
   StyleSheet,
@@ -303,11 +304,6 @@ export default function InstanceDiscoveryExample() {
         ref={getRefChecker('TouchableOpacity')}>
         <Text>TouchableOpacity</Text>
       </TouchableOpacity>
-      <TouchableWithoutFeedback
-        onPress={() => {}}
-        ref={getRefChecker('TouchableWithoutFeedback')}>
-        <Text>TouchableWithoutFeedback</Text>
-      </TouchableWithoutFeedback>
       <VirtualizedList
         data={[]}
         getItemCount={() => 0}

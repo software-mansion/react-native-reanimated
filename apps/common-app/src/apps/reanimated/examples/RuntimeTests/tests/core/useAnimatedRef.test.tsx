@@ -37,6 +37,7 @@ const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 const AnimatedTouchableHighlight = Animated.createAnimatedComponent(TouchableHighlight);
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 const AnimatedTouchableWithoutFeedback = Animated.createAnimatedComponent(TouchableWithoutFeedback);
+// @ts-ignore This is broken with react-native-strict-api types.
 const AnimatedVirtualizedList = Animated.createAnimatedComponent(VirtualizedList);
 const AnimatedRNGHScrollView = Animated.createAnimatedComponent(RNGHScrollView);
 const AnimatedPath = Animated.createAnimatedComponent(Path);
@@ -272,6 +273,7 @@ describe('Test *****useAnimatedRef*****', () => {
           ref={animatedRef}
           data={[]}
           renderItem={() => null}
+          // @ts-ignore This is broken with react-native-strict-api types.
           getItemCount={() => 0}
           getItem={() => undefined}
         />
