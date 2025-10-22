@@ -2,3 +2,4 @@
 export * from './colors';
 export * from './shadows';
 export * from './transformOrigin';
+export * from './transform';

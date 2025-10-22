@@ -8,6 +8,7 @@ import {
   processBoxShadowNative,
   processBoxShadowWeb,
   processColorsInProps,
+  processTransform,
   processTransformOrigin,
   ReanimatedError,
   SHOULD_BE_USE_WEB,
@@ -50,7 +51,12 @@ if (SHOULD_BE_USE_WEB) {
      * The goal is to create a simplified version of `src/css/platform/native/config.ts`,
      * containing only properties that require processing and their associated processors
      * */
+    console.log('updates before', updates);
     processColorsInProps(updates);
+    if ('transform' in updates) {
+      console.log('updates.transform', updates.transform);
+      updates.transform = processTransform(updates.transform);
+    }
     if ('transformOrigin' in updates) {
       updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
     }
