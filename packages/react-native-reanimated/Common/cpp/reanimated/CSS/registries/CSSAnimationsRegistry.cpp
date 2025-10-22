@@ -20,7 +20,7 @@ void CSSAnimationsRegistry::apply(
     const CSSAnimationsMap &newAnimations,
     const CSSAnimationSettingsUpdatesMap &settingsUpdates,
     double timestamp) {
-  const auto animationsVector =
+  auto animationsVector =
       buildAnimationsVector(rt, shadowNode, animationNames, newAnimations);
 
   const auto viewTag = shadowNode->getTag();
@@ -29,11 +29,6 @@ void CSSAnimationsRegistry::apply(
     return;
   }
 
-  registry_.erase(viewTag);
-  registry_.emplace(
-      viewTag,
-      RegistryEntry{
-          animationsVector, buildAnimationToIndexMap(animationsVector)});
   runningAnimationIndicesMap_[viewTag].clear();
 
   std::vector<size_t> updatedIndices;
@@ -48,6 +43,14 @@ void CSSAnimationsRegistry::apply(
   for (size_t i = 0; i < animationsVector.size(); ++i) {
     scheduleOrActivateAnimation(i, animationsVector[i], timestamp);
   }
+
+  auto animationToIndexMap = buildAnimationToIndexMap(animationsVector);
+  registry_.erase(viewTag);
+  registry_.emplace(
+      viewTag,
+      RegistryEntry{
+          std::move(animationsVector), std::move(animationToIndexMap)});
+
   updateViewAnimations(viewTag, updatedIndices, timestamp, false);
   applyViewAnimationsStyle(viewTag, timestamp);
 }
