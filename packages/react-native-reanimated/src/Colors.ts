@@ -168,8 +168,8 @@ export function clampRGBA(RGBA: ParsedColorArray): void {
   }
 }
 
-const names: Record<string, number> = {
-  transparent: 0x00000000,
+const names: Record<string, number | undefined> = {
+  transparent: undefined,
 
   /* spell-checker: disable */
   // http://www.w3.org/TR/css3-color/#svg-color
@@ -354,7 +354,7 @@ export const ColorProperties = [
   'stroke',
 ];
 
-export function normalizeColor(color: unknown): number | null {
+export function normalizeColor(color: unknown): number | null | undefined {
   'worklet';
 
   if (typeof color === 'number') {
@@ -375,7 +375,7 @@ export function normalizeColor(color: unknown): number | null {
     return Number.parseInt(match[1] + 'ff', 16) >>> 0;
   }
 
-  if (names[color] !== undefined) {
+  if (color in names) {
     return names[color];
   }
 
@@ -528,8 +528,8 @@ export const rgbaColor = (
   alpha = 1
 ): number | string => {
   'worklet';
-  // Replace tiny values like 1.234e-11 with 0:
-  const safeAlpha = alpha < 0.001 ? 0 : alpha;
+  // Round alpha to 3 decimal places to avoid floating point precision issues
+  const safeAlpha = Math.round(alpha * 1000) / 1000;
   return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
 };
 
@@ -636,12 +636,9 @@ export function processColorInitially(
     colorNumber = color;
   } else {
     const normalizedColor = normalizeColor(color);
-    if (normalizedColor === null || normalizedColor === undefined) {
-      return undefined;
-    }
 
     if (typeof normalizedColor !== 'number') {
-      return null;
+      return normalizedColor;
     }
 
     colorNumber = normalizedColor;
