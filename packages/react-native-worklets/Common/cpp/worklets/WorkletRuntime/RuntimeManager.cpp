@@ -92,11 +92,9 @@ uint64_t RuntimeManager::getNextRuntimeId() {
 
 void RuntimeManager::registerRuntime(
     const uint64_t runtimeId,
-    const std::string &name,
     const std::shared_ptr<WorkletRuntime> &workletRuntime) {
   std::unique_lock lock(weakRuntimesMutex_);
   weakRuntimes_[runtimeId] = workletRuntime;
-  nameToRuntimeId_[name] = runtimeId;
 #ifdef WORKLETS_BUNDLE_MODE
   runtimeAddressToRuntimeId_[&workletRuntime->getJSIRuntime()] = runtimeId;
 #endif // WORKLETS_BUNDLE_MODE
