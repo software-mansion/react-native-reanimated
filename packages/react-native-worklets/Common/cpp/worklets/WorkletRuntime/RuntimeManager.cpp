@@ -73,7 +73,8 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createUninitializedUIRuntime(
       RuntimeData::uiRuntimeId,
       jsQueue,
       RuntimeData::uiRuntimeName,
-      uiAsyncQueue);
+      uiAsyncQueue,
+      /*enableEventLoop*/ false);
 
   registerRuntime(RuntimeData::uiRuntimeId, uiRuntime);
 
