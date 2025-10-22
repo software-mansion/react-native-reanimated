@@ -7,26 +7,41 @@
 
 namespace reanimated::css {
 
-enum class ColorType {
-  Rgba,
-  Transparent,
-  CurrentColor, // for SVG
+// Base class with common color value functionality
+
+template <typename T>
+concept ColorTypeEnum = std::is_enum_v<T> && requires {
+  T::Rgba;
+  T::Transparent;
 };
 
-struct CSSColor : public CSSSimpleValue<CSSColor> {
+template <ColorTypeEnum TColorType, typename TDerived>
+struct CSSColorBase : public CSSSimpleValue<TDerived> {
   ColorChannels channels;
-  ColorType colorType;
+  TColorType colorType;
 
-  static const CSSColor Transparent;
+  CSSColorBase();
+  explicit CSSColorBase(TColorType colorType);
+  explicit CSSColorBase(int64_t numberValue);
 
-  CSSColor();
-  explicit CSSColor(ColorType colorType);
-  explicit CSSColor(int64_t numberValue);
-  explicit CSSColor(const std::string &colorString);
+  explicit CSSColorBase(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+  explicit CSSColorBase(ColorChannels colorChannels);
 
-  explicit CSSColor(uint8_t r, uint8_t g, uint8_t b);
-  explicit CSSColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-  explicit CSSColor(const ColorChannels &colorChannels);
+  TDerived interpolate(double progress, const TDerived &to) const override;
+
+  bool operator==(const TDerived &other) const;
+};
+
+// Enum class for color type
+
+enum class CSSColorType {
+  Rgba,
+  Transparent,
+};
+
+struct CSSColor : public CSSColorBase<CSSColorType, CSSColor> {
+  using CSSColorBase<CSSColorType, CSSColor>::CSSColorBase;
+  using CSSColorBase<CSSColorType, CSSColor>::operator==;
 
   explicit CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue);
   explicit CSSColor(const folly::dynamic &value);
@@ -36,20 +51,10 @@ struct CSSColor : public CSSSimpleValue<CSSColor> {
 
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
-  CSSColor interpolate(double progress, const CSSColor &to) const override;
-
-  static uint8_t interpolateChannel(uint8_t from, uint8_t to, double progress);
-
-  bool operator==(const CSSColor &other) const;
 
 #ifndef NDEBUG
   friend std::ostream &operator<<(std::ostream &os, const CSSColor &colorValue);
 #endif // NDEBUG
-
- private:
-  static bool isValidColorString(const std::string &colorString);
 };
-
-inline const CSSColor CSSColor::Transparent(ColorType::Transparent);
 
 } // namespace reanimated::css

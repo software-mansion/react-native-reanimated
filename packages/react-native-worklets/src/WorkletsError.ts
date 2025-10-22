@@ -19,8 +19,8 @@ function WorkletsErrorConstructor(message?: string): WorkletsError {
 export function registerWorkletsError() {
   'worklet';
   if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
-    globalThis.WorkletsError =
-      WorkletsErrorConstructor as IWorkletsErrorConstructor;
+    (globalThis as Record<string, unknown>).WorkletsError =
+      WorkletsErrorConstructor;
   }
 }
 
@@ -29,7 +29,7 @@ export const WorkletsError =
 
 export type WorkletsError = Error & { name: 'Worklets' }; // signed type
 
-export interface IWorkletsErrorConstructor extends Error {
+interface IWorkletsErrorConstructor extends Error {
   new (message?: string): WorkletsError;
   (message?: string): WorkletsError;
   readonly prototype: WorkletsError;
