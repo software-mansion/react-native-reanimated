@@ -19,8 +19,7 @@ string(
     -DREANIMATED_FEATURE_FLAGS=\"${REANIMATED_FEATURE_FLAGS}\"")
 string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
 # flags to optimize the binary size
-string(APPEND CMAKE_CXX_FLAGS
-       " -fvisibility=hidden")
+string(APPEND CMAKE_CXX_FLAGS" -fvisibility=hidden")
 
 if(${REANIMATED_PROFILING})
   string(APPEND CMAKE_CXX_FLAGS " -DREANIMATED_PROFILING")
@@ -96,7 +95,10 @@ set_target_properties(reanimated PROPERTIES LINK_FLAGS "-Wl,--gc-sections")
 
 # fold identical functions
 if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")
-  set_property(TARGET reanimated APPEND_STRING PROPERTY LINK_FLAGS ",--icf=safe")
+  set_property(
+    TARGET reanimated
+    APPEND_STRING
+    PROPERTY LINK_FLAGS ",--icf=safe")
 endif()
 
 target_link_libraries(
