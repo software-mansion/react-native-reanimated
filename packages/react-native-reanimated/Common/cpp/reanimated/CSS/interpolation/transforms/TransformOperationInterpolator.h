@@ -46,7 +46,7 @@ using TransformInterpolationContext = TransformInterpolator::UpdateContext;
 template <typename TOperation>
 class TransformOperationInterpolatorBase : public TransformInterpolator {
  public:
-  TransformOperationInterpolatorBase(std::shared_ptr<TOperation> defaultOperation)
+  explicit TransformOperationInterpolatorBase(std::shared_ptr<TOperation> defaultOperation)
       : defaultOperation_(defaultOperation) {}
 
   std::shared_ptr<TransformOperation> getDefaultOperation() const override {
@@ -61,7 +61,7 @@ class TransformOperationInterpolatorBase : public TransformInterpolator {
 template <typename TOperation>
 class TransformOperationInterpolator : public TransformOperationInterpolatorBase<TOperation> {
  public:
-  TransformOperationInterpolator(const std::shared_ptr<TOperation> &defaultOperation);
+  explicit TransformOperationInterpolator(const std::shared_ptr<TOperation> &defaultOperation);
 
   std::unique_ptr<TransformOperation> interpolate(
       double progress,
@@ -75,7 +75,7 @@ template <>
 class TransformOperationInterpolator<PerspectiveOperation>
     : public TransformOperationInterpolatorBase<PerspectiveOperation> {
  public:
-  TransformOperationInterpolator(const std::shared_ptr<PerspectiveOperation> &defaultOperation);
+  explicit TransformOperationInterpolator(const std::shared_ptr<PerspectiveOperation> &defaultOperation);
 
   std::unique_ptr<TransformOperation> interpolate(
       double progress,
@@ -88,7 +88,7 @@ class TransformOperationInterpolator<PerspectiveOperation>
 template <>
 class TransformOperationInterpolator<MatrixOperation> : public TransformOperationInterpolatorBase<MatrixOperation> {
  public:
-  TransformOperationInterpolator(const std::shared_ptr<MatrixOperation> &defaultOperation);
+  explicit TransformOperationInterpolator(const std::shared_ptr<MatrixOperation> &defaultOperation);
 
   std::unique_ptr<TransformOperation> interpolate(
       double progress,

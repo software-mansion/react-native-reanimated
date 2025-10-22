@@ -1,5 +1,8 @@
 #include <reanimated/CSS/utils/keyframes.h>
 
+#include <utility>
+#include <vector>
+
 namespace reanimated::css {
 
 std::vector<std::pair<double, jsi::Value>> parseJSIKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) {

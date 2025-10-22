@@ -2,8 +2,10 @@
 #include <reanimated/NativeModules/PropValueProcessor.h>
 
 #include <iomanip>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 #include <unordered_set>
 
 namespace reanimated {

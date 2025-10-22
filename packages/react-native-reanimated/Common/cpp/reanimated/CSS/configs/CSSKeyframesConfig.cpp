@@ -1,5 +1,8 @@
 #include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 
+#include <memory>
+#include <string>
+
 namespace reanimated::css {
 
 std::shared_ptr<AnimationStyleInterpolator> createStyleInterpolator(

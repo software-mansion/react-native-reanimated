@@ -1,5 +1,6 @@
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 
+#include <memory>
 #include <utility>
 
 namespace reanimated {

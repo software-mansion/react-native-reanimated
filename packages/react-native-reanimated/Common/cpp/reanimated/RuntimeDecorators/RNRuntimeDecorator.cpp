@@ -2,6 +2,8 @@
 #include <reanimated/Tools/ReanimatedVersion.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
 
+#include <memory>
+
 namespace reanimated {
 
 void RNRuntimeDecorator::decorate(

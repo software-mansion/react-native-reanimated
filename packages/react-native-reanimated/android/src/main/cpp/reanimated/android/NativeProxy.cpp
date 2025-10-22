@@ -9,6 +9,11 @@
 
 #include <react/fabric/Binding.h>
 
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 namespace reanimated {
 
 using namespace facebook;

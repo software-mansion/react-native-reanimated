@@ -1,6 +1,10 @@
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
+#include <memory>
+#include <utility>
+#include <vector>
+
 namespace reanimated {
 
 UpdatesRegistryManager::UpdatesRegistryManager(const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)

@@ -1,5 +1,7 @@
 #include <reanimated/CSS/svg/values/SVGLength.h>
 
+#include <string>
+
 namespace reanimated::css {
 
 SVGLength::SVGLength() : value(0), isPercentage(false) {}

@@ -1,5 +1,7 @@
 #include <reanimated/CSS/core/CSSAnimation.h>
 
+#include <memory>
+#include <string>
 #include <utility>
 
 namespace reanimated::css {

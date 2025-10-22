@@ -1,5 +1,7 @@
 #include <reanimated/CSS/interpolation/groups/GroupPropertiesInterpolator.h>
 
+#include <memory>
+
 namespace reanimated::css {
 
 GroupPropertiesInterpolator::GroupPropertiesInterpolator(

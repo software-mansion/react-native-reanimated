@@ -1,5 +1,8 @@
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 
+#include <memory>
+#include <utility>
+
 namespace reanimated::css {
 
 CSSTransitionsRegistry::CSSTransitionsRegistry(

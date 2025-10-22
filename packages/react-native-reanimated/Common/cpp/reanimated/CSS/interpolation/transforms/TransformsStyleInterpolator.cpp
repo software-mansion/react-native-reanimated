@@ -1,5 +1,10 @@
 #include <reanimated/CSS/interpolation/transforms/TransformsStyleInterpolator.h>
 
+#include <memory>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
 namespace reanimated::css {
 
 const TransformOperations TransformsStyleInterpolator::defaultStyleValue_ = {

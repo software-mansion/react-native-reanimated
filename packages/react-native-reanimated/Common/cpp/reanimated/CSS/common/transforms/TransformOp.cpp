@@ -1,6 +1,7 @@
 #include <reanimated/CSS/common/transforms/TransformOp.h>
 
 #include <array>
+#include <string>
 #include <unordered_map>
 
 namespace reanimated::css {

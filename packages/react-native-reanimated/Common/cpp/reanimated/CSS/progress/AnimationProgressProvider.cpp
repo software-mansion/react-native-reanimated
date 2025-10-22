@@ -1,5 +1,6 @@
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 
+#include <memory>
 #include <utility>
 
 namespace reanimated::css {

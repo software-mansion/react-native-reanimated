@@ -1,6 +1,8 @@
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
 
+#include <string>
 #include <utility>
+#include <vector>
 
 namespace reanimated::css {
 

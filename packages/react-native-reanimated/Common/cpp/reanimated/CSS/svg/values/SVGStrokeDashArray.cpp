@@ -1,5 +1,8 @@
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
+#include <string>
+#include <vector>
+
 namespace reanimated::css {
 
 SVGStrokeDashArray::SVGStrokeDashArray() : values() {}

@@ -1,5 +1,7 @@
 #include <reanimated/CSS/common/values/CSSBoolean.h>
 
+#include <string>
+
 namespace reanimated::css {
 
 CSSBoolean::CSSBoolean() : value(false) {}

@@ -1,5 +1,7 @@
 #include <reanimated/CSS/easing/linear.h>
 
+#include <vector>
+
 namespace reanimated::css {
 
 double

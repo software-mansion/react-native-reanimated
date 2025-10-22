@@ -1,5 +1,7 @@
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 
+#include <string>
+
 namespace reanimated::css {
 
 template <typename TValue>

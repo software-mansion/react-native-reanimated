@@ -1,6 +1,7 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
+#include <memory>
 #include <ranges>
 #include <utility>
 

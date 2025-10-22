@@ -1,5 +1,8 @@
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 
+#include <memory>
+#include <string>
+
 namespace reanimated::css {
 
 ViewStylesRepository::ViewStylesRepository(

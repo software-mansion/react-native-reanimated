@@ -3,6 +3,7 @@
 #include <reanimated/CSS/interpolation/transforms/operations/translate.h>
 
 #include <memory>
+#include <string>
 
 namespace reanimated::css {
 

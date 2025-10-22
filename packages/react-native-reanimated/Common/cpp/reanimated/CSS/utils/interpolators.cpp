@@ -1,5 +1,8 @@
 #include <reanimated/CSS/utils/interpolators.h>
 
+#include <memory>
+#include <string>
+
 namespace reanimated::css {
 
 std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(

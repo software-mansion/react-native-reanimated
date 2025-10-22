@@ -4,6 +4,8 @@
 #include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
 
 #include <algorithm>
+#include <string>
+#include <utility>
 
 namespace reanimated::css {
 

@@ -1,5 +1,11 @@
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
+#include <memory>
+#include <string>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
 namespace reanimated {
 
 std::lock_guard<std::mutex> UpdatesRegistry::lock() const {

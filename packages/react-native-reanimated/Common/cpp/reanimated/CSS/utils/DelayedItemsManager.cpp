@@ -1,5 +1,8 @@
 #include <reanimated/CSS/utils/DelayedItemsManager.h>
 
+#include <functional>
+#include <utility>
+
 namespace reanimated::css {
 
 template <typename TValue>

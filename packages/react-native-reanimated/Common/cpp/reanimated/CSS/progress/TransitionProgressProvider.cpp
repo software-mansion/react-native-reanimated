@@ -1,6 +1,9 @@
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
 #include <limits>
+#include <memory>
+#include <string>
+#include <unordered_set>
 
 namespace reanimated::css {
 

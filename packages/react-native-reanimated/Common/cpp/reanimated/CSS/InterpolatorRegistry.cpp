@@ -24,6 +24,7 @@
 #include <reanimated/CSS/interpolation/transforms/operations/skew.h>
 #include <reanimated/CSS/interpolation/transforms/operations/translate.h>
 
+#include <string>
 #include <vector>
 
 namespace reanimated::css {

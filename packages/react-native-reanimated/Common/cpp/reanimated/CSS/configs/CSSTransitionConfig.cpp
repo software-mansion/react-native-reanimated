@@ -1,5 +1,7 @@
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 
+#include <string>
+
 namespace reanimated::css {
 
 std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(

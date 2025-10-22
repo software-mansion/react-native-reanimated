@@ -1,5 +1,8 @@
 #include <reanimated/CSS/common/values/CSSDiscreteArray.h>
 
+#include <string>
+#include <vector>
+
 namespace reanimated::css {
 
 template <CSSValueDerived TValue>

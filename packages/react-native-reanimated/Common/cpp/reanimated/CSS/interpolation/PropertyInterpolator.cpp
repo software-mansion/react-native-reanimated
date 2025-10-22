@@ -1,5 +1,6 @@
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 
+#include <memory>
 #include <utility>
 
 namespace reanimated::css {

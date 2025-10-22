@@ -1,5 +1,8 @@
 #include <reanimated/CSS/utils/props.h>
 
+#include <string>
+#include <utility>
+
 namespace reanimated::css {
 
 bool isDiscreteProperty(const std::string &propName, const std::string &componentName) {

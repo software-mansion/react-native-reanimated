@@ -1,5 +1,9 @@
 #include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
 
+#include <memory>
+#include <string>
+#include <unordered_set>
+
 namespace reanimated::css {
 
 TransitionStyleInterpolator::TransitionStyleInterpolator(

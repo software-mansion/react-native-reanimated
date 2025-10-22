@@ -2,6 +2,8 @@
 #include <reanimated/Fabric/ReanimatedMountHook.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
+#include <memory>
+
 namespace reanimated {
 
 ReanimatedMountHook::ReanimatedMountHook(

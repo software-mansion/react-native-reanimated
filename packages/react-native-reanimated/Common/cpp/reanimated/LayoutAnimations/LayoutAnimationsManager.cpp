@@ -1,8 +1,9 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
-#ifndef NDEBUG
+#include <memory>
+#include <unordered_map>
 #include <utility>
-#endif
+#include <vector>
 
 namespace reanimated {
 

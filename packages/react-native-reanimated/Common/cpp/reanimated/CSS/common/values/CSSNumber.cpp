@@ -1,6 +1,7 @@
 #include <reanimated/CSS/common/values/CSSNumber.h>
 
 #include <algorithm>
+#include <string>
 
 namespace reanimated::css {
 

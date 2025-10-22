@@ -1,6 +1,7 @@
 #include <react/debug/react_native_assert.h>
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 
+#include <memory>
 #include <utility>
 
 namespace reanimated {

@@ -1,5 +1,6 @@
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 
+#include <memory>
 #include <utility>
 
 #define REANIMATED_SPEC_PREFIX(FN_NAME) __hostFunction_ReanimatedModuleProxySpec_##FN_NAME

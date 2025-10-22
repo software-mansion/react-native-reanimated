@@ -1,5 +1,7 @@
 #include <reanimated/CSS/common/values/CSSLength.h>
 
+#include <string>
+
 namespace reanimated::css {
 
 CSSLength::CSSLength() : value(0), isRelative(false) {}

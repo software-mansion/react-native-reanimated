@@ -8,6 +8,8 @@
 #include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
 
+#include <memory>
+
 namespace reanimated::css {
 
 template <typename... AllowedTypes>

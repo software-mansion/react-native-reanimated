@@ -1,6 +1,8 @@
 #include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
 #include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
 
+#include <memory>
+
 namespace reanimated::css {
 
 PerspectiveOperation::PerspectiveOperation(const double value)
