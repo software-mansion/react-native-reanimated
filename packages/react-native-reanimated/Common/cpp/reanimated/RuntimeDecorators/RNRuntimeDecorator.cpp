@@ -22,23 +22,12 @@ void RNRuntimeDecorator::decorate(
 
 #ifndef NDEBUG
   checkJSVersion(rnRuntime, reanimatedModuleProxy->getJSLogger());
-
-  jsi_utils::installJsiFunction(
-      rnRuntime,
-      "__getTagFromShadowNodeWrapper",
-      [](jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) {
-        auto node = Bridging<std::shared_ptr<const ShadowNode>>::fromJs(
-            rt, shadowNodeWrapper);
-        return jsi::Value(rt, static_cast<double>(node->getTag()));
-      });
 #endif // NDEBUG
 
 #ifdef IS_REANIMATED_EXAMPLE_APP
-  jsi_utils::installJsiFunction(
-      rnRuntime,
-      "_registriesLeakCheck",
-      reanimatedModuleProxy->createRegistriesLeakCheck());
+  installDebugBindings(rnRuntime, reanimatedModuleProxy);
 #endif // IS_REANIMATED_EXAMPLE_APP
+
   injectReanimatedCppVersion(rnRuntime);
 
   rnRuntime.global().setProperty(
@@ -51,5 +40,25 @@ void RNRuntimeDecorator::decorate(
       "__reanimatedModuleProxy",
       jsi::Object::createFromHostObject(rnRuntime, reanimatedModuleProxy));
 }
+
+#ifdef IS_REANIMATED_EXAMPLE_APP
+void RNRuntimeDecorator::installDebugBindings(
+    jsi::Runtime &rnRuntime,
+    const std::shared_ptr<ReanimatedModuleProxy> &reanimatedModuleProxy) {
+  jsi_utils::installJsiFunction(
+      rnRuntime,
+      "__getTagFromShadowNodeWrapper",
+      [](jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) {
+        auto node = Bridging<std::shared_ptr<const ShadowNode>>::fromJs(
+            rt, shadowNodeWrapper);
+        return jsi::Value(rt, static_cast<double>(node->getTag()));
+      });
+
+  jsi_utils::installJsiFunction(
+      rnRuntime,
+      "_registriesLeakCheck",
+      reanimatedModuleProxy->createRegistriesLeakCheck());
+}
+#endif // IS_REANIMATED_EXAMPLE_APP
 
 } // namespace reanimated

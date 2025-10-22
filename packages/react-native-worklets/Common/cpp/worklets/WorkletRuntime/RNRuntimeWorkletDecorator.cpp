@@ -31,7 +31,17 @@ void RNRuntimeWorkletDecorator::decorate(
 
 #ifndef NDEBUG
   checkJSVersion(rnRuntime, jsLogger);
+#endif // NDEBUG
 
+#ifdef IS_REANIMATED_EXAMPLE_APP
+  installDebugBindings(rnRuntime);
+#endif // IS_REANIMATED_EXAMPLE_APP
+
+  injectWorkletsCppVersion(rnRuntime);
+}
+
+#ifdef IS_REANIMATED_EXAMPLE_APP
+void RNRuntimeWorkletDecorator::installDebugBindings(jsi::Runtime &rnRuntime) {
   jsi_utils::installJsiFunction(
       rnRuntime,
       "__hasNativeState",
@@ -39,17 +49,7 @@ void RNRuntimeWorkletDecorator::decorate(
         return jsi::Value(
             value.isObject() && value.asObject(rt).hasNativeState(rt));
       });
-
-  jsi_utils::installJsiFunction(
-      rnRuntime,
-      "__isHostObject",
-      [](jsi::Runtime &rt, const jsi::Value &value) {
-        return jsi::Value(
-            value.isObject() && value.asObject(rt).isHostObject(rt));
-      });
-#endif // NDEBUG
-
-  injectWorkletsCppVersion(rnRuntime);
 }
+#endif // IS_REANIMATED_EXAMPLE_APP
 
 } // namespace worklets
