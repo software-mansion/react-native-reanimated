@@ -104,6 +104,14 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
   return unsubscribeFromKeyboardEventsFunction;
 }
 
+RunCoreAnimationForView makeRunCoreAnimationForView(REANodesManager *nodesManager)
+{
+  auto runCoreAnimationForView = [nodesManager](const int viewTag, const facebook::react::Rect &oldFrame, const facebook::react::Rect &newFrame, std::function<void()> completion) {
+    [nodesManager runCoreAnimationForView:viewTag oldFrame:oldFrame newFrame:newFrame completion:completion];
+  };
+  return runCoreAnimationForView;
+}
+
 PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleRegistry, REANodesManager *nodesManager)
 {
   auto requestRender = makeRequestRender(nodesManager);
@@ -127,6 +135,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto unsubscribeFromKeyboardEventsFunction = makeUnsubscribeFromKeyboardEventsFunction(keyboardObserver);
 
   auto maybeFlushUIUpdatesQueueFunction = makeMaybeFlushUIUpdatesQueueFunction(nodesManager);
+    
+  auto runCoreAnimationForView = makeRunCoreAnimationForView(nodesManager);
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
@@ -138,6 +148,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUIUpdatesQueueFunction,
+      runCoreAnimationForView,
   };
   return platformDepMethodsHolder;
 }

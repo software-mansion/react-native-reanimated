@@ -181,4 +181,81 @@ using namespace facebook::react;
   [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
 }
 
+- (void)runCoreAnimationForView:(ReactTag)viewTag oldFrame:(const facebook::react::Rect &)oldFrame newFrame:(const facebook::react::Rect &)newFrame completion:(std::function<void()>)completion
+{
+    RCTSurfacePresenter *surfacePresenter = self.surfacePresenter;
+    RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
+    REAUIView<RCTComponentViewProtocol> *componentView =
+        [componentViewRegistry findComponentViewWithTag:static_cast<Tag>(viewTag)];
+    
+    // TODO: run core animation for componentView
+    
+    // hardcoded example for infinite rotation just to see if it works
+//    CABasicAnimation *rotationAnimation = [CABasicAnimation animationWithKeyPath:@"transform.rotation.y"];
+//    rotationAnimation.toValue = [NSNumber numberWithFloat:2 * M_PI];
+//    rotationAnimation.duration = 1.0;
+//    [componentView.layer addAnimation:rotationAnimation forKey:@"rotation"];
+    
+    bool needsXAnimation = oldFrame.origin.x != newFrame.origin.x;
+    bool needsYAnimation = oldFrame.origin.y != newFrame.origin.y;
+
+    if (!needsXAnimation && !needsYAnimation) {
+      return;
+    }
+    
+//    [UIView animateWithDuration:3 animations:^{
+//        CGFloat x = newFrame.origin.x + (oldFrame.size.width / 2);
+//        CGFloat y = newFrame.origin.y + (oldFrame.size.height / 2);
+//        componentView.layer.position = CGPointMake(x, y);
+//    } completion:^(BOOL finished) {
+//        completion();
+//    }];
+    
+    CAAnimationGroup *positionGroup = [CAAnimationGroup animation];
+    NSMutableArray *animations = [NSMutableArray array];
+    
+    // TODO: Tidy up the long chains of X and Y and arithmetic operations
+    CGFloat x = componentView.layer.presentationLayer.frame.origin.x + (componentView.layer.presentationLayer.frame.size.width / 2);
+    CGFloat y = componentView.layer.presentationLayer.frame.origin.y + (componentView.layer.presentationLayer.frame.size.height / 2);
+
+    if (needsXAnimation) {
+      CABasicAnimation *xAnimation =
+        [CABasicAnimation animationWithKeyPath:@"position.x"];
+      xAnimation.fromValue = [NSNumber numberWithFloat:componentView.layer.presentationLayer.frame.origin.x + (componentView.layer.presentationLayer.frame.size.width / 2)];
+      xAnimation.toValue = [NSNumber numberWithFloat:newFrame.origin.x + (componentView.layer.presentationLayer.frame.size.width / 2)];
+      [animations addObject:xAnimation];
+        
+      x = newFrame.origin.x + (componentView.layer.presentationLayer.frame.size.width / 2);
+    }
+
+    if (needsYAnimation) {
+      CABasicAnimation *yAnimation =
+        [CABasicAnimation animationWithKeyPath:@"position.y"];
+      yAnimation.fromValue = [NSNumber numberWithFloat:componentView.layer.presentationLayer.frame.origin.y + (componentView.layer.presentationLayer.frame.size.height / 2)];
+      yAnimation.toValue = [NSNumber numberWithFloat:newFrame.origin.y + (componentView.layer.presentationLayer.frame.size.height / 2)];
+      [animations addObject:yAnimation];
+        
+      y = newFrame.origin.y + (componentView.layer.presentationLayer.frame.size.height / 2);
+    }
+    
+    componentView.layer.position = CGPointMake(x, y);
+
+    positionGroup.animations = animations;
+    positionGroup.duration = 0.5;
+    self.pendingAnimationCompletion = self.pendingAnimationCompletion = ^{
+        completion();
+    };
+    positionGroup.delegate = self;
+
+    [componentView.layer addAnimation:positionGroup forKey:@"positionGroup"];
+}
+
+- (void)animationDidStop:(CAAnimation *)anim finished:(BOOL)finished
+{
+    if (self.pendingAnimationCompletion) {
+        self.pendingAnimationCompletion();
+        self.pendingAnimationCompletion = nil;
+    }
+}
+
 @end

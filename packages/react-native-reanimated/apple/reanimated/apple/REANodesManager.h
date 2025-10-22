@@ -8,9 +8,11 @@ typedef void (^REAEventHandler)(id<RCTEvent> event);
 typedef void (^CADisplayLinkOperation)(READisplayLink *displayLink);
 typedef void (^REAPerformOperations)();
 
-@interface REANodesManager : NSObject
+// TODO: Attempt to make it work with a Delegate for animation completion. No idea if this is correct
+@interface REANodesManager : NSObject <CAAnimationDelegate>
 
 @property (weak) RCTSurfacePresenter *surfacePresenter;
+@property (nonatomic, copy) void (^pendingAnimationCompletion)(void);
 
 - (nonnull instancetype)init;
 - (void)invalidate;
@@ -21,5 +23,9 @@ typedef void (^REAPerformOperations)();
 - (void)synchronouslyUpdateUIProps:(ReactTag)viewTag props:(const folly::dynamic &)props;
 - (void)registerPerformOperations:(REAPerformOperations)performOperations;
 - (void)maybeFlushUIUpdatesQueue;
+- (void)runCoreAnimationForView:(ReactTag)viewTag
+                       oldFrame:(const facebook::react::Rect &)oldFrame
+                       newFrame:(const facebook::react::Rect &)newFrame
+                     completion:(std::function<void()>)completion;
 
 @end

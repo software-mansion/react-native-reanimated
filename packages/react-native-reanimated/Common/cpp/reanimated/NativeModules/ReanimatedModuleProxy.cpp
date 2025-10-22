@@ -56,21 +56,27 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(
           std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
-      viewStylesRepository_(std::make_shared<ViewStylesRepository>(
-          staticPropsRegistry_,
-          animatedPropsRegistry_)),
+      viewStylesRepository_(
+          std::make_shared<ViewStylesRepository>(
+              staticPropsRegistry_,
+              animatedPropsRegistry_)),
       cssAnimationKeyframesRegistry_(
           std::make_shared<CSSKeyframesRegistry>(viewStylesRepository_)),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
-      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
-          staticPropsRegistry_,
-          getAnimationTimestamp_)),
+      cssTransitionsRegistry_(
+          std::make_shared<CSSTransitionsRegistry>(
+              staticPropsRegistry_,
+              getAnimationTimestamp_)),
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(
           platformDepMethodsHolder.filterUnmountedTagsFunction),
 #endif // ANDROID
+#if __APPLE__
+      runCoreAnimationForViewFunction_(
+          platformDepMethodsHolder.runCoreAnimationForView),
+#endif // __APPLE__
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
@@ -1383,6 +1389,10 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         uiManager_,
         jsInvoker_
 #endif
+#if __APPLE__
+        ,
+        runCoreAnimationForViewFunction_
+#endif // __APPLE__
     );
   }
 }

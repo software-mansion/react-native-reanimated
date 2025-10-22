@@ -1,5 +1,10 @@
 import React, { useEffect } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import {
+  // FlatList,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import Animated, {
   LayoutAnimationConfig,
   LinearTransition,
@@ -13,7 +18,8 @@ interface Item {
   title: string;
 }
 
-const data = Array.from({ length: 200 }, (_, i) => ({
+// const data = Array.from({ length: 200 }, (_, i) => ({
+const data = Array.from({ length: 5 }, (_, i) => ({
   id: i,
   color: `hsl(${(i * 10) % 360}, 100%, 90%)`,
   title: `Item ${i + 1}`,
@@ -26,6 +32,7 @@ const exiting = SlideOutRight.duration(300);
 function renderItem({ item }: { item: Item }) {
   return (
     <Animated.Text
+      key={item.id}
       style={{ backgroundColor: item.color }}
       entering={entering}
       layout={layout}
@@ -35,9 +42,9 @@ function renderItem({ item }: { item: Item }) {
   );
 }
 
-function keyExtractor(item: Item) {
-  return String(item.id);
-}
+// function keyExtractor(item: Item) {
+//   return String(item.id);
+// }
 
 export default function FlatListWithLayoutAnimations() {
   const [state, setState] = React.useState(false);
@@ -52,12 +59,17 @@ export default function FlatListWithLayoutAnimations() {
   return (
     <View style={styles.container}>
       <LayoutAnimationConfig skipEntering skipExiting>
-        <FlatList
+        {/* <FlatList
           data={state ? data.slice(1) : data}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           initialNumToRender={50}
-        />
+        /> */}
+        <ScrollView>
+          {(state ? [data[0], data[2], ...data.slice(4)] : data).map((item) =>
+            renderItem({ item })
+          )}
+        </ScrollView>
       </LayoutAnimationConfig>
     </View>
   );
