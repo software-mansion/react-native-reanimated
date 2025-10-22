@@ -77,6 +77,15 @@ class WorkletRuntime : public jsi::HostObject,
     return name_;
   }
 
+  /**
+   * Retrieves a weak reference to the WorkletRuntime associated with the
+   * provided jsi::Runtime.
+   *
+   * Throws when invoked with a non-worklet runtime.
+   */
+  static std::weak_ptr<WorkletRuntime> getWeakRuntimeFromJSIRuntime(
+      jsi::Runtime &rt);
+
  private:
   const uint64_t runtimeId_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;

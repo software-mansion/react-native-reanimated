@@ -4,6 +4,7 @@
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
+#include <worklets/WorkletRuntime/RuntimeHolder.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
@@ -81,7 +82,7 @@ WorkletRuntime::WorkletRuntime(
       queue_(queue) {
   jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
-  if (enableEventLoop && name != uiRuntimeName) {
+  if (enableEventLoop && name != RuntimeData::uiRuntimeName) {
     eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_);
     eventLoop_->run();
   }
@@ -90,6 +91,12 @@ WorkletRuntime::WorkletRuntime(
 void WorkletRuntime::init(
     std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy) {
   jsi::Runtime &rt = *runtime_;
+
+  rt.setRuntimeData(
+      RuntimeData::weakRuntimeUUID,
+      std::make_shared<WeakRuntimeHolder>(
+          WeakRuntimeHolder{.weakRuntime = weak_from_this()}));
+
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
   const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
 #ifdef WORKLETS_BUNDLE_MODE
@@ -237,6 +244,18 @@ void scheduleOnRuntime(
       serializableWorkletValue,
       "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
   workletRuntime->runAsyncGuarded(serializableWorklet);
+}
+
+std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(
+    jsi::Runtime &rt) {
+  auto runtimeData = rt.getRuntimeData(RuntimeData::weakRuntimeUUID);
+  if (!runtimeData) [[unlikely]] {
+    throw std::runtime_error(
+        "[Worklets] No weak runtime data found on the provided JSI runtime."
+        " Perhaps the JSI Runtime is not a WorkletRuntime?");
+  }
+  auto weakHolder = std::static_pointer_cast<WeakRuntimeHolder>(runtimeData);
+  return weakHolder->weakRuntime;
 }
 
 } // namespace worklets
