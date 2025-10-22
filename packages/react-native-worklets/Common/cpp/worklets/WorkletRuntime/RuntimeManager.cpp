@@ -40,7 +40,7 @@ std::vector<std::shared_ptr<WorkletRuntime>> RuntimeManager::getAllRuntimes() {
 }
 
 std::shared_ptr<WorkletRuntime> RuntimeManager::getUIRuntime() {
-  return getRuntime(uiRuntimeId);
+  return getRuntime(RuntimeData::uiRuntimeId);
 }
 
 std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
