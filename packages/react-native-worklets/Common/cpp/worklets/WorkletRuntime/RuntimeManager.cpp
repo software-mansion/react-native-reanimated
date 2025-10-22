@@ -81,7 +81,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createUninitializedUIRuntime(
   const auto uiRuntime = std::make_shared<WorkletRuntime>(
       uiRuntimeId, jsQueue, uiRuntimeName, uiAsyncQueue);
 
-  registerRuntime(uiRuntimeId, uiRuntimeName, uiRuntime);
+  registerRuntime(RuntimeData::uiRuntimeId, uiRuntime);
 
   return uiRuntime;
 }
