@@ -15,7 +15,12 @@ module.exports = withPlugins([withBundleAnalyzer, withExpo], {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  transpilePackages: ['react-native-reanimated', 'react-native', 'expo'],
+  transpilePackages: [
+    'react-native-reanimated',
+    'react-native',
+    'react-native-web',
+    'expo',
+  ],
   webpack(config) {
     if (disableMinification) {
       config.optimization.minimizer = [];
