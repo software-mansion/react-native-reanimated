@@ -11,6 +11,7 @@
 #include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
+#include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGLength.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
@@ -64,5 +65,6 @@ template class SimpleValueInterpolator<CSSDiscreteArray<CSSKeyword>>;
 template class SimpleValueInterpolator<SVGLength>;
 template class SimpleValueInterpolator<SVGLength, CSSKeyword>;
 template class SimpleValueInterpolator<SVGStrokeDashArray, CSSKeyword>;
+template class SimpleValueInterpolator<SVGBrush>;
 
 } // namespace reanimated::css

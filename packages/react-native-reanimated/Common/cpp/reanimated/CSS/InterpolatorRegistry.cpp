@@ -13,6 +13,7 @@
 #include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
 
+#include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGLength.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
@@ -32,8 +33,8 @@ namespace reanimated::css {
 namespace {
 
 // Private implementation details
-const auto BLACK = CSSColor(0, 0, 0, 255);
-const auto TRANSPARENT = CSSColor::Transparent;
+const std::array<uint8_t, 4> BLACK = {0, 0, 0, 255};
+const std::array<uint8_t, 4> TRANSPARENT = {0, 0, 0, 0};
 
 InterpolatorFactoriesRecord mergeInterpolators(const std::vector<InterpolatorFactoriesRecord> &maps) {
   InterpolatorFactoriesRecord result;
@@ -225,17 +226,17 @@ const InterpolatorFactoriesRecord IMAGE_INTERPOLATORS = mergeInterpolators(
 // =================
 
 const InterpolatorFactoriesRecord SVG_COLOR_INTERPOLATORS = {
-    {"color", value<CSSColor>(BLACK)},
+    {"color", value<SVGBrush>(BLACK)},
 };
 
 const InterpolatorFactoriesRecord SVG_FILL_INTERPOLATORS = {
-    {"fill", value<CSSColor>(BLACK)},
+    {"fill", value<SVGBrush>(BLACK)},
     {"fillOpacity", value<CSSDouble>(1)},
     {"fillRule", value<CSSInteger>(0)},
 };
 
 const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
-    {"stroke", value<CSSColor>(BLACK)},
+    {"stroke", value<SVGBrush>(BLACK)},
     {"strokeWidth", value<SVGLength>(1)},
     {"strokeOpacity", value<CSSDouble>(1)},
     {"strokeDasharray", value<SVGStrokeDashArray, CSSKeyword>(SVGStrokeDashArray())},

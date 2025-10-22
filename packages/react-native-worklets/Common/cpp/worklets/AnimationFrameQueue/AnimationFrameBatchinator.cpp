@@ -1,6 +1,7 @@
 #include <jsi/jsi.h>
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
 #include <worklets/SharedItems/Serializable.h>
+#include <worklets/WorkletRuntime/RuntimeBindings.h>
 
 #include <atomic>
 #include <functional>
@@ -58,8 +59,8 @@ std::vector<std::shared_ptr<const facebook::jsi::Value>> AnimationFrameBatchinat
 
 AnimationFrameBatchinator::AnimationFrameBatchinator(
     facebook::jsi::Runtime &uiRuntime,
-    std::function<void(std::function<void(const double)>)> &&forwardedRequestAnimationFrame)
+    RuntimeBindings::RequestAnimationFrame requestAnimationFrame)
     : uiRuntime_(&uiRuntime),
-      requestAnimationFrame_(std::move(forwardedRequestAnimationFrame)) {}
+      requestAnimationFrame_(requestAnimationFrame) {}
 
 } // namespace worklets

@@ -29,7 +29,7 @@ WorkletsModule::WorkletsModule(
           jsCallInvoker,
           uiScheduler,
           getIsOnJSQueueThread(),
-          getForwardedRequestAnimationFrame(),
+          RuntimeBindings{.requestAnimationFrame = getRequestAnimationFrame()},
           script,
           sourceURL)) {
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
@@ -65,7 +65,7 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
   return makeCxxInstance(jThis, rnRuntime, messageQueueThread, jsCallInvoker, uiScheduler, script, sourceURL);
 }
 
-std::function<void(std::function<void(const double)>)> WorkletsModule::getForwardedRequestAnimationFrame() {
+RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame() {
   return [javaPart = javaPart_](std::function<void(const double)> &&callback) -> void {
     static const auto jRequestAnimationFrame =
         javaPart->getClass()->getMethod<void(AnimationFrameCallback::javaobject)>("requestAnimationFrame");
