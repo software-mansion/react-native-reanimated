@@ -3,10 +3,7 @@
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
 
-import type {
-  IReanimatedErrorConstructor,
-  LoggerConfigInternal,
-} from './common';
+import type { LoggerConfigInternal } from './common';
 import type {
   MapperRegistry,
   MeasuredDimensions,
@@ -82,9 +79,4 @@ declare global {
    *   future.
    */
   var __frameTimestamp: number | undefined;
-  var ReanimatedError: IReanimatedErrorConstructor;
-  /** Only in Debug builds. */
-  var __getTagFromShadowNodeWrapper: (
-    shadowNodeWrapper: ShadowNodeWrapper
-  ) => number;
 }

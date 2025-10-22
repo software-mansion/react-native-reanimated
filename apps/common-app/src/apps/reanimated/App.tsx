@@ -131,8 +131,16 @@ const screenOptions = {
   headerRight: IS_MACOS ? undefined : () => <DrawerButton />,
 };
 
+type AnimationType = 'none' | 'default' | 'fade';
+
 function Navigator() {
   const shouldReduceMotion = useReducedMotion();
+  let animation: AnimationType = 'default';
+  if (IS_MACOS) {
+    animation = 'none';
+  } else if (shouldReduceMotion) {
+    animation = 'fade';
+  }
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
@@ -150,7 +158,7 @@ function Navigator() {
           name={name}
           component={EXAMPLES[name].screen}
           options={{
-            animation: shouldReduceMotion ? 'fade' : 'default',
+            animation: animation,
             headerTitle: EXAMPLES[name].title,
             title: EXAMPLES[name].title,
           }}

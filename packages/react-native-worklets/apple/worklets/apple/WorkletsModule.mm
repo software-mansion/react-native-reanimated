@@ -12,6 +12,11 @@
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
 
+#if __has_include(<React/RCTBundleProvider.h>)
+// Bundle mode
+#import <React/RCTBundleProvider.h>
+#endif // __has_include(<React/RCTBundleProvider.h>)
+
 using worklets::RNRuntimeWorkletDecorator;
 using worklets::WorkletsModuleProxy;
 
@@ -33,11 +38,10 @@ using worklets::WorkletsModuleProxy;
   return workletsModuleProxy_;
 }
 
-#if __has_include(<React/RCTBundleConsumer.h>)
+#if __has_include(<React/RCTBundleProvider.h>)
 // Bundle mode
-@synthesize scriptBuffer = scriptBuffer_;
-@synthesize sourceURL = sourceURL_;
-#endif // __has_include(<React/RCTBundleConsumer.h>)
+@synthesize bundleProvider = bundleProvider_;
+#endif // __has_include(<React/RCTBundleProvider.h>)
 
 - (void)checkBridgeless
 {
@@ -45,7 +49,7 @@ using worklets::WorkletsModuleProxy;
   react_native_assert(isBridgeless && "[Worklets] react-native-worklets only supports bridgeless mode");
 }
 
-@synthesize callInvoker = _callInvoker;
+@synthesize callInvoker = callInvoker_;
 
 RCT_EXPORT_MODULE(WorkletsModule);
 
@@ -66,27 +70,18 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   std::string sourceURL = "";
   std::shared_ptr<const BigStringBuffer> script = nullptr;
 #ifdef WORKLETS_BUNDLE_MODE
-  script = [scriptBuffer_ getBuffer];
-  sourceURL = [sourceURL_ UTF8String];
+  script = [bundleProvider_ getBundle];
+  sourceURL = [[bundleProvider_ getSourceURL] UTF8String];
 #endif // WORKLETS_BUNDLE_MODE
 
-  auto jsCallInvoker = _callInvoker.callInvoker;
+  auto jsCallInvoker = callInvoker_.callInvoker;
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
   auto isJavaScriptQueue = []() -> bool { return IsJavaScriptQueue(); };
   animationFrameQueue_ = [AnimationFrameQueue new];
-  auto forwardedRequestAnimationFrame = std::function<void(std::function<void(const double)>)>(
-      [animationFrameQueue = animationFrameQueue_](std::function<void(const double)> callback) {
-        [animationFrameQueue requestAnimationFrame:callback];
-      });
+  auto runtimeBindings = [self getRuntimeBindings];
+
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
-      rnRuntime,
-      jsQueue,
-      jsCallInvoker,
-      uiScheduler,
-      std::move(isJavaScriptQueue),
-      std::move(forwardedRequestAnimationFrame),
-      script,
-      sourceURL);
+      rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(isJavaScriptQueue), runtimeBindings, script, sourceURL);
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy = worklets::jsi_utils::optimizedFromHostObject(
       rnRuntime, std::static_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));
@@ -116,6 +111,15 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   [self checkBridgeless];
   AssertJavaScriptQueue();
   return std::make_shared<facebook::react::NativeWorkletsModuleSpecJSI>(params);
+}
+
+- (worklets::RuntimeBindings)getRuntimeBindings
+{
+  return {
+      .requestAnimationFrame = [animationFrameQueue =
+                                    animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
+        [animationFrameQueue requestAnimationFrame:callback];
+      }};
 }
 
 @end

@@ -26,6 +26,17 @@ type DynamicColorValue = ColorValue & {
   };
 };
 
+type PlatformColorValue = ColorValue & { semantic?: Array<string> } & {
+  resource_paths?: Array<string>;
+};
+
+export function PlatformColor(...names: Array<string>): PlatformColorValue {
+  'worklet';
+  // eslint-disable-next-line camelcase
+  const mapped = IS_IOS ? { semantic: names } : { resource_paths: names };
+  return mapped as PlatformColorValue;
+}
+
 export function DynamicColorIOS(
   tuple: DynamicColorIOSTuple
 ): DynamicColorValue {
@@ -51,12 +62,9 @@ function isDynamicColorObject(value: any): boolean {
 
 export function processColor(color: unknown): number | null | undefined {
   let normalizedColor = processColorInitially(color);
-  if (normalizedColor === null || normalizedColor === undefined) {
-    return undefined;
-  }
 
   if (typeof normalizedColor !== 'number') {
-    return null;
+    return normalizedColor;
   }
 
   if (IS_ANDROID) {

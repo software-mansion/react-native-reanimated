@@ -1,9 +1,8 @@
 'use strict';
-import type { Maybe } from '../../../common';
-import type { AnyRecord } from '../../types';
+import type { AnyRecord, Maybe, NonMutable } from '../../../common';
 
 export type ValueProcessor<V> = (
-  value: V
+  value: NonMutable<V>
 ) => Maybe<string> | Record<string, string>;
 
 type ProcessedProps<P extends AnyRecord> = {
