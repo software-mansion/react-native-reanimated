@@ -4,6 +4,13 @@ import type { CSSAnimationKeyframeSelector } from '../../../../types';
 import { getStyleBuilder } from '../../../registry';
 import { ERROR_MESSAGES, normalizeAnimationKeyframes } from '../keyframes';
 
+const SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Set([
+  'boxShadow',
+  'shadowOffset',
+  'textShadowOffset',
+  'transformOrigin',
+]);
+
 describe(normalizeAnimationKeyframes, () => {
   const styleBuilder = getStyleBuilder('RCTView'); // Must be a valid view name
 
@@ -22,7 +29,8 @@ describe(normalizeAnimationKeyframes, () => {
         expect(
           normalizeAnimationKeyframes(
             { [offset]: { opacity: 1 } },
-            styleBuilder
+            styleBuilder,
+            SEPARATELY_INTERPOLATED_NESTED_PROPERTIES
           )
         ).toEqual({
           keyframesStyle: { opacity: [{ offset: expected, value: 1 }] },
@@ -39,7 +47,8 @@ describe(normalizeAnimationKeyframes, () => {
           expect(() =>
             normalizeAnimationKeyframes(
               { [value]: { opacity: 1 } },
-              styleBuilder
+              styleBuilder,
+              SEPARATELY_INTERPOLATED_NESTED_PROPERTIES
             )
           ).toThrow(
             new ReanimatedError(ERROR_MESSAGES.invalidOffsetType(value))
@@ -56,7 +65,8 @@ describe(normalizeAnimationKeyframes, () => {
           expect(() =>
             normalizeAnimationKeyframes(
               { [value]: { opacity: 1 } },
-              styleBuilder
+              styleBuilder,
+              SEPARATELY_INTERPOLATED_NESTED_PROPERTIES
             )
           ).toThrow(
             new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(value))
@@ -78,7 +88,8 @@ describe(normalizeAnimationKeyframes, () => {
         expect(
           normalizeAnimationKeyframes(
             { [offset]: { opacity: 1 } },
-            styleBuilder
+            styleBuilder,
+            SEPARATELY_INTERPOLATED_NESTED_PROPERTIES
           )
         ).toEqual({
           keyframeTimingFunctions: {},
@@ -100,7 +111,11 @@ describe(normalizeAnimationKeyframes, () => {
       ])('throws an error for %p', (offset, errorMsg) => {
         const value = offset as CSSAnimationKeyframeSelector;
         expect(() =>
-          normalizeAnimationKeyframes({ [value]: { opacity: 1 } }, styleBuilder)
+          normalizeAnimationKeyframes(
+            { [value]: { opacity: 1 } },
+            styleBuilder,
+            SEPARATELY_INTERPOLATED_NESTED_PROPERTIES
+          )
         ).toThrow(new ReanimatedError(errorMsg));
       });
     });
@@ -115,7 +130,8 @@ describe(normalizeAnimationKeyframes, () => {
             '50%': { opacity: 0.5 },
             to: { opacity: 1 },
           },
-          styleBuilder
+          styleBuilder,
+          SEPARATELY_INTERPOLATED_NESTED_PROPERTIES
         )
       ).toEqual({
         keyframesStyle: {
@@ -136,7 +152,8 @@ describe(normalizeAnimationKeyframes, () => {
             from: { shadowOffset: { width: 0, height: 0 } },
             to: { shadowOffset: { width: 10, height: 10 } },
           },
-          styleBuilder
+          styleBuilder,
+          SEPARATELY_INTERPOLATED_NESTED_PROPERTIES
         )
       ).toEqual({
         keyframesStyle: {
@@ -165,7 +182,8 @@ describe(normalizeAnimationKeyframes, () => {
             '25%': { opacity: 0.25 },
             from: { opacity: 0 },
           },
-          styleBuilder
+          styleBuilder,
+          SEPARATELY_INTERPOLATED_NESTED_PROPERTIES
         )
       ).toEqual({
         keyframesStyle: {
@@ -188,7 +206,8 @@ describe(normalizeAnimationKeyframes, () => {
             from: { transform: [{ scale: 0 }, { rotate: '0deg' }] },
             to: { transform: [{ scale: 1 }, { rotate: '360deg' }] },
           },
-          styleBuilder
+          styleBuilder,
+          SEPARATELY_INTERPOLATED_NESTED_PROPERTIES
         )
       ).toEqual({
         keyframesStyle: {
@@ -208,7 +227,8 @@ describe(normalizeAnimationKeyframes, () => {
             from: { opacity: 0, transform: undefined },
             to: { opacity: 1 },
           },
-          styleBuilder
+          styleBuilder,
+          SEPARATELY_INTERPOLATED_NESTED_PROPERTIES
         )
       ).toEqual({
         keyframesStyle: {
@@ -229,7 +249,8 @@ describe(normalizeAnimationKeyframes, () => {
             '50%': { opacity: 0.5 },
             to: {},
           },
-          styleBuilder
+          styleBuilder,
+          SEPARATELY_INTERPOLATED_NESTED_PROPERTIES
         )
       ).toEqual({
         keyframesStyle: {
@@ -250,7 +271,8 @@ describe(normalizeAnimationKeyframes, () => {
             '50%': { opacity: 0.75 },
             '75%': { opacity: 1, animationTimingFunction: 'ease-out' },
           },
-          styleBuilder
+          styleBuilder,
+          SEPARATELY_INTERPOLATED_NESTED_PROPERTIES
         )
       ).toEqual({
         keyframesStyle: {
@@ -281,7 +303,8 @@ describe(normalizeAnimationKeyframes, () => {
           {
             '0%, 100%': { opacity: 0, animationTimingFunction: 'ease-in' },
           },
-          styleBuilder
+          styleBuilder,
+          SEPARATELY_INTERPOLATED_NESTED_PROPERTIES
         )
       ).toEqual({
         keyframesStyle: {

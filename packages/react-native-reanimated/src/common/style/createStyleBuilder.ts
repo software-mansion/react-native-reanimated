@@ -2,33 +2,15 @@
 
 import type { AnyRecord } from '../types';
 import { isConfigPropertyAlias, isDefined, isRecord } from '../utils';
-import type {
-  StyleBuilder,
-  StyleBuilderConfig,
-  StyleBuildMiddleware,
-} from './types';
-
-type StyleBuilderOptions<P extends AnyRecord> = {
-  buildMiddleware?: StyleBuildMiddleware<P>;
-  separatelyInterpolatedNestedProperties?: (keyof P)[];
-};
+import type { StyleBuilder, StyleBuilderConfig } from './types';
 
 class StyleBuilderImpl<P extends AnyRecord> implements StyleBuilder<P> {
-  private readonly buildMiddleware: StyleBuildMiddleware<P>;
   private readonly config: StyleBuilderConfig<P>;
-  private readonly separatelyInterpolatedNestedProperties_: (keyof P)[];
 
   private processedProps = {} as P;
 
-  constructor(config: StyleBuilderConfig<P>, options?: StyleBuilderOptions<P>) {
+  constructor(config: StyleBuilderConfig<P>) {
     this.config = config;
-    this.buildMiddleware = options?.buildMiddleware ?? ((props) => props);
-    this.separatelyInterpolatedNestedProperties_ =
-      options?.separatelyInterpolatedNestedProperties ?? [];
-  }
-
-  isSeparatelyInterpolatedNestedProperty(property: keyof P): boolean {
-    return this.separatelyInterpolatedNestedProperties_.includes(property);
   }
 
   add(property: keyof P, value: P[keyof P]): void {
@@ -59,7 +41,7 @@ class StyleBuilderImpl<P extends AnyRecord> implements StyleBuilder<P> {
   }
 
   build(): P | null {
-    const result = this.buildMiddleware(this.processedProps);
+    const result = this.processedProps;
     this.cleanup();
 
     if (Object.keys(result).length === 0) {
@@ -90,8 +72,7 @@ class StyleBuilderImpl<P extends AnyRecord> implements StyleBuilder<P> {
 }
 
 export default function createStyleBuilder<P extends AnyRecord>(
-  config: StyleBuilderConfig<P>,
-  options?: StyleBuilderOptions<P>
+  config: StyleBuilderConfig<P>
 ): StyleBuilder<Partial<P>> {
-  return new StyleBuilderImpl(config, options);
+  return new StyleBuilderImpl(config);
 }

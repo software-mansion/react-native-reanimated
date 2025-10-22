@@ -100,7 +100,8 @@ function processStyleProperties<S extends AnyRecord>(
   offset: number,
   style: S,
   keyframeStyle: AnyRecord,
-  styleBuilder: StyleBuilder<AnyRecord>
+  styleBuilder: StyleBuilder<S>,
+  separatelyInterpolatedNestedProperties: Set<string>
 ) {
   Object.entries(style).forEach(([property, value]) => {
     if (!isDefined(value)) {
@@ -108,7 +109,7 @@ function processStyleProperties<S extends AnyRecord>(
     }
 
     if (typeof value === 'object') {
-      if (styleBuilder.isSeparatelyInterpolatedNestedProperty(property)) {
+      if (separatelyInterpolatedNestedProperties.has(property)) {
         if (!keyframeStyle[property]) {
           keyframeStyle[property] = Array.isArray(value) ? [] : {};
         }
@@ -116,7 +117,8 @@ function processStyleProperties<S extends AnyRecord>(
           offset,
           value,
           keyframeStyle[property],
-          styleBuilder
+          styleBuilder,
+          separatelyInterpolatedNestedProperties
         );
         return;
       }
@@ -131,14 +133,21 @@ function processStyleProperties<S extends AnyRecord>(
 
 export function normalizeAnimationKeyframes(
   keyframes: CSSAnimationKeyframes,
-  styleBuilder: StyleBuilder<AnyRecord>
+  styleBuilder: StyleBuilder<AnyRecord>,
+  separatelyInterpolatedNestedProperties: Set<string>
 ): NormalizedCSSAnimationKeyframesConfig {
   const keyframesStyle: NormalizedCSSKeyframesStyle = {};
   const timingFunctions: NormalizedCSSKeyframeTimingFunctions = {};
 
   processKeyframes(keyframes, styleBuilder).forEach(
     ({ offset, style, timingFunction }) => {
-      processStyleProperties(offset, style, keyframesStyle, styleBuilder);
+      processStyleProperties(
+        offset,
+        style,
+        keyframesStyle,
+        styleBuilder,
+        separatelyInterpolatedNestedProperties
+      );
       if (timingFunction && offset < 1) {
         timingFunctions[offset] = normalizeTimingFunction(timingFunction);
       }

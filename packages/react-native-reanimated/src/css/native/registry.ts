@@ -11,19 +11,16 @@ export const ERROR_MESSAGES = {
     `CSS style builder for component ${componentName} was not found`,
 };
 
-const baseStyleBuilder = createStyleBuilder(BASE_PROPERTIES_CONFIG, {
-  separatelyInterpolatedNestedProperties: [
-    'boxShadow',
-    'shadowOffset',
-    'textShadowOffset',
-    'transformOrigin',
-  ],
-});
+const baseStyleBuilder = createStyleBuilder(BASE_PROPERTIES_CONFIG);
 
 const STYLE_BUILDERS: Record<string, StyleBuilder> = {};
 
 export function hasStyleBuilder(componentName: string): boolean {
   return !!STYLE_BUILDERS[componentName] || componentName.startsWith('RCT');
+}
+
+export function isBaseStyleBuilder(styleBuilder: StyleBuilder): boolean {
+  return styleBuilder === baseStyleBuilder;
 }
 
 export function getStyleBuilder(componentName: string): StyleBuilder {
