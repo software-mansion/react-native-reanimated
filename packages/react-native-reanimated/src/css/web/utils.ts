@@ -1,16 +1,13 @@
 'use strict';
-import type { ColorValue, DimensionValue } from 'react-native';
-
+import type { ConvertValuesToArrays } from '../../common';
 import {
-  hasSuffix,
+  kebabizeCamelCase,
   maybeAddSuffix,
-  processColor,
   ReanimatedError,
 } from '../../common';
 import type { ParametrizedTimingFunction } from '../easing';
 import { CubicBezierEasing, LinearEasing, StepsEasing } from '../easing';
-import type { AddArrayPropertyType, ConvertValuesToArrays } from '../types';
-import { kebabizeCamelCase } from '../utils';
+import type { AddArrayPropertyType } from '../types';
 
 export function maybeAddSuffixes<T, K extends keyof T>(
   object: ConvertValuesToArrays<T>,
@@ -56,38 +53,4 @@ export function parseTimingFunction(
   }
 
   return easingMapper(timingFunction);
-}
-
-export function parseDimensionValue(value: DimensionValue) {
-  if (typeof value === 'object') {
-    return;
-  }
-  if (typeof value === 'string') {
-    return value;
-  }
-  if (!hasSuffix(value)) {
-    return `${value}px`;
-  }
-
-  return value;
-}
-
-export function opacifyColor(
-  color: ColorValue,
-  opacity: number
-): string | null {
-  const colorNumber = processColor(color);
-  if (colorNumber == null) {
-    return null;
-  }
-
-  const a = (colorNumber >> 24) & 0xff;
-  const r = (colorNumber >> 16) & 0xff;
-  const g = (colorNumber >> 8) & 0xff;
-  const b = colorNumber & 0xff;
-
-  // Combine the existing alpha with the new opacity
-  const newAlpha = (a / 255) * opacity;
-
-  return `rgba(${r}, ${g}, ${b}, ${newAlpha})`;
 }

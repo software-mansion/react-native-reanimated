@@ -16,6 +16,11 @@ const config = tsEslint.config(
     languageOptions: {
       parserOptions: {
         tsconfigRootDir: import.meta.dirname,
+        project: [
+          './tsconfig.json',
+          './tsconfig.web.json',
+          '../../tsconfig.json',
+        ],
       },
     },
     plugins: {

@@ -15692,6 +15692,7 @@ __metadata:
   dependencies:
     "@types/react": "npm:19.2.2"
     common-app: "workspace:*"
+    eslint: "npm:9.37.0"
     prettier: "npm:3.6.2"
     react: "npm:19.1.1"
     react-native: "npm:0.82.0"
@@ -30794,6 +30795,7 @@ __metadata:
     "@expo/metro-runtime": "npm:6.1.2"
     "@types/react": "npm:19.2.2"
     common-app: "workspace:*"
+    eslint: "npm:9.37.0"
     expo: "npm:54.0.13"
     prettier: "npm:3.6.2"
     react: "npm:19.1.1"

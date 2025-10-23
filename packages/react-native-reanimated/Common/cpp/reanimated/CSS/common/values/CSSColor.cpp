@@ -100,13 +100,11 @@ CSSColor::CSSColor(const folly::dynamic &value)
 }
 
 bool CSSColor::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  return jsiValue.isNumber() || jsiValue.isUndefined() ||
-      (jsiValue.isString() && jsiValue.getString(rt).utf8(rt) == "transparent");
+  return jsiValue.isNumber() || jsiValue.isNull();
 }
 
 bool CSSColor::canConstruct(const folly::dynamic &value) {
-  return value.isNumber() || value.empty() ||
-      (value.isString() && value.getString() == "transparent");
+  return value.isNumber() || value.isNull();
 }
 
 folly::dynamic CSSColor::toDynamic() const {
