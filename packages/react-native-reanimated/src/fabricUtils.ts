@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
+
 import type { InternalHostInstance, ShadowNodeWrapper } from './commonTypes';
-import type { HostInstance } from './platform-specific/findHostInstance';
 import { findHostInstance } from './platform-specific/findHostInstance';
+import type { HostInstance } from './platform-specific/types';
 
 let getInternalInstanceHandleFromPublicInstance: (ref: unknown) => {
   stateNode: { node: unknown };
