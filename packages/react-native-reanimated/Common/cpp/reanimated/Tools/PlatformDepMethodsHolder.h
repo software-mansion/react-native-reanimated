@@ -38,7 +38,7 @@ using SynchronouslyUpdateUIPropsFunction =
     std::function<void(const int, const folly::dynamic &)>;
 #endif // ANDROID
 using PreserveMountedTagsFunction =
-    std::function<std::optional<std::unique_ptr<int[]>>(std::vector<int> &)>;
+    std::function<std::unique_ptr<int[]>(std::vector<int> &)>;
 using GetAnimationTimestampFunction = std::function<double(void)>;
 
 using ProgressLayoutAnimationFunction =

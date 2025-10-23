@@ -395,18 +395,18 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     SurfaceId surfaceId,
     ShadowViewMutationList &mutations) const {
   auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+  if (updateMap.empty()) {
+    return;
+  }
+
 #ifdef ANDROID
   std::vector<int> tagsToUpdate;
+  tagsToUpdate.reserve(updateMap.size());
   for (auto &[tag, updateValues] : updateMap) {
     tagsToUpdate.push_back(tag);
   }
 
-  auto maybeCorrectedTags = preserveMountedTags_(tagsToUpdate);
-  if (!maybeCorrectedTags.has_value()) {
-    return;
-  }
-
-  auto correctedTags = maybeCorrectedTags->get();
+  auto correctedTags = preserveMountedTags_(tagsToUpdate);
 
   // since the map is not updated, we can assume that the ordering of tags in
   // correctedTags matches the iterator
