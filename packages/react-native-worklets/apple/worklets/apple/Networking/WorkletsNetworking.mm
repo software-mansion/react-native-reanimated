@@ -12,16 +12,17 @@
 #import <React/RCTNetworkTask.h>
 #import <React/RCTNetworking.h>
 #import <React/RCTUtils.h>
-#import <worklets/apple/Networking/WorkletsNetworking.h>
-
 #import <React/RCTHTTPRequestHandler.h>
 #import <react/featureflags/ReactNativeFeatureFlags.h>
-
 #import <React/RCTInspectorNetworkReporter.h>
 #import <React/RCTNetworkPlugins.h>
-
 #import <React-Core/React/RCTFollyConvert.h>
 #import <React-jsi/jsi/JSIDynamic.h>
+
+#import <worklets/apple/Networking/WorkletsNetworking.h>
+#import <worklets/WorkletRuntime/WorkletRuntime.h>
+
+using namespace worklets;
 
 // TODO: Document thread switching because it's a mess right now...
 
@@ -159,7 +160,6 @@ static NSString *WorkletsGenerateFormBoundary()
   //  NSArray<id<RCTURLRequestHandler>> * (^_handlersProvider)(RCTModuleRegistry *);
   //  NSMutableArray<id<RCTNetworkingRequestHandler>> *_requestHandlers;
   // NSMutableArray<id<RCTNetworkingResponseHandler>> *_responseHandlers;
-  std::shared_ptr<worklets::RuntimeManager> runtimeManager_;
   RCTNetworking *rctNetworking_;
   //  dispatch_queue_t _requestQueue;
 }
@@ -170,7 +170,7 @@ static NSString *WorkletsGenerateFormBoundary()
                 jquery:(const facebook::jsi::Value &)jquery
         responseSender:(jsi::Function &&)responseSender
 {
-  auto originRuntime = runtimeManager_->getRuntime(&rt);
+  auto originRuntime = WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt).lock();
   if (!originRuntime) {
     return;
   }
@@ -307,19 +307,17 @@ static NSString *WorkletsGenerateFormBoundary()
                                 //                                });
                                 //                                self->uiScheduler_->scheduleOnUI([block, request](){
                                 auto strongWorkletRuntime = workletRuntime.lock();
-                                strongWorkletRuntime->runOnQueue(
-                                    [completionBlock, request](jsi::Runtime &rt) { completionBlock(request, rt); });
+                               strongWorkletRuntime->runOnQueue(
+                                   [completionBlock, request](jsi::Runtime &rt) { completionBlock(request, rt); });
 
                                 return (RCTURLRequestCancellationBlock)nil;
                               }];
 }
 
-- (instancetype)init:(std::shared_ptr<worklets::RuntimeManager>)runtimeManager
-       rctNetworking:(RCTNetworking *)rctNetworking
+- (instancetype)init:(RCTNetworking *)rctNetworking
 {
   self = [super init];
   if (self) {
-    runtimeManager_ = runtimeManager;
     rctNetworking_ = rctNetworking;
     _tasksLock = [[NSLock alloc] init];
   }
@@ -432,10 +430,10 @@ static NSString *WorkletsGenerateFormBoundary()
                    return;
                  }
 
-                 strongWorkletRuntime->runOnQueue(^{
-                   cancellationBlock = callback(
-                       error, data ? @{@"body" : data, @"contentType" : RCTNullIfNil(response.MIMEType)} : nil);
-                 });
+                strongWorkletRuntime->runOnQueue(^{
+                  cancellationBlock = callback(
+                      error, data ? @{@"body" : data, @"contentType" : RCTNullIfNil(response.MIMEType)} : nil);
+                });
                }];
 
     [task start];
@@ -681,7 +679,7 @@ static NSString *WorkletsGenerateFormBoundary()
     }
     _tasksByRequestID[task.requestID] = task;
     [_tasksLock unlock];
-    auto workletRuntime = runtimeManager_->getRuntime(&rt);
+    auto workletRuntime = WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt).lock();
     auto value = task.requestID.doubleValue;
 
     responseSender.call(rt, jsi::Value(rt, value));

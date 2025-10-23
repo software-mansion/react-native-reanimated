@@ -320,8 +320,6 @@ function installRNBindingsOnUIRuntime() {
     );
   }
 
-  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
-
   if (!globalThis._WORKLETS_BUNDLE_MODE) {
     /** In bundle mode Runtimes setup their callGuard themselves. */
     executeOnUIRuntimeSync(setupCallGuard)();
@@ -334,6 +332,16 @@ function installRNBindingsOnUIRuntime() {
      * There's no need to register the error in bundle mode.
      */
     executeOnUIRuntimeSync(registerWorkletsError)();
+  }
+
+  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
+  let runtimeBoundInitializeNetworking: typeof initializeNetworking;
+  if (globalThis._WORKLETS_BUNDLE_MODE) {
+    /*
+     * Initialize networking has to be runtime bound because it needs
+     * TurboModules obtained from RN Runtime.
+     */
+    runtimeBoundInitializeNetworking = initializeNetworking;
   }
 
   executeOnUIRuntimeSync(() => {
@@ -350,9 +358,8 @@ function installRNBindingsOnUIRuntime() {
     setupSetTimeout();
     setupSetImmediate();
     setupSetInterval();
+    if (globalThis._WORKLETS_BUNDLE_MODE) {
+      runtimeBoundInitializeNetworking();
+    }
   })();
-
-  if (globalThis._WORKLETS_BUNDLE_MODE) {
-    executeOnUIRuntimeSync(initializeNetworking)();
-  }
 }

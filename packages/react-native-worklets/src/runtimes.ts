@@ -5,7 +5,7 @@ import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
 import { initializeNetworking } from './network';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { setupRunLoop } from './runLoop/workletRuntime';
-import { RuntimeKind } from './runtimeKind';
+import { getRuntimeKind, RuntimeKind } from './runtimeKind';
 import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
@@ -52,8 +52,11 @@ export function createWorkletRuntime(
   nameOrConfig?: string | WorkletRuntimeConfigInternal,
   initializer?: WorkletFunction<[], void>
 ): WorkletRuntime {
-  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
-
+  if (__DEV__ && getRuntimeKind() !== RuntimeKind.ReactNative) {
+    throw new WorkletsError(
+      '`createWorkletRuntime` cannot be called from Worklet Runtimes.'
+    );
+  }
   let name: string;
   let initializerFn: (() => void) | undefined;
   let useDefaultQueue = true;
@@ -81,6 +84,16 @@ export function createWorkletRuntime(
     );
   }
 
+  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
+  let runtimeBoundInitializeNetworking: typeof initializeNetworking;
+  if (globalThis._WORKLETS_BUNDLE_MODE) {
+    /*
+     * Initialize networking has to be runtime bound because it needs
+     * TurboModules obtained from RN Runtime.
+     */
+    runtimeBoundInitializeNetworking = initializeNetworking;
+  }
+
   return WorkletsModule.createWorkletRuntime(
     name,
     createSerializable(() => {
@@ -92,7 +105,7 @@ export function createWorkletRuntime(
         setupRunLoop(animationQueuePollingRate);
       }
       if (globalThis._WORKLETS_BUNDLE_MODE) {
-        initializeNetworking();
+        runtimeBoundInitializeNetworking();
       }
       initializerFn?.();
     }),

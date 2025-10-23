@@ -38,7 +38,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<RuntimeManager> &runtimeManager,
       const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
-      RuntimeBindings runtimeBindings);
+      const std::shared_ptr<RuntimeBindings> &runtimeBindings);
 
   JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other);
 
@@ -76,7 +76,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
     return runtimeManager_;
   }
 
-  [[nodiscard]] inline RuntimeBindings getRuntimeBindings() const {
+  [[nodiscard]] std::shared_ptr<RuntimeBindings> getRuntimeBindings() const {
     return runtimeBindings_;
   }
 
@@ -89,7 +89,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
   const std::shared_ptr<UIScheduler> uiScheduler_;
   const std::shared_ptr<RuntimeManager> runtimeManager_;
   const std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
-  const RuntimeBindings runtimeBindings_;
+  const std::shared_ptr<RuntimeBindings> runtimeBindings_;
 };
 
 } // namespace worklets

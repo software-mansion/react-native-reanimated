@@ -25,8 +25,7 @@
 #import <React/RCTBundleProvider.h>
 #endif // __has_include(<React/RCTBundleProvider.h>)
 
-using worklets::RNRuntimeWorkletDecorator;
-using worklets::WorkletsModuleProxy;
+using namespace worklets;
 
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;
@@ -39,7 +38,7 @@ using worklets::WorkletsModuleProxy;
   WorkletsNetworking *workletsNetworking_;
 #endif // WORKLETS_BUNDLE_MODE
 #ifndef NDEBUG
-  worklets::SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
+  SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
 #endif // NDEBUG
 }
 
@@ -61,7 +60,9 @@ using worklets::WorkletsModuleProxy;
 }
 
 @synthesize callInvoker = callInvoker_;
+#ifdef WORKLETS_BUNDLE_MODE
 @synthesize moduleRegistry = moduleRegistry_;
+#endif // WORKLETS_BUNDLE_MODE
 
 RCT_EXPORT_MODULE(WorkletsModule);
 
@@ -81,25 +82,23 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
   std::string sourceURL = "";
   std::shared_ptr<const BigStringBuffer> script = nullptr;
-
-  auto jsCallInvoker = callInvoker_.callInvoker;
-  auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
-  auto isJavaScriptQueue = []() -> bool { return IsJavaScriptQueue(); };
-  animationFrameQueue_ = [AnimationFrameQueue new];
 #ifdef WORKLETS_BUNDLE_MODE
   script = [bundleProvider_ getBundle];
   sourceURL = [[bundleProvider_ getSourceURL] UTF8String];
   id networkingModule = [moduleRegistry_ moduleForClass:RCTNetworking.class];
   workletsNetworking_ = [[WorkletsNetworking alloc] init:networkingModule];
 #endif // WORKLETS_BUNDLE_MODE
+
+  auto jsCallInvoker = callInvoker_.callInvoker;
+  auto uiScheduler = std::make_shared<IOSUIScheduler>();
+  auto isJavaScriptQueue = []() -> bool { return IsJavaScriptQueue(); };
+  animationFrameQueue_ = [AnimationFrameQueue new];
   auto runtimeBindings = [self getRuntimeBindings];
 
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
-      rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(isJavaScriptQueue), runtimeBindings, script, sourceURL
-      );
-
+      rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(isJavaScriptQueue), runtimeBindings, script, sourceURL);
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
-  auto optimizedJsiWorkletsModuleProxy = worklets::jsi_utils::optimizedFromHostObject(
+  auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
       rnRuntime, std::static_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));
   RNRuntimeWorkletDecorator::decorate(
       rnRuntime, std::move(optimizedJsiWorkletsModuleProxy), workletsModuleProxy_->getJSLogger());
@@ -129,9 +128,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   return std::make_shared<facebook::react::NativeWorkletsModuleSpecJSI>(params);
 }
 
-- (worklets::RuntimeBindings)getRuntimeBindings
+- (std::shared_ptr<RuntimeBindings>)getRuntimeBindings
 {
-  return {
+  return std::make_shared<RuntimeBindings>(RuntimeBindings{
       .requestAnimationFrame = [animationFrameQueue =
                                     animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
         [animationFrameQueue requestAnimationFrame:callback];
@@ -155,7 +154,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
             return jsi::Value::undefined();
           }
       #endif // WORKLETS_BUNDLE_MODE
-  };
+  });
 }
 
 @end

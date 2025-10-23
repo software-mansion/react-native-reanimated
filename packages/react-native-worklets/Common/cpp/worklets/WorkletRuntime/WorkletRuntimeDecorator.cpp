@@ -308,13 +308,13 @@ void WorkletRuntimeDecorator::decorate(
 #ifdef WORKLETS_BUNDLE_MODE
 void WorkletRuntimeDecorator::postEvaluateScript(
     jsi::Runtime &rt,
-    RuntimeBindings runtimeBindings) {
+    const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
   installNetworking(rt, runtimeBindings);
 }
 
 void WorkletRuntimeDecorator::installNetworking(
     jsi::Runtime &rt,
-    const RuntimeBindings runtimeBindings) {
+    const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
   auto TurboModules = rt.global().getPropertyAsObject(rt, "TurboModules");
 
   auto Networking = TurboModules.getPropertyAsFunction(rt, "get").callWithThis(
@@ -324,7 +324,7 @@ void WorkletRuntimeDecorator::installNetworking(
       rt,
       jsi::PropNameID::forAscii(rt, "sendRequest"),
       2,
-      [sendRequest = runtimeBindings.sendRequest](
+      [sendRequest = runtimeBindings->sendRequest](
           jsi::Runtime &rt,
           const jsi::Value &thisValue,
           const jsi::Value *args,
@@ -342,7 +342,7 @@ void WorkletRuntimeDecorator::installNetworking(
       rt,
       jsi::PropNameID::forAscii(rt, "abortRequest"),
       1,
-      [abortRequest = runtimeBindings.abortRequest](
+      [abortRequest = runtimeBindings->abortRequest](
           jsi::Runtime &rt,
           const jsi::Value &thisValue,
           const jsi::Value *args,
@@ -359,7 +359,7 @@ void WorkletRuntimeDecorator::installNetworking(
       rt,
       jsi::PropNameID::forAscii(rt, "clearCookies"),
       1,
-      [clearCookies = runtimeBindings.clearCookies](
+      [clearCookies = runtimeBindings->clearCookies](
           jsi::Runtime &rt,
           const jsi::Value &thisValue,
           const jsi::Value *args,

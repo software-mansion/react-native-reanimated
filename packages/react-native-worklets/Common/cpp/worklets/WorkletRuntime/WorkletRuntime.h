@@ -90,7 +90,7 @@ class WorkletRuntime : public jsi::HostObject,
   static std::weak_ptr<WorkletRuntime> getWeakRuntimeFromJSIRuntime(
       jsi::Runtime &rt);
 
- public:
+ private:
   const uint64_t runtimeId_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;

@@ -28,12 +28,12 @@ class WorkletRuntimeDecorator {
 #ifdef WORKLETS_BUNDLE_MODE
   static void postEvaluateScript(
       jsi::Runtime &rt,
-      RuntimeBindings runtimeBindings);
+      const std::shared_ptr<RuntimeBindings> &runtimeBindings);
 
  private:
   static void installNetworking(
       jsi::Runtime &rt,
-      RuntimeBindings runtimeBindings);
+      const std::shared_ptr<RuntimeBindings> &runtimeBindings);
 #endif // WORKLETS_BUNDLE_MODE
 };
 

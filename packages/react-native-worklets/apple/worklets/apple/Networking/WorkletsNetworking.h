@@ -5,12 +5,10 @@
 
 #import <React/RCTNetworking.h>
 
-#import <worklets/WorkletRuntime/RuntimeManager.h>
+using namespace facebook;
 
 @interface WorkletsNetworking : NSObject
-
-- (instancetype)init:(std::shared_ptr<worklets::RuntimeManager>)runtimeManager
-       rctNetworking:(RCTNetworking *)rctNetworking;
+- (instancetype)init:(RCTNetworking *)rctNetworking;
 
 - (void)jsiSendRequest:(jsi::Runtime &)rt
                 jquery:(const jsi::Value &)jquery

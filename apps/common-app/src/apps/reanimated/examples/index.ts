@@ -137,6 +137,7 @@ import WorkletExample from './WorkletExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import InstanceDiscoveryExample from './InstanceDiscoveryExample';
+import FetchExample from './FetchExample';
 
 interface Example {
   icon?: string;
@@ -191,6 +192,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🏃‍♂️',
     title: 'Worklet runtime',
     screen: WorkletRuntimeExample,
+  },
+  FetchExample: {
+    icon: '📡',
+    title: 'Fetch & XHR (Bundle Mode only)',
+    screen: FetchExample,
   },
   ModifyExample: {
     icon: '🪛',
