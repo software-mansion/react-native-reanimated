@@ -1,7 +1,7 @@
 'use strict';
-import { ReanimatedError } from '../../../../../common';
-import type { TransformsArray } from '../../../../types';
-import { ERROR_MESSAGES, processTransform } from '../transform';
+import { ReanimatedError } from '../..';
+import type { TransformsArray } from '../..';
+import { ERROR_MESSAGES_TRANSFORM, processTransform } from '../transform';
 
 describe(processTransform, () => {
   test('returns the same object if not a string', () => {
@@ -339,49 +339,58 @@ describe(processTransform, () => {
     }[] = [
       {
         input: 'translat(25, 25)', // Misspelled "translate"
-        errorMessage: ERROR_MESSAGES.invalidTransform('translat(25, 25)'),
+        errorMessage:
+          ERROR_MESSAGES_TRANSFORM.invalidTransform('translat(25, 25)'),
       },
       {
         input: 'rotate(90)', // Missing units for angle
-        errorMessage: ERROR_MESSAGES.invalidTransform('rotate(90)'),
+        errorMessage: ERROR_MESSAGES_TRANSFORM.invalidTransform('rotate(90)'),
       },
       {
         input: 'scaleX()', // Empty value for scaleX
-        errorMessage: ERROR_MESSAGES.invalidTransform('scaleX()'),
+        errorMessage: ERROR_MESSAGES_TRANSFORM.invalidTransform('scaleX()'),
       },
       {
         input: 'skew(45deg, 90)', // Missing units for second skew value
-        errorMessage: ERROR_MESSAGES.invalidTransform('skew(45deg, 90)'),
+        errorMessage:
+          ERROR_MESSAGES_TRANSFORM.invalidTransform('skew(45deg, 90)'),
       },
       {
         input: 'matrix(1, 2, 3)', // Incorrect number of elements for matrix (should be 6 or 16)
-        errorMessage: ERROR_MESSAGES.invalidTransform('matrix(1, 2, 3)'),
+        errorMessage:
+          ERROR_MESSAGES_TRANSFORM.invalidTransform('matrix(1, 2, 3)'),
       },
       {
         input: 'matrix(1, 2, 3, 4, 5, 6, 7)', // Incorrect number of elements for matrix
-        errorMessage: ERROR_MESSAGES.invalidTransform(
+        errorMessage: ERROR_MESSAGES_TRANSFORM.invalidTransform(
           'matrix(1, 2, 3, 4, 5, 6, 7)'
         ),
       },
       {
         input: 'rotateX(45)', // Missing units for X rotation
-        errorMessage: ERROR_MESSAGES.invalidTransform('rotateX(45)'),
+        errorMessage: ERROR_MESSAGES_TRANSFORM.invalidTransform('rotateX(45)'),
       },
       {
         input: 'translateY(25px, 10px)', // Extra value for translateY
-        errorMessage: ERROR_MESSAGES.invalidTransform('translateY(25px, 10px)'),
+        errorMessage: ERROR_MESSAGES_TRANSFORM.invalidTransform(
+          'translateY(25px, 10px)'
+        ),
       },
       {
         input: 'scale(2, 3, 4)', // Extra value for scale
-        errorMessage: ERROR_MESSAGES.invalidTransform('scale(2, 3, 4)'),
+        errorMessage:
+          ERROR_MESSAGES_TRANSFORM.invalidTransform('scale(2, 3, 4)'),
       },
       {
         input: 'skewX(45deg, 30deg)', // Extra value for skewX
-        errorMessage: ERROR_MESSAGES.invalidTransform('skewX(45deg, 30deg)'),
+        errorMessage: ERROR_MESSAGES_TRANSFORM.invalidTransform(
+          'skewX(45deg, 30deg)'
+        ),
       },
       {
         input: 'rotate(90grad)', // Unsupported angle unit
-        errorMessage: ERROR_MESSAGES.invalidTransform('rotate(90grad)'),
+        errorMessage:
+          ERROR_MESSAGES_TRANSFORM.invalidTransform('rotate(90grad)'),
       },
     ];
 

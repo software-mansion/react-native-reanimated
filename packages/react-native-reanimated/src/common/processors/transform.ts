@@ -1,98 +1,184 @@
 'use strict';
 'worklet';
-import { ReanimatedError } from '../errors';
+import type { ValueProcessor, TransformsArray } from '..';
+import { ReanimatedError } from '..';
+import {
+  isAngle,
+  isNumber,
+  isNumberArray,
+  isPercentage,
+} from '../../css/utils';
 
-type TransformObject =
-  | { matrix: number[] }
-  | { perspective: number }
-  | { rotate: string }
-  | { rotateX: string }
-  | { rotateY: string }
-  | { rotateZ: string }
-  | { scale: number }
-  | { scaleX: number }
-  | { scaleY: number }
-  | { translateX: number }
-  | { translateY: number }
-  | { skewX: string }
-  | { skewY: string }
-  | Record<string, any>;
-
-// According to RN documentation, these transforms need to have string values with units
-// https://reactnative.dev/docs/transforms#transform
-const STRING_UNIT_TRANSFORMS = new Set([
-  'rotate',
-  'rotateX',
-  'rotateY',
-  'rotateZ',
-  'skewX',
-  'skewY',
-]);
-
-const TRANSFORM_REGEX = /(\w+)\(([^)]+)\)/g;
-// Capture two groups: current transform value and optional unit -> "21.37px" => ["21.37px", "21.37", "px"]
-const TRANSFORM_VALUE_REGEX = /^([-+]?\d*\.?\d+)([a-z%]*)$/g;
-
-const VALID_UNITS = ['px', 'deg', 'rad', '%'] as const;
-
-const ERROR_MESSAGES = {
-  invalidTransform: (value: any) =>
-    `Invalid transform: ${JSON.stringify(value)}. Expected minimum one value.`,
-  invalidTransformValue: (value: any) =>
-    `Invalid transform value: ${JSON.stringify(value)}. Check if it contains value name, numerical value, and unit (px or deg) where applicable.`,
-  invalidUnit: (transform: string, unit: string) =>
-    `Invalid unit "${unit}" in ${JSON.stringify(
-      transform
-    )}. Supported units: ${VALID_UNITS.join(', ')}.`,
+export const ERROR_MESSAGES_TRANSFORM = {
+  invalidTransform: (transform: string) =>
+    `Invalid transform property: ${transform}`,
 };
 
-const parseNumberWithUnit = (name: string, value: string) => {
-  const match = value.match(TRANSFORM_VALUE_REGEX);
-  if (!match) {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidTransformValue(value));
-  }
-  const number = parseFloat(match[1]);
-  const unit = match[2];
-
-  const needsStringUnit = STRING_UNIT_TRANSFORMS.has(name);
-  return needsStringUnit ? `${number}${unit || 'deg'}` : number;
-};
-
-export const parseTransformString = (value: string): TransformObject[] => {
-  const matches = Array.from(value.matchAll(TRANSFORM_REGEX));
-
-  if (matches.length === 0) {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidTransform(value));
-  }
-
-  const transformArray = matches.map((match) => {
-    const [_, name, content] = match;
-    if (!name || !content) {
-      throw new ReanimatedError(ERROR_MESSAGES.invalidTransformValue(match[0]));
+function parseValues(valueString: string): (string | number)[] {
+  return valueString.split(',').map((value) => {
+    const trimmedValue = value.trim();
+    if (['deg', 'rad', '%'].some((unit) => trimmedValue.endsWith(unit))) {
+      return trimmedValue;
     }
-
-    if (name === 'matrix') {
-      const matrixValues = content.split(',').map((v) => parseFloat(v.trim()));
-      return { matrix: matrixValues };
-    }
-
-    const finalValue = parseNumberWithUnit(name, content);
-    return { [name]: finalValue };
+    const numValue = parseFloat(trimmedValue);
+    return isNaN(numValue) ? trimmedValue : numValue;
   });
+}
 
-  return transformArray;
-};
+function parseTranslateX(values: (number | string)[]): TransformsArray {
+  return values.length === 1 && (isNumber(values[0]) || isPercentage(values[0]))
+    ? [{ translateX: values[0] }]
+    : [];
+}
 
-export const processTransform = (value: any) => {
-  if (typeof value === 'string') {
-    return parseTransformString(value);
+function parseTranslateY(values: (number | string)[]): TransformsArray {
+  return values.length === 1 && (isNumber(values[0]) || isPercentage(values[0]))
+    ? [{ translateY: values[0] }]
+    : [];
+}
+
+function parseTranslate(values: (number | string)[]): TransformsArray {
+  if (values.length > 2) {
+    return [];
+  }
+  const result = parseTranslateX([values[0]]).concat(
+    parseTranslateY([values[1] ?? values[0]])
+  );
+  return result.length === 2 ? result : [];
+}
+
+function parseScaleX(values: (number | string)[]): TransformsArray {
+  return values.length === 1 && isNumber(values[0])
+    ? [{ scaleX: values[0] }]
+    : [];
+}
+
+function parseScaleY(values: (number | string)[]): TransformsArray {
+  return values.length === 1 && isNumber(values[0])
+    ? [{ scaleY: values[0] }]
+    : [];
+}
+
+function parseScale(values: (number | string)[]): TransformsArray {
+  if (values.length > 2) {
+    return [];
+  }
+  if (values.length === 1) {
+    return isNumber(values[0]) ? [{ scale: values[0] }] : [];
+  }
+  const result = parseScaleX([values[0]]).concat(
+    parseScaleY([values[1] ?? values[0]])
+  );
+  return result.length === 2 ? result : [];
+}
+
+function parseRotate(
+  key: string,
+  values: (string | number)[]
+): TransformsArray {
+  return values.length === 1 && (isAngle(values[0]) || values[0] === 0)
+    ? ([
+        { [key]: values[0] === 0 ? '0deg' : values[0] },
+      ] as unknown as TransformsArray)
+    : [];
+}
+
+function parseSkewX(values: (number | string)[]): TransformsArray {
+  return values.length === 1 && (isAngle(values[0]) || values[0] === 0)
+    ? [{ skewX: values[0] === 0 ? '0deg' : values[0] }]
+    : [];
+}
+
+function parseSkewY(values: (number | string)[]): TransformsArray {
+  return values.length === 1 && (isAngle(values[0]) || values[0] === 0)
+    ? [{ skewY: values[0] === 0 ? '0deg' : values[0] }]
+    : [];
+}
+
+function parseSkew(values: (number | string)[]): TransformsArray {
+  if (values.length > 2) {
+    return [];
+  }
+  const result = parseSkewX([values[0]]).concat(
+    parseSkewY([values[1] ?? values[0]])
+  );
+  return result.length === 2 ? result : [];
+}
+
+function parseMatrix(values: (number | string)[]): TransformsArray {
+  let matrixValues: number[] = [];
+
+  if (isNumberArray(values)) {
+    if (values.length === 6) {
+      // prettier-ignore
+      matrixValues = [
+        values[0], values[1], 0, 0,
+        values[2], values[3], 0, 0,
+        0,         0,         1, 0,
+        values[4], values[5], 0, 1
+      ];
+    } else if (values.length === 16) {
+      matrixValues = values;
+    }
   }
 
-  if (Array.isArray(value)) {
+  return matrixValues.length > 0 ? [{ matrix: matrixValues }] : [];
+}
+
+const parseTransformProperty = (transform: string): TransformsArray => {
+  const [key, valueString] = transform.split(/\(\s*/);
+  const values = parseValues(valueString.replace(/\)$/g, ''));
+
+  switch (key) {
+    case 'translate':
+      return parseTranslate(values);
+    case 'translateX':
+      return parseTranslateX(values);
+    case 'translateY':
+      return parseTranslateY(values);
+    case 'scale':
+      return parseScale(values);
+    case 'scaleX':
+      return parseScaleX(values);
+    case 'scaleY':
+      return parseScaleY(values);
+    case 'rotate':
+    case 'rotateX':
+    case 'rotateY':
+    case 'rotateZ':
+      return parseRotate(key, values);
+    case 'skew':
+      return parseSkew(values);
+    case 'skewX':
+      return parseSkewX(values);
+    case 'skewY':
+      return parseSkewY(values);
+    case 'matrix':
+      return parseMatrix(values);
+    default:
+      return [];
+  }
+};
+
+export const processTransform: ValueProcessor<TransformsArray | string> = (
+  value
+) => {
+  if (typeof value !== 'string') {
     return value;
   }
 
-  throw new ReanimatedError(
-    `Invalid transform input type: ${typeof value}. Expected string or array.`
-  );
+  return value
+    .split(/\)\s*/)
+    .filter(Boolean)
+    .flatMap((part) => {
+      const parsed = parseTransformProperty(part);
+
+      if (parsed.length === 0) {
+        throw new ReanimatedError(
+          ERROR_MESSAGES_TRANSFORM.invalidTransform(`${part})`)
+        );
+      }
+
+      return parsed;
+    });
 };

@@ -1,4 +1,5 @@
 'use strict';
+'worklet';
 import type { AnyRecord } from '../../common';
 import {
   ANIMATION_PROPS,

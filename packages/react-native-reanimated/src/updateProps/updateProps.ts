@@ -26,7 +26,6 @@ import jsPropsUpdater from '../createAnimatedComponent/JSPropsUpdater';
 import type { Descriptor } from '../hook/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
-// import { processTransform } from '../css/native/style/processors/transform';
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,

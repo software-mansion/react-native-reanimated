@@ -1,7 +1,12 @@
 'use strict';
 
 import type { ComponentType } from 'react';
-import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
+import type {
+  ImageStyle,
+  TextStyle,
+  ViewStyle,
+  TransformsStyle,
+} from 'react-native';
 
 export type Maybe<T> = T | null | undefined;
 
@@ -26,6 +31,11 @@ export type NormalizedTransformOrigin = [
   `${number}%` | number,
   number,
 ];
+
+export type TransformsArray = Exclude<
+  TransformsStyle['transform'],
+  string | undefined
+>;
 
 type DeprecatedProps =
   | 'transformMatrix'

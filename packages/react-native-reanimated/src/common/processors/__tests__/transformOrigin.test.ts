@@ -1,7 +1,10 @@
 'use strict';
 import { ReanimatedError } from '../../errors';
 import type { NormalizedTransformOrigin, TransformOrigin } from '../../types';
-import { ERROR_MESSAGES, processTransformOrigin } from '../transformOrigin';
+import {
+  ERROR_MESSAGES_TRANSFORM_ORIGIN,
+  processTransformOrigin,
+} from '../transformOrigin';
 
 describe(processTransformOrigin, () => {
   describe('valid cases', () => {
@@ -191,7 +194,7 @@ describe(processTransformOrigin, () => {
             cases: [
               {
                 input: 'invalid',
-                message: ERROR_MESSAGES.invalidValue(
+                message: ERROR_MESSAGES_TRANSFORM_ORIGIN.invalidValue(
                   'invalid',
                   'x',
                   'invalid',
@@ -200,7 +203,12 @@ describe(processTransformOrigin, () => {
               },
               {
                 input: '25', // number without px unit
-                message: ERROR_MESSAGES.invalidValue('25', 'x', '25', false),
+                message: ERROR_MESSAGES_TRANSFORM_ORIGIN.invalidValue(
+                  '25',
+                  'x',
+                  '25',
+                  false
+                ),
               },
             ],
           },
@@ -214,7 +222,7 @@ describe(processTransformOrigin, () => {
             cases: [
               {
                 input: 'left invalid',
-                message: ERROR_MESSAGES.invalidValue(
+                message: ERROR_MESSAGES_TRANSFORM_ORIGIN.invalidValue(
                   'invalid',
                   'y',
                   'left invalid',
@@ -223,7 +231,7 @@ describe(processTransformOrigin, () => {
               },
               {
                 input: '100% left',
-                message: ERROR_MESSAGES.invalidValue(
+                message: ERROR_MESSAGES_TRANSFORM_ORIGIN.invalidValue(
                   'left',
                   'y',
                   '100% left',
@@ -232,7 +240,7 @@ describe(processTransformOrigin, () => {
               },
               {
                 input: 'top 100%',
-                message: ERROR_MESSAGES.invalidValue(
+                message: ERROR_MESSAGES_TRANSFORM_ORIGIN.invalidValue(
                   'top',
                   'x',
                   'top 100%',
@@ -241,7 +249,12 @@ describe(processTransformOrigin, () => {
               },
               {
                 input: '25 25', // numbers without px units
-                message: ERROR_MESSAGES.invalidValue('25', 'x', '25 25', false),
+                message: ERROR_MESSAGES_TRANSFORM_ORIGIN.invalidValue(
+                  '25',
+                  'x',
+                  '25 25',
+                  false
+                ),
               },
             ],
           },
@@ -255,7 +268,7 @@ describe(processTransformOrigin, () => {
             cases: [
               {
                 input: 'left top invalid',
-                message: ERROR_MESSAGES.invalidValue(
+                message: ERROR_MESSAGES_TRANSFORM_ORIGIN.invalidValue(
                   'invalid',
                   'z',
                   'left top invalid',
@@ -264,7 +277,7 @@ describe(processTransformOrigin, () => {
               },
               {
                 input: 'left 100% 25%',
-                message: ERROR_MESSAGES.invalidValue(
+                message: ERROR_MESSAGES_TRANSFORM_ORIGIN.invalidValue(
                   '25%',
                   'z',
                   'left 100% 25%',
@@ -273,7 +286,7 @@ describe(processTransformOrigin, () => {
               },
               {
                 input: '25px 25px 25', // number without px unit
-                message: ERROR_MESSAGES.invalidValue(
+                message: ERROR_MESSAGES_TRANSFORM_ORIGIN.invalidValue(
                   '25',
                   'z',
                   '25px 25px 25',
@@ -292,7 +305,7 @@ describe(processTransformOrigin, () => {
             cases: [
               {
                 input: ['invalid'],
-                message: ERROR_MESSAGES.invalidValue(
+                message: ERROR_MESSAGES_TRANSFORM_ORIGIN.invalidValue(
                   'invalid',
                   'x',
                   ['invalid'],
@@ -301,7 +314,7 @@ describe(processTransformOrigin, () => {
               },
               {
                 input: ['25px'], // px unit not allowed in arrays
-                message: ERROR_MESSAGES.invalidValue(
+                message: ERROR_MESSAGES_TRANSFORM_ORIGIN.invalidValue(
                   '25px',
                   'x',
                   ['25px'],
@@ -310,7 +323,7 @@ describe(processTransformOrigin, () => {
               },
               {
                 input: ['left', 'invalid'],
-                message: ERROR_MESSAGES.invalidValue(
+                message: ERROR_MESSAGES_TRANSFORM_ORIGIN.invalidValue(
                   'invalid',
                   'y',
                   ['left', 'invalid'],
@@ -319,7 +332,7 @@ describe(processTransformOrigin, () => {
               },
               {
                 input: ['left', 'left'], // repeated x-axis keyword
-                message: ERROR_MESSAGES.invalidValue(
+                message: ERROR_MESSAGES_TRANSFORM_ORIGIN.invalidValue(
                   'left',
                   'y',
                   ['left', 'left'],
@@ -328,7 +341,7 @@ describe(processTransformOrigin, () => {
               },
               {
                 input: ['top', 'bottom'], // two same axis keywords
-                message: ERROR_MESSAGES.invalidValue(
+                message: ERROR_MESSAGES_TRANSFORM_ORIGIN.invalidValue(
                   'top',
                   'x',
                   ['top', 'bottom'],

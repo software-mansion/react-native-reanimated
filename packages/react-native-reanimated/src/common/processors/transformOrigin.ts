@@ -50,7 +50,7 @@ function getAllowedValues(axis: Axis, isArray: boolean): string {
   return allowed.join(', ');
 }
 
-export const ERROR_MESSAGES = {
+export const ERROR_MESSAGES_TRANSFORM_ORIGIN = {
   invalidTransformOrigin: (value: Readonly<TransformOrigin>) =>
     `Invalid transformOrigin: ${JSON.stringify(value)}. Expected 1-3 values.`,
   invalidValue: (
@@ -126,7 +126,9 @@ export const processTransformOrigin: ValueProcessor<TransformOrigin> = (
   const customParse = isArray ? () => null : parsePx;
 
   if (components.length < 1 || components.length > 3) {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidTransformOrigin(value));
+    throw new ReanimatedError(
+      ERROR_MESSAGES_TRANSFORM_ORIGIN.invalidTransformOrigin(value)
+    );
   }
 
   components = maybeSwapComponents(components);
@@ -136,18 +138,35 @@ export const processTransformOrigin: ValueProcessor<TransformOrigin> = (
       components[0] ?? '50%',
       true,
       customParse,
-      () => ERROR_MESSAGES.invalidValue(components[0], 'x', value, isArray),
+      () =>
+        ERROR_MESSAGES_TRANSFORM_ORIGIN.invalidValue(
+          components[0],
+          'x',
+          value,
+          isArray
+        ),
       HORIZONTAL_CONVERSIONS
     ),
     parseValue(
       components[1] ?? '50%',
       true,
       customParse,
-      () => ERROR_MESSAGES.invalidValue(components[1], 'y', value, isArray),
+      () =>
+        ERROR_MESSAGES_TRANSFORM_ORIGIN.invalidValue(
+          components[1],
+          'y',
+          value,
+          isArray
+        ),
       VERTICAL_CONVERSIONS
     ),
     parseValue(components[2] ?? 0, false, customParse, () =>
-      ERROR_MESSAGES.invalidValue(components[2], 'z', value, isArray)
+      ERROR_MESSAGES_TRANSFORM_ORIGIN.invalidValue(
+        components[2],
+        'z',
+        value,
+        isArray
+      )
     ),
   ];
 };
