@@ -60,19 +60,30 @@ function isDynamicColorObject(value: any): boolean {
   );
 }
 
-export function processColor(color: unknown): number | null | undefined {
-  let normalizedColor = processColorInitially(color);
+export const ERROR_MESSAGES = {
+  invalidColor: (color: unknown) => `Invalid color value: ${String(color)}`,
+};
 
-  if (typeof normalizedColor !== 'number') {
-    return normalizedColor;
-  }
+/**
+ * Processes a color value and returns a normalized color representation.
+ *
+ * @param value - The color value to process (string, number, or ColorValue)
+ * @returns The processed color value as a number for valid colors, null for
+ *   transparent colors, or undefined for invalid colors
+ */
+export function processColor(value: unknown): number | null {
+  let normalizedColor = processColorInitially(value);
 
-  if (IS_ANDROID) {
+  if (IS_ANDROID && typeof normalizedColor == 'number') {
     // Android use 32 bit *signed* integer to represent the color
     // We utilize the fact that bitwise operations in JS also operates on
     // signed 32 bit integers, so that we can use those to convert from
     // *unsigned* to *signed* 32bit int that way.
     normalizedColor = normalizedColor | 0x0;
+  }
+
+  if (normalizedColor === undefined) {
+    throw new ReanimatedError(ERROR_MESSAGES.invalidColor(value));
   }
 
   return normalizedColor;
@@ -85,7 +96,7 @@ export function processColorsInProps(props: StyleProps) {
     const value = props[key];
 
     if (Array.isArray(value)) {
-      props[key] = value.map((c: unknown) => processColor(c));
+      props[key] = value.map((c) => processColor(c));
     } else if (isDynamicColorObject(value)) {
       if (!IS_IOS) {
         throw new ReanimatedError(
