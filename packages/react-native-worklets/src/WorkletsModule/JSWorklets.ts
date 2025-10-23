@@ -79,6 +79,12 @@ class JSWorklets implements IWorkletsModule {
     );
   }
 
+  runOnRuntimeAsync(): never {
+    throw new WorkletsError(
+      'runOnRuntimeAsync should never be called in JSWorklets.'
+    );
+  }
+
   createSerializableSet(): never {
     throw new WorkletsError(
       'createSerializableSet should never be called in JSWorklets.'

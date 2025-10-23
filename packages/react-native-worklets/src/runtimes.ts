@@ -170,6 +170,32 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
   runOnRuntime(workletRuntime, worklet)(...args);
 }
 
+export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): Promise<ReturnValue> {
+  'worklet';
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
+    throw new WorkletsError(
+      '`runOnRuntimeAsync` cannot be called on the Worker Runtime.'
+    );
+  }
+
+  return new Promise<ReturnValue>((resolve, reject) => {
+    WorkletsModule.runOnRuntimeAsync(
+      workletRuntime,
+      createSerializable(() => {
+        'worklet';
+        const result = worklet(...args);
+        return makeShareableCloneOnUIRecursive(result);
+      }),
+      createSerializable(resolve),
+      createSerializable(reject)
+    );
+  });
+}
+
 /** Configuration object for creating a worklet runtime. */
 export type WorkletRuntimeConfig = {
   /** The name of the worklet runtime. */
