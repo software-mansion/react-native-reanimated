@@ -185,7 +185,8 @@ using namespace facebook::react;
 - (void)runCoreAnimationForView:(ReactTag)viewTag
                        oldFrame:(const facebook::react::Rect &)oldFrame
                        newFrame:(const facebook::react::Rect &)newFrame
-                     completion:(std::function<void()>)completion
+                     completion:(std::function<void(bool)>)completion
+                   animationKey:(NSString *)animationKey
 {
   RCTSurfacePresenter *surfacePresenter = self.surfacePresenter;
   RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
@@ -199,14 +200,23 @@ using namespace facebook::react;
     return;
   }
 
-  CGSize layerSize = componentView.layer.presentationLayer.frame.size;
-  CGFloat centerOffsetX = layerSize.width / 2;
-  CGFloat centerOffsetY = layerSize.height / 2;
+  CGRect presentationLayerFrame = componentView.layer.presentationLayer.frame;
+  CGFloat centerOffsetX = presentationLayerFrame.size.width / 2;
+  CGFloat centerOffsetY = presentationLayerFrame.size.height / 2;
 
-  CGFloat oldX = oldFrame.origin.x + centerOffsetX;
-  CGFloat oldY = oldFrame.origin.y + centerOffsetY;
+  // We are using the presentation layer's frame instead of the oldFrame to properly handle
+  // cases where animation is interrupted mid-way and replaced by the next one.
+  // In such cases the presentation layer allows us to start the new animation from
+  // the current visible position of the view and avoid "jumps"
+  CGFloat oldX = presentationLayerFrame.origin.x + centerOffsetX;
+  CGFloat oldY = presentationLayerFrame.origin.y + centerOffsetY;
   CGFloat newX = newFrame.origin.x + centerOffsetX;
   CGFloat newY = newFrame.origin.y + centerOffsetY;
+
+  if ([animationKey isEqual:@"enteringAnimation"]) {
+    // TODO: Handle this properly
+    oldX = centerOffsetX - 400;
+  }
 
   NSMutableArray *animations = [NSMutableArray array];
 
@@ -226,22 +236,20 @@ using namespace facebook::react;
 
   componentView.layer.position = CGPointMake(needsXAnimation ? newX : oldX, needsYAnimation ? newY : oldY);
 
-  CAAnimationGroup *positionGroup = [CAAnimationGroup animation];
-  positionGroup.animations = animations;
+  CAAnimationGroup *animationGroup = [CAAnimationGroup animation];
+  animationGroup.animations = animations;
 
   // TODO: Read the config and set the proper animation details
-  positionGroup.duration = 0.5;
+  animationGroup.duration = 1.0;
 
   REACoreAnimationDelegate *delegate =
       [REACoreAnimationDelegate delegateWithStart:nil
                                              stop:^(CAAnimation *animation, BOOL finished) {
-                                               if (finished) {
-                                                 completion();
-                                               }
+                                               completion(finished);
                                              }];
-  positionGroup.delegate = delegate;
+  animationGroup.delegate = delegate;
 
-  [componentView.layer addAnimation:positionGroup forKey:@"positionGroup"];
+  [componentView.layer addAnimation:animationGroup forKey:animationKey];
 }
 
 @end

@@ -342,12 +342,19 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
         startEnteringAnimation(tag, mutation);
         filteredMutations.push_back(mutation);
 
-        // temporarily set opacity to 0 to prevent flickering on android
-        std::shared_ptr<ShadowView> newView =
-            cloneViewWithoutOpacity(mutation, propsParserContext);
+        // TODO: The opacity set to 0 is temporarily turned off for the CA
+        // animations to work properly for entering temporarily set opacity to 0
+        // to prevent flickering on android
+        //        std::shared_ptr<ShadowView> newView =
+        //            cloneViewWithoutOpacity(mutation, propsParserContext);
+        //        auto x = newView->tag;
 
+        //        filteredMutations.push_back(ShadowViewMutation::UpdateMutation(
+        //            mutation.newChildShadowView, *newView, mutationParent));
         filteredMutations.push_back(ShadowViewMutation::UpdateMutation(
-            mutation.newChildShadowView, *newView, mutationParent));
+            mutation.newChildShadowView,
+            mutation.newChildShadowView,
+            mutationParent));
         break;
       }
 
@@ -680,7 +687,8 @@ void LayoutAnimationsProxy::startEnteringAnimation(
                               current,
                               mutation,
                               opacity,
-                              tag]() {
+                              tag,
+                              this]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -696,20 +704,40 @@ void LayoutAnimationsProxy::startEnteringAnimation(
       window = strongThis->surfaceManager.getWindow(
           mutation.newChildShadowView.surfaceId);
     }
+    auto oldView = mutation.oldChildShadowView;
+    auto newView = mutation.newChildShadowView;
 
-    Snapshot values(mutation.newChildShadowView, window);
-    auto &uiRuntime = strongThis->uiRuntime_;
-    jsi::Object yogaValues(uiRuntime);
-    yogaValues.setProperty(uiRuntime, "targetOriginX", values.x);
-    yogaValues.setProperty(uiRuntime, "targetGlobalOriginX", values.x);
-    yogaValues.setProperty(uiRuntime, "targetOriginY", values.y);
-    yogaValues.setProperty(uiRuntime, "targetGlobalOriginY", values.y);
-    yogaValues.setProperty(uiRuntime, "targetWidth", values.width);
-    yogaValues.setProperty(uiRuntime, "targetHeight", values.height);
-    yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
-    yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
-    strongThis->layoutAnimationsManager_->startLayoutAnimation(
-        uiRuntime, tag, LayoutAnimationType::ENTERING, yogaValues);
+    //    Snapshot values(mutation.newChildShadowView, window);
+    //    auto &uiRuntime = strongThis->uiRuntime_;
+    //    jsi::Object yogaValues(uiRuntime);
+    //    yogaValues.setProperty(uiRuntime, "targetOriginX", values.x);
+    //    yogaValues.setProperty(uiRuntime, "targetGlobalOriginX", values.x);
+    //    yogaValues.setProperty(uiRuntime, "targetOriginY", values.y);
+    //    yogaValues.setProperty(uiRuntime, "targetGlobalOriginY", values.y);
+    //    yogaValues.setProperty(uiRuntime, "targetWidth", values.width);
+    //    yogaValues.setProperty(uiRuntime, "targetHeight", values.height);
+    //    yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
+    //    yogaValues.setProperty(uiRuntime, "windowHeight",
+    //    values.windowHeight);
+    //    strongThis->layoutAnimationsManager_->startLayoutAnimation(
+    //        uiRuntime, tag, LayoutAnimationType::ENTERING, yogaValues);
+
+    // TODO: Better configuration of source frame in the entering animation.
+    facebook::react::Rect sourceFrame =
+        mutation.newChildShadowView.layoutMetrics.frame;
+    sourceFrame.origin.x -= window.width;
+
+    // It is needed to delay the trigger of the entering CA animation
+    // Without this, the animation attempts to animate a view that is not yet
+    // mounted
+    dispatch_async(dispatch_get_main_queue(), ^{
+      runCoreAnimationForView_(
+          tag,
+          sourceFrame,
+          mutation.newChildShadowView.layoutMetrics.frame,
+          [this, tag](bool finished) { this->endLayoutAnimation(tag, false); },
+          "enteringAnimation");
+    });
   });
 }
 
@@ -722,7 +750,7 @@ void LayoutAnimationsProxy::startExitingAnimation(
   auto surfaceId = mutation.oldChildShadowView.surfaceId;
 
   uiScheduler_->scheduleOnUI(
-      [weakThis = weak_from_this(), tag, mutation, surfaceId]() {
+      [weakThis = weak_from_this(), tag, mutation, surfaceId, this]() {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
@@ -739,18 +767,37 @@ void LayoutAnimationsProxy::startExitingAnimation(
 
         Snapshot values(oldView, window);
 
-        auto &uiRuntime = strongThis->uiRuntime_;
-        jsi::Object yogaValues(uiRuntime);
-        yogaValues.setProperty(uiRuntime, "currentOriginX", values.x);
-        yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", values.x);
-        yogaValues.setProperty(uiRuntime, "currentOriginY", values.y);
-        yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", values.y);
-        yogaValues.setProperty(uiRuntime, "currentWidth", values.width);
-        yogaValues.setProperty(uiRuntime, "currentHeight", values.height);
-        yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
-        yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
-        strongThis->layoutAnimationsManager_->startLayoutAnimation(
-            uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
+        //                auto &uiRuntime = strongThis->uiRuntime_;
+        //                jsi::Object yogaValues(uiRuntime);
+        //                yogaValues.setProperty(uiRuntime, "currentOriginX",
+        //                values.x); yogaValues.setProperty(uiRuntime,
+        //                "currentGlobalOriginX", values.x);
+        //                yogaValues.setProperty(uiRuntime, "currentOriginY",
+        //                values.y); yogaValues.setProperty(uiRuntime,
+        //                "currentGlobalOriginY", values.y);
+        //                yogaValues.setProperty(uiRuntime, "currentWidth",
+        //                values.width); yogaValues.setProperty(uiRuntime,
+        //                "currentHeight", values.height);
+        //                yogaValues.setProperty(uiRuntime, "windowWidth",
+        //                values.windowWidth); yogaValues.setProperty(uiRuntime,
+        //                "windowHeight", values.windowHeight);
+        //                strongThis->layoutAnimationsManager_->startLayoutAnimation(
+        //                    uiRuntime, tag, LayoutAnimationType::EXITING,
+        //                    yogaValues);
+
+        facebook::react::Rect destinationFrame =
+            mutation.oldChildShadowView.layoutMetrics.frame;
+        destinationFrame.origin.x = values.windowWidth;
+
+        runCoreAnimationForView_(
+            tag,
+            mutation.oldChildShadowView.layoutMetrics.frame,
+            destinationFrame,
+            [this, tag](bool finished) {
+              this->endLayoutAnimation(tag, finished);
+            },
+            "exitingAnimation");
+
         strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
       });
 }
@@ -763,13 +810,6 @@ void LayoutAnimationsProxy::startLayoutAnimation(
 #endif
   auto surfaceId = mutation.oldChildShadowView.surfaceId;
 
-  // TODO: Here or inside the scheduleOnUI?
-  //  runCoreAnimationForView_(
-  //      tag, mutation.oldChildShadowView.layoutMetrics.frame,
-  //      mutation.newChildShadowView.layoutMetrics.frame, [this, tag]{
-  //                              this->endLayoutAnimation(tag, false);
-  //  });
-
   uiScheduler_->scheduleOnUI(
       [weakThis = weak_from_this(), mutation, surfaceId, tag, this]() {
         auto strongThis = weakThis.lock();
@@ -778,6 +818,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
         }
 
         auto oldView = mutation.oldChildShadowView;
+        auto newView = mutation.newChildShadowView;
         Rect window{};
         {
           auto &mutex = strongThis->mutex;
@@ -789,37 +830,41 @@ void LayoutAnimationsProxy::startLayoutAnimation(
         Snapshot currentValues(oldView, window);
         Snapshot targetValues(mutation.newChildShadowView, window);
 
-        //    auto &uiRuntime = strongThis->uiRuntime_;
-        //    jsi::Object yogaValues(uiRuntime);
-        //    yogaValues.setProperty(uiRuntime, "currentOriginX",
-        //    currentValues.x); yogaValues.setProperty(uiRuntime,
-        //    "currentGlobalOriginX", currentValues.x);
-        //    yogaValues.setProperty(uiRuntime, "currentOriginY",
-        //    currentValues.y); yogaValues.setProperty(uiRuntime,
-        //    "currentGlobalOriginY", currentValues.y);
-        //    yogaValues.setProperty(uiRuntime, "currentWidth",
-        //    currentValues.width); yogaValues.setProperty(uiRuntime,
-        //    "currentHeight", currentValues.height);
-        //    yogaValues.setProperty(uiRuntime, "targetOriginX",
-        //    targetValues.x); yogaValues.setProperty(uiRuntime,
-        //    "targetGlobalOriginX", targetValues.x);
-        //    yogaValues.setProperty(uiRuntime, "targetOriginY",
-        //    targetValues.y); yogaValues.setProperty(uiRuntime,
-        //    "targetGlobalOriginY", targetValues.y);
-        //    yogaValues.setProperty(uiRuntime, "targetWidth",
-        //    targetValues.width); yogaValues.setProperty(uiRuntime,
-        //    "targetHeight", targetValues.height);
-        //    yogaValues.setProperty(uiRuntime, "windowWidth",
-        //    targetValues.windowWidth); yogaValues.setProperty(
-        //        uiRuntime, "windowHeight", targetValues.windowHeight);
-        //    strongThis->layoutAnimationsManager_->startLayoutAnimation(
-        //        uiRuntime, tag, LayoutAnimationType::LAYOUT, yogaValues);
+        //            auto &uiRuntime = strongThis->uiRuntime_;
+        //            jsi::Object yogaValues(uiRuntime);
+        //            yogaValues.setProperty(uiRuntime, "currentOriginX",
+        //            currentValues.x); yogaValues.setProperty(uiRuntime,
+        //            "currentGlobalOriginX", currentValues.x);
+        //            yogaValues.setProperty(uiRuntime, "currentOriginY",
+        //            currentValues.y); yogaValues.setProperty(uiRuntime,
+        //            "currentGlobalOriginY", currentValues.y);
+        //            yogaValues.setProperty(uiRuntime, "currentWidth",
+        //            currentValues.width); yogaValues.setProperty(uiRuntime,
+        //            "currentHeight", currentValues.height);
+        //            yogaValues.setProperty(uiRuntime, "targetOriginX",
+        //            targetValues.x); yogaValues.setProperty(uiRuntime,
+        //            "targetGlobalOriginX", targetValues.x);
+        //            yogaValues.setProperty(uiRuntime, "targetOriginY",
+        //            targetValues.y); yogaValues.setProperty(uiRuntime,
+        //            "targetGlobalOriginY", targetValues.y);
+        //            yogaValues.setProperty(uiRuntime, "targetWidth",
+        //            targetValues.width); yogaValues.setProperty(uiRuntime,
+        //            "targetHeight", targetValues.height);
+        //            yogaValues.setProperty(uiRuntime, "windowWidth",
+        //            targetValues.windowWidth); yogaValues.setProperty(
+        //                uiRuntime, "windowHeight", targetValues.windowHeight);
+        //            strongThis->layoutAnimationsManager_->startLayoutAnimation(
+        //                uiRuntime, tag, LayoutAnimationType::LAYOUT,
+        //                yogaValues);
 
         runCoreAnimationForView_(
             tag,
             mutation.oldChildShadowView.layoutMetrics.frame,
             mutation.newChildShadowView.layoutMetrics.frame,
-            [this, tag] { this->endLayoutAnimation(tag, false); });
+            [this, tag](bool finished) {
+              this->endLayoutAnimation(tag, false);
+            },
+            "layoutAnimation");
       });
 }
 

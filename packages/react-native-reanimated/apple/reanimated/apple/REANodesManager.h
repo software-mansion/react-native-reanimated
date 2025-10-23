@@ -24,6 +24,7 @@ typedef void (^REAPerformOperations)();
 - (void)runCoreAnimationForView:(ReactTag)viewTag
                        oldFrame:(const facebook::react::Rect &)oldFrame
                        newFrame:(const facebook::react::Rect &)newFrame
-                     completion:(std::function<void()>)completion;
+                     completion:(std::function<void(bool)>)completion
+                   animationKey:(NSString *)animationKey;
 
 @end

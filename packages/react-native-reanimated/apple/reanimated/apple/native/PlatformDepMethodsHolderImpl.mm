@@ -110,8 +110,14 @@ RunCoreAnimationForView makeRunCoreAnimationForView(REANodesManager *nodesManage
                                      const int viewTag,
                                      const facebook::react::Rect &oldFrame,
                                      const facebook::react::Rect &newFrame,
-                                     std::function<void()> completion) {
-    [nodesManager runCoreAnimationForView:viewTag oldFrame:oldFrame newFrame:newFrame completion:completion];
+                                     std::function<void(bool)> completion,
+                                     const std::string &animationKey) {
+    [nodesManager runCoreAnimationForView:viewTag
+                                 oldFrame:oldFrame
+                                 newFrame:newFrame
+                               completion:completion
+                             animationKey:[NSString stringWithCString:animationKey.c_str()
+                                                             encoding:[NSString defaultCStringEncoding]]];
   };
   return runCoreAnimationForView;
 }

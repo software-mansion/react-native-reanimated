@@ -58,7 +58,8 @@ using RunCoreAnimationForView = std::function<void(
     const int,
     const facebook::react::Rect &,
     const facebook::react::Rect &,
-    std::function<void()> &&)>;
+    std::function<void(bool)> &&,
+    const std::string &)>;
 
 struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
