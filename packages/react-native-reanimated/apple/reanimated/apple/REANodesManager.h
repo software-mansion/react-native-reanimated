@@ -8,11 +8,9 @@ typedef void (^REAEventHandler)(id<RCTEvent> event);
 typedef void (^CADisplayLinkOperation)(READisplayLink *displayLink);
 typedef void (^REAPerformOperations)();
 
-// TODO: Attempt to make it work with a Delegate for animation completion. No idea if this is correct
-@interface REANodesManager : NSObject <CAAnimationDelegate>
+@interface REANodesManager : NSObject
 
 @property (weak) RCTSurfacePresenter *surfacePresenter;
-@property (nonatomic, copy) void (^pendingAnimationCompletion)(void);
 
 - (nonnull instancetype)init;
 - (void)invalidate;

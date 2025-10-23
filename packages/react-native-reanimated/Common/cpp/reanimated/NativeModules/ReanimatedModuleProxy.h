@@ -43,10 +43,12 @@ namespace reanimated {
 using namespace facebook;
 using namespace css;
 
-using UpdatesBatch = std::vector<std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
+using UpdatesBatch =
+    std::vector<std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
 
-class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
-                              public std::enable_shared_from_this<ReanimatedModuleProxy> {
+class ReanimatedModuleProxy
+    : public ReanimatedModuleProxySpec,
+      public std::enable_shared_from_this<ReanimatedModuleProxy> {
  public:
   ReanimatedModuleProxy(
       const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
@@ -67,7 +69,9 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
       const jsi::Value &worklet,
       const jsi::Value &eventName,
       const jsi::Value &emitterReactTag) override;
-  void unregisterEventHandler(jsi::Runtime &rt, const jsi::Value &registrationId) override;
+  void unregisterEventHandler(
+      jsi::Runtime &rt,
+      const jsi::Value &registrationId) override;
 
   jsi::Value getViewProp(
       jsi::Runtime &rt,
@@ -75,23 +79,36 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
       const jsi::Value &propName,
       const jsi::Value &callback) override;
 
-  jsi::Value getStaticFeatureFlag(jsi::Runtime &rt, const jsi::Value &name) override;
-  jsi::Value setDynamicFeatureFlag(jsi::Runtime &rt, const jsi::Value &name, const jsi::Value &value) override;
+  jsi::Value getStaticFeatureFlag(jsi::Runtime &rt, const jsi::Value &name)
+      override;
+  jsi::Value setDynamicFeatureFlag(
+      jsi::Runtime &rt,
+      const jsi::Value &name,
+      const jsi::Value &value) override;
 
-  jsi::Value configureLayoutAnimationBatch(jsi::Runtime &rt, const jsi::Value &layoutAnimationsBatch) override;
-  void setShouldAnimateExiting(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &shouldAnimate) override;
+  jsi::Value configureLayoutAnimationBatch(
+      jsi::Runtime &rt,
+      const jsi::Value &layoutAnimationsBatch) override;
+  void setShouldAnimateExiting(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag,
+      const jsi::Value &shouldAnimate) override;
 
   void onRender(double timestampMs);
 
-  bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
+  bool isAnyHandlerWaitingForEvent(
+      const std::string &eventName,
+      const int emitterReactTag);
 
   void maybeRequestRender();
 
-  bool
-  handleEvent(const std::string &eventName, const int emitterReactTag, const jsi::Value &payload, double currentTime);
+  bool handleEvent(
+      const std::string &eventName,
+      const int emitterReactTag,
+      const jsi::Value &payload,
+      double currentTime);
 
-  inline std::shared_ptr<JSLogger> getJSLogger() const
-  {
+  inline std::shared_ptr<JSLogger> getJSLogger() const {
     return jsLogger_;
   }
 
@@ -102,26 +119,43 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   void performOperations();
 
-  void setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) override;
+  void setViewStyle(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag,
+      const jsi::Value &viewStyle) override;
 
-  void markNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) override;
-  void unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &viewTag) override;
+  void markNodeAsRemovable(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper) override;
+  void unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &viewTag)
+      override;
 
   void registerCSSKeyframes(
       jsi::Runtime &rt,
       const jsi::Value &animationName,
       const jsi::Value &viewName,
       const jsi::Value &keyframesConfig) override;
-  void unregisterCSSKeyframes(jsi::Runtime &rt, const jsi::Value &animationName, const jsi::Value &viewName) override;
+  void unregisterCSSKeyframes(
+      jsi::Runtime &rt,
+      const jsi::Value &animationName,
+      const jsi::Value &viewName) override;
 
-  void applyCSSAnimations(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &animationUpdates)
-      override;
+  void applyCSSAnimations(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper,
+      const jsi::Value &animationUpdates) override;
   void unregisterCSSAnimations(const jsi::Value &viewTag) override;
 
-  void registerCSSTransition(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &transitionConfig)
+  void registerCSSTransition(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper,
+      const jsi::Value &transitionConfig) override;
+  void updateCSSTransition(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag,
+      const jsi::Value &configUpdates) override;
+  void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag)
       override;
-  void updateCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &configUpdates) override;
-  void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) override;
 
   void cssLoopCallback(const double /*timestampMs*/);
 
@@ -131,7 +165,10 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
       const jsi::Value &commandNameValue,
       const jsi::Value &argsValue);
 
-  jsi::String obtainProp(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &propName);
+  jsi::String obtainProp(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper,
+      const jsi::Value &propName);
 
   jsi::Value measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue);
 
@@ -159,20 +196,20 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
       const jsi::Value &keyboardEventContainer,
       const jsi::Value &isStatusBarTranslucent,
       const jsi::Value &isNavigationBarTranslucent) override;
-  void unsubscribeFromKeyboardEvents(jsi::Runtime &rt, const jsi::Value &listenerId) override;
+  void unsubscribeFromKeyboardEvents(
+      jsi::Runtime &rt,
+      const jsi::Value &listenerId) override;
 
-  inline LayoutAnimationsManager &layoutAnimationsManager()
-  {
+  inline LayoutAnimationsManager &layoutAnimationsManager() {
     return *layoutAnimationsManager_;
   }
 
-  [[nodiscard]] inline bool isReducedMotion() const
-  {
+  [[nodiscard]] inline bool isReducedMotion() const {
     return isReducedMotion_;
   }
 
-  [[nodiscard]] inline std::shared_ptr<WorkletsModuleProxy> getWorkletsModuleProxy() const
-  {
+  [[nodiscard]] inline std::shared_ptr<WorkletsModuleProxy>
+  getWorkletsModuleProxy() const {
     return workletsModuleProxy_;
   }
 
