@@ -78,12 +78,13 @@ export const callMicrotasks = SHOULD_BE_USE_WEB
  * @param args - Arguments to pass to the function.
  * @see https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI
  */
-// @ts-expect-error This overload is correct since it's what user sees in his code
+// @ts-expect-error This overload is correct since it's what user sees in their code
 // before it's transformed by Worklets Babel plugin.
 export function scheduleOnUI<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue,
   ...args: Args
 ): void;
+
 export function scheduleOnUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
   ...args: Args
@@ -146,7 +147,7 @@ export function scheduleOnUI<Args extends unknown[], ReturnValue>(
  *   first argument.
  * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI @deprecated Use `scheduleOnUI` instead.
  */
-// @ts-expect-error This overload is correct since it's what user sees in his code
+// @ts-expect-error This overload is correct since it's what user sees in their code
 // before it's transformed by Worklets Babel plugin.
 export function runOnUI<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue
@@ -192,12 +193,13 @@ if (__DEV__ && !SHOULD_BE_USE_WEB) {
  * @returns The return value of the function passed as the first argument.
  * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUISync
  */
-// @ts-expect-error This overload is correct since it's what user sees in his code
+// @ts-expect-error This overload is correct since it's what user sees in their code
 // before it's transformed by Worklets Babel plugin.
 export function runOnUISync<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue,
   ...args: Args
 ): ReturnValue;
+
 export function runOnUISync<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
   ...args: Args
@@ -211,7 +213,7 @@ export function runOnUISync<Args extends unknown[], ReturnValue>(
   );
 }
 
-// @ts-expect-error This overload is correct since it's what user sees in his code
+// @ts-expect-error This overload is correct since it's what user sees in their code
 // before it's transformed by Worklets Babel plugin.
 export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue
