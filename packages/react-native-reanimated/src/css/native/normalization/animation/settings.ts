@@ -1,5 +1,5 @@
 'use strict';
-import { ReanimatedError } from '../../../../common';
+import { isNumber, ReanimatedError } from '../../../../common';
 import type {
   CSSAnimationDirection,
   CSSAnimationFillMode,
@@ -7,7 +7,7 @@ import type {
   CSSAnimationPlayState,
   SingleCSSAnimationSettings,
 } from '../../../types';
-import { deepEqual, isNumber } from '../../../utils';
+import { deepEqual } from '../../../utils';
 import type { NormalizedSingleCSSAnimationSettings } from '../../types';
 import {
   normalizeDelay,
