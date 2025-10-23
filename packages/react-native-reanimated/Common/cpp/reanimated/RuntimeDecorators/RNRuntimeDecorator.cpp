@@ -45,6 +45,7 @@ void RNRuntimeDecorator::decorate(
 void RNRuntimeDecorator::installDebugBindings(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<ReanimatedModuleProxy> &reanimatedModuleProxy) {
+#if TARGET_OS_X
   jsi_utils::installJsiFunction(
       rnRuntime,
       "__getTagFromShadowNodeWrapper",
@@ -53,6 +54,7 @@ void RNRuntimeDecorator::installDebugBindings(
             rt, shadowNodeWrapper);
         return jsi::Value(rt, static_cast<double>(node->getTag()));
       });
+#endif // TARGET_OS_X
 
   jsi_utils::installJsiFunction(
       rnRuntime,
