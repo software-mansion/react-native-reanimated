@@ -13,7 +13,12 @@ constexpr uint64_t rnRuntimeId{0};
 constexpr uint64_t uiRuntimeId{1};
 extern const std::string uiRuntimeName;
 
-constexpr facebook::jsi::UUID weakRuntimeUUID{2, 1, 3, 7, 2137};
+constexpr facebook::jsi::UUID weakRuntimeUUID{
+    0x770c6f2e,
+    0x1e4d,
+    0x436a,
+    0xa2b1,
+    0x9f322c8d5f5e};
 
 }; // namespace RuntimeData
 } // namespace worklets
