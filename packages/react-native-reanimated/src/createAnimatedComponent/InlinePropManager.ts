@@ -38,21 +38,29 @@ function inlinePropsHasChanged(
   return false;
 }
 
-function getInlinePropsUpdate(inlineProps: Record<string, unknown>) {
+function getInlinePropsUpdateInternal(styleValue: unknown): unknown {
   'worklet';
-  const update: Record<string, unknown> = {};
-  for (const [key, styleValue] of Object.entries(inlineProps)) {
-    if (isSharedValue(styleValue)) {
-      update[key] = styleValue.value;
-    } else if (Array.isArray(styleValue)) {
-      update[key] = styleValue.map((item) => {
-        return getInlinePropsUpdate(item);
-      });
-    } else if (typeof styleValue === 'object') {
-      update[key] = getInlinePropsUpdate(styleValue as Record<string, unknown>);
-    } else {
-      update[key] = styleValue;
+  if (isSharedValue(styleValue)) {
+    return styleValue.value;
+  }
+  if (Array.isArray(styleValue)) {
+    return styleValue.map(getInlinePropsUpdateInternal);
+  }
+  if (styleValue && typeof styleValue === 'object') {
+    const update: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(styleValue)) {
+      update[key] = getInlinePropsUpdateInternal(value);
     }
+    return update;
+  }
+  return styleValue;
+}
+
+function getInlinePropsUpdate(styleValue: StyleProps): StyleProps {
+  'worklet';
+  const update: StyleProps = {};
+  for (const [key, value] of Object.entries(styleValue)) {
+    update[key] = getInlinePropsUpdateInternal(value);
   }
   return update;
 }
