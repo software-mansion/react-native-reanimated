@@ -1,56 +1,98 @@
-// according to RN the tranforms must have units
 'use strict';
 'worklet';
 import { ReanimatedError } from '../errors';
 
-const TRANSFORM_SPLIT_GROUP_REGEX = /(\w+)\((.+?)(px|deg|rad)?\)/g;
-const TRANSFORM_PARTS_REGEX = /(\w+)\((.+?)(px|deg|rad)?\)/;
+type TransformObject =
+  | { matrix: number[] }
+  | { perspective: number }
+  | { rotate: string }
+  | { rotateX: string }
+  | { rotateY: string }
+  | { rotateZ: string }
+  | { scale: number }
+  | { scaleX: number }
+  | { scaleY: number }
+  | { translateX: number }
+  | { translateY: number }
+  | { skewX: string }
+  | { skewY: string }
+  | Record<string, any>;
+
+// According to RN documentation, these transforms need to have string values with units
+// https://reactnative.dev/docs/transforms#transform
+const STRING_UNIT_TRANSFORMS = new Set([
+  'rotate',
+  'rotateX',
+  'rotateY',
+  'rotateZ',
+  'skewX',
+  'skewY',
+]);
+
+const TRANSFORM_REGEX = /(\w+)\(([^)]+)\)/g;
+// Capture two groups: current transform value and optional unit -> "21.37px" => ["21.37px", "21.37", "px"]
+const TRANSFORM_VALUE_REGEX = /^([-+]?\d*\.?\d+)([a-z%]*)$/g;
+
+const VALID_UNITS = ['px', 'deg', 'rad', '%'] as const;
 
 const ERROR_MESSAGES = {
   invalidTransform: (value: any) =>
     `Invalid transform: ${JSON.stringify(value)}. Expected minimum one value.`,
   invalidTransformValue: (value: any) =>
     `Invalid transform value: ${JSON.stringify(value)}. Check if it contains value name, numerical value, and unit (px or deg) where applicable.`,
+  invalidUnit: (transform: string, unit: string) =>
+    `Invalid unit "${unit}" in ${JSON.stringify(
+      transform
+    )}. Supported units: ${VALID_UNITS.join(', ')}.`,
 };
 
-export const parseTransformString = (value: string) => {
-  let transformArray: any = [];
+const parseNumberWithUnit = (name: string, value: string) => {
+  const match = value.match(TRANSFORM_VALUE_REGEX);
+  if (!match) {
+    throw new ReanimatedError(ERROR_MESSAGES.invalidTransformValue(value));
+  }
+  const number = parseFloat(match[1]);
+  const unit = match[2];
 
-  const transforms = value.match(TRANSFORM_SPLIT_GROUP_REGEX) || [];
+  const needsStringUnit = STRING_UNIT_TRANSFORMS.has(name);
+  return needsStringUnit ? `${number}${unit || 'deg'}` : number;
+};
 
-  if (transforms.length < 1) {
+export const parseTransformString = (value: string): TransformObject[] => {
+  const matches = Array.from(value.matchAll(TRANSFORM_REGEX));
+
+  if (matches.length === 0) {
     throw new ReanimatedError(ERROR_MESSAGES.invalidTransform(value));
   }
-  transforms.map((transform) => {
-    const transformProps = transform.match(TRANSFORM_PARTS_REGEX);
 
-    if (!transformProps) {
-      // what if 2/3 transforms are okay?
-      throw new ReanimatedError(ERROR_MESSAGES.invalidTransform(transform));
+  const transformArray = matches.map((match) => {
+    const [_, name, content] = match;
+    if (!name || !content) {
+      throw new ReanimatedError(ERROR_MESSAGES.invalidTransformValue(match[0]));
     }
-    if (transformProps.length > 4 || transformProps.length < 3) {
-      throw new ReanimatedError(
-        ERROR_MESSAGES.invalidTransformValue(transform)
-      );
-    }
-    const unit = transformProps[3];
 
-    transformArray.push({
-      [transformProps ? transformProps[1] : '']: parseFloat(
-        transformProps
-          ? unit
-            ? transformProps[2] + unit
-            : transformProps[2]
-          : '0'
-      ),
-    });
+    if (name === 'matrix') {
+      const matrixValues = content.split(',').map((v) => parseFloat(v.trim()));
+      return { matrix: matrixValues };
+    }
+
+    const finalValue = parseNumberWithUnit(name, content);
+    return { [name]: finalValue };
   });
+
   return transformArray;
 };
 
 export const processTransform = (value: any) => {
-  const parsedTransform =
-    typeof value === 'string' ? parseTransformString(value) : value;
+  if (typeof value === 'string') {
+    return parseTransformString(value);
+  }
 
-  return parsedTransform;
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  throw new ReanimatedError(
+    `Invalid transform input type: ${typeof value}. Expected string or array.`
+  );
 };

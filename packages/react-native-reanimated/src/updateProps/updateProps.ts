@@ -26,6 +26,7 @@ import jsPropsUpdater from '../createAnimatedComponent/JSPropsUpdater';
 import type { Descriptor } from '../hook/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
+// import { processTransform } from '../css/native/style/processors/transform';
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
@@ -51,10 +52,8 @@ if (SHOULD_BE_USE_WEB) {
      * The goal is to create a simplified version of `src/css/platform/native/config.ts`,
      * containing only properties that require processing and their associated processors
      * */
-    console.log('updates before', updates);
     processColorsInProps(updates);
     if ('transform' in updates) {
-      console.log('updates.transform', updates.transform);
       updates.transform = processTransform(updates.transform);
     }
     if ('transformOrigin' in updates) {
