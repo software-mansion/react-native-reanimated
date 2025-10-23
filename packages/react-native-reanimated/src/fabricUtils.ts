@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
+
 import { ReanimatedError } from './common/errors';
 import type { InternalHostInstance, ShadowNodeWrapper } from './commonTypes';
-import type { HostInstance } from './platform-specific/findHostInstance';
 import { findHostInstance } from './platform-specific/findHostInstance';
+import type { HostInstance } from './platform-specific/types';
 
 export function getShadowNodeWrapperFromRef(
   ref: InternalHostInstance,
