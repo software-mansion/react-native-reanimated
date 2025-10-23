@@ -36,7 +36,6 @@ using worklets::WorkletsModuleProxy;
   AnimationFrameQueue *animationFrameQueue_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
 #ifdef WORKLETS_BUNDLE_MODE
-  RCTNetworking *networkingModule_;
   WorkletsNetworking *workletsNetworking_;
 #endif // WORKLETS_BUNDLE_MODE
 #ifndef NDEBUG
@@ -85,19 +84,18 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
   auto jsCallInvoker = callInvoker_.callInvoker;
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
-  auto runtimeManager = std::make_shared<worklets::RuntimeManager>();
   auto isJavaScriptQueue = []() -> bool { return IsJavaScriptQueue(); };
   animationFrameQueue_ = [AnimationFrameQueue new];
 #ifdef WORKLETS_BUNDLE_MODE
   script = [bundleProvider_ getBundle];
   sourceURL = [[bundleProvider_ getSourceURL] UTF8String];
-  networkingModule_ = [moduleRegistry_ moduleForClass:RCTNetworking.class];
-  workletsNetworking_ = [[WorkletsNetworking alloc] init:runtimeManager rctNetworking:networkingModule_];
+  id networkingModule = [moduleRegistry_ moduleForClass:RCTNetworking.class];
+  workletsNetworking_ = [[WorkletsNetworking alloc] init:networkingModule];
 #endif // WORKLETS_BUNDLE_MODE
   auto runtimeBindings = [self getRuntimeBindings];
 
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
-      rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(isJavaScriptQueue), runtimeBindings, runtimeManager, script, sourceURL
+      rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(isJavaScriptQueue), runtimeBindings, script, sourceURL
       );
 
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
