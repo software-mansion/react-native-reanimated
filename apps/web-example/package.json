@@ -9,6 +9,7 @@
     "production": "yarn expo export -p web && yarn serve dist --single",
     "format": "prettier --write --list-different .",
     "build": "",
+    "lint": "eslint . --max-warnings 0",
     "type:check": "tsc --noEmit"
   },
   "dependencies": {
@@ -22,6 +23,7 @@
   "devDependencies": {
     "@expo/metro-runtime": "6.1.2",
     "@types/react": "19.2.2",
+    "eslint": "9.37.0",
     "prettier": "3.6.2",
     "serve": "14.2.5",
     "typescript": "5.8.3"

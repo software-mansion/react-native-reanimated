@@ -1,5 +1,5 @@
 'use strict';
-import type { AnyRecord } from '../../common';
+import { isNumber, isPercentage } from '../../common';
 import {
   ANIMATION_PROPS,
   TRANSITION_PROPS,
@@ -17,7 +17,6 @@ import type {
   Repeat,
   TimeUnit,
 } from '../types';
-import type { ConfigPropertyAlias } from '../types/config';
 
 const ANIMATION_PROPS_SET = new Set<string>(ANIMATION_PROPS);
 const TRANSITION_PROPS_SET = new Set<string>(TRANSITION_PROPS);
@@ -57,30 +56,8 @@ export const isTimeUnit = (value: unknown): value is TimeUnit =>
   typeof value === 'string' &&
   (/^-?(\d+)?(\.\d+)?(ms|s)$/.test(value) || value === '0');
 
-export const isNumber = (value: unknown): value is number =>
-  typeof value === 'number' && !isNaN(value);
-
-export const isPercentage = (value: unknown): value is `${number}%` =>
-  typeof value === 'string' && /^-?\d+(\.\d+)?%$/.test(value);
-
 export const isLength = (value: unknown): value is `${number}%` | number =>
   isNumber(value) || isPercentage(value);
-
-export const isAngle = (
-  value: string | number
-): value is `${number}deg` | `${number}rad` =>
-  typeof value === 'string' && /^-?\d+(\.\d+)?(deg|rad)$/.test(value);
-
-export const isDefined = <T>(value: T): value is NonNullable<T> =>
-  value !== undefined && value !== null;
-
-export const isRecord = <T extends AnyRecord = AnyRecord>(
-  value: unknown
-): value is T =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
-export const isNumberArray = (value: unknown): value is number[] =>
-  Array.isArray(value) && value.every(isNumber);
 
 export const isArrayOfLength = <T, L extends number>(
   value: T[],
@@ -94,16 +71,3 @@ export const isCSSKeyframesObject = (
 
 export const isCSSKeyframesRule = (value: object): value is CSSKeyframesRule =>
   typeof value === 'object' && 'cssRules' in value && 'cssText' in value;
-
-export const isConfigPropertyAlias = <P extends AnyRecord>(
-  value: unknown
-): value is ConfigPropertyAlias<P> =>
-  !!value &&
-  typeof value === 'object' &&
-  'as' in value &&
-  typeof value.as === 'string';
-
-export const hasProp = <P extends AnyRecord, K extends string>(
-  obj: P,
-  key: K
-): obj is P & Record<K, string> => key in obj;

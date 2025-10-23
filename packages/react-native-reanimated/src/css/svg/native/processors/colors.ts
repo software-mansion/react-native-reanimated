@@ -1,16 +1,12 @@
 'use strict';
 import type { ColorValue } from 'react-native';
 
-import type { ValueProcessor } from '../../../../common';
-import { processColor } from '../../../native';
+import { processColor, type ValueProcessor } from '../../../../common';
 
 export const processColorSVG: ValueProcessor<
   ColorValue | number,
   number | string
 > = (value) => {
-  if (value === 'none') {
-    return 'transparent';
-  }
   if (value === 'currentColor') {
     return 'currentColor';
   }

@@ -24,12 +24,12 @@ SVGBrush::SVGBrush(const folly::dynamic &value)
 bool SVGBrush::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   return jsiValue.isNumber() || jsiValue.isUndefined() ||
       (jsiValue.isString() &&
-       isValidColorString(jsiValue.getString(rt).utf8(rt)));
+       jsiValue.getString(rt).utf8(rt) == "currentColor");
 }
 
 bool SVGBrush::canConstruct(const folly::dynamic &value) {
   return value.isNumber() || value.empty() ||
-      isValidColorString(value.asString());
+      value.asString() == "currentColor";
 }
 
 folly::dynamic SVGBrush::toDynamic() const {
@@ -77,9 +77,5 @@ std::ostream &operator<<(std::ostream &os, const SVGBrush &colorValue) {
 }
 
 #endif // NDEBUG
-
-bool SVGBrush::isValidColorString(const std::string &value) {
-  return value == "transparent" || value == "currentColor";
-}
 
 } // namespace reanimated::css

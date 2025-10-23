@@ -1,6 +1,6 @@
 'use strict';
 
-import type { HostInstance } from '../platform-specific/findHostInstance';
+import type { HostInstance } from '../platform-specific/types';
 
 export function getViewInfo(element: HostInstance): {
   viewName?: string;

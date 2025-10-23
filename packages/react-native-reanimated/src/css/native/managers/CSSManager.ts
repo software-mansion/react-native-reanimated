@@ -1,6 +1,7 @@
 'use strict';
 import type { AnyRecord } from '../../../common';
 import { ReanimatedError } from '../../../common';
+import type { StyleBuilder } from '../../../common/style';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
 import type { CSSStyle } from '../../types';
@@ -8,7 +9,6 @@ import type { ICSSManager } from '../../types/interfaces';
 import { filterCSSAndStyleProperties } from '../../utils';
 import { setViewStyle } from '../proxy';
 import { getStyleBuilder, hasStyleBuilder } from '../registry';
-import type { StyleBuilder } from '../style';
 import CSSAnimationsManager from './CSSAnimationsManager';
 import CSSTransitionsManager from './CSSTransitionsManager';
 
