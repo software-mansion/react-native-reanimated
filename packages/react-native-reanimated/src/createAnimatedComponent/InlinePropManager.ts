@@ -38,31 +38,22 @@ function inlinePropsHasChanged(
   return false;
 }
 
-function getInlinePropsUpdateInternal(styleValue: unknown): unknown {
+function getInlinePropsUpdate(styleValue: StyleProps): unknown {
   'worklet';
   if (isSharedValue(styleValue)) {
     return styleValue.value;
   }
   if (Array.isArray(styleValue)) {
-    return styleValue.map(getInlinePropsUpdateInternal);
+    return styleValue.map(getInlinePropsUpdate);
   }
   if (styleValue && typeof styleValue === 'object') {
     const update: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(styleValue)) {
-      update[key] = getInlinePropsUpdateInternal(value);
+      update[key] = getInlinePropsUpdate(value);
     }
     return update;
   }
   return styleValue;
-}
-
-function getInlinePropsUpdate(styleValue: StyleProps): StyleProps {
-  'worklet';
-  const update: StyleProps = {};
-  for (const [key, value] of Object.entries(styleValue)) {
-    update[key] = getInlinePropsUpdateInternal(value);
-  }
-  return update;
 }
 
 function extractSharedValuesMapFromProps(
@@ -117,7 +108,7 @@ export function getInlineStyle(
   isFirstRender: boolean
 ) {
   if (isFirstRender) {
-    return getInlinePropsUpdate(style);
+    return getInlinePropsUpdate(style) as Record<string, unknown>;
   }
   const newStyle: StyleProps = {};
   for (const [key, styleValue] of Object.entries(style)) {
