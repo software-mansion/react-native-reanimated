@@ -16,6 +16,11 @@ class RNRuntimeWorkletDecorator {
       jsi::Runtime &rnRuntime,
       jsi::Object &&jsiWorkletsModuleProxy,
       const std::shared_ptr<JSLogger> &jsLogger);
+
+#ifdef IS_REANIMATED_EXAMPLE_APP
+ private:
+  static void installDebugBindings(jsi::Runtime &rnRuntime);
+#endif // IS_REANIMATED_EXAMPLE_APP
 };
 
 } // namespace worklets

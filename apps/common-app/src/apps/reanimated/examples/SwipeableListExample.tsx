@@ -69,7 +69,11 @@ export default function SwipeableListExample() {
     <View style={s.container}>
       <FlatList
         data={data}
+        // TODO: Fix me
+        // @ts-ignore RNGH types for web FlatList are broken.
         renderItem={({ item }) => <ListItem item={item} onRemove={onRemove} />}
+        // TODO: Fix me
+        // @ts-ignore RNGH types for web FlatList are broken.
         keyExtractor={(item) => item.id}
       />
     </View>

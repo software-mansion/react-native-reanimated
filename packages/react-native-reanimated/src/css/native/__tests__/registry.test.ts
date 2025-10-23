@@ -1,11 +1,11 @@
 'use strict';
+import { BASE_PROPERTIES_CONFIG } from '../../../common';
 import {
   ERROR_MESSAGES,
   getStyleBuilder,
   hasStyleBuilder,
   registerComponentStyleBuilder,
 } from '../registry';
-import { BASE_PROPERTIES_CONFIG } from '../style';
 
 describe('registry', () => {
   describe('hasStyleBuilder', () => {

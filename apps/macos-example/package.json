@@ -6,6 +6,7 @@
     "macos": "react-native run-macos",
     "build": "cd macos && bundle install && bundle exec pod update",
     "format": "prettier --write --list-different .",
+    "lint": "eslint . --max-warnings 0",
     "start": "react-native start",
     "type:check": "tsc --noEmit"
   },

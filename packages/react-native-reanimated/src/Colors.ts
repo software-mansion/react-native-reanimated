@@ -168,8 +168,8 @@ export function clampRGBA(RGBA: ParsedColorArray): void {
   }
 }
 
-const names: Record<string, number | undefined> = {
-  transparent: undefined,
+const names: Record<string, number | null> = {
+  transparent: null,
 
   /* spell-checker: disable */
   // http://www.w3.org/TR/css3-color/#svg-color
@@ -354,16 +354,6 @@ export const ColorProperties = [
   'stroke',
 ];
 
-/* copied from:
- * https://github.com/facebook/react-native/blob/v0.81.0/packages/react-native/Libraries/StyleSheet/PlatformColorValueTypesIOS.d.ts
- */
-export const DynamicColorIOSProperties = [
-  'light',
-  'dark',
-  'highContrastLight',
-  'highContrastDark',
-] as const;
-
 export function normalizeColor(color: unknown): number | null | undefined {
   'worklet';
 
@@ -371,11 +361,11 @@ export function normalizeColor(color: unknown): number | null | undefined {
     if (color >>> 0 === color && color >= 0 && color <= 0xffffffff) {
       return color;
     }
-    return null;
+    return undefined;
   }
 
   if (typeof color !== 'string') {
-    return null;
+    return undefined;
   }
 
   let match: RegExpExecArray | null | undefined;
@@ -508,7 +498,7 @@ export function normalizeColor(color: unknown): number | null | undefined {
     );
   }
 
-  return null;
+  return undefined;
 }
 
 export const opacity = (c: number): number => {
@@ -637,7 +627,7 @@ export function processColorInitially(
 ): number | null | undefined {
   'worklet';
   if (color === null || color === undefined) {
-    return color;
+    return undefined;
   }
 
   let colorNumber: number;
@@ -662,7 +652,7 @@ export function isColor(value: unknown): boolean {
   if (typeof value !== 'string') {
     return false;
   }
-  return processColorInitially(value) != null;
+  return processColorInitially(value) != undefined;
 }
 
 export type ParsedColorArray = [number, number, number, number];

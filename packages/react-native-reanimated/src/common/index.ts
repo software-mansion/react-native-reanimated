@@ -2,6 +2,6 @@
 export * from './constants';
 export * from './errors';
 export * from './logger';
-export * from './processors';
+export * from './style';
 export type * from './types';
 export * from './utils';
