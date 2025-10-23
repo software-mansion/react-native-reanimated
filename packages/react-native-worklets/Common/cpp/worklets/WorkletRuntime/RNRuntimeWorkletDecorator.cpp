@@ -1,9 +1,10 @@
+#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/Tools/WorkletsVersion.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/WorkletRuntime/RuntimeKind.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
-#include <memory>
 
+#include <memory>
 #include <utility>
 
 namespace worklets {
@@ -32,7 +33,23 @@ void RNRuntimeWorkletDecorator::decorate(
   checkJSVersion(rnRuntime, jsLogger);
 #endif // NDEBUG
 
+#ifdef IS_REANIMATED_EXAMPLE_APP
+  installDebugBindings(rnRuntime);
+#endif // IS_REANIMATED_EXAMPLE_APP
+
   injectWorkletsCppVersion(rnRuntime);
 }
+
+#ifdef IS_REANIMATED_EXAMPLE_APP
+void RNRuntimeWorkletDecorator::installDebugBindings(jsi::Runtime &rnRuntime) {
+  jsi_utils::installJsiFunction(
+      rnRuntime,
+      "__hasNativeState",
+      [](jsi::Runtime &rt, const jsi::Value &value) {
+        return jsi::Value(
+            value.isObject() && value.asObject(rt).hasNativeState(rt));
+      });
+}
+#endif // IS_REANIMATED_EXAMPLE_APP
 
 } // namespace worklets
