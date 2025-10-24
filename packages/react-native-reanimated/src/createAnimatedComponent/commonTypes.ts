@@ -3,6 +3,7 @@ import type { Component, Ref, RefObject } from 'react';
 
 import type {
   AnimatedStyle,
+  AnimationRawConfig,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
   ShadowNodeWrapper,
@@ -74,6 +75,7 @@ export interface INativeEventsManager {
 
 export type LayoutAnimationStaticContext = {
   presetName: string;
+  rawConfig?: AnimationRawConfig;
 };
 
 export type AnimatedComponentProps<

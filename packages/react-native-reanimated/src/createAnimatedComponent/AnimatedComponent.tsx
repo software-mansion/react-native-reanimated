@@ -370,7 +370,9 @@ export default class AnimatedComponent
             ? undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */
             : this.props?.style,
           this._displayName
-        )
+        ),
+      undefined,
+      currentConfig?.rawConfig
     );
   }
 
