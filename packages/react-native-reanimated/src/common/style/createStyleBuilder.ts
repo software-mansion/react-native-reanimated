@@ -1,97 +1,133 @@
 'use strict';
+import type { ConfigPropertyAlias, ValueProcessor } from '../types';
+import type { AnyRecord } from '../types/helpers';
+import { hasSuffix, isConfigPropertyAlias, kebabizeCamelCase } from '../utils';
+import { BASE_PROPERTIES_CONFIG as WEB_BASE_PROPERTIES_CONFIG } from '../web/style/config';
+import type { RuleBuilder } from '../web/style/types';
+import { BASE_PROPERTIES_CONFIG } from './config';
 
-import type { AnyRecord } from '../types';
-import { isConfigPropertyAlias, isDefined, isRecord } from '../utils';
-import type {
-  StyleBuilder,
-  StyleBuilderConfig,
-  StyleBuildMiddleware,
-} from './types';
+type StyleBuilderConfig<TConfigValue, TBuildResult, TContext> = {
+  config: Record<string, TConfigValue>;
+  process: (params: {
+    configValue: TConfigValue;
+    config: Record<string, TConfigValue>;
+    ctx: TContext;
+  }) => ((value: unknown) => unknown) | TConfigValue | undefined;
+  build: (props: Record<string, unknown>) => TBuildResult;
+} & { ctx: TContext };
 
-type StyleBuilderOptions<P extends AnyRecord> = {
-  buildMiddleware?: StyleBuildMiddleware<P>;
-  separatelyInterpolatedNestedProperties?: (keyof P)[];
-};
+function createStyleBuilder<TConfigValue, TBuildResult, TContext = never>({
+  config,
+  ctx,
+  process,
+  build,
+}: StyleBuilderConfig<TConfigValue, TBuildResult, TContext>) {
+  const context = ctx ?? ({} as TContext);
 
-class StyleBuilderImpl<P extends AnyRecord> implements StyleBuilder<P> {
-  private readonly buildMiddleware: StyleBuildMiddleware<P>;
-  private readonly config: StyleBuilderConfig<P>;
-  private readonly separatelyInterpolatedNestedProperties_: (keyof P)[];
+  const processedConfig = Object.entries(config).reduce<
+    Record<string, (value: unknown) => unknown>
+  >((acc, [key, configValue]) => {
+    let processedEntry = process({ configValue, config, ctx: context });
 
-  private processedProps = {} as P;
-
-  constructor(config: StyleBuilderConfig<P>, options?: StyleBuilderOptions<P>) {
-    this.config = config;
-    this.buildMiddleware = options?.buildMiddleware ?? ((props) => props);
-    this.separatelyInterpolatedNestedProperties_ =
-      options?.separatelyInterpolatedNestedProperties ?? [];
-  }
-
-  isSeparatelyInterpolatedNestedProperty(property: keyof P): boolean {
-    return this.separatelyInterpolatedNestedProperties_.includes(property);
-  }
-
-  add(property: keyof P, value: P[keyof P]): void {
-    const configValue = this.config[property];
-
-    if (!configValue || !isDefined(value)) {
-      return;
+    while (processedEntry && typeof processedEntry !== 'function') {
+      processedEntry = process({
+        configValue: processedEntry,
+        config,
+        ctx: context,
+      });
     }
 
+    if (processedEntry) {
+      acc[key] = processedEntry as (value: unknown) => unknown;
+    }
+
+    return acc;
+  }, {});
+
+  return {
+    build(props: Record<string, unknown>, includeUndefined = false) {
+      const processedProps: Record<string, unknown> = {};
+
+      for (const [key, value] of Object.entries(props)) {
+        const processedValue = processedConfig[key](value);
+        if (includeUndefined || processedValue !== undefined) {
+          processedProps[key] = processedValue;
+        }
+      }
+
+      return build(processedProps);
+    },
+  };
+}
+
+function createRuleBuilder<TConfigValue, TBuildResult, TContext = never>({});
+
+// <<<<<<< NATIVE STYLE BUILDER >>>>>>>
+
+const hasValueProcessor = (
+  configValue: unknown
+): configValue is { process: ValueProcessor<unknown> } =>
+  typeof configValue === 'object' &&
+  configValue !== null &&
+  'process' in configValue;
+
+const nativeStyleBuilder = createStyleBuilder({
+  config: BASE_PROPERTIES_CONFIG,
+  process: ({ configValue, config }) => {
     if (configValue === true) {
-      this.maybeAssignProp(property, value);
-    } else if (isConfigPropertyAlias<P>(configValue)) {
-      this.add(configValue.as, value);
-    } else {
-      const { process } = configValue;
-      const processedValue = process ? process(value) : value;
-
-      if (!isDefined(processedValue)) {
-        return;
-      }
-
-      if (isRecord<P>(processedValue)) {
-        this.maybeAssignProps(processedValue);
-      } else {
-        this.maybeAssignProp(property, processedValue);
-      }
+      return (value) => String(value);
     }
-  }
+    if (isConfigPropertyAlias(configValue)) {
+      return config[configValue.as];
+    }
+    if (hasValueProcessor(configValue)) {
+      return (value) => configValue.process(value);
+    }
+  },
+  build: (props) => props,
+});
 
-  build(): P | null {
-    const result = this.buildMiddleware(this.processedProps);
-    this.cleanup();
+// <<<<<<< WEB STYLE BUILDER >>>>>>>
 
-    if (Object.keys(result).length === 0) {
+const isRuleBuilder = <P extends AnyRecord>(
+  value: unknown
+): value is RuleBuilder<P> => value instanceof RuleBuilderImpl;
+
+const webStyleBuilder = createStyleBuilder({
+  config: WEB_BASE_PROPERTIES_CONFIG,
+  ctx: {
+    ruleBuildersSet: new Set<RuleBuilder<AnyRecord>>(),
+  },
+  process: ({ configValue, config, ctx }) => {
+    if (configValue === true) {
+      return (value) => String(value);
+    }
+    if (typeof configValue === 'string') {
+      return (value) =>
+        hasSuffix(value) ? value : `${String(value)}${configValue}`;
+    }
+    if (isConfigPropertyAlias(configValue)) {
+      return config[configValue.as];
+    }
+    if (hasValueProcessor(configValue)) {
+      return (value) => configValue.process(value);
+    }
+    if (isRuleBuilder(configValue)) {
+      return (value) => {
+        ctx.ruleBuildersSet.add(configValue);
+        configValue.add(value);
+      };
+    }
+  },
+  build: (props) => {
+    const entries = Object.entries(props);
+
+    if (entries.length === 0) {
       return null;
     }
 
-    return result;
-  }
-
-  buildFrom(props: P): P | null {
-    Object.entries(props).forEach(([key, value]) => this.add(key, value));
-    return this.build();
-  }
-
-  private maybeAssignProp(property: keyof P, value: P[keyof P]) {
-    this.processedProps[property] ??= value;
-  }
-
-  private maybeAssignProps(props: P) {
-    Object.entries(props).forEach(([key, value]) =>
-      this.maybeAssignProp(key, value)
-    );
-  }
-
-  private cleanup() {
-    this.processedProps = {} as P;
-  }
-}
-
-export default function createStyleBuilder<P extends AnyRecord>(
-  config: StyleBuilderConfig<P>,
-  options?: StyleBuilderOptions<P>
-): StyleBuilder<Partial<P>> {
-  return new StyleBuilderImpl(config, options);
-}
+    return entries
+      .map(([key, value]) => `${kebabizeCamelCase(key)}: ${String(value)}`)
+      .join('; ');
+  },
+});

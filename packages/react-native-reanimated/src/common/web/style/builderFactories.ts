@@ -1,7 +1,6 @@
 'use strict';
 import type { AnyRecord } from '../../types';
 import {
-  hasProp,
   hasSuffix,
   isConfigPropertyAlias,
   isDefined,
@@ -38,7 +37,7 @@ abstract class BuilderBase<P extends AnyRecord, R> {
   add(property: keyof P, value: P[keyof P]) {
     const configValue = this.config[property];
 
-    if (!configValue || !isDefined(value) || configValue === false) {
+    if (!configValue || !isDefined(value)) {
       return;
     }
 
@@ -47,7 +46,7 @@ abstract class BuilderBase<P extends AnyRecord, R> {
     } else if (typeof configValue === 'string') {
       this.maybeAssignProp(
         property,
-        hasSuffix(value) ? value : `${String(value)}${configValue}`
+        hasSuffix(value) ? value : `${value}${configValue}`
       );
     } else if (isConfigPropertyAlias<P>(configValue)) {
       this.add(configValue.as, value);
@@ -99,7 +98,6 @@ class StyleBuilderImpl<P extends AnyRecord>
   private readonly buildHandler: StyleBuildHandler<P>;
 
   private ruleBuildersSet: Set<RuleBuilder<P>> = new Set();
-  private nameAliases = {} as Record<keyof P, string>;
 
   constructor(
     config: StyleBuilderConfig<P>,
@@ -116,7 +114,7 @@ class StyleBuilderImpl<P extends AnyRecord>
 
   override build(): string | null {
     this.buildRuleBuilders();
-    const result = this.buildHandler(this.processedProps, this.nameAliases);
+    const result = this.buildHandler(this.processedProps);
     this.cleanup();
     return result;
   }
@@ -137,10 +135,6 @@ class StyleBuilderImpl<P extends AnyRecord>
       } else {
         this.maybeAssignProp(property, String(value));
       }
-
-      if (hasProp(configValue, 'name')) {
-        this.nameAliases[property] = configValue.name;
-      }
     }
   }
 
@@ -154,7 +148,6 @@ class StyleBuilderImpl<P extends AnyRecord>
 
   private cleanup() {
     this.processedProps = {} as Record<keyof P, string>;
-    this.nameAliases = {} as Record<keyof P, string>;
   }
 }
 
@@ -186,10 +179,6 @@ class RuleBuilderImpl<P extends AnyRecord>
     this.processedProps = {} as Record<keyof P, string>;
   }
 }
-
-const isRuleBuilder = <P extends AnyRecord>(
-  value: unknown
-): value is RuleBuilder<P> => value instanceof RuleBuilderImpl;
 
 const defaultStyleBuildHandler: StyleBuildHandler<AnyRecord> = (
   props,
