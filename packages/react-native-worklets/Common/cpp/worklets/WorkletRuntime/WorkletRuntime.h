@@ -77,6 +77,7 @@ class WorkletRuntime : public jsi::HostObject,
     return name_;
   }
 
+#if REACT_NATIVE_MINOR_VERSION >= 81
   /**
    * Retrieves a weak reference to the WorkletRuntime associated with the
    * provided jsi::Runtime.
@@ -85,6 +86,7 @@ class WorkletRuntime : public jsi::HostObject,
    */
   static std::weak_ptr<WorkletRuntime> getWeakRuntimeFromJSIRuntime(
       jsi::Runtime &rt);
+#endif // REACT_NATIVE_MINOR_VERSION >= 81
 
  private:
   const uint64_t runtimeId_;

@@ -92,10 +92,12 @@ void WorkletRuntime::init(
     std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy) {
   jsi::Runtime &rt = *runtime_;
 
+#if REACT_NATIVE_MINOR_VERSION >= 81
   rt.setRuntimeData(
       RuntimeData::weakRuntimeUUID,
       std::make_shared<WeakRuntimeHolder>(
           WeakRuntimeHolder{.weakRuntime = weak_from_this()}));
+#endif // REACT_NATIVE_MINOR_VERSION >= 81
 
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
   const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
@@ -246,6 +248,7 @@ void scheduleOnRuntime(
   workletRuntime->runAsyncGuarded(serializableWorklet);
 }
 
+#if REACT_NATIVE_MINOR_VERSION >= 71
 std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(
     jsi::Runtime &rt) {
   auto runtimeData = rt.getRuntimeData(RuntimeData::weakRuntimeUUID);
@@ -257,5 +260,6 @@ std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(
   auto weakHolder = std::static_pointer_cast<WeakRuntimeHolder>(runtimeData);
   return weakHolder->weakRuntime;
 }
+#endif // REACT_NATIVE_MINOR_VERSION >= 71
 
 } // namespace worklets
