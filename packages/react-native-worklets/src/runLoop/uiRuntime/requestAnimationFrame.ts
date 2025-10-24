@@ -6,7 +6,10 @@ export function setupRequestAnimationFrame() {
   'worklet';
   const nativeRequestAnimationFrame = globalThis.requestAnimationFrame;
 
-  let queuedCallbacks: ((timestamp: number) => void)[] = [];
+  let queuedCallbacks: ((
+    timestamp: number,
+    isEventReaction?: boolean
+  ) => void)[] = [];
   let queuedCallbacksBegin = 0;
   let queuedCallbacksEnd = 0;
 
@@ -16,7 +19,10 @@ export function setupRequestAnimationFrame() {
 
   let flushRequested = false;
 
-  globalThis.__flushAnimationFrame = (timestamp: number) => {
+  globalThis.__flushAnimationFrame = (
+    timestamp: number,
+    isEventReaction?: boolean
+  ) => {
     flushedCallbacks = queuedCallbacks;
     queuedCallbacks = [];
 
@@ -25,7 +31,7 @@ export function setupRequestAnimationFrame() {
     queuedCallbacksBegin = queuedCallbacksEnd;
 
     for (const callback of flushedCallbacks) {
-      callback(timestamp);
+      callback(timestamp, isEventReaction);
     }
 
     flushedCallbacksBegin = flushedCallbacksEnd;
