@@ -7,15 +7,15 @@ import type {
   ValueProcessor,
   FilterArray,
   ParsedDropShadow,
-  FilterKey,
 } from '../../types';
 import { isLength } from '../../utils/guards';
 import { processColor } from './colors';
 import type { DropShadowValue } from 'react-native';
 
-const FILTER_REGEX = /(\w+)\(([^()]*\([^()]*\)[^()]*)+|[^()]*\)\)/g;
+const FILTER_REGEX = /([\w-]+)\(([^()]*|\([^()]*\)|[^()]*\([^()]*\)[^()]*)\)/g;
 // Capture two groups: current transform value and optional unit -> "21.37px" => ["21.37px", "21.37", "px"]
 const FILTER_VALUE_REGEX = /^([-+]?\d*\.?\d+)([a-z%]*)$/;
+const DROP_SHADOW_REGEX = /[^,\s()]+(?:\([^()]*\))?/g;
 
 export const ERROR_MESSAGES = {
   invalidFilter: (filter: string) => `Invalid filter property: ${filter}`,
@@ -34,7 +34,9 @@ const parseHueRotate = (value: SingleFilterValue): number | undefined => {
     return 0;
   }
   if (unit !== 'deg' && unit !== 'rad') {
-    return undefined;
+    throw new ReanimatedError(
+      ERROR_MESSAGES.invalidFilter(`hueRotate(${number}${unit})`)
+    );
   }
   return unit === 'rad' ? (180 * number) / Math.PI : number;
 };
@@ -50,13 +52,13 @@ const parseBlur = (value: SingleFilterValue): number | undefined => {
 const LENGTH_MAPPINGS = ['offsetX', 'offsetY', 'standardDeviation'] as const;
 
 const parseDropShadowString = (value: string) => {
-  const match = value.match(/(?:[^\s(]+(?:\([^)]+\))?)+/g) ?? [];
+  const match = value.match(DROP_SHADOW_REGEX) ?? [];
   const result: DropShadowValue = { offsetX: 0, offsetY: 0 };
   let foundLengthsCount = 0;
 
   match.forEach((part) => {
-    if (isLength(part)) {
-      const dropShadowValue = part.match(FILTER_VALUE_REGEX);
+    if (isLength(part) || !!parseFloat(part)) {
+      const dropShadowValue = part.trim().match(FILTER_VALUE_REGEX);
       if (!dropShadowValue) {
         throw new ReanimatedError(
           ERROR_MESSAGES.invalidFilter(`dropShadow(${part})`)
@@ -110,6 +112,7 @@ const parseFilterProperty = (
     value = filter[2];
   }
 
+  // We need to handle dropShadow separately because of its complex structure
   if (key == 'dropShadow') {
     return { dropShadow: parseDropShadow(value) };
   }
@@ -134,7 +137,7 @@ const parseFilterProperty = (
     case 'opacity':
     case 'saturate':
     case 'sepia':
-      if ((unit && unit !== '%' && unit !== 'px') || number < 0) {
+      if ((unit && unit !== '%') || number < 0) {
         return { [key]: undefined };
       }
       if (unit === '%') {
@@ -142,7 +145,9 @@ const parseFilterProperty = (
       }
       return { [key]: number };
     default:
-      return {};
+      throw new ReanimatedError(
+        ERROR_MESSAGES.invalidFilter(`${key}(${value})`)
+      );
   }
 };
 
@@ -161,7 +166,7 @@ export const parseFilterString = (value: string): FilterArray => {
 
     return parseFilterProperty(match);
   });
-  return filterArray;
+  return filterArray as FilterArray;
 };
 
 export const processFilter: ValueProcessor<
@@ -182,7 +187,7 @@ export const processFilter: ValueProcessor<
     ) {
       return value as FilterArray;
     }
-    return value.map((filter) => parseFilterProperty(filter));
+    return value.map((filter) => parseFilterProperty(filter)) as FilterArray;
   }
 
   throw new ReanimatedError(

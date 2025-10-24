@@ -41,10 +41,4 @@ export type ParsedDropShadow = {
   color: number;
 };
 
-export type FilterKey = FilterFunction extends infer T
-  ? T extends object
-    ? keyof T
-    : never
-  : never;
-
 export type FilterArray = FilterFunction[];
