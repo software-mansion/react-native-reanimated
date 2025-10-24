@@ -1,15 +1,14 @@
-import { balloonsImage } from '@/apps/css/assets';
 import React, { useEffect } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import Animated, {
   interpolateColor,
-  processColor,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
 
+// TO-DO: add string percentage examples
 export default function FilterExample() {
   const sv = useSharedValue(0);
 
@@ -21,12 +20,10 @@ export default function FilterExample() {
   // https://reactnative.dev/docs/view-style-props#filter
 
   const brightness = useAnimatedStyle(() => {
-    // TODO: support percentage string
     return { filter: [{ brightness: sv.value }] };
   });
 
   const opacity = useAnimatedStyle(() => {
-    // TODO: support percentage string
     return { filter: [{ opacity: sv.value }] };
   });
 
@@ -35,12 +32,9 @@ export default function FilterExample() {
   });
 
   const contrast = useAnimatedStyle(() => {
-    // TODO: support percentage string
     return { filter: [{ contrast: sv.value * 3 }] };
   });
 
-  // @ts-ignore - number returned by the processColor function is not assignable
-  // to the color property without react-native-strict-api enabled
   const dropShadow = useAnimatedStyle(() => {
     return {
       filter: [
@@ -49,10 +43,7 @@ export default function FilterExample() {
             offsetX: sv.value * 10,
             offsetY: sv.value * 10,
             standardDeviation: sv.value * 10,
-            // TODO: call processColor automatically
-            color: processColor(
-              interpolateColor(sv.value, [0, 1], ['red', 'blue'])
-            ),
+            color: interpolateColor(sv.value, [0, 1], ['red', 'blue']),
           },
         },
       ],
@@ -60,22 +51,18 @@ export default function FilterExample() {
   });
 
   const grayscale = useAnimatedStyle(() => {
-    // TODO: support percentage string
     return { filter: [{ grayscale: sv.value }] };
   });
 
   const hueRotate = useAnimatedStyle(() => {
-    // TODO: support deg and rad string
     return { filter: [{ hueRotate: sv.value * 360 }] };
   });
 
   const invert = useAnimatedStyle(() => {
-    // TODO: support percentage string
     return { filter: [{ invert: sv.value }] };
   });
 
   const sepia = useAnimatedStyle(() => {
-    // TODO: support percentage string
     return { filter: [{ sepia: sv.value }] };
   });
 
@@ -83,7 +70,8 @@ export default function FilterExample() {
     return { filter: [{ saturate: sv.value * 2 }] };
   });
 
-  // TODO: support filter string
+  // TODO: replace back with Balloons image when asset problem is fixed.
+  const uri = 'https://unsplash.it/400/400?image=1';
 
   return (
     <ScrollView
@@ -91,16 +79,23 @@ export default function FilterExample() {
       contentContainerStyle={styles.contentContainer}>
       <Text>brightness</Text>
       <Animated.Image
-        source={balloonsImage}
+        source={{ uri: uri }}
         // @ts-ignore
         style={brightness}
+        width={80}
+        height={80}
+      />
+      <Animated.Image
+        source={{ uri: uri }}
+        // @ts-ignore
+        style={brightnessString}
         width={80}
         height={80}
       />
 
       <Text>opacity</Text>
       <Animated.Image
-        source={balloonsImage}
+        source={{ uri: uri }}
         // @ts-ignore
         style={opacity}
         width={80}
@@ -109,7 +104,7 @@ export default function FilterExample() {
 
       <Text>blur (only Android)</Text>
       <Animated.Image
-        source={balloonsImage}
+        source={{ uri: uri }}
         // @ts-ignore
         style={blur}
         width={80}
@@ -118,7 +113,7 @@ export default function FilterExample() {
 
       <Text>contrast (only Android)</Text>
       <Animated.Image
-        source={balloonsImage}
+        source={{ uri: uri }}
         // @ts-ignore
         style={contrast}
         width={80}
@@ -127,7 +122,7 @@ export default function FilterExample() {
 
       <Text>dropShadow (only Android)</Text>
       <Animated.Image
-        source={balloonsImage}
+        source={{ uri: uri }}
         // @ts-ignore
         style={dropShadow}
         width={80}
@@ -136,7 +131,7 @@ export default function FilterExample() {
 
       <Text>grayscale (only Android)</Text>
       <Animated.Image
-        source={balloonsImage}
+        source={{ uri: uri }}
         // @ts-ignore
         style={grayscale}
         width={80}
@@ -145,7 +140,7 @@ export default function FilterExample() {
 
       <Text>hueRotate (only Android)</Text>
       <Animated.Image
-        source={balloonsImage}
+        source={{ uri: uri }}
         // @ts-ignore
         style={hueRotate}
         width={80}
@@ -154,7 +149,7 @@ export default function FilterExample() {
 
       <Text>invert (only Android)</Text>
       <Animated.Image
-        source={balloonsImage}
+        source={{ uri: uri }}
         // @ts-ignore
         style={invert}
         width={80}
@@ -163,7 +158,7 @@ export default function FilterExample() {
 
       <Text>sepia (only Android)</Text>
       <Animated.Image
-        source={balloonsImage}
+        source={{ uri: uri }}
         // @ts-ignore
         style={sepia}
         width={80}
@@ -172,7 +167,7 @@ export default function FilterExample() {
 
       <Text>saturate (only Android)</Text>
       <Animated.Image
-        source={balloonsImage}
+        source={{ uri: uri }}
         // @ts-ignore
         style={saturate}
         width={80}
