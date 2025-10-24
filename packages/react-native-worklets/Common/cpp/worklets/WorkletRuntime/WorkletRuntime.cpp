@@ -142,50 +142,70 @@ void WorkletRuntime::init(
 #endif // WORKLETS_BUNDLE_MODE
 }
 
-void WorkletRuntime::runAsyncGuarded(
-    const std::shared_ptr<SerializableWorklet> &worklet) {
-  react_native_assert(
-      "[Worklets] Tried to invoke `runAsyncGuarded` on a Worklet Runtime but "
-      "the async queue is not set. Recreate the runtime with a valid async queue.");
+/* #region schedule */
 
-  queue_->push([worklet, weakThis = weak_from_this()] {
+void WorkletRuntime::schedule(jsi::Function &&function) const {
+  react_native_assert(
+      queue_ &&
+      "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
+      "async queue is not set. Recreate the runtime with a valid async queue.");
+  queue_->push([function = std::make_shared<jsi::Function>(std::move(function)),
+                weakThis = weak_from_this()]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
     }
 
-    strongThis->runGuarded(worklet);
+    strongThis->runSync(*function);
   });
 }
 
-jsi::Value WorkletRuntime::executeSync(
-    jsi::Runtime &rt,
-    const jsi::Value &worklet) const {
-  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
-      rt,
-      worklet,
-      "[Worklets] Only worklets can be executed synchronously on UI runtime.");
-  auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
-  jsi::Runtime &uiRuntime = getJSIRuntime();
-  auto result = runGuarded(serializableWorklet);
-  auto serializableResult = extractSerializableOrThrow(uiRuntime, result);
-  lock.unlock();
-  return serializableResult->toJSValue(rt);
+void WorkletRuntime::schedule(
+    std::shared_ptr<SerializableWorklet> worklet) const {
+  react_native_assert(
+      queue_ &&
+      "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
+      "async queue is not set. Recreate the runtime with a valid async queue.");
+
+  queue_->push([worklet = std::move(worklet), weakThis = weak_from_this()] {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    strongThis->runSync(worklet);
+  });
 }
 
-jsi::Value WorkletRuntime::executeSync(
-    std::function<jsi::Value(jsi::Runtime &)> &&job) const {
-  auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
-  jsi::Runtime &uiRuntime = getJSIRuntime();
-  return job(uiRuntime);
+void WorkletRuntime::schedule(std::function<void()> job) const {
+  react_native_assert(
+      queue_ &&
+      "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
+      "async queue is not set. Recreate the runtime with a valid async queue.");
+
+  queue_->push(std::move(job));
 }
 
-jsi::Value WorkletRuntime::executeSync(
-    const std::function<jsi::Value(jsi::Runtime &)> &job) const {
-  auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
-  jsi::Runtime &uiRuntime = getJSIRuntime();
-  return job(uiRuntime);
+void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
+  react_native_assert(
+      queue_ &&
+      "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
+      "async queue is not set. Recreate the runtime with a valid async queue.");
+
+  queue_->push([job = std::move(job), weakThis = weak_from_this()]() {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    auto lock =
+        std::unique_lock<std::recursive_mutex>(*strongThis->runtimeMutex_);
+    jsi::Runtime &runtime = strongThis->getJSIRuntime();
+    job(runtime);
+  });
 }
+
+/* #endregion */
 
 jsi::Value WorkletRuntime::get(
     jsi::Runtime &rt,
@@ -236,7 +256,37 @@ void scheduleOnRuntime(
       rt,
       serializableWorkletValue,
       "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
-  workletRuntime->runAsyncGuarded(serializableWorklet);
+  workletRuntime->schedule(serializableWorklet);
 }
+
+/* #region deprecated */
+
+void WorkletRuntime::runAsyncGuarded(
+    const std::shared_ptr<SerializableWorklet> &worklet) {
+  schedule(worklet);
+}
+
+jsi::Value WorkletRuntime::executeSync(
+    jsi::Runtime &caller,
+    const jsi::Value &worklet) const {
+  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
+      caller,
+      worklet,
+      "[Worklets] Only worklets can be executed synchronously on UI runtime.");
+  auto result = runSyncSerialized(serializableWorklet);
+  return result->toJSValue(caller);
+}
+
+jsi::Value WorkletRuntime::executeSync(
+    std::function<jsi::Value(jsi::Runtime &)> &&job) const {
+  return runSync(job);
+}
+
+jsi::Value WorkletRuntime::executeSync(
+    const std::function<jsi::Value(jsi::Runtime &)> &job) const {
+  return runSync(job);
+}
+
+/* #endregion */
 
 } // namespace worklets

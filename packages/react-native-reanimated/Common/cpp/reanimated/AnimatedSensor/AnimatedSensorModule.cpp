@@ -65,7 +65,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
         value.setProperty(
             uiRuntime, "interfaceOrientation", orientationDegrees);
 
-        uiWorkletRuntime->runGuarded(serializableHandler, value);
+        uiWorkletRuntime->runSync(serializableHandler, value);
       });
   if (sensorId != -1) {
     sensorsIds_.insert(sensorId);

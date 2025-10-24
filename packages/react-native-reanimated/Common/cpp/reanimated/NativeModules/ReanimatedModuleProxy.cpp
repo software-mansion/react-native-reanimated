@@ -1433,7 +1433,7 @@ jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
         if (!strongThis) {
           return;
         }
-        strongThis->workletsModuleProxy_->getUIWorkletRuntime()->runGuarded(
+        strongThis->workletsModuleProxy_->getUIWorkletRuntime()->runSync(
             serializableHandler, jsi::Value(keyboardState), jsi::Value(height));
       },
       isStatusBarTranslucent.getBool(),

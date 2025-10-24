@@ -47,7 +47,7 @@ inline void scheduleOnUI(
     const auto scope = jsi::Scope(uiWorkletRuntime->getJSIRuntime());
 #endif // JS_RUNTIME_HERMES
 
-    uiWorkletRuntime->runGuarded(serializableWorklet);
+    uiWorkletRuntime->runSync(serializableWorklet);
   });
 }
 
@@ -56,7 +56,11 @@ inline jsi::Value executeOnUIRuntimeSync(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {
   if (auto uiWorkletRuntime = weakUIWorkletRuntime.lock()) {
-    return uiWorkletRuntime->executeSync(rt, worklet);
+    auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
+        rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
+    auto serializedResult =
+        uiWorkletRuntime->runSyncSerialized(serializableWorklet);
+    return serializedResult->toJSValue(rt);
   }
   return jsi::Value::undefined();
 }
@@ -83,7 +87,7 @@ inline jsi::Value propagateModuleUpdate(
   const auto runtimes = runtimeManager->getAllRuntimes();
 
   for (auto runtime : runtimes) {
-    runtime->executeSync([code, sourceUrl](jsi::Runtime &rt) {
+    runtime->runSync([code, sourceUrl](jsi::Runtime &rt) {
       const auto buffer = std::make_shared<jsi::StringBuffer>(code);
       rt.evaluateJavaScript(buffer, sourceUrl);
       return jsi::Value::undefined();
