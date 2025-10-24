@@ -722,22 +722,32 @@ void LayoutAnimationsProxy::startEnteringAnimation(
     //    strongThis->layoutAnimationsManager_->startLayoutAnimation(
     //        uiRuntime, tag, LayoutAnimationType::ENTERING, yogaValues);
 
-    // TODO: Better configuration of source frame in the entering animation.
     facebook::react::Rect sourceFrame =
         mutation.newChildShadowView.layoutMetrics.frame;
     sourceFrame.origin.x -= window.width;
 
-    // It is needed to delay the trigger of the entering CA animation
-    // Without this, the animation attempts to animate a view that is not yet
-    // mounted
-    dispatch_async(dispatch_get_main_queue(), ^{
-      runCoreAnimationForView_(
-          tag,
-          sourceFrame,
-          mutation.newChildShadowView.layoutMetrics.frame,
-          [this, tag](bool finished) { this->endLayoutAnimation(tag, false); },
-          "enteringAnimation");
-    });
+    // TODO: Could we just move the runCoreAnimationForView_ field to
+    // layoutAnimationsManager? would it make sense?
+    strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
+        tag,
+        LayoutAnimationType::ENTERING,
+        [this, tag, sourceFrame, mutation](
+            const LayoutAnimationRawConfig &config) {
+          // It is needed to delay the trigger of the entering CA animation
+          // Without this, the animation attempts to animate a view that is not
+          // yet mounted
+          dispatch_async(dispatch_get_main_queue(), ^{
+            runCoreAnimationForView_(
+                tag,
+                sourceFrame,
+                mutation.newChildShadowView.layoutMetrics.frame,
+                config,
+                [this, tag](bool finished) {
+                  this->endLayoutAnimation(tag, false);
+                },
+                "enteringAnimation");
+          });
+        });
   });
 }
 
@@ -767,36 +777,31 @@ void LayoutAnimationsProxy::startExitingAnimation(
 
         Snapshot values(oldView, window);
 
-        //                auto &uiRuntime = strongThis->uiRuntime_;
-        //                jsi::Object yogaValues(uiRuntime);
-        //                yogaValues.setProperty(uiRuntime, "currentOriginX",
-        //                values.x); yogaValues.setProperty(uiRuntime,
-        //                "currentGlobalOriginX", values.x);
-        //                yogaValues.setProperty(uiRuntime, "currentOriginY",
-        //                values.y); yogaValues.setProperty(uiRuntime,
-        //                "currentGlobalOriginY", values.y);
-        //                yogaValues.setProperty(uiRuntime, "currentWidth",
-        //                values.width); yogaValues.setProperty(uiRuntime,
-        //                "currentHeight", values.height);
-        //                yogaValues.setProperty(uiRuntime, "windowWidth",
-        //                values.windowWidth); yogaValues.setProperty(uiRuntime,
-        //                "windowHeight", values.windowHeight);
-        //                strongThis->layoutAnimationsManager_->startLayoutAnimation(
-        //                    uiRuntime, tag, LayoutAnimationType::EXITING,
-        //                    yogaValues);
+        auto &uiRuntime = strongThis->uiRuntime_;
+        jsi::Object yogaValues(uiRuntime);
+        yogaValues.setProperty(uiRuntime, "currentOriginX", values.x);
+        yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", values.x);
+        yogaValues.setProperty(uiRuntime, "currentOriginY", values.y);
+        yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", values.y);
+        yogaValues.setProperty(uiRuntime, "currentWidth", values.width);
+        yogaValues.setProperty(uiRuntime, "currentHeight", values.height);
+        yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
+        yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
+        strongThis->layoutAnimationsManager_->startLayoutAnimation(
+            uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
 
-        facebook::react::Rect destinationFrame =
-            mutation.oldChildShadowView.layoutMetrics.frame;
-        destinationFrame.origin.x = values.windowWidth;
-
-        runCoreAnimationForView_(
-            tag,
-            mutation.oldChildShadowView.layoutMetrics.frame,
-            destinationFrame,
-            [this, tag](bool finished) {
-              this->endLayoutAnimation(tag, finished);
-            },
-            "exitingAnimation");
+        //        facebook::react::Rect destinationFrame =
+        //            mutation.oldChildShadowView.layoutMetrics.frame;
+        //        destinationFrame.origin.x = values.windowWidth;
+        //
+        //        runCoreAnimationForView_(
+        //            tag,
+        //            mutation.oldChildShadowView.layoutMetrics.frame,
+        //            destinationFrame,
+        //            [this, tag](bool finished) {
+        //              this->endLayoutAnimation(tag, finished);
+        //            },
+        //            "exitingAnimation");
 
         strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
       });
@@ -810,62 +815,58 @@ void LayoutAnimationsProxy::startLayoutAnimation(
 #endif
   auto surfaceId = mutation.oldChildShadowView.surfaceId;
 
-  uiScheduler_->scheduleOnUI(
-      [weakThis = weak_from_this(), mutation, surfaceId, tag, this]() {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
+  uiScheduler_->scheduleOnUI([weakThis = weak_from_this(),
+                              mutation,
+                              surfaceId,
+                              tag,
+                              this]() {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
 
-        auto oldView = mutation.oldChildShadowView;
-        auto newView = mutation.newChildShadowView;
-        Rect window{};
-        {
-          auto &mutex = strongThis->mutex;
-          auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-          strongThis->createLayoutAnimation(mutation, oldView, surfaceId, tag);
-          window = strongThis->surfaceManager.getWindow(surfaceId);
-        }
+    auto oldView = mutation.oldChildShadowView;
+    auto newView = mutation.newChildShadowView;
+    Rect window{};
+    {
+      auto &mutex = strongThis->mutex;
+      auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+      strongThis->createLayoutAnimation(mutation, oldView, surfaceId, tag);
+      window = strongThis->surfaceManager.getWindow(surfaceId);
+    }
 
-        Snapshot currentValues(oldView, window);
-        Snapshot targetValues(mutation.newChildShadowView, window);
+    Snapshot currentValues(oldView, window);
+    Snapshot targetValues(mutation.newChildShadowView, window);
 
-        //            auto &uiRuntime = strongThis->uiRuntime_;
-        //            jsi::Object yogaValues(uiRuntime);
-        //            yogaValues.setProperty(uiRuntime, "currentOriginX",
-        //            currentValues.x); yogaValues.setProperty(uiRuntime,
-        //            "currentGlobalOriginX", currentValues.x);
-        //            yogaValues.setProperty(uiRuntime, "currentOriginY",
-        //            currentValues.y); yogaValues.setProperty(uiRuntime,
-        //            "currentGlobalOriginY", currentValues.y);
-        //            yogaValues.setProperty(uiRuntime, "currentWidth",
-        //            currentValues.width); yogaValues.setProperty(uiRuntime,
-        //            "currentHeight", currentValues.height);
-        //            yogaValues.setProperty(uiRuntime, "targetOriginX",
-        //            targetValues.x); yogaValues.setProperty(uiRuntime,
-        //            "targetGlobalOriginX", targetValues.x);
-        //            yogaValues.setProperty(uiRuntime, "targetOriginY",
-        //            targetValues.y); yogaValues.setProperty(uiRuntime,
-        //            "targetGlobalOriginY", targetValues.y);
-        //            yogaValues.setProperty(uiRuntime, "targetWidth",
-        //            targetValues.width); yogaValues.setProperty(uiRuntime,
-        //            "targetHeight", targetValues.height);
-        //            yogaValues.setProperty(uiRuntime, "windowWidth",
-        //            targetValues.windowWidth); yogaValues.setProperty(
-        //                uiRuntime, "windowHeight", targetValues.windowHeight);
-        //            strongThis->layoutAnimationsManager_->startLayoutAnimation(
-        //                uiRuntime, tag, LayoutAnimationType::LAYOUT,
-        //                yogaValues);
+    auto &uiRuntime = strongThis->uiRuntime_;
+    jsi::Object yogaValues(uiRuntime);
+    yogaValues.setProperty(uiRuntime, "currentOriginX", currentValues.x);
+    yogaValues.setProperty(uiRuntime, "currentGlobalOriginX", currentValues.x);
+    yogaValues.setProperty(uiRuntime, "currentOriginY", currentValues.y);
+    yogaValues.setProperty(uiRuntime, "currentGlobalOriginY", currentValues.y);
+    yogaValues.setProperty(uiRuntime, "currentWidth", currentValues.width);
+    yogaValues.setProperty(uiRuntime, "currentHeight", currentValues.height);
+    yogaValues.setProperty(uiRuntime, "targetOriginX", targetValues.x);
+    yogaValues.setProperty(uiRuntime, "targetGlobalOriginX", targetValues.x);
+    yogaValues.setProperty(uiRuntime, "targetOriginY", targetValues.y);
+    yogaValues.setProperty(uiRuntime, "targetGlobalOriginY", targetValues.y);
+    yogaValues.setProperty(uiRuntime, "targetWidth", targetValues.width);
+    yogaValues.setProperty(uiRuntime, "targetHeight", targetValues.height);
+    yogaValues.setProperty(uiRuntime, "windowWidth", targetValues.windowWidth);
+    yogaValues.setProperty(
+        uiRuntime, "windowHeight", targetValues.windowHeight);
+    strongThis->layoutAnimationsManager_->startLayoutAnimation(
+        uiRuntime, tag, LayoutAnimationType::LAYOUT, yogaValues);
 
-        runCoreAnimationForView_(
-            tag,
-            mutation.oldChildShadowView.layoutMetrics.frame,
-            mutation.newChildShadowView.layoutMetrics.frame,
-            [this, tag](bool finished) {
-              this->endLayoutAnimation(tag, false);
-            },
-            "layoutAnimation");
-      });
+    //        runCoreAnimationForView_(
+    //            tag,
+    //            mutation.oldChildShadowView.layoutMetrics.frame,
+    //            mutation.newChildShadowView.layoutMetrics.frame,
+    //            [this, tag](bool finished) {
+    //              this->endLayoutAnimation(tag, false);
+    //            },
+    //            "layoutAnimation");
+  });
 }
 
 void LayoutAnimationsProxy::updateOngoingAnimationTarget(

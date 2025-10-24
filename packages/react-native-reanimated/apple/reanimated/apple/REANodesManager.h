@@ -1,6 +1,7 @@
 #import <React/RCTEventDispatcherProtocol.h>
 #import <React/RCTSurfacePresenter.h>
 
+#import <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #import <reanimated/apple/READisplayLink.h>
 
 typedef void (^REAOnAnimationCallback)(READisplayLink *displayLink);
@@ -24,6 +25,11 @@ typedef void (^REAPerformOperations)();
 - (void)runCoreAnimationForView:(ReactTag)viewTag
                        oldFrame:(const facebook::react::Rect &)oldFrame
                        newFrame:(const facebook::react::Rect &)newFrame
+                         config:
+                             (const reanimated::LayoutAnimationRawConfig &)
+                                 config // TODO: Pass also the animation type, create some potentially new abstraction
+                                        // for handling different animations and run it from the NodesManager, something
+                                        // like CALayoutAnimator.animateEntering, CALayoutAnimator.animateExiting etc.?
                      completion:(std::function<void(bool)>)completion
                    animationKey:(NSString *)animationKey;
 

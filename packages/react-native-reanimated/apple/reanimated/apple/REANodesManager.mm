@@ -185,6 +185,7 @@ using namespace facebook::react;
 - (void)runCoreAnimationForView:(ReactTag)viewTag
                        oldFrame:(const facebook::react::Rect &)oldFrame
                        newFrame:(const facebook::react::Rect &)newFrame
+                         config:(const reanimated::LayoutAnimationRawConfig &)config
                      completion:(std::function<void(bool)>)completion
                    animationKey:(NSString *)animationKey
 {
@@ -213,8 +214,12 @@ using namespace facebook::react;
   CGFloat newX = newFrame.origin.x + centerOffsetX;
   CGFloat newY = newFrame.origin.y + centerOffsetY;
 
+  // TODO: Handle this properly and remove all the hardcoded values. There needs to be some place that either populates
+  // the frames with proper values based on the type of layout animation and/or tells this function here to use the
+  // presentation frame or oldFrame
+  // TODO: Ideally this function should just accept specific values and properties that it should animate and be
+  // responsible only for that - clear expectable behavior based on the input.
   if ([animationKey isEqual:@"enteringAnimation"]) {
-    // TODO: Handle this properly
     oldX = centerOffsetX - 400;
   }
 
@@ -239,8 +244,8 @@ using namespace facebook::react;
   CAAnimationGroup *animationGroup = [CAAnimationGroup animation];
   animationGroup.animations = animations;
 
-  // TODO: Read the config and set the proper animation details
-  animationGroup.duration = 1.0;
+  // TODO: Set the other animation details, figure out defaults and where to put them (not here probably)
+  animationGroup.duration = config.values->duration.value_or(1000) / 1000;
 
   REACoreAnimationDelegate *delegate =
       [REACoreAnimationDelegate delegateWithStart:nil
