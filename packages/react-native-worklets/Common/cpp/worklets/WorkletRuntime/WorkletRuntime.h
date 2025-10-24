@@ -23,12 +23,17 @@ using namespace react;
 
 namespace worklets {
 
-template <typename TValue>
-concept WorkletOrFunction =
-    std::is_assignable_v<const jsi::Function &, TValue> ||
+template <typename TCallable>
+concept ImplicitlySerializableCallable =
+    std::is_assignable_v<const jsi::Function &, TCallable> ||
     std::is_assignable_v<
-        const std::shared_ptr<worklets::SerializableWorklet> &,
-        TValue>;
+        const std::shared_ptr<SerializableWorklet> &,
+        TCallable>;
+
+template <typename TCallable, typename TReturn = void>
+concept RuntimeCallable = ImplicitlySerializableCallable<TCallable> ||
+    std::is_assignable_v<const std::function<TReturn(jsi::Runtime &)> &,
+                         TCallable>;
 
 /**
  * Forward declaration to avoid circular dependencies.
@@ -45,7 +50,10 @@ class WorkletRuntime : public jsi::HostObject,
 
   /* #region runSync */
 
-  template <WorkletOrFunction TCallable, typename... Args>
+  template <
+      typename TReturn,
+      RuntimeCallable<TReturn> TCallable,
+      typename... Args>
   jsi::Value inline runSync(TCallable &&callable, Args &&...args) const;
   template <typename... Args>
   jsi::Value inline runSync(const jsi::Function &function, Args &&...args)
@@ -65,8 +73,8 @@ class WorkletRuntime : public jsi::HostObject,
   template <typename TReturn>
   TReturn inline runSync(
       const std::function<TReturn(jsi::Runtime &)> &job) const {
-    auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
     jsi::Runtime &rt = getJSIRuntime();
+    auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
     return job(rt);
   }
 
@@ -74,7 +82,7 @@ class WorkletRuntime : public jsi::HostObject,
 
   /* #region runSyncSerialized */
 
-  template <WorkletOrFunction TCallable, typename... Args>
+  template <ImplicitlySerializableCallable TCallable, typename... Args>
   std::shared_ptr<Serializable> inline runSyncSerialized(
       TCallable &&callable,
       Args &&...args) const;
@@ -141,16 +149,17 @@ class WorkletRuntime : public jsi::HostObject,
   /* #region deprecated */
 
   /** @deprecated Use `runSync` instead. */
-  template <WorkletOrFunction TCallable, typename... Args>
+  template <RuntimeCallable TCallable, typename... Args>
   inline jsi::Value runGuarded(TCallable &&callable, Args &&...args) const {
     return runSync(
         std::forward<TCallable>(callable), std::forward<Args>(args)...);
   }
 
-  /** @deprecated Use `runAsync` instead. */
+  /** @deprecated Use `schedule` instead. */
   void runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet);
 
-  /** @deprecated Use `runSync` instead. */
+  /** @deprecated Use `runSyncSerialized` and extract to `jsi::Value` with
+   * `extractSerializableOrThrow` instead. */
   jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
   /** @deprecated Use `runSync` instead. */
   jsi::Value executeSync(std::function<jsi::Value(jsi::Runtime &)> &&job) const;

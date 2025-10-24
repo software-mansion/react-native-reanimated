@@ -42,7 +42,7 @@ inline jsi::Value runOnRuntimeGuarded(
     jsi::Runtime &rt,
     const jsi::Value &function,
     Args &&...args) {
-  runOnRuntimeGuarded(
+  return runOnRuntimeGuarded(
       rt, function.asObject(rt).asFunction(rt), std::forward<Args>(args)...);
 }
 
