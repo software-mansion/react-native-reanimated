@@ -5,8 +5,8 @@ import type {
   TextStyle,
   TransformsStyle,
   ViewStyle,
-  ColorValue,
 } from 'react-native';
+import { FilterFunction } from 'react-native';
 
 export type TransformOrigin = string | Array<string | number>;
 
@@ -37,20 +37,14 @@ export type TransformsArray = Exclude<
 export type ParsedDropShadow = {
   offsetX: number;
   offsetY: number;
-  standardDeviation?: number;
-  color?: ColorValue;
+  standardDeviation: number;
+  color: number;
 };
 
-type ParsedFilter =
-  | { brightness: number | string }
-  | { blur: number }
-  | { contrast: number | string }
-  | { grayscale: number | string }
-  | { hueRotate: number | string }
-  | { invert: number | string }
-  | { opacity: number | string }
-  | { saturate: number | string }
-  | { sepia: number | string }
-  | { dropShadow: ParsedDropShadow };
+export type FilterKey = FilterFunction extends infer T
+  ? T extends object
+    ? keyof T
+    : never
+  : never;
 
-export type FilterArray = ParsedFilter[];
+export type FilterArray = FilterFunction[];
