@@ -53,8 +53,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
   // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
   // std::shared_ptr<EventListener> eventListener_;
   void installJSIBindings();
-  std::unique_ptr<int[]> preserveMountedTags(
-      std::vector<int> &tags);
+  std::unique_ptr<int[]> preserveMountedTags(std::vector<int> &tags);
   void synchronouslyUpdateUIProps(
       const std::vector<int> &intBuffer,
       const std::vector<double> &doubleBuffer);

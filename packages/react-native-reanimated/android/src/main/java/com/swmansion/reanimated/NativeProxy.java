@@ -289,9 +289,7 @@ public class NativeProxy {
     };
   }
 
-  /**
-   * Modifies tags in place, setting not mounted view tags to -1 at their index.
-   */
+  /** Modifies tags in place, setting not mounted view tags to -1 at their index. */
   @DoNotStrip
   public void preserveMountedTags(int[] tags) {
     for (int i = 0; i < tags.length; i++) {

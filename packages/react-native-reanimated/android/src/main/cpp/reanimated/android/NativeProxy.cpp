@@ -177,8 +177,7 @@ void NativeProxy::maybeFlushUIUpdatesQueue() {
 std::unique_ptr<int[]> NativeProxy::preserveMountedTags(
     std::vector<int> &tags) {
   static const auto method =
-      getJniMethod<void(jni::alias_ref<jni::JArrayInt>)>(
-          "preserveMountedTags");
+      getJniMethod<void(jni::alias_ref<jni::JArrayInt>)>("preserveMountedTags");
   auto jArrayInt = jni::JArrayInt::newArray(tags.size());
   jArrayInt->setRegion(0, tags.size(), tags.data());
 
