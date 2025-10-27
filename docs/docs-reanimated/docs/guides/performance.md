@@ -26,7 +26,7 @@ We are actively working with React core team at Meta on identifying bottlenecks 
 
 **Solution:** You need to upgrade to React Native 0.80 (or newer), upgrade to Reanimated 4.2.0 (or newer) and enable [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](./feature-flags#use_commit_hook_only_for_react_commits) static feature flag as described [here](./feature-flags#use_commit_hook_only_for_react_commits).
 
-You can also consider enabling `enableCppPropsIteratorSetter` feature flag as described [below](#️-low-fps-when-running-multiple-animations-at-once)
+You can also consider enabling `enableCppPropsIteratorSetter` feature flag as described [below](#️-low-fps-when-running-multiple-animations-at-once).
 
 ### ⚠️ Low FPS when running multiple animations at once
 
