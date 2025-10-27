@@ -24,7 +24,9 @@ We are actively working with React core team at Meta on identifying bottlenecks 
 
 **Problem:** Frames per seconds drops when there are many animated components on the screen during scrolling.
 
-**Solution:** You need to upgrade to React Native 0.80 (or newer), upgrade to Reanimated 4.2.0 (or newer) and enable [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](./feature-flags#use_commit_hook_only_for_react_commits) static feature flag as described [here](./feature-flags#use_commit_hook_only_for_react_commits). It is also recommended to enable `enableCppPropsIteratorSetter` feature flag as described [below](#low-fps).
+**Solution:** You need to upgrade to React Native 0.80 (or newer), upgrade to Reanimated 4.2.0 (or newer) and enable [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](./feature-flags#use_commit_hook_only_for_react_commits) static feature flag as described [here](./feature-flags#use_commit_hook_only_for_react_commits).
+
+You can also consider enabling `enableCppPropsIteratorSetter` feature flag as described [below](#low-fps).
 
 ### ⚠️ Low FPS when running multiple animations at once
 
@@ -36,7 +38,7 @@ Note that these flags affect the touch detection system for components with anim
 
 It is also recommended to animate non-layout styles (e.g. `transform`) rather than layout-affecting styles as described [below](#prefer-animating-non-layout-properties).
 
-**Solution 2:** Manually enable `enableCppPropsIteratorSetter` feature flag from `react-native` by patching the source files and building React Native from source.
+**Solution 2:** Manually enable `enableCppPropsIteratorSetter` feature flag from `react-native` by patching the source files and building React Native from source. Note that this feature flag is experimental and may produce unexpected results.
 
 ### ℹ️ Debug vs. release mode
 
