@@ -6,7 +6,6 @@ import type { callGuardDEV } from './callGuard';
 import type { reportFatalRemoteError } from './errors';
 import type { Queue } from './runLoop/workletRuntime/taskQueue';
 import type { SynchronizableUnpacker } from './synchronizableUnpacker';
-import type { IWorkletsErrorConstructor } from './WorkletsError';
 import type { WorkletsModuleProxy } from './WorkletsModule';
 import type { ValueUnpacker } from './workletTypes';
 
@@ -70,9 +69,12 @@ declare global {
     worklet: SerializableRef<() => void>
   ) => void;
   var _microtaskQueueFinalizers: (() => void)[];
-  var WorkletsError: IWorkletsErrorConstructor;
   var _scheduleTimeoutCallback: (delay: number, handlerId: number) => void;
   var __runTimeoutCallback: (handlerId: number) => void;
   var __flushMicrotasks: () => void;
   var _taskQueue: Queue;
+  /** Only in Debug builds. */
+  var __hasNativeState: (value: object) => boolean;
+  /** Only in Debug builds. */
+  var __isHostObject: (value: object) => boolean;
 }

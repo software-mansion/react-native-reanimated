@@ -128,7 +128,8 @@ function processArgs(
     const maybeWorklet = findWorklet(
       arg,
       acceptWorkletizableFunction,
-      acceptObject
+      acceptObject,
+      state
     );
     // @ts-expect-error There's no need to workletize
     // inside an already workletized function.
@@ -146,7 +147,8 @@ function processArgs(
 function findWorklet(
   arg: NodePath,
   acceptWorkletizableFunction: boolean,
-  acceptObject: boolean
+  acceptObject: boolean,
+  state: ReanimatedPluginPass
 ): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
   if (acceptWorkletizableFunction && isWorkletizableFunctionPath(arg)) {
     return arg;
@@ -158,7 +160,8 @@ function findWorklet(
     return findReferencedWorklet(
       arg,
       acceptWorkletizableFunction,
-      acceptObject
+      acceptObject,
+      state
     );
   }
   return undefined;

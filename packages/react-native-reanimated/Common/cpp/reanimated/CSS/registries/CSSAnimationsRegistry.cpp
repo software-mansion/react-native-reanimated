@@ -1,5 +1,11 @@
 #include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
 
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
 namespace reanimated::css {
 
 bool CSSAnimationsRegistry::isEmpty() const {
@@ -9,8 +15,7 @@ bool CSSAnimationsRegistry::isEmpty() const {
 }
 
 bool CSSAnimationsRegistry::hasUpdates() const {
-  return !runningAnimationIndicesMap_.empty() ||
-      !delayedAnimationsManager_.empty() || !animationsToRevertMap_.empty();
+  return !runningAnimationIndicesMap_.empty() || !delayedAnimationsManager_.empty() || !animationsToRevertMap_.empty();
 }
 
 void CSSAnimationsRegistry::apply(
@@ -20,8 +25,7 @@ void CSSAnimationsRegistry::apply(
     const CSSAnimationsMap &newAnimations,
     const CSSAnimationSettingsUpdatesMap &settingsUpdates,
     double timestamp) {
-  const auto animationsVector =
-      buildAnimationsVector(rt, shadowNode, animationNames, newAnimations);
+  const auto animationsVector = buildAnimationsVector(rt, shadowNode, animationNames, newAnimations);
 
   const auto viewTag = shadowNode->getTag();
   if (animationsVector.empty()) {
@@ -30,11 +34,7 @@ void CSSAnimationsRegistry::apply(
   }
 
   registry_.erase(viewTag);
-  registry_.emplace(
-      viewTag,
-      RegistryEntry{
-          std::move(animationsVector),
-          buildAnimationToIndexMap(animationsVector)});
+  registry_.emplace(viewTag, RegistryEntry{std::move(animationsVector), buildAnimationToIndexMap(animationsVector)});
   runningAnimationIndicesMap_[viewTag].clear();
 
   std::vector<size_t> updatedIndices;
@@ -66,11 +66,9 @@ void CSSAnimationsRegistry::update(const double timestamp) {
   handleAnimationsToRevert(timestamp);
 
   // Iterate over active animations and update them
-  for (auto it = runningAnimationIndicesMap_.begin();
-       it != runningAnimationIndicesMap_.end();) {
+  for (auto it = runningAnimationIndicesMap_.begin(); it != runningAnimationIndicesMap_.end();) {
     const auto viewTag = it->first;
-    const std::vector<size_t> animationIndices = {
-        it->second.begin(), it->second.end()};
+    const std::vector<size_t> animationIndices = {it->second.begin(), it->second.end()};
     updateViewAnimations(viewTag, animationIndices, timestamp, true);
 
     if (runningAnimationIndicesMap_[viewTag].empty()) {
@@ -127,8 +125,7 @@ CSSAnimationsVector CSSAnimationsRegistry::buildAnimationsVector(
 
     if (oldAnimationIt == oldAnimationsMap.end()) {
       throw std::runtime_error(
-          "[Reanimated] There is no animation with name " + name +
-          " available to use at index " + std::to_string(i));
+          "[Reanimated] There is no animation with name " + name + " available to use at index " + std::to_string(i));
     }
 
     animationsVector.emplace_back(oldAnimationIt->second.back());
@@ -142,8 +139,7 @@ CSSAnimationsVector CSSAnimationsRegistry::buildAnimationsVector(
   return animationsVector;
 }
 
-CSSAnimationsRegistry::AnimationToIndexMap
-CSSAnimationsRegistry::buildAnimationToIndexMap(
+CSSAnimationsRegistry::AnimationToIndexMap CSSAnimationsRegistry::buildAnimationToIndexMap(
     const CSSAnimationsVector &animationsVector) const {
   AnimationToIndexMap animationToIndexMap;
 
@@ -195,9 +191,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
       if (addToBatch && !animation->hasForwardsFillMode()) {
         //  We also have to manually commit style values
         // reverting the changes applied by the animation.
-        hasUpdates =
-            addStyleUpdates(result, animation->getResetStyle(), false) ||
-            hasUpdates;
+        hasUpdates = addStyleUpdates(result, animation->getResetStyle(), false) || hasUpdates;
         updatesAddedToBatch = true;
         // We want to remove style changes applied by the animation that is
         // finished and has no forwards fill mode. We cannot simply remove
@@ -256,9 +250,7 @@ void CSSAnimationsRegistry::removeViewAnimations(const Tag viewTag) {
   runningAnimationIndicesMap_.erase(viewTag);
 }
 
-void CSSAnimationsRegistry::applyViewAnimationsStyle(
-    const Tag viewTag,
-    const double timestamp) {
+void CSSAnimationsRegistry::applyViewAnimationsStyle(const Tag viewTag, const double timestamp) {
   const auto it = registry_.find(viewTag);
   // Remove the style from the registry if there are no animations for the view
   if (it == registry_.end() || it->second.animationsVector.empty()) {
@@ -279,11 +271,9 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
     } else if (
         currentState == AnimationProgressState::Running ||
         // Animation is paused after start (was running before)
-        (currentState == AnimationProgressState::Paused &&
-         timestamp >= animation->getStartTimestamp(timestamp)) ||
+        (currentState == AnimationProgressState::Paused && timestamp >= animation->getStartTimestamp(timestamp)) ||
         // Animation is finished and has fill forwards fill mode
-        (currentState == AnimationProgressState::Finished &&
-         animation->hasForwardsFillMode())) {
+        (currentState == AnimationProgressState::Finished && animation->hasForwardsFillMode())) {
       style = animation->getCurrentInterpolationStyle();
     }
 
@@ -299,8 +289,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
 }
 
 void CSSAnimationsRegistry::activateDelayedAnimations(const double timestamp) {
-  while (!delayedAnimationsManager_.empty() &&
-         delayedAnimationsManager_.top().timestamp <= timestamp) {
+  while (!delayedAnimationsManager_.empty() && delayedAnimationsManager_.top().timestamp <= timestamp) {
     const auto [_, animation] = delayedAnimationsManager_.pop();
     const auto viewTag = animation->getShadowNode()->getTag();
 
@@ -336,8 +325,7 @@ bool CSSAnimationsRegistry::addStyleUpdates(
 
   bool hasUpdates = false;
   for (const auto &[propertyName, propertyValue] : updates.items()) {
-    if (shouldOverride || !target.count(propertyName) ||
-        target[propertyName].isNull()) {
+    if (shouldOverride || !target.count(propertyName) || target[propertyName].isNull()) {
       target[propertyName] = propertyValue;
       hasUpdates = true;
     }

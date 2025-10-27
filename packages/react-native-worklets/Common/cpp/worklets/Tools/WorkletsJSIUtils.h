@@ -40,9 +40,7 @@ inline jsi::Object get<jsi::Object>(jsi::Runtime &rt, const jsi::Value *value) {
 }
 
 template <>
-inline jsi::Value const &get<jsi::Value const &>(
-    jsi::Runtime &,
-    const jsi::Value *value) {
+inline jsi::Value const &get<jsi::Value const &>(jsi::Runtime &, const jsi::Value *value) {
   return *value;
 }
 
@@ -57,9 +55,7 @@ inline jsi::Value const &get<jsi::Value const &>(
 // BEGIN implementations for `convertArgs` specializations.
 // specialization for empty `Targs` - returns an empty tuple
 template <typename... Args>
-inline std::enable_if_t<(sizeof...(Args) == 0), std::tuple<>> convertArgs(
-    jsi::Runtime &,
-    const jsi::Value *) {
+inline std::enable_if_t<(sizeof...(Args) == 0), std::tuple<>> convertArgs(jsi::Runtime &, const jsi::Value *) {
   return std::make_tuple();
 }
 
@@ -67,9 +63,7 @@ inline std::enable_if_t<(sizeof...(Args) == 0), std::tuple<>> convertArgs(
 // then calls recursively on the rest of `args`
 // and returns the concatenation of results
 template <typename T, typename... Rest>
-inline std::tuple<T, Rest...> convertArgs(
-    jsi::Runtime &rt,
-    const jsi::Value *args) {
+inline std::tuple<T, Rest...> convertArgs(jsi::Runtime &rt, const jsi::Value *args) {
   auto arg = std::tuple<T>(get<T>(rt, args));
   auto rest = convertArgs<Rest...>(rt, std::next(args));
   return std::tuple_cat(std::move(arg), std::move(rest));
@@ -79,14 +73,9 @@ inline std::tuple<T, Rest...> convertArgs(
 // returns a tuple with the result of casting `args` to appropriate
 // native C++ types needed to call `function`
 template <typename Ret, typename... Args>
-std::tuple<Args...> getArgsForFunction(
-    std::function<Ret(Args...)>,
-    jsi::Runtime &rt,
-    const jsi::Value *args,
-    const size_t count) {
-  react_native_assert(
-      sizeof...(Args) == count &&
-      "Argument list has different length than expected");
+std::tuple<Args...>
+getArgsForFunction(std::function<Ret(Args...)>, jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
+  react_native_assert(sizeof...(Args) == count && "Argument list has different length than expected");
   return convertArgs<Args...>(rt, args);
 }
 
@@ -99,36 +88,27 @@ std::tuple<jsi::Runtime &, Args...> getArgsForFunction(
     jsi::Runtime &rt,
     const jsi::Value *args,
     const size_t count) {
-  react_native_assert(
-      sizeof...(Args) == count &&
-      "Argument list has different length than expected");
+  react_native_assert(sizeof...(Args) == count && "Argument list has different length than expected");
   return std::tuple_cat(std::tie(rt), convertArgs<Args...>(rt, args));
 }
 
 // calls `function` with `args`
 template <typename Ret, typename... Args>
-inline jsi::Value apply(
-    std::function<Ret(Args...)> function,
-    std::tuple<Args...> args) {
+inline jsi::Value apply(std::function<Ret(Args...)> function, std::tuple<Args...> args) {
   return std::apply(function, std::move(args));
 }
 
 // calls string-returning `function` with `args`,
 // and returns the string
 template <typename... Args>
-inline jsi::Value apply(
-    jsi::Runtime &rt,
-    std::function<std::string(Args...)> function,
-    std::tuple<Args...> args) {
+inline jsi::Value apply(jsi::Runtime &rt, std::function<std::string(Args...)> function, std::tuple<Args...> args) {
   return jsi::String::createFromUtf8(rt, std::apply(function, std::move(args)));
 }
 
 // calls void-returning `function` with `args`,
 // and returns `undefined`
 template <typename... Args>
-inline jsi::Value apply(
-    std::function<void(Args...)> function,
-    std::tuple<Args...> args) {
+inline jsi::Value apply(std::function<void(Args...)> function, std::tuple<Args...> args) {
   std::apply(function, std::move(args));
   return jsi::Value::undefined();
 }
@@ -137,11 +117,7 @@ inline jsi::Value apply(
 // from a native function `function`
 template <typename Fun>
 jsi::HostFunctionType createHostFunction(Fun function) {
-  return [function](
-             jsi::Runtime &rt,
-             const jsi::Value &,
-             const jsi::Value *args,
-             const size_t count) {
+  return [function](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, const size_t count) {
     auto argz = getArgsForFunction(function, rt, args, count);
     return apply(function, std::move(argz));
   };
@@ -150,13 +126,8 @@ jsi::HostFunctionType createHostFunction(Fun function) {
 // returns a function with JSI calling convention
 // from a native function `function` returning a string
 template <typename... Args>
-jsi::HostFunctionType createHostFunction(
-    std::function<std::string(Args...)> function) {
-  return [function](
-             jsi::Runtime &rt,
-             const jsi::Value &,
-             const jsi::Value *args,
-             const size_t count) {
+jsi::HostFunctionType createHostFunction(std::function<std::string(Args...)> function) {
+  return [function](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, const size_t count) {
     auto argz = getArgsForFunction(function, rt, args, count);
     return apply(rt, function, std::move(argz));
   };
@@ -179,14 +150,11 @@ struct takes_runtime<jsi::Runtime &, Rest...> {
 // and installs it as a global function named `name`
 // in the `rt` JS runtime
 template <typename Ret, typename... Args>
-void installJsiFunction(
-    jsi::Runtime &rt,
-    std::string_view name,
-    std::function<Ret(Args...)> function) {
+void installJsiFunction(jsi::Runtime &rt, std::string_view name, std::function<Ret(Args...)> function) {
   auto clb = createHostFunction(function);
   auto argsCount = sizeof...(Args) - takes_runtime<Args...>::value;
-  jsi::Value jsiFunction = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, name.data()), argsCount, clb);
+  jsi::Value jsiFunction =
+      jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, name.data()), argsCount, clb);
   rt.global().setProperty(rt, name.data(), jsiFunction);
 }
 
@@ -196,13 +164,8 @@ void installJsiFunction(jsi::Runtime &rt, std::string_view name, Fun function) {
   installJsiFunction(rt, name, std::function(std::forward<Fun>(function)));
 }
 
-jsi::Array convertStringToArray(
-    jsi::Runtime &rt,
-    const std::string &value,
-    const unsigned int expectedSize);
+jsi::Array convertStringToArray(jsi::Runtime &rt, const std::string &value, const unsigned int expectedSize);
 
-jsi::Object optimizedFromHostObject(
-    jsi::Runtime &rt,
-    std::shared_ptr<jsi::HostObject> &&hostObject);
+jsi::Object optimizedFromHostObject(jsi::Runtime &rt, std::shared_ptr<jsi::HostObject> &&hostObject);
 
 } // namespace worklets::jsi_utils

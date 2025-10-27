@@ -50,19 +50,15 @@ function measureNative(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
       `The view has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
     );
     return null;
-  } else if (measured.x === -1234567) {
-    logger.warn(
-      `The view returned an invalid measurement response. Please make sure the view is currently rendered.`
-    );
-    return null;
-  } else if (isNaN(measured.x)) {
+  }
+  if (isNaN(measured.x)) {
     logger.warn(
       `The view gets view-flattened on Android. To disable view-flattening, set \`collapsable={false}\` on this component.`
     );
     return null;
-  } else {
-    return measured;
   }
+
+  return measured;
 }
 
 function measureJest() {

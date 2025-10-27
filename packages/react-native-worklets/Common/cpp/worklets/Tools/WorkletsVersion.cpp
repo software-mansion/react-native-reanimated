@@ -21,19 +21,13 @@ std::string getWorkletsCppVersion() {
 
 void injectWorkletsCppVersion(jsi::Runtime &rnRuntime) {
   auto version = getWorkletsCppVersion();
-  rnRuntime.global().setProperty(
-      rnRuntime,
-      "_WORKLETS_VERSION_CPP",
-      jsi::String::createFromUtf8(rnRuntime, version));
+  rnRuntime.global().setProperty(rnRuntime, "_WORKLETS_VERSION_CPP", jsi::String::createFromUtf8(rnRuntime, version));
 }
 
 #ifndef NDEBUG
-void checkJSVersion(
-    jsi::Runtime &rnRuntime,
-    const std::shared_ptr<worklets::JSLogger> &jsLogger) {
+void checkJSVersion(jsi::Runtime &rnRuntime, const std::shared_ptr<worklets::JSLogger> &jsLogger) {
   auto cppVersion = getWorkletsCppVersion();
-  auto jsVersionValue =
-      rnRuntime.global().getProperty(rnRuntime, "_WORKLETS_VERSION_JS");
+  auto jsVersionValue = rnRuntime.global().getProperty(rnRuntime, "_WORKLETS_VERSION_JS");
   worklets::checkJSVersion(
       rnRuntime,
       jsVersionValue,
@@ -43,9 +37,7 @@ void checkJSVersion(
       "https://docs.swmansion.com/react-native-worklets/docs");
 }
 #else
-void checkJSVersion(
-    jsi::Runtime &rnRuntime,
-    const std::shared_ptr<worklets::JSLogger> &jsLogger) {
+void checkJSVersion(jsi::Runtime &rnRuntime, const std::shared_ptr<worklets::JSLogger> &jsLogger) {
   // In release builds we don't check the version, hence
   // this function is a NOOP.
 }

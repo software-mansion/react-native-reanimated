@@ -9,8 +9,7 @@
 namespace reanimated::css {
 
 template <TransformOp TOperation>
-struct TranslateOperationBase
-    : public TransformOperationBase<TOperation, CSSLength> {
+struct TranslateOperationBase : public TransformOperationBase<TOperation, CSSLength> {
   using TransformOperationBase<TOperation, CSSLength>::TransformOperationBase;
 
   explicit TranslateOperationBase(double value);

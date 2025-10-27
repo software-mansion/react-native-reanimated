@@ -1,10 +1,11 @@
 #include <reanimated/CSS/utils/props.h>
 
+#include <string>
+#include <utility>
+
 namespace reanimated::css {
 
-bool isDiscreteProperty(
-    const std::string &propName,
-    const std::string &componentName) {
+bool isDiscreteProperty(const std::string &propName, const std::string &componentName) {
   const auto &interpolators = getComponentInterpolators(componentName);
   const auto it = interpolators.find(propName);
   if (it == interpolators.end()) {
@@ -13,16 +14,13 @@ bool isDiscreteProperty(
   return it->second->isDiscreteProperty();
 }
 
-bool areArraysDifferentRecursive(
-    const folly::dynamic &oldArray,
-    const folly::dynamic &newArray) {
+bool areArraysDifferentRecursive(const folly::dynamic &oldArray, const folly::dynamic &newArray) {
   if (oldArray.size() != newArray.size()) {
     return true;
   }
 
   for (size_t i = 0; i < oldArray.size(); i++) {
-    const auto [oldChangedProp, newChangedProp] =
-        getChangedPropsRecursive(oldArray[i], newArray[i]);
+    const auto [oldChangedProp, newChangedProp] = getChangedPropsRecursive(oldArray[i], newArray[i]);
 
     if (!oldChangedProp.isNull() || !newChangedProp.isNull()) {
       return true;
@@ -73,8 +71,7 @@ std::pair<folly::dynamic, folly::dynamic> getChangedPropsRecursive(
 
     if (oldProp.count(propName)) {
       const auto &oldValue = oldProp[propName];
-      auto [oldChangedProp, newChangedProp] =
-          getChangedPropsRecursive(oldValue, newValue);
+      auto [oldChangedProp, newChangedProp] = getChangedPropsRecursive(oldValue, newValue);
 
       if (!oldChangedProp.isNull() && !newChangedProp.isNull()) {
         oldResult[propName] = std::move(oldChangedProp);
@@ -89,14 +86,11 @@ std::pair<folly::dynamic, folly::dynamic> getChangedPropsRecursive(
   }
 
   return {
-      oldHasChanges ? std::move(oldResult) : folly::dynamic(),
-      newHasChanges ? std::move(newResult) : folly::dynamic()};
+      oldHasChanges ? std::move(oldResult) : folly::dynamic(), newHasChanges ? std::move(newResult) : folly::dynamic()};
 }
 
-std::pair<folly::dynamic, folly::dynamic> getChangedValueForProp(
-    const folly::dynamic &oldObject,
-    const folly::dynamic &newObject,
-    const std::string &propName) {
+std::pair<folly::dynamic, folly::dynamic>
+getChangedValueForProp(const folly::dynamic &oldObject, const folly::dynamic &newObject, const std::string &propName) {
   const bool oldHasProperty = oldObject.count(propName);
   const bool newHasProperty = newObject.count(propName);
 
@@ -133,8 +127,7 @@ ChangedProps getChangedProps(
   PropertyNames changedPropertyNames;
 
   for (const auto &propName : allowedProperties) {
-    auto [oldChangedProp, newChangedProp] =
-        getChangedValueForProp(oldProps, newProps, propName);
+    auto [oldChangedProp, newChangedProp] = getChangedValueForProp(oldProps, newProps, propName);
 
     const auto hasOldChangedProp = !oldChangedProp.isNull();
     const auto hasNewChangedProp = !newChangedProp.isNull();
@@ -150,10 +143,7 @@ ChangedProps getChangedProps(
     }
   }
 
-  return {
-      std::move(oldResult),
-      std::move(newResult),
-      std::move(changedPropertyNames)};
+  return {std::move(oldResult), std::move(newResult), std::move(changedPropertyNames)};
 }
 
 } // namespace reanimated::css

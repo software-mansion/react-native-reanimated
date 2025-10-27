@@ -9,8 +9,7 @@ namespace reanimated::css {
 using namespace facebook;
 using namespace react;
 
-using PropsObserver = std::function<
-    void(const folly::dynamic &oldProps, const folly::dynamic &newProps)>;
+using PropsObserver = std::function<void(const folly::dynamic &oldProps, const folly::dynamic &newProps)>;
 
 class StaticPropsRegistry {
  public:
@@ -28,10 +27,7 @@ class StaticPropsRegistry {
   std::unordered_map<Tag, folly::dynamic> registry_;
   std::unordered_map<Tag, PropsObserver> observers_;
 
-  void notifyObservers(
-      Tag viewTag,
-      const folly::dynamic &oldProps,
-      const folly::dynamic &newProps);
+  void notifyObservers(Tag viewTag, const folly::dynamic &oldProps, const folly::dynamic &newProps);
 };
 
 } // namespace reanimated::css

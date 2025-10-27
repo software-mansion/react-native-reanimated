@@ -2,6 +2,8 @@
 
 #include <jsi/jsi.h>
 #include <worklets/SharedItems/Serializable.h>
+#include <worklets/WorkletRuntime/RuntimeBindings.h>
+
 #include <atomic>
 #include <functional>
 #include <memory>
@@ -10,19 +12,16 @@
 
 namespace worklets {
 
-class AnimationFrameBatchinator
-    : public std::enable_shared_from_this<AnimationFrameBatchinator> {
+class AnimationFrameBatchinator : public std::enable_shared_from_this<AnimationFrameBatchinator> {
  public:
-  using JsiRequestAnimationFrame = std::function<
-      void(facebook::jsi::Runtime &, const facebook::jsi::Value &)>;
+  using JsiRequestAnimationFrame = std::function<void(facebook::jsi::Runtime &, const facebook::jsi::Value &)>;
 
   void addToBatch(const facebook::jsi::Value &callback);
   JsiRequestAnimationFrame getJsiRequestAnimationFrame();
 
   AnimationFrameBatchinator(
       facebook::jsi::Runtime &uiRuntime,
-      std::function<void(std::function<void(const double)>)>
-          &&forwardedRequestAnimationFrame);
+      RuntimeBindings::RequestAnimationFrame requestAnimationFrame);
 
  private:
   void flush();

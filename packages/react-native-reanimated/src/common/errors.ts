@@ -18,15 +18,15 @@ function ReanimatedErrorConstructor(message: string): ReanimatedError {
 export function registerReanimatedError() {
   'worklet';
   if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
-    globalThis.ReanimatedError =
-      ReanimatedErrorConstructor as IReanimatedErrorConstructor;
+    (globalThis as Record<string, unknown>).ReanimatedError =
+      ReanimatedErrorConstructor;
   }
 }
 
 export const ReanimatedError =
   ReanimatedErrorConstructor as IReanimatedErrorConstructor;
 
-export interface IReanimatedErrorConstructor extends Error {
+interface IReanimatedErrorConstructor extends Error {
   new (message?: string): ReanimatedError;
   (message?: string): ReanimatedError;
   readonly prototype: ReanimatedError;
