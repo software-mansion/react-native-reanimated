@@ -48,27 +48,6 @@ For better development experience, you might also consider using `debugOptimized
 
 ## Other tips
 
-### 💡 Prefer animating non-layout properties
-
-Animating non-layout properties (like `transform`, `opacity` or `backgroundColor`) is generally more performant than animating styles that affect layout (like `top`/`left`, `width`/`height`, `margin` or `padding`). That's because the latter group requires an additional step of layout recalculation on each animation frame.
-
-Whenever possible, you should prefer using non-layout styles (e.g. `transform` with `translateX`/`translateY`) rather than their layout-affecting counterparts (i.e. `top`/`left`).
-
-Additionally, non-layout properties can be updated using a fast path – more details [here](./feature-flags#android_synchronously_update_ui_props).
-
-### 💡 Enable 120 fps
-
-In order to enable support for 120 fps on iOS, make sure that `CADisableMinimumFrameDurationOnPhone` flag is enabled in `Info.plist`. The flag is enabled by default in the app template starting from React Native 0.82.
-
-```xml
-<key>CADisableMinimumFrameDurationOnPhone</key>
-<true/>
-```
-
-### ❌ Avoid animating too many components at once
-
-Reanimated is perfectly capable of animating several dozens of components at once. However, if there's too many components to be animated simultaneously, performance can be affected. As a rule of thumb, you should animate no more than 100 components for low-end Android devices and no more than 500 components for iOS. For more complex animations, consider using Reanimated with `react-native-skia` instead of rendering individual React components.
-
 ### ❌ Avoid reading shared values on the JS thread
 
 Reading shared values is allowed only from worklets running on the UI thread. You should avoid reading shared values in the React Native runtime on the JavaScript thread.
@@ -86,6 +65,27 @@ const animatedStyle = useAnimatedStyle(() => {
 ```
 
 When you read the `sv.value` in the React Native runtime, the JS thread will get blocked until the value is fetched from the UI thread. In most cases it will be negligible, but if the UI thread is busy or you are reading a value multiple times, the wait time needed to synchronize both threads may significantly increase.
+
+### ❌ Avoid animating too many components at once
+
+Reanimated is perfectly capable of animating several dozens of components at once. However, if there's too many components to be animated simultaneously, performance can be affected. As a rule of thumb, you should animate no more than 100 components for low-end Android devices and no more than 500 components for iOS. For more complex animations, consider using Reanimated with `react-native-skia` instead of rendering individual React components.
+
+### 💡 Enable 120 fps
+
+In order to enable support for 120 fps on iOS, make sure that `CADisableMinimumFrameDurationOnPhone` flag is enabled in `Info.plist`. The flag is enabled by default in the app template starting from React Native 0.82.
+
+```xml
+<key>CADisableMinimumFrameDurationOnPhone</key>
+<true/>
+```
+
+### 💡 Prefer animating non-layout properties
+
+Animating non-layout properties (like `transform`, `opacity` or `backgroundColor`) is generally more performant than animating styles that affect layout (like `top`/`left`, `width`/`height`, `margin` or `padding`). That's because the latter group requires an additional step of layout recalculation on each animation frame.
+
+Whenever possible, you should prefer using non-layout styles (e.g. `transform` with `translateX`/`translateY`) rather than their layout-affecting counterparts (i.e. `top`/`left`).
+
+Additionally, non-layout properties can be updated using a fast path – more details [here](./feature-flags#android_synchronously_update_ui_props).
 
 ### 💡 Memoize gestures
 
