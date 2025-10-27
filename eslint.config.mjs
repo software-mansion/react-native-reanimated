@@ -66,18 +66,6 @@ const tsRules = {
   'no-empty': 'warn',
   'react/jsx-uses-react': 'error',
   camelcase: 'error',
-  'no-restricted-imports': [
-    'error',
-    {
-      patterns: [
-        {
-          group: ['*.native', '*.ios', '*.android', '*.web'],
-          message:
-            "Don't import with platform specifier, use extensionless imports.",
-        },
-      ],
-    },
-  ],
 };
 
 /** @type {import('typescript-eslint').ConfigWithExtends['rules']} */
