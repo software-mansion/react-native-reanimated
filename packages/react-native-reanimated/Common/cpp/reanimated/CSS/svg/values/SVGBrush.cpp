@@ -1,5 +1,7 @@
 #include <reanimated/CSS/svg/values/SVGBrush.h>
 
+#include <string>
+
 namespace reanimated::css {
 
 SVGBrush::SVGBrush(jsi::Runtime &rt, const jsi::Value &value)
