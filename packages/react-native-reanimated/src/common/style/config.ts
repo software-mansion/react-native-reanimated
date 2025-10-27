@@ -12,6 +12,7 @@ import {
   processInsetBlock,
   processInsetInline,
   processTransform,
+  processFilter,
 } from './processors';
 import type { StyleBuilderConfig } from './types';
 
@@ -222,6 +223,6 @@ export const BASE_PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   cursor: true,
   pointerEvents: true,
   // Others
-  filter: false, // web only
+  filter: { process: processFilter },
   isolation: true,
 };
