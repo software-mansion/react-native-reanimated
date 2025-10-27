@@ -86,6 +86,7 @@ function updateJSProps(operations: JSPropsOperation[]) {
 type NativePropsOperation = {
   shadowNodeWrapper: ShadowNodeWrapper;
   updates: StyleProps;
+  forceShadowTreeCommit: boolean;
 };
 
 function createUpdatePropsManager() {
@@ -112,31 +113,34 @@ function createUpdatePropsManager() {
 
   return {
     update(viewDescriptors: ViewDescriptorsWrapper, updates: PropUpdates) {
-      viewDescriptors.value.forEach(({ tag, shadowNodeWrapper }) => {
-        const viewTag = tag as number;
-        const { nativePropUpdates, jsPropUpdates } = processViewUpdates(
-          viewTag,
-          updates
-        );
+      viewDescriptors.value.forEach(
+        ({ tag, shadowNodeWrapper, forceShadowTreeCommit }) => {
+          const viewTag = tag as number;
+          const { nativePropUpdates, jsPropUpdates } = processViewUpdates(
+            viewTag,
+            updates
+          );
 
-        if (nativePropUpdates) {
-          nativeOperations.push({
-            shadowNodeWrapper,
-            updates: nativePropUpdates,
-          });
-        }
-        if (jsPropUpdates) {
-          jsOperations.push({
-            tag: viewTag,
-            updates: jsPropUpdates,
-          });
-        }
+          if (nativePropUpdates) {
+            nativeOperations.push({
+              shadowNodeWrapper,
+              updates: nativePropUpdates,
+              forceShadowTreeCommit,
+            });
+          }
+          if (jsPropUpdates) {
+            jsOperations.push({
+              tag: viewTag,
+              updates: jsPropUpdates,
+            });
+          }
 
-        if (!flushPending && (nativePropUpdates || jsPropUpdates)) {
-          queueMicrotask(this.flush);
-          flushPending = true;
+          if (!flushPending && (nativePropUpdates || jsPropUpdates)) {
+            queueMicrotask(this.flush);
+            flushPending = true;
+          }
         }
-      });
+      );
     },
     flush(this: void) {
       if (nativeOperations.length) {

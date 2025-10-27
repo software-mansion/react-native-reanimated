@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Platform, ScrollView, StyleSheet, Text } from 'react-native';
 import Animated, {
   interpolateColor,
+  useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
   withRepeat,
@@ -74,6 +75,65 @@ export default function SynchronousPropsExample() {
           backgroundColor: 'navy',
           opacity: sv,
         }}
+      />
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          backgroundColor: 'navy',
+          opacity: sv,
+        }}
+        forceShadowTreeCommit
+      />
+      <Animated.View
+        style={[
+          {
+            width: 50,
+            height: 50,
+            backgroundColor: 'navy',
+          },
+          useAnimatedStyle(() => ({ opacity: sv.value })),
+        ]}
+      />
+      <Animated.View
+        style={[
+          {
+            width: 50,
+            height: 50,
+            backgroundColor: 'navy',
+          },
+          useAnimatedStyle(() => ({ opacity: sv.value })),
+        ]}
+        forceShadowTreeCommit
+      />
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          backgroundColor: 'navy',
+          animationName: {
+            from: { opacity: 0 },
+            to: { opacity: 1 },
+          },
+          animationDuration: 500,
+          animationIterationCount: 'infinite',
+          animationDirection: 'alternate',
+        }}
+      />
+      <Animated.View
+        style={{
+          width: 50,
+          height: 50,
+          backgroundColor: 'navy',
+          animationName: {
+            from: { opacity: 0 },
+            to: { opacity: 1 },
+          },
+          animationDuration: 500,
+          animationIterationCount: 'infinite',
+          animationDirection: 'alternate',
+        }}
+        forceShadowTreeCommit
       />
 
       <Text>elevation</Text>

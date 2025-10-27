@@ -218,7 +218,8 @@ void CSSAnimationsRegistry::updateViewAnimations(
   }
 
   if (hasUpdates) {
-    addUpdatesToBatch(shadowNode, result);
+    // TODO: pass forceShadowTreeCommit instead of true
+    addUpdatesToBatch(shadowNode, result, true);
   }
 }
 

@@ -41,7 +41,9 @@ export interface IInlinePropManager {
 }
 
 export type AnimatedComponentTypeInternal = Component &
-  IAnimatedComponentInternal;
+  IAnimatedComponentInternal & {
+    props: AnimatedComponentProps;
+  };
 
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export type PropUpdates = StyleProps | AnimatedStyle<any>;
@@ -84,6 +86,7 @@ export type AnimatedComponentProps<
   animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
   jestAnimatedValues?: RefObject<AnimatedProps>;
   animatedStyle?: StyleProps;
+  forceShadowTreeCommit?: boolean;
   layout?: (
     | BaseAnimationBuilder
     | ILayoutAnimationBuilder
