@@ -289,19 +289,16 @@ public class NativeProxy {
     };
   }
 
+  /** Modifies tags in place, setting not mounted view tags to -1 at their index. */
   @DoNotStrip
-  public boolean preserveMountedTags(int[] tags) {
-    if (!UiThreadUtil.isOnUiThread()) {
-      return false;
-    }
-
+  public void preserveMountedTags(int[] tags) {
     for (int i = 0; i < tags.length; i++) {
+      // Note: resolveView has assertOnUiThread, which only logs as softexception in debug
+      // It is actually completely thread safe and there is a RFC in RN to do something about it
       if (mFabricUIManager.resolveView(tags[i]) == null) {
         tags[i] = -1;
       }
     }
-
-    return true;
   }
 
   @DoNotStrip
