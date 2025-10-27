@@ -46,7 +46,7 @@ It is very likely that the performance regressions are noticeable only the devel
 
 For better development experience, you might also consider using `debugOptimized` build variant on Android (available from React Native 0.82) – more details [here](https://reactnative.dev/blog/2025/10/08/react-native-0.82#optimized-debug-build-type-for-android).
 
-## Other tips
+## What to avoid
 
 ### ❌ Avoid reading shared values on the JS thread
 
@@ -69,6 +69,8 @@ When you read the `sv.value` in the React Native runtime, the JS thread will get
 ### ❌ Avoid animating too many components at once
 
 Reanimated is perfectly capable of animating several dozens of components at once. However, if there's too many components to be animated simultaneously, performance can be affected. As a rule of thumb, you should animate no more than 100 components for low-end Android devices and no more than 500 components for iOS. For more complex animations, consider using Reanimated with `react-native-skia` instead of rendering individual React components.
+
+## Other tips
 
 ### 💡 Enable 120 fps
 
