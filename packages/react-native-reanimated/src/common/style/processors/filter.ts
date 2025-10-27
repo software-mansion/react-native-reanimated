@@ -127,10 +127,6 @@ const parseFilterProperty = (
   const unit = match[2];
 
   switch (key) {
-    case 'hueRotate':
-      return { hueRotate: parseHueRotate({ number, unit }) };
-    case 'blur':
-      return { blur: parseBlur({ number, unit }) };
     case 'brightness':
     case 'contrast':
     case 'grayscale':
@@ -145,6 +141,10 @@ const parseFilterProperty = (
         number /= 100;
       }
       return { [key]: number };
+    case 'hueRotate':
+      return { hueRotate: parseHueRotate({ number, unit }) };
+    case 'blur':
+      return { blur: parseBlur({ number, unit }) };
     default:
       throw new ReanimatedError(
         ERROR_MESSAGES.invalidFilter(`${key}(${value})`)
