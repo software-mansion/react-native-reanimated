@@ -1,6 +1,10 @@
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 
+#include <memory>
+#include <string>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 
 namespace reanimated::css {
 
@@ -9,56 +13,48 @@ double getIterationCount(jsi::Runtime &rt, const jsi::Object &settings) {
 }
 
 AnimationDirection getDirection(jsi::Runtime &rt, const jsi::Object &settings) {
-  static const std::unordered_map<std::string, AnimationDirection>
-      strToEnumMap = {
-          {"normal", AnimationDirection::Normal},
-          {"reverse", AnimationDirection::Reverse},
-          {"alternate", AnimationDirection::Alternate},
-          {"alternate-reverse", AnimationDirection::AlternateReverse}};
+  static const std::unordered_map<std::string, AnimationDirection> strToEnumMap = {
+      {"normal", AnimationDirection::Normal},
+      {"reverse", AnimationDirection::Reverse},
+      {"alternate", AnimationDirection::Alternate},
+      {"alternate-reverse", AnimationDirection::AlternateReverse}};
 
   const auto str = settings.getProperty(rt, "direction").asString(rt).utf8(rt);
   auto it = strToEnumMap.find(str);
   if (it == strToEnumMap.cend()) {
-    throw std::invalid_argument(
-        "[Reanimated] Invalid animationDirection: " + str);
+    throw std::invalid_argument("[Reanimated] Invalid animationDirection: " + str);
   }
   return it->second;
 }
 
 AnimationFillMode getFillMode(jsi::Runtime &rt, const jsi::Object &settings) {
-  static const std::unordered_map<std::string, AnimationFillMode> strToEnumMap =
-      {{"none", AnimationFillMode::None},
-       {"forwards", AnimationFillMode::Forwards},
-       {"backwards", AnimationFillMode::Backwards},
-       {"both", AnimationFillMode::Both}};
+  static const std::unordered_map<std::string, AnimationFillMode> strToEnumMap = {
+      {"none", AnimationFillMode::None},
+      {"forwards", AnimationFillMode::Forwards},
+      {"backwards", AnimationFillMode::Backwards},
+      {"both", AnimationFillMode::Both}};
 
   const auto str = settings.getProperty(rt, "fillMode").asString(rt).utf8(rt);
   auto it = strToEnumMap.find(str);
   if (it == strToEnumMap.cend()) {
-    throw std::invalid_argument(
-        "[Reanimated] Invalid animationFillMode: " + str);
+    throw std::invalid_argument("[Reanimated] Invalid animationFillMode: " + str);
   }
   return it->second;
 }
 
 AnimationPlayState getPlayState(jsi::Runtime &rt, const jsi::Object &settings) {
-  static const std::unordered_map<std::string, AnimationPlayState>
-      strToEnumMap = {
-          {"running", AnimationPlayState::Running},
-          {"paused", AnimationPlayState::Paused}};
+  static const std::unordered_map<std::string, AnimationPlayState> strToEnumMap = {
+      {"running", AnimationPlayState::Running}, {"paused", AnimationPlayState::Paused}};
 
   const auto str = settings.getProperty(rt, "playState").asString(rt).utf8(rt);
   auto it = strToEnumMap.find(str);
   if (it == strToEnumMap.cend()) {
-    throw std::invalid_argument(
-        "[Reanimated] Invalid animationPlayState: " + str);
+    throw std::invalid_argument("[Reanimated] Invalid animationPlayState: " + str);
   }
   return it->second;
 }
 
-CSSAnimationSettings parseCSSAnimationSettings(
-    jsi::Runtime &rt,
-    const jsi::Value &settings) {
+CSSAnimationSettings parseCSSAnimationSettings(jsi::Runtime &rt, const jsi::Value &settings) {
   const auto &settingsObj = settings.asObject(rt);
 
   return {
@@ -71,9 +67,7 @@ CSSAnimationSettings parseCSSAnimationSettings(
       getPlayState(rt, settingsObj)};
 }
 
-PartialCSSAnimationSettings parsePartialCSSAnimationSettings(
-    jsi::Runtime &rt,
-    const jsi::Value &partialSettings) {
+PartialCSSAnimationSettings parsePartialCSSAnimationSettings(jsi::Runtime &rt, const jsi::Value &partialSettings) {
   const auto &partialObj = partialSettings.asObject(rt);
 
   PartialCSSAnimationSettings result;
@@ -103,9 +97,7 @@ PartialCSSAnimationSettings parsePartialCSSAnimationSettings(
   return result;
 }
 
-std::vector<std::string> parseAnimationNames(
-    jsi::Runtime &rt,
-    const jsi::Value &animationNames) {
+std::vector<std::string> parseAnimationNames(jsi::Runtime &rt, const jsi::Value &animationNames) {
   std::vector<std::string> result;
 
   const auto &namesArray = animationNames.asObject(rt).asArray(rt);
@@ -113,8 +105,7 @@ std::vector<std::string> parseAnimationNames(
   result.reserve(animationNamesCount);
 
   for (size_t i = 0; i < animationNamesCount; i++) {
-    result.emplace_back(
-        namesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
+    result.emplace_back(namesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
   }
 
   return result;
@@ -147,47 +138,35 @@ CSSAnimationSettingsMap parseNewAnimationSettings(
     const std::vector<std::string> &animationNames,
     const jsi::Value &newSettings) {
   return parseHelper<CSSAnimationSettings>(
-      rt,
-      newSettings.asObject(rt),
-      [&](jsi::Runtime &rt, const jsi::Value &settings) {
+      rt, newSettings.asObject(rt), [&](jsi::Runtime &rt, const jsi::Value &settings) {
         return parseCSSAnimationSettings(rt, settings);
       });
 }
 
-CSSAnimationSettingsUpdatesMap parseSettingsUpdates(
-    jsi::Runtime &rt,
-    const jsi::Value &settingsUpdates) {
+CSSAnimationSettingsUpdatesMap parseSettingsUpdates(jsi::Runtime &rt, const jsi::Value &settingsUpdates) {
   return parseHelper<PartialCSSAnimationSettings>(
-      rt,
-      settingsUpdates.asObject(rt),
-      [](jsi::Runtime &rt, const jsi::Value &settings) {
+      rt, settingsUpdates.asObject(rt), [](jsi::Runtime &rt, const jsi::Value &settings) {
         return parsePartialCSSAnimationSettings(rt, settings);
       });
 }
 
-CSSAnimationUpdates parseCSSAnimationUpdates(
-    jsi::Runtime &rt,
-    const jsi::Value &config) {
+CSSAnimationUpdates parseCSSAnimationUpdates(jsi::Runtime &rt, const jsi::Value &config) {
   const auto &configObj = config.asObject(rt);
 
   CSSAnimationUpdates result;
 
   if (configObj.hasProperty(rt, "animationNames")) {
-    const auto animationNames =
-        parseAnimationNames(rt, configObj.getProperty(rt, "animationNames"));
+    const auto animationNames = parseAnimationNames(rt, configObj.getProperty(rt, "animationNames"));
     result.animationNames = std::move(animationNames);
 
     if (configObj.hasProperty(rt, "newAnimationSettings")) {
-      result.newAnimationSettings = parseNewAnimationSettings(
-          rt,
-          animationNames,
-          configObj.getProperty(rt, "newAnimationSettings"));
+      result.newAnimationSettings =
+          parseNewAnimationSettings(rt, animationNames, configObj.getProperty(rt, "newAnimationSettings"));
     }
   }
 
   if (configObj.hasProperty(rt, "settingsUpdates")) {
-    result.settingsUpdates =
-        parseSettingsUpdates(rt, configObj.getProperty(rt, "settingsUpdates"));
+    result.settingsUpdates = parseSettingsUpdates(rt, configObj.getProperty(rt, "settingsUpdates"));
   }
 
   return result;

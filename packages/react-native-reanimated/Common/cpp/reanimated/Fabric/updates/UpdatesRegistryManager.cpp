@@ -1,18 +1,20 @@
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
+#include <memory>
+#include <utility>
+#include <vector>
+
 namespace reanimated {
 
-UpdatesRegistryManager::UpdatesRegistryManager(
-    const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
+UpdatesRegistryManager::UpdatesRegistryManager(const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
     : staticPropsRegistry_(staticPropsRegistry) {}
 
 std::lock_guard<std::mutex> UpdatesRegistryManager::lock() const {
   return std::lock_guard<std::mutex>{mutex_};
 }
 
-void UpdatesRegistryManager::addRegistry(
-    const std::shared_ptr<UpdatesRegistry> &registry) {
+void UpdatesRegistryManager::addRegistry(const std::shared_ptr<UpdatesRegistry> &registry) {
   if (!registry) {
     throw std::invalid_argument("[Reanimated] Registry cannot be null");
   }
@@ -20,8 +22,7 @@ void UpdatesRegistryManager::addRegistry(
 }
 
 void UpdatesRegistryManager::pauseReanimatedCommits() {
-  if constexpr (!StaticFeatureFlags::getFlag(
-                    "DISABLE_COMMIT_PAUSING_MECHANISM")) {
+  if constexpr (!StaticFeatureFlags::getFlag("DISABLE_COMMIT_PAUSING_MECHANISM")) {
     isPaused_ = true;
   }
 }
@@ -46,8 +47,7 @@ bool UpdatesRegistryManager::shouldCommitAfterPause() {
   return shouldCommitAfterPause_.exchange(false);
 }
 
-void UpdatesRegistryManager::markNodeAsRemovable(
-    const std::shared_ptr<const ShadowNode> &shadowNode) {
+void UpdatesRegistryManager::markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode) {
   removableShadowNodes_[shadowNode->getTag()] = shadowNode;
 }
 
@@ -55,8 +55,7 @@ void UpdatesRegistryManager::unmarkNodeAsRemovable(Tag viewTag) {
   removableShadowNodes_.erase(viewTag);
 }
 
-void UpdatesRegistryManager::handleNodeRemovals(
-    const RootShadowNode &rootShadowNode) {
+void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadowNode) {
   RemovableShadowNodes remainingShadowNodes;
 
   for (const auto &[tag, shadowNode] : removableShadowNodes_) {
@@ -112,8 +111,7 @@ void UpdatesRegistryManager::addToPropsMap(
   }
 }
 
-void UpdatesRegistryManager::collectPropsToRevertBySurface(
-    std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface) {
+void UpdatesRegistryManager::collectPropsToRevertBySurface(std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface) {
   for (const auto &registry : registries_) {
     registry->collectPropsToRevert(propsToRevertMap_);
   }

@@ -30,14 +30,11 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       const std::shared_ptr<TransformOperationInterpolators> &interpolators,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  folly::dynamic getStyleValue(
-      const std::shared_ptr<const ShadowNode> &shadowNode) const override;
-  folly::dynamic getResetStyle(
-      const std::shared_ptr<const ShadowNode> &shadowNode) const override;
+  folly::dynamic getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const override;
+  folly::dynamic getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const override;
   folly::dynamic getFirstKeyframeValue() const override;
   folly::dynamic getLastKeyframeValue() const override;
-  bool equalsReversingAdjustedStartValue(
-      const folly::dynamic &propertyValue) const override;
+  bool equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const override;
 
   folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,
@@ -59,18 +56,14 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
   std::vector<std::shared_ptr<TransformKeyframe>> keyframes_;
   std::optional<TransformOperations> reversingAdjustedStartValue_;
 
-  static std::optional<TransformOperations> parseTransformOperations(
-      jsi::Runtime &rt,
-      const jsi::Value &values);
-  static std::optional<TransformOperations> parseTransformOperations(
-      const folly::dynamic &values);
+  static std::optional<TransformOperations> parseTransformOperations(jsi::Runtime &rt, const jsi::Value &values);
+  static std::optional<TransformOperations> parseTransformOperations(const folly::dynamic &values);
   std::shared_ptr<TransformKeyframe> createTransformKeyframe(
       double fromOffset,
       double toOffset,
       const std::optional<TransformOperations> &fromOperationsOptional,
       const std::optional<TransformOperations> &toOperationsOptional) const;
-  std::pair<TransformOperations, TransformOperations>
-  createTransformInterpolationPair(
+  std::pair<TransformOperations, TransformOperations> createTransformInterpolationPair(
       const TransformOperations &fromOperations,
       const TransformOperations &toOperations) const;
   void addConvertedOperations(
@@ -78,23 +71,18 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       const std::shared_ptr<TransformOperation> &targetOperation,
       TransformOperations &sourceResult,
       TransformOperations &targetResult) const;
-  std::shared_ptr<TransformOperation> getDefaultOperationOfType(
-      TransformOp type) const;
+  std::shared_ptr<TransformOperation> getDefaultOperationOfType(TransformOp type) const;
 
-  size_t getIndexOfCurrentKeyframe(
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const;
-  TransformOperations getFallbackValue(
-      const std::shared_ptr<const ShadowNode> &shadowNode) const;
+  size_t getIndexOfCurrentKeyframe(const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const;
+  TransformOperations getFallbackValue(const std::shared_ptr<const ShadowNode> &shadowNode) const;
   folly::dynamic interpolateOperations(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       double keyframeProgress,
       const TransformOperations &fromOperations,
       const TransformOperations &toOperations) const;
 
-  static folly::dynamic convertOperationsToDynamic(
-      const TransformOperations &operations);
-  TransformInterpolationContext createUpdateContext(
-      const std::shared_ptr<const ShadowNode> &shadowNode) const;
+  static folly::dynamic convertOperationsToDynamic(const TransformOperations &operations);
+  TransformInterpolationContext createUpdateContext(const std::shared_ptr<const ShadowNode> &shadowNode) const;
 };
 
 } // namespace reanimated::css

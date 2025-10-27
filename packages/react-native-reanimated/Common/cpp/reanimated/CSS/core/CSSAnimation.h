@@ -37,9 +37,7 @@ class CSSAnimation {
 
   void run(double timestamp);
   folly::dynamic update(double timestamp);
-  void updateSettings(
-      const PartialCSSAnimationSettings &updatedSettings,
-      double timestamp);
+  void updateSettings(const PartialCSSAnimationSettings &updatedSettings, double timestamp);
 
  private:
   const std::string name_;
