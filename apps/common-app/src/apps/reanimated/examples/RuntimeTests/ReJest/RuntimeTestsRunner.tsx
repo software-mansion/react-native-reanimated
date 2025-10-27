@@ -137,9 +137,17 @@ function TestSelector({ tests, testSelectionCallbacks }: TestSelectorProps) {
         renderItem={({ item }) => {
           return (
             <SelectTest
+              // TODO: Fix me
+              // @ts-ignore RNGH types for web FlatList are broken.
               key={item.testSuiteName}
+              // TODO: Fix me
+              // @ts-ignore RNGH types for web FlatList are broken.
               disabled={item.disabled}
+              // TODO: Fix me
+              // @ts-ignore RNGH types for web FlatList are broken.
               testSuiteName={item.testSuiteName}
+              // TODO: Fix me
+              // @ts-ignore RNGH types for web FlatList are broken.
               selectClick={() => selectClick(item)}
               selectedTests={selectedTests}
             />
