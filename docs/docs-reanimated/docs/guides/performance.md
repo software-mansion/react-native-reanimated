@@ -48,7 +48,7 @@ For better development experience, you might also consider using `debugOptimized
 
 ## Other tips
 
-### 💡 Prefer non-layout properties
+### 💡 Prefer animating non-layout properties
 
 Animating non-layout properties (like `transform`, `opacity` or `backgroundColor`) is generally more performant than animating styles that affect layout (like `top`/`left`, `width`/`height`, `margin` or `padding`). That's because the latter group requires an additional step of layout recalculation on each animation frame.
 
