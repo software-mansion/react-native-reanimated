@@ -1,5 +1,5 @@
-'worklet';
 'use strict';
+'worklet';
 import type { DropShadowValue, FilterFunction } from 'react-native';
 
 import { ReanimatedError } from '../../errors';

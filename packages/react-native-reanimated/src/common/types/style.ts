@@ -1,12 +1,12 @@
 'use strict';
 
 import type {
+  FilterFunction,
   ImageStyle,
   TextStyle,
   TransformsStyle,
   ViewStyle,
 } from 'react-native';
-import { FilterFunction } from 'react-native';
 
 export type TransformOrigin = string | Array<string | number>;
 
