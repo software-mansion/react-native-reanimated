@@ -96,8 +96,8 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
       if (this.unmountCleanupCalled) {
         // unmountCleanup is called not only when the component truly unmounts, but also
         // when the component is frozen. In this case, we don't want to start the animation
-        // form the beginning. To do this, we have to calculate the total elapsed time from
-        // the animation creation timestamp and shift the delay by that amount.
+        // form the beginning when the component is unfrozen so we need to calculate the total
+        // elapsed time from the animation creation timestamp and shift the delay by that amount.
         processedAnimation.elapsedTime =
           timestamp - processedAnimation.creationTimestamp;
       }

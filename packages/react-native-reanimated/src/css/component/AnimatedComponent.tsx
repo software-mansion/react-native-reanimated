@@ -154,7 +154,6 @@ export default class AnimatedComponent<
   }
 
   componentDidMount() {
-    console.log('componentDidMount');
     this._updateStyles(this.props);
 
     const viewTag = this._viewInfo?.viewTag;
@@ -175,7 +174,6 @@ export default class AnimatedComponent<
   }
 
   componentWillUnmount() {
-    console.log('componentWillUnmount');
     if (!IS_JEST && this._CSSManager) {
       this._CSSManager.unmountCleanup();
     }
@@ -186,6 +184,7 @@ export default class AnimatedComponent<
       // when it no longer exists in the Shadow Tree. This ensures proper cleanup of
       // animations/transitions/props while handling cases where the node might be
       // remounted (e.g., when frozen) after componentWillUnmount is called.
+
       markNodeAsRemovable(wrapper);
     }
 
@@ -193,7 +192,6 @@ export default class AnimatedComponent<
   }
 
   shouldComponentUpdate(nextProps: P) {
-    console.log('shouldComponentUpdate');
     this._updateStyles(nextProps);
 
     if (this._CSSManager) {
