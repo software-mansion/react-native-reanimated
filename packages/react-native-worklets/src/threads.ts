@@ -213,8 +213,9 @@ export function runOnUISync<Args extends unknown[], ReturnValue>(
   );
 }
 
-// @ts-expect-error This overload is correct since it's what user sees in their code
 // before it's transformed by Worklets Babel plugin.
+/** @deprecated Use `runOnUISync` instead */
+// @ts-expect-error This overload is correct since it's what user sees in their code
 export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue
 ): (...args: Args) => ReturnValue;
@@ -361,45 +362,50 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
  *   as the first argument.
  * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUIAsync
  */
+// @ts-expect-error This overload is correct since it's what user sees in their code
 export function runOnUIAsync<Args extends unknown[], ReturnValue>(
-  worklet: (...args: Args) => ReturnValue
-): (...args: Args) => Promise<ReturnValue> {
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): Promise<ReturnValue>;
+
+export function runOnUIAsync<Args extends unknown[], ReturnValue>(
+  worklet: WorkletFunction<Args, ReturnValue>,
+  ...args: Args
+): Promise<ReturnValue> {
   if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
     throw new WorkletsError('`runOnUIAsync` can only be used with worklets.');
   }
-  return (...args: Args) => {
-    return new Promise<ReturnValue>((resolve) => {
-      if (IS_JEST) {
-        // Mocking time in Jest is tricky as both requestAnimationFrame and queueMicrotask
-        // callbacks run on the same queue and can be interleaved. There is no way
-        // to flush particular queue in Jest and the only control over mocked timers
-        // is by using jest.advanceTimersByTime() method which advances all types
-        // of timers including immediate and animation callbacks. Ideally we'd like
-        // to have some way here to schedule work along with React updates, but
-        // that's not possible, and hence in Jest environment instead of using scheduling
-        // mechanism we just schedule the work ommiting the queue. This is ok for the
-        // uses that we currently have but may not be ok for future tests that we write.
-        WorkletsModule.scheduleOnUI(
-          createSerializable(() => {
-            'worklet';
-            worklet(...args);
-          })
-        );
-        return;
-      }
-      if (__DEV__) {
-        // in DEV mode we call serializable conversion here because in case the object
-        // can't be converted, we will get a meaningful stack-trace as opposed to the
-        // situation when conversion is only done via microtask queue. This does not
-        // make the app particularily less efficient as converted objects are cached
-        // and for a given worklet the conversion only happens once.
-        createSerializable(worklet);
-        createSerializable(args);
-      }
+  return new Promise<ReturnValue>((resolve) => {
+    if (IS_JEST) {
+      // Mocking time in Jest is tricky as both requestAnimationFrame and queueMicrotask
+      // callbacks run on the same queue and can be interleaved. There is no way
+      // to flush particular queue in Jest and the only control over mocked timers
+      // is by using jest.advanceTimersByTime() method which advances all types
+      // of timers including immediate and animation callbacks. Ideally we'd like
+      // to have some way here to schedule work along with React updates, but
+      // that's not possible, and hence in Jest environment instead of using scheduling
+      // mechanism we just schedule the work ommiting the queue. This is ok for the
+      // uses that we currently have but may not be ok for future tests that we write.
+      WorkletsModule.scheduleOnUI(
+        createSerializable(() => {
+          'worklet';
+          worklet(...args);
+        })
+      );
+      return;
+    }
+    if (__DEV__) {
+      // in DEV mode we call serializable conversion here because in case the object
+      // can't be converted, we will get a meaningful stack-trace as opposed to the
+      // situation when conversion is only done via microtask queue. This does not
+      // make the app particularily less efficient as converted objects are cached
+      // and for a given worklet the conversion only happens once.
+      createSerializable(worklet);
+      createSerializable(args);
+    }
 
-      enqueueUI(worklet as WorkletFunction<Args, ReturnValue>, args, resolve);
-    });
-  };
+    enqueueUI(worklet, args, resolve);
+  });
 }
 
 if (__DEV__ && !SHOULD_BE_USE_WEB) {
