@@ -17,8 +17,7 @@ enum class AnimationProgressState {
   Finished
 };
 
-class AnimationProgressProvider final : public KeyframeProgressProvider,
-                                        public RawProgressProvider {
+class AnimationProgressProvider final : public KeyframeProgressProvider, public RawProgressProvider {
  public:
   AnimationProgressProvider(
       double timestamp,

@@ -1,15 +1,15 @@
 #include <reanimated/CSS/utils/DelayedItemsManager.h>
 
+#include <functional>
+#include <utility>
+
 namespace reanimated::css {
 
 template <typename TValue>
-DelayedItem<TValue>::DelayedItem(const double timestamp, const TValue value)
-    : timestamp(timestamp), value(value) {}
+DelayedItem<TValue>::DelayedItem(const double timestamp, const TValue value) : timestamp(timestamp), value(value) {}
 
 template <typename TValue>
-bool DelayedItemComparator<TValue>::operator()(
-    const DelayedItem<TValue> &lhs,
-    const DelayedItem<TValue> &rhs) const {
+bool DelayedItemComparator<TValue>::operator()(const DelayedItem<TValue> &lhs, const DelayedItem<TValue> &rhs) const {
   if (lhs.timestamp == rhs.timestamp) {
     // Use address comparison as a tiebreaker when timestamps are equal
     return std::less<const TValue *>{}(&lhs.value, &rhs.value);
@@ -18,9 +18,7 @@ bool DelayedItemComparator<TValue>::operator()(
 }
 
 template <typename TValue>
-void DelayedItemsManager<TValue>::add(
-    const double timestamp,
-    const TValue value) {
+void DelayedItemsManager<TValue>::add(const double timestamp, const TValue value) {
   auto result = itemsSet_.emplace(timestamp, value);
   if (result.second) {
     itemsMap_[result.first->value] = result.first;
@@ -53,8 +51,7 @@ bool DelayedItemsManager<TValue>::remove(const TValue value) {
 }
 
 template <typename TValue>
-const typename DelayedItemsManager<TValue>::Item &
-DelayedItemsManager<TValue>::top() const {
+const typename DelayedItemsManager<TValue>::Item &DelayedItemsManager<TValue>::top() const {
   if (itemsSet_.empty()) {
     throw std::runtime_error("[Reanimated] No delayed items available");
   }

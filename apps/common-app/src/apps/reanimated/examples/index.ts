@@ -138,14 +138,28 @@ import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import InstanceDiscoveryExample from './InstanceDiscoveryExample';
 
-interface Example {
+export const REAPlatform = {
+  IOS: 'ios',
+  ANDROID: 'android',
+  MACOS: 'macos',
+  WEB: 'web',
+};
+
+export interface Example {
   icon?: string;
   title: string;
   screen: React.FC;
-  missingOnFabric?: boolean;
+  disabledPlatforms?: (typeof REAPlatform)[keyof typeof REAPlatform][];
 }
 
 export const EXAMPLES: Record<string, Example> = {
+  // About
+  AboutExample: {
+    icon: 'ℹ️',
+    title: 'About',
+    screen: AboutExample,
+  },
+
   // Empty example for test purposes
   EmptyExample: {
     icon: '👻',
@@ -171,11 +185,13 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⚙️',
     title: 'RuntimeTestsExample',
     screen: RuntimeTestsExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   Synchronizable: {
     icon: '🔄',
     title: 'Synchronizable performance',
     screen: SynchronizablePerformanceExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   ReactFreeze: {
     icon: '❄️',
@@ -191,6 +207,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🏃‍♂️',
     title: 'Worklet runtime',
     screen: WorkletRuntimeExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   ModifyExample: {
     icon: '🪛',
@@ -211,6 +228,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🥶',
     title: 'Serializable freezing',
     screen: SerializableFreezingExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   InvalidReadWriteExample: {
     icon: '🔒',
@@ -226,19 +244,12 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔄',
     title: 'Copy serializable performance test',
     screen: CopySerializablePerformanceTest,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   FlatListWithLayoutAnimations: {
     icon: '🎻',
     title: 'FlatList with layout animations',
     screen: FlatListWithLayoutAnimations,
-  },
-
-  // About
-
-  AboutExample: {
-    icon: 'ℹ️',
-    title: 'About',
-    screen: AboutExample,
   },
 
   // Showcase
@@ -307,6 +318,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📺',
     title: 'Screen transition',
     screen: ScreenTransitionExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
 
   // Basic examples
@@ -509,6 +521,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔌',
     title: 'Without Babel plugin',
     screen: WithoutBabelPluginExample,
+    disabledPlatforms: [
+      REAPlatform.ANDROID,
+      REAPlatform.IOS,
+      REAPlatform.MACOS,
+    ],
   },
   MatrixExample: {
     icon: '🧮',
@@ -544,7 +561,12 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔎',
     title: 'getViewProp',
     screen: GetViewPropExample,
-    missingOnFabric: true,
+    disabledPlatforms: [
+      REAPlatform.WEB,
+      REAPlatform.ANDROID,
+      REAPlatform.IOS,
+      REAPlatform.MACOS,
+    ],
   },
   LogExample: {
     icon: '⌨',
@@ -595,6 +617,7 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'DynamicColorIOS',
     screen: DynamicColorIOSExample,
     icon: '🌗',
+    disabledPlatforms: [REAPlatform.ANDROID, REAPlatform.WEB],
   },
   PlatformColorExample: {
     title: 'PlatformColor',

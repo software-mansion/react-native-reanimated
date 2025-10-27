@@ -1,5 +1,8 @@
 #include <reanimated/CSS/core/CSSTransition.h>
 
+#include <memory>
+#include <string>
+#include <unordered_set>
 #include <utility>
 
 namespace reanimated::css {
@@ -12,9 +15,7 @@ CSSTransition::CSSTransition(
       viewStylesRepository_(viewStylesRepository),
       properties_(config.properties),
       settings_(config.settings),
-      styleInterpolator_(TransitionStyleInterpolator(
-          shadowNode_->getComponentName(),
-          viewStylesRepository)),
+      styleInterpolator_(TransitionStyleInterpolator(shadowNode_->getComponentName(), viewStylesRepository)),
       progressProvider_(TransitionProgressProvider()) {
   updateAllowedDiscreteProperties();
 }
@@ -36,17 +37,14 @@ TransitionProgressState CSSTransition::getState() const {
 }
 
 folly::dynamic CSSTransition::getCurrentInterpolationStyle() const {
-  return styleInterpolator_.interpolate(
-      shadowNode_, progressProvider_, allowDiscreteProperties_);
+  return styleInterpolator_.interpolate(shadowNode_, progressProvider_, allowDiscreteProperties_);
 }
 
 TransitionProperties CSSTransition::getProperties() const {
   return properties_;
 }
 
-PropertyNames CSSTransition::getAllowedProperties(
-    const folly::dynamic &oldProps,
-    const folly::dynamic &newProps) {
+PropertyNames CSSTransition::getAllowedProperties(const folly::dynamic &oldProps, const folly::dynamic &newProps) {
   if (!oldProps.isObject() || !newProps.isObject()) {
     return {};
   }
@@ -90,24 +88,20 @@ void CSSTransition::updateSettings(const PartialCSSTransitionConfig &config) {
   }
 }
 
-folly::dynamic CSSTransition::run(
-    const ChangedProps &changedProps,
-    const folly::dynamic &lastUpdateValue,
-    const double timestamp) {
+folly::dynamic
+CSSTransition::run(const ChangedProps &changedProps, const folly::dynamic &lastUpdateValue, const double timestamp) {
   progressProvider_.runProgressProviders(
       timestamp,
       settings_,
       changedProps.changedPropertyNames,
       styleInterpolator_.getReversedPropertyNames(changedProps.newProps));
-  styleInterpolator_.updateInterpolatedProperties(
-      changedProps, lastUpdateValue);
+  styleInterpolator_.updateInterpolatedProperties(changedProps, lastUpdateValue);
   return update(timestamp);
 }
 
 folly::dynamic CSSTransition::update(const double timestamp) {
   progressProvider_.update(timestamp);
-  auto result = styleInterpolator_.interpolate(
-      shadowNode_, progressProvider_, allowDiscreteProperties_);
+  auto result = styleInterpolator_.interpolate(shadowNode_, progressProvider_, allowDiscreteProperties_);
   // Remove interpolators for which interpolation has finished
   // (we won't need them anymore in the current transition)
   styleInterpolator_.discardFinishedInterpolators(progressProvider_);
@@ -117,8 +111,7 @@ folly::dynamic CSSTransition::update(const double timestamp) {
   return result;
 }
 
-void CSSTransition::updateTransitionProperties(
-    const TransitionProperties &properties) {
+void CSSTransition::updateTransitionProperties(const TransitionProperties &properties) {
   properties_ = properties;
 
   const auto isAllPropertiesTransition = !properties_.has_value();
@@ -126,8 +119,7 @@ void CSSTransition::updateTransitionProperties(
     return;
   }
 
-  const std::unordered_set<std::string> transitionPropertyNames(
-      properties_->begin(), properties_->end());
+  const std::unordered_set<std::string> transitionPropertyNames(properties_->begin(), properties_->end());
 
   styleInterpolator_.discardIrrelevantInterpolators(transitionPropertyNames);
   progressProvider_.discardIrrelevantProgressProviders(transitionPropertyNames);
@@ -147,8 +139,7 @@ bool CSSTransition::isAllowedProperty(const std::string &propertyName) const {
     return true;
   }
 
-  return allowDiscreteProperties_.contains(propertyName) ||
-      allowDiscreteProperties_.contains("all");
+  return allowDiscreteProperties_.contains(propertyName) || allowDiscreteProperties_.contains("all");
 }
 
 } // namespace reanimated::css

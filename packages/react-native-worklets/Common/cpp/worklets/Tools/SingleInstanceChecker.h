@@ -50,8 +50,7 @@ class SingleInstanceChecker {
 template <class T>
 SingleInstanceChecker<T>::SingleInstanceChecker() {
   int status = 0;
-  std::string className =
-      __cxxabiv1::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status);
+  std::string className = __cxxabiv1::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status);
 
   // React Native can spawn up to two instances of a Native Module at the same
   // time. This happens during a reload when a new instance of React Native is

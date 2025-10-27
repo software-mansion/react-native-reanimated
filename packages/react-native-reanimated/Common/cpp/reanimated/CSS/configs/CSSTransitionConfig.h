@@ -16,8 +16,7 @@ struct CSSTransitionPropertySettings {
   bool allowDiscrete;
 };
 
-using CSSTransitionPropertiesSettings =
-    std::unordered_map<std::string, CSSTransitionPropertySettings>;
+using CSSTransitionPropertiesSettings = std::unordered_map<std::string, CSSTransitionPropertySettings>;
 
 struct CSSTransitionConfig {
   TransitionProperties properties;
@@ -35,16 +34,10 @@ std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
 
 TransitionProperties getProperties(jsi::Runtime &rt, const jsi::Object &config);
 
-CSSTransitionPropertiesSettings parseCSSTransitionPropertiesSettings(
-    jsi::Runtime &rt,
-    const jsi::Object &settings);
+CSSTransitionPropertiesSettings parseCSSTransitionPropertiesSettings(jsi::Runtime &rt, const jsi::Object &settings);
 
-CSSTransitionConfig parseCSSTransitionConfig(
-    jsi::Runtime &rt,
-    const jsi::Value &config);
+CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config);
 
-PartialCSSTransitionConfig parsePartialCSSTransitionConfig(
-    jsi::Runtime &rt,
-    const jsi::Value &partialConfig);
+PartialCSSTransitionConfig parsePartialCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &partialConfig);
 
 } // namespace reanimated::css

@@ -45,9 +45,7 @@ class RuntimeManager {
  private:
   uint64_t getNextRuntimeId();
 
-  void registerRuntime(
-      const uint64_t runtimeId,
-      const std::shared_ptr<WorkletRuntime> &workletRuntime);
+  void registerRuntime(const uint64_t runtimeId, const std::shared_ptr<WorkletRuntime> &workletRuntime);
 
   std::atomic_uint64_t nextRuntimeId_{RuntimeData::uiRuntimeId + 1};
   std::map<uint64_t, std::weak_ptr<WorkletRuntime>> weakRuntimes_;

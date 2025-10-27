@@ -49,16 +49,13 @@ struct CSSBoxShadow : public CSSSimpleValue<CSSBoxShadow> {
 
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
-  CSSBoxShadow interpolate(double progress, const CSSBoxShadow &to)
-      const override;
+  CSSBoxShadow interpolate(double progress, const CSSBoxShadow &to) const override;
   bool canInterpolateTo(const CSSBoxShadow &to) const override;
 
   bool operator==(const CSSBoxShadow &other) const;
 
 #ifndef NDEBUG
-  friend std::ostream &operator<<(
-      std::ostream &os,
-      const CSSBoxShadow &shadowValue);
+  friend std::ostream &operator<<(std::ostream &os, const CSSBoxShadow &shadowValue);
 #endif // NDEBUG
 
  private:

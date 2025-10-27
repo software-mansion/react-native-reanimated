@@ -25,6 +25,7 @@
 #include <reanimated/CSS/interpolation/transforms/operations/skew.h>
 #include <reanimated/CSS/interpolation/transforms/operations/translate.h>
 
+#include <string>
 #include <vector>
 
 namespace reanimated::css {
@@ -35,8 +36,7 @@ namespace {
 const std::array<uint8_t, 4> BLACK = {0, 0, 0, 255};
 const std::array<uint8_t, 4> TRANSPARENT = {0, 0, 0, 0};
 
-InterpolatorFactoriesRecord mergeInterpolators(
-    const std::vector<InterpolatorFactoriesRecord> &maps) {
+InterpolatorFactoriesRecord mergeInterpolators(const std::vector<InterpolatorFactoriesRecord> &maps) {
   InterpolatorFactoriesRecord result;
   for (const auto &map : maps) {
     result.insert(map.begin(), map.end());
@@ -60,85 +60,55 @@ const InterpolatorFactoriesRecord FLEX_INTERPOLATORS = {
     {"borderStartWidth", value<CSSDouble>(0)},
     {"borderTopWidth", value<CSSDouble>(0)},
     {"borderWidth", value<CSSDouble>(0)},
-    {"bottom",
-     value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"})},
+    {"bottom", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"})},
     {"boxSizing", value<CSSKeyword>("border-box")},
     {"display", value<CSSDisplay>("flex")},
-    {"end",
-     value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
+    {"end", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
     {"flex", value<CSSDouble>(0)},
-    {"flexBasis",
-     value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
+    {"flexBasis", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
     {"flexDirection", value<CSSKeyword>("column")},
     {"rowGap", value<CSSLength>(0, {RelativeTo::Self, "height"})},
     {"columnGap", value<CSSLength>(0, {RelativeTo::Self, "width"})},
     {"flexGrow", value<CSSDouble>(0)},
     {"flexShrink", value<CSSDouble>(0)},
     {"flexWrap", value<CSSKeyword>("no-wrap")},
-    {"height",
-     value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"})},
+    {"height", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"})},
     {"justifyContent", value<CSSKeyword>("flex-start")},
-    {"left",
-     value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
+    {"left", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
     {"margin", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"marginBottom",
-     value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"marginEnd",
-     value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"marginHorizontal",
-     value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"marginLeft",
-     value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"marginRight",
-     value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"marginStart",
-     value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"marginTop",
-     value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"marginVertical",
-     value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"maxHeight",
-     value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"})},
-    {"maxWidth",
-     value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
-    {"minHeight",
-     value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"})},
-    {"minWidth",
-     value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
+    {"marginBottom", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+    {"marginEnd", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+    {"marginHorizontal", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+    {"marginLeft", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+    {"marginRight", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+    {"marginStart", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+    {"marginTop", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+    {"marginVertical", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+    {"maxHeight", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"})},
+    {"maxWidth", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
+    {"minHeight", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"})},
+    {"minWidth", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
     {"overflow", value<CSSKeyword>("visible")},
     {"padding", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"paddingBottom",
-     value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"paddingEnd",
-     value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"paddingHorizontal",
-     value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"paddingLeft",
-     value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"paddingRight",
-     value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"paddingStart",
-     value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"paddingTop",
-     value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"paddingVertical",
-     value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+    {"paddingBottom", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+    {"paddingEnd", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+    {"paddingHorizontal", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+    {"paddingLeft", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+    {"paddingRight", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+    {"paddingStart", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+    {"paddingTop", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+    {"paddingVertical", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
     {"position", value<CSSKeyword>("relative")},
-    {"right",
-     value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
-    {"start",
-     value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
-    {"top",
-     value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"})},
-    {"width",
-     value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
+    {"right", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
+    {"start", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
+    {"top", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"})},
+    {"width", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
     {"zIndex", value<CSSInteger>(0)},
     {"direction", value<CSSKeyword>("inherit")}};
 
 const InterpolatorFactoriesRecord SHADOW_INTERPOLATORS_IOS = {
     {"shadowColor", value<CSSColor>(BLACK)},
-    {"shadowOffset",
-     record({{"width", value<CSSDouble>(0)}, {"height", value<CSSDouble>(0)}})},
+    {"shadowOffset", record({{"width", value<CSSDouble>(0)}, {"height", value<CSSDouble>(0)}})},
     {"shadowRadius", value<CSSDouble>(0)},
     {"shadowOpacity", value<CSSDouble>(1)}};
 
@@ -150,8 +120,7 @@ const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
           value<CSSDouble>(0)})},
     {"transform",
      transforms(
-         {{"perspective",
-           transformOp<PerspectiveOperation>(0)}, // 0 - no perspective
+         {{"perspective", transformOp<PerspectiveOperation>(0)}, // 0 - no perspective
           {"rotate", transformOp<RotateOperation>("0deg")},
           {"rotateX", transformOp<RotateXOperation>("0deg")},
           {"rotateY", transformOp<RotateYOperation>("0deg")},
@@ -159,10 +128,8 @@ const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
           {"scale", transformOp<ScaleOperation>(1)},
           {"scaleX", transformOp<ScaleXOperation>(1)},
           {"scaleY", transformOp<ScaleYOperation>(1)},
-          {"translateX",
-           transformOp<TranslateXOperation>(0, {RelativeTo::Self, "width"})},
-          {"translateY",
-           transformOp<TranslateYOperation>(0, {RelativeTo::Self, "height"})},
+          {"translateX", transformOp<TranslateXOperation>(0, {RelativeTo::Self, "width"})},
+          {"translateY", transformOp<TranslateYOperation>(0, {RelativeTo::Self, "height"})},
           {"skewX", transformOp<SkewXOperation>("0deg")},
           {"skewY", transformOp<SkewYOperation>("0deg")},
           {"matrix", transformOp<MatrixOperation>(TransformMatrix2D())}})},
@@ -179,39 +146,27 @@ const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
          {"borderBlockEndColor", value<CSSColor>(BLACK)},
          {"borderBlockStartColor", value<CSSColor>(BLACK)},
          {"borderBottomColor", value<CSSColor>(BLACK)},
-         {"borderBottomEndRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderBottomLeftRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderBottomRightRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderBottomStartRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"})},
+         {"borderBottomEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+         {"borderBottomLeftRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+         {"borderBottomRightRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+         {"borderBottomStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
          {"borderColor", value<CSSColor>(BLACK)},
          {"borderCurve", value<CSSKeyword>("circular")},
          {"borderEndColor", value<CSSColor>(BLACK)},
-         {"borderEndEndRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderEndStartRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"})},
+         {"borderEndEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+         {"borderEndStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
          {"borderLeftColor", value<CSSColor>(BLACK)},
          {"borderRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
          {"borderRightColor", value<CSSColor>(BLACK)},
          {"borderStartColor", value<CSSColor>(BLACK)},
-         {"borderStartEndRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderStartStartRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"})},
+         {"borderStartEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+         {"borderStartStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
          {"borderStyle", value<CSSKeyword>("solid")},
          {"borderTopColor", value<CSSColor>(BLACK)},
-         {"borderTopEndRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderTopLeftRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderTopRightRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderTopStartRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"})},
+         {"borderTopEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+         {"borderTopLeftRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+         {"borderTopRightRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+         {"borderTopStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
          {"outlineColor", value<CSSColor>(BLACK)},
          {"outlineOffset", value<CSSDouble>(0)},
          {"outlineStyle", value<CSSKeyword>("solid")},
@@ -225,8 +180,7 @@ const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
          {"mixBlendMode", value<CSSKeyword>("normal")}}});
 
 const InterpolatorFactoriesRecord TEXT_INTERPOLATORS_IOS = {
-    {"fontVariant",
-     value<CSSDiscreteArray<CSSKeyword>>(std::vector<CSSKeyword>{})},
+    {"fontVariant", value<CSSDiscreteArray<CSSKeyword>>(std::vector<CSSKeyword>{})},
     {"textDecorationColor", value<CSSColor>(BLACK)},
     {"textDecorationStyle", value<CSSKeyword>("solid")},
     {"writingDirection", value<CSSKeyword>("auto")},
@@ -249,15 +203,11 @@ const InterpolatorFactoriesRecord TEXT_INTERPOLATORS = mergeInterpolators(
          {"fontStyle", value<CSSKeyword>("normal")},
          {"fontWeight", value<CSSKeyword>("normal")},
          {"letterSpacing", value<CSSDouble>(0)},
-         {"lineHeight",
-          value<CSSDouble>(14)}, // TODO - should inherit from fontSize
+         {"lineHeight", value<CSSDouble>(14)}, // TODO - should inherit from fontSize
          {"textAlign", value<CSSKeyword>("auto")},
          {"textDecorationLine", value<CSSKeyword>("none")},
          {"textShadowColor", value<CSSColor>(BLACK)},
-         {"textShadowOffset",
-          record(
-              {{"width", value<CSSDouble>(0)},
-               {"height", value<CSSDouble>(0)}})},
+         {"textShadowOffset", record({{"width", value<CSSDouble>(0)}, {"height", value<CSSDouble>(0)}})},
          {"textShadowRadius", value<CSSDouble>(0)},
          {"textTransform", value<CSSKeyword>("none")},
          {"userSelect", value<CSSKeyword>("auto")},
@@ -289,8 +239,7 @@ const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
     {"stroke", value<SVGBrush>(BLACK)},
     {"strokeWidth", value<SVGLength>(1)},
     {"strokeOpacity", value<CSSDouble>(1)},
-    {"strokeDasharray",
-     value<SVGStrokeDashArray, CSSKeyword>(SVGStrokeDashArray())},
+    {"strokeDasharray", value<SVGStrokeDashArray, CSSKeyword>(SVGStrokeDashArray())},
     {"strokeDashoffset", value<SVGLength>(0)},
     {"strokeLinecap", value<CSSInteger>(0)},
     {"strokeLinejoin", value<CSSInteger>(0)},
@@ -315,12 +264,11 @@ const InterpolatorFactoriesRecord SVG_TRANSFORM_INTERPOLATORS = {
     {"rotation", value<CSSAngle>(0)},
 };
 
-const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS =
-    mergeInterpolators({
-        SVG_COLOR_INTERPOLATORS,
-        SVG_FILL_INTERPOLATORS,
-        SVG_STROKE_INTERPOLATORS,
-    });
+const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS = mergeInterpolators({
+    SVG_COLOR_INTERPOLATORS,
+    SVG_FILL_INTERPOLATORS,
+    SVG_STROKE_INTERPOLATORS,
+});
 
 const InterpolatorFactoriesRecord SVG_CIRCLE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
@@ -331,16 +279,15 @@ const InterpolatorFactoriesRecord SVG_CIRCLE_INTERPOLATORS = mergeInterpolators(
          {"opacity", value<CSSDouble>(1)},
      }});
 
-const InterpolatorFactoriesRecord SVG_ELLIPSE_INTERPOLATORS =
-    mergeInterpolators(
-        {SVG_COMMON_INTERPOLATORS,
-         InterpolatorFactoriesRecord{
-             {"cx", value<SVGLength, CSSKeyword>(0)},
-             {"cy", value<SVGLength, CSSKeyword>(0)},
-             {"rx", value<SVGLength, CSSKeyword>(0)},
-             {"ry", value<SVGLength, CSSKeyword>(0)},
-             {"opacity", value<CSSDouble>(1)},
-         }});
+const InterpolatorFactoriesRecord SVG_ELLIPSE_INTERPOLATORS = mergeInterpolators(
+    {SVG_COMMON_INTERPOLATORS,
+     InterpolatorFactoriesRecord{
+         {"cx", value<SVGLength, CSSKeyword>(0)},
+         {"cy", value<SVGLength, CSSKeyword>(0)},
+         {"rx", value<SVGLength, CSSKeyword>(0)},
+         {"ry", value<SVGLength, CSSKeyword>(0)},
+         {"opacity", value<CSSDouble>(1)},
+     }});
 
 const InterpolatorFactoriesRecord SVG_LINE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
@@ -382,8 +329,7 @@ ComponentInterpolatorsMap initializeRegistry() {
       {"Image", IMAGE_INTERPOLATORS},
   };
 
-  if (StaticFeatureFlags::getFlag(
-          "EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS")) {
+  if (StaticFeatureFlags::getFlag("EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS")) {
     // SVG Components
     registry["RNSVGCircle"] = SVG_CIRCLE_INTERPOLATORS;
     registry["RNSVGEllipse"] = SVG_ELLIPSE_INTERPOLATORS;
@@ -399,8 +345,7 @@ ComponentInterpolatorsMap registry = initializeRegistry();
 
 } // namespace
 
-const InterpolatorFactoriesRecord &getComponentInterpolators(
-    const std::string &componentName) {
+const InterpolatorFactoriesRecord &getComponentInterpolators(const std::string &componentName) {
   if (auto it = registry.find(componentName); it != registry.end()) {
     return it->second;
   }

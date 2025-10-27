@@ -2,6 +2,7 @@
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
 #include <string>
+#include <utility>
 
 namespace reanimated::css {
 
@@ -11,9 +12,7 @@ TransformMatrix3D::TransformMatrix3D(jsi::Runtime &rt, const jsi::Value &value)
   const auto size = array.size(rt);
 
   if (size != SIZE) {
-    throw std::invalid_argument(
-        "[Reanimated] TransformMatrix3D: Invalid matrix size: " +
-        std::to_string(size));
+    throw std::invalid_argument("[Reanimated] TransformMatrix3D: Invalid matrix size: " + std::to_string(size));
   }
 
   for (size_t i = 0; i < SIZE; ++i) {
@@ -26,9 +25,7 @@ TransformMatrix3D::TransformMatrix3D(const folly::dynamic &array)
   const auto size = array.size();
 
   if (size != SIZE) {
-    throw std::invalid_argument(
-        "[Reanimated] TransformMatrix3D: Invalid matrix size: " +
-        std::to_string(size));
+    throw std::invalid_argument("[Reanimated] TransformMatrix3D: Invalid matrix size: " + std::to_string(size));
   }
 
   for (size_t i = 0; i < SIZE; ++i) {
@@ -49,12 +46,9 @@ TransformMatrix3D::Decomposed TransformMatrix3D::Decomposed::interpolate(
 
 #ifndef NDEBUG
 
-std::ostream &operator<<(
-    std::ostream &os,
-    const TransformMatrix3D::Decomposed &decomposed) {
-  os << "TransformMatrix3D::Decomposed(scale=" << decomposed.scale
-     << ", skew=" << decomposed.skew << ", quaternion=" << decomposed.quaternion
-     << ", translation=" << decomposed.translation
+std::ostream &operator<<(std::ostream &os, const TransformMatrix3D::Decomposed &decomposed) {
+  os << "TransformMatrix3D::Decomposed(scale=" << decomposed.scale << ", skew=" << decomposed.skew
+     << ", quaternion=" << decomposed.quaternion << ", translation=" << decomposed.translation
      << ", perspective=" << decomposed.perspective << ")";
   return os;
 }
@@ -63,8 +57,7 @@ std::ostream &operator<<(
 
 // Template specializations for TransformMatrix3D::create
 template <>
-TransformMatrix3D TransformMatrix3D::create<TransformOp::Perspective>(
-    double v) {
+TransformMatrix3D TransformMatrix3D::create<TransformOp::Perspective>(double v) {
   if (v == 0) {
     // Ignore perspective if it is invalid
     return TransformMatrix3D();
@@ -215,8 +208,7 @@ TransformMatrix3D TransformMatrix3D::create<TransformOp::SkewY>(double v) {
 template <TransformOp TOperation>
 TransformMatrix3D TransformMatrix3D::create(double value) {
   throw std::invalid_argument(
-      "[Reanimated] Cannot create TransformMatrix3D from: " +
-      getOperationNameFromType(TOperation));
+      "[Reanimated] Cannot create TransformMatrix3D from: " + getOperationNameFromType(TOperation));
 }
 
 TransformMatrix3D TransformMatrix3D::from2D(const TransformMatrix2D &m) {
@@ -290,8 +282,7 @@ double TransformMatrix3D::determinant() const {
 
   return a1 * determinant3x3(b2, b3, b4, c2, c3, c4, d2, d3, d4) -
       b1 * determinant3x3(a2, a3, a4, c2, c3, c4, d2, d3, d4) +
-      c1 * determinant3x3(a2, a3, a4, b2, b3, b4, d2, d3, d4) -
-      d1 * determinant3x3(a2, a3, a4, b2, b3, b4, c2, c3, c4);
+      c1 * determinant3x3(a2, a3, a4, b2, b3, b4, d2, d3, d4) - d1 * determinant3x3(a2, a3, a4, b2, b3, b4, c2, c3, c4);
 }
 
 void TransformMatrix3D::adjugate() {
@@ -355,8 +346,7 @@ bool TransformMatrix3D::invert() {
 
 void TransformMatrix3D::translate3d(const Vector3D &translation) {
   for (size_t i = 0; i < 4; ++i) {
-    matrix_[12 + i] += translation[0] * matrix_[i] +
-        translation[1] * matrix_[4 + i] + translation[2] * matrix_[8 + i];
+    matrix_[12 + i] += translation[0] * matrix_[i] + translation[1] * matrix_[4 + i] + translation[2] * matrix_[8 + i];
   }
 }
 
@@ -368,8 +358,7 @@ void TransformMatrix3D::scale3d(const Vector3D &scale) {
   }
 }
 
-std::optional<TransformMatrix3D::Decomposed> TransformMatrix3D::decompose()
-    const {
+std::optional<TransformMatrix3D::Decomposed> TransformMatrix3D::decompose() const {
   auto matrixCp = *this;
 
   if (!matrixCp.normalize()) {
@@ -385,8 +374,7 @@ std::optional<TransformMatrix3D::Decomposed> TransformMatrix3D::decompose()
   // processing
   std::array<Vector3D, 3> rows;
   for (size_t i = 0; i < 3; ++i) {
-    rows[i] =
-        Vector3D(matrixCp[i * 4], matrixCp[i * 4 + 1], matrixCp[i * 4 + 2]);
+    rows[i] = Vector3D(matrixCp[i * 4], matrixCp[i * 4 + 1], matrixCp[i * 4 + 2]);
   }
 
   auto [scale, skew] = computeScaleAndSkew(rows);
@@ -410,8 +398,7 @@ std::optional<TransformMatrix3D::Decomposed> TransformMatrix3D::decompose()
       .perspective = perspective.value()};
 }
 
-TransformMatrix3D TransformMatrix3D::recompose(
-    const TransformMatrix3D::Decomposed &decomposed) {
+TransformMatrix3D TransformMatrix3D::recompose(const TransformMatrix3D::Decomposed &decomposed) {
   auto result = TransformMatrix3D();
 
   // Start from applying perspective
@@ -507,8 +494,7 @@ Vector3D TransformMatrix3D::getTranslation() const {
   return Vector3D(matrix_[12], matrix_[13], matrix_[14]);
 }
 
-std::pair<Vector3D, Vector3D> TransformMatrix3D::computeScaleAndSkew(
-    std::array<Vector3D, 3> &rows) {
+std::pair<Vector3D, Vector3D> TransformMatrix3D::computeScaleAndSkew(std::array<Vector3D, 3> &rows) {
   Vector3D scale, skew;
 
   // Compute X scale factor and normalize first row
@@ -603,8 +589,7 @@ double TransformMatrix3D::determinant3x3(
     const double g,
     const double h,
     const double i) {
-  return (a * e * i) + (b * f * g) + (c * d * h) - (c * e * g) - (b * d * i) -
-      (a * f * h);
+  return (a * e * i) + (b * f * g) + (c * d * h) - (c * e * g) - (b * d * i) - (a * f * h);
 }
 
 } // namespace reanimated::css

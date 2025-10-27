@@ -18,18 +18,13 @@ class PropertyInterpolator {
       PropertyPath propertyPath,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  virtual folly::dynamic getStyleValue(
-      const std::shared_ptr<const ShadowNode> &shadowNode) const = 0;
-  virtual folly::dynamic getResetStyle(
-      const std::shared_ptr<const ShadowNode> &shadowNode) const = 0;
+  virtual folly::dynamic getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const = 0;
+  virtual folly::dynamic getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const = 0;
   virtual folly::dynamic getFirstKeyframeValue() const = 0;
   virtual folly::dynamic getLastKeyframeValue() const = 0;
-  virtual bool equalsReversingAdjustedStartValue(
-      const folly::dynamic &propertyValue) const = 0;
+  virtual bool equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const = 0;
 
-  virtual void updateKeyframes(
-      jsi::Runtime &rt,
-      const jsi::Value &keyframes) = 0;
+  virtual void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) = 0;
   virtual void updateKeyframesFromStyleChange(
       const folly::dynamic &oldStyleValue,
       const folly::dynamic &newStyleValue,
@@ -55,18 +50,13 @@ class PropertyInterpolatorFactory {
 
   virtual std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      const = 0;
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const = 0;
 };
 
-using PropertyInterpolatorsRecord =
-    std::unordered_map<std::string, std::shared_ptr<PropertyInterpolator>>;
-using InterpolatorFactoriesRecord = std::
-    unordered_map<std::string, std::shared_ptr<PropertyInterpolatorFactory>>;
+using PropertyInterpolatorsRecord = std::unordered_map<std::string, std::shared_ptr<PropertyInterpolator>>;
+using InterpolatorFactoriesRecord = std::unordered_map<std::string, std::shared_ptr<PropertyInterpolatorFactory>>;
 
-using PropertyInterpolatorsArray =
-    std::vector<std::shared_ptr<PropertyInterpolator>>;
-using InterpolatorFactoriesArray =
-    std::vector<std::shared_ptr<PropertyInterpolatorFactory>>;
+using PropertyInterpolatorsArray = std::vector<std::shared_ptr<PropertyInterpolator>>;
+using InterpolatorFactoriesArray = std::vector<std::shared_ptr<PropertyInterpolatorFactory>>;
 
 } // namespace reanimated::css
