@@ -127,6 +127,10 @@ const parseFilterProperty = (
   const unit = match[2];
 
   switch (key) {
+    case 'hueRotate':
+      return { hueRotate: parseHueRotate({ number, unit }) };
+    case 'blur':
+      return { blur: parseBlur({ number, unit }) };
     case 'brightness':
     case 'contrast':
     case 'grayscale':
@@ -134,6 +138,7 @@ const parseFilterProperty = (
     case 'opacity':
     case 'saturate':
     case 'sepia':
+      // eslint-disable-next-line no-fallthrough
       if ((unit && unit !== '%') || number < 0) {
         return { [key]: undefined };
       }
@@ -141,10 +146,6 @@ const parseFilterProperty = (
         number /= 100;
       }
       return { [key]: number };
-    case 'hueRotate':
-      return { hueRotate: parseHueRotate({ number, unit }) };
-    case 'blur':
-      return { blur: parseBlur({ number, unit }) };
     default:
       throw new ReanimatedError(
         ERROR_MESSAGES.invalidFilter(`${key}(${value})`)

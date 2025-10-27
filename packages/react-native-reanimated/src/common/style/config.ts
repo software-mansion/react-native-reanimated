@@ -6,13 +6,13 @@ import {
   processAspectRatio,
   processBoxShadowNative,
   processColor,
+  processFilter,
   processFontWeight,
   processGap,
   processInset,
   processInsetBlock,
   processInsetInline,
   processTransform,
-  processFilter,
 } from './processors';
 import type { StyleBuilderConfig } from './types';
 
