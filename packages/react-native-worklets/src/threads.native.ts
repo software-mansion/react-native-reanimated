@@ -24,12 +24,12 @@ export function setupMicrotasks() {
 
   let microtasksQueue: Array<() => void> = [];
   let isExecutingMicrotasksQueue = false;
-  global.queueMicrotask = (callback: () => void) => {
+  globalThis.queueMicrotask = (callback: () => void) => {
     microtasksQueue.push(callback);
   };
-  global._microtaskQueueFinalizers = [];
+  globalThis._microtaskQueueFinalizers = [];
 
-  global.__callMicrotasks = () => {
+  globalThis.__callMicrotasks = () => {
     if (isExecutingMicrotasksQueue) {
       return;
     }
@@ -40,7 +40,7 @@ export function setupMicrotasks() {
         microtasksQueue[index]();
       }
       microtasksQueue = [];
-      global._microtaskQueueFinalizers.forEach((finalizer) => finalizer());
+      globalThis._microtaskQueueFinalizers.forEach((finalizer) => finalizer());
     } finally {
       isExecutingMicrotasksQueue = false;
     }
@@ -49,7 +49,7 @@ export function setupMicrotasks() {
 
 function callMicrotasksOnUIThread() {
   'worklet';
-  global.__callMicrotasks();
+  globalThis.__callMicrotasks();
 }
 
 export const callMicrotasks = callMicrotasksOnUIThread;
@@ -73,11 +73,35 @@ export const callMicrotasks = callMicrotasksOnUIThread;
  * @param args - Arguments to pass to the function.
  * @see https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI
  */
+// @ts-expect-error This overload is correct since it's what user sees in their code
+// before it's transformed by Worklets Babel plugin.
 export function scheduleOnUI<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue,
   ...args: Args
+): void;
+
+export function scheduleOnUI<Args extends unknown[], ReturnValue>(
+  worklet: WorkletFunction<Args, ReturnValue>,
+  ...args: Args
 ): void {
-  runOnUI(worklet)(...args);
+  if (
+    __DEV__ &&
+    !isWorkletFunction(worklet) &&
+    !(worklet as unknown as WorkletImport).__bundleData
+  ) {
+    throw new WorkletsError('`scheduleOnUI` can only be used with worklets.');
+  }
+  if (__DEV__) {
+    // in DEV mode we call serializable conversion here because in case the object
+    // can't be converted, we will get a meaningful stack-trace as opposed to the
+    // situation when conversion is only done via microtask queue. This does not
+    // make the app particularily less efficient as converted objects are cached
+    // and for a given worklet the conversion only happens once.
+    createSerializable(worklet);
+    createSerializable(args);
+  }
+
+  enqueueUI(worklet, args);
 }
 
 /**
@@ -99,8 +123,8 @@ export function scheduleOnUI<Args extends unknown[], ReturnValue>(
  *   first argument.
  * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI @deprecated Use `scheduleOnUI` instead.
  */
-// @ts-expect-error This overload is correct since it's what user sees in his code
-// before it's transformed by Reanimated Babel plugin.
+// @ts-expect-error This overload is correct since it's what user sees in their code
+// before it's transformed by Worklets Babel plugin.
 export function runOnUI<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue
 ): (...args: Args) => void;
@@ -115,18 +139,8 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
   ) {
     throw new WorkletsError('`runOnUI` can only be used with worklets.');
   }
-  return (...args) => {
-    if (__DEV__) {
-      // in DEV mode we call serializable conversion here because in case the object
-      // can't be converted, we will get a meaningful stack-trace as opposed to the
-      // situation when conversion is only done via microtask queue. This does not
-      // make the app particularily less efficient as converted objects are cached
-      // and for a given worklet the conversion only happens once.
-      createSerializable(worklet);
-      createSerializable(args);
-    }
-
-    enqueueUI(worklet, args);
+  return (...args: Args) => {
+    scheduleOnUI(worklet, ...args);
   };
 }
 
@@ -162,14 +176,28 @@ if (__DEV__) {
  * @returns The return value of the function passed as the first argument.
  * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUISync
  */
+// @ts-expect-error This overload is correct since it's what user sees in their code
+// before it's transformed by Worklets Babel plugin.
 export function runOnUISync<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue,
   ...args: Args
+): ReturnValue;
+
+export function runOnUISync<Args extends unknown[], ReturnValue>(
+  worklet: WorkletFunction<Args, ReturnValue>,
+  ...args: Args
 ): ReturnValue {
-  return executeOnUIRuntimeSync(worklet)(...args);
+  return WorkletsModule.executeOnUIRuntimeSync(
+    createSerializable(() => {
+      'worklet';
+      const result = worklet(...args);
+      return makeShareableCloneOnUIRecursive(result);
+    })
+  );
 }
 
-// @ts-expect-error Check `executeOnUIRuntimeSync` overload above.
+// @ts-expect-error This overload is correct since it's what user sees in their code
+// before it's transformed by Worklets Babel plugin.
 export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue
 ): (...args: Args) => ReturnValue;
@@ -178,13 +206,7 @@ export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => ReturnValue {
   return (...args) => {
-    return WorkletsModule.executeOnUIRuntimeSync(
-      createSerializable(() => {
-        'worklet';
-        const result = worklet(...args);
-        return makeShareableCloneOnUIRecursive(result);
-      })
-    );
+    return runOnUISync(worklet, ...args);
   };
 }
 
@@ -206,71 +228,6 @@ function runWorkletOnJS<Args extends unknown[], ReturnValue>(
 ): void {
   // remote function that calls a worklet synchronously on the JS runtime
   worklet(...args);
-}
-
-/**
- * Lets you asynchronously run
- * non-[workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize)
- * functions that couldn't otherwise run on the [UI
- * thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread).
- * This applies to most external libraries as they don't have their functions
- * marked with "worklet"; directive.
- *
- * @param fun - A reference to a function you want to execute on the JavaScript
- *   thread from the UI thread.
- * @returns A function that accepts arguments for the function passed as the
- *   first argument.
- * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnJS
- */
-/** @deprecated Use `scheduleOnRN` instead. */
-export function runOnJS<Args extends unknown[], ReturnValue>(
-  fun:
-    | ((...args: Args) => ReturnValue)
-    | RemoteFunction<Args, ReturnValue>
-    | WorkletFunction<Args, ReturnValue>
-): (...args: Args) => void {
-  'worklet';
-  type FunDevRemote = Extract<typeof fun, DevRemoteFunction<Args, ReturnValue>>;
-  if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
-    // if we are already on the JS thread, we just schedule the worklet on the JS queue
-    return (...args) =>
-      queueMicrotask(
-        args.length
-          ? () => (fun as (...args: Args) => ReturnValue)(...args)
-          : (fun as () => ReturnValue)
-      );
-  }
-  if (isWorkletFunction<Args, ReturnValue>(fun)) {
-    // If `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
-    // and pass the worklet as a first argument followed by original arguments.
-
-    return (...args) =>
-      runOnJS(runWorkletOnJS<Args, ReturnValue>)(
-        fun as WorkletFunction<Args, ReturnValue>,
-        ...args
-      );
-  }
-  if ((fun as FunDevRemote).__remoteFunction) {
-    // In development mode the function provided as `fun` throws an error message
-    // such that when someone accidentally calls it directly on the UI runtime, they
-    // see that they should use `runOnJS` instead. To facilitate that we put the
-    // reference to the original remote function in the `__remoteFunction` property.
-    fun = (fun as FunDevRemote).__remoteFunction;
-  }
-
-  const scheduleOnJS =
-    typeof fun === 'function'
-      ? global._scheduleHostFunctionOnJS
-      : global._scheduleRemoteFunctionOnJS;
-
-  return (...args) => {
-    scheduleOnJS(
-      fun as
-        | ((...args: Args) => ReturnValue)
-        | WorkletFunction<Args, ReturnValue>,
-      args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
-    );
-  };
 }
 
 /**
@@ -303,7 +260,66 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
   ...args: Args
 ): void {
   'worklet';
-  runOnJS(fun)(...args);
+  type FunDevRemote = Extract<typeof fun, DevRemoteFunction<Args, ReturnValue>>;
+  if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
+    // if we are already on the JS thread, we just schedule the worklet on the JS queue
+    queueMicrotask(
+      args.length
+        ? () => (fun as (...args: Args) => ReturnValue)(...args)
+        : (fun as () => ReturnValue)
+    );
+    return;
+  }
+  if (isWorkletFunction<Args, ReturnValue>(fun)) {
+    // If `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
+    // and pass the worklet as a first argument followed by original arguments.
+    scheduleOnRN(runWorkletOnJS<Args, ReturnValue>, fun, ...args);
+    return;
+  }
+  if ((fun as FunDevRemote).__remoteFunction) {
+    // In development mode the function provided as `fun` throws an error message
+    // such that when someone accidentally calls it directly on the UI runtime, they
+    // see that they should use `runOnJS` instead. To facilitate that we put the
+    // reference to the original remote function in the `__remoteFunction` property.
+    fun = (fun as FunDevRemote).__remoteFunction;
+  }
+
+  const scheduleOnRNImpl =
+    typeof fun === 'function'
+      ? globalThis._scheduleHostFunctionOnJS
+      : globalThis._scheduleRemoteFunctionOnJS;
+
+  scheduleOnRNImpl(
+    fun as (...args: Args) => ReturnValue,
+    args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
+  );
+}
+
+/**
+ * Lets you asynchronously run
+ * non-[workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize)
+ * functions that couldn't otherwise run on the [UI
+ * thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread).
+ * This applies to most external libraries as they don't have their functions
+ * marked with "worklet"; directive.
+ *
+ * @param fun - A reference to a function you want to execute on the JavaScript
+ *   thread from the UI thread.
+ * @returns A function that accepts arguments for the function passed as the
+ *   first argument.
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnJS
+ */
+/** @deprecated Use `scheduleOnRN` instead. */
+export function runOnJS<Args extends unknown[], ReturnValue>(
+  fun:
+    | ((...args: Args) => ReturnValue)
+    | RemoteFunction<Args, ReturnValue>
+    | WorkletFunction<Args, ReturnValue>
+): (...args: Args) => void {
+  'worklet';
+  return (...args: Args) => {
+    scheduleOnRN(fun, ...args);
+  };
 }
 
 /**

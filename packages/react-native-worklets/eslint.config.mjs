@@ -16,6 +16,11 @@ const config = tsEslint.config(
     languageOptions: {
       parserOptions: {
         tsconfigRootDir: import.meta.dirname,
+        project: [
+          './tsconfig.json',
+          './tsconfig.web.json',
+          '../../tsconfig.json',
+        ],
       },
     },
     plugins: {
@@ -26,7 +31,6 @@ const config = tsEslint.config(
       'reanimated/use-worklets-error': 'error',
       'reanimated/use-global-this': 'error',
       'no-bitwise': 'error',
-      strict: ['error', 'global'],
     },
   },
   {

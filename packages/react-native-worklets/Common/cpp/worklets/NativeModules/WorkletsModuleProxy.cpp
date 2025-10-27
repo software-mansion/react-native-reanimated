@@ -5,6 +5,7 @@
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/Defs.h>
+#include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #ifdef __ANDROID__
@@ -26,8 +27,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     const std::shared_ptr<CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     std::function<bool()> &&isJavaScriptThread,
-    std::function<void(std::function<void(const double)>)>
-        &&forwardedRequestAnimationFrame,
+    RuntimeBindings runtimeBindings,
     const std::shared_ptr<const BigStringBuffer> &script,
     const std::string &sourceUrl)
     : isDevBundle_(isDevBundleFromRNRuntime(rnRuntime)),
@@ -38,6 +38,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           std::move(isJavaScriptThread))),
       uiScheduler_(uiScheduler),
       jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
+      runtimeBindings_(runtimeBindings),
       script_(script),
       sourceUrl_(sourceUrl),
       runtimeManager_(std::make_shared<RuntimeManager>()),
@@ -52,7 +53,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
 
   animationFrameBatchinator_ = std::make_shared<AnimationFrameBatchinator>(
       uiWorkletRuntime_->getJSIRuntime(),
-      std::move(forwardedRequestAnimationFrame));
+      runtimeBindings_.requestAnimationFrame);
 
   UIRuntimeDecorator::decorate(
       uiWorkletRuntime_->getJSIRuntime(),

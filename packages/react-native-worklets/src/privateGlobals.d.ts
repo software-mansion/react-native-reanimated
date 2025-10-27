@@ -73,4 +73,8 @@ declare global {
   var __runTimeoutCallback: (handlerId: number) => void;
   var __flushMicrotasks: () => void;
   var _taskQueue: Queue;
+  /** Only in Debug builds. */
+  var __hasNativeState: (value: object) => boolean;
+  /** Only in Debug builds. */
+  var __isHostObject: (value: object) => boolean;
 }

@@ -1,12 +1,16 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "./tsconfig.native.json",
   "compilerOptions": {
     "paths": {
-      "react-native-reanimated": ["./src"]
-    },
-    // TODO: Reanimated doesn't yet work with .web types.
-    "moduleSuffixes": [/* ".web",  */""]
+      "moduleSuffixes": [".web", ""]
+    }
   },
-  "include": ["src"],
-  "exclude": ["src/**/*.native.ts", "src/**/*.ios.ts", "src/**/*.android.ts"]
+  "exclude": [
+    "**/*.native.ts",
+    "**/*.native.tsx",
+    "**/*.ios.ts",
+    "**/*.ios.tsx",
+    "**/*.android.ts",
+    "**/*.android.tsx"
+  ]
 }

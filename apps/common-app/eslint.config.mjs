@@ -1,17 +1,18 @@
+import { fixupPluginRules } from '@eslint/compat';
 import jsEslint from '@eslint/js';
-import tsEslint from 'typescript-eslint';
-import perfectionist from 'eslint-plugin-perfectionist';
-import reactNative from 'eslint-plugin-react-native';
-import react from 'eslint-plugin-react';
-import globals from 'globals';
 import importPlugin from 'eslint-plugin-import';
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
-import reactHooks from 'eslint-plugin-react-hooks';
 import noRelativeImportPaths from 'eslint-plugin-no-relative-import-paths';
+import perfectionist from 'eslint-plugin-perfectionist';
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import react from 'eslint-plugin-react';
+// eslint-disable-next-line import/default
+import reactHooks from 'eslint-plugin-react-hooks';
+// @ts-expect-error eslint-plugin-react-native has no types.
+import reactNative from 'eslint-plugin-react-native';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import unusedImports from 'eslint-plugin-unused-imports';
-import { fixupPluginRules } from '@eslint/compat';
-import { globalIgnores } from 'eslint/config';
+import globals from 'globals';
+import tsEslint from 'typescript-eslint';
 
 /** @type {import('typescript-eslint').ConfigWithExtends[]} */
 export default tsEslint.config(
@@ -21,14 +22,30 @@ export default tsEslint.config(
   eslintPluginPrettierRecommended,
   {
     languageOptions: {
+      parserOptions: {
+        parser: tsEslint.parser,
+        project: [
+          './tsconfig.json',
+          './tsconfig.web.json',
+          './../../tsconfig.json',
+        ],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
+    languageOptions: {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       globals: {
         React: true,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         ...reactNative.environments['react-native']['react-native'],
         ...globals.node,
       },
     },
     plugins: {
       'no-relative-import-paths': noRelativeImportPaths,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       'react-native': fixupPluginRules(reactNative),
       'simple-import-sort': simpleImportSort,
       'unused-imports': unusedImports,
@@ -267,7 +284,6 @@ export default tsEslint.config(
       'import/resolver': {
         typescript: {
           alwaysTryTypes: true,
-          project: './tsconfig.json',
         },
       },
       react: {
@@ -276,15 +292,7 @@ export default tsEslint.config(
     },
   },
   {
-    files: ['**/*.ts', '**/*.tsx'],
     extends: [tsEslint.configs.recommendedTypeChecked],
-    languageOptions: {
-      parserOptions: {
-        parser: tsEslint.parser,
-        project: './tsconfig.json',
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
     rules: {
       '@typescript-eslint/array-type': ['error', { default: 'generic' }],
       '@typescript-eslint/consistent-type-exports': 'error',
@@ -328,6 +336,5 @@ export default tsEslint.config(
       '@typescript-eslint/no-unsafe-member-access': 'error',
       'no-underscore-dangle': 'error',
     },
-  },
-  globalIgnores(['**/eslint.config.mjs'])
+  }
 );

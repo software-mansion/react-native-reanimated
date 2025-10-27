@@ -1,5 +1,5 @@
 'use strict';
-export { createAnimatedComponent } from './component';
+export { createAnimatedComponent as createCSSAnimatedComponent } from './component';
 export { cubicBezier, linear, steps } from './easing';
 export * from './stylesheet';
 export type {

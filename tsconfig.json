@@ -19,5 +19,6 @@
     "noEmit": true,
     "moduleSuffixes": [".native", ".ios", ".android", ""]
   },
-  "exclude": ["**/eslint.config.mjs"]
+  "include": [".", "**/.*"],
+  "exclude": ["**/__generatedWorklets"]
 }

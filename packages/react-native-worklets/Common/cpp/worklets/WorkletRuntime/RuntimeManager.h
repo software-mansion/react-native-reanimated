@@ -23,7 +23,6 @@ class JSIWorkletsModuleProxy;
 class RuntimeManager {
  public:
   std::shared_ptr<WorkletRuntime> getRuntime(uint64_t runtimeId);
-  std::shared_ptr<WorkletRuntime> getRuntime(const std::string &name);
 #ifdef WORKLETS_BUNDLE_MODE
   std::shared_ptr<WorkletRuntime> getRuntime(jsi::Runtime *runtime);
 #endif // WORKLETS_BUNDLE_MODE
@@ -48,13 +47,11 @@ class RuntimeManager {
 
   void registerRuntime(
       const uint64_t runtimeId,
-      const std::string &name,
       const std::shared_ptr<WorkletRuntime> &workletRuntime);
 
-  std::atomic_uint64_t nextRuntimeId_{uiRuntimeId + 1};
+  std::atomic_uint64_t nextRuntimeId_{RuntimeData::uiRuntimeId + 1};
   std::map<uint64_t, std::weak_ptr<WorkletRuntime>> weakRuntimes_;
   std::shared_mutex weakRuntimesMutex_;
-  std::map<std::string, uint64_t> nameToRuntimeId_;
 #ifdef WORKLETS_BUNDLE_MODE
   std::map<jsi::Runtime *, uint64_t> runtimeAddressToRuntimeId_;
 #endif // WORKLETS_BUNDLE_MODE

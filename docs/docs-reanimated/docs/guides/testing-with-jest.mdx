@@ -111,10 +111,17 @@ More examples from `react-native-reanimated` repository:
 - [SharedValue.test.tsx](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-reanimated/__tests__/SharedValue.test.tsx)
 - [Animation.test.tsx](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-reanimated/__tests__/Animation.test.tsx)
 
+## Testing `react-native-svg`
+
+Because of how `react-native-svg` manages its props, you need to use the mock provided by Reanimated to enable testing:
+
+```js
+jest.mock('react-native-svg', () => require('react-native-reanimated/mock'));
+```
+
 ## Remarks
 
 - Tests must run with Node 16 or newer.
-- Testing `react-native-svg` props is not supported.
 - If you have custom babel configuration for testing, make sure that Reanimated's babel plugin is enabled in that environment.
 
 ## Recommended testing library

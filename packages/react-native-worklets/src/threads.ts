@@ -11,14 +11,14 @@ export function scheduleOnUI<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue,
   ...args: Args
 ): void {
-  runOnUI(worklet)(...args);
+  enqueueUI(worklet, args);
 }
 
 export function runOnUI<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue
 ): (...args: Args) => void {
   return (...args) => {
-    enqueueUI(worklet, args);
+    scheduleOnUI(worklet, ...args);
   };
 }
 
@@ -42,19 +42,18 @@ export function executeOnUIRuntimeSync(): never {
 export function runOnJS<Args extends unknown[], ReturnValue>(
   fun: (...args: Args) => ReturnValue
 ): (...args: Args) => void {
-  return (...args) =>
-    queueMicrotask(
-      args.length
-        ? () => (fun as (...args: Args) => ReturnValue)(...args)
-        : (fun as () => ReturnValue)
-    );
+  return (...args) => scheduleOnRN(fun, ...args);
 }
 
 export function scheduleOnRN<Args extends unknown[], ReturnValue>(
   fun: (...args: Args) => ReturnValue,
   ...args: Args
 ): void {
-  runOnJS(fun)(...args);
+  queueMicrotask(
+    args.length
+      ? () => (fun as (...args: Args) => ReturnValue)(...args)
+      : (fun as () => ReturnValue)
+  );
 }
 
 export function runOnUIAsync<Args extends unknown[], ReturnValue>(

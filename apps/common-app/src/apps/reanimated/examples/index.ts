@@ -136,6 +136,7 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
+import InstanceDiscoveryExample from './InstanceDiscoveryExample';
 
 export const REAPlatform = {
   IOS: 'ios',
@@ -435,6 +436,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '𝌍',
     title: 'useScrollOffset',
     screen: ScrollViewOffsetExample,
+  },
+  InstanceDiscoveryExample: {
+    icon: '🔍',
+    title: 'Instance Discovery',
+    screen: InstanceDiscoveryExample,
   },
   StickyHeaderExample: {
     icon: '🔝',

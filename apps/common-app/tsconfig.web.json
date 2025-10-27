@@ -1,12 +1,14 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "./tsconfig.native.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
-    // TODO: Doesn't yet work with Reanimated
-    // "moduleSuffixes": [".web", ""]
+    "moduleSuffixes": [".web", ""]
   },
-  "include": ["src", "index.ts"]
+  "exclude": [
+    "**/*.native.ts",
+    "**/*.native.tsx",
+    "**/*.ios.ts",
+    "**/*.ios.tsx",
+    "**/*.android.ts",
+    "**/*.android.tsx"
+  ]
 }

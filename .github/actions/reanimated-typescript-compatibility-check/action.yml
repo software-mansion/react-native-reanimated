@@ -5,7 +5,7 @@ inputs:
     description: React Native version to test compatibility with
     required: true
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Install monorepo node dependencies
       shell: bash

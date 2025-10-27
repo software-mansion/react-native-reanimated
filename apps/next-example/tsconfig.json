@@ -8,5 +8,5 @@
     "noImplicitAny": false,
     "moduleSuffixes": [".web", ""]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.js"]
+  "include": ["."]
 }

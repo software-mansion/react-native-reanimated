@@ -1,10 +1,10 @@
 'use strict';
+import { kebabizeCamelCase } from '../../../common';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
 import type {
   CSSTransitionProperties,
   ICSSTransitionsManager,
 } from '../../types';
-import { kebabizeCamelCase } from '../../utils';
 import { normalizeCSSTransitionProperties } from '../normalization';
 import { maybeAddSuffixes, parseTimingFunction } from '../utils';
 

@@ -1,60 +1,71 @@
-import React, { useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
+  withRepeat,
   withTiming,
 } from 'react-native-reanimated';
 
 const { width, height } = Dimensions.get('window');
 
-function randBetween(min: number, max: number) {
-  return min + Math.random() * (max - min);
+interface CircleProps {
+  size: number;
+  opacity: number;
+  duration: number;
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  startHue: number;
+  endHue: number;
 }
 
-function Circle() {
-  const shouldReduceMotion = useReducedMotion();
+function Circle({
+  size,
+  opacity,
+  duration,
+  startX,
+  startY,
+  endX,
+  endY,
+  startHue,
+  endHue,
+}: CircleProps) {
+  const left = useSharedValue(startX);
+  const top = useSharedValue(startY);
+  const hue = useSharedValue(startHue);
 
-  const [power] = useState(randBetween(0, 1));
-  const [duration] = useState(randBetween(2000, 3000));
+  useEffect(() => {
+    left.value = startX;
+    top.value = startY;
+    hue.value = startHue;
 
-  const size = 100 + power * 250;
-  const opacity = 0.1 + (1 - power) * 0.1;
-  const config = { duration, easing: Easing.linear };
+    const config = { duration, easing: Easing.linear };
 
-  const left = useSharedValue(randBetween(0, width) - size / 2);
-  const top = useSharedValue(randBetween(0, height) - size / 2);
-  const hue = useSharedValue(randBetween(100, 200));
-
-  const update = () => {
-    left.value = withTiming(left.value + randBetween(-100, 100), config);
-    top.value = withTiming(top.value + randBetween(-100, 100), config);
-    hue.value = withTiming(hue.value + randBetween(0, 100), config);
-  };
-
-  React.useEffect(() => {
-    update();
-    if (shouldReduceMotion) {
-      return;
-    }
-    const id = setInterval(update, duration);
-    return () => clearInterval(id);
-  });
+    left.value = withRepeat(withTiming(endX, config), -1, true);
+    top.value = withRepeat(withTiming(endY, config), -1, true);
+    hue.value = withRepeat(withTiming(endHue, config), -1, true);
+  }, [duration, startX, startY, startHue, endX, endY, endHue, hue, left, top]);
 
   const animatedStyle = useAnimatedStyle(
     () => ({
       backgroundColor: `hsl(${hue.value},100%,50%)`,
-      width: size,
-      height: size,
-      left: left.value,
-      top: top.value,
+      transform: [{ translateX: left.value }, { translateY: top.value }],
     }),
     []
   );
 
-  return <Animated.View style={[styles.circle, { opacity }, animatedStyle]} />;
+  return (
+    <Animated.View
+      style={[
+        styles.circle,
+        { opacity, width: size, height: size },
+        animatedStyle,
+      ]}
+    />
+  );
 }
 
 interface BokehProps {
@@ -62,13 +73,12 @@ interface BokehProps {
 }
 
 function Bokeh({ count }: BokehProps) {
-  return (
-    <>
-      {[...Array(count)].map((_, i) => (
-        <Circle key={i} />
-      ))}
-    </>
+  const circles = useMemo(
+    () => Array.from({ length: count }, makeBokehCircleParams),
+    [count]
   );
+
+  return circles.map((circleProps, i) => <Circle {...circleProps} key={i} />);
 }
 
 export default function BokehExample() {
@@ -79,11 +89,42 @@ export default function BokehExample() {
   );
 }
 
+function randBetween(min: number, max: number) {
+  return min + Math.random() * (max - min);
+}
+
+function makeBokehCircleParams(): CircleProps {
+  const power = randBetween(0, 1);
+  const size = 100 + power * 250;
+  const opacity = 0.1 + (1 - power) * 0.1;
+
+  const duration = randBetween(2000, 3000);
+
+  const startX = randBetween(0, width) - size / 2;
+  const startY = randBetween(0, height) - size / 2;
+
+  const endX = startX + randBetween(-100, 100);
+  const endY = startY + randBetween(-100, 100);
+
+  const startHue = randBetween(0, 360);
+  const endHue = randBetween(0, 360);
+
+  return {
+    size,
+    opacity,
+    duration,
+    startX,
+    startY,
+    endX,
+    endY,
+    startHue,
+    endHue,
+  };
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: 'black',
     overflow: 'hidden',
   },
