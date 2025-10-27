@@ -1,20 +1,21 @@
 'worklet';
 'use strict';
-import type { FilterFunction } from 'react-native';
+import type { DropShadowValue, FilterFunction } from 'react-native';
 
 import { ReanimatedError } from '../../errors';
 import type {
-  ValueProcessor,
   FilterArray,
   ParsedDropShadow,
+  ValueProcessor,
 } from '../../types';
 import { isLength } from '../../utils/guards';
 import { processColor } from './colors';
-import type { DropShadowValue } from 'react-native';
 
+// Capture filter functions and their content eg "brightness(0.5) opacity(1)" => [["brightness(0.5)", "brightness", "0.5"], ["opacity(1)", "opacity", "1"]]
 const FILTER_REGEX = /([\w-]+)\(([^()]*|\([^()]*\)|[^()]*\([^()]*\)[^()]*)\)/g;
 // Capture two groups: current transform value and optional unit -> "21.37px" => ["21.37px", "21.37", "px"]
 const FILTER_VALUE_REGEX = /^([-+]?\d*\.?\d+)([a-z%]*)$/;
+// Capture drop-shadow parts "10px 5px 5px #888888" => ["10px", "5px", "5px", "#888888"]
 const DROP_SHADOW_REGEX = /[^,\s()]+(?:\([^()]*\))?/g;
 
 export const ERROR_MESSAGES = {
@@ -29,7 +30,7 @@ type SingleFilterValue = {
 };
 
 const parseHueRotate = (value: SingleFilterValue): number | undefined => {
-  let { number, unit } = value;
+  const { number, unit } = value;
   if (number === 0) {
     return 0;
   }
