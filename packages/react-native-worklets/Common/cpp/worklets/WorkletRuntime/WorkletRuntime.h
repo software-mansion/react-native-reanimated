@@ -61,6 +61,8 @@ class WorkletRuntime : public jsi::HostObject,
   jsi::Value executeSync(
       const std::function<jsi::Value(jsi::Runtime &)> &job) const;
 
+  void executeAsync(std::function<void(jsi::Runtime &)> &&job) const;
+
   std::string toString() const {
     return "[WorkletRuntime \"" + name_ + "\"]";
   }

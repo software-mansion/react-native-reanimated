@@ -187,6 +187,21 @@ jsi::Value WorkletRuntime::executeSync(
   return job(uiRuntime);
 }
 
+void WorkletRuntime::executeAsync(
+    std::function<void(jsi::Runtime &)> &&job) const {
+  queue_->push([job = std::move(job), weakThis = weak_from_this()]() {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    auto lock =
+        std::unique_lock<std::recursive_mutex>(*strongThis->runtimeMutex_);
+    jsi::Runtime &runtime = strongThis->getJSIRuntime();
+    job(runtime);
+  });
+}
+
 jsi::Value WorkletRuntime::get(
     jsi::Runtime &rt,
     const jsi::PropNameID &propName) {
