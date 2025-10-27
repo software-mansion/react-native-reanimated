@@ -7,7 +7,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { runOnUI } from 'react-native-worklets';
+import { scheduleOnUI } from 'react-native-worklets';
 
 export default function MeasureExample() {
   const aref = useAnimatedRef<Animated.View>();
@@ -28,9 +28,9 @@ export default function MeasureExample() {
   };
 
   const handleMeasureFromUI = () => {
-    runOnUI(() => {
+    scheduleOnUI(() => {
       console.log(_WORKLET, '', measure(aref));
-    })();
+    });
   };
 
   const animatedStyle = useAnimatedStyle(() => {

@@ -15,7 +15,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
-import { runOnUI } from 'react-native-worklets';
+import { scheduleOnUI } from 'react-native-worklets';
 
 import { colors, radius, spacing } from '@/theme';
 import { typedMemo } from '@/utils';
@@ -55,7 +55,7 @@ function TabSelector<T extends string>({
   );
 
   useEffect(() => {
-    runOnUI(() => {
+    scheduleOnUI(() => {
       const offset = tabWidths.value
         .slice(0, activeTabIndex)
         .reduce(
@@ -64,7 +64,7 @@ function TabSelector<T extends string>({
           0
         );
       scrollTo(scrollViewRef, offset, 0, true);
-    })();
+    });
   }, [activeTabIndex, scrollViewRef, tabWidths]);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -147,10 +147,12 @@ function TabSelector<T extends string>({
               selected={tab === selectedTab}
               title={tab}
               onPress={() => onSelectTab(tab)}
-              onMeasure={runOnUI((width) => {
-                tabWidths.value[index] = width;
-                tabWidths.value = [...tabWidths.value];
-              })}
+              onMeasure={(widthArg) =>
+                scheduleOnUI((width) => {
+                  tabWidths.value[index] = width;
+                  tabWidths.value = [...tabWidths.value];
+                }, widthArg)
+              }
             />
           ))}
         </View>

@@ -1,5 +1,5 @@
 'use strict';
-import { executeOnUIRuntimeSync } from 'react-native-worklets';
+import { runOnUISync } from 'react-native-worklets';
 
 import {
   DEFAULT_LOGGER_CONFIG,
@@ -27,9 +27,9 @@ export function initializeReanimatedModule(
 
 registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
 if (!SHOULD_BE_USE_WEB) {
-  executeOnUIRuntimeSync(() => {
+  runOnUISync(() => {
     'worklet';
     global._tagToJSPropNamesMapping = {};
     registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
-  })();
+  });
 }

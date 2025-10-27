@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
+
 import type { RefObject } from 'react';
-import { runOnJS, runOnUI } from 'react-native-worklets';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import {
   IS_JEST,
@@ -144,7 +145,7 @@ function createUpdatePropsManager() {
         nativeOperations.length = 0;
       }
       if (jsOperations.length) {
-        runOnJS(updateJSProps)(jsOperations);
+        scheduleOnRN(updateJSProps, jsOperations);
         jsOperations.length = 0;
       }
       flushPending = false;
@@ -173,10 +174,10 @@ if (SHOULD_BE_USE_WEB) {
     }
   );
 } else {
-  runOnUI(() => {
+  scheduleOnUI(() => {
     'worklet';
     global.UpdatePropsManager = createUpdatePropsManager();
-  })();
+  });
 }
 
 /**

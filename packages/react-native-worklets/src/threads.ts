@@ -300,7 +300,7 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
   if ((fun as FunDevRemote).__remoteFunction) {
     // In development mode the function provided as `fun` throws an error message
     // such that when someone accidentally calls it directly on the UI runtime, they
-    // see that they should use `runOnJS` instead. To facilitate that we put the
+    // see that they should use `scheduleOnRN` instead. To facilitate that we put the
     // reference to the original remote function in the `__remoteFunction` property.
     fun = (fun as FunDevRemote).__remoteFunction;
   }
