@@ -26,7 +26,7 @@ We are actively working with React core team at Meta on identifying bottlenecks 
 
 **Solution:** You need to upgrade to React Native 0.80 (or newer), upgrade to Reanimated 4.2.0 (or newer) and enable [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](./feature-flags#use_commit_hook_only_for_react_commits) static feature flag as described [here](./feature-flags#use_commit_hook_only_for_react_commits).
 
-You can also consider enabling `enableCppPropsIteratorSetter` feature flag as described [below](#low-fps).
+You can also consider enabling `enableCppPropsIteratorSetter` feature flag as described [below](#️-low-fps-when-running-multiple-animations-at-once)
 
 ### ⚠️ Low FPS when running multiple animations at once
 
@@ -36,7 +36,7 @@ You can also consider enabling `enableCppPropsIteratorSetter` feature flag as de
 
 Note that these flags affect the touch detection system for components with animated transforms so you might want to consider using `Pressable` from `react-native-gesture-handler` instead of the built-in one from `react-native`.
 
-It is also recommended to animate non-layout styles (e.g. `transform`) rather than layout-affecting styles as described [below](#prefer-animating-non-layout-properties).
+It is also recommended to animate non-layout styles (e.g. `transform`) rather than layout-affecting styles as described [below](#-prefer-animating-non-layout-properties).
 
 **Solution 2:** Manually enable `enableCppPropsIteratorSetter` feature flag from `react-native` by patching the source files and building React Native from source. Note that this feature flag is experimental and may produce unexpected results.
 
