@@ -108,8 +108,7 @@ class RetainingSerializable : virtual public BaseClass {
  public:
   template <typename... Args>
   explicit RetainingSerializable(jsi::Runtime &rt, Args &&...args)
-      : BaseClass(rt, std::forward<Args>(args)...),
-        primaryRuntime_(&rt) {}
+      : BaseClass(rt, std::forward<Args>(args)...), primaryRuntime_(&rt) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt);
 
@@ -247,8 +246,7 @@ class SerializableSet : public Serializable {
 class SerializableHostObject : public Serializable {
  public:
   SerializableHostObject(jsi::Runtime &, const std::shared_ptr<jsi::HostObject> &hostObject)
-      : Serializable(HostObjectType),
-        hostObject_(hostObject) {}
+      : Serializable(HostObjectType), hostObject_(hostObject) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -275,8 +273,7 @@ class SerializableHostFunction : public Serializable {
 class SerializableArrayBuffer : public Serializable {
  public:
   SerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer)
-      : Serializable(ArrayBufferType),
-        data_(arrayBuffer.data(rt), arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
+      : Serializable(ArrayBufferType), data_(arrayBuffer.data(rt), arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -296,9 +293,7 @@ class SerializableWorklet : public SerializableObject {
 class SerializableImport : public Serializable {
  public:
   SerializableImport(jsi::Runtime &rt, const double source, const jsi::String &imported)
-      : Serializable(ImportType),
-        source_(source),
-        imported_(imported.utf8(rt)) {}
+      : Serializable(ImportType), source_(source), imported_(imported.utf8(rt)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -346,8 +341,7 @@ class SerializableInitializer : public Serializable {
 
  public:
   SerializableInitializer(jsi::Runtime &rt, const jsi::Object &initializerObject)
-      : Serializable(HandleType),
-        initializer_(std::make_unique<SerializableObject>(rt, initializerObject)) {}
+      : Serializable(HandleType), initializer_(std::make_unique<SerializableObject>(rt, initializerObject)) {}
 
   ~SerializableInitializer() {
     cleanupIfRuntimeExists(remoteRuntime_, remoteValue_);
@@ -369,8 +363,7 @@ class SerializableString : public Serializable {
 class SerializableBigInt : public Serializable {
  public:
   explicit SerializableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint)
-      : Serializable(BigIntType),
-        string_(bigint.toString(rt).utf8(rt)) {}
+      : Serializable(BigIntType), string_(bigint.toString(rt).utf8(rt)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 

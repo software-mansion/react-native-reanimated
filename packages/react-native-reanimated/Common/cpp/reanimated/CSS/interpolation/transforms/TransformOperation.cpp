@@ -171,8 +171,7 @@ folly::dynamic TransformOperation::toDynamic() const {
 // TransformOperationBase implementation
 template <TransformOp TOperation, typename TValue>
 TransformOperationBase<TOperation, TValue>::TransformOperationBase(TValue value)
-    : TransformOperation(TOperation),
-      value(std::move(value)) {}
+    : TransformOperation(TOperation), value(std::move(value)) {}
 
 template <TransformOp TOperation, typename TValue>
 bool TransformOperationBase<TOperation, TValue>::operator==(const TransformOperation &other) const {

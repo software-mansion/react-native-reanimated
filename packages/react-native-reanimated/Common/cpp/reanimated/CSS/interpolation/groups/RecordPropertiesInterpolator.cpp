@@ -10,8 +10,7 @@ RecordPropertiesInterpolator::RecordPropertiesInterpolator(
     const InterpolatorFactoriesRecord &factories,
     const PropertyPath &propertyPath,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : GroupPropertiesInterpolator(propertyPath, viewStylesRepository),
-      factories_(factories) {}
+    : GroupPropertiesInterpolator(propertyPath, viewStylesRepository), factories_(factories) {}
 
 bool RecordPropertiesInterpolator::equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const {
   return std::ranges::all_of(propertyValue.items(), [this](const auto &item) {

@@ -28,7 +28,7 @@ BreakConstructorInitializers: BeforeColon
 BreakAfterJavaFieldAnnotations: false
 BreakStringLiterals: false
 CommentPragmas: '^ IWYU pragma:'
-PackConstructorInitializers: CurrentLine
+PackConstructorInitializers: NextLine
 ConstructorInitializerIndentWidth: 4
 ContinuationIndentWidth: 4
 Cpp11BracedListStyle: true

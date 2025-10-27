@@ -11,8 +11,7 @@ namespace reanimated::css {
 
 // TransformMatrixBase template implementations
 template <typename TDerived, size_t TDimension>
-TransformMatrixBase<TDerived, TDimension>::TransformMatrixBase() : TransformMatrix(),
-                                                                   matrix_{} {
+TransformMatrixBase<TDerived, TDimension>::TransformMatrixBase() : TransformMatrix(), matrix_{} {
   // Create an identity matrix
   for (size_t i = 0; i < TDimension; ++i) {
     matrix_[i * (TDimension + 1)] = 1;
@@ -21,18 +20,15 @@ TransformMatrixBase<TDerived, TDimension>::TransformMatrixBase() : TransformMatr
 
 template <typename TDerived, size_t TDimension>
 TransformMatrixBase<TDerived, TDimension>::TransformMatrixBase(MatrixArray matrix)
-    : TransformMatrix(),
-      matrix_(std::move(matrix)) {}
+    : TransformMatrix(), matrix_(std::move(matrix)) {}
 
 template <typename TDerived, size_t TDimension>
 TransformMatrixBase<TDerived, TDimension>::TransformMatrixBase(const TransformMatrixBase &other)
-    : TransformMatrix(),
-      matrix_(other.matrix_) {}
+    : TransformMatrix(), matrix_(other.matrix_) {}
 
 template <typename TDerived, size_t TDimension>
 TransformMatrixBase<TDerived, TDimension>::TransformMatrixBase(TransformMatrixBase &&other) noexcept
-    : TransformMatrix(),
-      matrix_(std::move(other.matrix_)) {}
+    : TransformMatrix(), matrix_(std::move(other.matrix_)) {}
 
 template <typename TDerived, size_t TDimension>
 bool TransformMatrixBase<TDerived, TDimension>::operator==(const TDerived &other) const {

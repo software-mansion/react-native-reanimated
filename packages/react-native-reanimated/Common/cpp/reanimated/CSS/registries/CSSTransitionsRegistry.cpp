@@ -8,8 +8,7 @@ namespace reanimated::css {
 CSSTransitionsRegistry::CSSTransitionsRegistry(
     const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
     const GetAnimationTimestampFunction &getCurrentTimestamp)
-    : getCurrentTimestamp_(getCurrentTimestamp),
-      staticPropsRegistry_(staticPropsRegistry) {}
+    : getCurrentTimestamp_(getCurrentTimestamp), staticPropsRegistry_(staticPropsRegistry) {}
 
 bool CSSTransitionsRegistry::isEmpty() const {
   // The registry is empty if has no registered animations and no updates

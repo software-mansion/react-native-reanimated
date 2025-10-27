@@ -12,8 +12,7 @@ struct ResolvableValueInterpolatorConfig {
   std::string relativeProperty;
 
   ResolvableValueInterpolatorConfig(RelativeTo relativeTo, std::string relativeProperty)
-      : relativeTo(relativeTo),
-        relativeProperty(std::move(relativeProperty)) {}
+      : relativeTo(relativeTo), relativeProperty(std::move(relativeProperty)) {}
 
   ResolvableValueInterpolatorConfig() = default;
 };

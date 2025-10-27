@@ -79,8 +79,7 @@ isInstanceOfAny(jsi::Runtime &rt, const jsi::Object &object, const std::vector<s
 }
 
 JSISerializer::JSISerializer(jsi::Runtime &rt)
-    : rt_(rt),
-      visitedNodes_(rt_.global().getPropertyAsFunction(rt_, "Set").callAsConstructor(rt_).asObject(rt_)) {}
+    : rt_(rt), visitedNodes_(rt_.global().getPropertyAsFunction(rt_, "Set").callAsConstructor(rt_).asObject(rt_)) {}
 
 std::string JSISerializer::stringifyWithName(const jsi::Object &object) {
   std::stringstream ss;

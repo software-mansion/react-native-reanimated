@@ -79,9 +79,7 @@ struct Node {
   virtual bool isMutationMode();
   explicit Node(const Tag tag) : tag(tag) {}
   Node(Node &&node)
-      : children(std::move(node.children)),
-        unflattenedChildren(std::move(node.unflattenedChildren)),
-        tag(node.tag) {}
+      : children(std::move(node.children)), unflattenedChildren(std::move(node.unflattenedChildren)), tag(node.tag) {}
   Node(Node &node) : children(node.children), unflattenedChildren(node.unflattenedChildren), tag(node.tag) {}
   virtual ~Node() = default;
 };

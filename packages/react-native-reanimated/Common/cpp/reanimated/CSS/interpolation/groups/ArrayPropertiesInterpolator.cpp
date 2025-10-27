@@ -9,8 +9,7 @@ ArrayPropertiesInterpolator::ArrayPropertiesInterpolator(
     const InterpolatorFactoriesArray &factories,
     const PropertyPath &propertyPath,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : GroupPropertiesInterpolator(propertyPath, viewStylesRepository),
-      factories_(factories) {}
+    : GroupPropertiesInterpolator(propertyPath, viewStylesRepository), factories_(factories) {}
 
 bool ArrayPropertiesInterpolator::equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const {
   if (!propertyValue.isArray()) {

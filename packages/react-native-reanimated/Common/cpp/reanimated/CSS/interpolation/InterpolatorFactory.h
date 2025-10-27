@@ -23,8 +23,7 @@ class SimpleValueInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   template <typename TValue>
   explicit SimpleValueInterpolatorFactory(const TValue &defaultValue)
-      : PropertyInterpolatorFactory(),
-        defaultValue_(defaultValue) {}
+      : PropertyInterpolatorFactory(), defaultValue_(defaultValue) {}
 
   bool isDiscreteProperty() const override {
     // The property is considered discrete if all of the allowed types are
@@ -52,9 +51,7 @@ class ResolvableValueInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   template <typename TValue>
   explicit ResolvableValueInterpolatorFactory(const TValue &defaultValue, ResolvableValueInterpolatorConfig config)
-      : PropertyInterpolatorFactory(),
-        defaultValue_(defaultValue),
-        config_(std::move(config)) {}
+      : PropertyInterpolatorFactory(), defaultValue_(defaultValue), config_(std::move(config)) {}
 
   const CSSValue &getDefaultValue() const override {
     return defaultValue_;

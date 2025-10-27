@@ -6,8 +6,7 @@
 namespace reanimated::css {
 
 template <typename TValue>
-DelayedItem<TValue>::DelayedItem(const double timestamp, const TValue value) : timestamp(timestamp),
-                                                                               value(value) {}
+DelayedItem<TValue>::DelayedItem(const double timestamp, const TValue value) : timestamp(timestamp), value(value) {}
 
 template <typename TValue>
 bool DelayedItemComparator<TValue>::operator()(const DelayedItem<TValue> &lhs, const DelayedItem<TValue> &rhs) const {

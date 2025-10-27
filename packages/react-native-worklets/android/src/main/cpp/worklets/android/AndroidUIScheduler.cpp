@@ -23,8 +23,7 @@ class UISchedulerWrapper : public UIScheduler {
 };
 
 AndroidUIScheduler::AndroidUIScheduler(jni::alias_ref<AndroidUIScheduler::javaobject> jThis)
-    : javaPart_(jni::make_global(jThis)),
-      uiScheduler_(std::make_shared<UISchedulerWrapper>(jni::make_global(jThis))) {}
+    : javaPart_(jni::make_global(jThis)), uiScheduler_(std::make_shared<UISchedulerWrapper>(jni::make_global(jThis))) {}
 
 jni::local_ref<AndroidUIScheduler::jhybriddata> AndroidUIScheduler::initHybrid(jni::alias_ref<jhybridobject> jThis) {
   return makeCxxInstance(jThis);

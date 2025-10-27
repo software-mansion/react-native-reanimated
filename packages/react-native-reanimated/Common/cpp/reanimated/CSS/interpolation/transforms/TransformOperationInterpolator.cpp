@@ -148,8 +148,7 @@ template <ResolvableTransformOp TOperation>
 TransformOperationInterpolator<TOperation>::TransformOperationInterpolator(
     const std::shared_ptr<TOperation> &defaultOperation,
     ResolvableValueInterpolatorConfig config)
-    : TransformOperationInterpolatorBase<TOperation>(defaultOperation),
-      config_(std::move(config)) {}
+    : TransformOperationInterpolatorBase<TOperation>(defaultOperation), config_(std::move(config)) {}
 
 template <ResolvableTransformOp TOperation>
 std::unique_ptr<TransformOperation> TransformOperationInterpolator<TOperation>::interpolate(

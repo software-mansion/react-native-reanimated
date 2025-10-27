@@ -31,8 +31,7 @@ class HermesExecutorRuntimeAdapter
   explicit HermesExecutorRuntimeAdapter(
       facebook::hermes::HermesRuntime &hermesRuntime,
       const std::shared_ptr<MessageQueueThread> &thread)
-      : hermesRuntime_(hermesRuntime),
-        thread_(std::move(thread)) {}
+      : hermesRuntime_(hermesRuntime), thread_(std::move(thread)) {}
 
   virtual ~HermesExecutorRuntimeAdapter() {
     // This is required by iOS, because there is an assertion in the destructor
@@ -62,8 +61,7 @@ WorkletHermesRuntime::WorkletHermesRuntime(
     std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name)
-    : jsi::WithRuntimeDecorator<WorkletsReentrancyCheck>(*runtime, reentrancyCheck_),
-      runtime_(std::move(runtime)) {
+    : jsi::WithRuntimeDecorator<WorkletsReentrancyCheck>(*runtime, reentrancyCheck_), runtime_(std::move(runtime)) {
 #if HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
   auto adapter = std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_, jsQueue);
   debugToken_ = chrome::enableDebugging(std::move(adapter), name);

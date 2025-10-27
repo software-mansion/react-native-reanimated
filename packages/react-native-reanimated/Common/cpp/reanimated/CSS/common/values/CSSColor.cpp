@@ -10,17 +10,14 @@ namespace reanimated::css {
 // CSSColorBase template implementations
 
 template <ColorTypeEnum TColorType, typename TDerived>
-CSSColorBase<TColorType, TDerived>::CSSColorBase() : channels{0, 0, 0, 0},
-                                                     colorType(TColorType::Transparent) {}
+CSSColorBase<TColorType, TDerived>::CSSColorBase() : channels{0, 0, 0, 0}, colorType(TColorType::Transparent) {}
 
 template <ColorTypeEnum TColorType, typename TDerived>
-CSSColorBase<TColorType, TDerived>::CSSColorBase(TColorType colorType) : channels{0, 0, 0, 0},
-                                                                         colorType(colorType) {}
+CSSColorBase<TColorType, TDerived>::CSSColorBase(TColorType colorType) : channels{0, 0, 0, 0}, colorType(colorType) {}
 
 template <ColorTypeEnum TColorType, typename TDerived>
 CSSColorBase<TColorType, TDerived>::CSSColorBase(int64_t numberValue)
-    : channels{0, 0, 0, 0},
-      colorType(TColorType::Rgba) {
+    : channels{0, 0, 0, 0}, colorType(TColorType::Rgba) {
   uint32_t color;
   // On Android, colors are represented as signed 32-bit integers. In JS, we use
   // a bitwise operation (normalizedColor = normalizedColor | 0x0) to ensure the
@@ -42,13 +39,11 @@ CSSColorBase<TColorType, TDerived>::CSSColorBase(int64_t numberValue)
 
 template <ColorTypeEnum TColorType, typename TDerived>
 CSSColorBase<TColorType, TDerived>::CSSColorBase(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
-    : channels{r, g, b, a},
-      colorType(TColorType::Rgba) {}
+    : channels{r, g, b, a}, colorType(TColorType::Rgba) {}
 
 template <ColorTypeEnum TColorType, typename TDerived>
 CSSColorBase<TColorType, TDerived>::CSSColorBase(ColorChannels colorChannels)
-    : channels{std::move(colorChannels)},
-      colorType(TColorType::Rgba) {}
+    : channels{std::move(colorChannels)}, colorType(TColorType::Rgba) {}
 
 template <ColorTypeEnum TColorType, typename TDerived>
 TDerived CSSColorBase<TColorType, TDerived>::interpolate(double progress, const TDerived &to) const {

@@ -10,8 +10,7 @@ namespace reanimated::css {
 class RecordInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   explicit RecordInterpolatorFactory(const InterpolatorFactoriesRecord &factories)
-      : PropertyInterpolatorFactory(),
-        factories_(factories) {}
+      : PropertyInterpolatorFactory(), factories_(factories) {}
 
   const CSSValue &getDefaultValue() const override {
     static EmptyObjectValue emptyObjectValue;
@@ -42,8 +41,7 @@ class RecordInterpolatorFactory : public PropertyInterpolatorFactory {
 class ArrayInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   explicit ArrayInterpolatorFactory(const InterpolatorFactoriesArray &factories)
-      : PropertyInterpolatorFactory(),
-        factories_(factories) {}
+      : PropertyInterpolatorFactory(), factories_(factories) {}
 
   const CSSValue &getDefaultValue() const override {
     static EmptyArrayValue emptyArrayValue;
@@ -74,8 +72,7 @@ class ArrayInterpolatorFactory : public PropertyInterpolatorFactory {
 class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   explicit TransformsInterpolatorFactory(const std::shared_ptr<TransformOperationInterpolators> &interpolators)
-      : PropertyInterpolatorFactory(),
-        interpolators_(interpolators) {}
+      : PropertyInterpolatorFactory(), interpolators_(interpolators) {}
 
   const CSSValue &getDefaultValue() const override {
     static EmptyTransformsValue emptyTransformsValue;

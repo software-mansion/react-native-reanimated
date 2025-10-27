@@ -38,8 +38,7 @@ jsi::Value Synchronizable::toJSValue(jsi::Runtime &rt) {
 }
 
 Synchronizable::Synchronizable(const std::shared_ptr<Serializable> &value)
-    : Serializable(ValueType::SynchronizableType),
-      value_(value) {}
+    : Serializable(ValueType::SynchronizableType), value_(value) {}
 
 jsi::Function getSynchronizableUnpacker(jsi::Runtime &rt) {
   auto synchronizableUnpacker = rt.global().getProperty(rt, "__synchronizableUnpacker");

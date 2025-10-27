@@ -134,8 +134,7 @@ MatrixOperation::MatrixOperation(TransformMatrix3D matrix)
 MatrixOperation::MatrixOperation(TransformOperations operations)
     // Simplify operations to reduce the number of matrix
     // multiplications during matrix keyframe interpolation
-    : TransformOperation(TransformOp::Matrix),
-      value([&]() {
+    : TransformOperation(TransformOp::Matrix), value([&]() {
         const auto &[value, is3D] = simplifyOperations(std::move(operations));
         is3D_ = is3D;
         return value;

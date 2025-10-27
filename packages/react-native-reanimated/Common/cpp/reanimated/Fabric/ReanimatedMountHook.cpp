@@ -10,9 +10,7 @@ ReanimatedMountHook::ReanimatedMountHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
     const std::function<void()> &requestFlush)
-    : uiManager_(uiManager),
-      updatesRegistryManager_(updatesRegistryManager),
-      requestFlush_(requestFlush) {
+    : uiManager_(uiManager), updatesRegistryManager_(updatesRegistryManager), requestFlush_(requestFlush) {
   uiManager_->registerMountHook(*this);
 }
 

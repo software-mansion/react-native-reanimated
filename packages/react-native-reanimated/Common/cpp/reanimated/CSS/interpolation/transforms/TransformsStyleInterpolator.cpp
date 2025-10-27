@@ -14,8 +14,7 @@ TransformsStyleInterpolator::TransformsStyleInterpolator(
     const PropertyPath &propertyPath,
     const std::shared_ptr<TransformOperationInterpolators> &interpolators,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : PropertyInterpolator(propertyPath, viewStylesRepository),
-      interpolators_(interpolators) {}
+    : PropertyInterpolator(propertyPath, viewStylesRepository), interpolators_(interpolators) {}
 
 folly::dynamic TransformsStyleInterpolator::getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const {
   return viewStylesRepository_->getStyleProp(shadowNode->getTag(), propertyPath_);

@@ -14,8 +14,7 @@ TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     const double duration,
     const double delay,
     const EasingFunction &easingFunction)
-    : RawProgressProvider(timestamp, duration, delay),
-      easingFunction_(easingFunction) {}
+    : RawProgressProvider(timestamp, duration, delay), easingFunction_(easingFunction) {}
 
 TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     const double timestamp,

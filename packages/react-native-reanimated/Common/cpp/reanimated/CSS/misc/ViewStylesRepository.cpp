@@ -8,8 +8,7 @@ namespace reanimated::css {
 ViewStylesRepository::ViewStylesRepository(
     const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
     const std::shared_ptr<AnimatedPropsRegistry> &animatedPropsRegistry)
-    : staticPropsRegistry_(staticPropsRegistry),
-      animatedPropsRegistry_(animatedPropsRegistry) {}
+    : staticPropsRegistry_(staticPropsRegistry), animatedPropsRegistry_(animatedPropsRegistry) {}
 
 jsi::Value ViewStylesRepository::getNodeProp(
     const std::shared_ptr<const ShadowNode> &shadowNode,

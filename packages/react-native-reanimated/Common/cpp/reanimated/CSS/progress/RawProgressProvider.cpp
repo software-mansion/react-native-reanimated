@@ -3,9 +3,7 @@
 namespace reanimated::css {
 
 RawProgressProvider::RawProgressProvider(const double timestamp, const double duration, const double delay)
-    : duration_(duration),
-      delay_(delay),
-      creationTimestamp_(timestamp) {}
+    : duration_(duration), delay_(delay), creationTimestamp_(timestamp) {}
 
 void RawProgressProvider::setDuration(double duration) {
   duration_ = duration;
