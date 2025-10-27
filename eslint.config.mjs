@@ -50,12 +50,12 @@ const tsRules = {
 
   '@typescript-eslint/consistent-type-imports': [
     'error',
-    { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
+    { prefer: 'type-imports' },
   ],
 
   '@typescript-eslint/consistent-type-exports': [
     'error',
-    { fixMixedExportsWithInlineTypeSpecifier: true },
+    { fixMixedExportsWithInlineTypeSpecifier: false },
   ],
 
   '@typescript-eslint/no-non-null-assertion': 'off',
@@ -71,7 +71,7 @@ const tsRules = {
     {
       patterns: [
         {
-          group: ['*.native'],
+          group: ['*.native', '*.ios', '*.android', '*.web'],
           message:
             "Don't import with platform specifier, use extensionless imports.",
         },
@@ -159,29 +159,13 @@ const config = tsEslint.config(
     },
     settings: {
       'import/resolver': {
-        'babel-module': {
-          extensions: [
-            '.native.ts',
-            '.ts',
-            '.native.js',
-            '.js',
-            '.native.tsx',
-            '.tsx',
-            '.native.jsx',
-            '.jsx',
-          ],
-        },
+        'babel-module': { extensions: ['.js', '.jsx', '.ts', '.tsx'] },
       },
       react: {
         version: 'detect',
       },
       'import/parsers': {
-        '@typescript-eslint/parser': [
-          '.native.ts',
-          '.ts',
-          '.native.tsx',
-          '.tsx',
-        ],
+        '@typescript-eslint/parser': ['.ts', '.tsx'],
       },
       'import/ignore': ['react-native'],
     },
