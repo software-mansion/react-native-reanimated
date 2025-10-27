@@ -110,7 +110,7 @@ public class NativeProxy {
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 
-  public native void performOperations();
+  public native void performOperations(boolean isTriggeredByEvent);
 
   protected native void installJSIBindings();
 
@@ -287,21 +287,6 @@ public class NativeProxy {
       case CMD_TRANSFORM_PERSPECTIVE -> "perspective";
       default -> throw new RuntimeException("Unknown transform command: " + transformCommand);
     };
-  }
-
-  @DoNotStrip
-  public boolean preserveMountedTags(int[] tags) {
-    if (!UiThreadUtil.isOnUiThread()) {
-      return false;
-    }
-
-    for (int i = 0; i < tags.length; i++) {
-      if (mFabricUIManager.resolveView(tags[i]) == null) {
-        tags[i] = -1;
-      }
-    }
-
-    return true;
   }
 
   @DoNotStrip
@@ -503,7 +488,7 @@ public class NativeProxy {
   void maybeFlushUIUpdatesQueue() {
     UiThreadUtil.assertOnUiThread();
     if (!mNodesManager.isAnimationRunning()) {
-      mNodesManager.performOperations();
+      mNodesManager.performOperations(false);
     }
   }
 }

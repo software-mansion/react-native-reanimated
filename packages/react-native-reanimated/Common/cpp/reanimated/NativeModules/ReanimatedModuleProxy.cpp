@@ -65,11 +65,9 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
           staticPropsRegistry_,
           getAnimationTimestamp_)),
+#ifdef ANDROID
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
-#ifdef ANDROID
-      filterUnmountedTagsFunction_(
-          platformDepMethodsHolder.filterUnmountedTagsFunction),
 #endif // ANDROID
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
@@ -600,7 +598,7 @@ bool ReanimatedModuleProxy::handleRawEvent(
   // (res == true), but for now handleEvent always returns false. Thankfully,
   // performOperations does not trigger a lot of code if there is nothing to
   // be done so this is fine for now.
-  performOperations();
+  performOperations(true);
   return res;
 }
 
@@ -644,6 +642,7 @@ void ReanimatedModuleProxy::maybeRunCSSLoop() {
 }
 
 double ReanimatedModuleProxy::getCssTimestamp() {
+  return currentCssTimestamp_;
   if (cssLoopRunning_) {
     return currentCssTimestamp_;
   }
@@ -651,15 +650,24 @@ double ReanimatedModuleProxy::getCssTimestamp() {
   return currentCssTimestamp_;
 }
 
-void ReanimatedModuleProxy::performOperations() {
+void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
-  auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
-  for (const auto surfaceId : flushRequestsCopy) {
-    uiManager_->getShadowTreeRegistry().visit(
-        surfaceId, [](const ShadowTree &shadowTree) {
-          shadowTree.notifyDelegatesOfUpdates();
-        });
+  // auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
+  // for (const auto surfaceId : flushRequestsCopy) {
+  //   uiManager_->getShadowTreeRegistry().visit(
+  //       surfaceId, [](const ShadowTree &shadowTree) {
+  //         shadowTree.notifyDelegatesOfUpdates();
+  //       });
+
+  if (!isTriggeredByEvent) {
+      auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
+      for (const auto surfaceId: flushRequestsCopy) {
+          uiManager_->getShadowTreeRegistry().visit(
+                  surfaceId, [](const ShadowTree &shadowTree) {
+                      shadowTree.notifyDelegatesOfUpdates();
+                  });
+      }
   }
 
   jsi::Runtime &rt =
@@ -1101,67 +1109,6 @@ void ReanimatedModuleProxy::performOperations() {
     }
 #endif // ANDROID
 
-#if __APPLE__
-    if constexpr (StaticFeatureFlags::getFlag(
-                      "IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
-      static const std::unordered_set<std::string> synchronousProps = {
-          "opacity",
-          "elevation",
-          "zIndex",
-          "shadowOpacity",
-          "shadowRadius",
-          "backgroundColor",
-          // "color", // TODO: fix animating color of Animated.Text
-          "tintColor",
-          "borderRadius",
-          "borderTopLeftRadius",
-          "borderTopRightRadius",
-          "borderTopStartRadius",
-          "borderTopEndRadius",
-          "borderBottomLeftRadius",
-          "borderBottomRightRadius",
-          "borderBottomStartRadius",
-          "borderBottomEndRadius",
-          "borderStartStartRadius",
-          "borderStartEndRadius",
-          "borderEndStartRadius",
-          "borderEndEndRadius",
-          "borderColor",
-          "borderTopColor",
-          "borderBottomColor",
-          "borderLeftColor",
-          "borderRightColor",
-          "borderStartColor",
-          "borderEndColor",
-          "transform",
-      };
-
-      UpdatesBatch synchronousUpdatesBatch, shadowTreeUpdatesBatch;
-
-      for (const auto &[shadowNode, props] : updatesBatch) {
-        bool hasOnlySynchronousProps = true;
-        for (const auto &key : props.keys()) {
-          const auto keyStr = key.asString();
-          if (!synchronousProps.contains(keyStr)) {
-            hasOnlySynchronousProps = false;
-            break;
-          }
-        }
-        if (hasOnlySynchronousProps) {
-          synchronousUpdatesBatch.emplace_back(shadowNode, props);
-        } else {
-          shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
-        }
-      }
-
-      for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
-        synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
-      }
-
-      updatesBatch = std::move(shadowTreeUpdatesBatch);
-    }
-#endif // __APPLE__
-
     if ((updatesBatch.size() > 0) &&
         updatesRegistryManager_->shouldReanimatedSkipCommit()) {
       updatesRegistryManager_->pleaseCommitAfterPause();
@@ -1376,14 +1323,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         componentDescriptorRegistry,
         scheduler->getContextContainer(),
         workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
-        workletsModuleProxy_->getUIScheduler()
-#ifdef ANDROID
-            ,
-        filterUnmountedTagsFunction_,
-        uiManager_,
-        jsInvoker_
-#endif
-    );
+        workletsModuleProxy_->getUIScheduler());
   }
 }
 
