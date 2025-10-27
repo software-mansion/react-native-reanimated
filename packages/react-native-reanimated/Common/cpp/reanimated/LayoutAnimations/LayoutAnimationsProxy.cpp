@@ -26,6 +26,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " "
             << surfaceId << std::endl;
 #endif
+
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
@@ -100,7 +101,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(
 
 std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
     int tag,
-    bool shouldRemove) {
+    bool shouldRemove) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "end layout animation for " << tag << " - should remove "
             << shouldRemove << std::endl;
@@ -341,12 +342,19 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
         startEnteringAnimation(tag, mutation);
         filteredMutations.push_back(mutation);
 
-        // temporarily set opacity to 0 to prevent flickering on android
-        std::shared_ptr<ShadowView> newView =
-            cloneViewWithoutOpacity(mutation, propsParserContext);
+        // TODO: The opacity set to 0 is temporarily turned off for the CA
+        // animations to work properly for entering temporarily set opacity to 0
+        // to prevent flickering on android
+        //        std::shared_ptr<ShadowView> newView =
+        //            cloneViewWithoutOpacity(mutation, propsParserContext);
+        //        auto x = newView->tag;
 
+        //        filteredMutations.push_back(ShadowViewMutation::UpdateMutation(
+        //            mutation.newChildShadowView, *newView, mutationParent));
         filteredMutations.push_back(ShadowViewMutation::UpdateMutation(
-            mutation.newChildShadowView, *newView, mutationParent));
+            mutation.newChildShadowView,
+            mutation.newChildShadowView,
+            mutationParent));
         break;
       }
 
@@ -679,7 +687,8 @@ void LayoutAnimationsProxy::startEnteringAnimation(
                               current,
                               mutation,
                               opacity,
-                              tag]() {
+                              tag,
+                              this]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -695,20 +704,50 @@ void LayoutAnimationsProxy::startEnteringAnimation(
       window = strongThis->surfaceManager.getWindow(
           mutation.newChildShadowView.surfaceId);
     }
+    auto oldView = mutation.oldChildShadowView;
+    auto newView = mutation.newChildShadowView;
 
-    Snapshot values(mutation.newChildShadowView, window);
-    auto &uiRuntime = strongThis->uiRuntime_;
-    jsi::Object yogaValues(uiRuntime);
-    yogaValues.setProperty(uiRuntime, "targetOriginX", values.x);
-    yogaValues.setProperty(uiRuntime, "targetGlobalOriginX", values.x);
-    yogaValues.setProperty(uiRuntime, "targetOriginY", values.y);
-    yogaValues.setProperty(uiRuntime, "targetGlobalOriginY", values.y);
-    yogaValues.setProperty(uiRuntime, "targetWidth", values.width);
-    yogaValues.setProperty(uiRuntime, "targetHeight", values.height);
-    yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
-    yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
-    strongThis->layoutAnimationsManager_->startLayoutAnimation(
-        uiRuntime, tag, LayoutAnimationType::ENTERING, yogaValues);
+    //    Snapshot values(mutation.newChildShadowView, window);
+    //    auto &uiRuntime = strongThis->uiRuntime_;
+    //    jsi::Object yogaValues(uiRuntime);
+    //    yogaValues.setProperty(uiRuntime, "targetOriginX", values.x);
+    //    yogaValues.setProperty(uiRuntime, "targetGlobalOriginX", values.x);
+    //    yogaValues.setProperty(uiRuntime, "targetOriginY", values.y);
+    //    yogaValues.setProperty(uiRuntime, "targetGlobalOriginY", values.y);
+    //    yogaValues.setProperty(uiRuntime, "targetWidth", values.width);
+    //    yogaValues.setProperty(uiRuntime, "targetHeight", values.height);
+    //    yogaValues.setProperty(uiRuntime, "windowWidth", values.windowWidth);
+    //    yogaValues.setProperty(uiRuntime, "windowHeight",
+    //    values.windowHeight);
+    //    strongThis->layoutAnimationsManager_->startLayoutAnimation(
+    //        uiRuntime, tag, LayoutAnimationType::ENTERING, yogaValues);
+
+    facebook::react::Rect sourceFrame =
+        mutation.newChildShadowView.layoutMetrics.frame;
+    sourceFrame.origin.x -= window.width;
+
+    // TODO: Could we just move the runCoreAnimationForView_ field to
+    // layoutAnimationsManager? would it make sense?
+    strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
+        tag,
+        LayoutAnimationType::ENTERING,
+        [this, tag, sourceFrame, mutation](
+            const LayoutAnimationRawConfig &config) {
+          // It is needed to delay the trigger of the entering CA animation
+          // Without this, the animation attempts to animate a view that is not
+          // yet mounted
+          dispatch_async(dispatch_get_main_queue(), ^{
+            runCoreAnimationForView_(
+                tag,
+                sourceFrame,
+                mutation.newChildShadowView.layoutMetrics.frame,
+                config,
+                [this, tag](bool finished) {
+                  this->endLayoutAnimation(tag, false);
+                },
+                "enteringAnimation");
+          });
+        });
   });
 }
 
@@ -721,7 +760,7 @@ void LayoutAnimationsProxy::startExitingAnimation(
   auto surfaceId = mutation.oldChildShadowView.surfaceId;
 
   uiScheduler_->scheduleOnUI(
-      [weakThis = weak_from_this(), tag, mutation, surfaceId]() {
+      [weakThis = weak_from_this(), tag, mutation, surfaceId, this]() {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
@@ -750,6 +789,20 @@ void LayoutAnimationsProxy::startExitingAnimation(
         yogaValues.setProperty(uiRuntime, "windowHeight", values.windowHeight);
         strongThis->layoutAnimationsManager_->startLayoutAnimation(
             uiRuntime, tag, LayoutAnimationType::EXITING, yogaValues);
+
+        //        facebook::react::Rect destinationFrame =
+        //            mutation.oldChildShadowView.layoutMetrics.frame;
+        //        destinationFrame.origin.x = values.windowWidth;
+        //
+        //        runCoreAnimationForView_(
+        //            tag,
+        //            mutation.oldChildShadowView.layoutMetrics.frame,
+        //            destinationFrame,
+        //            [this, tag](bool finished) {
+        //              this->endLayoutAnimation(tag, finished);
+        //            },
+        //            "exitingAnimation");
+
         strongThis->layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
       });
 }
@@ -765,13 +818,15 @@ void LayoutAnimationsProxy::startLayoutAnimation(
   uiScheduler_->scheduleOnUI([weakThis = weak_from_this(),
                               mutation,
                               surfaceId,
-                              tag]() {
+                              tag,
+                              this]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
     }
 
     auto oldView = mutation.oldChildShadowView;
+    auto newView = mutation.newChildShadowView;
     Rect window{};
     {
       auto &mutex = strongThis->mutex;
@@ -802,6 +857,15 @@ void LayoutAnimationsProxy::startLayoutAnimation(
         uiRuntime, "windowHeight", targetValues.windowHeight);
     strongThis->layoutAnimationsManager_->startLayoutAnimation(
         uiRuntime, tag, LayoutAnimationType::LAYOUT, yogaValues);
+
+    //        runCoreAnimationForView_(
+    //            tag,
+    //            mutation.oldChildShadowView.layoutMetrics.frame,
+    //            mutation.newChildShadowView.layoutMetrics.frame,
+    //            [this, tag](bool finished) {
+    //              this->endLayoutAnimation(tag, false);
+    //            },
+    //            "layoutAnimation");
   });
 }
 

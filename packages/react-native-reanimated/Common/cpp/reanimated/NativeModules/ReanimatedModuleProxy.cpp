@@ -71,6 +71,10 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       filterUnmountedTagsFunction_(
           platformDepMethodsHolder.filterUnmountedTagsFunction),
 #endif // ANDROID
+#if __APPLE__
+      runCoreAnimationForViewFunction_(
+          platformDepMethodsHolder.runCoreAnimationForView),
+#endif // __APPLE__
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
@@ -332,7 +336,9 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     batchItem.tag = item.getProperty(rt, "viewTag").asNumber();
     batchItem.type = static_cast<LayoutAnimationType>(
         item.getProperty(rt, "type").asNumber());
+
     auto config = item.getProperty(rt, "config");
+
     if (config.isUndefined()) {
       batchItem.config = nullptr;
     } else {
@@ -340,6 +346,18 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
           rt,
           config,
           "[Reanimated] Layout animation config must be an object.");
+    }
+
+    auto rawConfig = item.getProperty(rt, "rawConfig");
+
+    if (rawConfig.isUndefined()) {
+      batchItem.rawConfig = nullptr;
+    } else {
+      const LayoutAnimationRawConfig &rawConfigObject =
+          LayoutAnimationsManager::extractRawConfigValues(
+              rt, rawConfig.asObject(rt));
+      batchItem.rawConfig =
+          std::make_shared<LayoutAnimationRawConfig>(rawConfigObject);
     }
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
@@ -1383,6 +1401,10 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         uiManager_,
         jsInvoker_
 #endif
+#if __APPLE__
+        ,
+        runCoreAnimationForViewFunction_
+#endif // __APPLE__
     );
   }
 }

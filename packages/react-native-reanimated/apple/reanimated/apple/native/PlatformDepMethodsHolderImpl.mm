@@ -104,6 +104,26 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
   return unsubscribeFromKeyboardEventsFunction;
 }
 
+RunCoreAnimationForView makeRunCoreAnimationForView(REANodesManager *nodesManager)
+{
+  auto runCoreAnimationForView = [nodesManager](
+                                     const int viewTag,
+                                     const facebook::react::Rect &oldFrame,
+                                     const facebook::react::Rect &newFrame,
+                                     const reanimated::LayoutAnimationRawConfig &config,
+                                     std::function<void(bool)> completion,
+                                     const std::string &animationKey) {
+    [nodesManager runCoreAnimationForView:viewTag
+                                 oldFrame:oldFrame
+                                 newFrame:newFrame
+                                   config:config
+                               completion:completion
+                             animationKey:[NSString stringWithCString:animationKey.c_str()
+                                                             encoding:[NSString defaultCStringEncoding]]];
+  };
+  return runCoreAnimationForView;
+}
+
 PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleRegistry, REANodesManager *nodesManager)
 {
   auto requestRender = makeRequestRender(nodesManager);
@@ -128,6 +148,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   auto maybeFlushUIUpdatesQueueFunction = makeMaybeFlushUIUpdatesQueueFunction(nodesManager);
 
+  auto runCoreAnimationForView = makeRunCoreAnimationForView(nodesManager);
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       synchronouslyUpdateUIPropsFunction,
@@ -138,6 +160,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUIUpdatesQueueFunction,
+      runCoreAnimationForView,
   };
   return platformDepMethodsHolder;
 }

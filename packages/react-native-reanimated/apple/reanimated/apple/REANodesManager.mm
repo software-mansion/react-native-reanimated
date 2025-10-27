@@ -1,5 +1,6 @@
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
+#import <reanimated/apple/REACoreAnimationDelegate.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/REAUIView.h>
 
@@ -179,6 +180,81 @@ using namespace facebook::react;
   // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
   // so that's why we need to call `finalizeUpdates` here.
   [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
+}
+
+- (void)runCoreAnimationForView:(ReactTag)viewTag
+                       oldFrame:(const facebook::react::Rect &)oldFrame
+                       newFrame:(const facebook::react::Rect &)newFrame
+                         config:(const reanimated::LayoutAnimationRawConfig &)config
+                     completion:(std::function<void(bool)>)completion
+                   animationKey:(NSString *)animationKey
+{
+  RCTSurfacePresenter *surfacePresenter = self.surfacePresenter;
+  RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
+  REAUIView<RCTComponentViewProtocol> *componentView =
+      [componentViewRegistry findComponentViewWithTag:static_cast<Tag>(viewTag)];
+
+  bool needsXAnimation = oldFrame.origin.x != newFrame.origin.x;
+  bool needsYAnimation = oldFrame.origin.y != newFrame.origin.y;
+
+  if (!needsXAnimation && !needsYAnimation) {
+    return;
+  }
+
+  CGRect presentationLayerFrame = componentView.layer.presentationLayer.frame;
+  CGFloat centerOffsetX = presentationLayerFrame.size.width / 2;
+  CGFloat centerOffsetY = presentationLayerFrame.size.height / 2;
+
+  // We are using the presentation layer's frame instead of the oldFrame to properly handle
+  // cases where animation is interrupted mid-way and replaced by the next one.
+  // In such cases the presentation layer allows us to start the new animation from
+  // the current visible position of the view and avoid "jumps"
+  CGFloat oldX = presentationLayerFrame.origin.x + centerOffsetX;
+  CGFloat oldY = presentationLayerFrame.origin.y + centerOffsetY;
+  CGFloat newX = newFrame.origin.x + centerOffsetX;
+  CGFloat newY = newFrame.origin.y + centerOffsetY;
+
+  // TODO: Handle this properly and remove all the hardcoded values. There needs to be some place that either populates
+  // the frames with proper values based on the type of layout animation and/or tells this function here to use the
+  // presentation frame or oldFrame
+  // TODO: Ideally this function should just accept specific values and properties that it should animate and be
+  // responsible only for that - clear expectable behavior based on the input.
+  if ([animationKey isEqual:@"enteringAnimation"]) {
+    oldX = centerOffsetX - 400;
+  }
+
+  NSMutableArray *animations = [NSMutableArray array];
+
+  if (needsXAnimation) {
+    CABasicAnimation *xAnimation = [CABasicAnimation animationWithKeyPath:@"position.x"];
+    xAnimation.fromValue = @(oldX);
+    xAnimation.toValue = @(newX);
+    [animations addObject:xAnimation];
+  }
+
+  if (needsYAnimation) {
+    CABasicAnimation *yAnimation = [CABasicAnimation animationWithKeyPath:@"position.y"];
+    yAnimation.fromValue = @(oldY);
+    yAnimation.toValue = @(newY);
+    [animations addObject:yAnimation];
+  }
+
+  componentView.layer.position = CGPointMake(needsXAnimation ? newX : oldX, needsYAnimation ? newY : oldY);
+
+  CAAnimationGroup *animationGroup = [CAAnimationGroup animation];
+  animationGroup.animations = animations;
+
+  // TODO: Set the other animation details, figure out defaults and where to put them (not here probably)
+  animationGroup.duration = config.values->duration.value_or(1000) / 1000;
+
+  REACoreAnimationDelegate *delegate =
+      [REACoreAnimationDelegate delegateWithStart:nil
+                                             stop:^(CAAnimation *animation, BOOL finished) {
+                                               completion(finished);
+                                             }];
+  animationGroup.delegate = delegate;
+
+  [componentView.layer addAnimation:animationGroup forKey:animationKey];
 }
 
 @end

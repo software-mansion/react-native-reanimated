@@ -3,6 +3,8 @@
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <react/renderer/core/ReactPrimitives.h>
+#include <react/renderer/graphics/Rect.h>
+#import <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
 #include <memory>
 #include <string>
@@ -53,6 +55,13 @@ using KeyboardEventSubscribeFunction =
     std::function<int(std::function<void(int, int)>, bool, bool)>;
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
+using RunCoreAnimationForView = std::function<void(
+    const int,
+    const facebook::react::Rect &,
+    const facebook::react::Rect &,
+    const reanimated::LayoutAnimationRawConfig &,
+    std::function<void(bool)> &&,
+    const std::string &)>;
 
 struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
@@ -67,6 +76,9 @@ struct PlatformDepMethodsHolder {
   KeyboardEventSubscribeFunction subscribeForKeyboardEvents;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEvents;
   MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction;
+#if __APPLE__
+  RunCoreAnimationForView runCoreAnimationForView;
+#endif // __APPLE__
 };
 
 } // namespace reanimated

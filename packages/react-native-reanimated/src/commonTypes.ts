@@ -162,6 +162,7 @@ export interface LayoutAnimationBatchItem {
   viewTag: number;
   type: LayoutAnimationType;
   config: SerializableRef<Keyframe | LayoutAnimationFunction> | undefined;
+  rawConfig?: AnimationRawConfig;
 }
 
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
@@ -482,3 +483,10 @@ export type InternalHostInstance = Partial<
 >;
 
 export type InstanceOrElement = InternalHostInstance | ElementType | Component;
+
+export interface AnimationRawConfig {
+  presetName?: string;
+  values?: BaseBuilderAnimationConfig & {
+    delay?: number;
+  };
+}

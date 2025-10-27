@@ -247,6 +247,7 @@ class ReanimatedModuleProxy
 
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
   const PreserveMountedTagsFunction filterUnmountedTagsFunction_;
+  const RunCoreAnimationForView runCoreAnimationForViewFunction_;
 
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;

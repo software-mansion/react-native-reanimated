@@ -10,15 +10,15 @@ void LayoutAnimationsManager::configureAnimationBatch(
     const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   for (auto layoutAnimationConfig : layoutAnimationsBatch) {
-    const auto &[tag, type, config] = layoutAnimationConfig;
+    const auto &[tag, type, config, rawConfig] = layoutAnimationConfig;
     if (type == ENTERING) {
-      enteringAnimationsForNativeID_[tag] = config;
+      enteringAnimationsForNativeID_[tag] = std::make_pair(config, rawConfig);
       continue;
     }
     if (config == nullptr) {
       getConfigsForType(type).erase(tag);
     } else {
-      getConfigsForType(type)[tag] = config;
+      getConfigsForType(type)[tag] = std::make_pair(config, rawConfig);
     }
   }
 }
@@ -59,14 +59,18 @@ void LayoutAnimationsManager::startLayoutAnimation(
     const int tag,
     const LayoutAnimationType type,
     const jsi::Object &values) {
-  std::shared_ptr<Serializable> config;
+  std::pair<
+      std::shared_ptr<Serializable>,
+      std::shared_ptr<LayoutAnimationRawConfig>>
+      configPair;
   {
     auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
     if (!getConfigsForType(type).contains(tag)) {
       return;
     }
-    config = getConfigsForType(type)[tag];
+    configPair = getConfigsForType(type)[tag];
   }
+
   // TODO: cache the following!!
   jsi::Value layoutAnimationRepositoryAsValue =
       rt.global()
@@ -80,7 +84,30 @@ void LayoutAnimationsManager::startLayoutAnimation(
       jsi::Value(tag),
       jsi::Value(static_cast<int>(type)),
       values,
-      config->toJSValue(rt));
+      configPair.first->toJSValue(rt));
+}
+
+void LayoutAnimationsManager::startNativeLayoutAnimation(
+    const int tag,
+    const LayoutAnimationType type,
+    std::function<void(const LayoutAnimationRawConfig &)>
+        executeNativeAnimation) {
+  std::pair<
+      std::shared_ptr<Serializable>,
+      std::shared_ptr<LayoutAnimationRawConfig>>
+      configPair;
+  {
+    auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+    if (!getConfigsForType(type).contains(tag)) {
+      return;
+    }
+    configPair = getConfigsForType(type)[tag];
+  }
+
+  // TODO: This has to be done differently
+  if (configPair.second) {
+    executeNativeAnimation(*configPair.second);
+  }
 }
 
 void LayoutAnimationsManager::cancelLayoutAnimation(
@@ -101,13 +128,17 @@ void LayoutAnimationsManager::transferConfigFromNativeID(
     const int tag) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   auto config = enteringAnimationsForNativeID_[nativeId];
-  if (config) {
+  if (config.first) {
     enteringAnimations_.insert_or_assign(tag, config);
   }
   enteringAnimationsForNativeID_.erase(nativeId);
 }
 
-std::unordered_map<int, std::shared_ptr<Serializable>> &
+std::unordered_map<
+    int,
+    std::pair<
+        std::shared_ptr<Serializable>,
+        std::shared_ptr<LayoutAnimationRawConfig>>> &
 LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
   switch (type) {
     case ENTERING:
@@ -119,6 +150,39 @@ LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
     default:
       throw std::invalid_argument("[Reanimated] Unknown layout animation type");
   }
+}
+
+const LayoutAnimationRawConfig LayoutAnimationsManager::extractRawConfigValues(
+    jsi::Runtime &rt,
+    const jsi::Object &rawConfig) {
+  std::optional<std::string> presetName;
+  std::optional<LayoutAnimationRawConfigValues> values;
+
+  jsi::Value presetNameProperty = rawConfig.getProperty(rt, "presetName");
+  if (presetNameProperty.isUndefined()) {
+    presetName = std::nullopt;
+  } else {
+    presetName = presetNameProperty.asString(rt).utf8(rt);
+  }
+
+  jsi::Value configValuesProperty = rawConfig.getProperty(rt, "values");
+  if (configValuesProperty.isUndefined()) {
+    values = std::nullopt;
+
+    return LayoutAnimationRawConfig(
+        {.presetName = presetName, .values = values});
+  }
+
+  jsi::Object configValues = configValuesProperty.asObject(rt);
+
+  jsi::Value valueProperty = configValues.getProperty(rt, "duration");
+  std::optional<double> duration = !valueProperty.isUndefined()
+      ? std::optional<double>(valueProperty.asNumber())
+      : std::nullopt;
+
+  return LayoutAnimationRawConfig(
+      {.presetName = presetName,
+       .values = LayoutAnimationRawConfigValues({.duration = duration})});
 }
 
 } // namespace reanimated

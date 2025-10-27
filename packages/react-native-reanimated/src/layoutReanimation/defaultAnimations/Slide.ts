@@ -84,6 +84,14 @@ export class SlideInLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
+    this.rawConfig = {
+      presetName: SlideInLeft.presetName,
+      values: {
+        ...config,
+        delay,
+      },
+    };
+
     return (values) => {
       'worklet';
       return {
