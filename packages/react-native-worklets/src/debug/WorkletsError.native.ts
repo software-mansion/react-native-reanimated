@@ -22,9 +22,9 @@ function WorkletsErrorConstructor(message?: string): IWorkletsError {
  */
 export function registerWorkletsError() {
   'worklet';
-  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
+  if ((globalThis.__RUNTIME_KIND as RuntimeKind) !== RuntimeKind.ReactNative) {
     (globalThis as Record<string, unknown>).WorkletsError =
-      WorkletsErrorConstructor as IWorkletsErrorConstructor;
+      WorkletsErrorConstructor;
   }
 }
 
