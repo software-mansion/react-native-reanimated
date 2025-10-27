@@ -6,8 +6,7 @@
 namespace reanimated::css {
 
 template <TransformOp TOperation>
-struct ScaleOperationBase
-    : public TransformOperationBase<TOperation, CSSDouble> {
+struct ScaleOperationBase : public TransformOperationBase<TOperation, CSSDouble> {
   using TransformOperationBase<TOperation, CSSDouble>::TransformOperationBase;
 
   explicit ScaleOperationBase(const double value);

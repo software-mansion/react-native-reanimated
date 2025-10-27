@@ -15,6 +15,8 @@
 #include <reanimated/CSS/svg/values/SVGLength.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
+#include <memory>
+
 namespace reanimated::css {
 
 template <typename... AllowedTypes>
@@ -22,10 +24,7 @@ SimpleValueInterpolator<AllowedTypes...>::SimpleValueInterpolator(
     const PropertyPath &propertyPath,
     const ValueType &defaultStyleValue,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : ValueInterpolator(
-          propertyPath,
-          std::make_shared<ValueType>(defaultStyleValue),
-          viewStylesRepository) {}
+    : ValueInterpolator(propertyPath, std::make_shared<ValueType>(defaultStyleValue), viewStylesRepository) {}
 
 template <typename... AllowedTypes>
 std::shared_ptr<CSSValue> SimpleValueInterpolator<AllowedTypes...>::createValue(
@@ -35,8 +34,7 @@ std::shared_ptr<CSSValue> SimpleValueInterpolator<AllowedTypes...>::createValue(
 }
 
 template <typename... AllowedTypes>
-std::shared_ptr<CSSValue> SimpleValueInterpolator<AllowedTypes...>::createValue(
-    const folly::dynamic &value) const {
+std::shared_ptr<CSSValue> SimpleValueInterpolator<AllowedTypes...>::createValue(const folly::dynamic &value) const {
   return std::make_shared<ValueType>(value);
 }
 

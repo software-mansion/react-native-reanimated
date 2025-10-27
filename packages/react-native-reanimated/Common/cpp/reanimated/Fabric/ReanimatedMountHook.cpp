@@ -2,15 +2,15 @@
 #include <reanimated/Fabric/ReanimatedMountHook.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
+#include <memory>
+
 namespace reanimated {
 
 ReanimatedMountHook::ReanimatedMountHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
     const std::function<void()> &requestFlush)
-    : uiManager_(uiManager),
-      updatesRegistryManager_(updatesRegistryManager),
-      requestFlush_(requestFlush) {
+    : uiManager_(uiManager), updatesRegistryManager_(updatesRegistryManager), requestFlush_(requestFlush) {
   uiManager_->registerMountHook(*this);
 }
 
@@ -28,9 +28,8 @@ void ReanimatedMountHook::shadowTreeDidMount(
     ) noexcept {
   ReanimatedSystraceSection s("ReanimatedMountHook::shadowTreeDidMount");
 
-  auto reaShadowNode =
-      std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
-          std::const_pointer_cast<RootShadowNode>(rootShadowNode));
+  auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
+      std::const_pointer_cast<RootShadowNode>(rootShadowNode));
 
   if (reaShadowNode->hasReanimatedMountTrait()) {
     // We mark reanimated commits with ReanimatedMountTrait. We don't want other

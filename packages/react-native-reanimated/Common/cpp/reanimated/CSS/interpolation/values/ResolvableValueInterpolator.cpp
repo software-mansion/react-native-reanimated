@@ -8,6 +8,8 @@
 #include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
 
+#include <memory>
+
 namespace reanimated::css {
 
 template <typename... AllowedTypes>
@@ -16,10 +18,7 @@ ResolvableValueInterpolator<AllowedTypes...>::ResolvableValueInterpolator(
     const ValueType &defaultStyleValue,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const ResolvableValueInterpolatorConfig &config)
-    : SimpleValueInterpolator<AllowedTypes...>(
-          propertyPath,
-          defaultStyleValue,
-          viewStylesRepository),
+    : SimpleValueInterpolator<AllowedTypes...>(propertyPath, defaultStyleValue, viewStylesRepository),
       config_(config) {}
 
 template <typename... AllowedTypes>

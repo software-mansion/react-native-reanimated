@@ -1,15 +1,15 @@
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
+#include <string>
+#include <vector>
+
 namespace reanimated::css {
 
 SVGStrokeDashArray::SVGStrokeDashArray() : values() {}
 
-SVGStrokeDashArray::SVGStrokeDashArray(const std::vector<SVGLength> &values)
-    : values(values) {}
+SVGStrokeDashArray::SVGStrokeDashArray(const std::vector<SVGLength> &values) : values(values) {}
 
-SVGStrokeDashArray::SVGStrokeDashArray(
-    jsi::Runtime &rt,
-    const jsi::Value &jsiValue) {
+SVGStrokeDashArray::SVGStrokeDashArray(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   const auto &array = jsiValue.asObject(rt).asArray(rt);
   const auto arraySize = array.size(rt);
   values.reserve(arraySize);
@@ -24,9 +24,7 @@ SVGStrokeDashArray::SVGStrokeDashArray(const folly::dynamic &value) {
   }
 }
 
-bool SVGStrokeDashArray::canConstruct(
-    jsi::Runtime &rt,
-    const jsi::Value &jsiValue) {
+bool SVGStrokeDashArray::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   if (!jsiValue.isObject() || !jsiValue.asObject(rt).isArray(rt)) {
     return false;
   }
@@ -41,9 +39,7 @@ bool SVGStrokeDashArray::canConstruct(
 
 bool SVGStrokeDashArray::canConstruct(const folly::dynamic &value) {
   return value.isArray() &&
-      std::all_of(value.begin(), value.end(), [](const auto &value) {
-           return SVGLength::canConstruct(value);
-         });
+      std::all_of(value.begin(), value.end(), [](const auto &value) { return SVGLength::canConstruct(value); });
 }
 
 folly::dynamic SVGStrokeDashArray::toDynamic() const {
@@ -68,9 +64,7 @@ std::string SVGStrokeDashArray::toString() const {
   return ss.str();
 }
 
-SVGStrokeDashArray SVGStrokeDashArray::interpolate(
-    double progress,
-    const SVGStrokeDashArray &to) const {
+SVGStrokeDashArray SVGStrokeDashArray::interpolate(double progress, const SVGStrokeDashArray &to) const {
   std::vector<SVGLength> result;
   auto fromValues = values;
   auto toValues = to.values;
@@ -94,8 +88,7 @@ SVGStrokeDashArray SVGStrokeDashArray::interpolate(
   result.reserve(resultSize);
 
   for (size_t i = 0; i < resultSize; i++) {
-    result.emplace_back(
-        fromValues[i % fromSize].interpolate(progress, toValues[i % toSize]));
+    result.emplace_back(fromValues[i % fromSize].interpolate(progress, toValues[i % toSize]));
   }
 
   return SVGStrokeDashArray(result);
@@ -107,9 +100,7 @@ bool SVGStrokeDashArray::operator==(const SVGStrokeDashArray &other) const {
 
 #ifndef NDEBUG
 
-std::ostream &operator<<(
-    std::ostream &os,
-    const SVGStrokeDashArray &strokeDashArray) {
+std::ostream &operator<<(std::ostream &os, const SVGStrokeDashArray &strokeDashArray) {
   os << "SVGStrokeDashArray(" << strokeDashArray.toString() << ")";
   return os;
 }
