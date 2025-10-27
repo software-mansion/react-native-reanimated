@@ -159,7 +159,18 @@ const config = tsEslint.config(
     },
     settings: {
       'import/resolver': {
-        'babel-module': { extensions: ['.js', '.jsx', '.ts', '.tsx'] },
+        'babel-module': {
+          extensions: [
+            '.js',
+            '.jsx',
+            '.ts',
+            '.tsx',
+            '.native.js',
+            '.native.jsx',
+            '.native.ts',
+            '.native.tsx',
+          ],
+        },
       },
       react: {
         version: 'detect',

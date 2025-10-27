@@ -18,11 +18,6 @@ import type {
   Synchronizable,
 } from './types';
 
-// for web and jest environments this file provides a stub implementation
-// where no serializable references are used. Instead, the objects themselves are used
-// instead of serializable references, because of the fact that we don't have to deal with
-// running the code on separate VMs.
-
 const MAGIC_KEY = 'REANIMATED_MAGIC_KEY';
 
 function isHostObject(value: NonNullable<object>) {
