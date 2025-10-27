@@ -3,6 +3,7 @@ import {
   convertPropertiesToArrays,
   type ConvertValuesToArrays,
   kebabizeCamelCase,
+  maybeAddSuffix,
 } from '../../../common';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
 import type {
@@ -11,6 +12,7 @@ import type {
   ExistingCSSAnimationProperties,
   ICSSAnimationsManager,
 } from '../../types';
+import { normalizeTimeUnit } from '../../utils';
 import { processKeyframeDefinitions } from '../animationParser';
 import {
   configureWebCSSAnimations,
@@ -28,6 +30,8 @@ const isCSSKeyframesRuleImpl = (
 type ProcessedAnimation = {
   keyframesRule: CSSKeyframesRuleImpl;
   removable: boolean;
+  creationTimestamp: number;
+  elapsedTime?: number;
 };
 
 type ProcessedSettings = ConvertValuesToArrays<CSSAnimationSettings>;
@@ -37,6 +41,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
 
   // Keys are processed keyframes
   private attachedAnimations: Record<string, ProcessedAnimation> = {};
+  private unmountCleanupCalled = false;
 
   constructor(element: ReanimatedHTMLElement) {
     configureWebCSSAnimations();
@@ -58,53 +63,65 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
       return;
     }
 
+    const timestamp = Date.now();
     const processedAnimations = definitions.map((definition) => {
+      let processedAnimation: ProcessedAnimation;
+
       // If the CSSKeyframesRule instance was provided, we can just use it
       if (isCSSKeyframesRuleImpl(definition)) {
-        return { keyframesRule: definition, removable: false };
-      }
+        processedAnimation = this.attachedAnimations[
+          definition.processedKeyframes
+        ] ?? {
+          keyframesRule: definition,
+          removable: false,
+          creationTimestamp: timestamp,
+        };
+      } else {
+        // If keyframes was defined as an object, the additional processing is needed
+        const keyframes = definition as CSSAnimationKeyframes;
+        const processedKeyframes = processKeyframeDefinitions(keyframes);
 
-      // If keyframes was defined as an object, the additional processing is needed
-      const keyframes = definition as CSSAnimationKeyframes;
-      const processedKeyframes = processKeyframeDefinitions(keyframes);
-
-      // If the animation with the same keyframes was already attached, we can reuse it
-      if (this.attachedAnimations[processedKeyframes]) {
-        return {
-          keyframesRule:
-            this.attachedAnimations[processedKeyframes].keyframesRule,
+        // If the animation with the same keyframes was already attached, we can reuse it
+        // Otherwise, we need to create a new CSSKeyframesRule object
+        processedAnimation = this.attachedAnimations[processedKeyframes] ?? {
+          keyframesRule: new CSSKeyframesRuleImpl(
+            keyframes,
+            processedKeyframes
+          ),
           removable: true,
+          creationTimestamp: timestamp,
         };
       }
 
-      // Otherwise, we need to create a new CSSKeyframesRule object
-      return {
-        keyframesRule: new CSSKeyframesRuleImpl(keyframes, processedKeyframes),
-        removable: true,
-      };
+      if (this.unmountCleanupCalled) {
+        // unmountCleanup is called not only when the component truly unmounts, but also
+        // when the component is frozen. In this case, we don't want to start the animation
+        // form the beginning. To do this, we have to calculate the total elapsed time from
+        // the animation creation timestamp and shift the delay by that amount.
+        processedAnimation.elapsedTime =
+          timestamp - processedAnimation.creationTimestamp;
+      }
+
+      return processedAnimation;
     });
 
-    const animationNames = processedAnimations.map(
-      ({ keyframesRule: { name } }) => name
-    );
-
+    this.unmountCleanupCalled = false;
     this.updateAttachedAnimations(processedAnimations);
-    this.setElementAnimations(animationNames, animationSettings);
+    this.setElementAnimations(processedAnimations, animationSettings);
   }
 
   unmountCleanup(): void {
-    // We use setTimeout to ensure that the animation is removed after the
-    // component is unmounted (it puts the detach call at the end of the event loop)
-    setTimeout(this.detach.bind(this));
+    if (!this.unmountCleanupCalled) {
+      this.unmountCleanupCalled = true;
+      // We use setTimeout to ensure that the animation is removed after the
+      // component is unmounted (it puts the detach call at the end of the event loop)
+      // We just remove the animation definition from the style sheet as there is no
+      // need to clean up view props if it is removed from the DOM.
+      setTimeout(this.removeAnimationsFromStyleSheet.bind(this));
+    }
   }
 
   private detach() {
-    const attachedAnimations = Object.values(this.attachedAnimations);
-
-    if (attachedAnimations.length === 0) {
-      return;
-    }
-
     this.element.style.animationDuration = '';
     this.element.style.animationDelay = '';
     this.element.style.animationDirection = '';
@@ -112,13 +129,8 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     this.element.style.animationPlayState = '';
     this.element.style.animationTimingFunction = '';
 
-    attachedAnimations.forEach(
-      ({ keyframesRule: { name, processedKeyframes }, removable }) => {
-        if (removable && processedKeyframes) {
-          removeCSSAnimation(name);
-        }
-      }
-    );
+    this.removeAnimationsFromStyleSheet();
+    this.unmountCleanupCalled = false;
     this.attachedAnimations = {};
   }
 
@@ -150,10 +162,12 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   }
 
   private setElementAnimations(
-    animationNames: string[],
+    processedAnimations: ProcessedAnimation[],
     animationSettings: ProcessedSettings
   ) {
-    this.element.style.animationName = animationNames.join(',');
+    this.element.style.animationName = processedAnimations
+      .map(({ keyframesRule: { name } }) => name)
+      .join(',');
 
     this.element.style.animationDuration = maybeAddSuffixes(
       animationSettings,
@@ -161,11 +175,18 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
       'ms'
     ).join(',');
 
-    this.element.style.animationDelay = maybeAddSuffixes(
-      animationSettings,
-      'animationDelay',
-      'ms'
-    ).join(',');
+    const animationDelays = animationSettings.animationDelay ?? [];
+    this.element.style.animationDelay = processedAnimations
+      .map(({ elapsedTime }, i) => {
+        const providedDelay = animationDelays[i] ?? 0;
+        return maybeAddSuffix(
+          elapsedTime
+            ? (normalizeTimeUnit(providedDelay) ?? 0) - elapsedTime
+            : providedDelay,
+          'ms'
+        );
+      })
+      .join(',');
 
     if (animationSettings.animationIterationCount) {
       this.element.style.animationIterationCount =
@@ -192,5 +213,15 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
         animationSettings.animationTimingFunction
       );
     }
+  }
+
+  private removeAnimationsFromStyleSheet() {
+    Object.values(this.attachedAnimations).forEach(
+      ({ keyframesRule: { name, processedKeyframes }, removable }) => {
+        if (removable && processedKeyframes) {
+          removeCSSAnimation(name);
+        }
+      }
+    );
   }
 }

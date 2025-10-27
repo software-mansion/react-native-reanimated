@@ -1,17 +1,13 @@
 'use strict';
 import { ReanimatedError } from '../../../../common';
-import {
-  MILLISECONDS_REGEX,
-  SECONDS_REGEX,
-  VALID_PREDEFINED_TIMING_FUNCTIONS,
-} from '../../../constants';
+import { VALID_PREDEFINED_TIMING_FUNCTIONS } from '../../../constants';
 import type {
   CSSTimingFunction,
   NormalizedCSSTimingFunction,
   PredefinedTimingFunction,
 } from '../../../easing';
 import type { TimeUnit } from '../../../types';
-import { isPredefinedTimingFunction } from '../../../utils';
+import { isPredefinedTimingFunction, normalizeTimeUnit } from '../../../utils';
 
 export const ERROR_MESSAGES = {
   invalidDelay: (timeUnit: TimeUnit) =>
@@ -25,17 +21,6 @@ export const ERROR_MESSAGES = {
   invalidParametrizedTimingFunction: (timingFunction: CSSTimingFunction) =>
     `Invalid parametrized timing function "${timingFunction?.toString()}".`,
 };
-
-function normalizeTimeUnit(timeUnit: TimeUnit): number | null {
-  if (typeof timeUnit === 'number') {
-    return timeUnit;
-  } else if (MILLISECONDS_REGEX.test(timeUnit)) {
-    return parseInt(timeUnit, 10);
-  } else if (SECONDS_REGEX.test(timeUnit)) {
-    return parseFloat(timeUnit) * 1000;
-  }
-  return null;
-}
 
 export function normalizeDelay(delay: TimeUnit = 0): number {
   const delayMs = normalizeTimeUnit(delay);
