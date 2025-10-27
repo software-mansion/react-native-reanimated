@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 42 # Use alphabetical order
 ---
 
 # createSerializable
@@ -10,7 +10,10 @@ It handles various data types including primitives, objects, arrays, functions, 
 To prevent misconceptions Worklets library freezes the original value for object-like values and for arrays.
 
 ![Serializable](/img/serializable.png)
-<figcaption style={{ textAlign: 'center' }}>Serializable flow diagram</figcaption>
+
+<figcaption style={{ textAlign: 'center' }}>
+  Serializable flow diagram
+</figcaption>
 
 **Functions like `runOnUI`, `runOnRuntime`, `runOnJS`, `executeOnUIRuntimeSync` and `runOnUIAsync` automatically convert values to `Serializable` references.**
 
@@ -55,26 +58,26 @@ function createSerializable<T>(value: T): SerializableRef<T> {
 
 ## Remarks
 
-- The function automatically detects the type of the input value and applies appropriate serialization strategies. 
+- The function automatically detects the type of the input value and applies appropriate serialization strategies.
 
 Supported types:
-  | Type | Supported |
-  |------|-----------|
-  | string | ✅ |
-  | number | ✅ |
-  | boolean | ✅ |
-  | object | ✅ |
-  | array | ✅ |
-  | function (non-worklet) | ✅ |
-  | HostObject | ✅ |
-  | worklet | ✅ |
-  | Map | ✅ |
-  | Set | ✅ |
-  | ArrayBuffer | ✅ |
-  | RegExp | ✅ |
-  | Cyclic objects | ❌ |
-  | Objects with custom prototype | ❌ |
-  
+| Type | Supported |
+|------|-----------|
+| string | ✅ |
+| number | ✅ |
+| boolean | ✅ |
+| object | ✅ |
+| array | ✅ |
+| function (non-worklet) | ✅ |
+| HostObject | ✅ |
+| worklet | ✅ |
+| Map | ✅ |
+| Set | ✅ |
+| ArrayBuffer | ✅ |
+| RegExp | ✅ |
+| Cyclic objects | ❌ |
+| Objects with custom prototype | ❌ |
+
 - For objects and arrays, it recursively processes nested properties
 - The function includes cycle detection to prevent infinite recursion
 - Objects are frozen after serialization to prevent accidental modifications that won't propagate to the Serializable

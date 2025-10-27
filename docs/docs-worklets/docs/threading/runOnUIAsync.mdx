@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 1 # Use alphabetical order
 ---
 
 # runOnUIAsync
@@ -9,7 +9,7 @@ It returns a Promise of the worklet's return value. The Promise is resolved asyn
 
 ## Reference
 
-```javascript   
+```javascript
 import { runOnUIAsync } from 'react-native-worklets';
 
 // RN Runtime, JS thread
@@ -27,7 +27,7 @@ await result; // 1
 ```typescript
 function runOnUIAsync<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue
-): (...args: Args) => Promise<ReturnValue> 
+): (...args: Args) => Promise<ReturnValue>;
 ```
 
 </details>

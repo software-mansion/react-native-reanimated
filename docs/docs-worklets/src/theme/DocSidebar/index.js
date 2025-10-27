@@ -14,14 +14,25 @@ export default function DocSidebarWrapper(props) {
   };
 
   const newItems = [];
-  const experimentalItems = ['shared-element-transitions/overview'];
+  const experimentalItems = [];
   const unreleasedItems = [];
+  const deprecatedItems = [
+    'threading/callMicrotasks',
+    'threading/executeOnUIRuntimeSync',
+    'threading/runOnJS',
+    'threading/runOnRuntime',
+    'threading/runOnUI',
+    'memory/makeShareable',
+    'memory/makeShareableCloneRecursive',
+    'memory/makeShareableCloneOnUIRecursive',
+  ];
 
   return (
     <DocSidebar
       newItems={newItems}
       experimentalItems={experimentalItems}
       unreleasedItems={unreleasedItems}
+      deprecatedItems={deprecatedItems}
       heroImages={heroImages}
       titleImages={titleImages}
       {...props}
