@@ -89,10 +89,8 @@ When you read the `sv.value` in the React Native runtime, the JS thread will get
 
 ### Memoize gestures
 
-If you're using [React Native Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/), you should wrap gesture objects like `Gesture.Tap()` or similar inside `useMemo` in order to memoize them. This way, the gestures don't need to be reattached on every render. This is particularly important for `FlatList` items. If you're using React Compiler, the gesture objects should be memoized automatically.
+If you're using [React Native Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/), you should wrap gesture objects like `Gesture.Tap()` or similar inside `useMemo` in order to memoize them. This way, the gestures don't need to be reattached on every render. This is particularly important for `FlatList` items where performance is key. If you're using React Compiler, the gesture objects should be memoized automatically.
 
 ### Animate `TextInput` instead of re-rendering `Text` component
 
-TODO
-
-`CounterExample`
+When implementing an animated number counter, don't use React state to periodically update the counter. Instead, store the number in a shared value and use an animated `TextInput` component to display the current value. For more details, see [this example](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/src/apps/reanimated/examples/CounterExample.tsx).
