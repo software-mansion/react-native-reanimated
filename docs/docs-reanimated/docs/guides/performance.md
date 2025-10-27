@@ -89,9 +89,7 @@ When you read the `sv.value` in the React Native runtime, the JS thread will get
 
 ### Memoize gestures
 
-TODO
-
-If you're not using React Compiler, remember to memoize your gestures with `useMemo`, in particular inside `FlatList` items, so the gestures don't need to be reattached on every render.
+If you're using [React Native Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/), you should wrap gesture objects like `Gesture.Tap()` or similar inside `useMemo` in order to memoize them. This way, the gestures don't need to be reattached on every render. This is particularly important for `FlatList` items. If you're using React Compiler, the gesture objects should be memoized automatically.
 
 ### Animate `TextInput` instead of re-rendering `Text` component
 
