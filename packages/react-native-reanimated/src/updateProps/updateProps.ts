@@ -12,7 +12,11 @@ import {
   ReanimatedError,
   SHOULD_BE_USE_WEB,
 } from '../common';
-import { processBoxShadowWeb, processTransformOrigin } from '../common/web';
+import {
+  processBoxShadowWeb,
+  processTransformOrigin,
+  processFilterWeb,
+} from '../common/web';
 import type {
   AnimatedStyle,
   ShadowNodeWrapper,
@@ -40,6 +44,9 @@ if (SHOULD_BE_USE_WEB) {
       const component = viewDescriptor.tag as ReanimatedHTMLElement;
       if ('boxShadow' in updates) {
         updates.boxShadow = processBoxShadowWeb(updates.boxShadow);
+      }
+      if ('filter' in updates) {
+        updates.filter = processFilterWeb(updates.filter);
       }
       _updatePropsJS(updates, component, isAnimatedProps);
     });

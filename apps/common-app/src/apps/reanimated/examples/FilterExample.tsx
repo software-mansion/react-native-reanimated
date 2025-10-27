@@ -71,7 +71,8 @@ export default function FilterExample() {
   });
 
   // TODO: replace back with Balloons image when asset problem is fixed.
-  const uri = 'https://unsplash.it/400/400?image=1';
+  const uri =
+    'https://fastly.picsum.photos/id/418/400/400.jpg?hmac=bb10nb5u-sK8fxD4fyTmZO36Q4N6jRTuSj-ChqtM_3M';
 
   return (
     <ScrollView
@@ -81,97 +82,71 @@ export default function FilterExample() {
       <Animated.Image
         source={{ uri: uri }}
         // @ts-ignore
-        style={brightness}
-        width={80}
-        height={80}
-      />
-      <Animated.Image
-        source={{ uri: uri }}
-        // @ts-ignore
-        style={brightnessString}
-        width={80}
-        height={80}
+        style={[styles.image, brightness]}
       />
 
       <Text>opacity</Text>
       <Animated.Image
         source={{ uri: uri }}
         // @ts-ignore
-        style={opacity}
-        width={80}
-        height={80}
+        style={[styles.image, opacity]}
       />
-
+      {/* // to-do */}
       <Text>blur (only Android)</Text>
       <Animated.Image
         source={{ uri: uri }}
         // @ts-ignore
-        style={blur}
-        width={80}
-        height={80}
+        style={[styles.image, blur]}
       />
 
       <Text>contrast (only Android)</Text>
       <Animated.Image
         source={{ uri: uri }}
         // @ts-ignore
-        style={contrast}
-        width={80}
-        height={80}
+        style={[styles.image, contrast]}
       />
 
       <Text>dropShadow (only Android)</Text>
       <Animated.Image
         source={{ uri: uri }}
         // @ts-ignore
-        style={dropShadow}
-        width={80}
-        height={80}
+        style={[styles.image, dropShadow]}
       />
 
       <Text>grayscale (only Android)</Text>
       <Animated.Image
         source={{ uri: uri }}
         // @ts-ignore
-        style={grayscale}
-        width={80}
-        height={80}
+        style={[styles.image, grayscale]}
       />
 
+      {/* // to-do */}
       <Text>hueRotate (only Android)</Text>
       <Animated.Image
         source={{ uri: uri }}
         // @ts-ignore
-        style={hueRotate}
-        width={80}
-        height={80}
+        style={[styles.image, hueRotate]}
       />
 
       <Text>invert (only Android)</Text>
       <Animated.Image
         source={{ uri: uri }}
         // @ts-ignore
-        style={invert}
-        width={80}
-        height={80}
+        style={[styles.image, invert]}
       />
 
       <Text>sepia (only Android)</Text>
       <Animated.Image
         source={{ uri: uri }}
         // @ts-ignore
-        style={sepia}
-        width={80}
-        height={80}
+        style={[styles.image, sepia]}
       />
 
       <Text>saturate (only Android)</Text>
       <Animated.Image
         source={{ uri: uri }}
         // @ts-ignore
-        style={saturate}
-        width={80}
-        height={80}
+        style={[styles.image, saturate]}
       />
     </ScrollView>
   );
@@ -184,5 +159,10 @@ const styles = StyleSheet.create({
   contentContainer: {
     alignItems: 'center',
     paddingVertical: 50,
+  },
+  image: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
   },
 });
