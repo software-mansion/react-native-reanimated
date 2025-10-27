@@ -155,7 +155,7 @@ function createUpdatePropsManager() {
     },
     flush(this: void) {
       if (nativeOperations.length) {
-        global._updateProps(nativeOperations);
+        global._updateProps!(nativeOperations);
         nativeOperations.length = 0;
       }
       if (jsOperations.length) {
