@@ -117,7 +117,7 @@ class ReanimatedModuleProxy
   void maybeRunCSSLoop();
   double getCssTimestamp();
 
-  void performOperations();
+  void performOperations(const bool isTriggeredByEvent);
 
   void setViewStyle(
       jsi::Runtime &rt,

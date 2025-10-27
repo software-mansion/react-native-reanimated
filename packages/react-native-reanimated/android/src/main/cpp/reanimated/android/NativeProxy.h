@@ -65,7 +65,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
       const std::string &eventName,
       const int emitterReactTag);
   void performOperations();
-  bool getIsReducedMotion();
+  bool getIsReducedMotion(const bool isTriggeredByEvent);
   void requestRender(std::function<void(double)> onRender);
   void registerEventHandler();
   void maybeFlushUIUpdatesQueue();

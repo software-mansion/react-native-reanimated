@@ -127,8 +127,8 @@ bool NativeProxy::isAnyHandlerWaitingForEvent(
       eventName, emitterReactTag);
 }
 
-void NativeProxy::performOperations() {
-  reanimatedModuleProxy_->performOperations();
+void NativeProxy::performOperations(const bool isTriggeredByEvent) {
+  reanimatedModuleProxy_->performOperations(isTriggeredByEvent);
 }
 
 bool NativeProxy::getIsReducedMotion() {
