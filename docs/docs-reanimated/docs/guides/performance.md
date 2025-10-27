@@ -34,52 +34,66 @@ We are actively working with React core team at Meta on identifying bottlenecks 
 
 Note that these flags affect the touch detection system for components with animated transforms so you might want to consider using `Pressable` from `react-native-gesture-handler` instead of the built-in one from `react-native`.
 
-It is also recommended to animate non-layout styles (e.g. `transform`) rather than layout-affecting styles as described below.
+It is also recommended to animate non-layout styles (e.g. `transform`) rather than layout-affecting styles as described [below](#prefer-animating-non-layout-properties).
 
 **Solution 2:** Manually enable `enableCppPropsIteratorSetter` feature flag from `react-native` by patching the source files and building React Native from source.
 
-### Animate non-layout properties
+### Debug vs. release mode
 
-It's generally faster to animate non-layout properties (like `transform` or `opacity`) rather than layout-affecting properties (like `top`/`left`, `width`/`height`, `margin` or `padding`). That's because the latter group requires a layout recalculation on each animation frame which is generally slower
+It is very likely that the performance regressions are noticeable only the development build of your app. In the release mode, both Reanimated and React Native itself are built with compiler optimizations enabled which results in much better performance when compared to the debug mode.
 
-## Debug vs. release mode
+#### Use `debugOptimized` build variant on Android
 
-TODO
+For better development experience, you might also consider using `debugOptimized` build variant on Android (available from React Native 0.82) – more details [here](https://reactnative.dev/blog/2025/10/08/react-native-0.82#optimized-debug-build-type-for-android).
 
-## Use `debugOptimized` build variant on Android
+## Other tips
 
-TODO
+### Prefer non-layout properties
 
-## Enable 120 fps
+Animating non-layout properties (like `transform`, `opacity` or `backgroundColor`) is generally more performant than animating styles that affect layout (like `top`/`left`, `width`/`height`, `margin` or `padding`). That's because the latter group requires an additional step of layout recalculation on each animation frame.
 
-TODO
+Whenever possible, you should prefer using non-layout styles (e.g. `transform` with `translateX`/`translateY`) rather than their layout-affecting counterparts (i.e. `top`/`left`).
 
-Android – enabled by default
+Additionally, non-layout properties can be updated using a fast path – more details [here](./feature-flags#android_synchronously_update_ui_props).
 
-iOS – should be enabled out of the box in template. make sure that your `Info.plist` contains:
+### Enable 120 fps
+
+In order to enable support for 120 fps on iOS, make sure that `CADisableMinimumFrameDurationOnPhone` flag is enabled in `Info.plist`. The flag is enabled by default in the app template starting from React Native 0.82.
 
 ```xml
 <key>CADisableMinimumFrameDurationOnPhone</key>
 <true/>
 ```
 
-## Don't animate more than 500 views
+### Avoid animating too many components at once
 
-TODO
+Reanimated is perfectly capable of animating several dozens of components at once. However, if there's too many components to be animated simultaneously, performance can be affected. As a rule of thumb, you should animate no more than 100 components for low-end Android devices and no more than 500 components for iOS. For more complex animations, consider using Reanimated with `react-native-skia` instead of rendering individual React components.
 
-For heavy use cases, use `react-native-skia` instead.
+### Avoid reading shared values on the JS thread
 
-## Avoid reading shared values on the JS thread
+Reading shared values is allowed only from worklets running on the UI thread. You should avoid reading shared values in the React Native runtime on the JavaScript thread.
 
-TODO
+```js
+const sv = useSharedValue(0);
 
-## Memoize gestures
+useEffect(() => {
+  console.log(sv.value); // ⚠️ reading shared value in the RN runtime (not recommended)
+}, []);
+
+const animatedStyle = useAnimatedStyle(() => {
+  return { opacity: sv.value }; // ✅ this is okay
+});
+```
+
+When you read the `sv.value` in the React Native runtime, the JS thread will get blocked until the value is fetched from the UI thread. In most cases it will be negligible, but if the UI thread is busy or you are reading a value multiple times, the wait time needed to synchronize both threads may significantly increase.
+
+### Memoize gestures
 
 TODO
 
 If you're not using React Compiler, remember to memoize your gestures with `useMemo`, in particular inside `FlatList` items, so the gestures don't need to be reattached on every render.
 
-## Animate `TextInput` instead of re-rendering `Text` component
+### Animate `TextInput` instead of re-rendering `Text` component
 
 TODO
 
