@@ -36,4 +36,10 @@ declare global {
    * - Value _3_: Worker Worklet Runtime
    */
   var __RUNTIME_KIND: RuntimeKind | 1 | 2 | 3;
+
+  /**
+   * Holds a reference to the WorkletRuntimeHolderNativeState instance used to
+   * obtain a weak reference to the WorkletRuntime.
+   */
+  var _WORKLET_RUNTIME_HOLDER: object | undefined;
 }
