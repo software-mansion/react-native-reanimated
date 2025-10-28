@@ -153,7 +153,7 @@ const parseFilterProperty = (
   }
 };
 
-export const parseFilterString = (value: string): FilterArray => {
+const parseFilterString = (value: string): FilterArray => {
   const matches = Array.from(value.matchAll(FILTER_REGEX));
 
   if (matches.length === 0) {
