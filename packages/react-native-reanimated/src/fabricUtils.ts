@@ -4,37 +4,23 @@ import type { ShadowNodeWrapper, WrapperRef } from './commonTypes';
 import type { HostInstance } from './platform-specific/findHostInstance';
 import { findHostInstance } from './platform-specific/findHostInstance';
 
-let getInternalInstanceHandleFromPublicInstance: (ref: unknown) => {
-  stateNode: { node: unknown };
-};
-
 export function getShadowNodeWrapperFromRef(
   ref: WrapperRef,
   hostInstance?: HostInstance
 ): ShadowNodeWrapper {
-  if (getInternalInstanceHandleFromPublicInstance === undefined) {
-    try {
-      getInternalInstanceHandleFromPublicInstance =
-        // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-        require('react-native/Libraries/ReactNative/ReactFabricPublicInstance/ReactFabricPublicInstance')
-          .getInternalInstanceHandleFromPublicInstance ??
-        ((_ref: any) => _ref._internalInstanceHandle);
-    } catch {
-      getInternalInstanceHandleFromPublicInstance = (_ref: any) =>
-        _ref._internalInstanceHandle;
+  let resolvedInstance =
+    hostInstance?.__internalInstanceHandle ?? ref?.__internalInstanceHandle;
+
+  if (!resolvedInstance) {
+    if (ref.getNativeScrollRef) {
+      resolvedInstance = (ref.getNativeScrollRef() as any)
+        .__internalInstanceHandle;
+    } else if ((ref as any)._reactInternals) {
+      resolvedInstance = findHostInstance(ref).__internalInstanceHandle;
+    } else {
+      throw new ReanimatedError(`Failed to find host instance for a ref.}`);
     }
   }
 
-  const resolvedRef =
-    ref.getScrollResponder?.()?.getNativeScrollRef?.() ??
-    ref.getNativeScrollRef?.() ??
-    ref;
-
-  const resolvedInstance =
-    ref?.__internalInstanceHandle ??
-    getInternalInstanceHandleFromPublicInstance(
-      hostInstance ?? findHostInstance(resolvedRef)
-    );
-
-  return resolvedInstance?.stateNode?.node;
+  return resolvedInstance!.stateNode.node as ShadowNodeWrapper;
 }

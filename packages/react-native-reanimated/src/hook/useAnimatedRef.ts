@@ -17,10 +17,6 @@ import type {
   MaybeObserverCleanup,
 } from './commonTypes';
 
-function getComponentOrScrollable(ref: WrapperRef) {
-  return ref.getNativeScrollRef?.() ?? ref.getScrollableNode?.() ?? ref;
-}
-
 function useAnimatedRefBase<TRef extends WrapperRef>(
   getWrapper: (ref: TRef) => ShadowNodeWrapper
 ): AnimatedRef<TRef> {
@@ -36,7 +32,8 @@ function useAnimatedRefBase<TRef extends WrapperRef>(
         wrapperRef.current = getWrapper(ref);
 
         // We have to unwrap the tag from the shadow node wrapper.
-        fun.getTag = () => findNodeHandle(getComponentOrScrollable(ref));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        fun.getTag = () => findNodeHandle(ref as any);
         fun.current = ref;
 
         if (observers.size) {
@@ -81,9 +78,7 @@ function useAnimatedRefNative<
   );
 
   const resultRef = useAnimatedRefBase<TRef>((ref) => {
-    const currentWrapper = getShadowNodeWrapperFromRef(
-      getComponentOrScrollable(ref)
-    );
+    const currentWrapper = getShadowNodeWrapperFromRef(ref);
 
     sharedWrapper.value = currentWrapper;
 
@@ -106,7 +101,15 @@ function useAnimatedRefNative<
 function useAnimatedRefWeb<
   TRef extends WrapperRef = React.Component,
 >(): AnimatedRef<TRef> {
-  return useAnimatedRefBase<TRef>((ref) => getComponentOrScrollable(ref));
+  return useAnimatedRefBase<TRef>((ref) => {
+    if (ref.getScrollableNode) {
+      return ref.getScrollableNode();
+    }
+    if (ref.getNativeScrollRef) {
+      return ref.getNativeScrollRef();
+    }
+    return ref;
+  });
 }
 
 /**
