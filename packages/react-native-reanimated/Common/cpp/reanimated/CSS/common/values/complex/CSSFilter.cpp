@@ -128,26 +128,38 @@ bool CSSFilter::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
 folly::dynamic CSSFilter::toDynamic() const {
   folly::dynamic obj = folly::dynamic::object();
 
-  if (blur) obj["blur"] = blur->toDynamic();
-  if (brightness) obj["brightness"] = brightness->toDynamic();
-  if (contrast) obj["contrast"] = contrast->toDynamic();
-  if (grayscale) obj["grayscale"] = grayscale->toDynamic();
-  if (hueRotate) obj["hueRotate"] = hueRotate->toDynamic();
-  if (invert) obj["invert"] = invert->toDynamic();
-  if (opacity) obj["opacity"] = opacity->toDynamic();
-  if (saturate) obj["saturate"] = saturate->toDynamic();
-  if (sepia) obj["sepia"] = sepia->toDynamic();
-  if (dropShadow) obj["dropShadow"] = dropShadow->toDynamic();
+  if (blur)
+    obj["blur"] = blur->toDynamic();
+  if (brightness)
+    obj["brightness"] = brightness->toDynamic();
+  if (contrast)
+    obj["contrast"] = contrast->toDynamic();
+  if (grayscale)
+    obj["grayscale"] = grayscale->toDynamic();
+  if (hueRotate)
+    obj["hueRotate"] = hueRotate->toDynamic();
+  if (invert)
+    obj["invert"] = invert->toDynamic();
+  if (opacity)
+    obj["opacity"] = opacity->toDynamic();
+  if (saturate)
+    obj["saturate"] = saturate->toDynamic();
+  if (sepia)
+    obj["sepia"] = sepia->toDynamic();
+  if (dropShadow)
+    obj["dropShadow"] = dropShadow->toDynamic();
 
   return obj;
 }
 
 std::string CSSFilter::toString() const {
   std::string str;
-  auto append = [&](const std::string &name, const std::optional<CSSDouble> &val,
+  auto append = [&](const std::string &name,
+                    const std::optional<CSSDouble> &val,
                     const std::string &unit = "") {
     if (val.has_value()) {
-      if (!str.empty()) str += " ";
+      if (!str.empty())
+        str += " ";
       str += name + "(" + val->toString() + unit + ")";
     }
   };
@@ -163,7 +175,8 @@ std::string CSSFilter::toString() const {
   append("sepia", sepia);
 
   if (dropShadow.has_value()) {
-    if (!str.empty()) str += " ";
+    if (!str.empty())
+      str += " ";
     str += "drop-shadow(" + dropShadow->toString() + ")";
   }
 
@@ -171,9 +184,9 @@ std::string CSSFilter::toString() const {
 }
 
 CSSFilter CSSFilter::interpolate(double progress, const CSSFilter &to) const {
-  auto interpolateOpt = [&](const std::optional<CSSDouble> &from,
-                            const std::optional<CSSDouble> &toVal)
-      -> std::optional<CSSDouble> {
+  auto interpolateOpt =
+      [&](const std::optional<CSSDouble> &from,
+          const std::optional<CSSDouble> &toVal) -> std::optional<CSSDouble> {
     if (from.has_value() && toVal.has_value()) {
       return from->interpolate(progress, toVal.value());
     }
@@ -193,15 +206,16 @@ CSSFilter CSSFilter::interpolate(double progress, const CSSFilter &to) const {
       dropShadow.has_value() && to.dropShadow.has_value()
           ? std::optional<CSSDropShadow>(
                 dropShadow->interpolate(progress, to.dropShadow.value()))
-          : dropShadow.has_value() ? dropShadow : to.dropShadow);
+          : dropShadow.has_value() ? dropShadow
+                                   : to.dropShadow);
 }
 
 bool CSSFilter::operator==(const CSSFilter &other) const {
   return blur == other.blur && brightness == other.brightness &&
-         contrast == other.contrast && grayscale == other.grayscale &&
-         hueRotate == other.hueRotate && invert == other.invert &&
-         opacity == other.opacity && saturate == other.saturate &&
-         sepia == other.sepia && dropShadow == other.dropShadow;
+      contrast == other.contrast && grayscale == other.grayscale &&
+      hueRotate == other.hueRotate && invert == other.invert &&
+      opacity == other.opacity && saturate == other.saturate &&
+      sepia == other.sepia && dropShadow == other.dropShadow;
 }
 
 #ifndef NDEBUG

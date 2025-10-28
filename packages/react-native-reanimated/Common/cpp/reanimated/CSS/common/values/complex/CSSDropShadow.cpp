@@ -24,8 +24,7 @@ CSSDropShadow::CSSDropShadow(jsi::Runtime &rt, const jsi::Value &jsiValue) {
     offsetY = CSSDouble(rt, obj.getProperty(rt, "offsetY"));
   }
   if (obj.hasProperty(rt, "standardDeviation")) {
-    standardDeviation =
-        CSSDouble(rt, obj.getProperty(rt, "standardDeviation"));
+    standardDeviation = CSSDouble(rt, obj.getProperty(rt, "standardDeviation"));
   }
   if (obj.hasProperty(rt, "color")) {
     color = CSSColor(rt, obj.getProperty(rt, "color"));
@@ -91,7 +90,7 @@ folly::dynamic CSSDropShadow::toDynamic() const {
 
 std::string CSSDropShadow::toString() const {
   return offsetX.toString() + " " + offsetY.toString() + " " +
-         standardDeviation.toString() + " " + color.toString();
+      standardDeviation.toString() + " " + color.toString();
 }
 
 CSSDropShadow CSSDropShadow::interpolate(
@@ -104,11 +103,9 @@ CSSDropShadow CSSDropShadow::interpolate(
       color.interpolate(progress, to.color));
 }
 
-
 bool CSSDropShadow::operator==(const CSSDropShadow &other) const {
   return offsetX == other.offsetX && offsetY == other.offsetY &&
-         standardDeviation == other.standardDeviation &&
-         color == other.color;
+      standardDeviation == other.standardDeviation && color == other.color;
 }
 
 #ifndef NDEBUG

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <reanimated/CSS/common/values/complex/CSSDropShadow.h>
-#include <reanimated/CSS/common/values/CSSNumber.h>
 #include <reanimated/CSS/common/values/CSSBoolean.h>
+#include <reanimated/CSS/common/values/CSSNumber.h>
+#include <reanimated/CSS/common/values/complex/CSSDropShadow.h>
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <reanimated/CSS/common/values/CSSNumber.h>
 #include <reanimated/CSS/common/values/CSSColor.h>
+#include <reanimated/CSS/common/values/CSSNumber.h>
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
@@ -18,11 +18,7 @@ class CSSDropShadow : public CSSSimpleValue<CSSDropShadow> {
   CSSDouble standardDeviation; // equivalent to blur radius
   CSSColor color;
 
-  CSSDropShadow(
-      CSSDouble offsetX,
-      CSSDouble offsetY,
-      CSSDouble standardDeviation,
-      CSSColor color);
+  CSSDropShadow(CSSDouble offsetX, CSSDouble offsetY, CSSDouble standardDeviation, CSSColor color);
 
   explicit CSSDropShadow(jsi::Runtime &rt, const jsi::Value &jsiValue);
   explicit CSSDropShadow(const folly::dynamic &value);
