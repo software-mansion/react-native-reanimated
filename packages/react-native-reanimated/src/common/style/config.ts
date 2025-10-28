@@ -6,7 +6,6 @@ import {
   processAspectRatio,
   processBoxShadowNative,
   processColor,
-  processFilter,
   processFontWeight,
   processGap,
   processInset,
@@ -223,6 +222,6 @@ export const BASE_PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   cursor: true,
   pointerEvents: true,
   // Others
-  filter: { process: processFilter },
+  filter: false, // web only
   isolation: true,
 };

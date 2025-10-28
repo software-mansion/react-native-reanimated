@@ -12,7 +12,6 @@
 
 #include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
-#include <reanimated/CSS/common/values/complex/CSSFilter.h>
 
 #include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGLength.h>
@@ -223,7 +222,6 @@ const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
          {"isolation", value<CSSKeyword>("auto")},
          {"cursor", value<CSSKeyword>("auto")},
          {"boxShadow", array({value<CSSBoxShadow>(CSSBoxShadow())})},
-         {"filter", array({value<CSSFilter>(CSSFilter())})},
          {"mixBlendMode", value<CSSKeyword>("normal")}}});
 
 const InterpolatorFactoriesRecord TEXT_INTERPOLATORS_IOS = {
