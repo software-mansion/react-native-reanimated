@@ -6,12 +6,9 @@ import { IS_ANDROID } from '../constants';
 
 export function processColor(color: unknown): number | null | undefined {
   let normalizedColor = processColorInitially(color);
-  if (normalizedColor === null || normalizedColor === undefined) {
-    return undefined;
-  }
 
   if (typeof normalizedColor !== 'number') {
-    return null;
+    return normalizedColor;
   }
 
   if (IS_ANDROID) {
