@@ -59,9 +59,6 @@ if (SHOULD_BE_USE_WEB) {
      * containing only properties that require processing and their associated processors
      * */
     processColorsInProps(updates);
-    if ('transform' in updates) {
-      updates.transform = processTransform(updates.transform);
-    }
     if ('transformOrigin' in updates) {
       updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
     }

@@ -23,7 +23,7 @@ export const processFilterWeb: ValueProcessor<
             case 'dropShadow':
               if (typeof filterValue === 'string') {
                 return `drop-shadow(${filterValue})`;
-              } else if (typeof filterValue === 'object') {
+              } else {
                 return `drop-shadow(${[
                   maybeAddSuffix(filterValue.offsetX, 'px'),
                   maybeAddSuffix(filterValue.offsetY, 'px'),
