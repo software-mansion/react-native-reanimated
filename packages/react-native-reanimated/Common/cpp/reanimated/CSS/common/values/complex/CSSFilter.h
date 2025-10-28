@@ -39,8 +39,8 @@ class CSSFilter : public CSSSimpleValue<CSSFilter> {
       std::optional<CSSDouble> sepia,
       std::optional<CSSDropShadow> dropShadow);
 
-  CSSFilter(jsi::Runtime &rt, const jsi::Value &jsiValue);
-  CSSFilter(const folly::dynamic &value);
+  explicit CSSFilter(jsi::Runtime &rt, const jsi::Value &jsiValue);
+  explicit CSSFilter(const folly::dynamic &value);
 
   static bool canConstruct(const folly::dynamic &value);
   static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);

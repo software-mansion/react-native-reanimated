@@ -1,5 +1,7 @@
 #include <reanimated/CSS/common/values/complex/CSSDropShadow.h>
 
+#include <utility>
+
 namespace reanimated::css {
 
 CSSDropShadow::CSSDropShadow(

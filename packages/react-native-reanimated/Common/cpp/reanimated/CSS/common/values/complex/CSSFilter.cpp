@@ -1,5 +1,7 @@
 #include <reanimated/CSS/common/values/complex/CSSFilter.h>
 
+#include <utility>
+
 namespace reanimated::css {
 
 CSSFilter::CSSFilter(

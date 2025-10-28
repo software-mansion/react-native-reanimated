@@ -24,8 +24,8 @@ class CSSDropShadow : public CSSSimpleValue<CSSDropShadow> {
       CSSDouble standardDeviation,
       CSSColor color);
 
-  CSSDropShadow(jsi::Runtime &rt, const jsi::Value &jsiValue);
-  CSSDropShadow(const folly::dynamic &value);
+  explicit CSSDropShadow(jsi::Runtime &rt, const jsi::Value &jsiValue);
+  explicit CSSDropShadow(const folly::dynamic &value);
   CSSDropShadow() = default;
 
   static bool canConstruct(const folly::dynamic &value);
