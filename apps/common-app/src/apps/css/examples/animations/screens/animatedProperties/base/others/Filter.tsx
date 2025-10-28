@@ -18,10 +18,10 @@ export default function Filter() {
       renderExample={({ animation }) => (
         // TO-DO: Replace with balloonsImage when assets are supported in monorepo
         <Animated.Image
+          style={[styles.image, animation]}
           source={{
             uri: 'https://fastly.picsum.photos/id/418/400/400.jpg?hmac=bb10nb5u-sK8fxD4fyTmZO36Q4N6jRTuSj-ChqtM_3M',
           }}
-          style={[styles.image, animation]}
         />
       )}
       sections={[
