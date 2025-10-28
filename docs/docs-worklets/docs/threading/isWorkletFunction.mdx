@@ -1,5 +1,5 @@
 ---
-sidebar_position: 8
+sidebar_position: 42 # Use alphabetical order
 ---
 
 # isWorkletFunction
@@ -12,8 +12,8 @@ sidebar_position: 8
 import { isWorkletFunction } from 'react-native-worklets';
 
 const workletFunction = () => {
-    'worklet';
-    return 1;
+  'worklet';
+  return 1;
 };
 
 const isWorkletFunction = isWorkletFunction(workletFunction);
@@ -21,7 +21,7 @@ const isWorkletFunction = isWorkletFunction(workletFunction);
 console.log(isWorkletFunction); // true
 
 const nonWorkletFunction = () => {
-    return 1;
+  return 1;
 };
 
 const isNonWorkletFunction = isWorkletFunction(nonWorkletFunction);
@@ -68,7 +68,7 @@ type WorkletFunction<
 function isWorkletFunction<
   Args extends unknown[] = unknown[],
   ReturnValue = unknown,
->(value: unknown): value is WorkletFunction<Args, ReturnValue>
+>(value: unknown): value is WorkletFunction<Args, ReturnValue>;
 ```
 
 </details>
@@ -85,7 +85,7 @@ A function to check if it is a worklet function.
 
 ### Remarks
 
-- Do not call it before the worklet is declared, as it will always return `false` then. 
+- Do not call it before the worklet is declared, as it will always return `false` then.
 
   ```ts
   isWorkletFunction(myWorklet); // Will always return false.
@@ -94,6 +94,3 @@ A function to check if it is a worklet function.
     'worklet';
   }
   ```
-
-
-
