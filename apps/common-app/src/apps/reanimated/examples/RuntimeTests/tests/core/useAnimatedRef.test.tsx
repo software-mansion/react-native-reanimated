@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlashList } from '@shopify/flash-list';
+import { FlashList, FlashListRef } from '@shopify/flash-list';
 import {
   ActivityIndicator,
   Button,
@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   VirtualizedList,
+  View,
 } from 'react-native';
 import { ScrollView as RNGHScrollView } from 'react-native-gesture-handler';
 import { Path } from 'react-native-svg';
@@ -104,7 +105,7 @@ describe('Test *****useAnimatedRef*****', () => {
 
   describe('Animated.FlashList', () => {
     const Component = () => {
-      const animatedRef = useAnimatedRef<typeof AnimatedFlashList>();
+      const animatedRef = useAnimatedRef<FlashListRef<unknown>>();
       return <AnimatedFlashList ref={animatedRef} data={[]} renderItem={() => null} />;
     };
     test('mounts without crashing', async () => {
@@ -114,7 +115,7 @@ describe('Test *****useAnimatedRef*****', () => {
 
   describe('Animated.ActivityIndicator', () => {
     const Component = () => {
-      const animatedRef = useAnimatedRef<typeof AnimatedActivityIndicator>();
+      const animatedRef = useAnimatedRef<ActivityIndicator>();
       return <AnimatedActivityIndicator ref={animatedRef} />;
     };
     test('mounts without crashing', async () => {
@@ -124,7 +125,7 @@ describe('Test *****useAnimatedRef*****', () => {
 
   describe('Animated.Button', () => {
     const Component = () => {
-      const animatedRef = useAnimatedRef<typeof AnimatedButton>();
+      const animatedRef = useAnimatedRef<Button>();
       return <AnimatedButton ref={animatedRef} title="Press me" onPress={() => {}} />;
     };
     test('mounts without crashing', async () => {
@@ -134,7 +135,7 @@ describe('Test *****useAnimatedRef*****', () => {
 
   describe('Animated.ImageBackground', () => {
     const Component = () => {
-      const animatedRef = useAnimatedRef<typeof AnimatedImageBackground>();
+      const animatedRef = useAnimatedRef<ImageBackground>();
       return (
         <AnimatedImageBackground
           ref={animatedRef}
@@ -151,7 +152,7 @@ describe('Test *****useAnimatedRef*****', () => {
 
   describe('Animated.KeyboardAvoidingView', () => {
     const Component = () => {
-      const animatedRef = useAnimatedRef<typeof AnimatedKeyboardAvoidingView>();
+      const animatedRef = useAnimatedRef<KeyboardAvoidingView>();
       return <AnimatedKeyboardAvoidingView ref={animatedRef} />;
     };
     test('mounts without crashing', async () => {
@@ -161,7 +162,7 @@ describe('Test *****useAnimatedRef*****', () => {
 
   describe('Animated.Modal', () => {
     const Component = () => {
-      const animatedRef = useAnimatedRef<typeof AnimatedModal>();
+      const animatedRef = useAnimatedRef<Modal>();
       return <AnimatedModal ref={animatedRef} visible />;
     };
     test('mounts without crashing', async () => {
@@ -171,7 +172,7 @@ describe('Test *****useAnimatedRef*****', () => {
 
   describe('Animated.Pressable', () => {
     const Component = () => {
-      const animatedRef = useAnimatedRef<typeof AnimatedPressable>();
+      const animatedRef = useAnimatedRef<View>();
       return (
         <AnimatedPressable ref={animatedRef} onPress={() => {}}>
           <Text>Press me</Text>
@@ -185,7 +186,7 @@ describe('Test *****useAnimatedRef*****', () => {
 
   describe('Animated.RefreshControl', () => {
     const Component = () => {
-      const animatedRef = useAnimatedRef<typeof AnimatedRefreshControl>();
+      const animatedRef = useAnimatedRef<RefreshControl>();
       return <AnimatedRefreshControl ref={animatedRef} refreshing={false} onRefresh={() => {}} />;
     };
     test('mounts without crashing', async () => {
@@ -195,7 +196,7 @@ describe('Test *****useAnimatedRef*****', () => {
 
   describe('Animated.SectionList', () => {
     const Component = () => {
-      const animatedRef = useAnimatedRef<typeof AnimatedSectionList>();
+      const animatedRef = useAnimatedRef<SectionList<unknown, unknown>>();
       return <AnimatedSectionList ref={animatedRef} sections={[]} renderItem={() => null} />;
     };
     test('mounts without crashing', async () => {
@@ -205,7 +206,7 @@ describe('Test *****useAnimatedRef*****', () => {
 
   describe('Animated.Switch', () => {
     const Component = () => {
-      const animatedRef = useAnimatedRef<typeof AnimatedSwitch>();
+      const animatedRef = useAnimatedRef<Switch>();
       return <AnimatedSwitch ref={animatedRef} value={false} onValueChange={() => {}} />;
     };
     test('mounts without crashing', async () => {
@@ -215,7 +216,7 @@ describe('Test *****useAnimatedRef*****', () => {
 
   describe('Animated.TextInput', () => {
     const Component = () => {
-      const animatedRef = useAnimatedRef<typeof AnimatedTextInput>();
+      const animatedRef = useAnimatedRef<TextInput>();
       return <AnimatedTextInput ref={animatedRef} value="Hello" onChangeText={() => {}} />;
     };
     test('mounts without crashing', async () => {
@@ -225,7 +226,7 @@ describe('Test *****useAnimatedRef*****', () => {
 
   describe('Animated.TouchableHighlight', () => {
     const Component = () => {
-      const animatedRef = useAnimatedRef<typeof AnimatedTouchableHighlight>();
+      const animatedRef = useAnimatedRef<View>();
       return (
         <AnimatedTouchableHighlight ref={animatedRef} onPress={() => {}}>
           <Text>Highlight me</Text>
@@ -239,7 +240,7 @@ describe('Test *****useAnimatedRef*****', () => {
 
   describe('Animated.TouchableOpacity', () => {
     const Component = () => {
-      const animatedRef = useAnimatedRef<typeof AnimatedTouchableOpacity>();
+      const animatedRef = useAnimatedRef<View>();
       return (
         <AnimatedTouchableOpacity ref={animatedRef} onPress={() => {}}>
           <Text>Opacitize me</Text>
@@ -253,7 +254,7 @@ describe('Test *****useAnimatedRef*****', () => {
 
   describe('Animated.TouchableWithoutFeedback', () => {
     const Component = () => {
-      const animatedRef = useAnimatedRef<typeof AnimatedTouchableWithoutFeedback>();
+      const animatedRef = useAnimatedRef<TouchableWithoutFeedback>();
       return (
         <AnimatedTouchableWithoutFeedback ref={animatedRef} onPress={() => {}}>
           <Text>Dont feedback me</Text>
@@ -267,7 +268,7 @@ describe('Test *****useAnimatedRef*****', () => {
 
   describe('Animated.VirtualizedList', () => {
     const Component = () => {
-      const animatedRef = useAnimatedRef<typeof AnimatedVirtualizedList>();
+      const animatedRef = useAnimatedRef<VirtualizedList<unknown>>();
       return (
         <AnimatedVirtualizedList
           ref={animatedRef}
@@ -286,7 +287,7 @@ describe('Test *****useAnimatedRef*****', () => {
 
   describe('Animated.ScrollView from RNGH', () => {
     const Component = () => {
-      const animatedRef = useAnimatedRef<typeof AnimatedRNGHScrollView>();
+      const animatedRef = useAnimatedRef<RNGHScrollView>();
       return <AnimatedRNGHScrollView ref={animatedRef} />;
     };
     test('mounts without crashing', async () => {
@@ -296,7 +297,7 @@ describe('Test *****useAnimatedRef*****', () => {
 
   describe('Animated.Path from react-native-svg', () => {
     const Component = () => {
-      const animatedRef = useAnimatedRef<typeof AnimatedPath>();
+      const animatedRef = useAnimatedRef<Path>();
       return <AnimatedPath ref={animatedRef} d="M10 10 H 90 V 90 H 10 L 10 10" stroke="black" fill="transparent" />;
     };
     test('mounts without crashing', async () => {
