@@ -91,6 +91,18 @@ Whenever possible, you should prefer using non-layout styles (e.g. `transform` w
 
 Additionally, non-layout properties can be updated using a fast path – more details [here](./feature-flags#android_synchronously_update_ui_props).
 
+### 💡 Memoize frame callbacks
+
+If you're using [`useFrameCallback`](../advanced/useFrameCallback), you should wrap the frame callback worklet inside `useCallback` in order to memoize it. This way, the frame callback won't need to be recrated and thus registered on every render. If you're using React Compiler, the frame callback should be memoized automatically.
+
+```tsx
+useFrameCallback(
+  useCallback(() => {
+    'worklet';
+  }, [...deps])
+);
+```
+
 ### 💡 Memoize gestures
 
 If you're using [React Native Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/), you should wrap gesture objects like `Gesture.Tap()` or similar inside `useMemo` in order to memoize them. This way, the gestures won't need to be reattached on every render. This is particularly important for `FlatList` items where performance is key. If you're using React Compiler, the gesture objects should be memoized automatically.
@@ -98,3 +110,7 @@ If you're using [React Native Gesture Handler](https://docs.swmansion.com/react-
 ### 💡 Animate `TextInput` instead of re-rendering `Text` component
 
 When implementing an animated number counter, don't use React state to periodically update the counter. Instead, store the number in a shared value and use an animated `TextInput` component to display the current value. For more details, see [this example](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/src/apps/reanimated/examples/CounterExample.tsx).
+
+```
+
+```
