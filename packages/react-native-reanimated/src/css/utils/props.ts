@@ -78,14 +78,6 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
 }
 
 function validateCSSAnimationProps(props: Partial<CSSAnimationProperties>) {
-  // Check if any animation properties are present but animationName is missing
-  if (!('animationName' in props) && Object.keys(props).length > 0) {
-    logger.warn(
-      'CSS animation properties were provided without specifying animationName.\n' +
-        'If unintended, add animationName or remove unnecessary animation properties.'
-    );
-  }
-
   // Check if animationDuration is missing when animationName is present
   if (!('animationDuration' in props) && 'animationName' in props) {
     logger.warn(
