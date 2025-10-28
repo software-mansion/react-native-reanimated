@@ -1,14 +1,14 @@
 'use strict';
 
-import type { Component, ElementType, RefObject } from 'react';
+import type { ComponentRef, RefObject } from 'react';
 import type {
-  FlatList,
-  HostInstance,
   ImageStyle,
-  ScrollView,
-  SectionList,
+  NativeMethods,
+  ScrollResponderMixin,
+  ScrollViewComponent,
   TextStyle,
   TransformsStyle,
+  View,
   ViewStyle,
 } from 'react-native';
 import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
@@ -457,33 +457,26 @@ export type StyleUpdaterContainer = RefObject<
   ((forceUpdate: boolean) => void) | undefined
 >;
 
-type GetProp<T, K extends PropertyKey> = K extends keyof T ? T[K] : undefined;
-
-type ScrollResponderType = InternalHostInstance &
-  Partial<
-    ReturnType<
-      NonNullable<
-        | GetProp<ScrollView, 'getScrollResponder'>
-        | GetProp<FlatList, 'getScrollResponder'>
-        | GetProp<SectionList, 'getScrollResponder'>
-      >
-    > &
-      JSX.Element
-  >;
-
-export type InternalHostInstance = Partial<
-  HostInstance & {
-    getScrollResponder: () => Maybe<ScrollResponderType>;
-    getNativeScrollRef: () => Maybe<
-      Partial<InternalHostInstance & typeof ScrollView>
-    >;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getScrollableNode: () => any;
-    __internalInstanceHandle: AnyRecord;
+type NativeScrollRef = Maybe<
+  (
+    | ComponentRef<typeof View>
+    | ComponentRef<typeof ScrollViewComponent>
+    | NativeMethods
+  ) & {
+    __internalInstanceHandle?: AnyRecord;
   }
 >;
 
-export type WrapperRef =
-  | InternalHostInstance
-  | (ElementType & InternalHostInstance)
-  | (Component & InternalHostInstance);
+type InstanceMethods = {
+  getScrollResponder?: () => Maybe<
+    (ScrollResponderMixin | React.JSX.Element) & {
+      getNativeScrollRef?: () => NativeScrollRef;
+    }
+  >;
+  getNativeScrollRef?: () => NativeScrollRef;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getScrollableNode?: () => any;
+  __internalInstanceHandle?: AnyRecord;
+};
+
+export type WrapperRef = (React.Component & InstanceMethods) | InstanceMethods;
