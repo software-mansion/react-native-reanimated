@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-// TO-DO: add string percentage examples
+// TO-DO: add string percentage examples, when we decide what to do on precision.
 export default function FilterExample() {
   const sv = useSharedValue(0);
 
