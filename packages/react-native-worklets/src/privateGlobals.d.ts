@@ -77,4 +77,7 @@ declare global {
   var __hasNativeState: (value: object) => boolean;
   /** Only in Debug builds. */
   var __isHostObject: (value: object) => boolean;
+  interface NodeRequire {
+    resolveWeak(id: string): number;
+  }
 }
