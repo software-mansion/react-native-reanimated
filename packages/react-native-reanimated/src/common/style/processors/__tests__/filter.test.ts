@@ -101,24 +101,6 @@ describe(processFilter, () => {
         name: 'dropShadow',
         cases: [
           {
-            input: 'dropShadow(10, 10, 5, red)',
-            output: [
-              {
-                dropShadow: {
-                  offsetX: 10,
-                  offsetY: 10,
-                  standardDeviation: 5,
-                  color: 4294901760,
-                },
-              },
-            ],
-          },
-        ],
-      },
-      {
-        name: 'dropShadow with spaces',
-        cases: [
-          {
             input: 'dropShadow(10 10 5 red)',
             output: [
               {

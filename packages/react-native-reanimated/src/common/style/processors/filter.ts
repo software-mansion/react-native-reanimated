@@ -7,8 +7,9 @@ import type {
   FilterArray,
   ParsedDropShadow,
   ValueProcessor,
+  ParsedFilterFunction,
 } from '../../types';
-import { isLength } from '../../utils/guards';
+import { isLength, isNumber } from '../../utils/guards';
 import { processColor } from './colors';
 
 // Capture filter functions and their content eg "brightness(0.5) opacity(1)" => [["brightness(0.5)", "brightness", "0.5"], ["opacity(1)", "opacity", "1"]]
@@ -20,34 +21,42 @@ const DROP_SHADOW_REGEX = /[^,\s()]+(?:\([^()]*\))?/g;
 
 export const ERROR_MESSAGES = {
   invalidFilter: (filter: string) => `Invalid filter property: ${filter}`,
-  invalidColor: (color: string, dropShadow: string) =>
-    `Invalid color "${color}" in dropShadow "${dropShadow}".`,
 };
 
 type SingleFilterValue = {
-  number: number;
+  numberValue: number;
   unit: string;
 };
 
 const parseHueRotate = (value: SingleFilterValue): number | undefined => {
-  const { number, unit } = value;
-  if (number === 0) {
+  const { numberValue, unit } = value;
+  if (numberValue === 0) {
     return 0;
   }
   if (unit !== 'deg' && unit !== 'rad') {
     throw new ReanimatedError(
-      ERROR_MESSAGES.invalidFilter(`hueRotate(${number}${unit})`)
+      ERROR_MESSAGES.invalidFilter(`hueRotate(${numberValue}${unit})`)
     );
   }
-  return unit === 'rad' ? (180 * number) / Math.PI : number;
+  return unit === 'rad' ? (180 * numberValue) / Math.PI : numberValue;
 };
 
 const parseBlur = (value: SingleFilterValue): number | undefined => {
-  const { number, unit } = value;
-  if ((unit && unit !== 'px') || number < 0) {
+  const { numberValue, unit } = value;
+  if ((unit && unit !== 'px') || numberValue < 0) {
     return undefined;
   }
-  return number;
+  return numberValue;
+};
+
+const parsePercentageFilter = (
+  value: SingleFilterValue
+): number | undefined => {
+  const { numberValue, unit } = value;
+  if ((unit && unit !== '%') || numberValue < 0) {
+    return undefined;
+  }
+  return unit === '%' ? numberValue / 100 : numberValue;
 };
 
 const LENGTH_MAPPINGS = ['offsetX', 'offsetY', 'standardDeviation'] as const;
@@ -58,14 +67,16 @@ const parseDropShadowString = (value: string) => {
   let foundLengthsCount = 0;
 
   match.forEach((part) => {
-    if (isLength(part) || !!parseFloat(part)) {
-      const dropShadowValue = part.trim().match(FILTER_VALUE_REGEX);
-      if (!dropShadowValue) {
-        throw new ReanimatedError(
-          ERROR_MESSAGES.invalidFilter(`dropShadow(${part})`)
-        );
+    if (isLength(part)) {
+      if (__DEV__) {
+        const dropShadowValue = part.trim().match(FILTER_VALUE_REGEX);
+        if (!dropShadowValue) {
+          throw new ReanimatedError(
+            ERROR_MESSAGES.invalidFilter(`dropShadow(${value})`)
+          );
+        }
       }
-      result[LENGTH_MAPPINGS[foundLengthsCount++]] = dropShadowValue[1];
+      result[LENGTH_MAPPINGS[foundLengthsCount++]] = parseFloat(part);
     } else {
       result.color = part.trim();
     }
@@ -81,19 +92,11 @@ const parseDropShadow = (value: string | DropShadowValue): ParsedDropShadow => {
     offsetX = 0,
     offsetY = 0,
     standardDeviation = 0,
-    ...rest
   } = dropShadow;
 
-  const processedColor = processColor(color);
-
-  if (processedColor === undefined || processedColor === null) {
-    throw new ReanimatedError(
-      ERROR_MESSAGES.invalidColor(color as string, JSON.stringify(dropShadow))
-    );
-  }
+  const processedColor = processColor(color)!;
 
   return {
-    ...rest,
     color: processedColor,
     offsetX: parseFloat(offsetX as string),
     offsetY: parseFloat(offsetY as string),
@@ -102,35 +105,35 @@ const parseDropShadow = (value: string | DropShadowValue): ParsedDropShadow => {
 };
 
 const parseFilterProperty = (
-  filter: string[] | FilterFunction
-): Record<string, ParsedDropShadow | number | undefined> => {
-  let key, value;
-  if (!Array.isArray(filter)) {
-    key = Object.keys(filter)[0];
-    value = (filter as Record<string, string>)[key];
-  } else {
-    key = filter[1];
-    value = filter[2];
-  }
-
+  filterName: string,
+  filterValue: string | number | DropShadowValue
+): ParsedFilterFunction => {
   // We need to handle dropShadow separately because of its complex structure
-  if (key == 'dropShadow') {
-    return { dropShadow: parseDropShadow(value) };
+  if (filterName == 'dropShadow') {
+    return {
+      dropShadow: parseDropShadow(filterValue as string | DropShadowValue),
+    };
   }
 
-  const match = value.match(FILTER_VALUE_REGEX);
+  if (isNumber(filterValue)) {
+    return { [filterName]: filterValue };
+  }
+
+  const match = (filterValue as string).match(FILTER_VALUE_REGEX);
   if (!match) {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidFilter(`${key}(${value})`));
+    throw new ReanimatedError(
+      ERROR_MESSAGES.invalidFilter(`${filterName}(${filterValue})`)
+    );
   }
 
-  let number = parseFloat(match[1]);
+  let numberValue = parseFloat(match[1]);
   const unit = match[2];
 
-  switch (key) {
+  switch (filterName) {
     case 'hueRotate':
-      return { hueRotate: parseHueRotate({ number, unit }) };
+      return { hueRotate: parseHueRotate({ numberValue, unit }) };
     case 'blur':
-      return { blur: parseBlur({ number, unit }) };
+      return { blur: parseBlur({ numberValue, unit }) };
     case 'brightness':
     case 'contrast':
     case 'grayscale':
@@ -139,16 +142,10 @@ const parseFilterProperty = (
     case 'saturate':
     case 'sepia':
       // eslint-disable-next-line no-fallthrough
-      if ((unit && unit !== '%') || number < 0) {
-        return { [key]: undefined };
-      }
-      if (unit === '%') {
-        number /= 100;
-      }
-      return { [key]: number };
+      return { [filterName]: parsePercentageFilter({ numberValue, unit }) };
     default:
       throw new ReanimatedError(
-        ERROR_MESSAGES.invalidFilter(`${key}(${value})`)
+        ERROR_MESSAGES.invalidFilter(`${filterName}(${filterValue})`)
       );
   }
 };
@@ -161,12 +158,12 @@ const parseFilterString = (value: string): FilterArray => {
   }
 
   const filterArray = matches.map((match) => {
-    const [_, name, content] = match;
+    const [filter, name, content] = match;
     if (!name || !content) {
-      throw new ReanimatedError(ERROR_MESSAGES.invalidFilter(match[0]));
+      throw new ReanimatedError(ERROR_MESSAGES.invalidFilter(filter));
     }
 
-    return parseFilterProperty(match);
+    return parseFilterProperty(name, content);
   });
   return filterArray as FilterArray;
 };
@@ -180,16 +177,10 @@ export const processFilter: ValueProcessor<
   }
 
   if (Array.isArray(value)) {
-    if (
-      value.every(
-        (filter) =>
-          typeof filter === 'object' &&
-          Object.values(filter).every((v) => typeof v === 'number')
-      )
-    ) {
-      return value as FilterArray;
-    }
-    return value.map((filter) => parseFilterProperty(filter)) as FilterArray;
+    return value.map((filter) => {
+      const [filterKey, filterValue] = Object.entries(filter)[0];
+      return parseFilterProperty(filterKey, filterValue as string);
+    });
   }
 
   throw new ReanimatedError(

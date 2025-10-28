@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-// TO-DO: add string percentage examples, when we decide what to do on precision.
+// TODO: add string percentage examples, when we decide what to do on precision.
 export default function FilterExample() {
   const sv = useSharedValue(0);
 
@@ -91,7 +91,6 @@ export default function FilterExample() {
         // @ts-ignore
         style={[styles.image, opacity]}
       />
-      {/* // to-do */}
       <Text>blur (only Android)</Text>
       <Animated.Image
         source={{ uri: uri }}
@@ -120,7 +119,6 @@ export default function FilterExample() {
         style={[styles.image, grayscale]}
       />
 
-      {/* // to-do */}
       <Text>hueRotate (only Android)</Text>
       <Animated.Image
         source={{ uri: uri }}

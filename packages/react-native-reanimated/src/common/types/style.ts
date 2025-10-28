@@ -1,7 +1,6 @@
 'use strict';
 
 import type {
-  FilterFunction,
   ImageStyle,
   TextStyle,
   TransformsStyle,
@@ -41,4 +40,17 @@ export type ParsedDropShadow = {
   color: number;
 };
 
-export type FilterArray = FilterFunction[];
+export type ParsedFilterFunction = {
+  brightness?: number;
+  contrast?: number;
+  dropShadow?: ParsedDropShadow;
+  grayscale?: number;
+  hueRotate?: number;
+  invert?: number;
+  opacity?: number;
+  saturate?: number;
+  sepia?: number;
+  blur?: number;
+};
+
+export type FilterArray = ParsedFilterFunction[];

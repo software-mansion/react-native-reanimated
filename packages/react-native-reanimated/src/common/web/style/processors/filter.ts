@@ -1,8 +1,35 @@
 'use strict';
 import type { FilterFunction } from 'react-native';
 
-import { maybeAddSuffix } from '../../../utils';
+import { maybeAddSuffix, kebabizeCamelCase } from '../../../utils';
 import type { ValueProcessor } from '../types';
+
+function parseFilterValue(filterName: string, filterValue: any) {
+  switch (filterName) {
+    case 'hueRotate':
+      return `${maybeAddSuffix(filterValue, 'deg')}`;
+
+    case 'blur':
+      return `${maybeAddSuffix(filterValue, 'px')}`;
+
+    case 'dropShadow':
+      if (typeof filterValue === 'string') {
+        return `${filterValue}`;
+      }
+
+      return [
+        maybeAddSuffix(filterValue.offsetX, 'px'),
+        maybeAddSuffix(filterValue.offsetY, 'px'),
+        maybeAddSuffix(filterValue.standardDeviation, 'px'),
+        filterValue.color,
+      ]
+        .filter(Boolean)
+        .join(' ');
+
+    default:
+      return filterValue;
+  }
+}
 
 export const processFilterWeb: ValueProcessor<
   ReadonlyArray<FilterFunction> | string
@@ -15,27 +42,10 @@ export const processFilterWeb: ValueProcessor<
     .map((filter) =>
       Object.entries(filter)
         .map(([filterProp, filterValue]) => {
-          switch (filterProp) {
-            case 'hueRotate':
-              return `hue-rotate(${maybeAddSuffix(filterValue, 'deg')})`;
-            case 'blur':
-              return `blur(${maybeAddSuffix(filterValue, 'px')})`;
-            case 'dropShadow':
-              if (typeof filterValue === 'string') {
-                return `drop-shadow(${filterValue})`;
-              } else {
-                return `drop-shadow(${[
-                  maybeAddSuffix(filterValue.offsetX, 'px'),
-                  maybeAddSuffix(filterValue.offsetY, 'px'),
-                  maybeAddSuffix(filterValue.standardDeviation, 'px'),
-                  filterValue.color,
-                ]
-                  .filter(Boolean)
-                  .join(' ')})`;
-              }
-            default:
-              return `${filterProp}(${filterValue})`;
-          }
+          const kebabName = kebabizeCamelCase(filterProp);
+          const parsedValue = parseFilterValue(filterProp, filterValue);
+
+          return `${kebabName}(${parsedValue})`;
         })
         .join(' ')
     )
