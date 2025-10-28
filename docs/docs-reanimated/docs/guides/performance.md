@@ -18,13 +18,13 @@ We are actively working with React core team at Meta on identifying bottlenecks 
 
 **Problem:** When scrolling a `FlatList` or `ScrollView`, you might notice flickering or jittering of animated components (e.g. sticky header) implemented using `useAnimatedScrollHandler` hook.
 
-**Solution:** You need to upgrade to React Native 0.81 (or newer), set experimental release level in order to enable `preventShadowTreeCommitExhaustion` feature flag and enable [`DISABLE_COMMIT_PAUSING_MECHANISM`](./feature-flags#disable_commit_pausing_mechanism) static feature flag as described [here](./feature-flags#disable_commit_pausing_mechanism).
+**Solution:** You need to upgrade to React Native 0.81 (or newer), set experimental release level in order to enable `preventShadowTreeCommitExhaustion` feature flag and enable [`DISABLE_COMMIT_PAUSING_MECHANISM`](/docs/guides/feature-flags#disable_commit_pausing_mechanism) static feature flag as described [here](/docs/guides/feature-flags#disable_commit_pausing_mechanism).
 
 ### ⚠️ Lower FPS while scrolling
 
 **Problem:** Frames per seconds drops when there are many animated components on the screen during scrolling.
 
-**Solution:** You need to upgrade to React Native 0.80 (or newer), upgrade to Reanimated 4.2.0 (or newer) and enable [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](./feature-flags#use_commit_hook_only_for_react_commits) static feature flag as described [here](./feature-flags#use_commit_hook_only_for_react_commits).
+**Solution:** You need to upgrade to React Native 0.80 (or newer), upgrade to Reanimated 4.2.0 (or newer) and enable [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](/docs/guides/feature-flags#use_commit_hook_only_for_react_commits) static feature flag as described [here](/docs/guides/feature-flags#use_commit_hook_only_for_react_commits).
 
 You can also consider enabling `enableCppPropsIteratorSetter` feature flag as described [below](#️-low-fps-when-running-multiple-animations-at-once).
 
@@ -32,7 +32,7 @@ You can also consider enabling `enableCppPropsIteratorSetter` feature flag as de
 
 **Problem:** When animating many components simultaneously (also across multiple screens) you might notice FPS regressions.
 
-**Solution 1:** Enable static feature flags `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` (available from 4.0.0) and `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` (available from 4.2.0) as described [here](./feature-flags#android_synchronously_update_ui_props) for Android and [here](./feature-flags#ios_synchronously_update_ui_props) for iOS, respectively. This will enable a fast code path for applying updates of non-layout styles like `opacity` or `transform` via platform-specific mechanisms rather than cloning `ShadowNode` instances and calling `ShadowTree::commit` method.
+**Solution 1:** Enable static feature flags `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` (available from 4.0.0) and `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` (available from 4.2.0) as described [here](/docs/guides/feature-flags#android_synchronously_update_ui_props) for Android and [here](/docs/guides/feature-flags#ios_synchronously_update_ui_props) for iOS, respectively. This will enable a fast code path for applying updates of non-layout styles like `opacity` or `transform` via platform-specific mechanisms rather than cloning `ShadowNode` instances and calling `ShadowTree::commit` method.
 
 Note that these flags affect the touch detection system for components with animated transforms so you might want to consider using `Pressable` from `react-native-gesture-handler` instead of the built-in one from `react-native`.
 
@@ -89,11 +89,11 @@ Animating non-layout properties (like `transform`, `opacity` or `backgroundColor
 
 Whenever possible, you should prefer using non-layout styles (e.g. `transform` with `translateX`/`translateY`) rather than their layout-affecting counterparts (i.e. `top`/`left`).
 
-Additionally, non-layout properties can be updated using a fast path – more details [here](./feature-flags#android_synchronously_update_ui_props).
+Additionally, non-layout properties can be updated using a fast path – more details [here](/docs/guides/feature-flags#android_synchronously_update_ui_props).
 
 ### 💡 Memoize frame callbacks
 
-If you're using [`useFrameCallback`](../advanced/useFrameCallback), you should wrap the frame callback worklet inside `useCallback` in order to memoize it. This way, the frame callback won't need to be recrated and thus registered on every render. If you're using React Compiler, the frame callback should be memoized automatically.
+If you're using [`useFrameCallback`](/docs/advanced/useFrameCallback), you should wrap the frame callback worklet inside `useCallback` in order to memoize it. This way, the frame callback won't need to be recrated and thus registered on every render. If you're using React Compiler, the frame callback should be memoized automatically.
 
 ```tsx
 useFrameCallback(
