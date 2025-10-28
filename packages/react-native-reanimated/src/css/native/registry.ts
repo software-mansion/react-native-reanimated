@@ -14,6 +14,7 @@ export const ERROR_MESSAGES = {
 const baseStyleBuilder = createStyleBuilder(BASE_PROPERTIES_CONFIG, {
   separatelyInterpolatedNestedProperties: [
     'boxShadow',
+    'filter',
     'shadowOffset',
     'textShadowOffset',
     'transformOrigin',

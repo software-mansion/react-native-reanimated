@@ -17,8 +17,11 @@ export default function Filter() {
         animationTimingFunction: 'linear',
       })}
       renderExample={({ animation }) => (
+        // TO-DO: Replace with balloonsImage when assets are supported in monorepo
         <Animated.Image
-          source={balloonsImage}
+          source={{
+            uri: 'https://fastly.picsum.photos/id/418/400/400.jpg?hmac=bb10nb5u-sK8fxD4fyTmZO36Q4N6jRTuSj-ChqtM_3M',
+          }}
           style={[styles.image, animation]}
         />
       )}
@@ -51,7 +54,6 @@ export default function Filter() {
               title: 'Object syntax',
             },
           ],
-          labelTypes: ['web'],
           title: 'Filter',
         },
       ]}
