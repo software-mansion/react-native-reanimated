@@ -360,7 +360,7 @@ export enum InterfaceOrientation {
 }
 
 export type ShadowNodeWrapper = {
-  __hostObjectShadowNodeWrapper: never;
+  __nativeStateShadowNodeWrapper: never;
 };
 
 export enum KeyboardState {
