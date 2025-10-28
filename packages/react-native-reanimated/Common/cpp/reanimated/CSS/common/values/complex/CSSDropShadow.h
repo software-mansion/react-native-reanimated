@@ -15,7 +15,7 @@ class CSSDropShadow : public CSSSimpleValue<CSSDropShadow> {
  public:
   CSSDouble offsetX;
   CSSDouble offsetY;
-  CSSDouble standardDeviation; 
+  CSSDouble standardDeviation;
   CSSColor color;
 
   CSSDropShadow(
