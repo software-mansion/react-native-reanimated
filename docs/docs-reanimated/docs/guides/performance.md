@@ -103,9 +103,19 @@ useFrameCallback(
 );
 ```
 
-### 💡 Memoize gestures
+### 💡 Memoize gesture objects
 
 If you're using [React Native Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/), you should wrap gesture objects like `Gesture.Tap()` or similar inside `useMemo` in order to memoize them. This way, the gestures won't need to be reattached on every render. This is particularly important for `FlatList` items where performance is key. If you're using React Compiler, the gesture objects should be memoized automatically.
+
+```tsx
+const pan = useMemo(
+  () =>
+    Gesture.Pan()
+      .onStart(() => {})
+      .onEnd(() => {}),
+  [...deps]
+);
+```
 
 ### 💡 Animate `TextInput` instead of re-rendering `Text` component
 
