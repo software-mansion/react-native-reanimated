@@ -2,7 +2,6 @@ import { StyleSheet } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
-import { balloonsImage } from '@/apps/css/assets';
 import { ExamplesScreen, VerticalExampleCard } from '@/apps/css/components';
 import { radius, sizes } from '@/theme';
 
