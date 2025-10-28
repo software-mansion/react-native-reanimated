@@ -18,7 +18,12 @@ class CSSDropShadow : public CSSSimpleValue<CSSDropShadow> {
   CSSDouble standardDeviation; // equivalent to blur radius
   CSSColor color;
 
-  CSSDropShadow(CSSDouble offsetX, CSSDouble offsetY, CSSDouble standardDeviation, CSSColor color);
+  CSSDropShadow(
+      CSSDouble offsetX,
+      CSSDouble offsetY,
+      CSSDouble standardDeviation,
+      CSSColor color);
+
 
   explicit CSSDropShadow(jsi::Runtime &rt, const jsi::Value &jsiValue);
   explicit CSSDropShadow(const folly::dynamic &value);
@@ -35,7 +40,9 @@ class CSSDropShadow : public CSSSimpleValue<CSSDropShadow> {
   bool operator==(const CSSDropShadow &other) const;
 
 #ifndef NDEBUG
-  friend std::ostream &operator<<(std::ostream &os, const CSSDropShadow &shadow);
+friend std::ostream &operator<<(
+    std::ostream &os,
+    const CSSDropShadow &shadow);
 #endif // NDEBUG
 
  private:

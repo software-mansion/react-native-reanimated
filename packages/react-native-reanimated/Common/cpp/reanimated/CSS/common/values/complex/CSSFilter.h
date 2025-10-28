@@ -53,7 +53,9 @@ class CSSFilter : public CSSSimpleValue<CSSFilter> {
   bool operator==(const CSSFilter &other) const;
 
 #ifndef NDEBUG
-  friend std::ostream &operator<<(std::ostream &os, const CSSFilter &filterValue);
+  friend std::ostream &operator<<(
+      std::ostream &os,
+      const CSSFilter &filterValue);
 #endif // NDEBUG
 
  private:
