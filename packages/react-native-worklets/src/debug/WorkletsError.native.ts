@@ -1,15 +1,19 @@
 'use strict';
 
-import { RuntimeKind } from './runtimeKind';
+import { RuntimeKind } from '../runtimeKind';
+import type {
+  IWorkletsErrorConstructor,
+  WorkletsError as IWorkletsError,
+} from './types';
 
-function WorkletsErrorConstructor(message?: string): WorkletsError {
+function WorkletsErrorConstructor(message?: string): IWorkletsError {
   'worklet';
   const prefix = '[Worklets]';
 
   // eslint-disable-next-line reanimated/use-worklets-error
   const errorInstance = new Error(message ? `${prefix} ${message}` : prefix);
   errorInstance.name = `WorkletsError`;
-  return errorInstance as WorkletsError;
+  return errorInstance as IWorkletsError;
 }
 
 /**
@@ -18,7 +22,7 @@ function WorkletsErrorConstructor(message?: string): WorkletsError {
  */
 export function registerWorkletsError() {
   'worklet';
-  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
+  if ((globalThis.__RUNTIME_KIND as RuntimeKind) !== RuntimeKind.ReactNative) {
     (globalThis as Record<string, unknown>).WorkletsError =
       WorkletsErrorConstructor;
   }
@@ -26,11 +30,3 @@ export function registerWorkletsError() {
 
 export const WorkletsError =
   WorkletsErrorConstructor as IWorkletsErrorConstructor;
-
-export type WorkletsError = Error & { name: 'Worklets' }; // signed type
-
-interface IWorkletsErrorConstructor extends Error {
-  new (message?: string): WorkletsError;
-  (message?: string): WorkletsError;
-  readonly prototype: WorkletsError;
-}

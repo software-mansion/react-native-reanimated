@@ -1,5 +1,6 @@
 'use strict';
-import type { Synchronizable } from './synchronizable';
+
+import type { Synchronizable } from './types';
 
 export function isSynchronizable<TValue>(
   value: unknown

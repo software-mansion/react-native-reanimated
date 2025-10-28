@@ -1,14 +1,11 @@
 'use strict';
-import { logger } from '../logger';
-import { WorkletsModule } from '../WorkletsModule';
-import type StaticFeatureFlagsJSON from './staticFlags.json';
-
-type DynamicFlagsType = {
-  EXAMPLE_DYNAMIC_FLAG: boolean;
-  init(): void;
-  setFlag(name: DynamicFlagName, value: boolean): void;
-};
-type DynamicFlagName = keyof Omit<Omit<DynamicFlagsType, 'setFlag'>, 'init'>;
+import { logger } from '../debug/logger';
+import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
+import type {
+  DynamicFlagName,
+  DynamicFlagsType,
+  StaticFeatureFlagsSchema,
+} from './types';
 
 export const DynamicFlags: DynamicFlagsType = {
   EXAMPLE_DYNAMIC_FLAG: true,
@@ -42,21 +39,6 @@ export function setDynamicFeatureFlag(
 ): void {
   DynamicFlags.setFlag(name, value);
 }
-
-/**
- * This constant is needed for typechecking and preserving static typechecks in
- * generated .d.ts files. Without it, the static flags resolve to an object
- * without specific keys.
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const DefaultStaticFeatureFlags = {
-  RUNTIME_TEST_FLAG: false,
-  IOS_DYNAMIC_FRAMERATE_ENABLED: false,
-} as const satisfies typeof StaticFeatureFlagsJSON;
-
-type StaticFeatureFlagsSchema = {
-  -readonly [K in keyof typeof DefaultStaticFeatureFlags]: boolean;
-};
 
 const staticFeatureFlags: Partial<StaticFeatureFlagsSchema> = {};
 

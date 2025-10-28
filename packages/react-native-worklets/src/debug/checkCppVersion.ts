@@ -1,7 +1,8 @@
 'use strict';
-import { logger } from '../logger';
-import { WorkletsError } from '../WorkletsError';
+
 import { jsVersion } from './jsVersion';
+import { logger } from './logger';
+import { WorkletsError } from './WorkletsError';
 
 export function checkCppVersion() {
   const cppVersion = global._WORKLETS_VERSION_CPP;

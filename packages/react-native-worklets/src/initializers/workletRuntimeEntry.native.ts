@@ -1,9 +1,8 @@
 'use strict';
 
+import { WorkletsError } from '../debug/WorkletsError';
+import { RuntimeKind } from '../runtimeKind';
 import { init } from './initializers';
-import { SHOULD_BE_USE_WEB } from './PlatformChecker';
-import { RuntimeKind } from './runtimeKind';
-import { WorkletsError } from './WorkletsError';
 
 /**
  * This function is an entry point for Worklet Runtimes. We can use it to setup
@@ -22,7 +21,7 @@ export function bundleModeInit() {
   // when Bundle Mode is enabled.
   globalThis._WORKLETS_BUNDLE_MODE = false;
 
-  if (SHOULD_BE_USE_WEB || !globalThis._WORKLETS_BUNDLE_MODE) {
+  if (!globalThis._WORKLETS_BUNDLE_MODE) {
     return;
   }
 

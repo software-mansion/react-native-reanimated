@@ -1,6 +1,6 @@
 'use strict';
 
-import type { RNError } from './errors';
+import type { RNError } from './debug/errors';
 
 /** Used only with debug builds. */
 export function callGuardDEV<Args extends unknown[], ReturnValue>(

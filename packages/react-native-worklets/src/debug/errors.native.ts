@@ -1,7 +1,7 @@
 'use strict';
 
+import type { WorkletStackDetails } from '../types';
 import { WorkletsError } from './WorkletsError';
-import type { WorkletStackDetails } from './workletTypes';
 
 const _workletStackDetails = new Map<number, WorkletStackDetails>();
 
