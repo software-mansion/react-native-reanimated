@@ -139,12 +139,11 @@ export const internalBindingsToCaptureFromGlobalScope = new Set([
 ]);
 
 /**
- * @deprecated Since we moved on to using `global.` prefix in Reanimated, we
- *   don't need to capture these identifiers anymore. However, for safety
- *   reasons and 3rd party libraries, we still keep them in the list.
- *
- *   `_WORKLET` is the only exception since it's a part of the public API.
+ * Since we moved on to using `global.` prefix in Reanimated, we don't need to
+ * capture these identifiers anymore. However, for safety reasons and 3rd party
+ * libraries, we still keep them in the list.
  */
+// TODO: Remove this once RNScreens stop depending on it.
 // eslint-disable-next-line camelcase
 const notCapturedIdentifiers_DEPRECATED = ['_IS_FABRIC'];
 

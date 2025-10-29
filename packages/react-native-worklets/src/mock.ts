@@ -10,6 +10,7 @@ const ID = <TValue>(value: TValue) => value;
 const IMMEDIATE_CALLBACK_INVOCATION = <TCallback>(callback: () => TCallback) =>
   callback();
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 globalThis._WORKLET = false;
 globalThis.__RUNTIME_KIND = RuntimeKind.ReactNative;
 globalThis._log = console.log;

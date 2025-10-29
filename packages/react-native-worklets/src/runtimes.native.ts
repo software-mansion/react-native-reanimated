@@ -104,44 +104,6 @@ export function createWorkletRuntime(
   );
 }
 
-/** @deprecated Use `scheduleOnRuntime` instead. @public */
-// @ts-expect-error Check `runOnUI` overload.
-export function runOnRuntime<Args extends unknown[], ReturnValue>(
-  workletRuntime: WorkletRuntime,
-  worklet: (...args: Args) => ReturnValue
-): WorkletFunction<Args, ReturnValue>;
-/** Schedule a worklet to execute on the background queue. */
-export function runOnRuntime<Args extends unknown[], ReturnValue>(
-  workletRuntime: WorkletRuntime,
-  worklet: WorkletFunction<Args, ReturnValue>
-): (...args: Args) => void {
-  'worklet';
-  if (__DEV__ && !isWorkletFunction(worklet)) {
-    throw new WorkletsError(
-      'The function passed to `runOnRuntime` is not a worklet.'
-    );
-  }
-  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
-    return (...args) =>
-      globalThis._scheduleOnRuntime(
-        workletRuntime,
-        makeShareableCloneOnUIRecursive(() => {
-          'worklet';
-          worklet(...args);
-        })
-      );
-  }
-  return (...args) =>
-    WorkletsModule.scheduleOnRuntime(
-      workletRuntime,
-      createSerializable(() => {
-        'worklet';
-        worklet(...args);
-        globalThis.__flushMicrotasks();
-      })
-    );
-}
-
 /**
  * Lets you asynchronously run a
  * [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)
@@ -173,7 +135,51 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
   ...args: Args
 ): void {
   'worklet';
-  runOnRuntime(workletRuntime, worklet)(...args);
+  if (__DEV__ && !isWorkletFunction(worklet)) {
+    throw new WorkletsError(
+      'The function passed to `runOnRuntime` is not a worklet.'
+    );
+  }
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
+    globalThis._scheduleOnRuntime(
+      workletRuntime,
+      // TODO: Migrate to `createSerializable` when Bundle Mode is the default.
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      makeShareableCloneOnUIRecursive(() => {
+        'worklet';
+        worklet(...args);
+      })
+    );
+  }
+
+  WorkletsModule.scheduleOnRuntime(
+    workletRuntime,
+    createSerializable(() => {
+      'worklet';
+      worklet(...args);
+      globalThis.__flushMicrotasks();
+    })
+  );
+}
+
+/** @deprecated Use `scheduleOnRuntime` instead. @public */
+// @ts-expect-error Check `runOnUI` overload.
+export function runOnRuntime<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: (...args: Args) => ReturnValue
+): WorkletFunction<Args, ReturnValue>;
+/** Schedule a worklet to execute on the background queue. */
+export function runOnRuntime<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: WorkletFunction<Args, ReturnValue>
+): (...args: Args) => void {
+  'worklet';
+  if (__DEV__ && !isWorkletFunction(worklet)) {
+    throw new WorkletsError(
+      'The function passed to `runOnRuntime` is not a worklet.'
+    );
+  }
+  return (...args) => scheduleOnRuntime(workletRuntime, worklet, ...args);
 }
 
 type WorkletRuntimeConfigInternal = WorkletRuntimeConfig & {
