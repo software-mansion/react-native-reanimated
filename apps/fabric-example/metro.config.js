@@ -6,7 +6,6 @@ const {
   getMetroAndroidAssetsResolutionFix,
   // @ts-ignore react-native-monorepo-tools doesn't have types.
 } = require('react-native-monorepo-tools');
-const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
 
 const androidAssetsResolutionFix = getMetroAndroidAssetsResolutionFix();
 
@@ -34,6 +33,7 @@ let config = {
 config = mergeConfig(getDefaultConfig(__dirname), config);
 
 // Uncomment the following to enable bundle mode.
+// const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
 // config = mergeConfig(config, bundleModeMetroConfig);
 
 module.exports = wrapWithReanimatedMetroConfig(

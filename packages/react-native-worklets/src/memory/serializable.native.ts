@@ -226,8 +226,7 @@ if (globalThis._WORKLETS_BUNDLE_MODE) {
   // TODO: Do it programatically.
   createSerializable.__bundleData = {
     imported: 'createSerializable',
-    // @ts-expect-error resolveWeak is defined by Metro
-    source: require.resolveWeak('./index'),
+    source: require.resolveWeak('react-native-worklets'),
   };
 }
 
