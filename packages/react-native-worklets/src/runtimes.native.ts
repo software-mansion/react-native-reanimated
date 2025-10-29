@@ -145,7 +145,7 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
   'worklet';
   if (__DEV__ && !isWorkletFunction(worklet)) {
     throw new WorkletsError(
-      'The function passed to `runOnRuntime` is not a worklet.'
+      'The function passed to `scheduleOnRuntime` is not a worklet.'
     );
   }
   if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
