@@ -123,6 +123,12 @@ export default function AboutExample() {
               : 'Disabled'}
           </Text>
           <Text style={styles.text}>
+            <Text style={styles.bold}>VERBOSE_MODE:</Text>{' '}
+            {getStaticFeatureFlagReanimated('VERBOSE_MODE')
+              ? 'Enabled'
+              : 'Disabled'}
+          </Text>
+          <Text style={styles.text}>
             <Text style={styles.bold}>IOS_DYNAMIC_FRAMERATE_ENABLED:</Text>{' '}
             {getStaticFeatureFlagWorklets('IOS_DYNAMIC_FRAMERATE_ENABLED')
               ? 'Enabled'
