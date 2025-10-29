@@ -57,13 +57,12 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
 }
 
 export function runOnUIAsync<Args extends unknown[], ReturnValue>(
-  worklet: (...args: Args) => ReturnValue
-): (...args: Args) => Promise<ReturnValue> {
-  return (...args: Args) => {
-    return new Promise<ReturnValue>((resolve) => {
-      enqueueUI(worklet, args, resolve);
-    });
-  };
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): Promise<ReturnValue> {
+  return new Promise<ReturnValue>((resolve) => {
+    enqueueUI(worklet, args, resolve);
+  });
 }
 
 type UIJob<Args extends unknown[] = unknown[], ReturnValue = unknown> = [

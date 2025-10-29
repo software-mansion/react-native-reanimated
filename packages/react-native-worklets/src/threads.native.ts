@@ -342,26 +342,25 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
  * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUIAsync
  */
 export function runOnUIAsync<Args extends unknown[], ReturnValue>(
-  worklet: (...args: Args) => ReturnValue
-): (...args: Args) => Promise<ReturnValue> {
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): Promise<ReturnValue> {
   if (__DEV__ && !isWorkletFunction(worklet)) {
     throw new WorkletsError('`runOnUIAsync` can only be used with worklets.');
   }
-  return (...args: Args) => {
-    return new Promise<ReturnValue>((resolve) => {
-      if (__DEV__) {
-        // in DEV mode we call serializable conversion here because in case the object
-        // can't be converted, we will get a meaningful stack-trace as opposed to the
-        // situation when conversion is only done via microtask queue. This does not
-        // make the app particularily less efficient as converted objects are cached
-        // and for a given worklet the conversion only happens once.
-        createSerializable(worklet);
-        createSerializable(args);
-      }
+  return new Promise<ReturnValue>((resolve) => {
+    if (__DEV__) {
+      // in DEV mode we call serializable conversion here because in case the object
+      // can't be converted, we will get a meaningful stack-trace as opposed to the
+      // situation when conversion is only done via microtask queue. This does not
+      // make the app particularily less efficient as converted objects are cached
+      // and for a given worklet the conversion only happens once.
+      createSerializable(worklet);
+      createSerializable(args);
+    }
 
-      enqueueUI(worklet as WorkletFunction<Args, ReturnValue>, args, resolve);
-    });
-  };
+    enqueueUI(worklet as WorkletFunction<Args, ReturnValue>, args, resolve);
+  });
 }
 
 if (__DEV__) {
