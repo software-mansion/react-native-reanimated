@@ -14,6 +14,8 @@ After enabling the New Architecture in your app, you might notice some performan
 
 We are actively working with React core team at Meta on identifying bottlenecks and improving the overall state of animations on the New Architecture. For now, please consider enabling the following optimizations in your app to mitigate the performance regressions.
 
+Please note that downgrading your Expo SDK version or using an older release of Reanimated is not a good solution in the long term. Reanimated 3 is no longer maintained and will not receive updates to support upcoming releases of React Native. Please upgrade to the latest version of Reanimated 4 in order to get bug fixes and other improvements.
+
 ### ⚠️ Flickering/jittering while scrolling
 
 **Problem:** When scrolling a `FlatList` or `ScrollView`, you might notice flickering or jittering of animated components (e.g. sticky header) implemented using `useAnimatedScrollHandler` hook.
@@ -39,6 +41,10 @@ Note that these flags affect the touch detection system for components with anim
 It is also recommended to animate non-layout styles (e.g. `transform`) rather than layout-affecting styles as described [below](#-prefer-animating-non-layout-properties).
 
 **Solution 2:** Manually enable `enableCppPropsIteratorSetter` feature flag from `react-native` by patching the source files and building React Native from source. Note that this feature flag is experimental and may produce unexpected results.
+
+### ⚠️ Blink of incorrect layout of FlashList
+
+**Problem:** When `FlashList` component from `@shopify/flash-list` is mounted while there are some animations running, the item components might be positioned incorrectly for a split second. Unfortunately, the root cause of the issue is located in React Native itself. We reported a [GitHub issue](https://github.com/facebook/react-native/issues/52373) where you can track the progress.
 
 ### ℹ️ Debug vs. release mode
 
@@ -66,7 +72,7 @@ const animatedStyle = useAnimatedStyle(() => {
 });
 ```
 
-When you read the `sv.value` in the React Native runtime, the JS thread will get blocked until the value is fetched from the UI thread. In most cases it will be negligible, but if the UI thread is busy or you are reading a value multiple times, the wait time needed to synchronize both threads may significantly increase.
+When you read the `sv.value` in the React Native runtime, the JS thread will get blocked until the value is fetched from the UI thread. In most cases it will be negligible, but if the UI thread is busy or you are reading a value multiple times, the wait time needed to synchronize both threads may significantly increase. For more details, check out [this article](https://andrei-calazans.com/posts/reanimated-blocking-js-thread/).
 
 ### ❌ Avoid animating too many components at once
 
