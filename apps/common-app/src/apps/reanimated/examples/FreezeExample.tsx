@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
 import { useContext, useEffect, useState } from 'react';
 import { Freeze } from 'react-freeze';
-import { Button, Text, View } from 'react-native';
+import { Button, Pressable, Text, View } from 'react-native';
 import Animated, {
   css,
   Easing,
@@ -43,9 +43,11 @@ const AnimatedSwitch = () => {
   });
 
   return (
-    <View style={styles.switchContainer} onTouchEnd={handleToggle}>
-      <Animated.View style={[styles.toggle, animatedStyles]} />
-    </View>
+    <Pressable onPress={handleToggle}>
+      <View style={styles.switchContainer}>
+        <Animated.View style={[styles.toggle, animatedStyles]} />
+      </View>
+    </Pressable>
   );
 };
 
@@ -78,14 +80,16 @@ const AnimatedStyleAnimation = () => {
     sv.value = 100;
   }, [sv]);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      left: withDelay(
-        1000,
-        withTiming(sv.value, { duration: 10000, easing: Easing.linear })
-      ),
-    };
-  });
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateX: withDelay(
+          1000,
+          withTiming(sv.value, { duration: 10000, easing: Easing.linear })
+        ),
+      },
+    ],
+  }));
 
   return (
     <Animated.View style={[styles.box, animatedStyle]}>

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 1 # Use alphabetical order
 ---
 
 # runOnUIAsync
@@ -9,14 +9,14 @@ It returns a Promise of the worklet's return value. The Promise is resolved asyn
 
 ## Reference
 
-```javascript   
+```javascript
 import { runOnUIAsync } from 'react-native-worklets';
 
 // RN Runtime, JS thread
 
 const result: Promise<number> = runOnUIAsync((): number => {
   return 1;
-})();
+});
 
 await result; // 1
 ```
@@ -26,8 +26,9 @@ await result; // 1
 
 ```typescript
 function runOnUIAsync<Args extends unknown[], ReturnValue>(
-  worklet: (...args: Args) => ReturnValue
-): (...args: Args) => Promise<ReturnValue> 
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): Promise<ReturnValue>;
 ```
 
 </details>
@@ -36,11 +37,11 @@ function runOnUIAsync<Args extends unknown[], ReturnValue>(
 
 #### worklet
 
-A reference to a function you want to execute on the UI thread. Arguments to your function have to be passed to the function returned from `runOnUIAsync` i.e. `runOnUIAsync(setValue)(10);`.
+A reference to a function you want to execute on the UI thread. Arguments to your function have to be passed to the function returned from `runOnUIAsync` i.e. `runOnUIAsync(setValue, 10);`.
 
 ## Remarks
 
-- It's a common mistake to execute function inside of `runOnUIAsync` like this: ~~`runOnUIAsync(myWorklet(10))()`~~. Here, the correct usage would be `runOnUIAsync(myWorklet)(10)`.
+- It's a common mistake to execute function inside of `runOnUIAsync` like this: ~~`runOnUIAsync(myWorklet(10))`~~. Here, the correct usage would be `runOnUIAsync(myWorklet, 10)`.
 
 - The callback passed as the argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ready to be run on the [UI thread](/docs/fundamentals/glossary#ui-thread).
 

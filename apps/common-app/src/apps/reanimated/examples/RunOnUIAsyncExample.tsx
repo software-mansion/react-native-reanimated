@@ -45,7 +45,7 @@ const RunOnUIAsyncExample: React.FC = () => {
     setIsSorting(true);
     console.log('Starting sort on UI thread...');
     try {
-      const sortedCards = await runOnUIAsync(sortCardsOnUIWorklet)(cards);
+      const sortedCards = await runOnUIAsync(sortCardsOnUIWorklet, cards);
       setCards(sortedCards);
       setIsSorting(false);
       console.log('Sorting complete, state updated on UI thread.');
@@ -59,7 +59,7 @@ const RunOnUIAsyncExample: React.FC = () => {
     setIsShuffling(true);
     console.log('Starting shuffle on UI thread...');
     try {
-      const shuffledCards = await runOnUIAsync(shuffleCardsOnUIWorklet)(cards);
+      const shuffledCards = await runOnUIAsync(shuffleCardsOnUIWorklet, cards);
       setCards(shuffledCards);
       setIsShuffling(false);
       console.log('Shuffling complete, state updated on UI thread.');
