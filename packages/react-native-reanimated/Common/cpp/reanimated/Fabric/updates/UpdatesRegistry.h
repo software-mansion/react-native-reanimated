@@ -36,6 +36,7 @@ class UpdatesRegistry {
   std::lock_guard<std::mutex> lock() const;
 
   virtual bool isEmpty() const;
+  virtual size_t size() const;
   folly::dynamic get(Tag tag) const;
   virtual void remove(Tag tag) = 0;
 
