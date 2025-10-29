@@ -79,5 +79,6 @@ declare global {
   var __isHostObject: (value: object) => boolean;
   interface NodeRequire {
     resolveWeak(id: string): number;
+    getModules(): Map<number, unknown>;
   }
 }
