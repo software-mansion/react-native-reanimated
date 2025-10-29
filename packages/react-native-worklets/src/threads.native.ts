@@ -153,6 +153,7 @@ if (__DEV__) {
   }
 
   const serializableRunOnUIWorklet = createSerializable(runOnUIWorklet);
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   serializableMappingCache.set(runOnUI, serializableRunOnUIWorklet);
 }
 
@@ -191,6 +192,8 @@ export function runOnUISync<Args extends unknown[], ReturnValue>(
     createSerializable(() => {
       'worklet';
       const result = worklet(...args);
+      // TODO: Migrate to `createSerializable` when Bundle Mode is the default.
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       return makeShareableCloneOnUIRecursive(result);
     })
   );
@@ -291,6 +294,8 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
 
   scheduleOnRNImpl(
     fun as (...args: Args) => ReturnValue,
+    // TODO: Migrate to `createSerializable` when Bundle Mode is the default.
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     args.length > 0 ? makeShareableCloneOnUIRecursive(args) : undefined
   );
 }
@@ -398,7 +403,7 @@ function flushUIQueue(): void {
         queue.forEach(([workletFunction, workletArgs, jobResolve]) => {
           const result = workletFunction(...workletArgs);
           if (jobResolve) {
-            runOnJS(jobResolve)(result);
+            scheduleOnRN(jobResolve, result);
           }
         });
         callMicrotasks();

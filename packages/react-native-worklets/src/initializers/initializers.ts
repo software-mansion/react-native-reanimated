@@ -5,6 +5,7 @@ import { mockedRequestAnimationFrame } from '../runLoop/uiRuntime/mockedRequestA
 import { RuntimeKind } from '../runtimeKind';
 
 export function init() {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   globalThis._WORKLET = false;
   globalThis.__RUNTIME_KIND = RuntimeKind.ReactNative;
   globalThis._log = console.log;

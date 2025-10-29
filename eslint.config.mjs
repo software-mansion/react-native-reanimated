@@ -28,6 +28,7 @@ const tsRules = {
   '@typescript-eslint/no-explicit-any': 'warn',
   '@typescript-eslint/no-empty-object-type': 'warn',
   '@typescript-eslint/unbound-method': 'error',
+  '@typescript-eslint/no-deprecated': 'error',
 
   '@typescript-eslint/ban-ts-comment': [
     'error',
