@@ -1,7 +1,8 @@
 'use strict';
 
 import { ReanimatedError } from '../../common';
-import type { SingleCSSTransitionConfig } from '../types';
+import { MILLISECONDS_REGEX, SECONDS_REGEX } from '../constants';
+import type { SingleCSSTransitionConfig, TimeUnit } from '../types';
 import { isTimeUnit, smellsLikeTimingFunction } from './guards';
 
 export function splitByComma(str: string) {
@@ -79,4 +80,15 @@ export function parseSingleTransitionShorthand(
   }
 
   return result;
+}
+
+export function normalizeTimeUnit(timeUnit: TimeUnit): number | null {
+  if (typeof timeUnit === 'number') {
+    return timeUnit;
+  } else if (MILLISECONDS_REGEX.test(timeUnit)) {
+    return parseInt(timeUnit, 10);
+  } else if (SECONDS_REGEX.test(timeUnit)) {
+    return parseFloat(timeUnit) * 1000;
+  }
+  return null;
 }
