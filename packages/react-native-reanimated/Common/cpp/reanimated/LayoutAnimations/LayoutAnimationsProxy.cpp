@@ -1,9 +1,12 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
+#include <reanimated/Tools/FeatureFlags.h>
+#include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <react/renderer/animations/utils.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 
+#include <chrono>
 #include <memory>
 #include <set>
 #include <string>
@@ -25,6 +28,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     MountingTransaction::Number transactionNumber,
     const TransactionTelemetry &telemetry,
     ShadowViewMutationList mutations) const {
+  ReanimatedSystraceSection s("LayoutAnimationsProxy::pullTransaction");
+  
+  const auto start = std::chrono::high_resolution_clock::now();
+
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << std::endl;
   LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " " << surfaceId << std::endl;
@@ -55,6 +62,12 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   handleUpdatesAndEnterings(filteredMutations, movedViews, mutations, propsParserContext, surfaceId);
 
   addOngoingAnimations(surfaceId, filteredMutations);
+  
+  if constexpr (StaticFeatureFlags::getFlag("VERBOSE_MODE")) {
+    const auto end = std::chrono::high_resolution_clock::now();
+    const auto duration_ms = std::chrono::duration<double>(end - start).count() * 1000;
+    LOG(INFO) << "pullTransaction took " << duration_ms << " ms";
+  }
 
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
