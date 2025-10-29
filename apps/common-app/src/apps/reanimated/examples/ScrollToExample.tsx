@@ -196,7 +196,7 @@ const AnimatedSectionList = Animated.createAnimatedComponent(
 );
 
 const SectionListExample = ({ animated, ref }: ExampleProps) => {
-  const aref = useAnimatedRef<typeof AnimatedSectionList>();
+  const aref = useAnimatedRef<SectionList<number>>();
 
   useImperativeHandle(ref, () => ({
     scrollFromJS() {
@@ -247,13 +247,11 @@ const SectionListExample = ({ animated, ref }: ExampleProps) => {
 const AnimatedRNGHScrollView = Animated.createAnimatedComponent(RNGHScrollView);
 
 const RNGHScrollViewExample = ({ animated, ref }: ExampleProps) => {
-  const aref = useAnimatedRef<typeof AnimatedRNGHScrollView>();
+  const aref = useAnimatedRef<RNGHScrollView>();
 
   useImperativeHandle(ref, () => ({
     scrollFromJS() {
       console.log(getRuntimeKind());
-      // @ts-ignore This is broken with react-native-strict-api types.
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       aref.current?.scrollTo({ y: getRandomOffset(), animated });
     },
     scrollFromUI() {
