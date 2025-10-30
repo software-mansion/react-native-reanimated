@@ -5,6 +5,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_STANDARD 20)
 
+find_package(fbjni REQUIRED CONFIG)
+find_package(ReactAndroid REQUIRED CONFIG)
+
 # default CMAKE_CXX_FLAGS: "-g -DANDROID -fdata-sections -ffunction-sections
 # -funwind-tables -fstack-protector-strong -no-canonical-prefixes
 # -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fstack-protector-all"
@@ -16,13 +19,6 @@ string(APPEND CMAKE_CXX_FLAGS
   -DREANIMATED_VERSION=${REANIMATED_VERSION}")
 
 string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
-
-if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
-  include("${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
-  target_compile_reactnative_options(reanimated PUBLIC)
-else()
-  string(APPEND CMAKE_CXX_FLAGS " -fexceptions -frtti -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
-endif()
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
   string(APPEND CMAKE_CXX_FLAGS " -DRCT_NEW_ARCH_ENABLED")
@@ -56,3 +52,10 @@ set(ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp")
 set(COMMON_CPP_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp")
 
 add_subdirectory("${ANDROID_CPP_DIR}/worklets")
+
+if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
+  include("${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
+  target_compile_reactnative_options(worklets PUBLIC)
+else()
+  string(APPEND CMAKE_CXX_FLAGS " -fexceptions -frtti -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
+endif()
