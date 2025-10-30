@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
-import { runOnUI } from 'react-native-worklets';
+import { scheduleOnUI } from 'react-native-worklets';
 
 export default function LogExample() {
   const handlePress = () => {
@@ -15,7 +15,7 @@ export default function LogExample() {
       }
     }
 
-    runOnUI(() => {
+    scheduleOnUI(() => {
       'worklet';
       // @ts-ignore _log function is registered for UI runtime
       globalThis._log('==============================================');
@@ -107,7 +107,7 @@ export default function LogExample() {
 
       // @ts-ignore _log function is registered for UI runtime
       console.log('✅ Tests passed');
-    })();
+    });
   };
 
   return (

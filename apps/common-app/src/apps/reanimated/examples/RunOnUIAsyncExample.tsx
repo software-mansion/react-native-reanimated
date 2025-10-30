@@ -2,7 +2,7 @@ import type React from 'react';
 import { useCallback, useState } from 'react';
 import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { interpolateColor } from 'react-native-reanimated';
-import { runOnJS, runOnUIAsync } from 'react-native-worklets';
+import { scheduleOnRN, runOnUIAsync } from 'react-native-worklets';
 
 interface Card {
   id: string;
@@ -51,7 +51,7 @@ const RunOnUIAsyncExample: React.FC = () => {
       console.log('Sorting complete, state updated on UI thread.');
     } catch (e) {
       console.error('Failed to sort cards on UI thread:', e);
-      runOnJS(setIsSorting)(false);
+      scheduleOnRN(setIsSorting, false);
     }
   }, [cards]);
 
@@ -65,7 +65,7 @@ const RunOnUIAsyncExample: React.FC = () => {
       console.log('Shuffling complete, state updated on UI thread.');
     } catch (e) {
       console.error('Failed to shuffle cards on UI thread:', e);
-      runOnJS(setIsShuffling)(false);
+      scheduleOnRN(setIsShuffling, false);
     }
   }, [cards]);
 

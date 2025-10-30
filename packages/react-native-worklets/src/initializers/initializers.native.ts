@@ -10,7 +10,7 @@ import { setupSetInterval } from '../runLoop/common/setIntervalPolyfill';
 import { setupRequestAnimationFrame } from '../runLoop/uiRuntime/requestAnimationFrame';
 import { setupSetTimeout } from '../runLoop/uiRuntime/setTimeoutPolyfill';
 import { RuntimeKind } from '../runtimeKind';
-import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from '../threads';
+import { runOnUISync, scheduleOnRN, setupMicrotasks } from '../threads';
 import type { ValueUnpacker } from '../types';
 import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
@@ -72,12 +72,12 @@ export function setupConsole(boundCapturableConsole: typeof console) {
   'worklet';
   // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
   globalThis.console = {
-    assert: runOnJS(boundCapturableConsole.assert),
-    debug: runOnJS(boundCapturableConsole.debug),
-    log: runOnJS(boundCapturableConsole.log),
-    warn: runOnJS(boundCapturableConsole.warn),
-    error: runOnJS(boundCapturableConsole.error),
-    info: runOnJS(boundCapturableConsole.info),
+    assert: (...args) => scheduleOnRN(boundCapturableConsole.assert, ...args),
+    debug: (...args) => scheduleOnRN(boundCapturableConsole.debug, ...args),
+    log: (...args) => scheduleOnRN(boundCapturableConsole.log, ...args),
+    warn: (...args) => scheduleOnRN(boundCapturableConsole.warn, ...args),
+    error: (...args) => scheduleOnRN(boundCapturableConsole.error, ...args),
+    info: (...args) => scheduleOnRN(boundCapturableConsole.info, ...args),
   };
 }
 
@@ -206,7 +206,7 @@ function installRNBindingsOnUIRuntime() {
 
   if (!globalThis._WORKLETS_BUNDLE_MODE) {
     /** In bundle mode Runtimes setup their callGuard themselves. */
-    executeOnUIRuntimeSync(setupCallGuard)();
+    runOnUISync(setupCallGuard);
 
     /**
      * Register WorkletsError in the UI runtime global scope. (we are using
@@ -215,10 +215,10 @@ function installRNBindingsOnUIRuntime() {
      *
      * There's no need to register the error in bundle mode.
      */
-    executeOnUIRuntimeSync(registerWorkletsError)();
+    runOnUISync(registerWorkletsError);
   }
 
-  executeOnUIRuntimeSync(() => {
+  runOnUISync(() => {
     'worklet';
 
     setupConsole(runtimeBoundCapturableConsole);
@@ -232,5 +232,5 @@ function installRNBindingsOnUIRuntime() {
     setupSetTimeout();
     setupSetImmediate();
     setupSetInterval();
-  })();
+  });
 }

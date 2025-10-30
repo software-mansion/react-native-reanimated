@@ -5,7 +5,7 @@ import type { ComponentCoords } from 'react-native-reanimated';
 import Animated, { getRelativeCoords, measure, useAnimatedRef, useSharedValue } from 'react-native-reanimated';
 
 import { describe, expect, getRegisteredValue, registerValue, render, test, wait } from '../../ReJest/RuntimeTestsApi';
-import { runOnUI } from 'react-native-worklets';
+import { scheduleOnUI } from 'react-native-worklets';
 
 const REGISTERED_VALUE_KEY = 'sv';
 
@@ -22,12 +22,12 @@ const CoordsComponent = ({
   const sRef = useAnimatedRef();
 
   const onLayoutMeasure = () => {
-    runOnUI(() => {
+    scheduleOnUI(() => {
       const measured = measure(sRef);
       if (measured !== null) {
         coordsSv.value = getRelativeCoords(bRef, measured.pageX, measured.pageY);
       }
-    })();
+    });
   };
 
   const testStyles: ViewStyle = {

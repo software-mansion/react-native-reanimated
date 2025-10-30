@@ -459,7 +459,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   WorkletExample: {
     icon: '🧵',
-    title: 'runOnJS / runOnUI',
+    title: 'scheduleOnRN / scheduleOnUI',
     screen: WorkletExample,
   },
   BabelVersionCheckExample: {

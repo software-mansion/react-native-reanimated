@@ -87,13 +87,13 @@ const WorkletAPI = {
     fun: (...args: Args) => ReturnValue,
     ...args: Args
   ): void {
-    this.runOnJS(fun)(...args);
+    WorkletAPI.runOnJS(fun)(...args);
   },
   scheduleOnUI<Args extends unknown[], ReturnValue>(
     worklet: (...args: Args) => ReturnValue,
     ...args: Args
   ): void {
-    this.runOnUI(worklet)(...args);
+    WorkletAPI.runOnUI(worklet)(...args);
   },
   // eslint-disable-next-line camelcase
   unstable_eventLoopTask: NOOP_FACTORY,
