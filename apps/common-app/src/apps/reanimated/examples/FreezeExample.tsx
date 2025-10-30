@@ -63,7 +63,7 @@ const CSSTransition = () => {
   const [state, setState] = useState(true);
 
   useEffect(() => {
-    setState((x) => !x);
+    setTimeout(() => setState((x) => !x));
   }, []);
 
   return (
@@ -227,6 +227,7 @@ const styles = css.create({
     animationDelay: '1s',
     animationDuration: '10s',
     animationFillMode: 'forwards',
+    animationTimingFunction: 'linear',
     animationName: {
       from: {
         backgroundColor: 'red',
@@ -245,13 +246,11 @@ const styles = css.create({
     transitionDelay: '1s',
     transitionDuration: '10s',
     transitionProperty: 'left',
+    transitionTimingFunction: 'linear',
   },
   box: {
     width: 100,
     height: 50,
     backgroundColor: 'pink',
-    transitionDelay: '1s',
-    transitionDuration: '20s',
-    transitionProperty: 'left',
   },
 });
