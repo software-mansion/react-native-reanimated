@@ -71,8 +71,6 @@ export default function FilterExample() {
     return { filter: [{ saturate: sv.value * 2 }] };
   });
 
-  // TODO: replace back with Balloons image when asset problem is fixed.
-
   return (
     <ScrollView
       style={styles.container}

@@ -37,20 +37,19 @@ export type ParsedDropShadow = {
   offsetX: number;
   offsetY: number;
   standardDeviation: number;
-  color: number;
+  color: number | null;
 };
 
-export type ParsedFilterFunction = {
-  brightness?: number;
-  contrast?: number;
-  dropShadow?: ParsedDropShadow;
-  grayscale?: number;
-  hueRotate?: number;
-  invert?: number;
-  opacity?: number;
-  saturate?: number;
-  sepia?: number;
-  blur?: number;
-};
+export type ParsedFilterFunction =
+  | { brightness?: number }
+  | { contrast?: number }
+  | { dropShadow?: ParsedDropShadow }
+  | { grayscale?: number }
+  | { hueRotate?: number }
+  | { invert?: number }
+  | { opacity?: number }
+  | { saturate?: number }
+  | { sepia?: number }
+  | { blur?: number };
 
 export type FilterArray = ParsedFilterFunction[];

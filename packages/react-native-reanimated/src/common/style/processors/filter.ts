@@ -21,6 +21,8 @@ const DROP_SHADOW_REGEX = /[^,\s()]+(?:\([^()]*\))?/g;
 
 export const ERROR_MESSAGES = {
   invalidFilter: (filter: string) => `Invalid filter property: ${filter}`,
+  invalidFilterType: (filter: readonly FilterFunction[]) =>
+    `Invalid filter input type: ${typeof filter}. Expected string or array.`,
 };
 
 type SingleFilterValue = {
@@ -68,13 +70,10 @@ const parseDropShadowString = (value: string) => {
 
   match.forEach((part) => {
     if (isLength(part)) {
-      if (__DEV__) {
-        const dropShadowValue = part.trim().match(FILTER_VALUE_REGEX);
-        if (!dropShadowValue) {
-          throw new ReanimatedError(
-            ERROR_MESSAGES.invalidFilter(`dropShadow(${value})`)
-          );
-        }
+      if (__DEV__ && !part.trim().match(FILTER_VALUE_REGEX)) {
+        throw new ReanimatedError(
+          ERROR_MESSAGES.invalidFilter(`dropShadow(${value})`)
+        );
       }
       result[LENGTH_MAPPINGS[foundLengthsCount++]] = parseFloat(part);
     } else {
@@ -94,7 +93,7 @@ const parseDropShadow = (value: string | DropShadowValue): ParsedDropShadow => {
     standardDeviation = 0,
   } = dropShadow;
 
-  const processedColor = processColor(color)!;
+  const processedColor = processColor(color);
 
   return {
     color: processedColor,
@@ -165,7 +164,7 @@ const parseFilterString = (value: string): FilterArray => {
 
     return parseFilterProperty(name, content);
   });
-  return filterArray as FilterArray;
+  return filterArray;
 };
 
 export const processFilter: ValueProcessor<
@@ -178,12 +177,10 @@ export const processFilter: ValueProcessor<
 
   if (Array.isArray(value)) {
     return value.map((filter) => {
-      const [filterKey, filterValue] = Object.entries(filter)[0];
-      return parseFilterProperty(filterKey, filterValue as string);
+      const filterKey = Object.keys(filter)[0];
+      return parseFilterProperty(filterKey, filter[filterKey]);
     });
   }
 
-  throw new ReanimatedError(
-    `Invalid transform input type: ${typeof value}. Expected string or array.`
-  );
+  throw new ReanimatedError(ERROR_MESSAGES.invalidFilterType(value));
 };
