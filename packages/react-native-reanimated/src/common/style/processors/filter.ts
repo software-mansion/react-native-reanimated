@@ -6,8 +6,8 @@ import { ReanimatedError } from '../../errors';
 import type {
   FilterArray,
   ParsedDropShadow,
-  ValueProcessor,
   ParsedFilterFunction,
+  ValueProcessor,
 } from '../../types';
 import { isLength, isNumber } from '../../utils/guards';
 import { processColor } from './colors';
@@ -119,14 +119,15 @@ const parseFilterProperty = (
     return { [filterName]: filterValue };
   }
 
-  const match = (filterValue as string).match(FILTER_VALUE_REGEX);
+  const stringValue = filterValue as string;
+  const match = stringValue.match(FILTER_VALUE_REGEX);
   if (!match) {
     throw new ReanimatedError(
-      ERROR_MESSAGES.invalidFilter(`${filterName}(${filterValue})`)
+      ERROR_MESSAGES.invalidFilter(`${filterName}(${stringValue})`)
     );
   }
 
-  let numberValue = parseFloat(match[1]);
+  const numberValue = parseFloat(match[1]);
   const unit = match[2];
 
   switch (filterName) {
@@ -141,11 +142,10 @@ const parseFilterProperty = (
     case 'opacity':
     case 'saturate':
     case 'sepia':
-      // eslint-disable-next-line no-fallthrough
       return { [filterName]: parsePercentageFilter({ numberValue, unit }) };
     default:
       throw new ReanimatedError(
-        ERROR_MESSAGES.invalidFilter(`${filterName}(${filterValue})`)
+        ERROR_MESSAGES.invalidFilter(`${filterName}(${stringValue})`)
       );
   }
 };

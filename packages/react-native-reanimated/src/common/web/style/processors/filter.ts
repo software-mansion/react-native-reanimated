@@ -1,7 +1,7 @@
 'use strict';
 import type { FilterFunction } from 'react-native';
 
-import { maybeAddSuffix, kebabizeCamelCase } from '../../../utils';
+import { kebabizeCamelCase, maybeAddSuffix } from '../../../utils';
 import type { ValueProcessor } from '../types';
 
 function parseFilterValue(filterName: string, filterValue: any) {
