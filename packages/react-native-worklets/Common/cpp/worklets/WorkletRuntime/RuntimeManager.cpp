@@ -16,16 +16,6 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::getRuntime(uint64_t runtimeId) {
   return nullptr;
 }
 
-#ifdef WORKLETS_BUNDLE_MODE
-std::shared_ptr<WorkletRuntime> RuntimeManager::getRuntime(jsi::Runtime *runtime) {
-  std::shared_lock lock(weakRuntimesMutex_);
-  if (runtimeAddressToRuntimeId_.contains(runtime)) {
-    return getRuntime(runtimeAddressToRuntimeId_.at(runtime));
-  }
-  return nullptr;
-}
-#endif // WORKLETS_BUNDLE_MODE
-
 std::vector<std::shared_ptr<WorkletRuntime>> RuntimeManager::getAllRuntimes() {
   std::shared_lock lock(weakRuntimesMutex_);
 
@@ -89,9 +79,6 @@ uint64_t RuntimeManager::getNextRuntimeId() {
 void RuntimeManager::registerRuntime(const uint64_t runtimeId, const std::shared_ptr<WorkletRuntime> &workletRuntime) {
   std::unique_lock lock(weakRuntimesMutex_);
   weakRuntimes_[runtimeId] = workletRuntime;
-#ifdef WORKLETS_BUNDLE_MODE
-  runtimeAddressToRuntimeId_[&workletRuntime->getJSIRuntime()] = runtimeId;
-#endif // WORKLETS_BUNDLE_MODE
 }
 
 } // namespace worklets
