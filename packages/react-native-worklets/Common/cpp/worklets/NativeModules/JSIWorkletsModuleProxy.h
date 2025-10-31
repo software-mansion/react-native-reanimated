@@ -7,6 +7,7 @@
 
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/Defs.h>
+#include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
@@ -36,9 +37,8 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<RuntimeManager> &runtimeManager,
-      const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime);
-
-  JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other);
+      const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
+      const std::shared_ptr<RuntimeBindings> &runtimeBindings);
 
   ~JSIWorkletsModuleProxy() override;
 
@@ -74,6 +74,10 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
     return runtimeManager_;
   }
 
+  [[nodiscard]] std::shared_ptr<RuntimeBindings> getRuntimeBindings() const {
+    return runtimeBindings_;
+  }
+
  private:
   const bool isDevBundle_;
   const std::shared_ptr<const BigStringBuffer> script_;
@@ -83,6 +87,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
   const std::shared_ptr<UIScheduler> uiScheduler_;
   const std::shared_ptr<RuntimeManager> runtimeManager_;
   const std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
+  const std::shared_ptr<RuntimeBindings> runtimeBindings_;
 };
 
 } // namespace worklets

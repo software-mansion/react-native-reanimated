@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cxxreact/MessageQueueThread.h>
+#include <cxxreact/ReactNativeVersion.h>
 #include <jsi/jsi.h>
 #include <jsireact/JSIExecutor.h>
 #include <react/debug/react_native_assert.h>

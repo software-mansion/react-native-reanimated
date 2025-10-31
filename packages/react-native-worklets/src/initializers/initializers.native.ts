@@ -1,5 +1,11 @@
 'use strict';
 
+import {
+  disallowRNImports,
+  mockTurboModuleRegistry,
+  silenceHMRWarnings,
+} from '../bundleMode/metroOverrides';
+import { initializeNetworking } from '../bundleMode/network';
 import { setupCallGuard } from '../callGuard';
 import { registerReportFatalRemoteError } from '../debug/errors';
 import { registerWorkletsError, WorkletsError } from '../debug/WorkletsError';
@@ -129,65 +135,46 @@ function initializeWorkletRuntime() {
     setupCallGuard();
 
     if (__DEV__) {
-      /*
-       * Temporary workaround for Metro bundler. We must implement a dummy
-       * Refresh module to prevent Metro from throwing irrelevant errors.
-       */
-      const Refresh = new Proxy(
-        {},
-        {
-          get() {
-            return () => {};
-          },
-        }
-      );
-
-      globalThis.__r.Refresh = Refresh;
-
-      /* Gracefully handle unwanted imports from React Native. */
-      const modules = require.getModules();
-      const ReactNativeModuleId = require.resolveWeak('react-native');
-
-      const factory = function (
-        _global: unknown,
-        _require: unknown,
-        _importDefault: unknown,
-        _importAll: unknown,
-        module: Record<string, unknown>,
-        _exports: unknown,
-        _dependencyMap: unknown
-      ) {
-        module.exports = new Proxy(
-          {},
-          {
-            get: function get(_target, prop) {
-              globalThis.console.warn(
-                `You tried to import '${String(prop)}' from 'react-native' module on a Worklet Runtime. Using 'react-native' module on a Worklet Runtime is not allowed.`
-              );
-              return {
-                get() {
-                  return undefined;
-                },
-              };
-            },
-          }
-        );
-      };
-
-      const mod = {
-        dependencyMap: [],
-        factory,
-        hasError: false,
-        importedAll: {},
-        importedDefault: {},
-        isInitialized: false,
-        publicModule: {
-          exports: {},
-        },
-      };
-
-      modules.set(ReactNativeModuleId, mod);
+      silenceHMRWarnings();
+      disallowRNImports();
+      mockTurboModuleRegistry();
     }
+
+    // const PolyfillFunctionsId = require.resolveWeak(
+    //   'react-native/Libraries/Utilities/PolyfillFunctions'
+    // );
+
+    // const polyfillFactory = function (
+    //   _global: unknown,
+    //   _$$_REQUIRE: unknown,
+    //   _$$_IMPORT_DEFAULT: unknown,
+    //   _$$_IMPORT_ALL: unknown,
+    //   module: Record<string, Record<string, unknown>>,
+    //   _exports: unknown,
+    //   _dependencyMap: unknown
+    // ) {
+    //   module.exports.polyfillGlobal = (
+    //     name: string,
+    //     getValue: () => unknown
+    //   ) => {
+    //     // globalThis._log('polyfillGlobal ' + name + ' ' + getValue);
+    //     (globalThis as Record<string, unknown>)[name] = getValue();
+    //   };
+    // };
+
+    // const polyfillMod = {
+    //   dependencyMap: [],
+    //   factory: polyfillFactory,
+    //   hasError: false,
+    //   importedAll: {},
+    //   importedDefault: {},
+    //   isInitialized: false,
+    //   publicModule: {
+    //     exports: {},
+    //   },
+    // };
+
+    // modules.set(PolyfillFunctionsId, polyfillMod);
   }
 }
 
@@ -202,8 +189,6 @@ function installRNBindingsOnUIRuntime() {
     );
   }
 
-  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
-
   if (!globalThis._WORKLETS_BUNDLE_MODE) {
     /** In bundle mode Runtimes setup their callGuard themselves. */
     runOnUISync(setupCallGuard);
@@ -216,6 +201,16 @@ function installRNBindingsOnUIRuntime() {
      * There's no need to register the error in bundle mode.
      */
     runOnUISync(registerWorkletsError);
+  }
+
+  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
+  let runtimeBoundInitializeNetworking: typeof initializeNetworking;
+  if (globalThis._WORKLETS_BUNDLE_MODE) {
+    /*
+     * Initialize networking has to be runtime bound because it needs
+     * TurboModules obtained from RN Runtime.
+     */
+    runtimeBoundInitializeNetworking = initializeNetworking;
   }
 
   runOnUISync(() => {
@@ -232,5 +227,8 @@ function installRNBindingsOnUIRuntime() {
     setupSetTimeout();
     setupSetImmediate();
     setupSetInterval();
+    if (globalThis._WORKLETS_BUNDLE_MODE) {
+      runtimeBoundInitializeNetworking();
+    }
   });
 }

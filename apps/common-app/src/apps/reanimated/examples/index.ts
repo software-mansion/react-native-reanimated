@@ -137,6 +137,7 @@ import WorkletExample from './WorkletExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import InstanceDiscoveryExample from './InstanceDiscoveryExample';
+import FetchExample from './FetchExample';
 
 export const REAPlatform = {
   IOS: 'ios',
@@ -208,6 +209,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Worklet runtime',
     screen: WorkletRuntimeExample,
     disabledPlatforms: [REAPlatform.WEB],
+  },
+  FetchExample: {
+    icon: '📡',
+    title: 'Fetch & XHR (Bundle Mode only)',
+    screen: FetchExample,
   },
   ModifyExample: {
     icon: '🪛',

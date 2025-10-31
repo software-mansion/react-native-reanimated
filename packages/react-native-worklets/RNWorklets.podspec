@@ -11,7 +11,7 @@ worklets_assert_new_architecture_enabled($new_arch_enabled)
 ios_min_version = '13.4'
 
 feature_flags = "-DWORKLETS_FEATURE_FLAGS=\"#{worklets_get_static_feature_flags()}\""
-version_flags = "-DWORKLETS_VERSION=#{package['version']}"
+version_flags = "-DWORKLETS_VERSION=#{package['version']} -DREACT_NATIVE_MINOR_VERSION=#{$worklets_config[:react_native_minor_version]}"
 
 Pod::Spec.new do |s|
   s.name         = "RNWorklets"
