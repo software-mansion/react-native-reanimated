@@ -13,6 +13,5 @@
     "declaration": false,
     "noEmit": false
   },
-  "include": ["src"],
-  "exclude": ["eslint.config.mjs"]
+  "include": ["src"]
 }

@@ -85,7 +85,11 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate,
   void startExitingAnimation(const int tag, ShadowViewMutation &mutation) const;
   void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation) const;
 
+<<<<<<< HEAD
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
+=======
+  void transferConfigFromNativeID(const std::string nativeId, const int tag) const;
+>>>>>>> main
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle);
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove);
   void maybeCancelAnimation(const int tag) const;
@@ -125,7 +129,11 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate,
       const bool shouldAnimate,
       const bool isScreenPop,
       ShadowViewMutationList &mutations) const;
+<<<<<<< HEAD
   void endAnimationsRecursively(const std::shared_ptr<MutationNode> &node, ShadowViewMutationList &mutations) const;
+=======
+  void endAnimationsRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList &mutations) const;
+>>>>>>> main
   void maybeDropAncestors(
       const std::shared_ptr<Node> &node,
       const std::shared_ptr<MutationNode> &child,

@@ -1,6 +1,8 @@
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
 
+#include <string>
 #include <utility>
+#include <vector>
 
 namespace reanimated::css {
 
@@ -48,8 +50,7 @@ CSSBoxShadow::CSSBoxShadow(jsi::Runtime &rt, const jsi::Value &jsiValue) {
     color = CSSColor(rt, obj.getProperty(rt, "color"));
   }
   // Every non-default (not empty) shadow must have an inset
-  inset = CSSBoolean(
-      rt, obj.hasProperty(rt, "inset") ? obj.getProperty(rt, "inset") : false);
+  inset = CSSBoolean(rt, obj.hasProperty(rt, "inset") ? obj.getProperty(rt, "inset") : false);
 }
 
 CSSBoxShadow::CSSBoxShadow(const folly::dynamic &value) {
@@ -84,8 +85,7 @@ bool CSSBoxShadow::canConstruct(const folly::dynamic &value) {
   }
 
   for (const auto &validator : fieldValidators) {
-    if (value.count(validator.fieldName) > 0 &&
-        !validator.validateDynamic(value[validator.fieldName])) {
+    if (value.count(validator.fieldName) > 0 && !validator.validateDynamic(value[validator.fieldName])) {
       return false;
     }
   }
@@ -102,8 +102,7 @@ bool CSSBoxShadow::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
 
   for (const auto &validator : fieldValidators) {
     const auto &fieldName = validator.fieldName.c_str();
-    if (obj.hasProperty(rt, fieldName) &&
-        !validator.validateJSI(rt, obj.getProperty(rt, fieldName))) {
+    if (obj.hasProperty(rt, fieldName) && !validator.validateJSI(rt, obj.getProperty(rt, fieldName))) {
       return false;
     }
   }
@@ -127,14 +126,11 @@ folly::dynamic CSSBoxShadow::toDynamic() const {
 }
 
 std::string CSSBoxShadow::toString() const {
-  return (inset.has_value() && inset.value().value ? "inset " : "") +
-      offsetX.toString() + " " + offsetY.toString() + " " +
-      blurRadius.toString() + " " + spreadDistance.toString() + " " +
-      color.toString();
+  return (inset.has_value() && inset.value().value ? "inset " : "") + offsetX.toString() + " " + offsetY.toString() +
+      " " + blurRadius.toString() + " " + spreadDistance.toString() + " " + color.toString();
 }
 
-CSSBoxShadow CSSBoxShadow::interpolate(double progress, const CSSBoxShadow &to)
-    const {
+CSSBoxShadow CSSBoxShadow::interpolate(double progress, const CSSBoxShadow &to) const {
   const auto &fromInset = inset.value_or(to.inset.value_or(CSSBoolean(false)));
   const auto &toInset = to.inset.value_or(inset.value_or(CSSBoolean(false)));
 
@@ -148,15 +144,12 @@ CSSBoxShadow CSSBoxShadow::interpolate(double progress, const CSSBoxShadow &to)
 }
 
 bool CSSBoxShadow::canInterpolateTo(const CSSBoxShadow &to) const {
-  return !inset.has_value() || !to.inset.has_value() ||
-      inset.value() == to.inset.value();
+  return !inset.has_value() || !to.inset.has_value() || inset.value() == to.inset.value();
 }
 
 bool CSSBoxShadow::operator==(const CSSBoxShadow &other) const {
-  return offsetX == other.offsetX && offsetY == other.offsetY &&
-      blurRadius == other.blurRadius &&
-      spreadDistance == other.spreadDistance && color == other.color &&
-      inset == other.inset;
+  return offsetX == other.offsetX && offsetY == other.offsetY && blurRadius == other.blurRadius &&
+      spreadDistance == other.spreadDistance && color == other.color && inset == other.inset;
 }
 
 #ifndef NDEBUG
@@ -168,36 +161,36 @@ std::ostream &operator<<(std::ostream &os, const CSSBoxShadow &shadowValue) {
 
 #endif // NDEBUG
 
-const std::vector<CSSBoxShadow::FieldValidator> CSSBoxShadow::fieldValidators =
-    {{"offsetX",
-      [](const folly::dynamic &val) { return CSSDouble::canConstruct(val); },
-      [](jsi::Runtime &rt, const jsi::Value &val) {
-        return CSSDouble::canConstruct(rt, val);
-      }},
-     {"offsetY",
-      [](const folly::dynamic &val) { return CSSDouble::canConstruct(val); },
-      [](jsi::Runtime &rt, const jsi::Value &val) {
-        return CSSDouble::canConstruct(rt, val);
-      }},
-     {"blurRadius",
-      [](const folly::dynamic &val) { return CSSDouble::canConstruct(val); },
-      [](jsi::Runtime &rt, const jsi::Value &val) {
-        return CSSDouble::canConstruct(rt, val);
-      }},
-     {"spreadDistance",
-      [](const folly::dynamic &val) { return CSSDouble::canConstruct(val); },
-      [](jsi::Runtime &rt, const jsi::Value &val) {
-        return CSSDouble::canConstruct(rt, val);
-      }},
-     {"color",
-      [](const folly::dynamic &val) { return CSSColor::canConstruct(val); },
-      [](jsi::Runtime &rt, const jsi::Value &val) {
-        return CSSColor::canConstruct(rt, val);
-      }},
-     {"inset",
-      [](const folly::dynamic &val) { return CSSBoolean::canConstruct(val); },
-      [](jsi::Runtime &rt, const jsi::Value &val) {
-        return CSSBoolean::canConstruct(rt, val);
-      }}};
+const std::vector<CSSBoxShadow::FieldValidator> CSSBoxShadow::fieldValidators = {
+    {"offsetX",
+     [](const folly::dynamic &val) { return CSSDouble::canConstruct(val); },
+     [](jsi::Runtime &rt, const jsi::Value &val) {
+       return CSSDouble::canConstruct(rt, val);
+     }},
+    {"offsetY",
+     [](const folly::dynamic &val) { return CSSDouble::canConstruct(val); },
+     [](jsi::Runtime &rt, const jsi::Value &val) {
+       return CSSDouble::canConstruct(rt, val);
+     }},
+    {"blurRadius",
+     [](const folly::dynamic &val) { return CSSDouble::canConstruct(val); },
+     [](jsi::Runtime &rt, const jsi::Value &val) {
+       return CSSDouble::canConstruct(rt, val);
+     }},
+    {"spreadDistance",
+     [](const folly::dynamic &val) { return CSSDouble::canConstruct(val); },
+     [](jsi::Runtime &rt, const jsi::Value &val) {
+       return CSSDouble::canConstruct(rt, val);
+     }},
+    {"color",
+     [](const folly::dynamic &val) { return CSSColor::canConstruct(val); },
+     [](jsi::Runtime &rt, const jsi::Value &val) {
+       return CSSColor::canConstruct(rt, val);
+     }},
+    {"inset",
+     [](const folly::dynamic &val) { return CSSBoolean::canConstruct(val); },
+     [](jsi::Runtime &rt, const jsi::Value &val) {
+       return CSSBoolean::canConstruct(rt, val);
+     }}};
 
 } // namespace reanimated::css

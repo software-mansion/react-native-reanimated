@@ -12,17 +12,13 @@ namespace reanimated::css {
 
 template <typename TOperation>
 concept ResolvableTransformOp = requires(TOperation operation) {
-  {
-    operation.value
-  } -> std::convertible_to<
-      typename std::remove_reference_t<decltype(operation.value)>>;
+  { operation.value } -> std::convertible_to<typename std::remove_reference_t<decltype(operation.value)>>;
   requires Resolvable<std::remove_reference_t<decltype(operation.value)>>;
 }; // NOLINT(readability/braces)
 
 class TransformInterpolator {
  public:
-  using Interpolators =
-      std::unordered_map<TransformOp, std::shared_ptr<TransformInterpolator>>;
+  using Interpolators = std::unordered_map<TransformOp, std::shared_ptr<TransformInterpolator>>;
 
   struct UpdateContext {
     const std::shared_ptr<const ShadowNode> &node;
@@ -50,8 +46,7 @@ using TransformInterpolationContext = TransformInterpolator::UpdateContext;
 template <typename TOperation>
 class TransformOperationInterpolatorBase : public TransformInterpolator {
  public:
-  TransformOperationInterpolatorBase(
-      std::shared_ptr<TOperation> defaultOperation)
+  explicit TransformOperationInterpolatorBase(std::shared_ptr<TOperation> defaultOperation)
       : defaultOperation_(defaultOperation) {}
 
   std::shared_ptr<TransformOperation> getDefaultOperation() const override {
@@ -64,11 +59,9 @@ class TransformOperationInterpolatorBase : public TransformInterpolator {
 
 // Base implementation for simple operations
 template <typename TOperation>
-class TransformOperationInterpolator
-    : public TransformOperationInterpolatorBase<TOperation> {
+class TransformOperationInterpolator : public TransformOperationInterpolatorBase<TOperation> {
  public:
-  TransformOperationInterpolator(
-      const std::shared_ptr<TOperation> &defaultOperation);
+  explicit TransformOperationInterpolator(const std::shared_ptr<TOperation> &defaultOperation);
 
   std::unique_ptr<TransformOperation> interpolate(
       double progress,
@@ -82,8 +75,7 @@ template <>
 class TransformOperationInterpolator<PerspectiveOperation>
     : public TransformOperationInterpolatorBase<PerspectiveOperation> {
  public:
-  TransformOperationInterpolator(
-      const std::shared_ptr<PerspectiveOperation> &defaultOperation);
+  explicit TransformOperationInterpolator(const std::shared_ptr<PerspectiveOperation> &defaultOperation);
 
   std::unique_ptr<TransformOperation> interpolate(
       double progress,
@@ -94,11 +86,9 @@ class TransformOperationInterpolator<PerspectiveOperation>
 
 // Specialization for MatrixOperation
 template <>
-class TransformOperationInterpolator<MatrixOperation>
-    : public TransformOperationInterpolatorBase<MatrixOperation> {
+class TransformOperationInterpolator<MatrixOperation> : public TransformOperationInterpolatorBase<MatrixOperation> {
  public:
-  TransformOperationInterpolator(
-      const std::shared_ptr<MatrixOperation> &defaultOperation);
+  explicit TransformOperationInterpolator(const std::shared_ptr<MatrixOperation> &defaultOperation);
 
   std::unique_ptr<TransformOperation> interpolate(
       double progress,
@@ -108,10 +98,8 @@ class TransformOperationInterpolator<MatrixOperation>
 
  protected:
   template <typename MatrixType>
-  MatrixType interpolateMatrix(
-      double progress,
-      const TransformMatrix::Shared &from,
-      const TransformMatrix::Shared &to) const;
+  MatrixType interpolateMatrix(double progress, const TransformMatrix::Shared &from, const TransformMatrix::Shared &to)
+      const;
 
   TransformMatrix::Shared matrixFromOperation(
       const std::shared_ptr<TransformOperation> &operation,
@@ -121,8 +109,7 @@ class TransformOperationInterpolator<MatrixOperation>
 
 // Specialization for resolvable operations
 template <ResolvableTransformOp TOperation>
-class TransformOperationInterpolator<TOperation>
-    : public TransformOperationInterpolatorBase<TOperation> {
+class TransformOperationInterpolator<TOperation> : public TransformOperationInterpolatorBase<TOperation> {
  public:
   TransformOperationInterpolator(
       const std::shared_ptr<TOperation> &defaultOperation,
@@ -141,8 +128,7 @@ class TransformOperationInterpolator<TOperation>
  protected:
   const ResolvableValueInterpolatorConfig config_;
 
-  ResolvableValueInterpolationContext getResolvableValueContext(
-      const TransformInterpolationContext &context) const;
+  ResolvableValueInterpolationContext getResolvableValueContext(const TransformInterpolationContext &context) const;
 };
 
 } // namespace reanimated::css

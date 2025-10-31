@@ -1,10 +1,11 @@
 'use strict';
+
 import type { Synchronizable } from 'react-native-worklets';
 import {
   createSerializable,
   createSynchronizable,
-  executeOnUIRuntimeSync,
-  runOnUI,
+  runOnUISync,
+  scheduleOnUI,
   serializableMappingCache,
 } from 'react-native-worklets';
 
@@ -219,19 +220,20 @@ function experimental_makeMutableNative<Value>(initial: Value): Mutable<Value> {
     get value(): Value {
       checkInvalidReadDuringRender();
       if (dirtyFlag.getBlocking()) {
-        const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
-          sv.setDirty!(false);
-          return sv.value;
-        });
+        const uiValueGetter = (svArg: Mutable<Value>) =>
+          runOnUISync((sv) => {
+            sv.setDirty!(false);
+            return sv.value;
+          }, svArg);
         latest = uiValueGetter(mutable as Mutable<Value>);
       }
       return latest;
     },
     set value(newValue) {
       checkInvalidWriteDuringRender();
-      runOnUI(() => {
+      scheduleOnUI(() => {
         mutable.value = newValue;
-      })();
+      });
     },
 
     get _value(): Value {
@@ -246,9 +248,9 @@ function experimental_makeMutableNative<Value>(initial: Value): Mutable<Value> {
     },
 
     modify: (modifier, forceUpdate = true) => {
-      runOnUI(() => {
+      scheduleOnUI(() => {
         mutable.modify(modifier, forceUpdate);
-      })();
+      });
     },
     addListener: () => {
       throw new ReanimatedError(
@@ -282,16 +284,17 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
   const mutable: PartialMutable<Value> = {
     get value(): Value {
       checkInvalidReadDuringRender();
-      const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
-        return sv.value;
-      });
+      const uiValueGetter = (svArg: Mutable<Value>) =>
+        runOnUISync((sv) => {
+          return sv.value;
+        }, svArg);
       return uiValueGetter(mutable as Mutable<Value>);
     },
     set value(newValue) {
       checkInvalidWriteDuringRender();
-      runOnUI(() => {
+      scheduleOnUI(() => {
         mutable.value = newValue;
-      })();
+      });
     },
 
     get _value(): Value {
@@ -306,9 +309,9 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
     },
 
     modify: (modifier, forceUpdate = true) => {
-      runOnUI(() => {
+      scheduleOnUI(() => {
         mutable.modify(modifier, forceUpdate);
-      })();
+      });
     },
     addListener: () => {
       throw new ReanimatedError(

@@ -1,6 +1,9 @@
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
 #include <limits>
+#include <memory>
+#include <string>
+#include <unordered_set>
 
 namespace reanimated::css {
 
@@ -11,8 +14,7 @@ TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     const double duration,
     const double delay,
     const EasingFunction &easingFunction)
-    : RawProgressProvider(timestamp, duration, delay),
-      easingFunction_(easingFunction) {}
+    : RawProgressProvider(timestamp, duration, delay), easingFunction_(easingFunction) {}
 
 TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     const double timestamp,
@@ -28,22 +30,18 @@ double TransitionPropertyProgressProvider::getGlobalProgress() const {
   return rawProgress_.value_or(0);
 }
 
-double TransitionPropertyProgressProvider::getKeyframeProgress(
-    const double fromOffset,
-    const double toOffset) const {
+double TransitionPropertyProgressProvider::getKeyframeProgress(const double fromOffset, const double toOffset) const {
   if (fromOffset == toOffset) {
     return 1;
   }
   return easingFunction_(getGlobalProgress());
 }
 
-double TransitionPropertyProgressProvider::getRemainingDelay(
-    const double timestamp) const {
+double TransitionPropertyProgressProvider::getRemainingDelay(const double timestamp) const {
   return delay_ - (timestamp - creationTimestamp_);
 }
 
-double TransitionPropertyProgressProvider::getReversingShorteningFactor()
-    const {
+double TransitionPropertyProgressProvider::getReversingShorteningFactor() const {
   return reversingShorteningFactor_;
 }
 
@@ -58,16 +56,14 @@ TransitionProgressState TransitionPropertyProgressProvider::getState() const {
   return TransitionProgressState::Running;
 }
 
-std::optional<double> TransitionPropertyProgressProvider::calculateRawProgress(
-    const double timestamp) {
+std::optional<double> TransitionPropertyProgressProvider::calculateRawProgress(const double timestamp) {
   if (duration_ == 0) {
     return 1;
   }
   return getElapsedTime(timestamp) / duration_;
 }
 
-double TransitionPropertyProgressProvider::getElapsedTime(
-    const double timestamp) const {
+double TransitionPropertyProgressProvider::getElapsedTime(const double timestamp) const {
   return timestamp - (creationTimestamp_ + delay_);
 }
 
@@ -75,8 +71,7 @@ double TransitionPropertyProgressProvider::getElapsedTime(
 
 TransitionProgressState TransitionProgressProvider::getState() const {
   for (const auto &[_, propertyProgressProvider] : propertyProgressProviders_) {
-    if (propertyProgressProvider->getState() ==
-        TransitionProgressState::Running) {
+    if (propertyProgressProvider->getState() == TransitionProgressState::Running) {
       return TransitionProgressState::Running;
     }
   }
@@ -90,8 +85,7 @@ double TransitionProgressProvider::getMinDelay(const double timestamp) const {
   auto minDelay = std::numeric_limits<double>::max();
 
   for (const auto &[_, propertyProgressProvider] : propertyProgressProviders_) {
-    const auto remainingDelay =
-        propertyProgressProvider->getRemainingDelay(timestamp);
+    const auto remainingDelay = propertyProgressProvider->getRemainingDelay(timestamp);
     if (remainingDelay < minDelay) {
       minDelay = remainingDelay;
     }
@@ -100,19 +94,16 @@ double TransitionProgressProvider::getMinDelay(const double timestamp) const {
   return minDelay;
 }
 
-TransitionPropertyProgressProviders
-TransitionProgressProvider::getPropertyProgressProviders() const {
+TransitionPropertyProgressProviders TransitionProgressProvider::getPropertyProgressProviders() const {
   return propertyProgressProviders_;
 }
 
-std::unordered_set<std::string>
-TransitionProgressProvider::getRemovedProperties() const {
+std::unordered_set<std::string> TransitionProgressProvider::getRemovedProperties() const {
   return removedProperties_;
 }
 
 void TransitionProgressProvider::discardFinishedProgressProviders() {
-  for (auto it = propertyProgressProviders_.begin();
-       it != propertyProgressProviders_.end();) {
+  for (auto it = propertyProgressProviders_.begin(); it != propertyProgressProviders_.end();) {
     if (it->second->getState() == TransitionProgressState::Finished) {
       it = propertyProgressProviders_.erase(it);
     } else {
@@ -123,12 +114,10 @@ void TransitionProgressProvider::discardFinishedProgressProviders() {
 
 void TransitionProgressProvider::discardIrrelevantProgressProviders(
     const std::unordered_set<std::string> &transitionPropertyNames) {
-  for (auto it = propertyProgressProviders_.begin();
-       it != propertyProgressProviders_.end();) {
+  for (auto it = propertyProgressProviders_.begin(); it != propertyProgressProviders_.end();) {
     // Remove property progress providers for properties not specified in the
     // transition property names
-    if (transitionPropertyNames.find(it->first) ==
-        transitionPropertyNames.end()) {
+    if (transitionPropertyNames.find(it->first) == transitionPropertyNames.end()) {
       it = propertyProgressProviders_.erase(it);
     } else {
       ++it;
@@ -142,13 +131,10 @@ void TransitionProgressProvider::runProgressProviders(
     const PropertyNames &changedPropertyNames,
     const std::unordered_set<std::string> &reversedPropertyNames) {
   for (const auto &propertyName : changedPropertyNames) {
-    const auto propertySettingsOptional =
-        getTransitionPropertySettings(propertiesSettings, propertyName);
+    const auto propertySettingsOptional = getTransitionPropertySettings(propertiesSettings, propertyName);
 
     if (!propertySettingsOptional.has_value()) {
-      throw std::invalid_argument(
-          "[Reanimated] Property '" + propertyName +
-          "' is not a valid transition property");
+      throw std::invalid_argument("[Reanimated] Property '" + propertyName + "' is not a valid transition property");
     }
 
     const auto &propertySettings = propertySettingsOptional.value();
@@ -158,15 +144,12 @@ void TransitionProgressProvider::runProgressProviders(
       const auto &progressProvider = it->second;
       progressProvider->update(timestamp);
 
-      if (reversedPropertyNames.find(propertyName) !=
-              reversedPropertyNames.end() &&
+      if (reversedPropertyNames.find(propertyName) != reversedPropertyNames.end() &&
           progressProvider->getState() != TransitionProgressState::Finished) {
         // Create reversing shortening progress provider for interrupted
         // reversing transition
         propertyProgressProviders_.insert_or_assign(
-            propertyName,
-            createReversingShorteningProgressProvider(
-                timestamp, propertySettings, *progressProvider));
+            propertyName, createReversingShorteningProgressProvider(timestamp, propertySettings, *progressProvider));
         continue;
       }
     }
@@ -175,21 +158,16 @@ void TransitionProgressProvider::runProgressProviders(
     propertyProgressProviders_.insert_or_assign(
         propertyName,
         std::make_shared<TransitionPropertyProgressProvider>(
-            timestamp,
-            propertySettings.duration,
-            propertySettings.delay,
-            propertySettings.easingFunction));
+            timestamp, propertySettings.duration, propertySettings.delay, propertySettings.easingFunction));
   }
 }
 
 void TransitionProgressProvider::update(const double timestamp) {
   removedProperties_.clear();
 
-  for (const auto &[propertyName, propertyProgressProvider] :
-       propertyProgressProviders_) {
+  for (const auto &[propertyName, propertyProgressProvider] : propertyProgressProviders_) {
     propertyProgressProvider->update(timestamp);
-    if (propertyProgressProvider->getState() ==
-        TransitionProgressState::Finished) {
+    if (propertyProgressProvider->getState() == TransitionProgressState::Finished) {
       removedProperties_.insert(propertyName);
     }
   }
@@ -201,18 +179,13 @@ TransitionProgressProvider::createReversingShorteningProgressProvider(
     const CSSTransitionPropertySettings &propertySettings,
     const TransitionPropertyProgressProvider &existingProgressProvider) {
   const auto oldProgress = existingProgressProvider.getKeyframeProgress(0, 1);
-  const auto oldReversingShorteningFactor =
-      existingProgressProvider.getReversingShorteningFactor();
-  auto newReversingShorteningFactor =
-      oldProgress * oldReversingShorteningFactor +
-      (1 - oldReversingShorteningFactor);
+  const auto oldReversingShorteningFactor = existingProgressProvider.getReversingShorteningFactor();
+  auto newReversingShorteningFactor = oldProgress * oldReversingShorteningFactor + (1 - oldReversingShorteningFactor);
 
   return std::make_shared<TransitionPropertyProgressProvider>(
       timestamp,
       propertySettings.duration * newReversingShorteningFactor,
-      propertySettings.delay < 0
-          ? newReversingShorteningFactor * propertySettings.delay
-          : propertySettings.delay,
+      propertySettings.delay < 0 ? newReversingShorteningFactor * propertySettings.delay : propertySettings.delay,
       propertySettings.easingFunction,
       newReversingShorteningFactor);
 }

@@ -54,12 +54,9 @@ template <typename TDerived, typename TResolved = TDerived>
 struct CSSResolvableValue : public CSSValue {
   static constexpr bool is_resolvable_value = true;
 
-  virtual TDerived interpolate(
-      double progress,
-      const TDerived &to,
-      const ResolvableValueInterpolationContext &context) const = 0;
-  virtual std::optional<TResolved> resolve(
-      const ResolvableValueInterpolationContext &context) const = 0;
+  virtual TDerived interpolate(double progress, const TDerived &to, const ResolvableValueInterpolationContext &context)
+      const = 0;
+  virtual std::optional<TResolved> resolve(const ResolvableValueInterpolationContext &context) const = 0;
   virtual bool canInterpolateTo(const TDerived &to) const {
     return true;
   }

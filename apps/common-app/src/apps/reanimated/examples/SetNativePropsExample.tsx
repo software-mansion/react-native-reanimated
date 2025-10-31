@@ -9,7 +9,7 @@ import Animated, {
   setNativeProps,
   useAnimatedRef,
 } from 'react-native-reanimated';
-import { runOnJS } from 'react-native-worklets';
+import { scheduleOnRN } from 'react-native-worklets';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -37,7 +37,7 @@ export default function SetNativePropsExample() {
       text: '',
       backgroundColor: `hsl(${Math.random() * 360}, 100%, 50%)`,
     });
-    runOnJS(send)();
+    scheduleOnRN(send);
   });
 
   return (

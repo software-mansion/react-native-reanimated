@@ -15,7 +15,7 @@ describe('Test `normalizeColor` function', () => {
         'rgb(1, 2, 3,)',
         'rgb(1, 2, 3',
       ].forEach((color) => {
-        expect(normalizeColor(color)).toBe(null);
+        expect(normalizeColor(color)).toBeUndefined();
       });
     });
 
@@ -33,7 +33,7 @@ describe('Test `normalizeColor` function', () => {
         'hsl(1%, 2, 3)',
         'rg b( 1%, 2%, 3%)',
       ].forEach((color) => {
-        expect(normalizeColor(color)).toBe(null);
+        expect(normalizeColor(color)).toBeUndefined();
       });
     });
 
@@ -50,7 +50,7 @@ describe('Test `normalizeColor` function', () => {
         'rgb(-1, -2, -3)',
         'rgba(0, 0, 0, 1)',
       ].forEach((color) => {
-        expect(normalizeColor(color)).not.toBe(null);
+        expect(normalizeColor(color)).toBeDefined();
       });
     });
   });
@@ -65,15 +65,15 @@ describe('Test `normalizeColor` function', () => {
       [0x123456, 0x123456],
       [0x1234567, 0x1234567],
       [0x12345678, 0x12345678],
-      [0x123456789, null],
+      [0x123456789, undefined],
       [11, 11],
       [158, 158],
-      [300.78, null],
-      [-300, null],
+      [300.78, undefined],
+      [-300, undefined],
       [0, 0],
-      [NaN, null],
-      [Infinity, null],
-      [-Infinity, null],
+      [NaN, undefined],
+      [Infinity, undefined],
+      [-Infinity, undefined],
     ])('normalizeColor(%d) = %p', (color, expectedColor) => {
       expect(normalizeColor(color)).toBe(expectedColor);
     });
@@ -81,20 +81,20 @@ describe('Test `normalizeColor` function', () => {
 
   describe('Test colors being a number as string', () => {
     test.each([
-      ['0x1', null],
-      ['0x12', null],
-      ['0x123', null],
-      ['0x1234', null],
-      ['0x12345', null],
-      ['0x123456', null],
-      ['0x1234567', null],
-      ['0x12345678', null],
-      ['0x123456789', null],
-      ['11', null],
-      ['158', null],
-      ['300.78', null],
-      ['-300', null],
-      ['0', null],
+      ['0x1', undefined],
+      ['0x12', undefined],
+      ['0x123', undefined],
+      ['0x1234', undefined],
+      ['0x12345', undefined],
+      ['0x123456', undefined],
+      ['0x1234567', undefined],
+      ['0x12345678', undefined],
+      ['0x123456789', undefined],
+      ['11', undefined],
+      ['158', undefined],
+      ['300.78', undefined],
+      ['-300', undefined],
+      ['0', undefined],
     ])('normalizeColor("%s") = %p', (color, expectedColor) => {
       expect(normalizeColor(color)).toBe(expectedColor);
     });
@@ -160,15 +160,15 @@ describe('Test `normalizeColor` function', () => {
 
     describe('Test invalid hex', () => {
       test.each([
-        ['#12345', null],
-        ['#12345g', null],
-        ['#1234567', null],
-        ['#abcde', null],
-        ['#abcdeff', null],
-        ['#abcde', null],
-        ['#abcdeff', null],
-        ['#abcde', null],
-        ['#abcdeff', null],
+        ['#12345', undefined],
+        ['#12345g', undefined],
+        ['#1234567', undefined],
+        ['#abcde', undefined],
+        ['#abcdeff', undefined],
+        ['#abcde', undefined],
+        ['#abcdeff', undefined],
+        ['#abcde', undefined],
+        ['#abcdeff', undefined],
       ])('normalizeColor(%s) = %p', (color, expectedColor) => {
         expect(normalizeColor(color)).toBe(expectedColor);
       });
@@ -176,10 +176,10 @@ describe('Test `normalizeColor` function', () => {
   });
   describe('Test colors being a rgb string', () => {
     test.each([
-      ['rgb (0,0,0)', null],
-      ['rgb(50,200,150, 45)', null],
-      ['RGB(50,200,150)', null],
-      ['rgb(50,200,150, 0.45)', null],
+      ['rgb (0,0,0)', undefined],
+      ['rgb(50,200,150, 45)', undefined],
+      ['RGB(50,200,150)', undefined],
+      ['rgb(50,200,150, 0.45)', undefined],
       ['rgb(0, 0, 255)', 0x0000ffff],
       ['rgb(0 0 255)', 0x0000ffff],
       ['rgb(100, 15, 69)', 0x640f45ff],
@@ -205,8 +205,8 @@ describe('Test `normalizeColor` function', () => {
 
   describe('Test colors being a rgba string', () => {
     test.each([
-      ['RGBA(100 ,255 ,50 ,50 )', null],
-      ['rgba (100,255,50,.5)', null],
+      ['RGBA(100 ,255 ,50 ,50 )', undefined],
+      ['rgba (100,255,50,.5)', undefined],
       ['rgba(0, 0, 0, .5)', 0x00000080],
       ['rgba(0, 0, 0, 0.0)', 0x00000000],
       ['rgba(0, 0, 0, 0)', 0x00000000],
@@ -232,10 +232,10 @@ describe('Test `normalizeColor` function', () => {
 
   describe('Test colors being a hsl string', () => {
     test.each([
-      ['HSL(0,100%,50%)', null],
-      ['hsl(120 ,0.99, 0.1 )', null],
-      ['hsl(0,100,50)', null],
-      ['hsl(0,100%,50%, 0.5)', null],
+      ['HSL(0,100%,50%)', undefined],
+      ['hsl(120 ,0.99, 0.1 )', undefined],
+      ['hsl(0,100,50)', undefined],
+      ['hsl(0,100%,50%, 0.5)', undefined],
       ['hsl(0, 0%, 0%)', 0x000000ff],
       ['hsl(360, 100%, 100%)', 0xffffffff],
       ['hsl(180, 50%, 50%)', 0x40bfbfff],
@@ -271,7 +271,7 @@ describe('Test `normalizeColor` function', () => {
       ['hsla(360 100% 100% / 1)', 0xffffffff],
       ['hsla(360 100% 100% / 0)', 0xffffff00],
       ['hsla(180 50% 50% / 0.2)', 0x40bfbf33],
-      ['HSLA(0,100%,50%,0.5)', null],
+      ['HSLA(0,100%,50%,0.5)', undefined],
       ['hsla(0,100%,50%,0.5)', 0xff000080],
       ['hsla(120,100%,50%, 0.5)', 0x00ff0080],
       ['hsla(120,100%,50%, 1)', 0x00ff00ff],
@@ -292,7 +292,7 @@ describe('Test `normalizeColor` function', () => {
       ['hwb(360, 100%, 100%)', 0x808080ff],
       ['hwb(0 0% 0%)', 0xff0000ff],
       ['hwb(70 50% 0%)', 0xeaff80ff],
-      ['HWB(0,100%,50%)', null],
+      ['HWB(0,100%,50%)', undefined],
       ['hwb(0,67%, 33%)', 0xabababff],
       ['hwb(0,67% , 33%)', 0xabababff],
       ['hwb(48, 38%, 6%)', 0xf0d361ff],
@@ -304,10 +304,10 @@ describe('Test `normalizeColor` function', () => {
   describe('Test colors a colorName string', () => {
     test.each([
       ['red', 0xff0000ff],
-      ['transparent', 0x00000000],
+      ['transparent', null], // Transparent cannot be represented as a number
       ['peachpuff', 0xffdab9ff],
-      ['peachPuff', null],
-      ['PeachPuff', null],
+      ['peachPuff', undefined],
+      ['PeachPuff', undefined],
     ])('normalizeColor(%s) = %p', (color, expectedColor) => {
       expect(normalizeColor(color)).toBe(expectedColor);
     });

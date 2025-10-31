@@ -1,6 +1,5 @@
 import React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
-import type { WorkletRuntime } from 'react-native-reanimated';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -9,24 +8,25 @@ import Animated, {
 } from 'react-native-reanimated';
 import {
   createWorkletRuntime,
-  runOnJS,
-  runOnRuntime,
-  runOnUI,
+  scheduleOnRN,
+  scheduleOnRuntime,
+  scheduleOnUI,
+  WorkletRuntime,
 } from 'react-native-worklets';
 
 export default function WorkletRuntimeExample() {
   return (
     <View style={styles.container}>
       <AnimationDemo />
-      <RunOnUIRunOnJSDemo />
+      <ScheduleOnUIscheduleOnRNDemo />
       <CreateWorkletRuntimeDemo />
       <InitializerDemo />
       <ThrowErrorDemo />
       <PerformanceNowDemo />
-      <RunOnRuntimeFromJSDemo />
-      <RunOnRuntimeFromUIDemo />
-      <RunOnRuntimeArgsDemo />
-      <RunOnRuntimeLongRunningTasksDemo />
+      <ScheduleOnRuntimeFromJSDemo />
+      <ScheduleOnRuntimeFromUIDemo />
+      <ScheduleOnRuntimeArgsDemo />
+      <ScheduleOnRuntimeLongRunningTasksDemo />
     </View>
   );
 }
@@ -58,17 +58,17 @@ function AnimationDemo() {
   );
 }
 
-function RunOnUIRunOnJSDemo() {
+function ScheduleOnUIscheduleOnRNDemo() {
   const handlePress = () => {
     const func = () => console.log('Hello from JS thread!');
-    runOnUI(() => {
+    scheduleOnUI(() => {
       'worklet';
       console.log('Hello from UI thread!');
-      runOnJS(func)();
-    })();
+      scheduleOnRN(func);
+    });
   };
 
-  return <Button title="runOnUI / runOnJS" onPress={handlePress} />;
+  return <Button title="scheduleOnUI / scheduleOnRN" onPress={handlePress} />;
 }
 
 function CreateWorkletRuntimeDemo() {
@@ -130,73 +130,77 @@ function PerformanceNowDemo() {
         console.log('WR', performance.now());
       },
     });
-    runOnUI(() => {
+    scheduleOnUI(() => {
       console.log('UI', performance.now());
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
       console.log('AT', global._getAnimationTimestamp());
-    })();
+    });
   };
 
   return <Button title="performance.now" onPress={handlePress} />;
 }
 
-function RunOnRuntimeFromJSDemo() {
+function ScheduleOnRuntimeFromJSDemo() {
   const handlePress = () => {
     const runtime = createWorkletRuntime({ name: 'foo' });
-    runOnRuntime(runtime, () => {
+    scheduleOnRuntime(runtime, () => {
       'worklet';
       console.log('Hello from background!', Math.random());
-    })();
+    });
   };
 
-  return <Button title="runOnRuntime from JS" onPress={handlePress} />;
+  return <Button title="scheduleOnRuntime from JS" onPress={handlePress} />;
 }
 
-function RunOnRuntimeFromUIDemo() {
+function ScheduleOnRuntimeFromUIDemo() {
   const handlePress = () => {
     const runtime = createWorkletRuntime({ name: 'foo' });
-    runOnUI(() => {
+    scheduleOnUI(() => {
       'worklet';
       const x = Math.random();
       console.log('Hello from UI thread!', x);
-      runOnRuntime(runtime, () => {
+      scheduleOnRuntime(runtime, () => {
         'worklet';
         console.log('Hello from background!', x);
-      })();
-    })();
+      });
+    });
   };
 
-  return <Button title="runOnRuntime from UI" onPress={handlePress} />;
+  return <Button title="scheduleOnRuntime from UI" onPress={handlePress} />;
 }
 
-function RunOnRuntimeArgsDemo() {
+function ScheduleOnRuntimeArgsDemo() {
   const handlePress = () => {
     const runtime = createWorkletRuntime({ name: 'foo' });
-    runOnRuntime(runtime, (x: number) => {
-      'worklet';
-      console.log('Hello from background!', x);
-    })(42);
+    scheduleOnRuntime(
+      runtime,
+      (x: number) => {
+        'worklet';
+        console.log('Hello from background!', x);
+      },
+      42
+    );
   };
 
-  return <Button title="runOnRuntime with args" onPress={handlePress} />;
+  return <Button title="scheduleOnRuntime with args" onPress={handlePress} />;
 }
 
 let runtime: WorkletRuntime | undefined;
 
-function RunOnRuntimeLongRunningTasksDemo() {
+function ScheduleOnRuntimeLongRunningTasksDemo() {
   const handlePress = () => {
     if (runtime === undefined) {
       runtime = createWorkletRuntime({ name: 'foo' });
     }
     for (let i = 0; i < 3; i++) {
-      runOnRuntime(runtime, () => {
+      scheduleOnRuntime(runtime, () => {
         'worklet';
         const until = performance.now() + 500;
         while (performance.now() < until) {
           // do nothing
         }
         console.log('Hello from background!', performance.now());
-      })();
+      });
     }
   };
 

@@ -25,7 +25,7 @@ using namespace worklets;
  *     // mismatch block
  *   }
  */
-#define REA_IF_SAME_TYPE(lhs, rhs)                  \
+#define REA_IF_SAME_TYPE(lhs, rhs) \
   using L = std::remove_reference_t<decltype(lhs)>; \
   using R = std::remove_reference_t<decltype(rhs)>; \
   if constexpr (std::is_same_v<L, R>) // NOLINT(readability/braces)
@@ -33,18 +33,15 @@ using namespace worklets;
 // Checks whether a type has canConstruct(...) for a generic value
 template <typename TCSSValue, typename TValue>
 concept ValueConstructibleCSSValue = requires(TValue &&value) {
-  {
-    TCSSValue::canConstruct(std::forward<TValue>(value))
-  } -> std::same_as<bool>;
+  { TCSSValue::canConstruct(std::forward<TValue>(value)) } -> std::same_as<bool>;
 }; // NOLINT(readability/braces)
 
 // Checks whether a type can be constructed from a jsi::Value
 template <typename TCSSValue>
-concept JSIConstructibleCSSValue =
-    requires(jsi::Runtime &rt, const jsi::Value &value) {
-      { TCSSValue::canConstruct(rt, value) } -> std::same_as<bool>;
-      { TCSSValue(rt, value) } -> std::same_as<TCSSValue>;
-    }; // NOLINT(readability/braces)
+concept JSIConstructibleCSSValue = requires(jsi::Runtime &rt, const jsi::Value &value) {
+  { TCSSValue::canConstruct(rt, value) } -> std::same_as<bool>;
+  { TCSSValue(rt, value) } -> std::same_as<TCSSValue>;
+}; // NOLINT(readability/braces)
 
 // Checks whether a type can be constructed from a folly::dynamic
 template <typename TCSSValue>
@@ -96,10 +93,8 @@ class CSSValueVariant final : public CSSValue {
   /**
    * Interpolate (non-resolvable)
    */
-  CSSValueVariant interpolate(
-      const double progress,
-      const CSSValueVariant &to,
-      const ValueInterpolationContext &context) const;
+  CSSValueVariant
+  interpolate(const double progress, const CSSValueVariant &to, const ValueInterpolationContext &context) const;
 
   /**
    * Interpolate (resolvable)
@@ -112,10 +107,8 @@ class CSSValueVariant final : public CSSValue {
  private:
   std::variant<AllowedTypes...> storage_;
 
-  CSSValueVariant fallbackInterpolate(
-      const double progress,
-      const CSSValueVariant &to,
-      double fallbackInterpolateThreshold) const;
+  CSSValueVariant
+  fallbackInterpolate(const double progress, const CSSValueVariant &to, double fallbackInterpolateThreshold) const;
 };
 
 } // namespace reanimated::css

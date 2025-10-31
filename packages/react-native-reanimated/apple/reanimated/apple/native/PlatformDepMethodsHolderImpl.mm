@@ -52,13 +52,17 @@ SynchronouslyUpdateUIPropsFunction makeSynchronouslyUpdateUIPropsFunction(REANod
 
 GetAnimationTimestampFunction makeGetAnimationTimestamp()
 {
-  auto getAnimationTimestamp = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
+  auto getAnimationTimestamp = []() {
+    return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000;
+  };
   return getAnimationTimestamp;
 }
 
 MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(REANodesManager *nodesManager)
 {
-  auto maybeFlushUIUpdatesQueueFunction = [nodesManager]() { [nodesManager maybeFlushUIUpdatesQueue]; };
+  auto maybeFlushUIUpdatesQueueFunction = [nodesManager]() {
+    [nodesManager maybeFlushUIUpdatesQueue];
+  };
   return maybeFlushUIUpdatesQueueFunction;
 }
 
@@ -66,19 +70,20 @@ RegisterSensorFunction makeRegisterSensorFunction(ReanimatedSensorContainer *rea
 {
   auto registerSensorFunction =
       [=](int sensorType, int interval, int iosReferenceFrame, std::function<void(double[], int)> setter) -> int {
-    return [reanimatedSensorContainer registerSensor:(ReanimatedSensorType)sensorType
-                                            interval:interval
-                                   iosReferenceFrame:iosReferenceFrame
-                                              setter:^(double *data, int orientationDegrees) {
-                                                setter(data, orientationDegrees);
-                                              }];
+    return [reanimatedSensorContainer
+           registerSensor:(ReanimatedSensorType)sensorType
+                 interval:interval
+        iosReferenceFrame:iosReferenceFrame
+                   setter:^(double *data, int orientationDegrees) { setter(data, orientationDegrees); }];
   };
   return registerSensorFunction;
 }
 
 UnregisterSensorFunction makeUnregisterSensorFunction(ReanimatedSensorContainer *reanimatedSensorContainer)
 {
-  auto unregisterSensorFunction = [=](int sensorId) { [reanimatedSensorContainer unregisterSensor:sensorId]; };
+  auto unregisterSensorFunction = [=](int sensorId) {
+    [reanimatedSensorContainer unregisterSensor:sensorId];
+  };
   return unregisterSensorFunction;
 }
 

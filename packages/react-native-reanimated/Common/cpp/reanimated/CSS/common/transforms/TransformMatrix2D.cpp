@@ -1,6 +1,7 @@
 #include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
 
 #include <cmath>
+#include <utility>
 
 namespace reanimated::css {
 
@@ -34,9 +35,7 @@ TransformMatrix2D::TransformMatrix2D(jsi::Runtime &rt, const jsi::Value &value)
     matrix_[8] = array.getValueAtIndex(rt, 15).asNumber();
   }
 
-  throw std::invalid_argument(
-      "[Reanimated] TransformMatrix2D: Invalid matrix size: " +
-      std::to_string(size));
+  throw std::invalid_argument("[Reanimated] TransformMatrix2D: Invalid matrix size: " + std::to_string(size));
 }
 
 TransformMatrix2D::TransformMatrix2D(const folly::dynamic &array)
@@ -68,14 +67,10 @@ TransformMatrix2D::TransformMatrix2D(const folly::dynamic &array)
     matrix_[8] = array[15].asDouble();
   }
 
-  throw std::invalid_argument(
-      "[Reanimated] TransformMatrix2D: Invalid matrix size: " +
-      std::to_string(size));
+  throw std::invalid_argument("[Reanimated] TransformMatrix2D: Invalid matrix size: " + std::to_string(size));
 }
 
-bool TransformMatrix2D::canConstruct(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
+bool TransformMatrix2D::canConstruct(jsi::Runtime &rt, const jsi::Value &value) {
   if (!value.isObject()) {
     return false;
   }
@@ -101,12 +96,9 @@ bool TransformMatrix2D::canConstruct(
     // [x, x, 0, x]
     // [0, 0, 1, 0]
     // [x, x, 0, x]
-    return array.getValueAtIndex(rt, 2).asNumber() == 0.0 &&
-        array.getValueAtIndex(rt, 6).asNumber() == 0.0 &&
-        array.getValueAtIndex(rt, 10).asNumber() == 1.0 &&
-        array.getValueAtIndex(rt, 11).asNumber() == 0.0 &&
-        array.getValueAtIndex(rt, 14).asNumber() == 0.0 &&
-        array.getValueAtIndex(rt, 15).asNumber() == 1.0;
+    return array.getValueAtIndex(rt, 2).asNumber() == 0.0 && array.getValueAtIndex(rt, 6).asNumber() == 0.0 &&
+        array.getValueAtIndex(rt, 10).asNumber() == 1.0 && array.getValueAtIndex(rt, 11).asNumber() == 0.0 &&
+        array.getValueAtIndex(rt, 14).asNumber() == 0.0 && array.getValueAtIndex(rt, 15).asNumber() == 1.0;
   }
 
   return false;
@@ -131,9 +123,8 @@ bool TransformMatrix2D::canConstruct(const folly::dynamic &array) {
     // [x, x, 0, x]
     // [0, 0, 1, 0]
     // [x, x, 0, x]
-    return array[2].asDouble() == 0.0 && array[6].asDouble() == 0.0 &&
-        array[10].asDouble() == 1.0 && array[11].asDouble() == 0.0 &&
-        array[14].asDouble() == 0.0 && array[15].asDouble() == 1.0;
+    return array[2].asDouble() == 0.0 && array[6].asDouble() == 0.0 && array[10].asDouble() == 1.0 &&
+        array[11].asDouble() == 0.0 && array[14].asDouble() == 0.0 && array[15].asDouble() == 1.0;
   }
 
   return false;
@@ -143,8 +134,7 @@ TransformMatrix2D::Decomposed TransformMatrix2D::Decomposed::interpolate(
     const double progress,
     const TransformMatrix2D::Decomposed &target) const {
   // Compute shortest signed angular delta (in range −π..π]
-  const double angleDelta =
-      std::remainder(target.rotation - rotation, 2.0 * M_PI);
+  const double angleDelta = std::remainder(target.rotation - rotation, 2.0 * M_PI);
 
   return {
       .scale = scale.interpolate(progress, target.scale),
@@ -156,12 +146,9 @@ TransformMatrix2D::Decomposed TransformMatrix2D::Decomposed::interpolate(
 
 #ifndef NDEBUG
 
-std::ostream &operator<<(
-    std::ostream &os,
-    const TransformMatrix2D::Decomposed &decomposed) {
-  os << "TransformMatrix2D::Decomposed(scale=" << decomposed.scale
-     << ", skew=" << decomposed.skew << ", rotation=" << decomposed.rotation
-     << ", translation=" << decomposed.translation << ")";
+std::ostream &operator<<(std::ostream &os, const TransformMatrix2D::Decomposed &decomposed) {
+  os << "TransformMatrix2D::Decomposed(scale=" << decomposed.scale << ", skew=" << decomposed.skew
+     << ", rotation=" << decomposed.rotation << ", translation=" << decomposed.translation << ")";
   return os;
 }
 
@@ -262,23 +249,18 @@ TransformMatrix2D TransformMatrix2D::create<TransformOp::SkewY>(double v) {
 template <TransformOp TOperation>
 TransformMatrix2D TransformMatrix2D::create(double value) {
   throw std::invalid_argument(
-      "[Reanimated] Cannot create TransformMatrix2D from: " +
-      getOperationNameFromType(TOperation));
+      "[Reanimated] Cannot create TransformMatrix2D from: " + getOperationNameFromType(TOperation));
 }
 
 double TransformMatrix2D::determinant() const {
-  return (matrix_[0] * matrix_[4] * matrix_[8]) +
-      (matrix_[1] * matrix_[5] * matrix_[6]) +
-      (matrix_[2] * matrix_[3] * matrix_[7]) -
-      (matrix_[2] * matrix_[4] * matrix_[6]) -
-      (matrix_[1] * matrix_[3] * matrix_[8]) -
-      (matrix_[0] * matrix_[5] * matrix_[7]);
+  return (matrix_[0] * matrix_[4] * matrix_[8]) + (matrix_[1] * matrix_[5] * matrix_[6]) +
+      (matrix_[2] * matrix_[3] * matrix_[7]) - (matrix_[2] * matrix_[4] * matrix_[6]) -
+      (matrix_[1] * matrix_[3] * matrix_[8]) - (matrix_[0] * matrix_[5] * matrix_[7]);
 }
 
 void TransformMatrix2D::translate2d(const Vector2D &translation) {
   for (size_t i = 0; i < 3; ++i) {
-    matrix_[6 + i] +=
-        translation[0] * matrix_[i] + translation[1] * matrix_[3 + i];
+    matrix_[6 + i] += translation[0] * matrix_[i] + translation[1] * matrix_[3 + i];
   }
 }
 
@@ -289,8 +271,7 @@ void TransformMatrix2D::scale2d(const Vector2D &scale) {
   }
 }
 
-std::optional<TransformMatrix2D::Decomposed> TransformMatrix2D::decompose()
-    const {
+std::optional<TransformMatrix2D::Decomposed> TransformMatrix2D::decompose() const {
   auto matrixCp = *this;
 
   if (!matrixCp.normalize()) {
@@ -319,15 +300,10 @@ std::optional<TransformMatrix2D::Decomposed> TransformMatrix2D::decompose()
 
   const auto rotation = computeRotation(rows);
 
-  return TransformMatrix2D::Decomposed{
-      .scale = scale,
-      .skew = skew,
-      .rotation = rotation,
-      .translation = translation};
+  return TransformMatrix2D::Decomposed{.scale = scale, .skew = skew, .rotation = rotation, .translation = translation};
 }
 
-TransformMatrix2D TransformMatrix2D::recompose(
-    const TransformMatrix2D::Decomposed &decomposed) {
+TransformMatrix2D TransformMatrix2D::recompose(const TransformMatrix2D::Decomposed &decomposed) {
   auto result = TransformMatrix2D();
 
   // Apply Translation
@@ -335,8 +311,7 @@ TransformMatrix2D TransformMatrix2D::recompose(
 
   // Apply Rotation
   if (decomposed.rotation != 0) {
-    const auto rotationMatrix =
-        TransformMatrix2D::create<TransformOp::Rotate>(decomposed.rotation);
+    const auto rotationMatrix = TransformMatrix2D::create<TransformOp::Rotate>(decomposed.rotation);
     result = rotationMatrix * result;
   }
 
@@ -357,8 +332,7 @@ Vector2D TransformMatrix2D::getTranslation() const {
   return Vector2D(matrix_[6], matrix_[7]);
 }
 
-std::pair<Vector2D, double> TransformMatrix2D::computeScaleAndSkew(
-    std::array<Vector2D, 2> &rows) {
+std::pair<Vector2D, double> TransformMatrix2D::computeScaleAndSkew(std::array<Vector2D, 2> &rows) {
   Vector2D scale;
 
   // Compute X scale and normalize first row
@@ -387,13 +361,9 @@ double TransformMatrix2D::computeRotation(std::array<Vector2D, 2> &rows) {
 }
 // Explicit template instantiations for unsupported operations
 // These will use the fallback template function that throws an error
-template TransformMatrix2D TransformMatrix2D::create<TransformOp::Perspective>(
-    double);
-template TransformMatrix2D TransformMatrix2D::create<TransformOp::RotateX>(
-    double);
-template TransformMatrix2D TransformMatrix2D::create<TransformOp::RotateY>(
-    double);
-template TransformMatrix2D TransformMatrix2D::create<TransformOp::RotateZ>(
-    double);
+template TransformMatrix2D TransformMatrix2D::create<TransformOp::Perspective>(double);
+template TransformMatrix2D TransformMatrix2D::create<TransformOp::RotateX>(double);
+template TransformMatrix2D TransformMatrix2D::create<TransformOp::RotateY>(double);
+template TransformMatrix2D TransformMatrix2D::create<TransformOp::RotateZ>(double);
 
 } // namespace reanimated::css

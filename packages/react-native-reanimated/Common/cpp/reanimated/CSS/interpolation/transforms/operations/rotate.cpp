@@ -2,12 +2,12 @@
 #include <reanimated/CSS/interpolation/transforms/operations/rotate.h>
 
 #include <memory>
+#include <string>
 
 namespace reanimated::css {
 
 template <TransformOp TOperation>
-RotateOperationBase2D<TOperation>::RotateOperationBase2D(
-    const std::string &value)
+RotateOperationBase2D<TOperation>::RotateOperationBase2D(const std::string &value)
     : TransformOperationBase<TOperation, CSSAngle>(CSSAngle(value)) {}
 
 template <TransformOp TOperation>
@@ -16,8 +16,7 @@ folly::dynamic RotateOperationBase2D<TOperation>::valueToDynamic() const {
 }
 
 template <TransformOp TOperation>
-RotateOperationBase3D<TOperation>::RotateOperationBase3D(
-    const std::string &value)
+RotateOperationBase3D<TOperation>::RotateOperationBase3D(const std::string &value)
     : TransformOperationBase<TOperation, CSSAngle>(CSSAngle(value)) {}
 
 template <TransformOp TOperation>
@@ -31,10 +30,8 @@ folly::dynamic RotateOperationBase3D<TOperation>::valueToDynamic() const {
 }
 
 template <TransformOp TOperation>
-TransformMatrix::Shared RotateOperationBase3D<TOperation>::toMatrix(
-    bool /* force3D */) const {
-  return std::make_shared<const TransformMatrix3D>(
-      TransformMatrix3D::create<TOperation>(this->value.value));
+TransformMatrix::Shared RotateOperationBase3D<TOperation>::toMatrix(bool /* force3D */) const {
+  return std::make_shared<const TransformMatrix3D>(TransformMatrix3D::create<TOperation>(this->value.value));
 }
 
 bool RotateZOperation::canConvertTo(TransformOp type) const {

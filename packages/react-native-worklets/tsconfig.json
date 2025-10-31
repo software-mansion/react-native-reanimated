@@ -1,9 +1,5 @@
 {
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "paths": {
-      "react-native-worklets": ["./src"]
-    }
-  },
-  "include": ["src"]
+  // To explore web types in your IDE you can temporarily change this line to:
+  // "extends": "./tsconfig.web.json"
+  "extends": "./tsconfig.native.json"
 }

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { runOnJS } from 'react-native-worklets';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { Stagger } from '@/apps/css/components';
 import { flex, spacing, style } from '@/theme';
@@ -139,9 +139,9 @@ export default function SearchScreen({ children }: SearchScreenProps) {
 
           searchBarShowProgress.value = progress;
           if (progress === 1) {
-            runOnJS(changeIsExpanded)(true);
+            scheduleOnRN(changeIsExpanded, true);
           } else if (progress === 0) {
-            runOnJS(changeIsExpanded)(false);
+            scheduleOnRN(changeIsExpanded, false);
           }
         }}>
         {(scrollProps) =>

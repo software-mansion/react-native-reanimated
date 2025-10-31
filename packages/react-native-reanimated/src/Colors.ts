@@ -168,8 +168,8 @@ export function clampRGBA(RGBA: ParsedColorArray): void {
   }
 }
 
-const names: Record<string, number> = {
-  transparent: 0x00000000,
+const names: Record<string, number | null> = {
+  transparent: null,
 
   /* spell-checker: disable */
   // http://www.w3.org/TR/css3-color/#svg-color
@@ -354,28 +354,18 @@ export const ColorProperties = [
   'stroke',
 ];
 
-/* copied from:
- * https://github.com/facebook/react-native/blob/v0.81.0/packages/react-native/Libraries/StyleSheet/PlatformColorValueTypesIOS.d.ts
- */
-export const DynamicColorIOSProperties = [
-  'light',
-  'dark',
-  'highContrastLight',
-  'highContrastDark',
-] as const;
-
-export function normalizeColor(color: unknown): number | null {
+export function normalizeColor(color: unknown): number | null | undefined {
   'worklet';
 
   if (typeof color === 'number') {
     if (color >>> 0 === color && color >= 0 && color <= 0xffffffff) {
       return color;
     }
-    return null;
+    return undefined;
   }
 
   if (typeof color !== 'string') {
-    return null;
+    return undefined;
   }
 
   let match: RegExpExecArray | null | undefined;
@@ -385,7 +375,7 @@ export function normalizeColor(color: unknown): number | null {
     return Number.parseInt(match[1] + 'ff', 16) >>> 0;
   }
 
-  if (names[color] !== undefined) {
+  if (color in names) {
     return names[color];
   }
 
@@ -508,7 +498,7 @@ export function normalizeColor(color: unknown): number | null {
     );
   }
 
-  return null;
+  return undefined;
 }
 
 export const opacity = (c: number): number => {
@@ -538,8 +528,8 @@ export const rgbaColor = (
   alpha = 1
 ): number | string => {
   'worklet';
-  // Replace tiny values like 1.234e-11 with 0:
-  const safeAlpha = alpha < 0.001 ? 0 : alpha;
+  // Round alpha to 3 decimal places to avoid floating point precision issues
+  const safeAlpha = Math.round(alpha * 1000) / 1000;
   return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
 };
 
@@ -637,7 +627,7 @@ export function processColorInitially(
 ): number | null | undefined {
   'worklet';
   if (color === null || color === undefined) {
-    return color;
+    return undefined;
   }
 
   let colorNumber: number;
@@ -646,12 +636,9 @@ export function processColorInitially(
     colorNumber = color;
   } else {
     const normalizedColor = normalizeColor(color);
-    if (normalizedColor === null || normalizedColor === undefined) {
-      return undefined;
-    }
 
     if (typeof normalizedColor !== 'number') {
-      return null;
+      return normalizedColor;
     }
 
     colorNumber = normalizedColor;
@@ -665,7 +652,7 @@ export function isColor(value: unknown): boolean {
   if (typeof value !== 'string') {
     return false;
   }
-  return processColorInitially(value) != null;
+  return processColorInitially(value) != undefined;
 }
 
 export type ParsedColorArray = [number, number, number, number];

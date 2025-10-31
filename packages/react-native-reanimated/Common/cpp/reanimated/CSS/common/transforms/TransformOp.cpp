@@ -1,6 +1,7 @@
 #include <reanimated/CSS/common/transforms/TransformOp.h>
 
 #include <array>
+#include <string>
 #include <unordered_map>
 
 namespace reanimated::css {
@@ -40,8 +41,7 @@ TransformOp getTransformOperationType(const std::string &property) {
   if (it != stringToEnumMap.end()) {
     return it->second;
   } else {
-    throw std::invalid_argument(
-        "[Reanimated] Unknown transform operation: " + property);
+    throw std::invalid_argument("[Reanimated] Unknown transform operation: " + property);
   }
 }
 
