@@ -33,10 +33,10 @@ function parseFilterValue(filterName: string, filterValue: unknown) {
           .join(' ');
       }
 
-      return `${filterValue}`;
+      return String(filterValue);
 
     default:
-      return filterValue;
+      return String(filterValue);
   }
 }
 
