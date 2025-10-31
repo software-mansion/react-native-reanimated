@@ -94,8 +94,7 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
 #if REACT_NATIVE_MINOR_VERSION >= 81
   rt.setRuntimeData(
       RuntimeData::weakRuntimeUUID,
-      std::make_shared<WeakRuntimeHolder>(
-          WeakRuntimeHolder{.weakRuntime = weak_from_this()}));
+      std::make_shared<WeakRuntimeHolder>(WeakRuntimeHolder{.weakRuntime = weak_from_this()}));
 #endif // REACT_NATIVE_MINOR_VERSION >= 81
 
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
@@ -220,8 +219,7 @@ void scheduleOnRuntime(
 }
 
 #if REACT_NATIVE_MINOR_VERSION >= 71
-std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(
-    jsi::Runtime &rt) {
+std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
   auto runtimeData = rt.getRuntimeData(RuntimeData::weakRuntimeUUID);
   if (!runtimeData) [[unlikely]] {
     throw std::runtime_error(

@@ -79,8 +79,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    *
    * Throws when invoked with a non-worklet runtime.
    */
-  static std::weak_ptr<WorkletRuntime> getWeakRuntimeFromJSIRuntime(
-      jsi::Runtime &rt);
+  static std::weak_ptr<WorkletRuntime> getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt);
 #endif // REACT_NATIVE_MINOR_VERSION >= 81
 
  private:
