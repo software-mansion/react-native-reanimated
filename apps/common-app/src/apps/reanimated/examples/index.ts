@@ -882,7 +882,7 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[SET] Many screens',
     screen: ManyScreensExample,
     shouldWork: {
-      ios: false, // header height issues on iOS 26
+      ios: true,
       android: true,
     },
   },
