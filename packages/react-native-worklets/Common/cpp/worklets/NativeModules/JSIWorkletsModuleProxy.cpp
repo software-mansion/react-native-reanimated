@@ -148,19 +148,6 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       uiWorkletRuntime_(uiWorkletRuntime),
       runtimeBindings_(runtimeBindings) {}
 
-JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
-    const JSIWorkletsModuleProxy &other)
-    : jsi::HostObject(),
-      isDevBundle_(other.isDevBundle_),
-      script_(other.script_),
-      sourceUrl_(other.sourceUrl_),
-      jsQueue_(other.jsQueue_),
-      jsScheduler_(other.jsScheduler_),
-      uiScheduler_(other.uiScheduler_),
-      runtimeManager_(other.runtimeManager_),
-      uiWorkletRuntime_(other.uiWorkletRuntime_),
-      runtimeBindings_(other.runtimeBindings_) {}
-
 JSIWorkletsModuleProxy::~JSIWorkletsModuleProxy() = default;
 
 std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(

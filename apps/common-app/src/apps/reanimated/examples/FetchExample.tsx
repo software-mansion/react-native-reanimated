@@ -143,7 +143,7 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Button
-        title="UNLEASH THE FETCH"
+        title="Test fetch chain"
         onPress={() => {
           scheduleOnRuntime(elephantRuntime, callback, elephantRuntime, 0);
         }}

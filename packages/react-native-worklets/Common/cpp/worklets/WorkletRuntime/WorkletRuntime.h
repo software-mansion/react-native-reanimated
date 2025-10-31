@@ -54,10 +54,6 @@ class WorkletRuntime : public jsi::HostObject,
 
   void runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet);
 
-  void runOnQueue(std::function<void()> &&job);
-
-  void runOnQueue(std::function<void(jsi::Runtime &)> &&job);
-
   jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
 
   jsi::Value executeSync(std::function<jsi::Value(jsi::Runtime &)> &&job) const;

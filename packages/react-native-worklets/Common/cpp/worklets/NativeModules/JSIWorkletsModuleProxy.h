@@ -40,8 +40,6 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
       const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
       const std::shared_ptr<RuntimeBindings> &runtimeBindings);
 
-  JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other);
-
   ~JSIWorkletsModuleProxy() override;
 
   std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
