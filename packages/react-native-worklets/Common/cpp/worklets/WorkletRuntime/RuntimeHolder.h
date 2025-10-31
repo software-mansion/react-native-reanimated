@@ -1,4 +1,5 @@
 #pragma once
+#if REACT_NATIVE_MINOR_VERSION >= 81
 
 #include <memory>
 
@@ -17,3 +18,5 @@ struct WeakRuntimeHolder {
 };
 
 } // namespace worklets
+
+#endif // REACT_NATIVE_MINOR_VERSION >= 81

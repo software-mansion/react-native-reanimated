@@ -27,8 +27,7 @@ namespace worklets {
  */
 class JSIWorkletsModuleProxy;
 
-class WorkletRuntime : public jsi::HostObject,
-                       public std::enable_shared_from_this<WorkletRuntime> {
+class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_this<WorkletRuntime> {
  public:
   explicit WorkletRuntime(
       uint64_t runtimeId,
@@ -44,12 +43,9 @@ class WorkletRuntime : public jsi::HostObject,
   }
 
   template <typename... Args>
-  inline jsi::Value runGuarded(
-      const std::shared_ptr<SerializableWorklet> &serializableWorklet,
-      Args &&...args) const {
+  inline jsi::Value runGuarded(const std::shared_ptr<SerializableWorklet> &serializableWorklet, Args &&...args) const {
     jsi::Runtime &rt = *runtime_;
-    return runOnRuntimeGuarded(
-        rt, serializableWorklet->toJSValue(rt), std::forward<Args>(args)...);
+    return runOnRuntimeGuarded(rt, serializableWorklet->toJSValue(rt), std::forward<Args>(args)...);
   }
 
   void runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet);
@@ -58,8 +54,7 @@ class WorkletRuntime : public jsi::HostObject,
 
   jsi::Value executeSync(std::function<jsi::Value(jsi::Runtime &)> &&job) const;
 
-  jsi::Value executeSync(
-      const std::function<jsi::Value(jsi::Runtime &)> &job) const;
+  jsi::Value executeSync(const std::function<jsi::Value(jsi::Runtime &)> &job) const;
 
   std::string toString() const {
     return "[WorkletRuntime \"" + name_ + "\"]";
@@ -77,14 +72,15 @@ class WorkletRuntime : public jsi::HostObject,
     return name_;
   }
 
+#if REACT_NATIVE_MINOR_VERSION >= 81
   /**
    * Retrieves a weak reference to the WorkletRuntime associated with the
    * provided jsi::Runtime.
    *
    * Throws when invoked with a non-worklet runtime.
    */
-  static std::weak_ptr<WorkletRuntime> getWeakRuntimeFromJSIRuntime(
-      jsi::Runtime &rt);
+  static std::weak_ptr<WorkletRuntime> getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt);
+#endif // REACT_NATIVE_MINOR_VERSION >= 81
 
  private:
   const uint64_t runtimeId_;
@@ -97,9 +93,7 @@ class WorkletRuntime : public jsi::HostObject,
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on
 // Android
-std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
-    jsi::Runtime &rt,
-    const jsi::Value &value);
+std::shared_ptr<WorkletRuntime> extractWorkletRuntime(jsi::Runtime &rt, const jsi::Value &value);
 
 void scheduleOnRuntime(
     jsi::Runtime &rt,

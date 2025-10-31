@@ -13,7 +13,7 @@ import {
   wait,
   waitForNotification,
 } from '../../ReJest/RuntimeTestsApi';
-import { runOnUI } from 'react-native-worklets';
+import { scheduleOnUI } from 'react-native-worklets';
 
 const RESULT_SHARED_VALUE_REF = 'RESULT_SHARED_VALUE_REF';
 
@@ -27,7 +27,7 @@ const ValueComponent = ({ onRunUIFunction }: { onRunUIFunction: () => boolean })
 
   useEffect(() => {
     try {
-      runOnUI(() => {
+      scheduleOnUI(() => {
         'worklet';
         try {
           const result = onRunUIFunction();
@@ -35,7 +35,7 @@ const ValueComponent = ({ onRunUIFunction }: { onRunUIFunction: () => boolean })
         } catch (error) {
           sharedResult.value = 'error';
         }
-      })();
+      });
     } catch (error) {
       sharedResult.value = 'error';
     }

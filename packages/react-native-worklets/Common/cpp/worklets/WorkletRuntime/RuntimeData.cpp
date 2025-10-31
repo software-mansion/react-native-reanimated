@@ -1,5 +1,7 @@
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
+#include <string>
+
 namespace worklets {
 namespace RuntimeData {
 

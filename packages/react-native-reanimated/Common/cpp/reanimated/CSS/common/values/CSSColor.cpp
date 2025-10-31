@@ -3,17 +3,17 @@
 
 #include <utility>
 
+#include <string>
+
 namespace reanimated::css {
 
 // CSSColorBase template implementations
 
 template <ColorTypeEnum TColorType, typename TDerived>
-CSSColorBase<TColorType, TDerived>::CSSColorBase()
-    : channels{0, 0, 0, 0}, colorType(TColorType::Transparent) {}
+CSSColorBase<TColorType, TDerived>::CSSColorBase() : channels{0, 0, 0, 0}, colorType(TColorType::Transparent) {}
 
 template <ColorTypeEnum TColorType, typename TDerived>
-CSSColorBase<TColorType, TDerived>::CSSColorBase(TColorType colorType)
-    : channels{0, 0, 0, 0}, colorType(colorType) {}
+CSSColorBase<TColorType, TDerived>::CSSColorBase(TColorType colorType) : channels{0, 0, 0, 0}, colorType(colorType) {}
 
 template <ColorTypeEnum TColorType, typename TDerived>
 CSSColorBase<TColorType, TDerived>::CSSColorBase(int64_t numberValue)
@@ -38,11 +38,7 @@ CSSColorBase<TColorType, TDerived>::CSSColorBase(int64_t numberValue)
 }
 
 template <ColorTypeEnum TColorType, typename TDerived>
-CSSColorBase<TColorType, TDerived>::CSSColorBase(
-    const uint8_t r,
-    const uint8_t g,
-    const uint8_t b,
-    const uint8_t a)
+CSSColorBase<TColorType, TDerived>::CSSColorBase(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
     : channels{r, g, b, a}, colorType(TColorType::Rgba) {}
 
 template <ColorTypeEnum TColorType, typename TDerived>
@@ -50,9 +46,7 @@ CSSColorBase<TColorType, TDerived>::CSSColorBase(ColorChannels colorChannels)
     : channels{std::move(colorChannels)}, colorType(TColorType::Rgba) {}
 
 template <ColorTypeEnum TColorType, typename TDerived>
-TDerived CSSColorBase<TColorType, TDerived>::interpolate(
-    double progress,
-    const TDerived &to) const {
+TDerived CSSColorBase<TColorType, TDerived>::interpolate(double progress, const TDerived &to) const {
   ColorChannels fromChannels = channels;
   ColorChannels toChannels = to.channels;
 
@@ -68,18 +62,15 @@ TDerived CSSColorBase<TColorType, TDerived>::interpolate(
     const auto &to = toChannels[i];
     // Cast one of operands to double to avoid unsigned int subtraction overflow
     // (when from > to)
-    const double interpolated =
-        (static_cast<double>(to) - from) * progress + from;
-    resultChannels[i] =
-        static_cast<uint8_t>(std::round(std::clamp(interpolated, 0.0, 255.0)));
+    const double interpolated = (static_cast<double>(to) - from) * progress + from;
+    resultChannels[i] = static_cast<uint8_t>(std::round(std::clamp(interpolated, 0.0, 255.0)));
   }
 
   return TDerived(std::move(resultChannels));
 }
 
 template <ColorTypeEnum TColorType, typename TDerived>
-bool CSSColorBase<TColorType, TDerived>::operator==(
-    const TDerived &other) const {
+bool CSSColorBase<TColorType, TDerived>::operator==(const TDerived &other) const {
   return colorType == other.colorType && channels == other.channels;
 }
 
@@ -92,8 +83,7 @@ CSSColor::CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue)
   }
 }
 
-CSSColor::CSSColor(const folly::dynamic &value)
-    : CSSColorBase<CSSColorType, CSSColor>(CSSColorType::Transparent) {
+CSSColor::CSSColor(const folly::dynamic &value) : CSSColorBase<CSSColorType, CSSColor>(CSSColorType::Transparent) {
   if (value.isNumber()) {
     *this = CSSColor(value.asInt());
   }
@@ -109,17 +99,15 @@ bool CSSColor::canConstruct(const folly::dynamic &value) {
 
 folly::dynamic CSSColor::toDynamic() const {
   if (colorType == CSSColorType::Rgba) {
-    return (channels[3] << 24) | (channels[0] << 16) | (channels[1] << 8) |
-        channels[2];
+    return (channels[3] << 24) | (channels[0] << 16) | (channels[1] << 8) | channels[2];
   }
   return 0;
 }
 
 std::string CSSColor::toString() const {
   if (colorType == CSSColorType::Rgba) {
-    return "rgba(" + std::to_string(channels[0]) + "," +
-        std::to_string(channels[1]) + "," + std::to_string(channels[2]) + "," +
-        std::to_string(channels[3]) + ")";
+    return "rgba(" + std::to_string(channels[0]) + "," + std::to_string(channels[1]) + "," +
+        std::to_string(channels[2]) + "," + std::to_string(channels[3]) + ")";
   }
   return "transparent";
 }

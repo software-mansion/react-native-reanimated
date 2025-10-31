@@ -1,245 +1,40 @@
 'use strict';
 
-import { setupCallGuard } from './callGuard';
-import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
-import { initializeNetworking } from './network';
-import { SHOULD_BE_USE_WEB } from './PlatformChecker';
-import { setupRunLoop } from './runLoop/workletRuntime';
-import { getRuntimeKind, RuntimeKind } from './runtimeKind';
-import {
-  createSerializable,
-  makeShareableCloneOnUIRecursive,
-} from './serializable';
-import { isWorkletFunction } from './workletFunction';
-import { registerWorkletsError, WorkletsError } from './WorkletsError';
-import { WorkletsModule } from './WorkletsModule';
-import type { WorkletFunction, WorkletRuntime } from './workletTypes';
+import { WorkletsError } from './debug/WorkletsError';
+import type {
+  WorkletFunction,
+  WorkletRuntime,
+  WorkletRuntimeConfig,
+} from './types';
 
-/**
- * Lets you create a new JS runtime which can be used to run worklets possibly
- * on different threads than JS or UI thread.
- *
- * @param config - Runtime configuration object - {@link WorkletRuntimeConfig}.
- * @returns WorkletRuntime which is a
- *   `jsi::HostObject<worklets::WorkletRuntime>` - {@link WorkletRuntime}
- * @see https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime/
- */
-// @ts-expect-error Public API overload.
 export function createWorkletRuntime(
   config?: WorkletRuntimeConfig
 ): WorkletRuntime;
 
-/**
- * @deprecated Please use the new config object signature instead:
- *   `createWorkletRuntime({ name, initializer })`
- *
- *   Lets you create a new JS runtime which can be used to run worklets possibly
- *   on different threads than JS or UI thread.
- * @param name - A name used to identify the runtime which will appear in
- *   devices list in Chrome DevTools.
- * @param initializer - An optional worklet that will be run synchronously on
- *   the same thread immediately after the runtime is created.
- * @returns WorkletRuntime which is a
- *   `jsi::HostObject<worklets::WorkletRuntime>` - {@link WorkletRuntime}
- * @see https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime/
- */
 export function createWorkletRuntime(
   name?: string,
   initializer?: () => void
 ): WorkletRuntime;
 
-export function createWorkletRuntime(
-  nameOrConfig?: string | WorkletRuntimeConfigInternal,
-  initializer?: WorkletFunction<[], void>
-): WorkletRuntime {
-  if (__DEV__ && getRuntimeKind() !== RuntimeKind.ReactNative) {
-    throw new WorkletsError(
-      '`createWorkletRuntime` cannot be called from Worklet Runtimes.'
-    );
-  }
-  let name: string;
-  let initializerFn: (() => void) | undefined;
-  let useDefaultQueue = true;
-  let customQueue: object | undefined;
-  let animationQueuePollingRate: number;
-  let enableEventLoop = true;
-  if (typeof nameOrConfig === 'string') {
-    name = nameOrConfig;
-    initializerFn = initializer;
-  } else {
-    // TODO: Make anonymous name globally unique.
-    name = nameOrConfig?.name ?? 'anonymous';
-    initializerFn = nameOrConfig?.initializer;
-    useDefaultQueue = nameOrConfig?.useDefaultQueue ?? true;
-    customQueue = nameOrConfig?.customQueue;
-    animationQueuePollingRate = Math.round(
-      nameOrConfig?.animationQueuePollingRate ?? 16
-    );
-    enableEventLoop = nameOrConfig?.enableEventLoop ?? true;
-  }
-
-  if (initializerFn && !isWorkletFunction(initializerFn)) {
-    throw new WorkletsError(
-      'The initializer passed to `createWorkletRuntime` is not a worklet.'
-    );
-  }
-
-  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
-  let runtimeBoundInitializeNetworking: typeof initializeNetworking;
-  if (globalThis._WORKLETS_BUNDLE_MODE) {
-    /*
-     * Initialize networking has to be runtime bound because it needs
-     * TurboModules obtained from RN Runtime.
-     */
-    runtimeBoundInitializeNetworking = initializeNetworking;
-  }
-
-  return WorkletsModule.createWorkletRuntime(
-    name,
-    createSerializable(() => {
-      'worklet';
-      setupCallGuard();
-      registerWorkletsError();
-      setupConsole(runtimeBoundCapturableConsole);
-      if (enableEventLoop) {
-        setupRunLoop(animationQueuePollingRate);
-      }
-      if (globalThis._WORKLETS_BUNDLE_MODE) {
-        runtimeBoundInitializeNetworking();
-      }
-      initializerFn?.();
-    }),
-    useDefaultQueue,
-    customQueue,
-    enableEventLoop
-  );
+export function createWorkletRuntime(): never {
+  throw new WorkletsError('`createWorkletRuntime` is not supported on web.');
 }
 
-/** @deprecated Use `scheduleOnRuntime` instead. */
-// @ts-expect-error Check `runOnUI` overload.
 export function runOnRuntime<Args extends unknown[], ReturnValue>(
   workletRuntime: WorkletRuntime,
   worklet: (...args: Args) => ReturnValue
 ): WorkletFunction<Args, ReturnValue>;
-/** Schedule a worklet to execute on the background queue. */
-export function runOnRuntime<Args extends unknown[], ReturnValue>(
-  workletRuntime: WorkletRuntime,
-  worklet: WorkletFunction<Args, ReturnValue>
-): (...args: Args) => void {
-  'worklet';
-  if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
-    throw new WorkletsError(
-      'The function passed to `runOnRuntime` is not a worklet.'
-    );
-  }
-  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
-    return (...args) =>
-      globalThis._scheduleOnRuntime(
-        workletRuntime,
-        makeShareableCloneOnUIRecursive(() => {
-          'worklet';
-          worklet(...args);
-        })
-      );
-  }
-  return (...args) =>
-    WorkletsModule.scheduleOnRuntime(
-      workletRuntime,
-      createSerializable(() => {
-        'worklet';
-        worklet(...args);
-        globalThis.__flushMicrotasks();
-      })
-    );
+
+export function runOnRuntime(): never {
+  throw new WorkletsError('`runOnRuntime` is not supported on web.');
 }
 
-/**
- * Lets you asynchronously run a
- * [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)
- * on the [Worker
- * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime).
- *
- * Check
- * {@link https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds}
- * for more information about the different runtime kinds.
- *
- * - The worklet is scheduled on the Worker Runtime's [Async
- *   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/Public/AsyncQueue.h)
- * - The function cannot be scheduled on the Worker Runtime from [UI
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime)
- *   or another [Worker
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime),
- *   unless the [Bundle
- *   Mode](https://docs.swmansion.com/react-native-worklets/docs/experimental/bundleMode)
- *   is enabled.
- *
- * @param workletRuntime - The runtime to schedule the worklet on.
- * @param worklet - The worklet to schedule.
- * @param args - The arguments to pass to the worklet.
- * @returns The return value of the worklet.
- */
 export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
   workletRuntime: WorkletRuntime,
   worklet: (...args: Args) => ReturnValue,
   ...args: Args
-): void {
-  'worklet';
-  runOnRuntime(workletRuntime, worklet)(...args);
+): void;
+
+export function scheduleOnRuntime(): never {
+  throw new WorkletsError('`scheduleOnRuntime` is not supported on web.');
 }
-
-/** Configuration object for creating a worklet runtime. */
-export type WorkletRuntimeConfig = {
-  /** The name of the worklet runtime. */
-  name?: string;
-  /**
-   * A worklet that will be run immediately after the runtime is created and
-   * before any other worklets.
-   */
-  initializer?: () => void;
-  /**
-   * Time interval in milliseconds between polling of frame callbacks scheduled
-   * by requestAnimationFrame. If not specified, it defaults to 16 ms.
-   */
-  animationQueuePollingRate?: number;
-  /**
-   * Determines whether to enable the default Event Loop or not. The Event Loop
-   * provides implementations for `setTimeout`, `setImmediate`, `setInterval`,
-   * `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`,
-   * `clearImmediate`, and `cancelAnimationFrame` methods. If not specified, it
-   * defaults to `true`.
-   */
-  enableEventLoop?: true;
-} & (
-  | {
-      /**
-       * If true, the runtime will use the default queue implementation for
-       * scheduling worklets. Defaults to true.
-       */
-      useDefaultQueue?: true;
-      /**
-       * An optional custom queue to be used for scheduling worklets.
-       *
-       * The queue has to implement the C++ `AsyncQueue` interface from
-       * `<worklets/Public/AsyncQueue.h>`.
-       */
-      customQueue?: never;
-    }
-  | {
-      /**
-       * If true, the runtime will use the default queue implementation for
-       * scheduling worklets. Defaults to true.
-       */
-      useDefaultQueue: false;
-      /**
-       * An optional custom queue to be used for scheduling worklets.
-       *
-       * The queue has to implement the C++ `AsyncQueue` interface from
-       * `<worklets/Public/AsyncQueue.h>`.
-       */
-      customQueue?: object;
-    }
-);
-
-type WorkletRuntimeConfigInternal = WorkletRuntimeConfig & {
-  initializer?: WorkletFunction<[], void>;
-};

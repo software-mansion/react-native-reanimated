@@ -7,10 +7,8 @@
 
 namespace reanimated::css {
 
-struct PerspectiveOperation final
-    : public TransformOperationBase<TransformOp::Perspective, CSSDouble> {
-  using TransformOperationBase<TransformOp::Perspective, CSSDouble>::
-      TransformOperationBase;
+struct PerspectiveOperation final : public TransformOperationBase<TransformOp::Perspective, CSSDouble> {
+  using TransformOperationBase<TransformOp::Perspective, CSSDouble>::TransformOperationBase;
 
   explicit PerspectiveOperation(double value);
 

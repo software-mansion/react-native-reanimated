@@ -1,20 +1,17 @@
 #include <react/debug/react_native_assert.h>
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 
+#include <memory>
 #include <utility>
 
 namespace reanimated {
 
-AnimatedSensorModule::AnimatedSensorModule(
-    const PlatformDepMethodsHolder &platformDepMethodsHolder)
+AnimatedSensorModule::AnimatedSensorModule(const PlatformDepMethodsHolder &platformDepMethodsHolder)
     : platformRegisterSensorFunction_(platformDepMethodsHolder.registerSensor),
-      platformUnregisterSensorFunction_(
-          platformDepMethodsHolder.unregisterSensor) {}
+      platformUnregisterSensorFunction_(platformDepMethodsHolder.unregisterSensor) {}
 
 AnimatedSensorModule::~AnimatedSensorModule() {
-  react_native_assert(
-      sensorsIds_.empty() &&
-      "Tried to deallocate AnimatedSensorModule with registered sensors");
+  react_native_assert(sensorsIds_.empty() && "Tried to deallocate AnimatedSensorModule with registered sensors");
 }
 
 jsi::Value AnimatedSensorModule::registerSensor(
@@ -27,17 +24,13 @@ jsi::Value AnimatedSensorModule::registerSensor(
   SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
 
   auto serializableHandler = extractSerializableOrThrow<SerializableWorklet>(
-      rt,
-      sensorDataHandler,
-      "[Reanimated] Sensor event handler must be a worklet.");
+      rt, sensorDataHandler, "[Reanimated] Sensor event handler must be a worklet.");
 
   int sensorId = platformRegisterSensorFunction_(
       sensorType,
       interval.asNumber(),
       iosReferenceFrame.asNumber(),
-      [sensorType,
-       serializableHandler,
-       weakUiWorkletRuntime = std::weak_ptr<WorkletRuntime>(uiWorkletRuntime)](
+      [sensorType, serializableHandler, weakUiWorkletRuntime = std::weak_ptr<WorkletRuntime>(uiWorkletRuntime)](
           double newValues[], int orientationDegrees) {
         auto uiWorkletRuntime = weakUiWorkletRuntime.lock();
         if (uiWorkletRuntime == nullptr) {
@@ -62,8 +55,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
           value.setProperty(uiRuntime, "y", newValues[1]);
           value.setProperty(uiRuntime, "z", newValues[2]);
         }
-        value.setProperty(
-            uiRuntime, "interfaceOrientation", orientationDegrees);
+        value.setProperty(uiRuntime, "interfaceOrientation", orientationDegrees);
 
         uiWorkletRuntime->runGuarded(serializableHandler, value);
       });

@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 'use strict';
+
 import type {
   IWorkletsModule,
   SerializableRef,
   WorkletFunction,
 } from 'react-native-worklets';
-import { executeOnUIRuntimeSync, WorkletsModule } from 'react-native-worklets';
+import { runOnUISync, WorkletsModule } from 'react-native-worklets';
 
 import {
   ReanimatedError,
@@ -92,10 +93,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       checkCppVersion();
     }
     this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
-    executeOnUIRuntimeSync(function initializeUI() {
+    runOnUISync(function initializeUI() {
       'worklet';
       registerReanimatedError();
-    })();
+    });
   }
 
   registerSensor(

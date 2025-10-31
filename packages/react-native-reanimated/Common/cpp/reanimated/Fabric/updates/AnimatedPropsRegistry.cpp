@@ -1,5 +1,6 @@
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 
+#include <memory>
 #include <utility>
 
 namespace reanimated {
@@ -8,14 +9,11 @@ namespace reanimated {
 static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper) {
-  return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(
-      rt, shadowNodeWrapper);
+  return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
 }
 #endif
 
-void AnimatedPropsRegistry::update(
-    jsi::Runtime &rt,
-    const jsi::Value &operations) {
+void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations) {
   auto operationsArray = operations.asObject(rt).asArray(rt);
 
   for (size_t i = 0, length = operationsArray.size(rt); i < length; ++i) {

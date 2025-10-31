@@ -3,7 +3,11 @@ import { ImageResponse } from '@vercel/og';
 import fs from 'fs';
 import path from 'path';
 
-export default async function OGImageStream(header, base64Image) {
+/**
+ * @param {string} _header
+ * @param {string} base64Image
+ */
+export default async function OGImageStream(_header, base64Image) {
   return new ImageResponse(
     (
       <div
@@ -16,8 +20,7 @@ export default async function OGImageStream(header, base64Image) {
           height: '100%',
           padding: '50px 200px',
           textAlign: 'center',
-          justifyContent: 'center',
-          alignItems: 'center',
+          position: 'relative',
         }}>
         <img
           style={{
@@ -33,33 +36,22 @@ export default async function OGImageStream(header, base64Image) {
         />
         <div
           style={{
+            position: 'absolute',
+            bottom: 40,
             display: 'flex',
-            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
             width: 1200,
-            gap: -20,
-            padding: '0 201px 0 67px',
           }}>
-          <p
-            style={{
-              fontSize: 72,
-              fontWeight: 'bold',
-              color: '#001A72',
-              textAlign: 'left',
-              fontFamily: 'Aeonik Bold',
-              textWrap: 'wrap',
-            }}>
-            {header}
-          </p>
           <pre
             style={{
-              fontSize: 40,
+              fontSize: 32,
+              color: 'white',
               fontWeight: 'normal',
-              color: '#001A72',
-              textAlign: 'left',
               fontFamily: 'Aeonik Regular',
               textWrap: 'wrap',
             }}>
-            {'Check out the React Native\nWorklets documentation.'}
+            Check out the React Native Worklets documentation.
           </pre>
         </div>
       </div>

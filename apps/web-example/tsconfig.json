@@ -4,7 +4,9 @@
     "strict": true,
     "baseUrl": "../..",
     "paths": {
-      "@/*": ["./apps/common-app/src/*"]
+      "@/*": ["./apps/common-app/src/*"],
+      // Required to enable hot reload when working on the react-native-reanimated source code
+      "react-native-reanimated": ["./packages/react-native-reanimated/src"]
     },
     "moduleSuffixes": [".web", ""]
   },
