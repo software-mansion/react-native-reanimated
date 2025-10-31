@@ -1,20 +1,20 @@
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 
+#include <memory>
+#include <string>
 #include <thread>
 #include <utility>
 
 namespace worklets {
 
-AsyncQueueImpl::AsyncQueueImpl(std::string name)
-    : state_(std::make_shared<AsyncQueueState>()) {
+AsyncQueueImpl::AsyncQueueImpl(std::string name) : state_(std::make_shared<AsyncQueueState>()) {
   auto thread = std::thread([name, state = state_] {
 #if __APPLE__
     pthread_setname_np(name.c_str());
 #endif
     while (state->running) {
       std::unique_lock<std::mutex> lock(state->mutex);
-      state->cv.wait(
-          lock, [state] { return !state->queue.empty() || !state->running; });
+      state->cv.wait(lock, [state] { return !state->queue.empty() || !state->running; });
       if (!state->running) {
         return;
       }
@@ -50,8 +50,7 @@ void AsyncQueueImpl::push(std::function<void()> &&job) {
   state_->cv.notify_one();
 }
 
-AsyncQueueUI::AsyncQueueUI(const std::shared_ptr<UIScheduler> &uiScheduler)
-    : uiScheduler_(uiScheduler) {}
+AsyncQueueUI::AsyncQueueUI(const std::shared_ptr<UIScheduler> &uiScheduler) : uiScheduler_(uiScheduler) {}
 
 void AsyncQueueUI::push(std::function<void()> &&job) {
   uiScheduler_->scheduleOnUI(std::move(job));

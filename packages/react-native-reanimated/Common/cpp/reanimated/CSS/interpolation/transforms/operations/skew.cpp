@@ -1,5 +1,7 @@
 #include <reanimated/CSS/interpolation/transforms/operations/skew.h>
 
+#include <string>
+
 namespace reanimated::css {
 
 template <TransformOp TOperation>

@@ -1,18 +1,18 @@
 #include <reanimated/CSS/common/values/CSSLength.h>
 
+#include <string>
+
 namespace reanimated::css {
 
 CSSLength::CSSLength() : value(0), isRelative(false) {}
 
 CSSLength::CSSLength(const double value) : value(value), isRelative(false) {}
 
-CSSLength::CSSLength(const double value, const bool isRelative)
-    : value(value), isRelative(isRelative) {}
+CSSLength::CSSLength(const double value, const bool isRelative) : value(value), isRelative(isRelative) {}
 
 CSSLength::CSSLength(const char *value) {
   if (!canConstruct(value)) {
-    throw std::invalid_argument(
-        "[Reanimated] CSSLength: Invalid value: " + std::string(value));
+    throw std::invalid_argument("[Reanimated] CSSLength: Invalid value: " + std::string(value));
   }
 
   std::string str = value;
@@ -48,13 +48,11 @@ bool CSSLength::canConstruct(const char *value) {
 }
 
 bool CSSLength::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  return jsiValue.isNumber() ||
-      (jsiValue.isString() && canConstruct(jsiValue.getString(rt).utf8(rt)));
+  return jsiValue.isNumber() || (jsiValue.isString() && canConstruct(jsiValue.getString(rt).utf8(rt)));
 }
 
 bool CSSLength::canConstruct(const folly::dynamic &value) {
-  return value.isNumber() ||
-      (value.isString() && canConstruct(value.getString()));
+  return value.isNumber() || (value.isString() && canConstruct(value.getString()));
 }
 
 folly::dynamic CSSLength::toDynamic() const {
@@ -65,8 +63,7 @@ folly::dynamic CSSLength::toDynamic() const {
 }
 
 std::string CSSLength::toString() const {
-  return isRelative ? (std::to_string(value * 100) + "%")
-                    : std::to_string(value);
+  return isRelative ? (std::to_string(value * 100) + "%") : std::to_string(value);
 }
 
 CSSLength CSSLength::interpolate(
@@ -76,10 +73,8 @@ CSSLength CSSLength::interpolate(
   // If both value types are the same, we can interpolate without reading the
   // relative value from the shadow node
   // (also, when one of the values is 0, and the other is relative)
-  if ((isRelative == to.isRelative) || (isRelative && to.value == 0) ||
-      (to.isRelative && value == 0)) {
-    return CSSLength(
-        value + (to.value - value) * progress, isRelative || to.isRelative);
+  if ((isRelative == to.isRelative) || (isRelative && to.value == 0) || (to.isRelative && value == 0)) {
+    return CSSLength(value + (to.value - value) * progress, isRelative || to.isRelative);
   }
   // Otherwise, we need to read the relative value from the shadow node and
   // interpolate values as numbers
@@ -89,24 +84,19 @@ CSSLength CSSLength::interpolate(
   if (!resolvedFrom.has_value() || !resolvedTo.has_value()) {
     return progress < 0.5 ? *this : to;
   }
-  return CSSLength(
-      resolvedFrom.value() +
-      (resolvedTo.value() - resolvedFrom.value()) * progress);
+  return CSSLength(resolvedFrom.value() + (resolvedTo.value() - resolvedFrom.value()) * progress);
 }
 
-std::optional<double> CSSLength::resolve(
-    const ResolvableValueInterpolationContext &context) const {
+std::optional<double> CSSLength::resolve(const ResolvableValueInterpolationContext &context) const {
   if (!isRelative) {
     return value;
   }
 
   jsi::Value relativeValue;
   if (context.relativeTo == RelativeTo::Self) {
-    relativeValue = context.viewStylesRepository->getNodeProp(
-        context.node, context.relativeProperty);
+    relativeValue = context.viewStylesRepository->getNodeProp(context.node, context.relativeProperty);
   } else {
-    relativeValue = context.viewStylesRepository->getParentNodeProp(
-        context.node, context.relativeProperty);
+    relativeValue = context.viewStylesRepository->getParentNodeProp(context.node, context.relativeProperty);
   }
 
   if (!relativeValue.isNumber()) {

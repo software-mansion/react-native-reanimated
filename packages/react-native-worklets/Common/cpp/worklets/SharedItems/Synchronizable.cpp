@@ -1,6 +1,7 @@
 #include <react/debug/react_native_assert.h>
 #include <worklets/SharedItems/Synchronizable.h>
 
+#include <memory>
 #include <utility>
 
 namespace worklets {
@@ -32,8 +33,7 @@ void Synchronizable::setBlocking(const std::shared_ptr<Serializable> &value) {
 
 jsi::Value Synchronizable::toJSValue(jsi::Runtime &rt) {
   auto synchronizableUnpacker = getSynchronizableUnpacker(rt);
-  auto ref =
-      SerializableJSRef::newNativeStateObject(rt, this->shared_from_this());
+  auto ref = SerializableJSRef::newNativeStateObject(rt, this->shared_from_this());
   return synchronizableUnpacker.call(rt, std::move(ref));
 }
 
@@ -41,25 +41,17 @@ Synchronizable::Synchronizable(const std::shared_ptr<Serializable> &value)
     : Serializable(ValueType::SynchronizableType), value_(value) {}
 
 jsi::Function getSynchronizableUnpacker(jsi::Runtime &rt) {
-  auto synchronizableUnpacker =
-      rt.global().getProperty(rt, "__synchronizableUnpacker");
-  react_native_assert(
-      synchronizableUnpacker.isObject() && "synchronizableUnpacker not found");
+  auto synchronizableUnpacker = rt.global().getProperty(rt, "__synchronizableUnpacker");
+  react_native_assert(synchronizableUnpacker.isObject() && "synchronizableUnpacker not found");
   return synchronizableUnpacker.asObject(rt).asFunction(rt);
 }
 
-std::shared_ptr<Synchronizable> extractSynchronizableOrThrow(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  auto serializable = extractSerializableOrThrow(
-      rt,
-      value,
-      "[Worklets] Expecting the object to be of type SerializableJSRef.");
+std::shared_ptr<Synchronizable> extractSynchronizableOrThrow(jsi::Runtime &rt, const jsi::Value &value) {
+  auto serializable =
+      extractSerializableOrThrow(rt, value, "[Worklets] Expecting the object to be of type SerializableJSRef.");
 
   auto synchronizable = std::dynamic_pointer_cast<Synchronizable>(serializable);
-  react_native_assert(
-      synchronizable != nullptr &&
-      "[Worklets] Expected the object to be a Synchronizable.");
+  react_native_assert(synchronizable != nullptr && "[Worklets] Expected the object to be a Synchronizable.");
 
   return synchronizable;
 }

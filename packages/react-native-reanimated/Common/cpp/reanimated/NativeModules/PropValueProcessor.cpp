@@ -2,16 +2,14 @@
 #include <reanimated/NativeModules/PropValueProcessor.h>
 
 #include <iomanip>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 #include <unordered_set>
 
 namespace reanimated {
-const std::unordered_set<std::string> PropValueProcessor::layoutProps = {
-    "width",
-    "height",
-    "top",
-    "left"};
+const std::unordered_set<std::string> PropValueProcessor::layoutProps = {"width", "height", "top", "left"};
 const std::unordered_set<std::string> PropValueProcessor::styleProps = {
     "opacity",
     "zIndex",
@@ -23,8 +21,7 @@ std::string PropValueProcessor::processPropValue(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     jsi::Runtime &rt) {
   if (isLayoutProp(propName)) {
-    auto layoutableShadowNode =
-        dynamic_cast<const LayoutableShadowNode *>(shadowNode.get());
+    auto layoutableShadowNode = dynamic_cast<const LayoutableShadowNode *>(shadowNode.get());
     if (!layoutableShadowNode) {
       throw std::runtime_error(
           "Cannot cast shadow node to "
@@ -38,9 +35,8 @@ std::string PropValueProcessor::processPropValue(
     return processStyleProp(propName, viewProps, rt);
   }
 
-  throw std::runtime_error(std::string(
-      "Getting property `" + propName +
-      "` with function `getViewProp` is not supported"));
+  throw std::runtime_error(
+      std::string("Getting property `" + propName + "` with function `getViewProp` is not supported"));
 }
 
 std::string PropValueProcessor::processLayoutProp(
@@ -77,8 +73,7 @@ std::string PropValueProcessor::processStyleProp(
   } else if (propName == "boxShadow") {
     jsi::Array result = jsi::Array(rt, viewProps->boxShadow.size());
     for (size_t i = 0; i < viewProps->boxShadow.size(); i++) {
-      result.setValueAtIndex(
-          rt, i, boxShadowPreprocessing(viewProps->boxShadow[i], rt));
+      result.setValueAtIndex(rt, i, boxShadowPreprocessing(viewProps->boxShadow[i], rt));
     }
     return rt.global()
         .getPropertyAsObject(rt, "JSON")
@@ -91,9 +86,7 @@ std::string PropValueProcessor::processStyleProp(
   throw std::runtime_error("Unsupported style property: " + propName);
 }
 
-jsi::Object PropValueProcessor::boxShadowPreprocessing(
-    const BoxShadow &boxShadow,
-    jsi::Runtime &rt) {
+jsi::Object PropValueProcessor::boxShadowPreprocessing(const BoxShadow &boxShadow, jsi::Runtime &rt) {
   jsi::Object result(rt);
   result.setProperty(rt, "offsetX", boxShadow.offsetX);
   result.setProperty(rt, "offsetY", boxShadow.offsetY);
@@ -107,12 +100,10 @@ jsi::Object PropValueProcessor::boxShadowPreprocessing(
 std::string PropValueProcessor::intColorToHex(const int val) {
   std::stringstream invertedHexColorStream;
   // By default transparency is first, color second
-  invertedHexColorStream << std::setfill('0') << std::setw(8) << std::hex
-                         << val;
+  invertedHexColorStream << std::setfill('0') << std::setw(8) << std::hex << val;
 
   auto invertedHexColor = invertedHexColorStream.str();
-  auto hexColor =
-      "#" + invertedHexColor.substr(2, 6) + invertedHexColor.substr(0, 2);
+  auto hexColor = "#" + invertedHexColor.substr(2, 6) + invertedHexColor.substr(0, 2);
 
   return hexColor;
 }

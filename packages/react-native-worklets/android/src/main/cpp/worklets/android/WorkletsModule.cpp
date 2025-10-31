@@ -5,6 +5,7 @@
 #include <worklets/android/WorkletsModule.h>
 
 #include <memory>
+#include <string>
 #include <utility>
 
 namespace worklets {
@@ -31,24 +32,18 @@ WorkletsModule::WorkletsModule(
           RuntimeBindings{.requestAnimationFrame = getRequestAnimationFrame()},
           script,
           sourceURL)) {
-  auto jsiWorkletsModuleProxy =
-      workletsModuleProxy_->createJSIWorkletsModuleProxy();
+  auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
-      *rnRuntime_,
-      std::static_pointer_cast<jsi::HostObject>(
-          std::move(jsiWorkletsModuleProxy)));
+      *rnRuntime_, std::static_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));
   RNRuntimeWorkletDecorator::decorate(
-      *rnRuntime_,
-      std::move(optimizedJsiWorkletsModuleProxy),
-      workletsModuleProxy_->getJSLogger());
+      *rnRuntime_, std::move(optimizedJsiWorkletsModuleProxy), workletsModuleProxy_->getJSLogger());
 }
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
     jlong jsContext,
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-    jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
-        jsCallInvokerHolder,
+    jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
     jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler
 #ifdef WORKLETS_BUNDLE_MODE
     ,
@@ -67,35 +62,20 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
   const auto sourceURL = std::string{};
 #endif // WORKLETS_BUNDLE_MODE
 
-  return makeCxxInstance(
-      jThis,
-      rnRuntime,
-      messageQueueThread,
-      jsCallInvoker,
-      uiScheduler,
-      script,
-      sourceURL);
+  return makeCxxInstance(jThis, rnRuntime, messageQueueThread, jsCallInvoker, uiScheduler, script, sourceURL);
 }
 
-RuntimeBindings::RequestAnimationFrame
-WorkletsModule::getRequestAnimationFrame() {
-  return [javaPart =
-              javaPart_](std::function<void(const double)> &&callback) -> void {
+RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame() {
+  return [javaPart = javaPart_](std::function<void(const double)> &&callback) -> void {
     static const auto jRequestAnimationFrame =
-        javaPart->getClass()
-            ->getMethod<void(AnimationFrameCallback::javaobject)>(
-                "requestAnimationFrame");
-    jRequestAnimationFrame(
-        javaPart.get(),
-        AnimationFrameCallback::newObjectCxxArgs(std::move(callback)).get());
+        javaPart->getClass()->getMethod<void(AnimationFrameCallback::javaobject)>("requestAnimationFrame");
+    jRequestAnimationFrame(javaPart.get(), AnimationFrameCallback::newObjectCxxArgs(std::move(callback)).get());
   };
 }
 
 std::function<bool()> WorkletsModule::getIsOnJSQueueThread() {
   return [javaPart = javaPart_]() -> bool {
-    return javaPart->getClass()
-        ->getMethod<jboolean()>("isOnJSQueueThread")
-        .operator()(javaPart);
+    return javaPart->getClass()->getMethod<jboolean()>("isOnJSQueueThread").operator()(javaPart);
   };
 }
 

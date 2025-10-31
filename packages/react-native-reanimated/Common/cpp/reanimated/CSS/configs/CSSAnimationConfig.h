@@ -35,10 +35,8 @@ struct PartialCSSAnimationSettings {
   std::optional<AnimationPlayState> playState;
 };
 
-using CSSAnimationSettingsMap =
-    std::unordered_map<size_t, CSSAnimationSettings>;
-using CSSAnimationSettingsUpdatesMap =
-    std::unordered_map<size_t, PartialCSSAnimationSettings>;
+using CSSAnimationSettingsMap = std::unordered_map<size_t, CSSAnimationSettings>;
+using CSSAnimationSettingsUpdatesMap = std::unordered_map<size_t, PartialCSSAnimationSettings>;
 
 struct CSSAnimationUpdates {
   std::optional<std::vector<std::string>> animationNames;
@@ -46,8 +44,6 @@ struct CSSAnimationUpdates {
   CSSAnimationSettingsUpdatesMap settingsUpdates;
 };
 
-CSSAnimationUpdates parseCSSAnimationUpdates(
-    jsi::Runtime &rt,
-    const jsi::Value &config);
+CSSAnimationUpdates parseCSSAnimationUpdates(jsi::Runtime &rt, const jsi::Value &config);
 
 } // namespace reanimated::css

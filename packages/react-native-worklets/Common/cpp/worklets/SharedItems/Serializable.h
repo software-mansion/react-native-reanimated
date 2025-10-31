@@ -21,10 +21,7 @@ jsi::Function getCallGuard(jsi::Runtime &rt);
 
 // If possible, please use `WorkletRuntime::runGuarded` instead.
 template <typename... Args>
-inline jsi::Value runOnRuntimeGuarded(
-    jsi::Runtime &rt,
-    const jsi::Value &function,
-    Args &&...args) {
+inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Value &function, Args &&...args) {
   // We only use callGuard in debug mode, otherwise we call the provided
   // function directly. CallGuard provides a way of capturing exceptions in
   // JavaScript and propagating them to the main React Native thread such that
@@ -36,9 +33,7 @@ inline jsi::Value runOnRuntimeGuarded(
 #endif // NDEBUG
 }
 
-inline void cleanupIfRuntimeExists(
-    jsi::Runtime *rt,
-    std::unique_ptr<jsi::Value> &value) {
+inline void cleanupIfRuntimeExists(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &value) {
   if (rt != nullptr && !WorkletRuntimeRegistry::isRuntimeAlive(rt)) {
     // The below use of unique_ptr.release prevents the smart pointer from
     // calling the destructor of the kept object. This effectively results in
@@ -127,8 +122,7 @@ class SerializableJSRef : public jsi::NativeState {
   const std::shared_ptr<Serializable> value_;
 
  public:
-  explicit SerializableJSRef(const std::shared_ptr<Serializable> &value)
-      : value_(value) {}
+  explicit SerializableJSRef(const std::shared_ptr<Serializable> &value) : value_(value) {}
 
   virtual ~SerializableJSRef();
 
@@ -136,9 +130,7 @@ class SerializableJSRef : public jsi::NativeState {
     return value_;
   }
 
-  static jsi::Object newNativeStateObject(
-      jsi::Runtime &rt,
-      const std::shared_ptr<Serializable> &value) {
+  static jsi::Object newNativeStateObject(jsi::Runtime &rt, const std::shared_ptr<Serializable> &value) {
     auto object = jsi::Object(rt);
     object.setNativeState(rt, std::make_shared<SerializableJSRef>(value));
     object.setProperty(rt, "__serializableRef", true);
@@ -175,52 +167,33 @@ jsi::Value makeSerializableObject(
     bool shouldRetainRemote,
     const jsi::Value &nativeStateSource);
 
-jsi::Value makeSerializableImport(
-    jsi::Runtime &rt,
-    const double source,
-    const jsi::String &imported);
+jsi::Value makeSerializableImport(jsi::Runtime &rt, const double source, const jsi::String &imported);
 
-jsi::Value makeSerializableHostObject(
-    jsi::Runtime &rt,
-    const std::shared_ptr<jsi::HostObject> &value);
+jsi::Value makeSerializableHostObject(jsi::Runtime &rt, const std::shared_ptr<jsi::HostObject> &value);
 
-jsi::Value makeSerializableArray(
-    jsi::Runtime &rt,
-    const jsi::Array &array,
-    const jsi::Value &shouldRetainRemote);
+jsi::Value makeSerializableArray(jsi::Runtime &rt, const jsi::Array &array, const jsi::Value &shouldRetainRemote);
 
-jsi::Value makeSerializableMap(
-    jsi::Runtime &rt,
-    const jsi::Array &keys,
-    const jsi::Array &values);
+jsi::Value makeSerializableMap(jsi::Runtime &rt, const jsi::Array &keys, const jsi::Array &values);
 
 jsi::Value makeSerializableSet(jsi::Runtime &rt, const jsi::Array &values);
 
-jsi::Value makeSerializableInitializer(
-    jsi::Runtime &rt,
-    const jsi::Object &initializerObject);
+jsi::Value makeSerializableInitializer(jsi::Runtime &rt, const jsi::Object &initializerObject);
 
 jsi::Value makeSerializableFunction(jsi::Runtime &rt, jsi::Function function);
 
-jsi::Value makeSerializableWorklet(
-    jsi::Runtime &rt,
-    const jsi::Object &object,
-    const bool &shouldRetainRemote);
+jsi::Value makeSerializableWorklet(jsi::Runtime &rt, const jsi::Object &object, const bool &shouldRetainRemote);
 
 std::shared_ptr<Serializable> extractSerializableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeSerializableValue,
-    const std::string &errorMessage =
-        "[Worklets] Expecting the object to be of type SerializableJSRef.");
+    const std::string &errorMessage = "[Worklets] Expecting the object to be of type SerializableJSRef.");
 
 template <typename T>
 std::shared_ptr<T> extractSerializableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &serializableRef,
-    const std::string &errorMessage =
-        "[Worklets] Provided serializable object is of an incompatible type.") {
-  auto res = std::dynamic_pointer_cast<T>(
-      extractSerializableOrThrow(rt, serializableRef, errorMessage));
+    const std::string &errorMessage = "[Worklets] Provided serializable object is of an incompatible type.") {
+  auto res = std::dynamic_pointer_cast<T>(extractSerializableOrThrow(rt, serializableRef, errorMessage));
   if (!res) {
     throw std::runtime_error(errorMessage);
   }
@@ -241,10 +214,7 @@ class SerializableObject : public Serializable {
  public:
   SerializableObject(jsi::Runtime &rt, const jsi::Object &object);
 
-  SerializableObject(
-      jsi::Runtime &rt,
-      const jsi::Object &object,
-      const jsi::Value &nativeStateSource);
+  SerializableObject(jsi::Runtime &rt, const jsi::Object &object, const jsi::Value &nativeStateSource);
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -255,17 +225,12 @@ class SerializableObject : public Serializable {
 
 class SerializableMap : public Serializable {
  public:
-  SerializableMap(
-      jsi::Runtime &rt,
-      const jsi::Array &keys,
-      const jsi::Array &values);
+  SerializableMap(jsi::Runtime &rt, const jsi::Array &keys, const jsi::Array &values);
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
-  std::vector<
-      std::pair<std::shared_ptr<Serializable>, std::shared_ptr<Serializable>>>
-      data_;
+  std::vector<std::pair<std::shared_ptr<Serializable>, std::shared_ptr<Serializable>>> data_;
 };
 
 class SerializableSet : public Serializable {
@@ -280,9 +245,7 @@ class SerializableSet : public Serializable {
 
 class SerializableHostObject : public Serializable {
  public:
-  SerializableHostObject(
-      jsi::Runtime &,
-      const std::shared_ptr<jsi::HostObject> &hostObject)
+  SerializableHostObject(jsi::Runtime &, const std::shared_ptr<jsi::HostObject> &hostObject)
       : Serializable(HostObjectType), hostObject_(hostObject) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
@@ -310,10 +273,7 @@ class SerializableHostFunction : public Serializable {
 class SerializableArrayBuffer : public Serializable {
  public:
   SerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer)
-      : Serializable(ArrayBufferType),
-        data_(
-            arrayBuffer.data(rt),
-            arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
+      : Serializable(ArrayBufferType), data_(arrayBuffer.data(rt), arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -323,8 +283,7 @@ class SerializableArrayBuffer : public Serializable {
 
 class SerializableWorklet : public SerializableObject {
  public:
-  SerializableWorklet(jsi::Runtime &rt, const jsi::Object &worklet)
-      : SerializableObject(rt, worklet) {
+  SerializableWorklet(jsi::Runtime &rt, const jsi::Object &worklet) : SerializableObject(rt, worklet) {
     valueType_ = WorkletType;
   }
 
@@ -333,13 +292,8 @@ class SerializableWorklet : public SerializableObject {
 
 class SerializableImport : public Serializable {
  public:
-  SerializableImport(
-      jsi::Runtime &rt,
-      const double source,
-      const jsi::String &imported)
-      : Serializable(ImportType),
-        source_(source),
-        imported_(imported.utf8(rt)) {}
+  SerializableImport(jsi::Runtime &rt, const double source, const jsi::String &imported)
+      : Serializable(ImportType), source_(source), imported_(imported.utf8(rt)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -348,9 +302,8 @@ class SerializableImport : public Serializable {
   const std::string imported_;
 };
 
-class SerializableRemoteFunction
-    : public Serializable,
-      public std::enable_shared_from_this<SerializableRemoteFunction> {
+class SerializableRemoteFunction : public Serializable,
+                                   public std::enable_shared_from_this<SerializableRemoteFunction> {
  private:
   jsi::Runtime *runtime_;
 #ifndef NDEBUG
@@ -387,12 +340,8 @@ class SerializableInitializer : public Serializable {
   jsi::Runtime *remoteRuntime_;
 
  public:
-  SerializableInitializer(
-      jsi::Runtime &rt,
-      const jsi::Object &initializerObject)
-      : Serializable(HandleType),
-        initializer_(
-            std::make_unique<SerializableObject>(rt, initializerObject)) {}
+  SerializableInitializer(jsi::Runtime &rt, const jsi::Object &initializerObject)
+      : Serializable(HandleType), initializer_(std::make_unique<SerializableObject>(rt, initializerObject)) {}
 
   ~SerializableInitializer() {
     cleanupIfRuntimeExists(remoteRuntime_, remoteValue_);
@@ -403,8 +352,7 @@ class SerializableInitializer : public Serializable {
 
 class SerializableString : public Serializable {
  public:
-  explicit SerializableString(const std::string &string)
-      : Serializable(StringType), data_(string) {}
+  explicit SerializableString(const std::string &string) : Serializable(StringType), data_(string) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 

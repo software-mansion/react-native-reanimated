@@ -13,23 +13,14 @@ namespace reanimated::css {
 
 class CSSKeyframesRegistry {
  public:
-  CSSKeyframesRegistry(
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+  explicit CSSKeyframesRegistry(const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  const CSSKeyframesConfig &get(
-      const std::string &animationName,
-      const std::string &componentName);
-  void set(
-      const std::string &animationName,
-      const std::string &componentName,
-      CSSKeyframesConfig &&config);
-  void remove(
-      const std::string &animationName,
-      const std::string &componentName);
+  const CSSKeyframesConfig &get(const std::string &animationName, const std::string &componentName);
+  void set(const std::string &animationName, const std::string &componentName, CSSKeyframesConfig &&config);
+  void remove(const std::string &animationName, const std::string &componentName);
 
  private:
-  using ConfigsByComponentName =
-      std::unordered_map<std::string, CSSKeyframesConfig>;
+  using ConfigsByComponentName = std::unordered_map<std::string, CSSKeyframesConfig>;
 
   std::unordered_map<std::string, ConfigsByComponentName> registry_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;

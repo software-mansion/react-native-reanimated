@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useEvent, useSharedValue } from 'react-native-reanimated';
 
 import { describe, expect, notify, render, test, wait, waitForNotification } from '../../ReJest/RuntimeTestsApi';
-import { scheduleOnRN, runOnUI } from 'react-native-worklets';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 interface TestResult {
   height: number;
@@ -26,9 +26,9 @@ const TestComponent = ({ result }: { result: TestResult }) => {
   });
 
   useEffect(() => {
-    runOnUI(() => {
+    scheduleOnUI(() => {
       height.value += 100;
-    })();
+    });
   }, [height]);
 
   const setAnimatedHandlerCalled = () => {

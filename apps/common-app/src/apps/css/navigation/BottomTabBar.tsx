@@ -18,7 +18,7 @@ import type { TabRoute } from '@/apps/css/navigation/types';
 import { colors, flex, spacing, text } from '@/theme';
 
 import { useLocalNavigationRef } from './LocalNavigationProvider';
-import { runOnUI } from 'react-native-worklets';
+import { scheduleOnUI } from 'react-native-worklets';
 
 const TABS_GAP = spacing.xxs;
 
@@ -82,10 +82,10 @@ export default function BottomTabBar({
 
   const handleMeasure = useCallback(
     (width: number, idx: number) => {
-      runOnUI(() => {
+      scheduleOnUI(() => {
         buttonWidths.value[idx] = width;
         buttonWidths.value = [...buttonWidths.value];
-      })();
+      });
     },
     [buttonWidths]
   );

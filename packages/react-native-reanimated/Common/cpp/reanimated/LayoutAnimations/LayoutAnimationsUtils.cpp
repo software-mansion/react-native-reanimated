@@ -1,9 +1,11 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 
+#include <memory>
+#include <unordered_map>
+
 namespace reanimated {
 
-std::unordered_map<Tag, UpdateValues> &SurfaceManager::getUpdateMap(
-    SurfaceId surfaceId) {
+std::unordered_map<Tag, UpdateValues> &SurfaceManager::getUpdateMap(SurfaceId surfaceId) {
   auto props = props_.find(surfaceId);
   if (props != props_.end()) {
     return *props->second;
@@ -14,10 +16,7 @@ std::unordered_map<Tag, UpdateValues> &SurfaceManager::getUpdateMap(
   return *newProps;
 }
 
-void SurfaceManager::updateWindow(
-    const SurfaceId surfaceId,
-    const double windowWidth,
-    const double windowHeight) {
+void SurfaceManager::updateWindow(const SurfaceId surfaceId, const double windowWidth, const double windowHeight) {
   windows_.insert_or_assign(surfaceId, Rect{windowWidth, windowHeight});
 }
 
@@ -63,13 +62,11 @@ void Node::removeChildFromUnflattenedTree(std::shared_ptr<MutationNode> child) {
   }
 }
 
-void Node::insertChildren(
-    std::vector<std::shared_ptr<MutationNode>> &newChildren) {
+void Node::insertChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren) {
   mergeAndSwap(children, newChildren);
 }
 
-void Node::insertUnflattenedChildren(
-    std::vector<std::shared_ptr<MutationNode>> &newChildren) {
+void Node::insertUnflattenedChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren) {
   mergeAndSwap(unflattenedChildren, newChildren);
 }
 

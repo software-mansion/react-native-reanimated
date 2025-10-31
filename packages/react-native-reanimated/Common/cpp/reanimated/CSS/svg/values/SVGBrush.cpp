@@ -1,19 +1,19 @@
 #include <reanimated/CSS/svg/values/SVGBrush.h>
 
+#include <string>
+
 namespace reanimated::css {
 
 SVGBrush::SVGBrush(jsi::Runtime &rt, const jsi::Value &value)
     : CSSColorBase<SVGBrushType, SVGBrush>(SVGBrushType::Transparent) {
   if (value.isNumber()) {
     *this = SVGBrush(value.getNumber());
-  } else if (
-      value.isString() && value.getString(rt).utf8(rt) == "currentColor") {
+  } else if (value.isString() && value.getString(rt).utf8(rt) == "currentColor") {
     colorType = SVGBrushType::CurrentColor;
   }
 }
 
-SVGBrush::SVGBrush(const folly::dynamic &value)
-    : CSSColorBase<SVGBrushType, SVGBrush>(SVGBrushType::Transparent) {
+SVGBrush::SVGBrush(const folly::dynamic &value) : CSSColorBase<SVGBrushType, SVGBrush>(SVGBrushType::Transparent) {
   if (value.isNumber()) {
     *this = SVGBrush(value.getDouble());
   } else if (value.isString() && value.getString() == "currentColor") {
@@ -23,20 +23,17 @@ SVGBrush::SVGBrush(const folly::dynamic &value)
 
 bool SVGBrush::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   return jsiValue.isNumber() || jsiValue.isUndefined() ||
-      (jsiValue.isString() &&
-       jsiValue.getString(rt).utf8(rt) == "currentColor");
+      (jsiValue.isString() && jsiValue.getString(rt).utf8(rt) == "currentColor");
 }
 
 bool SVGBrush::canConstruct(const folly::dynamic &value) {
-  return value.isNumber() || value.empty() ||
-      value.asString() == "currentColor";
+  return value.isNumber() || value.empty() || value.asString() == "currentColor";
 }
 
 folly::dynamic SVGBrush::toDynamic() const {
   switch (colorType) {
     case SVGBrushType::Rgba:
-      return (channels[3] << 24) | (channels[0] << 16) | (channels[1] << 8) |
-          channels[2];
+      return (channels[3] << 24) | (channels[0] << 16) | (channels[1] << 8) | channels[2];
     case SVGBrushType::CurrentColor:
       return nullptr; // currentColor is represented as nullptr in SVG
     default:
@@ -47,9 +44,8 @@ folly::dynamic SVGBrush::toDynamic() const {
 std::string SVGBrush::toString() const {
   switch (colorType) {
     case SVGBrushType::Rgba:
-      return "rgba(" + std::to_string(channels[0]) + "," +
-          std::to_string(channels[1]) + "," + std::to_string(channels[2]) +
-          "," + std::to_string(channels[3]) + ")";
+      return "rgba(" + std::to_string(channels[0]) + "," + std::to_string(channels[1]) + "," +
+          std::to_string(channels[2]) + "," + std::to_string(channels[3]) + ")";
     case SVGBrushType::CurrentColor:
       return "currentColor";
     default:
@@ -65,8 +61,7 @@ SVGBrush SVGBrush::interpolate(double progress, const SVGBrush &to) const {
 }
 
 bool SVGBrush::isInterpolatable() const {
-  return colorType == SVGBrushType::Rgba ||
-      colorType == SVGBrushType::Transparent;
+  return colorType == SVGBrushType::Rgba || colorType == SVGBrushType::Transparent;
 }
 
 #ifndef NDEBUG

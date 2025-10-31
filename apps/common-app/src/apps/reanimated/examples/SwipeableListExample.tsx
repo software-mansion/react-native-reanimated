@@ -19,7 +19,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { runOnJS } from 'react-native-worklets';
+import { scheduleOnRN } from 'react-native-worklets';
 
 const windowDimensions = Dimensions.get('window');
 const BUTTON_WIDTH = 80;
@@ -137,7 +137,7 @@ function ListItem({ item, onRemove }: ListItemProps) {
     if (isRemoving.value) {
       return {
         height: withTiming(0, timingConfig, () => {
-          runOnJS(onRemove)();
+          scheduleOnRN(onRemove);
         }),
         opacity: withTiming(0, timingConfig),
         transform: [
