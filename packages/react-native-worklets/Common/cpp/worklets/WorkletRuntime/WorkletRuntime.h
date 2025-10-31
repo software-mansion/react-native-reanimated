@@ -24,24 +24,19 @@ using namespace react;
 namespace worklets {
 
 template <typename TCallable>
-concept ImplicitlySerializableCallable =
-    std::is_assignable_v<const jsi::Function &, TCallable> ||
-    std::is_assignable_v<
-        const std::shared_ptr<SerializableWorklet> &,
-        TCallable>;
+concept ImplicitlySerializableCallable = std::is_assignable_v<const jsi::Function &, TCallable> ||
+    std::is_assignable_v<const std::shared_ptr<SerializableWorklet> &, TCallable>;
 
 template <typename TCallable, typename TReturn = void>
 concept RuntimeCallable = ImplicitlySerializableCallable<TCallable> ||
-    std::is_assignable_v<const std::function<TReturn(jsi::Runtime &)> &,
-                         TCallable>;
+    std::is_assignable_v<const std::function<TReturn(jsi::Runtime &)> &, TCallable>;
 
 /**
  * Forward declaration to avoid circular dependencies.
  */
 class JSIWorkletsModuleProxy;
 
-class WorkletRuntime : public jsi::HostObject,
-                       public std::enable_shared_from_this<WorkletRuntime> {
+class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_this<WorkletRuntime> {
  public:
   void schedule(jsi::Function &&function) const;
   void schedule(std::shared_ptr<SerializableWorklet> worklet) const;
@@ -50,29 +45,20 @@ class WorkletRuntime : public jsi::HostObject,
 
   /* #region runSync */
 
-  template <
-      typename TReturn,
-      RuntimeCallable<TReturn> TCallable,
-      typename... Args>
+  template <typename TReturn, RuntimeCallable<TReturn> TCallable, typename... Args>
   jsi::Value inline runSync(TCallable &&callable, Args &&...args) const;
   template <typename... Args>
-  jsi::Value inline runSync(const jsi::Function &function, Args &&...args)
-      const {
+  jsi::Value inline runSync(const jsi::Function &function, Args &&...args) const {
     auto &rt = *runtime_;
     return runOnRuntimeGuarded(rt, function, std::forward<Args>(args)...);
   }
   template <typename... Args>
-  jsi::Value inline runSync(
-      const std::shared_ptr<SerializableWorklet> &worklet,
-      Args &&...args) const {
+  jsi::Value inline runSync(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args) const {
     jsi::Runtime &rt = *runtime_;
-    return runSync(
-        worklet->toJSValue(rt).asObject(rt).asFunction(rt),
-        std::forward<Args>(args)...);
+    return runSync(worklet->toJSValue(rt).asObject(rt).asFunction(rt), std::forward<Args>(args)...);
   }
   template <typename TReturn>
-  TReturn inline runSync(
-      const std::function<TReturn(jsi::Runtime &)> &job) const {
+  TReturn inline runSync(const std::function<TReturn(jsi::Runtime &)> &job) const {
     jsi::Runtime &rt = getJSIRuntime();
     auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
     return job(rt);
@@ -83,13 +69,9 @@ class WorkletRuntime : public jsi::HostObject,
   /* #region runSyncSerialized */
 
   template <ImplicitlySerializableCallable TCallable, typename... Args>
-  std::shared_ptr<Serializable> inline runSyncSerialized(
-      TCallable &&callable,
-      Args &&...args) const;
+  std::shared_ptr<Serializable> inline runSyncSerialized(TCallable &&callable, Args &&...args) const;
   template <typename... Args>
-  std::shared_ptr<Serializable> inline runSyncSerialized(
-      const jsi::Function &function,
-      Args &&...args) const {
+  std::shared_ptr<Serializable> inline runSyncSerialized(const jsi::Function &function, Args &&...args) const {
     jsi::Runtime &rt = getJSIRuntime();
     auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
     auto result = runSync(function, std::forward<Args>(args)...);
@@ -151,8 +133,7 @@ class WorkletRuntime : public jsi::HostObject,
   /** @deprecated Use `runSync` instead. */
   template <RuntimeCallable TCallable, typename... Args>
   inline jsi::Value runGuarded(TCallable &&callable, Args &&...args) const {
-    return runSync(
-        std::forward<TCallable>(callable), std::forward<Args>(args)...);
+    return runSync(std::forward<TCallable>(callable), std::forward<Args>(args)...);
   }
 
   /** @deprecated Use `schedule` instead. */
@@ -164,8 +145,7 @@ class WorkletRuntime : public jsi::HostObject,
   /** @deprecated Use `runSync` instead. */
   jsi::Value executeSync(std::function<jsi::Value(jsi::Runtime &)> &&job) const;
   /** @deprecated Use `runSync` instead. */
-  jsi::Value executeSync(
-      const std::function<jsi::Value(jsi::Runtime &)> &job) const;
+  jsi::Value executeSync(const std::function<jsi::Value(jsi::Runtime &)> &job) const;
 
   /* #endregion */
 
@@ -180,9 +160,7 @@ class WorkletRuntime : public jsi::HostObject,
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on
 // Android
-std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
-    jsi::Runtime &rt,
-    const jsi::Value &value);
+std::shared_ptr<WorkletRuntime> extractWorkletRuntime(jsi::Runtime &rt, const jsi::Value &value);
 
 void scheduleOnRuntime(
     jsi::Runtime &rt,

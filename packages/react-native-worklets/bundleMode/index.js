@@ -5,15 +5,35 @@ const workletsPackageParentDir = path.resolve(__dirname, '../..');
 
 const defaults = getDefaultConfig(__dirname);
 
+function getEntryPoints() {
+  const entryPoints = [];
+  try {
+    entryPoints.push(
+      require.resolve(
+        'react-native-worklets/src/initializers/workletRuntimeEntry.native.ts'
+      )
+    );
+  } catch {
+    /* empty */
+  }
+  try {
+    entryPoints.push(
+      require.resolve(
+        'react-native-worklets/lib/module/initializers/workletRuntimeEntry.native.js'
+      )
+    );
+  } catch {
+    /* empty */
+  }
+  return entryPoints;
+}
+
 module.exports = {
   bundleModeMetroConfig: {
     serializer: {
       getModulesRunBeforeMainModule(/** @type {string} dirname */ dirname) {
         return [
-          require.resolve('react-native-worklets/src/workletRuntimeEntry.ts'),
-          require.resolve(
-            'react-native-worklets/lib/module/workletRuntimeEntry.js'
-          ),
+          ...getEntryPoints(),
           ...defaults.serializer.getModulesRunBeforeMainModule(dirname),
         ];
       },

@@ -21,9 +21,7 @@ struct DelayedItem {
 
 template <typename TValue>
 struct DelayedItemComparator {
-  bool operator()(
-      const DelayedItem<TValue> &lhs,
-      const DelayedItem<TValue> &rhs) const;
+  bool operator()(const DelayedItem<TValue> &lhs, const DelayedItem<TValue> &rhs) const;
 };
 
 template <typename TValue>

@@ -26,17 +26,13 @@ struct TransformOperation {
   // Tells if the transform operations is 3D-only (cannot be represented in 2D)
   virtual bool is3D() const;
 
-  static std::shared_ptr<TransformOperation> fromJSIValue(
-      jsi::Runtime &rt,
-      const jsi::Value &value);
-  static std::shared_ptr<TransformOperation> fromDynamic(
-      const folly::dynamic &value);
+  static std::shared_ptr<TransformOperation> fromJSIValue(jsi::Runtime &rt, const jsi::Value &value);
+  static std::shared_ptr<TransformOperation> fromDynamic(const folly::dynamic &value);
   folly::dynamic toDynamic() const;
   virtual folly::dynamic valueToDynamic() const = 0;
 
   virtual bool canConvertTo(TransformOp type) const;
-  virtual std::vector<std::shared_ptr<TransformOperation>> convertTo(
-      TransformOp type) const;
+  virtual std::vector<std::shared_ptr<TransformOperation>> convertTo(TransformOp type) const;
   void assertCanConvertTo(TransformOp type) const;
 
   virtual TransformMatrix::Shared toMatrix(bool force3D) const = 0;

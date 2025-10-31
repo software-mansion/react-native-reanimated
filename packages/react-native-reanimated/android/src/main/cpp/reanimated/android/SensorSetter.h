@@ -11,8 +11,7 @@ using namespace facebook::jni;
 
 class SensorSetter : public HybridClass<SensorSetter> {
  public:
-  static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/nativeProxy/SensorSetter;";
+  static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/nativeProxy/SensorSetter;";
 
   void sensorSetter(jni::alias_ref<JArrayFloat> value, int orientationDegrees) {
     size_t size = value->size();
@@ -33,8 +32,7 @@ class SensorSetter : public HybridClass<SensorSetter> {
  private:
   friend HybridBase;
 
-  explicit SensorSetter(std::function<void(double[], int)> callback)
-      : callback_(std::move(callback)) {}
+  explicit SensorSetter(std::function<void(double[], int)> callback) : callback_(std::move(callback)) {}
 
   std::function<void(double[], int)> callback_;
 };

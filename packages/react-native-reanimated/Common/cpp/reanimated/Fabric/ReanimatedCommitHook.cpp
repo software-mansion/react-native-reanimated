@@ -6,6 +6,7 @@
 
 #include <react/renderer/core/ComponentDescriptor.h>
 
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -27,23 +28,20 @@ ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
   uiManager_->unregisterCommitHook(*this);
 }
 
-void ReanimatedCommitHook::maybeInitializeLayoutAnimations(
-    SurfaceId surfaceId) {
+void ReanimatedCommitHook::maybeInitializeLayoutAnimations(SurfaceId surfaceId) {
   auto lock = std::unique_lock<std::mutex>(mutex_);
   if (surfaceId > currentMaxSurfaceId_) {
     // when a new surfaceId is observed we call setMountingOverrideDelegate
     // for all yet unseen surfaces
     uiManager_->getShadowTreeRegistry().enumerate(
-        [strongThis = shared_from_this()](
-            const ShadowTree &shadowTree, bool &stop) {
+        [strongThis = shared_from_this()](const ShadowTree &shadowTree, bool &stop) {
           // Executed synchronously.
           if (shadowTree.getSurfaceId() <= strongThis->currentMaxSurfaceId_) {
             // the set function actually adds our delegate to a list, so we
             // shouldn't invoke it twice for the same surface
             return;
           }
-          shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
-              strongThis->layoutAnimationsProxy_);
+          shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(strongThis->layoutAnimationsProxy_);
         });
     currentMaxSurfaceId_ = surfaceId;
   }
@@ -62,9 +60,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   maybeInitializeLayoutAnimations(newRootShadowNode->getSurfaceId());
 
-  auto reaShadowNode =
-      std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
-          newRootShadowNode);
+  auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(newRootShadowNode);
 
   if (reaShadowNode->hasReanimatedCommitTrait()) {
     // ShadowTree commited by Reanimated, no need to apply updates from
@@ -75,8 +71,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   }
 
 #if REACT_NATIVE_MINOR_VERSION >= 80
-  if constexpr (StaticFeatureFlags::getFlag(
-                    "USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS")) {
+  if constexpr (StaticFeatureFlags::getFlag("USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS")) {
     // State updates are based on the currently committed ShadowTree,
     // which means that all animation changes are already included.
     // Therefore, there's no need to reapply styles from the props map.

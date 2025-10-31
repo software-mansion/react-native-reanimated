@@ -61,13 +61,9 @@ WorkletHermesRuntime::WorkletHermesRuntime(
     std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name)
-    : jsi::WithRuntimeDecorator<WorkletsReentrancyCheck>(
-          *runtime,
-          reentrancyCheck_),
-      runtime_(std::move(runtime)) {
+    : jsi::WithRuntimeDecorator<WorkletsReentrancyCheck>(*runtime, reentrancyCheck_), runtime_(std::move(runtime)) {
 #if HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
-  auto adapter =
-      std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_, jsQueue);
+  auto adapter = std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_, jsQueue);
   debugToken_ = chrome::enableDebugging(std::move(adapter), name);
 #endif // HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
 
@@ -78,26 +74,19 @@ WorkletHermesRuntime::WorkletHermesRuntime(
       jsi::PropNameID::forAscii(*runtime_, "evalWithSourceMap"),
       3,
       [wrappedRuntime](
-          jsi::Runtime &rt,
-          const jsi::Value &thisValue,
-          const jsi::Value *args,
-          size_t count) -> jsi::Value {
-        auto code = std::make_shared<const jsi::StringBuffer>(
-            args[0].asString(rt).utf8(rt));
+          jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
+        auto code = std::make_shared<const jsi::StringBuffer>(args[0].asString(rt).utf8(rt));
         std::string sourceURL;
         if (count > 1 && args[1].isString()) {
           sourceURL = args[1].asString(rt).utf8(rt);
         }
         std::shared_ptr<const jsi::Buffer> sourceMap;
         if (count > 2 && args[2].isString()) {
-          sourceMap = std::make_shared<const jsi::StringBuffer>(
-              args[2].asString(rt).utf8(rt));
+          sourceMap = std::make_shared<const jsi::StringBuffer>(args[2].asString(rt).utf8(rt));
         }
-        return wrappedRuntime->evaluateJavaScriptWithSourceMap(
-            code, sourceMap, sourceURL);
+        return wrappedRuntime->evaluateJavaScriptWithSourceMap(code, sourceMap, sourceURL);
       });
-  runtime_->global().setProperty(
-      *runtime_, "evalWithSourceMap", evalWithSourceMap);
+  runtime_->global().setProperty(*runtime_, "evalWithSourceMap", evalWithSourceMap);
 #endif // NDEBUG
 }
 

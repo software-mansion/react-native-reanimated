@@ -13,7 +13,9 @@
 #include <jsi/jsi.h>
 
 #include <memory>
+#include <string>
 #include <utility>
+#include <vector>
 
 #if JS_RUNTIME_HERMES
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
@@ -27,8 +29,7 @@ class AroundLock {
   const std::shared_ptr<std::recursive_mutex> mutex_;
 
  public:
-  explicit AroundLock(const std::shared_ptr<std::recursive_mutex> &mutex)
-      : mutex_(mutex) {}
+  explicit AroundLock(const std::shared_ptr<std::recursive_mutex> &mutex) : mutex_(mutex) {}
 
   void before() const {
     mutex_->lock();
@@ -59,8 +60,7 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
   std::shared_ptr<jsi::Runtime> jsiRuntime;
 #if JS_RUNTIME_HERMES
   auto hermesRuntime = facebook::hermes::makeHermesRuntime();
-  jsiRuntime = std::make_shared<WorkletHermesRuntime>(
-      std::move(hermesRuntime), jsQueue, name);
+  jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime), jsQueue, name);
 #else
   jsiRuntime = facebook::jsc::makeJSCRuntime();
 #endif
@@ -87,8 +87,7 @@ WorkletRuntime::WorkletRuntime(
   }
 }
 
-void WorkletRuntime::init(
-    std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy) {
+void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy) {
   jsi::Runtime &rt = *runtime_;
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
   const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
@@ -97,21 +96,14 @@ void WorkletRuntime::init(
   const auto &sourceUrl = jsiWorkletsModuleProxy->getSourceUrl();
 #endif // WORKLETS_BUNDLE_MODE
 
-  auto optimizedJsiWorkletsModuleProxy =
-      jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
+  auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
 
   WorkletRuntimeDecorator::decorate(
-      rt,
-      name_,
-      jsScheduler,
-      isDevBundle,
-      std::move(optimizedJsiWorkletsModuleProxy),
-      eventLoop_);
+      rt, name_, jsScheduler, isDevBundle, std::move(optimizedJsiWorkletsModuleProxy), eventLoop_);
 
 #ifdef WORKLETS_BUNDLE_MODE
   if (!script) {
-    throw std::runtime_error(
-        "[Worklets] Expected to receive the bundle, but got nullptr instead.");
+    throw std::runtime_error("[Worklets] Expected to receive the bundle, but got nullptr instead.");
   }
 
   try {
@@ -120,24 +112,17 @@ void WorkletRuntime::init(
     const auto &message = error.getMessage();
     const auto &stack = error.getStack();
     if (!message.starts_with("[Worklets] Worklets initialized successfully")) {
-      const auto newMessage =
-          "[Worklets] Failed to initialize runtime. Reason: " + message;
+      const auto newMessage = "[Worklets] Failed to initialize runtime. Reason: " + message;
       JSLogger::reportFatalErrorOnJS(
-          jsScheduler,
-          {.message = newMessage,
-           .stack = stack,
-           .name = "WorkletsError",
-           .jsEngine = "Worklets"});
+          jsScheduler, {.message = newMessage, .stack = stack, .name = "WorkletsError", .jsEngine = "Worklets"});
     }
   }
 #else
   // Legacy behavior
-  auto valueUnpackerBuffer =
-      std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
+  auto valueUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
   rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
 
-  auto synchronizableUnpackerBuffer =
-      std::make_shared<const jsi::StringBuffer>(SynchronizableUnpackerCode);
+  auto synchronizableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(SynchronizableUnpackerCode);
   rt.evaluateJavaScript(synchronizableUnpackerBuffer, "synchronizableUnpacker");
 #endif // WORKLETS_BUNDLE_MODE
 }
@@ -149,8 +134,7 @@ void WorkletRuntime::schedule(jsi::Function &&function) const {
       queue_ &&
       "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
       "async queue is not set. Recreate the runtime with a valid async queue.");
-  queue_->push([function = std::make_shared<jsi::Function>(std::move(function)),
-                weakThis = weak_from_this()]() {
+  queue_->push([function = std::make_shared<jsi::Function>(std::move(function)), weakThis = weak_from_this()]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -160,8 +144,7 @@ void WorkletRuntime::schedule(jsi::Function &&function) const {
   });
 }
 
-void WorkletRuntime::schedule(
-    std::shared_ptr<SerializableWorklet> worklet) const {
+void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) const {
   react_native_assert(
       queue_ &&
       "[Worklets] Tried to invoke `schedule` on a Worklet Runtime but the "
@@ -198,8 +181,7 @@ void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
       return;
     }
 
-    auto lock =
-        std::unique_lock<std::recursive_mutex>(*strongThis->runtimeMutex_);
+    auto lock = std::unique_lock<std::recursive_mutex>(*strongThis->runtimeMutex_);
     jsi::Runtime &runtime = strongThis->getJSIRuntime();
     job(runtime);
   });
@@ -207,18 +189,14 @@ void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
 
 /* #endregion */
 
-jsi::Value WorkletRuntime::get(
-    jsi::Runtime &rt,
-    const jsi::PropNameID &propName) {
+jsi::Value WorkletRuntime::get(jsi::Runtime &rt, const jsi::PropNameID &propName) {
   auto name = propName.utf8(rt);
   if (name == "toString") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
         0,
-        [weakThis = weak_from_this()](
-            jsi::Runtime &rt, const jsi::Value &, const jsi::Value *, size_t)
-            -> jsi::Value {
+        [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *, size_t) -> jsi::Value {
           auto strongThis = weakThis.lock();
           if (!strongThis) {
             return jsi::String::createFromUtf8(rt, "");
@@ -233,17 +211,14 @@ jsi::Value WorkletRuntime::get(
   return jsi::Value::undefined();
 }
 
-std::vector<jsi::PropNameID> WorkletRuntime::getPropertyNames(
-    jsi::Runtime &rt) {
+std::vector<jsi::PropNameID> WorkletRuntime::getPropertyNames(jsi::Runtime &rt) {
   std::vector<jsi::PropNameID> result;
   result.push_back(jsi::PropNameID::forUtf8(rt, "toString"));
   result.push_back(jsi::PropNameID::forUtf8(rt, "name"));
   return result;
 }
 
-std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
+std::shared_ptr<WorkletRuntime> extractWorkletRuntime(jsi::Runtime &rt, const jsi::Value &value) {
   return value.getObject(rt).getHostObject<WorkletRuntime>(rt);
 }
 
@@ -261,29 +236,22 @@ void scheduleOnRuntime(
 
 /* #region deprecated */
 
-void WorkletRuntime::runAsyncGuarded(
-    const std::shared_ptr<SerializableWorklet> &worklet) {
+void WorkletRuntime::runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet) {
   schedule(worklet);
 }
 
-jsi::Value WorkletRuntime::executeSync(
-    jsi::Runtime &caller,
-    const jsi::Value &worklet) const {
+jsi::Value WorkletRuntime::executeSync(jsi::Runtime &caller, const jsi::Value &worklet) const {
   auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
-      caller,
-      worklet,
-      "[Worklets] Only worklets can be executed synchronously on UI runtime.");
+      caller, worklet, "[Worklets] Only worklets can be executed synchronously on UI runtime.");
   auto result = runSyncSerialized(serializableWorklet);
   return result->toJSValue(caller);
 }
 
-jsi::Value WorkletRuntime::executeSync(
-    std::function<jsi::Value(jsi::Runtime &)> &&job) const {
+jsi::Value WorkletRuntime::executeSync(std::function<jsi::Value(jsi::Runtime &)> &&job) const {
   return runSync(job);
 }
 
-jsi::Value WorkletRuntime::executeSync(
-    const std::function<jsi::Value(jsi::Runtime &)> &job) const {
+jsi::Value WorkletRuntime::executeSync(const std::function<jsi::Value(jsi::Runtime &)> &job) const {
   return runSync(job);
 }
 

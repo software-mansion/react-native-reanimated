@@ -10,8 +10,7 @@ class UISchedulerWrapper : public UIScheduler {
   jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler_;
 
  public:
-  explicit UISchedulerWrapper(
-      jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler)
+  explicit UISchedulerWrapper(jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler)
       : androidUiScheduler_(androidUiScheduler) {}
 
   void scheduleOnUI(std::function<void()> job) override {
@@ -23,14 +22,10 @@ class UISchedulerWrapper : public UIScheduler {
   }
 };
 
-AndroidUIScheduler::AndroidUIScheduler(
-    jni::alias_ref<AndroidUIScheduler::javaobject> jThis)
-    : javaPart_(jni::make_global(jThis)),
-      uiScheduler_(
-          std::make_shared<UISchedulerWrapper>(jni::make_global(jThis))) {}
+AndroidUIScheduler::AndroidUIScheduler(jni::alias_ref<AndroidUIScheduler::javaobject> jThis)
+    : javaPart_(jni::make_global(jThis)), uiScheduler_(std::make_shared<UISchedulerWrapper>(jni::make_global(jThis))) {}
 
-jni::local_ref<AndroidUIScheduler::jhybriddata> AndroidUIScheduler::initHybrid(
-    jni::alias_ref<jhybridobject> jThis) {
+jni::local_ref<AndroidUIScheduler::jhybriddata> AndroidUIScheduler::initHybrid(jni::alias_ref<jhybridobject> jThis) {
   return makeCxxInstance(jThis);
 }
 
@@ -42,8 +37,7 @@ void AndroidUIScheduler::triggerUI() {
 }
 
 void AndroidUIScheduler::scheduleTriggerOnUI() {
-  static const auto method =
-      javaPart_->getClass()->getMethod<void()>("scheduleTriggerOnUI");
+  static const auto method = javaPart_->getClass()->getMethod<void()>("scheduleTriggerOnUI");
   method(javaPart_.get());
 }
 

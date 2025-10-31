@@ -230,9 +230,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   if (hasKeyboardAnimation || forceAnimation) {
     _measuringView.frame = CGRectMake(0, -1, 0, _initialKeyboardHeight);
     [UIView animateWithDuration:animationDuration
-                     animations:^{
-                       self->_measuringView.frame = CGRectMake(0, -1, 0, self->_targetKeyboardHeight);
-                     }];
+                     animations:^{ self->_measuringView.frame = CGRectMake(0, -1, 0, self->_targetKeyboardHeight); }];
     [self runUpdater];
   }
 }

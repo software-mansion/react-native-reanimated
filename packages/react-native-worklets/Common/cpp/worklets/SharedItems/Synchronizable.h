@@ -52,8 +52,6 @@ class Synchronizable : public SynchronizableAccess,
 
 jsi::Function getSynchronizableUnpacker(jsi::Runtime &rt);
 
-std::shared_ptr<Synchronizable> extractSynchronizableOrThrow(
-    jsi::Runtime &rt,
-    const jsi::Value &value);
+std::shared_ptr<Synchronizable> extractSynchronizableOrThrow(jsi::Runtime &rt, const jsi::Value &value);
 
 }; // namespace worklets

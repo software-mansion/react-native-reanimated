@@ -20,21 +20,15 @@ void UIRuntimeDecorator::decorate(
   jsi_utils::installJsiFunction(uiRuntime, "_dispatchCommand", dispatchCommand);
   jsi_utils::installJsiFunction(uiRuntime, "_measure", measure);
 
-  jsi_utils::installJsiFunction(
-      uiRuntime, "_getAnimationTimestamp", getAnimationTimestamp);
+  jsi_utils::installJsiFunction(uiRuntime, "_getAnimationTimestamp", getAnimationTimestamp);
 
-  jsi_utils::installJsiFunction(
-      uiRuntime, "_notifyAboutProgress", progressLayoutAnimation);
-  jsi_utils::installJsiFunction(
-      uiRuntime, "_notifyAboutEnd", endLayoutAnimation);
+  jsi_utils::installJsiFunction(uiRuntime, "_notifyAboutProgress", progressLayoutAnimation);
+  jsi_utils::installJsiFunction(uiRuntime, "_notifyAboutEnd", endLayoutAnimation);
 
   jsi_utils::installJsiFunction(uiRuntime, "_setGestureState", setGestureState);
 
   const auto microtaskQueueFinalizers =
-      uiRuntime.global()
-          .getProperty(uiRuntime, "_microtaskQueueFinalizers")
-          .asObject(uiRuntime)
-          .asArray(uiRuntime);
+      uiRuntime.global().getProperty(uiRuntime, "_microtaskQueueFinalizers").asObject(uiRuntime).asArray(uiRuntime);
 
   microtaskQueueFinalizers.getPropertyAsFunction(uiRuntime, "push")
       .callWithThis(

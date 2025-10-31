@@ -17,8 +17,7 @@
 
 namespace worklets {
 
-class WorkletsModuleProxy
-    : public std::enable_shared_from_this<WorkletsModuleProxy> {
+class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModuleProxy> {
  public:
   explicit WorkletsModuleProxy(
       jsi::Runtime &rnRuntime,
@@ -48,13 +47,11 @@ class WorkletsModuleProxy
     return jsLogger_;
   }
 
-  [[nodiscard]] inline std::shared_ptr<WorkletRuntime> getUIWorkletRuntime()
-      const {
+  [[nodiscard]] inline std::shared_ptr<WorkletRuntime> getUIWorkletRuntime() const {
     return uiWorkletRuntime_;
   }
 
-  [[nodiscard]] std::shared_ptr<JSIWorkletsModuleProxy>
-  createJSIWorkletsModuleProxy() const;
+  [[nodiscard]] std::shared_ptr<JSIWorkletsModuleProxy> createJSIWorkletsModuleProxy() const;
 
   [[nodiscard]] inline bool isDevBundle() const {
     return isDevBundle_;

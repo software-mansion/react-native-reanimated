@@ -3,11 +3,11 @@
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
 import type { callGuardDEV } from './callGuard';
-import type { reportFatalRemoteError } from './errors';
+import type { reportFatalRemoteError } from './debug/errors';
+import type { SynchronizableUnpacker } from './memory/synchronizableUnpacker';
 import type { Queue } from './runLoop/workletRuntime/taskQueue';
-import type { SynchronizableUnpacker } from './synchronizableUnpacker';
-import type { WorkletsModuleProxy } from './WorkletsModule';
-import type { ValueUnpacker } from './workletTypes';
+import type { ValueUnpacker } from './types';
+import type { WorkletsModuleProxy } from './WorkletsModule/workletsModuleProxy';
 
 declare global {
   /** The only runtime-available require method is `__r` defined by Metro. */
@@ -77,4 +77,8 @@ declare global {
   var __hasNativeState: (value: object) => boolean;
   /** Only in Debug builds. */
   var __isHostObject: (value: object) => boolean;
+  interface NodeRequire {
+    resolveWeak(id: string): number;
+    getModules(): Map<number, unknown>;
+  }
 }

@@ -21,19 +21,15 @@ namespace reanimated {
 using namespace facebook;
 using namespace facebook::jni;
 
-class NativeProxy : public jni::HybridClass<NativeProxy>,
-                    std::enable_shared_from_this<NativeProxy> {
+class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_from_this<NativeProxy> {
  public:
-  static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/NativeProxy;";
+  static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/NativeProxy;";
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> jThis,
       jni::alias_ref<WorkletsModule::javaobject> jWorkletsModule,
       jlong jsContext,
-      jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
-          jsCallInvokerHolder,
-      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager);
+      jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
+      jni::alias_ref<facebook::react::JFabricUIManager::javaobject> fabricUIManager);
 
   static void registerNatives();
 
@@ -53,38 +49,26 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
   // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
   // std::shared_ptr<EventListener> eventListener_;
   void installJSIBindings();
-  std::optional<std::unique_ptr<int[]>> preserveMountedTags(
-      std::vector<int> &tags);
-  void synchronouslyUpdateUIProps(
-      const std::vector<int> &intBuffer,
-      const std::vector<double> &doubleBuffer);
+  std::optional<std::unique_ptr<int[]>> preserveMountedTags(std::vector<int> &tags);
+  void synchronouslyUpdateUIProps(const std::vector<int> &intBuffer, const std::vector<double> &doubleBuffer);
   PlatformDepMethodsHolder getPlatformDependentMethods();
 
   double getAnimationTimestamp();
-  bool isAnyHandlerWaitingForEvent(
-      const std::string &eventName,
-      const int emitterReactTag);
+  bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
   void performOperations();
   bool getIsReducedMotion();
   void requestRender(std::function<void(double)> onRender);
   void registerEventHandler();
   void maybeFlushUIUpdatesQueue();
   void setGestureState(int handlerTag, int newState);
-  int registerSensor(
-      int sensorType,
-      int interval,
-      int iosReferenceFrame,
-      std::function<void(double[], int)> setter);
+  int registerSensor(int sensorType, int interval, int iosReferenceFrame, std::function<void(double[], int)> setter);
   void unregisterSensor(int sensorId);
   int subscribeForKeyboardEvents(
       std::function<void(int, int)> callback,
       bool isStatusBarTranslucent,
       bool isNavigationBarTranslucent);
   void unsubscribeFromKeyboardEvents(int listenerId);
-  void handleEvent(
-      jni::alias_ref<JString> eventName,
-      jint emitterReactTag,
-      jni::alias_ref<react::WritableMap> event);
+  void handleEvent(jni::alias_ref<JString> eventName, jint emitterReactTag, jni::alias_ref<react::WritableMap> event);
 
   /***
    * Wraps a method of `NativeProxy` in a function object capturing `this`
@@ -95,8 +79,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
    * that method on `this`
    */
   template <class TReturn, class... TParams>
-  std::function<TReturn(TParams...)> bindThis(
-      TReturn (NativeProxy::*methodPtr)(TParams...)) {
+  std::function<TReturn(TParams...)> bindThis(TReturn (NativeProxy::*methodPtr)(TParams...)) {
     // It's probably safe to pass `this` as reference here...
     return [this, methodPtr](TParams &&...args) {
       return (this->*methodPtr)(std::forward<TParams>(args)...);
@@ -113,8 +96,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
       const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
       jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager);
+      jni::alias_ref<facebook::react::JFabricUIManager::javaobject> fabricUIManager);
 
   void invalidateCpp();
 };
