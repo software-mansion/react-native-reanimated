@@ -2,7 +2,6 @@ import { StyleSheet } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
-import { balloonsImage } from '@/apps/css/assets';
 import { ExamplesScreen, VerticalExampleCard } from '@/apps/css/components';
 import { radius, sizes } from '@/theme';
 
@@ -17,9 +16,12 @@ export default function Filter() {
         animationTimingFunction: 'linear',
       })}
       renderExample={({ animation }) => (
+        // TO-DO: Replace with balloonsImage when assets are supported in monorepo
         <Animated.Image
-          source={balloonsImage}
           style={[styles.image, animation]}
+          source={{
+            uri: 'https://fastly.picsum.photos/id/418/400/400.jpg?hmac=bb10nb5u-sK8fxD4fyTmZO36Q4N6jRTuSj-ChqtM_3M',
+          }}
         />
       )}
       sections={[
@@ -51,7 +53,6 @@ export default function Filter() {
               title: 'Object syntax',
             },
           ],
-          labelTypes: ['web'],
           title: 'Filter',
         },
       ]}
