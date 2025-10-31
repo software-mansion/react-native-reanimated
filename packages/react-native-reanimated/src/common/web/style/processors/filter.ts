@@ -19,10 +19,10 @@ function parseFilterValue(
 ): string {
   switch (filterName) {
     case 'hueRotate':
-      return `${maybeAddSuffix(filterValue, 'deg')}`;
+      return String(maybeAddSuffix(filterValue as number | string, 'deg'));
 
     case 'blur':
-      return `${maybeAddSuffix(filterValue, 'px')}`;
+      return String(maybeAddSuffix(filterValue as number | string, 'px'));
 
     case 'dropShadow':
       if (isDropShadowValue(filterValue)) {
@@ -33,13 +33,14 @@ function parseFilterValue(
           filterValue.color,
         ]
           .filter(Boolean)
+          .map((v) => String(v))
           .join(' ');
       }
 
-      return `${filterValue}`;
+      return String(filterValue);
 
     default:
-      return `${filterValue}`;
+      return String(filterValue);
   }
 }
 
