@@ -55,7 +55,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
 
   double getAnimationTimestamp();
   bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
-  void performOperations();
+  void performOperations(const bool isTriggeredByEvent);
   bool getIsReducedMotion();
   void requestRender(std::function<void(double)> onRender);
   void registerEventHandler();
