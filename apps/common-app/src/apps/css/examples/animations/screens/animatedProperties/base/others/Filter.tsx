@@ -45,7 +45,7 @@ export default function Filter() {
                   filter: [{ blur: 0, brightness: 0 }],
                 },
                 '50%': {
-                  filter: [{ blur: 10, brightness: 150 }],
+                  filter: [{ blur: 10, brightness: 1.5 }],
                 },
               },
               title: 'Object syntax',

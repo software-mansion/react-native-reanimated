@@ -3,13 +3,13 @@ import React, { useEffect } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import Animated, {
   interpolateColor,
-  processColor,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
 
+// TODO: add string percentage examples, when we decide what to do on precision.
 export default function FilterExample() {
   const sv = useSharedValue(0);
 
@@ -21,12 +21,10 @@ export default function FilterExample() {
   // https://reactnative.dev/docs/view-style-props#filter
 
   const brightness = useAnimatedStyle(() => {
-    // TODO: support percentage string
     return { filter: [{ brightness: sv.value }] };
   });
 
   const opacity = useAnimatedStyle(() => {
-    // TODO: support percentage string
     return { filter: [{ opacity: sv.value }] };
   });
 
@@ -35,12 +33,9 @@ export default function FilterExample() {
   });
 
   const contrast = useAnimatedStyle(() => {
-    // TODO: support percentage string
     return { filter: [{ contrast: sv.value * 3 }] };
   });
 
-  // @ts-ignore - number returned by the processColor function is not assignable
-  // to the color property without react-native-strict-api enabled
   const dropShadow = useAnimatedStyle(() => {
     return {
       filter: [
@@ -49,10 +44,7 @@ export default function FilterExample() {
             offsetX: sv.value * 10,
             offsetY: sv.value * 10,
             standardDeviation: sv.value * 10,
-            // TODO: call processColor automatically
-            color: processColor(
-              interpolateColor(sv.value, [0, 1], ['red', 'blue'])
-            ),
+            color: interpolateColor(sv.value, [0, 1], ['red', 'blue']),
           },
         },
       ],
@@ -60,30 +52,24 @@ export default function FilterExample() {
   });
 
   const grayscale = useAnimatedStyle(() => {
-    // TODO: support percentage string
     return { filter: [{ grayscale: sv.value }] };
   });
 
   const hueRotate = useAnimatedStyle(() => {
-    // TODO: support deg and rad string
     return { filter: [{ hueRotate: sv.value * 360 }] };
   });
 
   const invert = useAnimatedStyle(() => {
-    // TODO: support percentage string
     return { filter: [{ invert: sv.value }] };
   });
 
   const sepia = useAnimatedStyle(() => {
-    // TODO: support percentage string
     return { filter: [{ sepia: sv.value }] };
   });
 
   const saturate = useAnimatedStyle(() => {
     return { filter: [{ saturate: sv.value * 2 }] };
   });
-
-  // TODO: support filter string
 
   return (
     <ScrollView
@@ -93,90 +79,69 @@ export default function FilterExample() {
       <Animated.Image
         source={balloonsImage}
         // @ts-ignore
-        style={brightness}
-        width={80}
-        height={80}
+        style={[styles.image, brightness]}
       />
 
       <Text>opacity</Text>
       <Animated.Image
         source={balloonsImage}
         // @ts-ignore
-        style={opacity}
-        width={80}
-        height={80}
+        style={[styles.image, opacity]}
       />
-
       <Text>blur (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
         // @ts-ignore
-        style={blur}
-        width={80}
-        height={80}
+        style={[styles.image, blur]}
       />
 
       <Text>contrast (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
         // @ts-ignore
-        style={contrast}
-        width={80}
-        height={80}
+        style={[styles.image, contrast]}
       />
 
       <Text>dropShadow (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
         // @ts-ignore
-        style={dropShadow}
-        width={80}
-        height={80}
+        style={[styles.image, dropShadow]}
       />
 
       <Text>grayscale (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
         // @ts-ignore
-        style={grayscale}
-        width={80}
-        height={80}
+        style={[styles.image, grayscale]}
       />
 
       <Text>hueRotate (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
         // @ts-ignore
-        style={hueRotate}
-        width={80}
-        height={80}
+        style={[styles.image, hueRotate]}
       />
 
       <Text>invert (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
         // @ts-ignore
-        style={invert}
-        width={80}
-        height={80}
+        style={[styles.image, invert]}
       />
 
       <Text>sepia (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
         // @ts-ignore
-        style={sepia}
-        width={80}
-        height={80}
+        style={[styles.image, sepia]}
       />
 
       <Text>saturate (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
         // @ts-ignore
-        style={saturate}
-        width={80}
-        height={80}
+        style={[styles.image, saturate]}
       />
     </ScrollView>
   );
@@ -189,5 +154,10 @@ const styles = StyleSheet.create({
   contentContainer: {
     alignItems: 'center',
     paddingVertical: 50,
+  },
+  image: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
   },
 });
