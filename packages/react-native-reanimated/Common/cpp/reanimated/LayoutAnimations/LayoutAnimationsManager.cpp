@@ -15,9 +15,14 @@ void LayoutAnimationsManager::configureAnimationBatch(
       enteringAnimationsForNativeID_[tag] = config;
       continue;
     }
-    if (type == SHARED_ELEMENT_TRANSITION) {
+    if (type == SHARED_ELEMENT_TRANSITION_NATIVE_ID) {
       sharedTransitionsForNativeID_[tag] = config;
       sharedTransitionManager_->nativeIDToName_[tag] = sharedTag;
+      continue;
+    }
+    if (type == SHARED_ELEMENT_TRANSITION) {
+      sharedTransitions_[tag] = config;
+      sharedTransitionManager_->tagToName_[tag] = sharedTag;
       continue;
     }
     if (config == nullptr) {

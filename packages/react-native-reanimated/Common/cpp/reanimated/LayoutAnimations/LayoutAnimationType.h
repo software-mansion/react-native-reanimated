@@ -5,4 +5,5 @@ typedef enum LayoutAnimationType {
   EXITING = 2,
   LAYOUT = 3,
   SHARED_ELEMENT_TRANSITION = 4,
+  SHARED_ELEMENT_TRANSITION_NATIVE_ID = 5,
 } LayoutAnimationType;

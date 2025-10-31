@@ -1,4 +1,5 @@
 'use strict';
+import { logger } from '../common';
 import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
@@ -20,6 +21,9 @@ export class SharedTransition
 
   build = (): LayoutAnimationFunction => {
     const delayFunction = this.getDelayFunction();
+    if (!this.durationV) {
+      this.durationV = 500;
+    }
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const delay = this.getDelay();
@@ -62,7 +66,7 @@ export class SharedTransition
           } else if (key === 'transformOrigin') {
             animations[key] = target.map(animationFactory);
           } else {
-            console.error('Unexpected array in SharedTransition:', key);
+            logger.error(`Unexpected array in SharedTransition: ${key}`);
           }
         } else {
           animations[key] = animationFactory(values.target[key]);

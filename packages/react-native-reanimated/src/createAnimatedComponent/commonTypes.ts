@@ -12,6 +12,7 @@ import type {
 } from '../commonTypes';
 import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import type { BaseAnimationBuilder } from '../layoutReanimation';
+import type { SharedTransition } from '../layoutReanimation/SharedTransition';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 
 export interface AnimatedProps extends Record<string, unknown> {
@@ -85,6 +86,7 @@ export type AnimatedComponentProps<
   jestAnimatedValues?: RefObject<AnimatedProps>;
   animatedStyle?: StyleProps;
   sharedTransitionTag?: string;
+  sharedTransitionStyle?: SharedTransition & LayoutAnimationStaticContext;
   layout?: (
     | BaseAnimationBuilder
     | ILayoutAnimationBuilder
