@@ -520,10 +520,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
 #ifdef LAYOUT_ANIMATIONS_LOGS
       LOG(INFO) << "delete " << subNode->tag << std::endl;
 #endif
-      < < < < < < < HEAD mutations.push_back(ShadowViewMutation::DeleteMutation(subNode->mutation.oldChildShadowView));
-=======
       mutations.push_back(ShadowViewMutation::DeleteMutation(subNode->mutation.oldChildShadowView));
->>>>>>> main
     } else {
       subNode->state = ExitingState::WAITING;
     }

@@ -13,6 +13,7 @@ using namespace facebook;
 using namespace react;
 
 namespace reanimated {
+
 using UpdatePropsFunction = std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
 using ObtainPropFunction =
     std::function<jsi::Value(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &propName)>;
