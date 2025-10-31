@@ -13,7 +13,10 @@ const isDropShadowValue = (value: unknown): value is DropShadowValue => {
   );
 };
 
-function parseFilterValue(filterName: string, filterValue: unknown) {
+function parseFilterValue(
+  filterName: string,
+  filterValue: number | string | DropShadowValue
+): string {
   switch (filterName) {
     case 'hueRotate':
       return `${maybeAddSuffix(filterValue, 'deg')}`;
@@ -22,10 +25,6 @@ function parseFilterValue(filterName: string, filterValue: unknown) {
       return `${maybeAddSuffix(filterValue, 'px')}`;
 
     case 'dropShadow':
-      if (typeof filterValue === 'string') {
-        return `${filterValue}`;
-      }
-
       if (isDropShadowValue(filterValue)) {
         return [
           maybeAddSuffix(filterValue.offsetX, 'px'),
@@ -37,7 +36,7 @@ function parseFilterValue(filterName: string, filterValue: unknown) {
           .join(' ');
       }
 
-      return '';
+      return `${filterValue}`;
 
     default:
       return filterValue;
