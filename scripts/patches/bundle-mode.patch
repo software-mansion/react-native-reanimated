@@ -36,15 +36,17 @@ index afaf8c45a5..c3c5434878 100644
 +    }
 +}
 diff --git a/apps/fabric-example/babel.config.js b/apps/fabric-example/babel.config.js
-index 259ed1ad84..ebdbea9d22 100644
+index 101f511987..2535fca816 100644
 --- a/apps/fabric-example/babel.config.js
 +++ b/apps/fabric-example/babel.config.js
-@@ -6,7 +6,7 @@ module.exports = {
+@@ -6,8 +6,8 @@ module.exports = {
        'react-native-worklets/plugin',
        {
          // Uncomment the next line to enable bundle mode.
 -        // bundleMode: true,
+-        // workletizableModules: ['react-native/Libraries/Core/setUpXHR', 'axios'],
 +        bundleMode: true,
++        workletizableModules: ['react-native/Libraries/Core/setUpXHR', 'axios'],
        },
      ],
      [

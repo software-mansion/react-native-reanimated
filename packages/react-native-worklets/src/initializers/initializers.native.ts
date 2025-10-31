@@ -1,11 +1,16 @@
 'use strict';
 
+import {
+  disallowRNImports,
+  mockTurboModuleRegistry,
+  silenceHMRWarnings,
+} from '../bundleMode/metroOverrides';
+import { initializeNetworking } from '../bundleMode/network';
 import { setupCallGuard } from '../callGuard';
 import { registerReportFatalRemoteError } from '../debug/errors';
 import { registerWorkletsError, WorkletsError } from '../debug/WorkletsError';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
 import { __installUnpacker as installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
-import { initializeNetworking } from '../network';
 import { setupSetImmediate } from '../runLoop/common/setImmediatePolyfill';
 import { setupSetInterval } from '../runLoop/common/setIntervalPolyfill';
 import { setupRequestAnimationFrame } from '../runLoop/uiRuntime/requestAnimationFrame';
@@ -130,154 +135,46 @@ function initializeWorkletRuntime() {
     setupCallGuard();
 
     if (__DEV__) {
-      /*
-       * Temporary workaround for Metro bundler. We must implement a dummy
-       * Refresh module to prevent Metro from throwing irrelevant errors.
-       */
-      const Refresh = new Proxy(
-        {},
-        {
-          get() {
-            return () => {};
-          },
-        }
-      );
-
-      globalThis.__r.Refresh = Refresh;
-
-      /* Gracefully handle unwanted imports from React Native. */
-      const modules = require.getModules();
-      const ReactNativeModuleId = require.resolveWeak('react-native');
-
-      const factory = function (
-        _global: unknown,
-        _require: unknown,
-        _importDefault: unknown,
-        _importAll: unknown,
-        module: Record<string, unknown>,
-        _exports: unknown,
-        _dependencyMap: unknown
-      ) {
-        module.exports = new Proxy(
-          {},
-          {
-            get: function get(_target, prop) {
-              globalThis.console.warn(
-                `You tried to import '${String(prop)}' from 'react-native' module on a Worklet Runtime. Using 'react-native' module on a Worklet Runtime is not allowed.`,
-                // eslint-disable-next-line reanimated/use-worklets-error
-                new Error().stack
-              );
-              return {
-                get() {
-                  return undefined;
-                },
-              };
-            },
-          }
-        );
-      };
-
-      const mod = {
-        dependencyMap: [],
-        factory,
-        hasError: false,
-        importedAll: {},
-        importedDefault: {},
-        isInitialized: false,
-        publicModule: {
-          exports: {},
-        },
-      };
-
-      modules.set(ReactNativeModuleId, mod);
-
-      const PolyfillFunctionsId = require.resolveWeak(
-        'react-native/Libraries/Utilities/PolyfillFunctions'
-      );
-
-      const polyfillFactory = function (
-        _global: unknown,
-        _$$_REQUIRE: unknown,
-        _$$_IMPORT_DEFAULT: unknown,
-        _$$_IMPORT_ALL: unknown,
-        module: Record<string, Record<string, unknown>>,
-        _exports: unknown,
-        _dependencyMap: unknown
-      ) {
-        module.exports.polyfillGlobal = (
-          name: string,
-          getValue: () => unknown
-        ) => {
-          // globalThis._log('polyfillGlobal ' + name + ' ' + getValue);
-          (globalThis as Record<string, unknown>)[name] = getValue();
-        };
-      };
-
-      const polyfillMod = {
-        dependencyMap: [],
-        factory: polyfillFactory,
-        hasError: false,
-        importedAll: {},
-        importedDefault: {},
-        isInitialized: false,
-        publicModule: {
-          exports: {},
-        },
-      };
-
-      modules.set(PolyfillFunctionsId, polyfillMod);
-
-      const TurboModuleRegistryId = require.resolveWeak(
-        'react-native/Libraries/TurboModule/TurboModuleRegistry'
-      );
-
-      const TurboModules = new Map<string, unknown>();
-
-      // globalThis.TurboModules = new Map<string, unknown>();
-      // @ts-expect-error type not exposed by Metro
-      globalThis.TurboModules = TurboModules;
-
-      TurboModules.set('Networking', {});
-
-      const faactory = function (
-        _global: unknown,
-        _$$_REQUIRE: unknown,
-        _$$_IMPORT_DEFAULT: unknown,
-        _$$_IMPORT_ALL: unknown,
-        module: Record<string, unknown>,
-        _exports: unknown,
-        _dependencyMap: unknown
-      ) {
-        function get(name: string) {
-          globalThis._log('TurboModuleRegistry get ' + name);
-          // @ts-expect-error type not exposed by Metro
-          return globalThis.TurboModules.get(name);
-        }
-        function getEnforcing(name: string) {
-          globalThis._log('TurboModuleRegistry getEnforcing ' + name);
-          // @ts-expect-error type not exposed by Metro
-          return globalThis.TurboModules.get(name);
-        }
-        // @ts-expect-error type not exposed by Metro
-        module.exports.get = get;
-        // @ts-expect-error type not exposed by Metro
-        module.exports.getEnforcing = getEnforcing;
-      };
-
-      const mood = {
-        dependencyMap: [],
-        factory: faactory,
-        hasError: false,
-        importedAll: {},
-        importedDefault: {},
-        isInitialized: false,
-        publicModule: {
-          exports: {},
-        },
-      };
-
-      modules.set(TurboModuleRegistryId, mood);
+      silenceHMRWarnings();
+      disallowRNImports();
+      mockTurboModuleRegistry();
     }
+
+    // const PolyfillFunctionsId = require.resolveWeak(
+    //   'react-native/Libraries/Utilities/PolyfillFunctions'
+    // );
+
+    // const polyfillFactory = function (
+    //   _global: unknown,
+    //   _$$_REQUIRE: unknown,
+    //   _$$_IMPORT_DEFAULT: unknown,
+    //   _$$_IMPORT_ALL: unknown,
+    //   module: Record<string, Record<string, unknown>>,
+    //   _exports: unknown,
+    //   _dependencyMap: unknown
+    // ) {
+    //   module.exports.polyfillGlobal = (
+    //     name: string,
+    //     getValue: () => unknown
+    //   ) => {
+    //     // globalThis._log('polyfillGlobal ' + name + ' ' + getValue);
+    //     (globalThis as Record<string, unknown>)[name] = getValue();
+    //   };
+    // };
+
+    // const polyfillMod = {
+    //   dependencyMap: [],
+    //   factory: polyfillFactory,
+    //   hasError: false,
+    //   importedAll: {},
+    //   importedDefault: {},
+    //   isInitialized: false,
+    //   publicModule: {
+    //     exports: {},
+    //   },
+    // };
+
+    // modules.set(PolyfillFunctionsId, polyfillMod);
   }
 }
 

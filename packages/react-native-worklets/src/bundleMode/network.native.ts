@@ -2,7 +2,7 @@
 
 import { TurboModuleRegistry } from 'react-native';
 
-import { WorkletsError } from '../WorkletsError';
+import { WorkletsError } from '../debug/WorkletsError';
 
 // const FileReaderModule = getHostObjectFromTurboModule(
 //   TurboModuleRegistry.getEnforcing('FileReaderModule')
@@ -19,6 +19,10 @@ const BlobModule = getHostObjectFromTurboModule(
 
 export function initializeNetworking() {
   'worklet';
+
+  const TurboModules = globalThis.TurboModules;
+
+  TurboModules.set('Networking', {});
 
   const errorProxyFactory = (moduleName: string) => {
     return new Proxy(
@@ -45,9 +49,6 @@ export function initializeNetworking() {
       }
     },
   });
-
-  const TurboModules = (globalThis as Record<string, unknown>)
-    .TurboModules as Map<string, unknown>;
 
   try {
     TurboModules.set('FileReaderModule', errorProxyFactory('FileReaderModule'));

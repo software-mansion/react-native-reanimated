@@ -1,5 +1,6 @@
 'use strict';
 
+import { initializeNetworking } from './bundleMode/network';
 import { setupCallGuard } from './callGuard';
 import { registerWorkletsError, WorkletsError } from './debug/WorkletsError';
 import {
@@ -10,7 +11,6 @@ import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
 } from './memory/serializable';
-import { initializeNetworking } from './network';
 import { setupRunLoop } from './runLoop/workletRuntime';
 import { RuntimeKind } from './runtimeKind';
 import type {
