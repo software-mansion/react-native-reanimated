@@ -46,6 +46,7 @@ function findExamples(search: string) {
 function HomeScreen({ navigation }: HomeScreenProps) {
   const [search, setSearch] = React.useState('');
   const [wasClicked, setWasClicked] = React.useState<string[]>([]);
+  const platform = Platform.OS as 'ios' | 'android';
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -78,6 +79,7 @@ function HomeScreen({ navigation }: HomeScreenProps) {
               setTimeout(() => setWasClicked([...wasClicked, name]), 500);
             }
           }}
+          shouldWork={EXAMPLES[name].shouldWork?.[platform]}
           disabled={EXAMPLES[name].disabledPlatforms?.includes(Platform.OS)}
           wasClicked={wasClicked.includes(name)}
         />
@@ -95,9 +97,17 @@ interface ItemProps {
   disabled?: boolean;
   onPress: () => void;
   wasClicked?: boolean;
+  shouldWork?: boolean;
 }
 
-function Item({ icon, title, onPress, disabled, wasClicked }: ItemProps) {
+function Item({
+  icon,
+  title,
+  onPress,
+  disabled,
+  wasClicked,
+  shouldWork,
+}: ItemProps) {
   const Button = IS_MACOS ? Pressable : RectButton;
   return (
     <Button
@@ -110,6 +120,9 @@ function Item({ icon, title, onPress, disabled, wasClicked }: ItemProps) {
       enabled={!disabled}>
       {icon && <Text style={styles.title}>{icon + '  '}</Text>}
       <Text style={styles.title}>{title}</Text>
+      {shouldWork !== undefined && (
+        <Text style={styles.marker}>{shouldWork ? '✅' : '❌'}</Text>
+      )}
     </Button>
   );
 }
@@ -189,6 +202,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     color: 'black',
+  },
+  marker: {
+    fontSize: 20,
+    color: 'black',
+    alignSelf: 'flex-end',
+    marginLeft: 'auto',
   },
   visitedItem: {
     backgroundColor: '#e6f0f7',

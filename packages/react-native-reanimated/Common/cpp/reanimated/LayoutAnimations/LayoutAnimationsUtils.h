@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace reanimated {
+namespace reanimated_experimental {
 
 struct Rect {
   double width, height;
@@ -19,6 +19,7 @@ struct Rect {
 
 struct Frame {
   std::optional<double> x, y, width, height;
+  Frame(double x, double y, double width, double height) : x(x), y(y), width(width), height(height) {}
   Frame(jsi::Runtime &runtime, const jsi::Object &newStyle) {
     if (newStyle.hasProperty(runtime, "originX")) {
       x = newStyle.getProperty(runtime, "originX").asNumber();
@@ -56,10 +57,9 @@ struct Snapshot {
 typedef enum ExitingState {
   UNDEFINED = 1,
   WAITING = 2,
-  ANIMATING = 4,
-  DEAD = 8,
-  MOVED = 16,
-  DELETED = 32,
+  ANIMATING = 3,
+  DEAD = 4,
+  DELETED = 5,
 } ExitingState;
 
 struct MutationNode;
@@ -95,6 +95,33 @@ struct MutationNode : public Node {
   bool isMutationMode() override;
 };
 
+enum TransitionState { NONE = 0, START = 1, ACTIVE = 2, END = 3, CANCELLED = 4 };
+
+enum Intent {
+  NO_INTENT = 0,
+  TO_MOVE = 1,
+  TO_DELETE = 2,
+};
+
+struct LightNode {
+  using Unshared = std::shared_ptr<LightNode>;
+  Intent intent;
+  ShadowView previous;
+  ShadowView current;
+  ExitingState state = UNDEFINED;
+  std::weak_ptr<LightNode> parent;
+  std::vector<std::shared_ptr<LightNode>> children;
+  int animatedChildrenCount = 0;
+  void removeChild(std::shared_ptr<LightNode> child) {
+    for (int i = children.size() - 1; i >= 0; i--) {
+      if (children[i]->current.tag == child->current.tag) {
+        children.erase(children.begin() + i);
+        break;
+      }
+    }
+  }
+};
+
 struct SurfaceManager {
   mutable std::unordered_map<SurfaceId, std::shared_ptr<std::unordered_map<Tag, UpdateValues>>> props_;
   mutable std::unordered_map<SurfaceId, Rect> windows_;
@@ -120,10 +147,15 @@ static inline void updateLayoutMetrics(LayoutMetrics &layoutMetrics, Frame &fram
   }
 }
 
-static inline bool isRNSScreen(std::shared_ptr<MutationNode> node) {
-  const auto &componentName = node->mutation.oldChildShadowView.componentName;
+static inline bool isRNSScreenOrStack(std::shared_ptr<LightNode> &node) {
+  const auto &componentName = node->current.componentName;
   return !std::strcmp(componentName, "RNSScreenStack") || !std::strcmp(componentName, "RNSScreen") ||
       !std::strcmp(componentName, "RNSModalScreen");
+}
+
+static inline bool isRNSScreen(std::shared_ptr<LightNode> &node) {
+  const auto &componentName = node->current.componentName;
+  return !std::strcmp(componentName, "RNSScreen") || !std::strcmp(componentName, "RNSModalScreen");
 }
 
 static inline bool hasLayoutChanged(const ShadowViewMutation &mutation) {
@@ -155,4 +187,4 @@ static inline void mergeAndSwap(
   std::swap(A, merged);
 }
 
-} // namespace reanimated
+} // namespace reanimated_experimental

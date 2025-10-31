@@ -10,9 +10,19 @@ namespace reanimated {
 void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   for (auto layoutAnimationConfig : layoutAnimationsBatch) {
-    const auto &[tag, type, config] = layoutAnimationConfig;
+    const auto &[tag, type, config, sharedTag] = layoutAnimationConfig;
     if (type == ENTERING) {
       enteringAnimationsForNativeID_[tag] = config;
+      continue;
+    }
+    if (type == SHARED_ELEMENT_TRANSITION_NATIVE_ID) {
+      sharedTransitionsForNativeID_[tag] = config;
+      sharedTransitionManager_->nativeIDToName_[tag] = sharedTag;
+      continue;
+    }
+    if (type == SHARED_ELEMENT_TRANSITION) {
+      sharedTransitions_[tag] = config;
+      sharedTransitionManager_->tagToName_[tag] = sharedTag;
       continue;
     }
     if (config == nullptr) {
@@ -82,6 +92,14 @@ void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, con
     enteringAnimations_.insert_or_assign(tag, config);
   }
   enteringAnimationsForNativeID_.erase(nativeId);
+
+  auto setConfig = sharedTransitionsForNativeID_[nativeId];
+  if (setConfig) {
+    sharedTransitions_.insert_or_assign(tag, setConfig);
+    sharedTransitionManager_->tagToName_[tag] =
+        sharedTransitionManager_->nativeIDToName_[nativeId];
+  }
+  sharedTransitionsForNativeID_.erase(nativeId);
 }
 
 std::unordered_map<int, std::shared_ptr<Serializable>> &LayoutAnimationsManager::getConfigsForType(
@@ -93,6 +111,8 @@ std::unordered_map<int, std::shared_ptr<Serializable>> &LayoutAnimationsManager:
       return exitingAnimations_;
     case LAYOUT:
       return layoutAnimations_;
+    case SHARED_ELEMENT_TRANSITION:
+      return sharedTransitions_;
     default:
       throw std::invalid_argument("[Reanimated] Unknown layout animation type");
   }

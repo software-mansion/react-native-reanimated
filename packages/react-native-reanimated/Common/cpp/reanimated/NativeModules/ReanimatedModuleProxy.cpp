@@ -15,6 +15,8 @@
 
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 
 #include <functional>
 #include <iomanip>
@@ -51,6 +53,9 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       jsLogger_(std::make_shared<JSLogger>(workletsModuleProxy->getJSScheduler())),
       layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>(jsLogger_)),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
+#ifdef __APPLE__
+      forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
+#endif
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
@@ -121,8 +126,12 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
         if (!strongThis) {
           return;
         }
-
-        auto surfaceId = strongThis->layoutAnimationsProxy_->progressLayoutAnimation(tag, newStyle);
+        std::optional<SurfaceId> surfaceId;
+        if constexpr (StaticFeatureFlags::getFlag("SHARED_ELEMENT_TRANSITIONS")) {
+          surfaceId = strongThis->layoutAnimationsProxyExperimental_->progressLayoutAnimation(tag, newStyle);
+        } else {
+          surfaceId = surfaceId = strongThis->layoutAnimationsProxyLegacy_->progressLayoutAnimation(tag, newStyle);
+        }
         if (!surfaceId) {
           return;
         }
@@ -144,7 +153,12 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       return;
     }
 
-    auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
+    std::optional<SurfaceId> surfaceId;
+    if constexpr (StaticFeatureFlags::getFlag("SHARED_ELEMENT_TRANSITIONS")) {
+      surfaceId = strongThis->layoutAnimationsProxyExperimental_->endLayoutAnimation(tag, shouldRemove);
+    } else {
+      surfaceId = strongThis->layoutAnimationsProxyLegacy_->endLayoutAnimation(tag, shouldRemove);
+    }
 
     if (!strongThis->layoutAnimationRenderRequested_) {
       strongThis->layoutAnimationRenderRequested_ = true;
@@ -288,6 +302,10 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     } else {
       batchItem.config = extractSerializableOrThrow<SerializableObject>(
           rt, config, "[Reanimated] Layout animation config must be an object.");
+    }
+    auto sharedTag = item.getProperty(rt, "sharedTransitionTag");
+    if (!sharedTag.isUndefined()) {
+      batchItem.sharedTransitionTag = sharedTag.asString(rt).utf8(rt);
     }
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
@@ -456,12 +474,12 @@ void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi:
 bool ReanimatedModuleProxy::handleEvent(
     const std::string &eventName,
     const int emitterReactTag,
-    const jsi::Value &payload,
+    const jsi::Value &payloadd,
     double currentTime) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::handleEvent");
 
   eventHandlerRegistry_->processEvent(
-      workletsModuleProxy_->getUIWorkletRuntime(), currentTime, eventName, emitterReactTag, payload);
+      workletsModuleProxy_->getUIWorkletRuntime(), currentTime, eventName, emitterReactTag, payloadd);
 
   // TODO: return true if Reanimated successfully handled the event
   // to avoid sending it to JavaScript
@@ -485,6 +503,37 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   auto eventType = rawEvent.type;
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
+  }
+
+  if constexpr (StaticFeatureFlags::getFlag("SHARED_ELEMENT_TRANSITIONS")) {
+    if (!strcmp(eventType.c_str(), "onTransitionProgress")) {
+      jsi::Runtime &rt = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+      const auto &eventPayload = rawEvent.eventPayload;
+      jsi::Object payload = eventPayload->asJSIValue(rt).asObject(rt);
+      auto progress = payload.getProperty(rt, "progress").asNumber();
+      auto closing = payload.getProperty(rt, "closing").asNumber();
+      auto goingForward = payload.getProperty(rt, "goingForward").asNumber();
+      //      auto swiping = payload.getProperty(rt, "swiping").asNumber();
+
+      auto surfaceId =
+          layoutAnimationsProxyExperimental_->onTransitionProgress(tag, progress, closing, goingForward, false);
+      if (!surfaceId) {
+        return false;
+      }
+      // TODO: enumerate -> visit
+      uiManager_->getShadowTreeRegistry().enumerate(
+          [](const ShadowTree &shadowTree, bool &) { shadowTree.notifyDelegatesOfUpdates(); });
+      return false;
+    } else if (!strcmp(eventType.c_str(), "onGestureCancel")) {
+      auto surfaceId = layoutAnimationsProxyExperimental_->onGestureCancel();
+      if (!surfaceId) {
+        return false;
+      }
+      // TODO: enumerate -> visit
+      uiManager_->getShadowTreeRegistry().enumerate(
+          [](const ShadowTree &shadowTree, bool &) { shadowTree.notifyDelegatesOfUpdates(); });
+      return false;
+    }
   }
 
   if (!isAnyHandlerWaitingForEvent(eventType, tag)) {
@@ -589,8 +638,9 @@ void ReanimatedModuleProxy::performOperations() {
 
     shouldUpdateCssAnimations_ = false;
 
+// TODO: use the SET flag when it's ready
 #ifdef ANDROID
-    if constexpr (StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
+    if constexpr (false) {
       static const std::unordered_set<std::string> synchronousProps = {
           "opacity",
           "elevation",
@@ -1206,7 +1256,8 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
     strongThis->requestFlushRegistry();
   };
   mountHook_ = std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, request);
-  commitHook_ = std::make_shared<ReanimatedCommitHook>(uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(
+      uiManager_, updatesRegistryManager_, layoutAnimationsProxyLegacy_, layoutAnimationsProxyExperimental_);
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
@@ -1218,19 +1269,39 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
           .lock();
 
   if (componentDescriptorRegistry) {
-    layoutAnimationsProxy_ = std::make_shared<LayoutAnimationsProxy>(
-        layoutAnimationsManager_,
-        componentDescriptorRegistry,
-        scheduler->getContextContainer(),
-        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
-        workletsModuleProxy_->getUIScheduler()
+    if constexpr (StaticFeatureFlags::getFlag("SHARED_ELEMENT_TRANSITIONS")) {
+      layoutAnimationsProxyExperimental_ =
+          std::make_shared<reanimated_experimental::LayoutAnimationsProxy_Experimental>(
+              layoutAnimationsManager_,
+              componentDescriptorRegistry,
+              scheduler->getContextContainer(),
+              workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
+              workletsModuleProxy_->getUIScheduler()
 #ifdef ANDROID
-            ,
-        filterUnmountedTagsFunction_,
-        uiManager_,
-        jsInvoker_
+                  ,
+              filterUnmountedTagsFunction_,
+              uiManager_,
+              jsInvoker_
 #endif
-    );
+          );
+#ifdef __APPLE__
+      layoutAnimationsProxyExperimental_->setForceScreenSnapshotFunction(forceScreenSnapshot_);
+#endif
+    } else {
+      layoutAnimationsProxyLegacy_ = std::make_shared<LayoutAnimationsProxy_Legacy>(
+          layoutAnimationsManager_,
+          componentDescriptorRegistry,
+          scheduler->getContextContainer(),
+          workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
+          workletsModuleProxy_->getUIScheduler()
+#ifdef ANDROID
+              ,
+          filterUnmountedTagsFunction_,
+          uiManager_,
+          jsInvoker_
+#endif
+      );
+    }
   }
 }
 
