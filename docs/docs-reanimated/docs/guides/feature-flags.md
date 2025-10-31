@@ -22,6 +22,7 @@ Feature flags are available since Reanimated 4.
 | [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#experimental_css_animations_for_svg_components) | [static](#static-feature-flags) |  4.1.0   |  &ndash;   |    `false`    |
 | [`USE_SYNCHRONIZABLE_FOR_MUTABLES`](#use_synchronizable_for_mutables)                               | [static](#static-feature-flags) |  4.1.0   |  &ndash;   |    `false`    |
 | [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](#use_commit_hook_only_for_react_commits)                 | [static](#static-feature-flags) |  4.2.0   |  &ndash;   |    `false`    |
+| [`VERBOSE_MODE`](#verbose_mode)                                                                     | [static](#static-feature-flags) |  4.2.0   |  &ndash;   |    `false`    |
 
 :::info
 
@@ -151,6 +152,10 @@ This feature flag is supposed to speedup shared value reads on the RN runtime by
 ### `USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`
 
 This feature flag is supposed to fix performance regressions of animations while scrolling. When enabled, `ReanimatedCommitHook` applies latest animated styles and props only for React commits, which means the logic will be skipped for other commits, including state updates.
+
+### `VERBOSE_MODE`
+
+When enabled, detailed output for diagnostic purposes will be logged to the console (Logcat for Android, Xcode Debug Console for iOS).
 
 ## Static feature flags
 
