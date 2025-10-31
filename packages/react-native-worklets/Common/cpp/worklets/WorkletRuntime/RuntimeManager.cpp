@@ -49,7 +49,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
   workletRuntime->init(std::move(jsiWorkletsModuleProxy));
 
   if (initializer) {
-    workletRuntime->runGuarded(initializer);
+    workletRuntime->runSync(initializer);
   }
 
   registerRuntime(runtimeId, workletRuntime);

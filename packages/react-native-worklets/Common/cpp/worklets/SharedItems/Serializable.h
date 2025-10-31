@@ -19,9 +19,9 @@ jsi::Function getValueUnpacker(jsi::Runtime &rt);
 jsi::Function getCallGuard(jsi::Runtime &rt);
 #endif // NDEBUG
 
-// If possible, please use `WorkletRuntime::runGuarded` instead.
+/** If possible, please use `WorkletRuntime::runSync` instead. */
 template <typename... Args>
-inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Value &function, Args &&...args) {
+inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Function &function, Args &&...args) {
   // We only use callGuard in debug mode, otherwise we call the provided
   // function directly. CallGuard provides a way of capturing exceptions in
   // JavaScript and propagating them to the main React Native thread such that
@@ -29,8 +29,14 @@ inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Value &functi
 #ifndef NDEBUG
   return getCallGuard(rt).call(rt, function, args...);
 #else
-  return function.asObject(rt).asFunction(rt).call(rt, args...);
+  return function..call(rt, args...);
 #endif // NDEBUG
+}
+
+/** If possible, please use `WorkletRuntime::runSync` instead. */
+template <typename... Args>
+inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Value &function, Args &&...args) {
+  return runOnRuntimeGuarded(rt, function.asObject(rt).asFunction(rt), std::forward<Args>(args)...);
 }
 
 inline void cleanupIfRuntimeExists(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &value) {

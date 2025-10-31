@@ -9,7 +9,7 @@ void WorkletEventHandler::process(
     const std::shared_ptr<WorkletRuntime> &workletRuntime,
     const double eventTimestamp,
     const jsi::Value &eventValue) const {
-  workletRuntime->runGuarded(handlerFunction_, jsi::Value(eventTimestamp), eventValue);
+  workletRuntime->runSync(handlerFunction_, jsi::Value(eventTimestamp), eventValue);
 }
 
 uint64_t WorkletEventHandler::getHandlerId() const {
