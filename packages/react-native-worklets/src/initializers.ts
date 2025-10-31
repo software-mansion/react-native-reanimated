@@ -3,6 +3,7 @@
 import { bundleValueUnpacker } from './bundleUnpacker';
 import { setupCallGuard } from './callGuard';
 import { registerReportFatalRemoteError } from './errors';
+import { initializeNetworking } from './Network';
 import { IS_JEST, SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { setupSetImmediate } from './runLoop/common/setImmediatePolyfill';
 import { setupSetInterval } from './runLoop/common/setIntervalPolyfill';
@@ -172,7 +173,9 @@ function initializeWorkletRuntime() {
           {
             get: function get(_target, prop) {
               globalThis.console.warn(
-                `You tried to import '${String(prop)}' from 'react-native' module on a Worklet Runtime. Using 'react-native' module on a Worklet Runtime is not allowed.`
+                `You tried to import '${String(prop)}' from 'react-native' module on a Worklet Runtime. Using 'react-native' module on a Worklet Runtime is not allowed.`,
+                // eslint-disable-next-line reanimated/use-worklets-error
+                new Error().stack
               );
               return {
                 get() {
@@ -197,6 +200,95 @@ function initializeWorkletRuntime() {
       };
 
       modules.set(ReactNativeModuleId, mod);
+
+      // @ts-expect-error type not exposed by Metro
+      const PolyfillFunctionsId = require.resolveWeak(
+        'react-native/Libraries/Utilities/PolyfillFunctions'
+      );
+
+      const polyfillFactory = function (
+        _global: unknown,
+        _$$_REQUIRE: unknown,
+        _$$_IMPORT_DEFAULT: unknown,
+        _$$_IMPORT_ALL: unknown,
+        module: Record<string, Record<string, unknown>>,
+        _exports: unknown,
+        _dependencyMap: unknown
+      ) {
+        module.exports.polyfillGlobal = (
+          name: string,
+          getValue: () => unknown
+        ) => {
+          // globalThis._log('polyfillGlobal ' + name + ' ' + getValue);
+          (globalThis as Record<string, unknown>)[name] = getValue();
+        };
+      };
+
+      const polyfillMod = {
+        dependencyMap: [],
+        factory: polyfillFactory,
+        hasError: false,
+        importedAll: {},
+        importedDefault: {},
+        isInitialized: false,
+        publicModule: {
+          exports: {},
+        },
+      };
+
+      modules.set(PolyfillFunctionsId, polyfillMod);
+
+      // @ts-expect-error type not exposed by Metro
+      const TurboModuleRegistryId = require.resolveWeak(
+        'react-native/Libraries/TurboModule/TurboModuleRegistry'
+      );
+
+      const TurboModules = new Map<string, unknown>();
+
+      // globalThis.TurboModules = new Map<string, unknown>();
+      // @ts-expect-error type not exposed by Metro
+      globalThis.TurboModules = TurboModules;
+
+      TurboModules.set('Networking', {});
+
+      const faactory = function (
+        _global: unknown,
+        _$$_REQUIRE: unknown,
+        _$$_IMPORT_DEFAULT: unknown,
+        _$$_IMPORT_ALL: unknown,
+        module: Record<string, unknown>,
+        _exports: unknown,
+        _dependencyMap: unknown
+      ) {
+        function get(name: string) {
+          globalThis._log('TurboModuleRegistry get ' + name);
+          // @ts-expect-error type not exposed by Metro
+          return globalThis.TurboModules.get(name);
+        }
+        function getEnforcing(name: string) {
+          globalThis._log('TurboModuleRegistry getEnforcing ' + name);
+          // @ts-expect-error type not exposed by Metro
+          return globalThis.TurboModules.get(name);
+        }
+        // @ts-expect-error type not exposed by Metro
+        module.exports.get = get;
+        // @ts-expect-error type not exposed by Metro
+        module.exports.getEnforcing = getEnforcing;
+      };
+
+      const mood = {
+        dependencyMap: [],
+        factory: faactory,
+        hasError: false,
+        importedAll: {},
+        importedDefault: {},
+        isInitialized: false,
+        publicModule: {
+          exports: {},
+        },
+      };
+
+      modules.set(TurboModuleRegistryId, mood);
     }
   }
 }
@@ -259,4 +351,8 @@ function installRNBindingsOnUIRuntime() {
     setupSetImmediate();
     setupSetInterval();
   })();
+
+  if (globalThis._WORKLETS_BUNDLE_MODE) {
+    executeOnUIRuntimeSync(initializeNetworking)();
+  }
 }

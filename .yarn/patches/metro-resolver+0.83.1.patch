@@ -1,0 +1,160 @@
+diff --git a/src/PackageExportsResolve.js b/src/PackageExportsResolve.js
+index 6768e1a..8ac0edc 100644
+--- a/src/PackageExportsResolve.js
++++ b/src/PackageExportsResolve.js
+@@ -17,7 +17,11 @@ var _matchSubpathFromExportsLike = require("./utils/matchSubpathFromExportsLike"
+ var _toPosixPath = _interopRequireDefault(require("./utils/toPosixPath"));
+ var _path = _interopRequireDefault(require("path"));
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ function resolvePackageTargetFromExports(
+   context,
+diff --git a/src/PackageImportsResolve.js b/src/PackageImportsResolve.js
+index a9ae6b0..1cbff36 100644
+--- a/src/PackageImportsResolve.js
++++ b/src/PackageImportsResolve.js
+@@ -16,7 +16,11 @@ var _isSubpathDefinedInExportsLike = require("./utils/isSubpathDefinedInExportsL
+ var _matchSubpathFromExportsLike = require("./utils/matchSubpathFromExportsLike");
+ var _path = _interopRequireDefault(require("path"));
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ function resolvePackageTargetFromImports(
+   context,
+diff --git a/src/PackageResolve.js b/src/PackageResolve.js
+index 6e12170..df6bb8d 100644
+--- a/src/PackageResolve.js
++++ b/src/PackageResolve.js
+@@ -8,7 +8,11 @@ exports.redirectModulePath = redirectModulePath;
+ var _toPosixPath = _interopRequireDefault(require("./utils/toPosixPath"));
+ var _path = _interopRequireDefault(require("path"));
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ function getPackageEntryPoint(context, packageInfo, platform) {
+   const { mainFields } = context;
+diff --git a/src/resolve.js b/src/resolve.js
+index e8e62a8..0cf0f61 100644
+--- a/src/resolve.js
++++ b/src/resolve.js
+@@ -28,7 +28,11 @@ var _resolveAsset = _interopRequireDefault(require("./resolveAsset"));
+ var _isAssetFile = _interopRequireDefault(require("./utils/isAssetFile"));
+ var _path = _interopRequireDefault(require("path"));
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ function resolve(context, moduleName, platform) {
+   const resolveRequest = context.resolveRequest;
+@@ -42,6 +46,17 @@ function resolve(context, moduleName, platform) {
+       platform
+     );
+   }
++  if (
++    context.dependency?.data.isVirtualModule &&
++    context.dependency?.data.absolutePath &&
++    context.dependency?.data.type
++  ) {
++    return {
++      type: context.dependency.data.type,
++      filePath: context.dependency.data.absolutePath,
++      isVirtualModule: true,
++    };
++  }
+   if (isRelativeImport(moduleName) || _path.default.isAbsolute(moduleName)) {
+     const result = resolveModulePath(context, moduleName, platform);
+     if (result.type === "failed") {
+diff --git a/src/resolve.js.flow b/src/resolve.js.flow
+index 7a865db..760ca13 100644
+--- a/src/resolve.js.flow
++++ b/src/resolve.js.flow
+@@ -60,6 +60,18 @@ function resolve(
+     );
+   }
+ 
++  if (
++    context.dependency?.data.isVirtualModule &&
++    context.dependency?.data.absolutePath &&
++    context.dependency?.data.type
++  ) {
++    return {
++      type: context.dependency.data.type,
++      filePath: context.dependency.data.absolutePath,
++      isVirtualModule: true,
++    };
++  }
++
+   if (isRelativeImport(moduleName) || path.isAbsolute(moduleName)) {
+     const result = resolveModulePath(context, moduleName, platform);
+     if (result.type === 'failed') {
+diff --git a/src/resolveAsset.js b/src/resolveAsset.js
+index dbfe658..05857cf 100644
+--- a/src/resolveAsset.js
++++ b/src/resolveAsset.js
+@@ -6,7 +6,11 @@ Object.defineProperty(exports, "__esModule", {
+ exports.default = resolveAsset;
+ var _path = _interopRequireDefault(require("path"));
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ function resolveAsset(context, filePath) {
+   const dirPath = _path.default.dirname(filePath);
+diff --git a/src/utils/isAssetFile.js b/src/utils/isAssetFile.js
+index eb7b36c..9d3fa03 100644
+--- a/src/utils/isAssetFile.js
++++ b/src/utils/isAssetFile.js
+@@ -6,7 +6,11 @@ Object.defineProperty(exports, "__esModule", {
+ exports.default = isAssetFile;
+ var _path = _interopRequireDefault(require("path"));
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ function isAssetFile(filePath, assetExts) {
+   const baseName = _path.default.basename(filePath);
+diff --git a/src/utils/toPosixPath.js b/src/utils/toPosixPath.js
+index b7668ec..1e32304 100644
+--- a/src/utils/toPosixPath.js
++++ b/src/utils/toPosixPath.js
+@@ -6,7 +6,11 @@ Object.defineProperty(exports, "__esModule", {
+ exports.default = toPosixPath;
+ var _path = _interopRequireDefault(require("path"));
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ const MATCH_NON_POSIX_PATH_SEPS = new RegExp(
+   "\\" + _path.default.win32.sep,

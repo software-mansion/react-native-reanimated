@@ -1,0 +1,82 @@
+diff --git a/src/modules/HMRClient.js b/src/modules/HMRClient.js
+index 3e2652d..64abb1a 100644
+--- a/src/modules/HMRClient.js
++++ b/src/modules/HMRClient.js
+@@ -8,9 +8,12 @@ const inject = ({ module: [id, code], sourceURL }) => {
+     eval(code);
+   }
+ };
++const HMRClientOnUpdate = global.HMRClientOnUpdate;
+ const injectUpdate = (update) => {
+-  update.added.forEach(inject);
+-  update.modified.forEach(inject);
++  HMRClientOnUpdate.forEach((callback) => {
++    update.added.forEach(callback);
++    update.modified.forEach(callback);
++  });
+ };
+ class HMRClient extends EventEmitter {
+   _isEnabled = false;
+@@ -19,6 +22,7 @@ class HMRClient extends EventEmitter {
+   _state = "opening";
+   constructor(url) {
+     super();
++    HMRClientOnUpdate.push(inject);
+     this._ws = new global.WebSocket(url);
+     this._ws.onopen = () => {
+       this._state = "open";
+diff --git a/src/modules/HMRClient.js.flow b/src/modules/HMRClient.js.flow
+index 0ad4c2b..d193d2a 100644
+--- a/src/modules/HMRClient.js.flow
++++ b/src/modules/HMRClient.js.flow
+@@ -28,9 +28,15 @@ const inject = ({module: [id, code], sourceURL}: HmrModule) => {
+   }
+ };
+ 
++const HMRClientOnUpdate = global.HMRClientOnUpdate as Array<
++  (update: HmrModule) => void,
++>;
++
+ const injectUpdate = (update: HmrUpdate) => {
+-  update.added.forEach(inject);
+-  update.modified.forEach(inject);
++  HMRClientOnUpdate.forEach(callback => {
++    update.added.forEach(callback);
++    update.modified.forEach(callback);
++  });
+ };
+ 
+ class HMRClient extends EventEmitter {
+@@ -43,6 +49,8 @@ class HMRClient extends EventEmitter {
+   constructor(url: string) {
+     super();
+ 
++    HMRClientOnUpdate.push(inject);
++
+     // Access the global WebSocket object only after enabling the client,
+     // since some polyfills do the initialization lazily.
+     this._ws = new global.WebSocket(url);
+diff --git a/src/polyfills/require.js b/src/polyfills/require.js
+index b924d42..73ba2d6 100644
+--- a/src/polyfills/require.js
++++ b/src/polyfills/require.js
+@@ -9,6 +9,7 @@ const EMPTY = {};
+ const CYCLE_DETECTED = {};
+ const { hasOwnProperty } = {};
+ if (__DEV__) {
++  global.HMRClientOnUpdate = [];
+   global.$RefreshReg$ = global.$RefreshReg$ ?? (() => {});
+   global.$RefreshSig$ = global.$RefreshSig$ ?? (() => (type) => type);
+ }
+diff --git a/src/polyfills/require.js.flow b/src/polyfills/require.js.flow
+index 5a29396..1a421ee 100644
+--- a/src/polyfills/require.js.flow
++++ b/src/polyfills/require.js.flow
+@@ -94,6 +94,7 @@ const CYCLE_DETECTED = {};
+ const {hasOwnProperty} = {};
+ 
+ if (__DEV__) {
++  global.HMRClientOnUpdate = [];
+   global.$RefreshReg$ = global.$RefreshReg$ ?? (() => {});
+   global.$RefreshSig$ = global.$RefreshSig$ ?? (() => type => type);
+ }

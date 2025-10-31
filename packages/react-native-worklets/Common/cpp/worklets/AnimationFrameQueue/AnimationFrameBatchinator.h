@@ -22,7 +22,7 @@ class AnimationFrameBatchinator
   AnimationFrameBatchinator(
       facebook::jsi::Runtime &uiRuntime,
       std::function<void(std::function<void(const double)>)>
-          &&forwardedRequestAnimationFrame);
+          forwardedRequestAnimationFrame);
 
  private:
   void flush();

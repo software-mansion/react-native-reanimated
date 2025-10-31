@@ -2,6 +2,7 @@
 
 import { setupCallGuard } from './callGuard';
 import { getMemorySafeCapturableConsole, setupConsole } from './initializers';
+import { initializeNetworking } from './Network';
 import { SHOULD_BE_USE_WEB } from './PlatformChecker';
 import { setupRunLoop } from './runLoop/workletRuntime';
 import { RuntimeKind } from './runtimeKind';
@@ -80,7 +81,7 @@ export function createWorkletRuntime(
     );
   }
 
-  return WorkletsModule.createWorkletRuntime(
+  const workletRuntime = WorkletsModule.createWorkletRuntime(
     name,
     createSerializable(() => {
       'worklet';
@@ -96,6 +97,24 @@ export function createWorkletRuntime(
     customQueue,
     enableEventLoop
   );
+
+  // runOnRuntime(workletRuntime, () => {
+  //   'worklet';
+  //   setupMicrotasks();
+  //   setupRequestAnimationFrame();
+  //   setupSetTimeout();
+  //   setupSetImmediate();
+  //   setupSetInterval();
+  // })();
+
+  runOnRuntime(workletRuntime, initializeNetworking)();
+
+  // runOnRuntime(workletRuntime, () => {
+  //   'worklet';
+  //   initializerFn?.();
+  // })();
+
+  return workletRuntime;
 }
 
 /** @deprecated Use `scheduleOnRuntime` instead. */
@@ -111,6 +130,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => void {
   'worklet';
   if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
+    // console.log('wolekt', worklet);
     throw new WorkletsError(
       'The function passed to `runOnRuntime` is not a worklet.'
     );

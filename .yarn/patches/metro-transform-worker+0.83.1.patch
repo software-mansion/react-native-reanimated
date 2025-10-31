@@ -1,0 +1,112 @@
+diff --git a/src/__mocks__/index.js b/src/__mocks__/index.js
+new file mode 100644
+index 0000000..d33a434
+--- /dev/null
++++ b/src/__mocks__/index.js
+@@ -0,0 +1,5 @@
++"use strict";
++
++module.exports = function (data, callback) {
++  callback(null, {});
++};
+diff --git a/src/index.js b/src/index.js
+index ed83e3e..bd1d131 100644
+--- a/src/index.js
++++ b/src/index.js
+@@ -1,5 +1,6 @@
+ "use strict";
+ 
++var _FutureModules = require("metro/private/DeltaBundler/FutureModules");
+ const getMinifier = require("./utils/getMinifier");
+ const { transformFromAstSync } = require("@babel/core");
+ const generate = require("@babel/generator").default;
+@@ -200,6 +201,7 @@ async function transformJS(file, { config, options, projectRoot }) {
+           importDeclarationLocs != null
+             ? (loc) => importDeclarationLocs.has(locToKey(loc))
+             : null,
++        virtualModules: file.virtualModules,
+       };
+       ({ ast, dependencies, dependencyMapName } = collectDependencies(
+         ast,
+@@ -287,9 +289,11 @@ async function transformJS(file, { config, options, projectRoot }) {
+       type: file.type,
+     },
+   ];
++  const { virtualModules } = file;
+   return {
+     dependencies,
+     output,
++    virtualModules,
+   };
+ }
+ async function transformAsset(file, context) {
+@@ -326,6 +330,9 @@ async function transformJSWithBabel(file, context) {
+       null,
+     unstable_importDeclarationLocs:
+       transformResult.metadata?.metro?.unstable_importDeclarationLocs,
++    virtualModules: new _FutureModules.VirtualModules(
++      transformResult.metadata?.metro?.virtualModules
++    ),
+   };
+   return await transformJS(jsFile, context);
+ }
+diff --git a/src/index.js.flow b/src/index.js.flow
+index d092c94..2e5578b 100644
+--- a/src/index.js.flow
++++ b/src/index.js.flow
+@@ -60,6 +60,7 @@ const {
+ } = require('metro/private/ModuleGraph/worker/importLocationsPlugin');
+ const JsFileWrapping = require('metro/private/ModuleGraph/worker/JsFileWrapping');
+ const nullthrows = require('nullthrows');
++import {VirtualModules} from 'metro/private/DeltaBundler/FutureModules';
+ 
+ type MinifierConfig = $ReadOnly<{[string]: mixed, ...}>;
+ 
+@@ -154,6 +155,7 @@ type JSFile = $ReadOnly<{
+   type: JSFileType,
+   functionMap: FBSourceFunctionMap | null,
+   unstable_importDeclarationLocs?: ?$ReadOnlySet<string>,
++  virtualModules?: ?VirtualModules,
+ }>;
+ 
+ type JSONFile = {
+@@ -180,6 +182,7 @@ export type JsOutput = $ReadOnly<{
+ type TransformResponse = $ReadOnly<{
+   dependencies: $ReadOnlyArray<TransformResultDependency>,
+   output: $ReadOnlyArray<JsOutput>,
++  virtualModules?: ?VirtualModules,
+ }>;
+ 
+ function getDynamicDepsBehavior(
+@@ -408,6 +411,7 @@ async function transformJS(
+             ? (loc: BabelSourceLocation) =>
+                 importDeclarationLocs.has(locToKey(loc))
+             : null,
++        virtualModules: file.virtualModules,
+       };
+       ({ast, dependencies, dependencyMapName} = collectDependencies(ast, opts));
+     } catch (error) {
+@@ -504,9 +508,12 @@ async function transformJS(
+     },
+   ];
+ 
++  const {virtualModules} = file;
++
+   return {
+     dependencies,
+     output,
++    virtualModules,
+   };
+ }
+ 
+@@ -567,6 +574,10 @@ async function transformJSWithBabel(
+       null,
+     unstable_importDeclarationLocs:
+       transformResult.metadata?.metro?.unstable_importDeclarationLocs,
++    virtualModules: new VirtualModules(
++      // TODO: use raw map here
++      transformResult.metadata?.metro?.virtualModules,
++    ),
+   };
+ 
+   return await transformJS(jsFile, context);

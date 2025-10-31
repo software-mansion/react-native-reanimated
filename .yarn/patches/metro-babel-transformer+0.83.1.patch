@@ -1,0 +1,25 @@
+diff --git a/src/index.js.flow b/src/index.js.flow
+index 47e7afa..bff9bfe 100644
+--- a/src/index.js.flow
++++ b/src/index.js.flow
+@@ -58,11 +58,20 @@ export type BabelFileFunctionMapMetadata = $ReadOnly<{
+ 
+ export type BabelFileImportLocsMetadata = $ReadOnlySet<string>;
+ 
++export type VirtualModule = $ReadOnly<{
++  absolutePath: string,
++  code: string,
++  type: 'sourceFile',
++}>;
++
++export type VirtualModulesRawMap = Map<string, VirtualModule>;
++
+ export type MetroBabelFileMetadata = {
+   ...BabelFileMetadata,
+   metro?: ?{
+     functionMap?: ?BabelFileFunctionMapMetadata,
+     unstable_importDeclarationLocs?: ?BabelFileImportLocsMetadata,
++    virtualModulesRawMap?: VirtualModulesRawMap,
+     ...
+   },
+   ...

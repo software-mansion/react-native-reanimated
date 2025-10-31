@@ -1,0 +1,1767 @@
+diff --git a/src/Bundler.js b/src/Bundler.js
+index 75f41f7..d6906e4 100644
+--- a/src/Bundler.js
++++ b/src/Bundler.js
+@@ -12,8 +12,8 @@ class Bundler {
+           type: "transformer_load_started",
+         });
+         this._transformer = new Transformer(config, {
+-          getOrComputeSha1: (filePath) =>
+-            this._depGraph.getOrComputeSha1(filePath),
++          getOrComputeSha1: (filePath, virtualModule) =>
++            this._depGraph.getOrComputeSha1(filePath, virtualModule),
+         });
+         config.reporter.update({
+           type: "transformer_load_done",
+@@ -39,12 +39,13 @@ class Bundler {
+     await this.ready();
+     return this._depGraph;
+   }
+-  async transformFile(filePath, transformOptions, fileBuffer) {
++  async transformFile(filePath, transformOptions, fileBuffer, virtualModules) {
+     await this.ready();
+     return this._transformer.transformFile(
+       filePath,
+       transformOptions,
+-      fileBuffer
++      fileBuffer,
++      virtualModules
+     );
+   }
+   async ready() {
+diff --git a/src/Bundler.js.flow b/src/Bundler.js.flow
+index ee38774..c2a0ade 100644
+--- a/src/Bundler.js.flow
++++ b/src/Bundler.js.flow
+@@ -12,6 +12,7 @@
+ 'use strict';
+ 
+ import type {TransformResultWithSource} from './DeltaBundler';
++import type {VirtualModules} from './DeltaBundler/FutureModules';
+ import type {TransformOptions} from './DeltaBundler/Worker';
+ import type EventEmitter from 'events';
+ import type {ConfigT} from 'metro-config';
+@@ -37,8 +38,10 @@ class Bundler {
+       .then(() => {
+         config.reporter.update({type: 'transformer_load_started'});
+         this._transformer = new Transformer(config, {
+-          getOrComputeSha1: filePath =>
+-            this._depGraph.getOrComputeSha1(filePath),
++          getOrComputeSha1: (
++            filePath: string,
++            virtualModule?: ?VirtualModules,
++          ) => this._depGraph.getOrComputeSha1(filePath, virtualModule),
+         });
+         config.reporter.update({type: 'transformer_load_done'});
+       })
+@@ -73,6 +76,7 @@ class Bundler {
+     transformOptions: TransformOptions,
+     /** Optionally provide the file contents, this can be used to provide virtual contents for a file. */
+     fileBuffer?: Buffer,
++    virtualModules?: ?VirtualModules,
+   ): Promise<TransformResultWithSource<>> {
+     // We need to be sure that the DependencyGraph has been initialized.
+     // TODO: Remove this ugly hack!
+@@ -82,6 +86,7 @@ class Bundler {
+       filePath,
+       transformOptions,
+       fileBuffer,
++      virtualModules,
+     );
+   }
+ 
+diff --git a/src/DeltaBundler.js b/src/DeltaBundler.js
+index ebfc9d3..31a838e 100644
+--- a/src/DeltaBundler.js
++++ b/src/DeltaBundler.js
+@@ -1,10 +1,12 @@
+ "use strict";
+ 
++var _FutureModules = require("./DeltaBundler/FutureModules");
+ const DeltaCalculator = require("./DeltaBundler/DeltaCalculator");
+ class DeltaBundler {
+   _deltaCalculators = new Map();
+   constructor(changeEventSource) {
+     this._changeEventSource = changeEventSource;
++    this._virtualModules = new _FutureModules.VirtualModules();
+   }
+   end() {
+     this._deltaCalculators.forEach((deltaCalculator) => deltaCalculator.end());
+@@ -21,6 +23,11 @@ class DeltaBundler {
+       shallow: options.shallow,
+     });
+     const graph = deltaCalculator.getGraph();
++    this._virtualModules.addRawMap(graph.virtualModules.toRawMap());
++    graph.dependencies.forEach((value, key) => {
++      value.isVirtualModule = graph.virtualModules.get(key) != null;
++      value.sourceURL = graph.virtualModules.get(key)?.sourceURL;
++    });
+     deltaCalculator.end();
+     return graph.dependencies;
+   }
+diff --git a/src/DeltaBundler.js.flow b/src/DeltaBundler.js.flow
+index 4b6cbc0..36cb9c3 100644
+--- a/src/DeltaBundler.js.flow
++++ b/src/DeltaBundler.js.flow
+@@ -22,6 +22,7 @@ import type {
+ import type EventEmitter from 'events';
+ 
+ const DeltaCalculator = require('./DeltaBundler/DeltaCalculator');
++import {VirtualModules} from './DeltaBundler/FutureModules';
+ 
+ export type {
+   DeltaResult,
+@@ -45,9 +46,11 @@ export type {
+ class DeltaBundler<T = MixedOutput> {
+   _changeEventSource: EventEmitter;
+   _deltaCalculators: Map<Graph<T>, DeltaCalculator<T>> = new Map();
++  _virtualModules: VirtualModules;
+ 
+   constructor(changeEventSource: EventEmitter) {
+     this._changeEventSource = changeEventSource;
++    this._virtualModules = new VirtualModules();
+   }
+ 
+   end(): void {
+@@ -70,6 +73,13 @@ class DeltaBundler<T = MixedOutput> {
+     await deltaCalculator.getDelta({reset: true, shallow: options.shallow});
+     const graph = deltaCalculator.getGraph();
+ 
++    this._virtualModules.addRawMap(graph.virtualModules.toRawMap());
++
++    graph.dependencies.forEach((value, key) => {
++      value.isVirtualModule = graph.virtualModules.get(key) != null;
++      value.sourceURL = graph.virtualModules.get(key)?.sourceURL;
++    });
++
+     deltaCalculator.end();
+     return graph.dependencies;
+   }
+diff --git a/src/DeltaBundler/DeltaCalculator.js b/src/DeltaBundler/DeltaCalculator.js
+index 9f7f3cb..80dbef9 100644
+--- a/src/DeltaBundler/DeltaCalculator.js
++++ b/src/DeltaBundler/DeltaCalculator.js
+@@ -3,7 +3,11 @@
+ var _Graph = require("./Graph");
+ var _path = _interopRequireDefault(require("path"));
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ const debug = require("debug")("Metro:DeltaCalculator");
+ const { EventEmitter } = require("events");
+diff --git a/src/DeltaBundler/FutureModules.js b/src/DeltaBundler/FutureModules.js
+new file mode 100644
+index 0000000..973026f
+--- /dev/null
++++ b/src/DeltaBundler/FutureModules.js
+@@ -0,0 +1,34 @@
++"use strict";
++
++Object.defineProperty(exports, "__esModule", {
++  value: true,
++});
++exports.VirtualModules = void 0;
++class VirtualModules {
++  #map_;
++  constructor(initialMap) {
++    this.#map_ = new Map(initialMap ?? []);
++  }
++  toRawMap() {
++    return this.#map_;
++  }
++  addRawMap(other) {
++    other?.forEach((value, key) => this.#map_.set(key, value));
++  }
++  get(mixedPath) {
++    if (this.#map_.has(mixedPath)) {
++      return this.#map_.get(mixedPath);
++    }
++    const key = this.#map_
++      .keys()
++      .find((relativePath) => mixedPath.endsWith(relativePath));
++    if (key == null) {
++      return null;
++    }
++    return this.#map_.get(key);
++  }
++  set(relativePath, vModule) {
++    this.#map_.set(relativePath, vModule);
++  }
++}
++exports.VirtualModules = VirtualModules;
+diff --git a/src/DeltaBundler/FutureModules.js.flow b/src/DeltaBundler/FutureModules.js.flow
+new file mode 100644
+index 0000000..baa0ce9
+--- /dev/null
++++ b/src/DeltaBundler/FutureModules.js.flow
+@@ -0,0 +1,48 @@
++/**
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ *
++ * @flow strict-local
++ * @format
++ * @oncall react_native
++ */
++
++import type {VirtualModule, VirtualModulesRawMap} from './types';
++
++export class VirtualModules {
++  #map_: VirtualModulesRawMap;
++
++  constructor(initialMap?: ?VirtualModulesRawMap) {
++    this.#map_ = new Map(initialMap ?? []);
++  }
++
++  toRawMap(): VirtualModulesRawMap {
++    return this.#map_;
++  }
++
++  addRawMap(other: ?VirtualModulesRawMap) {
++    other?.forEach((value, key) => this.#map_.set(key, value));
++  }
++
++  get(mixedPath: string): ?VirtualModule {
++    if (this.#map_.has(mixedPath)) {
++      return this.#map_.get(mixedPath);
++    }
++
++    const key = this.#map_
++      .keys()
++      .find(relativePath => mixedPath.endsWith(relativePath));
++
++    if (key == null) {
++      return null;
++    }
++
++    return this.#map_.get(key);
++  }
++
++  set(relativePath: string, vModule: VirtualModule): void {
++    this.#map_.set(relativePath, vModule);
++  }
++}
+diff --git a/src/DeltaBundler/Graph.js b/src/DeltaBundler/Graph.js
+index 577f799..18d1d56 100644
+--- a/src/DeltaBundler/Graph.js
++++ b/src/DeltaBundler/Graph.js
+@@ -8,8 +8,13 @@ var _contextModule = require("../lib/contextModule");
+ var _CountingSet = _interopRequireDefault(require("../lib/CountingSet"));
+ var _isResolvedDependency = require("../lib/isResolvedDependency");
+ var _buildSubgraph = require("./buildSubgraph");
++var _FutureModules = require("./FutureModules");
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ const invariant = require("invariant");
+ const nullthrows = require("nullthrows");
+@@ -31,6 +36,7 @@ function isWeakOrLazy(dependency, options) {
+ }
+ class Graph {
+   dependencies = new Map();
++  virtualModules = new _FutureModules.VirtualModules();
+   #importBundleNodes = new Map();
+   #gc = {
+     color: new Map(),
+@@ -160,9 +166,13 @@ class Graph {
+       this.#resolvedContexts,
+       {
+         resolve: options.resolve,
+-        transform: async (absolutePath, requireContext) => {
++        transform: async (absolutePath, requireContext, virtualModules) => {
+           options.onDependencyAdd();
+-          const result = await options.transform(absolutePath, requireContext);
++          const result = await options.transform(
++            absolutePath,
++            requireContext,
++            virtualModules
++          );
+           options.onDependencyAdded();
+           return result;
+         },
+@@ -172,7 +182,8 @@ class Graph {
+           }
+           return moduleFilter == null || moduleFilter(dependency.absolutePath);
+         },
+-      }
++      },
++      this.virtualModules
+     );
+     return {
+       added: new Set(),
+diff --git a/src/DeltaBundler/Graph.js.flow b/src/DeltaBundler/Graph.js.flow
+index 07e7c9f..399c3e0 100644
+--- a/src/DeltaBundler/Graph.js.flow
++++ b/src/DeltaBundler/Graph.js.flow
+@@ -47,6 +47,7 @@ import {fileMatchesContext} from '../lib/contextModule';
+ import CountingSet from '../lib/CountingSet';
+ import {isResolvedDependency} from '../lib/isResolvedDependency';
+ import {buildSubgraph} from './buildSubgraph';
++import {VirtualModules} from './FutureModules';
+ 
+ const invariant = require('invariant');
+ const nullthrows = require('nullthrows');
+@@ -134,6 +135,7 @@ export class Graph<T = MixedOutput> {
+   +entryPoints: $ReadOnlySet<string>;
+   +transformOptions: TransformInputOptions;
+   +dependencies: Dependencies<T> = new Map();
++  +virtualModules: VirtualModules = new VirtualModules();
+   +#importBundleNodes: Map<
+     string,
+     $ReadOnly<{
+@@ -349,21 +351,30 @@ export class Graph<T = MixedOutput> {
+     options: InternalOptions<T>,
+     moduleFilter?: (path: string) => boolean,
+   ): Promise<Delta<T>> {
+-    const subGraph = await buildSubgraph(pathsToVisit, this.#resolvedContexts, {
+-      resolve: options.resolve,
+-      transform: async (absolutePath, requireContext) => {
+-        options.onDependencyAdd();
+-        const result = await options.transform(absolutePath, requireContext);
+-        options.onDependencyAdded();
+-        return result;
+-      },
+-      shouldTraverse: (dependency: ResolvedDependency) => {
+-        if (options.shallow || isWeakOrLazy(dependency, options)) {
+-          return false;
+-        }
+-        return moduleFilter == null || moduleFilter(dependency.absolutePath);
++    const subGraph = await buildSubgraph(
++      pathsToVisit,
++      this.#resolvedContexts,
++      {
++        resolve: options.resolve,
++        transform: async (absolutePath, requireContext, virtualModules) => {
++          options.onDependencyAdd();
++          const result = await options.transform(
++            absolutePath,
++            requireContext,
++            virtualModules,
++          );
++          options.onDependencyAdded();
++          return result;
++        },
++        shouldTraverse: (dependency: ResolvedDependency) => {
++          if (options.shallow || isWeakOrLazy(dependency, options)) {
++            return false;
++          }
++          return moduleFilter == null || moduleFilter(dependency.absolutePath);
++        },
+       },
+-    });
++      this.virtualModules,
++    );
+ 
+     return {
+       added: new Set(),
+diff --git a/src/DeltaBundler/Serializers/helpers/getSourceMapInfo.js b/src/DeltaBundler/Serializers/helpers/getSourceMapInfo.js
+index 46e948a..f067183 100644
+--- a/src/DeltaBundler/Serializers/helpers/getSourceMapInfo.js
++++ b/src/DeltaBundler/Serializers/helpers/getSourceMapInfo.js
+@@ -2,11 +2,16 @@
+ 
+ const { getJsOutput } = require("./js");
+ function getSourceMapInfo(module, options) {
++  const source = options.excludeSource
++    ? ""
++    : module.isVirtualModule === true
++    ? module.sourceURL
++    : getModuleSource(module);
+   return {
+     ...getJsOutput(module).data,
+     isIgnored: options.shouldAddToIgnoreList(module),
+     path: options?.getSourceUrl?.(module) ?? module.path,
+-    source: options.excludeSource ? "" : getModuleSource(module),
++    source,
+   };
+ }
+ function getModuleSource(module) {
+diff --git a/src/DeltaBundler/Serializers/helpers/getSourceMapInfo.js.flow b/src/DeltaBundler/Serializers/helpers/getSourceMapInfo.js.flow
+index 8f1b1f1..8c711dc 100644
+--- a/src/DeltaBundler/Serializers/helpers/getSourceMapInfo.js.flow
++++ b/src/DeltaBundler/Serializers/helpers/getSourceMapInfo.js.flow
+@@ -35,11 +35,14 @@ function getSourceMapInfo(
+   +lineCount: number,
+   +isIgnored: boolean,
+ } {
++
++  const source = options.excludeSource ? '' : module.isVirtualModule === true ? module.sourceURL : getModuleSource(module);
++
+   return {
+     ...getJsOutput(module).data,
+     isIgnored: options.shouldAddToIgnoreList(module),
+     path: options?.getSourceUrl?.(module) ?? module.path,
+-    source: options.excludeSource ? '' : getModuleSource(module),
++    source
+   };
+ }
+ 
+diff --git a/src/DeltaBundler/Transformer.js b/src/DeltaBundler/Transformer.js
+index d487d9f..a6f8c12 100644
+--- a/src/DeltaBundler/Transformer.js
++++ b/src/DeltaBundler/Transformer.js
+@@ -2,7 +2,11 @@
+ 
+ var _crypto = _interopRequireDefault(require("crypto"));
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ const getTransformCacheKey = require("./getTransformCacheKey");
+ const WorkerFarm = require("./WorkerFarm");
+@@ -39,7 +43,12 @@ class Transformer {
+     this._baseHash = baseHashBuffer.toString("binary");
+     debug("Base hash: %s", baseHashBuffer.toString("hex"));
+   }
+-  async transformFile(filePath, transformerOptions, fileBuffer) {
++  async transformFile(
++    filePath,
++    transformerOptions,
++    fileBuffer,
++    virtualModules
++  ) {
+     const cache = this._cache;
+     const {
+       customTransformOptions,
+@@ -93,7 +102,7 @@ class Transformer {
+         .digest("hex");
+       content = fileBuffer;
+     } else {
+-      const result = await this._getSha1(filePath);
++      const result = await this._getSha1(filePath, virtualModules);
+       sha1 = result.sha1;
+       if (result.content) {
+         content = result.content;
+@@ -118,7 +127,8 @@ class Transformer {
+       : await this._workerFarm.transform(
+           localPath,
+           transformerOptions,
+-          content
++          content,
++          virtualModules
+         );
+     if (sha1 !== data.sha1) {
+       fullKey = Buffer.concat([partialKey, Buffer.from(data.sha1, "hex")]);
+diff --git a/src/DeltaBundler/Transformer.js.flow b/src/DeltaBundler/Transformer.js.flow
+index dc4c73b..dbab422 100644
+--- a/src/DeltaBundler/Transformer.js.flow
++++ b/src/DeltaBundler/Transformer.js.flow
+@@ -12,6 +12,7 @@
+ 'use strict';
+ 
+ import type {TransformResult, TransformResultWithSource} from '../DeltaBundler';
++import type {VirtualModules} from './FutureModules';
+ import type {TransformerConfig, TransformOptions} from './Worker';
+ import type {ConfigT} from 'metro-config';
+ 
+@@ -25,9 +26,10 @@ const fs = require('fs');
+ const {Cache, stableHash} = require('metro-cache');
+ const path = require('path');
+ 
+-type GetOrComputeSha1Fn = string => Promise<
+-  $ReadOnly<{content?: Buffer, sha1: string}>,
+->;
++type GetOrComputeSha1Fn = (
++  path: string,
++  virtualModules?: ?VirtualModules,
++) => Promise<$ReadOnly<{content?: Buffer, sha1: string}>>;
+ 
+ class Transformer {
+   _config: ConfigT;
+@@ -80,6 +82,7 @@ class Transformer {
+     filePath: string,
+     transformerOptions: TransformOptions,
+     fileBuffer?: Buffer,
++    virtualModules?: ?VirtualModules,
+   ): Promise<TransformResultWithSource<>> {
+     const cache = this._cache;
+ 
+@@ -144,7 +147,7 @@ class Transformer {
+       sha1 = crypto.createHash('sha1').update(fileBuffer).digest('hex');
+       content = fileBuffer;
+     } else {
+-      const result = await this._getSha1(filePath);
++      const result = await this._getSha1(filePath, virtualModules);
+       sha1 = result.sha1;
+       if (result.content) {
+         content = result.content;
+@@ -174,6 +177,7 @@ class Transformer {
+           localPath,
+           transformerOptions,
+           content,
++          virtualModules,
+         );
+ 
+     // Only re-compute the full key if the SHA-1 changed. This is because
+diff --git a/src/DeltaBundler/Worker.flow.js b/src/DeltaBundler/Worker.flow.js
+index 25df3ad..d038583 100644
+--- a/src/DeltaBundler/Worker.flow.js
++++ b/src/DeltaBundler/Worker.flow.js
+@@ -1,5 +1,6 @@
+ "use strict";
+ 
++var _FutureModules = require("./FutureModules");
+ const traverse = require("@babel/traverse").default;
+ const crypto = require("crypto");
+ const fs = require("fs");
+@@ -21,7 +22,8 @@ async function transform(
+   transformOptions,
+   projectRoot,
+   transformerConfig,
+-  fileBuffer
++  fileBuffer,
++  virtualModulesRawMap
+ ) {
+   let data;
+   const fileBufferObject = asDeserializedBuffer(fileBuffer);
+@@ -30,12 +32,16 @@ async function transform(
+   } else {
+     data = fs.readFileSync(path.resolve(projectRoot, filename));
+   }
++  const virtualModules = new _FutureModules.VirtualModules(
++    virtualModulesRawMap
++  );
+   return transformFile(
+     filename,
+     data,
+     transformOptions,
+     projectRoot,
+-    transformerConfig
++    transformerConfig,
++    virtualModules
+   );
+ }
+ async function transformFile(
+@@ -43,7 +49,8 @@ async function transformFile(
+   data,
+   transformOptions,
+   projectRoot,
+-  transformerConfig
++  transformerConfig,
++  virtualModules
+ ) {
+   const Transformer = require.call(null, transformerConfig.transformerPath);
+   const transformFileStartLogEntry = {
+@@ -61,11 +68,23 @@ async function transformFile(
+     data,
+     transformOptions
+   );
++  for (const dependency of result.dependencies) {
++    const { name, data: dependencyData } = dependency;
++    const virtualModule = virtualModules?.get(name);
++    if (virtualModule != null) {
++      dependencyData.isVirtualModule = true;
++      dependencyData.absolutePath = virtualModule.absolutePath;
++      dependencyData.code = virtualModule.code;
++      dependencyData.type = virtualModule.type;
++      dependencyData.sourceURL = virtualModule.sourceURL;
++    }
++  }
+   traverse.cache.clear();
+   const transformFileEndLogEntry = getEndLogEntry(
+     transformFileStartLogEntry,
+     filename
+   );
++  result.virtualModulesRawMap = result.virtualModules?.toRawMap();
+   return {
+     result,
+     sha1,
+diff --git a/src/DeltaBundler/Worker.flow.js.flow b/src/DeltaBundler/Worker.flow.js.flow
+index 9a2de0a..db12ea7 100644
+--- a/src/DeltaBundler/Worker.flow.js.flow
++++ b/src/DeltaBundler/Worker.flow.js.flow
+@@ -11,12 +11,13 @@
+ 
+ 'use strict';
+ 
+-import type {TransformResult} from './types.flow';
++import type {TransformResult, VirtualModulesRawMap} from './types.flow';
+ import type {LogEntry} from 'metro-core/private/Logger';
+ import type {
+   JsTransformerConfig,
+   JsTransformOptions,
+ } from 'metro-transform-worker';
++import {VirtualModules} from './FutureModules';
+ 
+ const traverse = require('@babel/traverse').default;
+ const crypto = require('crypto');
+@@ -36,6 +37,7 @@ type TransformerInterface = {
+     string,
+     Buffer,
+     JsTransformOptions,
++    ?VirtualModules,
+   ): Promise<TransformResult<>>,
+ };
+ 
+@@ -78,6 +80,7 @@ async function transform(
+   projectRoot: string,
+   transformerConfig: TransformerConfig,
+   fileBuffer?: Buffer,
++  virtualModulesRawMap?: ?VirtualModulesRawMap,
+ ): Promise<Data> {
+   let data;
+ 
+@@ -87,12 +90,16 @@ async function transform(
+   } else {
+     data = fs.readFileSync(path.resolve(projectRoot, filename));
+   }
++
++  const virtualModules = new VirtualModules(virtualModulesRawMap);
++
+   return transformFile(
+     filename,
+     data,
+     transformOptions,
+     projectRoot,
+     transformerConfig,
++    virtualModules,
+   );
+ }
+ 
+@@ -102,6 +109,7 @@ async function transformFile(
+   transformOptions: JsTransformOptions,
+   projectRoot: string,
+   transformerConfig: TransformerConfig,
++  virtualModules?: ?VirtualModules,
+ ): Promise<Data> {
+   // eslint-disable-next-line no-useless-call
+   const Transformer: TransformerInterface = require.call(
+@@ -127,6 +135,23 @@ async function transformFile(
+     transformOptions,
+   );
+ 
++  for (const dependency of result.dependencies) {
++    const {name, data: dependencyData} = dependency;
++    const virtualModule = virtualModules?.get(name);
++
++    if (virtualModule != null) {
++      // $FlowFixMe[cannot-write] we update the dependency data here because now we have a guarantee that the map of Virtual Modules is up to date
++      dependencyData.isVirtualModule = true;
++      // $FlowFixMe[cannot-write] we update the dependency data here because now we have a guarantee that the map of Virtual Modules is up to date
++      dependencyData.absolutePath = virtualModule.absolutePath;
++      // $FlowFixMe[cannot-write] we update the dependency data here because now we have a guarantee that the map of Virtual Modules is up to date
++      dependencyData.code = virtualModule.code;
++      // $FlowFixMe[cannot-write] we update the dependency data here because now we have a guarantee that the map of Virtual Modules is up to date
++      dependencyData.type = virtualModule.type;
++      dependencyData.sourceURL = virtualModule.sourceURL;
++    }
++  }
++
+   // The babel cache caches scopes and pathes for already traversed AST nodes.
+   // Clearing the cache here since the nodes of the transformed file are no longer referenced.
+   // This isn't stritcly necessary since the cache uses a WeakMap. However, WeakMap only permit
+@@ -140,6 +165,9 @@ async function transformFile(
+     filename,
+   );
+ 
++  // $FlowFixMe[cannot-write] This has to be mutated in order to serialize it.
++  result.virtualModulesRawMap = result.virtualModules?.toRawMap();
++
+   return {
+     result,
+     sha1,
+diff --git a/src/DeltaBundler/WorkerFarm.js b/src/DeltaBundler/WorkerFarm.js
+index 3521a1e..7893c7f 100644
+--- a/src/DeltaBundler/WorkerFarm.js
++++ b/src/DeltaBundler/WorkerFarm.js
+@@ -35,14 +35,15 @@ class WorkerFarm {
+       await this._worker.end();
+     }
+   }
+-  async transform(filename, options, fileBuffer) {
++  async transform(filename, options, fileBuffer, virtualModules) {
+     try {
+       const data = await this._worker.transform(
+         filename,
+         options,
+         this._config.projectRoot,
+         this._transformerConfig,
+-        fileBuffer
++        fileBuffer,
++        virtualModules?.toRawMap?.()
+       );
+       Logger.log(data.transformFileStartLogEntry);
+       Logger.log(data.transformFileEndLogEntry);
+diff --git a/src/DeltaBundler/WorkerFarm.js.flow b/src/DeltaBundler/WorkerFarm.js.flow
+index e0869df..7219590 100644
+--- a/src/DeltaBundler/WorkerFarm.js.flow
++++ b/src/DeltaBundler/WorkerFarm.js.flow
+@@ -12,6 +12,7 @@
+ 'use strict';
+ 
+ import type {TransformResult} from '../DeltaBundler';
++import type {VirtualModules} from './FutureModules';
+ import type {TransformerConfig, TransformOptions, Worker} from './Worker';
+ import type {ConfigT} from 'metro-config';
+ import type {Readable} from 'stream';
+@@ -77,6 +78,7 @@ class WorkerFarm {
+     filename: string,
+     options: TransformOptions,
+     fileBuffer?: Buffer,
++    virtualModules?: ?VirtualModules,
+   ): Promise<TransformerResult> {
+     try {
+       const data = await this._worker.transform(
+@@ -85,6 +87,7 @@ class WorkerFarm {
+         this._config.projectRoot,
+         this._transformerConfig,
+         fileBuffer,
++        virtualModules?.toRawMap?.(),
+       );
+ 
+       Logger.log(data.transformFileStartLogEntry);
+diff --git a/src/DeltaBundler/buildSubgraph.js b/src/DeltaBundler/buildSubgraph.js
+index 773f9e1..19d8b2f 100644
+--- a/src/DeltaBundler/buildSubgraph.js
++++ b/src/DeltaBundler/buildSubgraph.js
+@@ -8,16 +8,31 @@ var _contextModule = require("../lib/contextModule");
+ var _isResolvedDependency = require("../lib/isResolvedDependency");
+ var _path = _interopRequireDefault(require("path"));
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+-function resolveDependencies(parentPath, dependencies, resolve) {
++function resolveDependencies(
++  parentPath,
++  dependencies,
++  resolve,
++  virtualModules
++) {
+   const maybeResolvedDeps = new Map();
+   const resolvedContexts = new Map();
+   for (const dep of dependencies) {
+     let maybeResolvedDep;
+     const key = dep.data.key;
+     const { contextParams } = dep.data;
+-    if (contextParams) {
++    const { isVirtualModule } = dep.data;
++    if (isVirtualModule === true) {
++      maybeResolvedDep = {
++        absolutePath: dep.data.absolutePath ?? "",
++        data: dep,
++      };
++    } else if (contextParams) {
+       const from = _path.default.join(parentPath, "..", dep.name);
+       const absolutePath = (0, _contextModule.deriveAbsolutePathFromContext)(
+         from,
+@@ -40,7 +55,7 @@ function resolveDependencies(parentPath, dependencies, resolve) {
+     } else {
+       try {
+         maybeResolvedDep = {
+-          absolutePath: resolve(parentPath, dep).filePath,
++          absolutePath: resolve(parentPath, dep, virtualModules).filePath,
+           data: dep,
+         };
+       } catch (error) {
+@@ -67,21 +82,28 @@ function resolveDependencies(parentPath, dependencies, resolve) {
+ async function buildSubgraph(
+   entryPaths,
+   resolvedContexts,
+-  { resolve, transform, shouldTraverse }
++  { resolve, transform, shouldTraverse },
++  virtualModules
+ ) {
+   const moduleData = new Map();
+   const errors = new Map();
+   const visitedPaths = new Set();
+-  async function visit(absolutePath, requireContext) {
++  async function visit(absolutePath, requireContext, virtualModules) {
+     if (visitedPaths.has(absolutePath)) {
+       return;
+     }
+     visitedPaths.add(absolutePath);
+-    const transformResult = await transform(absolutePath, requireContext);
++    const transformResult = await transform(
++      absolutePath,
++      requireContext,
++      virtualModules
++    );
++    virtualModules?.addRawMap(transformResult?.virtualModulesRawMap);
+     const resolutionResult = resolveDependencies(
+       absolutePath,
+       transformResult.dependencies,
+-      resolve
++      resolve,
++      virtualModules
+     );
+     moduleData.set(absolutePath, {
+       ...transformResult,
+@@ -97,16 +119,19 @@ async function buildSubgraph(
+         .map((dependency) =>
+           visit(
+             dependency.absolutePath,
+-            resolutionResult.resolvedContexts.get(dependency.data.data.key)
++            resolutionResult.resolvedContexts.get(dependency.data.data.key),
++            virtualModules
+           ).catch((error) => errors.set(dependency.absolutePath, error))
+         )
+     );
+   }
+   await Promise.all(
+     [...entryPaths].map((absolutePath) =>
+-      visit(absolutePath, resolvedContexts.get(absolutePath)).catch((error) =>
+-        errors.set(absolutePath, error)
+-      )
++      visit(
++        absolutePath,
++        resolvedContexts.get(absolutePath),
++        virtualModules
++      ).catch((error) => errors.set(absolutePath, error))
+     )
+   );
+   return {
+diff --git a/src/DeltaBundler/buildSubgraph.js.flow b/src/DeltaBundler/buildSubgraph.js.flow
+index 55ddb7f..2ed4704 100644
+--- a/src/DeltaBundler/buildSubgraph.js.flow
++++ b/src/DeltaBundler/buildSubgraph.js.flow
+@@ -9,6 +9,7 @@
+  */
+ 
+ import type {RequireContext} from '../lib/contextModule';
++import type {VirtualModules} from './FutureModules';
+ import type {
+   Dependency,
+   ModuleData,
+@@ -32,6 +33,7 @@ function resolveDependencies(
+   parentPath: string,
+   dependencies: $ReadOnlyArray<TransformResultDependency>,
+   resolve: ResolveFn,
++  virtualModules?: ?VirtualModules,
+ ): {
+   dependencies: Map<string, Dependency>,
+   resolvedContexts: Map<string, RequireContext>,
+@@ -45,7 +47,13 @@ function resolveDependencies(
+ 
+     // `require.context`
+     const {contextParams} = dep.data;
+-    if (contextParams) {
++    const {isVirtualModule} = dep.data;
++    if (isVirtualModule === true) {
++      maybeResolvedDep = {
++        absolutePath: dep.data.absolutePath ?? '',
++        data: dep,
++      };
++    } else if (contextParams) {
+       // Ensure the filepath has uniqueness applied to ensure multiple `require.context`
+       // statements can be used to target the same file with different properties.
+       const from = path.join(parentPath, '..', dep.name);
+@@ -70,7 +78,7 @@ function resolveDependencies(
+     } else {
+       try {
+         maybeResolvedDep = {
+-          absolutePath: resolve(parentPath, dep).filePath,
++          absolutePath: resolve(parentPath, dep, virtualModules).filePath,
+           data: dep,
+         };
+       } catch (error) {
+@@ -103,6 +111,7 @@ export async function buildSubgraph<T>(
+   entryPaths: $ReadOnlySet<string>,
+   resolvedContexts: $ReadOnlyMap<string, ?RequireContext>,
+   {resolve, transform, shouldTraverse}: Parameters<T>,
++  virtualModules?: ?VirtualModules,
+ ): Promise<{
+   moduleData: Map<string, ModuleData<T>>,
+   errors: Map<string, Error>,
+@@ -114,12 +123,19 @@ export async function buildSubgraph<T>(
+   async function visit(
+     absolutePath: string,
+     requireContext: ?RequireContext,
++    virtualModules?: ?VirtualModules,
+   ): Promise<void> {
+     if (visitedPaths.has(absolutePath)) {
+       return;
+     }
+     visitedPaths.add(absolutePath);
+-    const transformResult = await transform(absolutePath, requireContext);
++    const transformResult = await transform(
++      absolutePath,
++      requireContext,
++      virtualModules,
++    );
++
++    virtualModules?.addRawMap(transformResult?.virtualModulesRawMap);
+ 
+     // Get the absolute path of all sub-dependencies (some of them could have been
+     // moved but maintain the same relative path).
+@@ -127,6 +143,7 @@ export async function buildSubgraph<T>(
+       absolutePath,
+       transformResult.dependencies,
+       resolve,
++      virtualModules,
+     );
+ 
+     moduleData.set(absolutePath, {
+@@ -144,6 +161,7 @@ export async function buildSubgraph<T>(
+           visit(
+             dependency.absolutePath,
+             resolutionResult.resolvedContexts.get(dependency.data.data.key),
++            virtualModules,
+           ).catch(error => errors.set(dependency.absolutePath, error)),
+         ),
+     );
+@@ -151,9 +169,11 @@ export async function buildSubgraph<T>(
+ 
+   await Promise.all(
+     [...entryPaths].map(absolutePath =>
+-      visit(absolutePath, resolvedContexts.get(absolutePath)).catch(error =>
+-        errors.set(absolutePath, error),
+-      ),
++      visit(
++        absolutePath,
++        resolvedContexts.get(absolutePath),
++        virtualModules,
++      ).catch(error => errors.set(absolutePath, error)),
+     ),
+   );
+ 
+diff --git a/src/DeltaBundler/types.flow.js b/src/DeltaBundler/types.flow.js
+index a02fe2a..2fba945 100644
+--- a/src/DeltaBundler/types.flow.js
++++ b/src/DeltaBundler/types.flow.js
+@@ -2,5 +2,9 @@
+ 
+ var _CountingSet = _interopRequireDefault(require("../lib/CountingSet"));
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+diff --git a/src/DeltaBundler/types.flow.js.flow b/src/DeltaBundler/types.flow.js.flow
+index ce06388..5b4ea3c 100644
+--- a/src/DeltaBundler/types.flow.js.flow
++++ b/src/DeltaBundler/types.flow.js.flow
+@@ -13,6 +13,7 @@
+ 
+ import type {RequireContext} from '../lib/contextModule';
+ import type {RequireContextParams} from '../ModuleGraph/worker/collectDependencies';
++import type {VirtualModules} from './FutureModules';
+ import type {Graph} from './Graph';
+ import type {JsTransformOptions} from 'metro-transform-worker';
+ 
+@@ -58,6 +59,18 @@ export type TransformResultDependency = $ReadOnly<{
+ 
+     /** Context for requiring a collection of modules. */
+     contextParams?: RequireContextParams,
++
++    /** True if the dependency is a virtual module, i.e. it's not yet registered in the Metro file system but it will be at the moment it's accessed. */
++    isVirtualModule?: boolean,
++
++    /** Full path to the module, provided only for virtual modules. */
++    absolutePath?: string,
++
++    /** Code of the module, provided only for virtual modules. */
++    code?: string,
++
++    /** Type of the dependency, provided only for virtual modules. */
++    type?: 'sourceFile',
+   }>,
+ }>;
+ 
+@@ -79,6 +92,9 @@ export type Module<T = MixedOutput> = $ReadOnly<{
+   path: string,
+   getSource: () => Buffer,
+   unstable_transformResultKey?: ?string,
++  isVirtualModule?: boolean,
++  virtualModules?: ?VirtualModules,
++  virtualModulesRawMap?: ?VirtualModulesRawMap,
+ }>;
+ 
+ export type ModuleData<T = MixedOutput> = $ReadOnly<{
+@@ -87,6 +103,9 @@ export type ModuleData<T = MixedOutput> = $ReadOnly<{
+   output: $ReadOnlyArray<T>,
+   getSource: () => Buffer,
+   unstable_transformResultKey?: ?string,
++  isVirtualModule?: boolean,
++  virtualModules?: ?VirtualModules,
++  virtualModulesRawMap?: ?VirtualModulesRawMap,
+ }>;
+ 
+ export type Dependencies<T = MixedOutput> = Map<string, Module<T>>;
+@@ -119,6 +138,8 @@ export type TransformResult<T = MixedOutput> = $ReadOnly<{
+   dependencies: $ReadOnlyArray<TransformResultDependency>,
+   output: $ReadOnlyArray<T>,
+   unstable_transformResultKey?: ?string,
++  virtualModules?: ?VirtualModules,
++  virtualModulesRawMap?: ?VirtualModulesRawMap,
+ }>;
+ 
+ export type TransformResultWithSource<T = MixedOutput> = $ReadOnly<{
+@@ -126,14 +147,24 @@ export type TransformResultWithSource<T = MixedOutput> = $ReadOnly<{
+   getSource: () => Buffer,
+ }>;
+ 
++export type VirtualModule = $ReadOnly<{
++  absolutePath: string,
++  code: string,
++  type: 'sourceFile',
++}>;
++
++export type VirtualModulesRawMap = Map<string, VirtualModule>;
++
+ export type TransformFn<T = MixedOutput> = (
+   string,
+   ?RequireContext,
++  virtualModules?: ?VirtualModules,
+ ) => Promise<TransformResultWithSource<T>>;
+ 
+ export type ResolveFn = (
+   from: string,
+   dependency: TransformResultDependency,
++  virtualModules?: ?VirtualModules,
+ ) => BundlerResolution;
+ 
+ export type AllowOptionalDependenciesWithOptions = {
+diff --git a/src/IncrementalBundler.js b/src/IncrementalBundler.js
+index 8107857..e4499ee 100644
+--- a/src/IncrementalBundler.js
++++ b/src/IncrementalBundler.js
+@@ -145,6 +145,10 @@ class IncrementalBundler {
+       this._bundler,
+       this._deltaBundler
+     );
++    graph.dependencies.forEach((module) => {
++      module.isVirtualModule = graph.virtualModules.get(module.path) != null;
++      module.sourceURL = graph.virtualModules.get(module.path)?.sourceURL;
++    });
+     return {
+       prepend,
+       graph,
+diff --git a/src/IncrementalBundler.js.flow b/src/IncrementalBundler.js.flow
+index bffbc3f..0db8175 100644
+--- a/src/IncrementalBundler.js.flow
++++ b/src/IncrementalBundler.js.flow
+@@ -215,6 +215,11 @@ class IncrementalBundler {
+       this._deltaBundler,
+     );
+ 
++    graph.dependencies.forEach(module => {
++      module.isVirtualModule = graph.virtualModules.get(module.path) != null;
++      module.sourceURL = graph.virtualModules.get(module.path)?.sourceURL;
++    });
++
+     return {
+       prepend,
+       graph,
+diff --git a/src/ModuleGraph/worker/JsFileWrapping.js b/src/ModuleGraph/worker/JsFileWrapping.js
+index ecc7c4c..3265b62 100644
+--- a/src/ModuleGraph/worker/JsFileWrapping.js
++++ b/src/ModuleGraph/worker/JsFileWrapping.js
+@@ -15,10 +15,14 @@ function _getRequireWildcardCache(e) {
+ function _interopRequireWildcard(e, r) {
+   if (!r && e && e.__esModule) return e;
+   if (null === e || ("object" != typeof e && "function" != typeof e))
+-    return { default: e };
++    return {
++      default: e,
++    };
+   var t = _getRequireWildcardCache(r);
+   if (t && t.has(e)) return t.get(e);
+-  var n = { __proto__: null },
++  var n = {
++      __proto__: null,
++    },
+     a = Object.defineProperty && Object.getOwnPropertyDescriptor;
+   for (var u in e)
+     if ("default" !== u && {}.hasOwnProperty.call(e, u)) {
+@@ -28,7 +32,11 @@ function _interopRequireWildcard(e, r) {
+   return (n.default = e), t && t.set(e, n), n;
+ }
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ const WRAP_NAME = "$$_REQUIRE";
+ const IIFE_PARAM = _template.default.expression(
+diff --git a/src/ModuleGraph/worker/collectDependencies.js b/src/ModuleGraph/worker/collectDependencies.js
+index 2413f83..a4361ae 100644
+--- a/src/ModuleGraph/worker/collectDependencies.js
++++ b/src/ModuleGraph/worker/collectDependencies.js
+@@ -119,6 +119,14 @@ function collectDependencies(ast, options) {
+   const collectedDependencies = state.dependencyRegistry.getDependencies();
+   const dependencies = new Array(collectedDependencies.length);
+   for (const { index, name, ...dependencyData } of collectedDependencies) {
++    const virtualModule = options.virtualModules?.get(name);
++    if (virtualModule != null) {
++      dependencyData.isVirtualModule = true;
++      dependencyData.absolutePath = virtualModule.absolutePath;
++      dependencyData.code = virtualModule.code;
++      dependencyData.type = virtualModule.type;
++      dependencyData.sourceURL = virtualModule.sourceURL;
++    }
+     dependencies[index] = {
+       name,
+       data: dependencyData,
+diff --git a/src/ModuleGraph/worker/collectDependencies.js.flow b/src/ModuleGraph/worker/collectDependencies.js.flow
+index 58328e8..ef9c8c8 100644
+--- a/src/ModuleGraph/worker/collectDependencies.js.flow
++++ b/src/ModuleGraph/worker/collectDependencies.js.flow
+@@ -10,6 +10,7 @@
+ 
+ 'use strict';
+ 
++import type {VirtualModules} from '../../DeltaBundler/FutureModules';
+ import type {NodePath} from '@babel/traverse';
+ import type {CallExpression, Identifier, StringLiteral} from '@babel/types';
+ import type {
+@@ -68,6 +69,14 @@ type DependencyData = $ReadOnly<{
+   locs: $ReadOnlyArray<BabelSourceLocation>,
+   /** Context for requiring a collection of modules. */
+   contextParams?: RequireContextParams,
++  /** True if the dependency is a future module, i.e. it's not yet registered in the Metro file system but it will be at the moment it's accessed. */
++  isVirtualModule?: boolean,
++  /** Code of the module, provided only for future modules. */
++  code?: string,
++  /** Full path to the module, provided only for future modules. */
++  absolutePath?: string,
++  /** Type of the dependency, provided only for future modules. */
++  type?: 'sourceFile',
+ }>;
+ 
+ export type MutableInternalDependency = {
+@@ -104,6 +113,8 @@ export type Options = $ReadOnly<{
+   /** Enable `require.context` statements which can be used to import multiple files in a directory. */
+   unstable_allowRequireContext: boolean,
+   unstable_isESMImportAtSource?: ?(BabelSourceLocation) => boolean,
++  /** Map of registered virtual modules, i.e. modules not yet registered in the Metro file system but available for bundling. */
++  virtualModules?: ?VirtualModules,
+ }>;
+ 
+ export type CollectedDependencies = $ReadOnly<{
+@@ -296,6 +307,16 @@ function collectDependencies(
+   const dependencies = new Array<Dependency>(collectedDependencies.length);
+ 
+   for (const {index, name, ...dependencyData} of collectedDependencies) {
++    const virtualModule = options.virtualModules?.get(name);
++
++    if (virtualModule != null) {
++      dependencyData.isVirtualModule = true;
++      dependencyData.absolutePath = virtualModule.absolutePath;
++      dependencyData.code = virtualModule.code;
++      dependencyData.type = virtualModule.type;
++      dependencyData.sourceURL = virtualModule.sourceURL;
++    }
++
+     dependencies[index] = {
+       name,
+       data: dependencyData,
+diff --git a/src/Server.js b/src/Server.js
+index bc45d10..bf4f43b 100644
+--- a/src/Server.js
++++ b/src/Server.js
+@@ -861,6 +861,9 @@ class Server {
+   });
+   _getSortedModules(graph) {
+     const modules = [...graph.dependencies.values()];
++    graph.dependencies.forEach((module) => {
++      module.isVirtualModule = graph.virtualModules.get(module.path) != null;
++    });
+     for (const module of modules) {
+       this._createModuleId(module.path);
+     }
+diff --git a/src/Server.js.flow b/src/Server.js.flow
+index 580a034..bdc1b61 100644
+--- a/src/Server.js.flow
++++ b/src/Server.js.flow
+@@ -1145,6 +1145,10 @@ class Server {
+   // order as in a plain JS bundle.
+   _getSortedModules(graph: ReadOnlyGraph<>): $ReadOnlyArray<Module<>> {
+     const modules = [...graph.dependencies.values()];
++    graph.dependencies.forEach(module => {
++      module.isVirtualModule = graph.virtualModules.get(module.path) != null;
++    });
++
+     // Assign IDs to modules in a consistent order
+     for (const module of modules) {
+       this._createModuleId(module.path);
+diff --git a/src/__mocks__/debug.js b/src/__mocks__/debug.js
+new file mode 100644
+index 0000000..1b31c3a
+--- /dev/null
++++ b/src/__mocks__/debug.js
+@@ -0,0 +1,10 @@
++"use strict";
++
++function debug(namespace) {
++  const fn = (...args) => {};
++  fn.enabled = () => false;
++  return fn;
++}
++debug.enable = (match) => {};
++debug.disable = () => {};
++module.exports = debug;
+diff --git a/src/__mocks__/debug.js.flow b/src/__mocks__/debug.js.flow
+new file mode 100644
+index 0000000..8f5c75b
+--- /dev/null
++++ b/src/__mocks__/debug.js.flow
+@@ -0,0 +1,27 @@
++/**
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ *
++ * @format
++ * @flow strict
++ */
++
++'use strict';
++
++interface DebugFN {
++  (...args: Array<mixed>): void;
++  enabled: () => boolean;
++}
++
++function debug(namespace: string): DebugFN {
++  const fn = (...args: Array<mixed>) => {};
++  fn.enabled = () => false;
++  return fn;
++}
++
++debug.enable = (match: string) => {};
++debug.disable = () => {};
++
++module.exports = debug;
+diff --git a/src/cli.js b/src/cli.js
+old mode 100755
+new mode 100644
+diff --git a/src/commands/build.js b/src/commands/build.js
+index 7171490..a368802 100644
+--- a/src/commands/build.js
++++ b/src/commands/build.js
+@@ -4,7 +4,11 @@ var _parseKeyValueParamArray = _interopRequireDefault(
+   require("../cli/parseKeyValueParamArray")
+ );
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ const { makeAsyncCommand } = require("../cli-utils");
+ const TerminalReporter = require("../lib/TerminalReporter");
+diff --git a/src/integration_tests/basic_bundle/build-errors/cannot-resolve-import.js b/src/integration_tests/basic_bundle/build-errors/cannot-resolve-import.js
+index e6a968c..c053e4f 100644
+--- a/src/integration_tests/basic_bundle/build-errors/cannot-resolve-import.js
++++ b/src/integration_tests/basic_bundle/build-errors/cannot-resolve-import.js
+@@ -2,6 +2,10 @@
+ 
+ var _doesNotExist = _interopRequireDefault(require("./does-not-exist"));
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ global.x = _doesNotExist.default;
+diff --git a/src/integration_tests/basic_bundle/build-errors/inline-requires-cannot-resolve-import.js b/src/integration_tests/basic_bundle/build-errors/inline-requires-cannot-resolve-import.js
+index e6a968c..c053e4f 100644
+--- a/src/integration_tests/basic_bundle/build-errors/inline-requires-cannot-resolve-import.js
++++ b/src/integration_tests/basic_bundle/build-errors/inline-requires-cannot-resolve-import.js
+@@ -2,6 +2,10 @@
+ 
+ var _doesNotExist = _interopRequireDefault(require("./does-not-exist"));
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ global.x = _doesNotExist.default;
+diff --git a/src/integration_tests/basic_bundle/import-export/index.js b/src/integration_tests/basic_bundle/import-export/index.js
+index c891bcb..90093b9 100644
+--- a/src/integration_tests/basic_bundle/import-export/index.js
++++ b/src/integration_tests/basic_bundle/import-export/index.js
+@@ -30,7 +30,11 @@ var _exportPrimitiveDefault = _interopRequireWildcard(
+ var _export3 = _interopRequireDefault(require("./export-3"));
+ var _export4 = require("./export-4");
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ function _getRequireWildcardCache(e) {
+   if ("function" != typeof WeakMap) return null;
+@@ -43,10 +47,14 @@ function _getRequireWildcardCache(e) {
+ function _interopRequireWildcard(e, r) {
+   if (!r && e && e.__esModule) return e;
+   if (null === e || ("object" != typeof e && "function" != typeof e))
+-    return { default: e };
++    return {
++      default: e,
++    };
+   var t = _getRequireWildcardCache(r);
+   if (t && t.has(e)) return t.get(e);
+-  var n = { __proto__: null },
++  var n = {
++      __proto__: null,
++    },
+     a = Object.defineProperty && Object.getOwnPropertyDescriptor;
+   for (var u in e)
+     if ("default" !== u && {}.hasOwnProperty.call(e, u)) {
+diff --git a/src/lib/__mocks__/GlobalTransformCache.js b/src/lib/__mocks__/GlobalTransformCache.js
+new file mode 100644
+index 0000000..471b258
+--- /dev/null
++++ b/src/lib/__mocks__/GlobalTransformCache.js
+@@ -0,0 +1,8 @@
++"use strict";
++
++function get() {
++  return null;
++}
++module.exports = {
++  get,
++};
+diff --git a/src/lib/__mocks__/GlobalTransformCache.js.flow b/src/lib/__mocks__/GlobalTransformCache.js.flow
+new file mode 100644
+index 0000000..9ccde94
+--- /dev/null
++++ b/src/lib/__mocks__/GlobalTransformCache.js.flow
+@@ -0,0 +1,18 @@
++/**
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ *
++ * @flow strict
++ * @format
++ * @oncall react_native
++ */
++
++'use strict';
++
++function get(): null {
++  return null;
++}
++
++module.exports = {get};
+diff --git a/src/lib/__mocks__/declareOpts.js b/src/lib/__mocks__/declareOpts.js
+new file mode 100644
+index 0000000..998e4db
+--- /dev/null
++++ b/src/lib/__mocks__/declareOpts.js
+@@ -0,0 +1,12 @@
++"use strict";
++
++module.exports = function (declared) {
++  return function (opts) {
++    for (var p in declared) {
++      if (opts[p] == null && declared[p].default != null) {
++        opts[p] = declared[p].default;
++      }
++    }
++    return opts;
++  };
++};
+diff --git a/src/lib/__mocks__/declareOpts.js.flow b/src/lib/__mocks__/declareOpts.js.flow
+new file mode 100644
+index 0000000..fe512a5
+--- /dev/null
++++ b/src/lib/__mocks__/declareOpts.js.flow
+@@ -0,0 +1,22 @@
++/**
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ *
++ * @format
++ * @flow
++ */
++
++'use strict';
++
++module.exports = function (declared: Object): (opts: any) => any {
++  return function (opts: Object) {
++    for (var p in declared) {
++      if (opts[p] == null && declared[p].default != null) {
++        opts[p] = declared[p].default;
++      }
++    }
++    return opts;
++  };
++};
+diff --git a/src/lib/__mocks__/getAbsolutePath.js b/src/lib/__mocks__/getAbsolutePath.js
+new file mode 100644
+index 0000000..316e85d
+--- /dev/null
++++ b/src/lib/__mocks__/getAbsolutePath.js
+@@ -0,0 +1,4 @@
++"use strict";
++
++const path = require("path");
++module.exports = (file, roots) => path.resolve(roots[0], file);
+diff --git a/src/lib/__mocks__/getAbsolutePath.js.flow b/src/lib/__mocks__/getAbsolutePath.js.flow
+new file mode 100644
+index 0000000..cfa8352
+--- /dev/null
++++ b/src/lib/__mocks__/getAbsolutePath.js.flow
+@@ -0,0 +1,17 @@
++/**
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ *
++ * @flow strict
++ * @format
++ * @oncall react_native
++ */
++
++'use strict';
++
++const path = require('path');
++
++module.exports = (file: string, roots: $ReadOnlyArray<string>): string =>
++  path.resolve(roots[0], file);
+diff --git a/src/lib/contextModule.js b/src/lib/contextModule.js
+index 88527a1..f76acea 100644
+--- a/src/lib/contextModule.js
++++ b/src/lib/contextModule.js
+@@ -9,7 +9,11 @@ var _crypto = _interopRequireDefault(require("crypto"));
+ var _nullthrows = _interopRequireDefault(require("nullthrows"));
+ var _path = _interopRequireDefault(require("path"));
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ function toHash(value) {
+   return _crypto.default.createHash("sha1").update(value).digest("hex");
+diff --git a/src/lib/contextModuleTemplates.js b/src/lib/contextModuleTemplates.js
+index 0171bf4..6ee3a21 100644
+--- a/src/lib/contextModuleTemplates.js
++++ b/src/lib/contextModuleTemplates.js
+@@ -17,10 +17,14 @@ function _getRequireWildcardCache(e) {
+ function _interopRequireWildcard(e, r) {
+   if (!r && e && e.__esModule) return e;
+   if (null === e || ("object" != typeof e && "function" != typeof e))
+-    return { default: e };
++    return {
++      default: e,
++    };
+   var t = _getRequireWildcardCache(r);
+   if (t && t.has(e)) return t.get(e);
+-  var n = { __proto__: null },
++  var n = {
++      __proto__: null,
++    },
+     a = Object.defineProperty && Object.getOwnPropertyDescriptor;
+   for (var u in e)
+     if ("default" !== u && {}.hasOwnProperty.call(e, u)) {
+diff --git a/src/lib/createWebsocketServer.js b/src/lib/createWebsocketServer.js
+index e6f683c..fcc8f40 100644
+--- a/src/lib/createWebsocketServer.js
++++ b/src/lib/createWebsocketServer.js
+@@ -2,7 +2,11 @@
+ 
+ var _ws = _interopRequireDefault(require("ws"));
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ module.exports = function createWebsocketServer({ websocketServer }) {
+   const wss = new _ws.default.Server({
+diff --git a/src/lib/getAppendScripts.js b/src/lib/getAppendScripts.js
+index 4a2daf4..e174129 100644
+--- a/src/lib/getAppendScripts.js
++++ b/src/lib/getAppendScripts.js
+@@ -2,7 +2,11 @@
+ 
+ var _CountingSet = _interopRequireDefault(require("./CountingSet"));
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ const getInlineSourceMappingURL = require("../DeltaBundler/Serializers/helpers/getInlineSourceMappingURL");
+ const {
+diff --git a/src/lib/getPrependedScripts.js b/src/lib/getPrependedScripts.js
+index 152d36b..3669ec9 100644
+--- a/src/lib/getPrependedScripts.js
++++ b/src/lib/getPrependedScripts.js
+@@ -2,7 +2,11 @@
+ 
+ var _CountingSet = _interopRequireDefault(require("./CountingSet"));
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ const countLines = require("./countLines");
+ const getPreludeCode = require("./getPreludeCode");
+diff --git a/src/lib/transformHelpers.js b/src/lib/transformHelpers.js
+index fe54200..a12c042 100644
+--- a/src/lib/transformHelpers.js
++++ b/src/lib/transformHelpers.js
+@@ -5,7 +5,11 @@ var _isAssetFile = _interopRequireDefault(
+   require("metro-resolver/private/utils/isAssetFile")
+ );
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ const baseIgnoredInlineRequires = [
+   "React",
+@@ -115,7 +119,7 @@ async function getTransformFn(
+     resolverOptions
+   );
+   const assetExts = new Set(config.resolver.assetExts);
+-  return async (modulePath, requireContext) => {
++  return async (modulePath, requireContext, virtualModules) => {
+     let templateBuffer;
+     if (requireContext) {
+       const graph = await bundler.getDependencyGraph();
+@@ -142,7 +146,8 @@ async function getTransformFn(
+           inlineRequires
+         ),
+       },
+-      templateBuffer
++      templateBuffer,
++      virtualModules
+     );
+   };
+ }
+diff --git a/src/lib/transformHelpers.js.flow b/src/lib/transformHelpers.js.flow
+index 130eec8..952ce81 100644
+--- a/src/lib/transformHelpers.js.flow
++++ b/src/lib/transformHelpers.js.flow
+@@ -13,6 +13,7 @@
+ 
+ import type Bundler from '../Bundler';
+ import type DeltaBundler, {TransformFn} from '../DeltaBundler';
++import type {VirtualModules} from '../DeltaBundler/FutureModules';
+ import type {
+   BundlerResolution,
+   TransformInputOptions,
+@@ -156,7 +157,11 @@ async function getTransformFn(
+   );
+   const assetExts = new Set(config.resolver.assetExts);
+ 
+-  return async (modulePath: string, requireContext: ?RequireContext) => {
++  return async (
++    modulePath: string,
++    requireContext: ?RequireContext,
++    virtualModules?: ?VirtualModules,
++  ) => {
+     let templateBuffer: Buffer;
+ 
+     if (requireContext) {
+@@ -193,6 +198,7 @@ async function getTransformFn(
+         ),
+       },
+       templateBuffer,
++      virtualModules,
+     );
+   };
+ }
+diff --git a/src/node-haste/DependencyGraph.js b/src/node-haste/DependencyGraph.js
+index 4edf7df..5c5d0fd 100644
+--- a/src/node-haste/DependencyGraph.js
++++ b/src/node-haste/DependencyGraph.js
+@@ -176,7 +176,17 @@ class DependencyGraph extends EventEmitter {
+   getAllFiles() {
+     return nullthrows(this._fileSystem).getAllFiles();
+   }
+-  async getOrComputeSha1(mixedPath) {
++  async getOrComputeSha1(mixedPath, virtualModules) {
++    const virtualModule = virtualModules?.get(mixedPath);
++    if (virtualModule) {
++      const createHash = require("crypto").createHash;
++      return {
++        sha1: createHash("sha1")
++          .update(performance.now().toString())
++          .digest("hex"),
++        content: Buffer.from(virtualModule.code, "utf8"),
++      };
++    }
+     const result = await this._fileSystem.getOrComputeSha1(mixedPath);
+     if (!result || !result.sha1) {
+       throw new Error(`Failed to get the SHA-1 for: ${mixedPath}.
+diff --git a/src/node-haste/DependencyGraph.js.flow b/src/node-haste/DependencyGraph.js.flow
+index 7f37321..a726dd6 100644
+--- a/src/node-haste/DependencyGraph.js.flow
++++ b/src/node-haste/DependencyGraph.js.flow
+@@ -9,6 +9,7 @@
+  * @oncall react_native
+  */
+ 
++import type {VirtualModules} from '../DeltaBundler/FutureModules';
+ import type {
+   BundlerResolution,
+   TransformResultDependency,
+@@ -262,7 +263,35 @@ class DependencyGraph extends EventEmitter {
+    */
+   async getOrComputeSha1(
+     mixedPath: string,
++    virtualModules?: ?VirtualModules,
+   ): Promise<{content?: Buffer, sha1: string}> {
++    // let isFutureModule = false;
++    // if (futureModules != null) {
++    //   if (futureModules.has(mixedPath)) {
++    //     isFutureModule = true;
++    //   } else {
++    //     const futureModuleKey = futureModules
++    //       .keys()
++    //       .find(key => mixedPath.includes(key));
++    //     if (futureModuleKey != null) {
++    //       isFutureModule = true;
++    //     }
++    //   }
++    // }
++    const virtualModule = virtualModules?.get(mixedPath);
++
++    if (virtualModule) {
++      // For future modules, we can't compute the sha1 based on the file contents
++      // since the file doesn't exist yet. Instead, we generate a sha1 based on
++      // the current time to ensure it will force a refresh of the transform cache.
++      const createHash = require('crypto').createHash;
++      return {
++        sha1: createHash('sha1')
++          .update(performance.now().toString())
++          .digest('hex'),
++        content: Buffer.from(virtualModule.code, 'utf8'),
++      };
++    }
+     const result = await this._fileSystem.getOrComputeSha1(mixedPath);
+     if (!result || !result.sha1) {
+       throw new Error(`Failed to get the SHA-1 for: ${mixedPath}.
+diff --git a/src/node-haste/DependencyGraph/createFileMap.js b/src/node-haste/DependencyGraph/createFileMap.js
+index 73133e9..3cd0036 100644
+--- a/src/node-haste/DependencyGraph/createFileMap.js
++++ b/src/node-haste/DependencyGraph/createFileMap.js
+@@ -12,10 +12,14 @@ function _getRequireWildcardCache(e) {
+ function _interopRequireWildcard(e, r) {
+   if (!r && e && e.__esModule) return e;
+   if (null === e || ("object" != typeof e && "function" != typeof e))
+-    return { default: e };
++    return {
++      default: e,
++    };
+   var t = _getRequireWildcardCache(r);
+   if (t && t.has(e)) return t.get(e);
+-  var n = { __proto__: null },
++  var n = {
++      __proto__: null,
++    },
+     a = Object.defineProperty && Object.getOwnPropertyDescriptor;
+   for (var u in e)
+     if ("default" !== u && {}.hasOwnProperty.call(e, u)) {
+diff --git a/src/node-haste/Module.js b/src/node-haste/Module.js
+index 20e9fd0..a871832 100644
+--- a/src/node-haste/Module.js
++++ b/src/node-haste/Module.js
+@@ -2,7 +2,11 @@
+ 
+ var _path = _interopRequireDefault(require("path"));
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ class Module {
+   constructor(file, moduleCache) {
+diff --git a/src/node-haste/__mocks__/graceful-fs.js b/src/node-haste/__mocks__/graceful-fs.js
+new file mode 100644
+index 0000000..7ffea82
+--- /dev/null
++++ b/src/node-haste/__mocks__/graceful-fs.js
+@@ -0,0 +1,3 @@
++"use strict";
++
++module.exports = require("fs");
+diff --git a/src/node-haste/__mocks__/graceful-fs.js.flow b/src/node-haste/__mocks__/graceful-fs.js.flow
+new file mode 100644
+index 0000000..93a6690
+--- /dev/null
++++ b/src/node-haste/__mocks__/graceful-fs.js.flow
+@@ -0,0 +1,13 @@
++/**
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ *
++ * @format
++ * @flow strict
++ */
++
++'use strict';
++
++module.exports = require('fs');
+diff --git a/src/shared/output/RamBundle/util.js b/src/shared/output/RamBundle/util.js
+index c52efe2..400903b 100644
+--- a/src/shared/output/RamBundle/util.js
++++ b/src/shared/output/RamBundle/util.js
+@@ -2,7 +2,11 @@
+ 
+ var _countLines = _interopRequireDefault(require("../../../lib/countLines"));
+ function _interopRequireDefault(e) {
+-  return e && e.__esModule ? e : { default: e };
++  return e && e.__esModule
++    ? e
++    : {
++        default: e,
++      };
+ }
+ const invariant = require("invariant");
+ function lineToLineSourceMap(source, filename = "") {

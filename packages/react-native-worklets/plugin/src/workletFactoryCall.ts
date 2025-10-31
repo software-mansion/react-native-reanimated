@@ -6,6 +6,7 @@ import {
   memberExpression,
   stringLiteral,
 } from '@babel/types';
+import { dirname, resolve } from 'path';
 
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { generatedWorkletsDir } from './types';

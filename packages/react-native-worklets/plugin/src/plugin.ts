@@ -39,6 +39,7 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
     pre(this: ReanimatedPluginPass) {
       runWithTaggedExceptions(() => {
         initializeState(this);
+        this.opts.bundleMode = true;
       });
     },
     visitor: {

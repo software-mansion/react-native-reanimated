@@ -37,23 +37,23 @@ module.exports = {
         };
       },
     },
-    resolver: {
-      resolveRequest: (
-        /** @type {any} */ context,
-        /** @type {string} */ moduleName,
-        /** @type {any} */ platform
-      ) => {
-        if (
-          moduleName.startsWith('react-native-worklets/__generatedWorklets/')
-        ) {
-          const fullModuleName = path.join(
-            workletsPackageParentDir,
-            moduleName
-          );
-          return { type: 'sourceFile', filePath: fullModuleName };
-        }
-        return context.resolveRequest(context, moduleName, platform);
-      },
-    },
+    // resolver: {
+    //   resolveRequest: (
+    //     /** @type {any} */ context,
+    //     /** @type {string} */ moduleName,
+    //     /** @type {any} */ platform
+    //   ) => {
+    //     if (
+    //       moduleName.startsWith('react-native-worklets/__generatedWorklets/')
+    //     ) {
+    //       const fullModuleName = path.join(
+    //         workletsPackageParentDir,
+    //         moduleName
+    //       );
+    //       return { type: 'sourceFile', filePath: fullModuleName };
+    //     }
+    //     return context.resolveRequest(context, moduleName, platform);
+    //   },
+    // },
   },
 };

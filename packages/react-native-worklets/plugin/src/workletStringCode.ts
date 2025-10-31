@@ -116,17 +116,17 @@ export function buildWorkletString(
 
   const includeSourceMap = !(isRelease() || state.opts.disableSourceMaps);
 
-  if (includeSourceMap) {
-    // Clear contents array (should be empty anyways)
-    inputMap.sourcesContent = [];
-    // Include source contents in source map, because Flipper/iframe is not
-    // allowed to read files from disk.
-    for (const sourceFile of inputMap.sources) {
-      inputMap.sourcesContent.push(
-        fs.readFileSync(sourceFile).toString('utf-8')
-      );
-    }
-  }
+  // if (includeSourceMap) {
+  //   // Clear contents array (should be empty anyways)
+  //   inputMap.sourcesContent = [];
+  //   // Include source contents in source map, because Flipper/iframe is not
+  //   // allowed to read files from disk.
+  //   for (const sourceFile of inputMap.sources) {
+  //     inputMap.sourcesContent.push(
+  //       fs.readFileSync(sourceFile).toString('utf-8')
+  //     );
+  //   }
+  // }
 
   const transformed = workletTransformSync(code, {
     filename: state.file.opts.filename,

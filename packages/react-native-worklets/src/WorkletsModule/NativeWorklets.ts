@@ -39,6 +39,23 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     }
     if (__DEV__) {
       checkCppVersion();
+      // if (
+      //   globalThis._WORKLETS_BUNDLE_MODE &&
+      //   // @ts-expect-error i'ts ok
+      //   global.__workletsModuleProxy?.propagateModuleUpdate
+      // ) {
+      //   (
+      //     (globalThis as any).HMRClientOnUpdate as Array<
+      //       (update: {
+      //         module: [id: number, code: string];
+      //         sourceURL: string;
+      //       }) => void
+      //     >
+      //   ).unshift(({ module: [_id, code], sourceURL }) => {
+      //     // @ts-expect-error it's ok
+      //     global.__workletsModuleProxy.propagateModuleUpdate(code, sourceURL);
+      //   });
+      // }
     }
     this.#workletsModuleProxy = global.__workletsModuleProxy;
     this.#serializableNull = this.#workletsModuleProxy.createSerializableNull();

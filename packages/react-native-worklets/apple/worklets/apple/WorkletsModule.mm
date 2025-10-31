@@ -6,11 +6,16 @@
 #import <worklets/apple/AssertJavaScriptQueue.h>
 #import <worklets/apple/AssertTurboModuleManagerQueue.h>
 #import <worklets/apple/IOSUIScheduler.h>
+#import <worklets/apple/Networking/WorkletsNetworking.h>
 #import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
 
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
+#import <React/RCTNetworking.h>
+#import <ReactCommon/RCTTurboModule.h>
+
+#import <FBReactNativeSpec/FBReactNativeSpec.h>
 
 #if __has_include(<React/RCTBundleProvider.h>)
 // Bundle mode
@@ -27,6 +32,8 @@ using worklets::WorkletsModuleProxy;
 @implementation WorkletsModule {
   AnimationFrameQueue *animationFrameQueue_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+  RCTNetworking *networkingModule_;
+  WorkletsNetworking *workletsNetworking_;
 #ifndef NDEBUG
   worklets::SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
 #endif // NDEBUG
@@ -49,7 +56,8 @@ using worklets::WorkletsModuleProxy;
   react_native_assert(isBridgeless && "[Worklets] react-native-worklets only supports bridgeless mode");
 }
 
-@synthesize callInvoker = _callInvoker;
+@synthesize callInvoker = callInvoker_;
+@synthesize moduleRegistry = moduleRegistry_;
 
 RCT_EXPORT_MODULE(WorkletsModule);
 
@@ -67,6 +75,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
     throw error;
   });
 
+  networkingModule_ = [moduleRegistry_ moduleForClass:RCTNetworking.class];
+
   std::string sourceURL = "";
   std::shared_ptr<const BigStringBuffer> script = nullptr;
 #ifdef WORKLETS_BUNDLE_MODE
@@ -74,21 +84,43 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   sourceURL = [[bundleProvider_ getSourceURL] UTF8String];
 #endif // WORKLETS_BUNDLE_MODE
 
-  auto jsCallInvoker = _callInvoker.callInvoker;
+  auto jsCallInvoker = callInvoker_.callInvoker;
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
+  auto runtimeManager = std::make_shared<worklets::RuntimeManager>();
+  workletsNetworking_ = [[WorkletsNetworking alloc] init:runtimeManager rctNetworking:networkingModule_];
   auto isJavaScriptQueue = []() -> bool { return IsJavaScriptQueue(); };
   animationFrameQueue_ = [AnimationFrameQueue new];
-  auto forwardedRequestAnimationFrame = std::function<void(std::function<void(const double)>)>(
-      [animationFrameQueue = animationFrameQueue_](std::function<void(const double)> callback) {
-        [animationFrameQueue requestAnimationFrame:callback];
-      });
+
+  worklets::RuntimeBindings runtimeBindings{
+      .requestAnimationFrame =
+          [animationFrameQueue = animationFrameQueue_](std::function<void(const double)> callback) {
+            [animationFrameQueue requestAnimationFrame:callback];
+          },
+      .sendRequest =
+          [workletsNetworking = workletsNetworking_](
+              jsi::Runtime &rt, const jsi::Value &query, jsi::Function &&responseSender) {
+            [workletsNetworking jsiSendRequest:rt jquery:query responseSender:(std::move(responseSender))];
+            return jsi::Value::undefined();
+          },
+      .abortRequest =
+          [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, const jsi::Value &requestID) {
+            [workletsNetworking jsiAbortRequest:requestID.asNumber()];
+            return jsi::Value::undefined();
+          },
+      .clearCookies =
+          [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, jsi::Function &&responseSender) {
+            [workletsNetworking jsiClearCookies:rt responseSender:(std::move(responseSender))];
+            return jsi::Value::undefined();
+          }};
+
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
       rnRuntime,
       jsQueue,
       jsCallInvoker,
       uiScheduler,
+      runtimeManager,
       std::move(isJavaScriptQueue),
-      std::move(forwardedRequestAnimationFrame),
+      runtimeBindings,
       script,
       sourceURL);
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();

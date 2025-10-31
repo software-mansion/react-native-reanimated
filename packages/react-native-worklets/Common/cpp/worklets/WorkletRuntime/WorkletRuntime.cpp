@@ -92,9 +92,11 @@ void WorkletRuntime::init(
   jsi::Runtime &rt = *runtime_;
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
   const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
+
 #ifdef WORKLETS_BUNDLE_MODE
   auto script = jsiWorkletsModuleProxy->getScript();
   const auto &sourceUrl = jsiWorkletsModuleProxy->getSourceUrl();
+  auto runtimeBindings = jsiWorkletsModuleProxy->getRuntimeBindings();
 #endif // WORKLETS_BUNDLE_MODE
 
   auto optimizedJsiWorkletsModuleProxy =
@@ -128,8 +130,12 @@ void WorkletRuntime::init(
            .stack = stack,
            .name = "WorkletsError",
            .jsEngine = "Worklets"});
+      return;
     }
   }
+
+  WorkletRuntimeDecorator::postScript(rt, runtimeBindings);
+
 #else
   // Legacy behavior
   auto valueUnpackerBuffer =
@@ -158,33 +164,50 @@ void WorkletRuntime::runAsyncGuarded(
   });
 }
 
+void WorkletRuntime::runOnQueue(std::function<void()> &&job) {
+  queue_->push(std::move(job));
+}
+
+void WorkletRuntime::runOnQueue(std::function<void(jsi::Runtime &)> &&job) {
+  queue_->push([job = std::move(job), weakThis = weak_from_this()]() {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+    auto lock =
+        std::unique_lock<std::recursive_mutex>(*strongThis->runtimeMutex_);
+    jsi::Runtime &rt = strongThis->getJSIRuntime();
+    job(rt);
+  });
+}
+
 jsi::Value WorkletRuntime::executeSync(
-    jsi::Runtime &rt,
+    jsi::Runtime &callerRuntime,
     const jsi::Value &worklet) const {
   auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
-      rt,
+      callerRuntime,
       worklet,
       "[Worklets] Only worklets can be executed synchronously on UI runtime.");
   auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
-  jsi::Runtime &uiRuntime = getJSIRuntime();
+  jsi::Runtime &targetRuntime = getJSIRuntime();
   auto result = runGuarded(serializableWorklet);
-  auto serializableResult = extractSerializableOrThrow(uiRuntime, result);
+  auto serializableResult = extractSerializableOrThrow(targetRuntime, result);
   lock.unlock();
-  return serializableResult->toJSValue(rt);
+  return serializableResult->toJSValue(callerRuntime);
 }
 
 jsi::Value WorkletRuntime::executeSync(
     std::function<jsi::Value(jsi::Runtime &)> &&job) const {
   auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
-  jsi::Runtime &uiRuntime = getJSIRuntime();
-  return job(uiRuntime);
+  jsi::Runtime &rt = getJSIRuntime();
+  return job(rt);
 }
 
 jsi::Value WorkletRuntime::executeSync(
     const std::function<jsi::Value(jsi::Runtime &)> &job) const {
   auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
-  jsi::Runtime &uiRuntime = getJSIRuntime();
-  return job(uiRuntime);
+  jsi::Runtime &rt = getJSIRuntime();
+  return job(rt);
 }
 
 jsi::Value WorkletRuntime::get(

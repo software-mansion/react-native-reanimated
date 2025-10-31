@@ -5,6 +5,7 @@
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/Defs.h>
+#include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #ifdef __ANDROID__
@@ -25,9 +26,9 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
+    const std::shared_ptr<RuntimeManager> &runtimeManager,
     std::function<bool()> &&isJavaScriptThread,
-    std::function<void(std::function<void(const double)>)>
-        &&forwardedRequestAnimationFrame,
+    RuntimeBindings runtimeBindings,
     const std::shared_ptr<const BigStringBuffer> &script,
     const std::string &sourceUrl)
     : isDevBundle_(isDevBundleFromRNRuntime(rnRuntime)),
@@ -37,10 +38,11 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           jsCallInvoker,
           std::move(isJavaScriptThread))),
       uiScheduler_(uiScheduler),
+      runtimeBindings_(runtimeBindings),
       jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
       script_(script),
       sourceUrl_(sourceUrl),
-      runtimeManager_(std::make_shared<RuntimeManager>()),
+      runtimeManager_(runtimeManager),
       uiWorkletRuntime_(runtimeManager_->createUninitializedUIRuntime(
           jsQueue_,
           std::make_shared<AsyncQueueUI>(uiScheduler_))) {
@@ -52,7 +54,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
 
   animationFrameBatchinator_ = std::make_shared<AnimationFrameBatchinator>(
       uiWorkletRuntime_->getJSIRuntime(),
-      std::move(forwardedRequestAnimationFrame));
+      runtimeBindings_.requestAnimationFrame);
 
   UIRuntimeDecorator::decorate(
       uiWorkletRuntime_->getJSIRuntime(),
@@ -72,7 +74,8 @@ WorkletsModuleProxy::createJSIWorkletsModuleProxy() const {
       jsScheduler_,
       uiScheduler_,
       runtimeManager_,
-      uiWorkletRuntime_);
+      uiWorkletRuntime_,
+      runtimeBindings_);
 }
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {

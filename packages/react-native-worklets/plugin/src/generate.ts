@@ -79,6 +79,7 @@ export function generateWorkletFile(
     babelrc: false,
     configFile: false,
     comments: false,
+    sourceMaps: 'inline',
   })?.code;
 
   assert(transformedProg, '[Worklets] `transformedProg` is undefined.');
@@ -88,6 +89,32 @@ export function generateWorkletFile(
   }
 
   const dedicatedFilePath = resolve(filesDirPath, `${workletHash}.js`);
+
+  const requirePath = `react-native-worklets/__generatedWorklets/${workletHash}.js`;
+
+  type VirtualModule = {
+    absolutePath: string;
+    code: string;
+    sourceURL: string;
+    type: 'sourceFile';
+  };
+
+  type VirtualModules = Map<string, VirtualModule>;
+
+  // @ts-ignore is ok
+  if (!state.file.metadata.metro.virtualModules) {
+    // @ts-ignore is ok
+    state.file.metadata.metro.virtualModules = new Map() as VirtualModules;
+  }
+  // @ts-ignore is ok
+  state.file.metadata.metro.virtualModules.set(requirePath, {
+    absolutePath: dedicatedFilePath,
+    code: transformedProg,
+    sourceURL: state.filename,
+    type: 'sourceFile',
+  });
+
+  // console.log('generated', requirePath);
 
   writeFileSync(dedicatedFilePath, transformedProg);
 }

@@ -1,4 +1,8 @@
 {
   "name": "yarnModern",
-  "packageManager": "yarn@4.6.0"
+  "packageManager": "yarn@4.6.0",
+  "dependencies": {
+    "patch-package": "8.0.1",
+    "react-native-reanimated": "4.1.3"
+  }
 }

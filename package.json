@@ -46,8 +46,17 @@
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "node-fetch": "^3.3.2",
+    "patch-package": "^8.0.1",
     "prettier": "^3.3.3",
     "prettier-plugin-jsdoc": "^1.3.0",
     "typescript": "5.8.3"
+  },
+  "resolutions": {
+    "metro": "patch:metro@npm%3A0.83.1#~/.yarn/patches/metro+0.83.1.patch",
+    "metro-runtime": "patch:metro-runtime@npm%3A0.83.1#~/.yarn/patches/metro-runtime+0.83.1.patch",
+    "react-native": "patch:react-native@npm%3A0.82.0-rc.4#~/.yarn/patches/react-native+0.82.0-rc.4.patch",
+    "metro-resolver": "patch:metro-resolver@npm%3A0.83.1#~/.yarn/patches/metro-resolver+0.83.1.patch",
+    "metro-babel-transformer": "patch:metro-babel-transformer@npm%3A0.83.1#~/.yarn/patches/metro-babel-transformer+0.83.1.patch",
+    "metro-transform-worker": "patch:metro-transform-worker@npm%3A0.83.1#~/.yarn/patches/metro-transform-worker+0.83.1.patch"
   }
 }

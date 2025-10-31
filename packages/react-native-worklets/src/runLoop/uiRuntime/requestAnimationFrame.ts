@@ -4,7 +4,10 @@ import { callMicrotasks } from '../../threads';
 
 export function setupRequestAnimationFrame() {
   'worklet';
-  const nativeRequestAnimationFrame = globalThis.requestAnimationFrame;
+  const nativeRequestAnimationFrame =
+    globalThis.requestAnimationFrame ??
+    // @ts-expect-error wip
+    globalThis.__workletsModuleProxy.requestAnimationFrame;
 
   let queuedCallbacks: ((timestamp: number) => void)[] = [];
   let queuedCallbacksBegin = 0;

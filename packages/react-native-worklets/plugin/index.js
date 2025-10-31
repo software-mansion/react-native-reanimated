@@ -553,13 +553,24 @@ var require_generate = __commonJS({
         ast: false,
         babelrc: false,
         configFile: false,
-        comments: false
+        comments: false,
+        sourceMaps: "inline"
       })) === null || _a === void 0 ? void 0 : _a.code;
       (0, assert_1.default)(transformedProg, "[Worklets] `transformedProg` is undefined.");
       if (!(0, fs_1.existsSync)(filesDirPath)) {
         (0, fs_1.mkdirSync)(filesDirPath, {});
       }
       const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
+      const requirePath = `react-native-worklets/__generatedWorklets/${workletHash}.js`;
+      if (!state.file.metadata.metro.virtualModules) {
+        state.file.metadata.metro.virtualModules = /* @__PURE__ */ new Map();
+      }
+      state.file.metadata.metro.virtualModules.set(requirePath, {
+        absolutePath: dedicatedFilePath,
+        code: transformedProg,
+        sourceURL: state.filename,
+        type: "sourceFile"
+      });
       (0, fs_1.writeFileSync)(dedicatedFilePath, transformedProg);
     }
   }
@@ -653,7 +664,6 @@ var require_workletStringCode = __commonJS({
     var types_12 = require("@babel/types");
     var assert_1 = require("assert");
     var convertSourceMap = __importStar(require("convert-source-map"));
-    var fs = __importStar(require("fs"));
     var transform_1 = require_transform();
     var types_2 = require_types();
     var utils_1 = require_utils();
@@ -691,12 +701,6 @@ var require_workletStringCode = __commonJS({
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "[Reanimated] `inputMap` is undefined.");
       const includeSourceMap = !((0, utils_1.isRelease)() || state.opts.disableSourceMaps);
-      if (includeSourceMap) {
-        inputMap.sourcesContent = [];
-        for (const sourceFile of inputMap.sources) {
-          inputMap.sourcesContent.push(fs.readFileSync(sourceFile).toString("utf-8"));
-        }
-      }
       const transformed = (0, transform_1.workletTransformSync)(code, {
         filename: state.file.opts.filename,
         extraPlugins: [
@@ -1727,6 +1731,7 @@ module.exports = function WorkletsBabelPlugin() {
     pre() {
       runWithTaggedExceptions(() => {
         (0, globals_1.initializeState)(this);
+        this.opts.bundleMode = true;
       });
     },
     visitor: {
