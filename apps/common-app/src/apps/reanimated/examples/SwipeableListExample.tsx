@@ -19,7 +19,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { runOnJS } from 'react-native-worklets';
+import { scheduleOnRN } from 'react-native-worklets';
 
 const windowDimensions = Dimensions.get('window');
 const BUTTON_WIDTH = 80;
@@ -69,7 +69,11 @@ export default function SwipeableListExample() {
     <View style={s.container}>
       <FlatList
         data={data}
+        // TODO: Fix me
+        // @ts-ignore RNGH types for web FlatList are broken.
         renderItem={({ item }) => <ListItem item={item} onRemove={onRemove} />}
+        // TODO: Fix me
+        // @ts-ignore RNGH types for web FlatList are broken.
         keyExtractor={(item) => item.id}
       />
     </View>
@@ -133,7 +137,7 @@ function ListItem({ item, onRemove }: ListItemProps) {
     if (isRemoving.value) {
       return {
         height: withTiming(0, timingConfig, () => {
-          runOnJS(onRemove)();
+          scheduleOnRN(onRemove);
         }),
         opacity: withTiming(0, timingConfig),
         transform: [

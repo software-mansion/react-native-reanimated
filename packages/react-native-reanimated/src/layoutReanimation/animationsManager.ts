@@ -1,5 +1,6 @@
 'use strict';
-import { executeOnUIRuntimeSync } from 'react-native-worklets';
+
+import { runOnUISync } from 'react-native-worklets';
 
 import { withStyleAnimation } from '../animation';
 import { SHOULD_BE_USE_WEB } from '../common';
@@ -104,10 +105,10 @@ function createLayoutAnimationManager(): {
 }
 
 if (!SHOULD_BE_USE_WEB) {
-  executeOnUIRuntimeSync(() => {
+  runOnUISync(() => {
     'worklet';
     global.LayoutAnimationsManager = createLayoutAnimationManager();
-  })();
+  });
 }
 
 export type LayoutAnimationsManager = ReturnType<

@@ -1,23 +1,20 @@
 #include <reanimated/CSS/utils/keyframes.h>
 
+#include <utility>
+#include <vector>
+
 namespace reanimated::css {
 
-std::vector<std::pair<double, jsi::Value>> parseJSIKeyframes(
-    jsi::Runtime &rt,
-    const jsi::Value &keyframes) {
+std::vector<std::pair<double, jsi::Value>> parseJSIKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) {
   if (!keyframes.isObject() || !keyframes.asObject(rt).isArray(rt)) {
-    throw std::invalid_argument(
-        "[Reanimated] Keyframes must be an array of keyframe objects");
+    throw std::invalid_argument("[Reanimated] Keyframes must be an array of keyframe objects");
   }
 
   const auto keyframeArray = keyframes.asObject(rt).asArray(rt);
   const auto keyframesCount = keyframeArray.size(rt);
 
   const auto getKeyframeAtIndexOffset = [&](size_t index) -> double {
-    return keyframeArray.getValueAtIndex(rt, index)
-        .asObject(rt)
-        .getProperty(rt, "offset")
-        .asNumber();
+    return keyframeArray.getValueAtIndex(rt, index).asObject(rt).getProperty(rt, "offset").asNumber();
   };
 
   const bool hasOffset0 = getKeyframeAtIndexOffset(0) == 0;
@@ -33,8 +30,7 @@ std::vector<std::pair<double, jsi::Value>> parseJSIKeyframes(
 
   // Insert all provided keyframes
   for (size_t i = 0; i < keyframesCount; ++i) {
-    jsi::Object keyframeObject =
-        keyframeArray.getValueAtIndex(rt, i).asObject(rt);
+    jsi::Object keyframeObject = keyframeArray.getValueAtIndex(rt, i).asObject(rt);
     double offset = keyframeObject.getProperty(rt, "offset").asNumber();
     jsi::Value value = keyframeObject.getProperty(rt, "value");
 

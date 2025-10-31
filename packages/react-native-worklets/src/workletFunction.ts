@@ -1,6 +1,6 @@
 'use strict';
 
-import type { WorkletFunction } from './workletTypes';
+import type { WorkletFunction } from './types';
 
 /**
  * This function allows you to determine if a given function is a worklet. It

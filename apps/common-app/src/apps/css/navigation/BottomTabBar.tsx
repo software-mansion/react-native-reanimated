@@ -18,7 +18,7 @@ import type { TabRoute } from '@/apps/css/navigation/types';
 import { colors, flex, spacing, text } from '@/theme';
 
 import { useLocalNavigationRef } from './LocalNavigationProvider';
-import { runOnUI } from 'react-native-worklets';
+import { scheduleOnUI } from 'react-native-worklets';
 
 const TABS_GAP = spacing.xxs;
 
@@ -59,6 +59,9 @@ export default function BottomTabBar({
   const gradient = useMemo(
     () => (
       <Svg height="100%" width="100%">
+        {/* TODO: Fix me */}
+        {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+        {/* @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801 */}
         <Defs>
           <LinearGradient id="bottom-tab-bar" x1="0" x2="0" y1="0" y2="1">
             <Stop offset="0" stopColor={colors.black} stopOpacity="0" />
@@ -79,10 +82,10 @@ export default function BottomTabBar({
 
   const handleMeasure = useCallback(
     (width: number, idx: number) => {
-      runOnUI(() => {
+      scheduleOnUI(() => {
         buttonWidths.value[idx] = width;
         buttonWidths.value = [...buttonWidths.value];
-      })();
+      });
     },
     [buttonWidths]
   );

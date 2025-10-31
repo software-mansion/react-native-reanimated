@@ -4,10 +4,7 @@
 
 namespace reanimated::css {
 
-void StaticPropsRegistry::set(
-    jsi::Runtime &rt,
-    const Tag viewTag,
-    const jsi::Value &props) {
+void StaticPropsRegistry::set(jsi::Runtime &rt, const Tag viewTag, const jsi::Value &props) {
   if (props.isNull() || props.isUndefined()) {
     remove(viewTag);
   } else {
@@ -43,9 +40,7 @@ bool StaticPropsRegistry::hasObservers(const Tag viewTag) const {
   return observers_.find(viewTag) != observers_.end();
 }
 
-void StaticPropsRegistry::setObserver(
-    const Tag viewTag,
-    PropsObserver observer) {
+void StaticPropsRegistry::setObserver(const Tag viewTag, PropsObserver observer) {
   observers_[viewTag] = std::move(observer);
 }
 

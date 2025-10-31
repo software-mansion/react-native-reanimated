@@ -48,12 +48,8 @@ export {
 } from './animation';
 export type { ParsedColorArray } from './Colors';
 export { convertToRGBA, isColor } from './Colors';
-export {
-  DynamicColorIOS,
-  PlatformColor,
-  processColor,
-  ReanimatedLogLevel,
-} from './common';
+export { ReanimatedLogLevel } from './common';
+export { DynamicColorIOS, PlatformColor, processColor } from './common';
 export type {
   AnimatableValue,
   AnimatableValueObject,

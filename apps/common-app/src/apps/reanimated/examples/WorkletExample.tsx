@@ -14,22 +14,22 @@ import Animated, {
   useScrollOffset,
   useSharedValue,
 } from 'react-native-reanimated';
-import { runOnJS, runOnUI } from 'react-native-worklets';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
-function RunOnUIDemo() {
+function ScheduleOnUIDemo() {
   const someWorklet = (x: number) => {
     'worklet';
     console.log(_WORKLET, x); // _WORKLET should be true
   };
 
   const handlePress = () => {
-    runOnUI(someWorklet)(Math.random());
+    scheduleOnUI(someWorklet, Math.random());
   };
 
-  return <Button onPress={handlePress} title="runOnUI demo" />;
+  return <Button onPress={handlePress} title="scheduleOnUI demo" />;
 }
 
-function RunOnUIRunOnJSDemo() {
+function ScheduleOnUIscheduleOnRNDemo() {
   const someFunction = (x: number) => {
     console.log(_WORKLET, x); // _WORKLET should be false
   };
@@ -37,17 +37,19 @@ function RunOnUIRunOnJSDemo() {
   const someWorklet = (x: number) => {
     'worklet';
     console.log(_WORKLET, x); // _WORKLET should be true
-    runOnJS(someFunction)(x);
+    scheduleOnRN(someFunction, x);
   };
 
   const handlePress = () => {
-    runOnUI(someWorklet)(Math.random());
+    scheduleOnUI(someWorklet, Math.random());
   };
 
-  return <Button onPress={handlePress} title="runOnUI + runOnJS demo" />;
+  return (
+    <Button onPress={handlePress} title="scheduleOnUI + scheduleOnRN demo" />
+  );
 }
 
-function UseDerivedValueRunOnJSDemo() {
+function UseDerivedValuescheduleOnRNDemo() {
   const sv = useSharedValue(0);
 
   const someFunction = (x: number) => {
@@ -56,7 +58,7 @@ function UseDerivedValueRunOnJSDemo() {
 
   useDerivedValue(() => {
     console.log(_WORKLET, sv.value);
-    runOnJS(someFunction)(sv.value);
+    scheduleOnRN(someFunction, sv.value);
   });
 
   const handlePress = () => {
@@ -64,7 +66,7 @@ function UseDerivedValueRunOnJSDemo() {
   };
 
   return (
-    <Button onPress={handlePress} title="useDerivedValue + runOnJS demo" />
+    <Button onPress={handlePress} title="useDerivedValue + scheduleOnRN demo" />
   );
 }
 
@@ -83,7 +85,7 @@ function ThrowErrorWorkletDemo() {
   };
 
   const handlePress = () => {
-    runOnUI(someWorklet)();
+    scheduleOnUI(someWorklet);
   };
 
   return <Button onPress={handlePress} title="Throw error from worklet" />;
@@ -101,7 +103,7 @@ function ThrowErrorNestedWorkletDemo() {
   };
 
   const handlePress = () => {
-    runOnUI(outerWorklet)();
+    scheduleOnUI(outerWorklet);
   };
 
   return (
@@ -224,9 +226,9 @@ function ThrowErrorFromuseScrollOffsetDemo() {
 export default function WorkletExample() {
   return (
     <View style={styles.container}>
-      <RunOnUIDemo />
-      <RunOnUIRunOnJSDemo />
-      <UseDerivedValueRunOnJSDemo />
+      <ScheduleOnUIDemo />
+      <ScheduleOnUIscheduleOnRNDemo />
+      <UseDerivedValuescheduleOnRNDemo />
       <ThrowErrorDemo />
       <ThrowErrorWorkletDemo />
       <ThrowErrorNestedWorkletDemo />

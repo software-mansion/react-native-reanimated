@@ -283,8 +283,14 @@ function YayEmoji() {
       </View>
       <Svg
         height={0.5 * EMOJI_SIZE}
+        // TODO: Fix me
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
         style={yayStyles.cheeks}
         width={EMOJI_SIZE}>
+        {/* TODO: Fix me */}
+        {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+        {/* @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801 */}
         <Defs>
           <RadialGradient cx="50%" cy="50%" id="yay" rx="50%" ry="50%">
             <Stop offset="0" stopColor={COLORS.red} stopOpacity="0.3" />
@@ -628,8 +634,14 @@ function AngryEmoji() {
     <View style={angryStyles.emoji}>
       <Svg
         height={EMOJI_SIZE}
+        // TODO: Fix me
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
         style={StyleSheet.absoluteFill}
         width={EMOJI_SIZE}>
+        {/* TODO: Fix me */}
+        {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+        {/* @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801 */}
         <Defs>
           <LinearGradient id="angry" x1="0" x2="0" y1="0" y2="1">
             <Stop offset="0" stopColor={COLORS.red} stopOpacity="1" />

@@ -79,8 +79,8 @@ function HomeScreen({ navigation }: HomeScreenProps) {
               setTimeout(() => setWasClicked([...wasClicked, name]), 500);
             }
           }}
-          missingOnFabric={EXAMPLES[name].missingOnFabric}
           shouldWork={EXAMPLES[name].shouldWork?.[platform]}
+          disabled={EXAMPLES[name].disabledPlatforms?.includes(Platform.OS)}
           wasClicked={wasClicked.includes(name)}
         />
       )}
@@ -94,8 +94,8 @@ function HomeScreen({ navigation }: HomeScreenProps) {
 interface ItemProps {
   icon?: string;
   title: string;
+  disabled?: boolean;
   onPress: () => void;
-  missingOnFabric?: boolean;
   wasClicked?: boolean;
   shouldWork?: boolean;
 }
@@ -104,21 +104,20 @@ function Item({
   icon,
   title,
   onPress,
-  missingOnFabric,
+  disabled,
   wasClicked,
   shouldWork,
 }: ItemProps) {
-  const isDisabled = missingOnFabric;
   const Button = IS_MACOS ? Pressable : RectButton;
   return (
     <Button
       style={[
         styles.button,
-        isDisabled && styles.disabledButton,
+        disabled && styles.disabledButton,
         wasClicked && styles.visitedItem,
       ]}
       onPress={onPress}
-      enabled={!isDisabled}>
+      enabled={!disabled}>
       {icon && <Text style={styles.title}>{icon + '  '}</Text>}
       <Text style={styles.title}>{title}</Text>
       {shouldWork !== undefined && (
@@ -139,8 +138,16 @@ const screenOptions = {
   headerRight: IS_MACOS ? undefined : () => <DrawerButton />,
 };
 
+type AnimationType = 'none' | 'default' | 'fade';
+
 function Navigator() {
   const shouldReduceMotion = useReducedMotion();
+  let animation: AnimationType = 'default';
+  if (IS_MACOS) {
+    animation = 'none';
+  } else if (shouldReduceMotion) {
+    animation = 'fade';
+  }
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
@@ -158,7 +165,7 @@ function Navigator() {
           name={name}
           component={EXAMPLES[name].screen}
           options={{
-            animation: shouldReduceMotion ? 'fade' : 'default',
+            animation: animation,
             headerTitle: EXAMPLES[name].title,
             title: EXAMPLES[name].title,
           }}

@@ -27,7 +27,7 @@ export default function BouncingBoxExample() {
       );
     })
     .onFinalize(() => {
-      offset.value = withSpring(0, { mass: 2, stiffness: 500 });
+      offset.value = withSpring(0, { damping: 20 });
     });
 
   const rotation = Gesture.Rotation()
@@ -40,7 +40,7 @@ export default function BouncingBoxExample() {
       );
     })
     .onFinalize(() => {
-      angle.value = withSpring(0, { mass: 2, stiffness: 500 });
+      angle.value = withSpring(0, { damping: 20 });
     });
 
   const animatedStyles = useAnimatedStyle(() => {

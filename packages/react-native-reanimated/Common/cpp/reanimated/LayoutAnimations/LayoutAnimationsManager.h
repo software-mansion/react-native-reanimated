@@ -49,42 +49,32 @@ struct LayoutAnimationConfig {
 class LayoutAnimationsManager {
  public:
   explicit LayoutAnimationsManager(const std::shared_ptr<JSLogger> &jsLogger)
-      : sharedTransitionManager_(std::make_shared<SharedTransitionManager>()),
-        jsLogger_(jsLogger) {}
-  void configureAnimationBatch(
-      const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch);
+      : sharedTransitionManager_(std::make_shared<SharedTransitionManager>()), jsLogger_(jsLogger) {}
+  void configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch);
   void setShouldAnimateExiting(const int tag, const bool value);
   bool shouldAnimateExiting(const int tag, const bool shouldAnimate);
   bool hasLayoutAnimation(const int tag, const LayoutAnimationType type);
-  void startLayoutAnimation(
-      jsi::Runtime &rt,
-      const int tag,
-      const LayoutAnimationType type,
-      const jsi::Object &values);
+  void startLayoutAnimation(jsi::Runtime &rt, const int tag, const LayoutAnimationType type, const jsi::Object &values);
   void clearLayoutAnimationConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
 
   //  private:
-  std::unordered_map<int, std::shared_ptr<Serializable>> &getConfigsForType(
-      const LayoutAnimationType type);
+  std::unordered_map<int, std::shared_ptr<Serializable>> &getConfigsForType(const LayoutAnimationType type);
 
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
 
  private:
   std::shared_ptr<JSLogger> jsLogger_;
 
-  std::unordered_map<int, std::shared_ptr<Serializable>>
-      enteringAnimationsForNativeID_;
-  std::unordered_map<int, std::shared_ptr<Serializable>>
-      sharedTransitionsForNativeID_;
+  std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimationsForNativeID_;
+  std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitionsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitions_;
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Serializable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Serializable>> layoutAnimations_;
   std::unordered_map<int, bool> shouldAnimateExitingForTag_;
-  mutable std::recursive_mutex
-      animationsMutex_; // Protects `enteringAnimations_`, `exitingAnimations_`,
+  mutable std::recursive_mutex animationsMutex_; // Protects `enteringAnimations_`, `exitingAnimations_`,
   // `layoutAnimations_` and `shouldAnimateExitingForTag_`.
 };
 

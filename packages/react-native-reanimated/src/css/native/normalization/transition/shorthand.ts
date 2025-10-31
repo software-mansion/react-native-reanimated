@@ -1,15 +1,15 @@
 'use strict';
-import { ReanimatedError } from '../../../../common';
-import type { ControlPoint, CSSTimingFunction } from '../../../easing';
-import { cubicBezier, linear, steps } from '../../../easing';
-import type {
-  ConvertValuesToArraysWithUndefined,
-  CSSTransitionProperties,
-} from '../../../types';
+import type { ConvertValuesToArraysWithUndefined } from '../../../../common';
 import {
   camelizeKebabCase,
-  isArrayOfLength,
   isPercentage,
+  ReanimatedError,
+} from '../../../../common';
+import type { ControlPoint, CSSTimingFunction } from '../../../easing';
+import { cubicBezier, linear, steps } from '../../../easing';
+import type { CSSTransitionProperties } from '../../../types';
+import {
+  isArrayOfLength,
   isPredefinedTimingFunction,
   isStepsModifier,
   parseSingleTransitionShorthand,

@@ -21,15 +21,12 @@ struct SVGStrokeDashArray : public CSSSimpleValue<SVGStrokeDashArray> {
 
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
-  SVGStrokeDashArray interpolate(double progress, const SVGStrokeDashArray &to)
-      const override;
+  SVGStrokeDashArray interpolate(double progress, const SVGStrokeDashArray &to) const override;
 
   bool operator==(const SVGStrokeDashArray &other) const;
 
 #ifndef NDEBUG
-  friend std::ostream &operator<<(
-      std::ostream &os,
-      const SVGStrokeDashArray &strokeDashArray);
+  friend std::ostream &operator<<(std::ostream &os, const SVGStrokeDashArray &strokeDashArray);
 #endif // NDEBUG
 };
 

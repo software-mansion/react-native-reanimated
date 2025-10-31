@@ -10,8 +10,7 @@
 namespace reanimated::css {
 
 // MatrixOperationValue type for matrix operations
-using MatrixOperationValue =
-    std::variant<TransformMatrix::Shared, TransformOperations>;
+using MatrixOperationValue = std::variant<TransformMatrix::Shared, TransformOperations>;
 
 /**
  * Multiplies all operations in the vector to a single 3D matrix

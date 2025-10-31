@@ -1,4 +1,4 @@
-import { createWorkletRuntime, runOnRuntime, runOnUI, scheduleOnRN } from 'react-native-worklets';
+import { createWorkletRuntime, scheduleOnRuntime, scheduleOnUI, scheduleOnRN } from 'react-native-worklets';
 import {
   describe,
   expect,
@@ -27,17 +27,17 @@ const TestComponent = ({ runFrom }: { runFrom: 'ui' | 'js' | 'workletRuntime' })
       notify(NOTIFICATION_NAME);
     };
     if (runFrom === 'ui') {
-      runOnUI(() => {
+      scheduleOnUI(() => {
         scheduleOnRN(callback, 100);
-      })();
+      });
     } else if (runFrom === 'js') {
       scheduleOnRN(callback, 100);
     } else if (runFrom === 'workletRuntime') {
       const workletRuntime = createWorkletRuntime();
-      runOnRuntime(workletRuntime, () => {
+      scheduleOnRuntime(workletRuntime, () => {
         'worklet';
         scheduleOnRN(callback, 100);
-      })();
+      });
     }
   }, [runFrom, sharedValue]);
 

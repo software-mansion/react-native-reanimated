@@ -4,6 +4,7 @@ import { globalIgnores } from 'eslint/config';
 import jsdoc from 'eslint-plugin-jsdoc';
 import tsdoc from 'eslint-plugin-tsdoc';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
+// @ts-expect-error No types for eslint-plugin-react-native.
 import reactNative from 'eslint-plugin-react-native';
 import jest from 'eslint-plugin-jest';
 import globals from 'globals';
@@ -11,6 +12,7 @@ import importPlugin from 'eslint-plugin-import';
 import reactHooks from 'eslint-plugin-react-hooks';
 import react from 'eslint-plugin-react';
 import nodePlugin from 'eslint-plugin-n';
+// @ts-expect-error No types for eslint-plugin-promise.
 import pluginPromise from 'eslint-plugin-promise';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
@@ -125,8 +127,13 @@ const config = tsEslint.config(
       ecmaVersion: 'latest',
       parserOptions: {
         ecmaFeatures: { jsx: true },
-        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+        project: ['./tsconfig.json'],
       },
+    },
+  },
+  {
+    languageOptions: {
       globals: {
         React: true,
         ...reactNative.environments['react-native']['react-native'],
@@ -140,7 +147,18 @@ const config = tsEslint.config(
     },
     settings: {
       'import/resolver': {
-        'babel-module': { extensions: ['.js', '.jsx', '.ts', '.tsx'] },
+        'babel-module': {
+          extensions: [
+            '.js',
+            '.jsx',
+            '.ts',
+            '.tsx',
+            '.native.js',
+            '.native.jsx',
+            '.native.ts',
+            '.native.tsx',
+          ],
+        },
       },
       react: {
         version: 'detect',
@@ -186,6 +204,9 @@ const config = tsEslint.config(
     '**/ios/**',
     '**/android/**',
     '**/lib/**',
+    '**/.next/**',
+    '**/macos/**',
+    '**/__generatedWorklets__/**',
   ])
 );
 
