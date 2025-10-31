@@ -218,7 +218,7 @@ void scheduleOnRuntime(
   workletRuntime->runAsyncGuarded(serializableWorklet);
 }
 
-#if REACT_NATIVE_MINOR_VERSION >= 71
+#if REACT_NATIVE_MINOR_VERSION >= 81
 std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
   auto runtimeData = rt.getRuntimeData(RuntimeData::weakRuntimeUUID);
   if (!runtimeData) [[unlikely]] {
@@ -229,6 +229,6 @@ std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::
   auto weakHolder = std::static_pointer_cast<WeakRuntimeHolder>(runtimeData);
   return weakHolder->weakRuntime;
 }
-#endif // REACT_NATIVE_MINOR_VERSION >= 71
+#endif // REACT_NATIVE_MINOR_VERSION >= 81
 
 } // namespace worklets
