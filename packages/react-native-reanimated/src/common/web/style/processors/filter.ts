@@ -39,7 +39,7 @@ function parseFilterValue(
       return `${filterValue}`;
 
     default:
-      return `${filterValue}
+      return `${filterValue}`;
   }
 }
 
