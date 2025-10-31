@@ -166,6 +166,7 @@ import {
   View,
 } from 'react-native';
 import Animated from 'react-native-reanimated';
+import photo from './assets/image.jpg';
 
 type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 
@@ -197,7 +198,6 @@ const DATA: Item[] = [
   { id: 'a8', title: 'a8' },
   { id: 'a9', title: 'a9' },
 ];
-const photo = require('./assets/image.jpg');
 
 interface ItemProps extends ListItemWithParent<Item> {
   onPress: TouchableWithoutFeedbackProps['onPress'];
