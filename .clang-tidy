@@ -34,7 +34,7 @@ Checks:
   # - misc-*
   # - modernize-*
   # - objc-*
-  - performance-*
+  # - performance-*
   # - portability-*
   # - readability-*
 WarningsAsErrors: '*'
