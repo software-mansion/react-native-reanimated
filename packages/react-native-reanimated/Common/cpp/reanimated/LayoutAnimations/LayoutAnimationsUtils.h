@@ -53,7 +53,7 @@ struct Snapshot {
   }
 };
 
-typedef enum ExitingState {
+typedef enum class ExitingState : std::uint8_t {
   UNDEFINED = 1,
   WAITING = 2,
   ANIMATING = 4,
@@ -72,13 +72,13 @@ struct Node {
   std::vector<std::shared_ptr<MutationNode>> children, unflattenedChildren;
   std::shared_ptr<Node> parent, unflattenedParent;
   Tag tag;
-  void removeChildFromUnflattenedTree(std::shared_ptr<MutationNode> child);
-  void applyMutationToIndices(ShadowViewMutation mutation);
+  void removeChildFromUnflattenedTree(const std::shared_ptr<MutationNode> &child);
+  void applyMutationToIndices(const ShadowViewMutation &mutation);
   void insertChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
   void insertUnflattenedChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
   virtual bool isMutationMode();
   explicit Node(const Tag tag) : tag(tag) {}
-  Node(Node &&node)
+  Node(Node &&node) noexcept
       : children(std::move(node.children)), unflattenedChildren(std::move(node.unflattenedChildren)), tag(node.tag) {}
   Node(Node &node) : children(node.children), unflattenedChildren(node.unflattenedChildren), tag(node.tag) {}
   virtual ~Node() = default;
@@ -89,7 +89,7 @@ struct Node {
  */
 struct MutationNode : public Node {
   ShadowViewMutation mutation;
-  ExitingState state = UNDEFINED;
+  ExitingState state = ExitingState::UNDEFINED;
   explicit MutationNode(ShadowViewMutation &mutation) : Node(mutation.oldChildShadowView.tag), mutation(mutation) {}
   MutationNode(ShadowViewMutation &mutation, Node &&node) : Node(std::move(node)), mutation(mutation) {}
   bool isMutationMode() override;
@@ -120,7 +120,7 @@ static inline void updateLayoutMetrics(LayoutMetrics &layoutMetrics, Frame &fram
   }
 }
 
-static inline bool isRNSScreen(std::shared_ptr<MutationNode> node) {
+static inline bool isRNSScreen(const std::shared_ptr<MutationNode> &node) {
   const auto &componentName = node->mutation.oldChildShadowView.componentName;
   return !std::strcmp(componentName, "RNSScreenStack") || !std::strcmp(componentName, "RNSScreen") ||
       !std::strcmp(componentName, "RNSModalScreen");

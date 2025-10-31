@@ -31,7 +31,7 @@ class HermesExecutorRuntimeAdapter
   explicit HermesExecutorRuntimeAdapter(
       facebook::hermes::HermesRuntime &hermesRuntime,
       const std::shared_ptr<MessageQueueThread> &thread)
-      : hermesRuntime_(hermesRuntime), thread_(std::move(thread)) {}
+      : hermesRuntime_(hermesRuntime), thread_(thread) {}
 
   virtual ~HermesExecutorRuntimeAdapter() {
     // This is required by iOS, because there is an assertion in the destructor

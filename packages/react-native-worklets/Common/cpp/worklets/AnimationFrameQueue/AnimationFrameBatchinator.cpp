@@ -60,6 +60,6 @@ std::vector<std::shared_ptr<const facebook::jsi::Value>> AnimationFrameBatchinat
 AnimationFrameBatchinator::AnimationFrameBatchinator(
     facebook::jsi::Runtime &uiRuntime,
     RuntimeBindings::RequestAnimationFrame requestAnimationFrame)
-    : uiRuntime_(&uiRuntime), requestAnimationFrame_(requestAnimationFrame) {}
+    : uiRuntime_(&uiRuntime), requestAnimationFrame_(std::move(requestAnimationFrame)) {}
 
 } // namespace worklets

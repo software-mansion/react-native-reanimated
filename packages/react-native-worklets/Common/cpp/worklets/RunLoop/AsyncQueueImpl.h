@@ -21,7 +21,7 @@ struct AsyncQueueState {
 
 class AsyncQueueImpl : public AsyncQueue {
  public:
-  explicit AsyncQueueImpl(std::string name);
+  explicit AsyncQueueImpl(const std::string &name);
 
   ~AsyncQueueImpl() override;
 

@@ -4,7 +4,7 @@
 
 namespace reanimated::css {
 
-enum class TransformOp {
+enum class TransformOp : std::uint8_t {
   Perspective,
   Rotate,
   RotateX,

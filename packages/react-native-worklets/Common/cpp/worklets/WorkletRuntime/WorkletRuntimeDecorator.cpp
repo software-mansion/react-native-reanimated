@@ -22,7 +22,9 @@ static inline double performanceNow() {
   return duration / NANOSECONDS_IN_MILLISECOND;
 }
 
-static inline std::vector<jsi::Value> parseArgs(jsi::Runtime &rt, std::shared_ptr<SerializableArray> serializableArgs) {
+static inline std::vector<jsi::Value> parseArgs(
+    jsi::Runtime &rt,
+    const std::shared_ptr<SerializableArray> &serializableArgs) {
   if (serializableArgs == nullptr) {
     return {};
   }

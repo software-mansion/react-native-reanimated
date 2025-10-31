@@ -10,7 +10,7 @@
 
 namespace reanimated::css {
 
-enum class AnimationProgressState {
+enum class AnimationProgressState : std::uint8_t {
   Pending, // When the animation is waiting for the delay to pass
   Running,
   Paused,
