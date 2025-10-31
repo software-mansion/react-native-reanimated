@@ -149,6 +149,16 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
   /* #endregion */
 
+#if REACT_NATIVE_MINOR_VERSION >= 81
+  /**
+   * Retrieves a weak reference to the WorkletRuntime associated with the
+   * provided jsi::Runtime.
+   *
+   * Throws when invoked with a non-worklet runtime.
+   */
+  static std::weak_ptr<WorkletRuntime> getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt);
+#endif // REACT_NATIVE_MINOR_VERSION >= 81
+
  private:
   const uint64_t runtimeId_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
