@@ -1020,15 +1020,19 @@ void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(
 void LayoutAnimationsProxy_Experimental::transferConfigFromNativeID(
     const std::string nativeIdString,
     const int tag) const {
-  if (nativeIdString.empty()) {
+  if (nativeIdString.empty() || nativeIdString.length() > 9) {
     return;
   }
-  try {
-    auto nativeId = stoi(nativeIdString);
-    layoutAnimationsManager_->transferConfigFromNativeID(nativeId, tag);
-  } catch (std::invalid_argument) {
-  } catch (std::out_of_range) {
+  auto nativeId = 0;
+  for (int i = 0; i < nativeIdString.length(); i++) {
+    if (nativeIdString[i] < '0' || nativeIdString[i] > '9') {
+      return;
+    }
+    nativeId *= 10;
+    nativeId += nativeIdString[i] - '0';
   }
+
+  layoutAnimationsManager_->transferConfigFromNativeID(nativeId, tag);
 }
 
 // When entering animations start, we temporarily set opacity to 0
