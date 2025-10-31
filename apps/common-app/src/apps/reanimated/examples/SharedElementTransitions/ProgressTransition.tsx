@@ -15,6 +15,14 @@ import Animated, {
   FadeInUp,
 } from 'react-native-reanimated';
 
+// Image by <a href="https://www.freepik.com/free-photo/tasty-coffee-cups-with-foam-arrangement_29301184.htm#&position=16&from_view=collections">Freepik</a>
+// Image by <a href="https://www.freepik.com/free-photo/coffee-cups-wooden-boards-assortment_29301210.htm#&position=42&from_view=collections">Freepik</a>
+// Image by <a href="https://www.freepik.com/free-photo/delicious-coffee-glasses-arrangement_29301185.htm#&position=17&from_view=collections">Freepik</a>
+// Image by <a href="https://www.freepik.com/free-photo/coffee-cup-wooden-boards-arrangement_29301195.htm#&position=27&from_view=collections">Freepik</a>
+import coffeeImage from './assets/coffee/coffee.png';
+import espressoImage from './assets/coffee/coffee_espresso.png';
+import latteImage from './assets/coffee/coffee_latte.png';
+
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const BACKGROUND = '#fff';
@@ -23,14 +31,6 @@ const ACCENT_BACKGROUND = '#dac9be';
 const ACCENT = '#ba8638';
 const TEXT = '#222325';
 const TEXT_SECONDARY = '#aeacae';
-
-// Image by <a href="https://www.freepik.com/free-photo/tasty-coffee-cups-with-foam-arrangement_29301184.htm#&position=16&from_view=collections">Freepik</a>
-const coffeeImage = require('./assets/coffee/coffee.png');
-// Image by <a href="https://www.freepik.com/free-photo/coffee-cups-wooden-boards-assortment_29301210.htm#&position=42&from_view=collections">Freepik</a>
-const espressoImage = require('./assets/coffee/coffee_espresso.png');
-// Image by <a href="https://www.freepik.com/free-photo/delicious-coffee-glasses-arrangement_29301185.htm#&position=17&from_view=collections">Freepik</a>
-const latteImage = require('./assets/coffee/coffee_latte.png');
-// Image by <a href="https://www.freepik.com/free-photo/coffee-cup-wooden-boards-arrangement_29301195.htm#&position=27&from_view=collections">Freepik</a>
 
 const windowWidth = Dimensions.get('window').width;
 

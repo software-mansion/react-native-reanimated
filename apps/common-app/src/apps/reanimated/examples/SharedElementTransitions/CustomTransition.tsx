@@ -5,7 +5,6 @@ import * as React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   SharedTransition,
-  SharedTransitionType,
   withSpring,
 } from 'react-native-reanimated';
 

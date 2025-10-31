@@ -4,10 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { Button, StyleSheet, View } from 'react-native';
-import Animated, {
-  SharedTransition,
-  SharedTransitionType,
-} from 'react-native-reanimated';
+import Animated, { SharedTransition } from 'react-native-reanimated';
 
 const Stack = createNativeStackNavigator();
 const transition = undefined;

@@ -13,7 +13,6 @@ import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Layout,
   SharedTransition,
-  SharedTransitionType,
   withSpring,
 } from 'react-native-reanimated';
 
