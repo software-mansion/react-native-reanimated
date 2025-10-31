@@ -18,7 +18,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { flex } from '@/theme';
-import { IS_WEB } from '@/utils';
+import { IS_WEB, IS_MACOS } from '@/utils';
 
 const SPRING: WithSpringConfig = { stiffness: 140, damping: 22, mass: 0.6 };
 
@@ -238,7 +238,8 @@ export default function ExpandableHeaderScreen({
         </View>
       </Animated.View>
       <Animated.View style={[flex.fill, animatedContentContainerStyle]}>
-        {isExpanded ? (
+        {/* On macOS we disable the gesture handler to avoid interfering with the pointer events */}
+        {IS_MACOS || isExpanded ? (
           content
         ) : (
           <GestureDetector gesture={gesture}>{content}</GestureDetector>

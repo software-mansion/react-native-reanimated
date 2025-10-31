@@ -11,12 +11,13 @@ import Animated, {
 import type { RouteCardComponent } from '@/apps/css/components';
 import { RouteCard, Text } from '@/apps/css/components';
 import { colors, radius, sizes, spacing } from '@/theme';
+import { IS_MACOS } from '@/utils';
 
 const MiscellaneousCard: RouteCardComponent = (props) => (
   <RouteCard
     {...props}
     description="**Changing** animation, animation **settings updates** and so on">
-    <Showcase />
+  {!IS_MACOS && <Showcase />}
   </RouteCard>
 );
 
