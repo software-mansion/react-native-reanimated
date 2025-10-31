@@ -160,7 +160,7 @@ CSSAnimationUpdates parseCSSAnimationUpdates(jsi::Runtime &rt, const jsi::Value 
 
     if (configObj.hasProperty(rt, "newAnimationSettings")) {
       result.newAnimationSettings = parseNewAnimationSettings(
-          rt, animationNames, result.animationNames.value(), configObj.getProperty(rt, "newAnimationSettings"));
+          rt, result.animationNames.value(), configObj.getProperty(rt, "newAnimationSettings"));
     }
   }
 

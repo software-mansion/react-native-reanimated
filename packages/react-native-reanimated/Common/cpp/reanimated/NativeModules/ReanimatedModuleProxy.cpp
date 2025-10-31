@@ -211,7 +211,7 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
     }
     auto handler =
         std::make_shared<WorkletEventHandler>(newRegistrationId, eventNameStr, emitterReactTagInt, handlerSerializable);
-    strongThis->eventHandlerRegistry_->registerEventHandler(std::move(handler));
+    strongThis->eventHandlerRegistry_->registerEventHandler(handler);
   });
 
   return jsi::Value(static_cast<double>(newRegistrationId));
@@ -412,7 +412,7 @@ void ReanimatedModuleProxy::applyCSSAnimations(
   {
     auto lock = cssAnimationsRegistry_->lock();
     cssAnimationsRegistry_->apply(
-        rt, shadowNode, updates.animationNames, std::move(newAnimations), updates.settingsUpdates, timestamp);
+        rt, shadowNode, updates.animationNames, newAnimations, updates.settingsUpdates, timestamp);
   }
 
   maybeRunCSSLoop();
