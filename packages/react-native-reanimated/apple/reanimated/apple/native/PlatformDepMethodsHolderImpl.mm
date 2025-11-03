@@ -12,7 +12,7 @@
 #import <React/RCTComponentViewRegistry.h>
 #import <React/RCTMountingManager.h>
 
-#if __has_include (<rnscreens/RNSScreen.h>)
+#if __has_include(<rnscreens/RNSScreen.h>)
 #define HAS_SCREENS
 #import <rnscreens/RNSScreen.h>
 #endif
