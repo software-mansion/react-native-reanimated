@@ -8,10 +8,15 @@ import {
   IS_JEST,
   processBoxShadowNative,
   processColorsInProps,
+  processFilter,
   ReanimatedError,
   SHOULD_BE_USE_WEB,
 } from '../common';
-import { processBoxShadowWeb, processTransformOrigin } from '../common/web';
+import {
+  processBoxShadowWeb,
+  processFilterWeb,
+  processTransformOrigin,
+} from '../common/web';
 import type {
   AnimatedStyle,
   ShadowNodeWrapper,
@@ -40,6 +45,9 @@ if (SHOULD_BE_USE_WEB) {
       if ('boxShadow' in updates) {
         updates.boxShadow = processBoxShadowWeb(updates.boxShadow);
       }
+      if ('filter' in updates) {
+        updates.filter = processFilterWeb(updates.filter);
+      }
       _updatePropsJS(updates, component, isAnimatedProps);
     });
   };
@@ -56,6 +64,9 @@ if (SHOULD_BE_USE_WEB) {
     }
     if ('boxShadow' in updates) {
       updates.boxShadow = processBoxShadowNative(updates.boxShadow);
+    }
+    if ('filter' in updates) {
+      updates.filter = processFilter(updates.filter);
     }
     global.UpdatePropsManager.update(viewDescriptors, updates);
   };
