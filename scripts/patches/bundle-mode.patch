@@ -62,25 +62,27 @@ index 3f8fe4a6e2..e208389ca3 100644
  platform :ios, min_ios_version_supported
  prepare_react_native_project!
 diff --git a/apps/fabric-example/metro.config.js b/apps/fabric-example/metro.config.js
-index cb4f1c4adc..b05b824d9c 100644
+index ac70ff22bc..cb06730da7 100644
 --- a/apps/fabric-example/metro.config.js
 +++ b/apps/fabric-example/metro.config.js
-@@ -34,7 +34,7 @@ let config = {
+@@ -33,8 +33,8 @@ let config = {
  config = mergeConfig(getDefaultConfig(__dirname), config);
  
  // Uncomment the following to enable bundle mode.
+-// const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
 -// config = mergeConfig(config, bundleModeMetroConfig);
++const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
 +config = mergeConfig(config, bundleModeMetroConfig);
  
  module.exports = wrapWithReanimatedMetroConfig(
    mergeConfig(getDefaultConfig(__dirname), config)
 diff --git a/package.json b/package.json
-index 6a77357267..df6817cce5 100644
+index f020af7a46..9f9727afb9 100644
 --- a/package.json
 +++ b/package.json
-@@ -49,5 +49,10 @@
-     "prettier": "^3.3.3",
-     "prettier-plugin-jsdoc": "^1.3.0",
+@@ -69,5 +69,10 @@
+     "react-native-builder-bob": "0.40.13",
+     "shelljs": "0.10.0",
      "typescript": "5.8.3"
 +  },
 +  "resolutions": {

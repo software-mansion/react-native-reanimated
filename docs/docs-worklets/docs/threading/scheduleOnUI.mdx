@@ -1,11 +1,10 @@
 ---
-sidebar_position: 11
+sidebar_position: 42 # Use alphabetical order
 ---
 
 # scheduleOnUI
 
 `scheduleOnUI` lets you schedule a function to be executed on the [UI Runtime](/docs/fundamentals/glossary#ui-runtime). The callback executes asynchronously and doesn't return a value.
-
 
 ## Reference
 
@@ -20,7 +19,6 @@ const myFunction = (): void => {
 scheduleOnUI(myFunction); // Hello from the UI Runtime!
 ```
 
-
 <details>
 <summary>Type definitions</summary>
 
@@ -28,7 +26,7 @@ scheduleOnUI(myFunction); // Hello from the UI Runtime!
 function scheduleOnUI<Args extends unknown[], ReturnValue>(
   fun: (...args: Args) => ReturnValue,
   ...args: Args
-): void
+): void;
 ```
 
 </details>

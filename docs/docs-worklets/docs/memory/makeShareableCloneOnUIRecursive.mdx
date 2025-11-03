@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 2137 # Last in the section - deprecated
 ---
 
 # makeShareableCloneOnUIRecursive
@@ -7,7 +7,7 @@ sidebar_position: 5
 <DeprecatedBanner />
 
 `makeShareableCloneOnUIRecursive` recursively converts JavaScript values into shareable references that can be used on different Runtimes than UI Runtime.
-The reference cannot be manipulated, as it doesn't represent any standard JavaScript object. Changes to the original value don't affect the `Shareable`. 
+The reference cannot be manipulated, as it doesn't represent any standard JavaScript object. Changes to the original value don't affect the `Shareable`.
 To prevent misconceptions about it we freeze the original value for object-like values and for arrays.
 
 **Functions like `runOnUI`, `runOnRuntime`, `runOnJS`, `executeOnUIRuntimeSync` and `runOnUIAsync` automatically convert values to `Shareable` references.**
@@ -15,15 +15,17 @@ To prevent misconceptions about it we freeze the original value for object-like 
 ## Usage
 
 ```tsx
-import { makeShareableCloneOnUIRecursive, makeShareableCloneRecursive } from 'react-native-worklets';
+import {
+  makeShareableCloneOnUIRecursive,
+  makeShareableCloneRecursive,
+} from 'react-native-worklets';
 
 // The function `() => { console.log('Hello world!'); }` is converted into a Shareable reference,
 // that can be passed to native C++ code via custom function `global.customWorkletScheduler()`.
 const shareable = makeShareableCloneRecursive(() => {
-
-   // The string `"Hello world!"` is converted into a Shareable reference,
-   // that can be passed from native C++ code to the JS runtime.
-   return makeShareableCloneOnUIRecursive("Hello world!");
+  // The string `"Hello world!"` is converted into a Shareable reference,
+  // that can be passed from native C++ code to the JS runtime.
+  return makeShareableCloneOnUIRecursive('Hello world!');
 });
 
 const result = global.customWorkletScheduler(shareable);
@@ -44,10 +46,7 @@ export type ShareableRef<T = unknown> = {
 export type FlatShareableRef<T> =
   T extends ShareableRef<infer U> ? ShareableRef<U> : ShareableRef<T>;
 
-
-function makeShareableCloneOnUIRecursive<T>(
-  value: T
-): FlatShareableRef<T>
+function makeShareableCloneOnUIRecursive<T>(value: T): FlatShareableRef<T>;
 ```
 
 </details>
