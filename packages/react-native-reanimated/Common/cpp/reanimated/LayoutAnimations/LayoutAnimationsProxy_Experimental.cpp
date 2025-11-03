@@ -2,8 +2,11 @@
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #ifndef ANDROID
+#if __has_include(<react/renderer/components/rnscreens/Props.h>)
+#define HAS_SCREENS_PROPS
 #include <react/renderer/components/rnscreens/Props.h>
 #endif
+#endif // !ANDROID
 #include <glog/logging.h>
 #include <react/renderer/animations/utils.h>
 #include <react/renderer/components/scrollview/ScrollViewState.h>
@@ -259,7 +262,7 @@ LightNode::Unshared LayoutAnimationsProxy_Experimental::findTopScreen(LightNode:
     //      float f = node->current.props->rawProps.getDefault("activityState",
     //      0).asDouble(); isActive = f == 2.0f;
     isActive = true;
-#else
+#elif defined(HAS_SCREENS_PROPS)
     isActive = std::static_pointer_cast<const RNSScreenProps>(node->current.props)->activityState == 2.0f;
 #endif
     if (isActive) {

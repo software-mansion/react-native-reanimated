@@ -12,8 +12,10 @@
 #import <React/RCTComponentViewRegistry.h>
 #import <React/RCTMountingManager.h>
 
-// TODO: should be conditional import
+#if __has_include (<rnscreens/RNSScreen.h>)
+#define HAS_SCREENS
 #import <rnscreens/RNSScreen.h>
+#endif
 
 namespace reanimated {
 
@@ -120,11 +122,13 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
 ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
 {
   auto f = [=](Tag tag) {
+#ifdef HAS_SCREENS
     RCTSurfacePresenter *surfacePresenter = nodesManager.surfacePresenter;
     RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
     UIView<RCTComponentViewProtocol> *componentView = [componentViewRegistry findComponentViewWithTag:tag];
     RNSScreenView *rnsscreenview = (RNSScreenView *)componentView;
     [rnsscreenview setSnapshotAfterUpdates:YES];
+#endif // HAS_SCREENS
   };
   return f;
 }
