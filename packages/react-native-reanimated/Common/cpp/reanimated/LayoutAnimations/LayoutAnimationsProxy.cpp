@@ -30,7 +30,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     ShadowViewMutationList mutations) const {
   ReanimatedSystraceSection s("LayoutAnimationsProxy::pullTransaction");
   
-  const auto start = std::chrono::high_resolution_clock::now();
+  const auto startTime = std::chrono::high_resolution_clock::now();
 
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << std::endl;
@@ -64,9 +64,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   addOngoingAnimations(surfaceId, filteredMutations);
   
   if constexpr (StaticFeatureFlags::getFlag("VERBOSE_MODE")) {
-    const auto end = std::chrono::high_resolution_clock::now();
-    const auto duration_ms = std::chrono::duration<double>(end - start).count() * 1000;
-    LOG(INFO) << "pullTransaction took " << duration_ms << " ms";
+    const auto endTime = std::chrono::high_resolution_clock::now();
+    const auto durationMs = std::chrono::duration<double>(endTime - startTime).count() * 1000;
+    LOG(INFO) << "pullTransaction duration=" << durationMs << "ms";
   }
 
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};

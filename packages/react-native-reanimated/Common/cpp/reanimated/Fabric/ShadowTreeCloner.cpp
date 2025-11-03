@@ -65,7 +65,7 @@ std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
 RootShadowNode::Unshared cloneShadowTreeWithNewProps(const RootShadowNode &oldRootNode, const PropsMap &propsMap) {
   ReanimatedSystraceSection s("ShadowTreeCloner::cloneShadowTreeWithNewProps");
 
-  const auto start = std::chrono::high_resolution_clock::now();
+  const auto startTime = std::chrono::high_resolution_clock::now();
 
   ChildrenMap childrenMap;
 
@@ -96,9 +96,9 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(const RootShadowNode &oldRo
       cloneShadowTreeWithNewPropsRecursive(oldRootNode, childrenMap, propsMap, cloneCount));
 
   if constexpr (StaticFeatureFlags::getFlag("VERBOSE_MODE")) {
-    const auto end = std::chrono::high_resolution_clock::now();
-    const auto duration_ms = std::chrono::duration<double>(end - start).count() * 1000;
-    LOG(INFO) << "cloneShadowTreeWithNewProps count=" << cloneCount << " duration=" << duration_ms << "ms";
+    const auto endTime = std::chrono::high_resolution_clock::now();
+    const auto durationMs = std::chrono::duration<double>(endTime - startTime).count() * 1000;
+    LOG(INFO) << "cloneShadowTreeWithNewProps count=" << cloneCount << " duration=" << durationMs << "ms";
   }
 
   return result;
