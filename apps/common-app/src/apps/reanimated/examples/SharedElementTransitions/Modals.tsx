@@ -13,13 +13,12 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+import photo from './assets/image.jpg';
 
 type ParamList = {
   Screen1?: object;
   Screen2: { title: string; sharedTransitionTag: string };
 };
-
-const photo = require('./assets/image.jpg');
 
 const Stack = createNativeStackNavigator<ParamList>();
 

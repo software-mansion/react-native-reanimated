@@ -24,7 +24,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
-const leavesBackground = require('./assets/nature/leaves.jpg');
+import leavesBackground from './assets/nature/leaves.jpg';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;

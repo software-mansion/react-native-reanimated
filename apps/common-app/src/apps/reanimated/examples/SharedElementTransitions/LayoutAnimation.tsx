@@ -5,7 +5,7 @@ import * as React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated, { SlideInLeft, SlideOutLeft } from 'react-native-reanimated';
 
-const photo = require('./assets/image.jpg');
+import photo from './assets/image.jpg';
 
 const Stack = createNativeStackNavigator();
 

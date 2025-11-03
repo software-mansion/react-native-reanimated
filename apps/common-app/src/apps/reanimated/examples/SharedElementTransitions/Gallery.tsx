@@ -4,9 +4,9 @@ import * as React from 'react';
 import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, cubicBezier } from 'react-native-reanimated';
 
-const florence = require('./assets/florence.jpg');
-const countryside = require('./assets/countryside.jpg');
-const dawn = require('./assets/dawn.jpg');
+import florence from './assets/florence.jpg';
+import countryside from './assets/countryside.jpg';
+import dawn from './assets/dawn.jpg';
 
 type StackParamList = {
   Home: undefined;
