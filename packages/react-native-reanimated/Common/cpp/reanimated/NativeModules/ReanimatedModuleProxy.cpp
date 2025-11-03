@@ -1099,7 +1099,7 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
 
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
-      shadowTree.commit(
+      const auto status = shadowTree.commit(
           [&](RootShadowNode const &oldRootShadowNode) -> RootShadowNode::Unshared {
             if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
               return nullptr;
@@ -1123,6 +1123,8 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
       if (status == ShadowTree::CommitStatus::Succeeded) {
         updatesRegistryManager_->clearPropsToRevert(surfaceId);
       }
+#else
+      (void)status;
 #endif
     });
   }
