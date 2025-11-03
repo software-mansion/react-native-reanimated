@@ -98,7 +98,7 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(const RootShadowNode &oldRo
   if constexpr (StaticFeatureFlags::getFlag("VERBOSE_MODE")) {
     const auto endTime = std::chrono::high_resolution_clock::now();
     const auto durationMs = std::chrono::duration<double>(endTime - startTime).count() * 1000;
-    LOG(INFO) << "cloneShadowTreeWithNewProps count=" << cloneCount << " duration=" << durationMs << "ms";
+    LOG(INFO) << "cloneShadowTreeWithNewProps propsMapSize=" << propsMap.size() << " cloneCount=" << cloneCount << " duration=" << durationMs << "ms";
   }
 
   return result;
