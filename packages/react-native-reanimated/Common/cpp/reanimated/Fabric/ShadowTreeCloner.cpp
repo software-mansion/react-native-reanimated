@@ -98,7 +98,7 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(const RootShadowNode &oldRo
   if constexpr (StaticFeatureFlags::getFlag("VERBOSE_MODE")) {
     const auto end = std::chrono::high_resolution_clock::now();
     const auto duration_ms = std::chrono::duration<double>(end - start).count() * 1000;
-    LOG(INFO) << "Cloned " << cloneCount << " ShadowNodes in " << duration_ms << " ms";
+    LOG(INFO) << "cloneShadowTreeWithNewProps count=" << cloneCount << " duration=" << duration_ms << "ms";
   }
 
   return result;
