@@ -104,44 +104,6 @@ export function createWorkletRuntime(
   );
 }
 
-/** @deprecated Use `scheduleOnRuntime` instead. @public */
-// @ts-expect-error Check `runOnUI` overload.
-export function runOnRuntime<Args extends unknown[], ReturnValue>(
-  workletRuntime: WorkletRuntime,
-  worklet: (...args: Args) => ReturnValue
-): WorkletFunction<Args, ReturnValue>;
-/** Schedule a worklet to execute on the background queue. */
-export function runOnRuntime<Args extends unknown[], ReturnValue>(
-  workletRuntime: WorkletRuntime,
-  worklet: WorkletFunction<Args, ReturnValue>
-): (...args: Args) => void {
-  'worklet';
-  if (__DEV__ && !isWorkletFunction(worklet)) {
-    throw new WorkletsError(
-      'The function passed to `runOnRuntime` is not a worklet.'
-    );
-  }
-  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
-    return (...args) =>
-      globalThis._scheduleOnRuntime(
-        workletRuntime,
-        makeShareableCloneOnUIRecursive(() => {
-          'worklet';
-          worklet(...args);
-        })
-      );
-  }
-  return (...args) =>
-    WorkletsModule.scheduleOnRuntime(
-      workletRuntime,
-      createSerializable(() => {
-        'worklet';
-        worklet(...args);
-        globalThis.__flushMicrotasks();
-      })
-    );
-}
-
 /**
  * Lets you asynchronously run a
  * [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)
@@ -167,13 +129,68 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
  * @param args - The arguments to pass to the worklet.
  * @returns The return value of the worklet.
  */
+// @ts-expect-error This overload is correct since it's what user sees in their code
+// before it's transformed by Worklets Babel plugin.
 export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
   workletRuntime: WorkletRuntime,
   worklet: (...args: Args) => ReturnValue,
   ...args: Args
+): void;
+
+export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: WorkletFunction<Args, ReturnValue>,
+  ...args: Args
 ): void {
   'worklet';
-  runOnRuntime(workletRuntime, worklet)(...args);
+  if (__DEV__ && !isWorkletFunction(worklet)) {
+    throw new WorkletsError(
+      'The function passed to `scheduleOnRuntime` is not a worklet.'
+    );
+  }
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
+    globalThis._scheduleOnRuntime(
+      workletRuntime,
+      makeShareableCloneOnUIRecursive(() => {
+        'worklet';
+        worklet(...args);
+      })
+    );
+  }
+
+  WorkletsModule.scheduleOnRuntime(
+    workletRuntime,
+    createSerializable(() => {
+      'worklet';
+      worklet(...args);
+      globalThis.__flushMicrotasks();
+    })
+  );
+}
+
+/**
+ * @deprecated Use `scheduleOnRuntime` instead.
+ *
+ *   Schedule a worklet to execute on the background queue.
+ */
+// @ts-expect-error This overload is correct since it's what user sees in their code
+// before it's transformed by Worklets Babel plugin.
+export function runOnRuntime<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: (...args: Args) => ReturnValue
+): WorkletFunction<Args, ReturnValue>;
+
+export function runOnRuntime<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: WorkletFunction<Args, ReturnValue>
+): (...args: Args) => void {
+  'worklet';
+  if (__DEV__ && !isWorkletFunction(worklet)) {
+    throw new WorkletsError(
+      'The function passed to `runOnRuntime` is not a worklet.'
+    );
+  }
+  return (...args) => scheduleOnRuntime(workletRuntime, worklet, ...args);
 }
 
 type WorkletRuntimeConfigInternal = WorkletRuntimeConfig & {

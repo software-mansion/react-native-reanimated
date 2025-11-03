@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 
 import { describe, expect, getRegisteredValue, registerValue, render, test, wait } from '../../ReJest/RuntimeTestsApi';
-import { runOnUI } from 'react-native-worklets';
+import { scheduleOnUI } from 'react-native-worklets';
 
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
 
@@ -21,7 +21,7 @@ describe('Test recursion in worklets', () => {
       }
 
       useEffect(() => {
-        runOnUI(recursiveWorklet)(0);
+        scheduleOnUI(recursiveWorklet, 0);
       });
 
       return <View />;
@@ -64,7 +64,7 @@ describe('Test recursion in worklets', () => {
         if (a === 2) {
           output.value = a;
         } else if (a === 1) {
-          runOnUI(recursiveWorklet)(a + 1);
+          scheduleOnUI(recursiveWorklet, a + 1);
         } else {
           recursiveWorklet(a + 1);
         }
@@ -93,14 +93,14 @@ describe('Test recursion in worklets', () => {
           // TODO: Such case isn't supported at the moment -
           // a function can't be a Worklet and a Remote function at the same time.
           // Consider supporting it in the future.
-          // runOnJS(recursiveWorklet)(a + 1);
+          // scheduleOnRN(recursiveWorklet, a + 1);
         } else {
           recursiveWorklet(a + 1);
         }
       }
 
       useEffect(() => {
-        runOnUI(recursiveWorklet)(0);
+        scheduleOnUI(recursiveWorklet, 0);
       });
 
       return <View />;

@@ -1,5 +1,6 @@
 'use strict';
-import { executeOnUIRuntimeSync } from 'react-native-worklets';
+
+import { runOnUISync } from 'react-native-worklets';
 
 import type { LoggerConfig } from './common';
 import { SHOULD_BE_USE_WEB, updateLoggerConfig } from './common';
@@ -30,6 +31,6 @@ export function configureReanimatedLogger(config: LoggerConfig) {
   updateLoggerConfig(config);
   // Register the updated configuration in the UI runtime
   if (!SHOULD_BE_USE_WEB) {
-    executeOnUIRuntimeSync(updateLoggerConfig)(config);
+    runOnUISync(updateLoggerConfig, config);
   }
 }

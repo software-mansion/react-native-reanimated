@@ -22,7 +22,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { runOnJS, runOnUI } from 'react-native-worklets';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
@@ -170,7 +170,7 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
 
         animationProgress.value = withTiming(0, timingConfig, () => {
           imageOpacity.value = 1;
-          runOnJS(onClose)();
+          scheduleOnRN(onClose);
         });
 
         backdropOpacity.value = withTiming(0, timingConfig);
@@ -211,12 +211,12 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
   });
 
   useEffect(() => {
-    runOnUI(() => {
+    scheduleOnUI(() => {
       animationProgress.value = withTiming(1, timingConfig, () => {
         imageOpacity.value = 0;
       });
       backdropOpacity.value = withTiming(1, timingConfig);
-    })();
+    });
   }, [animationProgress, backdropOpacity, imageOpacity]);
 
   return (

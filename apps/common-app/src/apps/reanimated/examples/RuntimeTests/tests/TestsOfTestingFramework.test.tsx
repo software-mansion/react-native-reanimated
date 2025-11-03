@@ -25,7 +25,7 @@ import {
 } from '../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../ReJest/types';
 import { Snapshots } from './TestsOfTestingFramework.snapshot';
-import { createWorkletRuntime, runOnRuntime, runOnUI } from 'react-native-worklets';
+import { createWorkletRuntime, scheduleOnRuntime, scheduleOnUI } from 'react-native-worklets';
 
 const AnimatedComponent = () => {
   const widthSV = useSharedValue(0);
@@ -73,9 +73,9 @@ const AnimatedComponentWithNotify = () => {
 
     setTimeout(() => {
       notify('notifyJS');
-      runOnUI(() => {
+      scheduleOnUI(() => {
         notify('notifyUI');
-      })();
+      });
     }, 1000);
   }, [widthSV]);
 
@@ -402,17 +402,17 @@ describe('Tests of Test Framework', () => {
 
       const [state2, setState2] = createTestValue('not_ok');
       const notification2 = 'notification2';
-      runOnUI(() => {
+      scheduleOnUI(() => {
         setState2('ok', notification2);
-      })();
+      });
 
       const [state3, setState3] = createTestValue('not_ok');
       const notification3 = 'notification3';
       const rt = createWorkletRuntime({ name: 'test' });
-      runOnRuntime(rt, () => {
+      scheduleOnRuntime(rt, () => {
         'worklet';
         setState3('ok', notification3);
-      })();
+      });
 
       await waitForNotifications([notification2, notification3]);
       expect(state1.value).toBe('ok');
