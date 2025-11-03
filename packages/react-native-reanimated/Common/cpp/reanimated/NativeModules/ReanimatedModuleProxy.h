@@ -45,8 +45,9 @@ using namespace css;
 
 using UpdatesBatch = std::vector<std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
 
-class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
-                              public std::enable_shared_from_this<ReanimatedModuleProxy> {
+class __attribute__((visibility("default"))) ReanimatedModuleProxy
+    : public ReanimatedModuleProxySpec,
+      public std::enable_shared_from_this<ReanimatedModuleProxy> {
  public:
   ReanimatedModuleProxy(
       const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
