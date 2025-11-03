@@ -9,6 +9,11 @@
 
 #include <react/fabric/Binding.h>
 
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 namespace reanimated {
 
 using namespace facebook;
@@ -19,8 +24,7 @@ NativeProxy::NativeProxy(
     const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
     jsi::Runtime *rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-        fabricUIManager)
+    jni::alias_ref<facebook::react::JFabricUIManager::javaobject> fabricUIManager)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       workletsModuleProxy_(workletsModuleProxy),
@@ -35,8 +39,7 @@ NativeProxy::NativeProxy(
   injectCppVersion();
 #endif // NDEBUG
   reanimatedModuleProxy_->init(getPlatformDependentMethods());
-  const auto &uiManager =
-      fabricUIManager->getBinding()->getScheduler()->getUIManager();
+  const auto &uiManager = fabricUIManager->getBinding()->getScheduler()->getUIManager();
   reanimatedModuleProxy_->initializeFabric(uiManager);
   registerEventHandler();
   // removed temporarily, event listener mechanism needs to be fixed on RN side
@@ -59,40 +62,29 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
     jni::alias_ref<WorkletsModule::javaobject> jWorkletsModule,
     jlong jsContext,
-    jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
-        jsCallInvokerHolder,
-    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-        fabricUIManager) {
+    jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
+    jni::alias_ref<facebook::react::JFabricUIManager::javaobject> fabricUIManager) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto workletsModuleProxy = jWorkletsModule->cthis()->getWorkletsModuleProxy();
-  return makeCxxInstance(
-      jThis,
-      workletsModuleProxy,
-      (jsi::Runtime *)jsContext,
-      jsCallInvoker,
-      fabricUIManager);
+  return makeCxxInstance(jThis, workletsModuleProxy, (jsi::Runtime *)jsContext, jsCallInvoker, fabricUIManager);
 }
 
 #ifndef NDEBUG
 void NativeProxy::checkJavaVersion() {
   std::string javaVersion;
   try {
-    javaVersion =
-        getJniMethod<jstring()>("getReanimatedJavaVersion")(javaPart_.get())
-            ->toStdString();
+    javaVersion = getJniMethod<jstring()>("getReanimatedJavaVersion")(javaPart_.get())->toStdString();
   } catch (std::exception &) {
     throw std::runtime_error(
-        std::string(
-            "[Reanimated] C++ side failed to resolve Java code version.\n") +
+        std::string("[Reanimated] C++ side failed to resolve Java code version.\n") +
         "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#c-side-failed-to-resolve-java-code-version` for more details.");
   }
 
   auto cppVersion = getReanimatedCppVersion();
   if (cppVersion != javaVersion) {
     throw std::runtime_error(
-        std::string(
-            "[Reanimated] Mismatch between C++ code version and Java code version (") +
-        cppVersion + " vs. " + javaVersion + " respectively).\n" +
+        std::string("[Reanimated] Mismatch between C++ code version and Java code version (") + cppVersion + " vs. " +
+        javaVersion + " respectively).\n" +
         "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-c-code-version-and-java-code-version` for more details.");
   }
 }
@@ -100,13 +92,11 @@ void NativeProxy::checkJavaVersion() {
 void NativeProxy::injectCppVersion() {
   auto cppVersion = getReanimatedCppVersion();
   try {
-    static const auto method =
-        getJniMethod<void(jni::local_ref<JString>)>("setCppVersion");
+    static const auto method = getJniMethod<void(jni::local_ref<JString>)>("setCppVersion");
     method(javaPart_.get(), make_jstring(cppVersion));
   } catch (std::exception &) {
     throw std::runtime_error(
-        std::string(
-            "[Reanimated] C++ side failed to resolve Java code version (injection).\n") +
+        std::string("[Reanimated] C++ side failed to resolve Java code version (injection).\n") +
         "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#c-side-failed-to-resolve-java-code-version` for more details.");
   }
 }
@@ -115,16 +105,11 @@ void NativeProxy::injectCppVersion() {
 void NativeProxy::installJSIBindings() {
   jsi::Runtime &rnRuntime = *rnRuntime_;
   RNRuntimeDecorator::decorate(
-      rnRuntime,
-      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
-      reanimatedModuleProxy_);
+      rnRuntime, workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(), reanimatedModuleProxy_);
 }
 
-bool NativeProxy::isAnyHandlerWaitingForEvent(
-    const std::string &eventName,
-    const int emitterReactTag) {
-  return reanimatedModuleProxy_->isAnyHandlerWaitingForEvent(
-      eventName, emitterReactTag);
+bool NativeProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) {
+  return reanimatedModuleProxy_->isAnyHandlerWaitingForEvent(eventName, emitterReactTag);
 }
 
 void NativeProxy::performOperations() {
@@ -140,28 +125,20 @@ void NativeProxy::registerNatives() {
   registerHybrid(
       {makeNativeMethod("initHybrid", NativeProxy::initHybrid),
        makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
-       makeNativeMethod(
-           "isAnyHandlerWaitingForEvent",
-           NativeProxy::isAnyHandlerWaitingForEvent),
+       makeNativeMethod("isAnyHandlerWaitingForEvent", NativeProxy::isAnyHandlerWaitingForEvent),
        makeNativeMethod("performOperations", NativeProxy::performOperations),
        makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp)});
 }
 
 void NativeProxy::requestRender(std::function<void(double)> onRender) {
-  static const auto method =
-      getJniMethod<void(AnimationFrameCallback::javaobject)>("requestRender");
-  method(
-      javaPart_.get(),
-      AnimationFrameCallback::newObjectCxxArgs(std::move(onRender)).get());
+  static const auto method = getJniMethod<void(AnimationFrameCallback::javaobject)>("requestRender");
+  method(javaPart_.get(), AnimationFrameCallback::newObjectCxxArgs(std::move(onRender)).get());
 }
 
 void NativeProxy::registerEventHandler() {
   auto eventHandler = bindThis(&NativeProxy::handleEvent);
-  static const auto method =
-      getJniMethod<void(EventHandler::javaobject)>("registerEventHandler");
-  method(
-      javaPart_.get(),
-      EventHandler::newObjectCxxArgs(std::move(eventHandler)).get());
+  static const auto method = getJniMethod<void(EventHandler::javaobject)>("registerEventHandler");
+  method(javaPart_.get(), EventHandler::newObjectCxxArgs(std::move(eventHandler)).get());
 }
 
 void NativeProxy::maybeFlushUIUpdatesQueue() {
@@ -174,15 +151,12 @@ void NativeProxy::maybeFlushUIUpdatesQueue() {
   method(javaPart_.get());
 }
 
-std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(
-    std::vector<int> &tags) {
+std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(std::vector<int> &tags) {
   if (tags.empty()) {
     return {};
   }
 
-  static const auto method =
-      getJniMethod<jboolean(jni::alias_ref<jni::JArrayInt>)>(
-          "preserveMountedTags");
+  static const auto method = getJniMethod<jboolean(jni::alias_ref<jni::JArrayInt>)>("preserveMountedTags");
   auto jArrayInt = jni::JArrayInt::newArray(tags.size());
   jArrayInt->setRegion(0, tags.size(), tags.data());
 
@@ -197,8 +171,7 @@ std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(
 void NativeProxy::synchronouslyUpdateUIProps(
     const std::vector<int> &intBuffer,
     const std::vector<double> &doubleBuffer) {
-  static const auto method = getJniMethod<void(
-      jni::alias_ref<jni::JArrayInt>, jni::alias_ref<jni::JArrayDouble>)>(
+  static const auto method = getJniMethod<void(jni::alias_ref<jni::JArrayInt>, jni::alias_ref<jni::JArrayDouble>)>(
       "synchronouslyUpdateUIProps");
   auto jArrayInt = jni::JArrayInt::newArray(intBuffer.size());
   auto jArrayDouble = jni::JArrayDouble::newArray(doubleBuffer.size());
@@ -207,18 +180,9 @@ void NativeProxy::synchronouslyUpdateUIProps(
   method(javaPart_.get(), jArrayInt, jArrayDouble);
 }
 
-int NativeProxy::registerSensor(
-    int sensorType,
-    int interval,
-    int,
-    std::function<void(double[], int)> setter) {
-  static const auto method =
-      getJniMethod<int(int, int, SensorSetter::javaobject)>("registerSensor");
-  return method(
-      javaPart_.get(),
-      sensorType,
-      interval,
-      SensorSetter::newObjectCxxArgs(std::move(setter)).get());
+int NativeProxy::registerSensor(int sensorType, int interval, int, std::function<void(double[], int)> setter) {
+  static const auto method = getJniMethod<int(int, int, SensorSetter::javaobject)>("registerSensor");
+  return method(javaPart_.get(), sensorType, interval, SensorSetter::newObjectCxxArgs(std::move(setter)).get());
 }
 void NativeProxy::unregisterSensor(int sensorId) {
   static const auto method = getJniMethod<void(int)>("unregisterSensor");
@@ -235,8 +199,7 @@ int NativeProxy::subscribeForKeyboardEvents(
     bool isStatusBarTranslucent,
     bool isNavigationBarTranslucent) {
   static const auto method =
-      getJniMethod<int(KeyboardWorkletWrapper::javaobject, bool, bool)>(
-          "subscribeForKeyboardEvents");
+      getJniMethod<int(KeyboardWorkletWrapper::javaobject, bool, bool)>("subscribeForKeyboardEvents");
   return method(
       javaPart_.get(),
       KeyboardWorkletWrapper::newObjectCxxArgs(std::move(callback)).get(),
@@ -245,8 +208,7 @@ int NativeProxy::subscribeForKeyboardEvents(
 }
 
 void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
-  static const auto method =
-      getJniMethod<void(int)>("unsubscribeFromKeyboardEvents");
+  static const auto method = getJniMethod<void(int)>("unsubscribeFromKeyboardEvents");
   method(javaPart_.get(), listenerId);
 }
 
@@ -281,19 +243,16 @@ void NativeProxy::handleEvent(
     return;
   }
 
-  jsi::Runtime &rt =
-      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+  jsi::Runtime &rt = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
   jsi::Value payload;
   try {
-    payload = jsi::Value::createFromJsonUtf8(
-        rt, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
+    payload = jsi::Value::createFromJsonUtf8(rt, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
   } catch (std::exception &) {
     // Ignore events with malformed JSON payload.
     return;
   }
 
-  reanimatedModuleProxy_->handleEvent(
-      eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
+  reanimatedModuleProxy_->handleEvent(eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
 }
 
 PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
@@ -303,8 +262,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto preserveMountedTags = bindThis(&NativeProxy::preserveMountedTags);
 
-  auto synchronouslyUpdateUIPropsFunction =
-      bindThis(&NativeProxy::synchronouslyUpdateUIProps);
+  auto synchronouslyUpdateUIPropsFunction = bindThis(&NativeProxy::synchronouslyUpdateUIProps);
 
   auto registerSensorFunction = bindThis(&NativeProxy::registerSensor);
 
@@ -312,14 +270,11 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto setGestureStateFunction = bindThis(&NativeProxy::setGestureState);
 
-  auto subscribeForKeyboardEventsFunction =
-      bindThis(&NativeProxy::subscribeForKeyboardEvents);
+  auto subscribeForKeyboardEventsFunction = bindThis(&NativeProxy::subscribeForKeyboardEvents);
 
-  auto unsubscribeFromKeyboardEventsFunction =
-      bindThis(&NativeProxy::unsubscribeFromKeyboardEvents);
+  auto unsubscribeFromKeyboardEventsFunction = bindThis(&NativeProxy::unsubscribeFromKeyboardEvents);
 
-  auto maybeFlushUiUpdatesQueueFunction =
-      bindThis(&NativeProxy::maybeFlushUIUpdatesQueue);
+  auto maybeFlushUiUpdatesQueueFunction = bindThis(&NativeProxy::maybeFlushUIUpdatesQueue);
 
   return {
       requestRender,

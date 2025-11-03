@@ -3,8 +3,8 @@
 import {
   createSerializable,
   isWorkletFunction,
-  runOnUI,
   RuntimeKind,
+  scheduleOnUI,
   serializableMappingCache,
 } from 'react-native-worklets';
 
@@ -585,10 +585,10 @@ function cancelAnimationNative<TValue>(sharedValue: SharedValue<TValue>): void {
   if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
     sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
   } else {
-    runOnUI(() => {
+    scheduleOnUI(() => {
       'worklet';
       sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
-    })();
+    });
   }
 }
 

@@ -266,6 +266,9 @@
   --swm-sidebar-label-text-unreleased: var(--swm-navy-light-100);
   --swm-sidebar-label-background-unreleased: var(--swm-blue-light-40);
 
+  --swm-sidebar-label-text-deprecated: var(--swm-sidebar-menu-color);
+  --swm-sidebar-label-background-deprecated: rgba(170, 188, 208, 0.5);
+
   /* Mobile sidebar versions */
   --swm-sidebar-elements-version-text: var(--swm-navy-light-100);
   --swm-sidebar-elements-version-inactive: var(--swm-navy-dark-40);

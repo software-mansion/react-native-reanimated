@@ -4,14 +4,14 @@
 #include <algorithm>
 #include <deque>
 #include <memory>
+#include <utility>
 
 namespace reanimated::css {
 
 TransformMatrix3D matrixFromOperations3D(TransformOperations &operations) {
   TransformMatrix3D result;
   for (int i = static_cast<int>(operations.size()) - 1; i >= 0; i--) {
-    result *=
-        static_cast<const TransformMatrix3D &>(*operations[i]->toMatrix(true));
+    result *= static_cast<const TransformMatrix3D &>(*operations[i]->toMatrix(true));
   }
   return result;
 }
@@ -19,16 +19,13 @@ TransformMatrix3D matrixFromOperations3D(TransformOperations &operations) {
 TransformMatrix2D matrixFromOperations2D(TransformOperations &operations) {
   TransformMatrix2D result;
   for (int i = static_cast<int>(operations.size()) - 1; i >= 0; i--) {
-    result *=
-        static_cast<const TransformMatrix2D &>(*operations[i]->toMatrix(false));
+    result *= static_cast<const TransformMatrix2D &>(*operations[i]->toMatrix(false));
   }
   return result;
 }
 
-std::pair<TransformOperations, bool> flattenOperations(
-    const TransformOperations &operations) {
-  std::deque<std::shared_ptr<TransformOperation>> unprocessedQueue(
-      operations.begin(), operations.end());
+std::pair<TransformOperations, bool> flattenOperations(const TransformOperations &operations) {
+  std::deque<std::shared_ptr<TransformOperation>> unprocessedQueue(operations.begin(), operations.end());
   TransformOperations result;
   bool is3D = false;
 
@@ -37,15 +34,12 @@ std::pair<TransformOperations, bool> flattenOperations(
     unprocessedQueue.pop_front();
 
     if (operation->type == TransformOp::Matrix) {
-      const auto matrixOperation =
-          std::static_pointer_cast<MatrixOperation>(operation);
+      const auto matrixOperation = std::static_pointer_cast<MatrixOperation>(operation);
       if (std::holds_alternative<TransformOperations>(matrixOperation->value)) {
         // If the current operation is a matrix created from other operations,
         // add all of these operations at the beginning of the queue
-        const auto &nestedOps =
-            std::get<TransformOperations>(matrixOperation->value);
-        unprocessedQueue.insert(
-            unprocessedQueue.begin(), nestedOps.begin(), nestedOps.end());
+        const auto &nestedOps = std::get<TransformOperations>(matrixOperation->value);
+        unprocessedQueue.insert(unprocessedQueue.begin(), nestedOps.begin(), nestedOps.end());
         continue;
       }
     }
@@ -66,8 +60,7 @@ std::pair<TransformOperations, bool> flattenOperations(
  * in the resulting operations vector or returns a single matrix if all
  * operations can be converted to a matrix.
  */
-std::pair<MatrixOperationValue, bool> simplifyOperations(
-    const TransformOperations &operations) {
+std::pair<MatrixOperationValue, bool> simplifyOperations(const TransformOperations &operations) {
   const auto [flattenedOperations, is3D] = flattenOperations(operations);
 
   TransformOperations result;
@@ -76,9 +69,8 @@ std::pair<MatrixOperationValue, bool> simplifyOperations(
   toSimplify.reserve(operations.size());
 
   const auto simplify = [&]() {
-    return is3D
-        ? std::make_shared<MatrixOperation>(matrixFromOperations3D(toSimplify))
-        : std::make_shared<MatrixOperation>(matrixFromOperations2D(toSimplify));
+    return is3D ? std::make_shared<MatrixOperation>(matrixFromOperations3D(toSimplify))
+                : std::make_shared<MatrixOperation>(matrixFromOperations2D(toSimplify));
   };
 
   for (const auto &operation : flattenedOperations) {
@@ -165,13 +157,11 @@ bool MatrixOperation::operator==(const TransformOperation &other) const {
 
   // Both hold TransformOperations
   if (std::holds_alternative<TransformOperations>(value)) {
-    return std::get<TransformOperations>(value) ==
-        std::get<TransformOperations>(otherOperation->value);
+    return std::get<TransformOperations>(value) == std::get<TransformOperations>(otherOperation->value);
   }
 
   // Both hold matrices
-  return *std::get<TransformMatrix::Shared>(value) ==
-      *std::get<TransformMatrix::Shared>(otherOperation->value);
+  return *std::get<TransformMatrix::Shared>(value) == *std::get<TransformMatrix::Shared>(otherOperation->value);
 }
 
 bool MatrixOperation::is3D() const {
@@ -186,8 +176,8 @@ TransformMatrix::Shared MatrixOperation::toMatrix(const bool force3D) const {
   const auto &storedMatrix = getMatrixFromVariant();
 
   if (force3D && storedMatrix->getDimension() == MATRIX_2D_DIMENSION) {
-    return std::make_shared<const TransformMatrix3D>(TransformMatrix3D::from2D(
-        static_cast<const TransformMatrix2D &>(*storedMatrix)));
+    return std::make_shared<const TransformMatrix3D>(
+        TransformMatrix3D::from2D(static_cast<const TransformMatrix2D &>(*storedMatrix)));
   }
 
   return storedMatrix;
@@ -195,8 +185,7 @@ TransformMatrix::Shared MatrixOperation::toMatrix(const bool force3D) const {
 
 const TransformMatrix::Shared &MatrixOperation::getMatrixFromVariant() const {
   if (!std::holds_alternative<TransformMatrix::Shared>(value)) {
-    throw std::runtime_error(
-        "[Reanimated] Cannot convert unprocessed transform operations to the matrix.");
+    throw std::runtime_error("[Reanimated] Cannot convert unprocessed transform operations to the matrix.");
   }
   return std::get<TransformMatrix::Shared>(value);
 }

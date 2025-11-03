@@ -1,3 +1,4 @@
+import { balloonsImage } from '@/apps/css/assets';
 import React, { useEffect } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import Animated, {
@@ -8,7 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-// TO-DO: add string percentage examples
+// TODO: add string percentage examples, when we decide what to do on precision.
 export default function FilterExample() {
   const sv = useSharedValue(0);
 
@@ -70,52 +71,47 @@ export default function FilterExample() {
     return { filter: [{ saturate: sv.value * 2 }] };
   });
 
-  // TODO: replace back with Balloons image when asset problem is fixed.
-  const uri =
-    'https://fastly.picsum.photos/id/418/400/400.jpg?hmac=bb10nb5u-sK8fxD4fyTmZO36Q4N6jRTuSj-ChqtM_3M';
-
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}>
       <Text>brightness</Text>
       <Animated.Image
-        source={{ uri: uri }}
+        source={balloonsImage}
         // @ts-ignore
         style={[styles.image, brightness]}
       />
 
       <Text>opacity</Text>
       <Animated.Image
-        source={{ uri: uri }}
+        source={balloonsImage}
         // @ts-ignore
         style={[styles.image, opacity]}
       />
-      {/* // to-do */}
       <Text>blur (only Android)</Text>
       <Animated.Image
-        source={{ uri: uri }}
+        source={balloonsImage}
         // @ts-ignore
         style={[styles.image, blur]}
       />
 
       <Text>contrast (only Android)</Text>
       <Animated.Image
-        source={{ uri: uri }}
+        source={balloonsImage}
         // @ts-ignore
         style={[styles.image, contrast]}
       />
 
       <Text>dropShadow (only Android)</Text>
       <Animated.Image
-        source={{ uri: uri }}
+        source={balloonsImage}
         // @ts-ignore
         style={[styles.image, dropShadow]}
       />
 
       <Text>grayscale (only Android)</Text>
       <Animated.Image
-        source={{ uri: uri }}
+        source={balloonsImage}
         // @ts-ignore
         style={[styles.image, grayscale]}
       />
@@ -123,28 +119,28 @@ export default function FilterExample() {
       {/* // to-do */}
       <Text>hueRotate (only Android)</Text>
       <Animated.Image
-        source={{ uri: uri }}
+        source={balloonsImage}
         // @ts-ignore
         style={[styles.image, hueRotate]}
       />
 
       <Text>invert (only Android)</Text>
       <Animated.Image
-        source={{ uri: uri }}
+        source={balloonsImage}
         // @ts-ignore
         style={[styles.image, invert]}
       />
 
       <Text>sepia (only Android)</Text>
       <Animated.Image
-        source={{ uri: uri }}
+        source={balloonsImage}
         // @ts-ignore
         style={[styles.image, sepia]}
       />
 
       <Text>saturate (only Android)</Text>
       <Animated.Image
-        source={{ uri: uri }}
+        source={balloonsImage}
         // @ts-ignore
         style={[styles.image, saturate]}
       />
