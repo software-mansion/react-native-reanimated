@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Animated, { useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 
 function AnimatedView() {
   const opacitySv = useSharedValue(0);
@@ -8,24 +12,34 @@ function AnimatedView() {
   const [counter, setCounter] = useState(0);
 
   useEffect(() => {
+    opacitySv.value = withRepeat(
+      withTiming(Math.random(), { duration: 600 }),
+      -1,
+      true
+    );
+    scaleSv.value = withRepeat(
+      withTiming(Math.random() * 3, { duration: 600 }),
+      -1,
+      true
+    );
+
     const interval = setInterval(() => {
-      opacitySv.value = withTiming(Math.random(), { duration: 300 });
-      scaleSv.value = withTiming(Math.random() * 2, { duration: 300 });
       setCounter((prevCounter) => prevCounter + 1);
     }, 1000);
 
-    return () => {
-      clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, [opacitySv, scaleSv, setCounter]);
 
-  const style = [
-    styles.animatedView,
-    {
-      opacity: opacitySv,
-      transform: [{ scale: scaleSv }],
-    },
-  ];
+  const style = useMemo(
+    () => [
+      styles.animatedView,
+      {
+        opacity: opacitySv,
+        transform: [{ scale: scaleSv }],
+      },
+    ],
+    [opacitySv, scaleSv]
+  );
 
   return (
     <Animated.View collapsable={false} style={style}>
@@ -34,10 +48,13 @@ function AnimatedView() {
   );
 }
 
-function RecursiveView(props: { depth: number; noExtraChildren: number }) {
-  const childrenArr = useMemo(
-    () => Array.from({ length: props.noExtraChildren }),
-    [props.noExtraChildren]
+function RecursiveView(props: { depth: number; extraChildrenCount: number }) {
+  const children = useMemo(
+    () =>
+      Array.from({ length: props.extraChildrenCount }, (_, idx) => (
+        <View collapsable={false} key={idx} />
+      )),
+    [props.extraChildrenCount]
   );
 
   if (props.depth === 0) {
@@ -48,11 +65,9 @@ function RecursiveView(props: { depth: number; noExtraChildren: number }) {
     <View collapsable={false}>
       <RecursiveView
         depth={props.depth - 1}
-        noExtraChildren={props.noExtraChildren}
+        extraChildrenCount={props.extraChildrenCount}
       />
-      {childrenArr.map((_, idx) => (
-        <View collapsable={false} key={idx} />
-      ))}
+      {children}
     </View>
   );
 }
@@ -60,7 +75,7 @@ function RecursiveView(props: { depth: number; noExtraChildren: number }) {
 export default function ShadowNodesCloningExample() {
   return (
     <View style={styles.container}>
-      <RecursiveView depth={100} noExtraChildren={100} />
+      <RecursiveView depth={100} extraChildrenCount={100} />
     </View>
   );
 }
