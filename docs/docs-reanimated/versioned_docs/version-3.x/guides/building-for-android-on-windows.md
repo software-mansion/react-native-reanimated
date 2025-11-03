@@ -21,7 +21,7 @@ If you stumble across any of the above errors or similar, please don't disable o
 
 ### ❌ Do not disable New Architecture if it's already enabled
 
-Starting from React Native 0.76, New Architecture is enabled by default. Disabling it manually by changing `newArchEnabled=...` in `gradle.properties` does not fix the problem, it just postpones it as the legacy architecture will be removed in a future release of React Native.
+Starting from React Native 0.76, New Architecture is enabled by default. Disabling it manually by changing `newArchEnabled=...` in `gradle.properties` does not fix the problem, it just postpones it as the Legacy Architecture is no longer available to use in React Native 0.82 and newer versions.
 
 ### ❌ Do not downgrade Android Gradle Plugin
 
@@ -45,16 +45,18 @@ First all, make sure that you have followed all instructions in [Set Up Your Env
 
 Make sure to use latest supported version of Reanimated, depending on the setup of your app.
 
-**If your app uses Expo SDK**, you must use a specific major and minor version of Reanimated (first and second number). For instance, Expo SDK 52 supports only Reanimated 3.16.x. Make sure to update to the latest available patch version (third number), for instance 3.16.7.
+**If your app uses Expo SDK**, you must use a specific major and minor version of Reanimated (first and second number). For instance, Expo SDK 54 supports only Reanimated 4.1.x. Make sure to update to the latest available patch version (third number), for instance 4.1.3.
 
-| Expo SDK version | Reanimated version |
-| :--------------: | :----------------: |
-|       `52`       |     `~3.16.1`      |
-|       `51`       |     `~3.10.1`      |
-|       `50`       |      `~3.6.2`      |
+| Expo SDK version | `react-native-reanimated` version | `react-native-worklets` version |
+| :--------------: | :-------------------------------: | :-----------------------------: |
+|       `54`       |             `~4.1.1`              |             `0.5.1`             |
+|       `53`       |             `~3.17.4`             |          don't install          |
+|       `52`       |             `~3.16.1`             |          don't install          |
+|       `51`       |             `~3.10.1`             |          don't install          |
+|       `50`       |             `~3.6.2`              |          don't install          |
 
 :::tip
-How to determine which version is compatible? Open https://github.com/expo/expo/blob/sdk-52/packages/expo/bundledNativeModules.json file, jump to `sdk-XX` branch and search for `"react-native-reanimated"`.
+How to determine which version is compatible? Open https://github.com/expo/expo/blob/sdk-54/packages/expo/bundledNativeModules.json file, jump to `sdk-XX` branch and search for `"react-native-reanimated"`.
 :::
 
 **If your project uses Expo prebuild or React Native without a framework (e.g. React Native Community CLI)**, you should use a version of Reanimated that is compatible with the version of React Native according to the [Compatibility table](/docs/guides/compatibility).
