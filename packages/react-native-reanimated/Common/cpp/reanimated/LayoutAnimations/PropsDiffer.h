@@ -47,8 +47,9 @@ class PropsDiffer {
 
   void diffTransform(jsi::Runtime &rt);
   bool overrideTransformIfNeeded(jsi::Runtime &rt);
-  static std::vector<TransformOperationWithDefault>
-  getTransformOperationsFromProps(jsi::Runtime &rt, const ViewProps &props);
+  static std::vector<TransformOperationWithDefault> getTransformOperationsFromProps(
+      jsi::Runtime &rt,
+      const ViewProps &props);
   static void maybeAddOperationToDiff(
       jsi::Runtime &rt,
       const char *name,
@@ -64,9 +65,7 @@ class PropsDiffer {
       const ShadowView &view);
 
   void diffShadow(jsi::Runtime &rt);
-  static std::vector<BoxShadowWithDefault> getBoxShadowsFromProps(
-      jsi::Runtime &rt,
-      const ViewProps &props);
+  static std::vector<BoxShadowWithDefault> getBoxShadowsFromProps(jsi::Runtime &rt, const ViewProps &props);
 
   void diffBorder(jsi::Runtime &rt);
   void diffBorderRadius(
@@ -90,10 +89,7 @@ class PropsDiffer {
   static inline std::string toString(const SharedColor &value);
 
  public:
-  explicit PropsDiffer(
-      jsi::Runtime &rt,
-      const ShadowView &sourceView,
-      const ShadowView &targetView)
+  explicit PropsDiffer(jsi::Runtime &rt, const ShadowView &sourceView, const ShadowView &targetView)
       : sourceView_(sourceView),
         targetView_(targetView),
         sourceViewProps_(static_cast<const ViewProps &>(*sourceView.props)),

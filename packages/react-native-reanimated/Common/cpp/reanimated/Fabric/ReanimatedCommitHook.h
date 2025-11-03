@@ -16,12 +16,9 @@ class ReanimatedCommitHook : public UIManagerCommitHook, public std::enable_shar
  public:
   ReanimatedCommitHook(
       const std::shared_ptr<UIManager> &uiManager,
-      const std::shared_ptr<UpdatesRegistryManager>
-          &updatesRegistryManagerLegacy,
-      const std::shared_ptr<LayoutAnimationsProxy_Legacy>
-          &layoutAnimationsProxy,
-      const std::shared_ptr<
-          reanimated_experimental::LayoutAnimationsProxy_Experimental>
+      const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManagerLegacy,
+      const std::shared_ptr<LayoutAnimationsProxy_Legacy> &layoutAnimationsProxy,
+      const std::shared_ptr<reanimated_experimental::LayoutAnimationsProxy_Experimental>
           &layoutAnimationsProxyExperimental);
 
   ~ReanimatedCommitHook() noexcept override;
@@ -45,8 +42,7 @@ class ReanimatedCommitHook : public UIManagerCommitHook, public std::enable_shar
  private:
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
-  std::shared_ptr<reanimated_experimental::LayoutAnimationsProxy_Experimental>
-      layoutAnimationsProxyExperimental_;
+  std::shared_ptr<reanimated_experimental::LayoutAnimationsProxy_Experimental> layoutAnimationsProxyExperimental_;
   std::shared_ptr<LayoutAnimationsProxy_Legacy> layoutAnimationsProxyLegacy_;
 
   SurfaceId currentMaxSurfaceId_ = -1;

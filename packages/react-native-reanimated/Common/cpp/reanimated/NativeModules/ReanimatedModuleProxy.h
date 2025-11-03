@@ -212,8 +212,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<LayoutAnimationsProxy_Legacy> layoutAnimationsProxyLegacy_;
-  std::shared_ptr<reanimated_experimental::LayoutAnimationsProxy_Experimental>
-      layoutAnimationsProxyExperimental_;
+  std::shared_ptr<reanimated_experimental::LayoutAnimationsProxy_Experimental> layoutAnimationsProxyExperimental_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
   std::set<SurfaceId> layoutAnimationFlushRequests_;

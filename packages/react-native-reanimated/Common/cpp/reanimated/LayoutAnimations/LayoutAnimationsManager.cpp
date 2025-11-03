@@ -96,8 +96,7 @@ void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, con
   auto setConfig = sharedTransitionsForNativeID_[nativeId];
   if (setConfig) {
     sharedTransitions_.insert_or_assign(tag, setConfig);
-    sharedTransitionManager_->tagToName_[tag] =
-        sharedTransitionManager_->nativeIDToName_[nativeId];
+    sharedTransitionManager_->tagToName_[tag] = sharedTransitionManager_->nativeIDToName_[nativeId];
   }
   sharedTransitionsForNativeID_.erase(nativeId);
 }
