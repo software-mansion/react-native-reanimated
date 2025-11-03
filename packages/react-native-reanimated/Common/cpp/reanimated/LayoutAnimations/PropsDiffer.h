@@ -6,6 +6,7 @@
 
 #include <jsi/jsi.h>
 
+#include <utility>
 #include <vector>
 
 using namespace facebook;
@@ -89,13 +90,14 @@ class PropsDiffer {
   static inline std::string toString(const SharedColor &value);
 
  public:
+#include <string>
   explicit PropsDiffer(jsi::Runtime &rt, const ShadowView &sourceView, const ShadowView &targetView)
       : sourceView_(sourceView),
         targetView_(targetView),
         sourceViewProps_(static_cast<const ViewProps &>(*sourceView.props)),
         targetViewProps_(static_cast<const ViewProps &>(*targetView.props)),
         sourceValues_(rt),
-        targetValues_(rt) {};
+        targetValues_(rt) {}
 
   jsi::Object computeDiff(jsi::Runtime &runtime);
   void overrideSourceTransforms(const Transform &transform);

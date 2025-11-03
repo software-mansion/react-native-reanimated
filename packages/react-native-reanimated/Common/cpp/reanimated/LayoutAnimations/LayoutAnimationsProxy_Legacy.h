@@ -1,23 +1,18 @@
 #pragma once
 
-#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/Tools/PlatformDepMethodsHolder.h>
-
-#include <worklets/Tools/UIScheduler.h>
-
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
-#include <react/renderer/mounting/ShadowView.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-
-#include <react/renderer/mounting/ShadowView.h>
+#include <reanimated/Tools/PlatformDepMethodsHolder.h>
+#include <worklets/Tools/UIScheduler.h>
 
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace reanimated {

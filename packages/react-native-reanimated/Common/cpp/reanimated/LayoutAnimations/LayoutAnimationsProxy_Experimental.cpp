@@ -16,9 +16,12 @@
 #endif
 
 #include <algorithm>
+#include <memory>
 #include <ranges>
-#include <set>
+#include <string>
+#include <unordered_set>
 #include <utility>
+#include <vector>
 
 using ScrollState = ConcreteState<ScrollViewState>;
 
@@ -35,7 +38,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   ReanimatedSystraceSection d("pullTransaction");
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
-  auto rootChildCount = (int)lightNodes_[surfaceId]->children.size();
+  auto rootChildCount = static_cast<int>(lightNodes_[surfaceId]->children.size());
   std::vector<std::shared_ptr<MutationNode>> roots;
   bool isInTransition = transitionState_;
 
@@ -570,11 +573,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgres
     if (transitionState_ == NONE && progress < 1) {
       transitionState_ = START;
       transitionTag_ = tag;
-    }
-    //    else if (transitionState_ == ACTIVE && progress < eps){
-    //      transitionState_ = CANCELLED;
-    //    }
-    else if (transitionState_ == ACTIVE && progress == 1) {
+    } else if (transitionState_ == ACTIVE && progress == 1) {
       transitionState_ = END;
     }
     // TODO: unfix
@@ -697,7 +696,7 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
         current = layoutAnimations_.at(node->current.tag).currentView;
       }
       filteredMutations.push_back(
-          ShadowViewMutation::InsertMutation(parent->current.tag, current, (int)parent->children.size()));
+          ShadowViewMutation::InsertMutation(parent->current.tag, current, static_cast<int>(parent->children.size())));
       parent->children.push_back(node);
       parent->animatedChildrenCount++;
       if (node->state == UNDEFINED) {
@@ -791,7 +790,7 @@ void LayoutAnimationsProxy_Experimental::endAnimationsRecursively(
   // iterate from the end, so that children
   // with higher indices appear first in the mutations list
 
-  auto i = (int)node->children.size() - 1;
+  auto i = static_cast<int>(node->children.size()) - 1;
   for (auto it = node->children.rbegin(); it != node->children.rend(); it++) {
     auto &subNode = *it;
     if (subNode->state != DELETED) {
@@ -857,7 +856,7 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
 
   // iterate from the end, so that children
   // with higher indices appear first in the mutations list
-  auto index = (int)node->children.size();
+  auto index = static_cast<int>(node->children.size());
   for (auto it = node->children.rbegin(); it != node->children.rend(); it++) {
     index--;
     auto &subNode = *it;
@@ -1224,7 +1223,7 @@ std::vector<react::Point> LayoutAnimationsProxy_Experimental::getAbsolutePositio
     viewsAbsolutePositions.emplace_back(viewPosition);
     currentNode = currentNode->parent.lock();
   }
-  for (long int i = viewsAbsolutePositions.size() - 2; i >= 0; --i) {
+  for (int i = static_cast<int>(viewsAbsolutePositions.size()) - 2; i >= 0; --i) {
     viewsAbsolutePositions[i] += viewsAbsolutePositions[i + 1];
   }
   return viewsAbsolutePositions;
@@ -1256,7 +1255,7 @@ std::optional<Transform> LayoutAnimationsProxy_Experimental::parseParentTransfor
   const auto &targetViewPosition = absolutePositions[0];
   Transform combinedMatrix;
   bool parentHasTransform = false;
-  for (long int i = transforms.size() - 1; i >= 0; --i) {
+  for (int i = static_cast<int>(transforms.size()) - 1; i >= 0; --i) {
     auto &[transform, transformOrigin] = transforms[i];
     if (transform.operations.empty()) {
       continue;
@@ -1325,7 +1324,7 @@ std::array<float, 3> LayoutAnimationsProxy_Experimental::getTranslateForTransfor
 
   std::array<float, 3> origin = {viewCenterX, viewCenterY, transformOrigin.z};
 
-  for (size_t i = 0; i < transformOrigin.xy.size(); ++i) {
+  for (int i = 0; i < static_cast<int>(transformOrigin.xy.size()); ++i) {
     const auto &currentOrigin = transformOrigin.xy[i];
     if (currentOrigin.unit == UnitType::Point) {
       origin[i] = currentOrigin.value;

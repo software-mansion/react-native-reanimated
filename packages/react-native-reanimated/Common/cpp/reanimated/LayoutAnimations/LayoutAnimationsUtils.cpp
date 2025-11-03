@@ -1,5 +1,8 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 
+#include <memory>
+#include <unordered_map>
+
 namespace reanimated_experimental {
 
 std::unordered_map<Tag, UpdateValues> &SurfaceManager::getUpdateMap(SurfaceId surfaceId) {

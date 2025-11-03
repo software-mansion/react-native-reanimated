@@ -3,6 +3,7 @@
 #include <react/renderer/graphics/Transform.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
 
+#include <string>
 #include <vector>
 
 using namespace facebook;

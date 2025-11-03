@@ -14,10 +14,10 @@
 #include <react/renderer/uimanager/UIManagerBinding.h>
 
 #include <memory>
-#include <stack>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace reanimated_experimental {
