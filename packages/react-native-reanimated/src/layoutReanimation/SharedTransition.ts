@@ -39,7 +39,7 @@ export class SharedTransition
       };
       const initialValues: any = {};
       const animations: any = {};
-      for (const key in values.source) {
+      for (let key in values.source) {
         initialValues[key] = values.source[key];
 
         const target = values.target[key];
@@ -47,7 +47,7 @@ export class SharedTransition
           if (key === 'transform') {
             animations[key] = target.map(
               (item: Record<string, number | string>) => {
-                const key = Object.keys(item)[0];
+                key = Object.keys(item)[0];
                 return {
                   [key]: animationFactory(item[key]),
                 };
