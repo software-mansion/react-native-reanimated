@@ -638,9 +638,10 @@ void ReanimatedModuleProxy::performOperations() {
 
     shouldUpdateCssAnimations_ = false;
 
-// TODO: use the SET flag when it's ready
 #ifdef ANDROID
-    if constexpr (false) {
+    if constexpr (
+        StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
+        !StaticFeatureFlags::getFlag("SHARED_ELEMENT_TRANSITIONS")) {
       static const std::unordered_set<std::string> synchronousProps = {
           "opacity",
           "elevation",
@@ -1028,7 +1029,9 @@ void ReanimatedModuleProxy::performOperations() {
 #endif // ANDROID
 
 #if __APPLE__
-    if constexpr (StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
+    if constexpr (
+        StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
+        !StaticFeatureFlags::getFlag("SHARED_ELEMENT_TRANSITIONS")) {
       static const std::unordered_set<std::string> synchronousProps = {
           "opacity",
           "elevation",
