@@ -25,19 +25,6 @@ jsi::Object PropsDiffer::computeDiff(jsi::Runtime &runtime) {
   return diff;
 }
 
-void PropsDiffer::overrideSourceTransforms(const Transform &transform) {
-  sourceTransform_ =
-      Transform::FromTransformOperation(TransformOperation(TransformOperationType::Arbitrary), {}, transform);
-  needsOverrideSourceTransforms_ = true;
-}
-
-void PropsDiffer::overrideTargetTransforms(const Transform &transform) {
-  targetTransform_ =
-      Transform::FromTransformOperation(TransformOperation(TransformOperationType::Arbitrary), {}, transform);
-  ;
-  needsOverrideTargetTransforms_ = true;
-}
-
 void PropsDiffer::diffFrame(jsi::Runtime &rt) {
   const auto &sourceFrame = sourceView_.layoutMetrics.frame;
   const auto &targetFrame = targetView_.layoutMetrics.frame;
@@ -83,10 +70,6 @@ void PropsDiffer::diffBackgroundColor(jsi::Runtime &rt) {
 }
 
 void PropsDiffer::diffTransform(jsi::Runtime &rt) {
-  if (overrideTransformIfNeeded(rt)) {
-    return;
-  }
-
   const auto &sourceJsiOperations = getTransformOperationsFromProps(rt, sourceViewProps_);
   const auto &targetJsiOperations = getTransformOperationsFromProps(rt, targetViewProps_);
 
@@ -114,42 +97,6 @@ void PropsDiffer::diffTransform(jsi::Runtime &rt) {
   }
   sourceValues_.setProperty(rt, "transform", sourceTransforms);
   targetValues_.setProperty(rt, "transform", targetTransforms);
-}
-
-bool PropsDiffer::overrideTransformIfNeeded(jsi::Runtime &rt) {
-  if (needsOverrideSourceTransforms_) {
-    jsi::Array sourceMatrix(rt, 16);
-    for (int i = 0; i < 16; i++) {
-      sourceMatrix.setValueAtIndex(rt, i, sourceTransform_.matrix[i]);
-    }
-
-    jsi::Object sourceOperation(rt);
-    sourceOperation.setProperty(rt, "matrix", sourceMatrix);
-    jsi::Array sourceTransforms(rt, 1);
-    sourceTransforms.setValueAtIndex(rt, 0, sourceOperation);
-    sourceValues_.setProperty(rt, "transform", sourceTransforms);
-  } else if (needsOverrideTargetTransforms_) {
-    const auto &sourceJsiOperations = getTransformOperationsFromProps(rt, sourceViewProps_);
-    jsi::Array sourceTransforms(rt, 1);
-    sourceTransforms.setValueAtIndex(rt, 0, sourceJsiOperations[0].currentValue);
-    sourceValues_.setProperty(rt, "transform", sourceTransforms);
-  }
-
-  if (needsOverrideTargetTransforms_) {
-    jsi::Array targetMatrix(rt, 16);
-    for (int i = 0; i < 16; i++) {
-      targetMatrix.setValueAtIndex(rt, i, targetTransform_.matrix[i]);
-    }
-
-    jsi::Object targetOperation(rt);
-    targetOperation.setProperty(rt, "matrix", targetMatrix);
-    jsi::Array targetTransforms(rt, 1);
-    targetTransforms.setValueAtIndex(rt, 0, targetOperation);
-    targetValues_.setProperty(rt, "transform", targetTransforms);
-    return true;
-  }
-
-  return false;
 }
 
 std::vector<TransformOperationWithDefault> PropsDiffer::getTransformOperationsFromProps(
