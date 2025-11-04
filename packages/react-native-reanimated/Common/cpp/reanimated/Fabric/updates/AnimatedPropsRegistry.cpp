@@ -77,8 +77,7 @@ void AnimatedPropsRegistry::removeEntriesOlderThanTimestamp(const double timesta
     if (viewTimestamp < timestamp) {
       it = timestampMap_.erase(it);
       updatesRegistry_.erase(viewTag);
-    }
-    else {
+    } else {
       it++;
     }
   }
