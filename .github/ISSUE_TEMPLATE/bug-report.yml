@@ -114,9 +114,6 @@ body:
     attributes:
       label: Feature flags details
       description: If you are using any feature flags, please provide details about which ones and how they are configured.
-    if:
-      field: flags
-      value: 'Yes'
 
   - type: dropdown
     id: runtime
