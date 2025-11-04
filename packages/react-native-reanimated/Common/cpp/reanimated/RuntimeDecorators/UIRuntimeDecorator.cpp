@@ -38,8 +38,9 @@ void UIRuntimeDecorator::subscribeForMicrotasksFinalization(
   auto maybeMicrotaskQueueFinalizers = uiRuntime.global().getProperty(uiRuntime, "_microtaskQueueFinalizers");
 
   if (maybeMicrotaskQueueFinalizers.isUndefined()) {
-    throw std::runtime_error("[Reanimated] Expected microtaskQueueFinalizers to be defined."
-                             "Perhaps Worklets failed to initialize the UI Runtime?");
+    throw std::runtime_error(
+        "[Reanimated] Expected microtaskQueueFinalizers to be defined."
+        "Perhaps Worklets failed to initialize the UI Runtime?");
   }
 
   const auto microtaskQueueFinalizers = maybeMicrotaskQueueFinalizers.asObject(uiRuntime).asArray(uiRuntime);

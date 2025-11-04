@@ -6,7 +6,7 @@ const {
 const path = require('path');
 
 const root = path.resolve(__dirname, '../..');
-const appsPath = path.resolve(root, 'apps')
+const appsPath = path.resolve(root, 'apps');
 
 /**
  * Metro configuration https://reactnative.dev/docs/metro
@@ -14,11 +14,7 @@ const appsPath = path.resolve(root, 'apps')
  * @type {import('@react-native/metro-config').MetroConfig}
  */
 let config = {
-  watchFolders: [
-    root,
-    appsPath
-  ],
-
+  watchFolders: [root, appsPath],
 };
 
 config = mergeConfig(getDefaultConfig(__dirname), config);
