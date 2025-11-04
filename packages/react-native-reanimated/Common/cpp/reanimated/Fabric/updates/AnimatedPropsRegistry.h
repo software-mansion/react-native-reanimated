@@ -20,8 +20,7 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
   void removeEntriesOlderThanTimestamp(const double timestamp);
   
  private:
-  // TODO: add mutex if needed
-  std::unordered_map<Tag, double> timestampMap_; // viewTag -> timestamp
+  std::unordered_map<Tag, double> timestampMap_; // viewTag -> timestamp, protected by `mutex_`
 };
 
 } // namespace reanimated

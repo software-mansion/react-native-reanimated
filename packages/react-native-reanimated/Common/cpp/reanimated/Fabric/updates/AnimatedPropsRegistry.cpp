@@ -33,6 +33,8 @@ void AnimatedPropsRegistry::remove(const Tag tag) {
 }
 
 jsi::Value AnimatedPropsRegistry::getEntriesOlderThanTimestamp(jsi::Runtime &rt, const double timestamp) {
+  auto lock1 = lock();
+
   std::set<Tag> viewTags;
   for (const auto &[viewTag, viewTimestamp] : timestampMap_) {
     if (viewTimestamp < timestamp) {
@@ -66,6 +68,8 @@ jsi::Value AnimatedPropsRegistry::getEntriesOlderThanTimestamp(jsi::Runtime &rt,
 }
 
 void AnimatedPropsRegistry::removeEntriesOlderThanTimestamp(const double timestamp) {
+  auto lock1 = lock();
+
   for (auto it = timestampMap_.begin(); it != timestampMap_.end(); ) {
     const auto viewTag = it->first;
     const auto viewTimestamp = it->second;
