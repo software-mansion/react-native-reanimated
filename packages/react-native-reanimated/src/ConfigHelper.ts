@@ -2,7 +2,11 @@
 import { executeOnUIRuntimeSync } from 'react-native-worklets';
 
 import type { LoggerConfig } from './common';
-import { SHOULD_BE_USE_WEB, updateLoggerConfig } from './common';
+import {
+  getLoggerConfig,
+  SHOULD_BE_USE_WEB,
+  updateLoggerConfig,
+} from './common';
 
 /** @deprecated This function is a no-op in Reanimated 4. */
 export function addWhitelistedNativeProps(
@@ -26,10 +30,12 @@ export function addWhitelistedUIProps(_props: Record<string, boolean>): void {
  * @param config - The new logger configuration to apply.
  */
 export function configureReanimatedLogger(config: LoggerConfig) {
+  // Get the current config from the React runtime (to have a single source of truth)
+  const currentConfig = getLoggerConfig();
   // Update the configuration object in the React runtime
-  updateLoggerConfig(config);
+  updateLoggerConfig(currentConfig, config);
   // Register the updated configuration in the UI runtime
   if (!SHOULD_BE_USE_WEB) {
-    executeOnUIRuntimeSync(updateLoggerConfig)(config);
+    executeOnUIRuntimeSync(updateLoggerConfig)(currentConfig, config);
   }
 }
