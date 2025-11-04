@@ -4,21 +4,10 @@
 
 namespace reanimated::css {
 
-    enum class FilterOp {
-        blur,
-        brightness,
-        contrast,
-        dropShadow,
-        grayscale,
-        hueRotate,
-        invert,
-        opacity,
-        saturate,
-        sepia
-    };
+enum class FilterOp { Blur, Brightness, Contrast, DropShadow, Grayscale, HueRotate, Invert, Opacity, Saturate, Sepia };
 
-    FilterOp getFilterOperationType(const std::string &property);
+FilterOp getFilterOperationType(const std::string &property);
 
-    std::string getOperationNameFromType(const FilterOp type);
+std::string getOperationNameFromType(const FilterOp type);
 
 } // namespace reanimated::css

@@ -20,16 +20,16 @@ constexpr std::array<const char *, 10> filterOperationStrings = {
 
 FilterOp getFilterOperationType(const std::string &property) {
   static const std::unordered_map<std::string, FilterOp> stringToEnumMap = {
-    {"blur", FilterOp::blur},
-    {"brightness", FilterOp::brightness},
-    {"contrast", FilterOp::contrast},
-    {"dropShadow", FilterOp::dropShadow},
-    {"grayscale", FilterOp::grayscale},
-    {"hueRotate", FilterOp::hueRotate},
-    {"invert", FilterOp::invert},
-    {"opacity", FilterOp::opacity},
-    {"saturate", FilterOp::saturate},
-    {"sepia", FilterOp::sepia}};
+      {"blur", FilterOp::Blur},
+      {"brightness", FilterOp::Brightness},
+      {"contrast", FilterOp::Contrast},
+      {"dropShadow", FilterOp::DropShadow},
+      {"grayscale", FilterOp::Grayscale},
+      {"hueRotate", FilterOp::HueRotate},
+      {"invert", FilterOp::Invert},
+      {"opacity", FilterOp::Opacity},
+      {"saturate", FilterOp::Saturate},
+      {"sepia", FilterOp::Sepia}};
 
   auto it = stringToEnumMap.find(property);
   if (it != stringToEnumMap.end()) {
@@ -44,4 +44,3 @@ std::string getOperationNameFromType(const FilterOp type) {
 };
 
 } // namespace reanimated::css
-

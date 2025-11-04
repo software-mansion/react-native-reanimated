@@ -18,6 +18,7 @@
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
+
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
 #include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
 #include <reanimated/CSS/interpolation/transforms/operations/rotate.h>
@@ -35,7 +36,6 @@
 #include <reanimated/CSS/interpolation/filters/operations/opacity.h>
 #include <reanimated/CSS/interpolation/filters/operations/saturate.h>
 #include <reanimated/CSS/interpolation/filters/operations/sepia.h>
-
 
 #include <string>
 #include <vector>
@@ -149,17 +149,17 @@ const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
 
 const InterpolatorFactoriesRecord FILTER_INTERPOLATORS = {
     {"filter",
-    filters(
-        {{"blur", filterOp<BlurOperation>(0)},
-         {"brightness", filterOp<BrightnessOperation>(1)},
-         {"contrast", filterOp<ContrastOperation>(1)},
-         {"dropShadow", filterOp<DropShadowOperation>("")},
-         {"grayscale", filterOp<GrayscaleOperation>(0)},
-         {"hueRotate", filterOp<HueRotateOperation>("0deg")},
-         {"invert", filterOp<InvertOperation>(0)},
-         {"opacity", filterOp<OpacityOperation>(1)},
-         {"saturate", filterOp<SaturateOperation>(1)},
-         {"sepia", filterOp<SepiaOperation>(0)}})}};
+     filters(
+         {{"blur", filterOp<BlurOperation>(0)},
+          {"brightness", filterOp<BrightnessOperation>(1)},
+          {"contrast", filterOp<ContrastOperation>(1)},
+          {"dropShadow", filterOp<DropShadowOperation>(CSSDropShadow())},
+          {"grayscale", filterOp<GrayscaleOperation>(0)},
+          {"hueRotate", filterOp<HueRotateOperation>("0deg")},
+          {"invert", filterOp<InvertOperation>(0)},
+          {"opacity", filterOp<OpacityOperation>(1)},
+          {"saturate", filterOp<SaturateOperation>(1)},
+          {"sepia", filterOp<SepiaOperation>(0)}})}};
 };
 
 const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(

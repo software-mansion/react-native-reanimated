@@ -1,7 +1,7 @@
 #pragma once
 
-#include <reanimated/CSS/common/transforms/TransformMatrix.h>
 #include <reanimated/CSS/common/filters/FilterOp.h>
+#include <reanimated/CSS/common/values/CSSValue.h>
 
 #include <jsi/jsi.h>
 #include <memory>
@@ -28,23 +28,18 @@ struct FilterOperation {
   static std::shared_ptr<FilterOperation> fromDynamic(const folly::dynamic &value);
   folly::dynamic toDynamic() const;
   virtual folly::dynamic valueToDynamic() const = 0;
-
-  virtual bool canConvertTo(FilterOp type) const;
-  virtual std::vector<std::shared_ptr<FilterOperation>> convertTo(FilterOp type) const;
-  void assertCanConvertTo(FilterOp type) const;
-
 };
 
 using FilterOperations = std::vector<std::shared_ptr<FilterOperation>>;
 
 // Base implementation for filter operations
-template <FilterOp TOperation, typename TValue>
+template <FilterOp TOperation, CSSValueDerived TValue>
 struct FilterOperationBase : public FilterOperation {
   const TValue value;
 
   explicit FilterOperationBase(TValue value);
   bool operator==(const FilterOperation &other) const override;
-
+  folly::dynamic valueToDynamic() const override;
 };
 
 } // namespace reanimated::css

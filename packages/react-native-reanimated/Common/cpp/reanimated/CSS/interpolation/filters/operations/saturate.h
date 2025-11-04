@@ -1,21 +1,14 @@
 #pragma once
 
-#include <reanimated/CSS/interpolation/filters/FilterOperation.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
-
-#include <string>
+#include <reanimated/CSS/interpolation/filters/FilterOperation.h>
 
 namespace reanimated::css {
 
-template <FilterOp TOperation>
-struct SaturateOperationBase : public FilterOperationBase<TOperation, CSSDouble> {
-  using FilterOperationBase<TOperation, CSSDouble>::FilterOperationBase;
+struct SaturateOperation final : public FilterOperationBase<FilterOp::Saturate, CSSDouble> {
+  using FilterOperationBase<FilterOp::Saturate, CSSDouble>::FilterOperationBase;
 
-  explicit SaturateOperationBase(const std::string &value);
-
-  folly::dynamic valueToDynamic() const override;
+  explicit SaturateOperation(double value) : FilterOperationBase<FilterOp::Saturate, CSSDouble>(CSSDouble(value)) {}
 };
-
-using SaturateOperation = SaturateOperationBase<FilterOp::saturate>;
 
 } // namespace reanimated::css

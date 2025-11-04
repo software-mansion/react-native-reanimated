@@ -7,15 +7,11 @@
 
 namespace reanimated::css {
 
-template <FilterOp TOperation>
-struct HueRotateOperationBase : public FilterOperationBase<TOperation, CSSAngle> {
-  using FilterOperationBase<TOperation, CSSAngle>::FilterOperationBase;
+struct HueRotateOperation final : public FilterOperationBase<FilterOp::HueRotate, CSSAngle> {
+  using FilterOperationBase<FilterOp::HueRotate, CSSAngle>::FilterOperationBase;
 
-  explicit HueRotateOperationBase(const std::string &value);
-
-  folly::dynamic valueToDynamic() const override;
+  explicit HueRotateOperation(const std::string &value)
+      : FilterOperationBase<FilterOp::HueRotate, CSSAngle>(CSSAngle(value)) {}
 };
-
-using HueRotateOperation = HueRotateOperationBase<FilterOp::hueRotate>;
 
 } // namespace reanimated::css

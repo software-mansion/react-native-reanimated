@@ -3,18 +3,12 @@
 #include <reanimated/CSS/common/values/CSSNumber.h>
 #include <reanimated/CSS/interpolation/filters/FilterOperation.h>
 
-#include <string>
-
 namespace reanimated::css {
-template <FilterOp TOperation>
-struct SepiaOperationBase : public FilterOperationBase<TOperation, CSSDouble> {
-  using FilterOperationBase<TOperation, CSSDouble>::FilterOperationBase;
 
-  explicit SepiaOperationBase(const std::string &value);
+struct SepiaOperation final : public FilterOperationBase<FilterOp::Sepia, CSSDouble> {
+  using FilterOperationBase<FilterOp::Sepia, CSSDouble>::FilterOperationBase;
 
-  folly::dynamic valueToDynamic() const override;
+  explicit SepiaOperation(double value) : FilterOperationBase<FilterOp::Sepia, CSSDouble>(CSSDouble(value)) {}
 };
-
-using SepiaOperation = SepiaOperationBase<FilterOp::sepia>;
 
 } // namespace reanimated::css

@@ -1,20 +1,15 @@
 #pragma once
 
-#include <reanimated/CSS/interpolation/filters/FilterOperation.h>
 #include <reanimated/CSS/common/values/complex/CSSDropShadow.h>
-
-#include <string>
+#include <reanimated/CSS/interpolation/filters/FilterOperation.h>
 
 namespace reanimated::css {
-template <FilterOp TOperation>
-struct DropShadowBase : public FilterOperationBase<TOperation, CSSDropShadow> {
-  using FilterOperationBase<TOperation, CSSDropShadow>::FilterOperationBase;
 
-  explicit DropShadowBase(const std::string &value);
+struct DropShadowOperation final : public FilterOperationBase<FilterOp::DropShadow, CSSDropShadow> {
+  using FilterOperationBase<FilterOp::DropShadow, CSSDropShadow>::FilterOperationBase;
 
-  folly::dynamic valueToDynamic() const override;
+  explicit DropShadowOperation(CSSDropShadow value)
+      : FilterOperationBase<FilterOp::DropShadow, CSSDropShadow>(std::move(value)) {}
 };
-
-using DropShadowOperation = DropShadowBase<FilterOp::dropShadow>;
 
 } // namespace reanimated::css
