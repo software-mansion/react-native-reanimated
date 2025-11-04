@@ -33,32 +33,39 @@ void AnimatedPropsRegistry::remove(const Tag tag) {
 }
 
 jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt, const double timestamp) {
-  std::set<Tag> viewTags;
+  std::unordered_map<Tag, folly::dynamic> updatesMap;
+
   {
     auto lock1 = lock();
+
+    std::set<Tag> viewTags;
     for (const auto &[viewTag, viewTimestamp] : timestampMap_) {
       if (viewTimestamp < timestamp) {
         viewTags.insert(viewTag);
       }
     }
+
+    for (const auto &[tag, pair] : updatesRegistry_) {
+      const auto &[shadowNode, props] = pair;
+      const auto viewTag = shadowNode->getTag();
+      if (!viewTags.contains(viewTag)) {
+        continue;
+      }
+
+      auto it = updatesMap.find(viewTag);
+      if (it == updatesMap.cend()) {
+        folly::dynamic styleProps = folly::dynamic::object();
+        styleProps.update(props);
+        updatesMap[viewTag] = styleProps;
+      } else {
+        it->second.update(props);
+      }
+    }
   }
 
-  PropsMap propsMap;
-  collectProps(propsMap); // TODO: don't call collectProps since it locks again
-
-  const jsi::Array array(rt, viewTags.size());
+  const jsi::Array array(rt, updatesMap.size());
   size_t idx = 0;
-  for (const auto &[family, vectorOfRawProps] : propsMap) {
-    const auto viewTag = family->getTag();
-    if (!viewTags.contains(viewTag)) {
-      continue;
-    }
-
-    folly::dynamic styleProps = folly::dynamic::object();
-    for (const auto &rawProps : vectorOfRawProps) {
-      styleProps.update(static_cast<folly::dynamic>(rawProps));
-    }
-
+  for (const auto &[viewTag, styleProps] : updatesMap) {
     const jsi::Object item(rt);
     item.setProperty(rt, "viewTag", viewTag);
     item.setProperty(rt, "styleProps", jsi::valueFromDynamic(rt, styleProps));
