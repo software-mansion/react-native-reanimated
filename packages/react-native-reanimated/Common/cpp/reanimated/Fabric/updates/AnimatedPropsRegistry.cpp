@@ -42,4 +42,18 @@ std::set<Tag> AnimatedPropsRegistry::getTagsOlderThanTimestamp(const double time
   return result;
 }
 
+void AnimatedPropsRegistry::removeEntriesOlderThanTimestamp(const double timestamp) {
+  for (auto it = timestampMap_.begin(); it != timestampMap_.end(); ) {
+    const auto viewTag = it->first;
+    const auto viewTimestamp = it->second;
+    if (viewTimestamp < timestamp) {
+      it = timestampMap_.erase(it);
+      updatesRegistry_.erase(viewTag);
+    }
+    else {
+      it++;
+    }
+  }
+}
+
 } // namespace reanimated

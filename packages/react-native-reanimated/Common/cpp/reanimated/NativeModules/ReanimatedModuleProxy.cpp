@@ -482,6 +482,8 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
     array.setValueAtIndex(rt, idx++, item);
   }
 
+  animatedPropsRegistry_->removeEntriesOlderThanTimestamp(currentTimestamp - 10000); // 10 seconds
+
   return jsi::Value(rt, array);
 }
 
