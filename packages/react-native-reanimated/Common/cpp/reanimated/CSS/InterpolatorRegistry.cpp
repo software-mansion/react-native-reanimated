@@ -25,6 +25,18 @@
 #include <reanimated/CSS/interpolation/transforms/operations/skew.h>
 #include <reanimated/CSS/interpolation/transforms/operations/translate.h>
 
+#include <reanimated/CSS/interpolation/filters/operations/blur.h>
+#include <reanimated/CSS/interpolation/filters/operations/brightness.h>
+#include <reanimated/CSS/interpolation/filters/operations/contrast.h>
+#include <reanimated/CSS/interpolation/filters/operations/dropshadow.h>
+#include <reanimated/CSS/interpolation/filters/operations/grayscale.h>
+#include <reanimated/CSS/interpolation/filters/operations/huerotate.h>
+#include <reanimated/CSS/interpolation/filters/operations/invert.h>
+#include <reanimated/CSS/interpolation/filters/operations/opacity.h>
+#include <reanimated/CSS/interpolation/filters/operations/saturate.h>
+#include <reanimated/CSS/interpolation/filters/operations/sepia.h>
+
+
 #include <string>
 #include <vector>
 
@@ -154,6 +166,7 @@ const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
     {FLEX_INTERPOLATORS,
      SHADOW_INTERPOLATORS_IOS,
      TRANSFORMS_INTERPOLATORS,
+     FILTER_INTERPOLATORS,
      InterpolatorFactoriesRecord{
          {"backfaceVisibility", value<CSSKeyword>("visible")},
          {"backgroundColor", value<CSSColor>(TRANSPARENT)},
