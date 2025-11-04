@@ -134,6 +134,8 @@ export interface IAnimatedComponentInternalBase {
    * handling.
    */
   getComponentViewTag: () => number;
+
+  _syncStylePropsBackToReact: (props: StyleProps) => void;
 }
 
 export interface IAnimatedComponentInternal

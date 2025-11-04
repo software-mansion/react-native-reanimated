@@ -9,6 +9,7 @@ import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../../common';
 import type {
   InternalHostInstance,
   ShadowNodeWrapper,
+  StyleProps,
 } from '../../commonTypes';
 import type {
   AnimatedComponentRef,
@@ -33,8 +34,9 @@ export type AnimatedComponentProps = Record<string, unknown> & {
 // to the main one)
 export default class AnimatedComponent<
     P extends AnyRecord = AnimatedComponentProps,
+    S extends AnyRecord = Record<string, unknown>,
   >
-  extends Component<P>
+  extends Component<P, S>
   implements IAnimatedComponentInternalBase
 {
   ChildComponent: AnyComponent;
@@ -52,6 +54,10 @@ export default class AnimatedComponent<
   constructor(ChildComponent: AnyComponent, props: P) {
     super(props);
     this.ChildComponent = ChildComponent;
+  }
+
+  _syncStylePropsBackToReact() {
+    // noop
   }
 
   getComponentViewTag() {

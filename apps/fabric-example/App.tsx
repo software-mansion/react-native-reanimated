@@ -44,6 +44,10 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.box, animatedStyle]} />
+      <Animated.View style={[styles.box, animatedStyle]} />
+      <Animated.View style={[styles.box, animatedStyle]} />
+      <Animated.View style={[styles.box, animatedStyle]} />
+      <Animated.View style={[styles.box, animatedStyle]} />
       <Button title="Animate width" onPress={handleAnimateWidth} />
       <Text>Counter: {count}</Text>
       <Button title="Increase counter" onPress={handleIncreaseCounter} />
@@ -58,7 +62,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   box: {
-    height: 50,
+    height: 20,
     backgroundColor: 'navy',
   },
   buttonView: {

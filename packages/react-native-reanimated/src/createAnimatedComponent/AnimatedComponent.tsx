@@ -2,6 +2,7 @@
 import '../layoutReanimation/animationsManager';
 
 import type React from 'react';
+import { StyleSheet } from 'react-native';
 
 import { maybeBuild } from '../animationBuilder';
 import { IS_JEST, IS_WEB, logger } from '../common';
@@ -20,6 +21,7 @@ import {
 } from '../layoutReanimation/web';
 import type { CustomConfig } from '../layoutReanimation/web/config';
 import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
+import { PropsRegistryGarbageCollector } from '../PropsRegistryGarbageCollector';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
 import type {
@@ -52,7 +54,8 @@ export type Options<P> = {
 
 export default class AnimatedComponent
   extends ReanimatedAnimatedComponent<
-    AnimatedComponentProps<InitialComponentProps>
+    AnimatedComponentProps<InitialComponentProps>,
+    { styleProps: StyleProps }
   >
   implements IAnimatedComponentInternal
 {
@@ -83,6 +86,10 @@ export default class AnimatedComponent
     this._options = options;
     this._displayName = displayName;
 
+    this.state = {
+      styleProps: {},
+    };
+
     if (IS_JEST) {
       this.jestAnimatedStyle = { value: {} };
       this.jestAnimatedProps = { value: {} };
@@ -106,6 +113,11 @@ export default class AnimatedComponent
     this._NativeEventsManager?.attachEvents();
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+
+    const viewTag = this.getComponentViewTag();
+    if (viewTag !== -1) {
+      PropsRegistryGarbageCollector.registerView(viewTag, this);
+    }
 
     if (this._options?.jsProps?.length) {
       jsPropsUpdater.registerComponent(this, this._options.jsProps);
@@ -159,6 +171,11 @@ export default class AnimatedComponent
     this._detachStyles();
     this._InlinePropManager.detachInlineProps();
 
+    const viewTag = this.getComponentViewTag();
+    if (viewTag !== -1) {
+      PropsRegistryGarbageCollector.unregisterView(viewTag);
+    }
+
     if (this._options?.jsProps?.length) {
       jsPropsUpdater.unregisterComponent(this);
     }
@@ -179,6 +196,10 @@ export default class AnimatedComponent
         LayoutAnimationType.EXITING
       );
     }
+  }
+
+  _syncStylePropsBackToReact(props: StyleProps) {
+    this.setState({ styleProps: props });
   }
 
   _detachStyles() {
@@ -428,9 +449,16 @@ export default class AnimatedComponent
         }
       : {};
 
+    const flatStyles = StyleSheet.flatten(filteredProps.style as object);
+    const mergedStyles = {
+      ...flatStyles,
+      ...this.state.styleProps,
+    };
+
     return super.render({
       nativeID,
       ...filteredProps,
+      style: mergedStyles,
       ...jestProps,
     });
   }
