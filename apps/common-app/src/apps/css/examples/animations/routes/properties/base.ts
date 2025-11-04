@@ -462,7 +462,6 @@ const othersRoutes = {
   },
   Filter: {
     name: 'Filter',
-    labelTypes: ['web'],
     Component: baseAnimatedProperties.others.Filter,
   },
 } satisfies Routes;

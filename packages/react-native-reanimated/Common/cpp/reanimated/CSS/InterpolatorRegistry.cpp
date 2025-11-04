@@ -12,7 +12,6 @@
 
 #include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
-#include <reanimated/CSS/common/values/complex/CSSFilter.h>
 
 #include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGLength.h>
@@ -136,6 +135,21 @@ const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
           {"matrix", transformOp<MatrixOperation>(TransformMatrix2D())}})},
 };
 
+const InterpolatorFactoriesRecord FILTER_INTERPOLATORS = {
+    {"filter",
+    filters(
+        {{"blur", filterOp<BlurOperation>(0)},
+         {"brightness", filterOp<BrightnessOperation>(1)},
+         {"contrast", filterOp<ContrastOperation>(1)},
+         {"dropShadow", filterOp<DropShadowOperation>("")},
+         {"grayscale", filterOp<GrayscaleOperation>(0)},
+         {"hueRotate", filterOp<HueRotateOperation>("0deg")},
+         {"invert", filterOp<InvertOperation>(0)},
+         {"opacity", filterOp<OpacityOperation>(1)},
+         {"saturate", filterOp<SaturateOperation>(1)},
+         {"sepia", filterOp<SepiaOperation>(0)}})}};
+};
+
 const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
     {FLEX_INTERPOLATORS,
      SHADOW_INTERPOLATORS_IOS,
@@ -178,7 +192,6 @@ const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
          {"isolation", value<CSSKeyword>("auto")},
          {"cursor", value<CSSKeyword>("auto")},
          {"boxShadow", array({value<CSSBoxShadow>(CSSBoxShadow())})},
-         {"filter", array({value<CSSFilter>(CSSFilter())})},
          {"mixBlendMode", value<CSSKeyword>("normal")}}});
 
 const InterpolatorFactoriesRecord TEXT_INTERPOLATORS_IOS = {

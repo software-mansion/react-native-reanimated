@@ -7,6 +7,9 @@
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperationInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TransformsStyleInterpolator.h>
+#include <reanimated/CSS/interpolation/filters/FilterOperation.h>
+#include <reanimated/CSS/interpolation/filters/FilterOperationInterpolator.h>
+#include <reanimated/CSS/interpolation/filters/FilterStyleInterpolator.h>
 #include <reanimated/CSS/interpolation/values/ResolvableValueInterpolator.h>
 #include <reanimated/CSS/interpolation/values/SimpleValueInterpolator.h>
 
@@ -157,5 +160,11 @@ std::shared_ptr<PropertyInterpolatorFactory> array(const InterpolatorFactoriesAr
  */
 std::shared_ptr<PropertyInterpolatorFactory> transforms(
     const std::unordered_map<std::string, std::shared_ptr<TransformInterpolator>> &interpolators);
+
+/**
+* Filter interpolators
+*/
+std::shared_ptr<PropertyInterpolatorFactory> filters(
+    const std::unordered_map<std::string, std::shared_ptr<FilterInterpolator>> &interpolators);
 
 } // namespace reanimated::css
