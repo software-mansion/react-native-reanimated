@@ -30,6 +30,8 @@ if (!SHOULD_BE_USE_WEB) {
   runOnUISync(() => {
     'worklet';
     global._tagToJSPropNamesMapping = {};
+    globalThis.__lastUpdateFrameTimeByTag = {};
+    globalThis.__lastUpdateByTag = {};
     registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
   });
 }
