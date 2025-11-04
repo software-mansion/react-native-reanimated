@@ -56,7 +56,7 @@ export default class AnimatedComponent<
     this.ChildComponent = ChildComponent;
   }
 
-  _syncStylePropsBackToReact() {
+  _syncStylePropsBackToReact(_props: StyleProps) {
     // noop
   }
 
