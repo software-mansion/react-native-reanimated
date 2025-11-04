@@ -27,8 +27,23 @@ void UIRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(uiRuntime, "_setGestureState", setGestureState);
 
-  const auto microtaskQueueFinalizers =
-      uiRuntime.global().getProperty(uiRuntime, "_microtaskQueueFinalizers").asObject(uiRuntime).asArray(uiRuntime);
+  jsi_utils::installJsiFunction(uiRuntime, "_obtainProp", obtainPropFunction);
+
+  subscribeForMicrotasksFinalization(uiRuntime, maybeFlushUIUpdatesQueue);
+}
+
+void UIRuntimeDecorator::subscribeForMicrotasksFinalization(
+    jsi::Runtime &uiRuntime,
+    const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue) {
+  auto maybeMicrotaskQueueFinalizers = uiRuntime.global().getProperty(uiRuntime, "_microtaskQueueFinalizers");
+
+  if (!maybeMicrotaskQueueFinalizers.isObject()) {
+    uiRuntime.global().setProperty(uiRuntime, "_microtaskQueueFinalizers", jsi::Array(uiRuntime, 0));
+
+    maybeMicrotaskQueueFinalizers = uiRuntime.global().getProperty(uiRuntime, "_microtaskQueueFinalizers");
+  }
+
+  const auto microtaskQueueFinalizers = maybeMicrotaskQueueFinalizers.asObject(uiRuntime).asArray(uiRuntime);
 
   microtaskQueueFinalizers.getPropertyAsFunction(uiRuntime, "push")
       .callWithThis(
@@ -39,8 +54,6 @@ void UIRuntimeDecorator::decorate(
               jsi::PropNameID::forAscii(uiRuntime, "_maybeFlushUIUpdatesQueue"),
               0,
               jsi_utils::createHostFunction(maybeFlushUIUpdatesQueue)));
-
-  jsi_utils::installJsiFunction(uiRuntime, "_obtainProp", obtainPropFunction);
 }
 
 } // namespace reanimated

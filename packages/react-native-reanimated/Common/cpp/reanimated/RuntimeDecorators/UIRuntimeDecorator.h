@@ -21,6 +21,11 @@ class UIRuntimeDecorator {
       const ProgressLayoutAnimationFunction progressLayoutAnimation,
       const EndLayoutAnimationFunction endLayoutAnimation,
       const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue);
+
+ private:
+  static void subscribeForMicrotasksFinalization(
+      jsi::Runtime &uiRuntime,
+      const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue);
 };
 
 } // namespace reanimated
