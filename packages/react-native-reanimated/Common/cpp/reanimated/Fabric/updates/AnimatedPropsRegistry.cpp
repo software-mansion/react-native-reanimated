@@ -33,17 +33,18 @@ void AnimatedPropsRegistry::remove(const Tag tag) {
 }
 
 jsi::Value AnimatedPropsRegistry::getEntriesOlderThanTimestamp(jsi::Runtime &rt, const double timestamp) {
-  auto lock1 = lock();
-
   std::set<Tag> viewTags;
-  for (const auto &[viewTag, viewTimestamp] : timestampMap_) {
-    if (viewTimestamp < timestamp) {
-      viewTags.insert(viewTag);
+  {
+    auto lock1 = lock();
+    for (const auto &[viewTag, viewTimestamp] : timestampMap_) {
+      if (viewTimestamp < timestamp) {
+        viewTags.insert(viewTag);
+      }
     }
   }
   
   PropsMap propsMap;
-  collectProps(propsMap);
+  collectProps(propsMap); // TODO: don't call collectProps since it locks again
 
   const jsi::Array array(rt, viewTags.size());
   size_t idx = 0;
