@@ -1,4 +1,3 @@
-import type { FlashListRef } from '@shopify/flash-list';
 import { FlashList } from '@shopify/flash-list';
 import React from 'react';
 import type { View } from 'react-native';
@@ -105,7 +104,7 @@ describe('Test *****useAnimatedRef*****', () => {
 
   describe('Animated.FlashList', () => {
     const Component = () => {
-      const animatedRef = useAnimatedRef<FlashListRef<unknown>>();
+      const animatedRef = useAnimatedRef<FlashList<unknown>>();
       return <AnimatedFlashList ref={animatedRef} data={[]} renderItem={() => null} />;
     };
     test('mounts without crashing', async () => {

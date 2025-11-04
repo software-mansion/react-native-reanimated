@@ -226,8 +226,9 @@ function printNode(node: Node | number | string, prop?: string) {
   increaseIndent();
 
   printableProps.forEach((key) => {
-    if (node[key]) {
-      printNode(node[key], key);
+    const value = node[key];
+    if (value) {
+      printNode(value, key);
     }
   });
 
