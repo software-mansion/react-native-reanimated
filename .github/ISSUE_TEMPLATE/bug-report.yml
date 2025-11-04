@@ -115,7 +115,7 @@ body:
       label: Feature flags details
       description: If you are using any feature flags, please provide details about which ones and how they are configured.
     depends_on:
-      id: are-feature-flags-used
+      id: flags
       value: 'Yes'
 
   - type: dropdown
