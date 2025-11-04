@@ -460,8 +460,7 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
   animatedPropsRegistry_->collectProps(propsMap);
 
   const auto currentTimestamp = getAnimationTimestamp_();
-  const auto thresholdTimestamp = currentTimestamp - 5000; // 5 seconds
-  const auto viewTags = animatedPropsRegistry_->getTagsOlderThanTimestamp(thresholdTimestamp);
+  const auto viewTags = animatedPropsRegistry_->getTagsOlderThanTimestamp(currentTimestamp - 3000); // 3 seconds
 
   const jsi::Array array(rt, viewTags.size());
   size_t idx = 0;
@@ -482,7 +481,7 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
     array.setValueAtIndex(rt, idx++, item);
   }
 
-  animatedPropsRegistry_->removeEntriesOlderThanTimestamp(currentTimestamp - 10000); // 10 seconds
+  animatedPropsRegistry_->removeEntriesOlderThanTimestamp(currentTimestamp - 5000); // 5 seconds
 
   return jsi::Value(rt, array);
 }
