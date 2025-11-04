@@ -1,6 +1,8 @@
 'use strict';
 import type {
+  HostInstance,
   ImageStyle,
+  ScrollView,
   TextStyle,
   TransformsStyle,
   ViewStyle,
@@ -508,7 +510,7 @@ export enum InterfaceOrientation {
 }
 
 export type ShadowNodeWrapper = {
-  __hostObjectShadowNodeWrapper: never;
+  __nativeStateShadowNodeWrapper: never;
 };
 
 export enum KeyboardState {
@@ -608,3 +610,14 @@ export type AnimateStyle<Style = DefaultStyle> = AnimatedStyle<Style>;
 export type StylesOrDefault<T> = 'style' extends keyof T
   ? MaybeSharedValueRecursive<T['style']>
   : Record<string, unknown>;
+
+export type InternalHostInstance = Partial<
+  HostInstance & {
+    getNativeScrollRef: () =>
+      | Partial<InternalHostInstance & typeof ScrollView>
+      | undefined
+      | null;
+    __internalInstanceHandle: Record<string, any>;
+    _reactInternals: unknown;
+  }
+>;

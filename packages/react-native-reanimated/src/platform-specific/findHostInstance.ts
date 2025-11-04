@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 'use strict';
 
+import type { InternalHostInstance } from '../commonTypes';
 import type { IAnimatedComponentInternal } from '../createAnimatedComponent/commonTypes';
 import { ReanimatedError } from '../errors';
 import { isFabric } from '../PlatformChecker';
@@ -68,7 +69,7 @@ function resolveFindHostInstance_DEPRECATED() {
 
 let findHostInstance_DEPRECATED: (ref: unknown) => HostInstance;
 export function findHostInstance(
-  component: IAnimatedComponentInternal | React.Component
+  component: IAnimatedComponentInternal | InternalHostInstance
 ): HostInstance {
   // Fast path for native refs
   const hostInstance = findHostInstanceFastPath(

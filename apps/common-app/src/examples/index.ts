@@ -36,6 +36,7 @@ import FreezeExample from './FreezeExample';
 import Game2048Example from './Game2048Example';
 import GestureHandlerExample from './GestureHandlerExample';
 import GetViewPropExample from './GetViewPropExample';
+import InstanceDiscoveryExample from './InstanceDiscoveryExample';
 import InvalidValueAccessExample from './InvalidValueAccessExample';
 import InvertedFlatListExample from './InvertedFlatListExample';
 import IPodExample from './IPodExample';
@@ -384,6 +385,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '𝌍',
     title: 'useScrollViewOffset',
     screen: ScrollViewOffsetExample,
+  },
+  InstanceDiscoveryExample: {
+    icon: '🔍',
+    title: 'Instance Discovery',
+    screen: InstanceDiscoveryExample,
   },
   StickyHeaderExample: {
     icon: '🔝',

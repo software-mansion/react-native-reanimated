@@ -1,12 +1,9 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 import { Button, TextInput, View } from 'react-native';
-import Animated, {
-  useAnimatedProps,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
 import { Circle, Svg } from 'react-native-svg';
+
+import Animated, { useAnimatedProps, useSharedValue, withTiming } from '../src';
 
 const animationDuration = 100;
 
