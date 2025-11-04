@@ -106,16 +106,16 @@ body:
       label: Feature flags
       description: Are you using any Reanimated or React Native feature flags in your application?
       options:
-        - Yes
-        - No
+        - 'Yes'
+        - 'No'
 
   - type: textarea
     id: flags-details
     attributes:
       label: Feature flags details
       description: If you are using any feature flags, please provide details about which ones and how they are configured.
-    depends_on:
-      id: flags
+    if:
+      field: flags
       value: 'Yes'
 
   - type: dropdown
