@@ -200,6 +200,7 @@ export default class AnimatedComponent
 
   _syncStylePropsBackToReact(props: StyleProps) {
     this.setState({ styleProps: props });
+    // TODO: find a way to revert changes when animated styles are detached
   }
 
   _detachStyles() {
