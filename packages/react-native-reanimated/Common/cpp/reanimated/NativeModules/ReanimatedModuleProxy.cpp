@@ -1,5 +1,5 @@
-#include <jsi/jsi.h>
 #include <jsi/JSIDynamic.h>
+#include <jsi/jsi.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>

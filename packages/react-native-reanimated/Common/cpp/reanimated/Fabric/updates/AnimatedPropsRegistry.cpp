@@ -42,7 +42,7 @@ jsi::Value AnimatedPropsRegistry::getEntriesOlderThanTimestamp(jsi::Runtime &rt,
       }
     }
   }
-  
+
   PropsMap propsMap;
   collectProps(propsMap); // TODO: don't call collectProps since it locks again
 
@@ -64,14 +64,14 @@ jsi::Value AnimatedPropsRegistry::getEntriesOlderThanTimestamp(jsi::Runtime &rt,
     item.setProperty(rt, "styleProps", jsi::valueFromDynamic(rt, styleProps));
     array.setValueAtIndex(rt, idx++, item);
   }
-  
+
   return jsi::Value(rt, array);
 }
 
 void AnimatedPropsRegistry::removeEntriesOlderThanTimestamp(const double timestamp) {
   auto lock1 = lock();
 
-  for (auto it = timestampMap_.begin(); it != timestampMap_.end(); ) {
+  for (auto it = timestampMap_.begin(); it != timestampMap_.end();) {
     const auto viewTag = it->first;
     const auto viewTimestamp = it->second;
     if (viewTimestamp < timestamp) {
