@@ -458,6 +458,7 @@ void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi:
 jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
   const auto currentTimestamp = getAnimationTimestamp_();
 
+  // TODO: move removing old updates somewhere else?
   animatedPropsRegistry_->removeUpdatesOlderThanTimestamp(currentTimestamp - 4000); // 4 seconds
 
   return animatedPropsRegistry_->getUpdatesOlderThanTimestamp(rt, currentTimestamp - 3000); // 3 seconds
