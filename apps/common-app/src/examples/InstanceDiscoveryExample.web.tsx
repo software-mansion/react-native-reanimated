@@ -27,7 +27,7 @@ import {
 } from 'react-native';
 import { ScrollView as RNGHScrollView } from 'react-native-gesture-handler';
 import { makeMutable } from 'react-native-reanimated';
-import { Path as RNSVGPath } from 'react-native-svg';
+import SVG, { Path as RNSVGPath } from 'react-native-svg';
 
 // Make sure Reanimated and Worklets are initialized.
 makeMutable(() => {
@@ -321,13 +321,15 @@ export default function InstanceDiscoveryExample() {
       <RNGHScrollView ref={getRefChecker('RNGHScrollView')}>
         <Text>RNGH ScrollView Content</Text>
       </RNGHScrollView>
-      <RNSVGPath
-        ref={getRefChecker('SVG Path')}
-        d="M150 0 L75 200 L225 200 Z"
-        fill="lime"
-        stroke="purple"
-        strokeWidth="1"
-      />
+      <SVG>
+        <RNSVGPath
+          ref={getRefChecker('SVG Path')}
+          d="M150 0 L75 200 L225 200 Z"
+          fill="lime"
+          stroke="purple"
+          strokeWidth="1"
+        />
+      </SVG>
     </>
   );
 }

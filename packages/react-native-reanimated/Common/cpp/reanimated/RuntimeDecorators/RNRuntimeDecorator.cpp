@@ -36,7 +36,7 @@ void RNRuntimeDecorator::decorate(
 
 #if defined(IS_REANIMATED_EXAMPLE_APP) && defined(RCT_NEW_ARCH_ENABLED)
   installDebugBindings(rnRuntime, reanimatedModuleProxy);
-#endif // defined(IS_REANIMATED_EXAMPLE_APP) && defined(RCT_NEW_ARCH_ENABLED)
+#endif
 
   injectReanimatedCppVersion(rnRuntime);
 
@@ -51,7 +51,7 @@ void RNRuntimeDecorator::decorate(
       jsi::Object::createFromHostObject(rnRuntime, reanimatedModuleProxy));
 }
 
-#ifdef IS_REANIMATED_EXAMPLE_APP
+#if defined(IS_REANIMATED_EXAMPLE_APP) && defined(RCT_NEW_ARCH_ENABLED)
 void RNRuntimeDecorator::installDebugBindings(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<ReanimatedModuleProxy> &reanimatedModuleProxy) {
@@ -71,6 +71,6 @@ void RNRuntimeDecorator::installDebugBindings(
       "_registriesLeakCheck",
       reanimatedModuleProxy->createRegistriesLeakCheck());
 }
-#endif // IS_REANIMATED_EXAMPLE_APP
+#endif // defined(IS_REANIMATED_EXAMPLE_APP) && defined(RCT_NEW_ARCH_ENABLED)
 
 } // namespace reanimated
