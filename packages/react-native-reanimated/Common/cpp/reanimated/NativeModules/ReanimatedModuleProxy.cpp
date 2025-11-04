@@ -456,34 +456,11 @@ void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi:
 }
 
 jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
-  PropsMap propsMap;
-  animatedPropsRegistry_->collectProps(propsMap);
-
   const auto currentTimestamp = getAnimationTimestamp_();
-  const auto viewTags = animatedPropsRegistry_->getTagsOlderThanTimestamp(currentTimestamp - 3000); // 3 seconds
-
-  const jsi::Array array(rt, viewTags.size());
-  size_t idx = 0;
-  for (const auto &[family, vectorOfRawProps] : propsMap) {
-    const auto viewTag = family->getTag();
-    if (!viewTags.contains(viewTag)) {
-      continue;
-    }
-
-    folly::dynamic styleProps = folly::dynamic::object();
-    for (const auto &rawProps : vectorOfRawProps) {
-      styleProps.update(static_cast<folly::dynamic>(rawProps));
-    }
-
-    const jsi::Object item(rt);
-    item.setProperty(rt, "viewTag", viewTag);
-    item.setProperty(rt, "styleProps", jsi::valueFromDynamic(rt, styleProps));
-    array.setValueAtIndex(rt, idx++, item);
-  }
 
   animatedPropsRegistry_->removeEntriesOlderThanTimestamp(currentTimestamp - 5000); // 5 seconds
 
-  return jsi::Value(rt, array);
+  return animatedPropsRegistry_->getEntriesOlderThanTimestamp(rt, currentTimestamp - 3000); // 3 seconds
 }
 
 bool ReanimatedModuleProxy::handleEvent(

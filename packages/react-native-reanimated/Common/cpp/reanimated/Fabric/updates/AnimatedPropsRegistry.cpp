@@ -32,14 +32,37 @@ void AnimatedPropsRegistry::remove(const Tag tag) {
   updatesRegistry_.erase(tag);
 }
 
-std::set<Tag> AnimatedPropsRegistry::getTagsOlderThanTimestamp(const double timestamp) {
-  std::set<Tag> result;
+jsi::Value AnimatedPropsRegistry::getEntriesOlderThanTimestamp(jsi::Runtime &rt, const double timestamp) {
+  std::set<Tag> viewTags;
   for (const auto &[viewTag, viewTimestamp] : timestampMap_) {
     if (viewTimestamp < timestamp) {
-      result.insert(viewTag);
+      viewTags.insert(viewTag);
     }
   }
-  return result;
+  
+  PropsMap propsMap;
+  collectProps(propsMap);
+
+  const jsi::Array array(rt, viewTags.size());
+  size_t idx = 0;
+  for (const auto &[family, vectorOfRawProps] : propsMap) {
+    const auto viewTag = family->getTag();
+    if (!viewTags.contains(viewTag)) {
+      continue;
+    }
+
+    folly::dynamic styleProps = folly::dynamic::object();
+    for (const auto &rawProps : vectorOfRawProps) {
+      styleProps.update(static_cast<folly::dynamic>(rawProps));
+    }
+
+    const jsi::Object item(rt);
+    item.setProperty(rt, "viewTag", viewTag);
+    item.setProperty(rt, "styleProps", jsi::valueFromDynamic(rt, styleProps));
+    array.setValueAtIndex(rt, idx++, item);
+  }
+  
+  return jsi::Value(rt, array);
 }
 
 void AnimatedPropsRegistry::removeEntriesOlderThanTimestamp(const double timestamp) {

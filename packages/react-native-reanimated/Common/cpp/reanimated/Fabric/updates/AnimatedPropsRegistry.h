@@ -16,7 +16,7 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
  public:
   void update(jsi::Runtime &rt, const jsi::Value &operations, const double timestamp);
   void remove(Tag tag) override;
-  std::set<Tag> getTagsOlderThanTimestamp(const double timestamp);
+  jsi::Value getEntriesOlderThanTimestamp(jsi::Runtime &rt, const double timestamp);
   void removeEntriesOlderThanTimestamp(const double timestamp);
   
  private:
