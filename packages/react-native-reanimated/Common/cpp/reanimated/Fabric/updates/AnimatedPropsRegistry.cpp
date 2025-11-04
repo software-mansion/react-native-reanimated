@@ -34,21 +34,15 @@ void AnimatedPropsRegistry::remove(const Tag tag) {
 
 jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt, const double timestamp) {
   std::unordered_map<Tag, folly::dynamic> updatesMap;
-
   {
     auto lock1 = lock();
-
-    std::set<Tag> viewTags;
-    for (const auto &[viewTag, viewTimestamp] : timestampMap_) {
-      if (viewTimestamp < timestamp) {
-        viewTags.insert(viewTag);
-      }
-    }
 
     for (const auto &[tag, pair] : updatesRegistry_) {
       const auto &[shadowNode, props] = pair;
       const auto viewTag = shadowNode->getTag();
-      if (!viewTags.contains(viewTag)) {
+      
+      const auto viewTimestamp = timestampMap_.at(viewTag);
+      if (viewTimestamp >= timestamp) {
         continue;
       }
 
