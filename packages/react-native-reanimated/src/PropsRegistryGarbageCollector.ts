@@ -1,6 +1,7 @@
 'use strict';
 
 import type { IAnimatedComponentInternal } from './createAnimatedComponent/commonTypes';
+import { ReanimatedModule } from './ReanimatedModule';
 
 const FLUSH_INTERVAL_MS = 1000; // 1 second
 
@@ -29,17 +30,16 @@ export const PropsRegistryGarbageCollector = {
 
   syncPropsBackToReact() {
     console.log('syncPropsBackToReact', performance.now());
-    const styleProps = {
-      backgroundColor: `rgb(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255})`,
-    };
-    for (const [viewTag, component] of this.viewsMap.entries()) {
+    const settledUpdates = ReanimatedModule.getSettledUpdates();
+    for (const { viewTag, styleProps } of settledUpdates) {
+      const component = this.viewsMap.get(viewTag);
       console.log(
         '_syncStylePropsBackToReact',
         styleProps,
         'for viewTag',
         viewTag
       );
-      component._syncStylePropsBackToReact(styleProps);
+      component?._syncStylePropsBackToReact(styleProps);
     }
   },
 

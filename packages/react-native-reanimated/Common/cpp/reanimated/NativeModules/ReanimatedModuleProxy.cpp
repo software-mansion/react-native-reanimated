@@ -1,4 +1,5 @@
 #include <jsi/jsi.h>
+#include <jsi/JSIDynamic.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
@@ -92,7 +93,8 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       return;
     }
 
-    strongThis->animatedPropsRegistry_->update(rt, operations);
+    const auto timestamp = strongThis->getAnimationTimestamp_();
+    strongThis->animatedPropsRegistry_->update(rt, operations, timestamp);
   };
 
   auto measure = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) -> jsi::Value {
@@ -451,6 +453,36 @@ void ReanimatedModuleProxy::updateCSSTransition(
 void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) {
   auto lock = cssTransitionsRegistry_->lock();
   cssTransitionsRegistry_->remove(viewTag.asNumber());
+}
+
+jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
+  PropsMap propsMap;
+  animatedPropsRegistry_->collectProps(propsMap);
+
+  const auto currentTimestamp = getAnimationTimestamp_();
+  const auto thresholdTimestamp = currentTimestamp - 5000; // 5 seconds
+  const auto viewTags = animatedPropsRegistry_->getTagsOlderThanTimestamp(thresholdTimestamp);
+
+  const jsi::Array array(rt, viewTags.size());
+  size_t idx = 0;
+  for (const auto &[family, vectorOfRawProps] : propsMap) {
+    const auto viewTag = family->getTag();
+    if (!viewTags.contains(viewTag)) {
+      continue;
+    }
+
+    folly::dynamic styleProps = folly::dynamic::object();
+    for (const auto &rawProps : vectorOfRawProps) {
+      styleProps.update(static_cast<folly::dynamic>(rawProps));
+    }
+
+    const jsi::Object item(rt);
+    item.setProperty(rt, "viewTag", viewTag);
+    item.setProperty(rt, "styleProps", jsi::valueFromDynamic(rt, styleProps));
+    array.setValueAtIndex(rt, idx++, item);
+  }
+
+  return jsi::Value(rt, array);
 }
 
 bool ReanimatedModuleProxy::handleEvent(

@@ -13,7 +13,7 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
 }
 #endif
 
-void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations) {
+void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations, const double timestamp) {
   auto operationsArray = operations.asObject(rt).asArray(rt);
 
   for (size_t i = 0, length = operationsArray.size(rt); i < length; ++i) {
@@ -23,11 +23,23 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
 
     const jsi::Value &updates = item.getProperty(rt, "updates");
     addUpdatesToBatch(shadowNode, jsi::dynamicFromValue(rt, updates));
+
+    timestampMap_[shadowNode->getTag()] = timestamp;
   }
 }
 
 void AnimatedPropsRegistry::remove(const Tag tag) {
   updatesRegistry_.erase(tag);
+}
+
+std::set<Tag> AnimatedPropsRegistry::getTagsOlderThanTimestamp(const double timestamp) {
+  std::set<Tag> result;
+  for (const auto &[viewTag, viewTimestamp] : timestampMap_) {
+    if (viewTimestamp < timestamp) {
+      result.insert(viewTag);
+    }
+  }
+  return result;
 }
 
 } // namespace reanimated

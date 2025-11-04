@@ -16,6 +16,7 @@ import {
 import type {
   InternalHostInstance,
   LayoutAnimationBatchItem,
+  SettledUpdate,
   ShadowNodeWrapper,
   StyleProps,
   Value3D,
@@ -248,6 +249,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   unregisterCSSTransition(viewTag: number) {
     this.#reanimatedModuleProxy.unregisterCSSTransition(viewTag);
   }
+
+  getSettledUpdates(): SettledUpdate[] {
+    return this.#reanimatedModuleProxy.getSettledUpdates();
+  }
 }
 
 class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
@@ -286,5 +291,9 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   unregisterEventHandler(): void {}
   getViewProp() {
     return null!;
+  }
+
+  getSettledUpdates(): SettledUpdate[] {
+    return [];
   }
 }
