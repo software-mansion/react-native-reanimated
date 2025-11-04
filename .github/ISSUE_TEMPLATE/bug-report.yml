@@ -100,17 +100,17 @@ body:
 
         Providing as much information as possible greatly helps us with reproducing the issues.
 
- - type: dropdown
-    id: are-feature-flags-used
+  - type: dropdown
+    id: flags
     attributes:
-      label: Are any feature flags used?
+      label: Feature flags
       description: Are you using any Reanimated or React Native feature flags in your application?
       options:
         - Yes
         - No
 
   - type: textarea
-    id: feature-flags-details
+    id: flags-details
     attributes:
       label: Feature flags details
       description: If you are using any feature flags, please provide details about which ones and how they are configured.
