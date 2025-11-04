@@ -24,9 +24,7 @@ struct CSSBoolean : public CSSSimpleValue<CSSBoolean> {
   bool operator==(const CSSBoolean &other) const;
 
 #ifndef NDEBUG
-  friend std::ostream &operator<<(
-      std::ostream &os,
-      const CSSBoolean &boolValue);
+  friend std::ostream &operator<<(std::ostream &os, const CSSBoolean &boolValue);
 #endif // NDEBUG
 };
 

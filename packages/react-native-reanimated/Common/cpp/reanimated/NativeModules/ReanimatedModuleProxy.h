@@ -4,10 +4,10 @@
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/core/CSSTransition.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
-#include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
-#include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
-#include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
-#include <reanimated/CSS/registry/StaticPropsRegistry.h>
+#include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
+#include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
+#include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
+#include <reanimated/CSS/registries/StaticPropsRegistry.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
@@ -16,6 +16,7 @@
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
+#include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
@@ -25,11 +26,14 @@
 #include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
 
+#include <react/renderer/componentregistry/componentNameByReactViewName.h>
 #include <react/renderer/core/ShadowNode.h>
 #include <react/renderer/uimanager/UIManager.h>
 
 #include <memory>
+#include <set>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -39,11 +43,10 @@ namespace reanimated {
 using namespace facebook;
 using namespace css;
 
-using UpdatesBatch = std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
+using UpdatesBatch = std::vector<std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
 
-class ReanimatedModuleProxy
-    : public ReanimatedModuleProxySpec,
-      public std::enable_shared_from_this<ReanimatedModuleProxy> {
+class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
+                              public std::enable_shared_from_this<ReanimatedModuleProxy> {
  public:
   ReanimatedModuleProxy(
       const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
@@ -64,9 +67,7 @@ class ReanimatedModuleProxy
       const jsi::Value &worklet,
       const jsi::Value &eventName,
       const jsi::Value &emitterReactTag) override;
-  void unregisterEventHandler(
-      jsi::Runtime &rt,
-      const jsi::Value &registrationId) override;
+  void unregisterEventHandler(jsi::Runtime &rt, const jsi::Value &registrationId) override;
 
   jsi::Value getViewProp(
       jsi::Runtime &rt,
@@ -74,33 +75,20 @@ class ReanimatedModuleProxy
       const jsi::Value &propName,
       const jsi::Value &callback) override;
 
-  jsi::Value enableLayoutAnimations(jsi::Runtime &rt, const jsi::Value &config)
-      override;
-  jsi::Value configureProps(
-      jsi::Runtime &rt,
-      const jsi::Value &uiProps,
-      const jsi::Value &nativeProps) override;
-  jsi::Value configureLayoutAnimationBatch(
-      jsi::Runtime &rt,
-      const jsi::Value &layoutAnimationsBatch) override;
-  void setShouldAnimateExiting(
-      jsi::Runtime &rt,
-      const jsi::Value &viewTag,
-      const jsi::Value &shouldAnimate) override;
+  jsi::Value getStaticFeatureFlag(jsi::Runtime &rt, const jsi::Value &name) override;
+  jsi::Value setDynamicFeatureFlag(jsi::Runtime &rt, const jsi::Value &name, const jsi::Value &value) override;
+
+  jsi::Value configureLayoutAnimationBatch(jsi::Runtime &rt, const jsi::Value &layoutAnimationsBatch) override;
+  void setShouldAnimateExiting(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &shouldAnimate) override;
 
   void onRender(double timestampMs);
 
-  bool isAnyHandlerWaitingForEvent(
-      const std::string &eventName,
-      const int emitterReactTag);
+  bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
 
   void maybeRequestRender();
 
-  bool handleEvent(
-      const std::string &eventName,
-      const int emitterReactTag,
-      const jsi::Value &payload,
-      double currentTime);
+  bool
+  handleEvent(const std::string &eventName, const int emitterReactTag, const jsi::Value &payload, double currentTime);
 
   inline std::shared_ptr<JSLogger> getJSLogger() const {
     return jsLogger_;
@@ -113,40 +101,26 @@ class ReanimatedModuleProxy
 
   void performOperations();
 
-  void setViewStyle(
-      jsi::Runtime &rt,
-      const jsi::Value &viewTag,
-      const jsi::Value &viewStyle) override;
+  void setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) override;
 
-  void markNodeAsRemovable(
-      jsi::Runtime &rt,
-      const jsi::Value &shadowNodeWrapper) override;
-  void unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &viewTag)
-      override;
+  void markNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) override;
+  void unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &viewTag) override;
 
   void registerCSSKeyframes(
       jsi::Runtime &rt,
       const jsi::Value &animationName,
+      const jsi::Value &viewName,
       const jsi::Value &keyframesConfig) override;
-  void unregisterCSSKeyframes(jsi::Runtime &rt, const jsi::Value &animationName)
-      override;
+  void unregisterCSSKeyframes(jsi::Runtime &rt, const jsi::Value &animationName, const jsi::Value &viewName) override;
 
-  void applyCSSAnimations(
-      jsi::Runtime &rt,
-      const jsi::Value &shadowNodeWrapper,
-      const jsi::Value &animationUpdates) override;
+  void applyCSSAnimations(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &animationUpdates)
+      override;
   void unregisterCSSAnimations(const jsi::Value &viewTag) override;
 
-  void registerCSSTransition(
-      jsi::Runtime &rt,
-      const jsi::Value &shadowNodeWrapper,
-      const jsi::Value &transitionConfig) override;
-  void updateCSSTransition(
-      jsi::Runtime &rt,
-      const jsi::Value &viewTag,
-      const jsi::Value &configUpdates) override;
-  void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag)
+  void registerCSSTransition(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &transitionConfig)
       override;
+  void updateCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &configUpdates) override;
+  void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) override;
 
   void cssLoopCallback(const double /*timestampMs*/);
 
@@ -156,10 +130,7 @@ class ReanimatedModuleProxy
       const jsi::Value &commandNameValue,
       const jsi::Value &argsValue);
 
-  jsi::String obtainProp(
-      jsi::Runtime &rt,
-      const jsi::Value &shadowNodeWrapper,
-      const jsi::Value &propName);
+  jsi::String obtainProp(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &propName);
 
   jsi::Value measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue);
 
@@ -170,7 +141,7 @@ class ReanimatedModuleProxy
   std::string obtainPropFromShadowNode(
       jsi::Runtime &rt,
       const std::string &propName,
-      const ShadowNode::Shared &shadowNode);
+      const std::shared_ptr<const ShadowNode> &shadowNode);
 
   jsi::Value registerSensor(
       jsi::Runtime &rt,
@@ -187,9 +158,7 @@ class ReanimatedModuleProxy
       const jsi::Value &keyboardEventContainer,
       const jsi::Value &isStatusBarTranslucent,
       const jsi::Value &isNavigationBarTranslucent) override;
-  void unsubscribeFromKeyboardEvents(
-      jsi::Runtime &rt,
-      const jsi::Value &listenerId) override;
+  void unsubscribeFromKeyboardEvents(jsi::Runtime &rt, const jsi::Value &listenerId) override;
 
   inline LayoutAnimationsManager &layoutAnimationsManager() {
     return *layoutAnimationsManager_;
@@ -199,8 +168,7 @@ class ReanimatedModuleProxy
     return isReducedMotion_;
   }
 
-  [[nodiscard]] inline std::shared_ptr<WorkletsModuleProxy>
-  getWorkletsModuleProxy() const {
+  [[nodiscard]] inline std::shared_ptr<WorkletsModuleProxy> getWorkletsModuleProxy() const {
     return workletsModuleProxy_;
   }
 
@@ -209,10 +177,6 @@ class ReanimatedModuleProxy
 
  private:
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
-
-  jsi::Value filterNonAnimatableProps(
-      jsi::Runtime &rt,
-      const jsi::Value &props);
 
   const bool isReducedMotion_;
   bool shouldFlushRegistry_ = false;
@@ -235,17 +199,20 @@ class ReanimatedModuleProxy
   const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
+  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
   const std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
-  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
-  std::unordered_set<std::string>
-      animatablePropNames_; // filled by configureProps
+  const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
+  const PreserveMountedTagsFunction filterUnmountedTagsFunction_;
+
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
+  std::set<SurfaceId> layoutAnimationFlushRequests_;
+  bool layoutAnimationRenderRequested_;
 
   const KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;

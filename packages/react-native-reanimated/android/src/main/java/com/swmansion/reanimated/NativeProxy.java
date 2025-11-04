@@ -6,6 +6,8 @@ import android.provider.Settings;
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
+import com.facebook.react.bridge.JavaOnlyArray;
+import com.facebook.react.bridge.JavaOnlyMap;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.UiThreadUtil;
@@ -26,7 +28,9 @@ import com.swmansion.reanimated.sensor.ReanimatedSensorType;
 import com.swmansion.worklets.JSCallInvokerResolver;
 import com.swmansion.worklets.WorkletsModule;
 import java.lang.ref.WeakReference;
+import java.util.Arrays;
 import java.util.Objects;
+import java.util.PrimitiveIterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -39,6 +43,7 @@ public class NativeProxy {
 
   protected final WorkletsModule mWorkletsModule;
   protected NodesManager mNodesManager;
+  protected final FabricUIManager mFabricUIManager;
   protected final WeakReference<ReactApplicationContext> mContext;
   private final ReanimatedSensorContainer reanimatedSensorContainer;
   private final GestureHandlerStateManager gestureHandlerStateManager;
@@ -81,7 +86,7 @@ public class NativeProxy {
     gestureHandlerStateManager = tempHandlerStateManager;
     mNodesManager = nodesManager;
 
-    FabricUIManager fabricUIManager =
+    mFabricUIManager =
         (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
 
     CallInvokerHolderImpl callInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
@@ -90,7 +95,7 @@ public class NativeProxy {
             workletsModule,
             Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
             callInvokerHolder,
-            fabricUIManager);
+            mFabricUIManager);
     if (BuildConfig.DEBUG) {
       checkCppVersion(); // injectCppVersion should be called during initHybrid above
     }
@@ -172,6 +177,268 @@ public class NativeProxy {
               + cppVersion
               + " respectively). See "
               + "https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-java-code-version-and-c-code-version for more information.");
+    }
+  }
+
+  // NOTE: Keep in sync with ReanimatedModuleProxy::performOperations
+  private static final int CMD_START_OF_VIEW = 1;
+  private static final int CMD_START_OF_TRANSFORM = 2;
+  private static final int CMD_END_OF_TRANSFORM = 3;
+  private static final int CMD_END_OF_VIEW = 4;
+
+  private static final int CMD_OPACITY = 10;
+  private static final int CMD_ELEVATION = 11;
+  private static final int CMD_Z_INDEX = 12;
+  private static final int CMD_SHADOW_OPACITY = 13;
+  private static final int CMD_SHADOW_RADIUS = 14;
+  private static final int CMD_BACKGROUND_COLOR = 15;
+  private static final int CMD_COLOR = 16;
+  private static final int CMD_TINT_COLOR = 17;
+
+  private static final int CMD_BORDER_RADIUS = 20;
+  private static final int CMD_BORDER_TOP_LEFT_RADIUS = 21;
+  private static final int CMD_BORDER_TOP_RIGHT_RADIUS = 22;
+  private static final int CMD_BORDER_TOP_START_RADIUS = 23;
+  private static final int CMD_BORDER_TOP_END_RADIUS = 24;
+  private static final int CMD_BORDER_BOTTOM_LEFT_RADIUS = 25;
+  private static final int CMD_BORDER_BOTTOM_RIGHT_RADIUS = 26;
+  private static final int CMD_BORDER_BOTTOM_START_RADIUS = 27;
+  private static final int CMD_BORDER_BOTTOM_END_RADIUS = 28;
+  private static final int CMD_BORDER_START_START_RADIUS = 29;
+  private static final int CMD_BORDER_START_END_RADIUS = 30;
+  private static final int CMD_BORDER_END_START_RADIUS = 31;
+  private static final int CMD_BORDER_END_END_RADIUS = 32;
+
+  private static final int CMD_BORDER_COLOR = 40;
+  private static final int CMD_BORDER_TOP_COLOR = 41;
+  private static final int CMD_BORDER_BOTTOM_COLOR = 42;
+  private static final int CMD_BORDER_LEFT_COLOR = 43;
+  private static final int CMD_BORDER_RIGHT_COLOR = 44;
+  private static final int CMD_BORDER_START_COLOR = 45;
+  private static final int CMD_BORDER_END_COLOR = 46;
+
+  private static final int CMD_TRANSFORM_TRANSLATE_X = 100;
+  private static final int CMD_TRANSFORM_TRANSLATE_Y = 101;
+  private static final int CMD_TRANSFORM_SCALE = 102;
+  private static final int CMD_TRANSFORM_SCALE_X = 103;
+  private static final int CMD_TRANSFORM_SCALE_Y = 104;
+  private static final int CMD_TRANSFORM_ROTATE = 105;
+  private static final int CMD_TRANSFORM_ROTATE_X = 106;
+  private static final int CMD_TRANSFORM_ROTATE_Y = 107;
+  private static final int CMD_TRANSFORM_ROTATE_Z = 108;
+  private static final int CMD_TRANSFORM_SKEW_X = 109;
+  private static final int CMD_TRANSFORM_SKEW_Y = 110;
+  private static final int CMD_TRANSFORM_MATRIX = 111;
+  private static final int CMD_TRANSFORM_PERSPECTIVE = 112;
+
+  private static final int CMD_UNIT_DEG = 200;
+  private static final int CMD_UNIT_RAD = 201;
+  private static final int CMD_UNIT_PX = 202;
+  private static final int CMD_UNIT_PERCENT = 203;
+
+  private static String commandToString(int command) {
+    return switch (command) {
+      case CMD_OPACITY -> "opacity";
+      case CMD_ELEVATION -> "elevation";
+      case CMD_Z_INDEX -> "zIndex";
+      case CMD_SHADOW_OPACITY -> "shadowOpacity";
+      case CMD_SHADOW_RADIUS -> "shadowRadius";
+      case CMD_BACKGROUND_COLOR -> "backgroundColor";
+      case CMD_COLOR -> "color";
+      case CMD_TINT_COLOR -> "tintColor";
+      case CMD_BORDER_RADIUS -> "borderRadius";
+      case CMD_BORDER_TOP_LEFT_RADIUS -> "borderTopLeftRadius";
+      case CMD_BORDER_TOP_RIGHT_RADIUS -> "borderTopRightRadius";
+      case CMD_BORDER_TOP_START_RADIUS -> "borderTopStartRadius";
+      case CMD_BORDER_TOP_END_RADIUS -> "borderTopEndRadius";
+      case CMD_BORDER_BOTTOM_LEFT_RADIUS -> "borderBottomLeftRadius";
+      case CMD_BORDER_BOTTOM_RIGHT_RADIUS -> "borderBottomRightRadius";
+      case CMD_BORDER_BOTTOM_START_RADIUS -> "borderBottomStartRadius";
+      case CMD_BORDER_BOTTOM_END_RADIUS -> "borderBottomEndRadius";
+      case CMD_BORDER_START_START_RADIUS -> "borderStartStartRadius";
+      case CMD_BORDER_START_END_RADIUS -> "borderStartEndRadius";
+      case CMD_BORDER_END_START_RADIUS -> "borderEndStartRadius";
+      case CMD_BORDER_END_END_RADIUS -> "borderEndEndRadius";
+      case CMD_BORDER_COLOR -> "borderColor";
+      case CMD_BORDER_TOP_COLOR -> "borderTopColor";
+      case CMD_BORDER_BOTTOM_COLOR -> "borderBottomColor";
+      case CMD_BORDER_LEFT_COLOR -> "borderLeftColor";
+      case CMD_BORDER_RIGHT_COLOR -> "borderRightColor";
+      case CMD_BORDER_START_COLOR -> "borderStartColor";
+      case CMD_BORDER_END_COLOR -> "borderEndColor";
+      default -> throw new RuntimeException("Unknown command: " + command);
+    };
+  }
+
+  private static String transformCommandToString(int transformCommand) {
+    return switch (transformCommand) {
+      case CMD_TRANSFORM_TRANSLATE_X -> "translateX";
+      case CMD_TRANSFORM_TRANSLATE_Y -> "translateY";
+      case CMD_TRANSFORM_SCALE -> "scale";
+      case CMD_TRANSFORM_SCALE_X -> "scaleX";
+      case CMD_TRANSFORM_SCALE_Y -> "scaleY";
+      case CMD_TRANSFORM_ROTATE -> "rotate";
+      case CMD_TRANSFORM_ROTATE_X -> "rotateX";
+      case CMD_TRANSFORM_ROTATE_Y -> "rotateY";
+      case CMD_TRANSFORM_ROTATE_Z -> "rotateZ";
+      case CMD_TRANSFORM_SKEW_X -> "skewX";
+      case CMD_TRANSFORM_SKEW_Y -> "skewY";
+      case CMD_TRANSFORM_MATRIX -> "matrix";
+      case CMD_TRANSFORM_PERSPECTIVE -> "perspective";
+      default -> throw new RuntimeException("Unknown transform command: " + transformCommand);
+    };
+  }
+
+  @DoNotStrip
+  public boolean preserveMountedTags(int[] tags) {
+    if (!UiThreadUtil.isOnUiThread()) {
+      return false;
+    }
+
+    for (int i = 0; i < tags.length; i++) {
+      if (mFabricUIManager.resolveView(tags[i]) == null) {
+        tags[i] = -1;
+      }
+    }
+
+    return true;
+  }
+
+  @DoNotStrip
+  public void synchronouslyUpdateUIProps(int[] intBuffer, double[] doubleBuffer) {
+    PrimitiveIterator.OfInt intIterator = Arrays.stream(intBuffer).iterator();
+    PrimitiveIterator.OfDouble doubleIterator = Arrays.stream(doubleBuffer).iterator();
+    int viewTag = -1;
+    JavaOnlyMap props = new JavaOnlyMap();
+    while (intIterator.hasNext()) {
+      int command = intIterator.nextInt();
+      switch (command) {
+        case CMD_START_OF_VIEW:
+          viewTag = intIterator.nextInt();
+          props = new JavaOnlyMap();
+          break;
+
+        case CMD_OPACITY:
+        case CMD_ELEVATION:
+        case CMD_Z_INDEX:
+        case CMD_SHADOW_OPACITY:
+        case CMD_SHADOW_RADIUS:
+          {
+            String name = commandToString(command);
+            props.putDouble(name, doubleIterator.nextDouble());
+            break;
+          }
+
+        case CMD_BACKGROUND_COLOR:
+        case CMD_COLOR:
+        case CMD_TINT_COLOR:
+        case CMD_BORDER_COLOR:
+        case CMD_BORDER_TOP_COLOR:
+        case CMD_BORDER_BOTTOM_COLOR:
+        case CMD_BORDER_LEFT_COLOR:
+        case CMD_BORDER_RIGHT_COLOR:
+        case CMD_BORDER_START_COLOR:
+        case CMD_BORDER_END_COLOR:
+          {
+            String name = commandToString(command);
+            props.putInt(name, intIterator.nextInt());
+            break;
+          }
+
+        case CMD_BORDER_RADIUS:
+        case CMD_BORDER_TOP_LEFT_RADIUS:
+        case CMD_BORDER_TOP_RIGHT_RADIUS:
+        case CMD_BORDER_TOP_START_RADIUS:
+        case CMD_BORDER_TOP_END_RADIUS:
+        case CMD_BORDER_BOTTOM_LEFT_RADIUS:
+        case CMD_BORDER_BOTTOM_RIGHT_RADIUS:
+        case CMD_BORDER_BOTTOM_START_RADIUS:
+        case CMD_BORDER_BOTTOM_END_RADIUS:
+        case CMD_BORDER_START_START_RADIUS:
+        case CMD_BORDER_START_END_RADIUS:
+        case CMD_BORDER_END_START_RADIUS:
+        case CMD_BORDER_END_END_RADIUS:
+          {
+            String name = commandToString(command);
+            double value = doubleIterator.nextDouble();
+            switch (intIterator.nextInt()) {
+              case CMD_UNIT_PX -> props.putDouble(name, value);
+              case CMD_UNIT_PERCENT -> props.putString(name, value + "%");
+              default -> throw new RuntimeException("Unknown unit command");
+            }
+            break;
+          }
+
+        case CMD_START_OF_TRANSFORM:
+          JavaOnlyArray transform = new JavaOnlyArray();
+          while (true) {
+            int transformCommand = intIterator.nextInt();
+            if (transformCommand == CMD_END_OF_TRANSFORM) {
+              props.putArray("transform", transform);
+              break;
+            }
+            String name = transformCommandToString(transformCommand);
+            switch (transformCommand) {
+              case CMD_TRANSFORM_TRANSLATE_X:
+              case CMD_TRANSFORM_TRANSLATE_Y:
+                {
+                  double value = doubleIterator.nextDouble();
+                  switch (intIterator.nextInt()) {
+                    case CMD_UNIT_PX -> transform.pushMap(JavaOnlyMap.of(name, value));
+                    case CMD_UNIT_PERCENT -> transform.pushMap(JavaOnlyMap.of(name, value + "%"));
+                    default -> throw new RuntimeException("Unknown unit command");
+                  }
+                  break;
+                }
+
+              case CMD_TRANSFORM_SCALE:
+              case CMD_TRANSFORM_SCALE_X:
+              case CMD_TRANSFORM_SCALE_Y:
+              case CMD_TRANSFORM_PERSPECTIVE:
+                {
+                  double value = doubleIterator.nextDouble();
+                  transform.pushMap(JavaOnlyMap.of(name, value));
+                  break;
+                }
+
+              case CMD_TRANSFORM_ROTATE:
+              case CMD_TRANSFORM_ROTATE_X:
+              case CMD_TRANSFORM_ROTATE_Y:
+              case CMD_TRANSFORM_ROTATE_Z:
+              case CMD_TRANSFORM_SKEW_X:
+              case CMD_TRANSFORM_SKEW_Y:
+                double angle = doubleIterator.nextDouble();
+                String unit =
+                    switch (intIterator.nextInt()) {
+                      case CMD_UNIT_DEG -> "deg";
+                      case CMD_UNIT_RAD -> "rad";
+                      default -> throw new RuntimeException("Unknown unit command");
+                    };
+                transform.pushMap(JavaOnlyMap.of(name, angle + unit));
+                break;
+
+              case CMD_TRANSFORM_MATRIX:
+                int length = intIterator.nextInt();
+                JavaOnlyArray matrix = new JavaOnlyArray();
+                for (int i = 0; i < length; i++) {
+                  matrix.pushDouble(doubleIterator.nextDouble());
+                }
+                transform.pushMap(JavaOnlyMap.of(name, matrix));
+                break;
+
+              default:
+                throw new RuntimeException("Unknown transform type: " + transformCommand);
+            }
+          }
+          break;
+
+        case CMD_END_OF_VIEW:
+          mFabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, props);
+          break;
+
+        default:
+          throw new RuntimeException("Unexcepted command: " + command);
+      }
     }
   }
 

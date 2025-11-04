@@ -23,7 +23,7 @@ export type ScrollHandlerProcessed<
   Context extends Record<string, unknown> = Record<string, unknown>,
 > = EventHandlerProcessed<RNNativeScrollEvent, Context>;
 
-export type ScrollHandlerInternal = EventHandlerInternal<RNNativeScrollEvent>;
+type ScrollHandlerInternal = EventHandlerInternal<RNNativeScrollEvent>;
 
 /**
  * Lets you run callbacks on ScrollView events. Supports `onScroll`,

@@ -21,10 +21,7 @@ import {
 } from './types';
 import { processWorklet } from './workletSubstitution';
 
-const reanimatedObjectHooks = new Set([
-  'useAnimatedGestureHandler',
-  'useAnimatedScrollHandler',
-]);
+const reanimatedObjectHooks = new Set(['useAnimatedScrollHandler']);
 
 const reanimatedFunctionHooks = new Set([
   'useFrameCallback',
@@ -34,7 +31,6 @@ const reanimatedFunctionHooks = new Set([
   'useDerivedValue',
   'useAnimatedScrollHandler',
   'useAnimatedReaction',
-  'useWorkletCallback',
   // animations' callbacks
   'withTiming',
   'withSpring',
@@ -43,10 +39,14 @@ const reanimatedFunctionHooks = new Set([
   // scheduling functions
   'runOnUI',
   'executeOnUIRuntimeSync',
+  'scheduleOnUI',
+  'runOnUISync',
+  'runOnUIAsync',
+  'runOnRuntime',
+  'scheduleOnRuntime',
 ]);
 
 const reanimatedFunctionArgsToWorkletize = new Map([
-  ['useAnimatedGestureHandler', [0]],
   ['useFrameCallback', [0]],
   ['useAnimatedStyle', [0]],
   ['useAnimatedProps', [0]],
@@ -54,13 +54,17 @@ const reanimatedFunctionArgsToWorkletize = new Map([
   ['useDerivedValue', [0]],
   ['useAnimatedScrollHandler', [0]],
   ['useAnimatedReaction', [0, 1]],
-  ['useWorkletCallback', [0]],
   ['withTiming', [2]],
   ['withSpring', [2]],
   ['withDecay', [1]],
   ['withRepeat', [3]],
   ['runOnUI', [0]],
   ['executeOnUIRuntimeSync', [0]],
+  ['scheduleOnUI', [0]],
+  ['runOnUISync', [0]],
+  ['runOnUIAsync', [0]],
+  ['runOnRuntime', [1]],
+  ['scheduleOnRuntime', [1]],
   ...Array.from(gestureHandlerBuilderMethods).map((name) => [name, [0]]),
 ] as [string, number[]][]);
 
@@ -124,7 +128,8 @@ function processArgs(
     const maybeWorklet = findWorklet(
       arg,
       acceptWorkletizableFunction,
-      acceptObject
+      acceptObject,
+      state
     );
     // @ts-expect-error There's no need to workletize
     // inside an already workletized function.
@@ -142,7 +147,8 @@ function processArgs(
 function findWorklet(
   arg: NodePath,
   acceptWorkletizableFunction: boolean,
-  acceptObject: boolean
+  acceptObject: boolean,
+  state: ReanimatedPluginPass
 ): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
   if (acceptWorkletizableFunction && isWorkletizableFunctionPath(arg)) {
     return arg;
@@ -154,7 +160,8 @@ function findWorklet(
     return findReferencedWorklet(
       arg,
       acceptWorkletizableFunction,
-      acceptObject
+      acceptObject,
+      state
     );
   }
   return undefined;

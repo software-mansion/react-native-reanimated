@@ -1,17 +1,20 @@
 'use strict';
-import type { Component } from 'react';
-import { logger } from 'react-native-worklets';
+import { RuntimeKind } from 'react-native-worklets';
 
-import { IS_JEST, SHOULD_BE_USE_WEB } from '../common';
-import type { MeasuredDimensions, ShadowNodeWrapper } from '../commonTypes';
+import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
+import type {
+  InstanceOrElement,
+  MeasuredDimensions,
+  ShadowNodeWrapper,
+} from '../commonTypes';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 
-type Measure = <T extends Component>(
-  animatedRef: AnimatedRef<T>
+type Measure = <TRef extends InstanceOrElement>(
+  animatedRef: AnimatedRef<TRef>
 ) => MeasuredDimensions | null;
 
 /**
@@ -29,7 +32,7 @@ export let measure: Measure;
 
 function measureNative(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
   'worklet';
-  if (!globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     return null;
   }
 
@@ -47,19 +50,15 @@ function measureNative(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
       `The view has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
     );
     return null;
-  } else if (measured.x === -1234567) {
-    logger.warn(
-      `The view returned an invalid measurement response. Please make sure the view is currently rendered.`
-    );
-    return null;
-  } else if (isNaN(measured.x)) {
+  }
+  if (isNaN(measured.x)) {
     logger.warn(
       `The view gets view-flattened on Android. To disable view-flattening, set \`collapsable={false}\` on this component.`
     );
     return null;
-  } else {
-    return measured;
   }
+
+  return measured;
 }
 
 function measureJest() {
@@ -74,7 +73,7 @@ function measureDefault() {
 
 if (!SHOULD_BE_USE_WEB) {
   // Those assertions are actually correct since on Native platforms `AnimatedRef` is
-  // mapped as a different function in `shareableMappingCache` and
+  // mapped as a different function in `serializableMappingCache` and
   // TypeScript is not able to infer that.
   measure = measureNative as unknown as Measure;
 } else if (IS_JEST) {

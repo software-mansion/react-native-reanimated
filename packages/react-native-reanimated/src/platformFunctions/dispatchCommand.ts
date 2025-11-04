@@ -1,20 +1,11 @@
 'use strict';
-import type { Component } from 'react';
-import { logger } from 'react-native-worklets';
 
-import { IS_JEST, SHOULD_BE_USE_WEB } from '../common';
+import { RuntimeKind } from 'react-native-worklets';
+
+import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
 import type { ShadowNodeWrapper } from '../commonTypes';
-import type {
-  AnimatedRef,
-  AnimatedRefOnJS,
-  AnimatedRefOnUI,
-} from '../hook/commonTypes';
-
-type DispatchCommand = <T extends Component>(
-  animatedRef: AnimatedRef<T>,
-  commandName: string,
-  args?: unknown[]
-) => void;
+import type { AnimatedRefOnJS, AnimatedRefOnUI } from '../hook/commonTypes';
+import type { DispatchCommand } from './types';
 
 /**
  * Lets you synchronously call a command of a native component.
@@ -35,12 +26,25 @@ function dispatchCommandNative(
   args: Array<unknown> = []
 ) {
   'worklet';
-  if (!globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     return;
   }
 
-  const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
-  global._dispatchCommand!(shadowNodeWrapper, commandName, args);
+  const shadowNodeWrapper = animatedRef();
+
+  // This prevents crashes if ref has not been set yet
+  if (!shadowNodeWrapper) {
+    logger.warn(
+      `Tried to dispatch command "${commandName}" with an uninitialized ref. Make sure to pass the animated ref to the component before using it.`
+    );
+    return;
+  }
+
+  global._dispatchCommand!(
+    shadowNodeWrapper as ShadowNodeWrapper,
+    commandName,
+    args
+  );
 }
 
 function dispatchCommandJest() {
@@ -53,7 +57,7 @@ function dispatchCommandDefault() {
 
 if (!SHOULD_BE_USE_WEB) {
   // Those assertions are actually correct since on Native platforms `AnimatedRef` is
-  // mapped as a different function in `shareableMappingCache` and
+  // mapped as a different function in `serializableMappingCache` and
   // TypeScript is not able to infer that.
   dispatchCommand = dispatchCommandNative as unknown as DispatchCommand;
 } else if (IS_JEST) {

@@ -1,18 +1,20 @@
 'use strict';
 import type {
   IWorkletsModule,
-  ShareableRef,
+  SerializableRef,
   WorkletFunction,
 } from 'react-native-worklets';
-import { logger, WorkletsModule } from 'react-native-worklets';
+import { WorkletsModule } from 'react-native-worklets';
 
 import {
   IS_JEST,
   IS_WEB,
   IS_WINDOW_AVAILABLE,
+  logger,
   ReanimatedError,
 } from '../../common';
 import type {
+  InternalHostInstance,
   ShadowNodeWrapper,
   StyleProps,
   Value3D,
@@ -23,7 +25,8 @@ import type {
   CSSAnimationUpdates,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-} from '../../css/platform/native';
+} from '../../css/native';
+import { assertWorkletsVersion } from '../../platform-specific/workletsVersion';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
 
@@ -36,13 +39,20 @@ class JSReanimated implements IReanimatedModule {
    * We keep the instance of `WorkletsModule` here to keep correct coupling of
    * the modules and initialization order.
    */
+  // eslint-disable-next-line no-unused-private-class-members
   #workletsModule: IWorkletsModule = WorkletsModule;
   nextSensorId = 0;
   sensors = new Map<number, WebSensor>();
   platform?: Platform = undefined;
 
+  constructor() {
+    if (__DEV__) {
+      assertWorkletsVersion();
+    }
+  }
+
   registerEventHandler<T>(
-    _eventHandler: ShareableRef<T>,
+    _eventHandler: SerializableRef<T>,
     _eventName: string,
     _emitterReactTag: number
   ): number {
@@ -57,16 +67,6 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
-  enableLayoutAnimations() {
-    if (IS_WEB) {
-      logger.warn('Layout Animations are not supported on web yet.');
-    } else if (IS_JEST) {
-      logger.warn('Layout Animations are no-ops when using Jest.');
-    } else {
-      logger.warn('Layout Animations are not supported on this configuration.');
-    }
-  }
-
   configureLayoutAnimationBatch() {
     // no-op
   }
@@ -79,7 +79,7 @@ class JSReanimated implements IReanimatedModule {
     sensorType: SensorType,
     interval: number,
     _iosReferenceFrame: number,
-    eventHandler: ShareableRef<(data: Value3D | ValueRotation) => void>
+    eventHandler: SerializableRef<(data: Value3D | ValueRotation) => void>
   ): number {
     if (!IS_WINDOW_AVAILABLE) {
       // the window object is unavailable when building the server portion of a site that uses SSG
@@ -123,7 +123,7 @@ class JSReanimated implements IReanimatedModule {
   getSensorCallback = (
     sensor: WebSensor,
     sensorType: SensorType,
-    eventHandler: ShareableRef<(data: Value3D | ValueRotation) => void>
+    eventHandler: SerializableRef<(data: Value3D | ValueRotation) => void>
   ) => {
     switch (sensorType) {
       case SensorType.ACCELEROMETER:
@@ -135,19 +135,20 @@ class JSReanimated implements IReanimatedModule {
           if (this.platform === Platform.WEB_ANDROID) {
             [x, y, z] = [-x, -y, -z];
           }
-          // TODO TYPESCRIPT on web ShareableRef is the value itself so we call it directly
+          // TODO TYPESCRIPT on web SerializableRef is the value itself so we call it directly
           (eventHandler as any)({ x, y, z, interfaceOrientation: 0 });
         };
       case SensorType.GYROSCOPE:
       case SensorType.MAGNETIC_FIELD:
         return () => {
           const { x, y, z } = sensor;
-          // TODO TYPESCRIPT on web ShareableRef is the value itself so we call it directly
+          // TODO TYPESCRIPT on web SerializableRef is the value itself so we call it directly
           (eventHandler as any)({ x, y, z, interfaceOrientation: 0 });
         };
       case SensorType.ROTATION:
         return () => {
-          let [qw, qx, qy, qz] = sensor.quaternion;
+          const [qw, qx] = sensor.quaternion;
+          let [, , qy, qz] = sensor.quaternion;
 
           // Android sensors have a different coordinate system than iOS
           if (this.platform === Platform.WEB_ANDROID) {
@@ -164,7 +165,7 @@ class JSReanimated implements IReanimatedModule {
             2.0 * (qx * qy + qw * qz),
             qw * qw + qx * qx - qy * qy - qz * qz
           );
-          // TODO TYPESCRIPT on web ShareableRef is the value itself so we call it directly
+          // TODO TYPESCRIPT on web SerializableRef is the value itself so we call it directly
           (eventHandler as any)({
             qw,
             qx,
@@ -187,7 +188,7 @@ class JSReanimated implements IReanimatedModule {
     }
   }
 
-  subscribeForKeyboardEvents(_: ShareableRef<WorkletFunction>): number {
+  subscribeForKeyboardEvents(_: SerializableRef<WorkletFunction>): number {
     if (IS_WEB) {
       logger.warn('useAnimatedKeyboard is not available on web yet.');
     } else if (IS_JEST) {
@@ -254,16 +255,19 @@ class JSReanimated implements IReanimatedModule {
   getViewProp<T>(
     _viewTag: number,
     _propName: string,
-    _component?: React.Component,
+    _component?: InternalHostInstance | null,
     _callback?: (result: T) => void
   ): Promise<T> {
     throw new ReanimatedError('getViewProp is not available in JSReanimated.');
   }
 
-  configureProps() {
-    throw new ReanimatedError(
-      'configureProps is not available in JSReanimated.'
-    );
+  getStaticFeatureFlag(): boolean {
+    // mock implementation
+    return false;
+  }
+
+  setDynamicFeatureFlag(): void {
+    // noop
   }
 
   setViewStyle(_viewTag: number, _style: StyleProps): void {
@@ -284,6 +288,7 @@ class JSReanimated implements IReanimatedModule {
 
   registerCSSKeyframes(
     _animationName: string,
+    _viewName: string,
     _keyframesConfig: NormalizedCSSAnimationKeyframesConfig
   ): void {
     throw new ReanimatedError(
@@ -291,7 +296,7 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
-  unregisterCSSKeyframes(_animationName: string): void {
+  unregisterCSSKeyframes(_animationName: string, _viewName: string): void {
     throw new ReanimatedError(
       '`unregisterCSSKeyframes` is not available in JSReanimated.'
     );
@@ -339,7 +344,7 @@ class JSReanimated implements IReanimatedModule {
 
 // Lack of this export breaks TypeScript generation since
 // an enum transpiles into JavaScript code.
-// ts-prune-ignore-next
+/** @knipIgnore */
 export enum Platform {
   WEB_IOS = 'web iOS',
   WEB_ANDROID = 'web Android',

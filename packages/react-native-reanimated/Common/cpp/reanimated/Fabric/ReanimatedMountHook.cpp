@@ -2,15 +2,15 @@
 #include <reanimated/Fabric/ReanimatedMountHook.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
+#include <memory>
+
 namespace reanimated {
 
 ReanimatedMountHook::ReanimatedMountHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
     const std::function<void()> &requestFlush)
-    : uiManager_(uiManager),
-      updatesRegistryManager_(updatesRegistryManager),
-      requestFlush_(requestFlush) {
+    : uiManager_(uiManager), updatesRegistryManager_(updatesRegistryManager), requestFlush_(requestFlush) {
   uiManager_->registerMountHook(*this);
 }
 
@@ -20,7 +20,12 @@ ReanimatedMountHook::~ReanimatedMountHook() noexcept {
 
 void ReanimatedMountHook::shadowTreeDidMount(
     const RootShadowNode::Shared &rootShadowNode,
-    double) noexcept {
+#if REACT_NATIVE_MINOR_VERSION >= 81
+    HighResTimeStamp
+#else
+    double
+#endif // REACT_NATIVE_MINOR_VERSION >= 81
+    ) noexcept {
   ReanimatedSystraceSection s("ReanimatedMountHook::shadowTreeDidMount");
 
   // Nodes marked earlier in ReanimatedCommitHook for removal (if there props were the same) are removed here
@@ -30,9 +35,8 @@ void ReanimatedMountHook::shadowTreeDidMount(
     updatesRegistryManager_->removeImmediateRemovableNodes();
   }
 
-  auto reaShadowNode =
-      std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
-          std::const_pointer_cast<RootShadowNode>(rootShadowNode));
+  auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
+      std::const_pointer_cast<RootShadowNode>(rootShadowNode));
 
   if (reaShadowNode->hasReanimatedMountTrait()) {
     // We mark reanimated commits with ReanimatedMountTrait. We don't want other

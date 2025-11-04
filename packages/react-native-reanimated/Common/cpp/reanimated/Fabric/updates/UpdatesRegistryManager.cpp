@@ -1,17 +1,20 @@
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
+#include <reanimated/Tools/FeatureFlags.h>
+
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace reanimated {
 
-UpdatesRegistryManager::UpdatesRegistryManager(
-    const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
+UpdatesRegistryManager::UpdatesRegistryManager(const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
     : staticPropsRegistry_(staticPropsRegistry) {}
 
 std::lock_guard<std::mutex> UpdatesRegistryManager::lock() const {
   return std::lock_guard<std::mutex>{mutex_};
 }
 
-void UpdatesRegistryManager::addRegistry(
-    const std::shared_ptr<UpdatesRegistry> &registry) {
+void UpdatesRegistryManager::addRegistry(const std::shared_ptr<UpdatesRegistry> &registry) {
   if (!registry) {
     throw std::invalid_argument("[Reanimated] Registry cannot be null");
   }
@@ -19,7 +22,9 @@ void UpdatesRegistryManager::addRegistry(
 }
 
 void UpdatesRegistryManager::pauseReanimatedCommits() {
-  isPaused_ = true;
+  if constexpr (!StaticFeatureFlags::getFlag("DISABLE_COMMIT_PAUSING_MECHANISM")) {
+    isPaused_ = true;
+  }
 }
 
 bool UpdatesRegistryManager::shouldReanimatedSkipCommit() {
@@ -42,8 +47,7 @@ bool UpdatesRegistryManager::shouldCommitAfterPause() {
   return shouldCommitAfterPause_.exchange(false);
 }
 
-void UpdatesRegistryManager::markNodeAsRemovable(
-    const ShadowNode::Shared &shadowNode) {
+void UpdatesRegistryManager::markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode) {
   removableShadowNodes_[shadowNode->getTag()] = shadowNode;
 }
 
@@ -51,27 +55,25 @@ void UpdatesRegistryManager::unmarkNodeAsRemovable(Tag viewTag) {
   removableShadowNodes_.erase(viewTag);
 }
 
-void UpdatesRegistryManager::handleNodeRemovals(
-    const RootShadowNode &rootShadowNode) {
-  for (auto it = removableShadowNodes_.begin();
-       it != removableShadowNodes_.end();) {
-    const auto &shadowNode = it->second;
-    const auto &family = shadowNode->getFamily();
-    const auto &ancestors = family.getAncestors(rootShadowNode);
+void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadowNode) {
+  RemovableShadowNodes remainingShadowNodes;
 
-    // Skip if the node hasn't been removed
-    if (!ancestors.empty()) {
-      ++it;
+  for (const auto &[tag, shadowNode] : removableShadowNodes_) {
+    if (!shadowNode) {
       continue;
     }
 
-    const auto tag = shadowNode->getTag();
-    for (auto &registry : registries_) {
-      registry->remove(tag);
+    if (shadowNode->getFamily().getAncestors(rootShadowNode).empty()) {
+      for (auto &registry : registries_) {
+        registry->remove(tag);
+      }
+      staticPropsRegistry_->remove(tag);
+    } else {
+      remainingShadowNodes.emplace(tag, shadowNode);
     }
-    staticPropsRegistry_->remove(tag);
-    it = removableShadowNodes_.erase(it);
   }
+
+  removableShadowNodes_ = std::move(remainingShadowNodes);
 }
 
 void UpdatesRegistryManager::markNodeAsImmediateRemovable(Tag tag) {
@@ -113,7 +115,7 @@ bool UpdatesRegistryManager::hasPropsToRevert() {
 
 void UpdatesRegistryManager::addToPropsMap(
     PropsMap &propsMap,
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const folly::dynamic &props) {
   auto &family = shadowNode->getFamily();
   auto it = propsMap.find(&family);
@@ -127,8 +129,7 @@ void UpdatesRegistryManager::addToPropsMap(
   }
 }
 
-void UpdatesRegistryManager::collectPropsToRevertBySurface(
-    std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface) {
+void UpdatesRegistryManager::collectPropsToRevertBySurface(std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface) {
   for (const auto &registry : registries_) {
     registry->collectPropsToRevert(propsToRevertMap_);
   }
@@ -144,12 +145,16 @@ void UpdatesRegistryManager::collectPropsToRevertBySurface(
         continue;
       }
 
-      const auto &it = PROPERTY_INTERPOLATORS_CONFIG.find(propName);
-      if (it != PROPERTY_INTERPOLATORS_CONFIG.end()) {
+      const auto &componentName = shadowNode->getComponentName();
+      const auto &interpolators = getComponentInterpolators(componentName);
+      const auto &it = interpolators.find(propName);
+
+      if (it != interpolators.end()) {
         filteredStyle[propName] = it->second->getDefaultValue().toDynamic();
-      } else {
-        filteredStyle[propName] = nullptr;
+        continue;
       }
+
+      filteredStyle[propName] = nullptr;
     }
 
     const auto &surfaceId = shadowNode->getSurfaceId();

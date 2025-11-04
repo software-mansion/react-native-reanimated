@@ -1,13 +1,15 @@
 import { Portal } from '@gorhom/portal';
-import type { PropsWithChildren, ReactNode } from 'react';
+import type { ComponentRef, JSX, PropsWithChildren, ReactNode } from 'react';
 import { useRef, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
 import {
-  Gesture,
-  GestureDetector,
+  Dimensions,
   Pressable,
-} from 'react-native-gesture-handler';
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   FadeIn,
@@ -16,7 +18,7 @@ import Animated, {
   useAnimatedRef,
   useAnimatedStyle,
   useDerivedValue,
-  useScrollViewOffset,
+  useScrollOffset,
   useSharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -68,7 +70,6 @@ type ActionSheetDropdownStyleOptions = {
   offsetY?: number;
   dropdownMaxHeight?: number;
   dropdownZIndex?: number;
-  fitInScreen?: boolean;
 };
 
 type ActionSheetDropdownProps = PropsWithChildren<{
@@ -77,6 +78,7 @@ type ActionSheetDropdownProps = PropsWithChildren<{
     backdropOpacity?: number;
     dropdownStyle?: StyleProp<ViewStyle>;
   } & ActionSheetDropdownStyleOptions;
+  fitInScreen?: boolean;
   hitSlop?: number;
   onOpen?: () => void;
   onClose?: () => void;
@@ -90,7 +92,7 @@ export default function ActionSheetDropdown({
   styleOptions,
   ...contentProps
 }: ActionSheetDropdownProps): JSX.Element {
-  const containerRef = useRef<View>(null);
+  const containerRef = useRef<ComponentRef<typeof View>>(null);
   const insets = useSafeAreaInsets();
   const [{ isOpen, toggleMeasurements }, setState] = useState<DropdownState>({
     isOpen: false,
@@ -145,7 +147,7 @@ export default function ActionSheetDropdown({
                 {...contentProps}
                 alignment={styleOptions?.alignment}
                 dropdownMaxHeight={styleOptions?.dropdownMaxHeight}
-                fitInScreen={styleOptions?.fitInScreen}
+                fitInScreen={contentProps.fitInScreen}
                 handleClose={closeDropdown}
                 offsetX={styleOptions?.offsetX}
                 offsetY={styleOptions?.offsetY}
@@ -183,10 +185,13 @@ function DropdownContent({
   style,
   toggleMeasurements,
 }: DropdownContentProps): JSX.Element {
-  const flattenedStyle = StyleSheet.flatten(style);
+  // TODO - fix infinite type recursion or create a repro and report the issue
+  // to the RN team. For now we are casting the type to any.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const flattenedStyle = StyleSheet.flatten(style as any) as ViewStyle;
   const windowDimensions = Dimensions.get('window');
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
-  const scrollOffset = useScrollViewOffset(scrollRef);
+  const scrollOffset = useScrollOffset(scrollRef);
 
   const contentWidth = useSharedValue(0);
   const contentHeight = useSharedValue(0);

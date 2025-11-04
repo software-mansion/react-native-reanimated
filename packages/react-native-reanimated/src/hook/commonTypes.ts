@@ -1,6 +1,7 @@
 'use strict';
-import type { Component, MutableRefObject } from 'react';
+import type { ComponentRef, ElementType, RefObject } from 'react';
 import type {
+  HostInstance,
   ImageStyle,
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -9,12 +10,19 @@ import type {
 } from 'react-native';
 import type { WorkletFunction } from 'react-native-worklets';
 
+import type { Maybe } from '../common';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedStyle,
+  InstanceOrElement,
+  InternalHostInstance,
   ShadowNodeWrapper,
+  StyleUpdaterContainer,
 } from '../commonTypes';
-import type { AnimatedProps } from '../createAnimatedComponent/commonTypes';
+import type {
+  AnimatedComponentType,
+  AnimatedProps,
+} from '../createAnimatedComponent';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 
@@ -25,19 +33,41 @@ export interface Descriptor {
   shadowNodeWrapper: ShadowNodeWrapper;
 }
 
-export type AnimatedRef<T extends Component> = {
-  (component?: T):
-    | number // Paper
-    | ShadowNodeWrapper // Fabric
+export type MaybeObserverCleanup = (() => void) | undefined;
+
+export type AnimatedRefObserver = (tag: number | null) => MaybeObserverCleanup;
+
+export type ExtractElementRef<TRef> = TRef extends ElementType
+  ? ComponentRef<TRef> extends never // Ensure that ref type is explicitly defined (is not any)
+    ? TRef
+    : ComponentRef<TRef>
+  : TRef;
+
+// TODO - Replace InstanceOrElement with InternalHostInstance once we drop support for the old
+// types and migrate to the new react-native-strict-api types to align with the useRef type.
+// For now, we need to support the old useAnimatedRef API as well, which uses the ElementType
+// as the type of the ref.
+type AnimatedRefCurrent<TRef> = ExtractElementRef<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TRef extends AnimatedComponentType<any, infer Instance> ? Instance : TRef
+>;
+
+export type AnimatedRef<TRef extends InstanceOrElement = HostInstance> = {
+  (ref?: AnimatedRefCurrent<TRef> | null):
+    | ShadowNodeWrapper // Native
     | HTMLElement; // web
-  current: T | null;
-  getTag: () => number;
+  current: AnimatedRefCurrent<TRef> | null;
+  observe: (observer: AnimatedRefObserver) => void;
+  getTag?: () => Maybe<number>;
 };
 
 // Might make that type generic if it's ever needed.
-export type AnimatedRefOnJS = AnimatedRef<Component>;
+export type AnimatedRefOnJS = AnimatedRef<InternalHostInstance>;
 
-/** `AnimatedRef` is mapped to this type on the UI thread via a shareable handle. */
+/**
+ * `AnimatedRef` is mapped to this type on the UI thread via a serializable
+ * handle.
+ */
 export type AnimatedRefOnUI = {
   (): number | ShadowNodeWrapper | null;
 };
@@ -64,10 +94,6 @@ export type EventPayload<Event extends object> = Event extends {
   ? NativeEvent
   : Omit<Event, 'eventName'>;
 
-export type NativeEventWrapper<Event extends object> = {
-  nativeEvent: Event;
-};
-
 export type DefaultStyle = ViewStyle | ImageStyle | TextStyle;
 
 export type RNNativeScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
@@ -91,14 +117,15 @@ export interface AnimatedStyleHandle<
     value: AnimatedStyle<Style>;
     updater: () => AnimatedStyle<Style>;
   };
+  styleUpdaterContainer: StyleUpdaterContainer;
 }
 
 export interface JestAnimatedStyleHandle<
   Style extends DefaultStyle | AnimatedProps = DefaultStyle,
 > extends AnimatedStyleHandle<Style> {
   jestAnimatedValues:
-    | MutableRefObject<AnimatedStyle<Style>>
-    | MutableRefObject<AnimatedProps>;
+    | RefObject<AnimatedStyle<Style>>
+    | RefObject<AnimatedProps>;
   toJSON: () => string;
 }
 

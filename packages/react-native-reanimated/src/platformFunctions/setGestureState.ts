@@ -1,8 +1,8 @@
 'use strict';
 
-import { logger } from 'react-native-worklets';
+import { RuntimeKind } from 'react-native-worklets';
 
-import { IS_JEST, SHOULD_BE_USE_WEB } from '../common';
+import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
 
 type SetGestureState = (handlerTag: number, newState: number) => void;
 
@@ -10,7 +10,7 @@ export let setGestureState: SetGestureState;
 
 function setGestureStateNative(handlerTag: number, newState: number) {
   'worklet';
-  if (!globalThis._WORKLET) {
+  if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     logger.warn('You can not use setGestureState in non-worklet function.');
     return;
   }

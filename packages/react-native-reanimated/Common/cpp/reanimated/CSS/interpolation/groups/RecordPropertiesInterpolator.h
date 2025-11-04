@@ -1,11 +1,10 @@
 #pragma once
 
 #include <reanimated/CSS/interpolation/groups/GroupPropertiesInterpolator.h>
-#include <reanimated/CSS/util/interpolators.h>
+#include <reanimated/CSS/utils/interpolators.h>
 
 #include <memory>
 #include <string>
-#include <unordered_set>
 
 namespace reanimated::css {
 
@@ -17,8 +16,7 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
   virtual ~RecordPropertiesInterpolator() = default;
 
-  bool equalsReversingAdjustedStartValue(
-      const folly::dynamic &propertyValue) const override;
+  bool equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
@@ -27,9 +25,7 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
       const folly::dynamic &lastUpdateValue) override;
 
  protected:
-  folly::dynamic mapInterpolators(
-      const std::function<folly::dynamic(PropertyInterpolator &)> &callback)
-      const override;
+  folly::dynamic mapInterpolators(const std::function<folly::dynamic(PropertyInterpolator &)> &callback) const override;
 
   void maybeCreateInterpolator(const std::string &propertyName);
 

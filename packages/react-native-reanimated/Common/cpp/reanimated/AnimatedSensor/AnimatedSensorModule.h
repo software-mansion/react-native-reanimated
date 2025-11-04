@@ -2,7 +2,7 @@
 
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
-#include <worklets/SharedItems/Shareables.h>
+#include <worklets/SharedItems/Serializable.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <jsi/jsi.h>
@@ -29,8 +29,7 @@ class AnimatedSensorModule {
   UnregisterSensorFunction platformUnregisterSensorFunction_;
 
  public:
-  AnimatedSensorModule(
-      const PlatformDepMethodsHolder &platformDepMethodsHolder);
+  explicit AnimatedSensorModule(const PlatformDepMethodsHolder &platformDepMethodsHolder);
   ~AnimatedSensorModule();
 
   jsi::Value registerSensor(

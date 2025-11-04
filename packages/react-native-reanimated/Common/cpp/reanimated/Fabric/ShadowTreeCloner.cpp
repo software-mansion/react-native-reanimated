@@ -1,6 +1,7 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
+#include <memory>
 #include <ranges>
 #include <utility>
 
@@ -29,10 +30,7 @@ bool checkPropsEqual(const folly::dynamic& a, const folly::dynamic& b) {
     return true;
 }
 
-Props::Shared mergeProps(
-    const ShadowNode &shadowNode,
-    const PropsMap &propsMap,
-    const ShadowNodeFamily &family) {
+Props::Shared mergeProps(const ShadowNode &shadowNode, const PropsMap &propsMap, const ShadowNodeFamily &family) {
   ReanimatedSystraceSection s("ShadowTreeCloner::mergeProps");
 
   const auto it = propsMap.find(&family);
@@ -41,8 +39,7 @@ Props::Shared mergeProps(
     return ShadowNodeFragment::propsPlaceholder();
   }
 
-  PropsParserContext propsParserContext{
-      shadowNode.getSurfaceId(), *shadowNode.getContextContainer()};
+  PropsParserContext propsParserContext{shadowNode.getSurfaceId(), *shadowNode.getContextContainer()};
   const auto &propsVector = it->second;
   auto newProps = shadowNode.getProps();
 
@@ -50,23 +47,20 @@ Props::Shared mergeProps(
   if (propsVector.size() > 1) {
     folly::dynamic newPropsDynamic = folly::dynamic::object;
     for (const auto &props : propsVector) {
-      newPropsDynamic = folly::dynamic::merge(
-          props.operator folly::dynamic(), newPropsDynamic);
+      newPropsDynamic = folly::dynamic::merge(props.operator folly::dynamic(), newPropsDynamic);
     }
-    return shadowNode.getComponentDescriptor().cloneProps(
-        propsParserContext, newProps, RawProps(newPropsDynamic));
+    return shadowNode.getComponentDescriptor().cloneProps(propsParserContext, newProps, RawProps(newPropsDynamic));
   }
 #endif
 
   for (const auto &props : propsVector) {
-    newProps = shadowNode.getComponentDescriptor().cloneProps(
-        propsParserContext, newProps, RawProps(props));
+    newProps = shadowNode.getComponentDescriptor().cloneProps(propsParserContext, newProps, RawProps(props));
   }
 
   return newProps;
 }
 
-ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
+std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
     const ShadowNode &shadowNode,
     const ChildrenMap &childrenMap,
     const PropsMap &propsMap,
@@ -77,14 +71,13 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
 
   if (affectedChildrenIt != childrenMap.end()) {
     for (const auto index : affectedChildrenIt->second) {
-      children[index] = cloneShadowTreeWithNewPropsRecursive(
-          *children[index], childrenMap, propsMap, tagsToRemove);
+      children[index] = cloneShadowTreeWithNewPropsRecursive(*children[index], childrenMap, propsMap, tagsToRemove);
     }
   }
 
   const auto newProps = mergeProps(shadowNode, propsMap, *family);
 
- if (newProps) {
+  if (newProps) {
      ReanimatedSystraceSection s("ShadowTreeCloner::equalityCheck");
 
      const auto& shadowNodeProps = shadowNode.getProps()->rawProps;
@@ -95,19 +88,16 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
      if (isSame) {
          tagsToRemove.push_back(shadowNode.getTag());
      }
- }
+  }
 
   return shadowNode.clone(
       {newProps,
-       std::make_shared<ShadowNode::ListOfShared>(children),
+       std::make_shared<std::vector<std::shared_ptr<const ShadowNode>>>(children),
        shadowNode.getState(),
        false});
 }
 
-RootShadowNode::Unshared cloneShadowTreeWithNewProps(
-    const RootShadowNode &oldRootNode,
-    const PropsMap &propsMap,
-    std::vector<Tag>& tagsToRemove) {
+RootShadowNode::Unshared cloneShadowTreeWithNewProps(const RootShadowNode &oldRootNode, const PropsMap &propsMap, std::vector<Tag>& tagsToRemove) {
   ReanimatedSystraceSection s("ShadowTreeCloner::cloneShadowTreeWithNewProps");
 
   ChildrenMap childrenMap;
@@ -118,8 +108,7 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(
     for (auto &[family, _] : propsMap) {
       const auto ancestors = family->getAncestors(oldRootNode);
 
-      for (const auto &[parentNode, index] :
-           std::ranges::reverse_view(ancestors)) {
+      for (const auto &[parentNode, index] : std::ranges::reverse_view(ancestors)) {
         const auto parentFamily = &parentNode.get().getFamily();
         auto &affectedChildren = childrenMap[parentFamily];
 

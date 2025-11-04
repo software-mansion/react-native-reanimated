@@ -1,5 +1,4 @@
-import { runOnJS, runOnUI } from 'react-native-reanimated';
-
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 import type { LockObject } from '../types';
 
 class WaitForUnlock {
@@ -12,6 +11,7 @@ class WaitForUnlock {
   }
 
   _waitForUnlock(maxWaitTime?: number) {
+    const defaultPollingRate = 10;
     return new Promise(resolve => {
       const startTime = performance.now();
       const interval = setInterval(() => {
@@ -21,7 +21,7 @@ class WaitForUnlock {
           clearInterval(interval);
           resolve(this._lock.lock);
         }
-      }, 10);
+      }, defaultPollingRate);
     });
   }
 }
@@ -30,11 +30,11 @@ export class SyncUIRunner extends WaitForUnlock {
   public async runOnUIBlocking(worklet: () => void, maxWaitTime?: number) {
     const unlock = () => this._setLock(false);
     this._setLock(true);
-    runOnUI(() => {
+    scheduleOnUI(() => {
       'worklet';
       worklet();
-      runOnJS(unlock)();
-    })();
+      scheduleOnRN(unlock);
+    });
     await this._waitForUnlock(maxWaitTime);
   }
 }

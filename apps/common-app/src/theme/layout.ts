@@ -1,3 +1,9 @@
+import { StyleSheet } from 'react-native';
+
+import { IS_WEB } from '@/utils';
+
+import { spacing } from './spacing';
+
 export const flex = {
   absolute: { position: 'absolute' },
   center: { alignItems: 'center', justifyContent: 'center' },
@@ -7,3 +13,19 @@ export const flex = {
   shrink: { flexShrink: 1 },
   wrap: { flexWrap: 'wrap' },
 } as const;
+
+const webContainer = {
+  marginHorizontal: 'auto',
+  maxWidth: '100%',
+  width: 600,
+} as const;
+
+export const style = StyleSheet.create({
+  scrollViewContent: {
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    ...(IS_WEB && webContainer),
+  },
+  webContainer,
+});

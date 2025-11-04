@@ -19,14 +19,9 @@ struct CloneResult {
     std::vector<Tag> tagsToRemove;
 };
 
-using PropsMap =
-    std::unordered_map<const ShadowNodeFamily *, std::vector<RawProps>>;
-using ChildrenMap =
-    std::unordered_map<const ShadowNodeFamily *, std::unordered_set<int>>;
+using PropsMap = std::unordered_map<const ShadowNodeFamily *, std::vector<RawProps>>;
+using ChildrenMap = std::unordered_map<const ShadowNodeFamily *, std::unordered_set<int>>;
 
-RootShadowNode::Unshared cloneShadowTreeWithNewProps(
-    const RootShadowNode &oldRootNode,
-    const PropsMap &propsMap,
-    std::vector<Tag>& tagsToRemove);
+RootShadowNode::Unshared cloneShadowTreeWithNewProps(const RootShadowNode &oldRootNode, const PropsMap &propsMap, std::vector<Tag>& tagsToRemove);
 
 } // namespace reanimated

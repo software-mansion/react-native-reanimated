@@ -2,9 +2,13 @@
 
 ### The React Native multithreading library
 
-Work in progress!
+React Native Worklets is a library that allows you to run JavaScript code in parallel on multiple threads and runtimes.
 
-Do not consider any of the APIs as stable.
+While the library is in transitional period where we hone the API, all its features are functionally stable and ready to use in production.
+
+## Documentation
+
+Check out our dedicated documentation page for info about this library, API reference and more: [https://docs.swmansion.com/react-native-worklets/](https://docs.swmansion.com/react-native-worklets/)
 
 ## License
 

@@ -1,8 +1,18 @@
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
 #import <reanimated/apple/REANodesManager.h>
+#import <reanimated/apple/REAUIView.h>
 
+#import <React/RCTComponentViewProtocol.h>
+#import <React/RCTComponentViewRegistry.h>
+#import <React/RCTMountingManager.h>
 #import <React/RCTUtils.h>
+
+#if REACT_NATIVE_MINOR_VERSION < 81
+#import <React/RCTFollyConvert.h>
+#endif
+
+using namespace facebook::react;
 
 @implementation REANodesManager {
   READisplayLink *_displayLink;
@@ -50,9 +60,7 @@
       // no-op
     };
   }
-  [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) {
-    [displayLink setPaused:YES];
-  }];
+  [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) { [displayLink setPaused:YES]; }];
 
   return self;
 }
@@ -62,9 +70,7 @@
   REAAssertTurboModuleManagerQueue();
 
   _eventHandler = nil;
-  [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) {
-    [displayLink invalidate];
-  }];
+  [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) { [displayLink invalidate]; }];
 }
 
 - (void)postOnAnimation:(REAOnAnimationCallback)clb
@@ -149,6 +155,26 @@
   if ([[self getDisplayLink] isPaused]) {
     [self performOperations];
   }
+}
+
+- (void)synchronouslyUpdateUIProps:(ReactTag)viewTag props:(const folly::dynamic &)props
+{
+  RCTAssertMainQueue();
+
+  RCTSurfacePresenter *surfacePresenter = self.surfacePresenter;
+  RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
+  REAUIView<RCTComponentViewProtocol> *componentView =
+      [componentViewRegistry findComponentViewWithTag:static_cast<Tag>(viewTag)];
+  NSSet<NSString *> *propKeysManagedByAnimated = [componentView propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN];
+#if REACT_NATIVE_MINOR_VERSION >= 81
+  [surfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:viewTag props:props];
+#else
+  [surfacePresenter synchronouslyUpdateViewOnUIThread:@(viewTag) props:convertFollyDynamicToId(props)];
+#endif
+  [componentView setPropKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN:propKeysManagedByAnimated];
+  // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
+  // so that's why we need to call `finalizeUpdates` here.
+  [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
 }
 
 @end

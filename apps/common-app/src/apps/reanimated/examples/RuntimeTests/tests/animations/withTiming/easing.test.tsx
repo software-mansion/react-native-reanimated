@@ -91,7 +91,7 @@ describe('withTiming snapshots 📸, test EASING', () => {
           </ErrorBoundary>,
         );
       }).toThrow(
-        'Error: [Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.',
+        'ReanimatedError: [Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.',
       );
     });
 
@@ -107,7 +107,7 @@ describe('withTiming snapshots 📸, test EASING', () => {
           </ErrorBoundary>,
         );
       }).toThrow(
-        'Error: [Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.',
+        'ReanimatedError: [Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.',
       );
     });
   });
@@ -164,6 +164,7 @@ describe('withTiming snapshots 📸, test EASING', () => {
     expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[easingName]);
     expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
   });
+
   test('Easing.exp', async () => {
     const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(Easing.exp);
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots.exp);

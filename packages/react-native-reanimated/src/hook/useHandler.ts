@@ -1,9 +1,9 @@
 'use strict';
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
-import { makeShareable } from 'react-native-worklets';
+import { isWorkletFunction, makeShareable } from 'react-native-worklets';
 
-import { IS_JEST, IS_WEB } from '../common';
+import { IS_JEST, IS_WEB, ReanimatedError } from '../common';
 import type { DependencyList, ReanimatedEvent } from './commonTypes';
 import { areDependenciesEqual, buildDependencies } from './utils';
 
@@ -27,7 +27,7 @@ type GeneralHandlers<
 type GeneralWorkletHandlers<
   Event extends object,
   Context extends Record<string, unknown>,
-> = Record<string, GeneralWorkletHandler<Event, Context> | undefined>;
+> = Record<string, GeneralWorkletHandler<Event, Context>>;
 
 interface ContextWithDependencies<Context extends Record<string, unknown>> {
   context: Context;
@@ -83,9 +83,17 @@ export function useHandler<
 
   const { context, savedDependencies } = initRef.current;
 
+  for (const handlerName in handlers) {
+    if (!isWorkletFunction(handlers[handlerName])) {
+      throw new ReanimatedError(
+        'Passed a function that is not a worklet. Please provide a worklet function.'
+      );
+    }
+  }
+
   dependencies = buildDependencies(
     dependencies,
-    handlers as Record<string, WorkletFunction | undefined>
+    handlers as Record<string, WorkletFunction>
   );
 
   const doDependenciesDiffer = !areDependenciesEqual(

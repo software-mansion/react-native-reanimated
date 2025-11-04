@@ -4,35 +4,32 @@ import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
-  PanGestureHandler,
 } from 'react-native-gesture-handler';
 import Animated, {
-  runOnJS,
-  runOnUI,
-  useAnimatedGestureHandler,
   useAnimatedRef,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useDerivedValue,
   useFrameCallback,
-  useScrollViewOffset,
+  useScrollOffset,
   useSharedValue,
 } from 'react-native-reanimated';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
-function RunOnUIDemo() {
+function ScheduleOnUIDemo() {
   const someWorklet = (x: number) => {
     'worklet';
     console.log(_WORKLET, x); // _WORKLET should be true
   };
 
   const handlePress = () => {
-    runOnUI(someWorklet)(Math.random());
+    scheduleOnUI(someWorklet, Math.random());
   };
 
-  return <Button onPress={handlePress} title="runOnUI demo" />;
+  return <Button onPress={handlePress} title="scheduleOnUI demo" />;
 }
 
-function RunOnUIRunOnJSDemo() {
+function ScheduleOnUIscheduleOnRNDemo() {
   const someFunction = (x: number) => {
     console.log(_WORKLET, x); // _WORKLET should be false
   };
@@ -40,17 +37,19 @@ function RunOnUIRunOnJSDemo() {
   const someWorklet = (x: number) => {
     'worklet';
     console.log(_WORKLET, x); // _WORKLET should be true
-    runOnJS(someFunction)(x);
+    scheduleOnRN(someFunction, x);
   };
 
   const handlePress = () => {
-    runOnUI(someWorklet)(Math.random());
+    scheduleOnUI(someWorklet, Math.random());
   };
 
-  return <Button onPress={handlePress} title="runOnUI + runOnJS demo" />;
+  return (
+    <Button onPress={handlePress} title="scheduleOnUI + scheduleOnRN demo" />
+  );
 }
 
-function UseDerivedValueRunOnJSDemo() {
+function UseDerivedValuescheduleOnRNDemo() {
   const sv = useSharedValue(0);
 
   const someFunction = (x: number) => {
@@ -59,7 +58,7 @@ function UseDerivedValueRunOnJSDemo() {
 
   useDerivedValue(() => {
     console.log(_WORKLET, sv.value);
-    runOnJS(someFunction)(sv.value);
+    scheduleOnRN(someFunction, sv.value);
   });
 
   const handlePress = () => {
@@ -67,7 +66,7 @@ function UseDerivedValueRunOnJSDemo() {
   };
 
   return (
-    <Button onPress={handlePress} title="useDerivedValue + runOnJS demo" />
+    <Button onPress={handlePress} title="useDerivedValue + scheduleOnRN demo" />
   );
 }
 
@@ -86,7 +85,7 @@ function ThrowErrorWorkletDemo() {
   };
 
   const handlePress = () => {
-    runOnUI(someWorklet)();
+    scheduleOnUI(someWorklet);
   };
 
   return <Button onPress={handlePress} title="Throw error from worklet" />;
@@ -104,7 +103,7 @@ function ThrowErrorNestedWorkletDemo() {
   };
 
   const handlePress = () => {
-    runOnUI(outerWorklet)();
+    scheduleOnUI(outerWorklet);
   };
 
   return (
@@ -175,30 +174,12 @@ function ThrowErrorFromGestureDetectorDemo() {
   });
 
   return (
-    <GestureHandlerRootView>
+    <GestureHandlerRootView style={styles.height100}>
       <GestureDetector gesture={gesture}>
         <View style={styles.tomatoBox}>
           <Text>GestureDetector</Text>
         </View>
       </GestureDetector>
-    </GestureHandlerRootView>
-  );
-}
-
-function ThrowErrorFromUseAnimatedGestureHandlerDemo() {
-  const gestureHandler = useAnimatedGestureHandler({
-    onActive: () => {
-      throw Error('Hello world from useAnimatedGestureHandler');
-    },
-  });
-
-  return (
-    <GestureHandlerRootView>
-      <PanGestureHandler onGestureEvent={gestureHandler}>
-        <Animated.View style={styles.goldBox}>
-          <Text>PanGestureHandler + useAnimatedGestureHandler</Text>
-        </Animated.View>
-      </PanGestureHandler>
     </GestureHandlerRootView>
   );
 }
@@ -219,14 +200,14 @@ function ThrowErrorFromUseAnimatedScrollHandlerDemo() {
   );
 }
 
-function ThrowErrorFromUseScrollViewOffsetDemo() {
+function ThrowErrorFromuseScrollOffsetDemo() {
   const aref = useAnimatedRef<Animated.ScrollView>();
 
-  const offset = useScrollViewOffset(aref);
+  const offset = useScrollOffset(aref);
 
   useAnimatedStyle(() => {
     if (_WORKLET && offset.value > 0) {
-      throw Error('Hello world from useScrollViewOffset');
+      throw Error('Hello world from useScrollOffset');
     }
     return {};
   });
@@ -235,7 +216,7 @@ function ThrowErrorFromUseScrollViewOffsetDemo() {
     <View style={styles.height100}>
       <Animated.ScrollView ref={aref}>
         <View style={styles.cyanBox}>
-          <Text>useScrollViewOffset + useAnimatedStyle</Text>
+          <Text>useScrollOffset + useAnimatedStyle</Text>
         </View>
       </Animated.ScrollView>
     </View>
@@ -245,9 +226,9 @@ function ThrowErrorFromUseScrollViewOffsetDemo() {
 export default function WorkletExample() {
   return (
     <View style={styles.container}>
-      <RunOnUIDemo />
-      <RunOnUIRunOnJSDemo />
-      <UseDerivedValueRunOnJSDemo />
+      <ScheduleOnUIDemo />
+      <ScheduleOnUIscheduleOnRNDemo />
+      <UseDerivedValuescheduleOnRNDemo />
       <ThrowErrorDemo />
       <ThrowErrorWorkletDemo />
       <ThrowErrorNestedWorkletDemo />
@@ -255,9 +236,8 @@ export default function WorkletExample() {
       <ThrowErrorFromUseDerivedValueDemo />
       <ThrowErrorFromUseFrameCallbackDemo />
       <ThrowErrorFromGestureDetectorDemo />
-      <ThrowErrorFromUseAnimatedGestureHandlerDemo />
       <ThrowErrorFromUseAnimatedScrollHandlerDemo />
-      <ThrowErrorFromUseScrollViewOffsetDemo />
+      <ThrowErrorFromuseScrollOffsetDemo />
     </View>
   );
 }
@@ -284,10 +264,5 @@ const styles = StyleSheet.create({
     width: 100,
     height: 500,
     backgroundColor: 'cyan',
-  },
-  goldBox: {
-    width: 100,
-    height: 100,
-    backgroundColor: 'gold',
   },
 });

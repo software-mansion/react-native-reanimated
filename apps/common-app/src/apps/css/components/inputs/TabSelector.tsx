@@ -3,10 +3,10 @@ import {
   faChevronRight,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import type { ComponentRef } from 'react';
 import { useEffect, useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
-  runOnUI,
   scrollTo,
   useAnimatedRef,
   useAnimatedStyle,
@@ -15,6 +15,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
+import { scheduleOnUI } from 'react-native-worklets';
 
 import { colors, radius, spacing } from '@/theme';
 import { typedMemo } from '@/utils';
@@ -34,7 +35,7 @@ function TabSelector<T extends string>({
   selectedTab,
   tabs,
 }: TabSelectorProps<T>) {
-  const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
+  const scrollViewRef = useAnimatedRef<ComponentRef<Animated.ScrollView>>();
 
   const containerWidth = useSharedValue(0);
   const tabWidths = useSharedValue<Array<number>>([]);
@@ -54,7 +55,7 @@ function TabSelector<T extends string>({
   );
 
   useEffect(() => {
-    runOnUI(() => {
+    scheduleOnUI(() => {
       const offset = tabWidths.value
         .slice(0, activeTabIndex)
         .reduce(
@@ -63,7 +64,7 @@ function TabSelector<T extends string>({
           0
         );
       scrollTo(scrollViewRef, offset, 0, true);
-    })();
+    });
   }, [activeTabIndex, scrollViewRef, tabWidths]);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -82,6 +83,9 @@ function TabSelector<T extends string>({
     () => (
       <View pointerEvents="none" style={StyleSheet.absoluteFill}>
         <Svg>
+          {/* TODO: Fix me */}
+          {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+          {/* @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801 */}
           <Defs>
             <LinearGradient id="tab-selector" x1="0" x2="1" y1="0" y2="0">
               <Stop
@@ -143,10 +147,12 @@ function TabSelector<T extends string>({
               selected={tab === selectedTab}
               title={tab}
               onPress={() => onSelectTab(tab)}
-              onMeasure={runOnUI((width) => {
-                tabWidths.value[index] = width;
-                tabWidths.value = [...tabWidths.value];
-              })}
+              onMeasure={(widthArg) =>
+                scheduleOnUI((width) => {
+                  tabWidths.value[index] = width;
+                  tabWidths.value = [...tabWidths.value];
+                }, widthArg)
+              }
             />
           ))}
         </View>

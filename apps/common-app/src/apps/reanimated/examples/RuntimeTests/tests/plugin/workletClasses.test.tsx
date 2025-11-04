@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
-import { runOnUI, useSharedValue } from 'react-native-reanimated';
+import { useSharedValue } from 'react-native-reanimated';
 
 import { describe, expect, getRegisteredValue, registerValue, render, test, wait } from '../../ReJest/RuntimeTestsApi';
+import { scheduleOnUI } from 'react-native-worklets';
 
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
 
@@ -64,10 +65,10 @@ describe('Test worklet classes', () => {
   test('constructor works on Worklet runtime', async () => {
     const ExampleComponent = () => {
       useEffect(() => {
-        runOnUI(() => {
+        scheduleOnUI(() => {
           const clazz = new WorkletClass();
           clazz.getOne();
-        })();
+        });
       });
 
       return <View />;
@@ -83,10 +84,10 @@ describe('Test worklet classes', () => {
       registerValue(SHARED_VALUE_REF, output);
 
       useEffect(() => {
-        runOnUI(() => {
+        scheduleOnUI(() => {
           const clazz = new WorkletClass();
           output.value = clazz.getOne();
-        })();
+        });
       });
 
       return <View />;
@@ -103,10 +104,10 @@ describe('Test worklet classes', () => {
       registerValue(SHARED_VALUE_REF, output);
 
       useEffect(() => {
-        runOnUI(() => {
+        scheduleOnUI(() => {
           const clazz = new WorkletClass();
           output.value = clazz.getTwo();
-        })();
+        });
       });
 
       return <View />;
@@ -123,10 +124,10 @@ describe('Test worklet classes', () => {
       registerValue(SHARED_VALUE_REF, output);
 
       useEffect(() => {
-        runOnUI(() => {
+        scheduleOnUI(() => {
           const clazz = new WorkletClass();
           output.value = clazz.getIncremented() + clazz.getIncremented();
-        })();
+        });
       });
 
       return <View />;
@@ -143,10 +144,10 @@ describe('Test worklet classes', () => {
       registerValue(SHARED_VALUE_REF, output);
 
       useEffect(() => {
-        runOnUI(() => {
+        scheduleOnUI(() => {
           const clazz = new WorkletClass();
           output.value = clazz instanceof WorkletClass;
-        })();
+        });
       });
 
       return <View />;
@@ -163,10 +164,10 @@ describe('Test worklet classes', () => {
       registerValue(SHARED_VALUE_REF, output);
 
       useEffect(() => {
-        runOnUI(() => {
+        scheduleOnUI(() => {
           const clazz = new TypeScriptClass();
           output.value = clazz.getOne();
-        })();
+        });
       });
 
       return <View />;

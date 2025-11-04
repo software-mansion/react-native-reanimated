@@ -26,6 +26,11 @@ on:
       - apps/fabric-example/package.json
       - apps/fabric-example/android/**
   workflow_call:
+    inputs:
+      bundleMode:
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
 
 jobs:
@@ -36,7 +41,7 @@ jobs:
       WORKING_DIRECTORY: apps/fabric-example
       REANIMATED_DIR: packages/react-native-reanimated
     concurrency:
-      group: android-${{ github.ref }}
+      group: android-${{ github.ref }}-${{ inputs.bundleMode }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -51,6 +56,9 @@ jobs:
       # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
       - name: Install monorepo node dependencies
         run: yarn install --immutable
+      - name: Toggle Bundle Mode
+        if: ${{ inputs.bundleMode }}
+        run: ./scripts/toggle-bundle-mode.sh
       - name: Build Reanimated package
         working-directory: ${{ env.REANIMATED_DIR }}
         run: yarn build

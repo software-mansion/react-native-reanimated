@@ -11,9 +11,7 @@ using namespace facebook::react;
 
 namespace reanimated {
 
-class ReanimatedCommitHook
-    : public UIManagerCommitHook,
-      public std::enable_shared_from_this<ReanimatedCommitHook> {
+class ReanimatedCommitHook : public UIManagerCommitHook, public std::enable_shared_from_this<ReanimatedCommitHook> {
  public:
   ReanimatedCommitHook(
       const std::shared_ptr<UIManager> &uiManager,
@@ -31,7 +29,12 @@ class ReanimatedCommitHook
   RootShadowNode::Unshared shadowTreeWillCommit(
       ShadowTree const &shadowTree,
       RootShadowNode::Shared const &oldRootShadowNode,
-      RootShadowNode::Unshared const &newRootShadowNode) noexcept override;
+      RootShadowNode::Unshared const &newRootShadowNode
+#if REACT_NATIVE_MINOR_VERSION >= 80
+      ,
+      const ShadowTreeCommitOptions &commitOptions
+#endif
+      ) noexcept override;
 
  private:
   std::shared_ptr<UIManager> uiManager_;

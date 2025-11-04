@@ -1,5 +1,11 @@
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
+#include <memory>
+#include <string>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
 namespace reanimated {
 
 std::lock_guard<std::mutex> UpdatesRegistry::lock() const {
@@ -52,13 +58,13 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
 }
 
 void UpdatesRegistry::addUpdatesToBatch(
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const folly::dynamic &props) {
   updatesBatch_.emplace_back(shadowNode, props);
 }
 
 void UpdatesRegistry::setInUpdatesRegistry(
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const folly::dynamic &props) {
   const auto tag = shadowNode->getTag();
 #ifdef ANDROID
@@ -117,9 +123,7 @@ void UpdatesRegistry::collectPropsToRevert(PropsToRevertMap &propsToRevertMap) {
   propsToRevertMap_.clear();
 }
 
-void UpdatesRegistry::updatePropsToRevert(
-    const Tag tag,
-    const folly::dynamic *newProps) {
+void UpdatesRegistry::updatePropsToRevert(const Tag tag, const folly::dynamic *newProps) {
   auto it = updatesRegistry_.find(tag);
   if (it == updatesRegistry_.end()) {
     return;

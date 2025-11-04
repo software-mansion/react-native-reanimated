@@ -1,0 +1,17 @@
+diff --git a/React/Base/macOS/RCTPlatformDisplayLink.m b/React/Base/macOS/RCTPlatformDisplayLink.m
+index 6ee09fde67a60082ac45764f6c66b7c4ca97e5b9..f639c7b980a7ebe917c472d4c2a134bfc8114a09 100644
+--- a/React/Base/macOS/RCTPlatformDisplayLink.m
++++ b/React/Base/macOS/RCTPlatformDisplayLink.m
+@@ -134,11 +134,7 @@ - (BOOL)isPaused
+ 
+ - (NSTimeInterval)timestamp
+ {
+-  CVTimeStamp now;
+-  now.version = 0;
+-  memset(&now, 0 , sizeof(now));
+-  CVDisplayLinkGetCurrentTime(_displayLink, &now);
+-  return (NSTimeInterval)now.hostTime / (NSTimeInterval)CVGetHostClockFrequency();
++  return CACurrentMediaTime();
+ }
+ 
+ - (NSTimeInterval)duration

@@ -1,56 +1,126 @@
 'use strict';
 
-import type { ShareableRef, WorkletRuntime } from '../workletTypes';
+import type { SerializableRef, SynchronizableRef } from '../memory/types';
+import type { WorkletRuntime } from '../types';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */
 export interface WorkletsModuleProxy {
-  makeShareableClone<TValue>(
+  createSerializable<TValue>(
     value: TValue,
     shouldPersistRemote: boolean,
     nativeStateSource?: object
-  ): ShareableRef<TValue>;
+  ): SerializableRef<TValue>;
 
-  makeShareableImport<TValue>(
+  createSerializableImport<TValue>(
     source: string,
     imported: string
-  ): ShareableRef<TValue>;
+  ): SerializableRef<TValue>;
 
-  makeShareableString(str: string): ShareableRef<string>;
+  createSerializableString(str: string): SerializableRef<string>;
 
-  makeShareableNumber(num: number): ShareableRef<number>;
+  createSerializableNumber(num: number): SerializableRef<number>;
 
-  makeShareableBoolean(bool: boolean): ShareableRef<boolean>;
+  createSerializableBoolean(bool: boolean): SerializableRef<boolean>;
 
-  makeShareableBigInt(bigInt: bigint): ShareableRef<bigint>;
+  createSerializableBigInt(bigInt: bigint): SerializableRef<bigint>;
 
-  makeShareableUndefined(): ShareableRef<undefined>;
+  createSerializableUndefined(): SerializableRef<undefined>;
 
-  makeShareableNull(): ShareableRef<null>;
+  createSerializableNull(): SerializableRef<null>;
 
-  makeShareableHostObject<T extends object>(obj: T): ShareableRef<T>;
+  createSerializableTurboModuleLike<
+    TProps extends object,
+    TProto extends object,
+  >(
+    props: TProps,
+    proto: TProto
+  ): SerializableRef<TProps>;
 
-  makeShareableArray(
+  createSerializableObject<T extends object>(
+    obj: T,
+    shouldRetainRemote: boolean,
+    nativeStateSource?: object
+  ): SerializableRef<T>;
+
+  createSerializableHostObject<T extends object>(obj: T): SerializableRef<T>;
+
+  createSerializableArray(
     array: unknown[],
     shouldRetainRemote: boolean
-  ): ShareableRef<unknown[]>;
+  ): SerializableRef<unknown[]>;
 
-  makeShareableInitializer(obj: object): ShareableRef<object>;
+  createSerializableMap<TKey, TValue>(
+    keys: TKey[],
+    values: TValue[]
+  ): SerializableRef<Map<TKey, TValue>>;
 
-  scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
+  createSerializableSet<TValues>(
+    values: TValues[]
+  ): SerializableRef<Set<TValues>>;
+
+  createSerializableInitializer(obj: object): SerializableRef<object>;
+
+  createSerializableFunction<TArgs extends unknown[], TReturn>(
+    func: (...args: TArgs) => TReturn
+  ): SerializableRef<TReturn>;
+
+  createSerializableWorklet(
+    worklet: object,
+    shouldPersistRemote: boolean
+  ): SerializableRef<object>;
+
+  scheduleOnUI<TValue>(serializable: SerializableRef<TValue>): void;
 
   executeOnUIRuntimeSync<TValue, TReturn>(
-    shareable: ShareableRef<TValue>
+    serializable: SerializableRef<TValue>
   ): TReturn;
 
   createWorkletRuntime(
     name: string,
-    initializer: ShareableRef<() => void>
+    initializer: SerializableRef<() => void>,
+    useDefaultQueue: boolean,
+    customQueue: object | undefined,
+    enableEventLoop: boolean
   ): WorkletRuntime;
 
   scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
-    worklet: ShareableRef<TValue>
+    worklet: SerializableRef<TValue>
   ): void;
+
+  reportFatalErrorOnJS(
+    message: string,
+    stack: string,
+    name: string,
+    jsEngine: string
+  ): void;
+
+  createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue>;
+
+  synchronizableGetDirty<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): TValue;
+
+  synchronizableGetBlocking<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): TValue;
+
+  synchronizableSetBlocking<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>,
+    value: SerializableRef<TValue>
+  ): void;
+
+  synchronizableLock<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): void;
+
+  synchronizableUnlock<TValue>(
+    synchronizableRef: SynchronizableRef<TValue>
+  ): void;
+
+  getStaticFeatureFlag(name: string): boolean;
+
+  setDynamicFeatureFlag(name: string, value: boolean): void;
 }
 
-export interface IWorkletsModule extends WorkletsModuleProxy {}
+export type IWorkletsModule = WorkletsModuleProxy;

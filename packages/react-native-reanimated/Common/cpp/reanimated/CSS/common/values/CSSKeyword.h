@@ -2,13 +2,9 @@
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 
-#include <worklets/Tools/JSISerializer.h>
-
 #include <string>
 
 namespace reanimated::css {
-
-using namespace worklets;
 
 template <typename TValue>
 class CSSKeywordBase : public CSSSimpleValue<TValue> {
@@ -39,9 +35,7 @@ struct CSSKeyword : public CSSKeywordBase<CSSKeyword> {
   CSSKeyword interpolate(double progress, const CSSKeyword &to) const override;
 
 #ifndef NDEBUG
-  friend std::ostream &operator<<(
-      std::ostream &os,
-      const CSSKeyword &keywordValue);
+  friend std::ostream &operator<<(std::ostream &os, const CSSKeyword &keywordValue);
 #endif // NDEBUG
 };
 
@@ -52,9 +46,7 @@ struct CSSDisplay : public CSSKeywordBase<CSSDisplay> {
   CSSDisplay interpolate(double progress, const CSSDisplay &to) const override;
 
 #ifndef NDEBUG
-  friend std::ostream &operator<<(
-      std::ostream &os,
-      const CSSDisplay &displayValue);
+  friend std::ostream &operator<<(std::ostream &os, const CSSDisplay &displayValue);
 #endif // NDEBUG
 };
 

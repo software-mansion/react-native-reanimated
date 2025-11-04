@@ -1,29 +1,40 @@
-/* eslint-disable @typescript-eslint/no-redundant-type-constituents, @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
 
-import type { MutableRefObject } from 'react';
-import { runOnJS, runOnUI } from 'react-native-worklets';
+import type { RefObject } from 'react';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import {
   IS_JEST,
+  processBoxShadowNative,
   processColorsInProps,
-  processTransformOrigin,
+  processFilter,
   ReanimatedError,
   SHOULD_BE_USE_WEB,
 } from '../common';
+import {
+  processBoxShadowWeb,
+  processFilterWeb,
+  processTransformOrigin,
+} from '../common/web';
 import type {
   AnimatedStyle,
   ShadowNodeWrapper,
   StyleProps,
 } from '../commonTypes';
-import { ComponentRegistry } from '../createAnimatedComponent/ComponentRegistry';
+import type {
+  JSPropsOperation,
+  PropUpdates,
+} from '../createAnimatedComponent/commonTypes';
+import jsPropsUpdater from '../createAnimatedComponent/JSPropsUpdater';
 import type { Descriptor } from '../hook/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
+import { ComponentRegistry } from '../createAnimatedComponent/ComponentRegistry';
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
-  updates: StyleProps | AnimatedStyle<any>,
+  updates: PropUpdates,
   isAnimatedProps?: boolean
 ) => void;
 
@@ -32,6 +43,12 @@ if (SHOULD_BE_USE_WEB) {
     'worklet';
     viewDescriptors.value?.forEach((viewDescriptor) => {
       const component = viewDescriptor.tag as ReanimatedHTMLElement;
+      if ('boxShadow' in updates) {
+        updates.boxShadow = processBoxShadowWeb(updates.boxShadow);
+      }
+      if ('filter' in updates) {
+        updates.filter = processFilterWeb(updates.filter);
+      }
       _updatePropsJS(updates, component, isAnimatedProps);
     });
   };
@@ -53,9 +70,19 @@ if (SHOULD_BE_USE_WEB) {
         global.__frameTimestamp;
     });
 
+    /* TODO: Improve this config structure in the future
+     * The goal is to create a simplified version of `src/css/platform/native/config.ts`,
+     * containing only properties that require processing and their associated processors
+     * */
     processColorsInProps(updates);
     if ('transformOrigin' in updates) {
       updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
+    }
+    if ('boxShadow' in updates) {
+      updates.boxShadow = processBoxShadowNative(updates.boxShadow);
+    }
+    if ('filter' in updates) {
+      updates.filter = processFilter(updates.filter);
     }
     global.UpdatePropsManager.update(viewDescriptors, updates);
   };
@@ -64,7 +91,7 @@ if (SHOULD_BE_USE_WEB) {
 export const updatePropsJestWrapper = (
   viewDescriptors: ViewDescriptorsWrapper,
   updates: AnimatedStyle<any>,
-  animatedValues: MutableRefObject<AnimatedStyle<any>>,
+  animatedValues: RefObject<AnimatedStyle<any>>,
   adapters: ((updates: AnimatedStyle<any>) => void)[]
 ): void => {
   adapters.forEach((adapter) => {
@@ -80,20 +107,27 @@ export const updatePropsJestWrapper = (
 
 export default updateProps;
 
-function updateJSProps(tag: number, props: StyleProps) {
+function updateJSProps(operations: JSPropsOperation[]) {
+  jsPropsUpdater.updateProps(operations);
+}
+
+function updateStylePropsJS(tag: number, props: StyleProps) {
   const component = ComponentRegistry.getComponent(tag);
   if (component) {
     component._updateStylePropsJS(props);
   }
 }
 
+type NativePropsOperation = {
+  shadowNodeWrapper: ShadowNodeWrapper;
+  updates: StyleProps;
+  tag: number;
+};
+
 function createUpdatePropsManager() {
   'worklet';
-  const operations: {
-    shadowNodeWrapper: ShadowNodeWrapper;
-    updates: StyleProps | AnimatedStyle<any>;
-    tag: number;
-  }[] = [];
+  const nativeOperations: NativePropsOperation[] = [];
+  const jsOperations: JSPropsOperation[] = [];
 
   const scheduledFrameIds: Record<number, number | undefined> = {};
 
@@ -110,7 +144,7 @@ function createUpdatePropsManager() {
     if (update && currentFrameTime - lastUpdateFrameTime >= 20) {
       // ~ 2x frames
       // Animation appears to have settled - update component props on JS
-      runOnJS(updateJSProps)(tag, update);
+      scheduleOnRN(updateStylePropsJS, tag, update);
       global.__lastUpdateByTag[tag] = undefined;
       return;
     }
@@ -127,30 +161,66 @@ function createUpdatePropsManager() {
     });
   }
 
+  let flushPending = false;
+
+  const processViewUpdates = (tag: number, updates: PropUpdates) =>
+    Object.entries(updates).reduce<{
+      nativePropUpdates?: PropUpdates;
+      jsPropUpdates?: PropUpdates;
+    }>((acc, [propName, value]) => {
+      if (global._tagToJSPropNamesMapping[tag]?.[propName]) {
+        acc.jsPropUpdates ??= {};
+        acc.jsPropUpdates[propName] = value;
+      } else {
+        acc.nativePropUpdates ??= {};
+        acc.nativePropUpdates[propName] = value;
+      }
+      return acc;
+    }, {});
+
   return {
-    update(
-      viewDescriptors: ViewDescriptorsWrapper,
-      updates: StyleProps | AnimatedStyle<any>
-    ) {
-      viewDescriptors.value.forEach((viewDescriptor) => {
-        const tag = viewDescriptor.tag as number; // on mobile it should be a number
-        operations.push({
-          shadowNodeWrapper: viewDescriptor.shadowNodeWrapper,
-          updates,
-          tag,
-        });
-        if (operations.length === 1) {
+    update(viewDescriptors: ViewDescriptorsWrapper, updates: PropUpdates) {
+      viewDescriptors.value.forEach(({ tag, shadowNodeWrapper }) => {
+        const viewTag = tag as number;
+        const { nativePropUpdates, jsPropUpdates } = processViewUpdates(
+          viewTag,
+          updates
+        );
+
+        if (nativePropUpdates) {
+          nativeOperations.push({
+            shadowNodeWrapper,
+            updates: nativePropUpdates,
+            tag: viewTag,
+          });
+        }
+        if (jsPropUpdates) {
+          jsOperations.push({
+            tag: viewTag,
+            updates: jsPropUpdates,
+          });
+        }
+
+        if (!flushPending && (nativePropUpdates || jsPropUpdates)) {
           queueMicrotask(this.flush);
+          flushPending = true;
         }
       });
     },
     flush(this: void) {
-      global._updateProps!(operations);
-      operations.forEach(({ tag }) => {
-        'worklet';
-        checkUpdate(tag);
-      });
-      operations.length = 0;
+      if (nativeOperations.length) {
+        global._updateProps!(nativeOperations);
+        nativeOperations.forEach(({ tag }) => {
+          'worklet';
+          checkUpdate(tag);
+        });
+        nativeOperations.length = 0;
+      }
+      if (jsOperations.length) {
+        scheduleOnRN(updateJSProps, jsOperations);
+        jsOperations.length = 0;
+      }
+      flushPending = false;
     },
   };
 }
@@ -176,10 +246,10 @@ if (SHOULD_BE_USE_WEB) {
     }
   );
 } else {
-  runOnUI(() => {
+  scheduleOnUI(() => {
     'worklet';
     global.UpdatePropsManager = createUpdatePropsManager();
-  })();
+  });
 }
 
 /**

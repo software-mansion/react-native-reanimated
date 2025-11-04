@@ -1,12 +1,10 @@
 'use strict';
-import type { Component } from 'react';
-import { logger } from 'react-native-worklets';
-
-import type { MeasuredDimensions } from '../commonTypes';
+import { logger } from '../common';
+import type { InternalHostInstance, MeasuredDimensions } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 
-export function measure<T extends Component>(
-  animatedRef: AnimatedRef<T>
+export function measure<TRef extends InternalHostInstance>(
+  animatedRef: AnimatedRef<TRef>
 ): MeasuredDimensions | null {
   const element = animatedRef() as HTMLElement | null;
 

@@ -1,13 +1,12 @@
 #pragma once
 
-#include <reanimated/CSS/config/CSSAnimationConfig.h>
-#include <reanimated/CSS/config/CSSKeyframesConfig.h>
+#include <reanimated/CSS/configs/CSSAnimationConfig.h>
+#include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 #include <reanimated/CSS/progress/RawProgressProvider.h>
 
 #include <memory>
-#include <utility>
 
 namespace reanimated::css {
 
@@ -18,8 +17,7 @@ enum class AnimationProgressState {
   Finished
 };
 
-class AnimationProgressProvider final : public KeyframeProgressProvider,
-                                        public RawProgressProvider {
+class AnimationProgressProvider final : public KeyframeProgressProvider, public RawProgressProvider {
  public:
   AnimationProgressProvider(
       double timestamp,

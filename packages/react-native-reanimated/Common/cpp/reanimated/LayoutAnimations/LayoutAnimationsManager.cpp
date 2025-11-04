@@ -1,14 +1,13 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/Tools/CollectionUtils.h>
 
-#ifndef NDEBUG
+#include <memory>
+#include <unordered_map>
 #include <utility>
-#endif
+#include <vector>
 
 namespace reanimated {
 
-void LayoutAnimationsManager::configureAnimationBatch(
-    const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
+void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   for (auto layoutAnimationConfig : layoutAnimationsBatch) {
     const auto &[tag, type, config] = layoutAnimationConfig;
@@ -24,27 +23,19 @@ void LayoutAnimationsManager::configureAnimationBatch(
   }
 }
 
-void LayoutAnimationsManager::setShouldAnimateExiting(
-    const int tag,
-    const bool value) {
+void LayoutAnimationsManager::setShouldAnimateExiting(const int tag, const bool value) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   shouldAnimateExitingForTag_[tag] = value;
 }
 
-bool LayoutAnimationsManager::shouldAnimateExiting(
-    const int tag,
-    const bool shouldAnimate) {
+bool LayoutAnimationsManager::shouldAnimateExiting(const int tag, const bool shouldAnimate) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-  return collection::contains(shouldAnimateExitingForTag_, tag)
-      ? shouldAnimateExitingForTag_[tag]
-      : shouldAnimate;
+  return shouldAnimateExitingForTag_.contains(tag) ? shouldAnimateExitingForTag_[tag] : shouldAnimate;
 }
 
-bool LayoutAnimationsManager::hasLayoutAnimation(
-    const int tag,
-    const LayoutAnimationType type) {
+bool LayoutAnimationsManager::hasLayoutAnimation(const int tag, const LayoutAnimationType type) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-  return collection::contains(getConfigsForType(type), tag);
+  return getConfigsForType(type).contains(tag);
 }
 
 void LayoutAnimationsManager::clearLayoutAnimationConfig(const int tag) {
@@ -60,46 +51,31 @@ void LayoutAnimationsManager::startLayoutAnimation(
     const int tag,
     const LayoutAnimationType type,
     const jsi::Object &values) {
-  std::shared_ptr<Shareable> config;
+  std::shared_ptr<Serializable> config;
   {
     auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-    if (!collection::contains(getConfigsForType(type), tag)) {
+    if (!getConfigsForType(type).contains(tag)) {
       return;
     }
     config = getConfigsForType(type)[tag];
   }
   // TODO: cache the following!!
   jsi::Value layoutAnimationRepositoryAsValue =
-      rt.global()
-          .getPropertyAsObject(rt, "global")
-          .getProperty(rt, "LayoutAnimationsManager");
+      rt.global().getPropertyAsObject(rt, "global").getProperty(rt, "LayoutAnimationsManager");
   jsi::Function startAnimationForTag =
-      layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(
-          rt, "start");
-  startAnimationForTag.call(
-      rt,
-      jsi::Value(tag),
-      jsi::Value(static_cast<int>(type)),
-      values,
-      config->toJSValue(rt));
+      layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "start");
+  startAnimationForTag.call(rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, config->toJSValue(rt));
 }
 
-void LayoutAnimationsManager::cancelLayoutAnimation(
-    jsi::Runtime &rt,
-    const int tag) const {
+void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const {
   jsi::Value layoutAnimationRepositoryAsValue =
-      rt.global()
-          .getPropertyAsObject(rt, "global")
-          .getProperty(rt, "LayoutAnimationsManager");
+      rt.global().getPropertyAsObject(rt, "global").getProperty(rt, "LayoutAnimationsManager");
   jsi::Function cancelLayoutAnimation =
-      layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(
-          rt, "stop");
+      layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "stop");
   cancelLayoutAnimation.call(rt, jsi::Value(tag));
 }
 
-void LayoutAnimationsManager::transferConfigFromNativeID(
-    const int nativeId,
-    const int tag) {
+void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, const int tag) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   auto config = enteringAnimationsForNativeID_[nativeId];
   if (config) {
@@ -108,8 +84,8 @@ void LayoutAnimationsManager::transferConfigFromNativeID(
   enteringAnimationsForNativeID_.erase(nativeId);
 }
 
-std::unordered_map<int, std::shared_ptr<Shareable>> &
-LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
+std::unordered_map<int, std::shared_ptr<Serializable>> &LayoutAnimationsManager::getConfigsForType(
+    const LayoutAnimationType type) {
   switch (type) {
     case ENTERING:
       return enteringAnimations_;
@@ -118,7 +94,7 @@ LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
     case LAYOUT:
       return layoutAnimations_;
     default:
-      assert(false);
+      throw std::invalid_argument("[Reanimated] Unknown layout animation type");
   }
 }
 

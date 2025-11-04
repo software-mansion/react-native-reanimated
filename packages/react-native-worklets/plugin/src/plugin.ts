@@ -2,6 +2,7 @@ import type { NodePath, PluginItem } from '@babel/core';
 import type {
   CallExpression,
   ClassDeclaration,
+  ExpressionStatement,
   JSXAttribute,
   ObjectExpression,
   Program,
@@ -11,6 +12,7 @@ import {
   processCalleesAutoworkletizableCallbacks,
   processIfAutoworkletizableCallback,
 } from './autoworkletization';
+import { toggleBundleMode } from './bundleMode';
 import { processIfWorkletClass } from './class';
 import { processIfWorkletContextObject } from './contextObject';
 import { processIfWorkletFile } from './file';
@@ -26,7 +28,10 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
     try {
       fun();
     } catch (e) {
-      throw new Error(`[Worklets] Babel plugin exception: ${e as string}`);
+      const error = e as Error;
+      error.message = `[Worklets] Babel plugin exception: ${error.message}`;
+      error.name = 'WorkletsBabelPluginError';
+      throw error;
     }
   }
 
@@ -54,10 +59,11 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
           path: NodePath<WorkletizableFunction>,
           state: ReanimatedPluginPass
         ) {
-          runWithTaggedExceptions(() => {
-            processIfWithWorkletDirective(path, state) ||
-              processIfAutoworkletizableCallback(path, state);
-          });
+          runWithTaggedExceptions(
+            () =>
+              processIfWithWorkletDirective(path, state) ||
+              processIfAutoworkletizableCallback(path, state)
+          );
         },
       },
       ObjectExpression: {
@@ -78,6 +84,16 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
         enter(path: NodePath<Program>, state: ReanimatedPluginPass) {
           runWithTaggedExceptions(() => {
             processIfWorkletFile(path, state);
+          });
+        },
+      },
+      ExpressionStatement: {
+        enter(
+          path: NodePath<ExpressionStatement>,
+          state: ReanimatedPluginPass
+        ) {
+          runWithTaggedExceptions(() => {
+            toggleBundleMode(path, state);
           });
         },
       },
