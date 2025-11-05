@@ -194,6 +194,8 @@ export function setElementAnimation(
       return;
     }
 
+    originalElement.style.visibility = 'initial';
+
     while (element.firstChild) {
       originalElement.appendChild(element.firstChild);
     }
