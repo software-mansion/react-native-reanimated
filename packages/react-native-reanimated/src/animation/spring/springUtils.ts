@@ -66,16 +66,18 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   return errorMessage === '';
 }
 
-export function safeMergeConfigs<T extends Record<string, any>>(
-  defaults: T,
-  userConfig?: Partial<T>
-): T {
+export function safeMergeConfigs<TConfig extends Record<string, unknown>>(
+  defaults: TConfig,
+  userConfig?: Partial<TConfig>
+): TConfig {
   'worklet';
-  if (!userConfig) return defaults;
+  if (!userConfig) {
+    return defaults;
+  }
 
   const filtered = Object.fromEntries(
     Object.entries(userConfig).filter(([, v]) => v !== undefined)
-  ) as Partial<T>;
+  ) as Partial<TConfig>;
 
   return {
     ...defaults,
