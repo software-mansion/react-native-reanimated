@@ -94,7 +94,7 @@ function HomeScreen({ navigation }: HomeScreenProps) {
               setTimeout(() => setWasClicked([...wasClicked, name]), 500);
             }
           }}
-          missingOnFabric={EXAMPLES[name].missingOnFabric}
+          onlyArch={EXAMPLES[name].onlyArch}
           wasClicked={wasClicked.includes(name)}
         />
       )}
@@ -105,32 +105,29 @@ function HomeScreen({ navigation }: HomeScreenProps) {
   );
 }
 
+const isDisabled = (onlyArch: 'fabric' | 'paper' | undefined) =>
+  isFabric() ? onlyArch === 'paper' : onlyArch === 'fabric';
+
 interface ItemProps {
   icon?: string;
   title: string;
   onPress: () => void;
-  missingOnFabric?: boolean;
+  onlyArch?: 'fabric' | 'paper';
   wasClicked?: boolean;
 }
 
-function Item({
-  icon,
-  title,
-  onPress,
-  missingOnFabric,
-  wasClicked,
-}: ItemProps) {
-  const isDisabled = missingOnFabric && isFabric();
+function Item({ icon, title, onPress, onlyArch, wasClicked }: ItemProps) {
+  const disabled = isDisabled(onlyArch);
   const Button = Platform.OS === 'macos' ? Pressable : RectButton;
   return (
     <Button
       style={[
         styles.button,
-        isDisabled && styles.disabledButton,
+        disabled && styles.disabledButton,
         wasClicked && styles.visitedItem,
       ]}
       onPress={onPress}
-      enabled={!isDisabled}>
+      enabled={!disabled}>
       {icon && <Text style={styles.title}>{icon + '  '}</Text>}
       <Text style={styles.title}>{title}</Text>
     </Button>
@@ -210,15 +207,15 @@ export default function App() {
                 headerLeft: Platform.OS === 'web' ? () => null : undefined,
               }}
             />
-            {EXAMPLES_NAMES.map((name) => (
+            {Object.entries(EXAMPLES).map(([name, example]) => (
               <Stack.Screen
                 key={name}
                 name={name}
-                component={EXAMPLES[name].screen}
+                component={example.screen}
                 options={{
                   animation: shouldReduceMotion ? 'fade' : 'default',
-                  headerTitle: EXAMPLES[name].title,
-                  title: EXAMPLES[name].title,
+                  headerTitle: example.title,
+                  title: example.title,
                   headerLeft: Platform.OS === 'web' ? BackButton : undefined,
                 }}
               />

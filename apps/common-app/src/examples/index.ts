@@ -149,7 +149,7 @@ interface Example {
   icon?: string;
   title: string;
   screen: React.FC;
-  onlyOn?: 'fabric' | 'paper';
+  onlyArch?: 'fabric' | 'paper';
 }
 
 export const EXAMPLES: Record<string, Example> = {
@@ -259,7 +259,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📖',
     title: 'Letters',
     screen: LettersExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   SetNativePropsExample: {
     icon: '🪄',
@@ -275,7 +275,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📺',
     title: 'Screen transition',
     screen: ScreenTransitionExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
 
   // Basic examples
@@ -284,7 +284,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⏬',
     title: 'Animate inner component',
     screen: AnimatableRefExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   AmountExample: {
     icon: '📈',
@@ -390,6 +390,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔍',
     title: 'Instance Discovery',
     screen: InstanceDiscoveryExample,
+    onlyArch: 'fabric',
   },
   StickyHeaderExample: {
     icon: '🔝',
@@ -490,7 +491,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '☕',
     title: 'Progress transition',
     screen: ProgressTransitionExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   MatrixExample: {
     icon: '🧮',
@@ -516,7 +517,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔎',
     title: 'getViewProp',
     screen: GetViewPropExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   LogExample: {
     icon: '⌨',
@@ -577,7 +578,7 @@ export const EXAMPLES: Record<string, Example> = {
   AnimatedTabBarExample: {
     title: 'Tab bar',
     screen: AnimatedTabBarExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   ChatHeadsExample: {
     title: 'Chat heads',
@@ -776,86 +777,86 @@ export const EXAMPLES: Record<string, Example> = {
   CardExample: {
     title: '[SET] Card',
     screen: CardExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   CustomTransitionExample: {
     title: '[SET] Custom transition',
     screen: CustomTransitionExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   LayoutAnimationExample: {
     title: '[SET] Layout Animation',
     screen: LayoutAnimationExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   ManyScreensExample: {
     title: '[SET] Many screens',
     screen: ManyScreensExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   ManyTagsExample: {
     title: '[SET] Many tags',
     screen: ManyTagsExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   NestedStacksExample: {
     title: '[SET] Nested stacks',
     screen: NestedStacksExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   ModalsExample: {
     title: '[SET] Modals',
     screen: ModalsExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   FlatListExample: {
     title: '[SET] FlatList',
     screen: FlatListExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   ImageStackExample: {
     title: '[SET] Image Stack',
     screen: ImageStackExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   RestoreStateExample: {
     title: '[SET] Restore State',
     screen: RestoreStateExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   DuplicateTagsExample: {
     title: '[SET] Duplicate Tags',
     screen: DuplicateTagsExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   ReducedMotionSharedExample: {
     title: '[SET] Reduced Motion',
     screen: ReducedMotionSharedExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   TransitionRestartExample: {
     title: '[SET] Transition Restart',
     screen: TransitionRestartExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   ChangeThemeSharedExample: {
     title: '[SET] Change theme',
     screen: ChangeThemeSharedExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   NestedRotationSharedExample: {
     title: '[SET] Nested Transforms',
     screen: NestedRotationExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   BorderRadiiExample: {
     title: '[SET] Border Radii',
     screen: BorderRadiiExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
   TabNavigatorExample: {
     title: '[SET] Tab Navigator',
     screen: TabNavigatorExample,
-    onlyOn: 'paper',
+    onlyArch: 'paper',
   },
 } as const;
