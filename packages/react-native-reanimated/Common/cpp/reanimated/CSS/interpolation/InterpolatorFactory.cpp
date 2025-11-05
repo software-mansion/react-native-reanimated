@@ -106,34 +106,34 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
 };
 
 class FiltersInterpolatorFactory : public PropertyInterpolatorFactory {
-  public:
-    explicit FiltersInterpolatorFactory(const std::shared_ptr<FilterOperationInterpolators> &interpolators)
-        : PropertyInterpolatorFactory(), interpolators_(interpolators) {}
-  
-    const CSSValue &getDefaultValue() const override {
-      static EmptyFilterValue emptyFilterValue;
-      return emptyFilterValue;
+ public:
+  explicit FiltersInterpolatorFactory(const std::shared_ptr<FilterOperationInterpolators> &interpolators)
+      : PropertyInterpolatorFactory(), interpolators_(interpolators) {}
+
+  const CSSValue &getDefaultValue() const override {
+    static EmptyFilterValue emptyFilterValue;
+    return emptyFilterValue;
+  }
+
+  std::shared_ptr<PropertyInterpolator> create(
+      const PropertyPath &propertyPath,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
+    return std::make_shared<FilterStyleInterpolator>(propertyPath, interpolators_, viewStylesRepository);
+  }
+
+ private:
+  // Helper private type just for a default value
+  struct EmptyFilterValue : public CSSValue {
+    folly::dynamic toDynamic() const override {
+      return folly::dynamic::array();
     }
-  
-    std::shared_ptr<PropertyInterpolator> create(
-        const PropertyPath &propertyPath,
-        const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
-      return std::make_shared<FilterStyleInterpolator>(propertyPath, interpolators_, viewStylesRepository);
+
+    std::string toString() const override {
+      return "[]";
     }
-  
-  private:
-    // Helper private type just for a default value
-    struct EmptyFilterValue : public CSSValue {
-      folly::dynamic toDynamic() const override {
-        return folly::dynamic::array();
-      }
-  
-      std::string toString() const override {
-        return "[]";
-      }
-    };
-  
-    const std::shared_ptr<FilterOperationInterpolators> interpolators_;
+  };
+
+  const std::shared_ptr<FilterOperationInterpolators> interpolators_;
 };
 
 // Non-template function implementations
@@ -165,6 +165,6 @@ std::shared_ptr<PropertyInterpolatorFactory> filters(
   }
   return std::make_shared<FiltersInterpolatorFactory>(
       std::make_shared<FilterOperationInterpolators>(std::move(result)));
-  }
+}
 
 } // namespace reanimated::css

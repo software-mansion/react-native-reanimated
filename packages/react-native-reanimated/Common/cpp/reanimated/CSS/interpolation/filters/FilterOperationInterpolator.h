@@ -1,8 +1,8 @@
 #pragma once
 
+#include <reanimated/CSS/common/filters/FilterOp.h>
 #include <reanimated/CSS/interpolation/configs.h>
 #include <reanimated/CSS/interpolation/filters/FilterOperation.h>
-#include <reanimated/CSS/common/filters/FilterOp.h>
 
 #include <memory>
 #include <unordered_map>
@@ -47,9 +47,12 @@ template <typename TOperation>
 class FilterOperationInterpolatorBase : public FilterInterpolator {
  public:
   explicit FilterOperationInterpolatorBase(std::shared_ptr<TOperation> defaultOperation)
-      : defaultOperation_(defaultOperation) {}
+      : defaultOperation_(defaultOperation)
+  {
+  }
 
-  std::shared_ptr<FilterOperation> getDefaultOperation() const override {
+  std::shared_ptr<FilterOperation> getDefaultOperation() const override
+  {
     return defaultOperation_;
   }
 
@@ -69,7 +72,6 @@ class FilterOperationInterpolator : public FilterOperationInterpolatorBase<TOper
       const std::shared_ptr<FilterOperation> &to,
       const FilterInterpolationContext &context) const override;
 };
-
 
 // Specialization for resolvable operations
 template <ResolvableFilterOp TOperation>

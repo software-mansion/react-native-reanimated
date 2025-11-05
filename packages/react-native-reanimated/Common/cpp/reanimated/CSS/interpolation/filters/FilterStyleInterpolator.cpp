@@ -8,8 +8,7 @@
 
 namespace reanimated::css {
 
-const FilterOperations FilterStyleInterpolator::defaultStyleValue_ = {
-std::make_shared<ContrastOperation>(1.0)};
+const FilterOperations FilterStyleInterpolator::defaultStyleValue_ = {std::make_shared<ContrastOperation>(1.0)};
 
 FilterStyleInterpolator::FilterStyleInterpolator(
     const PropertyPath &propertyPath,
@@ -262,9 +261,7 @@ size_t FilterStyleInterpolator::getIndexOfCurrentKeyframe(
       keyframes_.begin(),
       keyframes_.end(),
       progress,
-      [](const std::shared_ptr<FilterKeyframe> &keyframe, double progress) {
-        return keyframe->toOffset < progress;
-      });
+      [](const std::shared_ptr<FilterKeyframe> &keyframe, double progress) { return keyframe->toOffset < progress; });
 
   // If we're at the end, return the last valid keyframe index
   if (it == keyframes_.end()) {
@@ -274,14 +271,12 @@ size_t FilterStyleInterpolator::getIndexOfCurrentKeyframe(
   return std::distance(keyframes_.begin(), it);
 }
 
-FilterOperations FilterStyleInterpolator::getFallbackValue(
-    const std::shared_ptr<const ShadowNode> &shadowNode) const {
+FilterOperations FilterStyleInterpolator::getFallbackValue(const std::shared_ptr<const ShadowNode> &shadowNode) const {
   const auto &styleValue = getStyleValue(shadowNode);
   return parseFilterOperations(styleValue).value_or(FilterOperations{});
 }
 
-std::shared_ptr<FilterOperation> FilterStyleInterpolator::getDefaultOperationOfType(
-    const FilterOp type) const {
+std::shared_ptr<FilterOperation> FilterStyleInterpolator::getDefaultOperationOfType(const FilterOp type) const {
   return interpolators_->at(type)->getDefaultOperation();
 }
 
@@ -301,8 +296,7 @@ folly::dynamic FilterStyleInterpolator::interpolateOperations(
 
     // fromOperation and toOperation have the same type
     const auto &interpolator = interpolators_->at(fromOperation->type);
-    result.emplace_back(
-        interpolator->interpolate(keyframeProgress, fromOperation, toOperation, filterUpdateContext));
+    result.emplace_back(interpolator->interpolate(keyframeProgress, fromOperation, toOperation, filterUpdateContext));
   }
 
   if (result.empty()) {

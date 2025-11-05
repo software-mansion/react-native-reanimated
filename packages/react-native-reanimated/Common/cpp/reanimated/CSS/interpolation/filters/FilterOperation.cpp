@@ -113,7 +113,6 @@ std::shared_ptr<FilterOperation> FilterOperation::fromDynamic(const folly::dynam
       throw std::invalid_argument("[Reanimated] Unknown filter operation: " + propertyName);
   }
 }
- 
 
 folly::dynamic FilterOperation::toDynamic() const {
   return folly::dynamic::object(getOperationName(), valueToDynamic());
