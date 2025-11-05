@@ -231,6 +231,15 @@ android {
                 doNotStrip "**/**/*.so"
             }
         }
+        release {
+            externalNativeBuild {
+                cmake {
+                    def currentArgs = arguments ?: []
+                    currentArgs += "-DCMAKE_BUILD_TYPE=Release"
+                    arguments = currentArgs
+                }
+            }
+        }
     }
     lintOptions {
         abortOnError false

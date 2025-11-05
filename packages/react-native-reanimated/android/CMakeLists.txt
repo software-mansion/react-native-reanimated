@@ -31,7 +31,7 @@ if(${IS_REANIMATED_EXAMPLE_APP})
 endif()
 
 if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")
-  string(APPEND CMAKE_CXX_FLAGS " -DNDEBUG")
+  string(APPEND CMAKE_CXX_FLAGS " -DNDEBUG -g0")
 endif()
 
 set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
