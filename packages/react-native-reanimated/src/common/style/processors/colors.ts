@@ -121,7 +121,7 @@ export function processColorsInProps(props: StyleProps) {
   }
 }
 
-function unprocessColor(value: number): string {
+export function unprocessColor(value: number): string {
   const a = value >>> 24;
   const r = (value << 8) >>> 24;
   const g = (value << 16) >>> 24;

@@ -1,6 +1,9 @@
 'use strict';
 
-import { unprocessColorsInProps } from './common/style/processors/colors';
+import {
+  unprocessColor,
+  unprocessColorsInProps,
+} from './common/style/processors/colors';
 import type { IAnimatedComponentInternal } from './createAnimatedComponent/commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
 
@@ -43,7 +46,12 @@ export const PropsRegistryGarbageCollector = {
     for (const { viewTag, styleProps } of settledUpdates) {
       const component = this.viewsMap.get(viewTag);
       unprocessColorsInProps(styleProps);
-      // TODO: fix boxShadow artifact visible in BubblesExample
+      if (Array.isArray(styleProps.boxShadow)) {
+        styleProps.boxShadow = styleProps.boxShadow.map((boxShadow) => ({
+          ...boxShadow,
+          color: unprocessColor(boxShadow.color),
+        }));
+      }
       console.log(
         '_syncStylePropsBackToReact',
         styleProps,
