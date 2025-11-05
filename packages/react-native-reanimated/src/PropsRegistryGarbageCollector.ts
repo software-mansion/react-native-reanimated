@@ -7,7 +7,7 @@ import {
 import type { IAnimatedComponentInternal } from './createAnimatedComponent/commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
 
-const FLUSH_INTERVAL_MS = 1000; // 1 second
+const FLUSH_INTERVAL_MS = 500;
 
 export const PropsRegistryGarbageCollector = {
   viewsCount: 0,

@@ -462,9 +462,9 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
   // TODO: move removing old updates somewhere else?
   // TODO: fix bug when threshold difference is smaller than 1 second
   // TOOD: find a better way to obtain timestamp for removing updates
-  animatedPropsRegistry_->removeUpdatesOlderThanTimestamp(currentTimestamp - 4500); // 4.5 seconds
+  animatedPropsRegistry_->removeUpdatesOlderThanTimestamp(currentTimestamp - 2000); // 2 seconds
 
-  return animatedPropsRegistry_->getUpdatesOlderThanTimestamp(rt, currentTimestamp - 3000); // 3 seconds
+  return animatedPropsRegistry_->getUpdatesOlderThanTimestamp(rt, currentTimestamp - 1000); // 1 second
 }
 
 bool ReanimatedModuleProxy::handleEvent(
