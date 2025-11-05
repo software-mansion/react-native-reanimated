@@ -33,6 +33,11 @@ export const PropsRegistryGarbageCollector = {
     const settledUpdates = ReanimatedModule.getSettledUpdates();
     for (const { viewTag, styleProps } of settledUpdates) {
       const component = this.viewsMap.get(viewTag);
+      // TODO: unprocessColor
+      if ('backgroundColor' in styleProps) {
+        styleProps.backgroundColor = 'lime';
+      }
+      // TODO: fix boxShadow artifact visible in BubblesExample
       console.log(
         '_syncStylePropsBackToReact',
         styleProps,
