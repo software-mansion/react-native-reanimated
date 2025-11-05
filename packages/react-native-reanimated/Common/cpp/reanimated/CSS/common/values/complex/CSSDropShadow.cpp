@@ -15,7 +15,6 @@ CSSDropShadow::CSSDropShadow(CSSDouble offsetX, CSSDouble offsetY, CSSDouble sta
 CSSDropShadow::CSSDropShadow(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   const auto &obj = jsiValue.asObject(rt);
 
-  // TODO: Is this optional or is this required? it a question for later....
   if (obj.hasProperty(rt, "offsetX")) {
     offsetX = CSSDouble(rt, obj.getProperty(rt, "offsetX"));
   }
