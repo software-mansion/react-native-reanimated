@@ -66,6 +66,22 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   return errorMessage === '';
 }
 
+export function safeMergeConfigs<T extends Record<string, any>>(
+  defaults: T,
+  userConfig?: Partial<T>
+): T {
+  if (!userConfig) return defaults;
+
+  const filtered = Object.fromEntries(
+    Object.entries(userConfig).filter(([, v]) => v !== undefined)
+  ) as Partial<T>;
+
+  return {
+    ...defaults,
+    ...filtered,
+  };
+}
+
 function bisectRoot({
   min,
   max,
