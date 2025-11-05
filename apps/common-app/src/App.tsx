@@ -17,7 +17,9 @@ import { IS_MACOS, IS_WEB, noop } from '@/utils';
 import { CSSApp, ReanimatedApp } from './apps';
 import { LeakCheck, NukeContext } from './components';
 
-LogBox.ignoreLogs(["Deep imports from the 'react-native' package are deprecated"]);
+LogBox.ignoreLogs([
+  "Deep imports from the 'react-native' package are deprecated",
+]);
 
 export default function App() {
   const [nuked, setNuked] = useState(false);
