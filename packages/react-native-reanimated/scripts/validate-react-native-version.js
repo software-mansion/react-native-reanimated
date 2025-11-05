@@ -41,6 +41,6 @@ for (const version of supportedRNVersions) {
 
 // eslint-disable-next-line reanimated/use-logger
 console.error(
-  `[Reanimated] React Native ${reactNativeVersion} version is not compatible with Reanimated ${reanimatedVersion}`
+  `[Reanimated] React Native ${reactNativeVersion} version is not compatible with Reanimated ${reanimatedVersion}. See the documentation for the list of supported versions https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility/`
 );
 process.exit(1);

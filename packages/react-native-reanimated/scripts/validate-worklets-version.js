@@ -61,7 +61,7 @@ function validateVersion(reanimatedVersion) {
 
   return {
     ok: false,
-    message: `Invalid version of \`react-native-worklets\`: "${workletsVersion}". Expected the version to be in inclusive range "${supportedWorkletsVersions.join(', ')}". Please install a compatible version of \`react-native-worklets\`.`,
+    message: `Invalid version of \`react-native-worklets\`: "${workletsVersion}". Expected the version to be in inclusive range "${supportedWorkletsVersions.join(', ')}". Please install a compatible version of \`react-native-worklets\`. See the documentation for the list of supported versions https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility/#supported-react-native-worklets-versions`,
   };
 }
 
