@@ -101,15 +101,6 @@ body:
         Providing as much information as possible greatly helps us with reproducing the issues.
 
   - type: dropdown
-    id: flags
-    attributes:
-      label: Feature flags
-      description: Do you have any Reanimated feature flags enabled? If so, please provide details about which ones and how they are configured in the description.
-      options:
-        - 'Yes'
-        - 'No'
-
-  - type: dropdown
     id: runtime
     attributes:
       label: JavaScript runtime
@@ -136,6 +127,15 @@ body:
       options:
         - New Architecture (Fabric renderer)
         - Legacy Architecture (Paper renderer)
+
+  - type: dropdown
+    id: flags
+    attributes:
+      label: Reanimated feature flags
+      description: Do you have any Reanimated feature flags enabled? If so, please provide details about which ones and how they are configured in the description.
+      options:
+        - 'Yes'
+        - 'No'
 
   - type: dropdown
     id: react-native-release-level
