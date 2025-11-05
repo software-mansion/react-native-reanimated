@@ -149,7 +149,7 @@ interface Example {
   icon?: string;
   title: string;
   screen: React.FC;
-  missingOnFabric?: boolean;
+  onlyOn?: 'fabric' | 'paper';
 }
 
 export const EXAMPLES: Record<string, Example> = {
@@ -259,7 +259,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📖',
     title: 'Letters',
     screen: LettersExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   SetNativePropsExample: {
     icon: '🪄',
@@ -275,7 +275,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📺',
     title: 'Screen transition',
     screen: ScreenTransitionExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
 
   // Basic examples
@@ -284,7 +284,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⏬',
     title: 'Animate inner component',
     screen: AnimatableRefExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   AmountExample: {
     icon: '📈',
@@ -490,7 +490,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '☕',
     title: 'Progress transition',
     screen: ProgressTransitionExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   MatrixExample: {
     icon: '🧮',
@@ -516,7 +516,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔎',
     title: 'getViewProp',
     screen: GetViewPropExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   LogExample: {
     icon: '⌨',
@@ -577,7 +577,7 @@ export const EXAMPLES: Record<string, Example> = {
   AnimatedTabBarExample: {
     title: 'Tab bar',
     screen: AnimatedTabBarExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   ChatHeadsExample: {
     title: 'Chat heads',
@@ -776,86 +776,86 @@ export const EXAMPLES: Record<string, Example> = {
   CardExample: {
     title: '[SET] Card',
     screen: CardExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   CustomTransitionExample: {
     title: '[SET] Custom transition',
     screen: CustomTransitionExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   LayoutAnimationExample: {
     title: '[SET] Layout Animation',
     screen: LayoutAnimationExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   ManyScreensExample: {
     title: '[SET] Many screens',
     screen: ManyScreensExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   ManyTagsExample: {
     title: '[SET] Many tags',
     screen: ManyTagsExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   NestedStacksExample: {
     title: '[SET] Nested stacks',
     screen: NestedStacksExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   ModalsExample: {
     title: '[SET] Modals',
     screen: ModalsExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   FlatListExample: {
     title: '[SET] FlatList',
     screen: FlatListExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   ImageStackExample: {
     title: '[SET] Image Stack',
     screen: ImageStackExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   RestoreStateExample: {
     title: '[SET] Restore State',
     screen: RestoreStateExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   DuplicateTagsExample: {
     title: '[SET] Duplicate Tags',
     screen: DuplicateTagsExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   ReducedMotionSharedExample: {
     title: '[SET] Reduced Motion',
     screen: ReducedMotionSharedExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   TransitionRestartExample: {
     title: '[SET] Transition Restart',
     screen: TransitionRestartExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   ChangeThemeSharedExample: {
     title: '[SET] Change theme',
     screen: ChangeThemeSharedExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   NestedRotationSharedExample: {
     title: '[SET] Nested Transforms',
     screen: NestedRotationExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   BorderRadiiExample: {
     title: '[SET] Border Radii',
     screen: BorderRadiiExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
   TabNavigatorExample: {
     title: '[SET] Tab Navigator',
     screen: TabNavigatorExample,
-    missingOnFabric: true,
+    onlyOn: 'paper',
   },
 } as const;

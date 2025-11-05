@@ -27,15 +27,26 @@ import {
   View,
   VirtualizedList,
 } from 'react-native';
-// @ts-expect-error No types for deep import.
-import ReactFabric from 'react-native/Libraries/Renderer/shims/ReactFabric';
 import { ScrollView as RNGHScrollView } from 'react-native-gesture-handler';
 import { makeMutable } from 'react-native-reanimated';
 import { Path as RNSVGPath } from 'react-native-svg';
 
-const findHostInstance_DEPRECATED = ReactFabric.findHostInstance_DEPRECATED as (
-  ref: any
-) => any;
+function isFabric(): boolean {
+  return !!(global as Record<string, unknown>)._IS_FABRIC;
+}
+
+// Conditionally import ReactFabric only on Fabric architecture
+let ReactFabric: any = null;
+if (isFabric()) {
+  try {
+    ReactFabric = require('react-native/Libraries/Renderer/shims/ReactFabric');
+  } catch {
+    // ReactFabric not available
+  }
+}
+
+const findHostInstance_DEPRECATED =
+  ReactFabric?.findHostInstance_DEPRECATED as (ref: any) => any;
 
 // Make sure Reanimated and Worklets are initialized.
 makeMutable(() => {
@@ -435,6 +446,14 @@ function findNativeStateObjects(node: Node, ref: any, source: string = '') {
 }
 
 export default function InstanceDiscoveryExample() {
+  if (!isFabric()) {
+    return (
+      <Text style={styles.notSupportedText}>
+        This example works only on Fabric (the New Architecture)
+      </Text>
+    );
+  }
+
   return (
     <>
       <Text style={styles.headingText}>
@@ -535,6 +554,12 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontSize: 20,
     fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  notSupportedText: {
+    marginTop: 20,
+    marginHorizontal: 20,
+    fontSize: 16,
     textAlign: 'center',
   },
 });
