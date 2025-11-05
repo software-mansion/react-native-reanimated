@@ -1,5 +1,6 @@
 'use strict';
 
+import { unprocessColorsInProps } from './common/style/processors/colors';
 import type { IAnimatedComponentInternal } from './createAnimatedComponent/commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
 
@@ -41,10 +42,7 @@ export const PropsRegistryGarbageCollector = {
     const settledUpdates = ReanimatedModule.getSettledUpdates();
     for (const { viewTag, styleProps } of settledUpdates) {
       const component = this.viewsMap.get(viewTag);
-      if ('backgroundColor' in styleProps) {
-        styleProps.backgroundColor = 'lime';
-      }
-      // TODO: unprocessColor
+      unprocessColorsInProps(styleProps);
       // TODO: fix boxShadow artifact visible in BubblesExample
       console.log(
         '_syncStylePropsBackToReact',

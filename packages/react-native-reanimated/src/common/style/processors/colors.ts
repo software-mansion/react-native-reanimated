@@ -120,3 +120,26 @@ export function processColorsInProps(props: StyleProps) {
     }
   }
 }
+
+function unprocessColor(value: number): string {
+  const a = value >>> 24;
+  const r = (value << 8) >>> 24;
+  const g = (value << 16) >>> 24;
+  const b = (value << 24) >>> 24;
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+export function unprocessColorsInProps(props: StyleProps) {
+  for (const key in props) {
+    if (!ColorProperties.includes(key)) continue;
+
+    const value = props[key];
+
+    if (Array.isArray(value)) {
+      props[key] = value.map((c) => unprocessColor(c));
+    } else {
+      props[key] = unprocessColor(value);
+    }
+    // TODO: add support for DynamicColorIOS
+  }
+}
