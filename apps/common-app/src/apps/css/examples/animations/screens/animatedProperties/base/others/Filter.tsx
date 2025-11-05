@@ -1,8 +1,8 @@
-import { balloonsImage } from '@/apps/css/assets';
 import { StyleSheet } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
+import { balloonsImage } from '@/apps/css/assets';
 import { ExamplesScreen, VerticalExampleCard } from '@/apps/css/components';
 import { radius, sizes } from '@/theme';
 
@@ -18,8 +18,8 @@ export default function Filter() {
       })}
       renderExample={({ animation }) => (
         <Animated.Image
-          style={[styles.image, animation]}
           source={balloonsImage}
+          style={[styles.image, animation]}
         />
       )}
       sections={[
