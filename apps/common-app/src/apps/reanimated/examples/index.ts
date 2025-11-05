@@ -79,6 +79,7 @@ import ReducedMotionLayoutExample from './LayoutAnimations/ReducedMotionLayoutEx
 import ReparentingExample from './LayoutAnimations/ReparentingExample';
 import SpringLayoutAnimation from './LayoutAnimations/SpringLayoutAnimation';
 import SwipeableList from './LayoutAnimations/SwipeableList';
+import SyncBackToReactExample from './SyncBackToReactExample';
 import ViewFlatteningExample from './LayoutAnimations/ViewFlattening';
 import ViewRecyclingExample from './LayoutAnimations/ViewRecyclingExample';
 import LettersExample from './LettersExample';
@@ -171,6 +172,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🎞️',
     title: 'FPS',
     screen: FpsExample,
+  },
+  SyncBackToReactExample: {
+    icon: '🔄',
+    title: 'Sync back to React',
+    screen: SyncBackToReactExample,
   },
   ScrollPerformanceExample: {
     icon: '🚁',
