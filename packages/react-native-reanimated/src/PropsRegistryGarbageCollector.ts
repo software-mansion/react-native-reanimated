@@ -12,6 +12,14 @@ export const PropsRegistryGarbageCollector = {
 
   registerView(viewTag: number, component: IAnimatedComponentInternal) {
     console.log('registerView', viewTag);
+    if (this.viewsMap.has(viewTag)) {
+      // In case of nested AnimatedComponents (like <GestureDetector> with <Animated.View> inside),
+      // `registerView` method is called first for the inner component (e.g. <Animated.View>)
+      // and then second time for the outer component (e.g. <GestureDetector>).
+      // Both of these components have the same viewTag so the inner component will be overwritten
+      // with the outer one. That's why we need to skip the logic during any subsequent calls.
+      return;
+    }
     this.viewsMap.set(viewTag, component);
     this.viewsCount++;
     if (this.viewsCount === 1) {
@@ -33,6 +41,9 @@ export const PropsRegistryGarbageCollector = {
     const settledUpdates = ReanimatedModule.getSettledUpdates();
     for (const { viewTag, styleProps } of settledUpdates) {
       const component = this.viewsMap.get(viewTag);
+      if ('backgroundColor' in styleProps) {
+        styleProps.backgroundColor = 'lime';
+      }
       // TODO: unprocessColor
       // TODO: fix boxShadow artifact visible in BubblesExample
       console.log(
