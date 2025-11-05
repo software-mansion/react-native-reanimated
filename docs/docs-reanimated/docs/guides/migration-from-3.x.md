@@ -14,11 +14,86 @@ Reanimated 4.x supports only the [New Architecture](https://reactnative.dev/arch
 
 ### Added dependency on `react-native-worklets`
 
-In Reanimated 4, [worklets](/docs/fundamentals/glossary#worklet) implementation has been moved to a separate npm package named `react-native-worklets`. You need to install `react-native-worklets` package using your package manager and rebuild the native apps.
+In Reanimated 4, [worklets](/docs/fundamentals/glossary#worklet) implementation has been moved to a separate library named `react-native-worklets`. You need to install `react-native-worklets` package using your package manager and rebuild the native apps.
+
+You can read more about `react-native-worklets` library in its [documentation](https://docs.swmansion.com/react-native-worklets/).
 
 ### Renamed `react-native-reanimated/plugin`
 
 Change `'react-native-reanimated/plugin'` to `'react-native-worklets/plugin'` in `babel.config.js`.
+
+### Worklet-specific functions should be imported from `react-native-worklets`
+
+Reanimated 4 moves all worklet-related functions to `react-native-worklets` library. While they are re-exported from `react-native-reanimated` for backwards compatibility, they are marked as deprecated and planned to be removed in a future release of Reanimated. You can update your imports as described below to make sure you're not using deprecated APIs.
+
+#### makeShareableCloneRecursive
+
+Replaced with [`createSerializable`](https://docs.swmansion.com/react-native-worklets/docs/memory/createSerializable/). The API stays the same.
+
+```diff
+- import { makeShareableCloneRecursive } from 'react-native-reanimated';
++ import { createSerializable } from 'react-native-worklets';
+```
+
+#### createWorkletRuntime
+
+Moved without changes.
+
+```diff
+- import { createWorkletRuntime } from 'react-native-reanimated';
++ import { createWorkletRuntime } from 'react-native-worklets';
+```
+
+#### executeOnUIRuntimeSync
+
+Replaced with [`runOnUISync`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUISync/). The API changed slightly so that the arguments are no longer passed as a separate function invocation.
+
+```diff
+- import { executeOnUIRuntimeSync } from 'react-native-reanimated';
+- executeOnUIRuntimeSync(func)(...args);
++ import { runOnUISync } from 'react-native-worklets';
++ runOnUISync(func, ...args);
+```
+
+#### runOnJS
+
+Replaced with [`scheduleOnRN`](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnRN/). The API changed slightly so that the arguments are no longer passed as a separate function invocation.
+
+```diff
+- import { runOnJS } from 'react-native-reanimated';
+- runOnJS(func)(...args);
++ import { scheduleOnRN } from 'react-native-worklets';
++ scheduleOnRN(func, ...args);
+```
+
+#### runOnRuntime
+
+Replaced with [`scheduleOnRuntime`](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnRuntime/). The API changed slightly so that the arguments are no longer passed as a separate function invocation.
+
+```diff
+- import { runOnRuntime } from 'react-native-reanimated';
+- runOnRuntime(runtime, func)(...args);
++ import { scheduleOnRuntime } from 'react-native-worklets';
++ scheduleOnRuntime(runtime, func, ...args);
+```
+
+#### WorkletRuntime
+
+Moved without changes.
+
+```diff
+- import { WorkletRuntime } from 'react-native-reanimated';
++ import { WorkletRuntime } from 'react-native-worklets';
+```
+
+#### isWorkletFunction
+
+Moved without changes.
+
+```diff
+- import { isWorkletFunction } from 'react-native-reanimated';
++ import { isWorkletFunction } from 'react-native-worklets';
+```
 
 ### Changed the default behavior of `withSpring`
 

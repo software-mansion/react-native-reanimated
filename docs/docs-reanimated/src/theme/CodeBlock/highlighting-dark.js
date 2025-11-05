@@ -33,6 +33,20 @@ module.exports = {
       },
     },
     {
+      types: ['inserted'],
+      style: {
+        color: 'var(--swm-green-light-80)',
+        backgroundColor: 'var(--swm-green-dark-140)',
+      },
+    },
+    {
+      types: ['deleted'],
+      style: {
+        color: 'var(--swm-red-light-80)',
+        backgroundColor: 'var(--swm-red-dark-140)',
+      },
+    },
+    {
       types: [
         'entity',
         'url',
@@ -42,7 +56,6 @@ module.exports = {
         'variable',
         'constant',
         'regex',
-        'inserted',
         'operator',
         'attr-value',
       ],
@@ -51,7 +64,7 @@ module.exports = {
       },
     },
     {
-      types: ['function', 'function-variable', 'deleted'],
+      types: ['function', 'function-variable'],
       style: {
         color: 'var(--swm-purple-light-80)',
       },
