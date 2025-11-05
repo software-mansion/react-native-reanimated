@@ -160,7 +160,6 @@ const InterpolatorFactoriesRecord FILTER_INTERPOLATORS = {
           {"opacity", filterOp<OpacityOperation>(1)},
           {"saturate", filterOp<SaturateOperation>(1)},
           {"sepia", filterOp<SepiaOperation>(0)}})}};
-};
 
 const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
     {FLEX_INTERPOLATORS,
