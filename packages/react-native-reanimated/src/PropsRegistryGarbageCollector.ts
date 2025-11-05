@@ -15,7 +15,6 @@ export const PropsRegistryGarbageCollector = {
   intervalId: null as NodeJS.Timeout | null,
 
   registerView(viewTag: number, component: IAnimatedComponentInternal) {
-    console.log('registerView', viewTag);
     if (this.viewsMap.has(viewTag)) {
       // In case of nested AnimatedComponents (like <GestureDetector> with <Animated.View> inside),
       // `registerView` method is called first for the inner component (e.g. <Animated.View>)
@@ -32,7 +31,6 @@ export const PropsRegistryGarbageCollector = {
   },
 
   unregisterView(viewTag: number) {
-    console.log('unregisterView', viewTag);
     this.viewsMap.delete(viewTag);
     this.viewsCount--;
     if (this.viewsCount === 0) {
@@ -41,7 +39,6 @@ export const PropsRegistryGarbageCollector = {
   },
 
   syncPropsBackToReact() {
-    console.log('syncPropsBackToReact', performance.now());
     const settledUpdates = ReanimatedModule.getSettledUpdates();
     for (const { viewTag, styleProps } of settledUpdates) {
       const component = this.viewsMap.get(viewTag);
@@ -52,18 +49,11 @@ export const PropsRegistryGarbageCollector = {
           color: unprocessColor(boxShadow.color),
         }));
       }
-      console.log(
-        '_syncStylePropsBackToReact',
-        styleProps,
-        'for viewTag',
-        viewTag
-      );
       component?._syncStylePropsBackToReact(styleProps);
     }
   },
 
   registerInterval() {
-    console.log('registerInterval');
     this.intervalId = setInterval(
       this.syncPropsBackToReact.bind(this),
       FLUSH_INTERVAL_MS
@@ -71,7 +61,6 @@ export const PropsRegistryGarbageCollector = {
   },
 
   unregisterInterval() {
-    console.log('unregisterInterval');
     if (this.intervalId !== null) {
       clearInterval(this.intervalId);
       this.intervalId = null;
