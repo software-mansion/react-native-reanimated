@@ -456,6 +456,7 @@ void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi:
 }
 
 jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
+  // TODO: use unified timestamp
   const auto currentTimestamp = getAnimationTimestamp_();
 
   // TODO: move removing old updates somewhere else?
