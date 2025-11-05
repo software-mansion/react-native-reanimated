@@ -2,7 +2,6 @@
 
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 #include <reanimated/CSS/interpolation/filters/FilterOperationInterpolator.h>
-#include <reanimated/CSS/interpolation/transforms/TransformOperationInterpolator.h>
 #include <reanimated/CSS/utils/keyframes.h>
 
 #include <memory>
@@ -66,11 +65,6 @@ class FilterStyleInterpolator final : public PropertyInterpolator {
   std::pair<FilterOperations, FilterOperations> createFilterInterpolationPair(
       const FilterOperations &fromOperations,
       const FilterOperations &toOperations) const;
-  void addConvertedOperations(
-      const std::shared_ptr<FilterOperation> &sourceOperation,
-      const std::shared_ptr<FilterOperation> &targetOperation,
-      FilterOperations &sourceResult,
-      FilterOperations &targetResult) const;
   std::shared_ptr<FilterOperation> getDefaultOperationOfType(FilterOp type) const;
 
   size_t getIndexOfCurrentKeyframe(const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const;

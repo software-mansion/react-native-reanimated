@@ -60,7 +60,7 @@ std::shared_ptr<FilterOperation> FilterOperation::fromJSIValue(jsi::Runtime &rt,
     case FilterOp::Grayscale:
       return std::make_shared<GrayscaleOperation>(propertyValue.asNumber());
     case FilterOp::HueRotate:
-      return std::make_shared<HueRotateOperation>(propertyValue.asString(rt).utf8(rt));
+      return std::make_shared<HueRotateOperation>(propertyValue.asNumber());
     case FilterOp::Invert:
       return std::make_shared<InvertOperation>(propertyValue.asNumber());
     case FilterOp::Opacity:
@@ -100,7 +100,7 @@ std::shared_ptr<FilterOperation> FilterOperation::fromDynamic(const folly::dynam
     case FilterOp::Grayscale:
       return std::make_shared<GrayscaleOperation>(propertyValue.getDouble());
     case FilterOp::HueRotate:
-      return std::make_shared<HueRotateOperation>(propertyValue.getString());
+      return std::make_shared<HueRotateOperation>(propertyValue.getDouble());
     case FilterOp::Invert:
       return std::make_shared<InvertOperation>(propertyValue.getDouble());
     case FilterOp::Opacity:

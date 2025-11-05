@@ -14,16 +14,6 @@
 #include <memory>
 #include <utility>
 
-#include <reanimated/CSS/interpolation/transforms/TransformOperationInterpolator.h>
-
-#include <reanimated/CSS/interpolation/transforms/operations/rotate.h>
-#include <reanimated/CSS/interpolation/transforms/operations/scale.h>
-#include <reanimated/CSS/interpolation/transforms/operations/skew.h>
-#include <reanimated/CSS/interpolation/transforms/operations/translate.h>
-
-#include <memory>
-#include <utility>
-
 namespace reanimated::css {
 
 std::shared_ptr<FilterOperation> FilterInterpolator::resolveOperation(

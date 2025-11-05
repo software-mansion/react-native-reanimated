@@ -6,12 +6,10 @@
 #include <utility>
 #include <vector>
 
-#include <reanimated/CSS/interpolation/transforms/TransformsStyleInterpolator.h>
-
 namespace reanimated::css {
 
 const FilterOperations FilterStyleInterpolator::defaultStyleValue_ = {
-    std::make_shared<ContrastOperation>(1.0)};
+std::make_shared<ContrastOperation>(1.0)};
 
 FilterStyleInterpolator::FilterStyleInterpolator(
     const PropertyPath &propertyPath,
@@ -225,7 +223,9 @@ std::pair<FilterOperations, FilterOperations> FilterStyleInterpolator::createFil
       bool toExistsLaterInFrom = lastIndexInFrom.count(toOperation->type) && lastIndexInFrom[toOperation->type] > i;
       bool fromExistsLaterInTo = lastIndexInTo.count(fromOperation->type) && lastIndexInTo[fromOperation->type] > j;
 
-      if (!fromExistsLaterInTo) {
+      if (toExistsLaterInFrom == fromExistsLaterInTo) {
+        break;
+      } else if (!fromExistsLaterInTo) {
         // If fromOperation does not exist later in toOperations, we can
         // interpolate it to the default value
         fromOperationsResult.emplace_back(fromOperation);
@@ -241,7 +241,6 @@ std::pair<FilterOperations, FilterOperations> FilterStyleInterpolator::createFil
     }
   }
 
-  // Convert all operations to matrices if matrix interpolation is required
   // Add remaining operations with default values
   for (; i < fromOperations.size(); ++i) {
     fromOperationsResult.emplace_back(fromOperations[i]);

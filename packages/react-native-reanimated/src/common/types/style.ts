@@ -1,7 +1,6 @@
 'use strict';
 
 import type {
-  FilterFunction,
   ImageStyle,
   TextStyle,
   TransformsStyle,

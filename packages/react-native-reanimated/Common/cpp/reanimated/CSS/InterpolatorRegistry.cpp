@@ -155,7 +155,7 @@ const InterpolatorFactoriesRecord FILTER_INTERPOLATORS = {
           {"contrast", filterOp<ContrastOperation>(1)},
           {"dropShadow", filterOp<DropShadowOperation>(CSSDropShadow())},
           {"grayscale", filterOp<GrayscaleOperation>(0)},
-          {"hueRotate", filterOp<HueRotateOperation>("0deg")},
+          {"hueRotate", filterOp<HueRotateOperation>(0)},
           {"invert", filterOp<InvertOperation>(0)},
           {"opacity", filterOp<OpacityOperation>(1)},
           {"saturate", filterOp<SaturateOperation>(1)},

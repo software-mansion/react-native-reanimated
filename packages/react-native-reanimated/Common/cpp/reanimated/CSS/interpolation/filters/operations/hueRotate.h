@@ -10,7 +10,7 @@ namespace reanimated::css {
 struct HueRotateOperation final : public FilterOperationBase<FilterOp::HueRotate, CSSAngle> {
   using FilterOperationBase<FilterOp::HueRotate, CSSAngle>::FilterOperationBase;
 
-  explicit HueRotateOperation(const std::string &value)
+  explicit HueRotateOperation(double value)
       : FilterOperationBase<FilterOp::HueRotate, CSSAngle>(CSSAngle(value)) {}
 };
 
