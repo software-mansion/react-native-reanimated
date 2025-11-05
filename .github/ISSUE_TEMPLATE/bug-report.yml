@@ -129,6 +129,25 @@ body:
         - Legacy Architecture (Paper renderer)
 
   - type: dropdown
+    id: flags
+    attributes:
+      label: Reanimated feature flags
+      description: Do you have any Reanimated feature flags enabled? If so, please provide details about which ones and how they are configured in the description.
+      options:
+        - 'Yes'
+        - 'No'
+
+  - type: dropdown
+    id: react-native-release-level
+    attributes:
+      label: React Native release level
+      description: What release level of React Native are you using?
+      options:
+        - Stable
+        - Experimental
+        - Canary
+
+  - type: dropdown
     id: build-type
     attributes:
       label: Build type
