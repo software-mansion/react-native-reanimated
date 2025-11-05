@@ -22,7 +22,7 @@ bool isDiscreteProperty(const std::string &propName, const std::string &componen
 // We need to specify it here because there are 2 methods referencing
 // each other in the recursion and areArraysDifferentRecursive must be
 // aware that getChangedPropsRecursive exists
-std::pair<folly::dynamic, folly::dynamic> getChangedPropsRecursive(
+std::pair<std::optional<folly::dynamic>, std::optional<folly::dynamic>> getChangedPropsRecursive(
     const folly::dynamic &oldProp,
     const folly::dynamic &newProp);
 

@@ -101,7 +101,7 @@ folly::dynamic CSSColor::toDynamic() const {
   if (colorType == CSSColorType::Rgba) {
     return (channels[3] << 24) | (channels[0] << 16) | (channels[1] << 8) | channels[2];
   }
-  return 0;
+  return folly::dynamic();
 }
 
 std::string CSSColor::toString() const {

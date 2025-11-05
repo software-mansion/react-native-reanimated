@@ -22,7 +22,9 @@ bool areArraysDifferentRecursive(const folly::dynamic &oldArray, const folly::dy
   for (size_t i = 0; i < oldArray.size(); i++) {
     const auto [oldChangedProp, newChangedProp] = getChangedPropsRecursive(oldArray[i], newArray[i]);
 
-    if (!oldChangedProp.isNull() || !newChangedProp.isNull()) {
+    // If any of the values is present, that means that the new value must be different from the old one.
+    // In such a case, we return true as arrays aren't the same.
+    if (oldChangedProp.has_value() || newChangedProp.has_value()) {
       return true;
     }
   }
@@ -30,7 +32,7 @@ bool areArraysDifferentRecursive(const folly::dynamic &oldArray, const folly::dy
   return false;
 }
 
-std::pair<folly::dynamic, folly::dynamic> getChangedPropsRecursive(
+std::pair<std::optional<folly::dynamic>, std::optional<folly::dynamic>> getChangedPropsRecursive(
     const folly::dynamic &oldProp,
     const folly::dynamic &newProp) {
   if (!oldProp.isObject() || !newProp.isObject()) {
@@ -38,7 +40,7 @@ std::pair<folly::dynamic, folly::dynamic> getChangedPropsRecursive(
     if (oldProp != newProp) {
       return {oldProp, newProp};
     }
-    return {folly::dynamic(), folly::dynamic()};
+    return {std::nullopt, std::nullopt};
   }
 
   if (oldProp.isArray() && newProp.isArray()) {
@@ -46,21 +48,17 @@ std::pair<folly::dynamic, folly::dynamic> getChangedPropsRecursive(
     if (areArraysDifferentRecursive(oldProp, newProp)) {
       return {oldProp, newProp};
     }
-    return {folly::dynamic(), folly::dynamic()};
+    return {std::nullopt, std::nullopt};
   }
 
   folly::dynamic oldResult = folly::dynamic::object;
   folly::dynamic newResult = folly::dynamic::object;
-  bool oldHasChanges = false;
-  bool newHasChanges = false;
 
   // Check for removed properties
   for (const auto &item : oldProp.items()) {
     const auto &propName = item.first.asString();
     if (!newProp.count(propName)) {
-      const auto &oldValue = item.second;
-      oldResult[propName] = oldValue;
-      oldHasChanges = true;
+      oldResult[propName] = item.second;
     }
   }
 
@@ -70,26 +68,25 @@ std::pair<folly::dynamic, folly::dynamic> getChangedPropsRecursive(
     const auto &newValue = item.second;
 
     if (oldProp.count(propName)) {
-      const auto &oldValue = oldProp[propName];
-      auto [oldChangedProp, newChangedProp] = getChangedPropsRecursive(oldValue, newValue);
+      auto [oldChangedProp, newChangedProp] = getChangedPropsRecursive(oldProp[propName], newValue);
 
-      if (!oldChangedProp.isNull() && !newChangedProp.isNull()) {
-        oldResult[propName] = std::move(oldChangedProp);
-        newResult[propName] = std::move(newChangedProp);
-        oldHasChanges = true;
-        newHasChanges = true;
+      if (oldChangedProp.has_value()) {
+        oldResult[propName] = std::move(oldChangedProp.value());
+      }
+      if (newChangedProp.has_value()) {
+        newResult[propName] = std::move(newChangedProp.value());
       }
     } else {
       newResult[propName] = newValue;
-      newHasChanges = true;
     }
   }
 
   return {
-      oldHasChanges ? std::move(oldResult) : folly::dynamic(), newHasChanges ? std::move(newResult) : folly::dynamic()};
+      oldResult.empty() ? std::nullopt : std::make_optional(std::move(oldResult)),
+      newResult.empty() ? std::nullopt : std::make_optional(std::move(newResult))};
 }
 
-std::pair<folly::dynamic, folly::dynamic>
+std::pair<std::optional<folly::dynamic>, std::optional<folly::dynamic>>
 getChangedValueForProp(const folly::dynamic &oldObject, const folly::dynamic &newObject, const std::string &propName) {
   const bool oldHasProperty = oldObject.count(propName);
   const bool newHasProperty = newObject.count(propName);
@@ -100,22 +97,22 @@ getChangedValueForProp(const folly::dynamic &oldObject, const folly::dynamic &ne
 
     if (oldVal.isObject() && newVal.isObject()) {
       return getChangedPropsRecursive(oldVal, newVal);
-    } else if (oldVal != newVal) {
+    }
+    if (oldVal != newVal) {
       return {oldVal, newVal};
     }
 
-    return {folly::dynamic(), folly::dynamic()};
+    return {std::nullopt, std::nullopt};
   }
 
   if (oldHasProperty) {
-    const auto &oldVal = oldObject[propName];
-    return {oldVal, folly::dynamic()};
-  } else if (newHasProperty) {
-    const auto &newVal = newObject[propName];
-    return {folly::dynamic(), newVal};
+    return {oldObject[propName], std::nullopt};
+  }
+  if (newHasProperty) {
+    return {std::nullopt, newObject[propName]};
   }
 
-  return {folly::dynamic(), folly::dynamic()};
+  return {std::nullopt, std::nullopt};
 }
 
 ChangedProps getChangedProps(
@@ -129,16 +126,13 @@ ChangedProps getChangedProps(
   for (const auto &propName : allowedProperties) {
     auto [oldChangedProp, newChangedProp] = getChangedValueForProp(oldProps, newProps, propName);
 
-    const auto hasOldChangedProp = !oldChangedProp.isNull();
-    const auto hasNewChangedProp = !newChangedProp.isNull();
-
-    if (hasOldChangedProp) {
-      oldResult[propName] = std::move(oldChangedProp);
+    if (oldChangedProp.has_value()) {
+      oldResult[propName] = std::move(oldChangedProp.value());
     }
-    if (hasNewChangedProp) {
-      newResult[propName] = std::move(newChangedProp);
+    if (newChangedProp.has_value()) {
+      newResult[propName] = std::move(newChangedProp.value());
     }
-    if (hasOldChangedProp || hasNewChangedProp) {
+    if (oldChangedProp.has_value() || newChangedProp.has_value()) {
       changedPropertyNames.push_back(propName);
     }
   }
