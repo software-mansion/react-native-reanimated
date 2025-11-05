@@ -47,12 +47,9 @@ template <typename TOperation>
 class FilterOperationInterpolatorBase : public FilterInterpolator {
  public:
   explicit FilterOperationInterpolatorBase(std::shared_ptr<TOperation> defaultOperation)
-      : defaultOperation_(defaultOperation)
-  {
-  }
+      : defaultOperation_(defaultOperation) {}
 
-  std::shared_ptr<FilterOperation> getDefaultOperation() const override
-  {
+  std::shared_ptr<FilterOperation> getDefaultOperation() const override {
     return defaultOperation_;
   }
 
