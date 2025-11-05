@@ -66,7 +66,7 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   return errorMessage === '';
 }
 
-export function safeMergeConfigs<TConfig extends Record<string, unknown>>(
+export function safeMergeConfigs<TConfig extends object>(
   defaults: TConfig,
   userConfig?: Partial<TConfig>
 ): TConfig {
