@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
@@ -22,7 +21,12 @@ class ReanimatedMountHook : public UIManagerMountHook {
 
   void shadowTreeDidMount(
       RootShadowNode::Shared const &rootShadowNode,
-      double mountTime) noexcept override;
+#if REACT_NATIVE_MINOR_VERSION >= 81
+      HighResTimeStamp mountTime
+#else
+      double mountTime
+#endif // REACT_NATIVE_MINOR_VERSION >= 81
+      ) noexcept override;
 
  private:
   const std::shared_ptr<UIManager> uiManager_;
@@ -31,5 +35,3 @@ class ReanimatedMountHook : public UIManagerMountHook {
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

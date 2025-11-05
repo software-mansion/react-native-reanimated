@@ -1,9 +1,9 @@
 'use strict';
 import { useEffect } from 'react';
+import type { WorkletFunction } from 'react-native-worklets';
 
+import { SHOULD_BE_USE_WEB } from '../common';
 import { startMapper, stopMapper } from '../core';
-import { shouldBeUseWeb } from '../PlatformChecker';
-import type { WorkletFunction } from '../WorkletsResolver';
 import type { DependencyList } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
 
@@ -40,7 +40,7 @@ export function useAnimatedReaction<PreparedResult>(
 
   let inputs = Object.values(prepare.__closure ?? {});
 
-  if (shouldBeUseWeb()) {
+  if (SHOULD_BE_USE_WEB) {
     if (!inputs.length && dependencies?.length) {
       // let web work without a Reanimated Babel plugin
       inputs = dependencies;
@@ -69,5 +69,6 @@ export function useAnimatedReaction<PreparedResult>(
     return () => {
       stopMapper(mapperId);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, dependencies);
 }

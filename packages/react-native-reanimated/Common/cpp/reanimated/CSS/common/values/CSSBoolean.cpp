@@ -1,15 +1,14 @@
-#ifdef RCT_NEW_ARCH_ENABLED
-
 #include <reanimated/CSS/common/values/CSSBoolean.h>
 
-namespace reanimated {
+#include <string>
+
+namespace reanimated::css {
 
 CSSBoolean::CSSBoolean() : value(false) {}
 
 CSSBoolean::CSSBoolean(bool value) : value(value) {}
 
-CSSBoolean::CSSBoolean(jsi::Runtime &rt, const jsi::Value &jsiValue)
-    : value(jsiValue.asBool()) {}
+CSSBoolean::CSSBoolean(jsi::Runtime &rt, const jsi::Value &jsiValue) : value(jsiValue.asBool()) {}
 
 CSSBoolean::CSSBoolean(const folly::dynamic &value) : value(value.asBool()) {}
 
@@ -29,8 +28,7 @@ std::string CSSBoolean::toString() const {
   return value ? "true" : "false";
 }
 
-CSSBoolean CSSBoolean::interpolate(double progress, const CSSBoolean &to)
-    const {
+CSSBoolean CSSBoolean::interpolate(double progress, const CSSBoolean &to) const {
   return CSSBoolean(progress < 0.5 ? value : to.value);
 }
 
@@ -47,6 +45,4 @@ std::ostream &operator<<(std::ostream &os, const CSSBoolean &boolValue) {
 
 #endif // NDEBUG
 
-} // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
+} // namespace reanimated::css

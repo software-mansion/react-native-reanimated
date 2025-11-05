@@ -1,22 +1,17 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 
-#include <worklets/Tools/JSISerializer.h>
-
 #include <string>
 
-namespace reanimated {
-
-using namespace worklets;
+namespace reanimated::css {
 
 template <typename TValue>
 class CSSKeywordBase : public CSSSimpleValue<TValue> {
  public:
   static constexpr bool is_discrete_value = true;
 
-  CSSKeywordBase();
+  CSSKeywordBase() = default;
   explicit CSSKeywordBase(const char *value);
   explicit CSSKeywordBase(jsi::Runtime &rt, const jsi::Value &jsiValue);
   explicit CSSKeywordBase(const folly::dynamic &value);
@@ -40,9 +35,7 @@ struct CSSKeyword : public CSSKeywordBase<CSSKeyword> {
   CSSKeyword interpolate(double progress, const CSSKeyword &to) const override;
 
 #ifndef NDEBUG
-  friend std::ostream &operator<<(
-      std::ostream &os,
-      const CSSKeyword &keywordValue);
+  friend std::ostream &operator<<(std::ostream &os, const CSSKeyword &keywordValue);
 #endif // NDEBUG
 };
 
@@ -53,12 +46,8 @@ struct CSSDisplay : public CSSKeywordBase<CSSDisplay> {
   CSSDisplay interpolate(double progress, const CSSDisplay &to) const override;
 
 #ifndef NDEBUG
-  friend std::ostream &operator<<(
-      std::ostream &os,
-      const CSSDisplay &displayValue);
+  friend std::ostream &operator<<(std::ostream &os, const CSSDisplay &displayValue);
 #endif // NDEBUG
 };
 
-} // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
+} // namespace reanimated::css

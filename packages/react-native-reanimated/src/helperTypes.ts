@@ -7,20 +7,20 @@ until time comes to refactor the code and get necessary types right.
 This will not be easy though! 
 */
 
-import type { RegisteredStyle, StyleProp } from 'react-native';
+import type { StyleProp } from 'react-native';
 
 import type {
   AnimatedStyle,
   EntryExitAnimationFunction,
   LayoutAnimationFunction,
   SharedValue,
-  TransformArrayItem,
 } from './commonTypes';
+import type { CSSStyle } from './css';
+import type { AddArrayPropertyType } from './css/types';
 import type { BaseAnimationBuilder } from './layoutReanimation/animationBuilder/BaseAnimationBuilder';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
-import type { SharedTransition } from './layoutReanimation/sharedTransitions';
 
-type EntryOrExitLayoutType =
+export type EntryOrExitLayoutType =
   | BaseAnimationBuilder
   | typeof BaseAnimationBuilder
   | EntryExitAnimationFunction
@@ -88,66 +88,21 @@ type LayoutProps = {
   exiting?: EntryOrExitLayoutType;
 };
 
-type SharedTransitionProps = {
-  /**
-   * Lets you animate components between two navigation screens.
-   *
-   * Assign the same `sharedTransitionTag` to [animated
-   * components](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component)
-   * on two different navigation screens to create a shared transition.
-   *
-   * @experimental
-   * @see https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
-   */
-  sharedTransitionTag?: string;
-  /**
-   * Lets you create a custom shared transition animation.
-   *
-   * Used alongside `SharedTransition.custom()` method.
-   *
-   * @experimental
-   * @see https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
-   */
-  sharedTransitionStyle?: SharedTransition;
-};
-
 type AnimatedPropsProp<Props extends object> = RestProps<Props> &
   AnimatedStyleProps<Props> &
-  LayoutProps &
-  SharedTransitionProps;
+  LayoutProps;
 
 export type AnimatedProps<Props extends object> = RestProps<Props> &
   AnimatedStyleProps<Props> &
-  LayoutProps &
-  SharedTransitionProps & {
+  LayoutProps & {
     /**
      * Lets you animate component props.
      *
      * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
      */
-    animatedProps?: Partial<AnimatedPropsProp<Props>>;
+    animatedProps?: AddArrayPropertyType<
+      Partial<AnimatedPropsProp<Props>> | CSSStyle<Props>
+    >;
   };
 
 // THE LAND OF THE DEPRECATED
-
-/** @deprecated This type is no longer relevant. */
-export type Adaptable<T> =
-  | T
-  | ReadonlyArray<T | ReadonlyArray<T>>
-  | SharedValue<T>;
-
-/** @deprecated This type is no longer relevant. */
-export type AdaptTransforms<T> = {
-  [P in keyof T]: Adaptable<T[P]>;
-};
-
-/** @deprecated Please use {@link TransformArrayItem} type instead. */
-export type TransformStyleTypes = TransformArrayItem;
-
-/** @deprecated This type is no longer relevant. */
-export type AnimatedStyleProp<T> =
-  | AnimatedStyle<T>
-  | RegisteredStyle<AnimatedStyle<T>>;
-
-/** @deprecated Please use {@link AnimatedProps} type instead. */
-export type AnimateProps<Props extends object> = AnimatedProps<Props>;

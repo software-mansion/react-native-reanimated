@@ -1,15 +1,14 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
-#include <reanimated/CSS/config/CSSAnimationConfig.h>
-#include <reanimated/CSS/config/CSSKeyframesConfig.h>
+#include <reanimated/CSS/configs/CSSAnimationConfig.h>
+#include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 #include <reanimated/CSS/progress/RawProgressProvider.h>
 
 #include <memory>
 
-namespace reanimated {
+namespace reanimated::css {
 
 enum class AnimationProgressState {
   Pending, // When the animation is waiting for the delay to pass
@@ -18,8 +17,7 @@ enum class AnimationProgressState {
   Finished
 };
 
-class AnimationProgressProvider final : public KeyframeProgressProvider,
-                                        public RawProgressProvider {
+class AnimationProgressProvider final : public KeyframeProgressProvider, public RawProgressProvider {
  public:
   AnimationProgressProvider(
       double timestamp,
@@ -30,33 +28,15 @@ class AnimationProgressProvider final : public KeyframeProgressProvider,
       EasingFunction easingFunction,
       const std::shared_ptr<KeyframeEasingFunctions> &keyframeEasingFunctions);
 
-  void setIterationCount(double iterationCount) {
-    resetProgress();
-    iterationCount_ = iterationCount;
-  }
-  void setDirection(AnimationDirection direction) {
-    resetProgress();
-    direction_ = direction;
-  }
-  void setEasingFunction(const EasingFunction &easingFunction) {
-    resetProgress();
-    easingFunction_ = easingFunction;
-  }
+  void setIterationCount(double iterationCount);
+  void setDirection(AnimationDirection direction);
+  void setEasingFunction(const EasingFunction &easingFunction);
 
-  AnimationDirection getDirection() const {
-    return direction_;
-  }
-  double getGlobalProgress() const override {
-    return applyAnimationDirection(rawProgress_.value_or(0));
-  }
-  bool isFirstUpdate() const override {
-    return !previousRawProgress_.has_value();
-  }
+  AnimationDirection getDirection() const;
+  double getGlobalProgress() const override;
   double getKeyframeProgress(double fromOffset, double toOffset) const override;
   AnimationProgressState getState(double timestamp) const;
-  double getPauseTimestamp() const {
-    return pauseTimestamp_;
-  }
+  double getPauseTimestamp() const;
   double getTotalPausedTime(double timestamp) const;
   double getStartTimestamp(double timestamp) const;
 
@@ -84,6 +64,4 @@ class AnimationProgressProvider final : public KeyframeProgressProvider,
   double applyAnimationDirection(double iterationProgress) const;
 };
 
-} // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
+} // namespace reanimated::css

@@ -1,8 +1,7 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
+#include <reanimated/CSS/InterpolatorRegistry.h>
 #include <reanimated/CSS/common/definitions.h>
-#include <reanimated/CSS/config/PropertyInterpolatorsConfig.h>
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
@@ -11,42 +10,33 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace reanimated {
+namespace reanimated::css {
 
 class TransitionStyleInterpolator {
  public:
   TransitionStyleInterpolator(
+      const std::string &componentName,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  std::unordered_set<std::string> getReversedPropertyNames(
-      const folly::dynamic &newPropertyValues) const;
+  std::unordered_set<std::string> getReversedPropertyNames(const folly::dynamic &newPropertyValues) const;
 
   folly::dynamic interpolate(
-      const ShadowNode::Shared &shadowNode,
-      const TransitionProgressProvider &transitionProgressProvider) const;
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const TransitionProgressProvider &transitionProgressProvider,
+      const std::unordered_set<std::string> &allowDiscreteProperties) const;
 
-  void discardFinishedInterpolators(
-      const TransitionProgressProvider &transitionProgressProvider);
-  void discardIrrelevantInterpolators(
-      const std::unordered_set<std::string> &transitionPropertyNames);
-  void updateInterpolatedProperties(
-      const ChangedProps &changedProps,
-      const folly::dynamic &lastUpdateValue);
+  void discardFinishedInterpolators(const TransitionProgressProvider &transitionProgressProvider);
+  void discardIrrelevantInterpolators(const std::unordered_set<std::string> &transitionPropertyNames);
+  void updateInterpolatedProperties(const ChangedProps &changedProps, const folly::dynamic &lastUpdateValue);
 
  private:
-  using MapInterpolatorsCallback = std::function<folly::dynamic(
-      const std::shared_ptr<PropertyInterpolator> &,
-      const std::shared_ptr<KeyframeProgressProvider> &)>;
+  using MapInterpolatorsCallback = std::function<
+      folly::dynamic(const std::shared_ptr<PropertyInterpolator> &, const std::shared_ptr<KeyframeProgressProvider> &)>;
 
+  const std::string componentName_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   PropertyInterpolatorsRecord interpolators_;
-
-  folly::dynamic mapInterpolators(
-      const TransitionProgressProvider &transitionProgressProvider,
-      const MapInterpolatorsCallback &callback) const;
 };
 
-} // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
+} // namespace reanimated::css

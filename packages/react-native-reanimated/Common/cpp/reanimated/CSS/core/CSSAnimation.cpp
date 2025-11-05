@@ -1,21 +1,22 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/core/CSSAnimation.h>
 
+#include <memory>
+#include <string>
 #include <utility>
 
-namespace reanimated {
+namespace reanimated::css {
 
 CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
-    ShadowNode::Shared shadowNode,
-    const unsigned index,
-    const CSSKeyframesConfig &keyframesConfig,
+    std::shared_ptr<const ShadowNode> shadowNode,
+    std::string animationName,
+    const CSSKeyframesConfig &cssKeyframesConfig,
     const CSSAnimationSettings &settings,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const double timestamp)
-    : index_(index),
+    : name_(std::move(animationName)),
       shadowNode_(std::move(shadowNode)),
       fillMode_(settings.fillMode),
+      styleInterpolator_(cssKeyframesConfig.styleInterpolator),
       progressProvider_(std::make_shared<AnimationProgressProvider>(
           timestamp,
           settings.duration,
@@ -23,18 +24,17 @@ CSSAnimation::CSSAnimation(
           settings.iterationCount,
           settings.direction,
           settings.easingFunction,
-          keyframesConfig.keyframeEasingFunctions)),
-      styleInterpolator_(keyframesConfig.styleInterpolator) {
+          cssKeyframesConfig.keyframeEasingFunctions)) {
   if (settings.playState == AnimationPlayState::Paused) {
     progressProvider_->pause(timestamp);
   }
 }
 
-CSSAnimationId CSSAnimation::getId() const {
-  return {shadowNode_->getTag(), index_};
+const std::string &CSSAnimation::getName() const {
+  return name_;
 }
 
-ShadowNode::Shared CSSAnimation::getShadowNode() const {
+std::shared_ptr<const ShadowNode> CSSAnimation::getShadowNode() const {
   return shadowNode_;
 }
 
@@ -48,32 +48,23 @@ AnimationProgressState CSSAnimation::getState(double timestamp) const {
 
 bool CSSAnimation::isReversed() const {
   const auto direction = progressProvider_->getDirection();
-  return direction == AnimationDirection::Reverse ||
-      direction == AnimationDirection::AlternateReverse;
+  return direction == AnimationDirection::Reverse || direction == AnimationDirection::AlternateReverse;
 }
 
 bool CSSAnimation::hasForwardsFillMode() const {
-  return fillMode_ == AnimationFillMode::Forwards ||
-      fillMode_ == AnimationFillMode::Both;
+  return fillMode_ == AnimationFillMode::Forwards || fillMode_ == AnimationFillMode::Both;
 }
 
 bool CSSAnimation::hasBackwardsFillMode() const {
-  return fillMode_ == AnimationFillMode::Backwards ||
-      fillMode_ == AnimationFillMode::Both;
+  return fillMode_ == AnimationFillMode::Backwards || fillMode_ == AnimationFillMode::Both;
 }
 
 folly::dynamic CSSAnimation::getCurrentInterpolationStyle() const {
-  return styleInterpolator_->interpolate(shadowNode_, progressProvider_);
+  return styleInterpolator_->interpolate(shadowNode_, progressProvider_, FALLBACK_INTERPOLATION_THRESHOLD);
 }
 
 folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
-  return isReversed() ? styleInterpolator_->getLastKeyframeValue()
-                      : styleInterpolator_->getFirstKeyframeValue();
-}
-
-folly::dynamic CSSAnimation::getForwardsFillStyle() const {
-  return isReversed() ? styleInterpolator_->getFirstKeyframeValue()
-                      : styleInterpolator_->getLastKeyframeValue();
+  return isReversed() ? styleInterpolator_->getLastKeyframeValue() : styleInterpolator_->getFirstKeyframeValue();
 }
 
 folly::dynamic CSSAnimation::getResetStyle() const {
@@ -81,8 +72,7 @@ folly::dynamic CSSAnimation::getResetStyle() const {
 }
 
 void CSSAnimation::run(const double timestamp) {
-  if (progressProvider_->getState(timestamp) ==
-      AnimationProgressState::Finished) {
+  if (progressProvider_->getState(timestamp) == AnimationProgressState::Finished) {
     return;
   }
   progressProvider_->play(timestamp);
@@ -95,30 +85,27 @@ folly::dynamic CSSAnimation::update(const double timestamp) {
   // (In general, it shouldn't be activated until the delay has passed but we
   // add this check to make sure that animation doesn't start with the negative
   // progress)
-  if (progressProvider_->getState(timestamp) ==
-      AnimationProgressState::Pending) {
+  if (progressProvider_->getState(timestamp) == AnimationProgressState::Pending) {
     return hasBackwardsFillMode() ? getBackwardsFillStyle() : folly::dynamic();
   }
 
-  return styleInterpolator_->interpolate(shadowNode_, progressProvider_);
+  return styleInterpolator_->interpolate(shadowNode_, progressProvider_, FALLBACK_INTERPOLATION_THRESHOLD);
 }
 
-void CSSAnimation::updateSettings(
-    const PartialCSSAnimationSettings &updatedSettings,
-    const double timestamp) {
+void CSSAnimation::updateSettings(const PartialCSSAnimationSettings &updatedSettings, const double timestamp) {
+  progressProvider_->resetProgress();
+
   if (updatedSettings.duration.has_value()) {
     progressProvider_->setDuration(updatedSettings.duration.value());
   }
   if (updatedSettings.easingFunction.has_value()) {
-    progressProvider_->setEasingFunction(
-        updatedSettings.easingFunction.value());
+    progressProvider_->setEasingFunction(updatedSettings.easingFunction.value());
   }
   if (updatedSettings.delay.has_value()) {
     progressProvider_->setDelay(updatedSettings.delay.value());
   }
   if (updatedSettings.iterationCount.has_value()) {
-    progressProvider_->setIterationCount(
-        updatedSettings.iterationCount.value());
+    progressProvider_->setIterationCount(updatedSettings.iterationCount.value());
   }
   if (updatedSettings.direction.has_value()) {
     progressProvider_->setDirection(updatedSettings.direction.value());
@@ -133,8 +120,8 @@ void CSSAnimation::updateSettings(
       progressProvider_->play(timestamp);
     }
   }
+
+  progressProvider_->update(timestamp);
 }
 
-} // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
+} // namespace reanimated::css

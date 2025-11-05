@@ -1,8 +1,8 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
-#include <reanimated/CSS/config/PropertyInterpolatorsConfig.h>
-#include <reanimated/CSS/registry/StaticPropsRegistry.h>
+#include <reanimated/CSS/InterpolatorRegistry.h>
+#include <reanimated/CSS/registries/StaticPropsRegistry.h>
+
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
@@ -13,16 +13,13 @@
 
 namespace reanimated {
 
+using namespace css;
+
 class UpdatesRegistryManager {
  public:
-  UpdatesRegistryManager();
+  explicit UpdatesRegistryManager(const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry);
 
-#ifdef ANDROID
-  explicit UpdatesRegistryManager(
-      const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry);
-#endif
-
-  std::lock_guard<std::mutex> createLock() const;
+  std::lock_guard<std::mutex> lock() const;
 
   // TODO - ensure that other sublibraries can easily hook into this registry
   // manager (e.g. add priority to registries)
@@ -36,32 +33,33 @@ class UpdatesRegistryManager {
   bool shouldCommitAfterPause();
   void cancelCommitAfterPause();
 
+  void markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode);
+  void unmarkNodeAsRemovable(Tag viewTag);
+  void handleNodeRemovals(const RootShadowNode &rootShadowNode);
   PropsMap collectProps();
 
 #ifdef ANDROID
   bool hasPropsToRevert();
-  void collectPropsToRevertBySurface(
-      std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
+  void collectPropsToRevertBySurface(std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
   void clearPropsToRevert(SurfaceId surfaceId);
 #endif
 
  private:
+  using RemovableShadowNodes = std::unordered_map<Tag, std::shared_ptr<const ShadowNode>>;
+
   mutable std::mutex mutex_;
   std::atomic<bool> isPaused_;
   std::atomic<bool> shouldCommitAfterPause_;
+  RemovableShadowNodes removableShadowNodes_;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
+  const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
 
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;
-  const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
 
-  static void addToPropsMap(
-      PropsMap &propsMap,
-      const ShadowNode::Shared &shadowNode,
-      const folly::dynamic &props);
+  static void
+  addToPropsMap(PropsMap &propsMap, const std::shared_ptr<const ShadowNode> &shadowNode, const folly::dynamic &props);
 #endif
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

@@ -1,27 +1,20 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
-#include <reanimated/CSS/config/CSSTransitionConfig.h>
+#include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 #include <reanimated/CSS/progress/RawProgressProvider.h>
-#include <reanimated/CSS/util/props.h>
+#include <reanimated/CSS/utils/props.h>
 
-#include <limits>
 #include <memory>
-#include <queue>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
-#include <utility>
-#include <vector>
 
-namespace reanimated {
+namespace reanimated::css {
 
 enum class TransitionProgressState { Pending, Running, Finished };
 
-class TransitionPropertyProgressProvider final
-    : public KeyframeProgressProvider,
-      public RawProgressProvider {
+class TransitionPropertyProgressProvider final : public KeyframeProgressProvider, public RawProgressProvider {
  public:
   TransitionPropertyProgressProvider(
       double timestamp,
@@ -41,8 +34,6 @@ class TransitionPropertyProgressProvider final
   double getReversingShorteningFactor() const;
   TransitionProgressState getState() const;
 
-  bool isFirstUpdate() const override;
-
  protected:
   std::optional<double> calculateRawProgress(double timestamp) override;
 
@@ -53,9 +44,8 @@ class TransitionPropertyProgressProvider final
   double getElapsedTime(double timestamp) const;
 };
 
-using TransitionPropertyProgressProviders = std::unordered_map<
-    std::string,
-    std::shared_ptr<TransitionPropertyProgressProvider>>;
+using TransitionPropertyProgressProviders =
+    std::unordered_map<std::string, std::shared_ptr<TransitionPropertyProgressProvider>>;
 
 class TransitionProgressProvider final {
  public:
@@ -65,8 +55,7 @@ class TransitionProgressProvider final {
   std::unordered_set<std::string> getRemovedProperties() const;
 
   void discardFinishedProgressProviders();
-  void discardIrrelevantProgressProviders(
-      const std::unordered_set<std::string> &transitionPropertyNames);
+  void discardIrrelevantProgressProviders(const std::unordered_set<std::string> &transitionPropertyNames);
   void runProgressProviders(
       double timestamp,
       const CSSTransitionPropertiesSettings &propertiesSettings,
@@ -79,13 +68,10 @@ class TransitionProgressProvider final {
 
   std::unordered_set<std::string> removedProperties_;
 
-  std::shared_ptr<TransitionPropertyProgressProvider>
-  createReversingShorteningProgressProvider(
+  std::shared_ptr<TransitionPropertyProgressProvider> createReversingShorteningProgressProvider(
       double timestamp,
       const CSSTransitionPropertySettings &propertySettings,
       const TransitionPropertyProgressProvider &existingProgressProvider);
 };
 
-} // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
+} // namespace reanimated::css

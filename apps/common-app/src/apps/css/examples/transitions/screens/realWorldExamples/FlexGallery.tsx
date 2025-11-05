@@ -22,7 +22,8 @@ import {
 } from '@/apps/css/assets';
 import { Screen } from '@/apps/css/components';
 import { BOTTOM_BAR_HEIGHT } from '@/apps/css/navigation/constants';
-import { colors, flex, radius, sizes, spacing } from '@/theme';
+import { colors, flex, radius, sizes, spacing, style } from '@/theme';
+import { IS_WEB } from '@/utils';
 
 const AnimatedTouchableOpacity =
   Animated.createAnimatedComponent(TouchableOpacity);
@@ -102,6 +103,9 @@ function GalleryCard({
   const gradient = useMemo(
     () => (
       <Svg height="100%" width="100%">
+        {/* TODO: Fix me */}
+        {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+        {/* @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801 */}
         <Defs>
           <LinearGradient id="gallery" x1="0" x2="0" y1="0" y2="1">
             <Stop offset="0" stopColor={colors.black} stopOpacity="0" />
@@ -223,9 +227,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     gap: spacing.sm,
-    marginHorizontal: 'auto',
-    maxWidth: '100%',
     padding: spacing.md,
-    width: 600,
+    ...(IS_WEB && style.webContainer),
   },
 });

@@ -1,7 +1,22 @@
-#!/bin/sh
+#!/bin/bash
 
 print() {
   echo "    [PRECOMMIT]: $1" >&2
+}
+
+check_and_lint_docs() {
+  local staged_files="$1"
+  local docs_path="$2"
+  local docs_name="$3"
+
+  print "Checking for changes in $docs_name..."
+  if echo "$staged_files" | grep "^$docs_path/" --silent; then
+    print "Changes spotted. Running $docs_name docs lint..."
+    try yarn workspace "$docs_name" lint
+    print "Success."
+  else
+    print "No changes. Skipping $docs_name docs lint."
+  fi
 }
 
 BRANCH=$(git symbolic-ref HEAD)
@@ -44,19 +59,30 @@ else
   print "No changes. Skipping TypeScript checks."
 fi
 
+# Linting docs
+for DOCS in docs-reanimated docs-worklets; do
+  DOCS_PATH="docs/$DOCS"
+  check_and_lint_docs "$STAGED_FILES" "$DOCS_PATH" "$DOCS"
+done
+
 # This automatically builds Reanimated Babel plugin JavaScript files if their
 # TypeScript counterparts were changed. It also adds the output file to the commit
 # if the built file differs from currently staged one.
 print "Checking for changes in Reanimated Babel plugin source files..."
-PLUGIN_PATH="$REANIMATED_PATH/plugin"
+PLUGIN_PATH="packages/react-native-worklets/plugin"
 if echo "$STAGED_FILES" | grep -E "$PLUGIN_PATH" >/dev/null; then
   print "Changes spotted. Building Reanimated Babel plugin files..."
 
-  yarn workspace babel-plugin-reanimated build
+  yarn workspace babel-plugin-worklets build
 
   PLUGIN_OUTPUT_PATH="$PLUGIN_PATH/index.js"
+  HAS_COMMITTED_CHANGES=false
   if git status -u | grep -E "$PLUGIN_OUTPUT_PATH" --silent; then
     git add "$PLUGIN_PATH"
+    HAS_COMMITTED_CHANGES=true
+  fi
+
+  if [ "$HAS_COMMITTED_CHANGES" = true ]; then
     print "Non-committed changes were automatically added to the commit."
   else
     print "All Babel plugin files were already committed."

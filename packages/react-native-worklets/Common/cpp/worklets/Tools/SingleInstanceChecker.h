@@ -2,6 +2,8 @@
 
 #ifndef NDEBUG
 
+#include <react/debug/react_native_assert.h>
+
 #include <cxxabi.h>
 
 #include <atomic>
@@ -29,14 +31,13 @@ class SingleInstanceChecker {
   void assertWithMessage(bool condition, std::string message) {
     if (!condition) {
 #ifdef ANDROID
-      __android_log_print(
-          ANDROID_LOG_WARN, "Reanimated", "%s", message.c_str());
+      __android_log_print(ANDROID_LOG_WARN, "Worklets", "%s", message.c_str());
 #else
-      std::cerr << "[Reanimated] " << message << std::endl;
+      std::cerr << "[Worklets] " << message << std::endl;
 #endif
 
 #ifdef IS_REANIMATED_EXAMPLE_APP
-      assert(false);
+      react_native_assert(false && "SingleInstanceChecker failed");
 #endif
     }
   }
@@ -49,8 +50,7 @@ class SingleInstanceChecker {
 template <class T>
 SingleInstanceChecker<T>::SingleInstanceChecker() {
   int status = 0;
-  std::string className =
-      __cxxabiv1::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status);
+  std::string className = __cxxabiv1::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status);
 
   // React Native can spawn up to two instances of a Native Module at the same
   // time. This happens during a reload when a new instance of React Native is
@@ -58,7 +58,7 @@ SingleInstanceChecker<T>::SingleInstanceChecker() {
   instanceCount_++;
   assertWithMessage(
       instanceCount_ <= 2,
-      "[Reanimated] More than two instances of " + className +
+      "[Worklets] More than two instances of " + className +
           " present. This may indicate a memory leak due to a retain cycle.");
 }
 

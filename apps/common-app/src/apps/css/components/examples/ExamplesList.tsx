@@ -1,8 +1,8 @@
-import type { ComponentType } from 'react';
+import type { ComponentType, JSX } from 'react';
 import type { CSSAnimationProperties } from 'react-native-reanimated';
 
 import { stringifyConfig } from '@/apps/css/utils';
-import type { AnyRecord } from '@/types';
+import type { AnyRecord, PlainStyle } from '@/types';
 
 import Scroll from '../layout/Scroll';
 import { Section } from '../layout/Section';
@@ -10,11 +10,10 @@ import type { LabelType } from '../misc/Label';
 import type { ExampleCardProps } from './ExampleCard';
 import ExampleCard from './ExampleCard';
 
-export type ExamplesListProps<P extends AnyRecord> = {
-  renderExample: (
-    props: { animation: CSSAnimationProperties } & P
-  ) => JSX.Element;
-  buildAnimation: (props: P) => CSSAnimationProperties;
+export type ExamplesListProps<P extends AnyRecord, S extends AnyRecord> = Pick<
+  ExampleProps<P, S>,
+  'buildAnimation' | 'renderExample'
+> & {
   CardComponent?: ComponentType<ExampleCardProps>;
   sections: Array<{
     title: string;
@@ -30,12 +29,15 @@ export type ExamplesListProps<P extends AnyRecord> = {
   }>;
 };
 
-export default function ExamplesList<P extends AnyRecord>({
+export default function ExamplesList<
+  P extends AnyRecord,
+  S extends AnyRecord = PlainStyle,
+>({
   CardComponent = ExampleCard,
   buildAnimation,
   renderExample,
   sections,
-}: ExamplesListProps<P>) {
+}: ExamplesListProps<P, S>) {
   return (
     <Scroll withBottomBarSpacing>
       {sections.map(
@@ -64,17 +66,17 @@ export default function ExamplesList<P extends AnyRecord>({
   );
 }
 
-type ExampleProps<P> = {
+type ExampleProps<P, S extends AnyRecord> = {
   CardComponent: ComponentType<ExampleCardProps>;
   denseCode?: boolean;
-  buildAnimation: (props: P) => CSSAnimationProperties;
+  buildAnimation: (props: P) => CSSAnimationProperties<S>;
   renderExample: (
-    props: { animation: CSSAnimationProperties } & P
+    props: Omit<P, 'animation'> & { animation: CSSAnimationProperties<S> }
   ) => JSX.Element;
 } & Omit<ExampleCardProps, 'code'> &
   P;
 
-function Example<P extends AnyRecord>({
+function Example<P extends AnyRecord, S extends AnyRecord>({
   CardComponent,
   buildAnimation,
   collapsedExampleHeight,
@@ -85,7 +87,7 @@ function Example<P extends AnyRecord>({
   showRestartButton,
   title,
   ...rest
-}: ExampleProps<P>) {
+}: ExampleProps<P, S>) {
   const userProps = rest as P;
   const animation = buildAnimation(userProps);
 
@@ -98,7 +100,7 @@ function Example<P extends AnyRecord>({
       minExampleHeight={minExampleHeight}
       showRestartButton={showRestartButton}
       title={title}>
-      {renderExample({ animation, ...userProps })}
+      {renderExample({ ...userProps, animation })}
     </CardComponent>
   );
 }

@@ -1,16 +1,10 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 
-#include <worklets/Tools/JSISerializer.h>
-
-#include <algorithm>
 #include <string>
 
-namespace reanimated {
-
-using namespace worklets;
+namespace reanimated::css {
 
 template <typename TDerived, typename TValue>
 struct CSSNumberBase : public CSSSimpleValue<TDerived> {
@@ -34,9 +28,7 @@ struct CSSNumberBase : public CSSSimpleValue<TDerived> {
 #ifndef NDEBUG
 
 template <typename TDerived, typename TValue>
-std::ostream &operator<<(
-    std::ostream &os,
-    const CSSNumberBase<TDerived, TValue> &numberValue) {
+std::ostream &operator<<(std::ostream &os, const CSSNumberBase<TDerived, TValue> &numberValue) {
   os << "CSSNumberBase(" << numberValue.toString() << ")";
   return os;
 }
@@ -51,8 +43,7 @@ struct CSSInteger : public CSSNumberBase<CSSInteger, int> {
   // Inherit all constructors from the base class
   using CSSNumberBase::CSSNumberBase;
 
-  CSSInteger interpolate(double progress, const CSSInteger &other)
-      const override;
+  CSSInteger interpolate(double progress, const CSSInteger &other) const override;
 };
 
 #ifdef ANDROID
@@ -60,8 +51,7 @@ struct CSSInteger : public CSSNumberBase<CSSInteger, int> {
 // For some reason Android crashes when blurRadius is smaller than 1 so we use a
 // custom value that will never be smaller than 1
 
-struct CSSShadowRadiusAndroid
-    : public CSSNumberBase<CSSShadowRadiusAndroid, double> {
+struct CSSShadowRadiusAndroid : public CSSNumberBase<CSSShadowRadiusAndroid, double> {
   CSSShadowRadiusAndroid();
   explicit CSSShadowRadiusAndroid(double value);
   explicit CSSShadowRadiusAndroid(jsi::Runtime &rt, const jsi::Value &jsiValue);
@@ -70,6 +60,4 @@ struct CSSShadowRadiusAndroid
 
 #endif
 
-} // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
+} // namespace reanimated::css

@@ -4,6 +4,7 @@ import {
   assertEasingIsWorklet,
   getReduceMotionFromConfig,
 } from '../../animation/util';
+import { ReanimatedError } from '../../common';
 import type {
   AnimationFunction,
   EasingFunction,
@@ -17,13 +18,13 @@ import type {
   ValidKeyframeProps,
 } from '../../commonTypes';
 import { ReduceMotion } from '../../commonTypes';
+import type { EasingFunctionFactory } from '../../Easing';
 import { Easing } from '../../Easing';
-import { ReanimatedError } from '../../errors';
 
 interface KeyframePoint {
   duration: number;
   value: number | string;
-  easing?: EasingFunction;
+  easing?: EasingFunction | EasingFunctionFactory;
 }
 interface ParsedKeyframesDefinition {
   initialValues: StyleProps;
@@ -130,7 +131,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       key: string;
       value: string | number;
       currentKeyPoint: number;
-      easing?: EasingFunction;
+      easing?: EasingFunction | EasingFunctionFactory;
     }): void => {
       if (!(key in parsedKeyframes)) {
         throw new ReanimatedError(

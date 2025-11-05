@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 
@@ -18,13 +17,12 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-using UpdatesBatch = std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
-using RegistryMap =
-    std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>>;
+using UpdatesBatch = std::vector<std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
+using RegistryMap = std::unordered_map<Tag, std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
 
 #ifdef ANDROID
 struct PropsToRevert {
-  ShadowNode::Shared shadowNode;
+  std::shared_ptr<const ShadowNode> shadowNode;
   std::unordered_set<std::string> props;
 };
 
@@ -33,35 +31,35 @@ using PropsToRevertMap = std::unordered_map<Tag, PropsToRevert>;
 
 class UpdatesRegistry {
  public:
+  virtual ~UpdatesRegistry() {}
+
+  std::lock_guard<std::mutex> lock() const;
+
+  virtual bool isEmpty() const;
   folly::dynamic get(Tag tag) const;
+  virtual void remove(Tag tag) = 0;
 
 #ifdef ANDROID
   bool hasPropsToRevert() const;
   void collectPropsToRevert(PropsToRevertMap &propsToRevertMap);
 #endif
 
-  void flushUpdates(UpdatesBatch &updatesBatch, bool merge);
+  void flushUpdates(UpdatesBatch &updatesBatch);
   void collectProps(PropsMap &propsMap);
 
  protected:
   mutable std::mutex mutex_;
-  std::unordered_set<Tag> tagsToRemove_;
+  RegistryMap updatesRegistry_;
 
-  void addUpdatesToBatch(
-      const ShadowNode::Shared &shadowNode,
-      const folly::dynamic &props);
+  void addUpdatesToBatch(const std::shared_ptr<const ShadowNode> &shadowNode, const folly::dynamic &props);
   folly::dynamic getUpdatesFromRegistry(const Tag tag) const;
-  void setInUpdatesRegistry(
-      const ShadowNode::Shared &shadowNode,
-      const folly::dynamic &props);
+  void setInUpdatesRegistry(const std::shared_ptr<const ShadowNode> &shadowNode, const folly::dynamic &props);
   void removeFromUpdatesRegistry(Tag tag);
 
  private:
   UpdatesBatch updatesBatch_;
-  RegistryMap updatesRegistry_;
 
-  void flushUpdatesToRegistry(const UpdatesBatch &updatesBatch, bool merge);
-  void runMarkedRemovals();
+  void flushUpdatesToRegistry(const UpdatesBatch &updatesBatch);
 
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;
@@ -71,5 +69,3 @@ class UpdatesRegistry {
 };
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

@@ -1,4 +1,4 @@
-fs = require('fs');
+const fs = require('fs');
 
 function patchFile(path, find, replace) {
   let data = fs.readFileSync(path, 'utf8');

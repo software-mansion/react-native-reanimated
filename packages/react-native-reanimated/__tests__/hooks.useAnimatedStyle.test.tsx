@@ -53,6 +53,9 @@ describe('Tests of inline styles', () => {
     jest.runAllTimers();
 
     expect(getAnimatedStyle(view)).toEqual({ width: 150 });
+
+    const rendered = render(<UseAnimatedStyle />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 
   test('useAnimatedStyle with withTiming', () => {
@@ -88,5 +91,8 @@ describe('Tests of inline styles', () => {
     jest.runAllTimers();
 
     expect(getAnimatedStyle(view)).toEqual({ width: 150 });
+
+    const rendered = render(<UseAnimatedStyle />).toJSON();
+    expect(rendered).toMatchSnapshot();
   });
 });

@@ -1,6 +1,6 @@
 'use strict';
 
-import { ReanimatedError } from '../../errors';
+import { ReanimatedError } from '../../common';
 
 type FixedLengthArray<
   T,
@@ -38,7 +38,6 @@ export function isAffineMatrixFlat(x: unknown): x is AffineMatrixFlat {
   );
 }
 
-// ts-prune-ignore-next This function is exported to be tested
 export function isAffineMatrix(x: unknown): x is AffineMatrix {
   'worklet';
   return (
@@ -58,7 +57,6 @@ export function flatten(matrix: AffineMatrix): AffineMatrixFlat {
   return matrix.flat() as AffineMatrixFlat;
 }
 
-// ts-prune-ignore-next This function is exported to be tested
 export function unflatten(m: AffineMatrixFlat): AffineMatrix {
   'worklet';
   return [
@@ -342,7 +340,6 @@ function gramSchmidtAlgorithm(matrix: AffineMatrix): {
   };
 }
 
-// ts-prune-ignore-next This function is exported to be tested
 export function decomposeMatrix(
   unknownTypeMatrix: AffineMatrixFlat | AffineMatrix
 ): TransformMatrixDecomposition {

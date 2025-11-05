@@ -1,33 +1,28 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
-#include <reanimated/CSS/config/CSSAnimationConfig.h>
-#include <reanimated/CSS/easing/EasingFunctions.h>
-#include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h>
+#include <reanimated/CSS/configs/CSSAnimationConfig.h>
+#include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 
 #include <memory>
 #include <string>
-#include <unordered_set>
-#include <utility>
 
-namespace reanimated {
-
-using CSSAnimationId = std::pair<Tag, unsigned>;
+namespace reanimated::css {
 
 class CSSAnimation {
  public:
+  static constexpr double FALLBACK_INTERPOLATION_THRESHOLD = 0.5;
+
   CSSAnimation(
       jsi::Runtime &rt,
-      ShadowNode::Shared shadowNode,
-      unsigned index,
-      const CSSKeyframesConfig &keyframesConfig,
+      std::shared_ptr<const ShadowNode> shadowNode,
+      std::string animationName,
+      const CSSKeyframesConfig &cssKeyframesConfig,
       const CSSAnimationSettings &settings,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       double timestamp);
 
-  CSSAnimationId getId() const;
-  ShadowNode::Shared getShadowNode() const;
+  const std::string &getName() const;
+  std::shared_ptr<const ShadowNode> getShadowNode() const;
 
   double getStartTimestamp(double timestamp) const;
   AnimationProgressState getState(double timestamp) const;
@@ -38,24 +33,19 @@ class CSSAnimation {
 
   folly::dynamic getCurrentInterpolationStyle() const;
   folly::dynamic getBackwardsFillStyle() const;
-  folly::dynamic getForwardsFillStyle() const;
   folly::dynamic getResetStyle() const;
 
   void run(double timestamp);
   folly::dynamic update(double timestamp);
-  void updateSettings(
-      const PartialCSSAnimationSettings &updatedSettings,
-      double timestamp);
+  void updateSettings(const PartialCSSAnimationSettings &updatedSettings, double timestamp);
 
  private:
-  const unsigned index_;
-  const ShadowNode::Shared shadowNode_;
+  const std::string name_;
+  const std::shared_ptr<const ShadowNode> shadowNode_;
   AnimationFillMode fillMode_;
 
-  std::shared_ptr<AnimationProgressProvider> progressProvider_;
-  std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
+  const std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
+  const std::shared_ptr<AnimationProgressProvider> progressProvider_;
 };
 
-} // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
+} // namespace reanimated::css

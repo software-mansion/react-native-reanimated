@@ -22,8 +22,8 @@ import {
  */
 export function useAnimatedKeyboard(
   options: AnimatedKeyboardOptions = {
-    isStatusBarTranslucentAndroid: false,
-    isNavigationBarTranslucentAndroid: false,
+    isStatusBarTranslucentAndroid: undefined,
+    isNavigationBarTranslucentAndroid: undefined,
   }
 ): AnimatedKeyboardInfo {
   const ref = useRef<AnimatedKeyboardInfo | null>(null);
@@ -58,6 +58,7 @@ export function useAnimatedKeyboard(
       unsubscribeFromKeyboardEvents(listenerId.current);
       isSubscribed.current = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return ref.current;
 }

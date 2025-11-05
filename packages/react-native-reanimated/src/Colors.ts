@@ -6,9 +6,6 @@
  */
 
 /* eslint no-bitwise: 0 */
-import type { StyleProps } from './commonTypes';
-import { makeShareable } from './core';
-import { isAndroid } from './PlatformChecker';
 
 interface RGB {
   r: number;
@@ -171,8 +168,8 @@ export function clampRGBA(RGBA: ParsedColorArray): void {
   }
 }
 
-const names: Record<string, number> = makeShareable({
-  transparent: 0x00000000,
+const names: Record<string, number | null> = {
+  transparent: null,
 
   /* spell-checker: disable */
   // http://www.w3.org/TR/css3-color/#svg-color
@@ -326,10 +323,10 @@ const names: Record<string, number> = makeShareable({
   yellow: 0xffff00ff,
   yellowgreen: 0x9acd32ff,
   /* spell-checker: enable */
-});
+};
 
 // copied from react-native/Libraries/Components/View/ReactNativeStyleAttributes
-export const ColorProperties = makeShareable([
+export const ColorProperties = [
   'backgroundColor',
   'borderBottomColor',
   'borderColor',
@@ -343,6 +340,7 @@ export const ColorProperties = makeShareable([
   'borderBlockStartColor',
   'color',
   'outlineColor',
+  'placeholderTextColor',
   'shadowColor',
   'textDecorationColor',
   'tintColor',
@@ -354,25 +352,20 @@ export const ColorProperties = makeShareable([
   'lightingColor',
   'stopColor',
   'stroke',
-]);
+];
 
-const NestedColorProperties = makeShareable({
-  boxShadow: 'color',
-});
-
-// // ts-prune-ignore-next Exported for the purpose of tests only
-export function normalizeColor(color: unknown): number | null {
+export function normalizeColor(color: unknown): number | null | undefined {
   'worklet';
 
   if (typeof color === 'number') {
     if (color >>> 0 === color && color >= 0 && color <= 0xffffffff) {
       return color;
     }
-    return null;
+    return undefined;
   }
 
   if (typeof color !== 'string') {
-    return null;
+    return undefined;
   }
 
   let match: RegExpExecArray | null | undefined;
@@ -382,7 +375,7 @@ export function normalizeColor(color: unknown): number | null {
     return Number.parseInt(match[1] + 'ff', 16) >>> 0;
   }
 
-  if (names[color] !== undefined) {
+  if (color in names) {
     return names[color];
   }
 
@@ -505,7 +498,7 @@ export function normalizeColor(color: unknown): number | null {
     );
   }
 
-  return null;
+  return undefined;
 }
 
 export const opacity = (c: number): number => {
@@ -535,8 +528,8 @@ export const rgbaColor = (
   alpha = 1
 ): number | string => {
   'worklet';
-  // Replace tiny values like 1.234e-11 with 0:
-  const safeAlpha = alpha < 0.001 ? 0 : alpha;
+  // Round alpha to 3 decimal places to avoid floating point precision issues
+  const safeAlpha = Math.round(alpha * 1000) / 1000;
   return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
 };
 
@@ -629,24 +622,29 @@ export const hsvToColor = (
   return rgbaColor(r, g, b, a);
 };
 
-function processColorInitially(color: unknown): number | null | undefined {
+export function processColorInitially(
+  color: unknown
+): number | null | undefined {
   'worklet';
-  if (color === null || color === undefined || typeof color === 'number') {
-    return color;
-  }
-
-  let normalizedColor = normalizeColor(color);
-
-  if (normalizedColor === null || normalizedColor === undefined) {
+  if (color === null || color === undefined) {
     return undefined;
   }
 
-  if (typeof normalizedColor !== 'number') {
-    return null;
+  let colorNumber: number;
+
+  if (typeof color === 'number') {
+    colorNumber = color;
+  } else {
+    const normalizedColor = normalizeColor(color);
+
+    if (typeof normalizedColor !== 'number') {
+      return normalizedColor;
+    }
+
+    colorNumber = normalizedColor;
   }
 
-  normalizedColor = ((normalizedColor << 24) | (normalizedColor >>> 8)) >>> 0; // alpha rgb
-  return normalizedColor;
+  return ((colorNumber << 24) | (colorNumber >>> 8)) >>> 0; // alpha rgb
 }
 
 export function isColor(value: unknown): boolean {
@@ -654,53 +652,7 @@ export function isColor(value: unknown): boolean {
   if (typeof value !== 'string') {
     return false;
   }
-  return processColorInitially(value) != null;
-}
-
-const IS_ANDROID = isAndroid();
-
-export function processColor(color: unknown): number | null | undefined {
-  'worklet';
-  let normalizedColor = processColorInitially(color);
-  if (normalizedColor === null || normalizedColor === undefined) {
-    return undefined;
-  }
-
-  if (typeof normalizedColor !== 'number') {
-    return null;
-  }
-
-  if (IS_ANDROID) {
-    // Android use 32 bit *signed* integer to represent the color
-    // We utilize the fact that bitwise operations in JS also operates on
-    // signed 32 bit integers, so that we can use those to convert from
-    // *unsigned* to *signed* 32bit int that way.
-    normalizedColor = normalizedColor | 0x0;
-  }
-
-  return normalizedColor;
-}
-
-export function processColorsInProps(props: StyleProps) {
-  'worklet';
-  for (const key in props) {
-    if (ColorProperties.includes(key)) {
-      props[key] = processColor(props[key]);
-    } else if (
-      NestedColorProperties[key as keyof typeof NestedColorProperties]
-    ) {
-      const propGroupList = props[key] as StyleProps[];
-      for (const propGroup of propGroupList) {
-        const nestedPropertyName =
-          NestedColorProperties[key as keyof typeof NestedColorProperties];
-        if (propGroup[nestedPropertyName] !== undefined) {
-          propGroup[nestedPropertyName] = processColor(
-            propGroup[nestedPropertyName]
-          );
-        }
-      }
-    }
-  }
+  return processColorInitially(value) != undefined;
 }
 
 export type ParsedColorArray = [number, number, number, number];

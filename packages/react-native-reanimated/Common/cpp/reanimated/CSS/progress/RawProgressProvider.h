@@ -1,11 +1,7 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
-#include <chrono>
 #include <optional>
-#include <utility>
-
-namespace reanimated {
+namespace reanimated::css {
 
 class RawProgressProvider {
  public:
@@ -32,6 +28,4 @@ class RawProgressProvider {
   virtual std::optional<double> calculateRawProgress(double timestamp) = 0;
 };
 
-} // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
+} // namespace reanimated::css

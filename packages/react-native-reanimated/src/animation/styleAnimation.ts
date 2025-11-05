@@ -1,5 +1,6 @@
 'use strict';
-import { ColorProperties, processColor } from '../Colors';
+import { ColorProperties } from '../Colors';
+import { logger, processColor } from '../common';
 import type {
   AnimatableValue,
   AnimatedStyle,
@@ -9,10 +10,9 @@ import type {
   NestedObjectValues,
   Timestamp,
 } from '../commonTypes';
-import { logger } from '../WorkletsResolver';
 import type { StyleLayoutAnimation } from './commonTypes';
 import { withTiming } from './timing';
-import { defineAnimation } from './util';
+import { defineAnimation, isValidLayoutAnimationProp } from './util';
 
 // resolves path to value for nested objects
 // if path cannot be resolved returns undefined
@@ -185,12 +185,23 @@ export function withStyleAnimation(
           if (prevAnimation && !prevVal) {
             prevVal = (prevAnimation as any).current;
           }
-          if (prevVal === undefined) {
-            logger.warn(
-              `Initial values for animation are missing for property ${currentEntry.path.join(
-                '.'
-              )}`
-            );
+          if (__DEV__) {
+            if (prevVal === undefined) {
+              logger.warn(
+                `Initial values for animation are missing for property ${currentEntry.path.join(
+                  '.'
+                )}`
+              );
+            }
+            const propName = currentEntry.path[0];
+            if (
+              typeof propName === 'string' &&
+              !isValidLayoutAnimationProp(propName.trim())
+            ) {
+              logger.warn(
+                `'${propName}' property is not officially supported for layout animations. It may not work as expected.`
+              );
+            }
           }
           setPath(animation.current, currentEntry.path, prevVal);
           let currentAnimation: AnimationObject;

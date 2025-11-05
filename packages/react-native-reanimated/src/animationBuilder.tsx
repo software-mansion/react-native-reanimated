@@ -1,14 +1,14 @@
 'use strict';
+import { logger } from './common';
 import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
-  LayoutAnimationsValues,
+  LayoutAnimationValues,
   StyleProps,
 } from './commonTypes';
 import type { NestedArray } from './createAnimatedComponent/commonTypes';
-import { logger } from './WorkletsResolver';
 
-const mockTargetValues: LayoutAnimationsValues = {
+const mockTargetValues: LayoutAnimationValues = {
   targetOriginX: 0,
   targetOriginY: 0,
   targetWidth: 0,

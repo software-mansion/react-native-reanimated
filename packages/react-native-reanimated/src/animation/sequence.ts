@@ -1,4 +1,5 @@
 'use strict';
+import { logger } from '../common';
 import type {
   AnimatableValue,
   Animation,
@@ -6,7 +7,6 @@ import type {
   ReduceMotion,
   Timestamp,
 } from '../commonTypes';
-import { logger } from '../WorkletsResolver';
 import type { NextAnimation, SequenceAnimation } from './commonTypes';
 import { defineAnimation, getReduceMotionForAnimation } from './util';
 
@@ -40,7 +40,7 @@ export function withSequence(
   // this is done to allow the reduce motion config prop to be optional
   if (_reduceMotionOrFirstAnimation) {
     if (typeof _reduceMotionOrFirstAnimation === 'string') {
-      reduceMotion = _reduceMotionOrFirstAnimation as ReduceMotion;
+      reduceMotion = _reduceMotionOrFirstAnimation;
     } else {
       _animations.unshift(
         _reduceMotionOrFirstAnimation as NextAnimation<AnimationObject>
@@ -81,6 +81,9 @@ export function withSequence(
           index < animations.length - 1 &&
           animations[index].reduceMotion
         ) {
+          if (typeof animations[index].callback === 'function') {
+            animations[index].callback?.(true);
+          }
           index++;
         }
 

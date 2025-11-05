@@ -12,7 +12,8 @@ import com.facebook.react.uimanager.events.RCTEventEmitter;
 public class EventHandler implements RCTEventEmitter {
 
   @DoNotStrip private final HybridData mHybridData;
-  UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
+
+  public UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
 
   @DoNotStrip
   private EventHandler(HybridData hybridData) {

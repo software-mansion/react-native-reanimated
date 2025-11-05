@@ -1,31 +1,34 @@
 'use strict';
-import type { Component, Ref } from 'react';
+import type { Component, Ref, RefObject } from 'react';
 
 import type {
+  AnimatedStyle,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
   ShadowNodeWrapper,
   SharedValue,
   StyleProps,
+  StyleUpdaterContainer,
 } from '../commonTypes';
 import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
-import type { ViewConfig } from '../ConfigHelper';
-import type {
-  BaseAnimationBuilder,
-  SharedTransition,
-} from '../layoutReanimation';
+import type { BaseAnimationBuilder } from '../layoutReanimation';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 
 export interface AnimatedProps extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;
   initial?: SharedValue<StyleProps>;
+  styleUpdaterContainer?: StyleUpdaterContainer;
 }
 
 export interface ViewInfo {
   viewTag: number | AnimatedComponentRef | HTMLElement | null;
-  viewName: string | null;
   shadowNodeWrapper: ShadowNodeWrapper | null;
-  viewConfig: ViewConfig;
+  // This is a React host instance view name which might differ from the
+  // Fabric component name. For clarity, we use the viewName property
+  // here and componentName in C++ after converting react viewName to
+  // Fabric component name.
+  // (see react/renderer/componentregistry/componentNameByReactViewName.cpp)
+  viewName?: string;
   DOMElement?: HTMLElement | null;
 }
 
@@ -37,21 +40,30 @@ export interface IInlinePropManager {
   detachInlineProps(): void;
 }
 
+export type AnimatedComponentTypeInternal = Component &
+  IAnimatedComponentInternal;
+
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+export type PropUpdates = StyleProps | AnimatedStyle<any>;
+
 export interface IPropsFilter {
   filterNonAnimatedProps: (
-    component: React.Component<unknown, unknown> & IAnimatedComponentInternal
+    component: AnimatedComponentTypeInternal
   ) => Record<string, unknown>;
 }
 
+export type JSPropsOperation = {
+  tag: number;
+  updates: StyleProps;
+};
+
 export interface IJSPropsUpdater {
-  addOnJSPropsChangeListener(
-    animatedComponent: React.Component<unknown, unknown> &
-      IAnimatedComponentInternal
+  registerComponent(
+    animatedComponent: AnimatedComponentTypeInternal,
+    jsProps: string[]
   ): void;
-  removeOnJSPropsChangeListener(
-    animatedComponent: React.Component<unknown, unknown> &
-      IAnimatedComponentInternal
-  ): void;
+  unregisterComponent(animatedComponent: AnimatedComponentTypeInternal): void;
+  updateProps(operations: JSPropsOperation[]): void;
 }
 
 export interface INativeEventsManager {
@@ -64,10 +76,13 @@ export type LayoutAnimationStaticContext = {
   presetName: string;
 };
 
-export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
-  forwardedRef?: Ref<Component>;
+export type AnimatedComponentProps<
+  P extends Record<string, unknown> = Record<string, unknown>,
+> = P & {
+  ref?: Ref<Component>;
   style?: NestedArray<StyleProps>;
   animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
+  jestAnimatedValues?: RefObject<AnimatedProps>;
   animatedStyle?: StyleProps;
   layout?: (
     | BaseAnimationBuilder
@@ -89,9 +104,16 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
     | Keyframe
   ) &
     LayoutAnimationStaticContext;
-  sharedTransitionTag?: string;
-  sharedTransitionStyle?: SharedTransition;
 };
+
+export type LayoutAnimationOrBuilder = (
+  | BaseAnimationBuilder
+  | typeof BaseAnimationBuilder
+  | EntryExitAnimationFunction
+  | Keyframe
+  | ILayoutAnimationBuilder
+) &
+  LayoutAnimationStaticContext;
 
 export interface AnimatedComponentRef extends Component {
   setNativeProps?: (props: Record<string, unknown>) => void;
@@ -101,29 +123,35 @@ export interface AnimatedComponentRef extends Component {
   elementRef?: React.RefObject<HTMLElement>;
 }
 
-export interface IAnimatedComponentInternal {
+export interface IAnimatedComponentInternalBase {
   ChildComponent: AnyComponent;
+  _componentRef: AnimatedComponentRef | HTMLElement | null;
+  _hasAnimatedRef: boolean;
+  _viewInfo?: ViewInfo;
+
+  /**
+   * Used for Layout Animations and Animated Styles. It is not related to event
+   * handling.
+   */
+  getComponentViewTag: () => number;
+}
+
+export interface IAnimatedComponentInternal
+  extends IAnimatedComponentInternalBase {
   _animatedStyles: StyleProps[];
   _prevAnimatedStyles: StyleProps[];
-  _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
+  _animatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[];
+  _prevAnimatedProps: Partial<AnimatedComponentProps<AnimatedProps>>[];
   _isFirstRender: boolean;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps };
-  _componentRef: AnimatedComponentRef | HTMLElement | null;
-  _sharedElementTransition: SharedTransition | null;
-  _jsPropsUpdater: IJSPropsUpdater;
+  jestAnimatedProps: { value: AnimatedProps };
   _InlinePropManager: IInlinePropManager;
   _PropsFilter: IPropsFilter;
   /** Doesn't exist on web. */
   _NativeEventsManager?: INativeEventsManager;
-  _viewInfo?: ViewInfo;
   context: React.ContextType<typeof SkipEnteringContext>;
-  /**
-   * Used for Shared Element Transitions, Layout Animations and Animated Styles.
-   * It is not related to event handling.
-   */
-  getComponentViewTag: () => number;
-  hasAnimatedRef: () => boolean;
+  setNativeProps: (props: StyleProps) => void;
 }
 
 export type NestedArray<T> = T | NestedArray<T>[];

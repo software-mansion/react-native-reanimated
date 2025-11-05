@@ -4,7 +4,7 @@ import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BOTTOM_BAR_HEIGHT } from '@/apps/css/navigation/constants';
-import { flex, spacing } from '@/theme';
+import { flex, spacing, style } from '@/theme';
 import { IS_WEB } from '@/utils';
 
 export type ScrollProps = {
@@ -18,10 +18,10 @@ export type ScrollProps = {
 export default function Scroll({
   children,
   contentContainerStyle,
-  fill = true,
+  fill = false,
   horizontal,
   noPadding = false,
-  style,
+  style: styleProp,
   withBottomBarSpacing,
   ...rest
 }: ScrollProps) {
@@ -42,9 +42,9 @@ export default function Scroll({
     <ScrollView
       horizontal={horizontal}
       showsVerticalScrollIndicator={false}
-      style={[style, fill && flex.fill]}
+      style={[styleProp, fill && flex.fill]}
       contentContainerStyle={[
-        IS_WEB && !horizontal && styles.scrollViewContentWeb,
+        IS_WEB && !horizontal && style.webContainer,
         { gap },
         noPadding
           ? {}
@@ -62,11 +62,3 @@ export default function Scroll({
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  scrollViewContentWeb: {
-    marginHorizontal: 'auto',
-    maxWidth: '100%',
-    width: 600,
-  },
-});

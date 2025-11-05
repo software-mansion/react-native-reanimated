@@ -1,12 +1,10 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <jsi/jsi.h>
-#include <memory>
 #include <string>
 #include <vector>
 
-namespace reanimated {
+namespace reanimated::css {
 
 using namespace facebook;
 
@@ -21,9 +19,5 @@ using TransitionProperties = std::optional<PropertyNames>;
 
 using EasingFunction = std::function<double(double)>;
 using ColorChannels = std::array<uint8_t, 4>;
-using Vec16Array = std::array<double, 16>;
-using Matrix4x4 = std::array<std::array<double, 4>, 4>;
 
-} // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
+} // namespace reanimated::css

@@ -1,49 +1,113 @@
-/* eslint-disable no-unused-expressions */
-/* eslint-disable @typescript-eslint/no-empty-function */
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import type { Ref } from 'react';
-import React, { forwardRef, useRef } from 'react';
-import type { ImageProps, ViewProps } from 'react-native';
+import type { FlashListRef } from '@shopify/flash-list';
+import { FlashList } from '@shopify/flash-list';
+import type {
+  ComponentClass,
+  ComponentType,
+  ElementType,
+  FunctionComponent,
+  Ref,
+} from 'react';
+import React, { useRef } from 'react';
+import type { ImageProps } from 'react-native';
 import { FlatList, Image, ScrollView, Text, View } from 'react-native';
 
 import Animated, { useAnimatedRef } from '../..';
 
 function UseAnimatedRefTest() {
-  function UseAnimatedRefTestClassComponent() {
-    const animatedRef = useAnimatedRef<React.Component<ImageProps>>();
+  // This example checks if useAnimatedRef and the plain ref work in the same way
+  // for the plain and the animated component.
+  function UseAnimatedRefTestComponentTypes() {
     const AnimatedImage = Animated.createAnimatedComponent(Image);
+    const plainRefInstance = useRef<Image>(null);
+    const animatedRefInstance = useAnimatedRef<Image>();
+    const plainRefComponentClass = useRef<ComponentClass<ImageProps>>(null);
+    const animatedRefComponentClass =
+      useAnimatedRef<ComponentClass<ImageProps>>();
+    const plainRefComponentType = useRef<ComponentType<ImageProps>>(null);
+    const animatedRefComponentType =
+      useAnimatedRef<ComponentType<ImageProps>>();
+    const plainRefElementType = useRef<ElementType<ImageProps>>(null);
+    const animatedRefElementType = useAnimatedRef<ElementType<ImageProps>>();
+    const plainRefFunctionComponent =
+      useRef<FunctionComponent<ImageProps>>(null);
+    const animatedRefFunctionComponent =
+      useAnimatedRef<FunctionComponent<ImageProps>>();
+
     return (
       <>
-        <AnimatedImage ref={animatedRef} source={{}} />
-        <Animated.Image ref={animatedRef} source={{}} />
+        <Image ref={plainRefInstance} source={{}} />
+        <Image ref={animatedRefInstance} source={{}} />
+        {/* @ts-expect-error Doesn't accept ComponentClass ref */}
+        <Image ref={plainRefComponentClass} source={{}} />
+        {/* @ts-expect-error Doesn't accept ComponentClass ref */}
+        <Image ref={animatedRefComponentClass} source={{}} />
+        {/* @ts-expect-error Doesn't accept ComponentType ref */}
+        <Image ref={plainRefComponentType} source={{}} />
+        {/* @ts-expect-error Doesn't accept ComponentType ref */}
+        <Image ref={animatedRefComponentType} source={{}} />
+        {/* @ts-expect-error Doesn't accept ElementType ref */}
+        <Image ref={plainRefElementType} source={{}} />
+        {/* @ts-expect-error Doesn't accept ElementType ref */}
+        <Image ref={animatedRefElementType} source={{}} />
+        {/* @ts-expect-error Doesn't accept FunctionComponent ref */}
+        <Image ref={plainRefFunctionComponent} source={{}} />
+        {/* @ts-expect-error Doesn't accept FunctionComponent ref */}
+        <Image ref={animatedRefFunctionComponent} source={{}} />
+        {/* @ts-expect-error Doesn't accept Component ref */}
+        <Image ref={plainRefComponent} source={{}} />
+        {/* @ts-expect-error Doesn't accept Component ref */}
+        <Image ref={animatedRefComponent} source={{}} />
+
+        {/* All examples below must behave in the same way as the ones for the 
+        plain Image component examples above. */}
+        <Animated.Image ref={plainRefInstance} source={{}} />
+        <Animated.Image ref={animatedRefInstance} source={{}} />
+        {/* @ts-expect-error Doesn't accept ComponentClass ref */}
+        <Animated.Image ref={plainRefComponentClass} source={{}} />
+        {/* @ts-expect-error Doesn't accept ComponentClass ref */}
+        <Animated.Image ref={animatedRefComponentClass} source={{}} />
+        {/* @ts-expect-error Doesn't accept ComponentType ref */}
+        <Animated.Image ref={plainRefComponentType} source={{}} />
+        {/* @ts-expect-error Doesn't accept ComponentType ref */}
+        <Animated.Image ref={animatedRefComponentType} source={{}} />
+        {/* @ts-expect-error Doesn't accept ElementType ref */}
+        <Animated.Image ref={plainRefElementType} source={{}} />
+        {/* @ts-expect-error Doesn't accept ElementType ref */}
+        <Animated.Image ref={animatedRefElementType} source={{}} />
+        {/* @ts-expect-error Doesn't accept FunctionComponent ref */}
+        <Animated.Image ref={plainRefFunctionComponent} source={{}} />
+        {/* @ts-expect-error Doesn't accept FunctionComponent ref */}
+        <Animated.Image ref={animatedRefFunctionComponent} source={{}} />
+        {/* @ts-expect-error Doesn't accept Component ref */}
+        <Animated.Image ref={plainRefComponent} source={{}} />
+        {/* @ts-expect-error Doesn't accept Component ref */}
+        <Animated.Image ref={animatedRefComponent} source={{}} />
+
+        <AnimatedImage ref={plainRefInstance} source={{}} />
+        <AnimatedImage ref={animatedRefInstance} source={{}} />
+        {/* @ts-expect-error Doesn't accept ComponentClass ref */}
+        <AnimatedImage ref={plainRefComponentClass} source={{}} />
+        {/* @ts-expect-error Doesn't accept ComponentClass ref */}
+        <AnimatedImage ref={animatedRefComponentClass} source={{}} />
+        {/* @ts-expect-error Doesn't accept ComponentType ref */}
+        <AnimatedImage ref={plainRefComponentType} source={{}} />
+        {/* @ts-expect-error Doesn't accept ComponentType ref */}
+        <AnimatedImage ref={animatedRefComponentType} source={{}} />
+        {/* @ts-expect-error Doesn't accept ElementType ref */}
+        <AnimatedImage ref={plainRefElementType} source={{}} />
+        {/* @ts-expect-error Doesn't accept ElementType ref */}
+        <AnimatedImage ref={animatedRefElementType} source={{}} />
+        {/* @ts-expect-error Doesn't accept FunctionComponent ref */}
+        <AnimatedImage ref={plainRefFunctionComponent} source={{}} />
+        {/* @ts-expect-error Doesn't accept FunctionComponent ref */}
+        <AnimatedImage ref={animatedRefFunctionComponent} source={{}} />
+        {/* @ts-expect-error Doesn't accept Component ref */}
+        <AnimatedImage ref={plainRefComponent} source={{}} />
+        {/* @ts-expect-error Doesn't accept Component ref */}
+        <AnimatedImage ref={animatedRefComponent} source={{}} />
       </>
     );
-  }
-
-  function UseAnimatedRefTestFunctionComponent() {
-    const FunctionComponent = (props: ViewProps) => {
-      return <View {...props} />;
-    };
-    const AnimatedFunctionComponent =
-      Animated.createAnimatedComponent(FunctionComponent);
-    const animatedRef = useAnimatedRef<React.Component<ViewProps>>();
-    return (
-      <AnimatedFunctionComponent
-        // @ts-expect-error ref is not available on plain function-components
-        ref={animatedRef}
-      />
-    );
-  }
-
-  function UseAnimatedRefTestForwardRefComponent() {
-    const ForwardRefComponent = forwardRef((props: ViewProps) => {
-      return <View {...props} />;
-    });
-    const AnimatedForwardRefComponent =
-      Animated.createAnimatedComponent(ForwardRefComponent);
-    const animatedRef = useAnimatedRef<React.Component<ViewProps>>();
-    return <AnimatedForwardRefComponent ref={animatedRef} />;
   }
 
   function UseAnimatedRefTestView() {
@@ -54,9 +118,7 @@ function UseAnimatedRefTest() {
     const animatedRefAnimatedComponent = useAnimatedRef<Animated.View>();
     const plainRefCreatedComponent = useRef<typeof CreatedAnimatedView>(null);
     const animatedRefCreatedComponent =
-      // TODO This below should be the correct syntax I believe, but currently it doesn't work.
-      // useAnimatedRef<typeof CreatedAnimatedView>();
-      useAnimatedRef<typeof CreatedAnimatedView & View>();
+      useAnimatedRef<typeof CreatedAnimatedView>();
 
     return (
       <>
@@ -95,9 +157,7 @@ function UseAnimatedRefTest() {
     const animatedRefAnimatedComponent = useAnimatedRef<Animated.Text>();
     const plainRefCreatedComponent = useRef<typeof CreatedAnimatedText>(null);
     const animatedRefCreatedComponent =
-      // TODO This below should be the correct syntax I believe, but currently it doesn't work.
-      // useAnimatedRef<typeof CreatedAnimatedText>();
-      useAnimatedRef<typeof CreatedAnimatedText & Text>();
+      useAnimatedRef<typeof CreatedAnimatedText>();
 
     return (
       <>
@@ -136,9 +196,7 @@ function UseAnimatedRefTest() {
     const animatedRefAnimatedComponent = useAnimatedRef<Animated.Image>();
     const plainRefCreatedComponent = useRef<typeof CreatedAnimatedImage>(null);
     const animatedRefCreatedComponent =
-      // TODO This below should be the correct syntax I believe, but currently it doesn't work.
-      // useAnimatedRef<typeof CreatedAnimatedImage>();
-      useAnimatedRef<typeof CreatedAnimatedImage & Image>();
+      useAnimatedRef<typeof CreatedAnimatedImage>();
 
     return (
       <>
@@ -215,9 +273,7 @@ function UseAnimatedRefTest() {
     const plainRefCreatedComponent =
       useRef<typeof CreatedAnimatedScrollView>(null);
     const animatedRefCreatedComponent =
-      // TODO This below should be the correct syntax I believe, but currently it doesn't work.
-      // useAnimatedRef<typeof CreatedAnimatedScrollView>();
-      useAnimatedRef<typeof CreatedAnimatedScrollView & ScrollView>();
+      useAnimatedRef<typeof CreatedAnimatedScrollView>();
 
     return (
       <>
@@ -229,15 +285,12 @@ function UseAnimatedRefTest() {
         <ScrollView ref={plainRefCreatedComponent} />
         <ScrollView ref={animatedRefCreatedComponent} />
 
-        {/* @ts-expect-error Properly detects misused Plain Ref. */}
         <Animated.ScrollView ref={plainRefPlainComponent} />
-        {/* @ts-expect-error Properly detects misused type. */}
         <Animated.ScrollView ref={animatedRefPlainComponent} />
         <Animated.ScrollView ref={plainRefAnimatedComponent} />
         <Animated.ScrollView ref={animatedRefAnimatedComponent} />
         {/* @ts-expect-error Properly detects misused Plain Ref. */}
         <Animated.ScrollView ref={plainRefCreatedComponent} />
-        {/* @ts-expect-error Properly detects misused type. */}
         <Animated.ScrollView ref={animatedRefCreatedComponent} />
 
         <CreatedAnimatedScrollView ref={plainRefPlainComponent} />
@@ -255,17 +308,12 @@ function UseAnimatedRefTest() {
     const CreatedAnimatedFlatList = Animated.createAnimatedComponent(FlatList);
     const plainRefPlainComponent = useRef<FlatList>(null);
     const animatedRefPlainComponent = useAnimatedRef<FlatList>();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const plainRefAnimatedComponent = useRef<Animated.FlatList<any>>(null);
-    const animatedRefAnimatedComponent =
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      useAnimatedRef<Animated.FlatList<any>>();
+    const plainRefAnimatedComponent = useRef<Animated.FlatList>(null);
+    const animatedRefAnimatedComponent = useAnimatedRef<Animated.FlatList>();
     const plainRefCreatedComponent =
       useRef<typeof CreatedAnimatedFlatList>(null);
     const animatedRefCreatedComponent =
-      // TODO This below should be the correct syntax I believe, but currently it doesn't work.
-      // useAnimatedRef<typeof CreatedAnimatedFlatList>();
-      useAnimatedRef<typeof CreatedAnimatedFlatList & FlatList>();
+      useAnimatedRef<typeof CreatedAnimatedFlatList>();
 
     return (
       <>
@@ -364,9 +412,7 @@ function UseAnimatedRefTest() {
     const plainRefCreatedComponent =
       useRef<typeof CreatedAnimatedFlatList>(null);
     const animatedRefCreatedComponent =
-      // TODO This below should be the correct syntax I believe, but currently it doesn't work.
-      // useAnimatedRef<typeof CreatedAnimatedFlatList>();
-      useAnimatedRef<typeof CreatedAnimatedFlatList & FlatList<number>>();
+      useAnimatedRef<typeof CreatedAnimatedFlatList>();
 
     return (
       <>
@@ -474,11 +520,7 @@ function UseAnimatedRefTest() {
     const plainRefCreatedComponent =
       useRef<typeof CreatedAnimatedCustomClassComponent>(null);
     const animatedRefCreatedComponent =
-      // TODO This below should be the correct syntax I believe, but currently it doesn't work.
-      // useAnimatedRef<typeof CreatedAnimatedCustomClassComponent>();
-      useAnimatedRef<
-        typeof CreatedAnimatedCustomClassComponent & CustomClassComponent
-      >();
+      useAnimatedRef<typeof CreatedAnimatedCustomClassComponent>();
 
     return (
       <>
@@ -494,6 +536,49 @@ function UseAnimatedRefTest() {
         <CreatedAnimatedCustomClassComponent ref={plainRefCreatedComponent} />
         <CreatedAnimatedCustomClassComponent
           ref={animatedRefCreatedComponent}
+        />
+      </>
+    );
+  }
+
+  function UseAnimatedRefTestFlashListNoType() {
+    const CreatedAnimatedFlashList =
+      Animated.createAnimatedComponent(FlashList);
+    const plainRef = useRef<FlashListRef<unknown>>(null);
+    const animatedRef = useAnimatedRef<FlashListRef<unknown>>();
+
+    return (
+      <>
+        <FlashList ref={plainRef} data={[]} renderItem={null} />
+        <FlashList ref={animatedRef} data={[]} renderItem={null} />
+
+        <CreatedAnimatedFlashList ref={plainRef} data={[]} renderItem={null} />
+        <CreatedAnimatedFlashList
+          ref={animatedRef}
+          data={[]}
+          renderItem={null}
+        />
+      </>
+    );
+  }
+
+  function UseAnimatedRefTestFlashListWithType() {
+    const CreatedAnimatedFlashList = Animated.createAnimatedComponent(
+      FlashList<number>
+    );
+    const plainRef = useRef<FlashListRef<number>>(null);
+    const animatedRef = useAnimatedRef<FlashListRef<number>>();
+
+    return (
+      <>
+        <FlashList ref={plainRef} data={[]} renderItem={null} />
+        <FlashList ref={animatedRef} data={[]} renderItem={null} />
+
+        <CreatedAnimatedFlashList ref={plainRef} data={[]} renderItem={null} />
+        <CreatedAnimatedFlashList
+          ref={animatedRef}
+          data={[]}
+          renderItem={null}
         />
       </>
     );

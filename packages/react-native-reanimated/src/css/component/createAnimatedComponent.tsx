@@ -1,52 +1,65 @@
 'use strict';
-import invariant from 'invariant';
-import type {
-  Component,
-  ComponentClass,
-  ComponentType,
-  FunctionComponent,
-} from 'react';
-import React from 'react';
+import type { ComponentRef, ComponentType, ReactNode, Ref } from 'react';
+import type React from 'react';
 import type { FlatList, FlatListProps } from 'react-native';
 
+import type { AnyRecord } from '../../common';
+import type { InitialComponentProps } from '../../createAnimatedComponent/commonTypes';
+import type { AnimatedProps } from '../../helperTypes';
+import type { AnimatedRef } from '../../hook';
 import type { CSSProps } from '../types';
 import type { AnimatedComponentProps } from './AnimatedComponent';
 import AnimatedComponentImpl from './AnimatedComponent';
 
-// Don't change the order of overloads, since such a change breaks current behavior
-export default function createAnimatedComponent<P extends object>(
-  Component: FunctionComponent<P>
-): FunctionComponent<CSSProps<P>>;
-
-export default function createAnimatedComponent<P extends object>(
-  Component: ComponentClass<P>
-): ComponentClass<CSSProps<P>>;
-
-export default function createAnimatedComponent<P extends object>(
-  // Actually ComponentType<P = {}> = ComponentClass<P> | FunctionComponent<P> but we need this overload too
-  // since some external components (like FastImage) are typed just as ComponentType
-  Component: ComponentType<P>
-): FunctionComponent<CSSProps<P>> | ComponentClass<CSSProps<P>>;
+type AnimatedComponentType<
+  Props extends AnyRecord = object,
+  Instance = unknown,
+> = (
+  props: Omit<CSSProps<Props>, 'ref'> & {
+    // Accept untyped AnimatedRef as well to allow passing a reference created
+    // with the useAnimatedRef hook call without specifying the type
+    ref?: Ref<Instance> | AnimatedRef;
+  }
+) => ReactNode;
 
 /**
  * @deprecated Please use `Animated.FlatList` component instead of calling
  *   `Animated.createAnimatedComponent(FlatList)` manually.
  */
-// @ts-ignore This is required to create this overload, since type of createAnimatedComponent is incorrect and doesn't include typeof FlatList
-export default function createAnimatedComponent(
-  Component: typeof FlatList<unknown>
-): ComponentClass<CSSProps<FlatListProps<unknown>>>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function createAnimatedComponent<T = any>(
+  Component: typeof FlatList<T>
+): AnimatedComponentType<
+  Readonly<FlatListProps<T>>,
+  ComponentRef<typeof FlatList<T>>
+>;
 
-export default function createAnimatedComponent<P extends object>(
-  Component: ComponentType<P>
+/**
+ * Lets you create an Animated version of any React Native component.
+ *
+ * @param Component - The component you want to make animatable.
+ * @returns A component that Reanimated is capable of animating.
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent
+ */
+export function createAnimatedComponent<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): any {
-  invariant(
-    typeof Component !== 'function' ||
-      (Component.prototype && Component.prototype.isReactComponent),
-    `Looks like you're passing a function component \`${Component.name}\` to \`createAnimatedComponent\` function which supports only class components. Please wrap your function component with \`React.forwardRef()\` or use a class component instead.`
-  );
+  TInstance extends ComponentType<any>,
+>(
+  Component: TInstance
+): AnimatedComponentType<
+  Readonly<React.ComponentProps<TInstance>>,
+  ComponentRef<TInstance>
+>;
 
+export function createAnimatedComponent<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TInstance extends ComponentType<any>,
+>(
+  Component: TInstance
+): AnimatedComponentType<
+  Readonly<React.ComponentProps<TInstance>>,
+  ComponentRef<TInstance>
+> {
   class AnimatedComponent extends AnimatedComponentImpl {
     static displayName = `AnimatedComponent(${
       Component.displayName || Component.name || 'Component'
@@ -57,14 +70,21 @@ export default function createAnimatedComponent<P extends object>(
     }
   }
 
-  const animatedComponent = React.forwardRef<Component>((props, ref) => {
+  const animatedComponent = (
+    props: AnimatedProps<InitialComponentProps> & {
+      ref?: Ref<ComponentRef<TInstance>> | AnimatedRef;
+    }
+  ) => {
     return (
       <AnimatedComponent
         {...props}
-        {...(ref === null ? null : { forwardedRef: ref })}
+        // Needed to prevent react from signing AnimatedComponent to the ref
+        // (we want to handle the ref assignment in the AnimatedComponent)
+        ref={null}
+        {...(props.ref === null ? null : { forwardedRef: props.ref })}
       />
     );
-  });
+  };
 
   animatedComponent.displayName =
     Component.displayName || Component.name || 'Component';

@@ -1,0 +1,123 @@
+---
+id: testing
+sidebar_label: 'Testing with Jest'
+---
+
+import TestSrc from '!!raw-loader!@site/src/examples/TestExample.tsx';
+
+# Testing with Jest
+
+Reanimated provides testing API, based on Jest. It allows user to mock web-based animations.
+
+## Reference
+
+```js
+test('reference', () => {
+  // some styles
+
+  const { getByTestId } = render(<AnimatedComponent />);
+  const view = getByTestId('view');
+  const button = getByTestId('button');
+
+  // highlight-next-line
+  expect(view).toHaveAnimatedStyle(style);
+
+  fireEvent.press(button);
+  jest.advanceTimersByTime(250); // if whole animation duration is a 500ms
+
+  style.width = 50; // value of component width after 250ms of animation
+  // highlight-next-line
+  expect(view).toHaveAnimatedStyle(style);
+});
+```
+
+## Setup
+
+Add the following line to your `jest-setup.js` file:
+
+```js
+require('react-native-reanimated').setUpTests();
+```
+
+- `setUpTests()` can take optional config argument. Default config is `{ fps: 60 }`.
+
+To be sure, check if your `jest.config.js` file contains:
+
+```js
+...
+preset: 'react-native',
+setupFilesAfterEnv: ['./jest-setup.js'],
+...
+```
+
+:::caution
+
+If you use Jest in a version **older than 28**, you should set `setupFiles` property instead of `setupFilesAfterEnv`
+
+:::
+
+## API
+
+### Style checker
+
+#### `expect(component).toHaveAnimatedStyle(expectedStyle)`
+
+Checking equality of selected styles with current component styles.
+
+- `component` - tested component.
+- `expectedStyle` - contains expected styles of testing component, for example `{ width: 100 }`.
+
+#### `expect(component).toHaveAnimatedStyle(expectedStyle, {exact: true})`
+
+Checking equality of all current component styles with expected styles.
+
+#### `expect(component).toHaveAnimatedProps(expectedProps)` <AvailableFrom version={'3.17.2'} />
+
+Checking equality of selected props with current component props.
+
+- `component` - tested component.
+- `expectedProps` - contains expected props of testing component, for example `{ text: 'name' }`.
+
+#### `getDefaultStyle(component)`
+
+Gets all styles of tested component.
+
+### Timers
+
+You can use Jest's fake timers to control animation progress.
+Check [the full guide about mocking timers on Jest documentation website](https://jestjs.io/docs/timer-mocks).
+
+```js
+jest.useFakeTimers();
+// call animation
+jest.runAllTimers();
+```
+
+If you want more control over animation, you can use `jest.advanceTimersByTime` to move to a certain point in the animation:
+
+```js
+jest.useFakeTimers();
+// call animation
+jest.advanceTimersByTime(250);
+// make assertions on what you expect the styles of a component should be after 250ms
+```
+
+## Example
+
+<CollapsibleCode src={TestSrc} showLines={[54, 70]} />
+
+More examples from `react-native-reanimated` repository:
+
+- [SharedValue.test.tsx](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-reanimated/__tests__/Animation.test.tsx)
+- [Animation.test.tsx](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-reanimated/__tests__/SharedValue.test.tsx)
+
+## Remarks
+
+- Tests must run with Node 16 or newer.
+- Testing `react-native-svg` props is not supported.
+- If you have custom babel configuration for testing, make sure that Reanimated's babel plugin is enabled in that environment.
+
+## Recommended testing library
+
+- [@testing-library/react-native](https://testing-library.com/docs/react-native-testing-library/intro)
+- [@testing-library/react-hooks](https://react-hooks-testing-library.com/) - for dealing with hooks

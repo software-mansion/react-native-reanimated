@@ -1,5 +1,6 @@
 'use strict';
-import React, { forwardRef, useRef } from 'react';
+import type { RefObject } from 'react';
+import { useMemo, useRef } from 'react';
 import type {
   FlatListProps,
   LayoutChangeEvent,
@@ -16,15 +17,18 @@ import { AnimatedView } from './View';
 
 const AnimatedFlatList = createAnimatedComponent(FlatList);
 
-interface CellRendererComponentProps {
+interface CellRendererComponentProps<ItemT = any> {
+  index: number;
+  item: ItemT;
   onLayout?: ((event: LayoutChangeEvent) => void) | undefined;
   children: React.ReactNode;
   style?: StyleProp<AnimatedStyle<ViewStyle>>;
 }
 
 const createCellRendererComponent = (
-  itemLayoutAnimationRef?: React.MutableRefObject<
-    ILayoutAnimationBuilder | undefined
+  itemLayoutAnimationRef?: RefObject<ILayoutAnimationBuilder | undefined>,
+  cellRendererComponentStyleRef?: RefObject<
+    ReanimatedFlatListPropsWithLayout<any>['CellRendererComponentStyle']
   >
 ) => {
   const CellRendererComponent = (props: CellRendererComponentProps) => {
@@ -33,7 +37,15 @@ const createCellRendererComponent = (
         // TODO TYPESCRIPT This is temporary cast is to get rid of .d.ts file.
         layout={itemLayoutAnimationRef?.current as any}
         onLayout={props.onLayout}
-        style={props.style}>
+        style={[
+          props.style,
+          typeof cellRendererComponentStyleRef?.current === 'function'
+            ? cellRendererComponentStyleRef?.current({
+                index: props.index,
+                item: props.item,
+              })
+            : cellRendererComponentStyleRef?.current,
+        ]}>
         {props.children}
       </AnimatedView>
     );
@@ -57,6 +69,20 @@ interface ReanimatedFlatListPropsWithLayout<T>
   skipEnteringExitingAnimations?: boolean;
   /** Property `CellRendererComponent` is not supported in `Animated.FlatList`. */
   CellRendererComponent?: never;
+  /**
+   * Either animated view styles or a function that receives the item to be
+   * rendered and its index and returns animated view styles.
+   */
+  CellRendererComponentStyle?:
+    | StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>
+    | (({
+        item,
+        index,
+      }: {
+        item: T;
+        index: number;
+      }) => StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>)
+    | undefined;
 }
 
 export type FlatListPropsWithLayout<T> = ReanimatedFlatListPropsWithLayout<T>;
@@ -69,12 +95,16 @@ interface AnimatedFlatListComplement<T> extends FlatList<T> {
 
 // We need explicit any here, because this is the exact same type that is used in React Native types.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const FlatListForwardRefRender = function <Item = any>(
+const FlatListRender = function <Item = any>(
   props: ReanimatedFlatListPropsWithLayout<Item>,
-  ref: React.ForwardedRef<FlatList>
+  ref: React.Ref<FlatList>
 ) {
-  const { itemLayoutAnimation, skipEnteringExitingAnimations, ...restProps } =
-    props;
+  const {
+    itemLayoutAnimation,
+    skipEnteringExitingAnimations,
+    CellRendererComponentStyle,
+    ...restProps
+  } = props;
 
   // Set default scrollEventThrottle, because user expects
   // to have continuous scroll events and
@@ -88,9 +118,16 @@ const FlatListForwardRefRender = function <Item = any>(
   const itemLayoutAnimationRef = useRef(itemLayoutAnimation);
   itemLayoutAnimationRef.current = itemLayoutAnimation;
 
-  const CellRendererComponent = React.useMemo(
-    () => createCellRendererComponent(itemLayoutAnimationRef),
-    [itemLayoutAnimationRef]
+  const cellRendererComponentStyleRef = useRef(CellRendererComponentStyle);
+  cellRendererComponentStyleRef.current = CellRendererComponentStyle;
+
+  const CellRendererComponent = useMemo(
+    () =>
+      createCellRendererComponent(
+        itemLayoutAnimationRef,
+        cellRendererComponentStyleRef
+      ),
+    []
   );
 
   const animatedFlatList = (
@@ -113,15 +150,16 @@ const FlatListForwardRefRender = function <Item = any>(
   );
 };
 
-export const ReanimatedFlatList = forwardRef(FlatListForwardRefRender) as <
+export const ReanimatedFlatList = FlatListRender as <
   // We need explicit any here, because this is the exact same type that is used in React Native types.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ItemT = any,
 >(
   props: ReanimatedFlatListPropsWithLayout<ItemT> & {
-    ref?: React.ForwardedRef<FlatList>;
+    ref?: React.Ref<FlatList>;
   }
 ) => React.ReactElement;
 
-export type ReanimatedFlatList<T> = typeof AnimatedFlatList &
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ReanimatedFlatList<T = any> = typeof AnimatedFlatList &
   AnimatedFlatListComplement<T>;

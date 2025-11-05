@@ -1,38 +1,65 @@
 'use strict';
 
-export type {
-  IWorkletsModule,
-  LoggerConfig,
-  ShareableRef,
-  WorkletFunction,
-  WorkletFunctionDev,
-  WorkletRuntime,
-  WorkletsModuleProxy,
-  WorkletStackDetails,
-} from './worklets';
+import { init } from './initializers/initializers';
+import { bundleModeInit } from './initializers/workletRuntimeEntry';
+
+init();
+
+// @ts-expect-error We must trick the bundler to include
+// the `workletRuntimeEntry` file the way it cannot optimize it out.
+if (globalThis._ALWAYS_FALSE) {
+  // Bundle mode.
+  bundleModeInit();
+}
+
 export {
-  callMicrotasks,
-  createCustomError,
-  createWorkletRuntime,
-  executeOnUIRuntimeSync,
-  isWorkletFunction,
-  logger,
-  LogLevel,
+  isShareableRef,
   makeShareable,
+  type MakeShareableClone,
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
-  mockedRequestAnimationFrame,
-  registerCustomError,
-  registerLoggerConfig,
-  registerWorkletStackDetails,
-  reportFatalErrorOnJS,
-  runOnJS,
-  runOnRuntime,
-  runOnUI,
-  runOnUIImmediately,
-  setupCallGuard,
-  setupConsole,
   shareableMappingCache,
-  updateLoggerConfig,
-  WorkletsModule,
-} from './worklets';
+  type ShareableRef,
+} from './deprecated';
+export {
+  getStaticFeatureFlag,
+  setDynamicFeatureFlag,
+} from './featureFlags/featureFlags';
+export { isSynchronizable } from './memory/isSynchronizable';
+export { createSerializable, isSerializableRef } from './memory/serializable';
+export { serializableMappingCache } from './memory/serializableMappingCache';
+export { createSynchronizable } from './memory/synchronizable';
+export type {
+  SerializableRef,
+  Synchronizable,
+  SynchronizableRef,
+} from './memory/types';
+export { getRuntimeKind, RuntimeKind } from './runtimeKind';
+export {
+  createWorkletRuntime,
+  runOnRuntime,
+  scheduleOnRuntime,
+} from './runtimes';
+export {
+  callMicrotasks,
+  executeOnUIRuntimeSync,
+  runOnJS,
+  runOnUI,
+  runOnUIAsync,
+  runOnUISync,
+  scheduleOnRN,
+  scheduleOnUI,
+  // eslint-disable-next-line camelcase
+  unstable_eventLoopTask,
+} from './threads';
+export type {
+  WorkletFunction,
+  WorkletRuntime,
+  WorkletStackDetails,
+} from './types';
+export { isWorkletFunction } from './workletFunction';
+export { WorkletsModule } from './WorkletsModule/NativeWorklets';
+export type {
+  IWorkletsModule,
+  WorkletsModuleProxy,
+} from './WorkletsModule/workletsModuleProxy';

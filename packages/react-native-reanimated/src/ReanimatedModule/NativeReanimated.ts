@@ -1,7 +1,20 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 'use strict';
-import type React from 'react';
 
 import type {
+  IWorkletsModule,
+  SerializableRef,
+  WorkletFunction,
+} from 'react-native-worklets';
+import { runOnUISync, WorkletsModule } from 'react-native-worklets';
+
+import {
+  ReanimatedError,
+  registerReanimatedError,
+  SHOULD_BE_USE_WEB,
+} from '../common';
+import type {
+  InternalHostInstance,
   LayoutAnimationBatchItem,
   ShadowNodeWrapper,
   StyleProps,
@@ -9,29 +22,19 @@ import type {
   ValueRotation,
 } from '../commonTypes';
 import type {
+  CSSAnimationUpdates,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-  NormalizedSingleCSSAnimationSettings,
-} from '../css/platform/native';
-import { ReanimatedError, registerReanimatedError } from '../errors';
+} from '../css/native';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
-import { isFabric, shouldBeUseWeb } from '../PlatformChecker';
-import { setupRequestAnimationFrame } from '../requestAnimationFrame';
+import { assertWorkletsVersion } from '../platform-specific/workletsVersion';
 import { ReanimatedTurboModule } from '../specs';
-import type {
-  IWorkletsModule,
-  ShareableRef,
-  WorkletFunction,
-} from '../WorkletsResolver';
-import { executeOnUIRuntimeSync, WorkletsModule } from '../WorkletsResolver';
 import type {
   IReanimatedModule,
   ReanimatedModuleProxy,
 } from './reanimatedModuleProxy';
-
-const IS_WEB = shouldBeUseWeb();
 
 export function createNativeReanimatedModule(): IReanimatedModule {
   return new NativeReanimatedModule();
@@ -54,18 +57,26 @@ class NativeReanimatedModule implements IReanimatedModule {
    * We keep the instance of `WorkletsModule` here to keep correct coupling of
    * the modules and initialization order.
    */
+  // eslint-disable-next-line no-unused-private-class-members
   #workletsModule: IWorkletsModule;
   #reanimatedModuleProxy: ReanimatedModuleProxy;
-
   constructor() {
     this.#workletsModule = WorkletsModule;
     // These checks have to split since version checking depend on the execution order
     if (__DEV__) {
       assertSingleReanimatedInstance();
+      assertWorkletsVersion();
     }
     global._REANIMATED_VERSION_JS = jsVersion;
-    if (global.__reanimatedModuleProxy === undefined) {
-      ReanimatedTurboModule?.installTurboModule();
+    if (global.__reanimatedModuleProxy === undefined && ReanimatedTurboModule) {
+      if (!ReanimatedTurboModule.installTurboModule()) {
+        // This path means that React Native has failed on reload.
+        // We don't want to throw any errors to not mislead the users
+        // that the problem is related to Reanimated.
+        // We install a DummyReanimatedModuleProxy instead.
+        this.#reanimatedModuleProxy = new DummyReanimatedModuleProxy();
+        return;
+      }
     }
     if (global.__reanimatedModuleProxy === undefined) {
       throw new ReanimatedError(
@@ -73,7 +84,7 @@ class NativeReanimatedModule implements IReanimatedModule {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    if (!isFabric() && !IS_WEB) {
+    if (__DEV__ && !globalThis.RN$Bridgeless && !SHOULD_BE_USE_WEB) {
       throw new ReanimatedError(
         'Reanimated 4 supports only the React Native New Architecture and web.'
       );
@@ -82,18 +93,17 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       checkCppVersion();
     }
     this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
-    executeOnUIRuntimeSync(function initializeUI() {
+    runOnUISync(function initializeUI() {
       'worklet';
       registerReanimatedError();
-      setupRequestAnimationFrame();
-    })();
+    });
   }
 
   registerSensor(
     sensorType: number,
     interval: number,
     iosReferenceFrame: number,
-    handler: ShareableRef<(data: Value3D | ValueRotation) => void>
+    handler: SerializableRef<(data: Value3D | ValueRotation) => void>
   ) {
     return this.#reanimatedModuleProxy.registerSensor(
       sensorType,
@@ -108,7 +118,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   }
 
   registerEventHandler<T>(
-    eventHandler: ShareableRef<T>,
+    eventHandler: SerializableRef<T>,
     eventName: string,
     emitterReactTag: number
   ) {
@@ -126,22 +136,15 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   getViewProp<T>(
     viewTag: number,
     propName: string,
-    component: React.Component | undefined, // required on Fabric
+    component: InternalHostInstance,
     callback?: (result: T) => void
   ) {
-    let shadowNodeWrapper;
-    if (isFabric()) {
-      shadowNodeWrapper = getShadowNodeWrapperFromRef(
-        component as React.Component
-      );
-      return this.#reanimatedModuleProxy.getViewProp(
-        shadowNodeWrapper,
-        propName,
-        callback
-      );
-    }
-
-    return this.#reanimatedModuleProxy.getViewProp(viewTag, propName, callback);
+    const shadowNodeWrapper = getShadowNodeWrapperFromRef(component);
+    return this.#reanimatedModuleProxy.getViewProp(
+      shadowNodeWrapper,
+      propName,
+      callback
+    );
   }
 
   configureLayoutAnimationBatch(
@@ -159,16 +162,16 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     );
   }
 
-  enableLayoutAnimations(flag: boolean) {
-    this.#reanimatedModuleProxy.enableLayoutAnimations(flag);
+  getStaticFeatureFlag(name: string): boolean {
+    return this.#reanimatedModuleProxy.getStaticFeatureFlag(name);
   }
 
-  configureProps(uiProps: string[], nativeProps: string[]) {
-    this.#reanimatedModuleProxy.configureProps(uiProps, nativeProps);
+  setDynamicFeatureFlag(name: string, value: boolean) {
+    this.#reanimatedModuleProxy.setDynamicFeatureFlag(name, value);
   }
 
   subscribeForKeyboardEvents(
-    handler: ShareableRef<WorkletFunction>,
+    handler: SerializableRef<WorkletFunction>,
     isStatusBarTranslucent: boolean,
     isNavigationBarTranslucent: boolean
   ) {
@@ -187,47 +190,37 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.setViewStyle(viewTag, style);
   }
 
-  removeViewStyle(viewTag: number) {
-    this.#reanimatedModuleProxy.removeViewStyle(viewTag);
+  markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper) {
+    this.#reanimatedModuleProxy.markNodeAsRemovable(shadowNodeWrapper);
+  }
+
+  unmarkNodeAsRemovable(viewTag: number) {
+    this.#reanimatedModuleProxy.unmarkNodeAsRemovable(viewTag);
   }
 
   registerCSSKeyframes(
     animationName: string,
+    viewName: string,
     keyframesConfig: NormalizedCSSAnimationKeyframesConfig
   ) {
     this.#reanimatedModuleProxy.registerCSSKeyframes(
       animationName,
+      viewName,
       keyframesConfig
     );
   }
 
-  unregisterCSSKeyframes(animationName: string) {
-    this.#reanimatedModuleProxy.unregisterCSSKeyframes(animationName);
+  unregisterCSSKeyframes(animationName: string, viewName: string) {
+    this.#reanimatedModuleProxy.unregisterCSSKeyframes(animationName, viewName);
   }
 
-  registerCSSAnimations(
+  applyCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,
-    animationConfigs: {
-      name: string;
-      settings: NormalizedSingleCSSAnimationSettings;
-    }[]
+    animationUpdates: CSSAnimationUpdates
   ) {
-    this.#reanimatedModuleProxy.registerCSSAnimations(
+    this.#reanimatedModuleProxy.applyCSSAnimations(
       shadowNodeWrapper,
-      animationConfigs
-    );
-  }
-
-  updateCSSAnimations(
-    animationId: number,
-    settingsUpdates: {
-      index: number;
-      settings: Partial<NormalizedSingleCSSAnimationSettings>;
-    }[]
-  ) {
-    this.#reanimatedModuleProxy.updateCSSAnimations(
-      animationId,
-      settingsUpdates
+      animationUpdates
     );
   }
 
@@ -254,5 +247,44 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   unregisterCSSTransition(viewTag: number) {
     this.#reanimatedModuleProxy.unregisterCSSTransition(viewTag);
+  }
+}
+
+class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
+  configureLayoutAnimationBatch(): void {}
+  setShouldAnimateExitingForTag(): void {}
+  getStaticFeatureFlag(): boolean {
+    return false;
+  }
+  setDynamicFeatureFlag(): void {}
+  subscribeForKeyboardEvents(): number {
+    return -1;
+  }
+
+  unsubscribeFromKeyboardEvents(): void {}
+  setViewStyle(): void {}
+  markNodeAsRemovable(): void {}
+  unmarkNodeAsRemovable(): void {}
+  registerCSSKeyframes(): void {}
+  unregisterCSSKeyframes(): void {}
+  applyCSSAnimations(): void {}
+  registerCSSAnimations(): void {}
+  updateCSSAnimations(): void {}
+  unregisterCSSAnimations(): void {}
+  registerCSSTransition(): void {}
+  updateCSSTransition(): void {}
+  unregisterCSSTransition(): void {}
+  registerSensor(): number {
+    return -1;
+  }
+
+  unregisterSensor(): void {}
+  registerEventHandler(): number {
+    return -1;
+  }
+
+  unregisterEventHandler(): void {}
+  getViewProp() {
+    return null!;
   }
 }

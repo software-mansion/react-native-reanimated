@@ -1,21 +1,15 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/progress/RawProgressProvider.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
-RawProgressProvider::RawProgressProvider(
-    const double timestamp,
-    const double duration,
-    const double delay)
+RawProgressProvider::RawProgressProvider(const double timestamp, const double duration, const double delay)
     : duration_(duration), delay_(delay), creationTimestamp_(timestamp) {}
 
 void RawProgressProvider::setDuration(double duration) {
-  resetProgress();
   duration_ = duration;
 }
 
 void RawProgressProvider::setDelay(double delay) {
-  resetProgress();
   delay_ = delay;
 }
 
@@ -44,6 +38,4 @@ void RawProgressProvider::update(const double timestamp) {
   }
 }
 
-} // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
+} // namespace reanimated::css

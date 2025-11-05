@@ -46,6 +46,11 @@ jobs:
           cache: 'yarn'
       - name: Clear annotations
         run: .github/workflows/helper/clear-annotations.sh
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install cpplint==1.6.1
+          pip install cmakelang==0.6.13
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable

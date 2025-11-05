@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type {
   GestureUpdateEvent,
   PanGestureChangeEventPayload,
@@ -21,11 +21,8 @@ import {
 } from 'react-native-screens';
 
 const AnimatedScreenStackHeaderConfig = Animated.createAnimatedComponent(
-  Platform.OS === 'web'
-    ? React.forwardRef(ScreenStackHeaderConfig as any)
-    : ScreenStackHeaderConfig
+  ScreenStackHeaderConfig
 );
-Animated.addWhitelistedNativeProps({ title: true });
 
 export default function ScreenStackHeaderConfigBackgroundColorExample() {
   const isPressed = useSharedValue(false);

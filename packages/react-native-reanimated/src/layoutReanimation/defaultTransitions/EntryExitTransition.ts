@@ -1,15 +1,15 @@
 'use strict';
 import { withSequence, withTiming } from '../../animation';
+import { logger } from '../../common';
 import type {
   AnimatableValue,
   AnimationObject,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
-  LayoutAnimationsValues,
+  LayoutAnimationValues,
   StylePropsWithArrayTransform,
   TransformArrayItem,
 } from '../../commonTypes';
-import { logger } from '../../WorkletsResolver';
 import { BaseAnimationBuilder } from '../animationBuilder';
 import { FadeIn, FadeOut } from '../defaultAnimations/Fade';
 
@@ -122,7 +122,7 @@ export class EntryExitTransition
                   exitingValues.animations[prop],
                   withTiming(
                     Object.keys(values).includes(prop)
-                      ? values[prop as keyof LayoutAnimationsValues]
+                      ? values[prop as keyof LayoutAnimationValues]
                       : exitingValues.initialValues[prop],
                     { duration: 0 }
                   ),
@@ -245,16 +245,4 @@ export class EntryExitTransition
       };
     };
   };
-}
-
-/**
- * @deprecated Please use
- *   `EntryExitTransition.entering(entering).exiting(exiting)` instead.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions
- */
-export function combineTransition(
-  exiting: BaseAnimationBuilder | typeof BaseAnimationBuilder,
-  entering: BaseAnimationBuilder | typeof BaseAnimationBuilder
-): EntryExitTransition {
-  return EntryExitTransition.entering(entering).exiting(exiting);
 }

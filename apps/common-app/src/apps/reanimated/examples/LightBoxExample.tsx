@@ -1,25 +1,28 @@
 import '../types';
 
 import { useHeaderHeight } from '@react-navigation/elements';
-import type { Component } from 'react';
+import type { ComponentRef, RefObject } from 'react';
 import React, { useEffect, useRef, useState } from 'react';
-import { Dimensions, Image, Platform, StyleSheet, View } from 'react-native';
 import {
-  PanGestureHandler,
-  ScrollView,
+  Dimensions,
+  Image,
+  Platform,
+  StyleSheet,
   TouchableWithoutFeedback,
-} from 'react-native-gesture-handler';
+  View,
+} from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
+import type { SharedValue } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   Extrapolation,
   interpolate,
-  runOnJS,
-  runOnUI,
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
@@ -45,13 +48,13 @@ type ActiveExampleImage = {
   y: number;
   targetHeight: number;
   targetWidth: number;
-  sv: Animated.SharedValue<number>;
+  sv: SharedValue<number>;
 };
 
 type onItemPressFn = (
-  imageRef: React.MutableRefObject<Component>,
+  imageRef: ComponentRef<typeof Image>,
   item: ExampleImage,
-  sv: Animated.SharedValue<number>
+  sv: SharedValue<number>
 ) => void;
 
 type ImageListProps = {
@@ -74,9 +77,9 @@ type ListItemProps = {
   index: number;
   onPress: onItemPressFn;
 };
+
 function ListItem({ item, index, onPress }: ListItemProps) {
-  // @ts-ignore FIXME)TS) createAnimatedComponent type
-  const ref = useRef<AnimatedImage>();
+  const ref = useRef<ComponentRef<typeof Image>>(null);
   const opacity = useSharedValue(1);
 
   const containerStyle = {
@@ -95,7 +98,7 @@ function ListItem({ item, index, onPress }: ListItemProps) {
   return (
     <TouchableWithoutFeedback
       style={containerStyle}
-      onPress={() => onPress(ref, item, opacity)}>
+      onPress={() => ref.current && onPress(ref.current, item, opacity)}>
       <AnimatedImage ref={ref} source={{ uri: item.uri }} style={styles} />
     </TouchableWithoutFeedback>
   );
@@ -138,8 +141,8 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
 
-  const onPan = useAnimatedGestureHandler({
-    onActive: (event) => {
+  const gesture = Gesture.Pan()
+    .onChange((event) => {
       translateX.value = event.translationX;
       translateY.value = event.translationY;
 
@@ -156,9 +159,8 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
         [0, 1, 0],
         Extrapolation.CLAMP
       );
-    },
-
-    onEnd: () => {
+    })
+    .onEnd(() => {
       if (Math.abs(translateY.value) > 40) {
         targetX.value = translateX.value - targetX.value * -1;
         targetY.value = translateY.value - targetY.value * -1;
@@ -168,7 +170,7 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
 
         animationProgress.value = withTiming(0, timingConfig, () => {
           imageOpacity.value = 1;
-          runOnJS(onClose)();
+          scheduleOnRN(onClose);
         });
 
         backdropOpacity.value = withTiming(0, timingConfig);
@@ -179,8 +181,7 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
       }
 
       scale.value = withTiming(1, timingConfig);
-    },
-  });
+    });
 
   const imageStyles = useAnimatedStyle(() => {
     const interpolateProgress = (range: [number, number]) =>
@@ -210,23 +211,23 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
   });
 
   useEffect(() => {
-    runOnUI(() => {
+    scheduleOnUI(() => {
       animationProgress.value = withTiming(1, timingConfig, () => {
         imageOpacity.value = 0;
       });
       backdropOpacity.value = withTiming(1, timingConfig);
-    })();
+    });
   }, [animationProgress, backdropOpacity, imageOpacity]);
 
   return (
     <View style={StyleSheet.absoluteFillObject}>
       <Animated.View style={[styles.backdrop, backdropStyles]} />
 
-      <PanGestureHandler onGestureEvent={onPan}>
+      <GestureDetector gesture={gesture}>
         <Animated.View style={StyleSheet.absoluteFillObject}>
           <AnimatedImage source={{ uri }} style={imageStyles} />
         </Animated.View>
-      </PanGestureHandler>
+      </GestureDetector>
     </View>
   );
 }
@@ -245,11 +246,11 @@ export default function LightBoxExample() {
   );
 
   function onItemPress(
-    imageRef: React.MutableRefObject<Component>,
+    imageRef: ComponentRef<typeof Image>,
     item: ExampleImage,
-    sv: Animated.SharedValue<number>
+    sv: SharedValue<number>
   ) {
-    imageRef.current?.measure?.((_x, _y, width, height, pageX, pageY) => {
+    imageRef.measure?.((_x, _y, width, height, pageX, pageY) => {
       if (width === 0 && height === 0) {
         return;
       }

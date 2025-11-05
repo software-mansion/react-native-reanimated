@@ -48,13 +48,8 @@ import type { EasingFunction } from './commonTypes';
  * - [`out`](docs/easing.html#out) runs an easing function backwards
  */
 
-/** @deprecated Please use {@link EasingFunction} type instead. */
-export type EasingFn = EasingFunction;
-
 export type EasingFunctionFactory = { factory: () => EasingFunction };
 
-/** @deprecated Please use {@link EasingFunctionFactory} type instead. */
-export type EasingFactoryFn = EasingFunctionFactory;
 /**
  * A linear function, `f(t) = t`. Position correlates to elapsed time one to
  * one.
@@ -213,7 +208,7 @@ function bezier(
   y1: number,
   x2: number,
   y2: number
-): { factory: () => (x: number) => number } {
+): EasingFunctionFactory {
   'worklet';
   return {
     factory: () => {

@@ -1,4 +1,4 @@
-import type { Component, Dispatch, MutableRefObject, ReactNode, SetStateAction } from 'react';
+import type { Component, Dispatch, ReactNode, RefObject, SetStateAction } from 'react';
 import type { AnimatedStyle, LayoutAnimationStartFunction, StyleProps } from 'react-native-reanimated';
 
 export type CallTracker = {
@@ -16,13 +16,13 @@ export type TrackerCallCount = {
   onUI: number;
 };
 
-export type SharedValueSnapshot = {
+export type SharedValueSnapshot<TValue extends TestValue> = {
   name: string;
-  onJS: TestValue;
-  onUI: TestValue;
+  onJS: TValue;
+  onUI: TValue;
 };
 
-export type ComponentRef = MutableRefObject<(Component & { props: { style: Record<string, unknown> } }) | null>;
+export type ComponentRef = RefObject<(Component & { props: { style: Record<string, unknown> } }) | null>;
 
 export enum DescribeDecorator {
   ONLY = 'only',
@@ -88,7 +88,13 @@ export enum ComparisonMode {
 
 export type LockObject = { lock: boolean };
 
-export type OperationUpdate = StyleProps | AnimatedStyle<Record<string, unknown>> | Record<string, unknown>;
+type Writable<T> = {
+  -readonly [P in keyof T]: T[P];
+};
+
+export type OperationUpdate = Writable<
+  StyleProps | AnimatedStyle<Writable<Record<string, unknown>>> | Writable<Record<string, unknown>>
+>;
 
 export interface Operation {
   tag?: number;
@@ -120,25 +126,24 @@ export type Mismatch = {
   capturedSnapshot: OperationUpdate;
 };
 
-/* eslint-disable no-var */
+export type DefaultValue = 'not_ok' | 'ok';
+export type ValueWrapper<T> = { value: T | DefaultValue };
+
 declare global {
   var mockedAnimationTimestamp: number | undefined;
   var framesCount: number | undefined;
   var originalRequestAnimationFrame: ((callback: (timestamp: number) => void) => void) | undefined;
   var originalGetAnimationTimestamp: (() => number) | undefined;
   var originalUpdateProps: ((operations: Operation[]) => void) | undefined;
-  var originalNotifyAboutProgress:
-    | ((tag: number, value: Record<string, unknown>, isSharedTransition: boolean) => void)
-    | undefined;
+  var originalNotifyAboutProgress: ((tag: number, value: Record<string, unknown>) => void) | undefined;
   var originalFlushAnimationFrame: ((frameTimestamp: number) => void) | undefined;
   var _getAnimationTimestamp: () => number;
   var __frameTimestamp: number | undefined;
   var _IS_FABRIC: boolean | undefined;
-  var _updatePropsPaper: (operations: Operation[]) => void;
-  var _updatePropsFabric: (operations: Operation[]) => void;
-  var _notifyAboutProgress: (tag: number, value: Record<string, unknown>, isSharedTransition: boolean) => void;
-  var _obtainPropPaper: (viewTag: number, propName: string) => string;
-  var _obtainPropFabric: (shadowNodeWrapper: unknown, propName: string) => string;
+  var _registriesLeakCheck: () => string;
+  var _updateProps: (operations: Operation[]) => void;
+  var _notifyAboutProgress: (tag: number, value: Record<string, unknown>) => void;
+  var _obtainProp: (shadowNodeWrapper: unknown, propName: string) => string;
   var __flushAnimationFrame: (frameTimestamp: number) => void;
   var LayoutAnimationsManager: {
     start: LayoutAnimationStartFunction;
@@ -149,4 +154,3 @@ declare global {
     stop: (tag: number) => void;
   };
 }
-/* eslint-enable no-var */

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
-import { runOnUI } from 'react-native-reanimated';
+import { scheduleOnUI } from 'react-native-worklets';
 
 function shortOffender() {
   'worklet';
@@ -24,14 +24,14 @@ function longOffender() {
 export default function BabelVersionCheckExample() {
   const forceErrorWithShortWorklet = () => {
     // @ts-ignore this is fine
-    shortOffender.__initData.version = 'x.y.z';
-    runOnUI(shortOffender)();
+    shortOffender.__pluginVersion = 'x.y.z';
+    scheduleOnUI(shortOffender);
   };
 
   const forceErrorWithLongWorklet = () => {
     // @ts-ignore this is fine
-    longOffender.__initData.version = 'x.y.z';
-    runOnUI(longOffender)();
+    longOffender.__pluginVersion = 'x.y.z';
+    scheduleOnUI(longOffender);
   };
 
   return (

@@ -1,9 +1,12 @@
 #import <Foundation/Foundation.h>
-#import <React/RCTDefines.h>
-#import <React/RCTUIManager.h>
+
+#import <React/RCTAssert.h>
+#import <React/RCTBridgeConstants.h>
+#import <React/RCTUtils.h>
+
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REASlowAnimations.h>
-#import <reanimated/apple/REAUIKit.h>
+#import <reanimated/apple/REAUIView.h>
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 
 typedef NS_ENUM(NSUInteger, KeyboardState) {
@@ -227,9 +230,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   if (hasKeyboardAnimation || forceAnimation) {
     _measuringView.frame = CGRectMake(0, -1, 0, _initialKeyboardHeight);
     [UIView animateWithDuration:animationDuration
-                     animations:^{
-                       self->_measuringView.frame = CGRectMake(0, -1, 0, self->_targetKeyboardHeight);
-                     }];
+                     animations:^{ self->_measuringView.frame = CGRectMake(0, -1, 0, self->_targetKeyboardHeight); }];
     [self runUpdater];
   }
 }

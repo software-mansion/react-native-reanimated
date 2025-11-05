@@ -4,7 +4,6 @@ import type { AnimatableValueObject, MeasuredDimensions } from 'react-native-rea
 import Animated, {
   Easing,
   measure,
-  runOnUI,
   useAnimatedRef,
   useAnimatedStyle,
   useFrameCallback,
@@ -12,6 +11,7 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
+import { scheduleOnUI } from 'react-native-worklets';
 
 import { describe, expect, getRegisteredValue, registerValue, render, test, wait } from '../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../ReJest/types';
@@ -57,9 +57,9 @@ describe('Test measuring component before nad after animation of the component a
 
     useEffect(() => {
       setTimeout(() => {
-        runOnUI(() => {
+        scheduleOnUI(() => {
           measuredInitial.value = measure(ref);
-        })();
+        });
       }, 50);
     });
 

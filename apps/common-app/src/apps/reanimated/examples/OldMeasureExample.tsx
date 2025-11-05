@@ -2,21 +2,18 @@ import '../types';
 
 import type { ReactElement, ReactNode } from 'react';
 import React, { useRef } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
-import type { TapGestureHandlerGestureEvent } from 'react-native-gesture-handler';
-import { TapGestureHandler } from 'react-native-gesture-handler';
-import type { AnimatedRef } from 'react-native-reanimated';
+import { Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import type { AnimatedRef, SharedValue } from 'react-native-reanimated';
 import Animated, {
   Easing,
   measure,
-  useAnimatedGestureHandler,
   useAnimatedRef,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const labels = ['apple', 'banana', 'kiwi', 'milk', 'water'];
 const SECTION_HEADER_HEIGHT = 40;
@@ -92,8 +89,8 @@ export default function OldMeasureExample() {
 
 type SectionProps = {
   title: string;
-  height: Animated.SharedValue<number>;
-  contentHeight: Animated.SharedValue<number>;
+  height: SharedValue<number>;
+  contentHeight: SharedValue<number>;
   z: number;
   show: boolean;
 };
@@ -124,7 +121,9 @@ function Section({
       />
       <View>
         {React.Children.map(children, (element) =>
-          React.cloneElement(element as ReactElement, { ref: aref })
+          React.cloneElement(element as ReactElement<{ ref: AnimatedRef }>, {
+            ref: aref,
+          })
         )}
       </View>
     </Animated.View>
@@ -139,9 +138,7 @@ type MeasuredDimensions = {
   pageX: number;
   pageY: number;
 };
-function asyncMeasure(
-  animatedRef: AnimatedRef<React.Component>
-): Promise<MeasuredDimensions> {
+function asyncMeasure(animatedRef: AnimatedRef): Promise<MeasuredDimensions> {
   return new Promise((resolve, reject) => {
     if (animatedRef && animatedRef.current) {
       animatedRef.current.measure?.((x, y, width, height, pageX, pageY) => {
@@ -155,8 +152,8 @@ function asyncMeasure(
 
 type SectionHeaderProps = {
   title: string;
-  animatedRef: AnimatedRef<React.Component>;
-  contentHeight: Animated.SharedValue<number>;
+  animatedRef: AnimatedRef;
+  contentHeight: SharedValue<number>;
   show: boolean;
 };
 
@@ -186,6 +183,7 @@ function SectionHeader({
   let onActiveImpl;
   if (Platform.OS === 'web') {
     onActiveImpl = async () => {
+      'worklet';
       try {
         applyMeasure(await asyncMeasure(animatedRef));
       } catch (e) {
@@ -200,20 +198,18 @@ function SectionHeader({
     };
   }
 
-  const handler = useAnimatedGestureHandler<TapGestureHandlerGestureEvent>({
-    onActive: onActiveImpl,
-  });
+  const gesture = Gesture.Tap().onBegin(onActiveImpl);
 
   return (
     <View style={styles.sectionHeader}>
       <View style={styles.header}>
         <Text>{title}</Text>
         {show && (
-          <TapGestureHandler onHandlerStateChange={handler}>
+          <GestureDetector gesture={gesture}>
             <Animated.View style={styles.triggerText}>
               <Text style={styles.white}>trigger</Text>
             </Animated.View>
-          </TapGestureHandler>
+          </GestureDetector>
         )}
       </View>
     </View>

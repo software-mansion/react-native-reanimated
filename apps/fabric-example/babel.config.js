@@ -2,7 +2,13 @@
 module.exports = {
   presets: ['module:@react-native/babel-preset'],
   plugins: [
-    ['react-native-reanimated/plugin', { processNestedWorklets: true }],
+    [
+      'react-native-worklets/plugin',
+      {
+        // Uncomment the next line to enable bundle mode.
+        // bundleMode: true,
+      },
+    ],
     [
       'module-resolver',
       {

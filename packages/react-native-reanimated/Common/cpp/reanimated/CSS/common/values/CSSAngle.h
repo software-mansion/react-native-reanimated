@@ -1,19 +1,10 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 
-#include <worklets/Tools/JSISerializer.h>
-
-#include <iomanip>
-#include <regex>
-#include <sstream>
 #include <string>
-#include <unordered_map>
 
-namespace reanimated {
-
-using namespace worklets;
+namespace reanimated::css {
 
 struct CSSAngle : public CSSSimpleValue<CSSAngle> {
   double value;
@@ -21,9 +12,12 @@ struct CSSAngle : public CSSSimpleValue<CSSAngle> {
   CSSAngle();
   explicit CSSAngle(double value);
   explicit CSSAngle(const std::string &rotationString);
+  explicit CSSAngle(const char *cstr);
   explicit CSSAngle(jsi::Runtime &rt, const jsi::Value &jsiValue);
+  explicit CSSAngle(const folly::dynamic &value);
 
   static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
+  static bool canConstruct(const folly::dynamic &value);
 
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
@@ -36,6 +30,4 @@ struct CSSAngle : public CSSSimpleValue<CSSAngle> {
 #endif // NDEBUG
 };
 
-} // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
+} // namespace reanimated::css

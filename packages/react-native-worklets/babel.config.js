@@ -1,3 +1,16 @@
+/** @type {import('@babel/core').TransformOptions} */
 module.exports = {
-  presets: ['module:react-native-builder-bob/babel-preset'],
+  presets: [
+    [
+      '@babel/preset-env',
+      {
+        targets: {
+          node: 'current',
+        },
+      },
+    ],
+    '@babel/preset-typescript',
+    '@react-native/babel-preset',
+  ],
+  plugins: [['./plugin', { disableInlineStylesWarning: true }]],
 };

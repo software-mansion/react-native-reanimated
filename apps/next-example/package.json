@@ -15,22 +15,26 @@
     "format": "prettier --write --list-different ."
   },
   "dependencies": {
-    "expo": "~48.0.10",
-    "next": "latest",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
+    "expo": "54.0.13",
+    "next": "15.5.4",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "react-native": "0.82.0",
     "react-native-reanimated": "workspace:*",
-    "react-native-web": "0.19.11"
+    "react-native-web": "0.21.1",
+    "react-native-worklets": "workspace:*",
+    "webpack": "5.102.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.9",
-    "@expo/next-adapter": "^5.0.2",
-    "@next/bundle-analyzer": "^13.5.3",
-    "cypress": "^13.2.0",
-    "eslint": "^8.57.0",
-    "next-compose-plugins": "^2.2.1",
-    "prettier": "^3.3.3",
-    "start-server-and-test": "^2.0.1"
+    "@babel/core": "7.28.4",
+    "@expo/next-adapter": "6.0.0",
+    "@next/bundle-analyzer": "15.5.4",
+    "cypress": "15.4.0",
+    "eslint": "9.37.0",
+    "next-compose-plugins": "2.2.1",
+    "prettier": "3.6.2",
+    "start-server-and-test": "2.1.2",
+    "typescript": "5.8.3"
   },
   "installConfig": {
     "selfReferences": false

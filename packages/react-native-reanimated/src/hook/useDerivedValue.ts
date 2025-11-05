@@ -1,11 +1,11 @@
 'use strict';
 import { useEffect, useRef } from 'react';
+import type { WorkletFunction } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
+import { SHOULD_BE_USE_WEB } from '../common';
 import type { SharedValue } from '../commonTypes';
 import { makeMutable, startMapper, stopMapper } from '../core';
-import { shouldBeUseWeb } from '../PlatformChecker';
-import type { WorkletFunction } from '../WorkletsResolver';
 import type { DependencyList } from './commonTypes';
 
 export interface DerivedValue<Value = unknown>
@@ -42,7 +42,7 @@ export function useDerivedValue<Value>(
 ): DerivedValue<Value> {
   const initRef = useRef<SharedValue<Value> | null>(null);
   let inputs = Object.values(updater.__closure ?? {});
-  if (shouldBeUseWeb()) {
+  if (SHOULD_BE_USE_WEB) {
     if (!inputs.length && dependencies?.length) {
       // let web work without a Babel/SWC plugin
       inputs = dependencies;
@@ -73,6 +73,7 @@ export function useDerivedValue<Value>(
     return () => {
       stopMapper(mapperId);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, dependencies);
 
   return sharedValue;

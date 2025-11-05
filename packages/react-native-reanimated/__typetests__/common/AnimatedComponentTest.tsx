@@ -1,12 +1,17 @@
-/* eslint-disable no-unused-expressions */
-/* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import type { ViewStyle } from 'react-native';
 import { FlatList, ScrollView, View } from 'react-native';
 
+import type { AnimatedStyle } from '../..';
 import Animated from '../..';
+
+function AnimatedStyleRecursiveReadonlyArrayTest() {
+  type TestStyleProp<T> = T | ReadonlyArray<TestStyleProp<T>>;
+
+  const style: AnimatedStyle<TestStyleProp<ViewStyle>> = {};
+}
 
 function AnimatedComponentPropsTest() {
   const RNStyle: ViewStyle = {};
@@ -48,7 +53,7 @@ function AnimatedComponentPropsTest() {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function AnimatedComponentPropsTestReanimatedProps(prop: any) {
-  class CustomClassComponent extends React.Component<never> {
+  class CustomClassComponent extends React.Component<unknown> {
     render() {
       return null;
     }
@@ -62,16 +67,12 @@ function AnimatedComponentPropsTestReanimatedProps(prop: any) {
         entering={prop}
         layout={prop}
         exiting={prop}
-        sharedTransitionTag={prop}
-        sharedTransitionStyle={prop}
         animatedProps={prop}
       />
       <Animated.Image
         entering={prop}
         layout={prop}
         exiting={prop}
-        sharedTransitionTag={prop}
-        sharedTransitionStyle={prop}
         animatedProps={prop}
         source={{ uri: undefined }}
       />
@@ -79,24 +80,18 @@ function AnimatedComponentPropsTestReanimatedProps(prop: any) {
         entering={prop}
         layout={prop}
         exiting={prop}
-        sharedTransitionTag={prop}
-        sharedTransitionStyle={prop}
         animatedProps={prop}
       />
       <Animated.ScrollView
         entering={prop}
         layout={prop}
         exiting={prop}
-        sharedTransitionTag={prop}
-        sharedTransitionStyle={prop}
         animatedProps={prop}
       />
       <Animated.FlatList
         entering={prop}
         layout={prop}
         exiting={prop}
-        sharedTransitionTag={prop}
-        sharedTransitionStyle={prop}
         animatedProps={prop}
         data={[]}
         renderItem={() => null}
@@ -105,8 +100,6 @@ function AnimatedComponentPropsTestReanimatedProps(prop: any) {
         entering={prop}
         layout={prop}
         exiting={prop}
-        sharedTransitionTag={prop}
-        sharedTransitionStyle={prop}
         animatedProps={prop}
       />
     </>

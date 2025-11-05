@@ -12,13 +12,23 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { colors, flex, radius, text } from '@/theme';
-import { IS_MACOS, IS_WEB, isFabric, noop } from '@/utils';
+import { IS_MACOS, IS_WEB, noop } from '@/utils';
 
 import { CSSApp, ReanimatedApp } from './apps';
+import { LeakCheck, NukeContext } from './components';
 
 export default function App() {
+  const [nuked, setNuked] = useState(false);
   const { isReady, navigationState, updateNavigationState } =
     useNavigationState();
+
+  if (nuked) {
+    return (
+      <NukeContext value={() => setNuked(false)}>
+        <LeakCheck />
+      </NukeContext>
+    );
+  }
 
   if (!isReady) {
     return (
@@ -28,8 +38,10 @@ export default function App() {
     );
   }
 
+  const RootApp = IS_MACOS ? ReanimatedApp : Navigator;
+
   return (
-    <SafeAreaProvider>
+    <NukeContext value={() => setNuked(true)}>
       <GestureHandlerRootView style={flex.fill}>
         <NavigationContainer
           initialState={navigationState}
@@ -60,11 +72,17 @@ export default function App() {
           }}
           onStateChange={updateNavigationState}>
           <PortalProvider>
-            <Navigator />
+            {IS_MACOS ? (
+              <RootApp />
+            ) : (
+              <SafeAreaProvider>
+                <RootApp />
+              </SafeAreaProvider>
+            )}
           </PortalProvider>
         </NavigationContainer>
       </GestureHandlerRootView>
-    </SafeAreaProvider>
+    </NukeContext>
   );
 }
 
@@ -80,12 +98,8 @@ const SCREENS = [
 ];
 
 function Navigator() {
-  if (IS_MACOS) {
-    return <ReanimatedApp />;
-  }
-
   const Drawer = createDrawerNavigator();
-  const screens = isFabric() || IS_WEB ? SCREENS : SCREENS.reverse();
+  const screens = IS_WEB ? SCREENS : SCREENS.reverse();
 
   return (
     <Drawer.Navigator
@@ -97,7 +111,7 @@ function Navigator() {
           borderRadius: radius.lg,
         },
         drawerLabelStyle: text.heading4,
-        drawerPosition: 'right',
+        drawerPosition: IS_WEB ? 'left' : 'right',
         drawerStyle: {
           backgroundColor: colors.background1,
         },

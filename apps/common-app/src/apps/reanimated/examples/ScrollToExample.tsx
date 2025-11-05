@@ -1,22 +1,26 @@
-import type {
-  FlashListProps,
+import {
+  FlashList,
+  FlashListRef,
   ListRenderItem as FlashListRenderItem,
 } from '@shopify/flash-list';
-import { FlashList } from '@shopify/flash-list';
-import React, {
-  forwardRef,
-  useCallback,
-  useImperativeHandle,
-  useRef,
-} from 'react';
-import type { ListRenderItem as FlatListRenderItem } from 'react-native';
-import { Button, StyleSheet, Switch, Text, View } from 'react-native';
-import type { AnimatedProps } from 'react-native-reanimated';
-import Animated, {
-  runOnUI,
-  scrollTo,
-  useAnimatedRef,
-} from 'react-native-reanimated';
+import type { Ref } from 'react';
+import React, { useCallback, useImperativeHandle, useRef } from 'react';
+import type {
+  ListRenderItem as FlatListRenderItem,
+  SectionListRenderItem,
+} from 'react-native';
+import {
+  Button,
+  ScrollView,
+  SectionList,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from 'react-native';
+import Animated, { scrollTo, useAnimatedRef } from 'react-native-reanimated';
+import { ScrollView as RNGHScrollView } from 'react-native-gesture-handler';
+import { scheduleOnUI, getRuntimeKind } from 'react-native-worklets';
 
 const DATA = [...Array(100).keys()];
 
@@ -25,9 +29,7 @@ function getRandomOffset() {
   return Math.random() * 2000;
 }
 
-const AnimatedFlashList = Animated.createAnimatedComponent(
-  FlashList
-) as React.ComponentClass<AnimatedProps<FlashListProps<number>>>;
+const AnimatedFlashList = Animated.createAnimatedComponent(FlashList<number>);
 
 type Scrollable = {
   scrollFromJS: () => void;
@@ -50,8 +52,16 @@ export default function ScrollToExample() {
       component: FlatListExample,
     },
     {
+      title: 'SectionList',
+      component: SectionListExample,
+    },
+    {
       title: 'FlashList',
       component: FlashListExample,
+    },
+    {
+      title: 'RNGHScrollView',
+      component: RNGHScrollViewExample,
     },
   ];
 
@@ -59,7 +69,10 @@ export default function ScrollToExample() {
 
   return (
     <>
-      <View style={styles.optionsRow}>
+      <ScrollView
+        contentContainerStyle={styles.optionsRow}
+        horizontal
+        style={styles.optionsContainer}>
         {examples.map(({ title }, index) => (
           <Button
             disabled={index === currentExample}
@@ -68,7 +81,7 @@ export default function ScrollToExample() {
             onPress={() => setCurrentExample(index)}
           />
         ))}
-      </View>
+      </ScrollView>
       <View style={styles.buttons}>
         <View style={styles.optionsRow}>
           <Text style={styles.switchLabel}>Animated</Text>
@@ -90,110 +103,182 @@ export default function ScrollToExample() {
 
 type ExampleProps = {
   animated: boolean;
+  ref: Ref<Scrollable>;
 };
 
-const ScrollViewExample = forwardRef<Scrollable, ExampleProps>(
-  ({ animated }, ref) => {
-    const aref = useAnimatedRef<Animated.ScrollView>();
+const ScrollViewExample = ({ animated, ref }: ExampleProps) => {
+  const aref = useAnimatedRef<Animated.ScrollView>();
 
-    useImperativeHandle(ref, () => ({
-      scrollFromJS() {
-        console.log(_WORKLET);
-        aref.current?.scrollTo({ y: getRandomOffset(), animated });
-      },
-      scrollFromUI() {
-        runOnUI(() => {
-          console.log(_WORKLET);
-          scrollTo(aref, 0, getRandomOffset(), animated);
-        })();
-      },
-    }));
+  useImperativeHandle(ref, () => ({
+    scrollFromJS() {
+      console.log(getRuntimeKind());
+      aref.current?.scrollTo({ y: getRandomOffset(), animated });
+    },
+    scrollFromUI() {
+      scheduleOnUI(() => {
+        console.log(getRuntimeKind());
+        scrollTo(aref, 0, getRandomOffset(), animated);
+      });
+    },
+  }));
 
-    return (
-      <Animated.ScrollView ref={aref} style={styles.fill}>
-        {DATA.map((_, i) => (
-          <Text key={i} style={styles.text}>
-            {i}
-          </Text>
-        ))}
-      </Animated.ScrollView>
-    );
-  }
+  return (
+    <Animated.ScrollView ref={aref} style={styles.fill}>
+      {DATA.map((_, i) => (
+        <Text key={i} style={styles.text}>
+          {i}
+        </Text>
+      ))}
+    </Animated.ScrollView>
+  );
+};
+
+const FlatListExample = ({ animated, ref }: ExampleProps) => {
+  const aref = useAnimatedRef<Animated.FlatList<number>>();
+
+  useImperativeHandle(ref, () => ({
+    scrollFromJS() {
+      console.log(getRuntimeKind());
+      aref.current?.scrollToOffset({ offset: getRandomOffset(), animated });
+    },
+    scrollFromUI() {
+      scheduleOnUI(() => {
+        console.log(getRuntimeKind());
+        scrollTo(aref, 0, getRandomOffset(), animated);
+      });
+    },
+  }));
+
+  const renderItem = useCallback<FlatListRenderItem<number>>(
+    ({ item }) => <Text style={styles.text}>{item}</Text>,
+    []
+  );
+
+  return (
+    <Animated.FlatList
+      ref={aref}
+      renderItem={renderItem}
+      data={DATA}
+      style={styles.fill}
+    />
+  );
+};
+
+const FlashListExample = ({ animated, ref }: ExampleProps) => {
+  const aref = useAnimatedRef<FlashListRef<number>>();
+
+  useImperativeHandle(ref, () => ({
+    scrollFromJS() {
+      console.log(getRuntimeKind());
+      aref.current?.scrollToOffset({ offset: getRandomOffset(), animated });
+    },
+    scrollFromUI() {
+      scheduleOnUI(() => {
+        console.log(getRuntimeKind());
+        scrollTo(aref, 0, getRandomOffset(), animated);
+      });
+    },
+  }));
+
+  const renderItem = useCallback<FlashListRenderItem<number>>(
+    ({ item }) => <Text style={styles.text}>{item}</Text>,
+    []
+  );
+
+  return <AnimatedFlashList ref={aref} renderItem={renderItem} data={DATA} />;
+};
+
+const AnimatedSectionList = Animated.createAnimatedComponent(
+  SectionList<number>
 );
 
-const FlatListExample = forwardRef<Scrollable, ExampleProps>(
-  ({ animated }, ref) => {
-    const aref = useAnimatedRef<Animated.FlatList<number>>();
+const SectionListExample = ({ animated, ref }: ExampleProps) => {
+  const aref = useAnimatedRef<typeof AnimatedSectionList>();
 
-    useImperativeHandle(ref, () => ({
-      scrollFromJS() {
-        console.log(_WORKLET);
-        aref.current?.scrollToOffset({ offset: getRandomOffset(), animated });
-      },
-      scrollFromUI() {
-        runOnUI(() => {
-          console.log(_WORKLET);
-          scrollTo(aref, 0, getRandomOffset(), animated);
-        })();
-      },
-    }));
+  useImperativeHandle(ref, () => ({
+    scrollFromJS() {
+      console.log(getRuntimeKind());
+      aref.current?.scrollToLocation({
+        sectionIndex: Math.floor((Math.random() * DATA.length) / 10),
+        itemIndex: Math.floor((Math.random() * DATA.length) / 10),
+      });
+    },
+    scrollFromUI() {
+      scheduleOnUI(() => {
+        console.log(getRuntimeKind());
+        scrollTo(aref, 0, getRandomOffset(), animated);
+      });
+    },
+  }));
 
-    const renderItem = useCallback<FlatListRenderItem<number>>(
-      ({ item }) => <Text style={styles.text}>{item}</Text>,
-      []
-    );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const renderItem = useCallback<SectionListRenderItem<any>>(
+    ({ item }) => <Text style={styles.text}>{item}</Text>,
+    []
+  );
 
-    return (
-      <Animated.FlatList
-        ref={aref}
-        renderItem={renderItem}
-        data={DATA}
-        style={styles.fill}
-      />
-    );
-  }
-);
+  const sections = React.useMemo(
+    () =>
+      Array.from({ length: 10 }, (_, i) => ({
+        title: `Section ${i + 1}`,
+        data: DATA.slice(i * 10, (i + 1) * 10),
+      })),
+    []
+  );
 
-const FlashListExample = forwardRef<Scrollable, ExampleProps>(
-  ({ animated }, ref) => {
-    const aref = useAnimatedRef<FlashList<number>>();
+  return (
+    <AnimatedSectionList
+      ref={aref}
+      renderItem={renderItem}
+      style={styles.fill}
+      sections={sections}
+      renderSectionHeader={({ section: { title } }) => (
+        <Text style={styles.header}>{title}</Text>
+      )}
+      stickySectionHeadersEnabled={false}
+    />
+  );
+};
 
-    useImperativeHandle(ref, () => ({
-      scrollFromJS() {
-        console.log(_WORKLET);
-        aref.current?.scrollToOffset({ offset: getRandomOffset(), animated });
-      },
-      scrollFromUI() {
-        runOnUI(() => {
-          console.log(_WORKLET);
-          scrollTo(aref, 0, getRandomOffset(), animated);
-        })();
-      },
-    }));
+const AnimatedRNGHScrollView = Animated.createAnimatedComponent(RNGHScrollView);
 
-    const renderItem = useCallback<FlashListRenderItem<number>>(
-      ({ item }) => <Text style={styles.text}>{item}</Text>,
-      []
-    );
+const RNGHScrollViewExample = ({ animated, ref }: ExampleProps) => {
+  const aref = useAnimatedRef<typeof AnimatedRNGHScrollView>();
 
-    return (
-      <AnimatedFlashList
-        ref={aref}
-        estimatedItemSize={60}
-        renderItem={renderItem}
-        data={DATA}
-      />
-    );
-  }
-);
+  useImperativeHandle(ref, () => ({
+    scrollFromJS() {
+      console.log(getRuntimeKind());
+      // @ts-ignore This is broken with react-native-strict-api types.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      aref.current?.scrollTo({ y: getRandomOffset(), animated });
+    },
+    scrollFromUI() {
+      scheduleOnUI(() => {
+        console.log(getRuntimeKind());
+        scrollTo(aref, 0, getRandomOffset(), animated);
+      });
+    },
+  }));
+
+  return (
+    <AnimatedRNGHScrollView ref={aref} style={styles.fill}>
+      {DATA.map((_, i) => (
+        <Text key={i} style={styles.text}>
+          {i}
+        </Text>
+      ))}
+    </AnimatedRNGHScrollView>
+  );
+};
 
 const styles = StyleSheet.create({
+  optionsContainer: {
+    flexGrow: 0,
+  },
   optionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
     marginVertical: 10,
+    fontSize: 10,
+    gap: 3,
   },
   switchLabel: {
     fontSize: 20,
@@ -209,6 +294,11 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 50,
+    textAlign: 'center',
+  },
+  header: {
+    fontSize: 32,
+    fontWeight: 'bold',
     textAlign: 'center',
   },
 });

@@ -1,49 +1,9 @@
 'use strict';
-import type { BoxShadowValue } from 'react-native';
 
-import { ReanimatedError } from '../errors';
-import type { SingleCSSTransitionConfig } from '../types';
-import { isLength, isTimeUnit, smellsLikeTimingFunction } from './guards';
-
-const LENGTH_MAPPINGS = [
-  'offsetX',
-  'offsetY',
-  'blurRadius',
-  'spreadDistance',
-] as const;
-
-const SHADOW_PARTS_REGEX = /(?:[^\s()]+|\([^()]*\))+/g;
-const SHADOW_SPLIT_REGEX = /(?:[^,()]+|\([^)]*\))+(?=\s*,|$)/g;
-
-export function parseBoxShadowString(value: string) {
-  if (value === 'none') {
-    return [];
-  }
-
-  const shadows = value.match(SHADOW_SPLIT_REGEX) || [];
-
-  return shadows.map<BoxShadowValue>((shadow) => {
-    const result: BoxShadowValue = {
-      offsetX: 0,
-      offsetY: 0,
-    };
-
-    let foundLengthsCount = 0;
-    const parts = shadow.match(SHADOW_PARTS_REGEX) || [];
-
-    parts.forEach((part) => {
-      if (isLength(part)) {
-        result[LENGTH_MAPPINGS[foundLengthsCount++]] = part;
-      } else if (part === 'inset') {
-        result.inset = true;
-      } else {
-        result.color = part.trim();
-      }
-    });
-
-    return result;
-  });
-}
+import { ReanimatedError } from '../../common';
+import { MILLISECONDS_REGEX, SECONDS_REGEX } from '../constants';
+import type { SingleCSSTransitionConfig, TimeUnit } from '../types';
+import { isTimeUnit, smellsLikeTimingFunction } from './guards';
 
 export function splitByComma(str: string) {
   // split by comma not enclosed in parentheses
@@ -120,4 +80,15 @@ export function parseSingleTransitionShorthand(
   }
 
   return result;
+}
+
+export function normalizeTimeUnit(timeUnit: TimeUnit): number | null {
+  if (typeof timeUnit === 'number') {
+    return timeUnit;
+  } else if (MILLISECONDS_REGEX.test(timeUnit)) {
+    return parseInt(timeUnit, 10);
+  } else if (SECONDS_REGEX.test(timeUnit)) {
+    return parseFloat(timeUnit) * 1000;
+  }
+  return null;
 }

@@ -1,0 +1,35 @@
+{
+  "name": "babel-plugin-worklets",
+  "version": "0.0.0",
+  "private": true,
+  "devDependencies": {
+    "@babel/cli": "7.28.3",
+    "@babel/core": "7.28.4",
+    "@babel/plugin-transform-class-properties": "7.27.1",
+    "@babel/plugin-transform-classes": "7.28.4",
+    "@babel/plugin-transform-unicode-regex": "7.27.1",
+    "@babel/traverse": "7.28.4",
+    "@babel/types": "7.28.4",
+    "@react-native/eslint-config": "0.80.0",
+    "@types/node": "24.0.14",
+    "@typescript-eslint/parser": "8.37.0",
+    "esbuild": "0.25.10",
+    "eslint": "9.37.0",
+    "prettier": "3.6.2",
+    "tsc-watch": "7.2.0",
+    "typescript": "5.8.3"
+  },
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "scripts": {
+    "build": "yarn tsc && yarn bundle && yarn format",
+    "bundle": "node bundle.js",
+    "format": "prettier --write --list-different src",
+    "watch": "tsc-watch --onSuccess \"yarn bundle\"",
+    "lint": "eslint --max-warnings=0 src",
+    "type:check": "tsc --noEmit"
+  },
+  "installConfig": {
+    "selfReferences": false
+  }
+}

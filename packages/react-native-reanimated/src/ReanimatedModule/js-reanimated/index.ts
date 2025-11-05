@@ -1,8 +1,7 @@
 'use strict';
+import { logger } from '../../common';
 import type { AnimatedStyle, StyleProps } from '../../commonTypes';
-import { ReanimatedError } from '../../errors';
-import { PropsAllowlists } from '../../propsAllowlists';
-import { logger } from '../../WorkletsResolver';
+import type { PropUpdates } from '../../createAnimatedComponent/commonTypes';
 import {
   createReactDOMStyle,
   createTextShadowValue,
@@ -10,25 +9,6 @@ import {
 } from './webUtils';
 
 export { createJSReanimatedModule } from './JSReanimated';
-
-// TODO: Install these global functions in a more suitable location.
-global._makeShareableClone = () => {
-  throw new ReanimatedError(
-    '`_makeShareableClone` should never be called from React runtime.'
-  );
-};
-
-global._scheduleHostFunctionOnJS = () => {
-  throw new ReanimatedError(
-    '`_scheduleOnJS` should never be called from React runtime.'
-  );
-};
-
-global._scheduleOnRuntime = () => {
-  throw new ReanimatedError(
-    '`_scheduleOnRuntime` should never be called from React runtime.'
-  );
-};
 
 interface JSReanimatedComponent {
   previousStyle: StyleProps;
@@ -53,8 +33,7 @@ export interface ReanimatedHTMLElement extends HTMLElement {
 
 // TODO: Move these functions outside of index file.
 export const _updatePropsJS = (
-  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-  updates: StyleProps | AnimatedStyle<any>,
+  updates: PropUpdates,
   viewRef: (JSReanimatedComponent | ReanimatedHTMLElement) & {
     getAnimatableRef?: () => JSReanimatedComponent | ReanimatedHTMLElement;
   },
@@ -110,15 +89,9 @@ const setNativeProps = (
   isAnimatedProps?: boolean
 ): void => {
   if (isAnimatedProps) {
-    const uiProps: Record<string, unknown> = {};
-    for (const key in newProps) {
-      if (isNativeProp(key)) {
-        uiProps[key] = newProps[key];
-      }
-    }
     // Only update UI props directly on the component,
     // other props can be updated as standard style props.
-    component.setNativeProps?.(uiProps);
+    component.setNativeProps?.(newProps);
   }
 
   const previousStyle = component.previousStyle ? component.previousStyle : {};
@@ -172,7 +145,3 @@ const updatePropsDOM = (
     }
   }
 };
-
-function isNativeProp(propName: string): boolean {
-  return !!PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST[propName];
-}

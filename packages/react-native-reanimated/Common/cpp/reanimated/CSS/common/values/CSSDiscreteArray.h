@@ -1,16 +1,11 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/values/CSSKeyword.h>
-
-#include <worklets/Tools/JSISerializer.h>
 
 #include <string>
 #include <vector>
 
-namespace reanimated {
-
-using namespace worklets;
+namespace reanimated::css {
 
 /*
  * CSSDiscreteArray is used for array interpolation when arrays need to be
@@ -34,19 +29,13 @@ struct CSSDiscreteArray : public CSSSimpleValue<CSSDiscreteArray<TValue>> {
 
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
-  CSSDiscreteArray<TValue> interpolate(
-      double progress,
-      const CSSDiscreteArray<TValue> &other) const override;
+  CSSDiscreteArray<TValue> interpolate(double progress, const CSSDiscreteArray<TValue> &other) const override;
 
   bool operator==(const CSSDiscreteArray<TValue> &other) const;
 
 #ifndef NDEBUG
-  friend std::ostream &operator<<(
-      std::ostream &os,
-      const CSSDiscreteArray<TValue> &arrayValue);
+  friend std::ostream &operator<<(std::ostream &os, const CSSDiscreteArray<TValue> &arrayValue);
 #endif // NDEBUG
 };
 
-} // namespace reanimated
-
-#endif
+} // namespace reanimated::css

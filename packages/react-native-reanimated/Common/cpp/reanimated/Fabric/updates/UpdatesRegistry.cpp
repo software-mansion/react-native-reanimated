@@ -1,7 +1,20 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
+#include <memory>
+#include <string>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
 namespace reanimated {
+
+std::lock_guard<std::mutex> UpdatesRegistry::lock() const {
+  return std::lock_guard<std::mutex>{mutex_};
+}
+
+bool UpdatesRegistry::isEmpty() const {
+  return updatesRegistry_.empty();
+}
 
 folly::dynamic UpdatesRegistry::get(const Tag tag) const {
   std::lock_guard<std::mutex> lock{mutex_};
@@ -13,22 +26,16 @@ folly::dynamic UpdatesRegistry::get(const Tag tag) const {
   return it->second.second;
 }
 
-void UpdatesRegistry::flushUpdates(
-    UpdatesBatch &updatesBatch,
-    const bool merge) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
+void UpdatesRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
   auto copiedUpdatesBatch = std::move(updatesBatch_);
   updatesBatch_.clear();
 
   // Store all updates in the registry for later use in the commit hook
-  flushUpdatesToRegistry(copiedUpdatesBatch, merge);
+  flushUpdatesToRegistry(copiedUpdatesBatch);
   // Flush the updates to the updatesBatch used to apply current changes
   for (auto &[shadowNode, props] : copiedUpdatesBatch) {
     updatesBatch.emplace_back(shadowNode, std::move(props));
   }
-  // Remove all tags scheduled for removal
-  runMarkedRemovals();
 }
 
 void UpdatesRegistry::collectProps(PropsMap &propsMap) {
@@ -51,13 +58,13 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
 }
 
 void UpdatesRegistry::addUpdatesToBatch(
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const folly::dynamic &props) {
   updatesBatch_.emplace_back(shadowNode, props);
 }
 
 void UpdatesRegistry::setInUpdatesRegistry(
-    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const folly::dynamic &props) {
   const auto tag = shadowNode->getTag();
 #ifdef ANDROID
@@ -81,27 +88,17 @@ void UpdatesRegistry::removeFromUpdatesRegistry(const Tag tag) {
   updatesRegistry_.erase(tag);
 }
 
-void UpdatesRegistry::flushUpdatesToRegistry(
-    const UpdatesBatch &updatesBatch,
-    const bool merge) {
+void UpdatesRegistry::flushUpdatesToRegistry(const UpdatesBatch &updatesBatch) {
   for (auto &[shadowNode, props] : updatesBatch) {
     const auto tag = shadowNode->getTag();
     auto it = updatesRegistry_.find(tag);
 
-    if (it == updatesRegistry_.cend() || !merge) {
+    if (it == updatesRegistry_.cend()) {
       updatesRegistry_[tag] = std::make_pair(shadowNode, props);
     } else {
       it->second.second.update(props);
     }
   }
-}
-
-void UpdatesRegistry::runMarkedRemovals() {
-  auto copiedTagsToRemove = std::move(tagsToRemove_);
-  for (const auto tag : copiedTagsToRemove) {
-    updatesRegistry_.erase(tag);
-  }
-  tagsToRemove_.clear();
 }
 
 #ifdef ANDROID
@@ -126,9 +123,7 @@ void UpdatesRegistry::collectPropsToRevert(PropsToRevertMap &propsToRevertMap) {
   propsToRevertMap_.clear();
 }
 
-void UpdatesRegistry::updatePropsToRevert(
-    const Tag tag,
-    const folly::dynamic *newProps) {
+void UpdatesRegistry::updatePropsToRevert(const Tag tag, const folly::dynamic *newProps) {
   auto it = updatesRegistry_.find(tag);
   if (it == updatesRegistry_.end()) {
     return;
@@ -163,5 +158,3 @@ void UpdatesRegistry::updatePropsToRevert(
 #endif
 
 } // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED

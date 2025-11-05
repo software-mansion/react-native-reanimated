@@ -5,6 +5,7 @@ import { ComparisonMode } from '../types';
 import { cyan, green, red, yellow } from '../utils/stringFormatUtils';
 import { SyncUIRunner } from '../utils/SyncUIRunner';
 import { getComparator } from './Comparators';
+import { getRuntimeKind, RuntimeKind } from 'react-native-worklets';
 
 type ToBeArgs = [TestValue, ComparisonMode?];
 export type ToThrowArgs = [string?];
@@ -42,7 +43,7 @@ function assertValueIsCallTracker(value: TrackerCallCount | TestValue): asserts 
 export const toBeMatcher: Matcher<ToBeArgs> = (currentValue, negation, expectedValue, comparisonModeUnknown) => {
   const comparisonMode: ComparisonMode =
     typeof comparisonModeUnknown === 'string' && comparisonModeUnknown in ComparisonMode
-      ? (comparisonModeUnknown as ComparisonMode)
+      ? comparisonModeUnknown
       : ComparisonMode.AUTO;
 
   const isEqual = getComparator(comparisonMode);
@@ -162,14 +163,18 @@ async function mockConsole(): Promise<
   const incrementJS = () => {
     counterJS++;
   };
-  const mockedConsoleFunction = (message: string) => {
+  const mockedConsoleFunction = (message: string | Error) => {
     'worklet';
-    if (_WORKLET) {
-      counterUI.value++;
-    } else {
+    if (getRuntimeKind() === RuntimeKind.ReactNative) {
       incrementJS();
+    } else {
+      counterUI.value++;
     }
-    recordedMessage.value = message.split('\n\nThis error is located at:')[0];
+    if (typeof message === 'object' && 'message' in message) {
+      recordedMessage.value = message.message;
+    } else {
+      recordedMessage.value = message.split('\n\nThis error is located at:')[0];
+    }
   };
   console.error = mockedConsoleFunction;
   console.warn = mockedConsoleFunction;

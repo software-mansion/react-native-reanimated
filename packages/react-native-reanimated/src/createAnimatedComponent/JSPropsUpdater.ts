@@ -1,126 +1,55 @@
 'use strict';
-import type { NativeModule } from 'react-native';
-import { NativeEventEmitter, Platform } from 'react-native';
+import { scheduleOnUI } from 'react-native-worklets';
 
-import type { StyleProps } from '../commonTypes';
-import { shouldBeUseWeb } from '../PlatformChecker';
-import NativeReanimatedModule from '../specs/NativeReanimatedModule';
-import { runOnJS, runOnUIImmediately } from '../WorkletsResolver';
+import { SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatedComponentProps,
+  AnimatedComponentTypeInternal,
   IAnimatedComponentInternal,
   IJSPropsUpdater,
   InitialComponentProps,
+  JSPropsOperation,
 } from './commonTypes';
 
-interface ListenerData {
-  viewTag: number;
-  props: StyleProps;
-}
+class JSPropsUpdaterNative implements IJSPropsUpdater {
+  private static _tagToComponentMapping = new Map<
+    number,
+    AnimatedComponentTypeInternal
+  >();
 
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
-
-class JSPropsUpdaterPaper implements IJSPropsUpdater {
-  private static _tagToComponentMapping = new Map();
-  _reanimatedEventEmitter: NativeEventEmitter;
-
-  constructor() {
-    this._reanimatedEventEmitter = new NativeEventEmitter(
-      // NativeEventEmitter only uses this parameter on iOS and macOS.
-      Platform.OS === 'ios' || Platform.OS === 'macos'
-        ? (NativeReanimatedModule as unknown as NativeModule)
-        : undefined
-    );
-  }
-
-  public addOnJSPropsChangeListener(
-    animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
+  public registerComponent(
+    animatedComponent: AnimatedComponentTypeInternal,
+    jsProps: string[]
   ) {
     const viewTag = animatedComponent.getComponentViewTag();
-    JSPropsUpdaterPaper._tagToComponentMapping.set(viewTag, animatedComponent);
-    if (JSPropsUpdaterPaper._tagToComponentMapping.size === 1) {
-      const listener = (data: ListenerData) => {
-        const component = JSPropsUpdaterPaper._tagToComponentMapping.get(
-          data.viewTag
-        );
-        component?._updateFromNative(data.props);
-      };
-      this._reanimatedEventEmitter.addListener(
-        'onReanimatedPropsChange',
-        listener
+    JSPropsUpdaterNative._tagToComponentMapping.set(viewTag, animatedComponent);
+
+    scheduleOnUI(() => {
+      global._tagToJSPropNamesMapping[viewTag] = Object.fromEntries(
+        jsProps.map((propName) => [propName, true])
       );
-    }
+    });
   }
 
-  public removeOnJSPropsChangeListener(
-    animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
-  ) {
+  public unregisterComponent(animatedComponent: AnimatedComponentTypeInternal) {
     const viewTag = animatedComponent.getComponentViewTag();
-    JSPropsUpdaterPaper._tagToComponentMapping.delete(viewTag);
-    if (JSPropsUpdaterPaper._tagToComponentMapping.size === 0) {
-      this._reanimatedEventEmitter.removeAllListeners(
-        'onReanimatedPropsChange'
-      );
-    }
-  }
-}
+    JSPropsUpdaterNative._tagToComponentMapping.delete(viewTag);
 
-class JSPropsUpdaterFabric implements IJSPropsUpdater {
-  private static _tagToComponentMapping = new Map();
-  private static isInitialized = false;
-
-  constructor() {
-    if (!JSPropsUpdaterFabric.isInitialized) {
-      const updater = (viewTag: number, props: unknown) => {
-        const component =
-          JSPropsUpdaterFabric._tagToComponentMapping.get(viewTag);
-        component?._updateFromNative(props);
-      };
-      runOnUIImmediately(() => {
-        'worklet';
-        global.updateJSProps = (viewTag: number, props: unknown) => {
-          runOnJS(updater)(viewTag, props);
-        };
-      })();
-      JSPropsUpdaterFabric.isInitialized = true;
-    }
+    scheduleOnUI(() => {
+      delete global._tagToJSPropNamesMapping[viewTag];
+    });
   }
 
-  public addOnJSPropsChangeListener(
-    animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
-  ) {
-    if (!JSPropsUpdaterFabric.isInitialized) {
-      return;
-    }
-    const viewTag = animatedComponent.getComponentViewTag();
-    JSPropsUpdaterFabric._tagToComponentMapping.set(viewTag, animatedComponent);
-  }
-
-  public removeOnJSPropsChangeListener(
-    animatedComponent: React.Component<
-      AnimatedComponentProps<InitialComponentProps>
-    > &
-      IAnimatedComponentInternal
-  ) {
-    if (!JSPropsUpdaterFabric.isInitialized) {
-      return;
-    }
-    const viewTag = animatedComponent.getComponentViewTag();
-    JSPropsUpdaterFabric._tagToComponentMapping.delete(viewTag);
+  public updateProps(operations: JSPropsOperation[]) {
+    operations.forEach(({ tag, updates }) => {
+      const component = JSPropsUpdaterNative._tagToComponentMapping.get(tag);
+      component?.setNativeProps(updates);
+    });
   }
 }
 
 class JSPropsUpdaterWeb implements IJSPropsUpdater {
-  public addOnJSPropsChangeListener(
+  public registerComponent(
     _animatedComponent: React.Component<
       AnimatedComponentProps<InitialComponentProps>
     > &
@@ -129,28 +58,31 @@ class JSPropsUpdaterWeb implements IJSPropsUpdater {
     // noop
   }
 
-  public removeOnJSPropsChangeListener(
+  public unregisterComponent(
     _animatedComponent: React.Component<
       AnimatedComponentProps<InitialComponentProps>
     > &
       IAnimatedComponentInternal
   ) {
+    // noop
+  }
+
+  public updateProps(_operations: JSPropsOperation[]) {
     // noop
   }
 }
 
 type JSPropsUpdaterOptions =
   | typeof JSPropsUpdaterWeb
-  | typeof JSPropsUpdaterFabric
-  | typeof JSPropsUpdaterPaper;
+  | typeof JSPropsUpdaterNative;
 
 let JSPropsUpdater: JSPropsUpdaterOptions;
 if (SHOULD_BE_USE_WEB) {
   JSPropsUpdater = JSPropsUpdaterWeb;
-} else if (global._IS_FABRIC) {
-  JSPropsUpdater = JSPropsUpdaterFabric;
 } else {
-  JSPropsUpdater = JSPropsUpdaterPaper;
+  JSPropsUpdater = JSPropsUpdaterNative;
 }
 
-export default JSPropsUpdater;
+const jsPropsUpdater = new JSPropsUpdater();
+
+export default jsPropsUpdater;

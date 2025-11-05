@@ -1,18 +1,19 @@
-#include <worklets/Tools/ReanimatedJSIUtils.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
+#include <worklets/WorkletRuntime/RuntimeKind.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
-using facebook::jsi::Runtime;
+#include <utility>
 
 namespace worklets {
 
-void UIRuntimeDecorator::decorate(Runtime &uiRuntime) {
+void UIRuntimeDecorator::decorate(
+    facebook::jsi::Runtime &uiRuntime,
+    std::function<void(facebook::jsi::Runtime &rt, const facebook::jsi::Value &callback)> &&requestAnimationFrame) {
+  uiRuntime.global().setProperty(uiRuntime, runtimeKindBindingName, static_cast<int>(RuntimeKind::UI));
+
   uiRuntime.global().setProperty(uiRuntime, "_UI", true);
 
-  // TODO: Without the following you can't do `runOnUI` since the
-  // queue is not established. Decide if it should be here or in
-  // Reanimated.
-  // jsi_utils::installJsiFunction(
-  // uiRuntime, "_maybeFlushUIUpdatesQueue", maybeFlushUIUpdatesQueue);
+  jsi_utils::installJsiFunction(uiRuntime, "requestAnimationFrame", std::move(requestAnimationFrame));
 }
 
 } // namespace worklets

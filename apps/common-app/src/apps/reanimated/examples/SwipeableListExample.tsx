@@ -1,20 +1,25 @@
-import React from 'react';
-import { Alert, Dimensions, StyleSheet, Text, View } from 'react-native';
-import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
+import React, { useMemo } from 'react';
+import {
+  Alert,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {
   FlatList,
-  PanGestureHandler,
-  TouchableOpacity,
+  Gesture,
+  GestureDetector,
 } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
-  runOnJS,
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 const windowDimensions = Dimensions.get('window');
 const BUTTON_WIDTH = 80;
@@ -64,7 +69,11 @@ export default function SwipeableListExample() {
     <View style={s.container}>
       <FlatList
         data={data}
+        // TODO: Fix me
+        // @ts-ignore RNGH types for web FlatList are broken.
         renderItem={({ item }) => <ListItem item={item} onRemove={onRemove} />}
+        // TODO: Fix me
+        // @ts-ignore RNGH types for web FlatList are broken.
         keyExtractor={(item) => item.id}
       />
     </View>
@@ -79,8 +88,6 @@ const springConfig = (velocity: number) => {
     damping: 500,
     mass: 3,
     overshootClamping: true,
-    restDisplacementThreshold: 0.01,
-    restSpeedThreshold: 0.01,
     velocity,
   };
 };
@@ -96,42 +103,43 @@ type ListItemProps = {
 };
 function ListItem({ item, onRemove }: ListItemProps) {
   const isRemoving = useSharedValue(false);
+  const startX = useSharedValue(0);
   const translateX = useSharedValue(0);
 
-  type AnimatedGHContext = {
-    startX: number;
-  };
-  const handler = useAnimatedGestureHandler<
-    PanGestureHandlerGestureEvent,
-    AnimatedGHContext
-  >({
-    onStart: (_evt, ctx) => {
-      ctx.startX = translateX.value;
-    },
-
-    onActive: (evt, ctx) => {
-      const nextTranslate = evt.translationX + ctx.startX;
-      translateX.value = Math.min(0, Math.max(nextTranslate, MAX_TRANSLATE));
-    },
-
-    onEnd: (evt) => {
-      if (evt.velocityX < -20) {
-        translateX.value = withSpring(
-          MAX_TRANSLATE,
-          springConfig(evt.velocityX)
-        );
-      } else {
-        translateX.value = withSpring(0, springConfig(evt.velocityX));
-      }
-    },
-  });
+  const panGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .activeOffsetX([-10, 10])
+        .onStart(() => {
+          startX.value = translateX.value;
+        })
+        .onUpdate((evt) => {
+          const nextTranslate = startX.value + evt.translationX;
+          translateX.value = Math.min(
+            0,
+            Math.max(nextTranslate, MAX_TRANSLATE)
+          );
+        })
+        .onEnd((evt) => {
+          if (evt.velocityX < -20) {
+            translateX.value = withSpring(
+              MAX_TRANSLATE,
+              springConfig(evt.velocityX)
+            );
+          } else {
+            translateX.value = withSpring(0, springConfig(evt.velocityX));
+          }
+        }),
+    [startX, translateX]
+  );
 
   const styles = useAnimatedStyle(() => {
     if (isRemoving.value) {
       return {
         height: withTiming(0, timingConfig, () => {
-          runOnJS(onRemove)();
+          scheduleOnRN(onRemove);
         }),
+        opacity: withTiming(0, timingConfig),
         transform: [
           {
             translateX: withTiming(-windowDimensions.width, timingConfig),
@@ -142,6 +150,7 @@ function ListItem({ item, onRemove }: ListItemProps) {
 
     return {
       height: 78,
+      opacity: 1,
       transform: [
         {
           translateX: translateX.value,
@@ -163,7 +172,7 @@ function ListItem({ item, onRemove }: ListItemProps) {
 
   return (
     <View style={s.item}>
-      <PanGestureHandler activeOffsetX={[-10, 10]} onGestureEvent={handler}>
+      <GestureDetector gesture={panGesture}>
         <Animated.View style={styles}>
           <ListItemContent item={item} />
 
@@ -171,7 +180,7 @@ function ListItem({ item, onRemove }: ListItemProps) {
             <Button item={removeButton} />
           </View>
         </Animated.View>
-      </PanGestureHandler>
+      </GestureDetector>
     </View>
   );
 }

@@ -1,0 +1,84 @@
+---
+sidebar_position: 42 # Use alphabetical order
+---
+
+# createSerializable
+
+`createSerializable` recursively converts JavaScript values into serializable references that can be used on different Runtimes than RN Runtime.
+The reference cannot be manipulated, as it doesn't represent any standard JavaScript object. Changes to the original value don't affect the `Serializable`.
+It handles various data types including primitives, objects, arrays, functions, and special cases like host objects and worklets.
+To prevent misconceptions Worklets library freezes the original value for object-like values and for arrays.
+
+![Serializable](/img/serializable.png)
+
+<figcaption style={{ textAlign: 'center' }}>
+  Serializable flow diagram
+</figcaption>
+
+**Functions like `runOnUI`, `runOnRuntime`, `runOnJS`, `executeOnUIRuntimeSync` and `runOnUIAsync` automatically convert values to `Serializable` references.**
+
+## Usage
+
+```tsx
+import { createSerializable, runOnUI } from 'react-native-worklets';
+
+const object = {
+  a: 1,
+  b: 2,
+  c: 4,
+};
+
+object.c = 3; // <-- Correct: you can modify the object before serializing it
+
+createSerializable(object);
+
+object.a = 10; // <-- Warning: You can't mutate the object after serializing it
+
+runOnUI(() => {
+  object.a = 10; // <-- Warning: You can't mutate the object after serializing it
+  console.log(object); // { a: 1, b: 2, c: 3 }
+})();
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type SerializableRef<T = unknown> = {
+  __serializableRef: true;
+  __nativeStateSerializableJSRef: T;
+};
+
+function createSerializable<T>(value: T): SerializableRef<T> {
+  return value as SerializableRef<T>;
+}
+```
+
+</details>
+
+## Remarks
+
+- The function automatically detects the type of the input value and applies appropriate serialization strategies.
+
+Supported types:
+| Type | Supported |
+|------|-----------|
+| string | ✅ |
+| number | ✅ |
+| boolean | ✅ |
+| object | ✅ |
+| array | ✅ |
+| function (non-worklet) | ✅ |
+| HostObject | ✅ |
+| worklet | ✅ |
+| Map | ✅ |
+| Set | ✅ |
+| ArrayBuffer | ✅ |
+| RegExp | ✅ |
+| Cyclic objects | ❌ |
+| Objects with custom prototype | ❌ |
+
+- For objects and arrays, it recursively processes nested properties
+- The function includes cycle detection to prevent infinite recursion
+- Objects are frozen after serialization to prevent accidental modifications that won't propagate to the Serializable
+- Functions that aren't worklets are serialized as references to function instances on the respective runtime

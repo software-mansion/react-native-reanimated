@@ -1,4 +1,6 @@
 'use strict';
+import type { SerializableRef } from 'react-native-worklets';
+
 import type {
   SensorConfig,
   SensorType,
@@ -7,7 +9,6 @@ import type {
   ValueRotation,
 } from './commonTypes';
 import Sensor from './Sensor';
-import type { ShareableRef } from './WorkletsResolver';
 
 export class SensorContainer {
   private nativeSensors: Map<number, Sensor> = new Map();
@@ -38,7 +39,7 @@ export class SensorContainer {
   registerSensor(
     sensorType: SensorType,
     config: SensorConfig,
-    handler: ShareableRef<(data: Value3D | ValueRotation) => void>
+    handler: SerializableRef<(data: Value3D | ValueRotation) => void>
   ): number {
     const sensorId = this.getSensorId(sensorType, config);
 

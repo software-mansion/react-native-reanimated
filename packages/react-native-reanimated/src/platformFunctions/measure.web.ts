@@ -1,16 +1,14 @@
 'use strict';
-import type { Component } from 'react';
-
-import type { MeasuredDimensions } from '../commonTypes';
+import { logger } from '../common';
+import type { InternalHostInstance, MeasuredDimensions } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
-import { logger } from '../WorkletsResolver';
 
-export function measure<T extends Component>(
-  animatedRef: AnimatedRef<T>
+export function measure<TRef extends InternalHostInstance>(
+  animatedRef: AnimatedRef<TRef>
 ): MeasuredDimensions | null {
-  const element = animatedRef() as HTMLElement | -1;
+  const element = animatedRef() as HTMLElement | null;
 
-  if (element === -1) {
+  if (!element) {
     logger.warn(
       `The view with tag ${element} is not a valid argument for measure(). This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
     );

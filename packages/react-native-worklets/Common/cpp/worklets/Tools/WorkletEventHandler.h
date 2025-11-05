@@ -1,6 +1,6 @@
 #pragma once
 
-#include <worklets/SharedItems/Shareables.h>
+#include <worklets/SharedItems/Serializable.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <jsi/jsi.h>
@@ -16,14 +16,14 @@ class WorkletEventHandler {
   const uint64_t handlerId_;
   const uint64_t emitterReactTag_;
   const std::string eventName_;
-  const std::shared_ptr<ShareableWorklet> handlerFunction_;
+  const std::shared_ptr<SerializableWorklet> handlerFunction_;
 
  public:
   WorkletEventHandler(
       const uint64_t handlerId,
       const std::string &eventName,
       const uint64_t emitterReactTag,
-      const std::shared_ptr<ShareableWorklet> &handlerFunction)
+      const std::shared_ptr<SerializableWorklet> &handlerFunction)
       : handlerId_(handlerId),
         emitterReactTag_(emitterReactTag),
         eventName_(eventName),

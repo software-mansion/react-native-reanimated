@@ -13,32 +13,40 @@ import AnimatedTextWidthExample from './AnimatedTextWidthExample';
 import ArticleProgressExample from './ArticleProgressExample';
 import BabelVersionCheckExample from './BabelVersionCheckExample';
 import BokehExample from './BokehExample';
+import BottomSheetExample from './BottomSheetExample';
 import BouncingBoxExample from './BouncingBoxExample';
 import BubblesExample from './BubblesExample';
 import ChatHeadsExample from './ChatHeadsExample';
 import ChessboardExample from './ChessboardExample';
 import ChessExample from './ChessExample';
+import CircularSliderExample from './CircularSliderExample';
 import ColorExample from './ColorExample';
 import ColorInterpolationExample from './ColorInterpolationExample';
 import ComposedHandlerConditionalExample from './ComposedHandlerConditionalExample';
 import ComposedHandlerDifferentEventsExample from './ComposedHandlerDifferentEventsExample';
 import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMergingExample';
+import CopySerializablePerformanceTest from './CopySerializablePerformanceTest';
 import CounterExample from './CounterExample';
 import CubesExample from './CubesExample';
 import PagerExample from './CustomHandler/PagerExample';
 import DispatchCommandExample from './DispatchCommandExample';
 import DragAndSnapExample from './DragAndSnapExample';
+import DynamicColorIOSExample from './DynamicColorIOSExample';
+import PlatformColorExample from './PlatformColorExample';
 import EmojiWaterfallExample from './EmojiWaterfallExample';
 import EmptyExample from './EmptyExample';
 import ExtrapolationExample from './ExtrapolationExample';
+import FilterExample from './FilterExample';
+import FlatListWithLayoutAnimations from './FlatListWithLayoutAnimationsExample';
+import FpsExample from './FpsExample';
 import FrameCallbackExample from './FrameCallbackExample';
+import FreezeExample from './FreezeExample';
 import Game2048Example from './Game2048Example';
 import GestureHandlerExample from './GestureHandlerExample';
 import GetViewPropExample from './GetViewPropExample';
 import InvalidValueAccessExample from './InvalidValueAccessExample';
 import InvertedFlatListExample from './InvertedFlatListExample';
 import IPodExample from './IPodExample';
-import JSPropsExample from './JSPropsExample';
 import AnimatedListExample from './LayoutAnimations/AnimatedList';
 import BasicLayoutAnimation from './LayoutAnimations/BasicLayoutAnimation';
 import BasicNestedAnimation from './LayoutAnimations/BasicNestedAnimation';
@@ -51,6 +59,7 @@ import CombinedTest from './LayoutAnimations/Combined';
 import CustomLayoutAnimationScreen from './LayoutAnimations/CustomLayout';
 import DefaultAnimations from './LayoutAnimations/DefaultAnimations';
 import DeleteAncestorOfExiting from './LayoutAnimations/DeleteAncestorOfExiting';
+import DurationZeroExample from './LayoutAnimations/DurationZero';
 import FlatListSkipEnteringExiting from './LayoutAnimations/FlatListSkipEnteringExiting';
 import HabitsExample from './LayoutAnimations/HabitsExample';
 import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
@@ -59,6 +68,7 @@ import ListItemLayoutAnimation from './LayoutAnimations/ListItemLayoutAnimation'
 import Modal from './LayoutAnimations/Modal';
 import ModalNewAPI from './LayoutAnimations/ModalNewAPI';
 import MountingUnmounting from './LayoutAnimations/MountingUnmounting';
+import MoveWithExiting from './LayoutAnimations/MoveWithExiting';
 import NativeModals from './LayoutAnimations/NativeModals';
 import NestedTest from './LayoutAnimations/Nested';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
@@ -66,6 +76,7 @@ import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksW
 import OlympicAnimation from './LayoutAnimations/OlympicAnimation';
 import ReactionsCounterExample from './LayoutAnimations/ReactionsCounterExample';
 import ReducedMotionLayoutExample from './LayoutAnimations/ReducedMotionLayoutExample';
+import ReparentingExample from './LayoutAnimations/ReparentingExample';
 import SpringLayoutAnimation from './LayoutAnimations/SpringLayoutAnimation';
 import SwipeableList from './LayoutAnimations/SwipeableList';
 import ViewFlatteningExample from './LayoutAnimations/ViewFlattening';
@@ -77,11 +88,13 @@ import LogExample from './LogExample';
 import MatrixTransform from './MatrixTransform';
 import MeasureExample from './MeasureExample';
 import MemoExample from './MemoExample';
+import ModalExitingExample from './ModalExitingExample';
 import ModifyExample from './ModifyExample';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
 import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
 import OldAnimatedSensorExample from './OldAnimatedSensorExample';
 import OldMeasureExample from './OldMeasureExample';
+import OpacityTransformExample from './OpacityTransformExample';
 import OverlappingBoxesExample from './OverlappingBoxesExample';
 import PendulumExample from './PendulumExample';
 import PerformanceMonitorExample from './PerfomanceMonitorExample';
@@ -90,46 +103,32 @@ import PlanetsExample from './PlanetsExample';
 import RainbowExample from './RainbowExample';
 import ReducedMotionExample from './ReducedMotionExample';
 import RefExample from './RefExample';
+import RunOnUIAsyncExample from './RunOnUIAsyncExample';
 import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
 import ScreenStackExample from './ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderConfigBackgroundColorExample';
 import ScreenTransitionExample from './ScreenTransitionExample';
 import ScrollableViewExample from './ScrollableViewExample';
 import ScrollEventExample from './ScrollEventExample';
+import ScrollPerformanceExample from './ScrollPerformanceExample';
 import ScrollToExample from './ScrollToExample';
 import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import SetNativePropsExample from './SetNativePropsExample';
-import FreezingShareablesExample from './ShareableFreezingExample';
-import ShareablesExample from './ShareablesExample';
-import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
-import CardExample from './SharedElementTransitions/Card';
-import ChangeThemeSharedExample from './SharedElementTransitions/ChangeTheme';
-import CustomTransitionExample from './SharedElementTransitions/CustomTransition';
-import DuplicateTagsExample from './SharedElementTransitions/DuplicateTags';
-import FlatListExample from './SharedElementTransitions/FlatList';
-import GalleryExample from './SharedElementTransitions/Gallery';
-import ImageStackExample from './SharedElementTransitions/ImageStack';
-import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
-import ManyScreensExample from './SharedElementTransitions/ManyScreens';
-import ManyTagsExample from './SharedElementTransitions/ManyTags';
-import ModalsExample from './SharedElementTransitions/Modals';
-import NestedRotationExample from './SharedElementTransitions/NestedRotation';
-import NestedStacksExample from './SharedElementTransitions/NestedStacks';
-import ProfilesExample from './SharedElementTransitions/Profiles';
-import ProgressTransitionExample from './SharedElementTransitions/ProgressTransition';
-import ReducedMotionSharedExample from './SharedElementTransitions/ReducedMotionSharedExample';
-import RestoreStateExample from './SharedElementTransitions/RestoreState';
-import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample';
-import TransitionRestartExample from './SharedElementTransitions/TransitionRestart';
+import SerializableFreezingExample from './SerializableFreezingExample';
 import SharedStyleExample from './SharedStyleExample';
+import SpringComparisonExample from './SpringComparisonExample';
+import SpringPresetsExample from './SpringPresetsExample';
 import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
 import SvgExample from './SvgExample';
 import SwipeableListExample from './SwipeableListExample';
+import SynchronizablePerformanceExample from './SynchronizableExample';
+import SynchronousPropsExample from './SynchronousPropsExample';
+import ThirdPartyComponentsExample from './ThirdPartyComponentsExample';
 import TransformExample from './TransformExample';
+import TransformOriginExample from './TransformOriginExample';
 import UpdatePropsPerfExample from './UpdatePropsPerfExample';
-import VolumeExample from './VolumeExample';
 import WidthExample from './WidthExample';
 import WithClampExample from './WithClampExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
@@ -137,68 +136,121 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
+import InstanceDiscoveryExample from './InstanceDiscoveryExample';
+import ShadowNodesCloningExample from './ShadowNodesCloningExample';
 
-interface Example {
+export const REAPlatform = {
+  IOS: 'ios',
+  ANDROID: 'android',
+  MACOS: 'macos',
+  WEB: 'web',
+};
+
+export interface Example {
   icon?: string;
   title: string;
   screen: React.FC;
-  missingOnFabric?: boolean;
+  disabledPlatforms?: (typeof REAPlatform)[keyof typeof REAPlatform][];
 }
 
 export const EXAMPLES: Record<string, Example> = {
+  // About
+  AboutExample: {
+    icon: 'ℹ️',
+    title: 'About',
+    screen: AboutExample,
+  },
+
   // Empty example for test purposes
   EmptyExample: {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
   },
+  FpsExample: {
+    icon: '🎞️',
+    title: 'FPS',
+    screen: FpsExample,
+  },
+  ScrollPerformanceExample: {
+    icon: '🚁',
+    title: 'Scroll performance',
+    screen: ScrollPerformanceExample,
+  },
+  ThirdPartyComponentsExample: {
+    icon: '3️⃣',
+    title: 'Third party components',
+    screen: ThirdPartyComponentsExample,
+  },
   RuntimeTests: {
     icon: '⚙️',
     title: 'RuntimeTestsExample',
     screen: RuntimeTestsExample,
+    disabledPlatforms: [REAPlatform.WEB],
+  },
+  Synchronizable: {
+    icon: '🔄',
+    title: 'Synchronizable performance',
+    screen: SynchronizablePerformanceExample,
+    disabledPlatforms: [REAPlatform.WEB],
+  },
+  ReactFreeze: {
+    icon: '❄️',
+    title: 'React freeze',
+    screen: FreezeExample,
+  },
+  RunOnUIAsyncExample: {
+    icon: '👷‍♂️',
+    title: 'runOnUIAsync',
+    screen: RunOnUIAsyncExample,
   },
   WorkletRuntimeExample: {
     icon: '🏃‍♂️',
     title: 'Worklet runtime',
     screen: WorkletRuntimeExample,
-  },
-  ShareablesExample: {
-    icon: '🖇',
-    title: 'Shareables',
-    screen: ShareablesExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   ModifyExample: {
     icon: '🪛',
     title: 'Modify',
     screen: ModifyExample,
   },
-  JSPropsExample: {
-    icon: '🟨',
-    title: 'JS props',
-    screen: JSPropsExample,
+  CircularSliderExample: {
+    icon: '🔘',
+    title: 'Circular slider',
+    screen: CircularSliderExample,
   },
   MemoExample: {
     icon: '🧠',
     title: 'Memo',
     screen: MemoExample,
   },
-  FreezingShareablesExample: {
+  SerializableFreezingExample: {
     icon: '🥶',
-    title: 'Freezing shareables',
-    screen: FreezingShareablesExample,
+    title: 'Serializable freezing',
+    screen: SerializableFreezingExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   InvalidReadWriteExample: {
     icon: '🔒',
     title: 'Invalid read/write during render',
     screen: InvalidValueAccessExample,
   },
-
-  // About
-
-  AboutExample: {
-    icon: 'ℹ️',
-    title: 'About',
-    screen: AboutExample,
+  BottomSheetExample: {
+    icon: '⬆️',
+    title: 'Bottom sheet',
+    screen: BottomSheetExample,
+  },
+  CopySerializablePerformanceTest: {
+    icon: '🔄',
+    title: 'Copy serializable performance test',
+    screen: CopySerializablePerformanceTest,
+    disabledPlatforms: [REAPlatform.WEB],
+  },
+  FlatListWithLayoutAnimations: {
+    icon: '🎻',
+    title: 'FlatList with layout animations',
+    screen: FlatListWithLayoutAnimations,
   },
 
   // Showcase
@@ -212,6 +264,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🫧',
     title: 'Bubbles',
     screen: BubblesExample,
+  },
+  OpacityTransformExample: {
+    icon: '🌀',
+    title: 'opacity & transform',
+    screen: OpacityTransformExample,
   },
   IPodExample: {
     icon: '🎧',
@@ -262,10 +319,10 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📺',
     title: 'Screen transition',
     screen: ScreenTransitionExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
 
   // Basic examples
-
   AnimatableRefExample: {
     icon: '⏬',
     title: 'Animate inner component',
@@ -290,6 +347,16 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🌈',
     title: 'Animate colors',
     screen: ColorExample,
+  },
+  FilterExample: {
+    icon: '🖼️',
+    title: 'Animate filter',
+    screen: FilterExample,
+  },
+  SynchronousPropsExample: {
+    icon: '⚡',
+    title: 'Animate synchronous props',
+    screen: SynchronousPropsExample,
   },
   ScreenStackHeaderConfigBackgroundColorExample: {
     icon: '🎨',
@@ -368,8 +435,13 @@ export const EXAMPLES: Record<string, Example> = {
   },
   ScrollViewOffsetExample: {
     icon: '𝌍',
-    title: 'useScrollViewOffset',
+    title: 'useScrollOffset',
     screen: ScrollViewOffsetExample,
+  },
+  InstanceDiscoveryExample: {
+    icon: '🔍',
+    title: 'Instance Discovery',
+    screen: InstanceDiscoveryExample,
   },
   StickyHeaderExample: {
     icon: '🔝',
@@ -388,7 +460,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   WorkletExample: {
     icon: '🧵',
-    title: 'runOnJS / runOnUI',
+    title: 'scheduleOnRN / scheduleOnUI',
     screen: WorkletExample,
   },
   BabelVersionCheckExample: {
@@ -413,7 +485,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   RefExample: {
     icon: '🦑',
-    title: 'forwardRef & useImperativeHandle',
+    title: 'Ref & useImperativeHandle',
     screen: RefExample,
   },
   ChessExample: {
@@ -450,27 +522,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔌',
     title: 'Without Babel plugin',
     screen: WithoutBabelPluginExample,
-  },
-  GalleryExample: {
-    icon: '🇮🇹',
-    title: 'Gallery',
-    screen: GalleryExample,
-  },
-  ProfilesExample: {
-    icon: '🙆‍♂️',
-    title: 'Profiles',
-    screen: ProfilesExample,
-  },
-  VolumeExample: {
-    icon: '🎧',
-    title: 'Volume slider & sensor',
-    screen: VolumeExample,
-  },
-  ProgressTransitionExample: {
-    icon: '☕',
-    title: 'Progress transition',
-    screen: ProgressTransitionExample,
-    missingOnFabric: true,
+    disabledPlatforms: [
+      REAPlatform.ANDROID,
+      REAPlatform.IOS,
+      REAPlatform.MACOS,
+    ],
   },
   MatrixExample: {
     icon: '🧮',
@@ -481,6 +537,16 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🕰',
     title: 'Pendulum example',
     screen: PendulumExample,
+  },
+  SpringPresetsExample: {
+    icon: '🛠',
+    title: 'Spring presets',
+    screen: SpringPresetsExample,
+  },
+  SpringComparisonExample: {
+    icon: '⚖️',
+    title: 'Spring comparison',
+    screen: SpringComparisonExample,
   },
   SpringClampExample: {
     icon: '🗜',
@@ -496,7 +562,12 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔎',
     title: 'getViewProp',
     screen: GetViewPropExample,
-    missingOnFabric: true,
+    disabledPlatforms: [
+      REAPlatform.WEB,
+      REAPlatform.ANDROID,
+      REAPlatform.IOS,
+      REAPlatform.MACOS,
+    ],
   },
   LogExample: {
     icon: '⌨',
@@ -543,9 +614,24 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'React Strict DOM',
     screen: StrictDOMExample,
   },
+  DynamicColorIOSExample: {
+    title: 'DynamicColorIOS',
+    screen: DynamicColorIOSExample,
+    icon: '🌗',
+    disabledPlatforms: [REAPlatform.ANDROID, REAPlatform.WEB],
+  },
+  PlatformColorExample: {
+    title: 'PlatformColor',
+    screen: PlatformColorExample,
+    icon: '🎨',
+  },
+  ShadowNodesCloningExample: {
+    icon: '🌑',
+    title: 'Shadow Nodes Cloning',
+    screen: ShadowNodesCloningExample,
+  },
 
   // Old examples
-
   AnimatedStyleUpdateExample: {
     title: 'Animated style update',
     screen: AnimatedStyleUpdateExample,
@@ -610,9 +696,12 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Pager example',
     screen: PagerExample,
   },
+  TransformOriginExample: {
+    title: 'Transform origin example',
+    screen: TransformOriginExample,
+  },
 
   // Layout Animations
-
   DeleteAncestorOfExiting: {
     title: '[LA] Deleting view with an exiting animation',
     screen: DeleteAncestorOfExiting,
@@ -729,92 +818,20 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] View Recycling',
     screen: ViewRecyclingExample,
   },
-
-  // Shared Element Transitions
-
-  CardExample: {
-    title: '[SET] Card',
-    screen: CardExample,
-    missingOnFabric: true,
+  ReparentingExample: {
+    title: '[LA] Reparenting',
+    screen: ReparentingExample,
   },
-  CustomTransitionExample: {
-    title: '[SET] Custom transition',
-    screen: CustomTransitionExample,
-    missingOnFabric: true,
+  ModalExitingExample: {
+    title: '[LA] Modal exiting example',
+    screen: ModalExitingExample,
   },
-  LayoutAnimationExample: {
-    title: '[SET] Layout Animation',
-    screen: LayoutAnimationExample,
-    missingOnFabric: true,
+  MoveWithExiting: {
+    title: '[LA] Move with exiting',
+    screen: MoveWithExiting,
   },
-  ManyScreensExample: {
-    title: '[SET] Many screens',
-    screen: ManyScreensExample,
-    missingOnFabric: true,
-  },
-  ManyTagsExample: {
-    title: '[SET] Many tags',
-    screen: ManyTagsExample,
-    missingOnFabric: true,
-  },
-  NestedStacksExample: {
-    title: '[SET] Nested stacks',
-    screen: NestedStacksExample,
-    missingOnFabric: true,
-  },
-  ModalsExample: {
-    title: '[SET] Modals',
-    screen: ModalsExample,
-    missingOnFabric: true,
-  },
-  FlatListExample: {
-    title: '[SET] FlatList',
-    screen: FlatListExample,
-    missingOnFabric: true,
-  },
-  ImageStackExample: {
-    title: '[SET] Image Stack',
-    screen: ImageStackExample,
-    missingOnFabric: true,
-  },
-  RestoreStateExample: {
-    title: '[SET] Restore State',
-    screen: RestoreStateExample,
-    missingOnFabric: true,
-  },
-  DuplicateTagsExample: {
-    title: '[SET] Duplicate Tags',
-    screen: DuplicateTagsExample,
-    missingOnFabric: true,
-  },
-  ReducedMotionSharedExample: {
-    title: '[SET] Reduced Motion',
-    screen: ReducedMotionSharedExample,
-    missingOnFabric: true,
-  },
-  TransitionRestartExample: {
-    title: '[SET] Transition Restart',
-    screen: TransitionRestartExample,
-    missingOnFabric: true,
-  },
-  ChangeThemeSharedExample: {
-    title: '[SET] Change theme',
-    screen: ChangeThemeSharedExample,
-    missingOnFabric: true,
-  },
-  NestedRotationSharedExample: {
-    title: '[SET] Nested Transforms',
-    screen: NestedRotationExample,
-    missingOnFabric: true,
-  },
-  BorderRadiiExample: {
-    title: '[SET] Border Radii',
-    screen: BorderRadiiExample,
-    missingOnFabric: true,
-  },
-  TabNavigatorExample: {
-    title: '[SET] Tab Navigator',
-    screen: TabNavigatorExample,
-    missingOnFabric: true,
+  DurationZeroExample: {
+    title: '[LA] Duration zero',
+    screen: DurationZeroExample,
   },
 } as const;

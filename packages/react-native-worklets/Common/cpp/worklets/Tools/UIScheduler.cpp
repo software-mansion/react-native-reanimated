@@ -1,5 +1,4 @@
 #include <worklets/Tools/UIScheduler.h>
-#include <worklets/WorkletRuntime/ReanimatedRuntime.h>
 
 #include <utility>
 

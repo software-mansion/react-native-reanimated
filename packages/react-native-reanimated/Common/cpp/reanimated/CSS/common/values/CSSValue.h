@@ -1,5 +1,4 @@
 #pragma once
-#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 
@@ -7,7 +6,7 @@
 #include <string>
 #include <type_traits>
 
-namespace reanimated {
+namespace reanimated::css {
 
 using namespace facebook;
 
@@ -16,8 +15,14 @@ enum class RelativeTo {
   Self,
 };
 
-struct CSSResolvableValueInterpolationContext {
-  const ShadowNode::Shared &node;
+struct ValueInterpolationContext {
+  const std::shared_ptr<const ShadowNode> &node;
+  const double fallbackInterpolateThreshold;
+};
+
+struct ResolvableValueInterpolationContext {
+  const std::shared_ptr<const ShadowNode> &node;
+  const double fallbackInterpolateThreshold;
   const std::shared_ptr<ViewStylesRepository> &viewStylesRepository;
   const std::string &relativeProperty;
   const RelativeTo relativeTo;
@@ -39,6 +44,9 @@ struct CSSSimpleValue : public CSSValue {
   static constexpr bool is_resolvable_value = false;
 
   virtual TDerived interpolate(double progress, const TDerived &to) const = 0;
+  virtual bool canInterpolateTo(const TDerived &to) const {
+    return true;
+  }
 };
 
 // Base for leaf values that need resolution before interpolation
@@ -46,12 +54,12 @@ template <typename TDerived, typename TResolved = TDerived>
 struct CSSResolvableValue : public CSSValue {
   static constexpr bool is_resolvable_value = true;
 
-  virtual TDerived interpolate(
-      double progress,
-      const TDerived &to,
-      const CSSResolvableValueInterpolationContext &context) const = 0;
-  virtual std::optional<TResolved> resolve(
-      const CSSResolvableValueInterpolationContext &context) const = 0;
+  virtual TDerived interpolate(double progress, const TDerived &to, const ResolvableValueInterpolationContext &context)
+      const = 0;
+  virtual std::optional<TResolved> resolve(const ResolvableValueInterpolationContext &context) const = 0;
+  virtual bool canInterpolateTo(const TDerived &to) const {
+    return true;
+  }
 };
 
 // Checks if a type is a resolvable value that needs resolution before
@@ -73,6 +81,4 @@ concept Discrete = requires {
 template <typename TCSSValue>
 concept CSSValueDerived = std::is_base_of_v<CSSValue, TCSSValue>;
 
-} // namespace reanimated
-
-#endif
+} // namespace reanimated::css

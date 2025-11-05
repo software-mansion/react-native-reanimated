@@ -1,7 +1,6 @@
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/easing/cubicBezier.h>
 
-namespace reanimated {
+namespace reanimated::css {
 
 double sampleCurveX(const double t, const double x1, const double x2) {
   return 3 * (1 - t) * (1 - t) * t * x1 + 3 * (1 - t) * t * t * x2 + t * t * t;
@@ -11,17 +10,11 @@ double sampleCurveY(const double t, const double y1, const double y2) {
   return 3 * (1 - t) * (1 - t) * t * y1 + 3 * (1 - t) * t * t * y2 + t * t * t;
 }
 
-double
-sampleCurveDerivativeX(const double t, const double x1, const double x2) {
-  return -6 * (1 - t) * t * x1 + 3 * (1 - t) * (1 - t) * x1 +
-      6 * (1 - t) * t * x2 - 6 * t * t * x2 + 3 * t * t;
+double sampleCurveDerivativeX(const double t, const double x1, const double x2) {
+  return -6 * (1 - t) * t * x1 + 3 * (1 - t) * (1 - t) * x1 + 6 * (1 - t) * t * x2 - 6 * t * t * x2 + 3 * t * t;
 }
 
-double solveCurveX(
-    const double x,
-    const double x1,
-    const double x2,
-    const double epsilon) {
+double solveCurveX(const double x, const double x1, const double x2, const double epsilon) {
   double t0 = 0.0, t1 = 1.0, t2 = x, xValue, dX;
   int iterations = 0;
 
@@ -55,11 +48,7 @@ double solveCurveX(
   return t2;
 }
 
-EasingFunction cubicBezier(
-    const double x1,
-    const double y1,
-    const double x2,
-    const double y2) {
+EasingFunction cubicBezier(const double x1, const double y1, const double x2, const double y2) {
   return [=](double x) {
     double t = solveCurveX(x, x1, x2);
     return sampleCurveY(t, y1, y2);
@@ -74,6 +63,4 @@ EasingFunction cubicBezier(jsi::Runtime &rt, const jsi::Object &easingConfig) {
   return cubicBezier(x1, y1, x2, y2);
 }
 
-} // namespace reanimated
-
-#endif // RCT_NEW_ARCH_ENABLED
+} // namespace reanimated::css

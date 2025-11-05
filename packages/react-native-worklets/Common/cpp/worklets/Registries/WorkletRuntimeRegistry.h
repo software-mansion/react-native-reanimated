@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <react/debug/react_native_assert.h>
 
 #include <mutex>
 #include <set>
@@ -30,7 +31,7 @@ class WorkletRuntimeRegistry {
 
  public:
   static bool isRuntimeAlive(jsi::Runtime *runtime) {
-    assert(runtime != nullptr);
+    react_native_assert(runtime != nullptr && "runtime is nullptr");
     std::lock_guard<std::mutex> lock(mutex_);
     return registry_.find(runtime) != registry_.end();
   }

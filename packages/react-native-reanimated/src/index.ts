@@ -2,10 +2,19 @@
 
 import './publicGlobals';
 
+import { initializeReanimatedModule } from './initializers';
+import { ReanimatedModule } from './ReanimatedModule';
+
+// TODO: Specify the initialization pipeline since now there's no
+// universal source of truth for it.
+initializeReanimatedModule(ReanimatedModule);
+
+// eslint-disable-next-line import/first
 import * as Animated from './Animated';
 
 export default Animated;
 
+export { createAnimatedComponent } from './Animated';
 export type {
   DecayAnimation,
   DelayAnimation,
@@ -21,6 +30,14 @@ export type {
 export {
   cancelAnimation,
   defineAnimation,
+  GentleSpringConfig,
+  GentleSpringConfigWithDuration,
+  Reanimated3DefaultSpringConfig,
+  Reanimated3DefaultSpringConfigWithDuration,
+  SnappySpringConfig,
+  SnappySpringConfigWithDuration,
+  WigglySpringConfig,
+  WigglySpringConfigWithDuration,
   withClamp,
   withDecay,
   withDelay,
@@ -30,7 +47,9 @@ export {
   withTiming,
 } from './animation';
 export type { ParsedColorArray } from './Colors';
-export { convertToRGBA, isColor, processColor } from './Colors';
+export { convertToRGBA, isColor } from './Colors';
+export { ReanimatedLogLevel } from './common';
+export { DynamicColorIOS, PlatformColor, processColor } from './common';
 export type {
   AnimatableValue,
   AnimatableValueObject,
@@ -39,7 +58,6 @@ export type {
   AnimatedSensor,
   AnimatedStyle,
   AnimatedTransform,
-  AnimateStyle,
   Animation,
   AnimationCallback,
   AnimationObject,
@@ -50,17 +68,16 @@ export type {
   ExitAnimationsValues,
   IEntryExitAnimationBuilder,
   ILayoutAnimationBuilder,
+  KeyframeProps,
   LayoutAnimation,
   LayoutAnimationFunction,
   LayoutAnimationStartFunction,
-  LayoutAnimationsValues,
+  LayoutAnimationValues as LayoutAnimationsValues,
   LayoutAnimationType,
   MeasuredDimensions,
   SensorConfig,
-  SharedTransitionAnimationsValues,
   SharedValue,
   StyleProps,
-  StylesOrDefault,
   TransformArrayItem,
   Value3D,
   ValueRotation,
@@ -71,7 +88,6 @@ export {
   KeyboardState,
   ReduceMotion,
   SensorType,
-  SharedTransitionType,
 } from './commonTypes';
 export type { FlatListPropsWithLayout } from './component/FlatList';
 export { LayoutAnimationConfig } from './component/LayoutAnimationConfig';
@@ -81,41 +97,24 @@ export { ReducedMotionConfig } from './component/ReducedMotionConfig';
 export type { AnimatedScrollViewProps } from './component/ScrollView';
 export { configureReanimatedLogger } from './ConfigHelper';
 export {
-  createWorkletRuntime,
   enableLayoutAnimations,
-  executeOnUIRuntimeSync,
   getViewProp,
   isConfigured,
   isReanimated3,
   makeMutable,
-  makeShareableCloneRecursive,
-  runOnJS,
-  runOnRuntime,
-  runOnUI,
 } from './core';
 export * from './css';
-export type {
-  EasingFactoryFn,
-  EasingFn,
-  EasingFunctionFactory,
-} from './Easing';
+export type { EasingFunctionFactory } from './Easing';
 export { Easing } from './Easing';
+export { getStaticFeatureFlag, setDynamicFeatureFlag } from './featureFlags';
 export type { FrameInfo } from './frameCallback';
-export type {
-  Adaptable,
-  AdaptTransforms,
-  AnimatedProps,
-  AnimatedStyleProp,
-  AnimateProps,
-  TransformStyleTypes,
-} from './helperTypes';
+export type { AnimatedProps, EntryOrExitLayoutType } from './helperTypes';
 export type {
   AnimatedRef,
   DerivedValue,
   EventHandler,
   EventHandlerProcessed,
   FrameCallback,
-  GestureHandlers,
   ReanimatedEvent,
   ScrollEvent,
   ScrollHandler,
@@ -124,7 +123,6 @@ export type {
   UseHandlerContext,
 } from './hook';
 export {
-  useAnimatedGestureHandler,
   useAnimatedKeyboard,
   useAnimatedProps,
   useAnimatedReaction,
@@ -138,9 +136,10 @@ export {
   useFrameCallback,
   useHandler,
   useReducedMotion,
-  useScrollViewOffset,
+  useScrollOffset,
+  /** @deprecated Please use {@link useScrollOffset} instead. */
+  useScrollOffset as useScrollViewOffset,
   useSharedValue,
-  useWorkletCallback,
 } from './hook';
 export type {
   InterpolateConfig,
@@ -165,6 +164,7 @@ export {
   setUpTests,
   withReanimatedTimer,
 } from './jestUtils';
+export type { ReanimatedKeyframe } from './layoutReanimation';
 export {
   BaseAnimationBuilder,
   // Bounce
@@ -178,7 +178,6 @@ export {
   BounceOutLeft,
   BounceOutRight,
   BounceOutUp,
-  combineTransition,
   ComplexAnimationBuilder,
   CurvedTransition,
   EntryExitTransition,
@@ -235,8 +234,6 @@ export {
   RotateOutUpLeft,
   RotateOutUpRight,
   SequencedTransition,
-  // SET
-  SharedTransition,
   SlideInDown,
   SlideInLeft,
   // Slide
@@ -270,6 +267,7 @@ export {
   ZoomOutUp,
 } from './layoutReanimation';
 export { startMapper, stopMapper } from './mappers';
+export { jsVersion as reanimatedVersion } from './platform-specific/jsVersion';
 export type { ComponentCoords } from './platformFunctions';
 export {
   dispatchCommand,
@@ -291,6 +289,13 @@ export {
   ScreenTransition,
   startScreenTransition,
 } from './screenTransition';
-export type { WorkletRuntime } from './WorkletsResolver';
-export { LogLevel as ReanimatedLogLevel } from './WorkletsResolver';
-export { isWorkletFunction } from './WorkletsResolver';
+export type { WorkletRuntime } from './workletFunctions';
+export {
+  createWorkletRuntime,
+  executeOnUIRuntimeSync,
+  isWorkletFunction,
+  makeShareableCloneRecursive,
+  runOnJS,
+  runOnRuntime,
+  runOnUI,
+} from './workletFunctions';

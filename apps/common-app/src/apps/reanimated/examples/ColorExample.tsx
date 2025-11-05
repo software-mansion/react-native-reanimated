@@ -29,7 +29,13 @@ export default function ColorExample() {
   });
 
   const style4 = useAnimatedStyle(() => {
-    return { shadowColor: makeColor(sv.value) };
+    return {
+      boxShadow: '20px 20px 5px 0px ' + makeColor(sv.value),
+    };
+  });
+
+  const style5 = useAnimatedStyle(() => {
+    return { tintColor: makeColor(sv.value) };
   });
 
   // TODO: textDecorationColor, tintColor, textShadowColor, overlayColor
@@ -45,6 +51,10 @@ export default function ColorExample() {
       <Animated.View style={[styles.box2, style2]} />
       <Animated.Text style={[styles.text3, style3]}>Reanimated</Animated.Text>
       <Animated.View style={[styles.box4, style4]} />
+      <Animated.Image
+        style={[styles.image5, style5]}
+        source={require('./assets/logo.png')}
+      />
       <View style={styles.buttons}>
         <Button onPress={handleToggle} title="Toggle shared value" />
       </View>
@@ -88,8 +98,14 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     shadowOpacity: 1,
     shadowColor: 'black',
+    elevation: 20,
+    marginBottom: 50,
+  },
+  image5: {
+    width: 150,
+    height: 120,
   },
   buttons: {
-    marginTop: 50,
+    marginTop: 20,
   },
 });
