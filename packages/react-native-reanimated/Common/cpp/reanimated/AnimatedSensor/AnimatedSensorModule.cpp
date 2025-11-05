@@ -1,6 +1,7 @@
 #include <react/debug/react_native_assert.h>
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 
+#include <cstdint>
 #include <memory>
 #include <utility>
 
@@ -27,7 +28,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
       rt, sensorDataHandler, "[Reanimated] Sensor event handler must be a worklet.");
 
   int sensorId = platformRegisterSensorFunction_(
-      static_cast<int>(sensorType),
+      static_cast<std::uint8_t>(sensorType),
       interval.asNumber(),
       iosReferenceFrame.asNumber(),
       [sensorType, serializableHandler, weakUiWorkletRuntime = std::weak_ptr<WorkletRuntime>(uiWorkletRuntime)](
