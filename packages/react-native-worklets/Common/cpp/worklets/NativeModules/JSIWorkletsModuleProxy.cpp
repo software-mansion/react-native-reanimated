@@ -88,10 +88,9 @@ inline jsi::Value propagateModuleUpdate(
   const auto runtimes = runtimeManager->getAllRuntimes();
 
   for (auto runtime : runtimes) {
-    runtime->runSync([code, sourceUrl](jsi::Runtime &rt) {
+    runtime->runSync([code, sourceUrl](jsi::Runtime &rt) -> void {
       const auto buffer = std::make_shared<jsi::StringBuffer>(code);
       rt.evaluateJavaScript(buffer, sourceUrl);
-      return jsi::Value::undefined();
     });
   }
   return jsi::Value::undefined();

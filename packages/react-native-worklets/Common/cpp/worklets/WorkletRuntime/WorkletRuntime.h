@@ -27,9 +27,11 @@ template <typename TCallable>
 concept ImplicitlySerializableCallable = std::is_assignable_v<const jsi::Function &, TCallable> ||
     std::is_assignable_v<const std::shared_ptr<SerializableWorklet> &, TCallable>;
 
-template <typename TCallable, typename TReturn = void>
-concept RuntimeCallable = ImplicitlySerializableCallable<TCallable> ||
-    std::is_assignable_v<const std::function<TReturn(jsi::Runtime &)> &, TCallable>;
+template <typename TCallable>
+concept RuntimeCallable =
+    ImplicitlySerializableCallable<TCallable> || requires(TCallable &&callable, jsi::Runtime &rt) {
+      { callable(rt) };
+    };
 
 /**
  * Forward declaration to avoid circular dependencies.
@@ -45,8 +47,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
   /* #region runSync */
 
-  template <typename TReturn, RuntimeCallable<TReturn> TCallable, typename... Args>
-  jsi::Value inline runSync(TCallable &&callable, Args &&...args) const;
+  template <RuntimeCallable TCallable, typename... Args>
+  std::invoke_result_t<TCallable, Args...> inline runSync(TCallable &&callable, Args &&...args) const;
   template <typename... Args>
   jsi::Value inline runSync(const jsi::Function &function, Args &&...args) const {
     auto &rt = *runtime_;
@@ -57,8 +59,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     jsi::Runtime &rt = *runtime_;
     return runSync(worklet->toJSValue(rt).asObject(rt).asFunction(rt), std::forward<Args>(args)...);
   }
-  template <typename TReturn>
-  TReturn inline runSync(const std::function<TReturn(jsi::Runtime &)> &job) const {
+  template <RuntimeCallable TCallable>
+  std::invoke_result_t<TCallable, jsi::Runtime &> inline runSync(TCallable &&job) const {
     jsi::Runtime &rt = getJSIRuntime();
     auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
     return job(rt);
@@ -176,5 +178,4 @@ void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &serializableWorkletValue);
-
 } // namespace worklets
