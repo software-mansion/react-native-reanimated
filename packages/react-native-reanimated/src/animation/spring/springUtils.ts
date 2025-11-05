@@ -70,6 +70,7 @@ export function safeMergeConfigs<T extends Record<string, any>>(
   defaults: T,
   userConfig?: Partial<T>
 ): T {
+  'worklet';
   if (!userConfig) return defaults;
 
   const filtered = Object.fromEntries(
