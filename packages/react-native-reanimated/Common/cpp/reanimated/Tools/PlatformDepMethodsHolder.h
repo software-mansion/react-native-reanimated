@@ -36,7 +36,7 @@ using GetAnimationTimestampFunction = std::function<double(void)>;
 using ProgressLayoutAnimationFunction = std::function<void(jsi::Runtime &, int, jsi::Object)>;
 using EndLayoutAnimationFunction = std::function<void(int, bool)>;
 
-using RegisterSensorFunction = std::function<int(std::uint8_t, int, int, std::function<void(double[], int)>)>;
+using RegisterSensorFunction = std::function<int(int, int, int, std::function<void(double[], int)>)>;
 using UnregisterSensorFunction = std::function<void(int)>;
 using SetGestureStateFunction = std::function<void(int, int)>;
 using KeyboardEventSubscribeFunction = std::function<int(std::function<void(int, int)>, bool, bool)>;
