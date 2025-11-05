@@ -36,6 +36,7 @@ import FreezeExample from './FreezeExample';
 import Game2048Example from './Game2048Example';
 import GestureHandlerExample from './GestureHandlerExample';
 import GetViewPropExample from './GetViewPropExample';
+import InstanceDiscoveryExample from './InstanceDiscoveryExample';
 import InvalidValueAccessExample from './InvalidValueAccessExample';
 import InvertedFlatListExample from './InvertedFlatListExample';
 import IPodExample from './IPodExample';
@@ -148,7 +149,7 @@ interface Example {
   icon?: string;
   title: string;
   screen: React.FC;
-  missingOnFabric?: boolean;
+  onlyArch?: 'fabric' | 'paper';
 }
 
 export const EXAMPLES: Record<string, Example> = {
@@ -258,7 +259,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📖',
     title: 'Letters',
     screen: LettersExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   SetNativePropsExample: {
     icon: '🪄',
@@ -274,7 +275,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📺',
     title: 'Screen transition',
     screen: ScreenTransitionExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
 
   // Basic examples
@@ -283,7 +284,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⏬',
     title: 'Animate inner component',
     screen: AnimatableRefExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   AmountExample: {
     icon: '📈',
@@ -385,6 +386,12 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'useScrollViewOffset',
     screen: ScrollViewOffsetExample,
   },
+  InstanceDiscoveryExample: {
+    icon: '🔍',
+    title: 'Instance Discovery',
+    screen: InstanceDiscoveryExample,
+    onlyArch: 'fabric',
+  },
   StickyHeaderExample: {
     icon: '🔝',
     title: 'Sticky header',
@@ -484,7 +491,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '☕',
     title: 'Progress transition',
     screen: ProgressTransitionExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   MatrixExample: {
     icon: '🧮',
@@ -510,7 +517,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔎',
     title: 'getViewProp',
     screen: GetViewPropExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   LogExample: {
     icon: '⌨',
@@ -571,7 +578,7 @@ export const EXAMPLES: Record<string, Example> = {
   AnimatedTabBarExample: {
     title: 'Tab bar',
     screen: AnimatedTabBarExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   ChatHeadsExample: {
     title: 'Chat heads',
@@ -770,86 +777,86 @@ export const EXAMPLES: Record<string, Example> = {
   CardExample: {
     title: '[SET] Card',
     screen: CardExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   CustomTransitionExample: {
     title: '[SET] Custom transition',
     screen: CustomTransitionExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   LayoutAnimationExample: {
     title: '[SET] Layout Animation',
     screen: LayoutAnimationExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   ManyScreensExample: {
     title: '[SET] Many screens',
     screen: ManyScreensExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   ManyTagsExample: {
     title: '[SET] Many tags',
     screen: ManyTagsExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   NestedStacksExample: {
     title: '[SET] Nested stacks',
     screen: NestedStacksExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   ModalsExample: {
     title: '[SET] Modals',
     screen: ModalsExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   FlatListExample: {
     title: '[SET] FlatList',
     screen: FlatListExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   ImageStackExample: {
     title: '[SET] Image Stack',
     screen: ImageStackExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   RestoreStateExample: {
     title: '[SET] Restore State',
     screen: RestoreStateExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   DuplicateTagsExample: {
     title: '[SET] Duplicate Tags',
     screen: DuplicateTagsExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   ReducedMotionSharedExample: {
     title: '[SET] Reduced Motion',
     screen: ReducedMotionSharedExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   TransitionRestartExample: {
     title: '[SET] Transition Restart',
     screen: TransitionRestartExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   ChangeThemeSharedExample: {
     title: '[SET] Change theme',
     screen: ChangeThemeSharedExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   NestedRotationSharedExample: {
     title: '[SET] Nested Transforms',
     screen: NestedRotationExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   BorderRadiiExample: {
     title: '[SET] Border Radii',
     screen: BorderRadiiExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
   TabNavigatorExample: {
     title: '[SET] Tab Navigator',
     screen: TabNavigatorExample,
-    missingOnFabric: true,
+    onlyArch: 'paper',
   },
 } as const;

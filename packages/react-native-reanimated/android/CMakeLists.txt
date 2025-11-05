@@ -58,7 +58,8 @@ add_subdirectory("${ANDROID_CPP_DIR}/worklets")
 add_subdirectory("${ANDROID_CPP_DIR}/reanimated")
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
-  include("${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
+  include(
+    "${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
   target_compile_reactnative_options(reanimated PUBLIC)
 else()
   string(APPEND CMAKE_CXX_FLAGS

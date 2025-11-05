@@ -138,9 +138,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   ) {
     let shadowNodeWrapper;
     if (isFabric()) {
-      shadowNodeWrapper = getShadowNodeWrapperFromRef(
-        component as React.Component
-      );
+      shadowNodeWrapper = getShadowNodeWrapperFromRef(component!);
       return this.#reanimatedModuleProxy.getViewProp(
         shadowNodeWrapper,
         propName,

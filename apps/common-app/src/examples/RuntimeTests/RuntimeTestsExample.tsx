@@ -40,6 +40,7 @@ export default function RuntimeTestsExample() {
         {
           testSuiteName: 'core',
           importTest: () => {
+            require('./tests/core/useAnimatedRef.test');
             require('./tests/core/cancelAnimation.test');
 
             require('./tests/core/useSharedValue/numbers.test');
