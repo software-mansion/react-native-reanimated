@@ -104,16 +104,15 @@ body:
     id: flags
     attributes:
       label: Feature flags
-      description: Are you using any Reanimated or React Native feature flags in your application?
+      description: Do you have any Reanimated feature flags enabled?
       options:
         - 'Yes'
         - 'No'
 
-  - type: textarea
-    id: flags-details
+  - type: markdown
     attributes:
-      label: Feature flags details
-      description: If you are using any feature flags, please provide details about which ones and how they are configured.
+      value: |
+        If you are using any feature flags, please provide details about which ones and how they are configured.
 
   - type: dropdown
     id: runtime
@@ -142,6 +141,16 @@ body:
       options:
         - New Architecture (Fabric renderer)
         - Legacy Architecture (Paper renderer)
+
+  - type: dropdown
+    id: react-native-release-level
+    attributes:
+      label: React Native release level
+      description: What release level of React Native are you using?
+      options:
+        - Stable
+        - Experimental
+        - Canary
 
   - type: dropdown
     id: build-type
