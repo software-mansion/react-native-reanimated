@@ -44,6 +44,7 @@ export const PropsRegistryGarbageCollector = {
       const component = this.viewsMap.get(viewTag);
       unprocessColorsInProps(styleProps);
       if (Array.isArray(styleProps.boxShadow)) {
+        // @ts-ignore yes we can update boxShadow like this
         styleProps.boxShadow = styleProps.boxShadow.map((boxShadow) => ({
           ...boxShadow,
           color: unprocessColor(boxShadow.color),
