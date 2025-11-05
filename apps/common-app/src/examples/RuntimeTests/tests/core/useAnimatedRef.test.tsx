@@ -15,7 +15,7 @@ import {
   TextInput,
   TouchableHighlight,
   TouchableOpacity,
-  TouchableWithoutFeedback,
+  // TouchableWithoutFeedback,
   VirtualizedList,
 } from 'react-native';
 import { ScrollView as RNGHScrollView } from 'react-native-gesture-handler';
@@ -37,7 +37,8 @@ const AnimatedSwitch = Animated.createAnimatedComponent(Switch);
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 const AnimatedTouchableHighlight = Animated.createAnimatedComponent(TouchableHighlight);
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
-const AnimatedTouchableWithoutFeedback = Animated.createAnimatedComponent(TouchableWithoutFeedback);
+// TouchableWithoutFeedback doesn't accept refs
+// const AnimatedTouchableWithoutFeedback = Animated.createAnimatedComponent(TouchableWithoutFeedback);
 // @ts-ignore This is broken with react-native-strict-api types.
 const AnimatedVirtualizedList = Animated.createAnimatedComponent(VirtualizedList);
 const AnimatedRNGHScrollView = Animated.createAnimatedComponent(RNGHScrollView);
@@ -243,20 +244,6 @@ describe('Test *****useAnimatedRef*****', () => {
         <AnimatedTouchableOpacity ref={animatedRef} onPress={() => {}}>
           <Text>Opacitize me</Text>
         </AnimatedTouchableOpacity>
-      );
-    };
-    test('mounts without crashing', async () => {
-      await render(<Component />);
-    });
-  });
-
-  describe('Animated.TouchableWithoutFeedback', () => {
-    const Component = () => {
-      const animatedRef = useAnimatedRef<TouchableWithoutFeedback>();
-      return (
-        <AnimatedTouchableWithoutFeedback ref={animatedRef} onPress={() => {}}>
-          <Text>Dont feedback me</Text>
-        </AnimatedTouchableWithoutFeedback>
       );
     };
     test('mounts without crashing', async () => {

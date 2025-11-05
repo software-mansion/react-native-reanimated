@@ -111,7 +111,7 @@ function useAnimatedRefNative<
   const ref = useAnimatedRefBase<TComponent>((component) => {
     const getTagOrWrapper = isFabric()
       ? getShadowNodeWrapperFromRef
-      : findNodeHandle;
+      : (comp: TComponent) => findNodeHandle(getComponentOrScrollable(comp));
 
     tagOrWrapper.value = getTagOrWrapper(component);
 
