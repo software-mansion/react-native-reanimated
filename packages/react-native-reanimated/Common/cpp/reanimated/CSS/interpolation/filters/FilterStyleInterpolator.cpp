@@ -195,25 +195,6 @@ std::shared_ptr<FilterKeyframe> FilterStyleInterpolator::createFilterKeyframe(
   return std::make_shared<FilterKeyframe>(FilterKeyframe{fromOffset, toOffset, fromOperations, toOperations});
 }
 
-void FilterStyleInterpolator::addConvertedOperations(
-    const std::shared_ptr<FilterOperation> &sourceOperation,
-    const std::shared_ptr<FilterOperation> &targetOperation,
-    FilterOperations &sourceResult,
-    FilterOperations &targetResult) const {
-  const auto convertedOps = sourceOperation->convertTo(targetOperation->type);
-
-  targetResult.emplace_back(targetOperation);
-  for (size_t k = 0; k < convertedOps.size(); ++k) {
-    sourceResult.emplace_back(convertedOps[k]);
-    // Converted operations will contain one operation with the same type and
-    // can contain more operations derived from the source operation (we need
-    // to pair them with operations of the same type with default values)
-    if (k > 0) {
-      targetResult.emplace_back(getDefaultOperationOfType(convertedOps[k]->type));
-    }
-  }
-}
-
 std::pair<FilterOperations, FilterOperations> FilterStyleInterpolator::createFilterInterpolationPair(
     const FilterOperations &fromOperations,
     const FilterOperations &toOperations) const {
@@ -237,15 +218,6 @@ std::pair<FilterOperations, FilterOperations> FilterStyleInterpolator::createFil
     if (fromOperation->type == toOperation->type) {
       fromOperationsResult.emplace_back(fromOperation);
       toOperationsResult.emplace_back(toOperation);
-      i++;
-      j++;
-    } else if (fromOperation->canConvertTo(toOperation->type)) {
-      // Case 2: Operations can be converted to each other's type
-      addConvertedOperations(fromOperation, toOperation, fromOperationsResult, toOperationsResult);
-      i++;
-      j++;
-    } else if (toOperation->canConvertTo(fromOperation->type)) {
-      addConvertedOperations(toOperation, fromOperation, toOperationsResult, fromOperationsResult);
       i++;
       j++;
     } else {

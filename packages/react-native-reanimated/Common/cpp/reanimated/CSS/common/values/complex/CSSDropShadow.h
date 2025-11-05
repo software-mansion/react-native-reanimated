@@ -43,7 +43,7 @@ struct CSSDropShadow : public CSSSimpleValue<CSSDropShadow> {
   struct FieldValidator {
     std::string fieldName;
     std::function<bool(const folly::dynamic &)> validateDynamic;
-    std::function<bool(jsi::Runtime &, const jsi::Value &)> validateJS;
+    std::function<bool(jsi::Runtime &, const jsi::Value &)> validateJSI;
   };
 
   static const std::vector<FieldValidator> fieldValidators;

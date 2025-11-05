@@ -52,23 +52,23 @@ std::shared_ptr<FilterOperation> FilterOperation::fromJSIValue(jsi::Runtime &rt,
     case FilterOp::Blur:
       return std::make_shared<BlurOperation>(propertyValue.asNumber());
     case FilterOp::Brightness:
-      return std::make_shared<BrightnessOperation>(propertyValue.asString(rt).utf8(rt));
+      return std::make_shared<BrightnessOperation>(propertyValue.asNumber());
     case FilterOp::Contrast:
-      return std::make_shared<ContrastOperation>(propertyValue.asString(rt).utf8(rt));
+      return std::make_shared<ContrastOperation>(propertyValue.asNumber());
     case FilterOp::DropShadow:
-      return std::make_shared<DropShadowOperation>(propertyValue.asString(rt).utf8(rt));
+      return std::make_shared<DropShadowOperation>(CSSDropShadow(rt, propertyValue));
     case FilterOp::Grayscale:
-      return std::make_shared<GrayscaleOperation>(propertyValue.asString(rt).utf8(rt));
+      return std::make_shared<GrayscaleOperation>(propertyValue.asNumber());
     case FilterOp::HueRotate:
       return std::make_shared<HueRotateOperation>(propertyValue.asString(rt).utf8(rt));
     case FilterOp::Invert:
-      return std::make_shared<InvertOperation>(propertyValue.asString(rt).utf8(rt));
+      return std::make_shared<InvertOperation>(propertyValue.asNumber());
     case FilterOp::Opacity:
-      return std::make_shared<OpacityOperation>(propertyValue.asString(rt).utf8(rt));
+      return std::make_shared<OpacityOperation>(propertyValue.asNumber());
     case FilterOp::Saturate:
-      return std::make_shared<SaturateOperation>(propertyValue.asString(rt).utf8(rt));
+      return std::make_shared<SaturateOperation>(propertyValue.asNumber());
     case FilterOp::Sepia:
-      return std::make_shared<SepiaOperation>(propertyValue.asString(rt).utf8(rt));
+      return std::make_shared<SepiaOperation>(propertyValue.asNumber());
     default:
       throw std::invalid_argument("[Reanimated] Unknown transform operation: " + propertyName);
   }
@@ -92,15 +92,15 @@ std::shared_ptr<FilterOperation> FilterOperation::fromDynamic(const folly::dynam
     case FilterOp::Blur:
       return std::make_shared<BlurOperation>(propertyValue.getDouble());
     case FilterOp::Brightness:
-      return std::make_shared<BrightnessOperation>(propertyValue.getString());
+      return std::make_shared<BrightnessOperation>(propertyValue.getDouble());
     case FilterOp::Contrast:
-      return std::make_shared<ContrastOperation>(propertyValue.getString());
+      return std::make_shared<ContrastOperation>(propertyValue.getDouble());
     case FilterOp::DropShadow:
-      return std::make_shared<DropShadowOperation>(propertyValue.getString());
+      return std::make_shared<DropShadowOperation>(CSSDropShadow(propertyValue));
     case FilterOp::Grayscale:
-      return std::make_shared<GrayscaleOperation>(propertyValue.getString());
+      return std::make_shared<GrayscaleOperation>(propertyValue.getDouble());
     case FilterOp::HueRotate:
-      return std::make_shared<HueRotateOperation>(propertyValue.getDouble());
+      return std::make_shared<HueRotateOperation>(propertyValue.getString());
     case FilterOp::Invert:
       return std::make_shared<InvertOperation>(propertyValue.getDouble());
     case FilterOp::Opacity:
@@ -113,6 +113,7 @@ std::shared_ptr<FilterOperation> FilterOperation::fromDynamic(const folly::dynam
       throw std::invalid_argument("[Reanimated] Unknown filter operation: " + propertyName);
   }
 }
+ 
 
 folly::dynamic FilterOperation::toDynamic() const {
   return folly::dynamic::object(getOperationName(), valueToDynamic());
