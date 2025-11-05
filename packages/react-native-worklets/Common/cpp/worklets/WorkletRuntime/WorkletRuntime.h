@@ -28,10 +28,10 @@ concept ImplicitlySerializableCallable = std::is_assignable_v<const jsi::Functio
     std::is_assignable_v<const std::shared_ptr<SerializableWorklet> &, TCallable>;
 
 template <typename TCallable>
-concept RuntimeCallable =
-    ImplicitlySerializableCallable<TCallable> || requires(TCallable &&callable, jsi::Runtime &rt) {
-      { callable(rt) };
-    };
+concept RuntimeCallable = requires(TCallable &&callable, jsi::Runtime &rt) {
+  // NOLINTNEXTLINE(readability/braces) cpplint doesn't understand concepts
+  { callable(rt) };
+} || ImplicitlySerializableCallable<TCallable>;
 
 /**
  * Forward declaration to avoid circular dependencies.
