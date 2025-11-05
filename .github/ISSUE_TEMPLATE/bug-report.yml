@@ -104,15 +104,10 @@ body:
     id: flags
     attributes:
       label: Feature flags
-      description: Do you have any Reanimated feature flags enabled?
+      description: Do you have any Reanimated feature flags enabled? If so, please provide details about which ones and how they are configured in the description.
       options:
         - 'Yes'
         - 'No'
-
-  - type: markdown
-    attributes:
-      value: |
-        If you are using any feature flags, please provide details about which ones and how they are configured.
 
   - type: dropdown
     id: runtime
