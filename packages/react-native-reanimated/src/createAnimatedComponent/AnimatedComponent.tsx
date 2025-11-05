@@ -459,6 +459,7 @@ export default class AnimatedComponent
     return super.render({
       nativeID,
       ...filteredProps,
+      ...this.state.styleProps, // TODO: find a better way to persist animated props
       style: mergedStyles,
       ...jestProps,
     });
