@@ -36,11 +36,11 @@ FilterOp getFilterOperationType(const std::string &property) {
     return it->second;
   } else {
     throw std::invalid_argument("[Reanimated] Unknown filter operation: " + property);
-  };
-};
+  }
+}
 
 std::string getOperationNameFromType(const FilterOp type) {
   return filterOperationStrings[static_cast<size_t>(type)];
-};
+}
 
 } // namespace reanimated::css

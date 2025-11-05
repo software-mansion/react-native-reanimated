@@ -10,7 +10,7 @@ CSSDropShadow::CSSDropShadow(CSSDouble offsetX, CSSDouble offsetY, CSSDouble sta
     : offsetX(std::move(offsetX)),
       offsetY(std::move(offsetY)),
       standardDeviation(std::move(standardDeviation)),
-      color(std::move(color)) {};
+      color(std::move(color)) {}
 
 CSSDropShadow::CSSDropShadow(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   const auto &obj = jsiValue.asObject(rt);
