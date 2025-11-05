@@ -40,7 +40,7 @@ jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt,
     for (const auto &[tag, pair] : updatesRegistry_) {
       const auto &[shadowNode, props] = pair;
       const auto viewTag = shadowNode->getTag();
-      
+
       const auto viewTimestamp = timestampMap_.at(viewTag);
       if (viewTimestamp >= timestamp) {
         continue;
