@@ -10,7 +10,7 @@
 #include <reanimated/CSS/interpolation/filters/operations/contrast.h>
 #include <reanimated/CSS/interpolation/filters/operations/dropShadow.h>
 #include <reanimated/CSS/interpolation/filters/operations/grayscale.h>
-#include <reanimated/CSS/interpolation/filters/operations/huerotate.h>
+#include <reanimated/CSS/interpolation/filters/operations/hueRotate.h>
 #include <reanimated/CSS/interpolation/filters/operations/invert.h>
 #include <reanimated/CSS/interpolation/filters/operations/opacity.h>
 #include <reanimated/CSS/interpolation/filters/operations/saturate.h>
@@ -70,7 +70,7 @@ std::shared_ptr<FilterOperation> FilterOperation::fromJSIValue(jsi::Runtime &rt,
     case FilterOp::Sepia:
       return std::make_shared<SepiaOperation>(propertyValue.asNumber());
     default:
-      throw std::invalid_argument("[Reanimated] Unknown transform operation: " + propertyName);
+      throw std::invalid_argument("[Reanimated] Unknown filter operation: " + propertyName);
   }
 }
 

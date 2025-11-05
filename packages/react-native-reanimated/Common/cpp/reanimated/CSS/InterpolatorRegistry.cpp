@@ -31,7 +31,7 @@
 #include <reanimated/CSS/interpolation/filters/operations/contrast.h>
 #include <reanimated/CSS/interpolation/filters/operations/dropShadow.h>
 #include <reanimated/CSS/interpolation/filters/operations/grayscale.h>
-#include <reanimated/CSS/interpolation/filters/operations/huerotate.h>
+#include <reanimated/CSS/interpolation/filters/operations/hueRotate.h>
 #include <reanimated/CSS/interpolation/filters/operations/invert.h>
 #include <reanimated/CSS/interpolation/filters/operations/opacity.h>
 #include <reanimated/CSS/interpolation/filters/operations/saturate.h>

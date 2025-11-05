@@ -116,7 +116,6 @@ export default function FilterExample() {
         style={[styles.image, grayscale]}
       />
 
-      {/* // to-do */}
       <Text>hueRotate (only Android)</Text>
       <Animated.Image
         source={balloonsImage}
