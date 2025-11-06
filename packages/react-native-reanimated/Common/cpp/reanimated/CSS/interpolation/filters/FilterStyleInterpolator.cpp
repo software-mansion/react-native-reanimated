@@ -211,14 +211,14 @@ std::pair<FilterOperations, FilterOperations> FilterStyleInterpolator::createFil
     const auto &fromOperation = fromOperations[i];
     const auto &toOperation = toOperations[j];
 
-    // Case 1: Types match directly
+    // Types match directly
     if (fromOperation->type == toOperation->type) {
       fromOperationsResult.emplace_back(fromOperation);
       toOperationsResult.emplace_back(toOperation);
       i++;
       j++;
     } else {
-      // Case 3: Use default values if no conversion possible
+      // Otherwise, use default values if there is no matching operation
       bool toExistsLaterInFrom = lastIndexInFrom.count(toOperation->type) && lastIndexInFrom[toOperation->type] > i;
       bool fromExistsLaterInTo = lastIndexInTo.count(fromOperation->type) && lastIndexInTo[fromOperation->type] > j;
 

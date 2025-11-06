@@ -94,10 +94,6 @@ CSSDropShadow CSSDropShadow::interpolate(double progress, const CSSDropShadow &t
       color.interpolate(progress, to.color));
 }
 
-bool CSSDropShadow::canInterpolateTo(const CSSDropShadow &to) const {
-  return true;
-}
-
 bool CSSDropShadow::operator==(const CSSDropShadow &other) const {
   return offsetX == other.offsetX && offsetY == other.offsetY && standardDeviation == other.standardDeviation &&
       color == other.color;
@@ -112,27 +108,19 @@ std::ostream &operator<<(std::ostream &os, const CSSDropShadow &shadowValue) {
 
 #endif // NDEBUG
 
-const std::vector<CSSDropShadow::FieldValidator> CSSDropShadow::fieldValidators = {
+const std::vector<FieldValidator> CSSDropShadow::fieldValidators = {
     {"offsetX",
      [](const folly::dynamic &value) { return CSSDouble::canConstruct(value); },
-     [](jsi::Runtime &rt, const jsi::Value &jsiValue) {
-       return CSSDouble::canConstruct(rt, jsiValue);
-     }},
+     [](jsi::Runtime &rt, const jsi::Value &jsiValue) { return CSSDouble::canConstruct(rt, jsiValue); }},
     {"offsetY",
      [](const folly::dynamic &value) { return CSSDouble::canConstruct(value); },
-     [](jsi::Runtime &rt, const jsi::Value &jsiValue) {
-       return CSSDouble::canConstruct(rt, jsiValue);
-     }},
+     [](jsi::Runtime &rt, const jsi::Value &jsiValue) { return CSSDouble::canConstruct(rt, jsiValue); }},
     {"standardDeviation",
      [](const folly::dynamic &value) { return CSSDouble::canConstruct(value); },
-     [](jsi::Runtime &rt, const jsi::Value &jsiValue) {
-       return CSSDouble::canConstruct(rt, jsiValue);
-     }},
+     [](jsi::Runtime &rt, const jsi::Value &jsiValue) { return CSSDouble::canConstruct(rt, jsiValue); }},
     {"color",
      [](const folly::dynamic &value) { return CSSColor::canConstruct(value); },
-     [](jsi::Runtime &rt, const jsi::Value &jsiValue) {
-       return CSSColor::canConstruct(rt, jsiValue);
-     }},
+     [](jsi::Runtime &rt, const jsi::Value &jsiValue) { return CSSColor::canConstruct(rt, jsiValue); }},
 };
 
 } // namespace reanimated::css

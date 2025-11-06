@@ -1,12 +1,11 @@
 #pragma once
 
+#include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/common/values/CSSBoolean.h>
 #include <reanimated/CSS/common/values/CSSColor.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
 
-#include <folly/json.h>
 #include <functional>
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -31,7 +30,6 @@ struct CSSDropShadow : public CSSSimpleValue<CSSDropShadow> {
   std::string toString() const;
 
   CSSDropShadow interpolate(double progress, const CSSDropShadow &to) const;
-  bool canInterpolateTo(const CSSDropShadow &to) const;
 
   bool operator==(const CSSDropShadow &other) const;
 
@@ -40,12 +38,6 @@ struct CSSDropShadow : public CSSSimpleValue<CSSDropShadow> {
 #endif // NDEBUG
 
  private:
-  struct FieldValidator {
-    std::string fieldName;
-    std::function<bool(const folly::dynamic &)> validateDynamic;
-    std::function<bool(jsi::Runtime &, const jsi::Value &)> validateJSI;
-  };
-
   static const std::vector<FieldValidator> fieldValidators;
 };
 

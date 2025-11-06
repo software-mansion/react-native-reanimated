@@ -42,7 +42,7 @@ export default function Filter() {
             {
               keyframes: {
                 '0%, 100%': {
-                  filter: [{ blur: 0, brightness: 0 }],
+                  filter: [{ blur: 0 }, { brightness: 0 }],
                 },
                 '50%': {
                   filter: [{ blur: 10 }, { brightness: 1.5 }],

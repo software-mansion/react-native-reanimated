@@ -11,9 +11,6 @@
 #include <reanimated/CSS/interpolation/filters/operations/saturate.h>
 #include <reanimated/CSS/interpolation/filters/operations/sepia.h>
 
-#include <memory>
-#include <utility>
-
 namespace reanimated::css {
 
 std::shared_ptr<FilterOperation> FilterInterpolator::resolveOperation(
@@ -95,4 +92,5 @@ template class FilterOperationInterpolator<InvertOperation>;
 template class FilterOperationInterpolator<OpacityOperation>;
 template class FilterOperationInterpolator<SaturateOperation>;
 template class FilterOperationInterpolator<SepiaOperation>;
+
 } // namespace reanimated::css

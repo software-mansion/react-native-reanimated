@@ -161,36 +161,24 @@ std::ostream &operator<<(std::ostream &os, const CSSBoxShadow &shadowValue) {
 
 #endif // NDEBUG
 
-const std::vector<CSSBoxShadow::FieldValidator> CSSBoxShadow::fieldValidators = {
+const std::vector<FieldValidator> CSSBoxShadow::fieldValidators = {
     {"offsetX",
      [](const folly::dynamic &val) { return CSSDouble::canConstruct(val); },
-     [](jsi::Runtime &rt, const jsi::Value &val) {
-       return CSSDouble::canConstruct(rt, val);
-     }},
+     [](jsi::Runtime &rt, const jsi::Value &val) { return CSSDouble::canConstruct(rt, val); }},
     {"offsetY",
      [](const folly::dynamic &val) { return CSSDouble::canConstruct(val); },
-     [](jsi::Runtime &rt, const jsi::Value &val) {
-       return CSSDouble::canConstruct(rt, val);
-     }},
+     [](jsi::Runtime &rt, const jsi::Value &val) { return CSSDouble::canConstruct(rt, val); }},
     {"blurRadius",
      [](const folly::dynamic &val) { return CSSDouble::canConstruct(val); },
-     [](jsi::Runtime &rt, const jsi::Value &val) {
-       return CSSDouble::canConstruct(rt, val);
-     }},
+     [](jsi::Runtime &rt, const jsi::Value &val) { return CSSDouble::canConstruct(rt, val); }},
     {"spreadDistance",
      [](const folly::dynamic &val) { return CSSDouble::canConstruct(val); },
-     [](jsi::Runtime &rt, const jsi::Value &val) {
-       return CSSDouble::canConstruct(rt, val);
-     }},
+     [](jsi::Runtime &rt, const jsi::Value &val) { return CSSDouble::canConstruct(rt, val); }},
     {"color",
      [](const folly::dynamic &val) { return CSSColor::canConstruct(val); },
-     [](jsi::Runtime &rt, const jsi::Value &val) {
-       return CSSColor::canConstruct(rt, val);
-     }},
+     [](jsi::Runtime &rt, const jsi::Value &val) { return CSSColor::canConstruct(rt, val); }},
     {"inset",
      [](const folly::dynamic &val) { return CSSBoolean::canConstruct(val); },
-     [](jsi::Runtime &rt, const jsi::Value &val) {
-       return CSSBoolean::canConstruct(rt, val);
-     }}};
+     [](jsi::Runtime &rt, const jsi::Value &val) { return CSSBoolean::canConstruct(rt, val); }}};
 
 } // namespace reanimated::css

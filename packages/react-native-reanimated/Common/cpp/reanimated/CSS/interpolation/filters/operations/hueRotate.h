@@ -3,8 +3,6 @@
 #include <reanimated/CSS/common/values/CSSAngle.h>
 #include <reanimated/CSS/interpolation/filters/FilterOperation.h>
 
-#include <string>
-
 namespace reanimated::css {
 
 struct HueRotateOperation final : public FilterOperationBase<FilterOp::HueRotate, CSSAngle> {
