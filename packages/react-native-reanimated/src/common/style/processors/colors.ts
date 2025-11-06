@@ -33,6 +33,15 @@ export function PlatformColor(...names: Array<string>): PlatformColorValue {
   return mapped as PlatformColorValue;
 }
 
+function isPlatformColorObject(value: any): boolean {
+  return (
+    value &&
+    typeof value === 'object' &&
+    (('semantic' in value && Array.isArray(value.semantic)) ||
+      ('resource_paths' in value && Array.isArray(value.resource_paths)))
+  );
+}
+
 /* copied from:
  * https://github.com/facebook/react-native/blob/v0.81.0/packages/react-native/Libraries/StyleSheet/PlatformColorValueTypesIOS.d.ts
  */
@@ -118,6 +127,9 @@ export function processColorsInProps(props: StyleProps) {
             : undefined;
       }
       props[key] = processed;
+    } else if (isPlatformColorObject(value)) {
+      // PlatformColor is not processed further on iOS and Android
+      props[key] = value;
     } else {
       props[key] = processColor(value);
     }
