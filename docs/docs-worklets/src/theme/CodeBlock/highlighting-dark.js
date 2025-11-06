@@ -35,15 +35,15 @@ module.exports = {
     {
       types: ['inserted'],
       style: {
-        color: 'var(--swm-green-light-80)',
-        backgroundColor: 'var(--swm-green-dark-140)',
+        color: 'var(--codeblock-diff-inserted-color-dark)',
+        backgroundColor: 'var(--codeblock-diff-inserted-background-dark)',
       },
     },
     {
       types: ['deleted'],
       style: {
-        color: 'var(--swm-red-light-80)',
-        backgroundColor: 'var(--swm-red-dark-140)',
+        color: 'var(--codeblock-diff-deleted-color-dark)',
+        backgroundColor: 'var(--codeblock-diff-deleted-background-dark)',
       },
     },
     {

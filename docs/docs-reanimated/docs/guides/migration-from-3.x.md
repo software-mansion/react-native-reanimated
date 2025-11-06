@@ -14,7 +14,7 @@ Reanimated 4.x supports only the [New Architecture](https://reactnative.dev/arch
 
 ### Added dependency on `react-native-worklets`
 
-In Reanimated 4, [worklets](/docs/fundamentals/glossary#worklet) implementation has been moved to a separate library named `react-native-worklets`. You need to install `react-native-worklets` package using your package manager and rebuild the native apps.
+In Reanimated 4, [worklets](/docs/fundamentals/glossary#worklet) implementation has been moved to a separate library named `react-native-worklets`. You need to install `react-native-worklets` package using your package manager and rebuild the native apps. Make sure to install compatible version of `react-native-worklets` as specified in the [compatibility table](https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility).
 
 You can read more about `react-native-worklets` library in its [documentation](https://docs.swmansion.com/react-native-worklets/).
 
@@ -26,33 +26,15 @@ Change `'react-native-reanimated/plugin'` to `'react-native-worklets/plugin'` in
 
 Reanimated 4 moves all worklet-related functions to `react-native-worklets` library. While they are re-exported from `react-native-reanimated` for backwards compatibility, they are marked as deprecated and planned to be removed in a future release of Reanimated. You can update your imports as described below to make sure you're not using deprecated APIs.
 
-#### makeShareableCloneRecursive
-
-Replaced with [`createSerializable`](https://docs.swmansion.com/react-native-worklets/docs/memory/createSerializable/). The API stays the same.
-
-```diff
-- import { makeShareableCloneRecursive } from 'react-native-reanimated';
-+ import { createSerializable } from 'react-native-worklets';
-```
-
-#### createWorkletRuntime
-
-Moved without changes.
-
-```diff
-- import { createWorkletRuntime } from 'react-native-reanimated';
-+ import { createWorkletRuntime } from 'react-native-worklets';
-```
-
 #### executeOnUIRuntimeSync
 
 Replaced with [`runOnUISync`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUISync/). The API changed slightly so that the arguments are no longer passed as a separate function invocation.
 
 ```diff
 - import { executeOnUIRuntimeSync } from 'react-native-reanimated';
-- executeOnUIRuntimeSync(func)(...args);
+- executeOnUIRuntimeSync((greeting) => console.log(greeting))("Hello from UI Runtime synchronously");
 + import { runOnUISync } from 'react-native-worklets';
-+ runOnUISync(func, ...args);
++ runOnUISync((greeting) => console.log(greeting), "Hello from UI Runtime synchronously");
 ```
 
 #### runOnJS
@@ -61,9 +43,20 @@ Replaced with [`scheduleOnRN`](https://docs.swmansion.com/react-native-worklets/
 
 ```diff
 - import { runOnJS } from 'react-native-reanimated';
-- runOnJS(func)(...args);
+- runOnJS((greeting) => console.log(greeting))("Hello from RN Runtime");
 + import { scheduleOnRN } from 'react-native-worklets';
-+ scheduleOnRN(func, ...args);
++ scheduleOnRN((greeting) => console.log(greeting), "Hello from RN Runtime");
+```
+
+#### runOnUI
+
+Replaced with [`scheduleOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI/). The API changed slightly so that the arguments are no longer passed as a separate function invocation.
+
+```diff
+- import { runOnUI } from 'react-native-reanimated';
+- runOnUI((greeting) => console.log(greeting))("Hello from UI Runtime asynchronously");
++ import { scheduleOnUI } from 'react-native-worklets';
++ scheduleOnUI((greeting) => console.log(greeting), "Hello from UI Runtime asynchronously");
 ```
 
 #### runOnRuntime
@@ -72,28 +65,17 @@ Replaced with [`scheduleOnRuntime`](https://docs.swmansion.com/react-native-work
 
 ```diff
 - import { runOnRuntime } from 'react-native-reanimated';
-- runOnRuntime(runtime, func)(...args);
+- runOnRuntime(runtime, (greeting) => console.log(greeting))("Hello from custom Runtime");
 + import { scheduleOnRuntime } from 'react-native-worklets';
-+ scheduleOnRuntime(runtime, func, ...args);
++ scheduleOnRuntime(runtime, (greeting) => console.log(greeting), "Hello from custom Runtime");
 ```
 
-#### WorkletRuntime
+#### Moved without changes to the API
 
-Moved without changes.
-
-```diff
-- import { WorkletRuntime } from 'react-native-reanimated';
-+ import { WorkletRuntime } from 'react-native-worklets';
-```
-
-#### isWorkletFunction
-
-Moved without changes.
-
-```diff
-- import { isWorkletFunction } from 'react-native-reanimated';
-+ import { isWorkletFunction } from 'react-native-worklets';
-```
+- `makeShareableCloneRecursive` - replaced with [`createSerializable`](https://docs.swmansion.com/react-native-worklets/docs/memory/createSerializable/).
+- `createWorkletRuntime` - moved without changes.
+- `WorkletRuntime` - moved without changes.
+- `isWorkletFunction` - moved without changes.
 
 ### Changed the default behavior of `withSpring`
 
