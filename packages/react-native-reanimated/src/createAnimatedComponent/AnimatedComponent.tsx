@@ -114,6 +114,7 @@ export default class AnimatedComponent
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
+    // TODO: don't do it on web?
     const viewTag = this.getComponentViewTag();
     if (viewTag !== -1) {
       PropsRegistryGarbageCollector.registerView(viewTag, this);
