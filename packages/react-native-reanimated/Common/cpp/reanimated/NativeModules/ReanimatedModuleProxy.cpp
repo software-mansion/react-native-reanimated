@@ -1123,6 +1123,8 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
       if (status == ShadowTree::CommitStatus::Succeeded) {
         updatesRegistryManager_->clearPropsToRevert(surfaceId);
       }
+#else
+      (void)status;
 #endif
     });
   }

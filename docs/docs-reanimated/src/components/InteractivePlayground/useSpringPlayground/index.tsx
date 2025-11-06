@@ -88,6 +88,7 @@ export default function useSpringPlayground() {
       mass: ${mass},
       overshootClamping: ${overshootClamping},
       energyThreshold: ${energyThreshold},
+      velocity: ${velocity},
       reduceMotion: ${formatReduceMotion(reduceMotion)},
     })
   `;

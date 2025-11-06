@@ -137,6 +137,7 @@ import WorkletExample from './WorkletExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import InstanceDiscoveryExample from './InstanceDiscoveryExample';
+import ShadowNodesCloningExample from './ShadowNodesCloningExample';
 
 export const REAPlatform = {
   IOS: 'ios',
@@ -623,6 +624,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'PlatformColor',
     screen: PlatformColorExample,
     icon: '🎨',
+  },
+  ShadowNodesCloningExample: {
+    icon: '🌑',
+    title: 'Shadow Nodes Cloning',
+    screen: ShadowNodesCloningExample,
   },
 
   // Old examples
