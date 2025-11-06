@@ -113,7 +113,9 @@ export function processColorsInProps(props: StyleProps) {
       const dynamicFields = value.dynamic;
       for (const field in dynamicFields) {
         processed.dynamic[field] =
-          dynamicFields[field] != null ? processColor(dynamicFields[field]) : undefined;
+          dynamicFields[field] != null
+            ? processColor(dynamicFields[field])
+            : undefined;
       }
       props[key] = processed;
     } else {
