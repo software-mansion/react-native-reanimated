@@ -112,7 +112,8 @@ export function processColorsInProps(props: StyleProps) {
       const processed = { dynamic: {} as Record<string, Maybe<number>> };
       const dynamicFields = value.dynamic;
       for (const field in dynamicFields) {
-        processed.dynamic[field] = processColor(dynamicFields[field]);
+        processed.dynamic[field] =
+          dynamicFields[field] != null ? processColor(dynamicFields[field]) : undefined;
       }
       props[key] = processed;
     } else {
