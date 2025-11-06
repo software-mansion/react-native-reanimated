@@ -20,6 +20,8 @@ struct FilterKeyframe {
   // pairs)
   const std::optional<FilterOperations> fromOperations;
   const std::optional<FilterOperations> toOperations;
+  // Keyframe is discrete when there is a difference in order between from and to operations
+  const bool isDiscrete;
 };
 
 class FilterStyleInterpolator final : public PropertyInterpolator {
@@ -62,7 +64,7 @@ class FilterStyleInterpolator final : public PropertyInterpolator {
       double toOffset,
       const std::optional<FilterOperations> &fromOperationsOptional,
       const std::optional<FilterOperations> &toOperationsOptional) const;
-  std::pair<FilterOperations, FilterOperations> createFilterInterpolationPair(
+  std::tuple<FilterOperations, FilterOperations, bool> createFilterInterpolationPair(
       const FilterOperations &fromOperations,
       const FilterOperations &toOperations) const;
   std::shared_ptr<FilterOperation> getDefaultOperationOfType(FilterOp type) const;

@@ -82,6 +82,12 @@ folly::dynamic FilterStyleInterpolator::interpolate(
         keyframe->toOperations.value_or(fallbackValue));
   }
 
+  if (!keyframe->isDiscrete) {
+    double progress = progressProvider->getKeyframeProgress(keyframe->fromOffset, keyframe->toOffset);
+    const auto &operations = progress < 0.5 ? keyframe->fromOperations.value() : keyframe->toOperations.value();
+    return convertOperationsToDynamic(operations);
+  }
+
   // Interpolate the current keyframe
   return interpolateOperations(
       shadowNode,
@@ -187,56 +193,36 @@ std::shared_ptr<FilterKeyframe> FilterStyleInterpolator::createFilterKeyframe(
         FilterKeyframe{fromOffset, toOffset, fromOperationsOptional, toOperationsOptional});
   }
 
-  const auto [fromOperations, toOperations] =
+  const auto [fromOperations, toOperations, isDiscrete] =
       createFilterInterpolationPair(fromOperationsOptional.value(), toOperationsOptional.value());
-  return std::make_shared<FilterKeyframe>(FilterKeyframe{fromOffset, toOffset, fromOperations, toOperations});
+  return std::make_shared<FilterKeyframe>(
+      FilterKeyframe{fromOffset, toOffset, fromOperations, toOperations, isDiscrete});
 }
 
-std::pair<FilterOperations, FilterOperations> FilterStyleInterpolator::createFilterInterpolationPair(
+std::tuple<FilterOperations, FilterOperations, bool> FilterStyleInterpolator::createFilterInterpolationPair(
     const FilterOperations &fromOperations,
     const FilterOperations &toOperations) const {
   FilterOperations fromOperationsResult, toOperationsResult;
-  size_t i = 0, j = 0;
+  size_t i = 0;
+  bool isDiscrete = true;
 
-  // Build index maps and check for matrix operation
-  std::unordered_map<FilterOp, size_t> lastIndexInFrom, lastIndexInTo;
-  for (size_t idx = 0; idx < fromOperations.size(); ++idx) {
-    lastIndexInFrom[fromOperations[idx]->type] = idx;
-  }
-  for (size_t idx = 0; idx < toOperations.size(); ++idx) {
-    lastIndexInTo[toOperations[idx]->type] = idx;
-  }
+  size_t fromOperationsSize = fromOperations.size();
+  size_t toOperationsSize = toOperations.size();
+  size_t minSize = std::min(fromOperationsSize, toOperationsSize);
 
-  while (i < fromOperations.size() && j < toOperations.size()) {
+  while (i < minSize) {
     const auto &fromOperation = fromOperations[i];
-    const auto &toOperation = toOperations[j];
+    const auto &toOperation = toOperations[i];
 
     // Types match directly
     if (fromOperation->type == toOperation->type) {
       fromOperationsResult.emplace_back(fromOperation);
       toOperationsResult.emplace_back(toOperation);
       i++;
-      j++;
     } else {
-      // Otherwise, use default values if there is no matching operation
-      bool toExistsLaterInFrom = lastIndexInFrom.count(toOperation->type) && lastIndexInFrom[toOperation->type] > i;
-      bool fromExistsLaterInTo = lastIndexInTo.count(fromOperation->type) && lastIndexInTo[fromOperation->type] > j;
-
-      if (toExistsLaterInFrom == fromExistsLaterInTo) {
-        break;
-      } else if (!fromExistsLaterInTo) {
-        // If fromOperation does not exist later in toOperations, we can
-        // interpolate it to the default value
-        fromOperationsResult.emplace_back(fromOperation);
-        toOperationsResult.emplace_back(getDefaultOperationOfType(fromOperation->type));
-        i++;
-      } else {
-        // If toOperation does not exist later in fromOperations, we can
-        // interpolate it from the default value
-        fromOperationsResult.emplace_back(getDefaultOperationOfType(toOperation->type));
-        toOperationsResult.emplace_back(toOperation);
-        j++;
-      }
+      // If the operation do not match, we need to set keyframe property isDiscrete to false
+      isDiscrete = false;
+      return std::make_tuple(fromOperations, toOperations, isDiscrete);
     }
   }
 
@@ -245,12 +231,12 @@ std::pair<FilterOperations, FilterOperations> FilterStyleInterpolator::createFil
     fromOperationsResult.emplace_back(fromOperations[i]);
     toOperationsResult.emplace_back(getDefaultOperationOfType(fromOperations[i]->type));
   }
-  for (; j < toOperations.size(); ++j) {
-    fromOperationsResult.emplace_back(getDefaultOperationOfType(toOperations[j]->type));
-    toOperationsResult.emplace_back(toOperations[j]);
+  for (; i < toOperations.size(); ++i) {
+    fromOperationsResult.emplace_back(getDefaultOperationOfType(toOperations[i]->type));
+    toOperationsResult.emplace_back(toOperations[i]);
   }
 
-  return std::make_pair(fromOperationsResult, toOperationsResult);
+  return std::make_tuple(fromOperationsResult, toOperationsResult, isDiscrete);
 }
 
 size_t FilterStyleInterpolator::getIndexOfCurrentKeyframe(
