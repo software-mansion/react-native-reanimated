@@ -7,6 +7,13 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
+const instructions = [
+  '1. Press "Animate width and color" button',
+  '2. Wait until the animated styles are synced back to React (about 3 seconds)',
+  '3. Press "Increase counter" button',
+  '4. The view width and color not change',
+].join('\n');
+
 interface ButtonProps {
   title: string;
   onPress: () => void;
@@ -50,9 +57,10 @@ export default function SyncBackToReactExample() {
       <Animated.View style={[styles.box, animatedStyle]} />
       <Animated.View style={[styles.box, animatedStyle]} />
       <Animated.View style={[styles.box, animatedStyle]} />
-      <Button title="Animate width" onPress={handleAnimateWidth} />
+      <Button title="Animate width and color" onPress={handleAnimateWidth} />
       <Text>Counter: {count}</Text>
       <Button title="Increase counter" onPress={handleIncreaseCounter} />
+      <Text style={styles.instructions}>{instructions}</Text>
     </View>
   );
 }
@@ -73,5 +81,8 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 20,
     color: 'dodgerblue',
+  },
+  instructions: {
+    marginHorizontal: 20,
   },
 });
