@@ -106,7 +106,11 @@ export {
 export * from './css';
 export type { EasingFunctionFactory } from './Easing';
 export { Easing } from './Easing';
-export { getStaticFeatureFlag, setDynamicFeatureFlag } from './featureFlags';
+export {
+  getDynamicFeatureFlag,
+  getStaticFeatureFlag,
+  setDynamicFeatureFlag,
+} from './featureFlags';
 export type { FrameInfo } from './frameCallback';
 export type { AnimatedProps, EntryOrExitLayoutType } from './helperTypes';
 export type {
