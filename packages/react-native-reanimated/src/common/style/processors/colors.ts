@@ -140,9 +140,23 @@ export function unprocessColorsInProps(props: StyleProps) {
 
     if (Array.isArray(value)) {
       props[key] = value.map((c) => unprocessColor(c));
+    } else if (isDynamicColorObject(value)) {
+      if (!IS_IOS) {
+        throw new ReanimatedError(
+          'DynamicColorIOS is not available on this platform.'
+        );
+      }
+      const processed = { dynamic: {} as Record<string, Maybe<string>> };
+      const dynamicFields = value.dynamic;
+      for (const field in dynamicFields) {
+        processed.dynamic[field] =
+          dynamicFields[field] != null
+            ? unprocessColor(dynamicFields[field])
+            : undefined;
+      }
+      props[key] = processed;
     } else {
       props[key] = unprocessColor(value);
     }
-    // TODO: add support for DynamicColorIOS
   }
 }
