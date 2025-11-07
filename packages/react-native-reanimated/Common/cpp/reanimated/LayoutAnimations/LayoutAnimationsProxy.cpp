@@ -296,9 +296,8 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           auto layoutAnimationIt = layoutAnimations_.find(tag);
           if (layoutAnimationIt == layoutAnimations_.end()) {
             if (oldShadowViewsForReparentings.contains(tag)) {
-              filteredMutations.push_back(
-                  ShadowViewMutation::InsertMutation(
-                      mutationParent, oldShadowViewsForReparentings[tag], mutation.index));
+              filteredMutations.push_back(ShadowViewMutation::InsertMutation(
+                  mutationParent, oldShadowViewsForReparentings[tag], mutation.index));
             } else {
               filteredMutations.push_back(mutation);
             }

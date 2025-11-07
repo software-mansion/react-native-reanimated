@@ -9,8 +9,8 @@
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
-#include <react/renderer/uimanager/UIManagerAnimationDelegate.h>
 #include <react/renderer/scheduler/Scheduler.h>
+#include <react/renderer/uimanager/UIManagerAnimationDelegate.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 
 #include <memory>
@@ -34,7 +34,7 @@ struct LayoutAnimation {
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 };
 
-struct SurfaceContext{
+struct SurfaceContext {
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
 };
 
@@ -100,10 +100,11 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate,
       std::unordered_map<Tag, Tag> &movedViews,
       ShadowViewMutationList &mutations,
       std::vector<std::shared_ptr<MutationNode>> &roots) const;
-      void handleRemovals(
-           ShadowViewMutationList &filteredMutations,
-           std::vector<std::shared_ptr<MutationNode>> &roots,
-           std::unordered_set<std::shared_ptr<MutationNode>> &deadNodes,bool shouldAnimate) const;
+  void handleRemovals(
+      ShadowViewMutationList &filteredMutations,
+      std::vector<std::shared_ptr<MutationNode>> &roots,
+      std::unordered_set<std::shared_ptr<MutationNode>> &deadNodes,
+      bool shouldAnimate) const;
 
   void handleUpdatesAndEnterings(
       ShadowViewMutationList &filteredMutations,
@@ -152,22 +153,20 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate,
       MountingTransaction::Number number,
       const TransactionTelemetry &telemetry,
       ShadowViewMutationList mutations) const override;
-      
+
   // UIManagerAnimationDelegate
 
   void uiManagerDidConfigureNextLayoutAnimation(
-      jsi::Runtime& runtime,
-      const RawValue& config,
-      const jsi::Value& successCallbackValue,
-      const jsi::Value& failureCallbackValue) const override;
+      jsi::Runtime &runtime,
+      const RawValue &config,
+      const jsi::Value &successCallbackValue,
+      const jsi::Value &failureCallbackValue) const override;
 
-  void setComponentDescriptorRegistry(const SharedComponentDescriptorRegistry&
-                                          componentDescriptorRegistry) override;
+  void setComponentDescriptorRegistry(const SharedComponentDescriptorRegistry &componentDescriptorRegistry) override;
 
   bool shouldAnimateFrame() const override;
 
   void stopSurface(SurfaceId surfaceId) override;
-
 };
 
 } // namespace reanimated
