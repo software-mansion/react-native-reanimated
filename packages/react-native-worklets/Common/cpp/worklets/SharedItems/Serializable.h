@@ -88,7 +88,7 @@ class Serializable {
 
   explicit Serializable(ValueType valueType) : valueType_(valueType) {}
 
-  [[nodiscard]] inline ValueType valueType() const {
+  inline ValueType valueType() const {
     return valueType_;
   }
 
@@ -146,7 +146,7 @@ class SerializableJSRef : public jsi::NativeState {
 
   ~SerializableJSRef() override;
 
-  [[nodiscard]] std::shared_ptr<Serializable> value() const {
+  std::shared_ptr<Serializable> value() const {
     return value_;
   }
 
