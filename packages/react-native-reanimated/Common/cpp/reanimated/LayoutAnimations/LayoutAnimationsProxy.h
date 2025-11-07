@@ -164,7 +164,6 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate,
   void setComponentDescriptorRegistry(const SharedComponentDescriptorRegistry&
                                           componentDescriptorRegistry) override;
 
-  // TODO: add SurfaceId to this API as well
   bool shouldAnimateFrame() const override;
 
   void stopSurface(SurfaceId surfaceId) override;
