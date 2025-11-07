@@ -101,7 +101,11 @@ export function processColor(value: unknown): number | null {
     throw new ReanimatedError(ERROR_MESSAGES.invalidColor(value));
   }
 
-  return normalizedColor;
+  // The normalizedColor can be a boolean false value for the transparent color, but
+  // we can safely cast it to number. Since boolean false is essentially 0, it can be
+  // used in all numeric operations without issues. We use a boolean false value to
+  // distinguish the transparent color from other colors.
+  return normalizedColor as number;
 }
 
 export function processColorsInProps(props: StyleProps) {

@@ -13,7 +13,7 @@ export function opacifyColor(
   if (colorNumber === undefined) {
     return null;
   }
-  if (colorNumber === null) {
+  if (colorNumber === false) {
     return 'transparent';
   }
 

@@ -168,7 +168,7 @@ export function clampRGBA(RGBA: ParsedColorArray): void {
   }
 }
 
-const names: Record<string, number | boolean> = {
+const names: Record<string, number | false> = {
   transparent: false,
 
   /* spell-checker: disable */
@@ -354,7 +354,7 @@ export const ColorProperties = [
   'stroke',
 ];
 
-export function normalizeColor(color: unknown): number | boolean | undefined {
+export function normalizeColor(color: unknown): number | false | undefined {
   'worklet';
 
   if (typeof color === 'number') {
@@ -622,13 +622,15 @@ export const hsvToColor = (
   return rgbaColor(r, g, b, a);
 };
 
-export function processColorInitially(color: unknown): number | undefined {
+export function processColorInitially(
+  color: unknown
+): number | false | undefined {
   'worklet';
   if (color === null || color === undefined) {
     return undefined;
   }
 
-  let colorNumber: number | boolean;
+  let colorNumber: number;
 
   if (typeof color === 'number') {
     colorNumber = color;
@@ -636,12 +638,7 @@ export function processColorInitially(color: unknown): number | undefined {
     const normalizedColor = normalizeColor(color);
 
     if (typeof normalizedColor !== 'number') {
-      // We return a boolean false value but cast its type to number as the expected
-      // return value is a number. Since the boolean value is essentially a number,
-      // it can be used in all arithmetic operations, so it is safe to return a boolean
-      // value instead of a number. We need a boolean value to distinguish the transparent
-      // color from other colors.
-      return normalizedColor as unknown as number;
+      return normalizedColor;
     }
 
     colorNumber = normalizedColor;
@@ -662,7 +659,7 @@ export type ParsedColorArray = [number, number, number, number];
 
 export function convertToRGBA(color: unknown): ParsedColorArray {
   'worklet';
-  const processedColor = processColorInitially(color)!; // alpha rgb;
+  const processedColor = processColorInitially(color) as number; // alpha rgb;
   const a = (processedColor >>> 24) / 255;
   const r = ((processedColor << 8) >>> 24) / 255;
   const g = ((processedColor << 16) >>> 24) / 255;
