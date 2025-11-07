@@ -50,7 +50,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   auto shouldAnimate = !surfacesToRemove_.contains(surfaceId);
   surfacesToRemove_.erase(surfaceId);
   handleRemovals(filteredMutations, roots, deadNodes, shouldAnimate);
-  
+
   handleUpdatesAndEnterings(
       filteredMutations, movedViews, mutations, propsParserContext, surfaceId);
 
@@ -267,9 +267,8 @@ void LayoutAnimationsProxy::handleRemovals(
       node->unflattenedParent->removeChildFromUnflattenedTree(node); //???
       if (node->state != MOVED) {
         maybeCancelAnimation(node->tag);
-        filteredMutations.push_back(
-            ShadowViewMutation::DeleteMutation(
-                node->mutation.oldChildShadowView));
+        filteredMutations.push_back(ShadowViewMutation::DeleteMutation(
+            node->mutation.oldChildShadowView));
         nodeForTag_.erase(node->tag);
         node->state = DELETED;
 #ifdef LAYOUT_ANIMATIONS_LOGS
@@ -326,11 +325,10 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           auto layoutAnimationIt = layoutAnimations_.find(tag);
           if (layoutAnimationIt == layoutAnimations_.end()) {
             if (oldShadowViewsForReparentings.contains(tag)) {
-              filteredMutations.push_back(
-                  ShadowViewMutation::InsertMutation(
-                      mutationParent,
-                      oldShadowViewsForReparentings[tag],
-                      mutation.index));
+              filteredMutations.push_back(ShadowViewMutation::InsertMutation(
+                  mutationParent,
+                  oldShadowViewsForReparentings[tag],
+                  mutation.index));
             } else {
               filteredMutations.push_back(mutation);
             }
@@ -338,9 +336,8 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           }
 
           auto oldView = *layoutAnimationIt->second.currentView;
-          filteredMutations.push_back(
-              ShadowViewMutation::InsertMutation(
-                  mutationParent, oldView, mutation.index));
+          filteredMutations.push_back(ShadowViewMutation::InsertMutation(
+              mutationParent, oldView, mutation.index));
           if (movedViews.contains(tag)) {
             layoutAnimationIt->second.parentTag = movedViews.at(tag);
           }
@@ -362,9 +359,8 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
         std::shared_ptr<ShadowView> newView =
             cloneViewWithoutOpacity(mutation, propsParserContext);
 
-        filteredMutations.push_back(
-            ShadowViewMutation::UpdateMutation(
-                mutation.newChildShadowView, *newView, mutationParent));
+        filteredMutations.push_back(ShadowViewMutation::UpdateMutation(
+            mutation.newChildShadowView, *newView, mutationParent));
         break;
       }
 
@@ -426,16 +422,15 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     newView->props = updateValues.newProps;
     updateLayoutMetrics(newView->layoutMetrics, updateValues.frame);
 
-    mutations.push_back(
-        ShadowViewMutation::UpdateMutation(
-            *layoutAnimation.currentView,
-            *newView,
+    mutations.push_back(ShadowViewMutation::UpdateMutation(
+        *layoutAnimation.currentView,
+        *newView,
 #if REACT_NATIVE_MINOR_VERSION >= 78
-            layoutAnimation.parentTag
+        layoutAnimation.parentTag
 #else
-            *layoutAnimation.parentView
+        *layoutAnimation.parentView
 #endif // REACT_NATIVE_MINOR_VERSION >= 78
-            ));
+        ));
     layoutAnimation.currentView = newView;
   }
   updateMap.clear();
@@ -560,9 +555,8 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
 #ifdef LAYOUT_ANIMATIONS_LOGS
       LOG(INFO) << "delete " << subNode->tag << std::endl;
 #endif
-      mutations.push_back(
-          ShadowViewMutation::DeleteMutation(
-              subNode->mutation.oldChildShadowView));
+      mutations.push_back(ShadowViewMutation::DeleteMutation(
+          subNode->mutation.oldChildShadowView));
     } else {
       subNode->state = WAITING;
     }

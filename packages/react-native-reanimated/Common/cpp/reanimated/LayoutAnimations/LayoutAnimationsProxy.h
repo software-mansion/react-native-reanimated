@@ -90,7 +90,8 @@ struct LayoutAnimationsProxy
   void handleRemovals(
       ShadowViewMutationList &filteredMutations,
       std::vector<std::shared_ptr<MutationNode>> &roots,
-      std::unordered_set<std::shared_ptr<MutationNode>> &deadNodes,bool shouldAnimate) const;
+      std::unordered_set<std::shared_ptr<MutationNode>> &deadNodes,
+      bool shouldAnimate) const;
 
   void handleUpdatesAndEnterings(
       ShadowViewMutationList &filteredMutations,
@@ -158,7 +159,8 @@ struct LayoutAnimationsProxy
       const jsi::Value &successCallbackValue,
       const jsi::Value &failureCallbackValue) const override;
 
-  void setComponentDescriptorRegistry(const SharedComponentDescriptorRegistry &componentDescriptorRegistry) override;
+  void setComponentDescriptorRegistry(const SharedComponentDescriptorRegistry &
+                                          componentDescriptorRegistry) override;
 
   bool shouldAnimateFrame() const override;
 
