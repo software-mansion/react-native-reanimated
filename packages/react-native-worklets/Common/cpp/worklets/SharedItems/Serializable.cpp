@@ -74,7 +74,7 @@ std::shared_ptr<Serializable> Serializable::undefined() {
   return undefined;
 }
 
-SerializableJSRef::~SerializableJSRef() {}
+SerializableJSRef::~SerializableJSRef() = default;
 
 SerializableArray::SerializableArray(jsi::Runtime &rt, const jsi::Array &array) : Serializable(ArrayType) {
   auto size = array.size(rt);

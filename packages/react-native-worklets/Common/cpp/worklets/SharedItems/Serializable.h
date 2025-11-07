@@ -289,7 +289,7 @@ class SerializableRemoteFunction : public Serializable,
         ownerRuntime_(&rt),
         function_(std::make_unique<jsi::Function>(std::move(function))) {}
 
-  ~SerializableRemoteFunction() {
+  ~SerializableRemoteFunction() override {
     cleanupIfRuntimeExists(ownerRuntime_, *reinterpret_cast<std::unique_ptr<jsi::Value> *>(&function_));
   }
 
