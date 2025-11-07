@@ -31,6 +31,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
+  auto &[deadNodes] = surfaceContext_[surfaceId];
 
   std::vector<std::shared_ptr<MutationNode>> roots;
   std::unordered_map<Tag, Tag> movedViews;
@@ -49,7 +50,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
   parseRemoveMutations(movedViews, mutations, roots);
 
-  handleRemovals(filteredMutations, roots);
+  auto shouldAnimate = !surfacesToRemove_.contains(surfaceId);
+  surfacesToRemove_.erase(surfaceId);
+  handleRemovals(filteredMutations, roots, deadNodes, shouldAnimate);
 
   handleUpdatesAndEnterings(
       filteredMutations, movedViews, mutations, propsParserContext, surfaceId);
@@ -134,6 +137,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
   auto node = nodeForTag_[tag];
   auto mutationNode = std::static_pointer_cast<MutationNode>(node);
   mutationNode->state = DEAD;
+  auto &[deadNodes] = surfaceContext_[surfaceId];
   deadNodes.insert(mutationNode);
 
   return surfaceId;
@@ -253,19 +257,22 @@ void LayoutAnimationsProxy::parseRemoveMutations(
 
 void LayoutAnimationsProxy::handleRemovals(
     ShadowViewMutationList &filteredMutations,
-    std::vector<std::shared_ptr<MutationNode>> &roots) const {
+    std::vector<std::shared_ptr<MutationNode>> &roots,
+    std::unordered_set<std::shared_ptr<MutationNode>> &deadNodes,
+    bool shouldAnimate) const {
   // iterate from the end, so that children
   // with higher indices appear first in the mutations list
   for (auto it = roots.rbegin(); it != roots.rend(); it++) {
     auto &node = *it;
     if (!startAnimationsRecursively(
-            node, true, true, false, filteredMutations)) {
+            node, true, shouldAnimate, false, filteredMutations)) {
       filteredMutations.push_back(node->mutation);
       node->unflattenedParent->removeChildFromUnflattenedTree(node); //???
       if (node->state != MOVED) {
         maybeCancelAnimation(node->tag);
-        filteredMutations.push_back(ShadowViewMutation::DeleteMutation(
-            node->mutation.oldChildShadowView));
+        filteredMutations.push_back(
+            ShadowViewMutation::DeleteMutation(
+                node->mutation.oldChildShadowView));
         nodeForTag_.erase(node->tag);
         node->state = DELETED;
 #ifdef LAYOUT_ANIMATIONS_LOGS
@@ -322,10 +329,11 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           auto layoutAnimationIt = layoutAnimations_.find(tag);
           if (layoutAnimationIt == layoutAnimations_.end()) {
             if (oldShadowViewsForReparentings.contains(tag)) {
-              filteredMutations.push_back(ShadowViewMutation::InsertMutation(
-                  mutationParent,
-                  oldShadowViewsForReparentings[tag],
-                  mutation.index));
+              filteredMutations.push_back(
+                  ShadowViewMutation::InsertMutation(
+                      mutationParent,
+                      oldShadowViewsForReparentings[tag],
+                      mutation.index));
             } else {
               filteredMutations.push_back(mutation);
             }
@@ -333,8 +341,9 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           }
 
           auto oldView = *layoutAnimationIt->second.currentView;
-          filteredMutations.push_back(ShadowViewMutation::InsertMutation(
-              mutationParent, oldView, mutation.index));
+          filteredMutations.push_back(
+              ShadowViewMutation::InsertMutation(
+                  mutationParent, oldView, mutation.index));
           if (movedViews.contains(tag)) {
             layoutAnimationIt->second.parentTag = movedViews.at(tag);
           }
@@ -356,8 +365,9 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
         std::shared_ptr<ShadowView> newView =
             cloneViewWithoutOpacity(mutation, propsParserContext);
 
-        filteredMutations.push_back(ShadowViewMutation::UpdateMutation(
-            mutation.newChildShadowView, *newView, mutationParent));
+        filteredMutations.push_back(
+            ShadowViewMutation::UpdateMutation(
+                mutation.newChildShadowView, *newView, mutationParent));
         break;
       }
 
@@ -448,15 +458,16 @@ void LayoutAnimationsProxy::addOngoingAnimations(
     newView->props = updateValues.newProps;
     updateLayoutMetrics(newView->layoutMetrics, updateValues.frame);
 
-    mutations.push_back(ShadowViewMutation::UpdateMutation(
-        *layoutAnimation.currentView,
-        *newView,
+    mutations.push_back(
+        ShadowViewMutation::UpdateMutation(
+            *layoutAnimation.currentView,
+            *newView,
 #if REACT_NATIVE_MINOR_VERSION >= 78
-        layoutAnimation.parentTag
+            layoutAnimation.parentTag
 #else
-        *layoutAnimation.parentView
+            *layoutAnimation.parentView
 #endif // REACT_NATIVE_MINOR_VERSION >= 78
-        ));
+            ));
     layoutAnimation.currentView = newView;
   }
   updateMap.clear();
@@ -581,8 +592,9 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
 #ifdef LAYOUT_ANIMATIONS_LOGS
       LOG(INFO) << "delete " << subNode->tag << std::endl;
 #endif
-      mutations.push_back(ShadowViewMutation::DeleteMutation(
-          subNode->mutation.oldChildShadowView));
+      mutations.push_back(
+          ShadowViewMutation::DeleteMutation(
+              subNode->mutation.oldChildShadowView));
     } else {
       subNode->state = WAITING;
     }
@@ -998,6 +1010,25 @@ const ShadowNode *LayoutAnimationsProxy::findInShadowTreeByTag(
   return nullptr;
 }
 #endif // ANDROID
+
+// UIManagerAnimationDelegate
+
+void LayoutAnimationsProxy::uiManagerDidConfigureNextLayoutAnimation(
+    jsi::Runtime &runtime,
+    const RawValue &config,
+    const jsi::Value &successCallbackValue,
+    const jsi::Value &failureCallbackValue) const {}
+
+void LayoutAnimationsProxy::setComponentDescriptorRegistry(
+    const SharedComponentDescriptorRegistry &componentDescriptorRegistry) {}
+
+bool LayoutAnimationsProxy::shouldAnimateFrame() const {
+  return false;
+}
+
+void LayoutAnimationsProxy::stopSurface(SurfaceId surfaceId) {
+  surfacesToRemove_.insert(surfaceId);
+}
 
 } // namespace reanimated
 

@@ -933,7 +933,6 @@ void ReanimatedModuleProxy::initializeFabric(
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
-  uiManager_->setAnimationDelegate(nullptr);
   auto scheduler = reinterpret_cast<Scheduler *>(uiManager_->getDelegate());
   auto componentDescriptorRegistry =
       scheduler->getContextContainer()
@@ -955,6 +954,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         jsInvoker_
 #endif
     );
+    uiManager_->setAnimationDelegate(layoutAnimationsProxy_.get());
   }
 }
 
