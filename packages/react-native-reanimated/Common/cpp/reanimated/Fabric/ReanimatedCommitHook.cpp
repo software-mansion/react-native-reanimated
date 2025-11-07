@@ -58,6 +58,10 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ) noexcept {
   ReanimatedSystraceSection s("ReanimatedCommitHook::shadowTreeWillCommit");
 
+  if constexpr (StaticFeatureFlags::getFlag("VERBOSE_MODE")) {
+    LOG(INFO) << "ReanimatedCommitHook::shadowTreeWillCommit";
+  }
+
   maybeInitializeLayoutAnimations(newRootShadowNode->getSurfaceId());
 
   auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(newRootShadowNode);

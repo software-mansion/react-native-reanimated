@@ -552,6 +552,10 @@ double ReanimatedModuleProxy::getCssTimestamp() {
 void ReanimatedModuleProxy::performOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
+  if constexpr (StaticFeatureFlags::getFlag("VERBOSE_MODE")) {
+    LOG(INFO) << "performOperations timestamp=" << static_cast<long>(getAnimationTimestamp_());
+  }
+
   auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
   for (const auto surfaceId : flushRequestsCopy) {
     uiManager_->getShadowTreeRegistry().visit(
@@ -571,11 +575,17 @@ void ReanimatedModuleProxy::performOperations() {
       auto lock = cssTransitionsRegistry_->lock();
       // Update CSS transitions and flush updates
       cssTransitionsRegistry_->update(currentCssTimestamp_);
+      if constexpr (StaticFeatureFlags::getFlag("VERBOSE_MODE")) {
+        LOG(INFO) << "cssTransitionsRegistry_ size=" << cssTransitionsRegistry_->size();
+      }
       cssTransitionsRegistry_->flushUpdates(updatesBatch);
     }
 
     {
       auto lock = animatedPropsRegistry_->lock();
+      if constexpr (StaticFeatureFlags::getFlag("VERBOSE_MODE")) {
+        LOG(INFO) << "animatedPropsRegistry_ size=" << animatedPropsRegistry_->size();
+      }
       // Flush all animated props updates
       animatedPropsRegistry_->flushUpdates(updatesBatch);
     }
@@ -584,6 +594,9 @@ void ReanimatedModuleProxy::performOperations() {
       auto lock = cssAnimationsRegistry_->lock();
       // Update CSS animations and flush updates
       cssAnimationsRegistry_->update(currentCssTimestamp_);
+      if constexpr (StaticFeatureFlags::getFlag("VERBOSE_MODE")) {
+        LOG(INFO) << "cssAnimationsRegistry_ size=" << cssAnimationsRegistry_->size();
+      }
       cssAnimationsRegistry_->flushUpdates(updatesBatch);
     }
 
@@ -832,6 +845,10 @@ void ReanimatedModuleProxy::performOperations() {
       }
 
       if (!synchronousUpdatesBatch.empty()) {
+        if constexpr (StaticFeatureFlags::getFlag("VERBOSE_MODE")) {
+          LOG(INFO) << "synchronousUpdatesBatch size=" << synchronousUpdatesBatch.size();
+        }
+
         std::vector<int> intBuffer;
         std::vector<double> doubleBuffer;
         intBuffer.reserve(1024);
@@ -1029,8 +1046,13 @@ void ReanimatedModuleProxy::performOperations() {
         }
       }
 
-      for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
-        synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
+      if (!synchronousUpdatesBatch.empty()) {
+        if constexpr (StaticFeatureFlags::getFlag("VERBOSE_MODE")) {
+          LOG(INFO) << "synchronousUpdatesBatch size=" << synchronousUpdatesBatch.size();
+        }
+        for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
+          synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
+        }
       }
 
       updatesBatch = std::move(shadowTreeUpdatesBatch);
@@ -1051,6 +1073,9 @@ void ReanimatedModuleProxy::performOperations() {
     return;
   }
 
+  if constexpr (StaticFeatureFlags::getFlag("VERBOSE_MODE")) {
+    LOG(INFO) << "updatesBatch size=" << updatesBatch.size();
+  }
   commitUpdates(rt, updatesBatch);
 
   // Clear the entire cache after the commit

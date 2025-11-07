@@ -16,6 +16,10 @@ bool UpdatesRegistry::isEmpty() const {
   return updatesRegistry_.empty();
 }
 
+size_t UpdatesRegistry::size() const {
+  return updatesRegistry_.size();
+}
+
 folly::dynamic UpdatesRegistry::get(const Tag tag) const {
   std::lock_guard<std::mutex> lock{mutex_};
 
