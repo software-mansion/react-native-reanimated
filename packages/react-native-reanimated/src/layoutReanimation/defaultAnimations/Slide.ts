@@ -84,13 +84,7 @@ export class SlideInLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    this.rawConfig = {
-      presetName: SlideInLeft.presetName,
-      values: {
-        ...config,
-        delay,
-      },
-    };
+    this.applyRawConfig(SlideInLeft.presetName, config, delay);
 
     return (values) => {
       'worklet';
@@ -139,13 +133,7 @@ export class SlideOutRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
-    this.rawConfig = {
-      presetName: SlideOutRight.presetName,
-      values: {
-        ...config,
-        delay,
-      },
-    };
+    this.applyRawConfig(SlideOutRight.presetName, config, delay);
 
     return (values) => {
       'worklet';

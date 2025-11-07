@@ -9,7 +9,19 @@
 namespace reanimated {
 
 struct LayoutAnimationRawConfigValues {
+  std::optional<double> delay; // TODO: Implement? What about randomDelay?
   std::optional<double> duration; // TODO: all of 'em
+
+  // Spring - TODO: Implement
+  std::optional<bool> springified;
+  std::optional<double> damping;
+  std::optional<double> dampingRatio;
+  std::optional<double> energyThreshold;
+  std::optional<double> mass;
+  std::optional<bool> overshootClamping;
+  std::optional<double> stiffness;
+
+  // TODO: What about easing?
 };
 
 struct LayoutAnimationRawConfig {

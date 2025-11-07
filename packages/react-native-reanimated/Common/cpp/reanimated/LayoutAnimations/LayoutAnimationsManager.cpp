@@ -1,4 +1,5 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/LayoutAnimations/NativeLayoutAnimationPresetFactory.h>
 
 #ifndef NDEBUG
 #include <utility>
@@ -107,6 +108,11 @@ void LayoutAnimationsManager::startNativeLayoutAnimation(
 
   // TODO: This has to be done differently
   if (configPair.second) {
+    PresetFrameTransform frames =
+        NativeLayoutAnimationPresetFactory::instance()
+            .create(type, *configPair.second->presetName)
+            ->calculate(startFrame, endFrame);
+
     // TODO: is this the way? this is weird
     // Create a shared_ptr to keep the callback alive
     auto callback = std::make_shared<std::function<void(bool)>>(onAnimationEnd);
@@ -114,37 +120,24 @@ void LayoutAnimationsManager::startNativeLayoutAnimation(
       // It is needed to delay the trigger of the entering CA animation
       // Without this, the animation attempts to animate a view that is not
       // yet mounted
-      // Because of that though it seems that by the time the dispatched block
-      // executes, the values of the referenced frames are zeroed out. Creating
-      // a copy of them to preserve them.
-      const facebook::react::Rect startFrameCopy = startFrame;
-      const facebook::react::Rect endFrameCopy = endFrame;
       dispatch_async(dispatch_get_main_queue(), ^{
         runCoreAnimationForView_(
             tag,
-            startFrameCopy,
-            endFrameCopy,
+            frames.oldFrame,
+            frames.newFrame,
             *configPair.second,
             false,
-            [callback](bool finished) {
-              if (callback) {
-                (*callback)(finished);
-              }
-            },
+            [callback](bool finished) { (*callback)(finished); },
             layoutAnimationNativeIdentifierMap_[type]);
       });
     } else {
       runCoreAnimationForView_(
           tag,
-          startFrame,
-          endFrame,
+          frames.oldFrame,
+          frames.newFrame,
           *configPair.second,
           true,
-          [callback](bool finished) {
-            if (callback) {
-              (*callback)(finished);
-            }
-          },
+          [callback](bool finished) { (*callback)(finished); },
           layoutAnimationNativeIdentifierMap_[type]);
     }
   }

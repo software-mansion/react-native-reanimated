@@ -725,8 +725,7 @@ void LayoutAnimationsProxy::startEnteringAnimation(
     // TODO: Conform to configs instead of this hardcode
     facebook::react::Rect startFrame = newView.layoutMetrics.frame;
     startFrame.origin.x -= window.width;
-    int x = 50;
-    (void)x;
+
     strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
         tag,
         LayoutAnimationType::ENTERING,

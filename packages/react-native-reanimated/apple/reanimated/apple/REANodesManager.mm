@@ -217,15 +217,6 @@ using namespace facebook::react;
   CGFloat newX = newFrame.origin.x + centerOffsetX;
   CGFloat newY = newFrame.origin.y + centerOffsetY;
 
-  // TODO: Handle this properly and remove all the hardcoded values. There needs to be some place that either populates
-  // the frames with proper values based on the type of layout animation and/or tells this function here to use the
-  // presentation frame or oldFrame
-  // TODO: Ideally this function should just accept specific values and properties that it should animate and be
-  // responsible only for that - clear expectable behavior based on the input.
-  if ([animationKey isEqual:@"enteringAnimation"]) {
-    oldX = centerOffsetX - 400;
-  }
-
   NSMutableArray *animations = [NSMutableArray array];
 
   if (needsXAnimation) {

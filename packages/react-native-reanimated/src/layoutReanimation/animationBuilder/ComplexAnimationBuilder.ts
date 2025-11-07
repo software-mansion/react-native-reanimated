@@ -25,6 +25,20 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
   initialValues?: StyleProps;
   rawConfig?: AnimationRawConfig;
 
+  applyRawConfig(
+    presetName: string,
+    config: BaseBuilderAnimationConfig,
+    delay: number | undefined
+  ) {
+    this.rawConfig = {
+      presetName,
+      values: {
+        ...config,
+        delay,
+      },
+    };
+  }
+
   static createInstance: <T extends typeof BaseAnimationBuilder>(
     this: T
   ) => InstanceType<T>;
