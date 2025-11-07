@@ -168,8 +168,8 @@ export function clampRGBA(RGBA: ParsedColorArray): void {
   }
 }
 
-const names: Record<string, number | null> = {
-  transparent: null,
+const names: Record<string, number | boolean> = {
+  transparent: false,
 
   /* spell-checker: disable */
   // http://www.w3.org/TR/css3-color/#svg-color
@@ -354,7 +354,7 @@ export const ColorProperties = [
   'stroke',
 ];
 
-export function normalizeColor(color: unknown): number | null | undefined {
+export function normalizeColor(color: unknown): number | boolean | undefined {
   'worklet';
 
   if (typeof color === 'number') {
@@ -622,29 +622,32 @@ export const hsvToColor = (
   return rgbaColor(r, g, b, a);
 };
 
-export function processColorInitially(
-  color: unknown
-): number | null | undefined {
+export function processColorInitially(color: unknown): number | undefined {
   'worklet';
   if (color === null || color === undefined) {
     return undefined;
   }
 
-  let colorNumber: number;
+  let convertedColor: number | boolean;
 
   if (typeof color === 'number') {
-    colorNumber = color;
+    convertedColor = color;
   } else {
     const normalizedColor = normalizeColor(color);
 
     if (typeof normalizedColor !== 'number') {
-      return normalizedColor;
+      // We return a boolean false value but cast its type to number as the expected
+      // return value is a number. Since the boolean value is essentially a number,
+      // it can be used in all arithmetic operations, so it is safe to return a boolean
+      // value instead of a number. We need a boolean value to distinguish the transparent
+      // color from other colors.
+      return normalizedColor as unknown as number;
     }
 
-    colorNumber = normalizedColor;
+    convertedColor = normalizedColor;
   }
 
-  return ((colorNumber << 24) | (colorNumber >>> 8)) >>> 0; // alpha rgb
+  return ((convertedColor << 24) | (convertedColor >>> 8)) >>> 0; // alpha rgb
 }
 
 export function isColor(value: unknown): boolean {

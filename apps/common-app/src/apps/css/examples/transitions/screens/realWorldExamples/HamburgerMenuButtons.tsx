@@ -45,7 +45,7 @@ export default function HamburgerMenuButtons() {
         columns={3}
         rowGap={spacing.md}
         staggerInterval={100}>
-        {/* <Example autoOpen={autoOpen} Component={Simple} title="Simple" />
+        <Example autoOpen={autoOpen} Component={Simple} title="Simple" />
         <Example autoOpen={autoOpen} Component={LeftArrow} title="Left Arrow" />
         <Example
           autoOpen={autoOpen}
@@ -53,9 +53,9 @@ export default function HamburgerMenuButtons() {
           title="Right Arrow"
         />
         <Example autoOpen={autoOpen} Component={ToPlus} title="To Plus" />
-        <Example autoOpen={autoOpen} Component={ToMinus} title="To Minus" /> */}
+        <Example autoOpen={autoOpen} Component={ToMinus} title="To Minus" />
         <Example autoOpen={autoOpen} Component={InCircle} title="In Circle" />
-        {/* <Example autoOpen={autoOpen} Component={Skew} title="Skew" />
+        <Example autoOpen={autoOpen} Component={Skew} title="Skew" />
         <Example autoOpen={autoOpen} Component={Rotate} title="Rotate" />
         <Example
           autoOpen={autoOpen}
@@ -83,7 +83,7 @@ export default function HamburgerMenuButtons() {
           autoOpen={autoOpen}
           Component={ManyRotations}
           title="Many Rotations"
-        /> */}
+        />
       </Grid>
     </ScrollScreen>
   );
@@ -347,7 +347,7 @@ function InCircle({ open }: ExampleComponentProps) {
           transform: [{ rotate: open ? '45deg' : '0deg' }],
         },
       ]}>
-      {/* <Animated.View
+      <Animated.View
         style={[
           lineStyle,
           {
@@ -378,7 +378,7 @@ function InCircle({ open }: ExampleComponentProps) {
             width: open ? 0.6 * BUTTON_SIZE : BUTTON_SIZE,
           },
         ]}
-      /> */}
+      />
     </Animated.View>
   );
 }

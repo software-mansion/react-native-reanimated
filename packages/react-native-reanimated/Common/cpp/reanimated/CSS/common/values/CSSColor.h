@@ -23,6 +23,7 @@ struct CSSColorBase : public CSSSimpleValue<TDerived> {
   CSSColorBase();
   explicit CSSColorBase(TColorType colorType);
   explicit CSSColorBase(int64_t numberValue);
+  explicit CSSColorBase(bool value);
 
   explicit CSSColorBase(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
   explicit CSSColorBase(ColorChannels colorChannels);
