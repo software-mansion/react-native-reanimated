@@ -53,7 +53,7 @@ inline void cleanupIfRuntimeExists(jsi::Runtime *rt, std::unique_ptr<jsi::Value>
     // before the runtime is terminated. Note that the underlying memory that
     // jsi::Value refers to is managed by the VM and gets freed along with the
     // runtime.
-    value.release(); // NOLINT(bugprone-unused-return-value)
+    value.release(); // NOLINT
   }
 }
 
@@ -88,7 +88,7 @@ class Serializable {
 
   explicit Serializable(ValueType valueType) : valueType_(valueType) {}
 
-  [[nodiscard]] inline ValueType valueType() const {
+  inline ValueType valueType() const {
     return valueType_;
   }
 
@@ -126,7 +126,7 @@ class SerializableJSRef : public jsi::NativeState {
 
   ~SerializableJSRef() override;
 
-  [[nodiscard]] std::shared_ptr<Serializable> value() const {
+  std::shared_ptr<Serializable> value() const {
     return value_;
   }
 

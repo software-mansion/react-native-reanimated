@@ -252,7 +252,7 @@ jsi::Value RetainingSerializable<BaseClass>::toJSValue(jsi::Runtime &rt) {
     return value;
   }
   if (&rt == secondaryRuntime_) {
-    return {rt, *secondaryValue_};
+    return jsi::Value(rt, *secondaryValue_);
   }
   return BaseClass::toJSValue(rt);
 }
@@ -395,7 +395,7 @@ jsi::Value SerializableImport::toJSValue(jsi::Runtime &rt) {
 
 jsi::Value SerializableRemoteFunction::toJSValue(jsi::Runtime &rt) {
   if (&rt == runtime_) {
-    return {rt, *function_};
+    return jsi::Value(rt, *function_);
   } else {
 #ifndef NDEBUG
     return getValueUnpacker(rt).call(
@@ -429,7 +429,7 @@ jsi::Value SerializableInitializer::toJSValue(jsi::Runtime &rt) {
     }
   }
   if (&rt == remoteRuntime_) {
-    return {rt, *remoteValue_};
+    return jsi::Value(rt, *remoteValue_);
   }
   auto initObj = initializer_->toJSValue(rt);
   return getValueUnpacker(rt).call(rt, initObj, jsi::String::createFromAscii(rt, "Handle"));
@@ -450,13 +450,13 @@ jsi::Value SerializableBigInt::toJSValue(jsi::Runtime &rt) {
 jsi::Value SerializableScalar::toJSValue(jsi::Runtime &) {
   switch (valueType_) {
     case Serializable::UndefinedType:
-      return {};
+      return jsi::Value();
     case Serializable::NullType:
-      return {nullptr};
+      return jsi::Value(nullptr);
     case Serializable::BooleanType:
-      return {data_.boolean};
+      return jsi::Value(data_.boolean);
     case Serializable::NumberType:
-      return {data_.number};
+      return jsi::Value(data_.number);
     default:
       throw std::runtime_error("[Worklets] Attempted to convert object that's not of a scalar type.");
   }
