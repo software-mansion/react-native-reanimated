@@ -268,6 +268,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(const Tag viewTag, const do
     const auto &currentState = animation->getState(timestamp);
     if (startTimestamp > timestamp && animation->hasBackwardsFillMode()) {
       style = animation->getBackwardsFillStyle();
+      LOG(INFO) << "getBackwardsFillStyle: " << style;
     } else if (
         currentState == AnimationProgressState::Running ||
         // Animation is paused after start (was running before)
@@ -275,6 +276,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(const Tag viewTag, const do
         // Animation is finished and has fill forwards fill mode
         (currentState == AnimationProgressState::Finished && animation->hasForwardsFillMode())) {
       style = animation->getCurrentInterpolationStyle();
+      LOG(INFO) << "getCurrentInterpolationStyle: " << style;
     }
 
     if (!shadowNode) {

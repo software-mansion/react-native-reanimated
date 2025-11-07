@@ -7,8 +7,8 @@
 
 namespace reanimated::css {
 
-const TransformOperations TransformsStyleInterpolator::defaultStyleValue_ = {
-    std::make_shared<MatrixOperation>(TransformMatrix2D())};
+const folly::dynamic TransformsStyleInterpolator::defaultStyleValueDynamic_ =
+    MatrixOperation(TransformMatrix3D()).toDynamic();
 
 TransformsStyleInterpolator::TransformsStyleInterpolator(
     const PropertyPath &propertyPath,
@@ -24,18 +24,21 @@ folly::dynamic TransformsStyleInterpolator::getResetStyle(const std::shared_ptr<
   auto styleValue = getStyleValue(shadowNode);
 
   if (!styleValue.isArray()) {
-    return convertOperationsToDynamic(defaultStyleValue_);
+    return defaultStyleValueDynamic_;
   }
 
   return styleValue;
 }
 
 folly::dynamic TransformsStyleInterpolator::getFirstKeyframeValue() const {
-  return convertOperationsToDynamic(keyframes_.front()->fromOperations.value_or(defaultStyleValue_));
+  const auto &fromOperations = keyframes_.front()->fromOperations;
+  return fromOperations.has_value() ? convertOperationsToDynamic(fromOperations.value()) : defaultStyleValueDynamic_;
 }
 
 folly::dynamic TransformsStyleInterpolator::getLastKeyframeValue() const {
-  return convertOperationsToDynamic(keyframes_.back()->toOperations.value_or(defaultStyleValue_));
+  const auto &toOperations = keyframes_.back()->toOperations;
+  return toOperations.has_value() ? convertOperationsToDynamic(toOperations.value()) : defaultStyleValueDynamic_;
+  return defaultStyleValueDynamic_;
 }
 
 bool TransformsStyleInterpolator::equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const {
