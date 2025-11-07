@@ -38,7 +38,6 @@ folly::dynamic TransformsStyleInterpolator::getFirstKeyframeValue() const {
 folly::dynamic TransformsStyleInterpolator::getLastKeyframeValue() const {
   const auto &toOperations = keyframes_.back()->toOperations;
   return toOperations.has_value() ? convertOperationsToDynamic(toOperations.value()) : defaultStyleValueDynamic_;
-  return defaultStyleValueDynamic_;
 }
 
 bool TransformsStyleInterpolator::equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const {
