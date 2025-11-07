@@ -440,7 +440,11 @@ jsi::Value SerializableString::toJSValue(jsi::Runtime &rt) {
 }
 
 jsi::Value SerializableBigInt::toJSValue(jsi::Runtime &rt) {
-  return rt.global().getPropertyAsFunction(rt, "BigInt").call(rt, jsi::String::createFromUtf8(rt, string_));
+  if (value_.has_value()) {
+    return jsi::BigInt::fromInt64(rt, value_.value());
+  } else {
+    return rt.global().getPropertyAsFunction(rt, "BigInt").call(rt, jsi::String::createFromUtf8(rt, string_));
+  }
 }
 
 jsi::Value SerializableScalar::toJSValue(jsi::Runtime &) {
