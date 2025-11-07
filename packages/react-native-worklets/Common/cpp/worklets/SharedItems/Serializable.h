@@ -53,7 +53,7 @@ inline void cleanupIfRuntimeExists(jsi::Runtime *rt, std::unique_ptr<jsi::Value>
     // before the runtime is terminated. Note that the underlying memory that
     // jsi::Value refers to is managed by the VM and gets freed along with the
     // runtime.
-    value.release();
+    value.release(); // NOLINT(bugprone-unused-return-value)
   }
 }
 
@@ -88,7 +88,7 @@ class Serializable {
 
   explicit Serializable(ValueType valueType) : valueType_(valueType) {}
 
-  inline ValueType valueType() const {
+  [[nodiscard]] inline ValueType valueType() const {
     return valueType_;
   }
 
@@ -124,9 +124,9 @@ class SerializableJSRef : public jsi::NativeState {
  public:
   explicit SerializableJSRef(const std::shared_ptr<Serializable> &value) : value_(value) {}
 
-  virtual ~SerializableJSRef();
+  ~SerializableJSRef() override;
 
-  std::shared_ptr<Serializable> value() const {
+  [[nodiscard]] std::shared_ptr<Serializable> value() const {
     return value_;
   }
 
@@ -167,7 +167,7 @@ jsi::Value makeSerializableObject(
     bool shouldRetainRemote,
     const jsi::Value &nativeStateSource);
 
-jsi::Value makeSerializableImport(jsi::Runtime &rt, const double source, const jsi::String &imported);
+jsi::Value makeSerializableImport(jsi::Runtime &rt, double source, const jsi::String &imported);
 
 jsi::Value makeSerializableHostObject(jsi::Runtime &rt, const std::shared_ptr<jsi::HostObject> &value);
 
@@ -321,7 +321,7 @@ class SerializableRemoteFunction : public Serializable,
         function_(std::make_unique<jsi::Value>(rt, std::move(function))) {
   }
 
-  ~SerializableRemoteFunction() {
+  ~SerializableRemoteFunction() override {
     cleanupIfRuntimeExists(runtime_, function_);
   }
 
@@ -343,7 +343,7 @@ class SerializableInitializer : public Serializable {
   SerializableInitializer(jsi::Runtime &rt, const jsi::Object &initializerObject)
       : Serializable(HandleType), initializer_(std::make_unique<SerializableObject>(rt, initializerObject)) {}
 
-  ~SerializableInitializer() {
+  ~SerializableInitializer() override {
     cleanupIfRuntimeExists(remoteRuntime_, remoteValue_);
   }
 
@@ -352,7 +352,7 @@ class SerializableInitializer : public Serializable {
 
 class SerializableString : public Serializable {
  public:
-  explicit SerializableString(const std::string &string) : Serializable(StringType), data_(string) {}
+  explicit SerializableString(std::string string) : Serializable(StringType), data_(std::move(string)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -391,7 +391,7 @@ class SerializableScalar : public Serializable {
   SerializableScalar() : Serializable(UndefinedType) {}
   explicit SerializableScalar(std::nullptr_t) : Serializable(NullType) {}
 
-  jsi::Value toJSValue(jsi::Runtime &);
+  jsi::Value toJSValue(jsi::Runtime &) override;
 
  protected:
   union Data {
