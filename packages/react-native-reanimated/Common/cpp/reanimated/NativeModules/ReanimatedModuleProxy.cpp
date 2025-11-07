@@ -942,6 +942,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         scheduler->getContextContainer(),
         uiWorkletRuntime_->getJSIRuntime(),
         workletsModuleProxy_->getUIScheduler());
+        uiManager_->setAnimationDelegate(layoutAnimationsProxy_.get());
   }
 }
 
