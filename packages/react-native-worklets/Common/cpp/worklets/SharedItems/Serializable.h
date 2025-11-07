@@ -110,7 +110,27 @@ class RetainingSerializable : virtual public BaseClass {
   explicit RetainingSerializable(jsi::Runtime &rt, Args &&...args)
       : BaseClass(rt, std::forward<Args>(args)...), primaryRuntime_(&rt) {}
 
-  jsi::Value toJSValue(jsi::Runtime &rt);
+  jsi::Value toJSValue(jsi::Runtime &rt) {
+    if (&rt == primaryRuntime_) {
+      // TODO: it is suboptimal to generate new object every time getJS is
+      // called on host runtime – the objects we are generating already exists
+      // and we should possibly just grab a hold of such object and use it here
+      // instead of creating a new JS representation. As far as I understand the
+      // only case where it can be realistically called this way is when a
+      // shared value is created and then accessed on the same runtime
+      return BaseClass::toJSValue(rt);
+    }
+    if (secondaryValue_ == nullptr) {
+      auto value = BaseClass::toJSValue(rt);
+      secondaryValue_ = std::make_unique<jsi::Value>(rt, value);
+      secondaryRuntime_ = &rt;
+      return value;
+    }
+    if (&rt == secondaryRuntime_) {
+      return jsi::Value(rt, *secondaryValue_);
+    }
+    return BaseClass::toJSValue(rt);
+  }
 
   ~RetainingSerializable() {
     cleanupIfRuntimeExists(secondaryRuntime_, secondaryValue_);
@@ -138,62 +158,17 @@ class SerializableJSRef : public jsi::NativeState {
   }
 };
 
-jsi::Value makeSerializableClone(
-    jsi::Runtime &rt,
-    const jsi::Value &value,
-    const jsi::Value &shouldRetainRemote,
-    const jsi::Value &nativeStateSource);
-
-jsi::Value makeSerializableString(jsi::Runtime &rt, const jsi::String &string);
-
-jsi::Value makeSerializableNumber(jsi::Runtime &rt, double number);
-
-jsi::Value makeSerializableBoolean(jsi::Runtime &rt, bool boolean);
-
-jsi::Value makeSerializableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint);
-
-jsi::Value makeSerializableUndefined(jsi::Runtime &rt);
-
-jsi::Value makeSerializableNull(jsi::Runtime &rt);
-
-jsi::Value makeSerializableTurboModuleLike(
-    jsi::Runtime &rt,
-    const jsi::Object &object,
-    const std::shared_ptr<jsi::HostObject> &proto);
-
-jsi::Value makeSerializableObject(
-    jsi::Runtime &rt,
-    jsi::Object object,
-    bool shouldRetainRemote,
-    const jsi::Value &nativeStateSource);
-
-jsi::Value makeSerializableImport(jsi::Runtime &rt, const double source, const jsi::String &imported);
-
-jsi::Value makeSerializableHostObject(jsi::Runtime &rt, const std::shared_ptr<jsi::HostObject> &value);
-
-jsi::Value makeSerializableArray(jsi::Runtime &rt, const jsi::Array &array, const jsi::Value &shouldRetainRemote);
-
-jsi::Value makeSerializableMap(jsi::Runtime &rt, const jsi::Array &keys, const jsi::Array &values);
-
-jsi::Value makeSerializableSet(jsi::Runtime &rt, const jsi::Array &values);
-
-jsi::Value makeSerializableInitializer(jsi::Runtime &rt, const jsi::Object &initializerObject);
-
-jsi::Value makeSerializableFunction(jsi::Runtime &rt, jsi::Function function);
-
-jsi::Value makeSerializableWorklet(jsi::Runtime &rt, const jsi::Object &object, const bool &shouldRetainRemote);
-
 std::shared_ptr<Serializable> extractSerializableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeSerializableValue,
     const std::string &errorMessage = "[Worklets] Expecting the object to be of type SerializableJSRef.");
 
-template <typename T>
-std::shared_ptr<T> extractSerializableOrThrow(
+template <std::derived_from<Serializable> TSerializable>
+std::shared_ptr<TSerializable> extractSerializableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &serializableRef,
     const std::string &errorMessage = "[Worklets] Provided serializable object is of an incompatible type.") {
-  auto res = std::dynamic_pointer_cast<T>(extractSerializableOrThrow(rt, serializableRef, errorMessage));
+  auto res = std::dynamic_pointer_cast<TSerializable>(extractSerializableOrThrow(rt, serializableRef, errorMessage));
   if (!res) {
     throw std::runtime_error(errorMessage);
   }
@@ -304,28 +279,32 @@ class SerializableImport : public Serializable {
 
 class SerializableRemoteFunction : public Serializable,
                                    public std::enable_shared_from_this<SerializableRemoteFunction> {
- private:
-  jsi::Runtime *runtime_;
-#ifndef NDEBUG
-  const std::string name_;
-#endif
-  std::unique_ptr<jsi::Value> function_;
+ protected:
+  jsi::Runtime *ownerRuntime_;
+  std::unique_ptr<jsi::Function> function_;
 
  public:
   SerializableRemoteFunction(jsi::Runtime &rt, jsi::Function &&function)
       : Serializable(RemoteFunctionType),
-        runtime_(&rt),
-#ifndef NDEBUG
-        name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
-#endif
-        function_(std::make_unique<jsi::Value>(rt, std::move(function))) {
-  }
+        ownerRuntime_(&rt),
+        function_(std::make_unique<jsi::Function>(std::move(function))) {}
 
   ~SerializableRemoteFunction() {
-    cleanupIfRuntimeExists(runtime_, function_);
+    cleanupIfRuntimeExists(ownerRuntime_, *reinterpret_cast<std::unique_ptr<jsi::Value> *>(&function_));
   }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
+};
+
+class SerializableRemoteFunctionDev : public SerializableRemoteFunction {
+ public:
+  SerializableRemoteFunctionDev(jsi::Runtime &rt, jsi::Function &&function, const jsi::Value &name)
+      : SerializableRemoteFunction(rt, std::move(function)), name_(name.asString(rt).utf8(rt)) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ private:
+  const std::string name_;
 };
 
 class SerializableInitializer : public Serializable {
@@ -362,13 +341,22 @@ class SerializableString : public Serializable {
 
 class SerializableBigInt : public Serializable {
  public:
-  explicit SerializableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint)
-      : Serializable(BigIntType), string_(bigint.toString(rt).utf8(rt)) {}
+  explicit SerializableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint) : Serializable(BigIntType) {
+    if (bigint.isInt64(rt)) {
+      value_ = bigint.getInt64(rt);
+    } else {
+      string_ = bigint.toString(rt).utf8(rt);
+    }
+  }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
-  const std::string string_;
+  /**
+   * This member is used only when the BigInt fits into int64_t range.
+  */
+  std::optional<int64_t> value_{};
+  std::string string_{};
 };
 
 class SerializableScalar : public Serializable {
@@ -410,5 +398,15 @@ class SerializableTurboModuleLike : public Serializable {
   const std::unique_ptr<SerializableHostObject> proto_;
   const std::unique_ptr<SerializableObject> properties_;
 };
+
+#ifdef WORKLETS_BUNDLE_MODE
+// Nothing
+#else
+jsi::Value makeSerializableClone(
+    jsi::Runtime &rt,
+    const jsi::Value &memoize,
+    const jsi::Value &value,
+    const jsi::Value &nativeStateSource);
+#endif
 
 } // namespace worklets

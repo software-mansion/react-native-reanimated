@@ -6,11 +6,7 @@ import type { WorkletFactory, WorkletFunction } from '../types';
 
 const handleCache = new WeakMap<WorkletFunction, unknown>();
 
-export function bundleValueUnpacker(
-  objectToUnpack: ObjectToUnpack,
-  category?: string,
-  remoteFunctionName?: string
-): unknown {
+export function bundleValueUnpacker(objectToUnpack: ObjectToUnpack): unknown {
   const workletHash = objectToUnpack.__workletHash;
   if (workletHash !== undefined) {
     return getWorklet(workletHash, objectToUnpack.__closure);
@@ -21,23 +17,12 @@ export function bundleValueUnpacker(
       handleCache.set(objectToUnpack, value);
     }
     return value;
-  } else if (category === 'RemoteFunction') {
-    const remoteFunctionHolder = () => {
-      const label = remoteFunctionName
-        ? `function \`${remoteFunctionName}\``
-        : 'anonymous function';
-      throw new WorkletsError(`Tried to synchronously call a non-worklet ${label} on the UI thread.
-See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
-    };
-    remoteFunctionHolder.__remoteFunction = objectToUnpack;
-    return remoteFunctionHolder;
-  } else {
-    throw new WorkletsError(
-      `Data type in category "${category}" not recognized by value unpacker: "${globalThis._toString(
-        objectToUnpack
-      )}".`
-    );
   }
+  throw new WorkletsError(
+    `Data type not recognized by value unpacker: "${globalThis._toString(
+      objectToUnpack
+    )}".`
+  );
 }
 
 function getWorklet(

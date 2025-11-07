@@ -11,17 +11,12 @@ declare global {
     | undefined;
 }
 
-function __installUnpacker() {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function installValueUnpacker() {
   const workletsCache = new Map<number, () => unknown>();
   const handleCache = new WeakMap<object, unknown>();
 
-  function valueUnpacker(
-    objectToUnpack: ObjectToUnpack,
-    category?: string,
-    remoteFunctionName?: string
-  ): unknown {
-    // eslint-disable-next-line strict
-    'use strict';
+  function valueUnpacker(objectToUnpack: ObjectToUnpack): unknown {
     const workletHash = objectToUnpack.__workletHash;
     if (workletHash !== undefined) {
       let workletFun = workletsCache.get(workletHash);
@@ -63,25 +58,13 @@ function __installUnpacker() {
         handleCache.set(objectToUnpack, value);
       }
       return value;
-    } else if (category === 'RemoteFunction') {
-      const fun = () => {
-        const label = remoteFunctionName
-          ? `function \`${remoteFunctionName}\``
-          : 'anonymous function';
-        // eslint-disable-next-line reanimated/use-worklets-error
-        throw new Error(`[Worklets] Tried to synchronously call a non-worklet ${label} on the UI thread.
-See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
-      };
-      fun.__remoteFunction = objectToUnpack;
-      return fun;
-    } else {
-      // eslint-disable-next-line reanimated/use-worklets-error
-      throw new Error(
-        `[Worklets] Data type in category "${category}" not recognized by value unpacker: "${globalThis._toString(
-          objectToUnpack
-        )}".`
-      );
     }
+    // eslint-disable-next-line reanimated/use-worklets-error
+    throw new Error(
+      `[Worklets] Data type in not recognized by value unpacker: "${globalThis._toString(
+        objectToUnpack
+      )}".`
+    );
   }
 
   globalThis.__valueUnpacker = valueUnpacker as ValueUnpacker;
