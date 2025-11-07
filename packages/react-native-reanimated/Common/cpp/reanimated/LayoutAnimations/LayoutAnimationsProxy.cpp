@@ -32,7 +32,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
-  auto& [deadNodes] = surfaceContext_[surfaceId];
+  auto &[deadNodes] = surfaceContext_[surfaceId];
 
   std::vector<std::shared_ptr<MutationNode>> roots;
   std::unordered_map<Tag, Tag> movedViews;
@@ -51,9 +51,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
   parseRemoveMutations(movedViews, mutations, roots);
 
-     auto shouldAnimate = !surfacesToRemove_.contains(surfaceId);
-     surfacesToRemove_.erase(surfaceId);
- handleRemovals(filteredMutations, roots, deadNodes, shouldAnimate);
+  auto shouldAnimate = !surfacesToRemove_.contains(surfaceId);
+  surfacesToRemove_.erase(surfaceId);
+  handleRemovals(filteredMutations, roots, deadNodes, shouldAnimate);
 
   handleUpdatesAndEnterings(filteredMutations, movedViews, mutations, propsParserContext, surfaceId);
 
@@ -123,7 +123,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
   auto node = nodeForTag_[tag];
   auto mutationNode = std::static_pointer_cast<MutationNode>(node);
   mutationNode->state = DEAD;
-  auto& [deadNodes] = surfaceContext_[surfaceId];
+  auto &[deadNodes] = surfaceContext_[surfaceId];
   deadNodes.insert(mutationNode);
 
   return surfaceId;
@@ -234,7 +234,8 @@ void LayoutAnimationsProxy::parseRemoveMutations(
 void LayoutAnimationsProxy::handleRemovals(
     ShadowViewMutationList &filteredMutations,
     std::vector<std::shared_ptr<MutationNode>> &roots,
-    std::unordered_set<std::shared_ptr<MutationNode>> &deadNodes, bool shouldAnimate) const {
+    std::unordered_set<std::shared_ptr<MutationNode>> &deadNodes,
+    bool shouldAnimate) const {
   // iterate from the end, so that children
   // with higher indices appear first in the mutations list
   for (auto it = roots.rbegin(); it != roots.rend(); it++) {
@@ -295,8 +296,9 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           auto layoutAnimationIt = layoutAnimations_.find(tag);
           if (layoutAnimationIt == layoutAnimations_.end()) {
             if (oldShadowViewsForReparentings.contains(tag)) {
-              filteredMutations.push_back(ShadowViewMutation::InsertMutation(
-                  mutationParent, oldShadowViewsForReparentings[tag], mutation.index));
+              filteredMutations.push_back(
+                  ShadowViewMutation::InsertMutation(
+                      mutationParent, oldShadowViewsForReparentings[tag], mutation.index));
             } else {
               filteredMutations.push_back(mutation);
             }
@@ -874,23 +876,20 @@ const ShadowNode *LayoutAnimationsProxy::findInShadowTreeByTag(const ShadowNode 
 // UIManagerAnimationDelegate
 
 void LayoutAnimationsProxy::uiManagerDidConfigureNextLayoutAnimation(
-    jsi::Runtime& runtime,
-    const RawValue& config,
-    const jsi::Value& successCallbackValue,
-                                                                     const jsi::Value& failureCallbackValue) const {
-                                                                       
-                                                                     }
+    jsi::Runtime &runtime,
+    const RawValue &config,
+    const jsi::Value &successCallbackValue,
+    const jsi::Value &failureCallbackValue) const {}
 
-void LayoutAnimationsProxy::setComponentDescriptorRegistry(const SharedComponentDescriptorRegistry&
-                                                           componentDescriptorRegistry) {
-  
-}
+void LayoutAnimationsProxy::setComponentDescriptorRegistry(
+    const SharedComponentDescriptorRegistry &componentDescriptorRegistry) {}
 
-bool LayoutAnimationsProxy::shouldAnimateFrame() const{
+bool LayoutAnimationsProxy::shouldAnimateFrame() const {
   return false;
 }
 
 void LayoutAnimationsProxy::stopSurface(SurfaceId surfaceId) {
   surfacesToRemove_.insert(surfaceId);
+}
 
 } // namespace reanimated
