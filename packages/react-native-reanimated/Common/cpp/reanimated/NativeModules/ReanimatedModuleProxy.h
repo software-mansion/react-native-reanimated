@@ -230,8 +230,10 @@ class ReanimatedModuleProxy
   std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
   const std::shared_ptr<JSLogger> jsLogger_;
-  std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
+
+  const RunCoreAnimationForView runCoreAnimationForViewFunction_;
+  std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
 
   bool cssLoopRunning_{false};
   bool shouldUpdateCssAnimations_{true};
@@ -247,7 +249,6 @@ class ReanimatedModuleProxy
 
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
   const PreserveMountedTagsFunction filterUnmountedTagsFunction_;
-  const RunCoreAnimationForView runCoreAnimationForViewFunction_;
 
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;

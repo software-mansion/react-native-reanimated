@@ -139,6 +139,14 @@ export class SlideOutRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
 
+    this.rawConfig = {
+      presetName: SlideOutRight.presetName,
+      values: {
+        ...config,
+        delay,
+      },
+    };
+
     return (values) => {
       'worklet';
       return {

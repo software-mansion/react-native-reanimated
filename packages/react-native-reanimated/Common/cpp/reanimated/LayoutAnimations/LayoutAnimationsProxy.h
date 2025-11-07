@@ -49,7 +49,6 @@ struct LayoutAnimationsProxy
   jsi::Runtime &uiRuntime_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   PreserveMountedTagsFunction preserveMountedTags_;
-  RunCoreAnimationForView runCoreAnimationForView_;
 #ifdef ANDROID
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<CallInvoker> jsInvoker_;
@@ -67,10 +66,6 @@ struct LayoutAnimationsProxy
       std::shared_ptr<UIManager> uiManager,
       std::shared_ptr<CallInvoker> jsInvoker
 #endif
-#if __APPLE__
-      ,
-      RunCoreAnimationForView runCoreAnimationForView
-#endif // __APPLE__
       )
       : layoutAnimationsManager_(layoutAnimationsManager),
         contextContainer_(contextContainer),
@@ -83,10 +78,6 @@ struct LayoutAnimationsProxy
         uiManager_(uiManager),
         jsInvoker_(jsInvoker)
 #endif // ANDROID
-#if __APPLE__
-        ,
-        runCoreAnimationForView_(runCoreAnimationForView)
-#endif // __APPLE__
   {
   }
 

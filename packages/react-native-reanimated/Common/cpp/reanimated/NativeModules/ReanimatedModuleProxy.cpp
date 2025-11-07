@@ -49,8 +49,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       animatedSensorModule_(platformDepMethodsHolder),
       jsLogger_(
           std::make_shared<JSLogger>(workletsModuleProxy->getJSScheduler())),
-      layoutAnimationsManager_(
-          std::make_shared<LayoutAnimationsManager>(jsLogger_)),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
@@ -70,10 +68,15 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef ANDROID
       filterUnmountedTagsFunction_(
           platformDepMethodsHolder.filterUnmountedTagsFunction),
+      layoutAnimationsManager_(
+          std::make_shared<LayoutAnimationsManager>(jsLogger_)),
 #endif // ANDROID
 #if __APPLE__
       runCoreAnimationForViewFunction_(
           platformDepMethodsHolder.runCoreAnimationForView),
+      layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>(
+          jsLogger_,
+          runCoreAnimationForViewFunction_)),
 #endif // __APPLE__
       subscribeForKeyboardEventsFunction_(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
@@ -1401,10 +1404,6 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         uiManager_,
         jsInvoker_
 #endif
-#if __APPLE__
-        ,
-        runCoreAnimationForViewFunction_
-#endif // __APPLE__
     );
   }
 }

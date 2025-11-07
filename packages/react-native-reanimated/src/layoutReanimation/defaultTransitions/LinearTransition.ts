@@ -33,6 +33,14 @@ export class LinearTransition
     const callback = this.callbackV;
     const delay = this.getDelay();
 
+    this.rawConfig = {
+      presetName: LinearTransition.presetName,
+      values: {
+        ...config,
+        delay,
+      },
+    };
+
     return (values) => {
       'worklet';
       return {

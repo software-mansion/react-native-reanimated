@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <unordered_map>
+
 typedef enum LayoutAnimationType {
   ENTERING = 1,
   EXITING = 2,

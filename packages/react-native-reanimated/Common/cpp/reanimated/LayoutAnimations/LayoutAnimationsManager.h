@@ -1,6 +1,8 @@
 #pragma once
 
+#include <reanimated/LayoutAnimations/LayoutAnimationConfig.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
+#include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/JSLogger.h>
@@ -20,26 +22,23 @@ namespace reanimated {
 using namespace facebook;
 using namespace worklets;
 
-struct LayoutAnimationRawConfigValues {
-  std::optional<double> duration; // TODO: all of 'em
-};
-
-struct LayoutAnimationRawConfig {
-  std::optional<std::string> presetName;
-  std::optional<LayoutAnimationRawConfigValues> values;
-};
-
-struct LayoutAnimationConfig {
-  int tag;
-  LayoutAnimationType type;
-  std::shared_ptr<Serializable> config;
-  std::shared_ptr<LayoutAnimationRawConfig> rawConfig;
-};
-
 class LayoutAnimationsManager {
  public:
-  explicit LayoutAnimationsManager(const std::shared_ptr<JSLogger> &jsLogger)
-      : jsLogger_(jsLogger) {}
+  explicit LayoutAnimationsManager(
+      const std::shared_ptr<JSLogger> &jsLogger
+#if __APPLE__
+      ,
+      RunCoreAnimationForView runCoreAnimationForView
+#endif // __APPLE__
+      )
+      : jsLogger_(jsLogger)
+#if __APPLE__
+        ,
+        runCoreAnimationForView_(runCoreAnimationForView)
+#endif // __APPLE__
+  {
+  }
+
   void configureAnimationBatch(
       const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch);
   void setShouldAnimateExiting(const int tag, const bool value);
@@ -53,8 +52,9 @@ class LayoutAnimationsManager {
   void startNativeLayoutAnimation(
       const int tag,
       const LayoutAnimationType type,
-      std::function<void(const LayoutAnimationRawConfig &)>
-          executeNativeAnimation);
+      const facebook::react::Rect &startFrame,
+      const facebook::react::Rect &endFrame,
+      std::function<void(bool)> &&onAnimationEnd);
   void clearLayoutAnimationConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
@@ -101,6 +101,10 @@ class LayoutAnimationsManager {
   mutable std::recursive_mutex
       animationsMutex_; // Protects `enteringAnimations_`, `exitingAnimations_`,
   // `layoutAnimations_` and `shouldAnimateExitingForTag_`.
+
+  RunCoreAnimationForView runCoreAnimationForView_;
+  static std::unordered_map<LayoutAnimationType, std::string>
+      layoutAnimationNativeIdentifierMap_;
 };
 
 } // namespace reanimated

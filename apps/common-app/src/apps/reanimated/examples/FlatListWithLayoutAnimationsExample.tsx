@@ -19,14 +19,14 @@ interface Item {
 }
 
 // const data = Array.from({ length: 200 }, (_, i) => ({
-const data = Array.from({ length: 5 }, (_, i) => ({
+const data = Array.from({ length: 10 }, (_, i) => ({
   id: i,
   color: `hsl(${(i * 10) % 360}, 100%, 90%)`,
   title: `Item ${i + 1}`,
 }));
 
-const entering = SlideInLeft.duration(300);
-const layout = LinearTransition.duration(300);
+const entering = SlideInLeft.duration(1000);
+const layout = LinearTransition.duration(1000);
 const exiting = SlideOutRight.duration(300);
 
 function renderItem({ item }: { item: Item }) {
@@ -52,7 +52,7 @@ export default function FlatListWithLayoutAnimations() {
   useEffect(() => {
     const interval = setInterval(() => {
       setState((prev) => !prev);
-    }, 500);
+    }, 1400);
     return () => clearInterval(interval);
   }, []);
 

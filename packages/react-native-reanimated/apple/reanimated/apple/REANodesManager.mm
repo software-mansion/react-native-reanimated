@@ -186,6 +186,7 @@ using namespace facebook::react;
                        oldFrame:(const facebook::react::Rect &)oldFrame
                        newFrame:(const facebook::react::Rect &)newFrame
                          config:(const reanimated::LayoutAnimationRawConfig &)config
+           usePresentationLayer:(bool)usePresentationLayer
                      completion:(std::function<void(bool)>)completion
                    animationKey:(NSString *)animationKey
 {
@@ -201,16 +202,18 @@ using namespace facebook::react;
     return;
   }
 
-  CGRect presentationLayerFrame = componentView.layer.presentationLayer.frame;
-  CGFloat centerOffsetX = presentationLayerFrame.size.width / 2;
-  CGFloat centerOffsetY = presentationLayerFrame.size.height / 2;
+  CGRect baseFrame = usePresentationLayer
+      ? componentView.layer.presentationLayer.frame
+      : CGRectMake(oldFrame.origin.x, oldFrame.origin.y, oldFrame.size.width, oldFrame.size.height);
 
-  // We are using the presentation layer's frame instead of the oldFrame to properly handle
-  // cases where animation is interrupted mid-way and replaced by the next one.
-  // In such cases the presentation layer allows us to start the new animation from
-  // the current visible position of the view and avoid "jumps"
-  CGFloat oldX = presentationLayerFrame.origin.x + centerOffsetX;
-  CGFloat oldY = presentationLayerFrame.origin.y + centerOffsetY;
+  CGFloat centerOffsetX = baseFrame.size.width / 2;
+  CGFloat centerOffsetY = baseFrame.size.height / 2;
+
+  // Apart from entering animations, we are using the presentation layer's frame instead of the oldFrame to properly
+  // handle cases where animation is interrupted mid-way and replaced by the next one. In such cases the presentation
+  // layer allows us to start the new animation from the current visible position of the view and avoid "jumps"
+  CGFloat oldX = baseFrame.origin.x + centerOffsetX;
+  CGFloat oldY = baseFrame.origin.y + centerOffsetY;
   CGFloat newX = newFrame.origin.x + centerOffsetX;
   CGFloat newY = newFrame.origin.y + centerOffsetY;
 

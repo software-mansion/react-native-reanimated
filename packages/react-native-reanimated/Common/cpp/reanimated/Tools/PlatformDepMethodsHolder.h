@@ -4,7 +4,8 @@
 #include <jsi/jsi.h>
 #include <react/renderer/core/ReactPrimitives.h>
 #include <react/renderer/graphics/Rect.h>
-#import <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+
+#include <reanimated/LayoutAnimations/LayoutAnimationConfig.h>
 
 #include <memory>
 #include <string>
@@ -60,6 +61,7 @@ using RunCoreAnimationForView = std::function<void(
     const facebook::react::Rect &,
     const facebook::react::Rect &,
     const reanimated::LayoutAnimationRawConfig &,
+    const bool,
     std::function<void(bool)> &&,
     const std::string &)>;
 

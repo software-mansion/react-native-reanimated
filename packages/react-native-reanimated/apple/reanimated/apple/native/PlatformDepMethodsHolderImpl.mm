@@ -111,13 +111,20 @@ RunCoreAnimationForView makeRunCoreAnimationForView(REANodesManager *nodesManage
                                      const facebook::react::Rect &oldFrame,
                                      const facebook::react::Rect &newFrame,
                                      const reanimated::LayoutAnimationRawConfig &config,
+                                     const bool usePresentationLayer,
                                      std::function<void(bool)> completion,
                                      const std::string &animationKey) {
+    // Create an Objective-C block that will retain the completion handler
+    void (^completionBlock)(bool) = ^(bool finished) {
+      completion(finished);
+    };
+
     [nodesManager runCoreAnimationForView:viewTag
                                  oldFrame:oldFrame
                                  newFrame:newFrame
                                    config:config
-                               completion:completion
+                     usePresentationLayer:usePresentationLayer
+                               completion:completionBlock
                              animationKey:[NSString stringWithCString:animationKey.c_str()
                                                              encoding:[NSString defaultCStringEncoding]]];
   };

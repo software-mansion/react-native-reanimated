@@ -30,6 +30,7 @@ typedef void (^REAPerformOperations)();
                                  config // TODO: Pass also the animation type, create some potentially new abstraction
                                         // for handling different animations and run it from the NodesManager, something
                                         // like CALayoutAnimator.animateEntering, CALayoutAnimator.animateExiting etc.?
+           usePresentationLayer:(bool)usePresentationLayer
                      completion:(std::function<void(bool)>)completion
                    animationKey:(NSString *)animationKey;
 
