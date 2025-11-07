@@ -628,10 +628,10 @@ export function processColorInitially(color: unknown): number | undefined {
     return undefined;
   }
 
-  let convertedColor: number | boolean;
+  let colorNumber: number | boolean;
 
   if (typeof color === 'number') {
-    convertedColor = color;
+    colorNumber = color;
   } else {
     const normalizedColor = normalizeColor(color);
 
@@ -644,10 +644,10 @@ export function processColorInitially(color: unknown): number | undefined {
       return normalizedColor as unknown as number;
     }
 
-    convertedColor = normalizedColor;
+    colorNumber = normalizedColor;
   }
 
-  return ((convertedColor << 24) | (convertedColor >>> 8)) >>> 0; // alpha rgb
+  return ((colorNumber << 24) | (colorNumber >>> 8)) >>> 0; // alpha rgb
 }
 
 export function isColor(value: unknown): boolean {

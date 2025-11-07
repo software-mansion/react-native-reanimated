@@ -114,16 +114,11 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
     const auto &transition = strongThis->registry_[viewTag];
     const auto allowedProperties = transition->getAllowedProperties(oldProps, newProps);
 
-    LOG(INFO) << "Old props: " << oldProps;
-    LOG(INFO) << "New props: " << newProps;
     const auto changedProps = getChangedProps(oldProps, newProps, allowedProperties);
 
     if (changedProps.changedPropertyNames.empty()) {
       return;
     }
-
-    LOG(INFO) << "Old changed props: " << changedProps.oldProps;
-    LOG(INFO) << "New changed props: " << changedProps.newProps;
 
     {
       std::lock_guard<std::mutex> lock{strongThis->mutex_};
