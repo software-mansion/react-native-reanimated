@@ -10,7 +10,7 @@ export function opacifyColor(
   'worklet';
   const colorNumber = processColorInitially(color);
 
-  if (colorNumber === undefined) {
+  if (colorNumber === null) {
     return null;
   }
   if (colorNumber === false) {
