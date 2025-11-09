@@ -27,7 +27,8 @@ export interface ReanimatedHTMLElement extends HTMLElement {
   _touchableNode: {
     setAttribute: (key: string, props: unknown) => void;
   };
-  reanimatedDummy?: boolean;
+  isDummy?: boolean;
+  dummyClone?: ReanimatedHTMLElement;
   removedAfterAnimation?: boolean;
 }
 
