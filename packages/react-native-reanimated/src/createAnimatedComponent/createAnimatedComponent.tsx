@@ -200,6 +200,18 @@ export function createAnimatedComponent(
       );
 
       if (IS_WEB) {
+        const element = this._componentDOMRef as ReanimatedHTMLElement;
+
+        // If the element was cloned (because of the exiting animation), we need bring it
+        // back to the DOM
+        if (element.dummyClone) {
+          const dummyClone = element.dummyClone;
+          while (dummyClone.firstChild) {
+            element.appendChild(dummyClone.firstChild);
+          }
+          delete element.dummyClone;
+        }
+
         if (this.props.exiting && this._componentDOMRef) {
           saveSnapshot(this._componentDOMRef);
         }

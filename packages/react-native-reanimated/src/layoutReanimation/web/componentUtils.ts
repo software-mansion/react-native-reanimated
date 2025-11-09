@@ -190,7 +190,7 @@ export function setElementAnimation(
   }
 
   const maybeRemoveElement = () => {
-    if (element.reanimatedDummy && parent?.contains(element)) {
+    if (element.isDummy && parent?.contains(element)) {
       element.removedAfterAnimation = true;
       parent.removeChild(element);
     }
@@ -318,15 +318,17 @@ function getElementScrollValue(element: HTMLElement): ScrollOffsets {
 }
 
 export function handleExitingAnimation(
-  element: HTMLElement,
+  element: ReanimatedHTMLElement,
   animationConfig: AnimationConfig
 ) {
   const parent = element.offsetParent;
   const dummy = element.cloneNode() as ReanimatedHTMLElement;
-  dummy.reanimatedDummy = true;
 
-  element.style.animationName = '';
+  dummy.isDummy = true;
   dummy.style.animationName = '';
+
+  element.dummyClone = dummy;
+  element.style.animationName = '';
 
   // Moving elements in DOM resets their scroll positions
   // so we memorize them here and restore after
