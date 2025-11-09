@@ -169,7 +169,7 @@ export function setElementAnimation(
   element: ReanimatedHTMLElement,
   animationConfig: AnimationConfig,
   shouldSavePosition = false,
-  parent: Element | null = null
+  originalElement?: HTMLElement
 ) {
   const { animationName, duration, delay, easing } = animationConfig;
 
@@ -189,11 +189,17 @@ export function setElementAnimation(
     configureAnimation();
   }
 
-  const maybeRemoveElement = () => {
-    if (element.reanimatedDummy && parent?.contains(element)) {
-      element.removedAfterAnimation = true;
-      parent.removeChild(element);
+  const maybeRunCleanup = () => {
+    if (!originalElement) {
+      return;
     }
+
+    while (element.firstChild) {
+      originalElement.appendChild(element.firstChild);
+    }
+
+    element.remove();
+    element.removedAfterAnimation = true;
   };
 
   let wasCallbackCalled = false;
@@ -209,14 +215,14 @@ export function setElementAnimation(
       saveSnapshot(element);
     }
 
-    maybeRemoveElement();
+    maybeRunCleanup();
     maybeCallCallback(true);
 
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
 
   const animationCancelHandler = () => {
-    maybeRemoveElement();
+    maybeRunCleanup();
     maybeCallCallback(false);
 
     element.removeEventListener('animationcancel', animationCancelHandler);
@@ -237,7 +243,7 @@ export function setElementAnimation(
         setElementPosition(element, snapshots.get(element)!);
       }
 
-      maybeRemoveElement();
+      maybeRunCleanup();
       maybeCallCallback(false);
     });
   }
@@ -328,6 +334,8 @@ export function handleExitingAnimation(
   element.style.animationName = '';
   dummy.style.animationName = '';
 
+  element.style.visibility = 'hidden';
+
   // Moving elements in DOM resets their scroll positions
   // so we memorize them here and restore after
   const scrollPositions = new Map<Element, { top: number; left: number }>();
@@ -392,5 +400,5 @@ export function handleExitingAnimation(
 
   setElementPosition(dummy, snapshot);
 
-  setElementAnimation(dummy, animationConfig, false, parent);
+  setElementAnimation(dummy, animationConfig, false, element);
 }
