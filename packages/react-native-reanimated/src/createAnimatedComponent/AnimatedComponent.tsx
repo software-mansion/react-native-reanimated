@@ -123,8 +123,7 @@ export default class AnimatedComponent
     if (IS_WEB) {
       const element = this._componentDOMRef as ReanimatedHTMLElement;
 
-      // If the element was cloned (because of the exiting animation), we need bring it
-      // back to the DOM
+      // If the element was cloned (because of the exiting animation), we need to bring it back to the DOM
       if (element.dummyClone) {
         const dummyClone = element.dummyClone;
         while (dummyClone.firstChild) {
