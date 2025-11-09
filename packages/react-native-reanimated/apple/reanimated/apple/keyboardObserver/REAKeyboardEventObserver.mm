@@ -423,18 +423,19 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
 // Inspired by: https://stackoverflow.com/questions/32598490
 - (REAUIView *_Nullable)getKeyboardView
 {
-  if (_keyboardView) {
-    return _keyboardView;
+  if (!_keyboardView) {
+    auto window = [self findView:[UIApplication sharedApplication].windows
+                       condition:[self withPrefix:@[ @"<UITextEffectsWindow" ]]];
+    auto container = [self findView:window.subviews
+                          condition:[self withPrefix:@[ @"<UIInputSetContainerView", @"<UITrackingWindowView" ]]];
+    _keyboardView =
+        [self findView:container.subviews
+             condition:^bool(REAUIView *view) {
+               return [self withPrefix:@[ @"<UIInputSetHostView", @"<UIKeyboardItemContainerView" ]](view) &&
+                   view.frame.size.height > 0;
+             }];
   }
-  auto window = [self findView:[UIApplication sharedApplication].windows
-                           condition:[self withPrefix:@[ @"<UITextEffectsWindow" ]]];
-  auto container = [self findView:window.subviews
-                             condition:[self withPrefix:@[ @"<UIInputSetContainerView", @"<UITrackingWindowView" ]]];
-  _keyboardView = [self findView:container.subviews
-                            condition:^bool(REAUIView *view) {
-                              return [self withPrefix:@[ @"<UIInputSetHostView", @"<UIKeyboardItemContainerView" ]](view) &&
-                                     view.frame.size.height > 0;
-                            }];
+
   return _keyboardView;
 }
 
