@@ -85,7 +85,7 @@ export const ERROR_MESSAGES = {
  *
  * @param value - The color value to process (string, number, or ColorValue)
  * @returns The processed color value: a number for valid colors, `false` for
- *   transparent colors, `null` for invalid colors
+ *   transparent colors
  */
 export function processColor(value: unknown): number {
   let normalizedColor = processColorInitially(value);
