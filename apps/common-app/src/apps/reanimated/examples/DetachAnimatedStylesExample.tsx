@@ -9,14 +9,10 @@ import Animated, {
 } from 'react-native-reanimated';
 
 export default function DetachAnimatedStylesExample() {
-  const [count, setCount] = React.useState(0);
-
-  const [active1, setActive1] = React.useState(true);
-
-  const [active2, setActive2] = React.useState(true);
-
+  const [count, setCount] = useState(0);
+  const [active1, setActive1] = useState(true);
+  const [active2, setActive2] = useState(true);
   const sv = useSharedValue(0);
-
   const ref = useRef(0);
 
   useEffect(() => {
