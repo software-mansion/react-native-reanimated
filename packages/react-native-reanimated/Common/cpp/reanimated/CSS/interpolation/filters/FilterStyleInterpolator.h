@@ -20,7 +20,7 @@ struct FilterKeyframe {
   // pairs)
   const std::optional<FilterOperations> fromOperations;
   const std::optional<FilterOperations> toOperations;
-  // Keyframe is discrete when there is a difference in order between from and to operations
+  // Keyframe is discrete when the fromOperations and toOperations aren't compatible
   const bool isDiscrete;
 };
 

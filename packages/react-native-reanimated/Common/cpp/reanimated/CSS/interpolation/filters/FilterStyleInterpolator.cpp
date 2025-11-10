@@ -82,18 +82,15 @@ folly::dynamic FilterStyleInterpolator::interpolate(
         keyframe->toOperations.value_or(fallbackValue));
   }
 
-  if (!keyframe->isDiscrete) {
-    double progress = progressProvider->getKeyframeProgress(keyframe->fromOffset, keyframe->toOffset);
+  double progress = progressProvider->getKeyframeProgress(keyframe->fromOffset, keyframe->toOffset);
+
+  if (keyframe->isDiscrete) {
     const auto &operations = progress < 0.5 ? keyframe->fromOperations.value() : keyframe->toOperations.value();
     return convertOperationsToDynamic(operations);
   }
 
   // Interpolate the current keyframe
-  return interpolateOperations(
-      shadowNode,
-      progressProvider->getKeyframeProgress(keyframe->fromOffset, keyframe->toOffset),
-      keyframe->fromOperations.value(),
-      keyframe->toOperations.value());
+  return interpolateOperations(shadowNode, progress, keyframe->fromOperations.value(), keyframe->toOperations.value());
 }
 
 void FilterStyleInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) {
@@ -204,7 +201,6 @@ std::tuple<FilterOperations, FilterOperations, bool> FilterStyleInterpolator::cr
     const FilterOperations &toOperations) const {
   FilterOperations fromOperationsResult, toOperationsResult;
   size_t i = 0;
-  bool isDiscrete = true;
 
   size_t fromOperationsSize = fromOperations.size();
   size_t toOperationsSize = toOperations.size();
@@ -221,8 +217,7 @@ std::tuple<FilterOperations, FilterOperations, bool> FilterStyleInterpolator::cr
       i++;
     } else {
       // If the operation do not match, we need to set keyframe property isDiscrete to false
-      isDiscrete = false;
-      return std::make_tuple(fromOperations, toOperations, isDiscrete);
+      return std::make_tuple(fromOperations, toOperations, true);
     }
   }
 
@@ -236,7 +231,7 @@ std::tuple<FilterOperations, FilterOperations, bool> FilterStyleInterpolator::cr
     toOperationsResult.emplace_back(toOperations[i]);
   }
 
-  return std::make_tuple(fromOperationsResult, toOperationsResult, isDiscrete);
+  return std::make_tuple(fromOperationsResult, toOperationsResult, false);
 }
 
 size_t FilterStyleInterpolator::getIndexOfCurrentKeyframe(
