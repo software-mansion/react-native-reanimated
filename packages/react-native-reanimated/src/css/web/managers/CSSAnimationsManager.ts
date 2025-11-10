@@ -1,18 +1,18 @@
 'use strict';
-import { maybeAddSuffix } from '../../../common';
+import {
+  convertPropertiesToArrays,
+  type ConvertValuesToArrays,
+  kebabizeCamelCase,
+  maybeAddSuffix,
+} from '../../../common';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
 import type {
-  ConvertValuesToArrays,
   CSSAnimationKeyframes,
   CSSAnimationSettings,
   ExistingCSSAnimationProperties,
   ICSSAnimationsManager,
 } from '../../types';
-import {
-  convertPropertiesToArrays,
-  kebabizeCamelCase,
-  normalizeTimeUnit,
-} from '../../utils';
+import { normalizeTimeUnit } from '../../utils';
 import { processKeyframeDefinitions } from '../animationParser';
 import {
   configureWebCSSAnimations,
@@ -118,11 +118,21 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
       // component is unmounted (it puts the detach call at the end of the event loop)
       // We just remove the animation definition from the style sheet as there is no
       // need to clean up view props if it is removed from the DOM.
-      setTimeout(this.removeAnimationsFromStyleSheet.bind(this));
+      setTimeout(() => {
+        this.removeAnimationsFromStyleSheet(
+          Object.values(this.attachedAnimations)
+        );
+      });
     }
   }
 
   private detach() {
+    const attachedAnimations = Object.values(this.attachedAnimations);
+
+    if (attachedAnimations.length === 0) {
+      return;
+    }
+
     this.element.style.animationDuration = '';
     this.element.style.animationDelay = '';
     this.element.style.animationDirection = '';
@@ -130,7 +140,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     this.element.style.animationPlayState = '';
     this.element.style.animationTimingFunction = '';
 
-    this.removeAnimationsFromStyleSheet();
+    this.removeAnimationsFromStyleSheet(attachedAnimations);
     this.unmountCleanupCalled = false;
     this.attachedAnimations = {};
   }
@@ -216,8 +226,8 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     }
   }
 
-  private removeAnimationsFromStyleSheet() {
-    Object.values(this.attachedAnimations).forEach(
+  private removeAnimationsFromStyleSheet(animations: ProcessedAnimation[]) {
+    animations.forEach(
       ({ keyframesRule: { name, processedKeyframes }, removable }) => {
         if (removable && processedKeyframes) {
           removeCSSAnimation(name);
