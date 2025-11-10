@@ -120,31 +120,17 @@ export default class AnimatedComponent
       this.props.exiting
     );
 
-    if (IS_WEB) {
-      const element = this._componentDOMRef as ReanimatedHTMLElement | null;
+    if (IS_WEB && this._componentDOMRef) {
+      const element = this._componentDOMRef as ReanimatedHTMLElement;
+      const dummyClone = element.dummyClone;
+      // If the element was cloned (because of the exiting animation), we need to bring it back to the DOM
+      while (dummyClone?.firstChild) {
+        element.appendChild(dummyClone.firstChild);
+      }
+      delete element.dummyClone;
 
-      if (element) {
-        const dummyClone = element.dummyClone;
-        // If the element was cloned (because of the exiting animation), we need to bring it back to the DOM
-        while (dummyClone?.firstChild) {
-          element.appendChild(dummyClone.firstChild);
-        }
-        delete element.dummyClone;
-
-        if (this.props.exiting) {
-          saveSnapshot(element);
-        }
-
-        const skipEntering = this.context?.current;
-        if (!skipEntering) {
-          startWebLayoutAnimation(
-            this.props,
-            element,
-            LayoutAnimationType.ENTERING
-          );
-        } else if (element.style) {
-          element.style.visibility = 'initial';
-        }
+      if (this.props.exiting) {
+        saveSnapshot(element);
       }
 
       if (!this.props.entering) {
@@ -156,6 +142,17 @@ export default class AnimatedComponent
         this._isFirstRender = false;
         (this.props.entering as BaseAnimationBuilder).callbackV?.(true);
         return;
+      }
+
+      const skipEntering = this.context?.current;
+      if (!skipEntering) {
+        startWebLayoutAnimation(
+          this.props,
+          element,
+          LayoutAnimationType.ENTERING
+        );
+      } else if (element.style) {
+        element.style.visibility = 'initial';
       }
     }
 
