@@ -199,21 +199,18 @@ export function createAnimatedComponent(
         this.props.exiting
       );
 
-      if (IS_WEB) {
+      if (IS_WEB && this._componentDOMRef) {
         const element = this._componentDOMRef as ReanimatedHTMLElement;
-
+        const dummyClone = element.dummyClone;
         // If the element was cloned (because of the exiting animation), we need bring it
         // back to the DOM
-        if (element.dummyClone) {
-          const dummyClone = element.dummyClone;
-          while (dummyClone.firstChild) {
-            element.appendChild(dummyClone.firstChild);
-          }
-          delete element.dummyClone;
+        while (dummyClone?.firstChild) {
+          element.appendChild(dummyClone.firstChild);
         }
+        delete element.dummyClone;
 
-        if (this.props.exiting && this._componentDOMRef) {
-          saveSnapshot(this._componentDOMRef);
+        if (this.props.exiting) {
+          saveSnapshot(element);
         }
 
         if (!this.props.entering) {
@@ -223,7 +220,6 @@ export function createAnimatedComponent(
 
         if (getReducedMotionFromConfig(this.props.entering as CustomConfig)) {
           this._isFirstRender = false;
-
           (this.props.entering as BaseAnimationBuilder).callbackV?.(true);
           return;
         }
@@ -233,11 +229,11 @@ export function createAnimatedComponent(
         if (!skipEntering) {
           startWebLayoutAnimation(
             this.props,
-            this._componentDOMRef as ReanimatedHTMLElement,
+            element,
             LayoutAnimationType.ENTERING
           );
-        } else if (this._componentDOMRef) {
-          this._componentDOMRef.style.visibility = 'initial';
+        } else if (element.style) {
+          element.style.visibility = 'initial';
         }
       }
 

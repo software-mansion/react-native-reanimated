@@ -196,7 +196,7 @@ const WheelPicker: React.FC<WheelPickerProps> = ({
   };
 
   return (
-    <View onLayout={onLayout}>
+    <View onLayout={onLayout} style={styles.fill}>
       <Animated.FlatList
         ref={flatListRef}
         data={data}
@@ -357,4 +357,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   itemText: { fontWeight: 'bold', fontSize: 30 },
+  fill: {
+    flex: 1,
+  },
 });
