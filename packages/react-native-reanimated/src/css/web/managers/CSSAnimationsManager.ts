@@ -226,10 +226,8 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     }
   }
 
-  private removeAnimationsFromStyleSheet(
-    attachedAnimations: ProcessedAnimation[]
-  ) {
-    attachedAnimations.forEach(
+  private removeAnimationsFromStyleSheet(animations: ProcessedAnimation[]) {
+    animations.forEach(
       ({ keyframesRule: { name, processedKeyframes }, removable }) => {
         if (removable && processedKeyframes) {
           removeCSSAnimation(name);
