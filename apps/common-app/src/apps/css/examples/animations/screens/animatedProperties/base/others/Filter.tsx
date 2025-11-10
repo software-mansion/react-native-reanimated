@@ -1,10 +1,44 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { balloonsImage } from '@/apps/css/assets';
 import { ExamplesScreen, VerticalExampleCard } from '@/apps/css/components';
+import type { LabelType } from '@/apps/css/components/misc';
 import { radius, sizes } from '@/theme';
+
+function makeFilterExample(
+  title: string,
+  from: string,
+  to: string,
+  labelTypes: Array<LabelType> = ['Android']
+) {
+  return {
+    title,
+    keyframes: {
+      '0%, 100%': { filter: from },
+      '50%': { filter: to },
+    },
+    labelTypes,
+  };
+}
+
+const EXAMPLES = [
+  makeFilterExample('Brightness', 'brightness(0)', 'brightness(150%)', ['iOS']),
+  makeFilterExample('Opacity', 'opacity(1)', 'opacity(0.5)', ['iOS']),
+  makeFilterExample('Blur', 'blur(0px)', 'blur(10px)'),
+  makeFilterExample('Contrast', 'contrast(100%)', 'contrast(200%)'),
+  makeFilterExample(
+    'Drop Shadow',
+    'dropShadow(0px 0px 0px black)',
+    'dropShadow(10px 10px 5px black)'
+  ),
+  makeFilterExample('Grayscale', 'grayscale(0%)', 'grayscale(100%)'),
+  makeFilterExample('Hue Rotate', 'hueRotate(0deg)', 'hueRotate(180deg)'),
+  makeFilterExample('Invert', 'invert(0%)', 'invert(100%)'),
+  makeFilterExample('Saturate', 'saturate(100%)', 'saturate(300%)'),
+  makeFilterExample('Sepia', 'sepia(0%)', 'sepia(100%)'),
+];
 
 export default function Filter() {
   return (
@@ -22,36 +56,61 @@ export default function Filter() {
           style={[styles.image, animation]}
         />
       )}
-      sections={[
+      tabs={[
         {
-          description: [
-            'Most of `filter` properties are **continuous**. That means, they **can be smoothly animated** between values.',
-          ],
-          examples: [
+          name: 'Structure',
+          sections: [
             {
-              keyframes: {
-                '0%, 100%': {
-                  filter: 'blur(0px) brightness(0)',
+              examples: [
+                {
+                  keyframes: {
+                    '0%, 100%': {
+                      filter: 'blur(0px) brightness(0)',
+                    },
+                    '50%': {
+                      filter: 'blur(10px) brightness(150%)',
+                    },
+                  },
+                  title: 'String syntax',
                 },
-                '50%': {
-                  filter: 'blur(10px) brightness(150%)',
+                {
+                  keyframes: {
+                    '0%, 100%': {
+                      filter: [{ blur: 0 }, { brightness: 0 }],
+                    },
+                    '50%': {
+                      filter: [{ blur: 10 }, { brightness: 1.5 }],
+                    },
+                  },
+                  title: 'Object syntax',
                 },
-              },
-              title: 'String syntax',
+              ],
+              title: 'Filter Structure',
+            },
+          ],
+        },
+        {
+          name: 'Properties',
+          sections: [
+            {
+              examples: EXAMPLES.filter((example) =>
+                example.labelTypes.includes('iOS')
+              ),
+              title: 'Filter Properties',
+              description:
+                'These filter properties are supported on both iOS and Android platforms.',
+              labelTypes: ['iOS', 'Android'],
             },
             {
-              keyframes: {
-                '0%, 100%': {
-                  filter: [{ blur: 0 }, { brightness: 0 }],
-                },
-                '50%': {
-                  filter: [{ blur: 10 }, { brightness: 1.5 }],
-                },
-              },
-              title: 'Object syntax',
+              examples: EXAMPLES.filter(
+                (example) => !example.labelTypes.includes('iOS')
+              ),
+              title: 'Filter Properties',
+              description:
+                'These filter properties are supported only on Android platform.',
+              labelTypes: ['Android'],
             },
           ],
-          title: 'Filter',
         },
       ]}
     />
