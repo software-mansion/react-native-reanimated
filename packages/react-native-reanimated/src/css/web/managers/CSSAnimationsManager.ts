@@ -1,18 +1,18 @@
 'use strict';
-import {
-  convertPropertiesToArrays,
-  type ConvertValuesToArrays,
-  kebabizeCamelCase,
-  maybeAddSuffix,
-} from '../../../common';
+import { maybeAddSuffix } from '../../../common';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
 import type {
+  ConvertValuesToArrays,
   CSSAnimationKeyframes,
   CSSAnimationSettings,
   ExistingCSSAnimationProperties,
   ICSSAnimationsManager,
 } from '../../types';
-import { normalizeTimeUnit } from '../../utils';
+import {
+  convertPropertiesToArrays,
+  kebabizeCamelCase,
+  normalizeTimeUnit,
+} from '../../utils';
 import { processKeyframeDefinitions } from '../animationParser';
 import {
   configureWebCSSAnimations,
