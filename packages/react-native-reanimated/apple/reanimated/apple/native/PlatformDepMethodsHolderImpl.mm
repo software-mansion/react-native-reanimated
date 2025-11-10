@@ -108,8 +108,8 @@ RunCoreAnimationForView makeRunCoreAnimationForView(REANodesManager *nodesManage
 {
   auto runCoreAnimationForView = [nodesManager](
                                      const int viewTag,
-                                     const facebook::react::Rect &oldFrame,
-                                     const facebook::react::Rect &newFrame,
+                                     const facebook::react::Rect &initialFrame,
+                                     const std::vector<reanimated::NativeLayoutAnimation> &animations,
                                      const reanimated::LayoutAnimationRawConfig &config,
                                      const bool usePresentationLayer,
                                      std::function<void(bool)> completion,
@@ -120,8 +120,8 @@ RunCoreAnimationForView makeRunCoreAnimationForView(REANodesManager *nodesManage
     };
 
     [nodesManager runCoreAnimationForView:viewTag
-                                 oldFrame:oldFrame
-                                 newFrame:newFrame
+                             initialFrame:initialFrame
+                               animations:animations
                                    config:config
                      usePresentationLayer:usePresentationLayer
                                completion:completionBlock

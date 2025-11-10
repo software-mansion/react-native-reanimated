@@ -6,6 +6,7 @@
 #include <react/renderer/graphics/Rect.h>
 
 #include <reanimated/LayoutAnimations/LayoutAnimationConfig.h>
+#include <reanimated/LayoutAnimations/NativeLayoutAnimation.h>
 
 #include <memory>
 #include <string>
@@ -59,7 +60,7 @@ using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 using RunCoreAnimationForView = std::function<void(
     const int,
     const facebook::react::Rect &,
-    const facebook::react::Rect &,
+    const std::vector<NativeLayoutAnimation> &animations,
     const reanimated::LayoutAnimationRawConfig &,
     const bool,
     std::function<void(bool)> &&,

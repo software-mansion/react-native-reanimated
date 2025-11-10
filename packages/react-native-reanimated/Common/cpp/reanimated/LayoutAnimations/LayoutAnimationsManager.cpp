@@ -1,5 +1,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/LayoutAnimations/NativeLayoutAnimation.h>
 #include <reanimated/LayoutAnimations/NativeLayoutAnimationPresetFactory.h>
+#include <vector>
 
 #ifndef NDEBUG
 #include <utility>
@@ -108,7 +110,7 @@ void LayoutAnimationsManager::startNativeLayoutAnimation(
 
   // TODO: This has to be done differently
   if (configPair.second) {
-    PresetFrameTransform frames =
+    std::vector<NativeLayoutAnimation> animations =
         NativeLayoutAnimationPresetFactory::instance()
             .create(type, *configPair.second->presetName)
             ->calculate(startFrame, endFrame);
@@ -120,11 +122,12 @@ void LayoutAnimationsManager::startNativeLayoutAnimation(
       // It is needed to delay the trigger of the entering CA animation
       // Without this, the animation attempts to animate a view that is not
       // yet mounted
+      facebook::react::Rect initialFrame = startFrame;
       dispatch_async(dispatch_get_main_queue(), ^{
         runCoreAnimationForView_(
             tag,
-            frames.oldFrame,
-            frames.newFrame,
+            initialFrame,
+            animations,
             *configPair.second,
             false,
             [callback](bool finished) { (*callback)(finished); },
@@ -133,8 +136,8 @@ void LayoutAnimationsManager::startNativeLayoutAnimation(
     } else {
       runCoreAnimationForView_(
           tag,
-          frames.oldFrame,
-          frames.newFrame,
+          startFrame,
+          animations,
           *configPair.second,
           true,
           [callback](bool finished) { (*callback)(finished); },

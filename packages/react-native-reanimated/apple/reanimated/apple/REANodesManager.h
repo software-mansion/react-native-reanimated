@@ -1,7 +1,8 @@
 #import <React/RCTEventDispatcherProtocol.h>
 #import <React/RCTSurfacePresenter.h>
 
-#import <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#import <reanimated/LayoutAnimations/LayoutAnimationConfig.h>
+#import <reanimated/LayoutAnimations/NativeLayoutAnimation.h>
 #import <reanimated/apple/READisplayLink.h>
 
 typedef void (^REAOnAnimationCallback)(READisplayLink *displayLink);
@@ -23,8 +24,8 @@ typedef void (^REAPerformOperations)();
 - (void)registerPerformOperations:(REAPerformOperations)performOperations;
 - (void)maybeFlushUIUpdatesQueue;
 - (void)runCoreAnimationForView:(ReactTag)viewTag
-                       oldFrame:(const facebook::react::Rect &)oldFrame
-                       newFrame:(const facebook::react::Rect &)newFrame
+                   initialFrame:(const facebook::react::Rect &)initialFrame
+                     animations:(const std::vector<reanimated::NativeLayoutAnimation> &)animations
                          config:
                              (const reanimated::LayoutAnimationRawConfig &)
                                  config // TODO: Pass also the animation type, create some potentially new abstraction

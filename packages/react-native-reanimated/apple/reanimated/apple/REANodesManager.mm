@@ -183,8 +183,8 @@ using namespace facebook::react;
 }
 
 - (void)runCoreAnimationForView:(ReactTag)viewTag
-                       oldFrame:(const facebook::react::Rect &)oldFrame
-                       newFrame:(const facebook::react::Rect &)newFrame
+                   initialFrame:(const facebook::react::Rect &)initialFrame
+                     animations:(const std::vector<reanimated::NativeLayoutAnimation> &)animations
                          config:(const reanimated::LayoutAnimationRawConfig &)config
            usePresentationLayer:(bool)usePresentationLayer
                      completion:(std::function<void(bool)>)completion
@@ -195,51 +195,46 @@ using namespace facebook::react;
   REAUIView<RCTComponentViewProtocol> *componentView =
       [componentViewRegistry findComponentViewWithTag:static_cast<Tag>(viewTag)];
 
-  bool needsXAnimation = oldFrame.origin.x != newFrame.origin.x;
-  bool needsYAnimation = oldFrame.origin.y != newFrame.origin.y;
-
-  if (!needsXAnimation && !needsYAnimation) {
-    return;
-  }
-
-  CGRect baseFrame = usePresentationLayer
-      ? componentView.layer.presentationLayer.frame
-      : CGRectMake(oldFrame.origin.x, oldFrame.origin.y, oldFrame.size.width, oldFrame.size.height);
-
-  CGFloat centerOffsetX = baseFrame.size.width / 2;
-  CGFloat centerOffsetY = baseFrame.size.height / 2;
-
   // Apart from entering animations, we are using the presentation layer's frame instead of the oldFrame to properly
   // handle cases where animation is interrupted mid-way and replaced by the next one. In such cases the presentation
   // layer allows us to start the new animation from the current visible position of the view and avoid "jumps"
-  CGFloat oldX = baseFrame.origin.x + centerOffsetX;
-  CGFloat oldY = baseFrame.origin.y + centerOffsetY;
-  CGFloat newX = newFrame.origin.x + centerOffsetX;
-  CGFloat newY = newFrame.origin.y + centerOffsetY;
+  CGRect presentationLayerFrame = componentView.layer.presentationLayer.frame;
+  facebook::react::Rect baseFrame = usePresentationLayer ? facebook::react::Rect{{presentationLayerFrame.origin.x, presentationLayerFrame.origin.y}, {presentationLayerFrame.size.width, presentationLayerFrame.size.height}} : initialFrame;
 
-  NSMutableArray *animations = [NSMutableArray array];
+  // TODO: Perhaps we could just add centerOffsets directly to baseFrame here and not have to deal with them anywhere
+  // else?
 
-  if (needsXAnimation) {
-    CABasicAnimation *xAnimation = [CABasicAnimation animationWithKeyPath:@"position.x"];
-    xAnimation.fromValue = @(oldX);
-    xAnimation.toValue = @(newX);
-    [animations addObject:xAnimation];
+  NSMutableArray *processedAnimations = [NSMutableArray array];
+
+  double delay = config.values->delay.value_or(0) / 1000;
+  double durationWithDelay = (config.values->duration.value() / 1000) + delay;
+
+  for (const auto &anim : animations) {
+    double fromValue = anim.getInitialValue(baseFrame);
+    double toValue = anim.targetValue;
+    NSString *keyPath = [NSString stringWithUTF8String:anim.key.c_str()];
+
+    // TODO: Detect if there's spring in the config and if so, use CASpringAnimation with proper config
+    CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:keyPath];
+    animation.fromValue = @(fromValue);
+    animation.toValue = @(toValue);
+    animation.beginTime = delay;
+
+    [processedAnimations addObject:animation];
+
+    // TODO: This is hardcoded for now. Figure this out for setting the final values of the properties
+    // Probably such implementation needs to be somewhere here, as it's iOS specific on setting something
+    // on the CA Layer
+    if ([keyPath isEqual:@"position.x"]) {
+      componentView.layer.position = CGPointMake(toValue, componentView.layer.position.y);
+    } else {
+      componentView.layer.position = CGPointMake(componentView.layer.position.x, toValue);
+    }
   }
-
-  if (needsYAnimation) {
-    CABasicAnimation *yAnimation = [CABasicAnimation animationWithKeyPath:@"position.y"];
-    yAnimation.fromValue = @(oldY);
-    yAnimation.toValue = @(newY);
-    [animations addObject:yAnimation];
-  }
-
-  componentView.layer.position = CGPointMake(needsXAnimation ? newX : oldX, needsYAnimation ? newY : oldY);
 
   CAAnimationGroup *animationGroup = [CAAnimationGroup animation];
-  animationGroup.animations = animations;
-
-  // TODO: Set the other animation details, figure out defaults and where to put them (not here probably)
-  animationGroup.duration = config.values->duration.value_or(1000) / 1000;
+  animationGroup.animations = processedAnimations;
+  animationGroup.duration = durationWithDelay;
 
   REACoreAnimationDelegate *delegate =
       [REACoreAnimationDelegate delegateWithStart:nil
