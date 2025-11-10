@@ -1505,7 +1505,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated (3.19.3):
+  - RNReanimated (3.19.4):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.11.18.00)
@@ -1525,10 +1525,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 3.19.3)
-    - RNReanimated/worklets (= 3.19.3)
+    - RNReanimated/reanimated (= 3.19.4)
+    - RNReanimated/worklets (= 3.19.4)
     - Yoga
-  - RNReanimated/reanimated (3.19.3):
+  - RNReanimated/reanimated (3.19.4):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.11.18.00)
@@ -1548,9 +1548,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 3.19.3)
+    - RNReanimated/reanimated/apple (= 3.19.4)
     - Yoga
-  - RNReanimated/reanimated/apple (3.19.3):
+  - RNReanimated/reanimated/apple (3.19.4):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.11.18.00)
@@ -1571,7 +1571,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated/worklets (3.19.3):
+  - RNReanimated/worklets (3.19.4):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.11.18.00)
@@ -1591,9 +1591,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/worklets/apple (= 3.19.3)
+    - RNReanimated/worklets/apple (= 3.19.4)
     - Yoga
-  - RNReanimated/worklets/apple (3.19.3):
+  - RNReanimated/worklets/apple (3.19.4):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.11.18.00)
@@ -1902,7 +1902,7 @@ SPEC CHECKSUMS:
   ReactCommon: d8a297276a8a494803194d834d5ee331c6be176c
   RNCAsyncStorage: c91d753ede6dc21862c4922cd13f98f7cfde578e
   RNGestureHandler: ca5ceb73b16c83ce13bb156f086e9804353346be
-  RNReanimated: 7e9d7b99794197543c1495e829a7a00e218a028c
+  RNReanimated: 9ec6d61b619d0d4eb0bc815abde3e556cfdef472
   RNSVG: 4c63b12b7b5761063bca4f20dd228f6a8370f614
   SocketRocket: 03f7111df1a343b162bf5b06ead333be808e1e0a
   Yoga: 68988998b6d10a0802dd7d5c6d40bf018e09ffd9
