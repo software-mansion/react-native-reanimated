@@ -40,7 +40,6 @@ const EXAMPLES = [
   makeFilterExample('Sepia', 'sepia(0%)', 'sepia(100%)'),
 ];
 
-
 const STRUCTURE_EXAMPLES = [
   {
     title: 'String syntax',
@@ -70,7 +69,9 @@ const STRUCTURE_EXAMPLES = [
     description:
       'When fromOperations and toOperations are not compatible (different order or different set of filter functions), the keyframe is considered discrete and the filter will abruptly change between the two states.',
     keyframes: {
-      '0%, 100%': { filter: [{ blur: 0 }, { opacity: 0.5 }, { brightness: 0.7 }] },
+      '0%, 100%': {
+        filter: [{ blur: 0 }, { opacity: 0.5 }, { brightness: 0.7 }],
+      },
       '50%': { filter: [{ blur: 10 }, { brightness: 1.5 }] },
     },
   },
