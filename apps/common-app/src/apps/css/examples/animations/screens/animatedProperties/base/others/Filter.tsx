@@ -40,6 +40,42 @@ const EXAMPLES = [
   makeFilterExample('Sepia', 'sepia(0%)', 'sepia(100%)'),
 ];
 
+
+const STRUCTURE_EXAMPLES = [
+  {
+    title: 'String syntax',
+    keyframes: {
+      '0%, 100%': { filter: 'blur(0px) brightness(0)' },
+      '50%': { filter: 'blur(10px) brightness(150%)' },
+    },
+  },
+  {
+    title: 'Object syntax',
+    keyframes: {
+      '0%, 100%': { filter: [{ blur: 0 }, { brightness: 0 }] },
+      '50%': { filter: [{ blur: 10 }, { brightness: 1.5 }] },
+    },
+  },
+  {
+    title: 'Missing properties',
+    description:
+      'When some filter properties are missing in the keyframes, they will be interpolated to default values.',
+    keyframes: {
+      '0%, 100%': { filter: [{ blur: 3 }, { brightness: 1.5 }] },
+      '50%': { filter: [{ blur: 10 }] },
+    },
+  },
+  {
+    title: 'Properties not compatible',
+    description:
+      'When fromOperations and toOperations are not compatible (different order or different set of filter functions), the keyframe is considered discrete and the filter will abruptly change between the two states.',
+    keyframes: {
+      '0%, 100%': { filter: [{ blur: 0, opacity: 0.5, brightness: 0.7 }] },
+      '50%': { filter: [{ blur: 10 }, { brightness: 1.5 }] },
+    },
+  },
+];
+
 export default function Filter() {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
@@ -61,30 +97,7 @@ export default function Filter() {
           name: 'Structure',
           sections: [
             {
-              examples: [
-                {
-                  keyframes: {
-                    '0%, 100%': {
-                      filter: 'blur(0px) brightness(0)',
-                    },
-                    '50%': {
-                      filter: 'blur(10px) brightness(150%)',
-                    },
-                  },
-                  title: 'String syntax',
-                },
-                {
-                  keyframes: {
-                    '0%, 100%': {
-                      filter: [{ blur: 0 }, { brightness: 0 }],
-                    },
-                    '50%': {
-                      filter: [{ blur: 10 }, { brightness: 1.5 }],
-                    },
-                  },
-                  title: 'Object syntax',
-                },
-              ],
+              examples: STRUCTURE_EXAMPLES,
               title: 'Filter Structure',
             },
           ],
