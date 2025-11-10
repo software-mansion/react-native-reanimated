@@ -232,7 +232,7 @@ export function createAnimatedComponent(
             element,
             LayoutAnimationType.ENTERING
           );
-        } else if (element) {
+        } else if (element.style) {
           element.style.visibility = 'initial';
         }
       }
