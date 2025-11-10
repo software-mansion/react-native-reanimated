@@ -111,16 +111,24 @@ std::ostream &operator<<(std::ostream &os, const CSSDropShadow &shadowValue) {
 const std::vector<FieldValidator> CSSDropShadow::fieldValidators = {
     {"offsetX",
      [](const folly::dynamic &value) { return CSSDouble::canConstruct(value); },
-     [](jsi::Runtime &rt, const jsi::Value &jsiValue) { return CSSDouble::canConstruct(rt, jsiValue); }},
+     [](jsi::Runtime &rt, const jsi::Value &jsiValue) {
+       return CSSDouble::canConstruct(rt, jsiValue);
+     }},
     {"offsetY",
      [](const folly::dynamic &value) { return CSSDouble::canConstruct(value); },
-     [](jsi::Runtime &rt, const jsi::Value &jsiValue) { return CSSDouble::canConstruct(rt, jsiValue); }},
+     [](jsi::Runtime &rt, const jsi::Value &jsiValue) {
+       return CSSDouble::canConstruct(rt, jsiValue);
+     }},
     {"standardDeviation",
      [](const folly::dynamic &value) { return CSSDouble::canConstruct(value); },
-     [](jsi::Runtime &rt, const jsi::Value &jsiValue) { return CSSDouble::canConstruct(rt, jsiValue); }},
+     [](jsi::Runtime &rt, const jsi::Value &jsiValue) {
+       return CSSDouble::canConstruct(rt, jsiValue);
+     }},
     {"color",
      [](const folly::dynamic &value) { return CSSColor::canConstruct(value); },
-     [](jsi::Runtime &rt, const jsi::Value &jsiValue) { return CSSColor::canConstruct(rt, jsiValue); }},
+     [](jsi::Runtime &rt, const jsi::Value &jsiValue) {
+       return CSSColor::canConstruct(rt, jsiValue);
+     }},
 };
 
 } // namespace reanimated::css
