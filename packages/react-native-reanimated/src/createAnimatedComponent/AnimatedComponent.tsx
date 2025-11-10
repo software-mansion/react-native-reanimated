@@ -142,7 +142,7 @@ export default class AnimatedComponent
             element,
             LayoutAnimationType.ENTERING
           );
-        } else {
+        } else if (element.style) {
           element.style.visibility = 'initial';
         }
       }
