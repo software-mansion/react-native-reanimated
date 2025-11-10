@@ -202,6 +202,7 @@ android {
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
                         "-DREANIMATED_PROFILING=${REANIMATED_PROFILING}",
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}",
+                        "-DGTEST_ENABLE=ON",
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
                         "-DREANIMATED_FEATURE_FLAGS=${REANIMATED_FEATURE_FLAGS}"
                 abiFilters (*reactNativeArchitectures())

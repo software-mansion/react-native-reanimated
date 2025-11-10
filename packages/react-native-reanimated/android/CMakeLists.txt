@@ -34,6 +34,12 @@ if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")
   string(APPEND CMAKE_CXX_FLAGS " -flto=thin")
 endif()
 
+# tests
+option(GTEST_ENABLE "Enable Google Test support" OFF)
+if(GTEST_ENABLE)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/../gtest ${CMAKE_BINARY_DIR}/gtest)
+endif()
+
 set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 set(ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp")
 set(COMMON_CPP_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp")

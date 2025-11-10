@@ -68,6 +68,7 @@
     "!**/__mocks__",
     "!apple/build/",
     "!android/build/",
+    "!Common/tests/build/",
     "!android/.cxx/",
     "!android/.gradle/",
     "!__snapshots__",
