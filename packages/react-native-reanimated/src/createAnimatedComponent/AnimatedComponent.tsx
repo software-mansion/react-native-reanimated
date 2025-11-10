@@ -119,18 +119,15 @@ export default class AnimatedComponent
       this.props.exiting
     );
 
-    if (IS_WEB) {
+    if (IS_WEB && this._componentDOMRef) {
       const element = this._componentDOMRef as ReanimatedHTMLElement;
-
+      const dummyClone = element.dummyClone;
       // If the element was cloned (because of the exiting animation), we need bring it
       // back to the DOM
-      if (element.dummyClone) {
-        const dummyClone = element.dummyClone;
-        while (dummyClone.firstChild) {
-          element.appendChild(dummyClone.firstChild);
-        }
-        delete element.dummyClone;
+      while (dummyClone?.firstChild) {
+        element.appendChild(dummyClone.firstChild);
       }
+      delete element.dummyClone;
 
       if (this.props.exiting) {
         saveSnapshot(element);
@@ -145,14 +142,13 @@ export default class AnimatedComponent
       }
 
       const skipEntering = this.context?.current;
-
       if (!skipEntering) {
         startWebLayoutAnimation(
           this.props,
           element,
           LayoutAnimationType.ENTERING
         );
-      } else {
+      } else if (element.style) {
         element.style.visibility = 'initial';
       }
     }
