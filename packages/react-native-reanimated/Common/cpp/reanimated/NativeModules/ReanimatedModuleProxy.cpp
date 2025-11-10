@@ -500,7 +500,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   // (res == true), but for now handleEvent always returns false. Thankfully,
   // performOperations does not trigger a lot of code if there is nothing to
   // be done so this is fine for now.
-  performOperations();
+  performOperations(true);
   return res;
 }
 
@@ -549,13 +549,15 @@ double ReanimatedModuleProxy::getCssTimestamp() {
   return currentCssTimestamp_;
 }
 
-void ReanimatedModuleProxy::performOperations() {
+void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
-  auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
-  for (const auto surfaceId : flushRequestsCopy) {
-    uiManager_->getShadowTreeRegistry().visit(
-        surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
+  if (!isTriggeredByEvent) {
+    auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
+    for (const auto surfaceId : flushRequestsCopy) {
+      uiManager_->getShadowTreeRegistry().visit(
+          surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
+    }
   }
 
   jsi::Runtime &rt = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
@@ -1212,7 +1214,6 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
-  uiManager_->setAnimationDelegate(nullptr);
   auto scheduler = reinterpret_cast<Scheduler *>(uiManager_->getDelegate());
   auto componentDescriptorRegistry =
       scheduler->getContextContainer()
@@ -1233,6 +1234,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         jsInvoker_
 #endif
     );
+    uiManager_->setAnimationDelegate(layoutAnimationsProxy_.get());
   }
 }
 

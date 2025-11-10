@@ -121,8 +121,19 @@ export default class AnimatedComponent
     );
 
     if (IS_WEB) {
-      if (this.props.exiting && this._componentDOMRef) {
-        saveSnapshot(this._componentDOMRef);
+      const element = this._componentDOMRef as ReanimatedHTMLElement;
+
+      // If the element was cloned (because of the exiting animation), we need to bring it back to the DOM
+      if (element.dummyClone) {
+        const dummyClone = element.dummyClone;
+        while (dummyClone.firstChild) {
+          element.appendChild(dummyClone.firstChild);
+        }
+        delete element.dummyClone;
+      }
+
+      if (this.props.exiting) {
+        saveSnapshot(element);
       }
 
       if (!this.props.entering) {
@@ -142,11 +153,11 @@ export default class AnimatedComponent
       if (!skipEntering) {
         startWebLayoutAnimation(
           this.props,
-          this._componentDOMRef as ReanimatedHTMLElement,
+          element,
           LayoutAnimationType.ENTERING
         );
-      } else if (this._componentDOMRef) {
-        this._componentDOMRef.style.visibility = 'initial';
+      } else {
+        element.style.visibility = 'initial';
       }
     }
 
