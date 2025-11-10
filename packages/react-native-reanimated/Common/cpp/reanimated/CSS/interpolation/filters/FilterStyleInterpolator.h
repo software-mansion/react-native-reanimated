@@ -5,6 +5,7 @@
 #include <reanimated/CSS/utils/keyframes.h>
 
 #include <memory>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>

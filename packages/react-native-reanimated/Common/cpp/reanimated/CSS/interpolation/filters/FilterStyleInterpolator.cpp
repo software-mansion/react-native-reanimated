@@ -1,7 +1,9 @@
 #include <reanimated/CSS/interpolation/filters/FilterStyleInterpolator.h>
 #include <reanimated/CSS/interpolation/filters/operations/contrast.h>
 
+#include <algorithm>
 #include <memory>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
