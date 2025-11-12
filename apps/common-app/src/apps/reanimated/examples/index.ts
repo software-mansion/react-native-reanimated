@@ -38,6 +38,7 @@ import EmptyExample from './EmptyExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import FilterExample from './FilterExample';
 import FlatListWithLayoutAnimations from './FlatListWithLayoutAnimationsExample';
+import InterruptedLayoutAnimationsExample from './InterruptedLayoutAnimationsExample';
 import FpsExample from './FpsExample';
 import FrameCallbackExample from './FrameCallbackExample';
 import FreezeExample from './FreezeExample';
@@ -230,6 +231,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🎻',
     title: 'FlatList with layout animations',
     screen: FlatListWithLayoutAnimations,
+  },
+  InterruptedLayoutAnimationsExample: {
+    icon: '🫥',
+    title: 'Interrupted layout animations',
+    screen: InterruptedLayoutAnimationsExample,
   },
 
   // About
