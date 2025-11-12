@@ -9,7 +9,7 @@ import {
 import {
   processBoxShadowWeb,
   processColor,
-  processFilter,
+  processFilterWeb,
   processFontVariant,
   processFontWeight,
   processMarginHorizontal,
@@ -225,6 +225,6 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   cursor: true,
   pointerEvents: true,
   // Others
-  filter: { process: processFilter },
+  filter: { process: processFilterWeb },
   isolation: true,
 };

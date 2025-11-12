@@ -64,7 +64,6 @@
     "madge": "8.0.0",
     "prettier": "3.6.2",
     "react-native": "0.82.0",
-    "react-native-monorepo-tools": "1.2.1",
     "react-test-renderer": "19.1.1",
     "typescript": "5.8.3",
     "typescript-eslint": "8.46.0"
