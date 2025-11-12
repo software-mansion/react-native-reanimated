@@ -63,8 +63,8 @@ using RunCoreAnimationForView = std::function<void(
     const std::vector<NativeLayoutAnimation> &animations,
     const reanimated::LayoutAnimationRawConfig &,
     const bool,
-    std::function<void(bool)> &&,
-    const std::string &)>;
+    std::function<void(bool)> &&)>;
+//    const std::string &)>;
 
 struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;

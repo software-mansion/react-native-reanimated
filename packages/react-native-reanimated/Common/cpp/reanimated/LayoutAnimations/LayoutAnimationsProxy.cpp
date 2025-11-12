@@ -713,9 +713,9 @@ void LayoutAnimationsProxy::startEnteringAnimation(
       strongThis->layoutAnimationsManager_->startNativeLayoutAnimation(
           tag,
           LayoutAnimationType::ENTERING,
-          newView.layoutMetrics
-              .frame, // old view does not really exist here with proper data so
-                      // we just pass new view
+          // old view does not really exist here with proper data so we just
+          // pass new view
+          newView.layoutMetrics.frame,
           newView.layoutMetrics.frame,
           [this, tag](bool finished) { this->endLayoutAnimation(tag, false); });
 
@@ -768,9 +768,9 @@ void LayoutAnimationsProxy::startExitingAnimation(
               tag,
               LayoutAnimationType::EXITING,
               oldView.layoutMetrics.frame,
-              oldView.layoutMetrics
-                  .frame, // end frame is the same as the start frame, just with
-                          // manipulations done further
+              // end frame is the same as the start frame, just with
+              // manipulations done further
+              oldView.layoutMetrics.frame,
               [this, tag](bool finished) {
                 this->endLayoutAnimation(tag, finished);
               });
@@ -832,9 +832,6 @@ void LayoutAnimationsProxy::startLayoutAnimation(
           oldView.layoutMetrics.frame,
           newView.layoutMetrics.frame,
           [this, tag](bool finished) { this->endLayoutAnimation(tag, false); });
-
-      int x = 9;
-      (void)x;
 
       return;
     }

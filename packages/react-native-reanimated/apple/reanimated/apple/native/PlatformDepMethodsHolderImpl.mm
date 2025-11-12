@@ -112,9 +112,9 @@ RunCoreAnimationForView makeRunCoreAnimationForView(REANodesManager *nodesManage
                                      const std::vector<reanimated::NativeLayoutAnimation> &animations,
                                      const reanimated::LayoutAnimationRawConfig &config,
                                      const bool usePresentationLayer,
-                                     std::function<void(bool)> completion,
-                                     const std::string &animationKey) {
-    // Create an Objective-C block that will retain the completion handler
+                                     std::function<void(bool)> completion) {
+    //                                     const std::string &animationKey) {
+    // Create an Objective-C block that will retain the completion handler // TODO: There is probably a better way?
     void (^completionBlock)(bool) = ^(bool finished) {
       completion(finished);
     };
@@ -124,9 +124,9 @@ RunCoreAnimationForView makeRunCoreAnimationForView(REANodesManager *nodesManage
                                animations:animations
                                    config:config
                      usePresentationLayer:usePresentationLayer
-                               completion:completionBlock
-                             animationKey:[NSString stringWithCString:animationKey.c_str()
-                                                             encoding:[NSString defaultCStringEncoding]]];
+                               completion:completionBlock];
+    //                             animationKey:[NSString stringWithCString:animationKey.c_str()
+    //                                                             encoding:[NSString defaultCStringEncoding]]];
   };
   return runCoreAnimationForView;
 }

@@ -130,8 +130,8 @@ void LayoutAnimationsManager::startNativeLayoutAnimation(
             animations,
             *configPair.second,
             false,
-            [callback](bool finished) { (*callback)(finished); },
-            layoutAnimationNativeIdentifierMap_[type]);
+            [callback](bool finished) { (*callback)(finished); });
+        //            layoutAnimationNativeIdentifierMap_[type]);
       });
     } else {
       runCoreAnimationForView_(
@@ -140,8 +140,8 @@ void LayoutAnimationsManager::startNativeLayoutAnimation(
           animations,
           *configPair.second,
           true,
-          [callback](bool finished) { (*callback)(finished); },
-          layoutAnimationNativeIdentifierMap_[type]);
+          [callback](bool finished) { (*callback)(finished); });
+      //          layoutAnimationNativeIdentifierMap_[type]);
     }
   }
 }
@@ -188,11 +188,11 @@ LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
   }
 }
 
-std::unordered_map<LayoutAnimationType, std::string>
-    LayoutAnimationsManager::layoutAnimationNativeIdentifierMap_ = {
-        {ENTERING, "ENTERING"},
-        {EXITING, "EXITING"},
-        {LAYOUT, "LAYOUT"}};
+// std::unordered_map<LayoutAnimationType, std::string>
+//     LayoutAnimationsManager::layoutAnimationNativeIdentifierMap_ = {
+//         {ENTERING, "ENTERING"},
+//         {EXITING, "EXITING"},
+//         {LAYOUT, "LAYOUT"}};
 
 const LayoutAnimationRawConfig LayoutAnimationsManager::extractRawConfigValues(
     jsi::Runtime &rt,

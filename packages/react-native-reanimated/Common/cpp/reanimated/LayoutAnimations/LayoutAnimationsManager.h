@@ -103,8 +103,8 @@ class LayoutAnimationsManager {
   // `layoutAnimations_` and `shouldAnimateExitingForTag_`.
 
   RunCoreAnimationForView runCoreAnimationForView_;
-  static std::unordered_map<LayoutAnimationType, std::string>
-      layoutAnimationNativeIdentifierMap_;
+  //  static std::unordered_map<LayoutAnimationType, std::string>
+  //      layoutAnimationNativeIdentifierMap_;
 };
 
 } // namespace reanimated
