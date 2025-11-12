@@ -6,7 +6,6 @@ export type Route = RouteWithComponent | RouteWithRoutes;
 
 type SharedRouteProps = {
   name: string;
-  disabled?: boolean;
   displayed?: boolean;
   labelTypes?: Array<LabelType>;
   CardComponent?: RouteCardComponent;
