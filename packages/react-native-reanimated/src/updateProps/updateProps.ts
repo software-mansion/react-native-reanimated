@@ -31,7 +31,6 @@ import jsPropsUpdater from '../createAnimatedComponent/JSPropsUpdater';
 import type { Descriptor } from '../hook/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
-import { RUNTIME_PROCESSORS } from './config';
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
@@ -56,11 +55,22 @@ if (SHOULD_BE_USE_WEB) {
 } else {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
+    /* TODO: Improve this config structure in the future
+     * The goal is to create a simplified version of `src/css/platform/native/config.ts`,
+     * containing only properties that require processing and their associated processors
+     * */
     processColorsInProps(updates);
-    for (const [prop, processor] of Object.entries(RUNTIME_PROCESSORS)) {
-      if (prop in updates) {
-        updates[prop] = processor(updates[prop]);
-      }
+    if ('transformOrigin' in updates) {
+      updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
+    }
+    if('transform' in updates){
+      updates.transform = processTransform(updates.transform);
+    }
+    if ('boxShadow' in updates) {
+      updates.boxShadow = processBoxShadowNative(updates.boxShadow);
+    }
+    if ('filter' in updates) {
+      updates.filter = processFilter(updates.filter);
     }
     global.UpdatePropsManager.update(viewDescriptors, updates);
   };
