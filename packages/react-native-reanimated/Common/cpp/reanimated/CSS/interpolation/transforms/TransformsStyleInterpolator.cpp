@@ -8,7 +8,7 @@
 namespace reanimated::css {
 
 const folly::dynamic TransformsStyleInterpolator::defaultStyleValueDynamic_ =
-    MatrixOperation(TransformMatrix3D()).toDynamic();
+    folly::dynamic::array(MatrixOperation(TransformMatrix3D()).toDynamic());
 
 TransformsStyleInterpolator::TransformsStyleInterpolator(
     const PropertyPath &propertyPath,
