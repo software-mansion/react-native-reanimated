@@ -112,8 +112,7 @@ export default function Filter() {
               ),
               title: 'Filter Properties',
               description:
-                'These filter properties are supported on both iOS and Android platforms.',
-              labelTypes: ['iOS', 'Android'],
+                'These filter properties are supported on all platforms.',
             },
             {
               examples: EXAMPLES.filter(
@@ -121,8 +120,8 @@ export default function Filter() {
               ),
               title: 'Filter Properties',
               description:
-                'These filter properties are supported only on Android platform.',
-              labelTypes: ['Android'],
+                'These filter properties are supported only on Android and web platforms.',
+              labelTypes: ['Android', 'web'],
             },
           ],
         },
