@@ -1,17 +1,19 @@
-import type { IFuseOptions } from 'fuse.js';
+import type { FuseResult, IFuseOptions } from 'fuse.js';
 import Fuse from 'fuse.js';
 
+import type { LabelType } from '@/apps/css/components';
 import { animationRoutes, transitionRoutes } from '@/apps/css/examples';
 
 import type { Route, Routes } from '../types';
 
-export interface SearchDoc {
+export type SearchDoc = {
   key: string; // route key
   name: string;
   breadcrumb: string; // created from screen names
   path: Array<string>; // segments of the path (from route keys)
   node: Route; // original object from the routes tree
-}
+  labelTypes?: Array<LabelType>;
+};
 
 function flattenRoutes(
   routes: Routes,
@@ -21,15 +23,21 @@ function flattenRoutes(
   return Object.entries(routes).flatMap(([k, r]) => {
     const nameSegments = [...names, r.name];
     const pathSegments = [...keys, k];
+
+    if (r.displayed === false) {
+      return [];
+    }
+
     return 'routes' in r
       ? flattenRoutes(r.routes, pathSegments, nameSegments)
       : [
           {
             key: pathSegments.join('/'),
             name: r.name,
-            breadcrumb: nameSegments.join(' / '),
+            breadcrumb: nameSegments.join('/'),
             path: pathSegments,
             node: r,
+            labelTypes: r.labelTypes,
           },
         ];
   });
@@ -50,8 +58,8 @@ const SEARCH_DOCS = flattenRoutes(ROUTES);
 
 const options = {
   keys: [
-    { name: 'name', weight: 0.5 },
-    { name: 'breadcrumb', weight: 0.5 },
+    { name: 'name', weight: 0.7 },
+    { name: 'breadcrumb', weight: 0.3 },
   ],
   threshold: 0.3,
   ignoreLocation: true,
@@ -68,7 +76,9 @@ export const fuse = new Fuse(
   Fuse.createIndex(options.keys, SEARCH_DOCS)
 );
 
-export function searchRoutes(q: string): Array<SearchDoc> {
+export function searchRoutes(q: string): Array<FuseResult<SearchDoc>> {
   if (!q.trim()) return [];
-  return fuse.search(q).map((r) => r.item); // ranked best to worst
+  const searchResults = fuse.search(q);
+  console.log('>>>', searchResults);
+  return searchResults;
 }
