@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useCallback } from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import type {
   GestureUpdateEvent,
   PanGestureChangeEventPayload,
@@ -66,12 +66,20 @@ export default function ScreenStackHeaderConfigBackgroundColorExample() {
     };
   }, [offset]);
 
+  const [counter, setCounter] = React.useState(0);
+
+  const handleIncrement = useCallback(() => {
+    setCounter((prev) => prev + 1);
+  }, []);
+
   return (
     <GestureHandlerRootView style={styles.root}>
       <ScreenStack style={styles.container}>
         <Screen>
           <AnimatedScreenStackHeaderConfig animatedProps={animatedProps} />
           <View style={styles.container}>
+            <Text>Counter: {counter}</Text>
+            <Button title="Increase counter" onPress={handleIncrement} />
             <GestureDetector gesture={gesture}>
               <Animated.View style={[styles.ball, animatedStyles]} />
             </GestureDetector>

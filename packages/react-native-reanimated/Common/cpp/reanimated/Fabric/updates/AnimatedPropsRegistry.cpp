@@ -13,7 +13,7 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
 }
 #endif
 
-void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations) {
+void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations, const double timestamp) {
   auto operationsArray = operations.asObject(rt).asArray(rt);
 
   for (size_t i = 0, length = operationsArray.size(rt); i < length; ++i) {
@@ -23,11 +23,65 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
 
     const jsi::Value &updates = item.getProperty(rt, "updates");
     addUpdatesToBatch(shadowNode, jsi::dynamicFromValue(rt, updates));
+
+    timestampMap_[shadowNode->getTag()] = timestamp;
   }
 }
 
 void AnimatedPropsRegistry::remove(const Tag tag) {
   updatesRegistry_.erase(tag);
+}
+
+jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt, const double timestamp) {
+  std::unordered_map<Tag, folly::dynamic> updatesMap;
+  {
+    auto lock1 = lock();
+
+    for (const auto &[tag, pair] : updatesRegistry_) {
+      const auto &[shadowNode, props] = pair;
+      const auto viewTag = shadowNode->getTag();
+
+      const auto viewTimestamp = timestampMap_.at(viewTag);
+      if (viewTimestamp >= timestamp) {
+        continue;
+      }
+
+      auto it = updatesMap.find(viewTag);
+      if (it == updatesMap.cend()) {
+        folly::dynamic styleProps = folly::dynamic::object();
+        styleProps.update(props);
+        updatesMap[viewTag] = styleProps;
+      } else {
+        it->second.update(props);
+      }
+    }
+  }
+
+  const jsi::Array array(rt, updatesMap.size());
+  size_t idx = 0;
+  for (const auto &[viewTag, styleProps] : updatesMap) {
+    const jsi::Object item(rt);
+    item.setProperty(rt, "viewTag", viewTag);
+    item.setProperty(rt, "styleProps", jsi::valueFromDynamic(rt, styleProps));
+    array.setValueAtIndex(rt, idx++, item);
+  }
+
+  return jsi::Value(rt, array);
+}
+
+void AnimatedPropsRegistry::removeUpdatesOlderThanTimestamp(const double timestamp) {
+  auto lock1 = lock();
+
+  for (auto it = timestampMap_.begin(); it != timestampMap_.end();) {
+    const auto viewTag = it->first;
+    const auto viewTimestamp = it->second;
+    if (viewTimestamp < timestamp) {
+      it = timestampMap_.erase(it);
+      updatesRegistry_.erase(viewTag);
+    } else {
+      it++;
+    }
+  }
 }
 
 } // namespace reanimated

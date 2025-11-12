@@ -135,3 +135,40 @@ export function processColorsInProps(props: StyleProps) {
     }
   }
 }
+
+export function unprocessColor(value: number): string {
+  const a = value >>> 24;
+  const r = (value << 8) >>> 24;
+  const g = (value << 16) >>> 24;
+  const b = (value << 24) >>> 24;
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+export function unprocessColorsInProps(props: StyleProps) {
+  for (const key in props) {
+    if (!ColorProperties.includes(key)) continue;
+
+    const value = props[key];
+
+    if (Array.isArray(value)) {
+      props[key] = value.map((c) => unprocessColor(c));
+    } else if (isDynamicColorObject(value)) {
+      if (!IS_IOS) {
+        throw new ReanimatedError(
+          'DynamicColorIOS is not available on this platform.'
+        );
+      }
+      const processed = { dynamic: {} as Record<string, Maybe<string>> };
+      const dynamicFields = value.dynamic;
+      for (const field in dynamicFields) {
+        processed.dynamic[field] =
+          dynamicFields[field] != null
+            ? unprocessColor(dynamicFields[field])
+            : undefined;
+      }
+      props[key] = processed;
+    } else {
+      props[key] = unprocessColor(value);
+    }
+  }
+}

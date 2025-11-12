@@ -5,6 +5,7 @@ import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 import type {
   InternalHostInstance,
   LayoutAnimationBatchItem,
+  SettledUpdate,
   ShadowNodeWrapper,
   StyleProps,
   Value3D,
@@ -90,6 +91,8 @@ export interface ReanimatedModuleProxy {
   ): void;
 
   unregisterCSSTransition(viewTag: number): void;
+
+  getSettledUpdates(): SettledUpdate[];
 }
 
 export interface IReanimatedModule

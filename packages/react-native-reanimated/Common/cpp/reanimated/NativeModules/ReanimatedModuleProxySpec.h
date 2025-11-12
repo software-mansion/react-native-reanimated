@@ -86,6 +86,8 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
   registerCSSTransition(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &transitionConfig) = 0;
   virtual void updateCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &configUpdates) = 0;
   virtual void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) = 0;
+
+  virtual jsi::Value getSettledUpdates(jsi::Runtime &rt) = 0;
 };
 
 } // namespace reanimated

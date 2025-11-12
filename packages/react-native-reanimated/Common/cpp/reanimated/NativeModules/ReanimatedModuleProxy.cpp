@@ -1,3 +1,4 @@
+#include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
@@ -92,7 +93,8 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       return;
     }
 
-    strongThis->animatedPropsRegistry_->update(rt, operations);
+    const auto timestamp = strongThis->getAnimationTimestamp_();
+    strongThis->animatedPropsRegistry_->update(rt, operations, timestamp);
   };
 
   auto measure = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) -> jsi::Value {
@@ -451,6 +453,20 @@ void ReanimatedModuleProxy::updateCSSTransition(
 void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) {
   auto lock = cssTransitionsRegistry_->lock();
   cssTransitionsRegistry_->remove(viewTag.asNumber());
+}
+
+jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
+  // TODO: use unified timestamp
+  const auto currentTimestamp = getAnimationTimestamp_();
+
+  // TODO: flush updates from CSS animations and CSS transitions registries
+
+  // TODO: move removing old updates to separate method?
+  // TODO: fix bug when threshold difference is smaller than 1 second
+  // TODO: find a better way to obtain timestamp for removing updates
+  animatedPropsRegistry_->removeUpdatesOlderThanTimestamp(currentTimestamp - 2000); // 2 seconds
+
+  return animatedPropsRegistry_->getUpdatesOlderThanTimestamp(rt, currentTimestamp - 1000); // 1 second
 }
 
 bool ReanimatedModuleProxy::handleEvent(

@@ -139,6 +139,11 @@ static jsi::Value REANIMATED_SPEC_PREFIX(
   return jsi::Value::undefined();
 }
 
+static jsi::Value REANIMATED_SPEC_PREFIX(
+    getSettledUpdates)(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value *args, size_t) {
+  return static_cast<ReanimatedModuleProxySpec *>(&turboModule)->getSettledUpdates(rt);
+}
+
 ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(const std::shared_ptr<CallInvoker> &jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
   methodMap_["registerEventHandler"] = MethodMetadata{3, REANIMATED_SPEC_PREFIX(registerEventHandler)};
@@ -171,6 +176,8 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(const std::shared_ptr<CallI
   methodMap_["registerCSSTransition"] = MethodMetadata{2, REANIMATED_SPEC_PREFIX(registerCSSTransition)};
   methodMap_["updateCSSTransition"] = MethodMetadata{2, REANIMATED_SPEC_PREFIX(updateCSSTransition)};
   methodMap_["unregisterCSSTransition"] = MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSTransition)};
+
+  methodMap_["getSettledUpdates"] = MethodMetadata{1, REANIMATED_SPEC_PREFIX(getSettledUpdates)};
 }
 
 } // namespace reanimated

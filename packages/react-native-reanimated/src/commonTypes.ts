@@ -361,6 +361,11 @@ export type ShadowNodeWrapper = {
   __nativeStateShadowNodeWrapper: never;
 };
 
+export type SettledUpdate = {
+  viewTag: number;
+  styleProps: StyleProps;
+};
+
 export enum KeyboardState {
   UNKNOWN = 0,
   OPENING = 1,
