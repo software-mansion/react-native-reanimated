@@ -59,6 +59,7 @@ const DefaultStaticFeatureFlags = {
   EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS: false,
   USE_SYNCHRONIZABLE_FOR_MUTABLES: false,
   USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS: false,
+  IOS_USE_NATIVE_LAYOUT_ANIMATIONS: false,
 } as const satisfies typeof StaticFeatureFlagsJSON;
 
 type StaticFeatureFlagsSchema = {
