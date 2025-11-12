@@ -122,19 +122,19 @@ MatrixOperation::MatrixOperation(const folly::dynamic &value)
       }()) {}
 
 MatrixOperation::MatrixOperation(TransformMatrix2D matrix)
-    : TransformOperation(TransformOp::Matrix),
+    : TransformOperation(static_cast<uint8_t>(TransformOp::Matrix)),
       value(std::make_shared<const TransformMatrix2D>(std::move(matrix))),
       is3D_(false) {}
 
 MatrixOperation::MatrixOperation(TransformMatrix3D matrix)
-    : TransformOperation(TransformOp::Matrix),
+    : TransformOperation(static_cast<uint8_t>(TransformOp::Matrix)),
       value(std::make_shared<const TransformMatrix3D>(std::move(matrix))),
       is3D_(true) {}
 
 MatrixOperation::MatrixOperation(TransformOperations operations)
     // Simplify operations to reduce the number of matrix
     // multiplications during matrix keyframe interpolation
-    : TransformOperation(TransformOp::Matrix), value([&]() {
+    : TransformOperation(static_cast<uint8_t>(TransformOp::Matrix)), value([&]() {
         const auto &[value, is3D] = simplifyOperations(std::move(operations));
         is3D_ = is3D;
         return value;

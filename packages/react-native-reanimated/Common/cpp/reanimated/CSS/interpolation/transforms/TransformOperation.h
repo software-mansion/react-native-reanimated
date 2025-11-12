@@ -2,6 +2,7 @@
 
 #include <reanimated/CSS/common/transforms/TransformMatrix.h>
 #include <reanimated/CSS/common/transforms/TransformOp.h>
+#include <reanimated/CSS/interpolation/operations/StyleOperation.h>
 
 #include <jsi/jsi.h>
 #include <memory>
@@ -13,23 +14,18 @@ namespace reanimated::css {
 using namespace facebook;
 
 // Base struct for TransformOperation
-struct TransformOperation {
-  const TransformOp type;
-
-  explicit TransformOperation(TransformOp value);
-  virtual ~TransformOperation() = default;
+struct TransformOperation : public StyleOperation {
+  using StyleOperation::StyleOperation;
 
   virtual bool operator==(const TransformOperation &other) const = 0;
 
-  std::string getOperationName() const;
-  virtual bool shouldResolve() const;
+  std::string getOperationName() const override;
   // Tells if the transform operations is 3D-only (cannot be represented in 2D)
   virtual bool is3D() const;
 
   static std::shared_ptr<TransformOperation> fromJSIValue(jsi::Runtime &rt, const jsi::Value &value);
   static std::shared_ptr<TransformOperation> fromDynamic(const folly::dynamic &value);
-  folly::dynamic toDynamic() const;
-  virtual folly::dynamic valueToDynamic() const = 0;
+  virtual folly::dynamic valueToDynamic() const override = 0;
 
   virtual bool canConvertTo(TransformOp type) const;
   virtual std::vector<std::shared_ptr<TransformOperation>> convertTo(TransformOp type) const;

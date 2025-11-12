@@ -53,7 +53,7 @@ class OperationsStyleInterpolator : public PropertyInterpolator {
  protected:
   virtual std::shared_ptr<StyleOperation> createStyleOperation(jsi::Runtime &rt, const jsi::Value &value) const = 0;
   virtual std::shared_ptr<StyleOperations> createStyleOperation(const folly::dynamic &value) const = 0;
-  virtual std::optional<std::pair<StyleOperations, StyleOperations>> createStyleOperationsInterpolationPair(
+  virtual std::optional<std::pair<StyleOperations, StyleOperations>> createInterpolationPair(
       const StyleOperations &fromOperations,
       const StyleOperations &toOperations) const = 0;
 
@@ -81,6 +81,25 @@ class OperationsStyleInterpolator : public PropertyInterpolator {
       const StyleOperations &toOperations) const;
   static folly::dynamic convertOperationsToDynamic(const StyleOperations &operations);
   StyleOperationsInterpolationContext createUpdateContext(const std::shared_ptr<const ShadowNode> &shadowNode) const;
+};
+
+template <typename TOperation>
+class OperationsStyleInterpolatorBase : public OperationsStyleInterpolator {
+ public:
+  using TOperations = std::vector<std::shared_ptr<TOperation>>;
+
+  using OperationsStyleInterpolator::OperationsStyleInterpolator;
+
+ protected:
+  std::shared_ptr<StyleOperation> createStyleOperation(jsi::Runtime &rt, const jsi::Value &value) const override;
+  std::shared_ptr<StyleOperations> createStyleOperation(const folly::dynamic &value) const override;
+  std::optional<std::pair<StyleOperations, StyleOperations>> createInterpolationPair(
+      const StyleOperations &fromOperations,
+      const StyleOperations &toOperations) const override;
+
+  virtual std::optional<std::pair<TOperations, TOperations>> createInterpolationPair(
+      const TOperations &fromOperations,
+      const TOperations &toOperations) const = 0;
 };
 
 } // namespace reanimated::css

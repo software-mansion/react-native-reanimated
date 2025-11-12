@@ -28,7 +28,7 @@ struct MatrixOperation final : public TransformOperation {
   const MatrixOperationValue value;
 
   explicit MatrixOperation(MatrixOperationValue value)
-      : TransformOperation(TransformOp::Matrix), value(std::move(value)) {}
+      : TransformOperation(static_cast<uint8_t>(TransformOp::Matrix)), value(std::move(value)) {}
 
   explicit MatrixOperation(jsi::Runtime &rt, const jsi::Value &value);
   explicit MatrixOperation(const folly::dynamic &value);

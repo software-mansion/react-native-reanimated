@@ -249,7 +249,7 @@ TransformMatrix2D TransformMatrix2D::create<TransformOp::SkewY>(double v) {
 template <TransformOp TOperation>
 TransformMatrix2D TransformMatrix2D::create(double value) {
   throw std::invalid_argument(
-      "[Reanimated] Cannot create TransformMatrix2D from: " + getOperationNameFromType(TOperation));
+      "[Reanimated] Cannot create TransformMatrix2D from: " + getOperationNameFromType(static_cast<uint8_t>(TOperation)));
 }
 
 double TransformMatrix2D::determinant() const {

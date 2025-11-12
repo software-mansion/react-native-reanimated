@@ -2,6 +2,8 @@
 
 namespace reanimated::css {
 
+// OperationsStyleInterpolator implementation
+
 OperationsStyleInterpolator::OperationsStyleInterpolator(
     const PropertyPath &propertyPath,
     const std::shared_ptr<StyleOperationInterpolators> &interpolators,
@@ -185,7 +187,7 @@ std::shared_ptr<StyleOperationsKeyframe> OperationsStyleInterpolator::createStyl
   if (fromOperationsOptional.has_value() && toOperationsOptional.has_value()) {
     // Try to create a compatible interpolation pair
     const auto interpolationPair =
-        createStyleOperationsInterpolationPair(fromOperationsOptional.value(), toOperationsOptional.value());
+        createInterpolationPair(fromOperationsOptional.value(), toOperationsOptional.value());
 
     if (interpolationPair.has_value()) {
       const auto [fromOperations, toOperations] = interpolationPair.value();
@@ -271,6 +273,36 @@ folly::dynamic OperationsStyleInterpolator::convertOperationsToDynamic(const Sty
 StyleOperationsInterpolationContext OperationsStyleInterpolator::createUpdateContext(
     const std::shared_ptr<const ShadowNode> &shadowNode) const {
   return StyleOperationsInterpolationContext{shadowNode, viewStylesRepository_, interpolators_};
+}
+
+// OperationsStyleInterpolatorBase implementation
+
+template <typename TOperation>
+std::shared_ptr<StyleOperation> OperationsStyleInterpolatorBase<TOperation>::createStyleOperation(
+    jsi::Runtime &rt,
+    const jsi::Value &value) const {
+  return TOperation::fromJSIValue(rt, value);
+}
+
+template <typename TOperation>
+std::shared_ptr<StyleOperations> OperationsStyleInterpolatorBase<TOperation>::createStyleOperation(
+    const folly::dynamic &value) const {
+  return TOperation::fromDynamic(value);
+}
+
+template <typename TOperation>
+std::optional<std::pair<StyleOperations, StyleOperations>>
+OperationsStyleInterpolatorBase<TOperation>::createInterpolationPair(
+    const StyleOperations &fromOperations,
+    const StyleOperations &toOperations) const {
+  const auto result = createInterpolationPair(
+      reinterpret_cast<const TOperations &>(fromOperations), reinterpret_cast<const TOperations &>(toOperations));
+
+  if (!result.has_value()) {
+    return std::nullopt;
+  }
+
+  return std::make_optional(reinterpret_cast<const std::pair<StyleOperations, StyleOperations> &>(result.value()));
 }
 
 } // namespace reanimated::css

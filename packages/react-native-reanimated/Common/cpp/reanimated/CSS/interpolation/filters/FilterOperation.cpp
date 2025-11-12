@@ -1,6 +1,5 @@
 #include <reanimated/CSS/interpolation/filters/FilterOperation.h>
 
-#include <reanimated/CSS/common/filters/FilterOp.h>
 #include <reanimated/CSS/common/values/CSSAngle.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
 #include <reanimated/CSS/common/values/complex/CSSDropShadow.h>
@@ -20,14 +19,8 @@
 
 namespace reanimated::css {
 
-FilterOperation::FilterOperation(FilterOp value) : type(value) {}
-
 std::string FilterOperation::getOperationName() const {
-  return getOperationNameFromType(type);
-}
-
-bool FilterOperation::shouldResolve() const {
-  return false;
+  return getFilterOperationName(type);
 }
 
 std::shared_ptr<FilterOperation> FilterOperation::fromJSIValue(jsi::Runtime &rt, const jsi::Value &value) {
@@ -112,14 +105,10 @@ std::shared_ptr<FilterOperation> FilterOperation::fromDynamic(const folly::dynam
   }
 }
 
-folly::dynamic FilterOperation::toDynamic() const {
-  return folly::dynamic::object(getOperationName(), valueToDynamic());
-}
-
 // FilterOperationBase implementation
 template <FilterOp TOperation, CSSValueDerived TValue>
 FilterOperationBase<TOperation, TValue>::FilterOperationBase(TValue value)
-    : FilterOperation(TOperation), value(std::move(value)) {}
+    : FilterOperation(static_cast<uint8_t>(TOperation)), value(std::move(value)) {}
 
 template <FilterOp TOperation, CSSValueDerived TValue>
 bool FilterOperationBase<TOperation, TValue>::operator==(const FilterOperation &other) const {

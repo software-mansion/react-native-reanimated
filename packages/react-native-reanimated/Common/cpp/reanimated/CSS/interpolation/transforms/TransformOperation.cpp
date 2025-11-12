@@ -17,14 +17,12 @@
 
 namespace reanimated::css {
 
-namespace {
-std::string createConversionErrorMessage(const TransformOp fromType, const TransformOp toType) {
-  return "[Reanimated] Cannot convert transform operation of type: " + getOperationNameFromType(fromType) +
-      " to type: " + getOperationNameFromType(toType);
-}
-} // namespace
 
-TransformOperation::TransformOperation(TransformOp value) : type(value) {}
+std::string createConversionErrorMessage(const TransformOp fromType, const TransformOp toType) {
+  return "[Reanimated] Cannot convert transform operation of type: " +
+      getOperationNameFromType(static_cast<uint8_t>(fromType)) +
+      " to type: " + getOperationNameFromType(static_cast<uint8_t>(toType));
+}
 
 bool TransformOperation::canConvertTo(const TransformOp targetType) const {
   return false;
@@ -32,20 +30,16 @@ bool TransformOperation::canConvertTo(const TransformOp targetType) const {
 
 void TransformOperation::assertCanConvertTo(const TransformOp targetType) const {
   if (!canConvertTo(targetType)) {
-    throw std::invalid_argument(createConversionErrorMessage(type, targetType));
+    throw std::invalid_argument(createConversionErrorMessage(static_cast<TransformOp>(type), targetType));
   }
 }
 
 TransformOperations TransformOperation::convertTo(const TransformOp targetType) const {
-  throw std::invalid_argument(createConversionErrorMessage(type, targetType));
+  throw std::invalid_argument(createConversionErrorMessage(static_cast<TransformOp>(type), targetType));
 }
 
 std::string TransformOperation::getOperationName() const {
   return getOperationNameFromType(type);
-}
-
-bool TransformOperation::shouldResolve() const {
-  return false;
 }
 
 bool TransformOperation::is3D() const {
@@ -162,14 +156,10 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(const folly:
   }
 }
 
-folly::dynamic TransformOperation::toDynamic() const {
-  return folly::dynamic::object(getOperationName(), valueToDynamic());
-}
-
 // TransformOperationBase implementation
 template <TransformOp TOperation, typename TValue>
 TransformOperationBase<TOperation, TValue>::TransformOperationBase(TValue value)
-    : TransformOperation(TOperation), value(std::move(value)) {}
+    : TransformOperation(static_cast<uint8_t>(TOperation)), value(std::move(value)) {}
 
 template <TransformOp TOperation, typename TValue>
 bool TransformOperationBase<TOperation, TValue>::operator==(const TransformOperation &other) const {

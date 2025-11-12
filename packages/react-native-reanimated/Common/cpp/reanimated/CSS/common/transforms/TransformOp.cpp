@@ -45,8 +45,8 @@ TransformOp getTransformOperationType(const std::string &property) {
   }
 }
 
-std::string getOperationNameFromType(const TransformOp type) {
-  return transformOperationStrings[static_cast<size_t>(type)];
+std::string getOperationNameFromType(const uint8_t type) {
+  return transformOperationStrings[type];
 }
 
 } // namespace reanimated::css
