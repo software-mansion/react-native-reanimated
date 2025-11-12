@@ -78,7 +78,5 @@ export const fuse = new Fuse(
 
 export function searchRoutes(q: string): Array<FuseResult<SearchDoc>> {
   if (!q.trim()) return [];
-  const searchResults = fuse.search(q);
-  console.log('>>>', searchResults);
-  return searchResults;
+  return fuse.search(q);
 }
