@@ -63,7 +63,7 @@ if (SHOULD_BE_USE_WEB) {
     if ('transformOrigin' in updates) {
       updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
     }
-    if('transform' in updates){
+    if ('transform' in updates) {
       updates.transform = processTransform(updates.transform);
     }
     if ('boxShadow' in updates) {
