@@ -45,7 +45,7 @@ First all, make sure that you have followed all instructions in [Set Up Your Env
 
 Make sure to use latest supported version of Reanimated, depending on the setup of your app.
 
-**If your app uses Expo SDK**, you must use a specific major and minor version of Reanimated (first and second number). For instance, Expo SDK 54 supports only Reanimated 4.1.x. Make sure to update to the latest available patch version (third number), for instance 4.1.3.
+**If your app uses Expo SDK**, you must use a specific major and minor version of Reanimated (first and second number). For instance, Expo SDK 54 supports only Reanimated 4.1.x. Make sure to update to the latest available patch version (third number), for instance 4.1.5.
 
 | Expo SDK version | `react-native-reanimated` version | `react-native-worklets` version |
 | :--------------: | :-------------------------------: | :-----------------------------: |
