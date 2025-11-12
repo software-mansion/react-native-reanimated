@@ -105,6 +105,37 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
   const std::shared_ptr<TransformOperationInterpolators> interpolators_;
 };
 
+class FiltersInterpolatorFactory : public PropertyInterpolatorFactory {
+ public:
+  explicit FiltersInterpolatorFactory(const std::shared_ptr<FilterOperationInterpolators> &interpolators)
+      : PropertyInterpolatorFactory(), interpolators_(interpolators) {}
+
+  const CSSValue &getDefaultValue() const override {
+    static EmptyFilterValue emptyFilterValue;
+    return emptyFilterValue;
+  }
+
+  std::shared_ptr<PropertyInterpolator> create(
+      const PropertyPath &propertyPath,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
+    return std::make_shared<FilterStyleInterpolator>(propertyPath, interpolators_, viewStylesRepository);
+  }
+
+ private:
+  // Helper private type just for a default value
+  struct EmptyFilterValue : public CSSValue {
+    folly::dynamic toDynamic() const override {
+      return folly::dynamic::array();
+    }
+
+    std::string toString() const override {
+      return "[]";
+    }
+  };
+
+  const std::shared_ptr<FilterOperationInterpolators> interpolators_;
+};
+
 // Non-template function implementations
 std::shared_ptr<PropertyInterpolatorFactory> record(const InterpolatorFactoriesRecord &factories) {
   return std::make_shared<RecordInterpolatorFactory>(factories);
@@ -123,6 +154,17 @@ std::shared_ptr<PropertyInterpolatorFactory> transforms(
   }
   return std::make_shared<TransformsInterpolatorFactory>(
       std::make_shared<TransformOperationInterpolators>(std::move(result)));
+}
+
+std::shared_ptr<PropertyInterpolatorFactory> filters(
+    const std::unordered_map<std::string, std::shared_ptr<FilterInterpolator>> &interpolators) {
+  FilterOperationInterpolators result;
+  result.reserve(interpolators.size());
+  for (const auto &[property, interpolator] : interpolators) {
+    result.emplace(getFilterOperationType(property), interpolator);
+  }
+  return std::make_shared<FiltersInterpolatorFactory>(
+      std::make_shared<FilterOperationInterpolators>(std::move(result)));
 }
 
 } // namespace reanimated::css

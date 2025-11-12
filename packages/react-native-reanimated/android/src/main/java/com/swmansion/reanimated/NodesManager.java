@@ -115,10 +115,10 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
-  public void performOperations() {
+  public void performOperations(boolean isTriggeredByEvent) {
     UiThreadUtil.assertOnUiThread();
     if (mNativeProxy != null) {
-      mNativeProxy.performOperations();
+      mNativeProxy.performOperations(isTriggeredByEvent);
     }
   }
 
@@ -155,7 +155,7 @@ public class NodesManager implements EventDispatcherListener {
           }
         }
 
-        performOperations();
+        performOperations(false);
       }
 
       mCallbackPosted.set(false);
@@ -189,7 +189,7 @@ public class NodesManager implements EventDispatcherListener {
       // the UI thread.
       if (UiThreadUtil.isOnUiThread()) {
         handleEvent(event);
-        performOperations();
+        performOperations(true);
       } else {
         String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
         int viewTag = event.getViewTag();
