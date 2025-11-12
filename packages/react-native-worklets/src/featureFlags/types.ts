@@ -6,10 +6,11 @@ export type DynamicFlagsType = {
   EXAMPLE_DYNAMIC_FLAG: boolean;
   init(): void;
   setFlag(name: DynamicFlagName, value: boolean): void;
+  getFlag(name: DynamicFlagName): boolean;
 };
 
 export type DynamicFlagName = keyof Omit<
-  Omit<DynamicFlagsType, 'setFlag'>,
+  Omit<DynamicFlagsType, 'setFlag' | 'getFlag'>,
   'init'
 >;
 

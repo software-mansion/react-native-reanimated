@@ -51,7 +51,7 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
 
  private:
   const std::shared_ptr<TransformOperationInterpolators> interpolators_;
-  static const TransformOperations defaultStyleValue_;
+  static const folly::dynamic defaultStyleValueDynamic_;
 
   std::vector<std::shared_ptr<TransformKeyframe>> keyframes_;
   std::optional<TransformOperations> reversingAdjustedStartValue_;

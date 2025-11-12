@@ -2,10 +2,10 @@ import React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 import {
   createSynchronizable,
-  runOnJS,
-  runOnUI,
+  scheduleOnRN,
+  scheduleOnUI,
   createWorkletRuntime,
-  runOnRuntime,
+  scheduleOnRuntime,
 } from 'react-native-worklets';
 
 const initialValue = 0;
@@ -47,12 +47,12 @@ export default function SynchronizablePerformanceExample() {
     }
 
     if ((globalThis as Record<string, unknown>)._LABEL === 'UI') {
-      runOnJS(setUIValueRemote)(value, durationMS);
+      scheduleOnRN(setUIValueRemote, value, durationMS);
     } else {
-      runOnJS(setBGValueRemote)(value, durationMS);
+      scheduleOnRN(setBGValueRemote, value, durationMS);
     }
 
-    runOnJS(decrementRuntimes)();
+    scheduleOnRN(decrementRuntimes);
   }
 
   function resetState() {
@@ -147,8 +147,8 @@ export default function SynchronizablePerformanceExample() {
           setRunningRuntimes(3);
 
           setTimeout(() => {
-            runOnUI(getDirtySetBlocking)();
-            runOnRuntime(runtime, getDirtySetBlocking)();
+            scheduleOnUI(getDirtySetBlocking);
+            scheduleOnRuntime(runtime, getDirtySetBlocking);
             queueMicrotask(getDirtySetBlocking);
           }, 50);
         }}
@@ -160,8 +160,8 @@ export default function SynchronizablePerformanceExample() {
           setRunningRuntimes(3);
 
           setTimeout(() => {
-            runOnRuntime(runtime, getBlockingSetBlocking)();
-            runOnUI(getBlockingSetBlocking)();
+            scheduleOnRuntime(runtime, getBlockingSetBlocking);
+            scheduleOnUI(getBlockingSetBlocking);
             queueMicrotask(getBlockingSetBlocking);
           }, 50);
         }}
@@ -173,8 +173,8 @@ export default function SynchronizablePerformanceExample() {
           setRunningRuntimes(3);
 
           setTimeout(() => {
-            runOnUI(setBlockingSetBlockingTransaction)();
-            runOnRuntime(runtime, setBlockingSetBlockingTransaction)();
+            scheduleOnUI(setBlockingSetBlockingTransaction);
+            scheduleOnRuntime(runtime, setBlockingSetBlockingTransaction);
             queueMicrotask(setBlockingSetBlockingTransaction);
           }, 50);
         }}
@@ -186,8 +186,8 @@ export default function SynchronizablePerformanceExample() {
           setRunningRuntimes(3);
 
           setTimeout(() => {
-            runOnUI(imperativeLocking)();
-            runOnRuntime(runtime, imperativeLocking)();
+            scheduleOnUI(imperativeLocking);
+            scheduleOnRuntime(runtime, imperativeLocking);
             queueMicrotask(imperativeLocking);
           }, 50);
         }}
