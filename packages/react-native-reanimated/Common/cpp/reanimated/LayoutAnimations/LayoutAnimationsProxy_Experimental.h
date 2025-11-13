@@ -104,6 +104,7 @@ struct LayoutAnimationsProxy_Experimental : public MountingOverrideDelegate,
         jsInvoker_(jsInvoker)
 #endif // ANDROID
   {
+    // TODO (before merging): remove hardcoded tags - find a generic solution
     lightNodes_[1] = std::make_shared<LightNode>();
     lightNodes_[11] = std::make_shared<LightNode>();
   }
