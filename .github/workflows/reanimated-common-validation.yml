@@ -58,6 +58,7 @@ jobs:
 
           # point to clang-20
           sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-20 100
+          sudo update-alternatives --set clang-format /usr/bin/clang-format-20
 
       - name: Check clang-format version
         run: |
