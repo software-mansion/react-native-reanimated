@@ -64,6 +64,8 @@ jobs:
         run: |
           clang-format --version
           which clang-format
+          echo "dump config"
+          clang-format -dump-config
       - name: Lint Common
         working-directory: packages/react-native-reanimated
         run: yarn lint:common
