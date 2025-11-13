@@ -45,16 +45,21 @@ jobs:
       - name: Install monorepo node dependencies
         run: yarn install --immutable
 
-      - name: Check clang-format
+      - name: Install clang-format 20
         run: |
-          echo "Clang-format version:"
+          # key to the arch
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
+
+          # recent release from https://apt.llvm.org/
+          sudo apt-add-repository "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-20 main"
+
+          sudo apt-get update
+          sudo apt-get install -y clang-format-20
+
+      - name: Check clang-format version
+        run: |
           clang-format --version
-
-          echo "Clang-format executable path:"
           which clang-format
-
-          echo "Using .clang-format config file:"
-          clang-format -style=file -dump-config | head -n 5
       - name: Lint Common
         working-directory: packages/react-native-reanimated
         run: yarn lint:common
