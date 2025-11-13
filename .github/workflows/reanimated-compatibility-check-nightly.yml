@@ -3,7 +3,7 @@ env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
-    types: [opened, synchronize, labeled, unlabeled]
+    types: [opened, synchronize, edited]
   schedule:
     - cron: '37 19 * * *'
   workflow_call:
@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    if: ${{ github.repository == 'software-mansion/react-native-reanimated' && github.event_name == 'pull_request' && contains(toLowerCase(github.event.pull_request.title), 'release') }}
+    if: ${{ github.repository == 'software-mansion/react-native-reanimated' && github.event_name == 'pull_request' && contains(github.event.pull_request.title, 'release') }}
     runs-on: ${{matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
     strategy:
       matrix:
