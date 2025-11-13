@@ -11,6 +11,7 @@ const fs = require('fs');
 const assert = require('assert').strict;
 
 exportToCpp('valueUnpacker.native.ts', 'ValueUnpacker');
+exportToCpp('remoteFunctionUnpacker.native.ts', 'RemoteFunctionUnpacker');
 exportToCpp('synchronizableUnpacker.native.ts', 'SynchronizableUnpacker');
 
 /**
@@ -40,10 +41,11 @@ function exportToCpp(sourceFilePath, outputFilename) {
   );
 
   let unpackerBody;
+  const unpackerName = outputFilename;
 
   traverse(transformed.ast, {
     FunctionDeclaration(path) {
-      if (path.node?.id?.name === '__installUnpacker') {
+      if (path.node?.id?.name.includes(unpackerName)) {
         unpackerBody = path.node.body;
       }
     },

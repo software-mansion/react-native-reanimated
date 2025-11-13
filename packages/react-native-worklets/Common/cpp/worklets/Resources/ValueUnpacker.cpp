@@ -10,9 +10,7 @@ const char ValueUnpackerCode[] =
     R"DELIMITER__((function () {
   var workletsCache = new Map();
   var handleCache = new WeakMap();
-  function valueUnpacker(objectToUnpack, category, remoteFunctionName) {
-    'use strict';
-
+  function valueUnpacker(objectToUnpack) {
     var workletHash = objectToUnpack.__workletHash;
     if (workletHash !== undefined) {
       var workletFun = workletsCache.get(workletHash);
@@ -37,16 +35,8 @@ const char ValueUnpackerCode[] =
         handleCache.set(objectToUnpack, value);
       }
       return value;
-    } else if (category === 'RemoteFunction') {
-      var fun = function fun() {
-        var label = remoteFunctionName ? "function `".concat(remoteFunctionName, "`") : 'anonymous function';
-        throw new Error("[Worklets] Tried to synchronously call a non-worklet ".concat(label, " on the UI thread.\nSee https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details."));
-      };
-      fun.__remoteFunction = objectToUnpack;
-      return fun;
-    } else {
-      throw new Error("[Worklets] Data type in category \"".concat(category, "\" not recognized by value unpacker: \"").concat(globalThis._toString(objectToUnpack), "\"."));
     }
+    throw new Error("[Worklets] Data type in not recognized by value unpacker: \"".concat(globalThis._toString(objectToUnpack), "\"."));
   }
   globalThis.__valueUnpacker = valueUnpacker;
 })();)DELIMITER__";

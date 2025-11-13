@@ -1,6 +1,7 @@
 /* eslint-disable reanimated/use-global-this */
 'use strict';
 
+import type { SerializableRef } from './memory/types';
 import type { RuntimeKind } from './runtimeKind';
 
 /** Public globals to be exposed to the user. */
@@ -83,10 +84,16 @@ export interface WorkletFactory<
   (closureVariables: TClosureVariables): WorkletFunction<TArgs, TReturn>;
 }
 
-export type ValueUnpacker = WorkletFunction<
-  [objectToUnpack: unknown, category?: string],
-  unknown
->;
+export type ValueUnpacker = (
+  objectToUnpack: unknown,
+  category?: string
+) => unknown;
+
+/** Used only in dev builds. */
+export type RemoteFunctionUnpacker = (
+  remoteFunctionRef: SerializableRef,
+  remoteFunctionName: string
+) => unknown;
 
 export interface WorkletImport {
   __bundleData: {

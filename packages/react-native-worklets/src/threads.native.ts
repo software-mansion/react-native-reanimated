@@ -6,6 +6,7 @@ import {
   makeShareableCloneOnUIRecursive,
 } from './memory/serializable';
 import { serializableMappingCache } from './memory/serializableMappingCache';
+import type { SerializableRef } from './memory/types';
 import { RuntimeKind } from './runtimeKind';
 import type { WorkletFunction, WorkletImport } from './types';
 import { isWorkletFunction } from './workletFunction';
@@ -210,12 +211,13 @@ export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
   };
 }
 
-type ReleaseRemoteFunction<Args extends unknown[], ReturnValue> = {
-  (...args: Args): ReturnValue;
-};
+type ReleaseRemoteFunction<
+  Args extends unknown[],
+  ReturnValue,
+> = SerializableRef<(...args: Args) => ReturnValue>;
 
 type DevRemoteFunction<Args extends unknown[], ReturnValue> = {
-  __remoteFunction: (...args: Args) => ReturnValue;
+  __remoteFunctionRef: ReleaseRemoteFunction<Args, ReturnValue>;
 };
 
 type RemoteFunction<Args extends unknown[], ReturnValue> =
@@ -260,7 +262,6 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
   ...args: Args
 ): void {
   'worklet';
-  type FunDevRemote = Extract<typeof fun, DevRemoteFunction<Args, ReturnValue>>;
   if (globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
     // if we are already on the JS thread, we just schedule the worklet on the JS queue
     queueMicrotask(
@@ -271,17 +272,22 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
     return;
   }
   if (isWorkletFunction<Args, ReturnValue>(fun)) {
+    // TODO: Crashing currently.
     // If `fun` is a worklet, we schedule a call of a remote function `runWorkletOnJS`
     // and pass the worklet as a first argument followed by original arguments.
     scheduleOnRN(runWorkletOnJS<Args, ReturnValue>, fun, ...args);
     return;
   }
-  if ((fun as FunDevRemote).__remoteFunction) {
+
+  if (
+    __DEV__ &&
+    (fun as DevRemoteFunction<Args, ReturnValue>).__remoteFunctionRef
+  ) {
     // In development mode the function provided as `fun` throws an error message
     // such that when someone accidentally calls it directly on the UI runtime, they
     // see that they should use `runOnJS` instead. To facilitate that we put the
-    // reference to the original remote function in the `__remoteFunction` property.
-    fun = (fun as FunDevRemote).__remoteFunction;
+    // reference to the original remote function in the `__remoteFunctionRef` property.
+    fun = (fun as DevRemoteFunction<Args, ReturnValue>).__remoteFunctionRef;
   }
 
   const scheduleOnRNImpl =

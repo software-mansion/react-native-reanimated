@@ -6,7 +6,7 @@ import type { callGuardDEV } from './callGuard';
 import type { reportFatalRemoteError } from './debug/errors';
 import type { SynchronizableUnpacker } from './memory/synchronizableUnpacker';
 import type { Queue } from './runLoop/workletRuntime/taskQueue';
-import type { ValueUnpacker } from './types';
+import type { RemoteFunctionUnpacker, ValueUnpacker } from './types';
 import type { WorkletsModuleProxy } from './WorkletsModule/workletsModuleProxy';
 
 declare global {
@@ -58,6 +58,8 @@ declare global {
   /** Available only on RN Runtime */
   var __reportFatalRemoteError: typeof reportFatalRemoteError | undefined;
   var __valueUnpacker: ValueUnpacker;
+  /** Available only in dev bundles. */
+  var __remoteFunctionUnpacker: RemoteFunctionUnpacker | undefined;
   var __synchronizableUnpacker: SynchronizableUnpacker;
   var __callGuardDEV: typeof callGuardDEV | undefined;
   var __flushAnimationFrame: (timestamp: number) => void;

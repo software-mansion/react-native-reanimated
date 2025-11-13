@@ -5,12 +5,6 @@ import type { WorkletRuntime } from '../types';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */
 export interface WorkletsModuleProxy {
-  createSerializable<TValue>(
-    value: TValue,
-    shouldPersistRemote: boolean,
-    nativeStateSource?: object
-  ): SerializableRef<TValue>;
-
   createSerializableImport<TValue>(
     source: string,
     imported: string
@@ -32,41 +26,57 @@ export interface WorkletsModuleProxy {
     TProps extends object,
     TProto extends object,
   >(
+    memoize: boolean,
     props: TProps,
     proto: TProto
   ): SerializableRef<TProps>;
 
-  createSerializableObject<T extends object>(
-    obj: T,
-    shouldRetainRemote: boolean,
+  createSerializableObject<TValue extends object>(
+    memoize: boolean,
+    obj: TValue,
     nativeStateSource?: object
-  ): SerializableRef<T>;
+  ): SerializableRef<TValue>;
 
-  createSerializableHostObject<T extends object>(obj: T): SerializableRef<T>;
+  createSerializableHostObject<TValue extends object>(
+    memoize: boolean,
+    obj: TValue
+  ): SerializableRef<TValue>;
+
+  createSerializableArrayBuffer<TValue extends ArrayBuffer>(
+    memoize: boolean,
+    arrayBuffer: TValue
+  ): SerializableRef<TValue>;
 
   createSerializableArray(
-    array: unknown[],
-    shouldRetainRemote: boolean
+    memoize: boolean,
+    array: unknown[]
   ): SerializableRef<unknown[]>;
 
   createSerializableMap<TKey, TValue>(
+    memoize: boolean,
     keys: TKey[],
     values: TValue[]
   ): SerializableRef<Map<TKey, TValue>>;
 
   createSerializableSet<TValues>(
+    memoize: boolean,
     values: TValues[]
   ): SerializableRef<Set<TValues>>;
 
   createSerializableInitializer(obj: object): SerializableRef<object>;
 
-  createSerializableFunction<TArgs extends unknown[], TReturn>(
+  createSerializableRemoteFunction<TArgs extends unknown[], TReturn>(
     func: (...args: TArgs) => TReturn
   ): SerializableRef<TReturn>;
 
+  createSerializableRemoteFunctionDev<TArgs extends unknown[], TReturn>(
+    func: (...args: TArgs) => TReturn,
+    name: string
+  ): SerializableRef<TReturn>;
+
   createSerializableWorklet(
-    worklet: object,
-    shouldPersistRemote: boolean
+    memoize: boolean,
+    worklet: object
   ): SerializableRef<object>;
 
   scheduleOnUI<TValue>(serializable: SerializableRef<TValue>): void;

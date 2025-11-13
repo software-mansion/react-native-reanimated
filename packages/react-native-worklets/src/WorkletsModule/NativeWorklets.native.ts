@@ -46,109 +46,144 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       this.#workletsModuleProxy.createSerializableBoolean(false);
   }
 
-  createSerializable<TValue>(
-    value: TValue,
-    shouldPersistRemote: boolean,
-    nativeStateSource?: object
-  ) {
-    return this.#workletsModuleProxy.createSerializable(
-      value,
-      shouldPersistRemote,
-      nativeStateSource
-    );
-  }
-
   createSerializableImport<TValue>(
     from: string,
     to: string
   ): SerializableRef<TValue> {
+    console.log('NativeWorklets.createSerializableImport called');
     return this.#workletsModuleProxy.createSerializableImport(from, to);
   }
 
   createSerializableString(str: string) {
+    console.log('NativeWorklets.createSerializableString called');
     return this.#workletsModuleProxy.createSerializableString(str);
   }
 
   createSerializableNumber(num: number) {
+    console.log('NativeWorklets.createSerializableNumber called');
     return this.#workletsModuleProxy.createSerializableNumber(num);
   }
 
   createSerializableBoolean(bool: boolean) {
+    console.log('NativeWorklets.createSerializableBoolean called');
     return bool ? this.#serializableTrue : this.#serializableFalse;
   }
 
   createSerializableBigInt(bigInt: bigint) {
+    console.log('NativeWorklets.createSerializableBigInt called');
     return this.#workletsModuleProxy.createSerializableBigInt(bigInt);
   }
 
   createSerializableUndefined() {
+    console.log('NativeWorklets.createSerializableUndefined called');
     return this.#serializableUndefined;
   }
 
   createSerializableNull() {
+    console.log('NativeWorklets.createSerializableNull called');
     return this.#serializableNull;
   }
 
   createSerializableTurboModuleLike<
     TProps extends object,
     TProto extends object,
-  >(props: TProps, proto: TProto): SerializableRef<TProps> {
+  >(memoize: boolean, props: TProps, proto: TProto): SerializableRef<TProps> {
+    console.log('NativeWorklets.createSerializableTurboModuleLike called');
     return this.#workletsModuleProxy.createSerializableTurboModuleLike(
+      memoize,
       props,
       proto
     );
   }
 
-  createSerializableObject<T extends object>(
-    obj: T,
-    shouldRetainRemote: boolean,
+  createSerializableArrayBuffer<TValue extends ArrayBuffer>(
+    memoize: boolean,
+    arrayBuffer: TValue
+  ): SerializableRef<TValue> {
+    console.log('NativeWorklets.createSerializableArrayBuffer called');
+    return this.#workletsModuleProxy.createSerializableArrayBuffer(
+      memoize,
+      arrayBuffer
+    );
+  }
+
+  createSerializableObject<TValue extends object>(
+    memoize: boolean,
+    obj: TValue,
     nativeStateSource?: object
-  ): SerializableRef<T> {
+  ): SerializableRef<TValue> {
+    console.log('NativeWorklets.createSerializableObject called');
     return this.#workletsModuleProxy.createSerializableObject(
+      memoize,
       obj,
-      shouldRetainRemote,
       nativeStateSource
     );
   }
 
-  createSerializableHostObject<T extends object>(obj: T) {
-    return this.#workletsModuleProxy.createSerializableHostObject(obj);
+  createSerializableHostObject<TValue extends object>(
+    memoize: boolean,
+    obj: TValue
+  ) {
+    console.log('NativeWorklets.createSerializableHostObject called');
+    return this.#workletsModuleProxy.createSerializableHostObject(memoize, obj);
   }
 
-  createSerializableArray(array: unknown[], shouldRetainRemote: boolean) {
-    return this.#workletsModuleProxy.createSerializableArray(
-      array,
-      shouldRetainRemote
-    );
+  createSerializableArray(memoize: boolean, array: unknown[]) {
+    console.log('NativeWorklets.createSerializableArray called');
+    return this.#workletsModuleProxy.createSerializableArray(memoize, array);
   }
 
   createSerializableMap<TKey, TValue>(
+    memoize: boolean,
     keys: TKey[],
     values: TValue[]
   ): SerializableRef<Map<TKey, TValue>> {
-    return this.#workletsModuleProxy.createSerializableMap(keys, values);
+    console.log('NativeWorklets.createSerializableMap called');
+    return this.#workletsModuleProxy.createSerializableMap(
+      memoize,
+      keys,
+      values
+    );
   }
 
   createSerializableSet<TValues>(
+    memoize: boolean,
     values: TValues[]
   ): SerializableRef<Set<TValues>> {
-    return this.#workletsModuleProxy.createSerializableSet(values);
+    console.log('NativeWorklets.createSerializableSet called');
+    return this.#workletsModuleProxy.createSerializableSet(memoize, values);
   }
 
   createSerializableInitializer(obj: object) {
+    console.log('NativeWorklets.createSerializableInitializer called');
     return this.#workletsModuleProxy.createSerializableInitializer(obj);
   }
 
-  createSerializableFunction<TArgs extends unknown[], TReturn>(
+  createSerializableRemoteFunction<TArgs extends unknown[], TReturn>(
     func: (...args: TArgs) => TReturn
   ) {
-    return this.#workletsModuleProxy.createSerializableFunction(func);
+    console.log('NativeWorklets.createSerializableRemoteFunction called');
+    return this.#workletsModuleProxy.createSerializableRemoteFunction(func);
   }
 
-  createSerializableWorklet(worklet: object, shouldPersistRemote: boolean) {
+  createSerializableRemoteFunctionDev<TArgs extends unknown[], TReturn>(
+    func: (...args: TArgs) => TReturn,
+    name: string
+  ) {
+    console.log('NativeWorklets.createSerializableRemoteFunctionDev called');
+    return this.#workletsModuleProxy.createSerializableRemoteFunctionDev(
+      func,
+      name
+    );
+  }
+
+  createSerializableWorklet(memoize: boolean, worklet: object) {
+    console.log('NativeWorklets.createSerializableWorklet called');
+    console.log(worklet);
+    console.log(Object.values(worklet));
     return this.#workletsModuleProxy.createSerializableWorklet(
-      worklet,
-      shouldPersistRemote
+      memoize,
+      worklet
     );
   }
 
@@ -178,9 +213,9 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  scheduleOnRuntime<T>(
+  scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
-    serializableWorklet: SerializableRef<T>
+    serializableWorklet: SerializableRef<TValue>
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntime(
       workletRuntime,

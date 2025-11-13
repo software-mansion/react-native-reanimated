@@ -21,6 +21,13 @@ class WorkletRuntimeDecorator {
       const bool isDevBundle,
       jsi::Object &&jsiWorkletsModuleProxy,
       const std::shared_ptr<EventLoop> &eventLoop);
+
+ private:
+#ifdef WORKLETS_BUNDLE_MODE
+// Nothing
+#else
+  static void installLegacyBindings(jsi::Runtime &rt, const std::shared_ptr<JSScheduler> &jsScheduler);
+#endif // WORKLETS_BUNDLE_MODE
 };
 
 } // namespace worklets

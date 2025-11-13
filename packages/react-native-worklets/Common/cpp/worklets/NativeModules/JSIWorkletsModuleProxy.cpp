@@ -1,9 +1,11 @@
+#include <jsi/jsi.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/SerializableFactory.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/FeatureFlags.h>
@@ -157,7 +159,6 @@ JSIWorkletsModuleProxy::~JSIWorkletsModuleProxy() = default;
 std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runtime &rt) {
   std::vector<jsi::PropNameID> propertyNames;
 
-  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializable"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableBigInt"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableBoolean"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableImport"));
@@ -168,8 +169,13 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableHostObject"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableInitializer"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableArray"));
-  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableFunction"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableHostFunction"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableRemoteFunction"));
+  if (isDevBundle_) {
+    propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableRemoteFunctionDev"));
+  }
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableTurboModuleLike"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableArrayBuffer"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableObject"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableMap"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableSet"));
@@ -200,13 +206,6 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
 
 jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &propName) {
   const auto name = propName.utf8(rt);
-
-  if (name == "createSerializable") {
-    return jsi::Function::createFromHostFunction(
-        rt, propName, 3, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return makeSerializableClone(rt, args[0], args[1], args[2]);
-        });
-  }
 
   if (name == "createSerializableBigInt") {
     return jsi::Function::createFromHostFunction(
@@ -267,56 +266,79 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
   if (name == "createSerializableArray") {
     return jsi::Function::createFromHostFunction(
         rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return makeSerializableArray(rt, args[0].asObject(rt).asArray(rt), args[1]);
+          return makeSerializableArray(rt, args[0].asBool(), args[1].asObject(rt).asArray(rt));
         });
   }
 
   if (name == "createSerializableMap") {
     return jsi::Function::createFromHostFunction(
-        rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return makeSerializableMap(rt, args[0].asObject(rt).asArray(rt), args[1].asObject(rt).asArray(rt));
+        rt, propName, 3, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          return makeSerializableMap(
+              rt, args[0].asBool(), args[1].asObject(rt).asArray(rt), args[2].asObject(rt).asArray(rt));
         });
   }
 
   if (name == "createSerializableSet") {
     return jsi::Function::createFromHostFunction(
-        rt, propName, 1, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return makeSerializableSet(rt, args[0].asObject(rt).asArray(rt));
+        rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          return makeSerializableSet(rt, args[0].asBool(), args[1].asObject(rt).asArray(rt));
         });
   }
 
   if (name == "createSerializableHostObject") {
     return jsi::Function::createFromHostFunction(
-        rt, propName, 1, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return makeSerializableHostObject(rt, args[0].asObject(rt).asHostObject(rt));
+        rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          return makeSerializableHostObject(rt, args[0].asBool(), args[1].asObject(rt).asHostObject(rt));
         });
   }
 
-  if (name == "createSerializableFunction") {
+  if (name == "createSerializableArrayBuffer") {
+    return jsi::Function::createFromHostFunction(
+        rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          return makeSerializableArrayBuffer(rt, args[0].asBool(), args[1].asObject(rt).getArrayBuffer(rt));
+        });
+  }
+
+  if (name == "createSerializableHostFunction") {
     return jsi::Function::createFromHostFunction(
         rt, propName, 1, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return makeSerializableFunction(rt, args[0].asObject(rt).asFunction(rt));
+          return makeSerializableHostFunction(rt, args[0].asObject(rt).asFunction(rt));
+        });
+  }
+
+  if (name == "createSerializableRemoteFunction") {
+    return jsi::Function::createFromHostFunction(
+        rt, propName, 1, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          return makeSerializableRemoteFunction(rt, args[0].asObject(rt).asFunction(rt));
+        });
+  }
+
+  if (name == "createSerializableRemoteFunctionDev") {
+    return jsi::Function::createFromHostFunction(
+        rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          return makeSerializableRemoteFunctionDev(rt, args[0].asObject(rt).asFunction(rt), args[1].asString(rt));
         });
   }
 
   if (name == "createSerializableTurboModuleLike") {
     return jsi::Function::createFromHostFunction(
-        rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return makeSerializableTurboModuleLike(rt, args[0].asObject(rt), args[1].asObject(rt).asHostObject(rt));
+        rt, propName, 3, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          return makeSerializableTurboModuleLike(
+              rt, args[0].asBool(), args[1].asObject(rt), args[2].asObject(rt).asHostObject(rt));
         });
   }
 
   if (name == "createSerializableObject") {
     return jsi::Function::createFromHostFunction(
-        rt, propName, 1, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return makeSerializableObject(rt, args[0].getObject(rt), args[1].getBool(), args[2]);
+        rt, propName, 3, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          return makeSerializableObject(rt, args[0].asBool(), args[1].asObject(rt), args[2]);
         });
   }
 
   if (name == "createSerializableWorklet") {
     return jsi::Function::createFromHostFunction(
         rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return makeSerializableWorklet(rt, args[0].getObject(rt), args[1].getBool());
+          return makeSerializableWorklet(rt, args[0].asBool(), args[1].asObject(rt));
         });
   }
 

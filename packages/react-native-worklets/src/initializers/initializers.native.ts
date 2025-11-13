@@ -4,7 +4,7 @@ import { setupCallGuard } from '../callGuard';
 import { registerReportFatalRemoteError } from '../debug/errors';
 import { registerWorkletsError, WorkletsError } from '../debug/WorkletsError';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
-import { __installUnpacker as installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
+import { installSynchronizableUnpacker as installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
 import { setupSetImmediate } from '../runLoop/common/setImmediatePolyfill';
 import { setupSetInterval } from '../runLoop/common/setIntervalPolyfill';
 import { setupRequestAnimationFrame } from '../runLoop/uiRuntime/requestAnimationFrame';

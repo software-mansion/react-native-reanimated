@@ -1,7 +1,9 @@
 #include <jsi/jsi.h>
 #include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/SerializableFactory.h>
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -13,6 +15,12 @@ jsi::Function getValueUnpacker(jsi::Runtime &rt) {
   auto valueUnpacker = rt.global().getProperty(rt, "__valueUnpacker");
   react_native_assert(valueUnpacker.isObject() && "valueUnpacker not found");
   return valueUnpacker.asObject(rt).asFunction(rt);
+}
+
+jsi::Function getRemoteFunctionUnpacker(jsi::Runtime &rt) {
+  auto remoteFunctionUnpacker = rt.global().getProperty(rt, "__remoteFunctionUnpacker");
+  react_native_assert(remoteFunctionUnpacker.isObject() && "remoteFunctionUnpacker not found");
+  return remoteFunctionUnpacker.asObject(rt).asFunction(rt);
 }
 
 #ifndef NDEBUG
@@ -42,174 +50,6 @@ jsi::Function getCallGuard(jsi::Runtime &rt) {
 
 #endif // NDEBUG
 
-jsi::Value makeSerializableClone(
-    jsi::Runtime &rt,
-    const jsi::Value &value,
-    const jsi::Value &shouldRetainRemote,
-    const jsi::Value &nativeStateSource) {
-  std::shared_ptr<Serializable> serializable;
-  if (value.isObject()) {
-    auto object = value.asObject(rt);
-    if (!object.getProperty(rt, "__workletHash").isUndefined()) {
-      // We pass `false` because this function is invoked only
-      // by `makeSerializableCloneOnUIRecursive` which doesn't
-      // make Retaining Serializables.
-      return makeSerializableWorklet(rt, object, false);
-    } else if (!object.getProperty(rt, "__init").isUndefined()) {
-      return makeSerializableInitializer(rt, object);
-    } else if (object.isFunction(rt)) {
-      return makeSerializableFunction(rt, object.asFunction(rt));
-    } else if (object.isArray(rt)) {
-      if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
-        serializable = std::make_shared<RetainingSerializable<SerializableArray>>(rt, object.asArray(rt));
-      } else {
-        serializable = std::make_shared<SerializableArray>(rt, object.asArray(rt));
-      }
-    } else if (object.isArrayBuffer(rt)) {
-      serializable = std::make_shared<SerializableArrayBuffer>(rt, object.getArrayBuffer(rt));
-    } else if (object.isHostObject(rt)) {
-      if (object.isHostObject<SerializableJSRef>(rt)) {
-        return object;
-      }
-      serializable = std::make_shared<SerializableHostObject>(rt, object.getHostObject(rt));
-    } else {
-      if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
-        serializable = std::make_shared<RetainingSerializable<SerializableObject>>(rt, object, nativeStateSource);
-      } else {
-        serializable = std::make_shared<SerializableObject>(rt, object, nativeStateSource);
-      }
-    }
-  } else if (value.isString()) {
-    serializable = std::make_shared<SerializableString>(value.asString(rt).utf8(rt));
-  } else if (value.isUndefined()) {
-    serializable = std::make_shared<SerializableScalar>();
-  } else if (value.isNull()) {
-    serializable = std::make_shared<SerializableScalar>(nullptr);
-  } else if (value.isBool()) {
-    serializable = std::make_shared<SerializableScalar>(value.getBool());
-  } else if (value.isNumber()) {
-    serializable = std::make_shared<SerializableScalar>(value.getNumber());
-  } else if (value.isBigInt()) {
-    serializable = std::make_shared<SerializableBigInt>(rt, value.getBigInt(rt));
-  } else if (value.isSymbol()) {
-    // TODO: this is only a placeholder implementation, here we replace symbols
-    // with strings in order to make certain objects to be captured. There isn't
-    // yet any usecase for using symbols on the UI runtime so it is fine to keep
-    // it like this for now.
-    serializable = std::make_shared<SerializableString>(value.getSymbol(rt).toString(rt));
-  } else {
-    throw std::runtime_error("[Worklets] Attempted to convert an unsupported value type.");
-  }
-  return SerializableJSRef::newNativeStateObject(rt, serializable);
-}
-
-jsi::Value makeSerializableString(jsi::Runtime &rt, const jsi::String &string) {
-  const auto serializable = std::make_shared<SerializableString>(string.utf8(rt));
-  return SerializableJSRef::newNativeStateObject(rt, serializable);
-}
-
-jsi::Value makeSerializableNumber(jsi::Runtime &rt, double number) {
-  const auto serializable = std::make_shared<SerializableScalar>(number);
-  return SerializableJSRef::newNativeStateObject(rt, serializable);
-}
-
-jsi::Value makeSerializableBoolean(jsi::Runtime &rt, bool boolean) {
-  const auto serializable = std::make_shared<SerializableScalar>(boolean);
-  return SerializableJSRef::newNativeStateObject(rt, serializable);
-}
-
-jsi::Value makeSerializableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint) {
-  const auto serializable = std::make_shared<SerializableBigInt>(rt, bigint);
-  return SerializableJSRef::newNativeStateObject(rt, serializable);
-}
-
-jsi::Value makeSerializableUndefined(jsi::Runtime &rt) {
-  const auto serializable = std::make_shared<SerializableScalar>();
-  return SerializableJSRef::newNativeStateObject(rt, serializable);
-}
-
-jsi::Value makeSerializableNull(jsi::Runtime &rt) {
-  const auto serializable = std::make_shared<SerializableScalar>(nullptr);
-  return SerializableJSRef::newNativeStateObject(rt, serializable);
-}
-
-jsi::Value makeSerializableWorklet(jsi::Runtime &rt, const jsi::Object &object, const bool &shouldRetainRemote) {
-  std::shared_ptr<Serializable> serializable;
-  if (shouldRetainRemote) {
-    serializable = std::make_shared<RetainingSerializable<SerializableWorklet>>(rt, object);
-  } else {
-    serializable = std::make_shared<SerializableWorklet>(rt, object);
-  }
-  return SerializableJSRef::newNativeStateObject(rt, serializable);
-}
-
-jsi::Value makeSerializableInitializer(jsi::Runtime &rt, const jsi::Object &initializerObject) {
-  const auto serializable = std::make_shared<SerializableInitializer>(rt, initializerObject);
-  return SerializableJSRef::newNativeStateObject(rt, serializable);
-}
-
-jsi::Value makeSerializableFunction(jsi::Runtime &rt, jsi::Function function) {
-  std::shared_ptr<Serializable> serializable;
-  if (function.isHostFunction(rt)) {
-    serializable = std::make_shared<SerializableHostFunction>(rt, std::move(function));
-  } else {
-    serializable = std::make_shared<SerializableRemoteFunction>(rt, std::move(function));
-  }
-  return SerializableJSRef::newNativeStateObject(rt, serializable);
-}
-
-jsi::Value makeSerializableArray(jsi::Runtime &rt, const jsi::Array &array, const jsi::Value &shouldRetainRemote) {
-  std::shared_ptr<Serializable> serializable;
-  if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
-    serializable = std::make_shared<RetainingSerializable<SerializableArray>>(rt, array);
-  } else {
-    serializable = std::make_shared<SerializableArray>(rt, array);
-  }
-  return SerializableJSRef::newNativeStateObject(rt, serializable);
-}
-
-jsi::Value makeSerializableMap(jsi::Runtime &rt, const jsi::Array &keys, const jsi::Array &values) {
-  auto serializable = std::make_shared<SerializableMap>(rt, keys, values);
-  return SerializableJSRef::newNativeStateObject(rt, serializable);
-}
-
-jsi::Value makeSerializableSet(jsi::Runtime &rt, const jsi::Array &values) {
-  auto serializable = std::make_shared<SerializableSet>(rt, values);
-  return SerializableJSRef::newNativeStateObject(rt, serializable);
-}
-
-jsi::Value makeSerializableHostObject(jsi::Runtime &rt, const std::shared_ptr<jsi::HostObject> &value) {
-  const auto serializable = std::make_shared<SerializableHostObject>(rt, value);
-  return SerializableJSRef::newNativeStateObject(rt, serializable);
-}
-
-jsi::Value makeSerializableTurboModuleLike(
-    jsi::Runtime &rt,
-    const jsi::Object &object,
-    const std::shared_ptr<jsi::HostObject> &proto) {
-  const auto serializable = std::make_shared<SerializableTurboModuleLike>(rt, object, proto);
-  return SerializableJSRef::newNativeStateObject(rt, serializable);
-}
-
-jsi::Value makeSerializableImport(jsi::Runtime &rt, const double source, const jsi::String &imported) {
-  auto serializable = std::make_shared<SerializableImport>(rt, source, imported);
-  return SerializableJSRef::newNativeStateObject(rt, serializable);
-}
-
-jsi::Value makeSerializableObject(
-    jsi::Runtime &rt,
-    jsi::Object object,
-    bool shouldRetainRemote,
-    const jsi::Value &nativeStateSource) {
-  std::shared_ptr<Serializable> serializable;
-  if (shouldRetainRemote) {
-    serializable = std::make_shared<RetainingSerializable<SerializableObject>>(rt, object, nativeStateSource);
-  } else {
-    serializable = std::make_shared<SerializableObject>(rt, object, nativeStateSource);
-  }
-  return SerializableJSRef::newNativeStateObject(rt, serializable);
-}
-
 std::shared_ptr<Serializable> extractSerializableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeSerializableValue,
@@ -234,30 +74,7 @@ std::shared_ptr<Serializable> Serializable::undefined() {
   return undefined;
 }
 
-template <typename BaseClass>
-jsi::Value RetainingSerializable<BaseClass>::toJSValue(jsi::Runtime &rt) {
-  if (&rt == primaryRuntime_) {
-    // TODO: it is suboptimal to generate new object every time getJS is
-    // called on host runtime – the objects we are generating already exists
-    // and we should possibly just grab a hold of such object and use it here
-    // instead of creating a new JS representation. As far as I understand the
-    // only case where it can be realistically called this way is when a
-    // shared value is created and then accessed on the same runtime
-    return BaseClass::toJSValue(rt);
-  }
-  if (secondaryValue_ == nullptr) {
-    auto value = BaseClass::toJSValue(rt);
-    secondaryValue_ = std::make_unique<jsi::Value>(rt, value);
-    secondaryRuntime_ = &rt;
-    return value;
-  }
-  if (&rt == secondaryRuntime_) {
-    return jsi::Value(rt, *secondaryValue_);
-  }
-  return BaseClass::toJSValue(rt);
-}
-
-SerializableJSRef::~SerializableJSRef() {}
+SerializableJSRef::~SerializableJSRef() = default;
 
 SerializableArray::SerializableArray(jsi::Runtime &rt, const jsi::Array &array) : Serializable(ArrayType) {
   auto size = array.size(rt);
@@ -394,19 +211,21 @@ jsi::Value SerializableImport::toJSValue(jsi::Runtime &rt) {
 }
 
 jsi::Value SerializableRemoteFunction::toJSValue(jsi::Runtime &rt) {
-  if (&rt == runtime_) {
+  if (&rt == ownerRuntime_) {
     return jsi::Value(rt, *function_);
-  } else {
-#ifndef NDEBUG
-    return getValueUnpacker(rt).call(
-        rt,
-        SerializableJSRef::newNativeStateObject(rt, shared_from_this()),
-        jsi::String::createFromAscii(rt, "RemoteFunction"),
-        jsi::String::createFromUtf8(rt, name_));
-#else
-    return SerializableJSRef::newNativeStateObject(rt, shared_from_this());
-#endif
   }
+
+  return SerializableJSRef::newNativeStateObject(rt, shared_from_this());
+}
+
+jsi::Value SerializableRemoteFunctionDev::toJSValue(jsi::Runtime &rt) {
+  if (&rt == ownerRuntime_) {
+    return jsi::Value(rt, *function_);
+  }
+
+  auto remoteFunctionUnpacker = getRemoteFunctionUnpacker(rt);
+  return remoteFunctionUnpacker.call(
+      rt, SerializableJSRef::newNativeStateObject(rt, shared_from_this()), jsi::String::createFromUtf8(rt, name_));
 }
 
 jsi::Value SerializableInitializer::toJSValue(jsi::Runtime &rt) {
@@ -440,7 +259,11 @@ jsi::Value SerializableString::toJSValue(jsi::Runtime &rt) {
 }
 
 jsi::Value SerializableBigInt::toJSValue(jsi::Runtime &rt) {
-  return rt.global().getPropertyAsFunction(rt, "BigInt").call(rt, jsi::String::createFromUtf8(rt, string_));
+  if (value_.has_value()) {
+    return jsi::BigInt::fromInt64(rt, value_.value());
+  } else {
+    return rt.global().getPropertyAsFunction(rt, "BigInt").call(rt, jsi::String::createFromUtf8(rt, string_));
+  }
 }
 
 jsi::Value SerializableScalar::toJSValue(jsi::Runtime &) {
@@ -465,5 +288,78 @@ jsi::Value SerializableTurboModuleLike::toJSValue(jsi::Runtime &rt) {
 
   return obj;
 }
+
+#ifdef WORKLETS_BUNDLE_MODE
+// Nothing
+#else
+jsi::Value makeSerializableClone(
+    jsi::Runtime &rt,
+    const jsi::Value &memoize,
+    const jsi::Value &value,
+    const jsi::Value &nativeStateSource) {
+  std::shared_ptr<Serializable> serializable;
+  if (value.isObject()) {
+    auto object = value.asObject(rt);
+    if (!object.getProperty(rt, "__workletHash").isUndefined()) {
+      // We pass `false` because this function is invoked only
+      // by `makeSerializableCloneOnUIRecursive` which doesn't
+      // make Retaining Serializables.
+      throw std::runtime_error(
+          "[Worklets] Serializing worklets from Worklet Runtimes is not supported outside of Bundle Mode.");
+      return makeSerializableWorklet(rt, false, object);
+    } else if (!object.getProperty(rt, "__init").isUndefined()) {
+      return makeSerializableInitializer(rt, object);
+    } else if (object.isFunction(rt)) {
+      if (object.asFunction(rt).isHostFunction(rt)) {
+        serializable = std::make_shared<SerializableHostFunction>(rt, object.asFunction(rt));
+      } else {
+        throw std::runtime_error(
+            "[Worklets] Serializing remote functions from Worklet Runtimes"
+            " is not supported outside of Bundle Mode.");
+      }
+    } else if (object.isArray(rt)) {
+      if (memoize.isBool() && memoize.getBool()) {
+        serializable = std::make_shared<RetainingSerializable<SerializableArray>>(rt, object.asArray(rt));
+      } else {
+        serializable = std::make_shared<SerializableArray>(rt, object.asArray(rt));
+      }
+    } else if (object.isArrayBuffer(rt)) {
+      serializable = std::make_shared<SerializableArrayBuffer>(rt, object.getArrayBuffer(rt));
+    } else if (object.isHostObject(rt)) {
+      if (object.isHostObject<SerializableJSRef>(rt)) {
+        return object;
+      }
+      serializable = std::make_shared<SerializableHostObject>(rt, object.getHostObject(rt));
+    } else {
+      if (memoize.isBool() && memoize.getBool()) {
+        serializable = std::make_shared<RetainingSerializable<SerializableObject>>(rt, object, nativeStateSource);
+      } else {
+        serializable = std::make_shared<SerializableObject>(rt, object, nativeStateSource);
+      }
+    }
+  } else if (value.isString()) {
+    serializable = std::make_shared<SerializableString>(value.asString(rt).utf8(rt));
+  } else if (value.isUndefined()) {
+    serializable = std::make_shared<SerializableScalar>();
+  } else if (value.isNull()) {
+    serializable = std::make_shared<SerializableScalar>(nullptr);
+  } else if (value.isBool()) {
+    serializable = std::make_shared<SerializableScalar>(value.getBool());
+  } else if (value.isNumber()) {
+    serializable = std::make_shared<SerializableScalar>(value.getNumber());
+  } else if (value.isBigInt()) {
+    serializable = std::make_shared<SerializableBigInt>(rt, value.getBigInt(rt));
+  } else if (value.isSymbol()) {
+    // TODO: this is only a placeholder implementation, here we replace symbols
+    // with strings in order to make certain objects to be captured. There isn't
+    // yet any usecase for using symbols on the UI runtime so it is fine to keep
+    // it like this for now.
+    serializable = std::make_shared<SerializableString>(value.getSymbol(rt).toString(rt));
+  } else {
+    throw std::runtime_error("[Worklets] Attempted to convert an unsupported value type.");
+  }
+  return SerializableJSRef::newNativeStateObject(rt, serializable);
+}
+#endif // WORKLETS_BUNDLE_MODE
 
 } // namespace worklets

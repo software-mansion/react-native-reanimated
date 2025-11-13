@@ -13,6 +13,7 @@
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
 
+#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
@@ -130,6 +131,11 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
   auto valueUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
   rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
 
+  if (isDevBundle) {
+    auto remoteFunctionUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(RemoteFunctionUnpackerCode);
+    rt.evaluateJavaScript(remoteFunctionUnpackerBuffer, "remoteFunctionUnpacker");
+  }
+
   auto synchronizableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(SynchronizableUnpackerCode);
   rt.evaluateJavaScript(synchronizableUnpackerBuffer, "synchronizableUnpacker");
 #endif // WORKLETS_BUNDLE_MODE
@@ -155,7 +161,12 @@ jsi::Value WorkletRuntime::executeSync(jsi::Runtime &rt, const jsi::Value &workl
       rt, worklet, "[Worklets] Only worklets can be executed synchronously on UI runtime.");
   auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
   jsi::Runtime &uiRuntime = getJSIRuntime();
-  auto result = runGuarded(serializableWorklet);
+  jsi::Value result = jsi::Value::undefined();
+  try {
+    result = runGuarded(serializableWorklet);
+  } catch (jsi::JSError &e) {
+    throw std::runtime_error(e.getMessage().c_str());
+  }
   auto serializableResult = extractSerializableOrThrow(uiRuntime, result);
   lock.unlock();
   return serializableResult->toJSValue(rt);
