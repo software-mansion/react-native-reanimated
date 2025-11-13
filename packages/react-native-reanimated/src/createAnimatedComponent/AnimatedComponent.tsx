@@ -380,23 +380,24 @@ export default class AnimatedComponent
     if (!getStaticFeatureFlag('SHARED_ELEMENT_TRANSITIONS')) {
       return;
     }
-    if (this.props.sharedTransitionTag) {
-      const sharedTransition =
-        this.props.sharedTransitionStyle ??
-        this._sharedTransition ??
-        new SharedTransition();
-      if (this._sharedTransition !== sharedTransition) {
-        updateLayoutAnimations(
-          useNativeId ? this.reanimatedID : this.getComponentViewTag(),
-          useNativeId
-            ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_NATIVE_ID
-            : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
-          maybeBuild(sharedTransition, this.props?.style, this._displayName),
-          undefined,
-          this.props.sharedTransitionTag
-        );
-        this._sharedTransition = sharedTransition;
-      }
+    if (!this.props.sharedTransitionTag) {
+      return;
+    }
+    const sharedTransition =
+      this.props.sharedTransitionStyle ??
+      this._sharedTransition ??
+      new SharedTransition();
+    if (this._sharedTransition !== sharedTransition) {
+      updateLayoutAnimations(
+        useNativeId ? this.reanimatedID : this.getComponentViewTag(),
+        useNativeId
+          ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_NATIVE_ID
+          : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+        maybeBuild(sharedTransition, this.props?.style, this._displayName),
+        undefined,
+        this.props.sharedTransitionTag
+      );
+      this._sharedTransition = sharedTransition;
     }
   }
 
