@@ -11,7 +11,7 @@ export class SharedTransition
   extends ComplexAnimationBuilder
   implements ILayoutAnimationBuilder
 {
-  static presetName = 'LinearTransition';
+  static presetName = 'SharedTransition';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
