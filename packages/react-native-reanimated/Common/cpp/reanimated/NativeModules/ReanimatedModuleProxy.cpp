@@ -1052,8 +1052,17 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
     // which will be applied in ReanimatedCommitHook.
     return;
   }
+  
+  UpdatesBatch updatesBatch2;
+  for (const auto &pair : updatesBatch) {
+    if (!strcmp(pair.first->getComponentName(), "Paragraph")) {
+      updatesBatch2.emplace_back(pair.first->getChildren()[0], pair.second);
+    } else {
+      updatesBatch2.push_back(pair);
+    }
+  }
 
-  commitUpdates(rt, updatesBatch);
+  commitUpdates(rt, updatesBatch2);
 
   // Clear the entire cache after the commit
   // (we don't know if the view is updated from outside of Reanimated
