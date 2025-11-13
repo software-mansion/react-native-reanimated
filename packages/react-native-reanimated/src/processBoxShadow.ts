@@ -200,7 +200,7 @@ export function processBoxShadow(props: ExtendedStyleProps) {
           parsedBoxShadow.blurRadius = value;
           break;
         case 'color':
-          parsedBoxShadow.color = rawBoxShadow.color;
+          parsedBoxShadow.color = rawBoxShadow.color as string;
           break;
         case 'inset':
           parsedBoxShadow.inset = rawBoxShadow.inset;

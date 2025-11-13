@@ -25,6 +25,13 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Use Yarn < 3.6
+        run: corepack prepare yarn@3.5.1 --activate
+
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:

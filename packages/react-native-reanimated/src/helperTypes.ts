@@ -7,7 +7,7 @@ until time comes to refactor the code and get necessary types right.
 This will not be easy though! 
 */
 
-import type { RegisteredStyle, StyleProp } from 'react-native';
+import type { StyleProp } from 'react-native';
 
 import type {
   AnimatedStyle,
