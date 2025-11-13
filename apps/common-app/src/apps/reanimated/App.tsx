@@ -124,7 +124,7 @@ function Item({
       {icon && <Text style={styles.title}>{icon + '  '}</Text>}
       <Text style={styles.title}>{title}</Text>
       {shouldWork !== undefined && (
-        <Text style={styles.marker}>{shouldWork ? '✅' : '❌'}</Text>
+        <Text style={styles.shouldWorkEmoji}>{shouldWork ? '✅' : '❌'}</Text>
       )}
     </Button>
   );
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'black',
   },
-  marker: {
+  shouldWorkEmoji: {
     fontSize: 20,
     color: 'black',
     alignSelf: 'flex-end',
