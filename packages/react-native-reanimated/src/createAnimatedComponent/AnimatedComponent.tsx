@@ -400,33 +400,6 @@ export default class AnimatedComponent
     }
   }
 
-  // _onSetLocalRef() {
-  //   const tag = this.getComponentViewTag();
-
-  //   const { layout, entering, exiting } = this.props;
-
-  //   if (layout || entering || exiting) {
-  //     if (!SHOULD_BE_USE_WEB) {
-  //       enableLayoutAnimations(true, false);
-  //     }
-
-  //     if (exiting) {
-  //       const reduceMotionInExiting =
-  //         'getReduceMotion' in exiting &&
-  //         typeof exiting.getReduceMotion === 'function'
-  //           ? getReduceMotionFromConfig(exiting.getReduceMotion())
-  //           : getReduceMotionFromConfig();
-  //       if (!reduceMotionInExiting) {
-  //         updateLayoutAnimations(
-  //           tag,
-  //           LayoutAnimationType.EXITING,
-  //           maybeBuild(exiting, this.props?.style, this._displayName)
-  //         );
-  //       }
-  //     }
-  //   }
-  // }
-
   // This is a component lifecycle method from React, therefore we are not calling it directly.
   // It is called before the component gets rerendered. This way we can access components' position before it changed
   // and later on, in componentDidUpdate, calculate translation for layout transition.
