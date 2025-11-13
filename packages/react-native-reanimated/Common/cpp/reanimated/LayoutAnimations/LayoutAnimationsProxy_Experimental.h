@@ -89,7 +89,7 @@ struct LayoutAnimationsProxy_Experimental : public MountingOverrideDelegate,
       std::shared_ptr<CallInvoker> jsInvoker
 #endif
       )
-      : sharedTransitionManager_(layoutAnimationsManager->sharedTransitionManager_),
+      : sharedTransitionManager_(layoutAnimationsManager->getSharedTransitionManager()),
         layoutAnimationsManager_(layoutAnimationsManager),
         contextContainer_(contextContainer),
         componentDescriptorRegistry_(componentDescriptorRegistry),

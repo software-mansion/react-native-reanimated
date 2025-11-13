@@ -101,6 +101,14 @@ void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, con
   sharedTransitionsForNativeID_.erase(nativeId);
 }
 
+void LayoutAnimationsManager::transferSharedConfig(const Tag from, const Tag to) {
+  sharedTransitions_[to] = sharedTransitions_[from];
+}
+
+std::shared_ptr<SharedTransitionManager> LayoutAnimationsManager::getSharedTransitionManager() {
+  return sharedTransitionManager_;
+}
+
 std::unordered_map<int, std::shared_ptr<Serializable>> &LayoutAnimationsManager::getConfigsForType(
     const LayoutAnimationType type) {
   switch (type) {

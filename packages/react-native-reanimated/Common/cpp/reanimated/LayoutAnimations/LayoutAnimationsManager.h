@@ -59,15 +59,14 @@ class LayoutAnimationsManager {
   void clearLayoutAnimationConfig(const int tag);
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
-
-  //  private:
-  std::unordered_map<int, std::shared_ptr<Serializable>> &getConfigsForType(const LayoutAnimationType type);
-
-  std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
+  void transferSharedConfig(const Tag from, const Tag to);
+  std::shared_ptr<SharedTransitionManager> getSharedTransitionManager();
 
  private:
-  std::shared_ptr<JSLogger> jsLogger_;
+  std::unordered_map<int, std::shared_ptr<Serializable>> &getConfigsForType(const LayoutAnimationType type);
 
+  std::shared_ptr<JSLogger> jsLogger_;
+  std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimationsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitionsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitions_;

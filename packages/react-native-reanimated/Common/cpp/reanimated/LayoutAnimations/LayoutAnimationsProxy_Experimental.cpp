@@ -426,8 +426,7 @@ void LayoutAnimationsProxy_Experimental::overrideTransform(
 }
 
 void LayoutAnimationsProxy_Experimental::transferConfigToContainer(Tag containerTag, Tag beforeTag) const {
-  layoutAnimationsManager_->getConfigsForType(LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[containerTag] =
-      layoutAnimationsManager_->getConfigsForType(LayoutAnimationType::SHARED_ELEMENT_TRANSITION)[beforeTag];
+  layoutAnimationsManager_->transferSharedConfig(beforeTag, containerTag);
 }
 
 Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
