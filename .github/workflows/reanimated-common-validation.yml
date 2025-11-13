@@ -45,6 +45,16 @@ jobs:
       - name: Install monorepo node dependencies
         run: yarn install --immutable
 
+      - name: Check clang-format
+        run: |
+          echo "Clang-format version:"
+          clang-format --version
+
+          echo "Clang-format executable path:"
+          which clang-format
+
+          echo "Using .clang-format config file:"
+          clang-format -style=file -dump-config | head -n 5
       - name: Lint Common
         working-directory: packages/react-native-reanimated
         run: yarn lint:common
