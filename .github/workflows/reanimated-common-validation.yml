@@ -56,6 +56,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y clang-format-20
 
+          # point to clang-20
+          sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-20 100
+
       - name: Check clang-format version
         run: |
           clang-format --version
