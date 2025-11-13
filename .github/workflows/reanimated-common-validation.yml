@@ -66,6 +66,12 @@ jobs:
           which clang-format
           echo "dump config"
           clang-format -dump-config
+      - name: check pwd
+        working-directory: packages/react-native-reanimated
+        run: |
+          echo $(pwd)
+          echo "clang-format config"
+
       - name: Lint Common
         working-directory: packages/react-native-reanimated
         run: yarn lint:common
