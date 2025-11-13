@@ -12,7 +12,6 @@ import type {
 import type { PropUpdates } from './createAnimatedComponent/commonTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
-import type { ProgressTransitionRegister } from './layoutReanimation/sharedTransitions';
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
 import type { RNScreensTurboModuleType } from './screenTransition/commonTypes';
 import type { SensorContainer } from './SensorContainer';
@@ -60,7 +59,6 @@ declare global {
   var LayoutAnimationsManager: LayoutAnimationsManager;
   var UpdatePropsManager: UpdatePropsManager;
   var RNScreensTurboModule: RNScreensTurboModuleType | undefined;
-  var ProgressTransitionRegister: ProgressTransitionRegister;
   var _obtainProp: (
     shadowNodeWrapper: ShadowNodeWrapper,
     propName: string
