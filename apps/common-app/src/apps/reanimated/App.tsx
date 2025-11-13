@@ -46,7 +46,8 @@ function findExamples(search: string) {
 function HomeScreen({ navigation }: HomeScreenProps) {
   const [search, setSearch] = React.useState('');
   const [wasClicked, setWasClicked] = React.useState<string[]>([]);
-  const platform = Platform.OS as 'ios' | 'android';
+  const platform =
+    Platform.OS == 'ios' || Platform.OS == 'android' ? Platform.OS : undefined;
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -79,7 +80,9 @@ function HomeScreen({ navigation }: HomeScreenProps) {
               setTimeout(() => setWasClicked([...wasClicked, name]), 500);
             }
           }}
-          shouldWork={EXAMPLES[name].shouldWork?.[platform]}
+          shouldWork={
+            platform ? EXAMPLES[name].shouldWork?.[platform] : undefined
+          }
           disabled={EXAMPLES[name].disabledPlatforms?.includes(Platform.OS)}
           wasClicked={wasClicked.includes(name)}
         />
