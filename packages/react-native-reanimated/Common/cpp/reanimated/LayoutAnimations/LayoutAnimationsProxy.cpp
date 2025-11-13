@@ -713,19 +713,14 @@ void LayoutAnimationsProxy::startEnteringAnimation(
     {
       auto &mutex = strongThis->mutex;
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-      strongThis->layoutAnimations_.insert_or_assign(
-          tag,
-          LayoutAnimation{
-              finalView,
-              current,
 #if REACT_NATIVE_MINOR_VERSION >= 78
-              mutation.parentTag,
+      auto parentTag = mutation.parentTag;
 #else
-              parent,
+      auto parentTag = mutation.parentShadowView.tag;
 #endif // REACT_NATIVE_MINOR_VERSION >= 78
-              opacity});
-      window = strongThis->surfaceManager.getWindow(
-          mutation.newChildShadowView.surfaceId);
+      strongThis->layoutAnimations_.insert_or_assign(
+          tag, LayoutAnimation{finalView, current, parentTag, opacity});
+      window = strongThis->surfaceManager.getWindow(mutation.newChildShadowView.surfaceId);
     }
 
     Snapshot values(mutation.newChildShadowView, window);
