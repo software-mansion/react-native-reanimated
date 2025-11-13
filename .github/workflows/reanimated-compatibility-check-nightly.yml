@@ -57,7 +57,7 @@ jobs:
           Setup Yarn
           # Sometimes `npx @react-native-community/cli init` fails at random.
           # Pre-installing it with Yarn seems to improve stability.
-        run: corepack enable && yarn init
+        run: corepack enable && corepack prepare yarn@3.5.1 --activate
       - name: Install React Native CLI
         run: yarn add @react-native-community/cli
       - name: Create app
