@@ -111,7 +111,6 @@ export type {
   Adaptable,
   AdaptTransforms,
   AnimatedProps,
-  AnimatedStyleProp,
   AnimateProps,
   EntryOrExitLayoutType,
   TransformStyleTypes,
