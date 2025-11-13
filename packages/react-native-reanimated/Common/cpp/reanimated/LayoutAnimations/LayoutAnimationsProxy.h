@@ -159,8 +159,9 @@ struct LayoutAnimationsProxy
       const jsi::Value &successCallbackValue,
       const jsi::Value &failureCallbackValue) const override;
 
-  void setComponentDescriptorRegistry(const SharedComponentDescriptorRegistry &
-                                          componentDescriptorRegistry) override;
+  void setComponentDescriptorRegistry(
+      const SharedComponentDescriptorRegistry &componentDescriptorRegistry)
+      override;
 
   bool shouldAnimateFrame() const override;
 
