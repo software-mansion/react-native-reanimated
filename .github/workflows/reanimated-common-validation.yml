@@ -68,8 +68,6 @@ jobs:
           clang-format -dump-config
       - name: Lint Common
         working-directory: packages/react-native-reanimated
-        env:
-          CLANG_FORMAT_STYLE: file:$(pwd)/.clang-format
         run: yarn lint:common
       - name: Disallow DEBUG macros
         run: |
