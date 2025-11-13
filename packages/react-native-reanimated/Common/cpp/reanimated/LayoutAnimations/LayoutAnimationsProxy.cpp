@@ -720,7 +720,8 @@ void LayoutAnimationsProxy::startEnteringAnimation(
 #endif // REACT_NATIVE_MINOR_VERSION >= 78
       strongThis->layoutAnimations_.insert_or_assign(
           tag, LayoutAnimation{finalView, current, parentTag, opacity});
-      window = strongThis->surfaceManager.getWindow(mutation.newChildShadowView.surfaceId);
+      window = strongThis->surfaceManager.getWindow(
+          mutation.newChildShadowView.surfaceId);
     }
 
     Snapshot values(mutation.newChildShadowView, window);
