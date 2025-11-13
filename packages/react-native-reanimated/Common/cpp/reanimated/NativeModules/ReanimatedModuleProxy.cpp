@@ -506,7 +506,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   }
 
   if constexpr (StaticFeatureFlags::getFlag("SHARED_ELEMENT_TRANSITIONS")) {
-    if (!strcmp(eventType.c_str(), "onTransitionProgress")) {
+    if (eventType == "onTransitionProgress") {
       jsi::Runtime &rt = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
       const auto &eventPayload = rawEvent.eventPayload;
       jsi::Object payload = eventPayload->asJSIValue(rt).asObject(rt);
@@ -524,7 +524,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
       uiManager_->getShadowTreeRegistry().enumerate(
           [](const ShadowTree &shadowTree, bool &) { shadowTree.notifyDelegatesOfUpdates(); });
       return false;
-    } else if (!strcmp(eventType.c_str(), "onGestureCancel")) {
+    } else if (eventType == "onGestureCancel") {
       auto surfaceId = layoutAnimationsProxyExperimental_->onGestureCancel();
       if (!surfaceId) {
         return false;
