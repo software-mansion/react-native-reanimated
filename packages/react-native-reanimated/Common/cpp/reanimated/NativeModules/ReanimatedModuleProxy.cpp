@@ -520,7 +520,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
       if (!surfaceId) {
         return false;
       }
-      // TODO: enumerate -> visit
+      // TODO (future): enumerate -> visit
       uiManager_->getShadowTreeRegistry().enumerate(
           [](const ShadowTree &shadowTree, bool &) { shadowTree.notifyDelegatesOfUpdates(); });
       return false;
@@ -529,7 +529,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
       if (!surfaceId) {
         return false;
       }
-      // TODO: enumerate -> visit
+      // TODO (future): enumerate -> visit
       uiManager_->getShadowTreeRegistry().enumerate(
           [](const ShadowTree &shadowTree, bool &) { shadowTree.notifyDelegatesOfUpdates(); });
       return false;

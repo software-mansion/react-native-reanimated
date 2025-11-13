@@ -206,7 +206,6 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
           // we are not starting the animation here because any update will come
           // from the UPDATE mutation
           //          layout_.push_back(node);
-          // TODO: this introduces ghosting. Figure out proper reconciliation
           filteredMutations.push_back(
               ShadowViewMutation::InsertMutation(mutation.parentTag, node->previous, mutation.index));
           //          node->previous = node->current;
@@ -257,10 +256,10 @@ LightNode::Unshared LayoutAnimationsProxy_Experimental::findTopScreen(LightNode:
   if (isRNSScreen(node)) {
     bool isActive = false;
 #ifdef ANDROID
-    // TODO: this looks like a RNSScreens bug - sometimes there is no active
-    // screen at a deeper level, when going back
-    //      float f = node->current.props->rawProps.getDefault("activityState",
-    //      0).asDouble(); isActive = f == 2.0f;
+    // TODO (future): this looks like a RNSScreens bug - sometimes there is no active
+    // screen at a deeper level, when going back (uncomment the following when fixed)
+    // float f = node->current.props->rawProps.getDefault("activityState",
+    // 0).asDouble(); isActive = f == 2.0f;
     isActive = true;
 #elif defined(HAS_SCREENS_PROPS)
     isActive = std::static_pointer_cast<const RNSScreenProps>(node->current.props)->activityState == 2.0f;
@@ -297,12 +296,12 @@ void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
     transition.parentTag[index] = node->parent.lock()->current.tag;
 
     if (transition.parentTag[0] && transition.parentTag[1]) {
-      // TODO: performance - this is costly on android
+      // TODO (future): performance - this is costly on android
       overrideTransform(transition.snapshot[0], transition.transform[0], propsParserContext);
       overrideTransform(transition.snapshot[1], transition.transform[1], propsParserContext);
       transitions_.emplace_back(sharedTag, transition);
     } else if (transition.parentTag[1]) {
-      // TODO: this is too eager
+      // TODO (future): this is too eager
       tagsToRestore_.push_back(transition.snapshot[1].tag);
     }
   }
@@ -568,8 +567,8 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgres
 #else
   isAndroid = false;
 #endif
-  // TODO: this new approach causes all back transitions to be progress
-  // transitions
+  // TODO (future): this new approach causes all back transitions to be progress
+  // transitions (maybe that's ok?)
   if (!isClosing && !isGoingForward && !isAndroid) {
     transitionProgress_ = progress;
     if (transitionState_ == NONE && progress < 1) {
@@ -578,7 +577,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgres
     } else if (transitionState_ == ACTIVE && progress == 1) {
       transitionState_ = END;
     }
-    // TODO: unfix
+    // TODO (before merging): unfix
     return 1;
   }
   return {};
@@ -589,7 +588,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onGestureCancel() {
   if (transitionState_) {
     transitionState_ = CANCELLED;
     transitionUpdated_ = true;
-    // TODO: unfix
+    // TODO (before merging): unfix
     return 1;
   }
   return {};
@@ -692,7 +691,7 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
 
     if (startAnimationsRecursively(node, true, true, false, filteredMutations)) {
       auto parent = node->parent.lock();
-      // TODO: handle this better
+      // TODO (future): handle this better
       auto current = node->current;
       if (layoutAnimations_.contains(node->current.tag)) {
         current = layoutAnimations_.at(node->current.tag).currentView;
