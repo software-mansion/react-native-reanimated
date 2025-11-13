@@ -346,8 +346,6 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           if (movedViews.contains(tag)) {
 #if REACT_NATIVE_MINOR_VERSION >= 78
             layoutAnimationIt->second.parentTag = movedViews.at(tag);
-#else
-            layoutAnimationIt->second.parentShadowView.tag = movedViews.at(tag);
 #endif // REACT_NATIVE_MINOR_VERSION >= 78
           }
           continue;
@@ -716,16 +714,16 @@ void LayoutAnimationsProxy::startEnteringAnimation(
       auto &mutex = strongThis->mutex;
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
       strongThis->layoutAnimations_.insert_or_assign(
-    tag,
-    LayoutAnimation{
-        finalView,
-        current,
+          tag,
+          LayoutAnimation{
+              finalView,
+              current,
 #if REACT_NATIVE_MINOR_VERSION >= 78
-        mutation.parentTag,
+              mutation.parentTag,
 #else
-        parent,
+              parent,
 #endif // REACT_NATIVE_MINOR_VERSION >= 78
-        opacity});
+              opacity});
       window = strongThis->surfaceManager.getWindow(
           mutation.newChildShadowView.surfaceId);
     }
