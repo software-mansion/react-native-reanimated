@@ -1,6 +1,4 @@
 name: Reanimated compatibility check [Nightly]
-env:
-  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     types: [opened, synchronize, edited]
@@ -57,7 +55,7 @@ jobs:
           Setup Yarn
           # Sometimes `npx @react-native-community/cli init` fails at random.
           # Pre-installing it with Yarn seems to improve stability.
-        run: corepack enable && corepack prepare yarn@3.5.1 --activate
+        run: corepack enable && yarn init
       - name: Install React Native CLI
         run: yarn add @react-native-community/cli
       - name: Create app
