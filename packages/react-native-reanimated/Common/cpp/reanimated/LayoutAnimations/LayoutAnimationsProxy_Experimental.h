@@ -59,8 +59,6 @@ struct LayoutAnimationsProxy_Experimental : public MountingOverrideDelegate,
   mutable bool synchronized_ = true;
   mutable std::vector<LightNode::Unshared> entering_, layout_, exiting_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
-  //  mutable std::unordered_map<
-  //        mutable std::optional<ShadowView> previousView;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::vector<LightNode::Unshared> containersToInsert_;
   mutable std::unordered_map<Tag, react::Transform> transformForNode_;
