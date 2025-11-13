@@ -121,16 +121,16 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
 
 ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
 {
-  auto f = [=](Tag tag) {
+  auto forceScreenSnapshot = [=](Tag tag) {
 #ifdef HAS_SCREENS
     RCTSurfacePresenter *surfacePresenter = nodesManager.surfacePresenter;
     RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
     UIView<RCTComponentViewProtocol> *componentView = [componentViewRegistry findComponentViewWithTag:tag];
-    RNSScreenView *rnsscreenview = (RNSScreenView *)componentView;
-    [rnsscreenview setSnapshotAfterUpdates:YES];
+    RNSScreenView *rnsScreenView = (RNSScreenView *)componentView;
+    [rnsScreenView setSnapshotAfterUpdates:YES];
 #endif // HAS_SCREENS
   };
-  return f;
+  return forceScreenSnapshot;
 }
 
 PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleRegistry, REANodesManager *nodesManager)
