@@ -144,10 +144,5 @@ export type AdaptTransforms<T> = {
 /** @deprecated Please use {@link TransformArrayItem} type instead. */
 export type TransformStyleTypes = TransformArrayItem;
 
-/** @deprecated This type is no longer relevant. */
-export type AnimatedStyleProp<T> =
-  | AnimatedStyle<T>
-  | RegisteredStyle<AnimatedStyle<T>>;
-
 /** @deprecated Please use {@link AnimatedProps} type instead. */
 export type AnimateProps<Props extends object> = AnimatedProps<Props>;

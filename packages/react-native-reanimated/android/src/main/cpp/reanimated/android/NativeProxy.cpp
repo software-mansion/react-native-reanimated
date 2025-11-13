@@ -41,7 +41,9 @@ NativeProxy::NativeProxy(
     )
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
-      layoutAnimations_(std::make_shared<jni::global_ref<LayoutAnimations::javaobject>>(std::move(layoutAnimations))),
+      layoutAnimations_(
+          std::make_shared<jni::global_ref<LayoutAnimations::javaobject>>(
+              std::move(layoutAnimations))),
       reanimatedModuleProxy_(std::make_shared<ReanimatedModuleProxy>(
           workletsModuleProxy,
           *rnRuntime,
@@ -407,8 +409,9 @@ void NativeProxy::progressLayoutAnimation(
     const jsi::Object &newProps,
     bool isSharedTransition) {
   auto newPropsJNI = JNIHelper::ConvertToPropsMap(rt, newProps);
-  (*layoutAnimations_)->cthis()->progressLayoutAnimation(
-      tag, newPropsJNI, isSharedTransition);
+  (*layoutAnimations_)
+      ->cthis()
+      ->progressLayoutAnimation(tag, newPropsJNI, isSharedTransition);
 }
 
 PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
@@ -450,12 +453,14 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto progressLayoutAnimation =
       bindThis(&NativeProxy::progressLayoutAnimation);
 
-  auto endLayoutAnimation = [layoutAnimationsWeak = std::weak_ptr<jni::global_ref<LayoutAnimations::javaobject>>(layoutAnimations_)](
-                                int tag, bool removeView) {
-    if (auto layoutAnimations = layoutAnimationsWeak.lock()) {
-      (*layoutAnimations)->cthis()->endLayoutAnimation(tag, removeView);
-    }
-  };
+  auto endLayoutAnimation =
+      [layoutAnimationsWeak =
+           std::weak_ptr<jni::global_ref<LayoutAnimations::javaobject>>(
+               layoutAnimations_)](int tag, bool removeView) {
+        if (auto layoutAnimations = layoutAnimationsWeak.lock()) {
+          (*layoutAnimations)->cthis()->endLayoutAnimation(tag, removeView);
+        }
+      };
 
   auto maybeFlushUiUpdatesQueueFunction =
       bindThis(&NativeProxy::maybeFlushUIUpdatesQueue);
