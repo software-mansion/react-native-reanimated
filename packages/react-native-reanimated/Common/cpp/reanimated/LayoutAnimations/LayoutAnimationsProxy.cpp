@@ -226,7 +226,12 @@ void LayoutAnimationsProxy::parseRemoveMutations(
   for (const auto &mutation : mutations) {
     if (mutation.type == ShadowViewMutation::Insert &&
         movedViews.contains(mutation.newChildShadowView.tag)) {
+#if REACT_NATIVE_MINOR_VERSION >= 78
       movedViews[mutation.newChildShadowView.tag] = mutation.parentTag;
+#else
+      movedViews[mutation.newChildShadowView.tag] =
+          mutation.parentShadowView.tag;
+#endif // REACT_NATIVE_MINOR_VERSION >= 78
     }
   }
 
@@ -339,7 +344,11 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           filteredMutations.push_back(ShadowViewMutation::InsertMutation(
               mutationParent, oldView, mutation.index));
           if (movedViews.contains(tag)) {
+#if REACT_NATIVE_MINOR_VERSION >= 78
             layoutAnimationIt->second.parentTag = movedViews.at(tag);
+#else
+            layoutAnimationIt->second.parentShadowView.tag = movedViews.at(tag);
+#endif // REACT_NATIVE_MINOR_VERSION >= 78
           }
           continue;
         }
@@ -385,6 +394,7 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
         // store the oldChildShadowView, so that we can use this ShadowView when
         // the view is inserted
         oldShadowViewsForReparentings[tag] = mutation.oldChildShadowView;
+#if REACT_NATIVE_MINOR_VERSION >= 78
         if (movedViews.contains(tag)) {
           mutation.parentTag = movedViews.at(tag);
         }
@@ -392,6 +402,15 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           startLayoutAnimation(tag, mutation);
         }
         break;
+#else
+        if (movedViews.contains(tag)) {
+          mutation.parentShadowView.tag = movedViews.at(tag);
+        }
+        if (mutation.parentShadowView.tag != -1) {
+          startLayoutAnimation(tag, mutation);
+        }
+        break;
+#endif // REACT_NATIVE_MINOR_VERSION >= 78
       }
 
       case ShadowViewMutation::Type::Remove:
