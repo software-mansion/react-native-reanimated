@@ -7,27 +7,7 @@
 
 namespace reanimated::css {
 
-std::shared_ptr<TransformOperation> TransformInterpolator::resolveOperation(
-    const std::shared_ptr<TransformOperation> &operation,
-    const UpdateContext &context) const {
-  return operation;
-}
-
-TransformOperationInterpolator<PerspectiveOperation>::TransformOperationInterpolator(
-    const std::shared_ptr<PerspectiveOperation> &defaultOperation)
-    : TransformOperationInterpolatorBase<PerspectiveOperation>(defaultOperation) {}
-
-std::unique_ptr<TransformOperation> TransformOperationInterpolator<PerspectiveOperation>::interpolate(
-    double progress,
-    const std::shared_ptr<TransformOperation> &from,
-    const std::shared_ptr<TransformOperation> &to,
-    const TransformInterpolationContext &context) const {
-  const auto &fromValue = std::static_pointer_cast<PerspectiveOperation>(from)->value;
-  const auto &toValue = std::static_pointer_cast<PerspectiveOperation>(to)->value;
-
-  return std::make_unique<PerspectiveOperation>(fromValue.interpolate(progress, toValue));
-}
-
+// Specialization for MatrixOperation
 TransformOperationInterpolator<MatrixOperation>::TransformOperationInterpolator(
     const std::shared_ptr<MatrixOperation> &defaultOperation)
     : TransformOperationInterpolatorBase<MatrixOperation>(defaultOperation) {}
@@ -124,42 +104,6 @@ template TransformMatrix3D TransformOperationInterpolator<MatrixOperation>::inte
     const TransformMatrix::Shared &) const;
 
 // Template implementations
-template <typename TOperation>
-TransformOperationInterpolator<TOperation>::TransformOperationInterpolator(
-    const std::shared_ptr<TOperation> &defaultOperation)
-    : TransformOperationInterpolatorBase<TOperation>(defaultOperation) {}
-
-template <typename TOperation>
-std::unique_ptr<TransformOperation> TransformOperationInterpolator<TOperation>::interpolate(
-    double progress,
-    const std::shared_ptr<TransformOperation> &from,
-    const std::shared_ptr<TransformOperation> &to,
-    const TransformInterpolationContext &context) const {
-  const auto &fromOp = *std::static_pointer_cast<TOperation>(from);
-  const auto &toOp = *std::static_pointer_cast<TOperation>(to);
-
-  return std::make_unique<TOperation>(fromOp.value.interpolate(progress, toOp.value));
-}
-
-template <ResolvableTransformOp TOperation>
-TransformOperationInterpolator<TOperation>::TransformOperationInterpolator(
-    const std::shared_ptr<TOperation> &defaultOperation,
-    ResolvableValueInterpolatorConfig config)
-    : TransformOperationInterpolatorBase<TOperation>(defaultOperation), config_(std::move(config)) {}
-
-template <ResolvableTransformOp TOperation>
-std::unique_ptr<TransformOperation> TransformOperationInterpolator<TOperation>::interpolate(
-    double progress,
-    const std::shared_ptr<TransformOperation> &from,
-    const std::shared_ptr<TransformOperation> &to,
-    const TransformInterpolationContext &context) const {
-  const auto &fromOp = *std::static_pointer_cast<TOperation>(from);
-  const auto &toOp = *std::static_pointer_cast<TOperation>(to);
-
-  return std::make_unique<TOperation>(
-      fromOp.value.interpolate(progress, toOp.value, getResolvableValueContext(context)));
-}
-
 template <ResolvableTransformOp TOperation>
 std::shared_ptr<TransformOperation> TransformOperationInterpolator<TOperation>::resolveOperation(
     const std::shared_ptr<TransformOperation> &operation,
@@ -174,16 +118,6 @@ std::shared_ptr<TransformOperation> TransformOperationInterpolator<TOperation>::
   }
 
   return std::make_shared<TOperation>(resolved.value());
-}
-
-template <ResolvableTransformOp TOperation>
-ResolvableValueInterpolationContext TransformOperationInterpolator<TOperation>::getResolvableValueContext(
-    const TransformInterpolationContext &context) const {
-  return ResolvableValueInterpolationContext{
-      .node = context.node,
-      .viewStylesRepository = context.viewStylesRepository,
-      .relativeProperty = config_.relativeProperty,
-      .relativeTo = config_.relativeTo};
 }
 
 // Rotate operations

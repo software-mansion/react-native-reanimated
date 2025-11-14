@@ -24,7 +24,9 @@ class StyleOperationInterpolator {
     const std::shared_ptr<Interpolators> &interpolators;
   };
 
-  virtual std::shared_ptr<StyleOperation> getDefaultOperation() const = 0;
+  explicit StyleOperationInterpolator(const std::shared_ptr<StyleOperation> &defaultOperation);
+
+  std::shared_ptr<StyleOperation> getDefaultOperation() const;
   virtual std::unique_ptr<StyleOperation> interpolate(
       double progress,
       const std::shared_ptr<StyleOperation> &from,
@@ -33,9 +35,50 @@ class StyleOperationInterpolator {
   virtual std::shared_ptr<StyleOperation> resolveOperation(
       const std::shared_ptr<StyleOperation> &operation,
       const UpdateContext &context) const;
+
+ private:
+  const std::shared_ptr<StyleOperation> defaultOperation_;
 };
 
 using StyleOperationInterpolators = StyleOperationInterpolator::Interpolators;
 using StyleOperationsInterpolationContext = StyleOperationInterpolator::UpdateContext;
+
+// Base implementation for simple operations
+template <typename TOperation>
+class StyleOperationInterpolatorBase : public StyleOperationInterpolator {
+ public:
+  explicit StyleOperationInterpolatorBase(const std::shared_ptr<TOperation> &defaultOperation);
+
+  std::unique_ptr<StyleOperation> interpolate(
+      double progress,
+      const std::shared_ptr<TOperation> &from,
+      const std::shared_ptr<TOperation> &to,
+      const StyleOperationsInterpolationContext &context) const override;
+};
+
+// Specialization for resolvable operations
+template <ResolvableOp TOperation>
+class StyleOperationInterpolatorBase<TOperation> : public StyleOperationInterpolator {
+ public:
+  StyleOperationInterpolatorBase(
+      const std::shared_ptr<TOperation> &defaultOperation,
+      ResolvableValueInterpolatorConfig config);
+
+  std::unique_ptr<StyleOperation> interpolate(
+      double progress,
+      const std::shared_ptr<StyleOperation> &from,
+      const std::shared_ptr<StyleOperation> &to,
+      const StyleOperationsInterpolationContext &context) const override;
+
+  std::shared_ptr<StyleOperation> resolveOperation(
+      const std::shared_ptr<StyleOperation> &operation,
+      const StyleOperationsInterpolationContext &context) const override;
+
+ protected:
+  const ResolvableValueInterpolatorConfig config_;
+
+  ResolvableValueInterpolationContext getResolvableValueContext(
+      const StyleOperationsInterpolationContext &context) const;
+};
 
 } // namespace reanimated::css

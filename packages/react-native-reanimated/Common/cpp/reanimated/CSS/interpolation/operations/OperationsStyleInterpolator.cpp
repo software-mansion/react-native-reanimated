@@ -1,5 +1,8 @@
 #include <reanimated/CSS/interpolation/operations/OperationsStyleInterpolator.h>
 
+#include <reanimated/CSS/interpolation/filters/FilterOperation.h>
+#include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
+
 namespace reanimated::css {
 
 // OperationsStyleInterpolator implementation
@@ -304,5 +307,15 @@ OperationsStyleInterpolatorBase<TOperation>::createInterpolationPair(
 
   return std::make_optional(reinterpret_cast<const std::pair<StyleOperations, StyleOperations> &>(result.value()));
 }
+
+template <typename TOperation>
+std::shared_ptr<TOperation> OperationsStyleInterpolatorBase<TOperation>::getDefaultOperationOfType(
+    const size_t type) const {
+  return std::static_pointer_cast<TOperation>(interpolators_->at(type)->getDefaultOperation());
+}
+
+// Explicit template instantiation
+template class OperationsStyleInterpolatorBase<FilterOperation>;
+template class OperationsStyleInterpolatorBase<TransformOperation>;
 
 } // namespace reanimated::css

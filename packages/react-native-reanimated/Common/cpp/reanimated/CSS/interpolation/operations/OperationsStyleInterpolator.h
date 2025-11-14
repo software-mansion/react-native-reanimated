@@ -73,7 +73,6 @@ class OperationsStyleInterpolator : public PropertyInterpolator {
       const std::optional<StyleOperations> &toOperationsOptional) const;
   size_t getIndexOfCurrentKeyframe(const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const;
   StyleOperations getFallbackValue(const std::shared_ptr<const ShadowNode> &shadowNode) const;
-  std::shared_ptr<StyleOperation> getDefaultOperationOfType(size_t type) const;
   folly::dynamic interpolateOperations(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       double keyframeProgress,
@@ -100,6 +99,8 @@ class OperationsStyleInterpolatorBase : public OperationsStyleInterpolator {
   virtual std::optional<std::pair<TOperations, TOperations>> createInterpolationPair(
       const TOperations &fromOperations,
       const TOperations &toOperations) const = 0;
+
+  std::shared_ptr<TOperation> getDefaultOperationOfType(size_t type) const;
 };
 
 } // namespace reanimated::css
