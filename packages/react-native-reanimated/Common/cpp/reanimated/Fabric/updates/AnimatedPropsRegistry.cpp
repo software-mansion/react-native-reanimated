@@ -26,13 +26,14 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     
     if (!strcmp(shadowNode->getComponentName(), "Paragraph")) {
       for (const auto &[key, value] : props.items()) {
-        if (key.getString() == "text") {
+        if (key == "text") {
           const auto &childShadowNode = shadowNode->getChildren()[0];
           addUpdatesToBatch(childShadowNode, folly::dynamic::object("text", value));
           break;
         }
       }
-      if (props.size() == 1) {
+      props.erase("text");
+      if (props.empty()) {
         continue;
       }
     }
