@@ -28,7 +28,7 @@ class SingleInstanceChecker {
   ~SingleInstanceChecker();
 
  private:
-  void assertWithMessage(bool condition, std::string message) {
+  void assertWithMessage(bool condition, const std::string &message) {
     if (!condition) {
 #ifdef ANDROID
       __android_log_print(ANDROID_LOG_WARN, "Worklets", "%s", message.c_str());

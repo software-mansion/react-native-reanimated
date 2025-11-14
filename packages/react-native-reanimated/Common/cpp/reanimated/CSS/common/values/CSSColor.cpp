@@ -43,7 +43,7 @@ CSSColorBase<TColorType, TDerived>::CSSColorBase(const uint8_t r, const uint8_t 
 
 template <ColorTypeEnum TColorType, typename TDerived>
 CSSColorBase<TColorType, TDerived>::CSSColorBase(ColorChannels colorChannels)
-    : channels{std::move(colorChannels)}, colorType(TColorType::Rgba) {}
+    : channels{colorChannels}, colorType(TColorType::Rgba) {}
 
 template <ColorTypeEnum TColorType, typename TDerived>
 TDerived CSSColorBase<TColorType, TDerived>::interpolate(double progress, const TDerived &to) const {
