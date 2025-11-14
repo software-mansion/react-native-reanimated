@@ -225,9 +225,7 @@ using namespace facebook::react;
     _shouldFlushUpdateBuffer = false;
   }
 #endif // RCT_NEW_ARCH_ENABLED
-  [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) {
-    [displayLink setPaused:YES];
-  }];
+  [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) { [displayLink setPaused:YES]; }];
 
   return self;
 }
@@ -235,9 +233,7 @@ using namespace facebook::react;
 - (void)invalidate
 {
   _eventHandler = nil;
-  [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) {
-    [displayLink invalidate];
-  }];
+  [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) { [displayLink invalidate]; }];
 }
 
 - (void)operationsBatchDidComplete
@@ -365,9 +361,8 @@ using namespace facebook::react;
   if (trySync) {
     _tryRunBatchUpdatesSynchronously = YES;
   }
-  [_operationsInBatch addObject:^(RCTUIManager *uiManager) {
-    [uiManager updateView:reactTag viewName:viewName props:nativeProps];
-  }];
+  [_operationsInBatch
+      addObject:^(RCTUIManager *uiManager) { [uiManager updateView:reactTag viewName:viewName props:nativeProps]; }];
 }
 #endif // RCT_NEW_ARCH_ENABLED
 
