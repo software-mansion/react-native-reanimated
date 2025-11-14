@@ -41,14 +41,13 @@ NativeProxy::NativeProxy(
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       layoutAnimations_(std::make_shared<jni::global_ref<LayoutAnimations::javaobject>>(std::move(layoutAnimations))),
-      reanimatedModuleProxy_(
-          std::make_shared<ReanimatedModuleProxy>(
-              workletsModuleProxy,
-              *rnRuntime,
-              jsCallInvoker,
-              getPlatformDependentMethods(),
-              isBridgeless,
-              getIsReducedMotion())) {
+      reanimatedModuleProxy_(std::make_shared<ReanimatedModuleProxy>(
+          workletsModuleProxy,
+          *rnRuntime,
+          jsCallInvoker,
+          getPlatformDependentMethods(),
+          isBridgeless,
+          getIsReducedMotion())) {
   reanimatedModuleProxy_->init(getPlatformDependentMethods());
 #ifdef RCT_NEW_ARCH_ENABLED
   commonInit(fabricUIManager);
