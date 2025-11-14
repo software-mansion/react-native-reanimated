@@ -42,9 +42,8 @@ std::atomic<bool> hasPendingBlocks;
     [uiManager setAnimationsManager:animationsManager];
     [self swizzleMethods];
 
-    IMP isExecutingUpdatesBatchImpl = imp_implementationWithBlock(^() {
-      return hasPendingBlocks || isFlushingBlocks > 0;
-    });
+    IMP isExecutingUpdatesBatchImpl =
+        imp_implementationWithBlock(^() { return hasPendingBlocks || isFlushingBlocks > 0; });
     class_addMethod([RCTUIManager class], @selector(isExecutingUpdatesBatch), isExecutingUpdatesBatchImpl, "");
   }
   return self;
@@ -60,9 +59,9 @@ std::atomic<bool> hasPendingBlocks;
                   fromClass:[self class]];
     SEL manageChildrenOriginal = @selector
         (_manageChildren:moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
-    SEL manageChildrenReanimated =
-        @selector(reanimated_manageChildren:
-                            moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
+    SEL manageChildrenReanimated = @selector
+        (reanimated_manageChildren:
+                   moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
     [REAUtils swizzleMethod:manageChildrenOriginal
                    forClass:[RCTUIManager class]
                        with:manageChildrenReanimated
@@ -185,12 +184,11 @@ std::atomic<bool> hasPendingBlocks;
     for (RCTShadowView *shadowView in affectedShadowViews) {
       reactTags[index] = shadowView.reactTag;
       RCTLayoutMetrics layoutMetrics = shadowView.layoutMetrics;
-      frameDataArray[index++] = (RCTFrameData){
-          layoutMetrics.frame,
-          layoutMetrics.layoutDirection,
-          shadowView.isNewView,
-          shadowView.superview.isNewView,
-          layoutMetrics.displayType};
+      frameDataArray[index++] = (RCTFrameData){layoutMetrics.frame,
+                                               layoutMetrics.layoutDirection,
+                                               shadowView.isNewView,
+                                               shadowView.superview.isNewView,
+                                               layoutMetrics.displayType};
     }
   }
 
@@ -309,11 +307,7 @@ std::atomic<bool> hasPendingBlocks;
 
       } else if (updatingLayoutAnimation) {
         // Animate view update
-        [updatingLayoutAnimation
-              performAnimations:^{
-                [view reactSetFrame:frame];
-              }
-            withCompletionBlock:completion];
+        [updatingLayoutAnimation performAnimations:^{ [view reactSetFrame:frame]; } withCompletionBlock:completion];
 
       } else {
         // Update without animation
