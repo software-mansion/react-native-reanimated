@@ -8,9 +8,7 @@ void RNRuntimeWorkletDecorator::decorate(
   rnRuntime.global().setProperty(rnRuntime, "_WORKLET", false);
 
   rnRuntime.global().setProperty(
-      rnRuntime,
-      "__workletsModuleProxy",
-      jsi::Object::createFromHostObject(rnRuntime, workletsModuleProxy));
+      rnRuntime, "__workletsModuleProxy", jsi::Object::createFromHostObject(rnRuntime, workletsModuleProxy));
 }
 
 } // namespace worklets

@@ -32,8 +32,7 @@ jsi::Function getCallGuard(jsi::Runtime &rt) {
   // the C++ implementation doesn't intercept errors and simply throws them as
   // C++ exceptions which crashes the app. We assume that installing the guard
   // doesn't throw any errors.
-  return jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "callGuard"), 1, callGuardLambda);
+  return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "callGuard"), 1, callGuardLambda);
 }
 
 #endif // NDEBUG
@@ -48,8 +47,7 @@ jsi::Value makeShareableClone(
     auto object = value.asObject(rt);
     if (!object.getProperty(rt, "__workletHash").isUndefined()) {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
-        shareable =
-            std::make_shared<RetainingShareable<ShareableWorklet>>(rt, object);
+        shareable = std::make_shared<RetainingShareable<ShareableWorklet>>(rt, object);
       } else {
         shareable = std::make_shared<ShareableWorklet>(rt, object);
       }
@@ -58,35 +56,28 @@ jsi::Value makeShareableClone(
     } else if (object.isFunction(rt)) {
       auto function = object.asFunction(rt);
       if (function.isHostFunction(rt)) {
-        shareable =
-            std::make_shared<ShareableHostFunction>(rt, std::move(function));
+        shareable = std::make_shared<ShareableHostFunction>(rt, std::move(function));
       } else {
-        shareable =
-            std::make_shared<ShareableRemoteFunction>(rt, std::move(function));
+        shareable = std::make_shared<ShareableRemoteFunction>(rt, std::move(function));
       }
     } else if (object.isArray(rt)) {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
-        shareable = std::make_shared<RetainingShareable<ShareableArray>>(
-            rt, object.asArray(rt));
+        shareable = std::make_shared<RetainingShareable<ShareableArray>>(rt, object.asArray(rt));
       } else {
         shareable = std::make_shared<ShareableArray>(rt, object.asArray(rt));
       }
     } else if (object.isArrayBuffer(rt)) {
-      shareable =
-          std::make_shared<ShareableArrayBuffer>(rt, object.getArrayBuffer(rt));
+      shareable = std::make_shared<ShareableArrayBuffer>(rt, object.getArrayBuffer(rt));
     } else if (object.isHostObject(rt)) {
       if (object.isHostObject<ShareableJSRef>(rt)) {
         return object;
       }
-      shareable =
-          std::make_shared<ShareableHostObject>(rt, object.getHostObject(rt));
+      shareable = std::make_shared<ShareableHostObject>(rt, object.getHostObject(rt));
     } else {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
-        shareable = std::make_shared<RetainingShareable<ShareableObject>>(
-            rt, object, nativeStateSource);
+        shareable = std::make_shared<RetainingShareable<ShareableObject>>(rt, object, nativeStateSource);
       } else {
-        shareable =
-            std::make_shared<ShareableObject>(rt, object, nativeStateSource);
+        shareable = std::make_shared<ShareableObject>(rt, object, nativeStateSource);
       }
     }
   } else if (value.isString()) {
@@ -106,19 +97,15 @@ jsi::Value makeShareableClone(
     // with strings in order to make certain objects to be captured. There isn't
     // yet any usecase for using symbols on the UI runtime so it is fine to keep
     // it like this for now.
-    shareable =
-        std::make_shared<ShareableString>(value.getSymbol(rt).toString(rt));
+    shareable = std::make_shared<ShareableString>(value.getSymbol(rt).toString(rt));
   } else {
-    throw std::runtime_error(
-        "[Reanimated] Attempted to convert an unsupported value type.");
+    throw std::runtime_error("[Reanimated] Attempted to convert an unsupported value type.");
   }
   return ShareableJSRef::newHostObject(rt, shareable);
 }
 
-std::shared_ptr<Shareable> extractShareableOrThrow(
-    jsi::Runtime &rt,
-    const jsi::Value &maybeShareableValue,
-    const std::string &errorMessage) {
+std::shared_ptr<Shareable>
+extractShareableOrThrow(jsi::Runtime &rt, const jsi::Value &maybeShareableValue, const std::string &errorMessage) {
   if (maybeShareableValue.isObject()) {
     auto object = maybeShareableValue.asObject(rt);
     if (object.isHostObject<ShareableJSRef>(rt)) {
@@ -164,8 +151,7 @@ jsi::Value RetainingShareable<BaseClass>::toJSValue(jsi::Runtime &rt) {
 
 ShareableJSRef::~ShareableJSRef() {}
 
-ShareableArray::ShareableArray(jsi::Runtime &rt, const jsi::Array &array)
-    : Shareable(ArrayType) {
+ShareableArray::ShareableArray(jsi::Runtime &rt, const jsi::Array &array) : Shareable(ArrayType) {
   auto size = array.size(rt);
   data_.reserve(size);
   for (size_t i = 0; i < size; i++) {
@@ -184,17 +170,13 @@ jsi::Value ShareableArray::toJSValue(jsi::Runtime &rt) {
 
 jsi::Value ShareableArrayBuffer::toJSValue(jsi::Runtime &rt) {
   auto size = static_cast<int>(data_.size());
-  auto arrayBuffer = rt.global()
-                         .getPropertyAsFunction(rt, "ArrayBuffer")
-                         .callAsConstructor(rt, size)
-                         .getObject(rt)
-                         .getArrayBuffer(rt);
+  auto arrayBuffer =
+      rt.global().getPropertyAsFunction(rt, "ArrayBuffer").callAsConstructor(rt, size).getObject(rt).getArrayBuffer(rt);
   memcpy(arrayBuffer.data(rt), data_.data(), size);
   return arrayBuffer;
 }
 
-ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
-    : Shareable(ObjectType) {
+ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object) : Shareable(ObjectType) {
   auto propertyNames = object.getPropertyNames(rt);
   auto size = propertyNames.size(rt);
   data_.reserve(size);
@@ -208,13 +190,9 @@ ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
   }
 }
 
-ShareableObject::ShareableObject(
-    jsi::Runtime &rt,
-    const jsi::Object &object,
-    const jsi::Value &nativeStateSource)
+ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object, const jsi::Value &nativeStateSource)
     : ShareableObject(rt, object) {
-  if (nativeStateSource.isObject() &&
-      nativeStateSource.asObject(rt).hasNativeState(rt)) {
+  if (nativeStateSource.isObject() && nativeStateSource.asObject(rt).hasNativeState(rt)) {
     nativeState_ = nativeStateSource.asObject(rt).getNativeState(rt);
   }
 }
@@ -222,10 +200,7 @@ ShareableObject::ShareableObject(
 jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
   auto obj = jsi::Object(rt);
   for (size_t i = 0, size = data_.size(); i < size; i++) {
-    obj.setProperty(
-        rt,
-        jsi::String::createFromUtf8(rt, data_[i].first),
-        data_[i].second->toJSValue(rt));
+    obj.setProperty(rt, jsi::String::createFromUtf8(rt, data_[i].first), data_[i].second->toJSValue(rt));
   }
   if (nativeState_ != nullptr) {
     obj.setNativeState(rt, nativeState_);
@@ -238,20 +213,15 @@ jsi::Value ShareableHostObject::toJSValue(jsi::Runtime &rt) {
 }
 
 jsi::Value ShareableHostFunction::toJSValue(jsi::Runtime &rt) {
-  return jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forUtf8(rt, name_), paramCount_, hostFunction_);
+  return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forUtf8(rt, name_), paramCount_, hostFunction_);
 }
 
 jsi::Value ShareableWorklet::toJSValue(jsi::Runtime &rt) {
   assert(
-      std::any_of(
-          data_.cbegin(),
-          data_.cend(),
-          [](const auto &item) { return item.first == "__workletHash"; }) &&
+      std::any_of(data_.cbegin(), data_.cend(), [](const auto &item) { return item.first == "__workletHash"; }) &&
       "ShareableWorklet doesn't have `__workletHash` property");
   jsi::Value obj = ShareableObject::toJSValue(rt);
-  return getValueUnpacker(rt).call(
-      rt, obj, jsi::String::createFromAscii(rt, "Worklet"));
+  return getValueUnpacker(rt).call(rt, obj, jsi::String::createFromAscii(rt, "Worklet"));
 }
 
 jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
@@ -273,8 +243,8 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
 jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
   if (remoteValue_ == nullptr) {
     auto initObj = initializer_->toJSValue(rt);
-    auto value = std::make_unique<jsi::Value>(getValueUnpacker(rt).call(
-        rt, initObj, jsi::String::createFromAscii(rt, "Handle")));
+    auto value = std::make_unique<jsi::Value>(
+        getValueUnpacker(rt).call(rt, initObj, jsi::String::createFromAscii(rt, "Handle")));
 
     // We are locking the initialization here since the thread that is
     // initalizing can be pre-empted on runtime lock. E.g.
@@ -293,8 +263,7 @@ jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
     return jsi::Value(rt, *remoteValue_);
   }
   auto initObj = initializer_->toJSValue(rt);
-  return getValueUnpacker(rt).call(
-      rt, initObj, jsi::String::createFromAscii(rt, "Handle"));
+  return getValueUnpacker(rt).call(rt, initObj, jsi::String::createFromAscii(rt, "Handle"));
 }
 
 jsi::Value ShareableString::toJSValue(jsi::Runtime &rt) {
@@ -302,9 +271,7 @@ jsi::Value ShareableString::toJSValue(jsi::Runtime &rt) {
 }
 
 jsi::Value ShareableBigInt::toJSValue(jsi::Runtime &rt) {
-  return rt.global()
-      .getPropertyAsFunction(rt, "BigInt")
-      .call(rt, jsi::String::createFromUtf8(rt, string_));
+  return rt.global().getPropertyAsFunction(rt, "BigInt").call(rt, jsi::String::createFromUtf8(rt, string_));
 }
 
 jsi::Value ShareableScalar::toJSValue(jsi::Runtime &) {
@@ -318,8 +285,7 @@ jsi::Value ShareableScalar::toJSValue(jsi::Runtime &) {
     case Shareable::NumberType:
       return jsi::Value(data_.number);
     default:
-      throw std::runtime_error(
-          "[Reanimated] Attempted to convert object that's not of a scalar type.");
+      throw std::runtime_error("[Reanimated] Attempted to convert object that's not of a scalar type.");
   }
 }
 

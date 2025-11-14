@@ -13,10 +13,7 @@ namespace worklets {
 
 class WorkletRuntimeDecorator {
  public:
-  static void decorate(
-      jsi::Runtime &rt,
-      const std::string &name,
-      const std::shared_ptr<JSScheduler> &jsScheduler);
+  static void decorate(jsi::Runtime &rt, const std::string &name, const std::shared_ptr<JSScheduler> &jsScheduler);
 };
 
 } // namespace worklets

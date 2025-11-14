@@ -12,9 +12,7 @@ namespace reanimated {
 
 class RNRuntimeDecorator {
  public:
-  static void decorate(
-      jsi::Runtime &rnRuntime,
-      const std::shared_ptr<ReanimatedModuleProxy> &reanimatedModuleProxy);
+  static void decorate(jsi::Runtime &rnRuntime, const std::shared_ptr<ReanimatedModuleProxy> &reanimatedModuleProxy);
 
 #ifdef IS_REANIMATED_EXAMPLE_APP
  private:

@@ -17,8 +17,7 @@ using namespace react;
 
 namespace worklets {
 
-class WorkletRuntime : public jsi::HostObject,
-                       public std::enable_shared_from_this<WorkletRuntime> {
+class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_this<WorkletRuntime> {
  public:
   explicit WorkletRuntime(
       jsi::Runtime &rnRuntime,
@@ -33,16 +32,12 @@ class WorkletRuntime : public jsi::HostObject,
   }
 
   template <typename... Args>
-  inline jsi::Value runGuarded(
-      const std::shared_ptr<ShareableWorklet> &shareableWorklet,
-      Args &&...args) const {
+  inline jsi::Value runGuarded(const std::shared_ptr<ShareableWorklet> &shareableWorklet, Args &&...args) const {
     jsi::Runtime &rt = *runtime_;
-    return runOnRuntimeGuarded(
-        rt, shareableWorklet->toJSValue(rt), std::forward<Args>(args)...);
+    return runOnRuntimeGuarded(rt, shareableWorklet->toJSValue(rt), std::forward<Args>(args)...);
   }
 
-  void runAsyncGuarded(
-      const std::shared_ptr<ShareableWorklet> &shareableWorklet) {
+  void runAsyncGuarded(const std::shared_ptr<ShareableWorklet> &shareableWorklet) {
     if (queue_ == nullptr) {
       queue_ = std::make_shared<AsyncQueue>(name_);
     }
@@ -78,9 +73,7 @@ class WorkletRuntime : public jsi::HostObject,
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on
 // Android
-std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
-    jsi::Runtime &rt,
-    const jsi::Value &value);
+std::shared_ptr<WorkletRuntime> extractWorkletRuntime(jsi::Runtime &rt, const jsi::Value &value);
 
 void scheduleOnRuntime(
     jsi::Runtime &rt,

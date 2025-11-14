@@ -21,10 +21,7 @@ jsi::Function getCallGuard(jsi::Runtime &rt);
 
 // If possible, please use `WorkletRuntime::runGuarded` instead.
 template <typename... Args>
-inline jsi::Value runOnRuntimeGuarded(
-    jsi::Runtime &rt,
-    const jsi::Value &function,
-    Args &&...args) {
+inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Value &function, Args &&...args) {
   // We only use callGuard in debug mode, otherwise we call the provided
   // function directly. CallGuard provides a way of capturing exceptions in
   // JavaScript and propagating them to the main React Native thread such that
@@ -36,9 +33,7 @@ inline jsi::Value runOnRuntimeGuarded(
 #endif
 }
 
-inline void cleanupIfRuntimeExists(
-    jsi::Runtime *rt,
-    std::unique_ptr<jsi::Value> &value) {
+inline void cleanupIfRuntimeExists(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &value) {
   if (rt != nullptr && !WorkletRuntimeRegistry::isRuntimeAlive(rt)) {
     // The below use of unique_ptr.release prevents the smart pointer from
     // calling the destructor of the kept object. This effectively results in
@@ -122,8 +117,7 @@ class ShareableJSRef : public jsi::HostObject {
   const std::shared_ptr<Shareable> value_;
 
  public:
-  explicit ShareableJSRef(const std::shared_ptr<Shareable> &value)
-      : value_(value) {}
+  explicit ShareableJSRef(const std::shared_ptr<Shareable> &value) : value_(value) {}
 
   virtual ~ShareableJSRef();
 
@@ -131,11 +125,8 @@ class ShareableJSRef : public jsi::HostObject {
     return value_;
   }
 
-  static jsi::Object newHostObject(
-      jsi::Runtime &rt,
-      const std::shared_ptr<Shareable> &value) {
-    return jsi::Object::createFromHostObject(
-        rt, std::make_shared<ShareableJSRef>(value));
+  static jsi::Object newHostObject(jsi::Runtime &rt, const std::shared_ptr<Shareable> &value) {
+    return jsi::Object::createFromHostObject(rt, std::make_shared<ShareableJSRef>(value));
   }
 };
 
@@ -148,17 +139,14 @@ jsi::Value makeShareableClone(
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &maybeShareableValue,
-    const std::string &errorMessage =
-        "[Reanimated] Expecting the object to be of type ShareableJSRef.");
+    const std::string &errorMessage = "[Reanimated] Expecting the object to be of type ShareableJSRef.");
 
 template <typename T>
 std::shared_ptr<T> extractShareableOrThrow(
     jsi::Runtime &rt,
     const jsi::Value &shareableRef,
-    const std::string &errorMessage =
-        "[Reanimated] Provided shareable object is of an incompatible type.") {
-  auto res = std::dynamic_pointer_cast<T>(
-      extractShareableOrThrow(rt, shareableRef, errorMessage));
+    const std::string &errorMessage = "[Reanimated] Provided shareable object is of an incompatible type.") {
+  auto res = std::dynamic_pointer_cast<T>(extractShareableOrThrow(rt, shareableRef, errorMessage));
   if (!res) {
     throw std::runtime_error(errorMessage);
   }
@@ -179,10 +167,7 @@ class ShareableObject : public Shareable {
  public:
   ShareableObject(jsi::Runtime &rt, const jsi::Object &object);
 
-  ShareableObject(
-      jsi::Runtime &rt,
-      const jsi::Object &object,
-      const jsi::Value &nativeStateSource);
+  ShareableObject(jsi::Runtime &rt, const jsi::Object &object, const jsi::Value &nativeStateSource);
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -193,9 +178,7 @@ class ShareableObject : public Shareable {
 
 class ShareableHostObject : public Shareable {
  public:
-  ShareableHostObject(
-      jsi::Runtime &,
-      const std::shared_ptr<jsi::HostObject> &hostObject)
+  ShareableHostObject(jsi::Runtime &, const std::shared_ptr<jsi::HostObject> &hostObject)
       : Shareable(HostObjectType), hostObject_(hostObject) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
@@ -208,9 +191,7 @@ class ShareableHostFunction : public Shareable {
  public:
   ShareableHostFunction(jsi::Runtime &rt, jsi::Function function)
       : Shareable(HostFunctionType),
-        hostFunction_(
-            (assert(function.isHostFunction(rt)),
-             function.getHostFunction(rt))),
+        hostFunction_((assert(function.isHostFunction(rt)), function.getHostFunction(rt))),
         name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
         paramCount_(function.getProperty(rt, "length").asNumber()) {}
 
@@ -225,10 +206,7 @@ class ShareableHostFunction : public Shareable {
 class ShareableArrayBuffer : public Shareable {
  public:
   ShareableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer)
-      : Shareable(ArrayBufferType),
-        data_(
-            arrayBuffer.data(rt),
-            arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
+      : Shareable(ArrayBufferType), data_(arrayBuffer.data(rt), arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -238,17 +216,14 @@ class ShareableArrayBuffer : public Shareable {
 
 class ShareableWorklet : public ShareableObject {
  public:
-  ShareableWorklet(jsi::Runtime &rt, const jsi::Object &worklet)
-      : ShareableObject(rt, worklet) {
+  ShareableWorklet(jsi::Runtime &rt, const jsi::Object &worklet) : ShareableObject(rt, worklet) {
     valueType_ = WorkletType;
   }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 };
 
-class ShareableRemoteFunction
-    : public Shareable,
-      public std::enable_shared_from_this<ShareableRemoteFunction> {
+class ShareableRemoteFunction : public Shareable, public std::enable_shared_from_this<ShareableRemoteFunction> {
  private:
   jsi::Runtime *runtime_;
 #ifndef NDEBUG
@@ -286,9 +261,7 @@ class ShareableHandle : public Shareable {
 
  public:
   ShareableHandle(jsi::Runtime &rt, const jsi::Object &initializerObject)
-      : Shareable(HandleType),
-        initializer_(std::make_unique<ShareableObject>(rt, initializerObject)) {
-  }
+      : Shareable(HandleType), initializer_(std::make_unique<ShareableObject>(rt, initializerObject)) {}
 
   ~ShareableHandle() {
     cleanupIfRuntimeExists(remoteRuntime_, remoteValue_);
@@ -299,8 +272,7 @@ class ShareableHandle : public Shareable {
 
 class ShareableString : public Shareable {
  public:
-  explicit ShareableString(const std::string &string)
-      : Shareable(StringType), data_(string) {}
+  explicit ShareableString(const std::string &string) : Shareable(StringType), data_(string) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 

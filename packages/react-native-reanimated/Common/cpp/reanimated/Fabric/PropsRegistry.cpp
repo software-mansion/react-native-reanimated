@@ -8,9 +8,7 @@ std::lock_guard<std::mutex> PropsRegistry::createLock() const {
   return std::lock_guard<std::mutex>(mutex_);
 }
 
-void PropsRegistry::update(
-    const std::shared_ptr<const ShadowNode> &shadowNode,
-    folly::dynamic &&props) {
+void PropsRegistry::update(const std::shared_ptr<const ShadowNode> &shadowNode, folly::dynamic &&props) {
   const auto tag = shadowNode->getTag();
   const auto it = map_.find(tag);
   if (it == map_.cend()) {
@@ -24,16 +22,14 @@ void PropsRegistry::update(
   }
 }
 
-void PropsRegistry::for_each(std::function<void(
-                                 const ShadowNodeFamily &family,
-                                 const folly::dynamic &props)> callback) const {
+void PropsRegistry::for_each(
+    std::function<void(const ShadowNodeFamily &family, const folly::dynamic &props)> callback) const {
   for (const auto &[_, value] : map_) {
     callback(value.first->getFamily(), value.second);
   }
 }
 
-void PropsRegistry::markNodeAsRemovable(
-    const std::shared_ptr<const ShadowNode> &shadowNode) {
+void PropsRegistry::markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode) {
   removableShadowNodes_[shadowNode->getTag()] = shadowNode;
 }
 
