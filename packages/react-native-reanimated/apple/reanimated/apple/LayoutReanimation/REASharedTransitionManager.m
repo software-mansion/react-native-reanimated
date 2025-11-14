@@ -72,8 +72,7 @@ static BOOL _isConfigured = NO;
     _isConfigured = NO;
     _disappearingScreens = [NSMutableArray new];
     _isTabNavigator = NO;
-    _findPrecedingViewTagForTransition = ^NSNumber *(NSNumber *tag)
-    {
+    _findPrecedingViewTagForTransition = ^NSNumber *(NSNumber *tag) {
       // default implementation, this block will be replaced by a setter
       return nil;
     };
