@@ -10,6 +10,7 @@ import Animated, {
 // TODO: make sure that React render doesn't overwrite the text
 // TODO: add support for the following syntax: <Animated.Text>{sharedValue}</Animated.Text>
 // TODO: add support for the following syntax: <Animated.Text>Before {sharedValue} After</Animated.Text>
+// TODO: add TypeScript validation that allows <Animated.Text> to either have children or have `text` animated prop
 
 export default function App() {
   const sv = useSharedValue(0);
