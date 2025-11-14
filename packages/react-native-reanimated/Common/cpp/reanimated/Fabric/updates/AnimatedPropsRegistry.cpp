@@ -25,15 +25,18 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     auto props = jsi::dynamicFromValue(rt, updates);
     
     if (!strcmp(shadowNode->getComponentName(), "Paragraph")) {
+      bool hasTextProp = false;
       for (const auto &[key, value] : props.items()) {
         if (key == "text") {
+          hasTextProp = true;
+          // Pass the text prop to child component
           const auto &childShadowNode = shadowNode->getChildren()[0];
           addUpdatesToBatch(childShadowNode, folly::dynamic::object("text", value));
           break;
         }
       }
-      props.erase("text");
-      if (props.empty()) {
+      if (hasTextProp && props.size() == 1) {
+        // Skip adding empty batch for the parent component
         continue;
       }
     }
