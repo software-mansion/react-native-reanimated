@@ -3,9 +3,10 @@ import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { ExamplesScreen, VerticalExampleCard } from '@/apps/css/components';
+import type { ExampleScreenProps } from '@/apps/css/navigation/types';
 import { colors, radius, sizes } from '@/theme';
 
-export default function ShadowOffset() {
+export default function ShadowOffset({ labelTypes }: ExampleScreenProps) {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
       CardComponent={VerticalExampleCard}
@@ -51,7 +52,7 @@ export default function ShadowOffset() {
               }),
             },
           ],
-          labelTypes: ['iOS', 'web'],
+          labelTypes,
           title: 'Shadow Offset',
         },
       ]}
