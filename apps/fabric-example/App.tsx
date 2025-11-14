@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedProps,
+  useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -26,11 +27,18 @@ export default function App() {
     };
   });
 
+  const animatedStyle = useAnimatedStyle(() => {
+    return { fontSize: 20 + sv.value };
+  });
+
   return (
     <View style={styles.container}>
       <Text>Left</Text>
-      {/* @ts-expect-error TODO fix animated props type */}
-      <Animated.Text animatedProps={animatedProps} style={styles.text} />
+      <Animated.Text
+        // @ts-expect-error TODO fix animated props type
+        animatedProps={animatedProps}
+        style={[styles.text, animatedStyle]}
+      />
       <Text>Right</Text>
     </View>
   );
