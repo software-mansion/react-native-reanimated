@@ -23,7 +23,7 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
 
     const jsi::Value &updates = item.getProperty(rt, "updates");
     auto props = jsi::dynamicFromValue(rt, updates);
-    
+
     if (!strcmp(shadowNode->getComponentName(), "Paragraph")) {
       bool hasTextProp = false;
       for (const auto &[key, value] : props.items()) {
@@ -39,8 +39,9 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
         // Skip adding empty batch for the parent component
         continue;
       }
+      props.erase("text");
     }
-    
+
     addUpdatesToBatch(shadowNode, props);
   }
 }
