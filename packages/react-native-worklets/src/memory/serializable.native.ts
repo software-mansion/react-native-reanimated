@@ -53,6 +53,7 @@ function getFromCache(value: object) {
   return cached;
 }
 
+// TODO: Do it smarter.
 // The below object is used as a replacement for objects that cannot be transferred
 // as serializable values. In createSerializable we detect if an object is of
 // a plain Object.prototype and only allow such objects to be transferred. This lets
@@ -69,7 +70,8 @@ const INACCESSIBLE_OBJECT = {
         get: (_: unknown, prop: string | symbol) => {
           if (
             prop === '_isReanimatedSharedValue' ||
-            prop === '__remoteFunction'
+            prop === '__remoteFunction' ||
+            prop === '__synchronizableRef'
           ) {
             // not very happy about this check here, but we need to allow for
             // "inaccessible" objects to be tested with isSerializableRef check
@@ -117,11 +119,29 @@ const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // We use it to check if later on the function reenters with the same object
 let processedObjectAtThresholdDepth: unknown;
 
+export const determinants: ((value: unknown) => boolean)[] = [];
+export const serializers: ((value: unknown) => unknown)[] = [];
+export const deserializers: ((value: unknown) => unknown)[] = [];
+
+export function registerSerializable(
+  determinant: (value: unknown) => boolean,
+  serializer: (value: unknown) => unknown,
+  deserializer: (value: unknown) => unknown
+) {
+  determinants.push(determinant);
+  serializers.push(serializer);
+  deserializers.push(deserializer);
+}
+
 export function createSerializable<TValue>(
   value: TValue,
   shouldPersistRemote = false,
   depth = 0
 ): SerializableRef<TValue> {
+  if (globalThis.__ENABLE_LOGGING) {
+    console.log('value', value);
+    console.log('typeof value', typeof value);
+  }
   detectCyclicObject(value, depth);
 
   const isObject = typeof value === 'object';
@@ -158,6 +178,13 @@ export function createSerializable<TValue>(
   const cached = getFromCache(value);
   if (cached !== undefined) {
     return cached as SerializableRef<TValue>;
+  }
+
+  for (let i = 0; i < determinants.length; i++) {
+    if (determinants[i](value)) {
+      // value = serializers[i](value) as any;
+      return cloneCustom(value, serializers[i], deserializers[i]);
+    }
   }
 
   if (Array.isArray(value)) {
@@ -219,7 +246,9 @@ export function createSerializable<TValue>(
     // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView
     return cloneArrayBufferView(value);
   }
-  return inaccessibleObject(value);
+  return clonePlainJSObject(value, shouldPersistRemote, depth);
+  // return inaccessibleObject(value);
+  // throw new Error("this shouldn't happen");
 }
 
 if (globalThis._WORKLETS_BUNDLE_MODE) {
@@ -593,6 +622,20 @@ function cloneImport<TValue extends WorkletImport>(
   serializableMappingCache.set(clone);
 
   return clone as SerializableRef<TValue>;
+}
+
+function cloneCustom<TValue extends object>(
+  data: TValue,
+  serializer: any,
+  deserializer: any
+): SerializableRef<TValue> {
+  const serializedData = serializer(data);
+  const serializedDataSerializable = createSerializable(serializedData);
+
+  return WorkletsModule.createSerializableCustom(
+    createSerializable(deserializer),
+    serializedDataSerializable
+  ) as SerializableRef<TValue>;
 }
 
 function inaccessibleObject<TValue extends object>(

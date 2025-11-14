@@ -466,4 +466,20 @@ jsi::Value SerializableTurboModuleLike::toJSValue(jsi::Runtime &rt) {
   return obj;
 }
 
+jsi::Value CustomSerializable::toJSValue(jsi::Runtime &rt) {
+  auto deserializerJS = deserializer_->toJSValue(rt).asObject(rt).asFunction(rt);
+  auto dataJS = data_->toJSValue(rt);
+
+  return deserializerJS.call(rt, dataJS);
+}
+
+jsi::Value makeSerializableCustom(jsi::Runtime &rt, const jsi::Value &deserializer, const jsi::Value &data) {
+  auto deserializerSerializable = extractSerializableOrThrow<SerializableWorklet>(
+      rt, deserializer, "[Worklets] Deserializer must be a Serializable Worklet.");
+  auto dataSerializable = extractSerializableOrThrow(rt, data, "[Worklets] Data must be a Serializable object.");
+
+  auto serializable = std::make_shared<CustomSerializable>(deserializerSerializable, dataSerializable);
+  return SerializableJSRef::newNativeStateObject(rt, serializable);
+}
+
 } // namespace worklets

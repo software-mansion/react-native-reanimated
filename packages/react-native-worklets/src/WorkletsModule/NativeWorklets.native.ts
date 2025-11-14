@@ -152,6 +152,16 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
+  createSerializableCustom(
+    deserializer: SerializableRef<object>,
+    data: object
+  ): SerializableRef<object> {
+    return this.#workletsModuleProxy.createSerializableCustom(
+      deserializer,
+      data
+    );
+  }
+
   scheduleOnUI<TValue>(serializable: SerializableRef<TValue>) {
     return this.#workletsModuleProxy.scheduleOnUI(serializable);
   }

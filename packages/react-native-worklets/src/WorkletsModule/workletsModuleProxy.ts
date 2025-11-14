@@ -69,6 +69,11 @@ export interface WorkletsModuleProxy {
     shouldPersistRemote: boolean
   ): SerializableRef<object>;
 
+  createSerializableCustom(
+    deserializer: SerializableRef<object>,
+    data: object
+  ): SerializableRef<object>;
+
   scheduleOnUI<TValue>(serializable: SerializableRef<TValue>): void;
 
   executeOnUIRuntimeSync<TValue, TReturn>(

@@ -84,6 +84,7 @@ class Serializable {
     TurboModuleLikeType,
     ImportType,
     SynchronizableType,
+    CustomType,
   };
 
   explicit Serializable(ValueType valueType) : valueType_(valueType) {}
@@ -182,6 +183,8 @@ jsi::Value makeSerializableInitializer(jsi::Runtime &rt, const jsi::Object &init
 jsi::Value makeSerializableFunction(jsi::Runtime &rt, jsi::Function function);
 
 jsi::Value makeSerializableWorklet(jsi::Runtime &rt, const jsi::Object &object, const bool &shouldRetainRemote);
+
+jsi::Value makeSerializableCustom(jsi::Runtime &rt, const jsi::Value &deserializer, const jsi::Value &data);
 
 std::shared_ptr<Serializable> extractSerializableOrThrow(
     jsi::Runtime &rt,
@@ -409,6 +412,18 @@ class SerializableTurboModuleLike : public Serializable {
  private:
   const std::unique_ptr<SerializableHostObject> proto_;
   const std::unique_ptr<SerializableObject> properties_;
+};
+
+class CustomSerializable : public Serializable {
+ public:
+  CustomSerializable(std::shared_ptr<SerializableWorklet> deserializer, std::shared_ptr<Serializable> data)
+      : Serializable(CustomType), deserializer_(std::move(deserializer)), data_(std::move(data)) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ private:
+  std::shared_ptr<SerializableWorklet> deserializer_;
+  std::shared_ptr<Serializable> data_;
 };
 
 } // namespace worklets
