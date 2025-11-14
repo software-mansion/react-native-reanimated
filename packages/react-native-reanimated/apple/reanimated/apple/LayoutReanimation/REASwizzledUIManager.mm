@@ -59,7 +59,8 @@ std::atomic<bool> hasPendingBlocks;
                   fromClass:[self class]];
     SEL manageChildrenOriginal = @selector
         (_manageChildren:moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
-    SEL manageChildrenReanimated = @selector(reanimated_manageChildren:moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
+    SEL manageChildrenReanimated =
+    @selector(reanimated_manageChildren:moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
     [REAUtils swizzleMethod:manageChildrenOriginal
                    forClass:[RCTUIManager class]
                        with:manageChildrenReanimated
