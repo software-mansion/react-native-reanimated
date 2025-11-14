@@ -22,7 +22,22 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
     const jsi::Value &updates = item.getProperty(rt, "updates");
-    addUpdatesToBatch(shadowNode, jsi::dynamicFromValue(rt, updates));
+    auto props = jsi::dynamicFromValue(rt, updates);
+    
+    if (!strcmp(shadowNode->getComponentName(), "Paragraph")) {
+      for (const auto &[key, value] : props.items()) {
+        if (key.getString() == "text") {
+          const auto &childShadowNode = shadowNode->getChildren()[0];
+          addUpdatesToBatch(childShadowNode, folly::dynamic::object("text", value));
+          break;
+        }
+      }
+      if (props.size() == 1) {
+        continue;
+      }
+    }
+    
+    addUpdatesToBatch(shadowNode, props);
   }
 }
 

@@ -1053,18 +1053,7 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
     return;
   }
 
-  // TODO: apply the same logic also in ReanimatedCommitHook so that React renders don't overwrite the text
-  UpdatesBatch updatesBatch2;
-  for (const auto &pair : updatesBatch) {
-    if (!strcmp(pair.first->getComponentName(), "Paragraph")) {
-      updatesBatch2.emplace_back(pair.first->getChildren()[0], pair.second);
-    } else {
-      updatesBatch2.push_back(pair);
-    }
-  }
-  // TODO: try tweaking findNodeHandle so that it returns the Text node to avoid workaround with getting the first child
-
-  commitUpdates(rt, updatesBatch2);
+  commitUpdates(rt, updatesBatch);
 
   // Clear the entire cache after the commit
   // (we don't know if the view is updated from outside of Reanimated
