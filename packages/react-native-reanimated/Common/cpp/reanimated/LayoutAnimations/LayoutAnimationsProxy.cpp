@@ -297,9 +297,8 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           auto layoutAnimationIt = layoutAnimations_.find(tag);
           if (layoutAnimationIt == layoutAnimations_.end()) {
             if (oldShadowViewsForReparentings.contains(tag)) {
-              filteredMutations.push_back(
-                  ShadowViewMutation::InsertMutation(
-                      mutationParent, oldShadowViewsForReparentings[tag], mutation.index));
+              filteredMutations.push_back(ShadowViewMutation::InsertMutation(
+                  mutationParent, oldShadowViewsForReparentings[tag], mutation.index));
             } else {
               filteredMutations.push_back(mutation);
             }
@@ -416,16 +415,15 @@ void LayoutAnimationsProxy::addOngoingAnimations(SurfaceId surfaceId, ShadowView
     newView->props = updateValues.newProps;
     updateLayoutMetrics(newView->layoutMetrics, updateValues.frame);
 
-    mutations.push_back(
-        ShadowViewMutation::UpdateMutation(
-            *layoutAnimation.currentView,
-            *newView,
+    mutations.push_back(ShadowViewMutation::UpdateMutation(
+        *layoutAnimation.currentView,
+        *newView,
 #if REACT_NATIVE_MINOR_VERSION >= 78
-            layoutAnimation.parentTag
+        layoutAnimation.parentTag
 #else
-            *layoutAnimation.parentView
+        *layoutAnimation.parentView
 #endif // REACT_NATIVE_MINOR_VERSION >= 78
-            ));
+        ));
     layoutAnimation.currentView = newView;
   }
   updateMap.clear();
