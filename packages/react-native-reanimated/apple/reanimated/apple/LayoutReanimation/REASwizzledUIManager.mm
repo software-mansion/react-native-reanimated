@@ -61,7 +61,7 @@ std::atomic<bool> hasPendingBlocks;
         (_manageChildren:moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
     // clang-format off
     SEL manageChildrenReanimated =
-        selector(reanimated_manageChildren:
+        @selector(reanimated_manageChildren:
                            moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
     // clang-format on
     [REAUtils swizzleMethod:manageChildrenOriginal
