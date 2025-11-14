@@ -28,7 +28,9 @@ export default function App() {
   });
 
   const animatedStyle = useAnimatedStyle(() => {
-    return { fontSize: 20 + sv.value };
+    return {
+      fontSize: 20 + sv.value,
+    };
   });
 
   return (
@@ -52,9 +54,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   text: {
-    fontSize: 80,
     fontVariant: ['tabular-nums'],
-    borderColor: 'red',
-    borderWidth: 2,
+    borderColor: 'lime',
+    borderWidth: 10,
   },
 });
