@@ -32,8 +32,7 @@ using namespace facebook::jni;
 
 class AnimationFrameCallback : public HybridClass<AnimationFrameCallback> {
  public:
-  static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/nativeProxy/AnimationFrameCallback;";
+  static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/nativeProxy/AnimationFrameCallback;";
 
   void onAnimationFrame(double timestampMs) {
     callback_(timestampMs);
@@ -41,29 +40,23 @@ class AnimationFrameCallback : public HybridClass<AnimationFrameCallback> {
 
   static void registerNatives() {
     javaClassStatic()->registerNatives({
-        makeNativeMethod(
-            "onAnimationFrame", AnimationFrameCallback::onAnimationFrame),
+        makeNativeMethod("onAnimationFrame", AnimationFrameCallback::onAnimationFrame),
     });
   }
 
  private:
   friend HybridBase;
 
-  explicit AnimationFrameCallback(std::function<void(double)> callback)
-      : callback_(std::move(callback)) {}
+  explicit AnimationFrameCallback(std::function<void(double)> callback) : callback_(std::move(callback)) {}
 
   std::function<void(double)> callback_;
 };
 
 class EventHandler : public HybridClass<EventHandler> {
  public:
-  static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/nativeProxy/EventHandler;";
+  static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/nativeProxy/EventHandler;";
 
-  void receiveEvent(
-      jni::alias_ref<JString> eventKey,
-      jint emitterReactTag,
-      jni::alias_ref<react::WritableMap> event) {
+  void receiveEvent(jni::alias_ref<JString> eventKey, jint emitterReactTag, jni::alias_ref<react::WritableMap> event) {
     handler_(eventKey, emitterReactTag, event);
   }
 
@@ -76,21 +69,16 @@ class EventHandler : public HybridClass<EventHandler> {
  private:
   friend HybridBase;
 
-  explicit EventHandler(std::function<void(
-                            jni::alias_ref<JString>,
-                            jint emitterReactTag,
-                            jni::alias_ref<react::WritableMap>)> handler)
+  explicit EventHandler(
+      std::function<void(jni::alias_ref<JString>, jint emitterReactTag, jni::alias_ref<react::WritableMap>)> handler)
       : handler_(std::move(handler)) {}
 
-  std::function<
-      void(jni::alias_ref<JString>, jint, jni::alias_ref<react::WritableMap>)>
-      handler_;
+  std::function<void(jni::alias_ref<JString>, jint, jni::alias_ref<react::WritableMap>)> handler_;
 };
 
 class SensorSetter : public HybridClass<SensorSetter> {
  public:
-  static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/nativeProxy/SensorSetter;";
+  static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/nativeProxy/SensorSetter;";
 
   void sensorSetter(jni::alias_ref<JArrayFloat> value, int orientationDegrees) {
     size_t size = value->size();
@@ -111,16 +99,14 @@ class SensorSetter : public HybridClass<SensorSetter> {
  private:
   friend HybridBase;
 
-  explicit SensorSetter(std::function<void(double[], int)> callback)
-      : callback_(std::move(callback)) {}
+  explicit SensorSetter(std::function<void(double[], int)> callback) : callback_(std::move(callback)) {}
 
   std::function<void(double[], int)> callback_;
 };
 
 class KeyboardWorkletWrapper : public HybridClass<KeyboardWorkletWrapper> {
  public:
-  static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/keyboard/KeyboardWorkletWrapper;";
+  static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/keyboard/KeyboardWorkletWrapper;";
 
   void invoke(int keyboardState, int height) {
     callback_(keyboardState, height);
@@ -135,28 +121,24 @@ class KeyboardWorkletWrapper : public HybridClass<KeyboardWorkletWrapper> {
  private:
   friend HybridBase;
 
-  explicit KeyboardWorkletWrapper(std::function<void(int, int)> callback)
-      : callback_(std::move(callback)) {}
+  explicit KeyboardWorkletWrapper(std::function<void(int, int)> callback) : callback_(std::move(callback)) {}
 
   std::function<void(int, int)> callback_;
 };
 
 class NativeProxy : public jni::HybridClass<NativeProxy> {
  public:
-  static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/NativeProxy;";
+  static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/NativeProxy;";
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> jThis,
       jni::alias_ref<WorkletsModule::javaobject> jWorkletsModule,
       jlong jsContext,
-      jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
-          jsCallInvokerHolder,
+      jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
       jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
       const bool isBridgeless
 #ifdef RCT_NEW_ARCH_ENABLED
       ,
-      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager
+      jni::alias_ref<facebook::react::JFabricUIManager::javaobject> fabricUIManager
 #endif
   );
 
@@ -170,8 +152,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   jsi::Runtime *rnRuntime_;
   // We keep a shared_ptr to a jni::global_ref because you can't make weak_ptrs
   // from jni::global_ref.
-  std::shared_ptr<jni::global_ref<LayoutAnimations::javaobject>>
-      layoutAnimations_;
+  std::shared_ptr<jni::global_ref<LayoutAnimations::javaobject>> layoutAnimations_;
   std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
 #ifndef NDEBUG
   void checkJavaVersion(jsi::Runtime &);
@@ -187,20 +168,14 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   void setupLayoutAnimations();
 
   double getAnimationTimestamp();
-  bool isAnyHandlerWaitingForEvent(
-      const std::string &eventName,
-      const int emitterReactTag);
+  bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
   void performOperations();
   bool getIsReducedMotion();
   void requestRender(std::function<void(double)> onRender);
   void registerEventHandler();
   void maybeFlushUIUpdatesQueue();
   void setGestureState(int handlerTag, int newState);
-  int registerSensor(
-      int sensorType,
-      int interval,
-      int iosReferenceFrame,
-      std::function<void(double[], int)> setter);
+  int registerSensor(int sensorType, int interval, int iosReferenceFrame, std::function<void(double[], int)> setter);
   void unregisterSensor(int sensorId);
   int subscribeForKeyboardEvents(
       std::function<void(int, int)> callback,
@@ -210,31 +185,17 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
-  jsi::Value
-  obtainProp(jsi::Runtime &rt, const int viewTag, const jsi::Value &propName);
-  void configureProps(
-      jsi::Runtime &rt,
-      const jsi::Value &uiProps,
-      const jsi::Value &nativeProps);
+  jsi::Value obtainProp(jsi::Runtime &rt, const int viewTag, const jsi::Value &propName);
+  void configureProps(jsi::Runtime &rt, const jsi::Value &uiProps, const jsi::Value &nativeProps);
   void updateProps(jsi::Runtime &rt, const jsi::Value &operations);
   void scrollTo(int viewTag, double x, double y, bool animated);
-  void dispatchCommand(
-      jsi::Runtime &rt,
-      const int viewTag,
-      const jsi::Value &commandNameValue,
-      const jsi::Value &argsValue);
+  void
+  dispatchCommand(jsi::Runtime &rt, const int viewTag, const jsi::Value &commandNameValue, const jsi::Value &argsValue);
   std::vector<std::pair<std::string, double>> measure(int viewTag);
 #endif
-  void handleEvent(
-      jni::alias_ref<JString> eventName,
-      jint emitterReactTag,
-      jni::alias_ref<react::WritableMap> event);
+  void handleEvent(jni::alias_ref<JString> eventName, jint emitterReactTag, jni::alias_ref<react::WritableMap> event);
 
-  void progressLayoutAnimation(
-      jsi::Runtime &rt,
-      int tag,
-      const jsi::Object &newProps,
-      bool isSharedTransition);
+  void progressLayoutAnimation(jsi::Runtime &rt, int tag, const jsi::Object &newProps, bool isSharedTransition);
 
   /***
    * Wraps a method of `NativeProxy` in a function object capturing `this`
@@ -245,8 +206,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
    * that method on `this`
    */
   template <class TReturn, class... TParams>
-  std::function<TReturn(TParams...)> bindThis(
-      TReturn (NativeProxy::*methodPtr)(TParams...)) {
+  std::function<TReturn(TParams...)> bindThis(TReturn (NativeProxy::*methodPtr)(TParams...)) {
     // It's probably safe to pass `this` as reference here...
     return [this, methodPtr](TParams &&...args) {
       return (this->*methodPtr)(std::forward<TParams>(args)...);
@@ -267,14 +227,12 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       const bool isBridgeless
 #ifdef RCT_NEW_ARCH_ENABLED
       ,
-      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager
+      jni::alias_ref<facebook::react::JFabricUIManager::javaobject> fabricUIManager
 #endif
   );
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  void commonInit(jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-                      &fabricUIManager);
+  void commonInit(jni::alias_ref<facebook::react::JFabricUIManager::javaobject> &fabricUIManager);
 #endif // RCT_NEW_ARCH_ENABLED
 
   void invalidateCpp();

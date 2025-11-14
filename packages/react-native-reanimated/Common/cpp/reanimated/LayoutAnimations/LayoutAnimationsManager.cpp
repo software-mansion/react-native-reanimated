@@ -7,15 +7,12 @@
 
 namespace reanimated {
 
-void LayoutAnimationsManager::configureAnimationBatch(
-    const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
+void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   std::vector<LayoutAnimationConfig> sharedTransitionConfigs;
   for (auto layoutAnimationConfig : layoutAnimationsBatch) {
-    const auto &[tag, type, config, sharedTransitionTag] =
-        layoutAnimationConfig;
-    if (type == SHARED_ELEMENT_TRANSITION ||
-        type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
+    const auto &[tag, type, config, sharedTransitionTag] = layoutAnimationConfig;
+    if (type == SHARED_ELEMENT_TRANSITION || type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
       clearSharedTransitionConfig(tag);
       sharedTransitionConfigs.push_back(std::move(layoutAnimationConfig));
     } else {
@@ -32,8 +29,7 @@ void LayoutAnimationsManager::configureAnimationBatch(
       }
     }
   }
-  for (const auto &[tag, type, config, sharedTransitionTag] :
-       sharedTransitionConfigs) {
+  for (const auto &[tag, type, config, sharedTransitionTag] : sharedTransitionConfigs) {
     if (config == nullptr) {
       continue;
     }
@@ -46,25 +42,17 @@ void LayoutAnimationsManager::configureAnimationBatch(
   }
 }
 
-void LayoutAnimationsManager::setShouldAnimateExiting(
-    const int tag,
-    const bool value) {
+void LayoutAnimationsManager::setShouldAnimateExiting(const int tag, const bool value) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   shouldAnimateExitingForTag_[tag] = value;
 }
 
-bool LayoutAnimationsManager::shouldAnimateExiting(
-    const int tag,
-    const bool shouldAnimate) {
+bool LayoutAnimationsManager::shouldAnimateExiting(const int tag, const bool shouldAnimate) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-  return collection::contains(shouldAnimateExitingForTag_, tag)
-      ? shouldAnimateExitingForTag_[tag]
-      : shouldAnimate;
+  return collection::contains(shouldAnimateExitingForTag_, tag) ? shouldAnimateExitingForTag_[tag] : shouldAnimate;
 }
 
-bool LayoutAnimationsManager::hasLayoutAnimation(
-    const int tag,
-    const LayoutAnimationType type) {
+bool LayoutAnimationsManager::hasLayoutAnimation(const int tag, const LayoutAnimationType type) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   if (type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
     auto end = ignoreProgressAnimationForTag_.end();
@@ -123,30 +111,17 @@ void LayoutAnimationsManager::startLayoutAnimation(
   }
   // TODO: cache the following!!
   jsi::Value layoutAnimationRepositoryAsValue =
-      rt.global()
-          .getPropertyAsObject(rt, "global")
-          .getProperty(rt, "LayoutAnimationsManager");
+      rt.global().getPropertyAsObject(rt, "global").getProperty(rt, "LayoutAnimationsManager");
   jsi::Function startAnimationForTag =
-      layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(
-          rt, "start");
-  startAnimationForTag.call(
-      rt,
-      jsi::Value(tag),
-      jsi::Value(static_cast<int>(type)),
-      values,
-      config->toJSValue(rt));
+      layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "start");
+  startAnimationForTag.call(rt, jsi::Value(tag), jsi::Value(static_cast<int>(type)), values, config->toJSValue(rt));
 }
 
-void LayoutAnimationsManager::cancelLayoutAnimation(
-    jsi::Runtime &rt,
-    const int tag) const {
+void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const {
   jsi::Value layoutAnimationRepositoryAsValue =
-      rt.global()
-          .getPropertyAsObject(rt, "global")
-          .getProperty(rt, "LayoutAnimationsManager");
+      rt.global().getPropertyAsObject(rt, "global").getProperty(rt, "LayoutAnimationsManager");
   jsi::Function cancelLayoutAnimation =
-      layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(
-          rt, "stop");
+      layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(rt, "stop");
   cancelLayoutAnimation.call(rt, jsi::Value(tag));
 }
 
@@ -167,16 +142,13 @@ int LayoutAnimationsManager::findPrecedingViewTagForTransition(const int tag) {
   return -1;
 }
 
-const std::vector<int> &LayoutAnimationsManager::getSharedGroup(
-    const int viewTag) {
+const std::vector<int> &LayoutAnimationsManager::getSharedGroup(const int viewTag) {
   const auto &groupSharedTag = viewTagToSharedTag_[viewTag];
   return sharedTransitionGroups_[groupSharedTag];
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
-void LayoutAnimationsManager::transferConfigFromNativeID(
-    const int nativeId,
-    const int tag) {
+void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, const int tag) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   auto config = enteringAnimationsForNativeID_[nativeId];
   if (config) {
@@ -187,15 +159,12 @@ void LayoutAnimationsManager::transferConfigFromNativeID(
 #endif
 
 #ifndef NDEBUG
-std::string LayoutAnimationsManager::getScreenSharedTagPairString(
-    const int screenTag,
-    const std::string &sharedTag) const {
+std::string LayoutAnimationsManager::getScreenSharedTagPairString(const int screenTag, const std::string &sharedTag)
+    const {
   return std::to_string(screenTag) + ":" + sharedTag;
 }
 
-void LayoutAnimationsManager::checkDuplicateSharedTag(
-    const int viewTag,
-    const int screenTag) {
+void LayoutAnimationsManager::checkDuplicateSharedTag(const int viewTag, const int screenTag) {
   if (!viewTagToSharedTag_.count(viewTag)) {
     return;
   }
@@ -203,17 +172,15 @@ void LayoutAnimationsManager::checkDuplicateSharedTag(
   const auto &pair = getScreenSharedTagPairString(screenTag, sharedTag);
   bool hasDuplicate = screenSharedTagSet_.count(pair);
   if (hasDuplicate) {
-    jsLogger_->warnOnJS(
-        "[Reanimated] Duplicate shared tag \"" + sharedTag +
-        "\" on the same screen");
+    jsLogger_->warnOnJS("[Reanimated] Duplicate shared tag \"" + sharedTag + "\" on the same screen");
   }
   viewsScreenSharedTagMap_[viewTag] = pair;
   screenSharedTagSet_.insert(pair);
 }
 #endif // NDEBUG
 
-std::unordered_map<int, std::shared_ptr<Shareable>> &
-LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
+std::unordered_map<int, std::shared_ptr<Shareable>> &LayoutAnimationsManager::getConfigsForType(
+    const LayoutAnimationType type) {
   switch (type) {
     case ENTERING:
       return enteringAnimations_;

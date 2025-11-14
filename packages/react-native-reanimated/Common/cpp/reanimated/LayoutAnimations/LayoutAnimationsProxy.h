@@ -40,10 +40,9 @@ struct SurfaceContext {
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
 };
 
-struct LayoutAnimationsProxy
-    : public MountingOverrideDelegate,
-      public UIManagerAnimationDelegate,
-      public std::enable_shared_from_this<LayoutAnimationsProxy> {
+struct LayoutAnimationsProxy : public MountingOverrideDelegate,
+                               public UIManagerAnimationDelegate,
+                               public std::enable_shared_from_this<LayoutAnimationsProxy> {
   mutable std::unordered_map<Tag, std::shared_ptr<Node>> nodeForTag_;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
   mutable std::recursive_mutex mutex;
@@ -69,17 +68,12 @@ struct LayoutAnimationsProxy
         uiRuntime_(uiRuntime),
         uiScheduler_(uiScheduler) {}
 
-  void startEnteringAnimation(const int tag, ShadowViewMutation &mutation)
-      const;
+  void startEnteringAnimation(const int tag, ShadowViewMutation &mutation) const;
   void startExitingAnimation(const int tag, ShadowViewMutation &mutation) const;
-  void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation)
-      const;
+  void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation) const;
 
-  void transferConfigFromNativeID(const std::string nativeId, const int tag)
-      const;
-  std::optional<SurfaceId> progressLayoutAnimation(
-      int tag,
-      const jsi::Object &newStyle);
+  void transferConfigFromNativeID(const std::string nativeId, const int tag) const;
+  std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle);
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove);
   void maybeCancelAnimation(const int tag) const;
 
@@ -99,21 +93,13 @@ struct LayoutAnimationsProxy
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext,
       SurfaceId surfaceId) const;
-  void addOngoingAnimations(
-      SurfaceId surfaceId,
-      ShadowViewMutationList &mutations) const;
-  void updateOngoingAnimationTarget(
-      const int tag,
-      const ShadowViewMutation &mutation) const;
+  void addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList &mutations) const;
+  void updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation) const;
   std::shared_ptr<ShadowView> cloneViewWithoutOpacity(
       facebook::react::ShadowViewMutation &mutation,
       const PropsParserContext &propsParserContext) const;
-  void maybeRestoreOpacity(
-      LayoutAnimation &layoutAnimation,
-      const jsi::Object &newStyle) const;
-  void maybeUpdateWindowDimensions(
-      facebook::react::ShadowViewMutation &mutation,
-      SurfaceId surfaceId) const;
+  void maybeRestoreOpacity(LayoutAnimation &layoutAnimation, const jsi::Object &newStyle) const;
+  void maybeUpdateWindowDimensions(facebook::react::ShadowViewMutation &mutation, SurfaceId surfaceId) const;
   void createLayoutAnimation(
       const ShadowViewMutation &mutation,
       ShadowView &oldView,
@@ -122,25 +108,20 @@ struct LayoutAnimationsProxy
 
   void updateIndexForMutation(ShadowViewMutation &mutation) const;
 
-  void removeRecursively(
-      std::shared_ptr<MutationNode> node,
-      ShadowViewMutationList &mutations) const;
+  void removeRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList &mutations) const;
   bool startAnimationsRecursively(
       std::shared_ptr<MutationNode> node,
       const bool shouldRemoveSubviewsWithoutAnimations,
       const bool shouldAnimate,
       const bool isScreenPop,
       ShadowViewMutationList &mutations) const;
-  void endAnimationsRecursively(
-      std::shared_ptr<MutationNode> node,
-      ShadowViewMutationList &mutations) const;
+  void endAnimationsRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList &mutations) const;
   void maybeDropAncestors(
       std::shared_ptr<Node> node,
       std::shared_ptr<MutationNode> child,
       ShadowViewMutationList &cleanupMutations) const;
 
-  const ComponentDescriptor &getComponentDescriptorForShadowView(
-      const ShadowView &shadowView) const;
+  const ComponentDescriptor &getComponentDescriptorForShadowView(const ShadowView &shadowView) const;
 
   // MountingOverrideDelegate
 
@@ -159,9 +140,7 @@ struct LayoutAnimationsProxy
       const jsi::Value &successCallbackValue,
       const jsi::Value &failureCallbackValue) const override;
 
-  void setComponentDescriptorRegistry(
-      const SharedComponentDescriptorRegistry &componentDescriptorRegistry)
-      override;
+  void setComponentDescriptorRegistry(const SharedComponentDescriptorRegistry &componentDescriptorRegistry) override;
 
   bool shouldAnimateFrame() const override;
 

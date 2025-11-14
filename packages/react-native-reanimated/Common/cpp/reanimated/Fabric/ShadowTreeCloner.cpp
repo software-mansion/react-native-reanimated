@@ -7,18 +7,14 @@
 
 namespace reanimated {
 
-Props::Shared mergeProps(
-    const ShadowNode &shadowNode,
-    const PropsMap &propsMap,
-    const ShadowNodeFamily &family) {
+Props::Shared mergeProps(const ShadowNode &shadowNode, const PropsMap &propsMap, const ShadowNodeFamily &family) {
   const auto it = propsMap.find(&family);
 
   if (it == propsMap.end()) {
     return ShadowNodeFragment::propsPlaceholder();
   }
 
-  PropsParserContext propsParserContext{
-      shadowNode.getSurfaceId(), *shadowNode.getContextContainer()};
+  PropsParserContext propsParserContext{shadowNode.getSurfaceId(), *shadowNode.getContextContainer()};
   const auto &propsVector = it->second;
   auto newProps = shadowNode.getProps();
 
@@ -26,17 +22,14 @@ Props::Shared mergeProps(
   if (propsVector.size() > 1) {
     folly::dynamic newPropsDynamic = folly::dynamic::object;
     for (const auto &props : propsVector) {
-      newPropsDynamic = folly::dynamic::merge(
-          props.operator folly::dynamic(), newPropsDynamic);
+      newPropsDynamic = folly::dynamic::merge(props.operator folly::dynamic(), newPropsDynamic);
     }
-    return shadowNode.getComponentDescriptor().cloneProps(
-        propsParserContext, newProps, RawProps(newPropsDynamic));
+    return shadowNode.getComponentDescriptor().cloneProps(propsParserContext, newProps, RawProps(newPropsDynamic));
   }
 #endif
 
   for (const auto &props : propsVector) {
-    newProps = shadowNode.getComponentDescriptor().cloneProps(
-        propsParserContext, newProps, RawProps(props));
+    newProps = shadowNode.getComponentDescriptor().cloneProps(propsParserContext, newProps, RawProps(props));
   }
 
   return newProps;
@@ -52,28 +45,23 @@ std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
 
   if (affectedChildrenIt != childrenMap.end()) {
     for (const auto index : affectedChildrenIt->second) {
-      children[index] = cloneShadowTreeWithNewPropsRecursive(
-          *children[index], childrenMap, propsMap);
+      children[index] = cloneShadowTreeWithNewPropsRecursive(*children[index], childrenMap, propsMap);
     }
   }
 
   return shadowNode.clone(
       {mergeProps(shadowNode, propsMap, *family),
-       std::make_shared<std::vector<std::shared_ptr<const ShadowNode>>>(
-           children),
+       std::make_shared<std::vector<std::shared_ptr<const ShadowNode>>>(children),
        shadowNode.getState()});
 }
 
-RootShadowNode::Unshared cloneShadowTreeWithNewProps(
-    const RootShadowNode &oldRootNode,
-    const PropsMap &propsMap) {
+RootShadowNode::Unshared cloneShadowTreeWithNewProps(const RootShadowNode &oldRootNode, const PropsMap &propsMap) {
   ChildrenMap childrenMap;
 
   for (auto &[family, _] : propsMap) {
     const auto ancestors = family->getAncestors(oldRootNode);
 
-    for (const auto &[parentNode, index] :
-         std::ranges::reverse_view(ancestors)) {
+    for (const auto &[parentNode, index] : std::ranges::reverse_view(ancestors)) {
       const auto parentFamily = &parentNode.get().getFamily();
       auto &affectedChildren = childrenMap[parentFamily];
 

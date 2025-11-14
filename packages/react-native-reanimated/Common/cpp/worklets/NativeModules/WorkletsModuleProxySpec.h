@@ -11,8 +11,7 @@ namespace worklets {
 
 class JSI_EXPORT WorkletsModuleProxySpec : public TurboModule {
  protected:
-  explicit WorkletsModuleProxySpec(
-      const std::shared_ptr<CallInvoker> jsInvoker);
+  explicit WorkletsModuleProxySpec(const std::shared_ptr<CallInvoker> jsInvoker);
 
  public:
   virtual jsi::Value makeShareableClone(
