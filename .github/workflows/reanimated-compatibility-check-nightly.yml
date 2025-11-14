@@ -4,6 +4,8 @@ env:
 on:
   pull_request:
     types: [opened, synchronize, edited, labeled, unlabeled]
+    branches:
+      - '**release**'
   schedule:
     - cron: '37 19 * * *'
   workflow_call:
