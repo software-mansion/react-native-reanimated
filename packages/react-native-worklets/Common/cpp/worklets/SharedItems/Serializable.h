@@ -63,7 +63,7 @@ class __attribute__((visibility("default"))) Serializable {
 
   virtual ~Serializable();
 
-  enum ValueType {
+  enum class ValueType : std::uint8_t {
     UndefinedType,
     NullType,
     BooleanType,
@@ -254,7 +254,7 @@ class __attribute__((visibility("default"))) SerializableSet : public Serializab
 class __attribute__((visibility("default"))) SerializableHostObject : public Serializable {
  public:
   SerializableHostObject(jsi::Runtime &, const std::shared_ptr<jsi::HostObject> &hostObject)
-      : Serializable(HostObjectType), hostObject_(hostObject) {}
+      : Serializable(ValueType::HostObjectType), hostObject_(hostObject) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -265,7 +265,7 @@ class __attribute__((visibility("default"))) SerializableHostObject : public Ser
 class __attribute__((visibility("default"))) SerializableHostFunction : public Serializable {
  public:
   SerializableHostFunction(jsi::Runtime &rt, jsi::Function function)
-      : Serializable(HostFunctionType),
+      : Serializable(ValueType::HostFunctionType),
         hostFunction_(function.getHostFunction(rt)),
         name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
         paramCount_(function.getProperty(rt, "length").asNumber()) {}
@@ -281,7 +281,8 @@ class __attribute__((visibility("default"))) SerializableHostFunction : public S
 class __attribute__((visibility("default"))) SerializableArrayBuffer : public Serializable {
  public:
   SerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer)
-      : Serializable(ArrayBufferType), data_(arrayBuffer.data(rt), arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
+      : Serializable(ValueType::ArrayBufferType),
+        data_(arrayBuffer.data(rt), arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -292,7 +293,7 @@ class __attribute__((visibility("default"))) SerializableArrayBuffer : public Se
 class __attribute__((visibility("default"))) SerializableWorklet : public SerializableObject {
  public:
   SerializableWorklet(jsi::Runtime &rt, const jsi::Object &worklet) : SerializableObject(rt, worklet) {
-    valueType_ = WorkletType;
+    valueType_ = ValueType::WorkletType;
   }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
@@ -301,7 +302,7 @@ class __attribute__((visibility("default"))) SerializableWorklet : public Serial
 class __attribute__((visibility("default"))) SerializableImport : public Serializable {
  public:
   SerializableImport(jsi::Runtime &rt, const double source, const jsi::String &imported)
-      : Serializable(ImportType), source_(source), imported_(imported.utf8(rt)) {}
+      : Serializable(ValueType::ImportType), source_(source), imported_(imported.utf8(rt)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -322,7 +323,7 @@ class __attribute__((visibility("default"))) SerializableRemoteFunction
 
  public:
   SerializableRemoteFunction(jsi::Runtime &rt, jsi::Function &&function)
-      : Serializable(RemoteFunctionType),
+      : Serializable(ValueType::RemoteFunctionType),
         runtime_(&rt),
 #ifndef NDEBUG
         name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
@@ -350,7 +351,8 @@ class __attribute__((visibility("default"))) SerializableInitializer : public Se
 
  public:
   SerializableInitializer(jsi::Runtime &rt, const jsi::Object &initializerObject)
-      : Serializable(HandleType), initializer_(std::make_unique<SerializableObject>(rt, initializerObject)) {}
+      : Serializable(ValueType::HandleType),
+        initializer_(std::make_unique<SerializableObject>(rt, initializerObject)) {}
 
   ~SerializableInitializer() {
     cleanupIfRuntimeExists(remoteRuntime_, remoteValue_);
@@ -361,7 +363,7 @@ class __attribute__((visibility("default"))) SerializableInitializer : public Se
 
 class __attribute__((visibility("default"))) SerializableString : public Serializable {
  public:
-  explicit SerializableString(const std::string &string) : Serializable(StringType), data_(string) {}
+  explicit SerializableString(const std::string &string) : Serializable(ValueType::StringType), data_(string) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -372,7 +374,7 @@ class __attribute__((visibility("default"))) SerializableString : public Seriali
 class __attribute__((visibility("default"))) SerializableBigInt : public Serializable {
  public:
   explicit SerializableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint)
-      : Serializable(BigIntType), string_(bigint.toString(rt).utf8(rt)) {}
+      : Serializable(ValueType::BigIntType), string_(bigint.toString(rt).utf8(rt)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -382,14 +384,14 @@ class __attribute__((visibility("default"))) SerializableBigInt : public Seriali
 
 class __attribute__((visibility("default"))) SerializableScalar : public Serializable {
  public:
-  explicit SerializableScalar(double number) : Serializable(NumberType) {
+  explicit SerializableScalar(double number) : Serializable(ValueType::NumberType) {
     data_.number = number;
   }
-  explicit SerializableScalar(bool boolean) : Serializable(BooleanType) {
+  explicit SerializableScalar(bool boolean) : Serializable(ValueType::BooleanType) {
     data_.boolean = boolean;
   }
-  SerializableScalar() : Serializable(UndefinedType) {}
-  explicit SerializableScalar(std::nullptr_t) : Serializable(NullType) {}
+  SerializableScalar() : Serializable(ValueType::UndefinedType) {}
+  explicit SerializableScalar(std::nullptr_t) : Serializable(ValueType::NullType) {}
 
   jsi::Value toJSValue(jsi::Runtime &);
 
@@ -409,7 +411,7 @@ class __attribute__((visibility("default"))) SerializableTurboModuleLike : publi
       jsi::Runtime &rt,
       const jsi::Object &object,
       const std::shared_ptr<jsi::HostObject> &proto)
-      : Serializable(TurboModuleLikeType),
+      : Serializable(ValueType::TurboModuleLikeType),
         proto_(std::make_unique<SerializableHostObject>(rt, proto)),
         properties_(std::make_unique<SerializableObject>(rt, object)) {}
 
