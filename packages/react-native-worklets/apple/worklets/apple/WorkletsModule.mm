@@ -8,6 +8,7 @@
 #import <worklets/apple/IOSUIScheduler.h>
 #import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
+#import <worklets/Tools/Defs.h>
 
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
@@ -67,7 +68,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
       std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) { throw error; });
 
   std::string sourceURL = "";
-  std::shared_ptr<const BigStringBuffer> script = nullptr;
+  std::shared_ptr<const JSBigStringBuffer> script = nullptr;
 #ifdef WORKLETS_BUNDLE_MODE
   script = [bundleProvider_ getBundle];
   sourceURL = [[bundleProvider_ getSourceURL] UTF8String];
