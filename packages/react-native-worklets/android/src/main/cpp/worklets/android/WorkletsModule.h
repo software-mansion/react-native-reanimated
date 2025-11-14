@@ -51,7 +51,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      const std::shared_ptr<const BigStringBuffer> &bundle,
+      const std::shared_ptr<const JSBigString> &bundle,
       const std::string &sourceURL);
 
   void invalidateCpp();

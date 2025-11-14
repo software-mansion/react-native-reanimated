@@ -19,7 +19,7 @@ WorkletsModule::WorkletsModule(
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
-    const std::shared_ptr<const BigStringBuffer> &script,
+    const std::shared_ptr<const JSBigString> &script,
     const std::string &sourceURL)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
@@ -55,7 +55,7 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
   auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext);
   auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
 
-  std::shared_ptr<const BigStringBuffer> script = nullptr;
+  std::shared_ptr<const JSBigString> script = nullptr;
 #ifdef WORKLETS_BUNDLE_MODE
   script = bundleWrapper->cthis()->getBundle();
 #else
