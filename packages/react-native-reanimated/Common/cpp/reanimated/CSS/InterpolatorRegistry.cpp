@@ -18,12 +18,24 @@
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
+
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
 #include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
 #include <reanimated/CSS/interpolation/transforms/operations/rotate.h>
 #include <reanimated/CSS/interpolation/transforms/operations/scale.h>
 #include <reanimated/CSS/interpolation/transforms/operations/skew.h>
 #include <reanimated/CSS/interpolation/transforms/operations/translate.h>
+
+#include <reanimated/CSS/interpolation/filters/operations/blur.h>
+#include <reanimated/CSS/interpolation/filters/operations/brightness.h>
+#include <reanimated/CSS/interpolation/filters/operations/contrast.h>
+#include <reanimated/CSS/interpolation/filters/operations/dropShadow.h>
+#include <reanimated/CSS/interpolation/filters/operations/grayscale.h>
+#include <reanimated/CSS/interpolation/filters/operations/hueRotate.h>
+#include <reanimated/CSS/interpolation/filters/operations/invert.h>
+#include <reanimated/CSS/interpolation/filters/operations/opacity.h>
+#include <reanimated/CSS/interpolation/filters/operations/saturate.h>
+#include <reanimated/CSS/interpolation/filters/operations/sepia.h>
 
 #include <string>
 #include <vector>
@@ -135,10 +147,25 @@ const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
           {"matrix", transformOp<MatrixOperation>(TransformMatrix2D())}})},
 };
 
+const InterpolatorFactoriesRecord FILTER_INTERPOLATORS = {
+    {"filter",
+     filters(
+         {{"blur", filterOp<BlurOperation>(0)},
+          {"brightness", filterOp<BrightnessOperation>(1)},
+          {"contrast", filterOp<ContrastOperation>(1)},
+          {"dropShadow", filterOp<DropShadowOperation>(CSSDropShadow())},
+          {"grayscale", filterOp<GrayscaleOperation>(0)},
+          {"hueRotate", filterOp<HueRotateOperation>(0)},
+          {"invert", filterOp<InvertOperation>(0)},
+          {"opacity", filterOp<OpacityOperation>(1)},
+          {"saturate", filterOp<SaturateOperation>(1)},
+          {"sepia", filterOp<SepiaOperation>(0)}})}};
+
 const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
     {FLEX_INTERPOLATORS,
      SHADOW_INTERPOLATORS_IOS,
      TRANSFORMS_INTERPOLATORS,
+     FILTER_INTERPOLATORS,
      InterpolatorFactoriesRecord{
          {"backfaceVisibility", value<CSSKeyword>("visible")},
          {"backgroundColor", value<CSSColor>(TRANSPARENT)},

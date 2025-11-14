@@ -98,7 +98,7 @@ export default function SearchScreen({ children }: SearchScreenProps) {
       currentFilter
         ? queryResults.filter((current) =>
             currentFilter?.every(
-              (chunk, index) => current.path[index] === chunk
+              (chunk, index) => current.item.path[index] === chunk
             )
           )
         : queryResults,

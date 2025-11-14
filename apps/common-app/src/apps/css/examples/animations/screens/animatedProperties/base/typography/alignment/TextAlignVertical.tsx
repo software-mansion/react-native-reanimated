@@ -3,9 +3,10 @@ import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { ExamplesScreen, VerticalExampleCard } from '@/apps/css/components';
+import type { ExampleScreenProps } from '@/apps/css/navigation/types';
 import { colors } from '@/theme';
 
-export default function TextAlignVertical() {
+export default function TextAlignVertical({ labelTypes }: ExampleScreenProps) {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
       CardComponent={VerticalExampleCard}
@@ -40,7 +41,7 @@ export default function TextAlignVertical() {
               title: 'Changing Vertical Text Alignment',
             },
           ],
-          labelTypes: ['Android'],
+          labelTypes,
           title: 'Text Align Vertical',
         },
       ]}
