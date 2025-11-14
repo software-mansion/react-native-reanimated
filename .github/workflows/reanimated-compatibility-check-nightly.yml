@@ -1,7 +1,7 @@
 name: Reanimated compatibility check [Nightly]
 on:
   pull_request:
-    types: [opened, synchronize, edited]
+    types: [opened, synchronize, edited, labeled, unlabeled]
   schedule:
     - cron: '37 19 * * *'
   workflow_call:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    if: ${{ github.repository == 'software-mansion/react-native-reanimated' && github.event_name == 'pull_request' && contains(github.event.pull_request.title, 'release') }}
+    if: ${{ github.repository == 'software-mansion/react-native-reanimated' && github.event_name == 'pull_request' && (contains(github.event.pull_request.title, 'release') || contains(github.event.pull_request.title, 'Release') || contains(github.event.pull_request.labels.*.name, 'Check compatibility')) }}
     runs-on: ${{matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
     strategy:
       matrix:
@@ -59,7 +59,7 @@ jobs:
       - name: Install React Native CLI
         run: yarn add @react-native-community/cli
       - name: Create app
-        run: yarn rnc-cli init ${{env.APP_NAME}} --version ${{ matrix.react-native.version }} --skip-install --pm yarn --install-pods 0 --skip-git-init
+        run: npx @react-native-community/cli init ${{env.APP_NAME}} --version ${{ matrix.react-native.version }}  --skip-install --pm yarn --pm npm --install-pods 0 --skip-git-init
       - name: Setup Yarn Modern in app
         # For convenience, sometimes there are vague issues with RN CLI and Yarn Legacy on the runner.
         working-directory: ${{ env.APP_NAME }}
