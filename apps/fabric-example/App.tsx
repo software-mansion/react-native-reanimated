@@ -7,6 +7,10 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+// TODO: make sure that React render doesn't overwrite the text
+// TODO: add support for the following syntax: <Animated.Text>{sharedValue}</Animated.Text>
+// TODO: add support for the following syntax: <Animated.Text>Before {sharedValue} After</Animated.Text>
+
 export default function App() {
   const sv = useSharedValue(0);
 
@@ -25,9 +29,7 @@ export default function App() {
     <View style={styles.container}>
       <Text>Left</Text>
       {/* @ts-expect-error TODO fix animated props type */}
-      <Animated.Text animatedProps={animatedProps} style={styles.text}>
-        This text will be animated
-      </Animated.Text>
+      <Animated.Text animatedProps={animatedProps} style={styles.text} />
       <Text>Right</Text>
     </View>
   );

@@ -1052,7 +1052,8 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
     // which will be applied in ReanimatedCommitHook.
     return;
   }
-  
+
+  // TODO: apply the same logic also in ReanimatedCommitHook so that React renders don't overwrite the text
   UpdatesBatch updatesBatch2;
   for (const auto &pair : updatesBatch) {
     if (!strcmp(pair.first->getComponentName(), "Paragraph")) {
@@ -1061,6 +1062,7 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
       updatesBatch2.push_back(pair);
     }
   }
+  // TODO: try tweaking findNodeHandle so that it returns the Text node to avoid workaround with getting the first child
 
   commitUpdates(rt, updatesBatch2);
 
