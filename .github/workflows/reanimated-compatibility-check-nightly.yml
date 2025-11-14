@@ -3,7 +3,7 @@ env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
-    types: [opened, synchronize, labeled, unlabeled]
+    types: [opened, synchronize, edited, labeled, unlabeled]
   schedule:
     - cron: '37 19 * * *'
   workflow_call:
