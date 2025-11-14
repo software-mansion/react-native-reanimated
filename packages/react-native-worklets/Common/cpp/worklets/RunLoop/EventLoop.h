@@ -33,7 +33,7 @@ class EventLoop : public std::enable_shared_from_this<EventLoop> {
  public:
   EventLoop(
       const std::string &name,
-      const std::shared_ptr<jsi::Runtime> runtime,
+      const std::shared_ptr<jsi::Runtime> &runtime,
       const std::shared_ptr<AsyncQueue> &queue);
   ~EventLoop();
   void run();
