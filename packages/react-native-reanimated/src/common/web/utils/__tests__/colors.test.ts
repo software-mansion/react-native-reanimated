@@ -6,8 +6,8 @@ describe(opacifyColor, () => {
     expect(opacifyColor('#ff0000', 0.5)).toBe('rgba(255, 0, 0, 0.5)');
   });
 
-  test('returns transparent when color is null color value', () => {
-    expect(opacifyColor(null, 1)).toBeNull();
+  test('returns "transparent" when color is "transparent"', () => {
+    expect(opacifyColor('transparent', 1)).toBe('transparent');
   });
 
   test('returns null when color cannot be processed', () => {

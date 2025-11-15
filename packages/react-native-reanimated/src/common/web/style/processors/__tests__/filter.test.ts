@@ -10,11 +10,7 @@ describe(processFilterWeb, () => {
 
   test('builds basic filter string from array', () => {
     expect(
-      processFilterWeb([
-        { blur: 4 },
-        { brightness: 0.5 },
-        { hueRotate: 45 },
-      ])
+      processFilterWeb([{ blur: 4 }, { brightness: 0.5 }, { hueRotate: 45 }])
     ).toBe('blur(4px) brightness(0.5) hue-rotate(45deg)');
   });
 
