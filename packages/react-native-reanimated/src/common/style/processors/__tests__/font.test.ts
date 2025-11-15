@@ -1,4 +1,5 @@
 'use strict';
+import { ReanimatedError } from '../../../errors';
 import { ERROR_MESSAGES, processFontWeight } from '../font';
 
 describe(processFontWeight, () => {
@@ -13,11 +14,14 @@ describe(processFontWeight, () => {
     });
   });
 
-  describe('invalid values', () => {
-    test('throws when value unsupported', () => {
-      expect(() => processFontWeight('unknown-weight')).toThrow(
-        ERROR_MESSAGES.invalidFontWeight('unknown-weight')
-      );
-    });
+  describe('throws an error for invalid font weight values', () => {
+    test.each(['unknown-weight', '1000', '0', 505])(
+      'throws an error for %p',
+      (value) => {
+        expect(() => processFontWeight(value)).toThrow(
+          new ReanimatedError(ERROR_MESSAGES.invalidFontWeight(value))
+        );
+      }
+    );
   });
 });

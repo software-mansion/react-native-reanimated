@@ -7,13 +7,13 @@ describe(hasSuffix, () => {
     ['1.5em', true],
     ['100', false],
     [42, false],
-  ])('checks %p => %p', (input, expected) => {
+  ])('for %p returns %p', (input, expected) => {
     expect(hasSuffix(input)).toBe(expected);
   });
 });
 
 describe(maybeAddSuffix, () => {
-  test('returns original value when suffix present', () => {
+  test('returns the same value when it has a suffix', () => {
     expect(maybeAddSuffix('5px', 'px')).toBe('5px');
   });
 

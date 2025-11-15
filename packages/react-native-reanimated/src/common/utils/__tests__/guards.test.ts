@@ -17,7 +17,7 @@ describe(isDefined, () => {
     [0, true],
     [null, false],
     [undefined, false],
-  ])('checks %p => %p', (input, expected) => {
+  ])('for %p returns %p', (input, expected) => {
     expect(isDefined(input)).toBe(expected);
   });
 });
@@ -28,7 +28,7 @@ describe(isAngle, () => {
     ['3.14rad', true],
     ['10', false],
     [45, false],
-  ])('checks %p => %p', (input, expected) => {
+  ])('for %p returns %p', (input, expected) => {
     expect(isAngle(input)).toBe(expected);
   });
 });
@@ -39,7 +39,7 @@ describe(isNumber, () => {
     [0, true],
     [NaN, false],
     ['10', false],
-  ])('checks %p => %p', (input, expected) => {
+  ])('for %p returns %p', (input, expected) => {
     expect(isNumber(input)).toBe(expected);
   });
 });
@@ -50,7 +50,7 @@ describe(isNumberArray, () => {
     [[], true],
     [[1, '2'], false],
     ['not array', false],
-  ])('checks %p => %p', (input, expected) => {
+  ])('for %p returns %p', (input, expected) => {
     expect(isNumberArray(input)).toBe(expected);
   });
 });
@@ -60,7 +60,7 @@ describe(isLength, () => {
     ['10px', true],
     ['20', true],
     ['10%', false],
-  ])('checks %p => %p', (input, expected) => {
+  ])('for %p returns %p', (input, expected) => {
     expect(isLength(input)).toBe(expected);
   });
 });
@@ -71,7 +71,7 @@ describe(isPercentage, () => {
     ['-5%', true],
     ['10', false],
     [10, false],
-  ])('checks %p => %p', (input, expected) => {
+  ])('for %p returns %p', (input, expected) => {
     expect(isPercentage(input)).toBe(expected);
   });
 });
@@ -82,7 +82,7 @@ describe(isRecord, () => {
     [null, false],
     [[1, 2], false],
     ['value', false],
-  ])('checks %p => %p', (input, expected) => {
+  ])('for %p returns %p', (input, expected) => {
     expect(isRecord(input)).toBe(expected);
   });
 });
@@ -105,7 +105,7 @@ describe(isConfigPropertyAlias, () => {
     [{}, false],
     [null, false],
     ['string', false],
-  ])('checks %p => %p', (input, expected) => {
+  ])('for %p returns %p', (input, expected) => {
     expect(isConfigPropertyAlias<Record<string, unknown>>(input)).toBe(
       expected
     );

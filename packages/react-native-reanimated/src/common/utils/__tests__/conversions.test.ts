@@ -11,18 +11,18 @@ describe(convertPropertyToArray, () => {
     expect(convertPropertyToArray(undefined)).toEqual([]);
   });
 
-  test('wraps scalar values in an array', () => {
+  test('wraps non-array values in an array', () => {
     expect(convertPropertyToArray(0)).toEqual([0]);
   });
 
-  test('returns the same array instance', () => {
+  test('returns the same array instance if already an array', () => {
     const values = ['a', 'b'];
     expect(convertPropertyToArray(values)).toBe(values);
   });
 });
 
 describe(convertPropertiesToArrays, () => {
-  test('converts each property and keeps keys', () => {
+  test('returns each property converted to an array', () => {
     const input = {
       width: 10,
       padding: [5, 10],
