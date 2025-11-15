@@ -68,14 +68,15 @@ std::shared_ptr<StyleOperation> StyleOperationInterpolatorBase<TOperation>::reso
   return std::make_shared<TOperation>(resolved.value());
 }
 
-template <ResolvableFilterOp TOperation>
+template <ResolvableOp TOperation>
 ResolvableValueInterpolationContext StyleOperationInterpolatorBase<TOperation>::getResolvableValueContext(
     const StyleOperationsInterpolationContext &context) const {
   return ResolvableValueInterpolationContext{
       .node = context.node,
       .viewStylesRepository = context.viewStylesRepository,
       .relativeProperty = config_.relativeProperty,
-      .relativeTo = config_.relativeTo}; // TODO - add missing fallbackInterpolateThreshold
+      .relativeTo = config_.relativeTo,
+      .fallbackInterpolateThreshold = context.fallbackInterpolateThreshold};
 }
 
 template class StyleOperationInterpolatorBase<BlurOperation>;

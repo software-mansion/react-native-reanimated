@@ -1,5 +1,6 @@
 #pragma once
 
+#include <reanimated/CSS/interpolation/configs.h>
 #include <reanimated/CSS/interpolation/operations/StyleOperation.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 
@@ -22,6 +23,7 @@ class StyleOperationInterpolator {
     const std::shared_ptr<const ShadowNode> &node;
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository;
     const std::shared_ptr<Interpolators> &interpolators;
+    const double fallbackInterpolateThreshold;
   };
 
   explicit StyleOperationInterpolator(const std::shared_ptr<StyleOperation> &defaultOperation);
@@ -49,10 +51,10 @@ class StyleOperationInterpolatorBase : public StyleOperationInterpolator {
  public:
   explicit StyleOperationInterpolatorBase(const std::shared_ptr<TOperation> &defaultOperation);
 
-  std::unique_ptr<StyleOperation> interpolate(
+ std::unique_ptr<StyleOperation> interpolate(
       double progress,
-      const std::shared_ptr<TOperation> &from,
-      const std::shared_ptr<TOperation> &to,
+      const std::shared_ptr<StyleOperation> &from,
+      const std::shared_ptr<StyleOperation> &to,
       const StyleOperationsInterpolationContext &context) const override;
 };
 

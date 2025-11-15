@@ -93,7 +93,12 @@ folly::dynamic OperationsStyleInterpolator::interpolate(
   }
 
   // Interpolate the current keyframe
-  return interpolateOperations(shadowNode, progress, keyframe->fromOperations.value(), keyframe->toOperations.value());
+  return interpolateOperations(
+      shadowNode,
+      progress,
+      keyframe->fromOperations.value(),
+      keyframe->toOperations.value(),
+      fallbackInterpolateThreshold);
 }
 
 void OperationsStyleInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) {
@@ -240,11 +245,12 @@ folly::dynamic OperationsStyleInterpolator::interpolateOperations(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const double keyframeProgress,
     const StyleOperations &fromOperations,
-    const StyleOperations &toOperations) const {
+    const StyleOperations &toOperations,
+    const double fallbackInterpolateThreshold) const {
   StyleOperations result;
   result.reserve(fromOperations.size());
 
-  const auto updateContext = createUpdateContext(shadowNode);
+  const auto updateContext = createUpdateContext(shadowNode, fallbackInterpolateThreshold);
 
   for (size_t i = 0; i < fromOperations.size(); ++i) {
     const auto &fromOperation = fromOperations[i];
@@ -274,8 +280,9 @@ folly::dynamic OperationsStyleInterpolator::convertOperationsToDynamic(const Sty
 }
 
 StyleOperationsInterpolationContext OperationsStyleInterpolator::createUpdateContext(
-    const std::shared_ptr<const ShadowNode> &shadowNode) const {
-  return StyleOperationsInterpolationContext{shadowNode, viewStylesRepository_, interpolators_};
+    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const double fallbackInterpolateThreshold) const {
+  return StyleOperationsInterpolationContext{shadowNode, viewStylesRepository_, interpolators_, fallbackInterpolateThreshold};
 }
 
 // OperationsStyleInterpolatorBase implementation

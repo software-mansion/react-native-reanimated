@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/interpolation/configs.h>
+#include <reanimated/CSS/interpolation/operations/StyleOperationInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
 #include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
 
@@ -10,17 +11,43 @@
 
 namespace reanimated::css {
 
-// Specialization for MatrixOperation
+template <typename TOperation>
+concept ResolvableTransformOp = requires(TOperation operation) {
+  { operation.value } -> std::convertible_to<typename std::remove_reference_t<decltype(operation.value)>>;
+  requires Resolvable<std::remove_reference_t<decltype(operation.value)>>;
+}; // NOLINT(readability/braces)
+
+using TransformOperationInterpolators = StyleOperationInterpolators;
+using TransformInterpolationContext = StyleOperationsInterpolationContext;
+
+template <typename TOperation>
+class TransformOperationInterpolator : public StyleOperationInterpolatorBase<TOperation> {
+ public:
+  explicit TransformOperationInterpolator(const std::shared_ptr<TOperation> &defaultOperation);
+};
+
 template <>
-class TransformOperationInterpolator<MatrixOperation> : public TransformOperationInterpolatorBase<MatrixOperation> {
+class TransformOperationInterpolator<PerspectiveOperation> : public StyleOperationInterpolatorBase<PerspectiveOperation> {
+ public:
+  explicit TransformOperationInterpolator(const std::shared_ptr<PerspectiveOperation> &defaultOperation);
+
+  std::unique_ptr<StyleOperation> interpolate(
+      double progress,
+      const std::shared_ptr<StyleOperation> &from,
+      const std::shared_ptr<StyleOperation> &to,
+      const StyleOperationsInterpolationContext &context) const override;
+};
+
+template <>
+class TransformOperationInterpolator<MatrixOperation> : public StyleOperationInterpolatorBase<MatrixOperation> {
  public:
   explicit TransformOperationInterpolator(const std::shared_ptr<MatrixOperation> &defaultOperation);
 
-  std::unique_ptr<TransformOperation> interpolate(
+  std::unique_ptr<StyleOperation> interpolate(
       double progress,
-      const std::shared_ptr<TransformOperation> &from,
-      const std::shared_ptr<TransformOperation> &to,
-      const TransformInterpolationContext &context) const override;
+      const std::shared_ptr<StyleOperation> &from,
+      const std::shared_ptr<StyleOperation> &to,
+      const StyleOperationsInterpolationContext &context) const override;
 
  protected:
   template <typename MatrixType>
@@ -30,7 +57,15 @@ class TransformOperationInterpolator<MatrixOperation> : public TransformOperatio
   TransformMatrix::Shared matrixFromOperation(
       const std::shared_ptr<TransformOperation> &operation,
       bool shouldBe3D,
-      const TransformInterpolationContext &context) const;
+      const StyleOperationsInterpolationContext &context) const;
+};
+
+template <ResolvableTransformOp TOperation>
+class TransformOperationInterpolator<TOperation> : public StyleOperationInterpolatorBase<TOperation> {
+ public:
+  TransformOperationInterpolator(
+      const std::shared_ptr<TOperation> &defaultOperation,
+      ResolvableValueInterpolatorConfig config);
 };
 
 } // namespace reanimated::css

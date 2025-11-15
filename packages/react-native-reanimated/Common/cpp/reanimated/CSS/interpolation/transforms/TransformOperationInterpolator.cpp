@@ -7,20 +7,36 @@
 
 namespace reanimated::css {
 
-// Specialization for MatrixOperation
+TransformOperationInterpolator<PerspectiveOperation>::TransformOperationInterpolator(
+    const std::shared_ptr<PerspectiveOperation> &defaultOperation)
+    : StyleOperationInterpolatorBase<PerspectiveOperation>(defaultOperation) {}
+
+std::unique_ptr<StyleOperation> TransformOperationInterpolator<PerspectiveOperation>::interpolate(
+    double progress,
+    const std::shared_ptr<StyleOperation> &from,
+    const std::shared_ptr<StyleOperation> &to,
+    const StyleOperationsInterpolationContext & /* context */) const {
+  const auto &fromOp = *std::static_pointer_cast<PerspectiveOperation>(from);
+  const auto &toOp = *std::static_pointer_cast<PerspectiveOperation>(to);
+
+  return std::make_unique<PerspectiveOperation>(fromOp.value.interpolate(progress, toOp.value));
+}
+
 TransformOperationInterpolator<MatrixOperation>::TransformOperationInterpolator(
     const std::shared_ptr<MatrixOperation> &defaultOperation)
-    : TransformOperationInterpolatorBase<MatrixOperation>(defaultOperation) {}
+    : StyleOperationInterpolatorBase<MatrixOperation>(defaultOperation) {}
 
-std::unique_ptr<TransformOperation> TransformOperationInterpolator<MatrixOperation>::interpolate(
+std::unique_ptr<StyleOperation> TransformOperationInterpolator<MatrixOperation>::interpolate(
     double progress,
-    const std::shared_ptr<TransformOperation> &from,
-    const std::shared_ptr<TransformOperation> &to,
-    const TransformInterpolationContext &context) const {
-  const auto shouldBe3D = from->is3D() || to->is3D();
+    const std::shared_ptr<StyleOperation> &from,
+    const std::shared_ptr<StyleOperation> &to,
+    const StyleOperationsInterpolationContext &context) const {
+  const auto fromOperation = std::static_pointer_cast<TransformOperation>(from);
+  const auto toOperation = std::static_pointer_cast<TransformOperation>(to);
+  const auto shouldBe3D = fromOperation->is3D() || toOperation->is3D();
 
-  const auto fromMatrix = matrixFromOperation(from, shouldBe3D, context);
-  const auto toMatrix = matrixFromOperation(to, shouldBe3D, context);
+  const auto fromMatrix = matrixFromOperation(fromOperation, shouldBe3D, context);
+  const auto toMatrix = matrixFromOperation(toOperation, shouldBe3D, context);
 
   if (shouldBe3D) {
     return std::make_unique<MatrixOperation>(interpolateMatrix<TransformMatrix3D>(progress, fromMatrix, toMatrix));
@@ -28,9 +44,7 @@ std::unique_ptr<TransformOperation> TransformOperationInterpolator<MatrixOperati
 
   const auto result2D = interpolateMatrix<TransformMatrix2D>(progress, fromMatrix, toMatrix);
 
-  // Unfortunately 2D matrices aren't handled properly in RN, so we have to
-  // convert them to 3D
-  // see the issue: https://github.com/facebook/react-native/issues/53639
+  // Unfortunately 2D matrices aren't handled properly in RN, so we convert to 3D.
   return std::make_unique<MatrixOperation>(TransformMatrix3D::from2D(result2D));
 }
 
@@ -54,7 +68,7 @@ MatrixType TransformOperationInterpolator<MatrixOperation>::interpolateMatrix(
 TransformMatrix::Shared TransformOperationInterpolator<MatrixOperation>::matrixFromOperation(
     const std::shared_ptr<TransformOperation> &operation,
     const bool shouldBe3D,
-    const TransformInterpolationContext &context) const {
+    const StyleOperationsInterpolationContext &context) const {
   const auto &matrixOperation = std::static_pointer_cast<MatrixOperation>(operation);
 
   if (std::holds_alternative<TransformMatrix::Shared>(matrixOperation->value)) {
@@ -70,7 +84,7 @@ TransformMatrix::Shared TransformOperationInterpolator<MatrixOperation>::matrixF
 
   const auto &operations = std::get<TransformOperations>(matrixOperation->value);
 
-  // Map over operations and resolve unresolved ones
+  // Map over operations and resolve unresolved ones.
   TransformOperations resolvedOperations;
   resolvedOperations.reserve(operations.size());
 
@@ -103,22 +117,16 @@ template TransformMatrix3D TransformOperationInterpolator<MatrixOperation>::inte
     const TransformMatrix::Shared &,
     const TransformMatrix::Shared &) const;
 
-// Template implementations
+template <typename TOperation>
+TransformOperationInterpolator<TOperation>::TransformOperationInterpolator(
+    const std::shared_ptr<TOperation> &defaultOperation)
+    : StyleOperationInterpolatorBase<TOperation>(defaultOperation) {}
+
 template <ResolvableTransformOp TOperation>
-std::shared_ptr<TransformOperation> TransformOperationInterpolator<TOperation>::resolveOperation(
-    const std::shared_ptr<TransformOperation> &operation,
-    const TransformInterpolationContext &context) const {
-  const auto &resolvableOp = std::static_pointer_cast<TOperation>(operation);
-  const auto &resolved = resolvableOp->value.resolve(getResolvableValueContext(context));
-
-  if (!resolved.has_value()) {
-    throw std::invalid_argument(
-        "[Reanimated] Cannot resolve resolvable operation: " + operation->getOperationName() +
-        " for node with tag: " + std::to_string(context.node->getTag()));
-  }
-
-  return std::make_shared<TOperation>(resolved.value());
-}
+TransformOperationInterpolator<TOperation>::TransformOperationInterpolator(
+    const std::shared_ptr<TOperation> &defaultOperation,
+    ResolvableValueInterpolatorConfig config)
+    : StyleOperationInterpolatorBase<TOperation>(defaultOperation, std::move(config)) {}
 
 // Rotate operations
 template class TransformOperationInterpolator<RotateOperation>;
