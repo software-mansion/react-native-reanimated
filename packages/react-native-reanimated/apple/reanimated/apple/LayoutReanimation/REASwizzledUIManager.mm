@@ -60,9 +60,11 @@ std::atomic<bool> hasPendingBlocks;
                   fromClass:[self class]];
     SEL manageChildrenOriginal = @selector
         (_manageChildren:moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
-    SEL manageChildrenReanimated =
-        @selector(reanimated_manageChildren:
-                            moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
+    // clang-format off
+    SEL manageChildrenReanimated = @selector
+        (reanimated_manageChildren:
+                   moveFromIndices:moveToIndices:addChildReactTags:addAtIndices:removeAtIndices:registry:);
+    // clang-format on
     [REAUtils swizzleMethod:manageChildrenOriginal
                    forClass:[RCTUIManager class]
                        with:manageChildrenReanimated
@@ -185,12 +187,11 @@ std::atomic<bool> hasPendingBlocks;
     for (RCTShadowView *shadowView in affectedShadowViews) {
       reactTags[index] = shadowView.reactTag;
       RCTLayoutMetrics layoutMetrics = shadowView.layoutMetrics;
-      frameDataArray[index++] = (RCTFrameData){
-          layoutMetrics.frame,
-          layoutMetrics.layoutDirection,
-          shadowView.isNewView,
-          shadowView.superview.isNewView,
-          layoutMetrics.displayType};
+      frameDataArray[index++] = (RCTFrameData){layoutMetrics.frame,
+                                               layoutMetrics.layoutDirection,
+                                               shadowView.isNewView,
+                                               shadowView.superview.isNewView,
+                                               layoutMetrics.displayType};
     }
   }
 
