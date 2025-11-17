@@ -4,9 +4,10 @@ import Animated from 'react-native-reanimated';
 
 import { balloonsImage } from '@/apps/css/assets';
 import { ExamplesScreen, VerticalExampleCard } from '@/apps/css/components';
+import type { ExampleScreenProps } from '@/apps/css/navigation/types';
 import { radius, sizes } from '@/theme';
 
-export default function ResizeMode() {
+export default function ResizeMode({ labelTypes }: ExampleScreenProps) {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
       CardComponent={VerticalExampleCard}
@@ -46,7 +47,7 @@ export default function ResizeMode() {
               title: 'Changing Resize Mode',
             },
           ],
-          labelTypes: ['iOS', 'Android'],
+          labelTypes,
           title: 'Resize Mode',
         },
       ]}

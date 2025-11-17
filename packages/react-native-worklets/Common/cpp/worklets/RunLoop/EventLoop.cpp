@@ -10,7 +10,7 @@ namespace worklets {
 
 EventLoop::EventLoop(
     const std::string &name,
-    const std::shared_ptr<jsi::Runtime> runtime,
+    const std::shared_ptr<jsi::Runtime> &runtime,
     const std::shared_ptr<AsyncQueue> &queue)
     : runtime_(runtime), queue_(queue), timeoutsQueueState_(std::make_shared<TimeoutsQueueState>()), name_(name) {}
 

@@ -33,6 +33,15 @@ export function PlatformColor(...names: Array<string>): PlatformColorValue {
   return mapped as PlatformColorValue;
 }
 
+function isPlatformColorObject(value: any): boolean {
+  return (
+    value &&
+    typeof value === 'object' &&
+    (('semantic' in value && Array.isArray(value.semantic)) ||
+      ('resource_paths' in value && Array.isArray(value.resource_paths)))
+  );
+}
+
 /* copied from:
  * https://github.com/facebook/react-native/blob/v0.81.0/packages/react-native/Libraries/StyleSheet/PlatformColorValueTypesIOS.d.ts
  */
@@ -67,17 +76,18 @@ function isDynamicColorObject(value: any): boolean {
 }
 
 export const ERROR_MESSAGES = {
-  invalidColor: (color: unknown) => `Invalid color value: ${String(color)}`,
+  invalidColor: (color: unknown) =>
+    `Invalid color value: ${JSON.stringify(color)}`,
 };
 
 /**
  * Processes a color value and returns a normalized color representation.
  *
  * @param value - The color value to process (string, number, or ColorValue)
- * @returns The processed color value as a number for valid colors, null for
- *   transparent colors, or undefined for invalid colors
+ * @returns The processed color value - `number` for valid colors, `false` for
+ *   transparent colors
  */
-export function processColor(value: unknown): number | null {
+export function processColor(value: unknown): number {
   let normalizedColor = processColorInitially(value);
 
   if (IS_ANDROID && typeof normalizedColor == 'number') {
@@ -88,11 +98,15 @@ export function processColor(value: unknown): number | null {
     normalizedColor = normalizedColor | 0x0;
   }
 
-  if (normalizedColor === undefined) {
+  if (normalizedColor === null) {
     throw new ReanimatedError(ERROR_MESSAGES.invalidColor(value));
   }
 
-  return normalizedColor;
+  // The normalizedColor can be a boolean false value for the transparent color, but
+  // we can safely cast it to number. Since boolean false is essentially 0, it can be
+  // used in all numeric operations without issues. We use a boolean false value to
+  // distinguish the transparent color from other colors.
+  return normalizedColor as number;
 }
 
 export function processColorsInProps(props: StyleProps) {
@@ -112,9 +126,15 @@ export function processColorsInProps(props: StyleProps) {
       const processed = { dynamic: {} as Record<string, Maybe<number>> };
       const dynamicFields = value.dynamic;
       for (const field in dynamicFields) {
-        processed.dynamic[field] = processColor(dynamicFields[field]);
+        processed.dynamic[field] =
+          dynamicFields[field] != undefined
+            ? processColor(dynamicFields[field])
+            : undefined;
       }
       props[key] = processed;
+    } else if (isPlatformColorObject(value)) {
+      // PlatformColor is not processed further on iOS and Android
+      props[key] = value;
     } else {
       props[key] = processColor(value);
     }

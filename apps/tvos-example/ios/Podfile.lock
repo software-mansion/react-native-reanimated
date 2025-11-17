@@ -2732,7 +2732,7 @@ SPEC CHECKSUMS:
   ReactCodegen: f4d6e6fd5140eade461ffb5579795197956868c8
   ReactCommon: c178596d3ef05508bb6c0f88bfbbc281b5c4222b
   RNReanimated: cccf8b45cb675080e7c5f3a4f5d0498eff6c62a0
-  RNWorklets: bdeeff31c1e0ff8d69b16e88922de016bd5ca951
+  RNWorklets: 339aa12272b2ff6490d91526e8ced6599f7ef6a3
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 0e792f39294e864568930600eeb71135364f777d
 

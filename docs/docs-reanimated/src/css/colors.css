@@ -296,6 +296,17 @@
   --swm-appjs-2025-primary: #484dfc;
   --swm-appjs-2025-primary-hover: #7189ff;
   --swm-appjs-2025-background: #f7eded;
+
+  /* Special codeblocks colors */
+  --codeblock-diff-inserted-color-light: #265f4c;
+  --codeblock-diff-inserted-color-dark: var(--swm-green-dark-40);
+  --codeblock-diff-inserted-background-light: var(--swm-green-light-20);
+  --codeblock-diff-inserted-background-dark: var(--swm-green-dark-140);
+
+  --codeblock-diff-deleted-color-light: #b8403a;
+  --codeblock-diff-deleted-color-dark: var(--swm-red-dark-40);
+  --codeblock-diff-deleted-background-light: var(--swm-red-light-20);
+  --codeblock-diff-deleted-background-dark: var(--swm-red-dark-140);
 }
 
 :root[data-theme='dark'] {

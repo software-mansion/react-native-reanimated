@@ -27,7 +27,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
       rt, sensorDataHandler, "[Reanimated] Sensor event handler must be a worklet.");
 
   int sensorId = platformRegisterSensorFunction_(
-      sensorType,
+      static_cast<int>(sensorType),
       interval.asNumber(),
       iosReferenceFrame.asNumber(),
       [sensorType, serializableHandler, weakUiWorkletRuntime = std::weak_ptr<WorkletRuntime>(uiWorkletRuntime)](

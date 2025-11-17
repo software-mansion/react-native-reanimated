@@ -6,13 +6,15 @@ sidebar_label: Performance
 
 # Performance
 
-This guide covers best practices and tips to achieve the best performance with Reanimated.
+This guide covers recommended practices and tips to achieve the best performance with Reanimated.
 
 ## Performance regressions on the New Architecture
 
-After enabling the New Architecture in your app, you might notice some performance regressions of animations, especially when compared to the old architecture. This can also happen after upgrading to Expo SDK 53 (or newer) where the New Architecture is enabled by default.
+After enabling the New Architecture in your app, you might notice some performance regressions of animations, especially when compared to the Legacy Architecture. This can also happen after upgrading to Expo SDK 53 (or newer) where the New Architecture is enabled by default.
 
-We are actively working with React core team at Meta on identifying bottlenecks and improving the overall state of animations on the New Architecture. For now, please consider enabling the following optimizations in your app to mitigate the performance regressions.
+We are actively working with the React core team at Meta on identifying bottlenecks and improving the overall state of animations on the New Architecture. For now, please consider enabling the following optimizations in your app to mitigate the performance regressions.
+
+Please note that downgrading your Expo SDK version or using an older release of Reanimated is not a good solution in the long term. Reanimated 3 is no longer maintained and will not receive updates to support upcoming releases of React Native. Please upgrade to the latest version of Reanimated 4 in order to get bug fixes and other improvements.
 
 ### ⚠️ Flickering/jittering while scrolling
 
@@ -22,7 +24,7 @@ We are actively working with React core team at Meta on identifying bottlenecks 
 
 ### ⚠️ Lower FPS while scrolling
 
-**Problem:** Frames per seconds drops when there are many animated components on the screen during scrolling.
+**Problem:** FPS drops when there are many animated components on the screen during scrolling.
 
 **Solution:** You need to upgrade to React Native 0.80 (or newer), upgrade to Reanimated 4.2.0 (or newer) and enable [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](/docs/guides/feature-flags#use_commit_hook_only_for_react_commits) static feature flag as described [here](/docs/guides/feature-flags#use_commit_hook_only_for_react_commits).
 
@@ -32,7 +34,7 @@ You can also consider enabling `enableCppPropsIteratorSetter` feature flag as de
 
 **Problem:** When animating many components simultaneously (also across multiple screens) you might notice FPS regressions.
 
-**Solution 1:** Enable static feature flags `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` (available from 4.0.0) and `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` (available from 4.2.0) as described [here](/docs/guides/feature-flags#android_synchronously_update_ui_props) for Android and [here](/docs/guides/feature-flags#ios_synchronously_update_ui_props) for iOS, respectively. This will enable a fast code path for applying updates of non-layout styles like `opacity` or `transform` via platform-specific mechanisms rather than cloning `ShadowNode` instances and calling `ShadowTree::commit` method.
+**Solution 1:** Enable `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` (available from 4.0.0) and `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` (available from 4.2.0) static feature flags as described [here](/docs/guides/feature-flags#android_synchronously_update_ui_props) for Android and [here](/docs/guides/feature-flags#ios_synchronously_update_ui_props) for iOS, respectively. This will enable a fast code path for applying updates of non-layout styles like `opacity` or `transform` via platform-specific mechanisms rather than cloning `ShadowNode` instances and calling `ShadowTree::commit` method.
 
 Note that these flags affect the touch detection system for components with animated transforms so you might want to consider using `Pressable` from `react-native-gesture-handler` instead of the built-in one from `react-native`.
 
@@ -40,9 +42,13 @@ It is also recommended to animate non-layout styles (e.g. `transform`) rather th
 
 **Solution 2:** Manually enable `enableCppPropsIteratorSetter` feature flag from `react-native` by patching the source files and building React Native from source. Note that this feature flag is experimental and may produce unexpected results.
 
+### ⚠️ Blink of incorrect layout of FlashList
+
+**Problem:** When `FlashList` component from `@shopify/flash-list` is mounted while there are some animations running, the item components might be positioned incorrectly for a split second. Unfortunately, the root cause of the issue is located in React Native itself. We reported a [GitHub issue](https://github.com/facebook/react-native/issues/52373) where you can track the progress.
+
 ### ℹ️ Debug vs. release mode
 
-It is very likely that the performance regressions are noticeable only the development build of your app. In the release mode, both Reanimated and React Native itself are built with compiler optimizations enabled which results in much better performance when compared to the debug mode.
+It is very likely that the performance regressions are noticeable only in the development build of your app. In the release mode, both Reanimated and React Native itself are built with compiler optimizations enabled, which results in much better performance when compared to the debug mode.
 
 #### 💡 Use `debugOptimized` build variant on Android
 
@@ -66,7 +72,7 @@ const animatedStyle = useAnimatedStyle(() => {
 });
 ```
 
-When you read the `sv.value` in the React Native runtime, the JS thread will get blocked until the value is fetched from the UI thread. In most cases it will be negligible, but if the UI thread is busy or you are reading a value multiple times, the wait time needed to synchronize both threads may significantly increase.
+When you read the `sv.value` in the React Native runtime, the JS thread will get blocked until the value is fetched from the UI thread. In most cases it will be negligible, but if the UI thread is busy or you are reading a value multiple times, the wait time needed to synchronize both threads may significantly increase. For more details, check out [this article](https://andrei-calazans.com/posts/reanimated-blocking-js-thread/).
 
 ### ❌ Avoid animating too many components at once
 
@@ -93,7 +99,7 @@ Additionally, non-layout properties can be updated using a fast path – more de
 
 ### 💡 Memoize frame callbacks
 
-If you're using [`useFrameCallback`](/docs/advanced/useFrameCallback), you should wrap the frame callback worklet inside `useCallback` in order to memoize it. This way, the frame callback won't need to be recrated and thus registered on every render. If you're using React Compiler, the frame callback should be memoized automatically.
+If you are using [`useFrameCallback`](/docs/advanced/useFrameCallback), you should wrap the frame callback worklet inside `useCallback` in order to memoize it. This way, the frame callback won't need to be recrated and thus registered on every render. If you are using React Compiler, the frame callback should be memoized automatically.
 
 ```tsx
 useFrameCallback(
@@ -105,7 +111,7 @@ useFrameCallback(
 
 ### 💡 Memoize gesture objects
 
-If you're using [React Native Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/), you should wrap gesture objects like `Gesture.Tap()` or similar inside `useMemo` in order to memoize them. This way, the gestures won't need to be reattached on every render. This is particularly important for `FlatList` items where performance is key. If you're using React Compiler, the gesture objects should be memoized automatically.
+If you are using [React Native Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/), you should wrap gesture objects like `Gesture.Tap()` or similar inside `useMemo` in order to memoize them. This way, the gestures won't need to be reattached on every render. This is particularly important for `FlatList` items where performance is key. If you are using React Compiler, the gesture objects should be memoized automatically.
 
 ```tsx
 const pan = useMemo(

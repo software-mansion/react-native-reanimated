@@ -59,6 +59,7 @@ import CombinedTest from './LayoutAnimations/Combined';
 import CustomLayoutAnimationScreen from './LayoutAnimations/CustomLayout';
 import DefaultAnimations from './LayoutAnimations/DefaultAnimations';
 import DeleteAncestorOfExiting from './LayoutAnimations/DeleteAncestorOfExiting';
+import DetachAnimatedStylesExample from './DetachAnimatedStylesExample';
 import DurationZeroExample from './LayoutAnimations/DurationZero';
 import FlatListSkipEnteringExiting from './LayoutAnimations/FlatListSkipEnteringExiting';
 import HabitsExample from './LayoutAnimations/HabitsExample';
@@ -137,6 +138,7 @@ import WorkletExample from './WorkletExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import InstanceDiscoveryExample from './InstanceDiscoveryExample';
+import ShadowNodesCloningExample from './ShadowNodesCloningExample';
 
 export const REAPlatform = {
   IOS: 'ios',
@@ -170,6 +172,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🎞️',
     title: 'FPS',
     screen: FpsExample,
+  },
+  DetachAnimatedStylesExample: {
+    icon: '⛓️‍💥',
+    title: 'Detach animated styles',
+    screen: DetachAnimatedStylesExample,
   },
   ScrollPerformanceExample: {
     icon: '🚁',
@@ -623,6 +630,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'PlatformColor',
     screen: PlatformColorExample,
     icon: '🎨',
+  },
+  ShadowNodesCloningExample: {
+    icon: '🌑',
+    title: 'Shadow Nodes Cloning',
+    screen: ShadowNodesCloningExample,
   },
 
   // Old examples
