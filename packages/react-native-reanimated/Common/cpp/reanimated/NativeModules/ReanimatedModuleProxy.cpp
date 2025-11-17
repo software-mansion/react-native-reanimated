@@ -130,7 +130,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
         if constexpr (StaticFeatureFlags::getFlag("SHARED_ELEMENT_TRANSITIONS")) {
           surfaceId = strongThis->layoutAnimationsProxyExperimental_->progressLayoutAnimation(tag, newStyle);
         } else {
-          surfaceId = surfaceId = strongThis->layoutAnimationsProxyLegacy_->progressLayoutAnimation(tag, newStyle);
+          surfaceId = strongThis->layoutAnimationsProxyLegacy_->progressLayoutAnimation(tag, newStyle);
         }
         if (!surfaceId) {
           return;
