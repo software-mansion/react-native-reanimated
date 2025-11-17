@@ -43,8 +43,6 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 17
-      - name: corepack enable
-        run: corepack enable
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
