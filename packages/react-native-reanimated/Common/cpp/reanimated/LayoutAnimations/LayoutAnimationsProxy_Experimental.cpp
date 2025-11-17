@@ -142,7 +142,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
     }
   }
 
-  for (auto &mutation : mutations) {
+  for (const auto &mutation : mutations) {
     maybeUpdateWindowDimensions(mutation);
     switch (mutation.type) {
       case ShadowViewMutation::Update: {
