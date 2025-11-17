@@ -4,6 +4,9 @@ import type { ShadowNodeWrapper } from '../../../../commonTypes';
 import type { CSSStyle } from '../../../types';
 import CSSManager from '../CSSManager';
 
+jest.mock('../CSSAnimationsManager');
+jest.mock('../CSSTransitionsManager');
+
 const createManager = (viewName = 'RCTView') =>
   new CSSManager({
     shadowNodeWrapper: {} as ShadowNodeWrapper,
@@ -11,7 +14,7 @@ const createManager = (viewName = 'RCTView') =>
     viewName,
   });
 
-describe('CSSManager warning', () => {
+describe('CSSManager', () => {
   const warnSpy = jest
     .spyOn(logger, 'warn')
     .mockImplementation(() => undefined);
@@ -56,7 +59,7 @@ describe('CSSManager warning', () => {
     expect(warnSpy).not.toHaveBeenCalled();
   });
 
-  test('resets warnings for different unsupported props', () => {
+  test('shows separate warnings for different unsupported props', () => {
     const manager = createManager();
     const styleA = { translateX: 10 } as CSSStyle;
     const styleB = { scaleX: 0.5 } as CSSStyle;

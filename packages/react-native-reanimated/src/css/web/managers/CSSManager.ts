@@ -13,21 +13,20 @@ export default class CSSManager extends BaseCSSManager implements ICSSManager {
   private readonly animationsManager: CSSAnimationsManager;
   private readonly transitionsManager: CSSTransitionsManager;
 
-  constructor(viewInfo: ViewInfo) {
+  constructor({ DOMElement, viewName = 'RCTView' }: ViewInfo) {
     super();
-    this.element = viewInfo.DOMElement as ReanimatedHTMLElement;
-    this.viewName = viewInfo.viewName ?? this.element.tagName;
-
+    this.element = DOMElement as ReanimatedHTMLElement;
+    this.viewName = viewName;
     this.animationsManager = new CSSAnimationsManager(this.element);
     this.transitionsManager = new CSSTransitionsManager(this.element);
   }
 
   update(style: CSSStyle): void {
-    const [animationProperties, transitionProperties] =
+    const [animationProperties, transitionProperties, filteredStyle] =
       filterCSSAndStyleProperties(style);
 
     if (__DEV__) {
-      this.warnOnUnsupportedProps(style, this.viewName);
+      this.warnOnUnsupportedProps(filteredStyle, this.viewName);
     }
 
     this.animationsManager.update(animationProperties);

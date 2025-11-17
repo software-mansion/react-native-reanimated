@@ -1,10 +1,13 @@
 'use strict';
+import { ViewInfo } from '../../../../createAnimatedComponent/commonTypes';
 import { logger } from '../../../../common';
-import type { ViewInfo } from '../../../../createAnimatedComponent/commonTypes';
 import type { CSSStyle } from '../../../types';
 import CSSManager from '../CSSManager';
 
-describe('web CSSManager warning', () => {
+jest.mock('../CSSAnimationsManager');
+jest.mock('../CSSTransitionsManager');
+
+describe('CSSManager', () => {
   const warnSpy = jest
     .spyOn(logger, 'warn')
     .mockImplementation(() => undefined);
@@ -56,7 +59,7 @@ describe('web CSSManager warning', () => {
     expect(warnSpy).not.toHaveBeenCalled();
   });
 
-  test('resets warning for different unsupported props', () => {
+  test('shows separate warnings for different unsupported props', () => {
     const manager = createManager('RCTView');
     const first = { translateY: 5 } as CSSStyle;
     const second = { scaleX: 2 } as CSSStyle;
