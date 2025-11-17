@@ -474,12 +474,12 @@ void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi:
 bool ReanimatedModuleProxy::handleEvent(
     const std::string &eventName,
     const int emitterReactTag,
-    const jsi::Value &payloadd,
+    const jsi::Value &payload,
     double currentTime) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::handleEvent");
 
   eventHandlerRegistry_->processEvent(
-      workletsModuleProxy_->getUIWorkletRuntime(), currentTime, eventName, emitterReactTag, payloadd);
+      workletsModuleProxy_->getUIWorkletRuntime(), currentTime, eventName, emitterReactTag, payload);
 
   // TODO: return true if Reanimated successfully handled the event
   // to avoid sending it to JavaScript
