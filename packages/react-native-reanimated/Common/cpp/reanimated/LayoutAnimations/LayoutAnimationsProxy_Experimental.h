@@ -152,8 +152,7 @@ struct LayoutAnimationsProxy_Experimental : public MountingOverrideDelegate,
   void transferConfigFromNativeID(const std::string nativeId, const int tag) const;
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle);
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove);
-  std::optional<SurfaceId>
-  onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward, bool isSwiping);
+  std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward);
   std::optional<SurfaceId> onGestureCancel();
 
   void maybeCancelAnimation(const int tag) const;

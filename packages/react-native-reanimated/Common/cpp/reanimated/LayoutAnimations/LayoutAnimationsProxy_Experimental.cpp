@@ -546,8 +546,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgres
     int tag,
     double progress,
     bool isClosing,
-    bool isGoingForward,
-    bool isSwiping) {
+    bool isGoingForward) {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   transitionUpdated_ = true;
   bool isAndroid;

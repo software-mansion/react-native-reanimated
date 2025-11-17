@@ -511,12 +511,10 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
       const auto &eventPayload = rawEvent.eventPayload;
       jsi::Object payload = eventPayload->asJSIValue(rt).asObject(rt);
       auto progress = payload.getProperty(rt, "progress").asNumber();
-      auto closing = payload.getProperty(rt, "closing").asNumber();
-      auto goingForward = payload.getProperty(rt, "goingForward").asNumber();
-      //      auto swiping = payload.getProperty(rt, "swiping").asNumber();
+      auto closing = static_cast<bool>(payload.getProperty(rt, "closing").asNumber());
+      auto goingForward = static_cast<bool>(payload.getProperty(rt, "goingForward").asNumber());
 
-      auto surfaceId =
-          layoutAnimationsProxyExperimental_->onTransitionProgress(tag, progress, closing, goingForward, false);
+      auto surfaceId = layoutAnimationsProxyExperimental_->onTransitionProgress(tag, progress, closing, goingForward);
       if (!surfaceId) {
         return false;
       }
