@@ -221,7 +221,7 @@ void LayoutAnimationsProxy_Legacy::parseRemoveMutations(
   }
 
   for (auto &mutationNode : mutationNodes) {
-    if (!mutationNode->unflattenedParent->isMutationMode()) {
+    if (!mutationNode->unflattenedParent->isMutationNode()) {
       roots.push_back(mutationNode);
     }
   }
@@ -441,7 +441,7 @@ void LayoutAnimationsProxy_Legacy::maybeDropAncestors(
     std::shared_ptr<MutationNode> child,
     ShadowViewMutationList &cleanupMutations) const {
   parent->removeChildFromUnflattenedTree(child);
-  if (!parent->isMutationMode()) {
+  if (!parent->isMutationNode()) {
     return;
   }
 
@@ -933,11 +933,11 @@ void Node::insertUnflattenedChildren(std::vector<std::shared_ptr<MutationNode>> 
   mergeAndSwap(unflattenedChildren, newChildren);
 }
 
-bool Node::isMutationMode() {
+inline bool Node::isMutationNode() {
   return false;
 }
 
-bool MutationNode::isMutationMode() {
+inline bool MutationNode::isMutationNode() {
   return true;
 }
 
