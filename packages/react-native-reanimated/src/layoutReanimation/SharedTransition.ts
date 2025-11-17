@@ -22,7 +22,7 @@ export class SharedTransition
   build = (): LayoutAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     if (!this.durationV) {
-      this.durationV = 500;
+      this.durationV = 300;
     }
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
@@ -45,6 +45,7 @@ export class SharedTransition
         const target = values.target[key];
         if (Array.isArray(target)) {
           if (key === 'transform') {
+            // TODO (future): do proper transform interpolation
             animations[key] = target.map(
               (item: Record<string, number | string>) => {
                 key = Object.keys(item)[0];
