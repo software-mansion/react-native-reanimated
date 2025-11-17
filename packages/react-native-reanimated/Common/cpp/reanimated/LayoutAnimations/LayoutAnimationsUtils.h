@@ -104,7 +104,6 @@ enum Intent {
 };
 
 struct LightNode {
-  using Unshared = std::shared_ptr<LightNode>;
   Intent intent;
   ShadowView previous;
   ShadowView current;
@@ -147,13 +146,13 @@ static inline void updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame
   }
 }
 
-static inline bool isRNSScreenOrStack(std::shared_ptr<LightNode> &node) {
+static inline bool isRNSScreenOrStack(const std::shared_ptr<LightNode> &node) {
   const auto &componentName = node->current.componentName;
   return !std::strcmp(componentName, "RNSScreenStack") || !std::strcmp(componentName, "RNSScreen") ||
       !std::strcmp(componentName, "RNSModalScreen");
 }
 
-static inline bool isRNSScreen(std::shared_ptr<LightNode> &node) {
+static inline bool isRNSScreen(const std::shared_ptr<LightNode> &node) {
   const auto &componentName = node->current.componentName;
   return !std::strcmp(componentName, "RNSScreen") || !std::strcmp(componentName, "RNSModalScreen");
 }

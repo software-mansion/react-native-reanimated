@@ -57,10 +57,10 @@ struct LayoutAnimationsProxy_Experimental : public MountingOverrideDelegate,
   mutable TransitionMap transitionMap_;
   mutable Transitions transitions_;
   mutable bool synchronized_ = true;
-  mutable std::vector<LightNode::Unshared> entering_, layout_, exiting_;
+  mutable std::vector<std::shared_ptr<LightNode>> entering_, layout_, exiting_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
-  mutable std::vector<LightNode::Unshared> containersToInsert_;
+  mutable std::vector<std::shared_ptr<LightNode>> containersToInsert_;
   mutable std::unordered_map<Tag, react::Transform> transformForNode_;
 
   mutable std::vector<Tag> finishedAnimationTags_;
@@ -107,9 +107,9 @@ struct LayoutAnimationsProxy_Experimental : public MountingOverrideDelegate,
     lightNodes_[11] = std::make_shared<LightNode>();
   }
 
-  void startEnteringAnimation(const LightNode::Unshared &node) const;
-  void startExitingAnimation(const LightNode::Unshared &node) const;
-  void startLayoutAnimation(const LightNode::Unshared &node) const;
+  void startEnteringAnimation(const std::shared_ptr<LightNode> &node) const;
+  void startExitingAnimation(const std::shared_ptr<LightNode> &node) const;
+  void startLayoutAnimation(const std::shared_ptr<LightNode> &node) const;
   void startSharedTransition(const int tag, const ShadowView &before, const ShadowView &after, SurfaceId surfaceId)
       const;
   void startProgressTransition(const int tag, const ShadowView &before, const ShadowView &after, SurfaceId surfaceId)
@@ -126,8 +126,8 @@ struct LayoutAnimationsProxy_Experimental : public MountingOverrideDelegate,
       ShadowViewMutationList &filteredMutations) const;
 
   void handleSharedTransitionsStart(
-      const LightNode::Unshared &afterTopScreen,
-      const LightNode::Unshared &beforeTopScreen,
+      const std::shared_ptr<LightNode> &afterTopScreen,
+      const std::shared_ptr<LightNode> &beforeTopScreen,
       ShadowViewMutationList &filteredMutations,
       const ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext,
@@ -157,16 +157,16 @@ struct LayoutAnimationsProxy_Experimental : public MountingOverrideDelegate,
 
   void maybeCancelAnimation(const int tag) const;
 
-  LightNode::Unshared findTopScreen(LightNode::Unshared node) const;
+  std::shared_ptr<LightNode> findTopScreen(std::shared_ptr<LightNode> node) const;
 
   void findSharedElementsOnScreen(
-      const LightNode::Unshared &node,
+      const std::shared_ptr<LightNode> &node,
       int index,
       const PropsParserContext &propsParserContext) const;
 
   void insertContainers(ShadowViewMutationList &filteredMutations, int &rootChildCount, SurfaceId surfaceId) const;
 
-  std::vector<react::Point> getAbsolutePositionsForRootPathView(const LightNode::Unshared &node) const;
+  std::vector<react::Point> getAbsolutePositionsForRootPathView(const std::shared_ptr<LightNode> &node) const;
 
   void transferConfigToContainer(Tag containerTag, Tag beforeTag) const;
 
@@ -182,7 +182,7 @@ struct LayoutAnimationsProxy_Experimental : public MountingOverrideDelegate,
       const PropsParserContext &propsParserContext) const;
 
   std::optional<Transform> parseParentTransforms(
-      const LightNode::Unshared &node,
+      const std::shared_ptr<LightNode> &node,
       const std::vector<react::Point> &absolutePositions) const;
   react::Transform resolveTransform(
       const LayoutMetrics &layoutMetrics,

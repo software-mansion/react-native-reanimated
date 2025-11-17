@@ -237,8 +237,8 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
 
 // MARK: Shared Element Transitions
 
-LightNode::Unshared LayoutAnimationsProxy_Experimental::findTopScreen(LightNode::Unshared node) const {
-  LightNode::Unshared result = nullptr;
+std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findTopScreen(std::shared_ptr<LightNode> node) const {
+  std::shared_ptr<LightNode> result = nullptr;
   if (!node->current.componentName) {
     return result;
   }
@@ -268,7 +268,7 @@ LightNode::Unshared LayoutAnimationsProxy_Experimental::findTopScreen(LightNode:
 }
 
 void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
-    const LightNode::Unshared &node,
+    const std::shared_ptr<LightNode> &node,
     int index,
     const PropsParserContext &propsParserContext) const {
   if (sharedTransitionManager_->tagToName_.contains(node->current.tag)) {
@@ -448,8 +448,8 @@ Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
 }
 
 void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
-    const LightNode::Unshared &afterTopScreen,
-    const LightNode::Unshared &beforeTopScreen,
+    const std::shared_ptr<LightNode> &afterTopScreen,
+    const std::shared_ptr<LightNode> &beforeTopScreen,
     ShadowViewMutationList &filteredMutations,
     const ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext,
@@ -1003,7 +1003,7 @@ ShadowView LayoutAnimationsProxy_Experimental::createLayoutAnimation(
   return oldView;
 }
 
-void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const LightNode::Unshared &node) const {
+void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::shared_ptr<LightNode> &node) const {
   auto newChildShadowView = node->current;
   auto finalView = newChildShadowView;
   auto currentView = newChildShadowView;
@@ -1046,7 +1046,7 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const LightNode:
       });
 }
 
-void LayoutAnimationsProxy_Experimental::startExitingAnimation(const LightNode::Unshared &node) const {
+void LayoutAnimationsProxy_Experimental::startExitingAnimation(const std::shared_ptr<LightNode> &node) const {
   auto &oldChildShadowView = node->current;
   const auto surfaceId = oldChildShadowView.surfaceId;
   const auto tag = oldChildShadowView.tag;
@@ -1085,7 +1085,7 @@ void LayoutAnimationsProxy_Experimental::startExitingAnimation(const LightNode::
   });
 }
 
-void LayoutAnimationsProxy_Experimental::startLayoutAnimation(const LightNode::Unshared &node) const {
+void LayoutAnimationsProxy_Experimental::startLayoutAnimation(const std::shared_ptr<LightNode> &node) const {
   auto oldChildShadowView = node->previous;
   auto newChildShadowView = node->current;
   auto surfaceId = oldChildShadowView.surfaceId;
@@ -1190,7 +1190,7 @@ void LayoutAnimationsProxy_Experimental::startProgressTransition(
 // MARK: Position Calculation
 
 std::vector<react::Point> LayoutAnimationsProxy_Experimental::getAbsolutePositionsForRootPathView(
-    const LightNode::Unshared &node) const {
+    const std::shared_ptr<LightNode> &node) const {
   std::vector<react::Point> viewsAbsolutePositions;
   auto currentNode = node;
   while (currentNode) {
@@ -1219,7 +1219,7 @@ std::vector<react::Point> LayoutAnimationsProxy_Experimental::getAbsolutePositio
 }
 
 std::optional<Transform> LayoutAnimationsProxy_Experimental::parseParentTransforms(
-    const LightNode::Unshared &node,
+    const std::shared_ptr<LightNode> &node,
     const std::vector<react::Point> &absolutePositions) const {
   std::vector<std::pair<Transform, TransformOrigin>> transforms;
   auto currentNode = node;
