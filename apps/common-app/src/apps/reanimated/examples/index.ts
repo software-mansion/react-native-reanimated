@@ -9,6 +9,7 @@ import AnimatedSensorMagneticFieldExample from './AnimatedSensorMagneticFieldExa
 import AnimatedSensorRotationExample from './AnimatedSensorRotationExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
+import AnimatedTextExample from './AnimatedTextExample';
 import AnimatedTextWidthExample from './AnimatedTextWidthExample';
 import ArticleProgressExample from './ArticleProgressExample';
 import BabelVersionCheckExample from './BabelVersionCheckExample';
@@ -172,6 +173,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🎞️',
     title: 'FPS',
     screen: FpsExample,
+  },
+  AnimatedTextExample: {
+    icon: '📝',
+    title: 'Animated text',
+    screen: AnimatedTextExample,
   },
   DetachAnimatedStylesExample: {
     icon: '⛓️‍💥',
