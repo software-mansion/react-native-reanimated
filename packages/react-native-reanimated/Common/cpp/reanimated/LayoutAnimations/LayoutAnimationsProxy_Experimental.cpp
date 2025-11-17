@@ -1023,8 +1023,7 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
         Rect window;
         const auto tag = newChildShadowView.tag;
         {
-          auto &mutex = strongThis->mutex;
-          auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+          auto lock = std::unique_lock<std::recursive_mutex>(strongThis->mutex);
           auto la = LayoutAnimation{newChildShadowView, newChildShadowView, newChildShadowView, parentTag, opacity};
           strongThis->layoutAnimations_.insert_or_assign(tag, std::move(la));
           window = strongThis->surfaceManager.getWindow(newChildShadowView.surfaceId);
