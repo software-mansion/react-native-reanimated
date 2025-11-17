@@ -1,34 +1,26 @@
 'use strict';
+import {
+  isReactComponentName,
+  logger,
+  UNSUPPORTED_TRANSFORM_PROPS,
+} from '../../common';
 import type { CSSStyle } from '../types';
-import { logger } from '../../common';
 
-const UNSUPPORTED_TRANSFORM_PROPS: ReadonlySet<string> = new Set([
-  'translate',
-  'translateX',
-  'translateY',
-  'scale',
-  'scaleX',
-  'scaleY',
-  'rotate',
-  'rotateX',
-  'rotateY',
-  'rotateZ',
-  'skewX',
-  'skewY',
-  'matrix',
-]);
+const UNSUPPORTED_TRANSFORM_PROPS_SET = new Set<string>(
+  UNSUPPORTED_TRANSFORM_PROPS
+);
 
 export default abstract class BaseCSSManager {
   private readonly warnedProps = new Set<string>();
 
   protected warnOnUnsupportedProps(style: CSSStyle, componentName: string) {
-    if (!style) {
+    if (!isReactComponentName(componentName)) {
       return;
     }
 
     Object.keys(style).forEach((prop) => {
       if (
-        UNSUPPORTED_TRANSFORM_PROPS.has(prop) &&
+        UNSUPPORTED_TRANSFORM_PROPS_SET.has(prop) &&
         !this.warnedProps.has(prop)
       ) {
         this.warnedProps.add(prop);

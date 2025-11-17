@@ -7,6 +7,8 @@ import type {
   ViewStyle,
 } from 'react-native';
 
+import type { UnsupportedTransformProp } from './props';
+
 export type TransformOrigin = string | Array<string | number>;
 
 export type NormalizedTransformOrigin = [
@@ -15,17 +17,9 @@ export type NormalizedTransformOrigin = [
   number,
 ];
 
-type DeprecatedProps =
-  | 'transformMatrix'
-  | 'rotation'
-  | 'scaleX'
-  | 'scaleY'
-  | 'translateX'
-  | 'translateY';
-
 export type PlainStyle = Omit<
   ViewStyle & TextStyle & ImageStyle,
-  DeprecatedProps
+  UnsupportedTransformProp
 >;
 
 export type TransformsArray = Exclude<
