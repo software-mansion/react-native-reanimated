@@ -6,6 +6,7 @@
 
 #include <jsi/jsi.h>
 
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -87,7 +88,6 @@ class PropsDiffer {
   static inline std::string toString(const SharedColor &value);
 
  public:
-#include <string>
   explicit PropsDiffer(jsi::Runtime &rt, const ShadowView &sourceView, const ShadowView &targetView)
       : sourceView_(sourceView),
         targetView_(targetView),
