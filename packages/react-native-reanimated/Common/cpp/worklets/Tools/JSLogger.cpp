@@ -1,5 +1,5 @@
-#include <memory>
 #include <worklets/Tools/JSLogger.h>
+#include <memory>
 
 namespace worklets {
 

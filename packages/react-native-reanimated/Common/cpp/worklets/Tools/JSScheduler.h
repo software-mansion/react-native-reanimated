@@ -15,7 +15,9 @@ class JSScheduler {
   using Job = std::function<void(jsi::Runtime &rt)>;
 
  public:
-  explicit JSScheduler(jsi::Runtime &rnRuntime, const std::shared_ptr<CallInvoker> &jsCallInvoker);
+  explicit JSScheduler(
+      jsi::Runtime &rnRuntime,
+      const std::shared_ptr<CallInvoker> &jsCallInvoker);
 
   const std::function<void(Job)> scheduleOnJS = nullptr;
 

@@ -5,21 +5,24 @@
 #import <REAModule.h>
 #import <REANodesManager.h>
 #import <React/RCTEventDispatcher.h>
-#import <memory>
 #import <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
+#import <memory>
 
 namespace reanimated {
 
-PlatformDepMethodsHolder
-makePlatformDepMethodsHolder(RCTBridge *bridge, REANodesManager *nodesManager, REAModule *reaModule);
+PlatformDepMethodsHolder makePlatformDepMethodsHolder(
+    RCTBridge *bridge,
+    REANodesManager *nodesManager,
+    REAModule *reaModule);
 
 #ifdef RCT_NEW_ARCH_ENABLED
 PlatformDepMethodsHolder makePlatformDepMethodsHolderBridgeless(
     RCTModuleRegistry *moduleRegistry,
     REANodesManager *nodesManager,
     REAModule *reaModule);
-SetGestureStateFunction makeSetGestureStateFunctionBridgeless(RCTModuleRegistry *moduleRegistry);
+SetGestureStateFunction makeSetGestureStateFunctionBridgeless(
+    RCTModuleRegistry *moduleRegistry);
 #else // RCT_NEW_ARCH_ENABLED
 UpdatePropsFunction makeUpdatePropsFunction(REAModule *reaModule);
 MeasureFunction makeMeasureFunction(RCTUIManager *uiManager);
@@ -32,13 +35,19 @@ ObtainPropFunction makeObtainPropFunction(REAModule *reaModule);
 SetGestureStateFunction makeSetGestureStateFunction(RCTBridge *bridge);
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager);
 GetAnimationTimestampFunction makeGetAnimationTimestamp();
-ProgressLayoutAnimationFunction makeProgressLayoutAnimation(REAModule *reaModule);
+ProgressLayoutAnimationFunction makeProgressLayoutAnimation(
+    REAModule *reaModule);
 EndLayoutAnimationFunction makeEndLayoutAnimation(REAModule *reaModule);
-MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(REANodesManager *nodesManager);
-RegisterSensorFunction makeRegisterSensorFunction(ReanimatedSensorContainer *reanimatedSensorContainer);
-UnregisterSensorFunction makeUnregisterSensorFunction(ReanimatedSensorContainer *reanimatedSensorContainer);
-KeyboardEventSubscribeFunction makeSubscribeForKeyboardEventsFunction(REAKeyboardEventObserver *keyboardObserver);
-KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKeyboardEventObserver *keyboardObserver);
+MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(
+    REANodesManager *nodesManager);
+RegisterSensorFunction makeRegisterSensorFunction(
+    ReanimatedSensorContainer *reanimatedSensorContainer);
+UnregisterSensorFunction makeUnregisterSensorFunction(
+    ReanimatedSensorContainer *reanimatedSensorContainer);
+KeyboardEventSubscribeFunction makeSubscribeForKeyboardEventsFunction(
+    REAKeyboardEventObserver *keyboardObserver);
+KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(
+    REAKeyboardEventObserver *keyboardObserver);
 
 } // namespace reanimated
 

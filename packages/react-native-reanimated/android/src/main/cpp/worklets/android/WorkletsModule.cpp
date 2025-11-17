@@ -39,13 +39,22 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jlong jsContext,
     const std::string &valueUnpackerCode,
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-    jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
-    jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler) {
+    jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
+        jsCallInvokerHolder,
+    jni::alias_ref<worklets::AndroidUIScheduler::javaobject>
+        androidUIScheduler) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext);
-  auto jsScheduler = std::make_shared<worklets::JSScheduler>(*rnRuntime, jsCallInvoker);
+  auto jsScheduler =
+      std::make_shared<worklets::JSScheduler>(*rnRuntime, jsCallInvoker);
   auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
-  return makeCxxInstance(rnRuntime, valueUnpackerCode, messageQueueThread, jsCallInvoker, jsScheduler, uiScheduler);
+  return makeCxxInstance(
+      rnRuntime,
+      valueUnpackerCode,
+      messageQueueThread,
+      jsCallInvoker,
+      jsScheduler,
+      uiScheduler);
 }
 
 void WorkletsModule::invalidateCpp() {

@@ -26,15 +26,18 @@ using namespace facebook::jni;
 
 class WorkletsModule : public jni::HybridClass<WorkletsModule> {
  public:
-  static auto constexpr kJavaDescriptor = "Lcom/swmansion/worklets/WorkletsModule;";
+  static auto constexpr kJavaDescriptor =
+      "Lcom/swmansion/worklets/WorkletsModule;";
 
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> /*jThis*/,
       jlong jsContext,
       const std::string &valueUnpackerCode,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-      jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
-      jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler);
+      jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
+          jsCallInvokerHolder,
+      jni::alias_ref<worklets::AndroidUIScheduler::javaobject>
+          androidUIScheduler);
 
   static void registerNatives();
 

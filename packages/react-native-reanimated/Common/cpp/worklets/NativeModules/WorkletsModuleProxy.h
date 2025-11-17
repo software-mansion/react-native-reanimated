@@ -1,17 +1,19 @@
 #pragma once
 
 #include <cxxreact/MessageQueueThread.h>
-#include <memory>
-#include <string>
 #include <worklets/NativeModules/WorkletsModuleProxySpec.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
+#include <memory>
+#include <string>
 
 namespace worklets {
 
-class WorkletsModuleProxy : public WorkletsModuleProxySpec, public std::enable_shared_from_this<WorkletsModuleProxy> {
+class WorkletsModuleProxy
+    : public WorkletsModuleProxySpec,
+      public std::enable_shared_from_this<WorkletsModuleProxy> {
  public:
   explicit WorkletsModuleProxy(
       const std::string &valueUnpackerCode,

@@ -14,7 +14,9 @@ using namespace facebook::react;
 
 class ReanimatedMountHook : public UIManagerMountHook {
  public:
-  ReanimatedMountHook(const std::shared_ptr<PropsRegistry> &propsRegistry, const std::shared_ptr<UIManager> &uiManager);
+  ReanimatedMountHook(
+      const std::shared_ptr<PropsRegistry> &propsRegistry,
+      const std::shared_ptr<UIManager> &uiManager);
   ~ReanimatedMountHook() noexcept override;
 
   void shadowTreeDidMount(

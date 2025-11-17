@@ -12,7 +12,8 @@ class AroundLock {
   const std::shared_ptr<std::recursive_mutex> mutex_;
 
  public:
-  explicit AroundLock(const std::shared_ptr<std::recursive_mutex> &mutex) : mutex_(mutex) {}
+  explicit AroundLock(const std::shared_ptr<std::recursive_mutex> &mutex)
+      : mutex_(mutex) {}
 
   void before() const {
     mutex_->lock();
@@ -58,7 +59,12 @@ WorkletRuntime::WorkletRuntime(
     const bool supportsLocking,
     const std::string &valueUnpackerCode)
     : runtimeMutex_(std::make_shared<std::recursive_mutex>()),
-      runtime_(makeRuntime(rnRuntime, jsQueue, name, supportsLocking, runtimeMutex_)),
+      runtime_(makeRuntime(
+          rnRuntime,
+          jsQueue,
+          name,
+          supportsLocking,
+          runtimeMutex_)),
 #ifndef NDEBUG
       supportsLocking_(supportsLocking),
 #endif
@@ -67,15 +73,25 @@ WorkletRuntime::WorkletRuntime(
   WorkletRuntimeCollector::install(rt);
   WorkletRuntimeDecorator::decorate(rt, name, jsScheduler);
 
-  auto codeBuffer = std::make_shared<const jsi::StringBuffer>("(" + valueUnpackerCode + "\n)");
-  auto valueUnpacker = rt.evaluateJavaScript(codeBuffer, "valueUnpacker").asObject(rt).asFunction(rt);
+  auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
+      "(" + valueUnpackerCode + "\n)");
+  auto valueUnpacker = rt.evaluateJavaScript(codeBuffer, "valueUnpacker")
+                           .asObject(rt)
+                           .asFunction(rt);
   rt.global().setProperty(rt, "__valueUnpacker", valueUnpacker);
 }
 
-jsi::Value WorkletRuntime::executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const {
-  assert(supportsLocking_ && ("[Reanimated] Runtime \"" + name_ + "\" doesn't support locking.").c_str());
+jsi::Value WorkletRuntime::executeSync(
+    jsi::Runtime &rt,
+    const jsi::Value &worklet) const {
+  assert(
+      supportsLocking_ &&
+      ("[Reanimated] Runtime \"" + name_ + "\" doesn't support locking.")
+          .c_str());
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
-      rt, worklet, "[Reanimated] Only worklets can be executed synchronously on UI runtime.");
+      rt,
+      worklet,
+      "[Reanimated] Only worklets can be executed synchronously on UI runtime.");
   auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
   jsi::Runtime &uiRuntime = getJSIRuntime();
   auto result = runGuarded(shareableWorklet);
@@ -84,14 +100,18 @@ jsi::Value WorkletRuntime::executeSync(jsi::Runtime &rt, const jsi::Value &workl
   return shareableResult->toJSValue(rt);
 }
 
-jsi::Value WorkletRuntime::get(jsi::Runtime &rt, const jsi::PropNameID &propName) {
+jsi::Value WorkletRuntime::get(
+    jsi::Runtime &rt,
+    const jsi::PropNameID &propName) {
   auto name = propName.utf8(rt);
   if (name == "toString") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
         0,
-        [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *, size_t) -> jsi::Value {
+        [weakThis = weak_from_this()](
+            jsi::Runtime &rt, const jsi::Value &, const jsi::Value *, size_t)
+            -> jsi::Value {
           auto strongThis = weakThis.lock();
           if (!strongThis) {
             return jsi::String::createFromUtf8(rt, "");
@@ -106,14 +126,17 @@ jsi::Value WorkletRuntime::get(jsi::Runtime &rt, const jsi::PropNameID &propName
   return jsi::Value::undefined();
 }
 
-std::vector<jsi::PropNameID> WorkletRuntime::getPropertyNames(jsi::Runtime &rt) {
+std::vector<jsi::PropNameID> WorkletRuntime::getPropertyNames(
+    jsi::Runtime &rt) {
   std::vector<jsi::PropNameID> result;
   result.push_back(jsi::PropNameID::forUtf8(rt, "toString"));
   result.push_back(jsi::PropNameID::forUtf8(rt, "name"));
   return result;
 }
 
-std::shared_ptr<WorkletRuntime> extractWorkletRuntime(jsi::Runtime &rt, const jsi::Value &value) {
+std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
   return value.getObject(rt).getHostObject<WorkletRuntime>(rt);
 }
 

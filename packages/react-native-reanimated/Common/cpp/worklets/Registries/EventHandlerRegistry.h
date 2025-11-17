@@ -18,14 +18,20 @@ namespace worklets {
 class WorkletEventHandler;
 
 class EventHandlerRegistry {
-  std::map<std::pair<int, std::string>, std::unordered_map<uint64_t, std::shared_ptr<WorkletEventHandler>>>
+  std::map<
+      std::pair<int, std::string>,
+      std::unordered_map<uint64_t, std::shared_ptr<WorkletEventHandler>>>
       eventMappingsWithTag;
-  std::map<std::string, std::unordered_map<uint64_t, std::shared_ptr<WorkletEventHandler>>> eventMappingsWithoutTag;
+  std::map<
+      std::string,
+      std::unordered_map<uint64_t, std::shared_ptr<WorkletEventHandler>>>
+      eventMappingsWithoutTag;
   std::map<uint64_t, std::shared_ptr<WorkletEventHandler>> eventHandlers;
   std::mutex instanceMutex;
 
  public:
-  void registerEventHandler(const std::shared_ptr<WorkletEventHandler> &eventHandler);
+  void registerEventHandler(
+      const std::shared_ptr<WorkletEventHandler> &eventHandler);
   void unregisterEventHandler(const uint64_t id);
 
   void processEvent(
@@ -35,7 +41,9 @@ class EventHandlerRegistry {
       const int emitterReactTag,
       const jsi::Value &eventPayload);
 
-  bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
+  bool isAnyHandlerWaitingForEvent(
+      const std::string &eventName,
+      const int emitterReactTag);
 };
 
 } // namespace worklets

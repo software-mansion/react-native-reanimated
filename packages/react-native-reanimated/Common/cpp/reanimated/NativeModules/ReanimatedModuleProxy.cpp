@@ -41,7 +41,8 @@ namespace reanimated {
 static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper) {
-  return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
+  return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(
+      rt, shadowNodeWrapper);
 }
 #endif // REACT_NATIVE_MINOR_VERSION >= 81
 #endif // RCT_NEW_ARCH_ENABLED
@@ -68,24 +69,32 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       animatedSensorModule_(platformDepMethodsHolder),
-      jsLogger_(std::make_shared<JSLogger>(workletsModuleProxy->getJSScheduler())),
-      layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>(jsLogger_)),
+      jsLogger_(
+          std::make_shared<JSLogger>(workletsModuleProxy->getJSScheduler())),
+      layoutAnimationsManager_(
+          std::make_shared<LayoutAnimationsManager>(jsLogger_)),
 #ifdef RCT_NEW_ARCH_ENABLED
 #ifdef ANDROID
-      filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
+      filterUnmountedTagsFunction_(
+          platformDepMethodsHolder.filterUnmountedTagsFunction),
 #endif // ANDROID
       propsRegistry_(std::make_shared<PropsRegistry>()),
 #else
       obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
-      configurePropsPlatformFunction_(platformDepMethodsHolder.configurePropsFunction),
+      configurePropsPlatformFunction_(
+          platformDepMethodsHolder.configurePropsFunction),
       updatePropsFunction_(platformDepMethodsHolder.updatePropsFunction),
 #endif
-      subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
-      unsubscribeFromKeyboardEventsFunction_(platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
+      subscribeForKeyboardEventsFunction_(
+          platformDepMethodsHolder.subscribeForKeyboardEvents),
+      unsubscribeFromKeyboardEventsFunction_(
+          platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
 }
 
-void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMethodsHolder) {
-  auto onRenderCallback = [weakThis = weak_from_this()](const double timestampMs) {
+void ReanimatedModuleProxy::init(
+    const PlatformDepMethodsHolder &platformDepMethodsHolder) {
+  auto onRenderCallback = [weakThis =
+                               weak_from_this()](const double timestampMs) {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -96,7 +105,9 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
   };
   onRenderCallback_ = std::move(onRenderCallback);
 
-  auto requestAnimationFrame = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &callback) {
+  auto requestAnimationFrame = [weakThis = weak_from_this()](
+                                   jsi::Runtime &rt,
+                                   const jsi::Value &callback) {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -106,7 +117,8 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
   };
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  auto updateProps = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &operations) {
+  auto updateProps = [weakThis = weak_from_this()](
+                         jsi::Runtime &rt, const jsi::Value &operations) {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -115,7 +127,9 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     strongThis->updateProps(rt, operations);
   };
 
-  auto removeFromPropsRegistry = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &viewTags) {
+  auto removeFromPropsRegistry = [weakThis = weak_from_this()](
+                                     jsi::Runtime &rt,
+                                     const jsi::Value &viewTags) {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -124,7 +138,9 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     strongThis->removeFromPropsRegistry(rt, viewTags);
   };
 
-  auto measure = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) -> jsi::Value {
+  auto measure = [weakThis = weak_from_this()](
+                     jsi::Runtime &rt,
+                     const jsi::Value &shadowNodeValue) -> jsi::Value {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return jsi::Value::undefined();
@@ -142,16 +158,20 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       return;
     }
 
-    strongThis->dispatchCommand(rt, shadowNodeValue, commandNameValue, argsValue);
+    strongThis->dispatchCommand(
+        rt, shadowNodeValue, commandNameValue, argsValue);
   };
   ProgressLayoutAnimationFunction progressLayoutAnimation =
-      [weakThis = weak_from_this()](jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool) {
+      [weakThis = weak_from_this()](
+          jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool) {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
         }
 
-        auto surfaceId = strongThis->layoutAnimationsProxy_->progressLayoutAnimation(tag, newStyle);
+        auto surfaceId =
+            strongThis->layoutAnimationsProxy_->progressLayoutAnimation(
+                tag, newStyle);
         if (!surfaceId) {
           return;
         }
@@ -166,31 +186,35 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     strongThis->layoutAnimationRenderRequested_ = false;
   };
 
-  EndLayoutAnimationFunction endLayoutAnimation = [weakThis = weak_from_this(), requestLayoutAnimationRender](
-                                                      int tag, bool shouldRemove) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
+  EndLayoutAnimationFunction endLayoutAnimation =
+      [weakThis = weak_from_this(), requestLayoutAnimationRender](
+          int tag, bool shouldRemove) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
 
-    auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
+        auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(
+            tag, shouldRemove);
 
-    if (!strongThis->layoutAnimationRenderRequested_) {
-      strongThis->layoutAnimationRenderRequested_ = true;
-      // if an animation has duration 0, performOperations would not get
-      // called for it so we call requestRender to have it called in the
-      // next frame
-      strongThis->requestRender_(requestLayoutAnimationRender);
-    }
+        if (!strongThis->layoutAnimationRenderRequested_) {
+          strongThis->layoutAnimationRenderRequested_ = true;
+          // if an animation has duration 0, performOperations would not get
+          // called for it so we call requestRender to have it called in the
+          // next frame
+          strongThis->requestRender_(requestLayoutAnimationRender);
+        }
 
-    if (!surfaceId) {
-      return;
-    }
-    strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
-  };
+        if (!surfaceId) {
+          return;
+        }
+        strongThis->layoutAnimationFlushRequests_.insert(*surfaceId);
+      };
 
   auto obtainProp = [weakThis = weak_from_this()](
-                        jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &propName) {
+                        jsi::Runtime &rt,
+                        const jsi::Value &shadowNodeWrapper,
+                        const jsi::Value &propName) {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return jsi::String::createFromUtf8(rt, "");
@@ -239,32 +263,40 @@ ReanimatedModuleProxy::~ReanimatedModuleProxy() {
   uiWorkletRuntime_.reset();
 }
 
-void ReanimatedModuleProxy::scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) {
+void ReanimatedModuleProxy::scheduleOnUI(
+    jsi::Runtime &rt,
+    const jsi::Value &worklet) {
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
       rt, worklet, "[Reanimated] Only worklets can be scheduled to run on UI.");
-  workletsModuleProxy_->getUIScheduler()->scheduleOnUI([=, weakThis = weak_from_this()] {
-    const auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
+  workletsModuleProxy_->getUIScheduler()->scheduleOnUI(
+      [=, weakThis = weak_from_this()] {
+        const auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
 #if JS_RUNTIME_HERMES
-    // JSI's scope defined here allows for JSI-objects to be cleared up
-    // after each runtime loop. Within these loops we typically create some
-    // temporary JSI objects and hence it allows for such objects to be
-    // garbage collected much sooner. Apparently the scope API is only
-    // supported on Hermes at the moment.
-    const auto scope = jsi::Scope(strongThis->uiWorkletRuntime_->getJSIRuntime());
+        // JSI's scope defined here allows for JSI-objects to be cleared up
+        // after each runtime loop. Within these loops we typically create some
+        // temporary JSI objects and hence it allows for such objects to be
+        // garbage collected much sooner. Apparently the scope API is only
+        // supported on Hermes at the moment.
+        const auto scope =
+            jsi::Scope(strongThis->uiWorkletRuntime_->getJSIRuntime());
 #endif
-    strongThis->uiWorkletRuntime_->runGuarded(shareableWorklet);
-  });
+        strongThis->uiWorkletRuntime_->runGuarded(shareableWorklet);
+      });
 }
 
-jsi::Value ReanimatedModuleProxy::executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet) {
+jsi::Value ReanimatedModuleProxy::executeOnUIRuntimeSync(
+    jsi::Runtime &rt,
+    const jsi::Value &worklet) {
   return uiWorkletRuntime_->executeSync(rt, worklet);
 }
 
-jsi::Value
-ReanimatedModuleProxy::createWorkletRuntime(jsi::Runtime &rt, const jsi::Value &name, const jsi::Value &initializer) {
+jsi::Value ReanimatedModuleProxy::createWorkletRuntime(
+    jsi::Runtime &rt,
+    const jsi::Value &name,
+    const jsi::Value &initializer) {
   auto workletRuntime = std::make_shared<WorkletRuntime>(
       rt,
       workletsModuleProxy_->getJSQueue(),
@@ -272,8 +304,8 @@ ReanimatedModuleProxy::createWorkletRuntime(jsi::Runtime &rt, const jsi::Value &
       name.asString(rt).utf8(rt),
       true /* supportsLocking */,
       valueUnpackerCode_);
-  auto initializerShareable =
-      extractShareableOrThrow<ShareableWorklet>(rt, initializer, "[Reanimated] Initializer must be a worklet.");
+  auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
+      rt, initializer, "[Reanimated] Initializer must be a worklet.");
   workletRuntime->runGuarded(initializerShareable);
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }
@@ -295,41 +327,52 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
 
   uint64_t newRegistrationId = NEXT_EVENT_HANDLER_ID++;
   auto eventNameStr = eventName.asString(rt).utf8(rt);
-  auto handlerShareable =
-      extractShareableOrThrow<ShareableWorklet>(rt, worklet, "[Reanimated] Event handler must be a worklet.");
+  auto handlerShareable = extractShareableOrThrow<ShareableWorklet>(
+      rt, worklet, "[Reanimated] Event handler must be a worklet.");
   int emitterReactTagInt = emitterReactTag.asNumber();
 
-  workletsModuleProxy_->getUIScheduler()->scheduleOnUI([=, weakThis = weak_from_this()]() {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    auto handler =
-        std::make_shared<WorkletEventHandler>(newRegistrationId, eventNameStr, emitterReactTagInt, handlerShareable);
-    strongThis->eventHandlerRegistry_->registerEventHandler(std::move(handler));
-  });
+  workletsModuleProxy_->getUIScheduler()->scheduleOnUI(
+      [=, weakThis = weak_from_this()]() {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        auto handler = std::make_shared<WorkletEventHandler>(
+            newRegistrationId,
+            eventNameStr,
+            emitterReactTagInt,
+            handlerShareable);
+        strongThis->eventHandlerRegistry_->registerEventHandler(
+            std::move(handler));
+      });
 
   return jsi::Value(static_cast<double>(newRegistrationId));
 }
 
-void ReanimatedModuleProxy::unregisterEventHandler(jsi::Runtime &, const jsi::Value &registrationId) {
+void ReanimatedModuleProxy::unregisterEventHandler(
+    jsi::Runtime &,
+    const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
-  workletsModuleProxy_->getUIScheduler()->scheduleOnUI([=, weakThis = weak_from_this()]() {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    strongThis->eventHandlerRegistry_->unregisterEventHandler(id);
-  });
+  workletsModuleProxy_->getUIScheduler()->scheduleOnUI(
+      [=, weakThis = weak_from_this()]() {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->eventHandlerRegistry_->unregisterEventHandler(id);
+      });
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
 static inline std::string intColorToHex(const int val) {
-  std::stringstream invertedHexColorStream; // By default transparency is first, color second
-  invertedHexColorStream << std::setfill('0') << std::setw(8) << std::hex << val;
+  std::stringstream
+      invertedHexColorStream; // By default transparency is first, color second
+  invertedHexColorStream << std::setfill('0') << std::setw(8) << std::hex
+                         << val;
 
   auto invertedHexColor = invertedHexColorStream.str();
-  auto hexColor = "#" + invertedHexColor.substr(2, 6) + invertedHexColor.substr(0, 2);
+  auto hexColor =
+      "#" + invertedHexColor.substr(2, 6) + invertedHexColor.substr(0, 2);
 
   return hexColor;
 }
@@ -338,11 +381,14 @@ std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
     jsi::Runtime &rt,
     const std::string &propName,
     const std::shared_ptr<const ShadowNode> &shadowNode) {
-  auto newestCloneOfShadowNode = uiManager_->getNewestCloneOfShadowNode(*shadowNode);
+  auto newestCloneOfShadowNode =
+      uiManager_->getNewestCloneOfShadowNode(*shadowNode);
 
-  if (propName == "width" || propName == "height" || propName == "top" || propName == "left") {
+  if (propName == "width" || propName == "height" || propName == "top" ||
+      propName == "left") {
     // These props are calculated from frame
-    auto layoutableShadowNode = dynamic_cast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
+    auto layoutableShadowNode = dynamic_cast<LayoutableShadowNode const *>(
+        newestCloneOfShadowNode.get());
     const auto &frame = layoutableShadowNode->layoutMetrics_.frame;
 
     if (propName == "width") {
@@ -369,8 +415,9 @@ std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
     }
   }
 
-  throw std::runtime_error(
-      std::string("Getting property `" + propName + "` with function `getViewProp` is not supported"));
+  throw std::runtime_error(std::string(
+      "Getting property `" + propName +
+      "` with function `getViewProp` is not supported"));
 }
 
 jsi::Value ReanimatedModuleProxy::getViewProp(
@@ -379,21 +426,27 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
     const jsi::Value &propName,
     const jsi::Value &callback) {
   const auto propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
-  const auto funPtr = std::make_shared<jsi::Function>(callback.getObject(rnRuntime).asFunction(rnRuntime));
+  const auto funPtr = std::make_shared<jsi::Function>(
+      callback.getObject(rnRuntime).asFunction(rnRuntime));
   const auto shadowNode = shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
-  workletsModuleProxy_->getUIScheduler()->scheduleOnUI([=, weakThis = weak_from_this()]() {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    jsi::Runtime &uiRuntime = strongThis->uiWorkletRuntime_->getJSIRuntime();
-    const auto resultStr = strongThis->obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
+  workletsModuleProxy_->getUIScheduler()->scheduleOnUI(
+      [=, weakThis = weak_from_this()]() {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        jsi::Runtime &uiRuntime =
+            strongThis->uiWorkletRuntime_->getJSIRuntime();
+        const auto resultStr = strongThis->obtainPropFromShadowNode(
+            uiRuntime, propNameStr, shadowNode);
 
-    strongThis->workletsModuleProxy_->getJSScheduler()->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
-      const auto resultValue = jsi::String::createFromUtf8(rnRuntime, resultStr);
-      funPtr->call(rnRuntime, resultValue);
-    });
-  });
+        strongThis->workletsModuleProxy_->getJSScheduler()->scheduleOnJS(
+            [=](jsi::Runtime &rnRuntime) {
+              const auto resultValue =
+                  jsi::String::createFromUtf8(rnRuntime, resultStr);
+              funPtr->call(rnRuntime, resultValue);
+            });
+      });
   return jsi::Value::undefined();
 }
 
@@ -405,7 +458,8 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
     const jsi::Value &propName,
     const jsi::Value &callback) {
   const auto propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
-  const auto funPtr = std::make_shared<jsi::Function>(callback.getObject(rnRuntime).asFunction(rnRuntime));
+  const auto funPtr = std::make_shared<jsi::Function>(
+      callback.getObject(rnRuntime).asFunction(rnRuntime));
 
   const int viewTagInt = viewTag.asNumber();
 
@@ -417,13 +471,18 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
         if (!strongThis) {
           return;
         }
-        jsi::Runtime &uiRuntime = strongThis->uiWorkletRuntime_->getJSIRuntime();
-        const jsi::Value propNameValue = jsi::String::createFromUtf8(uiRuntime, propNameStr);
-        const auto resultValue = strongThis->obtainPropFunction_(uiRuntime, viewTagInt, propNameValue);
+        jsi::Runtime &uiRuntime =
+            strongThis->uiWorkletRuntime_->getJSIRuntime();
+        const jsi::Value propNameValue =
+            jsi::String::createFromUtf8(uiRuntime, propNameStr);
+        const auto resultValue = strongThis->obtainPropFunction_(
+            uiRuntime, viewTagInt, propNameValue);
         const auto resultStr = resultValue.asString(uiRuntime).utf8(uiRuntime);
-        const auto jsScheduler = strongThis->workletsModuleProxy_->getJSScheduler();
+        const auto jsScheduler =
+            strongThis->workletsModuleProxy_->getJSScheduler();
         jsScheduler->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
-          const auto resultValue = jsi::String::createFromUtf8(rnRuntime, resultStr);
+          const auto resultValue =
+              jsi::String::createFromUtf8(rnRuntime, resultStr);
           funPtr->call(rnRuntime, resultValue);
         });
       });
@@ -432,13 +491,17 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
 
 #endif
 
-jsi::Value ReanimatedModuleProxy::enableLayoutAnimations(jsi::Runtime &, const jsi::Value &config) {
+jsi::Value ReanimatedModuleProxy::enableLayoutAnimations(
+    jsi::Runtime &,
+    const jsi::Value &config) {
   FeaturesConfig::setLayoutAnimationEnabled(config.getBool());
   return jsi::Value::undefined();
 }
 
-jsi::Value
-ReanimatedModuleProxy::configureProps(jsi::Runtime &rt, const jsi::Value &uiProps, const jsi::Value &nativeProps) {
+jsi::Value ReanimatedModuleProxy::configureProps(
+    jsi::Runtime &rt,
+    const jsi::Value &uiProps,
+    const jsi::Value &nativeProps) {
 #ifdef RCT_NEW_ARCH_ENABLED
   auto uiPropsArray = uiProps.asObject(rt).asArray(rt);
   for (size_t i = 0; i < uiPropsArray.size(rt); ++i) {
@@ -467,15 +530,19 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     auto item = array.getValueAtIndex(rt, i).asObject(rt);
     auto &batchItem = batch[i];
     batchItem.tag = item.getProperty(rt, "viewTag").asNumber();
-    batchItem.type = static_cast<LayoutAnimationType>(item.getProperty(rt, "type").asNumber());
+    batchItem.type = static_cast<LayoutAnimationType>(
+        item.getProperty(rt, "type").asNumber());
     auto config = item.getProperty(rt, "config");
     if (config.isUndefined()) {
       batchItem.config = nullptr;
     } else {
       batchItem.config = extractShareableOrThrow<ShareableObject>(
-          rt, config, "[Reanimated] Layout animation config must be an object.");
+          rt,
+          config,
+          "[Reanimated] Layout animation config must be an object.");
     }
-    if (batch[i].type != SHARED_ELEMENT_TRANSITION && batch[i].type != SHARED_ELEMENT_TRANSITION_PROGRESS) {
+    if (batch[i].type != SHARED_ELEMENT_TRANSITION &&
+        batch[i].type != SHARED_ELEMENT_TRANSITION_PROGRESS) {
       continue;
     }
     auto sharedTransitionTag = item.getProperty(rt, "sharedTransitionTag");
@@ -493,14 +560,20 @@ void ReanimatedModuleProxy::setShouldAnimateExiting(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
     const jsi::Value &shouldAnimate) {
-  layoutAnimationsManager_->setShouldAnimateExiting(viewTag.asNumber(), shouldAnimate.getBool());
+  layoutAnimationsManager_->setShouldAnimateExiting(
+      viewTag.asNumber(), shouldAnimate.getBool());
 }
 
-bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) {
-  return eventHandlerRegistry_->isAnyHandlerWaitingForEvent(eventName, emitterReactTag);
+bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(
+    const std::string &eventName,
+    const int emitterReactTag) {
+  return eventHandlerRegistry_->isAnyHandlerWaitingForEvent(
+      eventName, emitterReactTag);
 }
 
-void ReanimatedModuleProxy::requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback) {
+void ReanimatedModuleProxy::requestAnimationFrame(
+    jsi::Runtime &rt,
+    const jsi::Value &callback) {
   frameCallbacks_.push_back(std::make_shared<jsi::Value>(rt, callback));
   maybeRequestRender();
 }
@@ -529,10 +602,17 @@ jsi::Value ReanimatedModuleProxy::registerSensor(
     const jsi::Value &iosReferenceFrame,
     const jsi::Value &sensorDataHandler) {
   return animatedSensorModule_.registerSensor(
-      rt, uiWorkletRuntime_, sensorType, interval, iosReferenceFrame, sensorDataHandler);
+      rt,
+      uiWorkletRuntime_,
+      sensorType,
+      interval,
+      iosReferenceFrame,
+      sensorDataHandler);
 }
 
-void ReanimatedModuleProxy::unregisterSensor(jsi::Runtime &, const jsi::Value &sensorId) {
+void ReanimatedModuleProxy::unregisterSensor(
+    jsi::Runtime &,
+    const jsi::Value &sensorId) {
   animatedSensorModule_.unregisterSensor(sensorId);
 }
 
@@ -542,24 +622,31 @@ void ReanimatedModuleProxy::cleanupSensors() {
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
-void ReanimatedModuleProxy::markNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) {
+void ReanimatedModuleProxy::markNodeAsRemovable(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper) {
   auto lock = propsRegistry_->createLock();
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   propsRegistry_->markNodeAsRemovable(shadowNode);
 }
 
-void ReanimatedModuleProxy::unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &viewTag) {
+void ReanimatedModuleProxy::unmarkNodeAsRemovable(
+    jsi::Runtime &rt,
+    const jsi::Value &viewTag) {
   auto lock = propsRegistry_->createLock();
   propsRegistry_->unmarkNodeAsRemovable(viewTag.asNumber());
 }
 
-jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(jsi::Runtime &rt, const jsi::Value &props) {
+jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(
+    jsi::Runtime &rt,
+    const jsi::Value &props) {
   jsi::Object nonAnimatableProps(rt);
   bool hasAnyNonAnimatableProp = false;
   const jsi::Object &propsObject = props.asObject(rt);
   const jsi::Array &propNames = propsObject.getPropertyNames(rt);
   for (size_t i = 0; i < propNames.size(rt); ++i) {
-    const std::string &propName = propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    const std::string &propName =
+        propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
     if (!collection::contains(animatablePropNames_, propName)) {
       hasAnyNonAnimatableProp = true;
       const auto &propNameStr = propName.c_str();
@@ -579,7 +666,8 @@ bool ReanimatedModuleProxy::handleEvent(
     const int emitterReactTag,
     const jsi::Value &payload,
     double currentTime) {
-  eventHandlerRegistry_->processEvent(uiWorkletRuntime_, currentTime, eventName, emitterReactTag, payload);
+  eventHandlerRegistry_->processEvent(
+      uiWorkletRuntime_, currentTime, eventName, emitterReactTag, payload);
 
   // TODO: return true if Reanimated successfully handled the event
   // to avoid sending it to JavaScript
@@ -587,7 +675,9 @@ bool ReanimatedModuleProxy::handleEvent(
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
-bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double currentTime) {
+bool ReanimatedModuleProxy::handleRawEvent(
+    const RawEvent &rawEvent,
+    double currentTime) {
   const EventTarget *eventTarget = rawEvent.eventTarget.get();
   if (eventTarget == nullptr) {
     // after app reload scrollView is unmounted and its content offset is set
@@ -621,7 +711,9 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   return res;
 }
 
-void ReanimatedModuleProxy::updateProps(jsi::Runtime &rt, const jsi::Value &operations) {
+void ReanimatedModuleProxy::updateProps(
+    jsi::Runtime &rt,
+    const jsi::Value &operations) {
   auto array = operations.asObject(rt).asArray(rt);
   size_t length = array.size(rt);
   for (size_t i = 0; i < length; ++i) {
@@ -629,7 +721,8 @@ void ReanimatedModuleProxy::updateProps(jsi::Runtime &rt, const jsi::Value &oper
     auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
     auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
     const jsi::Value &updates = item.getProperty(rt, "updates");
-    operationsInBatch_.emplace_back(shadowNode, std::make_unique<jsi::Value>(rt, updates));
+    operationsInBatch_.emplace_back(
+        shadowNode, std::make_unique<jsi::Value>(rt, updates));
   }
 }
 
@@ -640,7 +733,9 @@ void ReanimatedModuleProxy::performOperations() {
     auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
     for (const auto surfaceId : flushRequestsCopy) {
       uiManager_->getShadowTreeRegistry().visit(
-          surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
+          surfaceId, [](const ShadowTree &shadowTree) {
+            shadowTree.notifyDelegatesOfUpdates();
+          });
     }
   }
 
@@ -657,7 +752,8 @@ void ReanimatedModuleProxy::performOperations() {
   {
     auto lock = propsRegistry_->createLock();
 
-    if (copiedOperationsQueue.size() > 0 && propsRegistry_->shouldReanimatedSkipCommit()) {
+    if (copiedOperationsQueue.size() > 0 &&
+        propsRegistry_->shouldReanimatedSkipCommit()) {
       propsRegistry_->pleaseCommitAfterPause();
     }
 
@@ -685,9 +781,13 @@ void ReanimatedModuleProxy::performOperations() {
       continue;
     }
     Tag viewTag = shadowNode->getTag();
-    jsi::Value maybeJSPropsUpdater = rt.global().getProperty(rt, "updateJSProps");
-    assert(maybeJSPropsUpdater.isObject() && "[Reanimated] `updateJSProps` not found");
-    jsi::Function jsPropsUpdater = maybeJSPropsUpdater.asObject(rt).asFunction(rt);
+    jsi::Value maybeJSPropsUpdater =
+        rt.global().getProperty(rt, "updateJSProps");
+    assert(
+        maybeJSPropsUpdater.isObject() &&
+        "[Reanimated] `updateJSProps` not found");
+    jsi::Function jsPropsUpdater =
+        maybeJSPropsUpdater.asObject(rt).asFunction(rt);
     jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
   }
 
@@ -715,17 +815,21 @@ void ReanimatedModuleProxy::performOperations() {
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
       shadowTree.commit(
-          [&](RootShadowNode const &oldRootShadowNode) -> RootShadowNode::Unshared {
+          [&](RootShadowNode const &oldRootShadowNode)
+              -> RootShadowNode::Unshared {
             if (propsRegistry_->shouldReanimatedSkipCommit()) {
               return nullptr;
             }
 
-            auto rootNode = cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+            auto rootNode =
+                cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
 
             // Mark the commit as Reanimated commit so that we can distinguish
             // it in ReanimatedCommitHook.
 
-            auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(rootNode);
+            auto reaShadowNode =
+                std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
+                    rootNode);
             reaShadowNode->setReanimatedCommitTrait();
 
             return rootNode;
@@ -755,24 +859,31 @@ void ReanimatedModuleProxy::dispatchCommand(
 
   if (schedulerDelegate) {
     const auto shadowView = ShadowView(*shadowNode);
-    schedulerDelegate->schedulerDidDispatchCommand(shadowView, commandName, args);
+    schedulerDelegate->schedulerDidDispatchCommand(
+        shadowView, commandName, args);
   }
 }
 
-jsi::String
-ReanimatedModuleProxy::obtainProp(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &propName) {
+jsi::String ReanimatedModuleProxy::obtainProp(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &propName) {
   jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
   const auto propNameStr = propName.asString(rt).utf8(rt);
   const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  const auto resultStr = obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
+  const auto resultStr =
+      obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
   return jsi::String::createFromUtf8(rt, resultStr);
 }
 
-jsi::Value ReanimatedModuleProxy::measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
+jsi::Value ReanimatedModuleProxy::measure(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeValue) {
   // based on implementation from UIManagerBinding.cpp
 
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
-  auto layoutMetrics = uiManager_->getRelativeLayoutMetrics(*shadowNode, nullptr, {/* .includeTransform = */ true});
+  auto layoutMetrics = uiManager_->getRelativeLayoutMetrics(
+      *shadowNode, nullptr, {/* .includeTransform = */ true});
 
   if (layoutMetrics == EmptyLayoutMetrics) {
     // Originally, in this case React Native returns `{0, 0, 0, 0, 0, 0}`,
@@ -781,32 +892,44 @@ jsi::Value ReanimatedModuleProxy::measure(jsi::Runtime &rt, const jsi::Value &sh
     // `MeasuredDimensions | null`.
     return jsi::Value::null();
   }
-  auto newestCloneOfShadowNode = uiManager_->getNewestCloneOfShadowNode(*shadowNode);
+  auto newestCloneOfShadowNode =
+      uiManager_->getNewestCloneOfShadowNode(*shadowNode);
 
-  auto layoutableShadowNode = dynamic_cast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
-  facebook::react::Point originRelativeToParent = layoutableShadowNode != nullptr
+  auto layoutableShadowNode =
+      dynamic_cast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
+  facebook::react::Point originRelativeToParent =
+      layoutableShadowNode != nullptr
       ? layoutableShadowNode->getLayoutMetrics().frame.origin
       : facebook::react::Point();
 
   auto frame = layoutMetrics.frame;
 
   jsi::Object result(rt);
-  result.setProperty(rt, "x", jsi::Value(static_cast<double>(originRelativeToParent.x)));
-  result.setProperty(rt, "y", jsi::Value(static_cast<double>(originRelativeToParent.y)));
-  result.setProperty(rt, "width", jsi::Value(static_cast<double>(frame.size.width)));
-  result.setProperty(rt, "height", jsi::Value(static_cast<double>(frame.size.height)));
-  result.setProperty(rt, "pageX", jsi::Value(static_cast<double>(frame.origin.x)));
-  result.setProperty(rt, "pageY", jsi::Value(static_cast<double>(frame.origin.y)));
+  result.setProperty(
+      rt, "x", jsi::Value(static_cast<double>(originRelativeToParent.x)));
+  result.setProperty(
+      rt, "y", jsi::Value(static_cast<double>(originRelativeToParent.y)));
+  result.setProperty(
+      rt, "width", jsi::Value(static_cast<double>(frame.size.width)));
+  result.setProperty(
+      rt, "height", jsi::Value(static_cast<double>(frame.size.height)));
+  result.setProperty(
+      rt, "pageX", jsi::Value(static_cast<double>(frame.origin.x)));
+  result.setProperty(
+      rt, "pageY", jsi::Value(static_cast<double>(frame.origin.y)));
   return result;
 }
 
-void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &uiManager) {
+void ReanimatedModuleProxy::initializeFabric(
+    const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
 
   initializeLayoutAnimationsProxy();
 
-  mountHook_ = std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
-  commitHook_ = std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_, layoutAnimationsProxy_);
+  mountHook_ =
+      std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(
+      propsRegistry_, uiManager_, layoutAnimationsProxy_);
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
@@ -814,7 +937,8 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
   auto scheduler = reinterpret_cast<Scheduler *>(uiManager_->getDelegate());
   auto componentDescriptorRegistry =
       scheduler->getContextContainer()
-          ->at<std::weak_ptr<const ComponentDescriptorRegistry>>("ComponentDescriptorRegistry_DO_NOT_USE_PRETTY_PLEASE")
+          ->at<std::weak_ptr<const ComponentDescriptorRegistry>>(
+              "ComponentDescriptorRegistry_DO_NOT_USE_PRETTY_PLEASE")
           .lock();
 
   if (componentDescriptorRegistry) {
@@ -840,7 +964,8 @@ std::string format(bool b) {
   return b ? "✅" : "❌";
 }
 
-std::function<std::string()> ReanimatedModuleProxy::createRegistriesLeakCheck() {
+std::function<std::string()>
+ReanimatedModuleProxy::createRegistriesLeakCheck() {
   return [weakThis = weak_from_this()]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
@@ -865,20 +990,25 @@ jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
     const jsi::Value &isStatusBarTranslucent,
     const jsi::Value &isNavigationBarTranslucent) {
   auto shareableHandler = extractShareableOrThrow<ShareableWorklet>(
-      rt, handlerWorklet, "[Reanimated] Keyboard event handler must be a worklet.");
+      rt,
+      handlerWorklet,
+      "[Reanimated] Keyboard event handler must be a worklet.");
   return subscribeForKeyboardEventsFunction_(
       [=, weakThis = weak_from_this()](int keyboardState, int height) {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
         }
-        strongThis->uiWorkletRuntime_->runGuarded(shareableHandler, jsi::Value(keyboardState), jsi::Value(height));
+        strongThis->uiWorkletRuntime_->runGuarded(
+            shareableHandler, jsi::Value(keyboardState), jsi::Value(height));
       },
       isStatusBarTranslucent.getBool(),
       isNavigationBarTranslucent.getBool());
 }
 
-void ReanimatedModuleProxy::unsubscribeFromKeyboardEvents(jsi::Runtime &, const jsi::Value &listenerId) {
+void ReanimatedModuleProxy::unsubscribeFromKeyboardEvents(
+    jsi::Runtime &,
+    const jsi::Value &listenerId) {
   unsubscribeFromKeyboardEventsFunction_(listenerId.asNumber());
 }
 

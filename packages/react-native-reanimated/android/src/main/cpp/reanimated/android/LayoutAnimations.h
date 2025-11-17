@@ -13,7 +13,8 @@ using namespace facebook::jni;
 using namespace facebook;
 
 class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
-  using AnimationStartingBlock = std::function<void(int, int, alias_ref<JMap<jstring, jstring>>)>;
+  using AnimationStartingBlock =
+      std::function<void(int, int, alias_ref<JMap<jstring, jstring>>)>;
   using HasAnimationBlock = std::function<bool(int, int)>;
   using ShouldAnimateExitingBlock = std::function<bool(int, bool)>;
 #ifndef NDEBUG
@@ -25,29 +26,41 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   using GetSharedGroupBlock = std::function<std::vector<int>(const int)>;
 
  public:
-  static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/layoutReanimation/LayoutAnimations;";
-  static jni::local_ref<jhybriddata> initHybrid(jni::alias_ref<jhybridobject> jThis);
+  static auto constexpr kJavaDescriptor =
+      "Lcom/swmansion/reanimated/layoutReanimation/LayoutAnimations;";
+  static jni::local_ref<jhybriddata> initHybrid(
+      jni::alias_ref<jhybridobject> jThis);
   static void registerNatives();
 
-  void startAnimationForTag(int tag, int type, alias_ref<JMap<jstring, jstring>> values);
+  void startAnimationForTag(
+      int tag,
+      int type,
+      alias_ref<JMap<jstring, jstring>> values);
   bool hasAnimationForTag(int tag, int type);
   bool shouldAnimateExiting(int tag, bool shouldAnimate);
   bool isLayoutAnimationEnabled();
 
   void setAnimationStartingBlock(AnimationStartingBlock animationStartingBlock);
   void setHasAnimationBlock(HasAnimationBlock hasAnimationBlock);
-  void setShouldAnimateExitingBlock(ShouldAnimateExitingBlock shouldAnimateExitingBlock);
+  void setShouldAnimateExitingBlock(
+      ShouldAnimateExitingBlock shouldAnimateExitingBlock);
 #ifndef NDEBUG
-  void setCheckDuplicateSharedTag(CheckDuplicateSharedTag checkDuplicateSharedTag);
+  void setCheckDuplicateSharedTag(
+      CheckDuplicateSharedTag checkDuplicateSharedTag);
   void checkDuplicateSharedTag(int viewTag, int screenTag);
 #endif
-  void setClearAnimationConfigBlock(ClearAnimationConfigBlock clearAnimationConfigBlock);
+  void setClearAnimationConfigBlock(
+      ClearAnimationConfigBlock clearAnimationConfigBlock);
   void setCancelAnimationForTag(CancelAnimationBlock cancelAnimationBlock);
   void setFindPrecedingViewTagForTransition(
-      FindPrecedingViewTagForTransitionBlock findPrecedingViewTagForTransitionBlock);
+      FindPrecedingViewTagForTransitionBlock
+          findPrecedingViewTagForTransitionBlock);
   void setGetSharedGroupBlock(const GetSharedGroupBlock getSharedGroupBlock);
 
-  void progressLayoutAnimation(int tag, const jni::local_ref<JNIHelper::PropsMap> &updates, bool isSharedTransition);
+  void progressLayoutAnimation(
+      int tag,
+      const jni::local_ref<JNIHelper::PropsMap> &updates,
+      bool isSharedTransition);
   void endLayoutAnimation(int tag, bool removeView);
   void clearAnimationConfigForTag(int tag);
   void cancelAnimationForTag(int tag);
@@ -64,13 +77,15 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   ShouldAnimateExitingBlock shouldAnimateExitingBlock_;
   ClearAnimationConfigBlock clearAnimationConfigBlock_;
   CancelAnimationBlock cancelAnimationBlock_;
-  FindPrecedingViewTagForTransitionBlock findPrecedingViewTagForTransitionBlock_;
+  FindPrecedingViewTagForTransitionBlock
+      findPrecedingViewTagForTransitionBlock_;
   GetSharedGroupBlock getSharedGroupBlock_;
 #ifndef NDEBUG
   CheckDuplicateSharedTag checkDuplicateSharedTag_;
 #endif
 
-  explicit LayoutAnimations(jni::alias_ref<LayoutAnimations::jhybridobject> jThis);
+  explicit LayoutAnimations(
+      jni::alias_ref<LayoutAnimations::jhybridobject> jThis);
 };
 
 }; // namespace reanimated

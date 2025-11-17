@@ -29,7 +29,8 @@ class AnimatedSensorModule {
   UnregisterSensorFunction platformUnregisterSensorFunction_;
 
  public:
-  explicit AnimatedSensorModule(const PlatformDepMethodsHolder &platformDepMethodsHolder);
+  explicit AnimatedSensorModule(
+      const PlatformDepMethodsHolder &platformDepMethodsHolder);
   ~AnimatedSensorModule();
 
   jsi::Value registerSensor(

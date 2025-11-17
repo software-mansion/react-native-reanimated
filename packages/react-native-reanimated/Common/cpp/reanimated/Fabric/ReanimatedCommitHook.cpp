@@ -17,7 +17,9 @@ ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<PropsRegistry> &propsRegistry,
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<LayoutAnimationsProxy> &layoutAnimationsProxy)
-    : propsRegistry_(propsRegistry), uiManager_(uiManager), layoutAnimationsProxy_(layoutAnimationsProxy) {
+    : propsRegistry_(propsRegistry),
+      uiManager_(uiManager),
+      layoutAnimationsProxy_(layoutAnimationsProxy) {
   uiManager_->registerCommitHook(*this);
 }
 
@@ -25,20 +27,23 @@ ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
   uiManager_->unregisterCommitHook(*this);
 }
 
-void ReanimatedCommitHook::maybeInitializeLayoutAnimations(SurfaceId surfaceId) {
+void ReanimatedCommitHook::maybeInitializeLayoutAnimations(
+    SurfaceId surfaceId) {
   auto lock = std::unique_lock<std::mutex>(mutex_);
   if (surfaceId > currentMaxSurfaceId_) {
     // when a new surfaceId is observed we call setMountingOverrideDelegate
     // for all yet unseen surfaces
     uiManager_->getShadowTreeRegistry().enumerate(
-        [strongThis = shared_from_this()](const ShadowTree &shadowTree, bool &stop) {
+        [strongThis = shared_from_this()](
+            const ShadowTree &shadowTree, bool &stop) {
           // Executed synchronously.
           if (shadowTree.getSurfaceId() <= strongThis->currentMaxSurfaceId_) {
             // the set function actually adds our delegate to a list, so we
             // shouldn't invoke it twice for the same surface
             return;
           }
-          shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(strongThis->layoutAnimationsProxy_);
+          shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
+              strongThis->layoutAnimationsProxy_);
         });
     currentMaxSurfaceId_ = surfaceId;
   }
@@ -55,7 +60,9 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ) noexcept {
   maybeInitializeLayoutAnimations(newRootShadowNode->getSurfaceId());
 
-  auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(newRootShadowNode);
+  auto reaShadowNode =
+      std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
+          newRootShadowNode);
 
   if (reaShadowNode->hasReanimatedCommitTrait()) {
     // ShadowTree commited by Reanimated, no need to apply updates from
@@ -74,7 +81,9 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     auto lock = propsRegistry_->createLock();
 
     propsRegistry_->for_each(
-        [&](const ShadowNodeFamily &family, const folly::dynamic &props) { propsMap[&family].emplace_back(props); });
+        [&](const ShadowNodeFamily &family, const folly::dynamic &props) {
+          propsMap[&family].emplace_back(props);
+        });
 
     rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
 

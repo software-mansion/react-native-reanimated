@@ -54,7 +54,9 @@ BOOL REANodeFind(id<RCTComponent> view, int (^block)(id<RCTComponent>))
 {
   static NSArray *_array;
   static dispatch_once_t onceToken;
-  dispatch_once(&onceToken, ^{ _array = @[ @"originX", @"originY", @"width", @"height" ]; });
+  dispatch_once(&onceToken, ^{
+    _array = @[ @"originX", @"originY", @"width", @"height" ];
+  });
   return _array;
 }
 

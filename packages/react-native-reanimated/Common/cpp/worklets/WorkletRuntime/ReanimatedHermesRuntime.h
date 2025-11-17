@@ -56,7 +56,8 @@ struct ReanimatedReentrancyCheck {
     // of this sort would be surprising, because the decorator would
     // need to call after() without before().
 
-    if (tid.compare_exchange_strong(expected, this_id, std::memory_order_relaxed)) {
+    if (tid.compare_exchange_strong(
+            expected, this_id, std::memory_order_relaxed)) {
       // Returns true if tid and expected were the same.  If they
       // were, then the stored tid referred to no thread, and we
       // atomically saved this thread's tid.  Now increment depth.
@@ -78,11 +79,14 @@ struct ReanimatedReentrancyCheck {
   }
 
   void after() {
-    assert(tid.load(std::memory_order_relaxed) == std::this_thread::get_id() && "[Reanimated] No thread id in after()");
+    assert(
+        tid.load(std::memory_order_relaxed) == std::this_thread::get_id() &&
+        "[Reanimated] No thread id in after()");
     if (--depth == 0) {
       // If we decremented depth to zero, store no-thread into tid.
       std::thread::id expected = std::this_thread::get_id();
-      bool didWrite = tid.compare_exchange_strong(expected, std::thread::id(), std::memory_order_relaxed);
+      bool didWrite = tid.compare_exchange_strong(
+          expected, std::thread::id(), std::memory_order_relaxed);
       assert(didWrite && "[Reanimated] Decremented to zero, but no tid write");
     }
   }
@@ -101,7 +105,8 @@ struct ReanimatedReentrancyCheck {
 // WithRuntimeDecorator -> DecoratedRuntime -> jsi::Runtime You can find out
 // more about this in ReactCommon/jsi/jsi/Decorator.h or by following this link:
 // https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/jsi/jsi/decorator.h
-class ReanimatedHermesRuntime : public jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck> {
+class ReanimatedHermesRuntime
+    : public jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck> {
  public:
   ReanimatedHermesRuntime(
       std::unique_ptr<facebook::hermes::HermesRuntime> runtime,

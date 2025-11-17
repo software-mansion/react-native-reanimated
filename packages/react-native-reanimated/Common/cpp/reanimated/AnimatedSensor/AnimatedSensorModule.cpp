@@ -4,9 +4,11 @@
 
 namespace reanimated {
 
-AnimatedSensorModule::AnimatedSensorModule(const PlatformDepMethodsHolder &platformDepMethodsHolder)
+AnimatedSensorModule::AnimatedSensorModule(
+    const PlatformDepMethodsHolder &platformDepMethodsHolder)
     : platformRegisterSensorFunction_(platformDepMethodsHolder.registerSensor),
-      platformUnregisterSensorFunction_(platformDepMethodsHolder.unregisterSensor) {}
+      platformUnregisterSensorFunction_(
+          platformDepMethodsHolder.unregisterSensor) {}
 
 AnimatedSensorModule::~AnimatedSensorModule() {
   assert(sensorsIds_.empty());
@@ -22,13 +24,17 @@ jsi::Value AnimatedSensorModule::registerSensor(
   SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
 
   auto shareableHandler = extractShareableOrThrow<ShareableWorklet>(
-      rt, sensorDataHandler, "[Reanimated] Sensor event handler must be a worklet.");
+      rt,
+      sensorDataHandler,
+      "[Reanimated] Sensor event handler must be a worklet.");
 
   int sensorId = platformRegisterSensorFunction_(
       sensorType,
       interval.asNumber(),
       iosReferenceFrame.asNumber(),
-      [sensorType, shareableHandler, weakUiWorkletRuntime = std::weak_ptr<WorkletRuntime>(uiWorkletRuntime)](
+      [sensorType,
+       shareableHandler,
+       weakUiWorkletRuntime = std::weak_ptr<WorkletRuntime>(uiWorkletRuntime)](
           double newValues[], int orientationDegrees) {
         auto uiWorkletRuntime = weakUiWorkletRuntime.lock();
         if (uiWorkletRuntime == nullptr) {
@@ -53,7 +59,8 @@ jsi::Value AnimatedSensorModule::registerSensor(
           value.setProperty(uiRuntime, "y", newValues[1]);
           value.setProperty(uiRuntime, "z", newValues[2]);
         }
-        value.setProperty(uiRuntime, "interfaceOrientation", orientationDegrees);
+        value.setProperty(
+            uiRuntime, "interfaceOrientation", orientationDegrees);
 
         uiWorkletRuntime->runGuarded(shareableHandler, value);
       });

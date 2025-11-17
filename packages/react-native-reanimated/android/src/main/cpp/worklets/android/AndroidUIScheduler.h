@@ -17,8 +17,10 @@ using namespace worklets;
 
 class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
  public:
-  static auto constexpr kJavaDescriptor = "Lcom/swmansion/worklets/AndroidUIScheduler;";
-  static jni::local_ref<jhybriddata> initHybrid(jni::alias_ref<jhybridobject> jThis);
+  static auto constexpr kJavaDescriptor =
+      "Lcom/swmansion/worklets/AndroidUIScheduler;";
+  static jni::local_ref<jhybriddata> initHybrid(
+      jni::alias_ref<jhybridobject> jThis);
   static void registerNatives();
 
   std::shared_ptr<UIScheduler> getUIScheduler() {
@@ -37,7 +39,8 @@ class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
   jni::global_ref<AndroidUIScheduler::javaobject> javaPart_;
   std::shared_ptr<UIScheduler> uiScheduler_;
 
-  explicit AndroidUIScheduler(jni::alias_ref<AndroidUIScheduler::jhybridobject> jThis);
+  explicit AndroidUIScheduler(
+      jni::alias_ref<AndroidUIScheduler::jhybridobject> jThis);
 };
 
 } // namespace worklets
