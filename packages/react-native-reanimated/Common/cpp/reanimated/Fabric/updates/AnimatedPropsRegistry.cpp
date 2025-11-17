@@ -24,13 +24,14 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     const jsi::Value &updates = item.getProperty(rt, "updates");
     auto props = jsi::dynamicFromValue(rt, updates);
 
-    if (!strcmp(shadowNode->getComponentName(), "Paragraph")) {
+    if (!strcmp(shadowNode->getComponentName(), "Paragraph") || !strcmp(shadowNode->getComponentName(), "Text")) {
       bool hasTextProp = false;
       for (const auto &[key, value] : props.items()) {
         if (key == "text") {
           hasTextProp = true;
           // Pass the text prop to child component
           const auto &childShadowNode = shadowNode->getChildren()[0];
+          react_native_assert(!strcmp(childShadowNode->getComponentName(), "RawText"));
           addUpdatesToBatch(childShadowNode, folly::dynamic::object("text", value));
           break;
         }

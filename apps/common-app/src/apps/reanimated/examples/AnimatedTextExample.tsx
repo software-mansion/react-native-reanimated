@@ -11,7 +11,6 @@ import Animated, {
 // TODO: add support for the following syntax: <Animated.Text>{sharedValue}</Animated.Text>
 // TODO: add support for the following syntax: <Animated.Text>Before {sharedValue} After</Animated.Text>
 // TODO: add TypeScript validation that allows <Animated.Text> to either have children or have `text` animated prop
-// TODO: add error handling for unsupported nested text
 // TODO: add gauges example
 // TODO: sync `text` prop updates back to React as `children` prop
 // TODO: support both string and number as text animated prop
@@ -39,13 +38,17 @@ export default function AnimatedTextExample() {
 
   return (
     <View style={styles.container}>
-      <Text>Left</Text>
-      <Animated.Text
-        // @ts-expect-error TODO fix animated props type
-        animatedProps={animatedProps}
-        style={[styles.text, animatedStyle]}
-      />
-      <Text>Right</Text>
+      <Text style={styles.cyan}>
+        <Text style={styles.bold}>
+          Before
+          <Animated.Text
+            // @ts-expect-error TODO fix animated props type
+            animatedProps={animatedProps}
+            style={[styles.text, animatedStyle]}
+          />
+        </Text>
+        After
+      </Text>
     </View>
   );
 }
@@ -57,9 +60,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  cyan: {
+    backgroundColor: 'limegreen',
+  },
+  bold: {
+    fontWeight: 'bold',
+  },
   text: {
+    backgroundColor: 'lime',
     fontVariant: ['tabular-nums'],
-    borderColor: 'lime',
-    borderWidth: 10,
   },
 });
