@@ -26,7 +26,7 @@ export default function AnimatedTextExample() {
 
   const animatedProps = useAnimatedProps(() => {
     return {
-      text: `${Math.round(sv.value)}`,
+      text: sv.value < 20 ? '' : Math.round(sv.value),
     };
   });
 

@@ -32,7 +32,7 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
           // Pass the text prop to child component
           const auto &childShadowNode = shadowNode->getChildren()[0];
           react_native_assert(!strcmp(childShadowNode->getComponentName(), "RawText"));
-          addUpdatesToBatch(childShadowNode, folly::dynamic::object("text", value));
+          addUpdatesToBatch(childShadowNode, folly::dynamic::object("text", value.asString()));
           break;
         }
       }

@@ -447,7 +447,10 @@ export default class AnimatedComponent
       // TODO: throw error when trying to <Animated.Text> component with animated prop `text` is nested inside another <Text> component
 
       // Pass the current value of animated prop `text` as `children` so that the text displays correctly during first render
-      filteredProps.children = filteredProps.text || '\u200b'; // use zero-width space when text is empty
+      filteredProps.children =
+        filteredProps.text === ''
+          ? '\u200b' // use zero-width space when text is empty
+          : String(filteredProps.text);
     }
 
     return super.render({
