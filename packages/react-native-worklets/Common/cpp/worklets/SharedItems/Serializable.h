@@ -373,7 +373,7 @@ class __attribute__((visibility("default"))) SerializableString : public Seriali
 
 class __attribute__((visibility("default"))) SerializableBigInt : public Serializable {
  public:
-  explicit SerializableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigInt) : Serializable(BigIntType) {
+  explicit SerializableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigInt) : Serializable(ValueType::BigIntType) {
     if (bigInt.isInt64(rt)) {
       fastValue_ = bigInt.getInt64(rt);
     } else {
