@@ -44,7 +44,7 @@ void ReanimatedCommitHook::maybeInitializeLayoutAnimations(SurfaceId surfaceId) 
             // shouldn't invoke it twice for the same surface
             return;
           }
-          if constexpr (StaticFeatureFlags::getFlag("SHARED_ELEMENT_TRANSITIONS")) {
+          if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
             shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
                 strongThis->layoutAnimationsProxyExperimental_);
           } else {

@@ -377,7 +377,7 @@ export default class AnimatedComponent
   }
 
   _configureSharedTransition(useNativeId?: boolean) {
-    if (!getStaticFeatureFlag('SHARED_ELEMENT_TRANSITIONS')) {
+    if (!getStaticFeatureFlag('ENABLE_SHARED_ELEMENT_TRANSITIONS')) {
       return;
     }
     if (!this.props.sharedTransitionTag) {

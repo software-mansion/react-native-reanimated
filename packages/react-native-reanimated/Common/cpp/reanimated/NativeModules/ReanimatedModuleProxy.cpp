@@ -127,7 +127,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
           return;
         }
         std::optional<SurfaceId> surfaceId;
-        if constexpr (StaticFeatureFlags::getFlag("SHARED_ELEMENT_TRANSITIONS")) {
+        if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
           surfaceId = strongThis->layoutAnimationsProxyExperimental_->progressLayoutAnimation(tag, newStyle);
         } else {
           surfaceId = strongThis->layoutAnimationsProxyLegacy_->progressLayoutAnimation(tag, newStyle);
@@ -154,7 +154,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     }
 
     std::optional<SurfaceId> surfaceId;
-    if constexpr (StaticFeatureFlags::getFlag("SHARED_ELEMENT_TRANSITIONS")) {
+    if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
       surfaceId = strongThis->layoutAnimationsProxyExperimental_->endLayoutAnimation(tag, shouldRemove);
     } else {
       surfaceId = strongThis->layoutAnimationsProxyLegacy_->endLayoutAnimation(tag, shouldRemove);
@@ -505,7 +505,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
     eventType = "on" + eventType.substr(3);
   }
 
-  if constexpr (StaticFeatureFlags::getFlag("SHARED_ELEMENT_TRANSITIONS")) {
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     if (eventType == "onTransitionProgress") {
       jsi::Runtime &rt = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
       const auto &eventPayload = rawEvent.eventPayload;
@@ -639,7 +639,7 @@ void ReanimatedModuleProxy::performOperations() {
 #ifdef ANDROID
     if constexpr (
         StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
-        !StaticFeatureFlags::getFlag("SHARED_ELEMENT_TRANSITIONS")) {
+        !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
       static const std::unordered_set<std::string> synchronousProps = {
           "opacity",
           "elevation",
@@ -1029,7 +1029,7 @@ void ReanimatedModuleProxy::performOperations() {
 #if __APPLE__
     if constexpr (
         StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
-        !StaticFeatureFlags::getFlag("SHARED_ELEMENT_TRANSITIONS")) {
+        !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
       static const std::unordered_set<std::string> synchronousProps = {
           "opacity",
           "elevation",
@@ -1270,7 +1270,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
           .lock();
 
   if (componentDescriptorRegistry) {
-    if constexpr (StaticFeatureFlags::getFlag("SHARED_ELEMENT_TRANSITIONS")) {
+    if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
       layoutAnimationsProxyExperimental_ =
           std::make_shared<reanimated_experimental::LayoutAnimationsProxy_Experimental>(
               layoutAnimationsManager_,
