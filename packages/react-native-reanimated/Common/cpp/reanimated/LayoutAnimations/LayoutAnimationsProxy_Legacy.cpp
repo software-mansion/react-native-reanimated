@@ -5,6 +5,7 @@
 #include <react/renderer/mounting/ShadowViewMutation.h>
 
 #include <memory>
+#include <ranges>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -898,11 +899,11 @@ void Node::applyMutationToIndices(ShadowViewMutation mutation) {
   }
 
   int delta = mutation.type == ShadowViewMutation::Insert ? 1 : -1;
-  for (int i = children.size() - 1; i >= 0; i--) {
-    if (children[i]->mutation.index < mutation.index) {
+  for (const auto &child : std::views::reverse(children)) {
+    if (child->mutation.index < mutation.index) {
       return;
     }
-    children[i]->mutation.index += delta;
+    child->mutation.index += delta;
   }
 }
 
