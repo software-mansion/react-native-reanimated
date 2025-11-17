@@ -13,10 +13,6 @@
 #include <react/renderer/core/ConcreteState.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
-#ifdef ANDROID
-#undef LOG
-#define LOG SYSLOG
-#endif
 
 #include <algorithm>
 #include <memory>
