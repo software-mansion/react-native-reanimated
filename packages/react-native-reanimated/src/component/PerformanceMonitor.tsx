@@ -1,9 +1,9 @@
 'use strict';
 
 import { useEffect, useRef } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { createAnimatedComponent } from '../createAnimatedComponent';
+import { AnimatedText } from '../component/Text';
 import type { FrameInfo } from '../frameCallback';
 import { useAnimatedProps, useFrameCallback, useSharedValue } from '../hook';
 
@@ -45,8 +45,6 @@ function createCircularDoublesBuffer(size: number) {
 }
 
 const DEFAULT_BUFFER_SIZE = 20;
-
-const AnimatedTextInput = createAnimatedComponent(TextInput);
 
 function loopAnimationFrame(fn: (lastTime: number, time: number) => void) {
   let lastTime = 0;
@@ -106,16 +104,15 @@ function JsPerformance({ smoothingFrames }: { smoothingFrames: number }) {
   }, [jsFps, totalRenderTime]);
 
   const animatedProps = useAnimatedProps(() => {
-    const text = 'JS: ' + (jsFps.value ?? 'N/A') + ' ';
-    return { text, defaultValue: text };
+    return { text: `JS: ${jsFps.value ?? 'N/A'}` };
   });
 
   return (
     <View style={styles.container}>
-      <AnimatedTextInput
-        style={styles.text}
+      <AnimatedText
+        // @ts-expect-error TODO fix animated props type
         animatedProps={animatedProps}
-        editable={false}
+        style={styles.text}
       />
     </View>
   );
@@ -138,16 +135,15 @@ function UiPerformance({ smoothingFrames }: { smoothingFrames: number }) {
   });
 
   const animatedProps = useAnimatedProps(() => {
-    const text = 'UI: ' + (uiFps.value ?? 'N/A') + ' ';
-    return { text, defaultValue: text };
+    return { text: `UI: ${uiFps.value ?? 'N/A'}` };
   });
 
   return (
     <View style={styles.container}>
-      <AnimatedTextInput
-        style={styles.text}
+      <AnimatedText
+        // @ts-expect-error TODO fix animated props type
         animatedProps={animatedProps}
-        editable={false}
+        style={styles.text}
       />
     </View>
   );
