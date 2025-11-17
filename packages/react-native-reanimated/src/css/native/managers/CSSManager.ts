@@ -4,41 +4,25 @@ import { ReanimatedError } from '../../../common';
 import type { StyleBuilder } from '../../../common/style';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
+import { BaseCSSManager } from '../../managers';
 import type { CSSStyle } from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
 import { filterCSSAndStyleProperties } from '../../utils';
 import { setViewStyle } from '../proxy';
 import { getStyleBuilder, hasStyleBuilder } from '../registry';
-import { logger } from '../../../common';
 import CSSAnimationsManager from './CSSAnimationsManager';
 import CSSTransitionsManager from './CSSTransitionsManager';
 
-const UNSUPPORTED_TRANSFORM_PROPS: ReadonlySet<string> = new Set([
-  'translate',
-  'translateX',
-  'translateY',
-  'scale',
-  'scaleX',
-  'scaleY',
-  'rotate',
-  'rotateX',
-  'rotateY',
-  'rotateZ',
-  'skewX',
-  'skewY',
-  'matrix',
-]);
-
-export default class CSSManager implements ICSSManager {
+export default class CSSManager extends BaseCSSManager implements ICSSManager {
   private readonly cssAnimationsManager: CSSAnimationsManager;
   private readonly cssTransitionsManager: CSSTransitionsManager;
   private readonly viewTag: number;
   private readonly viewName: string;
   private readonly styleBuilder: StyleBuilder<AnyRecord> | null = null;
-  private readonly warnedUnsupportedProps = new Set<string>();
   private isFirstUpdate: boolean = true;
 
   constructor({ shadowNodeWrapper, viewTag, viewName = 'RCTView' }: ViewInfo) {
+    super();
     const tag = (this.viewTag = viewTag as number);
     const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
 
@@ -64,8 +48,8 @@ export default class CSSManager implements ICSSManager {
       );
     }
 
-    if (__DEV__ && this.styleBuilder) {
-      this.warnUnsupportedTransformProps(filteredStyle);
+    if (__DEV__) {
+      this.warnOnUnsupportedProps(filteredStyle, this.viewName);
     }
 
     const normalizedStyle = this.styleBuilder?.buildFrom(filteredStyle);
@@ -92,19 +76,5 @@ export default class CSSManager implements ICSSManager {
   unmountCleanup(): void {
     this.cssAnimationsManager.unmountCleanup();
     this.cssTransitionsManager.unmountCleanup();
-  }
-
-  private warnUnsupportedTransformProps(style: CSSStyle) {
-    for (const prop of Object.keys(style ?? {})) {
-      if (
-        UNSUPPORTED_TRANSFORM_PROPS.has(prop) &&
-        !this.warnedUnsupportedProps.has(prop)
-      ) {
-        this.warnedUnsupportedProps.add(prop);
-        logger.warn(
-          `The style property "${prop}" is not supported for ${this.viewName} CSS animations. Use the "transform" property instead.`
-        );
-      }
-    }
   }
 }
