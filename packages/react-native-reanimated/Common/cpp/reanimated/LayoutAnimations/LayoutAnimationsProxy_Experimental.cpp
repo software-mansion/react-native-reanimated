@@ -22,8 +22,6 @@
 #include <utility>
 #include <vector>
 
-using ScrollState = ConcreteState<ScrollViewState>;
-
 namespace reanimated_experimental {
 
 // MARK: MountingOverrideDelegate
@@ -1204,7 +1202,7 @@ std::vector<react::Point> LayoutAnimationsProxy_Experimental::getAbsolutePositio
   while (currentNode) {
     react::Point viewPosition;
     if (!strcmp(currentNode->current.componentName, "ScrollView")) {
-      auto state = std::static_pointer_cast<const ScrollState>(currentNode->current.state);
+      auto state = std::static_pointer_cast<const ConcreteState<ScrollViewState>>(currentNode->current.state);
       auto data = state->getData();
       viewPosition -= data.contentOffset;
     }
