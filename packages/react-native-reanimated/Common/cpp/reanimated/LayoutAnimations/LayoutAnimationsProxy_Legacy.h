@@ -52,7 +52,7 @@ struct UpdateValues {
 
 struct Snapshot {
   double x, y, width, height, windowWidth, windowHeight;
-  Snapshot(const ShadowView &shadowView, Rect window) {
+  Snapshot(const ShadowView &shadowView, const Rect &window) {
     const auto &frame = shadowView.layoutMetrics.frame;
     x = frame.origin.x;
     y = frame.origin.y;
