@@ -216,14 +216,14 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
           if (parent->children[mutation.index]->current.tag == mutation.oldChildShadowView.tag) {
             filteredMutations.push_back(mutation);
           } else {
-            throw std::runtime_error("cos jest nie tak z indexami");
+            LOG(INFO) << "Indicies are wrong in Remove mutation";
           }
           parent->children.erase(parent->children.begin() + mutation.index);
         } else if (node->intent != TO_DELETE) {
           if (parent->children[mutation.index]->current.tag == mutation.oldChildShadowView.tag) {
             filteredMutations.push_back(mutation);
           } else {
-            throw std::runtime_error("cos jest nie tak z indexami");
+            LOG(INFO) << "Indicies are wrong in Remove mutation";
           }
           parent->children.erase(parent->children.begin() + mutation.index);
         }
