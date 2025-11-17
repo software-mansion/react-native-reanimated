@@ -15,8 +15,6 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 
-const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
-
 const KeyboardStateNames = {
   [KeyboardState.UNKNOWN]: 'UNKNOWN',
   [KeyboardState.OPENING]: 'OPENING',
@@ -98,14 +96,14 @@ export default function AnimatedKeyboardExample() {
         </TouchableOpacity>
       </Animated.View>
       <View style={styles.infoContainer}>
-        <AnimatedTextInput
+        <Animated.Text
           style={styles.infoText}
-          editable={false}
+          // @ts-expect-error TODO fix animated props type
           animatedProps={animatedHeightProps}
         />
-        <AnimatedTextInput
+        <Animated.Text
           style={styles.infoText}
-          editable={false}
+          // @ts-expect-error TODO fix animated props type
           animatedProps={animatedStateProps}
         />
       </View>
@@ -127,7 +125,6 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontWeight: '700',
-    width: '100%',
   },
   accessoryBar: {
     position: 'absolute',
