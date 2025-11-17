@@ -131,7 +131,7 @@ struct SurfaceManager {
   Rect getWindow(SurfaceId surfaceId);
 };
 
-static inline void updateLayoutMetrics(LayoutMetrics &layoutMetrics, Frame &frame) {
+static inline void updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame &frame) {
   // we use optional's here to avoid overwriting non-animated values
   if (frame.width) {
     layoutMetrics.frame.size.width = *frame.width;
