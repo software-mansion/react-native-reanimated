@@ -32,6 +32,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: corepack enable
+        run: corepack enable
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable

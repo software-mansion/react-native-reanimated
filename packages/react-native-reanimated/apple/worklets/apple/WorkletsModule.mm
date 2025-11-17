@@ -37,8 +37,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
 {
   auto *bridge = self.bridge;
   auto &rnRuntime = *(jsi::Runtime *)bridge.runtime;
-  auto jsQueue =
-      std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) { throw error; });
+  auto jsQueue = std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
+    throw error;
+  });
 
   std::string valueUnpackerCodeStr = [valueUnpackerCode UTF8String];
   auto jsCallInvoker = bridge.jsCallInvoker;

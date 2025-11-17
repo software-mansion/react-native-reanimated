@@ -150,8 +150,9 @@ DispatchCommandFunction makeDispatchCommandFunction(RCTUIManager *uiManager)
     NSString *commandID = [NSString stringWithCString:commandNameValue.asString(rt).utf8(rt).c_str()
                                              encoding:[NSString defaultCStringEncoding]];
     NSArray *commandArgs = convertJSIArrayToNSArray(rt, argsValue.asObject(rt).asArray(rt));
-    RCTExecuteOnUIManagerQueue(
-        ^{ [uiManager dispatchViewManagerCommand:viewTag commandID:commandID commandArgs:commandArgs]; });
+    RCTExecuteOnUIManagerQueue(^{
+      [uiManager dispatchViewManagerCommand:viewTag commandID:commandID commandArgs:commandArgs];
+    });
   };
   return dispatchCommandFunction;
 }
@@ -183,9 +184,7 @@ ObtainPropFunction makeObtainPropFunction(REAModule *reaModule)
 
 GetAnimationTimestampFunction makeGetAnimationTimestamp()
 {
-  auto getAnimationTimestamp = []() {
-    return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000;
-  };
+  auto getAnimationTimestamp = []() { return calculateTimestampWithSlowAnimations(CACurrentMediaTime()) * 1000; };
   return getAnimationTimestamp;
 }
 
@@ -228,9 +227,7 @@ EndLayoutAnimationFunction makeEndLayoutAnimation(REAModule *reaModule)
 
 MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(REANodesManager *nodesManager)
 {
-  auto maybeFlushUIUpdatesQueueFunction = [nodesManager]() {
-    [nodesManager maybeFlushUIUpdatesQueue];
-  };
+  auto maybeFlushUIUpdatesQueueFunction = [nodesManager]() { [nodesManager maybeFlushUIUpdatesQueue]; };
   return maybeFlushUIUpdatesQueueFunction;
 }
 
@@ -238,20 +235,19 @@ RegisterSensorFunction makeRegisterSensorFunction(ReanimatedSensorContainer *rea
 {
   auto registerSensorFunction =
       [=](int sensorType, int interval, int iosReferenceFrame, std::function<void(double[], int)> setter) -> int {
-    return [reanimatedSensorContainer
-           registerSensor:(ReanimatedSensorType)sensorType
-                 interval:interval
-        iosReferenceFrame:iosReferenceFrame
-                   setter:^(double *data, int orientationDegrees) { setter(data, orientationDegrees); }];
+    return [reanimatedSensorContainer registerSensor:(ReanimatedSensorType)sensorType
+                                            interval:interval
+                                   iosReferenceFrame:iosReferenceFrame
+                                              setter:^(double *data, int orientationDegrees) {
+                                                setter(data, orientationDegrees);
+                                              }];
   };
   return registerSensorFunction;
 }
 
 UnregisterSensorFunction makeUnregisterSensorFunction(ReanimatedSensorContainer *reanimatedSensorContainer)
 {
-  auto unregisterSensorFunction = [=](int sensorId) {
-    [reanimatedSensorContainer unregisterSensor:sensorId];
-  };
+  auto unregisterSensorFunction = [=](int sensorId) { [reanimatedSensorContainer unregisterSensor:sensorId]; };
   return unregisterSensorFunction;
 }
 

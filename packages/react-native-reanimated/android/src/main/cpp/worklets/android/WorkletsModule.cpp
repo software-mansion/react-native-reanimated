@@ -25,13 +25,12 @@ WorkletsModule::WorkletsModule(
     const std::shared_ptr<worklets::JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler)
     : rnRuntime_(rnRuntime),
-      workletsModuleProxy_(
-          std::make_shared<WorkletsModuleProxy>(
-              valueUnpackerCode,
-              std::make_shared<JMessageQueueThread>(messageQueueThread),
-              jsCallInvoker,
-              jsScheduler,
-              uiScheduler)) {
+      workletsModuleProxy_(std::make_shared<WorkletsModuleProxy>(
+          valueUnpackerCode,
+          std::make_shared<JMessageQueueThread>(messageQueueThread),
+          jsCallInvoker,
+          jsScheduler,
+          uiScheduler)) {
   RNRuntimeWorkletDecorator::decorate(*rnRuntime_, workletsModuleProxy_);
 }
 

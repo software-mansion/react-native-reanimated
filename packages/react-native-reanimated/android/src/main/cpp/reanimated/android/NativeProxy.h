@@ -76,11 +76,10 @@ class EventHandler : public HybridClass<EventHandler> {
  private:
   friend HybridBase;
 
-  explicit EventHandler(
-      std::function<void(
-          jni::alias_ref<JString>,
-          jint emitterReactTag,
-          jni::alias_ref<react::WritableMap>)> handler)
+  explicit EventHandler(std::function<void(
+                            jni::alias_ref<JString>,
+                            jint emitterReactTag,
+                            jni::alias_ref<react::WritableMap>)> handler)
       : handler_(std::move(handler)) {}
 
   std::function<
@@ -274,9 +273,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   );
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  void commonInit(
-      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          &fabricUIManager);
+  void commonInit(jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+                      &fabricUIManager);
 #endif // RCT_NEW_ARCH_ENABLED
 
   void invalidateCpp();

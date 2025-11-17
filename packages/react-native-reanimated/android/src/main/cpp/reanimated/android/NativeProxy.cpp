@@ -44,14 +44,13 @@ NativeProxy::NativeProxy(
       layoutAnimations_(
           std::make_shared<jni::global_ref<LayoutAnimations::javaobject>>(
               std::move(layoutAnimations))),
-      reanimatedModuleProxy_(
-          std::make_shared<ReanimatedModuleProxy>(
-              workletsModuleProxy,
-              *rnRuntime,
-              jsCallInvoker,
-              getPlatformDependentMethods(),
-              isBridgeless,
-              getIsReducedMotion())) {
+      reanimatedModuleProxy_(std::make_shared<ReanimatedModuleProxy>(
+          workletsModuleProxy,
+          *rnRuntime,
+          jsCallInvoker,
+          getPlatformDependentMethods(),
+          isBridgeless,
+          getIsReducedMotion())) {
   reanimatedModuleProxy_->init(getPlatformDependentMethods());
 #ifdef RCT_NEW_ARCH_ENABLED
   commonInit(fabricUIManager);
@@ -292,8 +291,8 @@ void NativeProxy::dispatchCommand(
       "dispatchCommand");
   local_ref<JString> commandId =
       jni::make_jstring(commandNameValue.asString(rt).utf8(rt).c_str());
-  jni::local_ref<ReadableArray::javaobject> commandArgs = castReadableArray(
-      ReadableNativeArray::newObjectCxxArgs(
+  jni::local_ref<ReadableArray::javaobject> commandArgs =
+      castReadableArray(ReadableNativeArray::newObjectCxxArgs(
           jsi::dynamicFromValue(rt, argsValue)));
   method(javaPart_.get(), viewTag, commandId, commandArgs);
 }

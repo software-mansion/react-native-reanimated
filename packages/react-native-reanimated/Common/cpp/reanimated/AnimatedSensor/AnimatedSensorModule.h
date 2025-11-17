@@ -29,7 +29,7 @@ class AnimatedSensorModule {
   UnregisterSensorFunction platformUnregisterSensorFunction_;
 
  public:
-  explicit AnimatedSensorModule(
+  AnimatedSensorModule(
       const PlatformDepMethodsHolder &platformDepMethodsHolder);
   ~AnimatedSensorModule();
 

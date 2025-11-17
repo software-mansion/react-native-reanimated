@@ -42,8 +42,9 @@ std::atomic<bool> hasPendingBlocks;
     [uiManager setAnimationsManager:animationsManager];
     [self swizzleMethods];
 
-    IMP isExecutingUpdatesBatchImpl =
-        imp_implementationWithBlock(^() { return hasPendingBlocks || isFlushingBlocks > 0; });
+    IMP isExecutingUpdatesBatchImpl = imp_implementationWithBlock(^() {
+      return hasPendingBlocks || isFlushingBlocks > 0;
+    });
     class_addMethod([RCTUIManager class], @selector(isExecutingUpdatesBatch), isExecutingUpdatesBatchImpl, "");
   }
   return self;
@@ -309,7 +310,11 @@ std::atomic<bool> hasPendingBlocks;
 
       } else if (updatingLayoutAnimation) {
         // Animate view update
-        [updatingLayoutAnimation performAnimations:^{ [view reactSetFrame:frame]; } withCompletionBlock:completion];
+        [updatingLayoutAnimation
+              performAnimations:^{
+                [view reactSetFrame:frame];
+              }
+            withCompletionBlock:completion];
 
       } else {
         // Update without animation

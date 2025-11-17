@@ -15,7 +15,9 @@ void IOSUIScheduler::scheduleOnUI(std::function<void()> job)
   UIScheduler::scheduleOnUI(job);
 
   if (!scheduledOnUI_) {
-    dispatch_async(dispatch_get_main_queue(), ^{ triggerUI(); });
+    dispatch_async(dispatch_get_main_queue(), ^{
+      triggerUI();
+    });
   }
 }
 
