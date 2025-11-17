@@ -1,18 +1,15 @@
 #pragma once
 
 #include <reanimated/CSS/common/filters/FilterOp.h>
-#include <reanimated/CSS/common/values/CSSValue.h>
-
-#include <reanimated/CSS/interpolation/filters/FilterOperation.h>
-
-#include <reanimated/CSS/common/filters/FilterOp.h>
 #include <reanimated/CSS/common/values/CSSAngle.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
+#include <reanimated/CSS/common/values/CSSValue.h>
 #include <reanimated/CSS/common/values/complex/CSSDropShadow.h>
 
 #include <jsi/jsi.h>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace reanimated::css {

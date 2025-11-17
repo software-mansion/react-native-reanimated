@@ -1,5 +1,4 @@
 #include <reanimated/CSS/interpolation/filters/FilterOperationInterpolator.h>
-
 #include <reanimated/CSS/interpolation/filters/operations/blur.h>
 #include <reanimated/CSS/interpolation/filters/operations/brightness.h>
 #include <reanimated/CSS/interpolation/filters/operations/contrast.h>

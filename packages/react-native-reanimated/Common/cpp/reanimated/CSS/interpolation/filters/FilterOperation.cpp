@@ -1,10 +1,8 @@
-#include <reanimated/CSS/interpolation/filters/FilterOperation.h>
-
 #include <reanimated/CSS/common/filters/FilterOp.h>
 #include <reanimated/CSS/common/values/CSSAngle.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
 #include <reanimated/CSS/common/values/complex/CSSDropShadow.h>
-
+#include <reanimated/CSS/interpolation/filters/FilterOperation.h>
 #include <reanimated/CSS/interpolation/filters/operations/blur.h>
 #include <reanimated/CSS/interpolation/filters/operations/brightness.h>
 #include <reanimated/CSS/interpolation/filters/operations/contrast.h>
