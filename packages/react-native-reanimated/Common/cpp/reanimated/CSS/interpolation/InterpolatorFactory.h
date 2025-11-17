@@ -158,7 +158,7 @@ auto filterOp(const auto &defaultValue) -> std::enable_if_t<
 template <typename TOperation>
 auto filterOp(const auto &defaultValue, ResolvableValueInterpolatorConfig config) -> std::enable_if_t<
     std::is_base_of_v<FilterOperation, TOperation> && std::is_constructible_v<TOperation, decltype(defaultValue)> &&
-        ResolvableFilterOp<TOperation>,
+        ResolvableOp<TOperation>,
     std::shared_ptr<FilterInterpolator>> {
   return std::make_shared<FilterOperationInterpolator<TOperation>>(
       std::make_shared<TOperation>(defaultValue), std::move(config));

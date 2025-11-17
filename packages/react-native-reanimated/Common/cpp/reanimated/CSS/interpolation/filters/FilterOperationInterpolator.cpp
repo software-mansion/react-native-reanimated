@@ -14,15 +14,15 @@
 namespace reanimated::css {
 
 template <typename TOperation>
-FilterOperationInterpolator<TOperation>::FilterOperationInterpolator(
-    const std::shared_ptr<TOperation> &defaultOperation)
-    : StyleOperationInterpolatorBase<TOperation>(defaultOperation) {}
-
-template <ResolvableFilterOp TOperation>
-FilterOperationInterpolator<TOperation>::FilterOperationInterpolator(
-    const std::shared_ptr<TOperation> &defaultOperation,
-    ResolvableValueInterpolatorConfig config)
-    : StyleOperationInterpolatorBase<TOperation>(defaultOperation, std::move(config)) {}
+std::unique_ptr<StyleOperation> FilterOperationInterpolator<TOperation>::interpolate(
+    double progress,
+    const std::shared_ptr<StyleOperation> &from,
+    const std::shared_ptr<StyleOperation> &to,
+    const FilterInterpolationContext &context) const {
+  const auto &fromOp = std::static_pointer_cast<TOperation>(from);
+  const auto &toOp = std::static_pointer_cast<TOperation>(to);
+  return std::make_unique<TOperation>(fromOp->value.interpolate(progress, toOp->value));
+}
 
 template class FilterOperationInterpolator<BlurOperation>;
 template class FilterOperationInterpolator<BrightnessOperation>;

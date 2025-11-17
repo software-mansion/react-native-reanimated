@@ -17,8 +17,6 @@ using namespace facebook;
 struct FilterOperation : public StyleOperation {
   using StyleOperation::StyleOperation;
 
-  virtual bool operator==(const FilterOperation &other) const = 0;
-
   std::string getOperationName() const override;
   virtual folly::dynamic valueToDynamic() const override = 0;
 
@@ -34,7 +32,6 @@ struct FilterOperationBase : public FilterOperation {
   const TValue value;
 
   explicit FilterOperationBase(TValue value);
-  bool operator==(const FilterOperation &other) const override;
   folly::dynamic valueToDynamic() const override;
 };
 

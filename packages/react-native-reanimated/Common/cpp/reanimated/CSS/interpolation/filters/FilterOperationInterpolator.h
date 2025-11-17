@@ -11,27 +11,19 @@
 
 namespace reanimated::css {
 
-template <typename TOperation>
-concept ResolvableFilterOp = requires(TOperation operation) {
-  { operation.value } -> std::convertible_to<typename std::remove_reference_t<decltype(operation.value)>>;
-  requires Resolvable<std::remove_reference_t<decltype(operation.value)>>;
-}; // NOLINT(readability/braces)
-
 using FilterOperationInterpolators = StyleOperationInterpolators;
 using FilterInterpolationContext = StyleOperationsInterpolationContext;
 
 template <typename TOperation>
-class FilterOperationInterpolator : public StyleOperationInterpolatorBase<TOperation> {
+class FilterOperationInterpolator final : public StyleOperationInterpolator {
  public:
-  explicit FilterOperationInterpolator(const std::shared_ptr<TOperation> &defaultOperation);
-};
+  using StyleOperationInterpolator::StyleOperationInterpolator;
 
-template <ResolvableFilterOp TOperation>
-class FilterOperationInterpolator<TOperation> : public StyleOperationInterpolatorBase<TOperation> {
- public:
-  FilterOperationInterpolator(
-      const std::shared_ptr<TOperation> &defaultOperation,
-      ResolvableValueInterpolatorConfig config);
+  std::unique_ptr<StyleOperation> interpolate(
+      double progress,
+      const std::shared_ptr<StyleOperation> &from,
+      const std::shared_ptr<StyleOperation> &to,
+      const FilterInterpolationContext &context) const override;
 };
 
 } // namespace reanimated::css
