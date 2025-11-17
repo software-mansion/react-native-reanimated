@@ -31,8 +31,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     MountingTransaction::Number transactionNumber,
     const TransactionTelemetry &telemetry,
     ShadowViewMutationList mutations) const {
-  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   ReanimatedSystraceSection d("pullTransaction");
+  auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
   auto rootChildCount = static_cast<int>(lightNodes_[surfaceId]->children.size());
