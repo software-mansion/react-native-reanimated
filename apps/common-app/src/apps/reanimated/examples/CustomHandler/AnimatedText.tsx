@@ -1,10 +1,8 @@
 import React from 'react';
-import type { StyleProp, TextInputProps, TextStyle } from 'react-native';
-import { StyleSheet, TextInput } from 'react-native';
+import type { StyleProp, TextStyle } from 'react-native';
+import { StyleSheet } from 'react-native';
 import type { AnimatedStyle, SharedValue } from 'react-native-reanimated';
 import Animated, { useAnimatedProps } from 'react-native-reanimated';
-
-const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 export function AnimatedText({
   style,
@@ -14,16 +12,14 @@ export function AnimatedText({
   text: SharedValue<string>;
 }) {
   const animatedProps = useAnimatedProps(() => {
-    return { text: text.value } as unknown as TextInputProps;
+    return { text: text.value };
   });
 
   return (
-    <AnimatedTextInput
-      underlineColorAndroid="transparent"
-      editable={false}
-      value={text.value}
-      style={[styles.text, style]}
+    <Animated.Text
+      // @ts-expect-error TODO fix animated props type
       animatedProps={animatedProps}
+      style={[styles.text, style]}
     />
   );
 }
