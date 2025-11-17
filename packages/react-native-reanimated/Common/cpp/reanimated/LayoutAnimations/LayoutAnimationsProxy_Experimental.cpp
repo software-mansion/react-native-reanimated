@@ -428,21 +428,17 @@ Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
   if (shouldCreateContainer) {
     auto &root = lightNodes_[surfaceId];
     ShadowView container = before;
-    containerTag = myTag;
     sharedTransitionManager_->tagToName_[containerTag] = sharedTag;
 
     container.tag = containerTag;
-    //    filteredMutations.push_back(ShadowViewMutation::CreateMutation(container));
-    //    filteredMutations.push_back(ShadowViewMutation::InsertMutation(
-    //        surfaceId, container, (int)root->children.size()));
     auto node = std::make_shared<LightNode>();
     node->current = std::move(container);
     root->children.push_back(node);
     containersToInsert_.push_back(node);
-    lightNodes_[myTag] = std::move(node);
+    lightNodes_[containerTag_] = std::move(node);
 
-    sharedTransitionManager_->containerTags_[sharedTag] = containerTag;
-    myTag += 2;
+    sharedTransitionManager_->containerTags_[sharedTag] = containerTag_;
+    containerTag_ += 2;
   }
   return containerTag;
 }
