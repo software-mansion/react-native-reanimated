@@ -1,13 +1,13 @@
 'use strict';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
-import { BaseCSSManager } from '../../managers';
+import { CSSManagerBase } from '../../managers';
 import type { CSSStyle, ICSSManager } from '../../types';
 import { filterCSSAndStyleProperties } from '../../utils';
 import CSSAnimationsManager from './CSSAnimationsManager';
 import CSSTransitionsManager from './CSSTransitionsManager';
 
-export default class CSSManager extends BaseCSSManager implements ICSSManager {
+export default class CSSManager extends CSSManagerBase implements ICSSManager {
   private readonly element: ReanimatedHTMLElement;
   private readonly viewName: string;
   private readonly animationsManager: CSSAnimationsManager;

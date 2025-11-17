@@ -1,6 +1,6 @@
 'use strict';
-import { ViewInfo } from '../../../../createAnimatedComponent/commonTypes';
 import { logger } from '../../../../common';
+import type { ViewInfo } from '../../../../createAnimatedComponent/commonTypes';
 import type { CSSStyle } from '../../../types';
 import CSSManager from '../CSSManager';
 

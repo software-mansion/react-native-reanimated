@@ -10,7 +10,7 @@ const UNSUPPORTED_TRANSFORM_PROPS_SET = new Set<string>(
   UNSUPPORTED_TRANSFORM_PROPS
 );
 
-export default abstract class BaseCSSManager {
+export default abstract class CSSManagerBase {
   private readonly warnedProps = new Set<string>();
 
   protected warnOnUnsupportedProps(style: CSSStyle, componentName: string) {

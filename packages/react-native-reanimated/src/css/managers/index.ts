@@ -1,2 +1,2 @@
 'use strict';
-export { default as BaseCSSManager } from './BaseCSSManager';
+export { default as CSSManagerBase } from './CSSManagerBase';
