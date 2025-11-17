@@ -1,11 +1,13 @@
 'use strict';
-import { ViewInfo } from '../../../../createAnimatedComponent/commonTypes';
 import { logger } from '../../../../common';
+import type { ViewInfo } from '../../../../createAnimatedComponent/commonTypes';
 import type { CSSStyle } from '../../../types';
 import CSSManager from '../CSSManager';
 
 describe('web CSSManager warning', () => {
-  const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+  const warnSpy = jest
+    .spyOn(logger, 'warn')
+    .mockImplementation(() => undefined);
 
   beforeAll(() => {
     // @ts-expect-error allow assigning to global

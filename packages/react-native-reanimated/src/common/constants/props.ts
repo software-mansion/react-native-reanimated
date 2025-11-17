@@ -1,17 +1,13 @@
 'use strict';
 
 export const UNSUPPORTED_TRANSFORM_PROPS = [
-  'translate',
-  'translateX',
-  'translateY',
-  'scale',
+  'transformMatrix',
+  'rotation',
   'scaleX',
   'scaleY',
-  'rotate',
-  'rotateX',
-  'rotateY',
-  'rotateZ',
-  'skewX',
-  'skewY',
-  'matrix',
+  'translateX',
+  'translateY',
 ] as const;
+
+export type UnsupportedTransformProp =
+  (typeof UNSUPPORTED_TRANSFORM_PROPS)[number];

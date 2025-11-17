@@ -1,6 +1,6 @@
 'use strict';
-import type { ShadowNodeWrapper } from '../../../../commonTypes';
 import { logger } from '../../../../common';
+import type { ShadowNodeWrapper } from '../../../../commonTypes';
 import type { CSSStyle } from '../../../types';
 import CSSManager from '../CSSManager';
 
@@ -12,7 +12,9 @@ const createManager = (viewName = 'RCTView') =>
   });
 
 describe('CSSManager warning', () => {
-  const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+  const warnSpy = jest
+    .spyOn(logger, 'warn')
+    .mockImplementation(() => undefined);
 
   beforeAll(() => {
     // @ts-expect-error allow assigning to global

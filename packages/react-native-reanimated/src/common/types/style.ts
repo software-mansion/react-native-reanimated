@@ -7,7 +7,7 @@ import type {
   ViewStyle,
 } from 'react-native';
 
-import type { UnsupportedTransformProp } from './props';
+import type { UnsupportedTransformProp } from '../constants';
 
 export type TransformOrigin = string | Array<string | number>;
 
