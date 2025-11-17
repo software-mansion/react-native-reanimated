@@ -14,7 +14,6 @@ import Animated, {
 // TODO: add error handling for unsupported nested text
 // TODO: add gauges example
 // TODO: sync `text` prop updates back to React as `children` prop
-// TODO: fix crash when returning empty string as text animated prop
 // TODO: support both string and number as text animated prop
 // TODO: convert docs examples from AnimatedTextInput to Animated.Text
 
