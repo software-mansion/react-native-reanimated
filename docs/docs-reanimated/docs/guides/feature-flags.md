@@ -184,6 +184,8 @@ import { setDynamicFeatureFlag } from 'react-native-reanimated';
 setDynamicFeatureFlag('EXAMPLE_DYNAMIC_FLAG', true);
 ```
 
+To read a dynamic feature flag value in JavaScript, you can use `getDynamicFeatureFlag` function.
+
 ## Comparison of static and dynamic feature flags
 
 |                                          | Static feature flags | Dynamic feature flags |

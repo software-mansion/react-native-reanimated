@@ -2,9 +2,10 @@ import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { ExamplesScreen, VerticalExampleCard } from '@/apps/css/components';
+import type { ExampleScreenProps } from '@/apps/css/navigation/types';
 import { colors, radius, sizes, spacing } from '@/theme';
 
-export default function BoxSizing() {
+export default function BoxSizing({ labelTypes }: ExampleScreenProps) {
   return (
     <ExamplesScreen
       CardComponent={VerticalExampleCard}
@@ -36,7 +37,7 @@ export default function BoxSizing() {
               title: 'Changing Box Sizing',
             },
           ],
-          labelTypes: ['web'],
+          labelTypes,
           title: 'Box Sizing',
         },
       ]}

@@ -9,6 +9,7 @@ import {
   processBoxShadowNative,
   processColorsInProps,
   processFilter,
+  processTransform,
   ReanimatedError,
   SHOULD_BE_USE_WEB,
 } from '../common';
@@ -61,6 +62,9 @@ if (SHOULD_BE_USE_WEB) {
     processColorsInProps(updates);
     if ('transformOrigin' in updates) {
       updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
+    }
+    if ('transform' in updates) {
+      updates.transform = processTransform(updates.transform);
     }
     if ('boxShadow' in updates) {
       updates.boxShadow = processBoxShadowNative(updates.boxShadow);

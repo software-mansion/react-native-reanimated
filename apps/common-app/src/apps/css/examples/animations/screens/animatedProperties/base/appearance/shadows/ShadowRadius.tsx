@@ -3,9 +3,10 @@ import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { ExamplesScreen, VerticalExampleCard } from '@/apps/css/components';
+import type { ExampleScreenProps } from '@/apps/css/navigation/types';
 import { colors, radius, sizes } from '@/theme';
 
-export default function ShadowRadius() {
+export default function ShadowRadius({ labelTypes }: ExampleScreenProps) {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
       CardComponent={VerticalExampleCard}
@@ -42,7 +43,7 @@ export default function ShadowRadius() {
               }),
             },
           ],
-          labelTypes: ['iOS', 'web'],
+          labelTypes,
           title: 'Shadow Radius',
         },
       ]}
