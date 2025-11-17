@@ -29,7 +29,7 @@ inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Function &fun
 #ifndef NDEBUG
   return getCallGuard(rt).call(rt, function, args...);
 #else
-  return function..call(rt, args...);
+  return function.call(rt, args...);
 #endif // NDEBUG
 }
 
