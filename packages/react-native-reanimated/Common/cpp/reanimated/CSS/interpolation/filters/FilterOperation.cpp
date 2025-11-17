@@ -1,10 +1,8 @@
-#include <reanimated/CSS/interpolation/filters/FilterOperation.h>
-
 #include <reanimated/CSS/common/filters/FilterOp.h>
 #include <reanimated/CSS/common/values/CSSAngle.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
 #include <reanimated/CSS/common/values/complex/CSSDropShadow.h>
-
+#include <reanimated/CSS/interpolation/filters/FilterOperation.h>
 #include <reanimated/CSS/interpolation/filters/operations/blur.h>
 #include <reanimated/CSS/interpolation/filters/operations/brightness.h>
 #include <reanimated/CSS/interpolation/filters/operations/contrast.h>
@@ -115,35 +113,5 @@ std::shared_ptr<FilterOperation> FilterOperation::fromDynamic(const folly::dynam
 folly::dynamic FilterOperation::toDynamic() const {
   return folly::dynamic::object(getOperationName(), valueToDynamic());
 }
-
-// FilterOperationBase implementation
-template <FilterOp TOperation, CSSValueDerived TValue>
-FilterOperationBase<TOperation, TValue>::FilterOperationBase(TValue value)
-    : FilterOperation(TOperation), value(std::move(value)) {}
-
-template <FilterOp TOperation, CSSValueDerived TValue>
-bool FilterOperationBase<TOperation, TValue>::operator==(const FilterOperation &other) const {
-  if (type != other.type) {
-    return false;
-  }
-  const auto &otherOperation = static_cast<const FilterOperationBase<TOperation, TValue> &>(other);
-  return value == otherOperation.value;
-}
-
-template <FilterOp TOperation, CSSValueDerived TValue>
-folly::dynamic FilterOperationBase<TOperation, TValue>::valueToDynamic() const {
-  return value.toDynamic();
-}
-
-template struct FilterOperationBase<FilterOp::Blur, CSSDouble>;
-template struct FilterOperationBase<FilterOp::Brightness, CSSDouble>;
-template struct FilterOperationBase<FilterOp::Contrast, CSSDouble>;
-template struct FilterOperationBase<FilterOp::DropShadow, CSSDropShadow>;
-template struct FilterOperationBase<FilterOp::Grayscale, CSSDouble>;
-template struct FilterOperationBase<FilterOp::HueRotate, CSSAngle>;
-template struct FilterOperationBase<FilterOp::Invert, CSSDouble>;
-template struct FilterOperationBase<FilterOp::Opacity, CSSDouble>;
-template struct FilterOperationBase<FilterOp::Saturate, CSSDouble>;
-template struct FilterOperationBase<FilterOp::Sepia, CSSDouble>;
 
 } // namespace reanimated::css
