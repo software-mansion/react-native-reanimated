@@ -1,5 +1,7 @@
 #pragma once
 
+#include <reanimated/CSS/common/values/CSSValue.h>
+
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <memory>

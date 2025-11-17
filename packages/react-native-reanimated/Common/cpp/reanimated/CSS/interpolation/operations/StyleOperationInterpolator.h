@@ -39,23 +39,4 @@ class StyleOperationInterpolator {
 using StyleOperationInterpolators = StyleOperationInterpolator::Interpolators;
 using StyleOperationsInterpolationContext = StyleOperationInterpolator::UpdateContext;
 
-template <typename TOperation>
-class StyleOperationInterpolatorBase : public StyleOperationInterpolator {
- public:
-  explicit StyleOperationInterpolatorBase(const std::shared_ptr<TOperation> &defaultOperation);
-
-  std::unique_ptr<StyleOperation> interpolate(
-      double progress,
-      const std::shared_ptr<StyleOperation> &from,
-      const std::shared_ptr<StyleOperation> &to,
-      const StyleOperationsInterpolationContext &context) const override;
-
- protected:
-  std::unique_ptr<StyleOperation> interpolate(
-      double progress,
-      const std::shared_ptr<StyleOperation> &from,
-      const std::shared_ptr<StyleOperation> &to,
-      const StyleOperationsInterpolationContext &context) const override;
-};
-
 } // namespace reanimated::css

@@ -39,8 +39,8 @@ FilterOp getFilterOperationType(const std::string &property) {
   }
 }
 
-std::string getFilterOperationName(const uint8_t type) {
-  return filterOperationStrings[type];
+std::string getFilterOperationName(const FilterOp type) {
+  return filterOperationStrings[static_cast<uint8_t>(type)];
 }
 
 } // namespace reanimated::css

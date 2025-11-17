@@ -18,6 +18,6 @@ enum class FilterOp : uint8_t {
 };
 
 FilterOp getFilterOperationType(const std::string &property);
-std::string getFilterOperationName(const uint8_t type);
+std::string getFilterOperationName(const FilterOp type);
 
 } // namespace reanimated::css

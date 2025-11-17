@@ -237,10 +237,6 @@ StyleOperations OperationsStyleInterpolator::getFallbackValue(
   return parseStyleOperations(styleValue).value_or(StyleOperations{});
 }
 
-std::shared_ptr<StyleOperation> OperationsStyleInterpolator::getDefaultOperationOfType(const size_t type) const {
-  return interpolators_->at(type)->getDefaultOperation();
-}
-
 folly::dynamic OperationsStyleInterpolator::interpolateOperations(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const double keyframeProgress,
@@ -297,7 +293,7 @@ std::shared_ptr<StyleOperation> OperationsStyleInterpolatorBase<TOperation>::cre
 template <typename TOperation>
 std::shared_ptr<StyleOperations> OperationsStyleInterpolatorBase<TOperation>::createStyleOperation(
     const folly::dynamic &value) const {
-  return TOperation::fromDynamic(value);
+  return std::static_pointer_cast<StyleOperations>(TOperation::fromDynamic(value));
 }
 
 template <typename TOperation>

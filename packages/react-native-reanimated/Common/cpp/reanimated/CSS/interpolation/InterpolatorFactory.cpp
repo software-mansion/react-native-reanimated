@@ -71,7 +71,7 @@ class ArrayInterpolatorFactory : public PropertyInterpolatorFactory {
 
 class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
-  explicit TransformsInterpolatorFactory(const std::shared_ptr<TransformOperationInterpolators> &interpolators)
+  explicit TransformsInterpolatorFactory(const std::shared_ptr<StyleOperationInterpolators> &interpolators)
       : PropertyInterpolatorFactory(), interpolators_(interpolators) {}
 
   const CSSValue &getDefaultValue() const override {
@@ -102,12 +102,12 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
     }
   };
 
-  const std::shared_ptr<TransformOperationInterpolators> interpolators_;
+  const std::shared_ptr<StyleOperationInterpolators> interpolators_;
 };
 
 class FiltersInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
-  explicit FiltersInterpolatorFactory(const std::shared_ptr<FilterOperationInterpolators> &interpolators)
+  explicit FiltersInterpolatorFactory(const std::shared_ptr<StyleOperationInterpolators> &interpolators)
       : PropertyInterpolatorFactory(), interpolators_(interpolators) {}
 
   const CSSValue &getDefaultValue() const override {
@@ -133,7 +133,7 @@ class FiltersInterpolatorFactory : public PropertyInterpolatorFactory {
     }
   };
 
-  const std::shared_ptr<FilterOperationInterpolators> interpolators_;
+  const std::shared_ptr<StyleOperationInterpolators> interpolators_;
 };
 
 // Non-template function implementations
@@ -146,25 +146,24 @@ std::shared_ptr<PropertyInterpolatorFactory> array(const InterpolatorFactoriesAr
 }
 
 std::shared_ptr<PropertyInterpolatorFactory> transforms(
-    const std::unordered_map<std::string, std::shared_ptr<TransformInterpolator>> &interpolators) {
-  TransformOperationInterpolators result;
+    const std::unordered_map<std::string, std::shared_ptr<StyleOperationInterpolator>> &interpolators) {
+  StyleOperationInterpolators result;
   result.reserve(interpolators.size());
   for (const auto &[property, interpolator] : interpolators) {
     result.emplace(getTransformOperationType(property), interpolator);
   }
   return std::make_shared<TransformsInterpolatorFactory>(
-      std::make_shared<TransformOperationInterpolators>(std::move(result)));
+      std::make_shared<StyleOperationInterpolators>(std::move(result)));
 }
 
 std::shared_ptr<PropertyInterpolatorFactory> filters(
-    const std::unordered_map<std::string, std::shared_ptr<FilterInterpolator>> &interpolators) {
-  FilterOperationInterpolators result;
+    const std::unordered_map<std::string, std::shared_ptr<StyleOperationInterpolator>> &interpolators) {
+  StyleOperationInterpolators result;
   result.reserve(interpolators.size());
   for (const auto &[property, interpolator] : interpolators) {
     result.emplace(getFilterOperationType(property), interpolator);
   }
-  return std::make_shared<FiltersInterpolatorFactory>(
-      std::make_shared<FilterOperationInterpolators>(std::move(result)));
+  return std::make_shared<FiltersInterpolatorFactory>(std::make_shared<StyleOperationInterpolators>(std::move(result)));
 }
 
 } // namespace reanimated::css

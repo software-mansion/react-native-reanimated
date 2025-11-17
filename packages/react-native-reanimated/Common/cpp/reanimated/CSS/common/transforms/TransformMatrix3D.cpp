@@ -208,7 +208,7 @@ TransformMatrix3D TransformMatrix3D::create<TransformOp::SkewY>(double v) {
 template <TransformOp TOperation>
 TransformMatrix3D TransformMatrix3D::create(double value) {
   throw std::invalid_argument(
-      "[Reanimated] Cannot create TransformMatrix3D from: " + getOperationNameFromType(static_cast<uint8_t>(TOperation)));
+      "[Reanimated] Cannot create TransformMatrix3D from: " + getTransformOperationName(TOperation));
 }
 
 TransformMatrix3D TransformMatrix3D::from2D(const TransformMatrix2D &m) {

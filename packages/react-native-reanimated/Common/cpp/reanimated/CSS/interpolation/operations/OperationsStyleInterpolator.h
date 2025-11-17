@@ -51,6 +51,8 @@ class OperationsStyleInterpolator : public PropertyInterpolator {
       const folly::dynamic &lastUpdateValue) override;
 
  protected:
+  const std::shared_ptr<StyleOperationInterpolators> interpolators_;
+
   virtual std::shared_ptr<StyleOperation> createStyleOperation(jsi::Runtime &rt, const jsi::Value &value) const = 0;
   virtual std::shared_ptr<StyleOperations> createStyleOperation(const folly::dynamic &value) const = 0;
   virtual std::optional<std::pair<StyleOperations, StyleOperations>> createInterpolationPair(
@@ -58,7 +60,6 @@ class OperationsStyleInterpolator : public PropertyInterpolator {
       const StyleOperations &toOperations) const = 0;
 
  private:
-  const std::shared_ptr<StyleOperationInterpolators> interpolators_;
   const folly::dynamic defaultStyleValueDynamic_;
 
   std::vector<std::shared_ptr<StyleOperationsKeyframe>> keyframes_;
@@ -77,7 +78,8 @@ class OperationsStyleInterpolator : public PropertyInterpolator {
       const std::shared_ptr<const ShadowNode> &shadowNode,
       double keyframeProgress,
       const StyleOperations &fromOperations,
-      const StyleOperations &toOperations) const;
+      const StyleOperations &toOperations,
+      double fallbackInterpolateThreshold) const;
   static folly::dynamic convertOperationsToDynamic(const StyleOperations &operations);
   StyleOperationsInterpolationContext createUpdateContext(
       const std::shared_ptr<const ShadowNode> &shadowNode,

@@ -33,7 +33,7 @@ std::pair<TransformOperations, bool> flattenOperations(const TransformOperations
     const auto operation = unprocessedQueue.front();
     unprocessedQueue.pop_front();
 
-    if (operation->type == TransformOp::Matrix) {
+    if (operation->type == static_cast<uint8_t>(TransformOp::Matrix)) {
       const auto matrixOperation = std::static_pointer_cast<MatrixOperation>(operation);
       if (std::holds_alternative<TransformOperations>(matrixOperation->value)) {
         // If the current operation is a matrix created from other operations,
@@ -139,30 +139,6 @@ MatrixOperation::MatrixOperation(TransformOperations operations)
         is3D_ = is3D;
         return value;
       }()) {}
-
-bool MatrixOperation::operator==(const TransformOperation &other) const {
-  if (type != other.type) {
-    return false;
-  }
-
-  const auto *otherOperation = dynamic_cast<const MatrixOperation *>(&other);
-  if (otherOperation == nullptr) {
-    return false;
-  }
-
-  // Quick check: if variants have different types, they're not equal
-  if (value.index() != otherOperation->value.index()) {
-    return false;
-  }
-
-  // Both hold TransformOperations
-  if (std::holds_alternative<TransformOperations>(value)) {
-    return std::get<TransformOperations>(value) == std::get<TransformOperations>(otherOperation->value);
-  }
-
-  // Both hold matrices
-  return *std::get<TransformMatrix::Shared>(value) == *std::get<TransformMatrix::Shared>(otherOperation->value);
-}
 
 bool MatrixOperation::is3D() const {
   return is3D_;

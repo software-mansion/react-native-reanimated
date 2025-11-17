@@ -6,7 +6,7 @@ const folly::dynamic defaultStyleValue = folly::dynamic::array(MatrixOperation(T
 
 TransformsStyleInterpolator::TransformsStyleInterpolator(
     const PropertyPath &propertyPath,
-    const std::shared_ptr<TransformOperationInterpolators> &interpolators,
+    const std::shared_ptr<StyleOperationInterpolators> &interpolators,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : OperationsStyleInterpolatorBase<TransformOperation>(
           propertyPath,

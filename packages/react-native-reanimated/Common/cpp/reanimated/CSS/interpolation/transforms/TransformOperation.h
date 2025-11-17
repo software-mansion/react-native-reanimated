@@ -17,15 +17,14 @@ using namespace facebook;
 struct TransformOperation : public StyleOperation {
   using StyleOperation::StyleOperation;
 
-  virtual bool operator==(const TransformOperation &other) const = 0;
-
-  std::string getOperationName() const override;
   // Tells if the transform operations is 3D-only (cannot be represented in 2D)
   virtual bool is3D() const;
 
+  std::string getOperationName() const override;
+  virtual folly::dynamic valueToDynamic() const override = 0;
+
   static std::shared_ptr<TransformOperation> fromJSIValue(jsi::Runtime &rt, const jsi::Value &value);
   static std::shared_ptr<TransformOperation> fromDynamic(const folly::dynamic &value);
-  virtual folly::dynamic valueToDynamic() const override = 0;
 
   virtual bool canConvertTo(TransformOp type) const;
   virtual std::vector<std::shared_ptr<TransformOperation>> convertTo(TransformOp type) const;
@@ -42,7 +41,6 @@ struct TransformOperationBase : public TransformOperation {
   const TValue value;
 
   explicit TransformOperationBase(TValue value);
-  bool operator==(const TransformOperation &other) const override;
   TransformMatrix::Shared toMatrix(bool force3D) const override;
 
  protected:

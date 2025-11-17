@@ -36,8 +36,6 @@ struct MatrixOperation final : public TransformOperation {
   explicit MatrixOperation(TransformMatrix3D matrix);
   explicit MatrixOperation(TransformOperations operations);
 
-  bool operator==(const TransformOperation &other) const override;
-
   bool is3D() const override;
   folly::dynamic valueToDynamic() const override;
   TransformMatrix::Shared toMatrix(bool force3D) const override;

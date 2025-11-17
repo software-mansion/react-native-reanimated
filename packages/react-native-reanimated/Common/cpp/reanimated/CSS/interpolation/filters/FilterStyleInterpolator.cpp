@@ -13,7 +13,7 @@ const folly::dynamic defaultStyleValueDynamic = folly::dynamic::array();
 
 FilterStyleInterpolator::FilterStyleInterpolator(
     const PropertyPath &propertyPath,
-    const std::shared_ptr<FilterOperationInterpolators> &interpolators,
+    const std::shared_ptr<StyleOperationInterpolators> &interpolators,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : OperationsStyleInterpolatorBase<FilterOperation>(
           propertyPath,

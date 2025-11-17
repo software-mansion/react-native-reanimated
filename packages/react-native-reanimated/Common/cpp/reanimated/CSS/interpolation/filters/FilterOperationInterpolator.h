@@ -11,9 +11,6 @@
 
 namespace reanimated::css {
 
-using FilterOperationInterpolators = StyleOperationInterpolators;
-using FilterInterpolationContext = StyleOperationsInterpolationContext;
-
 template <typename TOperation>
 class FilterOperationInterpolator final : public StyleOperationInterpolator {
  public:
@@ -23,7 +20,7 @@ class FilterOperationInterpolator final : public StyleOperationInterpolator {
       double progress,
       const std::shared_ptr<StyleOperation> &from,
       const std::shared_ptr<StyleOperation> &to,
-      const FilterInterpolationContext &context) const override;
+      const StyleOperationsInterpolationContext &context) const override;
 };
 
 } // namespace reanimated::css

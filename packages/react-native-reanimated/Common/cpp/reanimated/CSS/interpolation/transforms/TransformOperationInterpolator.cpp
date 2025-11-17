@@ -7,24 +7,44 @@
 
 namespace reanimated::css {
 
+// Base implementation for simple operations
+template <typename TOperation>
+std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::interpolate(
+    double progress,
+    const std::shared_ptr<StyleOperation> &from,
+    const std::shared_ptr<StyleOperation> &to,
+    const StyleOperationsInterpolationContext & /* context */) const {
+  const auto &fromOp = *std::static_pointer_cast<TOperation>(from);
+  const auto &toOp = *std::static_pointer_cast<TOperation>(to);
+  return std::make_unique<TOperation>(fromOp.value.interpolate(progress, toOp.value));
+}
+
+// Specialization for PerspectiveOperation
 TransformOperationInterpolator<PerspectiveOperation>::TransformOperationInterpolator(
     const std::shared_ptr<PerspectiveOperation> &defaultOperation)
-    : StyleOperationInterpolatorBase<PerspectiveOperation>(defaultOperation) {}
+    : StyleOperationInterpolator(defaultOperation) {}
 
 std::unique_ptr<StyleOperation> TransformOperationInterpolator<PerspectiveOperation>::interpolate(
     double progress,
     const std::shared_ptr<StyleOperation> &from,
     const std::shared_ptr<StyleOperation> &to,
     const StyleOperationsInterpolationContext & /* context */) const {
-  const auto &fromOp = *std::static_pointer_cast<PerspectiveOperation>(from);
-  const auto &toOp = *std::static_pointer_cast<PerspectiveOperation>(to);
+  // TODO - check if this implementation is correct
+  const auto &fromValue = std::static_pointer_cast<PerspectiveOperation>(from)->value;
+  const auto &toValue = std::static_pointer_cast<PerspectiveOperation>(to)->value;
 
-  return std::make_unique<PerspectiveOperation>(fromOp.value.interpolate(progress, toOp.value));
+  if (fromValue.value == 0)
+    return std::make_unique<PerspectiveOperation>(toValue);
+  if (toValue.value == 0)
+    return std::make_unique<PerspectiveOperation>(fromValue);
+
+  return std::make_unique<PerspectiveOperation>(fromValue.interpolate(progress, toValue));
 }
 
+// Specialization for MatrixOperation
 TransformOperationInterpolator<MatrixOperation>::TransformOperationInterpolator(
     const std::shared_ptr<MatrixOperation> &defaultOperation)
-    : StyleOperationInterpolatorBase<MatrixOperation>(defaultOperation) {}
+    : StyleOperationInterpolator(defaultOperation) {}
 
 std::unique_ptr<StyleOperation> TransformOperationInterpolator<MatrixOperation>::interpolate(
     double progress,
@@ -44,7 +64,7 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<MatrixOperation>:
 
   const auto result2D = interpolateMatrix<TransformMatrix2D>(progress, fromMatrix, toMatrix);
 
-  // Unfortunately 2D matrices aren't handled properly in RN, so we convert to 3D.
+  // Unfortunately 2D matrices aren't handled properly in RN, so we have to convert them to 3D.
   return std::make_unique<MatrixOperation>(TransformMatrix3D::from2D(result2D));
 }
 
@@ -95,7 +115,7 @@ TransformMatrix::Shared TransformOperationInterpolator<MatrixOperation>::matrixF
       [&](const auto &operation) -> std::shared_ptr<TransformOperation> {
         if (operation->shouldResolve()) {
           const auto &interpolator = context.interpolators->at(operation->type);
-          return interpolator->resolveOperation(operation, context);
+          return std::static_pointer_cast<TransformOperation>(interpolator->resolveOperation(operation, context));
         }
 
         return operation;
@@ -117,16 +137,52 @@ template TransformMatrix3D TransformOperationInterpolator<MatrixOperation>::inte
     const TransformMatrix::Shared &,
     const TransformMatrix::Shared &) const;
 
-template <typename TOperation>
-TransformOperationInterpolator<TOperation>::TransformOperationInterpolator(
-    const std::shared_ptr<TOperation> &defaultOperation)
-    : StyleOperationInterpolatorBase<TOperation>(defaultOperation) {}
-
-template <ResolvableTransformOp TOperation>
+// Specialization for resolvable operations
+template <ResolvableOp TOperation>
 TransformOperationInterpolator<TOperation>::TransformOperationInterpolator(
     const std::shared_ptr<TOperation> &defaultOperation,
     ResolvableValueInterpolatorConfig config)
-    : StyleOperationInterpolatorBase<TOperation>(defaultOperation, std::move(config)) {}
+    : StyleOperationInterpolator(defaultOperation), config_(std::move(config)) {}
+
+template <ResolvableOp TOperation>
+std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::interpolate(
+    double progress,
+    const std::shared_ptr<StyleOperation> &from,
+    const std::shared_ptr<StyleOperation> &to,
+    const StyleOperationsInterpolationContext &context) const {
+  const auto &fromOp = *std::static_pointer_cast<TOperation>(from);
+  const auto &toOp = *std::static_pointer_cast<TOperation>(to);
+
+  return std::make_unique<TOperation>(
+      fromOp.value.interpolate(progress, toOp.value, getResolvableValueContext(context)));
+}
+
+template <ResolvableOp TOperation>
+std::shared_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::resolveOperation(
+    const std::shared_ptr<StyleOperation> &operation,
+    const StyleOperationsInterpolationContext &context) const {
+  const auto &resolvableOp = std::static_pointer_cast<TOperation>(operation);
+  const auto &resolved = resolvableOp->value.resolve(getResolvableValueContext(context));
+
+  if (!resolved.has_value()) {
+    throw std::invalid_argument(
+        "[Reanimated] Cannot resolve resolvable operation: " + operation->getOperationName() +
+        " for node with tag: " + std::to_string(context.node->getTag()));
+  }
+
+  return std::make_shared<TOperation>(resolved.value());
+}
+
+template <ResolvableOp TOperation>
+ResolvableValueInterpolationContext TransformOperationInterpolator<TOperation>::getResolvableValueContext(
+    const StyleOperationsInterpolationContext &context) const {
+  return ResolvableValueInterpolationContext{
+      .node = context.node,
+      .fallbackInterpolateThreshold = context.fallbackInterpolateThreshold,
+      .viewStylesRepository = context.viewStylesRepository,
+      .relativeProperty = config_.relativeProperty,
+      .relativeTo = config_.relativeTo};
+}
 
 // Rotate operations
 template class TransformOperationInterpolator<RotateOperation>;

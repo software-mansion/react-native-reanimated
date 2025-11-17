@@ -17,11 +17,9 @@
 
 namespace reanimated::css {
 
-
 std::string createConversionErrorMessage(const TransformOp fromType, const TransformOp toType) {
-  return "[Reanimated] Cannot convert transform operation of type: " +
-      getOperationNameFromType(static_cast<uint8_t>(fromType)) +
-      " to type: " + getOperationNameFromType(static_cast<uint8_t>(toType));
+  return "[Reanimated] Cannot convert transform operation of type: " + getTransformOperationName(fromType) +
+      " to type: " + getTransformOperationName(toType);
 }
 
 bool TransformOperation::canConvertTo(const TransformOp targetType) const {
@@ -39,7 +37,7 @@ TransformOperations TransformOperation::convertTo(const TransformOp targetType) 
 }
 
 std::string TransformOperation::getOperationName() const {
-  return getOperationNameFromType(type);
+  return getTransformOperationName(static_cast<TransformOp>(type));
 }
 
 bool TransformOperation::is3D() const {
@@ -60,7 +58,7 @@ std::shared_ptr<TransformOperation> TransformOperation::fromJSIValue(jsi::Runtim
 
   const auto propertyName = propertyNames.getValueAtIndex(rt, 0).asString(rt).utf8(rt);
   const auto propertyValue = obj.getProperty(rt, jsi::PropNameID::forUtf8(rt, propertyName));
-  TransformOp operationType = getTransformOperationType(propertyName);
+  const TransformOp operationType = getTransformOperationType(propertyName);
 
   switch (operationType) {
     case TransformOp::Perspective:
@@ -114,7 +112,7 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(const folly:
 
   auto propertyName = obj.items().begin()->first.getString();
   auto propertyValue = obj.items().begin()->second;
-  TransformOp operationType = getTransformOperationType(propertyName);
+  const TransformOp operationType = getTransformOperationType(propertyName);
 
   switch (operationType) {
     case TransformOp::Perspective:
@@ -160,15 +158,6 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(const folly:
 template <TransformOp TOperation, typename TValue>
 TransformOperationBase<TOperation, TValue>::TransformOperationBase(TValue value)
     : TransformOperation(static_cast<uint8_t>(TOperation)), value(std::move(value)) {}
-
-template <TransformOp TOperation, typename TValue>
-bool TransformOperationBase<TOperation, TValue>::operator==(const TransformOperation &other) const {
-  if (type != other.type) {
-    return false;
-  }
-  const auto &otherOperation = static_cast<const TransformOperationBase<TOperation, TValue> &>(other);
-  return value == otherOperation.value;
-}
 
 template <TransformOp TOperation, typename TValue>
 TransformMatrix::Shared TransformOperationBase<TOperation, TValue>::toMatrix(bool force3D) const {

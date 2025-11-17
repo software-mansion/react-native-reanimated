@@ -21,6 +21,6 @@ enum class TransformOp : uint8_t {
 };
 
 TransformOp getTransformOperationType(const std::string &property);
-std::string getOperationNameFromType(const uint8_t type);
+std::string getTransformOperationName(const TransformOp type);
 
 } // namespace reanimated::css

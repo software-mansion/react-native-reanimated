@@ -9,7 +9,7 @@ class TransformsStyleInterpolator final : public OperationsStyleInterpolatorBase
  public:
   TransformsStyleInterpolator(
       const PropertyPath &propertyPath,
-      const std::shared_ptr<TransformOperationInterpolators> &interpolators,
+      const std::shared_ptr<StyleOperationInterpolators> &interpolators,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
  protected:
