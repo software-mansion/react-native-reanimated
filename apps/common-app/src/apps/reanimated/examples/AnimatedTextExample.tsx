@@ -16,8 +16,7 @@ import Animated, {
 // TODO: add gauges example
 // TODO: convert existing examples from AnimatedTextInput to Animated.Text
 // TODO: convert PerformanceMonitor from AnimatedTextInput to Animated.Text
-// TODO: check Android
-// TODO: check web
+// TODO: add web support
 // TODO: sync `text` prop updates back to React as `children` prop
 
 export default function AnimatedTextExample() {
