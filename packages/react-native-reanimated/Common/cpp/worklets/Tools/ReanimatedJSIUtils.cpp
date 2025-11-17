@@ -1,11 +1,14 @@
-#include <vector>
 #include <worklets/Tools/ReanimatedJSIUtils.h>
+#include <vector>
 
 using namespace facebook;
 
 namespace worklets::jsi_utils {
 
-jsi::Array convertStringToArray(jsi::Runtime &rt, const std::string &value, const unsigned int expectedSize) {
+jsi::Array convertStringToArray(
+    jsi::Runtime &rt,
+    const std::string &value,
+    const unsigned int expectedSize) {
   std::vector<float> transformMatrixList;
   std::istringstream stringStream(value);
   std::copy(

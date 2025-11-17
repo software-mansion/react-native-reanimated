@@ -24,8 +24,9 @@ void ReanimatedMountHook::shadowTreeDidMount(
     double
 #endif // REACT_NATIVE_MINOR_VERSION >= 81
     ) noexcept {
-  auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
-      std::const_pointer_cast<RootShadowNode>(rootShadowNode));
+  auto reaShadowNode =
+      std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
+          std::const_pointer_cast<RootShadowNode>(rootShadowNode));
 
   if (reaShadowNode->hasReanimatedMountTrait()) {
     // We mark reanimated commits with ReanimatedMountTrait. We don't want other
@@ -49,34 +50,41 @@ void ReanimatedMountHook::shadowTreeDidMount(
   }
 
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
-  shadowTreeRegistry.visit(rootShadowNode->getSurfaceId(), [&](ShadowTree const &shadowTree) {
-    shadowTree.commit(
-        [&](RootShadowNode const &oldRootShadowNode) -> RootShadowNode::Unshared {
-          PropsMap propsMap;
+  shadowTreeRegistry.visit(
+      rootShadowNode->getSurfaceId(), [&](ShadowTree const &shadowTree) {
+        shadowTree.commit(
+            [&](RootShadowNode const &oldRootShadowNode)
+                -> RootShadowNode::Unshared {
+              PropsMap propsMap;
 
-          RootShadowNode::Unshared rootNode =
-              std::static_pointer_cast<RootShadowNode>(oldRootShadowNode.ShadowNode::clone({}));
-          {
-            auto lock = propsRegistry_->createLock();
+              RootShadowNode::Unshared rootNode =
+                  std::static_pointer_cast<RootShadowNode>(
+                      oldRootShadowNode.ShadowNode::clone({}));
+              {
+                auto lock = propsRegistry_->createLock();
 
-            propsRegistry_->for_each([&](const ShadowNodeFamily &family, const folly::dynamic &props) {
-              propsMap[&family].emplace_back(props);
-            });
+                propsRegistry_->for_each([&](const ShadowNodeFamily &family,
+                                             const folly::dynamic &props) {
+                  propsMap[&family].emplace_back(props);
+                });
 
-            rootNode = cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
-          }
+                rootNode =
+                    cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+              }
 
-          // Mark the commit as Reanimated commit so that we can
-          // distinguish it in ReanimatedCommitHook.
-          auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(rootNode);
-          reaShadowNode->setReanimatedCommitTrait();
+              // Mark the commit as Reanimated commit so that we can
+              // distinguish it in ReanimatedCommitHook.
+              auto reaShadowNode =
+                  std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
+                      rootNode);
+              reaShadowNode->setReanimatedCommitTrait();
 
-          return rootNode;
-        },
-        {/* .enableStateReconciliation = */
-         false,
-         /* .mountSynchronously = */ true});
-  });
+              return rootNode;
+            },
+            {/* .enableStateReconciliation = */
+             false,
+             /* .mountSynchronously = */ true});
+      });
 }
 
 } // namespace reanimated

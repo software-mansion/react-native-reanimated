@@ -40,7 +40,8 @@ jsi::Value WorkletsModuleProxy::makeShareableClone(
     const jsi::Value &nativeStateSource) {
   // TODO: It might be a good idea to rename one of these methods to avoid
   // confusion.
-  return worklets::makeShareableClone(rt, value, shouldRetainRemote, nativeStateSource);
+  return worklets::makeShareableClone(
+      rt, value, shouldRetainRemote, nativeStateSource);
 }
 
 } // namespace worklets

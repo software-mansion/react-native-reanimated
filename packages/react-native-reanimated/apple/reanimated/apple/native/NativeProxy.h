@@ -1,7 +1,6 @@
 #if __cplusplus
 
 #import <React/RCTEventDispatcher.h>
-#import <memory>
 #import <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #import <reanimated/apple/LayoutReanimation/REAAnimationsManager.h>
 #import <reanimated/apple/REAModule.h>
@@ -9,6 +8,7 @@
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 #import <worklets/apple/WorkletsModule.h>
+#import <memory>
 
 namespace reanimated {
 
@@ -21,7 +21,9 @@ std::shared_ptr<reanimated::ReanimatedModuleProxy> createReanimatedModule(
     WorkletsModule *workletsModule,
     bool isBridgeless);
 
-void commonInit(REAModule *reaModule, std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy);
+void commonInit(
+    REAModule *reaModule,
+    std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy);
 
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing

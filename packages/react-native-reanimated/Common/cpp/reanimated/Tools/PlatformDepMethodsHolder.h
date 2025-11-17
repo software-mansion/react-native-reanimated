@@ -20,39 +20,55 @@ namespace reanimated {
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
-using UpdatePropsFunction = std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
-using ObtainPropFunction =
-    std::function<jsi::Value(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &propName)>;
+using UpdatePropsFunction =
+    std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
+using ObtainPropFunction = std::function<jsi::Value(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &propName)>;
 using DispatchCommandFunction = std::function<void(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,
     const jsi::Value &commandNameValue,
     const jsi::Value &argsValue)>;
-using MeasureFunction = std::function<jsi::Value(jsi::Runtime &rt, const jsi::Value &shadowNodeValue)>;
+using MeasureFunction = std::function<
+    jsi::Value(jsi::Runtime &rt, const jsi::Value &shadowNodeValue)>;
 
 #else
 
-using UpdatePropsFunction = std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
+using UpdatePropsFunction =
+    std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
 using ScrollToFunction = std::function<void(int, double, double, bool)>;
-using DispatchCommandFunction = std::function<
-    void(jsi::Runtime &rt, const int viewTag, const jsi::Value &commandNameValue, const jsi::Value &argsValue)>;
-using MeasureFunction = std::function<std::vector<std::pair<std::string, double>>(int)>;
-using ObtainPropFunction = std::function<jsi::Value(jsi::Runtime &, const int, const jsi::Value &)>;
+using DispatchCommandFunction = std::function<void(
+    jsi::Runtime &rt,
+    const int viewTag,
+    const jsi::Value &commandNameValue,
+    const jsi::Value &argsValue)>;
+using MeasureFunction =
+    std::function<std::vector<std::pair<std::string, double>>(int)>;
+using ObtainPropFunction =
+    std::function<jsi::Value(jsi::Runtime &, const int, const jsi::Value &)>;
 
 #endif // RCT_NEW_ARCH_ENABLED
 
-using RequestRenderFunction = std::function<void(std::function<void(const double)>)>;
+using RequestRenderFunction =
+    std::function<void(std::function<void(const double)>)>;
 using GetAnimationTimestampFunction = std::function<double(void)>;
 
-using ProgressLayoutAnimationFunction = std::function<void(jsi::Runtime &, int, jsi::Object, bool)>;
+using ProgressLayoutAnimationFunction =
+    std::function<void(jsi::Runtime &, int, jsi::Object, bool)>;
 using EndLayoutAnimationFunction = std::function<void(int, bool)>;
 
-using RegisterSensorFunction = std::function<int(int, int, int, std::function<void(double[], int)>)>;
+using RegisterSensorFunction =
+    std::function<int(int, int, int, std::function<void(double[], int)>)>;
 using UnregisterSensorFunction = std::function<void(int)>;
 using SetGestureStateFunction = std::function<void(int, int)>;
-using ConfigurePropsFunction =
-    std::function<void(jsi::Runtime &rt, const jsi::Value &uiProps, const jsi::Value &nativeProps)>;
-using KeyboardEventSubscribeFunction = std::function<int(std::function<void(int, int)>, bool, bool)>;
+using ConfigurePropsFunction = std::function<void(
+    jsi::Runtime &rt,
+    const jsi::Value &uiProps,
+    const jsi::Value &nativeProps)>;
+using KeyboardEventSubscribeFunction =
+    std::function<int(std::function<void(int, int)>, bool, bool)>;
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 

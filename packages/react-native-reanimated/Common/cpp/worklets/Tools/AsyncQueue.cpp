@@ -4,14 +4,16 @@
 
 namespace worklets {
 
-AsyncQueue::AsyncQueue(std::string name) : state_(std::make_shared<AsyncQueueState>()) {
+AsyncQueue::AsyncQueue(std::string name)
+    : state_(std::make_shared<AsyncQueueState>()) {
   auto thread = std::thread([name, state = state_] {
 #if __APPLE__
     pthread_setname_np(name.c_str());
 #endif
     while (state->running) {
       std::unique_lock<std::mutex> lock(state->mutex);
-      state->cv.wait(lock, [state] { return !state->queue.empty() || !state->running; });
+      state->cv.wait(
+          lock, [state] { return !state->queue.empty() || !state->running; });
       if (!state->running) {
         return;
       }
