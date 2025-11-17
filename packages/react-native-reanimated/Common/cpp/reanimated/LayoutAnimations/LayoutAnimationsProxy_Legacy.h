@@ -29,18 +29,18 @@ struct Rect {
 
 struct Frame {
   std::optional<double> x, y, width, height;
-  Frame(jsi::Runtime &runtime, const jsi::Object &newStyle) {
-    if (newStyle.hasProperty(runtime, "originX")) {
-      x = newStyle.getProperty(runtime, "originX").asNumber();
+  Frame(jsi::Runtime &runtime, const jsi::Object &obj) {
+    if (obj.hasProperty(runtime, "originX")) {
+      x = obj.getProperty(runtime, "originX").asNumber();
     }
-    if (newStyle.hasProperty(runtime, "originY")) {
-      y = newStyle.getProperty(runtime, "originY").asNumber();
+    if (obj.hasProperty(runtime, "originY")) {
+      y = obj.getProperty(runtime, "originY").asNumber();
     }
-    if (newStyle.hasProperty(runtime, "width")) {
-      width = newStyle.getProperty(runtime, "width").asNumber();
+    if (obj.hasProperty(runtime, "width")) {
+      width = obj.getProperty(runtime, "width").asNumber();
     }
-    if (newStyle.hasProperty(runtime, "height")) {
-      height = newStyle.getProperty(runtime, "height").asNumber();
+    if (obj.hasProperty(runtime, "height")) {
+      height = obj.getProperty(runtime, "height").asNumber();
     }
   }
 };
