@@ -19,10 +19,9 @@ class PropsRegistry {
 
   void update(const ShadowNode::Shared &shadowNode, folly::dynamic &&props);
 
-  void for_each(
-      std::function<
-          void(const ShadowNodeFamily &family, const folly::dynamic &props)>
-          callback) const;
+  void for_each(std::function<void(
+                    const ShadowNodeFamily &family,
+                    const folly::dynamic &props)> callback) const;
 
   void remove(const Tag tag);
 

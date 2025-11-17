@@ -57,14 +57,13 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       isReducedMotion_(isReducedMotion),
       workletsModuleProxy_(workletsModuleProxy),
       valueUnpackerCode_(workletsModuleProxy->getValueUnpackerCode()),
-      uiWorkletRuntime_(
-          std::make_shared<WorkletRuntime>(
-              rnRuntime,
-              workletsModuleProxy->getJSQueue(),
-              workletsModuleProxy->getJSScheduler(),
-              "Reanimated UI runtime",
-              true /* supportsLocking */,
-              valueUnpackerCode_)),
+      uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
+          rnRuntime,
+          workletsModuleProxy->getJSQueue(),
+          workletsModuleProxy->getJSScheduler(),
+          "Reanimated UI runtime",
+          true /* supportsLocking */,
+          valueUnpackerCode_)),
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       animatedSensorModule_(platformDepMethodsHolder),
@@ -410,10 +409,9 @@ std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
     }
   }
 
-  throw std::runtime_error(
-      std::string(
-          "Getting property `" + propName +
-          "` with function `getViewProp` is not supported"));
+  throw std::runtime_error(std::string(
+      "Getting property `" + propName +
+      "` with function `getViewProp` is not supported"));
 }
 
 jsi::Value ReanimatedModuleProxy::getViewProp(
