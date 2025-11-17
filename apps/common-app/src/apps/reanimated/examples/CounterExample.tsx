@@ -1,13 +1,11 @@
 import React from 'react';
-import { Button, StyleSheet, TextInput, View } from 'react-native';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedProps,
   useDerivedValue,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-
-const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 export default function CounterExample() {
   const ref = React.useRef(0);
@@ -32,10 +30,10 @@ export default function CounterExample() {
       <View style={styles.buttons}>
         <Button onPress={handleToggle} title="Toggle" />
       </View>
-      <AnimatedTextInput
+      <Animated.Text
+        // @ts-expect-error TODO fix animated props type
         animatedProps={animatedProps}
         style={styles.text}
-        editable={false}
       />
     </>
   );
