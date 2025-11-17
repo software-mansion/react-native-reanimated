@@ -1020,7 +1020,7 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
           return;
         }
 
-        Rect window{};
+        Rect window;
         const auto tag = newChildShadowView.tag;
         {
           auto &mutex = strongThis->mutex;
@@ -1383,7 +1383,7 @@ const ShadowNode *LayoutAnimationsProxy_Experimental::findInShadowTreeByTag(cons
   if (node.getTag() == tag) {
     return const_cast<const ShadowNode *>(&node);
   }
-  for (auto &child : node.getChildren()) {
+  for (const auto &child : node.getChildren()) {
     if (const auto result = findInShadowTreeByTag(*child, tag)) {
       return result;
     }
