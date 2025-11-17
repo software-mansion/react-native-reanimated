@@ -6,7 +6,7 @@
 
 namespace reanimated::css {
 
-enum class SVGBrushType {
+enum class SVGBrushType : std::uint8_t {
   Rgba,
   Transparent,
   CurrentColor,

@@ -168,8 +168,8 @@ export function clampRGBA(RGBA: ParsedColorArray): void {
   }
 }
 
-const names: Record<string, number | null> = {
-  transparent: null,
+const names: Record<string, number | false> = {
+  transparent: false,
 
   /* spell-checker: disable */
   // http://www.w3.org/TR/css3-color/#svg-color
@@ -354,18 +354,18 @@ export const ColorProperties = [
   'stroke',
 ];
 
-export function normalizeColor(color: unknown): number | null | undefined {
+export function normalizeColor(color: unknown): number | false | null {
   'worklet';
 
   if (typeof color === 'number') {
     if (color >>> 0 === color && color >= 0 && color <= 0xffffffff) {
       return color;
     }
-    return undefined;
+    return null;
   }
 
   if (typeof color !== 'string') {
-    return undefined;
+    return null;
   }
 
   let match: RegExpExecArray | null | undefined;
@@ -498,7 +498,7 @@ export function normalizeColor(color: unknown): number | null | undefined {
     );
   }
 
-  return undefined;
+  return null;
 }
 
 export const opacity = (c: number): number => {
@@ -622,12 +622,10 @@ export const hsvToColor = (
   return rgbaColor(r, g, b, a);
 };
 
-export function processColorInitially(
-  color: unknown
-): number | null | undefined {
+export function processColorInitially(color: unknown): number | false | null {
   'worklet';
   if (color === null || color === undefined) {
-    return undefined;
+    return null;
   }
 
   let colorNumber: number;
@@ -652,14 +650,15 @@ export function isColor(value: unknown): boolean {
   if (typeof value !== 'string') {
     return false;
   }
-  return processColorInitially(value) != undefined;
+  const processedColor = processColorInitially(value);
+  return processedColor !== undefined && processedColor !== null;
 }
 
 export type ParsedColorArray = [number, number, number, number];
 
 export function convertToRGBA(color: unknown): ParsedColorArray {
   'worklet';
-  const processedColor = processColorInitially(color)!; // alpha rgb;
+  const processedColor = processColorInitially(color) as number; // alpha rgb;
   const a = (processedColor >>> 24) / 255;
   const r = ((processedColor << 8) >>> 24) / 255;
   const g = ((processedColor << 16) >>> 24) / 255;

@@ -17,7 +17,7 @@ namespace worklets {
 
 class WorkletEventHandler;
 
-class EventHandlerRegistry {
+class __attribute__((visibility("default"))) EventHandlerRegistry {
   std::map<std::pair<int, std::string>, std::unordered_map<uint64_t, std::shared_ptr<WorkletEventHandler>>>
       eventMappingsWithTag;
   std::map<std::string, std::unordered_map<uint64_t, std::shared_ptr<WorkletEventHandler>>> eventMappingsWithoutTag;

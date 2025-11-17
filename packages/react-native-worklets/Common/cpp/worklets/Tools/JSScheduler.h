@@ -10,7 +10,7 @@ using namespace react;
 
 namespace worklets {
 
-class JSScheduler {
+class __attribute__((visibility("default"))) JSScheduler {
   using Job = std::function<void(jsi::Runtime &rt)>;
 
  public:
@@ -22,7 +22,7 @@ class JSScheduler {
 
   void scheduleOnJS(std::function<void(jsi::Runtime &rt)> job);
 
-  void invokeSyncOnJS(std::function<void(jsi::Runtime &rt)> job);
+  void invokeSyncOnJS(const std::function<void(jsi::Runtime &rt)> &job);
 
   bool canInvokeSyncOnJS();
 
