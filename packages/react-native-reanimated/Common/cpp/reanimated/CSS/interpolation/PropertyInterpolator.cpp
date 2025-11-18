@@ -34,7 +34,8 @@ std::vector<std::pair<double, jsi::Value>> PropertyInterpolator::parseJSIKeyfram
   if (!keyframes.isObject() || !keyframes.asObject(rt).isArray(rt)) {
     throw std::invalid_argument(
         "[Reanimated] Received invalid keyframes object for property: " + getPropertyPathString() +
-        ". Keyframes must be an array of keyframe objects. Received: " + worklets::stringifyJSIValue(rt, keyframes));
+        ".\n\nExpected an array of objects with 'offset' and 'value' properties, got: " +
+        worklets::stringifyJSIValue(rt, keyframes));
   }
 
   const auto keyframeArray = keyframes.asObject(rt).asArray(rt);
