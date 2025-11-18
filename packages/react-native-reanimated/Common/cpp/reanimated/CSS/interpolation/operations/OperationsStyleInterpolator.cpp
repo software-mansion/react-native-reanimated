@@ -243,7 +243,7 @@ folly::dynamic OperationsStyleInterpolator::interpolateOperations(
     const StyleOperations &fromOperations,
     const StyleOperations &toOperations,
     const double fallbackInterpolateThreshold) const {
-  StyleOperations result;
+  auto result = folly::dynamic::array();
   result.reserve(fromOperations.size());
 
   const auto updateContext = createUpdateContext(shadowNode, fallbackInterpolateThreshold);
@@ -254,14 +254,12 @@ folly::dynamic OperationsStyleInterpolator::interpolateOperations(
 
     // fromOperation and toOperation have the same type
     const auto &interpolator = interpolators_->at(fromOperation->type);
-    result.emplace_back(interpolator->interpolate(keyframeProgress, fromOperation, toOperation, updateContext));
+    const auto interpolationResult =
+        interpolator->interpolate(keyframeProgress, fromOperation, toOperation, updateContext);
+    result.push_back(interpolationResult->toDynamic());
   }
 
-  if (result.empty()) {
-    return folly::dynamic();
-  }
-
-  return convertOperationsToDynamic(result);
+  return result;
 }
 
 folly::dynamic OperationsStyleInterpolator::convertOperationsToDynamic(const StyleOperations &operations) {
@@ -278,7 +276,8 @@ folly::dynamic OperationsStyleInterpolator::convertOperationsToDynamic(const Sty
 StyleOperationsInterpolationContext OperationsStyleInterpolator::createUpdateContext(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const double fallbackInterpolateThreshold) const {
-  return StyleOperationsInterpolationContext{shadowNode, viewStylesRepository_, interpolators_, fallbackInterpolateThreshold};
+  return StyleOperationsInterpolationContext{
+      shadowNode, viewStylesRepository_, interpolators_, fallbackInterpolateThreshold};
 }
 
 // OperationsStyleInterpolatorBase implementation
@@ -291,9 +290,9 @@ std::shared_ptr<StyleOperation> OperationsStyleInterpolatorBase<TOperation>::cre
 }
 
 template <typename TOperation>
-std::shared_ptr<StyleOperations> OperationsStyleInterpolatorBase<TOperation>::createStyleOperation(
+std::shared_ptr<StyleOperation> OperationsStyleInterpolatorBase<TOperation>::createStyleOperation(
     const folly::dynamic &value) const {
-  return std::static_pointer_cast<StyleOperations>(TOperation::fromDynamic(value));
+  return std::static_pointer_cast<StyleOperation>(TOperation::fromDynamic(value));
 }
 
 template <typename TOperation>

@@ -24,12 +24,16 @@ TransformMatrix3D matrixFromOperations3D(TransformOperations &operations);
  */
 TransformMatrix2D matrixFromOperations2D(TransformOperations &operations);
 
+/**
+ * MatrixOperation does not inherit from TransformOperationBase because its value type
+ * is different from the other transform operations which use a CSSValue-derived type.
+ * Instead, it uses a variant of TransformMatrix::Shared and TransformOperations that
+ * doesn't have a value field.
+ */
 struct MatrixOperation final : public TransformOperation {
   const MatrixOperationValue value;
 
-  explicit MatrixOperation(MatrixOperationValue value)
-      : TransformOperation(static_cast<uint8_t>(TransformOp::Matrix)), value(std::move(value)) {}
-
+  explicit MatrixOperation(MatrixOperationValue value);
   explicit MatrixOperation(jsi::Runtime &rt, const jsi::Value &value);
   explicit MatrixOperation(const folly::dynamic &value);
   explicit MatrixOperation(TransformMatrix2D matrix);
@@ -39,6 +43,9 @@ struct MatrixOperation final : public TransformOperation {
   bool is3D() const override;
   folly::dynamic valueToDynamic() const override;
   TransformMatrix::Shared toMatrix(bool force3D) const override;
+
+ protected:
+  bool areValuesEqual(const StyleOperation &other) const override;
 
  private:
   bool is3D_;

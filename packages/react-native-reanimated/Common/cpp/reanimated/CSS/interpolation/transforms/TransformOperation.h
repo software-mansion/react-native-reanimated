@@ -15,13 +15,12 @@ using namespace facebook;
 
 // Base struct for TransformOperation
 struct TransformOperation : public StyleOperation {
-  using StyleOperation::StyleOperation;
+  explicit TransformOperation(TransformOp type);
 
   // Tells if the transform operations is 3D-only (cannot be represented in 2D)
   virtual bool is3D() const;
 
   std::string getOperationName() const override;
-  virtual folly::dynamic valueToDynamic() const override = 0;
 
   static std::shared_ptr<TransformOperation> fromJSIValue(jsi::Runtime &rt, const jsi::Value &value);
   static std::shared_ptr<TransformOperation> fromDynamic(const folly::dynamic &value);
@@ -45,6 +44,9 @@ struct TransformOperationBase : public TransformOperation {
 
  protected:
   mutable TransformMatrix::Shared cachedMatrix_;
+
+  folly::dynamic valueToDynamic() const override;
+  bool areValuesEqual(const StyleOperation &other) const override;
 };
 
 } // namespace reanimated::css

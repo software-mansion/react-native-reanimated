@@ -150,7 +150,7 @@ std::shared_ptr<PropertyInterpolatorFactory> transforms(
   StyleOperationInterpolators result;
   result.reserve(interpolators.size());
   for (const auto &[property, interpolator] : interpolators) {
-    result.emplace(getTransformOperationType(property), interpolator);
+    result.emplace(static_cast<size_t>(getTransformOperationType(property)), interpolator);
   }
   return std::make_shared<TransformsInterpolatorFactory>(
       std::make_shared<StyleOperationInterpolators>(std::move(result)));
@@ -161,7 +161,7 @@ std::shared_ptr<PropertyInterpolatorFactory> filters(
   StyleOperationInterpolators result;
   result.reserve(interpolators.size());
   for (const auto &[property, interpolator] : interpolators) {
-    result.emplace(getFilterOperationType(property), interpolator);
+    result.emplace(static_cast<size_t>(getFilterOperationType(property)), interpolator);
   }
   return std::make_shared<FiltersInterpolatorFactory>(std::make_shared<StyleOperationInterpolators>(std::move(result)));
 }

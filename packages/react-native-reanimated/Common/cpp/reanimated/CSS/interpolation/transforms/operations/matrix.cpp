@@ -99,6 +99,9 @@ std::pair<MatrixOperationValue, bool> simplifyOperations(const TransformOperatio
   return {std::move(result), is3D};
 }
 
+MatrixOperation::MatrixOperation(MatrixOperationValue value)
+    : TransformOperation(TransformOp::Matrix), value(std::move(value)) {}
+
 MatrixOperation::MatrixOperation(jsi::Runtime &rt, const jsi::Value &value)
     : MatrixOperation([&]() -> TransformMatrix::Shared {
         // Try 2D first, then 3D (will throw if neither works)
@@ -122,23 +125,26 @@ MatrixOperation::MatrixOperation(const folly::dynamic &value)
       }()) {}
 
 MatrixOperation::MatrixOperation(TransformMatrix2D matrix)
-    : TransformOperation(static_cast<uint8_t>(TransformOp::Matrix)),
+    : TransformOperation(TransformOp::Matrix),
       value(std::make_shared<const TransformMatrix2D>(std::move(matrix))),
       is3D_(false) {}
 
 MatrixOperation::MatrixOperation(TransformMatrix3D matrix)
-    : TransformOperation(static_cast<uint8_t>(TransformOp::Matrix)),
+    : TransformOperation(TransformOp::Matrix),
       value(std::make_shared<const TransformMatrix3D>(std::move(matrix))),
       is3D_(true) {}
 
 MatrixOperation::MatrixOperation(TransformOperations operations)
     // Simplify operations to reduce the number of matrix
     // multiplications during matrix keyframe interpolation
-    : TransformOperation(static_cast<uint8_t>(TransformOp::Matrix)), value([&]() {
-        const auto &[value, is3D] = simplifyOperations(std::move(operations));
-        is3D_ = is3D;
-        return value;
-      }()) {}
+    : TransformOperation(TransformOp::Matrix),
+      value([&]() {
+        const auto &[simplifiedValue, is3D] = simplifyOperations(std::move(operations));
+        const_cast<bool &>(is3D_) = is3D;
+        return simplifiedValue;
+      }()),
+      is3D_(false) // Will be set correctly by the lambda above
+{}
 
 bool MatrixOperation::is3D() const {
   return is3D_;
@@ -164,6 +170,23 @@ const TransformMatrix::Shared &MatrixOperation::getMatrixFromVariant() const {
     throw std::runtime_error("[Reanimated] Cannot convert unprocessed transform operations to the matrix.");
   }
   return std::get<TransformMatrix::Shared>(value);
+}
+
+bool MatrixOperation::areValuesEqual(const StyleOperation &other) const {
+  const auto &otherOperation = static_cast<const MatrixOperation &>(other);
+
+  // Quick check: if variants have different types, they're not equal
+  if (value.index() != otherOperation.value.index()) {
+    return false;
+  }
+
+  // Both hold TransformOperations
+  if (std::holds_alternative<TransformOperations>(value)) {
+    return std::get<TransformOperations>(value) == std::get<TransformOperations>(otherOperation.value);
+  }
+
+  // Both hold matrices
+  return *std::get<TransformMatrix::Shared>(value) == *std::get<TransformMatrix::Shared>(otherOperation.value);
 }
 
 } // namespace reanimated::css

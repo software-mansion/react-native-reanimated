@@ -54,7 +54,7 @@ class OperationsStyleInterpolator : public PropertyInterpolator {
   const std::shared_ptr<StyleOperationInterpolators> interpolators_;
 
   virtual std::shared_ptr<StyleOperation> createStyleOperation(jsi::Runtime &rt, const jsi::Value &value) const = 0;
-  virtual std::shared_ptr<StyleOperations> createStyleOperation(const folly::dynamic &value) const = 0;
+  virtual std::shared_ptr<StyleOperation> createStyleOperation(const folly::dynamic &value) const = 0;
   virtual std::optional<std::pair<StyleOperations, StyleOperations>> createInterpolationPair(
       const StyleOperations &fromOperations,
       const StyleOperations &toOperations) const = 0;
@@ -95,7 +95,7 @@ class OperationsStyleInterpolatorBase : public OperationsStyleInterpolator {
 
  protected:
   std::shared_ptr<StyleOperation> createStyleOperation(jsi::Runtime &rt, const jsi::Value &value) const override;
-  std::shared_ptr<StyleOperations> createStyleOperation(const folly::dynamic &value) const override;
+  std::shared_ptr<StyleOperation> createStyleOperation(const folly::dynamic &value) const override;
   std::optional<std::pair<StyleOperations, StyleOperations>> createInterpolationPair(
       const StyleOperations &fromOperations,
       const StyleOperations &toOperations) const override;

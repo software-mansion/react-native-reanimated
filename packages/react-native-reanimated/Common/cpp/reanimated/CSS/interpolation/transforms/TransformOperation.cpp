@@ -22,6 +22,8 @@ std::string createConversionErrorMessage(const TransformOp fromType, const Trans
       " to type: " + getTransformOperationName(toType);
 }
 
+TransformOperation::TransformOperation(TransformOp type) : StyleOperation(static_cast<uint8_t>(type)) {}
+
 bool TransformOperation::canConvertTo(const TransformOp targetType) const {
   return false;
 }
@@ -157,7 +159,7 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(const folly:
 // TransformOperationBase implementation
 template <TransformOp TOperation, typename TValue>
 TransformOperationBase<TOperation, TValue>::TransformOperationBase(TValue value)
-    : TransformOperation(static_cast<uint8_t>(TOperation)), value(std::move(value)) {}
+    : TransformOperation(TOperation), value(std::move(value)) {}
 
 template <TransformOp TOperation, typename TValue>
 TransformMatrix::Shared TransformOperationBase<TOperation, TValue>::toMatrix(bool force3D) const {
@@ -185,6 +187,16 @@ TransformMatrix::Shared TransformOperationBase<TOperation, TValue>::toMatrix(boo
     cachedMatrix_ = result;
     return result;
   }
+}
+
+template <TransformOp TOperation, typename TValue>
+folly::dynamic TransformOperationBase<TOperation, TValue>::valueToDynamic() const {
+  return value.toDynamic();
+}
+
+template <TransformOp TOperation, typename TValue>
+bool TransformOperationBase<TOperation, TValue>::areValuesEqual(const StyleOperation &other) const {
+  return value == static_cast<const TransformOperationBase<TOperation, TValue> &>(other).value;
 }
 
 // Rotate operations

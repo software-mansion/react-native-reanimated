@@ -15,10 +15,9 @@ using namespace facebook;
 
 // Base struct for FilterOperations
 struct FilterOperation : public StyleOperation {
-  using StyleOperation::StyleOperation;
+  explicit FilterOperation(FilterOp type);
 
   std::string getOperationName() const override;
-  virtual folly::dynamic valueToDynamic() const override = 0;
 
   static std::shared_ptr<FilterOperation> fromJSIValue(jsi::Runtime &rt, const jsi::Value &value);
   static std::shared_ptr<FilterOperation> fromDynamic(const folly::dynamic &value);
@@ -32,7 +31,10 @@ struct FilterOperationBase : public FilterOperation {
   const TValue value;
 
   explicit FilterOperationBase(TValue value);
+
+ protected:
   folly::dynamic valueToDynamic() const override;
+  bool areValuesEqual(const StyleOperation &other) const override;
 };
 
 } // namespace reanimated::css

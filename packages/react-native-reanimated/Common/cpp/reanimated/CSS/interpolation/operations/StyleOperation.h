@@ -20,16 +20,17 @@ concept ResolvableOp = requires(TOperation operation) {
 struct StyleOperation {
   uint8_t type;
 
-  explicit StyleOperation(uint8_t type) : type(type) {}
+  explicit StyleOperation(uint8_t type);
 
-  virtual folly::dynamic valueToDynamic() const = 0;
+  bool operator==(const StyleOperation &other) const;
+  folly::dynamic toDynamic() const;
+
   virtual std::string getOperationName() const = 0;
-  virtual bool shouldResolve() const {
-    return false;
-  }
-  folly::dynamic toDynamic() const {
-    return folly::dynamic::object(getOperationName(), valueToDynamic());
-  }
+  virtual bool shouldResolve() const;
+
+ protected:
+  virtual folly::dynamic valueToDynamic() const = 0;
+  virtual bool areValuesEqual(const StyleOperation &other) const = 0;
 };
 
 using StyleOperations = std::vector<std::shared_ptr<StyleOperation>>;

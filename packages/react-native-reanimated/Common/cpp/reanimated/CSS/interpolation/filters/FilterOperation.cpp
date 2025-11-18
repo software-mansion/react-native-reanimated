@@ -19,9 +19,7 @@
 
 namespace reanimated::css {
 
-std::string FilterOperation::getOperationName() const {
-  return getFilterOperationName(static_cast<FilterOp>(type));
-}
+FilterOperation::FilterOperation(FilterOp type) : StyleOperation(static_cast<uint8_t>(type)) {}
 
 std::shared_ptr<FilterOperation> FilterOperation::fromJSIValue(jsi::Runtime &rt, const jsi::Value &value) {
   if (!value.isObject()) {
@@ -108,11 +106,16 @@ std::shared_ptr<FilterOperation> FilterOperation::fromDynamic(const folly::dynam
 // FilterOperationBase implementation
 template <FilterOp TOperation, CSSValueDerived TValue>
 FilterOperationBase<TOperation, TValue>::FilterOperationBase(TValue value)
-    : FilterOperation(static_cast<uint8_t>(TOperation)), value(std::move(value)) {}
+    : FilterOperation(TOperation), value(std::move(value)) {}
 
 template <FilterOp TOperation, CSSValueDerived TValue>
 folly::dynamic FilterOperationBase<TOperation, TValue>::valueToDynamic() const {
   return value.toDynamic();
+}
+
+template <FilterOp TOperation, CSSValueDerived TValue>
+bool FilterOperationBase<TOperation, TValue>::areValuesEqual(const StyleOperation &other) const {
+  return value == static_cast<const FilterOperationBase<TOperation, TValue> &>(other).value;
 }
 
 template struct FilterOperationBase<FilterOp::Blur, CSSDouble>;
