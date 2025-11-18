@@ -134,8 +134,8 @@ Follow the official installation instructions in the [installation guide](https:
 To make migration easier, you can drop in a small compatibility layer:
 
 ```ts
-import { useSharedValue } from 'react-native-reanimated';
 import { useKeyboardHandler } from 'react-native-keyboard-controller';
+import { useSharedValue } from 'react-native-reanimated';
 
 export const KeyboardState = {
   UNKNOWN: 0,
@@ -154,19 +154,18 @@ export const useAnimatedKeyboard = () => {
       onStart: (e) => {
         'worklet';
 
-        state.value =
-          e.height > 0 ? KeyboardState.OPENING : KeyboardState.CLOSING;
+        state.set(e.height > 0 ? KeyboardState.OPENING : KeyboardState.CLOSING);
       },
       onMove: (e) => {
         'worklet';
 
-        height.value = e.height;
+        height.set(e.height);
       },
       onEnd: (e) => {
         'worklet';
 
-        state.value = e.height > 0 ? KeyboardState.OPEN : KeyboardState.CLOSED;
-        height.value = e.height;
+        state.set(e.height > 0 ? KeyboardState.OPEN : KeyboardState.CLOSED);
+        height.set(e.height);
       },
     },
     []
