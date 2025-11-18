@@ -5,3 +5,5 @@ e646dce7b85204cddeea4ef3e1ab971a85830562
 008ee9322f3d2ed3ffef1996cbab50039fb72a3d
 # Flatten headers directory (#3474) 
 bb3e42154807bc9f220d49d3c2a03521f58c2394
+chore(3.19): Align with clang formatting on main (#8597)
+1a45af78bc318310da4e78e7b2bf1c4a75ac29ea
