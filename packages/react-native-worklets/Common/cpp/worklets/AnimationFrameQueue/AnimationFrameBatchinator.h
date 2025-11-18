@@ -3,6 +3,7 @@
 #include <jsi/jsi.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <atomic>
 #include <functional>
@@ -20,7 +21,7 @@ class AnimationFrameBatchinator : public std::enable_shared_from_this<AnimationF
   JsiRequestAnimationFrame getJsiRequestAnimationFrame();
 
   AnimationFrameBatchinator(
-      facebook::jsi::Runtime &uiRuntime,
+      const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime,
       RuntimeBindings::RequestAnimationFrame requestAnimationFrame);
 
  private:
@@ -30,7 +31,7 @@ class AnimationFrameBatchinator : public std::enable_shared_from_this<AnimationF
   std::vector<std::shared_ptr<const facebook::jsi::Value>> callbacks_{};
   std::mutex callbacksMutex_{};
   std::atomic_bool flushRequested_{};
-  facebook::jsi::Runtime *uiRuntime_;
+  std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
   std::function<void(std::function<void(const double)>)> requestAnimationFrame_;
 };
 

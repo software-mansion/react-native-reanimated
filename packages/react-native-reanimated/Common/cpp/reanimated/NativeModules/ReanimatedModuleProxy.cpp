@@ -316,10 +316,10 @@ void ReanimatedModuleProxy::onRender(double timestampMs) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::onRender");
   auto callbacks = std::move(frameCallbacks_);
   frameCallbacks_.clear();
-  jsi::Runtime &uiRuntime = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+  auto uiWorkletRuntime = workletsModuleProxy_->getUIWorkletRuntime();
   jsi::Value timestamp{timestampMs};
   for (const auto &callback : callbacks) {
-    runOnRuntimeGuarded(uiRuntime, *callback, timestamp);
+    uiWorkletRuntime->runSync(*callback, timestamp);
   }
 }
 
