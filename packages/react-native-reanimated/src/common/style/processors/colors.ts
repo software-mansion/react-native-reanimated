@@ -13,14 +13,29 @@ import type { Maybe } from '../../types';
 
 type DynamicColorIOSTuple = Parameters<typeof RNDynamicColorIOS>[0];
 
-type DynamicColorValue = ColorValue & {
-  dynamic: {
-    light: ColorValue;
-    dark: ColorValue;
-    highContrastLight?: ColorValue;
-    highContrastDark?: ColorValue;
-  };
+type DynamicColorChannels = {
+  light: ColorValue;
+  dark: ColorValue;
+  highContrastLight?: ColorValue;
+  highContrastDark?: ColorValue;
 };
+
+type ProcessedDynamicColorChannels = {
+  light: Maybe<number>;
+  dark: Maybe<number>;
+  highContrastLight?: Maybe<number>;
+  highContrastDark?: Maybe<number>;
+};
+
+export type DynamicColorValue = {
+  dynamic: DynamicColorChannels;
+};
+
+export type ProcessedDynamicColor = {
+  dynamic: ProcessedDynamicColorChannels;
+};
+
+export type ProcessedColor = number | ProcessedDynamicColor;
 
 type PlatformColorValue = ColorValue & { semantic?: Array<string> } & {
   resource_paths?: Array<string>;
@@ -33,12 +48,12 @@ export function PlatformColor(...names: Array<string>): PlatformColorValue {
   return mapped as PlatformColorValue;
 }
 
-function isPlatformColorObject(value: any): boolean {
+function isPlatformColorObject(value: unknown): value is PlatformColorValue {
   return (
-    value &&
+    !!value &&
     typeof value === 'object' &&
-    (('semantic' in value && Array.isArray(value.semantic)) ||
-      ('resource_paths' in value && Array.isArray(value.resource_paths)))
+    (('semantic' in value && Array.isArray((value as any).semantic)) ||
+      ('resource_paths' in value && Array.isArray((value as any).resource_paths)))
   );
 }
 
@@ -52,9 +67,7 @@ const DynamicColorIOSProperties = [
   'highContrastDark',
 ] as const;
 
-export function DynamicColorIOS(
-  tuple: DynamicColorIOSTuple
-): DynamicColorValue {
+export function DynamicColorIOS(tuple: DynamicColorIOSTuple): DynamicColorValue {
   'worklet';
   return {
     dynamic: {
@@ -66,19 +79,16 @@ export function DynamicColorIOS(
   } as DynamicColorValue;
 }
 
-function isDynamicColorObject(value: any): boolean {
+function isDynamicColorObject(value: unknown): value is DynamicColorValue {
   return (
-    value &&
     typeof value === 'object' &&
+    value !== null &&
     'dynamic' in value &&
-    DynamicColorIOSProperties.some((key) => key in value.dynamic)
+    DynamicColorIOSProperties.some((key) =>
+      key in (value as { dynamic: Record<string, unknown> }).dynamic
+    )
   );
 }
-
-export const ERROR_MESSAGES = {
-  invalidColor: (color: unknown) =>
-    `Invalid color value: ${JSON.stringify(color)}`,
-};
 
 /**
  * Processes a color value and returns a normalized color representation.
@@ -87,7 +97,7 @@ export const ERROR_MESSAGES = {
  * @returns The processed color value - `number` for valid colors, `false` for
  *   transparent colors
  */
-export function processColor(value: unknown): number {
+function processColorToNumber(value: unknown): number {
   let normalizedColor = processColorInitially(value);
 
   if (IS_ANDROID && typeof normalizedColor == 'number') {
@@ -109,6 +119,40 @@ export function processColor(value: unknown): number {
   return normalizedColor as number;
 }
 
+export const ERROR_MESSAGES = {
+  invalidColor: (color: unknown) =>
+    `Invalid color value: ${JSON.stringify(color)}`,
+};
+
+function processDynamicColor(value: DynamicColorValue): ProcessedDynamicColor {
+  if (!IS_IOS) {
+    throw new ReanimatedError('DynamicColorIOS is not available on this platform.');
+  }
+
+  const channels = value.dynamic;
+  const normalizeChannel = (channel: ColorValue | undefined): Maybe<number> =>
+    channel === undefined ? undefined : processColorToNumber(channel);
+
+  return {
+    dynamic: {
+      light: processColorToNumber(channels.light),
+      dark: processColorToNumber(channels.dark),
+      highContrastLight: normalizeChannel(channels.highContrastLight),
+      highContrastDark: normalizeChannel(channels.highContrastDark),
+    },
+  };
+}
+
+export function processColor(value: DynamicColorValue): ProcessedDynamicColor;
+export function processColor(value: unknown): number;
+export function processColor(value: unknown): ProcessedColor {
+  if (isDynamicColorObject(value)) {
+    return processDynamicColor(value);
+  }
+
+  return processColorToNumber(value);
+}
+
 export function processColorsInProps(props: StyleProps) {
   for (const key in props) {
     if (!ColorProperties.includes(key)) continue;
@@ -117,23 +161,7 @@ export function processColorsInProps(props: StyleProps) {
 
     if (Array.isArray(value)) {
       props[key] = value.map((c) => processColor(c));
-    } else if (isDynamicColorObject(value)) {
-      if (!IS_IOS) {
-        throw new ReanimatedError(
-          'DynamicColorIOS is not available on this platform.'
-        );
-      }
-      const processed = { dynamic: {} as Record<string, Maybe<number>> };
-      const dynamicFields = value.dynamic;
-      for (const field in dynamicFields) {
-        processed.dynamic[field] =
-          dynamicFields[field] != undefined
-            ? processColor(dynamicFields[field])
-            : undefined;
-      }
-      props[key] = processed;
     } else if (isPlatformColorObject(value)) {
-      // PlatformColor is not processed further on iOS and Android
       props[key] = value;
     } else {
       props[key] = processColor(value);
