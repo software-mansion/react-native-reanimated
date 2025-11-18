@@ -1,5 +1,7 @@
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 
+#include <worklets/Tools/JSISerializer.h>
+
 #include <memory>
 #include <utility>
 
@@ -15,9 +17,13 @@ bool PropertyInterpolatorFactory::isDiscreteProperty() const {
 }
 
 std::string PropertyInterpolator::getPropertyPathString() const {
-  std::string result;
-  for (const auto &prop : propertyPath_) {
-    result += prop + ".";
+  if (propertyPath_.empty()) {
+    return "";
+  }
+
+  std::string result = propertyPath_[0];
+  for (size_t i = 1; i < propertyPath_.size(); ++i) {
+    result += "." + propertyPath_[i];
   }
   return result;
 }
@@ -28,7 +34,7 @@ std::vector<std::pair<double, jsi::Value>> PropertyInterpolator::parseJSIKeyfram
   if (!keyframes.isObject() || !keyframes.asObject(rt).isArray(rt)) {
     throw std::invalid_argument(
         "[Reanimated] Received invalid keyframes object for property: " + getPropertyPathString() +
-        ". Keyframes must be an array of keyframe objects");
+        ". Keyframes must be an array of keyframe objects. Received: " + worklets::stringifyJSIValue(rt, keyframes));
   }
 
   const auto keyframeArray = keyframes.asObject(rt).asArray(rt);
