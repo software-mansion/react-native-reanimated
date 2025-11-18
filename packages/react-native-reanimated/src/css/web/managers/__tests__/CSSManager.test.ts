@@ -2,10 +2,17 @@
 import { logger } from '../../../../common';
 import type { ViewInfo } from '../../../../createAnimatedComponent/commonTypes';
 import type { CSSStyle } from '../../../types';
+import CSSAnimationsManager from '../CSSAnimationsManager';
+import CSSTransitionsManager from '../CSSTransitionsManager';
 import CSSManager from '../CSSManager';
 
 jest.mock('../CSSAnimationsManager');
 jest.mock('../CSSTransitionsManager');
+
+const MockAnimationsManager =
+  CSSAnimationsManager as jest.MockedClass<typeof CSSAnimationsManager>;
+const MockTransitionsManager =
+  CSSTransitionsManager as jest.MockedClass<typeof CSSTransitionsManager>;
 
 describe('CSSManager', () => {
   const warnSpy = jest
@@ -19,6 +26,8 @@ describe('CSSManager', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    MockAnimationsManager.mockClear();
+    MockTransitionsManager.mockClear();
   });
 
   const createManager = (viewName = 'RCTView') =>
@@ -68,5 +77,51 @@ describe('CSSManager', () => {
     manager.update(second);
 
     expect(warnSpy).toHaveBeenCalledTimes(2);
+  });
+
+  test('passes animation and transition config to respective managers', () => {
+    const manager = createManager('RCTView');
+    const style: CSSStyle = {
+      animationDuration: ['1s'],
+      animationName: [{ from: { opacity: 0 }, to: { opacity: 1 } }],
+      transitionDuration: ['150ms'],
+      transitionProperty: ['opacity'],
+      opacity: 0.5,
+    };
+
+    manager.update(style);
+
+    const animationsInstance = MockAnimationsManager.mock.instances[0]!;
+    const transitionsInstance = MockTransitionsManager.mock.instances[0]!;
+    expect(animationsInstance.update).toHaveBeenCalledWith({
+      animationDuration: ['1s'],
+      animationName: expect.any(Array),
+    });
+    expect(transitionsInstance.update).toHaveBeenCalledWith({
+      transitionDuration: ['150ms'],
+      transitionProperty: ['opacity'],
+    });
+  });
+
+  test('sends null to managers when no configs present', () => {
+    const manager = createManager('RCTView');
+
+    manager.update({ opacity: 0.3 });
+
+    const animationsInstance = MockAnimationsManager.mock.instances[0]!;
+    const transitionsInstance = MockTransitionsManager.mock.instances[0]!;
+    expect(animationsInstance.update).toHaveBeenCalledWith(null);
+    expect(transitionsInstance.update).toHaveBeenCalledWith(null);
+  });
+
+  test('delegates unmountCleanup to both managers', () => {
+    const manager = createManager('RCTView');
+    const animationsInstance = MockAnimationsManager.mock.instances[0]!;
+    const transitionsInstance = MockTransitionsManager.mock.instances[0]!;
+
+    manager.unmountCleanup();
+
+    expect(animationsInstance.unmountCleanup).toHaveBeenCalledTimes(1);
+    expect(transitionsInstance.unmountCleanup).toHaveBeenCalledTimes(1);
   });
 });
