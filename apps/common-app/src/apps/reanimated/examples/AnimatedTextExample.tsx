@@ -38,7 +38,7 @@ export default function AnimatedTextExample() {
 
   return (
     <View style={styles.container}>
-      <Animated.Text style={styles.cyan}>
+      <Text style={styles.cyan}>
         <Text style={styles.bold}>
           Before
           <Animated.Text
@@ -48,7 +48,7 @@ export default function AnimatedTextExample() {
           />
         </Text>
         After
-      </Animated.Text>
+      </Text>
     </View>
   );
 }

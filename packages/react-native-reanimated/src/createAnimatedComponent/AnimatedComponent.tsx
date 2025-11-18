@@ -447,7 +447,6 @@ export default class AnimatedComponent
         );
       }
       // TODO: handle case when `text` property is not present during initial render but appears later on
-      // TODO: throw error when trying to <Animated.Text> component with animated prop `text` is nested inside another <Text> component
 
       // Pass the current value of animated prop `text` as `children` so that the text displays correctly during first render
       filteredProps.children =
