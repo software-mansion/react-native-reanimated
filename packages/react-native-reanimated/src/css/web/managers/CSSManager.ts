@@ -1,40 +1,25 @@
 'use strict';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
-import { CSSManagerBase } from '../../managers';
+import CSSManagerBase from '../../managers/CSSManagerBase';
 import type { CSSStyle, ICSSManager } from '../../types';
-import { filterCSSAndStyleProperties } from '../../utils';
 import CSSAnimationsManager from './CSSAnimationsManager';
 import CSSTransitionsManager from './CSSTransitionsManager';
 
 export default class CSSManager extends CSSManagerBase implements ICSSManager {
-  private readonly element: ReanimatedHTMLElement;
-  private readonly viewName: string;
-  private readonly animationsManager: CSSAnimationsManager;
-  private readonly transitionsManager: CSSTransitionsManager;
-
   constructor({ DOMElement, viewName = 'RCTView' }: ViewInfo) {
-    super();
-    this.element = DOMElement as ReanimatedHTMLElement;
-    this.viewName = viewName;
-    this.animationsManager = new CSSAnimationsManager(this.element);
-    this.transitionsManager = new CSSTransitionsManager(this.element);
+    const element = DOMElement as ReanimatedHTMLElement;
+    const animationsManager = new CSSAnimationsManager(element);
+    const transitionsManager = new CSSTransitionsManager(element);
+
+    super(viewName, animationsManager, transitionsManager);
   }
 
   update(style: CSSStyle): void {
-    const [animationProperties, transitionProperties, filteredStyle] =
-      filterCSSAndStyleProperties(style);
-
-    if (__DEV__) {
-      this.warnOnUnsupportedProps(filteredStyle, this.viewName);
-    }
+    const [animationProperties, transitionProperties] =
+      this.filterAndValidateStyle(style);
 
     this.animationsManager.update(animationProperties);
     this.transitionsManager.update(transitionProperties);
-  }
-
-  unmountCleanup(): void {
-    this.animationsManager.unmountCleanup();
-    this.transitionsManager.unmountCleanup();
   }
 }
