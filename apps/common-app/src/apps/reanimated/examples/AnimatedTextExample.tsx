@@ -15,6 +15,7 @@ import Animated, {
 // TODO: sync `text` prop updates back to React as `children` prop
 // TODO: support both string and number as text animated prop
 // TODO: convert docs examples from AnimatedTextInput to Animated.Text
+// TODO: fix Animated.Text inside Animated.Text
 
 export default function AnimatedTextExample() {
   const sv = useSharedValue(0);
@@ -26,7 +27,7 @@ export default function AnimatedTextExample() {
 
   const animatedProps = useAnimatedProps(() => {
     return {
-      text: sv.value < 20 ? '' : Math.round(sv.value),
+      text: Math.round(sv.value),
     };
   });
 
@@ -38,7 +39,7 @@ export default function AnimatedTextExample() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.cyan}>
+      <Animated.Text style={styles.cyan}>
         <Text style={styles.bold}>
           Before
           <Animated.Text
@@ -48,7 +49,7 @@ export default function AnimatedTextExample() {
           />
         </Text>
         After
-      </Text>
+      </Animated.Text>
     </View>
   );
 }
