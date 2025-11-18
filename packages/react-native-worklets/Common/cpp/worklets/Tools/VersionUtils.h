@@ -13,7 +13,7 @@ namespace worklets {
 
 bool matchVersion(const std::string &version1, const std::string &version2);
 
-__attribute__((visibility("default"))) void checkJSVersion(
+void checkJSVersion(
     jsi::Runtime &runtime,
     jsi::Value &jsVersionValue,
     const std::shared_ptr<worklets::JSLogger> &jsLogger,

@@ -8,7 +8,7 @@ using namespace facebook;
 
 namespace worklets {
 
-class __attribute__((visibility("default"))) JSISerializer {
+class JSISerializer {
  public:
   explicit JSISerializer(jsi::Runtime &rt);
   std::string stringifyJSIValueRecursively(const jsi::Value &value, bool isTopLevel = false);
@@ -37,6 +37,6 @@ class __attribute__((visibility("default"))) JSISerializer {
   jsi::Object visitedNodes_;
 };
 
-__attribute__((visibility("default"))) std::string stringifyJSIValue(jsi::Runtime &rt, const jsi::Value &value);
+std::string stringifyJSIValue(jsi::Runtime &rt, const jsi::Value &value);
 
 } // namespace worklets
