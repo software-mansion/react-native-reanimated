@@ -200,7 +200,7 @@ struct LayoutAnimationsProxy_Experimental : public MountingOverrideDelegate,
   ShadowView cloneViewWithOpacity(const ShadowView &shadowView, const PropsParserContext &propsParserContext) const;
   void maybeRestoreOpacity(LayoutAnimation &layoutAnimation, const jsi::Object &newStyle) const;
   void maybeUpdateWindowDimensions(const facebook::react::ShadowViewMutation &mutation) const;
-  ShadowView createLayoutAnimation(ShadowView &before, const ShadowView &after, const Tag parentTag) const;
+  ShadowView maybeCreateLayoutAnimation(ShadowView &before, const ShadowView &after, const Tag parentTag) const;
 
   bool startAnimationsRecursively(
       std::shared_ptr<LightNode> node,

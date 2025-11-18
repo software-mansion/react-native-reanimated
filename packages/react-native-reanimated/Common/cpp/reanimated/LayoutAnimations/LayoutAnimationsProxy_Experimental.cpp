@@ -974,7 +974,7 @@ void LayoutAnimationsProxy_Experimental::maybeUpdateWindowDimensions(
 
 // MARK: Start Animation
 
-ShadowView LayoutAnimationsProxy_Experimental::createLayoutAnimation(
+ShadowView LayoutAnimationsProxy_Experimental::maybeCreateLayoutAnimation(
     ShadowView &before,
     const ShadowView &after,
     const Tag parentTag) const {
@@ -1059,7 +1059,7 @@ void LayoutAnimationsProxy_Experimental::startExitingAnimation(const std::shared
     {
       auto &mutex = strongThis->mutex;
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-      oldView = strongThis->createLayoutAnimation(oldView, oldView, parentTag);
+      oldView = strongThis->maybeCreateLayoutAnimation(oldView, oldView, parentTag);
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
 
@@ -1100,7 +1100,7 @@ void LayoutAnimationsProxy_Experimental::startLayoutAnimation(const std::shared_
         {
           auto &mutex = strongThis->mutex;
           auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-          oldView = strongThis->createLayoutAnimation(oldView, newChildShadowView, parentTag);
+          oldView = strongThis->maybeCreateLayoutAnimation(oldView, newChildShadowView, parentTag);
           window = strongThis->surfaceManager.getWindow(surfaceId);
         }
 
@@ -1144,7 +1144,7 @@ void LayoutAnimationsProxy_Experimental::startSharedTransition(
     {
       auto &mutex = strongThis->mutex;
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-      oldView = strongThis->createLayoutAnimation(oldView, after, surfaceId);
+      oldView = strongThis->maybeCreateLayoutAnimation(oldView, after, surfaceId);
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
 
@@ -1177,7 +1177,7 @@ void LayoutAnimationsProxy_Experimental::startProgressTransition(
     {
       auto &mutex = strongThis->mutex;
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-      oldView = strongThis->createLayoutAnimation(oldView, after, surfaceId);
+      oldView = strongThis->maybeCreateLayoutAnimation(oldView, after, surfaceId);
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
   });
