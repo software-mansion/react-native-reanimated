@@ -75,6 +75,7 @@ export default class AnimatedComponent
   context!: React.ContextType<typeof SkipEnteringContext>;
   reanimatedID = id++;
   _sharedTransition?: SharedTransition;
+  _sharedTransitionTag?: string;
 
   constructor(
     ChildComponent: AnyComponent,
@@ -380,9 +381,25 @@ export default class AnimatedComponent
     if (!getStaticFeatureFlag('ENABLE_SHARED_ELEMENT_TRANSITIONS')) {
       return;
     }
+    console.log('Configuring shared transition');
     if (!this.props.sharedTransitionTag) {
+      if (this._sharedTransitionTag) {
+        console.log('Removing shared transition');
+        updateLayoutAnimations(
+          useNativeId ? this.reanimatedID : this.getComponentViewTag(),
+          useNativeId
+            ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_NATIVE_ID
+            : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+          undefined,
+          undefined,
+          undefined
+        );
+        this._sharedTransitionTag = undefined;
+      }
       return;
     }
+    console.log('Setting shared transition');
+    this._sharedTransitionTag = this.props.sharedTransitionTag;
     const sharedTransition =
       this.props.sharedTransitionStyle ??
       this._sharedTransition ??

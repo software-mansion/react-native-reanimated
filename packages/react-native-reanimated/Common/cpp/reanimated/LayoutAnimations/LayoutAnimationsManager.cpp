@@ -21,8 +21,15 @@ void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAn
       continue;
     }
     if (type == SHARED_ELEMENT_TRANSITION) {
-      sharedTransitions_[tag] = config;
-      sharedTransitionManager_->tagToName_[tag] = sharedTag;
+      if (config == nullptr) {
+        // TODO (future): if the view was transitioned (e.g. so we are on the second screen)
+        // and we remove the config, we should also bring back the view (probably using tagsToRestore_)
+        sharedTransitions_.erase(tag);
+        sharedTransitionManager_->tagToName_.erase(tag);
+      } else {
+        sharedTransitions_[tag] = config;
+        sharedTransitionManager_->tagToName_[tag] = sharedTag;
+      }
       continue;
     }
     if (config == nullptr) {
@@ -99,6 +106,7 @@ void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, con
     sharedTransitionManager_->tagToName_[tag] = sharedTransitionManager_->nativeIDToName_[nativeId];
   }
   sharedTransitionsForNativeID_.erase(nativeId);
+  sharedTransitionManager_->nativeIDToName_.erase(nativeId);
 }
 
 void LayoutAnimationsManager::transferSharedConfig(const Tag from, const Tag to) {
