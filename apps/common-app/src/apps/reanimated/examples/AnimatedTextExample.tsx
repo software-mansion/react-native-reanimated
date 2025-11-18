@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, {
+  interpolate,
   useAnimatedProps,
   useAnimatedStyle,
   useSharedValue,
@@ -21,53 +22,184 @@ export default function AnimatedTextExample() {
 
   useEffect(() => {
     sv.value = 0;
-    sv.value = withRepeat(withTiming(100, { duration: 1500 }), -1, true);
+    sv.value = withRepeat(withTiming(1, { duration: 1000 }), -1, true);
   }, [sv]);
 
-  const animatedProps = useAnimatedProps(() => {
+  const stringAnimatedProps = useAnimatedProps(() => {
     return {
-      text: Math.round(sv.value),
+      text: `${Math.round(sv.value * 100)}%`, // string
+    };
+  });
+
+  const numberAnimatedProps = useAnimatedProps(() => {
+    return {
+      text: Math.round(sv.value * 100), // number
+    };
+  });
+
+  const emptyAnimatedProps = useAnimatedProps(() => {
+    return {
+      text: sv.value > 0.5 ? 'Blink' : '', // empty string sometimes
     };
   });
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      fontSize: 20 + sv.value,
+      fontSize: interpolate(sv.value, [0, 1], [10, 20]),
     };
   });
 
+  const [show, setShow] = useState(false);
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.cyan}>
-        <Text style={styles.bold}>
+    <ScrollView contentContainerStyle={styles.container}>
+      {/* Animated text is a string */}
+      <View style={styles.row}>
+        <Text>Before</Text>
+        <Animated.Text
+          // @ts-expect-error TODO fix animated props type
+          animatedProps={stringAnimatedProps}
+          style={[styles.tabularNums, styles.color1]}
+        />
+        <Text>After</Text>
+      </View>
+
+      {/* Animated text is a number */}
+      <View style={styles.row}>
+        <Text>Before</Text>
+        <Animated.Text
+          // @ts-expect-error TODO fix animated props type
+          animatedProps={numberAnimatedProps}
+          style={[styles.tabularNums, styles.color2]}
+        />
+        <Text>After</Text>
+      </View>
+
+      {/* Animated text is an empty string during first render */}
+      <View style={styles.row}>
+        <Text>Before</Text>
+        <Animated.Text
+          // @ts-expect-error TODO fix animated props type
+          animatedProps={emptyAnimatedProps}
+          style={[styles.tabularNums, styles.color3]}
+        />
+        <Text>After</Text>
+      </View>
+
+      {/* With animated style */}
+      <View style={styles.row}>
+        <Text>Before</Text>
+        <Animated.Text
+          // @ts-expect-error TODO fix animated props type
+          animatedProps={numberAnimatedProps}
+          style={[styles.tabularNums, styles.color4, animatedStyle]}
+        />
+        <Text>After</Text>
+      </View>
+
+      {/* Inside another Text component */}
+      <View style={styles.row}>
+        <Text style={styles.italic}>
           Before
           <Animated.Text
             // @ts-expect-error TODO fix animated props type
-            animatedProps={animatedProps}
-            style={[styles.text, animatedStyle]}
+            animatedProps={numberAnimatedProps}
+            style={[styles.tabularNums, styles.color5]}
           />
+          After
         </Text>
-        After
-      </Text>
-    </View>
+      </View>
+
+      {/* Inside another Animated.Text */}
+      <View style={styles.row}>
+        <Animated.Text style={styles.italic}>
+          Before
+          <Animated.Text
+            // @ts-expect-error TODO fix animated props type
+            animatedProps={numberAnimatedProps}
+            style={[styles.tabularNums, styles.color6]}
+          />
+          After
+        </Animated.Text>
+      </View>
+
+      {/* Inside another Animated.Text with animatedStyle */}
+      <View style={styles.row}>
+        <Animated.Text style={[styles.italic, animatedStyle]}>
+          Before
+          <Animated.Text
+            // @ts-expect-error TODO fix animated props type
+            animatedProps={numberAnimatedProps}
+            style={[styles.tabularNums, styles.color7]}
+          />
+          After
+        </Animated.Text>
+      </View>
+
+      {/* Non-empty Animated.Text */}
+      <View style={styles.row}>
+        <Animated.Text>Lorem ipsum</Animated.Text>
+      </View>
+
+      {/* Non-empty Animated.Text with animated style */}
+      <View style={styles.row}>
+        <Animated.Text style={animatedStyle}>Lorem ipsum</Animated.Text>
+      </View>
+
+      {/* Non-empty Animated.Text with animated text (throws an error) */}
+      <View style={styles.row}>
+        {show && (
+          <Animated.Text
+            // @ts-expect-error TODO fix animated props type
+            animatedProps={stringAnimatedProps}>
+            Lorem ipsum
+          </Animated.Text>
+        )}
+        <Button
+          title="Render invalid Animated.Text"
+          onPress={() => setShow(true)}
+        />
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cyan: {
-    backgroundColor: 'limegreen',
+  row: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 30,
   },
-  bold: {
-    fontWeight: 'bold',
-  },
-  text: {
-    backgroundColor: 'lime',
+  tabularNums: {
     fontVariant: ['tabular-nums'],
+  },
+  italic: {
+    fontStyle: 'italic',
+  },
+  color1: {
+    backgroundColor: 'pink',
+  },
+  color2: {
+    backgroundColor: 'peachpuff',
+  },
+  color3: {
+    backgroundColor: 'khaki',
+  },
+  color4: {
+    backgroundColor: 'palegreen',
+  },
+  color5: {
+    backgroundColor: 'lightskyblue',
+  },
+  color6: {
+    backgroundColor: 'lightsteelblue',
+  },
+  color7: {
+    backgroundColor: 'thistle',
   },
 });
