@@ -438,10 +438,7 @@ export default class AnimatedComponent
       this.ChildComponent.displayName === 'Text' &&
       filteredProps.text !== undefined
     ) {
-      if (
-        filteredProps.children !== undefined &&
-        filteredProps.text !== undefined
-      ) {
+      if (filteredProps.children !== undefined) {
         throw new ReanimatedError(
           '<Animated.Text> component with animated prop `text` must be empty.'
         );
