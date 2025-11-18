@@ -38,6 +38,9 @@ class PropertyInterpolator {
  protected:
   const PropertyPath propertyPath_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+
+  std::string getPropertyPathString() const;
+  std::vector<std::pair<double, jsi::Value>> parseJSIKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) const;
 };
 
 class PropertyInterpolatorFactory {
