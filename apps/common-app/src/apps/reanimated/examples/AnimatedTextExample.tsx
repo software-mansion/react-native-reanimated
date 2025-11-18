@@ -15,7 +15,6 @@ import Animated, {
 // TODO: sync `text` prop updates back to React as `children` prop
 // TODO: support both string and number as text animated prop
 // TODO: convert docs examples from AnimatedTextInput to Animated.Text
-// TODO: fix Animated.Text inside Animated.Text
 
 export default function AnimatedTextExample() {
   const sv = useSharedValue(0);

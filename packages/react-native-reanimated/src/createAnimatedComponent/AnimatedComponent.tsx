@@ -434,7 +434,10 @@ export default class AnimatedComponent
         }
       : {};
 
-    if (this.ChildComponent.displayName === 'Text') {
+    if (
+      this.ChildComponent.displayName === 'Text' &&
+      filteredProps.text !== undefined
+    ) {
       if (
         filteredProps.children !== undefined &&
         filteredProps.text !== undefined
@@ -450,7 +453,9 @@ export default class AnimatedComponent
       filteredProps.children =
         filteredProps.text === ''
           ? '\u200b' // use zero-width space when text is empty
-          : String(filteredProps.text);
+          : typeof filteredProps.text === 'number'
+            ? String(filteredProps.text)
+            : filteredProps.text;
     }
 
     return super.render({
