@@ -123,4 +123,9 @@ std::optional<std::pair<TransformOperations, TransformOperations>> TransformsSty
   return std::make_pair(fromOperationsResult, toOperationsResult);
 }
 
+std::shared_ptr<TransformOperation> TransformsStyleInterpolator::getDefaultOperationOfType(TransformOp type) const {
+  return std::static_pointer_cast<TransformOperation>(
+      interpolators_->at(static_cast<size_t>(type))->getDefaultOperation());
+}
+
 } // namespace reanimated::css

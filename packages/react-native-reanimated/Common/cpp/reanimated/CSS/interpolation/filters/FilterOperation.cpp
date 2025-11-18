@@ -21,6 +21,10 @@ namespace reanimated::css {
 
 FilterOperation::FilterOperation(FilterOp type) : StyleOperation(static_cast<uint8_t>(type)) {}
 
+std::string FilterOperation::getOperationName() const {
+  return getFilterOperationName(static_cast<FilterOp>(type));
+}
+
 std::shared_ptr<FilterOperation> FilterOperation::fromJSIValue(jsi::Runtime &rt, const jsi::Value &value) {
   if (!value.isObject()) {
     throw std::invalid_argument("[Reanimated] FilterOperation must be an object.");
