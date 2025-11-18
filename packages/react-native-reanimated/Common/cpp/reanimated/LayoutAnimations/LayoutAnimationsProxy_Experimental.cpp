@@ -513,6 +513,7 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
     node->state = ANIMATING;
     startExitingAnimation(node);
   } else {
+    // TODO (future): add proper cleanup
     //    layoutAnimationsManager_->clearLayoutAnimationConfig(node->tag);
   }
 
