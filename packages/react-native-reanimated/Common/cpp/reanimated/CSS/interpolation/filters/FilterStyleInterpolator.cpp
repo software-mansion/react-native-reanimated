@@ -8,7 +8,6 @@
 
 namespace reanimated::css {
 
-// TODO - check if an empty array works
 const folly::dynamic defaultStyleValueDynamic = folly::dynamic::array();
 
 FilterStyleInterpolator::FilterStyleInterpolator(
