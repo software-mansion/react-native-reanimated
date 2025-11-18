@@ -22,7 +22,7 @@ export class SharedTransition
   build = (): LayoutAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     if (!this.durationV) {
-      this.durationV = 300;
+      this.durationV = 500;
     }
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
