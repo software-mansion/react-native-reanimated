@@ -126,12 +126,10 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
         if (!strongThis) {
           return;
         }
-        std::optional<SurfaceId> surfaceId;
-        if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-          surfaceId = strongThis->layoutAnimationsProxyExperimental_->progressLayoutAnimation(tag, newStyle);
-        } else {
-          surfaceId = strongThis->layoutAnimationsProxyLegacy_->progressLayoutAnimation(tag, newStyle);
+        if (!strongThis->layoutAnimationsProxy_) {
+          return;
         }
+        auto surfaceId = strongThis->layoutAnimationsProxy_->progressLayoutAnimation(tag, newStyle);
         if (!surfaceId) {
           return;
         }
@@ -153,12 +151,10 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       return;
     }
 
-    std::optional<SurfaceId> surfaceId;
-    if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-      surfaceId = strongThis->layoutAnimationsProxyExperimental_->endLayoutAnimation(tag, shouldRemove);
-    } else {
-      surfaceId = strongThis->layoutAnimationsProxyLegacy_->endLayoutAnimation(tag, shouldRemove);
+    if (!strongThis->layoutAnimationsProxy_) {
+      return;
     }
+    auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
 
     if (!strongThis->layoutAnimationRenderRequested_) {
       strongThis->layoutAnimationRenderRequested_ = true;
@@ -514,7 +510,10 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
       auto closing = static_cast<bool>(payload.getProperty(rt, "closing").asNumber());
       auto goingForward = static_cast<bool>(payload.getProperty(rt, "goingForward").asNumber());
 
-      auto surfaceId = layoutAnimationsProxyExperimental_->onTransitionProgress(tag, progress, closing, goingForward);
+      if (!layoutAnimationsProxy_) {
+        return false;
+      }
+      auto surfaceId = layoutAnimationsProxy_->onTransitionProgress(tag, progress, closing, goingForward);
       if (!surfaceId) {
         return false;
       }
@@ -523,7 +522,10 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
           [](const ShadowTree &shadowTree, bool &) { shadowTree.notifyDelegatesOfUpdates(); });
       return false;
     } else if (eventType == "onGestureCancel") {
-      auto surfaceId = layoutAnimationsProxyExperimental_->onGestureCancel();
+      if (!layoutAnimationsProxy_) {
+        return false;
+      }
+      auto surfaceId = layoutAnimationsProxy_->onGestureCancel();
       if (!surfaceId) {
         return false;
       }
@@ -1257,8 +1259,7 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
     strongThis->requestFlushRegistry();
   };
   mountHook_ = std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, request);
-  commitHook_ = std::make_shared<ReanimatedCommitHook>(
-      uiManager_, updatesRegistryManager_, layoutAnimationsProxyLegacy_, layoutAnimationsProxyExperimental_);
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
@@ -1271,25 +1272,21 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
 
   if (componentDescriptorRegistry) {
     if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-      layoutAnimationsProxyExperimental_ =
-          std::make_shared<reanimated_experimental::LayoutAnimationsProxy_Experimental>(
-              layoutAnimationsManager_,
-              componentDescriptorRegistry,
-              scheduler->getContextContainer(),
-              workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
-              workletsModuleProxy_->getUIScheduler()
+      layoutAnimationsProxy_ = std::make_shared<reanimated_experimental::LayoutAnimationsProxy_Experimental>(
+          layoutAnimationsManager_,
+          componentDescriptorRegistry,
+          scheduler->getContextContainer(),
+          workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
+          workletsModuleProxy_->getUIScheduler()
 #ifdef ANDROID
-                  ,
-              filterUnmountedTagsFunction_,
-              uiManager_,
-              jsInvoker_
+              ,
+          filterUnmountedTagsFunction_,
+          uiManager_,
+          jsInvoker_
 #endif
-          );
-#ifdef __APPLE__
-      layoutAnimationsProxyExperimental_->setForceScreenSnapshotFunction(forceScreenSnapshot_);
-#endif
+      );
     } else {
-      layoutAnimationsProxyLegacy_ = std::make_shared<LayoutAnimationsProxy_Legacy>(
+      layoutAnimationsProxy_ = std::make_shared<LayoutAnimationsProxy_Legacy>(
           layoutAnimationsManager_,
           componentDescriptorRegistry,
           scheduler->getContextContainer(),
@@ -1303,6 +1300,11 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
 #endif
       );
     }
+#ifdef __APPLE__
+    if (layoutAnimationsProxy_) {
+      layoutAnimationsProxy_->setForceScreenSnapshotFunction(forceScreenSnapshot_);
+    }
+#endif
   }
 }
 

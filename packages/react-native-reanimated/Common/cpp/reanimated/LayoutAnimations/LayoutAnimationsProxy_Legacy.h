@@ -5,6 +5,7 @@
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <worklets/Tools/UIScheduler.h>
 
@@ -174,7 +175,7 @@ struct LayoutAnimation {
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 };
 
-struct LayoutAnimationsProxy_Legacy : public MountingOverrideDelegate,
+struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxy,
                                       public std::enable_shared_from_this<LayoutAnimationsProxy_Legacy> {
   mutable std::unordered_map<Tag, std::shared_ptr<Node>> nodeForTag_;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
@@ -226,8 +227,8 @@ struct LayoutAnimationsProxy_Legacy : public MountingOverrideDelegate,
   void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation) const;
 
   void transferConfigFromNativeID(const std::string nativeId, const int tag) const;
-  std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle);
-  std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove);
+  std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) override;
+  std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
   void maybeCancelAnimation(const int tag) const;
 
   void parseRemoveMutations(

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
@@ -36,7 +37,7 @@ struct LayoutAnimation {
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 };
 
-struct LayoutAnimationsProxy_Experimental : public MountingOverrideDelegate,
+struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxy,
                                             public std::enable_shared_from_this<LayoutAnimationsProxy_Experimental> {
   mutable std::unordered_map<Tag, std::shared_ptr<Node>> nodeForTag_;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
@@ -139,7 +140,7 @@ struct LayoutAnimationsProxy_Experimental : public MountingOverrideDelegate,
       SurfaceId surfaceId) const;
 
 #ifdef __APPLE__
-  void setForceScreenSnapshotFunction(ForceScreenSnapshotFunction f) {
+  void setForceScreenSnapshotFunction(ForceScreenSnapshotFunction f) override {
     forceScreenSnapshot_ = std::move(f);
   }
 #endif
@@ -150,10 +151,10 @@ struct LayoutAnimationsProxy_Experimental : public MountingOverrideDelegate,
       const PropsParserContext &propsParserContext) const;
 
   void transferConfigFromNativeID(const std::string nativeId, const int tag) const;
-  std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle);
-  std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove);
-  std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward);
-  std::optional<SurfaceId> onGestureCancel();
+  std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) override;
+  std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
+  std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward) override;
+  std::optional<SurfaceId> onGestureCancel() override;
 
   void maybeCancelAnimation(const int tag) const;
 

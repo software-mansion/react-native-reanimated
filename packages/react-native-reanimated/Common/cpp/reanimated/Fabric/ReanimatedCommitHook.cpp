@@ -17,13 +17,10 @@ namespace reanimated {
 ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-    const std::shared_ptr<LayoutAnimationsProxy_Legacy> &layoutAnimationsProxyLegacy,
-    const std::shared_ptr<reanimated_experimental::LayoutAnimationsProxy_Experimental>
-        &layoutAnimationsProxyExperimental)
+    const std::shared_ptr<LayoutAnimationsProxy> &layoutAnimationsProxy)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
-      layoutAnimationsProxyExperimental_(layoutAnimationsProxyExperimental),
-      layoutAnimationsProxyLegacy_(layoutAnimationsProxyLegacy) {
+      layoutAnimationsProxy_(layoutAnimationsProxy) {
   uiManager_->registerCommitHook(*this);
 }
 
@@ -33,7 +30,7 @@ ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
 
 void ReanimatedCommitHook::maybeInitializeLayoutAnimations(SurfaceId surfaceId) {
   auto lock = std::unique_lock<std::mutex>(mutex_);
-  if (surfaceId > currentMaxSurfaceId_) {
+  if (surfaceId > currentMaxSurfaceId_ && layoutAnimationsProxy_) {
     // when a new surfaceId is observed we call setMountingOverrideDelegate
     // for all yet unseen surfaces
     uiManager_->getShadowTreeRegistry().enumerate(
@@ -44,12 +41,7 @@ void ReanimatedCommitHook::maybeInitializeLayoutAnimations(SurfaceId surfaceId) 
             // shouldn't invoke it twice for the same surface
             return;
           }
-          if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-            shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
-                strongThis->layoutAnimationsProxyExperimental_);
-          } else {
-            shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(strongThis->layoutAnimationsProxyLegacy_);
-          }
+          shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(strongThis->layoutAnimationsProxy_);
         });
     currentMaxSurfaceId_ = surfaceId;
   }
