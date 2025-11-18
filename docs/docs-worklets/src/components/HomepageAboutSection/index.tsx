@@ -12,7 +12,7 @@ export default function HomepageAboutSection(): JSX.Element {
       <div className={styles.videoContainer}>
         <iframe
           allowFullScreen
-          src="https://drive.google.com/file/d/1Js57i7_mnN41mqbIRU3NX3DIHGtcUMEU/preview"
+          src="https://www.youtube.com/embed/SHEyzLJ6hGY"
         />
       </div>
     </div>
