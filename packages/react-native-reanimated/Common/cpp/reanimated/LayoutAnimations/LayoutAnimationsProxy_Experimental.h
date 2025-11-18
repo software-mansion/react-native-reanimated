@@ -124,8 +124,8 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
       SurfaceId surfaceId) const;
 
 #ifdef __APPLE__
-  void setForceScreenSnapshotFunction(ForceScreenSnapshotFunction f) {
-    forceScreenSnapshot_ = std::move(f);
+  void setForceScreenSnapshotFunction(ForceScreenSnapshotFunction forceScreenSnapshot) {
+    forceScreenSnapshot_ = std::move(forceScreenSnapshot);
   }
 #endif
 
