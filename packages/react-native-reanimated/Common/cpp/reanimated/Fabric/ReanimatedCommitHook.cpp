@@ -63,7 +63,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(newRootShadowNode);
 
   if (reaShadowNode->hasReanimatedCommitTrait()) {
-    // ShadowTree commited by Reanimated, no need to apply updates from
+    // ShadowTree committed by Reanimated, no need to apply updates from
     // the updates registry manager
     reaShadowNode->unsetReanimatedCommitTrait();
     reaShadowNode->setReanimatedMountTrait();
@@ -81,7 +81,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   }
 #endif
 
-  // ShadowTree not commited by Reanimated, apply updates from the updates
+  // ShadowTree not committed by Reanimated, apply updates from the updates
   // registry manager
   reaShadowNode->unsetReanimatedMountTrait();
   RootShadowNode::Unshared rootNode = newRootShadowNode;
