@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/interpolation/filters/FilterOperationInterpolator.h>
+#include <reanimated/CSS/interpolation/filters/FilterOperation.h>
 #include <reanimated/CSS/interpolation/operations/OperationsStyleInterpolator.h>
 
 #include <memory>

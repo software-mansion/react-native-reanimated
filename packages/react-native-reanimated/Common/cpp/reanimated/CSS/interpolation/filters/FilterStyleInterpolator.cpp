@@ -1,4 +1,3 @@
-#include <reanimated/CSS/interpolation/filters/FilterOperation.h>
 #include <reanimated/CSS/interpolation/filters/FilterStyleInterpolator.h>
 
 #include <algorithm>

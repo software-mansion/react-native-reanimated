@@ -4,7 +4,6 @@
 #include <reanimated/CSS/interpolation/configs.h>
 #include <reanimated/CSS/interpolation/filters/FilterOperation.h>
 #include <reanimated/CSS/interpolation/filters/FilterOperationInterpolator.h>
-#include <reanimated/CSS/interpolation/filters/FilterStyleInterpolator.h>
 #include <reanimated/CSS/interpolation/groups/ArrayPropertiesInterpolator.h>
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
 #include <reanimated/CSS/interpolation/operations/StyleOperationInterpolator.h>

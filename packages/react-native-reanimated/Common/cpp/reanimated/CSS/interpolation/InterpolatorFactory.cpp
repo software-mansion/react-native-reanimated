@@ -1,4 +1,5 @@
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
+#include <reanimated/CSS/interpolation/filters/FilterStyleInterpolator.h>
 
 #include <memory>
 #include <string>
