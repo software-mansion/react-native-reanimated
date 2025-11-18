@@ -16,6 +16,8 @@
 #include <vector>
 
 namespace reanimated_experimental {
+using enum LayoutAnimationType;
+using enum ExitingState;
 
 // MARK: MountingOverrideDelegate
 

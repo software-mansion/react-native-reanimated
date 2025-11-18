@@ -320,6 +320,10 @@ const appearanceRoutes = {
       },
     },
   },
+  Filter: {
+    name: 'Filter',
+    Component: baseAnimatedProperties.appearance.Filter,
+  },
   Others: {
     name: 'Others',
     routes: {
@@ -459,11 +463,6 @@ const othersRoutes = {
         Component: baseAnimatedProperties.others.cursor.PointerEvents,
       },
     },
-  },
-  Filter: {
-    name: 'Filter',
-    labelTypes: ['web'],
-    Component: baseAnimatedProperties.others.Filter,
   },
 } satisfies Routes;
 

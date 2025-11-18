@@ -33,6 +33,20 @@ module.exports = {
       },
     },
     {
+      types: ['inserted'],
+      style: {
+        color: 'var(--codeblock-diff-inserted-color-light)',
+        backgroundColor: 'var(--codeblock-diff-inserted-background-light)',
+      },
+    },
+    {
+      types: ['deleted'],
+      style: {
+        color: 'var(--codeblock-diff-deleted-color-light)',
+        backgroundColor: 'var(--codeblock-diff-deleted-background-light)',
+      },
+    },
+    {
       types: [
         'entity',
         'url',
@@ -42,7 +56,6 @@ module.exports = {
         'variable',
         'constant',
         'regex',
-        'inserted',
         'operator',
         'attr-value',
       ],
@@ -51,7 +64,7 @@ module.exports = {
       },
     },
     {
-      types: ['function', 'function-variable', 'deleted'],
+      types: ['function', 'function-variable'],
       style: {
         color: 'var(--swm-purple-light-100)',
       },

@@ -1,6 +1,10 @@
-import React from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
-import { getStaticFeatureFlag as getStaticFeatureFlagReanimated } from 'react-native-reanimated';
+import React, { useCallback, useReducer } from 'react';
+import { Button, Platform, StyleSheet, Text, View } from 'react-native';
+import {
+  getDynamicFeatureFlag,
+  getStaticFeatureFlag as getStaticFeatureFlagReanimated,
+  setDynamicFeatureFlag,
+} from 'react-native-reanimated';
 import { getStaticFeatureFlag as getStaticFeatureFlagWorklets } from 'react-native-worklets';
 
 function isWeb() {
@@ -46,6 +50,16 @@ function getReactNativeVersion() {
 }
 
 export default function AboutExample() {
+  const [, forceUpdate] = useReducer((x) => x + 1, 0);
+
+  const handleToggleExampleDynamicFlag = useCallback(() => {
+    setDynamicFeatureFlag(
+      'EXAMPLE_DYNAMIC_FLAG',
+      !getDynamicFeatureFlag('EXAMPLE_DYNAMIC_FLAG')
+    );
+    forceUpdate();
+  }, [forceUpdate]);
+
   return (
     <View style={styles.container}>
       <Text style={styles.text}>
@@ -128,6 +142,16 @@ export default function AboutExample() {
               ? 'Enabled'
               : 'Disabled'}
           </Text>
+          <Text style={styles.text}>
+            <Text style={styles.bold}>EXAMPLE_DYNAMIC_FLAG:</Text>{' '}
+            {getDynamicFeatureFlag('EXAMPLE_DYNAMIC_FLAG')
+              ? 'Enabled'
+              : 'Disabled'}
+          </Text>
+          <Button
+            title={`Toggle EXAMPLE_DYNAMIC_FLAG`}
+            onPress={handleToggleExampleDynamicFlag}
+          />
         </>
       )}
     </View>

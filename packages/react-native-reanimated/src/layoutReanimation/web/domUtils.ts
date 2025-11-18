@@ -174,7 +174,7 @@ function findDescendantWithExitingAnimation(
     return;
   }
 
-  if (node.reanimatedDummy && node.removedAfterAnimation === undefined) {
+  if (node.isDummy && node.removedAfterAnimation === undefined) {
     reattachElementToAncestor(node, root);
   }
 

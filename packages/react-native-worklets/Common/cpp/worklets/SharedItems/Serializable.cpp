@@ -259,7 +259,7 @@ jsi::Value RetainingSerializable<BaseClass>::toJSValue(jsi::Runtime &rt) {
 
 SerializableJSRef::~SerializableJSRef() {}
 
-SerializableArray::SerializableArray(jsi::Runtime &rt, const jsi::Array &array) : Serializable(ArrayType) {
+SerializableArray::SerializableArray(jsi::Runtime &rt, const jsi::Array &array) : Serializable(ValueType::ArrayType) {
   auto size = array.size(rt);
   data_.reserve(size);
   for (size_t i = 0; i < size; i++) {
@@ -284,7 +284,8 @@ jsi::Value SerializableArrayBuffer::toJSValue(jsi::Runtime &rt) {
   return arrayBuffer;
 }
 
-SerializableObject::SerializableObject(jsi::Runtime &rt, const jsi::Object &object) : Serializable(ObjectType) {
+SerializableObject::SerializableObject(jsi::Runtime &rt, const jsi::Object &object)
+    : Serializable(ValueType::ObjectType) {
   auto propertyNames = object.getPropertyNames(rt);
   auto size = propertyNames.size(rt);
   data_.reserve(size);
@@ -317,7 +318,7 @@ jsi::Value SerializableObject::toJSValue(jsi::Runtime &rt) {
 }
 
 SerializableMap::SerializableMap(jsi::Runtime &rt, const jsi::Array &keys, const jsi::Array &values)
-    : Serializable(MapType) {
+    : Serializable(ValueType::MapType) {
   auto size = keys.size(rt);
   react_native_assert(size == values.size(rt) && "Keys and values arrays must have the same size.");
   data_.reserve(size);
@@ -343,7 +344,7 @@ jsi::Value SerializableMap::toJSValue(jsi::Runtime &rt) {
   return map;
 }
 
-SerializableSet::SerializableSet(jsi::Runtime &rt, const jsi::Array &values) : Serializable(SetType) {
+SerializableSet::SerializableSet(jsi::Runtime &rt, const jsi::Array &values) : Serializable(ValueType::SetType) {
   auto size = values.size(rt);
   data_.reserve(size);
   for (size_t i = 0; i < size; i++) {
@@ -440,18 +441,22 @@ jsi::Value SerializableString::toJSValue(jsi::Runtime &rt) {
 }
 
 jsi::Value SerializableBigInt::toJSValue(jsi::Runtime &rt) {
-  return rt.global().getPropertyAsFunction(rt, "BigInt").call(rt, jsi::String::createFromUtf8(rt, string_));
+  if (fastValue_.has_value()) {
+    return jsi::BigInt::fromInt64(rt, fastValue_.value());
+  } else {
+    return rt.global().getPropertyAsFunction(rt, "BigInt").call(rt, jsi::String::createFromUtf8(rt, slowValue_));
+  }
 }
 
 jsi::Value SerializableScalar::toJSValue(jsi::Runtime &) {
   switch (valueType_) {
-    case Serializable::UndefinedType:
+    case Serializable::ValueType::UndefinedType:
       return jsi::Value();
-    case Serializable::NullType:
+    case Serializable::ValueType::NullType:
       return jsi::Value(nullptr);
-    case Serializable::BooleanType:
+    case Serializable::ValueType::BooleanType:
       return jsi::Value(data_.boolean);
-    case Serializable::NumberType:
+    case Serializable::ValueType::NumberType:
       return jsi::Value(data_.number);
     default:
       throw std::runtime_error("[Worklets] Attempted to convert object that's not of a scalar type.");

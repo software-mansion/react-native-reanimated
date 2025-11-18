@@ -1,9 +1,12 @@
 import Animated, { css } from 'react-native-reanimated';
 
 import { TestExampleScreen } from '@/apps/css/components';
+import type { ExampleScreenProps } from '@/apps/css/navigation/types';
 import { colors, flex } from '@/theme';
 
-export default function IterationCountAndFillMode() {
+export default function IterationCountAndFillMode({
+  labelTypes,
+}: ExampleScreenProps) {
   return (
     <TestExampleScreen
       sections={[
@@ -23,7 +26,7 @@ export default function IterationCountAndFillMode() {
             },
           ],
           example: <Example />,
-          labelTypes: ['needsFix'],
+          labelTypes,
           title: 'Iteration Count and Fill Mode',
           webExampleLink:
             'https://codepen.io/Mateusz-opaciski/pen/YzmbwXM?editors=1100',
