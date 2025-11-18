@@ -426,6 +426,8 @@ Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
   auto shouldCreateContainer = (containerTag == -1 || !layoutAnimations_.contains(containerTag));
 
   if (shouldCreateContainer) {
+    containerTag = containerTag_;
+    containerTag_ += 2;
     auto &root = lightNodes_[surfaceId];
     ShadowView container = before;
     sharedTransitionManager_->tagToName_[containerTag] = sharedTag;
@@ -435,10 +437,9 @@ Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
     node->current = std::move(container);
     root->children.push_back(node);
     containersToInsert_.push_back(node);
-    lightNodes_[containerTag_] = std::move(node);
+    lightNodes_[containerTag] = std::move(node);
 
-    sharedTransitionManager_->containerTags_[sharedTag] = containerTag_;
-    containerTag_ += 2;
+    sharedTransitionManager_->containerTags_[sharedTag] = containerTag;
   }
   return containerTag;
 }
