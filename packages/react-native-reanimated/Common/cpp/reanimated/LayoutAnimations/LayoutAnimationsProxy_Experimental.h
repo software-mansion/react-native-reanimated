@@ -1,7 +1,7 @@
 #pragma once
 
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
@@ -28,19 +28,9 @@ class ReanimatedModuleProxy;
 using namespace facebook;
 using namespace reanimated;
 
-struct LayoutAnimation {
-  ShadowView finalView, currentView, startView;
-  Tag parentTag;
-  std::optional<double> opacity;
-  int count = 1;
-  bool isViewAlreadyMounted = false;
-  LayoutAnimation &operator=(const LayoutAnimation &other) = default;
-};
-
-struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxy,
+struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
                                             public std::enable_shared_from_this<LayoutAnimationsProxy_Experimental> {
   mutable std::unordered_map<Tag, std::shared_ptr<Node>> nodeForTag_;
-  mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
   mutable std::recursive_mutex mutex;
   mutable SurfaceManager surfaceManager;
   mutable std::unordered_set<std::shared_ptr<LightNode>> deadNodes;
@@ -64,18 +54,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxy,
   mutable std::vector<std::shared_ptr<LightNode>> containersToInsert_;
   mutable std::unordered_map<Tag, react::Transform> transformForNode_;
 
-  mutable std::vector<Tag> finishedAnimationTags_;
   mutable ForceScreenSnapshotFunction forceScreenSnapshot_;
-  std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
-  std::shared_ptr<const ContextContainer> contextContainer_;
-  SharedComponentDescriptorRegistry componentDescriptorRegistry_;
-  jsi::Runtime &uiRuntime_;
-  const std::shared_ptr<UIScheduler> uiScheduler_;
-  PreserveMountedTagsFunction preserveMountedTags_;
-#ifdef ANDROID
-  std::shared_ptr<UIManager> uiManager_;
-  std::shared_ptr<CallInvoker> jsInvoker_;
-#endif
 
   LayoutAnimationsProxy_Experimental(
       std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager,
@@ -90,19 +69,20 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxy,
       std::shared_ptr<CallInvoker> jsInvoker
 #endif
       )
-      : sharedTransitionManager_(layoutAnimationsManager->getSharedTransitionManager()),
-        layoutAnimationsManager_(layoutAnimationsManager),
-        contextContainer_(contextContainer),
-        componentDescriptorRegistry_(componentDescriptorRegistry),
-        uiRuntime_(uiRuntime),
-        uiScheduler_(uiScheduler)
+      : LayoutAnimationsProxyCommon(
+            layoutAnimationsManager,
+            componentDescriptorRegistry,
+            contextContainer,
+            uiRuntime,
+            uiScheduler
 #ifdef ANDROID
-        ,
-        preserveMountedTags_(filterUnmountedTagsFunction),
-        uiManager_(uiManager),
-        jsInvoker_(jsInvoker)
-#endif // ANDROID
-  {
+            ,
+            filterUnmountedTagsFunction,
+            uiManager,
+            jsInvoker
+#endif
+            ),
+        sharedTransitionManager_(layoutAnimationsManager->getSharedTransitionManager()) {
     // TODO (before merging): remove hardcoded tags - find a generic solution
     lightNodes_[1] = std::make_shared<LightNode>();
     lightNodes_[11] = std::make_shared<LightNode>();
@@ -140,7 +120,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxy,
       SurfaceId surfaceId) const;
 
 #ifdef __APPLE__
-  void setForceScreenSnapshotFunction(ForceScreenSnapshotFunction f) override {
+  void setForceScreenSnapshotFunction(ForceScreenSnapshotFunction f) {
     forceScreenSnapshot_ = std::move(f);
   }
 #endif
@@ -199,7 +179,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxy,
   ShadowView cloneViewWithoutOpacity(const ShadowView &shadowView, const PropsParserContext &propsParserContext) const;
 
   ShadowView cloneViewWithOpacity(const ShadowView &shadowView, const PropsParserContext &propsParserContext) const;
-  void maybeRestoreOpacity(LayoutAnimation &layoutAnimation, const jsi::Object &newStyle) const;
+  void maybeRestoreOpacity(reanimated::LayoutAnimation &layoutAnimation, const jsi::Object &newStyle) const;
   void maybeUpdateWindowDimensions(const facebook::react::ShadowViewMutation &mutation) const;
   ShadowView maybeCreateLayoutAnimation(ShadowView &before, const ShadowView &after, const Tag parentTag) const;
 
@@ -216,10 +196,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxy,
       ShadowViewMutationList &cleanupMutations) const;
 
   const ComponentDescriptor &getComponentDescriptorForShadowView(const ShadowView &shadowView) const;
-#ifdef ANDROID
-  void restoreOpacityInCaseOfFlakyEnteringAnimation(SurfaceId surfaceId) const;
-  const ShadowNode *findInShadowTreeByTag(const ShadowNode &node, Tag tag) const;
-#endif // ANDROID
+
   // MountingOverrideDelegate
 
   bool shouldOverridePullTransaction() const override;

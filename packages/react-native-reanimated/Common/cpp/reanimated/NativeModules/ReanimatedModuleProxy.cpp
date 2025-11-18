@@ -1272,19 +1272,24 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
 
   if (componentDescriptorRegistry) {
     if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-      layoutAnimationsProxy_ = std::make_shared<reanimated_experimental::LayoutAnimationsProxy_Experimental>(
-          layoutAnimationsManager_,
-          componentDescriptorRegistry,
-          scheduler->getContextContainer(),
-          workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
-          workletsModuleProxy_->getUIScheduler()
+      auto layoutAnimationsProxyExperimental =
+          std::make_shared<reanimated_experimental::LayoutAnimationsProxy_Experimental>(
+              layoutAnimationsManager_,
+              componentDescriptorRegistry,
+              scheduler->getContextContainer(),
+              workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
+              workletsModuleProxy_->getUIScheduler()
 #ifdef ANDROID
-              ,
-          filterUnmountedTagsFunction_,
-          uiManager_,
-          jsInvoker_
+                  ,
+              filterUnmountedTagsFunction_,
+              uiManager_,
+              jsInvoker_
 #endif
-      );
+          );
+#ifdef __APPLE__
+      layoutAnimationsProxyExperimental->setForceScreenSnapshotFunction(forceScreenSnapshot_);
+#endif
+      layoutAnimationsProxy_ = std::move(layoutAnimationsProxyExperimental);
     } else {
       layoutAnimationsProxy_ = std::make_shared<LayoutAnimationsProxy_Legacy>(
           layoutAnimationsManager_,
@@ -1300,11 +1305,6 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
 #endif
       );
     }
-#ifdef __APPLE__
-    if (layoutAnimationsProxy_) {
-      layoutAnimationsProxy_->setForceScreenSnapshotFunction(forceScreenSnapshot_);
-    }
-#endif
   }
 }
 

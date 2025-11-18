@@ -17,7 +17,7 @@ namespace reanimated {
 ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-    const std::shared_ptr<LayoutAnimationsProxy> &layoutAnimationsProxy)
+    const std::shared_ptr<LayoutAnimationsProxyCommon> &layoutAnimationsProxy)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
       layoutAnimationsProxy_(layoutAnimationsProxy) {

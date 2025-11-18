@@ -5,7 +5,7 @@
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <worklets/Tools/UIScheduler.h>
 
@@ -21,8 +21,6 @@ namespace reanimated {
 class ReanimatedModuleProxy;
 
 using namespace facebook;
-
-#pragma once
 
 struct Rect {
   double width, height;
@@ -166,34 +164,13 @@ static inline void mergeAndSwap(
   std::swap(A, merged);
 }
 
-struct LayoutAnimation {
-  std::shared_ptr<ShadowView> finalView, currentView;
-  Tag parentTag;
-  std::optional<double> opacity;
-  bool isViewAlreadyMounted = false;
-  int count = 1;
-  LayoutAnimation &operator=(const LayoutAnimation &other) = default;
-};
-
-struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxy,
+struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
                                       public std::enable_shared_from_this<LayoutAnimationsProxy_Legacy> {
   mutable std::unordered_map<Tag, std::shared_ptr<Node>> nodeForTag_;
-  mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
   mutable std::recursive_mutex mutex;
   mutable SurfaceManager surfaceManager;
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
   mutable std::unordered_map<Tag, int> leastRemoved;
-  mutable std::vector<Tag> finishedAnimationTags_;
-  std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
-  std::shared_ptr<const ContextContainer> contextContainer_;
-  SharedComponentDescriptorRegistry componentDescriptorRegistry_;
-  jsi::Runtime &uiRuntime_;
-  const std::shared_ptr<UIScheduler> uiScheduler_;
-  PreserveMountedTagsFunction preserveMountedTags_;
-#ifdef ANDROID
-  std::shared_ptr<UIManager> uiManager_;
-  std::shared_ptr<CallInvoker> jsInvoker_;
-#endif
 
   LayoutAnimationsProxy_Legacy(
       std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager,
@@ -208,18 +185,19 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxy,
       std::shared_ptr<CallInvoker> jsInvoker
 #endif
       )
-      : layoutAnimationsManager_(layoutAnimationsManager),
-        contextContainer_(contextContainer),
-        componentDescriptorRegistry_(componentDescriptorRegistry),
-        uiRuntime_(uiRuntime),
-        uiScheduler_(uiScheduler)
+      : LayoutAnimationsProxyCommon(
+            layoutAnimationsManager,
+            componentDescriptorRegistry,
+            contextContainer,
+            uiRuntime,
+            uiScheduler
 #ifdef ANDROID
-        ,
-        preserveMountedTags_(filterUnmountedTagsFunction),
-        uiManager_(uiManager),
-        jsInvoker_(jsInvoker)
-#endif // ANDROID
-  {
+            ,
+            filterUnmountedTagsFunction,
+            uiManager,
+            jsInvoker
+#endif
+        ) {
   }
 
   void startEnteringAnimation(const int tag, ShadowViewMutation &mutation) const;
@@ -273,10 +251,6 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxy,
       ShadowViewMutationList &cleanupMutations) const;
 
   const ComponentDescriptor &getComponentDescriptorForShadowView(const ShadowView &shadowView) const;
-#ifdef ANDROID
-  void restoreOpacityInCaseOfFlakyEnteringAnimation(SurfaceId surfaceId) const;
-  const ShadowNode *findInShadowTreeByTag(const ShadowNode &node, Tag tag) const;
-#endif // ANDROID
   // MountingOverrideDelegate
 
   bool shouldOverridePullTransaction() const override;

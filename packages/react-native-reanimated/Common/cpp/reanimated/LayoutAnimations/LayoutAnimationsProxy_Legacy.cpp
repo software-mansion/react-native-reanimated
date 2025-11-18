@@ -77,17 +77,17 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::progressLayoutAnimation(i
 
   auto rawProps = std::make_shared<RawProps>(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
 
-  PropsParserContext propsParserContext{layoutAnimation.finalView->surfaceId, *contextContainer_};
+  PropsParserContext propsParserContext{layoutAnimation.finalView.surfaceId, *contextContainer_};
 #ifdef RN_SERIALIZABLE_STATE
   rawProps = std::make_shared<RawProps>(
       folly::dynamic::merge(layoutAnimation.finalView->props->rawProps, (folly::dynamic)*rawProps));
 #endif
-  auto newProps = getComponentDescriptorForShadowView(*layoutAnimation.finalView)
-                      .cloneProps(propsParserContext, layoutAnimation.finalView->props, std::move(*rawProps));
-  auto &updateMap = surfaceManager.getUpdateMap(layoutAnimation.finalView->surfaceId);
+  auto newProps = getComponentDescriptorForShadowView(layoutAnimation.finalView)
+                      .cloneProps(propsParserContext, layoutAnimation.finalView.props, std::move(*rawProps));
+  auto &updateMap = surfaceManager.getUpdateMap(layoutAnimation.finalView.surfaceId);
   updateMap.insert_or_assign(tag, UpdateValues{newProps, Frame(uiRuntime_, newStyle)});
 
-  return layoutAnimation.finalView->surfaceId;
+  return layoutAnimation.finalView.surfaceId;
 }
 
 std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int tag, bool shouldRemove) {
@@ -112,7 +112,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int ta
     return {};
   }
   finishedAnimationTags_.push_back(tag);
-  auto surfaceId = layoutAnimation.finalView->surfaceId;
+  auto surfaceId = layoutAnimation.finalView.surfaceId;
 
   if (!shouldRemove || !nodeForTag_.contains(tag)) {
     return {};
@@ -299,7 +299,7 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
             continue;
           }
 
-          auto oldView = *layoutAnimationIt->second.currentView;
+          auto oldView = layoutAnimationIt->second.currentView;
           filteredMutations.push_back(ShadowViewMutation::InsertMutation(mutationParent, oldView, mutation.index));
           if (movedViews.contains(tag)) {
             layoutAnimationIt->second.parentTag = movedViews.at(tag);
@@ -405,12 +405,12 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(SurfaceId surfaceId, Sha
 
     auto &layoutAnimation = layoutAnimationIt->second;
     layoutAnimation.isViewAlreadyMounted = true;
-    auto newView = std::make_shared<ShadowView>(*layoutAnimation.finalView);
-    newView->props = updateValues.newProps;
-    updateLayoutMetrics(newView->layoutMetrics, updateValues.frame);
+    auto newView = layoutAnimation.finalView;
+    newView.props = updateValues.newProps;
+    updateLayoutMetrics(newView.layoutMetrics, updateValues.frame);
 
     mutations.push_back(
-        ShadowViewMutation::UpdateMutation(*layoutAnimation.currentView, *newView, layoutAnimation.parentTag));
+        ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
     layoutAnimation.currentView = newView;
   }
   updateMap.clear();
@@ -598,24 +598,31 @@ void LayoutAnimationsProxy_Legacy::createLayoutAnimation(
 
   if (layoutAnimationIt != layoutAnimations_.end()) {
     auto &layoutAnimation = layoutAnimationIt->second;
-    oldView = *layoutAnimation.currentView;
+    oldView = layoutAnimation.currentView;
     count = layoutAnimation.count + 1;
   }
 
-  auto finalView = std::make_shared<ShadowView>(
-      mutation.type == ShadowViewMutation::Remove ? mutation.oldChildShadowView : mutation.newChildShadowView);
-  auto currentView = std::make_shared<ShadowView>(oldView);
+  auto finalView =
+      mutation.type == ShadowViewMutation::Remove ? mutation.oldChildShadowView : mutation.newChildShadowView;
+  auto currentView = oldView;
 
   layoutAnimations_.insert_or_assign(
-      tag, LayoutAnimation{finalView, currentView, mutation.parentTag, {}, false, count});
+      tag,
+      LayoutAnimation{
+          .finalView = finalView,
+          .currentView = currentView,
+          .parentTag = mutation.parentTag,
+          .opacity = {},
+          .isViewAlreadyMounted = false,
+          .count = count});
 }
 
 void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowViewMutation &mutation) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "start entering animation for tag " << tag << std::endl;
 #endif
-  auto finalView = std::make_shared<ShadowView>(mutation.newChildShadowView);
-  auto current = std::make_shared<ShadowView>(mutation.newChildShadowView);
+  auto finalView = mutation.newChildShadowView;
+  auto current = mutation.newChildShadowView;
 
   auto &viewProps = static_cast<const ViewProps &>(*mutation.newChildShadowView.props);
   auto opacity = viewProps.opacity;
@@ -631,7 +638,9 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
       auto &mutex = strongThis->mutex;
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
       strongThis->layoutAnimations_.insert_or_assign(
-          tag, LayoutAnimation{finalView, current, mutation.parentTag, opacity});
+          tag,
+          LayoutAnimation{
+              .finalView = finalView, .currentView = current, .parentTag = mutation.parentTag, .opacity = opacity});
       window = strongThis->surfaceManager.getWindow(mutation.newChildShadowView.surfaceId);
     }
 
@@ -736,7 +745,8 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
 
 void LayoutAnimationsProxy_Legacy::updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation)
     const {
-  layoutAnimations_[tag].finalView = std::make_shared<ShadowView>(mutation.newChildShadowView);
+  auto copy = mutation.newChildShadowView;
+  layoutAnimations_[tag].finalView = copy;
 }
 
 void LayoutAnimationsProxy_Legacy::maybeCancelAnimation(const int tag) const {
@@ -804,70 +814,6 @@ void LayoutAnimationsProxy_Legacy::maybeUpdateWindowDimensions(
         mutation.newChildShadowView.layoutMetrics.frame.size.height);
   }
 }
-
-#ifdef ANDROID
-/*
- * It is possible that we may finish the layout animation before the native view
- * is mounted. If the view wasn't mounted, we wouldn't be able to restore the
- * opacity of the view. To fix this, we need to schedule a React update that
- * will restore the view's opacity. This is safe because we'll use the same
- * queue where React has already scheduled (but not yet executed) the view
- * mounting, so the opacity update will execute after the view is mounted.
- */
-void LayoutAnimationsProxy_Legacy::restoreOpacityInCaseOfFlakyEnteringAnimation(SurfaceId surfaceId) const {
-  std::vector<std::pair<double, Tag>> opacityToRestore;
-  for (const auto tag : finishedAnimationTags_) {
-    const auto &opacity = layoutAnimations_[tag].opacity;
-    if (opacity.has_value()) {
-      opacityToRestore.emplace_back(std::pair<double, Tag>{opacity.value(), tag});
-    }
-  }
-  if (opacityToRestore.empty()) {
-    // Animation was successfully finished, and the opacity was restored, so we
-    // don't need to do anything. Only the Entering animation has a set opacity
-    // value.
-    return;
-  }
-  const auto weakThis = weak_from_this();
-  jsInvoker_->invokeAsync([=](jsi::Runtime &runtime) {
-    const auto self = weakThis.lock();
-    if (!self) {
-      return;
-    }
-    self->uiManager_->getShadowTreeRegistry().visit(surfaceId, [=](ShadowTree const &shadowTree) {
-      shadowTree.commit(
-          [=](RootShadowNode const &oldRootShadowNode) {
-            const auto self = weakThis.lock();
-            if (!self) {
-              return cloneShadowTreeWithNewProps(oldRootShadowNode, {});
-            }
-            const auto &rootShadowNode = static_cast<const ShadowNode &>(oldRootShadowNode);
-            PropsMap propsMap;
-            for (const auto &[opacity, tag] : opacityToRestore) {
-              const auto *targetShadowNode = self->findInShadowTreeByTag(rootShadowNode, tag);
-              if (targetShadowNode != nullptr) {
-                propsMap[&targetShadowNode->getFamily()].emplace_back(folly::dynamic::object("opacity", opacity));
-              }
-            }
-            return cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
-          },
-          {});
-    });
-  });
-}
-
-const ShadowNode *LayoutAnimationsProxy_Legacy::findInShadowTreeByTag(const ShadowNode &node, Tag tag) const {
-  if (node.getTag() == tag) {
-    return const_cast<const ShadowNode *>(&node);
-  }
-  for (auto &child : node.getChildren()) {
-    if (const auto result = findInShadowTreeByTag(*child, tag)) {
-      return result;
-    }
-  }
-  return nullptr;
-}
-#endif // ANDROID
 
 std::unordered_map<Tag, UpdateValues> &SurfaceManager::getUpdateMap(SurfaceId surfaceId) {
   auto props = props_.find(surfaceId);

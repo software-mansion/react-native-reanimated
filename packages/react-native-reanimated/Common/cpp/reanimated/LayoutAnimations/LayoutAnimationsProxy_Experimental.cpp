@@ -582,7 +582,7 @@ ShadowView LayoutAnimationsProxy_Experimental::cloneViewWithOpacity(
 }
 
 void LayoutAnimationsProxy_Experimental::maybeRestoreOpacity(
-    LayoutAnimation &layoutAnimation,
+    reanimated::LayoutAnimation &layoutAnimation,
     const jsi::Object &newStyle) const {
   if (layoutAnimation.opacity && !newStyle.hasProperty(uiRuntime_, "opacity")) {
     newStyle.setProperty(uiRuntime_, "opacity", jsi::Value(*layoutAnimation.opacity));
@@ -627,7 +627,12 @@ ShadowView LayoutAnimationsProxy_Experimental::maybeCreateLayoutAnimation(
   auto currentView = oldView;
   auto startView = oldView;
 
-  auto la = LayoutAnimation{finalView, currentView, startView, parentTag, {}, count};
+  auto la = reanimated::LayoutAnimation{
+      .finalView = finalView,
+      .currentView = currentView,
+      .startView = startView,
+      .parentTag = parentTag,
+      .count = count};
 
   layoutAnimations_.insert_or_assign(tag, std::move(la));
 
@@ -655,7 +660,12 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
         const auto tag = newChildShadowView.tag;
         {
           auto lock = std::unique_lock<std::recursive_mutex>(strongThis->mutex);
-          auto la = LayoutAnimation{newChildShadowView, newChildShadowView, newChildShadowView, parentTag, opacity};
+          auto la = reanimated::LayoutAnimation{
+              .finalView = newChildShadowView,
+              .currentView = newChildShadowView,
+              .startView = newChildShadowView,
+              .parentTag = parentTag,
+              .opacity = opacity};
           strongThis->layoutAnimations_.insert_or_assign(tag, std::move(la));
           window = strongThis->surfaceManager.getWindow(newChildShadowView.surfaceId);
         }
@@ -816,69 +826,5 @@ void LayoutAnimationsProxy_Experimental::startProgressTransition(
     }
   });
 }
-
-#ifdef ANDROID
-/*
- * It is possible that we may finish the layout animation before the native view
- * is mounted. If the view wasn't mounted, we wouldn't be able to restore the
- * opacity of the view. To fix this, we need to schedule a React update that
- * will restore the view's opacity. This is safe because we'll use the same
- * queue where React has already scheduled (but not yet executed) the view
- * mounting, so the opacity update will execute after the view is mounted.
- */
-void LayoutAnimationsProxy_Experimental::restoreOpacityInCaseOfFlakyEnteringAnimation(SurfaceId surfaceId) const {
-  std::vector<std::pair<double, Tag>> opacityToRestore;
-  for (const auto tag : finishedAnimationTags_) {
-    const auto &opacity = layoutAnimations_[tag].opacity;
-    if (opacity.has_value()) {
-      opacityToRestore.emplace_back(std::pair<double, Tag>{opacity.value(), tag});
-    }
-  }
-  if (opacityToRestore.empty()) {
-    // Animation was successfully finished, and the opacity was restored, so we
-    // don't need to do anything. Only the Entering animation has a set opacity
-    // value.
-    return;
-  }
-  const auto weakThis = weak_from_this();
-  jsInvoker_->invokeAsync([=](jsi::Runtime &runtime) {
-    const auto self = weakThis.lock();
-    if (!self) {
-      return;
-    }
-    self->uiManager_->getShadowTreeRegistry().visit(surfaceId, [=](ShadowTree const &shadowTree) {
-      shadowTree.commit(
-          [=](RootShadowNode const &oldRootShadowNode) {
-            const auto self = weakThis.lock();
-            if (!self) {
-              return cloneShadowTreeWithNewProps(oldRootShadowNode, {});
-            }
-            const auto &rootShadowNode = static_cast<const ShadowNode &>(oldRootShadowNode);
-            PropsMap propsMap;
-            for (const auto &[opacity, tag] : opacityToRestore) {
-              const auto *targetShadowNode = self->findInShadowTreeByTag(rootShadowNode, tag);
-              if (targetShadowNode != nullptr) {
-                propsMap[&targetShadowNode->getFamily()].emplace_back(folly::dynamic::object("opacity", opacity));
-              }
-            }
-            return cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
-          },
-          {});
-    });
-  });
-}
-
-const ShadowNode *LayoutAnimationsProxy_Experimental::findInShadowTreeByTag(const ShadowNode &node, Tag tag) const {
-  if (node.getTag() == tag) {
-    return const_cast<const ShadowNode *>(&node);
-  }
-  for (const auto &child : node.getChildren()) {
-    if (const auto result = findInShadowTreeByTag(*child, tag)) {
-      return result;
-    }
-  }
-  return nullptr;
-}
-#endif // ANDROID
 
 } // namespace reanimated_experimental
