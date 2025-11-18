@@ -6,6 +6,7 @@ import CSSManager from '../CSSManager';
 
 jest.mock('../CSSAnimationsManager');
 jest.mock('../CSSTransitionsManager');
+jest.mock('../../proxy.ts');
 
 const createManager = (viewName = 'RCTView') =>
   new CSSManager({
