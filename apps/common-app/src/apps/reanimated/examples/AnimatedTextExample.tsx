@@ -156,7 +156,7 @@ export default function AnimatedTextExample() {
           </Animated.Text>
         )}
         <Button
-          title="Render invalid Animated.Text"
+          title="Render non-empty Animated.Text with animated text (throws an error)"
           onPress={() => setShow(true)}
         />
       </View>
