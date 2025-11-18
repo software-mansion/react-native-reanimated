@@ -9,10 +9,11 @@ import CSSTransitionsManager from './CSSTransitionsManager';
 export default class CSSManager extends CSSManagerBase implements ICSSManager {
   constructor({ DOMElement, viewName = 'RCTView' }: ViewInfo) {
     const element = DOMElement as ReanimatedHTMLElement;
-    const animationsManager = new CSSAnimationsManager(element);
-    const transitionsManager = new CSSTransitionsManager(element);
-
-    super(viewName, animationsManager, transitionsManager);
+    super(
+      viewName,
+      new CSSAnimationsManager(element),
+      new CSSTransitionsManager(element)
+    );
   }
 
   update(style: CSSStyle): void {

@@ -4,13 +4,13 @@ import { ReanimatedError } from '../../../common';
 import type { StyleBuilder } from '../../../common/style';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
-import CSSAnimationsManager from './CSSAnimationsManager';
-import CSSTransitionsManager from './CSSTransitionsManager';
 import CSSManagerBase from '../../managers/CSSManagerBase';
 import type { CSSStyle } from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
 import { setViewStyle } from '../proxy';
 import { getStyleBuilder, hasStyleBuilder } from '../registry';
+import CSSAnimationsManager from './CSSAnimationsManager';
+import CSSTransitionsManager from './CSSTransitionsManager';
 
 export default class CSSManager extends CSSManagerBase implements ICSSManager {
   private readonly viewTag: number;
@@ -20,16 +20,14 @@ export default class CSSManager extends CSSManagerBase implements ICSSManager {
   constructor({ shadowNodeWrapper, viewTag, viewName = 'RCTView' }: ViewInfo) {
     const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
     const tag = viewTag as number;
-    const animationsManager = new CSSAnimationsManager(
-      wrapper,
+
+    super(
       viewName,
-      tag
+      new CSSAnimationsManager(wrapper, viewName, tag),
+      new CSSTransitionsManager(wrapper, tag)
     );
-    const transitionsManager = new CSSTransitionsManager(wrapper, tag);
 
-    super(viewName, animationsManager, transitionsManager);
     this.viewTag = tag;
-
     this.styleBuilder = hasStyleBuilder(viewName)
       ? getStyleBuilder(viewName)
       : null;
@@ -39,6 +37,8 @@ export default class CSSManager extends CSSManagerBase implements ICSSManager {
     const [animationProperties, transitionProperties, filteredStyle] =
       this.filterAndValidateStyle(style);
 
+    // TODO - move this to the base class later on once separate style builders
+    // for web css animations are implemented
     if (!this.styleBuilder && (animationProperties || transitionProperties)) {
       throw new ReanimatedError(
         `Tried to apply CSS animations to ${this.viewName} which is not supported`
