@@ -1307,6 +1307,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
           jsInvoker_
 #endif
       );
+      // TODO (future): support in experimental
       uiManager_->setAnimationDelegate(layoutAnimationsProxyLegacy.get());
       layoutAnimationsProxy_ = std::move(layoutAnimationsProxyLegacy);
     }
