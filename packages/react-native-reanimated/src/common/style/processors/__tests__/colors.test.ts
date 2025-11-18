@@ -1,6 +1,34 @@
 'use strict';
 import { ReanimatedError } from '../../../errors';
-import { ERROR_MESSAGES, processColor, processColorsInProps } from '../colors';
+import {
+  ERROR_MESSAGES,
+  processColor,
+  processColorsInProps,
+} from '../colors';
+
+type ColorsModule = typeof import('../colors');
+
+function withPlatform(
+  platform: 'ios' | 'android',
+  run: (mod: ColorsModule) => void
+) {
+  jest.isolateModules(() => {
+    jest.doMock('../../../constants', () => {
+      const actual = jest.requireActual('../../../constants');
+      return {
+        ...actual,
+        IS_IOS: platform === 'ios',
+        IS_ANDROID: platform === 'android',
+      };
+    });
+
+    const mod = require('../colors') as ColorsModule;
+    run(mod);
+  });
+
+  jest.resetModules();
+  jest.dontMock('../../../constants');
+}
 
 describe(processColorsInProps, () => {
   describe('properly converts colors in props', () => {
@@ -47,6 +75,43 @@ describe(processColorsInProps, () => {
       expect(props).toEqual({ [key]: value });
     });
   });
+
+  describe('DynamicColorIOS support', () => {
+    test('mutates dynamic colors on iOS', () => {
+      withPlatform('ios', ({ processColorsInProps: processProps, DynamicColorIOS: DynamicIOS }) => {
+        const props = {
+          backgroundColor: DynamicIOS({
+            light: '#abcdef',
+            dark: '#123456',
+            highContrastDark: '#ff00ff',
+          }),
+        };
+
+        processProps(props);
+
+        expect(props.backgroundColor).toEqual({
+          dynamic: {
+            light: 0xffabcdef,
+            dark: 0xff123456,
+            highContrastLight: undefined,
+            highContrastDark: 0xffff00ff,
+          },
+        });
+      });
+    });
+
+    test('throws for dynamic colors on non-iOS platforms', () => {
+      withPlatform('android', ({ processColorsInProps: processProps, DynamicColorIOS: DynamicIOS }) => {
+        const props = {
+          backgroundColor: DynamicIOS({ light: '#ffffff', dark: '#000000' }),
+        };
+
+        expect(() => processProps(props)).toThrow(
+          new ReanimatedError('DynamicColorIOS is not available on this platform.')
+        );
+      });
+    });
+  });
 });
 
 describe(processColor, () => {
@@ -66,6 +131,32 @@ describe(processColor, () => {
         typeof expected === 'number' &&
         ((expected << 24) | (expected >>> 8)) >>> 0;
       expect(processColor(value)).toEqual(argb);
+    });
+
+    test('converts DynamicColorIOS values on iOS', () => {
+      withPlatform('ios', ({ processColor: processColorMock, DynamicColorIOS: DynamicIOS }) => {
+        const dynamic = DynamicIOS({
+          light: '#ffffff',
+          dark: '#000000',
+          highContrastLight: '#ff0000',
+        });
+        const processed = processColorMock(dynamic);
+
+        expect(processed.dynamic.light).toBe(0xffffffff);
+        expect(processed.dynamic.dark).toBe(0xff000000);
+        expect(processed.dynamic.highContrastLight).toBe(0xff0000ff);
+        expect(processed.dynamic.highContrastDark).toBeUndefined();
+      });
+    });
+
+    test('throws for DynamicColorIOS on non-iOS platforms', () => {
+      withPlatform('android', ({ processColor: processColorMock, DynamicColorIOS: DynamicIOS }) => {
+        const dynamic = DynamicIOS({ light: '#ffffff', dark: '#000000' });
+
+        expect(() => processColorMock(dynamic)).toThrow(
+          new ReanimatedError('DynamicColorIOS is not available on this platform.')
+        );
+      });
     });
   });
 
