@@ -19,6 +19,8 @@ import {
  * @returns An object with the current keyboard `height` and `state` as [shared
  *   values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value).
  * @see https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedKeyboard
+ * 
+ * @deprecated Please use `react-native-keyboard-controller` instead. See https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedKeyboard#migration-guide
  */
 export function useAnimatedKeyboard(
   options: AnimatedKeyboardOptions = {
