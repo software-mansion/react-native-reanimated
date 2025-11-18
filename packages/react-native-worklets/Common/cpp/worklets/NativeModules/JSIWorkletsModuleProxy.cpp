@@ -73,7 +73,8 @@ inline jsi::Value createWorkletRuntime(
     std::shared_ptr<SerializableWorklet> &initializer,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop) {
-  const auto workletRuntime = runtimeManager->createWorkletRuntime(jsiWorkletsModuleProxy, name, initializer, queue);
+  const auto workletRuntime =
+      runtimeManager->createWorkletRuntime(std::move(jsiWorkletsModuleProxy), name, initializer, queue);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
@@ -124,7 +125,7 @@ inline std::shared_ptr<AsyncQueue> extractAsyncQueue(jsi::Runtime &rt, const jsi
 
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const bool isDevBundle,
-    const std::shared_ptr<const BigStringBuffer> &script,
+    const std::shared_ptr<const JSBigStringBuffer> &script,
     const std::string &sourceUrl,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
@@ -430,7 +431,7 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
           auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
           auto newValue = extractSerializableOrThrow(rt, args[1], "[Worklets] Value must be a Serializable.");
-          synchronizable->setBlocking(std::move(newValue));
+          synchronizable->setBlocking(newValue);
           return jsi::Value::undefined();
         });
   }

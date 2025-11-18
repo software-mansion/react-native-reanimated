@@ -127,7 +127,7 @@ template struct FilterOperationBase<FilterOp::Brightness, CSSDouble>;
 template struct FilterOperationBase<FilterOp::Contrast, CSSDouble>;
 template struct FilterOperationBase<FilterOp::DropShadow, CSSDropShadow>;
 template struct FilterOperationBase<FilterOp::Grayscale, CSSDouble>;
-template struct FilterOperationBase<FilterOp::HueRotate, CSSAngle>;
+template struct FilterOperationBase<FilterOp::HueRotate, CSSDouble>;
 template struct FilterOperationBase<FilterOp::Invert, CSSDouble>;
 template struct FilterOperationBase<FilterOp::Opacity, CSSDouble>;
 template struct FilterOperationBase<FilterOp::Saturate, CSSDouble>;

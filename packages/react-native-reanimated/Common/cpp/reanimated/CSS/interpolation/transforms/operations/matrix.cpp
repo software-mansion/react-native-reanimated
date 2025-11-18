@@ -1,7 +1,6 @@
 #include <reanimated/CSS/interpolation/transforms/TransformOperationInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
 
-#include <algorithm>
 #include <deque>
 #include <memory>
 #include <utility>
@@ -139,7 +138,7 @@ MatrixOperation::MatrixOperation(TransformOperations operations)
     // multiplications during matrix keyframe interpolation
     : TransformOperation(TransformOp::Matrix),
       value([&]() {
-        const auto &[simplifiedValue, is3D] = simplifyOperations(std::move(operations));
+        const auto &[simplifiedValue, is3D] = simplifyOperations(operations);
         const_cast<bool &>(is3D_) = is3D;
         return simplifiedValue;
       }()),

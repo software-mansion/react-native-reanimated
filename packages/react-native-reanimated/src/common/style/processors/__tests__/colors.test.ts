@@ -59,10 +59,12 @@ describe(processColor, () => {
       ['hsl(240, 100%, 50%)', 0x0000ffff],
       ['hsla(120, 50%, 50%, 0.5)', 0x40bf4080],
       ['hwb(0, 0%, 0%)', 0xff0000ff],
-      ['transparent', null],
+      ['transparent', false], // we represent transparent color as false
     ])('converts %p to %p', (value, expected) => {
       // convert from RGBA to ARGB format if not null
-      const argb = expected && ((expected << 24) | (expected >>> 8)) >>> 0;
+      const argb =
+        typeof expected === 'number' &&
+        ((expected << 24) | (expected >>> 8)) >>> 0;
       expect(processColor(value)).toEqual(argb);
     });
   });

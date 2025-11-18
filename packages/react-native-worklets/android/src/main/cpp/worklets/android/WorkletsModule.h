@@ -3,8 +3,8 @@
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
-#include <jsireact/JSIExecutor.h>
 #include <react/jni/JMessageQueueThread.h>
+#include <worklets/Tools/Defs.h>
 #ifdef WORKLETS_BUNDLE_MODE
 #include <react/fabric/BundleWrapper.h>
 #endif // WORKLETS_BUNDLE_MODE
@@ -51,7 +51,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      const std::shared_ptr<const BigStringBuffer> &bundle,
+      const std::shared_ptr<const JSBigStringBuffer> &bundle,
       const std::string &sourceURL);
 
   void invalidateCpp();
