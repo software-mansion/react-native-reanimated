@@ -99,7 +99,23 @@ std::pair<MatrixOperationValue, bool> simplifyOperations(const TransformOperatio
 }
 
 MatrixOperation::MatrixOperation(MatrixOperationValue value)
-    : TransformOperation(TransformOp::Matrix), value(std::move(value)) {}
+    : TransformOperation(TransformOp::Matrix), value(std::move(value)) {
+  // Initialize is3D_ based on the variant content
+  if (std::holds_alternative<TransformMatrix::Shared>(this->value)) {
+    const auto &matrix = std::get<TransformMatrix::Shared>(this->value);
+    is3D_ = matrix->getDimension() == MATRIX_3D_DIMENSION;
+  } else {
+    // If it contains TransformOperations, check if any operation is 3D
+    const auto &operations = std::get<TransformOperations>(this->value);
+    is3D_ = false;
+    for (const auto &operation : operations) {
+      if (operation->is3D()) {
+        is3D_ = true;
+        break;
+      }
+    }
+  }
+}
 
 MatrixOperation::MatrixOperation(jsi::Runtime &rt, const jsi::Value &value)
     : MatrixOperation([&]() -> TransformMatrix::Shared {
@@ -136,14 +152,11 @@ MatrixOperation::MatrixOperation(TransformMatrix3D matrix)
 MatrixOperation::MatrixOperation(TransformOperations operations)
     // Simplify operations to reduce the number of matrix
     // multiplications during matrix keyframe interpolation
-    : TransformOperation(TransformOp::Matrix),
-      value([&]() {
-        const auto &[simplifiedValue, is3D] = simplifyOperations(operations);
-        const_cast<bool &>(is3D_) = is3D;
-        return simplifiedValue;
-      }()),
-      is3D_(false) // Will be set correctly by the lambda above
-{}
+    : TransformOperation(TransformOp::Matrix), value([&]() {
+        const auto &[value, is3D] = simplifyOperations(operations);
+        is3D_ = is3D;
+        return value;
+      }()) {}
 
 bool MatrixOperation::is3D() const {
   return is3D_;

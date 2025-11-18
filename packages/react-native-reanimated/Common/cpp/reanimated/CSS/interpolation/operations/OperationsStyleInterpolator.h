@@ -3,7 +3,6 @@
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 #include <reanimated/CSS/interpolation/operations/StyleOperation.h>
 #include <reanimated/CSS/interpolation/operations/StyleOperationInterpolator.h>
-#include <reanimated/CSS/utils/keyframes.h>
 
 #include <memory>
 #include <optional>

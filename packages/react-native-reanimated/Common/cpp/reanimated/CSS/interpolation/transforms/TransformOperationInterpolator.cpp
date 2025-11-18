@@ -64,7 +64,9 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<MatrixOperation>:
 
   const auto result2D = interpolateMatrix<TransformMatrix2D>(progress, fromMatrix, toMatrix);
 
-  // Unfortunately 2D matrices aren't handled properly in RN, so we have to convert them to 3D.
+  // Unfortunately 2D matrices aren't handled properly in RN, so we have to
+  // convert them to 3D
+  // see the issue: https://github.com/facebook/react-native/issues/53639
   return std::make_unique<MatrixOperation>(TransformMatrix3D::from2D(result2D));
 }
 
@@ -104,7 +106,7 @@ TransformMatrix::Shared TransformOperationInterpolator<MatrixOperation>::matrixF
 
   const auto &operations = std::get<TransformOperations>(matrixOperation->value);
 
-  // Map over operations and resolve unresolved ones.
+  // Map over operations and resolve unresolved ones
   TransformOperations resolvedOperations;
   resolvedOperations.reserve(operations.size());
 
