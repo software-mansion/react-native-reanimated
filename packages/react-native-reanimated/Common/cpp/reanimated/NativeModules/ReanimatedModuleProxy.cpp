@@ -589,6 +589,11 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
       cssAnimationsRegistry_->flushUpdates(updatesBatch);
     }
 
+        for (auto& update: updatesBatch){
+          const auto& dyn = update.second;
+          LOG(INFO) << "(BB) " << folly::toJson(dyn);
+        }
+
     shouldUpdateCssAnimations_ = false;
 
 #ifdef ANDROID
@@ -980,7 +985,7 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
 #endif // ANDROID
 
 #if __APPLE__
-    if constexpr (StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
+    if constexpr (false) {
       static const std::unordered_set<std::string> synchronousProps = {
           "opacity",
           "elevation",
@@ -1080,24 +1085,24 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
   updatesRegistryManager_->collectPropsToRevertBySurface(propsMapBySurface);
 #endif
 
-  if (shouldFlushRegistry_) {
-    shouldFlushRegistry_ = false;
-    const auto propsMap = updatesRegistryManager_->collectProps();
-    for (auto const &[family, props] : propsMap) {
-      const auto surfaceId = family->getSurfaceId();
-      auto &propsVector = propsMapBySurface[surfaceId][family];
-      for (const auto &prop : props) {
-        propsVector.emplace_back(prop);
-      }
-    }
-  } else {
-    for (auto const &[shadowNode, props] : updatesBatch) {
-      SurfaceId surfaceId = shadowNode->getSurfaceId();
-      auto family = &shadowNode->getFamily();
-      react_native_assert(family->getSurfaceId() == surfaceId);
-      propsMapBySurface[surfaceId][family].emplace_back(std::move(props));
-    }
+  //  if (shouldFlushRegistry_) {
+  //    shouldFlushRegistry_ = false;
+  //    const auto propsMap = updatesRegistryManager_->collectProps();
+  //    for (auto const &[family, props] : propsMap) {
+  //      const auto surfaceId = family->getSurfaceId();
+  //      auto &propsVector = propsMapBySurface[surfaceId][family];
+  //      for (const auto &prop : props) {
+  //        propsVector.emplace_back(prop);
+  //      }
+  //    }
+  //  } else {
+  for (auto const &[shadowNode, props] : updatesBatch) {
+    SurfaceId surfaceId = shadowNode->getSurfaceId();
+    auto family = &shadowNode->getFamily();
+    react_native_assert(family->getSurfaceId() == surfaceId);
+    propsMapBySurface[surfaceId][family].emplace_back(std::move(props));
   }
+  //  }
 
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {

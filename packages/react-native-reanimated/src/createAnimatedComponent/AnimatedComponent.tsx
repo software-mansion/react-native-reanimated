@@ -439,6 +439,7 @@ export default class AnimatedComponent
         }
       : {};
 
+    console.log('AnimatedComponent render', filteredProps.style);
     return super.render({
       nativeID,
       ...filteredProps,

@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <folly/json.h>
 
 namespace reanimated::css {
 
@@ -63,7 +64,7 @@ void CSSAnimationsRegistry::update(const double timestamp) {
   // Activate all delayed animations that should start now
   activateDelayedAnimations(timestamp);
   // Update styles in the registry for views which animations were reverted
-  handleAnimationsToRevert(timestamp);
+//  handleAnimationsToRevert(timestamp);
 
   // Iterate over active animations and update them
   for (auto it = runningAnimationIndicesMap_.begin(); it != runningAnimationIndicesMap_.end();) {
@@ -274,6 +275,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(const Tag viewTag, const do
         (currentState == AnimationProgressState::Paused && timestamp >= animation->getStartTimestamp(timestamp)) ||
         // Animation is finished and has fill forwards fill mode
         (currentState == AnimationProgressState::Finished && animation->hasForwardsFillMode())) {
+          LOG(INFO) << "(BB) " << (currentState == AnimationProgressState::Running ? "running" : currentState == AnimationProgressState::Paused ? "paused" : "finished");
       style = animation->getCurrentInterpolationStyle();
     }
 
@@ -284,7 +286,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(const Tag viewTag, const do
       updatedStyle.update(style);
     }
   }
-
+  LOG(INFO) <<"(BB) " << folly::toJson(updatedStyle);
   setInUpdatesRegistry(shadowNode, updatedStyle);
 }
 

@@ -80,6 +80,7 @@ PropsMap UpdatesRegistryManager::collectProps() {
   PropsMap propsMap;
   for (auto &registry : registries_) {
     registry->collectProps(propsMap);
+    registry->updatesRegistry_.clear();
   }
   return propsMap;
 }

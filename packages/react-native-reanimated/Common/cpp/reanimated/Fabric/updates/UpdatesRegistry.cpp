@@ -70,7 +70,11 @@ void UpdatesRegistry::setInUpdatesRegistry(
 #ifdef ANDROID
   updatePropsToRevert(tag, &props);
 #endif
-  updatesRegistry_[tag] = std::make_pair(shadowNode, props);
+  if (updatesRegistry_.contains(tag)){
+    updatesRegistry_.at(tag).second.merge_patch(props);
+  } else {
+    updatesRegistry_[tag] = std::make_pair(shadowNode, props);
+  }
 }
 
 folly::dynamic UpdatesRegistry::getUpdatesFromRegistry(const Tag tag) const {

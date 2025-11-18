@@ -138,6 +138,7 @@ import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import InstanceDiscoveryExample from './InstanceDiscoveryExample';
 import ShadowNodesCloningExample from './ShadowNodesCloningExample';
+import EmptyExample2 from './EmptyExample2';
 
 export const REAPlatform = {
   IOS: 'ios',
@@ -166,6 +167,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '👻',
     title: 'Empty',
     screen: EmptyExample,
+  },
+  EmptyExample2: {
+    icon: '👻',
+    title: 'Empty 2',
+    screen: EmptyExample2,
   },
   FpsExample: {
     icon: '🎞️',

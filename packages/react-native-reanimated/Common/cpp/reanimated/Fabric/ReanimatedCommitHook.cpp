@@ -9,6 +9,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <folly/json.h>
 
 using namespace facebook::react;
 
@@ -91,6 +92,14 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
     PropsMap propsMap = updatesRegistryManager_->collectProps();
     updatesRegistryManager_->cancelCommitAfterPause();
+    
+    for (auto& [_, rawPropsVector]: propsMap){
+      for (auto& rawProps:rawPropsVector){
+        LOG(INFO) << "(BB) " <<folly::toJson(rawProps.toDynamic());
+      }
+    }
+    
+    LOG(INFO) << "(BB) " << "propsMap size: " << propsMap.size();
 
     rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
     // If the commit comes from React Native then pause commits from
