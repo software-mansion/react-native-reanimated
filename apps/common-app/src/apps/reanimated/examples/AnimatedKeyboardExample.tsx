@@ -55,13 +55,15 @@ export default function AnimatedKeyboardExample() {
   });
 
   const animatedHeightProps = useAnimatedProps(() => {
-    const text = `Keyboard height: ${keyboard.height.value}`;
-    return { text, defaultValue: text };
+    return {
+      text: `Keyboard height: ${keyboard.height.value}`,
+    };
   });
 
   const animatedStateProps = useAnimatedProps(() => {
-    const text = `Keyboard state: ${KeyboardStateNames[keyboard.state.value]} - ${keyboard.state.value}`;
-    return { text, defaultValue: text };
+    return {
+      text: `Keyboard state: ${KeyboardStateNames[keyboard.state.value]} - ${keyboard.state.value}`,
+    };
   });
 
   return (

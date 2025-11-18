@@ -17,7 +17,7 @@ export default function CounterExample() {
   });
 
   const animatedProps = useAnimatedProps(() => {
-    return { text: text.value, defaultValue: text.value };
+    return { text: text.value };
   });
 
   const handleToggle = () => {
