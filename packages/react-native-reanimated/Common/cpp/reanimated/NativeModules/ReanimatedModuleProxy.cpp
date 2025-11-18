@@ -188,7 +188,6 @@ ReanimatedModuleProxy::~ReanimatedModuleProxy() {
   // event handler registry and frame callbacks store some JSI values from UI
   // runtime, so they have to go away before we tear down the runtime
   eventHandlerRegistry_.reset();
-  frameCallbacks_.clear();
 }
 
 jsi::Value ReanimatedModuleProxy::registerEventHandler(
@@ -314,13 +313,7 @@ void ReanimatedModuleProxy::maybeRequestRender() {
 
 void ReanimatedModuleProxy::onRender(double timestampMs) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::onRender");
-  auto callbacks = std::move(frameCallbacks_);
-  frameCallbacks_.clear();
-  auto uiWorkletRuntime = workletsModuleProxy_->getUIWorkletRuntime();
-  jsi::Value timestamp{timestampMs};
-  for (const auto &callback : callbacks) {
-    uiWorkletRuntime->runSync(*callback, timestamp);
-  }
+  // NOOP
 }
 
 jsi::Value ReanimatedModuleProxy::registerSensor(

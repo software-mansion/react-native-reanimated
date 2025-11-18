@@ -15,9 +15,9 @@ namespace worklets {
 
 class AnimationFrameBatchinator : public std::enable_shared_from_this<AnimationFrameBatchinator> {
  public:
-  using JsiRequestAnimationFrame = std::function<void(facebook::jsi::Runtime &, const facebook::jsi::Value &)>;
+  using JsiRequestAnimationFrame = std::function<void(jsi::Runtime &, const jsi::Value &)>;
 
-  void addToBatch(const facebook::jsi::Value &callback);
+  void addToBatch(jsi::Function &&callback);
   JsiRequestAnimationFrame getJsiRequestAnimationFrame();
 
   AnimationFrameBatchinator(
@@ -26,9 +26,9 @@ class AnimationFrameBatchinator : public std::enable_shared_from_this<AnimationF
 
  private:
   void flush();
-  std::vector<std::shared_ptr<const facebook::jsi::Value>> pullCallbacks();
+  std::vector<std::shared_ptr<const jsi::Function>> pullCallbacks();
 
-  std::vector<std::shared_ptr<const facebook::jsi::Value>> callbacks_{};
+  std::vector<std::shared_ptr<const jsi::Function>> callbacks_{};
   std::mutex callbacksMutex_{};
   std::atomic_bool flushRequested_{};
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;

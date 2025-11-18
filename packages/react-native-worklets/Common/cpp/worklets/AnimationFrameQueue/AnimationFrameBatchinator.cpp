@@ -12,11 +12,10 @@
 
 namespace worklets {
 
-void AnimationFrameBatchinator::addToBatch(const facebook::jsi::Value &callback) {
+void AnimationFrameBatchinator::addToBatch(jsi::Function &&callback) {
   {
     std::lock_guard<std::mutex> lock(callbacksMutex_);
-    auto &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
-    callbacks_.push_back(std::make_shared<const facebook::jsi::Value>(uiRuntime, callback));
+    callbacks_.push_back(std::make_shared<const jsi::Function>(std::move(callback)));
   }
   flush();
 }
@@ -28,7 +27,7 @@ AnimationFrameBatchinator::JsiRequestAnimationFrame AnimationFrameBatchinator::g
       return;
     }
 
-    strongThis->addToBatch(callback);
+    strongThis->addToBatch(callback.asObject(rt).asFunction(rt));
   };
 }
 
@@ -53,7 +52,7 @@ void AnimationFrameBatchinator::flush() {
   });
 }
 
-std::vector<std::shared_ptr<const facebook::jsi::Value>> AnimationFrameBatchinator::pullCallbacks() {
+std::vector<std::shared_ptr<const jsi::Function>> AnimationFrameBatchinator::pullCallbacks() {
   std::lock_guard<std::mutex> lock(callbacksMutex_);
   return std::move(callbacks_);
 }

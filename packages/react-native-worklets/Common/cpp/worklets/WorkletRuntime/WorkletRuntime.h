@@ -24,8 +24,7 @@ using namespace react;
 namespace worklets {
 
 template <typename TCallable>
-concept ImplicitlySerializableCallable =
-    std::is_assignable_v<const jsi::Function &, TCallable> || std::is_assignable_v<jsi::Value &, TCallable> ||
+concept ImplicitlySerializableCallable = std::is_assignable_v<const jsi::Function &, TCallable> ||
     std::is_assignable_v<const std::shared_ptr<SerializableWorklet> &, TCallable>;
 
 template <typename TCallable>
@@ -62,10 +61,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 #else
     return function.call(rt, args...);
 #endif // NDEBUG
-  }
-  template <typename... Args>
-  jsi::Value runSync(const jsi::Value &function, Args &&...args) const {
-    return runSync(function.asObject(*runtime_).asFunction(*runtime_), std::forward<Args>(args)...);
   }
   template <typename... Args>
   jsi::Value runSync(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args) const {
