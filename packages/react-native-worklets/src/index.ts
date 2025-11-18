@@ -30,7 +30,7 @@ export { isSynchronizable } from './memory/isSynchronizable';
 export {
   createSerializable,
   isSerializableRef,
-  registerSerializable,
+  registerCustomSerializable,
 } from './memory/serializable';
 export { serializableMappingCache } from './memory/serializableMappingCache';
 export { createSynchronizable } from './memory/synchronizable';

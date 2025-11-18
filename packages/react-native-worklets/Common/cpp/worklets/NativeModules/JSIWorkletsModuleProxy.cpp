@@ -122,6 +122,21 @@ inline std::shared_ptr<AsyncQueue> extractAsyncQueue(jsi::Runtime &rt, const jsi
   return asyncQueue;
 }
 
+inline void registerCustomSerializable(
+    const std::shared_ptr<RuntimeManager> &runtimeManager,
+    const std::shared_ptr<MemoryManager> &memoryManager,
+    const std::shared_ptr<SerializableWorklet> &determinant,
+    const std::shared_ptr<SerializableWorklet> &serializer,
+    const std::shared_ptr<SerializableWorklet> &deserializer,
+    const int typeId) {
+  const CustomSerializableData data{
+      .determinant = determinant, .serializer = serializer, .deserializer = deserializer, .typeId = typeId};
+  memoryManager->registerCustomSerializable(data);
+  for (const auto &runtime : runtimeManager->getAllRuntimes()) {
+    memoryManager->loadCustomSerializable(runtime, data);
+  }
+}
+
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const bool isDevBundle,
     const std::shared_ptr<const BigStringBuffer> &script,
@@ -129,6 +144,7 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler,
+    const std::shared_ptr<MemoryManager> &memoryManager,
     const std::shared_ptr<RuntimeManager> &runtimeManager,
     const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime)
     : jsi::HostObject(),
@@ -138,6 +154,7 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       jsQueue_(jsQueue),
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
+      memoryManager_(memoryManager),
       runtimeManager_(runtimeManager),
       uiWorkletRuntime_(uiWorkletRuntime) {}
 
@@ -149,6 +166,7 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &oth
       jsQueue_(other.jsQueue_),
       jsScheduler_(other.jsScheduler_),
       uiScheduler_(other.uiScheduler_),
+      memoryManager_(other.memoryManager_),
       runtimeManager_(other.runtimeManager_),
       uiWorkletRuntime_(other.uiWorkletRuntime_) {}
 
@@ -175,6 +193,7 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableSet"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableWorklet"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableCustom"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "registerCustomSerializable"));
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnUI"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "executeOnUIRuntimeSync"));
@@ -324,7 +343,26 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
   if (name == "createSerializableCustom") {
     return jsi::Function::createFromHostFunction(
         rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return makeSerializableCustom(rt, args[0], args[1]);
+          return makeSerializableCustom(rt, args[0], args[1].asNumber());
+        });
+  }
+
+  if (name == "registerCustomSerializable") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        4,
+        [memoryManager = memoryManager_, runtimeManager = runtimeManager_](
+            jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          const auto determinant =
+              extractSerializableOrThrow<SerializableWorklet>(rt, args[0], "[Worklets] Determinant must be a worklet.");
+          const auto serializer =
+              extractSerializableOrThrow<SerializableWorklet>(rt, args[1], "[Worklets] Serializer must be a worklet.");
+          const auto deserializer = extractSerializableOrThrow<SerializableWorklet>(
+              rt, args[2], "[Worklets] Deserializer must be a worklet.");
+          const auto typeId = args[3].asNumber();
+          registerCustomSerializable(runtimeManager, memoryManager, determinant, serializer, deserializer, typeId);
+          return jsi::Value::undefined();
         });
   }
 

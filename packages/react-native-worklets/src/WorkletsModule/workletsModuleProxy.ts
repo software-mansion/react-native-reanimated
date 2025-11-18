@@ -71,8 +71,15 @@ export interface WorkletsModuleProxy {
 
   createSerializableCustom(
     deserializer: SerializableRef<object>,
-    data: object
+    typeId: number
   ): SerializableRef<object>;
+
+  registerCustomSerializable(
+    determinant: SerializableRef<object>,
+    serializer: SerializableRef<object>,
+    deserializer: SerializableRef<object>,
+    typeId: number
+  ): void;
 
   scheduleOnUI<TValue>(serializable: SerializableRef<TValue>): void;
 

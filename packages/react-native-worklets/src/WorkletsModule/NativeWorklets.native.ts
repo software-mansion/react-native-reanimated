@@ -154,11 +154,25 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   createSerializableCustom(
     deserializer: SerializableRef<object>,
-    data: object
+    typeId: number
   ): SerializableRef<object> {
     return this.#workletsModuleProxy.createSerializableCustom(
       deserializer,
-      data
+      typeId
+    );
+  }
+
+  registerCustomSerializable(
+    determinant: SerializableRef<object>,
+    serializer: SerializableRef<object>,
+    deserializer: SerializableRef<object>,
+    typeId: number
+  ): void {
+    this.#workletsModuleProxy.registerCustomSerializable(
+      determinant,
+      serializer,
+      deserializer,
+      typeId
     );
   }
 

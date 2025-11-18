@@ -466,19 +466,24 @@ jsi::Value SerializableTurboModuleLike::toJSValue(jsi::Runtime &rt) {
   return obj;
 }
 
+jsi::Function getCustomSerializableUnpacker(jsi::Runtime &rt) {
+  auto customSerializableUnpacker = rt.global().getProperty(rt, "__customSerializableUnpacker");
+  react_native_assert(customSerializableUnpacker.isObject() && "customSerializableUnpacker not found");
+  return customSerializableUnpacker.asObject(rt).asFunction(rt);
+}
+
 jsi::Value CustomSerializable::toJSValue(jsi::Runtime &rt) {
-  auto deserializerJS = deserializer_->toJSValue(rt).asObject(rt).asFunction(rt);
+  auto deserializerJS = getCustomSerializableUnpacker(rt);
   auto dataJS = data_->toJSValue(rt);
+
+  return deserializerJS.call(rt, dataJS, jsi::Value(typeId_));
 
   return deserializerJS.call(rt, dataJS);
 }
 
-jsi::Value makeSerializableCustom(jsi::Runtime &rt, const jsi::Value &deserializer, const jsi::Value &data) {
-  auto deserializerSerializable = extractSerializableOrThrow<SerializableWorklet>(
-      rt, deserializer, "[Worklets] Deserializer must be a Serializable Worklet.");
-  auto dataSerializable = extractSerializableOrThrow(rt, data, "[Worklets] Data must be a Serializable object.");
-
-  auto serializable = std::make_shared<CustomSerializable>(deserializerSerializable, dataSerializable);
+jsi::Value makeSerializableCustom(jsi::Runtime &rt, const jsi::Value &data, const int typeId) {
+  auto serializableData = extractSerializableOrThrow(rt, data, "[Worklets] Data must be a Serializable object.");
+  auto serializable = std::make_shared<CustomSerializable>(serializableData, typeId);
   return SerializableJSRef::newNativeStateObject(rt, serializable);
 }
 

@@ -5,6 +5,7 @@
 #include <jsireact/JSIExecutor.h>
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
+#include <worklets/SharedItems/MemoryManager.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/SingleInstanceChecker.h>
@@ -66,6 +67,7 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
   const RuntimeBindings runtimeBindings_;
   const std::shared_ptr<const BigStringBuffer> script_;
   const std::string sourceUrl_;
+  const std::shared_ptr<MemoryManager> memoryManager_;
   const std::shared_ptr<RuntimeManager> runtimeManager_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
   std::shared_ptr<AnimationFrameBatchinator> animationFrameBatchinator_;

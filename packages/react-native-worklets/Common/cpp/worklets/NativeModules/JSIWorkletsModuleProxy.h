@@ -5,6 +5,7 @@
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 
+#include <worklets/SharedItems/MemoryManager.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
@@ -35,6 +36,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
+      const std::shared_ptr<MemoryManager> &memoryManager,
       const std::shared_ptr<RuntimeManager> &runtimeManager,
       const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime);
 
@@ -70,6 +72,10 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
     return sourceUrl_;
   }
 
+  [[nodiscard]] std::shared_ptr<MemoryManager> getMemoryManager() const {
+    return memoryManager_;
+  }
+
   [[nodiscard]] std::shared_ptr<RuntimeManager> getRuntimeManager() const {
     return runtimeManager_;
   }
@@ -81,6 +87,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
+  const std::shared_ptr<MemoryManager> memoryManager_;
   const std::shared_ptr<RuntimeManager> runtimeManager_;
   const std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
 };

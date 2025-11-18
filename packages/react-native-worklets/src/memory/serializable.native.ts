@@ -4,6 +4,7 @@ import { registerWorkletStackDetails } from '../debug/errors';
 import { jsVersion } from '../debug/jsVersion';
 import { logger } from '../debug/logger';
 import { WorkletsError } from '../debug/WorkletsError';
+import { getRuntimeKind, RuntimeKind } from '../runtimeKind';
 import type { WorkletFunction, WorkletImport } from '../types';
 import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
@@ -14,7 +15,9 @@ import {
 } from './serializableMappingCache';
 import type {
   FlatSerializableRef,
+  RegistrationData,
   SerializableRef,
+  SerializationData,
   Synchronizable,
 } from './types';
 
@@ -119,29 +122,11 @@ const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // We use it to check if later on the function reenters with the same object
 let processedObjectAtThresholdDepth: unknown;
 
-export const determinants: ((value: unknown) => boolean)[] = [];
-export const serializers: ((value: unknown) => unknown)[] = [];
-export const deserializers: ((value: unknown) => unknown)[] = [];
-
-export function registerSerializable(
-  determinant: (value: unknown) => boolean,
-  serializer: (value: unknown) => unknown,
-  deserializer: (value: unknown) => unknown
-) {
-  determinants.push(determinant);
-  serializers.push(serializer);
-  deserializers.push(deserializer);
-}
-
 export function createSerializable<TValue>(
   value: TValue,
   shouldPersistRemote = false,
   depth = 0
 ): SerializableRef<TValue> {
-  if (globalThis.__ENABLE_LOGGING) {
-    console.log('value', value);
-    console.log('typeof value', typeof value);
-  }
   detectCyclicObject(value, depth);
 
   const isObject = typeof value === 'object';
@@ -178,13 +163,6 @@ export function createSerializable<TValue>(
   const cached = getFromCache(value);
   if (cached !== undefined) {
     return cached as SerializableRef<TValue>;
-  }
-
-  for (let i = 0; i < determinants.length; i++) {
-    if (determinants[i](value)) {
-      // value = serializers[i](value) as any;
-      return cloneCustom(value, serializers[i], deserializers[i]);
-    }
   }
 
   if (Array.isArray(value)) {
@@ -246,9 +224,13 @@ export function createSerializable<TValue>(
     // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView
     return cloneArrayBufferView(value);
   }
-  return clonePlainJSObject(value, shouldPersistRemote, depth);
-  // return inaccessibleObject(value);
-  // throw new Error("this shouldn't happen");
+  for (let i = 0; i < customSerializationRegistry.length; i++) {
+    const { determinant, serializer } = customSerializationRegistry[i];
+    if (determinant(value)) {
+      return cloneCustom(value, serializer, i) as SerializableRef<TValue>;
+    }
+  }
+  return inaccessibleObject(value);
 }
 
 if (globalThis._WORKLETS_BUNDLE_MODE) {
@@ -257,6 +239,44 @@ if (globalThis._WORKLETS_BUNDLE_MODE) {
     imported: 'createSerializable',
     source: require.resolveWeak('react-native-worklets'),
   };
+}
+
+if (!globalThis.__customSerializationRegistry) {
+  globalThis.__customSerializationRegistry =
+    [] as typeof globalThis.__customSerializationRegistry;
+}
+const customSerializationRegistry = globalThis.__customSerializationRegistry;
+
+export function registerCustomSerializable<
+  TValue extends object,
+  TSerialized extends object,
+>(registrationData: RegistrationData<TValue, TSerialized>) {
+  if (__DEV__ && getRuntimeKind() !== RuntimeKind.ReactNative) {
+    throw new WorkletsError(
+      'registerCustomSerializable can be used only on React Native runtime.'
+    );
+  }
+
+  const { name, determinant, serializer, deserializer } = registrationData;
+  if (customSerializationRegistry.some((data) => data.name === name)) {
+    if (__DEV__) {
+      console.warn(
+        `Custom serializable with name "${name}" is already registered. Duplicate registration is ignored.`
+      );
+    }
+    return;
+  }
+
+  customSerializationRegistry.push(
+    registrationData as unknown as SerializationData<object, object>
+  );
+
+  WorkletsModule.registerCustomSerializable(
+    createSerializable(determinant),
+    createSerializable(serializer),
+    createSerializable(deserializer),
+    customSerializationRegistry.length - 1
+  );
 }
 
 function detectCyclicObject(value: unknown, depth: number) {
@@ -624,17 +644,17 @@ function cloneImport<TValue extends WorkletImport>(
   return clone as SerializableRef<TValue>;
 }
 
-function cloneCustom<TValue extends object>(
+function cloneCustom<TValue extends object, TSerialized extends object>(
   data: TValue,
-  serializer: any,
-  deserializer: any
+  serializer: (data: TValue) => TSerialized,
+  typeId: number
 ): SerializableRef<TValue> {
   const serializedData = serializer(data);
   const serializedDataSerializable = createSerializable(serializedData);
 
   return WorkletsModule.createSerializableCustom(
-    createSerializable(deserializer),
-    serializedDataSerializable
+    serializedDataSerializable,
+    typeId
   ) as SerializableRef<TValue>;
 }
 
@@ -749,6 +769,26 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
         return global._createSerializableSynchronizable(
           value
         ) as FlatSerializableRef<TValue>;
+      }
+      if (Object.getPrototypeOf(value) !== Object.prototype) {
+        for (
+          let i = 0;
+          i < globalThis.__customSerializationRegistry.length;
+          i++
+        ) {
+          const { determinant, serializer } =
+            globalThis.__customSerializationRegistry[i];
+          if (determinant(value)) {
+            console.log('true');
+            const serializedData = serializer(value);
+            return globalThis.__workletsModuleProxy?.createSerializableCustom(
+              cloneRecursive(
+                serializedData as TValue
+              ) as SerializableRef<object>,
+              i
+            ) as FlatSerializableRef<TValue>;
+          }
+        }
       }
       const toAdapt: Record<string, FlatSerializableRef<TValue>> = {};
       for (const [key, element] of Object.entries(value)) {
