@@ -441,10 +441,10 @@ jsi::Value SerializableString::toJSValue(jsi::Runtime &rt) {
 }
 
 jsi::Value SerializableBigInt::toJSValue(jsi::Runtime &rt) {
-  if (intValue_.has_value()) {
-    return jsi::BigInt::fromInt64(rt, intValue_.value());
+  if (fastValue_.has_value()) {
+    return jsi::BigInt::fromInt64(rt, fastValue_.value());
   } else {
-    return rt.global().getPropertyAsFunction(rt, "BigInt").call(rt, jsi::String::createFromUtf8(rt, stringValue_));
+    return rt.global().getPropertyAsFunction(rt, "BigInt").call(rt, jsi::String::createFromUtf8(rt, slowValue_));
   }
 }
 
