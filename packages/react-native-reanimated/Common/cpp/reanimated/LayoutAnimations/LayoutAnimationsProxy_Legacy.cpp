@@ -80,7 +80,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::progressLayoutAnimation(i
   PropsParserContext propsParserContext{layoutAnimation.finalView.surfaceId, *contextContainer_};
 #ifdef RN_SERIALIZABLE_STATE
   rawProps = std::make_shared<RawProps>(
-      folly::dynamic::merge(layoutAnimation.finalView->props->rawProps, (folly::dynamic)*rawProps));
+      folly::dynamic::merge(layoutAnimation.finalView.props->rawProps, (folly::dynamic)*rawProps));
 #endif
   auto newProps = getComponentDescriptorForShadowView(layoutAnimation.finalView)
                       .cloneProps(propsParserContext, layoutAnimation.finalView.props, std::move(*rawProps));

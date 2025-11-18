@@ -50,7 +50,7 @@ struct LayoutAnimationConfig {
 class LayoutAnimationsManager {
  public:
   explicit LayoutAnimationsManager(const std::shared_ptr<JSLogger> &jsLogger)
-      : sharedTransitionManager_(std::make_shared<SharedTransitionManager>()), jsLogger_(jsLogger) {}
+      : jsLogger_(jsLogger), sharedTransitionManager_(std::make_shared<SharedTransitionManager>()) {}
   void configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch);
   void setShouldAnimateExiting(const int tag, const bool value);
   bool shouldAnimateExiting(const int tag, const bool shouldAnimate);
