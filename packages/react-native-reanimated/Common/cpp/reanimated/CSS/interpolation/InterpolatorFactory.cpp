@@ -38,20 +38,11 @@ class RecordInterpolatorFactory : public PropertyInterpolatorFactory {
   const InterpolatorFactoriesRecord factories_;
 };
 
-class ArrayInterpolatorFactory : public PropertyInterpolatorFactory {
+class ArrayLikeInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
-  explicit ArrayInterpolatorFactory(const InterpolatorFactoriesArray &factories)
-      : PropertyInterpolatorFactory(), factories_(factories) {}
-
   const CSSValue &getDefaultValue() const override {
     static EmptyArrayValue emptyArrayValue;
     return emptyArrayValue;
-  }
-
-  std::shared_ptr<PropertyInterpolator> create(
-      const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
-    return std::make_shared<ArrayPropertiesInterpolator>(factories_, propertyPath, viewStylesRepository);
   }
 
  private:
@@ -65,8 +56,36 @@ class ArrayInterpolatorFactory : public PropertyInterpolatorFactory {
       return "[]";
     }
   };
+};
 
+class ArrayInterpolatorFactory : public ArrayLikeInterpolatorFactory {
+ public:
+  explicit ArrayInterpolatorFactory(const InterpolatorFactoriesArray &factories)
+      : ArrayLikeInterpolatorFactory(), factories_(factories) {}
+
+  std::shared_ptr<PropertyInterpolator> create(
+      const PropertyPath &propertyPath,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
+    return std::make_shared<ArrayPropertiesInterpolator>(factories_, propertyPath, viewStylesRepository);
+  }
+
+ private:
   const InterpolatorFactoriesArray factories_;
+};
+
+class FiltersInterpolatorFactory : public ArrayLikeInterpolatorFactory {
+ public:
+  explicit FiltersInterpolatorFactory(const std::shared_ptr<StyleOperationInterpolators> &interpolators)
+      : ArrayLikeInterpolatorFactory(), interpolators_(interpolators) {}
+
+  std::shared_ptr<PropertyInterpolator> create(
+      const PropertyPath &propertyPath,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
+    return std::make_shared<FilterStyleInterpolator>(propertyPath, interpolators_, viewStylesRepository);
+  }
+
+ private:
+  const std::shared_ptr<StyleOperationInterpolators> interpolators_;
 };
 
 class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
@@ -99,37 +118,6 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
 
     std::string toString() const override {
       return getIdentityMatrix().toString();
-    }
-  };
-
-  const std::shared_ptr<StyleOperationInterpolators> interpolators_;
-};
-
-class FiltersInterpolatorFactory : public PropertyInterpolatorFactory {
- public:
-  explicit FiltersInterpolatorFactory(const std::shared_ptr<StyleOperationInterpolators> &interpolators)
-      : PropertyInterpolatorFactory(), interpolators_(interpolators) {}
-
-  const CSSValue &getDefaultValue() const override {
-    static EmptyFilterValue emptyFilterValue;
-    return emptyFilterValue;
-  }
-
-  std::shared_ptr<PropertyInterpolator> create(
-      const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
-    return std::make_shared<FilterStyleInterpolator>(propertyPath, interpolators_, viewStylesRepository);
-  }
-
- private:
-  // Helper private type just for a default value
-  struct EmptyFilterValue : public CSSValue {
-    folly::dynamic toDynamic() const override {
-      return folly::dynamic::array();
-    }
-
-    std::string toString() const override {
-      return "[]";
     }
   };
 
