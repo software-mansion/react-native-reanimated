@@ -10,7 +10,7 @@ using namespace react;
 
 namespace worklets {
 
-class __attribute__((visibility("default"))) JSScheduler {
+class JSScheduler {
   using Job = std::function<void(jsi::Runtime &rt)>;
 
  public:
