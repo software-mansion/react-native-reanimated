@@ -364,13 +364,22 @@ class SerializableString : public Serializable {
 
 class SerializableBigInt : public Serializable {
  public:
-  explicit SerializableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint)
-      : Serializable(ValueType::BigIntType), string_(bigint.toString(rt).utf8(rt)) {}
+  explicit SerializableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigInt) : Serializable(ValueType::BigIntType) {
+    if (bigInt.isInt64(rt)) {
+      fastValue_ = bigInt.getInt64(rt);
+    } else {
+      slowValue_ = bigInt.toString(rt).utf8(rt);
+    }
+  }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
-  const std::string string_;
+  /**
+   * This member is used only when the BigInt fits into int64_t range.
+  */
+  std::optional<int64_t> fastValue_{};
+  std::string slowValue_{};
 };
 
 class SerializableScalar : public Serializable {
