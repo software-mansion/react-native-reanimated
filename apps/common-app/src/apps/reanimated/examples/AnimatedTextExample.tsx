@@ -11,9 +11,9 @@ import Animated, {
 // TODO: add support for the following syntax: <Animated.Text>{sharedValue}</Animated.Text>
 // TODO: add support for the following syntax: <Animated.Text>Before {sharedValue} After</Animated.Text>
 // TODO: add TypeScript validation that allows <Animated.Text> to either have children or have `text` animated prop
+// TODO: add more examples
 // TODO: add gauges example
 // TODO: sync `text` prop updates back to React as `children` prop
-// TODO: support both string and number as text animated prop
 // TODO: convert docs examples from AnimatedTextInput to Animated.Text
 
 export default function AnimatedTextExample() {
