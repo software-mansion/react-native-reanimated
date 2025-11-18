@@ -3,6 +3,9 @@
 #include <reanimated/CSS/interpolation/operations/OperationsStyleInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperationInterpolator.h>
 
+#include <memory>
+#include <utility>
+
 namespace reanimated::css {
 
 class TransformsStyleInterpolator final : public OperationsStyleInterpolatorBase<TransformOperation> {

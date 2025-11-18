@@ -8,6 +8,7 @@
 #include <optional>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 namespace reanimated::css {
 

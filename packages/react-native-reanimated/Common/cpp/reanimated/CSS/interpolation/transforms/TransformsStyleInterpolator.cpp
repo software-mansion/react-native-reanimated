@@ -1,5 +1,7 @@
 #include <reanimated/CSS/interpolation/transforms/TransformsStyleInterpolator.h>
 
+#include <unordered_map>
+
 namespace reanimated::css {
 
 const folly::dynamic defaultStyleValue = folly::dynamic::array(MatrixOperation(TransformMatrix3D()).toDynamic());

@@ -6,8 +6,6 @@
 #include <reanimated/CSS/interpolation/operations/StyleOperationInterpolator.h>
 
 #include <memory>
-#include <unordered_map>
-#include <utility>
 
 namespace reanimated::css {
 

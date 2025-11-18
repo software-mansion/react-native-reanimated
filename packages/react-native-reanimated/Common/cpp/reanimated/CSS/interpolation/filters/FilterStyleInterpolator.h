@@ -4,6 +4,7 @@
 #include <reanimated/CSS/interpolation/operations/OperationsStyleInterpolator.h>
 
 #include <memory>
+#include <utility>
 
 namespace reanimated::css {
 

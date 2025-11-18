@@ -5,7 +5,9 @@
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <memory>
+#include <string>
 #include <type_traits>
+#include <vector>
 
 namespace reanimated::css {
 
