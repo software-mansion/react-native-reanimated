@@ -87,138 +87,138 @@ export default function TransformOrigin() {
                   title: 'Vertical',
                   transformOrigins: ['top', 'bottom'],
                 },
-                // {
-                //   title: 'Horizontal',
-                //   transformOrigins: ['left', 'right'],
-                // },
-                // {
-                //   title: 'Through center',
-                //   transformOrigins: ['left', 'center', 'center', 'top'],
-                // },
+                {
+                  title: 'Horizontal',
+                  transformOrigins: ['left', 'right'],
+                },
+                {
+                  title: 'Through center',
+                  transformOrigins: ['left', 'center', 'center', 'top'],
+                },
               ],
               title: 'Single value',
             },
-            // {
-            //   description:
-            //     'When transform origin is a combination of two keyword values. The `top`/`bottom` value is applied to the **y axis** and the `left`/`right` value is applied to the **x axis**. `center` is applied to the **x axis** if is used as the first value or to the **y axis** if is used as the second value.',
-            //   examples: [
-            //     {
-            //       title: 'Top left to bottom right',
-            //       transformOrigins: ['top left', 'bottom right'],
-            //     },
-            //     {
-            //       title: 'Bottom left to top right',
-            //       transformOrigins: ['bottom left', 'top right'],
-            //     },
-            //     {
-            //       title: 'Through center',
-            //       transformOrigins: ['left top', 'center', 'right top'],
-            //     },
-            //   ],
-            //   title: 'Two values',
-            // },
+            {
+              description:
+                'When transform origin is a combination of two keyword values. The `top`/`bottom` value is applied to the **y axis** and the `left`/`right` value is applied to the **x axis**. `center` is applied to the **x axis** if is used as the first value or to the **y axis** if is used as the second value.',
+              examples: [
+                {
+                  title: 'Top left to bottom right',
+                  transformOrigins: ['top left', 'bottom right'],
+                },
+                {
+                  title: 'Bottom left to top right',
+                  transformOrigins: ['bottom left', 'top right'],
+                },
+                {
+                  title: 'Through center',
+                  transformOrigins: ['left top', 'center', 'right top'],
+                },
+              ],
+              title: 'Two values',
+            },
           ],
         },
-        // {
-        //   name: 'Absolute',
-        //   sections: [
-        //     {
-        //       description:
-        //         'Single value specified in pixels (or 3-value array). It is applied only to the **x axis**. The second axis is set to `center` by default.',
-        //       examples: [
-        //         {
-        //           title: 'As a pixels string',
-        //           transformOrigins: ['10px', '100px'],
-        //         },
-        //         {
-        //           title: 'As a number',
-        //           transformOrigins: [
-        //             [-50, 0, 0],
-        //             [100, 0, 0],
-        //           ],
-        //         },
-        //       ],
-        //       title: 'Single value',
-        //     },
-        //     {
-        //       description:
-        //         'Two values specified in pixels (or as a number). The first value is applied to the **x axis** and the second value is applied to the **y axis**.',
-        //       examples: [
-        //         {
-        //           title: 'As a pixels string',
-        //           transformOrigins: ['-50px -10px', '120px 60px'],
-        //         },
-        //         {
-        //           title: 'As a number',
-        //           transformOrigins: [
-        //             [120, -20, 0],
-        //             [-50, 60, 0],
-        //           ],
-        //         },
-        //       ],
-        //       title: 'Two values',
-        //     },
-        //   ],
-        // },
-        // {
-        //   name: 'Relative',
-        //   sections: [
-        //     {
-        //       description:
-        //         'Single value specified in percentage. It is applied only to the **x axis** and is relative to the **width** of the element. The second axis is set to `center` by default.',
-        //       examples: [
-        //         {
-        //           title: 'As a percentage string',
-        //           transformOrigins: ['-50%', '100%'],
-        //         },
-        //       ],
-        //       title: 'Single value',
-        //     },
-        //     {
-        //       description:
-        //         'Two values specified in percentage. The first value is applied to the **x axis** and is relative to the **width** of the element. The second value is applied to the **y axis** and is relative to the **height** of the element.',
-        //       examples: [
-        //         {
-        //           title: 'Percentage to percentage',
-        //           transformOrigins: ['-50% -50%', '100% 100%'],
-        //         },
-        //       ],
-        //       title: 'Two values',
-        //     },
-        //   ],
-        // },
-        // {
-        //   name: 'Mixed',
-        //   sections: [
-        //     {
-        //       description:
-        //         'Single value specified in pixels, as a number, in percentage, or as a keyword.',
-        //       examples: [
-        //         {
-        //           title: 'Mixed values',
-        //           transformOrigins: ['-75px', '50%', [-25, 0, 0], 'center'],
-        //         },
-        //       ],
-        //       title: 'Single value',
-        //     },
-        //     {
-        //       description:
-        //         'Two values specified in pixels, as a number, in percentage, or as a keyword.',
-        //       examples: [
-        //         {
-        //           title: 'Mixed values',
-        //           transformOrigins: [
-        //             '-50px 50%',
-        //             [50, 0, 0],
-        //             'center bottom',
-        //             '125%   bottom',
-        //           ],
-        //         },
-        //       ],
-        //       title: 'Two values',
-        //     },
-        //   ],
-        // },
+        {
+          name: 'Absolute',
+          sections: [
+            {
+              description:
+                'Single value specified in pixels (or 3-value array). It is applied only to the **x axis**. The second axis is set to `center` by default.',
+              examples: [
+                {
+                  title: 'As a pixels string',
+                  transformOrigins: ['10px', '100px'],
+                },
+                {
+                  title: 'As a number',
+                  transformOrigins: [
+                    [-50, 0, 0],
+                    [100, 0, 0],
+                  ],
+                },
+              ],
+              title: 'Single value',
+            },
+            {
+              description:
+                'Two values specified in pixels (or as a number). The first value is applied to the **x axis** and the second value is applied to the **y axis**.',
+              examples: [
+                {
+                  title: 'As a pixels string',
+                  transformOrigins: ['-50px -10px', '120px 60px'],
+                },
+                {
+                  title: 'As a number',
+                  transformOrigins: [
+                    [120, -20, 0],
+                    [-50, 60, 0],
+                  ],
+                },
+              ],
+              title: 'Two values',
+            },
+          ],
+        },
+        {
+          name: 'Relative',
+          sections: [
+            {
+              description:
+                'Single value specified in percentage. It is applied only to the **x axis** and is relative to the **width** of the element. The second axis is set to `center` by default.',
+              examples: [
+                {
+                  title: 'As a percentage string',
+                  transformOrigins: ['-50%', '100%'],
+                },
+              ],
+              title: 'Single value',
+            },
+            {
+              description:
+                'Two values specified in percentage. The first value is applied to the **x axis** and is relative to the **width** of the element. The second value is applied to the **y axis** and is relative to the **height** of the element.',
+              examples: [
+                {
+                  title: 'Percentage to percentage',
+                  transformOrigins: ['-50% -50%', '100% 100%'],
+                },
+              ],
+              title: 'Two values',
+            },
+          ],
+        },
+        {
+          name: 'Mixed',
+          sections: [
+            {
+              description:
+                'Single value specified in pixels, as a number, in percentage, or as a keyword.',
+              examples: [
+                {
+                  title: 'Mixed values',
+                  transformOrigins: ['-75px', '50%', [-25, 0, 0], 'center'],
+                },
+              ],
+              title: 'Single value',
+            },
+            {
+              description:
+                'Two values specified in pixels, as a number, in percentage, or as a keyword.',
+              examples: [
+                {
+                  title: 'Mixed values',
+                  transformOrigins: [
+                    '-50px 50%',
+                    [50, 0, 0],
+                    'center bottom',
+                    '125%   bottom',
+                  ],
+                },
+              ],
+              title: 'Two values',
+            },
+          ],
+        },
       ]}
     />
   );
