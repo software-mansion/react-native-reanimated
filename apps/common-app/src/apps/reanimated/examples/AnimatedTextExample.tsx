@@ -15,6 +15,7 @@ import Animated, {
 // TODO: add more examples
 // TODO: add gauges example
 // TODO: sync `text` prop updates back to React as `children` prop
+// TODO: add docs about Animated.Text
 // TODO: convert docs examples from AnimatedTextInput to Animated.Text
 
 export default function AnimatedTextExample() {
