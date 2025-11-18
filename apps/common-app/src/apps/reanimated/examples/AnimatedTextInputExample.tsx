@@ -44,11 +44,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   input: {
-    width: '100%',
     fontSize: 100,
     textAlign: 'center',
     fontVariant: ['tabular-nums'],
-    borderColor: 'cyan',
-    borderWidth: 10,
   },
 });
