@@ -1,196 +1,125 @@
 'use strict';
+import { ReanimatedError } from '../../../../../common';
+import {
+  ERROR_MESSAGES,
+  normalizeKeyframeSelector,
+  processKeyframes,
+} from '../keyframes';
 
-import type { PlainStyle, StyleBuilder } from '../../../../../common';
-import { getStyleBuilder } from '../../../registry';
-import { normalizeAnimationKeyframes } from '../keyframes';
+describe(normalizeKeyframeSelector, () => {
+  describe('single selector', () => {
+    describe('keyword', () => {
+      it('returns 0 for from', () => {
+        expect(normalizeKeyframeSelector('from')).toEqual([0]);
+      });
 
-describe(normalizeAnimationKeyframes, () => {
-  const styleBuilder = getStyleBuilder('RCTView');
+      it('returns 1 for to', () => {
+        expect(normalizeKeyframeSelector('to')).toEqual([1]);
+      });
 
-  test('normalizes primitive properties', () => {
-    const from = processValue(styleBuilder, 'backgroundColor', '#ff0000');
-    const to = processValue(styleBuilder, 'backgroundColor', '#00ff00');
-
-    const result = normalizeAnimationKeyframes(
-      {
-        from: { backgroundColor: '#ff0000' },
-        to: { backgroundColor: '#00ff00' },
-      },
-      styleBuilder
-    );
-
-    expect(result.keyframesStyle.backgroundColor).toEqual([
-      { offset: 0, value: from },
-      { offset: 1, value: to },
-    ]);
-    expect(result.keyframeTimingFunctions).toEqual({});
-  });
-
-  test('orders offsets ascending', () => {
-    const result = normalizeAnimationKeyframes(
-      {
-        to: { opacity: 1 },
-        '50%': { opacity: 0.5 },
-        from: { opacity: 0 },
-      },
-      styleBuilder
-    );
-
-    expect(result.keyframesStyle.opacity).toEqual([
-      { offset: 0, value: 0 },
-      { offset: 0.5, value: 0.5 },
-      { offset: 1, value: 1 },
-    ]);
-  });
-
-  test('normalizes transformOrigin into nested sequences', () => {
-    const result = normalizeAnimationKeyframes(
-      {
-        from: { transformOrigin: '0 50% 0' },
-        to: { transformOrigin: '100% 0 10px' },
-      },
-      styleBuilder
-    );
-
-    expect(result.keyframesStyle.transformOrigin).toEqual([
-      [
-        { offset: 0, value: 0 },
-        { offset: 1, value: '100%' },
-      ],
-      [
-        { offset: 0, value: '50%' },
-        { offset: 1, value: 0 },
-      ],
-      [
-        { offset: 0, value: 0 },
-        { offset: 1, value: 10 },
-      ],
-    ]);
-  });
-
-  test('treats transform arrays as terminal values', () => {
-    const from = processValue(styleBuilder, 'transform', [
-      { scale: 0 },
-      { rotate: '0deg' },
-    ]);
-    const to = processValue(styleBuilder, 'transform', [
-      { scale: 1 },
-      { rotate: '360deg' },
-    ]);
-
-    const result = normalizeAnimationKeyframes(
-      {
-        from: { transform: [{ scale: 0 }, { rotate: '0deg' }] },
-        to: { transform: [{ scale: 1 }, { rotate: '360deg' }] },
-      },
-      styleBuilder
-    );
-
-    expect(result.keyframesStyle.transform).toEqual([
-      { offset: 0, value: from },
-      { offset: 1, value: to },
-    ]);
-  });
-
-  test('normalizes filter values', () => {
-    const from = processValue(
-      styleBuilder,
-      'filter',
-      'blur(0px) brightness(0%)'
-    );
-    const to = processValue(
-      styleBuilder,
-      'filter',
-      'blur(4px) brightness(100%)'
-    );
-
-    const result = normalizeAnimationKeyframes(
-      {
-        from: { filter: 'blur(0px) brightness(0%)' },
-        to: { filter: 'blur(4px) brightness(100%)' },
-      },
-      styleBuilder
-    );
-
-    expect(result.keyframesStyle.filter).toEqual([
-      { offset: 0, value: from },
-      { offset: 1, value: to },
-    ]);
-  });
-
-  test('normalizes boxShadow arrays', () => {
-    const from = processValue(styleBuilder, 'boxShadow', '0px 0px 0px #000000');
-    const to = processValue(
-      styleBuilder,
-      'boxShadow',
-      '10px 5px 3px rgba(0,0,0,0.5)'
-    );
-
-    expect(Array.isArray(from)).toBe(true);
-    expect(Array.isArray(to)).toBe(true);
-
-    const result = normalizeAnimationKeyframes(
-      {
-        from: { boxShadow: '0px 0px 0px #000000' },
-        to: { boxShadow: '10px 5px 3px rgba(0,0,0,0.5)' },
-      },
-      styleBuilder
-    );
-
-    const fromShadows = Array.isArray(from) ? from : [];
-    const toShadows = Array.isArray(to) ? to : [];
-
-    expect(result.keyframesStyle.boxShadow).toEqual(
-      fromShadows.map((shadow, index) => [
-        { offset: 0, value: shadow },
-        { offset: 1, value: toShadows[index] },
-      ])
-    );
-  });
-
-  test('normalizes nested shadowOffset objects', () => {
-    const from = processValue(styleBuilder, 'shadowOffset', {
-      width: 0,
-      height: 0,
-    });
-    const to = processValue(styleBuilder, 'shadowOffset', {
-      width: 10,
-      height: 5,
+      it('throws an error for invalid keyword', () => {
+        expect(() => normalizeKeyframeSelector('invalid')).toThrow(
+          new ReanimatedError(ERROR_MESSAGES.invalidOffsetType('invalid'))
+        );
+      });
     });
 
-    const result = normalizeAnimationKeyframes(
-      {
-        from: { shadowOffset: { width: 0, height: 0 } },
-        to: { shadowOffset: { width: 10, height: 5 } },
-      },
-      styleBuilder
-    );
+    describe('number', () => {
+      it('returns the same value for numbers between 0 and 1', () => {
+        expect(normalizeKeyframeSelector(0.5)).toEqual([0.5]);
+      });
 
-    expect(result.keyframesStyle.shadowOffset).toEqual({
-      width: [
-        { offset: 0, value: from.width },
-        { offset: 1, value: to.width },
-      ],
-      height: [
-        { offset: 0, value: from.height },
-        { offset: 1, value: to.height },
-      ],
+      it('converts number strings to numbers', () => {
+        expect(normalizeKeyframeSelector('0.5')).toEqual([0.5]);
+      });
+
+      it('throws an error for numbers outside of 0 and 1', () => {
+        expect(() => normalizeKeyframeSelector(-0.1)).toThrow(
+          new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(-0.1))
+        );
+        expect(() => normalizeKeyframeSelector(1.1)).toThrow(
+          new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(1.1))
+        );
+      });
+
+      it('throws an error for invalid numbers', () => {
+        expect(() => normalizeKeyframeSelector('1+')).toThrow(
+          new ReanimatedError(ERROR_MESSAGES.invalidOffsetType('1+'))
+        );
+        expect(() => normalizeKeyframeSelector(NaN)).toThrow(
+          new ReanimatedError(ERROR_MESSAGES.invalidOffsetType(NaN))
+        );
+      });
+    });
+
+    describe('percentage', () => {
+      it('converts percentages to numbers between 0 and 1', () => {
+        expect(normalizeKeyframeSelector('50%')).toEqual([0.5]);
+      });
+
+      it('throws an error for invalid percentages', () => {
+        expect(() => normalizeKeyframeSelector('101%')).toThrow(
+          new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange('101%'))
+        );
+      });
+    });
+  });
+
+  describe('multiple selectors', () => {
+    test.each([
+      ['from, 50%, to', [0, 0.5, 1]],
+      ['0%, 25%, 50%, 75%, 100%', [0, 0.25, 0.5, 0.75, 1]],
+      // this function doesn't filter out duplicates and doesn't change the order
+      ['10%, 30%, 20%', [0.1, 0.3, 0.2]],
+      ['to, 0%, 1, 20%', [1, 0, 1, 0.2]],
+      ['0, 0.5, 1', [0, 0.5, 1]],
+    ])('converts %p to %p', (selectors, expected) => {
+      expect(normalizeKeyframeSelector(selectors)).toEqual(expected);
     });
   });
 });
 
-function processValue<P extends keyof PlainStyle>(
-  builder: StyleBuilder,
-  property: P,
-  value: PlainStyle[P]
-): NonNullable<PlainStyle[P]> {
-  const processed = builder.buildFrom({
-    [property]: value,
-  } as Partial<PlainStyle>);
+function mockStyleBuilder(
+  separatelyInterpolatedNestedProperties: string[] = []
+) {
+  const separatelyInterpolatedNestedPropertiesSet = new Set(
+    separatelyInterpolatedNestedProperties
+  );
 
-  if (!processed || processed[property] === undefined) {
-    throw new Error(`Style builder did not process ${String(property)}`);
-  }
-
-  return processed[property] as NonNullable<PlainStyle[P]>;
+  return {
+    buildFrom: jest.fn().mockImplementation((props) => props),
+    isSeparatelyInterpolatedNestedProperty: jest
+      .fn()
+      .mockImplementation((property) =>
+        separatelyInterpolatedNestedPropertiesSet.has(property)
+      ),
+    add: jest.fn(),
+  };
 }
+
+describe(processKeyframes, () => {
+  describe('duplicate selectors', () => {
+    test.each([
+      [
+        { from: { opacity: 0.5 }, '0, 0%': { opacity: 0.75 } },
+        [{ offset: 0, style: { opacity: 0.75 } }],
+      ],
+      [
+        { 'to, 100%, 0%, 0%': { opacity: 0.75 } },
+        [
+          { offset: 0, style: { opacity: 0.75 }, timingFunction: undefined },
+          { offset: 1, style: { opacity: 0.75 }, timingFunction: undefined },
+        ],
+      ],
+    ])('merges duplicate selectors in %p', (keyframes, expected) => {
+      const styleBuilder = mockStyleBuilder();
+      expect(processKeyframes(keyframes, styleBuilder)).toEqual(expected);
+    });
+  });
+
+  describe('simple properties', () => {});
+
+  describe('nested properties', () => {});
+
+  describe('multiple keyframes and properties', () => {});
+});
