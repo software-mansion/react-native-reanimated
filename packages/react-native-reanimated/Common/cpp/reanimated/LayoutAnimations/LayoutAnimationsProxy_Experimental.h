@@ -118,6 +118,10 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
       ShadowViewMutationList &filteredMutations,
       const PropsParserContext &propsParserContext,
       SurfaceId surfaceId) const;
+  void cleanupSharedTransitions(
+      ShadowViewMutationList &filteredMutations,
+      const PropsParserContext &propsParserContext,
+      SurfaceId surfaceId) const;
 
 #ifdef __APPLE__
   void setForceScreenSnapshotFunction(ForceScreenSnapshotFunction f) {

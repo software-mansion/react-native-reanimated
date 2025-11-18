@@ -265,46 +265,6 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
   }
 }
 
-void LayoutAnimationsProxy_Experimental::cleanupAnimations(
-    ShadowViewMutationList &filteredMutations,
-    const PropsParserContext &propsParserContext,
-    SurfaceId surfaceId) const {
-  for (auto &tag : tagsToRestore_) {
-    auto &node = lightNodes_[tag];
-    if (node) {
-      auto view = node->current;
-      auto parentTag = node->parent.lock()->current.tag;
-      auto m = ShadowViewMutation::UpdateMutation(
-          cloneViewWithoutOpacity(view, propsParserContext), cloneViewWithOpacity(view, propsParserContext), parentTag);
-      filteredMutations.push_back(m);
-    }
-  }
-  tagsToRestore_.clear();
-
-  for (auto &tag : sharedContainersToRemove_) {
-    auto root = lightNodes_[surfaceId];
-    for (int i = 0; i < root->children.size(); i++) {
-      auto &child = root->children[i];
-      if (child->current.tag == tag) {
-        filteredMutations.push_back(ShadowViewMutation::RemoveMutation(surfaceId, child->current, i));
-        filteredMutations.push_back(ShadowViewMutation::DeleteMutation(child->current));
-        root->children.erase(root->children.begin() + i);
-      }
-    }
-  }
-  sharedContainersToRemove_.clear();
-
-#ifdef ANDROID
-  restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId);
-#endif // ANDROID
-  for (const auto tag : finishedAnimationTags_) {
-    auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
-    layoutAnimations_.erase(tag);
-    updateMap.erase(tag);
-  }
-  finishedAnimationTags_.clear();
-}
-
 void LayoutAnimationsProxy_Experimental::hideTransitioningViews(
     int index,
     ShadowViewMutationList &filteredMutations,
@@ -371,6 +331,36 @@ void LayoutAnimationsProxy_Experimental::insertContainers(
   }
   filteredMutations.insert(filteredMutations.end(), temp.begin(), temp.end());
   containersToInsert_.clear();
+}
+
+void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
+    ShadowViewMutationList &filteredMutations,
+    const PropsParserContext &propsParserContext,
+    SurfaceId surfaceId) const {
+  for (auto &tag : tagsToRestore_) {
+    auto &node = lightNodes_[tag];
+    if (node) {
+      auto view = node->current;
+      auto parentTag = node->parent.lock()->current.tag;
+      auto m = ShadowViewMutation::UpdateMutation(
+          cloneViewWithoutOpacity(view, propsParserContext), cloneViewWithOpacity(view, propsParserContext), parentTag);
+      filteredMutations.push_back(m);
+    }
+  }
+  tagsToRestore_.clear();
+
+  for (auto &tag : sharedContainersToRemove_) {
+    auto root = lightNodes_[surfaceId];
+    for (int i = 0; i < root->children.size(); i++) {
+      auto &child = root->children[i];
+      if (child->current.tag == tag) {
+        filteredMutations.push_back(ShadowViewMutation::RemoveMutation(surfaceId, child->current, i));
+        filteredMutations.push_back(ShadowViewMutation::DeleteMutation(child->current));
+        root->children.erase(root->children.begin() + i);
+      }
+    }
+  }
+  sharedContainersToRemove_.clear();
 }
 
 // MARK: Position Calculation

@@ -606,6 +606,23 @@ void LayoutAnimationsProxy_Experimental::maybeUpdateWindowDimensions(
   }
 }
 
+void LayoutAnimationsProxy_Experimental::cleanupAnimations(
+    ShadowViewMutationList &filteredMutations,
+    const PropsParserContext &propsParserContext,
+    SurfaceId surfaceId) const {
+  cleanupSharedTransitions(filteredMutations, propsParserContext, surfaceId);
+
+#ifdef ANDROID
+  restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId);
+#endif // ANDROID
+  for (const auto tag : finishedAnimationTags_) {
+    auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+    layoutAnimations_.erase(tag);
+    updateMap.erase(tag);
+  }
+  finishedAnimationTags_.clear();
+}
+
 // MARK: Start Animation
 
 ShadowView LayoutAnimationsProxy_Experimental::maybeCreateLayoutAnimation(
