@@ -48,8 +48,8 @@ WorkletsModuleProxy::WorkletsModuleProxy(
    */
   uiWorkletRuntime_->init(createJSIWorkletsModuleProxy());
 
-  animationFrameBatchinator_ = std::make_shared<AnimationFrameBatchinator>(
-      uiWorkletRuntime_->getJSIRuntime(), runtimeBindings_.requestAnimationFrame);
+  animationFrameBatchinator_ =
+      std::make_shared<AnimationFrameBatchinator>(uiWorkletRuntime_, runtimeBindings_.requestAnimationFrame);
 
   UIRuntimeDecorator::decorate(
       uiWorkletRuntime_->getJSIRuntime(), animationFrameBatchinator_->getJsiRequestAnimationFrame());
