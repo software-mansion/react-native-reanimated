@@ -30,7 +30,6 @@ using namespace reanimated;
 
 struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
                                             public std::enable_shared_from_this<LayoutAnimationsProxy_Experimental> {
-  mutable std::unordered_map<Tag, std::shared_ptr<Node>> nodeForTag_;
   mutable std::recursive_mutex mutex;
   mutable SurfaceManager surfaceManager;
   mutable std::unordered_set<std::shared_ptr<LightNode>> deadNodes;

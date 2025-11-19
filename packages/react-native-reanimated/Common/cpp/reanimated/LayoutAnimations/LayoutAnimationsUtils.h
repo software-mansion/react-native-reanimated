@@ -66,37 +66,6 @@ typedef enum class ExitingState : std::uint8_t {
 
 struct MutationNode;
 
-/**
- Represents a view that was either removed or had a child removed from the
- ShadowTree
- */
-struct Node {
-  std::vector<std::shared_ptr<MutationNode>> children, unflattenedChildren;
-  std::shared_ptr<Node> parent, unflattenedParent;
-  Tag tag;
-  void removeChildFromUnflattenedTree(const std::shared_ptr<MutationNode> &child);
-  void applyMutationToIndices(const ShadowViewMutation &mutation);
-  void insertChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
-  void insertUnflattenedChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
-  virtual bool isMutationMode();
-  explicit Node(const Tag tag) : tag(tag) {}
-  Node(Node &&node) noexcept
-      : children(std::move(node.children)), unflattenedChildren(std::move(node.unflattenedChildren)), tag(node.tag) {}
-  Node(Node &node) : children(node.children), unflattenedChildren(node.unflattenedChildren), tag(node.tag) {}
-  virtual ~Node() = default;
-};
-
-/**
- Represents a view that was removed from the ShadowTree
- */
-struct MutationNode : public Node {
-  ShadowViewMutation mutation;
-  ExitingState state = ExitingState::UNDEFINED;
-  explicit MutationNode(ShadowViewMutation &mutation) : Node(mutation.oldChildShadowView.tag), mutation(mutation) {}
-  MutationNode(ShadowViewMutation &mutation, Node &&node) : Node(std::move(node)), mutation(mutation) {}
-  bool isMutationMode() override;
-};
-
 enum TransitionState { NONE = 0, START = 1, ACTIVE = 2, END = 3, CANCELLED = 4 };
 
 enum Intent {
@@ -161,31 +130,6 @@ static inline bool isRNSScreen(const std::shared_ptr<LightNode> &node) {
 
 static inline bool hasLayoutChanged(const ShadowViewMutation &mutation) {
   return mutation.oldChildShadowView.layoutMetrics.frame != mutation.newChildShadowView.layoutMetrics.frame;
-}
-
-static inline void mergeAndSwap(
-    std::vector<std::shared_ptr<MutationNode>> &A,
-    std::vector<std::shared_ptr<MutationNode>> &B) {
-  std::vector<std::shared_ptr<MutationNode>> merged;
-  auto it1 = A.begin(), it2 = B.begin();
-  while (it1 != A.end() && it2 != B.end()) {
-    if ((*it1)->mutation.index < (*it2)->mutation.index) {
-      merged.push_back(*it1);
-      it1++;
-    } else {
-      merged.push_back(*it2);
-      it2++;
-    }
-  }
-  while (it1 != A.end()) {
-    merged.push_back(*it1);
-    it1++;
-  }
-  while (it2 != B.end()) {
-    merged.push_back(*it2);
-    it2++;
-  }
-  std::swap(A, merged);
 }
 
 } // namespace reanimated_experimental
