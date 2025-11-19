@@ -16,9 +16,9 @@ class FilterStyleInterpolator final : public OperationsStyleInterpolatorBase<Fil
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
  protected:
-  std::optional<std::pair<FilterOperations, FilterOperations>> createInterpolationPair(
-      const FilterOperations &fromOperations,
-      const FilterOperations &toOperations) const override;
+  std::optional<std::pair<StyleOperations, StyleOperations>> createInterpolationPair(
+      const StyleOperations &fromOperations,
+      const StyleOperations &toOperations) const override;
 };
 
 } // namespace reanimated::css

@@ -19,10 +19,10 @@ FilterStyleInterpolator::FilterStyleInterpolator(
           viewStylesRepository,
           defaultStyleValueDynamic) {}
 
-std::optional<std::pair<FilterOperations, FilterOperations>> FilterStyleInterpolator::createInterpolationPair(
-    const FilterOperations &fromOperations,
-    const FilterOperations &toOperations) const {
-  FilterOperations fromOperationsResult, toOperationsResult;
+std::optional<std::pair<StyleOperations, StyleOperations>> FilterStyleInterpolator::createInterpolationPair(
+    const StyleOperations &fromOperations,
+    const StyleOperations &toOperations) const {
+  StyleOperations fromOperationsResult, toOperationsResult;
   size_t i = 0;
 
   size_t fromOperationsSize = fromOperations.size();

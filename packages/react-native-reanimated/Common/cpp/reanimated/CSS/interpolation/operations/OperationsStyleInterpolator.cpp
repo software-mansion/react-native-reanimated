@@ -296,21 +296,6 @@ std::shared_ptr<StyleOperation> OperationsStyleInterpolatorBase<TOperation>::cre
 }
 
 template <typename TOperation>
-std::optional<std::pair<StyleOperations, StyleOperations>>
-OperationsStyleInterpolatorBase<TOperation>::createInterpolationPair(
-    const StyleOperations &fromOperations,
-    const StyleOperations &toOperations) const {
-  const auto result = createInterpolationPair(
-      reinterpret_cast<const TOperations &>(fromOperations), reinterpret_cast<const TOperations &>(toOperations));
-
-  if (!result.has_value()) {
-    return std::nullopt;
-  }
-
-  return std::make_optional(reinterpret_cast<const std::pair<StyleOperations, StyleOperations> &>(result.value()));
-}
-
-template <typename TOperation>
 std::shared_ptr<TOperation> OperationsStyleInterpolatorBase<TOperation>::getDefaultOperationOfType(
     const size_t type) const {
   return std::static_pointer_cast<TOperation>(interpolators_->at(type)->getDefaultOperation());

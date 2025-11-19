@@ -89,21 +89,11 @@ class OperationsStyleInterpolator : public PropertyInterpolator {
 template <typename TOperation>
 class OperationsStyleInterpolatorBase : public OperationsStyleInterpolator {
  public:
-  using TOperations = std::vector<std::shared_ptr<TOperation>>;
-
   using OperationsStyleInterpolator::OperationsStyleInterpolator;
 
  protected:
   std::shared_ptr<StyleOperation> createStyleOperation(jsi::Runtime &rt, const jsi::Value &value) const override;
   std::shared_ptr<StyleOperation> createStyleOperation(const folly::dynamic &value) const override;
-  std::optional<std::pair<StyleOperations, StyleOperations>> createInterpolationPair(
-      const StyleOperations &fromOperations,
-      const StyleOperations &toOperations) const override;
-
-  virtual std::optional<std::pair<TOperations, TOperations>> createInterpolationPair(
-      const TOperations &fromOperations,
-      const TOperations &toOperations) const = 0;
-
   std::shared_ptr<TOperation> getDefaultOperationOfType(size_t type) const;
 };
 

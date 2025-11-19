@@ -16,17 +16,18 @@ class TransformsStyleInterpolator final : public OperationsStyleInterpolatorBase
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
  protected:
-  std::optional<std::pair<TransformOperations, TransformOperations>> createInterpolationPair(
-      const TransformOperations &fromOperations,
-      const TransformOperations &toOperations) const override;
+  std::optional<std::pair<StyleOperations, StyleOperations>> createInterpolationPair(
+      const StyleOperations &fromOperations,
+      const StyleOperations &toOperations) const override;
 
  private:
   void addConvertedOperations(
       const std::shared_ptr<TransformOperation> &sourceOperation,
       const std::shared_ptr<TransformOperation> &targetOperation,
-      TransformOperations &sourceResult,
-      TransformOperations &targetResult) const;
-  std::shared_ptr<TransformOperation> getDefaultOperationOfType(TransformOp type) const;
+      StyleOperations &sourceResult,
+      StyleOperations &targetResult) const;
+  TransformOperations convertToTransformOperations(const StyleOperations &operations) const;
+  std::shared_ptr<TransformOperation> getDefaultOperationOfType(uint8_t type) const;
 };
 
 } // namespace reanimated::css
