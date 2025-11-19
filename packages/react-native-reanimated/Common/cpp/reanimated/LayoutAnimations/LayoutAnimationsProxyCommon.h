@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <optional>
+#include <unordered_map>
 #include <vector>
 
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
