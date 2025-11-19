@@ -190,9 +190,10 @@ void scheduleOnRuntime(
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &serializableWorkletValue);
 
-// TODO: Remove after releasing Reanimated 4.2.0
+/**
+ * @deprecated Use `WorkletRuntime::runSync` instead.
+ */
 template <typename... Args>
-[[deprecated("Use WorkletRuntime::runSync instead.")]]
 inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Function &function, Args &&...args) {
   // We only use callGuard in debug mode, otherwise we call the provided
   // function directly. CallGuard provides a way of capturing exceptions in
@@ -205,9 +206,10 @@ inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Function &fun
 #endif // NDEBUG
 }
 
-// TODO: Remove after releasing Reanimated 4.2.0
+/**
+ * @deprecated Use `WorkletRuntime::runSync` instead.
+ */
 template <typename... Args>
-[[deprecated("Use WorkletRuntime::runSync instead.")]]
 inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Value &function, Args &&...args) {
   return runOnRuntimeGuarded(rt, function.asObject(rt).asFunction(rt), std::forward<Args>(args)...);
 }
