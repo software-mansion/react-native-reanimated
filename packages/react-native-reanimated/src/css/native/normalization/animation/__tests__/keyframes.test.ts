@@ -1,7 +1,9 @@
 'use strict';
 import { ReanimatedError } from '../../../../../common';
+import { getStyleBuilder } from '../../../registry';
 import {
   ERROR_MESSAGES,
+  normalizeAnimationKeyframes,
   normalizeKeyframeSelector,
   processKeyframes,
 } from '../keyframes';
@@ -96,6 +98,7 @@ function mockStyleBuilder(
     add: jest.fn(),
   };
 }
+
 
 describe(processKeyframes, () => {
   describe('offset handling', () => {
@@ -216,49 +219,48 @@ describe(processKeyframes, () => {
   });
 
   describe('complex properties', () => {
-    test('transform', () => {
-      const styleBuilder = mockStyleBuilder();
+    test('transform preserves array of operations', () => {
       const keyframes = {
         '0%': { transform: [{ translateX: 0 }] },
         '100%': { transform: [{ translateX: 100 }] },
       };
 
-      expect(processKeyframes(keyframes, styleBuilder)).toEqual([
+      expect(processKeyframes(keyframes, getStyleBuilder('RCTView'))).toEqual([
         { offset: 0, style: { transform: [{ translateX: 0 }] } },
         { offset: 1, style: { transform: [{ translateX: 100 }] } },
       ]);
     });
 
     test('transformOrigin preserves nested array structure', () => {
-      const styleBuilder = mockStyleBuilder(['transformOrigin']);
       const keyframes = {
         from: { transformOrigin: [0, '50%', 0] },
-        to: { transformOrigin: ['100%', 0, '25%'] },
+        to: { transformOrigin: ['100%', 0, 25] },
       };
 
-      expect(processKeyframes(keyframes, styleBuilder)).toEqual([
+      const result = processKeyframes(keyframes, getStyleBuilder('RCTView'));
+
+      expect(result).toEqual([
         {
           offset: 0,
           style: { transformOrigin: [0, '50%', 0] },
         },
         {
           offset: 1,
-          style: { transformOrigin: ['100%', 0, '25%'] },
+          style: { transformOrigin: ['100%', 0, 25] },
         },
       ]);
     });
 
     test.each(['shadowOffset', 'textShadowOffset'] as const)(
-      'produces keyframes for %s',
+      '%s preserves nested object structure',
       (property) => {
-        const styleBuilder = mockStyleBuilder([property]);
         const keyframes = {
           from: { [property]: { width: 0, height: 0 } },
           '50%': { [property]: { width: 3, height: 2 } },
           to: { [property]: { width: 10, height: 5 } },
         };
 
-        const result = processKeyframes(keyframes, styleBuilder);
+        const result = processKeyframes(keyframes, getStyleBuilder('RCTView'));
 
         expect(result).toEqual([
           {
@@ -283,24 +285,7 @@ describe(processKeyframes, () => {
       }
     );
 
-    test('drops keyframes when the processed style is undefined', () => {
-      const styleBuilder = mockStyleBuilder(['shadowOffset']);
-      styleBuilder.buildFrom
-        .mockImplementationOnce(() => undefined)
-        .mockImplementation((style) => style);
-
-      const keyframes = {
-        from: { shadowOffset: { width: 0, height: 0 } },
-        to: { shadowOffset: { width: 10, height: 5 } },
-      };
-
-      expect(processKeyframes(keyframes, styleBuilder)).toEqual([
-        { offset: 1, style: { shadowOffset: { width: 10, height: 5 } } },
-      ]);
-    });
-
-    test('boxShadow supports multiple shadow layers', () => {
-      const styleBuilder = mockStyleBuilder(['boxShadow']);
+    test('boxShadow preserves nested object structure', () => {
       const keyframes = {
         '0%': {
           boxShadow: [
@@ -320,7 +305,9 @@ describe(processKeyframes, () => {
         },
       };
 
-      expect(processKeyframes(keyframes, styleBuilder)).toEqual([
+      const result = processKeyframes(keyframes, getStyleBuilder('RCTView'));
+
+      expect(result).toEqual([
         {
           offset: 0,
           style: {
@@ -329,7 +316,8 @@ describe(processKeyframes, () => {
                 offsetX: 0,
                 offsetY: 0,
                 blurRadius: 0,
-                color: 'rgb(255 0 0)',
+                spreadDistance: 0,
+                color: 0xffff0000,
               },
             ],
           },
@@ -342,7 +330,8 @@ describe(processKeyframes, () => {
                 offsetX: 4,
                 offsetY: 2,
                 blurRadius: 2,
-                color: 'rgb(0 0 255)',
+                spreadDistance: 0,
+                color: 0xff0000ff,
               },
             ],
           },
@@ -355,13 +344,15 @@ describe(processKeyframes, () => {
                 offsetX: 10,
                 offsetY: 5,
                 blurRadius: 4,
-                color: 'rgb(0 255 0)',
+                spreadDistance: 0,
+                color: 0xff00ff00,
               },
               {
                 offsetX: 0,
                 offsetY: 0,
                 blurRadius: 2,
-                color: 'rgb(0 0 255)',
+                spreadDistance: 0,
+                color: 0xff0000ff,
               },
             ],
           },
@@ -370,23 +361,93 @@ describe(processKeyframes, () => {
     });
   });
 
-  describe('merged keyframes', () => {
-    test('merges styles for duplicate offsets', () => {
-      const styleBuilder = mockStyleBuilder();
-      const keyframes = {
-        '0%': { opacity: 0.5 },
-        '0': { transform: [{ scale: 1 }] },
-        '100%': { opacity: 1 },
-      };
+  test('drops keyframes when processed style is undefined', () => {
+    const styleBuilder = mockStyleBuilder(['shadowOffset']);
+    styleBuilder.buildFrom
+      .mockImplementationOnce(() => undefined)
+      .mockImplementation((style) => style);
 
-      expect(processKeyframes(keyframes, styleBuilder)).toEqual([
-        {
-          offset: 0,
-          style: { opacity: 0.5, transform: [{ scale: 1 }] },
-          timingFunction: undefined,
+    const keyframes = {
+      from: { shadowOffset: { width: 0, height: 0 } },
+      to: { shadowOffset: { width: 10, height: 5 } },
+    };
+
+    expect(processKeyframes(keyframes, styleBuilder)).toEqual([
+      { offset: 1, style: { shadowOffset: { width: 10, height: 5 } } },
+    ]);
+  });
+
+  test('merges styles for duplicate offsets', () => {
+    const styleBuilder = mockStyleBuilder();
+    const keyframes = {
+      '0%': { opacity: 0.5 },
+      '0': { transform: [{ scale: 1 }] },
+      '100%': { opacity: 1 },
+    };
+
+    expect(processKeyframes(keyframes, styleBuilder)).toEqual([
+      {
+        offset: 0,
+        style: { opacity: 0.5, transform: [{ scale: 1 }] },
+      },
+      { offset: 1, style: { opacity: 1 } },
+    ]);
+  });
+});
+
+describe(normalizeAnimationKeyframes, () => {
+  const styleBuilder = getStyleBuilder('RCTView');
+
+  test('aggregates styles and timing functions across keyframes', () => {
+    const result = normalizeAnimationKeyframes(
+      {
+        from: { opacity: 0, animationTimingFunction: 'ease-in' },
+        '50%': {
+          shadowOffset: { width: 2, height: 4 },
+          animationTimingFunction: 'ease',
         },
-        { offset: 1, style: { opacity: 1 }, timingFunction: undefined },
-      ]);
+        to: { opacity: 1 },
+      },
+      styleBuilder
+    );
+
+    expect(result).toEqual({
+      keyframesStyle: {
+        opacity: [
+          { offset: 0, value: 0 },
+          { offset: 1, value: 1 },
+        ],
+        shadowOffset: {
+          width: [{ offset: 0.5, value: 2 }],
+          height: [{ offset: 0.5, value: 4 }],
+        },
+      },
+      keyframeTimingFunctions: {
+        0: 'ease-in',
+        0.5: 'ease',
+      },
+    });
+  });
+
+  test('doesn\'t include timing function declared in the last keyframe', () => {
+    const result = normalizeAnimationKeyframes(
+      {
+        from: { opacity: 0, animationTimingFunction: 'ease-in' },
+        to: { opacity: 1, animationTimingFunction: 'ease-out' },
+      },
+      styleBuilder
+    );
+
+    expect(result).toEqual({
+      keyframesStyle: {
+        opacity: [
+          { offset: 0, value: 0 },
+          { offset: 1, value: 1 },
+        ],
+      },
+      keyframeTimingFunctions: {
+        0: 'ease-in',
+      },
     });
   });
 });
