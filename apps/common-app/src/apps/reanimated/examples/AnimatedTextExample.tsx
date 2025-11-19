@@ -57,7 +57,6 @@ export default function AnimatedTextExample() {
       <View style={styles.row}>
         <Text>Before</Text>
         <Animated.Text
-          // @ts-expect-error TODO fix animated props type
           animatedProps={stringAnimatedProps}
           style={[styles.tabularNums, styles.color1]}
         />
@@ -79,7 +78,6 @@ export default function AnimatedTextExample() {
       <View style={styles.row}>
         <Text>Before</Text>
         <Animated.Text
-          // @ts-expect-error TODO fix animated props type
           animatedProps={emptyAnimatedProps}
           style={[styles.tabularNums, styles.color3]}
         />
@@ -149,9 +147,8 @@ export default function AnimatedTextExample() {
       {/* Non-empty Animated.Text with animated text (throws an error) */}
       <View style={styles.row}>
         {show && (
-          <Animated.Text
-            // @ts-expect-error TODO fix animated props type
-            animatedProps={stringAnimatedProps}>
+          // @ts-expect-error We don't want to accept text in animatedProps when children are present
+          <Animated.Text animatedProps={stringAnimatedProps}>
             Lorem ipsum
           </Animated.Text>
         )}

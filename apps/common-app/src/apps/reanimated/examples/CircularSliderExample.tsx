@@ -150,11 +150,7 @@ function CircularSlider(props: CircularSliderProps) {
           </Svg>
         </Animated.View>
       </GestureDetector>
-      <Animated.Text
-        // @ts-expect-error TODO fix animated props type
-        animatedProps={animatedProps}
-        style={styles.text}
-      />
+      <Animated.Text animatedProps={animatedProps} style={styles.text} />
     </>
   );
 }

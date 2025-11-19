@@ -29,11 +29,7 @@ export default function AmountExample() {
 
   return (
     <View style={styles.container}>
-      <Animated.Text
-        // @ts-expect-error TODO fix animated props type
-        animatedProps={animatedProps}
-        style={styles.text}
-      />
+      <Animated.Text animatedProps={animatedProps} style={styles.text} />
       <View style={styles.row}>
         {DELTAS.map((delta) => (
           <Button

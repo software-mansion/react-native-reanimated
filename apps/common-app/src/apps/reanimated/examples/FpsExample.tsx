@@ -63,7 +63,6 @@ export default function FpsExample() {
       <View style={styles.row}>
         <Text>Timestamp:</Text>
         <Animated.Text
-          // @ts-expect-error TODO fix animated props type
           animatedProps={timestampAnimatedProps}
           style={styles.number}
         />
@@ -71,7 +70,6 @@ export default function FpsExample() {
       <View style={styles.row}>
         <Text>Time since first frame:</Text>
         <Animated.Text
-          // @ts-expect-error TODO fix animated props type
           animatedProps={timeSinceFirstFrameAnimatedProps}
           style={styles.number}
         />
@@ -79,7 +77,6 @@ export default function FpsExample() {
       <View style={styles.row}>
         <Text>Time since previous frame:</Text>
         <Animated.Text
-          // @ts-expect-error TODO fix animated props type
           animatedProps={timeSincePreviousFrameAnimatedProps}
           style={styles.number}
         />
@@ -87,7 +84,6 @@ export default function FpsExample() {
       <View style={styles.row}>
         <Text>Frames per second:</Text>
         <Animated.Text
-          // @ts-expect-error TODO fix animated props type
           animatedProps={framesPerSecondAnimatedProps}
           style={styles.number}
         />

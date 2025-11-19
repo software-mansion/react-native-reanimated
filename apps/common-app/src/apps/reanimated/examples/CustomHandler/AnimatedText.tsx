@@ -16,11 +16,7 @@ export function AnimatedText({
   });
 
   return (
-    <Animated.Text
-      // @ts-expect-error TODO fix animated props type
-      animatedProps={animatedProps}
-      style={[styles.text, style]}
-    />
+    <Animated.Text animatedProps={animatedProps} style={[styles.text, style]} />
   );
 }
 

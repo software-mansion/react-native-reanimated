@@ -30,11 +30,7 @@ export default function CounterExample() {
       <View style={styles.buttons}>
         <Button onPress={handleToggle} title="Toggle" />
       </View>
-      <Animated.Text
-        // @ts-expect-error TODO fix animated props type
-        animatedProps={animatedProps}
-        style={styles.text}
-      />
+      <Animated.Text animatedProps={animatedProps} style={styles.text} />
     </>
   );
 }

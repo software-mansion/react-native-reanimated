@@ -109,11 +109,7 @@ function JsPerformance({ smoothingFrames }: { smoothingFrames: number }) {
 
   return (
     <View style={styles.container}>
-      <AnimatedText
-        // @ts-expect-error TODO fix animated props type
-        animatedProps={animatedProps}
-        style={styles.text}
-      />
+      <AnimatedText animatedProps={animatedProps} style={styles.text} />
     </View>
   );
 }
@@ -140,11 +136,7 @@ function UiPerformance({ smoothingFrames }: { smoothingFrames: number }) {
 
   return (
     <View style={styles.container}>
-      <AnimatedText
-        // @ts-expect-error TODO fix animated props type
-        animatedProps={animatedProps}
-        style={styles.text}
-      />
+      <AnimatedText animatedProps={animatedProps} style={styles.text} />
     </View>
   );
 }
