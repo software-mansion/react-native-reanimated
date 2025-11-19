@@ -99,7 +99,6 @@ function mockStyleBuilder(
   };
 }
 
-
 describe(processKeyframes, () => {
   describe('offset handling', () => {
     test('sorts keyframes and accepts percentages', () => {
@@ -345,7 +344,7 @@ describe(normalizeAnimationKeyframes, () => {
     });
   });
 
-  test('doesn\'t include timing function declared in the last keyframe', () => {
+  test("doesn't include timing function declared in the last keyframe", () => {
     const result = normalizeAnimationKeyframes(
       {
         from: { opacity: 0, animationTimingFunction: 'ease-in' },
