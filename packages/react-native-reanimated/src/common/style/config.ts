@@ -1,7 +1,6 @@
 'use strict';
 import { IS_ANDROID } from '../constants';
 import type { PlainStyle } from '../types';
-import { processTransformOrigin } from '../web';
 import {
   processAspectRatio,
   processBoxShadowNative,
@@ -13,6 +12,7 @@ import {
   processInsetBlock,
   processInsetInline,
   processTransform,
+  processTransformOrigin,
 } from './processors';
 import type { StyleBuilderConfig } from './types';
 
