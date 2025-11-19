@@ -76,7 +76,7 @@ export function getColorSquare(color: unknown) {
   if (!isColor(color)) {
     return '??';
   }
-  const colorNumber = processColor(color) as number;
+  const colorNumber = processColor(color);
   /* eslint-disable no-bitwise */
   const red = (colorNumber >> 16) & 255;
   const green = (colorNumber >> 8) & 255;

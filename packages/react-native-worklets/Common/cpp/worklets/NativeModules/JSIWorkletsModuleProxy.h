@@ -31,7 +31,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
  public:
   explicit JSIWorkletsModuleProxy(
       const bool isDevBundle,
-      const std::shared_ptr<const BigStringBuffer> &script,
+      const std::shared_ptr<const JSBigStringBuffer> &script,
       const std::string &sourceUrl,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
@@ -64,7 +64,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
     return isDevBundle_;
   }
 
-  [[nodiscard]] std::shared_ptr<const BigStringBuffer> getScript() const {
+  [[nodiscard]] std::shared_ptr<const JSBigStringBuffer> getScript() const {
     return script_;
   }
 
@@ -82,7 +82,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
 
  private:
   const bool isDevBundle_;
-  const std::shared_ptr<const BigStringBuffer> script_;
+  const std::shared_ptr<const JSBigStringBuffer> script_;
   const std::string sourceUrl_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;

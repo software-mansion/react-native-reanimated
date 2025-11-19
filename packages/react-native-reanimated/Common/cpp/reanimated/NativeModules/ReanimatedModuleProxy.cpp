@@ -188,7 +188,6 @@ ReanimatedModuleProxy::~ReanimatedModuleProxy() {
   // event handler registry and frame callbacks store some JSI values from UI
   // runtime, so they have to go away before we tear down the runtime
   eventHandlerRegistry_.reset();
-  frameCallbacks_.clear();
 }
 
 jsi::Value ReanimatedModuleProxy::registerEventHandler(
@@ -211,7 +210,7 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
     }
     auto handler =
         std::make_shared<WorkletEventHandler>(newRegistrationId, eventNameStr, emitterReactTagInt, handlerSerializable);
-    strongThis->eventHandlerRegistry_->registerEventHandler(std::move(handler));
+    strongThis->eventHandlerRegistry_->registerEventHandler(handler);
   });
 
   return jsi::Value(static_cast<double>(newRegistrationId));
@@ -314,13 +313,7 @@ void ReanimatedModuleProxy::maybeRequestRender() {
 
 void ReanimatedModuleProxy::onRender(double timestampMs) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::onRender");
-  auto callbacks = std::move(frameCallbacks_);
-  frameCallbacks_.clear();
-  jsi::Runtime &uiRuntime = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
-  jsi::Value timestamp{timestampMs};
-  for (const auto &callback : callbacks) {
-    runOnRuntimeGuarded(uiRuntime, *callback, timestamp);
-  }
+  // NOOP
 }
 
 jsi::Value ReanimatedModuleProxy::registerSensor(
@@ -412,7 +405,7 @@ void ReanimatedModuleProxy::applyCSSAnimations(
   {
     auto lock = cssAnimationsRegistry_->lock();
     cssAnimationsRegistry_->apply(
-        rt, shadowNode, updates.animationNames, std::move(newAnimations), updates.settingsUpdates, timestamp);
+        rt, shadowNode, updates.animationNames, newAnimations, updates.settingsUpdates, timestamp);
   }
 
   maybeRunCSSLoop();
@@ -495,7 +488,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   const auto &eventPayload = rawEvent.eventPayload;
   jsi::Value payload = eventPayload->asJSIValue(rt);
 
-  auto res = handleEvent(eventType, tag, std::move(payload), currentTime);
+  auto res = handleEvent(eventType, tag, payload, currentTime);
   // TODO: we should call performOperations conditionally if event is handled
   // (res == true), but for now handleEvent always returns false. Thankfully,
   // performOperations does not trigger a lot of code if there is nothing to
@@ -1095,7 +1088,7 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
       SurfaceId surfaceId = shadowNode->getSurfaceId();
       auto family = &shadowNode->getFamily();
       react_native_assert(family->getSurfaceId() == surfaceId);
-      propsMapBySurface[surfaceId][family].emplace_back(std::move(props));
+      propsMapBySurface[surfaceId][family].emplace_back(props);
     }
   }
 
@@ -1277,7 +1270,7 @@ jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
         if (!strongThis) {
           return;
         }
-        strongThis->workletsModuleProxy_->getUIWorkletRuntime()->runGuarded(
+        strongThis->workletsModuleProxy_->getUIWorkletRuntime()->runSync(
             serializableHandler, jsi::Value(keyboardState), jsi::Value(height));
       },
       isStatusBarTranslucent.getBool(),

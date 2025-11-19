@@ -11,3 +11,4 @@ export { processInset, processInsetBlock, processInsetInline } from './insets';
 export { processAspectRatio, processGap } from './others';
 export { processBoxShadowNative } from './shadows';
 export { processTransform } from './transform';
+export { processTransformOrigin } from './transformOrigin';

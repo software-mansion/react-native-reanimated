@@ -6,6 +6,7 @@
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/SharedItems/MemoryManager.h>
+#include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/SingleInstanceChecker.h>
@@ -27,7 +28,7 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
       const std::shared_ptr<UIScheduler> &uiScheduler,
       std::function<bool()> &&isJavaScriptQueue,
       RuntimeBindings runtimeBindings,
-      const std::shared_ptr<const BigStringBuffer> &script,
+      const std::shared_ptr<const JSBigStringBuffer> &script,
       const std::string &sourceUrl);
 
   ~WorkletsModuleProxy();
@@ -65,7 +66,7 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
   const std::shared_ptr<UIScheduler> uiScheduler_;
   const std::shared_ptr<JSLogger> jsLogger_;
   const RuntimeBindings runtimeBindings_;
-  const std::shared_ptr<const BigStringBuffer> script_;
+  const std::shared_ptr<const JSBigStringBuffer> script_;
   const std::string sourceUrl_;
   const std::shared_ptr<MemoryManager> memoryManager_;
   const std::shared_ptr<RuntimeManager> runtimeManager_;

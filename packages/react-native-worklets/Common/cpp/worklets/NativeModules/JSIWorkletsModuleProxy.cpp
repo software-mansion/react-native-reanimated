@@ -50,7 +50,7 @@ inline void scheduleOnUI(
     const auto scope = jsi::Scope(uiWorkletRuntime->getJSIRuntime());
 #endif // JS_RUNTIME_HERMES
 
-    uiWorkletRuntime->runGuarded(serializableWorklet);
+    uiWorkletRuntime->runSync(serializableWorklet);
   });
 }
 
@@ -59,7 +59,10 @@ inline jsi::Value executeOnUIRuntimeSync(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {
   if (auto uiWorkletRuntime = weakUIWorkletRuntime.lock()) {
-    return uiWorkletRuntime->executeSync(rt, worklet);
+    auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
+        rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
+    auto serializedResult = uiWorkletRuntime->runSyncSerialized(serializableWorklet);
+    return serializedResult->toJSValue(rt);
   }
   return jsi::Value::undefined();
 }
@@ -73,7 +76,8 @@ inline jsi::Value createWorkletRuntime(
     std::shared_ptr<SerializableWorklet> &initializer,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop) {
-  const auto workletRuntime = runtimeManager->createWorkletRuntime(jsiWorkletsModuleProxy, name, initializer, queue);
+  const auto workletRuntime =
+      runtimeManager->createWorkletRuntime(std::move(jsiWorkletsModuleProxy), name, initializer, queue);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
@@ -85,10 +89,9 @@ inline jsi::Value propagateModuleUpdate(
   const auto runtimes = runtimeManager->getAllRuntimes();
 
   for (auto runtime : runtimes) {
-    runtime->executeSync([code, sourceUrl](jsi::Runtime &rt) {
+    runtime->runSync([code, sourceUrl](jsi::Runtime &rt) -> void {
       const auto buffer = std::make_shared<jsi::StringBuffer>(code);
       rt.evaluateJavaScript(buffer, sourceUrl);
-      return jsi::Value::undefined();
     });
   }
   return jsi::Value::undefined();
@@ -139,7 +142,7 @@ inline void registerCustomSerializable(
 
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const bool isDevBundle,
-    const std::shared_ptr<const BigStringBuffer> &script,
+    const std::shared_ptr<const JSBigStringBuffer> &script,
     const std::string &sourceUrl,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
@@ -476,7 +479,7 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
           auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
           auto newValue = extractSerializableOrThrow(rt, args[1], "[Worklets] Value must be a Serializable.");
-          synchronizable->setBlocking(std::move(newValue));
+          synchronizable->setBlocking(newValue);
           return jsi::Value::undefined();
         });
   }
