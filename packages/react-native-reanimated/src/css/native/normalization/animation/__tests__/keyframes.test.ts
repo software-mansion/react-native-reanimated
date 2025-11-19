@@ -98,28 +98,295 @@ function mockStyleBuilder(
 }
 
 describe(processKeyframes, () => {
-  describe('duplicate selectors', () => {
-    test.each([
-      [
-        { from: { opacity: 0.5 }, '0, 0%': { opacity: 0.75 } },
-        [{ offset: 0, style: { opacity: 0.75 } }],
-      ],
-      [
-        { 'to, 100%, 0%, 0%': { opacity: 0.75 } },
-        [
-          { offset: 0, style: { opacity: 0.75 }, timingFunction: undefined },
-          { offset: 1, style: { opacity: 0.75 }, timingFunction: undefined },
-        ],
-      ],
-    ])('merges duplicate selectors in %p', (keyframes, expected) => {
+  describe('offset handling', () => {
+    test('sorts keyframes and accepts percentages', () => {
       const styleBuilder = mockStyleBuilder();
-      expect(processKeyframes(keyframes, styleBuilder)).toEqual(expected);
+      const keyframes = {
+        '75%': { opacity: 0.75 },
+        from: { opacity: 0 },
+        '0.25': { opacity: 0.25 },
+        to: { opacity: 1 },
+      };
+
+      expect(processKeyframes(keyframes, styleBuilder)).toEqual([
+        { offset: 0, style: { opacity: 0 } },
+        { offset: 0.25, style: { opacity: 0.25 } },
+        { offset: 0.75, style: { opacity: 0.75 } },
+        { offset: 1, style: { opacity: 1 } },
+      ]);
+    });
+
+    test('splits multi-selector entries into separate keyframes', () => {
+      const styleBuilder = mockStyleBuilder();
+      const keyframes = {
+        'from, 50%': { opacity: 0.5 },
+        to: { opacity: 1 },
+      };
+
+      expect(processKeyframes(keyframes, styleBuilder)).toEqual([
+        { offset: 0, style: { opacity: 0.5 } },
+        { offset: 0.5, style: { opacity: 0.5 } },
+        { offset: 1, style: { opacity: 1 } },
+      ]);
     });
   });
 
-  describe('simple properties', () => {});
+  describe('timing functions', () => {
+    test('preserves timing functions for non-terminal keyframes', () => {
+      const styleBuilder = mockStyleBuilder();
+      const keyframes = {
+        '0%': {
+          opacity: 0,
+          animationTimingFunction: 'ease-in',
+        },
+        '50%': {
+          opacity: 0.5,
+          animationTimingFunction: 'linear',
+        },
+        '100%': { opacity: 1 },
+      } as const;
 
-  describe('nested properties', () => {});
+      expect(processKeyframes(keyframes, styleBuilder)).toEqual([
+        {
+          offset: 0,
+          style: { opacity: 0 },
+          timingFunction: 'ease-in',
+        },
+        {
+          offset: 0.5,
+          style: { opacity: 0.5 },
+          timingFunction: 'linear',
+        },
+        { offset: 1, style: { opacity: 1 } },
+      ]);
+    });
 
-  describe('multiple keyframes and properties', () => {});
+    test('prefers the last timing function for duplicate offsets', () => {
+      const styleBuilder = mockStyleBuilder();
+      const keyframes = {
+        from: {
+          opacity: 0,
+          animationTimingFunction: 'ease-in',
+        },
+        '0%': {
+          opacity: 0.25,
+          animationTimingFunction: 'ease-out',
+        },
+        to: { opacity: 1 },
+      } as const;
+
+      expect(processKeyframes(keyframes, styleBuilder)).toEqual([
+        {
+          offset: 0,
+          style: { opacity: 0.25 },
+          timingFunction: 'ease-out',
+        },
+        { offset: 1, style: { opacity: 1 } },
+      ]);
+    });
+  });
+
+  describe('style builder integration', () => {
+    test('skips keyframes when style builder returns undefined', () => {
+      const styleBuilder = mockStyleBuilder();
+      styleBuilder.buildFrom
+        .mockReturnValueOnce(undefined)
+        .mockReturnValueOnce({ opacity: 0.5 });
+
+      const keyframes = {
+        from: { opacity: 0 },
+        '50%': { opacity: 0.5 },
+      };
+
+      expect(processKeyframes(keyframes, styleBuilder)).toEqual([
+        { offset: 0.5, style: { opacity: 0.5 } },
+      ]);
+    });
+
+    test('hands original style objects to the builder', () => {
+      const styleBuilder = mockStyleBuilder();
+      const style = { opacity: 0.5, transform: [{ scale: 1 }] };
+      const keyframes = { '50%': style };
+
+      processKeyframes(keyframes, styleBuilder);
+
+      expect(styleBuilder.buildFrom).toHaveBeenCalledTimes(1);
+      expect(styleBuilder.buildFrom).toHaveBeenCalledWith(style);
+    });
+  });
+
+  describe('complex properties', () => {
+    test('transform', () => {
+      const styleBuilder = mockStyleBuilder();
+      const keyframes = {
+        '0%': { transform: [{ translateX: 0 }] },
+        '100%': { transform: [{ translateX: 100 }] },
+      };
+
+      expect(processKeyframes(keyframes, styleBuilder)).toEqual([
+        { offset: 0, style: { transform: [{ translateX: 0 }] } },
+        { offset: 1, style: { transform: [{ translateX: 100 }] } },
+      ]);
+    });
+
+    test('transformOrigin preserves nested array structure', () => {
+      const styleBuilder = mockStyleBuilder(['transformOrigin']);
+      const keyframes = {
+        from: { transformOrigin: [0, '50%', 0] },
+        to: { transformOrigin: ['100%', 0, '25%'] },
+      };
+
+      expect(processKeyframes(keyframes, styleBuilder)).toEqual([
+        {
+          offset: 0,
+          style: { transformOrigin: [0, '50%', 0] },
+        },
+        {
+          offset: 1,
+          style: { transformOrigin: ['100%', 0, '25%'] },
+        },
+      ]);
+    });
+
+    test.each(['shadowOffset', 'textShadowOffset'] as const)(
+      'produces keyframes for %s',
+      (property) => {
+        const styleBuilder = mockStyleBuilder([property]);
+        const keyframes = {
+          from: { [property]: { width: 0, height: 0 } },
+          '50%': { [property]: { width: 3, height: 2 } },
+          to: { [property]: { width: 10, height: 5 } },
+        };
+
+        const result = processKeyframes(keyframes, styleBuilder);
+
+        expect(result).toEqual([
+          {
+            offset: 0,
+            style: {
+              [property]: { width: 0, height: 0 },
+            },
+          },
+          {
+            offset: 0.5,
+            style: {
+              [property]: { width: 3, height: 2 },
+            },
+          },
+          {
+            offset: 1,
+            style: {
+              [property]: { width: 10, height: 5 },
+            },
+          },
+        ]);
+      }
+    );
+
+    test('drops keyframes when the processed style is undefined', () => {
+      const styleBuilder = mockStyleBuilder(['shadowOffset']);
+      styleBuilder.buildFrom
+        .mockImplementationOnce(() => undefined)
+        .mockImplementation((style) => style);
+
+      const keyframes = {
+        from: { shadowOffset: { width: 0, height: 0 } },
+        to: { shadowOffset: { width: 10, height: 5 } },
+      };
+
+      expect(processKeyframes(keyframes, styleBuilder)).toEqual([
+        { offset: 1, style: { shadowOffset: { width: 10, height: 5 } } },
+      ]);
+    });
+
+    test('boxShadow supports multiple shadow layers', () => {
+      const styleBuilder = mockStyleBuilder(['boxShadow']);
+      const keyframes = {
+        '0%': {
+          boxShadow: [
+            { offsetX: 0, offsetY: 0, blurRadius: 0, color: 'rgb(255 0 0)' },
+          ],
+        },
+        '50%': {
+          boxShadow: [
+            { offsetX: 4, offsetY: 2, blurRadius: 2, color: 'rgb(0 0 255)' },
+          ],
+        },
+        '100%': {
+          boxShadow: [
+            { offsetX: 10, offsetY: 5, blurRadius: 4, color: 'rgb(0 255 0)' },
+            { offsetX: 0, offsetY: 0, blurRadius: 2, color: 'rgb(0 0 255)' },
+          ],
+        },
+      };
+
+      expect(processKeyframes(keyframes, styleBuilder)).toEqual([
+        {
+          offset: 0,
+          style: {
+            boxShadow: [
+              {
+                offsetX: 0,
+                offsetY: 0,
+                blurRadius: 0,
+                color: 'rgb(255 0 0)',
+              },
+            ],
+          },
+        },
+        {
+          offset: 0.5,
+          style: {
+            boxShadow: [
+              {
+                offsetX: 4,
+                offsetY: 2,
+                blurRadius: 2,
+                color: 'rgb(0 0 255)',
+              },
+            ],
+          },
+        },
+        {
+          offset: 1,
+          style: {
+            boxShadow: [
+              {
+                offsetX: 10,
+                offsetY: 5,
+                blurRadius: 4,
+                color: 'rgb(0 255 0)',
+              },
+              {
+                offsetX: 0,
+                offsetY: 0,
+                blurRadius: 2,
+                color: 'rgb(0 0 255)',
+              },
+            ],
+          },
+        },
+      ]);
+    });
+  });
+
+  describe('merged keyframes', () => {
+    test('merges styles for duplicate offsets', () => {
+      const styleBuilder = mockStyleBuilder();
+      const keyframes = {
+        '0%': { opacity: 0.5 },
+        '0': { transform: [{ scale: 1 }] },
+        '100%': { opacity: 1 },
+      };
+
+      expect(processKeyframes(keyframes, styleBuilder)).toEqual([
+        {
+          offset: 0,
+          style: { opacity: 0.5, transform: [{ scale: 1 }] },
+          timingFunction: undefined,
+        },
+        { offset: 1, style: { opacity: 1 }, timingFunction: undefined },
+      ]);
+    });
+  });
 });

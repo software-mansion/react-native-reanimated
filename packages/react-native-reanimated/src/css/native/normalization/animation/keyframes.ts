@@ -79,7 +79,9 @@ export function processKeyframes(
         return normalizeKeyframeSelector(selector).map((offset) => ({
           offset,
           style: normalizedStyle,
-          timingFunction: animationTimingFunction,
+          ...(animationTimingFunction && {
+            timingFunction: animationTimingFunction,
+          }),
         }));
       }
     )
