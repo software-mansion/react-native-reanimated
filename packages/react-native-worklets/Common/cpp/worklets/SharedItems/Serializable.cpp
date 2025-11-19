@@ -15,33 +15,6 @@ jsi::Function getValueUnpacker(jsi::Runtime &rt) {
   return valueUnpacker.asObject(rt).asFunction(rt);
 }
 
-#ifndef NDEBUG
-
-static const auto callGuardLambda = [](facebook::jsi::Runtime &rt,
-                                       const facebook::jsi::Value &thisVal,
-                                       const facebook::jsi::Value *args,
-                                       size_t count) {
-  return args[0].asObject(rt).asFunction(rt).call(rt, args + 1, count - 1);
-};
-
-jsi::Function getCallGuard(jsi::Runtime &rt) {
-  auto callGuard = rt.global().getProperty(rt, "__callGuardDEV");
-  if (callGuard.isObject()) {
-    // Use JS implementation if `__callGuardDEV` has already been installed.
-    // This is the desired behavior.
-    return callGuard.asObject(rt).asFunction(rt);
-  }
-
-  // Otherwise, fallback to C++ JSI implementation. This is necessary so that we
-  // can install `__callGuardDEV` itself and should happen only once. Note that
-  // the C++ implementation doesn't intercept errors and simply throws them as
-  // C++ exceptions which crashes the app. We assume that installing the guard
-  // doesn't throw any errors.
-  return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "callGuard"), 1, callGuardLambda);
-}
-
-#endif // NDEBUG
-
 jsi::Value makeSerializableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
@@ -259,7 +232,7 @@ jsi::Value RetainingSerializable<BaseClass>::toJSValue(jsi::Runtime &rt) {
 
 SerializableJSRef::~SerializableJSRef() = default;
 
-SerializableArray::SerializableArray(jsi::Runtime &rt, const jsi::Array &array) : Serializable(ArrayType) {
+SerializableArray::SerializableArray(jsi::Runtime &rt, const jsi::Array &array) : Serializable(ValueType::ArrayType) {
   auto size = array.size(rt);
   data_.reserve(size);
   for (size_t i = 0; i < size; i++) {
@@ -284,7 +257,8 @@ jsi::Value SerializableArrayBuffer::toJSValue(jsi::Runtime &rt) {
   return arrayBuffer;
 }
 
-SerializableObject::SerializableObject(jsi::Runtime &rt, const jsi::Object &object) : Serializable(ObjectType) {
+SerializableObject::SerializableObject(jsi::Runtime &rt, const jsi::Object &object)
+    : Serializable(ValueType::ObjectType) {
   auto propertyNames = object.getPropertyNames(rt);
   auto size = propertyNames.size(rt);
   data_.reserve(size);
@@ -317,7 +291,7 @@ jsi::Value SerializableObject::toJSValue(jsi::Runtime &rt) {
 }
 
 SerializableMap::SerializableMap(jsi::Runtime &rt, const jsi::Array &keys, const jsi::Array &values)
-    : Serializable(MapType) {
+    : Serializable(ValueType::MapType) {
   auto size = keys.size(rt);
   react_native_assert(size == values.size(rt) && "Keys and values arrays must have the same size.");
   data_.reserve(size);
@@ -343,7 +317,7 @@ jsi::Value SerializableMap::toJSValue(jsi::Runtime &rt) {
   return map;
 }
 
-SerializableSet::SerializableSet(jsi::Runtime &rt, const jsi::Array &values) : Serializable(SetType) {
+SerializableSet::SerializableSet(jsi::Runtime &rt, const jsi::Array &values) : Serializable(ValueType::SetType) {
   auto size = values.size(rt);
   data_.reserve(size);
   for (size_t i = 0; i < size; i++) {
@@ -440,22 +414,22 @@ jsi::Value SerializableString::toJSValue(jsi::Runtime &rt) {
 }
 
 jsi::Value SerializableBigInt::toJSValue(jsi::Runtime &rt) {
-  if (value_.has_value()) {
-    return jsi::BigInt::fromInt64(rt, value_.value());
+  if (fastValue_.has_value()) {
+    return jsi::BigInt::fromInt64(rt, fastValue_.value());
   } else {
-    return rt.global().getPropertyAsFunction(rt, "BigInt").call(rt, jsi::String::createFromUtf8(rt, string_));
+    return rt.global().getPropertyAsFunction(rt, "BigInt").call(rt, jsi::String::createFromUtf8(rt, slowValue_));
   }
 }
 
 jsi::Value SerializableScalar::toJSValue(jsi::Runtime &) {
   switch (valueType_) {
-    case Serializable::UndefinedType:
+    case Serializable::ValueType::UndefinedType:
       return jsi::Value();
-    case Serializable::NullType:
+    case Serializable::ValueType::NullType:
       return jsi::Value(nullptr);
-    case Serializable::BooleanType:
+    case Serializable::ValueType::BooleanType:
       return jsi::Value(data_.boolean);
-    case Serializable::NumberType:
+    case Serializable::ValueType::NumberType:
       return jsi::Value(data_.number);
     default:
       throw std::runtime_error("[Worklets] Attempted to convert object that's not of a scalar type.");

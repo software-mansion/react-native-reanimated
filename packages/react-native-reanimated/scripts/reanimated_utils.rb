@@ -66,7 +66,7 @@ end
 def assert_minimal_react_native_version(config)
   validate_react_native_version_script = File.expand_path(File.join(__dir__, 'validate-react-native-version.js'))
   unless system("node \"#{validate_react_native_version_script}\" #{config[:react_native_version]}")
-    raise "[Reanimated] React Native version is not compatible with Reanimated"
+    raise "[Reanimated] Your installed version of React Native is not compatible with installed version of Reanimated. See the documentation for the list of supported versions: https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility/"
   end
 end
 

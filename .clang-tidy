@@ -39,7 +39,7 @@ Checks:
   - modernize-use-override
 
   # - objc-*
-  # - performance-*
+  - performance-*
   # - portability-*
   # - readability-*
 WarningsAsErrors: '*'

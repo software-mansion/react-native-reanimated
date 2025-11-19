@@ -10,12 +10,14 @@
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
 #include <react/renderer/scheduler/Scheduler.h>
+#include <react/renderer/uimanager/UIManagerAnimationDelegate.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace reanimated {
@@ -33,14 +35,20 @@ struct LayoutAnimation {
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 };
 
+struct SurfaceContext {
+  mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
+};
+
 struct LayoutAnimationsProxy : public MountingOverrideDelegate,
+                               public UIManagerAnimationDelegate,
                                public std::enable_shared_from_this<LayoutAnimationsProxy> {
   mutable std::unordered_map<Tag, std::shared_ptr<Node>> nodeForTag_;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
   mutable std::recursive_mutex mutex;
   mutable SurfaceManager surfaceManager;
-  mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
+  mutable std::unordered_map<SurfaceId, SurfaceContext> surfaceContext_;
   mutable std::unordered_map<Tag, int> leastRemoved;
+  mutable std::unordered_set<SurfaceId> surfacesToRemove_;
   mutable std::vector<Tag> finishedAnimationTags_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   std::shared_ptr<const ContextContainer> contextContainer_;
@@ -58,7 +66,7 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate,
       SharedComponentDescriptorRegistry componentDescriptorRegistry,
       std::shared_ptr<const ContextContainer> contextContainer,
       jsi::Runtime &uiRuntime,
-      const std::shared_ptr<UIScheduler> uiScheduler
+      const std::shared_ptr<UIScheduler> &uiScheduler
 #ifdef ANDROID
       ,
       PreserveMountedTagsFunction filterUnmountedTagsFunction,
@@ -66,16 +74,16 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate,
       std::shared_ptr<CallInvoker> jsInvoker
 #endif
       )
-      : layoutAnimationsManager_(layoutAnimationsManager),
-        contextContainer_(contextContainer),
-        componentDescriptorRegistry_(componentDescriptorRegistry),
+      : layoutAnimationsManager_(std::move(layoutAnimationsManager)),
+        contextContainer_(std::move(contextContainer)),
+        componentDescriptorRegistry_(std::move(componentDescriptorRegistry)),
         uiRuntime_(uiRuntime),
         uiScheduler_(uiScheduler)
 #ifdef ANDROID
         ,
-        preserveMountedTags_(filterUnmountedTagsFunction),
-        uiManager_(uiManager),
-        jsInvoker_(jsInvoker)
+        preserveMountedTags_(std::move(filterUnmountedTagsFunction)),
+        uiManager_(std::move(uiManager)),
+        jsInvoker_(std::move(jsInvoker))
 #endif // ANDROID
   {
   }
@@ -84,7 +92,7 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate,
   void startExitingAnimation(const int tag, ShadowViewMutation &mutation) const;
   void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation) const;
 
-  void transferConfigFromNativeID(const std::string nativeId, const int tag) const;
+  void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle);
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove);
   void maybeCancelAnimation(const int tag) const;
@@ -93,8 +101,11 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate,
       std::unordered_map<Tag, Tag> &movedViews,
       ShadowViewMutationList &mutations,
       std::vector<std::shared_ptr<MutationNode>> &roots) const;
-  void handleRemovals(ShadowViewMutationList &filteredMutations, std::vector<std::shared_ptr<MutationNode>> &roots)
-      const;
+  void handleRemovals(
+      ShadowViewMutationList &filteredMutations,
+      std::vector<std::shared_ptr<MutationNode>> &roots,
+      std::unordered_set<std::shared_ptr<MutationNode>> &deadNodes,
+      bool shouldAnimate) const;
 
   void handleUpdatesAndEnterings(
       ShadowViewMutationList &filteredMutations,
@@ -119,15 +130,15 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate,
 
   void removeRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList &mutations) const;
   bool startAnimationsRecursively(
-      std::shared_ptr<MutationNode> node,
+      const std::shared_ptr<MutationNode> &node,
       const bool shouldRemoveSubviewsWithoutAnimations,
       const bool shouldAnimate,
       const bool isScreenPop,
       ShadowViewMutationList &mutations) const;
-  void endAnimationsRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList &mutations) const;
+  void endAnimationsRecursively(const std::shared_ptr<MutationNode> &node, ShadowViewMutationList &mutations) const;
   void maybeDropAncestors(
-      std::shared_ptr<Node> node,
-      std::shared_ptr<MutationNode> child,
+      const std::shared_ptr<Node> &node,
+      const std::shared_ptr<MutationNode> &child,
       ShadowViewMutationList &cleanupMutations) const;
 
   const ComponentDescriptor &getComponentDescriptorForShadowView(const ShadowView &shadowView) const;
@@ -143,6 +154,20 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate,
       MountingTransaction::Number number,
       const TransactionTelemetry &telemetry,
       ShadowViewMutationList mutations) const override;
+
+  // UIManagerAnimationDelegate
+
+  void uiManagerDidConfigureNextLayoutAnimation(
+      jsi::Runtime &runtime,
+      const RawValue &config,
+      const jsi::Value &successCallbackValue,
+      const jsi::Value &failureCallbackValue) const override;
+
+  void setComponentDescriptorRegistry(const SharedComponentDescriptorRegistry &componentDescriptorRegistry) override;
+
+  bool shouldAnimateFrame() const override;
+
+  void stopSurface(SurfaceId surfaceId) override;
 };
 
 } // namespace reanimated

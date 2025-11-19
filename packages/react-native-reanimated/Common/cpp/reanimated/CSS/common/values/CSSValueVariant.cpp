@@ -11,6 +11,8 @@
 #include <reanimated/CSS/svg/values/SVGLength.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
+#include <worklets/Tools/JSISerializer.h>
+
 #include <string>
 #include <utility>
 #include <vector>
@@ -37,7 +39,7 @@ CSSValueVariant<AllowedTypes...>::CSSValueVariant(jsi::Runtime &rt, const jsi::V
   // Try constructing with each allowed type until one succeeds
   if (!(tryOne.template operator()<AllowedTypes>() || ...)) {
     throw std::runtime_error(
-        "[Reanimated] No compatible type found for construction from: " + stringifyJSIValue(rt, jsiValue));
+        "[Reanimated] No compatible type found for construction from: " + worklets::stringifyJSIValue(rt, jsiValue));
   }
 }
 
