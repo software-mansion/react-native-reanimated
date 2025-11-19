@@ -100,12 +100,10 @@ export default function AnimatedKeyboardExample() {
       <View style={styles.infoContainer}>
         <Animated.Text
           style={styles.infoText}
-          // @ts-expect-error TODO fix animated props type
           animatedProps={animatedHeightProps}
         />
         <Animated.Text
           style={styles.infoText}
-          // @ts-expect-error TODO fix animated props type
           animatedProps={animatedStateProps}
         />
       </View>

@@ -88,7 +88,7 @@ type LayoutProps = {
   exiting?: EntryOrExitLayoutType;
 };
 
-type AnimatedPropsProp<Props extends object> = RestProps<Props> &
+export type AnimatedPropsProp<Props extends object> = RestProps<Props> &
   AnimatedStyleProps<Props> &
   LayoutProps;
 
