@@ -249,13 +249,12 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
 
   void removeRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList &mutations) const;
   bool startAnimationsRecursively(
-          const std::shared_ptr<MutationNode> &node,
-          bool shouldRemoveSubviewsWithoutAnimations,
-          bool shouldAnimate,
-          bool isScreenPop,
-          ShadowViewMutationList &mutations) const;
-  void endAnimationsRecursively( const std::shared_ptr<MutationNode> &node,
-                                 ShadowViewMutationList &mutations) const;
+      const std::shared_ptr<MutationNode> &node,
+      bool shouldRemoveSubviewsWithoutAnimations,
+      bool shouldAnimate,
+      bool isScreenPop,
+      ShadowViewMutationList &mutations) const;
+  void endAnimationsRecursively(const std::shared_ptr<MutationNode> &node, ShadowViewMutationList &mutations) const;
   void maybeDropAncestors(
       const std::shared_ptr<Node> &node,
       const std::shared_ptr<MutationNode> &child,
