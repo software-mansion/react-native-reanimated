@@ -140,9 +140,9 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   /* #region deprecated */
 
   /** @deprecated Use `runSync` instead. */
-  template <RuntimeCallable TCallable, typename... Args>
-  jsi::Value runGuarded(TCallable &&callable, Args &&...args) const {
-    return runSync(std::forward<TCallable>(callable), std::forward<Args>(args)...);
+  template <typename... Args>
+  jsi::Value runGuarded(const std::shared_ptr<SerializableWorklet> &worklet, Args &&...args) const {
+    return runSync(worklet, std::forward<Args>(args)...);
   }
 
   /** @deprecated Use `schedule` instead. */
