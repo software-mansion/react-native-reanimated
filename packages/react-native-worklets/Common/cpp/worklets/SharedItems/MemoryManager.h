@@ -5,6 +5,10 @@
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
+#include <memory>
+#include <mutex>
+#include <vector>
+
 namespace worklets {
 class MemoryManager {
  public:
@@ -19,7 +23,7 @@ class MemoryManager {
  private:
   static jsi::Array getCustomSerializationRegistry(jsi::Runtime &rt);
 
-  void loadCustomSerializable(jsi::Runtime &runtime, const jsi::Array &registry, CustomSerializableData data);
+  void loadCustomSerializable(jsi::Runtime &runtime, const jsi::Array &registry, const CustomSerializableData &data);
 
   std::mutex customSerializablesMutex_;
   std::vector<CustomSerializableData> customSerializables_;

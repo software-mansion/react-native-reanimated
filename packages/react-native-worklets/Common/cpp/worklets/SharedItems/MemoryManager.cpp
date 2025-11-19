@@ -14,7 +14,7 @@ void MemoryManager::loadAllCustomSerializables(const std::shared_ptr<WorkletRunt
     }
     return jsi::Value::undefined();
   });
-};
+}
 
 void MemoryManager::loadCustomSerializable(
     const std::shared_ptr<WorkletRuntime> &runtime,
@@ -30,7 +30,7 @@ void MemoryManager::loadCustomSerializable(
 void MemoryManager::loadCustomSerializable(
     jsi::Runtime &runtime,
     const jsi::Array &registry,
-    CustomSerializableData data) {
+    const CustomSerializableData &data) {
   react_native_assert(
       registry.length(runtime) == data.typeId && "Custom serializable type IDs must not differ between runtimes.");
 
