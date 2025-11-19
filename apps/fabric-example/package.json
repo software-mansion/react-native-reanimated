@@ -14,9 +14,7 @@
   "dependencies": {
     "common-app": "workspace:*",
     "react": "19.1.1",
-    "react-native": "0.82.0",
-    "react-native-mmkv": "4.0.0",
-    "react-native-nitro-modules": "0.31.4"
+    "react-native": "0.82.0"
   },
   "devDependencies": {
     "@types/react": "19.2.2",

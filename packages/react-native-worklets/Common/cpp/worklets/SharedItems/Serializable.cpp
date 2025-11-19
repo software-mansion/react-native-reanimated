@@ -451,12 +451,18 @@ jsi::Function getCustomSerializableUnpacker(jsi::Runtime &rt) {
 }
 
 jsi::Value CustomSerializable::toJSValue(jsi::Runtime &rt) {
-  auto deserializerJS = getCustomSerializableUnpacker(rt);
-  auto dataJS = data_->toJSValue(rt);
+  try {
+    auto deserializerJS = getCustomSerializableUnpacker(rt);
+    auto dataJS = data_->toJSValue(rt);
 
-  return deserializerJS.call(rt, dataJS, jsi::Value(typeId_));
+    return deserializerJS.call(rt, dataJS, jsi::Value(typeId_));
 
-  return deserializerJS.call(rt, dataJS);
+    return deserializerJS.call(rt, dataJS);
+  } catch (jsi::JSError &e) {
+    throw std::runtime_error(
+        std::string("[Worklets] Failed to deserialize CustomSerializable. Reason: ") + e.getMessage());
+    return jsi::Value::undefined();
+  }
 }
 
 jsi::Value makeSerializableCustom(jsi::Runtime &rt, const jsi::Value &data, const int typeId) {

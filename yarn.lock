@@ -12333,6 +12333,8 @@ __metadata:
     react-dom: "npm:19.1.1"
     react-native: "npm:0.82.0"
     react-native-gesture-handler: "npm:2.28.0"
+    react-native-mmkv: "npm:4.0.0"
+    react-native-nitro-modules: "npm:0.31.4"
     react-native-pager-view: "npm:7.0.0"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.6.1"
@@ -15569,8 +15571,6 @@ __metadata:
     prettier: "npm:3.6.2"
     react: "npm:19.1.1"
     react-native: "npm:0.82.0"
-    react-native-mmkv: "npm:4.0.0"
-    react-native-nitro-modules: "npm:0.31.4"
     typescript: "npm:5.8.3"
   languageName: unknown
   linkType: soft

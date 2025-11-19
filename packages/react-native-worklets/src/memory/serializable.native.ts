@@ -779,7 +779,6 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
           const { determinant, serializer } =
             globalThis.__customSerializationRegistry[i];
           if (determinant(value)) {
-            console.log('true');
             const serializedData = serializer(value);
             return globalThis.__workletsModuleProxy?.createSerializableCustom(
               cloneRecursive(

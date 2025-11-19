@@ -412,7 +412,7 @@ jsi::Function getCustomSerializableUnpacker(jsi::Runtime &rt);
 class CustomSerializable : public Serializable {
  public:
   CustomSerializable(std::shared_ptr<Serializable> data, const int typeId)
-      : Serializable(CustomType), data_(std::move(data)), typeId_(typeId) {}
+      : Serializable(ValueType::CustomType), data_(std::move(data)), typeId_(typeId) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 

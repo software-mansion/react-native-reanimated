@@ -1,5 +1,3 @@
-#pragma once
-
 #include <jsi/jsi.h>
 #include <react/debug/react_native_assert.h>
 #include <worklets/SharedItems/MemoryManager.h>
@@ -20,7 +18,7 @@ void MemoryManager::loadAllCustomSerializables(const std::shared_ptr<WorkletRunt
 
 void MemoryManager::loadCustomSerializable(
     const std::shared_ptr<WorkletRuntime> &runtime,
-    CustomSerializableData data) {
+    const CustomSerializableData &data) {
   std::lock_guard lock(customSerializablesMutex_);
   runtime->executeSync([this, data](jsi::Runtime &rt) -> jsi::Value {
     const auto registry = getCustomSerializationRegistry(rt);
@@ -45,19 +43,13 @@ void MemoryManager::loadCustomSerializable(
   registry.getPropertyAsFunction(runtime, "push").callWithThis(runtime, registry, item);
 }
 
-void MemoryManager::registerCustomSerializable(CustomSerializableData data) {
+void MemoryManager::registerCustomSerializable(const CustomSerializableData &data) {
   std::lock_guard lock(customSerializablesMutex_);
   customSerializables_.emplace_back(data);
 }
 
 jsi::Array MemoryManager::getCustomSerializationRegistry(jsi::Runtime &rt) {
-  //   const auto global = rt.global();
   const auto data = rt.global().getProperty(rt, "__customSerializationRegistry");
-  //   if (data.isUndefined()) {
-  //     auto arr = jsi::Array(rt, 0);
-  //     global.setProperty(rt, "__customSerializationRegistry", arr);
-  //     return arr;
-  //   }
   return data.asObject(rt).asArray(rt);
 }
 

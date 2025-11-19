@@ -10,9 +10,11 @@ class MemoryManager {
  public:
   void loadAllCustomSerializables(const std::shared_ptr<WorkletRuntime> &workletRuntime);
 
-  void loadCustomSerializable(const std::shared_ptr<WorkletRuntime> &workletRuntime, CustomSerializableData data);
+  void loadCustomSerializable(
+      const std::shared_ptr<WorkletRuntime> &workletRuntime,
+      const CustomSerializableData &data);
 
-  void registerCustomSerializable(CustomSerializableData data);
+  void registerCustomSerializable(const CustomSerializableData &data);
 
  private:
   static jsi::Array getCustomSerializationRegistry(jsi::Runtime &rt);
