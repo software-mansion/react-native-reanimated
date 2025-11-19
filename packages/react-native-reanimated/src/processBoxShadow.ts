@@ -4,7 +4,7 @@
 'use strict';
 
 // @ts-ignore BoxShadowValue isn't available in RN 0.75
-import type { BoxShadowValue, OpaqueColorValue } from 'react-native';
+import type { BoxShadowValue } from 'react-native';
 
 import type { StyleProps } from '.';
 import { ReanimatedError } from './errors';
@@ -114,13 +114,17 @@ function parseLength(length: string): number | null {
 type ParsedBoxShadow = {
   offsetX: number;
   offsetY: number;
-  blurRadius?: number | OpaqueColorValue;
+  blurRadius?: number;
   spreadDistance?: number;
   inset?: boolean;
   color?: string;
 };
 
-export function processBoxShadow(props: StyleProps) {
+type ExtendedStyleProps = StyleProps & {
+  boxShadow: string | readonly BoxShadowValue[] | ParsedBoxShadow[];
+};
+
+export function processBoxShadow(props: ExtendedStyleProps) {
   'worklet';
   const result: Array<ParsedBoxShadow> = [];
 
@@ -196,7 +200,7 @@ export function processBoxShadow(props: StyleProps) {
           parsedBoxShadow.blurRadius = value;
           break;
         case 'color':
-          parsedBoxShadow.color = rawBoxShadow.color;
+          parsedBoxShadow.color = rawBoxShadow.color as string;
           break;
         case 'inset':
           parsedBoxShadow.inset = rawBoxShadow.inset;
