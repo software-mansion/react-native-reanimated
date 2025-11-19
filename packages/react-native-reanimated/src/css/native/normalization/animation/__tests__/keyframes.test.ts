@@ -1,5 +1,6 @@
 'use strict';
 import { ReanimatedError } from '../../../../../common';
+import type { Repeat } from '../../../../types';
 import { getStyleBuilder } from '../../../registry';
 import {
   ERROR_MESSAGES,
@@ -147,9 +148,11 @@ describe(processKeyframes, () => {
     });
 
     test('transformOrigin preserves nested array structure', () => {
+      const fromTransformOrigin: Repeat<number | string, 3> = [0, '50%', 0];
+      const toTransformOrigin: Repeat<number | string, 3> = ['100%', 0, 25];
       const keyframes = {
-        from: { transformOrigin: [0, '50%', 0] },
-        to: { transformOrigin: ['100%', 0, 25] },
+        from: { transformOrigin: fromTransformOrigin },
+        to: { transformOrigin: toTransformOrigin },
       };
 
       const result = processKeyframes(keyframes, getStyleBuilder('RCTView'));
@@ -157,11 +160,11 @@ describe(processKeyframes, () => {
       expect(result).toEqual([
         {
           offset: 0,
-          style: { transformOrigin: [0, '50%', 0] },
+          style: { transformOrigin: fromTransformOrigin },
         },
         {
           offset: 1,
-          style: { transformOrigin: ['100%', 0, 25] },
+          style: { transformOrigin: toTransformOrigin },
         },
       ]);
     });
