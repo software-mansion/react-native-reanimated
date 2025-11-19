@@ -549,7 +549,74 @@ double ReanimatedModuleProxy::getCssTimestamp() {
   return currentCssTimestamp_;
 }
 
+AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
+    ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperationsForBackend");
+    
+    auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
+    for (const auto surfaceId : flushRequestsCopy) {
+        uiManager_->getShadowTreeRegistry().visit(
+                                                  surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
+    }
+    
+//    jsi::Runtime &rt = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+    
+    UpdatesBatch updatesBatch;
+    {
+        ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
+        
+        auto lock = updatesRegistryManager_->lock();
+        
+        if (shouldUpdateCssAnimations_) {
+            currentCssTimestamp_ = getAnimationTimestamp_();
+            auto lock = cssTransitionsRegistry_->lock();
+            // Update CSS transitions and flush updates
+            cssTransitionsRegistry_->update(currentCssTimestamp_);
+            cssTransitionsRegistry_->flushUpdates(updatesBatch);
+        }
+        
+        {
+            auto lock = animatedPropsRegistry_->lock();
+            // Flush all animated props updates
+            animatedPropsRegistry_->flushUpdates(updatesBatch);
+        }
+        
+        if (shouldUpdateCssAnimations_) {
+            auto lock = cssAnimationsRegistry_->lock();
+            // Update CSS animations and flush updates
+            cssAnimationsRegistry_->update(currentCssTimestamp_);
+            cssAnimationsRegistry_->flushUpdates(updatesBatch);
+        }
+        
+        shouldUpdateCssAnimations_ = false;
+    }
+    
+    AnimationMutations mutations;
+    for (auto &[node, dynamic] : updatesBatch) {
+        AnimatedPropsBuilder builder;
+        for (const auto &pair : dynamic.items()) {
+            const auto &name = pair.first.getString();
+            auto nameHash = RAW_PROPS_KEY_HASH(name);
+            switch (nameHash) {
+                case RAW_PROPS_KEY_HASH("width"):
+                    builder.setWidth(yoga::Style::SizeLength::points(pair.second.asDouble()));
+                    break;
+                default:
+                    printf("AnimationMutations: Unsupported prop");
+            }
+        }
+        
+        mutations.push_back(AnimationMutation{node->getTag(), &node->getFamily(), builder.get()});
+    }
+    
+    return mutations;
+}
+
 void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
+    printf("performOperations");
+    requestRender_([](double const tmp){});
+    return;
+    
+    
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
   if (!isTriggeredByEvent) {
@@ -1054,10 +1121,10 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
   }
 
   commitUpdates(rt, updatesBatch);
-
-  // Clear the entire cache after the commit
-  // (we don't know if the view is updated from outside of Reanimated
-  // so we have to clear the entire cache)
+ 
+    //   Clear the entire cache after the commit
+    //   (we don't know if the view is updated from outside of Reanimated
+    //   so we have to clear the entire cache)
   viewStylesRepository_->clearNodesCache();
 }
 
@@ -1198,6 +1265,23 @@ jsi::Value ReanimatedModuleProxy::measure(jsi::Runtime &rt, const jsi::Value &sh
 void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
   viewStylesRepository_->setUIManager(uiManager_);
+    
+    requestRender_ = [this](std::function<void(const double)> callback) {
+        std::weak_ptr<UIManagerAnimationBackend> unstableAnimationBackend = uiManager_->unstable_getAnimationBackend();
+        if (auto locked = unstableAnimationBackend.lock()) {
+            auto animationBackend = std::static_pointer_cast<AnimationBackend>(locked);
+            animationBackend->start([this](double timestamp) {
+
+                if (auto locked = uiManager_->unstable_getAnimationBackend().lock()) {
+                    std::static_pointer_cast<AnimationBackend>(locked)->stop(false);
+                }
+
+                return performOperationsForBackend();
+            }, false);
+        }
+    };
+    
+//    requestRender_([this](const double tmp) {});
 
   initializeLayoutAnimationsProxy();
 
@@ -1209,8 +1293,9 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
 
     strongThis->requestFlushRegistry();
   };
-  mountHook_ = std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, request);
-  commitHook_ = std::make_shared<ReanimatedCommitHook>(uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
+    
+//  mountHook_ = std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, request);
+//  commitHook_ = std::make_shared<ReanimatedCommitHook>(uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {

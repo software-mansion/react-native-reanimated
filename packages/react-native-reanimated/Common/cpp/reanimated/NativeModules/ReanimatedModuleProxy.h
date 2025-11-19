@@ -29,6 +29,7 @@
 #include <react/renderer/componentregistry/componentNameByReactViewName.h>
 #include <react/renderer/core/ShadowNode.h>
 #include <react/renderer/uimanager/UIManager.h>
+#include <react/renderer/animationbackend/AnimationBackend.h>
 
 #include <memory>
 #include <set>
@@ -100,6 +101,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   double getCssTimestamp();
 
   void performOperations(const bool isTriggeredByEvent);
+  AnimationMutations performOperationsForBackend();
 
   void setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) override;
 
@@ -183,7 +185,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
 
   std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry_;
-  const RequestRenderFunction requestRender_;
+  RequestRenderFunction requestRender_;
   std::vector<std::shared_ptr<jsi::Value>> frameCallbacks_;
   volatile bool renderRequested_{false};
   std::function<void(const double)> onRenderCallback_;
