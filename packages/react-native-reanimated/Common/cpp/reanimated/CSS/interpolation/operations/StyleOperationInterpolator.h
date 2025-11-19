@@ -21,6 +21,7 @@ class StyleOperationInterpolator {
   };
 
   explicit StyleOperationInterpolator(const std::shared_ptr<StyleOperation> &defaultOperation);
+  virtual ~StyleOperationInterpolator() = default;
 
   std::shared_ptr<StyleOperation> getDefaultOperation() const;
   virtual std::unique_ptr<StyleOperation> interpolate(

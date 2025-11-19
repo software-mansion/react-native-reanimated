@@ -23,6 +23,7 @@ struct StyleOperation {
   uint8_t type;
 
   explicit StyleOperation(uint8_t type);
+  virtual ~StyleOperation() = default;
 
   bool operator==(const StyleOperation &other) const;
   folly::dynamic toDynamic() const;
