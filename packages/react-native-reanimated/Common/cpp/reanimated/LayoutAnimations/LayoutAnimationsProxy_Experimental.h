@@ -146,7 +146,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
 
   void findSharedElementsOnScreen(
       const std::shared_ptr<LightNode> &node,
-      int index,
+      BeforeOrAfter index,
       const PropsParserContext &propsParserContext) const;
 
   void insertContainers(ShadowViewMutationList &filteredMutations, int &rootChildCount, SurfaceId surfaceId) const;

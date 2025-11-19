@@ -48,7 +48,7 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findTopScreen(std
 
 void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
     const std::shared_ptr<LightNode> &node,
-    int index,
+    BeforeOrAfter index,
     const PropsParserContext &propsParserContext) const {
   if (sharedTransitionManager_->tagToName_.contains(node->current.tag)) {
     ShadowView copy = node->current;
@@ -97,8 +97,8 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
     auto beforeTopScreen = topScreen[surfaceId];
     auto afterTopScreen = lightNodes_[transitionTag_];
     if (beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen) {
-      findSharedElementsOnScreen(beforeTopScreen, 0, propsParserContext);
-      findSharedElementsOnScreen(afterTopScreen, 1, propsParserContext);
+      findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext);
+      findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext);
       hideTransitioningViews(0, filteredMutations, propsParserContext);
       hideTransitioningViews(1, filteredMutations, propsParserContext);
 

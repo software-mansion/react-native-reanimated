@@ -13,6 +13,8 @@
 
 namespace reanimated_experimental {
 
+enum BeforeOrAfter { BEFORE = 0, AFTER = 1 };
+
 struct Rect {
   double width, height;
 };

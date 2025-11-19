@@ -48,7 +48,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     auto root = lightNodes_[surfaceId];
     auto beforeTopScreen = topScreen[surfaceId];
     if (beforeTopScreen) {
-      findSharedElementsOnScreen(beforeTopScreen, 0, propsParserContext);
+      findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext);
     }
 
     updateLightTree(propsParserContext, mutations, filteredMutations);
@@ -57,7 +57,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     auto afterTopScreen = findTopScreen(root);
     topScreen[surfaceId] = afterTopScreen;
     if (afterTopScreen) {
-      findSharedElementsOnScreen(afterTopScreen, 1, propsParserContext);
+      findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext);
 #ifdef __APPLE__
       forceScreenSnapshot_(afterTopScreen->current.tag);
 #endif
