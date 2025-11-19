@@ -15,33 +15,6 @@ jsi::Function getValueUnpacker(jsi::Runtime &rt) {
   return valueUnpacker.asObject(rt).asFunction(rt);
 }
 
-#ifndef NDEBUG
-
-static const auto callGuardLambda = [](facebook::jsi::Runtime &rt,
-                                       const facebook::jsi::Value &thisVal,
-                                       const facebook::jsi::Value *args,
-                                       size_t count) {
-  return args[0].asObject(rt).asFunction(rt).call(rt, args + 1, count - 1);
-};
-
-jsi::Function getCallGuard(jsi::Runtime &rt) {
-  auto callGuard = rt.global().getProperty(rt, "__callGuardDEV");
-  if (callGuard.isObject()) {
-    // Use JS implementation if `__callGuardDEV` has already been installed.
-    // This is the desired behavior.
-    return callGuard.asObject(rt).asFunction(rt);
-  }
-
-  // Otherwise, fallback to C++ JSI implementation. This is necessary so that we
-  // can install `__callGuardDEV` itself and should happen only once. Note that
-  // the C++ implementation doesn't intercept errors and simply throws them as
-  // C++ exceptions which crashes the app. We assume that installing the guard
-  // doesn't throw any errors.
-  return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "callGuard"), 1, callGuardLambda);
-}
-
-#endif // NDEBUG
-
 jsi::Value makeSerializableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
