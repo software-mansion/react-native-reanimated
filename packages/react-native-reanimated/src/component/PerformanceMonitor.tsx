@@ -1,13 +1,11 @@
 'use strict';
 
 import { useEffect, useRef } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { createAnimatedComponent } from '../createAnimatedComponent';
 import type { FrameInfo } from '../frameCallback';
 import { useAnimatedProps, useFrameCallback, useSharedValue } from '../hook';
-
-const AnimatedText = createAnimatedComponent(Text); // don't use Animated.Text to avoid circular dependency
+import { AnimatedText } from './Text';
 
 type CircularBuffer = ReturnType<typeof createCircularDoublesBuffer>;
 function createCircularDoublesBuffer(size: number) {
