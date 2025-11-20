@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { TextProps } from 'react-native';
 import { Text } from 'react-native';
 
+import type { SharedValue } from '../commonTypes';
 import type { AnimatedComponentRef } from '../createAnimatedComponent';
 import { createAnimatedComponent } from '../createAnimatedComponent';
 import type { AddArrayPropertyType } from '../css/types';
@@ -23,9 +24,10 @@ type BaseAnimatedProps = Partial<AnimatedPropsProp<TextProps>>;
 
 type AnimatedTextProps =
   | (Omit<BaseAnimatedTextProps, 'children'> & {
-      animatedProps: AddArrayPropertyType<
-        BaseAnimatedProps & { text?: string }
+      animatedProps?: AddArrayPropertyType<
+        BaseAnimatedProps & { text?: string | number }
       >;
+      text?: SharedValue<string> | SharedValue<number>;
       children?: never;
     })
   | (BaseAnimatedTextProps & {

@@ -63,7 +63,6 @@ export default function AnimatedTextExample() {
       <View style={styles.row}>
         <Text>Before</Text>
         <Animated.Text
-          // @ts-expect-error TODO fix animated props type
           text={textSv}
           style={[styles.tabularNums, styles.color0]}
         />
@@ -84,7 +83,6 @@ export default function AnimatedTextExample() {
       <View style={styles.row}>
         <Text>Before</Text>
         <Animated.Text
-          // @ts-expect-error TODO fix animated props type
           animatedProps={numberAnimatedProps}
           style={[styles.tabularNums, styles.color2]}
         />
@@ -105,7 +103,6 @@ export default function AnimatedTextExample() {
       <View style={styles.row}>
         <Text>Before</Text>
         <Animated.Text
-          // @ts-expect-error TODO fix animated props type
           animatedProps={numberAnimatedProps}
           style={[styles.tabularNums, styles.color4, animatedStyle]}
         />
@@ -117,7 +114,6 @@ export default function AnimatedTextExample() {
         <Text style={styles.italic}>
           Before
           <Animated.Text
-            // @ts-expect-error TODO fix animated props type
             animatedProps={numberAnimatedProps}
             style={[styles.tabularNums, styles.color5]}
           />
@@ -130,7 +126,6 @@ export default function AnimatedTextExample() {
         <Animated.Text style={styles.italic}>
           Before
           <Animated.Text
-            // @ts-expect-error TODO fix animated props type
             animatedProps={numberAnimatedProps}
             style={[styles.tabularNums, styles.color6]}
           />
@@ -143,7 +138,6 @@ export default function AnimatedTextExample() {
         <Animated.Text style={[styles.italic, animatedStyle]}>
           Before
           <Animated.Text
-            // @ts-expect-error TODO fix animated props type
             animatedProps={numberAnimatedProps}
             style={[styles.tabularNums, styles.color7]}
           />
