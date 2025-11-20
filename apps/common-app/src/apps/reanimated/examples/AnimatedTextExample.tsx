@@ -4,6 +4,7 @@ import Animated, {
   interpolate,
   useAnimatedProps,
   useAnimatedStyle,
+  useDerivedValue,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -24,6 +25,10 @@ export default function AnimatedTextExample() {
     sv.value = 0;
     sv.value = withRepeat(withTiming(1, { duration: 1000 }), -1, true);
   }, [sv]);
+
+  const textSv = useDerivedValue(() => {
+    return String(Math.round(sv.value * 100));
+  });
 
   const stringAnimatedProps = useAnimatedProps(() => {
     return {
@@ -53,6 +58,18 @@ export default function AnimatedTextExample() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      {/* Animated text is an inline prop */}
+      {/* TODO: fix this example not working after fast refresh */}
+      <View style={styles.row}>
+        <Text>Before</Text>
+        <Animated.Text
+          // @ts-expect-error TODO fix animated props type
+          text={textSv}
+          style={[styles.tabularNums, styles.color0]}
+        />
+        <Text>After</Text>
+      </View>
+
       {/* Animated text is a string */}
       <View style={styles.row}>
         <Text>Before</Text>
@@ -180,6 +197,9 @@ const styles = StyleSheet.create({
   },
   italic: {
     fontStyle: 'italic',
+  },
+  color0: {
+    backgroundColor: 'burlywood',
   },
   color1: {
     backgroundColor: 'pink',
