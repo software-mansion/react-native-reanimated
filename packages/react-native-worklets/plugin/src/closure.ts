@@ -8,11 +8,11 @@ import {
   internalBindingsToCaptureFromGlobalScope,
   outsideBindingsToCaptureFromGlobalScope,
 } from './globals';
-import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
+import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 
 export function getClosure(
   funPath: NodePath<WorkletizableFunction>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): {
   closureVariables: Identifier[];
   libraryBindingsToImport: Set<Binding>;
