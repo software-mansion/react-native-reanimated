@@ -109,7 +109,7 @@ class WorkletHermesRuntime : public jsi::WithRuntimeDecorator<WorkletsReentrancy
       std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::string &name);
-  ~WorkletHermesRuntime();
+  ~WorkletHermesRuntime() override;
 
  private:
   std::unique_ptr<facebook::hermes::HermesRuntime> runtime_;

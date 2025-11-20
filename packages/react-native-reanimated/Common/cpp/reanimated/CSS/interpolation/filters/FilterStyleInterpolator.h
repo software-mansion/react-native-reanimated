@@ -2,7 +2,6 @@
 
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 #include <reanimated/CSS/interpolation/filters/FilterOperationInterpolator.h>
-#include <reanimated/CSS/utils/keyframes.h>
 
 #include <memory>
 #include <tuple>

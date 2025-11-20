@@ -4,6 +4,7 @@ import { registerWorkletStackDetails } from '../debug/errors';
 import { jsVersion } from '../debug/jsVersion';
 import { logger } from '../debug/logger';
 import { WorkletsError } from '../debug/WorkletsError';
+import { RuntimeKind } from '../runtimeKind';
 import type { WorkletFunction, WorkletImport } from '../types';
 import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
@@ -650,7 +651,7 @@ function isRemoteFunction<TValue>(value: {
  * should use shared values instead.
  */
 function freezeObjectInDev<TValue extends object>(value: TValue) {
-  if (!__DEV__) {
+  if (!__DEV__ || globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
     return;
   }
   Object.entries(value).forEach(([key, element]) => {

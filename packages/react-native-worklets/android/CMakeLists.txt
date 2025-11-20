@@ -20,8 +20,6 @@ string(
     -DHERMES_V1_ENABLED=${HERMES_V1_ENABLED}")
 
 string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
-# flags to optimize the binary size
-string(APPEND CMAKE_CXX_FLAGS " -fvisibility=hidden")
 
 if(${IS_REANIMATED_EXAMPLE_APP})
   string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic")

@@ -3,9 +3,9 @@
 import { useEffect, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { AnimatedText } from '../component/Text';
 import type { FrameInfo } from '../frameCallback';
 import { useAnimatedProps, useFrameCallback, useSharedValue } from '../hook';
+import { AnimatedText } from './Text';
 
 type CircularBuffer = ReturnType<typeof createCircularDoublesBuffer>;
 function createCircularDoublesBuffer(size: number) {
