@@ -69,7 +69,7 @@ TDerived CSSColorBase<TColorType, TDerived>::interpolate(double progress, const 
     resultChannels[i] = static_cast<uint8_t>(std::round(std::clamp(interpolated, 0.0, 255.0)));
   }
 
-  return TDerived(std::move(resultChannels));
+  return TDerived(resultChannels);
 }
 
 template <ColorTypeEnum TColorType, typename TDerived>
