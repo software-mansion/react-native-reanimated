@@ -198,4 +198,4 @@ This option can also be useful for Web apps. In Reanimated, there are numerous c
 
 Defaults to an empty array.
 
-This option allows you to register modules as safe to use on Worklet Runtimes in the [Bundle Mode](/docs/experimental/bundle-mode).
+This option allows you to register modules as safe to use on Worklet Runtimes in the [Bundle Mode](/docs/experimental/bundleMode).
