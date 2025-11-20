@@ -60,7 +60,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   // is fully constructed.
   void init(const PlatformDepMethodsHolder &platformDepMethodsHolder);
 
-  ~ReanimatedModuleProxy();
+  ~ReanimatedModuleProxy() override;
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,

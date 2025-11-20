@@ -35,7 +35,7 @@ inline void cleanupIfRuntimeExists(jsi::Runtime *rt, std::unique_ptr<jsi::Value>
     // before the runtime is terminated. Note that the underlying memory that
     // jsi::Value refers to is managed by the VM and gets freed along with the
     // runtime.
-    value.release();
+    value.release(); // NOLINT
   }
 }
 
@@ -106,7 +106,7 @@ class SerializableJSRef : public jsi::NativeState {
  public:
   explicit SerializableJSRef(const std::shared_ptr<Serializable> &value) : value_(value) {}
 
-  virtual ~SerializableJSRef();
+  ~SerializableJSRef() override;
 
   std::shared_ptr<Serializable> value() const {
     return value_;
@@ -149,7 +149,7 @@ jsi::Value makeSerializableObject(
     bool shouldRetainRemote,
     const jsi::Value &nativeStateSource);
 
-jsi::Value makeSerializableImport(jsi::Runtime &rt, const double source, const jsi::String &imported);
+jsi::Value makeSerializableImport(jsi::Runtime &rt, double source, const jsi::String &imported);
 
 jsi::Value makeSerializableHostObject(jsi::Runtime &rt, const std::shared_ptr<jsi::HostObject> &value);
 
@@ -304,7 +304,7 @@ class SerializableRemoteFunction : public Serializable,
         function_(std::make_unique<jsi::Value>(rt, std::move(function))) {
   }
 
-  ~SerializableRemoteFunction() {
+  ~SerializableRemoteFunction() override {
     cleanupIfRuntimeExists(runtime_, function_);
   }
 
@@ -327,7 +327,7 @@ class SerializableInitializer : public Serializable {
       : Serializable(ValueType::HandleType),
         initializer_(std::make_unique<SerializableObject>(rt, initializerObject)) {}
 
-  ~SerializableInitializer() {
+  ~SerializableInitializer() override {
     cleanupIfRuntimeExists(remoteRuntime_, remoteValue_);
   }
 
@@ -375,7 +375,7 @@ class SerializableScalar : public Serializable {
   SerializableScalar() : Serializable(ValueType::UndefinedType) {}
   explicit SerializableScalar(std::nullptr_t) : Serializable(ValueType::NullType) {}
 
-  jsi::Value toJSValue(jsi::Runtime &);
+  jsi::Value toJSValue(jsi::Runtime &) override;
 
  protected:
   union Data {
