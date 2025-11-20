@@ -4,6 +4,8 @@ title: 'Options'
 sidebar_label: 'Options'
 ---
 
+import AvailableFrom from '@site/src/components/AvailableFrom';
+
 # Options for Worklets Babel Plugin
 
 Our plugin offers several optional functionalities that you may need to employ advanced APIs:
@@ -12,15 +14,18 @@ Our plugin offers several optional functionalities that you may need to employ a
 <summary>Type definitions</summary>
 
 ```typescript
-interface ReanimatedPluginOptions {
-  relativeSourceLocation?: boolean;
+interface WorkletsPluginOptions {
+  bundleMode?: boolean;
   disableInlineStylesWarning?: boolean;
-  omitNativeOnlyData?: boolean;
-  globals?: string[];
-  substituteWebPlatformChecks?: boolean;
   disableSourceMaps?: boolean;
+  disableWorkletClasses?: boolean;
   extraPlugins?: string[];
   extraPresets?: string[];
+  globals?: string[];
+  omitNativeOnlyData?: boolean;
+  relativeSourceLocation?: boolean;
+  substituteWebPlatformChecks?: boolean;
+  workletizableModules?: string[];
 }
 ```
 
@@ -28,24 +33,26 @@ interface ReanimatedPluginOptions {
 
 ## How to use
 
-Using this is straightforward for Babel plugins; you just need to pass an object containing the options to the plugin in your `babel.config.js` file.
+Using this is straightforward for Babel plugins; you just need to pass an object containing the options to the plugin in your `babel.config.js` file. Make sure to pass the plugin and its options as an two-element array.
 
 Here's an example:
 
 ```js {7}
 module.exports = {
+  /** @type {import('react-native-worklets/plugin').PluginOptions} */
+  const workletOptions = {
+    relativeSourceLocation: true,
+    disableInlineStylesWarning: true,
+    omitNativeOnlyData: true,
+    globals: ['myObjectOnUI'],
+    substituteWebPlatformChecks: true,
+  }
   ...
   plugins: [
     ...
     [
       'react-native-worklets/plugin',
-      {
-        relativeSourceLocation: true,
-        disableInlineStylesWarning: true,
-        omitNativeOnlyData: true,
-        globals: ['myObjectOnUI'],
-        substituteWebPlatformChecks: true,
-      },
+      workletOptions
     ],
   ],
 };
@@ -53,17 +60,17 @@ module.exports = {
 
 ## Options
 
-### relativeSourceLocation
+### bundleMode
 
-Defaults to `false`.
+Default to `false`.
 
-This option dictates the passed file location for a worklet's source map. If you enable this option, the file paths will be relative to `process.cwd` (the current directory where Babel executes). This can be handy for Jest test snapshots to ensure consistent results across machines.
+Enables the [Bundle Mode](/docs/experimental/bundle-mode).
 
 ### disableInlineStylesWarning
 
 Defaults to `false`.
 
-Turning on this option suppresses a helpful warning when you use [inline shared values](/docs/fundamentals/glossary#animations-in-inline-styling) and might unintentionally write:
+Turning on this option suppresses a helpful warning when you use [inline shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animations-in-inline-styling) and might unintentionally write:
 
 ```tsx
 import Animated, {useSharedValue} from 'react-native-reanimated';
@@ -93,13 +100,33 @@ function MyView({ taggedWidth }) {
 
 Enable this option to silence such false warnings.
 
-### omitNativeOnlyData
+### disableSourceMaps
 
-Defaults to false.
+Defaults to `false`.
 
-This option comes in handy for Web apps. Because Babel ordinarily doesn't get information about the target platform, it includes worklet data in the bundle that only Native apps find relevant. If you enable this option, your bundle size will be smaller.
+This option turns off the source map generation for worklets. Mostly used for testing purposes.
+
+### disableWorkletClasses <AvailableFrom version="0.8.0" />
+
+Defaults to `false`.
+
+Disables [Worklet Classes support](/docs/worklets-babel-plugin/about#experimental-worklet-classes). You might need to disable this feature when using [Custom Serializables](/TODO).
+
+### extraPlugins
+
+Defaults to an empty array.
+
+This is a list of Babel plugins that will be used when transforming worklets' code with Worklets Babel Plugin.
+
+### extraPresets
+
+Defaults to an empty array.
+
+This is a list of Babel presets that will be used when transforming worklets' code with Worklets Babel Plugin.
 
 ### globals
+
+Defaults to an empty array.
 
 This is a list of identifiers (objects) that will not be copied to the UI thread if a worklet requires them. For instance:
 
@@ -158,24 +185,28 @@ JS THREAD
 
 This output occurs because the entire `global` object (!) would be copied to the UI thread for it to be assigned by `setOnUI`. Then, `readOnUI` would again copy the `global` object and read from this copy.
 
-There is a [huge list of identifiers whitelisted by default](https://github.com/software-mansion/react-native-reanimated/blob/4.0.0-beta.3/packages/react-native-worklets/plugin/src/globals.ts).
+There is a [huge list of identifiers whitelisted by default](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/globals.ts).
+
+### omitNativeOnlyData
+
+Defaults to `false`.
+
+This option comes in handy for Web apps. Because Babel ordinarily doesn't get information about the target platform, it includes worklet data in the bundle that only Native apps find relevant. If you enable this option, your bundle size will be smaller.
+
+### relativeSourceLocation
+
+Defaults to `false`.
+
+This option dictates the passed file location for a worklet's source map. If you enable this option, the file paths will be relative to `process.cwd` (the current directory where Babel executes). This can be handy for Jest test snapshots to ensure consistent results across machines.
 
 ### substituteWebPlatformChecks
 
 Defaults to `false`.
 
-This option can also be useful for Web apps. In Reanimated, we have numerous checks to determine the right function implementation for a specific target platform. Enabling this option changes all the checks that identify if the target is a Web app to `true`. This alteration can aid in tree-shaking and contribute to reducing the bundle size.
+This option can also be useful for Web apps. In Reanimated, there are numerous checks to determine the right function implementation for a specific target platform. Enabling this option changes all the checks that identify if the target is a Web app to `true`. This alteration can aid in tree-shaking and contribute to reducing the bundle size.
 
-### disableSourceMaps
+### workletizableModules
 
-Defaults to `false`.
+Defaults to an empty array.
 
-This option turns off the source map generation for worklets. Mostly used for testing purposes.
-
-### extraPlugins
-
-This is a list of Babel plugins that will be used when transforming worklets' code with Worklets Babel Plugin.
-
-### extraPresets
-
-This is a list of Babel presets that will be used when transforming worklets' code with Worklets Babel Plugin.
+This option allows you to register modules as safe to use on Worklet Runtimes in the [Bundle Mode](/docs/experimental/bundle-mode).
