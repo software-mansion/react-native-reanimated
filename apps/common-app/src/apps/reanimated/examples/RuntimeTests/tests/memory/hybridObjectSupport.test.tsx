@@ -17,6 +17,7 @@ import { createMMKV, type MMKV } from 'react-native-mmkv';
 import { type HybridObject, NitroModules } from 'react-native-nitro-modules';
 import type { BoxedHybridObject } from 'react-native-nitro-modules/lib/typescript/BoxedHybridObject';
 
+// @ts-ignore NitroModules types on web differ from native.
 const boxedNitroModules = NitroModules.box(NitroModules);
 
 const NitroModulesHandle = {
@@ -29,13 +30,15 @@ const NitroModulesHandle = {
 const serializedNitroModulesHandle = createSerializable(NitroModulesHandle);
 serializableMappingCache.set(NitroModules, serializedNitroModulesHandle);
 
-const determine = (value: object) => {
+const determine = (value: object): value is HybridObject<never> => {
   'worklet';
+  // @ts-ignore NitroModules types on web differ from native.
   return NitroModules.isHybridObject(value);
 };
 
 const pack = (value: HybridObject<never>) => {
   'worklet';
+  // @ts-ignore NitroModules types on web differ from native.
   return NitroModules.box(value);
 };
 
