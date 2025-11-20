@@ -41,7 +41,7 @@ index 3c9372b6ae..8043395b1c 100644
 +++ b/apps/fabric-example/babel.config.js
 @@ -1,7 +1,7 @@
  /** @type {import('react-native-worklets/plugin').PluginOptions} */
- const workletOptions = {
+ const workletsPluginOptions = {
    // Uncomment the next line to enable bundle mode.
 -  // bundleMode: true,
 +  bundleMode: true,
