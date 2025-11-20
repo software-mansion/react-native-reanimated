@@ -107,8 +107,8 @@ export function createWorkletRuntime(
 /**
  * Lets you asynchronously run a
  * [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)
- * on the [Worker
- * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime).
+ * on a [Worker
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-runtime).
  *
  * Check
  * {@link https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds}
@@ -119,7 +119,7 @@ export function createWorkletRuntime(
  * - The function cannot be scheduled on the Worker Runtime from [UI
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime)
  *   or another [Worker
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime),
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-runtime),
  *   unless the [Bundle
  *   Mode](https://docs.swmansion.com/react-native-worklets/docs/experimental/bundleMode)
  *   is enabled.

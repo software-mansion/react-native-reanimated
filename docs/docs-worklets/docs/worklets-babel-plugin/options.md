@@ -14,7 +14,7 @@ Our plugin offers several optional functionalities that you may need to employ a
 <summary>Type definitions</summary>
 
 ```typescript
-interface WorkletsPluginOptions {
+interface PluginOptions {
   bundleMode?: boolean;
   disableInlineStylesWarning?: boolean;
   disableSourceMaps?: boolean;

@@ -6,7 +6,7 @@ sidebar_position: 1
 
 # Worklets
 
-A worklet is a short-running JavaScript function that can be moved and executed across different Javascript Runtimes. Libraries like [Reanimated](https://docs.swmansion.com/react-native-reanimated/) use worklets to calculate view styles and react to events on the UI thread.
+Worklet is a short-running JavaScript function that can be moved and executed across different Javascript Runtimes. Reanimated uses worklets to calculate view styles and react to events on the UI thread.
 
 ## Defining worklets
 
@@ -95,7 +95,7 @@ function App() {
 
 ## Hoisting
 
-Functions marked with `'worklet';` aren't [hoisted](https://developer.mozilla.org/en-US/docs/Glossary/Hoisting). Besides affecting hoisting, the `'worklet'` directive has no effect on the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime-rn-runtime).
+Functions marked with `'worklet'` aren't [hoisted](https://developer.mozilla.org/en-US/docs/Glossary/Hoisting). Besides affecting hoisting, the `'worklet'` directive has no effect on the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime-rn-runtime).
 
 ## Capturing closure
 
@@ -173,7 +173,7 @@ function App() {
 
 There's no separate UI thread available on the Web. Because of that, when Worklets run in the browser, worklets are resolved to plain JavaScript functions.
 
-However, the `'worklet'` directive is still necessary on the Web, because libraries like Reanimated rely on the Worklets Babel plugin to capture dependencies inside worklet functions.
+However, the `'worklet'` directive is still necessary on the Web, because Reanimated relies on the Worklets Babel plugin to capture dependencies inside worklet functions.
 
 ## Other worklet runtimes
 
