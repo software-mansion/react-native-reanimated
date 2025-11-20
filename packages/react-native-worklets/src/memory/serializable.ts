@@ -28,7 +28,7 @@ export function makeShareable<TValue>(value: TValue): TValue {
 
 export function registerCustomSerializable<
   TValue extends object,
-  TSerialized extends object,
->(_registrationData: RegistrationData<TValue, TSerialized>) {
+  TPacked extends object,
+>(_registrationData: RegistrationData<TValue, TPacked>) {
   // noop
 }

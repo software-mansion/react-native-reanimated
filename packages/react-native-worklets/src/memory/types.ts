@@ -36,20 +36,17 @@ export type Synchronizable<TValue = unknown> = SerializableRef<TValue> &
     unlock(): void;
   };
 
-export type RegistrationData<
-  TValue extends object,
-  TSerialized extends object,
-> = {
+export type RegistrationData<TValue extends object, TPacked extends object> = {
   name: string;
   determine: (value: object) => value is TValue;
-  pack: (value: TValue) => TSerialized;
-  unpack: (value: TSerialized) => TValue;
+  pack: (value: TValue) => TPacked;
+  unpack: (value: TPacked) => TValue;
 };
 
 export type SerializationData<
   TValue extends object,
-  TSerialized extends object,
-> = Omit<RegistrationData<TValue, TSerialized>, 'name'> & {
+  TPacked extends object,
+> = Omit<RegistrationData<TValue, TPacked>, 'name'> & {
   /** Only defined on the RN Runtime. */
   name?: string;
 };

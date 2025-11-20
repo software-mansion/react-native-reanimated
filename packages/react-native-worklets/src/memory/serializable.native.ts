@@ -248,8 +248,8 @@ const customSerializationRegistry = globalThis.__customSerializationRegistry;
 
 export function registerCustomSerializable<
   TValue extends object,
-  TSerialized extends object,
->(registrationData: RegistrationData<TValue, TSerialized>) {
+  TPacked extends object,
+>(registrationData: RegistrationData<TValue, TPacked>) {
   if (__DEV__ && getRuntimeKind() !== RuntimeKind.ReactNative) {
     throw new WorkletsError(
       'registerCustomSerializable can be used only on React Native runtime.'
@@ -643,9 +643,9 @@ function cloneImport<TValue extends WorkletImport>(
   return clone as SerializableRef<TValue>;
 }
 
-function cloneCustom<TValue extends object, TSerialized extends object>(
+function cloneCustom<TValue extends object, TPacked extends object>(
   data: TValue,
-  pack: (data: TValue) => TSerialized,
+  pack: (data: TValue) => TPacked,
   typeId: number
 ): SerializableRef<TValue> {
   const serializedData = pack(data);
