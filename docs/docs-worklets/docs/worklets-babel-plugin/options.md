@@ -59,7 +59,7 @@ module.exports = {
 
 Defaults to `false`.
 
-Enables the [Bundle Mode](/docs/experimental/bundle-mode).
+Enables the [Bundle Mode](/docs/experimental/bundleMode).
 
 ### disableInlineStylesWarning
 
