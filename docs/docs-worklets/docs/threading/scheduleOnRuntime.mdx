@@ -4,7 +4,7 @@ sidebar_position: 42 # Use alphabetical order
 
 # scheduleOnRuntime
 
-`scheduleOnRuntime` lets you schedule a [worklet](/docs/fundamentals/glossary#worklet) to be executed on a [Worker Runtime](/docs/fundamentals/glossary#worker-runtime).
+`scheduleOnRuntime` lets you schedule a [worklet](/docs/fundamentals/glossary#worklet) to be executed on a [Worker Runtime](/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime).
 
 ## Reference
 
@@ -39,11 +39,11 @@ The worklet runtime to schedule the worklet on.
 
 ### worklet
 
-A reference to a function you want to execute on the [Worker Runtime](/docs/fundamentals/glossary#worker-runtime).
+A reference to a function you want to execute on the [Worklet Runtime](/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime).
 
 ### args
 
-Arguments to the function you want to execute on the [Worker Runtime](/docs/fundamentals/glossary#worker-runtime).
+Arguments to the function you want to execute on the [Worklet Runtime](/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime).
 
 ## Remarks
 
@@ -51,7 +51,7 @@ Arguments to the function you want to execute on the [Worker Runtime](/docs/fund
   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/Public/AsyncQueue.h)
 - The worklet cannot be scheduled on the Worker Runtime from [UI
   Runtime](/docs/fundamentals/glossary#ui-runtime) or another [Worker
-  Runtime](/docs/fundamentals/glossary#worker-runtime), unless the [Bundle Mode](/docs/experimental/bundleMode) is enabled.
+  Runtime](/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime), unless the [Bundle Mode](/docs/experimental/bundleMode) is enabled.
 
 ```javascript
 import { createWorkletRuntime, scheduleOnRuntime } from 'react-native-worklets';

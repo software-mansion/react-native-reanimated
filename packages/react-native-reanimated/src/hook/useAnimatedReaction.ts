@@ -42,7 +42,7 @@ export function useAnimatedReaction<PreparedResult>(
 
   if (SHOULD_BE_USE_WEB) {
     if (!inputs.length && dependencies?.length) {
-      // let web work without Worklets Babel plugin
+      // let web work without a Reanimated Babel plugin
       inputs = dependencies;
     }
   }

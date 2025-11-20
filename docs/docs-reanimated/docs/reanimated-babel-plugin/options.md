@@ -4,7 +4,7 @@ title: 'Options'
 sidebar_label: 'Options'
 ---
 
-# Options for Worklets Babel Plugin
+# Options for Reanimated Babel Plugin
 
 Our plugin offers several optional functionalities that you may need to employ advanced APIs:
 
@@ -174,8 +174,8 @@ This option turns off the source map generation for worklets. Mostly used for te
 
 ### extraPlugins
 
-This is a list of Babel plugins that will be used when transforming worklets' code with Worklets Babel Plugin.
+This is a list of Babel plugins that will be used when transforming worklets' code with Reanimated Babel Plugin.
 
 ### extraPresets
 
-This is a list of Babel presets that will be used when transforming worklets' code with Worklets Babel Plugin.
+This is a list of Babel presets that will be used when transforming worklets' code with Reanimated Babel Plugin.
