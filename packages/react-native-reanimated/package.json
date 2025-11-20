@@ -62,6 +62,7 @@
     "compatibility.json",
     "mock.js",
     "plugin/index.js",
+    "plugin/index.d.ts",
     "metro-config",
     "!**/__tests__",
     "!**/__fixtures__",
