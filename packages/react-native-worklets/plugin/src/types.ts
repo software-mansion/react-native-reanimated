@@ -18,6 +18,7 @@ import {
 export interface ReanimatedPluginOptions {
   relativeSourceLocation?: boolean;
   disableInlineStylesWarning?: boolean;
+  disableWorkletClasses?: boolean;
   omitNativeOnlyData?: boolean;
   globals?: string[];
   substituteWebPlatformChecks?: boolean;
