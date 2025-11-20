@@ -128,12 +128,11 @@ inline std::shared_ptr<AsyncQueue> extractAsyncQueue(jsi::Runtime &rt, const jsi
 inline void registerCustomSerializable(
     const std::shared_ptr<RuntimeManager> &runtimeManager,
     const std::shared_ptr<MemoryManager> &memoryManager,
-    const std::shared_ptr<SerializableWorklet> &determinant,
-    const std::shared_ptr<SerializableWorklet> &serializer,
-    const std::shared_ptr<SerializableWorklet> &deserializer,
+    const std::shared_ptr<SerializableWorklet> &determine,
+    const std::shared_ptr<SerializableWorklet> &pack,
+    const std::shared_ptr<SerializableWorklet> &unpack,
     const int typeId) {
-  const CustomSerializableData data{
-      .determinant = determinant, .serializer = serializer, .deserializer = deserializer, .typeId = typeId};
+  const SerializationData data{.determine = determine, .pack = pack, .unpack = unpack, .typeId = typeId};
   memoryManager->registerCustomSerializable(data);
   for (const auto &runtime : runtimeManager->getAllRuntimes()) {
     memoryManager->loadCustomSerializable(runtime, data);
@@ -346,7 +345,7 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
   if (name == "createSerializableCustom") {
     return jsi::Function::createFromHostFunction(
         rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return makeSerializableCustom(rt, args[0], args[1].asNumber());
+          return makeCustomSerializable(rt, args[0], args[1].asNumber());
         });
   }
 
@@ -357,14 +356,14 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         4,
         [memoryManager = memoryManager_, runtimeManager = runtimeManager_](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          const auto determinant =
-              extractSerializableOrThrow<SerializableWorklet>(rt, args[0], "[Worklets] Determinant must be a worklet.");
-          const auto serializer =
-              extractSerializableOrThrow<SerializableWorklet>(rt, args[1], "[Worklets] Serializer must be a worklet.");
-          const auto deserializer = extractSerializableOrThrow<SerializableWorklet>(
-              rt, args[2], "[Worklets] Deserializer must be a worklet.");
+          const auto determine = extractSerializableOrThrow<SerializableWorklet>(
+              rt, args[0], "[Worklets] Determine function must be a worklet.");
+          const auto pack = extractSerializableOrThrow<SerializableWorklet>(
+              rt, args[1], "[Worklets] Pack function must be a worklet.");
+          const auto unpack = extractSerializableOrThrow<SerializableWorklet>(
+              rt, args[2], "[Worklets] Unpack function must be a worklet.");
           const auto typeId = args[3].asNumber();
-          registerCustomSerializable(runtimeManager, memoryManager, determinant, serializer, deserializer, typeId);
+          registerCustomSerializable(runtimeManager, memoryManager, determine, pack, unpack, typeId);
           return jsi::Value::undefined();
         });
   }

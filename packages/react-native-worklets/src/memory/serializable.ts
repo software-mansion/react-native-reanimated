@@ -2,8 +2,8 @@
 
 import type {
   FlatSerializableRef,
+  RegistrationData,
   SerializableRef,
-  SerializationData,
 } from './types';
 
 export function isSerializableRef(value: unknown): value is SerializableRef {
@@ -29,6 +29,6 @@ export function makeShareable<TValue>(value: TValue): TValue {
 export function registerCustomSerializable<
   TValue extends object,
   TSerialized extends object,
->(_serializableData: SerializationData<TValue, TSerialized>) {
+>(_registrationData: RegistrationData<TValue, TSerialized>) {
   // noop
 }

@@ -35,18 +35,18 @@ function GlobalConstructorCarrierFactory(constructor: any) {
   return new GlobalConstructorCarrier(constructor);
 }
 
-const determinant = (value: object): value is IGlobalConstructorCarrier => {
+const determine = (value: object): value is IGlobalConstructorCarrier => {
   'worklet';
   return (value as Record<string, unknown>).__isCustomObject == true;
 };
 
-const serializer = (value: IGlobalConstructorCarrier) => {
+const pack = (value: IGlobalConstructorCarrier) => {
   'worklet';
   const constructorName = value.constructor.name;
   return { constructorName };
 };
 
-const deserializer = (value: { constructorName: string }) => {
+const unpack = (value: { constructorName: string }) => {
   'worklet';
   return GlobalConstructorCarrierFactory((globalThis as any)[value.constructorName]);
 };
@@ -60,9 +60,9 @@ describe('Test CustomSerializables', () => {
     try {
       registerCustomSerializable({
         name: 'registration test',
-        determinant,
-        serializer,
-        deserializer,
+        determine,
+        pack,
+        unpack,
       });
     } catch {
       error = true;
@@ -198,16 +198,16 @@ describe('Test CustomSerializables', () => {
       return new GlobalConstructorCarrier2(constructor);
     }
 
-    const determinant2 = (value: object): value is IGlobalConstructorCarrier2 => {
+    const determine2 = (value: object): value is IGlobalConstructorCarrier2 => {
       'worklet';
       return (value as Record<string, unknown>).__isCustomObject2 == true;
     };
 
     registerCustomSerializable({
       name: 'propagation test',
-      determinant: determinant2 as unknown as typeof determinant,
-      serializer,
-      deserializer,
+      determine: determine2 as unknown as typeof determine,
+      pack,
+      unpack,
     });
 
     const postRuntime = createWorkletRuntime();

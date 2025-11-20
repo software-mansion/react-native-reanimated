@@ -70,14 +70,14 @@ export interface WorkletsModuleProxy {
   ): SerializableRef<object>;
 
   createSerializableCustom(
-    deserializer: SerializableRef<object>,
+    data: SerializableRef<object>,
     typeId: number
   ): SerializableRef<object>;
 
   registerCustomSerializable(
-    determinant: SerializableRef<object>,
-    serializer: SerializableRef<object>,
-    deserializer: SerializableRef<object>,
+    determine: SerializableRef<object>,
+    pack: SerializableRef<object>,
+    unpack: SerializableRef<object>,
     typeId: number
   ): void;
 

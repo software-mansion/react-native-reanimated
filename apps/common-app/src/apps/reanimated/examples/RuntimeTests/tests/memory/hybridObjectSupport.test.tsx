@@ -10,7 +10,6 @@ import {
   runOnUISync,
   scheduleOnRN,
   scheduleOnRuntime,
-  scheduleOnUI,
   serializableMappingCache,
 } from 'react-native-worklets';
 
@@ -30,26 +29,26 @@ const NitroModulesHandle = {
 const serializedNitroModulesHandle = createSerializable(NitroModulesHandle);
 serializableMappingCache.set(NitroModules, serializedNitroModulesHandle);
 
-const determinant = (value: object) => {
+const determine = (value: object) => {
   'worklet';
   return NitroModules.isHybridObject(value);
 };
 
-const serializer = (value: HybridObject<never>) => {
+const pack = (value: HybridObject<never>) => {
   'worklet';
   return NitroModules.box(value);
 };
 
-const deserializer = (value: BoxedHybridObject<HybridObject<never>>) => {
+const unpack = (value: BoxedHybridObject<HybridObject<never>>) => {
   'worklet';
   return value.unbox();
 };
 
 registerCustomSerializable({
   name: 'nitro::HybridObject',
-  determinant,
-  serializer,
-  deserializer,
+  determine,
+  pack,
+  unpack,
 });
 
 let storageId = 0;

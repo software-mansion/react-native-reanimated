@@ -17,7 +17,7 @@ const char CustomSerializableUnpackerCode[] =
     if (!data) {
       throw new Error("[Worklets] No custom serializable registered for type ID ".concat(typeId, "."));
     }
-    return data.deserializer(value);
+    return data.unpack(value);
   }
   globalThis.__customSerializableUnpacker = customSerializableUnpacker;
 })();)DELIMITER__";

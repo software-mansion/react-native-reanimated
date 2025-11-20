@@ -224,16 +224,16 @@ export function createSerializable<TValue>(
     return cloneArrayBufferView(value);
   }
   for (let i = 0; i < customSerializationRegistry.length; i++) {
-    const { determinant, serializer } = customSerializationRegistry[i];
-    if (determinant(value)) {
-      return cloneCustom(value, serializer, i) as SerializableRef<TValue>;
+    const { determine, pack } = customSerializationRegistry[i];
+    if (determine(value)) {
+      return cloneCustom(value, pack, i) as SerializableRef<TValue>;
     }
   }
   return inaccessibleObject(value);
 }
 
 if (globalThis._WORKLETS_BUNDLE_MODE) {
-  // TODO: Do it programatically.
+  // TODO: Do it programmatically.
   createSerializable.__bundleData = {
     imported: 'createSerializable',
     source: require.resolveWeak('react-native-worklets'),
@@ -256,7 +256,7 @@ export function registerCustomSerializable<
     );
   }
 
-  const { name, determinant, serializer, deserializer } = registrationData;
+  const { name, determine, pack, unpack } = registrationData;
   if (customSerializationRegistry.some((data) => data.name === name)) {
     if (__DEV__) {
       console.warn(
@@ -271,9 +271,9 @@ export function registerCustomSerializable<
   );
 
   WorkletsModule.registerCustomSerializable(
-    createSerializable(determinant),
-    createSerializable(serializer),
-    createSerializable(deserializer),
+    createSerializable(determine),
+    createSerializable(pack),
+    createSerializable(unpack),
     customSerializationRegistry.length - 1
   );
 }
@@ -645,10 +645,10 @@ function cloneImport<TValue extends WorkletImport>(
 
 function cloneCustom<TValue extends object, TSerialized extends object>(
   data: TValue,
-  serializer: (data: TValue) => TSerialized,
+  pack: (data: TValue) => TSerialized,
   typeId: number
 ): SerializableRef<TValue> {
-  const serializedData = serializer(data);
+  const serializedData = pack(data);
   const serializedDataSerializable = createSerializable(serializedData);
 
   return WorkletsModule.createSerializableCustom(
@@ -775,10 +775,10 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
           i < globalThis.__customSerializationRegistry.length;
           i++
         ) {
-          const { determinant, serializer } =
+          const { determine, pack } =
             globalThis.__customSerializationRegistry[i];
-          if (determinant(value)) {
-            const serializedData = serializer(value);
+          if (determine(value)) {
+            const serializedData = pack(value);
             return globalThis.__workletsModuleProxy?.createSerializableCustom(
               cloneRecursive(
                 serializedData as TValue

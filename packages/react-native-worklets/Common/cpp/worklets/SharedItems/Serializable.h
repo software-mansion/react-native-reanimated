@@ -166,7 +166,7 @@ jsi::Value makeSerializableFunction(jsi::Runtime &rt, jsi::Function function);
 
 jsi::Value makeSerializableWorklet(jsi::Runtime &rt, const jsi::Object &object, const bool &shouldRetainRemote);
 
-jsi::Value makeSerializableCustom(jsi::Runtime &rt, const jsi::Value &data, int typeId);
+jsi::Value makeCustomSerializable(jsi::Runtime &rt, const jsi::Value &data, int typeId);
 
 std::shared_ptr<Serializable> extractSerializableOrThrow(
     jsi::Runtime &rt,
@@ -421,10 +421,10 @@ class CustomSerializable : public Serializable {
   const int typeId_;
 };
 
-struct CustomSerializableData {
-  std::shared_ptr<SerializableWorklet> determinant;
-  std::shared_ptr<SerializableWorklet> serializer;
-  std::shared_ptr<SerializableWorklet> deserializer;
+struct SerializationData {
+  std::shared_ptr<SerializableWorklet> determine;
+  std::shared_ptr<SerializableWorklet> pack;
+  std::shared_ptr<SerializableWorklet> unpack;
   int typeId;
 };
 

@@ -6,10 +6,10 @@
 
 namespace worklets {
 void MemoryManager::loadAllCustomSerializables(const std::shared_ptr<WorkletRuntime> &runtime) {
-  std::lock_guard lock(customSerializablesMutex_);
+  std::lock_guard lock(customSerializationDataMutex_);
   runtime->executeSync([&](jsi::Runtime &rt) -> jsi::Value {
     const auto registry = getCustomSerializationRegistry(rt);
-    for (const auto &data : customSerializables_) {
+    for (const auto &data : customSerializationData_) {
       loadCustomSerializable(rt, registry, data);
     }
     return jsi::Value::undefined();
@@ -18,8 +18,8 @@ void MemoryManager::loadAllCustomSerializables(const std::shared_ptr<WorkletRunt
 
 void MemoryManager::loadCustomSerializable(
     const std::shared_ptr<WorkletRuntime> &runtime,
-    const CustomSerializableData &data) {
-  std::lock_guard lock(customSerializablesMutex_);
+    const SerializationData &data) {
+  std::lock_guard lock(customSerializationDataMutex_);
   runtime->executeSync([this, data](jsi::Runtime &rt) -> jsi::Value {
     const auto registry = getCustomSerializationRegistry(rt);
     loadCustomSerializable(rt, registry, data);
@@ -30,22 +30,22 @@ void MemoryManager::loadCustomSerializable(
 void MemoryManager::loadCustomSerializable(
     jsi::Runtime &runtime,
     const jsi::Array &registry,
-    const CustomSerializableData &data) {
+    const SerializationData &data) {
   react_native_assert(
       registry.length(runtime) == data.typeId && "Custom serializable type IDs must not differ between runtimes.");
 
   const auto item = jsi::Object(runtime);
-  item.setProperty(runtime, "determinant", data.determinant->toJSValue(runtime));
-  item.setProperty(runtime, "serializer", data.serializer->toJSValue(runtime));
-  item.setProperty(runtime, "deserializer", data.deserializer->toJSValue(runtime));
+  item.setProperty(runtime, "determine", data.determine->toJSValue(runtime));
+  item.setProperty(runtime, "pack", data.pack->toJSValue(runtime));
+  item.setProperty(runtime, "unpack", data.unpack->toJSValue(runtime));
   item.setProperty(runtime, "typeId", data.typeId);
 
   registry.getPropertyAsFunction(runtime, "push").callWithThis(runtime, registry, item);
 }
 
-void MemoryManager::registerCustomSerializable(const CustomSerializableData &data) {
-  std::lock_guard lock(customSerializablesMutex_);
-  customSerializables_.emplace_back(data);
+void MemoryManager::registerCustomSerializable(const SerializationData &data) {
+  std::lock_guard lock(customSerializationDataMutex_);
+  customSerializationData_.emplace_back(data);
 }
 
 jsi::Array MemoryManager::getCustomSerializationRegistry(jsi::Runtime &rt) {

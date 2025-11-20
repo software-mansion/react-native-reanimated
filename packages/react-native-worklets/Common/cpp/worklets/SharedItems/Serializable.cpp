@@ -452,12 +452,10 @@ jsi::Function getCustomSerializableUnpacker(jsi::Runtime &rt) {
 
 jsi::Value CustomSerializable::toJSValue(jsi::Runtime &rt) {
   try {
-    auto deserializerJS = getCustomSerializableUnpacker(rt);
-    auto dataJS = data_->toJSValue(rt);
+    auto unpack = getCustomSerializableUnpacker(rt);
+    auto data = data_->toJSValue(rt);
 
-    return deserializerJS.call(rt, dataJS, jsi::Value(typeId_));
-
-    return deserializerJS.call(rt, dataJS);
+    return unpack.call(rt, data, jsi::Value(typeId_));
   } catch (jsi::JSError &e) {
     throw std::runtime_error(
         std::string("[Worklets] Failed to deserialize CustomSerializable. Reason: ") + e.getMessage());
@@ -465,10 +463,10 @@ jsi::Value CustomSerializable::toJSValue(jsi::Runtime &rt) {
   }
 }
 
-jsi::Value makeSerializableCustom(jsi::Runtime &rt, const jsi::Value &data, const int typeId) {
-  auto serializableData = extractSerializableOrThrow(rt, data, "[Worklets] Data must be a Serializable object.");
-  auto serializable = std::make_shared<CustomSerializable>(serializableData, typeId);
-  return SerializableJSRef::newNativeStateObject(rt, serializable);
+jsi::Value makeCustomSerializable(jsi::Runtime &rt, const jsi::Value &data, const int typeId) {
+  auto rawData = extractSerializableOrThrow(rt, data, "[Worklets] Data must be a Serializable object.");
+  auto customSerializable = std::make_shared<CustomSerializable>(rawData, typeId);
+  return SerializableJSRef::newNativeStateObject(rt, customSerializable);
 }
 
 } // namespace worklets

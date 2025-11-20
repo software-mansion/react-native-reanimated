@@ -16,7 +16,7 @@ export function __installUnpacker() {
       );
     }
 
-    return data.deserializer(value as object);
+    return data.unpack(value as object);
   }
 
   globalThis.__customSerializableUnpacker =
