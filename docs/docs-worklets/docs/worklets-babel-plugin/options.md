@@ -4,8 +4,6 @@ title: 'Options'
 sidebar_label: 'Options'
 ---
 
-import AvailableFrom from '@site/src/components/AvailableFrom';
-
 # Options for Worklets Babel Plugin
 
 Our plugin offers several optional functionalities that you may need to employ advanced APIs:
@@ -18,7 +16,6 @@ interface PluginOptions {
   bundleMode?: boolean;
   disableInlineStylesWarning?: boolean;
   disableSourceMaps?: boolean;
-  disableWorkletClasses?: boolean;
   extraPlugins?: string[];
   extraPresets?: string[];
   globals?: string[];
@@ -40,7 +37,7 @@ Here's an example:
 ```js {7}
 module.exports = {
   /** @type {import('react-native-worklets/plugin').PluginOptions} */
-  const workletOptions = {
+  const workletsPluginOptions = {
     relativeSourceLocation: true,
     disableInlineStylesWarning: true,
     omitNativeOnlyData: true,
@@ -52,7 +49,7 @@ module.exports = {
     ...
     [
       'react-native-worklets/plugin',
-      workletOptions
+      workletsPluginOptions
     ],
   ],
 };
@@ -105,12 +102,6 @@ Enable this option to silence such false warnings.
 Defaults to `false`.
 
 This option turns off the source map generation for worklets. Mostly used for testing purposes.
-
-### disableWorkletClasses <AvailableFrom version="0.8.0" />
-
-Defaults to `false`.
-
-Disables [Worklet Classes support](/docs/worklets-babel-plugin/about#experimental-worklet-classes). You might need to disable this feature when using [Custom Serializables](/TODO).
 
 ### extraPlugins
 

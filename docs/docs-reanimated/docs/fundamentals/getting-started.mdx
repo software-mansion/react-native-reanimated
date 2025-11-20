@@ -48,6 +48,7 @@ Install `react-native-reanimated` and `react-native-worklets` packages from npm:
 #### Dependencies
 
 This library requires an installation of the `react-native-worklets` dependency. It was separated from `react-native-reanimated` for better modularity and must be installed separately.
+
 You can read more about Worklets in the [Worklets documentation](https://docs.swmansion.com/react-native-worklets/).
 
 <Tabs groupId="package-managers">
@@ -81,7 +82,7 @@ When using [React Native Community CLI](https://github.com/react-native-communit
 
 ```js {7}
   /** @type {import('react-native-worklets/plugin').PluginOptions} */
-  const workletOptions = {
+  const workletsPluginOptions = {
     // Your custom options.
   }
 
@@ -91,7 +92,7 @@ When using [React Native Community CLI](https://github.com/react-native-communit
     ],
     plugins: [
       ...
-      ['react-native-worklets/plugin', workletOptions],
+      ['react-native-worklets/plugin', workletsPluginOptions],
     ],
   };
 ```
@@ -153,7 +154,7 @@ To use Reanimated on the web all you need to do is to install and add [`@babel/p
 
 ```js {7}
   /** @type {import('react-native-worklets/plugin').PluginOptions} */
-  const workletOptions = {
+  const workletsPluginOptions = {
     // Your custom options.
   }
 
@@ -164,7 +165,7 @@ To use Reanimated on the web all you need to do is to install and add [`@babel/p
       plugins: [
           ...
           '@babel/plugin-proposal-export-namespace-from',
-          ['react-native-worklets/plugin', workletOptions],
+          ['react-native-worklets/plugin', workletsPluginOptions],
       ],
   };
 ```
