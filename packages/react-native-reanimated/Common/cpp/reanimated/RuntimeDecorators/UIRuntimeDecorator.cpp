@@ -1,40 +1,39 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
 
+#include <utility>
+
 namespace reanimated {
 
 using namespace worklets;
 
 void UIRuntimeDecorator::decorate(
     jsi::Runtime &uiRuntime,
-    const ObtainPropFunction obtainPropFunction,
-    const UpdatePropsFunction updateProps,
-    const MeasureFunction measure,
-    const DispatchCommandFunction dispatchCommand,
-    const GetAnimationTimestampFunction getAnimationTimestamp,
-    const SetGestureStateFunction setGestureState,
-    const ProgressLayoutAnimationFunction progressLayoutAnimation,
-    const EndLayoutAnimationFunction endLayoutAnimation,
-    const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue) {
-  jsi_utils::installJsiFunction(uiRuntime, "_updateProps", updateProps);
-  jsi_utils::installJsiFunction(uiRuntime, "_dispatchCommand", dispatchCommand);
-  jsi_utils::installJsiFunction(uiRuntime, "_measure", measure);
+    ObtainPropFunction obtainPropFunction,
+    UpdatePropsFunction updateProps,
+    MeasureFunction measure,
+    DispatchCommandFunction dispatchCommand,
+    GetAnimationTimestampFunction getAnimationTimestamp,
+    SetGestureStateFunction setGestureState,
+    ProgressLayoutAnimationFunction progressLayoutAnimation,
+    EndLayoutAnimationFunction endLayoutAnimation,
+    MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue) {
 
-  jsi_utils::installJsiFunction(uiRuntime, "_getAnimationTimestamp", getAnimationTimestamp);
+  jsi_utils::installJsiFunction(uiRuntime, "_updateProps", std::move(updateProps));
+  jsi_utils::installJsiFunction(uiRuntime, "_dispatchCommand", std::move(dispatchCommand));
+  jsi_utils::installJsiFunction(uiRuntime, "_measure", std::move(measure));
+  jsi_utils::installJsiFunction(uiRuntime, "_getAnimationTimestamp", std::move(getAnimationTimestamp));
+  jsi_utils::installJsiFunction(uiRuntime, "_notifyAboutProgress", std::move(progressLayoutAnimation));
+  jsi_utils::installJsiFunction(uiRuntime, "_notifyAboutEnd", std::move(endLayoutAnimation));
+  jsi_utils::installJsiFunction(uiRuntime, "_setGestureState", std::move(setGestureState));
+  jsi_utils::installJsiFunction(uiRuntime, "_obtainProp", std::move(obtainPropFunction));
 
-  jsi_utils::installJsiFunction(uiRuntime, "_notifyAboutProgress", progressLayoutAnimation);
-  jsi_utils::installJsiFunction(uiRuntime, "_notifyAboutEnd", endLayoutAnimation);
-
-  jsi_utils::installJsiFunction(uiRuntime, "_setGestureState", setGestureState);
-
-  jsi_utils::installJsiFunction(uiRuntime, "_obtainProp", obtainPropFunction);
-
-  subscribeForMicrotasksFinalization(uiRuntime, maybeFlushUIUpdatesQueue);
+  subscribeForMicrotasksFinalization(uiRuntime, std::move(maybeFlushUIUpdatesQueue));
 }
 
 void UIRuntimeDecorator::subscribeForMicrotasksFinalization(
     jsi::Runtime &uiRuntime,
-    const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue) {
+    MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue) {
   auto maybeMicrotaskQueueFinalizers = uiRuntime.global().getProperty(uiRuntime, "_microtaskQueueFinalizers");
 
   if (maybeMicrotaskQueueFinalizers.isUndefined()) {
@@ -53,7 +52,7 @@ void UIRuntimeDecorator::subscribeForMicrotasksFinalization(
               uiRuntime,
               jsi::PropNameID::forAscii(uiRuntime, "_maybeFlushUIUpdatesQueue"),
               0,
-              jsi_utils::createHostFunction(maybeFlushUIUpdatesQueue)));
+              jsi_utils::createHostFunction(std::move(maybeFlushUIUpdatesQueue))));
 }
 
 } // namespace reanimated

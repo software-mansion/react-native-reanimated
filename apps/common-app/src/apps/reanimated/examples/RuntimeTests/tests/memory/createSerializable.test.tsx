@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
@@ -32,11 +36,11 @@ const ValueComponent = ({ onRunUIFunction }: { onRunUIFunction: () => boolean })
         try {
           const result = onRunUIFunction();
           sharedResult.value = result ? 'ok' : 'not_ok';
-        } catch (error) {
+        } catch {
           sharedResult.value = 'error';
         }
       });
-    } catch (error) {
+    } catch {
       sharedResult.value = 'error';
     }
     notify(DONE_NOTIFICATION_NAME);
@@ -178,7 +182,7 @@ describe('Test createSerializable', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
-  test('createSerializableBigInt', async () => {
+  test('createSerializableBigInt fitting in int64', async () => {
     // Arrange
     const bigIntValue = BigInt(123);
 
@@ -200,9 +204,31 @@ describe('Test createSerializable', () => {
     expect(sharedValue.onJS).toBe('ok');
   });
 
+  test('createSerializableBigInt too big for uint64', async () => {
+    // Arrange
+    const maxInt64 = BigInt('0x7FFFFFFFFFFFFFFF');
+    const bigIntValue = maxInt64 * maxInt64;
+
+    // Act
+    await render(
+      <ValueComponent
+        onRunUIFunction={() => {
+          'worklet';
+          const checks = [typeof bigIntValue === 'bigint', bigIntValue === maxInt64 * maxInt64];
+          return checks.every(Boolean);
+        }}
+      />,
+    );
+    await waitForNotification(DONE_NOTIFICATION_NAME);
+
+    // Assert
+    const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe('ok');
+    expect(sharedValue.onJS).toBe('ok');
+  });
+
   test('createSerializableHostObject', async () => {
     // Arrange
-    // @ts-expect-error It's ok
     const hostObjectValue = globalThis.__reanimatedModuleProxy;
     const hostObjectKeys = Object.keys(hostObjectValue);
 
@@ -572,8 +598,7 @@ describe('Test createSerializable', () => {
 
   test('createSerializableHostFunction', async () => {
     // Arrange
-    // @ts-expect-error It's ok
-    const hostFunction = globalThis.__workletsModuleProxy.createSerializableBoolean;
+    const hostFunction = globalThis.__workletsModuleProxy.createSerializableBoolean as any;
 
     // Act
     await render(
@@ -597,7 +622,6 @@ describe('Test createSerializable', () => {
 
   test('createSerializableTurboModuleLike', async () => {
     // Arrange
-    // @ts-expect-error This global host object isn't exposed in the types.
     const proto = globalThis.__reanimatedModuleProxy;
     const reanimatedModuleKeys = Object.keys(proto);
     const obj = {
@@ -751,3 +775,8 @@ describe('Test createSerializable', () => {
     expect(sharedValue.onJS).toBe('error');
   });
 });
+
+declare global {
+  var __reanimatedModuleProxy: Record<string, unknown>;
+  var __workletsModuleProxy: Record<string, unknown>;
+}

@@ -3,7 +3,6 @@
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperationInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
-#include <reanimated/CSS/utils/keyframes.h>
 
 #include <memory>
 #include <unordered_map>
@@ -51,7 +50,7 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
 
  private:
   const std::shared_ptr<TransformOperationInterpolators> interpolators_;
-  static const TransformOperations defaultStyleValue_;
+  static const folly::dynamic defaultStyleValueDynamic_;
 
   std::vector<std::shared_ptr<TransformKeyframe>> keyframes_;
   std::optional<TransformOperations> reversingAdjustedStartValue_;

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <reanimated/CSS/common/values/CSSValue.h>
-#include <worklets/Tools/JSISerializer.h>
 
 #include <folly/json.h>
 
@@ -12,8 +11,6 @@
 #include <variant>
 
 namespace reanimated::css {
-
-using namespace worklets;
 
 /**
  * Macro to check if two lambda parameters have the same reference-removed type.

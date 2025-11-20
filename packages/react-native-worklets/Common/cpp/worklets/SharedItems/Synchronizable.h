@@ -44,7 +44,7 @@ class Synchronizable : public SynchronizableAccess,
 
   explicit Synchronizable(const std::shared_ptr<Serializable> &value);
 
-  virtual ~Synchronizable() = default;
+  ~Synchronizable() override = default;
 
  private:
   std::shared_ptr<Serializable> value_;

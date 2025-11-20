@@ -25,7 +25,7 @@ class UIRuntimeDecorator {
  private:
   static void subscribeForMicrotasksFinalization(
       jsi::Runtime &uiRuntime,
-      const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue);
+      MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue);
 };
 
 } // namespace reanimated
