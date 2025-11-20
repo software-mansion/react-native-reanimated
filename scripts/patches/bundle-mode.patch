@@ -36,18 +36,18 @@ index afaf8c45a5..c3c5434878 100644
 +    }
 +}
 diff --git a/apps/fabric-example/babel.config.js b/apps/fabric-example/babel.config.js
-index 259ed1ad84..ebdbea9d22 100644
+index 3c9372b6ae..8043395b1c 100644
 --- a/apps/fabric-example/babel.config.js
 +++ b/apps/fabric-example/babel.config.js
-@@ -6,7 +6,7 @@ module.exports = {
-       'react-native-worklets/plugin',
-       {
-         // Uncomment the next line to enable bundle mode.
--        // bundleMode: true,
-+        bundleMode: true,
-       },
-     ],
-     [
+@@ -1,7 +1,7 @@
+ /** @type {import('react-native-worklets/plugin').PluginOptions} */
+ const workletOptions = {
+   // Uncomment the next line to enable bundle mode.
+-  // bundleMode: true,
++  bundleMode: true,
+ };
+ 
+ /** @type {import('@babel/core').TransformOptions} */
 diff --git a/apps/fabric-example/ios/Podfile b/apps/fabric-example/ios/Podfile
 index 3f8fe4a6e2..e208389ca3 100644
 --- a/apps/fabric-example/ios/Podfile
@@ -62,10 +62,10 @@ index 3f8fe4a6e2..e208389ca3 100644
  platform :ios, min_ios_version_supported
  prepare_react_native_project!
 diff --git a/apps/fabric-example/metro.config.js b/apps/fabric-example/metro.config.js
-index ac70ff22bc..cb06730da7 100644
+index 67158b31ff..3990fe93c2 100644
 --- a/apps/fabric-example/metro.config.js
 +++ b/apps/fabric-example/metro.config.js
-@@ -33,8 +33,8 @@ let config = {
+@@ -20,8 +20,8 @@ let config = {
  config = mergeConfig(getDefaultConfig(__dirname), config);
  
  // Uncomment the following to enable bundle mode.
@@ -77,10 +77,10 @@ index ac70ff22bc..cb06730da7 100644
  module.exports = wrapWithReanimatedMetroConfig(
    mergeConfig(getDefaultConfig(__dirname), config)
 diff --git a/package.json b/package.json
-index f020af7a46..9f9727afb9 100644
+index 141335c036..1261072923 100644
 --- a/package.json
 +++ b/package.json
-@@ -69,5 +69,10 @@
+@@ -70,5 +70,10 @@
      "react-native-builder-bob": "0.40.13",
      "shelljs": "0.10.0",
      "typescript": "5.8.3"
