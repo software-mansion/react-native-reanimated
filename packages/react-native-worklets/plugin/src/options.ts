@@ -99,7 +99,8 @@ export interface PluginOptions {
 
   /**
    * This option allows you to register modules as safe to use on Worklet
-   * Runtimes in the [Bundle Mode](/docs/experimental/bundle-mode).
+   * Runtimes in the [Bundle
+   * Mode](https://docs.swmansion.com/react-native-worklets/docs/experimental/bundle-mode).
    *
    * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#workletizablemodules}
    *
