@@ -16,16 +16,15 @@ import {
 } from '@babel/types';
 
 export interface ReanimatedPluginOptions {
-  bundleMode?: boolean;
+  relativeSourceLocation?: boolean;
   disableInlineStylesWarning?: boolean;
+  omitNativeOnlyData?: boolean;
+  globals?: string[];
+  substituteWebPlatformChecks?: boolean;
   disableSourceMaps?: boolean;
-  disableWorkletClasses?: boolean;
   extraPlugins?: string[];
   extraPresets?: string[];
-  globals?: string[];
-  omitNativeOnlyData?: boolean;
-  relativeSourceLocation?: boolean;
-  substituteWebPlatformChecks?: boolean;
+  bundleMode?: boolean;
   workletizableModules?: string[];
 }
 

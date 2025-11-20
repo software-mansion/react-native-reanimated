@@ -648,11 +648,11 @@ function cloneCustom<TValue extends object, TPacked extends object>(
   pack: (data: TValue) => TPacked,
   typeId: number
 ): SerializableRef<TValue> {
-  const serializedData = pack(data);
-  const serializedDataSerializable = createSerializable(serializedData);
+  const packedData = pack(data);
+  const serialized = createSerializable(packedData);
 
   return WorkletsModule.createSerializableCustom(
-    serializedDataSerializable,
+    serialized,
     typeId
   ) as SerializableRef<TValue>;
 }
@@ -770,19 +770,14 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
         ) as FlatSerializableRef<TValue>;
       }
       if (Object.getPrototypeOf(value) !== Object.prototype) {
-        for (
-          let i = 0;
-          i < globalThis.__customSerializationRegistry.length;
-          i++
-        ) {
+        const length = globalThis.__customSerializationRegistry.length;
+        for (let i = 0; i < length; i++) {
           const { determine, pack } =
             globalThis.__customSerializationRegistry[i];
           if (determine(value)) {
-            const serializedData = pack(value);
+            const packedData = pack(value);
             return globalThis.__workletsModuleProxy?.createSerializableCustom(
-              cloneRecursive(
-                serializedData as TValue
-              ) as SerializableRef<object>,
+              cloneRecursive(packedData as TValue) as SerializableRef<object>,
               i
             ) as FlatSerializableRef<TValue>;
           }
