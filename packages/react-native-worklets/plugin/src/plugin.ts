@@ -76,6 +76,9 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
       ClassDeclaration: {
         enter(path: NodePath<ClassDeclaration>, state: ReanimatedPluginPass) {
           runWithTaggedExceptions(() => {
+            if (state.opts.disableWorkletClasses) {
+              return;
+            }
             processIfWorkletClass(path, state);
           });
         },
