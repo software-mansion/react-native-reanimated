@@ -56,7 +56,6 @@ function getFromCache(value: object) {
   return cached;
 }
 
-// TODO: Do it smarter.
 // The below object is used as a replacement for objects that cannot be transferred
 // as serializable values. In createSerializable we detect if an object is of
 // a plain Object.prototype and only allow such objects to be transferred. This lets
