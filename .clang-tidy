@@ -2,6 +2,7 @@ Checks:
   # - bugprone-*
   # - clang-analyzer-*
   # - concurrency-*
+
   - cppcoreguidelines-*
   - -cppcoreguidelines-avoid-const-or-ref-data-members
   - -cppcoreguidelines-special-member-functions
@@ -28,11 +29,15 @@ Checks:
   - -cppcoreguidelines-init-variables
   - -cppcoreguidelines-pro-bounds-array-to-pointer-decay
   - -cppcoreguidelines-avoid-non-const-global-variables
+
   # - google-*
   # - hicpp-*
   # - llvm-*
   # - misc-*
+
   # - modernize-*
+  - modernize-use-override
+
   # - objc-*
   - performance-*
   # - portability-*

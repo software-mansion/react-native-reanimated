@@ -67,7 +67,7 @@ jsi::Value makeSerializableClone(
   } else if (value.isSymbol()) {
     // TODO: this is only a placeholder implementation, here we replace symbols
     // with strings in order to make certain objects to be captured. There isn't
-    // yet any usecase for using symbols on the UI runtime so it is fine to keep
+    // yet any use-case for using symbols on the UI runtime so it is fine to keep
     // it like this for now.
     serializable = std::make_shared<SerializableString>(value.getSymbol(rt).toString(rt));
   } else {
@@ -200,7 +200,7 @@ std::shared_ptr<Serializable> extractSerializableOrThrow(
   throw std::runtime_error(errorMessage);
 }
 
-Serializable::~Serializable() {}
+Serializable::~Serializable() = default;
 
 std::shared_ptr<Serializable> Serializable::undefined() {
   static auto undefined = std::make_shared<SerializableScalar>();
@@ -230,7 +230,7 @@ jsi::Value RetainingSerializable<BaseClass>::toJSValue(jsi::Runtime &rt) {
   return BaseClass::toJSValue(rt);
 }
 
-SerializableJSRef::~SerializableJSRef() {}
+SerializableJSRef::~SerializableJSRef() = default;
 
 SerializableArray::SerializableArray(jsi::Runtime &rt, const jsi::Array &array) : Serializable(ValueType::ArrayType) {
   auto size = array.size(rt);
@@ -281,8 +281,8 @@ SerializableObject::SerializableObject(jsi::Runtime &rt, const jsi::Object &obje
 
 jsi::Value SerializableObject::toJSValue(jsi::Runtime &rt) {
   auto obj = jsi::Object(rt);
-  for (size_t i = 0, size = data_.size(); i < size; i++) {
-    obj.setProperty(rt, jsi::String::createFromUtf8(rt, data_[i].first), data_[i].second->toJSValue(rt));
+  for (const auto &i : data_) {
+    obj.setProperty(rt, jsi::String::createFromUtf8(rt, i.first), i.second->toJSValue(rt));
   }
   if (nativeState_ != nullptr) {
     obj.setNativeState(rt, nativeState_);
@@ -390,8 +390,8 @@ jsi::Value SerializableInitializer::toJSValue(jsi::Runtime &rt) {
         getValueUnpacker(rt).call(rt, initObj, jsi::String::createFromAscii(rt, "Handle")));
 
     // We are locking the initialization here since the thread that is
-    // initalizing can be pre-empted on runtime lock. E.g.
-    // UI thread can be pre-empted on initialization of a shared value and then
+    // initializing can be preempted on runtime lock. E.g.
+    // UI thread can be preempted on initialization of a shared value and then
     // JS thread can try to access the shared value, locking the whole runtime.
     // If we put the lock on `getValueUnpacker` part (basically any part that
     // requires runtime) we would get a deadlock since UI thread would never

@@ -33,7 +33,7 @@ class NativeWorklets implements IWorkletsModule {
 See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#native-part-of-worklets-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    if (__DEV__) {
+    if (__DEV__ && globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
       checkCppVersion();
     }
     this.#workletsModuleProxy = global.__workletsModuleProxy;

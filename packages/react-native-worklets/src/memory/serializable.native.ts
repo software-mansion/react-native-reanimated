@@ -712,7 +712,7 @@ function isRemoteFunction<TValue>(value: {
  * should use shared values instead.
  */
 function freezeObjectInDev<TValue extends object>(value: TValue) {
-  if (!__DEV__) {
+  if (!__DEV__ || globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
     return;
   }
   Object.entries(value).forEach(([key, element]) => {
