@@ -4,7 +4,7 @@ import '../layoutReanimation/animationsManager';
 import type React from 'react';
 
 import { maybeBuild } from '../animationBuilder';
-import { IS_JEST, IS_WEB, logger } from '../common';
+import { IS_JEST, IS_WEB, logger, ReanimatedError } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
@@ -433,6 +433,26 @@ export default class AnimatedComponent
           jestAnimatedProps: this.jestAnimatedProps,
         }
       : {};
+
+    if (
+      this.ChildComponent.displayName === 'Text' &&
+      filteredProps.text !== undefined
+    ) {
+      if (filteredProps.children !== undefined) {
+        throw new ReanimatedError(
+          '<Animated.Text> component with animated prop `text` must be empty.'
+        );
+      }
+      // TODO: handle case when `text` property is not present during initial render but appears later on
+
+      // Pass the current value of animated prop `text` as `children` so that the text displays correctly during first render
+      filteredProps.children =
+        filteredProps.text === ''
+          ? '\u200b' // use zero-width space when text is empty
+          : typeof filteredProps.text === 'number'
+            ? String(filteredProps.text)
+            : filteredProps.text;
+    }
 
     return super.render({
       nativeID,
