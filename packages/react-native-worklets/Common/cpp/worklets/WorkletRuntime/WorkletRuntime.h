@@ -1,11 +1,12 @@
-#pragma once
+#ifndef RNWORKLETS_WORKLETRUNTIME_H
+#define RNWORKLETS_WORKLETRUNTIME_H
 
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
 #include <jsireact/JSIExecutor.h>
 #include <react/debug/react_native_assert.h>
 
-#include <worklets/Public/AsyncQueue.h>
+#include <worklets/RunLoop/AsyncQueue.h>
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 #include <worklets/RunLoop/EventLoop.h>
 #include <worklets/SharedItems/Serializable.h>
@@ -215,3 +216,5 @@ inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Value &functi
 }
 
 } // namespace worklets
+
+#endif // RNWORKLETS_WORKLETRUNTIME_H

@@ -108,6 +108,7 @@ def HERMES_V1_ENABLED = safeAppExtGet("hermesV1Enabled", false)
 version WORKLETS_VERSION
 
 def workletsPrefabHeadersDir = project.file("$buildDir/prefab-headers/worklets")
+def RNWorkletsPrefabHeadersDir = project.file("${buildDir}/prefab-headers/RNWorklets")
 
 def JS_RUNTIME = {
     // Override JS runtime with environment variable
@@ -172,6 +173,7 @@ android {
     prefab {
         worklets {
             headers workletsPrefabHeadersDir.absolutePath
+            headers RNWorkletsPrefabHeadersDir.absolutePath
         }
     }
 
@@ -315,6 +317,20 @@ task prepareWorkletsHeadersForPrefabs(type: Copy) {
     from("$projectDir/../Common/cpp")
     include("worklets/**/*.h")
     into(workletsPrefabHeadersDir)
+
+    // Pack public headers to RNWorklets headers dir
+    from("$projectDir/../Common/cpp/worklets/RunLoop/") {
+        include("AsyncQueue.h")
+    }
+    from("$projectDir/../Common/cpp/worklets/WorkletRuntime/") {
+        include("WorkletRuntime.h")
+    }
+    from("$projectDir/../Common/cpp/worklets/SharedItems/") {
+        include("Serializable.h")
+        include("Synchronizable.h")
+    }
+    into(RNWorkletsPrefabHeadersDir)
+
 }
 
 task cleanCmakeCache() {

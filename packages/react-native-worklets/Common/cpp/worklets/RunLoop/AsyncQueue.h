@@ -1,4 +1,5 @@
-#pragma once
+#ifndef RNWORKLETS_ASYNCQUEUE_H
+#define RNWORKLETS_ASYNCQUEUE_H
 
 #include <jsi/jsi.h>
 
@@ -12,3 +13,5 @@ class AsyncQueue : public facebook::jsi::NativeState {
 };
 
 } // namespace worklets
+
+#endif // RNWORKLETS_ASYNCQUEUE_H
