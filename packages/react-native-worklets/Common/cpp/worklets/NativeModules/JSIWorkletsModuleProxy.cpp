@@ -199,7 +199,7 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableMap"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableSet"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableWorklet"));
-  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableCustom"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createCustomSerializable"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "registerCustomSerializable"));
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnUI"));
@@ -347,7 +347,7 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         });
   }
 
-  if (name == "createSerializableCustom") {
+  if (name == "createCustomSerializable") {
     return jsi::Function::createFromHostFunction(
         rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
           return makeCustomSerializable(rt, args[0], args[1].asNumber());

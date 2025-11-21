@@ -69,7 +69,7 @@ export interface WorkletsModuleProxy {
     shouldPersistRemote: boolean
   ): SerializableRef<object>;
 
-  createSerializableCustom(
+  createCustomSerializable(
     data: SerializableRef<object>,
     typeId: number
   ): SerializableRef<object>;
