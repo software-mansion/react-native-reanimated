@@ -10,12 +10,13 @@ import Animated, { FadeInLeft, FadeOutRight } from 'react-native-reanimated';
 import type { RouteCardComponent } from '@/apps/css/components';
 import { RouteCard, Text } from '@/apps/css/components';
 import { colors, flex, radius, sizes, spacing } from '@/theme';
+import { IS_MACOS } from '@/utils';
 
 const MiscellaneousCard: RouteCardComponent = (props) => (
   <RouteCard
     {...props}
     description="Changing **transition properties**, **transition settings** and so on">
-    <Showcase />
+    {!IS_MACOS && <Showcase />}
   </RouteCard>
 );
 

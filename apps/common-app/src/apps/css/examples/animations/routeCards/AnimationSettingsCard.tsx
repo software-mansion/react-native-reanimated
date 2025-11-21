@@ -9,6 +9,7 @@ import type { RouteCardComponent } from '@/apps/css/components';
 import { RouteCard } from '@/apps/css/components';
 import { useFocusPlayState } from '@/apps/css/hooks';
 import { colors, radius, sizes, spacing } from '@/theme';
+import { IS_MACOS } from '@/utils';
 
 const animationSettings: CSSAnimationSettings = {
   animationDirection: 'alternate',
@@ -21,7 +22,7 @@ const AnimationSettingsCard: RouteCardComponent = (props) => (
   <RouteCard
     {...props}
     description="Customization options: **duration**, **timing**, **delay**, and more">
-    <Showcase />
+    {!IS_MACOS && <Showcase />}
   </RouteCard>
 );
 

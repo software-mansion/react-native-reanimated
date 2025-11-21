@@ -10,6 +10,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Linking, LogBox, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import { colors, flex, radius, text } from '@/theme';
 import { IS_MACOS, IS_WEB, noop } from '@/utils';
@@ -41,8 +42,6 @@ export default function App() {
       </View>
     );
   }
-
-  const RootApp = IS_MACOS ? ReanimatedApp : Navigator;
 
   return (
     <NukeContext value={() => setNuked(true)}>
@@ -77,10 +76,10 @@ export default function App() {
           onStateChange={updateNavigationState}>
           <PortalProvider>
             {IS_MACOS ? (
-              <RootApp />
+              <Navigator />
             ) : (
               <SafeAreaProvider>
-                <RootApp />
+                <Navigator />
               </SafeAreaProvider>
             )}
           </PortalProvider>
@@ -102,6 +101,29 @@ const SCREENS = [
 ];
 
 function Navigator() {
+  if (IS_MACOS) {
+    const Tab = createBottomTabNavigator();
+
+    return (
+      <Tab.Navigator
+        screenOptions={{
+          headerShown: false,
+          tabBarActiveTintColor: colors.primaryDark,
+          tabBarInactiveTintColor: colors.primary,
+          tabBarStyle: {
+            backgroundColor: colors.background1,
+            borderTopLeftRadius: radius.lg,
+            borderTopRightRadius: radius.lg,
+            height: 60,
+          },
+          tabBarLabelStyle: text.heading4,
+        }}>
+        {SCREENS.map(({ component, name }) => (
+          <Tab.Screen component={component} key={name} name={name} />
+        ))}
+      </Tab.Navigator>
+    );
+  }
   const Drawer = createDrawerNavigator();
   const screens = IS_WEB ? SCREENS : SCREENS.reverse();
 
