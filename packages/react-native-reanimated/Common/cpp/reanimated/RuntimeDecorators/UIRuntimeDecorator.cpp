@@ -26,9 +26,23 @@ void UIRuntimeDecorator::decorate(
   jsi_utils::installJsiFunction(uiRuntime, "_notifyAboutProgress", std::move(progressLayoutAnimation));
   jsi_utils::installJsiFunction(uiRuntime, "_notifyAboutEnd", std::move(endLayoutAnimation));
   jsi_utils::installJsiFunction(uiRuntime, "_setGestureState", std::move(setGestureState));
+  jsi_utils::installJsiFunction(uiRuntime, "_obtainProp", std::move(obtainPropFunction));
 
-  const auto microtaskQueueFinalizers =
-      uiRuntime.global().getProperty(uiRuntime, "_microtaskQueueFinalizers").asObject(uiRuntime).asArray(uiRuntime);
+  subscribeForMicrotasksFinalization(uiRuntime, std::move(maybeFlushUIUpdatesQueue));
+}
+
+void UIRuntimeDecorator::subscribeForMicrotasksFinalization(
+    jsi::Runtime &uiRuntime,
+    MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue) {
+  auto maybeMicrotaskQueueFinalizers = uiRuntime.global().getProperty(uiRuntime, "_microtaskQueueFinalizers");
+
+  if (maybeMicrotaskQueueFinalizers.isUndefined()) {
+    throw std::runtime_error(
+        "[Reanimated] Expected microtaskQueueFinalizers to be defined. "
+        "Perhaps Worklets failed to initialize the UI Runtime?");
+  }
+
+  const auto microtaskQueueFinalizers = maybeMicrotaskQueueFinalizers.asObject(uiRuntime).asArray(uiRuntime);
 
   microtaskQueueFinalizers.getPropertyAsFunction(uiRuntime, "push")
       .callWithThis(
@@ -39,8 +53,6 @@ void UIRuntimeDecorator::decorate(
               jsi::PropNameID::forAscii(uiRuntime, "_maybeFlushUIUpdatesQueue"),
               0,
               jsi_utils::createHostFunction(std::move(maybeFlushUIUpdatesQueue))));
-
-  jsi_utils::installJsiFunction(uiRuntime, "_obtainProp", std::move(obtainPropFunction));
 }
 
 } // namespace reanimated
