@@ -3086,6 +3086,34 @@ var foo = useTapGesture({
 });"
 `;
 
+exports[`babel plugin for react-native-gesture-handler workletizes referenced gesture callbacks using the hooks api and shorthand syntax 1`] = `
+"var _worklet_12687812344336_init_data = {
+  code: "function onBegin_null1(){console.log('onBegin');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+var onBegin = function onBegin_null1Factory({
+  _worklet_12687812344336_init_data
+}) {
+  const _e = [new global.Error(), 1, -27];
+  const onBegin = function () {
+    console.log('onBegin');
+  };
+  onBegin.__closure = {};
+  onBegin.__workletHash = 12687812344336;
+  onBegin.__pluginVersion = "x.y.z";
+  onBegin.__initData = _worklet_12687812344336_init_data;
+  onBegin.__stackDetails = _e;
+  return onBegin;
+}({
+  _worklet_12687812344336_init_data
+});
+var foo = useTapGesture({
+  numberOfTaps: 2,
+  onBegin: onBegin
+});"
+`;
+
 exports[`babel plugin for referenced worklets prefers AssignmentExpression over VariableDeclarator 1`] = `
 "var styleFactory = function styleFactory() {
   return 1;

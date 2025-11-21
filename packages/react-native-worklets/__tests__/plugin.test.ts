@@ -878,6 +878,22 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
+    test('workletizes referenced gesture callbacks using the hooks api and shorthand syntax', () => {
+      const input = html`<script>
+        const onBegin = () => {
+          console.log('onBegin');
+        };
+        const foo = useTapGesture({
+          numberOfTaps: 2,
+          onBegin,
+        });
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+
     test('workletizes possibly chained gesture object callback functions automatically', () => {
       const input = html`<script>
         const foo = Gesture.Tap()
