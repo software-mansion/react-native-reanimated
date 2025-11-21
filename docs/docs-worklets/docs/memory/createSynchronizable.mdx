@@ -1,0 +1,54 @@
+---
+sidebar_position: 42 # Use alphabetical order
+---
+
+# createSynchronizable
+
+A Synchronizable is type of shared memory not tied to any JavaScript Runtime. It can be accessed from any JavaScript Runtime and C++. The value held by Synchronizable behaves like a standard JavaScript value. Synchronizable is an advanced concept. It can be used to implement a semi-global state for runtimes to synchronize with. As it's not tied to any runtime, reading and writing to it doesn't preempt any runtimes and could be used to implement communication channels between different runtimes.
+
+Synchronizable can be obtained exclusively or non-exclusively, therefore trying to access it from multiple threads at once could lead to blocking.
+
+![Synchronizable](/img/createSynchronizable.svg)
+
+<figcaption style={{ textAlign: 'center' }}>
+  Synchronizable flow diagram
+</figcaption>
+
+## Reference
+
+```tsx
+import { createSynchronizable, scheduleOnUI } from 'react-native-worklets';
+
+// RN Runtime, JS thread
+
+const synchronizable = createSynchronizable({ a: 42 });
+
+scheduleOnUI(() => {
+  const value = synchronizable.getBlocking();
+  console.log(value); // {a: 24}
+});
+
+// Will most likely be executed before `getBlocking` scheduled on the UI Runtime.
+synchronizable.setBlocking({ a: 24 });
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type Synchronizable<TValue = unknown> = {
+  getDirty(): TValue;
+  getBlocking(): TValue;
+  setBlocking(value: TValue | ((prev: TValue) => TValue)): void;
+  lock(): void;
+  unlock(): void;
+};
+
+function createSynchronizable<TValue>(
+  initialValue: TValue
+): Synchronizable<TValue>;
+```
+
+</details>
+
+<!-- ## Remarks -->
