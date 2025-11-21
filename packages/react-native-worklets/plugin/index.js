@@ -348,6 +348,30 @@ var require_referencedWorklets = __commonJS({
   }
 });
 
+// lib/findWorklet.js
+var require_findWorklet = __commonJS({
+  "lib/findWorklet.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.findWorklet = findWorklet;
+    var referencedWorklets_1 = require_referencedWorklets();
+    var types_12 = require_types();
+    function findWorklet(arg, acceptWorkletizableFunction, acceptObject, state) {
+      if (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionPath)(arg)) {
+        return arg;
+      }
+      if (acceptObject && (0, types_12.isWorkletizableObjectPath)(arg)) {
+        return arg;
+      }
+      if (arg.isIdentifier() && arg.isReferencedIdentifier()) {
+        const a = (0, referencedWorklets_1.findReferencedWorklet)(arg, acceptWorkletizableFunction, acceptObject, state);
+        return a;
+      }
+      return void 0;
+    }
+  }
+});
+
 // lib/utils.js
 var require_utils = __commonJS({
   "lib/utils.js"(exports2) {
@@ -1132,25 +1156,12 @@ var require_objectWorklets = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.tryProcessingNode = tryProcessingNode;
     exports2.processWorkletizableObject = processWorkletizableObject;
-    var referencedWorklets_1 = require_referencedWorklets();
+    var findWorklet_1 = require_findWorklet();
     var types_12 = require_types();
     var workletSubstitution_12 = require_workletSubstitution();
-    function findWorklet(arg, acceptWorkletizableFunction, acceptObject, state) {
-      if (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionPath)(arg)) {
-        return arg;
-      }
-      if (acceptObject && (0, types_12.isWorkletizableObjectPath)(arg)) {
-        return arg;
-      }
-      if (arg.isIdentifier() && arg.isReferencedIdentifier()) {
-        const a = (0, referencedWorklets_1.findReferencedWorklet)(arg, acceptWorkletizableFunction, acceptObject, state);
-        return a;
-      }
-      return void 0;
-    }
     function tryProcessingNode(arg, state, acceptWorkletizableFunction, acceptObject) {
       var _a;
-      const maybeWorklet = findWorklet(arg, acceptWorkletizableFunction, acceptObject, state);
+      const maybeWorklet = (0, findWorklet_1.findWorklet)(arg, acceptWorkletizableFunction, acceptObject, state);
       if (!maybeWorklet || ((_a = maybeWorklet.getFunctionParent()) === null || _a === void 0 ? void 0 : _a.node.workletized)) {
         return;
       }
