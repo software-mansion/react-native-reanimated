@@ -62,15 +62,15 @@ var require_gestureHandlerAutoworkletization = __commonJS({
       "onTouchesCancelled"
     ]);
     exports2.gestureHandlerObjectHooks = /* @__PURE__ */ new Set([
-      "useTap",
-      "usePan",
-      "usePinch",
-      "useRotation",
-      "useFling",
-      "useLongPress",
-      "useNative",
-      "useManual",
-      "useHover"
+      "useTapGesture",
+      "usePanGesture",
+      "usePinchGesture",
+      "useRotationGesture",
+      "useFlingGesture",
+      "useLongPressGesture",
+      "useNativeGesture",
+      "useManualGesture",
+      "useHoverGesture"
     ]);
     function isGestureHandlerEventCallback(path) {
       return (0, types_12.isCallExpression)(path.parent) && (0, types_12.isExpression)(path.parent.callee) && isGestureObjectEventCallbackMethod(path.parent.callee);

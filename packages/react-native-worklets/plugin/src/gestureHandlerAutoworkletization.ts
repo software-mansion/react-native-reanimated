@@ -39,15 +39,15 @@ export const gestureHandlerBuilderMethods = new Set([
 ]);
 
 export const gestureHandlerObjectHooks = new Set([
-  'useTap',
-  'usePan',
-  'usePinch',
-  'useRotation',
-  'useFling',
-  'useLongPress',
-  'useNative',
-  'useManual',
-  'useHover',
+  'useTapGesture',
+  'usePanGesture',
+  'usePinchGesture',
+  'useRotationGesture',
+  'useFlingGesture',
+  'useLongPressGesture',
+  'useNativeGesture',
+  'useManualGesture',
+  'useHoverGesture',
 ]);
 
 // Auto-workletizes React Native Gesture Handler callback functions.

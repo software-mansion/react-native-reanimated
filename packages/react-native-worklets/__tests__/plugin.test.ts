@@ -843,7 +843,7 @@ describe('babel plugin', () => {
   describe('for react-native-gesture-handler', () => {
     test('workletizes gesture callbacks using the hooks api', () => {
       const input = html`<script>
-        const foo = useTap({
+        const foo = useTapGesture({
           numberOfTaps: 2,
           onBegin: () => {
             console.log('onBegin');
@@ -867,7 +867,7 @@ describe('babel plugin', () => {
         const onBegin = () => {
           console.log('onBegin');
         };
-        const foo = useTap({
+        const foo = useTapGesture({
           numberOfTaps: 2,
           onBegin: onBegin,
         });

@@ -2924,7 +2924,7 @@ var _worklet_16462958026656_init_data = {
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-var foo = useTap({
+var foo = useTapGesture({
   numberOfTaps: 2,
   onBegin: function null1Factory(_ref) {
     var _worklet_13539781966089_init_data = _ref._worklet_13539781966089_init_data;
@@ -3080,7 +3080,7 @@ var onBegin = function onBegin_null1Factory({
 }({
   _worklet_12687812344336_init_data
 });
-var foo = useTap({
+var foo = useTapGesture({
   numberOfTaps: 2,
   onBegin: onBegin
 });"
