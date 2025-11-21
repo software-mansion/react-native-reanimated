@@ -1,7 +1,7 @@
 import type { NodePath } from '@babel/core';
 import { booleanLiteral, type ExpressionStatement } from '@babel/types';
 
-import type { ReanimatedPluginPass } from './types';
+import type { WorkletsPluginPass } from './types';
 
 /**
  * This function replaces the `false` value in
@@ -15,7 +15,7 @@ import type { ReanimatedPluginPass } from './types';
  */
 export function toggleBundleMode(
   path: NodePath<ExpressionStatement>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ) {
   if (
     !state.opts.bundleMode ||

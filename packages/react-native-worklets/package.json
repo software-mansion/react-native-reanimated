@@ -104,6 +104,7 @@
     "scripts/worklets_utils.rb",
     "scripts/validate-react-native-version.js",
     "plugin/index.js",
+    "plugin/index.d.ts",
     "*.podspec",
     "react-native.config.js",
     "!apple/build",

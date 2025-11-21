@@ -13,13 +13,13 @@ import {
   returnStatement,
 } from '@babel/types';
 
-import type { ReanimatedPluginPass } from './types';
+import type { WorkletsPluginPass } from './types';
 
 export const contextObjectMarker = '__workletContextObject';
 
 export function processIfWorkletContextObject(
   path: NodePath<ObjectExpression>,
-  _state: ReanimatedPluginPass
+  _state: WorkletsPluginPass
 ): boolean {
   if (!isContextObject(path.node)) {
     return false;

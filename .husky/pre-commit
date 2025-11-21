@@ -65,13 +65,13 @@ for DOCS in docs-reanimated docs-worklets; do
   check_and_lint_docs "$STAGED_FILES" "$DOCS_PATH" "$DOCS"
 done
 
-# This automatically builds Reanimated Babel plugin JavaScript files if their
+# This automatically builds Worklets Babel plugin JavaScript files if their
 # TypeScript counterparts were changed. It also adds the output file to the commit
 # if the built file differs from currently staged one.
-print "Checking for changes in Reanimated Babel plugin source files..."
+print "Checking for changes in Worklets Babel plugin source files..."
 PLUGIN_PATH="packages/react-native-worklets/plugin"
 if echo "$STAGED_FILES" | grep -E "$PLUGIN_PATH" >/dev/null; then
-  print "Changes spotted. Building Reanimated Babel plugin files..."
+  print "Changes spotted. Building Worklets Babel plugin files..."
 
   yarn workspace babel-plugin-worklets build
 

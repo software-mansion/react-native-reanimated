@@ -64,8 +64,8 @@ export const callMicrotasks = callMicrotasksOnUIThread;
  *   and serialized.
  * - This function cannot be called from the [UI
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime)
- *   or [Worker
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime),
+ *   or a [Worker
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-runtime),
  *   unless you have the [Bundle Mode](/docs/experimental/bundleMode) enabled.
  *
  * @param fun - A reference to a function you want to schedule on the [UI
@@ -168,7 +168,7 @@ if (__DEV__) {
  * - This function cannot be called from the [UI
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime).
  * - This function cannot be called from a [Worker
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime).
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-runtime).
  *
  * @param fun - A reference to a function you want to execute on the [UI
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime).

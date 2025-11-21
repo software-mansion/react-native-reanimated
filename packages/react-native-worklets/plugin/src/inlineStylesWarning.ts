@@ -20,7 +20,7 @@ import {
 } from '@babel/types';
 import { strict as assert } from 'assert';
 
-import type { ReanimatedPluginPass } from './types';
+import type { WorkletsPluginPass } from './types';
 import { isRelease } from './utils';
 
 function generateInlineStylesWarning(path: NodePath<MemberExpression>) {
@@ -101,7 +101,7 @@ function processStyleObjectForInlineStylesWarning(
 
 export function processInlineStylesWarning(
   path: NodePath<JSXAttribute>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ) {
   if (isRelease()) {
     return;

@@ -16,7 +16,7 @@ import assert from 'assert';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, relative, resolve } from 'path';
 
-import type { ReanimatedPluginPass } from './types';
+import type { WorkletsPluginPass } from './types';
 import { generatedWorkletsDir } from './types';
 
 export function generateWorkletFile(
@@ -24,7 +24,7 @@ export function generateWorkletFile(
   relativeBindingsToImport: Set<Binding>,
   factory: FunctionExpression,
   workletHash: number,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ) {
   const libraryImports = Array.from(libraryBindingsToImport)
     .filter(

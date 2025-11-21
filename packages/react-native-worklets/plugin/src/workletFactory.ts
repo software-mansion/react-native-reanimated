@@ -38,7 +38,7 @@ import { basename, relative } from 'path';
 import { getClosure } from './closure';
 import { generateWorkletFile } from './generate';
 import { workletTransformSync } from './transform';
-import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
+import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
 import { buildWorkletString } from './workletStringCode';
@@ -50,7 +50,7 @@ const MOCK_VERSION = 'x.y.z';
 
 export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): {
   factory: FunctionExpression;
   factoryCallParamPack: ObjectExpression;
@@ -425,7 +425,7 @@ function hash(str: string): number {
 
 function makeWorkletName(
   fun: NodePath<WorkletizableFunction>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): { workletName: string; reactName: string } {
   let source = 'unknownFile';
 

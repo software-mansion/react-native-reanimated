@@ -1,3 +1,6 @@
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletOptions = {};
+
 /** @type {import('@babel/core').TransformOptions} */
 module.exports = {
   presets: ['next/babel'],
@@ -13,6 +16,6 @@ module.exports = {
         },
       },
     ],
-    'react-native-worklets/plugin',
+    ['react-native-worklets/plugin', workletOptions],
   ],
 };
