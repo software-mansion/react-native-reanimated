@@ -11,22 +11,12 @@ RotateOperationBase2D<TOperation>::RotateOperationBase2D(const std::string &valu
     : TransformOperationBase<TOperation, CSSAngle>(CSSAngle(value)) {}
 
 template <TransformOp TOperation>
-folly::dynamic RotateOperationBase2D<TOperation>::valueToDynamic() const {
-  return this->value.toDynamic();
-}
-
-template <TransformOp TOperation>
 RotateOperationBase3D<TOperation>::RotateOperationBase3D(const std::string &value)
     : TransformOperationBase<TOperation, CSSAngle>(CSSAngle(value)) {}
 
 template <TransformOp TOperation>
 bool RotateOperationBase3D<TOperation>::is3D() const {
   return true;
-}
-
-template <TransformOp TOperation>
-folly::dynamic RotateOperationBase3D<TOperation>::valueToDynamic() const {
-  return this->value.toDynamic();
 }
 
 template <TransformOp TOperation>
