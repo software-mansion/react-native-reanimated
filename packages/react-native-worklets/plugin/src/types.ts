@@ -15,7 +15,7 @@ import {
   isObjectMethod,
 } from '@babel/types';
 
-export interface ReanimatedPluginOptions {
+export interface WorkletsPluginOptions {
   relativeSourceLocation?: boolean;
   disableInlineStylesWarning?: boolean;
   omitNativeOnlyData?: boolean;
@@ -28,10 +28,10 @@ export interface ReanimatedPluginOptions {
   workletizableModules?: string[];
 }
 
-export interface ReanimatedPluginPass {
+export interface WorkletsPluginPass {
   file: BabelFile;
   key: string;
-  opts: ReanimatedPluginOptions;
+  opts: WorkletsPluginOptions;
   cwd: string;
   filename: string | undefined;
   workletNumber: number;
