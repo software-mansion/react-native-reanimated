@@ -12334,7 +12334,7 @@ __metadata:
     react-native: "npm:0.82.0"
     react-native-gesture-handler: "npm:2.28.0"
     react-native-mmkv: "npm:4.0.0"
-    react-native-nitro-modules: "npm:0.31.4"
+    react-native-nitro-modules: "npm:0.31.9"
     react-native-pager-view: "npm:7.0.0"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.6.1"
@@ -26035,13 +26035,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-nitro-modules@npm:0.31.4":
-  version: 0.31.4
-  resolution: "react-native-nitro-modules@npm:0.31.4"
+"react-native-nitro-modules@npm:0.31.9":
+  version: 0.31.9
+  resolution: "react-native-nitro-modules@npm:0.31.9"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/be908aa8aec76261c12b3fe8788ad9e69d3bf9c568f1b77ff5f6bcae4c064bf0f7d73f3ac9dc24e1e113b49eaa92d1833dcc2a899f1364caaa475c8fbe8b036b
+  checksum: 10/c102391695bae908c9c9eff7475b3fe7204de9595745ded9b7ccff887feba4f752cba54ca87056d1e09397a7d2b10c0a8ac11f0b212680e47af8175b4817fb96
   languageName: node
   linkType: hard
 

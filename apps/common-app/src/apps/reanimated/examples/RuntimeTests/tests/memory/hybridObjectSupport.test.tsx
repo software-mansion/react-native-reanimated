@@ -15,7 +15,7 @@ import {
 
 import { createMMKV, type MMKV } from 'react-native-mmkv';
 import { type HybridObject, NitroModules } from 'react-native-nitro-modules';
-import type { BoxedHybridObject } from 'react-native-nitro-modules/lib/typescript/BoxedHybridObject';
+import type { BoxedHybridObject } from 'react-native-nitro-modules';
 
 // @ts-ignore NitroModules types on web differ from native.
 const boxedNitroModules = NitroModules.box(NitroModules);
