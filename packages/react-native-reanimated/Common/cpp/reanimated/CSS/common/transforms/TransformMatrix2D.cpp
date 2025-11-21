@@ -1,7 +1,6 @@
 #include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
 
 #include <cmath>
-#include <utility>
 
 namespace reanimated::css {
 
@@ -249,7 +248,7 @@ TransformMatrix2D TransformMatrix2D::create<TransformOp::SkewY>(double v) {
 template <TransformOp TOperation>
 TransformMatrix2D TransformMatrix2D::create(double value) {
   throw std::invalid_argument(
-      "[Reanimated] Cannot create TransformMatrix2D from: " + getOperationNameFromType(TOperation));
+      "[Reanimated] Cannot create TransformMatrix2D from: " + getTransformOperationName(TOperation));
 }
 
 double TransformMatrix2D::determinant() const {
