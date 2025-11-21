@@ -38,7 +38,7 @@ void UIRuntimeDecorator::subscribeForMicrotasksFinalization(
 
   if (maybeMicrotaskQueueFinalizers.isUndefined()) {
     throw std::runtime_error(
-        "[Reanimated] Expected microtaskQueueFinalizers to be defined."
+        "[Reanimated] Expected microtaskQueueFinalizers to be defined. "
         "Perhaps Worklets failed to initialize the UI Runtime?");
   }
 
