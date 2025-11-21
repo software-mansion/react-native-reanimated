@@ -22,6 +22,7 @@ export {
   type ShareableRef,
 } from './deprecated';
 export {
+  getDynamicFeatureFlag,
   getStaticFeatureFlag,
   setDynamicFeatureFlag,
 } from './featureFlags/featureFlags';

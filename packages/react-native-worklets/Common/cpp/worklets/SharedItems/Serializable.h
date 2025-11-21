@@ -15,24 +15,6 @@ namespace worklets {
 
 jsi::Function getValueUnpacker(jsi::Runtime &rt);
 
-#ifndef NDEBUG
-jsi::Function getCallGuard(jsi::Runtime &rt);
-#endif // NDEBUG
-
-// If possible, please use `WorkletRuntime::runGuarded` instead.
-template <typename... Args>
-inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Value &function, Args &&...args) {
-  // We only use callGuard in debug mode, otherwise we call the provided
-  // function directly. CallGuard provides a way of capturing exceptions in
-  // JavaScript and propagating them to the main React Native thread such that
-  // they can be presented using RN's LogBox.
-#ifndef NDEBUG
-  return getCallGuard(rt).call(rt, function, args...);
-#else
-  return function.asObject(rt).asFunction(rt).call(rt, args...);
-#endif // NDEBUG
-}
-
 inline void cleanupIfRuntimeExists(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &value) {
   if (rt != nullptr && !WorkletRuntimeRegistry::isRuntimeAlive(rt)) {
     // The below use of unique_ptr.release prevents the smart pointer from
@@ -63,7 +45,7 @@ class Serializable {
 
   virtual ~Serializable();
 
-  enum ValueType {
+  enum class ValueType : std::uint8_t {
     UndefinedType,
     NullType,
     BooleanType,
@@ -227,7 +209,7 @@ class SerializableSet : public Serializable {
 class SerializableHostObject : public Serializable {
  public:
   SerializableHostObject(jsi::Runtime &, const std::shared_ptr<jsi::HostObject> &hostObject)
-      : Serializable(HostObjectType), hostObject_(hostObject) {}
+      : Serializable(ValueType::HostObjectType), hostObject_(hostObject) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -238,7 +220,7 @@ class SerializableHostObject : public Serializable {
 class SerializableHostFunction : public Serializable {
  public:
   SerializableHostFunction(jsi::Runtime &rt, jsi::Function function)
-      : Serializable(HostFunctionType),
+      : Serializable(ValueType::HostFunctionType),
         hostFunction_(function.getHostFunction(rt)),
         name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
         paramCount_(function.getProperty(rt, "length").asNumber()) {}
@@ -254,7 +236,8 @@ class SerializableHostFunction : public Serializable {
 class SerializableArrayBuffer : public Serializable {
  public:
   SerializableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer)
-      : Serializable(ArrayBufferType), data_(arrayBuffer.data(rt), arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
+      : Serializable(ValueType::ArrayBufferType),
+        data_(arrayBuffer.data(rt), arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -265,7 +248,7 @@ class SerializableArrayBuffer : public Serializable {
 class SerializableWorklet : public SerializableObject {
  public:
   SerializableWorklet(jsi::Runtime &rt, const jsi::Object &worklet) : SerializableObject(rt, worklet) {
-    valueType_ = WorkletType;
+    valueType_ = ValueType::WorkletType;
   }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
@@ -274,7 +257,7 @@ class SerializableWorklet : public SerializableObject {
 class SerializableImport : public Serializable {
  public:
   SerializableImport(jsi::Runtime &rt, const double source, const jsi::String &imported)
-      : Serializable(ImportType), source_(source), imported_(imported.utf8(rt)) {}
+      : Serializable(ValueType::ImportType), source_(source), imported_(imported.utf8(rt)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -294,7 +277,7 @@ class SerializableRemoteFunction : public Serializable,
 
  public:
   SerializableRemoteFunction(jsi::Runtime &rt, jsi::Function &&function)
-      : Serializable(RemoteFunctionType),
+      : Serializable(ValueType::RemoteFunctionType),
         runtime_(&rt),
 #ifndef NDEBUG
         name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
@@ -322,7 +305,8 @@ class SerializableInitializer : public Serializable {
 
  public:
   SerializableInitializer(jsi::Runtime &rt, const jsi::Object &initializerObject)
-      : Serializable(HandleType), initializer_(std::make_unique<SerializableObject>(rt, initializerObject)) {}
+      : Serializable(ValueType::HandleType),
+        initializer_(std::make_unique<SerializableObject>(rt, initializerObject)) {}
 
   ~SerializableInitializer() override {
     cleanupIfRuntimeExists(remoteRuntime_, remoteValue_);
@@ -333,7 +317,7 @@ class SerializableInitializer : public Serializable {
 
 class SerializableString : public Serializable {
  public:
-  explicit SerializableString(std::string string) : Serializable(StringType), data_(std::move(string)) {}
+  explicit SerializableString(const std::string &string) : Serializable(ValueType::StringType), data_(string) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -343,11 +327,11 @@ class SerializableString : public Serializable {
 
 class SerializableBigInt : public Serializable {
  public:
-  explicit SerializableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigInt) : Serializable(BigIntType) {
+  explicit SerializableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigInt) : Serializable(ValueType::BigIntType) {
     if (bigInt.isInt64(rt)) {
-      value_ = bigInt.getInt64(rt);
+      fastValue_ = bigInt.getInt64(rt);
     } else {
-      string_ = bigInt.toString(rt).utf8(rt);
+      slowValue_ = bigInt.toString(rt).utf8(rt);
     }
   }
 
@@ -357,20 +341,20 @@ class SerializableBigInt : public Serializable {
   /**
    * This member is used only when the BigInt fits into int64_t range.
   */
-  std::optional<int64_t> value_{};
-  std::string string_{};
+  std::optional<int64_t> fastValue_{};
+  std::string slowValue_{};
 };
 
 class SerializableScalar : public Serializable {
  public:
-  explicit SerializableScalar(double number) : Serializable(NumberType) {
+  explicit SerializableScalar(double number) : Serializable(ValueType::NumberType) {
     data_.number = number;
   }
-  explicit SerializableScalar(bool boolean) : Serializable(BooleanType) {
+  explicit SerializableScalar(bool boolean) : Serializable(ValueType::BooleanType) {
     data_.boolean = boolean;
   }
-  SerializableScalar() : Serializable(UndefinedType) {}
-  explicit SerializableScalar(std::nullptr_t) : Serializable(NullType) {}
+  SerializableScalar() : Serializable(ValueType::UndefinedType) {}
+  explicit SerializableScalar(std::nullptr_t) : Serializable(ValueType::NullType) {}
 
   jsi::Value toJSValue(jsi::Runtime &) override;
 
@@ -390,7 +374,7 @@ class SerializableTurboModuleLike : public Serializable {
       jsi::Runtime &rt,
       const jsi::Object &object,
       const std::shared_ptr<jsi::HostObject> &proto)
-      : Serializable(TurboModuleLikeType),
+      : Serializable(ValueType::TurboModuleLikeType),
         proto_(std::make_unique<SerializableHostObject>(rt, proto)),
         properties_(std::make_unique<SerializableObject>(rt, object)) {}
 

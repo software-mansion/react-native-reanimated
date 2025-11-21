@@ -11,9 +11,9 @@ import { isLayoutAnimationCallback } from './layoutAnimationAutoworkletization';
 import { processWorkletizableObject } from './objectWorklets';
 import { findReferencedWorklet } from './referencedWorklets';
 import type {
-  ReanimatedPluginPass,
   WorkletizableFunction,
   WorkletizableObject,
+  WorkletsPluginPass,
 } from './types';
 import {
   isWorkletizableFunctionPath,
@@ -71,7 +71,7 @@ const reanimatedFunctionArgsToWorkletize = new Map([
 /** @returns `true` if the function was workletized, `false` otherwise. */
 export function processIfAutoworkletizableCallback(
   path: NodePath<WorkletizableFunction>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): boolean {
   if (isGestureHandlerEventCallback(path) || isLayoutAnimationCallback(path)) {
     processWorklet(path, state);
@@ -82,7 +82,7 @@ export function processIfAutoworkletizableCallback(
 
 export function processCalleesAutoworkletizableCallbacks(
   path: NodePath<CallExpression>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): void {
   const callee = isSequenceExpression(path.node.callee)
     ? path.node.callee.expressions[path.node.callee.expressions.length - 1]
@@ -120,7 +120,7 @@ export function processCalleesAutoworkletizableCallbacks(
 
 function processArgs(
   args: NodePath[],
-  state: ReanimatedPluginPass,
+  state: WorkletsPluginPass,
   acceptWorkletizableFunction: boolean,
   acceptObject: boolean
 ): void {
@@ -148,7 +148,7 @@ function findWorklet(
   arg: NodePath,
   acceptWorkletizableFunction: boolean,
   acceptObject: boolean,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
   if (acceptWorkletizableFunction && isWorkletizableFunctionPath(arg)) {
     return arg;
