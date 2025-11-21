@@ -10,8 +10,7 @@ type ProcessedProps<P extends AnyRecord> = {
 };
 
 export type StyleBuildHandler<P extends AnyRecord> = (
-  props: ProcessedProps<P>,
-  nameAliases: Record<string, string>
+  props: ProcessedProps<P>
 ) => string | null;
 
 export type RuleBuildHandler<P extends AnyRecord> = (
