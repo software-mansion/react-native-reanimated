@@ -24,13 +24,13 @@ export function findWorklet(
     return nodePath;
   }
   if (nodePath.isIdentifier() && nodePath.isReferencedIdentifier()) {
-    const a = findReferencedWorklet(
+    const worklet = findReferencedWorklet(
       nodePath,
       acceptWorkletizableFunction,
       acceptObject,
       state
     );
-    return a;
+    return worklet;
   }
   return undefined;
 }

@@ -364,8 +364,8 @@ var require_findWorklet = __commonJS({
         return nodePath;
       }
       if (nodePath.isIdentifier() && nodePath.isReferencedIdentifier()) {
-        const a = (0, referencedWorklets_1.findReferencedWorklet)(nodePath, acceptWorkletizableFunction, acceptObject, state);
-        return a;
+        const worklet = (0, referencedWorklets_1.findReferencedWorklet)(nodePath, acceptWorkletizableFunction, acceptObject, state);
+        return worklet;
       }
       return void 0;
     }
