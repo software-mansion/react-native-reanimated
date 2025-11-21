@@ -12333,6 +12333,8 @@ __metadata:
     react-dom: "npm:19.1.1"
     react-native: "npm:0.82.0"
     react-native-gesture-handler: "npm:2.28.0"
+    react-native-mmkv: "npm:4.0.0"
+    react-native-nitro-modules: "npm:0.31.9"
     react-native-pager-view: "npm:7.0.0"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.6.1"
@@ -26012,6 +26014,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-mmkv@npm:4.0.0":
+  version: 4.0.0
+  resolution: "react-native-mmkv@npm:4.0.0"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+    react-native-nitro-modules: "*"
+  checksum: 10/5247b3e19017c4059c997ac79c7e89d33a49c00e2255fb4c5ef8e993fea0ee3aed0b48be9576d154bd098c22099bfd93a70fb071a6c9d865955c97f0aa1a8759
+  languageName: node
+  linkType: hard
+
 "react-native-monorepo-config@npm:^0.1.8":
   version: 0.1.10
   resolution: "react-native-monorepo-config@npm:0.1.10"
@@ -26019,6 +26032,16 @@ __metadata:
     escape-string-regexp: "npm:^5.0.0"
     fast-glob: "npm:^3.3.3"
   checksum: 10/36611eca9cbda6647111e659d5c466fdba002c608172b9d25880b6e3ac95c51f41d15520e06d9d3188c096b0c9182caeba7b9340c64f6b45f1fee331c08b877b
+  languageName: node
+  linkType: hard
+
+"react-native-nitro-modules@npm:0.31.9":
+  version: 0.31.9
+  resolution: "react-native-nitro-modules@npm:0.31.9"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10/c102391695bae908c9c9eff7475b3fe7204de9595745ded9b7ccff887feba4f752cba54ca87056d1e09397a7d2b10c0a8ac11f0b212680e47af8175b4817fb96
   languageName: node
   linkType: hard
 

@@ -1,6 +1,10 @@
 'use strict';
 
-import type { FlatSerializableRef, SerializableRef } from './types';
+import type {
+  FlatSerializableRef,
+  RegistrationData,
+  SerializableRef,
+} from './types';
 
 export function isSerializableRef(value: unknown): value is SerializableRef {
   return true;
@@ -20,4 +24,11 @@ export function makeShareableCloneOnUIRecursive<TValue>(
 
 export function makeShareable<TValue>(value: TValue): TValue {
   return value;
+}
+
+export function registerCustomSerializable<
+  TValue extends object,
+  TPacked extends object,
+>(_registrationData: RegistrationData<TValue, TPacked>) {
+  // noop
 }
