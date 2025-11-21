@@ -13,9 +13,9 @@ import {
 
 export function findWorklet(
   nodePath: NodePath,
+  state: ReanimatedPluginPass,
   acceptWorkletizableFunction: boolean,
-  acceptObject: boolean,
-  state: ReanimatedPluginPass
+  acceptObject: boolean
 ): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
   if (acceptWorkletizableFunction && isWorkletizableFunctionPath(nodePath)) {
     return nodePath;

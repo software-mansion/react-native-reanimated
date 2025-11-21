@@ -356,7 +356,7 @@ var require_findWorklet = __commonJS({
     exports2.findWorklet = findWorklet;
     var referencedWorklets_1 = require_referencedWorklets();
     var types_12 = require_types();
-    function findWorklet(nodePath, acceptWorkletizableFunction, acceptObject, state) {
+    function findWorklet(nodePath, state, acceptWorkletizableFunction, acceptObject) {
       if (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionPath)(nodePath)) {
         return nodePath;
       }
@@ -1161,7 +1161,7 @@ var require_objectWorklets = __commonJS({
     var workletSubstitution_12 = require_workletSubstitution();
     function tryProcessingNode(arg, state, acceptWorkletizableFunction, acceptObject) {
       var _a;
-      const maybeWorklet = (0, findWorklet_1.findWorklet)(arg, acceptWorkletizableFunction, acceptObject, state);
+      const maybeWorklet = (0, findWorklet_1.findWorklet)(arg, state, acceptWorkletizableFunction, acceptObject);
       if (!maybeWorklet || ((_a = maybeWorklet.getFunctionParent()) === null || _a === void 0 ? void 0 : _a.node.workletized)) {
         return;
       }

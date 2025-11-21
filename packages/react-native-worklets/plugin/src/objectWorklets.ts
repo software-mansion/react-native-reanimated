@@ -16,9 +16,9 @@ export function tryProcessingNode(
 ) {
   const maybeWorklet = findWorklet(
     arg,
+    state,
     acceptWorkletizableFunction,
-    acceptObject,
-    state
+    acceptObject
   );
   // @ts-expect-error There's no need to workletize
   // inside an already workletized function.
