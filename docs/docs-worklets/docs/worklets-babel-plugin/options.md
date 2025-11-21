@@ -30,7 +30,7 @@ interface PluginOptions {
 
 ## How to use
 
-Using this is straightforward for Babel plugins; you just need to pass an object containing the options to the plugin in your `babel.config.js` file. Make sure to pass the plugin and its options as an two-element array.
+Using this is straightforward for Babel plugins; you just need to pass an object containing the options to the plugin in your `babel.config.js` file. Make sure to pass the plugin and its options as a two-element array.
 
 Here's an example:
 
