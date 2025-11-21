@@ -1,11 +1,13 @@
 #pragma once
 
+#include <utility>
+
 namespace worklets {
 /**
  * Represents the different types of runtime environments available for
  * worklets.
  */
-enum class RuntimeKind {
+enum class RuntimeKind : std::uint8_t {
   ReactNative = 1,
   UI = 2,
   Worker = 3,

@@ -1,9 +1,9 @@
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
+#include <reanimated/CSS/interpolation/filters/FilterStyleInterpolator.h>
 
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <utility>
 
 namespace reanimated::css {
 
@@ -38,20 +38,11 @@ class RecordInterpolatorFactory : public PropertyInterpolatorFactory {
   const InterpolatorFactoriesRecord factories_;
 };
 
-class ArrayInterpolatorFactory : public PropertyInterpolatorFactory {
+class ArrayLikeInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
-  explicit ArrayInterpolatorFactory(const InterpolatorFactoriesArray &factories)
-      : PropertyInterpolatorFactory(), factories_(factories) {}
-
   const CSSValue &getDefaultValue() const override {
     static EmptyArrayValue emptyArrayValue;
     return emptyArrayValue;
-  }
-
-  std::shared_ptr<PropertyInterpolator> create(
-      const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
-    return std::make_shared<ArrayPropertiesInterpolator>(factories_, propertyPath, viewStylesRepository);
   }
 
  private:
@@ -65,13 +56,41 @@ class ArrayInterpolatorFactory : public PropertyInterpolatorFactory {
       return "[]";
     }
   };
+};
 
+class ArrayInterpolatorFactory : public ArrayLikeInterpolatorFactory {
+ public:
+  explicit ArrayInterpolatorFactory(const InterpolatorFactoriesArray &factories)
+      : ArrayLikeInterpolatorFactory(), factories_(factories) {}
+
+  std::shared_ptr<PropertyInterpolator> create(
+      const PropertyPath &propertyPath,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
+    return std::make_shared<ArrayPropertiesInterpolator>(factories_, propertyPath, viewStylesRepository);
+  }
+
+ private:
   const InterpolatorFactoriesArray factories_;
+};
+
+class FiltersInterpolatorFactory : public ArrayLikeInterpolatorFactory {
+ public:
+  explicit FiltersInterpolatorFactory(const std::shared_ptr<StyleOperationInterpolators> &interpolators)
+      : ArrayLikeInterpolatorFactory(), interpolators_(interpolators) {}
+
+  std::shared_ptr<PropertyInterpolator> create(
+      const PropertyPath &propertyPath,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
+    return std::make_shared<FilterStyleInterpolator>(propertyPath, interpolators_, viewStylesRepository);
+  }
+
+ private:
+  const std::shared_ptr<StyleOperationInterpolators> interpolators_;
 };
 
 class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
-  explicit TransformsInterpolatorFactory(const std::shared_ptr<TransformOperationInterpolators> &interpolators)
+  explicit TransformsInterpolatorFactory(const std::shared_ptr<StyleOperationInterpolators> &interpolators)
       : PropertyInterpolatorFactory(), interpolators_(interpolators) {}
 
   const CSSValue &getDefaultValue() const override {
@@ -102,38 +121,7 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
     }
   };
 
-  const std::shared_ptr<TransformOperationInterpolators> interpolators_;
-};
-
-class FiltersInterpolatorFactory : public PropertyInterpolatorFactory {
- public:
-  explicit FiltersInterpolatorFactory(const std::shared_ptr<FilterOperationInterpolators> &interpolators)
-      : PropertyInterpolatorFactory(), interpolators_(interpolators) {}
-
-  const CSSValue &getDefaultValue() const override {
-    static EmptyFilterValue emptyFilterValue;
-    return emptyFilterValue;
-  }
-
-  std::shared_ptr<PropertyInterpolator> create(
-      const PropertyPath &propertyPath,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
-    return std::make_shared<FilterStyleInterpolator>(propertyPath, interpolators_, viewStylesRepository);
-  }
-
- private:
-  // Helper private type just for a default value
-  struct EmptyFilterValue : public CSSValue {
-    folly::dynamic toDynamic() const override {
-      return folly::dynamic::array();
-    }
-
-    std::string toString() const override {
-      return "[]";
-    }
-  };
-
-  const std::shared_ptr<FilterOperationInterpolators> interpolators_;
+  const std::shared_ptr<StyleOperationInterpolators> interpolators_;
 };
 
 // Non-template function implementations
@@ -146,25 +134,24 @@ std::shared_ptr<PropertyInterpolatorFactory> array(const InterpolatorFactoriesAr
 }
 
 std::shared_ptr<PropertyInterpolatorFactory> transforms(
-    const std::unordered_map<std::string, std::shared_ptr<TransformInterpolator>> &interpolators) {
-  TransformOperationInterpolators result;
+    const std::unordered_map<std::string, std::shared_ptr<StyleOperationInterpolator>> &interpolators) {
+  StyleOperationInterpolators result;
   result.reserve(interpolators.size());
   for (const auto &[property, interpolator] : interpolators) {
-    result.emplace(getTransformOperationType(property), interpolator);
+    result.emplace(static_cast<size_t>(getTransformOperationType(property)), interpolator);
   }
   return std::make_shared<TransformsInterpolatorFactory>(
-      std::make_shared<TransformOperationInterpolators>(std::move(result)));
+      std::make_shared<StyleOperationInterpolators>(std::move(result)));
 }
 
 std::shared_ptr<PropertyInterpolatorFactory> filters(
-    const std::unordered_map<std::string, std::shared_ptr<FilterInterpolator>> &interpolators) {
-  FilterOperationInterpolators result;
+    const std::unordered_map<std::string, std::shared_ptr<StyleOperationInterpolator>> &interpolators) {
+  StyleOperationInterpolators result;
   result.reserve(interpolators.size());
   for (const auto &[property, interpolator] : interpolators) {
-    result.emplace(getFilterOperationType(property), interpolator);
+    result.emplace(static_cast<size_t>(getFilterOperationType(property)), interpolator);
   }
-  return std::make_shared<FiltersInterpolatorFactory>(
-      std::make_shared<FilterOperationInterpolators>(std::move(result)));
+  return std::make_shared<FiltersInterpolatorFactory>(std::make_shared<StyleOperationInterpolators>(std::move(result)));
 }
 
 } // namespace reanimated::css

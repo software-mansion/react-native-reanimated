@@ -2,9 +2,9 @@ import type { NodePath } from '@babel/core';
 
 import { findReferencedWorklet } from './referencedWorklets';
 import type {
-  ReanimatedPluginPass,
   WorkletizableFunction,
   WorkletizableObject,
+  WorkletsPluginPass,
 } from './types';
 import {
   isWorkletizableFunctionPath,
@@ -13,7 +13,7 @@ import {
 
 export function findWorklet(
   nodePath: NodePath,
-  state: ReanimatedPluginPass,
+  state: WorkletsPluginPass,
   acceptWorkletizableFunction: boolean,
   acceptObject: boolean
 ): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {

@@ -7,7 +7,7 @@
 
 namespace worklets {
 
-AsyncQueueImpl::AsyncQueueImpl(std::string name) : state_(std::make_shared<AsyncQueueState>()) {
+AsyncQueueImpl::AsyncQueueImpl(const std::string &name) : state_(std::make_shared<AsyncQueueState>()) {
   auto thread = std::thread([name, state = state_] {
 #if __APPLE__
     pthread_setname_np(name.c_str());

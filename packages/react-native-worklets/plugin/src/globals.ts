@@ -1,4 +1,4 @@
-import type { ReanimatedPluginPass } from './types';
+import type { WorkletsPluginPass } from './types';
 
 const notCapturedIdentifiers = [
   // Based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
@@ -148,7 +148,7 @@ export const internalBindingsToCaptureFromGlobalScope = new Set([
 // eslint-disable-next-line camelcase
 const notCapturedIdentifiers_DEPRECATED = ['_IS_FABRIC'];
 
-export function initializeState(state: ReanimatedPluginPass) {
+export function initializeState(state: WorkletsPluginPass) {
   state.workletNumber = 1;
   state.classesToWorkletize = [];
   initializeGlobals();
@@ -177,7 +177,7 @@ export function initializeGlobals() {
  * ];
  * ```
  */
-export function addCustomGlobals(state: ReanimatedPluginPass) {
+export function addCustomGlobals(state: WorkletsPluginPass) {
   if (state.opts && Array.isArray(state.opts.globals)) {
     state.opts.globals.forEach((name: string) => {
       globals.add(name);

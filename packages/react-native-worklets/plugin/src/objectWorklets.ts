@@ -1,7 +1,7 @@
 import type { NodePath } from '@babel/core';
 
 import { findWorklet } from './findWorklet';
-import type { ReanimatedPluginPass, WorkletizableObject } from './types';
+import type { WorkletizableObject, WorkletsPluginPass } from './types';
 import {
   isWorkletizableFunctionPath,
   isWorkletizableObjectPath,
@@ -10,7 +10,7 @@ import { processWorklet } from './workletSubstitution';
 
 export function tryProcessingNode(
   arg: NodePath,
-  state: ReanimatedPluginPass,
+  state: WorkletsPluginPass,
   acceptWorkletizableFunction: boolean,
   acceptObject: boolean
 ) {
@@ -34,7 +34,7 @@ export function tryProcessingNode(
 
 export function processWorkletizableObject(
   path: NodePath<WorkletizableObject>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): void {
   const properties = path.get('properties');
   for (const property of properties) {
