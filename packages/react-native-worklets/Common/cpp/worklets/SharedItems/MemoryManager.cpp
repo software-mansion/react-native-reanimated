@@ -32,7 +32,11 @@ void MemoryManager::loadCustomSerializable(
     const jsi::Array &registry,
     const SerializationData &data) {
   react_native_assert(
-      registry.length(runtime) == data.typeId && "Custom serializable type IDs must not differ between runtimes.");
+      registry.length(runtime) == data.typeId &&
+      ("Custom serializable type ID must match registry length. Expected typeId: " + std::to_string(data.typeId) +
+       ", got registry length: " + std::to_string(registry.length(runtime)) +
+       ". Custom serializables must be registered in the same order across all runtimes.")
+          .c_str());
 
   const auto item = jsi::Object(runtime);
   item.setProperty(runtime, "determine", data.determine->toJSValue(runtime));

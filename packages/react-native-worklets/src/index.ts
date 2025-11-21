@@ -35,6 +35,7 @@ export {
 export { serializableMappingCache } from './memory/serializableMappingCache';
 export { createSynchronizable } from './memory/synchronizable';
 export type {
+  RegistrationData,
   SerializableRef,
   Synchronizable,
   SynchronizableRef,

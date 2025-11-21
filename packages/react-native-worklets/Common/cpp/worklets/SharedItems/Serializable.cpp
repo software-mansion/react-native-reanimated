@@ -459,7 +459,6 @@ jsi::Value CustomSerializable::toJSValue(jsi::Runtime &rt) {
   } catch (jsi::JSError &e) {
     throw std::runtime_error(
         std::string("[Worklets] Failed to deserialize CustomSerializable. Reason: ") + e.getMessage());
-    return jsi::Value::undefined();
   }
 }
 

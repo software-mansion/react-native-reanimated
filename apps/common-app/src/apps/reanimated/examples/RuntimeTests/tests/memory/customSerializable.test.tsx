@@ -37,7 +37,7 @@ function GlobalConstructorCarrierFactory(constructor: any) {
 
 const determine = (value: object): value is IGlobalConstructorCarrier => {
   'worklet';
-  return (value as Record<string, unknown>).__isCustomObject == true;
+  return (value as Record<string, unknown>).__isCustomObject === true;
 };
 
 const pack = (value: IGlobalConstructorCarrier) => {
@@ -200,7 +200,7 @@ describe('Test CustomSerializables', () => {
 
     const determine2 = (value: object): value is IGlobalConstructorCarrier2 => {
       'worklet';
-      return (value as Record<string, unknown>).__isCustomObject2 == true;
+      return (value as Record<string, unknown>).__isCustomObject2 === true;
     };
 
     registerCustomSerializable({
