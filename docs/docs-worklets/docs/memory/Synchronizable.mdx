@@ -1,0 +1,78 @@
+---
+sidebar_position: 42 # Use alphabetical order
+---
+
+# Synchronizable
+
+Synchronizable is a type of shared memory not tied to any JavaScript Runtime. It can be accessed from any JavaScript Runtime and C++. The value held by Synchronizable behaves like a standard JavaScript value. Synchronizable is an advanced concept. It can be used to implement a semi-global state for runtimes to synchronize with. As it's not tied to any runtime, reading and writing to it doesn't preempt any runtimes and could be used to implement communication channels between different runtimes.
+
+Synchronizable can be obtained exclusively or non-exclusively, therefore trying to access it from multiple threads at once could lead to blocking.
+
+![Synchronizable](/img/createSynchronizable.svg)
+
+<figcaption style={{ textAlign: 'center' }}>
+  Synchronizable reference diagram
+</figcaption>
+
+## Methods
+
+Synchronizable has the following methods to access and modify its value:
+
+### getBlocking
+
+Exclusively obtains the Synchronizable and returns its value, potentially blocking if `getBlocking` or `setBlocking` are being executed on another thread or if the Synchronizable is explicitly locked.
+
+### getDirty
+
+Non-exclusively obtains the Synchronizable and returns its value. It never blocks, even the Synchronizable is explicitly locked, therefore could result in a [dirty read](https://en.wikipedia.org/wiki/Write%E2%80%93read_conflict). Useful for scenarios where eventual consistency is acceptable.
+
+### `setBlocking(value: TValue | ((prev: TValue) => TValue)): void`
+
+Exclusively obtains the Synchronizable and sets it to the provided value, potentially blocking if either getBlocking or setBlocking or if the Synchronizable is explicitly locked. You can also provide a setter function that receives the previous value and returns the new value. Synchronizable **is locked for the duration of the setter function execution**.
+
+### `lock(): void`
+
+Exclusively locks the Synchronizable - other threads can't call `getBlocking` or `setBlocking` until the Synchronizable is unlocked. Multiple calls on the same thread do nothing. Calling from another thread while the value is locked results in blocking.
+
+### `unlock(): void`
+
+Unlocks the Synchronizable. Does nothing on already unlocked Synchronizable. Works only when called from the same thread which locked the Synchronizable.
+
+## Reference
+
+```tsx
+import { createSynchronizable, scheduleOnUI } from 'react-native-worklets';
+
+// RN Runtime, JS thread
+
+const synchronizable = createSynchronizable({ a: 42 });
+
+scheduleOnUI(() => {
+  const value = synchronizable.getBlocking();
+  console.log(value); // {a: 24}
+});
+
+// Will most likely be executed before `getBlocking` scheduled on the UI Runtime.
+synchronizable.setBlocking({ a: 24 });
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type Synchronizable<TValue = unknown> = {
+  getDirty(): TValue;
+  getBlocking(): TValue;
+  setBlocking(value: TValue | ((prev: TValue) => TValue)): void;
+  lock(): void;
+  unlock(): void;
+};
+
+function createSynchronizable<TValue>(
+  initialValue: TValue
+): Synchronizable<TValue>;
+```
+
+</details>
+
+<!-- ## Remarks -->
