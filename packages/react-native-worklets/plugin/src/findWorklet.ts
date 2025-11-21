@@ -12,20 +12,20 @@ import {
 } from './types';
 
 export function findWorklet(
-  arg: NodePath,
+  nodePath: NodePath,
   acceptWorkletizableFunction: boolean,
   acceptObject: boolean,
   state: ReanimatedPluginPass
 ): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
-  if (acceptWorkletizableFunction && isWorkletizableFunctionPath(arg)) {
-    return arg;
+  if (acceptWorkletizableFunction && isWorkletizableFunctionPath(nodePath)) {
+    return nodePath;
   }
-  if (acceptObject && isWorkletizableObjectPath(arg)) {
-    return arg;
+  if (acceptObject && isWorkletizableObjectPath(nodePath)) {
+    return nodePath;
   }
-  if (arg.isIdentifier() && arg.isReferencedIdentifier()) {
+  if (nodePath.isIdentifier() && nodePath.isReferencedIdentifier()) {
     const a = findReferencedWorklet(
-      arg,
+      nodePath,
       acceptWorkletizableFunction,
       acceptObject,
       state
