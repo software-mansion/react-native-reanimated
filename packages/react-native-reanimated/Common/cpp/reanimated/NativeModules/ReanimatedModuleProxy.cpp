@@ -15,6 +15,8 @@
 
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 
 #include <functional>
 #include <iomanip>
@@ -51,6 +53,9 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       jsLogger_(std::make_shared<JSLogger>(workletsModuleProxy->getJSScheduler())),
       layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>(jsLogger_)),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
+#ifdef __APPLE__
+      forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
+#endif
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
@@ -121,7 +126,9 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
         if (!strongThis) {
           return;
         }
-
+        if (!strongThis->layoutAnimationsProxy_) {
+          return;
+        }
         auto surfaceId = strongThis->layoutAnimationsProxy_->progressLayoutAnimation(tag, newStyle);
         if (!surfaceId) {
           return;
@@ -144,6 +151,9 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       return;
     }
 
+    if (!strongThis->layoutAnimationsProxy_) {
+      return;
+    }
     auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
 
     if (!strongThis->layoutAnimationRenderRequested_) {
@@ -287,6 +297,10 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     } else {
       batchItem.config = extractSerializableOrThrow<SerializableObject>(
           rt, config, "[Reanimated] Layout animation config must be an object.");
+    }
+    auto sharedTag = item.getProperty(rt, "sharedTransitionTag");
+    if (!sharedTag.isUndefined()) {
+      batchItem.sharedTransitionTag = sharedTag.asString(rt).utf8(rt);
     }
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
@@ -480,6 +494,41 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
     eventType = "on" + eventType.substr(3);
   }
 
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    if (eventType == "onTransitionProgress") {
+      jsi::Runtime &rt = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+      const auto &eventPayload = rawEvent.eventPayload;
+      jsi::Object payload = eventPayload->asJSIValue(rt).asObject(rt);
+      auto progress = payload.getProperty(rt, "progress").asNumber();
+      auto closing = static_cast<bool>(payload.getProperty(rt, "closing").asNumber());
+      auto goingForward = static_cast<bool>(payload.getProperty(rt, "goingForward").asNumber());
+
+      if (!layoutAnimationsProxy_) {
+        return false;
+      }
+      auto surfaceId = layoutAnimationsProxy_->onTransitionProgress(tag, progress, closing, goingForward);
+      if (!surfaceId) {
+        return false;
+      }
+      // TODO (future): enumerate -> visit
+      uiManager_->getShadowTreeRegistry().enumerate(
+          [](const ShadowTree &shadowTree, bool &) { shadowTree.notifyDelegatesOfUpdates(); });
+      return false;
+    } else if (eventType == "onGestureCancel") {
+      if (!layoutAnimationsProxy_) {
+        return false;
+      }
+      auto surfaceId = layoutAnimationsProxy_->onGestureCancel();
+      if (!surfaceId) {
+        return false;
+      }
+      // TODO (future): enumerate -> visit
+      uiManager_->getShadowTreeRegistry().enumerate(
+          [](const ShadowTree &shadowTree, bool &) { shadowTree.notifyDelegatesOfUpdates(); });
+      return false;
+    }
+  }
+
   if (!isAnyHandlerWaitingForEvent(eventType, tag)) {
     return false;
   }
@@ -585,7 +634,9 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
     shouldUpdateCssAnimations_ = false;
 
 #ifdef ANDROID
-    if constexpr (StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
+    if constexpr (
+        StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
+        !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
       static const std::unordered_set<std::string> synchronousProps = {
           "opacity",
           "elevation",
@@ -973,7 +1024,9 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
 #endif // ANDROID
 
 #if __APPLE__
-    if constexpr (StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
+    if constexpr (
+        StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
+        !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
       static const std::unordered_set<std::string> synchronousProps = {
           "opacity",
           "elevation",
@@ -1214,20 +1267,43 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
           .lock();
 
   if (componentDescriptorRegistry) {
-    layoutAnimationsProxy_ = std::make_shared<LayoutAnimationsProxy>(
-        layoutAnimationsManager_,
-        componentDescriptorRegistry,
-        scheduler->getContextContainer(),
-        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
-        workletsModuleProxy_->getUIScheduler()
+    if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+      auto layoutAnimationsProxyExperimental =
+          std::make_shared<reanimated_experimental::LayoutAnimationsProxy_Experimental>(
+              layoutAnimationsManager_,
+              componentDescriptorRegistry,
+              scheduler->getContextContainer(),
+              workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
+              workletsModuleProxy_->getUIScheduler()
 #ifdef ANDROID
-            ,
-        filterUnmountedTagsFunction_,
-        uiManager_,
-        jsInvoker_
+                  ,
+              filterUnmountedTagsFunction_,
+              uiManager_,
+              jsInvoker_
 #endif
-    );
-    uiManager_->setAnimationDelegate(layoutAnimationsProxy_.get());
+          );
+#ifdef __APPLE__
+      layoutAnimationsProxyExperimental->setForceScreenSnapshotFunction(forceScreenSnapshot_);
+#endif
+      layoutAnimationsProxy_ = std::move(layoutAnimationsProxyExperimental);
+    } else {
+      auto layoutAnimationsProxyLegacy = std::make_shared<LayoutAnimationsProxy_Legacy>(
+          layoutAnimationsManager_,
+          componentDescriptorRegistry,
+          scheduler->getContextContainer(),
+          workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
+          workletsModuleProxy_->getUIScheduler()
+#ifdef ANDROID
+              ,
+          filterUnmountedTagsFunction_,
+          uiManager_,
+          jsInvoker_
+#endif
+      );
+      // TODO (future): support in experimental
+      uiManager_->setAnimationDelegate(layoutAnimationsProxyLegacy.get());
+      layoutAnimationsProxy_ = std::move(layoutAnimationsProxyLegacy);
+    }
   }
 }
 

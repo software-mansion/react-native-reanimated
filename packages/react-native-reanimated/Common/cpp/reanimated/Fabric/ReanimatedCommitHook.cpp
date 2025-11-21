@@ -17,7 +17,7 @@ namespace reanimated {
 ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-    const std::shared_ptr<LayoutAnimationsProxy> &layoutAnimationsProxy)
+    const std::shared_ptr<LayoutAnimationsProxyCommon> &layoutAnimationsProxy)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
       layoutAnimationsProxy_(layoutAnimationsProxy) {
@@ -30,7 +30,7 @@ ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
 
 void ReanimatedCommitHook::maybeInitializeLayoutAnimations(SurfaceId surfaceId) {
   auto lock = std::unique_lock<std::mutex>(mutex_);
-  if (surfaceId > currentMaxSurfaceId_) {
+  if (surfaceId > currentMaxSurfaceId_ && layoutAnimationsProxy_) {
     // when a new surfaceId is observed we call setMountingOverrideDelegate
     // for all yet unseen surfaces
     uiManager_->getShadowTreeRegistry().enumerate(

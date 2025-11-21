@@ -1,7 +1,7 @@
 #pragma once
 
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 
 #include <react/renderer/uimanager/UIManagerCommitHook.h>
 
@@ -16,7 +16,7 @@ class ReanimatedCommitHook : public UIManagerCommitHook, public std::enable_shar
   ReanimatedCommitHook(
       const std::shared_ptr<UIManager> &uiManager,
       const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-      const std::shared_ptr<LayoutAnimationsProxy> &layoutAnimationsProxy);
+      const std::shared_ptr<LayoutAnimationsProxyCommon> &layoutAnimationsProxy);
 
   ~ReanimatedCommitHook() noexcept override;
 
@@ -39,7 +39,7 @@ class ReanimatedCommitHook : public UIManagerCommitHook, public std::enable_shar
  private:
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
+  std::shared_ptr<LayoutAnimationsProxyCommon> layoutAnimationsProxy_;
 
   SurfaceId currentMaxSurfaceId_ = -1;
 
