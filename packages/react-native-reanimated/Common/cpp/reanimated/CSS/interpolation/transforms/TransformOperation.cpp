@@ -13,20 +13,16 @@
 #include <reanimated/CSS/interpolation/transforms/operations/skew.h>
 #include <reanimated/CSS/interpolation/transforms/operations/translate.h>
 
-#include <memory>
-#include <string>
 #include <utility>
 
 namespace reanimated::css {
 
-namespace {
 std::string createConversionErrorMessage(const TransformOp fromType, const TransformOp toType) {
-  return "[Reanimated] Cannot convert transform operation of type: " + getOperationNameFromType(fromType) +
-      " to type: " + getOperationNameFromType(toType);
+  return "[Reanimated] Cannot convert transform operation of type: " + getTransformOperationName(fromType) +
+      " to type: " + getTransformOperationName(toType);
 }
-} // namespace
 
-TransformOperation::TransformOperation(TransformOp value) : type(value) {}
+TransformOperation::TransformOperation(TransformOp type) : StyleOperation(static_cast<uint8_t>(type)) {}
 
 bool TransformOperation::canConvertTo(const TransformOp targetType) const {
   return false;
@@ -34,20 +30,16 @@ bool TransformOperation::canConvertTo(const TransformOp targetType) const {
 
 void TransformOperation::assertCanConvertTo(const TransformOp targetType) const {
   if (!canConvertTo(targetType)) {
-    throw std::invalid_argument(createConversionErrorMessage(type, targetType));
+    throw std::invalid_argument(createConversionErrorMessage(static_cast<TransformOp>(type), targetType));
   }
 }
 
 TransformOperations TransformOperation::convertTo(const TransformOp targetType) const {
-  throw std::invalid_argument(createConversionErrorMessage(type, targetType));
+  throw std::invalid_argument(createConversionErrorMessage(static_cast<TransformOp>(type), targetType));
 }
 
 std::string TransformOperation::getOperationName() const {
-  return getOperationNameFromType(type);
-}
-
-bool TransformOperation::shouldResolve() const {
-  return false;
+  return getTransformOperationName(static_cast<TransformOp>(type));
 }
 
 bool TransformOperation::is3D() const {
@@ -68,7 +60,7 @@ std::shared_ptr<TransformOperation> TransformOperation::fromJSIValue(jsi::Runtim
 
   const auto propertyName = propertyNames.getValueAtIndex(rt, 0).asString(rt).utf8(rt);
   const auto propertyValue = obj.getProperty(rt, jsi::PropNameID::forUtf8(rt, propertyName));
-  TransformOp operationType = getTransformOperationType(propertyName);
+  const TransformOp operationType = getTransformOperationType(propertyName);
 
   switch (operationType) {
     case TransformOp::Perspective:
@@ -122,7 +114,7 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(const folly:
 
   auto propertyName = obj.items().begin()->first.getString();
   auto propertyValue = obj.items().begin()->second;
-  TransformOp operationType = getTransformOperationType(propertyName);
+  const TransformOp operationType = getTransformOperationType(propertyName);
 
   switch (operationType) {
     case TransformOp::Perspective:
@@ -164,23 +156,10 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(const folly:
   }
 }
 
-folly::dynamic TransformOperation::toDynamic() const {
-  return folly::dynamic::object(getOperationName(), valueToDynamic());
-}
-
 // TransformOperationBase implementation
 template <TransformOp TOperation, typename TValue>
 TransformOperationBase<TOperation, TValue>::TransformOperationBase(TValue value)
     : TransformOperation(TOperation), value(std::move(value)) {}
-
-template <TransformOp TOperation, typename TValue>
-bool TransformOperationBase<TOperation, TValue>::operator==(const TransformOperation &other) const {
-  if (type != other.type) {
-    return false;
-  }
-  const auto &otherOperation = static_cast<const TransformOperationBase<TOperation, TValue> &>(other);
-  return value == otherOperation.value;
-}
 
 template <TransformOp TOperation, typename TValue>
 TransformMatrix::Shared TransformOperationBase<TOperation, TValue>::toMatrix(bool force3D) const {
@@ -208,6 +187,16 @@ TransformMatrix::Shared TransformOperationBase<TOperation, TValue>::toMatrix(boo
     cachedMatrix_ = result;
     return result;
   }
+}
+
+template <TransformOp TOperation, typename TValue>
+folly::dynamic TransformOperationBase<TOperation, TValue>::valueToDynamic() const {
+  return value.toDynamic();
+}
+
+template <TransformOp TOperation, typename TValue>
+bool TransformOperationBase<TOperation, TValue>::areValuesEqual(const StyleOperation &other) const {
+  return value == static_cast<const TransformOperationBase<TOperation, TValue> &>(other).value;
 }
 
 // Rotate operations

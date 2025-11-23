@@ -15,33 +15,6 @@ jsi::Function getValueUnpacker(jsi::Runtime &rt) {
   return valueUnpacker.asObject(rt).asFunction(rt);
 }
 
-#ifndef NDEBUG
-
-static const auto callGuardLambda = [](facebook::jsi::Runtime &rt,
-                                       const facebook::jsi::Value &thisVal,
-                                       const facebook::jsi::Value *args,
-                                       size_t count) {
-  return args[0].asObject(rt).asFunction(rt).call(rt, args + 1, count - 1);
-};
-
-jsi::Function getCallGuard(jsi::Runtime &rt) {
-  auto callGuard = rt.global().getProperty(rt, "__callGuardDEV");
-  if (callGuard.isObject()) {
-    // Use JS implementation if `__callGuardDEV` has already been installed.
-    // This is the desired behavior.
-    return callGuard.asObject(rt).asFunction(rt);
-  }
-
-  // Otherwise, fallback to C++ JSI implementation. This is necessary so that we
-  // can install `__callGuardDEV` itself and should happen only once. Note that
-  // the C++ implementation doesn't intercept errors and simply throws them as
-  // C++ exceptions which crashes the app. We assume that installing the guard
-  // doesn't throw any errors.
-  return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "callGuard"), 1, callGuardLambda);
-}
-
-#endif // NDEBUG
-
 jsi::Value makeSerializableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
@@ -94,7 +67,7 @@ jsi::Value makeSerializableClone(
   } else if (value.isSymbol()) {
     // TODO: this is only a placeholder implementation, here we replace symbols
     // with strings in order to make certain objects to be captured. There isn't
-    // yet any usecase for using symbols on the UI runtime so it is fine to keep
+    // yet any use-case for using symbols on the UI runtime so it is fine to keep
     // it like this for now.
     serializable = std::make_shared<SerializableString>(value.getSymbol(rt).toString(rt));
   } else {
@@ -227,7 +200,7 @@ std::shared_ptr<Serializable> extractSerializableOrThrow(
   throw std::runtime_error(errorMessage);
 }
 
-Serializable::~Serializable() {}
+Serializable::~Serializable() = default;
 
 std::shared_ptr<Serializable> Serializable::undefined() {
   static auto undefined = std::make_shared<SerializableScalar>();
@@ -257,9 +230,9 @@ jsi::Value RetainingSerializable<BaseClass>::toJSValue(jsi::Runtime &rt) {
   return BaseClass::toJSValue(rt);
 }
 
-SerializableJSRef::~SerializableJSRef() {}
+SerializableJSRef::~SerializableJSRef() = default;
 
-SerializableArray::SerializableArray(jsi::Runtime &rt, const jsi::Array &array) : Serializable(ArrayType) {
+SerializableArray::SerializableArray(jsi::Runtime &rt, const jsi::Array &array) : Serializable(ValueType::ArrayType) {
   auto size = array.size(rt);
   data_.reserve(size);
   for (size_t i = 0; i < size; i++) {
@@ -284,7 +257,8 @@ jsi::Value SerializableArrayBuffer::toJSValue(jsi::Runtime &rt) {
   return arrayBuffer;
 }
 
-SerializableObject::SerializableObject(jsi::Runtime &rt, const jsi::Object &object) : Serializable(ObjectType) {
+SerializableObject::SerializableObject(jsi::Runtime &rt, const jsi::Object &object)
+    : Serializable(ValueType::ObjectType) {
   auto propertyNames = object.getPropertyNames(rt);
   auto size = propertyNames.size(rt);
   data_.reserve(size);
@@ -307,8 +281,8 @@ SerializableObject::SerializableObject(jsi::Runtime &rt, const jsi::Object &obje
 
 jsi::Value SerializableObject::toJSValue(jsi::Runtime &rt) {
   auto obj = jsi::Object(rt);
-  for (size_t i = 0, size = data_.size(); i < size; i++) {
-    obj.setProperty(rt, jsi::String::createFromUtf8(rt, data_[i].first), data_[i].second->toJSValue(rt));
+  for (const auto &i : data_) {
+    obj.setProperty(rt, jsi::String::createFromUtf8(rt, i.first), i.second->toJSValue(rt));
   }
   if (nativeState_ != nullptr) {
     obj.setNativeState(rt, nativeState_);
@@ -317,7 +291,7 @@ jsi::Value SerializableObject::toJSValue(jsi::Runtime &rt) {
 }
 
 SerializableMap::SerializableMap(jsi::Runtime &rt, const jsi::Array &keys, const jsi::Array &values)
-    : Serializable(MapType) {
+    : Serializable(ValueType::MapType) {
   auto size = keys.size(rt);
   react_native_assert(size == values.size(rt) && "Keys and values arrays must have the same size.");
   data_.reserve(size);
@@ -343,7 +317,7 @@ jsi::Value SerializableMap::toJSValue(jsi::Runtime &rt) {
   return map;
 }
 
-SerializableSet::SerializableSet(jsi::Runtime &rt, const jsi::Array &values) : Serializable(SetType) {
+SerializableSet::SerializableSet(jsi::Runtime &rt, const jsi::Array &values) : Serializable(ValueType::SetType) {
   auto size = values.size(rt);
   data_.reserve(size);
   for (size_t i = 0; i < size; i++) {
@@ -416,8 +390,8 @@ jsi::Value SerializableInitializer::toJSValue(jsi::Runtime &rt) {
         getValueUnpacker(rt).call(rt, initObj, jsi::String::createFromAscii(rt, "Handle")));
 
     // We are locking the initialization here since the thread that is
-    // initalizing can be pre-empted on runtime lock. E.g.
-    // UI thread can be pre-empted on initialization of a shared value and then
+    // initializing can be preempted on runtime lock. E.g.
+    // UI thread can be preempted on initialization of a shared value and then
     // JS thread can try to access the shared value, locking the whole runtime.
     // If we put the lock on `getValueUnpacker` part (basically any part that
     // requires runtime) we would get a deadlock since UI thread would never
@@ -440,18 +414,22 @@ jsi::Value SerializableString::toJSValue(jsi::Runtime &rt) {
 }
 
 jsi::Value SerializableBigInt::toJSValue(jsi::Runtime &rt) {
-  return rt.global().getPropertyAsFunction(rt, "BigInt").call(rt, jsi::String::createFromUtf8(rt, string_));
+  if (fastValue_.has_value()) {
+    return jsi::BigInt::fromInt64(rt, fastValue_.value());
+  } else {
+    return rt.global().getPropertyAsFunction(rt, "BigInt").call(rt, jsi::String::createFromUtf8(rt, slowValue_));
+  }
 }
 
 jsi::Value SerializableScalar::toJSValue(jsi::Runtime &) {
   switch (valueType_) {
-    case Serializable::UndefinedType:
+    case Serializable::ValueType::UndefinedType:
       return jsi::Value();
-    case Serializable::NullType:
+    case Serializable::ValueType::NullType:
       return jsi::Value(nullptr);
-    case Serializable::BooleanType:
+    case Serializable::ValueType::BooleanType:
       return jsi::Value(data_.boolean);
-    case Serializable::NumberType:
+    case Serializable::ValueType::NumberType:
       return jsi::Value(data_.number);
     default:
       throw std::runtime_error("[Worklets] Attempted to convert object that's not of a scalar type.");
@@ -464,6 +442,30 @@ jsi::Value SerializableTurboModuleLike::toJSValue(jsi::Runtime &rt) {
   rt.global().getPropertyAsObject(rt, "Object").getPropertyAsFunction(rt, "setPrototypeOf").call(rt, obj, prototype);
 
   return obj;
+}
+
+jsi::Function getCustomSerializableUnpacker(jsi::Runtime &rt) {
+  auto customSerializableUnpacker = rt.global().getProperty(rt, "__customSerializableUnpacker");
+  react_native_assert(customSerializableUnpacker.isObject() && "customSerializableUnpacker not found");
+  return customSerializableUnpacker.asObject(rt).asFunction(rt);
+}
+
+jsi::Value CustomSerializable::toJSValue(jsi::Runtime &rt) {
+  try {
+    auto unpack = getCustomSerializableUnpacker(rt);
+    auto data = data_->toJSValue(rt);
+
+    return unpack.call(rt, data, jsi::Value(typeId_));
+  } catch (jsi::JSError &e) {
+    throw std::runtime_error(
+        std::string("[Worklets] Failed to deserialize CustomSerializable. Reason: ") + e.getMessage());
+  }
+}
+
+jsi::Value makeCustomSerializable(jsi::Runtime &rt, const jsi::Value &data, const int typeId) {
+  auto rawData = extractSerializableOrThrow(rt, data, "[Worklets] Data must be a Serializable object.");
+  auto customSerializable = std::make_shared<CustomSerializable>(rawData, typeId);
+  return SerializableJSRef::newNativeStateObject(rt, customSerializable);
 }
 
 } // namespace worklets

@@ -170,7 +170,7 @@ function onPress() {
 
 To convert a JavaScript function into a serializable object which can be copied and run over on [UI thread](/docs/fundamentals/glossary#ui-thread).
 
-Functions marked with `"worklet";` directive are automatically picked up and workletized by the Reanimated Babel plugin.
+Functions marked with `"worklet"` directive are automatically picked up and workletized by the Worklets Babel plugin.
 
 ## JavaScript thread
 
@@ -184,8 +184,8 @@ UI thread is responsible for handling user interface updates. Also known as Main
 
 You can learn more about it by reading the [Threading model](https://reactnative.dev/architecture/threading-model) article in the official React Native docs.
 
-## Reanimated Babel plugin
+## Worklets Babel plugin
 
 The plugin performs automatic [workletization](/docs/fundamentals/glossary#to-workletize) of certain functions used with Reanimated to reduce the amount of boilerplate code.
 
-You can learn the details by reading the [Reanimated Babel plugin README](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/README-dev.md).
+You can learn the details by reading the [Worklets docs](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about).
