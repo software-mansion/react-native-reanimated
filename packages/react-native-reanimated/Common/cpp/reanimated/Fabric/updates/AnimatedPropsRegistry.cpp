@@ -58,12 +58,12 @@ jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt,
   }
 
   const jsi::Array array(rt, updatesMap.size());
-  size_t idx = 0;
+  size_t i = 0;
   for (const auto &[viewTag, styleProps] : updatesMap) {
     const jsi::Object item(rt);
     item.setProperty(rt, "viewTag", viewTag);
     item.setProperty(rt, "styleProps", jsi::valueFromDynamic(rt, styleProps));
-    array.setValueAtIndex(rt, idx++, item);
+    array.setValueAtIndex(rt, i++, item);
   }
 
   return jsi::Value(rt, array);
