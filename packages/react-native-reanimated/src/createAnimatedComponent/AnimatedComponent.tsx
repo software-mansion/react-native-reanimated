@@ -10,6 +10,7 @@ import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
+import { getDynamicFeatureFlag } from '../featureFlags';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import type { BaseAnimationBuilder } from '../layoutReanimation';
 import {
@@ -46,6 +47,9 @@ let id = 0;
 if (IS_WEB) {
   configureWebLayoutAnimations();
 }
+
+const FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS =
+  !IS_WEB && getDynamicFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS');
 
 export type Options<P> = {
   setNativeProps?: (ref: AnimatedComponentRef, props: P) => void;
@@ -86,9 +90,11 @@ export default class AnimatedComponent
     this._options = options;
     this._displayName = displayName;
 
-    this.state = {
-      styleProps: {},
-    };
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+      this.state = {
+        styleProps: {},
+      };
+    }
 
     if (IS_JEST) {
       this.jestAnimatedStyle = { value: {} };
@@ -114,10 +120,11 @@ export default class AnimatedComponent
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
-    // TODO: don't do it on web?
-    const viewTag = this.getComponentViewTag();
-    if (viewTag !== -1) {
-      PropsRegistryGarbageCollector.registerView(viewTag, this);
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+      const viewTag = this.getComponentViewTag();
+      if (viewTag !== -1) {
+        PropsRegistryGarbageCollector.registerView(viewTag, this);
+      }
     }
 
     if (this._options?.jsProps?.length) {
@@ -178,9 +185,11 @@ export default class AnimatedComponent
     this._detachStyles();
     this._InlinePropManager.detachInlineProps();
 
-    const viewTag = this.getComponentViewTag();
-    if (viewTag !== -1) {
-      PropsRegistryGarbageCollector.unregisterView(viewTag);
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+      const viewTag = this.getComponentViewTag();
+      if (viewTag !== -1) {
+        PropsRegistryGarbageCollector.unregisterView(viewTag);
+      }
     }
 
     if (this._options?.jsProps?.length) {
@@ -206,8 +215,10 @@ export default class AnimatedComponent
   }
 
   _syncStylePropsBackToReact(props: StyleProps) {
-    this.setState({ styleProps: props });
-    // TODO: find a way to revert changes when animated styles are detached
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+      this.setState({ styleProps: props });
+      // TODO(future): revert changes when animated styles are detached
+    }
   }
 
   _detachStyles() {
@@ -457,17 +468,24 @@ export default class AnimatedComponent
         }
       : {};
 
-    const flatStyles = StyleSheet.flatten(filteredProps.style as object);
-    const mergedStyles = {
-      ...flatStyles,
-      ...this.state.styleProps,
-    };
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+      const flatStyles = StyleSheet.flatten(filteredProps.style as object);
+      const mergedStyles = {
+        ...flatStyles,
+        ...this.state.styleProps,
+      };
+      return super.render({
+        nativeID,
+        ...filteredProps,
+        ...this.state.styleProps,
+        style: mergedStyles,
+        ...jestProps,
+      });
+    }
 
     return super.render({
       nativeID,
       ...filteredProps,
-      ...this.state.styleProps, // TODO: find a better way to persist animated props
-      style: mergedStyles,
       ...jestProps,
     });
   }

@@ -60,6 +60,14 @@ export default function AboutExample() {
     forceUpdate();
   }, [forceUpdate]);
 
+  const handleToggleForceReactRenderForSettledAnimations = useCallback(() => {
+    setDynamicFeatureFlag(
+      'FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS',
+      !getDynamicFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS')
+    );
+    forceUpdate();
+  }, [forceUpdate]);
+
   return (
     <View style={styles.container}>
       <Text style={styles.text}>
@@ -151,6 +159,18 @@ export default function AboutExample() {
           <Button
             title={`Toggle EXAMPLE_DYNAMIC_FLAG`}
             onPress={handleToggleExampleDynamicFlag}
+          />
+          <Text style={styles.text}>
+            <Text style={styles.bold}>
+              FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS:
+            </Text>{' '}
+            {getDynamicFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS')
+              ? 'Enabled'
+              : 'Disabled'}
+          </Text>
+          <Button
+            title={`Toggle FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`}
+            onPress={handleToggleForceReactRenderForSettledAnimations}
           />
         </>
       )}
