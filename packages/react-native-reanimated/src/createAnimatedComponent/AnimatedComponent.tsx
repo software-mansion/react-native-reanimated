@@ -454,6 +454,26 @@ export default class AnimatedComponent
             : filteredProps.text;
     }
 
+    // if (
+    //   this.ChildComponent.displayName === 'Text' &&
+    //   isSharedValue(this.props.text)
+    // ) {
+    //   filteredProps.children =
+    //     filteredProps.text === ''
+    //       ? '\u200b' // use zero-width space when text is empty
+    //       : typeof filteredProps.text === 'number'
+    //         ? String(filteredProps.text)
+    //         : filteredProps.text;
+    // }
+
+    // if (this.ChildComponent.displayName === 'Text') {
+    //   console.log(filteredProps.text);
+    // }
+
+    if (this.ChildComponent.displayName === 'Circle') {
+      console.log('filteredProps', filteredProps);
+    }
+
     return super.render({
       nativeID,
       ...filteredProps,
