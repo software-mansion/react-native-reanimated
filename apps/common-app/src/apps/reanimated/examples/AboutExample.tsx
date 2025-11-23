@@ -52,7 +52,7 @@ function getReactNativeVersion() {
 export default function AboutExample() {
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
-  const handleToggleExampleDynamicFlag = useCallback(() => {
+  const toggleExampleDynamicFlag = useCallback(() => {
     setDynamicFeatureFlag(
       'EXAMPLE_DYNAMIC_FLAG',
       !getDynamicFeatureFlag('EXAMPLE_DYNAMIC_FLAG')
@@ -60,7 +60,7 @@ export default function AboutExample() {
     forceUpdate();
   }, [forceUpdate]);
 
-  const handleToggleForceReactRenderForSettledAnimations = useCallback(() => {
+  const toggleForceReactRenderForSettledAnimations = useCallback(() => {
     setDynamicFeatureFlag(
       'FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS',
       !getDynamicFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS')
@@ -158,7 +158,7 @@ export default function AboutExample() {
           </Text>
           <Button
             title={`Toggle EXAMPLE_DYNAMIC_FLAG`}
-            onPress={handleToggleExampleDynamicFlag}
+            onPress={toggleExampleDynamicFlag}
           />
           <Text style={styles.text}>
             <Text style={styles.bold}>
@@ -170,7 +170,7 @@ export default function AboutExample() {
           </Text>
           <Button
             title={`Toggle FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`}
-            onPress={handleToggleForceReactRenderForSettledAnimations}
+            onPress={toggleForceReactRenderForSettledAnimations}
           />
         </>
       )}
