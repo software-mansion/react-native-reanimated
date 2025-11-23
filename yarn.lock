@@ -12333,6 +12333,8 @@ __metadata:
     react-dom: "npm:19.1.1"
     react-native: "npm:0.82.0"
     react-native-gesture-handler: "npm:2.29.1"
+    react-native-mmkv: "npm:4.0.0"
+    react-native-nitro-modules: "npm:0.31.9"
     react-native-pager-view: "npm:7.0.0"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.6.1"
