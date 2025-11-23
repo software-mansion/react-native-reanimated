@@ -2,10 +2,13 @@ import React, { useCallback } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   interpolateColor,
+  setDynamicFeatureFlag,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+
+setDynamicFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS', true);
 
 const instructions = [
   '1. Press "Animate width and color" button',

@@ -48,9 +48,6 @@ if (IS_WEB) {
   configureWebLayoutAnimations();
 }
 
-const FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS =
-  !IS_WEB && getDynamicFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS');
-
 export type Options<P> = {
   setNativeProps?: (ref: AnimatedComponentRef, props: P) => void;
   jsProps?: string[];
@@ -90,10 +87,11 @@ export default class AnimatedComponent
     this._options = options;
     this._displayName = displayName;
 
-    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
-      this.state = {
-        styleProps: {},
-      };
+    if (
+      getDynamicFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS') &&
+      !IS_WEB
+    ) {
+      this.state = { styleProps: {} };
     }
 
     if (IS_JEST) {
@@ -120,7 +118,7 @@ export default class AnimatedComponent
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
-    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+    if (this.state?.styleProps) {
       const viewTag = this.getComponentViewTag();
       if (viewTag !== -1) {
         PropsRegistryGarbageCollector.registerView(viewTag, this);
@@ -185,7 +183,7 @@ export default class AnimatedComponent
     this._detachStyles();
     this._InlinePropManager.detachInlineProps();
 
-    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+    if (this.state?.styleProps) {
       const viewTag = this.getComponentViewTag();
       if (viewTag !== -1) {
         PropsRegistryGarbageCollector.unregisterView(viewTag);
@@ -215,7 +213,7 @@ export default class AnimatedComponent
   }
 
   _syncStylePropsBackToReact(props: StyleProps) {
-    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+    if (this.state?.styleProps) {
       this.setState({ styleProps: props });
       // TODO(future): revert changes when animated styles are detached
     }
@@ -468,7 +466,7 @@ export default class AnimatedComponent
         }
       : {};
 
-    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+    if (this.state?.styleProps) {
       const flatStyles = StyleSheet.flatten(filteredProps.style as object);
       const mergedStyles = {
         ...flatStyles,
