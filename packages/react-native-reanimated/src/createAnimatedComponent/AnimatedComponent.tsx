@@ -56,7 +56,7 @@ export type Options<P> = {
 export default class AnimatedComponent
   extends ReanimatedAnimatedComponent<
     AnimatedComponentProps<InitialComponentProps>,
-    { styleProps: StyleProps }
+    { settledProps: StyleProps }
   >
   implements IAnimatedComponentInternal
 {
@@ -91,7 +91,7 @@ export default class AnimatedComponent
       getDynamicFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS') &&
       !IS_WEB
     ) {
-      this.state = { styleProps: {} };
+      this.state = { settledProps: {} };
     }
 
     if (IS_JEST) {
@@ -118,7 +118,7 @@ export default class AnimatedComponent
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
-    if (this.state?.styleProps) {
+    if (this.state?.settledProps) {
       const viewTag = this.getComponentViewTag();
       if (viewTag !== -1) {
         PropsRegistryGarbageCollector.registerView(viewTag, this);
@@ -183,7 +183,7 @@ export default class AnimatedComponent
     this._detachStyles();
     this._InlinePropManager.detachInlineProps();
 
-    if (this.state?.styleProps) {
+    if (this.state?.settledProps) {
       const viewTag = this.getComponentViewTag();
       if (viewTag !== -1) {
         PropsRegistryGarbageCollector.unregisterView(viewTag);
@@ -213,8 +213,8 @@ export default class AnimatedComponent
   }
 
   _syncStylePropsBackToReact(props: StyleProps) {
-    if (this.state?.styleProps) {
-      this.setState({ styleProps: props });
+    if (this.state?.settledProps) {
+      this.setState({ settledProps: props });
       // TODO(future): revert changes when animated styles are detached
     }
   }
@@ -466,16 +466,16 @@ export default class AnimatedComponent
         }
       : {};
 
-    if (this.state?.styleProps) {
+    if (this.state?.settledProps) {
       const flatStyles = StyleSheet.flatten(filteredProps.style as object);
       const mergedStyles = {
         ...flatStyles,
-        ...this.state.styleProps,
+        ...this.state.settledProps,
       };
       return super.render({
         nativeID,
         ...filteredProps,
-        ...this.state.styleProps,
+        ...this.state.settledProps,
         style: mergedStyles,
         ...jestProps,
       });
