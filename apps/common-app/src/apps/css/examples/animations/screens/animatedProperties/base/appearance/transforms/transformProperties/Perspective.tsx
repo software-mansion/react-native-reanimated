@@ -54,8 +54,8 @@ export default function Perspective() {
             {
               from: [{ rotateY: '30deg' }],
               num: 73,
-              title: 'Without perspective',
-              to: [{ perspective: 100 }, { rotateY: '30deg' }],
+              title: 'With Y rotation',
+              to: [{ perspective: 25 }, { rotateY: '30deg' }],
             },
           ],
           title: 'Single-keyframe perspective',
@@ -75,14 +75,13 @@ export default function Perspective() {
           title: 'Negative Perspective',
         },
         {
-          description:
-            'Perspective can also be used in transform strings.',
+          description: 'Perspective can also be used in transform strings.',
           examples: [
             {
-              from: 'perspective(50px) rotateY(0deg)',
+              from: 'perspective(10px) rotate(5deg) rotateX(15deg)',
               num: 55,
-              title: 'Transform string',
-              to: 'perspective(200px) rotateY(45deg)',
+              title: 'With X and Z rotations',
+              to: 'perspective(100px) rotate(45deg) rotateX(15deg)',
             },
           ],
           title: 'Transform string',
