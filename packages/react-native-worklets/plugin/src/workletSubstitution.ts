@@ -6,7 +6,7 @@ import {
   objectProperty,
 } from '@babel/types';
 
-import type { ReanimatedPluginPass } from './types';
+import type { WorkletsPluginPass } from './types';
 import { WorkletizableFunction } from './types';
 import { replaceWithFactoryCall } from './utils';
 import { makeWorkletFactoryCall } from './workletFactoryCall';
@@ -14,7 +14,7 @@ import { makeWorkletFactoryCall } from './workletFactoryCall';
 /** @returns `true` if the function was workletized, `false` otherwise. */
 export function processIfWithWorkletDirective(
   path: NodePath<WorkletizableFunction>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): boolean {
   if (!isBlockStatement(path.node.body)) {
     // If the function body is not a block statement we can safely assume that it's not a worklet
@@ -41,14 +41,14 @@ export function processIfWithWorkletDirective(
  */
 export function processWorklet(
   path: NodePath<WorkletizableFunction>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): void {
   path.traverse(
     {
       // @ts-expect-error TypeScript doesn't like this syntax here.
       [WorkletizableFunction](
         subPath: NodePath<WorkletizableFunction>,
-        passedState: ReanimatedPluginPass
+        passedState: WorkletsPluginPass
       ): void {
         processIfWithWorkletDirective(subPath, passedState);
       },

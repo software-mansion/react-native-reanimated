@@ -62,14 +62,14 @@ void EventHandlerRegistry::processEvent(
     const std::lock_guard<std::mutex> lock(instanceMutex);
     auto handlersIt = eventMappingsWithoutTag.find(eventName);
     if (handlersIt != eventMappingsWithoutTag.end()) {
-      for (auto handler : handlersIt->second) {
+      for (const auto &handler : handlersIt->second) {
         handlersForEvent.push_back(handler.second);
       }
     }
     const auto eventHash = std::make_pair(emitterReactTag, eventName);
     auto handlersWithTagIt = eventMappingsWithTag.find(eventHash);
     if (handlersWithTagIt != eventMappingsWithTag.end()) {
-      for (auto handler : handlersWithTagIt->second) {
+      for (const auto &handler : handlersWithTagIt->second) {
         handlersForEvent.push_back(handler.second);
       }
     }
@@ -77,7 +77,7 @@ void EventHandlerRegistry::processEvent(
 
   jsi::Runtime &rt = uiWorkletRuntime->getJSIRuntime();
   eventPayload.asObject(rt).setProperty(rt, "eventName", jsi::String::createFromUtf8(rt, eventName));
-  for (auto handler : handlersForEvent) {
+  for (const auto &handler : handlersForEvent) {
     handler->process(uiWorkletRuntime, eventTimestamp, eventPayload);
   }
 }

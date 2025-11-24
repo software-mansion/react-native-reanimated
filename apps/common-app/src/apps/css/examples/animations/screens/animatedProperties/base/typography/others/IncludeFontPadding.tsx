@@ -3,9 +3,10 @@ import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { ExamplesScreen, VerticalExampleCard } from '@/apps/css/components';
+import type { ExampleScreenProps } from '@/apps/css/navigation/types';
 import { colors } from '@/theme';
 
-export default function IncludeFontPadding() {
+export default function IncludeFontPadding({ labelTypes }: ExampleScreenProps) {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
       CardComponent={VerticalExampleCard}
@@ -37,7 +38,7 @@ export default function IncludeFontPadding() {
               title: 'Changing Include Font Padding',
             },
           ],
-          labelTypes: ['Android'],
+          labelTypes,
           title: 'Include Font Padding',
         },
       ]}

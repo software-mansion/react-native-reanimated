@@ -2,8 +2,11 @@
 
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 #include <reanimated/CSS/interpolation/configs.h>
+#include <reanimated/CSS/interpolation/filters/FilterOperation.h>
+#include <reanimated/CSS/interpolation/filters/FilterOperationInterpolator.h>
 #include <reanimated/CSS/interpolation/groups/ArrayPropertiesInterpolator.h>
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
+#include <reanimated/CSS/interpolation/operations/StyleOperationInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperationInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TransformsStyleInterpolator.h>
@@ -129,16 +132,35 @@ auto value(const auto &defaultValue, ResolvableValueInterpolatorConfig config) -
 template <typename TOperation>
 auto transformOp(const auto &defaultValue) -> std::enable_if_t<
     std::is_base_of_v<TransformOperation, TOperation> && std::is_constructible_v<TOperation, decltype(defaultValue)>,
-    std::shared_ptr<TransformInterpolator>> {
+    std::shared_ptr<StyleOperationInterpolator>> {
   return std::make_shared<TransformOperationInterpolator<TOperation>>(std::make_shared<TOperation>(defaultValue));
 }
 
 template <typename TOperation>
 auto transformOp(const auto &defaultValue, ResolvableValueInterpolatorConfig config) -> std::enable_if_t<
     std::is_base_of_v<TransformOperation, TOperation> && std::is_constructible_v<TOperation, decltype(defaultValue)> &&
-        ResolvableTransformOp<TOperation>,
-    std::shared_ptr<TransformInterpolator>> {
+        ResolvableOp<TOperation>,
+    std::shared_ptr<StyleOperationInterpolator>> {
   return std::make_shared<TransformOperationInterpolator<TOperation>>(
+      std::make_shared<TOperation>(defaultValue), std::move(config));
+}
+
+/**
+ * Filter operation interpolator factories
+ */
+template <typename TOperation>
+auto filterOp(const auto &defaultValue) -> std::enable_if_t<
+    std::is_base_of_v<FilterOperation, TOperation> && std::is_constructible_v<TOperation, decltype(defaultValue)>,
+    std::shared_ptr<StyleOperationInterpolator>> {
+  return std::make_shared<FilterOperationInterpolator<TOperation>>(std::make_shared<TOperation>(defaultValue));
+}
+
+template <typename TOperation>
+auto filterOp(const auto &defaultValue, ResolvableValueInterpolatorConfig config) -> std::enable_if_t<
+    std::is_base_of_v<FilterOperation, TOperation> && std::is_constructible_v<TOperation, decltype(defaultValue)> &&
+        ResolvableOp<TOperation>,
+    std::shared_ptr<StyleOperationInterpolator>> {
+  return std::make_shared<FilterOperationInterpolator<TOperation>>(
       std::make_shared<TOperation>(defaultValue), std::move(config));
 }
 
@@ -156,6 +178,12 @@ std::shared_ptr<PropertyInterpolatorFactory> array(const InterpolatorFactoriesAr
  * Transform interpolators
  */
 std::shared_ptr<PropertyInterpolatorFactory> transforms(
-    const std::unordered_map<std::string, std::shared_ptr<TransformInterpolator>> &interpolators);
+    const std::unordered_map<std::string, std::shared_ptr<StyleOperationInterpolator>> &interpolators);
+
+/**
+* Filter interpolators
+*/
+std::shared_ptr<PropertyInterpolatorFactory> filters(
+    const std::unordered_map<std::string, std::shared_ptr<StyleOperationInterpolator>> &interpolators);
 
 } // namespace reanimated::css
