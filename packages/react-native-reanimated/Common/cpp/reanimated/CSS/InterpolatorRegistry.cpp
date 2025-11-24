@@ -39,6 +39,7 @@
 
 #include <string>
 #include <vector>
+#include <limits>
 
 namespace reanimated::css {
 
@@ -132,7 +133,7 @@ const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
           value<CSSDouble>(0)})},
     {"transform",
      transforms(
-         {{"perspective", transformOp<PerspectiveOperation>(0)}, // 0 - no perspective
+         {{"perspective", transformOp<PerspectiveOperation>(std::numeric_limits<double>::infinity())},
           {"rotate", transformOp<RotateOperation>("0deg")},
           {"rotateX", transformOp<RotateXOperation>("0deg")},
           {"rotateY", transformOp<RotateYOperation>("0deg")},

@@ -49,7 +49,7 @@ export default function Perspective() {
         },
         {
           description:
-            'The **default perspective** value is **0**, which means that there is no perspective applied. If you want to animate perspective, **make sure to set a value greater than 0 in all keyframes**. The example below shows that the perspective **is not animated** when not explicitly set to the perspective value.',
+            'Perspective interpolates even when it is specified in only one keyframe. This example shows how the animation behaves when perspective is added on the destination keyframe only.',
           examples: [
             {
               from: [{ rotateY: '30deg' }],
@@ -58,21 +58,34 @@ export default function Perspective() {
               to: [{ perspective: 100 }, { rotateY: '30deg' }],
             },
           ],
-          title: 'Zero Perspective',
+          title: 'Single-keyframe perspective',
         },
         {
           description:
-            'Negative perspective values are allowed (on **mobile**). They **invert** the view transformation relative to the **transformation origin** (e.g. invert the rotation direction).',
+            'Negative perspective values are allowed (not on the **web**). They **invert** the view transformation relative to the **transformation origin** (e.g. invert the rotation direction).',
           examples: [
             {
               from: [{ perspective: -20 }, { rotateY: '30deg' }],
               num: 12,
-              title: 'With X rotation',
+              title: 'With Y rotation',
               to: [{ perspective: -100 }, { rotateY: '30deg' }],
             },
           ],
           labelTypes: ['iOS', 'Android'],
           title: 'Negative Perspective',
+        },
+        {
+          description:
+            'Perspective can also be used in transform strings.',
+          examples: [
+            {
+              from: 'perspective(50px) rotateY(0deg)',
+              num: 55,
+              title: 'Transform string',
+              to: 'perspective(200px) rotateY(45deg)',
+            },
+          ],
+          title: 'Transform string',
         },
       ]}
     />

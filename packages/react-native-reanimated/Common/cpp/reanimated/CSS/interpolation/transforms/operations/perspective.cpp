@@ -1,19 +1,31 @@
 #include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
 #include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
 
+#include <cmath>
+#include <limits>
 #include <memory>
 
 namespace reanimated::css {
 
+double sanitizePerspectiveValue(double rawValue) {
+  if (rawValue == 0) {
+    return 1.0;
+  }
+  return rawValue;
+}
+
 PerspectiveOperation::PerspectiveOperation(const double value)
-    : TransformOperationBase<TransformOp::Perspective, CSSDouble>(CSSDouble(value)) {}
+    : TransformOperationBase<TransformOp::Perspective, CSSDouble>(CSSDouble(sanitizePerspectiveValue(value))) {}
 
 bool PerspectiveOperation::is3D() const {
   return true;
 }
 
 folly::dynamic PerspectiveOperation::valueToDynamic() const {
-  return value.value != 0 ? value.toDynamic() : folly::dynamic();
+  if (std::isinf(value.value)) {
+    return folly::dynamic();
+  }
+  return value.toDynamic();
 }
 
 TransformMatrix::Shared PerspectiveOperation::toMatrix(bool /* force3D */) const {
