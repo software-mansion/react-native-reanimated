@@ -1,5 +1,4 @@
-#ifndef RNWORKLETS_SERIALIZABLE_H
-#define RNWORKLETS_SERIALIZABLE_H
+#pragma once
 
 #include <worklets/Registries/WorkletRuntimeRegistry.h>
 
@@ -430,5 +429,3 @@ struct SerializationData {
 };
 
 } // namespace worklets
-
-#endif // RNWORKLETS_SERIALIZABLE_H

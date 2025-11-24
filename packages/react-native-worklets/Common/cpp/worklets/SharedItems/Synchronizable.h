@@ -1,5 +1,4 @@
-#ifndef RNWORKLETS_SYNCHRONIZABLE_H
-#define RNWORKLETS_SYNCHRONIZABLE_H
+#pragma once
 
 #include <jsi/jsi.h>
 #include <worklets/SharedItems/Serializable.h>
@@ -56,5 +55,3 @@ jsi::Function getSynchronizableUnpacker(jsi::Runtime &rt);
 std::shared_ptr<Synchronizable> extractSynchronizableOrThrow(jsi::Runtime &rt, const jsi::Value &value);
 
 }; // namespace worklets
-
-#endif // RNWORKLETS_SYNCHRONIZABLE_H

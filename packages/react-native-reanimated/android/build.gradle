@@ -111,6 +111,8 @@ def getReanimatedStaticFeatureFlags() {
     return featureFlags.collect { key, value -> "[${key}:${value}]" }.join("")
 }
 
+// apply from: "./fix-prefab.gradle"
+
 if (isNewArchitectureEnabled()) {
     apply plugin: "com.facebook.react"
 }
@@ -314,12 +316,13 @@ task prepareReanimatedHeadersForPrefabs(type: Copy) {
     into(reanimatedPrefabHeadersDir)
 }
 
-task cleanCmakeCache() {
-    tasks.getByName("clean").dependsOn(cleanCmakeCache)
-    doFirst {
-        delete "${projectDir}/.cxx"
-    }
-}
+// tasks.register("cleanCmakeCache", Delete) {
+//     delete(layout.projectDirectory.dir(".cxx"))
+//     delete(layout.projectDirectory.dir("build"))
+// }
+// tasks.named("clean") {
+//     dependsOn("cleanCmakeCache")
+// }
 
 repositories {
     mavenCentral()

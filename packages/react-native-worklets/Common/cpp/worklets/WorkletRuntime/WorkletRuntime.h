@@ -1,5 +1,4 @@
-#ifndef RNWORKLETS_WORKLETRUNTIME_H
-#define RNWORKLETS_WORKLETRUNTIME_H
+#pragma once
 
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
@@ -216,5 +215,3 @@ inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Value &functi
 }
 
 } // namespace worklets
-
-#endif // RNWORKLETS_WORKLETRUNTIME_H

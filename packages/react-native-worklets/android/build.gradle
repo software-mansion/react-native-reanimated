@@ -1,5 +1,7 @@
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 import groovy.json.JsonSlurper
+
+import java.nio.file.Files
 import java.nio.file.Paths
 import org.apache.tools.ant.taskdefs.condition.Os
 
@@ -107,8 +109,19 @@ def HERMES_V1_ENABLED = safeAppExtGet("hermesV1Enabled", false)
 // Set version for prefab
 version WORKLETS_VERSION
 
-def workletsPrefabHeadersDir = project.file("$buildDir/prefab-headers/worklets")
+def workletsPrefabHeadersDir = project.file("${buildDir}/prefab-headers/worklets")
+workletsPrefabHeadersDir.mkdirs()
 def RNWorkletsPrefabHeadersDir = project.file("${buildDir}/prefab-headers/RNWorklets")
+RNWorkletsPrefabHeadersDir.mkdirs()
+def RNWorkletsPrefabHeadersAPIDir = project.file("${buildDir}/prefab-headers/RNWorklets/RNWorklets")
+RNWorkletsPrefabHeadersAPIDir.mkdirs()
+// def rootProjectBuildDir = rootProject.hasProperty("buildDir") ? rootProject.buildDir : "${rootProject.projectDir}/build"
+// println("Root project build dir: ")
+// println(rootProject)
+// println(rootProject.hasProperty("buildDir"))
+// println(rootProject.buildDir)
+// println(rootProjectBuildDir)
+// println(rootProject.projectDir)
 
 def JS_RUNTIME = {
     // Override JS runtime with environment variable
@@ -151,6 +164,8 @@ apply plugin: "com.android.library"
 apply plugin: "maven-publish"
 apply plugin: "de.undercouch.download"
 
+apply from: "./fix-prefab.gradle"
+
 
 android {
     compileSdkVersion safeExtGet("compileSdkVersion", 34)
@@ -173,7 +188,13 @@ android {
     prefab {
         worklets {
             headers workletsPrefabHeadersDir.absolutePath
+            headerOnly false
+            // headers RNWorkletsPrefabHeadersDir.absolutePath
+        }
+        RNWorklets {
+            // headers RNWorkletsHeadersDir.absolutePath
             headers RNWorkletsPrefabHeadersDir.absolutePath
+            headerOnly true
         }
     }
 
@@ -201,8 +222,10 @@ android {
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
                         "-DWORKLETS_FEATURE_FLAGS=${WORKLETS_FEATURE_FLAGS}",
                         "-DHERMES_V1_ENABLED=${HERMES_V1_ENABLED}"
+                        // ,
+                        // "-DRNWORKLETS_HEADERS_DIR=${toPlatformFileString(RNWorkletsHeadersDir.path)}"
                 abiFilters (*reactNativeArchitectures())
-                targets("worklets")
+                targets("worklets", "RNWorklets")
             }
         }
 
@@ -312,33 +335,84 @@ task assertNewArchitectureEnabledTask {
 
 preBuild.dependsOn(assertNewArchitectureEnabledTask)
 
-task prepareWorkletsHeadersForPrefabs(type: Copy) {
-    from("$projectDir/src/main/cpp")
-    from("$projectDir/../Common/cpp")
-    include("worklets/**/*.h")
-    into(workletsPrefabHeadersDir)
-
-    // Pack public headers to RNWorklets headers dir
-    from("$projectDir/../Common/cpp/worklets/RunLoop/") {
-        include("AsyncQueue.h")
-    }
-    from("$projectDir/../Common/cpp/worklets/WorkletRuntime/") {
-        include("WorkletRuntime.h")
-    }
-    from("$projectDir/../Common/cpp/worklets/SharedItems/") {
-        include("Serializable.h")
-        include("Synchronizable.h")
-    }
-    into(RNWorkletsPrefabHeadersDir)
-
-}
-
-task cleanCmakeCache() {
-    tasks.getByName("clean").dependsOn(cleanCmakeCache)
+//tasks.register('prepareWorkletsHeadersForPrefabs',) {
+task prepareWorkletsHeadersForPrefabs {
     doFirst {
-        delete "${projectDir}/.cxx"
+        workletsPrefabHeadersDir.mkdirs()
+        RNWorkletsPrefabHeadersDir.mkdirs()
+        RNWorkletsPrefabHeadersAPIDir.mkdirs()
+
+//        inputs.files(fileTree("$projectDir/src/main/cpp") {
+//            include '**/worklets/**/*.h'
+//        })
+//        inputs.files(fileTree("$projectDir/../Common/cpp") {
+//            include '**/worklets/**/*.h'
+//        })
+        // inputs.files([
+        //         file("$projectDir/../Common/cpp/worklets/RunLoop/AsyncQueue.h"),
+        //         file("$projectDir/../Common/cpp/worklets/WorkletRuntime/WorkletRuntime.h"),
+        //         file("$projectDir/../Common/cpp/worklets/SharedItems/Serializable.h"),
+        //         file("$projectDir/../Common/cpp/worklets/SharedItems/Synchronizable.h")
+        // ])
+
+        def sourceDir1 = file("$projectDir/src/main/cpp")
+        def sourceDir2 = file("$projectDir/../Common/cpp")
+
+        [sourceDir1, sourceDir2].each { sourceDir ->
+            if (sourceDir.exists()) {
+                sourceDir.eachFileRecurse { sourceFile ->
+                    if (sourceFile.isFile() && sourceFile.path.contains("worklets") && sourceFile.name.endsWith(".h")) {
+                        def relativePath = sourceDir.toPath().relativize(sourceFile.toPath())
+                        def targetFile = file("${workletsPrefabHeadersDir}/${relativePath}")
+
+                        targetFile.parentFile.mkdirs()
+
+                        if (targetFile.exists()) {
+                            targetFile.delete()
+                        }
+
+                        Files.createSymbolicLink(
+                                targetFile.toPath(),
+                                sourceFile.toPath()
+                        )
+                    }
+                }
+            }
+        }
+
+        def sourceFiles = [
+                file("$projectDir/../Common/cpp/worklets/RunLoop/AsyncQueue.h"),
+                file("$projectDir/../Common/cpp/worklets/WorkletRuntime/WorkletRuntime.h"),
+                file("$projectDir/../Common/cpp/worklets/SharedItems/Serializable.h"),
+                file("$projectDir/../Common/cpp/worklets/SharedItems/Synchronizable.h")
+        ]
+
+        sourceFiles.each { sourceFile ->
+            def targetFile = file("${RNWorkletsPrefabHeadersAPIDir}/${sourceFile.name}")
+
+            targetFile.parentFile.mkdirs()
+
+            if (targetFile.exists()) {
+                targetFile.delete()
+            }
+
+            Files.createSymbolicLink(
+                    targetFile.toPath(),
+                    sourceFile.toPath()
+            )
+        }
+
+//        outputs.dir(workletsPrefabHeadersDir)
+//        outputs.dir(RNWorkletsPrefabHeadersDir)
     }
 }
+
+// tasks.register("cleanCmakeCache", Delete) {
+//     delete(layout.projectDirectory.dir(".cxx"))
+// }
+// tasks.named("clean") {
+//     dependsOn("cleanCmakeCache")
+// }
 
 repositories {
     mavenCentral()
