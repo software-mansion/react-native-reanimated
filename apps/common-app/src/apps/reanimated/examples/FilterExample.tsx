@@ -105,6 +105,7 @@ export default function FilterExample() {
   const createAnimatedFilterStyle = (
     filterType: (typeof FILTER_TYPES)[number]
   ) => {
+    // @ts-ignore
     return useAnimatedStyle(() => {
       const filterValue = getAnimatedFilterStyle(
         sv.value,
