@@ -33,7 +33,7 @@ jobs:
       - name: Install React Native
         run: yarn add @react-native-community/cli
       - name: Create app
-        run: yarn rnc-cli init ${{ env.APP_NAME }} --pm yarn --skip-install --install-pods false --skip-git-init --version 0.81
+        run: yarn rnc-cli init ${{ env.APP_NAME }} --version 0.81 --pm yarn --skip-install --install-pods false --skip-git-init --version 0.81
       - name: Setup Yarn Modern in app
         working-directory: ${{ env.APP_NAME }}
         run: |
