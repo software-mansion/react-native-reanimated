@@ -127,65 +127,19 @@ import AnimatedKeyboardSrc from '!!raw-loader!@site/src/examples/AnimatedKeyboar
 
 ## Migration guide
 
-As of `react-native-reanimated` **4.x** the `useAnimatedKeyboard` hook has been deprecated in favor of the more robust and feature-complete [keyboard](https://kirillzyusko.github.io/react-native-keyboard-controller/) library. This guide walks you through the migration process.
+As of `react-native-reanimated` **4.x** the `useAnimatedKeyboard` hook has been deprecated due to persistent bugs on iOS 26. To address this, we recommend migrating to the [react-native-keyboard-controller](https://kirillzyusko.github.io/react-native-keyboard-controller/) library, which offers a more robust and feature-complete solution for handling keyboard interactions. This guide walks you through the migration process.
 
 ### Step 1: Install `react-native-keyboard-controller`
 
 Follow the official installation instructions in the [installation guide](https://kirillzyusko.github.io/react-native-keyboard-controller/docs/installation).
 
-### Step 2: Add a compatibility wrapper
+### Step 2: Use a compatibility wrapper
 
-To make migration easier, you can drop in a small compatibility layer:
-
-```ts
-import { useKeyboardHandler } from 'react-native-keyboard-controller';
-import { useSharedValue } from 'react-native-reanimated';
-
-export const KeyboardState = {
-  UNKNOWN: 0,
-  OPENING: 1,
-  OPEN: 2,
-  CLOSING: 3,
-  CLOSED: 4,
-};
-
-export const useAnimatedKeyboard = () => {
-  const height = useSharedValue(0);
-  const state = useSharedValue(KeyboardState.UNKNOWN);
-
-  useKeyboardHandler(
-    {
-      onStart: (e) => {
-        'worklet';
-
-        state.set(e.height > 0 ? KeyboardState.OPENING : KeyboardState.CLOSING);
-      },
-      onMove: (e) => {
-        'worklet';
-
-        height.set(e.height);
-      },
-      onEnd: (e) => {
-        'worklet';
-
-        state.set(e.height > 0 ? KeyboardState.OPEN : KeyboardState.CLOSED);
-        height.set(e.height);
-      },
-    },
-    []
-  );
-
-  return { height, state };
-};
-```
-
-### Step 3: Update imports
-
-Replace your existing imports with the compat layer:
+To make migration easier, you can use a compatibility layer. For that just replace your existing imports with the compat layer:
 
 ```diff
 - import { useAnimatedKeyboard, KeyboardState } from 'react-native-reanimated';
-+ import { useAnimatedKeyboard, KeyboardState } from './path-to-compat-layer';
++ import { useAnimatedKeyboard, KeyboardState } from 'react-native-keyboard-controller';
 ```
 
 And that’s it 🎉
