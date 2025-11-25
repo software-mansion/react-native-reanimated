@@ -4,7 +4,6 @@
 #include <folly/dynamic.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
-
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 
 #include <functional>
