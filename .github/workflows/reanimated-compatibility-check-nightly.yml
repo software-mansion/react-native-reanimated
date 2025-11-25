@@ -1,6 +1,4 @@
 name: Reanimated compatibility check [Nightly]
-env:
-  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     types: [opened, synchronize, edited, labeled, unlabeled]
@@ -70,6 +68,8 @@ jobs:
           yarn set version berry
           yarn config set nodeLinker node-modules
       - name: Install Reanimated
+        env:
+          YARN_ENABLE_HARDENED_MODE: 0 
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
       - name: Install Pods
