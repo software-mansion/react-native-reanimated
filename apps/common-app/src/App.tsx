@@ -30,6 +30,12 @@ export default function App() {
   const opacity = useSharedValue(1);
   const borderRadius = useSharedValue(0);
 
+  // Individual border radius values
+  const borderTopLeftRadius = useSharedValue(0);
+  const borderTopRightRadius = useSharedValue(0);
+  const borderBottomLeftRadius = useSharedValue(0);
+  const borderBottomRightRadius = useSharedValue(0);
+
   // Animation functions
   const animateTranslateX = () => {
     translateX.value = withSpring(translateX.value === 0 ? 100 : 0);
@@ -68,6 +74,67 @@ export default function App() {
   const animateBorderRadius = () => {
     borderRadius.value = withSpring(
       borderRadius.value === 0 ? SQUARE_SIZE / 2 : 0
+    );
+  };
+
+  // Individual border radius animation functions
+  const animateTopLeftRadius = () => {
+    borderTopLeftRadius.value = withSpring(
+      borderTopLeftRadius.value === 0 ? 30 : 0
+    );
+  };
+
+  const animateTopRightRadius = () => {
+    borderTopRightRadius.value = withSpring(
+      borderTopRightRadius.value === 0 ? 30 : 0
+    );
+  };
+
+  const animateBottomLeftRadius = () => {
+    borderBottomLeftRadius.value = withSpring(
+      borderBottomLeftRadius.value === 0 ? 30 : 0
+    );
+  };
+
+  const animateBottomRightRadius = () => {
+    borderBottomRightRadius.value = withSpring(
+      borderBottomRightRadius.value === 0 ? 30 : 0
+    );
+  };
+
+  const animateTopRadius = () => {
+    borderTopLeftRadius.value = withSpring(
+      borderTopLeftRadius.value === 0 ? 25 : 0
+    );
+    borderTopRightRadius.value = withSpring(
+      borderTopRightRadius.value === 0 ? 25 : 0
+    );
+  };
+
+  const animateBottomRadius = () => {
+    borderBottomLeftRadius.value = withSpring(
+      borderBottomLeftRadius.value === 0 ? 25 : 0
+    );
+    borderBottomRightRadius.value = withSpring(
+      borderBottomRightRadius.value === 0 ? 25 : 0
+    );
+  };
+
+  const animateLeftRadius = () => {
+    borderTopLeftRadius.value = withSpring(
+      borderTopLeftRadius.value === 0 ? 25 : 0
+    );
+    borderBottomLeftRadius.value = withSpring(
+      borderBottomLeftRadius.value === 0 ? 25 : 0
+    );
+  };
+
+  const animateRightRadius = () => {
+    borderTopRightRadius.value = withSpring(
+      borderTopRightRadius.value === 0 ? 25 : 0
+    );
+    borderBottomRightRadius.value = withSpring(
+      borderBottomRightRadius.value === 0 ? 25 : 0
     );
   };
 
@@ -111,6 +178,10 @@ export default function App() {
     skewY.value = withSpring('0deg');
     opacity.value = withTiming(1);
     borderRadius.value = withSpring(0);
+    borderTopLeftRadius.value = withSpring(0);
+    borderTopRightRadius.value = withSpring(0);
+    borderBottomLeftRadius.value = withSpring(0);
+    borderBottomRightRadius.value = withSpring(0);
   };
 
   // Animated style
@@ -126,6 +197,10 @@ export default function App() {
       ],
       opacity: opacity.value,
       borderRadius: borderRadius.value,
+      borderTopLeftRadius: borderTopLeftRadius.value,
+      borderTopRightRadius: borderTopRightRadius.value,
+      borderBottomLeftRadius: borderBottomLeftRadius.value,
+      borderBottomRightRadius: borderBottomRightRadius.value,
     };
   });
 
@@ -138,6 +213,14 @@ export default function App() {
     { title: 'Skew Y', onPress: animateSkewY },
     { title: 'Opacity', onPress: animateOpacity },
     { title: 'Border Radius', onPress: animateBorderRadius },
+    { title: 'Top Left', onPress: animateTopLeftRadius },
+    { title: 'Top Right', onPress: animateTopRightRadius },
+    { title: 'Bottom Left', onPress: animateBottomLeftRadius },
+    { title: 'Bottom Right', onPress: animateBottomRightRadius },
+    { title: 'Top Sides', onPress: animateTopRadius },
+    { title: 'Bottom Sides', onPress: animateBottomRadius },
+    { title: 'Left Sides', onPress: animateLeftRadius },
+    { title: 'Right Sides', onPress: animateRightRadius },
     { title: 'Sequence', onPress: animateSequence },
     { title: 'Elastic', onPress: animateElastic },
     { title: 'Bounce', onPress: animateBounce },
@@ -153,7 +236,9 @@ export default function App() {
       <ScrollView
         style={styles.buttonsContainer}
         showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Reanimated Transform Examples</Text>
+        <Text style={styles.title}>
+          Reanimated Transform & Border Radius Examples
+        </Text>
         <View style={styles.buttonGrid}>
           {buttons.map((button, index) => (
             <TouchableOpacity
@@ -192,6 +277,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    // borderWidth: 1,
+    // borderColor: '#000000',
   },
   buttonsContainer: {
     flex: 1,

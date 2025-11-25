@@ -594,18 +594,69 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
   AnimationMutations mutations;
   for (auto &[node, dynamic] : updatesBatch) {
     AnimatedPropsBuilder builder;
+    CascadedBorderRadii borderRadii{};
+
     for (const auto &pair : dynamic.items()) {
       const auto &name = pair.first.getString();
+      printf("prop: %s \n", name.c_str());
       auto nameHash = RAW_PROPS_KEY_HASH(name);
+
       switch (nameHash) {
         case RAW_PROPS_KEY_HASH("opacity"):
           builder.setOpacity(pair.second.asDouble());
           break;
 
-        case RAW_PROPS_KEY_HASH("borderRadius"): {
-          CascadedBorderRadii c({.all = {{(float)pair.second.asDouble(), UnitType::Point}}});
-          builder.setBorderRadii(c);
-        } break;
+        case RAW_PROPS_KEY_HASH("borderRadius"):
+          borderRadii.all = {(float)pair.second.asDouble(), UnitType::Point};
+          break;
+
+        case RAW_PROPS_KEY_HASH("borderTopRightRadius"):
+          borderRadii.topRight = {(float)pair.second.asDouble(), UnitType::Point};
+          break;
+
+        case RAW_PROPS_KEY_HASH("borderTopLeftRadius"):
+          borderRadii.topLeft = {(float)pair.second.asDouble(), UnitType::Point};
+          break;
+
+        case RAW_PROPS_KEY_HASH("borderBottomRightRadius"):
+          borderRadii.bottomRight = {(float)pair.second.asDouble(), UnitType::Point};
+          break;
+
+        case RAW_PROPS_KEY_HASH("borderBottomLeftRadius"):
+          borderRadii.bottomLeft = {(float)pair.second.asDouble(), UnitType::Point};
+          break;
+
+        case RAW_PROPS_KEY_HASH("borderTopStartRadius"):
+          borderRadii.topStart = {(float)pair.second.asDouble(), UnitType::Point};
+          break;
+
+        case RAW_PROPS_KEY_HASH("borderTopEndRadius"):
+          borderRadii.topEnd = {(float)pair.second.asDouble(), UnitType::Point};
+          break;
+
+        case RAW_PROPS_KEY_HASH("borderBottomStartRadius"):
+          borderRadii.bottomStart = {(float)pair.second.asDouble(), UnitType::Point};
+          break;
+
+        case RAW_PROPS_KEY_HASH("borderBottomEndRadius"):
+          borderRadii.bottomEnd = {(float)pair.second.asDouble(), UnitType::Point};
+          break;
+
+        case RAW_PROPS_KEY_HASH("borderStartStartRadius"):
+          borderRadii.startStart = {(float)pair.second.asDouble(), UnitType::Point};
+          break;
+
+        case RAW_PROPS_KEY_HASH("borderStartEndRadius"):
+          borderRadii.startEnd = {(float)pair.second.asDouble(), UnitType::Point};
+          break;
+
+        case RAW_PROPS_KEY_HASH("borderEndStartRadius"):
+          borderRadii.endStart = {(float)pair.second.asDouble(), UnitType::Point};
+          break;
+
+        case RAW_PROPS_KEY_HASH("borderEndEndRadius"):
+          borderRadii.endEnd = {(float)pair.second.asDouble(), UnitType::Point};
+          break;
 
         case RAW_PROPS_KEY_HASH("width"):
           builder.setWidth(yoga::Style::SizeLength::points(pair.second.asDouble()));
@@ -617,12 +668,10 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
 
         case RAW_PROPS_KEY_HASH("transform"): {
           Transform t;
-          //          printf("%s \n", folly::toJson(pair.second).c_str());
 
           for (int i = 0; i < pair.second.size(); i++) {
             const auto &transformObject = pair.second.at(i);
             for (const auto &transform : transformObject.items()) {
-              printf("%s \n", transform.first.asString().c_str());
               if (transform.first.asString() == "translateX") {
                 t = t * t.Translate(transform.second.asDouble(), 0, 0);
               } else if (transform.first.asString() == "translateY") {
@@ -654,10 +703,12 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
         }
 
         default:
-          printf("AnimationMutations: Unsupported prop");
+          printf("AnimationMutations: Unsupported prop \n");
       }
     }
 
+    // TODO: This shouldn't be set there, but leaving it for now
+    builder.setBorderRadii(borderRadii);
     mutations.push_back(AnimationMutation{node->getTag(), &node->getFamily(), builder.get()});
   }
 
