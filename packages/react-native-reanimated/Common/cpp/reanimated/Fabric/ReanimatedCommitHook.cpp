@@ -30,7 +30,7 @@ ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
 
 void ReanimatedCommitHook::maybeInitializeLayoutAnimations(SurfaceId surfaceId) {
   auto lock = std::unique_lock<std::mutex>(mutex_);
-  if (surfaceId > currentMaxSurfaceId_ && layoutAnimationsProxy_) {
+  if (surfaceId > currentMaxSurfaceId_) {
     // when a new surfaceId is observed we call setMountingOverrideDelegate
     // for all yet unseen surfaces
     uiManager_->getShadowTreeRegistry().enumerate(
