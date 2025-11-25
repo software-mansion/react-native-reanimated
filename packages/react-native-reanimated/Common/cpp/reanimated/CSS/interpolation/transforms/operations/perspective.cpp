@@ -1,8 +1,8 @@
 #include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
 #include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
 
+#include <algorithm>
 #include <cmath>
-#include <limits>
 #include <memory>
 
 namespace reanimated::css {
