@@ -143,16 +143,12 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
     switch (mutation.type) {
       case ShadowViewMutation::Update: {
         auto &node = lightNodes_[mutation.newChildShadowView.tag];
-        if (!node) {
-          node = std::make_shared<LightNode>();
-        }
+        react_native_assert(node && "LightNode not found");
         node->previous = mutation.oldChildShadowView;
 #ifdef ANDROID
         if (node->current.props) {
-          // on android rawProps are used to store the diffed props
-          // so we need to merge them
-          // this should soon be replaced in RN with Props 2.0 (the diffing will
-          // be done at the end of the pipeline)
+          // On android rawProps are used to store the diffed props so we need to merge them
+          // This should soon be replaced in RN with Props 2.0 (the diffing will be done at the end of the pipeline)
           auto &currentRawProps = node->current.props->rawProps;
           auto mergedRawProps = folly::dynamic::merge(currentRawProps, mutation.newChildShadowView.props->rawProps);
           node->current = mutation.newChildShadowView;
