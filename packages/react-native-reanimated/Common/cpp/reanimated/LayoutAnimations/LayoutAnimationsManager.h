@@ -25,6 +25,7 @@ using namespace facebook;
 using namespace worklets;
 using SharedTag = std::string;
 
+// [0] is before and [1] is after (best to use BeforeOrAfter enum)
 struct Transition {
   ShadowView snapshot[2];
   Tag parentTag[2] = {0, 0};
