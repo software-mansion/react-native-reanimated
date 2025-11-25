@@ -1,25 +1,17 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
+#include <react/renderer/uimanager/UIManager.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
+#include <worklets/Tools/UIScheduler.h>
 
 #include <memory>
 #include <optional>
 #include <unordered_map>
 #include <vector>
-
-#include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <worklets/Tools/UIScheduler.h>
-
-namespace facebook {
-namespace react {
-class CallInvoker;
-class ShadowNode;
-class UIManager;
-} // namespace react
-} // namespace facebook
 
 namespace reanimated {
 
