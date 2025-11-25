@@ -160,7 +160,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         }
 #else
         node->current = mutation.newChildShadowView;
-#endif
+#endif // ANDROID
         auto tag = mutation.newChildShadowView.tag;
         if (layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
           layout_.push_back(node);
@@ -170,9 +170,9 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         break;
       }
       case ShadowViewMutation::Create: {
-        auto &node = lightNodes_[mutation.newChildShadowView.tag];
-        node = std::make_shared<LightNode>();
+        const auto &node = std::make_shared<LightNode>();
         node->current = mutation.newChildShadowView;
+        lightNodes_[mutation.newChildShadowView.tag] = node;
         filteredMutations.push_back(mutation);
         break;
       }
