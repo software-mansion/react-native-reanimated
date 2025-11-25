@@ -101,6 +101,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
 }
 
 bool LayoutAnimationsProxy_Experimental::shouldOverridePullTransaction() const {
+  // we need to listen to every possible mutation to keep the light tree updated
   return true;
 }
 
