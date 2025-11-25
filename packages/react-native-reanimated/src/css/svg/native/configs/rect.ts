@@ -15,5 +15,4 @@ export const SVG_RECT_PROPERTIES_CONFIG: SvgStyleBuilderConfig<RectProps> = {
   ry: true,
   width: true,
   height: true,
-  opacity: true,
 };
