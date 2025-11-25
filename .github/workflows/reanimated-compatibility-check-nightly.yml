@@ -1,6 +1,4 @@
 name: Reanimated compatibility check [Nightly]
-env:
-  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     types: [opened, synchronize, edited, labeled, unlabeled]
@@ -32,6 +30,7 @@ jobs:
           ]
       fail-fast: false
     env:
+      YARN_ENABLE_HARDENED_MODE: 0
       APP_NAME: app
       RCT_NEW_ARCH_ENABLED: ${{ matrix.react-native.architecture == 'Fabric' && '1' || '0' }}
     concurrency:
@@ -66,8 +65,8 @@ jobs:
         # For convenience, sometimes there are vague issues with RN CLI and Yarn Legacy on the runner.
         working-directory: ${{ env.APP_NAME }}
         run: |
-          yarn set version berry
           touch yarn.lock
+          yarn set version berry
           yarn config set nodeLinker node-modules
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
