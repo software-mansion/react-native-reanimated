@@ -314,6 +314,7 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
 
     if (startAnimationsRecursively(node, filteredMutations, config)) {
       auto parent = node->parent.lock();
+      react_native_assert(parent && "Parent node is nullptr");
       // TODO (future): figure out a better way to handle this
       // Currently we remove each view, and then if we want to animate it, reinsert it at the end.
       // This is nice, but introduces extra mutations (which could have some side effects, like making a snapshot in RNScreens),
@@ -339,6 +340,7 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
   for (auto node : deadNodes) {
     if (node->state != DELETED) {
       auto parent = node->parent.lock();
+      react_native_assert(parent && "Parent node is nullptr");
       auto index = parent->removeChild(node);
       react_native_assert(index != -1 && "Dead node not found");
 
@@ -420,7 +422,10 @@ void LayoutAnimationsProxy_Experimental::endAnimationsRecursively(
     }
   }
   node->children.clear();
-  mutations.push_back(ShadowViewMutation::RemoveMutation(node->parent.lock()->current.tag, node->current, index));
+
+  const auto &parent = node->parent.lock();
+  react_native_assert(parent && "Parent node is nullptr");
+  mutations.push_back(ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, index));
   mutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
 }
 
@@ -432,6 +437,7 @@ void LayoutAnimationsProxy_Experimental::maybeDropAncestors(
   }
 
   auto parent = node->parent.lock();
+  react_native_assert(parent && "Parent node is nullptr");
   auto index = parent->removeChild(node);
   react_native_assert(index != -1 && "Child node not found");
 
@@ -439,7 +445,7 @@ void LayoutAnimationsProxy_Experimental::maybeDropAncestors(
   maybeCancelAnimation(node->current.tag);
   cleanupMutations.push_back(ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, index));
   cleanupMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
-  maybeDropAncestors(node->parent.lock(), cleanupMutations);
+  maybeDropAncestors(parent, cleanupMutations);
 }
 
 const ComponentDescriptor &LayoutAnimationsProxy_Experimental::getComponentDescriptorForShadowView(
@@ -655,7 +661,9 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
   const auto &props = newChildShadowView.props;
   auto &viewProps = static_cast<const ViewProps &>(*props);
   const auto opacity = viewProps.opacity;
-  const auto parentTag = node->parent.lock()->current.tag;
+  const auto &parent = node->parent.lock();
+  react_native_assert(parent && "Parent node is nullptr");
+  const auto parentTag = parent->current.tag;
 
   uiScheduler_->scheduleOnUI(
       [weakThis = weak_from_this(), finalView, currentView, newChildShadowView, parentTag, opacity]() {
@@ -698,7 +706,9 @@ void LayoutAnimationsProxy_Experimental::startExitingAnimation(const std::shared
   auto &oldChildShadowView = node->current;
   const auto surfaceId = oldChildShadowView.surfaceId;
   const auto tag = oldChildShadowView.tag;
-  const auto parentTag = node->parent.lock()->current.tag;
+  const auto &parent = node->parent.lock();
+  react_native_assert(parent && "Parent node is nullptr");
+  const auto parentTag = parent->current.tag;
 
   uiScheduler_->scheduleOnUI([weakThis = weak_from_this(), tag, parentTag, oldChildShadowView, surfaceId]() {
     auto strongThis = weakThis.lock();
@@ -738,7 +748,9 @@ void LayoutAnimationsProxy_Experimental::startLayoutAnimation(const std::shared_
   auto newChildShadowView = node->current;
   auto surfaceId = oldChildShadowView.surfaceId;
   const auto tag = oldChildShadowView.tag;
-  const auto parentTag = node->parent.lock()->current.tag;
+  const auto &parent = node->parent.lock();
+  react_native_assert(parent && "Parent node is nullptr");
+  const auto parentTag = parent->current.tag;
 
   uiScheduler_->scheduleOnUI(
       [weakThis = weak_from_this(), surfaceId, oldChildShadowView, newChildShadowView, parentTag, tag]() {
