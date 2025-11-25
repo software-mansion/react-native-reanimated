@@ -314,7 +314,12 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
 
     if (startAnimationsRecursively(node, filteredMutations, config)) {
       auto parent = node->parent.lock();
-      // TODO (future): handle this better
+      // TODO (future): figure out a better way to handle this
+      // Currently we remove each view, and then if we want to animate it, reinsert it at the end.
+      // This is nice, but introduces extra mutations (which could have some side effects, like making a snapshot in RNScreens),
+      // and it changes the zIndex of animated views, which is different from what've had.
+      // The biggest convenience of this approach is that it is much easier to maintain indices of animated views, and handle reparentings.
+
       auto current = node->current;
       if (layoutAnimations_.contains(node->current.tag)) {
         current = layoutAnimations_.at(node->current.tag).currentView;
