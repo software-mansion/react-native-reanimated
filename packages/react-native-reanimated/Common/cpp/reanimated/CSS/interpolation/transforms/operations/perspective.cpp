@@ -7,11 +7,13 @@
 
 namespace reanimated::css {
 
-double sanitizePerspectiveValue(double rawValue) {
-  if (rawValue == 0) {
-    return 1.0;
+double sanitizePerspectiveValue(double value) {
+  if (value < 0) {
+    // Round value between -1 and 0 to -1
+    return std::min(value, -1.0);
   }
-  return rawValue;
+  // Round value between 0 and 1 to 1
+  return std::max(value, 1.0);
 }
 
 PerspectiveOperation::PerspectiveOperation(const double value)
