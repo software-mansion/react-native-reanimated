@@ -1,5 +1,5 @@
 'use strict';
-import type { AnyRecord, PlainStyle } from '../../common';
+import type { AnyRecord, PlainStyle, UnknownRecord } from '../../common';
 import { logger } from '../../common';
 import { isSharedValue } from '../../isSharedValue';
 import type {
@@ -8,6 +8,7 @@ import type {
   CSSTransitionProperties,
   ExistingCSSAnimationProperties,
 } from '../types';
+import { deepEqual } from './equality';
 import {
   isAnimationProp,
   isCSSKeyframesObject,
@@ -94,4 +95,49 @@ function validateCSSTransitionProps(props: Partial<CSSTransitionProperties>) {
         'Have you forgotten to pass the transitionDuration?'
     );
   }
+}
+
+function hasValue(value: unknown): boolean {
+  return value !== null && value !== undefined;
+}
+
+export type ChangedProps = Partial<Record<string, { from: unknown; to: unknown }>>;
+
+export function getChangedProps(
+  previousStyle: UnknownRecord | null,
+  nextStyle: UnknownRecord | null,
+  allowedProperties: string[] | 'all'
+): ChangedProps | null {
+  if (!previousStyle || !nextStyle) {
+    return null;
+  }
+
+  const monitoredProperties = Array.isArray(allowedProperties)
+    ? allowedProperties
+    : Array.from(
+        new Set([
+          ...Object.keys(previousStyle),
+          ...Object.keys(nextStyle),
+        ])
+      );
+
+  const diff: AnyRecord = {};
+
+  for (const property of monitoredProperties) {
+    const nextValue = nextStyle[property];
+    const prevValue = previousStyle[property];
+
+    if (!hasValue(prevValue) || !hasValue(nextValue)) {
+      if (prevValue !== nextValue) {
+        diff[property] = { from: prevValue, to: nextValue };
+      }
+      continue;
+    }
+
+    if (!deepEqual(prevValue, nextValue)) {
+      diff[property] = { from: prevValue, to: nextValue };
+    }
+  }
+
+  return Object.keys(diff).length > 0 ? (diff as ChangedProps) : null;
 }

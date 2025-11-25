@@ -1,5 +1,6 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
+import type { UnknownRecord } from '../../../common';
 import type {
   CSSTransitionProperties,
   ICSSTransitionsManager,
@@ -14,44 +15,54 @@ import {
   updateCSSTransition,
 } from '../proxy';
 import type { NormalizedCSSTransitionConfig } from '../types';
+import { getChangedProps } from '../../utils';
 
 export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private readonly viewTag: number;
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
 
   private transitionConfig: NormalizedCSSTransitionConfig | null = null;
+  private previousStyle: UnknownRecord | null = null;
 
   constructor(shadowNodeWrapper: ShadowNodeWrapper, viewTag: number) {
     this.viewTag = viewTag;
     this.shadowNodeWrapper = shadowNodeWrapper;
   }
 
-  update(transitionProperties: CSSTransitionProperties | null): void {
-    if (!transitionProperties) {
-      this.detach();
-      return;
-    }
+  update(
+    transitionProperties: CSSTransitionProperties | null,
+    style: UnknownRecord | null
+  ): void {
+    const previousStyle = this.previousStyle;
+    this.previousStyle = style;
 
-    const transitionConfig =
-      normalizeCSSTransitionProperties(transitionProperties);
+    const transitionConfig = transitionProperties
+      ? normalizeCSSTransitionProperties(transitionProperties)
+      : null;
+
     if (!transitionConfig) {
       this.detach();
       return;
     }
 
-    if (this.transitionConfig) {
-      const configUpdates = getNormalizedCSSTransitionConfigUpdates(
-        this.transitionConfig,
-        transitionConfig
-      );
+    getChangedProps(previousStyle, style, transitionConfig.properties);
 
-      if (Object.keys(configUpdates).length > 0) {
-        this.transitionConfig = transitionConfig;
-        updateCSSTransition(this.viewTag, configUpdates);
-      }
-    } else {
+    if (!this.transitionConfig) {
       this.attachTransition(transitionConfig);
+      return;
     }
+
+    const configUpdates = getNormalizedCSSTransitionConfigUpdates(
+      this.transitionConfig,
+      transitionConfig
+    );
+
+    if (Object.keys(configUpdates).length > 0) {
+      this.transitionConfig = transitionConfig;
+      updateCSSTransition(this.viewTag, configUpdates);
+    }
+
+    this.previousStyle = style;
   }
 
   unmountCleanup(): void {
