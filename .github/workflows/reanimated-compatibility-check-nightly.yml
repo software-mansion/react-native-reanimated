@@ -30,7 +30,6 @@ jobs:
           ]
       fail-fast: false
     env:
-      YARN_ENABLE_HARDENED_MODE: 0
       APP_NAME: app
       RCT_NEW_ARCH_ENABLED: ${{ matrix.react-native.architecture == 'Fabric' && '1' || '0' }}
     concurrency:
@@ -69,6 +68,8 @@ jobs:
           yarn set version berry
           yarn config set nodeLinker node-modules
       - name: Install Reanimated
+        env:
+          YARN_ENABLE_HARDENED_MODE: 0 
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
       - name: Install Pods
