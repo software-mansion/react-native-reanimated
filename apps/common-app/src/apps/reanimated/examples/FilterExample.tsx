@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, Switch, View } from 'react-native';
 import Animated, {
   interpolateColor,
+  SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -48,12 +49,13 @@ const getAnimatedFilterStyle = (
       case 'blur':
         filterValue = `blur(${value * 10}px)`;
         break;
-      case 'dropShadow':
+      case 'dropShadow': {
         const offset = value * 10;
         const blur = value * 10;
         const color = interpolateColor(value, [0, 1], ['red', 'blue']);
         filterValue = `dropShadow(${offset}px ${offset}px ${blur}px ${color})`;
         break;
+      }
       default:
         filterValue = '';
     }
@@ -76,7 +78,7 @@ const getAnimatedFilterStyle = (
       case 'blur':
         filterValue = { blur: value * 10 };
         break;
-      case 'dropShadow':
+      case 'dropShadow': {
         filterValue = {
           dropShadow: {
             offsetX: value * 10,
@@ -86,11 +88,51 @@ const getAnimatedFilterStyle = (
           },
         };
         break;
+      }
       default:
         filterValue = {};
     }
   }
   return useStringFormat ? filterValue : [filterValue];
+};
+
+const useAnimatedFilterStyle = (
+  sharedValue: SharedValue<number>,
+  filterType: (typeof FILTER_TYPES)[number],
+  useStringFormat: boolean
+) => {
+  // @ts-ignore
+  return useAnimatedStyle(() => {
+    const filterValue = getAnimatedFilterStyle(
+      sharedValue.value,
+      filterType,
+      useStringFormat
+    );
+    return { filter: filterValue };
+  }, [filterType, useStringFormat]);
+};
+
+const FilterImageItem = ({
+  filterType,
+  sv,
+  useStringFormat,
+}: {
+  filterType: (typeof FILTER_TYPES)[number];
+  sv: SharedValue<number>;
+  useStringFormat: boolean;
+}) => {
+  const style = useAnimatedFilterStyle(sv, filterType, useStringFormat);
+
+  return (
+    <>
+      <Text style={styles.filterTitle}>{filterType}</Text>
+      <Animated.Image
+        source={balloonsImage}
+        // @ts-ignore
+        style={[styles.image, style]}
+      />
+    </>
+  );
 };
 
 export default function FilterExample() {
@@ -101,20 +143,6 @@ export default function FilterExample() {
     sv.value = 0;
     sv.value = withRepeat(withTiming(1, { duration: 500 }), -1, true);
   }, [sv]);
-
-  const createAnimatedFilterStyle = (
-    filterType: (typeof FILTER_TYPES)[number]
-  ) => {
-    // @ts-ignore
-    return useAnimatedStyle(() => {
-      const filterValue = getAnimatedFilterStyle(
-        sv.value,
-        filterType,
-        useStringFormat
-      );
-      return { filter: filterValue };
-    });
-  };
 
   return (
     <View style={styles.container}>
@@ -132,20 +160,14 @@ export default function FilterExample() {
       </View>
 
       <ScrollView contentContainerStyle={styles.contentContainer}>
-        {FILTER_TYPES.map((filterType) => {
-          const style = createAnimatedFilterStyle(filterType);
-
-          return (
-            <React.Fragment key={filterType}>
-              <Text style={styles.filterTitle}>{filterType}</Text>
-              <Animated.Image
-                source={balloonsImage}
-                // @ts-ignore
-                style={[styles.image, style]}
-              />
-            </React.Fragment>
-          );
-        })}
+        {FILTER_TYPES.map((filterType) => (
+          <FilterImageItem
+            key={filterType}
+            filterType={filterType}
+            sv={sv}
+            useStringFormat={useStringFormat}
+          />
+        ))}
       </ScrollView>
     </View>
   );
