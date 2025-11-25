@@ -66,8 +66,8 @@ jobs:
         # For convenience, sometimes there are vague issues with RN CLI and Yarn Legacy on the runner.
         working-directory: ${{ env.APP_NAME }}
         run: |
-          touch yarn.lock
           yarn set version berry
+          touch yarn.lock
           yarn config set nodeLinker node-modules
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
