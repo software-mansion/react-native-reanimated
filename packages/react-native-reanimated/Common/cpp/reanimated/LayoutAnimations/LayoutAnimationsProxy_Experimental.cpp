@@ -641,14 +641,12 @@ ShadowView LayoutAnimationsProxy_Experimental::maybeCreateLayoutAnimation(
   auto currentView = oldView;
   auto startView = oldView;
 
-  auto la = reanimated::LayoutAnimation{
+  layoutAnimations_[tag] = {
       .finalView = finalView,
       .currentView = currentView,
       .startView = startView,
       .parentTag = parentTag,
       .count = count};
-
-  layoutAnimations_.insert_or_assign(tag, std::move(la));
 
   return oldView;
 }
@@ -676,13 +674,12 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
         const auto tag = newChildShadowView.tag;
         {
           auto lock = std::unique_lock<std::recursive_mutex>(strongThis->mutex);
-          auto la = reanimated::LayoutAnimation{
+          strongThis->layoutAnimations_[tag] = {
               .finalView = newChildShadowView,
               .currentView = newChildShadowView,
               .startView = newChildShadowView,
               .parentTag = parentTag,
               .opacity = opacity};
-          strongThis->layoutAnimations_.insert_or_assign(tag, std::move(la));
           window = strongThis->surfaceManager.getWindow(newChildShadowView.surfaceId);
         }
 
