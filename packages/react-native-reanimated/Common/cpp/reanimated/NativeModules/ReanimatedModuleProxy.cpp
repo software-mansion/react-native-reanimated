@@ -702,6 +702,11 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
           break;
         }
 
+        case RAW_PROPS_KEY_HASH("backgroundColor"): {
+          builder.setBackgroundColor(SharedColor(static_cast<int>(pair.second.asInt())));
+          break;
+        }
+
         default:
           printf("AnimationMutations: Unsupported prop \n");
       }

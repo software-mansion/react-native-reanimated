@@ -15,6 +15,7 @@ import Animated, {
   withDelay,
   withRepeat,
   Easing,
+  interpolateColor,
 } from 'react-native-reanimated';
 
 const SQUARE_SIZE = 80;
@@ -35,6 +36,12 @@ export default function App() {
   const borderTopRightRadius = useSharedValue(0);
   const borderBottomLeftRadius = useSharedValue(0);
   const borderBottomRightRadius = useSharedValue(0);
+
+  // Additional animation values
+  const backgroundColor = useSharedValue(0);
+  const borderWidth = useSharedValue(0);
+  const shadowOpacity = useSharedValue(0.25);
+  const width = useSharedValue(SQUARE_SIZE);
 
   // Animation functions
   const animateTranslateX = () => {
@@ -169,6 +176,27 @@ export default function App() {
     );
   };
 
+  // New essential animations
+  const animateBackgroundColor = () => {
+    backgroundColor.value = withTiming(backgroundColor.value === 0 ? 1 : 0, {
+      duration: 800,
+    });
+  };
+
+  const animateBorderWidth = () => {
+    borderWidth.value = withSpring(borderWidth.value === 0 ? 5 : 0);
+  };
+
+  const animateShadow = () => {
+    shadowOpacity.value = withSpring(shadowOpacity.value === 0.25 ? 0.8 : 0.25);
+  };
+
+  const animateWidth = () => {
+    width.value = withSpring(
+      width.value === SQUARE_SIZE ? SQUARE_SIZE * 1.5 : SQUARE_SIZE
+    );
+  };
+
   const resetAll = () => {
     translateX.value = withSpring(0);
     translateY.value = withSpring(0);
@@ -182,6 +210,10 @@ export default function App() {
     borderTopRightRadius.value = withSpring(0);
     borderBottomLeftRadius.value = withSpring(0);
     borderBottomRightRadius.value = withSpring(0);
+    backgroundColor.value = withTiming(0);
+    borderWidth.value = withSpring(0);
+    shadowOpacity.value = withSpring(0.25);
+    width.value = withSpring(SQUARE_SIZE);
   };
 
   // Animated style
@@ -201,6 +233,18 @@ export default function App() {
       borderTopRightRadius: borderTopRightRadius.value,
       borderBottomLeftRadius: borderBottomLeftRadius.value,
       borderBottomRightRadius: borderBottomRightRadius.value,
+      backgroundColor: interpolateColor(
+        backgroundColor.value,
+        [0, 1],
+        ['#3498db', '#e74c3c']
+      ),
+      borderWidth: borderWidth.value,
+      borderColor: '#2c3e50',
+      shadowOpacity: shadowOpacity.value,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 8,
+      shadowColor: '#000',
+      width: width.value,
     };
   });
 
@@ -221,6 +265,10 @@ export default function App() {
     { title: 'Bottom Sides', onPress: animateBottomRadius },
     { title: 'Left Sides', onPress: animateLeftRadius },
     { title: 'Right Sides', onPress: animateRightRadius },
+    { title: 'Background', onPress: animateBackgroundColor },
+    { title: 'Border Width', onPress: animateBorderWidth },
+    { title: 'Shadow', onPress: animateShadow },
+    { title: 'Width', onPress: animateWidth },
     { title: 'Sequence', onPress: animateSequence },
     { title: 'Elastic', onPress: animateElastic },
     { title: 'Bounce', onPress: animateBounce },
@@ -236,9 +284,7 @@ export default function App() {
       <ScrollView
         style={styles.buttonsContainer}
         showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>
-          Reanimated Transform & Border Radius Examples
-        </Text>
+        <Text style={styles.title}>Reanimated Animation Examples</Text>
         <View style={styles.buttonGrid}>
           {buttons.map((button, index) => (
             <TouchableOpacity
