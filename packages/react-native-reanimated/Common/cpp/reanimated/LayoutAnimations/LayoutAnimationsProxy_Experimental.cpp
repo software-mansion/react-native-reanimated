@@ -646,7 +646,8 @@ ShadowView LayoutAnimationsProxy_Experimental::maybeCreateLayoutAnimation(
       .currentView = currentView,
       .startView = startView,
       .parentTag = parentTag,
-      .count = count};
+      .count = count,
+  };
 
   return oldView;
 }
@@ -679,7 +680,8 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
               .currentView = newChildShadowView,
               .startView = newChildShadowView,
               .parentTag = parentTag,
-              .opacity = opacity};
+              .opacity = opacity,
+          };
           window = strongThis->surfaceManager.getWindow(newChildShadowView.surfaceId);
         }
 
