@@ -387,10 +387,8 @@ export default class AnimatedComponent
     if (!getStaticFeatureFlag('ENABLE_SHARED_ELEMENT_TRANSITIONS')) {
       return;
     }
-    console.log('Configuring shared transition');
     if (!this.props.sharedTransitionTag) {
       if (this._sharedTransitionTag) {
-        console.log('Removing shared transition');
         updateLayoutAnimations(
           useNativeId ? this.reanimatedID : this.getComponentViewTag(),
           useNativeId
@@ -404,7 +402,6 @@ export default class AnimatedComponent
       }
       return;
     }
-    console.log('Setting shared transition');
     this._sharedTransitionTag = this.props.sharedTransitionTag;
     const sharedTransition =
       this.props.sharedTransitionStyle ??

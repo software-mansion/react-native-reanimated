@@ -197,10 +197,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
       ShadowViewMutationList &mutations,
       StartAnimationsRecursivelyConfig config) const;
   void endAnimationsRecursively(std::shared_ptr<LightNode> node, int index, ShadowViewMutationList &mutations) const;
-  void maybeDropAncestors(
-      std::shared_ptr<LightNode> node,
-      std::shared_ptr<LightNode> child,
-      ShadowViewMutationList &cleanupMutations) const;
+  void maybeDropAncestors(std::shared_ptr<LightNode> node, ShadowViewMutationList &cleanupMutations) const;
 
   const ComponentDescriptor &getComponentDescriptorForShadowView(const ShadowView &shadowView) const;
 

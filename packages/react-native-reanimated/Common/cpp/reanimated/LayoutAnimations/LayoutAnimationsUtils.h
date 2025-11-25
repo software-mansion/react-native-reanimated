@@ -81,14 +81,14 @@ struct LightNode {
   ExitingState state = ExitingState::UNDEFINED;
   std::weak_ptr<LightNode> parent;
   std::vector<std::shared_ptr<LightNode>> children;
-  int animatedChildrenCount = 0;
-  void removeChild(std::shared_ptr<LightNode> child) {
+  int removeChild(std::shared_ptr<LightNode> child) {
     for (int i = children.size() - 1; i >= 0; i--) {
       if (children[i]->current.tag == child->current.tag) {
         children.erase(children.begin() + i);
-        break;
+        return i;
       }
     }
+    return -1;
   }
 };
 
