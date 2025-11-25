@@ -6,6 +6,9 @@ on:
     - cron: '27 23 * * *' # at 23:27 every day
   workflow_dispatch:
 
+permissions:
+  id-token: write
+
 jobs:
   npm-reanimated-4-publish-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
@@ -13,7 +16,6 @@ jobs:
     with:
       option: --nightly
       publish_on_npm: true
-    secrets: inherit
 
   npm-reanimated-3-publish-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
@@ -23,4 +25,3 @@ jobs:
       publish_on_npm: true
       # Remember to update the branch on new minor releases.
       ref: 3.19-stable
-    secrets: inherit
