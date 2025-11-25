@@ -77,16 +77,4 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 #endif
 };
 
-inline std::optional<facebook::react::SurfaceId> LayoutAnimationsProxyCommon::onTransitionProgress(
-    int /*tag*/,
-    double /*progress*/,
-    bool /*isClosing*/,
-    bool /*isGoingForward*/) {
-  return std::nullopt;
-}
-
-inline std::optional<facebook::react::SurfaceId> LayoutAnimationsProxyCommon::onGestureCancel() {
-  return std::nullopt;
-}
-
 } // namespace reanimated

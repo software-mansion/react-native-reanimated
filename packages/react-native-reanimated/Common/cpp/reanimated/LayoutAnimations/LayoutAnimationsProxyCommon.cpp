@@ -1,5 +1,3 @@
-#ifdef ANDROID
-
 #include <ReactCommon/CallInvoker.h>
 #include <folly/dynamic.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
@@ -12,6 +10,17 @@
 #include <vector>
 
 namespace reanimated {
+
+std::optional<facebook::react::SurfaceId>
+LayoutAnimationsProxyCommon::onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward) {
+  return std::nullopt;
+}
+
+std::optional<facebook::react::SurfaceId> LayoutAnimationsProxyCommon::onGestureCancel() {
+  return std::nullopt;
+}
+
+#ifdef ANDROID
 
 const facebook::react::ShadowNode *findInShadowTreeByTag(const facebook::react::ShadowNode &node, Tag tag) {
   if (node.getTag() == tag) {
@@ -63,6 +72,6 @@ void LayoutAnimationsProxyCommon::restoreOpacityInCaseOfFlakyEnteringAnimation(S
   });
 }
 
-} // namespace reanimated
-
 #endif // ANDROID
+
+} // namespace reanimated
