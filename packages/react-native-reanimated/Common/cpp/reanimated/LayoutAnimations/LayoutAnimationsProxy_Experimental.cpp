@@ -221,8 +221,10 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         }
         break;
       }
-      default:
+      default: {
+        react_native_assert(false && "Unsupported mutation type");
         break;
+      }
     }
   }
 }
