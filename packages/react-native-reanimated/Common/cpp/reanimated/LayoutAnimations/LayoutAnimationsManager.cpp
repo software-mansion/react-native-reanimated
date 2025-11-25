@@ -95,13 +95,13 @@ void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int 
 
 void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, const int tag) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-  auto config = enteringAnimationsForNativeID_[nativeId];
+  const auto config = enteringAnimationsForNativeID_[nativeId];
   if (config) {
     enteringAnimations_.insert_or_assign(tag, config);
   }
   enteringAnimationsForNativeID_.erase(nativeId);
 
-  auto sharedTransitionConfig = sharedTransitionsForNativeID_[nativeId];
+  const auto sharedTransitionConfig = sharedTransitionsForNativeID_[nativeId];
   if (sharedTransitionConfig) {
     sharedTransitions_.insert_or_assign(tag, sharedTransitionConfig);
     sharedTransitionManager_->tagToName_[tag] = sharedTransitionManager_->nativeIDToName_[nativeId];
