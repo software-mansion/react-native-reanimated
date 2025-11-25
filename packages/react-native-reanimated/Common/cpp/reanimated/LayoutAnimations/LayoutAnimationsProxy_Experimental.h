@@ -28,6 +28,12 @@ class ReanimatedModuleProxy;
 using namespace facebook;
 using namespace reanimated;
 
+struct StartAnimationsRecursivelyConfig {
+  bool shouldRemoveSubviewsWithoutAnimations;
+  bool shouldAnimate;
+  bool isScreenPop;
+};
+
 struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
                                             public std::enable_shared_from_this<LayoutAnimationsProxy_Experimental> {
   mutable std::recursive_mutex mutex;
@@ -188,10 +194,8 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
 
   bool startAnimationsRecursively(
       std::shared_ptr<LightNode> node,
-      const bool shouldRemoveSubviewsWithoutAnimations,
-      const bool shouldAnimate,
-      const bool isScreenPop,
-      ShadowViewMutationList &mutations) const;
+      ShadowViewMutationList &mutations,
+      StartAnimationsRecursivelyConfig config) const;
   void endAnimationsRecursively(std::shared_ptr<LightNode> node, int index, ShadowViewMutationList &mutations) const;
   void maybeDropAncestors(
       std::shared_ptr<LightNode> node,

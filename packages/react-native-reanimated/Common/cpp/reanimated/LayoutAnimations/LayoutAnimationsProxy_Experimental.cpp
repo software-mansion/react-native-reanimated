@@ -309,7 +309,10 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
   for (auto it = roots.rbegin(); it != roots.rend(); it++) {
     auto &node = *it;
 
-    if (startAnimationsRecursively(node, true, true, false, filteredMutations)) {
+    StartAnimationsRecursivelyConfig config = {
+        .shouldRemoveSubviewsWithoutAnimations = true, .shouldAnimate = true, .isScreenPop = false};
+
+    if (startAnimationsRecursively(node, filteredMutations, config)) {
       auto parent = node->parent.lock();
       // TODO (future): handle this better
       auto current = node->current;
@@ -458,10 +461,9 @@ const ComponentDescriptor &LayoutAnimationsProxy_Experimental::getComponentDescr
 
 bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
     std::shared_ptr<LightNode> node,
-    bool shouldRemoveSubviewsWithoutAnimations,
-    bool shouldAnimate,
-    bool isScreenPop,
-    ShadowViewMutationList &mutations) const {
+    ShadowViewMutationList &mutations,
+    StartAnimationsRecursivelyConfig config) const {
+  auto &[shouldRemoveSubviewsWithoutAnimations, shouldAnimate, isScreenPop] = config;
   if (isRNSScreenOrStack(node)) {
     isScreenPop = true;
   }
@@ -488,8 +490,7 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
         endAnimationsRecursively(subNode, index, mutations);
         toBeRemoved.push_back(subNode);
       }
-    } else if (startAnimationsRecursively(
-                   subNode, shouldRemoveSubviewsWithoutAnimations, shouldAnimate, isScreenPop, mutations)) {
+    } else if (startAnimationsRecursively(subNode, mutations, config)) {
       hasAnimatedChildren = true;
     } else if (shouldRemoveSubviewsWithoutAnimations) {
       maybeCancelAnimation(subNode->current.tag);
