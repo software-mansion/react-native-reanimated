@@ -13,9 +13,6 @@ on:
       publish_on_npm:
         required: false
         type: boolean
-    secrets:
-      NODE_AUTH_TOKEN:
-        required: false
   workflow_dispatch:
     inputs:
       option:
@@ -105,5 +102,3 @@ jobs:
       - name: Publish npm package
         run: npm publish $PACKAGE_NAME --tag nightly --provenance
         if: ${{ inputs.publish_on_npm }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
