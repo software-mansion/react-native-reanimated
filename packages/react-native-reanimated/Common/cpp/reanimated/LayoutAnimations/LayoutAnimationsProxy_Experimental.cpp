@@ -414,8 +414,8 @@ void LayoutAnimationsProxy_Experimental::endAnimationsRecursively(
   // iterate from the end, so that children
   // with higher indices appear first in the mutations list
 
-  int childenSize = static_cast<int>(node->children.size());
-  for (int i = childenSize - 1; i >= 0; i--) {
+  int childrenSize = static_cast<int>(node->children.size());
+  for (int i = childrenSize - 1; i >= 0; i--) {
     auto &subNode = node->children[i];
     if (subNode->state != DELETED) {
       endAnimationsRecursively(subNode, i, mutations);
