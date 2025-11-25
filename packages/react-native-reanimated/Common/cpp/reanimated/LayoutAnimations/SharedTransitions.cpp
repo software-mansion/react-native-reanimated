@@ -260,7 +260,7 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
         continue;
       }
       after.tag = containerTag;
-      auto &la = layoutAnimations_[containerTag];
+      const auto &la = layoutAnimations_[containerTag];
       if (la.finalView.layoutMetrics != after.layoutMetrics) {
         startSharedTransition(containerTag, la.currentView, after, surfaceId);
       }
