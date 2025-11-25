@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write
+  id-token: write # For publishing on NPM using OIDC
 
 jobs:
   npm-reanimated-4-publish-nightly:
