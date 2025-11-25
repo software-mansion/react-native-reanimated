@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 
-namespace reanimated_experimental {
+namespace reanimated {
 
 class ReanimatedModuleProxy;
 
@@ -210,4 +210,4 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
       ShadowViewMutationList mutations) const override;
 };
 
-} // namespace reanimated_experimental
+} // namespace reanimated

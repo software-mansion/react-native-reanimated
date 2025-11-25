@@ -3,7 +3,7 @@
 #include <memory>
 #include <unordered_map>
 
-namespace reanimated_experimental {
+namespace reanimated {
 
 std::unordered_map<Tag, UpdateValues> &SurfaceManager::getUpdateMap(SurfaceId surfaceId) {
   auto props = props_.find(surfaceId);
@@ -28,4 +28,4 @@ Rect SurfaceManager::getWindow(SurfaceId surfaceId) {
   return Rect{0, 0};
 }
 
-} // namespace reanimated_experimental
+} // namespace reanimated

@@ -12,7 +12,7 @@
 
 #include <ranges>
 
-namespace reanimated_experimental {
+namespace reanimated {
 
 // MARK: Shared Element Transitions
 
@@ -505,4 +505,4 @@ std::array<float, 3> LayoutAnimationsProxy_Experimental::getTranslateForTransfor
   return {newTranslateX, newTranslateY, newTranslateZ};
 }
 
-} // namespace reanimated_experimental
+} // namespace reanimated

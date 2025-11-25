@@ -15,7 +15,7 @@
 #include <utility>
 #include <vector>
 
-namespace reanimated_experimental {
+namespace reanimated {
 using enum LayoutAnimationType;
 using enum ExitingState;
 
@@ -847,4 +847,4 @@ void LayoutAnimationsProxy_Experimental::startProgressTransition(
   });
 }
 
-} // namespace reanimated_experimental
+} // namespace reanimated

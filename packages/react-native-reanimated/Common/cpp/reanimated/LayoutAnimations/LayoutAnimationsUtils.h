@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace reanimated_experimental {
+namespace reanimated {
 
 enum BeforeOrAfter { BEFORE = 0, AFTER = 1 };
 
@@ -132,4 +132,4 @@ static inline bool hasLayoutChanged(const ShadowViewMutation &mutation) {
   return mutation.oldChildShadowView.layoutMetrics.frame != mutation.newChildShadowView.layoutMetrics.frame;
 }
 
-} // namespace reanimated_experimental
+} // namespace reanimated

@@ -7,6 +7,7 @@
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <worklets/Tools/UIScheduler.h>
 
@@ -23,54 +24,14 @@ class ReanimatedModuleProxy;
 
 using namespace facebook;
 
-struct Rect {
-  double width, height;
-};
-
-struct Frame {
-  std::optional<double> x, y, width, height;
-  Frame(jsi::Runtime &runtime, const jsi::Object &obj) {
-    if (obj.hasProperty(runtime, "originX")) {
-      x = obj.getProperty(runtime, "originX").asNumber();
-    }
-    if (obj.hasProperty(runtime, "originY")) {
-      y = obj.getProperty(runtime, "originY").asNumber();
-    }
-    if (obj.hasProperty(runtime, "width")) {
-      width = obj.getProperty(runtime, "width").asNumber();
-    }
-    if (obj.hasProperty(runtime, "height")) {
-      height = obj.getProperty(runtime, "height").asNumber();
-    }
-  }
-};
-
-struct UpdateValues {
-  Props::Shared newProps;
-  Frame frame;
-};
-
-struct Snapshot {
-  double x, y, width, height, windowWidth, windowHeight;
-  Snapshot(const ShadowView &shadowView, const Rect &window) {
-    const auto &frame = shadowView.layoutMetrics.frame;
-    x = frame.origin.x;
-    y = frame.origin.y;
-    width = frame.size.width;
-    height = frame.size.height;
-    windowWidth = window.width;
-    windowHeight = window.height;
-  }
-};
-
-typedef enum ExitingState {
+typedef enum ExitingState_Legacy {
   UNDEFINED = 1,
   WAITING = 2,
   ANIMATING = 4,
   DEAD = 8,
   MOVED = 16,
   DELETED = 32,
-} ExitingState;
+} ExitingState_Legacy;
 
 struct MutationNode;
 
@@ -99,45 +60,16 @@ struct Node {
  */
 struct MutationNode : public Node {
   ShadowViewMutation mutation;
-  ExitingState state = UNDEFINED;
+  ExitingState_Legacy state = UNDEFINED;
   explicit MutationNode(ShadowViewMutation &mutation) : Node(mutation.oldChildShadowView.tag), mutation(mutation) {}
   MutationNode(ShadowViewMutation &mutation, Node &&node) : Node(std::move(node)), mutation(mutation) {}
   bool isMutationNode() override;
 };
 
-struct SurfaceManager {
-  mutable std::unordered_map<SurfaceId, std::shared_ptr<std::unordered_map<Tag, UpdateValues>>> props_;
-  mutable std::unordered_map<SurfaceId, Rect> windows_;
-
-  std::unordered_map<Tag, UpdateValues> &getUpdateMap(SurfaceId surfaceId);
-  void updateWindow(SurfaceId surfaceId, double windowWidth, double windowHeight);
-  Rect getWindow(SurfaceId surfaceId);
-};
-
-static inline void updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame &frame) {
-  // we use optional's here to avoid overwriting non-animated values
-  if (frame.width) {
-    layoutMetrics.frame.size.width = *frame.width;
-  }
-  if (frame.height) {
-    layoutMetrics.frame.size.height = *frame.height;
-  }
-  if (frame.x) {
-    layoutMetrics.frame.origin.x = *frame.x;
-  }
-  if (frame.y) {
-    layoutMetrics.frame.origin.y = *frame.y;
-  }
-}
-
 static inline bool isRNSScreen(std::shared_ptr<MutationNode> node) {
   const auto &componentName = node->mutation.oldChildShadowView.componentName;
   return !std::strcmp(componentName, "RNSScreenStack") || !std::strcmp(componentName, "RNSScreen") ||
       !std::strcmp(componentName, "RNSModalScreen");
-}
-
-static inline bool hasLayoutChanged(const ShadowViewMutation &mutation) {
-  return mutation.oldChildShadowView.layoutMetrics.frame != mutation.newChildShadowView.layoutMetrics.frame;
 }
 
 static inline void mergeAndSwap(
