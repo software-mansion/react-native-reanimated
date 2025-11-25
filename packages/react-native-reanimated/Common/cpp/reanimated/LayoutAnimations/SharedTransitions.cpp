@@ -58,19 +58,22 @@ void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
 
     auto sharedTag = sharedTransitionManager_->tagToName_[node->current.tag];
     auto &transition = transitionMap_[sharedTag];
-    auto transform = parseParentTransforms(node, absolutePositions);
-    transition.transform[index] = std::move(transform);
-    transition.snapshot[index] = copy;
-    transition.parentTag[index] = node->parent.lock()->current.tag;
+    auto &[snapshot, parentTag, transform] = transition;
+    auto newTransform = parseParentTransforms(node, absolutePositions);
+    const auto &parent = node->parent.lock();
+    react_native_assert(parent && "Parent node is nullptr");
+    transform[index] = std::move(newTransform);
+    snapshot[index] = copy;
+    parentTag[index] = parent->current.tag;
 
-    if (transition.parentTag[0] && transition.parentTag[1]) {
+    if (parentTag[BEFORE] && parentTag[AFTER]) {
       // TODO (future): performance - this is costly on android
-      overrideTransform(transition.snapshot[0], transition.transform[0], propsParserContext);
-      overrideTransform(transition.snapshot[1], transition.transform[1], propsParserContext);
+      overrideTransform(snapshot[BEFORE], transform[BEFORE], propsParserContext);
+      overrideTransform(snapshot[AFTER], transform[AFTER], propsParserContext);
       transitions_.emplace_back(sharedTag, transition);
-    } else if (transition.parentTag[1]) {
+    } else if (parentTag[AFTER]) {
       // TODO (future): this is too eager
-      tagsToRestore_.push_back(transition.snapshot[1].tag);
+      tagsToRestore_.push_back(snapshot[AFTER].tag);
     }
   }
   for (auto &child : node->children) {
@@ -99,16 +102,16 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
     if (beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen) {
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext);
       findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext);
-      hideTransitioningViews(0, filteredMutations, propsParserContext);
-      hideTransitioningViews(1, filteredMutations, propsParserContext);
+      hideTransitioningViews(BEFORE, filteredMutations, propsParserContext);
+      hideTransitioningViews(AFTER, filteredMutations, propsParserContext);
 
       for (auto &[sharedTag, transition] : transitions_) {
         auto &[before, after] = transition.snapshot;
         auto containerTag = getOrCreateContainer(before, sharedTag, filteredMutations, surfaceId);
         transferConfigToContainer(containerTag, before.tag);
 
-        restoreMap_[containerTag][0] = before.tag;
-        restoreMap_[containerTag][1] = after.tag;
+        restoreMap_[containerTag][BEFORE] = before.tag;
+        restoreMap_[containerTag][AFTER] = after.tag;
         before.tag = containerTag;
         after.tag = containerTag;
         activeTransitions_.insert(containerTag);
@@ -155,9 +158,9 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
   } else if (transitionState_ == END || transitionState_ == CANCELLED) {
     for (auto tag : activeTransitions_) {
       sharedContainersToRemove_.push_back(tag);
-      tagsToRestore_.push_back(restoreMap_[tag][1]);
+      tagsToRestore_.push_back(restoreMap_[tag][AFTER]);
       if (transitionState_ == CANCELLED) {
-        tagsToRestore_.push_back(restoreMap_[tag][0]);
+        tagsToRestore_.push_back(restoreMap_[tag][BEFORE]);
       }
     }
     if (transitionState_ == END) {
@@ -266,7 +269,7 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
 }
 
 void LayoutAnimationsProxy_Experimental::hideTransitioningViews(
-    int index,
+    BeforeOrAfter index,
     ShadowViewMutationList &filteredMutations,
     const PropsParserContext &propsParserContext) const {
   for (auto &[sharedTag, transition] : transitions_) {

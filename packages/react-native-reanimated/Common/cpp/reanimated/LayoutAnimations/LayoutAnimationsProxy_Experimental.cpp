@@ -66,9 +66,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
 
     if (shouldTransitionStart) {
       std::vector<ShadowViewMutation> temp;
-      hideTransitioningViews(0, temp, propsParserContext);
+      hideTransitioningViews(BEFORE, temp, propsParserContext);
       temp.insert(temp.end(), filteredMutations.begin(), filteredMutations.end());
-      hideTransitioningViews(1, temp, propsParserContext);
+      hideTransitioningViews(AFTER, temp, propsParserContext);
       std::swap(filteredMutations, temp);
     }
 

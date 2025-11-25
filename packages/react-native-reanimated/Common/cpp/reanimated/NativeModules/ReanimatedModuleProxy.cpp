@@ -126,9 +126,6 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
         if (!strongThis) {
           return;
         }
-        if (!strongThis->layoutAnimationsProxy_) {
-          return;
-        }
         auto surfaceId = strongThis->layoutAnimationsProxy_->progressLayoutAnimation(tag, newStyle);
         if (!surfaceId) {
           return;
@@ -151,9 +148,6 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       return;
     }
 
-    if (!strongThis->layoutAnimationsProxy_) {
-      return;
-    }
     auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
 
     if (!strongThis->layoutAnimationRenderRequested_) {

@@ -135,7 +135,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
 #endif
 
   void hideTransitioningViews(
-      int index,
+      BeforeOrAfter index,
       ShadowViewMutationList &filteredMutations,
       const PropsParserContext &propsParserContext) const;
 
