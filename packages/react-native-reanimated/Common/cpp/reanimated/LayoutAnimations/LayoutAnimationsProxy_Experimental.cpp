@@ -382,7 +382,7 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceI
     }
 #endif
 
-    auto layoutAnimationIt = layoutAnimations_.find(tag);
+    const auto layoutAnimationIt = layoutAnimations_.find(tag);
 
     if (layoutAnimationIt == layoutAnimations_.end()) {
       continue;
