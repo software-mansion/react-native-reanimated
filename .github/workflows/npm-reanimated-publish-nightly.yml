@@ -28,6 +28,7 @@ jobs:
     if: github.repository == 'software-mansion/react-native-reanimated'
     uses: ./.github/workflows/check-branch-changes.yml
     with:
+      # Remember to update the branch on new minor releases.
       branch: 3.19-stable
 
   npm-reanimated-3-publish-nightly:
