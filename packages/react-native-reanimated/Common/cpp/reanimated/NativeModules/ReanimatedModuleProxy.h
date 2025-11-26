@@ -60,7 +60,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   // is fully constructed.
   void init(const PlatformDepMethodsHolder &platformDepMethodsHolder);
 
-  ~ReanimatedModuleProxy();
+  ~ReanimatedModuleProxy() override;
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
@@ -184,7 +184,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry_;
   const RequestRenderFunction requestRender_;
-  std::vector<std::shared_ptr<jsi::Value>> frameCallbacks_;
   volatile bool renderRequested_{false};
   std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;

@@ -39,6 +39,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       runtimeBindings_(std::move(runtimeBindings)),
       script_(script),
       sourceUrl_(sourceUrl),
+      memoryManager_(std::make_shared<MemoryManager>()),
       runtimeManager_(std::make_shared<RuntimeManager>()),
       uiWorkletRuntime_(
           runtimeManager_->createUninitializedUIRuntime(jsQueue_, std::make_shared<AsyncQueueUI>(uiScheduler_))) {
@@ -48,8 +49,8 @@ WorkletsModuleProxy::WorkletsModuleProxy(
    */
   uiWorkletRuntime_->init(createJSIWorkletsModuleProxy());
 
-  animationFrameBatchinator_ = std::make_shared<AnimationFrameBatchinator>(
-      uiWorkletRuntime_->getJSIRuntime(), runtimeBindings_.requestAnimationFrame);
+  animationFrameBatchinator_ =
+      std::make_shared<AnimationFrameBatchinator>(uiWorkletRuntime_, runtimeBindings_.requestAnimationFrame);
 
   UIRuntimeDecorator::decorate(
       uiWorkletRuntime_->getJSIRuntime(), animationFrameBatchinator_->getJsiRequestAnimationFrame());
@@ -58,7 +59,15 @@ WorkletsModuleProxy::WorkletsModuleProxy(
 std::shared_ptr<JSIWorkletsModuleProxy> WorkletsModuleProxy::createJSIWorkletsModuleProxy() const {
   assert(uiWorkletRuntime_ && "UI Worklet Runtime must be initialized before creating JSI proxy.");
   return std::make_shared<JSIWorkletsModuleProxy>(
-      isDevBundle_, script_, sourceUrl_, jsQueue_, jsScheduler_, uiScheduler_, runtimeManager_, uiWorkletRuntime_);
+      isDevBundle_,
+      script_,
+      sourceUrl_,
+      jsQueue_,
+      jsScheduler_,
+      uiScheduler_,
+      memoryManager_,
+      runtimeManager_,
+      uiWorkletRuntime_);
 }
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {

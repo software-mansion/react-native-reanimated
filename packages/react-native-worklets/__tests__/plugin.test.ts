@@ -841,6 +841,59 @@ describe('babel plugin', () => {
   });
 
   describe('for react-native-gesture-handler', () => {
+    test('workletizes gesture callbacks using the hooks api', () => {
+      const input = html`<script>
+        const foo = useTapGesture({
+          numberOfTaps: 2,
+          onBegin: () => {
+            console.log('onBegin');
+          },
+          onStart: (_event) => {
+            console.log('onStart');
+          },
+          onEnd: (_event, _success) => {
+            console.log('onEnd');
+          },
+        });
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(3);
+      expect(code).toMatchSnapshot();
+    });
+
+    test('workletizes referenced gesture callbacks using the hooks api', () => {
+      const input = html`<script>
+        const onBegin = () => {
+          console.log('onBegin');
+        };
+        const foo = useTapGesture({
+          numberOfTaps: 2,
+          onBegin: onBegin,
+        });
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+
+    test('workletizes referenced gesture callbacks using the hooks api and shorthand syntax', () => {
+      const input = html`<script>
+        const onBegin = () => {
+          console.log('onBegin');
+        };
+        const foo = useTapGesture({
+          numberOfTaps: 2,
+          onBegin,
+        });
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
+
     test('workletizes possibly chained gesture object callback functions automatically', () => {
       const input = html`<script>
         const foo = Gesture.Tap()

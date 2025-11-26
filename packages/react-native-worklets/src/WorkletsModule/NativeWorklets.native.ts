@@ -33,7 +33,7 @@ class NativeWorklets implements IWorkletsModule {
 See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#native-part-of-worklets-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    if (__DEV__) {
+    if (__DEV__ && globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
       checkCppVersion();
     }
     this.#workletsModuleProxy = global.__workletsModuleProxy;
@@ -149,6 +149,27 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.createSerializableWorklet(
       worklet,
       shouldPersistRemote
+    );
+  }
+
+  createCustomSerializable(
+    data: SerializableRef<object>,
+    typeId: number
+  ): SerializableRef<object> {
+    return this.#workletsModuleProxy.createCustomSerializable(data, typeId);
+  }
+
+  registerCustomSerializable(
+    determine: SerializableRef<object>,
+    pack: SerializableRef<object>,
+    unpack: SerializableRef<object>,
+    typeId: number
+  ): void {
+    this.#workletsModuleProxy.registerCustomSerializable(
+      determine,
+      pack,
+      unpack,
+      typeId
     );
   }
 
