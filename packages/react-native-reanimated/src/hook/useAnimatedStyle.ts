@@ -608,7 +608,15 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
           toJSON: animatedStyleHandleToJSON,
           styleUpdaterContainer,
         }
-      : { viewDescriptors, initial, styleUpdaterContainer };
+      : 
+        {
+          get _doNotUseOrYouWillBeFired() {
+            throw new ReanimatedError('Perhaps your are trying to pass Animated Style to a non-animated component. Try creating Animated component using `createAnimatedComponent` function or use `Animated.*` components.');
+        },
+          viewDescriptors,
+          initial,
+          styleUpdaterContainer,
+      }
   }
 
   return animatedStyleHandle.current;
