@@ -424,7 +424,7 @@ export default class AnimatedComponent
         useNativeId
           ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_NATIVE_ID
           : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
-        maybeBuild(sharedTransition, this.props?.style, this._displayName),
+        maybeBuild(sharedTransition),
         undefined,
         this.props.sharedTransitionTag
       );
