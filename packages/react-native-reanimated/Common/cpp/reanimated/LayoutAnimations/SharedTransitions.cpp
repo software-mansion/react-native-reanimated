@@ -135,15 +135,15 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
       auto beforeRadius = beforeProps->borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value;
       auto afterRadius = afterProps->borderRadii.all.value_or(ValueUnit(0, UnitType::Point)).value;
 
-      auto d =
+      // TODO (future): Support more props in progress transitions.
+      auto borderRadiusDynamic =
           folly::dynamic::object("borderRadius", beforeRadius + transitionProgress_ * (afterRadius - beforeRadius));
 
 #ifdef RN_SERIALIZABLE_STATE
-      //        auto rawProps = RawProps(folly::dynamic::merge(
-      //            layoutAnimation.finalView->props->rawProps, d));
+      // TODO (future): Support borderRadius on Android.
       Props::Shared newProps = nullptr;
 #else
-      auto rawProps = RawProps(std::move(d));
+      auto rawProps = RawProps(std::move(borderRadiusDynamic));
 
       auto newProps = getComponentDescriptorForShadowView(layoutAnimation.finalView)
                           .cloneProps(propsParserContext, layoutAnimation.finalView.props, std::move(rawProps));
