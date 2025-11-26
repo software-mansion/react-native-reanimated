@@ -45,6 +45,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable double transitionProgress_;
   mutable bool transitionUpdated_;
   mutable TransitionState transitionState_ = NONE;
+  mutable SurfaceId transitioningSurfaceId_ = -1;
   mutable std::unordered_map<SurfaceId, std::shared_ptr<LightNode>> topScreen;
   mutable int containerTag_ = 10000002;
   mutable std::vector<Tag> sharedContainersToRemove_;

@@ -305,8 +305,11 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgres
     } else if (transitionState_ == ACTIVE && progress == 1) {
       transitionState_ = END;
     }
-    // TODO (before merging): unfix
-    return 1;
+    const auto &node = lightNodes_[tag];
+    react_native_assert(node && "LightNode is nullptr");
+
+    transitioningSurfaceId_ = node->current.surfaceId;
+    return transitioningSurfaceId_;
   }
   return {};
 }
@@ -317,7 +320,11 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onGestureCancel() {
     transitionState_ = CANCELLED;
     transitionUpdated_ = true;
     // TODO (before merging): unfix
-    return 1;
+    react_native_assert(transitioningSurfaceId_ != -1 && "Cancelling non-observed transition");
+
+    const auto surfaceId = transitioningSurfaceId_;
+    transitioningSurfaceId_ = -1;
+    return surfaceId;
   }
   return {};
 }
