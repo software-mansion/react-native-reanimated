@@ -16,7 +16,8 @@ namespace reanimated {
 
 // MARK: Shared Element Transitions
 
-std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findTopScreen(std::shared_ptr<LightNode> node) const {
+std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findTopScreen(
+    const std::shared_ptr<LightNode> &node) const {
   std::shared_ptr<LightNode> result = nullptr;
   if (!node->current.componentName) {
     return result;
@@ -36,7 +37,7 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findTopScreen(std
       result = node;
     }
   }
-  for (auto child : std::views::reverse(node->children)) {
+  for (const auto &child : std::views::reverse(node->children)) {
     auto top = findTopScreen(child);
     if (top) {
       return top;
@@ -141,7 +142,7 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
 
 #ifdef RN_SERIALIZABLE_STATE
       // TODO (future): Support borderRadius on Android.
-      Props::Shared newProps = nullptr;
+      const Props::Shared newProps = nullptr;
 #else
       auto rawProps = RawProps(std::move(borderRadiusDynamic));
 
@@ -182,7 +183,7 @@ void LayoutAnimationsProxy_Experimental::overrideTransform(
   }
 #ifdef ANDROID
   auto array = folly::dynamic::array(folly::dynamic::object("matrix", transform->operator folly::dynamic()));
-  folly::dynamic newTransformDynamic = folly::dynamic::object("transform", array);
+  const folly::dynamic newTransformDynamic = folly::dynamic::object("transform", array);
   auto newRawProps = folly::dynamic::merge(shadowView.props->rawProps, newTransformDynamic);
   auto newProps = getComponentDescriptorForShadowView(shadowView)
                       .cloneProps(propsParserContext, shadowView.props, RawProps(newRawProps));
@@ -201,7 +202,7 @@ void LayoutAnimationsProxy_Experimental::transferConfigToContainer(Tag container
 
 Tag LayoutAnimationsProxy_Experimental::getOrCreateContainer(
     const ShadowView &before,
-    SharedTag sharedTag,
+    const SharedTag &sharedTag,
     ShadowViewMutationList &filteredMutations,
     SurfaceId surfaceId) const {
   auto containerTag = sharedTransitionManager_->containerTags_[sharedTag];
@@ -325,14 +326,15 @@ void LayoutAnimationsProxy_Experimental::insertContainers(
     ShadowViewMutationList &filteredMutations,
     int &rootChildCount,
     SurfaceId surfaceId) const {
-  ShadowViewMutationList temp = std::move(filteredMutations);
+  ShadowViewMutationList currentMutations;
+  std::swap(currentMutations, filteredMutations);
   filteredMutations.reserve(containersToInsert_.size() * 2);
   auto root = lightNodes_[surfaceId];
   for (auto &node : containersToInsert_) {
     filteredMutations.push_back(ShadowViewMutation::CreateMutation(node->current));
     filteredMutations.push_back(ShadowViewMutation::InsertMutation(surfaceId, node->current, rootChildCount++));
   }
-  filteredMutations.insert(filteredMutations.end(), temp.begin(), temp.end());
+  filteredMutations.insert(filteredMutations.end(), currentMutations.begin(), currentMutations.end());
   containersToInsert_.clear();
 }
 
@@ -382,7 +384,7 @@ std::vector<react::Point> LayoutAnimationsProxy_Experimental::getAbsolutePositio
     if (!strcmp(currentNode->current.componentName, "RNSScreen") && currentNode->children.size() >= 2) {
       const auto &parent = currentNode->parent.lock();
       if (parent) {
-        float headerHeight =
+        const float headerHeight =
             parent->current.layoutMetrics.frame.size.height - currentNode->current.layoutMetrics.frame.size.height;
         viewPosition.y += headerHeight;
       }
@@ -487,8 +489,8 @@ std::array<float, 3> LayoutAnimationsProxy_Experimental::getTranslateForTransfor
     float viewWidth,
     float viewHeight,
     const TransformOrigin &transformOrigin) const {
-  float viewCenterX = viewWidth / 2;
-  float viewCenterY = viewHeight / 2;
+  const float viewCenterX = viewWidth / 2;
+  const float viewCenterY = viewHeight / 2;
 
   std::array<float, 3> origin = {viewCenterX, viewCenterY, transformOrigin.z};
 
@@ -501,9 +503,9 @@ std::array<float, 3> LayoutAnimationsProxy_Experimental::getTranslateForTransfor
     }
   }
 
-  float newTranslateX = -viewCenterX + origin[0];
-  float newTranslateY = -viewCenterY + origin[1];
-  float newTranslateZ = origin[2];
+  const float newTranslateX = -viewCenterX + origin[0];
+  const float newTranslateY = -viewCenterY + origin[1];
+  const float newTranslateZ = origin[2];
 
   return {newTranslateX, newTranslateY, newTranslateZ};
 }

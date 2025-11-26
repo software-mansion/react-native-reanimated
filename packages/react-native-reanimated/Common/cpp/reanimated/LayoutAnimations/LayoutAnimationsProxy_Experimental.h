@@ -139,7 +139,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
       ShadowViewMutationList &filteredMutations,
       const PropsParserContext &propsParserContext) const;
 
-  void transferConfigFromNativeID(const std::string nativeId, const int tag) const;
+  void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
   std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) override;
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
   std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward) override;
@@ -147,7 +147,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
 
   void maybeCancelAnimation(const int tag) const;
 
-  std::shared_ptr<LightNode> findTopScreen(std::shared_ptr<LightNode> node) const;
+  std::shared_ptr<LightNode> findTopScreen(const std::shared_ptr<LightNode> &node) const;
 
   void findSharedElementsOnScreen(
       const std::shared_ptr<LightNode> &node,
@@ -162,7 +162,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
 
   Tag getOrCreateContainer(
       const ShadowView &before,
-      SharedTag sharedTag,
+      const SharedTag &sharedTag,
       ShadowViewMutationList &filteredMutations,
       SurfaceId surfaceId) const;
 
@@ -193,11 +193,12 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   ShadowView maybeCreateLayoutAnimation(ShadowView &before, const ShadowView &after, const Tag parentTag) const;
 
   bool startAnimationsRecursively(
-      std::shared_ptr<LightNode> node,
+      const std::shared_ptr<LightNode> &node,
       ShadowViewMutationList &mutations,
       StartAnimationsRecursivelyConfig config) const;
-  void endAnimationsRecursively(std::shared_ptr<LightNode> node, int index, ShadowViewMutationList &mutations) const;
-  void maybeDropAncestors(std::shared_ptr<LightNode> node, ShadowViewMutationList &cleanupMutations) const;
+  void endAnimationsRecursively(const std::shared_ptr<LightNode> &node, int index, ShadowViewMutationList &mutations)
+      const;
+  void maybeDropAncestors(const std::shared_ptr<LightNode> &node, ShadowViewMutationList &cleanupMutations) const;
 
   const ComponentDescriptor &getComponentDescriptorForShadowView(const ShadowView &shadowView) const;
 
