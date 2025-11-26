@@ -443,8 +443,7 @@ std::optional<Transform> LayoutAnimationsProxy_Experimental::parseParentTransfor
       parentHasTransform = true;
     }
     if (i == 0 && !parentHasTransform) {
-      // If only target view has transform, lets skip it, to matrix
-      // decomposition in JS
+      // If only target view has transform, let's skip it, to matrix decomposition in JS
       break;
     }
     transformOrigin.xy[0].value -= targetViewPosition.x - absolutePositions[i].x;
