@@ -62,14 +62,17 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
       forceScreenSnapshot_(afterTopScreen->current.tag);
 #endif
     }
-    bool shouldTransitionStart = beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen;
+    bool hasScreenChanged = beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen;
 
-    if (shouldTransitionStart) {
-      std::vector<ShadowViewMutation> temp;
-      hideTransitioningViews(BEFORE, temp, propsParserContext);
-      temp.insert(temp.end(), filteredMutations.begin(), filteredMutations.end());
-      hideTransitioningViews(AFTER, temp, propsParserContext);
-      std::swap(filteredMutations, temp);
+    if (hasScreenChanged) {
+      // We want to add mutations to hide the views that will start their transitions.
+      // To keep things simple, we put mutations related to source views before all muatations
+      // and mutations to hide target views after all mutations.
+      std::vector<ShadowViewMutation> mergedMutations;
+      hideTransitioningViews(BEFORE, mergedMutations, propsParserContext);
+      mergedMutations.insert(mergedMutations.end(), filteredMutations.begin(), filteredMutations.end());
+      hideTransitioningViews(AFTER, mergedMutations, propsParserContext);
+      std::swap(filteredMutations, mergedMutations);
     }
 
     handleSharedTransitionsStart(
