@@ -157,7 +157,9 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
       <img width="346" alt="upload_7933257ba4df136251188391ad2693f0" src="https://github.com/user-attachments/assets/383648da-ef25-4b84-83b5-1c484a702488" />
 
     - Choose **target** - it will a be current stable branch e.g. `3.17-stable`,
-    - Choose **previous tag** - it will be from previous release e.g. `3.17.1`,
+    - Choose **previous tag**:
+        - For minor it will be a previous minor e.g. when releasing `4.2.0`, the **previous tag** is `4.1.0`,
+        - For patch it will be previous release e.g. when releasing `3.17.2` the **previous tag** is `3.17.1`,
     - Attach previously downloaded artifact (`.tgz`),
     - Generate release notes,
     - When making at least a minor release or a patch release with numerous commits, please highlight the key changes beside the automatically generated notes, like [here](https://github.com/software-mansion/react-native-reanimated/releases/tag/3.17.0),
