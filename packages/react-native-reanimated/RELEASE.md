@@ -40,7 +40,8 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
    - You need to do this in a separate PR as docs are hosted on `main`,
    - Use `&ndash;` (–) symbol instead of normal dash (-).
 
-7. <details><summary>Reanimated v4</summary>
+7. Install Pods:
+* <details><summary>Reanimated v4</summary>
 
     Run `yarn build-all` in the root directory.
 </details>
@@ -48,7 +49,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 * <details><summary>Reanimated v3</summary>
 
     run `bundle install && bundle exec pod install` in all example apps to update following files:
-     - `paper-example/ios/Podfile.lock`
+   - `paper-example/ios/Podfile.lock`
    - `fabric-example/ios/Podfile.lock`
    - `tvos-example/ios/Podfile.lock`
    - `macos-example/macos/Podfile.lock`
@@ -58,7 +59,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
     When releasing v3, make sure to update the branch used for nightly releases of Reanimated 3 in [the workflow](../../.github/workflows/npm-reanimated-publish-nightly.yml).
     </details>
-
+---
 9. When releasing a minor version, update the minimal supported React Native version:
 
    - Android: `build.gradle`
