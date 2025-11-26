@@ -356,7 +356,9 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
     auto &node = lightNodes_[tag];
     if (node) {
       auto view = node->current;
-      auto parentTag = node->parent.lock()->current.tag;
+      const auto &parent = node->parent.lock();
+      react_native_assert(parent && "Parent node is nullptr");
+      auto parentTag = parent->current.tag;
       auto m = ShadowViewMutation::UpdateMutation(
           cloneViewWithoutOpacity(view, propsParserContext), cloneViewWithOpacity(view, propsParserContext), parentTag);
       filteredMutations.push_back(m);
@@ -392,8 +394,7 @@ std::vector<react::Point> LayoutAnimationsProxy_Experimental::getAbsolutePositio
       viewPosition -= data.contentOffset;
     }
     if (!strcmp(currentNode->current.componentName, "RNSScreen") && currentNode->children.size() >= 2) {
-      const auto &parent = currentNode->parent.lock();
-      if (parent) {
+      if (const auto &parent = currentNode->parent.lock()) {
         const float headerHeight =
             parent->current.layoutMetrics.frame.size.height - currentNode->current.layoutMetrics.frame.size.height;
         viewPosition.y += headerHeight;
