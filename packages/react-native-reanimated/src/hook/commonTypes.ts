@@ -112,6 +112,7 @@ export interface IWorkletEventHandler<Event extends object> {
 export interface AnimatedStyleHandle<
   Style extends DefaultStyle | AnimatedProps = DefaultStyle,
 > {
+  get _doNotUseOrYouWillBeFired(): never | undefined;
   viewDescriptors: ViewDescriptorsSet;
   initial: {
     value: AnimatedStyle<Style>;
