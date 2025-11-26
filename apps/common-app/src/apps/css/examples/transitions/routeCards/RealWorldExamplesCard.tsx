@@ -16,12 +16,13 @@ import Animated, { cubicBezier } from 'react-native-reanimated';
 import type { RouteCardComponent } from '@/apps/css/components';
 import { RouteCard } from '@/apps/css/components';
 import { colors, flex, iconSizes, radius, sizes, spacing } from '@/theme';
+import { IS_MACOS } from '@/utils';
 
 const RealWorldExamplesCard: RouteCardComponent = (props) => (
   <RouteCard
     {...props}
     description="Examples showing **use of transitions** in real-world scenarios">
-    <Showcase />
+    {!IS_MACOS && <Showcase />}
   </RouteCard>
 );
 

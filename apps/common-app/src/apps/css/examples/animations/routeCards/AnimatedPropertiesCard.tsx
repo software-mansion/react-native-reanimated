@@ -9,6 +9,8 @@ import { RouteCard } from '@/apps/css/components';
 import { useFocusPlayState } from '@/apps/css/hooks';
 import { colors, radius, sizes, spacing } from '@/theme';
 
+import { IS_MACOS } from '@/utils';
+
 const exampleAnimationSettings: CSSAnimationSettings = {
   animationDuration: '3s',
   animationIterationCount: 'infinite',
@@ -18,7 +20,7 @@ const AnimatedPropertiesCard: RouteCardComponent = (props) => (
   <RouteCard
     {...props}
     description="Animated properties like **dimensions**, **colors** and **transforms**">
-    <Showcase />
+    {!IS_MACOS && <Showcase />}
   </RouteCard>
 );
 

@@ -6,12 +6,13 @@ import Animated from 'react-native-reanimated';
 import type { RouteCardComponent } from '@/apps/css/components';
 import { RouteCard } from '@/apps/css/components';
 import { colors, sizes, spacing } from '@/theme';
+import { IS_MACOS } from '@/utils';
 
 const TransitionSettingsCard: RouteCardComponent = (props) => (
   <RouteCard
     {...props}
     description="Customization options: **duration**, **delay**, **timing function** and more">
-    <Showcase />
+    {!IS_MACOS && <Showcase />}
   </RouteCard>
 );
 

@@ -7,12 +7,13 @@ import Animated from 'react-native-reanimated';
 import type { RouteCardComponent } from '@/apps/css/components';
 import { RouteCard } from '@/apps/css/components';
 import { colors, radius, sizes } from '@/theme';
+import { IS_MACOS } from '@/utils';
 
 const TestExamplesCard: RouteCardComponent = (props) => (
   <RouteCard
     {...props}
     description="Examples to test **edge cases**, **performance**, etc. (useful for devs)">
-    <Showcase />
+    {!IS_MACOS && <Showcase />}
   </RouteCard>
 );
 

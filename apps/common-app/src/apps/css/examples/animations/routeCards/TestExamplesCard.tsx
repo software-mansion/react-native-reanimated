@@ -1,18 +1,19 @@
 import { faCog } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { View } from 'react-native';
+import { View, Pressable, Text } from 'react-native';
 import Animated, { css } from 'react-native-reanimated';
 
 import type { RouteCardComponent } from '@/apps/css/components';
 import { RouteCard } from '@/apps/css/components';
 import { useFocusPlayState } from '@/apps/css/hooks';
 import { colors, sizes, spacing } from '@/theme';
+import { IS_MACOS } from '@/utils';
 
 const TestExamplesCard: RouteCardComponent = (props) => (
   <RouteCard
     {...props}
     description="Examples to test **edge cases**, **performance**, etc. (useful for devs)">
-    <Showcase />
+    {!IS_MACOS && <Showcase />}
   </RouteCard>
 );
 

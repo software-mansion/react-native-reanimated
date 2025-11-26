@@ -19,6 +19,7 @@ import { INITIAL_ROUTE_NAME, TAB_ROUTES } from './routes';
 import { PullToSearchProvider, SearchScreen } from './search';
 import type { Routes } from './types';
 import { isRouteWithRoutes } from './utils';
+import { IS_MACOS } from '@/utils';
 
 type RootStackParamList = Record<string, React.ComponentType>;
 
@@ -116,8 +117,8 @@ function createStackScreens(
 
   const sharedOptions = {
     contentStyle: styles.content,
-    headerLeft: () => <BackButton />,
-    headerRight: () => <DrawerButton />,
+    headerLeft: () => (IS_MACOS ? undefined : <BackButton />),
+    headerRight: () => (IS_MACOS ? undefined : <DrawerButton />),
   };
 
   return [

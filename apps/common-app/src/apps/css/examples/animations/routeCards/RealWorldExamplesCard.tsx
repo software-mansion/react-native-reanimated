@@ -15,6 +15,7 @@ import type { RouteCardComponent } from '@/apps/css/components';
 import { RouteCard } from '@/apps/css/components';
 import { useFocusPlayState } from '@/apps/css/hooks';
 import { colors, flex, sizes } from '@/theme';
+import { IS_MACOS } from '@/utils';
 
 const TIME_MULTIPLIER = 1;
 
@@ -36,7 +37,7 @@ const RealWorldExamplesCard: RouteCardComponent = (props) => (
     {...props}
     description="Simple and complex **animations** that can be **used in apps**"
     showcaseScale={1.5}>
-    <Showcase />
+    {!IS_MACOS && <Showcase />}
   </RouteCard>
 );
 
