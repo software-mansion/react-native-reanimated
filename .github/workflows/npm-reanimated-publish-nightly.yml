@@ -11,15 +11,34 @@ permissions:
   id-token: write # For publishing on NPM using OIDC
 
 jobs:
-  npm-reanimated-4-publish-nightly:
+  check-v4-changes:
     if: github.repository == 'software-mansion/react-native-reanimated'
+    uses: ./.github/workflows/check-branch-changes.yml
+    with:
+      branch: main
+
+  npm-reanimated-4-publish-nightly:
+    needs: check-v4-changes
+    if: |
+      github.repository == 'software-mansion/react-native-reanimated' &&
+      needs.check-v4-changes.outputs.has_changes == 'true'
     uses: ./.github/workflows/npm-reanimated-package-build.yml
     with:
       option: --nightly
       publish_on_npm: true
 
-  npm-reanimated-3-publish-nightly:
+  check-v3-changes:
     if: github.repository == 'software-mansion/react-native-reanimated'
+    uses: ./.github/workflows/check-branch-changes.yml
+    with:
+      # Remember to update the branch on new minor releases.
+      branch: 3.19-stable
+
+  npm-reanimated-3-publish-nightly:
+    needs: check-v3-changes
+    if: |
+      github.repository == 'software-mansion/react-native-reanimated' &&
+      needs.check-v3-changes.outputs.has_changes == 'true'
     uses: ./.github/workflows/npm-reanimated-package-build.yml
     with:
       option: --nightly
