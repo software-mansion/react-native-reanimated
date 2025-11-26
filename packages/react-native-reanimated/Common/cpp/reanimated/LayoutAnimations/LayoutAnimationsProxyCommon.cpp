@@ -20,6 +20,8 @@ std::optional<facebook::react::SurfaceId> LayoutAnimationsProxyCommon::onGesture
   return std::nullopt;
 }
 
+void LayoutAnimationsProxyCommon::startSurface(const SurfaceId surfaceId) {}
+
 #ifdef ANDROID
 
 const facebook::react::ShadowNode *findInShadowTreeByTag(const facebook::react::ShadowNode &node, Tag tag) {

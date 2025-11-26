@@ -319,7 +319,6 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onGestureCancel() {
   if (transitionState_) {
     transitionState_ = CANCELLED;
     transitionUpdated_ = true;
-    // TODO (before merging): unfix
     react_native_assert(transitioningSurfaceId_ != -1 && "Cancelling non-observed transition");
 
     const auto surfaceId = transitioningSurfaceId_;
@@ -327,6 +326,10 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onGestureCancel() {
     return surfaceId;
   }
   return {};
+}
+
+void LayoutAnimationsProxy_Experimental::startSurface(const SurfaceId surfaceId) {
+  lightNodes_[surfaceId] = std::make_shared<LightNode>();
 }
 
 void LayoutAnimationsProxy_Experimental::insertContainers(

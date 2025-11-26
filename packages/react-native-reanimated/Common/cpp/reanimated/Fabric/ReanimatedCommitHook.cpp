@@ -43,6 +43,7 @@ void ReanimatedCommitHook::maybeInitializeLayoutAnimations(SurfaceId surfaceId) 
       }
       // TODO: We should consider registering a new instance of proxy for each surface.
       // The current approach will encounter problems on platforms where it is more common to have multiple surfaces.
+      strongThis->layoutAnimationsProxy_->startSurface(shadowTree.getSurfaceId());
       shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(strongThis->layoutAnimationsProxy_);
     });
     currentMaxSurfaceId_ = surfaceId;

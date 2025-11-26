@@ -89,9 +89,6 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
 #endif
             ),
         sharedTransitionManager_(layoutAnimationsManager->getSharedTransitionManager()) {
-    // TODO (before merging): remove hardcoded tags - find a generic solution
-    lightNodes_[1] = std::make_shared<LightNode>();
-    lightNodes_[11] = std::make_shared<LightNode>();
   }
 
   void startEnteringAnimation(const std::shared_ptr<LightNode> &node) const;
@@ -145,6 +142,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
   std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward) override;
   std::optional<SurfaceId> onGestureCancel() override;
+  void startSurface(const SurfaceId surfaceId) override;
 
   void maybeCancelAnimation(const int tag) const;
 
