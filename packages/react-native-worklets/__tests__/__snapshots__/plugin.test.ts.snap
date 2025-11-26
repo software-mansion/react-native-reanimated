@@ -2908,6 +2908,72 @@ var foo = function foo_null1Factory(_ref) {
 });"
 `;
 
+exports[`babel plugin for react-native-gesture-handler workletizes gesture callbacks using the hooks api 1`] = `
+"var _worklet_13539781966089_init_data = {
+  code: "function null1(){console.log('onBegin');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+var _worklet_16446448315454_init_data = {
+  code: "function null2(_event){console.log('onStart');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+var _worklet_16462958026656_init_data = {
+  code: "function null3(_event,_success){console.log('onEnd');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+var foo = useTapGesture({
+  numberOfTaps: 2,
+  onBegin: function null1Factory(_ref) {
+    var _worklet_13539781966089_init_data = _ref._worklet_13539781966089_init_data;
+    var _e = [new global.Error(), 1, -27];
+    var null1 = function null1() {
+      console.log('onBegin');
+    };
+    null1.__closure = {};
+    null1.__workletHash = 13539781966089;
+    null1.__pluginVersion = "x.y.z";
+    null1.__initData = _worklet_13539781966089_init_data;
+    null1.__stackDetails = _e;
+    return null1;
+  }({
+    _worklet_13539781966089_init_data: _worklet_13539781966089_init_data
+  }),
+  onStart: function null2Factory(_ref2) {
+    var _worklet_16446448315454_init_data = _ref2._worklet_16446448315454_init_data;
+    var _e = [new global.Error(), 1, -27];
+    var null2 = function null2(_event) {
+      console.log('onStart');
+    };
+    null2.__closure = {};
+    null2.__workletHash = 16446448315454;
+    null2.__pluginVersion = "x.y.z";
+    null2.__initData = _worklet_16446448315454_init_data;
+    null2.__stackDetails = _e;
+    return null2;
+  }({
+    _worklet_16446448315454_init_data: _worklet_16446448315454_init_data
+  }),
+  onEnd: function null3Factory(_ref3) {
+    var _worklet_16462958026656_init_data = _ref3._worklet_16462958026656_init_data;
+    var _e = [new global.Error(), 1, -27];
+    var null3 = function null3(_event, _success) {
+      console.log('onEnd');
+    };
+    null3.__closure = {};
+    null3.__workletHash = 16462958026656;
+    null3.__pluginVersion = "x.y.z";
+    null3.__initData = _worklet_16462958026656_init_data;
+    null3.__stackDetails = _e;
+    return null3;
+  }({
+    _worklet_16462958026656_init_data: _worklet_16462958026656_init_data
+  })
+});"
+`;
+
 exports[`babel plugin for react-native-gesture-handler workletizes possibly chained gesture object callback functions automatically 1`] = `
 "var _worklet_2359797567586_init_data = {
   code: "function null1(_event,_success){console.log('onEnd');}",
@@ -2990,6 +3056,62 @@ var onStart = function onStart_null1Factory({
   _worklet_8764176270806_init_data
 });
 var foo = Gesture.Tap().onStart(onStart);"
+`;
+
+exports[`babel plugin for react-native-gesture-handler workletizes referenced gesture callbacks using the hooks api 1`] = `
+"var _worklet_12687812344336_init_data = {
+  code: "function onBegin_null1(){console.log('onBegin');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+var onBegin = function onBegin_null1Factory({
+  _worklet_12687812344336_init_data
+}) {
+  const _e = [new global.Error(), 1, -27];
+  const onBegin = function () {
+    console.log('onBegin');
+  };
+  onBegin.__closure = {};
+  onBegin.__workletHash = 12687812344336;
+  onBegin.__pluginVersion = "x.y.z";
+  onBegin.__initData = _worklet_12687812344336_init_data;
+  onBegin.__stackDetails = _e;
+  return onBegin;
+}({
+  _worklet_12687812344336_init_data
+});
+var foo = useTapGesture({
+  numberOfTaps: 2,
+  onBegin: onBegin
+});"
+`;
+
+exports[`babel plugin for react-native-gesture-handler workletizes referenced gesture callbacks using the hooks api and shorthand syntax 1`] = `
+"var _worklet_12687812344336_init_data = {
+  code: "function onBegin_null1(){console.log('onBegin');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+var onBegin = function onBegin_null1Factory({
+  _worklet_12687812344336_init_data
+}) {
+  const _e = [new global.Error(), 1, -27];
+  const onBegin = function () {
+    console.log('onBegin');
+  };
+  onBegin.__closure = {};
+  onBegin.__workletHash = 12687812344336;
+  onBegin.__pluginVersion = "x.y.z";
+  onBegin.__initData = _worklet_12687812344336_init_data;
+  onBegin.__stackDetails = _e;
+  return onBegin;
+}({
+  _worklet_12687812344336_init_data
+});
+var foo = useTapGesture({
+  numberOfTaps: 2,
+  onBegin: onBegin
+});"
 `;
 
 exports[`babel plugin for referenced worklets prefers AssignmentExpression over VariableDeclarator 1`] = `
