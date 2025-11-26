@@ -180,8 +180,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         break;
       }
       case ShadowViewMutation::Delete: {
-        // TODO (before merging): add proper cleanup
-        //            lightNodes_.erase(mutation.oldChildShadowView.tag);
+        lightNodes_.erase(mutation.oldChildShadowView.tag);
         break;
       }
       case ShadowViewMutation::Insert: {
