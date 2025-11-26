@@ -81,7 +81,6 @@ enum Intent {
 };
 
 struct LightNode {
-  Intent intent;
   ShadowView previous;
   ShadowView current;
   ExitingState state = ExitingState::UNDEFINED;

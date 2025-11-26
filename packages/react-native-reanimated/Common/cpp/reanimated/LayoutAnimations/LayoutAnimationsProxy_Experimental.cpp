@@ -115,7 +115,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
     const ShadowViewMutationList &mutations,
     ShadowViewMutationList &filteredMutations) const {
   ReanimatedSystraceSection s("updateLightTree");
-  std::unordered_set<Tag> moved, deleted;
+  std::unordered_set<Tag> inserted, moved, deleted;
   for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
     const auto &mutation = *it;
     switch (mutation.type) {
@@ -124,15 +124,13 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         break;
       }
       case ShadowViewMutation::Insert: {
-        moved.insert(mutation.newChildShadowView.tag);
+        inserted.insert(mutation.newChildShadowView.tag);
         break;
       }
       case ShadowViewMutation::Remove: {
         const auto tag = mutation.oldChildShadowView.tag;
-        if (deleted.contains(tag)) {
-          lightNodes_[tag]->intent = TO_DELETE;
-        } else if (moved.contains(tag)) {
-          lightNodes_[tag]->intent = TO_MOVE;
+        if (inserted.contains(tag)) {
+          moved.insert(tag);
         }
         break;
       }
@@ -193,7 +191,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         parent->children.insert(parent->children.begin() + mutation.index, node);
         node->parent = parent;
         const auto tag = mutation.newChildShadowView.tag;
-        if (node->intent == TO_MOVE && layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
+        if (moved.contains(tag) && layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT)) {
           filteredMutations.push_back(
               ShadowViewMutation::InsertMutation(mutation.parentTag, node->previous, mutation.index));
         } else if (layoutAnimationsManager_->hasLayoutAnimation(tag, ENTERING)) {
@@ -206,9 +204,11 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
       }
       case ShadowViewMutation::Remove: {
         auto &node = lightNodes_[mutation.oldChildShadowView.tag];
-        auto &parent = lightNodes_[mutation.parentTag];
+        const auto tag = node->current.tag;
+        const auto parentTag = mutation.parentTag;
+        auto &parent = lightNodes_[parentTag];
 
-        if (node->intent == TO_DELETE && parent->intent != TO_DELETE) {
+        if (deleted.contains(tag) && !deleted.contains(parentTag)) {
           exiting_.push_back(node);
           if (parent->children[mutation.index]->current.tag == mutation.oldChildShadowView.tag) {
             filteredMutations.push_back(mutation);
@@ -216,7 +216,7 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
             LOG(INFO) << "Indicies are wrong in Remove mutation";
           }
           parent->children.erase(parent->children.begin() + mutation.index);
-        } else if (node->intent != TO_DELETE) {
+        } else if (!deleted.contains(tag)) {
           if (parent->children[mutation.index]->current.tag == mutation.oldChildShadowView.tag) {
             filteredMutations.push_back(mutation);
           } else {
