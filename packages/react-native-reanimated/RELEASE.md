@@ -14,9 +14,13 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
    - For patches:
      - `git switch <current-stable>` e.g. `git switch 3.17-stable` then `git pull`.
    - For minors:
-     - If latest major, create another stable branch from `main`, i.e.:
-       `git switch main` then `git pull` then `git switch -c 4.20-stable`
-     - If older major, create another stable branch from the last one, i.e.: `git switch 3.17-stable` then `git pull` then `git switch -c 3.18-stable`.
+   
+    *   <details><summary>Reanimated v4</summary>Create another stable branch from `main`, i.e.: `git switch main` then `git pull` then `git switch -c 4.20-stable`
+    </details>
+     
+     *   <details><summary>Reanimated v3</summary>Create another stable branch from the last one, i.e.: `git switch 3.17-stable` then `git pull` then `git switch -c 3.18-stable`. Then you need to cherry pick the PRs you want     to include in your release.
+    </details>
+    
 
 3. Create a new release branch:
 
@@ -26,23 +30,34 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
    - `cd packages/react-native-reanimated && node ./scripts/set-reanimated-version.js x.y.z`
 
-5. If releasing v4, make sure to update required version of `react-native-worklets` in `scripts/worklets-version.json`.
+5. <details><summary>Reanimated v4</summary>
+    
+   Make sure to update required version of `react-native-worklets` in `scripts/worklets-version.json`.
+    </details>
 
 6. Update the **Compatibility Table** in the documentation:
 
    - You need to do this in a separate PR as docs are hosted on `main`,
    - Use `&ndash;` (–) symbol instead of normal dash (-).
 
-7. If releasing v3, run `bundle install && bundle exec pod install` in all example apps to update following files:
+7. <details><summary>Reanimated v4</summary>
 
-   - `paper-example/ios/Podfile.lock`
+    Run `yarn build-all` in the root directory.
+</details>
+
+* <details><summary>Reanimated v3</summary>
+
+    run `bundle install && bundle exec pod install` in all example apps to update following files:
+     - `paper-example/ios/Podfile.lock`
    - `fabric-example/ios/Podfile.lock`
    - `tvos-example/ios/Podfile.lock`
    - `macos-example/macos/Podfile.lock`
+    </details>
+---
+8. <details><summary>Reanimated v3</summary>
 
-   If releasing v4, run `yarn build-all` in the root directory.
-
-8. When releasing v3, make sure to update the branch used for nightly releases of Reanimated 3 in [the workflow](../../.github/workflows/npm-reanimated-publish-nightly.yml).
+    When releasing v3, make sure to update the branch used for nightly releases of Reanimated 3 in [the workflow](../../.github/workflows/npm-reanimated-publish-nightly.yml).
+    </details>
 
 9. When releasing a minor version, update the minimal supported React Native version:
 
