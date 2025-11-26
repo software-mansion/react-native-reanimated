@@ -137,6 +137,8 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         break;
       }
       default: {
+        // Skip other mutation types. We are only interested in moves and deletions here.
+        break;
       }
     }
   }
