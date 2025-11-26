@@ -101,13 +101,11 @@ function hasValue(value: unknown): boolean {
   return value !== null && value !== undefined;
 }
 
-export type ChangedProps = Partial<Record<string, { from: unknown; to: unknown }>>;
-
 export function getChangedProps(
   previousStyle: UnknownRecord | null,
   nextStyle: UnknownRecord | null,
   allowedProperties: string[] | 'all'
-): ChangedProps | null {
+): Record<string, [unknown, unknown]> | null {
   if (!previousStyle || !nextStyle) {
     return null;
   }
@@ -121,7 +119,7 @@ export function getChangedProps(
         ])
       );
 
-  const diff: AnyRecord = {};
+  const diff: Record<string, [unknown, unknown]> = {};
 
   for (const property of monitoredProperties) {
     const nextValue = nextStyle[property];
@@ -129,15 +127,15 @@ export function getChangedProps(
 
     if (!hasValue(prevValue) || !hasValue(nextValue)) {
       if (prevValue !== nextValue) {
-        diff[property] = { from: prevValue, to: nextValue };
+        diff[property] = [prevValue, nextValue];
       }
       continue;
     }
 
     if (!deepEqual(prevValue, nextValue)) {
-      diff[property] = { from: prevValue, to: nextValue };
+      diff[property] = [prevValue, nextValue];
     }
   }
 
-  return Object.keys(diff).length > 0 ? (diff as ChangedProps) : null;
+  return Object.keys(diff).length > 0 ? diff : null;
 }

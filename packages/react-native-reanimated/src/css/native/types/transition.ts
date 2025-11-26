@@ -17,3 +17,8 @@ export type NormalizedCSSTransitionConfig = {
 
 export type NormalizedCSSTransitionConfigUpdates =
   Partial<NormalizedCSSTransitionConfig>;
+
+export type CSSTransitionUpdates = {
+  properties?: Record<string, [unknown, unknown]>;
+  settings?: Record<string, Partial<NormalizedSingleCSSTransitionSettings>>;
+};
