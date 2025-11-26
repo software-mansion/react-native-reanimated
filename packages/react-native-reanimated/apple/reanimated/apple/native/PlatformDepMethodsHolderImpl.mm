@@ -12,10 +12,10 @@
 #import <React/RCTComponentViewRegistry.h>
 #import <React/RCTMountingManager.h>
 
-#if __has_include(<rnscreens/RNSScreen.h>)
-#define HAS_SCREENS
-#import <rnscreens/RNSScreen.h>
-#endif
+@protocol RNScreenViewOptionalProtocol <NSObject>
+@required
+- (void)setSnapshotAfterUpdates:(BOOL)snapshot;
+@end
 
 namespace reanimated {
 
@@ -122,13 +122,13 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
 ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
 {
   auto forceScreenSnapshot = [=](Tag tag) {
-#ifdef HAS_SCREENS
     RCTSurfacePresenter *surfacePresenter = nodesManager.surfacePresenter;
     RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
-    UIView<RCTComponentViewProtocol> *componentView = [componentViewRegistry findComponentViewWithTag:tag];
-    RNSScreenView *rnsScreenView = (RNSScreenView *)componentView;
-    [rnsScreenView setSnapshotAfterUpdates:YES];
-#endif // HAS_SCREENS
+    UIView<RCTComponentViewProtocol> *maybeRNSScreenView = [componentViewRegistry findComponentViewWithTag:tag];
+    SEL setSnapshotSelector = @selector(setSnapshotAfterUpdates:);
+    if ([maybeRNSScreenView respondsToSelector:setSnapshotSelector]) {
+        [(id<RNScreenViewOptionalProtocol>)maybeRNSScreenView setSnapshotAfterUpdates:YES];
+    }
   };
   return forceScreenSnapshot;
 }
