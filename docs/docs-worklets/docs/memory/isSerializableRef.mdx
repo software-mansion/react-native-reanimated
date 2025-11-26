@@ -4,7 +4,7 @@ sidebar_position: 42 # Use alphabetical order
 
 # isSerializableRef
 
-`isSerializableRef` checks if a value is a serializable reference.
+`isSerializableRef` checks if a value is a [Serializable](/docs/memory/Serializable) reference.
 
 ## Reference
 
@@ -28,3 +28,13 @@ function isSerializableRef(value: unknown): value is SerializableRef;
 ```
 
 </details>
+
+## Arguments
+
+### value
+
+The value to be checked.
+
+## Remarks
+
+- Outside of [Bundle Mode](/docs/experimental/bundleMode), `isSerializableRef` can be called only on the [RN Runtime](/docs/fundamentals/glossary#rn-runtime). In Bundle Mode, it can be called from any Runtime.

@@ -1,0 +1,32 @@
+.table {
+  width: fit-content;
+  border-collapse: collapse;
+}
+
+.table td {
+  padding: 8px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.table td:first-child {
+  text-align: right;
+}
+
+.table td:last-child {
+  text-align: center;
+}
+
+.supported {
+  font-weight: bold;
+  color: var(--swm-supported-type-color);
+}
+
+.unsupported {
+  font-weight: bold;
+  color: var(--swm-unsupported-type-color);
+}
+
+.type {
+  font-style: italic;
+}

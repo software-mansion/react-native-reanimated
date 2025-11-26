@@ -10,6 +10,8 @@ import {
 } from '@site/src/components/Compatibility';
 import Indent from '@site/src/components/Indent';
 import DeprecatedBanner from '@site/src/components/DeprecatedBanner';
+import SerializableSupportedTypesTable from '@site/src/components/SerializableTypes';
+import SVGDiagram from '@site/src/components/SVGDiagram';
 
 export default {
   // Re-use the default mapping
@@ -24,4 +26,6 @@ export default {
   Indent,
   DeprecatedBanner,
   WorkletsCompatibility,
+  SerializableSupportedTypesTable,
+  SVGDiagram,
 };
