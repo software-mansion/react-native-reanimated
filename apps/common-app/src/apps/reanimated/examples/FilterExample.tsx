@@ -23,7 +23,10 @@ const FILTER_TYPES = [
   'saturate',
 ] as const;
 
-const getObjectFilterStyle = (value: number, filterType: (typeof FILTER_TYPES)[number]) => {
+const getObjectFilterStyle = (
+  value: number,
+  filterType: (typeof FILTER_TYPES)[number]
+) => {
   'worklet';
   let filterValue;
   switch (filterType) {
@@ -59,9 +62,12 @@ const getObjectFilterStyle = (value: number, filterType: (typeof FILTER_TYPES)[n
       filterValue = {};
   }
   return [filterValue];
-}
+};
 
-const getStringFilterStyle = (value: number, filterType: (typeof FILTER_TYPES)[number]) => {
+const getStringFilterStyle = (
+  value: number,
+  filterType: (typeof FILTER_TYPES)[number]
+) => {
   'worklet';
   let filterValue;
   switch (filterType) {
@@ -93,7 +99,7 @@ const getStringFilterStyle = (value: number, filterType: (typeof FILTER_TYPES)[n
       filterValue = '';
   }
   return filterValue;
-}
+};
 
 const FilterImageItem = ({
   filterType,
@@ -106,7 +112,7 @@ const FilterImageItem = ({
 }) => {
   // @ts-ignore
   const style = useAnimatedStyle(() => {
-  const filterValue = isStringFormat
+    const filterValue = isStringFormat
       ? getStringFilterStyle(sv.value, filterType)
       : getObjectFilterStyle(sv.value, filterType);
     return { filter: filterValue };
