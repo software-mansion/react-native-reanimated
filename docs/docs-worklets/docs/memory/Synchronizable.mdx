@@ -8,7 +8,7 @@ Synchronizable is a type of shared memory not tied to any JavaScript Runtime. It
 
 It can be used to implement a semi-global state for Runtimes to synchronize with. As it's not tied to any Runtime, reading and writing to it doesn't preempt any Runtimes and could be used to implement communication channels between different Runtimes and/or C++ code.
 
-Synchronizable can be obtained exclusively or non-exclusively. Trying to access it from multiple threads at once could lead to blocking.
+Synchronizable can be obtained exclusively or non-exclusively. Trying to access it from multiple threads at once can lead to blocking.
 
 <SVGDiagram>![Synchronizable](/img/synchronizable.svg)</SVGDiagram>
 
@@ -71,7 +71,7 @@ Non-exclusively obtains the Synchronizable and returns its value. It never block
 
 ### setBlocking
 
-Exclusively obtains the Synchronizable and sets it to the provided value, potentially blocking if either getBlocking or setBlocking are being executed or if the Synchronizable is explicitly locked. You can also pass a setter function that receives the previous value and returns the new value. Synchronizable is **locked for the duration of the setter function execution**.
+Exclusively obtains the Synchronizable and sets it to the provided value, potentially blocking if either `getBlocking` or `setBlocking` are being executed or if the Synchronizable is explicitly locked. You can also pass a setter function that receives the previous value and returns the new value. Synchronizable is **locked for the duration of the setter function execution**.
 
 ```tsx
 // Set the value to 42
@@ -84,7 +84,7 @@ The value provided to `setBlocking` is serialized automatically.
 
 ### lock
 
-Exclusively locks the Synchronizable - other threads can't call `getBlocking`, `setBlocking` or `lock` until the Synchronizable is unlocked. Multiple calls on the same thread do nothing. Trying to call `lock` from another thread while the value is already locked results in blocking.
+Exclusively locks the Synchronizable - other threads are blocked when calling `getBlocking`, `setBlocking` or `lock` until the Synchronizable is unlocked. Multiple calls on the same thread do nothing.
 
 ### unlock
 

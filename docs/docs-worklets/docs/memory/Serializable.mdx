@@ -32,4 +32,4 @@ type SerializableRef<TValue = unknown> = {
 
 - The JavaScript value of a Serializable is a reference wrapper that only holds the C++ side in its `jsi::NativeState`.
 - The prop `__nativeStateSerializableJSRef` present on the reference doesn't exist in runtime - it's only a TypeScript definition to tell you what type of value is held by the Serializable.
-- Functions that aren't worklets are serialized as references to function instances on the respective runtime, meaning that they can't be invoked on other runtimes, only passed around.
+- Functions that aren't worklets are serialized as references to function instances on the respective Runtime, meaning that they can't be invoked on other runtimes, only passed around.

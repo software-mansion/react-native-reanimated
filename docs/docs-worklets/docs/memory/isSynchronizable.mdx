@@ -4,7 +4,7 @@ sidebar_position: 42 # Use alphabetical order
 
 # isSynchronizable
 
-Asserts whether the provided value is a [Synchronizable](/docs/memory/Synchronizable).
+Asserts whether a value is a [Synchronizable](/docs/memory/Synchronizable).
 
 You can pass a generic type argument to specify the expected value type held by the Synchronizable.
 
@@ -12,13 +12,13 @@ You can pass a generic type argument to specify the expected value type held by 
 
 ```typescript
 import { isSynchronizable } from 'react-native-worklets';
-const synchronizable = ...; // type: unknown
+const maybeSynchronizable = ...; // type: unknown
 
-console.log(isSynchronizable(synchronizable)); // logs true if `synchronizable` is a Synchronizable.
+console.log(isSynchronizable(maybeSynchronizable)); // logs `true` if `maybeSynchronizable` is a Synchronizable.
 
-if (isSynchronizable<number>(synchronizable)) {
-  // Here, TypeScript knows that `synchronizable` is of type `Synchronizable<number>`
-  synchronizable.setBlocking(42);
+if (isSynchronizable<number>(maybeSynchronizable)) {
+  // Here, TypeScript knows that `maybeSynchronizable` is of type `Synchronizable<number>`
+  maybeSynchronizable.setBlocking(42);
 }
 ```
 

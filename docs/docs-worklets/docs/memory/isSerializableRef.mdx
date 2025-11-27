@@ -4,20 +4,15 @@ sidebar_position: 42 # Use alphabetical order
 
 # isSerializableRef
 
-`isSerializableRef` checks if a value is a [Serializable](/docs/memory/Serializable) reference.
+Asserts whether a value is a [Serializable](/docs/memory/Serializable) reference.
 
 ## Reference
 
-```javascript
-import { isSerializableRef, createSerializable } from 'react-native-worklets';
+```typescript
+import { isSerializableRef } from 'react-native-worklets';
+const maybeSerializableRef = ...; // type: unknown
 
-const object = {
-  a: 1,
-};
-
-const serializableRef = createSerializable(object);
-
-console.log(isSerializableRef(serializableRef)); // true
+console.log(isSerializableRef(maybeSerializableRef)); // logs `true` if `maybeSerializableRef` is a SerializableRef.
 ```
 
 <details>
@@ -37,4 +32,4 @@ The value to be checked.
 
 ## Remarks
 
-- Outside of [Bundle Mode](/docs/experimental/bundleMode), `isSerializableRef` can be called only on the [RN Runtime](/docs/fundamentals/glossary#rn-runtime). In Bundle Mode, it can be called from any Runtime.
+- `isSerializableRef` can be called from any JavaScript Runtime.
