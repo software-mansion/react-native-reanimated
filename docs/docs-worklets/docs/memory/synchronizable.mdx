@@ -98,7 +98,7 @@ Synchronizable can be created and accessed from C++ code. The C++ API doesn't su
 
 ## Remarks
 
-- While Synchronizable can hold any [Serializable](/docs/memory/Serializable) JavaScript value, we recommend to use primitives like `number`, `string` or `boolean` for best performance, to minimize the amount of data being copied for each access.
+- While Synchronizable can hold any [Serializable](/docs/memory/serializable) JavaScript value, we recommend to use primitives like `number`, `string` or `boolean` for best performance, to minimize the amount of data being copied for each access.
 - We recommend to avoid changing the type of the value held by Synchronizable, instead opt to create a new Synchronizable for different types.
 - Synchronizable is not reactive, meaning that there are no built-in mechanisms to notify Runtimes when its value changes. Runtimes need to poll the value to detect changes.
 - Synchronizable on a JavaScript Runtime is a wrapper to a reference to the actual Synchronizable living in C++. The value held by Synchronizable is copied to/from C++ on each access.
