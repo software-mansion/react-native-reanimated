@@ -155,8 +155,6 @@ flowchart TD
 
 ## Remarks
 
-<!-- TODO: -->
-
-- To use Custom Serializables which require `new` keyword for instantiation, you need to disable `workletClasses` feature of `Worklets Babel Plugin`.
+- To use Custom Serializables which require `new` keyword for instantiation, you need to [disable Worklet Classes](/docs/worklets-babel-plugin/plugin-options#disableworkletclasses) option in Worklets Babel plugin configuration.
 - Custom Serializables are global and shared between all [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime). Once you register a Custom Serializable, it will be available in all Runtimes.
 - You can use `registerCustomSerializable` only on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
