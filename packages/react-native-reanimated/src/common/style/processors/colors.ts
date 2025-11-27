@@ -3,39 +3,16 @@
 import type {
   ColorValue,
   DynamicColorIOS as RNDynamicColorIOS,
+  OpaqueColorValue,
 } from 'react-native';
 
 import { ColorProperties, processColorInitially } from '../../../Colors';
 import type { StyleProps } from '../../../commonTypes';
 import { IS_ANDROID, IS_IOS } from '../../constants';
 import { ReanimatedError } from '../../errors';
-import type { Maybe } from '../../types';
+import { isRecord } from '../../utils';
 
 type DynamicColorIOSTuple = Parameters<typeof RNDynamicColorIOS>[0];
-
-type DynamicColorChannels = {
-  light: ColorValue;
-  dark: ColorValue;
-  highContrastLight?: ColorValue;
-  highContrastDark?: ColorValue;
-};
-
-type ProcessedDynamicColorChannels = {
-  light: Maybe<number>;
-  dark: Maybe<number>;
-  highContrastLight?: Maybe<number>;
-  highContrastDark?: Maybe<number>;
-};
-
-export type DynamicColorValue = {
-  dynamic: DynamicColorChannels;
-};
-
-export type ProcessedDynamicColor = {
-  dynamic: ProcessedDynamicColorChannels;
-};
-
-export type ProcessedColor = number | ProcessedDynamicColor;
 
 type PlatformColorValue = ColorValue & { semantic?: Array<string> } & {
   resource_paths?: Array<string>;
@@ -52,22 +29,15 @@ function isPlatformColorObject(value: unknown): value is PlatformColorValue {
   return (
     !!value &&
     typeof value === 'object' &&
-    (('semantic' in value && Array.isArray((value as any).semantic)) ||
-      ('resource_paths' in value && Array.isArray((value as any).resource_paths)))
+    (('semantic' in value && Array.isArray(value.semantic)) ||
+      ('resource_paths' in value && Array.isArray(value.resource_paths)))
   );
 }
 
 /* copied from:
  * https://github.com/facebook/react-native/blob/v0.81.0/packages/react-native/Libraries/StyleSheet/PlatformColorValueTypesIOS.d.ts
  */
-const DynamicColorIOSProperties = [
-  'light',
-  'dark',
-  'highContrastLight',
-  'highContrastDark',
-] as const;
-
-export function DynamicColorIOS(tuple: DynamicColorIOSTuple): DynamicColorValue {
+export function DynamicColorIOS(tuple: DynamicColorIOSTuple): OpaqueColorValue {
   'worklet';
   return {
     dynamic: {
@@ -76,28 +46,32 @@ export function DynamicColorIOS(tuple: DynamicColorIOSTuple): DynamicColorValue 
       highContrastLight: tuple.highContrastLight,
       highContrastDark: tuple.highContrastDark,
     },
-  } as DynamicColorValue;
+  } as unknown as OpaqueColorValue;
 }
 
-function isDynamicColorObject(value: unknown): value is DynamicColorValue {
+type DynamicColorObjectIOS = {
+  dynamic: DynamicColorIOSTuple;
+};
+
+function isDynamicColorObjectIOS(
+  value: unknown
+): value is DynamicColorObjectIOS {
   return (
-    typeof value === 'object' &&
-    value !== null &&
-    'dynamic' in value &&
-    DynamicColorIOSProperties.some((key) =>
-      key in (value as { dynamic: Record<string, unknown> }).dynamic
-    )
+    isRecord(value) &&
+    isRecord(value.dynamic) &&
+    'light' in value.dynamic &&
+    'dark' in value.dynamic
   );
 }
 
-/**
- * Processes a color value and returns a normalized color representation.
- *
- * @param value - The color value to process (string, number, or ColorValue)
- * @returns The processed color value - `number` for valid colors, `false` for
- *   transparent colors
- */
-function processColorToNumber(value: unknown): number {
+export const ERROR_MESSAGES = {
+  invalidColor: (color: unknown) =>
+    `Invalid color value: ${JSON.stringify(color)}`,
+  dynamicNotAvailableOnPlatform: () =>
+    'DynamicColorIOS is not available on this platform.',
+};
+
+export function processColorNumber(value: unknown): number | null {
   let normalizedColor = processColorInitially(value);
 
   if (IS_ANDROID && typeof normalizedColor == 'number') {
@@ -108,49 +82,83 @@ function processColorToNumber(value: unknown): number {
     normalizedColor = normalizedColor | 0x0;
   }
 
-  if (normalizedColor === null) {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidColor(value));
+  if (normalizedColor !== null) {
+    // The normalizedColor can be a boolean false value for the transparent color, but
+    // we can safely cast it to number. Since boolean false is essentially 0, it can be
+    // used in all numeric operations without issues. We use a boolean false value to
+    // distinguish the transparent color from other colors.
+    return normalizedColor as number;
   }
 
-  // The normalizedColor can be a boolean false value for the transparent color, but
-  // we can safely cast it to number. Since boolean false is essentially 0, it can be
-  // used in all numeric operations without issues. We use a boolean false value to
-  // distinguish the transparent color from other colors.
-  return normalizedColor as number;
+  return null;
 }
 
-export const ERROR_MESSAGES = {
-  invalidColor: (color: unknown) =>
-    `Invalid color value: ${JSON.stringify(color)}`,
+type ProcessedDynamicColorObjectIOS = {
+  dynamic: {
+    light: number;
+    dark: number;
+    highContrastLight?: number;
+    highContrastDark?: number;
+  };
 };
 
-function processDynamicColor(value: DynamicColorValue): ProcessedDynamicColor {
-  if (!IS_IOS) {
-    throw new ReanimatedError('DynamicColorIOS is not available on this platform.');
+const DynamicColorIOSProperties = [
+  'light',
+  'dark',
+  'highContrastLight',
+  'highContrastDark',
+] as const;
+
+function processDynamicColorObjectIOS(
+  value: DynamicColorObjectIOS
+): ProcessedDynamicColorObjectIOS | null {
+  const result = {} as ProcessedDynamicColorObjectIOS['dynamic'];
+
+  for (const property of DynamicColorIOSProperties) {
+    if (!(property in value.dynamic)) {
+      continue;
+    }
+
+    const processed = processColorNumber(value.dynamic[property]);
+    if (processed === null) {
+      return null;
+    }
+
+    result[property] = processed;
   }
 
-  const channels = value.dynamic;
-  const normalizeChannel = (channel: ColorValue | undefined): Maybe<number> =>
-    channel === undefined ? undefined : processColorToNumber(channel);
-
   return {
-    dynamic: {
-      light: processColorToNumber(channels.light),
-      dark: processColorToNumber(channels.dark),
-      highContrastLight: normalizeChannel(channels.highContrastLight),
-      highContrastDark: normalizeChannel(channels.highContrastDark),
-    },
+    dynamic: result,
   };
 }
 
-export function processColor(value: DynamicColorValue): ProcessedDynamicColor;
-export function processColor(value: unknown): number;
-export function processColor(value: unknown): ProcessedColor {
-  if (isDynamicColorObject(value)) {
-    return processDynamicColor(value);
+/**
+ * Processes a color value and returns a normalized color representation.
+ *
+ * @param value - The color value to process (string, number, or ColorValue)
+ * @returns The processed color value - `number` for valid colors, `false` for
+ *   transparent colors
+ */
+export function processColor(value: string | number): number;
+export function processColor(
+  value: unknown
+): number | ProcessedDynamicColorObjectIOS;
+export function processColor(
+  value: unknown
+): number | ProcessedDynamicColorObjectIOS {
+  let result = null;
+
+  if (isDynamicColorObjectIOS(value)) {
+    result = processDynamicColorObjectIOS(value);
+  } else {
+    result = processColorNumber(value);
   }
 
-  return processColorToNumber(value);
+  if (result === null) {
+    throw new ReanimatedError(ERROR_MESSAGES.invalidColor(value));
+  }
+
+  return result;
 }
 
 export function processColorsInProps(props: StyleProps) {
@@ -162,6 +170,7 @@ export function processColorsInProps(props: StyleProps) {
     if (Array.isArray(value)) {
       props[key] = value.map((c) => processColor(c));
     } else if (isPlatformColorObject(value)) {
+      // PlatformColor is not processed further on iOS and Android
       props[key] = value;
     } else {
       props[key] = processColor(value);
