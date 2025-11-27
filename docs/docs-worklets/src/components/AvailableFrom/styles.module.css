@@ -1,0 +1,41 @@
+.badge {
+  display: inline-block;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  white-space: nowrap;
+  margin: 0 0.25rem;
+}
+
+.fullBadge {
+  padding: 1rem;
+  width: '100%';
+  border-radius: 8px;
+  display: flex !important;
+  flex-direction: row;
+  margin-bottom: 1rem;
+}
+
+.light {
+  background-color: var(--swm-yellow-light-40);
+  color: var(--swm-navy-light-100);
+}
+
+.dark {
+  background-color: var(--swm-yellow-dark-120);
+  color: var(--swm-off-white);
+}
+
+.infoIcon {
+  margin-right: 1rem;
+}
+
+.infoIcon > svg {
+  width: 14px;
+  height: 14px;
+}
+
+.version {
+  font-weight: 500;
+}

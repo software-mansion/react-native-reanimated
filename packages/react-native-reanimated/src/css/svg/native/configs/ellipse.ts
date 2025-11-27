@@ -14,5 +14,4 @@ export const SVG_ELLIPSE_PROPERTIES_CONFIG: SvgStyleBuilderConfig<EllipseProps> 
     cy: true,
     rx: true,
     ry: true,
-    opacity: true,
   };
