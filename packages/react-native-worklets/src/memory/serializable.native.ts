@@ -252,6 +252,18 @@ if (!globalThis.__customSerializationRegistry) {
 }
 const customSerializationRegistry = globalThis.__customSerializationRegistry;
 
+/**
+ * `registerCustomSerializable` lets you register your own pre-serialization and
+ * post-deserialization logic for object with prototype different than
+ * `Object.prototype` that aren't supported by default by Serializable. Such
+ * types are called **Custom Serializables**. This way you can tell Worklets how
+ * to transfer your custom data structures between different Runtimes without
+ * manually serializing and deserializing them every time.
+ *
+ * @param registrationData - The registration data for the custom serializable -
+ *   {@link RegistrationData}
+ * @see https://docs.swmansion.com/react-native-worklets/docs/memory/registerCustomSerializable/
+ */
 export function registerCustomSerializable<
   TValue extends object,
   TPacked extends object,
@@ -263,6 +275,10 @@ export function registerCustomSerializable<
   }
 
   const { name, determine, pack, unpack } = registrationData;
+
+  if (__DEV__) {
+    verifyRegistrationData(determine, pack, unpack);
+  }
   if (customSerializationRegistry.some((data) => data.name === name)) {
     if (__DEV__) {
       console.warn(
@@ -273,7 +289,7 @@ export function registerCustomSerializable<
   }
 
   customSerializationRegistry.push(
-    registrationData as unknown as SerializationData<object, object>
+    registrationData as unknown as SerializationData<object, unknown>
   );
 
   WorkletsModule.registerCustomSerializable(
@@ -282,6 +298,28 @@ export function registerCustomSerializable<
     createSerializable(unpack),
     customSerializationRegistry.length - 1
   );
+}
+
+function verifyRegistrationData(
+  determine: unknown,
+  pack: unknown,
+  unpack: unknown
+) {
+  if (!isWorkletFunction(determine)) {
+    throw new WorkletsError(
+      'The "determine" function provided to registerCustomSerializable must be a worklet.'
+    );
+  }
+  if (!isWorkletFunction(pack)) {
+    throw new WorkletsError(
+      'The "pack" function provided to registerCustomSerializable must be a worklet.'
+    );
+  }
+  if (!isWorkletFunction(unpack)) {
+    throw new WorkletsError(
+      'The "unpack" function provided to registerCustomSerializable must be a worklet.'
+    );
+  }
 }
 
 function detectCyclicObject(value: unknown, depth: number) {
@@ -649,7 +687,7 @@ function cloneImport<TValue extends WorkletImport>(
   return clone as SerializableRef<TValue>;
 }
 
-function cloneCustom<TValue extends object, TPacked extends object>(
+function cloneCustom<TValue extends object, TPacked = unknown>(
   data: TValue,
   pack: (data: TValue) => TPacked,
   typeId: number

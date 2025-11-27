@@ -28,6 +28,7 @@
     "@docusaurus/core": "3.9.1",
     "@docusaurus/plugin-debug": "3.9.1",
     "@docusaurus/preset-classic": "3.9.1",
+    "@docusaurus/theme-mermaid": "3.9.1",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.0",
     "@mdx-js/react": "3.0.0",

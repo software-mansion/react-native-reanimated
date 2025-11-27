@@ -34,7 +34,10 @@ const config = {
     hooks: {
       onBrokenMarkdownLinks: 'throw',
     },
+    mermaid: true,
   },
+
+  themes: ['@docusaurus/theme-mermaid'],
 
   onBrokenLinks: 'throw',
   onBrokenAnchors: 'throw',
