@@ -6,7 +6,7 @@ sidebar_position: 2
 
 ## Worklet
 
-Worklet is a short-running JavaScript function that can be moved and executed across different [Worklet Runtimes](/docs/fundamentals/glossary#worklet-runtime) and the [React Native Runtime](/docs/fundamentals/glossary/#react-native-runtime-rn-runtime).
+Worklet is a short-running JavaScript function that can be moved and executed across different [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime) and the [React Native Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
 
 Most of the time when working with libraries like [Reanimated](https://docs.swmansion.com/react-native-reanimated/) the code is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and run on the UI thread by default.
 
@@ -42,42 +42,15 @@ function onPress() {
 
 ## to workletize
 
-To convert a JavaScript function into a serializable object which can be copied and run over on [Worklet Runtimes](/docs/fundamentals/glossary#worklet-runtime).
+To convert a JavaScript function into a serializable object which can be copied and run over on [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime).
 
 Functions marked with `"worklet"` directive are automatically picked up and workletized by the Worklets Babel plugin.
 
-## Worklet Runtime
-
-A JavaScript runtime spawned by `react-native-worklets`. It's pre-configured to be able to execute worklets.
-
-It isn't coupled to any thread, but there might be a thread dedicated to its execution.
-
-You can learn more about different runtime types by reading the [Runtime kinds](/docs/fundamentals/runtimeKinds) section.
-
-## UI Runtime
-
-A unique [Worklet Runtime](/docs/fundamentals/glossary#worklet-runtime) that is tailored to efficiently offload work from the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime-rn-runtime) and to allow for synchronous access to native events and the native rendering layer.
-
-There's only one UI Runtime in your app.
-
-## Worker Runtime
-
-A runtime created on demand with [`createWorkletRuntime`](/docs/threading/createWorkletRuntime) function from `react-native-worklets`. You can customize its behavior and the thread it runs on.
-
-There can be multiple Worker Runtimes in your app running at the same time.
-
-## React Native Runtime (RN Runtime)
-
-A JavaScript runtime that is responsible for executing your app's bundle and where the React part of React Native lives.
-React Native Runtime uses [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) and [UI thread](/docs/fundamentals/glossary#ui-thread) to execute your code.
-
-You can learn more about it by reading the [JavaScript Runtime](https://reactnative.dev/docs/javascript-environment) article in the official React Native docs.
-
 ## JavaScript thread
 
-JavaScript thread (or JS thread for short) is responsible for handling JavaScript code execution in the app.
+JavaScript thread (or JS thread for short) is responsible for handling JavaScript code execution in the app for the [React Native Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
 
-This is the primary place where all the business logic, state management, and event handling occur. It runs the JavaScript code that defines your app’s behavior and manages interactions with the user interface.
+This is the primary place where all the business logic, state management, and JavaScript event handling occur. It runs the JavaScript code that defines your app’s behavior and manages interactions with the user interface.
 
 ## UI thread
 
@@ -90,11 +63,3 @@ You can learn more about it by reading the [Threading model](https://reactnative
 The plugin performs automatic [workletization](/docs/fundamentals/glossary#to-workletize) of certain functions used with Reanimated to reduce the amount of boilerplate code.
 
 You can learn the details [here](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about).
-
-## Serializable
-
-A Serializable is an object that represents a JavaScript value that can be copied between [Worklet Runtimes](/docs/fundamentals/glossary#worklet-runtime). JavaScript values cannot be passed to other runtimes without prior serialization.
-
-## SerializableRef
-
-A `SerializableRef` is a reference to a `Serializable` object.

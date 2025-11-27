@@ -1,0 +1,37 @@
+---
+title: createSynchronizable
+sidebar_position: 42 # Use alphabetical order
+---
+
+# createSynchronizable <AvailableFrom version="0.6.0" />
+
+Creates a new [Synchronizable](/docs/memory/synchronizable) holding the provided initial value. Returns the created Synchronizable.
+
+## Reference
+
+```tsx
+import { createSynchronizable } from 'react-native-worklets';
+
+const synchronizable = createSynchronizable({ a: 42 });
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function createSynchronizable<TValue>(
+  initialValue: TValue
+): Synchronizable<TValue>;
+```
+
+</details>
+
+## Arguments
+
+### initialValue
+
+The initial value to be held by the created Synchronizable. As it has to be serialized before passing to C++, it must be one of the supported types listed in the [Serializable](/docs/memory/serializable) documentation.
+
+## Remarks
+
+- Outside of [Bundle Mode](/docs/experimental/bundleMode), `createSynchronizable` can be called only on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime). In Bundle Mode, it can be called from any Runtime.
