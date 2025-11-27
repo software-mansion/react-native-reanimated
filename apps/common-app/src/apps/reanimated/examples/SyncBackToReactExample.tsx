@@ -14,7 +14,7 @@ const instructions = [
   '1. Press "Animate width and color" button',
   '2. Wait until the animated styles are synced back to React (about 3 seconds)',
   '3. Press "Increase counter" button',
-  '4. The view width and color not change',
+  '4. The view width and color not change, similar to when the feature flag is disabled',
 ].join('\n');
 
 interface ButtonProps {
