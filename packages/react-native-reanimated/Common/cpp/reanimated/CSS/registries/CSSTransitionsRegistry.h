@@ -1,9 +1,9 @@
 #pragma once
 
+#include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/core/CSSTransition.h>
 #include <reanimated/CSS/registries/StaticPropsRegistry.h>
 #include <reanimated/CSS/utils/DelayedItemsManager.h>
-#include <reanimated/CSS/utils/props.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
@@ -25,8 +25,8 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
   bool isEmpty() const override;
   bool hasUpdates() const;
 
+  void apply(jsi::Runtime &rt, Tag viewTag, const CSSTransitionUpdates &updates);
   void add(const std::shared_ptr<CSSTransition> &transition);
-  void updateSettings(Tag viewTag, const PartialCSSTransitionConfig &config);
   void remove(Tag viewTag) override;
 
   void update(double timestamp);

@@ -12,8 +12,9 @@ import type {
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSTransitionUpdates,
   NormalizedCSSAnimationKeyframesConfig,
-  NormalizedCSSTransitionConfig,
+  NormalizedCSSTransitionConfigWithDiff,
 } from '../css/native';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
@@ -81,12 +82,12 @@ export interface ReanimatedModuleProxy {
 
   registerCSSTransition(
     shadowNodeWrapper: ShadowNodeWrapper,
-    transitionConfig: NormalizedCSSTransitionConfig
+    transitionConfig: NormalizedCSSTransitionConfigWithDiff
   ): void;
 
   updateCSSTransition(
     viewTag: number,
-    settingsUpdates: Partial<NormalizedCSSTransitionConfig>
+    transitionUpdates: CSSTransitionUpdates
   ): void;
 
   unregisterCSSTransition(viewTag: number): void;

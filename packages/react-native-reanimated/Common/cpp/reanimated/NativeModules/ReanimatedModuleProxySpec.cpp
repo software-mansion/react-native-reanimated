@@ -120,16 +120,9 @@ static jsi::Value REANIMATED_SPEC_PREFIX(
 }
 
 static jsi::Value REANIMATED_SPEC_PREFIX(
-    registerCSSTransition)(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value *args, size_t) {
+    applyCSSTransition)(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value *args, size_t) {
   static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->registerCSSTransition(rt, std::move(args[0]), std::move(args[1]));
-  return jsi::Value::undefined();
-}
-
-static jsi::Value REANIMATED_SPEC_PREFIX(
-    updateCSSTransition)(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value *args, size_t) {
-  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->updateCSSTransition(rt, std::move(args[0]), std::move(args[1]));
+      ->applyCSSTransition(rt, std::move(args[0]), std::move(args[1]));
   return jsi::Value::undefined();
 }
 
@@ -168,8 +161,7 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(const std::shared_ptr<CallI
   methodMap_["applyCSSAnimations"] = MethodMetadata{2, REANIMATED_SPEC_PREFIX(applyCSSAnimations)};
   methodMap_["unregisterCSSAnimations"] = MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSAnimations)};
 
-  methodMap_["registerCSSTransition"] = MethodMetadata{2, REANIMATED_SPEC_PREFIX(registerCSSTransition)};
-  methodMap_["updateCSSTransition"] = MethodMetadata{2, REANIMATED_SPEC_PREFIX(updateCSSTransition)};
+  methodMap_["applyCSSTransition"] = MethodMetadata{2, REANIMATED_SPEC_PREFIX(applyCSSTransition)};
   methodMap_["unregisterCSSTransition"] = MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSTransition)};
 }
 

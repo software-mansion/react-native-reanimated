@@ -5,6 +5,8 @@ import type {
   CSSAnimationUpdates,
   CSSTransitionUpdates,
   NormalizedCSSAnimationKeyframesConfig,
+  NormalizedCSSTransitionConfig,
+  NormalizedCSSTransitionConfigWithDiff,
 } from './types';
 
 // COMMON
@@ -59,11 +61,18 @@ export function unregisterCSSAnimations(viewTag: number) {
 
 // TRANSITIONS
 
-export function applyCSSTransition(
+export function registerCSSTransition(
   shadowNodeWrapper: ShadowNodeWrapper,
-  transitionUpdates: CSSTransitionUpdates
+  config: NormalizedCSSTransitionConfigWithDiff
 ) {
-  ReanimatedModule.applyCSSTransition(shadowNodeWrapper, transitionUpdates);
+  ReanimatedModule.registerCSSTransition(shadowNodeWrapper, config);
+}
+
+export function updateCSSTransition(
+  viewTag: number,
+  updates: CSSTransitionUpdates
+) {
+  ReanimatedModule.updateCSSTransition(viewTag, updates);
 }
 
 export function unregisterCSSTransition(viewTag: number) {

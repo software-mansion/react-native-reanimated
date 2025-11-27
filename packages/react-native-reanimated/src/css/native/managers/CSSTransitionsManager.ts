@@ -6,7 +6,11 @@ import type {
   ICSSTransitionsManager,
 } from '../../types';
 import { normalizeCSSTransitionProperties } from '../normalization';
-import { applyCSSTransition, unregisterCSSTransition } from '../proxy';
+import {
+  registerCSSTransition,
+  updateCSSTransition,
+  unregisterCSSTransition,
+} from '../proxy';
 import type {
   CSSTransitionUpdates,
   NormalizedCSSTransitionConfig,
@@ -31,7 +35,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     style: UnknownRecord | null
   ): void {
     const previousStyle = this.previousStyle;
-    this.previousStyle = style;
+    const previousConfig = this.transitionConfig;
 
     const transitionConfig = transitionProperties
       ? normalizeCSSTransitionProperties(transitionProperties)
@@ -42,26 +46,38 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
       return;
     }
 
-    const propertyDiff = getChangedProps(
-      previousStyle,
-      style,
-      transitionConfig.properties
-    );
+    const propertyDiff =
+      transitionConfig.properties.length > 0
+        ? getChangedProps(previousStyle, style, transitionConfig.properties)
+        : null;
 
-    if (!propertyDiff) {
-      return;
+    this.previousStyle = style;
+
+    if (propertyDiff) {
+      if (!previousConfig) {
+        registerCSSTransition(this.shadowNodeWrapper, {
+          properties: propertyDiff,
+          settings: transitionConfig.settings,
+        });
+      } else {
+        const updates: CSSTransitionUpdates = {
+          properties: propertyDiff,
+        };
+
+        const settingsDiff = this.getSettingsUpdates(
+          transitionConfig,
+          previousConfig
+        );
+
+        if (settingsDiff) {
+          updates.settings = settingsDiff;
+        }
+
+        updateCSSTransition(this.viewTag, updates);
+      }
     }
-
-    const transitionUpdates = this.getTransitionUpdates(
-      transitionConfig,
-      propertyDiff
-    );
 
     this.transitionConfig = transitionConfig;
-
-    if (transitionUpdates) {
-      applyCSSTransition(this.shadowNodeWrapper, transitionUpdates);
-    }
   }
 
   unmountCleanup(): void {
@@ -71,36 +87,9 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private detach() {
     if (this.transitionConfig) {
       unregisterCSSTransition(this.viewTag);
-      this.transitionConfig = null;
     }
-  }
-
-  private getTransitionUpdates(
-    newConfig: NormalizedCSSTransitionConfig,
-    propertyDiff: Record<string, [unknown, unknown]>
-  ): CSSTransitionUpdates | null {
-    const previousConfig = this.transitionConfig;
-
-    if (!previousConfig) {
-      return {
-        properties: propertyDiff,
-        settings: newConfig.settings,
-      };
-    }
-
-    const updates: CSSTransitionUpdates = {};
-
-    if (propertyDiff) {
-      updates.properties = propertyDiff;
-    }
-
-    const settingsDiff = this.getSettingsUpdates(newConfig, previousConfig);
-
-    if (settingsDiff) {
-      updates.settings = settingsDiff;
-    }
-
-    return Object.keys(updates).length > 0 ? updates : null;
+    this.transitionConfig = null;
+    this.previousStyle = null;
   }
 
   private getSettingsUpdates(
@@ -112,43 +101,43 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
       Partial<NormalizedSingleCSSTransitionSettings>
     > = {};
 
-    for (const [property, settings] of Object.entries(newConfig.settings)) {
-      const previousSettings = previousConfig.settings[property];
+    for (const [property, nextSettings] of Object.entries(newConfig.settings)) {
+      const perPropertyDiff = this.getPropertySettingsDiff(
+        previousConfig.settings[property],
+        nextSettings
+      );
 
-      if (!previousSettings) {
-        diff[property] = settings;
-        continue;
-      }
-
-      const propertyDiff = this.getSettingsDiff(previousSettings, settings);
-
-      if (propertyDiff) {
-        diff[property] = propertyDiff;
+      if (perPropertyDiff) {
+        diff[property] = perPropertyDiff;
       }
     }
 
     return Object.keys(diff).length > 0 ? diff : null;
   }
 
-  private getSettingsDiff(
-    previousSettings: NormalizedSingleCSSTransitionSettings,
+  private getPropertySettingsDiff(
+    previousSettings: NormalizedSingleCSSTransitionSettings | undefined,
     nextSettings: NormalizedSingleCSSTransitionSettings
   ): Partial<NormalizedSingleCSSTransitionSettings> | null {
-    const diff: Partial<NormalizedSingleCSSTransitionSettings> = {};
+    if (!previousSettings) {
+      return nextSettings;
+    }
+
+    const settingsDiff: Partial<NormalizedSingleCSSTransitionSettings> = {};
 
     if (previousSettings.duration !== nextSettings.duration) {
-      diff.duration = nextSettings.duration;
+      settingsDiff.duration = nextSettings.duration;
     }
     if (previousSettings.delay !== nextSettings.delay) {
-      diff.delay = nextSettings.delay;
+      settingsDiff.delay = nextSettings.delay;
     }
     if (previousSettings.allowDiscrete !== nextSettings.allowDiscrete) {
-      diff.allowDiscrete = nextSettings.allowDiscrete;
+      settingsDiff.allowDiscrete = nextSettings.allowDiscrete;
     }
     if (previousSettings.timingFunction !== nextSettings.timingFunction) {
-      diff.timingFunction = nextSettings.timingFunction;
+      settingsDiff.timingFunction = nextSettings.timingFunction;
     }
 
-    return Object.keys(diff).length > 0 ? diff : null;
+    return Object.keys(settingsDiff).length > 0 ? settingsDiff : null;
   }
 }

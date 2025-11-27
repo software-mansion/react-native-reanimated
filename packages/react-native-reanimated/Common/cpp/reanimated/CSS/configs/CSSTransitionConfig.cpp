@@ -87,4 +87,98 @@ PartialCSSTransitionConfig parsePartialCSSTransitionConfig(jsi::Runtime &rt, con
   return result;
 }
 
+static PartialCSSTransitionPropertySettings
+parsePartialPropertySettings(jsi::Runtime &rt, const jsi::Object &settings) {
+  PartialCSSTransitionPropertySettings result;
+
+  if (settings.hasProperty(rt, "duration")) {
+    result.duration = getDuration(rt, settings);
+  }
+
+  if (settings.hasProperty(rt, "delay")) {
+    result.delay = getDelay(rt, settings);
+  }
+
+  if (settings.hasProperty(rt, "allowDiscrete")) {
+    const auto allowDiscreteValue = settings.getProperty(rt, "allowDiscrete");
+    if (allowDiscreteValue.isBool()) {
+      result.allowDiscrete = allowDiscreteValue.getBool();
+    }
+  }
+
+  if (settings.hasProperty(rt, "timingFunction")) {
+    result.easingFunction = getTimingFunction(rt, settings);
+  }
+
+  return result;
+}
+static CSSTransitionPropertySettingsUpdates
+parseSettingsUpdatesObject(jsi::Runtime &rt, const jsi::Object &settings) {
+  CSSTransitionPropertySettingsUpdates result;
+  const auto propertyNames = settings.getPropertyNames(rt);
+  const auto count = propertyNames.size(rt);
+
+  for (size_t i = 0; i < count; ++i) {
+    const auto propertyName = propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    const auto propertyValue = settings.getProperty(rt, jsi::PropNameID::forUtf8(rt, propertyName));
+
+    if (!propertyValue.isObject()) {
+      continue;
+    }
+
+    const auto propertySettings = propertyValue.asObject(rt);
+    result.emplace(propertyName, parsePartialPropertySettings(rt, propertySettings));
+  }
+
+  return result;
+}
+static CSSTransitionPropertyDiffs
+parsePropertyDiffs(jsi::Runtime &rt, const jsi::Object &diffs) {
+  CSSTransitionPropertyDiffs result;
+  const auto propertyNames = diffs.getPropertyNames(rt);
+  const auto count = propertyNames.size(rt);
+
+  for (size_t i = 0; i < count; ++i) {
+    const auto propertyName = propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    const auto diffValue = diffs.getProperty(rt, jsi::PropNameID::forUtf8(rt, propertyName));
+
+    if (!diffValue.isObject()) {
+      continue;
+    }
+
+    const auto diffArray = diffValue.asObject(rt).asArray(rt);
+    if (diffArray.size(rt) != 2) {
+      continue;
+    }
+
+    result.emplace(propertyName, std::make_pair(diffArray.getValueAtIndex(rt, 0), diffArray.getValueAtIndex(rt, 1)));
+  }
+
+  return result;
+}
+
+CSSTransitionUpdates parseCSSTransitionUpdates(jsi::Runtime &rt, const jsi::Value &updates) {
+  const auto updatesObj = updates.asObject(rt);
+
+  CSSTransitionUpdates result;
+
+  if (updatesObj.hasProperty(rt, "properties")) {
+    const auto propertiesValue = updatesObj.getProperty(rt, "properties");
+    auto propertyDiffs = parsePropertyDiffs(rt, propertiesValue.asObject(rt));
+    if (!propertyDiffs.empty()) {
+      result.properties = std::move(propertyDiffs);
+    }
+  }
+
+  if (updatesObj.hasProperty(rt, "settings")) {
+    const auto settingsValue = updatesObj.getProperty(rt, "settings");
+    auto settingsUpdates = parseSettingsUpdatesObject(rt, settingsValue.asObject(rt));
+    if (!settingsUpdates.empty()) {
+      result.settings = std::move(settingsUpdates);
+    }
+  }
+
+  return result;
+}
+
 } // namespace reanimated::css

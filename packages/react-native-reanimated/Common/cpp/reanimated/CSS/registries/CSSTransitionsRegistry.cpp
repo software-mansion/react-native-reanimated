@@ -37,13 +37,38 @@ void CSSTransitionsRegistry::remove(const Tag viewTag) {
   registry_.erase(viewTag);
 }
 
-void CSSTransitionsRegistry::updateSettings(const Tag viewTag, const PartialCSSTransitionConfig &config) {
-  const auto &transition = registry_[viewTag];
-  transition->updateSettings(config);
+void CSSTransitionsRegistry::apply(jsi::Runtime &rt, const Tag viewTag, const CSSTransitionUpdates &updates) {
+  auto transitionIt = registry_.find(viewTag);
 
-  // Replace style overrides with the new ones if transition properties were
-  // updated (we want to keep overrides only for transitioned properties)
-  if (config.properties.has_value()) {
+  if (transitionIt == registry_.end()) {
+    auto shadowNode = staticPropsRegistry_->getShadowNode(viewTag);
+    if (!shadowNode || !updates.settings.has_value()) {
+      return;
+    }
+
+    CSSTransitionConfig config;
+    if (updates.properties.has_value()) {
+      PropertyNames propertyNames;
+      propertyNames.reserve(updates.properties->size());
+      for (const auto &entry : *updates.properties) {
+        propertyNames.push_back(entry.first);
+      }
+      config.properties = propertyNames;
+    } else {
+      config.properties = std::nullopt;
+    }
+
+    config.settings = parseCSSTransitionPropertiesSettings(rt, *updates.settings);
+
+    auto transition = std::make_shared<CSSTransition>(std::move(shadowNode), config, viewStylesRepository_);
+    add(transition);
+    transitionIt = registry_.find(viewTag);
+  }
+
+  const auto &transition = transitionIt->second;
+  transition->applyUpdates(rt, updates);
+
+  if (updates.properties.has_value()) {
     updateInUpdatesRegistry(transition, transition->getCurrentInterpolationStyle());
   }
 }
