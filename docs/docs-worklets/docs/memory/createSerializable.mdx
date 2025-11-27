@@ -62,6 +62,10 @@ scheduleOnUI(() => {
 object.a = 10; // <-- Warning: You can't mutate the object after serializing it
 ```
 
+### Returns
+
+`SerializableRef` - a reference to the Serializable representation of the input value.
+
 ## Remarks
 
 - The function automatically detects the type of the input value and applies appropriate serialization strategies.
