@@ -317,7 +317,7 @@
   --swm-unsupported-type-color: var(--swm-red-light-100);
 
   /* SVG Diagram background */
-  --swm-svg-diagram-background: 'transparent';
+  --swm-svg-diagram-background: transparent;
 }
 
 :root[data-theme='dark'] {
