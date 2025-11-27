@@ -37,22 +37,9 @@ jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt,
   {
     auto lock1 = lock();
 
-    for (const auto &[tag, pair] : updatesRegistry_) {
-      const auto &[shadowNode, props] = pair;
-      const auto viewTag = shadowNode->getTag();
-
-      const auto viewTimestamp = timestampMap_.at(viewTag);
-      if (viewTimestamp >= timestamp) {
-        continue;
-      }
-
-      auto it = updatesMap.find(viewTag);
-      if (it == updatesMap.cend()) {
-        folly::dynamic styleProps = folly::dynamic::object();
-        styleProps.update(props);
-        updatesMap[viewTag] = styleProps;
-      } else {
-        it->second.update(props);
+    for (const auto &[viewTag, pair] : updatesRegistry_) {
+      if (timestampMap_.at(viewTag) < timestamp) {
+        updatesMap[viewTag] = pair.second;
       }
     }
   }
