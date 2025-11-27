@@ -13,9 +13,14 @@ permissions:
 jobs:
   check-v4-changes:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    uses: ./.github/workflows/check-branch-changes.yml
-    with:
-      branch: main
+    runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.commit-check-action-v4.outputs.has_changes }}
+    steps:
+      - id: commit-check-v4 
+        uses: ./.github/actions/check-branch-changes
+        with:
+          branch: main
 
   npm-reanimated-4-publish-nightly:
     needs: check-v4-changes
@@ -29,10 +34,15 @@ jobs:
 
   check-v3-changes:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    uses: ./.github/workflows/check-branch-changes.yml
-    with:
-      # Remember to update the branch on new minor releases.
-      branch: 3.19-stable
+    runs-on: ubuntu-latest 
+    outputs:
+      has_changes: ${{ steps.commit-check-action-v3.outputs.has_changes }}
+    steps:
+      - id: commit-check-v3 
+        uses: ./.github/actions/check-branch-changes
+        with:
+          # Remember to update the branch on new minor releases.
+          branch: 3.19-stable
 
   npm-reanimated-3-publish-nightly:
     needs: check-v3-changes

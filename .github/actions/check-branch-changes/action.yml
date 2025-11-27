@@ -1,0 +1,30 @@
+name: Check branch changes
+description: 'Checks if a branch has commits in the last 24 hours.'
+inputs:
+  branch:
+    description: 'The branch name to check'
+    required: true
+outputs:
+  has_changes:
+    value: ${{ steps.commit_check.outputs.has_changes }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout branch
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: ${{ inputs.branch }}
+
+    - name: Check for recent commits
+      id: commit_check
+      shell: bash
+      run: |
+        COUNT=$(git log --oneline --since='24 hours ago' | wc -l)
+        echo "Found $COUNT commits in the last 24 hours on branch ${{ inputs.branch }}"
+
+        if [ "$COUNT" -gt 0 ]; then
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+        else
+          echo "has_changes=false" >> $GITHUB_OUTPUT
+        fi
