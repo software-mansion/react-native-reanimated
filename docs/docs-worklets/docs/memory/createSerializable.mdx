@@ -41,7 +41,8 @@ The JavaScript value to be converted into a Serializable reference. It must be o
 
 <SerializableSupportedTypesTable />
 
-`value` is frozen in development bundles after serialization to prevent misconceptions that changes to the original value would propagate to the Serializable.
+:::note
+In development builds, the `value` argument is [frozen](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze) after serialization. This prevents misconceptions that changes to the original value would update the already created Serializable.
 
 ```typescript
 import { createSerializable, scheduleOnUI } from 'react-native-worklets';
@@ -62,6 +63,8 @@ scheduleOnUI(() => {
 object.a = 10; // <-- Warning: You can't mutate the object after serializing it
 ```
 
+:::
+
 ### Returns
 
 `SerializableRef` - a reference to the Serializable representation of the input value.
@@ -70,6 +73,7 @@ object.a = 10; // <-- Warning: You can't mutate the object after serializing it
 
 - The function automatically detects the type of the input value and applies appropriate serialization strategies.
 - For objects and arrays, it recursively processes nested properties.
+- This function is rarely used as in almost all cases Worklets handle the creation of Serializables for you.
 - The function includes cycle detection to prevent infinite recursion.
 - `jsi::NativeState` of a passed value is preserved during serialization.
 - In almost all cases Worklets handle the creation of Serializables for you, so you should rarely need to use this function.
