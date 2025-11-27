@@ -1,8 +1,9 @@
 ---
+title: registerCustomSerializable
 sidebar_position: 42 # Use alphabetical order
 ---
 
-# registerCustomSerializable
+# registerCustomSerializable <AvailableFrom version="0.7.0" />
 
 `registerCustomSerializable` lets you register your own pre-serialization and post-deserialization logic for object with prototype different than `Object.prototype` that aren't supported by default by [Serializable](/docs/memory/Serializable). Such types are called **Custom Serializables**. This way you can tell Worklets how to transfer your custom data structures between different Runtimes without manually serializing and deserializing them every time.
 
