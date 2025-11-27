@@ -7,9 +7,9 @@ sidebar_position: 42 # Use alphabetical order
 
 Synchronizable is a type of shared memory not tied to any JavaScript Runtime. It can be accessed from any JavaScript Runtime and C++. The value held by Synchronizable behaves like a standard JavaScript value.
 
-It can be used to implement a semi-global state for Runtimes to synchronize with. As it's not tied to any Runtime, reading and writing to it doesn't preempt any Runtimes and could be used to implement communication channels between different Runtimes and/or C++ code.
+You can use Synchronizable on multiple Runtimes to poll some shared state information without expensive synchronous messaging between Runtimes.
 
-Synchronizable can be obtained exclusively or non-exclusively. Trying to access it from multiple threads at once can lead to blocking.
+Synchronizable can be accessed both non-exclusively or exclusively - meaning that a thread (Runtime) could obtain it and all other threads (Runtimes) trying to access it will have to wait until it's released.
 
 <SVGDiagram>![Synchronizable](/img/synchronizable.svg)</SVGDiagram>
 
@@ -53,10 +53,9 @@ synchronizable.setBlocking({ a: 24 });
 
 <SVGDiagram>![Synchronizable flow](/img/synchronizable-flow.svg)</SVGDiagram>
 
-Possible flow of operations for the above example, assuming that `getBlocking`
-function executes first. Time axis is not to scale.
-function executed first. Time axis is not to scale.
-
+<figcaption style={{ textAlign: 'center' }}>
+  Possible flow of operations for the above example, assuming that `getBlocking`
+  function executes first. Time axis is not to scale.
 </figcaption>
 
 ## Methods
