@@ -13,10 +13,10 @@ namespace reanimated {
 
 class AnimatedPropsRegistry : public UpdatesRegistry {
  public:
-  void update(jsi::Runtime &rt, const jsi::Value &operations, const double timestamp);
+  void update(jsi::Runtime &rt, const jsi::Value &operations, double timestamp);
   void remove(Tag tag) override;
-  jsi::Value getUpdatesOlderThanTimestamp(jsi::Runtime &rt, const double timestamp);
-  void removeUpdatesOlderThanTimestamp(const double timestamp);
+  jsi::Value getUpdatesOlderThanTimestamp(jsi::Runtime &rt, double timestamp);
+  void removeUpdatesOlderThanTimestamp(double timestamp);
 
  private:
   std::unordered_map<Tag, double> timestampMap_; // viewTag -> timestamp, protected by `mutex_`
