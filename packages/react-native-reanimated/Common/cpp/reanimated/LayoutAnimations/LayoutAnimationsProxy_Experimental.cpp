@@ -77,19 +77,19 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
 
     handleSharedTransitionsStart(
         afterTopScreen, beforeTopScreen, filteredMutations, mutations, propsParserContext, surfaceId);
-
-    for (auto &node : entering_) {
-      startEnteringAnimation(node);
-    }
-    for (auto &node : layout_) {
-      startLayoutAnimation(node);
-    }
-    entering_.clear();
-    layout_.clear();
-
-    handleRemovals(filteredMutations, exiting_);
-    exiting_.clear();
   }
+
+  for (auto &node : entering_) {
+    startEnteringAnimation(node);
+  }
+  for (auto &node : layout_) {
+    startLayoutAnimation(node);
+  }
+  entering_.clear();
+  layout_.clear();
+
+  handleRemovals(filteredMutations, exiting_);
+  exiting_.clear();
 
   addOngoingAnimations(surfaceId, filteredMutations);
 
@@ -291,12 +291,15 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
     tagsToRestore_.push_back(restoreMap_[tag][1]);
     transformForNode_.clear();
   }
-  if (!shouldRemove || !lightNodes_.contains(tag)) {
+  if (!shouldRemove) {
     return surfaceId;
   }
 
   auto node = lightNodes_[tag];
+  react_native_assert(node && "LightNode not found");
+
   node->state = DEAD;
+  lightNodes_.erase(tag);
   deadNodes.insert(node);
 
   return surfaceId;
@@ -511,6 +514,7 @@ bool LayoutAnimationsProxy_Experimental::startAnimationsRecursively(
   if (hasExitAnimation) {
     node->state = ANIMATING;
     startExitingAnimation(node);
+    lightNodes_[node->current.tag] = node;
   } else {
     // TODO (future): add proper cleanup
     //    layoutAnimationsManager_->clearLayoutAnimationConfig(node->tag);
