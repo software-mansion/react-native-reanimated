@@ -23,105 +23,94 @@ const FILTER_TYPES = [
   'saturate',
 ] as const;
 
-const getAnimatedFilterStyle = (
-  value: number,
-  filterType: (typeof FILTER_TYPES)[number],
-  useStringFormat: boolean
-) => {
+const getObjectFilterStyle = (value: number, filterType: (typeof FILTER_TYPES)[number]) => {
   'worklet';
   let filterValue;
-  if (useStringFormat) {
-    switch (filterType) {
-      case 'brightness':
-      case 'opacity':
-      case 'grayscale':
-      case 'invert':
-      case 'sepia':
-        filterValue = `${filterType}(${value * 100}%)`;
-        break;
-      case 'contrast':
-      case 'saturate':
-        filterValue = `${filterType}(${value * 200}%)`;
-        break;
-      case 'hueRotate':
-        filterValue = `hueRotate(${value * 360}deg)`;
-        break;
-      case 'blur':
-        filterValue = `blur(${value * 10}px)`;
-        break;
-      case 'dropShadow': {
-        const offset = value * 10;
-        const blur = value * 10;
-        const color = interpolateColor(value, [0, 1], ['red', 'blue']);
-        filterValue = `dropShadow(${offset}px ${offset}px ${blur}px ${color})`;
-        break;
-      }
-      default:
-        filterValue = '';
+  switch (filterType) {
+    case 'brightness':
+    case 'opacity':
+    case 'grayscale':
+    case 'invert':
+    case 'sepia':
+      filterValue = { [filterType]: value };
+      break;
+    case 'contrast':
+    case 'saturate':
+      filterValue = { [filterType]: value * 2 };
+      break;
+    case 'hueRotate':
+      filterValue = { hueRotate: value * 360 };
+      break;
+    case 'blur':
+      filterValue = { blur: value * 10 };
+      break;
+    case 'dropShadow': {
+      filterValue = {
+        dropShadow: {
+          offsetX: value * 10,
+          offsetY: value * 10,
+          standardDeviation: value * 10,
+          color: interpolateColor(value, [0, 1], ['red', 'blue']),
+        },
+      };
+      break;
     }
-  } else {
-    switch (filterType) {
-      case 'brightness':
-      case 'opacity':
-      case 'grayscale':
-      case 'invert':
-      case 'sepia':
-        filterValue = { [filterType]: value };
-        break;
-      case 'contrast':
-      case 'saturate':
-        filterValue = { [filterType]: value * 2 };
-        break;
-      case 'hueRotate':
-        filterValue = { hueRotate: value * 360 };
-        break;
-      case 'blur':
-        filterValue = { blur: value * 10 };
-        break;
-      case 'dropShadow': {
-        filterValue = {
-          dropShadow: {
-            offsetX: value * 10,
-            offsetY: value * 10,
-            standardDeviation: value * 10,
-            color: interpolateColor(value, [0, 1], ['red', 'blue']),
-          },
-        };
-        break;
-      }
-      default:
-        filterValue = {};
-    }
+    default:
+      filterValue = {};
   }
-  return useStringFormat ? filterValue : [filterValue];
-};
+  return [filterValue];
+}
 
-const useAnimatedFilterStyle = (
-  sharedValue: SharedValue<number>,
-  filterType: (typeof FILTER_TYPES)[number],
-  useStringFormat: boolean
-) => {
-  // @ts-ignore
-  return useAnimatedStyle(() => {
-    const filterValue = getAnimatedFilterStyle(
-      sharedValue.value,
-      filterType,
-      useStringFormat
-    );
-    return { filter: filterValue };
-  }, [filterType, useStringFormat]);
-};
+const getStringFilterStyle = (value: number, filterType: (typeof FILTER_TYPES)[number]) => {
+  'worklet';
+  let filterValue;
+  switch (filterType) {
+    case 'brightness':
+    case 'opacity':
+    case 'grayscale':
+    case 'invert':
+    case 'sepia':
+      filterValue = `${filterType}(${value * 100}%)`;
+      break;
+    case 'contrast':
+    case 'saturate':
+      filterValue = `${filterType}(${value * 200}%)`;
+      break;
+    case 'hueRotate':
+      filterValue = `hueRotate(${value * 360}deg)`;
+      break;
+    case 'blur':
+      filterValue = `blur(${value * 10}px)`;
+      break;
+    case 'dropShadow': {
+      const offset = value * 10;
+      const blur = value * 10;
+      const color = interpolateColor(value, [0, 1], ['red', 'blue']);
+      filterValue = `dropShadow(${offset}px ${offset}px ${blur}px ${color})`;
+      break;
+    }
+    default:
+      filterValue = '';
+  }
+  return filterValue;
+}
 
 const FilterImageItem = ({
   filterType,
   sv,
-  useStringFormat,
+  isStringFormat,
 }: {
   filterType: (typeof FILTER_TYPES)[number];
   sv: SharedValue<number>;
-  useStringFormat: boolean;
+  isStringFormat: boolean;
 }) => {
-  const style = useAnimatedFilterStyle(sv, filterType, useStringFormat);
+  // @ts-ignore
+  const style = useAnimatedStyle(() => {
+  const filterValue = isStringFormat
+      ? getStringFilterStyle(sv.value, filterType)
+      : getObjectFilterStyle(sv.value, filterType);
+    return { filter: filterValue };
+  });
 
   return (
     <>
@@ -137,7 +126,7 @@ const FilterImageItem = ({
 
 export default function FilterExample() {
   const sv = useSharedValue(0);
-  const [useStringFormat, setUseStringFormat] = useState(false);
+  const [isStringFormat, setIsStringFormat] = useState(false);
 
   useEffect(() => {
     sv.value = 0;
@@ -148,14 +137,14 @@ export default function FilterExample() {
     <View style={styles.container}>
       <View style={styles.switchContainer}>
         <Text style={styles.switchLabel}>
-          Format: {useStringFormat ? 'String' : 'Object'}
+          Format: {isStringFormat ? 'String' : 'Object'}
         </Text>
         <Switch
           trackColor={{ false: '#767577', true: '#919fcf' }}
-          thumbColor={useStringFormat ? '#001a72' : '#f4f3f4'}
+          thumbColor={isStringFormat ? '#001a72' : '#f4f3f4'}
           ios_backgroundColor="#33488e40"
-          onValueChange={setUseStringFormat}
-          value={useStringFormat}
+          onValueChange={setIsStringFormat}
+          value={isStringFormat}
         />
       </View>
 
@@ -165,7 +154,7 @@ export default function FilterExample() {
             key={filterType}
             filterType={filterType}
             sv={sv}
-            useStringFormat={useStringFormat}
+            isStringFormat={isStringFormat}
           />
         ))}
       </ScrollView>
