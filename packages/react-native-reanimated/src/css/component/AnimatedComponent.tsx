@@ -9,7 +9,6 @@ import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../../common';
 import type {
   InternalHostInstance,
   ShadowNodeWrapper,
-  StyleProps,
 } from '../../commonTypes';
 import type {
   AnimatedComponentRef,
