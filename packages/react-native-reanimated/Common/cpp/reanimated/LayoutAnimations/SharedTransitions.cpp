@@ -22,6 +22,8 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findTopScreen(
   if (!node->current.componentName) {
     return result;
   }
+  // TODO: We could get rid of the RNSScreens c++ dependency if we create a custom native component that would be a boundary for SharedTransitions.
+  // This way we could allow for transitions without screens, and across componentes on the same screen.
   if (isRNSScreen(node)) {
     bool isActive = false;
 #ifdef ANDROID
