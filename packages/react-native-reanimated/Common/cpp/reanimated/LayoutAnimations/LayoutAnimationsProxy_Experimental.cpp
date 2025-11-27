@@ -175,6 +175,8 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
       case ShadowViewMutation::Create: {
         const auto &node = std::make_shared<LightNode>();
         node->current = mutation.newChildShadowView;
+        react_native_assert(!lightNodes_.contains(mutation.newChildShadowView.tag) && "LightNode already exists");
+
         lightNodes_[mutation.newChildShadowView.tag] = node;
         filteredMutations.push_back(mutation);
         break;
@@ -206,21 +208,16 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         const auto tag = node->current.tag;
         const auto parentTag = mutation.parentTag;
         const auto &parent = lightNodes_[parentTag];
+        react_native_assert(
+            parent->children[mutation.index]->current.tag == mutation.oldChildShadowView.tag &&
+            "Indicies are wrong in Remove mutation");
 
         if (deleted.contains(tag) && !deleted.contains(parentTag)) {
           exiting_.push_back(node);
-          if (parent->children[mutation.index]->current.tag == mutation.oldChildShadowView.tag) {
-            filteredMutations.push_back(mutation);
-          } else {
-            LOG(INFO) << "Indicies are wrong in Remove mutation";
-          }
+          filteredMutations.push_back(mutation);
           parent->children.erase(parent->children.begin() + mutation.index);
         } else if (!deleted.contains(tag)) {
-          if (parent->children[mutation.index]->current.tag == mutation.oldChildShadowView.tag) {
-            filteredMutations.push_back(mutation);
-          } else {
-            LOG(INFO) << "Indicies are wrong in Remove mutation";
-          }
+          filteredMutations.push_back(mutation);
           parent->children.erase(parent->children.begin() + mutation.index);
         }
         break;
