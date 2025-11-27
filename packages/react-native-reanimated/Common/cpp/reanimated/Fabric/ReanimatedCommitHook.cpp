@@ -90,7 +90,6 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     auto lock = updatesRegistryManager_->lock();
 
     PropsMap propsMap = updatesRegistryManager_->collectProps();
-    LOG(INFO) << "ReanimatedCommitHook propsMap size=" << propsMap.size();
     updatesRegistryManager_->cancelCommitAfterPause();
 
     rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
