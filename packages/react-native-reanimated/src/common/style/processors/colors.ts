@@ -93,7 +93,7 @@ export function processColorNumber(value: unknown): number | null {
   return null;
 }
 
-type ProcessedDynamicColorObjectIOS = {
+export type ProcessedDynamicColorObjectIOS = {
   dynamic: {
     light: number;
     dark: number;
@@ -115,7 +115,7 @@ function processDynamicColorObjectIOS(
   const result = {} as ProcessedDynamicColorObjectIOS['dynamic'];
 
   for (const property of DynamicColorIOSProperties) {
-    if (!(property in value.dynamic)) {
+    if (value.dynamic[property] === undefined) {
       continue;
     }
 
@@ -132,6 +132,8 @@ function processDynamicColorObjectIOS(
   };
 }
 
+type ProcessedColor = number | ProcessedDynamicColorObjectIOS;
+
 /**
  * Processes a color value and returns a normalized color representation.
  *
@@ -140,18 +142,19 @@ function processDynamicColorObjectIOS(
  *   transparent colors
  */
 export function processColor(value: string | number): number;
-export function processColor(
-  value: unknown
-): number | ProcessedDynamicColorObjectIOS;
-export function processColor(
-  value: unknown
-): number | ProcessedDynamicColorObjectIOS {
-  let result = null;
+export function processColor(value: unknown): ProcessedColor;
+export function processColor(value: unknown): ProcessedColor {
+  let result: ProcessedColor | null = processColorNumber(value); // try to convert to a number first (most common case)
+
+  if (result !== null) {
+    return result;
+  }
 
   if (isDynamicColorObjectIOS(value)) {
+    if (!IS_IOS) {
+      throw new ReanimatedError(ERROR_MESSAGES.dynamicNotAvailableOnPlatform());
+    }
     result = processDynamicColorObjectIOS(value);
-  } else {
-    result = processColorNumber(value);
   }
 
   if (result === null) {

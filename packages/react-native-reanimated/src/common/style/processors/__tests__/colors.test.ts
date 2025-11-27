@@ -1,14 +1,14 @@
 'use strict';
 import { ReanimatedError } from '../../../errors';
-import {
-  ERROR_MESSAGES,
-  processColor,
-  processColorsInProps,
-} from '../colors';
+import type * as Colors from '../colors';
+import { ERROR_MESSAGES, processColor, processColorsInProps } from '../colors';
 
-type ColorsModule = typeof import('../colors');
+type ColorsModule = Pick<
+  typeof Colors,
+  'DynamicColorIOS' | 'processColor' | 'processColorsInProps'
+>;
 
-function withPlatform(
+function withMockedPlatform(
   platform: 'ios' | 'android',
   run: (mod: ColorsModule) => void
 ) {
@@ -22,8 +22,7 @@ function withPlatform(
       };
     });
 
-    const mod = require('../colors') as ColorsModule;
-    run(mod);
+    run(jest.requireActual('../colors'));
   });
 
   jest.resetModules();
@@ -78,38 +77,50 @@ describe(processColorsInProps, () => {
 
   describe('DynamicColorIOS support', () => {
     test('mutates dynamic colors on iOS', () => {
-      withPlatform('ios', ({ processColorsInProps: processProps, DynamicColorIOS: DynamicIOS }) => {
-        const props = {
-          backgroundColor: DynamicIOS({
-            light: '#abcdef',
-            dark: '#123456',
-            highContrastDark: '#ff00ff',
-          }),
-        };
+      withMockedPlatform(
+        'ios',
+        ({
+          processColorsInProps: processColorsInProps_,
+          DynamicColorIOS: DynamicIOS,
+        }) => {
+          const props = {
+            backgroundColor: DynamicIOS({
+              light: '#abcdef',
+              dark: '#123456',
+              highContrastDark: '#ff00ff',
+            }),
+          };
 
-        processProps(props);
+          processColorsInProps_(props);
 
-        expect(props.backgroundColor).toEqual({
-          dynamic: {
-            light: 0xffabcdef,
-            dark: 0xff123456,
-            highContrastLight: undefined,
-            highContrastDark: 0xffff00ff,
-          },
-        });
-      });
+          expect(props.backgroundColor).toEqual({
+            dynamic: {
+              light: 0xffabcdef,
+              dark: 0xff123456,
+              highContrastLight: undefined,
+              highContrastDark: 0xffff00ff,
+            },
+          });
+        }
+      );
     });
 
     test('throws for dynamic colors on non-iOS platforms', () => {
-      withPlatform('android', ({ processColorsInProps: processProps, DynamicColorIOS: DynamicIOS }) => {
-        const props = {
-          backgroundColor: DynamicIOS({ light: '#ffffff', dark: '#000000' }),
-        };
+      withMockedPlatform(
+        'android',
+        ({
+          processColorsInProps: processColorsInProps_,
+          DynamicColorIOS: DynamicIOS,
+        }) => {
+          const props = {
+            backgroundColor: DynamicIOS({ light: '#ffffff', dark: '#000000' }),
+          };
 
-        expect(() => processProps(props)).toThrow(
-          new ReanimatedError('DynamicColorIOS is not available on this platform.')
-        );
-      });
+          expect(() => processColorsInProps_(props)).toThrow(
+            new ReanimatedError(ERROR_MESSAGES.dynamicNotAvailableOnPlatform())
+          );
+        }
+      );
     });
   });
 });
@@ -134,29 +145,41 @@ describe(processColor, () => {
     });
 
     test('converts DynamicColorIOS values on iOS', () => {
-      withPlatform('ios', ({ processColor: processColorMock, DynamicColorIOS: DynamicIOS }) => {
-        const dynamic = DynamicIOS({
-          light: '#ffffff',
-          dark: '#000000',
-          highContrastLight: '#ff0000',
-        });
-        const processed = processColorMock(dynamic);
+      withMockedPlatform(
+        'ios',
+        ({ processColor: processColor_, DynamicColorIOS: DynamicIOS }) => {
+          const dynamic = DynamicIOS({
+            light: '#ffffff',
+            dark: 'transparent',
+            highContrastLight: '#ff0000',
+          });
+          const processed = processColor_(
+            dynamic
+          ) as Colors.ProcessedDynamicColorObjectIOS;
 
-        expect(processed.dynamic.light).toBe(0xffffffff);
-        expect(processed.dynamic.dark).toBe(0xff000000);
-        expect(processed.dynamic.highContrastLight).toBe(0xff0000ff);
-        expect(processed.dynamic.highContrastDark).toBeUndefined();
-      });
+          expect(processed).toEqual({
+            dynamic: {
+              light: 0xffffffff,
+              dark: false, // transparent color is represented as false
+              highContrastLight: 0xffff0000,
+              highContrastDark: undefined,
+            },
+          });
+        }
+      );
     });
 
     test('throws for DynamicColorIOS on non-iOS platforms', () => {
-      withPlatform('android', ({ processColor: processColorMock, DynamicColorIOS: DynamicIOS }) => {
-        const dynamic = DynamicIOS({ light: '#ffffff', dark: '#000000' });
+      withMockedPlatform(
+        'android',
+        ({ processColor: processColor_, DynamicColorIOS: DynamicIOS }) => {
+          const dynamic = DynamicIOS({ light: '#ffffff', dark: '#000000' });
 
-        expect(() => processColorMock(dynamic)).toThrow(
-          new ReanimatedError('DynamicColorIOS is not available on this platform.')
-        );
-      });
+          expect(() => processColor_(dynamic)).toThrow(
+            new ReanimatedError(ERROR_MESSAGES.dynamicNotAvailableOnPlatform())
+          );
+        }
+      );
     });
   });
 
@@ -172,6 +195,25 @@ describe(processColor, () => {
     ])('throws an error for %p', (value) => {
       expect(() => processColor(value)).toThrow(
         new ReanimatedError(ERROR_MESSAGES.invalidColor(value))
+      );
+    });
+
+    test('throws when DynamicColorIOS is nested inside another DynamicColorIOS', () => {
+      withMockedPlatform(
+        'ios',
+        ({ processColor: processColor_, DynamicColorIOS: DynamicIOS }) => {
+          const nested = DynamicIOS({
+            light: DynamicIOS({
+              light: '#ffffff',
+              dark: '#000000',
+            }) as unknown as string,
+            dark: '#000000',
+          });
+
+          expect(() => processColor_(nested)).toThrow(
+            new ReanimatedError(ERROR_MESSAGES.invalidColor(nested))
+          );
+        }
       );
     });
   });
