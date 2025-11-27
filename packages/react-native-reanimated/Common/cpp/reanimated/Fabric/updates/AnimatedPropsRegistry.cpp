@@ -33,17 +33,17 @@ void AnimatedPropsRegistry::remove(const Tag tag) {
 }
 
 jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt, const double timestamp) {
-  std::unordered_map<Tag, folly::dynamic> updatesMap;
+  std::vector<std::pair<Tag, folly::dynamic>> updates;
 
   for (const auto &[viewTag, pair] : updatesRegistry_) {
     if (timestampMap_.at(viewTag) < timestamp) {
-      updatesMap[viewTag] = pair.second;
+      updates.emplace_back(viewTag, pair.second);
     }
   }
 
-  const jsi::Array array(rt, updatesMap.size());
+  const jsi::Array array(rt, updates.size());
   size_t i = 0;
-  for (const auto &[viewTag, styleProps] : updatesMap) {
+  for (const auto &[viewTag, styleProps] : updates) {
     const jsi::Object item(rt);
     item.setProperty(rt, "viewTag", viewTag);
     item.setProperty(rt, "styleProps", jsi::valueFromDynamic(rt, styleProps));
