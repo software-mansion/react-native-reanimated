@@ -204,11 +204,14 @@ describe(processColor, () => {
     test.each(['ios', 'android'] as const)(
       'returns PlatformColor values unchanged on %s',
       (platform) => {
-        withMockedPlatform(platform, ({ processColor: processColor_, PlatformColor }) => {
-          const platformColor = PlatformColor('systemBlue');
+        withMockedPlatform(
+          platform,
+          ({ processColor: processColor_, PlatformColor }) => {
+            const platformColor = PlatformColor('systemBlue');
 
-          expect(processColor_(platformColor)).toBe(platformColor);
-        });
+            expect(processColor_(platformColor)).toBe(platformColor);
+          }
+        );
       }
     );
   });

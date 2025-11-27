@@ -12,17 +12,19 @@ import { ReanimatedError } from '../../errors';
 import { isRecord } from '../../utils';
 
 /**
- * copied from:
+ * Copied from:
  * https://github.com/facebook/react-native/blob/v0.81.0/packages/react-native/Libraries/StyleSheet/PlatformColorValueTypes.d.ts
  */
 export function PlatformColor(...names: string[]): OpaqueColorValue {
-  // eslint-disable-next-line camelcase
-  return (IS_IOS ? { semantic: names } : { resource_paths: names }) as unknown as OpaqueColorValue;
+  return (IS_IOS
+    ? { semantic: names }
+    : // eslint-disable-next-line camelcase
+      { resource_paths: names }) as unknown as OpaqueColorValue;
 }
 
-type PlatformColorObject = 
- { semantic: Array<string>; resource_paths?: never } | 
- { semantic?: never; resource_paths?: Array<string>; };
+type PlatformColorObject =
+  | { semantic: Array<string>; resource_paths?: never }
+  | { semantic?: never; resource_paths?: Array<string> };
 
 function isPlatformColorObject(value: unknown): value is PlatformColorObject {
   return (
@@ -130,7 +132,10 @@ function processDynamicColorObjectIOS(
   };
 }
 
-type ProcessedColor = number | PlatformColorObject | ProcessedDynamicColorObjectIOS;
+type ProcessedColor =
+  | number
+  | PlatformColorObject
+  | ProcessedDynamicColorObjectIOS;
 
 /**
  * Processes a color value and returns a normalized color representation.
@@ -156,7 +161,7 @@ export function processColor(value: unknown): ProcessedColor {
       throw new ReanimatedError(ERROR_MESSAGES.dynamicNotAvailableOnPlatform());
     }
     result = processDynamicColorObjectIOS(value);
-  } 
+  }
 
   if (result === null) {
     throw new ReanimatedError(ERROR_MESSAGES.invalidColor(value));
@@ -169,6 +174,8 @@ export function processColorsInProps(props: StyleProps) {
   for (const key in props) {
     if (!ColorProperties.includes(key)) continue;
     const value = props[key];
-    props[key] = Array.isArray(value) ? value.map((c) => processColor(c)) : processColor(value)
+    props[key] = Array.isArray(value)
+      ? value.map((c) => processColor(c))
+      : processColor(value);
   }
 }
