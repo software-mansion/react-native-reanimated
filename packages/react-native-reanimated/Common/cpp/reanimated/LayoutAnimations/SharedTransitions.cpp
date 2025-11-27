@@ -396,11 +396,12 @@ std::vector<react::Point> LayoutAnimationsProxy_Experimental::getAbsolutePositio
       viewPosition -= data.contentOffset;
     }
     if (!strcmp(currentNode->current.componentName, "RNSScreen") && currentNode->children.size() >= 2) {
-      if (const auto &parent = currentNode->parent.lock()) {
-        const float headerHeight =
-            parent->current.layoutMetrics.frame.size.height - currentNode->current.layoutMetrics.frame.size.height;
-        viewPosition.y += headerHeight;
-      }
+      const auto &parent = currentNode->parent.lock();
+      react_native_assert(parent && "Parent node is nullptr");
+
+      const float headerHeight =
+          parent->current.layoutMetrics.frame.size.height - currentNode->current.layoutMetrics.frame.size.height;
+      viewPosition.y += headerHeight;
     }
     viewPosition += currentNode->current.layoutMetrics.frame.origin;
     viewsAbsolutePositions.emplace_back(viewPosition);
