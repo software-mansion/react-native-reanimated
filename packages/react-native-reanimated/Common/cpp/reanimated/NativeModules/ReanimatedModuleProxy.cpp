@@ -451,6 +451,8 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
   // TODO(future): use unified timestamp
   const auto currentTimestamp = getAnimationTimestamp_();
 
+  const auto lock = cssAnimationsRegistry_->lock();
+
   // TODO: fix bug when threshold difference is smaller than 1 second
   // TODO(future): flush updates from CSS animations and CSS transitions registries
   animatedPropsRegistry_->removeUpdatesOlderThanTimestamp(currentTimestamp - 2000); // 2 seconds

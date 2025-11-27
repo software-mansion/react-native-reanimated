@@ -34,13 +34,10 @@ void AnimatedPropsRegistry::remove(const Tag tag) {
 
 jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt, const double timestamp) {
   std::unordered_map<Tag, folly::dynamic> updatesMap;
-  {
-    auto lock1 = lock();
 
-    for (const auto &[viewTag, pair] : updatesRegistry_) {
-      if (timestampMap_.at(viewTag) < timestamp) {
-        updatesMap[viewTag] = pair.second;
-      }
+  for (const auto &[viewTag, pair] : updatesRegistry_) {
+    if (timestampMap_.at(viewTag) < timestamp) {
+      updatesMap[viewTag] = pair.second;
     }
   }
 
@@ -57,8 +54,6 @@ jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt,
 }
 
 void AnimatedPropsRegistry::removeUpdatesOlderThanTimestamp(const double timestamp) {
-  auto lock1 = lock();
-
   for (auto it = timestampMap_.begin(); it != timestampMap_.end();) {
     const auto viewTag = it->first;
     const auto viewTimestamp = it->second;
