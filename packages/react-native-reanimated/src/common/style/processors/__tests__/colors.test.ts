@@ -5,7 +5,7 @@ import { ERROR_MESSAGES, processColor, processColorsInProps } from '../colors';
 
 type ColorsModule = Pick<
   typeof Colors,
-  'DynamicColorIOS' | 'processColor' | 'processColorsInProps'
+  'DynamicColorIOS' | 'PlatformColor' | 'processColor' | 'processColorsInProps'
 >;
 
 function withMockedPlatform(
@@ -123,6 +123,25 @@ describe(processColorsInProps, () => {
       );
     });
   });
+
+  describe('PlatformColor support', () => {
+    test.each(['ios', 'android'] as const)(
+      'keeps PlatformColor values unchanged on %s',
+      (platform) => {
+        withMockedPlatform(
+          platform,
+          ({ processColorsInProps: processColorsInProps_, PlatformColor }) => {
+            const platformColor = PlatformColor('systemBlue');
+            const props = { backgroundColor: platformColor };
+
+            processColorsInProps_(props);
+
+            expect(props.backgroundColor).toBe(platformColor);
+          }
+        );
+      }
+    );
+  });
 });
 
 describe(processColor, () => {
@@ -181,6 +200,17 @@ describe(processColor, () => {
         }
       );
     });
+
+    test.each(['ios', 'android'] as const)(
+      'returns PlatformColor values unchanged on %s',
+      (platform) => {
+        withMockedPlatform(platform, ({ processColor: processColor_, PlatformColor }) => {
+          const platformColor = PlatformColor('systemBlue');
+
+          expect(processColor_(platformColor)).toBe(platformColor);
+        });
+      }
+    );
   });
 
   describe('throws an error for invalid color values', () => {

@@ -1,7 +1,6 @@
 'use strict';
 'worklet';
 import type {
-  ColorValue,
   DynamicColorIOS as RNDynamicColorIOS,
   OpaqueColorValue,
 } from 'react-native';
@@ -12,33 +11,32 @@ import { IS_ANDROID, IS_IOS } from '../../constants';
 import { ReanimatedError } from '../../errors';
 import { isRecord } from '../../utils';
 
-type DynamicColorIOSTuple = Parameters<typeof RNDynamicColorIOS>[0];
-
-type PlatformColorValue = ColorValue & { semantic?: Array<string> } & {
-  resource_paths?: Array<string>;
-};
-
-export function PlatformColor(...names: Array<string>): PlatformColorValue {
-  'worklet';
+/**
+ * copied from:
+ * https://github.com/facebook/react-native/blob/v0.81.0/packages/react-native/Libraries/StyleSheet/PlatformColorValueTypes.d.ts
+ */
+export function PlatformColor(...names: string[]): OpaqueColorValue {
   // eslint-disable-next-line camelcase
-  const mapped = IS_IOS ? { semantic: names } : { resource_paths: names };
-  return mapped as PlatformColorValue;
+  return (IS_IOS ? { semantic: names } : { resource_paths: names }) as unknown as OpaqueColorValue;
 }
 
-function isPlatformColorObject(value: unknown): value is PlatformColorValue {
+type PlatformColorObject = 
+ { semantic: Array<string>; resource_paths?: never } | 
+ { semantic?: never; resource_paths?: Array<string>; };
+
+function isPlatformColorObject(value: unknown): value is PlatformColorObject {
   return (
-    !!value &&
-    typeof value === 'object' &&
-    (('semantic' in value && Array.isArray(value.semantic)) ||
-      ('resource_paths' in value && Array.isArray(value.resource_paths)))
+    isRecord(value) &&
+    (Array.isArray(value.semantic) || Array.isArray(value.resource_paths))
   );
 }
 
 /* copied from:
  * https://github.com/facebook/react-native/blob/v0.81.0/packages/react-native/Libraries/StyleSheet/PlatformColorValueTypesIOS.d.ts
  */
+type DynamicColorIOSTuple = Parameters<typeof RNDynamicColorIOS>[0];
+
 export function DynamicColorIOS(tuple: DynamicColorIOSTuple): OpaqueColorValue {
-  'worklet';
   return {
     dynamic: {
       light: tuple.light,
@@ -132,7 +130,7 @@ function processDynamicColorObjectIOS(
   };
 }
 
-type ProcessedColor = number | ProcessedDynamicColorObjectIOS;
+type ProcessedColor = number | PlatformColorObject | ProcessedDynamicColorObjectIOS;
 
 /**
  * Processes a color value and returns a normalized color representation.
@@ -150,12 +148,15 @@ export function processColor(value: unknown): ProcessedColor {
     return result;
   }
 
+  if (isPlatformColorObject(value)) {
+    return value;
+  }
   if (isDynamicColorObjectIOS(value)) {
     if (!IS_IOS) {
       throw new ReanimatedError(ERROR_MESSAGES.dynamicNotAvailableOnPlatform());
     }
     result = processDynamicColorObjectIOS(value);
-  }
+  } 
 
   if (result === null) {
     throw new ReanimatedError(ERROR_MESSAGES.invalidColor(value));
@@ -167,16 +168,7 @@ export function processColor(value: unknown): ProcessedColor {
 export function processColorsInProps(props: StyleProps) {
   for (const key in props) {
     if (!ColorProperties.includes(key)) continue;
-
     const value = props[key];
-
-    if (Array.isArray(value)) {
-      props[key] = value.map((c) => processColor(c));
-    } else if (isPlatformColorObject(value)) {
-      // PlatformColor is not processed further on iOS and Android
-      props[key] = value;
-    } else {
-      props[key] = processColor(value);
-    }
+    props[key] = Array.isArray(value) ? value.map((c) => processColor(c)) : processColor(value)
   }
 }
