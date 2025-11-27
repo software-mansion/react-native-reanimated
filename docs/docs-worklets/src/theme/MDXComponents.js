@@ -10,9 +10,9 @@ import {
 } from '@site/src/components/Compatibility';
 import Indent from '@site/src/components/Indent';
 import DeprecatedBanner from '@site/src/components/DeprecatedBanner';
+import AvailableFrom from '../components/AvailableFrom';
 import SerializableSupportedTypesTable from '@site/src/components/SerializableTypes';
 import SVGDiagram from '@site/src/components/SVGDiagram';
-import AvailableFrom from '../components/AvailableFrom';
 
 export default {
   // Re-use the default mapping
