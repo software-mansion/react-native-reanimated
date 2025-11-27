@@ -155,7 +155,7 @@ This feature flag is supposed to fix performance regressions of animations while
 
 ### `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`
 
-This feature flag enables a mechanism that periodically synchronizes animated style updates back to React by triggering a React render for animated components with accumulated animated styles and evicting them from the registry on the C++ side. It is supposed improve performance by decreasing the number of `ShadowNode` clone operations in `ReanimatedCommitHook` for React commits.
+This feature flag enables a mechanism that periodically synchronizes animated style updates back to React by triggering a React render for animated components with accumulated animated styles and evicting them from the registry on the C++ side. It is supposed to improve performance by decreasing the number of `ShadowNode` clone operations in `ReanimatedCommitHook` for React commits.
 
 ## Static feature flags
 
