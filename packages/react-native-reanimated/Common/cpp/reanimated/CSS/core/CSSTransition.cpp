@@ -36,48 +36,6 @@ TransitionProgressState CSSTransition::getState() const {
   return progressProvider_.getState();
 }
 
-folly::dynamic CSSTransition::getCurrentInterpolationStyle() const {
-  return styleInterpolator_.interpolate(shadowNode_, progressProvider_, allowDiscreteProperties_);
-}
-
-TransitionProperties CSSTransition::getProperties() const {
-  return properties_;
-}
-
-PropertyNames CSSTransition::getAllowedProperties(const folly::dynamic &oldProps, const folly::dynamic &newProps) {
-  if (!oldProps.isObject() || !newProps.isObject()) {
-    return {};
-  }
-
-  // If specific properties are set, process only those
-  if (properties_.has_value()) {
-    PropertyNames allowedProps;
-    const auto &properties = properties_.value();
-    allowedProps.reserve(properties.size());
-
-    for (const auto &prop : properties) {
-      if (isAllowedProperty(prop)) {
-        allowedProps.push_back(prop);
-      }
-    }
-
-    return allowedProps;
-  }
-
-  // Process all properties from both old and new props
-  std::unordered_set<std::string> allAllowedProps;
-
-  for (const auto &props : {oldProps, newProps}) {
-    for (const auto &propertyName : props.keys()) {
-      if (isAllowedProperty(propertyName.asString())) {
-        allAllowedProps.insert(propertyName.asString());
-      }
-    }
-  }
-
-  return {allAllowedProps.begin(), allAllowedProps.end()};
-}
-
 folly::dynamic CSSTransition::run(
     jsi::Runtime &rt,
     const ChangedProps &changedProps,
