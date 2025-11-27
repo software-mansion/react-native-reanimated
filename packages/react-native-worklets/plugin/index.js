@@ -30,7 +30,7 @@ var require_gestureHandlerAutoworkletization = __commonJS({
   "lib/gestureHandlerAutoworkletization.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.gestureHandlerBuilderMethods = void 0;
+    exports2.gestureHandlerObjectHooks = exports2.gestureHandlerBuilderMethods = void 0;
     exports2.isGestureHandlerEventCallback = isGestureHandlerEventCallback;
     exports2.isGestureObjectEventCallbackMethod = isGestureObjectEventCallbackMethod;
     var types_12 = require("@babel/types");
@@ -60,6 +60,17 @@ var require_gestureHandlerAutoworkletization = __commonJS({
       "onTouchesMove",
       "onTouchesUp",
       "onTouchesCancelled"
+    ]);
+    exports2.gestureHandlerObjectHooks = /* @__PURE__ */ new Set([
+      "useTapGesture",
+      "usePanGesture",
+      "usePinchGesture",
+      "useRotationGesture",
+      "useFlingGesture",
+      "useLongPressGesture",
+      "useNativeGesture",
+      "useManualGesture",
+      "useHoverGesture"
     ]);
     function isGestureHandlerEventCallback(path) {
       return (0, types_12.isCallExpression)(path.parent) && (0, types_12.isExpression)(path.parent.callee) && isGestureObjectEventCallbackMethod(path.parent.callee);
@@ -267,6 +278,97 @@ var require_types = __commonJS({
     }
     exports2.workletClassFactorySuffix = "__classFactory";
     exports2.generatedWorkletsDir = "__generatedWorklets";
+  }
+});
+
+// lib/referencedWorklets.js
+var require_referencedWorklets = __commonJS({
+  "lib/referencedWorklets.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.findReferencedWorklet = findReferencedWorklet;
+    var types_12 = require("@babel/types");
+    var types_2 = require_types();
+    function findReferencedWorklet(workletIdentifier, acceptWorkletizableFunction, acceptObject, state) {
+      const workletName = workletIdentifier.node.name;
+      const scope = workletIdentifier.scope;
+      const workletBinding = scope.getBinding(workletName);
+      if (!workletBinding) {
+        return void 0;
+      }
+      if (state.opts.bundleMode && bindingIsWorklet(workletBinding)) {
+        return void 0;
+      }
+      if (acceptWorkletizableFunction && workletBinding.path.isFunctionDeclaration()) {
+        return workletBinding.path;
+      }
+      const isConstant = workletBinding.constant;
+      if (isConstant) {
+        return findReferencedWorkletFromVariableDeclarator(workletBinding, acceptWorkletizableFunction, acceptObject, state);
+      }
+      return findReferencedWorkletFromAssignmentExpression(workletBinding, acceptWorkletizableFunction, acceptObject, state);
+    }
+    function findReferencedWorkletFromVariableDeclarator(workletBinding, acceptWorkletizableFunction, acceptObject, state) {
+      const workletDeclaration = workletBinding.path;
+      if (!workletDeclaration.isVariableDeclarator()) {
+        return void 0;
+      }
+      const worklet = workletDeclaration.get("init");
+      if (acceptWorkletizableFunction && (0, types_2.isWorkletizableFunctionPath)(worklet)) {
+        return worklet;
+      }
+      if (acceptObject && (0, types_2.isWorkletizableObjectPath)(worklet)) {
+        return worklet;
+      }
+      if (worklet.isIdentifier() && worklet.isReferencedIdentifier()) {
+        return findReferencedWorklet(worklet, acceptWorkletizableFunction, acceptObject, state);
+      }
+      return void 0;
+    }
+    function findReferencedWorkletFromAssignmentExpression(workletBinding, acceptWorkletizableFunction, acceptObject, state) {
+      const workletDeclaration = workletBinding.constantViolations.reverse().find((constantViolation) => constantViolation.isAssignmentExpression() && (acceptWorkletizableFunction && (0, types_2.isWorkletizableFunctionPath)(constantViolation.get("right")) || acceptObject && (0, types_2.isWorkletizableObjectPath)(constantViolation.get("right"))));
+      if (!workletDeclaration || !workletDeclaration.isAssignmentExpression()) {
+        return void 0;
+      }
+      const workletDefinition = workletDeclaration.get("right");
+      if (acceptWorkletizableFunction && (0, types_2.isWorkletizableFunctionPath)(workletDefinition)) {
+        return workletDefinition;
+      }
+      if (acceptObject && (0, types_2.isWorkletizableObjectPath)(workletDefinition)) {
+        return workletDefinition;
+      }
+      if (workletDefinition.isIdentifier() && workletDefinition.isReferencedIdentifier()) {
+        return findReferencedWorklet(workletDefinition, acceptWorkletizableFunction, acceptObject, state);
+      }
+      return void 0;
+    }
+    function bindingIsWorklet(binding) {
+      return binding.referencePaths.some((refPath) => !Array.isArray(refPath.container) && (0, types_12.isMemberExpression)(refPath.container) && refPath.container.object === refPath.node && (0, types_12.isIdentifier)(refPath.container.property) && refPath.container.property.name === "__workletHash");
+    }
+  }
+});
+
+// lib/findWorklet.js
+var require_findWorklet = __commonJS({
+  "lib/findWorklet.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.findWorklet = findWorklet;
+    var referencedWorklets_1 = require_referencedWorklets();
+    var types_12 = require_types();
+    function findWorklet(nodePath, state, acceptWorkletizableFunction, acceptObject) {
+      if (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionPath)(nodePath)) {
+        return nodePath;
+      }
+      if (acceptObject && (0, types_12.isWorkletizableObjectPath)(nodePath)) {
+        return nodePath;
+      }
+      if (nodePath.isIdentifier() && nodePath.isReferencedIdentifier()) {
+        const worklet = (0, referencedWorklets_1.findReferencedWorklet)(nodePath, acceptWorkletizableFunction, acceptObject, state);
+        return worklet;
+      }
+      return void 0;
+    }
   }
 });
 
@@ -1054,9 +1156,23 @@ var require_objectWorklets = __commonJS({
   "lib/objectWorklets.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.tryProcessingNode = tryProcessingNode;
     exports2.processWorkletizableObject = processWorkletizableObject;
+    var findWorklet_1 = require_findWorklet();
     var types_12 = require_types();
     var workletSubstitution_12 = require_workletSubstitution();
+    function tryProcessingNode(arg, state, acceptWorkletizableFunction, acceptObject) {
+      var _a;
+      const maybeWorklet = (0, findWorklet_1.findWorklet)(arg, state, acceptWorkletizableFunction, acceptObject);
+      if (!maybeWorklet || ((_a = maybeWorklet.getFunctionParent()) === null || _a === void 0 ? void 0 : _a.node.workletized)) {
+        return;
+      }
+      if ((0, types_12.isWorkletizableFunctionPath)(maybeWorklet)) {
+        (0, workletSubstitution_12.processWorklet)(maybeWorklet, state);
+      } else if ((0, types_12.isWorkletizableObjectPath)(maybeWorklet)) {
+        processWorkletizableObject(maybeWorklet, state);
+      }
+    }
     function processWorkletizableObject(path, state) {
       const properties = path.get("properties");
       for (const property of properties) {
@@ -1064,80 +1180,11 @@ var require_objectWorklets = __commonJS({
           (0, workletSubstitution_12.processWorklet)(property, state);
         } else if (property.isObjectProperty()) {
           const value = property.get("value");
-          if ((0, types_12.isWorkletizableFunctionPath)(value)) {
-            (0, workletSubstitution_12.processWorklet)(value, state);
-          }
+          tryProcessingNode(value, state, true, false);
         } else {
           throw new Error(`[Reanimated] '${property.type}' as to-be workletized argument is not supported for object hooks.`);
         }
       }
-    }
-  }
-});
-
-// lib/referencedWorklets.js
-var require_referencedWorklets = __commonJS({
-  "lib/referencedWorklets.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.findReferencedWorklet = findReferencedWorklet;
-    var types_12 = require("@babel/types");
-    var types_2 = require_types();
-    function findReferencedWorklet(workletIdentifier, acceptWorkletizableFunction, acceptObject, state) {
-      const workletName = workletIdentifier.node.name;
-      const scope = workletIdentifier.scope;
-      const workletBinding = scope.getBinding(workletName);
-      if (!workletBinding) {
-        return void 0;
-      }
-      if (state.opts.bundleMode && bindingIsWorklet(workletBinding)) {
-        return void 0;
-      }
-      if (acceptWorkletizableFunction && workletBinding.path.isFunctionDeclaration()) {
-        return workletBinding.path;
-      }
-      const isConstant = workletBinding.constant;
-      if (isConstant) {
-        return findReferencedWorkletFromVariableDeclarator(workletBinding, acceptWorkletizableFunction, acceptObject, state);
-      }
-      return findReferencedWorkletFromAssignmentExpression(workletBinding, acceptWorkletizableFunction, acceptObject, state);
-    }
-    function findReferencedWorkletFromVariableDeclarator(workletBinding, acceptWorkletizableFunction, acceptObject, state) {
-      const workletDeclaration = workletBinding.path;
-      if (!workletDeclaration.isVariableDeclarator()) {
-        return void 0;
-      }
-      const worklet = workletDeclaration.get("init");
-      if (acceptWorkletizableFunction && (0, types_2.isWorkletizableFunctionPath)(worklet)) {
-        return worklet;
-      }
-      if (acceptObject && (0, types_2.isWorkletizableObjectPath)(worklet)) {
-        return worklet;
-      }
-      if (worklet.isIdentifier() && worklet.isReferencedIdentifier()) {
-        return findReferencedWorklet(worklet, acceptWorkletizableFunction, acceptObject, state);
-      }
-      return void 0;
-    }
-    function findReferencedWorkletFromAssignmentExpression(workletBinding, acceptWorkletizableFunction, acceptObject, state) {
-      const workletDeclaration = workletBinding.constantViolations.reverse().find((constantViolation) => constantViolation.isAssignmentExpression() && (acceptWorkletizableFunction && (0, types_2.isWorkletizableFunctionPath)(constantViolation.get("right")) || acceptObject && (0, types_2.isWorkletizableObjectPath)(constantViolation.get("right"))));
-      if (!workletDeclaration || !workletDeclaration.isAssignmentExpression()) {
-        return void 0;
-      }
-      const workletDefinition = workletDeclaration.get("right");
-      if (acceptWorkletizableFunction && (0, types_2.isWorkletizableFunctionPath)(workletDefinition)) {
-        return workletDefinition;
-      }
-      if (acceptObject && (0, types_2.isWorkletizableObjectPath)(workletDefinition)) {
-        return workletDefinition;
-      }
-      if (workletDefinition.isIdentifier() && workletDefinition.isReferencedIdentifier()) {
-        return findReferencedWorklet(workletDefinition, acceptWorkletizableFunction, acceptObject, state);
-      }
-      return void 0;
-    }
-    function bindingIsWorklet(binding) {
-      return binding.referencePaths.some((refPath) => !Array.isArray(refPath.container) && (0, types_12.isMemberExpression)(refPath.container) && refPath.container.object === refPath.node && (0, types_12.isIdentifier)(refPath.container.property) && refPath.container.property.name === "__workletHash");
     }
   }
 });
@@ -1153,10 +1200,11 @@ var require_autoworkletization = __commonJS({
     var gestureHandlerAutoworkletization_1 = require_gestureHandlerAutoworkletization();
     var layoutAnimationAutoworkletization_1 = require_layoutAnimationAutoworkletization();
     var objectWorklets_1 = require_objectWorklets();
-    var referencedWorklets_1 = require_referencedWorklets();
-    var types_2 = require_types();
     var workletSubstitution_12 = require_workletSubstitution();
-    var reanimatedObjectHooks = /* @__PURE__ */ new Set(["useAnimatedScrollHandler"]);
+    var reanimatedObjectHooks = /* @__PURE__ */ new Set([
+      "useAnimatedScrollHandler",
+      ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerObjectHooks)
+    ]);
     var reanimatedFunctionHooks = /* @__PURE__ */ new Set([
       "useFrameCallback",
       "useAnimatedStyle",
@@ -1196,6 +1244,7 @@ var require_autoworkletization = __commonJS({
       ["runOnUIAsync", [0]],
       ["runOnRuntime", [1]],
       ["scheduleOnRuntime", [1]],
+      ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerObjectHooks).map((name) => [name, [0]]),
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerBuilderMethods).map((name) => [name, [0]])
     ]);
     function processIfAutoworkletizableCallback(path, state) {
@@ -1224,29 +1273,8 @@ var require_autoworkletization = __commonJS({
     }
     function processArgs(args, state, acceptWorkletizableFunction, acceptObject) {
       args.forEach((arg) => {
-        var _a;
-        const maybeWorklet = findWorklet(arg, acceptWorkletizableFunction, acceptObject, state);
-        if (!maybeWorklet || ((_a = maybeWorklet.getFunctionParent()) === null || _a === void 0 ? void 0 : _a.node.workletized)) {
-          return;
-        }
-        if ((0, types_2.isWorkletizableFunctionPath)(maybeWorklet)) {
-          (0, workletSubstitution_12.processWorklet)(maybeWorklet, state);
-        } else if ((0, types_2.isWorkletizableObjectPath)(maybeWorklet)) {
-          (0, objectWorklets_1.processWorkletizableObject)(maybeWorklet, state);
-        }
+        (0, objectWorklets_1.tryProcessingNode)(arg, state, acceptWorkletizableFunction, acceptObject);
       });
-    }
-    function findWorklet(arg, acceptWorkletizableFunction, acceptObject, state) {
-      if (acceptWorkletizableFunction && (0, types_2.isWorkletizableFunctionPath)(arg)) {
-        return arg;
-      }
-      if (acceptObject && (0, types_2.isWorkletizableObjectPath)(arg)) {
-        return arg;
-      }
-      if (arg.isIdentifier() && arg.isReferencedIdentifier()) {
-        return (0, referencedWorklets_1.findReferencedWorklet)(arg, acceptWorkletizableFunction, acceptObject, state);
-      }
-      return void 0;
     }
   }
 });

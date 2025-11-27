@@ -13,8 +13,6 @@ struct RotateOperationBase2D : public TransformOperationBase<TOperation, CSSAngl
   using TransformOperationBase<TOperation, CSSAngle>::TransformOperationBase;
 
   explicit RotateOperationBase2D(const std::string &value);
-
-  folly::dynamic valueToDynamic() const override;
 };
 
 template <TransformOp TOperation>
@@ -24,7 +22,6 @@ struct RotateOperationBase3D : public TransformOperationBase<TOperation, CSSAngl
   explicit RotateOperationBase3D(const std::string &value);
 
   bool is3D() const override;
-  folly::dynamic valueToDynamic() const override;
   TransformMatrix::Shared toMatrix(bool /* force3D */) const override;
 };
 

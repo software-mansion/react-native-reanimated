@@ -1,6 +1,5 @@
 #include <reanimated/CSS/interpolation/filters/FilterOperation.h>
 
-#include <reanimated/CSS/common/filters/FilterOp.h>
 #include <reanimated/CSS/common/values/CSSAngle.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
 #include <reanimated/CSS/common/values/complex/CSSDropShadow.h>
@@ -20,14 +19,10 @@
 
 namespace reanimated::css {
 
-FilterOperation::FilterOperation(FilterOp value) : type(value) {}
+FilterOperation::FilterOperation(FilterOp type) : StyleOperation(static_cast<uint8_t>(type)) {}
 
 std::string FilterOperation::getOperationName() const {
-  return getOperationNameFromType(type);
-}
-
-bool FilterOperation::shouldResolve() const {
-  return false;
+  return getFilterOperationName(static_cast<FilterOp>(type));
 }
 
 std::shared_ptr<FilterOperation> FilterOperation::fromJSIValue(jsi::Runtime &rt, const jsi::Value &value) {
@@ -112,27 +107,19 @@ std::shared_ptr<FilterOperation> FilterOperation::fromDynamic(const folly::dynam
   }
 }
 
-folly::dynamic FilterOperation::toDynamic() const {
-  return folly::dynamic::object(getOperationName(), valueToDynamic());
-}
-
 // FilterOperationBase implementation
 template <FilterOp TOperation, CSSValueDerived TValue>
 FilterOperationBase<TOperation, TValue>::FilterOperationBase(TValue value)
     : FilterOperation(TOperation), value(std::move(value)) {}
 
 template <FilterOp TOperation, CSSValueDerived TValue>
-bool FilterOperationBase<TOperation, TValue>::operator==(const FilterOperation &other) const {
-  if (type != other.type) {
-    return false;
-  }
-  const auto &otherOperation = static_cast<const FilterOperationBase<TOperation, TValue> &>(other);
-  return value == otherOperation.value;
+folly::dynamic FilterOperationBase<TOperation, TValue>::valueToDynamic() const {
+  return value.toDynamic();
 }
 
 template <FilterOp TOperation, CSSValueDerived TValue>
-folly::dynamic FilterOperationBase<TOperation, TValue>::valueToDynamic() const {
-  return value.toDynamic();
+bool FilterOperationBase<TOperation, TValue>::areValuesEqual(const StyleOperation &other) const {
+  return value == static_cast<const FilterOperationBase<TOperation, TValue> &>(other).value;
 }
 
 template struct FilterOperationBase<FilterOp::Blur, CSSDouble>;

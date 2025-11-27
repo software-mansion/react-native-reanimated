@@ -18,7 +18,7 @@ import { processIfWorkletContextObject } from './contextObject';
 import { processIfWorkletFile } from './file';
 import { initializeState } from './globals';
 import { processInlineStylesWarning } from './inlineStylesWarning';
-import type { ReanimatedPluginPass } from './types';
+import type { WorkletsPluginPass } from './types';
 import { WorkletizableFunction } from './types';
 import { substituteWebCallExpression } from './webOptimization';
 import { processIfWithWorkletDirective } from './workletSubstitution';
@@ -38,14 +38,14 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
   return {
     name: 'worklets',
 
-    pre(this: ReanimatedPluginPass) {
+    pre(this: WorkletsPluginPass) {
       runWithTaggedExceptions(() => {
         initializeState(this);
       });
     },
     visitor: {
       CallExpression: {
-        enter(path: NodePath<CallExpression>, state: ReanimatedPluginPass) {
+        enter(path: NodePath<CallExpression>, state: WorkletsPluginPass) {
           runWithTaggedExceptions(() => {
             processCalleesAutoworkletizableCallbacks(path, state);
             if (state.opts.substituteWebPlatformChecks) {
@@ -57,7 +57,7 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
       [WorkletizableFunction]: {
         enter(
           path: NodePath<WorkletizableFunction>,
-          state: ReanimatedPluginPass
+          state: WorkletsPluginPass
         ) {
           runWithTaggedExceptions(
             () =>
@@ -67,14 +67,14 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
         },
       },
       ObjectExpression: {
-        enter(path: NodePath<ObjectExpression>, state: ReanimatedPluginPass) {
+        enter(path: NodePath<ObjectExpression>, state: WorkletsPluginPass) {
           runWithTaggedExceptions(() => {
             processIfWorkletContextObject(path, state);
           });
         },
       },
       ClassDeclaration: {
-        enter(path: NodePath<ClassDeclaration>, state: ReanimatedPluginPass) {
+        enter(path: NodePath<ClassDeclaration>, state: WorkletsPluginPass) {
           runWithTaggedExceptions(() => {
             if (state.opts.disableWorkletClasses) {
               return;
@@ -84,24 +84,21 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
         },
       },
       Program: {
-        enter(path: NodePath<Program>, state: ReanimatedPluginPass) {
+        enter(path: NodePath<Program>, state: WorkletsPluginPass) {
           runWithTaggedExceptions(() => {
             processIfWorkletFile(path, state);
           });
         },
       },
       ExpressionStatement: {
-        enter(
-          path: NodePath<ExpressionStatement>,
-          state: ReanimatedPluginPass
-        ) {
+        enter(path: NodePath<ExpressionStatement>, state: WorkletsPluginPass) {
           runWithTaggedExceptions(() => {
             toggleBundleMode(path, state);
           });
         },
       },
       JSXAttribute: {
-        enter(path: NodePath<JSXAttribute>, state: ReanimatedPluginPass) {
+        enter(path: NodePath<JSXAttribute>, state: WorkletsPluginPass) {
           runWithTaggedExceptions(() =>
             processInlineStylesWarning(path, state)
           );

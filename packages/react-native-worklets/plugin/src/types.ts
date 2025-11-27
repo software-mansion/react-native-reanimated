@@ -15,24 +15,12 @@ import {
   isObjectMethod,
 } from '@babel/types';
 
-export interface ReanimatedPluginOptions {
-  relativeSourceLocation?: boolean;
-  disableInlineStylesWarning?: boolean;
-  disableWorkletClasses?: boolean;
-  omitNativeOnlyData?: boolean;
-  globals?: string[];
-  substituteWebPlatformChecks?: boolean;
-  disableSourceMaps?: boolean;
-  extraPlugins?: string[];
-  extraPresets?: string[];
-  bundleMode?: boolean;
-  workletizableModules?: string[];
-}
+import type { PluginOptions } from './options';
 
-export interface ReanimatedPluginPass {
+export interface WorkletsPluginPass {
   file: BabelFile;
   key: string;
-  opts: ReanimatedPluginOptions;
+  opts: PluginOptions;
   cwd: string;
   filename: string | undefined;
   workletNumber: number;
