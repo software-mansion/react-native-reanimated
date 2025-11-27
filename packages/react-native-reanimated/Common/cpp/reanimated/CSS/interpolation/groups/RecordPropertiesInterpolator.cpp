@@ -40,8 +40,7 @@ void RecordPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::
 void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
     jsi::Runtime &rt,
     const jsi::Value &oldStyleValue,
-    const jsi::Value &newStyleValue,
-    const jsi::Value &lastUpdateValue) {
+    const jsi::Value &newStyleValue) {
   const auto getObject = [&rt](const jsi::Value &value) -> std::optional<jsi::Object> {
     if (!value.isObject()) {
       return std::nullopt;
@@ -57,7 +56,6 @@ void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
 
   const auto oldObject = getObject(oldStyleValue);
   const auto newObject = getObject(newStyleValue);
-  const auto lastObject = getObject(lastUpdateValue);
 
   std::unordered_set<std::string> propertyNamesSet;
   if (oldObject.has_value()) {
@@ -81,9 +79,7 @@ void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
     const auto propId = jsi::PropNameID::forUtf8(rt, propertyName);
     const auto oldValue = oldObject.has_value() ? oldObject->getProperty(rt, propId) : jsi::Value::undefined();
     const auto newValue = newObject.has_value() ? newObject->getProperty(rt, propId) : jsi::Value::undefined();
-    const auto lastValue = lastObject.has_value() ? lastObject->getProperty(rt, propId) : jsi::Value::undefined();
-
-    interpolators_[propertyName]->updateKeyframesFromStyleChange(rt, oldValue, newValue, lastValue);
+    interpolators_[propertyName]->updateKeyframesFromStyleChange(rt, oldValue, newValue);
   }
 }
 

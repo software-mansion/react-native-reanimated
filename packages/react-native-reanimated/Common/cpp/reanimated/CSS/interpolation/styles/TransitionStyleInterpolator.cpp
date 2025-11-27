@@ -72,31 +72,22 @@ void TransitionStyleInterpolator::discardIrrelevantInterpolators(
 }
 
 void TransitionStyleInterpolator::updateInterpolatedProperties(
-    const ChangedProps &changedProps,
-    const folly::dynamic &lastUpdateValue) {
-  const auto &oldPropsObj = changedProps.oldProps;
-  const auto &newPropsObj = changedProps.newProps;
+    jsi::Runtime &rt,
+    const CSSTransitionPropertyUpdates &propertyUpdates) {
+  for (const auto &[propertyName, diffPair] : propertyUpdates) {
+    if (!diffPair.has_value()) {
+      interpolators_.erase(propertyName);
+      continue;
+    }
 
-  const auto empty = folly::dynamic();
-
-  for (const auto &propertyName : changedProps.changedPropertyNames) {
     auto it = interpolators_.find(propertyName);
-    const auto shouldCreateInterpolator = it == interpolators_.end();
-
-    if (shouldCreateInterpolator) {
+    if (it == interpolators_.end()) {
       const auto newInterpolator = createPropertyInterpolator(
           propertyName, {}, getComponentInterpolators(componentName_), viewStylesRepository_);
       it = interpolators_.emplace(propertyName, newInterpolator).first;
     }
 
-    const auto &oldValue = oldPropsObj.getDefault(propertyName, empty);
-    const auto &newValue = newPropsObj.getDefault(propertyName, empty);
-    // Pass lastValue only if the interpolator is updated (no new interpolator
-    // was created), otherwise pass an empty value
-    const auto &lastValue =
-        (shouldCreateInterpolator || lastUpdateValue.empty()) ? empty : lastUpdateValue.getDefault(propertyName, empty);
-
-    it->second->updateKeyframesFromStyleChange(oldValue, newValue, lastValue);
+    it->second->updateKeyframesFromStyleChange(rt, diffPair->first, diffPair->second);
   }
 }
 

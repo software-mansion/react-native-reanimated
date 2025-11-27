@@ -15,19 +15,17 @@ export type NormalizedCSSTransitionConfig = {
   settings: Record<string, NormalizedSingleCSSTransitionSettings>;
 };
 
-export type CSSTransitionPropertiesDiff = Record<string, [unknown, unknown]>;
+export type CSSTransitionPropertyUpdates = Record<string, [unknown, unknown] | null>;
 
-export type NormalizedCSSTransitionConfigWithDiff = Omit<
-  NormalizedCSSTransitionConfig,
-  'properties'
-> & {
-  properties: CSSTransitionPropertiesDiff;
+export type NormalizedNewCSSTransitionConfig = {
+  properties: CSSTransitionPropertyUpdates;
+  settings: Record<string, NormalizedSingleCSSTransitionSettings>;
 };
 
 export type NormalizedCSSTransitionConfigUpdates =
   Partial<NormalizedCSSTransitionConfig>;
 
 export type CSSTransitionUpdates = {
-  properties?: CSSTransitionPropertiesDiff;
+  properties?: CSSTransitionPropertyUpdates;
   settings?: Record<string, Partial<NormalizedSingleCSSTransitionSettings>>;
 };

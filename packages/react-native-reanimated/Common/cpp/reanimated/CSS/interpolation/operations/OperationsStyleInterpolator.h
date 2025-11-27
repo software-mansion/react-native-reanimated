@@ -42,7 +42,7 @@ class OperationsStyleInterpolator : public PropertyInterpolator {
   folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
-      const double fallbackInterpolateThreshold) const override;
+      double fallbackInterpolateThreshold) const override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
@@ -66,7 +66,6 @@ class OperationsStyleInterpolator : public PropertyInterpolator {
   std::optional<StyleOperations> reversingAdjustedStartValue_;
 
   std::optional<StyleOperations> parseStyleOperations(jsi::Runtime &rt, const jsi::Value &values) const;
-  std::optional<StyleOperations> parseStyleOperations(const folly::dynamic &values) const;
   std::shared_ptr<StyleOperationsKeyframe> createStyleOperationsKeyframe(
       double fromOffset,
       double toOffset,

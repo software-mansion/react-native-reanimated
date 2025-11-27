@@ -18,30 +18,21 @@ class CSSTransition {
       const CSSTransitionConfig &config,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  Tag getViewTag() const;
   std::shared_ptr<const ShadowNode> getShadowNode() const;
   double getMinDelay(double timestamp) const;
   TransitionProgressState getState() const;
   folly::dynamic run(
       jsi::Runtime &rt,
-      const ChangedProps &changedProps,
       const CSSTransitionUpdates &updates,
-      const folly::dynamic &lastUpdateValue,
       double timestamp);
   folly::dynamic update(double timestamp);
 
  private:
   const std::shared_ptr<const ShadowNode> shadowNode_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
-  std::unordered_set<std::string> allowDiscreteProperties_;
-  TransitionProperties properties_;
   CSSTransitionPropertiesSettings settings_;
   TransitionStyleInterpolator styleInterpolator_;
   TransitionProgressProvider progressProvider_;
-
-  void updateTransitionProperties(const TransitionProperties &properties);
-  void updateAllowedDiscreteProperties();
-  bool isAllowedProperty(const std::string &propertyName) const;
 };
 
 } // namespace reanimated::css

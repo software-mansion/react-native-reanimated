@@ -89,7 +89,7 @@ void CSSTransitionsRegistry::activateDelayedTransitions(const double timestamp) 
 }
 
 void CSSTransitionsRegistry::scheduleOrActivateTransition(const std::shared_ptr<CSSTransition> &transition) {
-  const auto viewTag = transition->getViewTag();
+  const auto viewTag = transition->getShadowNode()->getViewTag();
   const auto currentTimestamp = getCurrentTimestamp_();
   const auto minDelay = transition->getMinDelay(currentTimestamp);
 

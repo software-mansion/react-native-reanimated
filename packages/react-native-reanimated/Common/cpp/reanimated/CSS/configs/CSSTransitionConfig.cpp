@@ -6,14 +6,19 @@
 
 namespace reanimated::css {
 
-CSSTransitionPropertyDiffs parsePropertyDiffs(jsi::Runtime &rt, const jsi::Object &diffs) {
-  CSSTransitionPropertyDiffs result;
+CSSTransitionPropertyUpdates parsePropertyUpdates(jsi::Runtime &rt, const jsi::Object &diffs) {
+  CSSTransitionPropertyUpdates result;
   const auto propertyNames = diffs.getPropertyNames(rt);
   const auto propertyCount = propertyNames.size(rt);
 
   for (size_t i = 0; i < propertyCount; ++i) {
     const auto propertyName = propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
     const auto diffValue = diffs.getProperty(rt, jsi::PropNameID::forUtf8(rt, propertyName));
+
+    if (diffValue.isNull()) {
+      result.emplace(propertyName, std::nullopt);
+      continue;
+    }
 
     if (!diffValue.isObject()) {
       continue;
@@ -26,7 +31,8 @@ CSSTransitionPropertyDiffs parsePropertyDiffs(jsi::Runtime &rt, const jsi::Objec
 
     result.emplace(
         propertyName,
-        std::make_pair(diffArray.getValueAtIndex(rt, 0), diffArray.getValueAtIndex(rt, 1)));
+        std::make_optional(std::make_pair(
+            diffArray.getValueAtIndex(rt, 0), diffArray.getValueAtIndex(rt, 1))));
   }
 
   return result;
@@ -118,7 +124,7 @@ CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value 
   const auto configObj = config.asObject(rt);
 
   CSSTransitionConfig result{
-      .properties = parsePropertyDiffs(rt, configObj.getProperty(rt, "properties").asObject(rt)),
+      .properties = parsePropertyUpdates(rt, configObj.getProperty(rt, "properties").asObject(rt)),
       .settings = parseSettings(rt, configObj.getProperty(rt, "settings").asObject(rt)),
   };
 
@@ -128,7 +134,7 @@ CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value 
 CSSTransitionUpdates parseCSSTransitionUpdates(jsi::Runtime &rt, const jsi::Value &updates) {
   const auto updatesObj = updates.asObject(rt);
   CSSTransitionUpdates result{
-      .properties = parsePropertyDiffs(rt, updatesObj.getProperty(rt, "properties").asObject(rt)),
+      .properties = parsePropertyUpdates(rt, updatesObj.getProperty(rt, "properties").asObject(rt)),
   };
 
   if (updatesObj.hasProperty(rt, "settings")) {

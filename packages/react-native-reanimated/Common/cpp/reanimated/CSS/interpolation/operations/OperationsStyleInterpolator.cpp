@@ -129,23 +129,20 @@ void OperationsStyleInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::V
 void OperationsStyleInterpolator::updateKeyframesFromStyleChange(
     jsi::Runtime &rt,
     const jsi::Value &oldStyleValue,
-    const jsi::Value &newStyleValue,
-    const jsi::Value &lastUpdateValue) {
-  if (oldStyleValue.isNull()) {
+    const jsi::Value &newStyleValue) {
+  if (oldStyleValue.isUndefined()) {
     reversingAdjustedStartValue_ = std::nullopt;
   } else {
-    reversingAdjustedStartValue_ = parseStyleOperations(oldStyleValue);
+    reversingAdjustedStartValue_ = parseStyleOperations(rt, oldStyleValue);
   }
-
-  const auto &prevStyleValue = lastUpdateValue.isNull() ? oldStyleValue : lastUpdateValue;
 
   keyframes_.clear();
   keyframes_.reserve(1);
   keyframes_.emplace_back(createStyleOperationsKeyframe(
       0,
       1,
-      parseStyleOperations(prevStyleValue).value_or(StyleOperations{}),
-      parseStyleOperations(newStyleValue).value_or(StyleOperations{})));
+      parseStyleOperations(rt, oldStyleValue).value_or(StyleOperations{}),
+      parseStyleOperations(rt, newStyleValue).value_or(StyleOperations{})));
 }
 
 std::optional<StyleOperations> OperationsStyleInterpolator::parseStyleOperations(
@@ -163,24 +160,6 @@ std::optional<StyleOperations> OperationsStyleInterpolator::parseStyleOperations
 
   for (size_t i = 0; i < operationsCount; ++i) {
     styleOperations.emplace_back(createStyleOperation(rt, operationsArray.getValueAtIndex(rt, i)));
-  }
-
-  return styleOperations;
-}
-
-std::optional<StyleOperations> OperationsStyleInterpolator::parseStyleOperations(const folly::dynamic &values) const {
-  if (values.empty()) {
-    return std::nullopt;
-  }
-
-  const auto &operationsArray = values;
-  const auto operationsCount = operationsArray.size();
-
-  StyleOperations styleOperations;
-  styleOperations.reserve(operationsCount);
-
-  for (size_t i = 0; i < operationsCount; ++i) {
-    styleOperations.emplace_back(createStyleOperation(operationsArray[i]));
   }
 
   return styleOperations;

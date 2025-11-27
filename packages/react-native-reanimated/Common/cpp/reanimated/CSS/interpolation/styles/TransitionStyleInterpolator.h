@@ -27,7 +27,9 @@ class TransitionStyleInterpolator {
 
   void discardFinishedInterpolators(const TransitionProgressProvider &transitionProgressProvider);
   void discardIrrelevantInterpolators(const std::unordered_set<std::string> &transitionPropertyNames);
-  void updateInterpolatedProperties(const ChangedProps &changedProps, const folly::dynamic &lastUpdateValue);
+  void updateInterpolatedProperties(
+      jsi::Runtime &rt,
+      const CSSTransitionPropertyUpdates &propertyUpdates);
 
  private:
   using MapInterpolatorsCallback = std::function<
