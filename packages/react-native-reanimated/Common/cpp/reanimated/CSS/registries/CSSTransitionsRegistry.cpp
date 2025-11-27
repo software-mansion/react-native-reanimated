@@ -20,15 +20,6 @@ bool CSSTransitionsRegistry::hasUpdates() const {
   return !runningTransitionTags_.empty() || !delayedTransitionsManager_.empty();
 }
 
-void CSSTransitionsRegistry::add(const std::shared_ptr<CSSTransition> &transition) {
-  const auto &shadowNode = transition->getShadowNode();
-  const auto viewTag = shadowNode->getTag();
-
-  registry_.insert({viewTag, transition});
-  PropsObserver observer = createPropsObserver(viewTag);
-  staticPropsRegistry_->setObserver(viewTag, std::move(observer));
-}
-
 void CSSTransitionsRegistry::remove(const Tag viewTag) {
   removeFromUpdatesRegistry(viewTag);
   staticPropsRegistry_->removeObserver(viewTag);
@@ -37,40 +28,31 @@ void CSSTransitionsRegistry::remove(const Tag viewTag) {
   registry_.erase(viewTag);
 }
 
-void CSSTransitionsRegistry::apply(jsi::Runtime &rt, const Tag viewTag, const CSSTransitionUpdates &updates) {
+void CSSTransitionsRegistry::add(
+    jsi::Runtime &rt,
+    std::shared_ptr<const ShadowNode> shadowNode,
+    const CSSTransitionConfig &config) {
+  const auto viewTag = shadowNode->getTag();
+  auto transition = std::make_shared<CSSTransition>(std::move(shadowNode), config, viewStylesRepository_);
+
+  registry_.insert({viewTag, transition});
+  PropsObserver observer = createPropsObserver(viewTag);
+  staticPropsRegistry_->setObserver(viewTag, std::move(observer));
+
+  // Newly added transitions should immediately store their initial interpolation style
+  updateInUpdatesRegistry(transition, transition->getCurrentInterpolationStyle());
+}
+
+void CSSTransitionsRegistry::update(jsi::Runtime &rt, const Tag viewTag, const CSSTransitionUpdates &updates) {
   auto transitionIt = registry_.find(viewTag);
 
   if (transitionIt == registry_.end()) {
-    auto shadowNode = staticPropsRegistry_->getShadowNode(viewTag);
-    if (!shadowNode || !updates.settings.has_value()) {
-      return;
-    }
-
-    CSSTransitionConfig config;
-    if (updates.properties.has_value()) {
-      PropertyNames propertyNames;
-      propertyNames.reserve(updates.properties->size());
-      for (const auto &entry : *updates.properties) {
-        propertyNames.push_back(entry.first);
-      }
-      config.properties = propertyNames;
-    } else {
-      config.properties = std::nullopt;
-    }
-
-    config.settings = parseCSSTransitionPropertiesSettings(rt, *updates.settings);
-
-    auto transition = std::make_shared<CSSTransition>(std::move(shadowNode), config, viewStylesRepository_);
-    add(transition);
-    transitionIt = registry_.find(viewTag);
+    return;
   }
 
   const auto &transition = transitionIt->second;
-  transition->applyUpdates(rt, updates);
-
-  if (updates.properties.has_value()) {
-    updateInUpdatesRegistry(transition, transition->getCurrentInterpolationStyle());
-  }
+  transition->update(rt, updates);
+  updateInUpdatesRegistry(transition, transition->getCurrentInterpolationStyle());
 }
 
 void CSSTransitionsRegistry::update(const double timestamp) {

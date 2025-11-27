@@ -27,9 +27,9 @@ class PropertyInterpolator {
 
   virtual void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) = 0;
   virtual void updateKeyframesFromStyleChange(
-      const folly::dynamic &oldStyleValue,
-      const folly::dynamic &newStyleValue,
-      const folly::dynamic &lastUpdateValue) = 0;
+      jsi::Runtime &rt,
+      const jsi::Value &oldStyleValue,
+      const jsi::Value &newStyleValue) = 0;
 
   virtual folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,

@@ -78,18 +78,49 @@ PropertyNames CSSTransition::getAllowedProperties(const folly::dynamic &oldProps
   return {allAllowedProps.begin(), allAllowedProps.end()};
 }
 
-void CSSTransition::updateSettings(const PartialCSSTransitionConfig &config) {
-  if (config.properties.has_value()) {
-    updateTransitionProperties(config.properties.value());
-  }
-  if (config.settings.has_value()) {
-    settings_ = config.settings.value();
+folly::dynamic CSSTransition::run(
+    jsi::Runtime &rt,
+    const ChangedProps &changedProps,
+    const CSSTransitionUpdates &updates,
+    const folly::dynamic &lastUpdateValue,
+    const double timestamp) {
+  if (updates.settings.has_value()) {
+    for (const auto &[property, partialSettings] : *updates.settings) {
+      auto &existingSettings = settings_[property];
+
+      if (partialSettings.duration.has_value()) {
+        existingSettings.duration = partialSettings.duration.value();
+      }
+      if (partialSettings.easingFunction.has_value()) {
+        existingSettings.easingFunction = partialSettings.easingFunction.value();
+      }
+      if (partialSettings.delay.has_value()) {
+        existingSettings.delay = partialSettings.delay.value();
+      }
+      if (partialSettings.allowDiscrete.has_value()) {
+        existingSettings.allowDiscrete = partialSettings.allowDiscrete.value();
+      }
+    }
+
     updateAllowedDiscreteProperties();
   }
-}
 
-folly::dynamic
-CSSTransition::run(const ChangedProps &changedProps, const folly::dynamic &lastUpdateValue, const double timestamp) {
+  if (!updates.properties.empty()) {
+    ChangedProps transitionChangedProps;
+    transitionChangedProps.changedPropertyNames.reserve(updates.properties.size());
+    transitionChangedProps.oldProps = folly::dynamic::object;
+    transitionChangedProps.newProps = folly::dynamic::object;
+
+    for (const auto &[property, diffPair] : updates.properties) {
+      transitionChangedProps.changedPropertyNames.push_back(property);
+      transitionChangedProps.oldProps[property] = jsiValueToDynamic(rt, diffPair.first);
+      transitionChangedProps.newProps[property] = jsiValueToDynamic(rt, diffPair.second);
+    }
+
+    updateTransitionProperties(properties_);
+    styleInterpolator_.updateInterpolatedProperties(transitionChangedProps, {});
+  }
+
   progressProvider_.runProgressProviders(
       timestamp,
       settings_,
@@ -132,6 +163,22 @@ void CSSTransition::updateAllowedDiscreteProperties() {
       allowDiscreteProperties_.insert(propertyName);
     }
   }
+}
+
+void CSSTransition::applyPropertyDiffs(jsi::Runtime &rt, const CSSTransitionPropertyDiffs &diffs) {
+  ChangedProps changedProps;
+  changedProps.changedPropertyNames.reserve(diffs.size());
+  changedProps.oldProps = folly::dynamic::object;
+  changedProps.newProps = folly::dynamic::object;
+
+  for (const auto &[property, diffPair] : diffs) {
+    changedProps.changedPropertyNames.push_back(property);
+    changedProps.oldProps[property] = jsiValueToDynamic(rt, diffPair.first);
+    changedProps.newProps[property] = jsiValueToDynamic(rt, diffPair.second);
+  }
+
+  const folly::dynamic lastUpdateValue; // empty since updates come from JS
+  styleInterpolator_.updateInterpolatedProperties(changedProps, lastUpdateValue);
 }
 
 bool CSSTransition::isAllowedProperty(const std::string &propertyName) const {

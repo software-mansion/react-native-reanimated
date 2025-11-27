@@ -127,9 +127,10 @@ void OperationsStyleInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::V
 }
 
 void OperationsStyleInterpolator::updateKeyframesFromStyleChange(
-    const folly::dynamic &oldStyleValue,
-    const folly::dynamic &newStyleValue,
-    const folly::dynamic &lastUpdateValue) {
+    jsi::Runtime &rt,
+    const jsi::Value &oldStyleValue,
+    const jsi::Value &newStyleValue,
+    const jsi::Value &lastUpdateValue) {
   if (oldStyleValue.isNull()) {
     reversingAdjustedStartValue_ = std::nullopt;
   } else {

@@ -19,14 +19,12 @@ struct CSSTransitionPropertySettings {
 
 using CSSTransitionPropertiesSettings = std::unordered_map<std::string, CSSTransitionPropertySettings>;
 
-struct CSSTransitionConfig {
-  TransitionProperties properties;
-  CSSTransitionPropertiesSettings settings;
-};
+using CSSTransitionPropertyDiffs =
+    std::unordered_map<std::string, std::pair<jsi::Value, jsi::Value>>;
 
-struct PartialCSSTransitionConfig {
-  std::optional<TransitionProperties> properties;
-  std::optional<CSSTransitionPropertiesSettings> settings;
+struct CSSTransitionConfig {
+  CSSTransitionPropertyDiffs properties;
+  CSSTransitionPropertiesSettings settings;
 };
 
 struct PartialCSSTransitionPropertySettings {
@@ -39,11 +37,8 @@ struct PartialCSSTransitionPropertySettings {
 using CSSTransitionPropertySettingsUpdates =
     std::unordered_map<std::string, PartialCSSTransitionPropertySettings>;
 
-using CSSTransitionPropertyDiffs =
-    std::unordered_map<std::string, std::pair<jsi::Value, jsi::Value>>;
-
 struct CSSTransitionUpdates {
-  std::optional<CSSTransitionPropertyDiffs> properties;
+  CSSTransitionPropertyDiffs properties;
   std::optional<CSSTransitionPropertySettingsUpdates> settings;
 };
 
@@ -51,14 +46,7 @@ std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
     const CSSTransitionPropertiesSettings &propertiesSettings,
     const std::string &propName);
 
-TransitionProperties getProperties(jsi::Runtime &rt, const jsi::Object &config);
-
-CSSTransitionPropertiesSettings parseCSSTransitionPropertiesSettings(jsi::Runtime &rt, const jsi::Object &settings);
-
 CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config);
-
-PartialCSSTransitionConfig parsePartialCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &partialConfig);
-
 CSSTransitionUpdates parseCSSTransitionUpdates(jsi::Runtime &rt, const jsi::Value &updates);
 
 } // namespace reanimated::css

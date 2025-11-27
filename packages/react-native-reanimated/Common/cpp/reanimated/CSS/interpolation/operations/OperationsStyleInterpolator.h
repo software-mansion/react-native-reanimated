@@ -46,9 +46,9 @@ class OperationsStyleInterpolator : public PropertyInterpolator {
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
-      const folly::dynamic &oldStyleValue,
-      const folly::dynamic &newStyleValue,
-      const folly::dynamic &lastUpdateValue) override;
+      jsi::Runtime &rt,
+      const jsi::Value &oldStyleValue,
+      const jsi::Value &newStyleValue) override;
 
  protected:
   const std::shared_ptr<StyleOperationInterpolators> interpolators_;

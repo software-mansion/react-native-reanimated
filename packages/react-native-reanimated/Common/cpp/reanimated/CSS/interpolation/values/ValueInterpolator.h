@@ -36,9 +36,9 @@ class ValueInterpolator : public PropertyInterpolator {
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
-      const folly::dynamic &oldStyleValue,
-      const folly::dynamic &newStyleValue,
-      const folly::dynamic &lastUpdateValue) override;
+      jsi::Runtime &rt,
+      const jsi::Value &oldStyleValue,
+      const jsi::Value &newStyleValue) override;
 
   folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,
@@ -50,9 +50,9 @@ class ValueInterpolator : public PropertyInterpolator {
   std::shared_ptr<CSSValue> defaultStyleValue_;
   folly::dynamic defaultStyleValueDynamic_;
   folly::dynamic reversingAdjustedStartValue_;
+  std::shared_ptr<CSSValue> lastUpdateValue_;
 
   virtual std::shared_ptr<CSSValue> createValue(jsi::Runtime &rt, const jsi::Value &value) const = 0;
-  virtual std::shared_ptr<CSSValue> createValue(const folly::dynamic &value) const = 0;
   virtual folly::dynamic interpolateValue(
       double progress,
       const std::shared_ptr<CSSValue> &fromValue,

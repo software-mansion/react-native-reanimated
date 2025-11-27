@@ -11,7 +11,8 @@ ValueInterpolator::ValueInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : PropertyInterpolator(propertyPath, viewStylesRepository),
       defaultStyleValue_(defaultValue),
-      defaultStyleValueDynamic_(defaultValue->toDynamic()) {}
+      defaultStyleValueDynamic_(defaultValue->toDynamic()),
+      lastUpdateValue_(nullptr) {}
 
 folly::dynamic ValueInterpolator::getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const {
   return viewStylesRepository_->getStyleProp(shadowNode->getTag(), propertyPath_);
@@ -58,27 +59,38 @@ void ValueInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyf
 }
 
 void ValueInterpolator::updateKeyframesFromStyleChange(
-    const folly::dynamic &oldStyleValue,
-    const folly::dynamic &newStyleValue,
-    const folly::dynamic &lastUpdateValue) {
+    jsi::Runtime &rt,
+    const jsi::Value &oldStyleValue,
+    const jsi::Value &newStyleValue) {
+  const bool hasLastUpdateValue = lastUpdateValue_ != nullptr;
   ValueKeyframe firstKeyframe, lastKeyframe;
 
-  if (!lastUpdateValue.isNull()) {
-    firstKeyframe = ValueKeyframe{0, createValue(lastUpdateValue)};
-  } else if (!oldStyleValue.isNull()) {
-    firstKeyframe = ValueKeyframe{0, createValue(oldStyleValue)};
+  const bool hasOldValue = !oldStyleValue.isUndefined();
+  const bool hasNewValue = !newStyleValue.isUndefined();
+
+  if (hasLastUpdateValue) {
+    firstKeyframe = ValueKeyframe{0, std::nullopt};
+  } else if (hasOldValue) {
+    firstKeyframe = ValueKeyframe{0, createValue(rt, oldStyleValue)};
   } else {
     firstKeyframe = ValueKeyframe{0, defaultStyleValue_};
   }
 
-  if (newStyleValue.isNull()) {
+  if (!hasNewValue) {
     lastKeyframe = ValueKeyframe{1, defaultStyleValue_};
   } else {
-    lastKeyframe = ValueKeyframe{1, createValue(newStyleValue)};
+    lastKeyframe = ValueKeyframe{1, createValue(rt, newStyleValue)};
   }
 
   keyframes_ = {std::move(firstKeyframe), std::move(lastKeyframe)};
-  reversingAdjustedStartValue_ = oldStyleValue;
+  if (hasLastUpdateValue) {
+    reversingAdjustedStartValue_ = lastUpdateValue_->toDynamic();
+  } else if (hasOldValue) {
+    reversingAdjustedStartValue_ = createValue(rt, oldStyleValue)->toDynamic();
+  } else {
+    reversingAdjustedStartValue_ = folly::dynamic();
+  }
+  lastUpdateValue_ = hasNewValue ? createValue(rt, newStyleValue) : nullptr;
 }
 
 folly::dynamic ValueInterpolator::interpolate(

@@ -42,30 +42,35 @@ void ArrayPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::V
 }
 
 void ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
-    const folly::dynamic &oldStyleValue,
-    const folly::dynamic &newStyleValue,
-    const folly::dynamic &lastUpdateValue) {
-  const auto emptyArray = folly::dynamic::array();
-  const auto null = folly::dynamic();
+    jsi::Runtime &rt,
+    const jsi::Value &oldStyleValue,
+    const jsi::Value &newStyleValue) {
+  const auto getArray = [&rt](const jsi::Value &value) -> std::optional<jsi::Array> {
+    if (!value.isObject()) {
+      return std::nullopt;
+    }
 
-  const auto &oldStyleArray = oldStyleValue.empty() ? emptyArray : oldStyleValue;
-  const auto &newStyleArray = newStyleValue.empty() ? emptyArray : newStyleValue;
-  const auto &lastUpdateArray = lastUpdateValue.empty() ? emptyArray : lastUpdateValue;
+    const auto object = value.asObject(rt);
+    if (!object.isArray(rt)) {
+      return std::nullopt;
+    }
 
-  const size_t oldSize = oldStyleArray.size();
-  const size_t newSize = newStyleArray.size();
-  const size_t lastSize = lastUpdateArray.size();
+    return object.asArray(rt);
+  };
+
+  const auto oldArray = getArray(oldStyleValue);
+  const auto newArray = getArray(newStyleValue);
+
+  const size_t oldSize = oldArray.has_value() ? oldArray->size(rt) : 0;
+  const size_t newSize = newArray.has_value() ? newArray->size(rt) : 0;
   const size_t valuesCount = std::max(oldSize, newSize);
 
   resizeInterpolators(valuesCount);
 
   for (size_t i = 0; i < valuesCount; ++i) {
-    // These index checks ensure that interpolation works between 2 arrays
-    // with different lengths
-    interpolators_[i]->updateKeyframesFromStyleChange(
-        i < oldSize ? oldStyleArray[i] : null,
-        i < newSize ? newStyleArray[i] : null,
-        i < lastSize ? lastUpdateArray[i] : null);
+    const auto oldValue = (oldArray.has_value() && i < oldSize) ? oldArray->getValueAtIndex(rt, i) : jsi::Value::undefined();
+    const auto newValue = (newArray.has_value() && i < newSize) ? newArray->getValueAtIndex(rt, i) : jsi::Value::undefined();
+    interpolators_[i]->updateKeyframesFromStyleChange(rt, oldValue, newValue);
   }
 }
 

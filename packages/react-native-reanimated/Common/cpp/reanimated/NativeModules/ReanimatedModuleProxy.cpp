@@ -416,17 +416,33 @@ void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
   cssAnimationsRegistry_->remove(viewTag.asNumber());
 }
 
-void ReanimatedModuleProxy::applyCSSTransition(
+void ReanimatedModuleProxy::registerCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
-    const jsi::Value &transitionUpdates) {
+    const jsi::Value &transitionConfig) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  const auto config = parseCSSTransitionConfig(rt, transitionConfig);
+
+  {
+    auto lock = cssTransitionsRegistry_->lock();
+    cssTransitionsRegistry_->add(rt, shadowNode, config);
+  }
+
+  maybeRunCSSLoop();
+}
+
+void ReanimatedModuleProxy::updateCSSTransition(
+    jsi::Runtime &rt,
+    const jsi::Value &viewTag,
+    const jsi::Value &transitionUpdates) {
+  const auto tag = viewTag.asNumber();
   const auto updates = parseCSSTransitionUpdates(rt, transitionUpdates);
 
   {
     auto lock = cssTransitionsRegistry_->lock();
-    cssTransitionsRegistry_->apply(shadowNode->getTag(), updates);
+    cssTransitionsRegistry_->update(rt, tag, updates);
   }
+
   maybeRunCSSLoop();
 }
 
