@@ -56,10 +56,6 @@ export default class AnimatedComponent<
     this.ChildComponent = ChildComponent;
   }
 
-  _syncStylePropsBackToReact(_props: StyleProps) {
-    // noop
-  }
-
   getComponentViewTag() {
     return this._getViewInfo().viewTag as number;
   }
