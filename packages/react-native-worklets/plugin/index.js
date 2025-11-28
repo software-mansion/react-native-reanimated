@@ -761,26 +761,28 @@ var require_workletStringCode = __commonJS({
       (0, assert_1.strict)("params" in expression, "'params' property is undefined in 'expression'");
       (0, assert_1.strict)((0, types_12.isBlockStatement)(expression.body), "[Reanimated] `expression.body` is not a `BlockStatement`");
       const parsedClasses = /* @__PURE__ */ new Set();
-      (0, core_1.traverse)(fun, {
-        NewExpression(path) {
-          if (!(0, types_12.isIdentifier)(path.node.callee)) {
-            return;
+      if (!state.opts.disableWorkletClasses) {
+        (0, core_1.traverse)(fun, {
+          NewExpression(path) {
+            if (!(0, types_12.isIdentifier)(path.node.callee)) {
+              return;
+            }
+            const constructorName = path.node.callee.name;
+            if (!closureVariables.some((variable) => variable.name === constructorName) || parsedClasses.has(constructorName)) {
+              return;
+            }
+            const index = closureVariables.findIndex((variable) => variable.name === constructorName);
+            closureVariables.splice(index, 1);
+            const workletClassFactoryName = constructorName + types_2.workletClassFactorySuffix;
+            closureVariables.push((0, types_12.identifier)(workletClassFactoryName));
+            (0, types_12.assertBlockStatement)(expression.body);
+            expression.body.body.unshift((0, types_12.variableDeclaration)("const", [
+              (0, types_12.variableDeclarator)((0, types_12.identifier)(constructorName), (0, types_12.callExpression)((0, types_12.identifier)(workletClassFactoryName), []))
+            ]));
+            parsedClasses.add(constructorName);
           }
-          const constructorName = path.node.callee.name;
-          if (!closureVariables.some((variable) => variable.name === constructorName) || parsedClasses.has(constructorName)) {
-            return;
-          }
-          const index = closureVariables.findIndex((variable) => variable.name === constructorName);
-          closureVariables.splice(index, 1);
-          const workletClassFactoryName = constructorName + types_2.workletClassFactorySuffix;
-          closureVariables.push((0, types_12.identifier)(workletClassFactoryName));
-          (0, types_12.assertBlockStatement)(expression.body);
-          expression.body.body.unshift((0, types_12.variableDeclaration)("const", [
-            (0, types_12.variableDeclarator)((0, types_12.identifier)(constructorName), (0, types_12.callExpression)((0, types_12.identifier)(workletClassFactoryName), []))
-          ]));
-          parsedClasses.add(constructorName);
-        }
-      });
+        });
+      }
       const workletFunction = (0, types_12.functionExpression)((0, types_12.identifier)(workletName), expression.params, expression.body, expression.generator, expression.async);
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "[Reanimated] `inputMap` is undefined.");
@@ -1814,6 +1816,9 @@ module.exports = function WorkletsBabelPlugin() {
       ClassDeclaration: {
         enter(path, state) {
           runWithTaggedExceptions(() => {
+            if (state.opts.disableWorkletClasses) {
+              return;
+            }
             (0, class_1.processIfWorkletClass)(path, state);
           });
         }

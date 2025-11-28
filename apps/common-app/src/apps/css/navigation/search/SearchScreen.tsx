@@ -11,7 +11,6 @@ import { flex, spacing, style } from '@/theme';
 import { IS_WEB } from '@/utils';
 
 import { BOTTOM_BAR_HEIGHT } from '../constants';
-import { INITIAL_ROUTE_NAME } from '../routes';
 import ExpandableHeaderScreen, { ExpandMode } from './ExpandableHeaderScreen';
 import { searchRoutes } from './fuse';
 import PullToSearchIndicator from './PullToSearchIndicator';
@@ -28,7 +27,6 @@ export default function SearchScreen({ children }: SearchScreenProps) {
   const navigation =
     useNavigation<NativeStackNavigationProp<Record<string, never>>>();
   const insets = useSafeAreaInsets();
-  const navigationState = navigation.getState();
   const { pullToSearchShown, setPullToSearchShown } = usePullToSearch();
 
   const bottomInset = Platform.select({
@@ -38,22 +36,13 @@ export default function SearchScreen({ children }: SearchScreenProps) {
 
   const searchBarShowProgress = useSharedValue(IS_WEB ? 1 : 0);
 
-  const getInitialRouteFilter = useCallback(() => {
-    const routeName =
-      navigationState?.routes[navigationState.routes.length - 1]?.name;
-    if (routeName === INITIAL_ROUTE_NAME) {
-      return null;
-    }
-    return routeName?.split('/') ?? null;
-  }, [navigationState]);
-
   const [searchQuery, setSearchQuery] = useState('');
   const [expandMode, setExpandMode] = useState<ExpandMode>(
     IS_WEB ? ExpandMode.EXPANDED : ExpandMode.AUTO
   );
   const [isExpanded, setIsExpanded] = useState(IS_WEB);
   const [currentFilter, setCurrentFilter] = useState<Array<string> | null>(
-    getInitialRouteFilter
+    null
   );
 
   const hasSearchQuery = !!searchQuery;
@@ -117,7 +106,7 @@ export default function SearchScreen({ children }: SearchScreenProps) {
             value={searchQuery}
             onCancel={() => {
               setSearchQuery('');
-              setCurrentFilter(getInitialRouteFilter());
+              setCurrentFilter(null);
               if (!IS_WEB) {
                 changeIsExpanded(false);
                 setExpandMode(ExpandMode.COLLAPSED);

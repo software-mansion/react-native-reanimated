@@ -4,7 +4,7 @@ sidebar_position: 42 # Use alphabetical order
 
 # scheduleOnUI
 
-`scheduleOnUI` lets you schedule a function to be executed on the [UI Runtime](/docs/fundamentals/glossary#ui-runtime). The callback executes asynchronously and doesn't return a value.
+`scheduleOnUI` lets you schedule a function to be executed on the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime). The callback executes asynchronously and doesn't return a value.
 
 ## Reference
 
@@ -35,7 +35,7 @@ function scheduleOnUI<Args extends unknown[], ReturnValue>(
 
 #### fun
 
-A reference to a function you want to schedule on the [UI Runtime](/docs/fundamentals/glossary#ui-runtime).
+A reference to a function you want to schedule on the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime).
 
 #### args
 
@@ -43,8 +43,8 @@ Arguments to pass to the function.
 
 ## Remarks
 
-- The callback passed as the argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ready to be run on the [UI Runtime](/docs/fundamentals/glossary#ui-runtime).
+- The callback passed as the argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ready to be run on the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime).
 
-- Make sure not to execute `scheduleOnUI` on the [UI Runtime](/docs/fundamentals/glossary#ui-runtime) or [Worker Runtime](/docs/fundamentals/glossary#worker-runtime) as this will result in an error, unless you have the [Bundle Mode](/docs/experimental/bundleMode) enabled.
+- Make sure not to execute `scheduleOnUI` on the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime) or [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime) as this will result in an error, unless you have the [Bundle Mode](/docs/experimental/bundleMode) enabled.
 
 - On the Web, `scheduleOnUI` schedules work to run on the next animation frame using `requestAnimationFrame`.

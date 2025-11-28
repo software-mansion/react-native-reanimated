@@ -34,7 +34,10 @@ const config = {
     hooks: {
       onBrokenMarkdownLinks: 'throw',
     },
+    mermaid: true,
   },
+
+  themes: ['@docusaurus/theme-mermaid'],
 
   onBrokenLinks: 'throw',
   onBrokenAnchors: 'throw',
@@ -136,7 +139,7 @@ const config = {
           'All trademarks and copyrights belong to their respective owners.',
       },
       prism: {
-        additionalLanguages: ['bash', 'diff', 'json'],
+        additionalLanguages: ['bash', 'diff', 'json', 'mermaid'],
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
       },
