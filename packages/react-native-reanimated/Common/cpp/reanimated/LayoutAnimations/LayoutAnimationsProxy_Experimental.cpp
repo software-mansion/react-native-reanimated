@@ -44,10 +44,11 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     if (reactTop == actualTop) {
       synchronized_ = true;
     }
-  } else {
+  } else if (!mutations.empty()) {
     auto root = lightNodes_[surfaceId];
     auto beforeTopScreen = topScreen[surfaceId];
     if (beforeTopScreen) {
+      ReanimatedSystraceSection s("find before elements");
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext);
     }
 
@@ -57,6 +58,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     auto afterTopScreen = findTopScreen(root);
     topScreen[surfaceId] = afterTopScreen;
     if (afterTopScreen) {
+      ReanimatedSystraceSection s("find after elements");
       findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext);
 #ifdef __APPLE__
       forceScreenSnapshot_(afterTopScreen->current.tag);
@@ -308,6 +310,7 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::endLayoutAnimation(
 void LayoutAnimationsProxy_Experimental::handleRemovals(
     ShadowViewMutationList &filteredMutations,
     std::vector<std::shared_ptr<LightNode>> &roots) const {
+  ReanimatedSystraceSection s("handleRemovals");
   // iterate from the end, so that children
   // with higher indices appear first in the mutations list
   for (auto it = roots.rbegin(); it != roots.rend(); it++) {
@@ -360,6 +363,7 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
 
 void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList &mutations)
     const {
+  ReanimatedSystraceSection s1("addOngoingAnimations");
   auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
 #ifdef ANDROID
   std::vector<int> tagsToUpdate;
@@ -616,6 +620,7 @@ void LayoutAnimationsProxy_Experimental::cleanupAnimations(
     ShadowViewMutationList &filteredMutations,
     const PropsParserContext &propsParserContext,
     SurfaceId surfaceId) const {
+  ReanimatedSystraceSection s("cleanupAnimations");
   cleanupSharedTransitions(filteredMutations, propsParserContext, surfaceId);
 
 #ifdef ANDROID

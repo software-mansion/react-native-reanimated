@@ -70,12 +70,9 @@ void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
     parentTag[index] = parent->current.tag;
 
     if (parentTag[BEFORE] && parentTag[AFTER]) {
-      // TODO (future): performance - this is costly on android
-      overrideTransform(snapshot[BEFORE], transform[BEFORE], propsParserContext);
-      overrideTransform(snapshot[AFTER], transform[AFTER], propsParserContext);
       transitions_.emplace_back(sharedTag, transition);
     } else if (parentTag[AFTER]) {
-      // TODO (future): this is too eager
+      // TODO (future): this is adding unnecessary views to the list
       tagsToRestore_.push_back(snapshot[AFTER].tag);
     }
   }
@@ -110,6 +107,9 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
 
       for (auto &[sharedTag, transition] : transitions_) {
         auto &[before, after] = transition.snapshot;
+        const auto &transform = transition.transform;
+        overrideTransform(before, transform[BEFORE], propsParserContext);
+        overrideTransform(after, transform[AFTER], propsParserContext);
         auto containerTag = getOrCreateContainer(before, sharedTag, filteredMutations, surfaceId);
         transferConfigToContainer(containerTag, before.tag);
 
@@ -180,6 +180,7 @@ void LayoutAnimationsProxy_Experimental::overrideTransform(
     ShadowView &shadowView,
     const std::optional<Transform> &transform,
     const PropsParserContext &propsParserContext) const {
+  ReanimatedSystraceSection s("overrideTransfrom");
   if (!transform) {
     return;
   }
@@ -245,6 +246,9 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
   if (beforeTopScreen != afterTopScreen) {
     for (auto &[sharedTag, transition] : transitions_) {
       auto &[before, after] = transition.snapshot;
+      const auto &transform = transition.transform;
+      overrideTransform(before, transform[BEFORE], propsParserContext);
+      overrideTransform(after, transform[AFTER], propsParserContext);
       auto containerTag = getOrCreateContainer(before, sharedTag, filteredMutations, surfaceId);
 
       transferConfigToContainer(containerTag, before.tag);
@@ -265,6 +269,7 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
       after.tag = containerTag;
       const auto &la = layoutAnimations_[containerTag];
       if (la.finalView.layoutMetrics != after.layoutMetrics) {
+        overrideTransform(after, transition.transform[AFTER], propsParserContext);
         startSharedTransition(containerTag, la.currentView, after, surfaceId);
       }
     }
@@ -354,7 +359,9 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
     ShadowViewMutationList &filteredMutations,
     const PropsParserContext &propsParserContext,
     SurfaceId surfaceId) const {
+  ReanimatedSystraceSection s1("cleanupSharedTransitions");
   for (auto &tag : tagsToRestore_) {
+    ReanimatedSystraceSection s("Restore tag");
     auto &node = lightNodes_[tag];
     if (node) {
       auto view = node->current;
@@ -368,6 +375,7 @@ void LayoutAnimationsProxy_Experimental::cleanupSharedTransitions(
   }
   tagsToRestore_.clear();
 
+  ReanimatedSystraceSection s2("remove shared containers");
   for (auto &tag : sharedContainersToRemove_) {
     auto root = lightNodes_[surfaceId];
     for (int i = 0; i < root->children.size(); i++) {
