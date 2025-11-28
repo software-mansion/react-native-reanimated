@@ -2,8 +2,7 @@
 
 #include <memory>
 #include <string>
-#include <unordered_set>
-#include <utility>
+#include <unordered_map>
 
 namespace reanimated::css {
 
@@ -30,37 +29,40 @@ TransitionProgressState CSSTransition::getState() const {
   return progressProvider_.getState();
 }
 
-folly::dynamic CSSTransition::run(jsi::Runtime &rt, const CSSTransitionUpdates &updates, const double timestamp) {
-  if (updates.settings.has_value()) {
-    for (const auto &[property, partialSettings] : *updates.settings) {
-      auto &existingSettings = settings_[property];
+void CSSTransition::updateSettings(const CSSTransitionPropertySettingsUpdates &settingsUpdates) {
+  for (const auto &[property, partialSettings] : settingsUpdates) {
+    auto &existingSettings = settings_[property];
 
-      if (partialSettings.duration.has_value()) {
-        existingSettings.duration = partialSettings.duration.value();
-      }
-      if (partialSettings.easingFunction.has_value()) {
-        existingSettings.easingFunction = partialSettings.easingFunction.value();
-      }
-      if (partialSettings.delay.has_value()) {
-        existingSettings.delay = partialSettings.delay.value();
-      }
-      if (partialSettings.allowDiscrete.has_value()) {
-        existingSettings.allowDiscrete = partialSettings.allowDiscrete.value();
-      }
+    if (partialSettings.duration.has_value()) {
+      existingSettings.duration = partialSettings.duration.value();
+    }
+    if (partialSettings.easingFunction.has_value()) {
+      existingSettings.easingFunction = partialSettings.easingFunction.value();
+    }
+    if (partialSettings.delay.has_value()) {
+      existingSettings.delay = partialSettings.delay.value();
+    }
+    if (partialSettings.allowDiscrete.has_value()) {
+      existingSettings.allowDiscrete = partialSettings.allowDiscrete.value();
     }
   }
+}
 
-  if (!updates.properties.empty()) {
-    styleInterpolator_.updateInterpolatedProperties(rt, updates.properties);
+folly::dynamic CSSTransition::run(
+    jsi::Runtime &rt,
+    const CSSTransitionPropertyUpdates &propertyUpdates,
+    const double timestamp) {
+  if (!propertyUpdates.empty()) {
+    styleInterpolator_.updateInterpolatedProperties(rt, propertyUpdates);
   }
 
-  progressProvider_.runProgressProviders(timestamp, settings_, updates.properties);
+  progressProvider_.runProgressProviders(timestamp, settings_, propertyUpdates);
   return update(rt, timestamp);
 }
 
 folly::dynamic CSSTransition::update(const double timestamp) {
   progressProvider_.update(timestamp);
-  auto result = styleInterpolator_.interpolate(shadowNode_, progressProvider_, allowDiscreteProperties_);
+  auto result = styleInterpolator_.interpolate(shadowNode_, progressProvider_);
   // Remove interpolators for which interpolation has finished
   // (we won't need them anymore in the current transition)
   styleInterpolator_.discardFinishedInterpolators(progressProvider_);

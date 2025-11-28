@@ -21,10 +21,8 @@ class CSSTransition {
   std::shared_ptr<const ShadowNode> getShadowNode() const;
   double getMinDelay(double timestamp) const;
   TransitionProgressState getState() const;
-  folly::dynamic run(
-      jsi::Runtime &rt,
-      const CSSTransitionUpdates &updates,
-      double timestamp);
+  void updateSettings(const CSSTransitionPropertySettingsUpdates &settingsUpdates);
+  folly::dynamic run(jsi::Runtime &rt, const CSSTransitionPropertyUpdates &propertyUpdates, double timestamp);
   folly::dynamic update(double timestamp);
 
  private:

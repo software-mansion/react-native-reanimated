@@ -35,16 +35,18 @@ std::unordered_set<std::string> TransitionStyleInterpolator::getReversedProperty
 
 folly::dynamic TransitionStyleInterpolator::interpolate(
     const std::shared_ptr<const ShadowNode> &shadowNode,
-    const TransitionProgressProvider &transitionProgressProvider,
-    const std::unordered_set<std::string> &allowDiscreteProperties) const {
+    const TransitionProgressProvider &transitionProgressProvider) const {
   folly::dynamic result = folly::dynamic::object;
 
-  const auto allFallbackInterpolateThreshold = allowDiscreteProperties.contains("all") ? 0.5 : 0;
-
   for (const auto &[propertyName, progressProvider] : transitionProgressProvider.getPropertyProgressProviders()) {
-    const auto &interpolator = interpolators_.at(propertyName);
-    const auto fallbackInterpolateThreshold =
-        (allowDiscreteProperties.contains(propertyName)) ? 0.5 : allFallbackInterpolateThreshold;
+    const auto interpolatorIt = interpolators_.find(propertyName);
+    if (interpolatorIt == interpolators_.end()) {
+      continue;
+    }
+
+    const auto &interpolator = interpolatorIt->second;
+    const double fallbackInterpolateThreshold =
+        progressProvider->getFallbackInterpolateThreshold(interpolator->isDiscreteProperty());
     result[propertyName] = interpolator->interpolate(shadowNode, progressProvider, fallbackInterpolateThreshold);
   }
 

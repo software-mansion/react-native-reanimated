@@ -5,9 +5,7 @@
 
 namespace reanimated::css {
 
-CSSTransitionsRegistry::CSSTransitionsRegistry(
-    const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
-    const GetAnimationTimestampFunction &getCurrentTimestamp)
+CSSTransitionsRegistry::CSSTransitionsRegistry(const GetAnimationTimestampFunction &getCurrentTimestamp)
     : getCurrentTimestamp_(getCurrentTimestamp) {}
 
 bool CSSTransitionsRegistry::isEmpty() const {
@@ -20,6 +18,17 @@ bool CSSTransitionsRegistry::hasUpdates() const {
   return !runningTransitionTags_.empty() || !delayedTransitionsManager_.empty();
 }
 
+void CSSTransitionsRegistry::add(
+    jsi::Runtime &rt,
+    std::shared_ptr<const ShadowNode> shadowNode,
+    const CSSTransitionConfig &config) {
+  const auto viewTag = shadowNode->getTag();
+
+  auto transition = std::make_shared<CSSTransition>(std::move(shadowNode), config, viewStylesRepository_);
+  registry_.insert({viewTag, transition});
+  runTransition(rt, transition, config.properties);
+}
+
 void CSSTransitionsRegistry::remove(const Tag viewTag) {
   removeFromUpdatesRegistry(viewTag);
   delayedTransitionsManager_.remove(viewTag);
@@ -27,25 +36,22 @@ void CSSTransitionsRegistry::remove(const Tag viewTag) {
   registry_.erase(viewTag);
 }
 
-void CSSTransitionsRegistry::add(
+void CSSTransitionsRegistry::update(
     jsi::Runtime &rt,
-    std::shared_ptr<const ShadowNode> shadowNode,
-    const CSSTransitionConfig &config) {
-  const auto viewTag = shadowNode->getTag();
-  auto transition = std::make_shared<CSSTransition>(std::move(shadowNode), config, viewStylesRepository_);
-
-  registry_.insert({viewTag, transition});
-}
-
-void CSSTransitionsRegistry::update(jsi::Runtime &rt, const Tag viewTag, const CSSTransitionUpdates &updates) {
-  auto transitionIt = registry_.find(viewTag);
-
+    const Tag viewTag,
+    const CSSTransitionUpdates &updates) {
+  const auto transitionIt = registry_.find(viewTag);
   if (transitionIt == registry_.end()) {
     return;
   }
 
   const auto &transition = transitionIt->second;
-  transition->update(rt, updates);
+
+  if (updates.settings.has_value()) {
+    transition->updateSettings(*updates.settings);
+  }
+
+  runTransition(rt, transition, updates.properties);
 }
 
 void CSSTransitionsRegistry::update(const double timestamp) {
@@ -89,7 +95,7 @@ void CSSTransitionsRegistry::activateDelayedTransitions(const double timestamp) 
 }
 
 void CSSTransitionsRegistry::scheduleOrActivateTransition(const std::shared_ptr<CSSTransition> &transition) {
-  const auto viewTag = transition->getShadowNode()->getViewTag();
+  const auto viewTag = transition->getShadowNode()->getTag();
   const auto currentTimestamp = getCurrentTimestamp_();
   const auto minDelay = transition->getMinDelay(currentTimestamp);
 
@@ -104,6 +110,44 @@ void CSSTransitionsRegistry::scheduleOrActivateTransition(const std::shared_ptr<
   }
 }
 
+void CSSTransitionsRegistry::updateInUpdatesRegistry(
+    const std::shared_ptr<CSSTransition> &transition,
+    const folly::dynamic &updates) {
+  const auto &shadowNode = transition->getShadowNode();
+  const auto &lastUpdates = getUpdatesFromRegistry(shadowNode->getTag());
+  const auto &transitionProperties = transition->getProperties();
+
+  folly::dynamic filteredUpdates = folly::dynamic::object;
+
+  if (!transitionProperties.has_value()) {
+    // If transitionProperty is set to 'all' (optional has no value), we have
+    // to keep the result of the previous transition updated with the new
+    // transition starting values
+    if (!lastUpdates.empty()) {
+      filteredUpdates = lastUpdates;
+    }
+  } else if (!lastUpdates.empty()) {
+    // Otherwise, we keep only allowed properties from the last updates
+    // and update the object with the new transition starting values
+    for (const auto &prop : transitionProperties.value()) {
+      if (lastUpdates.count(prop)) {
+        filteredUpdates[prop] = lastUpdates[prop];
+      }
+    }
+  }
+
+  // updated object contains only allowed properties so we don't need
+  // to do additional filtering here
+  filteredUpdates.update(updates);
+  setInUpdatesRegistry(shadowNode, filteredUpdates);
 }
 
 } // namespace reanimated::css
+void CSSTransitionsRegistry::runTransition(
+    jsi::Runtime &rt,
+    const std::shared_ptr<CSSTransition> &transition,
+    const CSSTransitionPropertyUpdates &propertyUpdates) {
+  const auto startStyle = transition->run(rt, propertyUpdates, getCurrentTimestamp_());
+  updateInUpdatesRegistry(transition, startStyle);
+  scheduleOrActivateTransition(transition);
+}
