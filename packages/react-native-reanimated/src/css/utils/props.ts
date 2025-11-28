@@ -104,24 +104,21 @@ function hasValue(value: unknown): boolean {
 export function getChangedProps(
   previousStyle: UnknownRecord | null,
   nextStyle: UnknownRecord | null,
-  allowedProperties: string[] | 'all'
+  allowedProperties?: string[]
 ): Record<string, [unknown, unknown]> | null {
   if (!previousStyle || !nextStyle) {
     return null;
   }
 
-  const monitoredProperties = Array.isArray(allowedProperties)
-    ? allowedProperties
-    : Array.from(
-        new Set([
-          ...Object.keys(previousStyle),
-          ...Object.keys(nextStyle),
-        ])
-      );
+  const allowedPropertiesArray =
+    allowedProperties ??
+    Array.from(
+      new Set([...Object.keys(previousStyle), ...Object.keys(nextStyle)])
+    );
 
   const diff: Record<string, [unknown, unknown]> = {};
 
-  for (const property of monitoredProperties) {
+  for (const property of allowedPropertiesArray) {
     const nextValue = nextStyle[property];
     const prevValue = previousStyle[property];
 

@@ -57,8 +57,8 @@ TransitionProgressState TransitionPropertyProgressProvider::getState() const {
   return TransitionProgressState::Running;
 }
 
-double TransitionPropertyProgressProvider::getFallbackInterpolateThreshold(const bool isDiscreteProperty) const {
-  return !isDiscreteProperty || allowDiscrete_ ? 0.5 : 0.0;
+double TransitionPropertyProgressProvider::getFallbackInterpolateThreshold(const bool isDiscrete) const {
+  return !isDiscrete || allowDiscrete_ ? 0.5 : 0.0;
 }
 
 std::optional<double> TransitionPropertyProgressProvider::calculateRawProgress(const double timestamp) {
@@ -129,7 +129,7 @@ void TransitionProgressProvider::discardIrrelevantProgressProviders(
 void TransitionProgressProvider::runProgressProviders(
     const double timestamp,
     const CSSTransitionPropertiesSettings &propertiesSettings,
-    const PropertyNames &changedPropertyNames,
+    const std::vector<std::string> &changedPropertyNames,
     const std::unordered_set<std::string> &reversedPropertyNames) {
   for (const auto &propertyName : changedPropertyNames) {
     const auto propertySettingsOptional = getTransitionPropertySettings(propertiesSettings, propertyName);
@@ -145,7 +145,7 @@ void TransitionProgressProvider::runProgressProviders(
       const auto &progressProvider = it->second;
       progressProvider->update(timestamp);
 
-      if (reversedPropertyNames.find(propertyName) != reversedPropertyNames.end() &&
+      if (reversedPropertyNames.contains(propertyName) &&
           progressProvider->getState() != TransitionProgressState::Finished) {
         // Create reversing shortening progress provider for interrupted
         // reversing transition

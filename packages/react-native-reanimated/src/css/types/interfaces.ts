@@ -1,6 +1,6 @@
 'use strict';
+import type { UnknownRecord } from '../../common';
 import type { ExistingCSSAnimationProperties } from './animation';
-import type { UnknownRecord } from '../common';
 import type { CSSTransitionProperties } from './transition';
 
 export interface ICSSAnimationsManager {
@@ -17,6 +17,6 @@ export interface ICSSTransitionsManager {
 }
 
 export interface ICSSManager {
-  update(style: CSSStyle | null): void;
+  update(style: UnknownRecord | null): void;
   unmountCleanup(): void;
 }

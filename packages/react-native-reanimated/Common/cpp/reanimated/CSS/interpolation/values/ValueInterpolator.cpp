@@ -11,8 +11,7 @@ ValueInterpolator::ValueInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : PropertyInterpolator(propertyPath, viewStylesRepository),
       defaultStyleValue_(defaultValue),
-      defaultStyleValueDynamic_(defaultValue->toDynamic()),
-      lastUpdateValue_(nullptr) {}
+      defaultStyleValueDynamic_(defaultValue->toDynamic()) {}
 
 folly::dynamic ValueInterpolator::getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const {
   return viewStylesRepository_->getStyleProp(shadowNode->getTag(), propertyPath_);
@@ -36,13 +35,6 @@ folly::dynamic ValueInterpolator::getLastKeyframeValue() const {
   return convertOptionalToDynamic(keyframes_.back().value);
 }
 
-bool ValueInterpolator::equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const {
-  if (reversingAdjustedStartValue_.isNull()) {
-    return propertyValue.isNull();
-  }
-  return reversingAdjustedStartValue_ == propertyValue;
-}
-
 void ValueInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) {
   const auto parsedKeyframes = parseJSIKeyframes(rt, keyframes);
 
@@ -58,39 +50,18 @@ void ValueInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyf
   }
 }
 
-void ValueInterpolator::updateKeyframesFromStyleChange(
+bool ValueInterpolator::updateKeyframesFromStyleChange(
     jsi::Runtime &rt,
     const jsi::Value &oldStyleValue,
     const jsi::Value &newStyleValue) {
-  const bool hasLastUpdateValue = lastUpdateValue_ != nullptr;
-  ValueKeyframe firstKeyframe, lastKeyframe;
+  keyframes_ = {
+      ValueKeyframe{0, oldStyleValue.isUndefined() ? defaultStyleValue_ : createValue(rt, oldStyleValue)},
+      ValueKeyframe{1, newStyleValue.isUndefined() ? defaultStyleValue_ : createValue(rt, newStyleValue)}};
 
-  const bool hasOldValue = !oldStyleValue.isUndefined();
-  const bool hasNewValue = !newStyleValue.isUndefined();
+  auto equalsReversingAdjustedStartValue = keyframes_[1].value.value() == reversingAdjustedStartValue_;
+  reversingAdjustedStartValue_ = keyframes_[0].value.value();
 
-  if (hasLastUpdateValue) {
-    firstKeyframe = ValueKeyframe{0, std::nullopt};
-  } else if (hasOldValue) {
-    firstKeyframe = ValueKeyframe{0, createValue(rt, oldStyleValue)};
-  } else {
-    firstKeyframe = ValueKeyframe{0, defaultStyleValue_};
-  }
-
-  if (!hasNewValue) {
-    lastKeyframe = ValueKeyframe{1, defaultStyleValue_};
-  } else {
-    lastKeyframe = ValueKeyframe{1, createValue(rt, newStyleValue)};
-  }
-
-  keyframes_ = {std::move(firstKeyframe), std::move(lastKeyframe)};
-  if (hasLastUpdateValue) {
-    reversingAdjustedStartValue_ = lastUpdateValue_->toDynamic();
-  } else if (hasOldValue) {
-    reversingAdjustedStartValue_ = createValue(rt, oldStyleValue)->toDynamic();
-  } else {
-    reversingAdjustedStartValue_ = folly::dynamic();
-  }
-  lastUpdateValue_ = hasNewValue ? createValue(rt, newStyleValue) : nullptr;
+  return equalsReversingAdjustedStartValue;
 }
 
 folly::dynamic ValueInterpolator::interpolate(

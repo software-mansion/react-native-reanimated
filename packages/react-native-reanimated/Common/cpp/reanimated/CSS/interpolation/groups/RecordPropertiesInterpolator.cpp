@@ -12,14 +12,6 @@ RecordPropertiesInterpolator::RecordPropertiesInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : GroupPropertiesInterpolator(propertyPath, viewStylesRepository), factories_(factories) {}
 
-bool RecordPropertiesInterpolator::equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const {
-  return std::ranges::all_of(propertyValue.items(), [this](const auto &item) {
-    const auto &[propName, propValue] = item;
-    const auto it = interpolators_.find(propName.getString());
-    return it != interpolators_.end() && it->second->equalsReversingAdjustedStartValue(propValue);
-  });
-}
-
 void RecordPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) {
   // TODO - maybe add a possibility to remove interpolators that are no longer
   // used (for now, for simplicity, we only add new ones)
@@ -37,50 +29,42 @@ void RecordPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::
   }
 }
 
-void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
+bool RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
     jsi::Runtime &rt,
     const jsi::Value &oldStyleValue,
     const jsi::Value &newStyleValue) {
-  const auto getObject = [&rt](const jsi::Value &value) -> std::optional<jsi::Object> {
-    if (!value.isObject()) {
-      return std::nullopt;
-    }
+  // TODO - maybe add a possibility to remove interpolators that are no longer
+  // used  (for now, for simplicity, we only add new ones)
+  const auto oldStyleObject = oldStyleValue.isUndefined() ? jsi::Object(rt) : oldStyleValue.asObject(rt);
+  const auto newStyleObject = newStyleValue.isUndefined() ? jsi::Object(rt) : newStyleValue.asObject(rt);
 
-    const auto object = value.asObject(rt);
-    if (!object.isObject()) {
-      return std::nullopt;
-    }
-
-    return object;
-  };
-
-  const auto oldObject = getObject(oldStyleValue);
-  const auto newObject = getObject(newStyleValue);
+  const auto oldPropertyNames = oldStyleObject.getPropertyNames(rt);
+  const auto newPropertyNames = newStyleObject.getPropertyNames(rt);
+  const auto oldSize = oldPropertyNames.size(rt);
+  const auto newSize = newPropertyNames.size(rt);
 
   std::unordered_set<std::string> propertyNamesSet;
-  if (oldObject.has_value()) {
-    jsi::Array names = oldObject->getPropertyNames(rt);
-    const size_t count = names.size(rt);
-    for (size_t i = 0; i < count; ++i) {
-      propertyNamesSet.insert(names.getValueAtIndex(rt, i).asString(rt).utf8(rt));
-    }
+  for (size_t i = 0; i < oldSize; ++i) {
+    propertyNamesSet.insert(oldPropertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt));
   }
-  if (newObject.has_value()) {
-    jsi::Array names = newObject->getPropertyNames(rt);
-    const size_t count = names.size(rt);
-    for (size_t i = 0; i < count; ++i) {
-      propertyNamesSet.insert(names.getValueAtIndex(rt, i).asString(rt).utf8(rt));
-    }
+  for (size_t i = 0; i < newSize; ++i) {
+    propertyNamesSet.insert(newPropertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt));
   }
+
+  bool areAllPropsReversed = true;
 
   for (const auto &propertyName : propertyNamesSet) {
     maybeCreateInterpolator(propertyName);
-
-    const auto propId = jsi::PropNameID::forUtf8(rt, propertyName);
-    const auto oldValue = oldObject.has_value() ? oldObject->getProperty(rt, propId) : jsi::Value::undefined();
-    const auto newValue = newObject.has_value() ? newObject->getProperty(rt, propId) : jsi::Value::undefined();
-    interpolators_[propertyName]->updateKeyframesFromStyleChange(rt, oldValue, newValue);
+    const auto propNameID = jsi::PropNameID::forUtf8(rt, propertyName);
+    areAllPropsReversed &= interpolators_[propertyName]->updateKeyframesFromStyleChange(
+        rt,
+        oldStyleObject.hasProperty(rt, propNameID) ? oldStyleObject.getProperty(rt, propNameID)
+                                                   : jsi::Value::undefined(),
+        newStyleObject.hasProperty(rt, propNameID) ? newStyleObject.getProperty(rt, propNameID)
+                                                   : jsi::Value::undefined());
   }
+
+  return areAllPropsReversed;
 }
 
 folly::dynamic RecordPropertiesInterpolator::mapInterpolators(

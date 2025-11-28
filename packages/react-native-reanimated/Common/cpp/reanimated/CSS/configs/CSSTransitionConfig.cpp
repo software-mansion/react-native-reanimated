@@ -2,8 +2,6 @@
 
 #include <reanimated/CSS/configs/common.h>
 
-#include <utility>
-
 namespace reanimated::css {
 
 CSSTransitionPropertyUpdates parsePropertyUpdates(jsi::Runtime &rt, const jsi::Object &diffs) {
@@ -31,16 +29,13 @@ CSSTransitionPropertyUpdates parsePropertyUpdates(jsi::Runtime &rt, const jsi::O
 
     result.emplace(
         propertyName,
-        std::make_optional(std::make_pair(
-            diffArray.getValueAtIndex(rt, 0), diffArray.getValueAtIndex(rt, 1))));
+        std::make_optional(std::make_pair(diffArray.getValueAtIndex(rt, 0), diffArray.getValueAtIndex(rt, 1))));
   }
 
   return result;
 }
 
-PartialCSSTransitionPropertySettings parsePartialPropertySettings(
-    jsi::Runtime &rt,
-    const jsi::Object &settings) {
+PartialCSSTransitionPropertySettings parsePartialPropertySettings(jsi::Runtime &rt, const jsi::Object &settings) {
   PartialCSSTransitionPropertySettings result;
 
   if (settings.hasProperty(rt, "duration")) {

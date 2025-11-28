@@ -3,7 +3,6 @@
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 #include <reanimated/CSS/progress/RawProgressProvider.h>
-#include <reanimated/CSS/utils/props.h>
 
 #include <memory>
 #include <string>
@@ -35,7 +34,7 @@ class TransitionPropertyProgressProvider final : public KeyframeProgressProvider
   double getRemainingDelay(double timestamp) const;
   double getReversingShorteningFactor() const;
   TransitionProgressState getState() const;
-  double getFallbackInterpolateThreshold(bool isDiscreteProperty) const;
+  double getFallbackInterpolateThreshold(bool isDiscrete) const;
 
  protected:
   std::optional<double> calculateRawProgress(double timestamp) override;
@@ -63,7 +62,7 @@ class TransitionProgressProvider final {
   void runProgressProviders(
       double timestamp,
       const CSSTransitionPropertiesSettings &propertiesSettings,
-      const PropertyNames &changedPropertyNames,
+      const std::vector<std::string> &changedPropertyNames,
       const std::unordered_set<std::string> &reversedPropertyNames);
   void update(double timestamp);
 

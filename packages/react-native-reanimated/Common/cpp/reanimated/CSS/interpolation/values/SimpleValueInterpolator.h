@@ -27,7 +27,6 @@ class SimpleValueInterpolator : public ValueInterpolator {
 
  protected:
   std::shared_ptr<CSSValue> createValue(jsi::Runtime &rt, const jsi::Value &value) const override;
-
   std::shared_ptr<CSSValue> createValue(const folly::dynamic &value) const override;
 
   folly::dynamic interpolateValue(

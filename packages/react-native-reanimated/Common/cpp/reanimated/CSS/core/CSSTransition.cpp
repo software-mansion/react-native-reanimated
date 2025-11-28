@@ -3,6 +3,8 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace reanimated::css {
 
@@ -14,8 +16,7 @@ CSSTransition::CSSTransition(
       viewStylesRepository_(viewStylesRepository),
       settings_(config.settings),
       styleInterpolator_(TransitionStyleInterpolator(shadowNode_->getComponentName(), viewStylesRepository)),
-      progressProvider_(TransitionProgressProvider()) {
-}
+      progressProvider_(TransitionProgressProvider()) {}
 
 std::shared_ptr<const ShadowNode> CSSTransition::getShadowNode() const {
   return shadowNode_;
@@ -48,16 +49,19 @@ void CSSTransition::updateSettings(const CSSTransitionPropertySettingsUpdates &s
   }
 }
 
-folly::dynamic CSSTransition::run(
-    jsi::Runtime &rt,
-    const CSSTransitionPropertyUpdates &propertyUpdates,
-    const double timestamp) {
-  if (!propertyUpdates.empty()) {
-    styleInterpolator_.updateInterpolatedProperties(rt, propertyUpdates);
+folly::dynamic
+CSSTransition::run(jsi::Runtime &rt, const CSSTransitionPropertyUpdates &propertyUpdates, const double timestamp) {
+  const auto reversedPropertyNames = styleInterpolator_.updateInterpolatedProperties(rt, propertyUpdates);
+
+  std::vector<std::string> propertyNames;
+  propertyNames.reserve(propertyUpdates.size());
+  for (const auto &[key, value] : propertyUpdates) {
+    propertyNames.emplace_back(key);
   }
 
-  progressProvider_.runProgressProviders(timestamp, settings_, propertyUpdates);
-  return update(rt, timestamp);
+  progressProvider_.runProgressProviders(timestamp, settings_, propertyNames, reversedPropertyNames);
+
+  return update(timestamp);
 }
 
 folly::dynamic CSSTransition::update(const double timestamp) {

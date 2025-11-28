@@ -26,7 +26,7 @@ class TransitionStyleInterpolator {
 
   void discardFinishedInterpolators(const TransitionProgressProvider &transitionProgressProvider);
   void discardIrrelevantInterpolators(const std::unordered_set<std::string> &transitionPropertyNames);
-  void updateInterpolatedProperties(
+  std::unordered_set<std::string> updateInterpolatedProperties(
       jsi::Runtime &rt,
       const CSSTransitionPropertyUpdates &propertyUpdates);
 

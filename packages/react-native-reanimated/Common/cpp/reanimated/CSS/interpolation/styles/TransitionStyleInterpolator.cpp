@@ -11,28 +11,6 @@ TransitionStyleInterpolator::TransitionStyleInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : componentName_(componentName), viewStylesRepository_(viewStylesRepository) {}
 
-std::unordered_set<std::string> TransitionStyleInterpolator::getReversedPropertyNames(
-    const folly::dynamic &newPropertyValues) const {
-  std::unordered_set<std::string> reversedProperties;
-
-  if (!newPropertyValues.isObject()) {
-    return reversedProperties;
-  }
-
-  for (const auto &[propertyName, propertyValue] : newPropertyValues.items()) {
-    const auto propertyNameStr = propertyName.getString();
-    const auto it = interpolators_.find(propertyNameStr);
-    if (it != interpolators_.end() &&
-        // First keyframe value of the previous transition is the reversing
-        // adjusted start value
-        it->second->equalsReversingAdjustedStartValue(propertyValue)) {
-      reversedProperties.insert(propertyNameStr);
-    }
-  }
-
-  return reversedProperties;
-}
-
 folly::dynamic TransitionStyleInterpolator::interpolate(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const TransitionProgressProvider &transitionProgressProvider) const {
@@ -46,7 +24,7 @@ folly::dynamic TransitionStyleInterpolator::interpolate(
 
     const auto &interpolator = interpolatorIt->second;
     const double fallbackInterpolateThreshold =
-        progressProvider->getFallbackInterpolateThreshold(interpolator->isDiscreteProperty());
+        progressProvider->getFallbackInterpolateThreshold(interpolator->isDiscrete());
     result[propertyName] = interpolator->interpolate(shadowNode, progressProvider, fallbackInterpolateThreshold);
   }
 
@@ -73,9 +51,11 @@ void TransitionStyleInterpolator::discardIrrelevantInterpolators(
   }
 }
 
-void TransitionStyleInterpolator::updateInterpolatedProperties(
+std::unordered_set<std::string> TransitionStyleInterpolator::updateInterpolatedProperties(
     jsi::Runtime &rt,
     const CSSTransitionPropertyUpdates &propertyUpdates) {
+  std::unordered_set<std::string> reversedPropertyNames;
+
   for (const auto &[propertyName, diffPair] : propertyUpdates) {
     if (!diffPair.has_value()) {
       interpolators_.erase(propertyName);
@@ -89,8 +69,10 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
       it = interpolators_.emplace(propertyName, newInterpolator).first;
     }
 
-    it->second->updateKeyframesFromStyleChange(rt, diffPair->first, diffPair->second);
+    reversedPropertyNames.insert(it->second->updateKeyframesFromStyleChange(rt, diffPair->first, diffPair->second));
   }
+
+  return reversedPropertyNames;
 }
 
 } // namespace reanimated::css

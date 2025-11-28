@@ -7,6 +7,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 namespace reanimated::css {
 
@@ -19,8 +20,7 @@ struct CSSTransitionPropertySettings {
 
 using CSSTransitionPropertiesSettings = std::unordered_map<std::string, CSSTransitionPropertySettings>;
 
-using CSSTransitionPropertyUpdates =
-    std::unordered_map<std::string, std::optional<std::pair<jsi::Value, jsi::Value>>>;
+using CSSTransitionPropertyUpdates = std::unordered_map<std::string, std::optional<std::pair<jsi::Value, jsi::Value>>>;
 
 struct CSSTransitionConfig {
   CSSTransitionPropertyUpdates properties;
@@ -34,8 +34,7 @@ struct PartialCSSTransitionPropertySettings {
   std::optional<bool> allowDiscrete;
 };
 
-using CSSTransitionPropertySettingsUpdates =
-    std::unordered_map<std::string, PartialCSSTransitionPropertySettings>;
+using CSSTransitionPropertySettingsUpdates = std::unordered_map<std::string, PartialCSSTransitionPropertySettings>;
 
 struct CSSTransitionUpdates {
   CSSTransitionPropertyUpdates properties;

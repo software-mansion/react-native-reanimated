@@ -117,14 +117,9 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
       override;
   void unregisterCSSAnimations(const jsi::Value &viewTag) override;
 
-  void registerCSSTransition(
-      jsi::Runtime &rt,
-      const jsi::Value &shadowNodeWrapper,
-      const jsi::Value &transitionConfig) override;
-  void updateCSSTransition(
-      jsi::Runtime &rt,
-      const jsi::Value &viewTag,
-      const jsi::Value &transitionUpdates) override;
+  void registerCSSTransition(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &transitionConfig)
+      override;
+  void updateCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &transitionUpdates) override;
   void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) override;
 
   void cssLoopCallback(const double /*timestampMs*/);

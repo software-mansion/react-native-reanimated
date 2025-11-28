@@ -41,8 +41,9 @@ export default class CSSManager implements ICSSManager {
       filterCSSAndStyleProperties(style);
 
     if (!this.styleBuilder && (animationProperties || transitionProperties)) {
+      const kind = animationProperties ? 'CSS animations' : 'a cSS transition';
       throw new ReanimatedError(
-        `Tried to apply CSS animations to ${this.viewName} which is not supported`
+        `Tried to apply ${kind} to ${this.viewName} which is not supported`
       );
     }
 
@@ -58,7 +59,7 @@ export default class CSSManager implements ICSSManager {
       }
     } else if (this.isStyleSet) {
       setViewStyle(this.viewTag, null);
-      this.isStyleSet = false;      
+      this.isStyleSet = false;
     }
   }
 

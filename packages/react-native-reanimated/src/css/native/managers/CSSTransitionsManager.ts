@@ -1,22 +1,22 @@
 'use strict';
-import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { UnknownRecord } from '../../../common';
+import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type {
   CSSTransitionProperties,
   ICSSTransitionsManager,
 } from '../../types';
+import { getChangedProps } from '../../utils';
 import { normalizeCSSTransitionProperties } from '../normalization';
 import {
   registerCSSTransition,
-  updateCSSTransition,
   unregisterCSSTransition,
+  updateCSSTransition,
 } from '../proxy';
 import type {
   CSSTransitionUpdates,
   NormalizedCSSTransitionConfig,
   NormalizedSingleCSSTransitionSettings,
 } from '../types';
-import { getChangedProps } from '../../utils';
 
 export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private readonly viewTag: number;
@@ -37,11 +37,12 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     const previousStyle = this.previousStyle;
     const previousConfig = this.transitionConfig;
 
-    const transitionConfig = transitionProperties
+    this.previousStyle = style;
+    this.transitionConfig = transitionProperties
       ? normalizeCSSTransitionProperties(transitionProperties)
       : null;
 
-    if (!transitionConfig) {
+    if (!this.transitionConfig) {
       this.detach();
       return;
     }
@@ -49,24 +50,23 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     const propertyDiff = getChangedProps(
       previousStyle,
       style,
-      transitionConfig.properties
+      this.transitionConfig.properties === 'all'
+        ? undefined
+        : this.transitionConfig.properties
     );
 
-    this.previousStyle = style;
-
     if (!propertyDiff) {
-      this.transitionConfig = transitionConfig;
       return;
     }
 
     const settingsDiff = previousConfig
-      ? this.getSettingsUpdates(transitionConfig, previousConfig)
+      ? this.getSettingsUpdates(this.transitionConfig, previousConfig)
       : null;
 
     if (!previousConfig) {
       registerCSSTransition(this.shadowNodeWrapper, {
         properties: propertyDiff,
-        settings: transitionConfig.settings,
+        settings: this.transitionConfig.settings,
       });
     } else {
       const updates: CSSTransitionUpdates = {
@@ -79,8 +79,6 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
 
       updateCSSTransition(this.viewTag, updates);
     }
-
-    this.transitionConfig = transitionConfig;
   }
 
   unmountCleanup(): void {
@@ -96,22 +94,22 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   }
 
   private getSettingsUpdates(
-    newConfig: NormalizedCSSTransitionConfig,
-    previousConfig: NormalizedCSSTransitionConfig
+    oldConfig: NormalizedCSSTransitionConfig,
+    newConfig: NormalizedCSSTransitionConfig
   ): Record<string, Partial<NormalizedSingleCSSTransitionSettings>> | null {
     const diff: Record<
       string,
       Partial<NormalizedSingleCSSTransitionSettings>
     > = {};
 
-    for (const [property, nextSettings] of Object.entries(newConfig.settings)) {
-      const perPropertyDiff = this.getPropertySettingsDiff(
-        previousConfig.settings[property],
-        nextSettings
+    for (const [property, newSettings] of Object.entries(newConfig.settings)) {
+      const settingsDiff = this.getPropertySettingsDiff(
+        oldConfig.settings[property],
+        newSettings
       );
 
-      if (perPropertyDiff) {
-        diff[property] = perPropertyDiff;
+      if (settingsDiff) {
+        diff[property] = settingsDiff;
       }
     }
 
@@ -119,26 +117,26 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   }
 
   private getPropertySettingsDiff(
-    previousSettings: NormalizedSingleCSSTransitionSettings | undefined,
-    nextSettings: NormalizedSingleCSSTransitionSettings
+    oldSettings: NormalizedSingleCSSTransitionSettings | undefined,
+    newSettings: NormalizedSingleCSSTransitionSettings
   ): Partial<NormalizedSingleCSSTransitionSettings> | null {
-    if (!previousSettings) {
-      return nextSettings;
+    if (!oldSettings) {
+      return newSettings;
     }
 
     const settingsDiff: Partial<NormalizedSingleCSSTransitionSettings> = {};
 
-    if (previousSettings.duration !== nextSettings.duration) {
-      settingsDiff.duration = nextSettings.duration;
+    if (oldSettings.duration !== newSettings.duration) {
+      settingsDiff.duration = newSettings.duration;
     }
-    if (previousSettings.delay !== nextSettings.delay) {
-      settingsDiff.delay = nextSettings.delay;
+    if (oldSettings.delay !== newSettings.delay) {
+      settingsDiff.delay = newSettings.delay;
     }
-    if (previousSettings.allowDiscrete !== nextSettings.allowDiscrete) {
-      settingsDiff.allowDiscrete = nextSettings.allowDiscrete;
+    if (oldSettings.allowDiscrete !== newSettings.allowDiscrete) {
+      settingsDiff.allowDiscrete = newSettings.allowDiscrete;
     }
-    if (previousSettings.timingFunction !== nextSettings.timingFunction) {
-      settingsDiff.timingFunction = nextSettings.timingFunction;
+    if (oldSettings.timingFunction !== newSettings.timingFunction) {
+      settingsDiff.timingFunction = newSettings.timingFunction;
     }
 
     return Object.keys(settingsDiff).length > 0 ? settingsDiff : null;

@@ -15,10 +15,8 @@ class ArrayPropertiesInterpolator : public GroupPropertiesInterpolator {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
   virtual ~ArrayPropertiesInterpolator() = default;
 
-  bool equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const override;
-
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
-  void updateKeyframesFromStyleChange(
+  bool updateKeyframesFromStyleChange(
       jsi::Runtime &rt,
       const jsi::Value &oldStyleValue,
       const jsi::Value &newStyleValue) override;

@@ -15,7 +15,10 @@ export type NormalizedCSSTransitionConfig = {
   settings: Record<string, NormalizedSingleCSSTransitionSettings>;
 };
 
-export type CSSTransitionPropertyUpdates = Record<string, [unknown, unknown] | null>;
+export type CSSTransitionPropertyUpdates = Record<
+  string,
+  [unknown, unknown] | null
+>;
 
 export type NormalizedNewCSSTransitionConfig = {
   properties: CSSTransitionPropertyUpdates;

@@ -36,10 +36,7 @@ void CSSTransitionsRegistry::remove(const Tag viewTag) {
   registry_.erase(viewTag);
 }
 
-void CSSTransitionsRegistry::update(
-    jsi::Runtime &rt,
-    const Tag viewTag,
-    const CSSTransitionUpdates &updates) {
+void CSSTransitionsRegistry::update(jsi::Runtime &rt, const Tag viewTag, const CSSTransitionUpdates &updates) {
   const auto transitionIt = registry_.find(viewTag);
   if (transitionIt == registry_.end()) {
     return;
