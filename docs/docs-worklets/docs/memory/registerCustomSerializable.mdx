@@ -5,27 +5,32 @@ sidebar_position: 42 # Use alphabetical order
 
 # registerCustomSerializable <AvailableFrom version="0.7.0" />
 
-`registerCustomSerializable` lets you register your own pre-serialization and post-deserialization logic for object with prototype different than `Object.prototype` that aren't supported by default by [Serializable](/docs/memory/Serializable). Such types are called **Custom Serializables**. This way you can tell Worklets how to transfer your custom data structures between different Runtimes without manually serializing and deserializing them every time.
+`registerCustomSerializable` lets you register your own pre-serialization and post-deserialization logic. This is necessary for objects with prototypes different than just `Object.prototype` or some other built-in prototypes like `Map` etc. Worklets can't handle such objects by default to convert into [Serializables](/docs/memory/serializable) hence you need to register them as **Custom Serializables**. This way you can tell Worklets how to transfer your custom data structures between different Runtimes without manually serializing and deserializing them every time.
+
+List of supported types for Serialization can be found [here](/docs/memory/serializable#supported-types).
 
 ## Reference
 
 ```typescript
 const obj = { a: 42 };
-Object.setPrototypeOf(obj, global.console); // because why not
+Object.setPrototypeOf(obj, console); // because why not
+
+type ConsoleLike = typeof console;
 
 registerCustomSerializable({
   name: 'ConsoleLike',
-  determine(value: object): value is typeof console {
+  determine(value: object): value is ConsoleLike {
     'worklet';
-    return Object.getPrototypeOf(value) === global.console;
+    return Object.getPrototypeOf(value) === console;
   },
-  pack(value: typeof console) {
+  pack(value: ConsoleLike) {
     'worklet';
     return { a: value.a }; // transfer data
   },
   unpack(value: object) {
     'worklet';
-    return Object.create(global.console, value); // recreate object with prototype
+    // recreate object with prototype
+    return Object.create(console, value);
   },
 });
 ```
@@ -76,17 +81,20 @@ Consider the following examples:
 
 ```typescript
 const obj = {};
-Object.setPrototypeOf(obj, global.console); // because why not
+
+// because why not
+Object.setPrototypeOf(obj, console);
 
 scheduleOnUI(() => {
-  // This will throw because `obj` had
-  // a custom prototype and it couldn't be serialized.
+  // This will throw because `obj`
+  // had a custom prototype and
+  // it couldn't be serialized.
   obj.log('Hello!');
 });
 ```
 
 </td>
-<td style={{textAlign: 'center'}}>
+<td style={{textAlign: 'center', flex: 1}}>
 
 ```mermaid
 flowchart TD
@@ -104,15 +112,19 @@ flowchart TD
 
 ```typescript
 const obj = {};
-Object.setPrototypeOf(obj, global.console); // because why not
+
+// because why not
+Object.setPrototypeOf(obj, console);
+
+type ConsoleLike = typeof console;
 
 registerCustomSerializable({
   name: 'ConsoleLike',
-  determine(value: object): value is typeof console {
+  determine(value: object): value is ConsoleLike {
     'worklet';
-    return Object.getPrototypeOf(value) === global.console;
+    return Object.getPrototypeOf(value) === console;
   },
-  pack(value: typeof console) {
+  pack(value: ConsoleLike) {
     'worklet';
     // We don't need to transfer any data,
     // so we can pack it to an empty object.
@@ -121,17 +133,17 @@ registerCustomSerializable({
   unpack(value: object) {
     'worklet';
     // We can recreate the original object.
-    return Object.create(global.console);
+    return Object.create(console);
   },
 });
 
 scheduleOnUI(() => {
-  obj.log('Hello!'); // 'Hello!' printed to console.
+  obj.log('Hello!'); // prints 'Hello!'
 });
 ```
 
 </td>
-<td style={{textAlign: 'center'}}>
+<td style={{textAlign: 'center', flex: 1}}>
 
 ```mermaid
 flowchart TD
