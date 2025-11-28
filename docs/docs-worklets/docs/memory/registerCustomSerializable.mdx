@@ -66,7 +66,7 @@ Available properties:
 | --------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | name      | `string`                             | A unique name for the Custom Serializable. It's used to prevent duplicate registrations of the same Custom Serializable. You will get warned if you attempt to register a Custom Serializable with a name that has already been used.                                                                    |
 | determine | `(value: object) => value is TValue` | A [worklet](/docs/fundamentals/glossary#worklet) that checks whether a given JavaScript value is of the type handled by this Custom Serializable.                                                                                                                                                        |
-| pack      | `(value: TValue) => TPacked`         | A [worklet](/docs/fundamentals/glossary#worklet) that packs the JavaScript value of type `TValue` into a value that can be serialized by default as [Serializable](/docs/memory/Serializable). The function must return a [supported type for Serialization](/docs/memory/Serializable#supported-types). |
+| pack      | `(value: TValue) => TPacked`         | A [worklet](/docs/fundamentals/glossary#worklet) that packs the JavaScript value of type `TValue` into a value that can be serialized by default as [Serializable](/docs/memory/serializable). The function must return a [supported type for Serialization](/docs/memory/serializable#supported-types). |
 | unpack    | `(value: TPacked) => TValue`         | A [worklet](/docs/fundamentals/glossary#worklet) that unpacks the packed value, after it's been deserialized from it's packed form, back into the JavaScript value of type `TValue`.                                                                                                                     |
 
 ## Motivation
@@ -168,6 +168,6 @@ flowchart TD
 
 ## Remarks
 
-- To use Custom Serializables which require `new` keyword for instantiation, you need to [disable Worklet Classes](/docs/worklets-babel-plugin/plugin-options#disableworkletclasses) option in Worklets Babel plugin configuration.
+- To use Custom Serializables which require `new` keyword for instantiation, you need to [disable Worklet Classes](/docs/worklets-babel-plugin/plugin-options#disableworkletclasses-) option in Worklets Babel plugin configuration.
 - Custom Serializables are global and shared between all [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime). Once you register a Custom Serializable, it will be available in all Runtimes.
 - You can use `registerCustomSerializable` only on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
