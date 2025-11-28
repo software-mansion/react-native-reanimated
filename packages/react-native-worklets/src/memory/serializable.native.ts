@@ -254,11 +254,13 @@ const customSerializationRegistry = globalThis.__customSerializationRegistry;
 
 /**
  * `registerCustomSerializable` lets you register your own pre-serialization and
- * post-deserialization logic for object with prototype different than
- * `Object.prototype` that aren't supported by default by Serializable. Such
- * types are called **Custom Serializables**. This way you can tell Worklets how
- * to transfer your custom data structures between different Runtimes without
- * manually serializing and deserializing them every time.
+ * post-deserialization logic. This is necessary for objects with prototypes
+ * different than just `Object.prototype` or some other built-in prototypes like
+ * `Map` etc. Worklets can't handle such objects by default to convert into
+ * [Serializables](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable)
+ * hence you need to register them as **Custom Serializables**. This way you can
+ * tell Worklets how to transfer your custom data structures between different
+ * Runtimes without manually serializing and deserializing them every time.
  *
  * @param registrationData - The registration data for the custom serializable -
  *   {@link RegistrationData}
