@@ -96,7 +96,8 @@ const parseDropShadow = (value: string | DropShadowValue): ParsedDropShadow => {
   const processedColor = processColor(color);
 
   return {
-    color: processedColor,
+    // TODO - add support for IOS dynamic colors in CSS (for now we just assume that it's a number)
+    color: processedColor as number,
     offsetX: parseFloat(offsetX as string),
     offsetY: parseFloat(offsetY as string),
     standardDeviation: parseFloat(standardDeviation as string),
