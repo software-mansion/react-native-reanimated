@@ -10,6 +10,9 @@ export const processColorSVG: ValueProcessor<
   if (value === 'currentColor') {
     return 'currentColor';
   }
+  if (value === 'none') {
+    return null;
+  }
 
   return processColor(value);
 };
