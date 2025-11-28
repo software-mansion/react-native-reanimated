@@ -10,7 +10,7 @@ import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
-import { getDynamicFeatureFlag } from '../featureFlags';
+import { getStaticFeatureFlag } from '../featureFlags';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import type { BaseAnimationBuilder } from '../layoutReanimation';
 import {
@@ -47,6 +47,9 @@ let id = 0;
 if (IS_WEB) {
   configureWebLayoutAnimations();
 }
+
+const FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS =
+  getStaticFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS') && !IS_WEB;
 
 export type Options<P> = {
   setNativeProps?: (ref: AnimatedComponentRef, props: P) => void;
@@ -88,10 +91,7 @@ export default class AnimatedComponent
     this._options = options;
     this._displayName = displayName;
 
-    if (
-      getDynamicFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS') &&
-      !IS_WEB
-    ) {
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
       this.state = { settledProps: {} };
     }
 
@@ -119,7 +119,7 @@ export default class AnimatedComponent
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
-    if (this.state?.settledProps) {
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
       const viewTag = this.getComponentViewTag();
       if (viewTag !== -1) {
         PropsRegistryGarbageCollector.registerView(viewTag, this);
@@ -184,7 +184,7 @@ export default class AnimatedComponent
     this._detachStyles();
     this._InlinePropManager.detachInlineProps();
 
-    if (this.state?.settledProps) {
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
       const viewTag = this.getComponentViewTag();
       if (viewTag !== -1) {
         PropsRegistryGarbageCollector.unregisterView(viewTag);
@@ -214,7 +214,7 @@ export default class AnimatedComponent
   }
 
   _syncStylePropsBackToReact(props: StyleProps) {
-    if (this.state?.settledProps) {
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
       this.setState({ settledProps: props });
       // TODO(future): revert changes when animated styles are detached
     }
@@ -477,7 +477,7 @@ export default class AnimatedComponent
         }
       : {};
 
-    if (this.state?.settledProps) {
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
       const flatStyles = StyleSheet.flatten(filteredProps.style as object);
       const mergedStyles = {
         ...flatStyles,

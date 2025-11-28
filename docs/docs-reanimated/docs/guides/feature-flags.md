@@ -14,15 +14,15 @@ Feature flags are available since Reanimated 4.
 
 ## Summary of available feature flags
 
-| Feature flag name                                                                                   |               Type                | Added in | Removed in | Default value |
-| --------------------------------------------------------------------------------------------------- | :-------------------------------: | :------: | :--------: | :-----------: |
-| [`DISABLE_COMMIT_PAUSING_MECHANISM`](#disable_commit_pausing_mechanism)                             |  [static](#static-feature-flags)  |  4.0.0   |  &ndash;   |    `false`    |
-| [`ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#android_synchronously_update_ui_props)                   |  [static](#static-feature-flags)  |  4.0.0   |  &ndash;   |    `false`    |
-| [`IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#ios_synchronously_update_ui_props)                           |  [static](#static-feature-flags)  |  4.2.0   |  &ndash;   |    `false`    |
-| [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#experimental_css_animations_for_svg_components) |  [static](#static-feature-flags)  |  4.1.0   |  &ndash;   |    `false`    |
-| [`USE_SYNCHRONIZABLE_FOR_MUTABLES`](#use_synchronizable_for_mutables)                               |  [static](#static-feature-flags)  |  4.1.0   |  &ndash;   |    `false`    |
-| [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](#use_commit_hook_only_for_react_commits)                 |  [static](#static-feature-flags)  |  4.2.0   |  &ndash;   |    `false`    |
-| [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#force_react_render_for_settled_animations)           | [dynamic](#dynamic-feature-flags) |  4.2.0   |  &ndash;   |    `false`    |
+| Feature flag name                                                                                   |              Type               | Added in | Removed in | Default value |
+| --------------------------------------------------------------------------------------------------- | :-----------------------------: | :------: | :--------: | :-----------: |
+| [`DISABLE_COMMIT_PAUSING_MECHANISM`](#disable_commit_pausing_mechanism)                             | [static](#static-feature-flags) |  4.0.0   |  &ndash;   |    `false`    |
+| [`ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#android_synchronously_update_ui_props)                   | [static](#static-feature-flags) |  4.0.0   |  &ndash;   |    `false`    |
+| [`IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS`](#ios_synchronously_update_ui_props)                           | [static](#static-feature-flags) |  4.2.0   |  &ndash;   |    `false`    |
+| [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#experimental_css_animations_for_svg_components) | [static](#static-feature-flags) |  4.1.0   |  &ndash;   |    `false`    |
+| [`USE_SYNCHRONIZABLE_FOR_MUTABLES`](#use_synchronizable_for_mutables)                               | [static](#static-feature-flags) |  4.1.0   |  &ndash;   |    `false`    |
+| [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](#use_commit_hook_only_for_react_commits)                 | [static](#static-feature-flags) |  4.2.0   |  &ndash;   |    `false`    |
+| [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#force_react_render_for_settled_animations)           | [static](#static-feature-flags) |  4.2.0   |  &ndash;   |    `false`    |
 
 :::info
 

@@ -5,7 +5,6 @@ import type StaticFeatureFlagsJSON from './staticFlags.json';
 
 type DynamicFlagsType = {
   EXAMPLE_DYNAMIC_FLAG: boolean;
-  FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS: boolean;
   init(): void;
   setFlag(name: DynamicFlagName, value: boolean): void;
   getFlag(name: DynamicFlagName): boolean;
@@ -18,7 +17,6 @@ type DynamicFlagName = keyof Omit<
 /** @knipIgnore */
 export const DynamicFlags: DynamicFlagsType = {
   EXAMPLE_DYNAMIC_FLAG: true,
-  FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS: false,
 
   init() {
     Object.keys(DynamicFlags).forEach((key) => {
@@ -80,6 +78,7 @@ const DefaultStaticFeatureFlags = {
   EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS: false,
   USE_SYNCHRONIZABLE_FOR_MUTABLES: false,
   USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS: false,
+  FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS: false,
 } as const satisfies typeof StaticFeatureFlagsJSON;
 
 type StaticFeatureFlagsSchema = {

@@ -3,13 +3,10 @@ import { Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   DynamicColorIOS,
   PlatformColor,
-  setDynamicFeatureFlag,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-
-setDynamicFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS', true);
 
 const instructions = [
   '1. Press "Toggle shared value" button',

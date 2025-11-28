@@ -448,6 +448,10 @@ void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi:
 }
 
 jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
+  react_native_assert(
+      StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
+      "getSettledUpdates requires FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS static feature flag to be enabled");
+
   // TODO(future): use unified timestamp
   const auto currentTimestamp = getAnimationTimestamp_();
 

@@ -52,18 +52,10 @@ function getReactNativeVersion() {
 export default function AboutExample() {
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
-  const toggleExampleDynamicFlag = useCallback(() => {
+  const handleToggleExampleDynamicFlag = useCallback(() => {
     setDynamicFeatureFlag(
       'EXAMPLE_DYNAMIC_FLAG',
       !getDynamicFeatureFlag('EXAMPLE_DYNAMIC_FLAG')
-    );
-    forceUpdate();
-  }, [forceUpdate]);
-
-  const toggleForceReactRenderForSettledAnimations = useCallback(() => {
-    setDynamicFeatureFlag(
-      'FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS',
-      !getDynamicFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS')
     );
     forceUpdate();
   }, [forceUpdate]);
@@ -145,6 +137,16 @@ export default function AboutExample() {
               : 'Disabled'}
           </Text>
           <Text style={styles.text}>
+            <Text style={styles.bold}>
+              FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS:
+            </Text>{' '}
+            {getStaticFeatureFlagReanimated(
+              'FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS'
+            )
+              ? 'Enabled'
+              : 'Disabled'}
+          </Text>
+          <Text style={styles.text}>
             <Text style={styles.bold}>IOS_DYNAMIC_FRAMERATE_ENABLED:</Text>{' '}
             {getStaticFeatureFlagWorklets('IOS_DYNAMIC_FRAMERATE_ENABLED')
               ? 'Enabled'
@@ -158,19 +160,7 @@ export default function AboutExample() {
           </Text>
           <Button
             title={`Toggle EXAMPLE_DYNAMIC_FLAG`}
-            onPress={toggleExampleDynamicFlag}
-          />
-          <Text style={styles.text}>
-            <Text style={styles.bold}>
-              FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS:
-            </Text>{' '}
-            {getDynamicFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS')
-              ? 'Enabled'
-              : 'Disabled'}
-          </Text>
-          <Button
-            title={`Toggle FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`}
-            onPress={toggleForceReactRenderForSettledAnimations}
+            onPress={handleToggleExampleDynamicFlag}
           />
         </>
       )}

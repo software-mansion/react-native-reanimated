@@ -24,7 +24,9 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     const jsi::Value &updates = item.getProperty(rt, "updates");
     addUpdatesToBatch(shadowNode, jsi::dynamicFromValue(rt, updates));
 
-    timestampMap_[shadowNode->getTag()] = timestamp;
+    if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
+      timestampMap_[shadowNode->getTag()] = timestamp;
+    }
   }
 }
 
