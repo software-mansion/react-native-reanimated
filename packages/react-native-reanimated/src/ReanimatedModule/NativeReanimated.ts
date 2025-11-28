@@ -187,7 +187,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.unsubscribeFromKeyboardEvents(listenerId);
   }
 
-  setViewStyle(viewTag: number, style: StyleProps) {
+  setViewStyle(viewTag: number, style: StyleProps | null) {
     this.#reanimatedModuleProxy.setViewStyle(viewTag, style);
   }
 

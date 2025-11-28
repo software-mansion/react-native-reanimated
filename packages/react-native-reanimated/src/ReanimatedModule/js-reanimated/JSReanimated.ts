@@ -271,7 +271,7 @@ class JSReanimated implements IReanimatedModule {
     // noop
   }
 
-  setViewStyle(_viewTag: number, _style: StyleProps): void {
+  setViewStyle(_viewTag: number, _style: StyleProps | null): void {
     throw new ReanimatedError('setViewStyle is not available in JSReanimated.');
   }
 

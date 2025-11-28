@@ -60,7 +60,7 @@ export interface ReanimatedModuleProxy {
 
   setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
 
-  setViewStyle(viewTag: number, style: StyleProps): void;
+  setViewStyle(viewTag: number, style: StyleProps | null): void;
 
   markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper): void;
   unmarkNodeAsRemovable(viewTag: number): void;

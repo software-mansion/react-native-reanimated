@@ -18,7 +18,7 @@ export default class CSSManager implements ICSSManager {
   private readonly viewTag: number;
   private readonly viewName: string;
   private readonly styleBuilder: StyleBuilder<AnyRecord> | null = null;
-  private isFirstUpdate: boolean = true;
+  private isStyleSet = false;
 
   constructor({ shadowNodeWrapper, viewTag, viewName = 'RCTView' }: ViewInfo) {
     const tag = (this.viewTag = viewTag as number);
@@ -46,25 +46,20 @@ export default class CSSManager implements ICSSManager {
       );
     }
 
-    const normalizedStyle = this.styleBuilder?.buildFrom(filteredStyle);
+    const normalizedStyle = this.styleBuilder?.buildFrom(filteredStyle) ?? null;
 
-    // If the update is called during the first css style update, we won't
-    // trigger CSS transitions and set styles before attaching CSS transitions
-    if (this.isFirstUpdate && normalizedStyle) {
-      setViewStyle(this.viewTag, normalizedStyle);
-    }
-
-    this.cssTransitionsManager.update(transitionProperties, normalizedStyle ?? null);
+    this.cssTransitionsManager.update(transitionProperties, normalizedStyle);
     this.cssAnimationsManager.update(animationProperties);
 
-    // If the current update is not the fist one, we want to update CSS
-    // animations and transitions first and update the style then to make
-    // sure that the new transition is fired with new settings (like duration)
-    if (!this.isFirstUpdate && normalizedStyle) {
-      setViewStyle(this.viewTag, normalizedStyle);
+    if (normalizedStyle) {
+      if (animationProperties) {
+        setViewStyle(this.viewTag, normalizedStyle);
+        this.isStyleSet = true;
+      }
+    } else if (this.isStyleSet) {
+      setViewStyle(this.viewTag, null);
+      this.isStyleSet = false;      
     }
-
-    this.isFirstUpdate = false;
   }
 
   unmountCleanup(): void {

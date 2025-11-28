@@ -46,36 +46,38 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
       return;
     }
 
-    const propertyDiff =
-      transitionConfig.properties.length > 0
-        ? getChangedProps(previousStyle, style, transitionConfig.properties)
-        : null;
+    const propertyDiff = getChangedProps(
+      previousStyle,
+      style,
+      transitionConfig.properties
+    );
 
     this.previousStyle = style;
 
-    if (propertyDiff) {
-      const settingsDiff = this.getSettingsUpdates(
-        transitionConfig,
-        previousConfig
-      );
+    if (!propertyDiff) {
+      this.transitionConfig = transitionConfig;
+      return;
+    }
 
-      if (!previousConfig) {
-        registerCSSTransition(this.shadowNodeWrapper, {
-          properties: propertyDiff,
-          settings: transitionConfig.settings,
-          settingsUpdates: settingsDiff ?? undefined,
-        });
-      } else {
-        const updates: CSSTransitionUpdates = {
-          properties: propertyDiff,
-        };
+    const settingsDiff = previousConfig
+      ? this.getSettingsUpdates(transitionConfig, previousConfig)
+      : null;
 
-        if (settingsDiff) {
-          updates.settings = settingsDiff;
-        }
+    if (!previousConfig) {
+      registerCSSTransition(this.shadowNodeWrapper, {
+        properties: propertyDiff,
+        settings: transitionConfig.settings,
+      });
+    } else {
+      const updates: CSSTransitionUpdates = {
+        properties: propertyDiff,
+      };
 
-        updateCSSTransition(this.viewTag, updates);
+      if (settingsDiff) {
+        updates.settings = settingsDiff;
       }
+
+      updateCSSTransition(this.viewTag, updates);
     }
 
     this.transitionConfig = transitionConfig;

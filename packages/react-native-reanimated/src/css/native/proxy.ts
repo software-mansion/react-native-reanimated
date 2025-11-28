@@ -5,13 +5,12 @@ import type {
   CSSAnimationUpdates,
   CSSTransitionUpdates,
   NormalizedCSSAnimationKeyframesConfig,
-  NormalizedCSSTransitionConfig,
   NormalizedNewCSSTransitionConfig,
 } from './types';
 
 // COMMON
 
-export function setViewStyle(viewTag: number, style: StyleProps) {
+export function setViewStyle(viewTag: number, style: StyleProps | null) {
   ReanimatedModule.setViewStyle(viewTag, style);
 }
 
