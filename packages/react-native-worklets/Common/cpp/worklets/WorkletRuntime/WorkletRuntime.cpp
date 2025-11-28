@@ -99,6 +99,7 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
 
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
   const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
+  const auto memoryManager_ = jsiWorkletsModuleProxy->getMemoryManager();
 #ifdef WORKLETS_BUNDLE_MODE
   auto script = jsiWorkletsModuleProxy->getScript();
   const auto &sourceUrl = jsiWorkletsModuleProxy->getSourceUrl();
@@ -132,7 +133,15 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
 
   auto synchronizableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(SynchronizableUnpackerCode);
   rt.evaluateJavaScript(synchronizableUnpackerBuffer, "synchronizableUnpacker");
+
+  auto customSerializableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(CustomSerializableUnpackerCode);
+  rt.evaluateJavaScript(customSerializableUnpackerBuffer, "customSerializableUnpacker");
 #endif // WORKLETS_BUNDLE_MODE
+  try {
+    memoryManager_->loadAllCustomSerializables(shared_from_this());
+  } catch (jsi::JSError &e) {
+    throw std::runtime_error(std::string("[Worklets] Failed to load custom serializables. Reason: ") + e.getMessage());
+  }
 }
 
 /* #region schedule */

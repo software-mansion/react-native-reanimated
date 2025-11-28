@@ -13,9 +13,6 @@ on:
       publish_on_npm:
         required: false
         type: boolean
-    secrets:
-      NODE_AUTH_TOKEN:
-        required: false
   workflow_dispatch:
     inputs:
       option:
@@ -43,10 +40,16 @@ jobs:
           ref: ${{ inputs.ref }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
+          cache: 'yarn'
           registry-url: https://registry.npmjs.org/
+
+      # Ensure npm 11.5.1 or later is installed for OIDC
+      - name: Update npm
+        run: npm install -g npm@latest
+
       - name: Clear annotations
         run: .github/workflows/helper/clear-annotations.sh
 
@@ -105,5 +108,3 @@ jobs:
       - name: Publish npm package
         run: npm publish $PACKAGE_NAME --tag nightly --provenance
         if: ${{ inputs.publish_on_npm }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}

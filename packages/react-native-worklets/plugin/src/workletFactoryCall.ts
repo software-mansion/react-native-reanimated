@@ -7,13 +7,13 @@ import {
   stringLiteral,
 } from '@babel/types';
 
-import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
+import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 import { generatedWorkletsDir } from './types';
 import { makeWorkletFactory } from './workletFactory';
 
 export function makeWorkletFactoryCall(
   path: NodePath<WorkletizableFunction>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): CallExpression {
   const { factory, factoryCallParamPack, workletHash } = makeWorkletFactory(
     path,

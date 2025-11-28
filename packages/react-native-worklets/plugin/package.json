@@ -22,9 +22,9 @@
   "license": "MIT",
   "readmeFilename": "README.md",
   "scripts": {
-    "build": "yarn tsc && yarn bundle && yarn format",
+    "build": "yarn tsc && yarn bundle && yarn format && cp types/options.d.ts index.d.ts",
     "bundle": "node bundle.js",
-    "format": "prettier --write --list-different src",
+    "format": "prettier --write --ignore-path '' --log-level silent types/options.d.ts && prettier --write --list-different src",
     "watch": "tsc-watch --onSuccess \"yarn bundle\"",
     "lint": "eslint --max-warnings=0 src",
     "type:check": "tsc --noEmit"
