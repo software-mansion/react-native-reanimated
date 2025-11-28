@@ -1,7 +1,8 @@
 import React, { useCallback } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
-  interpolateColor,
+  DynamicColorIOS,
+  PlatformColor,
   setDynamicFeatureFlag,
   useAnimatedStyle,
   useSharedValue,
@@ -11,10 +12,10 @@ import Animated, {
 setDynamicFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS', true);
 
 const instructions = [
-  '1. Press "Animate width and color" button',
+  '1. Press "Toggle shared value" button',
   '2. Wait until the animated styles are synced back to React (about 3 seconds)',
   '3. Press "Increase counter" button',
-  '4. The view width and color not change, similar to when the feature flag is disabled',
+  '4. The width and colors should not change, similar to when the feature flag is disabled',
 ].join('\n');
 
 interface ButtonProps {
@@ -36,17 +37,61 @@ function Button({ title, onPress }: ButtonProps) {
 export default function SyncBackToReactExample() {
   const [count, setCount] = React.useState(0);
 
-  const sv = useSharedValue(0);
+  const ref = React.useRef(false);
 
-  const animatedStyle = useAnimatedStyle(() => {
+  const sv = useSharedValue(false);
+
+  const animatedStyle1 = useAnimatedStyle(() => {
     return {
-      width: 20 + sv.value * 200,
-      backgroundColor: interpolateColor(sv.value, [0, 1], ['red', 'lime']),
+      width: withSpring(sv.value ? 150 : 50),
     };
   });
 
-  const handleAnimateWidth = useCallback(() => {
-    sv.value = withSpring(Math.random());
+  const animatedStyle2 = useAnimatedStyle(() => {
+    return {
+      backgroundColor: sv.value ? 'blue' : 'green',
+    };
+  });
+
+  const animatedStyle3 = useAnimatedStyle(() => {
+    return {
+      backgroundColor:
+        Platform.OS === 'ios'
+          ? PlatformColor(sv.value ? 'systemBlue' : 'systemGreen')
+          : PlatformColor(
+              sv.value
+                ? '@android:color/holo_blue_light'
+                : '@android:color/holo_green_bright'
+            ),
+    };
+  });
+
+  const animatedStyle4 = useAnimatedStyle(() => {
+    return {
+      backgroundColor:
+        Platform.OS === 'ios'
+          ? sv.value
+            ? DynamicColorIOS({ light: 'blue', dark: 'orange' })
+            : DynamicColorIOS({ light: 'green', dark: 'red' })
+          : 'gray',
+    };
+  });
+
+  const animatedStyle5 = useAnimatedStyle(() => {
+    return {
+      boxShadow: [
+        {
+          blurRadius: 10,
+          offsetX: 10,
+          offsetY: 10,
+          color: sv.value ? 'blue' : 'green',
+        },
+      ],
+    };
+  });
+
+  const handleToggle = useCallback(() => {
+    sv.value = ref.current = !ref.current;
   }, [sv]);
 
   const handleIncreaseCounter = useCallback(() => {
@@ -55,12 +100,12 @@ export default function SyncBackToReactExample() {
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.box, animatedStyle]} />
-      <Animated.View style={[styles.box, animatedStyle]} />
-      <Animated.View style={[styles.box, animatedStyle]} />
-      <Animated.View style={[styles.box, animatedStyle]} />
-      <Animated.View style={[styles.box, animatedStyle]} />
-      <Button title="Animate width and color" onPress={handleAnimateWidth} />
+      <Animated.View style={[styles.box, animatedStyle1]} />
+      <Animated.View style={[styles.box, animatedStyle2]} />
+      <Animated.View style={[styles.box, animatedStyle3]} />
+      <Animated.View style={[styles.box, animatedStyle4]} />
+      <Animated.View style={[styles.box, animatedStyle5]} />
+      <Button title="Toggle shared value" onPress={handleToggle} />
       <Text>Counter: {count}</Text>
       <Button title="Increase counter" onPress={handleIncreaseCounter} />
       <Text style={styles.instructions}>{instructions}</Text>
@@ -75,8 +120,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   box: {
-    height: 20,
-    backgroundColor: 'navy',
+    width: 50,
+    height: 50,
+    backgroundColor: 'black',
   },
   buttonView: {
     margin: 20,
