@@ -126,7 +126,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 ### `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`
 
-When enabled, non-layout styles will be applied using the `synchronouslyUpdateViewOnUIThread` method (which doesn't involve layout recalculation) instead of than `ShadowTree::commit` method (which requires layout recalculation). In an artifical benchmark, it can lead to up to 4x increase of frames per second. Even though we don't expect such high speedups in the production apps, there should be a visible improvements in the smoothness of some animations. However, there are some unwanted side effects that one needs to take into account and properly compensate for:
+When enabled, non-layout styles will be applied using the `synchronouslyUpdateViewOnUIThread` method (which doesn't involve layout recalculation) instead of than `ShadowTree::commit` method (which requires layout recalculation). In an artificial benchmark, it can lead to up to 4x increase of frames per second. Even though we don't expect such high speedups in the production apps, there should be a visible improvements in the smoothness of some animations. However, there are some unwanted side effects that one needs to take into account and properly compensate for:
 
 1. The changes applied via `synchronouslyUpdateViewOnUIThread` are not respected by the touch gesture system of Fabric renderer which can lead to incorrect behavior, in particular if transforms are applied. In that case, it's advisable to use `Pressable` component from `react-native-gesture-handler` (which attaches to the underlying platform view rather than using `ShadowTree` to determine the component present at given point) rather than its original counterpart from `react-native`.
 
