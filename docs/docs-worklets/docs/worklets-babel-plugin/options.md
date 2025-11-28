@@ -4,8 +4,6 @@ title: 'Options'
 sidebar_label: 'Options'
 ---
 
-import AvailableFrom from '@site/src/components/AvailableFrom';
-
 # Options for Worklets Babel Plugin
 
 Our plugin offers several optional functionalities that you may need to employ advanced APIs:
