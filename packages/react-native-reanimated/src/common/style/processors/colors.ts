@@ -172,6 +172,9 @@ export function unprocessColorsInProps(props: StyleProps) {
             : undefined;
       }
       props[key] = processed;
+    } else if (isPlatformColorObject(value)) {
+      // PlatformColor is not processed further on iOS and Android
+      props[key] = value;
     } else {
       props[key] = unprocessColor(value);
     }
