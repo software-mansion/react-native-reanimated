@@ -16,6 +16,7 @@ interface PluginOptions {
   bundleMode?: boolean;
   disableInlineStylesWarning?: boolean;
   disableSourceMaps?: boolean;
+  disableWorkletClasses?: boolean;
   extraPlugins?: string[];
   extraPresets?: string[];
   globals?: string[];
@@ -100,6 +101,15 @@ Enable this option to silence such false warnings.
 Defaults to `false`.
 
 This option turns off the source map generation for worklets. Mostly used for testing purposes.
+
+### disableWorkletClasses <AvailableFrom version="0.7.0"/>
+
+Defaults to `false`
+
+Disables [Worklet Classes
+support](/docs/worklets-babel-plugin/about#experimental-worklet-classes).
+You might need to disable this feature when using [Custom
+Serializables](/docs/memory/registerCustomSerializable).
 
 ### extraPlugins
 
