@@ -17,7 +17,7 @@ jobs:
     outputs:
       has_changes: ${{ steps.commit-check-action-v4.outputs.has_changes }}
     steps:
-      - id: commit-check-v4 
+      - id: commit-check-v4
         uses: ./.github/actions/check-branch-changes
         with:
           branch: main
@@ -34,11 +34,11 @@ jobs:
 
   check-v3-changes:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
     outputs:
       has_changes: ${{ steps.commit-check-action-v3.outputs.has_changes }}
     steps:
-      - id: commit-check-v3 
+      - id: commit-check-v3
         uses: ./.github/actions/check-branch-changes
         with:
           # Remember to update the branch on new minor releases.
