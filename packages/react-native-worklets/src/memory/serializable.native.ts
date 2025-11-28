@@ -32,9 +32,15 @@ function isHostObject(value: NonNullable<object>) {
   return MAGIC_KEY in value;
 }
 
-export function isSerializableRef(value: unknown): value is SerializableRef {
+export function isSerializableRef<TValue = unknown>(
+  value: unknown
+): value is SerializableRef<TValue> {
+  'worklet';
   return (
-    typeof value === 'object' && value !== null && '__serializableRef' in value
+    typeof value === 'object' &&
+    value !== null &&
+    '__serializableRef' in value &&
+    value.__serializableRef === true
   );
 }
 

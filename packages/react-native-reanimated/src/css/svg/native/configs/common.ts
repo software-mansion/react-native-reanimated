@@ -141,4 +141,5 @@ export const commonSvgProps = {
   ...commonMarkerProps,
   ...commonMaskProps,
   ...commonFilterProps,
+  opacity: { process: processOpacity },
 } as const;
