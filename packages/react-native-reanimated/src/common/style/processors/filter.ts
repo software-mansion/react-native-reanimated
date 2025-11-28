@@ -14,8 +14,8 @@ import { processColor } from './colors';
 
 // Capture filter functions and their content eg "brightness(0.5) opacity(1)" => [["brightness(0.5)", "brightness", "0.5"], ["opacity(1)", "opacity", "1"]]
 const FILTER_REGEX = /([\w-]+)\(([^()]*|\([^()]*\)|[^()]*\([^()]*\)[^()]*)\)/g;
-// Capture two groups: current transform value and optional unit -> "21.37px" => ["21.37px", "21.37", "px"]
-const FILTER_VALUE_REGEX = /^([-+]?\d*\.?\d+)([a-z%]*)$/;
+// Capture two groups: current transform value and optional unit -> "21.37px" => ["21.37px", "21.37", "px"] + accepts scientific notation like 'e-14'
+const FILTER_VALUE_REGEX = /^([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)([a-z%]*)$/;
 // Capture drop-shadow parts "10px 5px 5px #888888" => ["10px", "5px", "5px", "#888888"]
 const DROP_SHADOW_REGEX = /[^,\s()]+(?:\([^()]*\))?/g;
 

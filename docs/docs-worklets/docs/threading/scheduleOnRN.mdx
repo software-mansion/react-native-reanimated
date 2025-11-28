@@ -4,11 +4,11 @@ sidebar_position: 42 # Use alphabetical order
 
 # scheduleOnRN
 
-`scheduleOnRN` lets you schedule a function to be executed on the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime-rn-runtime) from any [Worklet Runtime](/docs/fundamentals/glossary#worklet-runtime).
+`scheduleOnRN` lets you schedule a function to be executed on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime) from any [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime).
 
 To learn more about the different runtime kinds, check [Runtime Kinds](/docs/fundamentals/runtimeKinds).
 
-`scheduleOnRN` is commonly used to update React state from [UI Runtime](/docs/fundamentals/glossary#ui-runtime), e.g. when animation finishes or conditionally within a gesture.
+`scheduleOnRN` is commonly used to update React state from [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime), e.g. when animation finishes or conditionally within a gesture.
 
 ## Reference
 
@@ -40,11 +40,11 @@ function scheduleOnRN<Args extends unknown[], ReturnValue>(
 
 #### fn
 
-A reference to a function you want to execute on the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime-rn-runtime).
+A reference to a function you want to execute on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
 
 #### args
 
-Arguments to the function you want to execute on the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime-rn-runtime).
+Arguments to the function you want to execute on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
 
 ## Example
 
@@ -55,7 +55,7 @@ import ScheduleOnRNsrc from '!!raw-loader!@site/src/examples/ScheduleOnRN';
 
 ## Remarks
 
-- Functions passed to `scheduleOnRN` must be defined in the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime-rn-runtime) scope, i.e. in the component body or the global scope. The code below won't work because `myFunction` is defined in the `runOnUI` callback, which is only executed in the [UI Runtime](/docs/fundamentals/glossary#ui-runtime):
+- Functions passed to `scheduleOnRN` must be defined in the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime) scope, i.e. in the component body or the global scope. The code below won't work because `myFunction` is defined in the `runOnUI` callback, which is only executed in the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime):
 
 <Indent>
 
@@ -75,6 +75,6 @@ runOnUI(() => {
 
 ## Implementation Details
 
-- Scheduling function from the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime-rn-runtime) (we are already on RN Runtime) simply
+- Scheduling function from the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime) (we are already on RN Runtime) simply
   uses `queueMicrotask`.
-- When functions need to be scheduled from a [Worklet Runtime](/docs/fundamentals/glossary#worklet-runtime), they rely on React Native's scheduling model to forward the function call to the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime-rn-runtime).
+- When functions need to be scheduled from a [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime), they rely on React Native's scheduling model to forward the function call to the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
