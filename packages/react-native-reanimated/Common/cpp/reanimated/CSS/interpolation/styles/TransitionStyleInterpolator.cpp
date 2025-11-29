@@ -57,6 +57,8 @@ std::unordered_set<std::string> TransitionStyleInterpolator::updateInterpolatedP
   std::unordered_set<std::string> reversedPropertyNames;
 
   for (const auto &[propertyName, diffPair] : propertyUpdates) {
+    // If the diffPair is not present, it means that the property was removed and should no
+    // longer be transitioned. In such a case, we can remove the interpolator for this property.
     if (!diffPair.has_value()) {
       interpolators_.erase(propertyName);
       continue;
@@ -69,7 +71,10 @@ std::unordered_set<std::string> TransitionStyleInterpolator::updateInterpolatedP
       it = interpolators_.emplace(propertyName, newInterpolator).first;
     }
 
-    reversedPropertyNames.insert(it->second->updateKeyframesFromStyleChange(rt, diffPair->first, diffPair->second));
+    auto isPropertyReversed = it->second->updateKeyframesFromStyleChange(rt, diffPair->first, diffPair->second);
+    if (isPropertyReversed) {
+      reversedPropertyNames.insert(propertyName);
+    }
   }
 
   return reversedPropertyNames;

@@ -139,7 +139,6 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
   setInUpdatesRegistry(shadowNode, filteredUpdates);
 }
 
-} // namespace reanimated::css
 void CSSTransitionsRegistry::runTransition(
     jsi::Runtime &rt,
     const std::shared_ptr<CSSTransition> &transition,
@@ -148,3 +147,5 @@ void CSSTransitionsRegistry::runTransition(
   updateInUpdatesRegistry(transition, startStyle);
   scheduleOrActivateTransition(transition);
 }
+
+} // namespace reanimated::css

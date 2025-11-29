@@ -19,6 +19,7 @@ class PropertyInterpolator {
       PropertyPath propertyPath,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
+  virtual bool isDiscrete() const = 0;
   virtual folly::dynamic getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const = 0;
   virtual folly::dynamic getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const = 0;
   virtual folly::dynamic getFirstKeyframeValue() const = 0;
@@ -48,7 +49,6 @@ class PropertyInterpolatorFactory {
   PropertyInterpolatorFactory() = default;
   virtual ~PropertyInterpolatorFactory() = default;
 
-  virtual bool isDiscreteProperty() const;
   virtual const CSSValue &getDefaultValue() const = 0;
 
   virtual std::shared_ptr<PropertyInterpolator> create(

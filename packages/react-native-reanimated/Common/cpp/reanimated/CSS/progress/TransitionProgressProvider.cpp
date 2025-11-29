@@ -12,20 +12,17 @@ TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     const double timestamp,
     const double duration,
     const double delay,
-    const EasingFunction &easingFunction,
-    const bool allowDiscrete)
-    : RawProgressProvider(timestamp, duration, delay), easingFunction_(easingFunction), allowDiscrete_(allowDiscrete) {}
+    const EasingFunction &easingFunction)
+    : RawProgressProvider(timestamp, duration, delay), easingFunction_(easingFunction) {}
 TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     const double timestamp,
     const double duration,
     const double delay,
     const EasingFunction &easingFunction,
-    const double reversingShorteningFactor,
-    const bool allowDiscrete)
+    const double reversingShorteningFactor)
     : RawProgressProvider(timestamp, duration, delay),
       easingFunction_(easingFunction),
-      reversingShorteningFactor_(reversingShorteningFactor),
-      allowDiscrete_(allowDiscrete) {}
+      reversingShorteningFactor_(reversingShorteningFactor) {}
 
 double TransitionPropertyProgressProvider::getGlobalProgress() const {
   return rawProgress_.value_or(0);
@@ -55,10 +52,6 @@ TransitionProgressState TransitionPropertyProgressProvider::getState() const {
     return TransitionProgressState::Finished;
   }
   return TransitionProgressState::Running;
-}
-
-double TransitionPropertyProgressProvider::getFallbackInterpolateThreshold(const bool isDiscrete) const {
-  return !isDiscrete || allowDiscrete_ ? 0.5 : 0.0;
 }
 
 std::optional<double> TransitionPropertyProgressProvider::calculateRawProgress(const double timestamp) {
@@ -159,11 +152,7 @@ void TransitionProgressProvider::runProgressProviders(
     propertyProgressProviders_.insert_or_assign(
         propertyName,
         std::make_shared<TransitionPropertyProgressProvider>(
-            timestamp,
-            propertySettings.duration,
-            propertySettings.delay,
-            propertySettings.easingFunction,
-            propertySettings.allowDiscrete));
+            timestamp, propertySettings.duration, propertySettings.delay, propertySettings.easingFunction));
   }
 }
 
@@ -192,8 +181,7 @@ TransitionProgressProvider::createReversingShorteningProgressProvider(
       propertySettings.duration * newReversingShorteningFactor,
       propertySettings.delay < 0 ? newReversingShorteningFactor * propertySettings.delay : propertySettings.delay,
       propertySettings.easingFunction,
-      newReversingShorteningFactor,
-      propertySettings.allowDiscrete);
+      newReversingShorteningFactor);
 }
 
 } // namespace reanimated::css

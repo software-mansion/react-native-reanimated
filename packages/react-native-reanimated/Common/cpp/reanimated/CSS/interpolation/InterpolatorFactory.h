@@ -28,12 +28,6 @@ class SimpleValueInterpolatorFactory : public PropertyInterpolatorFactory {
   explicit SimpleValueInterpolatorFactory(const TValue &defaultValue)
       : PropertyInterpolatorFactory(), defaultValue_(defaultValue) {}
 
-  bool isDiscreteProperty() const override {
-    // The property is considered discrete if all of the allowed types are
-    // discrete
-    return (Discrete<AllowedTypes> && ...);
-  }
-
   const CSSValue &getDefaultValue() const override {
     return defaultValue_;
   }

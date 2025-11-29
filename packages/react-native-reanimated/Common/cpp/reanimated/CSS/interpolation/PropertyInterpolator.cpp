@@ -12,7 +12,7 @@ PropertyInterpolator::PropertyInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : propertyPath_(std::move(propertyPath)), viewStylesRepository_(viewStylesRepository) {}
 
-bool PropertyInterpolatorFactory::isDiscreteProperty() const {
+bool PropertyInterpolator::isDiscrete() const {
   return false;
 }
 

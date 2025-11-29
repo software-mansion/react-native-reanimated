@@ -19,22 +19,19 @@ class TransitionPropertyProgressProvider final : public KeyframeProgressProvider
       double timestamp,
       double duration,
       double delay,
-      const EasingFunction &easingFunction,
-      bool allowDiscrete);
+      const EasingFunction &easingFunction);
   TransitionPropertyProgressProvider(
       double timestamp,
       double duration,
       double delay,
       const EasingFunction &easingFunction,
-      double reversingShorteningFactor,
-      bool allowDiscrete);
+      double reversingShorteningFactor);
 
   double getGlobalProgress() const override;
   double getKeyframeProgress(double fromOffset, double toOffset) const override;
   double getRemainingDelay(double timestamp) const;
   double getReversingShorteningFactor() const;
   TransitionProgressState getState() const;
-  double getFallbackInterpolateThreshold(bool isDiscrete) const;
 
  protected:
   std::optional<double> calculateRawProgress(double timestamp) override;
@@ -42,7 +39,6 @@ class TransitionPropertyProgressProvider final : public KeyframeProgressProvider
  private:
   EasingFunction easingFunction_;
   double reversingShorteningFactor_ = 1;
-  bool allowDiscrete_ = false;
 
   double getElapsedTime(double timestamp) const;
 };
