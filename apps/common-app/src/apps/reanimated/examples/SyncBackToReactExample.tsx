@@ -1,3 +1,4 @@
+import { balloonsImage } from '@/apps/css/assets';
 import React, { useCallback } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
@@ -87,6 +88,18 @@ export default function SyncBackToReactExample() {
     };
   });
 
+  const animatedStyle6 = useAnimatedStyle(() => {
+    return {
+      transform: `rotate(${sv.value ? 30 : 0}deg)`,
+    };
+  });
+
+  const animatedStyle7 = useAnimatedStyle(() => {
+    return {
+      filter: `brightness(${sv.value ? 0.5 : 1})`,
+    };
+  });
+
   const handleToggle = useCallback(() => {
     sv.value = ref.current = !ref.current;
   }, [sv]);
@@ -102,6 +115,12 @@ export default function SyncBackToReactExample() {
       <Animated.View style={[styles.box, animatedStyle3]} />
       <Animated.View style={[styles.box, animatedStyle4]} />
       <Animated.View style={[styles.box, animatedStyle5]} />
+      <Animated.View style={[styles.box, animatedStyle6]} />
+      <Animated.Image
+        source={balloonsImage}
+        // @ts-expect-error
+        style={[styles.box, animatedStyle7]}
+      />
       <Button title="Toggle shared value" onPress={handleToggle} />
       <Text>Counter: {count}</Text>
       <Button title="Increase counter" onPress={handleIncreaseCounter} />
