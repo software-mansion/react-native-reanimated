@@ -721,6 +721,13 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
           builder.setShadowRadius(pair.second.asDouble());
           break;
         }
+              
+          case RAW_PROPS_KEY_HASH("shadowOffset"): {
+              auto shadowOffset = pair.second;
+              auto width = shadowOffset["width"].asDouble();
+              auto height = shadowOffset["height"].asDouble();
+              builder.setShadowOffset(facebook::react::Size{width, height});
+          }
 
         default:
           printf("AnimationMutations: Unsupported prop \n");
