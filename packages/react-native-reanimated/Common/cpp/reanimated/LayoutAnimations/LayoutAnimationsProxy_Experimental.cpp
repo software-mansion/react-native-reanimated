@@ -46,6 +46,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     }
   } else if (!mutations.empty()) {
     auto root = lightNodes_[surfaceId];
+    react_native_assert(root && "Root node not found");
     auto beforeTopScreen = topScreen[surfaceId];
     if (beforeTopScreen) {
       ReanimatedSystraceSection s("find before elements");
@@ -54,7 +55,6 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
 
     updateLightTree(propsParserContext, mutations, filteredMutations);
 
-    root = lightNodes_[surfaceId];
     auto afterTopScreen = findTopScreen(root);
     topScreen[surfaceId] = afterTopScreen;
     if (afterTopScreen) {
@@ -151,7 +151,8 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         react_native_assert(node && "LightNode not found");
         node->previous = mutation.oldChildShadowView;
 #ifdef ANDROID
-        if (node->current.props) {
+        // TODO (future): We don't merge the root view as the currently stored version might not be accurate, because of the inconsequential initialization order of proxy and the surface
+        if (!isRoot(node) && node->current.props) {
           // On android rawProps are used to store the diffed props so we need to merge them
           // This should soon be replaced in RN with Props 2.0 (the diffing will be done at the end of the pipeline)
           auto &currentRawProps = node->current.props->rawProps;

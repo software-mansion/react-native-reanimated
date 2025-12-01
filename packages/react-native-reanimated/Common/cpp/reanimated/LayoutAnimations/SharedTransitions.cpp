@@ -19,9 +19,6 @@ namespace reanimated {
 std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findTopScreen(
     const std::shared_ptr<LightNode> &node) const {
   std::shared_ptr<LightNode> result = nullptr;
-  if (!node->current.componentName) {
-    return result;
-  }
   // TODO: We could get rid of the RNSScreens c++ dependency if we create a custom native component that would be a boundary for SharedTransitions.
   // This way we could allow for transitions without screens, and across componentes on the same screen.
   if (isRNSScreen(node)) {
@@ -336,7 +333,11 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onGestureCancel() {
 }
 
 void LayoutAnimationsProxy_Experimental::startSurface(const SurfaceId surfaceId) {
-  lightNodes_[surfaceId] = std::make_shared<LightNode>();
+  const auto node = std::make_shared<LightNode>();
+  node->current.componentName = "RootView";
+  node->current.tag = surfaceId;
+  node->current.props = std::make_shared<BaseViewProps>();
+  lightNodes_[surfaceId] = node;
 }
 
 void LayoutAnimationsProxy_Experimental::insertContainers(
@@ -398,12 +399,14 @@ std::vector<react::Point> LayoutAnimationsProxy_Experimental::getAbsolutePositio
   auto currentNode = node;
   while (currentNode) {
     react::Point viewPosition;
-    if (!strcmp(currentNode->current.componentName, "ScrollView")) {
+    const auto &componentName = currentNode->current.componentName;
+    react_native_assert(componentName && "Component name is nullptr");
+    if (!strcmp(componentName, "ScrollView")) {
       auto state = std::static_pointer_cast<const ConcreteState<ScrollViewState>>(currentNode->current.state);
       auto data = state->getData();
       viewPosition -= data.contentOffset;
     }
-    if (!strcmp(currentNode->current.componentName, "RNSScreen") && currentNode->children.size() >= 2) {
+    if (!strcmp(componentName, "RNSScreen") && currentNode->children.size() >= 2) {
       const auto &parent = currentNode->parent.lock();
       react_native_assert(parent && "Parent node is nullptr");
 
