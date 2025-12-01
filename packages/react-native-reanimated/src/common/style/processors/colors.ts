@@ -148,11 +148,9 @@ function unprocessDynamicColorObjectIOS(
   const result = {} as DynamicColorIOSTuple;
 
   for (const property of DynamicColorIOSProperties) {
-    if (value.dynamic[property] === undefined) {
-      continue;
+    if (value.dynamic[property] !== undefined) {
+      result[property] = unprocessColorNumber(value.dynamic[property]);
     }
-
-    result[property] = unprocessColorNumber(value.dynamic[property]);
   }
 
   return {
