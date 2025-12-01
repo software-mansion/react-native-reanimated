@@ -130,7 +130,7 @@ export type WorkletRuntimeConfig = {
        * An optional custom queue to be used for scheduling worklets.
        *
        * The queue has to implement the C++ `AsyncQueue` interface from
-       * `<worklets/Public/AsyncQueue.h>`.
+       * `<worklets/RunLoop/AsyncQueue.h>`.
        */
       customQueue?: never;
     }
@@ -144,7 +144,7 @@ export type WorkletRuntimeConfig = {
        * An optional custom queue to be used for scheduling worklets.
        *
        * The queue has to implement the C++ `AsyncQueue` interface from
-       * `<worklets/Public/AsyncQueue.h>`.
+       * `<worklets/RunLoop/AsyncQueue.h>`.
        */
       customQueue?: object;
     }
