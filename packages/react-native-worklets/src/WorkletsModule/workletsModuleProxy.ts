@@ -70,9 +70,9 @@ export interface WorkletsModuleProxy {
   ): SerializableRef<object>;
 
   createCustomSerializable(
-    data: SerializableRef<object>,
+    data: SerializableRef<unknown>,
     typeId: number
-  ): SerializableRef<object>;
+  ): SerializableRef<unknown>;
 
   registerCustomSerializable(
     determine: SerializableRef<object>,
