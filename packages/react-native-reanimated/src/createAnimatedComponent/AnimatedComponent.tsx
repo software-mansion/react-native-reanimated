@@ -3,7 +3,7 @@ import '../layoutReanimation/animationsManager';
 
 import type React from 'react';
 
-import { maybeBuild } from '../animationBuilder';
+import { checkStyleOverwriting, maybeBuild } from '../animationBuilder';
 import { IS_JEST, IS_WEB, logger } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
@@ -69,6 +69,7 @@ export default class AnimatedComponent
   _InlinePropManager = new InlinePropManager();
   _PropsFilter = new PropsFilter();
   _NativeEventsManager?: INativeEventsManager;
+  _hasWarnedAboutLayoutAnimationStyleOverwriting?: boolean;
   static contextType = SkipEnteringContext;
   context!: React.ContextType<typeof SkipEnteringContext>;
   reanimatedID = id++;
@@ -364,19 +365,29 @@ export default class AnimatedComponent
       return;
     }
 
+    if (
+      __DEV__ &&
+      currentConfig &&
+      type !== LayoutAnimationType.LAYOUT &&
+      this.props.style &&
+      !this._hasWarnedAboutLayoutAnimationStyleOverwriting
+    ) {
+      const onWarn = () =>
+        (this._hasWarnedAboutLayoutAnimationStyleOverwriting = true);
+      checkStyleOverwriting(
+        currentConfig,
+        this.props.style,
+        this._displayName,
+        onWarn
+      );
+    }
+
     updateLayoutAnimations(
       type === LayoutAnimationType.ENTERING
         ? this.reanimatedID
         : this.getComponentViewTag(),
       type,
-      currentConfig &&
-        maybeBuild(
-          currentConfig,
-          type === LayoutAnimationType.LAYOUT
-            ? undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */
-            : this.props?.style,
-          this._displayName
-        )
+      currentConfig && maybeBuild(currentConfig)
     );
   }
 
