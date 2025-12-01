@@ -595,10 +595,10 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
   for (auto &[node, dynamic] : updatesBatch) {
     AnimatedPropsBuilder builder;
     CascadedBorderRadii borderRadii{};
+    printf("dynamic: %s \n", folly::toJson(dynamic).c_str());
 
     for (const auto &pair : dynamic.items()) {
       const auto &name = pair.first.getString();
-      printf("prop: %s \n", name.c_str());
       auto nameHash = RAW_PROPS_KEY_HASH(name);
 
       switch (nameHash) {
@@ -704,6 +704,21 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
 
         case RAW_PROPS_KEY_HASH("backgroundColor"): {
           builder.setBackgroundColor(SharedColor(static_cast<int>(pair.second.asInt())));
+          break;
+        }
+
+        case RAW_PROPS_KEY_HASH("shadowColor"): {
+          builder.setShadowColor(SharedColor(static_cast<int>(pair.second.asInt())));
+          break;
+        }
+
+        case RAW_PROPS_KEY_HASH("shadowOpacity"): {
+          builder.setShadowOpacity(pair.second.asDouble());
+          break;
+        }
+
+        case RAW_PROPS_KEY_HASH("shadowRadius"): {
+          builder.setShadowRadius(pair.second.asDouble());
           break;
         }
 

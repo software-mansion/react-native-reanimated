@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Animated as RNAnimated,
+  Pressable,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -42,6 +44,10 @@ export default function App() {
   const borderWidth = useSharedValue(0);
   const shadowOpacity = useSharedValue(0.25);
   const width = useSharedValue(SQUARE_SIZE);
+
+  // React Native Animated API value
+  const rnBorderRadius = useRef(new RNAnimated.Value(0)).current;
+  const [rnBorderRadiusToggle, setRnBorderRadiusToggle] = useState(false);
 
   // Animation functions
   const animateTranslateX = () => {
@@ -197,6 +203,17 @@ export default function App() {
     );
   };
 
+  // React Native Animated API animation
+  const animateRNBorderRadius = () => {
+    const toValue = rnBorderRadiusToggle ? 0 : 40;
+    setRnBorderRadiusToggle(!rnBorderRadiusToggle);
+    RNAnimated.timing(rnBorderRadius, {
+      toValue,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
+  };
+
   const resetAll = () => {
     translateX.value = withSpring(0);
     translateY.value = withSpring(0);
@@ -214,6 +231,9 @@ export default function App() {
     borderWidth.value = withSpring(0);
     shadowOpacity.value = withSpring(0.25);
     width.value = withSpring(SQUARE_SIZE);
+    // Reset RN Animated value
+    rnBorderRadius.setValue(0);
+    setRnBorderRadiusToggle(false);
   };
 
   // Animated style
@@ -275,10 +295,20 @@ export default function App() {
     { title: 'Reset All', onPress: resetAll },
   ];
 
+  // Red button for RN Animated
+  const rnButton = {
+    title: 'RN Border Radius',
+    onPress: animateRNBorderRadius,
+    isRNAnimated: true,
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.animationContainer}>
         <Animated.View style={[styles.square, animatedStyle]} />
+        <RNAnimated.View
+          style={[styles.rnSquare, { borderRadius: rnBorderRadius }]}
+        />
       </View>
 
       <ScrollView
@@ -287,14 +317,21 @@ export default function App() {
         <Text style={styles.title}>Reanimated Animation Examples</Text>
         <View style={styles.buttonGrid}>
           {buttons.map((button, index) => (
-            <TouchableOpacity
+            <Pressable
               key={index}
               style={styles.button}
               onPress={button.onPress}>
               <Text style={styles.buttonText}>{button.title}</Text>
-            </TouchableOpacity>
+            </Pressable>
           ))}
         </View>
+
+        <Text style={styles.sectionTitle}>React Native Animated API</Text>
+        <Pressable
+          style={[styles.button, styles.redButton]}
+          onPress={rnButton.onPress}>
+          <Text style={styles.buttonText}>{rnButton.title}</Text>
+        </Pressable>
       </ScrollView>
     </View>
   );
@@ -323,8 +360,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-    // borderWidth: 1,
-    // borderColor: '#000000',
+    marginBottom: 20,
+  },
+  rnSquare: {
+    width: SQUARE_SIZE,
+    height: SQUARE_SIZE,
+    backgroundColor: '#9b59b6',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   buttonsContainer: {
     flex: 1,
@@ -357,5 +406,17 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: '600',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 20,
+    marginBottom: 15,
+    color: '#2c3e50',
+  },
+  redButton: {
+    backgroundColor: '#e74c3c',
+    width: '100%',
   },
 });
