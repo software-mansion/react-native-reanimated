@@ -65,16 +65,11 @@ export const PropsRegistryGarbageCollector = {
 
 function unprocessProps(props: StyleProps) {
   unprocessColorsInProps(props);
-  // TODO: transformOrigin
-  // TODO: transform
   unprocessBoxShadow(props);
-  // TODO: filter
 }
 
 function unprocessBoxShadow(props: StyleProps) {
   if (Array.isArray(props.boxShadow)) {
-    // TODO: move to unprocessBoxShadow
-    // @ts-ignore yes we can update boxShadow like this
     props.boxShadow = props.boxShadow.map((boxShadow) => ({
       ...boxShadow,
       color: unprocessColor(boxShadow.color),
