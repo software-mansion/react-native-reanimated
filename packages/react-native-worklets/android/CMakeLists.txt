@@ -60,19 +60,6 @@ endif()
 add_library(worklets SHARED ${WORKLETS_COMMON_CPP_SOURCES}
                             ${WORKLETS_ANDROID_CPP_SOURCES})
 
-add_library(
-  RNWorklets
-  INTERFACE
-  "${COMMON_CPP_DIR}/worklets/RunLoop/AsyncQueue.h"
-  "${COMMON_CPP_DIR}/worklets/WorkletRuntime/WorkletRuntime.h"
-  "${COMMON_CPP_DIR}/worklets/SharedItems/Serializable.h"
-  "${COMMON_CPP_DIR}/worklets/SharedItems/Synchronizable.h")
-
-get_target_property(WORKLETS_TYPE worklets TYPE)
-get_target_property(RNWORKLETS_TYPE RNWorklets TYPE)
-message(WARNING "worklets library added, type: ${WORKLETS_TYPE}")
-message(WARNING "RNWorklets library added, type: ${RNWORKLETS_TYPE}")
-
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
   include(
     "${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
@@ -119,28 +106,3 @@ if(${JS_RUNTIME} STREQUAL "hermes")
 elseif(${JS_RUNTIME} STREQUAL "jsc")
   target_link_libraries(worklets ReactAndroid::jsctooling)
 endif()
-
-# get_cmake_property(_variableNames VARIABLES) list(SORT _variableNames)
-# foreach(_variableName ${_variableNames}) message(WARNING "${_variableName} =
-# ${${_variableName}}") endforeach()
-
-# set(PUBLIC_INCLUDE_DIR "${RNWORKLETS_HEADERS_DIR}")
-
-# file(MAKE_DIRECTORY "${PUBLIC_INCLUDE_DIR}")
-
-# # // // Pack public headers to RNWorklets headers dir // #
-# from("$projectDir/../Common/cpp/worklets/RunLoop/") { // #
-# include("AsyncQueue.h") // } // #
-# from("$projectDir/../Common/cpp/worklets/WorkletRuntime/") { // #
-# include("WorkletRuntime.h") // } // #
-# from("$projectDir/../Common/cpp/worklets/SharedItems/") { // #
-# include("Serializable.h") //     include("Synchronizable.h") // }
-
-# file(CREATE_LINK "${COMMON_CPP_DIR}/worklets/RunLoop/AsyncQueue.h"
-# "${PUBLIC_INCLUDE_DIR}/AsyncQueue.h" SYMBOLIC) file(CREATE_LINK
-# "${COMMON_CPP_DIR}/worklets/WorkletRuntime/WorkletRuntime.h"
-# "${PUBLIC_INCLUDE_DIR}/WorkletRuntime.h" SYMBOLIC) file(CREATE_LINK
-# "${COMMON_CPP_DIR}/worklets/SharedItems/Serializable.h"
-# "${PUBLIC_INCLUDE_DIR}/Serializable.h" SYMBOLIC) file(CREATE_LINK
-# "${COMMON_CPP_DIR}/worklets/SharedItems/Synchronizable.h"
-# "${PUBLIC_INCLUDE_DIR}/Synchronizable.h" SYMBOLIC)
