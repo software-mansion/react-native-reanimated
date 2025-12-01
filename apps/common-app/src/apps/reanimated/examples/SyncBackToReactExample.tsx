@@ -53,6 +53,12 @@ export default function SyncBackToReactExample() {
 
   const animatedStyle3 = useAnimatedStyle(() => {
     return {
+      backgroundColor: sv.value ? 'transparent' : 'green',
+    };
+  });
+
+  const animatedStyle4 = useAnimatedStyle(() => {
+    return {
       backgroundColor:
         Platform.OS === 'ios'
           ? PlatformColor(sv.value ? 'systemBlue' : 'systemGreen')
@@ -64,7 +70,7 @@ export default function SyncBackToReactExample() {
     };
   });
 
-  const animatedStyle4 = useAnimatedStyle(() => {
+  const animatedStyle5 = useAnimatedStyle(() => {
     return {
       backgroundColor:
         Platform.OS === 'ios'
@@ -75,7 +81,7 @@ export default function SyncBackToReactExample() {
     };
   });
 
-  const animatedStyle5 = useAnimatedStyle(() => {
+  const animatedStyle6 = useAnimatedStyle(() => {
     return {
       boxShadow: [
         {
@@ -88,13 +94,13 @@ export default function SyncBackToReactExample() {
     };
   });
 
-  const animatedStyle6 = useAnimatedStyle(() => {
+  const animatedStyle7 = useAnimatedStyle(() => {
     return {
       transform: `rotate(${sv.value ? 30 : 0}deg)`,
     };
   });
 
-  const animatedStyle7 = useAnimatedStyle(() => {
+  const animatedStyle8 = useAnimatedStyle(() => {
     return {
       filter: `brightness(${sv.value ? 0.5 : 1})`,
     };
@@ -116,10 +122,11 @@ export default function SyncBackToReactExample() {
       <Animated.View style={[styles.box, animatedStyle4]} />
       <Animated.View style={[styles.box, animatedStyle5]} />
       <Animated.View style={[styles.box, animatedStyle6]} />
+      <Animated.View style={[styles.box, animatedStyle7]} />
       <Animated.Image
         source={balloonsImage}
         // @ts-ignore
-        style={[styles.box, animatedStyle7]}
+        style={[styles.box, animatedStyle8]}
       />
       <Button title="Toggle shared value" onPress={handleToggle} />
       <Text>Counter: {count}</Text>
