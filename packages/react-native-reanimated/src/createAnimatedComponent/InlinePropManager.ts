@@ -71,6 +71,9 @@ function extractSharedValuesMapFromProps(
         if (!style) {
           return;
         }
+        if (__DEV__ && '_requiresAnimatedComponent' in style) {
+          return;
+        }
         for (const [styleKey, styleValue] of Object.entries(style)) {
           if (isSharedValue(styleValue)) {
             inlineProps[styleKey] = styleValue;
