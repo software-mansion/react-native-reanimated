@@ -70,6 +70,7 @@ function unprocessProps(props: StyleProps) {
 
 function unprocessBoxShadow(props: StyleProps) {
   if (Array.isArray(props.boxShadow)) {
+    // @ts-ignore props is readonly
     props.boxShadow = props.boxShadow.map((boxShadow) => ({
       ...boxShadow,
       color: unprocessColor(boxShadow.color),
