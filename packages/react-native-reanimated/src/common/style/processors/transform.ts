@@ -120,6 +120,12 @@ function parseMatrix(values: (number | string)[]): TransformsArray {
   return matrixValues.length > 0 ? [{ matrix: matrixValues }] : [];
 }
 
+function parsePerspective(values: (number | string)[]): TransformsArray {
+  return values.length === 1 && isNumber(values[0])
+    ? [{ perspective: values[0] }]
+    : [];
+}
+
 const parseTransformProperty = (transform: string): TransformsArray => {
   const [key, valueString] = transform.split(/\(\s*/);
   const values = parseValues(valueString.replace(/\)$/g, ''));
@@ -150,6 +156,8 @@ const parseTransformProperty = (transform: string): TransformsArray => {
       return parseSkewY(values);
     case 'matrix':
       return parseMatrix(values);
+    case 'perspective':
+      return parsePerspective(values);
     default:
       return [];
   }
