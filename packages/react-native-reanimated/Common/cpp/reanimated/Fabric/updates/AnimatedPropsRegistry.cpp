@@ -1,4 +1,5 @@
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
+#include <reanimated/Tools/FeatureFlags.h>
 
 #include <memory>
 #include <utility>
