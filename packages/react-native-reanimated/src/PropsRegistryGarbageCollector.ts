@@ -4,6 +4,7 @@ import {
   unprocessColor,
   unprocessColorsInProps,
 } from './common/style/processors/colors';
+import type { StyleProps } from './commonTypes';
 import type { IAnimatedComponentInternal } from './createAnimatedComponent/commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
 
@@ -42,15 +43,7 @@ export const PropsRegistryGarbageCollector = {
     const settledUpdates = ReanimatedModule.getSettledUpdates();
     for (const { viewTag, styleProps } of settledUpdates) {
       const component = this.viewsMap.get(viewTag);
-      unprocessColorsInProps(styleProps);
-      if (Array.isArray(styleProps.boxShadow)) {
-        // TODO: move to unprocessBoxShadow
-        // @ts-ignore yes we can update boxShadow like this
-        styleProps.boxShadow = styleProps.boxShadow.map((boxShadow) => ({
-          ...boxShadow,
-          color: unprocessColor(boxShadow.color),
-        }));
-      }
+      unprocessProps(styleProps);
       component?._syncStylePropsBackToReact(styleProps);
     }
   },
@@ -69,3 +62,20 @@ export const PropsRegistryGarbageCollector = {
     }
   },
 };
+
+function unprocessProps(props: StyleProps) {
+  unprocessColorsInProps(props);
+  unprocessBoxShadow(props);
+  // TODO: unprocess remaining props
+}
+
+function unprocessBoxShadow(props: StyleProps) {
+  if (Array.isArray(props.boxShadow)) {
+    // TODO: move to unprocessBoxShadow
+    // @ts-ignore yes we can update boxShadow like this
+    props.boxShadow = props.boxShadow.map((boxShadow) => ({
+      ...boxShadow,
+      color: unprocessColor(boxShadow.color),
+    }));
+  }
+}
