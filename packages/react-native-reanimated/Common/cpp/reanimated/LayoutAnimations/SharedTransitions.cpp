@@ -19,12 +19,12 @@ namespace reanimated {
 std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findTopScreen(
     const std::shared_ptr<LightNode> &node) const {
   std::shared_ptr<LightNode> result = nullptr;
-  // TODO: We could get rid of the RNSScreens c++ dependency if we create a custom native component that would be a boundary for SharedTransitions.
-  // This way we could allow for transitions without screens, and across componentes on the same screen.
+  // TODO: We could get rid of the RNScreens c++ dependency if we create a custom native component that would be a boundary for Shared Element Transitions.
+  // This way we could allow for transitions without screens, and across components on the same screen.
   if (isRNSScreen(node)) {
     bool isActive = false;
 #ifdef ANDROID
-    // TODO (future): this looks like a RNSScreens bug - sometimes there is no active
+    // TODO (future): this looks like a RNScreens bug - sometimes there is no active
     // screen at a deeper level, when going back (uncomment the following when fixed)
     // float f = node->current.props->rawProps.getDefault("activityState",
     // 0).asDouble(); isActive = f == 2.0f;
