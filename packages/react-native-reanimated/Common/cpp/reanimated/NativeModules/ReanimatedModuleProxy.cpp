@@ -595,6 +595,8 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
   for (auto &[node, dynamic] : updatesBatch) {
     AnimatedPropsBuilder builder;
     CascadedBorderRadii borderRadii{};
+    CascadedRectangleEdges<yoga::StyleLength> margin{};
+      CascadedRectangleEdges<yoga::StyleLength> padding{};
     printf("dynamic: %s \n", folly::toJson(dynamic).c_str());
 
     for (const auto &pair : dynamic.items()) {
@@ -728,6 +730,100 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
               auto height = shadowOffset["height"].asDouble();
               builder.setShadowOffset(facebook::react::Size{width, height});
           }
+              
+          // MARGIN
+            
+          case RAW_PROPS_KEY_HASH("margin"): {
+              margin.all = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("marginTop"): {
+              margin.top = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("marginBottom"): {
+              margin.bottom = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+        
+          case RAW_PROPS_KEY_HASH("marginHorizontal"): {
+              margin.horizontal = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("marginVertical"): {
+              margin.vertical = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+            
+          case RAW_PROPS_KEY_HASH("marginLeft"): {
+              margin.left = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("marginRight"): {
+              margin.right = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("marginStart"): {
+              margin.start = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("marginEnd"): {
+              margin.end = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+         // PADDING
+              
+          case RAW_PROPS_KEY_HASH("padding"): {
+              padding.all = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("paddingTop"): {
+              padding.top = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("paddingBottom"): {
+              padding.bottom = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+        
+          case RAW_PROPS_KEY_HASH("paddingHorizontal"): {
+              padding.horizontal = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("paddingVertical"): {
+              padding.vertical = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+            
+          case RAW_PROPS_KEY_HASH("paddingLeft"): {
+              padding.left = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("paddingRight"): {
+              padding.right = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("paddingStart"): {
+              padding.start = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("paddingEnd"): {
+              padding.end = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
 
         default:
           printf("AnimationMutations: Unsupported prop \n");
@@ -736,6 +832,8 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
 
     // TODO: This shouldn't be set there, but leaving it for now
     builder.setBorderRadii(borderRadii);
+    builder.setMargin(margin);
+    builder.setPadding(padding);
     mutations.push_back(AnimationMutation{node->getTag(), &node->getFamily(), builder.get()});
   }
 
