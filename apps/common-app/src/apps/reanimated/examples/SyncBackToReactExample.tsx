@@ -118,7 +118,7 @@ export default function SyncBackToReactExample() {
       <Animated.View style={[styles.box, animatedStyle6]} />
       <Animated.Image
         source={balloonsImage}
-        // @ts-expect-error
+        // @ts-ignore
         style={[styles.box, animatedStyle7]}
       />
       <Button title="Toggle shared value" onPress={handleToggle} />
