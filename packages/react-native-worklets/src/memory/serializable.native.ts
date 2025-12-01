@@ -32,9 +32,15 @@ function isHostObject(value: NonNullable<object>) {
   return MAGIC_KEY in value;
 }
 
-export function isSerializableRef(value: unknown): value is SerializableRef {
+export function isSerializableRef<TValue = unknown>(
+  value: unknown
+): value is SerializableRef<TValue> {
+  'worklet';
   return (
-    typeof value === 'object' && value !== null && '__serializableRef' in value
+    typeof value === 'object' &&
+    value !== null &&
+    '__serializableRef' in value &&
+    value.__serializableRef === true
   );
 }
 
@@ -246,6 +252,20 @@ if (!globalThis.__customSerializationRegistry) {
 }
 const customSerializationRegistry = globalThis.__customSerializationRegistry;
 
+/**
+ * `registerCustomSerializable` lets you register your own pre-serialization and
+ * post-deserialization logic. This is necessary for objects with prototypes
+ * different than just `Object.prototype` or some other built-in prototypes like
+ * `Map` etc. Worklets can't handle such objects by default to convert into
+ * [Serializables](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable)
+ * hence you need to register them as **Custom Serializables**. This way you can
+ * tell Worklets how to transfer your custom data structures between different
+ * Runtimes without manually serializing and deserializing them every time.
+ *
+ * @param registrationData - The registration data for the custom serializable -
+ *   {@link RegistrationData}
+ * @see https://docs.swmansion.com/react-native-worklets/docs/memory/registerCustomSerializable/
+ */
 export function registerCustomSerializable<
   TValue extends object,
   TPacked extends object,
@@ -257,6 +277,10 @@ export function registerCustomSerializable<
   }
 
   const { name, determine, pack, unpack } = registrationData;
+
+  if (__DEV__) {
+    verifyRegistrationData(determine, pack, unpack);
+  }
   if (customSerializationRegistry.some((data) => data.name === name)) {
     if (__DEV__) {
       console.warn(
@@ -267,7 +291,7 @@ export function registerCustomSerializable<
   }
 
   customSerializationRegistry.push(
-    registrationData as unknown as SerializationData<object, object>
+    registrationData as unknown as SerializationData<object, unknown>
   );
 
   WorkletsModule.registerCustomSerializable(
@@ -276,6 +300,28 @@ export function registerCustomSerializable<
     createSerializable(unpack),
     customSerializationRegistry.length - 1
   );
+}
+
+function verifyRegistrationData(
+  determine: unknown,
+  pack: unknown,
+  unpack: unknown
+) {
+  if (!isWorkletFunction(determine)) {
+    throw new WorkletsError(
+      'The "determine" function provided to registerCustomSerializable must be a worklet.'
+    );
+  }
+  if (!isWorkletFunction(pack)) {
+    throw new WorkletsError(
+      'The "pack" function provided to registerCustomSerializable must be a worklet.'
+    );
+  }
+  if (!isWorkletFunction(unpack)) {
+    throw new WorkletsError(
+      'The "unpack" function provided to registerCustomSerializable must be a worklet.'
+    );
+  }
 }
 
 function detectCyclicObject(value: unknown, depth: number) {
@@ -643,7 +689,7 @@ function cloneImport<TValue extends WorkletImport>(
   return clone as SerializableRef<TValue>;
 }
 
-function cloneCustom<TValue extends object, TPacked extends object>(
+function cloneCustom<TValue extends object, TPacked = unknown>(
   data: TValue,
   pack: (data: TValue) => TPacked,
   typeId: number

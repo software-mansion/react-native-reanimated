@@ -7,15 +7,15 @@ import { strict as assert } from 'assert';
 import { html } from 'code-tag';
 
 import { version as packageVersion } from '../package.json';
+import type { PluginOptions } from '../plugin';
 import plugin from '../plugin';
-import type { ReanimatedPluginOptions } from '../plugin/src/types';
 
 const MOCK_LOCATION = '/dev/null';
 
 function runPlugin(
   input: string,
   transformOpts: TransformOptions = {},
-  pluginOpts: ReanimatedPluginOptions = {},
+  pluginOpts: PluginOptions = {},
   filename: string = MOCK_LOCATION
 ) {
   const transformed = transformSync(input.replace(/<\/?script[^>]*>/g, ''), {
@@ -2641,6 +2641,29 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData(6);
+      expect(code).toMatchSnapshot();
+    });
+
+    test('is disabled via option', () => {
+      const input = html`<script>
+        function foo() {
+          this.prop = 42;
+        }
+
+        function bar() {
+          'worklet';
+          const instance = new foo();
+        }
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        {},
+        {
+          disableWorkletClasses: true,
+        }
+      );
+      expect(code).not.toContain('foo__classFactory');
       expect(code).toMatchSnapshot();
     });
   });

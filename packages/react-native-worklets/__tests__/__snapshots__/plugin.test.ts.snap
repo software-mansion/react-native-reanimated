@@ -4148,6 +4148,36 @@ var foo = function foo_null1Factory(_ref) {
 });"
 `;
 
+exports[`babel plugin for worklet classes is disabled via option 1`] = `
+"function foo() {
+  this.prop = 42;
+}
+var _worklet_6135491687917_init_data = {
+  code: "function bar_null1(){const{foo}=this.__closure;const instance=new foo();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+var bar = function bar_null1Factory(_ref) {
+  var _worklet_6135491687917_init_data = _ref._worklet_6135491687917_init_data,
+    foo = _ref.foo;
+  var _e = [new global.Error(), -2, -27];
+  var bar = function bar() {
+    var instance = new foo();
+  };
+  bar.__closure = {
+    foo: foo
+  };
+  bar.__workletHash = 6135491687917;
+  bar.__pluginVersion = "x.y.z";
+  bar.__initData = _worklet_6135491687917_init_data;
+  bar.__stackDetails = _e;
+  return bar;
+}({
+  _worklet_6135491687917_init_data: _worklet_6135491687917_init_data,
+  foo: foo
+});"
+`;
+
 exports[`babel plugin for worklet classes keeps this binding 1`] = `
 "var _worklet_14560075646677_init_data = {
   code: "function _classCallCheck_null1(a,n){if(!(a instanceof n))throw new TypeError(\\"Cannot call a class as a function\\");}",

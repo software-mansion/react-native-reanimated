@@ -108,18 +108,18 @@ export function createWorkletRuntime(
  * Lets you asynchronously run a
  * [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)
  * on a [Worker
- * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-runtime).
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
  *
  * Check
  * {@link https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds}
  * for more information about the different runtime kinds.
  *
  * - The worklet is scheduled on the Worker Runtime's [Async
- *   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/Public/AsyncQueue.h)
+ *   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
  * - The function cannot be scheduled on the Worker Runtime from [UI
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime)
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
  *   or another [Worker
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-runtime),
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
  *   unless the [Bundle
  *   Mode](https://docs.swmansion.com/react-native-worklets/docs/experimental/bundleMode)
  *   is enabled.
