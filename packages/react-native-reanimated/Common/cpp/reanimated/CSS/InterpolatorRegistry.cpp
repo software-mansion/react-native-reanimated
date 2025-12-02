@@ -37,6 +37,7 @@
 #include <reanimated/CSS/interpolation/filters/operations/saturate.h>
 #include <reanimated/CSS/interpolation/filters/operations/sepia.h>
 
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -132,7 +133,7 @@ const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
           value<CSSDouble>(0)})},
     {"transform",
      transforms(
-         {{"perspective", transformOp<PerspectiveOperation>(0)}, // 0 - no perspective
+         {{"perspective", transformOp<PerspectiveOperation>(std::numeric_limits<double>::infinity())},
           {"rotate", transformOp<RotateOperation>("0deg")},
           {"rotateX", transformOp<RotateXOperation>("0deg")},
           {"rotateY", transformOp<RotateYOperation>("0deg")},
@@ -295,6 +296,7 @@ const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS = mergeInterpolators(
     SVG_COLOR_INTERPOLATORS,
     SVG_FILL_INTERPOLATORS,
     SVG_STROKE_INTERPOLATORS,
+    InterpolatorFactoriesRecord{{"opacity", value<CSSDouble>(1)}},
 });
 
 const InterpolatorFactoriesRecord SVG_CIRCLE_INTERPOLATORS = mergeInterpolators(
@@ -303,7 +305,6 @@ const InterpolatorFactoriesRecord SVG_CIRCLE_INTERPOLATORS = mergeInterpolators(
          {"cx", value<SVGLength, CSSKeyword>(0)},
          {"cy", value<SVGLength, CSSKeyword>(0)},
          {"r", value<SVGLength, CSSKeyword>(0)},
-         {"opacity", value<CSSDouble>(1)},
      }});
 
 const InterpolatorFactoriesRecord SVG_ELLIPSE_INTERPOLATORS = mergeInterpolators(
@@ -313,7 +314,6 @@ const InterpolatorFactoriesRecord SVG_ELLIPSE_INTERPOLATORS = mergeInterpolators
          {"cy", value<SVGLength, CSSKeyword>(0)},
          {"rx", value<SVGLength, CSSKeyword>(0)},
          {"ry", value<SVGLength, CSSKeyword>(0)},
-         {"opacity", value<CSSDouble>(1)},
      }});
 
 const InterpolatorFactoriesRecord SVG_LINE_INTERPOLATORS = mergeInterpolators(
@@ -323,7 +323,6 @@ const InterpolatorFactoriesRecord SVG_LINE_INTERPOLATORS = mergeInterpolators(
          {"y1", value<SVGLength, CSSKeyword>(0)},
          {"x2", value<SVGLength, CSSKeyword>(0)},
          {"y2", value<SVGLength, CSSKeyword>(0)},
-         {"opacity", value<CSSDouble>(1)},
      }});
 
 const InterpolatorFactoriesRecord SVG_RECT_INTERPOLATORS = mergeInterpolators(
@@ -335,7 +334,6 @@ const InterpolatorFactoriesRecord SVG_RECT_INTERPOLATORS = mergeInterpolators(
          {"height", value<SVGLength, CSSKeyword>(0)},
          {"rx", value<SVGLength, CSSKeyword>(0)},
          {"ry", value<SVGLength, CSSKeyword>(0)},
-         {"opacity", value<CSSDouble>(1)},
      }});
 
 const InterpolatorFactoriesRecord SVG_PATH_INTERPOLATORS = mergeInterpolators(

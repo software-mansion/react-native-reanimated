@@ -15,24 +15,6 @@ namespace worklets {
 
 jsi::Function getValueUnpacker(jsi::Runtime &rt);
 
-#ifndef NDEBUG
-jsi::Function getCallGuard(jsi::Runtime &rt);
-#endif // NDEBUG
-
-// If possible, please use `WorkletRuntime::runGuarded` instead.
-template <typename... Args>
-inline jsi::Value runOnRuntimeGuarded(jsi::Runtime &rt, const jsi::Value &function, Args &&...args) {
-  // We only use callGuard in debug mode, otherwise we call the provided
-  // function directly. CallGuard provides a way of capturing exceptions in
-  // JavaScript and propagating them to the main React Native thread such that
-  // they can be presented using RN's LogBox.
-#ifndef NDEBUG
-  return getCallGuard(rt).call(rt, function, args...);
-#else
-  return function.asObject(rt).asFunction(rt).call(rt, args...);
-#endif // NDEBUG
-}
-
 inline void cleanupIfRuntimeExists(jsi::Runtime *rt, std::unique_ptr<jsi::Value> &value) {
   if (rt != nullptr && !WorkletRuntimeRegistry::isRuntimeAlive(rt)) {
     // The below use of unique_ptr.release prevents the smart pointer from
@@ -53,7 +35,7 @@ inline void cleanupIfRuntimeExists(jsi::Runtime *rt, std::unique_ptr<jsi::Value>
     // before the runtime is terminated. Note that the underlying memory that
     // jsi::Value refers to is managed by the VM and gets freed along with the
     // runtime.
-    value.release();
+    value.release(); // NOLINT
   }
 }
 
@@ -84,6 +66,7 @@ class Serializable {
     TurboModuleLikeType,
     ImportType,
     SynchronizableType,
+    CustomType,
   };
 
   explicit Serializable(ValueType valueType) : valueType_(valueType) {}
@@ -124,7 +107,7 @@ class SerializableJSRef : public jsi::NativeState {
  public:
   explicit SerializableJSRef(const std::shared_ptr<Serializable> &value) : value_(value) {}
 
-  virtual ~SerializableJSRef();
+  ~SerializableJSRef() override;
 
   std::shared_ptr<Serializable> value() const {
     return value_;
@@ -167,7 +150,7 @@ jsi::Value makeSerializableObject(
     bool shouldRetainRemote,
     const jsi::Value &nativeStateSource);
 
-jsi::Value makeSerializableImport(jsi::Runtime &rt, const double source, const jsi::String &imported);
+jsi::Value makeSerializableImport(jsi::Runtime &rt, double source, const jsi::String &imported);
 
 jsi::Value makeSerializableHostObject(jsi::Runtime &rt, const std::shared_ptr<jsi::HostObject> &value);
 
@@ -182,6 +165,8 @@ jsi::Value makeSerializableInitializer(jsi::Runtime &rt, const jsi::Object &init
 jsi::Value makeSerializableFunction(jsi::Runtime &rt, jsi::Function function);
 
 jsi::Value makeSerializableWorklet(jsi::Runtime &rt, const jsi::Object &object, const bool &shouldRetainRemote);
+
+jsi::Value makeCustomSerializable(jsi::Runtime &rt, const jsi::Value &data, int typeId);
 
 std::shared_ptr<Serializable> extractSerializableOrThrow(
     jsi::Runtime &rt,
@@ -322,7 +307,7 @@ class SerializableRemoteFunction : public Serializable,
         function_(std::make_unique<jsi::Value>(rt, std::move(function))) {
   }
 
-  ~SerializableRemoteFunction() {
+  ~SerializableRemoteFunction() override {
     cleanupIfRuntimeExists(runtime_, function_);
   }
 
@@ -345,7 +330,7 @@ class SerializableInitializer : public Serializable {
       : Serializable(ValueType::HandleType),
         initializer_(std::make_unique<SerializableObject>(rt, initializerObject)) {}
 
-  ~SerializableInitializer() {
+  ~SerializableInitializer() override {
     cleanupIfRuntimeExists(remoteRuntime_, remoteValue_);
   }
 
@@ -364,13 +349,22 @@ class SerializableString : public Serializable {
 
 class SerializableBigInt : public Serializable {
  public:
-  explicit SerializableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint)
-      : Serializable(ValueType::BigIntType), string_(bigint.toString(rt).utf8(rt)) {}
+  explicit SerializableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigInt) : Serializable(ValueType::BigIntType) {
+    if (bigInt.isInt64(rt)) {
+      fastValue_ = bigInt.getInt64(rt);
+    } else {
+      slowValue_ = bigInt.toString(rt).utf8(rt);
+    }
+  }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
-  const std::string string_;
+  /**
+   * This member is used only when the BigInt fits into int64_t range.
+  */
+  std::optional<int64_t> fastValue_{};
+  std::string slowValue_{};
 };
 
 class SerializableScalar : public Serializable {
@@ -384,7 +378,7 @@ class SerializableScalar : public Serializable {
   SerializableScalar() : Serializable(ValueType::UndefinedType) {}
   explicit SerializableScalar(std::nullptr_t) : Serializable(ValueType::NullType) {}
 
-  jsi::Value toJSValue(jsi::Runtime &);
+  jsi::Value toJSValue(jsi::Runtime &) override;
 
  protected:
   union Data {
@@ -411,6 +405,27 @@ class SerializableTurboModuleLike : public Serializable {
  private:
   const std::unique_ptr<SerializableHostObject> proto_;
   const std::unique_ptr<SerializableObject> properties_;
+};
+
+jsi::Function getCustomSerializableUnpacker(jsi::Runtime &rt);
+
+class CustomSerializable : public Serializable {
+ public:
+  CustomSerializable(std::shared_ptr<Serializable> data, const int typeId)
+      : Serializable(ValueType::CustomType), data_(std::move(data)), typeId_(typeId) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ private:
+  const std::shared_ptr<Serializable> data_;
+  const int typeId_;
+};
+
+struct SerializationData {
+  std::shared_ptr<SerializableWorklet> determine;
+  std::shared_ptr<SerializableWorklet> pack;
+  std::shared_ptr<SerializableWorklet> unpack;
+  int typeId;
 };
 
 } // namespace worklets

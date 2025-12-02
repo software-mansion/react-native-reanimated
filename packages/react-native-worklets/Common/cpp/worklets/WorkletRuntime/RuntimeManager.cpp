@@ -49,7 +49,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
   workletRuntime->init(std::move(jsiWorkletsModuleProxy));
 
   if (initializer) {
-    workletRuntime->runGuarded(initializer);
+    workletRuntime->runSync(initializer);
   }
 
   registerRuntime(runtimeId, workletRuntime);
@@ -77,8 +77,17 @@ uint64_t RuntimeManager::getNextRuntimeId() {
 }
 
 void RuntimeManager::registerRuntime(const uint64_t runtimeId, const std::shared_ptr<WorkletRuntime> &workletRuntime) {
+  std::unique_lock registrationLock(registrationMutex_);
   std::unique_lock lock(weakRuntimesMutex_);
   weakRuntimes_[runtimeId] = workletRuntime;
+}
+
+void RuntimeManager::pause() {
+  registrationMutex_.lock();
+}
+
+void RuntimeManager::resume() {
+  registrationMutex_.unlock();
 }
 
 } // namespace worklets

@@ -645,7 +645,7 @@ export function processColorInitially(color: unknown): number | false | null {
   return ((colorNumber << 24) | (colorNumber >>> 8)) >>> 0; // alpha rgb
 }
 
-export function isColor(value: unknown): boolean {
+export function isColor(value: unknown): value is string {
   'worklet';
   if (typeof value !== 'string') {
     return false;

@@ -189,7 +189,6 @@ ReanimatedModuleProxy::~ReanimatedModuleProxy() {
   // event handler registry and frame callbacks store some JSI values from UI
   // runtime, so they have to go away before we tear down the runtime
   eventHandlerRegistry_.reset();
-  frameCallbacks_.clear();
 }
 
 jsi::Value ReanimatedModuleProxy::registerEventHandler(
@@ -315,13 +314,7 @@ void ReanimatedModuleProxy::maybeRequestRender() {
 
 void ReanimatedModuleProxy::onRender(double timestampMs) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::onRender");
-  auto callbacks = std::move(frameCallbacks_);
-  frameCallbacks_.clear();
-  jsi::Runtime &uiRuntime = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
-  jsi::Value timestamp{timestampMs};
-  for (const auto &callback : callbacks) {
-    runOnRuntimeGuarded(uiRuntime, *callback, timestamp);
-  }
+  // NOOP
 }
 
 jsi::Value ReanimatedModuleProxy::registerSensor(
@@ -1591,7 +1584,7 @@ jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
         if (!strongThis) {
           return;
         }
-        strongThis->workletsModuleProxy_->getUIWorkletRuntime()->runGuarded(
+        strongThis->workletsModuleProxy_->getUIWorkletRuntime()->runSync(
             serializableHandler, jsi::Value(keyboardState), jsi::Value(height));
       },
       isStatusBarTranslucent.getBool(),
