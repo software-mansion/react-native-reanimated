@@ -4,7 +4,7 @@ import type { PlainStyle } from '../types';
 import {
   processAspectRatio,
   processBoxShadowNative,
-  processColorCSS,
+  processColor,
   processFilter,
   processFontWeight,
   processGap,
@@ -16,7 +16,7 @@ import {
 } from './processors';
 import type { StyleBuilderConfig } from './types';
 
-const colorAttributes = { process: processColorCSS };
+const colorAttributes = { process: processColor };
 
 export const BASE_PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   /** Layout and Positioning */

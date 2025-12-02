@@ -1,12 +1,7 @@
 'use strict';
 import { ReanimatedError } from '../../../errors';
 import type * as Colors from '../colors';
-import {
-  ERROR_MESSAGES,
-  processColor,
-  processColorCSS,
-  processColorsInProps,
-} from '../colors';
+import { ERROR_MESSAGES, processColor, processColorsInProps } from '../colors';
 
 type ColorsModule = Pick<
   typeof Colors,
@@ -254,11 +249,5 @@ describe(processColor, () => {
         }
       );
     });
-  });
-});
-
-describe(processColorCSS, () => {
-  test('returns false for transparent color', () => {
-    expect(processColorCSS('transparent')).toBe(false);
   });
 });

@@ -9,6 +9,7 @@ import { ColorProperties, processColorInitially } from '../../../Colors';
 import type { StyleProps } from '../../../commonTypes';
 import { IS_ANDROID, IS_IOS } from '../../constants';
 import { ReanimatedError } from '../../errors';
+import { type ValueProcessorContext, ValueProcessorTarget } from '../../types';
 import { isRecord } from '../../utils';
 
 /**
@@ -138,10 +139,24 @@ type ProcessedColor =
  */
 export function processColor(value: string | number): number;
 export function processColor(value: unknown): ProcessedColor;
-export function processColor(value: unknown): ProcessedColor {
+export function processColor(
+  value: unknown,
+  context?: ValueProcessorContext
+): ProcessedColor {
   let result: ProcessedColor | null = processColorNumber(value); // try to convert to a number first (most common case)
 
-  if (result !== null) {
+  if (result) {
+    return result;
+  }
+  if (result === 0) {
+    if (
+      context?.target === ValueProcessorTarget.CSS &&
+      value === 'transparent'
+    ) {
+      // For CSS, we have to return `false` to distinguish the true 'transparent' from the 0x00000000 color
+      // and properly interpolate between the transparent and the non-transparent color.
+      return false as unknown as number;
+    }
     return result;
   }
 
@@ -170,17 +185,4 @@ export function processColorsInProps(props: StyleProps) {
       ? value.map((c) => processColor(c))
       : processColor(value);
   }
-}
-
-export function processColorCSS(value: unknown): ProcessedColor | boolean {
-  const processed = processColor(value);
-
-  // processed is falsy (0) only if value is 0x00000000 or 'transparent'.
-  // We want to distinguish the true 'transparent' from the 0x00000000 color
-  // in CSS animations so we return false if the input value is 'transparent'.
-  if (!processed && value === 'transparent') {
-    return false;
-  }
-
-  return processed;
 }
