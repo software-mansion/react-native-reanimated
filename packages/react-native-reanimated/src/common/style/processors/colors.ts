@@ -9,6 +9,7 @@ import { ColorProperties, processColorInitially } from '../../../Colors';
 import type { StyleProps } from '../../../commonTypes';
 import { IS_ANDROID, IS_IOS } from '../../constants';
 import { ReanimatedError } from '../../errors';
+import { type ValueProcessorContext, ValueProcessorTarget } from '../../types';
 import { isRecord } from '../../utils';
 
 /**
@@ -82,15 +83,7 @@ export function processColorNumber(value: unknown): number | null {
     normalizedColor = normalizedColor | 0x0;
   }
 
-  if (normalizedColor !== null) {
-    // The normalizedColor can be a boolean false value for the transparent color, but
-    // we can safely cast it to number. Since boolean false is essentially 0, it can be
-    // used in all numeric operations without issues. We use a boolean false value to
-    // distinguish the transparent color from other colors.
-    return normalizedColor as number;
-  }
-
-  return null;
+  return normalizedColor;
 }
 
 export type ProcessedDynamicColorObjectIOS = {
@@ -141,15 +134,36 @@ type ProcessedColor =
  * Processes a color value and returns a normalized color representation.
  *
  * @param value - The color value to process (string, number, or ColorValue)
+ * @param context - Optional for target-specific processing context (e.g. CSS)
  * @returns The processed color value - `number` for valid colors, `false` for
  *   transparent colors
  */
-export function processColor(value: string | number): number;
-export function processColor(value: unknown): ProcessedColor;
-export function processColor(value: unknown): ProcessedColor {
+export function processColor(
+  value: string | number,
+  context?: ValueProcessorContext
+): number;
+export function processColor(
+  value: unknown,
+  context?: ValueProcessorContext
+): ProcessedColor;
+export function processColor(
+  value: unknown,
+  context?: ValueProcessorContext
+): ProcessedColor {
   let result: ProcessedColor | null = processColorNumber(value); // try to convert to a number first (most common case)
 
-  if (result !== null) {
+  if (result) {
+    return result;
+  }
+  if (result === 0) {
+    if (
+      context?.target === ValueProcessorTarget.CSS &&
+      value === 'transparent'
+    ) {
+      // For CSS, we have to return `false` to distinguish the true 'transparent' from the 0x00000000 color
+      // and properly interpolate between the transparent and the non-transparent color.
+      return false as unknown as number; // TODO - figure out a better way to handle this instead of type casting
+    }
     return result;
   }
 
