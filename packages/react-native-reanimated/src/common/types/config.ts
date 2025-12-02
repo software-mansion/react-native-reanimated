@@ -4,7 +4,7 @@ import type { AnyRecord, Maybe, NonMutable } from './helpers';
 
 export enum ValueProcessorTarget {
   CSS = 'css',
-  Native = 'native',
+  Default = 'default',
 }
 
 export type ValueProcessorContext = {
@@ -12,7 +12,8 @@ export type ValueProcessorContext = {
 };
 
 export type ValueProcessor<V, R = V> = (
-  value: NonMutable<V>
+  value: NonMutable<V>,
+  context?: ValueProcessorContext
 ) => Maybe<R> | Record<string, R>;
 
 export type ConfigPropertyAlias<P extends AnyRecord> = {

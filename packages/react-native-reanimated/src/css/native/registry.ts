@@ -4,6 +4,7 @@ import {
   BASE_PROPERTIES_CONFIG,
   createStyleBuilder,
   ReanimatedError,
+  ValueProcessorTarget,
 } from '../../common';
 
 export const ERROR_MESSAGES = {
@@ -18,6 +19,7 @@ const baseStyleBuilder = createStyleBuilder(BASE_PROPERTIES_CONFIG, {
     'textShadowOffset',
     'transformOrigin',
   ],
+  target: ValueProcessorTarget.CSS,
 });
 
 const STYLE_BUILDERS: Record<string, StyleBuilder> = {};
@@ -45,5 +47,7 @@ export function registerComponentStyleBuilder(
   componentName: string,
   config: StyleBuilderConfig
 ) {
-  STYLE_BUILDERS[componentName] = createStyleBuilder(config);
+  STYLE_BUILDERS[componentName] = createStyleBuilder(config, {
+    target: ValueProcessorTarget.CSS,
+  });
 }
