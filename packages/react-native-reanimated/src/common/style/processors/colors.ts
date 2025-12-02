@@ -134,11 +134,14 @@ type ProcessedColor =
  * Processes a color value and returns a normalized color representation.
  *
  * @param value - The color value to process (string, number, or ColorValue)
+ * @param context - Optional for target-specific processing context (e.g. CSS)
  * @returns The processed color value - `number` for valid colors, `false` for
  *   transparent colors
  */
-export function processColor(value: string | number): number;
-export function processColor(value: unknown): ProcessedColor;
+export function processColor(value: string | number,
+  context?: ValueProcessorContext): number;
+export function processColor(value: unknown,
+  context?: ValueProcessorContext): ProcessedColor;
 export function processColor(
   value: unknown,
   context?: ValueProcessorContext

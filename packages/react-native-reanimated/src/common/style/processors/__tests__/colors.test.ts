@@ -2,6 +2,7 @@
 import { ReanimatedError } from '../../../errors';
 import type * as Colors from '../colors';
 import { ERROR_MESSAGES, processColor, processColorsInProps } from '../colors';
+import { ValueProcessorTarget } from '../../../types';
 
 type ColorsModule = Pick<
   typeof Colors,
@@ -161,6 +162,19 @@ describe(processColor, () => {
         typeof expected === 'number' &&
         ((expected << 24) | (expected >>> 8)) >>> 0;
       expect(processColor(value)).toEqual(argb);
+    });
+
+    test('returns false for transparent color in CSS context', () => {
+      expect(
+        processColor('transparent', { target: ValueProcessorTarget.CSS })
+      ).toBe(false);
+    });
+
+    test('returns 0 for transparent color outside CSS context', () => {
+      expect(
+        processColor('transparent', { target: ValueProcessorTarget.Default })
+      ).toBe(0);
+      expect(processColor('transparent')).toBe(0);
     });
 
     test('converts DynamicColorIOS values on iOS', () => {
