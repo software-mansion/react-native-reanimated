@@ -19,7 +19,7 @@
 
 
 <script src="/react-native-reanimated/js/snack-helpers.js" async></script><link rel="stylesheet" href="/react-native-reanimated/assets/css/styles.44772ce7.css">
-<script src="/react-native-reanimated/assets/js/runtime~main.3d748460.js" defer="defer"></script>
+<script src="/react-native-reanimated/assets/js/runtime~main.abb8fbe6.js" defer="defer"></script>
 <script src="/react-native-reanimated/assets/js/main.f1ab4503.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -53,7 +53,7 @@
 <p>The changes are applied via <code>synchronouslyUpdateViewOnUIThread</code> are not synchronized with changes applied by <code>ShadowTree::commit</code> which may lead to minor inconsistencies of animated styles or animated components in a single animation frame.</p>
 </li>
 </ol>
-<p>Currently, only the following styles can be updated using the fast path: <code>opacity</code>, <code>elevation</code>, <code>zIndex</code>, <code>backgroundColor</code>, <code>tintColor</code>, <code>borderRadius</code> (all sides), <code>borderColor</code> (all sides) and <code>transform</code> (all transforms). All remaining styles, if present, will be updated via <code>ShadowTree::commit</code>.</p>
+<p>Currently, only the following styles can be updated using the fast path: <code>opacity</code>, <code>elevation</code>, <code>zIndex</code>, <code>backgroundColor</code> (excluding <code>PlatformColor</code>), <code>tintColor</code> (excluding <code>PlatformColor</code>), <code>borderColor</code> (all sides, excluding <code>PlatformColor</code>), <code>borderRadius</code> (all sides) and <code>transform</code> (all transforms). All remaining styles, if present, will be updated via <code>ShadowTree::commit</code>.</p>
 <p>This feature flag works only on Android and has no effect on iOS. For more details, see <a href="https://github.com/software-mansion/react-native-reanimated/pull/7823" target="_blank" rel="noopener noreferrer">PR #7823</a>.</p>
 <h3 class="anchor anchorWithHideOnScrollNavbar_WYt5" id="ios_synchronously_update_ui_props"><code>IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS</code><a href="#ios_synchronously_update_ui_props" class="hash-link" aria-label="Direct link to ios_synchronously_update_ui_props" title="Direct link to ios_synchronously_update_ui_props" translate="no">​</a></h3>
 <p>When enabled, non-layout styles will be applied using the <code>[RCTSurfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:props:]</code> method (which doesn&#x27;t involve layout recalculation) instead of than <code>ShadowTree::commit</code> method (which requires layout recalculation). Limitations and unwanted side effects are the same as for <code>ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS</code>. For more details, see <a href="https://github.com/software-mansion/react-native-reanimated/pull/8367" target="_blank" rel="noopener noreferrer">PR #8367</a>.</p>
