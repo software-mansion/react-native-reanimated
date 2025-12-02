@@ -1,7 +1,7 @@
 'use strict';
 import type { PlainStyle } from '../../types';
-import createStyleBuilder from '../createStyleBuilder';
 import { ValueProcessorTarget } from '../../types';
+import createStyleBuilder from '../createStyleBuilder';
 // TODO - add more tests
 
 describe(createStyleBuilder, () => {
@@ -63,7 +63,7 @@ describe(createStyleBuilder, () => {
 
     const builder = createStyleBuilder({ padding: { process: processor } });
 
-    builder.buildFrom({ padding: 8 } as PlainStyle);
+    builder.buildFrom({ padding: 8 });
 
     expect(processor).toHaveBeenCalledWith(8, {
       target: ValueProcessorTarget.Default,

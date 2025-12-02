@@ -1,9 +1,6 @@
 'use strict';
 
-import type {
-  AnyRecord,
-  ValueProcessorContext,
-} from '../types';
+import type { AnyRecord, ValueProcessorContext } from '../types';
 import { ValueProcessorTarget } from '../types';
 import { isConfigPropertyAlias, isDefined, isRecord } from '../utils';
 import type {
