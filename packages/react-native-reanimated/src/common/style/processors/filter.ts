@@ -85,7 +85,10 @@ const parseDropShadowString = (value: string) => {
   return result;
 };
 
-const parseDropShadow = (value: string | DropShadowValue, context: ValueProcessorContext | undefined): ParsedDropShadow => {
+const parseDropShadow = (
+  value: string | DropShadowValue,
+  context: ValueProcessorContext | undefined
+): ParsedDropShadow => {
   const dropShadow =
     typeof value === 'string' ? parseDropShadowString(value) : value;
   const {
@@ -114,7 +117,10 @@ const parseFilterProperty = (
   // We need to handle dropShadow separately because of its complex structure
   if (filterName == 'dropShadow') {
     return {
-      dropShadow: parseDropShadow(filterValue as string | DropShadowValue, context),
+      dropShadow: parseDropShadow(
+        filterValue as string | DropShadowValue,
+        context
+      ),
     };
   }
 
@@ -153,7 +159,10 @@ const parseFilterProperty = (
   }
 };
 
-const parseFilterString = (value: string, context: ValueProcessorContext | undefined): FilterArray => {
+const parseFilterString = (
+  value: string,
+  context: ValueProcessorContext | undefined
+): FilterArray => {
   const matches = Array.from(value.matchAll(FILTER_REGEX));
 
   if (matches.length === 0) {

@@ -138,10 +138,14 @@ type ProcessedColor =
  * @returns The processed color value - `number` for valid colors, `false` for
  *   transparent colors
  */
-export function processColor(value: string | number,
-  context?: ValueProcessorContext): number;
-export function processColor(value: unknown,
-  context?: ValueProcessorContext): ProcessedColor;
+export function processColor(
+  value: string | number,
+  context?: ValueProcessorContext
+): number;
+export function processColor(
+  value: unknown,
+  context?: ValueProcessorContext
+): ProcessedColor;
 export function processColor(
   value: unknown,
   context?: ValueProcessorContext

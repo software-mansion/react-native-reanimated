@@ -39,8 +39,9 @@ let updateProps: (
 ) => void;
 
 if (SHOULD_BE_USE_WEB) {
-  updateProps = (viewDescriptors, updates, isAnimatedProps) => {
+  updateProps = (viewDescriptors, originalUpdates, isAnimatedProps) => {
     'worklet';
+    const updates = { ...originalUpdates };
     viewDescriptors.value?.forEach((viewDescriptor) => {
       const component = viewDescriptor.tag as ReanimatedHTMLElement;
       if ('boxShadow' in updates) {
@@ -53,12 +54,13 @@ if (SHOULD_BE_USE_WEB) {
     });
   };
 } else {
-  updateProps = (viewDescriptors, updates) => {
+  updateProps = (viewDescriptors, originalUpdates) => {
     'worklet';
     /* TODO: Improve this config structure in the future
      * The goal is to create a simplified version of `src/css/platform/native/config.ts`,
      * containing only properties that require processing and their associated processors
      * */
+    const updates = { ...originalUpdates };
     processColorsInProps(updates);
     if ('transformOrigin' in updates) {
       updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
