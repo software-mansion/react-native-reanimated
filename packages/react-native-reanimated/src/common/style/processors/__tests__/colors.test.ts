@@ -1,7 +1,12 @@
 'use strict';
 import { ReanimatedError } from '../../../errors';
 import type * as Colors from '../colors';
-import { ERROR_MESSAGES, processColor, processColorsInProps } from '../colors';
+import {
+  ERROR_MESSAGES,
+  processColor,
+  processColorCSS,
+  processColorsInProps,
+} from '../colors';
 
 type ColorsModule = Pick<
   typeof Colors,
@@ -154,7 +159,7 @@ describe(processColor, () => {
       ['hsl(240, 100%, 50%)', 0x0000ffff],
       ['hsla(120, 50%, 50%, 0.5)', 0x40bf4080],
       ['hwb(0, 0%, 0%)', 0xff0000ff],
-      ['transparent', false], // we represent transparent color as false
+      ['transparent', 0x00000000],
     ])('converts %p to %p', (value, expected) => {
       // convert from RGBA to ARGB format if not null
       const argb =
@@ -179,7 +184,7 @@ describe(processColor, () => {
           expect(processed).toEqual({
             dynamic: {
               light: 0xffffffff,
-              dark: false, // transparent color is represented as false
+              dark: 0x00000000,
               highContrastLight: 0xffff0000,
               highContrastDark: undefined,
             },
@@ -249,5 +254,11 @@ describe(processColor, () => {
         }
       );
     });
+  });
+});
+
+describe(processColorCSS, () => {
+  test('returns false for transparent color', () => {
+    expect(processColorCSS('transparent')).toBe(false);
   });
 });

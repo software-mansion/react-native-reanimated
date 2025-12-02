@@ -82,15 +82,7 @@ export function processColorNumber(value: unknown): number | null {
     normalizedColor = normalizedColor | 0x0;
   }
 
-  if (normalizedColor !== null) {
-    // The normalizedColor can be a boolean false value for the transparent color, but
-    // we can safely cast it to number. Since boolean false is essentially 0, it can be
-    // used in all numeric operations without issues. We use a boolean false value to
-    // distinguish the transparent color from other colors.
-    return normalizedColor as number;
-  }
-
-  return null;
+  return normalizedColor;
 }
 
 export type ProcessedDynamicColorObjectIOS = {
@@ -178,4 +170,14 @@ export function processColorsInProps(props: StyleProps) {
       ? value.map((c) => processColor(c))
       : processColor(value);
   }
+}
+
+export function processColorCSS(value: unknown): ProcessedColor | boolean {
+  const processed = processColor(value);
+
+  if (!processed && value === 'transparent') {
+    return false;
+  }
+
+  return processed;
 }

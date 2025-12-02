@@ -3,6 +3,7 @@ export {
   DynamicColorIOS,
   PlatformColor,
   processColor,
+  processColorCSS,
   processColorNumber,
   processColorsInProps,
 } from './colors';
