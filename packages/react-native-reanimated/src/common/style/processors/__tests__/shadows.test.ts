@@ -161,7 +161,7 @@ describe(processBoxShadowNative, () => {
       ]);
     });
 
-    test('returns false for transparent color in CSS target', () => {
+    test('returns false for transparent color with CSS target', () => {
       const result = processBoxShadowNative(
         [{ offsetX: 0, offsetY: 0, color: 'transparent' }],
         {

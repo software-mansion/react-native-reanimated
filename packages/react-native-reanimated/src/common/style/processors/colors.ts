@@ -162,7 +162,7 @@ export function processColor(
     ) {
       // For CSS, we have to return `false` to distinguish the true 'transparent' from the 0x00000000 color
       // and properly interpolate between the transparent and the non-transparent color.
-      return false as unknown as number;
+      return false as unknown as number; // TODO - figure out a better way to handle this instead of type casting
     }
     return result;
   }

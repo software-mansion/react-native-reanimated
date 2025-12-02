@@ -126,7 +126,7 @@ describe(processFilter, () => {
   });
 
   describe('context-aware color processing', () => {
-    test('keeps transparent color numeric outside CSS context', () => {
+    test('keeps transparent color numeric by default', () => {
       const result = processFilter('dropShadow(0 0 0 transparent)');
 
       expect(result).toEqual([
@@ -141,7 +141,7 @@ describe(processFilter, () => {
       ]);
     });
 
-    test('converts transparent color to false for CSS target', () => {
+    test('converts transparent color to false with CSS target', () => {
       const result = processFilter('dropShadow(0 0 0 transparent)', {
         target: ValueProcessorTarget.CSS,
       });

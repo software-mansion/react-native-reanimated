@@ -164,17 +164,10 @@ describe(processColor, () => {
       expect(processColor(value)).toEqual(argb);
     });
 
-    test('returns false for transparent color in CSS context', () => {
+    test('returns false for transparent color with CSS target', () => {
       expect(
         processColor('transparent', { target: ValueProcessorTarget.CSS })
       ).toBe(false);
-    });
-
-    test('returns 0 for transparent color outside CSS context', () => {
-      expect(
-        processColor('transparent', { target: ValueProcessorTarget.Default })
-      ).toBe(0);
-      expect(processColor('transparent')).toBe(0);
     });
 
     test('converts DynamicColorIOS values on iOS', () => {
