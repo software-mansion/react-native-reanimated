@@ -313,11 +313,21 @@ task prepareReanimatedHeadersForPrefabs(type: Copy) {
     into(reanimatedPrefabHeadersDir)
 }
 
-task cleanCmakeCache() {
-    tasks.getByName("clean").dependsOn(cleanCmakeCache)
+interface FSService {
+    @Inject FileSystemOperations getFs()
+}
+
+tasks.register('cleanCmakeCache', Delete) {
+    def fsService = project.objects.newInstance(FSService)
+    def projectDir = project.projectDir
     doFirst {
-        delete "${projectDir}/.cxx"
+        fsService.fs.delete {"$projectDir/.cxx"
+        }
     }
+}
+
+tasks.named('clean') {
+    dependsOn cleanCmakeCache
 }
 
 repositories {

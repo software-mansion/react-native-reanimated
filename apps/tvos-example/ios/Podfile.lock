@@ -2397,9 +2397,67 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - RNWorklets/worklets/apple (= 0.7.0-main)
+    - RNWorklets/worklets/common (= 0.7.0-main)
+    - RNWorklets/worklets/public (= 0.7.0-main)
     - SocketRocket
     - Yoga
   - RNWorklets/worklets/apple (0.7.0-main):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
+  - RNWorklets/worklets/common (0.7.0-main):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
+  - RNWorklets/worklets/public (0.7.0-main):
     - boost
     - DoubleConversion
     - fast_float
@@ -2732,7 +2790,7 @@ SPEC CHECKSUMS:
   ReactCodegen: f4d6e6fd5140eade461ffb5579795197956868c8
   ReactCommon: c178596d3ef05508bb6c0f88bfbbc281b5c4222b
   RNReanimated: cccf8b45cb675080e7c5f3a4f5d0498eff6c62a0
-  RNWorklets: 339aa12272b2ff6490d91526e8ced6599f7ef6a3
+  RNWorklets: 6aa271764dc8121f468b10c866239ca4c644208b
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 0e792f39294e864568930600eeb71135364f777d
 

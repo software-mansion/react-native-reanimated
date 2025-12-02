@@ -1,5 +1,8 @@
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 import groovy.json.JsonSlurper
+
+import javax.inject.Inject
+import java.nio.file.Files
 import java.nio.file.Paths
 import org.apache.tools.ant.taskdefs.condition.Os
 
@@ -319,17 +322,57 @@ task prepareWorkletsHeadersForPrefabs(type: Copy) {
     into(workletsPrefabHeadersDir)
 }
 
-task cleanCmakeCache() {
-    tasks.getByName("clean").dependsOn(cleanCmakeCache)
-    doFirst {
-        delete "${projectDir}/.cxx"
+def workletsPublicTargetDir = file("${workletsPrefabHeadersDir}/RNWorklets")
+
+tasks.register('cleanWorkletsHeaders', Delete) {
+    delete workletsPublicTargetDir
+}
+
+
+task preparePublicHeadersForPrefabs_experimental {
+    dependsOn prepareWorkletsHeadersForPrefabs
+    dependsOn cleanWorkletsHeaders
+
+    def links = [
+            [file("${workletsPrefabHeadersDir}/worklets/WorkletRuntime/WorkletRuntime.h"), file("${workletsPublicTargetDir}/WorkletRuntime.h")],
+            [file("${workletsPrefabHeadersDir}/worklets/RunLoop/AsyncQueue.h"), file("${workletsPublicTargetDir}/AsyncQueue.h")],
+            [file("${workletsPrefabHeadersDir}/worklets/SharedItems/Serializable.h"), file("${workletsPublicTargetDir}/Serializable.h")],
+            [file("${workletsPrefabHeadersDir}/worklets/SharedItems/Synchronizable.h"), file("${workletsPublicTargetDir}/Synchronizable.h")]
+        ]
+
+    doLast {
+        workletsPublicTargetDir.mkdirs()
+
+        links.each { link ->
+            Files.createSymbolicLink(link[1].toPath(), link[0].toPath())
+        }
     }
+}
+
+interface FSService {
+    @Inject FileSystemOperations getFs()
+}
+
+tasks.register('cleanCmakeCache', Delete) {
+    def fsService = project.objects.newInstance(FSService)
+    def projectDir = project.projectDir
+    doFirst {
+        fsService.fs.delete {"$projectDir/.cxx"
+        }
+    }
+}
+
+tasks.named('clean') {
+    dependsOn cleanCmakeCache
 }
 
 repositories {
     mavenCentral()
     google()
 }
+
+preBuild.dependsOn(prepareWorkletsHeadersForPrefabs)
+preBuild.dependsOn(preparePublicHeadersForPrefabs_experimental)
 
 dependencies {
     implementation "com.facebook.yoga:proguard-annotations:1.19.0"
@@ -341,5 +384,3 @@ dependencies {
         implementation "com.facebook.react:hermes-android" // version substituted by RNGP
     }
 }
-
-preBuild.dependsOn(prepareWorkletsHeadersForPrefabs)
