@@ -133,7 +133,7 @@ When enabled, non-layout styles will be applied using the `synchronouslyUpdateVi
 
 2. The changes are applied via `synchronouslyUpdateViewOnUIThread` are not synchronized with changes applied by `ShadowTree::commit` which may lead to minor inconsistencies of animated styles or animated components in a single animation frame.
 
-Currently, only the following styles can be updated using the fast path: `opacity`, `elevation`, `zIndex`, `backgroundColor`, `tintColor`, `borderRadius` (all sides), `borderColor` (all sides) and `transform` (all transforms). All remaining styles, if present, will be updated via `ShadowTree::commit`.
+Currently, only the following styles can be updated using the fast path: `opacity`, `elevation`, `zIndex`, `backgroundColor` (excluding `PlatformColor`), `tintColor` (excluding `PlatformColor`), `borderColor` (all sides, excluding `PlatformColor`), `borderRadius` (all sides) and `transform` (all transforms). All remaining styles, if present, will be updated via `ShadowTree::commit`.
 
 This feature flag works only on Android and has no effect on iOS. For more details, see [PR #7823](https://github.com/software-mansion/react-native-reanimated/pull/7823).
 
