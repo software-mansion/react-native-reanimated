@@ -589,7 +589,9 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
     AnimatedPropsBuilder builder;
     CascadedBorderRadii borderRadii{};
     CascadedRectangleEdges<yoga::StyleLength> margin{};
-      CascadedRectangleEdges<yoga::StyleLength> padding{};
+    CascadedRectangleEdges<yoga::StyleLength> padding{};
+    CascadedRectangleEdges<yoga::StyleLength> position{};
+    CascadedRectangleEdges<yoga::StyleLength> borderWidth{};
     printf("dynamic: %s \n", folly::toJson(dynamic).c_str());
 
     for (const auto &pair : dynamic.items()) {
@@ -817,6 +819,64 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
               padding.end = yoga::StyleLength::points(pair.second.asDouble());
               break;
           }
+              
+         // POSITIONS
+          case RAW_PROPS_KEY_HASH("top"): {
+              position.top = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+            
+          case RAW_PROPS_KEY_HASH("bottom"): {
+              position.bottom = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("left"): {
+              position.left = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("right"): {
+              position.right = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+        
+         // BORDER WIDTH
+              
+          case RAW_PROPS_KEY_HASH("borderWidth"): {
+              borderWidth.all = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("borderLeftWidth"): {
+              borderWidth.left = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("borderRightWidth"): {
+              borderWidth.right = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("borderTopWidth"): {
+              borderWidth.top = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("borderBottomWidth"): {
+              borderWidth.bottom = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("borderStartWidth"): {
+              borderWidth.start = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
+              
+          case RAW_PROPS_KEY_HASH("borderEndWidth"): {
+              borderWidth.end = yoga::StyleLength::points(pair.second.asDouble());
+              break;
+          }
 
         default:
           printf("AnimationMutations: Unsupported prop \n");
@@ -827,6 +887,8 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
     builder.setBorderRadii(borderRadii);
     builder.setMargin(margin);
     builder.setPadding(padding);
+    builder.setPosition(position);
+    builder.setBorderWidth(borderWidth);
     mutations.push_back(AnimationMutation{node->getTag(), &node->getFamily(), builder.get()});
   }
 

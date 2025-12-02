@@ -39,6 +39,12 @@ export default function TransformAnimations({ onBack }: Props) {
   const shadowOpacity = useSharedValue(0.25);
   const width = useSharedValue(SQUARE_SIZE);
 
+  // Absolute positioning values
+  const top = useSharedValue(50);
+  const bottom = useSharedValue(50);
+  const left = useSharedValue(50);
+  const right = useSharedValue(50);
+
   // React Native Animated API value
   const rnBorderRadius = useRef(new RNAnimated.Value(0)).current;
   const [rnBorderRadiusToggle, setRnBorderRadiusToggle] = useState(false);
@@ -126,6 +132,23 @@ export default function TransformAnimations({ onBack }: Props) {
     );
   };
 
+  // Absolute positioning animations
+  const animateTop = () => {
+    top.value = withSpring(top.value === 50 ? 150 : 50);
+  };
+
+  const animateBottom = () => {
+    bottom.value = withSpring(bottom.value === 50 ? 150 : 50);
+  };
+
+  const animateLeft = () => {
+    left.value = withSpring(left.value === 50 ? 150 : 50);
+  };
+
+  const animateRight = () => {
+    right.value = withSpring(right.value === 50 ? 150 : 50);
+  };
+
   // React Native Animated API animation
   const animateRNBorderRadius = () => {
     const toValue = rnBorderRadiusToggle ? 0 : 40;
@@ -148,6 +171,10 @@ export default function TransformAnimations({ onBack }: Props) {
     backgroundColor.value = withTiming(0);
     shadowOpacity.value = withSpring(0.25);
     width.value = withSpring(SQUARE_SIZE);
+    top.value = withSpring(50);
+    bottom.value = withSpring(50);
+    left.value = withSpring(50);
+    right.value = withSpring(50);
     // Reset RN Animated value
     rnBorderRadius.setValue(0);
     setRnBorderRadiusToggle(false);
@@ -171,10 +198,14 @@ export default function TransformAnimations({ onBack }: Props) {
         ['#3498db', '#e74c3c']
       ),
       shadowOpacity: shadowOpacity.value,
-      shadowOffset: { width: 0, height: 4 },
+      //   shadowOffset: { width: 0, height: 4 },
       shadowRadius: 8,
       shadowColor: '#000',
       width: width.value,
+      top: top.value,
+      bottom: bottom.value,
+      left: left.value,
+      right: right.value,
     };
   });
 
@@ -189,6 +220,10 @@ export default function TransformAnimations({ onBack }: Props) {
     { title: 'Background', onPress: animateBackgroundColor },
     { title: 'Shadow', onPress: animateShadow },
     { title: 'Width', onPress: animateWidth },
+    { title: 'Top', onPress: animateTop },
+    { title: 'Bottom', onPress: animateBottom },
+    { title: 'Left', onPress: animateLeft },
+    { title: 'Right', onPress: animateRight },
     { title: 'Sequence', onPress: animateSequence },
     { title: 'Elastic', onPress: animateElastic },
     { title: 'Bounce', onPress: animateBounce },
@@ -251,6 +286,7 @@ const styles = StyleSheet.create({
     minHeight: 300,
   },
   square: {
+    position: 'absolute',
     width: SQUARE_SIZE,
     height: SQUARE_SIZE,
     backgroundColor: '#3498db',
@@ -262,7 +298,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-    marginBottom: 20,
   },
   rnSquare: {
     width: SQUARE_SIZE,

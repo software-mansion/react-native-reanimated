@@ -28,7 +28,8 @@ export default function App() {
             onPress={() => setCurrentScreen('transform')}>
             <Text style={styles.categoryTitle}>🔄 Transform</Text>
             <Text style={styles.categoryDescription}>
-              Scale, rotate, translate, skew, opacity, background, shadows
+              Scale, rotate, translate, skew, opacity, background, shadows,
+              absolute positioning
             </Text>
           </TouchableOpacity>
 
