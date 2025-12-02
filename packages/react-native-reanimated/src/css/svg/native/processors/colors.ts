@@ -3,8 +3,8 @@ import type { ColorValue } from 'react-native';
 
 import {
   processColorNumber,
-  type ValueProcessor,
   ReanimatedError,
+  type ValueProcessor,
 } from '../../../../common';
 
 export const ERROR_MESSAGES = {
