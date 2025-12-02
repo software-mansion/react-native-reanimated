@@ -1,6 +1,7 @@
 'use strict';
 
-import type { AnyRecord } from '../types';
+import type { AnyRecord, ValueProcessorContext } from '../types';
+import { ValueProcessorTarget } from '../types';
 import { isConfigPropertyAlias, isDefined, isRecord } from '../utils';
 import type {
   StyleBuilder,
@@ -11,12 +12,14 @@ import type {
 type StyleBuilderOptions<P extends AnyRecord> = {
   buildMiddleware?: StyleBuildMiddleware<P>;
   separatelyInterpolatedNestedProperties?: (keyof P)[];
+  target?: ValueProcessorTarget;
 };
 
 class StyleBuilderImpl<P extends AnyRecord> implements StyleBuilder<P> {
   private readonly buildMiddleware: StyleBuildMiddleware<P>;
   private readonly config: StyleBuilderConfig<P>;
   private readonly separatelyInterpolatedNestedProperties_: (keyof P)[];
+  private readonly context: ValueProcessorContext;
 
   private processedProps = {} as P;
 
@@ -25,6 +28,9 @@ class StyleBuilderImpl<P extends AnyRecord> implements StyleBuilder<P> {
     this.buildMiddleware = options?.buildMiddleware ?? ((props) => props);
     this.separatelyInterpolatedNestedProperties_ =
       options?.separatelyInterpolatedNestedProperties ?? [];
+    this.context = {
+      target: options?.target ?? ValueProcessorTarget.Default,
+    };
   }
 
   isSeparatelyInterpolatedNestedProperty(property: keyof P): boolean {
@@ -44,7 +50,7 @@ class StyleBuilderImpl<P extends AnyRecord> implements StyleBuilder<P> {
       this.add(configValue.as, value);
     } else {
       const { process } = configValue;
-      const processedValue = process ? process(value) : value;
+      const processedValue = process ? process(value, this.context) : value;
 
       if (!isDefined(processedValue)) {
         return;
