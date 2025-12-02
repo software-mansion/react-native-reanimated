@@ -1,8 +1,8 @@
 'use strict';
 import { ReanimatedError } from '../../../errors';
+import { ValueProcessorTarget } from '../../../types';
 import type * as Colors from '../colors';
 import { ERROR_MESSAGES, processColor, processColorsInProps } from '../colors';
-import { ValueProcessorTarget } from '../../../types';
 
 type ColorsModule = Pick<
   typeof Colors,
