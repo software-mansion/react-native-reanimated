@@ -175,6 +175,9 @@ export function processColorsInProps(props: StyleProps) {
 export function processColorCSS(value: unknown): ProcessedColor | boolean {
   const processed = processColor(value);
 
+  // processed is falsy (0) only if value is 0x00000000 or 'transparent'.
+  // We want to distinguish the true 'transparent' from the 0x00000000 color
+  // in CSS animations so we return false if the input value is 'transparent'.
   if (!processed && value === 'transparent') {
     return false;
   }
