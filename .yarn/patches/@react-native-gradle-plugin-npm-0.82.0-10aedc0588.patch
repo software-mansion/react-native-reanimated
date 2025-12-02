@@ -7,7 +7,7 @@ index 890e61c007d5b3e0a9a69d37ef10e8aa3ce5c6b6..91acd7b2930fedb4eca2461ba9928772
        }
  
 -      configureReactNativeNdk(project, extension)
-+      if(!project.gradle.startParameter.taskNames.any { it.contains("clean") }) {
++      if (!project.gradle.startParameter.taskNames.any { it.contains("clean") }) {
 +        configureReactNativeNdk(project, extension)
 +      }
        configureBuildConfigFieldsForApp(project, extension)
