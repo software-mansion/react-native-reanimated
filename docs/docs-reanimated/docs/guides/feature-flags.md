@@ -208,7 +208,6 @@ To read a dynamic feature flag value in JavaScript, you can use `getDynamicFeatu
 | Value may change during app lifetime     |          ❌          |          ✅           |
 | Value change requires app rebuild        |          ✅          |          ❌           |
 | Can be changed via public JavaScript API |          ❌          |          ✅           |
-| Can be changed via public JavaScript API |          ❌          |          ✅           |
 | Can be changed via app's `package.json`  |          ✅          |          ❌           |
 
 ## Remarks for contributors
