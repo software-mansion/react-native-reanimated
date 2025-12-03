@@ -1,6 +1,7 @@
 #include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_set>
 
@@ -9,7 +10,7 @@ namespace reanimated::css {
 TransitionStyleInterpolator::TransitionStyleInterpolator(
     const std::string &componentName,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : componentName_(componentName), viewStylesRepository_(viewStylesRepository) {}
+    : viewStylesRepository_(viewStylesRepository), interpolatorFactories_(getComponentInterpolators(componentName)) {}
 
 folly::dynamic TransitionStyleInterpolator::interpolate(
     const std::shared_ptr<const ShadowNode> &shadowNode,
@@ -22,10 +23,8 @@ folly::dynamic TransitionStyleInterpolator::interpolate(
       continue;
     }
 
-    const auto &interpolator = interpolatorIt->second;
-    const double fallbackInterpolateThreshold =
-        progressProvider->getFallbackInterpolateThreshold(interpolator->isDiscrete());
-    result[propertyName] = interpolator->interpolate(shadowNode, progressProvider, fallbackInterpolateThreshold);
+    result[propertyName] = interpolatorIt->second->interpolate(
+        shadowNode, progressProvider, progressProvider->getFallbackInterpolateThreshold());
   }
 
   return result;
@@ -51,33 +50,69 @@ void TransitionStyleInterpolator::discardIrrelevantInterpolators(
   }
 }
 
-std::unordered_set<std::string> TransitionStyleInterpolator::updateInterpolatedProperties(
+std::vector<TransitionPropertyUpdate> TransitionStyleInterpolator::updateInterpolatedProperties(
     jsi::Runtime &rt,
-    const CSSTransitionPropertyUpdates &propertyUpdates) {
-  std::unordered_set<std::string> reversedPropertyNames;
+    const CSSTransitionPropertyUpdates &propertyUpdates,
+    const jsi::Value &lastUpdates,
+    const CSSTransitionPropertiesSettings &settings) {
+  std::vector<TransitionPropertyUpdate> result;
+
+  // Check if lastUpdates is null or undefined (converted from empty folly::dynamic())
+  const bool hasLastUpdates = !lastUpdates.isNull() && !lastUpdates.isUndefined();
+  const jsi::Object lastUpdatesObject = hasLastUpdates ? lastUpdates.asObject(rt) : jsi::Object(rt);
 
   for (const auto &[propertyName, diffPair] : propertyUpdates) {
-    // If the diffPair is not present, it means that the property was removed and should no
-    // longer be transitioned. In such a case, we can remove the interpolator for this property.
-    if (!diffPair.has_value()) {
+    if (!diffPair.has_value() || !isAllowedProperty(propertyName, settings)) {
+      // If the diffPair is not present (this means that the property was removed and should no
+      // longer be transitioned) or if the property is not allowed to be transitioned, we should
+      // remove the interpolator for this property.
       interpolators_.erase(propertyName);
+      result.emplace_back(TransitionPropertyUpdate{propertyName, TransitionPropertyStatus::Removed});
       continue;
     }
 
     auto it = interpolators_.find(propertyName);
     if (it == interpolators_.end()) {
-      const auto newInterpolator = createPropertyInterpolator(
-          propertyName, {}, getComponentInterpolators(componentName_), viewStylesRepository_);
+      const auto newInterpolator =
+          createPropertyInterpolator(propertyName, {}, interpolatorFactories_, viewStylesRepository_);
       it = interpolators_.emplace(propertyName, newInterpolator).first;
     }
 
-    auto isPropertyReversed = it->second->updateKeyframesFromStyleChange(rt, diffPair->first, diffPair->second);
-    if (isPropertyReversed) {
-      reversedPropertyNames.insert(propertyName);
+    // Try to get the last update value from the lastUpdates object
+    // If lastUpdates is null/undefined (from empty folly::dynamic()), use diffPair->first
+    std::optional<jsi::Value> lastUpdateValueOpt;
+    if (hasLastUpdates) {
+      auto lastUpdateValue = lastUpdatesObject.getProperty(rt, propertyName.c_str());
+      if (!lastUpdateValue.isUndefined()) {
+        lastUpdateValueOpt.emplace(std::move(lastUpdateValue));
+      }
     }
+
+    const jsi::Value &oldStyleValue = lastUpdateValueOpt.has_value() ? *lastUpdateValueOpt : diffPair->first;
+    auto isPropertyReversed = it->second->updateKeyframesFromStyleChange(rt, oldStyleValue, diffPair->second);
+    const auto status = isPropertyReversed ? TransitionPropertyStatus::Reversed : TransitionPropertyStatus::Updated;
+    result.emplace_back(TransitionPropertyUpdate{propertyName, status});
   }
 
-  return reversedPropertyNames;
+  return result;
+}
+
+bool TransitionStyleInterpolator::isAllowedProperty(
+    const std::string &propertyName,
+    const CSSTransitionPropertiesSettings &settings) const {
+  const auto it = interpolatorFactories_.find(propertyName);
+  if (it == interpolatorFactories_.end()) {
+    return false;
+  }
+
+  // Non-discrete properties are always allowed
+  if (!it->second->isDiscrete()) {
+    return true;
+  }
+
+  // Discrete properties require allowDiscrete to be true
+  const auto propertySettings = getTransitionPropertySettings(settings, propertyName);
+  return propertySettings.has_value() && propertySettings->allowDiscrete;
 }
 
 } // namespace reanimated::css

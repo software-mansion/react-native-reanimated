@@ -28,6 +28,10 @@ class SimpleValueInterpolatorFactory : public PropertyInterpolatorFactory {
   explicit SimpleValueInterpolatorFactory(const TValue &defaultValue)
       : PropertyInterpolatorFactory(), defaultValue_(defaultValue) {}
 
+  bool isDiscrete() const override {
+    return (Discrete<AllowedTypes> && ...);
+  }
+
   const CSSValue &getDefaultValue() const override {
     return defaultValue_;
   }
@@ -49,6 +53,10 @@ class ResolvableValueInterpolatorFactory : public PropertyInterpolatorFactory {
   template <typename TValue>
   explicit ResolvableValueInterpolatorFactory(const TValue &defaultValue, ResolvableValueInterpolatorConfig config)
       : PropertyInterpolatorFactory(), defaultValue_(defaultValue), config_(std::move(config)) {}
+
+  bool isDiscrete() const override {
+    return (Discrete<AllowedTypes> && ...);
+  }
 
   const CSSValue &getDefaultValue() const override {
     return defaultValue_;

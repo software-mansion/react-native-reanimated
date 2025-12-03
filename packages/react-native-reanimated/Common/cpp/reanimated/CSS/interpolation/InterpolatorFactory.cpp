@@ -1,6 +1,7 @@
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
 #include <reanimated/CSS/interpolation/filters/FilterStyleInterpolator.h>
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -11,6 +12,11 @@ class RecordInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   explicit RecordInterpolatorFactory(const InterpolatorFactoriesRecord &factories)
       : PropertyInterpolatorFactory(), factories_(factories) {}
+
+  bool isDiscrete() const override {
+    return std::all_of(
+        factories_.begin(), factories_.end(), [](const auto &pair) { return pair.second->isDiscrete(); });
+  }
 
   const CSSValue &getDefaultValue() const override {
     static EmptyObjectValue emptyObjectValue;
@@ -63,6 +69,10 @@ class ArrayInterpolatorFactory : public ArrayLikeInterpolatorFactory {
   explicit ArrayInterpolatorFactory(const InterpolatorFactoriesArray &factories)
       : ArrayLikeInterpolatorFactory(), factories_(factories) {}
 
+  bool isDiscrete() const override {
+    return std::all_of(factories_.begin(), factories_.end(), [](const auto &factory) { return factory->isDiscrete(); });
+  }
+
   std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
@@ -78,6 +88,10 @@ class FiltersInterpolatorFactory : public ArrayLikeInterpolatorFactory {
   explicit FiltersInterpolatorFactory(const std::shared_ptr<StyleOperationInterpolators> &interpolators)
       : ArrayLikeInterpolatorFactory(), interpolators_(interpolators) {}
 
+  bool isDiscrete() const override {
+    return false;
+  }
+
   std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
@@ -92,6 +106,10 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   explicit TransformsInterpolatorFactory(const std::shared_ptr<StyleOperationInterpolators> &interpolators)
       : PropertyInterpolatorFactory(), interpolators_(interpolators) {}
+
+  bool isDiscrete() const override {
+    return false;
+  }
 
   const CSSValue &getDefaultValue() const override {
     static EmptyTransformsValue emptyTransformsValue;

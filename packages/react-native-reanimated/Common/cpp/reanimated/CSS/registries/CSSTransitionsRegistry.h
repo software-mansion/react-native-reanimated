@@ -18,7 +18,8 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   bool isEmpty() const override;
   bool hasUpdates() const;
 
-  void add(jsi::Runtime &rt, std::shared_ptr<const ShadowNode> shadowNode, const CSSTransitionConfig &config);
+  void
+  add(jsi::Runtime &rt, std::shared_ptr<CSSTransition> transition, const CSSTransitionPropertyUpdates &propertyUpdates);
   void update(jsi::Runtime &rt, Tag viewTag, const CSSTransitionUpdates &updates);
   void remove(Tag viewTag) override;
 

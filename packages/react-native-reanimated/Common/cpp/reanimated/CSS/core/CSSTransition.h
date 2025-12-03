@@ -22,7 +22,12 @@ class CSSTransition {
   double getMinDelay(double timestamp) const;
   TransitionProgressState getState() const;
   void updateSettings(const CSSTransitionPropertySettingsUpdates &settingsUpdates);
-  folly::dynamic run(jsi::Runtime &rt, const CSSTransitionPropertyUpdates &propertyUpdates, double timestamp);
+  std::optional<std::unordered_set<std::string>> getProperties() const;
+  folly::dynamic run(
+      jsi::Runtime &rt,
+      const CSSTransitionPropertyUpdates &propertyUpdates,
+      const jsi::Value &lastUpdates,
+      double timestamp);
   folly::dynamic update(double timestamp);
 
  private:

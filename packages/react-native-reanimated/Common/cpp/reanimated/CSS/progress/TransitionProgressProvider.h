@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 namespace reanimated::css {
 
@@ -19,18 +20,21 @@ class TransitionPropertyProgressProvider final : public KeyframeProgressProvider
       double timestamp,
       double duration,
       double delay,
-      const EasingFunction &easingFunction);
+      const EasingFunction &easingFunction,
+      bool allowDiscrete);
   TransitionPropertyProgressProvider(
       double timestamp,
       double duration,
       double delay,
       const EasingFunction &easingFunction,
+      bool allowDiscrete,
       double reversingShorteningFactor);
 
   double getGlobalProgress() const override;
   double getKeyframeProgress(double fromOffset, double toOffset) const override;
   double getRemainingDelay(double timestamp) const;
   double getReversingShorteningFactor() const;
+  double getFallbackInterpolateThreshold() const;
   TransitionProgressState getState() const;
 
  protected:
@@ -39,6 +43,7 @@ class TransitionPropertyProgressProvider final : public KeyframeProgressProvider
  private:
   EasingFunction easingFunction_;
   double reversingShorteningFactor_ = 1;
+  bool allowDiscrete_;
 
   double getElapsedTime(double timestamp) const;
 };
@@ -57,9 +62,8 @@ class TransitionProgressProvider final {
   void discardIrrelevantProgressProviders(const std::unordered_set<std::string> &transitionPropertyNames);
   void runProgressProviders(
       double timestamp,
-      const CSSTransitionPropertiesSettings &propertiesSettings,
-      const std::vector<std::string> &changedPropertyNames,
-      const std::unordered_set<std::string> &reversedPropertyNames);
+      const std::vector<TransitionPropertyUpdate> &propertyUpdates,
+      const CSSTransitionPropertiesSettings &settings);
   void update(double timestamp);
 
  private:

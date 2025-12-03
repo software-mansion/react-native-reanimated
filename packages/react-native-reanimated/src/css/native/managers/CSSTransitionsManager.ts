@@ -38,11 +38,11 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     const previousConfig = this.transitionConfig;
 
     this.previousStyle = style;
-    this.transitionConfig = transitionProperties
+    const transitionConfig = transitionProperties
       ? normalizeCSSTransitionProperties(transitionProperties)
       : null;
 
-    if (!this.transitionConfig) {
+    if (!transitionConfig) {
       this.detach();
       return;
     }
@@ -50,9 +50,9 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     const propertyDiff = getChangedProps(
       previousStyle,
       style,
-      this.transitionConfig.properties === 'all'
+      transitionConfig.properties === 'all'
         ? undefined
-        : this.transitionConfig.properties
+        : transitionConfig.properties
     );
 
     if (!propertyDiff) {
@@ -60,13 +60,13 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     }
 
     const settingsDiff = previousConfig
-      ? this.getSettingsUpdates(this.transitionConfig, previousConfig)
+      ? this.getSettingsUpdates(previousConfig, transitionConfig)
       : null;
 
     if (!previousConfig) {
       registerCSSTransition(this.shadowNodeWrapper, {
         properties: propertyDiff,
-        settings: this.transitionConfig.settings,
+        settings: transitionConfig.settings,
       });
     } else {
       const updates: CSSTransitionUpdates = {
@@ -79,6 +79,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
 
       updateCSSTransition(this.viewTag, updates);
     }
+    this.transitionConfig = transitionConfig;
   }
 
   unmountCleanup(): void {

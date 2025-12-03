@@ -20,13 +20,11 @@ bool CSSTransitionsRegistry::hasUpdates() const {
 
 void CSSTransitionsRegistry::add(
     jsi::Runtime &rt,
-    std::shared_ptr<const ShadowNode> shadowNode,
-    const CSSTransitionConfig &config) {
-  const auto viewTag = shadowNode->getTag();
-
-  auto transition = std::make_shared<CSSTransition>(std::move(shadowNode), config, viewStylesRepository_);
+    std::shared_ptr<CSSTransition> transition,
+    const CSSTransitionPropertyUpdates &propertyUpdates) {
+  const auto viewTag = transition->getShadowNode()->getTag();
   registry_.insert({viewTag, transition});
-  runTransition(rt, transition, config.properties);
+  runTransition(rt, transition, propertyUpdates);
 }
 
 void CSSTransitionsRegistry::remove(const Tag viewTag) {
@@ -143,7 +141,9 @@ void CSSTransitionsRegistry::runTransition(
     jsi::Runtime &rt,
     const std::shared_ptr<CSSTransition> &transition,
     const CSSTransitionPropertyUpdates &propertyUpdates) {
-  const auto startStyle = transition->run(rt, propertyUpdates, getCurrentTimestamp_());
+  const auto &lastUpdates = getUpdatesFromRegistry(transition->getShadowNode()->getTag());
+  const auto startStyle =
+      transition->run(rt, propertyUpdates, valueFromDynamic(rt, lastUpdates), getCurrentTimestamp_());
   updateInUpdatesRegistry(transition, startStyle);
   scheduleOrActivateTransition(transition);
 }

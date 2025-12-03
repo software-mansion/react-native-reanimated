@@ -27,11 +27,6 @@ SimpleValueInterpolator<AllowedTypes...>::SimpleValueInterpolator(
     : ValueInterpolator(propertyPath, std::make_shared<ValueType>(defaultStyleValue), viewStylesRepository) {}
 
 template <typename... AllowedTypes>
-bool SimpleValueInterpolator<AllowedTypes...>::isDiscrete() const {
-  return (Discrete<AllowedTypes> && ...);
-}
-
-template <typename... AllowedTypes>
 std::shared_ptr<CSSValue> SimpleValueInterpolator<AllowedTypes...>::createValue(
     jsi::Runtime &rt,
     const jsi::Value &value) const {

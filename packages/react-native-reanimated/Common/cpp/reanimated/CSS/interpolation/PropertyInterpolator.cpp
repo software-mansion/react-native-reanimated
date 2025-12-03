@@ -12,10 +12,6 @@ PropertyInterpolator::PropertyInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : propertyPath_(std::move(propertyPath)), viewStylesRepository_(viewStylesRepository) {}
 
-bool PropertyInterpolator::isDiscrete() const {
-  return false;
-}
-
 std::string PropertyInterpolator::getPropertyPathString() const {
   if (propertyPath_.empty()) {
     return "";

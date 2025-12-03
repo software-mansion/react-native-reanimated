@@ -11,6 +11,17 @@
 
 namespace reanimated::css {
 
+enum class TransitionPropertyStatus : uint8_t {
+  Updated,
+  Removed,
+  Reversed,
+};
+
+struct TransitionPropertyUpdate {
+  std::string name;
+  TransitionPropertyStatus status;
+};
+
 struct CSSTransitionPropertySettings {
   double duration;
   EasingFunction easingFunction;

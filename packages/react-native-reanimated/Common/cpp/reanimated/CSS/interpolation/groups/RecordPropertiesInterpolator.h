@@ -16,7 +16,6 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
   virtual ~RecordPropertiesInterpolator() = default;
 
-  bool isDiscrete() const override;
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   bool updateKeyframesFromStyleChange(
       jsi::Runtime &rt,

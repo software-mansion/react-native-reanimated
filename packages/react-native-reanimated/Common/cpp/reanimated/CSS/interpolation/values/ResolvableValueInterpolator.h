@@ -29,8 +29,6 @@ class ResolvableValueInterpolator final : public SimpleValueInterpolator<Allowed
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const ResolvableValueInterpolatorConfig &config);
 
-  bool isDiscrete() const override;
-
  protected:
   folly::dynamic interpolateValue(
       double progress,

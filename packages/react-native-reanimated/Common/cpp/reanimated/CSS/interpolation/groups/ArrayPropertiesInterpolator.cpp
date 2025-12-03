@@ -11,15 +11,6 @@ ArrayPropertiesInterpolator::ArrayPropertiesInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : GroupPropertiesInterpolator(propertyPath, viewStylesRepository), factories_(factories) {}
 
-bool ArrayPropertiesInterpolator::isDiscrete() const {
-  for (const auto &interpolator : interpolators_) {
-    if (!interpolator->isDiscrete()) {
-      return false;
-    }
-  }
-  return true;
-}
-
 void ArrayPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) {
   const jsi::Array keyframesArray = keyframes.asObject(rt).asArray(rt);
   const size_t valuesCount = keyframesArray.size(rt);

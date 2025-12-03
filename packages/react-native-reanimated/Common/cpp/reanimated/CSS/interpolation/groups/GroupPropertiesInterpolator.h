@@ -14,7 +14,6 @@ class GroupPropertiesInterpolator : public PropertyInterpolator {
       const PropertyPath &propertyPath,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  bool isDiscrete() const override;
   folly::dynamic getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const override;
   folly::dynamic getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const override;
   folly::dynamic getFirstKeyframeValue() const override;

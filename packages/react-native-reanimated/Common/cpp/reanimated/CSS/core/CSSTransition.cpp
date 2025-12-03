@@ -1,8 +1,9 @@
 #include <reanimated/CSS/core/CSSTransition.h>
 
 #include <memory>
+#include <optional>
 #include <string>
-#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -49,18 +50,27 @@ void CSSTransition::updateSettings(const CSSTransitionPropertySettingsUpdates &s
   }
 }
 
-folly::dynamic
-CSSTransition::run(jsi::Runtime &rt, const CSSTransitionPropertyUpdates &propertyUpdates, const double timestamp) {
-  const auto reversedPropertyNames = styleInterpolator_.updateInterpolatedProperties(rt, propertyUpdates);
-
-  std::vector<std::string> propertyNames;
-  propertyNames.reserve(propertyUpdates.size());
-  for (const auto &[key, value] : propertyUpdates) {
-    propertyNames.emplace_back(key);
+std::optional<std::unordered_set<std::string>> CSSTransition::getProperties() const {
+  const auto allIt = settings_.find("all");
+  if (allIt != settings_.end()) {
+    return std::nullopt; // "all" means no specific properties
   }
 
-  progressProvider_.runProgressProviders(timestamp, settings_, propertyNames, reversedPropertyNames);
+  std::unordered_set<std::string> properties;
+  for (const auto &[property, _] : settings_) {
+    properties.insert(property);
+  }
+  return properties;
+}
 
+folly::dynamic CSSTransition::run(
+    jsi::Runtime &rt,
+    const CSSTransitionPropertyUpdates &propertyUpdates,
+    const jsi::Value &lastUpdates,
+    const double timestamp) {
+  const auto updatedProperties =
+      styleInterpolator_.updateInterpolatedProperties(rt, propertyUpdates, lastUpdates, settings_);
+  progressProvider_.runProgressProviders(timestamp, updatedProperties, settings_);
   return update(timestamp);
 }
 

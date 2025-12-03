@@ -12,15 +12,6 @@ RecordPropertiesInterpolator::RecordPropertiesInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : GroupPropertiesInterpolator(propertyPath, viewStylesRepository), factories_(factories) {}
 
-bool RecordPropertiesInterpolator::isDiscrete() const {
-  for (const auto &[propertyName, interpolator] : interpolators_) {
-    if (!interpolator->isDiscrete()) {
-      return false;
-    }
-  }
-  return true;
-}
-
 void RecordPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) {
   // TODO - maybe add a possibility to remove interpolators that are no longer
   // used (for now, for simplicity, we only add new ones)

@@ -423,9 +423,11 @@ void ReanimatedModuleProxy::registerCSSTransition(
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto config = parseCSSTransitionConfig(rt, transitionConfig);
 
+  auto transition = std::make_shared<CSSTransition>(std::move(shadowNode), config, viewStylesRepository_);
+
   {
     auto lock = cssTransitionsRegistry_->lock();
-    cssTransitionsRegistry_->add(rt, shadowNode, config);
+    cssTransitionsRegistry_->add(rt, transition, config.properties);
   }
 
   maybeRunCSSLoop();
