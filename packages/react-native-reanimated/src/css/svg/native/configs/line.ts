@@ -13,5 +13,4 @@ export const SVG_LINE_PROPERTIES_CONFIG: SvgStyleBuilderConfig<LineProps> = {
   y1: true,
   x2: true,
   y2: true,
-  opacity: true,
 };

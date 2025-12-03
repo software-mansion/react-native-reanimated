@@ -72,7 +72,7 @@ function rgbToAnsi256(red: number, green: number, blue: number) {
   return 16 + 36 * scaledRed + 6 * scaledGreen + scaledBlue;
 }
 
-export function getColorSquare(color: unknown) {
+export function getColorSquare(color: string) {
   if (!isColor(color)) {
     return '??';
   }

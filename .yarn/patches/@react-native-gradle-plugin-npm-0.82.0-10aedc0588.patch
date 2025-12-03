@@ -1,0 +1,15 @@
+diff --git a/react-native-gradle-plugin/src/main/kotlin/com/facebook/react/ReactPlugin.kt b/react-native-gradle-plugin/src/main/kotlin/com/facebook/react/ReactPlugin.kt
+index 890e61c007d5b3e0a9a69d37ef10e8aa3ce5c6b6..91acd7b2930fedb4eca2461ba99287721ca1f38f 100644
+--- a/react-native-gradle-plugin/src/main/kotlin/com/facebook/react/ReactPlugin.kt
++++ b/react-native-gradle-plugin/src/main/kotlin/com/facebook/react/ReactPlugin.kt
+@@ -80,7 +80,9 @@ class ReactPlugin : Plugin<Project> {
+         configureRepositories(project)
+       }
+ 
+-      configureReactNativeNdk(project, extension)
++      if (!project.gradle.startParameter.taskNames.any { it.contains("clean") }) {
++        configureReactNativeNdk(project, extension)
++      }
+       configureBuildConfigFieldsForApp(project, extension)
+       configureDevServerLocation(project)
+       configureBackwardCompatibilityReactMap(project)

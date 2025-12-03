@@ -153,9 +153,9 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   }
 
   createCustomSerializable(
-    data: SerializableRef<object>,
+    data: SerializableRef<unknown>,
     typeId: number
-  ): SerializableRef<object> {
+  ): SerializableRef<unknown> {
     return this.#workletsModuleProxy.createCustomSerializable(data, typeId);
   }
 

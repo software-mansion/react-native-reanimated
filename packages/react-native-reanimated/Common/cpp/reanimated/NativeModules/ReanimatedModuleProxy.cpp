@@ -812,9 +812,10 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
 
       for (const auto &[shadowNode, props] : updatesBatch) {
         bool hasOnlySynchronousProps = true;
-        for (const auto &key : props.keys()) {
+        for (const auto &[key, value] : props.items()) {
           const auto keyStr = key.asString();
-          if (!synchronousProps.contains(keyStr)) {
+          if (!synchronousProps.contains(keyStr) ||
+              ((keyStr == "color" || keyStr.find("Color") != std::string::npos) && !value.isInt())) {
             hasOnlySynchronousProps = false;
             break;
           }
