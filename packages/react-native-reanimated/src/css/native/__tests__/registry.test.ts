@@ -37,14 +37,14 @@ describe('registry', () => {
       const propsBuilder = getPropsBuilder(componentName);
 
       expect(propsBuilder).toBeDefined();
-      expect(typeof propsBuilder.buildFrom).toBe('function');
+      expect(typeof propsBuilder.build).toBe('function');
     });
 
     test('returns base props builder for RCT prefixed components', () => {
       const propsBuilder = getPropsBuilder('RCTView');
 
       expect(propsBuilder).toBeDefined();
-      expect(typeof propsBuilder.buildFrom).toBe('function');
+      expect(typeof propsBuilder.build).toBe('function');
     });
 
     test('throws error for unregistered component names', () => {

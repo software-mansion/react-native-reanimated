@@ -27,6 +27,12 @@ type PropsBuilderPropertyConfig<
       process: ValueProcessor<Required<TProps>[K], any>; // for custom value processing
     };
 
+export type NativePropsBuilder<TProps extends UnknownRecord> = ReturnType<
+  typeof createPropsBuilder<TProps, Required<{
+    [K in keyof TProps]: PropsBuilderPropertyConfig<TProps, K>;
+  }>>
+>;
+
 export function createNativePropsBuilder<TProps extends UnknownRecord>(
   config: Required<{
     [K in keyof TProps]: PropsBuilderPropertyConfig<TProps, K>;

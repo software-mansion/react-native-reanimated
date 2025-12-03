@@ -9,6 +9,11 @@ import {
   processKeyframes,
 } from '../keyframes';
 
+type PropsBuilderInstance = ReturnType<typeof getPropsBuilder>;
+type BuildFn = PropsBuilderInstance['build'];
+type BuildReturn = ReturnType<BuildFn>;
+type BuildArgs = Parameters<BuildFn>;
+
 describe(normalizeKeyframeSelector, () => {
   describe('single selector', () => {
     describe('keyword', () => {
@@ -82,28 +87,21 @@ describe(normalizeKeyframeSelector, () => {
   });
 });
 
-function mockPropsBuilder(
-  separatelyInterpolatedNestedProperties: string[] = []
-) {
-  const separatelyInterpolatedNestedPropertiesSet = new Set(
-    separatelyInterpolatedNestedProperties
+const createMockPropsBuilder = () => {
+  const buildMock = jest.fn<BuildReturn | undefined, BuildArgs>((style) =>
+    style as BuildReturn
   );
 
   return {
-    buildFrom: jest.fn().mockImplementation((props) => props),
-    isSeparatelyInterpolatedNestedProperty: jest
-      .fn()
-      .mockImplementation((property) =>
-        separatelyInterpolatedNestedPropertiesSet.has(property)
-      ),
-    add: jest.fn(),
+    builder: { build: buildMock } as PropsBuilderInstance,
+    buildMock,
   };
-}
+};
 
 describe(processKeyframes, () => {
   describe('offset handling', () => {
     test('sorts keyframes and accepts percentages', () => {
-      const propsBuilder = mockPropsBuilder();
+      const { builder } = createMockPropsBuilder();
       const keyframes = {
         '75%': { opacity: 0.75 },
         from: { opacity: 0 },
@@ -111,7 +109,7 @@ describe(processKeyframes, () => {
         to: { opacity: 1 },
       };
 
-      expect(processKeyframes(keyframes, propsBuilder)).toEqual([
+      expect(processKeyframes(keyframes, builder)).toEqual([
         { offset: 0, style: { opacity: 0 } },
         { offset: 0.25, style: { opacity: 0.25 } },
         { offset: 0.75, style: { opacity: 0.75 } },
@@ -120,13 +118,13 @@ describe(processKeyframes, () => {
     });
 
     test('splits multi-selector entries into separate keyframes', () => {
-      const propsBuilder = mockPropsBuilder();
+      const { builder } = createMockPropsBuilder();
       const keyframes = {
         'from, 50%': { opacity: 0.5 },
         to: { opacity: 1 },
       };
 
-      expect(processKeyframes(keyframes, propsBuilder)).toEqual([
+      expect(processKeyframes(keyframes, builder)).toEqual([
         { offset: 0, style: { opacity: 0.5 } },
         { offset: 0.5, style: { opacity: 0.5 } },
         { offset: 1, style: { opacity: 1 } },
@@ -141,7 +139,9 @@ describe(processKeyframes, () => {
         '100%': { transform: [{ translateX: 100 }] },
       };
 
-      expect(processKeyframes(keyframes, getPropsBuilder('RCTView'))).toEqual([
+      expect(
+        processKeyframes(keyframes, getPropsBuilder('RCTView'))
+      ).toEqual([
         { offset: 0, style: { transform: [{ translateX: 0 }] } },
         { offset: 1, style: { transform: [{ translateX: 100 }] } },
       ]);
@@ -280,30 +280,34 @@ describe(processKeyframes, () => {
   });
 
   test('drops keyframes when processed style is undefined', () => {
-    const propsBuilder = mockPropsBuilder(['shadowOffset']);
-    propsBuilder.buildFrom
+    const { builder, buildMock } = createMockPropsBuilder();
+    buildMock
       .mockImplementationOnce(() => undefined)
-      .mockImplementation((style) => style);
+      .mockImplementation((style) => style as BuildReturn);
 
     const keyframes = {
       from: { shadowOffset: { width: 0, height: 0 } },
       to: { shadowOffset: { width: 10, height: 5 } },
     };
 
-    expect(processKeyframes(keyframes, propsBuilder)).toEqual([
+    expect(processKeyframes(keyframes, builder)).toEqual([
       { offset: 1, style: { shadowOffset: { width: 10, height: 5 } } },
     ]);
+
+    buildMock.mockRestore();
   });
 
   test('merges styles for duplicate offsets', () => {
-    const propsBuilder = mockPropsBuilder();
+    const { builder } = createMockPropsBuilder();
     const keyframes = {
       '0%': { opacity: 0.5 },
       '0': { transform: [{ scale: 1 }] },
       '100%': { opacity: 1 },
     };
 
-    expect(processKeyframes(keyframes, propsBuilder)).toEqual([
+    expect(
+      processKeyframes(keyframes, builder)
+    ).toEqual([
       {
         offset: 0,
         style: { opacity: 0.5, transform: [{ scale: 1 }] },
@@ -314,8 +318,6 @@ describe(processKeyframes, () => {
 });
 
 describe(normalizeAnimationKeyframes, () => {
-  const propsBuilder = getPropsBuilder('RCTView');
-
   test('aggregates styles and timing functions across keyframes', () => {
     const result = normalizeAnimationKeyframes(
       {
@@ -326,7 +328,7 @@ describe(normalizeAnimationKeyframes, () => {
         },
         to: { opacity: 1 },
       },
-      propsBuilder
+      'RCTView'
     );
 
     expect(result).toEqual({
@@ -353,7 +355,7 @@ describe(normalizeAnimationKeyframes, () => {
         from: { opacity: 0, animationTimingFunction: 'ease-in' },
         to: { opacity: 1, animationTimingFunction: 'ease-out' },
       },
-      propsBuilder
+      'RCTView'
     );
 
     expect(result).toEqual({

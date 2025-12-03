@@ -1,12 +1,9 @@
 'use strict';
 import { ReanimatedError } from '../../../../../common';
 import type { CSSAnimationKeyframeSelector } from '../../../../types';
-import { getPropsBuilder } from '../../../registry';
 import { ERROR_MESSAGES, normalizeAnimationKeyframes } from '../keyframes';
 
 describe(normalizeAnimationKeyframes, () => {
-  const propsBuilder = getPropsBuilder('RCTView'); // Must be a valid view name
-
   describe('offset normalization', () => {
     describe('when offset is valid', () => {
       test.each([
@@ -22,7 +19,7 @@ describe(normalizeAnimationKeyframes, () => {
         expect(
           normalizeAnimationKeyframes(
             { [offset]: { opacity: 1 } },
-            propsBuilder
+            'RCTView'
           )
         ).toEqual({
           keyframesStyle: { opacity: [{ offset: expected, value: 1 }] },
@@ -39,7 +36,7 @@ describe(normalizeAnimationKeyframes, () => {
           expect(() =>
             normalizeAnimationKeyframes(
               { [value]: { opacity: 1 } },
-              propsBuilder
+              'RCTView'
             )
           ).toThrow(
             new ReanimatedError(ERROR_MESSAGES.invalidOffsetType(value))
@@ -56,7 +53,7 @@ describe(normalizeAnimationKeyframes, () => {
           expect(() =>
             normalizeAnimationKeyframes(
               { [value]: { opacity: 1 } },
-              propsBuilder
+              'RCTView'
             )
           ).toThrow(
             new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(value))
@@ -78,7 +75,7 @@ describe(normalizeAnimationKeyframes, () => {
         expect(
           normalizeAnimationKeyframes(
             { [offset]: { opacity: 1 } },
-            propsBuilder
+            'RCTView'
           )
         ).toEqual({
           keyframeTimingFunctions: {},
@@ -100,7 +97,7 @@ describe(normalizeAnimationKeyframes, () => {
       ])('throws an error for %p', (offset, errorMsg) => {
         const value = offset as CSSAnimationKeyframeSelector;
         expect(() =>
-          normalizeAnimationKeyframes({ [value]: { opacity: 1 } }, propsBuilder)
+          normalizeAnimationKeyframes({ [value]: { opacity: 1 } }, 'RCTView')
         ).toThrow(new ReanimatedError(errorMsg));
       });
     });
@@ -115,7 +112,7 @@ describe(normalizeAnimationKeyframes, () => {
             '50%': { opacity: 0.5 },
             to: { opacity: 1 },
           },
-          propsBuilder
+          'RCTView'
         )
       ).toEqual({
         keyframesStyle: {
@@ -136,7 +133,7 @@ describe(normalizeAnimationKeyframes, () => {
             from: { shadowOffset: { width: 0, height: 0 } },
             to: { shadowOffset: { width: 10, height: 10 } },
           },
-          propsBuilder
+          'RCTView'
         )
       ).toEqual({
         keyframesStyle: {
@@ -165,7 +162,7 @@ describe(normalizeAnimationKeyframes, () => {
             '25%': { opacity: 0.25 },
             from: { opacity: 0 },
           },
-          propsBuilder
+          'RCTView'
         )
       ).toEqual({
         keyframesStyle: {
@@ -188,7 +185,7 @@ describe(normalizeAnimationKeyframes, () => {
             from: { transform: [{ scale: 0 }, { rotate: '0deg' }] },
             to: { transform: [{ scale: 1 }, { rotate: '360deg' }] },
           },
-          propsBuilder
+          'RCTView'
         )
       ).toEqual({
         keyframesStyle: {
@@ -208,7 +205,7 @@ describe(normalizeAnimationKeyframes, () => {
             from: { opacity: 0, transform: undefined },
             to: { opacity: 1 },
           },
-          propsBuilder
+          'RCTView'
         )
       ).toEqual({
         keyframesStyle: {
@@ -229,7 +226,7 @@ describe(normalizeAnimationKeyframes, () => {
             '50%': { opacity: 0.5 },
             to: {},
           },
-          propsBuilder
+          'RCTView'
         )
       ).toEqual({
         keyframesStyle: {
@@ -250,7 +247,7 @@ describe(normalizeAnimationKeyframes, () => {
             '50%': { opacity: 0.75 },
             '75%': { opacity: 1, animationTimingFunction: 'ease-out' },
           },
-          propsBuilder
+          'RCTView'
         )
       ).toEqual({
         keyframesStyle: {
@@ -281,7 +278,7 @@ describe(normalizeAnimationKeyframes, () => {
           {
             '0%, 100%': { opacity: 0, animationTimingFunction: 'ease-in' },
           },
-          propsBuilder
+          'RCTView'
         )
       ).toEqual({
         keyframesStyle: {

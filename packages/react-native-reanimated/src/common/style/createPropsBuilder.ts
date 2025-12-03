@@ -17,7 +17,7 @@ type CreatePropsBuilderParams<TPropsConfig> = {
   ) => ValueProcessor | TPropsConfig[keyof TPropsConfig] | undefined;
 };
 
-type CreateStyleBuilderResult<TProps> = {
+export type PropsBuilderResult<TProps> = {
   build(
     props: TProps,
     options?: {
@@ -33,7 +33,7 @@ export default function createPropsBuilder<
 >({
   processConfigValue,
   config,
-}: CreatePropsBuilderParams<TPropsConfig>): CreateStyleBuilderResult<TProps> {
+}: CreatePropsBuilderParams<TPropsConfig>): PropsBuilderResult<TProps> {
   const processedConfig = Object.entries(config).reduce<
     Record<string, ValueProcessor>
   >((acc, [key, configValue]) => {

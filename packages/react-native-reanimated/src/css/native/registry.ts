@@ -4,13 +4,12 @@ import {
   ReanimatedError,
   createNativePropsBuilder,
 } from '../../common';
+import type { PropsBuilderConfig } from '../../common';
 
 export const ERROR_MESSAGES = {
   propsBuilderNotFound: (componentName: string) =>
     `CSS props builder for component ${componentName} was not found`,
 };
-
-type CSSPropsBuilder = ReturnType<typeof createNativePropsBuilder>;
 
 const DEFAULT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Set<string>([
   'boxShadow',
@@ -26,7 +25,7 @@ const COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Map<
 
 const basePropsBuilder = createNativePropsBuilder(BASE_PROPERTIES_CONFIG);
 
-const PROPS_BUILDERS: Record<string, CSSPropsBuilder> = {};
+const PROPS_BUILDERS: Record<string, ReturnType<typeof createNativePropsBuilder>> = {};
 
 export function hasPropsBuilder(componentName: string): boolean {
   return !!PROPS_BUILDERS[componentName] || componentName.startsWith('RCT');
