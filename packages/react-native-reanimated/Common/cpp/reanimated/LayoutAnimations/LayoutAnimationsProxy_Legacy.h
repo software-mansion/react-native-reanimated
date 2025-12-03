@@ -1,17 +1,15 @@
 #pragma once
 
-#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
-#include <reanimated/Tools/PlatformDepMethodsHolder.h>
-
-#include <worklets/Tools/UIScheduler.h>
-
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
-#include <react/renderer/mounting/ShadowView.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerAnimationDelegate.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
+#include <reanimated/Tools/PlatformDepMethodsHolder.h>
+#include <worklets/Tools/UIScheduler.h>
 
 #include <memory>
 #include <string>
@@ -26,42 +24,94 @@ class ReanimatedModuleProxy;
 
 using namespace facebook;
 
-struct LayoutAnimation {
-  std::shared_ptr<ShadowView> finalView, currentView;
-  Tag parentTag;
-  std::optional<double> opacity;
-  bool isViewAlreadyMounted = false;
-  int count = 1;
-  LayoutAnimation &operator=(const LayoutAnimation &other) = default;
+typedef enum ExitingState_Legacy {
+  UNDEFINED = 1,
+  WAITING = 2,
+  ANIMATING = 4,
+  DEAD = 8,
+  MOVED = 16,
+  DELETED = 32,
+} ExitingState_Legacy;
+
+struct MutationNode;
+
+/**
+ Represents a view that was either removed or had a child removed from the
+ ShadowTree
+ */
+struct Node {
+  std::vector<std::shared_ptr<MutationNode>> children, unflattenedChildren;
+  std::shared_ptr<Node> parent, unflattenedParent;
+  Tag tag;
+  void removeChildFromUnflattenedTree(std::shared_ptr<MutationNode> child);
+  void applyMutationToIndices(ShadowViewMutation mutation);
+  void insertChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
+  void insertUnflattenedChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
+  virtual bool isMutationNode();
+  explicit Node(const Tag tag) : tag(tag) {}
+  Node(Node &&node)
+      : children(std::move(node.children)), unflattenedChildren(std::move(node.unflattenedChildren)), tag(node.tag) {}
+  Node(Node &node) : children(node.children), unflattenedChildren(node.unflattenedChildren), tag(node.tag) {}
+  virtual ~Node() = default;
 };
+
+/**
+ Represents a view that was removed from the ShadowTree
+ */
+struct MutationNode : public Node {
+  ShadowViewMutation mutation;
+  ExitingState_Legacy state = UNDEFINED;
+  explicit MutationNode(ShadowViewMutation &mutation) : Node(mutation.oldChildShadowView.tag), mutation(mutation) {}
+  MutationNode(ShadowViewMutation &mutation, Node &&node) : Node(std::move(node)), mutation(mutation) {}
+  bool isMutationNode() override;
+};
+
+static inline bool isRNSScreen(std::shared_ptr<MutationNode> node) {
+  const auto &componentName = node->mutation.oldChildShadowView.componentName;
+  return !std::strcmp(componentName, "RNSScreenStack") || !std::strcmp(componentName, "RNSScreen") ||
+      !std::strcmp(componentName, "RNSModalScreen");
+}
+
+static inline void mergeAndSwap(
+    std::vector<std::shared_ptr<MutationNode>> &A,
+    std::vector<std::shared_ptr<MutationNode>> &B) {
+  std::vector<std::shared_ptr<MutationNode>> merged;
+  auto it1 = A.begin(), it2 = B.begin();
+  while (it1 != A.end() && it2 != B.end()) {
+    if ((*it1)->mutation.index < (*it2)->mutation.index) {
+      merged.push_back(*it1);
+      it1++;
+    } else {
+      merged.push_back(*it2);
+      it2++;
+    }
+  }
+  while (it1 != A.end()) {
+    merged.push_back(*it1);
+    it1++;
+  }
+  while (it2 != B.end()) {
+    merged.push_back(*it2);
+    it2++;
+  }
+  std::swap(A, merged);
+}
 
 struct SurfaceContext {
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
 };
 
-struct LayoutAnimationsProxy : public MountingOverrideDelegate,
-                               public UIManagerAnimationDelegate,
-                               public std::enable_shared_from_this<LayoutAnimationsProxy> {
+struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
+                                      public UIManagerAnimationDelegate,
+                                      public std::enable_shared_from_this<LayoutAnimationsProxy_Legacy> {
   mutable std::unordered_map<Tag, std::shared_ptr<Node>> nodeForTag_;
-  mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
   mutable std::recursive_mutex mutex;
   mutable SurfaceManager surfaceManager;
   mutable std::unordered_map<SurfaceId, SurfaceContext> surfaceContext_;
   mutable std::unordered_map<Tag, int> leastRemoved;
   mutable std::unordered_set<SurfaceId> surfacesToRemove_;
-  mutable std::vector<Tag> finishedAnimationTags_;
-  std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
-  std::shared_ptr<const ContextContainer> contextContainer_;
-  SharedComponentDescriptorRegistry componentDescriptorRegistry_;
-  jsi::Runtime &uiRuntime_;
-  const std::shared_ptr<UIScheduler> uiScheduler_;
-  PreserveMountedTagsFunction preserveMountedTags_;
-#ifdef ANDROID
-  std::shared_ptr<UIManager> uiManager_;
-  std::shared_ptr<CallInvoker> jsInvoker_;
-#endif
 
-  LayoutAnimationsProxy(
+  LayoutAnimationsProxy_Legacy(
       std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager,
       SharedComponentDescriptorRegistry componentDescriptorRegistry,
       std::shared_ptr<const ContextContainer> contextContainer,
@@ -74,18 +124,19 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate,
       std::shared_ptr<CallInvoker> jsInvoker
 #endif
       )
-      : layoutAnimationsManager_(std::move(layoutAnimationsManager)),
-        contextContainer_(std::move(contextContainer)),
-        componentDescriptorRegistry_(std::move(componentDescriptorRegistry)),
-        uiRuntime_(uiRuntime),
-        uiScheduler_(uiScheduler)
+      : LayoutAnimationsProxyCommon(
+            std::move(layoutAnimationsManager),
+            std::move(componentDescriptorRegistry),
+            std::move(contextContainer),
+            uiRuntime,
+            uiScheduler
 #ifdef ANDROID
-        ,
-        preserveMountedTags_(std::move(filterUnmountedTagsFunction)),
-        uiManager_(std::move(uiManager)),
-        jsInvoker_(std::move(jsInvoker))
-#endif // ANDROID
-  {
+            ,
+            std::move(filterUnmountedTagsFunction),
+            std::move(uiManager),
+            std::move(jsInvoker)
+#endif
+        ) {
   }
 
   void startEnteringAnimation(const int tag, ShadowViewMutation &mutation) const;
@@ -93,8 +144,8 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate,
   void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation) const;
 
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
-  std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle);
-  std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove);
+  std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) override;
+  std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
   void maybeCancelAnimation(const int tag) const;
 
   void parseRemoveMutations(
@@ -131,9 +182,9 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate,
   void removeRecursively(std::shared_ptr<MutationNode> node, ShadowViewMutationList &mutations) const;
   bool startAnimationsRecursively(
       const std::shared_ptr<MutationNode> &node,
-      const bool shouldRemoveSubviewsWithoutAnimations,
-      const bool shouldAnimate,
-      const bool isScreenPop,
+      bool shouldRemoveSubviewsWithoutAnimations,
+      bool shouldAnimate,
+      bool isScreenPop,
       ShadowViewMutationList &mutations) const;
   void endAnimationsRecursively(const std::shared_ptr<MutationNode> &node, ShadowViewMutationList &mutations) const;
   void maybeDropAncestors(
@@ -142,10 +193,6 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate,
       ShadowViewMutationList &cleanupMutations) const;
 
   const ComponentDescriptor &getComponentDescriptorForShadowView(const ShadowView &shadowView) const;
-#ifdef ANDROID
-  void restoreOpacityInCaseOfFlakyEnteringAnimation(SurfaceId surfaceId) const;
-  const ShadowNode *findInShadowTreeByTag(const ShadowNode &node, Tag tag) const;
-#endif // ANDROID
   // MountingOverrideDelegate
 
   bool shouldOverridePullTransaction() const override;
