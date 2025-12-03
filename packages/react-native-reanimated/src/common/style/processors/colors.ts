@@ -213,7 +213,7 @@ export function processColor(
 export function unprocessColor(
   value: ProcessedColor
 ): string | PlatformColorObject | DynamicColorObjectIOS {
-  if (typeof value === 'number' || typeof value === 'boolean') {
+  if (typeof value === 'number') {
     return unprocessColorNumber(value);
   }
   if (isPlatformColorObject(value)) {
