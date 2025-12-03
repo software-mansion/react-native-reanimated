@@ -1,7 +1,7 @@
 'use strict';
 import type { PlainStyle } from '../../types';
 import { ValueProcessorTarget } from '../../types';
-import createStyleBuilder from '../createStyleBuilder';
+import createStyleBuilder from '../createStyleBuilder-old';
 // TODO - add more tests
 
 describe(createStyleBuilder, () => {

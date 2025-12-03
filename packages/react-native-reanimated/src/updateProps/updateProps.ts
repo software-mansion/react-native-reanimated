@@ -6,13 +6,9 @@ import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import {
   IS_JEST,
-  processBoxShadowNative,
-  processColorsInProps,
-  processFilter,
-  processTransform,
-  processTransformOrigin,
   ReanimatedError,
   SHOULD_BE_USE_WEB,
+  styleBuilder,
 } from '../common';
 import { processBoxShadowWeb, processFilterWeb } from '../common/web';
 import type {
@@ -52,24 +48,10 @@ if (SHOULD_BE_USE_WEB) {
 } else {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
-    /* TODO: Improve this config structure in the future
-     * The goal is to create a simplified version of `src/css/platform/native/config.ts`,
-     * containing only properties that require processing and their associated processors
-     * */
-    processColorsInProps(updates);
-    if ('transformOrigin' in updates) {
-      updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
-    }
-    if ('transform' in updates) {
-      updates.transform = processTransform(updates.transform);
-    }
-    if ('boxShadow' in updates) {
-      updates.boxShadow = processBoxShadowNative(updates.boxShadow);
-    }
-    if ('filter' in updates) {
-      updates.filter = processFilter(updates.filter);
-    }
-    global.UpdatePropsManager.update(viewDescriptors, updates);
+    global.UpdatePropsManager.update(
+      viewDescriptors,
+      styleBuilder.build(updates)
+    );
   };
 }
 
