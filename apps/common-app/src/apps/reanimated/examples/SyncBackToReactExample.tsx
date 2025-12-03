@@ -1,6 +1,6 @@
 import { balloonsImage } from '@/apps/css/assets';
 import React, { useCallback } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { Button, Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   DynamicColorIOS,
   PlatformColor,
@@ -16,14 +16,17 @@ const instructions = [
   '4. The width and colors should not change, similar to when the feature flag is disabled',
 ].join('\n');
 
-interface ButtonProps {
+interface CustomButtonProps {
   title: string;
   onPress: () => void;
 }
 
-function Button({ title, onPress }: ButtonProps) {
-  // We use a custom button component because the one from React Native
-  // triggers additional renders when pressed.
+// We use a custom button component on native platforms
+// because the one from React Native triggers additional renders when pressed.
+function CustomButton({ title, onPress }: CustomButtonProps) {
+  if (Platform.OS === 'web') {
+    return <Button title={title} onPress={onPress} />;
+  }
 
   return (
     <View onTouchEnd={onPress} style={styles.buttonView}>
@@ -130,9 +133,9 @@ export default function SyncBackToReactExample() {
         // @ts-ignore
         style={[styles.box, animatedStyle8]}
       />
-      <Button title="Toggle shared value" onPress={handleToggle} />
+      <CustomButton title="Toggle shared value" onPress={handleToggle} />
       <Text>Counter: {count}</Text>
-      <Button title="Increase counter" onPress={handleIncreaseCounter} />
+      <CustomButton title="Increase counter" onPress={handleIncreaseCounter} />
       <Text style={styles.instructions}>{instructions}</Text>
     </View>
   );
