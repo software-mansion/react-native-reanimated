@@ -182,6 +182,10 @@ Static flags are intended to be resolved during code compilation and cannot be c
 2. Run `pod install` (iOS only)
 3. Rebuild the native app
 
+:::warning
+[RNRepo](https://rnrepo.org/) does not support Reanimated static feature flags. If you would like to modify static feature flags while using RNRepo in your project, you must force building Reanimated from source by adding deny list configuration as described in [RNRepo's documentation](https://github.com/software-mansion/rnrepo/blob/main/TROUBLESHOOTING.md#deny-list-configuration).
+:::
+
 To read a static feature flag value in JavaScript, you can use `getStaticFeatureFlag` function.
 
 ## Dynamic feature flags
@@ -203,6 +207,7 @@ To read a dynamic feature flag value in JavaScript, you can use `getDynamicFeatu
 | Value is known during app build          |          ✅          |          ❌           |
 | Value may change during app lifetime     |          ❌          |          ✅           |
 | Value change requires app rebuild        |          ✅          |          ❌           |
+| Can be changed via public JavaScript API |          ❌          |          ✅           |
 | Can be changed via public JavaScript API |          ❌          |          ✅           |
 | Can be changed via app's `package.json`  |          ✅          |          ❌           |
 
