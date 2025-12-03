@@ -60,13 +60,15 @@ export default function SyncBackToReactExample() {
   const animatedStyle4 = useAnimatedStyle(() => {
     return {
       backgroundColor:
-        Platform.OS === 'ios'
-          ? PlatformColor(sv.value ? 'systemBlue' : 'systemGreen')
-          : PlatformColor(
+        Platform.OS === 'android'
+          ? PlatformColor(
               sv.value
                 ? '@android:color/holo_blue_bright'
                 : '@android:color/holo_green_light'
-            ),
+            )
+          : Platform.OS === 'ios'
+            ? PlatformColor(sv.value ? 'systemBlue' : 'systemGreen')
+            : 'gray',
     };
   });
 
