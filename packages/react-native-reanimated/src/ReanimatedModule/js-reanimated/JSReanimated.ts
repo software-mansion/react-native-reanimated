@@ -15,6 +15,7 @@ import {
 } from '../../common';
 import type {
   InternalHostInstance,
+  SettledUpdate,
   ShadowNodeWrapper,
   StyleProps,
   Value3D,
@@ -338,6 +339,12 @@ class JSReanimated implements IReanimatedModule {
   unregisterCSSTransition(_viewTag: number): void {
     throw new ReanimatedError(
       '`unregisterCSSTransition` is not available in JSReanimated.'
+    );
+  }
+
+  getSettledUpdates(): SettledUpdate[] {
+    throw new ReanimatedError(
+      '`getSettledUpdates` is not available in JSReanimated.'
     );
   }
 }

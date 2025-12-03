@@ -23,6 +23,7 @@ Feature flags are available since Reanimated 4.
 | [`USE_SYNCHRONIZABLE_FOR_MUTABLES`](#use_synchronizable_for_mutables)                               | [static](#static-feature-flags) |  4.1.0   |  &ndash;   |    `false`    |
 | [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](#use_commit_hook_only_for_react_commits)                 | [static](#static-feature-flags) |  4.2.0   |  &ndash;   |    `false`    |
 | [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions)                           | [static](#static-feature-flags) |  4.2.0   |  &ndash;   |    `false`    |
+| [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#force_react_render_for_settled_animations)           | [static](#static-feature-flags) |  4.2.0   |  &ndash;   |    `false`    |
 
 :::info
 
@@ -133,7 +134,7 @@ When enabled, non-layout styles will be applied using the `synchronouslyUpdateVi
 
 2. The changes are applied via `synchronouslyUpdateViewOnUIThread` are not synchronized with changes applied by `ShadowTree::commit` which may lead to minor inconsistencies of animated styles or animated components in a single animation frame.
 
-Currently, only the following styles can be updated using the fast path: `opacity`, `elevation`, `zIndex`, `backgroundColor`, `tintColor`, `borderRadius` (all sides), `borderColor` (all sides) and `transform` (all transforms). All remaining styles, if present, will be updated via `ShadowTree::commit`.
+Currently, only the following styles can be updated using the fast path: `opacity`, `elevation`, `zIndex`, `backgroundColor` (excluding `PlatformColor`), `tintColor` (excluding `PlatformColor`), `borderColor` (all sides, excluding `PlatformColor`), `borderRadius` (all sides) and `transform` (all transforms). All remaining styles, if present, will be updated via `ShadowTree::commit`.
 
 This feature flag works only on Android and has no effect on iOS. For more details, see [PR #7823](https://github.com/software-mansion/react-native-reanimated/pull/7823).
 
@@ -156,6 +157,10 @@ This feature flag is supposed to fix performance regressions of animations while
 ### `ENABLE_SHARED_ELEMENT_TRANSITIONS`
 
 When enabled, Shared Element Transitions are available to use, also the synchronous prop update flags are disabled. The feature is not yet production ready, and may have some limitations or bugs. For more details, see [PR #7466](https://github.com/software-mansion/react-native-reanimated/pull/7466).
+
+### `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`
+
+This feature flag enables a mechanism that periodically synchronizes animated style updates back to React by triggering a React render for animated components with accumulated animated styles and evicting them from the registry on the C++ side. It is supposed to improve performance by decreasing the number of `ShadowNode` clone operations in `ReanimatedCommitHook` for React commits. However, for the time being, it also alters the behavior when detaching animated styles from animated components – the animated styles won't be reverted to the original styles. This can cause unwanted side effects in your app's behavior, so please use this feature flag with caution, particularly if some parts of your app rely on detaching animated styles.
 
 ## Static feature flags
 

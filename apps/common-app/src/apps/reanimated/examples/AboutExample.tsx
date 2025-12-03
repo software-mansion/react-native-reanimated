@@ -137,6 +137,16 @@ export default function AboutExample() {
               : 'Disabled'}
           </Text>
           <Text style={styles.text}>
+            <Text style={styles.bold}>
+              FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS:
+            </Text>{' '}
+            {getStaticFeatureFlagReanimated(
+              'FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS'
+            )
+              ? 'Enabled'
+              : 'Disabled'}
+          </Text>
+          <Text style={styles.text}>
             <Text style={styles.bold}>IOS_DYNAMIC_FRAMERATE_ENABLED:</Text>{' '}
             {getStaticFeatureFlagWorklets('IOS_DYNAMIC_FRAMERATE_ENABLED')
               ? 'Enabled'

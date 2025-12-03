@@ -150,6 +150,8 @@ apply plugin: "com.android.library"
 apply plugin: "maven-publish"
 apply plugin: "de.undercouch.download"
 
+apply from: "./fix-prefab.gradle"
+
 
 android {
     compileSdkVersion safeExtGet("compileSdkVersion", 34)

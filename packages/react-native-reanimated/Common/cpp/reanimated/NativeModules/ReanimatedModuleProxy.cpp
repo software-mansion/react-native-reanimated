@@ -97,7 +97,8 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       return;
     }
 
-    strongThis->animatedPropsRegistry_->update(rt, operations);
+    const auto timestamp = strongThis->getAnimationTimestamp_();
+    strongThis->animatedPropsRegistry_->update(rt, operations, timestamp);
   };
 
   auto measure = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) -> jsi::Value {
@@ -452,6 +453,25 @@ void ReanimatedModuleProxy::updateCSSTransition(
 void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) {
   auto lock = cssTransitionsRegistry_->lock();
   cssTransitionsRegistry_->remove(viewTag.asNumber());
+}
+
+jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
+  react_native_assert(
+      StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
+      "getSettledUpdates requires FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS static feature flag to be enabled");
+
+  // TODO(future): use unified timestamp
+  const auto currentTimestamp = getAnimationTimestamp_();
+
+  const auto lock = animatedPropsRegistry_->lock();
+
+  // TODO: fix bug when threshold difference is smaller than 1 second
+  // TODO(future): flush updates from CSS animations and CSS transitions registries
+  animatedPropsRegistry_->removeUpdatesOlderThanTimestamp(currentTimestamp - 2000); // 2 seconds
+
+  // TODO(future): find a better way to obtain timestamp for removing updates
+  // TODO(future): move removing old updates to separate method
+  return animatedPropsRegistry_->getUpdatesOlderThanTimestamp(rt, currentTimestamp - 1000); // 1 second
 }
 
 bool ReanimatedModuleProxy::handleEvent(
@@ -857,9 +877,10 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
 
       for (const auto &[shadowNode, props] : updatesBatch) {
         bool hasOnlySynchronousProps = true;
-        for (const auto &key : props.keys()) {
+        for (const auto &[key, value] : props.items()) {
           const auto keyStr = key.asString();
-          if (!synchronousProps.contains(keyStr)) {
+          if (!synchronousProps.contains(keyStr) ||
+              ((keyStr == "color" || keyStr.find("Color") != std::string::npos) && !value.isInt())) {
             hasOnlySynchronousProps = false;
             break;
           }
