@@ -2,6 +2,7 @@
 import '../layoutReanimation/animationsManager';
 
 import type React from 'react';
+import { StyleSheet } from 'react-native';
 
 import { checkStyleOverwriting, maybeBuild } from '../animationBuilder';
 import { IS_JEST, IS_WEB, logger } from '../common';
@@ -9,6 +10,7 @@ import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
+import { getStaticFeatureFlag } from '../featureFlags';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
 import type { BaseAnimationBuilder } from '../layoutReanimation';
 import {
@@ -20,6 +22,7 @@ import {
 } from '../layoutReanimation/web';
 import type { CustomConfig } from '../layoutReanimation/web/config';
 import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
+import { PropsRegistryGarbageCollector } from '../PropsRegistryGarbageCollector';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
 import type {
@@ -45,6 +48,9 @@ if (IS_WEB) {
   configureWebLayoutAnimations();
 }
 
+const FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS =
+  getStaticFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS') && !IS_WEB;
+
 export type Options<P> = {
   setNativeProps?: (ref: AnimatedComponentRef, props: P) => void;
   jsProps?: string[];
@@ -52,7 +58,8 @@ export type Options<P> = {
 
 export default class AnimatedComponent
   extends ReanimatedAnimatedComponent<
-    AnimatedComponentProps<InitialComponentProps>
+    AnimatedComponentProps<InitialComponentProps>,
+    { settledProps: StyleProps }
   >
   implements IAnimatedComponentInternal
 {
@@ -84,6 +91,10 @@ export default class AnimatedComponent
     this._options = options;
     this._displayName = displayName;
 
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+      this.state = { settledProps: {} };
+    }
+
     if (IS_JEST) {
       this.jestAnimatedStyle = { value: {} };
       this.jestAnimatedProps = { value: {} };
@@ -107,6 +118,13 @@ export default class AnimatedComponent
     this._NativeEventsManager?.attachEvents();
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+      const viewTag = this.getComponentViewTag();
+      if (viewTag !== -1) {
+        PropsRegistryGarbageCollector.registerView(viewTag, this);
+      }
+    }
 
     if (this._options?.jsProps?.length) {
       jsPropsUpdater.registerComponent(this, this._options.jsProps);
@@ -166,6 +184,13 @@ export default class AnimatedComponent
     this._detachStyles();
     this._InlinePropManager.detachInlineProps();
 
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+      const viewTag = this.getComponentViewTag();
+      if (viewTag !== -1) {
+        PropsRegistryGarbageCollector.unregisterView(viewTag);
+      }
+    }
+
     if (this._options?.jsProps?.length) {
       jsPropsUpdater.unregisterComponent(this);
     }
@@ -185,6 +210,13 @@ export default class AnimatedComponent
         this._componentDOMRef as ReanimatedHTMLElement,
         LayoutAnimationType.EXITING
       );
+    }
+  }
+
+  _syncStylePropsBackToReact(props: StyleProps) {
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+      this.setState({ settledProps: props });
+      // TODO(future): revert changes when animated styles are detached
     }
   }
 
@@ -444,6 +476,21 @@ export default class AnimatedComponent
           jestAnimatedProps: this.jestAnimatedProps,
         }
       : {};
+
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+      const flatStyles = StyleSheet.flatten(filteredProps.style as object);
+      const mergedStyles = {
+        ...flatStyles,
+        ...this.state.settledProps,
+      };
+      return super.render({
+        nativeID,
+        ...filteredProps,
+        ...this.state.settledProps,
+        style: mergedStyles,
+        ...jestProps,
+      });
+    }
 
     return super.render({
       nativeID,

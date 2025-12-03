@@ -68,6 +68,8 @@ function isDynamicColorObjectIOS(
 export const ERROR_MESSAGES = {
   invalidColor: (color: unknown) =>
     `Invalid color value: ${JSON.stringify(color)}`,
+  invalidProcessedColor: (color: unknown) =>
+    `Invalid processed color value: ${JSON.stringify(color)}`,
   dynamicNotAvailableOnPlatform: () =>
     'DynamicColorIOS is not available on this platform.',
 };
@@ -84,6 +86,14 @@ export function processColorNumber(value: unknown): number | null {
   }
 
   return normalizedColor;
+}
+
+function unprocessColorNumber(value: number): string {
+  const a = value >>> 24;
+  const r = (value << 8) >>> 24;
+  const g = (value << 16) >>> 24;
+  const b = (value << 24) >>> 24;
+  return `rgba(${r},${g},${b},${a})`;
 }
 
 export type ProcessedDynamicColorObjectIOS = {
@@ -118,6 +128,22 @@ function processDynamicColorObjectIOS(
     }
 
     result[property] = processed;
+  }
+
+  return {
+    dynamic: result,
+  };
+}
+
+function unprocessDynamicColorObjectIOS(
+  value: ProcessedDynamicColorObjectIOS
+): DynamicColorObjectIOS {
+  const result = {} as DynamicColorIOSTuple;
+
+  for (const property of DynamicColorIOSProperties) {
+    if (value.dynamic[property] !== undefined) {
+      result[property] = unprocessColorNumber(value.dynamic[property]);
+    }
   }
 
   return {
@@ -184,6 +210,24 @@ export function processColor(
   return result;
 }
 
+export function unprocessColor(
+  value: ProcessedColor
+): string | PlatformColorObject | DynamicColorObjectIOS {
+  if (typeof value === 'number') {
+    return unprocessColorNumber(value);
+  }
+  if (isPlatformColorObject(value)) {
+    return value;
+  }
+  if (isDynamicColorObjectIOS(value)) {
+    if (!IS_IOS) {
+      throw new ReanimatedError(ERROR_MESSAGES.dynamicNotAvailableOnPlatform());
+    }
+    return unprocessDynamicColorObjectIOS(value);
+  }
+  throw new ReanimatedError(ERROR_MESSAGES.invalidProcessedColor(value));
+}
+
 export function processColorsInProps(props: StyleProps) {
   for (const key in props) {
     if (!ColorProperties.includes(key)) continue;
@@ -191,5 +235,15 @@ export function processColorsInProps(props: StyleProps) {
     props[key] = Array.isArray(value)
       ? value.map((c) => processColor(c))
       : processColor(value);
+  }
+}
+
+export function unprocessColorsInProps(props: StyleProps) {
+  for (const key in props) {
+    if (!ColorProperties.includes(key)) continue;
+    const value = props[key];
+    props[key] = Array.isArray(value)
+      ? value.map((c) => unprocessColor(c))
+      : unprocessColor(value);
   }
 }

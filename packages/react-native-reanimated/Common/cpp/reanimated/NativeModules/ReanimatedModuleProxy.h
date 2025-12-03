@@ -122,6 +122,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   void updateCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &configUpdates) override;
   void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) override;
 
+  jsi::Value getSettledUpdates(jsi::Runtime &rt) override;
+
   void cssLoopCallback(const double /*timestampMs*/);
 
   void dispatchCommand(
