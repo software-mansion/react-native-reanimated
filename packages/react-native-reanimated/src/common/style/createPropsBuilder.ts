@@ -1,6 +1,7 @@
 'use strict';
 import { ReanimatedError } from '../errors';
 import type { ReadonlyRecord, UnknownRecord, ValueProcessor } from '../types';
+import { isRecord } from '../utils';
 
 const MAX_PROCESS_DEPTH = 10;
 
@@ -49,15 +50,37 @@ export default function createPropsBuilder<TConfigValue, TBuildResult>({
   return {
     build(props: Readonly<UnknownRecord>, includeUndefined = false) {
       'worklet';
-      return buildProps(
-        Object.entries(props).reduce<UnknownRecord>((acc, [key, value]) => {
-          const processedValue = processedConfig[key](value); // TODO - add value processor context
-          if (includeUndefined || processedValue !== undefined) {
+      const processed = Object.entries(props).reduce<UnknownRecord>(
+        (acc, [key, value]) => {
+          const processor = processedConfig[key];
+
+          if (!processor) {
+            // Props is not supported, skip it
+           return acc;
+          }
+
+          const processedValue = processor(value);
+          if (processedValue === undefined && !includeUndefined) {
+            // Skip if value is undefined and we don't want to include undefined values
+            return acc;
+          }
+
+          if (isRecord(processedValue)) {
+            for (const processedKey in processedValue) {
+              if (!(processedKey in props)) {
+                acc[processedKey] = processedValue[processedKey];
+              }
+            }
+          } else {
             acc[key] = processedValue;
           }
+
           return acc;
-        }, {})
+        },
+        {}
       );
+
+      return buildProps(processed);
     },
   };
 }
