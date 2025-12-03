@@ -14,7 +14,6 @@ export type NonMutable<T> = T extends object ? Readonly<T> : T;
 
 export type AnyRecord = Record<string, any>;
 export type UnknownRecord = Record<string, unknown>;
-export type ReadonlyRecord<K extends keyof any, V> = Readonly<Record<K, V>>;
 
 export type AnyComponent = ComponentType<any>;
 

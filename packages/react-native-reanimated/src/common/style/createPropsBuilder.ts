@@ -1,55 +1,76 @@
 'use strict';
 import { ReanimatedError } from '../errors';
-import type { ReadonlyRecord, UnknownRecord, ValueProcessor } from '../types';
+import type {
+  UnknownRecord,
+  ValueProcessor,
+  ValueProcessorContext,
+} from '../types';
+import { ValueProcessorTarget } from '../types';
 import { isRecord } from '../utils';
 
 const MAX_PROCESS_DEPTH = 10;
 
-type PropsBuilderConfig<TConfigValue, TBuildResult> = {
-  config: ReadonlyRecord<string, TConfigValue>;
+type CreatePropsBuilderParams<TPropsConfig> = {
+  config: TPropsConfig;
   processConfigEntry: (params: {
-    configValue: TConfigValue;
-    config: ReadonlyRecord<string, TConfigValue>;
-    // ctx: TConfigContext;
-  }) => ValueProcessor | TConfigValue | undefined;
-  buildProps: (props: Readonly<UnknownRecord>) => TBuildResult;
+    configValue: TPropsConfig[keyof TPropsConfig];
+    config: TPropsConfig;
+  }) => ValueProcessor | TPropsConfig[keyof TPropsConfig] | undefined;
+  buildProps: (props: Readonly<UnknownRecord>) => UnknownRecord;
 };
 
-//& { ctx: TConfigContext };
-
-export default function createPropsBuilder<TConfigValue, TBuildResult>({
-  config,
-  processConfigEntry,
-  buildProps,
-}: PropsBuilderConfig<TConfigValue, TBuildResult>) {
-  const processedConfig = Object.entries(config).reduce<
-    Record<string, (value: unknown) => unknown>
-  >((acc, [key, configValue]) => {
-    let processedEntry: ReturnType<typeof processConfigEntry> = configValue;
-
-    let depth = 0;
-    do {
-      if (++depth > MAX_PROCESS_DEPTH) {
-        throw new ReanimatedError(
-          `Max process depth for props builder reached for property ${key}`
-        );
-      }
-      processedEntry = processConfigEntry({
-        configValue: processedEntry,
-        config,
-      });
-    } while (processedEntry && typeof processedEntry !== 'function');
-
-    if (processedEntry) {
-      acc[key] = processedEntry as ValueProcessor;
+type CreateStyleBuilderResult<TProps> = {
+  build(
+    props: TProps,
+    options?: {
+      includeUndefined?: boolean;
+      target?: ValueProcessorTarget;
     }
+  ): UnknownRecord;
+}
 
-    return acc;
-  }, {});
+export default function createPropsBuilder<TProps extends UnknownRecord, TPropsConfig extends UnknownRecord>({
+  processConfigEntry,
+config,
+}: CreatePropsBuilderParams<TPropsConfig>): CreateStyleBuilderResult<TProps> {
+    const processedConfig = Object.entries(config).reduce<
+      Record<string, ValueProcessor>
+    >((acc, [key, configValue]) => {
+      let processedEntry: ReturnType<typeof processConfigEntry> = configValue as TPropsConfig[keyof TPropsConfig];
 
-  return {
-    build(props: Readonly<UnknownRecord>, includeUndefined = false) {
+      let depth = 0;
+      do {
+        if (++depth > MAX_PROCESS_DEPTH) {
+          throw new ReanimatedError(
+            `Max process depth for props builder reached for property ${key}`
+          );
+        }
+        processedEntry = processConfigEntry({
+          configValue: processedEntry,
+          config,
+        });
+      } while (processedEntry && typeof processedEntry !== 'function');
+
+      if (processedEntry) {
+        acc[key] = processedEntry as ValueProcessor;
+      }
+
+      return acc;
+    }, {});
+
+    return {
+      build(
+        props: Readonly<UnknownRecord>,
+        {
+          includeUndefined = false,
+          target = ValueProcessorTarget.Default,
+      }: {
+        includeUndefined?: boolean;
+        target?: ValueProcessorTarget;
+      } = {}
+    ) {
       'worklet';
+      const context: ValueProcessorContext = { target };
       const processed = Object.entries(props).reduce<UnknownRecord>(
         (acc, [key, value]) => {
           const processor = processedConfig[key];
@@ -59,7 +80,7 @@ export default function createPropsBuilder<TConfigValue, TBuildResult>({
            return acc;
           }
 
-          const processedValue = processor(value);
+          const processedValue = processor(value, context);
           if (processedValue === undefined && !includeUndefined) {
             // Skip if value is undefined and we don't want to include undefined values
             return acc;
@@ -80,7 +101,7 @@ export default function createPropsBuilder<TConfigValue, TBuildResult>({
         {}
       );
 
-      return buildProps(processed);
+      return processed;
     },
   };
 }
