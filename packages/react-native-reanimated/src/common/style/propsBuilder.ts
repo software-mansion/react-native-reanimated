@@ -1,5 +1,10 @@
 'use strict';
-import { ConfigPropertyAlias, PlainStyle, UnknownRecord, type ValueProcessor } from '../types';
+import type {
+  ConfigPropertyAlias,
+  PlainStyle,
+  UnknownRecord,
+  ValueProcessor,
+} from '../types';
 import { isConfigPropertyAlias, isRecord } from '../utils';
 import { BASE_PROPERTIES_CONFIG } from './config';
 import createPropsBuilder from './createPropsBuilder';
@@ -20,21 +25,25 @@ type PropsBuilderPropertyConfig<
       // type than in the React Native stylesheet (e.g. number for colors instead of string)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       process: ValueProcessor<Required<TProps>[K], any>; // for custom value processing
-  };
+    };
 
 export function createNativePropsBuilder<TProps extends UnknownRecord>(
-  config: Required<{ [K in keyof TProps]: PropsBuilderPropertyConfig<TProps, K> }>
+  config: Required<{
+    [K in keyof TProps]: PropsBuilderPropertyConfig<TProps, K>;
+  }>
 ) {
-  return createPropsBuilder<TProps, typeof config>({
+  type TConfig = typeof config;
+
+  return createPropsBuilder<TProps, TConfig>({
     config,
-    processConfigEntry: ({ configValue, config }) => {
+    processConfigValue(configValue) {
       if (configValue === true) {
         return (value) => {
           'worklet';
           return value;
         };
       }
-      if (isConfigPropertyAlias(configValue)) {
+      if (isConfigPropertyAlias<TProps>(configValue)) {
         return config[configValue.as];
       }
       if (hasValueProcessor(configValue)) {
@@ -47,32 +56,8 @@ export function createNativePropsBuilder<TProps extends UnknownRecord>(
   });
 }
 
-
-
-// = createPropsBuilder({
-//   processConfigEntry: ({ configValue, config }) => {
-//     if (configValue === true) {
-//       return (value) => {
-//         'worklet';
-//         return value;
-//       };
-//     }
-//     if (isConfigPropertyAlias(configValue)) {
-//       return config[configValue.as];
-//     }
-//     if (hasValueProcessor(configValue)) {
-//       return (value, context) => {
-//         'worklet';
-//         return configValue.process(value, context);
-//       };
-//     }
-//   },
-//   buildProps: (props) => {
-//     'worklet';
-//     return props;
-//   },
-// });
-
-const propsBuilder = createNativePropsBuilder<PlainStyle>(BASE_PROPERTIES_CONFIG);
+const propsBuilder = createNativePropsBuilder<PlainStyle>(
+  BASE_PROPERTIES_CONFIG
+);
 
 export default propsBuilder;

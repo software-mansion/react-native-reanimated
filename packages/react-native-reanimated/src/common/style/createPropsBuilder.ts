@@ -12,11 +12,9 @@ const MAX_PROCESS_DEPTH = 10;
 
 type CreatePropsBuilderParams<TPropsConfig> = {
   config: TPropsConfig;
-  processConfigEntry: (params: {
-    configValue: TPropsConfig[keyof TPropsConfig];
-    config: TPropsConfig;
-  }) => ValueProcessor | TPropsConfig[keyof TPropsConfig] | undefined;
-  buildProps: (props: Readonly<UnknownRecord>) => UnknownRecord;
+  processConfigValue: (
+    configValue: TPropsConfig[keyof TPropsConfig]
+  ) => ValueProcessor | TPropsConfig[keyof TPropsConfig] | undefined;
 };
 
 type CreateStyleBuilderResult<TProps> = {
@@ -27,43 +25,46 @@ type CreateStyleBuilderResult<TProps> = {
       target?: ValueProcessorTarget;
     }
   ): UnknownRecord;
-}
+};
 
-export default function createPropsBuilder<TProps extends UnknownRecord, TPropsConfig extends UnknownRecord>({
-  processConfigEntry,
-config,
+export default function createPropsBuilder<
+  TProps extends UnknownRecord,
+  TPropsConfig extends UnknownRecord,
+>({
+  processConfigValue,
+  config,
 }: CreatePropsBuilderParams<TPropsConfig>): CreateStyleBuilderResult<TProps> {
-    const processedConfig = Object.entries(config).reduce<
-      Record<string, ValueProcessor>
-    >((acc, [key, configValue]) => {
-      let processedEntry: ReturnType<typeof processConfigEntry> = configValue as TPropsConfig[keyof TPropsConfig];
+  const processedConfig = Object.entries(config).reduce<
+    Record<string, ValueProcessor>
+  >((acc, [key, configValue]) => {
+    let processedValue: ReturnType<typeof processConfigValue> =
+      configValue as TPropsConfig[keyof TPropsConfig];
 
-      let depth = 0;
-      do {
-        if (++depth > MAX_PROCESS_DEPTH) {
-          throw new ReanimatedError(
-            `Max process depth for props builder reached for property ${key}`
-          );
-        }
-        processedEntry = processConfigEntry({
-          configValue: processedEntry,
-          config,
-        });
-      } while (processedEntry && typeof processedEntry !== 'function');
-
-      if (processedEntry) {
-        acc[key] = processedEntry as ValueProcessor;
+    let depth = 0;
+    while (processedValue) {
+      if (++depth > MAX_PROCESS_DEPTH) {
+        throw new ReanimatedError(
+          `Max process depth for props builder reached for property ${key}`
+        );
       }
 
-      return acc;
-    }, {});
+      if (typeof processedValue === 'function') {
+        acc[key] = processedValue as ValueProcessor;
+        break;
+      }
 
-    return {
-      build(
-        props: Readonly<UnknownRecord>,
-        {
-          includeUndefined = false,
-          target = ValueProcessorTarget.Default,
+      processedValue = processConfigValue(processedValue);
+    }
+
+    return acc;
+  }, {});
+
+  return {
+    build(
+      props: Readonly<UnknownRecord>,
+      {
+        includeUndefined = false,
+        target = ValueProcessorTarget.Default,
       }: {
         includeUndefined?: boolean;
         target?: ValueProcessorTarget;
@@ -71,13 +72,14 @@ config,
     ) {
       'worklet';
       const context: ValueProcessorContext = { target };
-      const processed = Object.entries(props).reduce<UnknownRecord>(
+
+      return Object.entries(props).reduce<UnknownRecord>(
         (acc, [key, value]) => {
           const processor = processedConfig[key];
 
           if (!processor) {
             // Props is not supported, skip it
-           return acc;
+            return acc;
           }
 
           const processedValue = processor(value, context);
@@ -100,53 +102,6 @@ config,
         },
         {}
       );
-
-      return processed;
     },
   };
 }
-
-// // <<<<<<< WEB STYLE BUILDER >>>>>>>
-
-// const isRuleBuilder = <P extends AnyRecord>(
-//   value: unknown
-// ): value is RuleBuilder<P> => value instanceof RuleBuilderImpl;
-
-// const webStyleBuilder = createStyleBuilder({
-//   config: WEB_BASE_PROPERTIES_CONFIG,
-//   ctx: {
-//     ruleBuildersSet: new Set<RuleBuilder<UnknownRecord>>(),
-//   },
-//   process: ({ configValue, config, ctx }) => {
-//     if (configValue === true) {
-//       return (value) => String(value);
-//     }
-//     if (typeof configValue === 'string') {
-//       return (value) =>
-//         hasSuffix(value) ? value : `${String(value)}${configValue}`;
-//     }
-//     if (isConfigPropertyAlias(configValue)) {
-//       return config[configValue.as];
-//     }
-//     if (hasValueProcessor(configValue)) {
-//       return (value) => configValue.process(value);
-//     }
-//     if (isRuleBuilder(configValue)) {
-//       return (value) => {
-//         ctx.ruleBuildersSet.add(configValue);
-//         configValue.add(value);
-//       };
-//     }
-//   },
-//   build: (props) => {
-//     const entries = Object.entries(props);
-
-//     if (entries.length === 0) {
-//       return null;
-//     }
-
-//     return entries
-//       .map(([key, value]) => `${kebabizeCamelCase(key)}: ${String(value)}`)
-//       .join('; ');
-//   },
-// });
