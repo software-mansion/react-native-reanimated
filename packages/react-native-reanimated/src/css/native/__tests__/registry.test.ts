@@ -5,7 +5,7 @@ import {
   getPropsBuilder,
   hasPropsBuilder,
   registerComponentPropsBuilder,
-} from '../registry';
+} from '../../../common/style';
 
 describe('registry', () => {
   describe('hasPropsBuilder', () => {

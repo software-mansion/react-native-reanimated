@@ -1,7 +1,7 @@
 'use strict';
 import { ReanimatedError } from '../../../../../common';
 import type { Repeat } from '../../../../types';
-import { getPropsBuilder } from '../../../registry';
+import { getPropsBuilder } from '../../../../../common/style';
 import {
   ERROR_MESSAGES,
   normalizeAnimationKeyframes,

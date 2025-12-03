@@ -1,10 +1,11 @@
 'use strict';
-import {
-  BASE_PROPERTIES_CONFIG,
-  ReanimatedError,
+import { ReanimatedError } from '../errors';
+import type { PlainStyle, UnknownRecord } from '../types';
+import propsBuilder, {
   createNativePropsBuilder,
-} from '../../common';
-import type { PropsBuilderConfig } from '../../common';
+  type NativePropsBuilder,
+  type PropsBuilderConfig,
+} from './propsBuilder';
 
 export const ERROR_MESSAGES = {
   propsBuilderNotFound: (componentName: string) =>
@@ -23,19 +24,19 @@ const COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Map<
   Set<string>
 >();
 
-const basePropsBuilder = createNativePropsBuilder(BASE_PROPERTIES_CONFIG);
+const basePropsBuilder = propsBuilder as NativePropsBuilder;
 
-const PROPS_BUILDERS: Record<string, ReturnType<typeof createNativePropsBuilder>> = {};
+const PROPS_BUILDERS: Record<string, NativePropsBuilder> = {};
 
 export function hasPropsBuilder(componentName: string): boolean {
   return !!PROPS_BUILDERS[componentName] || componentName.startsWith('RCT');
 }
 
 export function getPropsBuilder(componentName: string) {
-  const propsBuilder = PROPS_BUILDERS[componentName];
+  const componentPropsBuilder = PROPS_BUILDERS[componentName];
 
-  if (propsBuilder) {
-    return propsBuilder;
+  if (componentPropsBuilder) {
+    return componentPropsBuilder;
   }
 
   if (componentName.startsWith('RCT')) {
@@ -53,7 +54,7 @@ export function registerComponentPropsBuilder(
     separatelyInterpolatedNestedProperties?: readonly string[];
   } = {}
 ) {
-  PROPS_BUILDERS[componentName] = createNativePropsBuilder(config);
+  PROPS_BUILDERS[componentName] = createNativePropsBuilder(config) as NativePropsBuilder;
 
   if (options.separatelyInterpolatedNestedProperties?.length) {
     COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES.set(

@@ -83,12 +83,16 @@ export default function createPropsBuilder<
           }
 
           const processedValue = processor(value, context);
+
+          const valueIsRecord = isRecord(value);
+          const processedValueIsRecord = isRecord(processedValue);
+
           if (processedValue === undefined && !includeUndefined) {
             // Skip if value is undefined and we don't want to include undefined values
             return acc;
           }
 
-          if (isRecord(processedValue)) {
+          if (processedValueIsRecord && !valueIsRecord) {
             for (const processedKey in processedValue) {
               if (!(processedKey in props)) {
                 acc[processedKey] = processedValue[processedKey];

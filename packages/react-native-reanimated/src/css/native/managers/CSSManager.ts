@@ -6,7 +6,7 @@ import type { CSSStyle } from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
 import { filterCSSAndStyleProperties } from '../../utils';
 import { setViewStyle } from '../proxy';
-import { getPropsBuilder, hasPropsBuilder } from '../registry';
+import { getPropsBuilder, hasPropsBuilder } from '../../../common/style';
 import CSSAnimationsManager from './CSSAnimationsManager';
 import CSSTransitionsManager from './CSSTransitionsManager';
 

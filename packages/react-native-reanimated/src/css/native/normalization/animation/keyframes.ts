@@ -17,7 +17,7 @@ import { normalizeTimingFunction } from '../common';
 import {
   getPropsBuilder,
   getSeparatelyInterpolatedNestedProperties,
-} from '../../registry';
+} from '../../../../common/style';
 
 export const ERROR_MESSAGES = {
   invalidOffsetType: (selector: CSSAnimationKeyframeSelector) =>

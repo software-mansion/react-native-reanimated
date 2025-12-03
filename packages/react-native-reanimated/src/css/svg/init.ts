@@ -1,5 +1,5 @@
 'use strict';
-import { registerComponentPropsBuilder } from '../native';
+import { registerComponentPropsBuilder } from '../../common/style';
 import {
   SVG_CIRCLE_PROPERTIES_CONFIG,
   SVG_ELLIPSE_PROPERTIES_CONFIG,

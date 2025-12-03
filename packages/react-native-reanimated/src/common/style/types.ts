@@ -1,12 +1,21 @@
 'use strict';
-import type { AnyRecord, ConfigPropertyAlias, ValueProcessor } from '../types';
+import type {
+  AnyRecord,
+  ConfigPropertyAlias,
+  ValueProcessor,
+  ValueProcessorContext,
+} from '../types';
 
 export type PropsBuildMiddleware<P extends AnyRecord> = (props: P) => P;
 
 export type PropsBuilder<P extends AnyRecord = AnyRecord> = {
-  isSeparatelyInterpolatedNestedProperty(property: keyof P): boolean;
-  add(property: keyof P, value: P[keyof P]): void;
-  buildFrom(props: P): P | null;
+  build(
+    props: Readonly<P>,
+    options?: {
+      includeUndefined?: boolean;
+      target?: ValueProcessorContext['target'];
+    }
+  ): AnyRecord;
 };
 
 type PropertyValueConfigBase<P extends AnyRecord> =
