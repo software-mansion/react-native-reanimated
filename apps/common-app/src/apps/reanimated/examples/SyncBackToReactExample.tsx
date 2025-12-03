@@ -64,8 +64,8 @@ export default function SyncBackToReactExample() {
           ? PlatformColor(sv.value ? 'systemBlue' : 'systemGreen')
           : PlatformColor(
               sv.value
-                ? '@android:color/holo_blue_light'
-                : '@android:color/holo_green_bright'
+                ? '@android:color/holo_blue_bright'
+                : '@android:color/holo_green_light'
             ),
     };
   });
