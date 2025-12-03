@@ -2,76 +2,76 @@
 import { BASE_PROPERTIES_CONFIG } from '../../../common';
 import {
   ERROR_MESSAGES,
-  getStyleBuilder,
-  hasStyleBuilder,
-  registerComponentStyleBuilder,
+  getPropsBuilder,
+  hasPropsBuilder,
+  registerComponentPropsBuilder,
 } from '../registry';
 
 describe('registry', () => {
-  describe('hasStyleBuilder', () => {
+  describe('hasPropsBuilder', () => {
     test('returns true for registered component names', () => {
       const componentName = 'CustomComponent';
       const config = { width: true, height: true };
 
-      registerComponentStyleBuilder(componentName, config);
+      registerComponentPropsBuilder(componentName, config);
 
-      expect(hasStyleBuilder(componentName)).toBe(true);
+      expect(hasPropsBuilder(componentName)).toBe(true);
     });
 
     test('returns true for RCT prefixed component names', () => {
-      expect(hasStyleBuilder('RCTView')).toBe(true);
-      expect(hasStyleBuilder('RCTText')).toBe(true);
+      expect(hasPropsBuilder('RCTView')).toBe(true);
+      expect(hasPropsBuilder('RCTText')).toBe(true);
     });
 
     test('returns false for unregistered component names', () => {
-      expect(hasStyleBuilder('UnregisteredComponent')).toBe(false);
+      expect(hasPropsBuilder('UnregisteredComponent')).toBe(false);
     });
   });
 
-  describe('getStyleBuilder', () => {
-    test('returns registered style builder for custom component', () => {
+  describe('getPropsBuilder', () => {
+    test('returns registered props builder for custom component', () => {
       const componentName = 'CustomComponent';
       const config = { width: true, height: true };
 
-      registerComponentStyleBuilder(componentName, config);
-      const styleBuilder = getStyleBuilder(componentName);
+      registerComponentPropsBuilder(componentName, config);
+      const propsBuilder = getPropsBuilder(componentName);
 
-      expect(styleBuilder).toBeDefined();
-      expect(typeof styleBuilder.buildFrom).toBe('function');
+      expect(propsBuilder).toBeDefined();
+      expect(typeof propsBuilder.buildFrom).toBe('function');
     });
 
-    test('returns base style builder for RCT prefixed components', () => {
-      const styleBuilder = getStyleBuilder('RCTView');
+    test('returns base props builder for RCT prefixed components', () => {
+      const propsBuilder = getPropsBuilder('RCTView');
 
-      expect(styleBuilder).toBeDefined();
-      expect(typeof styleBuilder.buildFrom).toBe('function');
+      expect(propsBuilder).toBeDefined();
+      expect(typeof propsBuilder.buildFrom).toBe('function');
     });
 
     test('throws error for unregistered component names', () => {
       expect(() => {
-        getStyleBuilder('UnregisteredComponent');
-      }).toThrow(ERROR_MESSAGES.styleBuilderNotFound('UnregisteredComponent'));
+        getPropsBuilder('UnregisteredComponent');
+      }).toThrow(ERROR_MESSAGES.propsBuilderNotFound('UnregisteredComponent'));
     });
   });
 
-  describe('registerComponentStyleBuilder', () => {
+  describe('registerComponentPropsBuilder', () => {
     test('registers a style builder', () => {
       const componentName = 'TestComponent';
       const config = { width: true, height: true };
 
-      registerComponentStyleBuilder(componentName, config);
+      registerComponentPropsBuilder(componentName, config);
 
-      expect(hasStyleBuilder(componentName)).toBe(true);
-      expect(getStyleBuilder(componentName)).toBeDefined();
+      expect(hasPropsBuilder(componentName)).toBe(true);
+      expect(getPropsBuilder(componentName)).toBeDefined();
     });
 
     test('works with base properties config', () => {
       const componentName = 'BaseConfigComponent';
 
-      registerComponentStyleBuilder(componentName, BASE_PROPERTIES_CONFIG);
+      registerComponentPropsBuilder(componentName, BASE_PROPERTIES_CONFIG);
 
-      expect(hasStyleBuilder(componentName)).toBe(true);
-      expect(getStyleBuilder(componentName)).toBeDefined();
+      expect(hasPropsBuilder(componentName)).toBe(true);
+      expect(getPropsBuilder(componentName)).toBeDefined();
     });
   });
 });

@@ -1,5 +1,5 @@
 'use strict';
-import type { AnyRecord, StyleBuilder } from '../../../../common';
+import type { AnyRecord, PropsBuilder } from '../../../../common';
 import { isDefined, isNumber, ReanimatedError } from '../../../../common';
 import type { StyleProps } from '../../../../commonTypes';
 import { PERCENTAGE_REGEX } from '../../../constants';
@@ -67,7 +67,7 @@ type ProcessedKeyframes = Array<{
 
 export function processKeyframes(
   keyframes: CSSAnimationKeyframes,
-  styleBuilder: StyleBuilder<AnyRecord>
+  styleBuilder: PropsBuilder<AnyRecord>
 ): ProcessedKeyframes {
   return Object.entries(keyframes)
     .flatMap(
@@ -102,7 +102,7 @@ function processStyleProperties<S extends AnyRecord>(
   offset: number,
   style: S,
   keyframeStyle: AnyRecord,
-  styleBuilder: StyleBuilder<AnyRecord>
+  styleBuilder: PropsBuilder<AnyRecord>
 ) {
   Object.entries(style).forEach(([property, value]) => {
     if (!isDefined(value)) {
@@ -133,7 +133,7 @@ function processStyleProperties<S extends AnyRecord>(
 
 export function normalizeAnimationKeyframes(
   keyframes: CSSAnimationKeyframes,
-  styleBuilder: StyleBuilder<AnyRecord>
+  styleBuilder: PropsBuilder<AnyRecord>
 ): NormalizedCSSAnimationKeyframesConfig {
   const keyframesStyle: NormalizedCSSKeyframesStyle = {};
   const timingFunctions: NormalizedCSSKeyframeTimingFunctions = {};

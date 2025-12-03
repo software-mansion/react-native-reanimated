@@ -4,26 +4,26 @@ import type { AnyRecord, ValueProcessorContext } from '../types';
 import { ValueProcessorTarget } from '../types';
 import { isConfigPropertyAlias, isDefined, isRecord } from '../utils';
 import type {
-  StyleBuilder,
-  StyleBuilderConfig,
-  StyleBuildMiddleware,
+  PropsBuilder,
+  PropsBuilderConfig,
+  PropsBuildMiddleware,
 } from './types';
 
-type StyleBuilderOptions<P extends AnyRecord> = {
-  buildMiddleware?: StyleBuildMiddleware<P>;
+type PropsBuilderOptions<P extends AnyRecord> = {
+  buildMiddleware?: PropsBuildMiddleware<P>;
   separatelyInterpolatedNestedProperties?: (keyof P)[];
   target?: ValueProcessorTarget;
 };
 
-class StyleBuilderImpl<P extends AnyRecord> implements StyleBuilder<P> {
-  private readonly buildMiddleware: StyleBuildMiddleware<P>;
-  private readonly config: StyleBuilderConfig<P>;
+class PropsBuilderImpl<P extends AnyRecord> implements PropsBuilder<P> {
+  private readonly buildMiddleware: PropsBuildMiddleware<P>;
+  private readonly config: PropsBuilderConfig<P>;
   private readonly separatelyInterpolatedNestedProperties_: (keyof P)[];
   private readonly context: ValueProcessorContext;
 
   private processedProps = {} as P;
 
-  constructor(config: StyleBuilderConfig<P>, options?: StyleBuilderOptions<P>) {
+  constructor(config: PropsBuilderConfig<P>, options?: PropsBuilderOptions<P>) {
     this.config = config;
     this.buildMiddleware = options?.buildMiddleware ?? ((props) => props);
     this.separatelyInterpolatedNestedProperties_ =
@@ -96,8 +96,8 @@ class StyleBuilderImpl<P extends AnyRecord> implements StyleBuilder<P> {
 }
 
 export default function createStyleBuilder<P extends AnyRecord>(
-  config: StyleBuilderConfig<P>,
-  options?: StyleBuilderOptions<P>
-): StyleBuilder<Partial<P>> {
-  return new StyleBuilderImpl(config, options);
+  config: PropsBuilderConfig<P>,
+  options?: PropsBuilderOptions<P>
+): PropsBuilder<Partial<P>> {
+  return new PropsBuilderImpl(config, options);
 }

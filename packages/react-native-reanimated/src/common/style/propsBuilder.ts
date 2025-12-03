@@ -2,15 +2,14 @@
 import type { ValueProcessor } from '../types';
 import { isConfigPropertyAlias, isRecord } from '../utils';
 import { BASE_PROPERTIES_CONFIG } from './config';
-import createStyleBuilder from './createStyleBuilder';
+import createPropsBuilder from './createPropsBuilder';
 
 const hasValueProcessor = (
   configValue: unknown
 ): configValue is { process: ValueProcessor<unknown> } =>
   isRecord(configValue) && 'process' in configValue;
 
-// TODO - maybe rename to propsBuilder, as we have updateProps
-const propsBuilder = createStyleBuilder({
+const propsBuilder = createPropsBuilder({
   config: BASE_PROPERTIES_CONFIG,
   processConfigEntry: ({ configValue, config }) => {
     if (configValue === true) {

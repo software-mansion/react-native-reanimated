@@ -1,5 +1,5 @@
 'use strict';
-import type { StyleBuilder, StyleBuilderConfig } from '../../common';
+import type { PropsBuilder, StyleBuilderConfig } from '../../common';
 import {
   BASE_PROPERTIES_CONFIG,
   createStyleBuilder,
@@ -8,11 +8,11 @@ import {
 } from '../../common';
 
 export const ERROR_MESSAGES = {
-  styleBuilderNotFound: (componentName: string) =>
-    `CSS style builder for component ${componentName} was not found`,
+  propsBuilderNotFound: (componentName: string) =>
+    `CSS props builder for component ${componentName} was not found`,
 };
 
-const baseStyleBuilder = createStyleBuilder(BASE_PROPERTIES_CONFIG, {
+const basePropsBuilder = createStyleBuilder(BASE_PROPERTIES_CONFIG, {
   separatelyInterpolatedNestedProperties: [
     'boxShadow',
     'shadowOffset',
@@ -22,32 +22,32 @@ const baseStyleBuilder = createStyleBuilder(BASE_PROPERTIES_CONFIG, {
   target: ValueProcessorTarget.CSS,
 });
 
-const STYLE_BUILDERS: Record<string, StyleBuilder> = {};
+const PROPS_BUILDERS: Record<string, PropsBuilder> = {};
 
-export function hasStyleBuilder(componentName: string): boolean {
-  return !!STYLE_BUILDERS[componentName] || componentName.startsWith('RCT');
+export function hasPropsBuilder(componentName: string): boolean {
+  return !!PROPS_BUILDERS[componentName] || componentName.startsWith('RCT');
 }
 
-export function getStyleBuilder(componentName: string): StyleBuilder {
-  const styleBuilder = STYLE_BUILDERS[componentName];
+export function getPropsBuilder(componentName: string): PropsBuilder {
+  const propsBuilder = PROPS_BUILDERS[componentName];
 
-  if (styleBuilder) {
-    return styleBuilder;
+  if (propsBuilder) {
+    return propsBuilder;
   }
 
   // This captures all React Native components
   if (componentName.startsWith('RCT')) {
-    return baseStyleBuilder;
+    return basePropsBuilder;
   }
 
-  throw new ReanimatedError(ERROR_MESSAGES.styleBuilderNotFound(componentName));
+  throw new ReanimatedError(ERROR_MESSAGES.propsBuilderNotFound(componentName));
 }
 
-export function registerComponentStyleBuilder(
+export function registerComponentPropsBuilder(
   componentName: string,
   config: StyleBuilderConfig
 ) {
-  STYLE_BUILDERS[componentName] = createStyleBuilder(config, {
+  PROPS_BUILDERS[componentName] = createStyleBuilder(config, {
     target: ValueProcessorTarget.CSS,
   });
 }

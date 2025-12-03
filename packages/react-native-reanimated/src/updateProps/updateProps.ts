@@ -8,7 +8,7 @@ import {
   IS_JEST,
   ReanimatedError,
   SHOULD_BE_USE_WEB,
-  styleBuilder,
+  propsBuilder,
 } from '../common';
 import { processBoxShadowWeb, processFilterWeb } from '../common/web';
 import type {
@@ -50,7 +50,7 @@ if (SHOULD_BE_USE_WEB) {
     'worklet';
     global.UpdatePropsManager.update(
       viewDescriptors,
-      styleBuilder.build(updates)
+      propsBuilder.build(updates)
     );
   };
 }

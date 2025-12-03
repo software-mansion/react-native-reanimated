@@ -30,7 +30,7 @@ export default function createPropsBuilder<TConfigValue, TBuildResult>({
     do {
       if (++depth > MAX_PROCESS_DEPTH) {
         throw new ReanimatedError(
-          `Max process depth for style builder reached for property ${key}`
+          `Max process depth for props builder reached for property ${key}`
         );
       }
       processedEntry = processConfigEntry({
