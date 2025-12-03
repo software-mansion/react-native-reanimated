@@ -3,6 +3,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 
 #include <RNWorklets/Serializable.h>
+// #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/JSLogger.h>
 
 #include <jsi/jsi.h>

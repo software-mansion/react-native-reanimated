@@ -107,6 +107,28 @@ android {
     }
 }
 
+// interface FSService {
+//     @Inject FileSystemOperations getFs()
+// }
+
+// tasks.register('cleanCmakeCache', Delete) {
+//     def fsService = project.objects.newInstance(FSService)
+//     def projectDir = project.projectDir
+
+//     def buildDir = project.buildDir
+//     def cxxDir = new File(projectDir, ".cxx")
+//     doFirst {
+//         delete "$buildDir"
+//         delete "${projectDir}/.cxx"
+//         delete "${projectDir}/../build"
+//     }
+// }
+
+// tasks.named('clean') {
+//     dependsOn cleanCmakeCache
+// }
+
+
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")

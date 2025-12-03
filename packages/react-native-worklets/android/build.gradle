@@ -353,22 +353,73 @@ interface FSService {
     @Inject FileSystemOperations getFs()
 }
 
-tasks.register('cleanCmakeCache', Delete) {
+afterEvaluate {
+    // Make sure that Gradle Sync in Android Studio doesn't complain about
+    // missing prefab-headers directory for header inclusions
+    workletsPrefabHeadersDir.mkdirs()
+}
+
+def cleanCmakeCacheTask = tasks.register('cleanCmakeCache', Delete) {
     def fsService = project.objects.newInstance(FSService)
     def projectDir = project.projectDir
-    doFirst {
-        fsService.fs.delete {"$projectDir/.cxx"
+    doLast {
+        println "Cleaning CMake build cache in ${projectDir}"
+        fsService.fs.delete {
+            delete "${projectDir}/build"
+            delete "${projectDir}/.cxx"
         }
     }
 }
 
-tasks.named('clean') {
-    dependsOn cleanCmakeCache
+// Ensure this runs after any externalNativeBuildClean* task
+tasks.matching { it.name.startsWith('externalNativeBuildClean') }.configureEach {
+    finalizedBy(cleanCmakeCacheTask)
 }
 
 repositories {
     mavenCentral()
     google()
+}
+
+tasks.named('preBuild') {
+    def projectDir = project.projectDir
+    def fsService = project.objects.newInstance(FSService)
+    
+    // 1. Define the actual copy action inside doFirst
+    doFirst {
+        // println("📝 [Worklets] Copying headers for Prefabs...")
+        
+        // Ensure the destination exists
+        // workletsPrefabHeadersDir.mkdirs() 
+        // fsService.fs.delete {
+        //     delete workletsPrefabHeadersDir
+        // }
+
+        workletsPrefabHeadersDir.mkdirs()
+
+        // Use the project.copy closure to perform file operations
+        fsService.fs.copy {
+            from("$projectDir/src/main/cpp")
+            from("$projectDir/../Common/cpp")
+            include("worklets/**/*.h")
+            into(workletsPrefabHeadersDir)
+        }
+    }
+    
+    // 2. Define the output for incremental builds
+    // This tells Gradle that if workletsPrefabHeadersDir is unchanged, it can skip running this task.
+//    outputs.dir(workletsPrefabHeadersDir)
+    
+    // 3. Define inputs (optional but recommended for correctness)
+    // This tells Gradle which files this task uses, so if they change, the task runs again.
+    inputs.files(
+        fileTree("$projectDir/src/main/cpp") {
+            include("worklets/**/*.h")
+        },
+        fileTree("$projectDir/../Common/cpp") {
+            include("worklets/**/*.h")
+        }
+    ).withPropertyName('workletHeaders')
 }
 
 preBuild.dependsOn(prepareWorkletsHeadersForPrefabs)

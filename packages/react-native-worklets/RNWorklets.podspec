@@ -28,6 +28,7 @@ Pod::Spec.new do |s|
       sss.source_files = "Common/cpp/worklets/**/*.{h,cpp}"
       sss.header_dir = "worklets"
       sss.header_mappings_dir = "Common/cpp/worklets"
+      sss.public_header_files = "**/*.h"
     end
 
     ss.subspec "apple" do |sss|
@@ -37,6 +38,7 @@ Pod::Spec.new do |s|
       sss.source_files = "apple/worklets/**/*.{mm,h,m}"
       sss.header_dir = "worklets"
       sss.header_mappings_dir = "apple/worklets"
+      sss.public_header_files = "**/*.h"
     end
 
     ss.subspec "public" do |sss|
@@ -45,6 +47,7 @@ Pod::Spec.new do |s|
         "Common/cpp/worklets/WorkletRuntime/WorkletRuntime.h",
         "Common/cpp/worklets/SharedItems/Serializable.h",
         "Common/cpp/worklets/SharedItems/Synchronizable.h"
+      sss.public_header_files = "**/*.h"
     end
   end
 
