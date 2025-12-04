@@ -7,36 +7,41 @@ const path = require('path');
 /**
  * @param {Object<string, string>} dependencies
  * @param {Set<string>} exclude
+ * @param {((moduleName: string) => string) | undefined} localResolve
  */
-function resolveDependencies(dependencies = {}, exclude, resolve) {
+function resolveDependencies(dependencies = {}, exclude, localResolve) {
   return Object.fromEntries(
     Object.keys(dependencies)
       .filter((name) => !exclude.has(name))
       .map((name) => [
         name,
         {
-          root: getRootPath(name, resolve),
+          root: getRootPath(name, localResolve),
         },
       ])
   );
 }
 
-/** @param {string} moduleName */
-function getRootPath(moduleName, resolve) {
+/**
+ * @param {string} moduleName
+ * @param {((moduleName: string) => string) | undefined} localResolve
+ */
+function getRootPath(moduleName, localResolve) {
   let root;
-  try {
-    root = path.dirname(resolve(moduleName));
-  } catch (e) {
-    // console.log(e);
-    // If a package defines an `exports` field, `require.resolve` can fail.
-    // Fortunately, none of the packages we care about cause this issue.
+  if (localResolve) {
+    try {
+      root = path.dirname(localResolve(moduleName));
+    } catch {
+      // If a package defines an `exports` field, `require.resolve` can fail.
+      // Fortunately, none of the packages we care about cause this issue.
+    }
   }
   if (!root) {
     try {
       root = path.dirname(require.resolve(`${moduleName}/package.json`));
-    } catch (e) {
-      // console.log(e);
-      // Ignore
+    } catch {
+      // If a package defines an `exports` field, `require.resolve` can fail.
+      // Fortunately, none of the packages we care about cause this issue.
     }
   }
   return root;
@@ -46,10 +51,16 @@ function getRootPath(moduleName, resolve) {
  * This function will return the dependencies from the common-app package that
  * aren't listed in the current app's package.json
  *
- * @param {string} currentAppDir - The current app directory (e.g. __dirname)
- * @param {string[]} exclude - The dependencies to exclude from the common-app
+ * @param {string} [currentAppDir='.'] - The current app directory (e.g.
+ *   __dirname). Default is `'.'`
+ * @param {string[]} [exclude=[]] - The dependencies to exclude from the
+ *   common-app. Default is `[]`
+ * @param {(moduleName: string) => string} [localResolve] - Function that
+ *   resolves a module name to its path from the app directory. This way modules
+ *   resolved from the concrete app are prioritized before those from
+ *   common-app.
  */
-function getDependencies(currentAppDir = '.', exclude = [], resolve) {
+function getDependencies(currentAppDir = '.', exclude = [], localResolve) {
   const commonAppDir = path.resolve(__dirname, '..');
   const commonAppPkg = require(path.resolve(commonAppDir, 'package.json'));
 
@@ -66,12 +77,12 @@ function getDependencies(currentAppDir = '.', exclude = [], resolve) {
     ...resolveDependencies(
       commonAppPkg.devDependencies,
       excludedDependencies,
-      resolve
+      localResolve
     ),
     ...resolveDependencies(
       commonAppPkg.dependencies,
       excludedDependencies,
-      resolve
+      localResolve
     ),
   };
 }
