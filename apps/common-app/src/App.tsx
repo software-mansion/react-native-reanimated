@@ -34,13 +34,13 @@ export default function App() {
     );
   }
 
-  if (!isReady) {
-    return (
-      <View style={[flex.fill, flex.center]}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
+  // if (!isReady) {
+  //   return (
+  //     <View style={[flex.fill, flex.center]}>
+  //       <ActivityIndicator  />
+  //     </View>
+  //   );
+  // }
 
   const RootApp = IS_MACOS ? ReanimatedApp : Navigator;
 
