@@ -2737,7 +2737,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNReanimated (4.2.0-main):
+  - RNReanimated (4.3.0-main):
     - boost
     - DoubleConversion
     - fast_float
@@ -2764,11 +2764,11 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 4.2.0-main)
+    - RNReanimated/reanimated (= 4.3.0-main)
     - RNWorklets
     - SocketRocket
     - Yoga
-  - RNReanimated/reanimated (4.2.0-main):
+  - RNReanimated/reanimated (4.3.0-main):
     - boost
     - DoubleConversion
     - fast_float
@@ -2795,11 +2795,11 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 4.2.0-main)
+    - RNReanimated/reanimated/apple (= 4.3.0-main)
     - RNWorklets
     - SocketRocket
     - Yoga
-  - RNReanimated/reanimated/apple (4.2.0-main):
+  - RNReanimated/reanimated/apple (4.3.0-main):
     - boost
     - DoubleConversion
     - fast_float
@@ -2945,7 +2945,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNWorklets (0.7.0-main):
+  - RNWorklets (0.8.0-main):
     - boost
     - DoubleConversion
     - fast_float
@@ -2972,10 +2972,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNWorklets/worklets (= 0.7.0-main)
+    - RNWorklets/worklets (= 0.8.0-main)
     - SocketRocket
     - Yoga
-  - RNWorklets/worklets (0.7.0-main):
+  - RNWorklets/worklets (0.8.0-main):
     - boost
     - DoubleConversion
     - fast_float
@@ -3002,10 +3002,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNWorklets/worklets/apple (= 0.7.0-main)
+    - RNWorklets/worklets/apple (= 0.8.0-main)
     - SocketRocket
     - Yoga
-  - RNWorklets/worklets/apple (0.7.0-main):
+  - RNWorklets/worklets/apple (0.8.0-main):
     - boost
     - DoubleConversion
     - fast_float
@@ -3402,10 +3402,10 @@ SPEC CHECKSUMS:
   RNCClipboard: 4b58c780f63676367640f23c8e114e9bd0cf86ac
   RNCMaskedView: 5ef8c95cbab95334a32763b72896a7b7d07e6299
   RNGestureHandler: be7148bc663eac98c0ad6474b4b105f8cadd56be
-  RNReanimated: 2826987c121c8c592a45aabd82c8bf3d17f371b3
+  RNReanimated: 2153bf5499b8b9c91006b3b3f301d99aecf65d69
   RNScreens: 42e7a4ec86914b9b22cea8db89abfa160e86be62
   RNSVG: 11354d28dd6cb71a59570b68c91ba6772a2d781d
-  RNWorklets: c3324e6f52d86859c5e8b66dcbcf4bd988dc16e1
+  RNWorklets: 8c8730c20ef65283a962824689980a9e269d5d31
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: c272f00ea8a0f2833b5b2fe6200bb2b562d42554
 
