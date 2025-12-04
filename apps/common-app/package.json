@@ -37,7 +37,7 @@
     "react-native-safe-area-context": "5.6.0",
     "react-native-screens": "4.14.1",
     "react-native-svg": "15.12.1",
-    "react-native-worklets": "workspace:*",
+    "react-native-worklets": "0.7.0",
     "react-strict-dom": "0.0.27"
   },
   "devDependencies": {

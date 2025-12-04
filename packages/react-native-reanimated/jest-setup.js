@@ -1,6 +1,9 @@
 delete global.MessageChannel;
-require('react-native-worklets/jestSetup');
 require('./src/jestUtils').setUpTests();
+
+jest.mock('react-native-worklets', () =>
+  require('react-native-worklets/src/mock')
+);
 
 global.__reanimatedLoggerConfig = {
   logFunction: (data) => {

@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react';
+import type { ComponentType, JSX } from 'react';
 import type { CSSAnimationProperties } from 'react-native-reanimated';
 
 import { stringifyConfig } from '@/apps/css/utils';
