@@ -475,11 +475,11 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'useScrollOffset',
     screen: ScrollViewOffsetExample,
   },
-  // InstanceDiscoveryExample: {
-  //   icon: '🔍',
-  //   title: 'Instance Discovery',
-  //   screen: InstanceDiscoveryExample,
-  // },
+  InstanceDiscoveryExample: {
+    icon: '🔍',
+    title: 'Instance Discovery',
+    screen: InstanceDiscoveryExample,
+  },
   StickyHeaderExample: {
     icon: '🔝',
     title: 'Sticky header',

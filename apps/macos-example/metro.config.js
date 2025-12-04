@@ -2,17 +2,17 @@ const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const {
   wrapWithReanimatedMetroConfig,
 } = require('react-native-reanimated/metro-config');
-
+const { getModuleBlocklist } = require('../../scripts/metro-blocklist');
 const path = require('path');
-const escape = require('escape-string-regexp');
+
 const pack = require('../../packages/react-native-reanimated/package.json');
-
-const monorepoRoot = path.resolve(__dirname, '../..');
-
 const modulesToBlock = [
   ...Object.keys(pack.peerDependencies),
   'react-native-macos',
 ];
+const blockList = getModuleBlocklist(modulesToBlock);
+
+const monorepoRoot = path.resolve(__dirname, '../..');
 
 const defaultConfig = getDefaultConfig(__dirname);
 
@@ -28,23 +28,15 @@ const config = {
   // We need to make sure that only one version is loaded for peerDependencies
   // So we exclude them at the root, and alias them to the versions in example's node_modules
   resolver: {
-    blockList: [
-      ...modulesToBlock.map(
-        (m) =>
-          new RegExp(
-            `^${escape(path.join(monorepoRoot, 'node_modules', m))}\\/.*$`
-          )
-      ),
-    ].concat(defaultConfig.resolver.blockList),
+    blockList: [...blockList.concat(defaultConfig.resolver.blockList)],
 
     extraNodeModules: modulesToBlock.reduce((acc, name) => {
-      // @ts-expect-error
       acc[name] = path.join(__dirname, 'node_modules', name);
       return acc;
-    }, {}),
+    }, /** @type {{ [key: string]: string }} */ ({})),
   },
 };
 
 module.exports = wrapWithReanimatedMetroConfig(
-  mergeConfig(getDefaultConfig(__dirname), config)
+  mergeConfig(defaultConfig, config)
 );

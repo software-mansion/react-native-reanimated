@@ -3,24 +3,22 @@ const {
   wrapWithReanimatedMetroConfig,
 } = require('react-native-reanimated/metro-config');
 const { getModuleBlocklist } = require('../../scripts/metro-blocklist');
-
 const path = require('path');
 
 const modulesToBlock = ['react', 'react-native'];
-const monorepoRoot = path.resolve(__dirname, '../..');
-
 const blockList = getModuleBlocklist(modulesToBlock);
 
-const defaultConfig = getDefaultConfig(__dirname);
-
+const monorepoRoot = path.resolve(__dirname, '../..');
 const appsPath = path.resolve(monorepoRoot, 'apps');
 
+const defaultConfig = getDefaultConfig(__dirname);
 /**
  * Metro configuration https://reactnative.dev/docs/metro
  *
  * @type {import('@react-native/metro-config').MetroConfig}
  */
 let config = {
+  projectRoot: __dirname,
   watchFolders: [monorepoRoot, appsPath],
   resolver: {
     blockList: [...blockList.concat(defaultConfig.resolver.blockList)],
@@ -32,12 +30,12 @@ let config = {
   },
 };
 
-config = mergeConfig(getDefaultConfig(__dirname), config);
+config = mergeConfig(defaultConfig, config);
 
 // Uncomment the following to enable bundle mode.
 // const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
 // config = mergeConfig(config, bundleModeMetroConfig);
 
 module.exports = wrapWithReanimatedMetroConfig(
-  mergeConfig(getDefaultConfig(__dirname), config)
+  mergeConfig(defaultConfig, config)
 );
