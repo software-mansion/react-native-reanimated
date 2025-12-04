@@ -41,17 +41,13 @@ describe('CSSTransitionsManager', () => {
 
         manager.update(transitionProperties, nextStyle);
 
-        const normalizedConfig = normalizeCSSTransitionProperties(
-          transitionProperties
-        );
+        const normalizedConfig =
+          normalizeCSSTransitionProperties(transitionProperties);
 
-        expect(registerCSSTransition).toHaveBeenCalledWith(
-          shadowNodeWrapper,
-          {
-            properties: { opacity: [0, 0.5] },
-            settings: normalizedConfig?.settings ?? {},
-          }
-        );
+        expect(registerCSSTransition).toHaveBeenCalledWith(shadowNodeWrapper, {
+          properties: { opacity: [0, 0.5] },
+          settings: normalizedConfig?.settings ?? {},
+        });
         expect(unregisterCSSTransition).not.toHaveBeenCalled();
         expect(updateCSSTransition).not.toHaveBeenCalled();
       });
@@ -260,7 +256,7 @@ describe('CSSTransitionsManager', () => {
           transitionProperty: 'opacity',
           transitionDuration: '80ms',
         };
-        const secondStyle: UnknownRecord = { opacity: 0.6 };
+        const secondStyle = { opacity: 0.6 };
 
         manager.update(transitionProperties, initialStyle);
         manager.update(transitionProperties, secondStyle);

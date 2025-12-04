@@ -8,25 +8,17 @@ export type NormalizedSingleCSSTransitionSettings = {
   allowDiscrete: boolean;
 };
 
-export type NormalizedCSSTransitionPropertyNames = 'all' | string[];
-
 export type NormalizedCSSTransitionConfig = {
-  properties: NormalizedCSSTransitionPropertyNames;
+  properties: 'all' | string[];
   settings: Record<string, NormalizedSingleCSSTransitionSettings>;
 };
 
-export type CSSTransitionPropertyUpdates = Record<
-  string,
-  [unknown, unknown] | null
->;
+type CSSTransitionPropertyUpdates = Record<string, [unknown, unknown] | null>;
 
 export type NormalizedNewCSSTransitionConfig = {
   properties: CSSTransitionPropertyUpdates;
   settings: Record<string, NormalizedSingleCSSTransitionSettings>;
 };
-
-export type NormalizedCSSTransitionConfigUpdates =
-  Partial<NormalizedCSSTransitionConfig>;
 
 export type CSSTransitionUpdates = {
   properties?: CSSTransitionPropertyUpdates;
