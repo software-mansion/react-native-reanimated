@@ -112,14 +112,11 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 19. Test the package in a clean React Native Web app:
 
     - `npx create-expo-app my-app`
-    - Set up using **Getting Started** tutorial from [Expo Docs](https://docs.expo.dev/workflow/web/),
+    - `npx expo install react-dom react-native-web @expo/metro-runtime` (set up using **Getting Started** tutorial from [Expo Docs](https://docs.expo.dev/workflow/web/)),
     - `yarn add ~/Downloads/react-native-reanimated-x.y.z.tgz`
-    - If you don't have `babel.config.js`, create it using [this instruction](https://docs.expo.dev/versions/latest/config/babel/),
-    - Add `plugins: ['react-native-worklets/plugin']` in `babel.config.js` - as in our [Getting started](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/) guide,
-    - Copy [Bokeh Example](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/src/apps/reanimated/examples/BokehExample.tsx) to `App.tsx` - when using **expo-router** find and copy to `index.tsx`,
+    - Copy [Bokeh Example](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/src/apps/reanimated/examples/BokehExample.tsx) to `app/_layout.tsx`,
     - Run dev: `npx expo start --web`,
     - Run release: `npx expo export -p web && npx serve dist --single`.
-    - Run prebuild: `npx expo prebuild` to generate native code and ensure the app works correctly.
 
 20. If something doesn't work you can fix it in this or in a separate PR (depending on the case), and repeat the steps.
 21. If everything works fine you can merge the PR.
