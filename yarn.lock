@@ -28464,6 +28464,7 @@ __metadata:
     "@react-native/eslint-config": "npm:0.83.0-rc.4"
     "@react-native/metro-config": "npm:0.83.0-rc.4"
     "@react-native/typescript-config": "npm:0.83.0-rc.4"
+    "@shopify/flash-list": "npm:2.1.0"
     "@testing-library/jest-native": "npm:5.4.3"
     "@testing-library/react-hooks": "npm:8.0.1"
     "@testing-library/react-native": "npm:13.3.3"
