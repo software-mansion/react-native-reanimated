@@ -21,7 +21,7 @@
     "react-dom": "19.1.0",
     "react-native-reanimated": "workspace:*",
     "react-native-web": "0.20.0",
-    "react-native-worklets": "workspace:*"
+    "react-native-worklets": "0.7.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
@@ -34,6 +34,7 @@
     "start-server-and-test": "^2.0.1"
   },
   "installConfig": {
-    "selfReferences": false
+    "selfReferences": false,
+    "hoistingLimits": "workspaces"
   }
 }
