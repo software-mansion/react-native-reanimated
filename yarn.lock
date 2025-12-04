@@ -28484,6 +28484,7 @@ __metadata:
     react-native: "npm:0.83.0-rc.4"
     react-native-builder-bob: "npm:0.40.13"
     react-native-is-edge-to-edge: "npm:1.2.1"
+    react-native-svg: "npm:15.14.0"
     react-native-web: "npm:0.21.1"
     react-native-worklets: "workspace:*"
     react-test-renderer: "npm:19.2.0"
@@ -33156,6 +33157,7 @@ __metadata:
     react-dom: "npm:19.2.0"
     react-native: "npm:0.83.0-rc.4"
     react-native-web: "npm:0.21.1"
+    react-strict-dom: "npm:0.0.54"
     serve: "npm:14.2.5"
     typescript: "npm:5.8.3"
   languageName: unknown
