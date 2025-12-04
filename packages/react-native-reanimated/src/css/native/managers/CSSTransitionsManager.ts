@@ -47,12 +47,11 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
       return;
     }
 
-    const propertyDiff = getChangedProps(
+    const propertyDiff = this.getPropertyDiff(
       previousStyle,
       style,
-      transitionConfig.properties === 'all'
-        ? undefined
-        : transitionConfig.properties
+      previousConfig,
+      transitionConfig
     );
 
     if (!propertyDiff) {
@@ -92,6 +91,69 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     }
     this.transitionConfig = null;
     this.previousStyle = null;
+  }
+
+  private getPropertyDiff(
+    previousStyle: UnknownRecord | null,
+    nextStyle: UnknownRecord | null,
+    previousConfig: NormalizedCSSTransitionConfig | null,
+    nextConfig: NormalizedCSSTransitionConfig
+  ): Record<string, [unknown, unknown] | null> | null {
+    const trackedProperties =
+      nextConfig.properties === 'all' ? undefined : nextConfig.properties;
+
+    const changedProps = getChangedProps(
+      previousStyle,
+      nextStyle,
+      trackedProperties
+    );
+
+    const removedPropsDiff = this.getRemovedPropertiesDiff(
+      previousStyle,
+      previousConfig,
+      nextConfig
+    );
+
+    const combinedDiff = {
+      ...changedProps,
+      ...removedPropsDiff,
+    };
+
+    return Object.keys(combinedDiff).length > 0 ? combinedDiff : null;
+  }
+
+  private getRemovedPropertiesDiff(
+    previousStyle: UnknownRecord | null,
+    previousConfig: NormalizedCSSTransitionConfig | null,
+    nextConfig: NormalizedCSSTransitionConfig
+  ): Record<string, null> {
+    if (!previousConfig || !previousStyle) {
+      return {};
+    }
+
+    const nextProperties = nextConfig.properties;
+    if (nextProperties === 'all') {
+      return {};
+    }
+
+    const previousProperties =
+      previousConfig.properties === 'all'
+        ? Object.keys(previousStyle)
+        : previousConfig.properties;
+
+    const diff: Record<string, null> = {};
+
+    for (const property of previousProperties) {
+      if (previousStyle[property] !== undefined) {
+        diff[property] = null;
+      }
+    }
+
+    for (const property of nextProperties) {
+      delete diff[property];
+    }
+
+    return diff;
   }
 
   private getSettingsUpdates(
