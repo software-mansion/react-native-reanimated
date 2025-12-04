@@ -62,8 +62,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 ---
 9. When releasing a minor version, update the minimal supported React Native version:
 
-   - Android: `build.gradle`
-   - iOS: `reanimated_utils.rb`
+   - update `compatibility.json` - it is used by both `reanimated_utils.rb` on iOS and `build.gradle` on Android
    - By default we support the last three minor versions
 
 10. Testing:
