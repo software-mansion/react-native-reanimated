@@ -16,8 +16,9 @@ const workletsPath = path.resolve(
 const blockedDirs = [monorepoRoot, commonAppPath, reanimatedPath, workletsPath];
 
 /**
- * @param {string[]} modulesToBlock
- * @param {string} appDir
+ * @param {string[]} modulesToBlock - Module names to block from being resolved
+ *   from unwanted locations.
+ * @param {string} appDir - Absolute path to the app directory.
  * @param {import('@react-native/metro-config').MetroConfig} defaultConfig -
  *   Metro configuration https://reactnative.dev/docs/metro
  * @returns {{
