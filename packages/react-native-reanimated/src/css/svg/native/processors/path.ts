@@ -2,9 +2,16 @@
 
 import { ReanimatedError, type ValueProcessor } from '../../../../common';
 
+export const ERROR_MESSAGES = {
+  invalidSVGPathCommand: (command: unknown, args: unknown) =>
+    `Invalid SVG Path command: ${JSON.stringify(command)} ${JSON.stringify(args)}`,
+  invalidSVGPathStart: (command: string) =>
+    `Invalid SVG Path: Path must start with "M" or "m", but found "${command}"`,
+};
+
 type PathCommand = [string, ...number[]];
 
-export const processPath: ValueProcessor<string, string> = (d) => {
+export const processSVGPath: ValueProcessor<string, string> = (d) => {
   let pathSegments: PathCommand[] = parsePathString(d);
   pathSegments = normalizePath(pathSegments);
 
@@ -36,6 +43,10 @@ function parsePathString(d: string): PathCommand[] {
     const numbers = argsString.match(numberPattern);
     const args = numbers ? numbers.map(Number) : [];
 
+    if (pathSegments.length === 0 && type !== 'm') {
+      throw new ReanimatedError(ERROR_MESSAGES.invalidSVGPathStart(command));
+    }
+
     if (type === 'm' && args.length > length['m']) {
       pathSegments.push([command, ...args.splice(0, length['m'])]);
       type = 'l'; // If m has more than 2 arguments, use them in implicit l commands
@@ -49,7 +60,9 @@ function parsePathString(d: string): PathCommand[] {
       }
 
       if (args.length < length[type]) {
-        throw new ReanimatedError('Wrong path command');
+        throw new ReanimatedError(
+          ERROR_MESSAGES.invalidSVGPathCommand(command, args)
+        );
       }
 
       pathSegments.push([command, ...args.splice(0, length[type])]);
