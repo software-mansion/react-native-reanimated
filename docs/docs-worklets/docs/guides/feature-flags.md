@@ -68,13 +68,14 @@ To read a dynamic feature flag value in JavaScript, you can use `getDynamicFeatu
 
 ## Comparison of static and dynamic feature flags
 
-|                                          | Static feature flags | Dynamic feature flags |
-| ---------------------------------------- | :------------------: | :-------------------: |
-| Value is known during app build          |          ✅          |          ❌           |
-| Value may change during app lifetime     |          ❌          |          ✅           |
-| Value change requires app rebuild        |          ✅          |          ❌           |
-| Can be changed via public JavaScript API |          ❌          |          ✅           |
-| Can be changed via app's `package.json`  |          ✅          |          ❌           |
+|                                             | Static feature flags | Dynamic feature flags |
+| ------------------------------------------- | :------------------: | :-------------------: |
+| Value is known during app build             |          ✅          |          ❌           |
+| Value may change during app lifetime        |          ❌          |          ✅           |
+| Value change requires app rebuild           |          ✅          |          ❌           |
+| Can be changed via public JavaScript API    |          ❌          |          ✅           |
+| Can be changed via app's `package.json`     |          ✅          |          ❌           |
+| Can be changed when using Expo Go or RNRepo |          ❌          |          ✅           |
 
 ## Remarks for contributors
 
