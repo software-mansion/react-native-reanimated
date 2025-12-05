@@ -40,3 +40,6 @@ export const isConfigPropertyAlias = <P extends AnyRecord>(
   typeof value === 'object' &&
   'as' in value &&
   typeof value.as === 'string';
+
+export const isReactComponentName = (componentName: string): boolean =>
+  componentName.startsWith('RCT');

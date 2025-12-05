@@ -3,6 +3,7 @@ import type { StyleBuilder, StyleBuilderConfig } from '../../common';
 import {
   BASE_PROPERTIES_CONFIG,
   createStyleBuilder,
+  isReactComponentName,
   ReanimatedError,
   ValueProcessorTarget,
 } from '../../common';
@@ -25,7 +26,7 @@ const baseStyleBuilder = createStyleBuilder(BASE_PROPERTIES_CONFIG, {
 const STYLE_BUILDERS: Record<string, StyleBuilder> = {};
 
 export function hasStyleBuilder(componentName: string): boolean {
-  return !!STYLE_BUILDERS[componentName] || componentName.startsWith('RCT');
+  return !!STYLE_BUILDERS[componentName] || isReactComponentName(componentName);
 }
 
 export function getStyleBuilder(componentName: string): StyleBuilder {
@@ -36,7 +37,7 @@ export function getStyleBuilder(componentName: string): StyleBuilder {
   }
 
   // This captures all React Native components
-  if (componentName.startsWith('RCT')) {
+  if (isReactComponentName(componentName)) {
     return baseStyleBuilder;
   }
 
