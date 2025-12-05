@@ -38,3 +38,9 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
 export function scheduleOnRuntime(): never {
   throw new WorkletsError('`scheduleOnRuntime` is not supported on web.');
 }
+
+export function getUIWorkletRuntime(): WorkletRuntime;
+
+export function getUIWorkletRuntime(): never {
+  throw new WorkletsError('`getUIWorkletRuntime` is not supported on web.');
+}

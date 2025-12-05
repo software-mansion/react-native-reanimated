@@ -9,6 +9,7 @@ const generate = require('@babel/generator').default;
 const path = require('path');
 const fs = require('fs');
 const assert = require('assert').strict;
+const workletsBabelPlugin = require('../plugin');
 
 exportToCpp('valueUnpacker.native.ts', 'ValueUnpacker');
 exportToCpp('synchronizableUnpacker.native.ts', 'SynchronizableUnpacker');
@@ -16,6 +17,7 @@ exportToCpp(
   'customSerializableUnpacker.native.ts',
   'CustomSerializableUnpacker'
 );
+exportToCpp('shareableUnpacker.native.ts', 'ShareableUnpacker');
 
 /**
  * @param {string} sourceFilePath - The path to the TypeScript source file to
@@ -31,10 +33,12 @@ function exportToCpp(sourceFilePath, outputFilename) {
         ['@babel/preset-env', { modules: false }],
         '@babel/preset-typescript',
       ],
+      plugins: [workletsBabelPlugin],
       sourceType: 'unambiguous',
       code: false,
       ast: true,
       comments: false,
+      configFile: false,
     }
   );
 

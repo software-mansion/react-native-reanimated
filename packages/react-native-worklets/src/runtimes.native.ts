@@ -196,3 +196,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
 type WorkletRuntimeConfigInternal = WorkletRuntimeConfig & {
   initializer?: WorkletFunction<[], void>;
 };
+
+export function getUIWorkletRuntime(): WorkletRuntime {
+  return WorkletsModule.getUIWorkletRuntime();
+}

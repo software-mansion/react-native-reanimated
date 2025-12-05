@@ -3,6 +3,7 @@
 import type { Synchronizable } from 'react-native-worklets';
 import {
   createSerializable,
+  createShareable,
   createSynchronizable,
   runOnUISync,
   scheduleOnUI,
@@ -209,12 +210,20 @@ const USE_SYNCHRONIZABLE_FOR_MUTABLES = getStaticFeatureFlag(
 function experimental_makeMutableNative<Value>(initial: Value): Mutable<Value> {
   let latest = initial;
   const dirtyFlag = createSynchronizable(false);
-  const handle = createSerializable({
-    __init: () => {
+  const shareable = createShareable(
+    'UI',
+    () => {
       'worklet';
       return experimental_makeMutableUI(initial, dirtyFlag);
     },
-  });
+    { inline: true }
+  );
+  // const handle = createSerializable({
+  //   __init: () => {
+  //     'worklet';
+  //     return experimental_makeMutableUI(initial, dirtyFlag);
+  //   },
+  // });
 
   const mutable: PartialMutable<Value> = {
     get value(): Value {
@@ -223,6 +232,8 @@ function experimental_makeMutableNative<Value>(initial: Value): Mutable<Value> {
         const uiValueGetter = (svArg: Mutable<Value>) =>
           runOnUISync((sv) => {
             sv.setDirty!(false);
+            // console.log('shareable value.value', shareable.value.value);
+            // console.log('shareable value.value');
             return sv.value;
           }, svArg);
         latest = uiValueGetter(mutable as Mutable<Value>);
@@ -269,7 +280,7 @@ function experimental_makeMutableNative<Value>(initial: Value): Mutable<Value> {
   hideInternalValueProp(mutable);
   addCompilerSafeGetAndSet(mutable);
 
-  serializableMappingCache.set(mutable, handle);
+  serializableMappingCache.set(mutable, createSerializable(shareable));
   return mutable as Mutable<Value>;
 }
 

@@ -134,6 +134,9 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
   auto synchronizableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(SynchronizableUnpackerCode);
   rt.evaluateJavaScript(synchronizableUnpackerBuffer, "synchronizableUnpacker");
 
+  auto shareableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(ShareableUnpackerCode);
+  rt.evaluateJavaScript(shareableUnpackerBuffer, "shareableUnpacker");
+
   auto customSerializableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(CustomSerializableUnpackerCode);
   rt.evaluateJavaScript(customSerializableUnpackerBuffer, "customSerializableUnpacker");
 #endif // WORKLETS_BUNDLE_MODE

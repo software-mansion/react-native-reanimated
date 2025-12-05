@@ -65,6 +65,7 @@ class Serializable {
     ArrayBufferType,
     TurboModuleLikeType,
     ImportType,
+    ShareableType,
     SynchronizableType,
     CustomType,
   };

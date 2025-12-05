@@ -5,6 +5,7 @@
 import type { callGuardDEV } from './callGuard';
 import type { reportFatalRemoteError } from './debug/errors';
 import type { CustomSerializableUnpacker } from './memory/customSerializableUnpacker';
+import type { ShareableUnpacker } from './memory/shareableUnpacker';
 import type { SynchronizableUnpacker } from './memory/synchronizableUnpacker';
 import type { CustomSerializationRegistry } from './memory/types';
 import type { Queue } from './runLoop/workletRuntime/taskQueue';
@@ -17,7 +18,7 @@ declare global {
     Record<string, unknown>;
 
   var _toString: (value: unknown) => string;
-  var __workletsModuleProxy: WorkletsModuleProxy | undefined;
+  var __workletsModuleProxy: WorkletsModuleProxy;
   var _WORKLETS_BUNDLE_MODE: boolean | undefined;
   var _WORKLETS_VERSION_CPP: string | undefined;
   var _WORKLETS_VERSION_JS: string | undefined;
@@ -81,6 +82,7 @@ declare global {
   var __hasNativeState: (value: object) => boolean;
   /** Only in Debug builds. */
   var __isHostObject: (value: object) => boolean;
+  var __shareableUnpacker: ShareableUnpacker;
   interface NodeRequire {
     resolveWeak(id: string): number;
     getModules(): Map<number, unknown>;

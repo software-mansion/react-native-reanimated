@@ -77,3 +77,30 @@ export type SerializationData<TValue extends object, TPacked = unknown> = Omit<
 };
 
 export type CustomSerializationRegistry = SerializationData<object, unknown>[];
+
+export type ShareableHostProps<TValue = unknown> = {
+  value: TValue;
+};
+
+export type ShareableBorrowProps<TValue = unknown> = {
+  getAsync(): Promise<TValue>;
+  getSync(): TValue;
+  setAsync(value: TValue | ((prev: TValue) => TValue)): void;
+  setSync(value: TValue | ((prev: TValue) => TValue)): void;
+};
+
+export type ShareableHost<TValue = unknown> = {
+  isHost: true;
+  __shareableRef: true;
+} & ShareableHostProps<TValue> &
+  Partial<ShareableBorrowProps<TValue>>;
+
+export type ShareableBorrow<TValue = unknown> = {
+  isHost: false;
+  __shareableRef: true;
+} & ShareableBorrowProps<TValue> &
+  Partial<ShareableHostProps<TValue>>;
+
+export type Shareable<TValue = unknown> =
+  | ShareableHost<TValue>
+  | ShareableBorrow<TValue>;
