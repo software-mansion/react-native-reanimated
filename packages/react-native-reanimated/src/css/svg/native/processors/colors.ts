@@ -18,6 +18,10 @@ export const processColorSVG: ValueProcessor<
 > = (value) => {
   const processed = processColorNumber(value);
 
+  if (value === 'none') {
+    return 0;
+  }
+
   if (processed) {
     return processed;
   }
