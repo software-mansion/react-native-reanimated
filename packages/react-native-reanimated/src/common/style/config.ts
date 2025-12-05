@@ -14,11 +14,11 @@ import {
   processTransform,
   processTransformOrigin,
 } from './processors';
-import type { StyleBuilderConfig } from './types';
+import type { PropsBuilderConfig } from './types';
 
 const colorAttributes = { process: processColor };
 
-export const BASE_PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
+export const BASE_PROPERTIES_CONFIG: PropsBuilderConfig<PlainStyle> = {
   /** Layout and Positioning */
   // FLEXBOX
   flex: true,
