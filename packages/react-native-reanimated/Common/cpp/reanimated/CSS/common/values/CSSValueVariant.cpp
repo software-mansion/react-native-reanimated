@@ -9,6 +9,7 @@
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
 #include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGLength.h>
+#include <reanimated/CSS/svg/values/SVGPath.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
 #include <worklets/Tools/JSISerializer.h>
@@ -168,6 +169,7 @@ template class CSSValueVariant<CSSDiscreteArray<CSSKeyword>>;
 
 template class CSSValueVariant<SVGLength>;
 template class CSSValueVariant<SVGLength, CSSKeyword>;
+template class CSSValueVariant<SVGPath>;
 template class CSSValueVariant<SVGStrokeDashArray, CSSKeyword>;
 template class CSSValueVariant<SVGBrush>;
 
