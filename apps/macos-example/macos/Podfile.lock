@@ -1802,7 +1802,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated (4.2.0-main):
+  - RNReanimated (4.3.0-main):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1825,10 +1825,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 4.2.0-main)
+    - RNReanimated/reanimated (= 4.3.0-main)
     - RNWorklets
     - Yoga
-  - RNReanimated/reanimated (4.2.0-main):
+  - RNReanimated/reanimated (4.3.0-main):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1851,10 +1851,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 4.2.0-main)
+    - RNReanimated/reanimated/apple (= 4.3.0-main)
     - RNWorklets
     - Yoga
-  - RNReanimated/reanimated/apple (4.2.0-main):
+  - RNReanimated/reanimated/apple (4.3.0-main):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1928,7 +1928,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNWorklets (0.7.0-main):
+  - RNWorklets (0.8.0-main):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1951,9 +1951,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNWorklets/worklets (= 0.7.0-main)
+    - RNWorklets/worklets (= 0.8.0-main)
     - Yoga
-  - RNWorklets/worklets (0.7.0-main):
+  - RNWorklets/worklets (0.8.0-main):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1976,9 +1976,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNWorklets/worklets/apple (= 0.7.0-main)
+    - RNWorklets/worklets/apple (= 0.8.0-main)
     - Yoga
-  - RNWorklets/worklets/apple (0.7.0-main):
+  - RNWorklets/worklets/apple (0.8.0-main):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2320,9 +2320,9 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: a1c8cc8a99c32de1244a9cf707bf9d83d0de0f71
   RNCClipboard: ea6045252d5c0753cf17f62290f647dc0096f6ac
   RNGestureHandler: 0397fea67f39d5a2d17fcf4a028e206f7ba098ba
-  RNReanimated: 152207cf096f2badeef2c552a8f2886accd187e6
+  RNReanimated: bf396b9af9533dac43b6bd0a098c0e8887daf340
   RNSVG: 681f8ef5ca50e13cb3c6c88a907ea89b68fee74f
-  RNWorklets: ee84c4d458ce35f4ed94462a2add070ff4e69edb
+  RNWorklets: b80cf058c95c1bbb1fe364f3a6122c0eba42a936
   SocketRocket: 03f7111df1a343b162bf5b06ead333be808e1e0a
   Yoga: 45ce05cb11db042ba2e5e51a2dfaf0ff63d269f9
 

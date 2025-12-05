@@ -192,8 +192,8 @@
 
   /* Pagination */
   --swm-paginator-sublabel: var(--swm-navy-light-100);
-  --swm-paginator-label: var(--swm-yellow-dark-100);
-  --swm-paginator-label-hover: var(--swm-yellow-dark-120);
+  --swm-paginator-label: var(--swm-blue-light-80);
+  --swm-paginator-label-hover: var(--swm-blue-light-100);
 
   /* Footer */
   --swm-brand-copyright-color: var(--swm-navy-light-100);
@@ -407,8 +407,8 @@
 
   /* Pagination */
   --swm-paginator-sublabel: var(--swm-navy-light-20);
-  --swm-paginator-label: var(--swm-yellow-light-60);
-  --swm-paginator-label-hover: var(--swm-yellow-light-40);
+  --swm-paginator-label: var(--swm-blue-dark-80);
+  --swm-paginator-label-hover: var(--swm-blue-dark-60);
 
   /* Footer */
   --swm-brand-copyright-color: var(--swm-navy-light-20);

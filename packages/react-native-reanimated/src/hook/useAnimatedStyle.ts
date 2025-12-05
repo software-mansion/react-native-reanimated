@@ -612,7 +612,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
         ? ({
             get _requiresAnimatedComponent() {
               throw new ReanimatedError(
-                'Perhaps your are trying to pass an animated style to a non-animated component. Try creating an animated component using `createAnimatedComponent` function or use `Animated.*` components.'
+                'Perhaps you are trying to pass an animated style to a non-animated component. Try creating an animated component using `createAnimatedComponent` function or use `Animated.*` components.'
               );
             },
             viewDescriptors,

@@ -238,6 +238,7 @@ export {
   RotateOutUpLeft,
   RotateOutUpRight,
   SequencedTransition,
+  SharedTransition,
   SlideInDown,
   SlideInLeft,
   // Slide

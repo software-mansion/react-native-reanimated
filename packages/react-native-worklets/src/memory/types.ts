@@ -36,19 +36,44 @@ export type Synchronizable<TValue = unknown> = SerializableRef<TValue> &
     unlock(): void;
   };
 
-export type RegistrationData<TValue extends object, TPacked extends object> = {
+/**
+ * Registration data for
+ * [registerCustomSerializable](https://docs.swmansion.com/react-native-reanimated/docs/memory/registerCustomSerializable)
+ * function.
+ */
+export type RegistrationData<TValue extends object, TPacked = unknown> = {
+  /**
+   * A unique name for the Custom Serializable. It's used to prevent duplicate
+   * registrations of the same Custom Serializable. You will get warned if you
+   * attempt to register a Custom Serializable with a name that has already been
+   * used.
+   */
   name: string;
+  /**
+   * A worklet that checks whether a given JavaScript value is of the type
+   * handled by this Custom Serializable.
+   */
   determine: (value: object) => value is TValue;
+  /**
+   * A worklet that packs the JavaScript value of type `TValue` into a value
+   * that can be serialized by default as Serializable. The function must return
+   * a [supported type for
+   * Serialization](https://docs.swmansion.com/react-native-reanimated/docs/memory/Serializable#supported-types).
+   */
   pack: (value: TValue) => TPacked;
+  /**
+   * A worklet that unpacks the packed value, after it's been deserialized from
+   * it's packed form, back into the JavaScript value of type `TValue`.
+   */
   unpack: (value: TPacked) => TValue;
 };
 
-export type SerializationData<
-  TValue extends object,
-  TPacked extends object,
-> = Omit<RegistrationData<TValue, TPacked>, 'name'> & {
+export type SerializationData<TValue extends object, TPacked = unknown> = Omit<
+  RegistrationData<TValue, TPacked>,
+  'name'
+> & {
   /** Only defined on the RN Runtime. */
   name?: string;
 };
 
-export type CustomSerializationRegistry = SerializationData<object, object>[];
+export type CustomSerializationRegistry = SerializationData<object, unknown>[];

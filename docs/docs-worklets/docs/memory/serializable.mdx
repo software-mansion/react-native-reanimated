@@ -15,10 +15,6 @@ Serializable is a type of shared memory that holds an immutable value that can b
   Serializable memory model
 </figcaption>
 
-## Supported types
-
-<SerializableSupportedTypesTable />
-
 <details>
 <summary>Type definitions</summary>
 
@@ -30,6 +26,12 @@ type SerializableRef<TValue = unknown> = {
 ```
 
 </details>
+
+## Supported types
+
+<SerializableSupportedTypesTable />
+
+If you want to transfer objects with custom prototypes across Runtimes, you can use [registerCustomSerializable](/docs/memory/registerCustomSerializable) to define your own serialization and deserialization logic.
 
 ## Remarks
 
