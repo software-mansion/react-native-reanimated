@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 'use strict';
 import { IS_ANDROID } from '../constants';
 import type { PlainStyle } from '../types';
@@ -190,8 +191,14 @@ export const BASE_PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   backfaceVisibility: true,
   opacity: true,
   mixBlendMode: true,
-  // eslint-disable-next-line camelcase
+
   experimental_backgroundImage: false, // TODO
+  // @ts-ignore This type doesn't exist on non-strict-api
+  experimental_backgroundPosition: false, // TODO
+  // @ts-ignore This type doesn't exist on non-strict-api
+  experimental_backgroundSize: false, // TODO
+  // @ts-ignore This type doesn't exist on non-strict-api
+  experimental_backgroundRepeat: false, // TODO
 
   /** Typography */
   // Font
