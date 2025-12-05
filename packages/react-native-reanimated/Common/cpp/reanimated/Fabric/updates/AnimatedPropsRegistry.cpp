@@ -22,10 +22,6 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
     auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
-    if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
-      timestampMap_[shadowNode->getTag()] = timestamp;
-    }
-
     const jsi::Value &updates = item.getProperty(rt, "updates");
     auto props = jsi::dynamicFromValue(rt, updates);
 
@@ -38,6 +34,9 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
           const auto &childShadowNode = shadowNode->getChildren()[0];
           react_native_assert(!strcmp(childShadowNode->getComponentName(), "RawText"));
           addUpdatesToBatch(childShadowNode, folly::dynamic::object("text", value.asString()));
+          if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
+            timestampMap_[childShadowNode->getTag()] = timestamp;
+          }
           break;
         }
       }
@@ -49,6 +48,10 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     }
 
     addUpdatesToBatch(shadowNode, props);
+
+    if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
+      timestampMap_[shadowNode->getTag()] = timestamp;
+    }
   }
 }
 
