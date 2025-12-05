@@ -203,7 +203,9 @@ android {
                         "-DREANIMATED_PROFILING=${REANIMATED_PROFILING}",
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}",
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
-                        "-DREANIMATED_FEATURE_FLAGS=${REANIMATED_FEATURE_FLAGS}"
+                        "-DREANIMATED_FEATURE_FLAGS=${REANIMATED_FEATURE_FLAGS}",
+                        "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384",
+                        "-DCMAKE_EXE_LINKER_FLAGS=-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
                 abiFilters (*reactNativeArchitectures())
                 targets("reanimated")
             }
