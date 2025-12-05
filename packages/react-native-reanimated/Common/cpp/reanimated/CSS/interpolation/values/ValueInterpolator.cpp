@@ -35,13 +35,6 @@ folly::dynamic ValueInterpolator::getLastKeyframeValue() const {
   return convertOptionalToDynamic(keyframes_.back().value);
 }
 
-bool ValueInterpolator::equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const {
-  if (reversingAdjustedStartValue_.isNull()) {
-    return propertyValue.isNull();
-  }
-  return reversingAdjustedStartValue_ == propertyValue;
-}
-
 void ValueInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) {
   const auto parsedKeyframes = parseJSIKeyframes(rt, keyframes);
 
@@ -57,28 +50,18 @@ void ValueInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyf
   }
 }
 
-void ValueInterpolator::updateKeyframesFromStyleChange(
-    const folly::dynamic &oldStyleValue,
-    const folly::dynamic &newStyleValue,
-    const folly::dynamic &lastUpdateValue) {
-  ValueKeyframe firstKeyframe, lastKeyframe;
+bool ValueInterpolator::updateKeyframesFromStyleChange(
+    jsi::Runtime &rt,
+    const jsi::Value &oldStyleValue,
+    const jsi::Value &newStyleValue) {
+  keyframes_ = {
+      ValueKeyframe{0, oldStyleValue.isUndefined() ? defaultStyleValue_ : createValue(rt, oldStyleValue)},
+      ValueKeyframe{1, newStyleValue.isUndefined() ? defaultStyleValue_ : createValue(rt, newStyleValue)}};
 
-  if (!lastUpdateValue.isNull()) {
-    firstKeyframe = ValueKeyframe{0, createValue(lastUpdateValue)};
-  } else if (!oldStyleValue.isNull()) {
-    firstKeyframe = ValueKeyframe{0, createValue(oldStyleValue)};
-  } else {
-    firstKeyframe = ValueKeyframe{0, defaultStyleValue_};
-  }
+  auto equalsReversingAdjustedStartValue = keyframes_[1].value.value() == reversingAdjustedStartValue_;
+  reversingAdjustedStartValue_ = keyframes_[0].value.value();
 
-  if (newStyleValue.isNull()) {
-    lastKeyframe = ValueKeyframe{1, defaultStyleValue_};
-  } else {
-    lastKeyframe = ValueKeyframe{1, createValue(newStyleValue)};
-  }
-
-  keyframes_ = {std::move(firstKeyframe), std::move(lastKeyframe)};
-  reversingAdjustedStartValue_ = oldStyleValue;
+  return equalsReversingAdjustedStartValue;
 }
 
 folly::dynamic ValueInterpolator::interpolate(

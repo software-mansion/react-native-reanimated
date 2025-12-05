@@ -23,13 +23,12 @@ class PropertyInterpolator {
   virtual folly::dynamic getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const = 0;
   virtual folly::dynamic getFirstKeyframeValue() const = 0;
   virtual folly::dynamic getLastKeyframeValue() const = 0;
-  virtual bool equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const = 0;
 
   virtual void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) = 0;
-  virtual void updateKeyframesFromStyleChange(
-      const folly::dynamic &oldStyleValue,
-      const folly::dynamic &newStyleValue,
-      const folly::dynamic &lastUpdateValue) = 0;
+  virtual bool updateKeyframesFromStyleChange(
+      jsi::Runtime &rt,
+      const jsi::Value &oldStyleValue,
+      const jsi::Value &newStyleValue) = 0;
 
   virtual folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,
@@ -49,7 +48,7 @@ class PropertyInterpolatorFactory {
   PropertyInterpolatorFactory() = default;
   virtual ~PropertyInterpolatorFactory() = default;
 
-  virtual bool isDiscreteProperty() const;
+  virtual bool isDiscrete() const = 0;
   virtual const CSSValue &getDefaultValue() const = 0;
 
   virtual std::shared_ptr<PropertyInterpolator> create(
