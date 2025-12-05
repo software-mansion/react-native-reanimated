@@ -2,15 +2,18 @@ const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const {
   wrapWithReanimatedMetroConfig,
 } = require('react-native-reanimated/metro-config');
-const { getModuleBlocklist } = require('../../scripts/metro-blocklist');
+const { getMonorepoMetroOptions } = require('../../scripts/metro');
 const path = require('path');
 
 const modulesToBlock = ['react-native', 'react'];
-const blockList = getModuleBlocklist(modulesToBlock);
+const defaultConfig = getDefaultConfig(__dirname);
+const { blockList, extraNodeModules } = getMonorepoMetroOptions(
+  modulesToBlock,
+  __dirname,
+  defaultConfig
+);
 
 const monorepoRoot = path.resolve(__dirname, '../..');
-
-const defaultConfig = getDefaultConfig(__dirname);
 
 /** @type {import('@react-native/metro-config').MetroConfig} */
 const config = {
@@ -20,12 +23,8 @@ const config = {
   // We need to make sure that only one version is loaded for peerDependencies
   // So we exclude them at the root, and alias them to the versions in example's node_modules
   resolver: {
-    blockList: [...blockList.concat(defaultConfig.resolver.blockList)],
-
-    extraNodeModules: modulesToBlock.reduce((acc, name) => {
-      acc[name] = path.join(__dirname, 'node_modules', name);
-      return acc;
-    }, /** @type {{ [key: string]: string }} */ ({})),
+    blockList,
+    extraNodeModules,
   },
 };
 

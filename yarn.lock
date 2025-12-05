@@ -9561,15 +9561,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:19.2.0":
-  version: 19.2.0
-  resolution: "@types/react@npm:19.2.0"
-  dependencies:
-    csstype: "npm:^3.0.2"
-  checksum: 10/c00a8552d54282caeb608d09664a250e6bd00b1f51e32bb73a0569d844ddbf58d25ffadffec85cc5df08e6c00e6c232a06a8efcfa5edd0bea2ce234519707b34
-  languageName: node
-  linkType: hard
-
 "@types/react@npm:19.2.2":
   version: 19.2.2
   resolution: "@types/react@npm:19.2.2"
@@ -12273,7 +12264,6 @@ __metadata:
     "@babel/plugin-transform-unicode-regex": "npm:7.27.1"
     "@babel/traverse": "npm:7.28.4"
     "@babel/types": "npm:7.28.4"
-    "@react-native/eslint-config": "npm:0.83.0-rc.4"
     "@types/node": "npm:24.0.14"
     "@typescript-eslint/parser": "npm:8.37.0"
     esbuild: "npm:0.25.10"
@@ -13762,7 +13752,7 @@ __metadata:
     "@tsconfig/react-native": "npm:3.0.0"
     "@types/d3-shape": "npm:3.1.7"
     "@types/jest": "npm:30.0.0"
-    "@types/react": "npm:19.2.0"
+    "@types/react": "npm:19.2.2"
     "@types/react-test-renderer": "npm:19.1.0"
     d3-shape: "npm:3.2.0"
     eslint: "npm:9.37.0"
@@ -17470,7 +17460,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "fabric-example@workspace:apps/fabric-example"
   dependencies:
-    "@types/react": "npm:19.2.0"
+    "@types/react": "npm:19.2.2"
     common-app: "workspace:*"
     eslint: "npm:9.37.0"
     prettier: "npm:3.6.2"
@@ -28471,7 +28461,7 @@ __metadata:
     "@types/convert-source-map": "npm:2.0.3"
     "@types/jest": "npm:30.0.0"
     "@types/node": "npm:24.0.14"
-    "@types/react": "npm:19.2.0"
+    "@types/react": "npm:19.2.2"
     "@types/react-test-renderer": "npm:19.1.0"
     "@types/semver": "npm:7.7.1"
     clang-format-node: "npm:1.3.5"
@@ -28596,7 +28586,7 @@ __metadata:
     "@react-native/eslint-config": "npm:0.83.0-rc.4"
     "@types/jest": "npm:30.0.0"
     "@types/node": "npm:24.7.0"
-    "@types/react": "npm:19.2.0"
+    "@types/react": "npm:19.2.2"
     clang-format-node: "npm:1.3.5"
     code-tag: "npm:1.2.0"
     convert-source-map: "npm:2.0.0"
@@ -33149,7 +33139,7 @@ __metadata:
   resolution: "web-example@workspace:apps/web-example"
   dependencies:
     "@expo/metro-runtime": "npm:6.1.2"
-    "@types/react": "npm:19.2.0"
+    "@types/react": "npm:19.2.2"
     common-app: "workspace:*"
     eslint: "npm:9.37.0"
     expo: "npm:54.0.13"

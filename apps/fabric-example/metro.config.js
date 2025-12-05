@@ -2,16 +2,19 @@ const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const {
   wrapWithReanimatedMetroConfig,
 } = require('react-native-reanimated/metro-config');
-const { getModuleBlocklist } = require('../../scripts/metro-blocklist');
+const { getMonorepoMetroOptions } = require('../../scripts/metro');
 const path = require('path');
 
+const defaultConfig = getDefaultConfig(__dirname);
 const modulesToBlock = ['react', 'react-native'];
-const blockList = getModuleBlocklist(modulesToBlock);
+const { blockList, extraNodeModules } = getMonorepoMetroOptions(
+  modulesToBlock,
+  __dirname,
+  defaultConfig
+);
 
 const monorepoRoot = path.resolve(__dirname, '../..');
-const appsPath = path.resolve(monorepoRoot, 'apps');
 
-const defaultConfig = getDefaultConfig(__dirname);
 /**
  * Metro configuration https://reactnative.dev/docs/metro
  *
@@ -19,14 +22,10 @@ const defaultConfig = getDefaultConfig(__dirname);
  */
 let config = {
   projectRoot: __dirname,
-  watchFolders: [monorepoRoot, appsPath],
+  watchFolders: [monorepoRoot],
   resolver: {
-    blockList: [...blockList.concat(defaultConfig.resolver.blockList)],
-
-    extraNodeModules: modulesToBlock.reduce((acc, name) => {
-      acc[name] = path.join(__dirname, 'node_modules', name);
-      return acc;
-    }, /** @type {{ [key: string]: string }} */ ({})),
+    blockList,
+    extraNodeModules,
   },
 };
 

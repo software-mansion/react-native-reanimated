@@ -192,11 +192,11 @@ export const BASE_PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   opacity: true,
   mixBlendMode: true,
 
-  experimental_backgroundImage: false, // TODO:
+  experimental_backgroundImage: false, // TODO
   // @ts-ignore This type doesn't exist on non-strict-api
-  experimental_backgroundPosition: false, // TODO:
-  experimental_backgroundSize: false, // TODO:
-  experimental_backgroundRepeat: false, // TODO:
+  experimental_backgroundPosition: false, // TODO
+  experimental_backgroundSize: false, // TODO
+  experimental_backgroundRepeat: false, // TODO
 
   /** Typography */
   // Font

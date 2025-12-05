@@ -59,7 +59,7 @@
     "@tsconfig/react-native": "3.0.0",
     "@types/d3-shape": "3.1.7",
     "@types/jest": "30.0.0",
-    "@types/react": "19.2.0",
+    "@types/react": "19.2.2",
     "@types/react-test-renderer": "19.1.0",
     "eslint": "9.37.0",
     "jest": "30.2.0",
