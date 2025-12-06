@@ -64,7 +64,7 @@ describe('Layout Animations', () => {
         // The box should be visible now
         expect(screen.queryByTestId('box')).not.toBeNull();
 
-        // The box should stay visible after the animation finishes
+        // The box should stay visible after the timeout
         jest.advanceTimersByTime(500);
         expect(screen.queryByTestId('box')).not.toBeNull();
       });
