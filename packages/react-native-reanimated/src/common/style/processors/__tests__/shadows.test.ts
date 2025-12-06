@@ -1,6 +1,7 @@
 'use strict';
 import type { BoxShadowValue } from 'react-native';
 
+import { ValueProcessorTarget } from '../../../types';
 import { processColor } from '../colors';
 import type { ProcessedBoxShadowValue } from '../shadows';
 import { processBoxShadowNative } from '../shadows';
@@ -140,6 +141,43 @@ describe(processBoxShadowNative, () => {
           expect(processBoxShadowNative(input)).toEqual(expected);
         }
       );
+    });
+  });
+
+  describe('context-aware transparent color handling', () => {
+    test('returns numeric color by default', () => {
+      const result = processBoxShadowNative([
+        { offsetX: 0, offsetY: 0, color: 'transparent' },
+      ]);
+
+      expect(result).toEqual([
+        {
+          blurRadius: 0,
+          color: 0, // transparent color for non-CSS target
+          offsetX: 0,
+          offsetY: 0,
+          spreadDistance: 0,
+        },
+      ]);
+    });
+
+    test('returns false for transparent color with CSS target', () => {
+      const result = processBoxShadowNative(
+        [{ offsetX: 0, offsetY: 0, color: 'transparent' }],
+        {
+          target: ValueProcessorTarget.CSS,
+        }
+      );
+
+      expect(result).toEqual([
+        {
+          blurRadius: 0,
+          color: false, // transparent color for CSS target
+          offsetX: 0,
+          offsetY: 0,
+          spreadDistance: 0,
+        },
+      ]);
     });
   });
 });

@@ -7221,6 +7221,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native/gradle-plugin@patch:@react-native/gradle-plugin@npm%3A0.82.0#~/.yarn/patches/@react-native-gradle-plugin-npm-0.82.0-10aedc0588.patch":
+  version: 0.82.0
+  resolution: "@react-native/gradle-plugin@patch:@react-native/gradle-plugin@npm%3A0.82.0#~/.yarn/patches/@react-native-gradle-plugin-npm-0.82.0-10aedc0588.patch::version=0.82.0&hash=5abe05"
+  checksum: 10/3686a3a7bc356b721c88c63f7415491a51e4c7ab8e916bf47c4e73085a832d0806d7893801d6cbe51ce4ae3559b8cb555132f6f11a8dfa634d1c250bc2797b0b
+  languageName: node
+  linkType: hard
+
 "@react-native/js-polyfills@npm:0.79.6":
   version: 0.79.6
   resolution: "@react-native/js-polyfills@npm:0.79.6"
@@ -13026,7 +13033,7 @@ __metadata:
     react-native-pager-view: "npm:7.0.0"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.6.1"
-    react-native-screens: "npm:4.16.0"
+    react-native-screens: "npm:4.19.0-nightly-20251125-46052f31e"
     react-native-svg: "npm:15.14.0"
     react-native-worklets: "workspace:*"
     react-strict-dom: "npm:0.0.54"
@@ -27496,7 +27503,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-is-edge-to-edge@npm:1.2.1, react-native-is-edge-to-edge@npm:^1.2.1":
+"react-native-is-edge-to-edge@npm:1.2.1":
   version: 1.2.1
   resolution: "react-native-is-edge-to-edge@npm:1.2.1"
   peerDependencies:
@@ -27772,17 +27779,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-screens@npm:4.16.0":
-  version: 4.16.0
-  resolution: "react-native-screens@npm:4.16.0"
+"react-native-screens@npm:4.19.0-nightly-20251125-46052f31e":
+  version: 4.19.0-nightly-20251125-46052f31e
+  resolution: "react-native-screens@npm:4.19.0-nightly-20251125-46052f31e"
   dependencies:
     react-freeze: "npm:^1.0.0"
-    react-native-is-edge-to-edge: "npm:^1.2.1"
     warn-once: "npm:^0.1.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/f055d37b3abf96f42c15d61645441995884ed69b2a6b35f63a21abeb147b9df7e084447d2a329a424ee3686d703c25817ea588d3be9e6ebc38e5c653ebe5e05b
+  checksum: 10/a8ca5c29db9cb7de30f4b48fdb6ec13aeceaa84c59b64fd6a25b1eaccca7675a5a9e3331acc8908ef8c22e036d16746c81ef68aba113f31a95c17f77f6b7071f
   languageName: node
   linkType: hard
 

@@ -12,6 +12,7 @@ import type {
 } from '../commonTypes';
 import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import type { BaseAnimationBuilder } from '../layoutReanimation';
+import type { SharedTransition } from '../layoutReanimation/SharedTransition';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 
 export interface AnimatedProps extends Record<string, unknown> {
@@ -84,6 +85,8 @@ export type AnimatedComponentProps<
   animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
   jestAnimatedValues?: RefObject<AnimatedProps>;
   animatedStyle?: StyleProps;
+  sharedTransitionTag?: string;
+  sharedTransitionStyle?: SharedTransition & LayoutAnimationStaticContext;
   layout?: (
     | BaseAnimationBuilder
     | ILayoutAnimationBuilder
@@ -152,6 +155,7 @@ export interface IAnimatedComponentInternal
   _NativeEventsManager?: INativeEventsManager;
   context: React.ContextType<typeof SkipEnteringContext>;
   setNativeProps: (props: StyleProps) => void;
+  _syncStylePropsBackToReact: (props: StyleProps) => void;
 }
 
 export type NestedArray<T> = T | NestedArray<T>[];

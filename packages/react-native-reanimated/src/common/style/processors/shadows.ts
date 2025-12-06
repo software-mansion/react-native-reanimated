@@ -36,7 +36,7 @@ const parseBlurRadius = (value: string) => {
 export const processBoxShadowNative: ValueProcessor<
   ReadonlyArray<BoxShadowValue> | string,
   ProcessedBoxShadowValue[]
-> = (value) => {
+> = (value, context) => {
   if (value === 'none') {
     return;
   }
@@ -57,7 +57,7 @@ export const processBoxShadowNative: ValueProcessor<
       blurRadius = 0,
       ...rest
     } = shadow;
-    const processedColor = processColor(color);
+    const processedColor = processColor(color, context);
 
     if (processedColor === undefined) {
       throw new ReanimatedError(

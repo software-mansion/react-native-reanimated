@@ -19,6 +19,7 @@ import type { CSSStyle } from './css';
 import type { AddArrayPropertyType } from './css/types';
 import type { BaseAnimationBuilder } from './layoutReanimation/animationBuilder/BaseAnimationBuilder';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
+import type { SharedTransition } from './layoutReanimation/SharedTransition';
 
 export type EntryOrExitLayoutType =
   | BaseAnimationBuilder
@@ -88,6 +89,11 @@ type LayoutProps = {
   exiting?: EntryOrExitLayoutType;
 };
 
+type SharedTransitionProps = {
+  sharedTransitionTag?: string;
+  sharedTransitionStyle?: SharedTransition;
+};
+
 type AnimatedPropsProp<Props extends object> = RestProps<Props> &
   AnimatedStyleProps<Props> &
   LayoutProps;
@@ -103,6 +109,6 @@ export type AnimatedProps<Props extends object> = RestProps<Props> &
     animatedProps?: AddArrayPropertyType<
       Partial<AnimatedPropsProp<Props>> | CSSStyle<Props>
     >;
-  };
+  } & SharedTransitionProps;
 
 // THE LAND OF THE DEPRECATED

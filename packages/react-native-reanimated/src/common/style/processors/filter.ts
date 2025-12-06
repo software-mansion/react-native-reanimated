@@ -8,6 +8,7 @@ import type {
   ParsedDropShadow,
   ParsedFilterFunction,
   ValueProcessor,
+  ValueProcessorContext,
 } from '../../types';
 import { isLength, isNumber } from '../../utils/guards';
 import { processColor } from './colors';
@@ -83,7 +84,11 @@ const parseDropShadowString = (value: string) => {
 
   return result;
 };
-const parseDropShadow = (value: string | DropShadowValue): ParsedDropShadow => {
+
+const parseDropShadow = (
+  value: string | DropShadowValue,
+  context: ValueProcessorContext | undefined
+): ParsedDropShadow => {
   const dropShadow =
     typeof value === 'string' ? parseDropShadowString(value) : value;
   const {
@@ -93,7 +98,7 @@ const parseDropShadow = (value: string | DropShadowValue): ParsedDropShadow => {
     standardDeviation = 0,
   } = dropShadow;
 
-  const processedColor = processColor(color);
+  const processedColor = processColor(color, context);
 
   return {
     // TODO - add support for IOS dynamic colors in CSS (for now we just assume that it's a number)
@@ -106,12 +111,16 @@ const parseDropShadow = (value: string | DropShadowValue): ParsedDropShadow => {
 
 const parseFilterProperty = (
   filterName: string,
-  filterValue: string | number | DropShadowValue
+  filterValue: string | number | DropShadowValue,
+  context: ValueProcessorContext | undefined
 ): ParsedFilterFunction => {
   // We need to handle dropShadow separately because of its complex structure
   if (filterName == 'dropShadow') {
     return {
-      dropShadow: parseDropShadow(filterValue as string | DropShadowValue),
+      dropShadow: parseDropShadow(
+        filterValue as string | DropShadowValue,
+        context
+      ),
     };
   }
 
@@ -150,7 +159,10 @@ const parseFilterProperty = (
   }
 };
 
-const parseFilterString = (value: string): FilterArray => {
+const parseFilterString = (
+  value: string,
+  context: ValueProcessorContext | undefined
+): FilterArray => {
   const matches = Array.from(value.matchAll(FILTER_REGEX));
 
   if (matches.length === 0) {
@@ -163,7 +175,7 @@ const parseFilterString = (value: string): FilterArray => {
       throw new ReanimatedError(ERROR_MESSAGES.invalidFilter(filter));
     }
 
-    return parseFilterProperty(name, content);
+    return parseFilterProperty(name, content, context);
   });
   return filterArray;
 };
@@ -171,15 +183,15 @@ const parseFilterString = (value: string): FilterArray => {
 export const processFilter: ValueProcessor<
   ReadonlyArray<FilterFunction> | string,
   FilterArray
-> = (value) => {
+> = (value, context) => {
   if (typeof value === 'string') {
-    return parseFilterString(value);
+    return parseFilterString(value, context);
   }
 
   if (Array.isArray(value)) {
     return value.map((filter) => {
       const filterKey = Object.keys(filter)[0];
-      return parseFilterProperty(filterKey, filter[filterKey]);
+      return parseFilterProperty(filterKey, filter[filterKey], context);
     });
   }
 

@@ -1,0 +1,54 @@
+diff --git a/ios/RNSScreen.h b/ios/RNSScreen.h
+index 6b0c87abb74c9c70d39813b71b989a889c92408f..c0bbf0d08adc91333f6fcab82daf4eb6be8a9954 100644
+--- a/ios/RNSScreen.h
++++ b/ios/RNSScreen.h
+@@ -53,7 +53,7 @@ namespace react = facebook::react;
+ - (void)notifyFinishTransitioning;
+ - (RNSScreenView *)screenView;
+ #ifdef RCT_NEW_ARCH_ENABLED
+-- (void)setViewToSnapshot;
++- (void)setViewToSnapshotAfterUpdates:(BOOL)afterUpdates;
+ - (CGFloat)calculateHeaderHeightIsModal:(BOOL)isModal;
+ #endif
+ 
+@@ -130,6 +130,7 @@ namespace react = facebook::react;
+ @property (nonatomic, readonly) BOOL hasHeaderConfig;
+ @property (nonatomic, readonly, getter=isMarkedForUnmountInCurrentTransaction)
+     BOOL markedForUnmountInCurrentTransaction;
++@property (nonatomic) BOOL snapshotAfterUpdates;
+ #else
+ @property (nonatomic, copy) RCTDirectEventBlock onAppear;
+ @property (nonatomic, copy) RCTDirectEventBlock onDisappear;
+diff --git a/ios/RNSScreen.mm b/ios/RNSScreen.mm
+index 65c18f1ddccc64b3169e050e577eab77fd8c183b..e8779d92d400e614e850ccc0627510a8b85cb5dc 100644
+--- a/ios/RNSScreen.mm
++++ b/ios/RNSScreen.mm
+@@ -2139,12 +2139,12 @@ Class<RCTComponentViewProtocol> RNSScreenCls(void)
+ #ifdef RCT_NEW_ARCH_ENABLED
+ #pragma mark - Fabric specific
+ 
+-- (void)setViewToSnapshot
++- (void)setViewToSnapshotAfterUpdates:(BOOL)afterUpdates
+ {
+   UIView *superView = self.view.superview;
+   // if we dismissed the view natively, it will already be detached from view hierarchy
+   if (self.view.window != nil) {
+-    UIView *snapshot = [self.view snapshotViewAfterScreenUpdates:NO];
++    UIView *snapshot = [self.view snapshotViewAfterScreenUpdates:afterUpdates];
+     snapshot.frame = self.view.frame;
+     [self.view removeFromSuperview];
+     self.view = snapshot;
+diff --git a/ios/RNSScreenStack.mm b/ios/RNSScreenStack.mm
+index 51f021831aed26a4eed3c85014020423b7b3108b..db0e68204ad8579822fabc5969c594e44c67c4ed 100644
+--- a/ios/RNSScreenStack.mm
++++ b/ios/RNSScreenStack.mm
+@@ -1393,7 +1393,8 @@ RNS_IGNORE_SUPER_CALL_END
+ - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
+ {
+   RNSScreenView *screenChildComponent = (RNSScreenView *)childComponentView;
+-  [screenChildComponent.controller setViewToSnapshot];
++  BOOL afterUpdates = screenChildComponent.snapshotAfterUpdates;
++  [screenChildComponent.controller setViewToSnapshotAfterUpdates:afterUpdates];
+ 
+   RCTAssert(
+       screenChildComponent.reactSuperview == self,

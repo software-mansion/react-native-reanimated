@@ -78,6 +78,8 @@ const DefaultStaticFeatureFlags = {
   EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS: false,
   USE_SYNCHRONIZABLE_FOR_MUTABLES: false,
   USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS: false,
+  ENABLE_SHARED_ELEMENT_TRANSITIONS: false,
+  FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS: false,
 } as const satisfies typeof StaticFeatureFlagsJSON;
 
 type StaticFeatureFlagsSchema = {
