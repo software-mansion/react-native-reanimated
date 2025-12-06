@@ -1,6 +1,7 @@
+// @ts-expect-error - jest-expo/config doesn't have type declarations
 const { getWebPreset } = require('jest-expo/config');
 
-const sharedSetupFiles = ['<rootDir>/jest-setup.js'];
+const sharedSetupFiles = ['<rootDir>/jest/setup.js'];
 const sharedSetupFilesAfterEnv = ['@testing-library/jest-native/extend-expect'];
 
 /**
@@ -29,16 +30,18 @@ const nativeProject = createProject({
 
 const {
   snapshotResolver: _,
+  watchPlugins: __,
   ...baseWebPreset
 } = getWebPreset();
 
 const webProject = createProject({
   ...baseWebPreset,
-  setupFiles: [...baseWebPreset.setupFiles, '<rootDir>/jest-web-setup.js'],
+  setupFiles: [...baseWebPreset.setupFiles, '<rootDir>/jest/setup.web.js'],
   displayName: 'web',
   testMatch: ['**/*.web.test.@(js|jsx|ts|tsx)'],
   testEnvironment: 'jsdom',
 });
+
 
 module.exports = {
   projects: [nativeProject, webProject],
