@@ -15,7 +15,7 @@ import type {
   InitialComponentProps,
 } from './commonTypes';
 
-type AnimatedComponentRef<TInstance> =
+export type AnimatedComponentRef<TInstance> =
   | Ref<ExtractElementRef<TInstance>>
   | (TInstance extends InstanceOrElement ? AnimatedRef<TInstance> : never)
   // Accept untyped AnimatedRef as well to allow passing a reference created
