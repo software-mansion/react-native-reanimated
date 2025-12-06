@@ -5,7 +5,7 @@ const sharedSetupFiles = ['<rootDir>/jest/setup.js'];
 const sharedSetupFilesAfterEnv = ['@testing-library/jest-native/extend-expect'];
 
 /**
- * @param {import('jest').Config} [presetConfig]
+ * @param {import('jest').Config} presetConfig
  * @returns {import('jest').Config}
  */
 const createProject = ({
@@ -13,7 +13,7 @@ const createProject = ({
   setupFiles = [],
   setupFilesAfterEnv = [],
   ...rest
-} = ({})) => ({
+} = {}) => ({
   ...rest,
   modulePathIgnorePatterns: [...modulePathIgnorePatterns, '<rootDir>/lib'],
   setupFiles: [...setupFiles, ...sharedSetupFiles],
@@ -48,7 +48,6 @@ const androidProject = createReactNativeProject({
   setupFiles: ['<rootDir>/jest/setup.android.js'],
 });
 
-
 const {
   snapshotResolver: _,
   watchPlugins: __,
@@ -62,7 +61,6 @@ const webProject = createProject({
   testMatch: ['**/*.web.test.@(js|jsx|ts|tsx)'],
   testEnvironment: 'jsdom',
 });
-
 
 module.exports = {
   projects: [nativeProject, iosProject, androidProject, webProject],
