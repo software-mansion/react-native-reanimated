@@ -5,7 +5,7 @@ const sharedSetupFiles = ['<rootDir>/jest/setup.js'];
 const sharedSetupFilesAfterEnv = ['@testing-library/jest-native/extend-expect'];
 
 /**
- * @param {import('jest').Config} presetConfig
+ * @param {import('jest').Config} [presetConfig]
  * @returns {import('jest').Config}
  */
 const createProject = ({
@@ -13,18 +13,39 @@ const createProject = ({
   setupFiles = [],
   setupFilesAfterEnv = [],
   ...rest
-}) => ({
+} = ({})) => ({
   ...rest,
   modulePathIgnorePatterns: [...modulePathIgnorePatterns, '<rootDir>/lib'],
   setupFiles: [...setupFiles, ...sharedSetupFiles],
   setupFilesAfterEnv: [...setupFilesAfterEnv, ...sharedSetupFilesAfterEnv],
 });
 
-const nativeProject = createProject({
+/**
+ * @param {import('jest').Config} config
+ * @returns {import('jest').Config}
+ */
+const createReactNativeProject = (config = {}) =>
+  createProject({
+    preset: 'react-native',
+    testEnvironment: 'node',
+    ...config,
+  });
+
+const nativeProject = createReactNativeProject({
   displayName: 'native',
-  preset: 'react-native',
-  testEnvironment: 'node',
-  testPathIgnorePatterns: ['\\.web\\.test\\.(?:js|jsx|ts|tsx)$'],
+  testRegex: '.*(?<!\\.(?:ios|android|web))\\.test\\.(?:js|jsx|ts|tsx)$',
+});
+
+const iosProject = createReactNativeProject({
+  displayName: 'ios',
+  testMatch: ['**/*.ios.test.@(js|jsx|ts|tsx)'],
+  setupFiles: ['<rootDir>/jest/setup.ios.js'],
+});
+
+const androidProject = createReactNativeProject({
+  displayName: 'android',
+  testMatch: ['**/*.android.test.@(js|jsx|ts|tsx)'],
+  setupFiles: ['<rootDir>/jest/setup.android.js'],
 });
 
 
@@ -44,5 +65,5 @@ const webProject = createProject({
 
 
 module.exports = {
-  projects: [nativeProject, webProject],
+  projects: [nativeProject, iosProject, androidProject, webProject],
 };
