@@ -5,12 +5,15 @@ const { Platform } = require('react-native');
  *
  * @typedef {Parameters<import('react-native').Platform['select']>[0]} PlatformSelectSpec
  *
+ *
  * @typedef {keyof PlatformSelectSpec | 'default'} PlatformSelectKey
+ */
+
+/**
  * @param {PlatformOS} targetOS
  * @param {PlatformSelectKey[]} priorityKeys
  */
 function mockPlatform(targetOS, priorityKeys) {
-  // @ts-ignore - We're mocking Platform.OS for testing purposes
   Platform.OS = targetOS;
 
   const originalSelect = Platform.select.bind(Platform);
