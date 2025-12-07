@@ -34,7 +34,7 @@ import DragAndSnapExample from './DragAndSnapExample';
 import DynamicColorIOSExample from './DynamicColorIOSExample';
 import PlatformColorExample from './PlatformColorExample';
 import EmojiWaterfallExample from './EmojiWaterfallExample';
-import StrictModeComparison from './LayoutAnimations/StrictModeComparison';
+import StrictModeComparison from './LayoutAnimations/StrictModeComparisonExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import FilterExample from './FilterExample';
 import FlatListWithLayoutAnimations from './FlatListWithLayoutAnimationsExample';
