@@ -55,19 +55,20 @@ function StrictComparison({
   title: string;
 }) {
   return (
-    <View style={{ gap: 8, alignItems: 'center', flex: 1 }}>
-      <Text style={{ fontSize: 20, alignSelf: 'center' }}>{title}</Text>
+    <View style={styles.wrapper}>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.descriptionText}>
+        This example demonstrates layout animations in React&apos;s Strict Mode
+        vs Non-Strict Mode. Both columns should behave identically - animations
+        should work the same regardless of Strict Mode.
+      </Text>
 
-      <View style={{ flex: 1, flexDirection: 'row', gap: 20 }}>
-        <View
-          style={{ flex: 1, alignItems: 'center' }}
-          testID="strict-mode-column">
+      <View style={styles.columnsContainer}>
+        <View style={styles.column} testID="strict-mode-column">
           <Text>Strict mode</Text>
           <StrictMode>{children}</StrictMode>
         </View>
-        <View
-          style={{ flex: 1, alignItems: 'center' }}
-          testID="non-strict-column">
+        <View style={styles.column} testID="non-strict-column">
           <Text>Non-strict</Text>
           {children}
         </View>
@@ -77,25 +78,49 @@ function StrictComparison({
 }
 
 function Square() {
-  return (
-    <View
-      style={{
-        width: 50,
-        height: 50,
-        borderRadius: 10,
-        backgroundColor: 'red',
-      }}
-      testID="box"
-    />
-  );
+  return <View style={styles.square} testID="box" />;
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    gap: 12,
+    alignItems: 'center',
+    flex: 1,
+    padding: 16,
+  },
+  title: {
+    fontSize: 20,
+    alignSelf: 'center',
+  },
+  descriptionText: {
+    fontSize: 14,
+    textAlign: 'center',
+    color: '#666',
+    paddingHorizontal: 8,
+  },
+  columnsContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 20,
+  },
+  column: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 8,
+  },
   container: {
     flex: 1,
     gap: 20,
     width: 200,
     backgroundColor: '#fff',
     alignItems: 'center',
+    padding: 12,
+  },
+  square: {
+    width: 50,
+    height: 50,
+    borderRadius: 10,
+    backgroundColor: 'red',
   },
 });
