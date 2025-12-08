@@ -65,6 +65,19 @@ function isBundleModeEnabled() {
   return '_WORKLETS_BUNDLE_MODE' in globalThis;
 }
 
+const staticFlagsReanimated = [
+  'DISABLE_COMMIT_PAUSING_MECHANISM',
+  'ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS',
+  'IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS',
+  'EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS',
+  'USE_SYNCHRONIZABLE_FOR_MUTABLES',
+  'USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS',
+  'ENABLE_SHARED_ELEMENT_TRANSITIONS',
+  'FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS',
+] as const;
+
+const staticFlagsWorklets = ['IOS_DYNAMIC_FRAMERATE_ENABLED'] as const;
+
 interface ItemProps {
   label: string;
   value: string | boolean;
@@ -111,54 +124,20 @@ export default function AboutExample() {
           <Item label="JS runtime" value={getRuntime()} />
           <Item label="RN version" value={getReactNativeVersion()} />
           <Item label="Bundle mode" value={isBundleModeEnabled()} />
-          <Item
-            label="DISABLE_COMMIT_PAUSING_MECHANISM"
-            value={getStaticFeatureFlagReanimated(
-              'DISABLE_COMMIT_PAUSING_MECHANISM'
-            )}
-          />
-          <Item
-            label="ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS"
-            value={getStaticFeatureFlagReanimated(
-              'ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS'
-            )}
-          />
-          <Item
-            label="IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS"
-            value={getStaticFeatureFlagReanimated(
-              'IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS'
-            )}
-          />
-          <Item
-            label="EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS"
-            value={getStaticFeatureFlagReanimated(
-              'EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS'
-            )}
-          />
-          <Item
-            label="USE_SYNCHRONIZABLE_FOR_MUTABLES"
-            value={getStaticFeatureFlagReanimated(
-              'USE_SYNCHRONIZABLE_FOR_MUTABLES'
-            )}
-          />
-          <Item
-            label="USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS"
-            value={getStaticFeatureFlagReanimated(
-              'USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS'
-            )}
-          />
-          <Item
-            label="FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS"
-            value={getStaticFeatureFlagReanimated(
-              'FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS'
-            )}
-          />
-          <Item
-            label="IOS_DYNAMIC_FRAMERATE_ENABLED"
-            value={getStaticFeatureFlagWorklets(
-              'IOS_DYNAMIC_FRAMERATE_ENABLED'
-            )}
-          />
+          {staticFlagsReanimated.map((name) => (
+            <Item
+              key={name}
+              label={name}
+              value={getStaticFeatureFlagReanimated(name)}
+            />
+          ))}
+          {staticFlagsWorklets.map((name) => (
+            <Item
+              key={name}
+              label={name}
+              value={getStaticFeatureFlagWorklets(name)}
+            />
+          ))}
           <Item
             label="EXAMPLE_DYNAMIC_FLAG"
             value={getDynamicFeatureFlag('EXAMPLE_DYNAMIC_FLAG')}
