@@ -183,7 +183,11 @@ Static flags are intended to be resolved during code compilation and cannot be c
 3. Rebuild the native app
 
 :::warning
-[RNRepo](https://rnrepo.org/) does not support Reanimated static feature flags. If you would like to modify static feature flags while using RNRepo in your project, you must force building Reanimated from source by adding deny list configuration as described in [RNRepo's documentation](https://github.com/software-mansion/rnrepo/blob/main/TROUBLESHOOTING.md#deny-list-configuration).
+Static feature flags are not supported in environments where Reanimated is prebuilt with the default configuration of flags, like for instance in [Expo Go](https://expo.dev/go) and [RNRepo](https://rnrepo.org/).
+
+- It's not possible to modify static feature flags in Expo Go. Please consider using [Expo Prebuild](https://docs.expo.dev/workflow/continuous-native-generation/) instead.
+- If your project uses RNRepo, you need to force building Reanimated from source by adding it to the deny list as described in [RNRepo's documentation](https://github.com/software-mansion/rnrepo/blob/main/TROUBLESHOOTING.md#deny-list-configuration).
+
 :::
 
 To read a static feature flag value in JavaScript, you can use `getStaticFeatureFlag` function.
@@ -202,13 +206,14 @@ To read a dynamic feature flag value in JavaScript, you can use `getDynamicFeatu
 
 ## Comparison of static and dynamic feature flags
 
-|                                          | Static feature flags | Dynamic feature flags |
-| ---------------------------------------- | :------------------: | :-------------------: |
-| Value is known during app build          |          ✅          |          ❌           |
-| Value may change during app lifetime     |          ❌          |          ✅           |
-| Value change requires app rebuild        |          ✅          |          ❌           |
-| Can be changed via public JavaScript API |          ❌          |          ✅           |
-| Can be changed via app's `package.json`  |          ✅          |          ❌           |
+|                                             | Static feature flags | Dynamic feature flags |
+| ------------------------------------------- | :------------------: | :-------------------: |
+| Value is known during app build             |          ✅          |          ❌           |
+| Value may change during app lifetime        |          ❌          |          ✅           |
+| Value change requires app rebuild           |          ✅          |          ❌           |
+| Can be changed via public JavaScript API    |          ❌          |          ✅           |
+| Can be changed via app's `package.json`     |          ✅          |          ❌           |
+| Can be changed when using Expo Go or RNRepo |          ❌          |          ✅           |
 
 ## Remarks for contributors
 

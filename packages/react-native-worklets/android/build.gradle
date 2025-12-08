@@ -103,6 +103,7 @@ def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
 def BUNDLE_MODE = safeAppExtGet("workletsBundleMode", false)
 def WORKLETS_FEATURE_FLAGS = getStaticFeatureFlags()
 def HERMES_V1_ENABLED = safeAppExtGet("hermesV1Enabled", false)
+def WORKLETS_PROFILING = safeAppExtGet("enableWorkletsProfiling", false)
 
 // Set version for prefab
 version WORKLETS_VERSION
@@ -183,6 +184,7 @@ android {
         versionCode 1
         versionName WORKLETS_VERSION
 
+        buildConfigField("boolean", "WORKLETS_PROFILING", WORKLETS_PROFILING.toString())
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
         buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
@@ -197,6 +199,7 @@ android {
                         "-DJS_RUNTIME=${JS_RUNTIME}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
                         "-DWORKLETS_BUNDLE_MODE=${BUNDLE_MODE}",
+                        "-DWORKLETS_PROFILING=${WORKLETS_PROFILING}",
                         "-DWORKLETS_VERSION=${WORKLETS_VERSION}",
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
                         "-DWORKLETS_FEATURE_FLAGS=${WORKLETS_FEATURE_FLAGS}",
