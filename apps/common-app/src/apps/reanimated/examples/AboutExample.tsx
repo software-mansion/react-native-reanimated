@@ -75,7 +75,13 @@ function Item({ label, value }: ItemProps) {
     <View style={styles.item}>
       <Text style={styles.label}>{label}</Text>
       <Text style={styles.value}>
-        {value === true ? 'Enabled' : value === false ? 'Disabled' : value}
+        {value === true ? (
+          <Text style={styles.true}>✅ true</Text>
+        ) : value === false ? (
+          <Text style={styles.false}>❌ false</Text>
+        ) : (
+          value
+        )}
       </Text>
     </View>
   );
@@ -182,5 +188,11 @@ const styles = StyleSheet.create({
   },
   value: {
     fontSize: 16,
+  },
+  true: {
+    color: 'green',
+  },
+  false: {
+    color: 'firebrick',
   },
 });
