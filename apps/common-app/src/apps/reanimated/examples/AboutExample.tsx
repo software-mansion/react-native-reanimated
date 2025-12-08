@@ -28,19 +28,22 @@ function getBundle() {
 }
 
 function getRuntime() {
-  if ('HermesInternal' in global) {
+  if ('HermesInternal' in globalThis) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const version =
       // @ts-ignore this is fine
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      global.HermesInternal?.getRuntimeProperties?.()['OSS Release Version'];
+      globalThis.HermesInternal?.getRuntimeProperties?.()[
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        'OSS Release Version'
+      ];
     return `Hermes (${version})`;
   }
   return 'unknown';
 }
 
 function getArchitecture() {
-  return 'nativeFabricUIManager' in global ? 'Fabric' : 'Paper';
+  return 'nativeFabricUIManager' in globalThis ? 'Fabric' : 'Paper';
 }
 
 function getReactNativeVersion() {
