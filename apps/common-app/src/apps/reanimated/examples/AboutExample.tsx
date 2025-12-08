@@ -49,6 +49,19 @@ function getReactNativeVersion() {
   return `${major}.${minor}.${patch}${prerelease ? `-${prerelease}` : ''}`;
 }
 
+interface ItemProps {
+  label: string;
+  value: string;
+}
+
+function Item({ label, value }: ItemProps) {
+  return (
+    <Text style={styles.text}>
+      <Text style={styles.bold}>{label}:</Text> {value}
+    </Text>
+  );
+}
+
 export default function AboutExample() {
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
@@ -62,102 +75,103 @@ export default function AboutExample() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>
-        <Text style={styles.bold}>Platform:</Text> {getPlatform()}{' '}
-        {getPlatformVersion()}
-      </Text>
-      <Text style={styles.text}>
-        <Text style={styles.bold}>Bundle:</Text> {getBundle()}
-      </Text>
+      <Item
+        label="Platform"
+        value={`${getPlatform()} ${getPlatformVersion()}`}
+      />
+      <Item label="Bundle" value={getBundle()} />
       {!isWeb() && (
         <>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>Architecture:</Text> {getArchitecture()}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>JS runtime:</Text> {getRuntime()}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>RN version:</Text>{' '}
-            {getReactNativeVersion()}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>Bundle mode:</Text>{' '}
-            {
-              // @ts-expect-error This global is not exposed.
-              globalThis._WORKLETS_BUNDLE_MODE ? 'Enabled' : 'Disabled'
+          <Item label="Architecture" value={getArchitecture()} />
+          <Item label="JS runtime" value={getRuntime()} />
+          <Item label="RN version" value={getReactNativeVersion()} />
+          <Item
+            label="Bundle mode"
+            // @ts-expect-error This global is not exposed.
+            value={globalThis._WORKLETS_BUNDLE_MODE ? 'Enabled' : 'Disabled'}
+          />
+          <Item
+            label="DISABLE_COMMIT_PAUSING_MECHANISM"
+            value={
+              getStaticFeatureFlagReanimated('DISABLE_COMMIT_PAUSING_MECHANISM')
+                ? 'Enabled'
+                : 'Disabled'
             }
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>DISABLE_COMMIT_PAUSING_MECHANISM:</Text>{' '}
-            {getStaticFeatureFlagReanimated('DISABLE_COMMIT_PAUSING_MECHANISM')
-              ? 'Enabled'
-              : 'Disabled'}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>
-              ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS:
-            </Text>{' '}
-            {getStaticFeatureFlagReanimated(
-              'ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS'
-            )
-              ? 'Enabled'
-              : 'Disabled'}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS:</Text>{' '}
-            {getStaticFeatureFlagReanimated('IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS')
-              ? 'Enabled'
-              : 'Disabled'}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>
-              EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS:
-            </Text>{' '}
-            {getStaticFeatureFlagReanimated(
-              'EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS'
-            )
-              ? 'Enabled'
-              : 'Disabled'}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>USE_SYNCHRONIZABLE_FOR_MUTABLES:</Text>{' '}
-            {getStaticFeatureFlagReanimated('USE_SYNCHRONIZABLE_FOR_MUTABLES')
-              ? 'Enabled'
-              : 'Disabled'}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>
-              USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS:
-            </Text>{' '}
-            {getStaticFeatureFlagReanimated(
-              'USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS'
-            )
-              ? 'Enabled'
-              : 'Disabled'}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>
-              FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS:
-            </Text>{' '}
-            {getStaticFeatureFlagReanimated(
-              'FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS'
-            )
-              ? 'Enabled'
-              : 'Disabled'}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>IOS_DYNAMIC_FRAMERATE_ENABLED:</Text>{' '}
-            {getStaticFeatureFlagWorklets('IOS_DYNAMIC_FRAMERATE_ENABLED')
-              ? 'Enabled'
-              : 'Disabled'}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>EXAMPLE_DYNAMIC_FLAG:</Text>{' '}
-            {getDynamicFeatureFlag('EXAMPLE_DYNAMIC_FLAG')
-              ? 'Enabled'
-              : 'Disabled'}
-          </Text>
+          />
+          <Item
+            label="ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS"
+            value={
+              getStaticFeatureFlagReanimated(
+                'ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS'
+              )
+                ? 'Enabled'
+                : 'Disabled'
+            }
+          />
+          <Item
+            label="IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS"
+            value={
+              getStaticFeatureFlagReanimated(
+                'IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS'
+              )
+                ? 'Enabled'
+                : 'Disabled'
+            }
+          />
+          <Item
+            label="EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS"
+            value={
+              getStaticFeatureFlagReanimated(
+                'EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS'
+              )
+                ? 'Enabled'
+                : 'Disabled'
+            }
+          />
+          <Item
+            label="USE_SYNCHRONIZABLE_FOR_MUTABLES"
+            value={
+              getStaticFeatureFlagReanimated('USE_SYNCHRONIZABLE_FOR_MUTABLES')
+                ? 'Enabled'
+                : 'Disabled'
+            }
+          />
+          <Item
+            label="USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS"
+            value={
+              getStaticFeatureFlagReanimated(
+                'USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS'
+              )
+                ? 'Enabled'
+                : 'Disabled'
+            }
+          />
+          <Item
+            label="FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS"
+            value={
+              getStaticFeatureFlagReanimated(
+                'FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS'
+              )
+                ? 'Enabled'
+                : 'Disabled'
+            }
+          />
+          <Item
+            label="IOS_DYNAMIC_FRAMERATE_ENABLED"
+            value={
+              getStaticFeatureFlagWorklets('IOS_DYNAMIC_FRAMERATE_ENABLED')
+                ? 'Enabled'
+                : 'Disabled'
+            }
+          />
+          <Item
+            label="EXAMPLE_DYNAMIC_FLAG"
+            value={
+              getDynamicFeatureFlag('EXAMPLE_DYNAMIC_FLAG')
+                ? 'Enabled'
+                : 'Disabled'
+            }
+          />
           <Button
             title={`Toggle EXAMPLE_DYNAMIC_FLAG`}
             onPress={handleToggleExampleDynamicFlag}
