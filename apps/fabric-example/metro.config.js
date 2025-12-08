@@ -6,9 +6,9 @@ const { getMonorepoMetroOptions } = require('../../scripts/metro');
 const path = require('path');
 
 const defaultConfig = getDefaultConfig(__dirname);
-const modulesToBlock = ['react', 'react-native'];
+const modulesToFilter = ['react', 'react-native'];
 const { blockList, extraNodeModules } = getMonorepoMetroOptions(
-  modulesToBlock,
+  modulesToFilter,
   __dirname,
   defaultConfig
 );

@@ -16,7 +16,7 @@ const workletsPath = path.resolve(
 const blockedDirs = [monorepoRoot, commonAppPath, reanimatedPath, workletsPath];
 
 /**
- * @param {string[]} modulesToBlock - Module names to block from being resolved
+ * @param {string[]} modulesToFilter - Module names to block from being resolved
  *   from unwanted locations.
  * @param {string} appDir - Absolute path to the app directory.
  * @param {import('@react-native/metro-config').MetroConfig} defaultConfig -
@@ -26,9 +26,9 @@ const blockedDirs = [monorepoRoot, commonAppPath, reanimatedPath, workletsPath];
  *   extraNodeModules: { [x: string]: string };
  * }}
  */
-function getMonorepoMetroOptions(modulesToBlock, appDir, defaultConfig) {
-  const blockList = getModuleBlocklist(modulesToBlock, defaultConfig);
-  const extraNodeModules = getExtraNodeModules(modulesToBlock, appDir);
+function getMonorepoMetroOptions(modulesToFilter, appDir, defaultConfig) {
+  const blockList = getModuleBlocklist(modulesToFilter, defaultConfig);
+  const extraNodeModules = getExtraNodeModules(modulesToFilter, appDir);
 
   return {
     blockList,

@@ -5,10 +5,10 @@ const {
 const { getMonorepoMetroOptions } = require('../../scripts/metro');
 const path = require('path');
 
-const modulesToBlock = ['react', 'react-native', 'react-native-macos'];
+const modulesToFilter = ['react', 'react-native', 'react-native-macos'];
 const defaultConfig = getDefaultConfig(__dirname);
 const { blockList, extraNodeModules } = getMonorepoMetroOptions(
-  modulesToBlock,
+  modulesToFilter,
   __dirname,
   // @ts-expect-error Metro types differ for macOS
   defaultConfig
