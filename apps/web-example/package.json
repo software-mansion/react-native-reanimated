@@ -15,10 +15,11 @@
   "dependencies": {
     "common-app": "workspace:*",
     "expo": "54.0.13",
-    "react": "19.1.1",
-    "react-dom": "19.1.1",
-    "react-native": "0.82.0",
-    "react-native-web": "0.21.1"
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-native": "0.83.0-rc.4",
+    "react-native-web": "0.21.1",
+    "react-strict-dom": "0.0.54"
   },
   "devDependencies": {
     "@expo/metro-runtime": "6.1.2",

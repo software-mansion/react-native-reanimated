@@ -13,8 +13,8 @@
   },
   "dependencies": {
     "common-app": "workspace:*",
-    "react": "19.1.1",
-    "react-native": "0.82.0"
+    "react": "19.2.0",
+    "react-native": "0.83.0-rc.4"
   },
   "devDependencies": {
     "@types/react": "19.2.2",
@@ -26,7 +26,8 @@
     "node": ">=20.13.0"
   },
   "installConfig": {
-    "selfReferences": false
+    "selfReferences": false,
+    "hoistingLimits": "workspaces"
   },
   "reanimated": {
     "staticFeatureFlags": {
