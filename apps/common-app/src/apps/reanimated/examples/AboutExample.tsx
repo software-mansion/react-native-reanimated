@@ -1,5 +1,12 @@
 import React, { useCallback, useReducer } from 'react';
-import { Button, Platform, StyleSheet, Text, View } from 'react-native';
+import {
+  Button,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import {
   getDynamicFeatureFlag,
   getStaticFeatureFlag as getStaticFeatureFlagReanimated,
@@ -65,10 +72,12 @@ interface ItemProps {
 
 function Item({ label, value }: ItemProps) {
   return (
-    <Text style={styles.text}>
-      <Text style={styles.bold}>{label}:</Text>{' '}
-      {value === true ? 'Enabled' : value === false ? 'Disabled' : value}
-    </Text>
+    <View style={styles.item}>
+      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.value}>
+        {value === true ? 'Enabled' : value === false ? 'Disabled' : value}
+      </Text>
+    </View>
   );
 }
 
@@ -84,7 +93,7 @@ export default function AboutExample() {
   }, [forceUpdate]);
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Item
         label="Platform"
         value={`${getPlatform()} ${getPlatformVersion()}`}
@@ -154,20 +163,24 @@ export default function AboutExample() {
           />
         </>
       )}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 20,
+    paddingBottom: 20,
   },
-  text: {
+  item: {
+    padding: 15,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'gray',
+  },
+  label: {
+    fontSize: 12,
+    marginBottom: 5,
+  },
+  value: {
     fontSize: 16,
-    marginVertical: 4,
-  },
-  bold: {
-    fontWeight: 'bold',
   },
 });
