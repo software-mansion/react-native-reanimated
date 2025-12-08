@@ -1,10 +1,10 @@
 #include <jsi/jsi.h>
-#include <reanimated/CSS/common/values/CSSAngle.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
+#include <reanimated/CSS/utils/propsBuilderWrapper.h>
 
 #include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/SharedItems/Serializable.h>
@@ -555,6 +555,7 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
   //    jsi::Runtime &rt = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
 
   UpdatesBatch updatesBatch;
+  UpdatesBatchAnimatedProps updatesBatchAnimatedProps;
   {
     ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
 
@@ -566,6 +567,8 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
       // Update CSS transitions and flush updates
       cssTransitionsRegistry_->update(currentCssTimestamp_);
       cssTransitionsRegistry_->flushUpdates(updatesBatch);
+
+      cssTransitionsRegistry_->flushAnimatedPropsUpdates(updatesBatchAnimatedProps);
     }
 
     {
@@ -584,313 +587,17 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
     shouldUpdateCssAnimations_ = false;
   }
 
+  printf("updatesBatchAnimatedProps size: %ld \n", updatesBatchAnimatedProps.size());
+
   AnimationMutations mutations;
-  for (auto &[node, dynamic] : updatesBatch) {
-    AnimatedPropsBuilder builder;
-    CascadedBorderRadii borderRadii{};
-    CascadedRectangleEdges<yoga::StyleLength> margin{};
-    CascadedRectangleEdges<yoga::StyleLength> padding{};
-    CascadedRectangleEdges<yoga::StyleLength> position{};
-    CascadedRectangleEdges<yoga::StyleLength> borderWidth{};
-    printf("dynamic: %s \n", folly::toJson(dynamic).c_str());
-
-    for (const auto &pair : dynamic.items()) {
-      const auto &name = pair.first.getString();
-      auto nameHash = RAW_PROPS_KEY_HASH(name);
-
-      switch (nameHash) {
-        case RAW_PROPS_KEY_HASH("opacity"):
-          builder.setOpacity(pair.second.asDouble());
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderRadius"):
-          borderRadii.all = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderTopRightRadius"):
-          borderRadii.topRight = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderTopLeftRadius"):
-          borderRadii.topLeft = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderBottomRightRadius"):
-          borderRadii.bottomRight = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderBottomLeftRadius"):
-          borderRadii.bottomLeft = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderTopStartRadius"):
-          borderRadii.topStart = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderTopEndRadius"):
-          borderRadii.topEnd = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderBottomStartRadius"):
-          borderRadii.bottomStart = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderBottomEndRadius"):
-          borderRadii.bottomEnd = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderStartStartRadius"):
-          borderRadii.startStart = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderStartEndRadius"):
-          borderRadii.startEnd = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderEndStartRadius"):
-          borderRadii.endStart = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderEndEndRadius"):
-          borderRadii.endEnd = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("width"):
-          builder.setWidth(yoga::Style::SizeLength::points(pair.second.asDouble()));
-          break;
-
-        case RAW_PROPS_KEY_HASH("height"):
-          builder.setHeight(yoga::Style::SizeLength::points(pair.second.asDouble()));
-          break;
-
-        case RAW_PROPS_KEY_HASH("transform"): {
-          Transform t;
-
-          for (int i = 0; i < pair.second.size(); i++) {
-            const auto &transformObject = pair.second.at(i);
-            for (const auto &transform : transformObject.items()) {
-              if (transform.first.asString() == "translateX") {
-                t = t * t.Translate(transform.second.asDouble(), 0, 0);
-              } else if (transform.first.asString() == "translateY") {
-                t = t * t.Translate(0, transform.second.asDouble(), 0);
-              } else if (transform.first.asString() == "scale") {
-                t = t * t.Scale(transform.second.asDouble(), transform.second.asDouble(), transform.second.asDouble());
-              } else if (transform.first.asString() == "skewX") {
-                t = t * t.Skew(CSSAngle(transform.second.asString()).value, 0);
-              } else if (transform.first.asString() == "skewY") {
-                t = t * t.Skew(0, CSSAngle(transform.second.asString()).value);
-              } else if (transform.first.asString() == "rotate") {
-                double angle = CSSAngle(transform.second.asString()).value;
-                t = t * t.Rotate(angle, angle, angle);
-              } else if (transform.first.asString() == "rotateX") {
-                double angle = CSSAngle(transform.second.asString()).value;
-                t = t * t.RotateX(angle);
-              } else if (transform.first.asString() == "rotateY") {
-                double angle = CSSAngle(transform.second.asString()).value;
-                t = t * t.RotateY(angle);
-              } else if (transform.first.asString() == "rotateZ") {
-                double angle = CSSAngle(transform.second.asString()).value;
-                t = t * t.RotateZ(angle);
-              }
-            }
-          }
-
-          builder.setTransform(t);
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("backgroundColor"): {
-          builder.setBackgroundColor(SharedColor(static_cast<int>(pair.second.asInt())));
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("shadowColor"): {
-          builder.setShadowColor(SharedColor(static_cast<int>(pair.second.asInt())));
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("shadowOpacity"): {
-          builder.setShadowOpacity(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("shadowRadius"): {
-          builder.setShadowRadius(pair.second.asDouble());
-          break;
-        }
-              
-          case RAW_PROPS_KEY_HASH("shadowOffset"): {
-              auto shadowOffset = pair.second;
-              auto width = shadowOffset["width"].asDouble();
-              auto height = shadowOffset["height"].asDouble();
-              builder.setShadowOffset(facebook::react::Size{width, height});
-          }
-              
-          // MARGIN
-            
-          case RAW_PROPS_KEY_HASH("margin"): {
-              margin.all = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("marginTop"): {
-              margin.top = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("marginBottom"): {
-              margin.bottom = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-        
-          case RAW_PROPS_KEY_HASH("marginHorizontal"): {
-              margin.horizontal = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("marginVertical"): {
-              margin.vertical = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-            
-          case RAW_PROPS_KEY_HASH("marginLeft"): {
-              margin.left = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("marginRight"): {
-              margin.right = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("marginStart"): {
-              margin.start = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("marginEnd"): {
-              margin.end = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-         // PADDING
-              
-          case RAW_PROPS_KEY_HASH("padding"): {
-              padding.all = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("paddingTop"): {
-              padding.top = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("paddingBottom"): {
-              padding.bottom = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-        
-          case RAW_PROPS_KEY_HASH("paddingHorizontal"): {
-              padding.horizontal = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("paddingVertical"): {
-              padding.vertical = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-            
-          case RAW_PROPS_KEY_HASH("paddingLeft"): {
-              padding.left = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("paddingRight"): {
-              padding.right = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("paddingStart"): {
-              padding.start = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("paddingEnd"): {
-              padding.end = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-         // POSITIONS
-          case RAW_PROPS_KEY_HASH("top"): {
-              position.top = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-            
-          case RAW_PROPS_KEY_HASH("bottom"): {
-              position.bottom = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("left"): {
-              position.left = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("right"): {
-              position.right = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-        
-         // BORDER WIDTH
-              
-          case RAW_PROPS_KEY_HASH("borderWidth"): {
-              borderWidth.all = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("borderLeftWidth"): {
-              borderWidth.left = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("borderRightWidth"): {
-              borderWidth.right = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("borderTopWidth"): {
-              borderWidth.top = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("borderBottomWidth"): {
-              borderWidth.bottom = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("borderStartWidth"): {
-              borderWidth.start = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-              
-          case RAW_PROPS_KEY_HASH("borderEndWidth"): {
-              borderWidth.end = yoga::StyleLength::points(pair.second.asDouble());
-              break;
-          }
-
-        default:
-          printf("AnimationMutations: Unsupported prop \n");
-      }
-    }
-
-    // TODO: This shouldn't be set there, but leaving it for now
-    builder.setBorderRadii(borderRadii);
-    builder.setMargin(margin);
-    builder.setPadding(padding);
-    builder.setPosition(position);
-    builder.setBorderWidth(borderWidth);
-    mutations.push_back(AnimationMutation{node->getTag(), &node->getFamily(), builder.get()});
-  }
+    
+  // TODO: Use this when packing props from dynamic
+  animationMutationsFromDynamic(mutations, updatesBatch);
+  
+  // TODO: Use this when packing props from already prepared animated props
+//  for (auto &[node, animatedProp] : updatesBatchAnimatedProps) {
+//    mutations.push_back(AnimationMutation{node->getTag(), &node->getFamily(), std::move(animatedProp)});
+//  }
 
   return mutations;
 }
@@ -1548,20 +1255,29 @@ jsi::Value ReanimatedModuleProxy::measure(jsi::Runtime &rt, const jsi::Value &sh
 void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
   viewStylesRepository_->setUIManager(uiManager_);
+  backendCallbacks_ = std::vector<std::function<void(const double)>>();
 
   requestRender_ = [this](std::function<void(const double)> callback) {
     std::weak_ptr<UIManagerAnimationBackend> unstableAnimationBackend = uiManager_->unstable_getAnimationBackend();
+    backendCallbacks_.push_back(callback);
     if (auto locked = unstableAnimationBackend.lock()) {
       auto animationBackend = std::static_pointer_cast<AnimationBackend>(locked);
-      animationBackend->start(
-          [this](double timestamp) {
-            if (auto locked = uiManager_->unstable_getAnimationBackend().lock()) {
-              std::static_pointer_cast<AnimationBackend>(locked)->stop(false);
-            }
+      if (backendCallbacks_.size() == 1) {
+        animationBackend->start(
+            [this](double timestamp) {
+              if (auto locked = uiManager_->unstable_getAnimationBackend().lock()) {
+                std::static_pointer_cast<AnimationBackend>(locked)->stop(false);
+              }
 
-            return performOperationsForBackend();
-          },
-          false);
+              auto copy = std::move(backendCallbacks_);
+              for (auto &cb : copy) {
+                cb(timestamp);
+              }
+
+              return performOperationsForBackend();
+            },
+            false);
+      }
     }
   };
 
@@ -1578,8 +1294,8 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
     strongThis->requestFlushRegistry();
   };
 
-  //  mountHook_ = std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, request);
-  //  commitHook_ = std::make_shared<ReanimatedCommitHook>(uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
+  //    mountHook_ = std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, request);
+  //    commitHook_ = std::make_shared<ReanimatedCommitHook>(uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {

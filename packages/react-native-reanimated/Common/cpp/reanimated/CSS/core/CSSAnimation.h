@@ -3,6 +3,7 @@
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
+#include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
 
 #include <memory>
 #include <string>
@@ -42,6 +43,7 @@ class CSSAnimation {
  private:
   const std::string name_;
   const std::shared_ptr<const ShadowNode> shadowNode_;
+  const std::shared_ptr<AnimatedPropsBuilder> propsBuilder_;
   AnimationFillMode fillMode_;
 
   const std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;

@@ -4,6 +4,7 @@
 #include <reanimated/CSS/common/values/CSSValue.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
+#include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
 
 #include <memory>
 #include <string>
@@ -34,6 +35,7 @@ class PropertyInterpolator {
   virtual folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+      const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder,
       double fallbackInterpolateThreshold) const = 0;
 
  protected:

@@ -192,6 +192,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   const std::shared_ptr<JSLogger> jsLogger_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
+  std::vector<std::function<void(const double)>> backendCallbacks_;
 
   bool cssLoopRunning_{false};
   bool shouldUpdateCssAnimations_{true};

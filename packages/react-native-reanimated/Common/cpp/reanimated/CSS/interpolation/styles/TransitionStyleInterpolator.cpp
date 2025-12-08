@@ -1,5 +1,7 @@
 #include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
+#include <reanimated/CSS/utils/propsBuilderWrapper.h>
 
+#include <folly/json.h>
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -36,6 +38,7 @@ std::unordered_set<std::string> TransitionStyleInterpolator::getReversedProperty
 folly::dynamic TransitionStyleInterpolator::interpolate(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const TransitionProgressProvider &transitionProgressProvider,
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder,
     const std::unordered_set<std::string> &allowDiscreteProperties) const {
   folly::dynamic result = folly::dynamic::object;
 
@@ -45,7 +48,15 @@ folly::dynamic TransitionStyleInterpolator::interpolate(
     const auto &interpolator = interpolators_.at(propertyName);
     const auto fallbackInterpolateThreshold =
         (allowDiscreteProperties.contains(propertyName)) ? 0.5 : allFallbackInterpolateThreshold;
-    result[propertyName] = interpolator->interpolate(shadowNode, progressProvider, fallbackInterpolateThreshold);
+    const auto interpolatedValue =
+        interpolator->interpolate(shadowNode, progressProvider, propsBuilder, fallbackInterpolateThreshold);
+
+    printf(
+        "property name: %s, interpolatedValue: %s \n", propertyName.c_str(), folly::toJson(interpolatedValue).c_str());
+
+     addToPropsBuilder(propsBuilder, interpolatedValue, propertyName);
+
+    result[propertyName] = interpolatedValue;
   }
 
   return result;

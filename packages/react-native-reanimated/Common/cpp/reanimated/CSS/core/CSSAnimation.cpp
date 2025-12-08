@@ -1,4 +1,6 @@
 #include <reanimated/CSS/core/CSSAnimation.h>
+#include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
+
 
 #include <memory>
 #include <string>
@@ -15,6 +17,7 @@ CSSAnimation::CSSAnimation(
     const double timestamp)
     : name_(std::move(animationName)),
       shadowNode_(std::move(shadowNode)),
+      propsBuilder_(std::make_shared<AnimatedPropsBuilder>()),
       fillMode_(settings.fillMode),
       styleInterpolator_(cssKeyframesConfig.styleInterpolator),
       progressProvider_(std::make_shared<AnimationProgressProvider>(
@@ -60,7 +63,7 @@ bool CSSAnimation::hasBackwardsFillMode() const {
 }
 
 folly::dynamic CSSAnimation::getCurrentInterpolationStyle() const {
-  return styleInterpolator_->interpolate(shadowNode_, progressProvider_, FALLBACK_INTERPOLATION_THRESHOLD);
+  return styleInterpolator_->interpolate(shadowNode_, progressProvider_, propsBuilder_, FALLBACK_INTERPOLATION_THRESHOLD);
 }
 
 folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
@@ -88,8 +91,9 @@ folly::dynamic CSSAnimation::update(const double timestamp) {
   if (progressProvider_->getState(timestamp) == AnimationProgressState::Pending) {
     return hasBackwardsFillMode() ? getBackwardsFillStyle() : folly::dynamic();
   }
-
-  return styleInterpolator_->interpolate(shadowNode_, progressProvider_, FALLBACK_INTERPOLATION_THRESHOLD);
+  
+  // TODO: return AnimatedProps
+  return styleInterpolator_->interpolate(shadowNode_, progressProvider_, propsBuilder_, FALLBACK_INTERPOLATION_THRESHOLD);
 }
 
 void CSSAnimation::updateSettings(const PartialCSSAnimationSettings &updatedSettings, const double timestamp) {

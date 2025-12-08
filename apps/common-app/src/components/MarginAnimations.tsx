@@ -161,6 +161,30 @@ export default function MarginAnimations({ onBack }: Props) {
     };
   });
 
+  // Margin style for the outer square
+  const marginStyle = useAnimatedStyle(() => {
+    return {
+      margin: margin.value,
+      marginTop: marginTop.value,
+      marginBottom: marginBottom.value,
+      marginLeft: marginLeft.value,
+      marginRight: marginRight.value,
+      marginHorizontal: marginHorizontal.value,
+      marginVertical: marginVertical.value,
+    };
+  });
+
+  // Padding style for the inner content
+  const paddingStyle = useAnimatedStyle(() => {
+    return {
+      padding: padding.value,
+      paddingTop: paddingTop.value,
+      paddingBottom: paddingBottom.value,
+      paddingLeft: paddingLeft.value,
+      paddingRight: paddingRight.value,
+    };
+  });
+
   const buttons = [
     { title: 'Margin', onPress: animateMargin },
     { title: 'Margin Top', onPress: animateMarginTop },
@@ -183,7 +207,14 @@ export default function MarginAnimations({ onBack }: Props) {
     <View style={styles.container}>
       <View style={styles.animationContainer}>
         <View style={styles.boundaryBox}>
-          <Animated.View style={[styles.square, animatedStyle]} />
+          <Animated.View style={[styles.square, marginStyle]}>
+            <Animated.View style={[styles.innerContent, paddingStyle]}>
+              <Text style={styles.innerText}>
+                Padding
+                {'\n'}Animation
+              </Text>
+            </Animated.View>
+          </Animated.View>
         </View>
       </View>
 
@@ -248,18 +279,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 20,
-    color: '#2c3e50',
-  },
   buttonGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     paddingBottom: 40,
+  },
+  innerContent: {
+    backgroundColor: '#f1c40f',
+    borderRadius: 8,
+    minWidth: 30,
+    minHeight: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  innerText: {
+    color: '#2c3e50',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    fontSize: 14,
   },
   button: {
     backgroundColor: '#8e44ad',

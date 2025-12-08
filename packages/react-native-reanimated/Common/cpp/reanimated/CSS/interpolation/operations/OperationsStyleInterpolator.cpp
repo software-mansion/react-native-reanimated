@@ -68,6 +68,7 @@ bool OperationsStyleInterpolator::equalsReversingAdjustedStartValue(const folly:
 folly::dynamic OperationsStyleInterpolator::interpolate(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder,
     const double fallbackInterpolateThreshold) const {
   const auto currentIndex = getIndexOfCurrentKeyframe(progressProvider);
 

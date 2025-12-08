@@ -10,8 +10,9 @@ import {
 import TransformAnimations from './components/TransformAnimations';
 import BorderAnimations from './components/BorderAnimations';
 import MarginAnimations from './components/MarginAnimations';
+import CSSAnimations from './components/CSSAnimations';
 
-type Screen = 'home' | 'transform' | 'border' | 'margin';
+type Screen = 'home' | 'transform' | 'border' | 'margin' | 'css';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
@@ -50,6 +51,15 @@ export default function App() {
               Margin, padding animations with wave effects
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.categoryButton, styles.cssButton]}
+            onPress={() => setCurrentScreen('css')}>
+            <Text style={styles.categoryTitle}>✨ CSS Animations</Text>
+            <Text style={styles.categoryDescription}>
+              Classic CSS effects: fade, slide, bounce, pulse, shake, and more
+            </Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -63,6 +73,8 @@ export default function App() {
         return <BorderAnimations onBack={() => setCurrentScreen('home')} />;
       case 'margin':
         return <MarginAnimations onBack={() => setCurrentScreen('home')} />;
+      case 'css':
+        return <CSSAnimations onBack={() => setCurrentScreen('home')} />;
       default:
         return renderHomeScreen();
     }
@@ -128,6 +140,9 @@ const styles = StyleSheet.create({
   },
   marginButton: {
     borderLeftColor: '#f39c12',
+  },
+  cssButton: {
+    borderLeftColor: '#9b59b6',
   },
   categoryTitle: {
     fontSize: 20,

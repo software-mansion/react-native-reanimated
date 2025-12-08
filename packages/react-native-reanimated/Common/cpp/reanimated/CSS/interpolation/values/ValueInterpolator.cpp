@@ -1,4 +1,9 @@
+#include <reanimated/CSS/common/values/CSSKeyword.h>
+#include <reanimated/CSS/common/values/CSSLength.h>
+#include <reanimated/CSS/common/values/CSSValueVariant.h>
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
+
+#include <folly/json.h>
 
 #include <memory>
 #include <utility>
@@ -84,6 +89,7 @@ void ValueInterpolator::updateKeyframesFromStyleChange(
 folly::dynamic ValueInterpolator::interpolate(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder,
     const double fallbackInterpolateThreshold) const {
   const auto toIndex = getToKeyframeIndex(progressProvider);
   const auto fromIndex = toIndex - 1;

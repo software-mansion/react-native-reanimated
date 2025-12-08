@@ -1,5 +1,6 @@
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 
+#include <folly/json.h>
 #include <memory>
 #include <utility>
 
@@ -61,6 +62,9 @@ void CSSTransitionsRegistry::update(const double timestamp) {
     if (!updates.empty()) {
       addUpdatesToBatch(transition->getShadowNode(), updates);
     }
+
+    auto animatedProps = transition->getAnimatedProps();
+    addAnimatedPropsToBatch(transition->getShadowNode(), std::move(animatedProps));
 
     // We remove transition from running and schedule it when animation of one
     // of properties has finished and the other one is still delayed

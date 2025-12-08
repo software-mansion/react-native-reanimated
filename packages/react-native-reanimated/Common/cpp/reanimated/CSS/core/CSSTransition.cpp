@@ -13,6 +13,7 @@ CSSTransition::CSSTransition(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : shadowNode_(std::move(shadowNode)),
       viewStylesRepository_(viewStylesRepository),
+      propsBuilder_(std::make_shared<AnimatedPropsBuilder>()),
       properties_(config.properties),
       settings_(config.settings),
       styleInterpolator_(TransitionStyleInterpolator(shadowNode_->getComponentName(), viewStylesRepository)),
@@ -37,7 +38,7 @@ TransitionProgressState CSSTransition::getState() const {
 }
 
 folly::dynamic CSSTransition::getCurrentInterpolationStyle() const {
-  return styleInterpolator_.interpolate(shadowNode_, progressProvider_, allowDiscreteProperties_);
+  return styleInterpolator_.interpolate(shadowNode_, progressProvider_, propsBuilder_, allowDiscreteProperties_);
 }
 
 TransitionProperties CSSTransition::getProperties() const {
@@ -101,13 +102,18 @@ CSSTransition::run(const ChangedProps &changedProps, const folly::dynamic &lastU
 
 folly::dynamic CSSTransition::update(const double timestamp) {
   progressProvider_.update(timestamp);
-  auto result = styleInterpolator_.interpolate(shadowNode_, progressProvider_, allowDiscreteProperties_);
+  auto result = styleInterpolator_.interpolate(shadowNode_, progressProvider_, propsBuilder_, allowDiscreteProperties_);
   // Remove interpolators for which interpolation has finished
   // (we won't need them anymore in the current transition)
   styleInterpolator_.discardFinishedInterpolators(progressProvider_);
   // And remove finished progress providers after they were used to calculate
   // the last frame of the transition
   progressProvider_.discardFinishedProgressProviders();
+  return result;
+}
+
+AnimatedProps CSSTransition::getAnimatedProps() {
+  AnimatedProps result = propsBuilder_->get();
   return result;
 }
 
