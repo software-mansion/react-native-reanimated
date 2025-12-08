@@ -43,7 +43,9 @@ function getRuntime() {
 }
 
 function getArchitecture() {
-  return 'nativeFabricUIManager' in globalThis ? 'Fabric' : 'Paper';
+  return 'nativeFabricUIManager' in globalThis
+    ? 'New Architecture'
+    : 'Legacy Architecture';
 }
 
 function getReactNativeVersion() {
