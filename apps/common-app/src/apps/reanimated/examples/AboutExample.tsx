@@ -8,9 +8,9 @@ import {
   View,
 } from 'react-native';
 import {
-  getDynamicFeatureFlag,
+  getDynamicFeatureFlag as getDynamicFeatureFlagReanimated,
   getStaticFeatureFlag as getStaticFeatureFlagReanimated,
-  setDynamicFeatureFlag,
+  setDynamicFeatureFlag as setDynamicFeatureFlagReanimated,
 } from 'react-native-reanimated';
 import { getStaticFeatureFlag as getStaticFeatureFlagWorklets } from 'react-native-worklets';
 
@@ -104,9 +104,9 @@ export default function AboutExample() {
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
   const handleToggleExampleDynamicFlag = useCallback(() => {
-    setDynamicFeatureFlag(
+    setDynamicFeatureFlagReanimated(
       'EXAMPLE_DYNAMIC_FLAG',
-      !getDynamicFeatureFlag('EXAMPLE_DYNAMIC_FLAG')
+      !getDynamicFeatureFlagReanimated('EXAMPLE_DYNAMIC_FLAG')
     );
     forceUpdate();
   }, [forceUpdate]);
@@ -140,7 +140,7 @@ export default function AboutExample() {
           ))}
           <Item
             label="EXAMPLE_DYNAMIC_FLAG"
-            value={getDynamicFeatureFlag('EXAMPLE_DYNAMIC_FLAG')}
+            value={getDynamicFeatureFlagReanimated('EXAMPLE_DYNAMIC_FLAG')}
           />
           <Button
             title={`Toggle EXAMPLE_DYNAMIC_FLAG`}
