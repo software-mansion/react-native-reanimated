@@ -51,13 +51,14 @@ function getReactNativeVersion() {
 
 interface ItemProps {
   label: string;
-  value: string;
+  value: string | boolean;
 }
 
 function Item({ label, value }: ItemProps) {
   return (
     <Text style={styles.text}>
-      <Text style={styles.bold}>{label}:</Text> {value}
+      <Text style={styles.bold}>{label}:</Text>{' '}
+      {value === true ? 'Enabled' : value === false ? 'Disabled' : value}
     </Text>
   );
 }
@@ -88,89 +89,59 @@ export default function AboutExample() {
           <Item
             label="Bundle mode"
             // @ts-expect-error This global is not exposed.
-            value={globalThis._WORKLETS_BUNDLE_MODE ? 'Enabled' : 'Disabled'}
+            value={globalThis._WORKLETS_BUNDLE_MODE as boolean}
           />
           <Item
             label="DISABLE_COMMIT_PAUSING_MECHANISM"
-            value={
-              getStaticFeatureFlagReanimated('DISABLE_COMMIT_PAUSING_MECHANISM')
-                ? 'Enabled'
-                : 'Disabled'
-            }
+            value={getStaticFeatureFlagReanimated(
+              'DISABLE_COMMIT_PAUSING_MECHANISM'
+            )}
           />
           <Item
             label="ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS"
-            value={
-              getStaticFeatureFlagReanimated(
-                'ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS'
-              )
-                ? 'Enabled'
-                : 'Disabled'
-            }
+            value={getStaticFeatureFlagReanimated(
+              'ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS'
+            )}
           />
           <Item
             label="IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS"
-            value={
-              getStaticFeatureFlagReanimated(
-                'IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS'
-              )
-                ? 'Enabled'
-                : 'Disabled'
-            }
+            value={getStaticFeatureFlagReanimated(
+              'IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS'
+            )}
           />
           <Item
             label="EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS"
-            value={
-              getStaticFeatureFlagReanimated(
-                'EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS'
-              )
-                ? 'Enabled'
-                : 'Disabled'
-            }
+            value={getStaticFeatureFlagReanimated(
+              'EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS'
+            )}
           />
           <Item
             label="USE_SYNCHRONIZABLE_FOR_MUTABLES"
-            value={
-              getStaticFeatureFlagReanimated('USE_SYNCHRONIZABLE_FOR_MUTABLES')
-                ? 'Enabled'
-                : 'Disabled'
-            }
+            value={getStaticFeatureFlagReanimated(
+              'USE_SYNCHRONIZABLE_FOR_MUTABLES'
+            )}
           />
           <Item
             label="USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS"
-            value={
-              getStaticFeatureFlagReanimated(
-                'USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS'
-              )
-                ? 'Enabled'
-                : 'Disabled'
-            }
+            value={getStaticFeatureFlagReanimated(
+              'USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS'
+            )}
           />
           <Item
             label="FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS"
-            value={
-              getStaticFeatureFlagReanimated(
-                'FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS'
-              )
-                ? 'Enabled'
-                : 'Disabled'
-            }
+            value={getStaticFeatureFlagReanimated(
+              'FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS'
+            )}
           />
           <Item
             label="IOS_DYNAMIC_FRAMERATE_ENABLED"
-            value={
-              getStaticFeatureFlagWorklets('IOS_DYNAMIC_FRAMERATE_ENABLED')
-                ? 'Enabled'
-                : 'Disabled'
-            }
+            value={getStaticFeatureFlagWorklets(
+              'IOS_DYNAMIC_FRAMERATE_ENABLED'
+            )}
           />
           <Item
             label="EXAMPLE_DYNAMIC_FLAG"
-            value={
-              getDynamicFeatureFlag('EXAMPLE_DYNAMIC_FLAG')
-                ? 'Enabled'
-                : 'Disabled'
-            }
+            value={getDynamicFeatureFlag('EXAMPLE_DYNAMIC_FLAG')}
           />
           <Button
             title={`Toggle EXAMPLE_DYNAMIC_FLAG`}
