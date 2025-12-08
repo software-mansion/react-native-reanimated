@@ -49,6 +49,10 @@ function getReactNativeVersion() {
   return `${major}.${minor}.${patch}${prerelease ? `-${prerelease}` : ''}`;
 }
 
+function isBundleModeEnabled() {
+  return '_WORKLETS_BUNDLE_MODE' in globalThis;
+}
+
 interface ItemProps {
   label: string;
   value: string | boolean;
@@ -86,11 +90,7 @@ export default function AboutExample() {
           <Item label="Architecture" value={getArchitecture()} />
           <Item label="JS runtime" value={getRuntime()} />
           <Item label="RN version" value={getReactNativeVersion()} />
-          <Item
-            label="Bundle mode"
-            // @ts-expect-error This global is not exposed.
-            value={globalThis._WORKLETS_BUNDLE_MODE as boolean}
-          />
+          <Item label="Bundle mode" value={isBundleModeEnabled()} />
           <Item
             label="DISABLE_COMMIT_PAUSING_MECHANISM"
             value={getStaticFeatureFlagReanimated(
