@@ -15,11 +15,11 @@ inputs:
     required: true
   app-name:
     description: Name of the test app
-    default: 'app'
+    default: "app"
     required: false
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Setup Yarn
       shell: bash
