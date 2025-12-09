@@ -199,12 +199,12 @@ type WorkletRuntimeConfigInternal = WorkletRuntimeConfig & {
 
 /**
  * Lets you run a function synchronously on a [Worker
- * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime).
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
  *
  * - This function cannot be called from the [UI
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime).
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
  *   or another [Worker
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime),
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
  *   unless the [Bundle
  *   Mode](https://docs.swmansion.com/react-native-worklets/docs/experimental/bundleMode)
  *   is enabled.
