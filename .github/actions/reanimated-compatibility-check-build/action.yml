@@ -15,11 +15,11 @@ inputs:
     required: true
   app-name:
     description: Name of the test app
-    default: 'app'
+    default: "app"
     required: false
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Setup Yarn
       shell: bash
@@ -46,10 +46,6 @@ runs:
       working-directory: ${{ inputs.app-name }}
       shell: bash
       run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
-    - name: Select Xcode (iOS)
-      if: ${{ inputs.platform == 'iOS' }}
-      shell: bash
-      run: sudo xcode-select --switch /Applications/Xcode_16.4.app
     - name: Install Pods (iOS)
       if: ${{ inputs.platform == 'iOS' }}
       working-directory: ${{ inputs.app-name }}/ios

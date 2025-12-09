@@ -6,17 +6,17 @@ on:
     paths:
       - .github/workflows/react-native-nightly-reanimated-build-check-nightly.yml
   schedule:
-    - cron: '37 19 * * *'
+    - cron: "37 19 * * *"
   workflow_call:
   workflow_dispatch:
 
 jobs:
   react-native-nightly-reanimated-build-check:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: ${{ matrix.platform == 'iOS' && 'macos-15' || 'ubuntu-latest'}}
+    runs-on: ${{ matrix.platform == 'iOS' && 'macos-26' || 'ubuntu-latest'}}
     strategy:
       matrix:
-        platform: ['iOS', 'Android']
+        platform: ["iOS", "Android"]
       fail-fast: false
     env:
       REACT_NATIVE_TAG: nightly
@@ -33,8 +33,8 @@ jobs:
         if: ${{ matrix.platform == 'Android' }}
         uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
-          java-version: '18'
+          distribution: "zulu"
+          java-version: "18"
       - name: Load "next" tag if available
         run: |
           if npm view react-native dist-tags | grep -q 'next:' ; then
@@ -56,9 +56,6 @@ jobs:
       - name: Install Worklets
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
-      - name: Select Xcode (iOS)
-        if: ${{ matrix.platform == 'iOS' }}
-        run: sudo xcode-select --switch /Applications/Xcode_16.4.app
       - name: Install Fabric Pods (iOS)
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}/ios
