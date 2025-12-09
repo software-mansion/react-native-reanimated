@@ -14,10 +14,8 @@ class GroupPropertiesInterpolator : public PropertyInterpolator {
       const PropertyPath &propertyPath,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  folly::dynamic getStyleValue(
-      const std::shared_ptr<const ShadowNode> &shadowNode) const override;
-  folly::dynamic getResetStyle(
-      const std::shared_ptr<const ShadowNode> &shadowNode) const override;
+  folly::dynamic getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const override;
+  folly::dynamic getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const override;
   folly::dynamic getFirstKeyframeValue() const override;
   folly::dynamic getLastKeyframeValue() const override;
 
@@ -28,8 +26,7 @@ class GroupPropertiesInterpolator : public PropertyInterpolator {
 
  protected:
   virtual folly::dynamic mapInterpolators(
-      const std::function<folly::dynamic(PropertyInterpolator &)> &callback)
-      const = 0;
+      const std::function<folly::dynamic(PropertyInterpolator &)> &callback) const = 0;
 };
 
 } // namespace reanimated::css

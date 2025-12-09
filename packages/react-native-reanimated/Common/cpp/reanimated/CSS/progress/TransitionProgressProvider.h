@@ -5,22 +5,16 @@
 #include <reanimated/CSS/progress/RawProgressProvider.h>
 #include <reanimated/CSS/utils/props.h>
 
-#include <limits>
 #include <memory>
-#include <queue>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
-#include <utility>
-#include <vector>
 
 namespace reanimated::css {
 
-enum class TransitionProgressState { Pending, Running, Finished };
+enum class TransitionProgressState : std::uint8_t { Pending, Running, Finished };
 
-class TransitionPropertyProgressProvider final
-    : public KeyframeProgressProvider,
-      public RawProgressProvider {
+class TransitionPropertyProgressProvider final : public KeyframeProgressProvider, public RawProgressProvider {
  public:
   TransitionPropertyProgressProvider(
       double timestamp,
@@ -50,9 +44,8 @@ class TransitionPropertyProgressProvider final
   double getElapsedTime(double timestamp) const;
 };
 
-using TransitionPropertyProgressProviders = std::unordered_map<
-    std::string,
-    std::shared_ptr<TransitionPropertyProgressProvider>>;
+using TransitionPropertyProgressProviders =
+    std::unordered_map<std::string, std::shared_ptr<TransitionPropertyProgressProvider>>;
 
 class TransitionProgressProvider final {
  public:
@@ -62,8 +55,7 @@ class TransitionProgressProvider final {
   std::unordered_set<std::string> getRemovedProperties() const;
 
   void discardFinishedProgressProviders();
-  void discardIrrelevantProgressProviders(
-      const std::unordered_set<std::string> &transitionPropertyNames);
+  void discardIrrelevantProgressProviders(const std::unordered_set<std::string> &transitionPropertyNames);
   void runProgressProviders(
       double timestamp,
       const CSSTransitionPropertiesSettings &propertiesSettings,
@@ -76,8 +68,7 @@ class TransitionProgressProvider final {
 
   std::unordered_set<std::string> removedProperties_;
 
-  std::shared_ptr<TransitionPropertyProgressProvider>
-  createReversingShorteningProgressProvider(
+  std::shared_ptr<TransitionPropertyProgressProvider> createReversingShorteningProgressProvider(
       double timestamp,
       const CSSTransitionPropertySettings &propertySettings,
       const TransitionPropertyProgressProvider &existingProgressProvider);

@@ -5,6 +5,7 @@
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 
+#include <worklets/SharedItems/MemoryManager.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
@@ -30,11 +31,12 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
  public:
   explicit JSIWorkletsModuleProxy(
       const bool isDevBundle,
-      const std::shared_ptr<const BigStringBuffer> &script,
+      const std::shared_ptr<const JSBigStringBuffer> &script,
       const std::string &sourceUrl,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
+      const std::shared_ptr<MemoryManager> &memoryManager,
       const std::shared_ptr<RuntimeManager> &runtimeManager,
       const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime);
 
@@ -62,12 +64,16 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
     return isDevBundle_;
   }
 
-  [[nodiscard]] std::shared_ptr<const BigStringBuffer> getScript() const {
+  [[nodiscard]] std::shared_ptr<const JSBigStringBuffer> getScript() const {
     return script_;
   }
 
   [[nodiscard]] std::string getSourceUrl() const {
     return sourceUrl_;
+  }
+
+  [[nodiscard]] std::shared_ptr<MemoryManager> getMemoryManager() const {
+    return memoryManager_;
   }
 
   [[nodiscard]] std::shared_ptr<RuntimeManager> getRuntimeManager() const {
@@ -76,11 +82,12 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
 
  private:
   const bool isDevBundle_;
-  const std::shared_ptr<const BigStringBuffer> script_;
+  const std::shared_ptr<const JSBigStringBuffer> script_;
   const std::string sourceUrl_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
+  const std::shared_ptr<MemoryManager> memoryManager_;
   const std::shared_ptr<RuntimeManager> runtimeManager_;
   const std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
 };

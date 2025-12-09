@@ -7,7 +7,7 @@ import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type {
   AnimatedComponentProps,
-  AnimatedComponentType,
+  AnimatedComponentTypeInternal,
   IInlinePropManager,
   ViewInfo,
 } from './commonTypes';
@@ -38,23 +38,22 @@ function inlinePropsHasChanged(
   return false;
 }
 
-function getInlinePropsUpdate(inlineProps: Record<string, unknown>) {
+function getInlinePropsUpdate(styleValue: StyleProps): unknown {
   'worklet';
-  const update: Record<string, unknown> = {};
-  for (const [key, styleValue] of Object.entries(inlineProps)) {
-    if (isSharedValue(styleValue)) {
-      update[key] = styleValue.value;
-    } else if (Array.isArray(styleValue)) {
-      update[key] = styleValue.map((item) => {
-        return getInlinePropsUpdate(item);
-      });
-    } else if (typeof styleValue === 'object') {
-      update[key] = getInlinePropsUpdate(styleValue as Record<string, unknown>);
-    } else {
-      update[key] = styleValue;
-    }
+  if (isSharedValue(styleValue)) {
+    return styleValue.value;
   }
-  return update;
+  if (Array.isArray(styleValue)) {
+    return styleValue.map(getInlinePropsUpdate);
+  }
+  if (styleValue && typeof styleValue === 'object') {
+    const update: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(styleValue)) {
+      update[key] = getInlinePropsUpdate(value);
+    }
+    return update;
+  }
+  return styleValue;
 }
 
 function extractSharedValuesMapFromProps(
@@ -70,6 +69,9 @@ function extractSharedValuesMapFromProps(
       const styles = flattenArray<StyleProps>(props.style ?? []);
       styles.forEach((style) => {
         if (!style) {
+          return;
+        }
+        if (__DEV__ && '_requiresAnimatedComponent' in style) {
           return;
         }
         for (const [styleKey, styleValue] of Object.entries(style)) {
@@ -109,7 +111,7 @@ export function getInlineStyle(
   isFirstRender: boolean
 ) {
   if (isFirstRender) {
-    return getInlinePropsUpdate(style);
+    return getInlinePropsUpdate(style) as Record<string, unknown>;
   }
   const newStyle: StyleProps = {};
   for (const [key, styleValue] of Object.entries(style)) {
@@ -129,7 +131,7 @@ export class InlinePropManager implements IInlinePropManager {
   _inlineProps: StyleProps = {};
 
   public attachInlineProps(
-    animatedComponent: AnimatedComponentType,
+    animatedComponent: AnimatedComponentTypeInternal,
     viewInfo: ViewInfo
   ) {
     const newInlineProps: Record<string, unknown> =

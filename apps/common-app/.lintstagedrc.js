@@ -1,7 +1,8 @@
-/** @type {import('lint-staged').Config} */
+/* eslint-disable @typescript-eslint/no-require-imports */
+/** @type {import('lint-staged').Configuration} */
 const commonConfig = require('../../.lintstagedrc-common.js');
 
-/** @type {import('lint-staged').Config} */
+/** @type {import('lint-staged').Configuration} */
 module.exports = {
   ...commonConfig,
 };

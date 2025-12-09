@@ -44,7 +44,7 @@ class Synchronizable : public SynchronizableAccess,
 
   explicit Synchronizable(const std::shared_ptr<Serializable> &value);
 
-  virtual ~Synchronizable() = default;
+  ~Synchronizable() override = default;
 
  private:
   std::shared_ptr<Serializable> value_;
@@ -52,8 +52,6 @@ class Synchronizable : public SynchronizableAccess,
 
 jsi::Function getSynchronizableUnpacker(jsi::Runtime &rt);
 
-std::shared_ptr<Synchronizable> extractSynchronizableOrThrow(
-    jsi::Runtime &rt,
-    const jsi::Value &value);
+std::shared_ptr<Synchronizable> extractSynchronizableOrThrow(jsi::Runtime &rt, const jsi::Value &value);
 
 }; // namespace worklets

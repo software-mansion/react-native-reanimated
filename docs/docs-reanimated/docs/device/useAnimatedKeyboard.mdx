@@ -1,0 +1,149 @@
+---
+sidebar_position: 1
+---
+
+`useAnimatedKeyboard` lets you create animations based on state and height of the virtual keyboard.
+
+:::info ⚠️ Deprecation notice
+The `useAnimatedKeyboard` is now deprecated. Please migrate to the [`react-native-keyboard-controller`](https://kirillzyusko.github.io/react-native-keyboard-controller/) library. See the [migration guide](#migration-guide) below.
+:::
+
+:::caution
+
+Android implementation of `useAnimatedKeyboard` has drawbacks on Android SDK < 30, for more details see [remarks](/docs/device/useAnimatedKeyboard#remarks) section.
+
+:::
+
+## Reference
+
+```javascript
+import { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
+
+export default function App() {
+  const keyboard = useAnimatedKeyboard();
+
+  const animatedStyles = useAnimatedStyle(() => ({
+    transform: [{ translateY: -keyboard.height.value }],
+  }));
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+// --- Function declaration ---
+
+function useAnimatedKeyboard(
+  options: AnimatedKeyboardOptions
+): AnimatedKeyboardInfo;
+
+// --- Configuration types ---
+
+export interface AnimatedKeyboardOptions {
+  isStatusBarTranslucentAndroid?: boolean;
+}
+
+// --- Return types ---
+
+export type AnimatedKeyboardInfo = {
+  height: SharedValue<number>;
+  state: SharedValue<KeyboardState>;
+};
+
+export enum KeyboardState {
+  UNKNOWN = 0,
+  OPENING = 1,
+  OPEN = 2,
+  CLOSING = 3,
+  CLOSED = 4,
+}
+```
+
+</details>
+
+### Arguments
+
+#### `options` <Optional />
+
+Optional object containing additional configuration:
+
+- `isStatusBarTranslucentAndroid` - removes top inset on Android i.e. to use translucent status bar on Android, set this option to `true`. Defaults to `false`. Ignored on iOS.
+
+### Returns
+
+Hook `useAnimatedKeyboard` returns an object containing these fields:
+
+| Name   | Type                         | Description                                                                                                                                                |
+| ------ | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| height | `SharedValue<number>`        | A [shared value](/docs/fundamentals/glossary#shared-value) containing current height of the keyboard.                                                      |
+| state  | `SharedValue<KeyboardState>` | A [shared value](/docs/fundamentals/glossary#shared-value) containing current state of the keyboard. Possible states: `{ CLOSED, OPEN, CLOSING, OPENING }` |
+
+## Example
+
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import AnimatedKeyboardSrc from '!!raw-loader!@site/src/examples/AnimatedKeyboard';
+
+<InteractiveExample
+  src={AnimatedKeyboardSrc}
+  component={() => (
+    <ThemedVideo
+      center
+      width={300}
+      sources={{
+        light: '/recordings/useAnimatedKeyboard_light.mov',
+        dark: '/recordings/useAnimatedKeyboard_dark.mov',
+      }}
+    />
+  )}
+/>
+
+## Remarks
+
+- On Android, make sure to set `android:windowSoftInputMode` in your `AndroidManifest.xml` to `adjustResize`. Then, using the `useAnimatedKeyboard` hook disables
+  the default Android behavior (resizing the view to accommodate keyboard) in the whole app. Using values from `useAnimatedKeyboard` hook you can handle the keyboard yourself. Unmounting all components that use `useAnimatedKeyboard` hook brings back the default Android behavior.
+
+- On Android, using the `useAnimatedKeyboard` hook expands root view to full screen ([immersive mode](https://developer.android.com/develop/ui/views/layout/immersive)) and takes control over insets management.
+
+  - When `isStatusBarTranslucentAndroid` is `false` it applies the top margin according to the insets.
+
+  - When `isStatusBarTranslucentAndroid` is `true` it sets top margin to `0`.
+
+  - When `isNavigationBarTranslucentAndroid` is `false` it applies the bottom margin according to the insets.
+
+  - When `isNavigationBarTranslucentAndroid` is `true` it sets bottom margin to `0`.
+
+- On Android, when using navigation with native header, `isStatusBarTranslucentAndroid` doesn't affect the top inset.
+
+- On Android SDK < 30, when status bar is hidden, the keyboard reverts to the default Android behavior.
+
+- <AvailableFrom version={'3.17.0'} /> On iPad, when the keyboard is floating, the
+  hook will always return height: <code>0</code>
+  and state: <code>CLOSED</code>.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios />
+
+## Migration guide
+
+As of `react-native-reanimated` **4.x** the `useAnimatedKeyboard` hook has been deprecated due to persistent bugs on iOS 26. To address this, we recommend migrating to the [react-native-keyboard-controller](https://kirillzyusko.github.io/react-native-keyboard-controller/) library, which offers a more robust and feature-complete solution for handling keyboard interactions. This guide walks you through the migration process.
+
+### Step 1: Install `react-native-keyboard-controller`
+
+Follow the official installation instructions in the [installation guide](https://kirillzyusko.github.io/react-native-keyboard-controller/docs/installation).
+
+### Step 2: Use a compatibility wrapper
+
+To make migration easier, you can use a compatibility layer. For that just replace your existing imports with the compat layer:
+
+```diff
+- import { useAnimatedKeyboard, KeyboardState } from 'react-native-reanimated';
++ import { useAnimatedKeyboard, KeyboardState } from 'react-native-keyboard-controller';
+```
+
+And that’s it 🎉
+
+If you run into any issues or edge cases, please open a ticket in the [`react-native-keyboard-controller`](https://github.com/kirillzyusko/react-native-keyboard-controller) repository.
+
+Also consider exploring the built-in [components](https://kirillzyusko.github.io/react-native-keyboard-controller/docs/guides/components-overview) - they can help reduce boilerplate and simplify your integration.

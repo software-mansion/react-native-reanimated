@@ -8,12 +8,9 @@
 #include <react/renderer/core/LayoutableShadowNode.h>
 #include <react/renderer/dom/DOM.h>
 
-#include <map>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 namespace reanimated::css {
 
@@ -35,12 +32,8 @@ class ViewStylesRepository {
     uiManager_ = uiManager;
   }
 
-  jsi::Value getNodeProp(
-      const std::shared_ptr<const ShadowNode> &shadowNode,
-      const std::string &propName);
-  jsi::Value getParentNodeProp(
-      const std::shared_ptr<const ShadowNode> &shadowNode,
-      const std::string &propName);
+  jsi::Value getNodeProp(const std::shared_ptr<const ShadowNode> &shadowNode, const std::string &propName);
+  jsi::Value getParentNodeProp(const std::shared_ptr<const ShadowNode> &shadowNode, const std::string &propName);
   folly::dynamic getStyleProp(Tag tag, const PropertyPath &propertyPath);
 
   void clearNodesCache();
@@ -52,13 +45,9 @@ class ViewStylesRepository {
 
   std::unordered_map<int, CachedShadowNode> shadowNodeCache_;
 
-  void updateCacheIfNeeded(
-      CachedShadowNode &cachedNode,
-      const std::shared_ptr<const ShadowNode> &shadowNode);
+  void updateCacheIfNeeded(CachedShadowNode &cachedNode, const std::shared_ptr<const ShadowNode> &shadowNode);
 
-  static folly::dynamic getPropertyValue(
-      const folly::dynamic &value,
-      const PropertyPath &propertyPath);
+  static folly::dynamic getPropertyValue(const folly::dynamic &value, const PropertyPath &propertyPath);
 };
 
 } // namespace reanimated::css

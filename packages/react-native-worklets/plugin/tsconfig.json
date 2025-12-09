@@ -10,9 +10,9 @@
     "esModuleInterop": true,
     "outDir": "lib",
     "rootDir": "src",
-    "declaration": false,
+    "declarationDir": "types",
+    "declaration": true,
     "noEmit": false
   },
-  "include": ["src"],
-  "exclude": ["eslint.config.mjs"]
+  "include": ["src"]
 }

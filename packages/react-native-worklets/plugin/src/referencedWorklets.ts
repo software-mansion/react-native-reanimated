@@ -1,8 +1,13 @@
 import type { NodePath } from '@babel/core';
 import type { Binding } from '@babel/traverse';
 import type { AssignmentExpression, Identifier } from '@babel/types';
+import { isIdentifier, isMemberExpression } from '@babel/types';
 
-import type { WorkletizableFunction, WorkletizableObject } from './types';
+import type {
+  WorkletizableFunction,
+  WorkletizableObject,
+  WorkletsPluginPass,
+} from './types';
 import {
   isWorkletizableFunctionPath,
   isWorkletizableObjectPath,
@@ -11,13 +16,18 @@ import {
 export function findReferencedWorklet(
   workletIdentifier: NodePath<Identifier>,
   acceptWorkletizableFunction: boolean,
-  acceptObject: boolean
+  acceptObject: boolean,
+  state: WorkletsPluginPass
 ): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
   const workletName = workletIdentifier.node.name;
   const scope = workletIdentifier.scope;
 
   const workletBinding = scope.getBinding(workletName);
   if (!workletBinding) {
+    return undefined;
+  }
+
+  if (state.opts.bundleMode && bindingIsWorklet(workletBinding)) {
     return undefined;
   }
 
@@ -33,20 +43,23 @@ export function findReferencedWorklet(
     return findReferencedWorkletFromVariableDeclarator(
       workletBinding,
       acceptWorkletizableFunction,
-      acceptObject
+      acceptObject,
+      state
     );
   }
   return findReferencedWorkletFromAssignmentExpression(
     workletBinding,
     acceptWorkletizableFunction,
-    acceptObject
+    acceptObject,
+    state
   );
 }
 
 function findReferencedWorkletFromVariableDeclarator(
   workletBinding: Binding,
   acceptWorkletizableFunction: boolean,
-  acceptObject: boolean
+  acceptObject: boolean,
+  state: WorkletsPluginPass
 ): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
   const workletDeclaration = workletBinding.path;
   if (!workletDeclaration.isVariableDeclarator()) {
@@ -64,7 +77,8 @@ function findReferencedWorkletFromVariableDeclarator(
     return findReferencedWorklet(
       worklet,
       acceptWorkletizableFunction,
-      acceptObject
+      acceptObject,
+      state
     );
   }
   return undefined;
@@ -73,7 +87,8 @@ function findReferencedWorkletFromVariableDeclarator(
 function findReferencedWorkletFromAssignmentExpression(
   workletBinding: Binding,
   acceptWorkletizableFunction: boolean,
-  acceptObject: boolean
+  acceptObject: boolean,
+  state: WorkletsPluginPass
 ): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
   const workletDeclaration = workletBinding.constantViolations
     .reverse()
@@ -108,8 +123,20 @@ function findReferencedWorkletFromAssignmentExpression(
     return findReferencedWorklet(
       workletDefinition,
       acceptWorkletizableFunction,
-      acceptObject
+      acceptObject,
+      state
     );
   }
   return undefined;
+}
+
+function bindingIsWorklet(binding: Binding) {
+  return binding.referencePaths.some(
+    (refPath) =>
+      !Array.isArray(refPath.container) &&
+      isMemberExpression(refPath.container) &&
+      refPath.container.object === refPath.node &&
+      isIdentifier(refPath.container.property) &&
+      refPath.container.property.name === '__workletHash'
+  );
 }

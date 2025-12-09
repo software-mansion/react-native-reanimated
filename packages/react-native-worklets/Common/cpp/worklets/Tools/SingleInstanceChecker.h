@@ -28,7 +28,7 @@ class SingleInstanceChecker {
   ~SingleInstanceChecker();
 
  private:
-  void assertWithMessage(bool condition, std::string message) {
+  void assertWithMessage(bool condition, const std::string &message) {
     if (!condition) {
 #ifdef ANDROID
       __android_log_print(ANDROID_LOG_WARN, "Worklets", "%s", message.c_str());
@@ -50,8 +50,7 @@ class SingleInstanceChecker {
 template <class T>
 SingleInstanceChecker<T>::SingleInstanceChecker() {
   int status = 0;
-  std::string className =
-      __cxxabiv1::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status);
+  std::string className = __cxxabiv1::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status);
 
   // React Native can spawn up to two instances of a Native Module at the same
   // time. This happens during a reload when a new instance of React Native is

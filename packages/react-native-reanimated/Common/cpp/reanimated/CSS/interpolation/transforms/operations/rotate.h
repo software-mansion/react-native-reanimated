@@ -1,47 +1,39 @@
 #pragma once
 
+#include <reanimated/CSS/common/transforms/TransformMatrix.h>
+#include <reanimated/CSS/common/values/CSSAngle.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
-#include <memory>
 #include <string>
 
 namespace reanimated::css {
 
 template <TransformOp TOperation>
-struct RotateOperationBase
-    : public TransformOperationBase<TOperation, CSSAngle> {
+struct RotateOperationBase2D : public TransformOperationBase<TOperation, CSSAngle> {
   using TransformOperationBase<TOperation, CSSAngle>::TransformOperationBase;
 
-  explicit RotateOperationBase(const std::string &value)
-      : TransformOperationBase<TOperation, CSSAngle>(CSSAngle(value)) {}
-
-  folly::dynamic valueToDynamic() const override {
-    return this->value.toDynamic();
-  }
-
-  TransformMatrix3D toMatrix() const override {
-    return TransformMatrix3D::create<TOperation>(this->value.value);
-  }
+  explicit RotateOperationBase2D(const std::string &value);
 };
 
-using RotateOperation = RotateOperationBase<TransformOp::Rotate>;
+template <TransformOp TOperation>
+struct RotateOperationBase3D : public TransformOperationBase<TOperation, CSSAngle> {
+  using TransformOperationBase<TOperation, CSSAngle>::TransformOperationBase;
 
-using RotateXOperation = RotateOperationBase<TransformOp::RotateX>;
+  explicit RotateOperationBase3D(const std::string &value);
 
-using RotateYOperation = RotateOperationBase<TransformOp::RotateY>;
+  bool is3D() const override;
+  TransformMatrix::Shared toMatrix(bool /* force3D */) const override;
+};
 
-struct RotateZOperation final
-    : public RotateOperationBase<TransformOp::RotateZ> {
-  using RotateOperationBase<TransformOp::RotateZ>::RotateOperationBase;
+using RotateOperation = RotateOperationBase2D<TransformOp::Rotate>;
+using RotateXOperation = RotateOperationBase3D<TransformOp::RotateX>;
+using RotateYOperation = RotateOperationBase3D<TransformOp::RotateY>;
 
-  bool canConvertTo(TransformOp type) const override {
-    return type == TransformOp::Rotate;
-  }
+struct RotateZOperation final : public RotateOperationBase2D<TransformOp::RotateZ> {
+  using RotateOperationBase2D<TransformOp::RotateZ>::RotateOperationBase2D;
 
-  TransformOperations convertTo(TransformOp type) const override {
-    assertCanConvertTo(type);
-    return {std::make_shared<RotateOperation>(value)};
-  }
+  bool canConvertTo(TransformOp type) const override;
+  TransformOperations convertTo(TransformOp type) const override;
 };
 
 } // namespace reanimated::css

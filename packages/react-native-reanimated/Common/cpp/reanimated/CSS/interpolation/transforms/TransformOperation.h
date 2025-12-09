@@ -1,87 +1,52 @@
 #pragma once
 
-#include <reanimated/CSS/common/definitions.h>
-#include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
+#include <reanimated/CSS/common/transforms/TransformMatrix.h>
 #include <reanimated/CSS/common/transforms/TransformOp.h>
-#include <reanimated/CSS/common/values/CSSAngle.h>
-#include <reanimated/CSS/common/values/CSSLength.h>
-#include <reanimated/CSS/common/values/CSSNumber.h>
+#include <reanimated/CSS/interpolation/operations/StyleOperation.h>
 
-#include <react/renderer/core/ShadowNode.h>
-
+#include <jsi/jsi.h>
 #include <memory>
 #include <string>
-#include <unordered_map>
-#include <variant>
 #include <vector>
-
-#ifndef NDEBUG
-#include <iostream>
-#include <sstream>
-#endif // NDEBUG
 
 namespace reanimated::css {
 
 using namespace facebook;
-using namespace react;
 
 // Base struct for TransformOperation
-struct TransformOperation {
-  virtual bool operator==(const TransformOperation &other) const = 0;
+struct TransformOperation : public StyleOperation {
+  explicit TransformOperation(TransformOp type);
 
-#ifndef NDEBUG
-  friend std::ostream &operator<<(
-      std::ostream &os,
-      const TransformOperation &operation);
-  virtual std::string stringifyOperationValue() const = 0;
-#endif // NDEBUG
+  // Tells if the transform operations is 3D-only (cannot be represented in 2D)
+  virtual bool is3D() const;
 
-  std::string getOperationName() const;
-  virtual TransformOp type() const = 0;
-  virtual bool isRelative() const;
+  std::string getOperationName() const override;
 
-  static std::shared_ptr<TransformOperation> fromJSIValue(
-      jsi::Runtime &rt,
-      const jsi::Value &value);
-  static std::shared_ptr<TransformOperation> fromDynamic(
-      const folly::dynamic &value);
-  folly::dynamic toDynamic() const;
-  virtual folly::dynamic valueToDynamic() const = 0;
+  static std::shared_ptr<TransformOperation> fromJSIValue(jsi::Runtime &rt, const jsi::Value &value);
+  static std::shared_ptr<TransformOperation> fromDynamic(const folly::dynamic &value);
 
   virtual bool canConvertTo(TransformOp type) const;
-  virtual std::vector<std::shared_ptr<TransformOperation>> convertTo(
-      TransformOp type) const;
-
-  virtual TransformMatrix3D toMatrix() const = 0;
+  virtual std::vector<std::shared_ptr<TransformOperation>> convertTo(TransformOp type) const;
   void assertCanConvertTo(TransformOp type) const;
+
+  virtual TransformMatrix::Shared toMatrix(bool force3D) const = 0;
 };
 
 using TransformOperations = std::vector<std::shared_ptr<TransformOperation>>;
 
-// Template overload to inherit from in final operation structs
+// Base implementation for transform operations (except for MatrixOperation)
 template <TransformOp TOperation, typename TValue>
 struct TransformOperationBase : public TransformOperation {
   const TValue value;
 
-  explicit TransformOperationBase(const TValue &value) : value(value) {}
-  virtual ~TransformOperationBase() = default;
+  explicit TransformOperationBase(TValue value);
+  TransformMatrix::Shared toMatrix(bool force3D) const override;
 
-  TransformOp type() const override {
-    return TOperation;
-  }
+ protected:
+  mutable TransformMatrix::Shared cachedMatrix_;
 
-  bool operator==(const TransformOperation &other) const override {
-    if (type() != other.type()) {
-      return false;
-    }
-    const auto &otherOperation =
-        static_cast<const TransformOperationBase<TOperation, TValue> &>(other);
-    return value == otherOperation.value;
-  }
-
-#ifndef NDEBUG
-  std::string stringifyOperationValue() const override;
-#endif // NDEBUG
+  folly::dynamic valueToDynamic() const override;
+  bool areValuesEqual(const StyleOperation &other) const override;
 };
 
 } // namespace reanimated::css

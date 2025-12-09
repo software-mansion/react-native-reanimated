@@ -1,12 +1,10 @@
 #pragma once
 
-#include <array>
 #include <string>
-#include <unordered_map>
 
 namespace reanimated::css {
 
-enum class TransformOp {
+enum class TransformOp : uint8_t {
   Perspective,
   Rotate,
   RotateX,
@@ -23,7 +21,6 @@ enum class TransformOp {
 };
 
 TransformOp getTransformOperationType(const std::string &property);
-
-std::string getOperationNameFromType(const TransformOp type);
+std::string getTransformOperationName(const TransformOp type);
 
 } // namespace reanimated::css

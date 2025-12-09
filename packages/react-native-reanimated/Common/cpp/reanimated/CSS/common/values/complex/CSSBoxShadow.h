@@ -1,5 +1,6 @@
 #pragma once
 
+#include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/common/values/CSSBoolean.h>
 #include <reanimated/CSS/common/values/CSSColor.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
@@ -8,7 +9,6 @@
 #include <functional>
 #include <optional>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace reanimated::css {
@@ -50,25 +50,16 @@ struct CSSBoxShadow : public CSSSimpleValue<CSSBoxShadow> {
 
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
-  CSSBoxShadow interpolate(double progress, const CSSBoxShadow &to)
-      const override;
+  CSSBoxShadow interpolate(double progress, const CSSBoxShadow &to) const override;
   bool canInterpolateTo(const CSSBoxShadow &to) const override;
 
   bool operator==(const CSSBoxShadow &other) const;
 
 #ifndef NDEBUG
-  friend std::ostream &operator<<(
-      std::ostream &os,
-      const CSSBoxShadow &shadowValue);
+  friend std::ostream &operator<<(std::ostream &os, const CSSBoxShadow &shadowValue);
 #endif // NDEBUG
 
  private:
-  struct FieldValidator {
-    std::string fieldName;
-    std::function<bool(const folly::dynamic &)> validateDynamic;
-    std::function<bool(jsi::Runtime &, const jsi::Value &)> validateJSI;
-  };
-
   static const std::vector<FieldValidator> fieldValidators;
 };
 

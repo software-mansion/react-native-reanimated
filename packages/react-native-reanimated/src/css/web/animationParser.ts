@@ -1,12 +1,11 @@
 'use strict';
+import type { PlainStyle } from '../../common';
 import { hasSuffix } from '../../common';
+import { createStyleBuilder, PROPERTIES_CONFIG } from '../../common/web';
 import type {
   CSSAnimationKeyframeBlock,
   CSSAnimationKeyframes,
-  PlainStyle,
 } from '../types';
-import { PROPERTIES_CONFIG } from './config';
-import { createStyleBuilder } from './style';
 import { parseTimingFunction } from './utils';
 
 const styleBuilder = createStyleBuilder(PROPERTIES_CONFIG);

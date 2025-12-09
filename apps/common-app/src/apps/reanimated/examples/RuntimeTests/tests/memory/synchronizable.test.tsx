@@ -1,11 +1,11 @@
 import {
   isSynchronizable,
   createSynchronizable,
-  runOnUI,
-  executeOnUIRuntimeSync,
-  runOnJS,
+  scheduleOnUI,
+  runOnUISync,
+  scheduleOnRN,
   createWorkletRuntime,
-  runOnRuntime,
+  scheduleOnRuntime,
   type Synchronizable,
 } from 'react-native-worklets';
 import { describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
@@ -21,9 +21,9 @@ describe('Test Synchronizable creation and serialization', () => {
 
   test('Synchronizable serializes correctly from RN Runtime to UI Runtime', () => {
     const synchronizable = createSynchronizable(0);
-    const value = executeOnUIRuntimeSync(() => {
+    const value = runOnUISync(() => {
       return synchronizable.getBlocking();
-    })();
+    });
 
     expect(value).toBe(0);
   });
@@ -41,11 +41,11 @@ describe('Test Synchronizable creation and serialization', () => {
     const runtime = createWorkletRuntime({
       name: 'test',
     });
-    runOnRuntime(runtime, () => {
+    scheduleOnRuntime(runtime, () => {
       'worklet';
       const value = synchronizable.getBlocking();
-      runOnJS(onJSCallback)(value);
-    })();
+      scheduleOnRN(onJSCallback, value);
+    });
     await waitForNotification(NOTIFICATION);
 
     // Assert
@@ -54,9 +54,9 @@ describe('Test Synchronizable creation and serialization', () => {
 
   test('Synchronizable serializes correctly from UI Runtime to RN runtime', () => {
     const synchronizable = createSynchronizable(0);
-    const synchronizableCopy = executeOnUIRuntimeSync(() => {
+    const synchronizableCopy = runOnUISync(() => {
       return synchronizable;
-    })();
+    });
 
     const value = synchronizableCopy.getBlocking();
     expect(value).toBe(0);
@@ -75,17 +75,17 @@ describe('Test Synchronizable creation and serialization', () => {
     const runtime = createWorkletRuntime({
       name: 'test',
     });
-    runOnRuntime(runtime, () => {
+    scheduleOnRuntime(runtime, () => {
       'worklet';
-      runOnJS(onJSCallback)(synchronizable);
-    })();
+      scheduleOnRN(onJSCallback, synchronizable);
+    });
     await waitForNotification(NOTIFICATION);
 
     const value = synchronizableCopy!.getBlocking();
     expect(value).toBe(42);
   });
 
-  // TODO: This test doesn't work because nested `runOnJS` isn't copied properly.
+  // TODO: This test doesn't work because nested `scheduleOnRN` isn't copied properly.
   // It will be fixed when BundleMode™ becomes the standard.
   // test('Synchronizable serializes correctly from UI Runtime to BG Runtime', async () => {
   //   const synchronizable = createSynchronizable(42);
@@ -100,12 +100,12 @@ describe('Test Synchronizable creation and serialization', () => {
   //   const runtime = createWorkletRuntime({
   //     name: 'test',
   //   });
-  //   runOnUI(() => {
-  //     runOnRuntime(runtime, () => {
+  //   scheduleOnUI(() => {
+  //     scheduleOnRuntime(runtime, () => {
   //       'worklet';
   //       const value = synchronizable.getBlocking();
-  //       console.log(runOnJS);
-  //       runOnJS(onJSCallback)(value);
+  //       console.log(scheduleOnRN);
+  //       scheduleOnRN(onJSCallback)(value);
   //     })();
   //   })();
 
@@ -164,21 +164,21 @@ function dispatch(
 ) {
   const synchronizable = createSynchronizable(initialValue);
   const runtime = createWorkletRuntime({ name: 'test' });
-  runOnRuntime(runtime, () => {
+  scheduleOnRuntime(runtime, () => {
     'worklet';
     const value = method(synchronizable);
-    runOnJS(callbackBG)(value);
-  })();
+    scheduleOnRN(callbackBG, value);
+  });
 
-  runOnUI(() => {
+  scheduleOnUI(() => {
     'worklet';
     const value = method(synchronizable);
-    runOnJS(callbackUI)(value);
-  })();
+    scheduleOnRN(callbackUI, value);
+  });
 
   queueMicrotask(() => {
     const value = method(synchronizable);
-    runOnJS(callbackRN)(value);
+    scheduleOnRN(callbackRN, value);
   });
 }
 

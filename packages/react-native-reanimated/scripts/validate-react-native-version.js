@@ -10,6 +10,7 @@ const reanimatedVersion = packageJson.version;
 const compatibilityFile = require('../compatibility.json');
 
 const reactNativeVersion = process.argv[2];
+const architecture = 'fabric';
 const supportedRNVersions = [];
 
 if (semverPrerelease(reactNativeVersion)) {
@@ -18,10 +19,12 @@ if (semverPrerelease(reactNativeVersion)) {
   process.exit(0);
 }
 
-for (const key in compatibilityFile) {
+for (const key in compatibilityFile[architecture]) {
   if (semverSatisfies(reanimatedVersion, key)) {
-    // @ts-ignore
-    supportedRNVersions.push(...compatibilityFile[key]['react-native']);
+    supportedRNVersions.push(
+      // @ts-ignore
+      ...compatibilityFile[architecture][key]['react-native']
+    );
   }
 }
 
@@ -38,6 +41,6 @@ for (const version of supportedRNVersions) {
 
 // eslint-disable-next-line reanimated/use-logger
 console.error(
-  `[Reanimated] React Native ${reactNativeVersion} version is not compatible with Reanimated ${reanimatedVersion}`
+  `[Reanimated] Your installed version of React Native (${reactNativeVersion}) is not compatible with installed version of Reanimated (${reanimatedVersion}). See the documentation for the list of supported versions: https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility/`
 );
 process.exit(1);

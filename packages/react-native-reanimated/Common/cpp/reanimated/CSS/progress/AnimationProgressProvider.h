@@ -7,19 +7,17 @@
 #include <reanimated/CSS/progress/RawProgressProvider.h>
 
 #include <memory>
-#include <utility>
 
 namespace reanimated::css {
 
-enum class AnimationProgressState {
+enum class AnimationProgressState : std::uint8_t {
   Pending, // When the animation is waiting for the delay to pass
   Running,
   Paused,
   Finished
 };
 
-class AnimationProgressProvider final : public KeyframeProgressProvider,
-                                        public RawProgressProvider {
+class AnimationProgressProvider final : public KeyframeProgressProvider, public RawProgressProvider {
  public:
   AnimationProgressProvider(
       double timestamp,

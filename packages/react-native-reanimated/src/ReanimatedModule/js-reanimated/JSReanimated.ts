@@ -14,11 +14,12 @@ import {
   ReanimatedError,
 } from '../../common';
 import type {
+  InternalHostInstance,
+  SettledUpdate,
   ShadowNodeWrapper,
   StyleProps,
   Value3D,
   ValueRotation,
-  WrapperRef,
 } from '../../commonTypes';
 import { SensorType } from '../../commonTypes';
 import type {
@@ -255,7 +256,7 @@ class JSReanimated implements IReanimatedModule {
   getViewProp<T>(
     _viewTag: number,
     _propName: string,
-    _component?: WrapperRef | null,
+    _component?: InternalHostInstance | null,
     _callback?: (result: T) => void
   ): Promise<T> {
     throw new ReanimatedError('getViewProp is not available in JSReanimated.');
@@ -338,6 +339,12 @@ class JSReanimated implements IReanimatedModule {
   unregisterCSSTransition(_viewTag: number): void {
     throw new ReanimatedError(
       '`unregisterCSSTransition` is not available in JSReanimated.'
+    );
+  }
+
+  getSettledUpdates(): SettledUpdate[] {
+    throw new ReanimatedError(
+      '`getSettledUpdates` is not available in JSReanimated.'
     );
   }
 }

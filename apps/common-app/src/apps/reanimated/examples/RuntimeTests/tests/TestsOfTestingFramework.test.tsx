@@ -25,7 +25,7 @@ import {
 } from '../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../ReJest/types';
 import { Snapshots } from './TestsOfTestingFramework.snapshot';
-import { createWorkletRuntime, runOnRuntime, runOnUI } from 'react-native-worklets';
+import { createWorkletRuntime, scheduleOnRuntime, scheduleOnUI } from 'react-native-worklets';
 
 const AnimatedComponent = () => {
   const widthSV = useSharedValue(0);
@@ -73,9 +73,9 @@ const AnimatedComponentWithNotify = () => {
 
     setTimeout(() => {
       notify('notifyJS');
-      runOnUI(() => {
+      scheduleOnUI(() => {
         notify('notifyUI');
-      })();
+      });
     }, 1000);
   }, [widthSV]);
 
@@ -140,6 +140,7 @@ describe('Wardrobe with drawers', () => {
             await wait(10);
             expect(1).toBe(1);
           });
+
           test('Test 2 of page 1 of book 1 of box 1 of drawer 1 - ✅ ', async () => {
             await render(<AnimatedComponent />);
             await wait(10);
@@ -153,6 +154,7 @@ describe('Wardrobe with drawers', () => {
             await wait(10);
             expect(1).toBe(1);
           });
+
           test('Test 2 of page 2 of book 1 of box 1 of drawer 1 - ✅', async () => {
             await render(<AnimatedComponent />);
             await wait(10);
@@ -173,6 +175,7 @@ describe('Wardrobe with drawers', () => {
             await wait(10);
             expect(1).toBe(1);
           });
+
           test('Test 2 of page 2 of book 1 of box 1 of drawer 2 - ✅', async () => {
             await render(<AnimatedComponent />);
             await wait(10);
@@ -368,6 +371,7 @@ describe('Tests of Test Framework', () => {
         console.error('OH, NO!');
       }).toThrow('OH, NO!');
     });
+
     test('console.error  with with error message - ❌', async () => {
       await expect(() => {
         console.error('OH, NO!');
@@ -398,17 +402,17 @@ describe('Tests of Test Framework', () => {
 
       const [state2, setState2] = createTestValue('not_ok');
       const notification2 = 'notification2';
-      runOnUI(() => {
+      scheduleOnUI(() => {
         setState2('ok', notification2);
-      })();
+      });
 
       const [state3, setState3] = createTestValue('not_ok');
       const notification3 = 'notification3';
       const rt = createWorkletRuntime({ name: 'test' });
-      runOnRuntime(rt, () => {
+      scheduleOnRuntime(rt, () => {
         'worklet';
         setState3('ok', notification3);
-      })();
+      });
 
       await waitForNotifications([notification2, notification3]);
       expect(state1.value).toBe('ok');

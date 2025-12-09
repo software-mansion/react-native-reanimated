@@ -1,5 +1,7 @@
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 
+#include <string>
+
 namespace reanimated::css {
 
 std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
@@ -19,9 +21,7 @@ std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
   return std::nullopt;
 }
 
-TransitionProperties getProperties(
-    jsi::Runtime &rt,
-    const jsi::Object &config) {
+TransitionProperties getProperties(jsi::Runtime &rt, const jsi::Object &config) {
   const auto transitionProperty = config.getProperty(rt, "properties");
 
   if (transitionProperty.isObject()) {
@@ -30,8 +30,7 @@ TransitionProperties getProperties(
     const auto propertiesArray = transitionProperty.asObject(rt).asArray(rt);
     const auto propertiesCount = propertiesArray.size(rt);
     for (size_t i = 0; i < propertiesCount; ++i) {
-      properties.emplace_back(
-          propertiesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
+      properties.emplace_back(propertiesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
     }
 
     return properties;
@@ -44,20 +43,15 @@ bool getAllowDiscrete(jsi::Runtime &rt, const jsi::Object &config) {
   return config.getProperty(rt, "allowDiscrete").asBool();
 }
 
-CSSTransitionPropertiesSettings parseCSSTransitionPropertiesSettings(
-    jsi::Runtime &rt,
-    const jsi::Object &settings) {
+CSSTransitionPropertiesSettings parseCSSTransitionPropertiesSettings(jsi::Runtime &rt, const jsi::Object &settings) {
   CSSTransitionPropertiesSettings result;
 
   const auto propertyNames = settings.getPropertyNames(rt);
   const auto propertiesCount = propertyNames.size(rt);
 
   for (size_t i = 0; i < propertiesCount; ++i) {
-    const auto propertyName =
-        propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    const auto propertySettings =
-        settings.getProperty(rt, jsi::PropNameID::forUtf8(rt, propertyName))
-            .asObject(rt);
+    const auto propertyName = propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    const auto propertySettings = settings.getProperty(rt, jsi::PropNameID::forUtf8(rt, propertyName)).asObject(rt);
 
     result.emplace(
         propertyName,
@@ -71,19 +65,14 @@ CSSTransitionPropertiesSettings parseCSSTransitionPropertiesSettings(
   return result;
 }
 
-CSSTransitionConfig parseCSSTransitionConfig(
-    jsi::Runtime &rt,
-    const jsi::Value &config) {
+CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config) {
   const auto configObj = config.asObject(rt);
   return CSSTransitionConfig{
       getProperties(rt, configObj),
-      parseCSSTransitionPropertiesSettings(
-          rt, configObj.getProperty(rt, "settings").asObject(rt))};
+      parseCSSTransitionPropertiesSettings(rt, configObj.getProperty(rt, "settings").asObject(rt))};
 }
 
-PartialCSSTransitionConfig parsePartialCSSTransitionConfig(
-    jsi::Runtime &rt,
-    const jsi::Value &partialConfig) {
+PartialCSSTransitionConfig parsePartialCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &partialConfig) {
   const auto partialObj = partialConfig.asObject(rt);
 
   PartialCSSTransitionConfig result;
@@ -92,8 +81,7 @@ PartialCSSTransitionConfig parsePartialCSSTransitionConfig(
     result.properties = getProperties(rt, partialObj);
   }
   if (partialObj.hasProperty(rt, "settings")) {
-    result.settings = parseCSSTransitionPropertiesSettings(
-        rt, partialObj.getProperty(rt, "settings").asObject(rt));
+    result.settings = parseCSSTransitionPropertiesSettings(rt, partialObj.getProperty(rt, "settings").asObject(rt));
   }
 
   return result;

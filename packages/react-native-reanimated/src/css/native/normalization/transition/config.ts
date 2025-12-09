@@ -1,15 +1,11 @@
 'use strict';
-import { ReanimatedError } from '../../../../common';
+import type { AnyRecord } from '../../../../common';
+import { convertPropertyToArray, ReanimatedError } from '../../../../common';
 import type {
-  AnyRecord,
   CSSTransitionProperties,
   CSSTransitionProperty,
 } from '../../../types';
-import {
-  areArraysEqual,
-  convertPropertyToArray,
-  deepEqual,
-} from '../../../utils';
+import { areArraysEqual, deepEqual } from '../../../utils';
 import type {
   NormalizedCSSTransitionConfig,
   NormalizedCSSTransitionConfigUpdates,

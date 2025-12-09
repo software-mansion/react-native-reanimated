@@ -7,7 +7,7 @@ import {
   NavigationContainer,
 } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Linking, View } from 'react-native';
+import { ActivityIndicator, Linking, LogBox, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -16,6 +16,10 @@ import { IS_MACOS, IS_WEB, noop } from '@/utils';
 
 import { CSSApp, ReanimatedApp } from './apps';
 import { LeakCheck, NukeContext } from './components';
+
+LogBox.ignoreLogs([
+  "Deep imports from the 'react-native' package are deprecated",
+]);
 
 export default function App() {
   const [nuked, setNuked] = useState(false);
@@ -38,44 +42,50 @@ export default function App() {
     );
   }
 
+  const RootApp = IS_MACOS ? ReanimatedApp : Navigator;
+
   return (
     <NukeContext value={() => setNuked(true)}>
-      <SafeAreaProvider>
-        <GestureHandlerRootView style={flex.fill}>
-          <NavigationContainer
-            initialState={navigationState}
-            linking={{
-              getPathFromState: (state, options) =>
-                getPathFromState(state, options).replace(/%2F/g, '/'),
-              getStateFromPath: (path) => {
-                const chunks = path.split('/').filter(Boolean);
-                if (chunks.length === 0) return { routes: [] };
+      <GestureHandlerRootView style={flex.fill}>
+        <NavigationContainer
+          initialState={navigationState}
+          linking={{
+            getPathFromState: (state, options) =>
+              getPathFromState(state, options).replace(/%2F/g, '/'),
+            getStateFromPath: (path) => {
+              const chunks = path.split('/').filter(Boolean);
+              if (chunks.length === 0) return { routes: [] };
 
-                const drawerRoute = chunks[0];
-                const stackRoutes = chunks.slice(1).map((_, index, array) => ({
-                  name: array.slice(0, index + 1).join('/'),
-                }));
+              const drawerRoute = chunks[0];
+              const stackRoutes = chunks.slice(1).map((_, index, array) => ({
+                name: array.slice(0, index + 1).join('/'),
+              }));
 
-                return {
-                  routes: [
-                    {
-                      name: drawerRoute,
-                      state: {
-                        routes: stackRoutes,
-                      },
+              return {
+                routes: [
+                  {
+                    name: drawerRoute,
+                    state: {
+                      routes: stackRoutes,
                     },
-                  ],
-                };
-              },
-              prefixes: [],
-            }}
-            onStateChange={updateNavigationState}>
-            <PortalProvider>
-              <Navigator />
-            </PortalProvider>
-          </NavigationContainer>
-        </GestureHandlerRootView>
-      </SafeAreaProvider>
+                  },
+                ],
+              };
+            },
+            prefixes: [],
+          }}
+          onStateChange={updateNavigationState}>
+          <PortalProvider>
+            {IS_MACOS ? (
+              <RootApp />
+            ) : (
+              <SafeAreaProvider>
+                <RootApp />
+              </SafeAreaProvider>
+            )}
+          </PortalProvider>
+        </NavigationContainer>
+      </GestureHandlerRootView>
     </NukeContext>
   );
 }
@@ -92,10 +102,6 @@ const SCREENS = [
 ];
 
 function Navigator() {
-  if (IS_MACOS) {
-    return <ReanimatedApp />;
-  }
-
   const Drawer = createDrawerNavigator();
   const screens = IS_WEB ? SCREENS : SCREENS.reverse();
 

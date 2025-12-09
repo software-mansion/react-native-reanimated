@@ -1,11 +1,11 @@
 import React from 'react';
-import type { FlexStyle, ViewStyle } from 'react-native';
+import type { ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
 import type { ComponentCoords } from 'react-native-reanimated';
 import Animated, { getRelativeCoords, measure, useAnimatedRef, useSharedValue } from 'react-native-reanimated';
 
 import { describe, expect, getRegisteredValue, registerValue, render, test, wait } from '../../ReJest/RuntimeTestsApi';
-import { runOnUI } from 'react-native-worklets';
+import { scheduleOnUI } from 'react-native-worklets';
 
 const REGISTERED_VALUE_KEY = 'sv';
 
@@ -13,8 +13,8 @@ const CoordsComponent = ({
   justifyContent,
   alignItems,
 }: {
-  justifyContent: FlexStyle['justifyContent'];
-  alignItems: FlexStyle['alignItems'];
+  justifyContent: ViewStyle['justifyContent'];
+  alignItems: ViewStyle['alignItems'];
 }) => {
   const coordsSv = useSharedValue<ComponentCoords | null>(null);
   registerValue(REGISTERED_VALUE_KEY, coordsSv);
@@ -22,12 +22,12 @@ const CoordsComponent = ({
   const sRef = useAnimatedRef();
 
   const onLayoutMeasure = () => {
-    runOnUI(() => {
+    scheduleOnUI(() => {
       const measured = measure(sRef);
       if (measured !== null) {
         coordsSv.value = getRelativeCoords(bRef, measured.pageX, measured.pageY);
       }
-    })();
+    });
   };
 
   const testStyles: ViewStyle = {
@@ -55,7 +55,7 @@ describe('getRelativeCoords', () => {
     ['flex-end', 'flex-start', 0, 100],
     ['flex-end', 'center', 50, 100],
     ['flex-end', 'flex-end', 100, 100],
-  ] as Array<[FlexStyle['justifyContent'], FlexStyle['alignItems'], number, number]>)(
+  ] as Array<[ViewStyle['justifyContent'], ViewStyle['alignItems'], number, number]>)(
     'getCoords %s',
     async ([justifyContent, alignItems, expectedValueX, expectedValueY]) => {
       await render(<CoordsComponent justifyContent={justifyContent} alignItems={alignItems} />);

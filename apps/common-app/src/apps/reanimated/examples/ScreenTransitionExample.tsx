@@ -1,5 +1,5 @@
 import type { ParamListBase } from '@react-navigation/native';
-import React from 'react';
+import React, { type JSX } from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import type { AnimatedScreenTransition } from 'react-native-reanimated';
 import { ScreenTransition } from 'react-native-reanimated';

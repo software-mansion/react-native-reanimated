@@ -3,7 +3,6 @@
 
 import type React from 'react';
 import { useCallback } from 'react';
-import type { FlatListProps } from 'react-native';
 import { FlatList, View } from 'react-native';
 
 import Animated from '../..';
@@ -14,8 +13,9 @@ function AnimatedFlatListTest() {
       id: number;
     };
     const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
-    const AnimatedTypedFlatList =
-      Animated.createAnimatedComponent<FlatListProps<Item[]>>(FlatList);
+    const AnimatedTypedFlatList = Animated.createAnimatedComponent(
+      FlatList<Item[]>
+    );
     const renderItem = useCallback(
       ({ item, index }: { item: Item[]; index: number }) => {
         if (Math.random()) {

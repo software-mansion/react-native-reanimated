@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 'use strict';
+
 import type {
   IWorkletsModule,
   SerializableRef,
   WorkletFunction,
 } from 'react-native-worklets';
-import { executeOnUIRuntimeSync, WorkletsModule } from 'react-native-worklets';
+import { runOnUISync, WorkletsModule } from 'react-native-worklets';
 
 import {
   ReanimatedError,
@@ -13,12 +14,13 @@ import {
   SHOULD_BE_USE_WEB,
 } from '../common';
 import type {
+  InternalHostInstance,
   LayoutAnimationBatchItem,
+  SettledUpdate,
   ShadowNodeWrapper,
   StyleProps,
   Value3D,
   ValueRotation,
-  WrapperRef,
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
@@ -83,7 +85,7 @@ class NativeReanimatedModule implements IReanimatedModule {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    if (!globalThis.RN$Bridgeless && !SHOULD_BE_USE_WEB) {
+    if (__DEV__ && !globalThis.RN$Bridgeless && !SHOULD_BE_USE_WEB) {
       throw new ReanimatedError(
         'Reanimated 4 supports only the React Native New Architecture and web.'
       );
@@ -92,10 +94,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       checkCppVersion();
     }
     this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
-    executeOnUIRuntimeSync(function initializeUI() {
+    runOnUISync(function initializeUI() {
       'worklet';
       registerReanimatedError();
-    })();
+    });
   }
 
   registerSensor(
@@ -135,7 +137,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   getViewProp<T>(
     viewTag: number,
     propName: string,
-    component: WrapperRef, // required on Fabric
+    component: InternalHostInstance,
     callback?: (result: T) => void
   ) {
     const shadowNodeWrapper = getShadowNodeWrapperFromRef(component);
@@ -247,6 +249,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   unregisterCSSTransition(viewTag: number) {
     this.#reanimatedModuleProxy.unregisterCSSTransition(viewTag);
   }
+
+  getSettledUpdates(): SettledUpdate[] {
+    return this.#reanimatedModuleProxy.getSettledUpdates();
+  }
 }
 
 class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
@@ -285,5 +291,9 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   unregisterEventHandler(): void {}
   getViewProp() {
     return null!;
+  }
+
+  getSettledUpdates(): SettledUpdate[] {
+    return [];
   }
 }

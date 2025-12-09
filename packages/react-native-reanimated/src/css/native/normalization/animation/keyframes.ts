@@ -1,15 +1,13 @@
 'use strict';
-import { ReanimatedError } from '../../../../common';
+import type { AnyRecord, StyleBuilder } from '../../../../common';
+import { isDefined, isNumber, ReanimatedError } from '../../../../common';
 import type { StyleProps } from '../../../../commonTypes';
 import { PERCENTAGE_REGEX } from '../../../constants';
 import type {
-  AnyRecord,
   CSSAnimationKeyframes,
   CSSAnimationKeyframeSelector,
   CSSAnimationTimingFunction,
 } from '../../../types';
-import { isDefined, isNumber } from '../../../utils';
-import type { StyleBuilder } from '../../style';
 import type {
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSKeyframesStyle,
@@ -24,7 +22,7 @@ export const ERROR_MESSAGES = {
     `Invalid keyframe selector "${selector}". Expected a number between 0 and 1 or a percentage between 0% and 100%.`,
 };
 
-function normalizeKeyframeSelector(
+export function normalizeKeyframeSelector(
   keyframeSelector: CSSAnimationKeyframeSelector
 ): number[] {
   const selectors =
@@ -67,7 +65,7 @@ type ProcessedKeyframes = Array<{
   timingFunction?: CSSAnimationTimingFunction;
 }>;
 
-function processKeyframes(
+export function processKeyframes(
   keyframes: CSSAnimationKeyframes,
   styleBuilder: StyleBuilder<AnyRecord>
 ): ProcessedKeyframes {
@@ -81,7 +79,9 @@ function processKeyframes(
         return normalizeKeyframeSelector(selector).map((offset) => ({
           offset,
           style: normalizedStyle,
-          timingFunction: animationTimingFunction,
+          ...(animationTimingFunction && {
+            timingFunction: animationTimingFunction,
+          }),
         }));
       }
     )

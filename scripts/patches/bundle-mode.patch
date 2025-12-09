@@ -1,8 +1,8 @@
 diff --git a/apps/fabric-example/android/gradle.properties b/apps/fabric-example/android/gradle.properties
-index efcfd4720d..9f26a1d953 100644
+index d183897bec..7fdf50386b 100644
 --- a/apps/fabric-example/android/gradle.properties
 +++ b/apps/fabric-example/android/gradle.properties
-@@ -44,7 +44,7 @@ isReanimatedExampleApp=true
+@@ -49,7 +49,7 @@ isReanimatedExampleApp=true
  enableReanimatedProfiling=true
  
  # Uncomment the next line to enable bundle mode.
@@ -36,20 +36,20 @@ index afaf8c45a5..c3c5434878 100644
 +    }
 +}
 diff --git a/apps/fabric-example/babel.config.js b/apps/fabric-example/babel.config.js
-index 259ed1ad84..ebdbea9d22 100644
+index 3c9372b6ae..8043395b1c 100644
 --- a/apps/fabric-example/babel.config.js
 +++ b/apps/fabric-example/babel.config.js
-@@ -6,7 +6,7 @@ module.exports = {
-       'react-native-worklets/plugin',
-       {
-         // Uncomment the next line to enable bundle mode.
--        // bundleMode: true,
-+        bundleMode: true,
-       },
-     ],
-     [
+@@ -1,7 +1,7 @@
+ /** @type {import('react-native-worklets/plugin').PluginOptions} */
+ const workletsPluginOptions = {
+   // Uncomment the next line to enable bundle mode.
+-  // bundleMode: true,
++  bundleMode: true,
+ };
+ 
+ /** @type {import('@babel/core').TransformOptions} */
 diff --git a/apps/fabric-example/ios/Podfile b/apps/fabric-example/ios/Podfile
-index f9c832e1f7..d82d448b93 100644
+index 3f8fe4a6e2..e208389ca3 100644
 --- a/apps/fabric-example/ios/Podfile
 +++ b/apps/fabric-example/ios/Podfile
 @@ -10,7 +10,7 @@ require_relative '../../../packages/react-native-reanimated/scripts/clangd-add-x
@@ -62,15 +62,32 @@ index f9c832e1f7..d82d448b93 100644
  platform :ios, min_ios_version_supported
  prepare_react_native_project!
 diff --git a/apps/fabric-example/metro.config.js b/apps/fabric-example/metro.config.js
-index cb4f1c4adc..b05b824d9c 100644
+index 67158b31ff..3990fe93c2 100644
 --- a/apps/fabric-example/metro.config.js
 +++ b/apps/fabric-example/metro.config.js
-@@ -34,7 +34,7 @@ let config = {
+@@ -20,8 +20,8 @@ let config = {
  config = mergeConfig(getDefaultConfig(__dirname), config);
  
  // Uncomment the following to enable bundle mode.
+-// const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
 -// config = mergeConfig(config, bundleModeMetroConfig);
++const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
 +config = mergeConfig(config, bundleModeMetroConfig);
  
  module.exports = wrapWithReanimatedMetroConfig(
    mergeConfig(getDefaultConfig(__dirname), config)
+diff --git a/package.json b/package.json
+index 141335c036..1261072923 100644
+--- a/package.json
++++ b/package.json
+@@ -70,5 +70,10 @@
+     "react-native-builder-bob": "0.40.13",
+     "shelljs": "0.10.0",
+     "typescript": "5.8.3"
++  },
++  "resolutions": {
++    "metro": "patch:metro@npm%3A0.83.1#~/.yarn/patches/metro-npm-0.83.1-241fe42591.patch",
++    "metro-runtime": "patch:metro-runtime@npm%3A0.83.1#~/.yarn/patches/metro-runtime-npm-0.83.1-c3d616063e.patch",
++    "react-native": "patch:react-native@npm%3A0.82.0#~/.yarn/patches/react-native-npm-0.82.0-228ad0ffa7.patch"
+   }
+ }

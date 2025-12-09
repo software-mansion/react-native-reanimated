@@ -1,5 +1,9 @@
 #include <reanimated/CSS/common/transforms/TransformOp.h>
 
+#include <array>
+#include <string>
+#include <unordered_map>
+
 namespace reanimated::css {
 
 constexpr std::array<const char *, 13> transformOperationStrings = {
@@ -37,13 +41,12 @@ TransformOp getTransformOperationType(const std::string &property) {
   if (it != stringToEnumMap.end()) {
     return it->second;
   } else {
-    throw std::invalid_argument(
-        "[Reanimated] Unknown transform operation: " + property);
+    throw std::invalid_argument("[Reanimated] Unknown transform operation: " + property);
   }
 }
 
-std::string getOperationNameFromType(const TransformOp type) {
-  return transformOperationStrings[static_cast<size_t>(type)];
+std::string getTransformOperationName(const TransformOp type) {
+  return transformOperationStrings[static_cast<uint8_t>(type)];
 }
 
 } // namespace reanimated::css

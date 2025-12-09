@@ -85,9 +85,7 @@ function createRoutesScreen(
     const navigation = useNavigation();
     const localNavigationRef = useLocalNavigationRef();
 
-    if (!localNavigationRef.current) {
-      localNavigationRef.current = navigation;
-    }
+    localNavigationRef.current ??= navigation;
 
     return (
       <SearchScreen>{createRouteCards(routes, path, flatten)}</SearchScreen>
@@ -152,17 +150,22 @@ function createStackScreens(
           }
         );
       }
+
+      const ScreenComponent = value.Component;
+
       return (
         <Stack.Screen
-          component={value.Component}
           key={key}
           name={newPath}
           options={{
             ...sharedOptions,
             animation: 'slide_from_right',
             title: value.name,
-          }}
-        />
+          }}>
+          {(props) => (
+            <ScreenComponent {...props} labelTypes={value.labelTypes} />
+          )}
+        </Stack.Screen>
       );
     }),
   ];

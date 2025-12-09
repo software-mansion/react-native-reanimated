@@ -1,15 +1,15 @@
 'use strict';
+import { BASE_PROPERTIES_CONFIG } from '../../../common';
 import {
   ERROR_MESSAGES,
   getStyleBuilder,
   hasStyleBuilder,
   registerComponentStyleBuilder,
 } from '../registry';
-import { BASE_PROPERTIES_CONFIG } from '../style';
 
 describe('registry', () => {
   describe('hasStyleBuilder', () => {
-    it('returns true for registered component names', () => {
+    test('returns true for registered component names', () => {
       const componentName = 'CustomComponent';
       const config = { width: true, height: true };
 
@@ -18,18 +18,18 @@ describe('registry', () => {
       expect(hasStyleBuilder(componentName)).toBe(true);
     });
 
-    it('returns true for RCT prefixed component names', () => {
+    test('returns true for RCT prefixed component names', () => {
       expect(hasStyleBuilder('RCTView')).toBe(true);
       expect(hasStyleBuilder('RCTText')).toBe(true);
     });
 
-    it('returns false for unregistered component names', () => {
+    test('returns false for unregistered component names', () => {
       expect(hasStyleBuilder('UnregisteredComponent')).toBe(false);
     });
   });
 
   describe('getStyleBuilder', () => {
-    it('returns registered style builder for custom component', () => {
+    test('returns registered style builder for custom component', () => {
       const componentName = 'CustomComponent';
       const config = { width: true, height: true };
 
@@ -40,14 +40,14 @@ describe('registry', () => {
       expect(typeof styleBuilder.buildFrom).toBe('function');
     });
 
-    it('returns base style builder for RCT prefixed components', () => {
+    test('returns base style builder for RCT prefixed components', () => {
       const styleBuilder = getStyleBuilder('RCTView');
 
       expect(styleBuilder).toBeDefined();
       expect(typeof styleBuilder.buildFrom).toBe('function');
     });
 
-    it('throws error for unregistered component names', () => {
+    test('throws error for unregistered component names', () => {
       expect(() => {
         getStyleBuilder('UnregisteredComponent');
       }).toThrow(ERROR_MESSAGES.styleBuilderNotFound('UnregisteredComponent'));
@@ -55,7 +55,7 @@ describe('registry', () => {
   });
 
   describe('registerComponentStyleBuilder', () => {
-    it('registers a style builder', () => {
+    test('registers a style builder', () => {
       const componentName = 'TestComponent';
       const config = { width: true, height: true };
 
@@ -65,7 +65,7 @@ describe('registry', () => {
       expect(getStyleBuilder(componentName)).toBeDefined();
     });
 
-    it('works with base properties config', () => {
+    test('works with base properties config', () => {
       const componentName = 'BaseConfigComponent';
 
       registerComponentStyleBuilder(componentName, BASE_PROPERTIES_CONFIG);

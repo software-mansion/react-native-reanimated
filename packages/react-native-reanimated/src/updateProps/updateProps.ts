@@ -1,17 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
+
 import type { RefObject } from 'react';
-import { runOnJS, runOnUI } from 'react-native-worklets';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import {
   IS_JEST,
   processBoxShadowNative,
-  processBoxShadowWeb,
   processColorsInProps,
-  processTransformOrigin,
+  processFilter,
+  processTransform,
   ReanimatedError,
   SHOULD_BE_USE_WEB,
 } from '../common';
+import {
+  processBoxShadowWeb,
+  processFilterWeb,
+  processTransformOrigin,
+} from '../common/web';
 import type {
   AnimatedStyle,
   ShadowNodeWrapper,
@@ -40,6 +46,9 @@ if (SHOULD_BE_USE_WEB) {
       if ('boxShadow' in updates) {
         updates.boxShadow = processBoxShadowWeb(updates.boxShadow);
       }
+      if ('filter' in updates) {
+        updates.filter = processFilterWeb(updates.filter);
+      }
       _updatePropsJS(updates, component, isAnimatedProps);
     });
   };
@@ -54,8 +63,14 @@ if (SHOULD_BE_USE_WEB) {
     if ('transformOrigin' in updates) {
       updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
     }
+    if ('transform' in updates) {
+      updates.transform = processTransform(updates.transform);
+    }
     if ('boxShadow' in updates) {
       updates.boxShadow = processBoxShadowNative(updates.boxShadow);
+    }
+    if ('filter' in updates) {
+      updates.filter = processFilter(updates.filter);
     }
     global.UpdatePropsManager.update(viewDescriptors, updates);
   };
@@ -145,7 +160,7 @@ function createUpdatePropsManager() {
         nativeOperations.length = 0;
       }
       if (jsOperations.length) {
-        runOnJS(updateJSProps)(jsOperations);
+        scheduleOnRN(updateJSProps, jsOperations);
         jsOperations.length = 0;
       }
       flushPending = false;
@@ -174,10 +189,10 @@ if (SHOULD_BE_USE_WEB) {
     }
   );
 } else {
-  runOnUI(() => {
+  scheduleOnUI(() => {
     'worklet';
     global.UpdatePropsManager = createUpdatePropsManager();
-  })();
+  });
 }
 
 /**

@@ -2,11 +2,9 @@
 
 #include <reanimated/CSS/common/values/CSSValueVariant.h>
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
-#include <reanimated/CSS/utils/keyframes.h>
 
 #include <memory>
 #include <optional>
-#include <utility>
 #include <vector>
 
 namespace reanimated::css {
@@ -30,14 +28,11 @@ class ValueInterpolator : public PropertyInterpolator {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
   virtual ~ValueInterpolator() = default;
 
-  folly::dynamic getStyleValue(
-      const std::shared_ptr<const ShadowNode> &shadowNode) const override;
-  folly::dynamic getResetStyle(
-      const std::shared_ptr<const ShadowNode> &shadowNode) const override;
+  folly::dynamic getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const override;
+  folly::dynamic getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const override;
   folly::dynamic getFirstKeyframeValue() const override;
   folly::dynamic getLastKeyframeValue() const override;
-  bool equalsReversingAdjustedStartValue(
-      const folly::dynamic &propertyValue) const override;
+  bool equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
@@ -48,7 +43,7 @@ class ValueInterpolator : public PropertyInterpolator {
   folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
-      const double fallbackInterpolateThreshold) const override;
+      double fallbackInterpolateThreshold) const override;
 
  protected:
   std::vector<ValueKeyframe> keyframes_;
@@ -56,24 +51,18 @@ class ValueInterpolator : public PropertyInterpolator {
   folly::dynamic defaultStyleValueDynamic_;
   folly::dynamic reversingAdjustedStartValue_;
 
-  virtual std::shared_ptr<CSSValue> createValue(
-      jsi::Runtime &rt,
-      const jsi::Value &value) const = 0;
-  virtual std::shared_ptr<CSSValue> createValue(
-      const folly::dynamic &value) const = 0;
+  virtual std::shared_ptr<CSSValue> createValue(jsi::Runtime &rt, const jsi::Value &value) const = 0;
+  virtual std::shared_ptr<CSSValue> createValue(const folly::dynamic &value) const = 0;
   virtual folly::dynamic interpolateValue(
       double progress,
       const std::shared_ptr<CSSValue> &fromValue,
       const std::shared_ptr<CSSValue> &toValue,
-      const CSSValueInterpolationContext &context) const = 0;
+      const ValueInterpolationContext &context) const = 0;
 
  private:
-  folly::dynamic convertOptionalToDynamic(
-      const std::optional<std::shared_ptr<CSSValue>> &value) const;
-  std::shared_ptr<CSSValue> getFallbackValue(
-      const std::shared_ptr<const ShadowNode> &shadowNode) const;
-  size_t getToKeyframeIndex(
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const;
+  folly::dynamic convertOptionalToDynamic(const std::optional<std::shared_ptr<CSSValue>> &value) const;
+  std::shared_ptr<CSSValue> getFallbackValue(const std::shared_ptr<const ShadowNode> &shadowNode) const;
+  size_t getToKeyframeIndex(const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const;
 };
 
 } // namespace reanimated::css

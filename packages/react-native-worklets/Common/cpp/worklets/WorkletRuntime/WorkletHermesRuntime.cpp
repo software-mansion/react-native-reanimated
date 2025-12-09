@@ -16,25 +16,29 @@ namespace worklets {
 
 using namespace facebook;
 using namespace react;
-#if HERMES_ENABLE_DEBUGGER
+#if HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
 using namespace facebook::hermes::inspector_modern;
-#endif // HERMES_ENABLE_DEBUGGER
+#endif // HERMES_ENABLE_DEBUGGER  && !defined(HERMES_V1_ENABLED)
 
 #if HERMES_ENABLE_DEBUGGER
 
-class HermesExecutorRuntimeAdapter : public RuntimeAdapter {
+class HermesExecutorRuntimeAdapter
+#if HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
+    : public RuntimeAdapter
+#endif // HERMES_ENABLE_DEBUGGER  && !defined(HERMES_V1_ENABLED)
+{
  public:
   explicit HermesExecutorRuntimeAdapter(
       facebook::hermes::HermesRuntime &hermesRuntime,
       const std::shared_ptr<MessageQueueThread> &thread)
-      : hermesRuntime_(hermesRuntime), thread_(std::move(thread)) {}
+      : hermesRuntime_(hermesRuntime), thread_(thread) {}
 
   virtual ~HermesExecutorRuntimeAdapter() {
     // This is required by iOS, because there is an assertion in the destructor
     // that the thread was indeed `quit` before
     thread_->quitSynchronous();
   }
-
+#if HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
   facebook::hermes::HermesRuntime &getRuntime() override {
     return hermesRuntime_;
   }
@@ -44,6 +48,7 @@ class HermesExecutorRuntimeAdapter : public RuntimeAdapter {
   // required us to hold a refernce to the runtime inside this adapter which
   // caused issues while reloading the app.
   void tickleJs() override {}
+#endif // HERMES_ENABLE_DEBUGGER  && !defined(HERMES_V1_ENABLED)
 
  public:
   facebook::hermes::HermesRuntime &hermesRuntime_;
@@ -56,15 +61,11 @@ WorkletHermesRuntime::WorkletHermesRuntime(
     std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::string &name)
-    : jsi::WithRuntimeDecorator<WorkletsReentrancyCheck>(
-          *runtime,
-          reentrancyCheck_),
-      runtime_(std::move(runtime)) {
-#if HERMES_ENABLE_DEBUGGER
-  auto adapter =
-      std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_, jsQueue);
+    : jsi::WithRuntimeDecorator<WorkletsReentrancyCheck>(*runtime, reentrancyCheck_), runtime_(std::move(runtime)) {
+#if HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
+  auto adapter = std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_, jsQueue);
   debugToken_ = chrome::enableDebugging(std::move(adapter), name);
-#endif // HERMES_ENABLE_DEBUGGER
+#endif // HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
 
 #ifndef NDEBUG
   facebook::hermes::HermesRuntime *wrappedRuntime = runtime_.get();
@@ -73,34 +74,27 @@ WorkletHermesRuntime::WorkletHermesRuntime(
       jsi::PropNameID::forAscii(*runtime_, "evalWithSourceMap"),
       3,
       [wrappedRuntime](
-          jsi::Runtime &rt,
-          const jsi::Value &thisValue,
-          const jsi::Value *args,
-          size_t count) -> jsi::Value {
-        auto code = std::make_shared<const jsi::StringBuffer>(
-            args[0].asString(rt).utf8(rt));
+          jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
+        auto code = std::make_shared<const jsi::StringBuffer>(args[0].asString(rt).utf8(rt));
         std::string sourceURL;
         if (count > 1 && args[1].isString()) {
           sourceURL = args[1].asString(rt).utf8(rt);
         }
         std::shared_ptr<const jsi::Buffer> sourceMap;
         if (count > 2 && args[2].isString()) {
-          sourceMap = std::make_shared<const jsi::StringBuffer>(
-              args[2].asString(rt).utf8(rt));
+          sourceMap = std::make_shared<const jsi::StringBuffer>(args[2].asString(rt).utf8(rt));
         }
-        return wrappedRuntime->evaluateJavaScriptWithSourceMap(
-            code, sourceMap, sourceURL);
+        return wrappedRuntime->evaluateJavaScriptWithSourceMap(code, sourceMap, sourceURL);
       });
-  runtime_->global().setProperty(
-      *runtime_, "evalWithSourceMap", evalWithSourceMap);
+  runtime_->global().setProperty(*runtime_, "evalWithSourceMap", evalWithSourceMap);
 #endif // NDEBUG
 }
 
 WorkletHermesRuntime::~WorkletHermesRuntime() {
-#if HERMES_ENABLE_DEBUGGER
+#if HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
   // We have to disable debugging before the runtime is destroyed.
   chrome::disableDebugging(debugToken_);
-#endif // HERMES_ENABLE_DEBUGGER
+#endif // HERMES_ENABLE_DEBUGGER && !defined(HERMES_V1_ENABLED)
 }
 
 } // namespace worklets

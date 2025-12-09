@@ -1,7 +1,11 @@
+import type { JSX } from 'react';
 import Animated, {
   type CSSAnimationKeyframes,
   type CSSAnimationProperties,
 } from 'react-native-reanimated';
+// TODO: Fix me
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
 import type { CircleProps, PolygonProps } from 'react-native-svg';
 import { Circle, Polygon, Svg } from 'react-native-svg';
 

@@ -15,7 +15,7 @@ namespace reanimated {
 using namespace facebook;
 using namespace worklets;
 
-enum SensorType {
+enum class SensorType : std::uint8_t {
   ACCELEROMETER = 1,
   GYROSCOPE = 2,
   GRAVITY = 3,
@@ -29,8 +29,7 @@ class AnimatedSensorModule {
   UnregisterSensorFunction platformUnregisterSensorFunction_;
 
  public:
-  AnimatedSensorModule(
-      const PlatformDepMethodsHolder &platformDepMethodsHolder);
+  explicit AnimatedSensorModule(const PlatformDepMethodsHolder &platformDepMethodsHolder);
   ~AnimatedSensorModule();
 
   jsi::Value registerSensor(

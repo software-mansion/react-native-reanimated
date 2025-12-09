@@ -1,13 +1,14 @@
 #include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/Tools/WorkletEventHandler.h>
 
+#include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
 namespace worklets {
 
-void EventHandlerRegistry::registerEventHandler(
-    const std::shared_ptr<WorkletEventHandler> &eventHandler) {
+void EventHandlerRegistry::registerEventHandler(const std::shared_ptr<WorkletEventHandler> &eventHandler) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   const auto &eventName = eventHandler->getEventName();
   auto handlerId = eventHandler->getHandlerId();
@@ -61,30 +62,27 @@ void EventHandlerRegistry::processEvent(
     const std::lock_guard<std::mutex> lock(instanceMutex);
     auto handlersIt = eventMappingsWithoutTag.find(eventName);
     if (handlersIt != eventMappingsWithoutTag.end()) {
-      for (auto handler : handlersIt->second) {
+      for (const auto &handler : handlersIt->second) {
         handlersForEvent.push_back(handler.second);
       }
     }
     const auto eventHash = std::make_pair(emitterReactTag, eventName);
     auto handlersWithTagIt = eventMappingsWithTag.find(eventHash);
     if (handlersWithTagIt != eventMappingsWithTag.end()) {
-      for (auto handler : handlersWithTagIt->second) {
+      for (const auto &handler : handlersWithTagIt->second) {
         handlersForEvent.push_back(handler.second);
       }
     }
   }
 
   jsi::Runtime &rt = uiWorkletRuntime->getJSIRuntime();
-  eventPayload.asObject(rt).setProperty(
-      rt, "eventName", jsi::String::createFromUtf8(rt, eventName));
-  for (auto handler : handlersForEvent) {
+  eventPayload.asObject(rt).setProperty(rt, "eventName", jsi::String::createFromUtf8(rt, eventName));
+  for (const auto &handler : handlersForEvent) {
     handler->process(uiWorkletRuntime, eventTimestamp, eventPayload);
   }
 }
 
-bool EventHandlerRegistry::isAnyHandlerWaitingForEvent(
-    const std::string &eventName,
-    const int emitterReactTag) {
+bool EventHandlerRegistry::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   const auto eventHash = std::make_pair(emitterReactTag, eventName);
   auto it = eventMappingsWithTag.find(eventHash);

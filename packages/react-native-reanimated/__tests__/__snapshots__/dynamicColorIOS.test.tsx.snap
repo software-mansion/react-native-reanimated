@@ -1,0 +1,86 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`DynamicColorIOS test colors are animating 1`] = `
+<View
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": undefined,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  jestAnimatedProps={
+    {
+      "value": {},
+    }
+  }
+  jestAnimatedStyle={
+    {
+      "value": {
+        "backgroundColor": {
+          "dynamic": {
+            "dark": "rgba(181, 141, 241, 1)",
+            "highContrastDark": undefined,
+            "highContrastLight": undefined,
+            "light": "rgba(56, 172, 221, 1)",
+          },
+        },
+        "width": 100,
+      },
+    }
+  }
+  jestInlineStyle={
+    [
+      {
+        "height": 100,
+      },
+    ]
+  }
+  nativeID="1"
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    [
+      {
+        "backgroundColor": {
+          "dynamic": {
+            "dark": "rgba(181, 141, 241, 1)",
+            "highContrastDark": undefined,
+            "highContrastLight": undefined,
+            "light": "rgba(56, 172, 221, 1)",
+          },
+        },
+        "width": 100,
+      },
+      {
+        "height": 100,
+      },
+    ]
+  }
+  testID="pressable"
+>
+  <Text>
+    Button
+  </Text>
+</View>
+`;

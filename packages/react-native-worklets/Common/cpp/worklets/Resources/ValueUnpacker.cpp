@@ -40,7 +40,7 @@ const char ValueUnpackerCode[] =
     } else if (category === 'RemoteFunction') {
       var fun = function fun() {
         var label = remoteFunctionName ? "function `".concat(remoteFunctionName, "`") : 'anonymous function';
-        throw new Error("[Worklets] Tried to synchronously call a non-worklet ".concat(label, " on the UI thread.\nSee https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details."));
+        throw new Error("[Worklets] Tried to synchronously call a non-worklet ".concat(label, " on the UI thread.\nSee https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details."));
       };
       fun.__remoteFunction = objectToUnpack;
       return fun;

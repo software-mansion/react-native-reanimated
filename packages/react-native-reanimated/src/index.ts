@@ -2,7 +2,6 @@
 
 import './publicGlobals';
 
-import * as Animated from './Animated';
 import { initializeReanimatedModule } from './initializers';
 import { ReanimatedModule } from './ReanimatedModule';
 
@@ -10,8 +9,12 @@ import { ReanimatedModule } from './ReanimatedModule';
 // universal source of truth for it.
 initializeReanimatedModule(ReanimatedModule);
 
+// eslint-disable-next-line import/first
+import * as Animated from './Animated';
+
 export default Animated;
 
+export { createAnimatedComponent } from './Animated';
 export type {
   DecayAnimation,
   DelayAnimation,
@@ -45,7 +48,8 @@ export {
 } from './animation';
 export type { ParsedColorArray } from './Colors';
 export { convertToRGBA, isColor } from './Colors';
-export { processColor, ReanimatedLogLevel } from './common';
+export { ReanimatedLogLevel } from './common';
+export { DynamicColorIOS, PlatformColor, processColor } from './common';
 export type {
   AnimatableValue,
   AnimatableValueObject,
@@ -102,7 +106,11 @@ export {
 export * from './css';
 export type { EasingFunctionFactory } from './Easing';
 export { Easing } from './Easing';
-export { getStaticFeatureFlag, setDynamicFeatureFlag } from './featureFlags';
+export {
+  getDynamicFeatureFlag,
+  getStaticFeatureFlag,
+  setDynamicFeatureFlag,
+} from './featureFlags';
 export type { FrameInfo } from './frameCallback';
 export type { AnimatedProps, EntryOrExitLayoutType } from './helperTypes';
 export type {
@@ -230,6 +238,7 @@ export {
   RotateOutUpLeft,
   RotateOutUpRight,
   SequencedTransition,
+  SharedTransition,
   SlideInDown,
   SlideInLeft,
   // Slide

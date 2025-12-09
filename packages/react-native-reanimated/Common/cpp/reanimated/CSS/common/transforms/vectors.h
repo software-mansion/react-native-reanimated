@@ -1,9 +1,6 @@
 #pragma once
 
 #include <array>
-#include <cmath>
-#include <string>
-#include <unordered_map>
 
 #ifndef NDEBUG
 #include <iostream>
@@ -63,8 +60,7 @@ struct Vector4D {
   std::array<double, 4> vec;
 
   Vector4D() : vec({0, 0, 0, 0}) {}
-  explicit Vector4D(double x, double y, double z, double w)
-      : vec({x, y, z, w}) {}
+  explicit Vector4D(double x, double y, double z, double w) : vec({x, y, z, w}) {}
   explicit Vector4D(std::array<double, 4> vec) : vec(vec) {}
 
   double &operator[](size_t idx);

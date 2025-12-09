@@ -1,12 +1,11 @@
 'use strict';
 
-import type { WorkletFunction } from './workletTypes';
+import type { WorkletFunction } from './types';
 
 /**
  * This function allows you to determine if a given function is a worklet. It
- * only works with Reanimated Babel plugin enabled. Unless you are doing
- * something with internals of Reanimated you shouldn't need to use this
- * function.
+ * only works with Worklets Babel plugin enabled. Unless you are doing something
+ * with internals of Worklets you shouldn't need to use this function.
  *
  * ### Note
  *

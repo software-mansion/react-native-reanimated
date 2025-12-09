@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { createWorkletRuntime, runOnRuntime, runOnUI } from 'react-native-worklets';
+import { createWorkletRuntime, scheduleOnRuntime, scheduleOnUI } from 'react-native-worklets';
 import { RuntimeKind } from 'react-native-worklets';
 
 let counter = 0;
@@ -11,15 +11,15 @@ export function DispatchTestComponent({ worklet, runtimeKind }: { worklet: () =>
   });
   useEffect(() => {
     if (runtimeKind === RuntimeKind.UI) {
-      runOnUI(() => {
+      scheduleOnUI(() => {
         'worklet';
         worklet();
-      })();
+      });
     } else {
-      runOnRuntime(rt!, () => {
+      scheduleOnRuntime(rt!, () => {
         'worklet';
         worklet();
-      })();
+      });
     }
   });
 

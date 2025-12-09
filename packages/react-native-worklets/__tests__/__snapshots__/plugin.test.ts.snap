@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`babel plugin for DirectiveLiterals doesn't bother other Directive Literals 1`] = `
 "function foo() {
@@ -1357,9 +1357,7 @@ var foo = exports.foo = function null1Factory(_ref) {
 `;
 
 exports[`babel plugin for file workletization workletizes ClassDeclaration 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _readOnlyError2 = _interopRequireDefault(require("@babel/runtime/helpers/readOnlyError"));
-var _worklet_14560075646677_init_data = {
+"var _worklet_14560075646677_init_data = {
   code: "function _classCallCheck_null1(a,n){if(!(a instanceof n))throw new TypeError(\\"Cannot call a class as a function\\");}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
@@ -1530,12 +1528,10 @@ var Clazz = function () {
 `;
 
 exports[`babel plugin for file workletization workletizes ClassDeclaration in default export 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-Object.defineProperty(exports, "__esModule", {
+"Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-var _readOnlyError2 = _interopRequireDefault(require("@babel/runtime/helpers/readOnlyError"));
 var _worklet_14560075646677_init_data = {
   code: "function _classCallCheck_null1(a,n){if(!(a instanceof n))throw new TypeError(\\"Cannot call a class as a function\\");}",
   location: "/dev/null",
@@ -1707,12 +1703,10 @@ var Clazz = exports.default = function () {
 `;
 
 exports[`babel plugin for file workletization workletizes ClassDeclaration in named export 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-Object.defineProperty(exports, "__esModule", {
+"Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.Clazz = void 0;
-var _readOnlyError2 = _interopRequireDefault(require("@babel/runtime/helpers/readOnlyError"));
 var _worklet_14560075646677_init_data = {
   code: "function _classCallCheck_null1(a,n){if(!(a instanceof n))throw new TypeError(\\"Cannot call a class as a function\\");}",
   location: "/dev/null",
@@ -2914,6 +2908,72 @@ var foo = function foo_null1Factory(_ref) {
 });"
 `;
 
+exports[`babel plugin for react-native-gesture-handler workletizes gesture callbacks using the hooks api 1`] = `
+"var _worklet_13539781966089_init_data = {
+  code: "function null1(){console.log('onBegin');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+var _worklet_16446448315454_init_data = {
+  code: "function null2(_event){console.log('onStart');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+var _worklet_16462958026656_init_data = {
+  code: "function null3(_event,_success){console.log('onEnd');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+var foo = useTapGesture({
+  numberOfTaps: 2,
+  onBegin: function null1Factory(_ref) {
+    var _worklet_13539781966089_init_data = _ref._worklet_13539781966089_init_data;
+    var _e = [new global.Error(), 1, -27];
+    var null1 = function null1() {
+      console.log('onBegin');
+    };
+    null1.__closure = {};
+    null1.__workletHash = 13539781966089;
+    null1.__pluginVersion = "x.y.z";
+    null1.__initData = _worklet_13539781966089_init_data;
+    null1.__stackDetails = _e;
+    return null1;
+  }({
+    _worklet_13539781966089_init_data: _worklet_13539781966089_init_data
+  }),
+  onStart: function null2Factory(_ref2) {
+    var _worklet_16446448315454_init_data = _ref2._worklet_16446448315454_init_data;
+    var _e = [new global.Error(), 1, -27];
+    var null2 = function null2(_event) {
+      console.log('onStart');
+    };
+    null2.__closure = {};
+    null2.__workletHash = 16446448315454;
+    null2.__pluginVersion = "x.y.z";
+    null2.__initData = _worklet_16446448315454_init_data;
+    null2.__stackDetails = _e;
+    return null2;
+  }({
+    _worklet_16446448315454_init_data: _worklet_16446448315454_init_data
+  }),
+  onEnd: function null3Factory(_ref3) {
+    var _worklet_16462958026656_init_data = _ref3._worklet_16462958026656_init_data;
+    var _e = [new global.Error(), 1, -27];
+    var null3 = function null3(_event, _success) {
+      console.log('onEnd');
+    };
+    null3.__closure = {};
+    null3.__workletHash = 16462958026656;
+    null3.__pluginVersion = "x.y.z";
+    null3.__initData = _worklet_16462958026656_init_data;
+    null3.__stackDetails = _e;
+    return null3;
+  }({
+    _worklet_16462958026656_init_data: _worklet_16462958026656_init_data
+  })
+});"
+`;
+
 exports[`babel plugin for react-native-gesture-handler workletizes possibly chained gesture object callback functions automatically 1`] = `
 "var _worklet_2359797567586_init_data = {
   code: "function null1(_event,_success){console.log('onEnd');}",
@@ -2996,6 +3056,62 @@ var onStart = function onStart_null1Factory({
   _worklet_8764176270806_init_data
 });
 var foo = Gesture.Tap().onStart(onStart);"
+`;
+
+exports[`babel plugin for react-native-gesture-handler workletizes referenced gesture callbacks using the hooks api 1`] = `
+"var _worklet_12687812344336_init_data = {
+  code: "function onBegin_null1(){console.log('onBegin');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+var onBegin = function onBegin_null1Factory({
+  _worklet_12687812344336_init_data
+}) {
+  const _e = [new global.Error(), 1, -27];
+  const onBegin = function () {
+    console.log('onBegin');
+  };
+  onBegin.__closure = {};
+  onBegin.__workletHash = 12687812344336;
+  onBegin.__pluginVersion = "x.y.z";
+  onBegin.__initData = _worklet_12687812344336_init_data;
+  onBegin.__stackDetails = _e;
+  return onBegin;
+}({
+  _worklet_12687812344336_init_data
+});
+var foo = useTapGesture({
+  numberOfTaps: 2,
+  onBegin: onBegin
+});"
+`;
+
+exports[`babel plugin for react-native-gesture-handler workletizes referenced gesture callbacks using the hooks api and shorthand syntax 1`] = `
+"var _worklet_12687812344336_init_data = {
+  code: "function onBegin_null1(){console.log('onBegin');}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+var onBegin = function onBegin_null1Factory({
+  _worklet_12687812344336_init_data
+}) {
+  const _e = [new global.Error(), 1, -27];
+  const onBegin = function () {
+    console.log('onBegin');
+  };
+  onBegin.__closure = {};
+  onBegin.__workletHash = 12687812344336;
+  onBegin.__pluginVersion = "x.y.z";
+  onBegin.__initData = _worklet_12687812344336_init_data;
+  onBegin.__stackDetails = _e;
+  return onBegin;
+}({
+  _worklet_12687812344336_init_data
+});
+var foo = useTapGesture({
+  numberOfTaps: 2,
+  onBegin: onBegin
+});"
 `;
 
 exports[`babel plugin for referenced worklets prefers AssignmentExpression over VariableDeclarator 1`] = `
@@ -3664,9 +3780,7 @@ var y = true;"
 `;
 
 exports[`babel plugin for worklet classes appends polyfills 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _readOnlyError2 = _interopRequireDefault(require("@babel/runtime/helpers/readOnlyError"));
-var _worklet_14560075646677_init_data = {
+"var _worklet_14560075646677_init_data = {
   code: "function _classCallCheck_null1(a,n){if(!(a instanceof n))throw new TypeError(\\"Cannot call a class as a function\\");}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
@@ -3837,9 +3951,7 @@ var Clazz = function () {
 `;
 
 exports[`babel plugin for worklet classes creates factories 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _readOnlyError2 = _interopRequireDefault(require("@babel/runtime/helpers/readOnlyError"));
-var _worklet_14560075646677_init_data = {
+"var _worklet_14560075646677_init_data = {
   code: "function _classCallCheck_null1(a,n){if(!(a instanceof n))throw new TypeError(\\"Cannot call a class as a function\\");}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
@@ -4036,10 +4148,38 @@ var foo = function foo_null1Factory(_ref) {
 });"
 `;
 
+exports[`babel plugin for worklet classes is disabled via option 1`] = `
+"function foo() {
+  this.prop = 42;
+}
+var _worklet_6135491687917_init_data = {
+  code: "function bar_null1(){const{foo}=this.__closure;const instance=new foo();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+var bar = function bar_null1Factory(_ref) {
+  var _worklet_6135491687917_init_data = _ref._worklet_6135491687917_init_data,
+    foo = _ref.foo;
+  var _e = [new global.Error(), -2, -27];
+  var bar = function bar() {
+    var instance = new foo();
+  };
+  bar.__closure = {
+    foo: foo
+  };
+  bar.__workletHash = 6135491687917;
+  bar.__pluginVersion = "x.y.z";
+  bar.__initData = _worklet_6135491687917_init_data;
+  bar.__stackDetails = _e;
+  return bar;
+}({
+  _worklet_6135491687917_init_data: _worklet_6135491687917_init_data,
+  foo: foo
+});"
+`;
+
 exports[`babel plugin for worklet classes keeps this binding 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _readOnlyError2 = _interopRequireDefault(require("@babel/runtime/helpers/readOnlyError"));
-var _worklet_14560075646677_init_data = {
+"var _worklet_14560075646677_init_data = {
   code: "function _classCallCheck_null1(a,n){if(!(a instanceof n))throw new TypeError(\\"Cannot call a class as a function\\");}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
@@ -4270,9 +4410,7 @@ var foo = function foo_null1Factory(_ref) {
 `;
 
 exports[`babel plugin for worklet classes removes marker 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _readOnlyError2 = _interopRequireDefault(require("@babel/runtime/helpers/readOnlyError"));
-var _worklet_14560075646677_init_data = {
+"var _worklet_14560075646677_init_data = {
   code: "function _classCallCheck_null1(a,n){if(!(a instanceof n))throw new TypeError(\\"Cannot call a class as a function\\");}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
@@ -4443,9 +4581,7 @@ var Clazz = function () {
 `;
 
 exports[`babel plugin for worklet classes workletizes polyfills 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _readOnlyError2 = _interopRequireDefault(require("@babel/runtime/helpers/readOnlyError"));
-var _worklet_14560075646677_init_data = {
+"var _worklet_14560075646677_init_data = {
   code: "function _classCallCheck_null1(a,n){if(!(a instanceof n))throw new TypeError(\\"Cannot call a class as a function\\");}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
@@ -4616,9 +4752,7 @@ var Clazz = function () {
 `;
 
 exports[`babel plugin for worklet classes workletizes regardless of marker value 1`] = `
-"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-var _readOnlyError2 = _interopRequireDefault(require("@babel/runtime/helpers/readOnlyError"));
-var _worklet_14560075646677_init_data = {
+"var _worklet_14560075646677_init_data = {
   code: "function _classCallCheck_null1(a,n){if(!(a instanceof n))throw new TypeError(\\"Cannot call a class as a function\\");}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
@@ -5300,8 +5434,7 @@ var foo = function foo_null1Factory(_ref) {
 exports[`babel plugin generally transforms 1`] = `
 "var _reactNativeReanimated = _interopRequireWildcard(require("react-native-reanimated"));
 var _jsxRuntime = require("react/jsx-runtime");
-function _getRequireWildcardCache(e) { if ("function" != typeof WeakMap) return null; var r = new WeakMap(), t = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(e) { return e ? t : r; })(e); }
-function _interopRequireWildcard(e, r) { if (!r && e && e.__esModule) return e; if (null === e || "object" != typeof e && "function" != typeof e) return { default: e }; var t = _getRequireWildcardCache(r); if (t && t.has(e)) return t.get(e); var n = { __proto__: null }, a = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var u in e) if ("default" !== u && {}.hasOwnProperty.call(e, u)) { var i = a ? Object.getOwnPropertyDescriptor(e, u) : null; i && (i.get || i.set) ? Object.defineProperty(n, u, i) : n[u] = e[u]; } return n.default = e, t && t.set(e, n), n; }
+function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function _interopRequireWildcard(e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (var _t in e) "default" !== _t && {}.hasOwnProperty.call(e, _t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, _t)) && (i.get || i.set) ? o(f, _t, i) : f[_t] = e[_t]); return f; })(e, t); }
 var _worklet_6576407799916_init_data = {
   code: "function null1(){const{offset}=this.__closure;return{transform:[{translateX:offset.value*255}]};}",
   location: "/dev/null",

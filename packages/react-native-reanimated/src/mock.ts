@@ -235,6 +235,10 @@ class BaseAnimationMock {
     return this;
   }
 
+  energyThreshold() {
+    return this;
+  }
+
   withCallback() {
     return this;
   }

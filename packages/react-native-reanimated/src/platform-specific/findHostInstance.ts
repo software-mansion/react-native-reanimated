@@ -2,14 +2,9 @@
 'use strict';
 
 import { ReanimatedError } from '../common';
-import type { WrapperRef } from '../commonTypes';
+import type { InternalHostInstance } from '../commonTypes';
 import type { IAnimatedComponentInternalBase } from '../createAnimatedComponent/commonTypes';
-
-export type HostInstance = {
-  __internalInstanceHandle?: Record<string, unknown>;
-  __nativeTag?: number;
-  _viewConfig?: Record<string, unknown>;
-};
+import type { HostInstance } from './types';
 
 function findHostInstanceFastPath(maybeNativeRef: HostInstance | undefined) {
   if (!maybeNativeRef) {
@@ -46,7 +41,7 @@ function resolveFindHostInstance_DEPRECATED() {
 
 let findHostInstance_DEPRECATED: (ref: unknown) => HostInstance;
 export function findHostInstance(
-  ref: IAnimatedComponentInternalBase | WrapperRef
+  ref: IAnimatedComponentInternalBase | InternalHostInstance
 ): HostInstance {
   // Fast path for native refs
   const hostInstance = findHostInstanceFastPath(

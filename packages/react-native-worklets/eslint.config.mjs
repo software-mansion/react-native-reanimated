@@ -16,6 +16,11 @@ const config = tsEslint.config(
     languageOptions: {
       parserOptions: {
         tsconfigRootDir: import.meta.dirname,
+        project: [
+          './tsconfig.json',
+          './tsconfig.web.json',
+          '../../tsconfig.json',
+        ],
       },
     },
     plugins: {
@@ -26,7 +31,27 @@ const config = tsEslint.config(
       'reanimated/use-worklets-error': 'error',
       'reanimated/use-global-this': 'error',
       'no-bitwise': 'error',
+      // TODO: Use this rule in Reanimated (globally in the repo) too
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['*.native', '*.ios', '*.android', '*.web'],
+              message:
+                "Don't import with platform specifier, use extensionless imports.",
+            },
+          ],
+        },
+      ],
     },
+  },
+  {
+    rules: {
+      strict: ['error', 'global'],
+    },
+    files: ['src/**/*.tsx', 'src/**/*.ts'],
+    ignores: ['__tests__', '__mocks__'],
   },
   {
     files: ['**/*.test.ts', '**/*.test.tsx'],
@@ -34,7 +59,7 @@ const config = tsEslint.config(
       '@typescript-eslint/unbound-method': 'off',
       'jest/unbound-method': 'error',
     },
-  },
+  }
 );
 
 export default config;

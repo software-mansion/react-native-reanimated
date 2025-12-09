@@ -1,5 +1,4 @@
 'use strict';
-export * from './conversions';
 export * from './equality';
 export * from './guards';
 export * from './parsers';

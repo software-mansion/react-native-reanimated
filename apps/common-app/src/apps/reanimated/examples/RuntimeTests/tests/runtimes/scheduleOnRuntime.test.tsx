@@ -1,4 +1,4 @@
-import { createSynchronizable, createWorkletRuntime, runOnJS, scheduleOnRuntime } from 'react-native-worklets';
+import { createSynchronizable, createWorkletRuntime, scheduleOnRN, scheduleOnRuntime } from 'react-native-worklets';
 import { describe, expect, test, waitForNotification, notify } from '../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../ReJest/types';
 
@@ -15,14 +15,14 @@ describe('scheduleOnRuntime', () => {
   //     };
 
   //     // Act
-  //     runOnUI(() => {
+  //     scheduleOnUI(() => {
   //       'worklet';
   //       scheduleOnRuntime(workletRuntime, () => {
   //         'worklet';
   //         synchronizable.setBlocking(100);
-  //         runOnJS(onJSCallback)();
+  //         scheduleOnRN(onJSCallback);
   //       });
-  //     })();
+  //     });
 
   //     // Assert
   //     await waitForNotify(NOTIFICATION_NAME);
@@ -41,7 +41,7 @@ describe('scheduleOnRuntime', () => {
     scheduleOnRuntime(workletRuntime, () => {
       'worklet';
       synchronizable.setBlocking(100);
-      runOnJS(onJSCallback)();
+      scheduleOnRN(onJSCallback);
     });
 
     // Assert
@@ -67,7 +67,7 @@ describe('scheduleOnRuntime', () => {
   //       scheduleOnRuntime(workletRuntime2, () => {
   //         'worklet';
   //         synchronizable.setBlocking(200);
-  //         runOnJS(onJSCallback)();
+  //         scheduleOnRN(onJSCallback);
   //       });
   //     });
 

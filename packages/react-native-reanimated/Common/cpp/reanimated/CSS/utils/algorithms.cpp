@@ -1,5 +1,7 @@
 #include <reanimated/CSS/utils/algorithms.h>
 
+#include <vector>
+
 namespace reanimated::css {
 
 size_t firstSmallerOrEqual(const double x, const std::vector<double> &arr) {

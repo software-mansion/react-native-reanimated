@@ -1,20 +1,12 @@
 'use strict';
-import type { Ref } from 'react';
+import type { ComponentProps } from 'react';
 import React from 'react';
-import type { ScrollViewProps } from 'react-native';
 import { ScrollView } from 'react-native';
 
 import type { SharedValue } from '../commonTypes';
 import { createAnimatedComponent } from '../createAnimatedComponent';
-import type { AnimatedProps } from '../helperTypes';
 import type { AnimatedRef } from '../hook';
 import { useAnimatedRef, useScrollOffset } from '../hook';
-
-export interface AnimatedScrollViewProps
-  extends AnimatedProps<ScrollViewProps> {
-  scrollViewOffset?: SharedValue<number>;
-  ref?: Ref<AnimatedScrollView> | null;
-}
 
 // Since createAnimatedComponent return type is ComponentClass that has the props of the argument,
 // but not things like NativeMethods, etc. we need to add them manually by extending the type.
@@ -23,6 +15,12 @@ interface AnimatedScrollViewComplement extends ScrollView {
 }
 
 const AnimatedScrollViewComponent = createAnimatedComponent(ScrollView);
+
+export type AnimatedScrollViewProps = ComponentProps<
+  typeof AnimatedScrollViewComponent
+> & {
+  scrollViewOffset?: SharedValue<number>;
+};
 
 export function AnimatedScrollView({
   scrollViewOffset,

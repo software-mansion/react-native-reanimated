@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/configs/interpolators/registry.h>
+#include <reanimated/CSS/InterpolatorRegistry.h>
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
 
 #include <memory>
@@ -18,10 +18,7 @@ class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
       const jsi::Value &keyframes,
       const std::string &componentName,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      : RecordPropertiesInterpolator(
-            getComponentInterpolators(componentName),
-            {},
-            viewStylesRepository) {
+      : RecordPropertiesInterpolator(getComponentInterpolators(componentName), {}, viewStylesRepository) {
     updateKeyframes(rt, keyframes);
   }
 };

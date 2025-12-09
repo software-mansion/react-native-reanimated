@@ -2,10 +2,16 @@
 
 const semverSatisfies = require('semver/functions/satisfies');
 const semverPrerelease = require('semver/functions/prerelease');
+const semverOutside = require('semver/ranges/outside');
 const expectedVersion = require('./worklets-version.json');
 const compatibilityFile = require('../compatibility.json');
 
-/** @returns {{ ok: boolean; message?: string }} */
+const architecture = 'fabric';
+
+/**
+ * @param {string} reanimatedVersion
+ * @returns {{ ok: boolean; message?: string }}
+ */
 function validateVersion(reanimatedVersion) {
   let workletsVersion;
   try {
@@ -35,11 +41,11 @@ function validateVersion(reanimatedVersion) {
 
   const supportedWorkletsVersions = [];
 
-  for (const key in compatibilityFile) {
+  for (const key in compatibilityFile[architecture]) {
     if (semverSatisfies(reanimatedVersion, key)) {
-      // @ts-ignore
       supportedWorkletsVersions.push(
-        ...compatibilityFile[key]['react-native-worklets']
+        // @ts-ignore
+        ...compatibilityFile[architecture][key]['react-native-worklets']
       );
     }
   }
@@ -54,9 +60,19 @@ function validateVersion(reanimatedVersion) {
     }
   }
 
+  const earliestSupportedVersion = supportedWorkletsVersions[0];
+  const latestSupportedVersion =
+    supportedWorkletsVersions[supportedWorkletsVersions.length - 1];
+
+  const isHigher = semverOutside(workletsVersion, latestSupportedVersion, '>');
+
+  const installMessage = isHigher
+    ? `Please install the latest supported version of Worklets ${latestSupportedVersion} or older`
+    : `Please install Worklets ${earliestSupportedVersion} or newer`;
+
   return {
     ok: false,
-    message: `Invalid version of \`react-native-worklets\`: "${workletsVersion}". Expected the version to be in inclusive range "${supportedWorkletsVersions.join(', ')}". Please install a compatible version of \`react-native-worklets\`.`,
+    message: `Your installed version of Worklets (${workletsVersion}) is not compatible with installed version of Reanimated (${reanimatedVersion}). ${installMessage}. See the documentation for the list of supported versions: https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility/#supported-react-native-worklets-versions`,
   };
 }
 

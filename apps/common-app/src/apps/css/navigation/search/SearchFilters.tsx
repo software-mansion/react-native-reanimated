@@ -1,5 +1,7 @@
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import type { FuseResult } from 'fuse.js';
+import type { ComponentRef } from 'react';
 import { Fragment, useEffect, useMemo, useRef } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -17,7 +19,7 @@ const NEXT_FILTER_KEY = '__next__';
 
 type SearchFiltersProps = {
   currentFilter: Array<string> | null;
-  queryResults: Array<SearchDoc>;
+  queryResults: Array<FuseResult<SearchDoc>>;
   setCurrentFilter: (filter: Array<string> | null) => void;
 };
 
@@ -26,7 +28,7 @@ export default function SearchFilters({
   queryResults,
   setCurrentFilter,
 }: SearchFiltersProps) {
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollToEnd({ animated: true });
@@ -80,10 +82,10 @@ export default function SearchFilters({
     for (let i = 0; i < (currentFilter?.length ?? 0); i++) {
       const filterChunk = currentFilter![i];
       const resultCounts: Record<string, number> = {};
-      const newResults: Array<SearchDoc> = [];
+      const newResults: Array<FuseResult<SearchDoc>> = [];
 
       for (const result of currentResults) {
-        const resultChunk = result.path[i];
+        const resultChunk = result.item.path[i];
         if (resultChunk === filterChunk) {
           newResults.push(result);
         }
@@ -104,7 +106,7 @@ export default function SearchFilters({
     const resultCounts: Record<string, number> = {};
     const index = currentFilter?.length ?? 0;
     for (const result of currentResults) {
-      const chunk = result.path[index];
+      const chunk = result.item.path[index];
       if (chunk) {
         resultCounts[chunk] = (resultCounts[chunk] ?? 0) + 1;
       }
