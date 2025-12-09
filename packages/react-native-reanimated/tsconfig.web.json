@@ -2,11 +2,7 @@
   "extends": "./tsconfig.native.json",
   "compilerOptions": {
     "paths": {
-      "moduleSuffixes": [
-        ".web.test",
-        ".web",
-        ""
-      ]
+      "moduleSuffixes": [".web.test", ".web", ""]
     }
   },
   "exclude": [
