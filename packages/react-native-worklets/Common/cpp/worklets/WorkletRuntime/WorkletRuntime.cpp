@@ -134,6 +134,11 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
   auto synchronizableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(SynchronizableUnpackerCode);
   rt.evaluateJavaScript(synchronizableUnpackerBuffer, "synchronizableUnpacker");
 
+  auto shareableHostUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(ShareableHostUnpackerCode);
+  rt.evaluateJavaScript(shareableHostUnpackerBuffer, "shareableHostUnpacker");
+  auto shareableGuestUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(ShareableGuestUnpackerCode);
+  rt.evaluateJavaScript(shareableGuestUnpackerBuffer, "shareableGuestUnpacker");
+
   auto customSerializableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(CustomSerializableUnpackerCode);
   rt.evaluateJavaScript(customSerializableUnpackerBuffer, "customSerializableUnpacker");
 #endif // WORKLETS_BUNDLE_MODE
@@ -255,9 +260,10 @@ void scheduleOnRuntime(
 std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
   auto runtimeData = rt.getRuntimeData(RuntimeData::weakRuntimeUUID);
   if (!runtimeData) [[unlikely]] {
-    throw std::runtime_error(
-        "[Worklets] No weak runtime data found on the provided JSI runtime."
-        " Perhaps the JSI Runtime is not a WorkletRuntime?");
+    return std::weak_ptr<WorkletRuntime>();
+    // throw std::runtime_error(
+    //     "[Worklets] No weak runtime data found on the provided JSI runtime."
+    //     " Perhaps the JSI Runtime is not a WorkletRuntime?");
   }
   auto weakHolder = std::static_pointer_cast<WeakRuntimeHolder>(runtimeData);
   return weakHolder->weakRuntime;

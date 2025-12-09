@@ -173,14 +173,30 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
+  createShareable<TShared = unknown>(
+    hostRuntime: WorkletRuntime,
+    initial: SerializableRef<TShared>,
+    decorateHost: SerializableRef,
+    decorateRef: SerializableRef
+  ): SerializableRef<TShared> {
+    return this.#workletsModuleProxy.createShareable(
+      hostRuntime,
+      initial,
+      decorateHost,
+      decorateRef
+    );
+  }
+
+  getUIWorkletRuntime(): WorkletRuntime {
+    return this.#workletsModuleProxy.getUIWorkletRuntime();
+  }
+
   scheduleOnUI<TValue>(serializable: SerializableRef<TValue>) {
     return this.#workletsModuleProxy.scheduleOnUI(serializable);
   }
 
-  executeOnUIRuntimeSync<TValue, TReturn>(
-    serializable: SerializableRef<TValue>
-  ): TReturn {
-    return this.#workletsModuleProxy.executeOnUIRuntimeSync(serializable);
+  runOnUISync<TValue, TReturn>(serializable: SerializableRef<TValue>): TReturn {
+    return this.#workletsModuleProxy.runOnUISync(serializable);
   }
 
   createWorkletRuntime(

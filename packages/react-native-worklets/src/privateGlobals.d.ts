@@ -5,6 +5,8 @@
 import type { callGuardDEV } from './callGuard';
 import type { reportFatalRemoteError } from './debug/errors';
 import type { CustomSerializableUnpacker } from './memory/customSerializableUnpacker';
+import type { ShareableGuestUnpacker } from './memory/shareableGuestUnpacker';
+import type { ShareableHostUnpacker } from './memory/shareableHostUnpacker';
 import type { SynchronizableUnpacker } from './memory/synchronizableUnpacker';
 import type { CustomSerializationRegistry } from './memory/types';
 import type { Queue } from './runLoop/workletRuntime/taskQueue';
@@ -17,13 +19,13 @@ declare global {
     Record<string, unknown>;
 
   var _toString: (value: unknown) => string;
-  var __workletsModuleProxy: WorkletsModuleProxy | undefined;
+  var __workletsModuleProxy: WorkletsModuleProxy;
   var _WORKLETS_BUNDLE_MODE: boolean | undefined;
   var _WORKLETS_VERSION_CPP: string | undefined;
   var _WORKLETS_VERSION_JS: string | undefined;
   var _createSerializable: <T>(
     value: T,
-    nativeStateSource?: object
+    nativeStateSource: object | undefined
   ) => FlatSerializableRef<T>;
   var _createSerializableString: (value: string) => FlatSerializableRef<string>;
   var _createSerializableNumber: (value: number) => FlatSerializableRef<number>;
@@ -81,6 +83,11 @@ declare global {
   var __hasNativeState: (value: object) => boolean;
   /** Only in Debug builds. */
   var __isHostObject: (value: object) => boolean;
+  var __shareableHostUnpacker: ShareableHostUnpacker;
+  var __shareableGuestUnpacker: ShareableGuestUnpacker;
+  var __makeSerializableCloneOnUIRecursive: <TValue>(
+    value: TValue
+  ) => SerializableRef<TValue>;
   interface NodeRequire {
     resolveWeak(id: string): number;
     getModules(): Map<number, unknown>;

@@ -33,10 +33,12 @@ export {
   registerCustomSerializable,
 } from './memory/serializable';
 export { serializableMappingCache } from './memory/serializableMappingCache';
+export { createShareable } from './memory/shareable';
 export { createSynchronizable } from './memory/synchronizable';
 export type {
   RegistrationData,
   SerializableRef,
+  Shareable,
   Synchronizable,
   SynchronizableRef,
 } from './memory/types';

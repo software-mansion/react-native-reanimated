@@ -5,6 +5,7 @@
 #include <worklets/android/WorkletsModule.h>
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
+    worklets::WorkletsModule::vm = vm;
   return facebook::jni::initialize(vm, [] {
     worklets::WorkletsModule::registerNatives();
     worklets::AndroidUIScheduler::registerNatives();

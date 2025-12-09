@@ -1,15 +1,15 @@
 // This file was generated with
-// `packages/react-native-worklets/scripts/export-unpackers.js`.
-// Please do not modify it directly.
+  // `packages/react-native-worklets/scripts/export-unpackers.js`.
+  // Please do not modify it directly.
 
-#include <worklets/Resources/Unpackers.h>
+  #include <worklets/Resources/Unpackers.h>
 
-namespace worklets {
+  namespace worklets {
 
-const char SynchronizableUnpackerCode[] =
-    R"DELIMITER__((function () {
-  var serializer = !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE ? function (value, _) {
-    return (0, _serializable.createSerializable)(value);
+  const char SynchronizableUnpackerCode[] =
+      R"DELIMITER__((function () {
+  var serializer = globalThis.__RUNTIME_KIND === 1 || globalThis._WORKLETS_BUNDLE_MODE ? function (value, _) {
+    return createSerializable(value);
   } : globalThis._createSerializable;
   function synchronizableUnpacker(synchronizableRef) {
     var synchronizable = synchronizableRef;
@@ -46,4 +46,5 @@ const char SynchronizableUnpackerCode[] =
   }
   globalThis.__synchronizableUnpacker = synchronizableUnpacker;
 })();)DELIMITER__";
-} // namespace worklets
+  } // namespace worklets
+  

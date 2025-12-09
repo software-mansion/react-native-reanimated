@@ -13,6 +13,8 @@ namespace worklets {
 using namespace facebook;
 using namespace react;
 
+JavaVM *WorkletsModule::vm = nullptr;
+
 WorkletsModule::WorkletsModule(
     jni::alias_ref<jhybridobject> jThis,
     jsi::Runtime *rnRuntime,

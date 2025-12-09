@@ -1,7 +1,9 @@
 #pragma once
 
+#include <glog/logging.h>
 #include <jsi/jsi.h>
 #include <react/debug/react_native_assert.h>
+
 #include <memory>
 #include <string>
 #include <tuple>
@@ -74,8 +76,9 @@ inline std::tuple<T, Rest...> convertArgs(jsi::Runtime &rt, const jsi::Value *ar
 // native C++ types needed to call `function`
 template <typename Ret, typename... Args>
 std::tuple<Args...>
-getArgsForFunction(std::function<Ret(Args...)>, jsi::Runtime &rt, const jsi::Value *args, const size_t count) {
-  react_native_assert(sizeof...(Args) == count && "Argument list has different length than expected");
+getArgsForFunction(std::function<Ret(Args...)>, jsi::Runtime &rt, const jsi::Value *args, const size_t count, std::string_view name) {
+        std::string str = std::string("Argument list has different length than expected in function ") + *(name.data());
+  react_native_assert(sizeof...(Args) == count && str.c_str());
   return convertArgs<Args...>(rt, args);
 }
 
@@ -87,8 +90,12 @@ std::tuple<jsi::Runtime &, Args...> getArgsForFunction(
     std::function<Ret(jsi::Runtime &, Args...)>,
     jsi::Runtime &rt,
     const jsi::Value *args,
-    const size_t count) {
-  react_native_assert(sizeof...(Args) == count && "Argument list has different length than expected");
+    const size_t count,
+    std::string_view name = "") {
+  const auto argsCount = sizeof...(Args);
+  LOG(INFO) << "argsCount " << argsCount;
+  std::string str = std::string("Argument list has different length than expected in function ") + *(name.data());
+  react_native_assert(sizeof...(Args) == count && str.c_str());
   return std::tuple_cat(std::tie(rt), convertArgs<Args...>(rt, args));
 }
 
@@ -116,9 +123,9 @@ inline jsi::Value apply(std::function<void(Args...)> function, std::tuple<Args..
 // returns a function with JSI calling convention
 // from a native function `function`
 template <typename Fun>
-jsi::HostFunctionType createHostFunction(Fun function) {
-  return [function](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, const size_t count) {
-    auto argz = getArgsForFunction(function, rt, args, count);
+jsi::HostFunctionType createHostFunction(Fun function, std::string_view name = "") {
+  return [function, name](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, const size_t count) {
+    auto argz = getArgsForFunction(function, rt, args, count, name);
     return apply(function, std::move(argz));
   };
 }
@@ -126,9 +133,9 @@ jsi::HostFunctionType createHostFunction(Fun function) {
 // returns a function with JSI calling convention
 // from a native function `function` returning a string
 template <typename... Args>
-jsi::HostFunctionType createHostFunction(std::function<std::string(Args...)> function) {
-  return [function](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, const size_t count) {
-    auto argz = getArgsForFunction(function, rt, args, count);
+jsi::HostFunctionType createHostFunction(std::function<std::string(Args...)> function, std::string_view name = "") {
+  return [function, name](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, const size_t count) {
+    auto argz = getArgsForFunction(function, rt, args, count, name);
     return apply(rt, function, std::move(argz));
   };
 }
@@ -151,7 +158,7 @@ struct takes_runtime<jsi::Runtime &, Rest...> {
 // in the `rt` JS runtime
 template <typename Ret, typename... Args>
 void installJsiFunction(jsi::Runtime &rt, std::string_view name, std::function<Ret(Args...)> function) {
-  auto clb = createHostFunction(function);
+  auto clb = createHostFunction(function, name);
   auto argsCount = sizeof...(Args) - takes_runtime<Args...>::value;
   jsi::Value jsiFunction =
       jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, name.data()), argsCount, clb);

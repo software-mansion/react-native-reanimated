@@ -23,6 +23,7 @@ using namespace facebook::jni;
 
 class WorkletsModule : public jni::HybridClass<WorkletsModule> {
  public:
+  static JavaVM *vm;
   static auto constexpr kJavaDescriptor = "Lcom/swmansion/worklets/WorkletsModule;";
 
   static jni::local_ref<jhybriddata> initHybrid(

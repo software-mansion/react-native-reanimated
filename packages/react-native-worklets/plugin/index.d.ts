@@ -6,6 +6,7 @@ export interface PluginOptions {
   extraPlugins?: string[];
   extraPresets?: string[];
   globals?: string[];
+  limitInitDataHoisting?: boolean;
   omitNativeOnlyData?: boolean;
   relativeSourceLocation?: boolean;
   substituteWebPlatformChecks?: boolean;

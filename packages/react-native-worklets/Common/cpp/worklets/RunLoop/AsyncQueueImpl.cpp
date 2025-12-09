@@ -1,4 +1,7 @@
 #include <worklets/RunLoop/AsyncQueueImpl.h>
+#ifdef ANDROID
+#include <worklets/android/WorkletsModule.h>
+#endif // ANDROID
 
 #include <memory>
 #include <string>
@@ -12,6 +15,10 @@ AsyncQueueImpl::AsyncQueueImpl(const std::string &name) : state_(std::make_share
 #if __APPLE__
     pthread_setname_np(name.c_str());
 #endif
+#ifdef ANDROID
+    JNIEnv *env = nullptr;
+    /* auto result =  */ WorkletsModule::vm->AttachCurrentThread(reinterpret_cast<JNIEnv **>(&env), nullptr);
+#endif // ANDROID
     while (state->running) {
       std::unique_lock<std::mutex> lock(state->mutex);
       state->cv.wait(lock, [state] { return !state->queue.empty() || !state->running; });
@@ -26,6 +33,9 @@ AsyncQueueImpl::AsyncQueueImpl(const std::string &name) : state_(std::make_share
       lock.unlock();
       job();
     }
+#ifdef ANDROID
+    WorkletsModule::vm->DetachCurrentThread();
+#endif // ANDROID
   });
 #ifdef ANDROID
   pthread_setname_np(thread.native_handle(), name.c_str());
