@@ -25,8 +25,11 @@ template <typename... AllowedTypes>
 class SimpleValueInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   template <typename TValue>
-  explicit SimpleValueInterpolatorFactory(const TValue &defaultValue)
-      : PropertyInterpolatorFactory(), defaultValue_(defaultValue) {}
+  explicit SimpleValueInterpolatorFactory(
+      const TValue &defaultValue,
+      std::function<void(std::shared_ptr<AnimatedPropsBuilder>, const CSSValueVariant<AllowedTypes...> &)>
+          addToPropsBuilder = nullptr)
+      : PropertyInterpolatorFactory(), defaultValue_(defaultValue), addToPropsBuilder_(addToPropsBuilder) {}
 
   bool isDiscreteProperty() const override {
     // The property is considered discrete if all of the allowed types are
@@ -42,19 +45,28 @@ class SimpleValueInterpolatorFactory : public PropertyInterpolatorFactory {
       const PropertyPath &propertyPath,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
     return std::make_shared<SimpleValueInterpolator<AllowedTypes...>>(
-        propertyPath, defaultValue_, viewStylesRepository);
+        propertyPath, defaultValue_, viewStylesRepository, addToPropsBuilder_);
   }
 
  private:
   const CSSValueVariant<AllowedTypes...> defaultValue_;
+  std::function<void(std::shared_ptr<AnimatedPropsBuilder>, const CSSValueVariant<AllowedTypes...> &)>
+      addToPropsBuilder_;
 };
 
 template <typename... AllowedTypes>
 class ResolvableValueInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   template <typename TValue>
-  explicit ResolvableValueInterpolatorFactory(const TValue &defaultValue, ResolvableValueInterpolatorConfig config)
-      : PropertyInterpolatorFactory(), defaultValue_(defaultValue), config_(std::move(config)) {}
+  explicit ResolvableValueInterpolatorFactory(
+      const TValue &defaultValue,
+      ResolvableValueInterpolatorConfig config,
+      std::function<void(std::shared_ptr<AnimatedPropsBuilder>, const CSSValueVariant<AllowedTypes...> &)>
+          addToPropsBuilder = nullptr)
+      : PropertyInterpolatorFactory(),
+        defaultValue_(defaultValue),
+        config_(std::move(config)),
+        addToPropsBuilder_(addToPropsBuilder) {}
 
   const CSSValue &getDefaultValue() const override {
     return defaultValue_;
@@ -64,12 +76,14 @@ class ResolvableValueInterpolatorFactory : public PropertyInterpolatorFactory {
       const PropertyPath &propertyPath,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
     return std::make_shared<ResolvableValueInterpolator<AllowedTypes...>>(
-        propertyPath, defaultValue_, viewStylesRepository, config_);
+        propertyPath, defaultValue_, viewStylesRepository, config_, addToPropsBuilder_);
   }
 
  private:
   const CSSValueVariant<AllowedTypes...> defaultValue_;
   ResolvableValueInterpolatorConfig config_;
+  std::function<void(std::shared_ptr<AnimatedPropsBuilder>, const CSSValueVariant<AllowedTypes...> &)>
+      addToPropsBuilder_;
 };
 
 /**
@@ -118,12 +132,17 @@ auto value(const auto &defaultValue) -> std::enable_if_t<
 }
 
 template <typename... AllowedTypes>
-auto value(const auto &defaultValue, ResolvableValueInterpolatorConfig config) -> std::enable_if_t<
-    (std::is_constructible_v<AllowedTypes, decltype(defaultValue)> || ...),
-    std::shared_ptr<PropertyInterpolatorFactory>> {
+auto value(
+    const auto &defaultValue,
+    ResolvableValueInterpolatorConfig config,
+    std::function<void(std::shared_ptr<AnimatedPropsBuilder>, const CSSValueVariant<AllowedTypes...> &)> cb)
+    -> std::enable_if_t<
+        (std::is_constructible_v<AllowedTypes, decltype(defaultValue)> || ...),
+        std::shared_ptr<PropertyInterpolatorFactory>> {
   // Create a concrete CSSValue from the defaultValue
   auto cssValue = createCSSValue<AllowedTypes...>(defaultValue);
-  return std::make_shared<ResolvableValueInterpolatorFactory<AllowedTypes...>>(std::move(cssValue), std::move(config));
+  return std::make_shared<ResolvableValueInterpolatorFactory<AllowedTypes...>>(
+      std::move(cssValue), std::move(config), cb);
 }
 
 /**

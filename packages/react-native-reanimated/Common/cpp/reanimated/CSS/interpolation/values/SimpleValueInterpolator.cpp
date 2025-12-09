@@ -23,7 +23,9 @@ template <typename... AllowedTypes>
 SimpleValueInterpolator<AllowedTypes...>::SimpleValueInterpolator(
     const PropertyPath &propertyPath,
     const ValueType &defaultStyleValue,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+    std::function<void(std::shared_ptr<AnimatedPropsBuilder>, const CSSValueVariant<AllowedTypes...> &)>
+        addToPropsBuilder)
     : ValueInterpolator(propertyPath, std::make_shared<ValueType>(defaultStyleValue), viewStylesRepository) {}
 
 template <typename... AllowedTypes>
@@ -46,7 +48,9 @@ folly::dynamic SimpleValueInterpolator<AllowedTypes...>::interpolateValue(
     const ValueInterpolationContext &context) const {
   const auto &from = std::static_pointer_cast<ValueType>(fromValue);
   const auto &to = std::static_pointer_cast<ValueType>(toValue);
-  return from->interpolate(progress, *to, context).toDynamic();
+  const auto interpolatedValue = from->interpolate(progress, *to, context);
+
+  return interpolatedValue.toDynamic();
 }
 
 template class SimpleValueInterpolator<CSSLength>;

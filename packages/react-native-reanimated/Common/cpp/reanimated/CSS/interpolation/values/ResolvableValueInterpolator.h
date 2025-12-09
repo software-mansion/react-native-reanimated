@@ -27,7 +27,9 @@ class ResolvableValueInterpolator final : public SimpleValueInterpolator<Allowed
       const PropertyPath &propertyPath,
       const ValueType &defaultStyleValue,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const ResolvableValueInterpolatorConfig &config);
+      const ResolvableValueInterpolatorConfig &config,
+      std::function<void(std::shared_ptr<AnimatedPropsBuilder>, const CSSValueVariant<AllowedTypes...> &)>
+          addToPropsBuilder);
 
  protected:
   folly::dynamic interpolateValue(

@@ -23,7 +23,8 @@ class SimpleValueInterpolator : public ValueInterpolator {
   explicit SimpleValueInterpolator(
       const PropertyPath &propertyPath,
       const ValueType &defaultStyleValue,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+      std::function<void(std::shared_ptr<AnimatedPropsBuilder>, const CSSValueVariant<AllowedTypes...> &)>);
 
  protected:
   std::shared_ptr<CSSValue> createValue(jsi::Runtime &rt, const jsi::Value &value) const override;

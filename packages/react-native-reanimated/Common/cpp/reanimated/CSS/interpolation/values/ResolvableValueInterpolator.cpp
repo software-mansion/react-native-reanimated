@@ -17,8 +17,14 @@ ResolvableValueInterpolator<AllowedTypes...>::ResolvableValueInterpolator(
     const PropertyPath &propertyPath,
     const ValueType &defaultStyleValue,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const ResolvableValueInterpolatorConfig &config)
-    : SimpleValueInterpolator<AllowedTypes...>(propertyPath, defaultStyleValue, viewStylesRepository),
+    const ResolvableValueInterpolatorConfig &config,
+    std::function<void(std::shared_ptr<AnimatedPropsBuilder>, const CSSValueVariant<AllowedTypes...> &)>
+        addToPropsBuilder)
+    : SimpleValueInterpolator<AllowedTypes...>(
+          propertyPath,
+          defaultStyleValue,
+          viewStylesRepository,
+          addToPropsBuilder),
       config_(config) {}
 
 template <typename... AllowedTypes>
@@ -29,16 +35,15 @@ folly::dynamic ResolvableValueInterpolator<AllowedTypes...>::interpolateValue(
     const ValueInterpolationContext &context) const {
   const auto &from = std::static_pointer_cast<ValueType>(fromValue);
   const auto &to = std::static_pointer_cast<ValueType>(toValue);
-  return from
-      ->interpolate(
-          progress,
-          *to,
-          {.node = context.node,
-           .fallbackInterpolateThreshold = context.fallbackInterpolateThreshold,
-           .viewStylesRepository = this->viewStylesRepository_,
-           .relativeProperty = config_.relativeProperty,
-           .relativeTo = config_.relativeTo})
-      .toDynamic();
+  const auto interpolatedValue = from->interpolate(
+      progress,
+      *to,
+      {.node = context.node,
+       .fallbackInterpolateThreshold = context.fallbackInterpolateThreshold,
+       .viewStylesRepository = this->viewStylesRepository_,
+       .relativeProperty = config_.relativeProperty,
+       .relativeTo = config_.relativeTo});
+  return interpolatedValue.toDynamic();
 }
 
 template class ResolvableValueInterpolator<CSSLength>;

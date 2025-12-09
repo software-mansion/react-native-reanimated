@@ -17,6 +17,7 @@
 #include <reanimated/CSS/svg/values/SVGLength.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
+#include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
 
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
@@ -44,6 +45,38 @@
 namespace reanimated::css {
 
 namespace {
+
+const auto kNoopAnimatedPropsBuilderCallback = [](const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &,
+                                                  const CSSValue &value) {
+};
+
+using CSSLengthKeywordCallback = std::function<
+    void(std::shared_ptr<facebook::react::AnimatedPropsBuilder>, const CSSValueVariant<CSSLength, CSSKeyword> &)>;
+
+using CSSLengthCallback =
+    std::function<void(std::shared_ptr<facebook::react::AnimatedPropsBuilder>, const CSSValueVariant<CSSLength> &)>;
+
+const auto concreteLengthKeywordAnimatedPropsBuilderCallback =
+    [](const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+       const CSSValueVariant<CSSLength, CSSKeyword> &value) {
+        const auto storage = value.getStorage();
+        
+        std::visit([&](const auto& active_value) {
+            using T = std::decay_t<decltype(active_value)>;
+            
+            if constexpr (std::is_same_v<T, CSSLength>) {
+                const CSSLength& length = active_value;
+                double value = length.value;
+                
+            } else if constexpr(std::is_same_v<T, CSSKeyword>) {
+                
+            }
+        }, storage);
+    };
+
+const auto concreteLengthAnimatedPropsBuilderCallback =
+    [](const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<CSSLength> &) {
+    };
 
 // Private implementation details
 const std::array<uint8_t, 4> BLACK = {0, 0, 0, 255};
@@ -73,49 +106,175 @@ const InterpolatorFactoriesRecord FLEX_INTERPOLATORS = {
     {"borderStartWidth", value<CSSDouble>(0)},
     {"borderTopWidth", value<CSSDouble>(0)},
     {"borderWidth", value<CSSDouble>(0)},
-    {"bottom", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"})},
+    {"bottom",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "height"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
     {"boxSizing", value<CSSKeyword>("border-box")},
     {"display", value<CSSDisplay>("flex")},
-    {"end", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
+    {"end",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
     {"flex", value<CSSDouble>(0)},
-    {"flexBasis", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
+    {"flexBasis",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
     {"flexDirection", value<CSSKeyword>("column")},
-    {"rowGap", value<CSSLength>(0, {RelativeTo::Self, "height"})},
-    {"columnGap", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+    {"rowGap",
+     value<CSSLength>(0, {RelativeTo::Self, "height"}, CSSLengthCallback(concreteLengthAnimatedPropsBuilderCallback))},
+    {"columnGap",
+     value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSLengthCallback(concreteLengthAnimatedPropsBuilderCallback))},
     {"flexGrow", value<CSSDouble>(0)},
     {"flexShrink", value<CSSDouble>(0)},
     {"flexWrap", value<CSSKeyword>("no-wrap")},
-    {"height", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"})},
+    {"height",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "height"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
     {"justifyContent", value<CSSKeyword>("flex-start")},
-    {"left", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
-    {"margin", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"marginBottom", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"marginEnd", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"marginHorizontal", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"marginLeft", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"marginRight", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"marginStart", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"marginTop", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"marginVertical", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"maxHeight", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"})},
-    {"maxWidth", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
-    {"minHeight", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"})},
-    {"minWidth", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
+    {"left",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"margin",
+     value<CSSLength, CSSKeyword>(
+         0,
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"marginBottom",
+     value<CSSLength, CSSKeyword>(
+         0,
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"marginEnd",
+     value<CSSLength, CSSKeyword>(
+         0,
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"marginHorizontal",
+     value<CSSLength, CSSKeyword>(
+         0,
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"marginLeft",
+     value<CSSLength, CSSKeyword>(
+         0,
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"marginRight",
+     value<CSSLength, CSSKeyword>(
+         0,
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"marginStart",
+     value<CSSLength, CSSKeyword>(
+         0,
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"marginTop",
+     value<CSSLength, CSSKeyword>(
+         0,
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"marginVertical",
+     value<CSSLength, CSSKeyword>(
+         0,
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"maxHeight",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "height"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"maxWidth",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"minHeight",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "height"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"minWidth",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
     {"overflow", value<CSSKeyword>("visible")},
-    {"padding", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"paddingBottom", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"paddingEnd", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"paddingHorizontal", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"paddingLeft", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"paddingRight", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"paddingStart", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"paddingTop", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-    {"paddingVertical", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+    {"padding",
+     value<CSSLength, CSSKeyword>(
+         0,
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"paddingBottom",
+     value<CSSLength, CSSKeyword>(
+         0,
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"paddingEnd",
+     value<CSSLength, CSSKeyword>(
+         0,
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"paddingHorizontal",
+     value<CSSLength, CSSKeyword>(
+         0,
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"paddingLeft",
+     value<CSSLength, CSSKeyword>(
+         0,
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"paddingRight",
+     value<CSSLength, CSSKeyword>(
+         0,
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"paddingStart",
+     value<CSSLength, CSSKeyword>(
+         0,
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"paddingTop",
+     value<CSSLength, CSSKeyword>(
+         0,
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"paddingVertical",
+     value<CSSLength, CSSKeyword>(
+         0,
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
     {"position", value<CSSKeyword>("relative")},
-    {"right", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
-    {"start", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
-    {"top", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"})},
-    {"width", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
+    {"right",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"start",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"top",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "height"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
+    {"width",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(concreteLengthKeywordAnimatedPropsBuilderCallback))},
     {"zIndex", value<CSSInteger>(0)},
     {"direction", value<CSSKeyword>("inherit")}};
 
@@ -128,8 +287,14 @@ const InterpolatorFactoriesRecord SHADOW_INTERPOLATORS_IOS = {
 const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
     {"transformOrigin",
      array(
-         {value<CSSLength>("50%", {RelativeTo::Self, "width"}),
-          value<CSSLength>("50%", {RelativeTo::Self, "height"}),
+         {value<CSSLength>(
+              "50%",
+              {RelativeTo::Self, "width"},
+              CSSLengthCallback(concreteLengthAnimatedPropsBuilderCallback)),
+          value<CSSLength>(
+              "50%",
+              {RelativeTo::Self, "height"},
+              CSSLengthCallback(concreteLengthAnimatedPropsBuilderCallback)),
           value<CSSDouble>(0)})},
     {"transform",
      transforms(
@@ -174,27 +339,79 @@ const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
          {"borderBlockEndColor", value<CSSColor>(BLACK)},
          {"borderBlockStartColor", value<CSSColor>(BLACK)},
          {"borderBottomColor", value<CSSColor>(BLACK)},
-         {"borderBottomEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderBottomLeftRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderBottomRightRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderBottomStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+         {"borderBottomEndRadius",
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSLengthCallback(concreteLengthAnimatedPropsBuilderCallback))},
+         {"borderBottomLeftRadius",
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSLengthCallback(concreteLengthAnimatedPropsBuilderCallback))},
+         {"borderBottomRightRadius",
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSLengthCallback(concreteLengthAnimatedPropsBuilderCallback))},
+         {"borderBottomStartRadius",
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSLengthCallback(concreteLengthAnimatedPropsBuilderCallback))},
          {"borderColor", value<CSSColor>(BLACK)},
          {"borderCurve", value<CSSKeyword>("circular")},
          {"borderEndColor", value<CSSColor>(BLACK)},
-         {"borderEndEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderEndStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+         {"borderEndEndRadius",
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSLengthCallback(concreteLengthAnimatedPropsBuilderCallback))},
+         {"borderEndStartRadius",
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSLengthCallback(concreteLengthAnimatedPropsBuilderCallback))},
          {"borderLeftColor", value<CSSColor>(BLACK)},
-         {"borderRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+         {"borderRadius",
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSLengthCallback(concreteLengthAnimatedPropsBuilderCallback))},
          {"borderRightColor", value<CSSColor>(BLACK)},
          {"borderStartColor", value<CSSColor>(BLACK)},
-         {"borderStartEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderStartStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+         {"borderStartEndRadius",
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSLengthCallback(concreteLengthAnimatedPropsBuilderCallback))},
+         {"borderStartStartRadius",
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSLengthCallback(concreteLengthAnimatedPropsBuilderCallback))},
          {"borderStyle", value<CSSKeyword>("solid")},
          {"borderTopColor", value<CSSColor>(BLACK)},
-         {"borderTopEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderTopLeftRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderTopRightRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderTopStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+         {"borderTopEndRadius",
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSLengthCallback(concreteLengthAnimatedPropsBuilderCallback))},
+         {"borderTopLeftRadius",
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSLengthCallback(concreteLengthAnimatedPropsBuilderCallback))},
+         {"borderTopRightRadius",
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSLengthCallback(concreteLengthAnimatedPropsBuilderCallback))},
+         {"borderTopStartRadius",
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSLengthCallback(concreteLengthAnimatedPropsBuilderCallback))},
          {"outlineColor", value<CSSColor>(BLACK)},
          {"outlineOffset", value<CSSDouble>(0)},
          {"outlineStyle", value<CSSKeyword>("solid")},
