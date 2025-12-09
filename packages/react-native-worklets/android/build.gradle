@@ -149,7 +149,7 @@ apply from: "./fix-prefab.gradle"
 
 
 android {
-    compileSdkVersion safeExtGet("compileSdkVersion", 34)
+    compileSdkVersion safeExtGet("compileSdkVersion", 36)
 
     namespace "com.swmansion.worklets"
 
