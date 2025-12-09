@@ -83,9 +83,7 @@ export interface WorkletsModuleProxy {
 
   scheduleOnUI<TValue>(serializable: SerializableRef<TValue>): void;
 
-  executeOnUIRuntimeSync<TValue, TReturn>(
-    serializable: SerializableRef<TValue>
-  ): TReturn;
+  runOnUISync<TValue, TReturn>(serializable: SerializableRef<TValue>): TReturn;
 
   createWorkletRuntime(
     name: string,
@@ -99,6 +97,11 @@ export interface WorkletsModuleProxy {
     workletRuntime: WorkletRuntime,
     worklet: SerializableRef<TValue>
   ): void;
+
+  runOnRuntimeSync<TValue, TReturn>(
+    workletRuntime: WorkletRuntime,
+    worklet: SerializableRef<TValue>
+  ): TReturn;
 
   reportFatalErrorOnJS(
     message: string,
