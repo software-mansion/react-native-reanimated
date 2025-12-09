@@ -10,7 +10,10 @@
     "format": "prettier --write --list-different .",
     "build": "",
     "lint": "eslint . --max-warnings 0",
-    "type:check": "tsc --noEmit"
+    "type:check": "tsc --noEmit",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "common-app": "workspace:*",
@@ -23,6 +26,7 @@
   },
   "devDependencies": {
     "@expo/metro-runtime": "6.1.2",
+    "@playwright/test": "1.57.0",
     "@types/react": "19.2.2",
     "eslint": "9.37.0",
     "prettier": "3.6.2",
