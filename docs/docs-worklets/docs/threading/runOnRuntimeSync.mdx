@@ -2,10 +2,10 @@
 sidebar_position: 11
 ---
 
-# runOnRuntimeSync
+# runOnRuntimeSync <AvailableFrom version="0.8.0"/>
 
-`runOnRuntimeSync` lets you run a [workletized](/docs/fundamentals/glossary#to-workletize) function synchronously on a [Worker Runtime](/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime).
-It might preempt the Runtime where it's called from the thread (it's blocking).
+`runOnRuntimeSync` lets you run a [workletized](/docs/fundamentals/glossary#to-workletize) function synchronously on a [Worker Runtime](/docs/fundamentals/runtime-kinds#worker-runtime). It's blocking - meaning that it can preempt the runtime from a thread that's currently executing it.
+
 ## Reference
 
 ```javascript
@@ -15,12 +15,11 @@ const workletRuntime = createWorkletRuntime({ name: 'background' });
 
 const result = runOnRuntimeSync(workletRuntime, () => {
   'worklet';
-  return 2+2;
+  return 2 + 2;
 }); // This will block the RN Runtime until the worklet is finished
 
 console.log(result); // 4
 ```
-
 
 <details>
 <summary>Type definitions</summary>
@@ -30,7 +29,7 @@ function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
   workletRuntime: WorkletRuntime,
   worklet: (...args: Args) => ReturnValue,
   ...args: Args
-): ReturnValue
+): ReturnValue;
 ```
 
 </details>
@@ -59,8 +58,8 @@ import { createWorkletRuntime, runOnRuntimeSync } from 'react-native-worklets';
 const workletRuntime = createWorkletRuntime({ name: 'background' });
 
 runOnUI(() => {
-  runOnRuntimeSync(workletRuntime, (greeting: string) => { 
-    console.log(`${greeting} from the background Worklet Runtime`); 
+  runOnRuntimeSync(workletRuntime, (greeting: string) => {
+    console.log(`${greeting} from the background Worklet Runtime`);
   }, 'Hello'); // This will throw an error outside of Bundle Mode 🚨
 });
 ```

@@ -54,10 +54,8 @@ inline void scheduleOnUI(
   });
 }
 
-inline jsi::Value executeOnUIRuntimeSync(
-    const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
-    jsi::Runtime &rt,
-    const jsi::Value &worklet) {
+inline jsi::Value
+runOnUISync(const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime, jsi::Runtime &rt, const jsi::Value &worklet) {
   if (auto uiWorkletRuntime = weakUIWorkletRuntime.lock()) {
     auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
         rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
@@ -67,10 +65,12 @@ inline jsi::Value executeOnUIRuntimeSync(
   return jsi::Value::undefined();
 }
 
-inline jsi::Value
+jsi::Value
 runOnRuntimeSync(jsi::Runtime &rt, const jsi::Value &workletRuntimeValue, const jsi::Value &serializableWorkletValue) {
   auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
-  return workletRuntime->executeSync(rt, serializableWorkletValue);
+  auto worklet = extractSerializableOrThrow<SerializableWorklet>(
+      rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
+  return workletRuntime->runSyncSerialized(worklet)->toJSValue(rt);
 }
 
 inline jsi::Value createWorkletRuntime(
@@ -209,7 +209,7 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "registerCustomSerializable"));
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnUI"));
-  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "executeOnUIRuntimeSync"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnUISync"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnRuntimeSync"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createWorkletRuntime"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnRuntime"));
@@ -392,14 +392,14 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         });
   }
 
-  if (name == "executeOnUIRuntimeSync") {
+  if (name == "runOnUISync") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
         1,
         [uiWorkletRuntime = uiWorkletRuntime_](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return executeOnUIRuntimeSync(uiWorkletRuntime, rt, args[0]);
+          return runOnUISync(uiWorkletRuntime, rt, args[0]);
         });
   }
 

@@ -161,17 +161,6 @@ void WorkletRuntime::schedule(jsi::Function &&function) const {
   });
 }
 
-jsi::Value WorkletRuntime::executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const {
-  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
-      rt, worklet, "[Worklets] Only worklets can be executed synchronously on Worklet (" + name_ + ") Runtime.");
-  auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
-  jsi::Runtime &workletRuntime = getJSIRuntime();
-  auto result = runGuarded(serializableWorklet);
-  auto serializableResult = extractSerializableOrThrow(workletRuntime, result);
-  lock.unlock();
-  return serializableResult->toJSValue(rt);
-}
-
 void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet) const {
   react_native_assert(
       queue_ &&

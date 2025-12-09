@@ -83,9 +83,7 @@ export interface WorkletsModuleProxy {
 
   scheduleOnUI<TValue>(serializable: SerializableRef<TValue>): void;
 
-  executeOnUIRuntimeSync<TValue, TReturn>(
-    serializable: SerializableRef<TValue>
-  ): TReturn;
+  runOnUISync<TValue, TReturn>(serializable: SerializableRef<TValue>): TReturn;
 
   createWorkletRuntime(
     name: string,

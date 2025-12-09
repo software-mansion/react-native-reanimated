@@ -198,7 +198,7 @@ type WorkletRuntimeConfigInternal = WorkletRuntimeConfig & {
 };
 
 /**
- * Lets you run a function synchronously on the [Worker
+ * Lets you run a function synchronously on a [Worker
  * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-worklet-runtime---worker-runtime).
  *
  * - This function cannot be called from the [UI
