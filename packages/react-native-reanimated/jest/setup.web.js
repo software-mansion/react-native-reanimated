@@ -1,4 +1,4 @@
-const { Platform } = require('react-native');
+const { mockPlatform } = require('./utils');
 
 /* global window */
 if (window && typeof window.matchMedia !== 'function') {
@@ -14,17 +14,4 @@ if (window && typeof window.matchMedia !== 'function') {
   });
 }
 
-Platform.OS = 'web';
-
-const originalSelect = Platform.select.bind(Platform);
-
-Platform.select = (spec) => {
-  if (spec && typeof spec === 'object') {
-    /** @type {Record<string, unknown>} */
-    const typedSpec = spec;
-    return typedSpec.web ?? typedSpec.default ?? originalSelect(typedSpec);
-  }
-
-  return spec;
-};
-
+mockPlatform('web', ['web']);
