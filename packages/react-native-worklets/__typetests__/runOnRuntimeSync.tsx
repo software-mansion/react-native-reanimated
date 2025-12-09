@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { createWorkletRuntime, runOnRuntimeSync, runOnUISync } from '..';
+import { createWorkletRuntime, runOnRuntimeSync } from '..';
 
 function runOnRuntimeSyncTypeTests() {
   const workletRuntime = createWorkletRuntime({ name: 'test' });
