@@ -16,7 +16,7 @@ import type {
   SharedValue,
 } from './commonTypes';
 import type { CSSStyle } from './css';
-import type { AddArrayPropertyType } from './css/types';
+import type { NestedArray } from './createAnimatedComponent/commonTypes';
 import type { BaseAnimationBuilder } from './layoutReanimation/animationBuilder/BaseAnimationBuilder';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import type { SharedTransition } from './layoutReanimation/SharedTransition';
@@ -94,10 +94,6 @@ type SharedTransitionProps = {
   sharedTransitionStyle?: SharedTransition;
 };
 
-type AnimatedPropsProp<Props extends object> = RestProps<Props> &
-  AnimatedStyleProps<Props> &
-  LayoutProps;
-
 export type AnimatedProps<Props extends object> = RestProps<Props> &
   AnimatedStyleProps<Props> &
   LayoutProps & {
@@ -106,8 +102,9 @@ export type AnimatedProps<Props extends object> = RestProps<Props> &
      *
      * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
      */
-    animatedProps?: AddArrayPropertyType<
-      Partial<AnimatedPropsProp<Props>> | CSSStyle<Props>
+    animatedProps?: NestedArray<
+      Partial<RestProps<Props> & AnimatedStyleProps<Props> & LayoutProps> |
+        CSSStyle<Props>
     >;
   } & SharedTransitionProps;
 

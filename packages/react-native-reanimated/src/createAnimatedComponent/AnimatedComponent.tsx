@@ -227,8 +227,8 @@ export default class AnimatedComponent
       for (const style of this._animatedStyles) {
         style.viewDescriptors.remove(viewTag);
       }
-      if (this.props.animatedProps?.viewDescriptors) {
-        this.props.animatedProps.viewDescriptors.remove(viewTag);
+      for (const animatedProp of this._animatedProps) {
+        animatedProp?.viewDescriptors?.remove(viewTag);
       }
     }
   }

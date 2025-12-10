@@ -177,4 +177,18 @@ function UseAnimatedPropsTest() {
     };
     return <Animated.View animatedProps={[animatedProps, cssProps]} />;
   }
+
+  function UseAnimatedPropsNestedArrays() {
+    const animatedProps = useAnimatedProps(() => ({
+      pointerEvents: 'none' as const,
+    }));
+    const cssProps: CSSStyle = {
+      animationName: { to: { backgroundColor: 'green' } },
+    };
+    return (
+      <Animated.View
+        animatedProps={[[animatedProps], [[cssProps, [animatedProps]]]]}
+      />
+    );
+  }
 }
