@@ -1,32 +1,36 @@
 ---
+title: runOnRuntimeSync
 sidebar_position: 42 # Use alphabetical order
 ---
 
-# scheduleOnRuntime
+# runOnRuntimeSync <AvailableFrom version="0.8.0"/>
 
-`scheduleOnRuntime` lets you schedule a [worklet](/docs/fundamentals/glossary#worklet) to be executed on a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
+`runOnRuntimeSync` lets you run a [workletized](/docs/fundamentals/glossary#to-workletize) function synchronously on a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime). It's blocking - meaning that it can preempt the runtime from a thread that's currently executing it.
 
 ## Reference
 
 ```javascript
-import { scheduleOnRuntime, createWorkletRuntime } from 'react-native-worklets';
+import { runOnRuntimeSync, createWorkletRuntime } from 'react-native-worklets';
 
 const workletRuntime = createWorkletRuntime({ name: 'background' });
 
-scheduleOnRuntime(workletRuntime, (greeting: string) => {
-  console.log(`${greeting} from the background Worklet Runtime`);
-}, 'Hello');
+const result = runOnRuntimeSync(workletRuntime, () => {
+  'worklet';
+  return 2 + 2;
+}); // This will block the RN Runtime until the worklet is finished
+
+console.log(result); // 4
 ```
 
 <details>
 <summary>Type definitions</summary>
 
 ```typescript
-function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
+function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
   workletRuntime: WorkletRuntime,
   worklet: (...args: Args) => ReturnValue,
   ...args: Args
-): void;
+): ReturnValue;
 ```
 
 </details>
@@ -35,7 +39,7 @@ function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
 
 ### workletRuntime
 
-The worklet runtime to schedule the worklet on.
+The worklet runtime to run the worklet on.
 
 ### worklet
 
@@ -47,19 +51,15 @@ Arguments to the function you want to execute on the [Worker Runtime](/docs/fund
 
 ## Remarks
 
-- The worklet is scheduled on the Worker Runtime's [Async
-  Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
-- The worklet cannot be scheduled on the Worker Runtime from [UI
-  Runtime](/docs/fundamentals/runtimeKinds#ui-runtime) or another [Worker
-  Runtime](/docs/fundamentals/runtimeKinds#worker-runtime), unless the [Bundle Mode](/docs/experimental/bundleMode) is enabled.
+- `runOnRuntimeSync` can only be called on the [RN Runtime](/docs/fundamentals/glossary#react-native-runtime) unless the [Bundle Mode](/docs/experimental/bundleMode) is enabled.
 
 ```javascript
-import { createWorkletRuntime, scheduleOnRuntime } from 'react-native-worklets';
+import { createWorkletRuntime, runOnRuntimeSync } from 'react-native-worklets';
 
 const workletRuntime = createWorkletRuntime({ name: 'background' });
 
 runOnUI(() => {
-  scheduleOnRuntime(workletRuntime, (greeting: string) => {
+  runOnRuntimeSync(workletRuntime, (greeting: string) => {
     console.log(`${greeting} from the background Worklet Runtime`);
   }, 'Hello'); // This will throw an error outside of Bundle Mode 🚨
 });
@@ -71,8 +71,8 @@ import { createWorkletRuntime, scheduleOnRuntime } from 'react-native-worklets';
 const workletRuntime = createWorkletRuntime({ name: 'background' });
 const anotherWorkletRuntime = createWorkletRuntime({ name: 'anotherBackground' });
 
-scheduleOnRuntime(anotherWorkletRuntime, () => {
-  scheduleOnRuntime(workletRuntime, (greeting: string) => {
+runOnRuntimeSync(anotherWorkletRuntime, () => {
+  runOnRuntimeSync(workletRuntime, (greeting: string) => {
     console.log(`${greeting} from the background Worklet Runtime`);
   }, 'Hello'); // This will throw an error outside of Bundle Mode 🚨
 });

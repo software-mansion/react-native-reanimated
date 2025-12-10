@@ -36,7 +36,7 @@ import DragAndSnapExample from './DragAndSnapExample';
 import DynamicColorIOSExample from './DynamicColorIOSExample';
 import PlatformColorExample from './PlatformColorExample';
 import EmojiWaterfallExample from './EmojiWaterfallExample';
-import EmptyExample from './EmptyExample';
+import StrictModeComparison from './LayoutAnimations/StrictModeComparisonExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import FilterExample from './FilterExample';
 import FlatListWithLayoutAnimations from './FlatListWithLayoutAnimationsExample';
@@ -162,6 +162,7 @@ import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import InstanceDiscoveryExample from './InstanceDiscoveryExample';
 import ShadowNodesCloningExample from './ShadowNodesCloningExample';
+import EmptyExample from './EmptyExample';
 
 export const REAPlatform = {
   IOS: 'ios',
@@ -841,6 +842,10 @@ export const EXAMPLES: Record<string, Example> = {
   MountingUnmounting: {
     title: '[LA] Mounting Unmounting',
     screen: MountingUnmounting,
+  },
+  StrictModeComparison: {
+    title: '[LA] Strict Mode Comparison',
+    screen: StrictModeComparison,
   },
   ReactionsCounterExample: {
     title: '[LA] Reactions counter',
