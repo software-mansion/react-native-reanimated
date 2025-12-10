@@ -15,11 +15,11 @@ inputs:
     required: true
   app-name:
     description: Name of the test app
-    default: "app"
+    default: 'app'
     required: false
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Setup Yarn
       shell: bash
@@ -50,7 +50,7 @@ runs:
       if: ${{ inputs.platform == 'iOS' }}
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: "3.3" # Not needed with a `.ruby-version` or `.tool-versions`
+        ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
     - name: Install Pods (iOS)
       if: ${{ inputs.platform == 'iOS' }}

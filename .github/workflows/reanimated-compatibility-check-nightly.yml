@@ -5,7 +5,7 @@ on:
   pull_request:
     types: [opened, synchronize, labeled, unlabeled]
   schedule:
-    - cron: "37 19 * * *"
+    - cron: '37 19 * * *'
   workflow_call:
   workflow_dispatch:
 
@@ -30,8 +30,8 @@ jobs:
     needs: read-compatibility-json
     strategy:
       matrix:
-        platform: ["iOS", "Android"]
-        mode: ["Debug", "Release"]
+        platform: ['iOS', 'Android']
+        mode: ['Debug', 'Release']
         react-native-version: ${{ fromJson(needs.read-compatibility-json.outputs.react-native-versions) }}
       fail-fast: false
     env:
@@ -46,8 +46,8 @@ jobs:
         if: ${{ matrix.platform == 'Android' }}
         uses: actions/setup-java@v3
         with:
-          distribution: "zulu"
-          java-version: "18"
+          distribution: 'zulu'
+          java-version: '18'
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
@@ -55,7 +55,7 @@ jobs:
       - uses: ruby/setup-ruby@v1
         if: ${{ matrix.platform == 'iOS' }}
         with:
-          ruby-version: "3.3" # Not needed with a `.ruby-version` or `.tool-versions`
+          ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
       - name: Check if react-native version exists
         id: check-react-native-version
