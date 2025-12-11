@@ -28,7 +28,6 @@ import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMerg
 import CopySerializablePerformanceTest from './CopySerializablePerformanceTest';
 import CounterExample from './CounterExample';
 import CubesExample from './CubesExample';
-import PagerExample from './CustomHandler/PagerExample';
 import DispatchCommandExample from './DispatchCommandExample';
 import DragAndSnapExample from './DragAndSnapExample';
 import DynamicColorIOSExample from './DynamicColorIOSExample';
@@ -756,10 +755,6 @@ export const EXAMPLES: Record<string, Example> = {
   WobbleExample: {
     title: 'Wobble example',
     screen: WobbleExample,
-  },
-  PagerExample: {
-    title: 'Pager example',
-    screen: PagerExample,
   },
   TransformOriginExample: {
     title: 'Transform origin example',
