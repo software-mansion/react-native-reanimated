@@ -1,5 +1,5 @@
 diff --git a/React/Base/RCTBridgeModule.h b/React/Base/RCTBridgeModule.h
-index 940e64f4dd068fc8105413f5f53bd2a77d990219..3a2e43be59a183f9bff9d364dcfeee87da743478 100644
+index 940e64f4dd0..3a2e43be59a 100644
 --- a/React/Base/RCTBridgeModule.h
 +++ b/React/Base/RCTBridgeModule.h
 @@ -22,6 +22,7 @@
@@ -28,7 +28,7 @@ index 940e64f4dd068fc8105413f5f53bd2a77d990219..3a2e43be59a183f9bff9d364dcfeee87
   * A reference to an RCTCallableJSModules. Useful for modules that need to
   * call into methods on JavaScript modules registered as callable with
 diff --git a/React/Base/RCTBridgeModuleDecorator.h b/React/Base/RCTBridgeModuleDecorator.h
-index e7860967d1a7f8b3899979e2fba59147a65803d8..4724ba8e40765a1b5bf9d27c74f312ba7cfe1eb1 100644
+index e7860967d1a..4724ba8e407 100644
 --- a/React/Base/RCTBridgeModuleDecorator.h
 +++ b/React/Base/RCTBridgeModuleDecorator.h
 @@ -23,11 +23,13 @@
@@ -46,7 +46,7 @@ index e7860967d1a7f8b3899979e2fba59147a65803d8..4724ba8e40765a1b5bf9d27c74f312ba
  
  - (void)attachInteropAPIsToModule:(id<RCTBridgeModule>)bridgeModule;
 diff --git a/React/Base/RCTBridgeModuleDecorator.m b/React/Base/RCTBridgeModuleDecorator.m
-index 7f8e15417bc218adaeb3b0790fda917288dfa3dd..397df7e41786cc8a936d0aeabccc7d4b15a3897b 100644
+index 7f8e15417bc..397df7e4178 100644
 --- a/React/Base/RCTBridgeModuleDecorator.m
 +++ b/React/Base/RCTBridgeModuleDecorator.m
 @@ -12,12 +12,14 @@ @implementation RCTBridgeModuleDecorator
@@ -84,7 +84,7 @@ index 7f8e15417bc218adaeb3b0790fda917288dfa3dd..397df7e41786cc8a936d0aeabccc7d4b
     * to call JS Module methods.
 diff --git a/React/Base/RCTBundleProvider.h b/React/Base/RCTBundleProvider.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..00711fdd549deb5757619b01fd070bc350132d74
+index 00000000000..00711fdd549
 --- /dev/null
 +++ b/React/Base/RCTBundleProvider.h
 @@ -0,0 +1,28 @@
@@ -118,7 +118,7 @@ index 0000000000000000000000000000000000000000..00711fdd549deb5757619b01fd070bc3
 +@end
 diff --git a/React/Base/RCTBundleProvider.mm b/React/Base/RCTBundleProvider.mm
 new file mode 100644
-index 0000000000000000000000000000000000000000..f7abbc9b6eadf4c6e66b771b8585513be6f58257
+index 00000000000..f7abbc9b6ea
 --- /dev/null
 +++ b/React/Base/RCTBundleProvider.mm
 @@ -0,0 +1,32 @@
@@ -155,7 +155,7 @@ index 0000000000000000000000000000000000000000..f7abbc9b6eadf4c6e66b771b8585513b
 +}
 +@end
 diff --git a/React/Base/RCTModuleData.h b/React/Base/RCTModuleData.h
-index 812991e4d26a03e40e72618e87da1712610987cd..e2008a5eff3b80cf455f176ff5723b46569963d4 100644
+index 812991e4d26..e2008a5eff3 100644
 --- a/React/Base/RCTModuleData.h
 +++ b/React/Base/RCTModuleData.h
 @@ -18,6 +18,7 @@
@@ -183,7 +183,7 @@ index 812991e4d26a03e40e72618e87da1712610987cd..e2008a5eff3b80cf455f176ff5723b46
      __deprecated_msg("This API will be removed along with the legacy architecture.");
  
 diff --git a/React/Base/RCTModuleData.mm b/React/Base/RCTModuleData.mm
-index 51d096e008f4739c8378659d1ffc74d72ba196ee..9f9b59fde3c9978353ed770ac5249841fae7ba3e 100644
+index 51d096e008f..9f9b59fde3c 100644
 --- a/React/Base/RCTModuleData.mm
 +++ b/React/Base/RCTModuleData.mm
 @@ -46,6 +46,7 @@ @implementation RCTModuleData {
@@ -219,7 +219,7 @@ index 51d096e008f4739c8378659d1ffc74d72ba196ee..9f9b59fde3c9978353ed770ac5249841
        [moduleDecorator attachInteropAPIsToModule:_instance];
  
 diff --git a/React/CxxBridge/RCTCxxBridge.mm b/React/CxxBridge/RCTCxxBridge.mm
-index 7a85fe7d5823e7a4dbc71aacd74e1834103a13c2..01925785aa57a09f4b059190b655eb2ad8db5e88 100644
+index 7a85fe7d582..01925785aa5 100644
 --- a/React/CxxBridge/RCTCxxBridge.mm
 +++ b/React/CxxBridge/RCTCxxBridge.mm
 @@ -245,6 +245,7 @@ @implementation RCTCxxBridge {
@@ -255,7 +255,7 @@ index 7a85fe7d5823e7a4dbc71aacd74e1834103a13c2..01925785aa57a09f4b059190b655eb2a
      BridgeNativeModulePerfLogger::moduleDataCreateEnd([moduleName UTF8String], moduleDataId);
  
 diff --git a/ReactAndroid/src/main/java/com/facebook/react/bridge/BridgeReactContext.java b/ReactAndroid/src/main/java/com/facebook/react/bridge/BridgeReactContext.java
-index 1ccb8abad435f9188de121e4e89226228610cecd..2e78c5400296b6df52506c1ddc525fb6e6f5f170 100644
+index 1ccb8abad43..2e78c540029 100644
 --- a/ReactAndroid/src/main/java/com/facebook/react/bridge/BridgeReactContext.java
 +++ b/ReactAndroid/src/main/java/com/facebook/react/bridge/BridgeReactContext.java
 @@ -25,6 +25,7 @@ import com.facebook.react.common.annotations.VisibleForTesting;
@@ -284,7 +284,7 @@ index 1ccb8abad435f9188de121e4e89226228610cecd..2e78c5400296b6df52506c1ddc525fb6
     * Get the sourceURL for the JS bundle from the CatalystInstance. This method is needed for
     * compatibility with bridgeless mode, which has no CatalystInstance.
 diff --git a/ReactAndroid/src/main/java/com/facebook/react/bridge/CatalystInstance.kt b/ReactAndroid/src/main/java/com/facebook/react/bridge/CatalystInstance.kt
-index 81ee574dd1d604bd338970bd41ed02ba91d68d01..024a18df9b9fd587dc65aa2f3ef71281cc81ee53 100644
+index 81ee574dd1d..024a18df9b9 100644
 --- a/ReactAndroid/src/main/java/com/facebook/react/bridge/CatalystInstance.kt
 +++ b/ReactAndroid/src/main/java/com/facebook/react/bridge/CatalystInstance.kt
 @@ -12,6 +12,7 @@ package com.facebook.react.bridge
@@ -308,7 +308,7 @@ index 81ee574dd1d604bd338970bd41ed02ba91d68d01..024a18df9b9fd587dc65aa2f3ef71281
    // which this prevents.
    @DoNotStrip public override fun invokeCallback(callbackID: Int, arguments: NativeArrayInterface)
 diff --git a/ReactAndroid/src/main/java/com/facebook/react/bridge/CatalystInstanceImpl.java b/ReactAndroid/src/main/java/com/facebook/react/bridge/CatalystInstanceImpl.java
-index 6a15edf67709834c847fb6b90792b66af1e05b72..a488b2164c1e1aeb26e427753ceab3726a420eba 100644
+index 6a15edf6770..a488b2164c1 100644
 --- a/ReactAndroid/src/main/java/com/facebook/react/bridge/CatalystInstanceImpl.java
 +++ b/ReactAndroid/src/main/java/com/facebook/react/bridge/CatalystInstanceImpl.java
 @@ -29,6 +29,7 @@ import com.facebook.react.common.annotations.VisibleForTesting;
@@ -340,7 +340,7 @@ index 6a15edf67709834c847fb6b90792b66af1e05b72..a488b2164c1e1aeb26e427753ceab372
    public @Nullable String getSourceURL() {
      return mSourceURL;
 diff --git a/ReactAndroid/src/main/java/com/facebook/react/bridge/ReactContext.java b/ReactAndroid/src/main/java/com/facebook/react/bridge/ReactContext.java
-index 7a0655081a86cb41b76153ac21d6de70d4f186c2..c49dffd0dcaceec7b2cd02a30041f47849523015 100644
+index 7a0655081a8..c49dffd0dca 100644
 --- a/ReactAndroid/src/main/java/com/facebook/react/bridge/ReactContext.java
 +++ b/ReactAndroid/src/main/java/com/facebook/react/bridge/ReactContext.java
 @@ -26,6 +26,7 @@ import com.facebook.react.bridge.queue.MessageQueueThread;
@@ -367,7 +367,7 @@ index 7a0655081a86cb41b76153ac21d6de70d4f186c2..c49dffd0dcaceec7b2cd02a30041f478
     * compatibility with bridgeless mode, which has no CatalystInstance.
 diff --git a/ReactAndroid/src/main/java/com/facebook/react/fabric/BundleWrapper.kt b/ReactAndroid/src/main/java/com/facebook/react/fabric/BundleWrapper.kt
 new file mode 100644
-index 0000000000000000000000000000000000000000..1a686f66bc19b62c10cb17d1bb59c39f64d1cbed
+index 00000000000..1a686f66bc1
 --- /dev/null
 +++ b/ReactAndroid/src/main/java/com/facebook/react/fabric/BundleWrapper.kt
 @@ -0,0 +1,38 @@
@@ -410,7 +410,7 @@ index 0000000000000000000000000000000000000000..1a686f66bc19b62c10cb17d1bb59c39f
 +  ): HybridData
 +}
 diff --git a/ReactAndroid/src/main/java/com/facebook/react/runtime/BridgelessCatalystInstance.kt b/ReactAndroid/src/main/java/com/facebook/react/runtime/BridgelessCatalystInstance.kt
-index d70ec496050aaa33ab1c62094b68e4f1cb91f37e..8329317e6f5406418059d1e7c9501a2a2dfdf75b 100644
+index d70ec496050..8329317e6f5 100644
 --- a/ReactAndroid/src/main/java/com/facebook/react/runtime/BridgelessCatalystInstance.kt
 +++ b/ReactAndroid/src/main/java/com/facebook/react/runtime/BridgelessCatalystInstance.kt
 @@ -29,6 +29,7 @@ import com.facebook.react.common.annotations.VisibleForTesting
@@ -432,7 +432,7 @@ index d70ec496050aaa33ab1c62094b68e4f1cb91f37e..8329317e6f5406418059d1e7c9501a2a
      get() = throw UnsupportedOperationException("Unimplemented method 'getSourceURL'")
  
 diff --git a/ReactAndroid/src/main/java/com/facebook/react/runtime/BridgelessReactContext.kt b/ReactAndroid/src/main/java/com/facebook/react/runtime/BridgelessReactContext.kt
-index 30a79dc06b952e3edee7c3d28bcd79f54e1aca68..f956a673250de21694dd4dd400182ac419f472d2 100644
+index 30a79dc06b9..f956a673250 100644
 --- a/ReactAndroid/src/main/java/com/facebook/react/runtime/BridgelessReactContext.kt
 +++ b/ReactAndroid/src/main/java/com/facebook/react/runtime/BridgelessReactContext.kt
 @@ -26,6 +26,7 @@ import com.facebook.react.common.annotations.FrameworkAPI
@@ -465,7 +465,7 @@ index 30a79dc06b952e3edee7c3d28bcd79f54e1aca68..f956a673250de21694dd4dd400182ac4
  
    fun setSourceURL(sourceURL: String?) {
 diff --git a/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt b/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
-index 4999f86705042623d85fd8401c4b6ef57a5b0689..bf674b6417f306a3dfe12edee820d314472f0494 100644
+index 4999f867050..bf674b6417f 100644
 --- a/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
 +++ b/ReactAndroid/src/main/java/com/facebook/react/runtime/ReactInstance.kt
 @@ -43,6 +43,7 @@ import com.facebook.react.common.annotations.UnstableReactNativeAPI
@@ -533,7 +533,7 @@ index 4999f86705042623d85fd8401c4b6ef57a5b0689..bf674b6417f306a3dfe12edee820d314
    private external fun loadJSBundleFromAssets(assetManager: AssetManager, assetURL: String)
  
 diff --git a/ReactAndroid/src/main/java/com/facebook/react/uimanager/ThemedReactContext.kt b/ReactAndroid/src/main/java/com/facebook/react/uimanager/ThemedReactContext.kt
-index d91b7f1b1895173cf544260c6ca8e5c5f49c4bd3..1257b3483660201f8ce4dd4abd19fe7588d4d177 100644
+index d91b7f1b189..1257b348366 100644
 --- a/ReactAndroid/src/main/java/com/facebook/react/uimanager/ThemedReactContext.kt
 +++ b/ReactAndroid/src/main/java/com/facebook/react/uimanager/ThemedReactContext.kt
 @@ -21,6 +21,7 @@ import com.facebook.react.bridge.ReactApplicationContext
@@ -555,7 +555,7 @@ index d91b7f1b1895173cf544260c6ca8e5c5f49c4bd3..1257b3483660201f8ce4dd4abd19fe75
    override fun registerSegment(segmentId: Int, path: String?, callback: Callback?) {
 diff --git a/ReactAndroid/src/main/jni/react/fabric/BundleWrapper.cpp b/ReactAndroid/src/main/jni/react/fabric/BundleWrapper.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..3a606b1f3c64403af54a0073fbf795f816c5b428
+index 00000000000..3a606b1f3c6
 --- /dev/null
 +++ b/ReactAndroid/src/main/jni/react/fabric/BundleWrapper.cpp
 @@ -0,0 +1,48 @@
@@ -609,7 +609,7 @@ index 0000000000000000000000000000000000000000..3a606b1f3c64403af54a0073fbf795f8
 +} // namespace facebook::react
 diff --git a/ReactAndroid/src/main/jni/react/fabric/BundleWrapper.h b/ReactAndroid/src/main/jni/react/fabric/BundleWrapper.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..e9a90aa4bbf9f3e6fdfbeb0e8be1faf249f6eddf
+index 00000000000..e9a90aa4bbf
 --- /dev/null
 +++ b/ReactAndroid/src/main/jni/react/fabric/BundleWrapper.h
 @@ -0,0 +1,45 @@
@@ -659,7 +659,7 @@ index 0000000000000000000000000000000000000000..e9a90aa4bbf9f3e6fdfbeb0e8be1faf2
 +
 +} // namespace facebook::react
 diff --git a/ReactAndroid/src/main/jni/react/fabric/CMakeLists.txt b/ReactAndroid/src/main/jni/react/fabric/CMakeLists.txt
-index bdef71c0d4a689c6f5492319a6e444b9c08a0a55..09ecad6e7b7b51c116a98365c4c57adb2282c906 100644
+index bdef71c0d4a..09ecad6e7b7 100644
 --- a/ReactAndroid/src/main/jni/react/fabric/CMakeLists.txt
 +++ b/ReactAndroid/src/main/jni/react/fabric/CMakeLists.txt
 @@ -26,6 +26,7 @@ target_link_libraries(
@@ -671,7 +671,7 @@ index bdef71c0d4a689c6f5492319a6e444b9c08a0a55..09ecad6e7b7b51c116a98365c4c57adb
          react_codegen_rncore
          react_debug
 diff --git a/ReactAndroid/src/main/jni/react/fabric/OnLoad.cpp b/ReactAndroid/src/main/jni/react/fabric/OnLoad.cpp
-index 2d411d4dc7af987fc60a5f60f42494a53e73ede1..8fec1ae37be00c4f859f61b51ff2bacb589708a1 100644
+index 2d411d4dc7a..8fec1ae37be 100644
 --- a/ReactAndroid/src/main/jni/react/fabric/OnLoad.cpp
 +++ b/ReactAndroid/src/main/jni/react/fabric/OnLoad.cpp
 @@ -7,6 +7,7 @@
@@ -690,7 +690,7 @@ index 2d411d4dc7af987fc60a5f60f42494a53e73ede1..8fec1ae37be00c4f859f61b51ff2bacb
    });
  }
 diff --git a/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp b/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp
-index 5d123a5d1b800611539fac06db24ceef2df83bb8..c8b5ae499a5512bdd8c0987d52ebf36f0c8dff96 100644
+index 5d123a5d1b8..c8b5ae499a5 100644
 --- a/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp
 +++ b/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.cpp
 @@ -132,24 +132,11 @@ jni::local_ref<JReactInstance::jhybriddata> JReactInstance::initHybrid(
@@ -735,7 +735,7 @@ index 5d123a5d1b800611539fac06db24ceef2df83bb8..c8b5ae499a5512bdd8c0987d52ebf36f
            "getJSCallInvokerHolder", JReactInstance::getJSCallInvokerHolder),
        makeNativeMethod(
 diff --git a/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.h b/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.h
-index d58e52722b7130d94cd9914f6a35216b59f104b6..f558f59c4c8bd3e503e4df4343675918bd55039b 100644
+index d58e52722b7..f558f59c4c8 100644
 --- a/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.h
 +++ b/ReactAndroid/src/main/jni/react/runtime/jni/JReactInstance.h
 @@ -13,6 +13,7 @@
@@ -760,7 +760,7 @@ index d58e52722b7130d94cd9914f6a35216b59f104b6..f558f59c4c8bd3e503e4df4343675918
    void callFunctionOnModule(const std::string &moduleName, const std::string &methodName, NativeArray *args);
  
 diff --git a/ReactCommon/jsiexecutor/jsireact/JSIExecutor.h b/ReactCommon/jsiexecutor/jsireact/JSIExecutor.h
-index b8d8b2e11dea12a0e0ae2f60e9f55f08f5718c2b..36d46f65ccb108d8a4b8f795b85b3e17fa51f4c7 100644
+index b8d8b2e11de..36d46f65ccb 100644
 --- a/ReactCommon/jsiexecutor/jsireact/JSIExecutor.h
 +++ b/ReactCommon/jsiexecutor/jsireact/JSIExecutor.h
 @@ -51,7 +51,7 @@ using JSIScopedTimeoutInvoker =
@@ -781,8 +781,60 @@ index b8d8b2e11dea12a0e0ae2f60e9f55f08f5718c2b..36d46f65ccb108d8a4b8f795b85b3e17
  };
  
  class [[deprecated("This API will be removed along with the legacy architecture.")]] JSIExecutor : public JSExecutor {
+diff --git a/ReactCommon/react/nativemodule/core/ReactCommon/TurboModule.h b/ReactCommon/react/nativemodule/core/ReactCommon/TurboModule.h
+index 59e852c2e5f..5d26b78d27d 100644
+--- a/ReactCommon/react/nativemodule/core/ReactCommon/TurboModule.h
++++ b/ReactCommon/react/nativemodule/core/ReactCommon/TurboModule.h
+@@ -7,6 +7,7 @@
+ 
+ #pragma once
+ 
++#include <cstdint>
+ #include <memory>
+ #include <string>
+ #include <unordered_map>
+@@ -59,7 +60,7 @@ class JSI_EXPORT TurboModule : public jsi::HostObject {
+     // If we have a JS wrapper, cache the result of this lookup
+     // We don't cache misses, to allow for methodMap_ to dynamically be
+     // extended
+-    if (jsRepresentation_ && !prop.isUndefined()) {
++    if (jsRepresentation_ && reinterpret_cast<std::uintptr_t>(&runtime) == representationRuntimeAddress_ && !prop.isUndefined()) {
+       jsRepresentation_->lock(runtime).asObject(runtime).setProperty(runtime, propName, prop);
+     }
+     return prop;
+@@ -139,6 +140,9 @@ class JSI_EXPORT TurboModule : public jsi::HostObject {
+  private:
+   friend class TurboModuleBinding;
+   std::unique_ptr<jsi::WeakObject> jsRepresentation_;
++  /** This address is used only for identifying the runtime associated with the
++   * JS representation. Do not dereference or use for any other purpose. */
++  std::uintptr_t representationRuntimeAddress_;
+ };
+ 
+ /**
+diff --git a/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp b/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp
+index 195811f9876..dd92074afbc 100644
+--- a/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp
++++ b/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp
+@@ -10,6 +10,7 @@
+ #include <ReactCommon/TurboModuleWithJSIBindings.h>
+ #include <cxxreact/TraceSection.h>
+ #include <react/utils/jsi-utils.h>
++#include <cstdint>
+ #include <stdexcept>
+ #include <string>
+ 
+@@ -177,6 +178,8 @@ jsi::Value TurboModuleBinding::getModule(
+     jsi::Object jsRepresentation(runtime);
+     weakJsRepresentation =
+         std::make_unique<jsi::WeakObject>(runtime, jsRepresentation);
++    module->representationRuntimeAddress_ =
++        reinterpret_cast<std::uintptr_t>(&runtime);
+ 
+     // Lazily populate the jsRepresentation, on property access.
+     //
 diff --git a/ReactCommon/react/nativemodule/core/platform/ios/ReactCommon/RCTTurboModuleManager.mm b/ReactCommon/react/nativemodule/core/platform/ios/ReactCommon/RCTTurboModuleManager.mm
-index ac4c5c5c2a0f08e3bb1f128d8344b0c12b0b72d0..bd6bd6944786ee7fa4ebb571950a1f0dbe36a0c0 100644
+index ac4c5c5c2a0..bd6bd694478 100644
 --- a/ReactCommon/react/nativemodule/core/platform/ios/ReactCommon/RCTTurboModuleManager.mm
 +++ b/ReactCommon/react/nativemodule/core/platform/ios/ReactCommon/RCTTurboModuleManager.mm
 @@ -817,6 +817,7 @@ - (BOOL)_shouldCreateObjCModule:(Class)moduleClass
@@ -794,7 +846,7 @@ index ac4c5c5c2a0f08e3bb1f128d8344b0c12b0b72d0..bd6bd6944786ee7fa4ebb571950a1f0d
      [_bridge registerModuleForFrameUpdates:(id<RCTBridgeModule>)module withModuleData:data];
    }
 diff --git a/ReactCommon/react/runtime/ReactInstance.cpp b/ReactCommon/react/runtime/ReactInstance.cpp
-index c2ecf402d79c41bffd0689c1781a514f71ff4ef5..3f943ed6ee8ad2eb4f491ac6329e43c86418df32 100644
+index c2ecf402d79..3f943ed6ee8 100644
 --- a/ReactCommon/react/runtime/ReactInstance.cpp
 +++ b/ReactCommon/react/runtime/ReactInstance.cpp
 @@ -217,7 +217,7 @@ std::string simpleBasename(const std::string& path) {
@@ -807,7 +859,7 @@ index c2ecf402d79c41bffd0689c1781a514f71ff4ef5..3f943ed6ee8ad2eb4f491ac6329e43c8
      std::function<void(jsi::Runtime& runtime)>&& beforeLoad,
      std::function<void(jsi::Runtime& runtime)>&& afterLoad) {
 diff --git a/ReactCommon/react/runtime/ReactInstance.h b/ReactCommon/react/runtime/ReactInstance.h
-index a138c2e1fc5cb1818b7c797283c364e2acec3ff0..0e2e99dd9d31ddf8f2ad5cd87fadea1dfd3ee5c2 100644
+index a138c2e1fc5..0e2e99dd9d3 100644
 --- a/ReactCommon/react/runtime/ReactInstance.h
 +++ b/ReactCommon/react/runtime/ReactInstance.h
 @@ -46,10 +46,10 @@ class ReactInstance final : private jsinspector_modern::InstanceTargetDelegate {
@@ -826,7 +878,7 @@ index a138c2e1fc5cb1818b7c797283c364e2acec3ff0..0e2e99dd9d31ddf8f2ad5cd87fadea1d
    void registerSegment(uint32_t segmentId, const std::string &segmentPath);
  
 diff --git a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTHost.mm b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTHost.mm
-index 5c7bf6b986a7bddc1f7c0416aba8d9e5a03c0085..efbf398b5f179c3b1a226a742eb27f7df97090e5 100644
+index 5c7bf6b986a..efbf398b5f1 100644
 --- a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTHost.mm
 +++ b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTHost.mm
 @@ -10,6 +10,7 @@
@@ -870,7 +922,7 @@ index 5c7bf6b986a7bddc1f7c0416aba8d9e5a03c0085..efbf398b5f179c3b1a226a742eb27f7d
                                       moduleRegistry:_moduleRegistry
                                parentInspectorTarget:_inspectorTarget.get()
 diff --git a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.h b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.h
-index 72b7585184e697a58fbb14379df7cbbaf4b24d2d..ea3e131c32ddacc841921c3d8db9d92d786fe547 100644
+index 72b7585184e..ea3e131c32d 100644
 --- a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.h
 +++ b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.h
 @@ -26,6 +26,7 @@ RCT_EXTERN NSString *RCTInstanceRuntimeDiagnosticFlags(void);
@@ -898,7 +950,7 @@ index 72b7585184e697a58fbb14379df7cbbaf4b24d2d..ea3e131c32ddacc841921c3d8db9d92d
                    moduleRegistry:(RCTModuleRegistry *)moduleRegistry
             parentInspectorTarget:(facebook::react::jsinspector_modern::HostTarget *)parentInspectorTarget
 diff --git a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
-index d065b1b7943d0a53e3a94f5fb36e344f57a107f8..491e1a74f69f03f66be3ce56d791b03c95de98b5 100644
+index d065b1b7943..491e1a74f69 100644
 --- a/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
 +++ b/ReactCommon/react/runtime/platform/ios/ReactCommon/RCTInstance.mm
 @@ -72,6 +72,11 @@ void RCTInstanceSetRuntimeDiagnosticFlags(NSString *flags)
