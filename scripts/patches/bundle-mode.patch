@@ -77,7 +77,7 @@ index fcf4a483fe..2c82f6b46e 100644
  module.exports = wrapWithReanimatedMetroConfig(
    mergeConfig(defaultConfig, config)
 diff --git a/package.json b/package.json
-index 141335c036..97a0f183f9 100644
+index 141335c036..7de5af3e1a 100644
 --- a/package.json
 +++ b/package.json
 @@ -70,5 +70,10 @@
@@ -86,8 +86,8 @@ index 141335c036..97a0f183f9 100644
      "typescript": "5.8.3"
 +  },
 +  "resolutions": {
-+    "metro": "patch:metro@npm%3A0.83.1#~/.yarn/patches/metro-npm-0.83.1-241fe42591.patch",
-+    "metro-runtime": "patch:metro-runtime@npm%3A0.83.1#~/.yarn/patches/metro-runtime-npm-0.83.1-c3d616063e.patch",
++    "metro": "patch:metro@npm%3A0.83.2#~/.yarn/patches/metro-npm-0.83.2-d09f48ca84.patch",
++    "metro-runtime": "patch:metro-runtime@npm%3A0.83.2#~/.yarn/patches/metro-runtime-npm-0.83.2-c614bbd3b9.patch",
 +    "react-native": "patch:react-native@npm%3A0.83.0#~/.yarn/patches/react-native-npm-0.83.0.patch"
    }
  }
