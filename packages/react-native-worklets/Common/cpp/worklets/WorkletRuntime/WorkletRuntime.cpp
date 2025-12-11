@@ -116,7 +116,8 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
   }
 
   try {
-    rt.evaluateJavaScript(script, sourceUrl);
+    auto buffer = std::make_shared<const BigStringBuffer>(script);
+    rt.evaluateJavaScript(buffer, sourceUrl);
   } catch (facebook::jsi::JSError error) {
     const auto &message = error.getMessage();
     const auto &stack = error.getStack();
