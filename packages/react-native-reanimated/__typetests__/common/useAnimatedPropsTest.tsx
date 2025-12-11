@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
-import type { FlatListProps } from 'react-native';
+import type { FlatListProps, ViewProps } from 'react-native';
 import { FlatList } from 'react-native';
 
 import type { CSSStyle } from '../..';
@@ -62,10 +62,6 @@ function UseAnimatedPropsTest() {
     const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
     const optionalProps = useAnimatedProps<FlatListProps<unknown>>(() => ({
       style: {},
-    }));
-    const requiredProps = useAnimatedProps<FlatListProps<unknown>>(() => ({
-      data: ['1'],
-      renderItem: () => null,
     }));
 
     // Should pass because required props are set.
@@ -149,45 +145,61 @@ function UseAnimatedPropsTest() {
   }
 
   function UseAnimatedPropsTestMultiple1() {
-    const animatedProps1 = useAnimatedProps(() => ({
-      pointerEvents: 'none' as const,
-    }));
-    const animatedProps2 = useAnimatedProps(() => ({
-      pointerEvents: 'auto' as const,
-    }));
+    const animatedProps1 = useAnimatedProps(() => ({ pointerEvents: 'none' as const }));
+    const animatedProps2 = useAnimatedProps(() => ({ pointerEvents: 'auto' as const }));
     return <Animated.View animatedProps={[animatedProps1, animatedProps2]} />;
   }
 
   function UseAnimatedPropsMultiple2() {
-    const cssProps1: CSSStyle = {
-      animationName: { from: { backgroundColor: 'red' } },
+    const cssProps1: CSSStyle<ViewProps> = {
+      animationName: { from: { pointerEvents: 'auto' } },
     };
-    const cssProps2: CSSStyle = {
-      animationName: { to: { backgroundColor: 'blue' } },
+    const cssProps2: CSSStyle<ViewProps> = {
+      animationName: { to: { pointerEvents: 'none' } },
     };
     return <Animated.View animatedProps={[cssProps1, cssProps2]} />;
   }
 
   function UseAnimatedPropsMultiple3() {
-    const animatedProps = useAnimatedProps(() => ({
-      pointerEvents: 'none' as const,
-    }));
-    const cssProps: CSSStyle = {
-      animationName: { to: { backgroundColor: 'blue' } },
+    const animatedProps = useAnimatedProps(
+      () => ({ pointerEvents: 'none' as const })
+    );
+    const cssProps: CSSStyle<ViewProps> = {
+      animationName: { to: { pointerEvents: 'auto' } },
     };
     return <Animated.View animatedProps={[animatedProps, cssProps]} />;
   }
 
   function UseAnimatedPropsNestedArrays() {
-    const animatedProps = useAnimatedProps(() => ({
-      pointerEvents: 'none' as const,
+    const animatedProps = useAnimatedProps(
+      () => ({ pointerEvents: 'none' as const })
+    );
+    const cssProps: CSSStyle<ViewProps> = {
+      animationName: {
+        from: { pointerEvents: 'auto' },
+        to: { pointerEvents: 'none' },
+      },
+    };
+    const accessibilityProps = useAnimatedProps(() => ({
+      accessibilityLiveRegion: 'polite' as const,
     }));
-    const cssProps: CSSStyle = {
-      animationName: { to: { backgroundColor: 'green' } },
+    return (
+      <Animated.View
+        animatedProps={[[animatedProps, cssProps], [[accessibilityProps]]]}
+      />
+    );
+  }
+
+  function UseAnimatedPropsDeeplyNestedArrays() {
+    const cssFrom: CSSStyle<ViewProps> = {
+      animationName: { from: { pointerEvents: 'auto' } },
+    };
+    const cssTo: CSSStyle<ViewProps> = {
+      animationName: { to: { pointerEvents: 'none' } },
     };
     return (
       <Animated.View
-        animatedProps={[[animatedProps], [[cssProps, [animatedProps]]]]}
+        animatedProps={[[cssFrom], [[cssTo], [[[cssFrom, cssTo]]]]]}
       />
     );
   }

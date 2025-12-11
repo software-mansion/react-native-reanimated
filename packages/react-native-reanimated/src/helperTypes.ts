@@ -15,7 +15,6 @@ import type {
   LayoutAnimationFunction,
   SharedValue,
 } from './commonTypes';
-import type { CSSStyle } from './css';
 import type { NestedArray } from './createAnimatedComponent/commonTypes';
 import type { BaseAnimationBuilder } from './layoutReanimation/animationBuilder/BaseAnimationBuilder';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
@@ -47,8 +46,13 @@ type AnimatedStyleProps<Props extends object> = {
 };
 
 /** Component props that are not specially handled by us. */
+type ComponentPropsWithoutStyle<Props extends object> = Omit<
+  Props,
+  keyof PickStyleProps<Props> | 'style'
+>;
+
 type RestProps<Props extends object> = {
-  [K in keyof Omit<Props, keyof PickStyleProps<Props> | 'style'>]:
+  [K in keyof ComponentPropsWithoutStyle<Props>]:
     | Props[K]
     | SharedValue<Props[K]>;
 };
@@ -102,10 +106,7 @@ export type AnimatedProps<Props extends object> = RestProps<Props> &
      *
      * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
      */
-    animatedProps?: NestedArray<
-      Partial<RestProps<Props> & AnimatedStyleProps<Props> & LayoutProps> |
-        CSSStyle<Props>
-    >;
+    animatedProps?: NestedArray<Partial<ComponentPropsWithoutStyle<Props>>>;
   } & SharedTransitionProps;
 
 // THE LAND OF THE DEPRECATED
