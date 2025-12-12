@@ -6,14 +6,11 @@ import type { TextInputProps } from 'react-native';
 import Animated, {
   useAnimatedProps,
   useSharedValue,
-  withTiming,
 } from 'react-native-reanimated';
-import { Circle, Svg } from 'react-native-svg';
 import type { JestAnimatedStyleHandle } from '../src/hook/commonTypes';
 
 const animationDuration = 100;
 
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 interface BaseTextInputComponentProps {
@@ -43,134 +40,145 @@ describe('animatedProps', () => {
     jest.useRealTimers();
   });
 
-  describe('SVG component', () => {
-    function CircleTestComponent() {
-      const r = useSharedValue(20);
+  describe('Single animated props object', () => {
+    function TextInputTestComponent() {
+      const width = useSharedValue(20);
 
       const animatedProps = useAnimatedProps(() => ({
-        r: withTiming(r.value, { duration: animationDuration }),
+        text: `Box width: ${width.value}`,
+        defaultValue: `Box width: ${width.value}`,
       }));
 
       const handlePress = () => {
-        r.value += 10;
+        width.value += 10;
       };
 
       return (
-        <View>
-          <Svg>
-            {/* SVG components strip our jest props and cannot be tested */}
-            <AnimatedCircle
-              cx="50%"
-              cy="50%"
-              fill="#b58df1"
-              testID="circle"
-              animatedProps={animatedProps}
-            />
-          </Svg>
-          <Button testID="button" onPress={handlePress} title="Click me" />
-        </View>
+        <BaseTextInputComponent
+          animatedProps={animatedProps}
+          onPress={handlePress}
+        />
       );
     }
 
-    test('SVG component cannot be tested', () => {
-      const { getByTestId } = render(<CircleTestComponent />);
-      const circle = getByTestId('circle');
-
-      expect(circle).toHaveAnimatedProps({});
-
-      const rendered = render(<CircleTestComponent />).toJSON();
+    test('matches snapshot', () => {
+      const rendered = render(<TextInputTestComponent />).toJSON();
       expect(rendered).toMatchSnapshot();
+    });
+
+    test('updates text on button press', () => {
+      const { getByTestId } = render(<TextInputTestComponent />);
+      const textInput = getByTestId('text');
+      const button = getByTestId('button');
+
+      expect(textInput).toHaveAnimatedProps({ text: 'Box width: 20' });
+
+      fireEvent.press(button);
+      jest.advanceTimersByTime(animationDuration);
+
+      expect(textInput).toHaveAnimatedProps({ text: 'Box width: 30' });
+    });
+
+    test('cleans up a single animated props object on unmount', () => {
+      const removeSpy = jest.fn();
+
+      function DetachSingleAnimatedPropsComponent() {
+        const animatedProps = useAnimatedProps(() => ({
+          placeholder: 'Single animated props',
+        }));
+
+        React.useEffect(() => {
+          const handle =
+            animatedProps as JestAnimatedStyleHandle<TextInputProps>;
+          const spy = jest
+            .spyOn(handle.viewDescriptors, 'remove')
+            .mockImplementation(removeSpy);
+
+          return () => {
+            spy.mockRestore();
+          };
+        }, [animatedProps]);
+
+        return <AnimatedTextInput animatedProps={animatedProps} />;
+      }
+
+      const { unmount } = render(<DetachSingleAnimatedPropsComponent />);
+
+      unmount();
+
+      expect(removeSpy).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('TextInput component', () => {
-    describe('Single animated props object', () => {
-      function TextInputTestComponent() {
-        const width = useSharedValue(20);
+  describe('Multiple animated props objects', () => {
+    function TextInputTestComponent() {
+      const width = useSharedValue(20);
+      const counter = useSharedValue(0);
 
-        const animatedProps = useAnimatedProps(() => ({
-          text: `Box width: ${width.value}`,
-          defaultValue: `Box width: ${width.value}`,
-        }));
+      const animatedProps1 = useAnimatedProps(() => ({
+        text: `Box width: ${width.value}`,
+        defaultValue: `Box width: ${width.value}`,
+      }));
 
-        const handlePress = () => {
-          width.value += 10;
-        };
+      const animatedProps2 = useAnimatedProps(() => ({
+        placeholder: `Click count: ${counter.value}`,
+      }));
 
-        return (
-          <BaseTextInputComponent
-            animatedProps={animatedProps}
-            onPress={handlePress}
-          />
-        );
-      }
+      const handlePress = () => {
+        width.value += 10;
+        counter.value += 1;
+      };
 
-      test('matches snapshot', () => {
-        const rendered = render(<TextInputTestComponent />).toJSON();
-        expect(rendered).toMatchSnapshot();
+      return (
+        <BaseTextInputComponent
+          animatedProps={[animatedProps1, animatedProps2]}
+          onPress={handlePress}
+        />
+      );
+    }
+
+    test('matches snapshot', () => {
+      const rendered = render(<TextInputTestComponent />).toJSON();
+      expect(rendered).toMatchSnapshot();
+    });
+
+    test('merges multiple animated props objects', () => {
+      const { getByTestId } = render(<TextInputTestComponent />);
+      const textInput = getByTestId('text');
+      const button = getByTestId('button');
+
+      expect(textInput).toHaveAnimatedProps({
+        text: 'Box width: 20',
+        placeholder: 'Click count: 0',
       });
 
-      test('updates text on button press', () => {
-        const { getByTestId } = render(<TextInputTestComponent />);
-        const textInput = getByTestId('text');
-        const button = getByTestId('button');
+      fireEvent.press(button);
+      jest.advanceTimersByTime(animationDuration);
 
-        expect(textInput).toHaveAnimatedProps({ text: 'Box width: 20' });
-
-        fireEvent.press(button);
-        jest.advanceTimersByTime(animationDuration);
-
-        expect(textInput).toHaveAnimatedProps({ text: 'Box width: 30' });
-      });
-
-      test('cleans up a single animated props object on unmount', () => {
-        const removeSpy = jest.fn();
-
-        function DetachSingleAnimatedPropsComponent() {
-          const animatedProps = useAnimatedProps(() => ({
-            placeholder: 'Single animated props',
-          }));
-
-          React.useEffect(() => {
-            const handle =
-              animatedProps as JestAnimatedStyleHandle<TextInputProps>;
-            const spy = jest
-              .spyOn(handle.viewDescriptors, 'remove')
-              .mockImplementation(removeSpy);
-
-            return () => {
-              spy.mockRestore();
-            };
-          }, [animatedProps]);
-
-          return <AnimatedTextInput animatedProps={animatedProps} />;
-        }
-
-        const { unmount } = render(<DetachSingleAnimatedPropsComponent />);
-
-        unmount();
-
-        expect(removeSpy).toHaveBeenCalledTimes(1);
+      expect(textInput).toHaveAnimatedProps({
+        text: 'Box width: 30',
+        placeholder: 'Click count: 1',
       });
     });
 
-    describe('Multiple animated props objects', () => {
-      function TextInputTestComponent() {
-        const width = useSharedValue(20);
-        const counter = useSharedValue(0);
+    test('later animated props override earlier animated props when overlapping and when both are updated', () => {
+      function OverlappingPropsComponent() {
+        const value1 = useSharedValue('first');
+        const value2 = useSharedValue('second');
 
         const animatedProps1 = useAnimatedProps(() => ({
-          text: `Box width: ${width.value}`,
-          defaultValue: `Box width: ${width.value}`,
+          text: value1.value,
+          placeholder: 'First placeholder',
         }));
 
         const animatedProps2 = useAnimatedProps(() => ({
-          placeholder: `Click count: ${counter.value}`,
+          text: value2.value,
+          placeholder: 'Second placeholder',
         }));
 
         const handlePress = () => {
-          width.value += 10;
-          counter.value += 1;
+          value1.value = 'updated first';
+          value2.value = 'updated second';
         };
 
         return (
@@ -181,171 +189,117 @@ describe('animatedProps', () => {
         );
       }
 
-      test('matches snapshot', () => {
-        const rendered = render(<TextInputTestComponent />).toJSON();
-        expect(rendered).toMatchSnapshot();
+      const { getByTestId } = render(<OverlappingPropsComponent />);
+      const textInput = getByTestId('text');
+      const button = getByTestId('button');
+
+      // Later props (animatedProps2) should override earlier ones (animatedProps1)
+      expect(textInput).toHaveAnimatedProps({
+        text: 'second',
+        placeholder: 'Second placeholder',
       });
 
-      test('merges multiple animated props objects', () => {
-        const { getByTestId } = render(<TextInputTestComponent />);
-        const textInput = getByTestId('text');
-        const button = getByTestId('button');
+      fireEvent.press(button);
+      jest.advanceTimersByTime(animationDuration);
 
-        expect(textInput).toHaveAnimatedProps({
-          text: 'Box width: 20',
-          placeholder: 'Click count: 0',
-        });
+      expect(textInput).toHaveAnimatedProps({
+        text: 'updated second',
+        placeholder: 'Second placeholder',
+      });
+    });
 
-        fireEvent.press(button);
-        jest.advanceTimersByTime(animationDuration);
+    test('last updated animated props override all other animated props', () => {
+      function OverlappingPropsComponent() {
+        const value1 = useSharedValue(10);
+        const value2 = useSharedValue(20);
 
-        expect(textInput).toHaveAnimatedProps({
-          text: 'Box width: 30',
-          placeholder: 'Click count: 1',
-        });
+        const animatedProps1 = useAnimatedProps(() => ({
+          text: `First: ${value1.value}`,
+          placeholder: 'First placeholder',
+        }));
+
+        const animatedProps2 = useAnimatedProps(() => ({
+          text: `Second: ${value2.value}`,
+          placeholder: 'Second placeholder',
+        }));
+
+        const handlePress = () => {
+          // Update the shared value to show that order does not matter
+          value1.value += 5;
+        };
+
+        return (
+          <BaseTextInputComponent
+            animatedProps={[animatedProps1, animatedProps2]}
+            onPress={handlePress}
+          />
+        );
+      }
+
+      const { getByTestId } = render(<OverlappingPropsComponent />);
+      const textInput = getByTestId('text');
+      const button = getByTestId('button');
+
+      // Initially, the second animated props are used
+      expect(textInput).toHaveAnimatedProps({
+        text: 'Second: 20',
+        placeholder: 'Second placeholder',
       });
 
-      test('later animated props override earlier animated props when overlapping and when both are updated', () => {
-        function OverlappingPropsComponent() {
-          const value1 = useSharedValue('first');
-          const value2 = useSharedValue('second');
+      fireEvent.press(button);
+      jest.advanceTimersByTime(animationDuration);
 
-          const animatedProps1 = useAnimatedProps(() => ({
-            text: value1.value,
-            placeholder: 'First placeholder',
-          }));
+      // After updating value1, used in the first animated props, the props from this animated props are used
+      expect(textInput).toHaveAnimatedProps({
+        text: 'First: 15',
+        placeholder: 'First placeholder', // this also changes as the entire returned object is used
+      });
+    });
 
-          const animatedProps2 = useAnimatedProps(() => ({
-            text: value2.value,
-            placeholder: 'Second placeholder',
-          }));
+    test('cleans up all animated props objects on unmount', () => {
+      const removeMocks = [jest.fn(), jest.fn(), jest.fn()];
 
-          const handlePress = () => {
-            value1.value = 'updated first';
-            value2.value = 'updated second';
+      function DetachMultipleAnimatedPropsComponent() {
+        const animatedProps1 = useAnimatedProps(() => ({
+          placeholder: 'First animated props',
+        }));
+        const animatedProps2 = useAnimatedProps(() => ({
+          inputMode: 'numeric' as const,
+        }));
+        const animatedProps3 = useAnimatedProps(() => ({
+          pointerEvents: 'auto' as const,
+        }));
+
+        React.useEffect(() => {
+          const handles = [animatedProps1, animatedProps2, animatedProps3];
+          const spies = handles.map((animatedProps, index) =>
+            jest
+              .spyOn(
+                (animatedProps as JestAnimatedStyleHandle<TextInputProps>)
+                  .viewDescriptors,
+                'remove'
+              )
+              .mockImplementation(removeMocks[index])
+          );
+
+          return () => {
+            spies.forEach((spy) => spy.mockRestore());
           };
+        }, [animatedProps1, animatedProps2, animatedProps3]);
 
-          return (
-            <BaseTextInputComponent
-              animatedProps={[animatedProps1, animatedProps2]}
-              onPress={handlePress}
-            />
-          );
-        }
+        return (
+          <BaseTextInputComponent
+            animatedProps={[[animatedProps1], animatedProps2, animatedProps3]}
+          />
+        );
+      }
 
-        const { getByTestId } = render(<OverlappingPropsComponent />);
-        const textInput = getByTestId('text');
-        const button = getByTestId('button');
+      const { unmount } = render(<DetachMultipleAnimatedPropsComponent />);
 
-        // Later props (animatedProps2) should override earlier ones (animatedProps1)
-        expect(textInput).toHaveAnimatedProps({
-          text: 'second',
-          placeholder: 'Second placeholder',
-        });
+      unmount();
 
-        fireEvent.press(button);
-        jest.advanceTimersByTime(animationDuration);
-
-        expect(textInput).toHaveAnimatedProps({
-          text: 'updated second',
-          placeholder: 'Second placeholder',
-        });
-      });
-
-      test('last updated animated props override all other animated props', () => {
-        function OverlappingPropsComponent() {
-          const value1 = useSharedValue(10);
-          const value2 = useSharedValue(20);
-
-          const animatedProps1 = useAnimatedProps(() => ({
-            text: `First: ${value1.value}`,
-            placeholder: 'First placeholder',
-          }));
-
-          const animatedProps2 = useAnimatedProps(() => ({
-            text: `Second: ${value2.value}`,
-            placeholder: 'Second placeholder',
-          }));
-
-          const handlePress = () => {
-            // Update the shared value to show that order does not matter
-            value1.value += 5;
-          };
-
-          return (
-            <BaseTextInputComponent
-              animatedProps={[animatedProps1, animatedProps2]}
-              onPress={handlePress}
-            />
-          );
-        }
-
-        const { getByTestId } = render(<OverlappingPropsComponent />);
-        const textInput = getByTestId('text');
-        const button = getByTestId('button');
-
-        // Initially, the second animated props are used
-        expect(textInput).toHaveAnimatedProps({
-          text: 'Second: 20',
-          placeholder: 'Second placeholder',
-        });
-
-        fireEvent.press(button);
-        jest.advanceTimersByTime(animationDuration);
-
-        // After updating value1, used in the first animated props, the props from this animated props are used
-        expect(textInput).toHaveAnimatedProps({
-          text: 'First: 15',
-          placeholder: 'First placeholder', // this also changes as the entire returned object is used
-        });
-      });
-
-      test('cleans up all animated props objects on unmount', () => {
-        const removeMocks = [jest.fn(), jest.fn(), jest.fn()];
-
-        function DetachMultipleAnimatedPropsComponent() {
-          const animatedProps1 = useAnimatedProps(() => ({
-            placeholder: 'First animated props',
-          }));
-          const animatedProps2 = useAnimatedProps(() => ({
-            inputMode: 'numeric' as const,
-          }));
-          const animatedProps3 = useAnimatedProps(() => ({
-            pointerEvents: 'auto' as const,
-          }));
-
-          React.useEffect(() => {
-            const handles = [animatedProps1, animatedProps2, animatedProps3];
-            const spies = handles.map((animatedProps, index) =>
-              jest
-                .spyOn(
-                  (
-                    animatedProps as JestAnimatedStyleHandle<TextInputProps>
-                  ).viewDescriptors,
-                  'remove'
-                )
-                .mockImplementation(removeMocks[index])
-            );
-
-            return () => {
-              spies.forEach((spy) => spy.mockRestore());
-            };
-          }, [animatedProps1, animatedProps2, animatedProps3]);
-
-          return (
-            <BaseTextInputComponent
-              animatedProps={[[animatedProps1], animatedProps2, animatedProps3]}
-            />
-          );
-        }
-
-        const { unmount } = render(<DetachMultipleAnimatedPropsComponent />);
-
-        unmount();
-
-        removeMocks.forEach((mock) => {
-          expect(mock).toHaveBeenCalled();
-        });
+      removeMocks.forEach((mock) => {
+        expect(mock).toHaveBeenCalled();
       });
     });
   });
