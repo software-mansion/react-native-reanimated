@@ -1,9 +1,9 @@
 diff --git a/src/node-haste/DependencyGraph.js b/src/node-haste/DependencyGraph.js
-index 4edf7dfd1777490fd3619a09de0b8fc2567c7c74..008007fbb38bb58b43794b2f1ce77254d715fba9 100644
+index bd42485a8a6647757c0f5b2f2c4a5e659125fcdd..417de6c997067b4b1c686c35fe5007ba199b3897 100644
 --- a/src/node-haste/DependencyGraph.js
 +++ b/src/node-haste/DependencyGraph.js
-@@ -177,6 +177,14 @@ class DependencyGraph extends EventEmitter {
-     return nullthrows(this._fileSystem).getAllFiles();
+@@ -186,6 +186,14 @@ class DependencyGraph extends _events.default {
+     return (0, _nullthrows.default)(this._fileSystem).getAllFiles();
    }
    async getOrComputeSha1(mixedPath) {
 +    if (mixedPath.includes("react-native-worklets/__generatedWorklets/")) {
