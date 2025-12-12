@@ -6,11 +6,7 @@ import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import {
   IS_JEST,
-  processBoxShadowNative,
-  processColorsInProps,
-  processFilter,
-  processTransform,
-  processTransformOrigin,
+  propsBuilder,
   ReanimatedError,
   SHOULD_BE_USE_WEB,
 } from '../common';
@@ -50,26 +46,16 @@ if (SHOULD_BE_USE_WEB) {
     });
   };
 } else {
-  updateProps = (viewDescriptors, updates) => {
+  updateProps = (viewDescriptors, updates, isAnimatedProps) => {
     'worklet';
-    /* TODO: Improve this config structure in the future
-     * The goal is to create a simplified version of `src/css/platform/native/config.ts`,
-     * containing only properties that require processing and their associated processors
-     * */
-    processColorsInProps(updates);
-    if ('transformOrigin' in updates) {
-      updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
-    }
-    if ('transform' in updates) {
-      updates.transform = processTransform(updates.transform);
-    }
-    if ('boxShadow' in updates) {
-      updates.boxShadow = processBoxShadowNative(updates.boxShadow);
-    }
-    if ('filter' in updates) {
-      updates.filter = processFilter(updates.filter);
-    }
-    global.UpdatePropsManager.update(viewDescriptors, updates);
+    global.UpdatePropsManager.update(
+      viewDescriptors,
+      // For animated props, we include unknown properties because unlike styles
+      // which have complete processing configs specified in Reanimated, animated
+      // props can contain any property from the component's interface. We don't
+      // process most of them and rely on the user to provide correct prop values.
+      propsBuilder.build(updates, { includeUnknown: isAnimatedProps })
+    );
   };
 }
 

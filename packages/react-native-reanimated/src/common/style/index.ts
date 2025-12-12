@@ -1,6 +1,6 @@
 'use strict';
 export * from './config';
-export { default as createStyleBuilder } from './createStyleBuilder';
 export * from './processors';
-export type { StyleBuilder } from './types';
+export { default as propsBuilder } from './propsBuilder';
+export * from './registry';
 export type * from './types';

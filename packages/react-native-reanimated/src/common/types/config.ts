@@ -11,10 +11,10 @@ export type ValueProcessorContext = {
   target: ValueProcessorTarget;
 };
 
-export type ValueProcessor<V, R = V> = (
+export type ValueProcessor<V = unknown, R = V> = (
   value: NonMutable<V>,
   context?: ValueProcessorContext
-) => Maybe<R> | Record<string, R>;
+) => R | Record<string, R>;
 
 export type ConfigPropertyAlias<P extends AnyRecord> = {
   as: keyof P;

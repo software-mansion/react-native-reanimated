@@ -9,7 +9,7 @@ import { processBoxShadowNative } from '../shadows';
 describe(processBoxShadowNative, () => {
   describe('returns a correct number of shadows', () => {
     describe('when input is a string', () => {
-      test('returns undefined when input is "none"', () => {
+      test('returns null when input is "none"', () => {
         expect(processBoxShadowNative('none')).toBeUndefined();
       });
 
