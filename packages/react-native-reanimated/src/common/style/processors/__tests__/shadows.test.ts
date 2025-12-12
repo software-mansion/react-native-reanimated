@@ -10,7 +10,7 @@ describe(processBoxShadowNative, () => {
   describe('returns a correct number of shadows', () => {
     describe('when input is a string', () => {
       test('returns null when input is "none"', () => {
-        expect(processBoxShadowNative('none')).toBeNull();
+        expect(processBoxShadowNative('none')).toBeUndefined();
       });
 
       test.each([
