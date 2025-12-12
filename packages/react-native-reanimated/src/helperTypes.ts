@@ -107,10 +107,7 @@ export type AnimatedProps<Props extends object> = RestProps<Props> &
      *
      * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
      */
-    animatedProps?: NestedArray<
-      | Partial<ComponentPropsWithoutStyle<Props>>
-      | CSSStyle<ComponentPropsWithoutStyle<Props>>
-    >;
+    animatedProps?: NestedArray<CSSStyle<ComponentPropsWithoutStyle<Props>>>; // TODO - improve type once useAnimatedProps is typed properly
   } & SharedTransitionProps;
 
 // THE LAND OF THE DEPRECATED
