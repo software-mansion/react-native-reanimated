@@ -1,12 +1,13 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import type { ComponentProps } from 'react';
 import React from 'react';
-import { Button, TextInput, View } from 'react-native';
 import type { TextInputProps } from 'react-native';
+import { Button, TextInput, View } from 'react-native';
 import Animated, {
   useAnimatedProps,
   useSharedValue,
 } from 'react-native-reanimated';
+
 import type { JestAnimatedStyleHandle } from '../src/hook/commonTypes';
 
 const animationDuration = 100;
