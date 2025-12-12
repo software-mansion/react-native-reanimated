@@ -58,11 +58,11 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   auto jsQueue =
       std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) { throw error; });
 
-  NSURL *sourceURL = nil;
+  std::string sourceURL = "";
   std::shared_ptr<const ScriptBuffer> script = nullptr;
 #ifdef WORKLETS_BUNDLE_MODE
-  sourceURL = bundleManager_.bundleURL;
-  NSData *data = [NSData dataWithContentsOfURL:sourceURL];
+  NSURL *url = bundleManager_.bundleURL;
+  NSData *data = [NSData dataWithContentsOfURL:url];
   if (data) {
     auto str = std::string(reinterpret_cast<const char *>([data bytes]), [data length]);
     auto bigString = std::make_shared<const JSBigStdString>(str);
@@ -70,6 +70,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   } else {
     throw std::runtime_error("[Worklets] Failed to load worklets bundle from URL");
   }
+  sourceURL = [[url absoluteString] UTF8String];
 #endif // WORKLETS_BUNDLE_MODE
 
   auto jsCallInvoker = callInvoker_.callInvoker;
@@ -81,14 +82,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   auto runtimeBindings = [self getRuntimeBindings];
 
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
-      rnRuntime,
-      jsQueue,
-      jsCallInvoker,
-      uiScheduler,
-      std::move(isJavaScriptQueue),
-      runtimeBindings,
-      script,
-      [[sourceURL absoluteString] UTF8String]);
+      rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(isJavaScriptQueue), runtimeBindings, script, sourceURL);
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
       rnRuntime, std::static_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));

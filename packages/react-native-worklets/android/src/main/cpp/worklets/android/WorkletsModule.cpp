@@ -47,11 +47,8 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<JavaMessageQueueThread::javaobject>
         messageQueueThread, // NOLINT //(performance-unnecessary-value-param)
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
-    jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler
-#ifdef WORKLETS_BUNDLE_MODE
-    ,
-    jni::alias_ref<JScriptWrapper::javaobject> jBundleWrapper
-#endif // WORKLETS_BUNDLE_MODE
+    jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
+    jni::alias_ref<JScriptWrapper::javaobject> jBundleWrapper // NOLINT //(performance-unnecessary-value-param)
 ) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext); // NOLINT //(performance-no-int-to-ptr)

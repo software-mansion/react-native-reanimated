@@ -28,12 +28,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jlong jsContext,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
-      jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler
-#ifdef WORKLETS_BUNDLE_MODE
-      ,
-      jni::alias_ref<JScriptWrapper::javaobject> jBundleWrapper
-#endif // WORKLETS_BUNDLE_MODE
-  );
+      jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
+      jni::alias_ref<JScriptWrapper::javaobject> jBundleWrapper);
 
   static void registerNatives();
 
