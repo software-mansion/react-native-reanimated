@@ -1,0 +1,32 @@
+name: docs build
+description: Lint and build Reanimated and Worklets documentation
+inputs:
+  REANIMATED_DOCS_DIR:
+    description: Directory of Reanimated docs
+    default: 'docs/docs-reanimated'
+    required: true
+  WORKLETS_DOCS_DIR:
+    description: Directory of Worklets docs
+    default: 'docs/docs-worklets'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Lint check Reanimated docs
+      shell: bash
+      working-directory: ${{ inputs.REANIMATED_DOCS_DIR }}
+      run: yarn lint
+    - name: Build Reanimated docs
+      shell: bash
+      working-directory: ${{ inputs.REANIMATED_DOCS_DIR }}
+      run: yarn build
+
+    - name: Lint check Worklets docs
+      shell: bash
+      working-directory: ${{ inputs.WORKLETS_DOCS_DIR }}
+      run: yarn lint
+    - name: Build Worklets docs
+      shell: bash
+      working-directory: ${{ inputs.WORKLETS_DOCS_DIR }}
+      run: yarn build
