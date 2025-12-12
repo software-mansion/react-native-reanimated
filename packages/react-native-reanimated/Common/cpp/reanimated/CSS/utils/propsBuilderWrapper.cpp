@@ -13,6 +13,75 @@ namespace reanimated::css {
 
 namespace {
 
+void addCascadedRectangleEdgesToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value,
+    std::string borderWidthPropName) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSDouble>(storage);
+  const auto updateBorderWidth = [&](CascadedRectangleEdges<yoga::StyleLength> &borderWidth) {
+    auto nameHash = RAW_PROPS_KEY_HASH(borderWidthPropName);
+    switch (nameHash) {
+      case RAW_PROPS_KEY_HASH("all"): {
+        borderWidth.all = yoga::StyleLength::points(cssValue.value);
+        break;
+      }
+
+      case RAW_PROPS_KEY_HASH("left"): {
+        borderWidth.left = yoga::StyleLength::points(cssValue.value);
+        break;
+      }
+
+      case RAW_PROPS_KEY_HASH("right"): {
+        borderWidth.right = yoga::StyleLength::points(cssValue.value);
+        break;
+      }
+
+      case RAW_PROPS_KEY_HASH("top"): {
+        borderWidth.top = yoga::StyleLength::points(cssValue.value);
+        break;
+      }
+
+      case RAW_PROPS_KEY_HASH("bottom"): {
+        borderWidth.bottom = yoga::StyleLength::points(cssValue.value);
+        break;
+      }
+
+      case RAW_PROPS_KEY_HASH("start"): {
+        borderWidth.start = yoga::StyleLength::points(cssValue.value);
+        break;
+      }
+
+      case RAW_PROPS_KEY_HASH("end"): {
+        borderWidth.end = yoga::StyleLength::points(cssValue.value);
+        break;
+      }
+    }
+  };
+
+  bool isFound = false;
+  for (auto &prop : propsBuilder->props) {
+    if (prop->propName != BORDER_WIDTH) {
+      continue;
+    }
+    auto *borderWidthProp = dynamic_cast<AnimatedProp<CascadedRectangleEdges<yoga::StyleLength>> *>(prop.get());
+
+    if (!borderWidthProp) {
+      continue;
+    }
+
+    updateBorderWidth(borderWidthProp->value);
+    isFound = true;
+    break;
+  }
+
+  if (!isFound) {
+    CascadedRectangleEdges<yoga::StyleLength> borderWidth{};
+    updateBorderWidth(borderWidth);
+    propsBuilder->setBorderWidth(borderWidth);
+  }
+}
+
 void addCascadedBorderRadiiToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength> &value,
@@ -241,6 +310,48 @@ void addBorderEndEndRadiusToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength> &value) {
   addCascadedBorderRadiiToPropsBuilder(propsBuilder, value, "endEnd");
+}
+
+void addBorderWidthToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value) {
+  addCascadedRectangleEdgesToPropsBuilder(propsBuilder, value, "all");
+}
+
+void addBorderBottomWidthToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value) {
+  addCascadedRectangleEdgesToPropsBuilder(propsBuilder, value, "bottom");
+}
+
+void addBorderTopWidthToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value) {
+  addCascadedRectangleEdgesToPropsBuilder(propsBuilder, value, "top");
+}
+
+void addBorderLeftWidthToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value) {
+  addCascadedRectangleEdgesToPropsBuilder(propsBuilder, value, "left");
+}
+
+void addBorderRightWidthToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value) {
+  addCascadedRectangleEdgesToPropsBuilder(propsBuilder, value, "right");
+}
+
+void addBorderStartWidthToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value) {
+  addCascadedRectangleEdgesToPropsBuilder(propsBuilder, value, "start");
+}
+
+void addBorderEndWidthToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value) {
+  addCascadedRectangleEdgesToPropsBuilder(propsBuilder, value, "end");
 }
 
 void animationMutationsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch) {
