@@ -102,7 +102,7 @@ def WORKLETS_PROFILING = safeAppExtGet("enableWorkletsProfiling", false)
 // Set version for prefab
 version WORKLETS_VERSION
 
-def workletsPrefabHeadersDir = project.file("${getLayout().getBuildDirectory()}/prefab-headers/worklets")
+def workletsPrefabHeadersDir = project.file("${getLayout().getBuildDirectory().getAsFile().get().absolutePath}/prefab-headers/worklets")
 
 def JS_RUNTIME = {
     // Override JS runtime with environment variable
@@ -301,7 +301,7 @@ tasks.register('prepareWorkletsHeadersForPrefabs', Copy) {
     from("$projectDir/src/main/cpp")
     from("$projectDir/../Common/cpp")
     include("worklets/**/*.h")
-    into(workletsPrefabHeadersDir)
+    into(workletsPrefabHeadersDir.absolutePath)
 }
 
 interface FSService {
