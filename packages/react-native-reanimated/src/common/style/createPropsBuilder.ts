@@ -63,15 +63,17 @@ export default function createPropsBuilder<
     build(
       props: Readonly<UnknownRecord>,
       {
-        includeUndefined = false,
-        target = ValueProcessorTarget.Default,
+        includeUndefined,
+        target,
       }: {
         includeUndefined?: boolean;
         target?: ValueProcessorTarget;
       } = {}
     ) {
       'worklet';
-      const context: ValueProcessorContext = { target };
+      const context: ValueProcessorContext = {
+        target: target ?? ValueProcessorTarget.Default,
+      };
 
       return Object.entries(props).reduce<UnknownRecord>(
         (acc, [key, value]) => {
