@@ -98,6 +98,26 @@ describe(createPropsBuilder, () => {
     expect(builder.build(style)).toEqual({ width: 120 });
   });
 
+  test('includes unknown properties when includeUnknown is true', () => {
+    const builder = createBuilder({ width: true });
+
+    const style: TestStyle = {
+      width: 120,
+      height: 300,
+      // @ts-ignore - testing unknown prop
+      customProp: 'test',
+    };
+
+    expect(builder.build(style)).toEqual({ width: 120 });
+    expect(
+      builder.build(style, { includeUnknown: true })
+    ).toEqual({
+      width: 120,
+      height: 300,
+      customProp: 'test',
+    });
+  });
+
   test('passes provided context to processors', () => {
     const processor = jest.fn().mockReturnValue(24);
     const builder = createBuilder({

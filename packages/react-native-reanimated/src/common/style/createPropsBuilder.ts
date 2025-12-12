@@ -23,6 +23,7 @@ type PropsBuilderResult<TProps> = {
     options?: {
       includeUndefined?: boolean;
       target?: ValueProcessorTarget;
+      includeUnknown?: boolean;
     }
   ): UnknownRecord;
 };
@@ -63,11 +64,18 @@ export default function createPropsBuilder<
     build(
       props: Readonly<UnknownRecord>,
       {
+<<<<<<< Updated upstream
         includeUndefined,
         target,
+=======
+        includeUndefined = false,
+        target = ValueProcessorTarget.Default,
+        includeUnknown = false,
+>>>>>>> Stashed changes
       }: {
         includeUndefined?: boolean;
         target?: ValueProcessorTarget;
+        includeUnknown?: boolean;
       } = {}
     ) {
       'worklet';
@@ -80,7 +88,12 @@ export default function createPropsBuilder<
           const processor = processedConfig[key];
 
           if (!processor) {
-            // Props is not supported, skip it
+            // Props is not supported
+            if (includeUnknown) {
+              // Include unknown props as-is
+              acc[key] = value;
+            }
+            // Otherwise skip it
             return acc;
           }
 
