@@ -1,6 +1,10 @@
 'use strict';
 import type { AnyRecord } from '../../../../common';
 import { isDefined, isNumber, ReanimatedError } from '../../../../common';
+import {
+  getPropsBuilder,
+  getSeparatelyInterpolatedNestedProperties,
+} from '../../../../common/style';
 import type { StyleProps } from '../../../../commonTypes';
 import { PERCENTAGE_REGEX } from '../../../constants';
 import type {
@@ -14,10 +18,6 @@ import type {
   NormalizedCSSKeyframeTimingFunctions,
 } from '../../types';
 import { normalizeTimingFunction } from '../common';
-import {
-  getPropsBuilder,
-  getSeparatelyInterpolatedNestedProperties,
-} from '../../../../common/style';
 
 export const ERROR_MESSAGES = {
   invalidOffsetType: (selector: CSSAnimationKeyframeSelector) =>

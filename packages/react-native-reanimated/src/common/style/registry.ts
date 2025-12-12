@@ -24,9 +24,9 @@ const COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Map<
   Set<string>
 >();
 
-const basePropsBuilder = propsBuilder as NativePropsBuilder;
+const basePropsBuilder = propsBuilder as NativePropsBuilder<PlainStyle>;
 
-const PROPS_BUILDERS: Record<string, NativePropsBuilder> = {};
+const PROPS_BUILDERS: Record<string, NativePropsBuilder<PlainStyle>> = {};
 
 export function hasPropsBuilder(componentName: string): boolean {
   return !!PROPS_BUILDERS[componentName] || componentName.startsWith('RCT');
@@ -47,14 +47,16 @@ export function getPropsBuilder(componentName: string) {
   throw new ReanimatedError(ERROR_MESSAGES.propsBuilderNotFound(componentName));
 }
 
-export function registerComponentPropsBuilder(
+export function registerComponentPropsBuilder<P extends UnknownRecord>(
   componentName: string,
-  config: PropsBuilderConfig,
+  config: PropsBuilderConfig<P>,
   options: {
     separatelyInterpolatedNestedProperties?: readonly string[];
   } = {}
 ) {
-  PROPS_BUILDERS[componentName] = createNativePropsBuilder(config) as NativePropsBuilder;
+  PROPS_BUILDERS[componentName] = createNativePropsBuilder(
+    config
+  ) as NativePropsBuilder<PlainStyle>;
 
   if (options.separatelyInterpolatedNestedProperties?.length) {
     COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES.set(

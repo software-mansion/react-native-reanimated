@@ -1,12 +1,12 @@
 'use strict';
 import { ReanimatedError } from '../../../common';
+import { getPropsBuilder, hasPropsBuilder } from '../../../common/style';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
 import type { CSSStyle } from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
 import { filterCSSAndStyleProperties } from '../../utils';
 import { setViewStyle } from '../proxy';
-import { getPropsBuilder, hasPropsBuilder } from '../../../common/style';
 import CSSAnimationsManager from './CSSAnimationsManager';
 import CSSTransitionsManager from './CSSTransitionsManager';
 
@@ -15,9 +15,8 @@ export default class CSSManager implements ICSSManager {
   private readonly cssTransitionsManager: CSSTransitionsManager;
   private readonly viewTag: number;
   private readonly viewName: string;
-  private readonly propsBuilder:
-    | ReturnType<typeof getPropsBuilder>
-    | null = null;
+  private readonly propsBuilder: ReturnType<typeof getPropsBuilder> | null =
+    null;
   private isFirstUpdate: boolean = true;
 
   constructor({ shadowNodeWrapper, viewTag, viewName = 'RCTView' }: ViewInfo) {
@@ -48,9 +47,7 @@ export default class CSSManager implements ICSSManager {
 
     let normalizedStyle: CSSStyle | null = null;
     if (this.propsBuilder) {
-      normalizedStyle = this.propsBuilder.build(
-        filteredStyle as Parameters<typeof this.propsBuilder.build>[0]
-      ) as CSSStyle | null;
+      normalizedStyle = this.propsBuilder.build(filteredStyle);
     }
 
     // If the update is called during the first css style update, we won't

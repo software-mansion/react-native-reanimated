@@ -6,9 +6,9 @@ import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import {
   IS_JEST,
+  propsBuilder,
   ReanimatedError,
   SHOULD_BE_USE_WEB,
-  propsBuilder,
 } from '../common';
 import { processBoxShadowWeb, processFilterWeb } from '../common/web';
 import type {

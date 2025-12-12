@@ -1,7 +1,7 @@
 'use strict';
 import { ReanimatedError } from '../../../../../common';
-import type { Repeat } from '../../../../types';
 import { getPropsBuilder } from '../../../../../common/style';
+import type { Repeat } from '../../../../types';
 import {
   ERROR_MESSAGES,
   normalizeAnimationKeyframes,
@@ -88,8 +88,8 @@ describe(normalizeKeyframeSelector, () => {
 });
 
 const createMockPropsBuilder = () => {
-  const buildMock = jest.fn<BuildReturn | undefined, BuildArgs>((style) =>
-    style as BuildReturn
+  const buildMock = jest.fn<BuildReturn | undefined, BuildArgs>(
+    (style) => style as BuildReturn
   );
 
   return {
@@ -139,9 +139,7 @@ describe(processKeyframes, () => {
         '100%': { transform: [{ translateX: 100 }] },
       };
 
-      expect(
-        processKeyframes(keyframes, getPropsBuilder('RCTView'))
-      ).toEqual([
+      expect(processKeyframes(keyframes, getPropsBuilder('RCTView'))).toEqual([
         { offset: 0, style: { transform: [{ translateX: 0 }] } },
         { offset: 1, style: { transform: [{ translateX: 100 }] } },
       ]);
@@ -305,9 +303,7 @@ describe(processKeyframes, () => {
       '100%': { opacity: 1 },
     };
 
-    expect(
-      processKeyframes(keyframes, builder)
-    ).toEqual([
+    expect(processKeyframes(keyframes, builder)).toEqual([
       {
         offset: 0,
         style: { opacity: 0.5, transform: [{ scale: 1 }] },

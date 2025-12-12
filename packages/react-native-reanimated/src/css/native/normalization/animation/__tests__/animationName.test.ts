@@ -17,10 +17,7 @@ describe(normalizeAnimationKeyframes, () => {
         [1, 1],
       ])(`normalizes %p to %p`, (offset, expected) => {
         expect(
-          normalizeAnimationKeyframes(
-            { [offset]: { opacity: 1 } },
-            'RCTView'
-          )
+          normalizeAnimationKeyframes({ [offset]: { opacity: 1 } }, 'RCTView')
         ).toEqual({
           keyframesStyle: { opacity: [{ offset: expected, value: 1 }] },
           keyframeTimingFunctions: {},
@@ -34,10 +31,7 @@ describe(normalizeAnimationKeyframes, () => {
         (offset) => {
           const value = offset as CSSAnimationKeyframeSelector;
           expect(() =>
-            normalizeAnimationKeyframes(
-              { [value]: { opacity: 1 } },
-              'RCTView'
-            )
+            normalizeAnimationKeyframes({ [value]: { opacity: 1 } }, 'RCTView')
           ).toThrow(
             new ReanimatedError(ERROR_MESSAGES.invalidOffsetType(value))
           );
@@ -51,10 +45,7 @@ describe(normalizeAnimationKeyframes, () => {
         (offset) => {
           const value = offset as CSSAnimationKeyframeSelector;
           expect(() =>
-            normalizeAnimationKeyframes(
-              { [value]: { opacity: 1 } },
-              'RCTView'
-            )
+            normalizeAnimationKeyframes({ [value]: { opacity: 1 } }, 'RCTView')
           ).toThrow(
             new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(value))
           );
@@ -73,10 +64,7 @@ describe(normalizeAnimationKeyframes, () => {
         ['0, 0.5, 1', [0, 0.5, 1]],
       ])('normalizes %p to %p', (offset, expected) => {
         expect(
-          normalizeAnimationKeyframes(
-            { [offset]: { opacity: 1 } },
-            'RCTView'
-          )
+          normalizeAnimationKeyframes({ [offset]: { opacity: 1 } }, 'RCTView')
         ).toEqual({
           keyframeTimingFunctions: {},
           keyframesStyle: {
