@@ -64,14 +64,9 @@ export default function createPropsBuilder<
     build(
       props: Readonly<UnknownRecord>,
       {
-<<<<<<< Updated upstream
         includeUndefined,
-        target,
-=======
-        includeUndefined = false,
         target = ValueProcessorTarget.Default,
         includeUnknown = false,
->>>>>>> Stashed changes
       }: {
         includeUndefined?: boolean;
         target?: ValueProcessorTarget;
