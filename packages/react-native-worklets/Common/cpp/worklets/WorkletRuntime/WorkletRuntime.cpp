@@ -26,22 +26,6 @@
 
 namespace worklets {
 
-class CopyableBigStringBuffer : public jsi::Buffer {
- public:
-  CopyableBigStringBuffer(std::shared_ptr<const JSBigString> script) : script_(std::move(script)) {}
-
-  size_t size() const override {
-    return script_->size();
-  }
-
-  const uint8_t *data() const override {
-    return reinterpret_cast<const uint8_t *>(script_->c_str());
-  }
-
- private:
-  std::shared_ptr<const JSBigString> script_;
-};
-
 class AroundLock {
   const std::shared_ptr<std::recursive_mutex> mutex_;
 
