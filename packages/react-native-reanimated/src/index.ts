@@ -165,6 +165,7 @@ export {
   advanceAnimationByFrame,
   advanceAnimationByTime,
   getAnimatedStyle,
+  getAnimatedProps,
   setUpTests,
   withReanimatedTimer,
 } from './jestUtils';

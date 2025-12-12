@@ -63,28 +63,34 @@ function extractSharedValuesMapFromProps(
 ): Record<string, unknown> {
   const inlineProps: Record<string, unknown> = {};
 
+  // Helper to extract shared values from any nested structure
+  const extractFromNested = (items: unknown[]) => {
+    items.forEach((item) => {
+      if (!item || typeof item !== 'object') {
+        return;
+      }
+      for (const [key, value] of Object.entries(item)) {
+        if (isSharedValue(value) || 
+           (key === 'transform' && isInlineStyleTransform(value))
+        ) {
+          inlineProps[key] = value;
+        }
+      }
+    });
+  };
+
   for (const key in props) {
     const value = props[key];
     if (key === 'style') {
       const styles = flattenArray<StyleProps>(props.style ?? []);
-      styles.forEach((style) => {
-        if (!style) {
-          return;
-        }
-        if (__DEV__ && '_requiresAnimatedComponent' in style) {
-          return;
-        }
-        for (const [styleKey, styleValue] of Object.entries(style)) {
-          if (isSharedValue(styleValue)) {
-            inlineProps[styleKey] = styleValue;
-          } else if (
-            styleKey === 'transform' &&
-            isInlineStyleTransform(styleValue)
-          ) {
-            inlineProps[styleKey] = styleValue;
-          }
-        }
-      });
+      const filteredStyles = __DEV__
+        ? styles.filter((s) => s && !('_requiresAnimatedComponent' in s))
+        : styles;
+      extractFromNested(filteredStyles);
+    } else if (key === 'animatedProps') {
+      // Process animatedProps using the same logic as styles
+      const animatedPropsArray = flattenArray(props.animatedProps ?? []);
+      extractFromNested(animatedPropsArray);
     } else if (isSharedValue(value)) {
       inlineProps[key] = value;
     }
@@ -128,7 +134,7 @@ export function getInlineStyle(
 export class InlinePropManager implements IInlinePropManager {
   _inlinePropsViewDescriptors: ViewDescriptorsSet | null = null;
   _inlinePropsMapperId: number | null = null;
-  _inlineProps: StyleProps = {};
+  _inlineProps: Record<string, unknown> = {};
 
   public attachInlineProps(
     animatedComponent: AnimatedComponentTypeInternal,

@@ -353,3 +353,11 @@ export const getAnimatedStyle = (component: ReactTestInstance) => {
     component as unknown as TestComponent
   );
 };
+
+export const getAnimatedProps = (component: ReactTestInstance) => {
+  return getCurrentProps(
+    // This type assertion is needed to get type checking in the following
+    // functions since `ReactTestInstance` has its `props` defined as `any`.
+    component as unknown as TestComponent
+  );
+};

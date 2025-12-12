@@ -20,6 +20,7 @@ import type { CSSStyle } from './css';
 import type { BaseAnimationBuilder } from './layoutReanimation/animationBuilder/BaseAnimationBuilder';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import type { SharedTransition } from './layoutReanimation/SharedTransition';
+import type { CSSAnimationProperties, CSSTransitionProperties } from './css/types';
 
 export type EntryOrExitLayoutType =
   | BaseAnimationBuilder
@@ -107,7 +108,13 @@ export type AnimatedProps<Props extends object> = RestProps<Props> &
      *
      * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
      */
-    animatedProps?: NestedArray<CSSStyle<ComponentPropsWithoutStyle<Props>>>; // TODO - improve type once useAnimatedProps is typed properly
+    animatedProps?: NestedArray<
+      Partial<
+        CSSAnimationProperties<ComponentPropsWithoutStyle<Props>> &
+        CSSTransitionProperties<ComponentPropsWithoutStyle<Props>> &
+        RestProps<Props>
+      >
+    >; // TODO - improve type once useAnimatedProps is typed properly
   } & SharedTransitionProps;
 
 // THE LAND OF THE DEPRECATED
