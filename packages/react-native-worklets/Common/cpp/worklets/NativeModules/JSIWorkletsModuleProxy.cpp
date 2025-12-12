@@ -152,7 +152,7 @@ inline void registerCustomSerializable(
 
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const bool isDevBundle,
-    const std::shared_ptr<const JSBigStringBuffer> &script,
+    const std::shared_ptr<const ScriptBuffer> &script,
     const std::string &sourceUrl,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
@@ -170,18 +170,6 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       memoryManager_(memoryManager),
       runtimeManager_(runtimeManager),
       uiWorkletRuntime_(uiWorkletRuntime) {}
-
-JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other)
-    : jsi::HostObject(),
-      isDevBundle_(other.isDevBundle_),
-      script_(other.script_),
-      sourceUrl_(other.sourceUrl_),
-      jsQueue_(other.jsQueue_),
-      jsScheduler_(other.jsScheduler_),
-      uiScheduler_(other.uiScheduler_),
-      memoryManager_(other.memoryManager_),
-      runtimeManager_(other.runtimeManager_),
-      uiWorkletRuntime_(other.uiWorkletRuntime_) {}
 
 JSIWorkletsModuleProxy::~JSIWorkletsModuleProxy() = default;
 

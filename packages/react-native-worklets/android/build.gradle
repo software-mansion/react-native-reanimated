@@ -254,17 +254,6 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-    sourceSets {
-        main {
-            java {
-                if (BUNDLE_MODE) {
-                    srcDirs += "src/experimentalBundling"
-                } else {
-                    srcDirs += "src/legacyBundling"
-                }
-            }
-        }
-    }
     tasks.withType(ExternalNativeBuildJsonTask).tap {
         configureEach { compileTask ->
             compileTask.doLast {

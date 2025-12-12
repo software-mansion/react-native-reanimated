@@ -8,7 +8,6 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.common.annotations.FrameworkAPI;
-import com.facebook.react.fabric.BundleWrapper;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.soloader.SoLoader;
@@ -37,8 +36,6 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   private final AndroidUIScheduler mAndroidUIScheduler;
   private final AnimationFrameQueue mAnimationFrameQueue;
   private boolean mSlowAnimationsEnabled;
-  private BundleWrapper mBundleWrapper = null;
-  private String mSourceURL = null;
 
   /**
    * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
@@ -52,8 +49,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
       MessageQueueThread messageQueueThread,
       CallInvokerHolderImpl jsCallInvokerHolder,
       AndroidUIScheduler androidUIScheduler,
-      BundleWrapper bundleWrapper,
-      String sourceURL);
+      BundleWrapper bundleWrapper);
 
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -78,8 +74,8 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     var jsContext = Objects.requireNonNull(context.getJavaScriptContextHolder()).get();
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
-    mSourceURL = context.getSourceURL();
-    mBundleWrapper = context.getBundle();
+    var sourceURL = context.getSourceURL();
+    var bundleWrapper = new BundleWrapper(sourceURL, context.getAssets());
 
     mHybridData =
         initHybrid(
@@ -87,8 +83,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
             mMessageQueueThread,
             jsCallInvokerHolder,
             mAndroidUIScheduler,
-            mBundleWrapper,
-            mSourceURL);
+            bundleWrapper);
     return true;
   }
 
