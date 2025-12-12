@@ -1,0 +1,32 @@
+name: docs publish
+description: Publish Reanimated and Worklets documentation to GitHub Pages
+inputs:
+  REANIMATED_DOCS_DIR:
+    description: Directory of Reanimated docs
+    default: 'docs/docs-reanimated'
+    required: true
+  WORKLETS_DOCS_DIR:
+    description: Directory of Worklets docs
+    default: 'docs/docs-worklets'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Configure git user info
+      shell: bash
+      run: >-
+        git config --local user.email "action@github.com"
+        && git config --local user.name "GitHub Action"
+
+    - name: Bundle Worklets docs into Reanimated docs
+      shell: bash
+      working-directory: ${{ inputs.WORKLETS_DOCS_DIR }}
+      run: yarn prepublish
+
+    - name: Publish generated content to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@releases/v3
+      with:
+        FOLDER: docs/docs-reanimated/build
+        BRANCH: gh-pages
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

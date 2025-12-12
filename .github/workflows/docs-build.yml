@@ -1,0 +1,33 @@
+name: docs build
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/docs-build.yml'
+      - '.github/workflows/docs-publish.yml'
+      - '.github/actions/docs-build/**'
+      - docs/docs-reanimated/**
+      - packages/react-native-reanimated/compatibility.json
+      - docs/docs-worklets/**
+      - packages/react-native-worklets/compatibility.json
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  docs-build:
+    runs-on: ubuntu-latest
+    env:
+      REANIMATED_DOCS_DIR: docs/docs-reanimated
+      WORKLETS_DOCS_DIR: docs/docs-worklets
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+      - name: Install monorepo node dependencies
+        run: yarn install
+
+      - name: Lint and build Reanimated and Worklets docs
+        uses: ./.github/actions/docs-build
+        with:
+          REANIMATED_DOCS_DIR: ${{ env.REANIMATED_DOCS_DIR }}
+          WORKLETS_DOCS_DIR: ${{ env.WORKLETS_DOCS_DIR }}
