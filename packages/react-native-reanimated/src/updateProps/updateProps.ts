@@ -10,14 +10,11 @@ import {
   processColorsInProps,
   processFilter,
   processTransform,
+  processTransformOrigin,
   ReanimatedError,
   SHOULD_BE_USE_WEB,
 } from '../common';
-import {
-  processBoxShadowWeb,
-  processFilterWeb,
-  processTransformOrigin,
-} from '../common/web';
+import { processBoxShadowWeb, processFilterWeb } from '../common/web';
 import type {
   AnimatedStyle,
   ShadowNodeWrapper,
