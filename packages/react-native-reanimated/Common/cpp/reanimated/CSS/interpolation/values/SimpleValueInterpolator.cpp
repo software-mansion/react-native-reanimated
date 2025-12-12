@@ -24,9 +24,10 @@ SimpleValueInterpolator<AllowedTypes...>::SimpleValueInterpolator(
     const PropertyPath &propertyPath,
     const ValueType &defaultStyleValue,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    std::function<void(std::shared_ptr<AnimatedPropsBuilder>, const CSSValueVariant<AllowedTypes...> &)>
+    std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)>
         addToPropsBuilder)
-    : ValueInterpolator(propertyPath, std::make_shared<ValueType>(defaultStyleValue), viewStylesRepository) {}
+    : ValueInterpolator(propertyPath, std::make_shared<ValueType>(defaultStyleValue), viewStylesRepository),
+      addToPropsBuilder_(addToPropsBuilder) {}
 
 template <typename... AllowedTypes>
 std::shared_ptr<CSSValue> SimpleValueInterpolator<AllowedTypes...>::createValue(
@@ -45,10 +46,15 @@ folly::dynamic SimpleValueInterpolator<AllowedTypes...>::interpolateValue(
     double progress,
     const std::shared_ptr<CSSValue> &fromValue,
     const std::shared_ptr<CSSValue> &toValue,
-    const ValueInterpolationContext &context) const {
+    const ValueInterpolationContext &context,
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const {
   const auto &from = std::static_pointer_cast<ValueType>(fromValue);
   const auto &to = std::static_pointer_cast<ValueType>(toValue);
   const auto interpolatedValue = from->interpolate(progress, *to, context);
+
+  if (addToPropsBuilder_) {
+    addToPropsBuilder_(propsBuilder, interpolatedValue);
+  }
 
   return interpolatedValue.toDynamic();
 }

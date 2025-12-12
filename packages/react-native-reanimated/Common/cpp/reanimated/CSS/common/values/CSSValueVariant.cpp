@@ -155,7 +155,7 @@ CSSValueVariant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::fallbackInter
 
 template <CSSValueDerived... AllowedTypes>
 std::variant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::getStorage() const {
-    return storage_;
+  return storage_;
 };
 
 template class CSSValueVariant<CSSLength>;

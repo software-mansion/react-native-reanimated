@@ -11,8 +11,9 @@ import TransformAnimations from './components/TransformAnimations';
 import BorderAnimations from './components/BorderAnimations';
 import MarginAnimations from './components/MarginAnimations';
 import CSSAnimations from './components/CSSAnimations';
+import CSSBorderAnimations from './components/CSSBorderAnimations';
 
-type Screen = 'home' | 'transform' | 'border' | 'margin' | 'css';
+type Screen = 'home' | 'transform' | 'border' | 'margin' | 'css' | 'css-border';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
@@ -60,6 +61,15 @@ export default function App() {
               Classic CSS effects: fade, slide, bounce, pulse, shake, and more
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.categoryButton, styles.cssBorderButton]}
+            onPress={() => setCurrentScreen('css-border')}>
+            <Text style={styles.categoryTitle}>🧱 CSS Border Lab</Text>
+            <Text style={styles.categoryDescription}>
+              Border-focused transitions powered by CSS animations
+            </Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -75,6 +85,8 @@ export default function App() {
         return <MarginAnimations onBack={() => setCurrentScreen('home')} />;
       case 'css':
         return <CSSAnimations onBack={() => setCurrentScreen('home')} />;
+      case 'css-border':
+        return <CSSBorderAnimations onBack={() => setCurrentScreen('home')} />;
       default:
         return renderHomeScreen();
     }
@@ -143,6 +155,9 @@ const styles = StyleSheet.create({
   },
   cssButton: {
     borderLeftColor: '#9b59b6',
+  },
+  cssBorderButton: {
+    borderLeftColor: '#1abc9c',
   },
   categoryTitle: {
     fontSize: 20,

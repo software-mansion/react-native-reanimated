@@ -1,6 +1,6 @@
-#include <reanimated/Fabric/updates/UpdatesRegistry.h>
 #include <reanimated/CSS/common/values/CSSAngle.h>
 #include <reanimated/CSS/utils/propsBuilderWrapper.h>
+#include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
 #include <react/renderer/animationbackend/AnimationBackend.h>
@@ -11,35 +11,236 @@ using namespace facebook::react;
 
 namespace reanimated::css {
 
-void addToPropsBuilder(
+namespace {
+
+void addCascadedBorderRadiiToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const folly::dynamic &interpolatedValue,
-    const std::string &propertyName) {
-  printf("addsToPropsBuilder");
+    const CSSValueVariant<CSSLength> &value,
+    std::string borderRadiiPropName) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSLength>(storage);
 
-  auto nameHash = RAW_PROPS_KEY_HASH(propertyName);
-  switch (nameHash) {
+  const auto updateBordeRadii = [&](CascadedBorderRadii &borderRadii) {
+    auto nameHash = RAW_PROPS_KEY_HASH(borderRadiiPropName);
+    switch (nameHash) {
+      case RAW_PROPS_KEY_HASH("all"):
+        borderRadii.all = {(float)cssValue.value, UnitType::Point};
+        break;
+      case RAW_PROPS_KEY_HASH("topLeft"):
+        borderRadii.topLeft = {(float)cssValue.value, UnitType::Point};
+        break;
+      case RAW_PROPS_KEY_HASH("topRight"):
+        borderRadii.topRight = {(float)cssValue.value, UnitType::Point};
+        break;
+      case RAW_PROPS_KEY_HASH("bottomLeft"):
+        borderRadii.bottomLeft = {(float)cssValue.value, UnitType::Point};
+        break;
+      case RAW_PROPS_KEY_HASH("bottomRight"):
+        borderRadii.bottomRight = {(float)cssValue.value, UnitType::Point};
+        break;
+      case RAW_PROPS_KEY_HASH("topStart"):
+        borderRadii.topStart = {(float)cssValue.value, UnitType::Point};
+        break;
+      case RAW_PROPS_KEY_HASH("topEnd"):
+        borderRadii.topEnd = {(float)cssValue.value, UnitType::Point};
+        break;
+      case RAW_PROPS_KEY_HASH("bottomStart"):
+        borderRadii.bottomStart = {(float)cssValue.value, UnitType::Point};
+        break;
+      case RAW_PROPS_KEY_HASH("bottomEnd"):
+        borderRadii.bottomEnd = {(float)cssValue.value, UnitType::Point};
+        break;
+      case RAW_PROPS_KEY_HASH("startStart"):
+        borderRadii.startStart = {(float)cssValue.value, UnitType::Point};
+        break;
+      case RAW_PROPS_KEY_HASH("startEnd"):
+        borderRadii.startEnd = {(float)cssValue.value, UnitType::Point};
+        break;
+      case RAW_PROPS_KEY_HASH("endStart"):
+        borderRadii.endStart = {(float)cssValue.value, UnitType::Point};
+        break;
+      case RAW_PROPS_KEY_HASH("endEnd"):
+        borderRadii.endEnd = {(float)cssValue.value, UnitType::Point};
+        break;
+    }
+  };
 
-    case RAW_PROPS_KEY_HASH("width"):
-      propsBuilder->setWidth(facebook::yoga::Style::SizeLength::points(interpolatedValue.asDouble()));
-      break;
+  bool isFound = false;
+  for (auto &prop : propsBuilder->props) {
+    if (prop->propName != BORDER_RADII) {
+      continue;
+    }
+    auto *borderProp = dynamic_cast<AnimatedProp<CascadedBorderRadii> *>(prop.get());
 
-    case RAW_PROPS_KEY_HASH("height"):
-      propsBuilder->setHeight(facebook::yoga::Style::SizeLength::points(interpolatedValue.asDouble()));
-      break;
+    if (!borderProp) {
+      continue;
+    }
 
-    case RAW_PROPS_KEY_HASH("backgroundColor"):
-      propsBuilder->setBackgroundColor(facebook::react::SharedColor(static_cast<int>(interpolatedValue.asInt())));
-      break;
-
-    case RAW_PROPS_KEY_HASH("opacity"):
-      propsBuilder->setOpacity(interpolatedValue.asDouble());
-      break;
-
-    default:
-      printf("Property %s not handled in addToPropsBuilder\n", propertyName.c_str());
-      break;
+    updateBordeRadii(borderProp->value);
+    isFound = true;
+    break;
   }
+
+  if (!isFound) {
+    CascadedBorderRadii borderRadii{};
+    updateBordeRadii(borderRadii);
+    propsBuilder->setBorderRadii(borderRadii);
+  }
+}
+
+} // namespace
+
+void addWidthToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
+
+  const auto &storage = value.getStorage();
+  std::visit(
+      [&](const auto &active_value) {
+        using T = std::decay_t<decltype(active_value)>;
+
+        if constexpr (std::is_same_v<T, CSSLength>) {
+          const CSSLength &cssValue = active_value;
+          if (cssValue.isRelative) {
+            propsBuilder->setWidth(yoga::Style::SizeLength::percent(cssValue.value));
+          } else {
+            propsBuilder->setWidth(yoga::Style::SizeLength::points(cssValue.value));
+          }
+
+          printf("getCSSLengthKeywordCallback: propName %s, value %f \n", "width", cssValue.value);
+
+        } else if constexpr (std::is_same_v<T, CSSKeyword>) {
+        }
+      },
+      storage);
+}
+
+void addHeightToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
+
+  const auto &storage = value.getStorage();
+  std::visit(
+      [&](const auto &active_value) {
+        using T = std::decay_t<decltype(active_value)>;
+
+        if constexpr (std::is_same_v<T, CSSLength>) {
+          const CSSLength &cssValue = active_value;
+          if (cssValue.isRelative) {
+            propsBuilder->setWidth(yoga::Style::SizeLength::percent(cssValue.value));
+          } else {
+            propsBuilder->setWidth(yoga::Style::SizeLength::points(cssValue.value));
+          }
+
+          printf("getCSSLengthKeywordCallback: propName %s, value %f \n", "width", cssValue.value);
+
+        } else if constexpr (std::is_same_v<T, CSSKeyword>) {
+        }
+      },
+      storage);
+}
+
+void addBackgroundColorToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSColor> &value) {
+
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSColor>(storage);
+  auto color = 0;
+  if (cssValue.colorType == CSSColorType::Rgba) {
+    auto &channels = cssValue.channels;
+    color = (channels[3] << 24) | (channels[0] << 16) | (channels[1] << 8) | channels[2];
+  } else {
+    color = 0;
+  }
+
+  propsBuilder->setBackgroundColor(SharedColor(color));
+}
+
+void addOpacityToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSDouble>(storage);
+  propsBuilder->setOpacity(cssValue.value);
+}
+
+void addBorderRadiusToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value) {
+  addCascadedBorderRadiiToPropsBuilder(propsBuilder, value, "all");
+}
+
+void addBorderTopRightRadiusToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value) {
+  addCascadedBorderRadiiToPropsBuilder(propsBuilder, value, "topRight");
+}
+
+void addBorderTopLeftRadiusToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value) {
+  addCascadedBorderRadiiToPropsBuilder(propsBuilder, value, "topLeft");
+}
+
+void addBorderBottomRightRadiusToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value) {
+  addCascadedBorderRadiiToPropsBuilder(propsBuilder, value, "bottomRight");
+}
+
+void addBorderBottomLeftRadiusToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value) {
+  addCascadedBorderRadiiToPropsBuilder(propsBuilder, value, "bottomLeft");
+}
+
+void addBorderTopStartRadiusToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value) {
+  addCascadedBorderRadiiToPropsBuilder(propsBuilder, value, "topStart");
+}
+
+void addBorderTopEndRadiusToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value) {
+  addCascadedBorderRadiiToPropsBuilder(propsBuilder, value, "topEnd");
+}
+
+void addBorderBottomStartRadiusToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value) {
+  addCascadedBorderRadiiToPropsBuilder(propsBuilder, value, "bottomStart");
+}
+
+void addBorderBottomEndRadiusToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value) {
+  addCascadedBorderRadiiToPropsBuilder(propsBuilder, value, "bottomEnd");
+}
+
+void addBorderStartStartRadiusToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value) {
+  addCascadedBorderRadiiToPropsBuilder(propsBuilder, value, "startStart");
+}
+
+void addBorderStartEndRadiusToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value) {
+  addCascadedBorderRadiiToPropsBuilder(propsBuilder, value, "startEnd");
+}
+
+void addBorderEndStartRadiusToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value) {
+  addCascadedBorderRadiiToPropsBuilder(propsBuilder, value, "endStart");
+}
+
+void addBorderEndEndRadiusToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value) {
+  addCascadedBorderRadiiToPropsBuilder(propsBuilder, value, "endEnd");
 }
 
 void animationMutationsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch) {

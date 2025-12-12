@@ -27,7 +27,7 @@ class SimpleValueInterpolatorFactory : public PropertyInterpolatorFactory {
   template <typename TValue>
   explicit SimpleValueInterpolatorFactory(
       const TValue &defaultValue,
-      std::function<void(std::shared_ptr<AnimatedPropsBuilder>, const CSSValueVariant<AllowedTypes...> &)>
+      std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)>
           addToPropsBuilder = nullptr)
       : PropertyInterpolatorFactory(), defaultValue_(defaultValue), addToPropsBuilder_(addToPropsBuilder) {}
 
@@ -50,7 +50,7 @@ class SimpleValueInterpolatorFactory : public PropertyInterpolatorFactory {
 
  private:
   const CSSValueVariant<AllowedTypes...> defaultValue_;
-  std::function<void(std::shared_ptr<AnimatedPropsBuilder>, const CSSValueVariant<AllowedTypes...> &)>
+  std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)>
       addToPropsBuilder_;
 };
 
@@ -61,7 +61,7 @@ class ResolvableValueInterpolatorFactory : public PropertyInterpolatorFactory {
   explicit ResolvableValueInterpolatorFactory(
       const TValue &defaultValue,
       ResolvableValueInterpolatorConfig config,
-      std::function<void(std::shared_ptr<AnimatedPropsBuilder>, const CSSValueVariant<AllowedTypes...> &)>
+      std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)>
           addToPropsBuilder = nullptr)
       : PropertyInterpolatorFactory(),
         defaultValue_(defaultValue),
@@ -82,7 +82,7 @@ class ResolvableValueInterpolatorFactory : public PropertyInterpolatorFactory {
  private:
   const CSSValueVariant<AllowedTypes...> defaultValue_;
   ResolvableValueInterpolatorConfig config_;
-  std::function<void(std::shared_ptr<AnimatedPropsBuilder>, const CSSValueVariant<AllowedTypes...> &)>
+  std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)>
       addToPropsBuilder_;
 };
 
@@ -123,26 +123,26 @@ CSSValueVariant<AllowedTypes...> createCSSValue(const auto &defaultValue) {
  * Value interpolator factories
  */
 template <typename... AllowedTypes>
-auto value(const auto &defaultValue) -> std::enable_if_t<
+auto value(const auto &defaultValue, std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)> addToPropsBuilder) -> std::enable_if_t<
     (std::is_constructible_v<AllowedTypes, decltype(defaultValue)> || ...),
     std::shared_ptr<PropertyInterpolatorFactory>> {
   // Create a concrete CSSValue from the defaultValue
   auto cssValue = createCSSValue<AllowedTypes...>(defaultValue);
-  return std::make_shared<SimpleValueInterpolatorFactory<AllowedTypes...>>(std::move(cssValue));
+  return std::make_shared<SimpleValueInterpolatorFactory<AllowedTypes...>>(std::move(cssValue), addToPropsBuilder);
 }
 
 template <typename... AllowedTypes>
 auto value(
     const auto &defaultValue,
     ResolvableValueInterpolatorConfig config,
-    std::function<void(std::shared_ptr<AnimatedPropsBuilder>, const CSSValueVariant<AllowedTypes...> &)> cb)
+    std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)> addToPropsBuilder)
     -> std::enable_if_t<
         (std::is_constructible_v<AllowedTypes, decltype(defaultValue)> || ...),
         std::shared_ptr<PropertyInterpolatorFactory>> {
   // Create a concrete CSSValue from the defaultValue
   auto cssValue = createCSSValue<AllowedTypes...>(defaultValue);
   return std::make_shared<ResolvableValueInterpolatorFactory<AllowedTypes...>>(
-      std::move(cssValue), std::move(config), cb);
+      std::move(cssValue), std::move(config), addToPropsBuilder);
 }
 
 /**

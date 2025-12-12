@@ -18,21 +18,23 @@ ResolvableValueInterpolator<AllowedTypes...>::ResolvableValueInterpolator(
     const ValueType &defaultStyleValue,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const ResolvableValueInterpolatorConfig &config,
-    std::function<void(std::shared_ptr<AnimatedPropsBuilder>, const CSSValueVariant<AllowedTypes...> &)>
+    std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)>
         addToPropsBuilder)
     : SimpleValueInterpolator<AllowedTypes...>(
           propertyPath,
           defaultStyleValue,
           viewStylesRepository,
           addToPropsBuilder),
-      config_(config) {}
+      config_(config),
+      addToPropsBuilder_(addToPropsBuilder) {}
 
 template <typename... AllowedTypes>
 folly::dynamic ResolvableValueInterpolator<AllowedTypes...>::interpolateValue(
     double progress,
     const std::shared_ptr<CSSValue> &fromValue,
     const std::shared_ptr<CSSValue> &toValue,
-    const ValueInterpolationContext &context) const {
+    const ValueInterpolationContext &context,
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const {
   const auto &from = std::static_pointer_cast<ValueType>(fromValue);
   const auto &to = std::static_pointer_cast<ValueType>(toValue);
   const auto interpolatedValue = from->interpolate(
@@ -43,6 +45,11 @@ folly::dynamic ResolvableValueInterpolator<AllowedTypes...>::interpolateValue(
        .viewStylesRepository = this->viewStylesRepository_,
        .relativeProperty = config_.relativeProperty,
        .relativeTo = config_.relativeTo});
+
+  if (addToPropsBuilder_) {
+    addToPropsBuilder_(propsBuilder, interpolatedValue);
+  }
+
   return interpolatedValue.toDynamic();
 }
 

@@ -119,7 +119,8 @@ folly::dynamic ValueInterpolator::interpolate(
       keyframeProgress,
       fromValue,
       toValue,
-      {.node = shadowNode, .fallbackInterpolateThreshold = fallbackInterpolateThreshold});
+      {.node = shadowNode, .fallbackInterpolateThreshold = fallbackInterpolateThreshold},
+      propsBuilder);
 }
 
 folly::dynamic ValueInterpolator::convertOptionalToDynamic(
