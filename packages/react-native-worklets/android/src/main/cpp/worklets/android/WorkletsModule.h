@@ -3,12 +3,13 @@
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
-#include <react/jni/JSLoader.h>
 #include <react/jni/JMessageQueueThread.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/Tools/Defs.h>
+#include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/android/AndroidUIScheduler.h>
+#include <worklets/android/JScriptWrapper.h>
 
 #include <memory>
 #include <string>
@@ -30,10 +31,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler
 #ifdef WORKLETS_BUNDLE_MODE
       ,
-      jni::alias_ref<JAssetManager::javaobject> assetManager,
-//      jni::alias_ref<jbyteArray> bundle,
-//    const std::string &bundle,
-      const std::string &sourceURL
+      jni::alias_ref<JScriptWrapper::javaobject> jBundleWrapper
 #endif // WORKLETS_BUNDLE_MODE
   );
 
@@ -50,7 +48,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      const std::shared_ptr<const JSBigStringBuffer> &bundle,
+      const std::shared_ptr<const ScriptBuffer> &script,
       const std::string &sourceURL);
 
   void invalidateCpp();

@@ -123,6 +123,13 @@ function makeBokehCircleParams(): CircleProps {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'black', overflow: 'hidden' },
-  circle: { position: 'absolute', borderRadius: 999 },
+  container: {
+    flex: 1,
+    backgroundColor: 'black',
+    overflow: 'hidden',
+  },
+  circle: {
+    position: 'absolute',
+    borderRadius: 999,
+  },
 });

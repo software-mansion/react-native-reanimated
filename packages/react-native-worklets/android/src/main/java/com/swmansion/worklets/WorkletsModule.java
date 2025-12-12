@@ -1,6 +1,7 @@
 package com.swmansion.worklets;
 
 import android.os.Build;
+import android.renderscript.Script;
 
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
@@ -50,7 +51,8 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
       long jsContext,
       MessageQueueThread messageQueueThread,
       CallInvokerHolderImpl jsCallInvokerHolder,
-      AndroidUIScheduler androidUIScheduler);
+      AndroidUIScheduler androidUIScheduler,
+      ScriptWrapper bundleWrapper);
 
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -71,8 +73,16 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     var jsContext = Objects.requireNonNull(context.getJavaScriptContextHolder()).get();
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
+    var sourceURL = context.getSourceURL();
+    var scriptWrapper = new ScriptWrapper(sourceURL, context.getAssets());
+
     mHybridData =
-        initHybrid(jsContext, mMessageQueueThread, jsCallInvokerHolder, mAndroidUIScheduler);
+        initHybrid(
+            jsContext,
+            mMessageQueueThread,
+            jsCallInvokerHolder,
+            mAndroidUIScheduler,
+            scriptWrapper);
     return true;
   }
 

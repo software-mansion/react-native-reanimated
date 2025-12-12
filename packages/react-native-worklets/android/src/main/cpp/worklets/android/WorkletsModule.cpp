@@ -1,4 +1,5 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
+#include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/android/AnimationFrameCallback.h>
@@ -7,11 +8,6 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include "cxxreact/JSBigString.h"
-#include <react/jni/JSLoader.h>
-#include "worklets/Tools/Defs.h"
-
-#include <glog/logging.h>
 
 namespace worklets {
 
@@ -19,12 +15,13 @@ using namespace facebook;
 using namespace react;
 
 WorkletsModule::WorkletsModule(
-    jni::alias_ref<jhybridobject> jThis,
+    jni::alias_ref<jhybridobject> jThis, // NOLINT(performance-unnecessary-value-param)
     jsi::Runtime *rnRuntime,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+    jni::alias_ref<JavaMessageQueueThread::javaobject>
+        messageQueueThread, // NOLINT(performance-unnecessary-value-param)
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
-    const std::shared_ptr<const JSBigStringBuffer> &script,
+    const std::shared_ptr<const ScriptBuffer> &script,
     const std::string &sourceURL)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
@@ -45,47 +42,27 @@ WorkletsModule::WorkletsModule(
 }
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
-    jni::alias_ref<jhybridobject> jThis,
+    jni::alias_ref<jhybridobject> jThis, // NOLINT(performance-unnecessary-value-param)
     jlong jsContext,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+    jni::alias_ref<JavaMessageQueueThread::javaobject>
+        messageQueueThread, // NOLINT(performance-unnecessary-value-param)
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
     jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler
 #ifdef WORKLETS_BUNDLE_MODE
     ,
-    jni::alias_ref<JAssetManager::javaobject> assetManager,
-//    jni::alias_ref<jbyteArray> bundle,
-//    const std::string &bundle,
-    const std::string &sourceURL
+    jni::alias_ref<JScriptWrapper::javaobject> jBundleWrapper
 #endif // WORKLETS_BUNDLE_MODE
 ) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
-  auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext);
+  auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext); // NOLINT(performance-no-int-to-ptr)
   auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
 
-  std::shared_ptr<const JSBigStringBuffer> script = nullptr;
-//  auto bytes = bundle.get();
-//  auto *env = jni::Environment::current();
-//  jsize len = env->GetArrayLength(bytes);
-//  jbyte* scriptDataPtr = env->GetByteArrayElements(bytes, nullptr);
-
-//    auto data_deleter = [](const uint8_t* ptr) { delete[] ptr; };
-
-    // Allocate a new byte buffer (using uint8_t* for explicit byte representation)
-//    auto raw_data_copy = std::shared_ptr<uint8_t[]>(new uint8_t[len]);
-//    std::memcpy(raw_data_copy.get(), scriptDataPtr, len);
-//    auto rawPtr = reinterpret_cast<char *>(raw_data_copy.get());
-//    auto str = std::string(rawPtr);
-
-//  script = std::make_shared<const JSBigStdString>(bundle);
-//script = std::make_shared<const JSBigStdString>(str);
-
-//    env->ReleaseByteArrayElements(bytes, scriptDataPtr, JNI_ABORT);
+  std::shared_ptr<const ScriptBuffer> script = nullptr;
+  std::string sourceURL;
 #ifdef WORKLETS_BUNDLE_MODE
-//  script = JSBigFileString::fromPath(sourceURL.substr(9));
-script = loadScriptFromAssets(extractAssetManager(assetManager), sourceURL);
-LOG(INFO) << script->c_str();
-#else
-  const auto sourceURL = std::string{};
+  auto cxxBundleWrapper = jBundleWrapper->cthis();
+  script = cxxBundleWrapper->getScript();
+  sourceURL = cxxBundleWrapper->getSourceUrl();
 #endif // WORKLETS_BUNDLE_MODE
 
   return makeCxxInstance(jThis, rnRuntime, messageQueueThread, jsCallInvoker, uiScheduler, script, sourceURL);

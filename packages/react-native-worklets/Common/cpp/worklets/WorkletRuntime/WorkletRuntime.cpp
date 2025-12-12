@@ -132,8 +132,7 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
   }
 
   try {
-    auto buffer = std::make_shared<const CopyableBigStringBuffer>(script);
-    rt.evaluateJavaScript(buffer, sourceUrl);
+    rt.evaluateJavaScript(script, sourceUrl);
   } catch (facebook::jsi::JSError &error) {
     const auto &message = error.getMessage();
     const auto &stack = error.getStack();
@@ -154,11 +153,11 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
   auto customSerializableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(CustomSerializableUnpackerCode);
   rt.evaluateJavaScript(customSerializableUnpackerBuffer, "customSerializableUnpacker");
 #endif // WORKLETS_BUNDLE_MODE
-   try {
-     memoryManager_->loadAllCustomSerializables(shared_from_this());
-   } catch (jsi::JSError &e) {
-     throw std::runtime_error(std::string("[Worklets] Failed to load custom serializables. Reason: ") + e.getMessage());
-   }
+  try {
+    memoryManager_->loadAllCustomSerializables(shared_from_this());
+  } catch (jsi::JSError &e) {
+    throw std::runtime_error(std::string("[Worklets] Failed to load custom serializables. Reason: ") + e.getMessage());
+  }
 }
 
 /* #region schedule */

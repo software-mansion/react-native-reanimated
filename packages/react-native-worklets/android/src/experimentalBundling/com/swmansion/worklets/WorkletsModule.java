@@ -1,9 +1,5 @@
 package com.swmansion.worklets;
 
-import android.content.res.AssetManager;
-import android.content.res.Resources;
-import android.os.Build;
-
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
@@ -17,6 +13,7 @@ import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.worklets.runloop.AnimationFrameCallback;
 import com.swmansion.worklets.runloop.AnimationFrameQueue;
+import com.swmansion.worklets.BundleWrapper;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -31,8 +28,6 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   @SuppressWarnings("unused")
   private HybridData mHybridData;
 
-  private final AssetManager assetManager = Resources.getSystem().getAssets();
-
   @SuppressWarnings("unused")
   protected HybridData getHybridData() {
     return mHybridData;
@@ -42,8 +37,6 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   private final AndroidUIScheduler mAndroidUIScheduler;
   private final AnimationFrameQueue mAnimationFrameQueue;
   private boolean mSlowAnimationsEnabled;
-  private byte[] mBundle = null;
-  private String mSourceURL = null;
 
   /**
    * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
@@ -57,10 +50,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
       MessageQueueThread messageQueueThread,
       CallInvokerHolderImpl jsCallInvokerHolder,
       AndroidUIScheduler androidUIScheduler,
-AssetManager assetManager,
-//      byte[] bundle,
-//      String bundle,
-      String sourceURL);
+      BundleWrapper bundleWrapper);
 
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -85,50 +75,8 @@ AssetManager assetManager,
     var jsContext = Objects.requireNonNull(context.getJavaScriptContextHolder()).get();
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
-    var url = context.getSourceURL();
-    System.out.println("url: " + url);
-
-    byte[] bundle = null;
-//    String bundle = "";
-
-    try {
-      if (url != null && url.startsWith("assets://")) {
-          url = url.substring(9);
-        // Handle assets URL
-        String assetPath = url; // Remove "assets://" prefix
-//          var asset = assetManager.open(assetPath);
-          System.out.println("assetPath: " + assetPath);
-        try (java.io.InputStream is = context.getAssets().open(assetPath)) {
-            System.out.println("opened");
-            byte[] content = null;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                content = is.readAllBytes();
-                bundle = content;
-            }
-//          bundle = new String(content, java.nio.charset.StandardCharsets.UTF_8);
-//          System.out.println("bunlde: " + bundle);
-//            bundle = new String(content);
-        }
-      } else {
-        // Handle HTTP URL
-        var connection = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
-        byte[] content = null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-          content = connection.getInputStream().readAllBytes();
-        }
-//        bundle = new String(content, java.nio.charset.StandardCharsets.UTF_8);
-//          bundle = content;
-        assert(content != null);
-      }
-    } catch (Exception e) {
-      // handle error
-    }
-
-    System.out.println("Bundle len: " + bundle.length);
-
-    mSourceURL = context.getSourceURL().substring(9);
-//    mBundle = bundle;
-      var assetManager = context.getAssets();
+    var sourceURL = context.getSourceURL();
+    var bundleWrapper = new BundleWrapper(sourceURL, context.getAssets());
 
     mHybridData =
         initHybrid(
@@ -136,10 +84,7 @@ AssetManager assetManager,
             mMessageQueueThread,
             jsCallInvokerHolder,
             mAndroidUIScheduler,
-            assetManager,
-//            mBundle,
-//                bundle,
-            mSourceURL);
+            bundleWrapper);
     return true;
   }
 
