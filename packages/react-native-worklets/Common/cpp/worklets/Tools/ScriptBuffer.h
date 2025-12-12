@@ -13,7 +13,7 @@ using namespace facebook::react;
 
 class ScriptBuffer : public jsi::Buffer {
  public:
-  ScriptBuffer(std::shared_ptr<const JSBigString> script) : script_(std::move(script)) {}
+  explicit ScriptBuffer(std::shared_ptr<const JSBigString> script) : script_(std::move(script)) {}
 
   size_t size() const override {
     return script_->size();

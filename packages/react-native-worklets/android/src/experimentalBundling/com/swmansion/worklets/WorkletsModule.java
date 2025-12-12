@@ -13,7 +13,6 @@ import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.worklets.runloop.AnimationFrameCallback;
 import com.swmansion.worklets.runloop.AnimationFrameQueue;
-import com.swmansion.worklets.BundleWrapper;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 

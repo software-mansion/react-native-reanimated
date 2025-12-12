@@ -15,10 +15,10 @@ using namespace facebook;
 using namespace react;
 
 WorkletsModule::WorkletsModule(
-    jni::alias_ref<jhybridobject> jThis, // NOLINT(performance-unnecessary-value-param)
+    jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
     jsi::Runtime *rnRuntime,
     jni::alias_ref<JavaMessageQueueThread::javaobject>
-        messageQueueThread, // NOLINT(performance-unnecessary-value-param)
+        messageQueueThread, // NOLINT //(performance-unnecessary-value-param)
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::shared_ptr<const ScriptBuffer> &script,
@@ -42,10 +42,10 @@ WorkletsModule::WorkletsModule(
 }
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
-    jni::alias_ref<jhybridobject> jThis, // NOLINT(performance-unnecessary-value-param)
+    jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
     jlong jsContext,
     jni::alias_ref<JavaMessageQueueThread::javaobject>
-        messageQueueThread, // NOLINT(performance-unnecessary-value-param)
+        messageQueueThread, // NOLINT //(performance-unnecessary-value-param)
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
     jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler
 #ifdef WORKLETS_BUNDLE_MODE
@@ -54,7 +54,7 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
 #endif // WORKLETS_BUNDLE_MODE
 ) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
-  auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext); // NOLINT(performance-no-int-to-ptr)
+  auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext); // NOLINT //(performance-no-int-to-ptr)
   auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
 
   std::shared_ptr<const ScriptBuffer> script = nullptr;

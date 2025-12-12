@@ -1,6 +1,6 @@
 #import <worklets/NativeModules/JSIWorkletsModuleProxy.h>
-#import <worklets/Tools/ScriptBuffer.h>
 #import <worklets/Tools/Defs.h>
+#import <worklets/Tools/ScriptBuffer.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/Tools/WorkletsJSIUtils.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
@@ -58,18 +58,18 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   auto jsQueue =
       std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) { throw error; });
 
-  NSURL* sourceURL = nil;
+  NSURL *sourceURL = nil;
   std::shared_ptr<const ScriptBuffer> script = nullptr;
 #ifdef WORKLETS_BUNDLE_MODE
   sourceURL = bundleManager_.bundleURL;
-NSData *data = [NSData dataWithContentsOfURL:sourceURL];
-if (data) {
-  auto str = std::string(reinterpret_cast<const char *>([data bytes]), [data length]);
-  auto bigString = std::make_shared<const JSBigStdString>(str);
-  script = std::make_shared<const ScriptBuffer>(bigString);
-} else {
-  throw std::runtime_error("[Worklets] Failed to load worklets bundle from URL");
-}
+  NSData *data = [NSData dataWithContentsOfURL:sourceURL];
+  if (data) {
+    auto str = std::string(reinterpret_cast<const char *>([data bytes]), [data length]);
+    auto bigString = std::make_shared<const JSBigStdString>(str);
+    script = std::make_shared<const ScriptBuffer>(bigString);
+  } else {
+    throw std::runtime_error("[Worklets] Failed to load worklets bundle from URL");
+  }
 #endif // WORKLETS_BUNDLE_MODE
 
   auto jsCallInvoker = callInvoker_.callInvoker;
@@ -81,7 +81,14 @@ if (data) {
   auto runtimeBindings = [self getRuntimeBindings];
 
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
-      rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(isJavaScriptQueue), runtimeBindings, script, [[sourceURL absoluteString] UTF8String]);
+      rnRuntime,
+      jsQueue,
+      jsCallInvoker,
+      uiScheduler,
+      std::move(isJavaScriptQueue),
+      runtimeBindings,
+      script,
+      [[sourceURL absoluteString] UTF8String]);
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
       rnRuntime, std::static_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));

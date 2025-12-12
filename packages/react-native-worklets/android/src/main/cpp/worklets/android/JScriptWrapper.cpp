@@ -8,13 +8,15 @@
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/android/JScriptWrapper.h>
 
+#include <utility>
+
 namespace worklets {
 
 using namespace facebook::jni;
 
 jni::local_ref<JScriptWrapper::jhybriddata> JScriptWrapper::initHybridFromAssets(
-    jni::alias_ref<jhybridobject> jThis, // NOLINT(performance-unnecessary-value-param)
-    jni::alias_ref<JAssetManager::javaobject> assetManager, // NOLINT(performance-unnecessary-value-param)
+    jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
+    jni::alias_ref<JAssetManager::javaobject> assetManager, // NOLINT //(performance-unnecessary-value-param)
     const std::string &sourceURL) {
   auto manager = extractAssetManager(assetManager);
   auto bigString = loadScriptFromAssets(manager, sourceURL);
@@ -23,7 +25,7 @@ jni::local_ref<JScriptWrapper::jhybriddata> JScriptWrapper::initHybridFromAssets
 }
 
 jni::local_ref<JScriptWrapper::jhybriddata> JScriptWrapper::initHybridFromFile(
-    jni::alias_ref<jhybridobject> jThis, // NOLINT(performance-unnecessary-value-param)
+    jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
     const std::string &fileName) {
   std::shared_ptr<const ScriptBuffer> script;
   RecoverableError::runRethrowingAsRecoverable<std::system_error>([&fileName, &script]() {
@@ -34,7 +36,7 @@ jni::local_ref<JScriptWrapper::jhybriddata> JScriptWrapper::initHybridFromFile(
 }
 
 jni::local_ref<JScriptWrapper::jhybriddata> JScriptWrapper::initHybridFromString(
-    jni::alias_ref<jhybridobject> jThis, // NOLINT(performance-unnecessary-value-param)
+    jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
     const std::string &scriptStr,
     const std::string &sourceURL) {
   auto bigString = std::make_shared<JSBigStdString>(scriptStr);
