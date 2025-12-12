@@ -17,7 +17,7 @@ type CreatePropsBuilderParams<TPropsConfig> = {
   ) => ValueProcessor | TPropsConfig[keyof TPropsConfig] | undefined;
 };
 
-export type PropsBuilderResult<TProps> = {
+type PropsBuilderResult<TProps> = {
   build(
     props: TProps,
     options?: {

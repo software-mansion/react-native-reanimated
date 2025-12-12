@@ -3,20 +3,7 @@ import type {
   AnyRecord,
   ConfigPropertyAlias,
   ValueProcessor,
-  ValueProcessorContext,
 } from '../types';
-
-export type PropsBuildMiddleware<P extends AnyRecord> = (props: P) => P;
-
-export type PropsBuilder<P extends AnyRecord = AnyRecord> = {
-  build(
-    props: Readonly<P>,
-    options?: {
-      includeUndefined?: boolean;
-      target?: ValueProcessorContext['target'];
-    }
-  ): AnyRecord;
-};
 
 type PropertyValueConfigBase<P extends AnyRecord> =
   | boolean // true - included, false - excluded
