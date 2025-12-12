@@ -2,12 +2,14 @@ import { fireEvent, render } from '@testing-library/react-native';
 import type { ComponentProps } from 'react';
 import React from 'react';
 import { Button, TextInput, View } from 'react-native';
+import type { TextInputProps } from 'react-native';
 import Animated, {
   useAnimatedProps,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 import { Circle, Svg } from 'react-native-svg';
+import type { JestAnimatedStyleHandle } from '../src/hook/commonTypes';
 
 const animationDuration = 100;
 
@@ -119,6 +121,36 @@ describe('animatedProps', () => {
         jest.advanceTimersByTime(animationDuration);
 
         expect(textInput).toHaveAnimatedProps({ text: 'Box width: 30' });
+      });
+
+      test('cleans up a single animated props object on unmount', () => {
+        const removeSpy = jest.fn();
+
+        function DetachSingleAnimatedPropsComponent() {
+          const animatedProps = useAnimatedProps(() => ({
+            placeholder: 'Single animated props',
+          }));
+
+          React.useEffect(() => {
+            const handle =
+              animatedProps as JestAnimatedStyleHandle<TextInputProps>;
+            const spy = jest
+              .spyOn(handle.viewDescriptors, 'remove')
+              .mockImplementation(removeSpy);
+
+            return () => {
+              spy.mockRestore();
+            };
+          }, [animatedProps]);
+
+          return <AnimatedTextInput animatedProps={animatedProps} />;
+        }
+
+        const { unmount } = render(<DetachSingleAnimatedPropsComponent />);
+
+        unmount();
+
+        expect(removeSpy).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -265,6 +297,54 @@ describe('animatedProps', () => {
         expect(textInput).toHaveAnimatedProps({
           text: 'First: 15',
           placeholder: 'First placeholder', // this also changes as the entire returned object is used
+        });
+      });
+
+      test('cleans up all animated props objects on unmount', () => {
+        const removeMocks = [jest.fn(), jest.fn(), jest.fn()];
+
+        function DetachMultipleAnimatedPropsComponent() {
+          const animatedProps1 = useAnimatedProps(() => ({
+            placeholder: 'First animated props',
+          }));
+          const animatedProps2 = useAnimatedProps(() => ({
+            inputMode: 'numeric' as const,
+          }));
+          const animatedProps3 = useAnimatedProps(() => ({
+            pointerEvents: 'auto' as const,
+          }));
+
+          React.useEffect(() => {
+            const handles = [animatedProps1, animatedProps2, animatedProps3];
+            const spies = handles.map((animatedProps, index) =>
+              jest
+                .spyOn(
+                  (
+                    animatedProps as JestAnimatedStyleHandle<TextInputProps>
+                  ).viewDescriptors,
+                  'remove'
+                )
+                .mockImplementation(removeMocks[index])
+            );
+
+            return () => {
+              spies.forEach((spy) => spy.mockRestore());
+            };
+          }, [animatedProps1, animatedProps2, animatedProps3]);
+
+          return (
+            <BaseTextInputComponent
+              animatedProps={[[animatedProps1], animatedProps2, animatedProps3]}
+            />
+          );
+        }
+
+        const { unmount } = render(<DetachMultipleAnimatedPropsComponent />);
+
+        unmount();
+
+        removeMocks.forEach((mock) => {
+          expect(mock).toHaveBeenCalled();
         });
       });
     });
