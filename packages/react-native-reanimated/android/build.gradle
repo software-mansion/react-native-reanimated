@@ -119,7 +119,7 @@ def REANIMATED_FEATURE_FLAGS = getReanimatedStaticFeatureFlags()
 // Set version for prefab
 version REANIMATED_VERSION
 
-def reanimatedPrefabHeadersDir = project.file("${getLayout().getBuildDirectory()}/prefab-headers/reanimated")
+def reanimatedPrefabHeadersDir = project.file("${getLayout().getBuildDirectory().getAsFile().get().absolutePath}/prefab-headers/reanimated")
 
 def reactNativeArchitectures() {
     def value = project.getProperties().get("reactNativeArchitectures")
