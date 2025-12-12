@@ -34,16 +34,10 @@ export default function WorkletRuntimeExample() {
 function AnimationDemo() {
   const sv = useSharedValue(10);
 
-  const config = {
-    duration: 500,
-    easing: Easing.bezierFn(0.5, 0.01, 0, 1),
-  };
+  const config = { duration: 500, easing: Easing.bezierFn(0.5, 0.01, 0, 1) };
 
   const style = useAnimatedStyle(() => {
-    return {
-      width: sv.value,
-      backgroundColor: `hsl(${sv.value}, 100%, 50%)`,
-    };
+    return { width: sv.value, backgroundColor: `hsl(${sv.value}, 100%, 50%)` };
   });
 
   const handlePress = () => {
@@ -208,12 +202,6 @@ function ScheduleOnRuntimeLongRunningTasksDemo() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  box: {
-    height: 40,
-  },
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  box: { height: 40 },
 });

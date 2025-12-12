@@ -7,6 +7,11 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include "cxxreact/JSBigString.h"
+#include <react/jni/JSLoader.h>
+#include "worklets/Tools/Defs.h"
+
+#include <glog/logging.h>
 
 namespace worklets {
 
@@ -47,7 +52,9 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler
 #ifdef WORKLETS_BUNDLE_MODE
     ,
-    jni::alias_ref<facebook::react::BundleWrapper::javaobject> bundleWrapper,
+    jni::alias_ref<JAssetManager::javaobject> assetManager,
+//    jni::alias_ref<jbyteArray> bundle,
+//    const std::string &bundle,
     const std::string &sourceURL
 #endif // WORKLETS_BUNDLE_MODE
 ) {
@@ -56,8 +63,27 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
   auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
 
   std::shared_ptr<const JSBigStringBuffer> script = nullptr;
+//  auto bytes = bundle.get();
+//  auto *env = jni::Environment::current();
+//  jsize len = env->GetArrayLength(bytes);
+//  jbyte* scriptDataPtr = env->GetByteArrayElements(bytes, nullptr);
+
+//    auto data_deleter = [](const uint8_t* ptr) { delete[] ptr; };
+
+    // Allocate a new byte buffer (using uint8_t* for explicit byte representation)
+//    auto raw_data_copy = std::shared_ptr<uint8_t[]>(new uint8_t[len]);
+//    std::memcpy(raw_data_copy.get(), scriptDataPtr, len);
+//    auto rawPtr = reinterpret_cast<char *>(raw_data_copy.get());
+//    auto str = std::string(rawPtr);
+
+//  script = std::make_shared<const JSBigStdString>(bundle);
+//script = std::make_shared<const JSBigStdString>(str);
+
+//    env->ReleaseByteArrayElements(bytes, scriptDataPtr, JNI_ABORT);
 #ifdef WORKLETS_BUNDLE_MODE
-  script = bundleWrapper->cthis()->getBundle();
+//  script = JSBigFileString::fromPath(sourceURL.substr(9));
+script = loadScriptFromAssets(extractAssetManager(assetManager), sourceURL);
+LOG(INFO) << script->c_str();
 #else
   const auto sourceURL = std::string{};
 #endif // WORKLETS_BUNDLE_MODE

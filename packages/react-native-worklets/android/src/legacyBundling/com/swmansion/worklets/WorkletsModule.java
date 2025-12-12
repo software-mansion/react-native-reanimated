@@ -1,5 +1,7 @@
 package com.swmansion.worklets;
 
+import android.os.Build;
+
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;

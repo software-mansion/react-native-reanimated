@@ -1,5 +1,9 @@
 package com.swmansion.worklets;
 
+import android.content.res.AssetManager;
+import android.content.res.Resources;
+import android.os.Build;
+
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
@@ -8,7 +12,6 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.common.annotations.FrameworkAPI;
-import com.facebook.react.fabric.BundleWrapper;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.soloader.SoLoader;
@@ -28,6 +31,8 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   @SuppressWarnings("unused")
   private HybridData mHybridData;
 
+  private final AssetManager assetManager = Resources.getSystem().getAssets();
+
   @SuppressWarnings("unused")
   protected HybridData getHybridData() {
     return mHybridData;
@@ -37,7 +42,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   private final AndroidUIScheduler mAndroidUIScheduler;
   private final AnimationFrameQueue mAnimationFrameQueue;
   private boolean mSlowAnimationsEnabled;
-  private BundleWrapper mBundleWrapper = null;
+  private byte[] mBundle = null;
   private String mSourceURL = null;
 
   /**
@@ -52,7 +57,9 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
       MessageQueueThread messageQueueThread,
       CallInvokerHolderImpl jsCallInvokerHolder,
       AndroidUIScheduler androidUIScheduler,
-      BundleWrapper bundleWrapper,
+AssetManager assetManager,
+//      byte[] bundle,
+//      String bundle,
       String sourceURL);
 
   public WorkletsModule(ReactApplicationContext reactContext) {
@@ -78,8 +85,50 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     var jsContext = Objects.requireNonNull(context.getJavaScriptContextHolder()).get();
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
-    mSourceURL = context.getSourceURL();
-    mBundleWrapper = context.getBundle();
+    var url = context.getSourceURL();
+    System.out.println("url: " + url);
+
+    byte[] bundle = null;
+//    String bundle = "";
+
+    try {
+      if (url != null && url.startsWith("assets://")) {
+          url = url.substring(9);
+        // Handle assets URL
+        String assetPath = url; // Remove "assets://" prefix
+//          var asset = assetManager.open(assetPath);
+          System.out.println("assetPath: " + assetPath);
+        try (java.io.InputStream is = context.getAssets().open(assetPath)) {
+            System.out.println("opened");
+            byte[] content = null;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                content = is.readAllBytes();
+                bundle = content;
+            }
+//          bundle = new String(content, java.nio.charset.StandardCharsets.UTF_8);
+//          System.out.println("bunlde: " + bundle);
+//            bundle = new String(content);
+        }
+      } else {
+        // Handle HTTP URL
+        var connection = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+        byte[] content = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+          content = connection.getInputStream().readAllBytes();
+        }
+//        bundle = new String(content, java.nio.charset.StandardCharsets.UTF_8);
+//          bundle = content;
+        assert(content != null);
+      }
+    } catch (Exception e) {
+      // handle error
+    }
+
+    System.out.println("Bundle len: " + bundle.length);
+
+    mSourceURL = context.getSourceURL().substring(9);
+//    mBundle = bundle;
+      var assetManager = context.getAssets();
 
     mHybridData =
         initHybrid(
@@ -87,7 +136,9 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
             mMessageQueueThread,
             jsCallInvokerHolder,
             mAndroidUIScheduler,
-            mBundleWrapper,
+            assetManager,
+//            mBundle,
+//                bundle,
             mSourceURL);
     return true;
   }

@@ -3,13 +3,10 @@
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
+#include <react/jni/JSLoader.h>
 #include <react/jni/JMessageQueueThread.h>
-#include <worklets/Tools/Defs.h>
-#ifdef WORKLETS_BUNDLE_MODE
-#include <react/fabric/BundleWrapper.h>
-#endif // WORKLETS_BUNDLE_MODE
-
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
+#include <worklets/Tools/Defs.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/android/AndroidUIScheduler.h>
 
@@ -33,7 +30,9 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler
 #ifdef WORKLETS_BUNDLE_MODE
       ,
-      jni::alias_ref<facebook::react::BundleWrapper::javaobject> bundleWrapper,
+      jni::alias_ref<JAssetManager::javaobject> assetManager,
+//      jni::alias_ref<jbyteArray> bundle,
+//    const std::string &bundle,
       const std::string &sourceURL
 #endif // WORKLETS_BUNDLE_MODE
   );
