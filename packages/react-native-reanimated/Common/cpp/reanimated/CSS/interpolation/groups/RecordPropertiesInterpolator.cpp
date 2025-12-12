@@ -12,14 +12,6 @@ RecordPropertiesInterpolator::RecordPropertiesInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : GroupPropertiesInterpolator(propertyPath, viewStylesRepository), factories_(factories) {}
 
-bool RecordPropertiesInterpolator::equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const {
-  return std::ranges::all_of(propertyValue.items(), [this](const auto &item) {
-    const auto &[propName, propValue] = item;
-    const auto it = interpolators_.find(propName.getString());
-    return it != interpolators_.end() && it->second->equalsReversingAdjustedStartValue(propValue);
-  });
-}
-
 void RecordPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) {
   // TODO - maybe add a possibility to remove interpolators that are no longer
   // used (for now, for simplicity, we only add new ones)
@@ -37,34 +29,42 @@ void RecordPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::
   }
 }
 
-void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
-    const folly::dynamic &oldStyleValue,
-    const folly::dynamic &newStyleValue,
-    const folly::dynamic &lastUpdateValue) {
+bool RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
+    jsi::Runtime &rt,
+    const jsi::Value &oldStyleValue,
+    const jsi::Value &newStyleValue) {
   // TODO - maybe add a possibility to remove interpolators that are no longer
-  // used (for now, for simplicity, we only add new ones)
-  const folly::dynamic emptyObject = folly::dynamic::object();
-  const auto null = folly::dynamic();
+  // used  (for now, for simplicity, we only add new ones)
+  const auto oldStyleObject = oldStyleValue.isUndefined() ? jsi::Object(rt) : oldStyleValue.asObject(rt);
+  const auto newStyleObject = newStyleValue.isUndefined() ? jsi::Object(rt) : newStyleValue.asObject(rt);
 
-  const auto &oldStyleObject = oldStyleValue.empty() ? emptyObject : oldStyleValue;
-  const auto &newStyleObject = newStyleValue.empty() ? emptyObject : newStyleValue;
-  const auto &lastUpdateObject = lastUpdateValue.empty() ? emptyObject : lastUpdateValue;
+  const auto oldPropertyNames = oldStyleObject.getPropertyNames(rt);
+  const auto newPropertyNames = newStyleObject.getPropertyNames(rt);
+  const auto oldSize = oldPropertyNames.size(rt);
+  const auto newSize = newPropertyNames.size(rt);
 
   std::unordered_set<std::string> propertyNamesSet;
-  for (const auto &key : oldStyleObject.keys()) {
-    propertyNamesSet.insert(key.asString());
+  for (size_t i = 0; i < oldSize; ++i) {
+    propertyNamesSet.insert(oldPropertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt));
   }
-  for (const auto &key : newStyleObject.keys()) {
-    propertyNamesSet.insert(key.asString());
+  for (size_t i = 0; i < newSize; ++i) {
+    propertyNamesSet.insert(newPropertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt));
   }
+
+  bool areAllPropsReversed = true;
 
   for (const auto &propertyName : propertyNamesSet) {
     maybeCreateInterpolator(propertyName);
-    interpolators_[propertyName]->updateKeyframesFromStyleChange(
-        oldStyleObject.getDefault(propertyName, null),
-        newStyleObject.getDefault(propertyName, null),
-        lastUpdateObject.getDefault(propertyName, null));
+    const auto propNameID = jsi::PropNameID::forUtf8(rt, propertyName);
+    areAllPropsReversed &= interpolators_[propertyName]->updateKeyframesFromStyleChange(
+        rt,
+        oldStyleObject.hasProperty(rt, propNameID) ? oldStyleObject.getProperty(rt, propNameID)
+                                                   : jsi::Value::undefined(),
+        newStyleObject.hasProperty(rt, propNameID) ? newStyleObject.getProperty(rt, propNameID)
+                                                   : jsi::Value::undefined());
   }
+
+  return areAllPropsReversed;
 }
 
 folly::dynamic RecordPropertiesInterpolator::mapInterpolators(

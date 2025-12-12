@@ -40,31 +40,6 @@ folly::dynamic OperationsStyleInterpolator::getLastKeyframeValue() const {
   return toOperations.has_value() ? convertOperationsToDynamic(toOperations.value()) : defaultStyleValueDynamic_;
 }
 
-bool OperationsStyleInterpolator::equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const {
-  const auto propertyOperations = parseStyleOperations(propertyValue);
-
-  if (!reversingAdjustedStartValue_.has_value()) {
-    return !propertyOperations.has_value();
-  } else if (!propertyOperations.has_value()) {
-    return false;
-  }
-
-  const auto &reversingAdjustedOperationsValue = reversingAdjustedStartValue_.value();
-  const auto &propertyOperationsValue = propertyOperations.value();
-
-  if (reversingAdjustedOperationsValue.size() != propertyOperationsValue.size()) {
-    return false;
-  }
-
-  for (size_t i = 0; i < reversingAdjustedOperationsValue.size(); ++i) {
-    if (*reversingAdjustedOperationsValue[i] != *propertyOperationsValue[i]) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 folly::dynamic OperationsStyleInterpolator::interpolate(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
@@ -126,25 +101,25 @@ void OperationsStyleInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::V
   }
 }
 
-void OperationsStyleInterpolator::updateKeyframesFromStyleChange(
-    const folly::dynamic &oldStyleValue,
-    const folly::dynamic &newStyleValue,
-    const folly::dynamic &lastUpdateValue) {
-  if (oldStyleValue.isNull()) {
-    reversingAdjustedStartValue_ = std::nullopt;
-  } else {
-    reversingAdjustedStartValue_ = parseStyleOperations(oldStyleValue);
-  }
-
-  const auto &prevStyleValue = lastUpdateValue.isNull() ? oldStyleValue : lastUpdateValue;
-
+bool OperationsStyleInterpolator::updateKeyframesFromStyleChange(
+    jsi::Runtime &rt,
+    const jsi::Value &oldStyleValue,
+    const jsi::Value &newStyleValue) {
   keyframes_.clear();
   keyframes_.reserve(1);
   keyframes_.emplace_back(createStyleOperationsKeyframe(
       0,
       1,
-      parseStyleOperations(prevStyleValue).value_or(StyleOperations{}),
-      parseStyleOperations(newStyleValue).value_or(StyleOperations{})));
+      parseStyleOperations(rt, oldStyleValue).value_or(StyleOperations{}),
+      parseStyleOperations(rt, newStyleValue).value_or(StyleOperations{})));
+
+  const auto &toOperations = keyframes_.back()->toOperations;
+  bool equalsReversingAdjustedStartValue = toOperations.has_value() == reversingAdjustedStartValue_.has_value() &&
+      (!toOperations.has_value() || toOperations.value() == reversingAdjustedStartValue_.value());
+
+  reversingAdjustedStartValue_ = keyframes_.back()->fromOperations;
+
+  return equalsReversingAdjustedStartValue;
 }
 
 std::optional<StyleOperations> OperationsStyleInterpolator::parseStyleOperations(

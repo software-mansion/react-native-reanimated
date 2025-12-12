@@ -24,8 +24,9 @@ import type {
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSTransitionUpdates,
   NormalizedCSSAnimationKeyframesConfig,
-  NormalizedCSSTransitionConfig,
+  NormalizedNewCSSTransitionConfig,
 } from '../css/native';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
@@ -187,7 +188,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.unsubscribeFromKeyboardEvents(listenerId);
   }
 
-  setViewStyle(viewTag: number, style: StyleProps) {
+  setViewStyle(viewTag: number, style: StyleProps | null) {
     this.#reanimatedModuleProxy.setViewStyle(viewTag, style);
   }
 
@@ -231,7 +232,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   registerCSSTransition(
     shadowNodeWrapper: ShadowNodeWrapper,
-    transitionConfig: NormalizedCSSTransitionConfig
+    transitionConfig: NormalizedNewCSSTransitionConfig
   ) {
     this.#reanimatedModuleProxy.registerCSSTransition(
       shadowNodeWrapper,
@@ -241,9 +242,9 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   updateCSSTransition(
     viewTag: number,
-    configUpdates: Partial<NormalizedCSSTransitionConfig>
+    transitionUpdates: CSSTransitionUpdates
   ) {
-    this.#reanimatedModuleProxy.updateCSSTransition(viewTag, configUpdates);
+    this.#reanimatedModuleProxy.updateCSSTransition(viewTag, transitionUpdates);
   }
 
   unregisterCSSTransition(viewTag: number) {

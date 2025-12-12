@@ -4,10 +4,23 @@
 #include <reanimated/CSS/configs/common.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
+#include <optional>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 namespace reanimated::css {
+
+enum class TransitionPropertyStatus : uint8_t {
+  Updated,
+  Removed,
+  Reversed,
+};
+
+struct TransitionPropertyUpdate {
+  std::string name;
+  TransitionPropertyStatus status;
+};
 
 struct CSSTransitionPropertySettings {
   double duration;
@@ -18,26 +31,32 @@ struct CSSTransitionPropertySettings {
 
 using CSSTransitionPropertiesSettings = std::unordered_map<std::string, CSSTransitionPropertySettings>;
 
+using CSSTransitionPropertyUpdates = std::unordered_map<std::string, std::optional<std::pair<jsi::Value, jsi::Value>>>;
+
 struct CSSTransitionConfig {
-  TransitionProperties properties;
+  CSSTransitionPropertyUpdates properties;
   CSSTransitionPropertiesSettings settings;
 };
 
-struct PartialCSSTransitionConfig {
-  std::optional<TransitionProperties> properties;
-  std::optional<CSSTransitionPropertiesSettings> settings;
+struct PartialCSSTransitionPropertySettings {
+  std::optional<double> duration;
+  std::optional<EasingFunction> easingFunction;
+  std::optional<double> delay;
+  std::optional<bool> allowDiscrete;
+};
+
+using CSSTransitionPropertySettingsUpdates = std::unordered_map<std::string, PartialCSSTransitionPropertySettings>;
+
+struct CSSTransitionUpdates {
+  CSSTransitionPropertyUpdates properties;
+  std::optional<CSSTransitionPropertySettingsUpdates> settings;
 };
 
 std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
     const CSSTransitionPropertiesSettings &propertiesSettings,
     const std::string &propName);
 
-TransitionProperties getProperties(jsi::Runtime &rt, const jsi::Object &config);
-
-CSSTransitionPropertiesSettings parseCSSTransitionPropertiesSettings(jsi::Runtime &rt, const jsi::Object &settings);
-
 CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config);
-
-PartialCSSTransitionConfig parsePartialCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &partialConfig);
+CSSTransitionUpdates parseCSSTransitionUpdates(jsi::Runtime &rt, const jsi::Value &updates);
 
 } // namespace reanimated::css

@@ -62,7 +62,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(staticPropsRegistry_, animatedPropsRegistry_)),
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>(viewStylesRepository_)),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
-      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(staticPropsRegistry_, getAnimationTimestamp_)),
+      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(getAnimationTimestamp_)),
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
@@ -430,23 +430,30 @@ void ReanimatedModuleProxy::registerCSSTransition(
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &transitionConfig) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  const auto config = parseCSSTransitionConfig(rt, transitionConfig);
 
-  auto transition = std::make_shared<CSSTransition>(
-      std::move(shadowNode), parseCSSTransitionConfig(rt, transitionConfig), viewStylesRepository_);
+  auto transition = std::make_shared<CSSTransition>(std::move(shadowNode), config, viewStylesRepository_);
 
   {
     auto lock = cssTransitionsRegistry_->lock();
-    cssTransitionsRegistry_->add(transition);
+    cssTransitionsRegistry_->add(rt, transition, config.properties);
   }
+
   maybeRunCSSLoop();
 }
 
 void ReanimatedModuleProxy::updateCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
-    const jsi::Value &configUpdates) {
-  auto lock = cssTransitionsRegistry_->lock();
-  cssTransitionsRegistry_->updateSettings(viewTag.asNumber(), parsePartialCSSTransitionConfig(rt, configUpdates));
+    const jsi::Value &transitionUpdates) {
+  const auto tag = viewTag.asNumber();
+  const auto updates = parseCSSTransitionUpdates(rt, transitionUpdates);
+
+  {
+    auto lock = cssTransitionsRegistry_->lock();
+    cssTransitionsRegistry_->update(rt, tag, updates);
+  }
+
   maybeRunCSSLoop();
 }
 

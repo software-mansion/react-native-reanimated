@@ -3,13 +3,14 @@ import type { ShadowNodeWrapper, StyleProps } from '../../commonTypes';
 import { ReanimatedModule } from '../../ReanimatedModule';
 import type {
   CSSAnimationUpdates,
+  CSSTransitionUpdates,
   NormalizedCSSAnimationKeyframesConfig,
-  NormalizedCSSTransitionConfig,
+  NormalizedNewCSSTransitionConfig,
 } from './types';
 
 // COMMON
 
-export function setViewStyle(viewTag: number, style: StyleProps) {
+export function setViewStyle(viewTag: number, style: StyleProps | null) {
   ReanimatedModule.setViewStyle(viewTag, style);
 }
 
@@ -61,16 +62,16 @@ export function unregisterCSSAnimations(viewTag: number) {
 
 export function registerCSSTransition(
   shadowNodeWrapper: ShadowNodeWrapper,
-  transitionConfig: NormalizedCSSTransitionConfig
+  config: NormalizedNewCSSTransitionConfig
 ) {
-  ReanimatedModule.registerCSSTransition(shadowNodeWrapper, transitionConfig);
+  ReanimatedModule.registerCSSTransition(shadowNodeWrapper, config);
 }
 
 export function updateCSSTransition(
   viewTag: number,
-  configUpdates: Partial<NormalizedCSSTransitionConfig>
+  updates: CSSTransitionUpdates
 ) {
-  ReanimatedModule.updateCSSTransition(viewTag, configUpdates);
+  ReanimatedModule.updateCSSTransition(viewTag, updates);
 }
 
 export function unregisterCSSTransition(viewTag: number) {
