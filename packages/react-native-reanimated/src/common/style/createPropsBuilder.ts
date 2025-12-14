@@ -1,5 +1,6 @@
 'use strict';
 import { ReanimatedError } from '../errors';
+import { logger } from '../logger';
 import type {
   UnknownRecord,
   ValueProcessor,
@@ -21,9 +22,7 @@ type PropsBuilderResult<TProps> = {
   build(
     props: TProps,
     options?: {
-      includeUndefined?: boolean;
       target?: ValueProcessorTarget;
-      includeUnknown?: boolean;
     }
   ): UnknownRecord;
 };
@@ -49,11 +48,15 @@ export default function createPropsBuilder<
         );
       }
 
+      // If the value returned from the processConfigValue function is a function,
+      // that means it's a terminal value that will be used to process the value
+      // of the property. We can break the loop at this point.
       if (typeof processedValue === 'function') {
         acc[key] = processedValue as ValueProcessor;
         break;
       }
 
+      // Otherwise, we need to continue processing the value.
       processedValue = processConfigValue(processedValue);
     }
 
@@ -61,48 +64,29 @@ export default function createPropsBuilder<
   }, {});
 
   return {
-    build(
-      props: Readonly<UnknownRecord>,
-      {
-        includeUndefined,
-        target = ValueProcessorTarget.Default,
-        includeUnknown = false,
-      }: {
-        includeUndefined?: boolean;
-        target?: ValueProcessorTarget;
-        includeUnknown?: boolean;
-      } = {}
-    ) {
+    build(props, options) {
       'worklet';
       const context: ValueProcessorContext = {
-        target: target ?? ValueProcessorTarget.Default,
+        target: options?.target ?? ValueProcessorTarget.Default,
       };
 
       return Object.entries(props).reduce<UnknownRecord>(
         (acc, [key, value]) => {
           const processor = processedConfig[key];
 
-          if (!processor) {
-            // Props is not supported
-            if (includeUnknown) {
-              // Include unknown props as-is
-              acc[key] = value;
-            }
-            // Otherwise skip it
+          if (!processor || value === undefined) {
+            // Prop is not supported
             return acc;
           }
 
           const processedValue = processor(value, context);
 
-          const valueIsRecord = isRecord(value);
-          const processedValueIsRecord = isRecord(processedValue);
-
-          if (processedValue === undefined && !includeUndefined) {
-            // Skip if value is undefined and we don't want to include undefined values
-            return acc;
-          }
-
-          if (processedValueIsRecord && !valueIsRecord) {
+          if (isRecord(processedValue) && !isRecord(value)) {
+            // The value processor may return multiple values for a single property
+            // as a record of new property names and processed values. In such a case,
+            // we want to store properties from this record in the result object only if
+            // they are not already present in the original props object (we don't want
+            // override properties specified by the user).
             for (const processedKey in processedValue) {
               if (!(processedKey in props)) {
                 acc[processedKey] = processedValue[processedKey];

@@ -1,6 +1,6 @@
 'use strict';
 
-import type { AnyRecord, Maybe, NonMutable } from './helpers';
+import type { AnyRecord, NonMutable } from './helpers';
 
 export enum ValueProcessorTarget {
   CSS = 'css',

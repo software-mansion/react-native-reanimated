@@ -1,6 +1,6 @@
 'use strict';
 import { ReanimatedError } from '../errors';
-import type { PlainStyle, UnknownRecord } from '../types';
+import type { UnknownRecord } from '../types';
 import propsBuilder, {
   createNativePropsBuilder,
   type NativePropsBuilder,
@@ -24,15 +24,13 @@ const COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Map<
   Set<string>
 >();
 
-const basePropsBuilder = propsBuilder as NativePropsBuilder<PlainStyle>;
-
-const PROPS_BUILDERS: Record<string, NativePropsBuilder<PlainStyle>> = {};
+const PROPS_BUILDERS: Record<string, NativePropsBuilder> = {};
 
 export function hasPropsBuilder(componentName: string): boolean {
   return !!PROPS_BUILDERS[componentName] || componentName.startsWith('RCT');
 }
 
-export function getPropsBuilder(componentName: string) {
+export function getPropsBuilder(componentName: string): NativePropsBuilder {
   const componentPropsBuilder = PROPS_BUILDERS[componentName];
 
   if (componentPropsBuilder) {
@@ -41,7 +39,7 @@ export function getPropsBuilder(componentName: string) {
 
   if (componentName.startsWith('RCT')) {
     // This captures all React Native components (prefixed with RCT)
-    return basePropsBuilder;
+    return propsBuilder;
   }
 
   throw new ReanimatedError(ERROR_MESSAGES.propsBuilderNotFound(componentName));
@@ -54,9 +52,7 @@ export function registerComponentPropsBuilder<P extends UnknownRecord>(
     separatelyInterpolatedNestedProperties?: readonly string[];
   } = {}
 ) {
-  PROPS_BUILDERS[componentName] = createNativePropsBuilder(
-    config
-  ) as NativePropsBuilder<PlainStyle>;
+  PROPS_BUILDERS[componentName] = createNativePropsBuilder(config);
 
   if (options.separatelyInterpolatedNestedProperties?.length) {
     COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES.set(

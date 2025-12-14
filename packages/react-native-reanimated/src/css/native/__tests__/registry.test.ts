@@ -1,11 +1,11 @@
 'use strict';
-import { BASE_PROPERTIES_CONFIG } from '../../../common';
 import {
+  BASE_PROPERTIES_CONFIG,
   ERROR_MESSAGES,
   getPropsBuilder,
   hasPropsBuilder,
   registerComponentPropsBuilder,
-} from '../../../common/style';
+} from '../../../common';
 
 describe('registry', () => {
   describe('hasPropsBuilder', () => {

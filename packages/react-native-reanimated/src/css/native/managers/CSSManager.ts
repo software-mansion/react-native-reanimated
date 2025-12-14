@@ -1,6 +1,9 @@
 'use strict';
-import { ReanimatedError } from '../../../common';
-import { getPropsBuilder, hasPropsBuilder } from '../../../common/style';
+import {
+  getPropsBuilder,
+  hasPropsBuilder,
+  ReanimatedError,
+} from '../../../common';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
 import type { CSSStyle } from '../../types';
@@ -45,10 +48,7 @@ export default class CSSManager implements ICSSManager {
       );
     }
 
-    let normalizedStyle: CSSStyle | null = null;
-    if (this.propsBuilder) {
-      normalizedStyle = this.propsBuilder.build(filteredStyle);
-    }
+    const normalizedStyle = this.propsBuilder?.build(filteredStyle);
 
     // If the update is called during the first css style update, we won't
     // trigger CSS transitions and set styles before attaching CSS transitions

@@ -1,6 +1,5 @@
 'use strict';
-import { ReanimatedError } from '../../../../../common';
-import { getPropsBuilder } from '../../../../../common/style';
+import { getPropsBuilder, ReanimatedError } from '../../../../../common';
 import type { Repeat } from '../../../../types';
 import {
   ERROR_MESSAGES,
@@ -89,7 +88,7 @@ describe(normalizeKeyframeSelector, () => {
 
 const createMockPropsBuilder = () => {
   const buildMock = jest.fn<BuildReturn | undefined, BuildArgs>(
-    (style) => style as BuildReturn
+    (style) => style
   );
 
   return {
@@ -110,10 +109,10 @@ describe(processKeyframes, () => {
       };
 
       expect(processKeyframes(keyframes, builder)).toEqual([
-        { offset: 0, style: { opacity: 0 } },
-        { offset: 0.25, style: { opacity: 0.25 } },
-        { offset: 0.75, style: { opacity: 0.75 } },
-        { offset: 1, style: { opacity: 1 } },
+        { offset: 0, props: { opacity: 0 } },
+        { offset: 0.25, props: { opacity: 0.25 } },
+        { offset: 0.75, props: { opacity: 0.75 } },
+        { offset: 1, props: { opacity: 1 } },
       ]);
     });
 
@@ -125,9 +124,9 @@ describe(processKeyframes, () => {
       };
 
       expect(processKeyframes(keyframes, builder)).toEqual([
-        { offset: 0, style: { opacity: 0.5 } },
-        { offset: 0.5, style: { opacity: 0.5 } },
-        { offset: 1, style: { opacity: 1 } },
+        { offset: 0, props: { opacity: 0.5 } },
+        { offset: 0.5, props: { opacity: 0.5 } },
+        { offset: 1, props: { opacity: 1 } },
       ]);
     });
   });
@@ -140,8 +139,8 @@ describe(processKeyframes, () => {
       };
 
       expect(processKeyframes(keyframes, getPropsBuilder('RCTView'))).toEqual([
-        { offset: 0, style: { transform: [{ translateX: 0 }] } },
-        { offset: 1, style: { transform: [{ translateX: 100 }] } },
+        { offset: 0, props: { transform: [{ translateX: 0 }] } },
+        { offset: 1, props: { transform: [{ translateX: 100 }] } },
       ]);
     });
 
@@ -158,11 +157,11 @@ describe(processKeyframes, () => {
       expect(result).toEqual([
         {
           offset: 0,
-          style: { transformOrigin: fromTransformOrigin },
+          props: { transformOrigin: fromTransformOrigin },
         },
         {
           offset: 1,
-          style: { transformOrigin: toTransformOrigin },
+          props: { transformOrigin: toTransformOrigin },
         },
       ]);
     });
@@ -181,19 +180,19 @@ describe(processKeyframes, () => {
         expect(result).toEqual([
           {
             offset: 0,
-            style: {
+            props: {
               [property]: { width: 0, height: 0 },
             },
           },
           {
             offset: 0.5,
-            style: {
+            props: {
               [property]: { width: 3, height: 2 },
             },
           },
           {
             offset: 1,
-            style: {
+            props: {
               [property]: { width: 10, height: 5 },
             },
           },
@@ -226,7 +225,7 @@ describe(processKeyframes, () => {
       expect(result).toEqual([
         {
           offset: 0,
-          style: {
+          props: {
             boxShadow: [
               {
                 offsetX: 0,
@@ -240,7 +239,7 @@ describe(processKeyframes, () => {
         },
         {
           offset: 0.5,
-          style: {
+          props: {
             boxShadow: [
               {
                 offsetX: 4,
@@ -254,7 +253,7 @@ describe(processKeyframes, () => {
         },
         {
           offset: 1,
-          style: {
+          props: {
             boxShadow: [
               {
                 offsetX: 10,
@@ -281,7 +280,7 @@ describe(processKeyframes, () => {
     const { builder, buildMock } = createMockPropsBuilder();
     buildMock
       .mockImplementationOnce(() => undefined)
-      .mockImplementation((style) => style as BuildReturn);
+      .mockImplementation((style) => style);
 
     const keyframes = {
       from: { shadowOffset: { width: 0, height: 0 } },
@@ -289,7 +288,7 @@ describe(processKeyframes, () => {
     };
 
     expect(processKeyframes(keyframes, builder)).toEqual([
-      { offset: 1, style: { shadowOffset: { width: 10, height: 5 } } },
+      { offset: 1, props: { shadowOffset: { width: 10, height: 5 } } },
     ]);
 
     buildMock.mockRestore();
@@ -306,9 +305,9 @@ describe(processKeyframes, () => {
     expect(processKeyframes(keyframes, builder)).toEqual([
       {
         offset: 0,
-        style: { opacity: 0.5, transform: [{ scale: 1 }] },
+        props: { opacity: 0.5, transform: [{ scale: 1 }] },
       },
-      { offset: 1, style: { opacity: 1 } },
+      { offset: 1, props: { opacity: 1 } },
     ]);
   });
 });
@@ -328,7 +327,7 @@ describe(normalizeAnimationKeyframes, () => {
     );
 
     expect(result).toEqual({
-      keyframesStyle: {
+      propKeyframes: {
         opacity: [
           { offset: 0, value: 0 },
           { offset: 1, value: 1 },
@@ -355,7 +354,7 @@ describe(normalizeAnimationKeyframes, () => {
     );
 
     expect(result).toEqual({
-      keyframesStyle: {
+      propKeyframes: {
         opacity: [
           { offset: 0, value: 0 },
           { offset: 1, value: 1 },

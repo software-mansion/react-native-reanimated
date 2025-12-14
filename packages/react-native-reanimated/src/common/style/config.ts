@@ -4,7 +4,7 @@ import { IS_ANDROID } from '../constants';
 import type { PlainStyle } from '../types';
 import {
   processAspectRatio,
-  processBoxShadowNative,
+  processBoxShadow,
   processColor,
   processFilter,
   processFontWeight,
@@ -139,7 +139,7 @@ export const BASE_PROPERTIES_CONFIG: PropsBuilderConfig<PlainStyle> = {
   elevation: IS_ANDROID,
   textShadowOffset: true,
   textShadowRadius: true,
-  boxShadow: { process: processBoxShadowNative },
+  boxShadow: { process: processBoxShadow },
 
   // BORDERS
   // Radius

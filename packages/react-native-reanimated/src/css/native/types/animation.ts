@@ -1,5 +1,5 @@
 'use strict';
-import type { PlainStyle } from '../../../common';
+import type { UnknownRecord } from '../../../common';
 import type { NormalizedCSSTimingFunction } from '../../easing';
 import type {
   CSSAnimationDirection,
@@ -7,32 +7,31 @@ import type {
   CSSAnimationPlayState,
 } from '../../types';
 
-type CSSKeyframesStyleValue<V> = {
+type CSSPropKeyframe<V> = {
   offset: number;
   value: V;
 }[];
 
-type CreateKeyframesStyle<S> = {
-  [P in keyof S]: S[P] extends infer U | undefined
+export type PropsWithKeyframes<TProps = UnknownRecord> = {
+  [P in keyof TProps]: TProps[P] extends infer U | undefined
     ? U extends object
       ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
         U extends Array<any>
-        ? CSSKeyframesStyleValue<U> // If the value is an array, don't iterate over its values and treat it as the end value
-        : { [K in keyof U]: CreateKeyframesStyle<U[K]> }
+        ? CSSPropKeyframe<U> // If the value is an array, don't iterate over its values and treat it as the end value
+        : { [K in keyof U]: PropsWithKeyframes<U[K]> }
       : P extends 'transform' // Don't allow transform to be passed as a string in keyframes
         ? never
-        : CSSKeyframesStyleValue<U>
+        : CSSPropKeyframe<U>
     : never;
 };
 
-export type NormalizedCSSKeyframesStyle = CreateKeyframesStyle<PlainStyle>;
 export type NormalizedCSSKeyframeTimingFunctions = Record<
   number,
   NormalizedCSSTimingFunction
 >;
 
 export type NormalizedCSSAnimationKeyframesConfig = {
-  keyframesStyle: NormalizedCSSKeyframesStyle;
+  propKeyframes: PropsWithKeyframes;
   keyframeTimingFunctions: NormalizedCSSKeyframeTimingFunctions;
 };
 

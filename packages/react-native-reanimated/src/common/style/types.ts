@@ -1,9 +1,5 @@
 'use strict';
-import type {
-  AnyRecord,
-  ConfigPropertyAlias,
-  ValueProcessor,
-} from '../types';
+import type { AnyRecord, ConfigPropertyAlias, ValueProcessor } from '../types';
 
 type PropertyValueConfigBase<P extends AnyRecord> =
   | boolean // true - included, false - excluded

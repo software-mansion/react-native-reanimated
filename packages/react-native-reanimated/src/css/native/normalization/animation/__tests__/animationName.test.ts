@@ -19,7 +19,7 @@ describe(normalizeAnimationKeyframes, () => {
         expect(
           normalizeAnimationKeyframes({ [offset]: { opacity: 1 } }, 'RCTView')
         ).toEqual({
-          keyframesStyle: { opacity: [{ offset: expected, value: 1 }] },
+          propKeyframes: { opacity: [{ offset: expected, value: 1 }] },
           keyframeTimingFunctions: {},
         });
       });
@@ -67,7 +67,7 @@ describe(normalizeAnimationKeyframes, () => {
           normalizeAnimationKeyframes({ [offset]: { opacity: 1 } }, 'RCTView')
         ).toEqual({
           keyframeTimingFunctions: {},
-          keyframesStyle: {
+          propKeyframes: {
             opacity: expected.map((normalizedOffset) => ({
               offset: normalizedOffset,
               value: 1,
@@ -91,7 +91,7 @@ describe(normalizeAnimationKeyframes, () => {
     });
   });
 
-  describe('keyframesStyle', () => {
+  describe('propKeyframes', () => {
     test('converts keyframes to style with properties with offset', () => {
       expect(
         normalizeAnimationKeyframes(
@@ -103,7 +103,7 @@ describe(normalizeAnimationKeyframes, () => {
           'RCTView'
         )
       ).toEqual({
-        keyframesStyle: {
+        propKeyframes: {
           opacity: [
             { offset: 0, value: 0 },
             { offset: 0.5, value: 0.5 },
@@ -124,7 +124,7 @@ describe(normalizeAnimationKeyframes, () => {
           'RCTView'
         )
       ).toEqual({
-        keyframesStyle: {
+        propKeyframes: {
           shadowOffset: {
             width: [
               { offset: 0, value: 0 },
@@ -153,7 +153,7 @@ describe(normalizeAnimationKeyframes, () => {
           'RCTView'
         )
       ).toEqual({
-        keyframesStyle: {
+        propKeyframes: {
           opacity: [
             { offset: 0, value: 0 },
             { offset: 0.25, value: 0.25 },
@@ -176,7 +176,7 @@ describe(normalizeAnimationKeyframes, () => {
           'RCTView'
         )
       ).toEqual({
-        keyframesStyle: {
+        propKeyframes: {
           transform: [
             { offset: 0, value: [{ scale: 0 }, { rotate: '0deg' }] },
             { offset: 1, value: [{ scale: 1 }, { rotate: '360deg' }] },
@@ -196,7 +196,7 @@ describe(normalizeAnimationKeyframes, () => {
           'RCTView'
         )
       ).toEqual({
-        keyframesStyle: {
+        propKeyframes: {
           opacity: [
             { offset: 0, value: 0 },
             { offset: 1, value: 1 },
@@ -217,7 +217,7 @@ describe(normalizeAnimationKeyframes, () => {
           'RCTView'
         )
       ).toEqual({
-        keyframesStyle: {
+        propKeyframes: {
           opacity: [{ offset: 0.5, value: 0.5 }],
         },
         keyframeTimingFunctions: {},
@@ -238,7 +238,7 @@ describe(normalizeAnimationKeyframes, () => {
           'RCTView'
         )
       ).toEqual({
-        keyframesStyle: {
+        propKeyframes: {
           opacity: [
             { offset: 0, value: 0 },
             { offset: 0.25, value: 0.5 },
@@ -269,7 +269,7 @@ describe(normalizeAnimationKeyframes, () => {
           'RCTView'
         )
       ).toEqual({
-        keyframesStyle: {
+        propKeyframes: {
           opacity: [
             { offset: 0, value: 0 },
             { offset: 1, value: 0 },

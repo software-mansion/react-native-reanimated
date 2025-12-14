@@ -50,11 +50,10 @@ if (SHOULD_BE_USE_WEB) {
     'worklet';
     global.UpdatePropsManager.update(
       viewDescriptors,
-      // For animated props, we include unknown properties because unlike styles
-      // which have complete processing configs specified in Reanimated, animated
-      // props can contain any property from the component's interface. We don't
-      // process most of them and rely on the user to provide correct prop values.
-      propsBuilder.build(updates, { includeUnknown: isAnimatedProps })
+      // Use props builder only for style updaters, since animated props
+      // can contain any properties of different types, depending on the
+      // component, which we cannot process properly with the props builder.
+      isAnimatedProps ? updates : propsBuilder.build(updates)
     );
   };
 }

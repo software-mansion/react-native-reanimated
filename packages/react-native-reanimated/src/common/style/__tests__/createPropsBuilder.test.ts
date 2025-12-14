@@ -1,8 +1,8 @@
 'use strict';
 
+import { ReanimatedError } from '../../errors';
 import type { ValueProcessor } from '../../types';
 import { ValueProcessorTarget } from '../../types';
-import { ReanimatedError } from '../../errors';
 import createPropsBuilder from '../createPropsBuilder';
 
 type TestStyle = {
@@ -60,33 +60,6 @@ const createBuilder = (configOverrides: Partial<TestConfig>) => {
 };
 
 describe(createPropsBuilder, () => {
-  test('skips undefined values unless includeUndefined is true', () => {
-    const builder = createBuilder({
-      width: true,
-      margin: true,
-      borderRadius: true,
-    });
-
-    const style: TestStyle = {
-      width: undefined,
-      margin: 'auto',
-      borderRadius: 10,
-    };
-
-    expect(builder.build(style)).toEqual({
-      margin: 'auto',
-      borderRadius: 10,
-    });
-
-    expect(
-      builder.build(style, { includeUndefined: true })
-    ).toEqual({
-      width: undefined,
-      margin: 'auto',
-      borderRadius: 10,
-    });
-  });
-
   test('ignores properties not present in config', () => {
     const builder = createBuilder({ width: true });
 
@@ -98,35 +71,18 @@ describe(createPropsBuilder, () => {
     expect(builder.build(style)).toEqual({ width: 120 });
   });
 
-  test('includes unknown properties when includeUnknown is true', () => {
-    const builder = createBuilder({ width: true });
-
-    const style: TestStyle = {
-      width: 120,
-      height: 300,
-      // @ts-ignore - testing unknown prop
-      customProp: 'test',
-    };
-
-    expect(builder.build(style)).toEqual({ width: 120 });
-    expect(
-      builder.build(style, { includeUnknown: true })
-    ).toEqual({
-      width: 120,
-      height: 300,
-      customProp: 'test',
-    });
-  });
-
   test('passes provided context to processors', () => {
     const processor = jest.fn().mockReturnValue(24);
     const builder = createBuilder({
       borderRadius: { process: processor },
     });
 
-    builder.build({ borderRadius: 12 }, {
-      target: ValueProcessorTarget.CSS,
-    });
+    builder.build(
+      { borderRadius: 12 },
+      {
+        target: ValueProcessorTarget.CSS,
+      }
+    );
 
     expect(processor).toHaveBeenCalledWith(12, {
       target: ValueProcessorTarget.CSS,
@@ -169,24 +125,15 @@ describe(createPropsBuilder, () => {
     });
   });
 
-  test('allows processors to return undefined based on includeUndefined option', () => {
-    const builder = createBuilder({
-      width: {
-        process: () => undefined,
-      },
-    });
-
-    expect(builder.build({ width: 10 })).toEqual({});
-    expect(
-      builder.build({ width: 10 }, { includeUndefined: true })
-    ).toEqual({ width: undefined });
-  });
-
   test('throws when processor resolution exceeds maximum depth', () => {
     expect(() =>
       createBuilder({
         width: 'loop',
       })
-    ).toThrow(new ReanimatedError('Max process depth for props builder reached for property width'));
+    ).toThrow(
+      new ReanimatedError(
+        'Max process depth for props builder reached for property width'
+      )
+    );
   });
 });

@@ -32,7 +32,7 @@ describe('createNativePropsBuilder', () => {
       });
     });
 
-    test('creates builder with processor config', () => {
+    test('creates builder with custom value processor', () => {
       type TestProps = {
         value: number;
         unchanged: string;
@@ -65,20 +65,20 @@ describe('createNativePropsBuilder', () => {
       };
 
       const builder = createNativePropsBuilder<TestProps>({
-        source: true,
-        target: { as: 'source' },
+        source: { as: 'target' },
+        target: { process: (val: string) => val.toUpperCase() },
       });
 
       const input = {
-        source: 'original',
-        target: 'aliased',
+        source: 'source',
+        target: 'target',
       };
 
       const result = builder.build(input);
 
       expect(result).toEqual({
-        source: 'original',
-        target: 'aliased',
+        source: 'SOURCE', // Uses target's config (value processor in this case)
+        target: 'TARGET',
       });
     });
 
@@ -87,7 +87,7 @@ describe('createNativePropsBuilder', () => {
         included: string;
         excluded: string;
         processed: number;
-        aliased: string;
+        aliased: number;
       };
 
       const builder = createNativePropsBuilder<MixedProps>({
@@ -96,14 +96,14 @@ describe('createNativePropsBuilder', () => {
         processed: {
           process: (val: number) => val + 100,
         },
-        aliased: { as: 'included' },
+        aliased: { as: 'processed' },
       });
 
       const input = {
         included: 'yes',
         excluded: 'no',
         processed: 50,
-        aliased: 'alias-value',
+        aliased: 10,
       };
 
       const result = builder.build(input);
@@ -111,7 +111,7 @@ describe('createNativePropsBuilder', () => {
       expect(result).toEqual({
         included: 'yes',
         processed: 150,
-        aliased: 'alias-value',
+        aliased: 110,
       });
     });
 
@@ -123,7 +123,9 @@ describe('createNativePropsBuilder', () => {
       };
 
       const builder = createNativePropsBuilder<NestedProps>({
-        prop1: true,
+        prop1: {
+          process: (val: string) => val.toUpperCase(),
+        },
         prop2: { as: 'prop1' },
         prop3: { as: 'prop2' },
       });
@@ -136,11 +138,11 @@ describe('createNativePropsBuilder', () => {
 
       const result = builder.build(input);
 
-      // All three should be included as they all eventually resolve to prop1 which is true
+      // All three use the prop1's value processor
       expect(result).toEqual({
-        prop1: 'value1',
-        prop2: 'value2',
-        prop3: 'value3',
+        prop1: 'VALUE1',
+        prop2: 'VALUE2',
+        prop3: 'VALUE3',
       });
     });
 
@@ -155,7 +157,7 @@ describe('createNativePropsBuilder', () => {
 
       const style = {
         width: 100,
-        unknownProp: 'should be filtered',
+        unknownProp: 'should be rejected',
         customProp: 123,
       };
 
@@ -163,56 +165,9 @@ describe('createNativePropsBuilder', () => {
 
       expect(result).toEqual({ width: 100 });
     });
-
-    test('handles undefined values correctly', () => {
-      type TestProps = {
-        width?: number;
-        height: number;
-      };
-
-      const builder = createNativePropsBuilder<TestProps>({
-        width: true,
-        height: true,
-      });
-
-      const style = {
-        width: undefined,
-        height: 100,
-      };
-
-      expect(builder.build(style)).toEqual({ height: 100 });
-      expect(builder.build(style, { includeUndefined: true })).toEqual({
-        width: undefined,
-        height: 100,
-      });
-    });
   });
 
   describe('build with context', () => {
-    test('includes unknown properties when includeUnknown is true', () => {
-      type KnownProps = {
-        width: number;
-      };
-
-      const builder = createNativePropsBuilder<KnownProps>({
-        width: true,
-      });
-
-      const style = {
-        width: 100,
-        unknownProp: 'should be included',
-        customProp: 123,
-      };
-
-      const result = builder.build(style, { includeUnknown: true });
-
-      expect(result).toEqual({
-        width: 100,
-        unknownProp: 'should be included',
-        customProp: 123,
-      });
-    });
-
     test('processor receives correct context', () => {
       type TestProps = {
         testProp: string;

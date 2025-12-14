@@ -16,7 +16,7 @@ import type {
   TransformProps,
 } from 'react-native-svg';
 
-import type { PropsBuilderConfig } from '../../../../common/style';
+import type { PropsBuilderConfig } from '../../../../common';
 import {
   convertStringToNumber,
   processColorSVG,

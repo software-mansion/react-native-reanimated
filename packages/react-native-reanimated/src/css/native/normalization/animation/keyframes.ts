@@ -1,11 +1,17 @@
 'use strict';
-import type { AnyRecord } from '../../../../common';
-import { isDefined, isNumber, ReanimatedError } from '../../../../common';
+import type {
+  AnyRecord,
+  NativePropsBuilder,
+  UnknownRecord,
+} from '../../../../common';
 import {
   getPropsBuilder,
   getSeparatelyInterpolatedNestedProperties,
-} from '../../../../common/style';
-import type { StyleProps } from '../../../../commonTypes';
+  isDefined,
+  isNumber,
+  isRecord,
+  ReanimatedError,
+} from '../../../../common';
 import { PERCENTAGE_REGEX } from '../../../constants';
 import type {
   CSSAnimationKeyframes,
@@ -14,8 +20,8 @@ import type {
 } from '../../../types';
 import type {
   NormalizedCSSAnimationKeyframesConfig,
-  NormalizedCSSKeyframesStyle,
   NormalizedCSSKeyframeTimingFunctions,
+  PropsWithKeyframes,
 } from '../../types';
 import { normalizeTimingFunction } from '../common';
 
@@ -65,26 +71,24 @@ export function normalizeKeyframeSelector(
 
 type ProcessedKeyframes = Array<{
   offset: number;
-  style: StyleProps;
+  props: UnknownRecord;
   timingFunction?: CSSAnimationTimingFunction;
 }>;
 
 export function processKeyframes(
   keyframes: CSSAnimationKeyframes,
-  propsBuilder: ReturnType<typeof getPropsBuilder>
+  propsBuilder: NativePropsBuilder
 ): ProcessedKeyframes {
   return Object.entries(keyframes)
     .flatMap(
-      ([selector, { animationTimingFunction = undefined, ...style } = {}]) => {
-        const normalizedStyle = propsBuilder.build(
-          style as Parameters<ReturnType<typeof getPropsBuilder>['build']>[0]
-        );
-        if (!normalizedStyle) {
+      ([selector, { animationTimingFunction = undefined, ...props } = {}]) => {
+        const normalizedProps = propsBuilder.build(props);
+        if (!normalizedProps) {
           return [];
         }
         return normalizeKeyframeSelector(selector).map((offset) => ({
           offset,
-          style: normalizedStyle,
+          props: normalizedProps,
           ...(animationTimingFunction && {
             timingFunction: animationTimingFunction,
           }),
@@ -95,7 +99,7 @@ export function processKeyframes(
     .reduce<ProcessedKeyframes>((acc, keyframe) => {
       const lastKeyframe = acc[acc.length - 1];
       if (lastKeyframe && lastKeyframe.offset === keyframe.offset) {
-        lastKeyframe.style = { ...lastKeyframe.style, ...keyframe.style };
+        lastKeyframe.props = { ...lastKeyframe.props, ...keyframe.props };
         lastKeyframe.timingFunction = keyframe.timingFunction;
       } else {
         acc.push(keyframe);
@@ -104,36 +108,37 @@ export function processKeyframes(
     }, []);
 }
 
-function processStyleProperties(
+function processProps(
   offset: number,
-  style: AnyRecord,
-  keyframeStyle: AnyRecord,
+  props: UnknownRecord,
+  keyframeProps: AnyRecord,
   separatelyInterpolatedNestedProperties: ReadonlySet<string>
 ) {
-  Object.entries(style).forEach(([property, value]) => {
+  Object.entries(props).forEach(([property, value]) => {
     if (!isDefined(value)) {
       return;
     }
 
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      if (separatelyInterpolatedNestedProperties.has(property)) {
-        if (!keyframeStyle[property]) {
-          keyframeStyle[property] = Array.isArray(value) ? [] : {};
-        }
-        processStyleProperties(
-          offset,
-          value,
-          keyframeStyle[property],
-          separatelyInterpolatedNestedProperties
-        );
-        return;
+    if (
+      isRecord(value) &&
+      separatelyInterpolatedNestedProperties.has(property)
+    ) {
+      if (!keyframeProps[property]) {
+        keyframeProps[property] = Array.isArray(value) ? [] : {};
       }
+      processProps(
+        offset,
+        value,
+        keyframeProps[property],
+        separatelyInterpolatedNestedProperties
+      );
+      return;
     }
 
-    if (!keyframeStyle[property]) {
-      keyframeStyle[property] = [];
+    if (!keyframeProps[property]) {
+      keyframeProps[property] = [];
     }
-    keyframeStyle[property].push({ offset, value });
+    keyframeProps[property].push({ offset, value });
   });
 }
 
@@ -144,15 +149,15 @@ export function normalizeAnimationKeyframes(
   const propsBuilder = getPropsBuilder(viewName);
   const separatelyInterpolatedNestedProperties =
     getSeparatelyInterpolatedNestedProperties(viewName);
-  const keyframesStyle: NormalizedCSSKeyframesStyle = {};
+  const propKeyframes: PropsWithKeyframes = {};
   const timingFunctions: NormalizedCSSKeyframeTimingFunctions = {};
 
   processKeyframes(keyframes, propsBuilder).forEach(
-    ({ offset, style, timingFunction }) => {
-      processStyleProperties(
+    ({ offset, props, timingFunction }) => {
+      processProps(
         offset,
-        style,
-        keyframesStyle,
+        props,
+        propKeyframes,
         separatelyInterpolatedNestedProperties
       );
       if (timingFunction && offset < 1) {
@@ -161,5 +166,5 @@ export function normalizeAnimationKeyframes(
     }
   );
 
-  return { keyframesStyle, keyframeTimingFunctions: timingFunctions };
+  return { propKeyframes, keyframeTimingFunctions: timingFunctions };
 }

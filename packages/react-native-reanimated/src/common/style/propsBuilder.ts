@@ -23,31 +23,17 @@ type PropsBuilderPropertyConfig<
   | {
       // value can have any type as it is passed to CPP where we can expect a different
       // type than in the React Native stylesheet (e.g. number for colors instead of string)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      process: ValueProcessor<Required<TProps>[K], any>; // for custom value processing
+      process: ValueProcessor<Required<TProps>[K], unknown>; // for custom value processing
     };
 
 export type PropsBuilderConfig<P extends UnknownRecord = UnknownRecord> = {
   [K in keyof Required<P>]: PropsBuilderPropertyConfig<P, K>;
 };
 
-export type NativePropsBuilder<TProps extends UnknownRecord> = ReturnType<
-  typeof createPropsBuilder<
-    TProps,
-    Required<{
-      [K in keyof TProps]: PropsBuilderPropertyConfig<TProps, K>;
-    }>
-  >
->;
-
 export function createNativePropsBuilder<TProps extends UnknownRecord>(
-  config: Required<{
-    [K in keyof TProps]: PropsBuilderPropertyConfig<TProps, K>;
-  }>
+  config: PropsBuilderConfig<TProps>
 ) {
-  type TConfig = typeof config;
-
-  return createPropsBuilder<TProps, TConfig>({
+  return createPropsBuilder({
     config,
     processConfigValue(configValue) {
       if (configValue === true) {
@@ -68,6 +54,8 @@ export function createNativePropsBuilder<TProps extends UnknownRecord>(
     },
   });
 }
+
+export type NativePropsBuilder = ReturnType<typeof createNativePropsBuilder>;
 
 const propsBuilder = createNativePropsBuilder<PlainStyle>(
   BASE_PROPERTIES_CONFIG
