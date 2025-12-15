@@ -4,8 +4,8 @@ import type { AnyRecord, ValueProcessorContext } from '../types';
 import { ValueProcessorTarget } from '../types';
 import { isConfigPropertyAlias, isDefined, isRecord } from '../utils';
 import type {
-  PropsBuilderConfig,
   PropsBuilder,
+  PropsBuilderConfig,
   StyleBuildMiddleware,
 } from './types';
 

@@ -10,11 +10,11 @@ import {
 } from '../../utils';
 import type {
   AnyBuilderConfig,
+  PropsBuilder,
+  PropsBuilderConfig,
   RuleBuilder,
   RuleBuilderConfig,
   RuleBuildHandler,
-  PropsBuilder,
-  PropsBuilderConfig,
   StyleBuildHandler,
   ValueProcessor,
 } from './types';
