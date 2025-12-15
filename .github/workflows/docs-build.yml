@@ -26,6 +26,7 @@ jobs:
       - name: Install monorepo node dependencies
         run: yarn install
 
+      # We always build both docs because they are released together.
       - name: Lint and build Reanimated and Worklets docs
         uses: ./.github/actions/docs-build
         with:
