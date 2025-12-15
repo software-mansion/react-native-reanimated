@@ -49,7 +49,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
       MessageQueueThread messageQueueThread,
       CallInvokerHolderImpl jsCallInvokerHolder,
       AndroidUIScheduler androidUIScheduler,
-      ScriptWrapper bundleWrapper);
+      ScriptBufferWrapper scriptBufferWrapper);
 
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -71,7 +71,11 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
     var sourceURL = context.getSourceURL();
-    var scriptWrapper = new ScriptWrapper(sourceURL, context.getAssets());
+
+    ScriptBufferWrapper scriptBufferWrapper = null;
+    if (BuildConfig.BUNDLE_MODE) {
+      scriptBufferWrapper = new ScriptBufferWrapper(sourceURL, context.getAssets());
+    }
 
     mHybridData =
         initHybrid(
@@ -79,7 +83,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
             mMessageQueueThread,
             jsCallInvokerHolder,
             mAndroidUIScheduler,
-            scriptWrapper);
+            scriptBufferWrapper);
     return true;
   }
 

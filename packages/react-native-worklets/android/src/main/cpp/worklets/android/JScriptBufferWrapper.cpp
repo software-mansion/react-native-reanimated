@@ -6,7 +6,7 @@
 #include <cxxreact/JSBigString.h>
 #include <cxxreact/RecoverableError.h>
 #include <worklets/Tools/ScriptBuffer.h>
-#include <worklets/android/JScriptWrapper.h>
+#include <worklets/android/JScriptBufferWrapper.h>
 
 #include <utility>
 
@@ -14,7 +14,7 @@ namespace worklets {
 
 using namespace facebook::jni;
 
-jni::local_ref<JScriptWrapper::jhybriddata> JScriptWrapper::initHybridFromAssets(
+jni::local_ref<JScriptBufferWrapper::jhybriddata> JScriptBufferWrapper::initHybridFromAssets(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
     jni::alias_ref<JAssetManager::javaobject> assetManager, // NOLINT //(performance-unnecessary-value-param)
     const std::string &sourceURL) {
@@ -24,7 +24,7 @@ jni::local_ref<JScriptWrapper::jhybriddata> JScriptWrapper::initHybridFromAssets
   return makeCxxInstance(std::move(script), sourceURL);
 }
 
-jni::local_ref<JScriptWrapper::jhybriddata> JScriptWrapper::initHybridFromFile(
+jni::local_ref<JScriptBufferWrapper::jhybriddata> JScriptBufferWrapper::initHybridFromFile(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
     const std::string &fileName) {
   std::shared_ptr<const ScriptBuffer> script;
@@ -35,7 +35,7 @@ jni::local_ref<JScriptWrapper::jhybriddata> JScriptWrapper::initHybridFromFile(
   return makeCxxInstance(std::move(script), fileName);
 }
 
-jni::local_ref<JScriptWrapper::jhybriddata> JScriptWrapper::initHybridFromString(
+jni::local_ref<JScriptBufferWrapper::jhybriddata> JScriptBufferWrapper::initHybridFromString(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
     const std::string &scriptStr,
     const std::string &sourceURL) {
@@ -44,22 +44,24 @@ jni::local_ref<JScriptWrapper::jhybriddata> JScriptWrapper::initHybridFromString
   return makeCxxInstance(std::move(script), sourceURL);
 }
 
-JScriptWrapper::JScriptWrapper(const std::shared_ptr<const ScriptBuffer> &script, const std::string &sourceUrl)
+JScriptBufferWrapper::JScriptBufferWrapper(
+    const std::shared_ptr<const ScriptBuffer> &script,
+    const std::string &sourceUrl)
     : script_(script), sourceUrl_(sourceUrl) {}
 
-std::shared_ptr<const ScriptBuffer> JScriptWrapper::getScript() const {
+std::shared_ptr<const ScriptBuffer> JScriptBufferWrapper::getScript() const {
   return script_;
 }
 
-std::string JScriptWrapper::getSourceUrl() const {
+std::string JScriptBufferWrapper::getSourceUrl() const {
   return sourceUrl_;
 }
 
-void JScriptWrapper::registerNatives() {
+void JScriptBufferWrapper::registerNatives() {
   registerHybrid({
-      makeNativeMethod("initHybridFromAssets", JScriptWrapper::initHybridFromAssets),
-      makeNativeMethod("initHybridFromFile", JScriptWrapper::initHybridFromFile),
-      makeNativeMethod("initHybridFromString", JScriptWrapper::initHybridFromString),
+      makeNativeMethod("initHybridFromAssets", JScriptBufferWrapper::initHybridFromAssets),
+      makeNativeMethod("initHybridFromFile", JScriptBufferWrapper::initHybridFromFile),
+      makeNativeMethod("initHybridFromString", JScriptBufferWrapper::initHybridFromString),
   });
 }
 } // namespace worklets

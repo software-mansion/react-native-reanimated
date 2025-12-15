@@ -9,7 +9,7 @@
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/android/AndroidUIScheduler.h>
-#include <worklets/android/JScriptWrapper.h>
+#include <worklets/android/JScriptBufferWrapper.h>
 
 #include <memory>
 #include <string>
@@ -29,7 +29,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
       jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
-      jni::alias_ref<JScriptWrapper::javaobject> jBundleWrapper);
+      jni::alias_ref<JScriptBufferWrapper::javaobject> jScriptBufferWrapper);
 
   static void registerNatives();
 

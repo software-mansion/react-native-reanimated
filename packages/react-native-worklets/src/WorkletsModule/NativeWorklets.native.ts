@@ -27,7 +27,9 @@ class NativeWorklets implements IWorkletsModule {
     ) {
       WorkletsTurboModule?.installTurboModule();
       if (__DEV__ && globalThis._WORKLETS_BUNDLE_MODE) {
-        console.log('[Worklets] Downloaded the bundle for Worklet Runtimes.');
+        console.log(
+          '[Worklets] Bundle mode initialization: Downloaded the bundle for Worklet Runtimes.'
+        );
       }
     }
     if (global.__workletsModuleProxy === undefined) {

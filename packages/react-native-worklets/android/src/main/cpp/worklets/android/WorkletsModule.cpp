@@ -48,7 +48,8 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
         messageQueueThread, // NOLINT //(performance-unnecessary-value-param)
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
     jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
-    jni::alias_ref<JScriptWrapper::javaobject> jBundleWrapper // NOLINT //(performance-unnecessary-value-param)
+    jni::alias_ref<JScriptBufferWrapper::javaobject>
+        jScriptBufferWrapper // NOLINT //(performance-unnecessary-value-param)
 ) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext); // NOLINT //(performance-no-int-to-ptr)
@@ -57,9 +58,9 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
   std::shared_ptr<const ScriptBuffer> script = nullptr;
   std::string sourceURL;
 #ifdef WORKLETS_BUNDLE_MODE
-  auto cxxBundleWrapper = jBundleWrapper->cthis();
-  script = cxxBundleWrapper->getScript();
-  sourceURL = cxxBundleWrapper->getSourceUrl();
+  auto cxxWrapper = jScriptBufferWrapper->cthis();
+  script = cxxWrapper->getScript();
+  sourceURL = cxxWrapper->getSourceUrl();
 #endif // WORKLETS_BUNDLE_MODE
 
   return makeCxxInstance(jThis, rnRuntime, messageQueueThread, jsCallInvoker, uiScheduler, script, sourceURL);

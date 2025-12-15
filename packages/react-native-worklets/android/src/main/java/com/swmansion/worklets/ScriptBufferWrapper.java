@@ -16,8 +16,8 @@ import java.nio.charset.StandardCharsets;
 @SuppressWarnings("JavaJniMissingFunction")
 @SuppressLint("MissingNativeLoadLibrary")
 @DoNotStripAny
-public class ScriptWrapper {
-  public ScriptWrapper(String uri, AssetManager assetManager) {
+public class ScriptBufferWrapper {
+  public ScriptBufferWrapper(String uri, AssetManager assetManager) {
     String filePrefix = "file://";
     String assetsPrefix = "assets://";
 
@@ -41,16 +41,21 @@ public class ScriptWrapper {
   private static String downloadScript(String url) throws IOException {
     var scriptUrl = new URL(url);
     HttpURLConnection connection = (HttpURLConnection) scriptUrl.openConnection();
+    try {
+      byte[] content;
 
-    byte[] content;
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        content = connection.getInputStream().readAllBytes();
+      } else {
+        content = readBytes(connection.getInputStream());
+      }
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      content = connection.getInputStream().readAllBytes();
-    } else {
-      content = readBytes(connection.getInputStream());
+      return new String(content, StandardCharsets.UTF_8);
+    } finally {
+      if (connection != null) {
+        connection.disconnect();
+      }
     }
-
-    return new String(content, StandardCharsets.UTF_8);
   }
 
   /** Reads all bytes from an InputStream into a byte array for SDKs below 33. */

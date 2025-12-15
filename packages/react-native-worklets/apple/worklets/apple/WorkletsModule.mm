@@ -68,7 +68,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
     auto bigString = std::make_shared<const JSBigStdString>(str);
     script = std::make_shared<const ScriptBuffer>(bigString);
   } else {
-    throw std::runtime_error("[Worklets] Failed to load worklets bundle from URL");
+    NSString *errorMsg = [NSString stringWithFormat:@"[Worklets] Failed to load worklets bundle from URL: %@", url];
+    NSLog(@"%@", errorMsg);
+    throw std::runtime_error([errorMsg UTF8String]);
   }
   sourceURL = [[url absoluteString] UTF8String];
 #endif // WORKLETS_BUNDLE_MODE
