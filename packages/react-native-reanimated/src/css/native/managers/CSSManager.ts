@@ -4,6 +4,7 @@ import { ReanimatedError } from '../../../common';
 import type { StyleBuilder } from '../../../common/style';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
+import { CSSManagerBase } from '../../managers';
 import type { CSSStyle } from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
 import { filterCSSAndStyleProperties } from '../../utils';
@@ -12,7 +13,7 @@ import { getStyleBuilder, hasStyleBuilder } from '../registry';
 import CSSAnimationsManager from './CSSAnimationsManager';
 import CSSTransitionsManager from './CSSTransitionsManager';
 
-export default class CSSManager implements ICSSManager {
+export default class CSSManager extends CSSManagerBase implements ICSSManager {
   private readonly cssAnimationsManager: CSSAnimationsManager;
   private readonly cssTransitionsManager: CSSTransitionsManager;
   private readonly viewTag: number;
@@ -21,6 +22,7 @@ export default class CSSManager implements ICSSManager {
   private isFirstUpdate: boolean = true;
 
   constructor({ shadowNodeWrapper, viewTag, viewName = 'RCTView' }: ViewInfo) {
+    super();
     const tag = (this.viewTag = viewTag as number);
     const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
 
@@ -44,6 +46,10 @@ export default class CSSManager implements ICSSManager {
       throw new ReanimatedError(
         `Tried to apply CSS animations to ${this.viewName} which is not supported`
       );
+    }
+
+    if (__DEV__) {
+      this.warnOnUnsupportedProps(filteredStyle, this.viewName);
     }
 
     const normalizedStyle = this.styleBuilder?.buildFrom(filteredStyle);
