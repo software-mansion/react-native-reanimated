@@ -1,8 +1,52 @@
 'use strict';
-
+import { SHOULD_BE_USE_WEB } from '../common';
 import type { AnimatedPropsAdapterFunction } from '../commonTypes';
 import type { DependencyList, UseAnimatedStyleInternal } from './commonTypes';
 import { useAnimatedStyle } from './useAnimatedStyle';
+
+// TODO: we should make sure that when useAP is used we are not assigning styles
+
+type UseAnimatedProps = <Props extends object>(
+  updater: () => Partial<Props>,
+  dependencies?: DependencyList | null,
+  adapters?:
+    | AnimatedPropsAdapterFunction
+    | AnimatedPropsAdapterFunction[]
+    | null,
+  isAnimatedProps?: boolean
+) => Partial<Props>;
+
+function useAnimatedPropsJS<Props extends object>(
+  updater: () => Props,
+  deps?: DependencyList | null,
+  adapters?:
+    | AnimatedPropsAdapterFunction
+    | AnimatedPropsAdapterFunction[]
+    | null
+) {
+  return (useAnimatedStyle as UseAnimatedStyleInternal<Props>)(
+    updater,
+    deps,
+    adapters,
+    true
+  );
+}
+
+function useAnimatedPropsNative<Props extends object>(
+  updater: () => Props,
+  deps?: DependencyList | null,
+  adapters?:
+    | AnimatedPropsAdapterFunction
+    | AnimatedPropsAdapterFunction[]
+    | null
+) {
+  return (useAnimatedStyle as UseAnimatedStyleInternal<Props>)(
+    updater,
+    deps,
+    adapters,
+    true
+  );
+}
 
 /**
  * Lets you create an animated props object which can be animated using shared
@@ -18,19 +62,6 @@ import { useAnimatedStyle } from './useAnimatedStyle';
  *   property of an Animated component that you want to animate.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
  */
-export function useAnimatedProps<Props extends object>(
-  updater: () => Props,
-  deps?: DependencyList | null,
-  adapters?:
-    | AnimatedPropsAdapterFunction
-    | AnimatedPropsAdapterFunction[]
-    | null
-) {
-  'worklet';
-  return (useAnimatedStyle as UseAnimatedStyleInternal<Props>)(
-    updater,
-    deps,
-    adapters,
-    true
-  );
-}
+export const useAnimatedProps: UseAnimatedProps = SHOULD_BE_USE_WEB
+  ? (useAnimatedPropsJS as UseAnimatedProps)
+  : (useAnimatedPropsNative as UseAnimatedProps);

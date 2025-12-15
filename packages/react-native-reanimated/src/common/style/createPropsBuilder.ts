@@ -1,6 +1,5 @@
 'use strict';
 import { ReanimatedError } from '../errors';
-import { logger } from '../logger';
 import type {
   UnknownRecord,
   ValueProcessor,
@@ -23,6 +22,7 @@ type PropsBuilderResult<TProps> = {
     props: TProps,
     options?: {
       target?: ValueProcessorTarget;
+      includeUnprocessed?: boolean;
     }
   ): UnknownRecord;
 };
@@ -74,8 +74,11 @@ export default function createPropsBuilder<
         (acc, [key, value]) => {
           const processor = processedConfig[key];
 
+          // Prop is not supported or value is undefined
           if (!processor || value === undefined) {
-            // Prop is not supported
+            if (options?.includeUnprocessed) {
+              acc[key] = value;
+            }
             return acc;
           }
 
