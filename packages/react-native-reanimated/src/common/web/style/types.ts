@@ -23,7 +23,7 @@ type BuilderBase<P extends AnyRecord, R> = {
   build(): R;
 };
 
-export type StyleBuilder<P extends AnyRecord> = BuilderBase<
+export type PropsBuilder<P extends AnyRecord> = BuilderBase<
   P,
   string | null
 > & {
@@ -44,7 +44,7 @@ type PropertyValueConfigBase<P extends AnyRecord> =
   | string // suffix
   | PropertyAlias<P>; // alias for another property
 
-type StyleBuilderPropertyConfig<
+type PropsBuilderPropertyConfig<
   P extends AnyRecord,
   K extends keyof P = keyof P,
 > =
@@ -64,8 +64,8 @@ type RuleBuilderPropertyConfig<
       process: ValueProcessor<NonNullable<P[K]>>; // for custom value processing
     };
 
-export type StyleBuilderConfig<P extends AnyRecord> = {
-  [K in keyof P]: StyleBuilderPropertyConfig<P, K>;
+export type PropsBuilderConfig<P extends AnyRecord> = {
+  [K in keyof P]: PropsBuilderPropertyConfig<P, K>;
 };
 
 export type RuleBuilderConfig<P extends AnyRecord> = {
@@ -73,5 +73,5 @@ export type RuleBuilderConfig<P extends AnyRecord> = {
 };
 
 export type AnyBuilderConfig<P extends AnyRecord> =
-  | StyleBuilderConfig<P>
+  | PropsBuilderConfig<P>
   | RuleBuilderConfig<P>;

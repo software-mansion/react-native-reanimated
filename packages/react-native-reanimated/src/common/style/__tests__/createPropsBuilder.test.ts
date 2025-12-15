@@ -1,11 +1,11 @@
 'use strict';
 import type { PlainStyle } from '../../types';
 import { ValueProcessorTarget } from '../../types';
-import createStyleBuilder from '../createStyleBuilder';
+import createPropsBuilder from '../createPropsBuilder';
 // TODO - add more tests
 
-describe(createStyleBuilder, () => {
-  const styleBuilder = createStyleBuilder({
+describe(createPropsBuilder, () => {
+  const styleBuilder = createPropsBuilder({
     width: true,
     margin: true,
     borderRadius: true,
@@ -40,7 +40,7 @@ describe(createStyleBuilder, () => {
   test('passes context to processors', () => {
     const processor = jest.fn();
 
-    const builder = createStyleBuilder(
+    const builder = createPropsBuilder(
       {
         borderRadius: {
           process: processor,
@@ -61,7 +61,7 @@ describe(createStyleBuilder, () => {
   test('uses default target when none provided', () => {
     const processor = jest.fn();
 
-    const builder = createStyleBuilder({ padding: { process: processor } });
+    const builder = createPropsBuilder({ padding: { process: processor } });
 
     builder.buildFrom({ padding: 8 });
 
