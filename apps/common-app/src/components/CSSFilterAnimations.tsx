@@ -53,18 +53,18 @@ export default function CSSFilterAnimations({ onBack }: Props) {
 
   const filterString = useMemo(() => {
     const dropShadow = filters.dropShadow
-      ? '0px 16px 24px rgba(0,0,0,0.35)'
+      ? '0px 16px 24px rgba(100,100,0,0.35)'
       : '0px 0px 0px rgba(0,0,0,0)';
     return [
-      `blur(${filters.blur}px)`,
-      `brightness(${filters.brightness})`,
-      `contrast(${filters.contrast})`,
-      `saturate(${filters.saturate})`,
-      `grayscale(${filters.grayscale})`,
-      //   `hue-rotate(${filters.hueRotate}deg)`,
-      `invert(${filters.invert})`,
-      `sepia(${filters.sepia})`,
-      //   `drop-shadow(${dropShadow})`,
+      //   `blur(${filters.blur}px)`,
+      //   `brightness(${filters.brightness})`,
+      //   `contrast(${filters.contrast})`,
+      //   `saturate(${filters.saturate})`,
+      //   `grayscale(${filters.grayscale})`,
+      //   `hueRotate(${filters.hueRotate}deg)`,
+      //   `invert(${filters.invert})`,
+      //   `sepia(${filters.sepia})`,
+      `dropShadow(${dropShadow})`,
     ].join(' ');
   }, [filters]);
 

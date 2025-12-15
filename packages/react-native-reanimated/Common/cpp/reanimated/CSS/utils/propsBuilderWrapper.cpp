@@ -13,6 +13,42 @@ namespace reanimated::css {
 
 namespace {
 
+int32_t parseCSSColor(CSSColor color) {
+  if (color.colorType == CSSColorType::Rgba) {
+    auto &channels = color.channels;
+    return (channels[3] << 24) | (channels[0] << 16) | (channels[1] << 8) | channels[2];
+  }
+
+  return 0;
+}
+
+void addFilter(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    FilterFunction filterFunction) {
+  bool isFound = false;
+  for (auto &prop : propsBuilder->props) {
+    if (prop->propName != FILTER) {
+      continue;
+    }
+
+    auto *filterProp = dynamic_cast<std::vector<FilterFunction> *>(prop.get());
+
+    if (!filterProp) {
+      continue;
+    }
+
+    filterProp->push_back(filterFunction);
+
+    isFound = true;
+    break;
+  }
+
+  if (!isFound) {
+    std::vector<FilterFunction> filters{filterFunction};
+    propsBuilder->setFilter(filters);
+  }
+}
+
 void updateCascadedRectangleEdges(
     CascadedRectangleEdges<yoga::StyleLength> &edges,
     float value,
@@ -318,14 +354,7 @@ void addBackgroundColorToPropsBuilder(
 
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSColor>(storage);
-  auto color = 0;
-  if (cssValue.colorType == CSSColorType::Rgba) {
-    auto &channels = cssValue.channels;
-    color = (channels[3] << 24) | (channels[0] << 16) | (channels[1] << 8) | channels[2];
-  } else {
-    color = 0;
-  }
-
+  auto color = parseCSSColor(cssValue);
   propsBuilder->setBackgroundColor(SharedColor(color));
 }
 
@@ -567,43 +596,96 @@ void addPaddingVerticalToPropsBuilder(
 
 void addBlurFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    BlurOperation &operation) {}
+    BlurOperation &operation) {
+  double blurValue = operation.value.value;
+  FilterFunction filterFunction = FilterFunction{FilterType::Blur, std::variant<Float, DropShadowParams>{blurValue}};
+  addFilter(propsBuilder, filterFunction);
+}
 
 void addBrightnessFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    BrightnessOperation &operation) {}
+    BrightnessOperation &operation) {
+  double brightnessValue = operation.value.value;
+  FilterFunction filterFunction =
+      FilterFunction{FilterType::Brightness, std::variant<Float, DropShadowParams>{brightnessValue}};
+  addFilter(propsBuilder, filterFunction);
+}
 
 void addContrastFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    ContrastOperation &operation) {}
+    ContrastOperation &operation) {
+  double contrastValue = operation.value.value;
+  FilterFunction filterFuntion =
+      FilterFunction{FilterType::Contrast, std::variant<Float, DropShadowParams>{contrastValue}};
+}
 
 void addDropShadowFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    DropShadowOperation &operation) {}
+    DropShadowOperation &operation) {
+
+  DropShadowParams dropShadowParams = DropShadowParams{
+      operation.value.offsetX.value,
+      operation.value.offsetY.value,
+      operation.value.standardDeviation.value,
+      SharedColor(parseCSSColor(operation.value.color))};
+
+  FilterFunction filterFunction =
+      FilterFunction{FilterType::DropShadow, std::variant<Float, DropShadowParams>{dropShadowParams}};
+  addFilter(propsBuilder, filterFunction);
+}
 
 void addGrayscaleFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    GrayscaleOperation &operation) {}
+    GrayscaleOperation &operation) {
+  double grayScaleValue = operation.value.value;
+  FilterFunction filterFunction =
+      FilterFunction{FilterType::Grayscale, std::variant<Float, DropShadowParams>{grayScaleValue}};
+  addFilter(propsBuilder, filterFunction);
+}
 
 void addHueRotateFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    HueRotateOperation &operation) {}
+    HueRotateOperation &operation) {
+  double hueRotateValue = operation.value.value;
+  FilterFunction filterFunction =
+      FilterFunction{FilterType::HueRotate, std::variant<Float, DropShadowParams>{hueRotateValue}};
+  addFilter(propsBuilder, filterFunction);
+}
 
 void addInvertFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    InvertOperation &operation) {}
+    InvertOperation &operation) {
+  double invertValue = operation.value.value;
+  FilterFunction filterFunction =
+      FilterFunction{FilterType::Invert, std::variant<Float, DropShadowParams>{invertValue}};
+  addFilter(propsBuilder, filterFunction);
+}
 
 void addOpacityFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    OpacityOperation &operation) {}
+    OpacityOperation &operation) {
+  double opacityValue = operation.value.value;
+  FilterFunction filterFunction =
+      FilterFunction{FilterType::Opacity, std::variant<Float, DropShadowParams>{opacityValue}};
+  addFilter(propsBuilder, filterFunction);
+}
 
 void addSaturateFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    SaturateOperation &operation) {}
+    SaturateOperation &operation) {
+  double saturateValue = operation.value.value;
+  FilterFunction filterFunction =
+      FilterFunction{FilterType::Saturate, std::variant<Float, DropShadowParams>{saturateValue}};
+  addFilter(propsBuilder, filterFunction);
+}
 
 void addSepiaFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    SepiaOperation &operation) {}
+    SepiaOperation &operation) {
+  double sepiaValue = operation.value.value;
+  FilterFunction filterFunction = FilterFunction{FilterType::Sepia, std::variant<Float, DropShadowParams>{sepiaValue}};
+  addFilter(propsBuilder, filterFunction);
+}
 
 void animationMutationsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch) {
   for (auto &[node, dynamic] : updatesBatch) {
