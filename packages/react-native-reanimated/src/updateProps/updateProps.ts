@@ -6,7 +6,7 @@ import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import {
   IS_JEST,
-  processBoxShadowNative,
+  processBoxShadow,
   processColorsInProps,
   processFilter,
   processTransform,
@@ -64,7 +64,7 @@ if (SHOULD_BE_USE_WEB) {
       updates.transform = processTransform(updates.transform);
     }
     if ('boxShadow' in updates) {
-      updates.boxShadow = processBoxShadowNative(updates.boxShadow);
+      updates.boxShadow = processBoxShadow(updates.boxShadow);
     }
     if ('filter' in updates) {
       updates.filter = processFilter(updates.filter);
