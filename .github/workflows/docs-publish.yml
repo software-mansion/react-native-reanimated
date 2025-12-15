@@ -1,4 +1,4 @@
-name: Docs Reanimated publish
+name: docs publish
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
@@ -9,10 +9,11 @@ on:
       - docs/docs-reanimated/**
       - docs/docs-worklets/**
       - packages/react-native-reanimated/compatibility.json
+      - packages/react-native-worklets/compatibility.json
   workflow_dispatch:
 
 jobs:
-  docs-reanimated-publish:
+  docs-publish:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     env:
@@ -21,26 +22,27 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v4
+      - name: Install monorepo node dependencies
+        run: yarn install
+
+      - name: Build Reanimated and Worklets docs
+        uses: ./.github/actions/docs-build
+        with:
+          REANIMATED_DOCS_DIR: ${{ env.REANIMATED_DOCS_DIR }}
+          WORKLETS_DOCS_DIR: ${{ env.WORKLETS_DOCS_DIR }}
 
       - name: Configure git user info
         run: >-
           git config --local user.email "action@github.com"
           && git config --local user.name "GitHub Action"
 
-      - name: Install monorepo node dependencies
-        run: yarn install
-
-      - name: Build Reanimated docs
-        working-directory: ${{ env.REANIMATED_DOCS_DIR }}
-        run: yarn build
-
-      - name: Build Worklets docs
+      - name: Bundle Worklets docs into Reanimated docs
         working-directory: ${{ env.WORKLETS_DOCS_DIR }}
-        run: yarn build
+        run: yarn prepublish
 
       - name: Publish generated content to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
-          FOLDER: docs/docs-reanimated/build
+          FOLDER: ${{ env.REANIMATED_DOCS_DIR }}/build
           BRANCH: gh-pages
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
