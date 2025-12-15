@@ -88,7 +88,7 @@ describe(normalizeKeyframeSelector, () => {
 
 const createMockPropsBuilder = () => {
   const buildMock = jest.fn<BuildReturn | undefined, BuildArgs>(
-    (style) => style
+    (props) => props
   );
 
   return {
@@ -276,11 +276,11 @@ describe(processKeyframes, () => {
     });
   });
 
-  test('drops keyframes when processed style is undefined', () => {
+  test('drops keyframes when processed props are undefined', () => {
     const { builder, buildMock } = createMockPropsBuilder();
     buildMock
       .mockImplementationOnce(() => undefined)
-      .mockImplementation((style) => style);
+      .mockImplementation((props) => props);
 
     const keyframes = {
       from: { shadowOffset: { width: 0, height: 0 } },
@@ -294,7 +294,7 @@ describe(processKeyframes, () => {
     buildMock.mockRestore();
   });
 
-  test('merges styles for duplicate offsets', () => {
+  test('merges props for duplicate offsets', () => {
     const { builder } = createMockPropsBuilder();
     const keyframes = {
       '0%': { opacity: 0.5 },
@@ -313,7 +313,7 @@ describe(processKeyframes, () => {
 });
 
 describe(normalizeAnimationKeyframes, () => {
-  test('aggregates styles and timing functions across keyframes', () => {
+  test('aggregates props and timing functions across keyframes', () => {
     const result = normalizeAnimationKeyframes(
       {
         from: { opacity: 0, animationTimingFunction: 'ease-in' },

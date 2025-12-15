@@ -92,7 +92,7 @@ describe(normalizeAnimationKeyframes, () => {
   });
 
   describe('propKeyframes', () => {
-    test('converts keyframes to style with properties with offset', () => {
+    test('converts keyframes to a record with property names as keys and arrays of keyframes as values', () => {
       expect(
         normalizeAnimationKeyframes(
           {
@@ -114,7 +114,7 @@ describe(normalizeAnimationKeyframes, () => {
       });
     });
 
-    test('handles nested style properties', () => {
+    test('handles nested props', () => {
       expect(
         normalizeAnimationKeyframes(
           {

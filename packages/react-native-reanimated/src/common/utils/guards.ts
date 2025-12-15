@@ -23,7 +23,7 @@ export const isLength = (value: string) => {
 export const isPercentage = (value: unknown): value is `${number}%` =>
   typeof value === 'string' && /^-?\d+(\.\d+)?%$/.test(value);
 
-export const isRecord = <T extends AnyRecord = UnknownRecord>(
+export const isRecord = <T extends UnknownRecord = UnknownRecord>(
   value: unknown
 ): value is T =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
