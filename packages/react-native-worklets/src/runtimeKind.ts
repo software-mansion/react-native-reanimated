@@ -29,6 +29,26 @@ export function getRuntimeKind(): RuntimeKind {
   return globalThis.__RUNTIME_KIND;
 }
 
+export function isRNRuntime(): boolean {
+  'worklet';
+  return globalThis.__RUNTIME_KIND === 1;
+}
+
+export function isWorkletRuntime(): boolean {
+  'worklet';
+  return globalThis.__RUNTIME_KIND !== 1;
+}
+
+export function isUIRuntime(): boolean {
+  'worklet';
+  return globalThis.__RUNTIME_KIND === 2;
+}
+
+export function isWorkerRuntime(): boolean {
+  'worklet';
+  return globalThis.__RUNTIME_KIND === 3;
+}
+
 if (globalThis.__RUNTIME_KIND === undefined) {
   // In Jest environments eager imports make this file to evaluate before
   // `initializers.ts` file, therefore we have to set the RuntimeKind here,

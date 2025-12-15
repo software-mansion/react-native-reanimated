@@ -40,7 +40,14 @@ export type {
   Synchronizable,
   SynchronizableRef,
 } from './memory/types';
-export { getRuntimeKind, RuntimeKind } from './runtimeKind';
+export {
+  getRuntimeKind,
+  isRNRuntime,
+  isUIRuntime,
+  isWorkerRuntime,
+  isWorkletRuntime,
+  RuntimeKind,
+} from './runtimeKind';
 export {
   createWorkletRuntime,
   runOnRuntime,
