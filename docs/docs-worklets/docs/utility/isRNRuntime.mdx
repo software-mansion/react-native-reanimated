@@ -1,0 +1,47 @@
+---
+sidebar_position: 42 # Use alphabetical order
+---
+
+# isRNRuntime
+
+Checks if the current runtime is the [React Native Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
+
+## Reference
+
+```typescript
+import {
+  isRNRuntime,
+  scheduleOnUI,
+  scheduleOnRuntime,
+  createWorkletRuntime,
+} from 'react-native-worklets';
+
+// highlight-next-line
+console.log(isRNRuntime()); // true
+
+scheduleOnUI(() => {
+  console.log(isRNRuntime()); // false
+})();
+
+const workerRuntime = createWorkletRuntime();
+scheduleOnRuntime(workerRuntime, () => {
+  console.log(isRNRuntime()); // false
+})();
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function isRNRuntime(): boolean;
+```
+
+</details>
+
+### Returns
+
+`true` if the current runtime is the RN Runtime, `false` otherwise.
+
+## Remarks
+
+- The function checks the value of `globalThis.__RUNTIME_KIND` to determine the kind of the current runtime. See [getRuntimeKind](/docs/utility/getRuntimeKind) for more details.

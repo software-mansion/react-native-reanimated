@@ -29,21 +29,48 @@ export function getRuntimeKind(): RuntimeKind {
   return globalThis.__RUNTIME_KIND;
 }
 
+/**
+ * Checks if the current runtime is the [React Native
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds/#rn-runtime).
+ *
+ * @returns `true` if the current runtime is the React Native Runtime, `false`
+ *   otherwise.
+ */
 export function isRNRuntime(): boolean {
   'worklet';
   return globalThis.__RUNTIME_KIND === 1;
 }
 
+/**
+ * Checks if the current runtime is a [Worklet
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds/#worklet-runtime).
+ *
+ * @returns `true` if the current runtime is a Worklet Runtime, `false`
+ *   otherwise.
+ */
 export function isWorkletRuntime(): boolean {
   'worklet';
   return globalThis.__RUNTIME_KIND !== 1;
 }
 
+/**
+ * Checks if the current runtime is the [UI
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds/#ui-runtime).
+ *
+ * @returns `true` if the current runtime is the UI Runtime, `false` otherwise.
+ */
 export function isUIRuntime(): boolean {
   'worklet';
   return globalThis.__RUNTIME_KIND === 2;
 }
 
+/**
+ * Checks if the current runtime is a [Worker
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds/#worker-runtime).
+ *
+ * @returns `true` if the current runtime is a Worker Runtime, `false`
+ *   otherwise.
+ */
 export function isWorkerRuntime(): boolean {
   'worklet';
   return globalThis.__RUNTIME_KIND === 3;
