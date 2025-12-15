@@ -12,8 +12,20 @@ import BorderAnimations from './components/BorderAnimations';
 import MarginAnimations from './components/MarginAnimations';
 import CSSAnimations from './components/CSSAnimations';
 import CSSBorderAnimations from './components/CSSBorderAnimations';
+import CSSMarginAnimations from './components/CSSMarginAnimations';
+import CSSTransformAnimations from './components/CSSTransformAnimations';
+import CSSFilterAnimations from './components/CSSFilterAnimations';
 
-type Screen = 'home' | 'transform' | 'border' | 'margin' | 'css' | 'css-border';
+type Screen =
+  | 'home'
+  | 'transform'
+  | 'border'
+  | 'margin'
+  | 'css'
+  | 'css-border'
+  | 'css-margin'
+  | 'css-transform'
+  | 'css-filter';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
@@ -25,7 +37,7 @@ export default function App() {
         <Text style={styles.subtitle}>Animation Examples</Text>
 
         <View style={styles.categoryContainer}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[styles.categoryButton, styles.transformButton]}
             onPress={() => setCurrentScreen('transform')}>
             <Text style={styles.categoryTitle}>🔄 Transform</Text>
@@ -51,14 +63,23 @@ export default function App() {
             <Text style={styles.categoryDescription}>
               Margin, padding animations with wave effects
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[styles.categoryButton, styles.cssButton]}
             onPress={() => setCurrentScreen('css')}>
             <Text style={styles.categoryTitle}>✨ CSS Animations</Text>
             <Text style={styles.categoryDescription}>
               Classic CSS effects: fade, slide, bounce, pulse, shake, and more
+            </Text>
+          </TouchableOpacity> */}
+
+          <TouchableOpacity
+            style={[styles.categoryButton, styles.cssTransformButton]}
+            onPress={() => setCurrentScreen('css-transform')}>
+            <Text style={styles.categoryTitle}>🌀 CSS Transform Lab</Text>
+            <Text style={styles.categoryDescription}>
+              Translate, rotate, scale, skew, and opacity via CSS transitions
             </Text>
           </TouchableOpacity>
 
@@ -68,6 +89,24 @@ export default function App() {
             <Text style={styles.categoryTitle}>🧱 CSS Border Lab</Text>
             <Text style={styles.categoryDescription}>
               Border-focused transitions powered by CSS animations
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.categoryButton, styles.cssMarginButton]}
+            onPress={() => setCurrentScreen('css-margin')}>
+            <Text style={styles.categoryTitle}>🪄 CSS Margin Lab</Text>
+            <Text style={styles.categoryDescription}>
+              Margin and padding experiments driven by CSS transitions
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.categoryButton, styles.cssFilterButton]}
+            onPress={() => setCurrentScreen('css-filter')}>
+            <Text style={styles.categoryTitle}>🌫️ CSS Filter Lab</Text>
+            <Text style={styles.categoryDescription}>
+              Blur, contrast, hue-rotate, invert, saturate, and more filters
             </Text>
           </TouchableOpacity>
         </View>
@@ -87,6 +126,14 @@ export default function App() {
         return <CSSAnimations onBack={() => setCurrentScreen('home')} />;
       case 'css-border':
         return <CSSBorderAnimations onBack={() => setCurrentScreen('home')} />;
+      case 'css-margin':
+        return <CSSMarginAnimations onBack={() => setCurrentScreen('home')} />;
+      case 'css-transform':
+        return (
+          <CSSTransformAnimations onBack={() => setCurrentScreen('home')} />
+        );
+      case 'css-filter':
+        return <CSSFilterAnimations onBack={() => setCurrentScreen('home')} />;
       default:
         return renderHomeScreen();
     }
@@ -156,8 +203,17 @@ const styles = StyleSheet.create({
   cssButton: {
     borderLeftColor: '#9b59b6',
   },
+  cssTransformButton: {
+    borderLeftColor: '#16a085',
+  },
   cssBorderButton: {
     borderLeftColor: '#1abc9c',
+  },
+  cssMarginButton: {
+    borderLeftColor: '#e84393',
+  },
+  cssFilterButton: {
+    borderLeftColor: '#8e44ad',
   },
   categoryTitle: {
     fontSize: 20,

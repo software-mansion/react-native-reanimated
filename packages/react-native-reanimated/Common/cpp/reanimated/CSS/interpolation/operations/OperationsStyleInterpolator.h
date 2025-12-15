@@ -80,7 +80,8 @@ class OperationsStyleInterpolator : public PropertyInterpolator {
       double keyframeProgress,
       const StyleOperations &fromOperations,
       const StyleOperations &toOperations,
-      double fallbackInterpolateThreshold) const;
+      double fallbackInterpolateThreshold,
+      const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const;
   static folly::dynamic convertOperationsToDynamic(const StyleOperations &operations);
   StyleOperationsInterpolationContext createUpdateContext(
       const std::shared_ptr<const ShadowNode> &shadowNode,

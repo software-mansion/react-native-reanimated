@@ -15,7 +15,8 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::inte
     double progress,
     const std::shared_ptr<StyleOperation> &from,
     const std::shared_ptr<StyleOperation> &to,
-    const StyleOperationsInterpolationContext & /* context */) const {
+    const StyleOperationsInterpolationContext & /* context */,
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const {
   const auto &fromOp = *std::static_pointer_cast<TOperation>(from);
   const auto &toOp = *std::static_pointer_cast<TOperation>(to);
   return std::make_unique<TOperation>(fromOp.value.interpolate(progress, toOp.value));
@@ -30,7 +31,8 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<PerspectiveOperat
     double progress,
     const std::shared_ptr<StyleOperation> &from,
     const std::shared_ptr<StyleOperation> &to,
-    const StyleOperationsInterpolationContext & /* context */) const {
+    const StyleOperationsInterpolationContext & /* context */,
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const {
   // TODO - check if this implementation is correct
   const auto &fromValue = std::static_pointer_cast<PerspectiveOperation>(from)->value;
   const auto &toValue = std::static_pointer_cast<PerspectiveOperation>(to)->value;
@@ -52,7 +54,8 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<MatrixOperation>:
     double progress,
     const std::shared_ptr<StyleOperation> &from,
     const std::shared_ptr<StyleOperation> &to,
-    const StyleOperationsInterpolationContext &context) const {
+    const StyleOperationsInterpolationContext &context,
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const {
   const auto fromOperation = std::static_pointer_cast<TransformOperation>(from);
   const auto toOperation = std::static_pointer_cast<TransformOperation>(to);
   const auto shouldBe3D = fromOperation->is3D() || toOperation->is3D();
@@ -153,7 +156,8 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::inte
     double progress,
     const std::shared_ptr<StyleOperation> &from,
     const std::shared_ptr<StyleOperation> &to,
-    const StyleOperationsInterpolationContext &context) const {
+    const StyleOperationsInterpolationContext &context,
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const {
   const auto &fromOp = *std::static_pointer_cast<TOperation>(from);
   const auto &toOp = *std::static_pointer_cast<TOperation>(to);
 

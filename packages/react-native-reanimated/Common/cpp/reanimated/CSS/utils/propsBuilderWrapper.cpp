@@ -565,6 +565,46 @@ void addPaddingVerticalToPropsBuilder(
   addPadding(propsBuilder, value, "vertical");
 }
 
+void addBlurFilterToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    BlurOperation &operation) {}
+
+void addBrightnessFilterToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    BrightnessOperation &operation) {}
+
+void addContrastFilterToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    ContrastOperation &operation) {}
+
+void addDropShadowFilterToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    DropShadowOperation &operation) {}
+
+void addGrayscaleFilterToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    GrayscaleOperation &operation) {}
+
+void addHueRotateFilterToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    HueRotateOperation &operation) {}
+
+void addInvertFilterToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    InvertOperation &operation) {}
+
+void addOpacityFilterToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    OpacityOperation &operation) {}
+
+void addSaturateFilterToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    SaturateOperation &operation) {}
+
+void addSepiaFilterToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    SepiaOperation &operation) {}
+
 void animationMutationsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch) {
   for (auto &[node, dynamic] : updatesBatch) {
     AnimatedPropsBuilder builder;

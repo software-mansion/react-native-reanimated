@@ -168,10 +168,10 @@ auto transformOp(const auto &defaultValue, ResolvableValueInterpolatorConfig con
  * Filter operation interpolator factories
  */
 template <typename TOperation>
-auto filterOp(const auto &defaultValue) -> std::enable_if_t<
+auto filterOp(const auto &defaultValue, std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder) -> std::enable_if_t<
     std::is_base_of_v<FilterOperation, TOperation> && std::is_constructible_v<TOperation, decltype(defaultValue)>,
     std::shared_ptr<StyleOperationInterpolator>> {
-  return std::make_shared<FilterOperationInterpolator<TOperation>>(std::make_shared<TOperation>(defaultValue));
+  return std::make_shared<FilterOperationInterpolator<TOperation>>(std::make_shared<TOperation>(defaultValue), addToPropsBuilder);
 }
 
 template <typename TOperation>

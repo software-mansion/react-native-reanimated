@@ -99,7 +99,8 @@ folly::dynamic OperationsStyleInterpolator::interpolate(
       progress,
       keyframe->fromOperations.value(),
       keyframe->toOperations.value(),
-      fallbackInterpolateThreshold);
+      fallbackInterpolateThreshold,
+      propsBuilder);
 }
 
 void OperationsStyleInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) {
@@ -243,7 +244,8 @@ folly::dynamic OperationsStyleInterpolator::interpolateOperations(
     const double keyframeProgress,
     const StyleOperations &fromOperations,
     const StyleOperations &toOperations,
-    const double fallbackInterpolateThreshold) const {
+    const double fallbackInterpolateThreshold,
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const {
   auto result = folly::dynamic::array();
   result.reserve(fromOperations.size());
 
@@ -256,7 +258,7 @@ folly::dynamic OperationsStyleInterpolator::interpolateOperations(
     // fromOperation and toOperation have the same type
     const auto &interpolator = interpolators_->at(fromOperation->type);
     const auto interpolationResult =
-        interpolator->interpolate(keyframeProgress, fromOperation, toOperation, updateContext);
+        interpolator->interpolate(keyframeProgress, fromOperation, toOperation, updateContext, propsBuilder);
     result.push_back(interpolationResult->toDynamic());
   }
 

@@ -19,7 +19,8 @@ class TransformOperationInterpolator : public StyleOperationInterpolator {
       double progress,
       const std::shared_ptr<StyleOperation> &from,
       const std::shared_ptr<StyleOperation> &to,
-      const StyleOperationsInterpolationContext &context) const override;
+      const StyleOperationsInterpolationContext &context,
+      const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const override;
 };
 
 // Specialization for PerspectiveOperation
@@ -32,7 +33,8 @@ class TransformOperationInterpolator<PerspectiveOperation> : public StyleOperati
       double progress,
       const std::shared_ptr<StyleOperation> &from,
       const std::shared_ptr<StyleOperation> &to,
-      const StyleOperationsInterpolationContext &context) const override;
+      const StyleOperationsInterpolationContext &context,
+      const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const override;
 };
 
 // Specialization for MatrixOperation
@@ -45,7 +47,8 @@ class TransformOperationInterpolator<MatrixOperation> : public StyleOperationInt
       double progress,
       const std::shared_ptr<StyleOperation> &from,
       const std::shared_ptr<StyleOperation> &to,
-      const StyleOperationsInterpolationContext &context) const override;
+      const StyleOperationsInterpolationContext &context,
+      const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const override;
 
  protected:
   template <typename MatrixType>
@@ -70,7 +73,8 @@ class TransformOperationInterpolator<TOperation> : public StyleOperationInterpol
       double progress,
       const std::shared_ptr<StyleOperation> &from,
       const std::shared_ptr<StyleOperation> &to,
-      const StyleOperationsInterpolationContext &context) const override;
+      const StyleOperationsInterpolationContext &context,
+      const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const override;
 
   std::shared_ptr<StyleOperation> resolveOperation(
       const std::shared_ptr<StyleOperation> &operation,
