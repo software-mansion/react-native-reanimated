@@ -27,10 +27,15 @@ export {
   setDynamicFeatureFlag,
 } from './featureFlags/featureFlags';
 export { isSynchronizable } from './memory/isSynchronizable';
-export { createSerializable, isSerializableRef } from './memory/serializable';
+export {
+  createSerializable,
+  isSerializableRef,
+  registerCustomSerializable,
+} from './memory/serializable';
 export { serializableMappingCache } from './memory/serializableMappingCache';
 export { createSynchronizable } from './memory/synchronizable';
 export type {
+  RegistrationData,
   SerializableRef,
   Synchronizable,
   SynchronizableRef,
@@ -39,6 +44,7 @@ export { getRuntimeKind, RuntimeKind } from './runtimeKind';
 export {
   createWorkletRuntime,
   runOnRuntime,
+  runOnRuntimeSync,
   scheduleOnRuntime,
 } from './runtimes';
 export {

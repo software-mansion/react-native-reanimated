@@ -54,10 +54,8 @@ inline void scheduleOnUI(
   });
 }
 
-inline jsi::Value executeOnUIRuntimeSync(
-    const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
-    jsi::Runtime &rt,
-    const jsi::Value &worklet) {
+inline jsi::Value
+runOnUISync(const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime, jsi::Runtime &rt, const jsi::Value &worklet) {
   if (auto uiWorkletRuntime = weakUIWorkletRuntime.lock()) {
     auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
         rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
@@ -65,6 +63,14 @@ inline jsi::Value executeOnUIRuntimeSync(
     return serializedResult->toJSValue(rt);
   }
   return jsi::Value::undefined();
+}
+
+jsi::Value
+runOnRuntimeSync(jsi::Runtime &rt, const jsi::Value &workletRuntimeValue, const jsi::Value &serializableWorkletValue) {
+  auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
+  auto worklet = extractSerializableOrThrow<SerializableWorklet>(
+      rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
+  return workletRuntime->runSyncSerialized(worklet)->toJSValue(rt);
 }
 
 inline jsi::Value createWorkletRuntime(
@@ -125,6 +131,25 @@ inline std::shared_ptr<AsyncQueue> extractAsyncQueue(jsi::Runtime &rt, const jsi
   return asyncQueue;
 }
 
+inline void registerCustomSerializable(
+    const std::shared_ptr<RuntimeManager> &runtimeManager,
+    const std::shared_ptr<MemoryManager> &memoryManager,
+    const std::shared_ptr<SerializableWorklet> &determine,
+    const std::shared_ptr<SerializableWorklet> &pack,
+    const std::shared_ptr<SerializableWorklet> &unpack,
+    const int typeId) {
+  const SerializationData data{.determine = determine, .pack = pack, .unpack = unpack, .typeId = typeId};
+  // Prevent registering new worklet runtimes while we are updating existing ones to prevent inconsistencies.
+  runtimeManager->pause();
+
+  memoryManager->registerCustomSerializable(data);
+  for (const auto &runtime : runtimeManager->getAllRuntimes()) {
+    memoryManager->loadCustomSerializable(runtime, data);
+  }
+
+  runtimeManager->resume();
+}
+
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const bool isDevBundle,
     const std::shared_ptr<const JSBigStringBuffer> &script,
@@ -132,6 +157,7 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler,
+    const std::shared_ptr<MemoryManager> &memoryManager,
     const std::shared_ptr<RuntimeManager> &runtimeManager,
     const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime)
     : jsi::HostObject(),
@@ -141,6 +167,7 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       jsQueue_(jsQueue),
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
+      memoryManager_(memoryManager),
       runtimeManager_(runtimeManager),
       uiWorkletRuntime_(uiWorkletRuntime) {}
 
@@ -152,6 +179,7 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &oth
       jsQueue_(other.jsQueue_),
       jsScheduler_(other.jsScheduler_),
       uiScheduler_(other.uiScheduler_),
+      memoryManager_(other.memoryManager_),
       runtimeManager_(other.runtimeManager_),
       uiWorkletRuntime_(other.uiWorkletRuntime_) {}
 
@@ -177,9 +205,12 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableMap"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableSet"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableWorklet"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createCustomSerializable"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "registerCustomSerializable"));
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnUI"));
-  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "executeOnUIRuntimeSync"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnUISync"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnRuntimeSync"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createWorkletRuntime"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnRuntime"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "reportFatalErrorOnJS"));
@@ -323,6 +354,32 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         });
   }
 
+  if (name == "createCustomSerializable") {
+    return jsi::Function::createFromHostFunction(
+        rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          return makeCustomSerializable(rt, args[0], args[1].asNumber());
+        });
+  }
+
+  if (name == "registerCustomSerializable") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        4,
+        [memoryManager = memoryManager_, runtimeManager = runtimeManager_](
+            jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          const auto determine = extractSerializableOrThrow<SerializableWorklet>(
+              rt, args[0], "[Worklets] Determine function must be a worklet.");
+          const auto pack = extractSerializableOrThrow<SerializableWorklet>(
+              rt, args[1], "[Worklets] Pack function must be a worklet.");
+          const auto unpack = extractSerializableOrThrow<SerializableWorklet>(
+              rt, args[2], "[Worklets] Unpack function must be a worklet.");
+          const auto typeId = args[3].asNumber();
+          registerCustomSerializable(runtimeManager, memoryManager, determine, pack, unpack, typeId);
+          return jsi::Value::undefined();
+        });
+  }
+
   if (name == "scheduleOnUI") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -335,14 +392,21 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         });
   }
 
-  if (name == "executeOnUIRuntimeSync") {
+  if (name == "runOnUISync") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
         1,
         [uiWorkletRuntime = uiWorkletRuntime_](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return executeOnUIRuntimeSync(uiWorkletRuntime, rt, args[0]);
+          return runOnUISync(uiWorkletRuntime, rt, args[0]);
+        });
+  }
+
+  if (name == "runOnRuntimeSync") {
+    return jsi::Function::createFromHostFunction(
+        rt, propName, 2, [](jsi::Runtime &rt, const jsi ::Value &thisValue, const jsi::Value *args, size_t count) {
+          return runOnRuntimeSync(rt, args[0], args[1]);
         });
   }
 

@@ -4,23 +4,48 @@ sidebar_position: 42 # Use alphabetical order
 
 # createSerializable
 
-`createSerializable` recursively converts JavaScript values into serializable references that can be used on different Runtimes than RN Runtime.
-The reference cannot be manipulated, as it doesn't represent any standard JavaScript object. Changes to the original value don't affect the `Serializable`.
-It handles various data types including primitives, objects, arrays, functions, and special cases like host objects and worklets.
-To prevent misconceptions Worklets library freezes the original value for object-like values and for arrays.
+Recursively converts JavaScript values into [Serializable](/docs/memory/serializable) references that can be passed to different JavaScript Runtimes.
 
-![Serializable](/img/serializable.png)
+The returned reference cannot be manipulated as it doesn't represent any standard JavaScript object. Changes to the original value don't affect the `Serializable`.
 
-<figcaption style={{ textAlign: 'center' }}>
-  Serializable flow diagram
-</figcaption>
+**Functions like `scheduleOnUI`, `runOnUISync`, `scheduleOnRuntime` etc. automatically convert values to Serializable references.**
 
-**Functions like `runOnUI`, `runOnRuntime`, `runOnJS`, `executeOnUIRuntimeSync` and `runOnUIAsync` automatically convert values to `Serializable` references.**
+## Reference
 
-## Usage
+```typescript
+import { createSerializable, scheduleOnUI } from 'react-native-worklets';
 
-```tsx
-import { createSerializable, runOnUI } from 'react-native-worklets';
+const object = {
+  a: 1,
+  b: 2,
+  c: 3,
+};
+
+const serializableRef = createSerializable(object);
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function createSerializable<TValue>(value: TValue): SerializableRef<TValue>;
+```
+
+</details>
+
+## Arguments
+
+### value
+
+The JavaScript value to be converted into a Serializable reference. It must be one of the supported types listed below.
+
+<SerializableSupportedTypesTable />
+
+:::note
+In development builds, the `value` argument is [frozen](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze) after serialization. This prevents misconceptions that changes to the original value would update the already created Serializable.
+
+```typescript
+import { createSerializable, scheduleOnUI } from 'react-native-worklets';
 
 const object = {
   a: 1,
@@ -30,55 +55,25 @@ const object = {
 
 object.c = 3; // <-- Correct: you can modify the object before serializing it
 
-createSerializable(object);
+scheduleOnUI(() => {
+  // `object` was implicitly serialized with `createSerializable` when passed to `scheduleOnUI`.
+  console.log(object); // { a: 1, b: 2, c: 3 }
+});
 
 object.a = 10; // <-- Warning: You can't mutate the object after serializing it
-
-runOnUI(() => {
-  object.a = 10; // <-- Warning: You can't mutate the object after serializing it
-  console.log(object); // { a: 1, b: 2, c: 3 }
-})();
 ```
 
-<details>
-<summary>Type definitions</summary>
+:::
 
-```typescript
-type SerializableRef<T = unknown> = {
-  __serializableRef: true;
-  __nativeStateSerializableJSRef: T;
-};
+### Returns
 
-function createSerializable<T>(value: T): SerializableRef<T> {
-  return value as SerializableRef<T>;
-}
-```
-
-</details>
+`SerializableRef` - a reference to the Serializable representation of the input value.
 
 ## Remarks
 
-- The function automatically detects the type of the input value and applies appropriate serialization strategies.
-
-Supported types:
-| Type | Supported |
-|------|-----------|
-| string | ✅ |
-| number | ✅ |
-| boolean | ✅ |
-| object | ✅ |
-| array | ✅ |
-| function (non-worklet) | ✅ |
-| HostObject | ✅ |
-| worklet | ✅ |
-| Map | ✅ |
-| Set | ✅ |
-| ArrayBuffer | ✅ |
-| RegExp | ✅ |
-| Cyclic objects | ❌ |
-| Objects with custom prototype | ❌ |
-
-- For objects and arrays, it recursively processes nested properties
-- The function includes cycle detection to prevent infinite recursion
-- Objects are frozen after serialization to prevent accidental modifications that won't propagate to the Serializable
-- Functions that aren't worklets are serialized as references to function instances on the respective runtime
+- This function automatically detects the type of the input value and applies appropriate serialization strategies.
+- For objects and arrays, it recursively processes nested properties.
+- This function is rarely used as in almost all cases Worklets handle the creation of Serializables for you.
+- This function includes cycle detection to prevent infinite recursion.
+- `jsi::NativeState` of a passed value is preserved during serialization.
+- Outside of [Bundle Mode](/docs/experimental/bundleMode), `createSerializable` can be called only on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime). In Bundle Mode, it can be called from any Runtime. If you need to create a Serializable on a [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) outside of Bundle Mode, use deprecated [makeShareableCloneOnUIRecursive](/docs/memory/makeShareableCloneOnUIRecursive) instead.

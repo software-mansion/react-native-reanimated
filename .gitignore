@@ -75,3 +75,8 @@ CompilationDatabase
 compile_commands.json
 
 build/
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/

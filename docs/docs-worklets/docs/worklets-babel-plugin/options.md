@@ -16,6 +16,7 @@ interface PluginOptions {
   bundleMode?: boolean;
   disableInlineStylesWarning?: boolean;
   disableSourceMaps?: boolean;
+  disableWorkletClasses?: boolean;
   extraPlugins?: string[];
   extraPresets?: string[];
   globals?: string[];
@@ -30,20 +31,20 @@ interface PluginOptions {
 
 ## How to use
 
-Using this is straightforward for Babel plugins; you just need to pass an object containing the options to the plugin in your `babel.config.js` file. Make sure to pass the plugin and its options as an two-element array.
+Using this is straightforward for Babel plugins; you just need to pass an object containing the options to the plugin in your `babel.config.js` file. Make sure to pass the plugin and its options as a two-element array.
 
 Here's an example:
 
-```js {7}
+```js
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  bundleMode: true,
+  disableInlineStylesWarning: true,
+  globals: ['myObjectOnUI'],
+  substituteWebPlatformChecks: true,
+}
+
 module.exports = {
-  /** @type {import('react-native-worklets/plugin').PluginOptions} */
-  const workletsPluginOptions = {
-    relativeSourceLocation: true,
-    disableInlineStylesWarning: true,
-    omitNativeOnlyData: true,
-    globals: ['myObjectOnUI'],
-    substituteWebPlatformChecks: true,
-  }
   ...
   plugins: [
     ...
@@ -59,9 +60,9 @@ module.exports = {
 
 ### bundleMode
 
-Default to `false`.
+Defaults to `false`.
 
-Enables the [Bundle Mode](/docs/experimental/bundle-mode).
+Enables the [Bundle Mode](/docs/experimental/bundleMode).
 
 ### disableInlineStylesWarning
 
@@ -102,6 +103,15 @@ Enable this option to silence such false warnings.
 Defaults to `false`.
 
 This option turns off the source map generation for worklets. Mostly used for testing purposes.
+
+### disableWorkletClasses <AvailableFrom version="0.7.0"/>
+
+Defaults to `false`
+
+Disables [Worklet Classes
+support](/docs/worklets-babel-plugin/about#experimental-worklet-classes).
+You might need to disable this feature when using [Custom
+Serializables](/docs/memory/registerCustomSerializable).
 
 ### extraPlugins
 
@@ -200,4 +210,4 @@ This option can also be useful for Web apps. In Reanimated, there are numerous c
 
 Defaults to an empty array.
 
-This option allows you to register modules as safe to use on Worklet Runtimes in the [Bundle Mode](/docs/experimental/bundle-mode).
+This option allows you to register modules as safe to use on Worklet Runtimes in the [Bundle Mode](/docs/experimental/bundleMode).

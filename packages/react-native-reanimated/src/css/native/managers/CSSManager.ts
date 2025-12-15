@@ -1,14 +1,14 @@
 'use strict';
 import type { AnyRecord } from '../../../common';
 import { ReanimatedError } from '../../../common';
-import type { StyleBuilder } from '../../../common/style';
+import type { PropsBuilder } from '../../../common/style';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
 import type { CSSStyle } from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
 import { filterCSSAndStyleProperties } from '../../utils';
 import { setViewStyle } from '../proxy';
-import { getStyleBuilder, hasStyleBuilder } from '../registry';
+import { getPropsBuilder, hasPropsBuilder } from '../registry';
 import CSSAnimationsManager from './CSSAnimationsManager';
 import CSSTransitionsManager from './CSSTransitionsManager';
 
@@ -17,7 +17,7 @@ export default class CSSManager implements ICSSManager {
   private readonly cssTransitionsManager: CSSTransitionsManager;
   private readonly viewTag: number;
   private readonly viewName: string;
-  private readonly styleBuilder: StyleBuilder<AnyRecord> | null = null;
+  private readonly styleBuilder: PropsBuilder<AnyRecord> | null = null;
   private isFirstUpdate: boolean = true;
 
   constructor({ shadowNodeWrapper, viewTag, viewName = 'RCTView' }: ViewInfo) {
@@ -25,8 +25,8 @@ export default class CSSManager implements ICSSManager {
     const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
 
     this.viewName = viewName;
-    this.styleBuilder = hasStyleBuilder(viewName)
-      ? getStyleBuilder(viewName)
+    this.styleBuilder = hasPropsBuilder(viewName)
+      ? getPropsBuilder(viewName)
       : null;
     this.cssAnimationsManager = new CSSAnimationsManager(
       wrapper,

@@ -192,8 +192,8 @@
 
   /* Pagination */
   --swm-paginator-sublabel: var(--swm-navy-light-100);
-  --swm-paginator-label: var(--swm-yellow-dark-100);
-  --swm-paginator-label-hover: var(--swm-yellow-dark-120);
+  --swm-paginator-label: var(--swm-blue-light-80);
+  --swm-paginator-label-hover: var(--swm-blue-light-100);
 
   /* Footer */
   --swm-brand-copyright-color: var(--swm-navy-light-100);
@@ -311,6 +311,13 @@
   --codeblock-diff-deleted-color-dark: var(--swm-red-dark-40);
   --codeblock-diff-deleted-background-light: var(--swm-red-light-20);
   --codeblock-diff-deleted-background-dark: var(--swm-red-dark-140);
+
+  /* Supported types table */
+  --swm-supported-type-color: var(--swm-green-dark-120);
+  --swm-unsupported-type-color: var(--swm-red-light-100);
+
+  /* SVG Diagram background */
+  --swm-svg-diagram-background: transparent;
 }
 
 :root[data-theme='dark'] {
@@ -400,8 +407,8 @@
 
   /* Pagination */
   --swm-paginator-sublabel: var(--swm-navy-light-20);
-  --swm-paginator-label: var(--swm-yellow-light-60);
-  --swm-paginator-label-hover: var(--swm-yellow-light-40);
+  --swm-paginator-label: var(--swm-blue-dark-80);
+  --swm-paginator-label-hover: var(--swm-blue-dark-60);
 
   /* Footer */
   --swm-brand-copyright-color: var(--swm-navy-light-20);
@@ -499,6 +506,13 @@
   --swm-compatibility-supported-background: var(--swm-green-dark-120);
   --swm-compatibility-not-supported-background: var(--swm-red-dark-120);
   --swm-compatibility-text-color: var(--swm-navy-dark-20);
+
+  /* Supported types table */
+  --swm-supported-type-color: var(--swm-green-dark-120);
+  --swm-unsupported-type-color: var(--swm-red-dark-120);
+
+  /* SVG Diagram background */
+  --swm-svg-diagram-background: var(--swm-navy-dark-60);
 }
 
 code {

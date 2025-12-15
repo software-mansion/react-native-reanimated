@@ -4,7 +4,7 @@
 
 namespace reanimated::css {
 
-enum class TransformOp : std::uint8_t {
+enum class TransformOp : uint8_t {
   Perspective,
   Rotate,
   RotateX,
@@ -21,7 +21,6 @@ enum class TransformOp : std::uint8_t {
 };
 
 TransformOp getTransformOperationType(const std::string &property);
-
-std::string getOperationNameFromType(const TransformOp type);
+std::string getTransformOperationName(const TransformOp type);
 
 } // namespace reanimated::css

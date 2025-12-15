@@ -1,5 +1,5 @@
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
-const workletOptions = {};
+const workletsPluginOptions = {};
 
 /** @type {import('@babel/core').TransformOptions} */
 module.exports = {
@@ -16,6 +16,6 @@ module.exports = {
         },
       },
     ],
-    ['react-native-worklets/plugin', workletOptions],
+    ['react-native-worklets/plugin', workletsPluginOptions],
   ],
 };

@@ -5,7 +5,7 @@
 #include <jsireact/JSIExecutor.h>
 #include <react/debug/react_native_assert.h>
 
-#include <worklets/Public/AsyncQueue.h>
+#include <worklets/RunLoop/AsyncQueue.h>
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 #include <worklets/RunLoop/EventLoop.h>
 #include <worklets/SharedItems/Serializable.h>

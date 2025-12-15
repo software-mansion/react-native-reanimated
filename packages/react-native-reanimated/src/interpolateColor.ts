@@ -306,7 +306,7 @@ function processColorRanges(
 
     const isTransparent = color === 'transparent';
 
-    if (typeof processedColor === 'number') {
+    if (!isTransparent) {
       if (isPrevTransparent) {
         // Ensure that we animate from the correct RGB values (the same as in the
         // current color) with alpha 0 when animating from transparent to a color.

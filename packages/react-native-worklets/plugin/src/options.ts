@@ -31,6 +31,18 @@ export interface PluginOptions {
   disableSourceMaps?: boolean;
 
   /**
+   * Disables [Worklet Classes
+   * support](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about#experimental-worklet-classes).
+   * You might need to disable this feature when using [Custom
+   * Serializables](https://docs.swmansion.com/react-native-worklets/docs/memory/registerCustomSerializable).
+   *
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#disableworkletclasses}
+   *
+   * - Defaults to `false`.
+   */
+  disableWorkletClasses?: boolean;
+
+  /**
    * This is a list of Babel plugins that will be used when transforming
    * worklets' code with Worklets Babel Plugin.
    *
@@ -99,7 +111,8 @@ export interface PluginOptions {
 
   /**
    * This option allows you to register modules as safe to use on Worklet
-   * Runtimes in the [Bundle Mode](/docs/experimental/bundle-mode).
+   * Runtimes in the [Bundle
+   * Mode](https://docs.swmansion.com/react-native-worklets/docs/experimental/bundle-mode).
    *
    * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#workletizablemodules}
    *

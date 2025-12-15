@@ -33,7 +33,7 @@ class NativeWorklets implements IWorkletsModule {
 See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#native-part-of-worklets-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    if (__DEV__) {
+    if (__DEV__ && globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
       checkCppVersion();
     }
     this.#workletsModuleProxy = global.__workletsModuleProxy;
@@ -152,14 +152,33 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
+  createCustomSerializable(
+    data: SerializableRef<unknown>,
+    typeId: number
+  ): SerializableRef<unknown> {
+    return this.#workletsModuleProxy.createCustomSerializable(data, typeId);
+  }
+
+  registerCustomSerializable(
+    determine: SerializableRef<object>,
+    pack: SerializableRef<object>,
+    unpack: SerializableRef<object>,
+    typeId: number
+  ): void {
+    this.#workletsModuleProxy.registerCustomSerializable(
+      determine,
+      pack,
+      unpack,
+      typeId
+    );
+  }
+
   scheduleOnUI<TValue>(serializable: SerializableRef<TValue>) {
     return this.#workletsModuleProxy.scheduleOnUI(serializable);
   }
 
-  executeOnUIRuntimeSync<TValue, TReturn>(
-    serializable: SerializableRef<TValue>
-  ): TReturn {
-    return this.#workletsModuleProxy.executeOnUIRuntimeSync(serializable);
+  runOnUISync<TValue, TReturn>(worklet: SerializableRef<TValue>): TReturn {
+    return this.#workletsModuleProxy.runOnUISync(worklet);
   }
 
   createWorkletRuntime(
@@ -186,6 +205,13 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       workletRuntime,
       serializableWorklet
     );
+  }
+
+  runOnRuntimeSync<TValue, TReturn>(
+    workletRuntime: WorkletRuntime,
+    worklet: SerializableRef<TValue>
+  ): TReturn {
+    return this.#workletsModuleProxy.runOnRuntimeSync(workletRuntime, worklet);
   }
 
   createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {

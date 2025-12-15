@@ -1,10 +1,10 @@
 'use strict';
 import type { TransformsStyle } from 'react-native';
 
-import { createStyleBuilder } from '../builderFactories';
+import { createPropsBuilder } from '../builderFactories';
 import type { ValueProcessor } from '../types';
 
-const transformBuilder = createStyleBuilder(
+const transformBuilder = createPropsBuilder(
   {
     perspective: 'px',
     rotate: true,
