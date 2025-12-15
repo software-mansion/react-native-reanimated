@@ -258,7 +258,7 @@ describe('animatedProps', () => {
     });
 
     test('cleans up all animated props objects on unmount', () => {
-      const removeMocks = [jest.fn(), jest.fn(), jest.fn()];
+      const removeMocks: jest.Mock[] = [];
 
       function DetachMultipleAnimatedPropsComponent() {
         const animatedProps1 = useAnimatedProps(() => ({
@@ -273,15 +273,17 @@ describe('animatedProps', () => {
 
         React.useEffect(() => {
           const handles = [animatedProps1, animatedProps2, animatedProps3];
-          const spies = handles.map((animatedProps, index) =>
-            jest
+          const spies = handles.map((animatedProps) => {
+            const mock = jest.fn();
+            removeMocks.push(mock);
+            return jest
               .spyOn(
                 (animatedProps as JestAnimatedStyleHandle<TextInputProps>)
                   .viewDescriptors,
                 'remove'
               )
-              .mockImplementation(removeMocks[index])
-          );
+              .mockImplementation(mock);
+          });
 
           return () => {
             spies.forEach((spy) => spy.mockRestore());

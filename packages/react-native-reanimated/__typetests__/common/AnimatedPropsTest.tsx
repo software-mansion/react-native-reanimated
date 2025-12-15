@@ -161,7 +161,7 @@ function AnimatedPropsTest() {
     return <Animated.View animatedProps={[animatedProps1, animatedProps2]} />;
   }
 
-  function UseAnimatedPropsMultiple2() {
+  function AnimatedPropsMultiple2() {
     const cssProps1 = {
       animationName: { from: { pointerEvents: 'auto' as const } },
     };
@@ -171,7 +171,7 @@ function AnimatedPropsTest() {
     return <Animated.View animatedProps={[cssProps1, cssProps2]} />;
   }
 
-  function UseAnimatedPropsMultiple3() {
+  function AnimatedPropsMultiple3() {
     const animatedProps = useAnimatedProps(() => ({
       pointerEvents: 'none' as const,
     }));
@@ -181,7 +181,7 @@ function AnimatedPropsTest() {
     return <Animated.View animatedProps={[animatedProps, cssProps]} />;
   }
 
-  function UseAnimatedPropsNestedArrays() {
+  function AnimatedPropsNestedArrays() {
     const animatedProps = useAnimatedProps(() => ({
       pointerEvents: 'none' as const,
     }));
@@ -201,7 +201,7 @@ function AnimatedPropsTest() {
     );
   }
 
-  function UseAnimatedPropsDeeplyNestedArrays() {
+  function AnimatedPropsDeeplyNestedArrays() {
     const cssFrom = {
       animationName: { from: { pointerEvents: 'auto' as const } },
     };
