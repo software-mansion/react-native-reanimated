@@ -12,6 +12,7 @@ ios_min_version = '13.4'
 
 feature_flags = "-DWORKLETS_FEATURE_FLAGS=\"#{worklets_get_static_feature_flags()}\""
 version_flags = "-DWORKLETS_VERSION=#{package['version']} -DREACT_NATIVE_MINOR_VERSION=#{$worklets_config[:react_native_minor_version]}"
+hermes_v1_flag = ENV['RCT_HERMES_V1_ENABLED'] == '1' ? '-DHERMES_V1_ENABLED' : ''
 
 Pod::Spec.new do |s|
   s.name         = "RNWorklets"
@@ -75,7 +76,7 @@ Pod::Spec.new do |s|
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
     "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => "$(inherited) #{hermes_debug_hidden_flags} #{bundle_mode_flag}",
     "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => "$(inherited) #{bundle_mode_flag}",
-    "OTHER_CFLAGS" => "$(inherited) #{feature_flags} #{version_flags}",
+    "OTHER_CFLAGS" => "$(inherited) #{feature_flags} #{version_flags} #{hermes_v1_flag}",
   }
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => [
