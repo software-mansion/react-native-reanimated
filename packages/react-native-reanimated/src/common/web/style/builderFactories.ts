@@ -13,8 +13,8 @@ import type {
   RuleBuilder,
   RuleBuilderConfig,
   RuleBuildHandler,
-  StyleBuilder,
-  StyleBuilderConfig,
+  PropsBuilder,
+  PropsBuilderConfig,
   StyleBuildHandler,
   ValueProcessor,
 } from './types';
@@ -94,7 +94,7 @@ abstract class BuilderBase<P extends AnyRecord, R> {
 
 class StyleBuilderImpl<P extends AnyRecord>
   extends BuilderBase<P, string | null>
-  implements StyleBuilder<P>
+  implements PropsBuilder<P>
 {
   private readonly buildHandler: StyleBuildHandler<P>;
 
@@ -102,7 +102,7 @@ class StyleBuilderImpl<P extends AnyRecord>
   private nameAliases = {} as Record<keyof P, string>;
 
   constructor(
-    config: StyleBuilderConfig<P>,
+    config: PropsBuilderConfig<P>,
     buildHandler: StyleBuildHandler<P>
   ) {
     super(config);
@@ -209,10 +209,10 @@ const defaultStyleBuildHandler: StyleBuildHandler<AnyRecord> = (
     .join('; ');
 };
 
-export function createStyleBuilder<P extends AnyRecord>(
-  config: StyleBuilderConfig<P>,
+export function createPropsBuilder<P extends AnyRecord>(
+  config: PropsBuilderConfig<P>,
   buildHandler: StyleBuildHandler<P> = defaultStyleBuildHandler
-): StyleBuilder<Partial<P>> {
+): PropsBuilder<Partial<P>> {
   return new StyleBuilderImpl(config, buildHandler);
 }
 
