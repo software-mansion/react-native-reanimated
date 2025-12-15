@@ -13,8 +13,9 @@ import type {
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSTransitionUpdates,
   NormalizedCSSAnimationKeyframesConfig,
-  NormalizedCSSTransitionConfig,
+  NormalizedNewCSSTransitionConfig,
 } from '../css/native';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
@@ -60,7 +61,7 @@ export interface ReanimatedModuleProxy {
 
   setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
 
-  setViewStyle(viewTag: number, style: StyleProps): void;
+  setViewStyle(viewTag: number, style: StyleProps | null): void;
 
   markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper): void;
   unmarkNodeAsRemovable(viewTag: number): void;
@@ -82,12 +83,12 @@ export interface ReanimatedModuleProxy {
 
   registerCSSTransition(
     shadowNodeWrapper: ShadowNodeWrapper,
-    transitionConfig: NormalizedCSSTransitionConfig
+    transitionConfig: NormalizedNewCSSTransitionConfig
   ): void;
 
   updateCSSTransition(
     viewTag: number,
-    settingsUpdates: Partial<NormalizedCSSTransitionConfig>
+    transitionUpdates: CSSTransitionUpdates
   ): void;
 
   unregisterCSSTransition(viewTag: number): void;

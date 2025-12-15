@@ -24,8 +24,9 @@ import type {
 import { SensorType } from '../../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSTransitionUpdates,
   NormalizedCSSAnimationKeyframesConfig,
-  NormalizedCSSTransitionConfig,
+  NormalizedNewCSSTransitionConfig,
 } from '../../css/native';
 import { assertWorkletsVersion } from '../../platform-specific/workletsVersion';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
@@ -271,7 +272,7 @@ class JSReanimated implements IReanimatedModule {
     // noop
   }
 
-  setViewStyle(_viewTag: number, _style: StyleProps): void {
+  setViewStyle(_viewTag: number, _style: StyleProps | null): void {
     throw new ReanimatedError('setViewStyle is not available in JSReanimated.');
   }
 
@@ -320,7 +321,7 @@ class JSReanimated implements IReanimatedModule {
 
   registerCSSTransition(
     _shadowNodeWrapper: ShadowNodeWrapper,
-    _transitionConfig: NormalizedCSSTransitionConfig
+    _transitionConfig: NormalizedNewCSSTransitionConfig
   ): void {
     throw new ReanimatedError(
       '`registerCSSTransition` is not available in JSReanimated.'
@@ -329,7 +330,7 @@ class JSReanimated implements IReanimatedModule {
 
   updateCSSTransition(
     _viewTag: number,
-    _settingsUpdates: Partial<NormalizedCSSTransitionConfig>
+    _transitionUpdates: CSSTransitionUpdates
   ): void {
     throw new ReanimatedError(
       '`updateCSSTransition` is not available in JSReanimated.'

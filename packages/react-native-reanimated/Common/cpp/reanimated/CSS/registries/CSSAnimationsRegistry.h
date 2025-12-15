@@ -3,7 +3,6 @@
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/utils/DelayedItemsManager.h>
-#include <reanimated/CSS/utils/props.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <memory>

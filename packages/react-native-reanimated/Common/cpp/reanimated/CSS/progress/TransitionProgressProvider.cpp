@@ -8,23 +8,24 @@
 namespace reanimated::css {
 
 // TransitionPropertyProgressProvider
-
-TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
-    const double timestamp,
-    const double duration,
-    const double delay,
-    const EasingFunction &easingFunction)
-    : RawProgressProvider(timestamp, duration, delay), easingFunction_(easingFunction) {}
-
 TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     const double timestamp,
     const double duration,
     const double delay,
     const EasingFunction &easingFunction,
+    const bool allowDiscrete)
+    : RawProgressProvider(timestamp, duration, delay), easingFunction_(easingFunction), allowDiscrete_(allowDiscrete) {}
+TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
+    const double timestamp,
+    const double duration,
+    const double delay,
+    const EasingFunction &easingFunction,
+    const bool allowDiscrete,
     const double reversingShorteningFactor)
     : RawProgressProvider(timestamp, duration, delay),
       easingFunction_(easingFunction),
-      reversingShorteningFactor_(reversingShorteningFactor) {}
+      reversingShorteningFactor_(reversingShorteningFactor),
+      allowDiscrete_(allowDiscrete) {}
 
 double TransitionPropertyProgressProvider::getGlobalProgress() const {
   return rawProgress_.value_or(0);
@@ -43,6 +44,10 @@ double TransitionPropertyProgressProvider::getRemainingDelay(const double timest
 
 double TransitionPropertyProgressProvider::getReversingShorteningFactor() const {
   return reversingShorteningFactor_;
+}
+
+double TransitionPropertyProgressProvider::getFallbackInterpolateThreshold() const {
+  return allowDiscrete_ ? 0.5 : 0;
 }
 
 TransitionProgressState TransitionPropertyProgressProvider::getState() const {
@@ -127,14 +132,21 @@ void TransitionProgressProvider::discardIrrelevantProgressProviders(
 
 void TransitionProgressProvider::runProgressProviders(
     const double timestamp,
-    const CSSTransitionPropertiesSettings &propertiesSettings,
-    const PropertyNames &changedPropertyNames,
-    const std::unordered_set<std::string> &reversedPropertyNames) {
-  for (const auto &propertyName : changedPropertyNames) {
-    const auto propertySettingsOptional = getTransitionPropertySettings(propertiesSettings, propertyName);
+    const std::vector<TransitionPropertyUpdate> &propertyUpdates,
+    const CSSTransitionPropertiesSettings &settings) {
+  for (const auto &propertyUpdate : propertyUpdates) {
+    const auto &propertyName = propertyUpdate.name;
+    const auto status = propertyUpdate.status;
 
+    // Handle removed properties
+    if (status == TransitionPropertyStatus::Removed) {
+      propertyProgressProviders_.erase(propertyName);
+      continue;
+    }
+
+    const auto propertySettingsOptional = getTransitionPropertySettings(settings, propertyName);
     if (!propertySettingsOptional.has_value()) {
-      throw std::invalid_argument("[Reanimated] Property '" + propertyName + "' is not a valid transition property");
+      throw std::runtime_error("[Reanimated] Settings not found for CSS transition property: '" + propertyName + "'");
     }
 
     const auto &propertySettings = propertySettingsOptional.value();
@@ -144,21 +156,24 @@ void TransitionProgressProvider::runProgressProviders(
       const auto &progressProvider = it->second;
       progressProvider->update(timestamp);
 
-      if (reversedPropertyNames.find(propertyName) != reversedPropertyNames.end() &&
+      if (status == TransitionPropertyStatus::Reversed &&
           progressProvider->getState() != TransitionProgressState::Finished) {
-        // Create reversing shortening progress provider for interrupted
-        // reversing transition
+        // Create reversing shortening progress provider for interrupted reversing transition
         propertyProgressProviders_.insert_or_assign(
             propertyName, createReversingShorteningProgressProvider(timestamp, propertySettings, *progressProvider));
         continue;
       }
     }
 
-    // Create progress provider with the new settings
+    // Create a new progress provider with the latest settings
     propertyProgressProviders_.insert_or_assign(
         propertyName,
         std::make_shared<TransitionPropertyProgressProvider>(
-            timestamp, propertySettings.duration, propertySettings.delay, propertySettings.easingFunction));
+            timestamp,
+            propertySettings.duration,
+            propertySettings.delay,
+            propertySettings.easingFunction,
+            propertySettings.allowDiscrete));
   }
 }
 
@@ -187,6 +202,7 @@ TransitionProgressProvider::createReversingShorteningProgressProvider(
       propertySettings.duration * newReversingShorteningFactor,
       propertySettings.delay < 0 ? newReversingShorteningFactor * propertySettings.delay : propertySettings.delay,
       propertySettings.easingFunction,
+      propertySettings.allowDiscrete,
       newReversingShorteningFactor);
 }
 
