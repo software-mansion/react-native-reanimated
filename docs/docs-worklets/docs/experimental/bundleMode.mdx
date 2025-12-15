@@ -6,11 +6,11 @@ sidebar_label: Bundle Mode
 
 # Bundle Mode
 
-Bundle Mode is a feature that gives worklets access to your whole JavaScript bundle - meaning that any code that's present in the bundle can be executed in any worklet and on any runtime. This means that 3rd party libraries can be used in worklets without any tricks like patching them with a `'worklet'` directive.
+Bundle Mode is a feature that gives worklets access to your whole JavaScript bundle - meaning that any code that's present in the bundle can be executed in any worklet and on any runtime. This means that third party libraries can be used in worklets without the need to patch them.
 
 ## Setup
 
-Bundle Mode is available from `react-native-worklets` 0.4, but for best experience and up-to-date features we recommend using the latest version of `react-native-worklets` from the `bundle-mode-preview` tag.
+Install `react-native-worklets` package with the `bundle-mode-preview` tag:
 
 ```sh
 yarn add react-native-worklets@bundle-mode-preview
@@ -22,103 +22,155 @@ or
 npm i react-native-worklets@bundle-mode-preview
 ```
 
-### All platforms
+### General
 
 To use `react-native-worklets`'s Bundle Mode feature, you need to make the following changes in your repository:
 
-1. **Modify your Babel configuration**. In your `babel.config.js` file, add the following:
+1. **Modify your Babel configuration**. [Worklets Babel Plugin](/docs/worklets-babel-plugin/about) needs to know that it has to prepare your code for the Bundle Mode. In your `babel.config.js` file, add the following:
 
-```javascript
-/** @type {import('react-native-worklets/plugin').PluginOptions} */
-const workletsPluginOptions = {
-  bundleMode: true,
-}
+   ```javascript
+   /** @type {import('react-native-worklets/plugin').PluginOptions} */
+   // highlight-next-line
+   const workletsPluginOptions = {
+     // highlight-next-line
+     bundleMode: true,
+     // highlight-next-line
+   }
 
-module.exports = {
-  presets: [
-    ... // don't add it here :)
-  ],
-  plugins: [
-    ...
-    ['react-native-worklets/plugin', workletsPluginOptions],
-  ],
-};
-```
+   module.exports = {
+     presets: [
+       ... // don't add it here :)
+     ],
+     plugins: [
+       ...
+       // highlight-next-line
+       ['react-native-worklets/plugin', workletsPluginOptions],
+     ],
+   };
+   ```
 
-[Example reference](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app/blob/main/babel.config.js).
+2. **Modify your Metro configuration**. Metro needs to be configured pre-load Bundle Mode entry points into your JavaScript bundle. In your `metro.config.js` file, apply the config required for the bundle mode. For example:
 
-2. **Modify your Metro configuration**. In your `metro.config.js` file, apply the config required for the bundle mode. For example:
+   ```javascript
+   const {
+     getDefaultConfig,
+     mergeConfig,
+   } = require('@react-native/metro-config');
+   // highlight-next-line
+   const {
+     // highlight-next-line
+     bundleModeMetroConfig,
+     // highlight-next-line
+   } = require('react-native-worklets/bundleMode');
 
-```javascript
-const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
-// highlight-next-line
-const {
-  // highlight-next-line
-  bundleModeMetroConfig,
-  // highlight-next-line
-} = require('react-native-worklets/bundleMode');
+   const config = {
+     // Your config
+   };
 
-const config = {
-  // Your config
-};
-
-module.exports = mergeConfig(
-  getDefaultConfig(__dirname),
-  // highlight-next-line
-  bundleModeMetroConfig,
-  config
-);
-```
-
-[Example reference](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app/blob/main/metro.config.js)
-
-3. Apply the necessary package patches from [worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches).
+   module.exports = mergeConfig(
+     getDefaultConfig(__dirname),
+     // highlight-next-line
+     bundleModeMetroConfig,
+     config
+   );
+   ```
 
 ### iOS
 
 1. **Modify your Podfile**. In your `ios/Podfile`, add the following:
 
-```ruby
-# top level
-ENV['WORKLETS_BUNDLE_MODE'] = '1'
-```
+   ```ruby
+   # top level
+   ENV['WORKLETS_BUNDLE_MODE'] = '1'
+   ```
 
-[Example reference](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app/blob/main/ios/Podfile#L11)
+1. Make sure to reinstall your pods.
+1. Alternatively, you can run `pod install` with the environment variable set:
 
-2. Make sure to reinstall your pods.
+   ```sh
+   WORKLETS_BUNDLE_MODE=1 pod install
+   ```
 
 ### Android
 
-1. Enable building [React Native from source](https://reactnative.dev/contributing/how-to-build-from-source#android).
+1. **Modify your `gradle.properties`**. In your `android/gradle.properties`, add the following:
 
-   [Example reference](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app/blob/main/android/settings.gradle#L8)
-
-2. **Modify your `gradle.properties`**. In your `android/gradle.properties`, add the following:
    ```groovy
    workletsBundleMode=true
    ```
-   [Example reference](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app/blob/main/android/gradle.properties#L41)
 
-## Usage
+### Enable seamless Metro bundling
 
-Currently, third party libraries have to be on an allow-list to use them in worklets. This is because some libraries come with side-effects that would break a Worklet Runtime. For instance, a library that imports something from React Native cannot be used in Worklets, because loading a second instance of React Native on another runtime would break your app.
+_This step is optional but highly recommended._
 
-To add a library to the allow-list you only need to change the `workletizableModules` option in Worklets Babel plugin, which is an array of library names. For instance, if you want to use `my-library` on a Worklet Runtime:
+If you run the app after just executing the above steps, you will see an error "Failed to get the SHA-1 for ...":
+
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import ThemedImage from '@theme/ThemedImage';
+
+<ThemedImage
+  sources={{
+    light: useBaseUrl('/img/sha-light.png'),
+    dark: useBaseUrl('/img/sha-dark.png'),
+  }}
+  alt="Bundle Mode Metro error logs"
+/>
+
+This is due to fact that Bundle Mode isolates each worklet in a separate module (file) on the fly and the Metro bundler doesn't index these isolated modules in time.
+
+To fix this issue you can do one of the following:
+
+1. Reload the app and Metro a couple of times until Metro picks up all the new modules. You will have to do it each time. Not recommended.
+2. Patch `metro` package for it to synchronously index new modules created by Bundle Mode. This is the recommended approach. These patches **do not require building React Native from source**. You can find patching instructions in the [Worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches).
+
+This patch is a temporary workaround until necessary changes are merged into Metro.
+
+### Enable fast refresh on Worklet Runtimes
+
+_This step is optional but highly recommended._
+
+React Native's Fast Refresh (hot reload) feature doesn't apply to Worklet Runtimes out of the box. Therefore, when you change worklet's code you will see an error "\[Worklets\] Unable to resolve worklet with hash ...".
+
+<ThemedImage
+  sources={{
+    light: useBaseUrl('/img/hot-light.png'),
+    dark: useBaseUrl('/img/hot-dark.png'),
+  }}
+  alt="Bundle Mode Fast Refresh error logs"
+/>
+
+This is due to fact that the Fast Refresh update wasn't sent to the Worklet Runtime and it doesn't know that new worklet with the given hash exists.
+
+To fix this issue you can do one of two thing:
+
+1. Reload the app on each worklet code change. This virtually defeats the purpose of Fast Refresh. Not recommended.
+2. Patch `metro-runtime` package for it to send Fast Refresh updates to Worklet Runtimes. You can find patching instructions in the [Worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches).
+
+This patch is a temporary workaround until necessary changes are merged into Metro.
+
+### Final steps
+
+Make sure to [clear your Metro bundler's cache](/docs/#clear-metro-bundler-cache-recommended) to ensure that all the changes are applied correctly.
+
+And that's it! You can now happily enjoy the Bundle Mode!
+
+## Running third party libraries in Worklets
+
+Third party libraries have to be on an allow-list to use them in worklets. This is because libraries can come with side-effects that would break a Worklet Runtime. For instance, a library that imports something from React Native can't be used on a Worklet Runtime. This would load a second instance of React Native and break your app.
+
+To add a library to the allow-list you only need to set the `workletizableModules` option in Worklets Babel plugin, which is an array of library names. For instance, if you want to use `my-library` on a Worklet Runtime.
 
 ```javascript
-module.exports = {
-  plugins: [
-    [
-      'react-native-worklets/plugin',
-      {
-        bundleMode: true,
-        // highlight-next-line
-        workletizableModules: ['my-library'],
-      },
-    ],
-    // Your other plugins...
-  ],
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  bundleMode: true,
+  // highlight-next-line
+  workletizableModules: ['my-library'],
 };
 ```
 
-[Example reference](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app/blob/main/babel.config.js).
+`workletizableModules` API is temporary and will be replaced with a more robust solution in the future.
+
+## Reference
+
+yes
