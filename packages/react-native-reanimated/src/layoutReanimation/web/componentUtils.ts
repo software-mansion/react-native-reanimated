@@ -30,6 +30,28 @@ import {
 } from './Easing.web';
 import { prepareCurvedTransition } from './transition/Curved.web';
 
+function getSnapshotForElement(element: HTMLElement): ReanimatedSnapshot {
+  const existingSnapshot = snapshots.get(element);
+
+  if (existingSnapshot) {
+    return existingSnapshot;
+  }
+
+  const rect = element.getBoundingClientRect();
+
+  const fallbackSnapshot: ReanimatedSnapshot = {
+    top: rect.top,
+    left: rect.left,
+    width: rect.width,
+    height: rect.height,
+    scrollOffsets: getElementScrollValue(element),
+  };
+
+  snapshots.set(element, fallbackSnapshot);
+
+  return fallbackSnapshot;
+}
+
 function getEasingFromConfig(config: CustomConfig): string {
   if (!config.easingV) {
     return getEasingByName('linear');
@@ -176,6 +198,7 @@ export function setElementAnimation(
 
   const configureAnimation = () => {
     element.style.animationName = animationName;
+    element.style.animationFillMode = 'backwards';
     element.style.animationDuration = `${duration}s`;
     element.style.animationDelay = `${delay}s`;
     element.style.animationTimingFunction = easing;
@@ -234,7 +257,7 @@ export function setElementAnimation(
   if (!(animationName in Animations)) {
     scheduleAnimationCleanup(animationName, duration + delay, () => {
       if (shouldSavePosition) {
-        setElementPosition(element, snapshots.get(element)!);
+        setElementPosition(element, getSnapshotForElement(element));
       }
 
       maybeRemoveElement();
@@ -367,7 +390,7 @@ export function handleExitingAnimation(
   };
   restoreScrollPosition(dummy);
 
-  const snapshot = snapshots.get(element)!;
+  const snapshot = getSnapshotForElement(element);
 
   const scrollOffsets = getElementScrollValue(element);
 
