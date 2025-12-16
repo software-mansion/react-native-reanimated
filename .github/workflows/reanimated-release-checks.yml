@@ -2,10 +2,10 @@ name: Reanimated release checks
 on:
   pull_request:
     branches:
-      - '[0-9]+.[0-9]+-stable'
+      - "[0-9]+.[0-9]+-stable"
   push:
     branches:
-      - '[0-9]+.[0-9]+-stable'
+      - "[0-9]+.[0-9]+-stable"
   workflow_call:
   workflow_dispatch:
 
@@ -29,11 +29,6 @@ jobs:
     if: github.repository == 'software-mansion/react-native-reanimated'
     name: Example iOS build check
     uses: ./.github/workflows/example-ios-build-check.yml
-
-  example_macos_build_check:
-    if: github.repository == 'software-mansion/react-native-reanimated'
-    name: Example macOS build check
-    uses: ./.github/workflows/example-macos-build-check.yml
 
   example_next_build_check:
     if: github.repository == 'software-mansion/react-native-reanimated'
