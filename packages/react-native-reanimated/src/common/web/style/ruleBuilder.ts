@@ -1,12 +1,12 @@
 'use strict';
+import createPropsBuilder from '../../style/createPropsBuilder';
 import type { UnknownRecord } from '../../types';
 import {
+  hasValueProcessor,
   isConfigPropertyAlias,
   maybeAddSuffix,
-  hasValueProcessor,
 } from '../../utils';
 import { hasNameAlias } from '../utils';
-import createPropsBuilder from '../../style/createPropsBuilder';
 import type { RuleBuilderConfig, RuleBuildHandler } from './types';
 
 type ProcessedProps<P> = Record<keyof P, string>;
@@ -25,12 +25,12 @@ export function createWebRuleBuilder<TProps extends UnknownRecord>(
     processConfigValue(configValue, propertyKey) {
       // Handle suffix config (e.g., 'px')
       if (typeof configValue === 'string') {
-        return (value: unknown) => maybeAddSuffix(value, configValue);
+        return (value) => maybeAddSuffix(value, configValue);
       }
 
       // Handle boolean - true means include, false means exclude
       if (configValue === true) {
-        return (value: unknown) => String(value);
+        return (value) => String(value);
       }
 
       // Handle property alias
@@ -38,14 +38,19 @@ export function createWebRuleBuilder<TProps extends UnknownRecord>(
         return config[configValue.as];
       }
 
-      // Handle name alias
-      if (hasNameAlias(configValue)) {
+      // Handle name alias and/or value processor
+      const isNameAlias = hasNameAlias(configValue);
+      if (isNameAlias) {
         nameAliases.set(String(propertyKey), configValue.name);
       }
 
-      // Handle value processor
       if (hasValueProcessor(configValue)) {
         return configValue.process;
+      }
+
+      // Name alias without processor needs passthrough
+      if (isNameAlias) {
+        return (value) => String(value);
       }
 
       return undefined;
@@ -62,7 +67,9 @@ export function createWebRuleBuilder<TProps extends UnknownRecord>(
 
       // Apply name aliases to processed props
       const propsWithAliases: Record<string, string> = {};
-      for (const [key, value] of Object.entries(processedProps as Record<string, string>)) {
+      for (const [key, value] of Object.entries(
+        processedProps as Record<string, string>
+      )) {
         const aliasedKey = nameAliases.get(key) ?? key;
         propsWithAliases[aliasedKey] = value;
       }

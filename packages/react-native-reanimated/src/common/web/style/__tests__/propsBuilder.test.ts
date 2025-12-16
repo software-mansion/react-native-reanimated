@@ -2,16 +2,52 @@
 import { createWebPropsBuilder } from '../propsBuilder';
 import { createWebRuleBuilder } from '../ruleBuilder';
 
-describe('createWebPropsBuilder', () => {
+describe(createWebPropsBuilder, () => {
+  describe('CSS output formatting', () => {
+    test('converts camelCase to kebab-case', () => {
+      const builder = createWebPropsBuilder({
+        backgroundColor: true,
+        borderRadius: 'px',
+      });
+
+      const result = builder.build({
+        backgroundColor: 'blue',
+        borderRadius: 5,
+      });
+
+      expect(result).toBe('background-color: blue; border-radius: 5px');
+    });
+
+    test('returns null for empty props', () => {
+      const builder = createWebPropsBuilder({
+        excluded: false,
+      });
+
+      const result = builder.build({
+        excluded: 'value',
+      });
+
+      expect(result).toBeNull();
+    });
+
+    test('filters out undefined values', () => {
+      const builder = createWebPropsBuilder({
+        width: 'px',
+        height: 'px',
+      });
+
+      const result = builder.build({
+        width: 100,
+        height: undefined,
+      });
+
+      expect(result).toBe('width: 100px');
+    });
+  });
+
   describe('build with basic config', () => {
     test('creates builder with boolean config values', () => {
-      type TestProps = {
-        prop1: string;
-        prop2: string;
-        prop3: string;
-      };
-
-      const builder = createWebPropsBuilder<TestProps>({
+      const builder = createWebPropsBuilder({
         prop1: true,
         prop2: false,
         prop3: true,
@@ -27,12 +63,7 @@ describe('createWebPropsBuilder', () => {
     });
 
     test('handles suffix config', () => {
-      type TestProps = {
-        width: number | string;
-        height: number | string;
-      };
-
-      const builder = createWebPropsBuilder<TestProps>({
+      const builder = createWebPropsBuilder({
         width: 'px',
         height: 'px',
       });
@@ -46,12 +77,7 @@ describe('createWebPropsBuilder', () => {
     });
 
     test('handles property aliases', () => {
-      type TestProps = {
-        marginStart: number;
-        marginLeft: number;
-      };
-
-      const builder = createWebPropsBuilder<TestProps>({
+      const builder = createWebPropsBuilder({
         marginStart: { as: 'marginLeft' },
         marginLeft: 'px',
       });
@@ -65,12 +91,7 @@ describe('createWebPropsBuilder', () => {
     });
 
     test('handles value processors', () => {
-      type TestProps = {
-        value: number;
-        color: string;
-      };
-
-      const builder = createWebPropsBuilder<TestProps>({
+      const builder = createWebPropsBuilder({
         value: {
           process: (val: number) => `${val * 2}`,
         },
@@ -90,29 +111,28 @@ describe('createWebPropsBuilder', () => {
 
   describe('build with rule builders', () => {
     test('handles rule builders', () => {
-      type ShadowProps = {
-        shadowColor: string;
-        shadowOffset: { width: number; height: number };
-        shadowRadius: number;
-      };
-
-      const shadowBuilder = createWebRuleBuilder<Partial<ShadowProps>>(
+      const shadowBuilder = createWebRuleBuilder(
         {
           shadowColor: true,
           shadowOffset: {
-            process: (val) => `${val.width}px ${val.height}px`,
+            process: (val: { width: number; height: number }) =>
+              `${val.width}px ${val.height}px`,
           },
           shadowRadius: 'px',
         },
-        ({ shadowColor = '#000', shadowOffset = '0 0', shadowRadius = '0' }) => ({
+        ({
+          shadowColor = '#000',
+          shadowOffset = '0 0',
+          shadowRadius = '0',
+        }) => ({
           boxShadow: `${shadowOffset} ${shadowRadius} ${shadowColor}`,
         })
       );
 
-      const builder = createWebPropsBuilder<ShadowProps>({
-        shadowColor: shadowBuilder as unknown as any,
-        shadowOffset: shadowBuilder as unknown as any,
-        shadowRadius: shadowBuilder as unknown as any,
+      const builder = createWebPropsBuilder({
+        shadowColor: shadowBuilder,
+        shadowOffset: shadowBuilder,
+        shadowRadius: shadowBuilder,
       });
 
       const result = builder.build({
@@ -125,13 +145,7 @@ describe('createWebPropsBuilder', () => {
     });
 
     test('merges rule builder results with regular props', () => {
-      type MixedProps = {
-        width: number;
-        shadowColor: string;
-        shadowRadius: number;
-      };
-
-      const shadowBuilder = createWebRuleBuilder<Partial<Pick<MixedProps, "shadowColor" | "shadowRadius">>>(
+      const shadowBuilder = createWebRuleBuilder(
         {
           shadowColor: true,
           shadowRadius: 'px',
@@ -141,10 +155,10 @@ describe('createWebPropsBuilder', () => {
         })
       );
 
-      const builder = createWebPropsBuilder<MixedProps>({
+      const builder = createWebPropsBuilder({
         width: 'px',
-        shadowColor: shadowBuilder as unknown as any,
-        shadowRadius: shadowBuilder as unknown as any,
+        shadowColor: shadowBuilder,
+        shadowRadius: shadowBuilder,
       });
 
       const result = builder.build({
@@ -160,16 +174,7 @@ describe('createWebPropsBuilder', () => {
 
   describe('build with mixed config', () => {
     test('handles combination of all config types', () => {
-      type ComplexProps = {
-        display: string;
-        width: number;
-        marginStart: number;
-        marginLeft: number;
-        color: string;
-        shadowRadius: number;
-      };
-
-      const shadowBuilder = createWebRuleBuilder<Partial<Pick<ComplexProps, "shadowRadius">>>(
+      const shadowBuilder = createWebRuleBuilder(
         {
           shadowRadius: 'px',
         },
@@ -178,7 +183,7 @@ describe('createWebPropsBuilder', () => {
         })
       );
 
-      const builder = createWebPropsBuilder<ComplexProps>({
+      const builder = createWebPropsBuilder({
         display: true,
         width: 'px',
         marginStart: { as: 'marginLeft' },
@@ -186,7 +191,7 @@ describe('createWebPropsBuilder', () => {
         color: {
           process: (val: string) => val.toUpperCase(),
         },
-        shadowRadius: shadowBuilder as unknown as any,
+        shadowRadius: shadowBuilder,
       });
 
       const result = builder.build({
@@ -198,68 +203,17 @@ describe('createWebPropsBuilder', () => {
         shadowRadius: 8,
       });
 
-      expect(result).toContain('display: flex');
-      expect(result).toContain('width: 200px');
-      expect(result).toContain('margin-start: 10px');
-      expect(result).toContain('margin-left: 20px');
-      expect(result).toContain('color: RED');
-      expect(result).toContain('box-shadow: 0 0 8px black');
-    });
-  });
-
-  describe('CSS output formatting', () => {
-    test('converts camelCase to kebab-case', () => {
-      type TestProps = {
-        backgroundColor: string;
-        borderRadius: number;
-      };
-
-      const builder = createWebPropsBuilder<TestProps>({
-        backgroundColor: true,
-        borderRadius: 'px',
+      const expectedProps = [
+        'display: flex',
+        'width: 200px',
+        'margin-start: 10px',
+        'margin-left: 20px',
+        'color: RED',
+        'box-shadow: 0 0 8px black',
+      ];
+      expectedProps.forEach((prop) => {
+        expect(result).toContain(prop);
       });
-
-      const result = builder.build({
-        backgroundColor: 'blue',
-        borderRadius: 5,
-      });
-
-      expect(result).toBe('background-color: blue; border-radius: 5px');
-    });
-
-    test('returns null for empty props', () => {
-      type TestProps = {
-        excluded: string;
-      };
-
-      const builder = createWebPropsBuilder<TestProps>({
-        excluded: false,
-      });
-
-      const result = builder.build({
-        excluded: 'value',
-      });
-
-      expect(result).toBeNull();
-    });
-
-    test('filters out undefined values', () => {
-      type TestProps = {
-        width: number | undefined;
-        height: number | undefined;
-      };
-
-      const builder = createWebPropsBuilder<TestProps>({
-        width: 'px',
-        height: 'px',
-      });
-
-      const result = builder.build({
-        width: 100,
-        height: undefined,
-      });
-
-      expect(result).toBe('width: 100px');
     });
   });
 });
