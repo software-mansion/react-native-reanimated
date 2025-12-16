@@ -1,5 +1,6 @@
 'use strict';
 import type { TransformsStyle } from 'react-native';
+
 import { createWebRuleBuilder } from '../ruleBuilder';
 import type { ValueProcessor } from '../types';
 
@@ -47,7 +48,8 @@ export const processTransform: ValueProcessor<
     )
   );
 
-  return transformBuilder.build();
+  const result = transformBuilder.build();
+  return result.transform;
 };
 
 export const processTransformOrigin: ValueProcessor<

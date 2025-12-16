@@ -28,11 +28,6 @@ export function createWebRuleBuilder<TProps extends UnknownRecord>(
         return (value) => maybeAddSuffix(value, configValue);
       }
 
-      // Handle boolean - true means include, false means exclude
-      if (configValue === true) {
-        return (value) => String(value);
-      }
-
       // Handle property alias
       if (isConfigPropertyAlias<TProps>(configValue)) {
         return config[configValue.as];
@@ -48,8 +43,8 @@ export function createWebRuleBuilder<TProps extends UnknownRecord>(
         return configValue.process;
       }
 
-      // Name alias without processor needs passthrough
-      if (isNameAlias) {
+      // Boolean true or name alias without processor - both need string conversion
+      if (configValue === true || isNameAlias) {
         return (value) => String(value);
       }
 
