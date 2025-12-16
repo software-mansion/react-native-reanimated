@@ -541,6 +541,7 @@ var require_closure = __commonJS({
       const closureVariables = new Array();
       const libraryBindingsToImport = /* @__PURE__ */ new Set();
       const relativeBindingsToImport = /* @__PURE__ */ new Set();
+      const unresolvableVariables = /* @__PURE__ */ new Set();
       let recrawled = false;
       funPath.traverse({
         "TSType|TSTypeAliasDeclaration|TSInterfaceDeclaration"(typePath) {
@@ -597,6 +598,9 @@ var require_closure = __commonJS({
               return;
             }
           }
+          if (binding.path.isAncestor(funPath)) {
+            unresolvableVariables.add(name);
+          }
           capturedNames.add(name);
           closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
         }
@@ -604,7 +608,8 @@ var require_closure = __commonJS({
       return {
         closureVariables,
         libraryBindingsToImport,
-        relativeBindingsToImport
+        relativeBindingsToImport,
+        unresolvableVariables
       };
     }
     function isImport(binding) {
@@ -912,7 +917,7 @@ var require_workletFactory = __commonJS({
       });
       (0, assert_1.strict)(transformed, "[Reanimated] `transformed` is undefined.");
       (0, assert_1.strict)(transformed.ast, "[Reanimated] `transformed.ast` is undefined.");
-      const { closureVariables, libraryBindingsToImport, relativeBindingsToImport } = (0, closure_1.getClosure)(fun, state);
+      const { closureVariables, libraryBindingsToImport, relativeBindingsToImport, unresolvableVariables } = (0, closure_1.getClosure)(fun, state);
       const clone = (0, types_12.cloneNode)(fun.node);
       const funExpression = (0, types_12.isBlockStatement)(clone.body) ? (0, types_12.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
       const { workletName, reactName } = makeWorkletName(fun, state);
@@ -966,6 +971,9 @@ var require_workletFactory = __commonJS({
         (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(closureVariables.map((variable) => !state.opts.bundleMode && variable.name.endsWith(types_2.workletClassFactorySuffix) ? (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, variable.name.length - types_2.workletClassFactorySuffix.length)), (0, types_12.identifier)(variable.name))) : (0, types_12.objectProperty)((0, types_12.cloneNode)(variable, true), (0, types_12.cloneNode)(variable, true), false, true))))),
         (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__workletHash"), false), (0, types_12.numericLiteral)(workletHash)))
       ];
+      if (unresolvableVariables.size > 0) {
+        statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__unresolvables"), false), (0, types_12.arrayExpression)(Array.from(unresolvableVariables).map((variable) => (0, types_12.stringLiteral)(variable))))));
+      }
       const shouldInjectVersion = !(0, utils_1.isRelease)();
       if (shouldInjectVersion) {
         statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__pluginVersion")), (0, types_12.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION))));

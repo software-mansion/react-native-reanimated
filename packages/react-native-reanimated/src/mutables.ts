@@ -12,7 +12,8 @@ import {
 import { IS_JEST, logger, ReanimatedError, SHOULD_BE_USE_WEB } from './common';
 import type { Mutable } from './commonTypes';
 import { getStaticFeatureFlag } from './featureFlags';
-import { isFirstReactRender, isReactRendering } from './reactUtils';
+import { isFirstReactRender, isReactRendering } from '
+./reactUtils';
 import { valueSetter } from './valueSetter';
 
 function shouldWarnAboutAccessDuringRender() {

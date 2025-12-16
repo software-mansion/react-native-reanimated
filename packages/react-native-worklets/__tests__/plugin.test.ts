@@ -472,6 +472,47 @@ describe('babel plugin', () => {
       expect(code).toContain('foo: foo');
       expect(code).toMatchSnapshot();
     });
+
+    test('captures unresolvable identifiers in functions', () => {
+      const input = html`<script>
+        const foo = useHook(() => {
+          'worklet';
+          foo.method();
+        });
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('__unresolvables =');
+      expect(code).toMatchSnapshot();
+    });
+
+    test('captures unresolvable identifiers in objects', () => {
+      const input = html`<script>
+        const foo = useHook({
+          handler: () => {
+            'worklet';
+            foo.method();
+          },
+        });
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('__unresolvables =');
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't capture recursion as unresolvable", () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          foo();
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).not.toContain('__unresolvables =');
+      expect(code).toMatchSnapshot();
+    });
   });
 
   describe('for explicit worklets', () => {

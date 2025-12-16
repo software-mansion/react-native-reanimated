@@ -137,7 +137,7 @@ const config = tsEslint.config(
       globals: {
         React: true,
         ...reactNative.environments['react-native']['react-native'],
-        ...jest.environments.globals.globals,
+        ...globals.jest,
         ...globals.node,
       },
     },
@@ -187,7 +187,6 @@ const config = tsEslint.config(
       'no-var': 'error',
     },
   },
-
   {
     files: ['**/*.js', '**/*.jsx'],
     extends: [jsdoc.configs['flat/recommended']],

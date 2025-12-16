@@ -97,6 +97,7 @@ export function makeWorkletFactory(
     closureVariables,
     libraryBindingsToImport,
     relativeBindingsToImport,
+    unresolvableVariables,
   } = getClosure(fun, state);
 
   const clone = cloneNode(fun.node);
@@ -256,6 +257,26 @@ export function makeWorkletFactory(
       )
     ),
   ];
+
+  if (unresolvableVariables.size > 0) {
+    statements.push(
+      expressionStatement(
+        assignmentExpression(
+          '=',
+          memberExpression(
+            identifier(reactName),
+            identifier('__unresolvables'),
+            false
+          ),
+          arrayExpression(
+            Array.from(unresolvableVariables).map((variable) =>
+              stringLiteral(variable)
+            )
+          )
+        )
+      )
+    );
+  }
 
   const shouldInjectVersion = !isRelease();
   if (shouldInjectVersion) {

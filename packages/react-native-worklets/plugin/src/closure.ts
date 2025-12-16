@@ -17,11 +17,13 @@ export function getClosure(
   closureVariables: Identifier[];
   libraryBindingsToImport: Set<Binding>;
   relativeBindingsToImport: Set<Binding>;
+  unresolvableVariables: Set<string>;
 } {
   const capturedNames = new Set<string>();
   const closureVariables = new Array<Identifier>();
   const libraryBindingsToImport = new Set<Binding>();
   const relativeBindingsToImport = new Set<Binding>();
+  const unresolvableVariables = new Set<string>();
   let recrawled = false;
 
   funPath.traverse(
@@ -120,6 +122,10 @@ export function getClosure(
           }
         }
 
+        if (binding.path.isAncestor(funPath)) {
+          unresolvableVariables.add(name);
+        }
+
         capturedNames.add(name);
         closureVariables.push(cloneNode(idPath.node as Identifier, true));
       },
@@ -131,6 +137,7 @@ export function getClosure(
     closureVariables,
     libraryBindingsToImport,
     relativeBindingsToImport,
+    unresolvableVariables,
   };
 }
 

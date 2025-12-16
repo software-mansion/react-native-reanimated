@@ -696,6 +696,64 @@ var f = function f_null1Factory(_ref) {
 });"
 `;
 
+exports[`babel plugin for closure capturing captures unresolvable identifiers in functions 1`] = `
+"var _worklet_961180527103_init_data = {
+  code: "function null1(){const{foo}=this.__closure;foo.method();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+var foo = useHook(function null1Factory(_ref) {
+  var _worklet_961180527103_init_data = _ref._worklet_961180527103_init_data,
+    foo = _ref.foo;
+  var _e = [new global.Error(), -2, -27];
+  var null1 = function null1() {
+    foo.method();
+  };
+  null1.__closure = {
+    foo: foo
+  };
+  null1.__workletHash = 961180527103;
+  null1.__unresolvables = ["foo"];
+  null1.__pluginVersion = "x.y.z";
+  null1.__initData = _worklet_961180527103_init_data;
+  null1.__stackDetails = _e;
+  return null1;
+}({
+  _worklet_961180527103_init_data: _worklet_961180527103_init_data,
+  foo: foo
+}));"
+`;
+
+exports[`babel plugin for closure capturing captures unresolvable identifiers in objects 1`] = `
+"var _worklet_961180527103_init_data = {
+  code: "function null1(){const{foo}=this.__closure;foo.method();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+var foo = useHook({
+  handler: function null1Factory(_ref) {
+    var _worklet_961180527103_init_data = _ref._worklet_961180527103_init_data,
+      foo = _ref.foo;
+    var _e = [new global.Error(), -2, -27];
+    var null1 = function null1() {
+      foo.method();
+    };
+    null1.__closure = {
+      foo: foo
+    };
+    null1.__workletHash = 961180527103;
+    null1.__unresolvables = ["foo"];
+    null1.__pluginVersion = "x.y.z";
+    null1.__initData = _worklet_961180527103_init_data;
+    null1.__stackDetails = _e;
+    return null1;
+  }({
+    _worklet_961180527103_init_data: _worklet_961180527103_init_data,
+    foo: foo
+  })
+});"
+`;
+
 exports[`babel plugin for closure capturing captures worklets environment 1`] = `
 "var x = 5;
 var objX = {
@@ -856,6 +914,29 @@ var f = function f_null1Factory(_ref) {
 }({
   _worklet_239990909653_init_data: _worklet_239990909653_init_data,
   foo: foo
+});"
+`;
+
+exports[`babel plugin for closure capturing doesn't capture recursion as unresolvable 1`] = `
+"var _worklet_102253585996_init_data = {
+  code: "function foo_null1(){const foo_null1=this._recur;foo_null1();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+var foo = function foo_null1Factory(_ref) {
+  var _worklet_102253585996_init_data = _ref._worklet_102253585996_init_data;
+  var _e = [new global.Error(), 1, -27];
+  var _foo = function foo() {
+    _foo();
+  };
+  _foo.__closure = {};
+  _foo.__workletHash = 102253585996;
+  _foo.__pluginVersion = "x.y.z";
+  _foo.__initData = _worklet_102253585996_init_data;
+  _foo.__stackDetails = _e;
+  return _foo;
+}({
+  _worklet_102253585996_init_data: _worklet_102253585996_init_data
 });"
 `;
 
