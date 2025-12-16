@@ -2,6 +2,7 @@
 
 import type { TransformsStyle } from 'react-native';
 
+import { maybeAddSuffix } from '../../common';
 import type {
   AnimationData,
   ReanimatedWebTransformProperties,
@@ -21,10 +22,6 @@ import { SequencedTransition } from './transition/Sequenced.web';
 type TransformType = NonNullable<TransformsStyle['transform']>;
 type TransformValue = string | number;
 
-function toTransformValue(value: number | string): TransformValue {
-  return typeof value === 'number' ? `${value}px` : value;
-}
-
 function assignTransformRules(
   map: Map<string, TransformValue>,
   transform?: ReanimatedWebTransformProperties[]
@@ -40,31 +37,10 @@ function assignTransformRules(
   });
 }
 
-function buildTransformMap(
-  transform?: ReanimatedWebTransformProperties[]
-) {
-  const map = new Map<string, TransformValue>();
-  assignTransformRules(map, transform);
-  return map;
-}
-
-function transformMapToArray(
-  map: Map<string, TransformValue>
-): ReanimatedWebTransformProperties[] | undefined {
-  if (!map.size) {
-    return undefined;
-  }
-
-  return Array.from(map, ([property, value]) => ({
-    [property]: value,
-  }));
-}
-
 // Translate values are passed as numbers. However, if `translate` property receives number, it will not automatically
 // convert it to `px`. Therefore if we want to keep transform we have to add 'px' suffix to each of translate values
 // that are present inside transform.
 //
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function addPxToTransform(transform: TransformType) {
   type RNTransformProp = (typeof transform)[number];
 
@@ -139,7 +115,8 @@ export function createAnimationWithInitialValues(
 
   const { transform, originX, originY, ...rest } = initialValues;
 
-  const transformStyle = buildTransformMap(firstAnimationStep.transform);
+  const transformStyle = new Map<string, TransformValue>();
+  assignTransformRules(transformStyle, firstAnimationStep.transform);
 
   if (transform) {
     const transformWithPx = addPxToTransform(transform as TransformType);
@@ -147,15 +124,18 @@ export function createAnimationWithInitialValues(
   }
 
   if (originX !== undefined) {
-    transformStyle.set('translateX', toTransformValue(originX));
+    transformStyle.set('translateX', maybeAddSuffix(originX, 'px'));
   }
 
   if (originY !== undefined) {
-    transformStyle.set('translateY', toTransformValue(originY));
+    transformStyle.set('translateY', maybeAddSuffix(originY, 'px'));
   }
 
-  const mergedTransform = transformMapToArray(transformStyle);
-  if (mergedTransform) {
+  const mergedTransform = Array.from(transformStyle, ([property, value]) => ({
+    [property]: value,
+  }));
+
+  if (transformStyle.size) {
     firstAnimationStep.transform = mergedTransform;
   }
 
