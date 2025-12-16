@@ -202,7 +202,10 @@ export function setElementAnimation(
     element.style.animationDelay = `${delay}s`;
     element.style.animationTimingFunction = easing;
 
-    if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
+    if (
+      animationConfig.animationType === LayoutAnimationType.ENTERING &&
+      delay > 0
+    ) {
       element.style.animationFillMode = 'backwards';
     }
   };
