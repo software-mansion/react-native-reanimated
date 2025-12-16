@@ -1,5 +1,5 @@
 'use strict';
-import createPropsBuilder from '../../style/createPropsBuilder';
+import { createPropsBuilder } from '../../style';
 import type { PlainStyle, UnknownRecord } from '../../types';
 import {
   hasValueProcessor,
@@ -8,16 +8,9 @@ import {
   kebabizeCamelCase,
   maybeAddSuffix,
 } from '../../utils';
+import { isRuleBuilder } from '../utils';
 import { PROPERTIES_CONFIG } from './config';
 import type { PropsBuilderConfig, RuleBuilder } from './types';
-
-const isRuleBuilder = <P extends UnknownRecord>(
-  value: unknown
-): value is RuleBuilder<P> =>
-  typeof value === 'object' &&
-  value !== null &&
-  'add' in value &&
-  'build' in value;
 
 type WebPropsBuilderConfig<P extends UnknownRecord = UnknownRecord> =
   PropsBuilderConfig<P>;

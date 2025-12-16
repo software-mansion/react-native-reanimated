@@ -1,4 +1,5 @@
 'use strict';
+export { default as createPropsBuilder } from './createPropsBuilder';
 export * from './config';
 export * from './processors';
 export {
