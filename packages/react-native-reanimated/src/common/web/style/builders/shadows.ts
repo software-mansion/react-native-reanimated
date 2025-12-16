@@ -3,8 +3,8 @@ import type { TextStyle, ViewStyle } from 'react-native';
 
 import { logger } from '../../../logger';
 import { opacifyColor } from '../../utils';
-import { createWebRuleBuilder } from '../ruleBuilder';
 import { processColor } from '../processors';
+import { createWebRuleBuilder } from '../ruleBuilder';
 import type { ValueProcessor } from '../types';
 
 type ShadowOffset = NonNullable<ViewStyle['shadowOffset']>;

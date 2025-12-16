@@ -1,15 +1,15 @@
 'use strict';
+import createPropsBuilder from '../../style/createPropsBuilder';
 import type { PlainStyle, UnknownRecord } from '../../types';
 import {
+  hasValueProcessor,
   isConfigPropertyAlias,
   isDefined,
   kebabizeCamelCase,
   maybeAddSuffix,
-  hasValueProcessor,
 } from '../../utils';
-import createPropsBuilder from '../../style/createPropsBuilder';
 import { PROPERTIES_CONFIG } from './config';
-import type { PropsBuilderConfig, RuleBuilder, ValueProcessor } from './types';
+import type { PropsBuilderConfig, RuleBuilder } from './types';
 
 const isRuleBuilder = <P extends UnknownRecord>(
   value: unknown
@@ -36,7 +36,7 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
         return undefined;
       }
 
-      // Handle true - include as is
+      // Handle true - include as string
       if (configValue === true) {
         return (value) => String(value);
       }
@@ -77,7 +77,9 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
       const processedProps = propsBuilder.build(props);
 
       // Build all rule builders and merge their results
-      const ruleBuilderProps = Array.from(ruleBuilderInstances).reduce<UnknownRecord>(
+      const ruleBuilderProps = Array.from(
+        ruleBuilderInstances
+      ).reduce<UnknownRecord>(
         (acc, builder) => ({ ...acc, ...builder.build() }),
         {}
       );
@@ -86,8 +88,8 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
       const allProps = { ...processedProps, ...ruleBuilderProps };
 
       // Convert to CSS string
-      const entries = Object.entries(allProps).filter(
-        ([, value]) => isDefined(value)
+      const entries = Object.entries(allProps).filter(([, value]) =>
+        isDefined(value)
       );
 
       if (entries.length === 0) {
@@ -95,7 +97,7 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
       }
 
       return entries
-        .map(([key, value]) => `${kebabizeCamelCase(key)}: ${value}`)
+        .map(([key, value]) => `${kebabizeCamelCase(key)}: ${String(value)}`)
         .join('; ');
     },
   };
