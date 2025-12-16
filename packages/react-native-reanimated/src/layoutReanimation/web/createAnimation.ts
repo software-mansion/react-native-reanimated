@@ -2,6 +2,7 @@
 
 import type { TransformsStyle } from 'react-native';
 
+import { maybeAddSuffix } from '../../common';
 import type {
   AnimationData,
   ReanimatedWebTransformProperties,
@@ -19,14 +20,29 @@ import { LinearTransition } from './transition/Linear.web';
 import { SequencedTransition } from './transition/Sequenced.web';
 
 type TransformType = NonNullable<TransformsStyle['transform']>;
+type TransformValue = string | number;
+
+function assignTransformRules(
+  map: Map<string, TransformValue>,
+  transform?: ReanimatedWebTransformProperties[]
+) {
+  if (!transform) {
+    return;
+  }
+
+  transform.forEach((rule) => {
+    for (const [property, propertyValue] of Object.entries(rule)) {
+      map.set(property, propertyValue as TransformValue);
+    }
+  });
+}
 
 // Translate values are passed as numbers. However, if `translate` property receives number, it will not automatically
 // convert it to `px`. Therefore if we want to keep transform we have to add 'px' suffix to each of translate values
 // that are present inside transform.
 //
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function addPxToTransform(transform: TransformType) {
-  type RNTransformProp = (typeof transform)[number];
+  type RNTransformProp = NonNullable<(typeof transform)[number]>;
 
   // @ts-ignore `existingTransform` cannot be string because in that case
   // we throw error in `extractTransformFromStyle`
@@ -97,41 +113,30 @@ export function createAnimationWithInitialValues(
   const animationStyle = structuredClone(AnimationsData[animationName].style);
   const firstAnimationStep = animationStyle['0'];
 
-  const { transform, ...rest } = initialValues;
+  const { transform, originX, originY, ...rest } = initialValues;
+
+  const transformStyle = new Map<string, TransformValue>();
+  assignTransformRules(transformStyle, firstAnimationStep.transform);
 
   if (transform) {
     const transformWithPx = addPxToTransform(transform as TransformType);
-    // If there was no predefined transform, we can simply assign transform from `initialValues`.
-    if (!firstAnimationStep.transform) {
-      firstAnimationStep.transform = transformWithPx;
-    } else {
-      // Othwerwise we have to merge predefined transform with the one provided in `initialValues`.
-      // To do that, we create `Map` that will contain final transform.
-      const transformStyle = new Map<string, any>();
+    assignTransformRules(transformStyle, transformWithPx);
+  }
 
-      // First we assign all of the predefined rules
-      for (const rule of firstAnimationStep.transform) {
-        // In most cases there will be just one iteration
-        for (const [property, value] of Object.entries(rule)) {
-          transformStyle.set(property, value);
-        }
-      }
+  if (originX !== undefined) {
+    transformStyle.set('translateX', maybeAddSuffix(originX, 'px'));
+  }
 
-      // Then we either add new rule, or override one that already exists.
-      for (const rule of transformWithPx) {
-        for (const [property, value] of Object.entries(rule)) {
-          transformStyle.set(property, value);
-        }
-      }
+  if (originY !== undefined) {
+    transformStyle.set('translateY', maybeAddSuffix(originY, 'px'));
+  }
 
-      // Finally, we convert `Map` with final transform back into array of objects.
-      firstAnimationStep.transform = Array.from(
-        transformStyle,
-        ([property, value]) => ({
-          [property]: value,
-        })
-      );
-    }
+  const mergedTransform = Array.from(transformStyle, ([property, value]) => ({
+    [property]: value,
+  }));
+
+  if (transformStyle.size) {
+    firstAnimationStep.transform = mergedTransform;
   }
 
   animationStyle['0'] = {
