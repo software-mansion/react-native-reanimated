@@ -15,6 +15,7 @@ import CSSBorderAnimations from './components/CSSBorderAnimations';
 import CSSMarginAnimations from './components/CSSMarginAnimations';
 import CSSTransformAnimations from './components/CSSTransformAnimations';
 import CSSFilterAnimations from './components/CSSFilterAnimations';
+import CSSOutlineAnimations from './components/CSSOutlineAnimations';
 
 type Screen =
   | 'home'
@@ -25,7 +26,8 @@ type Screen =
   | 'css-border'
   | 'css-margin'
   | 'css-transform'
-  | 'css-filter';
+  | 'css-filter'
+  | 'css-outline';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
@@ -65,14 +67,14 @@ export default function App() {
             </Text>
           </TouchableOpacity> */}
 
-          {/* <TouchableOpacity
+          <TouchableOpacity
             style={[styles.categoryButton, styles.cssButton]}
             onPress={() => setCurrentScreen('css')}>
             <Text style={styles.categoryTitle}>✨ CSS Animations</Text>
             <Text style={styles.categoryDescription}>
               Classic CSS effects: fade, slide, bounce, pulse, shake, and more
             </Text>
-          </TouchableOpacity> */}
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.categoryButton, styles.cssTransformButton]}
@@ -106,7 +108,16 @@ export default function App() {
             onPress={() => setCurrentScreen('css-filter')}>
             <Text style={styles.categoryTitle}>🌫️ CSS Filter Lab</Text>
             <Text style={styles.categoryDescription}>
-              Blur, contrast, hue-rotate, invert, saturate, and more filters
+              Blur, brightness, contrast, hue-rotate, invert, saturate, etc.
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.categoryButton, styles.cssOutlineButton]}
+            onPress={() => setCurrentScreen('css-outline')}>
+            <Text style={styles.categoryTitle}>🖊️ CSS Outline Lab</Text>
+            <Text style={styles.categoryDescription}>
+              Border-side colors plus outline color/offset/style/width
             </Text>
           </TouchableOpacity>
         </View>
@@ -134,6 +145,8 @@ export default function App() {
         );
       case 'css-filter':
         return <CSSFilterAnimations onBack={() => setCurrentScreen('home')} />;
+      case 'css-outline':
+        return <CSSOutlineAnimations onBack={() => setCurrentScreen('home')} />;
       default:
         return renderHomeScreen();
     }
@@ -214,6 +227,9 @@ const styles = StyleSheet.create({
   },
   cssFilterButton: {
     borderLeftColor: '#8e44ad',
+  },
+  cssOutlineButton: {
+    borderLeftColor: '#c0392b',
   },
   categoryTitle: {
     fontSize: 20,
