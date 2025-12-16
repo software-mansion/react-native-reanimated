@@ -58,7 +58,10 @@ export default function createPropsBuilder<
       }
 
       // Otherwise, we need to continue processing the value.
-      processedValue = processConfigValue(processedValue, key as keyof TPropsConfig);
+      processedValue = processConfigValue(
+        processedValue,
+        key as keyof TPropsConfig
+      );
     }
 
     return acc;

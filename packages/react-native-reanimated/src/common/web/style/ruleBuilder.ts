@@ -7,7 +7,7 @@ import {
   maybeAddSuffix,
 } from '../../utils';
 import { hasNameAlias } from '../utils';
-import type { RuleBuildHandler, RuleBuilderConfig } from './types';
+import type { RuleBuilderConfig, RuleBuildHandler } from './types';
 
 type ProcessedProps<P> = Record<keyof P, string>;
 

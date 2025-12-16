@@ -5,7 +5,7 @@ import type {
   UnknownRecord,
   ValueProcessor,
 } from '../types';
-import { isConfigPropertyAlias, hasValueProcessor } from '../utils';
+import { hasValueProcessor, isConfigPropertyAlias } from '../utils';
 import { BASE_PROPERTIES_CONFIG } from './config';
 import createPropsBuilder from './createPropsBuilder';
 

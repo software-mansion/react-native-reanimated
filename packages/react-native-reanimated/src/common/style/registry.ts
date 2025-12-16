@@ -1,7 +1,7 @@
 'use strict';
-import { isReactNativeViewName } from '../utils/guards';
 import { ReanimatedError } from '../errors';
 import type { UnknownRecord } from '../types';
+import { isReactNativeViewName } from '../utils/guards';
 import propsBuilder, {
   createNativePropsBuilder,
   type NativePropsBuilder,
@@ -28,7 +28,9 @@ const COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Map<
 const PROPS_BUILDERS: Record<string, NativePropsBuilder> = {};
 
 export function hasPropsBuilder(componentName: string): boolean {
-  return !!PROPS_BUILDERS[componentName] || isReactNativeViewName(componentName);
+  return (
+    !!PROPS_BUILDERS[componentName] || isReactNativeViewName(componentName)
+  );
 }
 
 export function getPropsBuilder(componentName: string): NativePropsBuilder {

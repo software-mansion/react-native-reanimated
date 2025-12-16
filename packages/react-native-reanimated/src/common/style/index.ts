@@ -1,6 +1,6 @@
 'use strict';
-export { default as createPropsBuilder } from './createPropsBuilder';
 export * from './config';
+export { default as createPropsBuilder } from './createPropsBuilder';
 export * from './processors';
 export {
   type NativePropsBuilder,
