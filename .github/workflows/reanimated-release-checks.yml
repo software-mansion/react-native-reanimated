@@ -2,10 +2,10 @@ name: Reanimated release checks
 on:
   pull_request:
     branches:
-      - "[0-9]+.[0-9]+-stable"
+      - '[0-9]+.[0-9]+-stable'
   push:
     branches:
-      - "[0-9]+.[0-9]+-stable"
+      - '[0-9]+.[0-9]+-stable'
   workflow_call:
   workflow_dispatch:
 
