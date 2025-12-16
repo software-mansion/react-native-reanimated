@@ -1,7 +1,7 @@
 'use strict';
 import type { AnyRecord, Maybe, NonMutable } from '../..';
 
-export type ValueProcessor<V> = (
+export type ValueProcessor<V = unknown> = (
   value: NonMutable<V>
 ) => Maybe<string> | Record<string, string>;
 
@@ -18,22 +18,16 @@ export type RuleBuildHandler<P extends AnyRecord> = (
   props: ProcessedProps<P>
 ) => Record<string, string>;
 
-type BuilderBase<P extends AnyRecord, R> = {
+type BuilderBase<P extends AnyRecord> = {
   add(property: keyof P, value: P[keyof P]): void;
-  build(): R;
+  build(): Record<string, string>;
 };
 
-export type PropsBuilder<P extends AnyRecord> = BuilderBase<
-  P,
-  string | null
-> & {
+export type PropsBuilder<P extends AnyRecord> = BuilderBase<P> & {
   buildFrom(props: P): string | null;
 };
 
-export type RuleBuilder<P extends AnyRecord> = BuilderBase<
-  P,
-  Record<string, string>
->;
+export type RuleBuilder<P extends AnyRecord> = BuilderBase<P>;
 
 type PropertyAlias<P extends AnyRecord> = {
   as: keyof P;
@@ -49,7 +43,8 @@ type PropsBuilderPropertyConfig<
   K extends keyof P = keyof P,
 > =
   | PropertyValueConfigBase<P>
-  | RuleBuilder<P>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  | RuleBuilder<any>
   | {
       process?: ValueProcessor<NonNullable<P[K]>>; // for custom value processing
       name?: string; // for custom property name
@@ -61,7 +56,8 @@ type RuleBuilderPropertyConfig<
 > =
   | PropertyValueConfigBase<P>
   | {
-      process: ValueProcessor<NonNullable<P[K]>>; // for custom value processing
+      process?: ValueProcessor<NonNullable<P[K]>>; // for custom value processing
+      name?: string; // for custom property name
     };
 
 export type PropsBuilderConfig<P extends AnyRecord> = {
