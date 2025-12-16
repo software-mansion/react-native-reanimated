@@ -31,13 +31,19 @@ class RuntimeManager {
   std::shared_ptr<WorkletRuntime> createWorkletRuntime(
       std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy,
       const std::string &name,
-      std::shared_ptr<SerializableWorklet> initializer = nullptr,
+      const std::shared_ptr<SerializableWorklet> &initializer = nullptr,
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
       bool enableEventLoop = true);
 
   std::shared_ptr<WorkletRuntime> createUninitializedUIRuntime(
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<AsyncQueue> &uiAsyncQueue);
+
+  /** Pauses registration of new Worklet Runtimes. */
+  void pause();
+
+  /** Resumes registration of new Worklet Runtimes. */
+  void resume();
 
  private:
   uint64_t getNextRuntimeId();
@@ -47,6 +53,7 @@ class RuntimeManager {
   std::atomic_uint64_t nextRuntimeId_{RuntimeData::uiRuntimeId + 1};
   std::map<uint64_t, std::weak_ptr<WorkletRuntime>> weakRuntimes_;
   std::shared_mutex weakRuntimesMutex_;
+  std::mutex registrationMutex_;
 };
 
 } // namespace worklets

@@ -9,7 +9,7 @@ import {
 import {
   processBoxShadowWeb,
   processColor,
-  processFilter,
+  processFilterWeb,
   processFontVariant,
   processFontWeight,
   processMarginHorizontal,
@@ -17,11 +17,11 @@ import {
   processPaddingHorizontal,
   processPaddingVertical,
 } from './processors';
-import type { StyleBuilderConfig } from './types';
+import type { PropsBuilderConfig } from './types';
 
 const colorAttributes = { process: processColor };
 
-export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
+export const PROPERTIES_CONFIG: PropsBuilderConfig<PlainStyle> = {
   /** Layout and Positioning */
   // FLEXBOX
   flex: true,
@@ -225,6 +225,6 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   cursor: true,
   pointerEvents: true,
   // Others
-  filter: { process: processFilter },
+  filter: { process: processFilterWeb },
   isolation: true,
 };

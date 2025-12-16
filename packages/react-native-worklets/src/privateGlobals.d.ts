@@ -4,7 +4,9 @@
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
 import type { callGuardDEV } from './callGuard';
 import type { reportFatalRemoteError } from './debug/errors';
+import type { CustomSerializableUnpacker } from './memory/customSerializableUnpacker';
 import type { SynchronizableUnpacker } from './memory/synchronizableUnpacker';
+import type { CustomSerializationRegistry } from './memory/types';
 import type { Queue } from './runLoop/workletRuntime/taskQueue';
 import type { ValueUnpacker } from './types';
 import type { WorkletsModuleProxy } from './WorkletsModule/workletsModuleProxy';
@@ -59,6 +61,8 @@ declare global {
   var __reportFatalRemoteError: typeof reportFatalRemoteError | undefined;
   var __valueUnpacker: ValueUnpacker;
   var __synchronizableUnpacker: SynchronizableUnpacker;
+  var __customSerializationRegistry: CustomSerializationRegistry;
+  var __customSerializableUnpacker: CustomSerializableUnpacker;
   var __callGuardDEV: typeof callGuardDEV | undefined;
   var __flushAnimationFrame: (timestamp: number) => void;
   var __frameTimestamp: number | undefined;

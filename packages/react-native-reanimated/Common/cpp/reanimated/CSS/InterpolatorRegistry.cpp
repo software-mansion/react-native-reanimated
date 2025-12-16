@@ -18,6 +18,7 @@
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
+
 #include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
 #include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
 #include <reanimated/CSS/interpolation/transforms/operations/rotate.h>
@@ -25,6 +26,18 @@
 #include <reanimated/CSS/interpolation/transforms/operations/skew.h>
 #include <reanimated/CSS/interpolation/transforms/operations/translate.h>
 
+#include <reanimated/CSS/interpolation/filters/operations/blur.h>
+#include <reanimated/CSS/interpolation/filters/operations/brightness.h>
+#include <reanimated/CSS/interpolation/filters/operations/contrast.h>
+#include <reanimated/CSS/interpolation/filters/operations/dropShadow.h>
+#include <reanimated/CSS/interpolation/filters/operations/grayscale.h>
+#include <reanimated/CSS/interpolation/filters/operations/hueRotate.h>
+#include <reanimated/CSS/interpolation/filters/operations/invert.h>
+#include <reanimated/CSS/interpolation/filters/operations/opacity.h>
+#include <reanimated/CSS/interpolation/filters/operations/saturate.h>
+#include <reanimated/CSS/interpolation/filters/operations/sepia.h>
+
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -120,7 +133,7 @@ const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
           value<CSSDouble>(0)})},
     {"transform",
      transforms(
-         {{"perspective", transformOp<PerspectiveOperation>(0)}, // 0 - no perspective
+         {{"perspective", transformOp<PerspectiveOperation>(std::numeric_limits<double>::infinity())},
           {"rotate", transformOp<RotateOperation>("0deg")},
           {"rotateX", transformOp<RotateXOperation>("0deg")},
           {"rotateY", transformOp<RotateYOperation>("0deg")},
@@ -135,10 +148,25 @@ const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
           {"matrix", transformOp<MatrixOperation>(TransformMatrix2D())}})},
 };
 
+const InterpolatorFactoriesRecord FILTER_INTERPOLATORS = {
+    {"filter",
+     filters(
+         {{"blur", filterOp<BlurOperation>(0)},
+          {"brightness", filterOp<BrightnessOperation>(1)},
+          {"contrast", filterOp<ContrastOperation>(1)},
+          {"dropShadow", filterOp<DropShadowOperation>(CSSDropShadow())},
+          {"grayscale", filterOp<GrayscaleOperation>(0)},
+          {"hueRotate", filterOp<HueRotateOperation>(0)},
+          {"invert", filterOp<InvertOperation>(0)},
+          {"opacity", filterOp<OpacityOperation>(1)},
+          {"saturate", filterOp<SaturateOperation>(1)},
+          {"sepia", filterOp<SepiaOperation>(0)}})}};
+
 const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
     {FLEX_INTERPOLATORS,
      SHADOW_INTERPOLATORS_IOS,
      TRANSFORMS_INTERPOLATORS,
+     FILTER_INTERPOLATORS,
      InterpolatorFactoriesRecord{
          {"backfaceVisibility", value<CSSKeyword>("visible")},
          {"backgroundColor", value<CSSColor>(TRANSPARENT)},
@@ -268,6 +296,7 @@ const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS = mergeInterpolators(
     SVG_COLOR_INTERPOLATORS,
     SVG_FILL_INTERPOLATORS,
     SVG_STROKE_INTERPOLATORS,
+    InterpolatorFactoriesRecord{{"opacity", value<CSSDouble>(1)}},
 });
 
 const InterpolatorFactoriesRecord SVG_CIRCLE_INTERPOLATORS = mergeInterpolators(
@@ -276,7 +305,6 @@ const InterpolatorFactoriesRecord SVG_CIRCLE_INTERPOLATORS = mergeInterpolators(
          {"cx", value<SVGLength, CSSKeyword>(0)},
          {"cy", value<SVGLength, CSSKeyword>(0)},
          {"r", value<SVGLength, CSSKeyword>(0)},
-         {"opacity", value<CSSDouble>(1)},
      }});
 
 const InterpolatorFactoriesRecord SVG_ELLIPSE_INTERPOLATORS = mergeInterpolators(
@@ -286,7 +314,6 @@ const InterpolatorFactoriesRecord SVG_ELLIPSE_INTERPOLATORS = mergeInterpolators
          {"cy", value<SVGLength, CSSKeyword>(0)},
          {"rx", value<SVGLength, CSSKeyword>(0)},
          {"ry", value<SVGLength, CSSKeyword>(0)},
-         {"opacity", value<CSSDouble>(1)},
      }});
 
 const InterpolatorFactoriesRecord SVG_LINE_INTERPOLATORS = mergeInterpolators(
@@ -296,7 +323,6 @@ const InterpolatorFactoriesRecord SVG_LINE_INTERPOLATORS = mergeInterpolators(
          {"y1", value<SVGLength, CSSKeyword>(0)},
          {"x2", value<SVGLength, CSSKeyword>(0)},
          {"y2", value<SVGLength, CSSKeyword>(0)},
-         {"opacity", value<CSSDouble>(1)},
      }});
 
 const InterpolatorFactoriesRecord SVG_RECT_INTERPOLATORS = mergeInterpolators(
@@ -308,7 +334,6 @@ const InterpolatorFactoriesRecord SVG_RECT_INTERPOLATORS = mergeInterpolators(
          {"height", value<SVGLength, CSSKeyword>(0)},
          {"rx", value<SVGLength, CSSKeyword>(0)},
          {"ry", value<SVGLength, CSSKeyword>(0)},
-         {"opacity", value<CSSDouble>(1)},
      }});
 
 const InterpolatorFactoriesRecord SVG_PATH_INTERPOLATORS = mergeInterpolators(

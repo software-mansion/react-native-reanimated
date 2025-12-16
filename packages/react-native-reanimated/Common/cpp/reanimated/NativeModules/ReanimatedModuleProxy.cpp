@@ -15,6 +15,8 @@
 
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 
 #include <functional>
 #include <iomanip>
@@ -51,6 +53,9 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       jsLogger_(std::make_shared<JSLogger>(workletsModuleProxy->getJSScheduler())),
       layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>(jsLogger_)),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
+#ifdef __APPLE__
+      forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
+#endif
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
@@ -92,7 +97,8 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       return;
     }
 
-    strongThis->animatedPropsRegistry_->update(rt, operations);
+    const auto timestamp = strongThis->getAnimationTimestamp_();
+    strongThis->animatedPropsRegistry_->update(rt, operations, timestamp);
   };
 
   auto measure = [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) -> jsi::Value {
@@ -121,7 +127,6 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
         if (!strongThis) {
           return;
         }
-
         auto surfaceId = strongThis->layoutAnimationsProxy_->progressLayoutAnimation(tag, newStyle);
         if (!surfaceId) {
           return;
@@ -188,7 +193,6 @@ ReanimatedModuleProxy::~ReanimatedModuleProxy() {
   // event handler registry and frame callbacks store some JSI values from UI
   // runtime, so they have to go away before we tear down the runtime
   eventHandlerRegistry_.reset();
-  frameCallbacks_.clear();
 }
 
 jsi::Value ReanimatedModuleProxy::registerEventHandler(
@@ -211,7 +215,7 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
     }
     auto handler =
         std::make_shared<WorkletEventHandler>(newRegistrationId, eventNameStr, emitterReactTagInt, handlerSerializable);
-    strongThis->eventHandlerRegistry_->registerEventHandler(std::move(handler));
+    strongThis->eventHandlerRegistry_->registerEventHandler(handler);
   });
 
   return jsi::Value(static_cast<double>(newRegistrationId));
@@ -289,6 +293,10 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
       batchItem.config = extractSerializableOrThrow<SerializableObject>(
           rt, config, "[Reanimated] Layout animation config must be an object.");
     }
+    auto sharedTag = item.getProperty(rt, "sharedTransitionTag");
+    if (!sharedTag.isUndefined()) {
+      batchItem.sharedTransitionTag = sharedTag.asString(rt).utf8(rt);
+    }
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
   return jsi::Value::undefined();
@@ -314,13 +322,7 @@ void ReanimatedModuleProxy::maybeRequestRender() {
 
 void ReanimatedModuleProxy::onRender(double timestampMs) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::onRender");
-  auto callbacks = std::move(frameCallbacks_);
-  frameCallbacks_.clear();
-  jsi::Runtime &uiRuntime = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
-  jsi::Value timestamp{timestampMs};
-  for (const auto &callback : callbacks) {
-    runOnRuntimeGuarded(uiRuntime, *callback, timestamp);
-  }
+  // NOOP
 }
 
 jsi::Value ReanimatedModuleProxy::registerSensor(
@@ -412,7 +414,7 @@ void ReanimatedModuleProxy::applyCSSAnimations(
   {
     auto lock = cssAnimationsRegistry_->lock();
     cssAnimationsRegistry_->apply(
-        rt, shadowNode, updates.animationNames, std::move(newAnimations), updates.settingsUpdates, timestamp);
+        rt, shadowNode, updates.animationNames, newAnimations, updates.settingsUpdates, timestamp);
   }
 
   maybeRunCSSLoop();
@@ -453,6 +455,25 @@ void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi:
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
+jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
+  react_native_assert(
+      StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
+      "getSettledUpdates requires FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS static feature flag to be enabled");
+
+  // TODO(future): use unified timestamp
+  const auto currentTimestamp = getAnimationTimestamp_();
+
+  const auto lock = animatedPropsRegistry_->lock();
+
+  // TODO: fix bug when threshold difference is smaller than 1 second
+  // TODO(future): flush updates from CSS animations and CSS transitions registries
+  animatedPropsRegistry_->removeUpdatesOlderThanTimestamp(currentTimestamp - 2000); // 2 seconds
+
+  // TODO(future): find a better way to obtain timestamp for removing updates
+  // TODO(future): move removing old updates to separate method
+  return animatedPropsRegistry_->getUpdatesOlderThanTimestamp(rt, currentTimestamp - 1000); // 1 second
+}
+
 bool ReanimatedModuleProxy::handleEvent(
     const std::string &eventName,
     const int emitterReactTag,
@@ -487,6 +508,41 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
     eventType = "on" + eventType.substr(3);
   }
 
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    if (eventType == "onTransitionProgress") {
+      jsi::Runtime &rt = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+      const auto &eventPayload = rawEvent.eventPayload;
+      jsi::Object payload = eventPayload->asJSIValue(rt).asObject(rt);
+      auto progress = payload.getProperty(rt, "progress").asNumber();
+      auto closing = static_cast<bool>(payload.getProperty(rt, "closing").asNumber());
+      auto goingForward = static_cast<bool>(payload.getProperty(rt, "goingForward").asNumber());
+
+      if (!layoutAnimationsProxy_) {
+        return false;
+      }
+      auto surfaceId = layoutAnimationsProxy_->onTransitionProgress(tag, progress, closing, goingForward);
+      if (!surfaceId) {
+        return false;
+      }
+      // TODO (future): enumerate -> visit
+      uiManager_->getShadowTreeRegistry().enumerate(
+          [](const ShadowTree &shadowTree, bool &) { shadowTree.notifyDelegatesOfUpdates(); });
+      return false;
+    } else if (eventType == "onGestureCancel") {
+      if (!layoutAnimationsProxy_) {
+        return false;
+      }
+      auto surfaceId = layoutAnimationsProxy_->onGestureCancel();
+      if (!surfaceId) {
+        return false;
+      }
+      // TODO (future): enumerate -> visit
+      uiManager_->getShadowTreeRegistry().enumerate(
+          [](const ShadowTree &shadowTree, bool &) { shadowTree.notifyDelegatesOfUpdates(); });
+      return false;
+    }
+  }
+
   if (!isAnyHandlerWaitingForEvent(eventType, tag)) {
     return false;
   }
@@ -495,12 +551,12 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   const auto &eventPayload = rawEvent.eventPayload;
   jsi::Value payload = eventPayload->asJSIValue(rt);
 
-  auto res = handleEvent(eventType, tag, std::move(payload), currentTime);
+  auto res = handleEvent(eventType, tag, payload, currentTime);
   // TODO: we should call performOperations conditionally if event is handled
   // (res == true), but for now handleEvent always returns false. Thankfully,
   // performOperations does not trigger a lot of code if there is nothing to
   // be done so this is fine for now.
-  performOperations();
+  performOperations(true);
   return res;
 }
 
@@ -549,13 +605,15 @@ double ReanimatedModuleProxy::getCssTimestamp() {
   return currentCssTimestamp_;
 }
 
-void ReanimatedModuleProxy::performOperations() {
+void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
-  auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
-  for (const auto surfaceId : flushRequestsCopy) {
-    uiManager_->getShadowTreeRegistry().visit(
-        surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
+  if (!isTriggeredByEvent) {
+    auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
+    for (const auto surfaceId : flushRequestsCopy) {
+      uiManager_->getShadowTreeRegistry().visit(
+          surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
+    }
   }
 
   jsi::Runtime &rt = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
@@ -590,7 +648,9 @@ void ReanimatedModuleProxy::performOperations() {
     shouldUpdateCssAnimations_ = false;
 
 #ifdef ANDROID
-    if constexpr (StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
+    if constexpr (
+        StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
+        !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
       static const std::unordered_set<std::string> synchronousProps = {
           "opacity",
           "elevation",
@@ -817,9 +877,10 @@ void ReanimatedModuleProxy::performOperations() {
 
       for (const auto &[shadowNode, props] : updatesBatch) {
         bool hasOnlySynchronousProps = true;
-        for (const auto &key : props.keys()) {
+        for (const auto &[key, value] : props.items()) {
           const auto keyStr = key.asString();
-          if (!synchronousProps.contains(keyStr)) {
+          if (!synchronousProps.contains(keyStr) ||
+              ((keyStr == "color" || keyStr.find("Color") != std::string::npos) && !value.isInt())) {
             hasOnlySynchronousProps = false;
             break;
           }
@@ -978,7 +1039,9 @@ void ReanimatedModuleProxy::performOperations() {
 #endif // ANDROID
 
 #if __APPLE__
-    if constexpr (StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS")) {
+    if constexpr (
+        StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
+        !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
       static const std::unordered_set<std::string> synchronousProps = {
           "opacity",
           "elevation",
@@ -1093,7 +1156,7 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
       SurfaceId surfaceId = shadowNode->getSurfaceId();
       auto family = &shadowNode->getFamily();
       react_native_assert(family->getSurfaceId() == surfaceId);
-      propsMapBySurface[surfaceId][family].emplace_back(std::move(props));
+      propsMapBySurface[surfaceId][family].emplace_back(props);
     }
   }
 
@@ -1123,6 +1186,8 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
       if (status == ShadowTree::CommitStatus::Succeeded) {
         updatesRegistryManager_->clearPropsToRevert(surfaceId);
       }
+#else
+      (void)status;
 #endif
     });
   }
@@ -1210,7 +1275,6 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
-  uiManager_->setAnimationDelegate(nullptr);
   auto scheduler = reinterpret_cast<Scheduler *>(uiManager_->getDelegate());
   auto componentDescriptorRegistry =
       scheduler->getContextContainer()
@@ -1218,19 +1282,42 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
           .lock();
 
   if (componentDescriptorRegistry) {
-    layoutAnimationsProxy_ = std::make_shared<LayoutAnimationsProxy>(
-        layoutAnimationsManager_,
-        componentDescriptorRegistry,
-        scheduler->getContextContainer(),
-        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
-        workletsModuleProxy_->getUIScheduler()
+    if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+      auto layoutAnimationsProxyExperimental = std::make_shared<LayoutAnimationsProxy_Experimental>(
+          layoutAnimationsManager_,
+          componentDescriptorRegistry,
+          scheduler->getContextContainer(),
+          workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
+          workletsModuleProxy_->getUIScheduler()
 #ifdef ANDROID
-            ,
-        filterUnmountedTagsFunction_,
-        uiManager_,
-        jsInvoker_
+              ,
+          filterUnmountedTagsFunction_,
+          uiManager_,
+          jsInvoker_
 #endif
-    );
+      );
+#ifdef __APPLE__
+      layoutAnimationsProxyExperimental->setForceScreenSnapshotFunction(forceScreenSnapshot_);
+#endif
+      layoutAnimationsProxy_ = std::move(layoutAnimationsProxyExperimental);
+    } else {
+      auto layoutAnimationsProxyLegacy = std::make_shared<LayoutAnimationsProxy_Legacy>(
+          layoutAnimationsManager_,
+          componentDescriptorRegistry,
+          scheduler->getContextContainer(),
+          workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
+          workletsModuleProxy_->getUIScheduler()
+#ifdef ANDROID
+              ,
+          filterUnmountedTagsFunction_,
+          uiManager_,
+          jsInvoker_
+#endif
+      );
+      // TODO (future): support in experimental
+      uiManager_->setAnimationDelegate(layoutAnimationsProxyLegacy.get());
+      layoutAnimationsProxy_ = std::move(layoutAnimationsProxyLegacy);
+    }
   }
 }
 
@@ -1273,7 +1360,7 @@ jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
         if (!strongThis) {
           return;
         }
-        strongThis->workletsModuleProxy_->getUIWorkletRuntime()->runGuarded(
+        strongThis->workletsModuleProxy_->getUIWorkletRuntime()->runSync(
             serializableHandler, jsi::Value(keyboardState), jsi::Value(height));
       },
       isStatusBarTranslucent.getBool(),

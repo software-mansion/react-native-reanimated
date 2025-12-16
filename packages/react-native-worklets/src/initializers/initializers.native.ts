@@ -10,6 +10,7 @@ import { setupCallGuard } from '../callGuard';
 import { registerReportFatalRemoteError } from '../debug/errors';
 import { registerWorkletsError, WorkletsError } from '../debug/WorkletsError';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
+import { __installUnpacker as installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
 import { __installUnpacker as installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
 import { setupSetImmediate } from '../runLoop/common/setImmediatePolyfill';
 import { setupSetInterval } from '../runLoop/common/setIntervalPolyfill';
@@ -111,6 +112,7 @@ function initializeRuntime() {
     globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
   }
   installSynchronizableUnpacker();
+  installCustomSerializableUnpacker();
 }
 
 /** A function that should be run only on React Native runtime. */

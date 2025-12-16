@@ -39,39 +39,46 @@ function logToConsole(data: LogData) {
   }
 }
 
-export const DEFAULT_LOGGER_CONFIG: LoggerConfigInternal = {
+const DEFAULT_LOGGER_CONFIG: LoggerConfigInternal = {
   logFunction: logToConsole,
   level: ReanimatedLogLevel.warn,
   strict: true,
 };
 
 /**
- * Registers the logger configuration. use it only for Worklet runtimes.
+ * Current logger config getter.
  *
- * @param config - The config to register.
+ * @returns The current logger configuration object.
  */
-export function registerLoggerConfig(config: LoggerConfigInternal) {
+export function getLoggerConfig() {
   'worklet';
-  global.__reanimatedLoggerConfig = config;
+  if (!global.__reanimatedLoggerConfig) {
+    global.__reanimatedLoggerConfig = DEFAULT_LOGGER_CONFIG;
+  }
+  return global.__reanimatedLoggerConfig;
 }
 
 /**
  * Updates logger configuration.
  *
+ * @param currentConfig - The current logger configuration object.
  * @param options - The new logger configuration to apply.
  *
  *   - Level: The minimum log level to display.
  *   - Strict: Whether to log warnings and errors that are not strict. Defaults to
  *       false.
  */
-export function updateLoggerConfig(options?: Partial<LoggerConfig>) {
+export function updateLoggerConfig(
+  currentConfig: LoggerConfigInternal,
+  options?: Partial<LoggerConfig>
+) {
   'worklet';
-  registerLoggerConfig({
-    ...global.__reanimatedLoggerConfig,
-    // Don't reuse previous level and strict values from the global config
+  global.__reanimatedLoggerConfig = {
+    ...currentConfig,
+    // Don't reuse previous level and strict values from the current config
     level: options?.level ?? DEFAULT_LOGGER_CONFIG.level,
     strict: options?.strict ?? DEFAULT_LOGGER_CONFIG.strict,
-  });
+  };
 }
 
 type LogOptions = {
@@ -84,7 +91,7 @@ function handleLog(
   options: LogOptions
 ) {
   'worklet';
-  const config = global.__reanimatedLoggerConfig;
+  const config = getLoggerConfig();
   if (
     // Don't log if the log is marked as strict-only and the config doesn't
     // enable strict logging

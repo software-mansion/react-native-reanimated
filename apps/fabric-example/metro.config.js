@@ -2,16 +2,20 @@ const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const {
   wrapWithReanimatedMetroConfig,
 } = require('react-native-reanimated/metro-config');
-const {
-  getMetroAndroidAssetsResolutionFix,
-  // @ts-ignore react-native-monorepo-tools doesn't have types.
-} = require('react-native-monorepo-tools');
-
-const androidAssetsResolutionFix = getMetroAndroidAssetsResolutionFix();
-
+const { getMonorepoMetroOptions } = require('../../scripts/metro');
 const path = require('path');
 
-const root = path.resolve(__dirname, '../..');
+const defaultConfig = getDefaultConfig(__dirname);
+const modulesToFilter = ['react', 'react-native'];
+const { blockList, extraNodeModules } = getMonorepoMetroOptions(
+  modulesToFilter,
+  __dirname,
+  defaultConfig
+);
+
+const monorepoRoot = path.resolve(__dirname, '../..');
+/** Do not remove 'apps' from watchFolders, as it's required to resolve assets. */
+const appsRoot = path.resolve(monorepoRoot, 'apps');
 
 /**
  * Metro configuration https://reactnative.dev/docs/metro
@@ -19,23 +23,20 @@ const root = path.resolve(__dirname, '../..');
  * @type {import('@react-native/metro-config').MetroConfig}
  */
 let config = {
-  watchFolders: [root],
-  transformer: {
-    publicPath: androidAssetsResolutionFix.publicPath,
-  },
-  server: {
-    enhanceMiddleware: (middleware) => {
-      return androidAssetsResolutionFix.applyMiddleware(middleware);
-    },
+  projectRoot: __dirname,
+  watchFolders: [monorepoRoot, appsRoot],
+  resolver: {
+    blockList,
+    extraNodeModules,
   },
 };
 
-config = mergeConfig(getDefaultConfig(__dirname), config);
+config = mergeConfig(defaultConfig, config);
 
 // Uncomment the following to enable bundle mode.
 const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
 config = mergeConfig(config, bundleModeMetroConfig);
 
 module.exports = wrapWithReanimatedMetroConfig(
-  mergeConfig(getDefaultConfig(__dirname), config)
+  mergeConfig(defaultConfig, config)
 );

@@ -6,12 +6,15 @@ import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import {
   IS_JEST,
-  processBoxShadowNative,
+  processBoxShadow,
   processColorsInProps,
+  processFilter,
+  processTransform,
+  processTransformOrigin,
   ReanimatedError,
   SHOULD_BE_USE_WEB,
 } from '../common';
-import { processBoxShadowWeb, processTransformOrigin } from '../common/web';
+import { processBoxShadowWeb, processFilterWeb } from '../common/web';
 import type {
   AnimatedStyle,
   ShadowNodeWrapper,
@@ -40,6 +43,9 @@ if (SHOULD_BE_USE_WEB) {
       if ('boxShadow' in updates) {
         updates.boxShadow = processBoxShadowWeb(updates.boxShadow);
       }
+      if ('filter' in updates) {
+        updates.filter = processFilterWeb(updates.filter);
+      }
       _updatePropsJS(updates, component, isAnimatedProps);
     });
   };
@@ -54,8 +60,14 @@ if (SHOULD_BE_USE_WEB) {
     if ('transformOrigin' in updates) {
       updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
     }
+    if ('transform' in updates) {
+      updates.transform = processTransform(updates.transform);
+    }
     if ('boxShadow' in updates) {
-      updates.boxShadow = processBoxShadowNative(updates.boxShadow);
+      updates.boxShadow = processBoxShadow(updates.boxShadow);
+    }
+    if ('filter' in updates) {
+      updates.filter = processFilter(updates.filter);
     }
     global.UpdatePropsManager.update(viewDescriptors, updates);
   };

@@ -6,17 +6,23 @@ sidebar_position: 3
 
 Worklets library differentiate between two types of runtimes - **React Native Runtime** and **Worklet Runtimes**. **Worklet Runtimes** are further divided into **UI Runtime** and **Worker Runtimes**.
 
-## React Native Runtime - RN Runtime
+## RN Runtime
 
-A runtime spawned by React Native. There's only one React Native in your app. It's the runtime where React lives and the app's JavaScript code is executed. This runtime is executed by the React Native's [JS Thread](https://reactnative.dev/architecture/threading-model). This is the only runtime that has access to the React Native APIs and the app's state and components.
+React Native Runtime - a JavaScript Runtime spawned by React Native. It's the Runtime where React lives and your app's JavaScript code is executed. This Runtime is executed by the React Native's [JS Thread](https://reactnative.dev/architecture/threading-model). This is the only Runtime that has access to the React Native APIs and the app's state and components.
+
+You can learn more about it by reading the [JavaScript Runtime](https://reactnative.dev/docs/javascript-environment) article in the official React Native docs.
+
+There's only one React Native Runtime in your app.
 
 ## Worklet Runtime
 
-A runtime spawned by Worklets library. It's pre-configured to be able to execute worklets. It doesn't share any memory with the React Native Runtime or other Worklet Runtimes, but it can communicate with them using specific APIs. It isn't coupled to any thread, but there might be a thread dedicated to its execution.
+A JavaScript Runtime spawned by Worklets library. It's pre-configured to be able to execute worklets. It doesn't share any memory with the React Native Runtime or other Worklet Runtimes, but it can communicate with them using specific APIs. It isn't coupled to any thread, but there might be a thread dedicated to its execution.
 
-## UI Worklet Runtime - UI Runtime
+We differentiate between two kinds of Worklet Runtimes, **UI Runtime** and **Worker Runtimes**.
 
-Special kind of a Worklet Runtime. There's only one UI Runtime in your app. Its primary function is to execute worklets which represent high-priority JavaScript tasks. The UI Runtime is mostly executed by the UI (main) thread. Examples of such tasks are:
+### UI Runtime
+
+Special kind of a Worklet Runtime. Its primary function is to execute worklets which represent high-priority JavaScript tasks. The UI Runtime is mostly executed by the UI (main) thread. Examples of such tasks are:
 
 - **Synchronous handling of native events**.  
   Responding to native events like touches on the UI thread allows to react to them on the same frame of the user interaction, without any perceivable delays.
@@ -26,6 +32,12 @@ Special kind of a Worklet Runtime. There's only one UI Runtime in your app. Its 
 
 UI Runtime can be periodically acquired by other threads (other runtimes) to synchronize data.
 
-## Worker Worklet Runtime - Worker Runtime
+There's only one UI Runtime in your app.
 
-Runtimes spawned by [createWorkletRuntime](/docs/threading/createWorkletRuntime) API per user request. Worker Runtimes are designed to execute worklets in a separate thread. They allow for custom parallelization of JavaScript code execution, which can be useful for heavy computations or tasks that don't require immediate interaction with the UI, like data processing or background tasks.
+### Worker Runtime
+
+A Worklet Runtime spawned by [createWorkletRuntime](/docs/threading/createWorkletRuntime) API per user request. Worker Runtimes are designed to execute worklets in a separate thread. They allow for custom parallelization of JavaScript code execution, which can be useful for heavy computations or tasks that don't require immediate interaction with the user interface, like data processing or background tasks.
+
+You can customize its behavior and the thread it runs on.
+
+There can be multiple Worker Runtimes in your app running at the same time.

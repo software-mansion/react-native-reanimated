@@ -7,7 +7,7 @@ import {
   NavigationContainer,
 } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Linking, View } from 'react-native';
+import { ActivityIndicator, Linking, LogBox, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -16,6 +16,10 @@ import { IS_MACOS, IS_WEB, noop } from '@/utils';
 
 import { CSSApp, ReanimatedApp } from './apps';
 import { LeakCheck, NukeContext } from './components';
+
+LogBox.ignoreLogs([
+  "Deep imports from the 'react-native' package are deprecated",
+]);
 
 export default function App() {
   const [nuked, setNuked] = useState(false);

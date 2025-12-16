@@ -22,7 +22,7 @@
     "@babel/core": "7.28.4",
     "@babel/preset-env": "7.28.3",
     "@babel/runtime": "7.28.4",
-    "@react-native-community/cli": "18.0.0",
+    "@react-native-community/cli": "20.0.0",
     "@react-native-community/cli-platform-ios": "18.0.0",
     "@react-native/babel-preset": "0.79.6",
     "@react-native/eslint-config": "0.79.6",
@@ -47,7 +47,8 @@
       "IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS": true,
       "EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS": true,
       "USE_SYNCHRONIZABLE_FOR_MUTABLES": true,
-      "USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS": true
+      "USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS": true,
+      "FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS": true
     }
   },
   "worklets": {

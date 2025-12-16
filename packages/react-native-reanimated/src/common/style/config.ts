@@ -1,23 +1,25 @@
+/* eslint-disable camelcase */
 'use strict';
 import { IS_ANDROID } from '../constants';
 import type { PlainStyle } from '../types';
-import { processTransformOrigin } from '../web';
 import {
   processAspectRatio,
-  processBoxShadowNative,
+  processBoxShadow,
   processColor,
+  processFilter,
   processFontWeight,
   processGap,
   processInset,
   processInsetBlock,
   processInsetInline,
   processTransform,
+  processTransformOrigin,
 } from './processors';
-import type { StyleBuilderConfig } from './types';
+import type { PropsBuilderConfig } from './types';
 
 const colorAttributes = { process: processColor };
 
-export const BASE_PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
+export const BASE_PROPERTIES_CONFIG: PropsBuilderConfig<PlainStyle> = {
   /** Layout and Positioning */
   // FLEXBOX
   flex: true,
@@ -137,7 +139,7 @@ export const BASE_PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   elevation: IS_ANDROID,
   textShadowOffset: true,
   textShadowRadius: true,
-  boxShadow: { process: processBoxShadowNative },
+  boxShadow: { process: processBoxShadow },
 
   // BORDERS
   // Radius
@@ -189,8 +191,14 @@ export const BASE_PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   backfaceVisibility: true,
   opacity: true,
   mixBlendMode: true,
-  // eslint-disable-next-line camelcase
+
   experimental_backgroundImage: false, // TODO
+  // @ts-ignore This type doesn't exist on non-strict-api
+  experimental_backgroundPosition: false, // TODO
+  // @ts-ignore This type doesn't exist on non-strict-api
+  experimental_backgroundSize: false, // TODO
+  // @ts-ignore This type doesn't exist on non-strict-api
+  experimental_backgroundRepeat: false, // TODO
 
   /** Typography */
   // Font
@@ -222,6 +230,6 @@ export const BASE_PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   cursor: true,
   pointerEvents: true,
   // Others
-  filter: false, // web only
+  filter: { process: processFilter },
   isolation: true,
 };

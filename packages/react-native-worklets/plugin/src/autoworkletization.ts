@@ -4,24 +4,19 @@ import { isSequenceExpression, isV8IntrinsicIdentifier } from '@babel/types';
 
 import {
   gestureHandlerBuilderMethods,
+  gestureHandlerObjectHooks,
   isGestureHandlerEventCallback,
   isGestureObjectEventCallbackMethod,
 } from './gestureHandlerAutoworkletization';
 import { isLayoutAnimationCallback } from './layoutAnimationAutoworkletization';
-import { processWorkletizableObject } from './objectWorklets';
-import { findReferencedWorklet } from './referencedWorklets';
-import type {
-  ReanimatedPluginPass,
-  WorkletizableFunction,
-  WorkletizableObject,
-} from './types';
-import {
-  isWorkletizableFunctionPath,
-  isWorkletizableObjectPath,
-} from './types';
+import { tryProcessingNode } from './objectWorklets';
+import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 import { processWorklet } from './workletSubstitution';
 
-const reanimatedObjectHooks = new Set(['useAnimatedScrollHandler']);
+const reanimatedObjectHooks = new Set([
+  'useAnimatedScrollHandler',
+  ...Array.from(gestureHandlerObjectHooks),
+]);
 
 const reanimatedFunctionHooks = new Set([
   'useFrameCallback',
@@ -65,13 +60,14 @@ const reanimatedFunctionArgsToWorkletize = new Map([
   ['runOnUIAsync', [0]],
   ['runOnRuntime', [1]],
   ['scheduleOnRuntime', [1]],
+  ...Array.from(gestureHandlerObjectHooks).map((name) => [name, [0]]),
   ...Array.from(gestureHandlerBuilderMethods).map((name) => [name, [0]]),
 ] as [string, number[]][]);
 
 /** @returns `true` if the function was workletized, `false` otherwise. */
 export function processIfAutoworkletizableCallback(
   path: NodePath<WorkletizableFunction>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): boolean {
   if (isGestureHandlerEventCallback(path) || isLayoutAnimationCallback(path)) {
     processWorklet(path, state);
@@ -82,7 +78,7 @@ export function processIfAutoworkletizableCallback(
 
 export function processCalleesAutoworkletizableCallbacks(
   path: NodePath<CallExpression>,
-  state: ReanimatedPluginPass
+  state: WorkletsPluginPass
 ): void {
   const callee = isSequenceExpression(path.node.callee)
     ? path.node.callee.expressions[path.node.callee.expressions.length - 1]
@@ -120,49 +116,11 @@ export function processCalleesAutoworkletizableCallbacks(
 
 function processArgs(
   args: NodePath[],
-  state: ReanimatedPluginPass,
+  state: WorkletsPluginPass,
   acceptWorkletizableFunction: boolean,
   acceptObject: boolean
 ): void {
   args.forEach((arg) => {
-    const maybeWorklet = findWorklet(
-      arg,
-      acceptWorkletizableFunction,
-      acceptObject,
-      state
-    );
-    // @ts-expect-error There's no need to workletize
-    // inside an already workletized function.
-    if (!maybeWorklet || maybeWorklet.getFunctionParent()?.node.workletized) {
-      return;
-    }
-    if (isWorkletizableFunctionPath(maybeWorklet)) {
-      processWorklet(maybeWorklet, state);
-    } else if (isWorkletizableObjectPath(maybeWorklet)) {
-      processWorkletizableObject(maybeWorklet, state);
-    }
+    tryProcessingNode(arg, state, acceptWorkletizableFunction, acceptObject);
   });
-}
-
-function findWorklet(
-  arg: NodePath,
-  acceptWorkletizableFunction: boolean,
-  acceptObject: boolean,
-  state: ReanimatedPluginPass
-): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
-  if (acceptWorkletizableFunction && isWorkletizableFunctionPath(arg)) {
-    return arg;
-  }
-  if (acceptObject && isWorkletizableObjectPath(arg)) {
-    return arg;
-  }
-  if (arg.isIdentifier() && arg.isReferencedIdentifier()) {
-    return findReferencedWorklet(
-      arg,
-      acceptWorkletizableFunction,
-      acceptObject,
-      state
-    );
-  }
-  return undefined;
 }

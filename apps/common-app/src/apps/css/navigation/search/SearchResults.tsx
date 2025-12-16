@@ -1,4 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
+import type { FuseResult } from 'fuse.js';
 import { memo, useCallback, useMemo } from 'react';
 import {
   FlatList,
@@ -9,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button, Text } from '@/apps/css/components';
+import { Button, Label, Text } from '@/apps/css/components';
 import { colors, flex, radius, spacing, style, text } from '@/theme';
 import { IS_IOS, IS_WEB } from '@/utils';
 
@@ -17,7 +18,7 @@ import { BOTTOM_BAR_HEIGHT } from '../constants';
 import type { SearchDoc } from './fuse';
 
 type SearchResultsProps = {
-  searchResults: Array<SearchDoc>;
+  searchResults: Array<FuseResult<SearchDoc>>;
   currentFilter: Array<string> | null;
   onClearFilters: () => void;
   onClearSearch: () => void;
@@ -32,8 +33,8 @@ export default function SearchResults({
   const insets = useSafeAreaInsets();
 
   const renderItem = useCallback(
-    ({ item }: { item: SearchDoc }) => (
-      <ResultCard currentFilter={currentFilter} item={item} />
+    ({ item }: { item: FuseResult<SearchDoc> }) => (
+      <ResultCard currentFilter={currentFilter} searchResult={item} />
     ),
     [currentFilter]
   );
@@ -93,44 +94,64 @@ export default function SearchResults({
 }
 
 type ResultCardProps = {
-  item: SearchDoc;
+  searchResult: FuseResult<SearchDoc>;
   currentFilter: Array<string> | null;
 };
 
 const ResultCard = memo(function ResultCard({
   currentFilter,
-  item,
+  searchResult: { item, matches },
 }: ResultCardProps) {
   const navigation = useNavigation();
 
-  const boldedPath = useMemo(() => {
-    if (!currentFilter) {
-      return item.breadcrumb;
-    }
-    const boldedChunks = [];
-    let index = 0;
-    for (index = 0; index < currentFilter.length; index++) {
-      const pathChunk = item.path[index];
-      if (pathChunk && pathChunk === currentFilter[index]) {
-        boldedChunks.push(pathChunk);
+  const formatted = useMemo(() => {
+    const formattedValues: Record<string, string> = {};
+    matches?.forEach(({ key, indices, value }) => {
+      if (!key || !value) return;
+
+      let result = '';
+      let last = 0;
+
+      for (let i = 0; i < indices.length; i++) {
+        const [start, end] = indices[i];
+
+        // append unhighlighted part
+        if (start > last) result += value.slice(last, start);
+        // append highlighted substring
+        result += `**${value.slice(start, end + 1)}**`;
+
+        last = end + 1;
       }
+
+      // append any remaining tail
+      if (last < value.length) result += value.slice(last);
+
+      formattedValues[key] = result;
+    });
+
+    let path = formattedValues.breadcrumb ?? item.breadcrumb;
+    if (currentFilter) {
+      path = `./${path.split('/').slice(currentFilter.length).join('/')}`;
     }
 
-    const remainingPath = item.path.slice(index).join(' / ');
-
-    return (
-      `**${boldedChunks.join(' / ')}**` +
-      (remainingPath ? ` / ${remainingPath}` : '')
-    );
-  }, [currentFilter, item]);
+    return {
+      name: formattedValues.name ?? item.name,
+      path,
+    };
+  }, [currentFilter, item, matches]);
 
   return (
     <Pressable
       key={item.key}
       style={styles.resultCard}
       onPress={() => navigation.navigate(item.key as never)}>
-      <Text style={styles.resultName}>{item.name}</Text>
-      <Text style={styles.fullPath}>{boldedPath}</Text>
+      <View style={styles.resultHeader}>
+        <Text style={styles.resultName}>{formatted.name}</Text>
+        {item.labelTypes?.map((labelType) => (
+          <Label key={labelType} size="small" type={labelType} />
+        ))}
+      </View>
+      <Text style={styles.fullPath}>{formatted.path}</Text>
     </Pressable>
   );
 });
@@ -139,7 +160,6 @@ const styles = StyleSheet.create({
   clearButtons: {
     flexDirection: 'row',
     gap: spacing.xs,
-    justifyContent: 'flex-start',
   },
   contentContainer: {
     ...style.scrollViewContent,
@@ -165,8 +185,14 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     padding: spacing.sm,
   },
+  resultHeader: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    justifyContent: 'flex-start',
+  },
   resultName: {
     ...text.subHeading3,
+    alignSelf: 'center',
     color: colors.foreground1,
   },
   searchResultsText: {
