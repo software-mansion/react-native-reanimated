@@ -1,6 +1,6 @@
 'use strict';
 import { createWebPropsBuilder } from '../propsBuilder';
-import { createRuleBuilder } from '../builderFactories';
+import { createWebRuleBuilder } from '../ruleBuilder';
 
 describe('createWebPropsBuilder', () => {
   describe('build with basic config', () => {
@@ -96,7 +96,7 @@ describe('createWebPropsBuilder', () => {
         shadowRadius: number;
       };
 
-      const shadowBuilder = createRuleBuilder<Partial<ShadowProps>>(
+      const shadowBuilder = createWebRuleBuilder<Partial<ShadowProps>>(
         {
           shadowColor: true,
           shadowOffset: {
@@ -131,7 +131,7 @@ describe('createWebPropsBuilder', () => {
         shadowRadius: number;
       };
 
-      const shadowBuilder = createRuleBuilder<Partial<Pick<MixedProps, "shadowColor" | "shadowRadius">>>(
+      const shadowBuilder = createWebRuleBuilder<Partial<Pick<MixedProps, "shadowColor" | "shadowRadius">>>(
         {
           shadowColor: true,
           shadowRadius: 'px',
@@ -169,7 +169,7 @@ describe('createWebPropsBuilder', () => {
         shadowRadius: number;
       };
 
-      const shadowBuilder = createRuleBuilder<Partial<Pick<ComplexProps, "shadowRadius">>>(
+      const shadowBuilder = createWebRuleBuilder<Partial<Pick<ComplexProps, "shadowRadius">>>(
         {
           shadowRadius: 'px',
         },

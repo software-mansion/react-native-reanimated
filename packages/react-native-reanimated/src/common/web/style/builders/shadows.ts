@@ -3,7 +3,7 @@ import type { TextStyle, ViewStyle } from 'react-native';
 
 import { logger } from '../../../logger';
 import { opacifyColor } from '../../utils';
-import { createRuleBuilder } from '../builderFactories';
+import { createWebRuleBuilder } from '../ruleBuilder';
 import { processColor } from '../processors';
 import type { ValueProcessor } from '../types';
 
@@ -17,7 +17,7 @@ type BoxShadowProps = Pick<
   'shadowColor' | 'shadowOffset' | 'shadowOpacity' | 'shadowRadius'
 >;
 
-export const boxShadowBuilder = createRuleBuilder<BoxShadowProps>(
+export const boxShadowBuilder = createWebRuleBuilder<BoxShadowProps>(
   {
     shadowColor: { process: processColor },
     shadowOffset: { process: processShadowOffset },
@@ -49,7 +49,7 @@ type TextShadowProps = Pick<
   'textShadowColor' | 'textShadowOffset' | 'textShadowRadius'
 >;
 
-export const textShadowBuilder = createRuleBuilder<TextShadowProps>(
+export const textShadowBuilder = createWebRuleBuilder<TextShadowProps>(
   {
     textShadowColor: { process: processColor },
     textShadowOffset: { process: processShadowOffset },
