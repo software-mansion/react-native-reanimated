@@ -13,7 +13,8 @@ const MAX_PROCESS_DEPTH = 10;
 type CreatePropsBuilderParams<TPropsConfig> = {
   config: TPropsConfig;
   processConfigValue: (
-    configValue: TPropsConfig[keyof TPropsConfig]
+    configValue: TPropsConfig[keyof TPropsConfig],
+    propertyKey: keyof TPropsConfig
   ) => ValueProcessor | TPropsConfig[keyof TPropsConfig] | undefined;
 };
 
@@ -57,7 +58,7 @@ export default function createPropsBuilder<
       }
 
       // Otherwise, we need to continue processing the value.
-      processedValue = processConfigValue(processedValue);
+      processedValue = processConfigValue(processedValue, key as keyof TPropsConfig);
     }
 
     return acc;

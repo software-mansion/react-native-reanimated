@@ -1,0 +1,106 @@
+'use strict';
+import type { PlainStyle, UnknownRecord } from '../../types';
+import {
+  isConfigPropertyAlias,
+  isDefined,
+  kebabizeCamelCase,
+  maybeAddSuffix,
+  hasValueProcessor,
+} from '../../utils';
+import createPropsBuilder from '../../style/createPropsBuilder';
+import { PROPERTIES_CONFIG } from './config';
+import type { PropsBuilderConfig, RuleBuilder, ValueProcessor } from './types';
+
+const isRuleBuilder = <P extends UnknownRecord>(
+  value: unknown
+): value is RuleBuilder<P> =>
+  typeof value === 'object' &&
+  value !== null &&
+  'add' in value &&
+  'build' in value;
+
+type WebPropsBuilderConfig<P extends UnknownRecord = UnknownRecord> =
+  PropsBuilderConfig<P>;
+
+export function createWebPropsBuilder<TProps extends UnknownRecord>(
+  config: WebPropsBuilderConfig<TProps>
+) {
+  // Track unique rule builder instances
+  const ruleBuilderInstances = new Set<RuleBuilder<TProps>>();
+
+  const propsBuilder = createPropsBuilder({
+    config,
+    processConfigValue(configValue, propertyKey) {
+      // Handle false - exclude property
+      if (configValue === false) {
+        return undefined;
+      }
+
+      // Handle true - include as is
+      if (configValue === true) {
+        return (value) => String(value);
+      }
+
+      // Handle suffix (e.g., 'px')
+      if (typeof configValue === 'string') {
+        return (value) => maybeAddSuffix(value, configValue);
+      }
+
+      // Handle property alias
+      if (isConfigPropertyAlias<TProps>(configValue)) {
+        return config[configValue.as];
+      }
+
+      // Handle rule builders - store reference and return marker
+      if (isRuleBuilder<TProps>(configValue)) {
+        ruleBuilderInstances.add(configValue);
+        // Return a processor that feeds values to the rule builder and returns undefined
+        // so the property doesn't appear in the regular processed props
+        return (value: unknown) => {
+          configValue.add(propertyKey, value as TProps[keyof TProps]);
+          return undefined;
+        };
+      }
+
+      // Handle value processor
+      if (hasValueProcessor(configValue)) {
+        return configValue.process;
+      }
+
+      return undefined;
+    },
+  });
+
+  return {
+    build(props: TProps): string | null {
+      // Build props - rule builders are fed during processing
+      const processedProps = propsBuilder.build(props);
+
+      // Build all rule builders and merge their results
+      const ruleBuilderProps = Array.from(ruleBuilderInstances).reduce<UnknownRecord>(
+        (acc, builder) => ({ ...acc, ...builder.build() }),
+        {}
+      );
+
+      // Merge all props
+      const allProps = { ...processedProps, ...ruleBuilderProps };
+
+      // Convert to CSS string
+      const entries = Object.entries(allProps).filter(
+        ([, value]) => isDefined(value)
+      );
+
+      if (entries.length === 0) {
+        return null;
+      }
+
+      return entries
+        .map(([key, value]) => `${kebabizeCamelCase(key)}: ${value}`)
+        .join('; ');
+    },
+  };
+}
+
+const webPropsBuilder = createWebPropsBuilder<PlainStyle>(PROPERTIES_CONFIG);
+
+export default webPropsBuilder;
