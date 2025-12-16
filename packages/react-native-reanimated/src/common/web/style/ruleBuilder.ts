@@ -1,5 +1,5 @@
 'use strict';
-import createPropsBuilder from '../../style/createPropsBuilder';
+import { createPropsBuilder } from '../../style';
 import type { UnknownRecord } from '../../types';
 import {
   hasValueProcessor,
