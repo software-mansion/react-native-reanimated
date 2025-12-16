@@ -4,11 +4,10 @@ import React from 'react';
 import type { FlatListProps } from 'react-native';
 import { FlatList } from 'react-native';
 
-import type { CSSStyle } from '../..';
 import Animated, { useAnimatedProps } from '../..';
 
-function UseAnimatedPropsTest() {
-  function UseAnimatedPropsTestClass1() {
+function AnimatedPropsTest() {
+  function AnimatedPropsTestClass1() {
     class Path extends React.Component<{ fill?: string }> {
       render() {
         return null;
@@ -25,7 +24,7 @@ function UseAnimatedPropsTest() {
     );
   }
 
-  function UseAnimatedPropsTestClass2() {
+  function AnimatedPropsTestClass2() {
     class Path extends React.Component<{ fill?: string }> {
       render() {
         return null;
@@ -39,33 +38,37 @@ function UseAnimatedPropsTest() {
     );
   }
 
-  function UseAnimatedPropsTestView1() {
+  function AnimatedPropsTestView1() {
     const animatedProps = useAnimatedProps(
       () => ({ pointerEvents: 'none' }) as const
     );
     return <Animated.View animatedProps={animatedProps} />;
   }
 
-  function UseAnimatedPropsTestView2() {
-    const cssProps: CSSStyle = {
-      animationName: { from: { backgroundColor: 'red' } },
+  function AnimatedPropsTestView2() {
+    const cssProps = {
+      animationName: { from: { pointerEvents: 'auto' as const } },
     };
     return <Animated.View animatedProps={cssProps} />;
   }
 
-  function UseAnimatedPropsTestView3() {
+  function AnimatedPropsTestView3() {
     // @ts-expect-error Fails because of the invalid `animationName` type
     return <Animated.View animatedProps={{ animationName: 'name' }} />;
   }
 
-  function UseAnimatedPropsTestPartial1() {
+  function AnimatedPropsTestView4() {
+    const cssProps = {
+      animationName: { from: { backgroundColor: 'red' } },
+    };
+    // @ts-expect-error Fails because style properties aren't allowed in animatedProps
+    return <Animated.View animatedProps={cssProps} />;
+  }
+
+  function AnimatedPropsTestPartial1() {
     const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
     const optionalProps = useAnimatedProps<FlatListProps<unknown>>(() => ({
       style: {},
-    }));
-    const requiredProps = useAnimatedProps<FlatListProps<unknown>>(() => ({
-      data: ['1'],
-      renderItem: () => null,
     }));
 
     // Should pass because required props are set.
@@ -87,7 +90,7 @@ function UseAnimatedPropsTest() {
     );
   }
 
-  function UseAnimatedPropsTestPartial2() {
+  function AnimatedPropsTestPartial2() {
     const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
     const optionalProps = useAnimatedProps<FlatListProps<string>>(() => ({
       style: {},
@@ -104,7 +107,7 @@ function UseAnimatedPropsTest() {
     );
   }
 
-  function UseAnimatedPropsTestPartial3() {
+  function AnimatedPropsTestPartial3() {
     const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
     const requiredProps = useAnimatedProps<FlatListProps<string>>(() => ({
       data: ['1'],
@@ -123,7 +126,7 @@ function UseAnimatedPropsTest() {
     );
   }
 
-  function UseAnimatedPropsTestPartial4() {
+  function AnimatedPropsTestPartial4() {
     const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
     const partOfRequiredProps = useAnimatedProps<FlatListProps<string>>(() => ({
       data: ['1'],
@@ -148,7 +151,7 @@ function UseAnimatedPropsTest() {
     );
   }
 
-  function UseAnimatedPropsTestMultiple1() {
+  function AnimatedPropsTestMultiple1() {
     const animatedProps1 = useAnimatedProps(() => ({
       pointerEvents: 'none' as const,
     }));
@@ -158,23 +161,57 @@ function UseAnimatedPropsTest() {
     return <Animated.View animatedProps={[animatedProps1, animatedProps2]} />;
   }
 
-  function UseAnimatedPropsMultiple2() {
-    const cssProps1: CSSStyle = {
-      animationName: { from: { backgroundColor: 'red' } },
+  function AnimatedPropsMultiple2() {
+    const cssProps1 = {
+      animationName: { from: { pointerEvents: 'auto' as const } },
     };
-    const cssProps2: CSSStyle = {
-      animationName: { to: { backgroundColor: 'blue' } },
+    const cssProps2 = {
+      animationName: { to: { pointerEvents: 'none' as const } },
     };
     return <Animated.View animatedProps={[cssProps1, cssProps2]} />;
   }
 
-  function UseAnimatedPropsMultiple3() {
+  function AnimatedPropsMultiple3() {
     const animatedProps = useAnimatedProps(() => ({
       pointerEvents: 'none' as const,
     }));
-    const cssProps: CSSStyle = {
-      animationName: { to: { backgroundColor: 'blue' } },
+    const cssProps = {
+      animationName: { to: { pointerEvents: 'auto' as const } },
     };
     return <Animated.View animatedProps={[animatedProps, cssProps]} />;
+  }
+
+  function AnimatedPropsNestedArrays() {
+    const animatedProps = useAnimatedProps(() => ({
+      pointerEvents: 'none' as const,
+    }));
+    const cssProps = {
+      animationName: {
+        from: { pointerEvents: 'auto' as const },
+        to: { pointerEvents: 'none' as const },
+      },
+    };
+    const accessibilityProps = useAnimatedProps(() => ({
+      accessibilityLiveRegion: 'polite' as const,
+    }));
+    return (
+      <Animated.View
+        animatedProps={[[animatedProps, cssProps], [[accessibilityProps]]]}
+      />
+    );
+  }
+
+  function AnimatedPropsDeeplyNestedArrays() {
+    const cssFrom = {
+      animationName: { from: { pointerEvents: 'auto' as const } },
+    };
+    const cssTo = {
+      animationName: { to: { pointerEvents: 'none' as const } },
+    };
+    return (
+      <Animated.View
+        animatedProps={[[cssFrom], [[cssTo], [[[cssFrom, cssTo]]]]]}
+      />
+    );
   }
 }
