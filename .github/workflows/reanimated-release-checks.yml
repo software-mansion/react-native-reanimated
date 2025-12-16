@@ -30,11 +30,6 @@ jobs:
     name: Example iOS build check
     uses: ./.github/workflows/example-ios-build-check.yml
 
-  example_macos_build_check:
-    if: github.repository == 'software-mansion/react-native-reanimated'
-    name: Example macOS build check
-    uses: ./.github/workflows/example-macos-build-check.yml
-
   example_next_build_check:
     if: github.repository == 'software-mansion/react-native-reanimated'
     name: Example Next build check
