@@ -13,17 +13,17 @@ describe(processTransform, () => {
   });
 
   test('builds transform from array of transform objects', () => {
-    const transforms = [
-      { rotate: '45deg' },
-      { scale: 2 },
-      { translateX: 10 },
-    ];
+    const transforms = [{ rotate: '45deg' }, { scale: 2 }, { translateX: 10 }];
 
-    expect(processTransform(transforms)).toBe('rotate(45deg) scale(2) translateX(10px)');
+    expect(processTransform(transforms)).toBe(
+      'rotate(45deg) scale(2) translateX(10px)'
+    );
   });
 
   test('applies name alias for matrix to matrix3d', () => {
-    const transforms = [{ matrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1] }];
+    const transforms = [
+      { matrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1] },
+    ];
 
     expect(processTransform(transforms)).toBe(
       'matrix3d(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1)'

@@ -1,7 +1,7 @@
 'use strict';
-import { isReactNativeViewName } from '../utils/guards';
 import { ReanimatedError } from '../errors';
 import type { UnknownRecord } from '../types';
+import { isReactNativeViewName } from '../utils/guards';
 import {
   createNativePropsBuilder,
   type NativePropsBuilder,
