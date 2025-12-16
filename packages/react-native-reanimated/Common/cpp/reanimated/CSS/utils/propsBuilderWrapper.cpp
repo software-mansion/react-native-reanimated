@@ -6,6 +6,7 @@
 #include <react/renderer/animationbackend/AnimationBackend.h>
 
 #include <folly/json.h>
+#include <memory>
 
 using namespace facebook::react;
 
@@ -46,6 +47,30 @@ void addFilter(
   if (!isFound) {
     std::vector<FilterFunction> filters{filterFunction};
     propsBuilder->setFilter(filters);
+  }
+}
+
+void addTransform(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder, Transform transform) {
+  bool isFound = false;
+  for (auto &prop : propsBuilder->props) {
+    if (prop->propName != TRANSFORM) {
+      continue;
+    }
+
+    auto *transformProp = dynamic_cast<Transform *>(prop.get());
+
+    if (!transformProp) {
+      continue;
+    }
+
+    *transformProp = (*transformProp) * transform;
+
+    isFound = true;
+    break;
+  }
+
+  if (!isFound) {
+    propsBuilder->setTransform(transform);
   }
 }
 
@@ -685,6 +710,109 @@ void addSepiaFilterToPropsBuilder(
   double sepiaValue = operation.value.value;
   FilterFunction filterFunction = FilterFunction{FilterType::Sepia, std::variant<Float, DropShadowParams>{sepiaValue}};
   addFilter(propsBuilder, filterFunction);
+}
+
+void addPerspectiveTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    PerspectiveOperation &operation) {
+  double perspectiveValue = operation.value.value;
+  Transform t = t.Perspective(perspectiveValue);
+  addTransform(propsBuilder, t);
+}
+
+void addRotateTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    RotateOperation &operation) {
+  double rotateValue = operation.value.value;
+  Transform t = t.Rotate(rotateValue, rotateValue, rotateValue);
+  addTransform(propsBuilder, t);
+}
+
+void addRotateXTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    RotateXOperation &operation) {
+  double rotateValue = operation.value.value;
+  Transform t = t.RotateX(rotateValue);
+  addTransform(propsBuilder, t);
+}
+
+void addRotateYTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    RotateYOperation &operation) {
+  double rotateValue = operation.value.value;
+  Transform t = t.RotateY(rotateValue);
+  addTransform(propsBuilder, t);
+}
+
+void addRotateZTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    RotateZOperation &operation) {
+  double rotateValue = operation.value.value;
+  Transform t = t.RotateZ(rotateValue);
+  addTransform(propsBuilder, t);
+}
+
+void addScaleTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    ScaleOperation &operation) {
+  double scaleValue = operation.value.value;
+  Transform t = t.Scale(scaleValue, scaleValue, scaleValue);
+  addTransform(propsBuilder, t);
+}
+
+void addScaleXTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    ScaleXOperation &operation) {
+  double scaleValue = operation.value.value;
+  Transform t = t.Scale(scaleValue, 0, 0);
+  addTransform(propsBuilder, t);
+}
+
+void addScaleYTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    ScaleYOperation &operation) {
+  double scaleValue = operation.value.value;
+  Transform t = t.Scale(0, scaleValue, 0);
+  addTransform(propsBuilder, t);
+}
+
+void addTranslateXTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    TranslateXOperation &operation) {
+    double translateValue = operation.value.value;
+    Transform t = t.Translate(translateValue, 0, 0);
+    addTransform(propsBuilder, t);
+}
+
+void addTranslateYTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    TranslateYOperation &operation) {
+    double translateValue = operation.value.value;
+    Transform t = t.Translate(0, translateValue, 0);
+    addTransform(propsBuilder, t);
+}
+
+void addSkewXTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    SkewXOperation &operation) {
+    double skewValue = operation.value.value;
+    Transform t = t.Skew(skewValue, 0);
+    addTransform(propsBuilder, t);
+}
+
+void addSkewYTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    SkewYOperation &operation) {
+    double skewValue = operation.value.value;
+    Transform t = t.Skew(0, skewValue);
+    addTransform(propsBuilder, t);
+}
+
+void addMatrixTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    MatrixOperation &operation) {
+    TransformMatrix::Shared transformMatrix = operation.toMatrix(true);
+//    transformMatrix->
 }
 
 void animationMutationsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch) {

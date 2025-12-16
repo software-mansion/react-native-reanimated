@@ -393,19 +393,25 @@ const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
           value<CSSDouble>(0, getCSSDoubleCallback("transformOrigin"))})},
     {"transform",
      transforms(
-         {{"perspective", transformOp<PerspectiveOperation>(std::numeric_limits<double>::infinity())},
-          {"rotate", transformOp<RotateOperation>("0deg")},
-          {"rotateX", transformOp<RotateXOperation>("0deg")},
-          {"rotateY", transformOp<RotateYOperation>("0deg")},
-          {"rotateZ", transformOp<RotateZOperation>("0deg")},
-          {"scale", transformOp<ScaleOperation>(1)},
-          {"scaleX", transformOp<ScaleXOperation>(1)},
-          {"scaleY", transformOp<ScaleYOperation>(1)},
-          {"translateX", transformOp<TranslateXOperation>(0, {RelativeTo::Self, "width"})},
-          {"translateY", transformOp<TranslateYOperation>(0, {RelativeTo::Self, "height"})},
-          {"skewX", transformOp<SkewXOperation>("0deg")},
-          {"skewY", transformOp<SkewYOperation>("0deg")},
-          {"matrix", transformOp<MatrixOperation>(TransformMatrix2D())}})},
+
+         {{"perspective",
+           transformOp<PerspectiveOperation>(
+               std::numeric_limits<double>::infinity(),
+               addPerspectiveTransformToPropsBuilder)},
+          {"rotate", transformOp<RotateOperation>("0deg", addRotateTransformToPropsBuilder)},
+          {"rotateX", transformOp<RotateXOperation>("0deg", addRotateXTransformToPropsBuilder)},
+          {"rotateY", transformOp<RotateYOperation>("0deg", addRotateYTransformToPropsBuilder)},
+          {"rotateZ", transformOp<RotateZOperation>("0deg", addRotateZTransformToPropsBuilder)},
+          {"scale", transformOp<ScaleOperation>(1, addScaleTransformToPropsBuilder)},
+          {"scaleX", transformOp<ScaleXOperation>(1, addScaleXTransformToPropsBuilder)},
+          {"scaleY", transformOp<ScaleYOperation>(1, addScaleYTransformToPropsBuilder)},
+          {"translateX",
+           transformOp<TranslateXOperation>(0, {RelativeTo::Self, "width"}, addTranslateXTransformToPropsBuilder)},
+          {"translateY",
+           transformOp<TranslateYOperation>(0, {RelativeTo::Self, "height"}, addTranslateYTransformToPropsBuilder)},
+          {"skewX", transformOp<SkewXOperation>("0deg", addSkewXTransformToPropsBuilder)},
+          {"skewY", transformOp<SkewYOperation>("0deg", addSkewYTransformToPropsBuilder)},
+          {"matrix", transformOp<MatrixOperation>(TransformMatrix2D(), addMatrixTransformToPropsBuilder)}})},
 };
 
 const InterpolatorFactoriesRecord FILTER_INTERPOLATORS = {

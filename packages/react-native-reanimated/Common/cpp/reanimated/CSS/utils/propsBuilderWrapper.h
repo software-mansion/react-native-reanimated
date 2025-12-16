@@ -19,6 +19,13 @@
 #include <reanimated/CSS/interpolation/filters/operations/saturate.h>
 #include <reanimated/CSS/interpolation/filters/operations/sepia.h>
 
+#include <reanimated/CSS/interpolation/transforms/operations/matrix.h>
+#include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
+#include <reanimated/CSS/interpolation/transforms/operations/rotate.h>
+#include <reanimated/CSS/interpolation/transforms/operations/scale.h>
+#include <reanimated/CSS/interpolation/transforms/operations/skew.h>
+#include <reanimated/CSS/interpolation/transforms/operations/translate.h>
+
 namespace reanimated::css {
 void addWidthToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
@@ -227,6 +234,58 @@ void addSaturateFilterToPropsBuilder(
 void addSepiaFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     SepiaOperation &operation);
+
+void addPerspectiveTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    PerspectiveOperation &operation);
+
+void addRotateTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    RotateOperation &operation);
+
+void addRotateXTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    RotateXOperation &operation);
+
+void addRotateYTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    RotateYOperation &operation);
+
+void addRotateZTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    RotateZOperation &operation);
+
+void addScaleTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    ScaleOperation &operation);
+
+void addScaleXTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    ScaleXOperation &operation);
+
+void addScaleYTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    ScaleYOperation &operation);
+
+void addTranslateXTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    TranslateXOperation &operation);
+
+void addTranslateYTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    TranslateYOperation &operation);
+
+void addSkewXTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    SkewXOperation &operation);
+
+void addSkewYTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    SkewYOperation &operation);
+
+void addMatrixTransformToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    MatrixOperation &operation);
 
 void animationMutationsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch);
 } // namespace reanimated::css

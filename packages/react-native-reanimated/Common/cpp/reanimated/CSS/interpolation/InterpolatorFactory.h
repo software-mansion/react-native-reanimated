@@ -149,19 +149,19 @@ auto value(
  * Transform operation interpolator factories
  */
 template <typename TOperation>
-auto transformOp(const auto &defaultValue) -> std::enable_if_t<
+auto transformOp(const auto &defaultValue, std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder) -> std::enable_if_t<
     std::is_base_of_v<TransformOperation, TOperation> && std::is_constructible_v<TOperation, decltype(defaultValue)>,
     std::shared_ptr<StyleOperationInterpolator>> {
-  return std::make_shared<TransformOperationInterpolator<TOperation>>(std::make_shared<TOperation>(defaultValue));
+  return std::make_shared<TransformOperationInterpolator<TOperation>>(std::make_shared<TOperation>(defaultValue), addToPropsBuilder);
 }
 
 template <typename TOperation>
-auto transformOp(const auto &defaultValue, ResolvableValueInterpolatorConfig config) -> std::enable_if_t<
+auto transformOp(const auto &defaultValue, ResolvableValueInterpolatorConfig config, std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder) -> std::enable_if_t<
     std::is_base_of_v<TransformOperation, TOperation> && std::is_constructible_v<TOperation, decltype(defaultValue)> &&
         ResolvableOp<TOperation>,
     std::shared_ptr<StyleOperationInterpolator>> {
   return std::make_shared<TransformOperationInterpolator<TOperation>>(
-      std::make_shared<TOperation>(defaultValue), std::move(config));
+      std::make_shared<TOperation>(defaultValue), std::move(config), addToPropsBuilder);
 }
 
 /**

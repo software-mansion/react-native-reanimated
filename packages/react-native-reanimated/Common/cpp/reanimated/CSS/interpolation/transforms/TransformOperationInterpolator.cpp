@@ -11,6 +11,11 @@ namespace reanimated::css {
 
 // Base implementation for simple operations
 template <typename TOperation>
+TransformOperationInterpolator<TOperation>::TransformOperationInterpolator(
+    const std::shared_ptr<TOperation> &defaultOperation, std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder)
+    : addToPropsBuilder_(addToPropsBuilder), StyleOperationInterpolator(defaultOperation) {}
+
+template <typename TOperation>
 std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::interpolate(
     double progress,
     const std::shared_ptr<StyleOperation> &from,
@@ -19,13 +24,15 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::inte
     const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const {
   const auto &fromOp = *std::static_pointer_cast<TOperation>(from);
   const auto &toOp = *std::static_pointer_cast<TOperation>(to);
-  return std::make_unique<TOperation>(fromOp.value.interpolate(progress, toOp.value));
+  auto operation = std::make_unique<TOperation>(fromOp.value.interpolate(progress, toOp.value));
+  addToPropsBuilder_(propsBuilder, *operation);
+  return operation;
 }
 
 // Specialization for PerspectiveOperation
 TransformOperationInterpolator<PerspectiveOperation>::TransformOperationInterpolator(
-    const std::shared_ptr<PerspectiveOperation> &defaultOperation)
-    : StyleOperationInterpolator(defaultOperation) {}
+    const std::shared_ptr<PerspectiveOperation> &defaultOperation, std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, PerspectiveOperation &)> addToPropsBuilder)
+    : addToPropsBuilder_(addToPropsBuilder), StyleOperationInterpolator(defaultOperation) {}
 
 std::unique_ptr<StyleOperation> TransformOperationInterpolator<PerspectiveOperation>::interpolate(
     double progress,
@@ -38,17 +45,19 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<PerspectiveOperat
   const auto &toValue = std::static_pointer_cast<PerspectiveOperation>(to)->value;
 
   if (fromValue.value == 0)
-    return std::make_unique<PerspectiveOperation>(toValue);
+      return std::make_unique<PerspectiveOperation>(toValue);
   if (toValue.value == 0)
     return std::make_unique<PerspectiveOperation>(fromValue);
 
-  return std::make_unique<PerspectiveOperation>(fromValue.interpolate(progress, toValue));
+  auto operation = std::make_unique<PerspectiveOperation>(fromValue.interpolate(progress, toValue));
+  addToPropsBuilder_(propsBuilder, *operation);
+  return operation;
 }
 
 // Specialization for MatrixOperation
 TransformOperationInterpolator<MatrixOperation>::TransformOperationInterpolator(
-    const std::shared_ptr<MatrixOperation> &defaultOperation)
-    : StyleOperationInterpolator(defaultOperation) {}
+    const std::shared_ptr<MatrixOperation> &defaultOperation, std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, MatrixOperation &)> addToPropsBuilder)
+    : addToPropsBuilder_(addToPropsBuilder), StyleOperationInterpolator(defaultOperation) {}
 
 std::unique_ptr<StyleOperation> TransformOperationInterpolator<MatrixOperation>::interpolate(
     double progress,
@@ -72,7 +81,9 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<MatrixOperation>:
   // Unfortunately 2D matrices aren't handled properly in RN, so we have to
   // convert them to 3D
   // see the issue: https://github.com/facebook/react-native/issues/53639
-  return std::make_unique<MatrixOperation>(TransformMatrix3D::from2D(result2D));
+  auto operation = std::make_unique<MatrixOperation>(TransformMatrix3D::from2D(result2D));
+  addToPropsBuilder_(propsBuilder, *operation);
+  return operation;
 }
 
 template <typename MatrixType>
@@ -148,8 +159,9 @@ template TransformMatrix3D TransformOperationInterpolator<MatrixOperation>::inte
 template <ResolvableOp TOperation>
 TransformOperationInterpolator<TOperation>::TransformOperationInterpolator(
     const std::shared_ptr<TOperation> &defaultOperation,
-    ResolvableValueInterpolatorConfig config)
-    : StyleOperationInterpolator(defaultOperation), config_(std::move(config)) {}
+    ResolvableValueInterpolatorConfig config,
+    std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder)
+    : addToPropsBuilder_(addToPropsBuilder), StyleOperationInterpolator(defaultOperation), config_(std::move(config)) {}
 
 template <ResolvableOp TOperation>
 std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::interpolate(
