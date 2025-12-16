@@ -198,10 +198,14 @@ export function setElementAnimation(
 
   const configureAnimation = () => {
     element.style.animationName = animationName;
-    element.style.animationFillMode = 'backwards';
     element.style.animationDuration = `${duration}s`;
     element.style.animationDelay = `${delay}s`;
     element.style.animationTimingFunction = easing;
+
+    if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
+      element.style.animationFillMode = 'backwards';
+      element.hasEnteringAnimation = true;
+    }
   };
 
   if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
@@ -340,6 +344,23 @@ function getElementScrollValue(element: HTMLElement): ScrollOffsets {
   return scrollOffsets;
 }
 
+function cleanupEnteringAnimations(element: HTMLElement) {
+  const el = element as ReanimatedHTMLElement;
+  const name = el.style.animationName;
+
+  if (el.hasEnteringAnimation && name && name !== 'none') {
+    el.style.animationName = '';
+    el.style.animationFillMode = '';
+    delete el.hasEnteringAnimation;
+  }
+
+  for (const child of Array.from(element.children)) {
+    if (child instanceof HTMLElement) {
+      cleanupEnteringAnimations(child);
+    }
+  }
+}
+
 export function handleExitingAnimation(
   element: ReanimatedHTMLElement,
   animationConfig: AnimationConfig
@@ -366,6 +387,10 @@ export function handleExitingAnimation(
     }
   };
   saveScrollPosition(element);
+
+  // Clean up entering animations on all descendants before moving them to the dummy.
+  // This prevents entering animations from restarting when elements are moved to a new parent.
+  cleanupEnteringAnimations(element);
 
   // After cloning the element, we want to move all children from original element to its clone. This is because original element
   // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.

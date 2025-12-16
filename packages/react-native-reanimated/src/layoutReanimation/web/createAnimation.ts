@@ -30,11 +30,11 @@ function assignTransformRules(
     return;
   }
 
-  transform.forEach((rule) => {
-    for (const [property, propertyValue] of Object.entries(rule)) {
-      map.set(property, propertyValue as TransformValue);
+  for (const rule of transform) {
+    for (const [property, value] of Object.entries(rule)) {
+      map.set(property, value as TransformValue);
     }
-  });
+  }
 }
 
 // Translate values are passed as numbers. However, if `translate` property receives number, it will not automatically
