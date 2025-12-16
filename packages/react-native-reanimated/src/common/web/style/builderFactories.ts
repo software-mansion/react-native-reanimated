@@ -7,6 +7,7 @@ import {
   isDefined,
   isRecord,
   kebabizeCamelCase,
+  hasValueProcessor,
 } from '../../utils';
 import type {
   AnyBuilderConfig,
@@ -18,13 +19,6 @@ import type {
   StyleBuildHandler,
   ValueProcessor,
 } from './types';
-
-const hasValueProcessor = (
-  configValue: unknown
-): configValue is { process: ValueProcessor<unknown> } =>
-  typeof configValue === 'object' &&
-  configValue !== null &&
-  'process' in configValue;
 
 abstract class BuilderBase<P extends AnyRecord, R> {
   protected readonly config: AnyBuilderConfig<P>;

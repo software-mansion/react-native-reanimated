@@ -1,4 +1,5 @@
 'use strict';
+import { isReactNativeViewName } from '../utils/guards';
 import { ReanimatedError } from '../errors';
 import type { UnknownRecord } from '../types';
 import propsBuilder, {
@@ -27,7 +28,7 @@ const COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Map<
 const PROPS_BUILDERS: Record<string, NativePropsBuilder> = {};
 
 export function hasPropsBuilder(componentName: string): boolean {
-  return !!PROPS_BUILDERS[componentName] || componentName.startsWith('RCT');
+  return !!PROPS_BUILDERS[componentName] || isReactNativeViewName(componentName);
 }
 
 export function getPropsBuilder(componentName: string): NativePropsBuilder {
@@ -37,7 +38,7 @@ export function getPropsBuilder(componentName: string): NativePropsBuilder {
     return componentPropsBuilder;
   }
 
-  if (componentName.startsWith('RCT')) {
+  if (isReactNativeViewName(componentName)) {
     // This captures all React Native components (prefixed with RCT)
     return propsBuilder;
   }
