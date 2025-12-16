@@ -1,9 +1,9 @@
 'use strict';
 
+import { logger } from '../../common';
 import { LayoutAnimationType, ReduceMotion } from '../../commonTypes';
 import type { EasingFunctionFactory } from '../../Easing';
 import { EasingNameSymbol } from '../../Easing';
-import { logger } from '../../logger';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../../ReanimatedModule/js-reanimated';
 import { ReducedMotionManager } from '../../ReducedMotion';
