@@ -30,7 +30,6 @@ export interface ReanimatedHTMLElement extends HTMLElement {
   isDummy?: boolean;
   dummyClone?: ReanimatedHTMLElement;
   removedAfterAnimation?: boolean;
-  hasEnteringAnimation?: boolean;
 }
 
 // TODO: Move these functions outside of index file.

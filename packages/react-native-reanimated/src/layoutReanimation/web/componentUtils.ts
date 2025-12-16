@@ -204,7 +204,6 @@ export function setElementAnimation(
 
     if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
       element.style.animationFillMode = 'backwards';
-      element.hasEnteringAnimation = true;
     }
   };
 
@@ -345,13 +344,12 @@ function getElementScrollValue(element: HTMLElement): ScrollOffsets {
 }
 
 function cleanupEnteringAnimations(element: HTMLElement) {
-  const el = element as ReanimatedHTMLElement;
-  const name = el.style.animationName;
+  const animationName = element.style.animationName;
 
-  if (el.hasEnteringAnimation && name && name !== 'none') {
-    el.style.animationName = '';
-    el.style.animationFillMode = '';
-    delete el.hasEnteringAnimation;
+  // Check if the animation name indicates it's an entering animation
+  if (animationName && animationName.startsWith('REA-ENTERING-')) {
+    element.style.animationName = '';
+    element.style.animationFillMode = '';
   }
 
   for (const child of Array.from(element.children)) {
