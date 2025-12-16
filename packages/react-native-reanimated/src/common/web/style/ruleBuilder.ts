@@ -7,13 +7,16 @@ import {
   maybeAddSuffix,
 } from '../../utils';
 import { hasNameAlias } from '../utils';
-import type { RuleBuilderConfig, RuleBuildHandler } from './types';
+import type { RuleBuildHandler, RuleBuilderConfig } from './types';
 
 type ProcessedProps<P> = Record<keyof P, string>;
 
-export function createWebRuleBuilder<TProps extends UnknownRecord>(
+export function createWebRuleBuilder<
+  TProps extends UnknownRecord,
+  TResult = Record<string, string>,
+>(
   config: RuleBuilderConfig<TProps>,
-  buildHandler: RuleBuildHandler<TProps>
+  buildHandler: RuleBuildHandler<TProps, TResult>
 ) {
   // Accumulate props across add() calls
   let accumulatedProps: Partial<TProps> = {};
@@ -56,7 +59,7 @@ export function createWebRuleBuilder<TProps extends UnknownRecord>(
     add(property: keyof TProps, value: TProps[keyof TProps]): void {
       accumulatedProps[property] = value;
     },
-    build(): Record<string, string> {
+    build(): TResult {
       // Build all accumulated props
       const processedProps = propsBuilder.build(accumulatedProps as TProps);
 

@@ -20,12 +20,10 @@ const transformBuilder = createWebRuleBuilder(
     skewY: true,
     matrix: { name: 'matrix3d' },
   },
-  (transforms) => {
-    const transformString = Object.entries(transforms)
+  (transforms) =>
+    Object.entries(transforms)
       .map(([key, value]) => `${key}(${value})`)
-      .join(' ');
-    return { transform: transformString };
-  }
+      .join(' ')
 );
 
 export const processTransform: ValueProcessor<
@@ -48,8 +46,7 @@ export const processTransform: ValueProcessor<
     )
   );
 
-  const result = transformBuilder.build();
-  return result.transform;
+  return transformBuilder.build();
 };
 
 export const processTransformOrigin: ValueProcessor<
