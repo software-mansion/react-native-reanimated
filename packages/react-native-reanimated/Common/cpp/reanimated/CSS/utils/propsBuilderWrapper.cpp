@@ -125,6 +125,21 @@ void updateCascadedRectangleEdges(
       edges.vertical = yogaStyleLength(value);
       break;
     }
+
+    case RAW_PROPS_KEY_HASH("block"): {
+      edges.vertical = yogaStyleLength(value);
+      break;
+    }
+
+    case RAW_PROPS_KEY_HASH("blockStart"): {
+      edges.vertical = yogaStyleLength(value);
+      break;
+    }
+
+    case RAW_PROPS_KEY_HASH("blockEnd"): {
+      edges.vertical = yogaStyleLength(value);
+      break;
+    }
   }
 }
 
@@ -317,6 +332,78 @@ void addCascadedBorderRadiiToPropsBuilder(
     CascadedBorderRadii borderRadii{};
     updateBordeRadii(borderRadii);
     propsBuilder->setBorderRadii(borderRadii);
+  }
+}
+
+void addBorderColor(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSColor> &value,
+    std::string borderColorPropName) {
+  const auto &storage = value.getStorage();
+  const auto &cssColor = std::get<CSSColor>(storage);
+
+  const auto updateBorderColor = [&](CascadedBorderColors &borderColor) {
+    auto nameHash = RAW_PROPS_KEY_HASH(borderColorPropName);
+    switch (nameHash) {
+      case RAW_PROPS_KEY_HASH("all"):
+        borderColor.all = SharedColor(parseCSSColor(cssColor));
+        break;
+      case RAW_PROPS_KEY_HASH("left"):
+        borderColor.left = SharedColor(parseCSSColor(cssColor));
+        break;
+      case RAW_PROPS_KEY_HASH("top"):
+        borderColor.top = SharedColor(parseCSSColor(cssColor));
+        break;
+      case RAW_PROPS_KEY_HASH("right"):
+        borderColor.right = SharedColor(parseCSSColor(cssColor));
+        break;
+      case RAW_PROPS_KEY_HASH("bottom"):
+        borderColor.bottom = SharedColor(parseCSSColor(cssColor));
+        break;
+      case RAW_PROPS_KEY_HASH("start"):
+        borderColor.start = SharedColor(parseCSSColor(cssColor));
+        break;
+      case RAW_PROPS_KEY_HASH("end"):
+        borderColor.end = SharedColor(parseCSSColor(cssColor));
+        break;
+      case RAW_PROPS_KEY_HASH("horizontal"):
+        borderColor.horizontal = SharedColor(parseCSSColor(cssColor));
+        break;
+      case RAW_PROPS_KEY_HASH("vertical"):
+        borderColor.vertical = SharedColor(parseCSSColor(cssColor));
+        break;
+      case RAW_PROPS_KEY_HASH("block"):
+        borderColor.block = SharedColor(parseCSSColor(cssColor));
+        break;
+      case RAW_PROPS_KEY_HASH("blockStart"):
+        borderColor.blockStart = SharedColor(parseCSSColor(cssColor));
+        break;
+      case RAW_PROPS_KEY_HASH("blockEnd"):
+        borderColor.blockEnd = SharedColor(parseCSSColor(cssColor));
+        break;
+    }
+  };
+
+  bool isFound = false;
+  for (auto &prop : propsBuilder->props) {
+    if (prop->propName != BORDER_COLOR) {
+      continue;
+    }
+    auto *borderColorProp = dynamic_cast<AnimatedProp<CascadedBorderColors> *>(prop.get());
+
+    if (!borderColorProp) {
+      continue;
+    }
+
+    updateBorderColor(borderColorProp->value);
+    isFound = true;
+    break;
+  }
+
+  if (!isFound) {
+    CascadedBorderColors borderColor{};
+    updateBorderColor(borderColor);
+    propsBuilder->setBorderColor(borderColor);
   }
 }
 
@@ -779,40 +866,146 @@ void addScaleYTransformToPropsBuilder(
 void addTranslateXTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     TranslateXOperation &operation) {
-    double translateValue = operation.value.value;
-    Transform t = t.Translate(translateValue, 0, 0);
-    addTransform(propsBuilder, t);
+  double translateValue = operation.value.value;
+  Transform t = t.Translate(translateValue, 0, 0);
+  addTransform(propsBuilder, t);
 }
 
 void addTranslateYTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     TranslateYOperation &operation) {
-    double translateValue = operation.value.value;
-    Transform t = t.Translate(0, translateValue, 0);
-    addTransform(propsBuilder, t);
+  double translateValue = operation.value.value;
+  Transform t = t.Translate(0, translateValue, 0);
+  addTransform(propsBuilder, t);
 }
 
 void addSkewXTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     SkewXOperation &operation) {
-    double skewValue = operation.value.value;
-    Transform t = t.Skew(skewValue, 0);
-    addTransform(propsBuilder, t);
+  double skewValue = operation.value.value;
+  Transform t = t.Skew(skewValue, 0);
+  addTransform(propsBuilder, t);
 }
 
 void addSkewYTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     SkewYOperation &operation) {
-    double skewValue = operation.value.value;
-    Transform t = t.Skew(0, skewValue);
-    addTransform(propsBuilder, t);
+  double skewValue = operation.value.value;
+  Transform t = t.Skew(0, skewValue);
+  addTransform(propsBuilder, t);
 }
 
 void addMatrixTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     MatrixOperation &operation) {
-    TransformMatrix::Shared transformMatrix = operation.toMatrix(true);
-//    transformMatrix->
+  TransformMatrix::Shared transformMatrix = operation.toMatrix(true);
+  //    transformMatrix->
+}
+
+void addBorderColorToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSColor> &value) {
+  addBorderColor(propsBuilder, value, "all");
+}
+
+void addBorderEndColorToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSColor> &value) {
+  addBorderColor(propsBuilder, value, "end");
+}
+
+void addBorderStartColorToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSColor> &value) {
+  addBorderColor(propsBuilder, value, "start");
+}
+
+void addBorderLeftColorToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSColor> &value) {
+  addBorderColor(propsBuilder, value, "left");
+}
+
+void addBorderRightColorToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSColor> &value) {
+  addBorderColor(propsBuilder, value, "right");
+}
+
+void addBorderTopColorToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSColor> &value) {
+  addBorderColor(propsBuilder, value, "top");
+}
+
+void addBorderBottomColorToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSColor> &value) {
+  addBorderColor(propsBuilder, value, "bottom");
+}
+
+void addBorderBlockColorToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSColor> &value) {
+  addBorderColor(propsBuilder, value, "block");
+}
+
+void addBorderBlockEndColorToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSColor> &value) {
+  addBorderColor(propsBuilder, value, "blockEnd");
+}
+
+void addBorderBlockStartColorToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSColor> &value) {
+  addBorderColor(propsBuilder, value, "blockStart");
+}
+
+void addOutlineColorToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSColor> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssColor = std::get<CSSColor>(storage);
+  propsBuilder->setOutlineColor(SharedColor(parseCSSColor(cssColor)));
+}
+
+void addOutlineOffsetToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSDouble>(storage);
+  propsBuilder->setOutlineOffset(cssValue.value);
+}
+
+void addOutlineStyleToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSKeyword>(storage);
+  OutlineStyle outlineStyle;
+
+  auto outlineStyleStr = cssValue.toString();
+
+  if (outlineStyleStr == "solid") {
+      outlineStyle = OutlineStyle::Solid;
+  } else if (outlineStyleStr == "dotted") {
+      outlineStyle = OutlineStyle::Dotted;
+  } else if (outlineStyleStr == "dashed") {
+      outlineStyle = OutlineStyle::Dashed;
+  } else {
+      return;
+  }
+
+   propsBuilder->setOutlineStyle(outlineStyle);
+}
+
+void addOutlineWidthToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value) {
+    const auto &storage = value.getStorage();
+    const auto &cssValue = std::get<CSSDouble>(storage);
+    propsBuilder->setOutlineWidth(cssValue.value);
 }
 
 void animationMutationsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch) {
