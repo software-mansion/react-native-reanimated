@@ -48,7 +48,11 @@ std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
 
   if (affectedChildrenIt != childrenMap.end()) {
     for (const auto index : affectedChildrenIt->second) {
-      children[index] = cloneShadowTreeWithNewPropsRecursive(*children[index], childrenMap, propsMap, enableRuntimeReferenceUpdates);
+      children[index] = cloneShadowTreeWithNewPropsRecursive(
+          *children[index],
+          childrenMap,
+          propsMap,
+          enableRuntimeReferenceUpdates);
     }
   }
 
@@ -60,9 +64,9 @@ std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
 }
 
 RootShadowNode::Unshared cloneShadowTreeWithNewProps(
-  const RootShadowNode &oldRootNode,
-  const PropsMap &propsMap,
-  bool enableRuntimeReferenceUpdates = false) {
+    const RootShadowNode &oldRootNode,
+    const PropsMap &propsMap,
+    bool enableRuntimeReferenceUpdates) {
   ReanimatedSystraceSection s("ShadowTreeCloner::cloneShadowTreeWithNewProps");
 
   ChildrenMap childrenMap;
