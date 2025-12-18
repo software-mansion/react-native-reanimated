@@ -1,6 +1,7 @@
 'use strict';
 
 import { logger } from '../../common';
+import { removeElementAnimation } from '../../common/web';
 import { LayoutAnimationType, ReduceMotion } from '../../commonTypes';
 import type { EasingFunctionFactory } from '../../Easing';
 import { EasingNameSymbol } from '../../Easing';
@@ -351,8 +352,7 @@ function cleanupEnteringAnimations(element: HTMLElement) {
 
   // Check if the animation name indicates it's an entering animation
   if (animationName && animationName.startsWith('REA-ENTERING-')) {
-    element.style.animationName = '';
-    element.style.animationFillMode = '';
+    removeElementAnimation(element);
   }
 
   for (const child of Array.from(element.children)) {

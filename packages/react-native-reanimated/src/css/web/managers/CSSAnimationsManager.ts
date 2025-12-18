@@ -5,6 +5,7 @@ import {
   kebabizeCamelCase,
   maybeAddSuffix,
 } from '../../../common';
+import { removeElementAnimation } from '../../../common/web';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
 import type {
   CSSAnimationKeyframes,
@@ -133,12 +134,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
       return;
     }
 
-    this.element.style.animationDuration = '';
-    this.element.style.animationDelay = '';
-    this.element.style.animationDirection = '';
-    this.element.style.animationFillMode = '';
-    this.element.style.animationPlayState = '';
-    this.element.style.animationTimingFunction = '';
+    removeElementAnimation(this.element);
 
     this.removeAnimationsFromStyleSheet(attachedAnimations);
     this.unmountCleanupCalled = false;
