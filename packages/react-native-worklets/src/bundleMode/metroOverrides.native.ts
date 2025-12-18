@@ -85,6 +85,8 @@ export function mockTurboModuleRegistry() {
 
   const TurboModules = new Map<string, unknown>();
 
+  TurboModules.set('Networking', {});
+
   globalThis.TurboModules = TurboModules;
 
   const moduleFactory = makeModuleFactory((module) => {

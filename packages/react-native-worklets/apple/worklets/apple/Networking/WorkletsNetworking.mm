@@ -307,7 +307,7 @@ static NSString *WorkletsGenerateFormBoundary()
                                 //                                });
                                 //                                self->uiScheduler_->scheduleOnUI([block, request](){
                                 auto strongWorkletRuntime = workletRuntime.lock();
-                               strongWorkletRuntime->runOnQueue(
+                               strongWorkletRuntime->schedule(
                                    [completionBlock, request](jsi::Runtime &rt) { completionBlock(request, rt); });
 
                                 return (RCTURLRequestCancellationBlock)nil;
@@ -430,7 +430,7 @@ static NSString *WorkletsGenerateFormBoundary()
                    return;
                  }
 
-                strongWorkletRuntime->runOnQueue(^{
+                strongWorkletRuntime->schedule(^{
                   cancellationBlock = callback(
                       error, data ? @{@"body" : data, @"contentType" : RCTNullIfNil(response.MIMEType)} : nil);
                 });
@@ -592,12 +592,6 @@ static NSString *WorkletsGenerateFormBoundary()
     id responseURL = response.URL ? response.URL.absoluteString : [NSNull null];
     NSArray<id> *responseJSON = @[ task.requestID, @(status), headers, responseURL ];
 
-    if (facebook::react::ReactNativeFeatureFlags::enableNetworkEventReporting()) {
-      [RCTInspectorNetworkReporter reportResponseStart:task.requestID
-                                              response:response
-                                            statusCode:(int)status
-                                               headers:headers];
-    }
     [weakSelf emitDeviceEvent:@"didReceiveNetworkResponse" argFactory:responseJSON rt:rt];
   };
 
@@ -656,9 +650,6 @@ static NSString *WorkletsGenerateFormBoundary()
     NSArray *responseJSON =
         @[ task.requestID, RCTNullIfNil(error.localizedDescription), error.code == kCFURLErrorTimedOut ? @YES : @NO ];
 
-    if (facebook::react::ReactNativeFeatureFlags::enableNetworkEventReporting()) {
-      [RCTInspectorNetworkReporter reportResponseEnd:task.requestID encodedDataLength:(int)data.length];
-    }
     [strongSelf emitDeviceEvent:@"didCompleteNetworkResponse" argFactory:responseJSON rt:rt];
     
     [strongSelf->_tasksLock lock];
@@ -683,12 +674,6 @@ static NSString *WorkletsGenerateFormBoundary()
     auto value = task.requestID.doubleValue;
 
     responseSender.call(rt, jsi::Value(rt, value));
-
-    if (facebook::react::ReactNativeFeatureFlags::enableNetworkEventReporting()) {
-      [RCTInspectorNetworkReporter reportRequestStart:task.requestID
-                                              request:request
-                                    encodedDataLength:(int)task.response.expectedContentLength];
-    }
   }
 
   [task start];

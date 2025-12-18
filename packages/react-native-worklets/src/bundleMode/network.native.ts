@@ -1,28 +1,11 @@
 'use strict';
 
-import { TurboModuleRegistry } from 'react-native';
-
 import { WorkletsError } from '../debug/WorkletsError';
-
-// const FileReaderModule = getHostObjectFromTurboModule(
-//   TurboModuleRegistry.getEnforcing('FileReaderModule')
-// );
-// const PlatformConstans = getHostObjectFromTurboModule(
-//   TurboModuleRegistry.getEnforcing('PlatformConstants')
-// );
-// const WebSocketModule = getHostObjectFromTurboModule(
-//   TurboModuleRegistry.getEnforcing('WebSocketModule')
-// );
-const BlobModule = getHostObjectFromTurboModule(
-  TurboModuleRegistry.getEnforcing('BlobModule')
-);
 
 export function initializeNetworking() {
   'worklet';
 
   const TurboModules = globalThis.TurboModules;
-
-  TurboModules.set('Networking', {});
 
   const errorProxyFactory = (moduleName: string) => {
     return new Proxy(
@@ -30,25 +13,12 @@ export function initializeNetworking() {
       {
         get: (__, propName) => {
           throw new WorkletsError(
-            `${propName as string} not available in ${moduleName}`
+            `${propName as string} not available in ${moduleName} on a Worklet Runtime.`
           );
         },
       }
     );
   };
-
-  const BlobProxy = new Proxy(BlobModule, {
-    get: (target, propName) => {
-      if (propName === 'addNetworkingHandler') {
-        return () => {};
-      }
-      if (propName === 'getConstants') {
-        return target.getConstants.bind(BlobModule);
-      } else {
-        return undefined;
-      }
-    },
-  });
 
   try {
     TurboModules.set('FileReaderModule', errorProxyFactory('FileReaderModule'));
@@ -57,20 +27,10 @@ export function initializeNetworking() {
       errorProxyFactory('PlatformConstants')
     );
     TurboModules.set('WebSocketModule', errorProxyFactory('WebSocketModule'));
-    TurboModules.set('BlobModule', BlobProxy);
+    TurboModules.set('BlobModule', errorProxyFactory('BlobModule'));
   } catch (e) {
     console.error('Error initializing networking:', e);
   }
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   require('react-native/Libraries/Core/setUpXHR');
-}
-
-function getHostObjectFromTurboModule(turboModule: object) {
-  const hostObject = Object.getPrototypeOf(turboModule);
-  if (!('mmmmmmagic' in hostObject)) {
-    throw new WorkletsError(
-      'Host object is not available. Make sure you are using the correct TurboModule.'
-    );
-  }
-  return hostObject;
 }

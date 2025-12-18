@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cxxreact/MessageQueueThread.h>
-#include <cxxreact/ReactNativeVersion.h>
 #include <jsi/jsi.h>
 #include <jsireact/JSIExecutor.h>
 #include <react/debug/react_native_assert.h>
@@ -172,16 +171,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 #ifndef NDEBUG
   static jsi::Function getCallGuard(jsi::Runtime &rt);
 #endif // NDEBUG
-
-#if REACT_NATIVE_MINOR_VERSION >= 81
-  /**
-   * Retrieves a weak reference to the WorkletRuntime associated with the
-   * provided jsi::Runtime.
-   *
-   * Throws when invoked with a non-worklet runtime.
-   */
-  static std::weak_ptr<WorkletRuntime> getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt);
-#endif // REACT_NATIVE_MINOR_VERSION >= 81
 
  private:
   const uint64_t runtimeId_;
