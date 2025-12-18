@@ -3,6 +3,7 @@
 import type { TransformsStyle } from 'react-native';
 
 import { maybeAddSuffix } from '../../common';
+import { LayoutAnimationType } from '../../commonTypes';
 import type {
   AnimationData,
   ReanimatedWebTransformProperties,
@@ -30,11 +31,11 @@ function assignTransformRules(
     return;
   }
 
-  transform.forEach((rule) => {
-    for (const [property, propertyValue] of Object.entries(rule)) {
-      map.set(property, propertyValue as TransformValue);
+  for (const rule of transform) {
+    for (const [property, value] of Object.entries(rule)) {
+      map.set(property, value as TransformValue);
     }
-  });
+  }
 }
 
 // Translate values are passed as numbers. However, if `translate` property receives number, it will not automatically
@@ -68,7 +69,8 @@ function addPxToTransform(transform: TransformType) {
 }
 
 export function createCustomKeyFrameAnimation(
-  keyframeDefinitions: KeyframeDefinitions
+  keyframeDefinitions: KeyframeDefinitions,
+  animationType: LayoutAnimationType
 ) {
   for (const value of Object.values(keyframeDefinitions)) {
     if (value.transform) {
@@ -82,7 +84,7 @@ export function createCustomKeyFrameAnimation(
     duration: -1,
   };
 
-  animationData.name = generateNextCustomKeyframeName();
+  animationData.name = generateNextCustomKeyframeName(animationType);
 
   // Move keyframe easings one keyframe up (our LA Keyframe definition is different
   // from the CSS keyframes and expects easing to be present in the keyframe to which
@@ -108,7 +110,8 @@ export function createCustomKeyFrameAnimation(
 
 export function createAnimationWithInitialValues(
   animationName: string,
-  initialValues: InitialValuesStyleProps
+  initialValues: InitialValuesStyleProps,
+  animationType: LayoutAnimationType
 ) {
   const animationStyle = structuredClone(AnimationsData[animationName].style);
   const firstAnimationStep = animationStyle['0'];
@@ -145,7 +148,7 @@ export function createAnimationWithInitialValues(
   };
 
   // TODO: Maybe we can extract the logic below into separate function
-  const keyframeName = generateNextCustomKeyframeName();
+  const keyframeName = generateNextCustomKeyframeName(animationType);
 
   const animationObject: AnimationData = {
     name: keyframeName,
@@ -162,8 +165,14 @@ export function createAnimationWithInitialValues(
 
 let customKeyframeCounter = 0;
 
-function generateNextCustomKeyframeName() {
-  return `REA${customKeyframeCounter++}`;
+const ANIMATION_TYPE_STRINGS: Partial<Record<LayoutAnimationType, string>> = {
+  [LayoutAnimationType.ENTERING]: 'ENTERING',
+  [LayoutAnimationType.EXITING]: 'EXITING',
+  [LayoutAnimationType.LAYOUT]: 'LAYOUT',
+};
+
+function generateNextCustomKeyframeName(animationType: LayoutAnimationType) {
+  return `REA-${ANIMATION_TYPE_STRINGS[animationType] ?? ''}-${customKeyframeCounter++}`;
 }
 
 /**
@@ -179,7 +188,9 @@ export function TransitionGenerator(
   transitionType: TransitionType,
   transitionData: TransitionData
 ) {
-  const transitionKeyframeName = generateNextCustomKeyframeName();
+  const transitionKeyframeName = generateNextCustomKeyframeName(
+    LayoutAnimationType.LAYOUT
+  );
   let dummyTransitionKeyframeName;
 
   let transitionObject;
@@ -212,7 +223,9 @@ export function TransitionGenerator(
 
     // Here code block with {} is necessary because of eslint
     case TransitionType.CURVED: {
-      dummyTransitionKeyframeName = generateNextCustomKeyframeName();
+      dummyTransitionKeyframeName = generateNextCustomKeyframeName(
+        LayoutAnimationType.LAYOUT
+      );
 
       const { firstKeyframeObj, secondKeyframeObj } = CurvedTransition(
         transitionKeyframeName,
