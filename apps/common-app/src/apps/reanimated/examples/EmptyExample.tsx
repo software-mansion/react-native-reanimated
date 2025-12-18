@@ -135,10 +135,7 @@ function FirstScreen() {
                 index={index}
                 offset={offset}
                 amplitude={amplitude}
-                onPress={() => {
-                  console.log(index);
-                  navigation.navigate('Second', { index });
-                }}
+                onPress={() => navigation.navigate('Second', { index })}
               />
             ))}
           </Animated.View>
