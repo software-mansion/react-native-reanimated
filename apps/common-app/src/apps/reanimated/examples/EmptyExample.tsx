@@ -115,23 +115,33 @@ function FirstScreen() {
 
   const gesture = Gesture.Simultaneous(pinch, native);
 
+  const animatedStyle = useAnimatedStyle(() => {
+    return { transform: [{ translateY: offset.value }] };
+  });
+
   return (
     <View style={styles.container}>
-      {Array.from({ length: N }).map((_, index) => (
-        <Item
-          key={index}
-          index={index}
-          offset={offset}
-          amplitude={amplitude}
-          onPress={() => {
-            console.log(index);
-            navigation.navigate('Second', { index });
-          }}
-        />
-      ))}
       <GestureDetector gesture={gesture}>
-        <ScrollView ref={scrollViewRef} style={styles.scrollView}>
-          <View style={styles.spacer} />
+        <ScrollView
+          ref={scrollViewRef}
+          style={styles.scrollView}
+          contentContainerStyle={{
+            height: N * 50 + 400,
+          }}>
+          <Animated.View style={animatedStyle}>
+            {Array.from({ length: N }).map((_, index) => (
+              <Item
+                key={index}
+                index={index}
+                offset={offset}
+                amplitude={amplitude}
+                onPress={() => {
+                  console.log(index);
+                  navigation.navigate('Second', { index });
+                }}
+              />
+            ))}
+          </Animated.View>
         </ScrollView>
       </GestureDetector>
     </View>
@@ -177,16 +187,13 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    pointerEvents: 'none',
-  },
-  spacer: {
-    height: N * 50,
   },
   pressable: {
     position: 'absolute',
     top: 0,
     width: 300,
     height: 80,
+    alignSelf: 'center',
   },
   album: {
     width: 300,
