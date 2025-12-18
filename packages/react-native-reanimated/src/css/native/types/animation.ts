@@ -47,9 +47,9 @@ export type NormalizedSingleCSSAnimationSettings = {
 
 export type CSSAnimationUpdates = {
   animationNames?: string[];
-  newAnimationSettings?: Record<string, NormalizedSingleCSSAnimationSettings>;
+  newAnimationSettings?: Record<number, NormalizedSingleCSSAnimationSettings>;
   settingsUpdates?: Record<
-    string,
+    number,
     Partial<NormalizedSingleCSSAnimationSettings>
   >;
 };
