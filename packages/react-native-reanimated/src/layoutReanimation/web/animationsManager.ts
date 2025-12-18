@@ -133,7 +133,8 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
 
   if (isCustomKeyframe) {
     animationName = createCustomKeyFrameAnimation(
-      (config as CustomConfig).definitions as KeyframeDefinitions
+      (config as CustomConfig).definitions as KeyframeDefinitions,
+      animationType
     );
   } else if (typeof config === 'function') {
     animationName = config.presetName;
@@ -145,7 +146,8 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
   if (hasInitialValues) {
     animationName = createAnimationWithInitialValues(
       animationName,
-      (config as CustomConfig).initialValues as InitialValuesStyleProps
+      (config as CustomConfig).initialValues as InitialValuesStyleProps,
+      animationType
     );
   }
 
