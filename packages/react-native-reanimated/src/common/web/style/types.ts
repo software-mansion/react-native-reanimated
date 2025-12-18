@@ -9,11 +9,6 @@ type ProcessedProps<P extends AnyRecord> = {
   [K in keyof P]: string;
 };
 
-export type StyleBuildHandler<P extends AnyRecord> = (
-  props: ProcessedProps<P>,
-  nameAliases: Record<string, string>
-) => string | null;
-
 export type RuleBuildHandler<
   P extends AnyRecord,
   R = Record<string, string>,
@@ -22,10 +17,6 @@ export type RuleBuildHandler<
 type BuilderBase<P extends AnyRecord, R = Record<string, string>> = {
   add(property: keyof P, value: P[keyof P]): void;
   build(): R;
-};
-
-export type PropsBuilder<P extends AnyRecord> = BuilderBase<P> & {
-  buildFrom(props: P): string | null;
 };
 
 export type RuleBuilder<
@@ -71,7 +62,3 @@ export type PropsBuilderConfig<P extends AnyRecord> = {
 export type RuleBuilderConfig<P extends AnyRecord> = {
   [K in keyof P]: RuleBuilderPropertyConfig<P, K>;
 };
-
-export type AnyBuilderConfig<P extends AnyRecord> =
-  | PropsBuilderConfig<P>
-  | RuleBuilderConfig<P>;
