@@ -1,6 +1,9 @@
 'use strict';
-import type { AnyRecord } from '../../../../common';
-import { convertPropertyToArray, ReanimatedError } from '../../../../common';
+import {
+  convertPropertyToArray,
+  ReanimatedError,
+  type UnknownRecord,
+} from '../../../../common';
 import type {
   CSSTransitionProperties,
   CSSTransitionProperty,
@@ -32,7 +35,7 @@ export const ERROR_MESSAGES = {
 function getExpandedConfigProperties(
   config: CSSTransitionProperties
 ): ExpandedCSSTransitionConfigProperties {
-  const result: AnyRecord = config.transition
+  const result: UnknownRecord = config.transition
     ? parseTransitionShorthand(config.transition)
     : createEmptyTransitionConfig();
 
