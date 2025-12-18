@@ -51,18 +51,15 @@ describe('CSSAnimationsManager', () => {
 
         manager.update(animationProperties);
 
-        expect(jest.mocked(applyCSSAnimations)).toHaveBeenCalledTimes(1);
-        expect(jest.mocked(applyCSSAnimations)).toHaveBeenCalledWith(
-          shadowNodeWrapper,
-          {
-            animationNames: [animationName(0)],
-            newAnimationSettings: {
-              0: normalizeSingleCSSAnimationSettings(animationProperties),
-            },
-          }
-        );
+        expect(applyCSSAnimations).toHaveBeenCalledTimes(1);
+        expect(applyCSSAnimations).toHaveBeenCalledWith(shadowNodeWrapper, {
+          animationNames: [animationName(0)],
+          newAnimationSettings: {
+            0: normalizeSingleCSSAnimationSettings(animationProperties),
+          },
+        });
 
-        expect(jest.mocked(unregisterCSSAnimations)).not.toHaveBeenCalled();
+        expect(unregisterCSSAnimations).not.toHaveBeenCalled();
       });
 
       test('updates an existing animation if keyframes are the same and animation settings are different', () => {
@@ -82,12 +79,12 @@ describe('CSSAnimationsManager', () => {
         } satisfies CSSAnimationProperties;
 
         manager.update(animationProperties);
-        expect(jest.mocked(applyCSSAnimations)).toHaveBeenCalledTimes(1);
-        expect(jest.mocked(unregisterCSSAnimations)).not.toHaveBeenCalled();
+        expect(applyCSSAnimations).toHaveBeenCalledTimes(1);
+        expect(unregisterCSSAnimations).not.toHaveBeenCalled();
 
         manager.update(newAnimationConfig);
-        expect(jest.mocked(applyCSSAnimations)).toHaveBeenCalledTimes(2);
-        expect(jest.mocked(applyCSSAnimations)).toHaveBeenNthCalledWith(
+        expect(applyCSSAnimations).toHaveBeenCalledTimes(2);
+        expect(applyCSSAnimations).toHaveBeenNthCalledWith(
           2,
           shadowNodeWrapper,
           {
@@ -96,7 +93,7 @@ describe('CSSAnimationsManager', () => {
             },
           }
         );
-        expect(jest.mocked(unregisterCSSAnimations)).not.toHaveBeenCalled();
+        expect(unregisterCSSAnimations).not.toHaveBeenCalled();
       });
 
       test('attaches a new animation if keyframes are different', () => {
@@ -114,12 +111,12 @@ describe('CSSAnimationsManager', () => {
         } satisfies CSSAnimationProperties;
 
         manager.update(animationProperties);
-        expect(jest.mocked(applyCSSAnimations)).toHaveBeenCalledTimes(1);
-        expect(jest.mocked(unregisterCSSAnimations)).not.toHaveBeenCalled();
+        expect(applyCSSAnimations).toHaveBeenCalledTimes(1);
+        expect(unregisterCSSAnimations).not.toHaveBeenCalled();
 
         manager.update(newAnimationProperties);
-        expect(jest.mocked(applyCSSAnimations)).toHaveBeenCalledTimes(2);
-        expect(jest.mocked(applyCSSAnimations)).toHaveBeenNthCalledWith(
+        expect(applyCSSAnimations).toHaveBeenCalledTimes(2);
+        expect(applyCSSAnimations).toHaveBeenNthCalledWith(
           2,
           shadowNodeWrapper,
           {
@@ -129,7 +126,7 @@ describe('CSSAnimationsManager', () => {
             },
           }
         );
-        expect(jest.mocked(unregisterCSSAnimations)).not.toHaveBeenCalled();
+        expect(unregisterCSSAnimations).not.toHaveBeenCalled();
       });
 
       test('reuses the same CSSKeyframesRuleImpl instances when the same inline keyframes are passed to different components', () => {
@@ -176,15 +173,13 @@ describe('CSSAnimationsManager', () => {
         } satisfies CSSAnimationProperties;
 
         manager.update(animationProperties);
-        expect(jest.mocked(applyCSSAnimations)).toHaveBeenCalledTimes(1);
-        expect(jest.mocked(unregisterCSSAnimations)).not.toHaveBeenCalled();
+        expect(applyCSSAnimations).toHaveBeenCalledTimes(1);
+        expect(unregisterCSSAnimations).not.toHaveBeenCalled();
 
         manager.update(null);
-        expect(jest.mocked(unregisterCSSAnimations)).toHaveBeenCalledTimes(1);
-        expect(jest.mocked(unregisterCSSAnimations)).toHaveBeenCalledWith(
-          viewTag
-        );
-        expect(jest.mocked(applyCSSAnimations)).toHaveBeenCalledTimes(1);
+        expect(unregisterCSSAnimations).toHaveBeenCalledTimes(1);
+        expect(unregisterCSSAnimations).toHaveBeenCalledWith(viewTag);
+        expect(applyCSSAnimations).toHaveBeenCalledTimes(1);
       });
 
       describe('multiple animations', () => {
@@ -209,7 +204,7 @@ describe('CSSAnimationsManager', () => {
           expect(firstKeyframesRule2).toBeDefined();
 
           // Verify 2 keyframes were registered
-          expect(jest.mocked(registerCSSKeyframes)).toHaveBeenCalledTimes(2);
+          expect(registerCSSKeyframes).toHaveBeenCalledTimes(2);
 
           manager.update({
             animationName: [getKeyframes2(), getKeyframes1()],
@@ -224,7 +219,7 @@ describe('CSSAnimationsManager', () => {
           expect(secondKeyframesRule2).toBe(firstKeyframesRule2);
 
           // Verify no new keyframes were registered
-          expect(jest.mocked(registerCSSKeyframes)).toHaveBeenCalledTimes(2);
+          expect(registerCSSKeyframes).toHaveBeenCalledTimes(2);
         });
 
         test('calls applyCSSAnimations with updated order of animation names and no settings if they are the same when the order of keyframes is changed', () => {
@@ -233,8 +228,8 @@ describe('CSSAnimationsManager', () => {
             animationDuration: '2s',
           });
 
-          expect(jest.mocked(applyCSSAnimations)).toHaveBeenCalledTimes(1);
-          expect(jest.mocked(applyCSSAnimations)).toHaveBeenLastCalledWith(
+          expect(applyCSSAnimations).toHaveBeenCalledTimes(1);
+          expect(applyCSSAnimations).toHaveBeenLastCalledWith(
             shadowNodeWrapper,
             {
               animationNames: [animation1Name, animation2Name],
@@ -250,8 +245,8 @@ describe('CSSAnimationsManager', () => {
             animationDuration: '2s',
           });
 
-          expect(jest.mocked(applyCSSAnimations)).toHaveBeenCalledTimes(2);
-          expect(jest.mocked(applyCSSAnimations)).toHaveBeenLastCalledWith(
+          expect(applyCSSAnimations).toHaveBeenCalledTimes(2);
+          expect(applyCSSAnimations).toHaveBeenLastCalledWith(
             shadowNodeWrapper,
             {
               animationNames: [animation2Name, animation1Name],
@@ -265,8 +260,8 @@ describe('CSSAnimationsManager', () => {
             animationDuration: ['2s', 500],
           });
 
-          expect(jest.mocked(applyCSSAnimations)).toHaveBeenCalledTimes(1);
-          expect(jest.mocked(applyCSSAnimations)).toHaveBeenLastCalledWith(
+          expect(applyCSSAnimations).toHaveBeenCalledTimes(1);
+          expect(applyCSSAnimations).toHaveBeenLastCalledWith(
             shadowNodeWrapper,
             {
               animationNames: [animation1Name, animation2Name],
@@ -282,8 +277,8 @@ describe('CSSAnimationsManager', () => {
             animationDuration: ['2s', 500],
           });
 
-          expect(jest.mocked(applyCSSAnimations)).toHaveBeenCalledTimes(2);
-          expect(jest.mocked(applyCSSAnimations)).toHaveBeenLastCalledWith(
+          expect(applyCSSAnimations).toHaveBeenCalledTimes(2);
+          expect(applyCSSAnimations).toHaveBeenLastCalledWith(
             shadowNodeWrapper,
             {
               animationNames: [animation2Name, animation1Name],
@@ -319,13 +314,13 @@ describe('CSSAnimationsManager', () => {
         // Run cleanup and test
         manager.unmountCleanup();
 
-        expect(jest.mocked(unregisterCSSKeyframes)).toHaveBeenCalledTimes(2);
-        expect(jest.mocked(unregisterCSSKeyframes)).toHaveBeenNthCalledWith(
+        expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(2);
+        expect(unregisterCSSKeyframes).toHaveBeenNthCalledWith(
           1,
           attachedAnimations[0].keyframesRule.name,
           VIEW_NAME
         );
-        expect(jest.mocked(unregisterCSSKeyframes)).toHaveBeenNthCalledWith(
+        expect(unregisterCSSKeyframes).toHaveBeenNthCalledWith(
           2,
           attachedAnimations[1].keyframesRule.name,
           VIEW_NAME
@@ -336,8 +331,8 @@ describe('CSSAnimationsManager', () => {
         // We handle this animations cleanup in the CPP implementation.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         expect((manager as any).attachedAnimations).toEqual(attachedAnimations);
-        expect(jest.mocked(unregisterCSSAnimations)).not.toHaveBeenCalled();
-        expect(jest.mocked(applyCSSAnimations)).not.toHaveBeenCalled();
+        expect(unregisterCSSAnimations).not.toHaveBeenCalled();
+        expect(applyCSSAnimations).not.toHaveBeenCalled();
       });
     });
   });
