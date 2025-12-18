@@ -40,14 +40,15 @@ Props::Shared mergeProps(const ShadowNode &shadowNode, const PropsMap &propsMap,
 std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
     const ShadowNode &shadowNode,
     const ChildrenMap &childrenMap,
-    const PropsMap &propsMap) {
+    const PropsMap &propsMap,
+    bool enableRuntimeReferenceUpdates) {
   const auto family = &shadowNode.getFamily();
   const auto affectedChildrenIt = childrenMap.find(family);
   auto children = shadowNode.getChildren();
 
   if (affectedChildrenIt != childrenMap.end()) {
     for (const auto index : affectedChildrenIt->second) {
-      children[index] = cloneShadowTreeWithNewPropsRecursive(*children[index], childrenMap, propsMap);
+      children[index] = cloneShadowTreeWithNewPropsRecursive(*children[index], childrenMap, propsMap, enableRuntimeReferenceUpdates);
     }
   }
 
@@ -55,10 +56,13 @@ std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
       {mergeProps(shadowNode, propsMap, *family),
        std::make_shared<std::vector<std::shared_ptr<const ShadowNode>>>(children),
        shadowNode.getState(),
-       false});
+       enableRuntimeReferenceUpdates});
 }
 
-RootShadowNode::Unshared cloneShadowTreeWithNewProps(const RootShadowNode &oldRootNode, const PropsMap &propsMap) {
+RootShadowNode::Unshared cloneShadowTreeWithNewProps(
+  const RootShadowNode &oldRootNode,
+  const PropsMap &propsMap,
+  bool enableRuntimeReferenceUpdates = false) {
   ReanimatedSystraceSection s("ShadowTreeCloner::cloneShadowTreeWithNewProps");
 
   ChildrenMap childrenMap;
@@ -85,7 +89,7 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(const RootShadowNode &oldRo
   // This cast is safe, because this function returns a clone
   // of the oldRootNode, which is an instance of RootShadowNode
   return std::static_pointer_cast<RootShadowNode>(
-      cloneShadowTreeWithNewPropsRecursive(oldRootNode, childrenMap, propsMap));
+      cloneShadowTreeWithNewPropsRecursive(oldRootNode, childrenMap, propsMap, enableRuntimeReferenceUpdates));
 }
 
 } // namespace reanimated
