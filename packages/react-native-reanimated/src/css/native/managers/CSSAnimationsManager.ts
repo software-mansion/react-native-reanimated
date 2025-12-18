@@ -191,6 +191,14 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
         return;
       }
 
+      // Check if the order of animations has changed
+      if (
+        !animationsArrayChanged &&
+        this.attachedAnimations[i].keyframesRule.name !== keyframesRule.name
+      ) {
+        animationsArrayChanged = true;
+      }
+
       const updates = getAnimationSettingsUpdates(
         oldAnimation.normalizedSettings,
         normalizedSettings
@@ -199,10 +207,6 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
       if (Object.keys(updates).length > 0) {
         hasSettingsUpdates = true;
         settingsUpdates[i] = updates;
-      }
-
-      if (oldAnimation.keyframesRule.name !== keyframesRule.name) {
-        animationsArrayChanged = true;
       }
     });
 
