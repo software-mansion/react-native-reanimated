@@ -49,10 +49,7 @@ std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
   if (affectedChildrenIt != childrenMap.end()) {
     for (const auto index : affectedChildrenIt->second) {
       children[index] = cloneShadowTreeWithNewPropsRecursive(
-          *children[index],
-          childrenMap,
-          propsMap,
-          enableRuntimeReferenceUpdates);
+          *children[index], childrenMap, propsMap, enableRuntimeReferenceUpdates);
     }
   }
 
