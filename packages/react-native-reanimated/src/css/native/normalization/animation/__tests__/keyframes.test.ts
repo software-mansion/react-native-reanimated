@@ -1,5 +1,5 @@
 'use strict';
-import { getPropsBuilder, ReanimatedError } from '../../../../../common';
+import { registry, ReanimatedError } from '../../../../../common';
 import type { Repeat } from '../../../../types';
 import {
   ERROR_MESSAGES,
@@ -8,7 +8,7 @@ import {
   processKeyframes,
 } from '../keyframes';
 
-type PropsBuilderInstance = ReturnType<typeof getPropsBuilder>;
+type PropsBuilderInstance = ReturnType<typeof registry.getPropsBuilder>;
 type BuildFn = PropsBuilderInstance['build'];
 type BuildReturn = ReturnType<BuildFn>;
 type BuildArgs = Parameters<BuildFn>;
@@ -138,7 +138,7 @@ describe(processKeyframes, () => {
         '100%': { transform: [{ translateX: 100 }] },
       };
 
-      expect(processKeyframes(keyframes, getPropsBuilder('RCTView'))).toEqual([
+      expect(processKeyframes(keyframes, registry.getPropsBuilder('RCTView'))).toEqual([
         { offset: 0, props: { transform: [{ translateX: 0 }] } },
         { offset: 1, props: { transform: [{ translateX: 100 }] } },
       ]);
@@ -152,7 +152,7 @@ describe(processKeyframes, () => {
         to: { transformOrigin: toTransformOrigin },
       };
 
-      const result = processKeyframes(keyframes, getPropsBuilder('RCTView'));
+      const result = processKeyframes(keyframes, registry.getPropsBuilder('RCTView'));
 
       expect(result).toEqual([
         {
@@ -175,7 +175,7 @@ describe(processKeyframes, () => {
           to: { [property]: { width: 10, height: 5 } },
         };
 
-        const result = processKeyframes(keyframes, getPropsBuilder('RCTView'));
+        const result = processKeyframes(keyframes, registry.getPropsBuilder('RCTView'));
 
         expect(result).toEqual([
           {
@@ -220,7 +220,7 @@ describe(processKeyframes, () => {
         },
       };
 
-      const result = processKeyframes(keyframes, getPropsBuilder('RCTView'));
+      const result = processKeyframes(keyframes, registry.getPropsBuilder('RCTView'));
 
       expect(result).toEqual([
         {

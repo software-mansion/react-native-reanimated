@@ -1,7 +1,6 @@
 'use strict';
 import {
-  getPropsBuilder,
-  hasPropsBuilder,
+  registry,
   ReanimatedError,
 } from '../../../common';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
@@ -18,7 +17,7 @@ export default class CSSManager implements ICSSManager {
   private readonly cssTransitionsManager: CSSTransitionsManager;
   private readonly viewTag: number;
   private readonly viewName: string;
-  private readonly propsBuilder: ReturnType<typeof getPropsBuilder> | null =
+  private readonly propsBuilder: ReturnType<typeof registry.getPropsBuilder> | null =
     null;
   private isFirstUpdate: boolean = true;
 
@@ -27,8 +26,8 @@ export default class CSSManager implements ICSSManager {
     const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
 
     this.viewName = viewName;
-    this.propsBuilder = hasPropsBuilder(viewName)
-      ? getPropsBuilder(viewName)
+    this.propsBuilder = registry.hasPropsBuilder(viewName)
+      ? registry.getPropsBuilder(viewName)
       : null;
     this.cssAnimationsManager = new CSSAnimationsManager(
       wrapper,

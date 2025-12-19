@@ -5,7 +5,7 @@ import type {
   UnknownRecord,
 } from '../../../../common';
 import {
-  getPropsBuilder,
+  registry,
   getSeparatelyInterpolatedNestedProperties,
   isDefined,
   isNumber,
@@ -146,7 +146,7 @@ export function normalizeAnimationKeyframes(
   keyframes: CSSAnimationKeyframes,
   viewName: string
 ): NormalizedCSSAnimationKeyframesConfig {
-  const propsBuilder = getPropsBuilder(viewName);
+  const propsBuilder = registry.getPropsBuilder(viewName);
   const separatelyInterpolatedNestedProperties =
     getSeparatelyInterpolatedNestedProperties(viewName);
   const propKeyframes: PropsWithKeyframes = {};
