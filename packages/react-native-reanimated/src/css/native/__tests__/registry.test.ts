@@ -2,9 +2,8 @@
 import {
   BASE_PROPERTIES_CONFIG,
   ERROR_MESSAGES,
-  registry,
-
   registerComponentPropsBuilder,
+  registry,
 } from '../../../common';
 
 describe('registry', () => {

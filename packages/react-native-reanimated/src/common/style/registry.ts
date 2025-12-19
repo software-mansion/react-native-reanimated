@@ -1,11 +1,11 @@
 'use strict';
+import { createRegistry } from '../registry';
 import type { UnknownRecord } from '../types';
 import propsBuilder, {
   createNativePropsBuilder,
   type NativePropsBuilder,
   type PropsBuilderConfig,
 } from './propsBuilder';
-import { createRegistry } from '../registry';
 
 export { ERROR_MESSAGES } from '../registry';
 

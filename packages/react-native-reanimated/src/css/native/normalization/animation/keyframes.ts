@@ -5,12 +5,12 @@ import type {
   UnknownRecord,
 } from '../../../../common';
 import {
-  registry,
   getSeparatelyInterpolatedNestedProperties,
   isDefined,
   isNumber,
   isRecord,
   ReanimatedError,
+  registry,
 } from '../../../../common';
 import { PERCENTAGE_REGEX } from '../../../constants';
 import type {
