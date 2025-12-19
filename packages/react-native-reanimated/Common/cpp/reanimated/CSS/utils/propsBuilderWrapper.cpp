@@ -23,6 +23,46 @@ int32_t parseCSSColor(CSSColor color) {
   return 0;
 }
 
+yoga::Align strToYogaAlign(std::string name) {
+  if (name == "auto") {
+    return yoga::Align::Auto;
+  }
+
+  if (name == "flex-start") {
+    return yoga::Align::FlexStart;
+  }
+
+  if (name == "center") {
+    return yoga::Align::Center;
+  }
+
+  if (name == "flex-end") {
+    return yoga::Align::FlexEnd;
+  }
+
+  if (name == "stretch") {
+    return yoga::Align::Stretch;
+  }
+
+  if (name == "baseline") {
+    return yoga::Align::Baseline;
+  }
+
+  if (name == "space-between") {
+    return yoga::Align::SpaceBetween;
+  }
+
+  if (name == "space-around") {
+    return yoga::Align::SpaceAround;
+  }
+
+  if (name == "space-evenly") {
+    return yoga::Align::SpaceEvenly;
+  }
+
+  return yoga::Align::Auto;
+}
+
 void addFilter(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     FilterFunction filterFunction) {
@@ -32,13 +72,13 @@ void addFilter(
       continue;
     }
 
-    auto *filterProp = dynamic_cast<std::vector<FilterFunction> *>(prop.get());
+    auto *filterProp = dynamic_cast<AnimatedProp<std::vector<FilterFunction>> *>(prop.get());
 
     if (!filterProp) {
       continue;
     }
 
-    filterProp->push_back(filterFunction);
+    filterProp->value.push_back(filterFunction);
 
     isFound = true;
     break;
@@ -57,13 +97,13 @@ void addTransform(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &
       continue;
     }
 
-    auto *transformProp = dynamic_cast<Transform *>(prop.get());
+    auto *transformProp = dynamic_cast<AnimatedProp<Transform> *>(prop.get());
 
     if (!transformProp) {
       continue;
     }
 
-    *transformProp = (*transformProp) * transform;
+    transformProp->value = (transformProp->value) * transform;
 
     isFound = true;
     break;
@@ -426,8 +466,6 @@ void addWidthToPropsBuilder(
             propsBuilder->setWidth(yoga::Style::SizeLength::points(cssValue.value));
           }
 
-          printf("getCSSLengthKeywordCallback: propName %s, value %f \n", "width", cssValue.value);
-
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
           // TODO: Handle this case
         }
@@ -447,12 +485,10 @@ void addHeightToPropsBuilder(
         if constexpr (std::is_same_v<T, CSSLength>) {
           const CSSLength &cssValue = active_value;
           if (cssValue.isRelative) {
-            propsBuilder->setWidth(yoga::Style::SizeLength::percent(cssValue.value));
+            propsBuilder->setHeight(yoga::Style::SizeLength::percent(cssValue.value));
           } else {
-            propsBuilder->setWidth(yoga::Style::SizeLength::points(cssValue.value));
+            propsBuilder->setHeight(yoga::Style::SizeLength::points(cssValue.value));
           }
-
-          printf("getCSSLengthKeywordCallback: propName %s, value %f \n", "width", cssValue.value);
 
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
         }
@@ -811,7 +847,7 @@ void addRotateTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     RotateOperation &operation) {
   double rotateValue = operation.value.value;
-  Transform t = t.Rotate(rotateValue, rotateValue, rotateValue);
+  Transform t = t.RotateZ(rotateValue);
   addTransform(propsBuilder, t);
 }
 
@@ -988,331 +1024,231 @@ void addOutlineStyleToPropsBuilder(
   auto outlineStyleStr = cssValue.toString();
 
   if (outlineStyleStr == "solid") {
-      outlineStyle = OutlineStyle::Solid;
+    outlineStyle = OutlineStyle::Solid;
   } else if (outlineStyleStr == "dotted") {
-      outlineStyle = OutlineStyle::Dotted;
+    outlineStyle = OutlineStyle::Dotted;
   } else if (outlineStyleStr == "dashed") {
-      outlineStyle = OutlineStyle::Dashed;
+    outlineStyle = OutlineStyle::Dashed;
   } else {
-      return;
+    return;
   }
 
-   propsBuilder->setOutlineStyle(outlineStyle);
+  propsBuilder->setOutlineStyle(outlineStyle);
 }
 
 void addOutlineWidthToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDouble> &value) {
-    const auto &storage = value.getStorage();
-    const auto &cssValue = std::get<CSSDouble>(storage);
-    propsBuilder->setOutlineWidth(cssValue.value);
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSDouble>(storage);
+  propsBuilder->setOutlineWidth(cssValue.value);
+}
+
+void addFlexToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSDouble>(storage);
+  //    propsBuilder->setF
+}
+
+void addAlignContentToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSKeyword>(storage);
+  propsBuilder->setAlignContent(strToYogaAlign(cssValue.toString()));
+}
+
+void addAlignItemsToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSKeyword>(storage);
+  propsBuilder->setAlignItems(strToYogaAlign(cssValue.toString()));
+}
+
+void addAlignSelfToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSKeyword>(storage);
+  propsBuilder->setAlignSelf(strToYogaAlign(cssValue.toString()));
+}
+
+void addAspectRatioToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble, CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+
+  std::visit(
+      [&](const auto &active_value) {
+        using T = std::decay_t<decltype(active_value)>;
+
+        if constexpr (std::is_same_v<T, CSSLength>) {
+          const CSSDouble &cssValue = active_value;
+          propsBuilder->setAspectRatio(yoga::FloatOptional(cssValue.value));
+        } else if constexpr (std::is_same_v<T, CSSKeyword>) {
+          // TODO: Handle this case
+        }
+      },
+      storage);
+}
+
+void addBoxSizingToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSKeyword>(storage);
+  const auto boxSizing = cssValue.toString();
+  if (boxSizing == "border-box") {
+    propsBuilder->setBoxSizing(yoga::BoxSizing::BorderBox);
+  } else if (boxSizing == "content-box") {
+    propsBuilder->setBoxSizing(yoga::BoxSizing::ContentBox);
+  }
+}
+
+void addDisplayToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDisplay> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSDisplay>(storage);
+  const auto display = cssValue.toString();
+
+  if (display == "flex") {
+    propsBuilder->setDisplay(yoga::Display::Flex);
+  } else if (display == "none") {
+    propsBuilder->setDisplay(yoga::Display::None);
+  } else if (display == "contents") {
+    propsBuilder->setDisplay(yoga::Display::Contents);
+  }
+}
+
+void addFlexBasisToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+
+  std::visit(
+      [&](const auto &active_value) {
+        using T = std::decay_t<decltype(active_value)>;
+
+        if constexpr (std::is_same_v<T, CSSLength>) {
+          const CSSLength &cssValue = active_value;
+          if (cssValue.isRelative) {
+            propsBuilder->setFlexBasis(yoga::Style::SizeLength::percent(cssValue.value));
+          } else {
+            propsBuilder->setFlexBasis(yoga::Style::SizeLength::points(cssValue.value));
+          }
+        } else if constexpr (std::is_same_v<T, CSSKeyword>) {
+          // TODO: Handle this case
+        }
+      },
+      storage);
+}
+
+void addFlexDirectionToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSKeyword>(storage);
+  const auto flexDirection = cssValue.toString();
+
+  if (flexDirection == "column") {
+    propsBuilder->setFlexDirection(yoga::FlexDirection::Column);
+  } else if (flexDirection == "column-reverse") {
+    propsBuilder->setFlexDirection(yoga::FlexDirection::ColumnReverse);
+  } else if (flexDirection == "row") {
+    propsBuilder->setFlexDirection(yoga::FlexDirection::Row);
+  } else if (flexDirection == "row-reverse") {
+    propsBuilder->setFlexDirection(yoga::FlexDirection::RowReverse);
+  }
+}
+
+void addRowGapToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSLength>(storage);
+
+  if (cssValue.isRelative) {
+    propsBuilder->setRowGap(yoga::StyleLength::percent(cssValue.value));
+  } else {
+    propsBuilder->setRowGap(yoga::StyleLength::points(cssValue.value));
+  }
+}
+
+void addColumnGapToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSLength>(storage);
+
+  if (cssValue.isRelative) {
+    propsBuilder->setColumnGap(yoga::StyleLength::percent(cssValue.value));
+  } else {
+    propsBuilder->setColumnGap(yoga::StyleLength::points(cssValue.value));
+  }
+}
+
+void addFlexGrowToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSDouble>(storage);
+  propsBuilder->setFlexGrow(yoga::FloatOptional(cssValue.value));
+}
+
+void addFlexShrinkToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSDouble>(storage);
+  propsBuilder->setFlexShrink(yoga::FloatOptional(cssValue.value));
+}
+
+void addFlexWrapToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSKeyword>(storage);
+  const auto flexWrap = cssValue.toString();
+
+  if (flexWrap == "no-wrap") {
+    propsBuilder->setFlexWrap(yoga::Wrap::NoWrap);
+  } else if (flexWrap == "wrap") {
+    propsBuilder->setFlexWrap(yoga::Wrap::Wrap);
+  } else if (flexWrap == "wrap-reverse") {
+    propsBuilder->setFlexWrap(yoga::Wrap::WrapReverse);
+  }
+}
+
+void addJustifyContentToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSKeyword>(storage);
+  const auto justifyContent = cssValue.toString();
+
+  if (justifyContent == "flex-start") {
+    propsBuilder->setJustifyContent(yoga::Justify::FlexStart);
+  } else if (justifyContent == "center") {
+    propsBuilder->setJustifyContent(yoga::Justify::Center);
+  } else if (justifyContent == "flex-end") {
+    propsBuilder->setJustifyContent(yoga::Justify::FlexEnd);
+  } else if (justifyContent == "space-between") {
+    propsBuilder->setJustifyContent(yoga::Justify::SpaceBetween);
+  } else if (justifyContent == "space-around") {
+    propsBuilder->setJustifyContent(yoga::Justify::SpaceAround);
+  } else if (justifyContent == "space-evenly") {
+    propsBuilder->setJustifyContent(yoga::Justify::SpaceEvenly);
+  }
 }
 
 void animationMutationsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch) {
   for (auto &[node, dynamic] : updatesBatch) {
     AnimatedPropsBuilder builder;
-    CascadedBorderRadii borderRadii{};
-    CascadedRectangleEdges<yoga::StyleLength> margin{};
-    CascadedRectangleEdges<yoga::StyleLength> padding{};
-    CascadedRectangleEdges<yoga::StyleLength> position{};
-    CascadedRectangleEdges<yoga::StyleLength> borderWidth{};
-    printf("dynamic: %s \n", folly::toJson(dynamic).c_str());
-
-    for (const auto &pair : dynamic.items()) {
-      const auto &name = pair.first.getString();
-      auto nameHash = RAW_PROPS_KEY_HASH(name);
-
-      switch (nameHash) {
-        case RAW_PROPS_KEY_HASH("opacity"):
-          builder.setOpacity(pair.second.asDouble());
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderRadius"):
-          borderRadii.all = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderTopRightRadius"):
-          borderRadii.topRight = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderTopLeftRadius"):
-          borderRadii.topLeft = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderBottomRightRadius"):
-          borderRadii.bottomRight = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderBottomLeftRadius"):
-          borderRadii.bottomLeft = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderTopStartRadius"):
-          borderRadii.topStart = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderTopEndRadius"):
-          borderRadii.topEnd = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderBottomStartRadius"):
-          borderRadii.bottomStart = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderBottomEndRadius"):
-          borderRadii.bottomEnd = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderStartStartRadius"):
-          borderRadii.startStart = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderStartEndRadius"):
-          borderRadii.startEnd = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderEndStartRadius"):
-          borderRadii.endStart = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("borderEndEndRadius"):
-          borderRadii.endEnd = {(float)pair.second.asDouble(), UnitType::Point};
-          break;
-
-        case RAW_PROPS_KEY_HASH("width"):
-          builder.setWidth(yoga::Style::SizeLength::points(pair.second.asDouble()));
-          break;
-
-        case RAW_PROPS_KEY_HASH("height"):
-          builder.setHeight(yoga::Style::SizeLength::points(pair.second.asDouble()));
-          break;
-
-        case RAW_PROPS_KEY_HASH("transform"): {
-          Transform t;
-
-          for (int i = 0; i < pair.second.size(); i++) {
-            const auto &transformObject = pair.second.at(i);
-            for (const auto &transform : transformObject.items()) {
-              if (transform.first.asString() == "translateX") {
-                t = t * t.Translate(transform.second.asDouble(), 0, 0);
-              } else if (transform.first.asString() == "translateY") {
-                t = t * t.Translate(0, transform.second.asDouble(), 0);
-              } else if (transform.first.asString() == "scale") {
-                t = t * t.Scale(transform.second.asDouble(), transform.second.asDouble(), transform.second.asDouble());
-              } else if (transform.first.asString() == "skewX") {
-                t = t * t.Skew(CSSAngle(transform.second.asString()).value, 0);
-              } else if (transform.first.asString() == "skewY") {
-                t = t * t.Skew(0, CSSAngle(transform.second.asString()).value);
-              } else if (transform.first.asString() == "rotate") {
-                double angle = CSSAngle(transform.second.asString()).value;
-                t = t * t.Rotate(angle, angle, angle);
-              } else if (transform.first.asString() == "rotateX") {
-                double angle = CSSAngle(transform.second.asString()).value;
-                t = t * t.RotateX(angle);
-              } else if (transform.first.asString() == "rotateY") {
-                double angle = CSSAngle(transform.second.asString()).value;
-                t = t * t.RotateY(angle);
-              } else if (transform.first.asString() == "rotateZ") {
-                double angle = CSSAngle(transform.second.asString()).value;
-                t = t * t.RotateZ(angle);
-              }
-            }
-          }
-
-          builder.setTransform(t);
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("backgroundColor"): {
-          builder.setBackgroundColor(SharedColor(static_cast<int>(pair.second.asInt())));
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("shadowColor"): {
-          builder.setShadowColor(SharedColor(static_cast<int>(pair.second.asInt())));
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("shadowOpacity"): {
-          builder.setShadowOpacity(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("shadowRadius"): {
-          builder.setShadowRadius(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("shadowOffset"): {
-          auto shadowOffset = pair.second;
-          auto width = shadowOffset["width"].asDouble();
-          auto height = shadowOffset["height"].asDouble();
-          builder.setShadowOffset(facebook::react::Size{width, height});
-        }
-
-          // MARGIN
-
-        case RAW_PROPS_KEY_HASH("margin"): {
-          margin.all = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("marginTop"): {
-          margin.top = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("marginBottom"): {
-          margin.bottom = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("marginHorizontal"): {
-          margin.horizontal = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("marginVertical"): {
-          margin.vertical = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("marginLeft"): {
-          margin.left = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("marginRight"): {
-          margin.right = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("marginStart"): {
-          margin.start = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("marginEnd"): {
-          margin.end = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-          // PADDING
-
-        case RAW_PROPS_KEY_HASH("padding"): {
-          padding.all = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("paddingTop"): {
-          padding.top = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("paddingBottom"): {
-          padding.bottom = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("paddingHorizontal"): {
-          padding.horizontal = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("paddingVertical"): {
-          padding.vertical = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("paddingLeft"): {
-          padding.left = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("paddingRight"): {
-          padding.right = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("paddingStart"): {
-          padding.start = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("paddingEnd"): {
-          padding.end = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-          // POSITIONS
-        case RAW_PROPS_KEY_HASH("top"): {
-          position.top = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("bottom"): {
-          position.bottom = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("left"): {
-          position.left = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("right"): {
-          position.right = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-          // BORDER WIDTH
-
-        case RAW_PROPS_KEY_HASH("borderWidth"): {
-          borderWidth.all = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("borderLeftWidth"): {
-          borderWidth.left = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("borderRightWidth"): {
-          borderWidth.right = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("borderTopWidth"): {
-          borderWidth.top = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("borderBottomWidth"): {
-          borderWidth.bottom = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("borderStartWidth"): {
-          borderWidth.start = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        case RAW_PROPS_KEY_HASH("borderEndWidth"): {
-          borderWidth.end = yoga::StyleLength::points(pair.second.asDouble());
-          break;
-        }
-
-        default:
-          printf("AnimationMutations: Unsupported prop \n");
-      }
-    }
-
-    // TODO: This shouldn't be set there, but leaving it for now
-    builder.setBorderRadii(borderRadii);
-    builder.setMargin(margin);
-    builder.setPadding(padding);
-    builder.setPosition(position);
-    builder.setBorderWidth(borderWidth);
+    builder.storeDynamic(dynamic);
     mutations.push_back(AnimationMutation{node->getTag(), &node->getFamily(), builder.get()});
   }
 }

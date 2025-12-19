@@ -173,8 +173,10 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::inte
   const auto &fromOp = *std::static_pointer_cast<TOperation>(from);
   const auto &toOp = *std::static_pointer_cast<TOperation>(to);
 
-  return std::make_unique<TOperation>(
+  auto operation = std::make_unique<TOperation>(
       fromOp.value.interpolate(progress, toOp.value, getResolvableValueContext(context)));
+  addToPropsBuilder_(propsBuilder, *operation);
+  return operation;
 }
 
 template <ResolvableOp TOperation>

@@ -343,5 +343,65 @@ void addOutlineWidthToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDouble> &value);
 
+void addFlexToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value);
+
+void addAlignContentToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value);
+
+void addAlignItemsToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value);
+
+void addAlignSelfToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value);
+
+void addAspectRatioToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble, CSSKeyword> &value);
+
+void addBoxSizingToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value);
+
+void addDisplayToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDisplay> &value);
+
+void addFlexBasisToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value);
+
+void addFlexDirectionToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value);
+
+void addRowGapToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value);
+
+void addColumnGapToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value);
+
+void addFlexGrowToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value);
+
+void addFlexShrinkToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value);
+
+void addFlexWrapToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value);
+
+void addJustifyContentToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value);
+
 void animationMutationsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch);
 } // namespace reanimated::css
