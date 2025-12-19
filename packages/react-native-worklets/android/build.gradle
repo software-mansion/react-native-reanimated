@@ -80,12 +80,23 @@ def getStaticFeatureFlags() {
         }
     }
 
-    return featureFlags.collect { key, value -> "[${key}:${value}]" }.join("")
+    // return featureFlags.collect { key, value -> "[${key}:${value}]" }.join("")
+    return featureFlags;
+}
+
+def getStaticFeatureFlagsFlag(featureFlags) {
+    return "-DWORKLETS_FEATURE_FLAGS=\"${featureFlags.collect { key, value -> "[${key}:${value}]" }.join("")}\""
+}
+
+def isFlagEnabled(featureFlags, flagName) {
+    return (featureFlags.containsKey(flagName) && featureFlags[flagName] == "true");
 }
 
 if (isNewArchitectureEnabled()) {
     apply plugin: "com.facebook.react"
 }
+
+def featureFlags = getStaticFeatureFlags()
 
 def packageDir = project.projectDir.parentFile
 def reactNativeRootDir = resolveReactNativeDirectory()
@@ -94,8 +105,9 @@ def REACT_NATIVE_VERSION = getReactNativeVersion()
 def WORKLETS_VERSION = getWorkletsVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
-def BUNDLE_MODE = safeAppExtGet("workletsBundleMode", false)
-def WORKLETS_FEATURE_FLAGS = getStaticFeatureFlags()
+def BUNDLE_MODE = isFlagEnabled(featureFlags, "BUNDLE_MODE");
+def FETCH_ON_WORKLET_RUNTIMES = isFlagEnabled(featureFlags, "FETCH_ON_WORKLET_RUNTIMES");
+def WORKLETS_FEATURE_FLAGS_FLAG = getStaticFeatureFlagsFlag(featureFlags)
 def HERMES_V1_ENABLED = safeAppExtGet("hermesV1Enabled", false)
 def WORKLETS_PROFILING = safeAppExtGet("enableWorkletsProfiling", false)
 
@@ -194,10 +206,11 @@ android {
                         "-DJS_RUNTIME=${JS_RUNTIME}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
                         "-DWORKLETS_BUNDLE_MODE=${BUNDLE_MODE}",
+                        "-DFETCH_ON_WORKLET_RUNTIMES=${FETCH_ON_WORKLET_RUNTIMES}",
                         "-DWORKLETS_PROFILING=${WORKLETS_PROFILING}",
                         "-DWORKLETS_VERSION=${WORKLETS_VERSION}",
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
-                        "-DWORKLETS_FEATURE_FLAGS=${WORKLETS_FEATURE_FLAGS}",
+                        "-DWORKLETS_FEATURE_FLAGS=${WORKLETS_FEATURE_FLAGS_FLAG}",
                         "-DHERMES_V1_ENABLED=${HERMES_V1_ENABLED}"
                 abiFilters(*reactNativeArchitectures())
                 targets("worklets")

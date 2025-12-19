@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Button, TurboModuleRegistry } from 'react-native';
+import { StyleSheet, View, Button } from 'react-native';
 import {
   createWorkletRuntime,
   scheduleOnRuntime,
@@ -7,19 +7,11 @@ import {
 } from 'react-native-worklets';
 import axios from 'axios';
 
-console.log(TurboModuleRegistry.get('BlobModule')?.getConstants());
+let elephantRuntime: WorkletRuntime;
 
-const elephantRuntime = createWorkletRuntime({
-  name: 'elephant',
-});
+let giraffeRuntime: WorkletRuntime;
 
-const giraffeRuntime = createWorkletRuntime({
-  name: 'giraffe  ',
-});
-
-const monkeyRuntime = createWorkletRuntime({
-  name: 'monkey',
-});
+let monkeyRuntime: WorkletRuntime;
 
 function testXHR(
   readystateHandler: boolean,
@@ -112,7 +104,15 @@ function testXHR(
   state.downloading = true;
 }
 
-function callback(runtime: WorkletRuntime, count: number) {
+function callback(
+  runtime: WorkletRuntime,
+  runtimes: {
+    elephant: WorkletRuntime;
+    giraffe: WorkletRuntime;
+    monkey: WorkletRuntime;
+  },
+  count: number
+) {
   'worklet';
   axios({
     method: 'get',
@@ -130,15 +130,29 @@ function callback(runtime: WorkletRuntime, count: number) {
   }
 
   const nextRuntime =
-    runtime.name === elephantRuntime.name
-      ? giraffeRuntime
-      : runtime.name === giraffeRuntime.name
-        ? monkeyRuntime
-        : elephantRuntime;
+    runtime.name === runtimes.elephant.name
+      ? runtimes.giraffe
+      : runtime.name === runtimes.giraffe.name
+        ? runtimes.monkey
+        : runtimes.elephant;
 
   setTimeout(() => {
-    scheduleOnRuntime(nextRuntime, callback, nextRuntime, count + 1);
+    scheduleOnRuntime(nextRuntime, callback, nextRuntime, runtimes, count + 1);
   }, 100);
+}
+
+function initializeRuntimes() {
+  if (!elephantRuntime) {
+    elephantRuntime = createWorkletRuntime({
+      name: 'elephant',
+    });
+    giraffeRuntime = createWorkletRuntime({
+      name: 'giraffe  ',
+    });
+    monkeyRuntime = createWorkletRuntime({
+      name: 'monkey',
+    });
+  }
 }
 
 export default function App() {
@@ -147,12 +161,24 @@ export default function App() {
       <Button
         title="Test fetch chain"
         onPress={() => {
-          scheduleOnRuntime(elephantRuntime, callback, elephantRuntime, 0);
+          initializeRuntimes();
+          scheduleOnRuntime(
+            elephantRuntime,
+            callback,
+            elephantRuntime,
+            {
+              elephant: elephantRuntime,
+              giraffe: giraffeRuntime,
+              monkey: monkeyRuntime,
+            },
+            0
+          );
         }}
       />
       <Button
         title="Test XHR"
         onPress={() => {
+          initializeRuntimes();
           scheduleOnRuntime(
             elephantRuntime,
             testXHR,

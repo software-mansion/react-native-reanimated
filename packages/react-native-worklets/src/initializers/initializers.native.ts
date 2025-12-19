@@ -139,8 +139,8 @@ function initializeWorkletRuntime() {
     if (__DEV__) {
       silenceHMRWarnings();
       disallowRNImports();
-      mockTurboModuleRegistry();
     }
+    mockTurboModuleRegistry();
 
     // const PolyfillFunctionsId = require.resolveWeak(
     //   'react-native/Libraries/Utilities/PolyfillFunctions'
