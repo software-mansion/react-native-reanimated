@@ -1,5 +1,7 @@
 'use strict';
+import { registerSvgPropsBuilders } from './web';
 
 export function initSvgCssSupport() {
-  // TODO: Add web support for SVG components
+  // Register SVG props builders for web
+  registerSvgPropsBuilders();
 }
