@@ -22,13 +22,7 @@ export function createRegistry<TBuilder>({
 
   return {
     hasPropsBuilder(componentName: string): boolean {
-      if (builders[componentName]) {
-        return true;
-      }
-      if (isReactNativeViewName(componentName)) {
-        return true;
-      }
-      return false;
+      return !!builders[componentName] || isReactNativeViewName(componentName);
     },
 
     getPropsBuilder(componentName: string): TBuilder {

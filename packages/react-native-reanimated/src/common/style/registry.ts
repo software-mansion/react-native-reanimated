@@ -5,9 +5,9 @@ import propsBuilder, {
   type NativePropsBuilder,
   type PropsBuilderConfig,
 } from './propsBuilder';
-import { createRegistry } from '../registry/createRegistry';
+import { createRegistry } from '../registry';
 
-export { ERROR_MESSAGES } from '../registry/createRegistry';
+export { ERROR_MESSAGES } from '../registry';
 
 const DEFAULT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Set<string>([
   'boxShadow',

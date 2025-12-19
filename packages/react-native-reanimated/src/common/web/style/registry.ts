@@ -1,11 +1,10 @@
 'use strict';
+import { createRegistry } from '../../registry';
 import type { UnknownRecord } from '../../types';
-import { createWebPropsBuilder } from './propsBuilder';
+import webPropsBuilder, { createWebPropsBuilder } from './propsBuilder';
 import type { PropsBuilderConfig } from './types';
-import { createRegistry } from '../../registry/createRegistry';
-import webPropsBuilder from './propsBuilder';
 
-export { ERROR_MESSAGES } from '../../registry/createRegistry';
+export { ERROR_MESSAGES } from '../../registry';
 
 type WebPropsBuilder = {
   build(props: UnknownRecord): string | null;

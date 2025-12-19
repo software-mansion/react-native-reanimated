@@ -1,7 +1,19 @@
 'use strict';
-import { registerSvgPropsBuilders } from './web';
+import { registerComponentPropsBuilder } from '../../common/web';
+import {
+  SVG_CIRCLE_PROPERTIES_CONFIG,
+  SVG_ELLIPSE_PROPERTIES_CONFIG,
+  SVG_LINE_PROPERTIES_CONFIG,
+  SVG_PATH_PROPERTIES_CONFIG,
+  SVG_RECT_PROPERTIES_CONFIG,
+} from './web';
 
 export function initSvgCssSupport() {
-  // Register SVG props builders for web
-  registerSvgPropsBuilders();
+  registerComponentPropsBuilder('RNSVGCircle', SVG_CIRCLE_PROPERTIES_CONFIG);
+  registerComponentPropsBuilder('RNSVGEllipse', SVG_ELLIPSE_PROPERTIES_CONFIG);
+  registerComponentPropsBuilder('RNSVGLine', SVG_LINE_PROPERTIES_CONFIG);
+  registerComponentPropsBuilder('RNSVGPath', SVG_PATH_PROPERTIES_CONFIG);
+  registerComponentPropsBuilder('RNSVGRect', SVG_RECT_PROPERTIES_CONFIG);
+
+  // TODO: Add more SVG components as they are implemented
 }
