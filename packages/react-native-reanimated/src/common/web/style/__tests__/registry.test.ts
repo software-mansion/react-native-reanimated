@@ -1,15 +1,14 @@
 'use strict';
 import {
-  BASE_PROPERTIES_CONFIG,
   ERROR_MESSAGES,
   registerComponentPropsBuilder,
   registry,
-} from '../../../common';
+} from '../registry';
 
-describe('registry', () => {
+describe('web registry', () => {
   describe('hasPropsBuilder', () => {
     test('returns true for registered component names', () => {
-      const componentName = 'CustomComponent';
+      const componentName = 'CustomWebComponent';
       const config = { width: true, height: true };
 
       registerComponentPropsBuilder(componentName, config);
@@ -23,13 +22,13 @@ describe('registry', () => {
     });
 
     test('returns false for unregistered component names', () => {
-      expect(registry.hasPropsBuilder('UnregisteredComponent')).toBe(false);
+      expect(registry.hasPropsBuilder('UnregisteredWebComponent')).toBe(false);
     });
   });
 
   describe('getPropsBuilder', () => {
     test('returns registered props builder for custom component', () => {
-      const componentName = 'CustomComponent';
+      const componentName = 'CustomWebComponent';
       const config = { width: true, height: true };
 
       registerComponentPropsBuilder(componentName, config);
@@ -48,14 +47,16 @@ describe('registry', () => {
 
     test('throws error for unregistered component names', () => {
       expect(() => {
-        registry.getPropsBuilder('UnregisteredComponent');
-      }).toThrow(ERROR_MESSAGES.propsBuilderNotFound('UnregisteredComponent'));
+        registry.getPropsBuilder('UnregisteredWebComponent');
+      }).toThrow(
+        ERROR_MESSAGES.propsBuilderNotFound('UnregisteredWebComponent')
+      );
     });
   });
 
   describe('registerComponentPropsBuilder', () => {
     test('registers a style builder', () => {
-      const componentName = 'TestComponent';
+      const componentName = 'TestWebComponent';
       const config = { width: true, height: true };
 
       registerComponentPropsBuilder(componentName, config);
@@ -64,13 +65,16 @@ describe('registry', () => {
       expect(registry.getPropsBuilder(componentName)).toBeDefined();
     });
 
-    test('works with base properties config', () => {
-      const componentName = 'BaseConfigComponent';
+    test('returns CSS string for valid props', () => {
+      const componentName = 'CSSTestComponent';
+      const config = { width: 'px', height: 'px' };
 
-      registerComponentPropsBuilder(componentName, BASE_PROPERTIES_CONFIG);
+      registerComponentPropsBuilder(componentName, config);
+      const propsBuilder = registry.getPropsBuilder(componentName);
+      const cssString = propsBuilder.build({ width: 100, height: 200 });
 
-      expect(registry.hasPropsBuilder(componentName)).toBe(true);
-      expect(registry.getPropsBuilder(componentName)).toBeDefined();
+      expect(cssString).toContain('width');
+      expect(cssString).toContain('height');
     });
   });
 });

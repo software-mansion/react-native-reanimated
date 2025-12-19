@@ -7,7 +7,7 @@ export const ERROR_MESSAGES = {
     `CSS props builder for component ${componentName} was not found`,
 };
 
-export type PropsBuilderRegistry<TBuilder> = {
+type PropsBuilderRegistry<TBuilder> = {
   hasPropsBuilder(componentName: string): boolean;
   getPropsBuilder(componentName: string): TBuilder;
   registerBuilder(componentName: string, builder: TBuilder): void;

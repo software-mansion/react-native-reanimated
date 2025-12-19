@@ -2,10 +2,7 @@
 export * from './builders';
 export * from './config';
 export * from './processors';
-export {
-  createWebPropsBuilder,
-  default as webPropsBuilder,
-} from './propsBuilder';
-export * from './registry';
+export { default as webPropsBuilder } from './propsBuilder';
+export { registerComponentPropsBuilder } from './registry';
 export * from './ruleBuilder';
 export type * from './types';
