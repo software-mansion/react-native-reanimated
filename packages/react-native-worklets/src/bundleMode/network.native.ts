@@ -12,6 +12,11 @@ export function initializeNetworking() {
       {},
       {
         get: (__, propName) => {
+          if (propName === 'getConstants') {
+            return () => ({ BLOB_URI_HOST: null, BLOB_URI_SCHEME: 'blob' });
+          } else if (propName === 'addNetworkingHandler') {
+            return () => {};
+          }
           throw new WorkletsError(
             `${propName as string} not available in ${moduleName} on a Worklet Runtime.`
           );

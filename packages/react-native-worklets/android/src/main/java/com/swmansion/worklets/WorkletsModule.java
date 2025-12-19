@@ -3,9 +3,14 @@ package com.swmansion.worklets;
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableNativeArray;
+import com.facebook.react.bridge.ReadableNativeMap;
 import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.module.annotations.ReactModule;
@@ -35,6 +40,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   private final WorkletsMessageQueueThread mMessageQueueThread = new WorkletsMessageQueueThread();
   private final AndroidUIScheduler mAndroidUIScheduler;
   private final AnimationFrameQueue mAnimationFrameQueue;
+  private final WorkletsNetworking mWorkletsNetworking;
   private boolean mSlowAnimationsEnabled;
 
   /**
@@ -58,6 +64,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
 
     mAndroidUIScheduler = new AndroidUIScheduler(reactContext);
     mAnimationFrameQueue = new AnimationFrameQueue(reactContext);
+    mWorkletsNetworking = new WorkletsNetworking();
   }
 
   @OptIn(markerClass = FrameworkAPI.class)
@@ -86,6 +93,23 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
             scriptBufferWrapper);
     return true;
   }
+
+  public void abortRequest(int runtimeId, double requestIdAsDouble){
+      mWorkletsNetworking.jsiAbortRequest(runtimeId, requestIdAsDouble);
+  };
+
+  public void clearCookies(Callback callback){
+      mWorkletsNetworking.jsiClearCookies(callback);
+  };
+
+  public void sendRequest(WorkletRuntimeWrapper runtimeWrapper
+          , String method
+                          , String url, double requestIdAsDouble
+                          , ReadableNativeArray headers
+                          , ReadableNativeMap data, String responseType, boolean useIncrementalUpdates, double timeoutAsDouble, boolean withCredentials
+  ){
+    mWorkletsNetworking.jsiSendRequest(runtimeWrapper, method, url, requestIdAsDouble, headers, data, responseType, useIncrementalUpdates, timeoutAsDouble, withCredentials);
+  };
 
   public void requestAnimationFrame(AnimationFrameCallback animationFrameCallback) {
     mAnimationFrameQueue.requestAnimationFrame(animationFrameCallback);

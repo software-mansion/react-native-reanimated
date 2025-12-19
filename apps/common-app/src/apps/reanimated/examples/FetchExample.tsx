@@ -1,11 +1,13 @@
 import React from 'react';
-import { StyleSheet, View, Button } from 'react-native';
+import { StyleSheet, View, Button, TurboModuleRegistry } from 'react-native';
 import {
   createWorkletRuntime,
   scheduleOnRuntime,
   type WorkletRuntime,
 } from 'react-native-worklets';
 import axios from 'axios';
+
+console.log(TurboModuleRegistry.get('BlobModule')?.getConstants());
 
 const elephantRuntime = createWorkletRuntime({
   name: 'elephant',

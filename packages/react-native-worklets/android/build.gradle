@@ -146,6 +146,7 @@ apply plugin: "maven-publish"
 apply plugin: "de.undercouch.download"
 
 apply from: "./fix-prefab.gradle"
+apply plugin: 'org.jetbrains.kotlin.android'
 
 
 android {
@@ -254,6 +255,9 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
     tasks.withType(ExternalNativeBuildJsonTask).tap {
         configureEach { compileTask ->
             compileTask.doLast {
@@ -330,6 +334,7 @@ dependencies {
     implementation "androidx.core:core:1.15.0"
 
     implementation "com.facebook.react:react-android" // version substituted by RNGP
+    implementation 'androidx.core:core-ktx:1.17.0'
     if (JS_RUNTIME == "hermes") {
         implementation "com.facebook.react:hermes-android" // version substituted by RNGP
     }

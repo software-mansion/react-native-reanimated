@@ -2,6 +2,7 @@
 
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
+#include <jni.h>
 #include <jsi/jsi.h>
 #include <react/jni/JMessageQueueThread.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
@@ -31,7 +32,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
       jni::alias_ref<JScriptBufferWrapper::javaobject> jScriptBufferWrapper);
 
-  static void registerNatives();
+  static void registerNatives(JavaVM *vm);
 
   inline std::shared_ptr<WorkletsModuleProxy> getWorkletsModuleProxy() {
     return workletsModuleProxy_;
@@ -55,6 +56,9 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
   }
 
   RuntimeBindings::RequestAnimationFrame getRequestAnimationFrame();
+  RuntimeBindings::AbortRequest getAbortRequest();
+  RuntimeBindings::ClearCookies getClearCookies();
+  RuntimeBindings::SendRequest getSendRequest();
 
   std::function<bool()> getIsOnJSQueueThread();
 
@@ -62,6 +66,9 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
   jni::global_ref<WorkletsModule::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+  static JavaVM *jvm_;
+
+  friend class AsyncQueueImpl;
 };
 
 } // namespace worklets
