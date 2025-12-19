@@ -4,6 +4,7 @@ import {
   createWorkletRuntime,
   scheduleOnRuntime,
   type WorkletRuntime,
+  createSynchronizable,
 } from 'react-native-worklets';
 import axios from 'axios';
 
@@ -12,6 +13,8 @@ let elephantRuntime: WorkletRuntime;
 let giraffeRuntime: WorkletRuntime;
 
 let monkeyRuntime: WorkletRuntime;
+
+const shouldStop = createSynchronizable(false);
 
 function testXHR(
   readystateHandler: boolean,
@@ -123,6 +126,7 @@ function callback(
       console.log(response.data);
     })
     .catch((error) => {
+      shouldStop.setBlocking(true);
       console.error('Axios error:', error);
     });
   if (count > 32) {
@@ -137,7 +141,15 @@ function callback(
         : runtimes.elephant;
 
   setTimeout(() => {
-    scheduleOnRuntime(nextRuntime, callback, nextRuntime, runtimes, count + 1);
+    if (!shouldStop.getDirty()) {
+      scheduleOnRuntime(
+        nextRuntime,
+        callback,
+        nextRuntime,
+        runtimes,
+        count + 1
+      );
+    }
   }, 100);
 }
 
@@ -162,6 +174,7 @@ export default function App() {
         title="Test fetch chain"
         onPress={() => {
           initializeRuntimes();
+          shouldStop.setBlocking(false);
           scheduleOnRuntime(
             elephantRuntime,
             callback,
