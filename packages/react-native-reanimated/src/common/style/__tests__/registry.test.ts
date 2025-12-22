@@ -1,7 +1,11 @@
 'use strict';
 
-import { BASE_PROPERTIES_CONFIG } from "../config";
-import { ERROR_MESSAGES, registerComponentPropsBuilder, registry } from "../registry";
+import { BASE_PROPERTIES_CONFIG } from '../config';
+import {
+  ERROR_MESSAGES,
+  registerComponentPropsBuilder,
+  registry,
+} from '../registry';
 
 describe('registry', () => {
   describe('hasPropsBuilder', () => {
