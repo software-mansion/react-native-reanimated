@@ -1,0 +1,146 @@
+---
+id: overview
+title: Shared Element Transitions
+sidebar_label: Overview
+---
+
+:::caution
+
+Shared Element Transitions is an experimental feature available <a href="/react-native-reanimated/docs/guides/feature-flags#enable_shared_element_transitions">behind a feature flag</a>, not recommended for production use yet. We are waiting for your feedback to improve the implementation.
+
+:::
+
+Shared Element Transitions allow you to smoothly transform a component from one screen into a component on another screen.
+
+## Reference
+
+```javascript
+import Animated from 'react-native-reanimated';
+
+const Stack = createNativeStackNavigator();
+
+function One({ navigation }) {
+  return (
+    <>
+      <Animated.View
+        // highlight-start
+        sharedTransitionTag="sharedTag"
+        // highlight-end
+      />
+      <Button title="Two" onPress={() => navigation.navigate('Two')} />
+    </>
+  );
+}
+
+function Two({ navigation }) {
+  return (
+    <>
+      <Animated.View
+        // highlight-start
+        sharedTransitionTag="sharedTag"
+        // highlight-end
+      />
+      <Button title="One" onPress={() => navigation.navigate('One')} />
+    </>
+  );
+}
+
+export default function SharedElementExample() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: true }}>
+        <Stack.Screen name="One" component={One} />
+        <Stack.Screen name="Two" component={Two} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+```
+
+## Overview
+
+When Reanimated detects that the current top screen on the stack changes, it checks if there are components with the same `sharedTransitionTag` on the new and old top screen.
+
+If it finds two matching components, it hides both of them by changing their opacity and creates a third view, that is displayed over the view hierarchy, that looks exactly like the source view, and is then animated to look like the target view. This implementation detail is subject to change as we might want to avoid creating a redundant instance of the same component.
+
+After the animation is complete, the third view is removed, and the opacity of both original views is restored.
+
+Currently you can't define a fully custom animation function. You can however customize the duration and use spring-based animations. You can expect `width`, `height`, `originX`, `originY`, `transform`, `backgroundColor` and `opacity` to be animated by default with a duration of 500ms using the [`withTiming`](/docs/animations/withTiming/) animation function.
+
+## Implementation
+
+To create a shared transition animation between two components on different screens, simply assign the same `sharedTransitionTag` to both components. When you navigate between screens, the shared transition animation will automatically play.
+
+If you want to use more than one shared view on the same screen, be sure to assign a **unique** shared tag to each component.
+
+**Screen A**
+
+```tsx {2}
+<Animated.View
+  sharedTransitionTag="sharedTag"
+  style={{ width: 150, height: 150, backgroundColor: 'green' }}
+/>
+```
+
+**Screen B**
+
+```tsx {2}
+<Animated.View
+  sharedTransitionTag="sharedTag"
+  style={{ width: 100, height: 100, backgroundColor: 'green' }}
+/>
+```
+
+## Custom animation
+
+You can customize the transition with the `SharedTransition` builder class. The available customization will be extended as the feature matures.
+
+```tsx
+import { SharedTransition } from 'react-native-reanimated';
+
+const transition = SharedTransition.duration(550).springify();
+
+function SharedView() {
+  return (
+    <Animated.View
+      sharedTransitionTag="reanimatedTransition"
+      // highlight-next-line
+      sharedTransitionStyle={transition}
+      style={{ backgroundColor: 'blue', width: 200, height: 100 }}
+    />
+  );
+}
+```
+
+On iOS, when the animation is triggered by a swipe gesture or the OS back button we instead run a progress-based transition. This way the animation responds to the user swiping their finger accordingly, and allows for transition cancellation. This behavior will be possible to customize in the future.
+
+## Example
+
+import SharedElementSrc from '!!raw-loader!@site/src/examples/SharedElementTransition';
+
+<ExampleVideo
+  sources={{
+    android:
+      '/react-native-reanimated/recordings/android_shared_element_transition.mov',
+    ios: '/react-native-reanimated/recordings/ios_shared_element_transition.mov',
+  }}
+/>
+
+<CollapsibleCode src={SharedElementSrc} showLines={[48, 78]} />
+
+## Current limitations
+
+- Only the NativeStack is supported.
+- The TabNavigator is not supported yet, using it in on path that uses shared transitions may result in no animation being ran.
+- Transitions with native modals (using `transparentModal`) don't work properly on iOS (the modal is obstructing the Shared Element).
+- You can't define custom animation functions
+- Some properties (e.g. backgroundColor) are not supported in progress-based transitions.
+- On iOS you can encounter some issues with the vertical positioning of transitioning views. This is due to issues with header height information propagation.
+- There are some performance bottlenecks, that stem from transforms being recalculated too eagerly.
+- We have to use a workaround for react-native-screens to not keep a snapshot of the transitioning view on the popped screen. Currently the fix is available in 3.19+ versions.
+- Enabling the feature flag causes the zIndex of views with exiting animations to change (they are brought to the front). This differs from the current behavior in Reanimated 4.
+- Sometimes on a fast refresh, the transition will run for elements that are on the same screen. It can happen when the navigator is wrapped with a context provider, and the native view that represents the screen changed, so the SET logic was triggered.
+
+## Platform Compatibility
+
+<PlatformCompatibility android ios />
