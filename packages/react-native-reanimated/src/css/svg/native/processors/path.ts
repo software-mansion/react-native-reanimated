@@ -396,6 +396,7 @@ function absolutizePath(pathSegments: PathCommand[]): PathCommand[] {
           curY = args[args.length - 1];
         }
     }
+
     return [upperCmd, ...args];
   });
 }

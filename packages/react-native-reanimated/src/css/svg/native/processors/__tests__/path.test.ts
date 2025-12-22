@@ -23,18 +23,6 @@ describe(processSVGPath, () => {
     });
   });
 
-  describe('M command errors', () => {
-    test.each([
-      ['M 10', ERROR_MESSAGES.invalidSVGPathCommand('M', [10])],
-      // If M has more than 2 elements, they are porvided in pairs to implicit L commands (which then turn into C commands)
-      ['M 10 10 10', ERROR_MESSAGES.invalidSVGPathCommand('L', [10])],
-      // Regexp skips all symbols that aren't proper commands so the first one taken is v
-      ['invalid', ERROR_MESSAGES.invalidSVGPathStart('v')],
-    ])('for %p returns %p', (input, err) => {
-      expect(() => processSVGPath(input)).toThrow(new ReanimatedError(err));
-    });
-  });
-
   describe('L, H, V commands', () => {
     test.each([
       ['M 0 0 L 30 30', 'M 0 0 C 10 10 20 20 30 30'],
@@ -42,9 +30,7 @@ describe(processSVGPath, () => {
       ['M 0 0 H 30', 'M 0 0 C 10 0 20 0 30 0'],
       ['M 10 10 h 30', 'M 10 10 C 20 10 30 10 40 10'],
       ['M 0 0 V 30', 'M 0 0 C 0 10 0 20 0 30'],
-
       ['M 10 10 v 30', 'M 10 10 C 10 20 10 30 10 40'],
-
       // Implicit L commands (numbers following an L, H, or V that exceed arg length)
       // M 0 0 L 30 30 60 60 -> M 0 0 L 30 30 L 60 60
       ['M 0 0 L 30 30 60 60', 'M 0 0 C 10 10 20 20 30 30 C 40 40 50 50 60 60'],
@@ -151,6 +137,11 @@ describe(processSVGPath, () => {
 
   describe('Validation Errors', () => {
     test.each([
+      ['M 10', ERROR_MESSAGES.invalidSVGPathCommand('M', [10])],
+      // If M has more than 2 elements, they are porvided in pairs to implicit L commands (which then turn into C commands)
+      ['M 10 10 10', ERROR_MESSAGES.invalidSVGPathCommand('L', [10])],
+      // Regexp skips all symbols that aren't proper commands so the first one taken is v
+      ['invalid', ERROR_MESSAGES.invalidSVGPathStart('v')],
       ['M 0 0 L 10', ERROR_MESSAGES.invalidSVGPathCommand('L', [10])],
       [
         'M 0 0 C 10 10 20 20',
