@@ -18,8 +18,7 @@ type WebPropsBuilderConfig<P extends UnknownRecord = UnknownRecord> =
 export function createWebPropsBuilder<TProps extends UnknownRecord>(
   config: WebPropsBuilderConfig<TProps>
 ) {
-  // Track unique rule builder instances
-  const ruleBuilderInstances = new Set<RuleBuilder<TProps>>();
+  let usedRuleBuilders = new Set<RuleBuilder<TProps>>();
 
   const propsBuilder = createPropsBuilder({
     config,
@@ -46,10 +45,10 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
 
       // Handle rule builders - store reference and return marker
       if (isRuleBuilder<TProps>(configValue)) {
-        ruleBuilderInstances.add(configValue);
         // Return a processor that feeds values to the rule builder and returns undefined
         // so the property doesn't appear in the regular processed props
         return (value: unknown) => {
+          usedRuleBuilders.add(configValue);
           configValue.add(propertyKey, value as TProps[keyof TProps]);
           return undefined;
         };
@@ -65,14 +64,14 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
   });
 
   return {
-    build(props: TProps): string | null {
+    build(props: Partial<TProps>): string | null {
+      usedRuleBuilders = new Set<RuleBuilder<TProps>>();
+
       // Build props - rule builders are fed during processing
       const processedProps = propsBuilder.build(props);
 
-      // Build all rule builders and merge their results
-      const ruleBuilderProps = Array.from(
-        ruleBuilderInstances
-      ).reduce<UnknownRecord>(
+      // Build only used rule builders and merge their results
+      const ruleBuilderProps = Array.from(usedRuleBuilders).reduce<UnknownRecord>(
         (acc, builder) => ({ ...acc, ...builder.build() }),
         {}
       );

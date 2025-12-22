@@ -170,6 +170,60 @@ describe(createWebPropsBuilder, () => {
       expect(result).toContain('width: 100px');
       expect(result).toContain('box-shadow: 0 0 5px blue');
     });
+
+    test('excludes rule builders when no props handled by the rule builder are provided', () => {
+      const shadowBuilder = createWebRuleBuilder(
+        {
+          shadowColor: true,
+          shadowRadius: 'px',
+        },
+        ({ shadowColor = '#000', shadowRadius = '0' }) => ({
+          boxShadow: `0 0 ${shadowRadius} ${shadowColor}`,
+        })
+      );
+
+      const builder = createWebPropsBuilder({
+        width: 'px',
+        shadowColor: shadowBuilder,
+        shadowRadius: shadowBuilder,
+      });
+
+      const result = builder.build({ width: 100 });
+
+      expect(result).toBe('width: 100px');
+      expect(result).not.toContain('box-shadow');
+    });
+
+    test('includes rule builders when at least one prop handled by the rule builder is provided', () => {
+      const shadowBuilder = createWebRuleBuilder(
+        {
+          shadowColor: true,
+          shadowRadius: 'px',
+        },
+        ({ shadowColor = '#000', shadowRadius = '0' }) => ({
+          boxShadow: `0 0 ${shadowRadius} ${shadowColor}`,
+        })
+      );
+
+      const builder = createWebPropsBuilder({
+        width: 'px',
+        shadowColor: shadowBuilder,
+        shadowRadius: shadowBuilder,
+      });
+
+      const resultWithShadowColor = builder.build({
+        width: 100,
+        shadowColor: 'red',
+      });
+
+      expect(resultWithShadowColor).toContain('width: 100px');
+      expect(resultWithShadowColor).toContain('box-shadow: 0 0 0 red');
+
+      const resultWithShadowRadius = builder.build({ width: 100, shadowRadius: 5 });
+
+      expect(resultWithShadowRadius).toContain('width: 100px');
+      expect(resultWithShadowRadius).toContain('box-shadow: 0 0 5px #000');
+    });
   });
 
   describe('build with mixed config', () => {
