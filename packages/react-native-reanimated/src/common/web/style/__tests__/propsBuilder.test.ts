@@ -219,7 +219,10 @@ describe(createWebPropsBuilder, () => {
       expect(resultWithShadowColor).toContain('width: 100px');
       expect(resultWithShadowColor).toContain('box-shadow: 0 0 0 red');
 
-      const resultWithShadowRadius = builder.build({ width: 100, shadowRadius: 5 });
+      const resultWithShadowRadius = builder.build({
+        width: 100,
+        shadowRadius: 5,
+      });
 
       expect(resultWithShadowRadius).toContain('width: 100px');
       expect(resultWithShadowRadius).toContain('box-shadow: 0 0 5px #000');
