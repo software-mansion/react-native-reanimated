@@ -1,6 +1,6 @@
 'use strict';
 import { ReanimatedError } from '../errors';
-import { isReactNativeViewName } from '../utils/guards';
+import { isReactNativeViewName } from '../utils';
 
 export const ERROR_MESSAGES = {
   propsBuilderNotFound: (componentName: string) =>

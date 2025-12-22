@@ -32,8 +32,7 @@ export function registerComponentPropsBuilder<P extends UnknownRecord>(
     separatelyInterpolatedNestedProperties?: readonly string[];
   } = {}
 ) {
-  const builder = createNativePropsBuilder(config);
-  registry.registerBuilder(componentName, builder);
+  registry.registerBuilder(componentName, createNativePropsBuilder(config));
 
   if (options.separatelyInterpolatedNestedProperties?.length) {
     COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES.set(

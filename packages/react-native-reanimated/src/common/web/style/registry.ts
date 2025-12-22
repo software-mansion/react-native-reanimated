@@ -18,6 +18,5 @@ export function registerComponentPropsBuilder<P extends UnknownRecord>(
   componentName: string,
   config: PropsBuilderConfig<P>
 ) {
-  const builder = createWebPropsBuilder(config);
-  registry.registerBuilder(componentName, builder);
+  registry.registerBuilder(componentName, createWebPropsBuilder(config));
 }
