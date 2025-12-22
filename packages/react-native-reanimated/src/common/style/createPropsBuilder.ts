@@ -20,7 +20,7 @@ type CreatePropsBuilderParams<TPropsConfig> = {
 
 type PropsBuilderResult<TProps> = {
   build(
-    props: TProps,
+    props: Partial<TProps>,
     options?: {
       target?: ValueProcessorTarget;
       includeUnprocessed?: boolean;
