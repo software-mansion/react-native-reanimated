@@ -68,7 +68,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
 10. Testing:
 
-    - **Required**: Run `yarn test:e2e` in the repository root and ensure all tests pass before proceeding with the release.
+    - Run `yarn test:e2e` in the repository root and ensure all tests pass before proceeding with the release.
     - Run the examples from Reanimated app, especially those affected by release changes.
     - Test each example app on each platform (if possible, run in both **release** and **debug** mode using **Android** and **iOS**).
     - On rare cases it might be necessary to also test unusual configurations, i.e. **release** app with a **development** bundle. Please consult the team for more instructions here.
