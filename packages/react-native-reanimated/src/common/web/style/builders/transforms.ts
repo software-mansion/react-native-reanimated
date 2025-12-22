@@ -1,10 +1,10 @@
 'use strict';
 import type { TransformsStyle } from 'react-native';
 
-import { createPropsBuilder } from '../builderFactories';
+import { createWebRuleBuilder } from '../ruleBuilder';
 import type { ValueProcessor } from '../types';
 
-const transformBuilder = createPropsBuilder(
+const transformBuilder = createWebRuleBuilder(
   {
     perspective: 'px',
     rotate: true,
@@ -20,9 +20,9 @@ const transformBuilder = createPropsBuilder(
     skewY: true,
     matrix: { name: 'matrix3d' },
   },
-  (transforms, nameAliases) =>
+  (transforms) =>
     Object.entries(transforms)
-      .map(([key, value]) => `${nameAliases[key] ?? key}(${value})`)
+      .map(([key, value]) => `${key}(${value})`)
       .join(' ')
 );
 

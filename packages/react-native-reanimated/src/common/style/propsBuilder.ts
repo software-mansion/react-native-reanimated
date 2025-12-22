@@ -5,14 +5,9 @@ import type {
   UnknownRecord,
   ValueProcessor,
 } from '../types';
-import { isConfigPropertyAlias, isRecord } from '../utils';
+import { hasValueProcessor, isConfigPropertyAlias } from '../utils';
 import { BASE_PROPERTIES_CONFIG } from './config';
 import createPropsBuilder from './createPropsBuilder';
-
-const hasValueProcessor = (
-  configValue: unknown
-): configValue is { process: ValueProcessor<unknown> } =>
-  isRecord(configValue) && 'process' in configValue;
 
 type PropsBuilderPropertyConfig<
   TProps extends UnknownRecord = UnknownRecord,
@@ -45,7 +40,7 @@ export function createNativePropsBuilder<TProps extends UnknownRecord>(
       if (isConfigPropertyAlias<TProps>(configValue)) {
         return config[configValue.as];
       }
-      if (hasValueProcessor(configValue)) {
+      if (hasValueProcessor<ValueProcessor>(configValue)) {
         return (value, context) => {
           'worklet';
           return configValue.process(value, context);
