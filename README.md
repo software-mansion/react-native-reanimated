@@ -1,4 +1,9 @@
-<img src="https://user-images.githubusercontent.com/16062886/117443145-ff868480-af37-11eb-8680-648bccf0d0ce.png" alt="React Native Reanimated by Software Mansion" width="100%">
+<p align="center" style="margin:0; padding:0;">
+  <img src="https://user-images.githubusercontent.com/16062886/117443145-ff868480-af37-11eb-8680-648bccf0d0ce.png" alt="React Native Reanimated by Software Mansion" width="100%">
+  <a href="https://stateofreactnative.com/">
+    <img width="1100" height="120" alt="sorn25-banner" src="https://github.com/user-attachments/assets/4a5ec022-7283-443a-ba13-27b3984d7b58" />
+  </a>
+</p>
 
 ### Create smooth animations with an excellent developer experience.
 
