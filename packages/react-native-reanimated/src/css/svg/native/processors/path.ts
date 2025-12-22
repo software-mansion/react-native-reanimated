@@ -38,6 +38,7 @@ const numberPattern = /-?[0-9]*\.?[0-9]+(?:e[-+]?\d+)?/gi;
 
 function parsePathString(d: string): PathCommand[] {
   const pathSegments: PathCommand[] = [];
+
   d.replace(segmentPattern, (_, command: string, argsString: string) => {
     let type = command.toLowerCase();
     const numbers = argsString.match(numberPattern);
@@ -47,27 +48,37 @@ function parsePathString(d: string): PathCommand[] {
       throw new ReanimatedError(ERROR_MESSAGES.invalidSVGPathStart(command));
     }
 
+    let argsStartIdx = 0;
+
     if (type === 'm' && args.length > length['m']) {
-      pathSegments.push([command, ...args.splice(0, length['m'])]);
-      type = 'l'; // If m has more than 2 arguments, use them in implicit l commands
+      pathSegments.push([command, ...args.slice(0, length['m'])]);
+      argsStartIdx += length['m'];
+      type = 'l'; // If m has more than 2 (length['m']) arguments, use them in implicit l commands
       command = command === 'm' ? 'l' : 'L';
     }
 
     while (true) {
-      if (args.length === length[type]) {
-        pathSegments.push([command, ...args]);
-        return '';
-      }
-
-      if (args.length < length[type]) {
+      if (args.length - argsStartIdx < length[type]) {
         throw new ReanimatedError(
-          ERROR_MESSAGES.invalidSVGPathCommand(command, args)
+          ERROR_MESSAGES.invalidSVGPathCommand(
+            command,
+            args.slice(argsStartIdx)
+          )
         );
       }
 
-      pathSegments.push([command, ...args.splice(0, length[type])]);
+      pathSegments.push([
+        command,
+        ...args.slice(argsStartIdx, argsStartIdx + length[type]),
+      ]);
+      argsStartIdx += length[type];
+
+      if (args.length - argsStartIdx === 0) {
+        return '';
+      }
     }
   });
+
   return pathSegments;
 }
 
