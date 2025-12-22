@@ -1,11 +1,11 @@
 'use strict';
+
+import { BASE_PROPERTIES_CONFIG } from '../config';
 import {
-  BASE_PROPERTIES_CONFIG,
   ERROR_MESSAGES,
-  getPropsBuilder,
-  hasPropsBuilder,
   registerComponentPropsBuilder,
-} from '../../../common';
+  registry,
+} from '../registry';
 
 describe('registry', () => {
   describe('hasPropsBuilder', () => {
@@ -15,16 +15,16 @@ describe('registry', () => {
 
       registerComponentPropsBuilder(componentName, config);
 
-      expect(hasPropsBuilder(componentName)).toBe(true);
+      expect(registry.hasPropsBuilder(componentName)).toBe(true);
     });
 
     test('returns true for RCT prefixed component names', () => {
-      expect(hasPropsBuilder('RCTView')).toBe(true);
-      expect(hasPropsBuilder('RCTText')).toBe(true);
+      expect(registry.hasPropsBuilder('RCTView')).toBe(true);
+      expect(registry.hasPropsBuilder('RCTText')).toBe(true);
     });
 
     test('returns false for unregistered component names', () => {
-      expect(hasPropsBuilder('UnregisteredComponent')).toBe(false);
+      expect(registry.hasPropsBuilder('UnregisteredComponent')).toBe(false);
     });
   });
 
@@ -34,14 +34,14 @@ describe('registry', () => {
       const config = { width: true, height: true };
 
       registerComponentPropsBuilder(componentName, config);
-      const propsBuilder = getPropsBuilder(componentName);
+      const propsBuilder = registry.getPropsBuilder(componentName);
 
       expect(propsBuilder).toBeDefined();
       expect(typeof propsBuilder.build).toBe('function');
     });
 
     test('returns base props builder for RCT prefixed components', () => {
-      const propsBuilder = getPropsBuilder('RCTView');
+      const propsBuilder = registry.getPropsBuilder('RCTView');
 
       expect(propsBuilder).toBeDefined();
       expect(typeof propsBuilder.build).toBe('function');
@@ -49,7 +49,7 @@ describe('registry', () => {
 
     test('throws error for unregistered component names', () => {
       expect(() => {
-        getPropsBuilder('UnregisteredComponent');
+        registry.getPropsBuilder('UnregisteredComponent');
       }).toThrow(ERROR_MESSAGES.propsBuilderNotFound('UnregisteredComponent'));
     });
   });
@@ -61,8 +61,8 @@ describe('registry', () => {
 
       registerComponentPropsBuilder(componentName, config);
 
-      expect(hasPropsBuilder(componentName)).toBe(true);
-      expect(getPropsBuilder(componentName)).toBeDefined();
+      expect(registry.hasPropsBuilder(componentName)).toBe(true);
+      expect(registry.getPropsBuilder(componentName)).toBeDefined();
     });
 
     test('works with base properties config', () => {
@@ -70,8 +70,8 @@ describe('registry', () => {
 
       registerComponentPropsBuilder(componentName, BASE_PROPERTIES_CONFIG);
 
-      expect(hasPropsBuilder(componentName)).toBe(true);
-      expect(getPropsBuilder(componentName)).toBeDefined();
+      expect(registry.hasPropsBuilder(componentName)).toBe(true);
+      expect(registry.getPropsBuilder(componentName)).toBeDefined();
     });
   });
 });

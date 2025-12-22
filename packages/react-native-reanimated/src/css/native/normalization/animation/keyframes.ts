@@ -5,12 +5,12 @@ import type {
   UnknownRecord,
 } from '../../../../common';
 import {
-  getPropsBuilder,
   getSeparatelyInterpolatedNestedProperties,
   isDefined,
   isNumber,
   isRecord,
   ReanimatedError,
+  registry,
 } from '../../../../common';
 import { PERCENTAGE_REGEX } from '../../../constants';
 import type {
@@ -146,7 +146,7 @@ export function normalizeAnimationKeyframes(
   keyframes: CSSAnimationKeyframes,
   viewName: string
 ): NormalizedCSSAnimationKeyframesConfig {
-  const propsBuilder = getPropsBuilder(viewName);
+  const propsBuilder = registry.getPropsBuilder(viewName);
   const separatelyInterpolatedNestedProperties =
     getSeparatelyInterpolatedNestedProperties(viewName);
   const propKeyframes: PropsWithKeyframes = {};

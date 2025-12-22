@@ -1,17 +1,13 @@
 'use strict';
-import { ReanimatedError } from '../errors';
+import { createRegistry } from '../registry';
 import type { UnknownRecord } from '../types';
-import { isReactNativeViewName } from '../utils/guards';
 import propsBuilder, {
   createNativePropsBuilder,
   type NativePropsBuilder,
   type PropsBuilderConfig,
 } from './propsBuilder';
 
-export const ERROR_MESSAGES = {
-  propsBuilderNotFound: (componentName: string) =>
-    `CSS props builder for component ${componentName} was not found`,
-};
+export { ERROR_MESSAGES } from '../registry';
 
 const DEFAULT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Set<string>([
   'boxShadow',
@@ -25,28 +21,9 @@ const COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Map<
   Set<string>
 >();
 
-const PROPS_BUILDERS: Record<string, NativePropsBuilder> = {};
-
-export function hasPropsBuilder(componentName: string): boolean {
-  return (
-    !!PROPS_BUILDERS[componentName] || isReactNativeViewName(componentName)
-  );
-}
-
-export function getPropsBuilder(componentName: string): NativePropsBuilder {
-  const componentPropsBuilder = PROPS_BUILDERS[componentName];
-
-  if (componentPropsBuilder) {
-    return componentPropsBuilder;
-  }
-
-  if (isReactNativeViewName(componentName)) {
-    // This captures all React Native components (prefixed with RCT)
-    return propsBuilder;
-  }
-
-  throw new ReanimatedError(ERROR_MESSAGES.propsBuilderNotFound(componentName));
-}
+export const registry = createRegistry<NativePropsBuilder>({
+  basePropsBuilder: propsBuilder,
+});
 
 export function registerComponentPropsBuilder<P extends UnknownRecord>(
   componentName: string,
@@ -55,7 +32,7 @@ export function registerComponentPropsBuilder<P extends UnknownRecord>(
     separatelyInterpolatedNestedProperties?: readonly string[];
   } = {}
 ) {
-  PROPS_BUILDERS[componentName] = createNativePropsBuilder(config);
+  registry.registerBuilder(componentName, createNativePropsBuilder(config));
 
   if (options.separatelyInterpolatedNestedProperties?.length) {
     COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES.set(
