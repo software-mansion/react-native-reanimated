@@ -71,7 +71,9 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
       const processedProps = propsBuilder.build(props);
 
       // Build only used rule builders and merge their results
-      const ruleBuilderProps = Array.from(usedRuleBuilders).reduce<UnknownRecord>(
+      const ruleBuilderProps = Array.from(
+        usedRuleBuilders
+      ).reduce<UnknownRecord>(
         (acc, builder) => ({ ...acc, ...builder.build() }),
         {}
       );
