@@ -3,12 +3,13 @@
 import { ReanimatedError, type ValueProcessor } from '../../../../common';
 import {
   arcToCubic,
+  lineToCubic,
   NUMBER_PATTERN,
   PATH_COMMAND_LENGTHS,
   quadraticToCubic,
   reflectControlPoint,
   SEGMENT_PATTERN,
-} from '../../../utils/pathUtils';
+} from '../../../utils';
 
 export const ERROR_MESSAGES = {
   invalidSVGPathCommand: (command: unknown, args: unknown) =>
@@ -28,47 +29,54 @@ export const processSVGPath: ValueProcessor<string, string> = (d) => {
   return tmpFlat.join(' ');
 };
 
+function processPathSegment(
+  command: string,
+  args: number[],
+  pathSegments: PathCommand[]
+): void {
+  let type = command.toLowerCase();
+
+  if (pathSegments.length === 0 && type !== 'm') {
+    throw new ReanimatedError(ERROR_MESSAGES.invalidSVGPathStart(command));
+  }
+
+  let argsStartIdx = 0;
+
+  if (type === 'm' && args.length > PATH_COMMAND_LENGTHS['m']) {
+    pathSegments.push([command, ...args.slice(0, PATH_COMMAND_LENGTHS['m'])]);
+    argsStartIdx += PATH_COMMAND_LENGTHS['m'];
+    type = 'l'; // If m has more than 2 (length['m']) arguments, use them in implicit l commands
+    command = command === 'm' ? 'l' : 'L';
+  }
+
+  while (true) {
+    if (args.length - argsStartIdx < PATH_COMMAND_LENGTHS[type]) {
+      throw new ReanimatedError(
+        ERROR_MESSAGES.invalidSVGPathCommand(command, args.slice(argsStartIdx))
+      );
+    }
+
+    pathSegments.push([
+      command,
+      ...args.slice(argsStartIdx, argsStartIdx + PATH_COMMAND_LENGTHS[type]),
+    ]);
+    argsStartIdx += PATH_COMMAND_LENGTHS[type];
+
+    if (args.length - argsStartIdx === 0) {
+      return;
+    }
+  }
+}
+
 function parsePathString(d: string): PathCommand[] {
   const pathSegments: PathCommand[] = [];
 
   d.replace(SEGMENT_PATTERN, (_, command: string, argsString: string) => {
-    let type = command.toLowerCase();
     const numbers = argsString.match(NUMBER_PATTERN);
     const args = numbers ? numbers.map(Number) : [];
 
-    if (pathSegments.length === 0 && type !== 'm') {
-      throw new ReanimatedError(ERROR_MESSAGES.invalidSVGPathStart(command));
-    }
-
-    let argsStartIdx = 0;
-
-    if (type === 'm' && args.length > PATH_COMMAND_LENGTHS['m']) {
-      pathSegments.push([command, ...args.slice(0, PATH_COMMAND_LENGTHS['m'])]);
-      argsStartIdx += PATH_COMMAND_LENGTHS['m'];
-      type = 'l'; // If m has more than 2 (length['m']) arguments, use them in implicit l commands
-      command = command === 'm' ? 'l' : 'L';
-    }
-
-    while (true) {
-      if (args.length - argsStartIdx < PATH_COMMAND_LENGTHS[type]) {
-        throw new ReanimatedError(
-          ERROR_MESSAGES.invalidSVGPathCommand(
-            command,
-            args.slice(argsStartIdx)
-          )
-        );
-      }
-
-      pathSegments.push([
-        command,
-        ...args.slice(argsStartIdx, argsStartIdx + PATH_COMMAND_LENGTHS[type]),
-      ]);
-      argsStartIdx += PATH_COMMAND_LENGTHS[type];
-
-      if (args.length - argsStartIdx === 0) {
-        return '';
-      }
-    }
+    processPathSegment(command, args, pathSegments);
+    return '';
   });
 
   return pathSegments;
@@ -78,121 +86,63 @@ function normalizePath(pathSegments: PathCommand[]): PathCommand[] {
   const absoluteSegments = absolutizePath(pathSegments);
   const out: PathCommand[] = [];
 
-  let curX = 0,
-    curY = 0;
-  let startX = 0,
-    startY = 0;
-
-  // Last control point used for S only reflects C/S; T only reflects Q/T.
-  let lastCubicCtrlX = 0,
-    lastCubicCtrlY = 0;
-  let lastQuadCtrlX = 0,
-    lastQuadCtrlY = 0;
+  const state: PathState = {
+    curX: 0,
+    curY: 0,
+    startX: 0,
+    startY: 0,
+    lastCubicCtrlX: 0,
+    lastCubicCtrlY: 0,
+    lastQuadCtrlX: 0,
+    lastQuadCtrlY: 0,
+  };
 
   for (const seg of absoluteSegments) {
     let cmd = seg[0];
     let args = [...seg.slice(1)] as number[];
 
-    let isCubicChain = false;
-    let isQuadChain = false;
-
     if (cmd === 'S') {
       const [rX, rY] = reflectControlPoint(
-        curX,
-        curY,
-        lastCubicCtrlX,
-        lastCubicCtrlY
+        state.curX,
+        state.curY,
+        state.lastCubicCtrlX,
+        state.lastCubicCtrlY
       );
       cmd = 'C';
       args = [rX, rY, args[0], args[1], args[2], args[3]];
-      isCubicChain = true;
     } else if (cmd === 'T') {
       const [rX, rY] = reflectControlPoint(
-        curX,
-        curY,
-        lastQuadCtrlX,
-        lastQuadCtrlY
+        state.curX,
+        state.curY,
+        state.lastQuadCtrlX,
+        state.lastQuadCtrlY
       );
       cmd = 'Q';
       args = [rX, rY, args[0], args[1]];
-      isQuadChain = true;
     }
 
     if (cmd === 'H') {
-      args = [args[0], curY];
       cmd = 'L';
-    } else if (cmd === 'V') {
-      args = [curX, args[0]];
+      args = [args[0], state.curY];
+    }
+    if (cmd === 'V') {
       cmd = 'L';
+      args = [state.curX, args[0]];
     }
 
-    if (cmd === 'M') {
-      curX = args[0];
-      curY = args[1];
-      startX = curX;
-      startY = curY;
-      out.push(['M', curX, curY]);
-    } else if (cmd === 'L') {
-      const [x, y] = args;
-      const cp1x = curX + (x - curX) / 3;
-      const cp1y = curY + (y - curY) / 3;
-      const cp2x = curX + (2 * (x - curX)) / 3;
-      const cp2y = curY + (2 * (y - curY)) / 3;
-      out.push(['C', cp1x, cp1y, cp2x, cp2y, x, y]);
-      curX = x;
-      curY = y;
-    } else if (cmd === 'Q') {
-      const [qcx, qcy, x, y] = args;
-      isQuadChain = true;
-      out.push(['C', ...quadraticToCubic(curX, curY, qcx, qcy, x, y)]);
-      lastQuadCtrlX = qcx;
-      lastQuadCtrlY = qcy;
-      curX = x;
-      curY = y;
-    } else if (cmd === 'C') {
-      isCubicChain = true;
-      out.push(['C', ...args]);
-      lastCubicCtrlX = args[2];
-      lastCubicCtrlY = args[3];
-      curX = args[4];
-      curY = args[5];
-    } else if (cmd === 'A') {
-      const cubics = arcToCubic(
-        curX,
-        curY,
-        args[0],
-        args[1],
-        args[2],
-        args[3],
-        args[4],
-        args[5],
-        args[6]
-      );
-      if (cubics.length > 0) {
-        isCubicChain = true;
-        for (const cArgs of cubics) {
-          out.push(['C', ...cArgs]);
-        }
-        const last = cubics[cubics.length - 1];
-        curX = last[4];
-        curY = last[5];
-        lastCubicCtrlX = last[2];
-        lastCubicCtrlY = last[3];
-      }
-    } else if (cmd === 'Z') {
-      out.push(['Z']);
-      curX = startX;
-      curY = startY;
-    }
+    const result = handlers[cmd as keyof typeof handlers](state, args);
+    out.push(...result);
 
-    if (!isCubicChain) {
-      lastCubicCtrlX = curX;
-      lastCubicCtrlY = curY;
-    }
+    const isCubic = cmd === 'C';
+    const isQuad = cmd === 'Q';
 
-    if (!isQuadChain) {
-      lastQuadCtrlX = curX;
-      lastQuadCtrlY = curY;
+    if (!isCubic) {
+      state.lastCubicCtrlX = state.curX;
+      state.lastCubicCtrlY = state.curY;
+    }
+    if (!isQuad) {
+      state.lastQuadCtrlX = state.curX;
+      state.lastQuadCtrlY = state.curY;
     }
   }
 
@@ -256,3 +206,79 @@ function absolutizePath(pathSegments: PathCommand[]): PathCommand[] {
     return [upperCmd, ...args];
   });
 }
+
+type PathState = {
+  curX: number;
+  curY: number;
+  startX: number;
+  startY: number;
+  lastCubicCtrlX: number;
+  lastCubicCtrlY: number;
+  lastQuadCtrlX: number;
+  lastQuadCtrlY: number;
+};
+
+const handlers = {
+  M: (state: PathState, args: number[]): PathCommand[] => {
+    const [x, y] = args;
+    state.curX = state.startX = x;
+    state.curY = state.startY = y;
+    return [['M', x, y]];
+  },
+
+  L: (state: PathState, args: number[]): PathCommand[] => {
+    const [x, y] = args;
+    const cubic = lineToCubic(state.curX, state.curY, x, y);
+    state.curX = x;
+    state.curY = y;
+    return [['C', ...cubic]];
+  },
+
+  Q: (state: PathState, args: number[]): PathCommand[] => {
+    const [qcx, qcy, x, y] = args;
+    const cubic = quadraticToCubic(state.curX, state.curY, qcx, qcy, x, y);
+    state.lastQuadCtrlX = qcx;
+    state.lastQuadCtrlY = qcy;
+    state.curX = x;
+    state.curY = y;
+    return [['C', ...cubic]];
+  },
+
+  C: (state: PathState, args: number[]): PathCommand[] => {
+    const [_cp1x, _cp1y, cp2x, cp2y, x, y] = args;
+    state.lastCubicCtrlX = cp2x;
+    state.lastCubicCtrlY = cp2y;
+    state.curX = x;
+    state.curY = y;
+    return [['C', ...args]];
+  },
+
+  A: (state: PathState, args: number[]): PathCommand[] => {
+    const cubics = arcToCubic(
+      state.curX,
+      state.curY,
+      args[0],
+      args[1],
+      args[2],
+      args[3],
+      args[4],
+      args[5],
+      args[6]
+    );
+    if (cubics.length === 0) return [];
+
+    const last = cubics[cubics.length - 1];
+    state.lastCubicCtrlX = last[2];
+    state.lastCubicCtrlY = last[3];
+    state.curX = last[4];
+    state.curY = last[5];
+
+    return cubics.map((c) => ['C', ...c]);
+  },
+
+  Z: (state: PathState): PathCommand[] => {
+    state.curX = state.startX;
+    state.curY = state.startY;
+    return [['Z']];
+  },
+};
