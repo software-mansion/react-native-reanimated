@@ -62,4 +62,5 @@ struct SVGPath : public CSSSimpleValue<SVGPath> {
 
   std::pair<Cubic, Cubic> singleSplitCubic(const Cubic &cubic, double t) const;
 };
+
 } // namespace reanimated::css

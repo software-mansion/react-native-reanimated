@@ -68,15 +68,15 @@ SVGPath SVGPath::interpolate(const double progress, const SVGPath &to) const {
   size_t longerSize = longerPath.size();
   size_t shorterSize = shorterPath.size();
 
+  if (shorterSize == 0) {
+    return to;
+  }
+
   std::vector<std::reference_wrapper<const SubPath>> fromRef;
   std::vector<std::reference_wrapper<const SubPath>> toRef;
 
   fromRef.reserve(longerSize);
   toRef.reserve(longerSize);
-
-  if (shorterSize == 0) {
-    return to;
-  }
 
   size_t baseGroupSize = longerSize / shorterSize;
   size_t remainder = longerSize % shorterSize;
