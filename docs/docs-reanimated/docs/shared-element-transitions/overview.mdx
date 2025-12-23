@@ -6,8 +6,7 @@ sidebar_label: Overview
 
 :::caution
 
-Shared Element Transitions is an experimental feature available <a href="/react-native-reanimated/docs/guides/feature-flags#enable_shared_element_transitions">behind a feature flag</a>, not recommended for production use yet. We are waiting for your feedback to improve the implementation.
-
+Shared Element Transitions is an experimental feature available [behind a feature flag](/docs/guides/feature-flags#enable_shared_element_transitions), not recommended for production use yet. We are waiting for your feedback to improve the implementation.
 :::
 
 Shared Element Transitions allow you to smoothly transform a component from one screen into a component on another screen.
@@ -48,7 +47,7 @@ function Two({ navigation }) {
 export default function SharedElementExample() {
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: true }}>
+      <Stack.Navigator>
         <Stack.Screen name="One" component={One} />
         <Stack.Screen name="Two" component={Two} />
       </Stack.Navigator>
