@@ -23,7 +23,7 @@ import { SensorContainer } from './SensorContainer';
 export { startMapper, stopMapper } from './mappers';
 export { makeMutable } from './mutables';
 
-const EDGE_TO_EDGE = isEdgeToEdge();
+const EDGE_TO_EDGE = /* @__PURE__ */ isEdgeToEdge();
 
 /**
  * @deprecated Please use the exported variable `reanimatedVersion` instead.
