@@ -489,6 +489,8 @@ var require_globals = __commonJS({
       "performance",
       "arguments",
       "require",
+      "fetch",
+      "XMLHttpRequest",
       "queueMicrotask",
       "requestAnimationFrame",
       "cancelAnimationFrame",

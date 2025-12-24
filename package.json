@@ -70,5 +70,9 @@
     "react-native-builder-bob": "0.40.13",
     "shelljs": "0.10.0",
     "typescript": "5.8.3"
+  },
+  "resolutions": {
+    "metro": "patch:metro@npm%3A0.83.2#~/.yarn/patches/metro-npm-0.83.2-d09f48ca84.patch",
+    "metro-runtime": "patch:metro-runtime@npm%3A0.83.2#~/.yarn/patches/metro-runtime-npm-0.83.2-c614bbd3b9.patch"
   }
 }

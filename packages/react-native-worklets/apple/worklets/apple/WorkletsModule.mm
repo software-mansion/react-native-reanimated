@@ -14,6 +14,14 @@
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
 
+#ifdef WORKLETS_BUNDLE_MODE
+#import <worklets/apple/Networking/WorkletsNetworking.h>
+#import <React/RCTNetworking.h>
+#import <ReactCommon/RCTTurboModule.h>
+
+#import <FBReactNativeSpec/FBReactNativeSpec.h>
+#endif // WORKLETS_BUNDLE_MODE
+
 using namespace worklets;
 
 @interface RCTBridge (JSIRuntime)
@@ -23,6 +31,9 @@ using namespace worklets;
 @implementation WorkletsModule {
   AnimationFrameQueue *animationFrameQueue_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+#ifdef WORKLETS_BUNDLE_MODE
+  WorkletsNetworking *workletsNetworking_;
+#endif // WORKLETS_BUNDLE_MODE
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
 #endif // NDEBUG
@@ -42,6 +53,9 @@ using namespace worklets;
 
 @synthesize bundleManager = bundleManager_;
 @synthesize callInvoker = callInvoker_;
+#ifdef WORKLETS_BUNDLE_MODE
+@synthesize moduleRegistry = moduleRegistry_;
+#endif // WORKLETS_BUNDLE_MODE
 
 RCT_EXPORT_MODULE(WorkletsModule);
 
@@ -61,6 +75,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   std::string sourceURL = "";
   std::shared_ptr<const ScriptBuffer> script = nullptr;
 #ifdef WORKLETS_BUNDLE_MODE
+  id networkingModule = [moduleRegistry_ moduleForClass:RCTNetworking.class];
+  workletsNetworking_ = [[WorkletsNetworking alloc] init:networkingModule];
   NSURL *url = bundleManager_.bundleURL;
   NSData *data = [NSData dataWithContentsOfURL:url];
   if (data) {
@@ -116,13 +132,33 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   return std::make_shared<facebook::react::NativeWorkletsModuleSpecJSI>(params);
 }
 
-- (RuntimeBindings)getRuntimeBindings
+- (std::shared_ptr<RuntimeBindings>)getRuntimeBindings
 {
-  return {
+  return std::make_shared<RuntimeBindings>(RuntimeBindings{
       .requestAnimationFrame = [animationFrameQueue =
                                     animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
         [animationFrameQueue requestAnimationFrame:callback];
-      }};
+      }
+      #ifdef WORKLETS_BUNDLE_MODE
+      ,
+      .abortRequest =
+          [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, const jsi::Value &requestID) {
+            [workletsNetworking jsiAbortRequest:requestID.asNumber()];
+            return jsi::Value::undefined();
+          },
+      .clearCookies =
+          [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, jsi::Function &&responseSender) {
+            [workletsNetworking jsiClearCookies:rt responseSender:(std::move(responseSender))];
+            return jsi::Value::undefined();
+          },
+      .sendRequest =
+          [workletsNetworking = workletsNetworking_](
+              jsi::Runtime &rt, const jsi::Value &query, jsi::Function &&responseSender) {
+            [workletsNetworking jsiSendRequest:rt jquery:query responseSender:(std::move(responseSender))];
+            return jsi::Value::undefined();
+          }
+      #endif // WORKLETS_BUNDLE_MODE
+  });
 }
 
 @end

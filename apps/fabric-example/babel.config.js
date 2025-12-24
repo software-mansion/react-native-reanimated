@@ -1,7 +1,8 @@
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
 const workletsPluginOptions = {
   // Uncomment the next line to enable bundle mode.
-  // bundleMode: true,
+  bundleMode: true,
+  workletizableModules: ['react-native/Libraries/Core/setUpXHR', 'axios'],
 };
 
 /** @type {import('@babel/core').TransformOptions} */

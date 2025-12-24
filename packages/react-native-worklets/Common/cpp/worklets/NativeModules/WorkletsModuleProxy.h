@@ -28,7 +28,7 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       std::function<bool()> &&isJavaScriptQueue,
-      RuntimeBindings runtimeBindings,
+      const std::shared_ptr<RuntimeBindings> &runtimeBindings,
       const std::shared_ptr<const ScriptBuffer> &script,
       const std::string &sourceUrl);
 
@@ -66,7 +66,7 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   const std::shared_ptr<JSLogger> jsLogger_;
-  const RuntimeBindings runtimeBindings_;
+  const std::shared_ptr<RuntimeBindings> runtimeBindings_;
   const std::shared_ptr<const ScriptBuffer> script_;
   const std::string sourceUrl_;
   const std::shared_ptr<MemoryManager> memoryManager_;
