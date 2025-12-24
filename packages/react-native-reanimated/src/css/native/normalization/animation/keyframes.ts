@@ -1,10 +1,12 @@
 'use strict';
 import type {
   AnyRecord,
-  PropsBuilder,
+  NativePropsBuilder,
   UnknownRecord,
 } from '../../../../common';
 import {
+  getPropsBuilder,
+  getSeparatelyInterpolatedNestedProperties,
   isDefined,
   isNumber,
   isRecord,
@@ -75,12 +77,12 @@ type ProcessedKeyframes = Array<{
 
 export function processKeyframes(
   keyframes: CSSAnimationKeyframes,
-  propsBuilder: PropsBuilder<AnyRecord>
+  propsBuilder: NativePropsBuilder
 ): ProcessedKeyframes {
   return Object.entries(keyframes)
     .flatMap(
       ([selector, { animationTimingFunction = undefined, ...props } = {}]) => {
-        const normalizedProps = propsBuilder.buildFrom(props);
+        const normalizedProps = propsBuilder.build(props);
         if (!normalizedProps) {
           return [];
         }
@@ -110,7 +112,7 @@ function processProps(
   offset: number,
   props: UnknownRecord,
   keyframeProps: AnyRecord,
-  propsBuilder: PropsBuilder<AnyRecord>
+  separatelyInterpolatedNestedProperties: ReadonlySet<string>
 ) {
   Object.entries(props).forEach(([property, value]) => {
     if (!isDefined(value)) {
@@ -119,12 +121,17 @@ function processProps(
 
     if (
       isRecord(value) &&
-      propsBuilder.isSeparatelyInterpolatedNestedProperty(property)
+      separatelyInterpolatedNestedProperties.has(property)
     ) {
       if (!keyframeProps[property]) {
         keyframeProps[property] = Array.isArray(value) ? [] : {};
       }
-      processProps(offset, value, keyframeProps[property], propsBuilder);
+      processProps(
+        offset,
+        value,
+        keyframeProps[property],
+        separatelyInterpolatedNestedProperties
+      );
       return;
     }
 
@@ -137,14 +144,22 @@ function processProps(
 
 export function normalizeAnimationKeyframes(
   keyframes: CSSAnimationKeyframes,
-  propsBuilder: PropsBuilder<AnyRecord>
+  viewName: string
 ): NormalizedCSSAnimationKeyframesConfig {
+  const propsBuilder = getPropsBuilder(viewName);
+  const separatelyInterpolatedNestedProperties =
+    getSeparatelyInterpolatedNestedProperties(viewName);
   const propKeyframes: PropsWithKeyframes = {};
   const timingFunctions: NormalizedCSSKeyframeTimingFunctions = {};
 
   processKeyframes(keyframes, propsBuilder).forEach(
     ({ offset, props, timingFunction }) => {
-      processProps(offset, props, propKeyframes, propsBuilder);
+      processProps(
+        offset,
+        props,
+        propKeyframes,
+        separatelyInterpolatedNestedProperties
+      );
       if (timingFunction && offset < 1) {
         timingFunctions[offset] = normalizeTimingFunction(timingFunction);
       }

@@ -1,11 +1,11 @@
 'use strict';
-import { BASE_PROPERTIES_CONFIG } from '../../../common';
 import {
+  BASE_PROPERTIES_CONFIG,
   ERROR_MESSAGES,
   getPropsBuilder,
   hasPropsBuilder,
   registerComponentPropsBuilder,
-} from '../registry';
+} from '../../../common';
 
 describe('registry', () => {
   describe('hasPropsBuilder', () => {
@@ -37,14 +37,14 @@ describe('registry', () => {
       const propsBuilder = getPropsBuilder(componentName);
 
       expect(propsBuilder).toBeDefined();
-      expect(typeof propsBuilder.buildFrom).toBe('function');
+      expect(typeof propsBuilder.build).toBe('function');
     });
 
     test('returns base props builder for RCT prefixed components', () => {
       const propsBuilder = getPropsBuilder('RCTView');
 
       expect(propsBuilder).toBeDefined();
-      expect(typeof propsBuilder.buildFrom).toBe('function');
+      expect(typeof propsBuilder.build).toBe('function');
     });
 
     test('throws error for unregistered component names', () => {
@@ -55,7 +55,7 @@ describe('registry', () => {
   });
 
   describe('registerComponentPropsBuilder', () => {
-    test('registers a props builder', () => {
+    test('registers a style builder', () => {
       const componentName = 'TestComponent';
       const config = { width: true, height: true };
 

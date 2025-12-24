@@ -228,16 +228,6 @@ export function unprocessColor(
   throw new ReanimatedError(ERROR_MESSAGES.invalidProcessedColor(value));
 }
 
-export function processColorsInProps(props: StyleProps) {
-  for (const key in props) {
-    if (!ColorProperties.includes(key)) continue;
-    const value = props[key];
-    props[key] = Array.isArray(value)
-      ? value.map((c) => processColor(c))
-      : processColor(value);
-  }
-}
-
 export function unprocessColorsInProps(props: StyleProps) {
   for (const key in props) {
     if (!ColorProperties.includes(key)) continue;

@@ -32,7 +32,21 @@ function useAnimatedPropsJS<Props extends object>(
   );
 }
 
-const useAnimatedPropsNative = useAnimatedStyle;
+function useAnimatedPropsNative<Props extends object>(
+  updater: () => Props,
+  deps?: DependencyList | null,
+  adapters?:
+    | AnimatedPropsAdapterFunction
+    | AnimatedPropsAdapterFunction[]
+    | null
+) {
+  return (useAnimatedStyle as UseAnimatedStyleInternal<Props>)(
+    updater,
+    deps,
+    adapters,
+    true
+  );
+}
 
 /**
  * Lets you create an animated props object which can be animated using shared
@@ -50,4 +64,4 @@ const useAnimatedPropsNative = useAnimatedStyle;
  */
 export const useAnimatedProps: UseAnimatedProps = SHOULD_BE_USE_WEB
   ? (useAnimatedPropsJS as UseAnimatedProps)
-  : useAnimatedPropsNative;
+  : (useAnimatedPropsNative as UseAnimatedProps);

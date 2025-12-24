@@ -4,7 +4,6 @@ export {
   PlatformColor,
   processColor,
   processColorNumber,
-  processColorsInProps,
 } from './colors';
 export { processFilter } from './filter';
 export { processFontWeight } from './font';

@@ -271,7 +271,7 @@ function styleUpdater(
       }
 
       if (updates) {
-        updateProps(viewDescriptors, updates);
+        updateProps(viewDescriptors, updates, isAnimatedProps);
       }
 
       if (!allFinished) {
@@ -289,7 +289,7 @@ function styleUpdater(
     }
 
     if (hasNonAnimatedValues) {
-      updateProps(viewDescriptors, nonAnimatedNewValues);
+      updateProps(viewDescriptors, nonAnimatedNewValues, isAnimatedProps);
     }
   } else {
     state.isAnimationCancelled = true;

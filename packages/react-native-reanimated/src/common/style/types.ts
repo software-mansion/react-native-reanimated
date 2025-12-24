@@ -1,14 +1,6 @@
 'use strict';
 import type { AnyRecord, ConfigPropertyAlias, ValueProcessor } from '../types';
 
-export type StyleBuildMiddleware<P extends AnyRecord> = (props: P) => P;
-
-export type PropsBuilder<P extends AnyRecord = AnyRecord> = {
-  isSeparatelyInterpolatedNestedProperty(property: keyof P): boolean;
-  add(property: keyof P, value: P[keyof P]): void;
-  buildFrom(props: P): P | null;
-};
-
 type PropertyValueConfigBase<P extends AnyRecord> =
   | boolean // true - included, false - excluded
   | ConfigPropertyAlias<P>; // alias for another property
