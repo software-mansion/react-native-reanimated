@@ -118,6 +118,15 @@
     "!**/__mocks__",
     "!**/.*"
   ],
+  "sideEffects": [
+    "./src/index.ts",
+    "./lib/module/index.js",
+    "./**/runtimeKind.{js,ts}",
+    "./**/serializable.native.{js,ts}",
+    "./**/workletRuntimeEntry.native.{js,ts}",
+    "./**/initializers.native.{js,ts}",
+    "./**/featureFlags.native.{js,ts}"
+  ],
   "react-native-builder-bob": {
     "source": "src",
     "output": "lib",
