@@ -22,7 +22,7 @@ export type CSSStyle<S extends AnyRecord = PlainStyle> = S &
   Partial<CSSAnimationProperties<S>> &
   Partial<CSSTransitionProperties<S>>;
 
-type CSSStyleProps<P extends object> = {
+type CSSStyleProps<P extends AnyRecord> = {
   [K in keyof PickStyleProps<P>]: P[K] extends StyleProp<infer U>
     ? U extends object
       ? StyleProp<CSSStyle<U>>
@@ -30,8 +30,8 @@ type CSSStyleProps<P extends object> = {
     : never;
 };
 
-type RestProps<P extends object> = {
+type RestProps<P extends AnyRecord> = {
   [K in keyof Omit<P, keyof PickStyleProps<P>>]: P[K];
 };
 
-export type CSSProps<P extends object> = CSSStyleProps<P> & RestProps<P>;
+export type CSSProps<P extends AnyRecord> = CSSStyleProps<P> & RestProps<P>;

@@ -75,7 +75,7 @@ type ProcessedKeyframes = Array<{
 
 export function processKeyframes(
   keyframes: CSSAnimationKeyframes,
-  propsBuilder: PropsBuilder<AnyRecord>
+  propsBuilder: PropsBuilder
 ): ProcessedKeyframes {
   return Object.entries(keyframes)
     .flatMap(
@@ -110,7 +110,7 @@ function processProps(
   offset: number,
   props: UnknownRecord,
   keyframeProps: AnyRecord,
-  propsBuilder: PropsBuilder<AnyRecord>
+  propsBuilder: PropsBuilder
 ) {
   Object.entries(props).forEach(([property, value]) => {
     if (!isDefined(value)) {
@@ -137,7 +137,7 @@ function processProps(
 
 export function normalizeAnimationKeyframes(
   keyframes: CSSAnimationKeyframes,
-  propsBuilder: PropsBuilder<AnyRecord>
+  propsBuilder: PropsBuilder
 ): NormalizedCSSAnimationKeyframesConfig {
   const propKeyframes: PropsWithKeyframes = {};
   const timingFunctions: NormalizedCSSKeyframeTimingFunctions = {};

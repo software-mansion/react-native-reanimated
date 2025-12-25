@@ -9,6 +9,7 @@ This will not be easy though!
 
 import type { StyleProp } from 'react-native';
 
+import type { AnyRecord } from './common';
 import type {
   AnimatedStyle,
   EntryExitAnimationFunction,
@@ -42,17 +43,17 @@ type PickStyleProps<Props> = Pick<
   }[keyof Props]
 >;
 
-type AnimatedStyleProps<Props extends object> = {
+type AnimatedStyleProps<Props extends AnyRecord> = {
   [Key in keyof PickStyleProps<Props>]: StyleProp<AnimatedStyle<Props[Key]>>;
 };
 
 /** Component props that are not specially handled by us. */
-type ComponentPropsWithoutStyle<Props extends object> = Omit<
+type ComponentPropsWithoutStyle<Props extends AnyRecord> = Omit<
   Props,
   keyof PickStyleProps<Props> | 'style'
 >;
 
-type RestProps<Props extends object> = {
+type RestProps<Props extends AnyRecord> = {
   [K in keyof ComponentPropsWithoutStyle<Props>]:
     | Props[K]
     | SharedValue<Props[K]>;
@@ -99,7 +100,7 @@ type SharedTransitionProps = {
   sharedTransitionStyle?: SharedTransition;
 };
 
-export type AnimatedProps<Props extends object> = RestProps<Props> &
+export type AnimatedProps<Props extends AnyRecord> = RestProps<Props> &
   AnimatedStyleProps<Props> &
   LayoutProps & {
     /**

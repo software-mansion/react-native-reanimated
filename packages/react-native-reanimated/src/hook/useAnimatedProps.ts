@@ -1,4 +1,5 @@
 'use strict';
+import type { UnknownRecord } from '../common';
 import { SHOULD_BE_USE_WEB } from '../common';
 import type { AnimatedPropsAdapterFunction } from '../commonTypes';
 import type { DependencyList, UseAnimatedStyleInternal } from './commonTypes';
@@ -6,7 +7,7 @@ import { useAnimatedStyle } from './useAnimatedStyle';
 
 // TODO: we should make sure that when useAP is used we are not assigning styles
 
-type UseAnimatedProps = <Props extends object>(
+type UseAnimatedProps = <Props extends UnknownRecord>(
   updater: () => Partial<Props>,
   dependencies?: DependencyList | null,
   adapters?:
@@ -16,7 +17,7 @@ type UseAnimatedProps = <Props extends object>(
   isAnimatedProps?: boolean
 ) => Partial<Props>;
 
-function useAnimatedPropsJS<Props extends object>(
+function useAnimatedPropsJS<Props extends UnknownRecord>(
   updater: () => Props,
   deps?: DependencyList | null,
   adapters?:

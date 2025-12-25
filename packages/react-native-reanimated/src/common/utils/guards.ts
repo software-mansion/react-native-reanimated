@@ -1,6 +1,6 @@
 'use strict';
 'worklet';
-import type { AnyRecord, ConfigPropertyAlias, UnknownRecord } from '../types';
+import type { ConfigPropertyAlias, UnknownRecord } from '../types';
 
 export const isDefined = <T>(value: T): value is NonNullable<T> =>
   value !== undefined && value !== null;
@@ -28,12 +28,12 @@ export const isRecord = <T extends UnknownRecord = UnknownRecord>(
 ): value is T =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
-export const hasProp = <P extends AnyRecord, K extends string>(
+export const hasProp = <P extends UnknownRecord, K extends string>(
   obj: P,
   key: K
 ): obj is P & Record<K, string> => key in obj;
 
-export const isConfigPropertyAlias = <P extends AnyRecord>(
+export const isConfigPropertyAlias = <P extends UnknownRecord>(
   value: unknown
 ): value is ConfigPropertyAlias<P> =>
   !!value &&

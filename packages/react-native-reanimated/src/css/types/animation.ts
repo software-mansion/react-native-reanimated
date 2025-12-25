@@ -1,5 +1,5 @@
 'use strict';
-import type { PlainStyle } from '../../common';
+import type { PlainStyle, UnknownRecord } from '../../common';
 import type { CSSTimingFunction } from '../easing';
 import type { TimeUnit } from './common';
 import type { AddArrayPropertyType, AddArrayPropertyTypes } from './helpers';
@@ -12,11 +12,11 @@ export interface CSSKeyframesRule {
 }
 
 export type CSSAnimationKeyframeSelector = string | number;
-export type CSSAnimationKeyframeBlock<S extends object> = S & {
+export type CSSAnimationKeyframeBlock<S extends UnknownRecord> = S & {
   animationTimingFunction?: CSSAnimationTimingFunction;
 };
 
-export type CSSAnimationKeyframes<S extends object = PlainStyle> = Record<
+export type CSSAnimationKeyframes<S extends UnknownRecord = PlainStyle> = Record<
   CSSAnimationKeyframeSelector,
   CSSAnimationKeyframeBlock<S>
 >;
@@ -43,7 +43,7 @@ export type SingleCSSAnimationSettings = {
   // animationTimeline?: // TODO - This is still experimental in browsers and we might not want to support it when CSS animations in reanimated are released
 };
 
-export type SingleCSSAnimationProperties<S extends object = PlainStyle> =
+export type SingleCSSAnimationProperties<S extends UnknownRecord = PlainStyle> =
   SingleCSSAnimationSettings & {
     animationName: CSSKeyframesRule | CSSAnimationKeyframes<S>;
   };
@@ -51,14 +51,14 @@ export type SingleCSSAnimationProperties<S extends object = PlainStyle> =
 export type CSSAnimationSettings =
   AddArrayPropertyTypes<SingleCSSAnimationSettings>;
 
-export type CSSAnimationProperties<S extends object = PlainStyle> =
+export type CSSAnimationProperties<S extends UnknownRecord = PlainStyle> =
   CSSAnimationSettings & {
     animationName:
       | AddArrayPropertyType<CSSKeyframesRule | CSSAnimationKeyframes<S>>
       | 'none';
   };
 
-export type ExistingCSSAnimationProperties<S extends object = PlainStyle> =
+export type ExistingCSSAnimationProperties<S extends UnknownRecord = PlainStyle> =
   CSSAnimationProperties<S> & {
     animationName: AddArrayPropertyType<
       CSSKeyframesRule | CSSAnimationKeyframes<S>

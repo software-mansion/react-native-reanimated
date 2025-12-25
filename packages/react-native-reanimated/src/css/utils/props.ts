@@ -1,5 +1,5 @@
 'use strict';
-import type { AnyRecord, PlainStyle } from '../../common';
+import type { AnyRecord, PlainStyle, UnknownRecord } from '../../common';
 import { logger } from '../../common';
 import { isSharedValue } from '../../isSharedValue';
 import type {
@@ -24,7 +24,7 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
 ] {
   const animationProperties: Partial<CSSAnimationProperties> = {};
   let transitionProperties: Partial<CSSTransitionProperties> = {};
-  const filteredStyle: AnyRecord = {};
+  const filteredStyle: UnknownRecord = {};
 
   for (const [prop, value] of Object.entries(style)) {
     if (isAnimationProp(prop)) {
