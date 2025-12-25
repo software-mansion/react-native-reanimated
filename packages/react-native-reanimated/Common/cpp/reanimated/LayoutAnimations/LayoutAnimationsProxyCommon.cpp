@@ -67,7 +67,7 @@ void LayoutAnimationsProxyCommon::restoreOpacityInCaseOfFlakyEnteringAnimation(S
                 propsMap[&targetShadowNode->getFamily()].emplace_back(folly::dynamic::object("opacity", opacity));
               }
             }
-            return cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+            return cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap, false);
           },
           {});
     });

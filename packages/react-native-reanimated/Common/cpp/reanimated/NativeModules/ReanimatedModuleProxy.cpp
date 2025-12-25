@@ -1168,7 +1168,7 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
               return nullptr;
             }
 
-            auto rootNode = cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+            auto rootNode = cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap, false);
 
             // Mark the commit as Reanimated commit so that we can distinguish
             // it in ReanimatedCommitHook.
