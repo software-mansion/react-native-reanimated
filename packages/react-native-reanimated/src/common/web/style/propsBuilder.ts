@@ -10,7 +10,12 @@ import {
 } from '../../utils';
 import { isRuleBuilder } from '../utils';
 import { PROPERTIES_CONFIG } from './config';
-import type { PropsBuilderConfig, RuleBuilder } from './types';
+import type {
+  DOMStyleObject,
+  PropsBuilderConfig,
+  RuleBuilder,
+  WebStyleValue,
+} from './types';
 
 type WebPropsBuilderConfig<P extends UnknownRecord = UnknownRecord> =
   PropsBuilderConfig<P>;
@@ -64,7 +69,7 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
   });
 
   return {
-    build(props: Partial<TProps>): string | null {
+    build(props: Partial<TProps>): DOMStyleObject | null {
       usedRuleBuilders = new Set<RuleBuilder<TProps>>();
 
       // Build props - rule builders are fed during processing
@@ -79,20 +84,26 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
       );
 
       // Merge all props
-      const allProps = { ...processedProps, ...ruleBuilderProps };
+      const allProps = { ...processedProps, ...ruleBuilderProps } as Record<
+        string,
+        WebStyleValue
+      >;
 
-      // Convert to CSS string
-      const entries = Object.entries(allProps).filter(([, value]) =>
+      // Filter out undefined values
+      const definedProps = Object.entries(allProps).filter(([, value]) =>
         isDefined(value)
       );
 
-      if (entries.length === 0) {
+      if (definedProps.length === 0) {
         return null;
       }
 
-      return entries
-        .map(([key, value]) => `${kebabizeCamelCase(key)}: ${String(value)}`)
-        .join('; ');
+      // Return DOM style object with kebab-case keys
+      return definedProps.reduce<DOMStyleObject>((acc, [key, value]) => {
+        const kebabKey = kebabizeCamelCase(key);
+        acc[kebabKey] = value;
+        return acc;
+      }, {});
     },
   };
 }

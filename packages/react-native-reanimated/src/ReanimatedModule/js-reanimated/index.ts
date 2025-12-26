@@ -2,11 +2,6 @@
 import { logger } from '../../common';
 import type { AnimatedStyle, StyleProps } from '../../commonTypes';
 import type { PropUpdates } from '../../createAnimatedComponent/commonTypes';
-import {
-  createReactDOMStyle,
-  createTextShadowValue,
-  createTransformValue,
-} from './webUtils';
 
 export { createJSReanimatedModule } from './JSReanimated';
 
@@ -59,10 +54,7 @@ export const _updatePropsJS = (
       // Also, some components (e.g. from react-native-svg) don't have styles
       // and always provide setNativeProps function instead (even on React Native Web 0.19+).
       setNativeProps(component, rawStyles, isAnimatedProps);
-    } else if (
-      createReactDOMStyle !== undefined &&
-      component.style !== undefined
-    ) {
+    } else if (component.style !== undefined) {
       // React Native Web 0.19+ no longer provides setNativeProps function,
       // so we need to update DOM nodes directly.
       updatePropsDOM(component, rawStyles, isAnimatedProps);
@@ -113,36 +105,19 @@ const updatePropsDOM = (
   const currentStyle = { ...previousStyle, ...style };
   (component as JSReanimatedComponent).previousStyle = currentStyle;
 
-  const domStyle = createReactDOMStyle(currentStyle);
-  if (Array.isArray(domStyle.transform) && createTransformValue !== undefined) {
-    domStyle.transform = createTransformValue(domStyle.transform);
-  }
-
-  if (
-    createTextShadowValue !== undefined &&
-    (domStyle.textShadowColor ||
-      domStyle.textShadowRadius ||
-      domStyle.textShadowOffset)
-  ) {
-    domStyle.textShadow = createTextShadowValue({
-      textShadowColor: domStyle.textShadowColor,
-      textShadowOffset: domStyle.textShadowOffset,
-      textShadowRadius: domStyle.textShadowRadius,
-    });
-  }
-
-  for (const key in domStyle) {
+  // Apply already-processed DOM styles
+  for (const key in currentStyle) {
     if (isAnimatedProps) {
       // We need to explicitly set the 'text' property on input component because React Native's
       // internal _valueTracker (https://github.com/facebook/react/blob/main/packages/react-dom-bindings/src/client/inputValueTracking.js)
       // prevents updates when only modifying attributes.
       if ((component as HTMLElement).nodeName === 'INPUT' && key === 'text') {
-        (component as HTMLInputElement).value = domStyle[key] as string;
+        (component as HTMLInputElement).value = currentStyle[key] as string;
       } else {
-        (component as HTMLElement).setAttribute(key, domStyle[key]);
+        (component as HTMLElement).setAttribute(key, currentStyle[key]);
       }
     } else {
-      (component.style as StyleProps)[key] = domStyle[key];
+      (component.style as StyleProps)[key] = currentStyle[key];
     }
   }
 };

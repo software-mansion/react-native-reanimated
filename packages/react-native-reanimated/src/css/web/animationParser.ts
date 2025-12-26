@@ -32,11 +32,16 @@ function processKeyframeBlock({
   animationTimingFunction,
   ...rules
 }: CSSAnimationKeyframeBlock<PlainStyle>): string | null {
-  const style = webPropsBuilder.build(rules);
+  const styleObject = webPropsBuilder.build(rules);
 
-  if (!style) {
+  if (!styleObject) {
     return null;
   }
+
+  // Convert DOM style object to CSS string
+  const style = Object.entries(styleObject)
+    .map(([key, value]) => `${key}: ${value}`)
+    .join('; ');
 
   return animationTimingFunction
     ? `animation-timing-function: ${parseTimingFunction(animationTimingFunction)}; ${style}`
