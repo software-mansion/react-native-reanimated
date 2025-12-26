@@ -2,8 +2,8 @@
 import { runOnUISync } from 'react-native-worklets';
 
 import { IS_WEB, ReanimatedError, SHOULD_BE_USE_WEB } from './common';
+import { getStaticFeatureFlag } from './config';
 import { initSvgCssSupport } from './css/svg';
-import { getStaticFeatureFlag } from './featureFlags';
 import type { IReanimatedModule } from './ReanimatedModule';
 
 export function initializeReanimatedModule(

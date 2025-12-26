@@ -3,11 +3,11 @@
 import { logger } from '../../common';
 import { removeElementAnimation } from '../../common/web';
 import { LayoutAnimationType, ReduceMotion } from '../../commonTypes';
+import { ReducedMotionManager } from '../../config';
 import type { EasingFunctionFactory } from '../../Easing';
 import { EasingNameSymbol } from '../../Easing';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../../ReanimatedModule/js-reanimated';
-import { ReducedMotionManager } from '../../ReducedMotion';
 import { Keyframe } from '../animationBuilder';
 import type { TransitionData } from './animationParser';
 import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';

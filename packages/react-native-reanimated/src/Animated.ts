@@ -4,8 +4,5 @@ export { AnimatedImage as Image } from './component/Image';
 export { AnimatedScrollView as ScrollView } from './component/ScrollView';
 export { AnimatedText as Text } from './component/Text';
 export { AnimatedView as View } from './component/View';
-export {
-  addWhitelistedNativeProps,
-  addWhitelistedUIProps,
-} from './ConfigHelper';
+export { addWhitelistedNativeProps, addWhitelistedUIProps } from './config';
 export { createAnimatedComponent } from './createAnimatedComponent';
