@@ -1,6 +1,6 @@
 'use strict';
-import { logger } from '../common';
-import { ReanimatedModule } from '../ReanimatedModule';
+import { logger } from '../../common';
+import { ReanimatedModule } from '../../ReanimatedModule';
 import type StaticFeatureFlagsJSON from './staticFlags.json';
 
 type DynamicFlagsType = {
@@ -87,6 +87,8 @@ type StaticFeatureFlagsSchema = {
 };
 
 const staticFeatureFlags: Partial<StaticFeatureFlagsSchema> = {};
+
+export type FeatureFlag = keyof StaticFeatureFlagsSchema;
 
 export function getStaticFeatureFlag(
   name: keyof StaticFeatureFlagsSchema

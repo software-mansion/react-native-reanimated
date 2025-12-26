@@ -28,8 +28,8 @@ import type {
   Timestamp,
 } from '../commonTypes';
 import { ReduceMotion } from '../commonTypes';
+import { ReducedMotionManager } from '../config';
 import type { EasingFunctionFactory } from '../Easing';
-import { ReducedMotionManager } from '../ReducedMotion';
 import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type {
   AffineMatrix,

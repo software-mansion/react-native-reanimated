@@ -1,5 +1,5 @@
 'use strict';
-import { isReducedMotionEnabledInSystem } from '../ReducedMotion';
+import { isReducedMotionEnabledInSystem } from '../config';
 
 const IS_REDUCED_MOTION_ENABLED_IN_SYSTEM = isReducedMotionEnabledInSystem();
 

@@ -6,7 +6,7 @@ import { ReduceMotion } from '../commonTypes';
 import {
   isReducedMotionEnabledInSystem,
   ReducedMotionManager,
-} from '../ReducedMotion';
+} from '../config';
 
 /**
  * A component that lets you overwrite default reduce motion behavior globally

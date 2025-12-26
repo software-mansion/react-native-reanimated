@@ -1,6 +1,6 @@
 'use strict';
-import { IS_WEB, IS_WINDOW_AVAILABLE } from './common';
-import { makeMutable } from './mutables';
+import { IS_WEB, IS_WINDOW_AVAILABLE } from '../common';
+import { makeMutable } from '../mutables';
 
 type localGlobal = typeof global & Record<string, unknown>;
 
