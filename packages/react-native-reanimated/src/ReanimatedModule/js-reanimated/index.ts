@@ -95,9 +95,9 @@ const setNativeProps = (
 };
 
 /**
- * Merges new props with previous props stored on the component.
- * This mimics the native implementation's limitation that uses props merging
- * instead of applying only new props and removing old ones.
+ * Merges new props with previous props stored on the component. This mimics the
+ * native implementation's limitation that uses props merging instead of
+ * applying only new props and removing old ones.
  */
 const mergeProps = (
   component: JSReanimatedComponent | HTMLElement,
@@ -112,8 +112,8 @@ const mergeProps = (
 };
 
 /**
- * Updates style properties on a DOM element.
- * Uses props merging to match native implementation behavior.
+ * Updates style properties on a DOM element. Uses props merging to match native
+ * implementation behavior.
  */
 const updateStyleDOM = (
   component: JSReanimatedComponent | HTMLElement,
@@ -128,8 +128,8 @@ const updateStyleDOM = (
 };
 
 /**
- * Updates animated props on a DOM element using setAttribute.
- * Uses props merging to match native implementation behavior.
+ * Updates animated props on a DOM element using setAttribute. Uses props
+ * merging to match native implementation behavior.
  */
 const updateAnimatedPropsDOM = (
   component: JSReanimatedComponent | HTMLElement,
@@ -140,7 +140,10 @@ const updateAnimatedPropsDOM = (
   // We need to explicitly set the 'text' property on input component because React Native's
   // internal _valueTracker (https://github.com/facebook/react/blob/main/packages/react-dom-bindings/src/client/inputValueTracking.js)
   // prevents updates when only modifying attributes.
-  if ((component as HTMLElement).nodeName === 'INPUT' && 'text' in mergedProps) {
+  if (
+    (component as HTMLElement).nodeName === 'INPUT' &&
+    'text' in mergedProps
+  ) {
     (component as HTMLInputElement).value = mergedProps.text as string;
     delete mergedProps.text;
   }
