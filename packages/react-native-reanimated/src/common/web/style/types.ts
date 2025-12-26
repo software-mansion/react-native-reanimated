@@ -1,6 +1,8 @@
 'use strict';
 import type { AnyRecord, Maybe, NonMutable, UnknownRecord } from '../..';
 
+export type DOMStyleObject = Record<string, string | number>;
+
 export type ValueProcessor<V = unknown> = (
   value: NonMutable<V>
 ) => Maybe<string> | Record<string, string>;

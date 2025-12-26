@@ -1,6 +1,6 @@
 'use strict';
 import type { PlainStyle } from '../../common';
-import { hasSuffix } from '../../common';
+import { hasSuffix, kebabizeCamelCase } from '../../common';
 import { webPropsBuilder } from '../../common/web';
 import type {
   CSSAnimationKeyframeBlock,
@@ -32,13 +32,27 @@ function processKeyframeBlock({
   animationTimingFunction,
   ...rules
 }: CSSAnimationKeyframeBlock<PlainStyle>): string | null {
-  const style = webPropsBuilder.build(rules);
+  const styleObject = webPropsBuilder.build(rules);
 
-  if (!style) {
+  if (!styleObject) {
     return null;
   }
 
-  return animationTimingFunction
-    ? `animation-timing-function: ${parseTimingFunction(animationTimingFunction)}; ${style}`
-    : style;
+  const styleEntries: string[] = [];
+
+  // Add animation-timing-function if present
+  if (animationTimingFunction) {
+    styleEntries.push(
+      `animation-timing-function: ${parseTimingFunction(animationTimingFunction)}`
+    );
+  }
+
+  // Convert DOM style object to CSS string with kebab-case properties
+  for (const [key, value] of Object.entries(styleObject)) {
+    if (value !== undefined && value !== null) {
+      styleEntries.push(`${kebabizeCamelCase(key)}: ${value}`);
+    }
+  }
+
+  return styleEntries.length > 0 ? styleEntries.join('; ') : null;
 }

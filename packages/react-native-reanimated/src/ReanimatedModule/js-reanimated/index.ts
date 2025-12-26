@@ -2,11 +2,6 @@
 import { logger } from '../../common';
 import type { AnimatedStyle, StyleProps } from '../../commonTypes';
 import type { PropUpdates } from '../../createAnimatedComponent/commonTypes';
-import {
-  createReactDOMStyle,
-  createTextShadowValue,
-  createTransformValue,
-} from './webUtils';
 
 export { createJSReanimatedModule } from './JSReanimated';
 
@@ -59,13 +54,12 @@ export const _updatePropsJS = (
       // Also, some components (e.g. from react-native-svg) don't have styles
       // and always provide setNativeProps function instead (even on React Native Web 0.19+).
       setNativeProps(component, rawStyles, isAnimatedProps);
-    } else if (
-      createReactDOMStyle !== undefined &&
-      component.style !== undefined
-    ) {
+    } else if (isAnimatedProps) {
+      updateAnimatedPropsDOM(component, rawStyles);
+    } else if (component.style !== undefined) {
       // React Native Web 0.19+ no longer provides setNativeProps function,
       // so we need to update DOM nodes directly.
-      updatePropsDOM(component, rawStyles, isAnimatedProps);
+      updateStyleDOM(component, rawStyles);
     } else if (Object.keys(component.props).length > 0) {
       Object.keys(component.props).forEach((key) => {
         if (!rawStyles[key]) {
@@ -95,54 +89,67 @@ const setNativeProps = (
     component.setNativeProps?.(newProps);
   }
 
-  const previousStyle = component.previousStyle ? component.previousStyle : {};
-  const currentStyle = { ...previousStyle, ...newProps };
-  component.previousStyle = currentStyle;
+  const mergedProps = mergeProps(component, newProps);
 
-  component.setNativeProps?.({ style: currentStyle });
+  component.setNativeProps?.({ style: mergedProps });
 };
 
-const updatePropsDOM = (
+/**
+ * Merges new props with previous props stored on the component. This mimics the
+ * native implementation's limitation that uses props merging instead of
+ * applying only new props and removing old ones.
+ */
+const mergeProps = (
   component: JSReanimatedComponent | HTMLElement,
-  style: StyleProps,
-  isAnimatedProps?: boolean
-): void => {
+  newProps: StyleProps
+): StyleProps => {
   const previousStyle = (component as JSReanimatedComponent).previousStyle
     ? (component as JSReanimatedComponent).previousStyle
     : {};
-  const currentStyle = { ...previousStyle, ...style };
+  const currentStyle = { ...previousStyle, ...newProps };
   (component as JSReanimatedComponent).previousStyle = currentStyle;
+  return currentStyle;
+};
 
-  const domStyle = createReactDOMStyle(currentStyle);
-  if (Array.isArray(domStyle.transform) && createTransformValue !== undefined) {
-    domStyle.transform = createTransformValue(domStyle.transform);
+/**
+ * Updates style properties on a DOM element. Uses props merging to match native
+ * implementation behavior.
+ */
+const updateStyleDOM = (
+  component: JSReanimatedComponent | HTMLElement,
+  style: StyleProps
+): void => {
+  const mergedStyle = mergeProps(component, style);
+
+  // Apply styles directly to component.style
+  for (const key in mergedStyle) {
+    (component.style as StyleProps)[key] = mergedStyle[key];
   }
+};
 
+/**
+ * Updates animated props on a DOM element using setAttribute. Uses props
+ * merging to match native implementation behavior.
+ */
+const updateAnimatedPropsDOM = (
+  component: JSReanimatedComponent | HTMLElement,
+  props: StyleProps
+): void => {
+  const mergedProps = mergeProps(component, props);
+
+  // We need to explicitly set the 'text' property on input component because React Native's
+  // internal _valueTracker (https://github.com/facebook/react/blob/main/packages/react-dom-bindings/src/client/inputValueTracking.js)
+  // prevents updates when only modifying attributes.
   if (
-    createTextShadowValue !== undefined &&
-    (domStyle.textShadowColor ||
-      domStyle.textShadowRadius ||
-      domStyle.textShadowOffset)
+    (component as HTMLElement).nodeName === 'INPUT' &&
+    'text' in mergedProps
   ) {
-    domStyle.textShadow = createTextShadowValue({
-      textShadowColor: domStyle.textShadowColor,
-      textShadowOffset: domStyle.textShadowOffset,
-      textShadowRadius: domStyle.textShadowRadius,
-    });
+    (component as HTMLInputElement).value = mergedProps.text as string;
+    delete mergedProps.text;
   }
 
-  for (const key in domStyle) {
-    if (isAnimatedProps) {
-      // We need to explicitly set the 'text' property on input component because React Native's
-      // internal _valueTracker (https://github.com/facebook/react/blob/main/packages/react-dom-bindings/src/client/inputValueTracking.js)
-      // prevents updates when only modifying attributes.
-      if ((component as HTMLElement).nodeName === 'INPUT' && key === 'text') {
-        (component as HTMLInputElement).value = domStyle[key] as string;
-      } else {
-        (component as HTMLElement).setAttribute(key, domStyle[key]);
-      }
-    } else {
-      (component.style as StyleProps)[key] = domStyle[key];
-    }
+  // Apply props as DOM attributes
+  for (const key in mergedProps) {
+    (component as HTMLElement).setAttribute(key, mergedProps[key]);
   }
 };

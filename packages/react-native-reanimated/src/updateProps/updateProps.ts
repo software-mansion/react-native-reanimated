@@ -10,7 +10,7 @@ import {
   ReanimatedError,
   SHOULD_BE_USE_WEB,
 } from '../common';
-import { processBoxShadowWeb, processFilterWeb } from '../common/web';
+import { webPropsBuilder } from '../common/web';
 import type {
   AnimatedStyle,
   ShadowNodeWrapper,
@@ -36,13 +36,14 @@ if (SHOULD_BE_USE_WEB) {
     'worklet';
     viewDescriptors.value?.forEach((viewDescriptor) => {
       const component = viewDescriptor.tag as ReanimatedHTMLElement;
-      if ('boxShadow' in updates) {
-        updates.boxShadow = processBoxShadowWeb(updates.boxShadow);
+      // Use web props builder for style updates; pass raw updates for animatedProps
+      // since they contain component-specific properties
+      const processedUpdates = isAnimatedProps
+        ? updates
+        : webPropsBuilder.build(updates);
+      if (processedUpdates) {
+        _updatePropsJS(processedUpdates, component, isAnimatedProps);
       }
-      if ('filter' in updates) {
-        updates.filter = processFilterWeb(updates.filter);
-      }
-      _updatePropsJS(updates, component, isAnimatedProps);
     });
   };
 } else {
