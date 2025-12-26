@@ -95,7 +95,6 @@ export type { PerformanceMonitorProps } from './component/PerformanceMonitor';
 export { PerformanceMonitor } from './component/PerformanceMonitor';
 export { ReducedMotionConfig } from './component/ReducedMotionConfig';
 export type { AnimatedScrollViewProps } from './component/ScrollView';
-export type { FeatureFlag, LoggerConfig, LoggerConfigT } from './config';
 export {
   configureReanimatedLogger,
   getDynamicFeatureFlag,

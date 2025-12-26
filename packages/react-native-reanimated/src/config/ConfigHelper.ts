@@ -2,15 +2,12 @@
 
 import { runOnUISync } from 'react-native-worklets';
 
-import type { LoggerConfig, LoggerConfigInternal } from '../common';
+import type { LoggerConfig } from '../common';
 import {
   getLoggerConfig,
   SHOULD_BE_USE_WEB,
   updateLoggerConfig,
 } from '../common';
-
-export type { LoggerConfig };
-export type LoggerConfigT = LoggerConfigInternal;
 
 /** @deprecated This function is a no-op in Reanimated 4. */
 export function addWhitelistedNativeProps(

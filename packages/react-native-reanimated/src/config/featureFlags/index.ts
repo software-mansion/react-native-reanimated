@@ -88,8 +88,6 @@ type StaticFeatureFlagsSchema = {
 
 const staticFeatureFlags: Partial<StaticFeatureFlagsSchema> = {};
 
-export type FeatureFlag = keyof StaticFeatureFlagsSchema;
-
 export function getStaticFeatureFlag(
   name: keyof StaticFeatureFlagsSchema
 ): boolean {
