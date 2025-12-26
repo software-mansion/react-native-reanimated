@@ -4,18 +4,11 @@ import type { PlainStyle, UnknownRecord } from '../../types';
 import {
   hasValueProcessor,
   isConfigPropertyAlias,
-  isDefined,
-  kebabizeCamelCase,
   maybeAddSuffix,
 } from '../../utils';
 import { isRuleBuilder } from '../utils';
 import { PROPERTIES_CONFIG } from './config';
-import type {
-  DOMStyleObject,
-  PropsBuilderConfig,
-  RuleBuilder,
-  WebStyleValue,
-} from './types';
+import type { DOMStyleObject, PropsBuilderConfig, RuleBuilder } from './types';
 
 type WebPropsBuilderConfig<P extends UnknownRecord = UnknownRecord> =
   PropsBuilderConfig<P>;
@@ -33,7 +26,7 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
         return undefined;
       }
 
-      // Handle true - include as string
+      // Handle true - include as string (preserve null)
       if (configValue === true) {
         return (value) => String(value);
       }
@@ -84,26 +77,14 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
       );
 
       // Merge all props
-      const allProps = { ...processedProps, ...ruleBuilderProps } as Record<
-        string,
-        WebStyleValue
-      >;
+      const allProps = { ...processedProps, ...ruleBuilderProps };
 
-      // Filter out undefined values
-      const definedProps = Object.entries(allProps).filter(([, value]) =>
-        isDefined(value)
-      );
-
-      if (definedProps.length === 0) {
+      if (Object.keys(allProps).length === 0) {
         return null;
       }
 
-      // Return DOM style object with kebab-case keys
-      return definedProps.reduce<DOMStyleObject>((acc, [key, value]) => {
-        const kebabKey = kebabizeCamelCase(key);
-        acc[kebabKey] = value;
-        return acc;
-      }, {});
+      // Return DOM style object with camelCase keys
+      return allProps as DOMStyleObject;
     },
   };
 }

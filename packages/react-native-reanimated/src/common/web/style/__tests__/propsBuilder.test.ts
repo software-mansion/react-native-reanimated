@@ -4,7 +4,7 @@ import { createWebRuleBuilder } from '../ruleBuilder';
 
 describe(createWebPropsBuilder, () => {
   describe('CSS output formatting', () => {
-    test('returns DOM style object with kebab-case keys', () => {
+    test('returns DOM style object with camelCase keys', () => {
       const builder = createWebPropsBuilder({
         backgroundColor: true,
         borderRadius: 'px',
@@ -16,8 +16,8 @@ describe(createWebPropsBuilder, () => {
       });
 
       expect(result).toEqual({
-        'background-color': 'blue',
-        'border-radius': '5px',
+        backgroundColor: 'blue',
+        borderRadius: '5px',
       });
     });
 
@@ -33,7 +33,7 @@ describe(createWebPropsBuilder, () => {
       expect(result).toBeNull();
     });
 
-    test('filters out undefined values', () => {
+    test('includes undefined values', () => {
       const builder = createWebPropsBuilder({
         width: 'px',
         height: 'px',
@@ -44,7 +44,7 @@ describe(createWebPropsBuilder, () => {
         height: undefined,
       });
 
-      expect(result).toEqual({ width: '100px' });
+      expect(result).toEqual({ width: '100px', height: undefined });
     });
   });
 
@@ -91,8 +91,8 @@ describe(createWebPropsBuilder, () => {
       });
 
       expect(result).toEqual({
-        'margin-start': '10px',
-        'margin-left': '20px',
+        marginStart: '10px',
+        marginLeft: '20px',
       });
     });
 
@@ -147,7 +147,7 @@ describe(createWebPropsBuilder, () => {
         shadowRadius: 8,
       });
 
-      expect(result).toEqual({ 'box-shadow': '2px 4px 8px red' });
+      expect(result).toEqual({ boxShadow: '2px 4px 8px red' });
     });
 
     test('merges rule builder results with regular props', () => {
@@ -175,7 +175,7 @@ describe(createWebPropsBuilder, () => {
 
       expect(result).toMatchObject({
         width: '100px',
-        'box-shadow': '0 0 5px blue',
+        boxShadow: '0 0 5px blue',
       });
     });
 
@@ -199,7 +199,7 @@ describe(createWebPropsBuilder, () => {
       const result = builder.build({ width: 100 });
 
       expect(result).toEqual({ width: '100px' });
-      expect(result).not.toHaveProperty('box-shadow');
+      expect(result).not.toHaveProperty('boxShadow');
     });
 
     test('includes rule builders when at least one prop handled by the rule builder is provided', () => {
@@ -226,7 +226,7 @@ describe(createWebPropsBuilder, () => {
 
       expect(resultWithShadowColor).toMatchObject({
         width: '100px',
-        'box-shadow': '0 0 0 red',
+        boxShadow: '0 0 0 red',
       });
 
       const resultWithShadowRadius = builder.build({
@@ -236,7 +236,7 @@ describe(createWebPropsBuilder, () => {
 
       expect(resultWithShadowRadius).toMatchObject({
         width: '100px',
-        'box-shadow': '0 0 5px #000',
+        boxShadow: '0 0 5px #000',
       });
     });
   });
@@ -275,10 +275,10 @@ describe(createWebPropsBuilder, () => {
       expect(result).toMatchObject({
         display: 'flex',
         width: '200px',
-        'margin-start': '10px',
-        'margin-left': '20px',
+        marginStart: '10px',
+        marginLeft: '20px',
         color: 'RED',
-        'box-shadow': '0 0 8px black',
+        boxShadow: '0 0 8px black',
       });
     });
   });
