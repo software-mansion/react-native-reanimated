@@ -1,7 +1,7 @@
 'use strict';
 import type { ColorValue } from 'react-native';
 
-import { convertToRGBA, rgbaArrayToRGBAColor } from '../../../../Colors';
+import { convertToRGBA, rgbaArrayToRGBAColor } from '../../../../utils';
 import { isNumber } from '../../../utils';
 import type { ValueProcessor } from '../types';
 

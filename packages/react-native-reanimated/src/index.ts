@@ -46,8 +46,6 @@ export {
   withSpring,
   withTiming,
 } from './animation';
-export type { ParsedColorArray } from './Colors';
-export { convertToRGBA, isColor } from './Colors';
 export { ReanimatedLogLevel } from './common';
 export { DynamicColorIOS, PlatformColor, processColor } from './common';
 export type {
@@ -145,19 +143,6 @@ export {
   useScrollOffset as useScrollViewOffset,
   useSharedValue,
 } from './hook';
-export type {
-  InterpolateConfig,
-  InterpolateHSV,
-  InterpolateRGB,
-  InterpolationOptions,
-} from './interpolateColor';
-export {
-  ColorSpace,
-  /** @deprecated Please use {@link Extrapolation} instead. */
-  Extrapolate,
-  interpolateColor,
-  useInterpolateConfig,
-} from './interpolateColor';
 export type { ExtrapolationConfig, ExtrapolationType } from './interpolation';
 export { clamp, Extrapolation, interpolate } from './interpolation';
 export { isSharedValue } from './isSharedValue';
@@ -294,6 +279,21 @@ export {
   ScreenTransition,
   startScreenTransition,
 } from './screenTransition';
+export type { ParsedColorArray } from './utils';
+export type {
+  InterpolateConfig,
+  InterpolateHSV,
+  InterpolateRGB,
+  InterpolationOptions,
+} from './utils';
+export { convertToRGBA, isColor } from './utils';
+export {
+  ColorSpace,
+  /** @deprecated Please use {@link Extrapolation} instead. */
+  Extrapolate,
+  interpolateColor,
+  useInterpolateConfig,
+} from './utils';
 export type { WorkletRuntime } from './workletFunctions';
 export {
   createWorkletRuntime,

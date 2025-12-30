@@ -1,5 +1,4 @@
 'use strict';
-import { ColorProperties } from '../Colors';
 import { logger, processColor } from '../common';
 import type {
   AnimatableValue,
@@ -10,6 +9,7 @@ import type {
   NestedObjectValues,
   Timestamp,
 } from '../commonTypes';
+import { ColorProperties } from '../utils';
 import type { StyleLayoutAnimation } from './commonTypes';
 import { withTiming } from './timing';
 import { defineAnimation, isValidLayoutAnimationProp } from './util';

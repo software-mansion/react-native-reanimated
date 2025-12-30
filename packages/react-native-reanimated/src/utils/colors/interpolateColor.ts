@@ -1,4 +1,9 @@
 'use strict';
+import { processColor, ReanimatedError } from '../../common';
+import type { SharedValue } from '../../commonTypes';
+import { makeMutable } from '../../core';
+import { useSharedValue } from '../../hook/useSharedValue';
+import { Extrapolation, interpolate } from '../../interpolation';
 import {
   blue,
   green,
@@ -8,12 +13,7 @@ import {
   rgbaColor,
   RGBtoHSV,
 } from './Colors';
-import { processColor, ReanimatedError } from './common';
-import type { SharedValue } from './commonTypes';
-import { makeMutable } from './core';
 import culori from './culori';
-import { useSharedValue } from './hook/useSharedValue';
-import { Extrapolation, interpolate } from './interpolation';
 
 /** @deprecated Please use Extrapolation instead */
 export const Extrapolate = Extrapolation;

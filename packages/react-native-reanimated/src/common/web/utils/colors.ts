@@ -1,7 +1,7 @@
 'use strict';
 import type { ColorValue } from 'react-native';
 
-import { processColorInitially } from '../../../Colors';
+import { processColorInitially } from '../../../utils';
 
 export function opacifyColor(
   color: ColorValue,

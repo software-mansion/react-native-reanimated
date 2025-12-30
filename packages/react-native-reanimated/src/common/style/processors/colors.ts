@@ -5,8 +5,8 @@ import type {
   OpaqueColorValue,
 } from 'react-native';
 
-import { ColorProperties, processColorInitially } from '../../../Colors';
 import type { StyleProps } from '../../../commonTypes';
+import { ColorProperties, processColorInitially } from '../../../utils';
 import { IS_ANDROID, IS_IOS } from '../../constants';
 import { ReanimatedError } from '../../errors';
 import { type ValueProcessorContext, ValueProcessorTarget } from '../../types';
