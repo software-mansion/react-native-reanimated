@@ -1,12 +1,12 @@
 'use strict';
-import { ReanimatedError } from '../../../errors';
+import { ReanimatedError } from '../../../common';
 import {
   DynamicColorIOS,
   ERROR_MESSAGES,
   PlatformColor,
   processColor,
   processColorsInProps,
-} from '../colors';
+} from '../colorProcessing';
 
 describe('DynamicColorIOS support on Android', () => {
   test('processColorsInProps throws for DynamicColorIOS', () => {

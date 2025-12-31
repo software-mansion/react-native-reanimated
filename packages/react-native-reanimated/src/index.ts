@@ -46,10 +46,7 @@ export {
   withSpring,
   withTiming,
 } from './animation';
-export type { ParsedColorArray } from './Colors';
-export { convertToRGBA, isColor } from './Colors';
 export { ReanimatedLogLevel } from './common';
-export { DynamicColorIOS, PlatformColor, processColor } from './common';
 export type {
   AnimatableValue,
   AnimatableValueObject,
@@ -119,6 +116,7 @@ export type {
   EventHandler,
   EventHandlerProcessed,
   FrameCallback,
+  InterpolateConfig,
   ReanimatedEvent,
   ScrollEvent,
   ScrollHandler,
@@ -127,6 +125,7 @@ export type {
   UseHandlerContext,
 } from './hook';
 export {
+  ColorSpace,
   useAnimatedKeyboard,
   useAnimatedProps,
   useAnimatedReaction,
@@ -139,25 +138,13 @@ export {
   useEvent,
   useFrameCallback,
   useHandler,
+  useInterpolateConfig,
   useReducedMotion,
   useScrollOffset,
   /** @deprecated Please use {@link useScrollOffset} instead. */
   useScrollOffset as useScrollViewOffset,
   useSharedValue,
 } from './hook';
-export type {
-  InterpolateConfig,
-  InterpolateHSV,
-  InterpolateRGB,
-  InterpolationOptions,
-} from './interpolateColor';
-export {
-  ColorSpace,
-  /** @deprecated Please use {@link Extrapolation} instead. */
-  Extrapolate,
-  interpolateColor,
-  useInterpolateConfig,
-} from './interpolateColor';
 export type { ExtrapolationConfig, ExtrapolationType } from './interpolation';
 export { clamp, Extrapolation, interpolate } from './interpolation';
 export { isSharedValue } from './isSharedValue';
@@ -294,6 +281,22 @@ export {
   ScreenTransition,
   startScreenTransition,
 } from './screenTransition';
+export type { ParsedColorArray } from './utils';
+export type {
+  InterpolateHSV,
+  InterpolateRGB,
+  InterpolationOptions,
+} from './utils';
+export {
+  convertToRGBA,
+  DynamicColorIOS,
+  /** @deprecated Please use {@link Extrapolation} instead. */
+  Extrapolate,
+  interpolateColor,
+  isColor,
+  PlatformColor,
+  processColor,
+} from './utils';
 export type { WorkletRuntime } from './workletFunctions';
 export {
   createWorkletRuntime,

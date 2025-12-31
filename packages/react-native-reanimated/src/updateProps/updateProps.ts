@@ -7,7 +7,6 @@ import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 import {
   IS_JEST,
   processBoxShadow,
-  processColorsInProps,
   processFilter,
   processTransform,
   processTransformOrigin,
@@ -28,6 +27,7 @@ import jsPropsUpdater from '../createAnimatedComponent/JSPropsUpdater';
 import type { Descriptor } from '../hook/commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../ReanimatedModule/js-reanimated';
+import { processColorsInProps } from '../utils';
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,

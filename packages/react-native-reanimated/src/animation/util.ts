@@ -8,15 +8,6 @@ import {
   serializableMappingCache,
 } from 'react-native-worklets';
 
-import type { ParsedColorArray } from '../Colors';
-import {
-  clampRGBA,
-  convertToRGBA,
-  isColor,
-  rgbaArrayToRGBAColor,
-  toGammaSpace,
-  toLinearSpace,
-} from '../Colors';
 import { logger, ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatableValue,
@@ -30,6 +21,15 @@ import type {
 import { ReduceMotion } from '../commonTypes';
 import { ReducedMotionManager } from '../config';
 import type { EasingFunctionFactory } from '../Easing';
+import type { ParsedColorArray } from '../utils';
+import {
+  clampRGBA,
+  convertToRGBA,
+  isColor,
+  rgbaArrayToRGBAColor,
+  toGammaSpace,
+  toLinearSpace,
+} from '../utils';
 import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type {
   AffineMatrix,

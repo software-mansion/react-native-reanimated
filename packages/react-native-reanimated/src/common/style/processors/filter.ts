@@ -2,6 +2,7 @@
 'worklet';
 import type { DropShadowValue, FilterFunction } from 'react-native';
 
+import { processColor } from '../../../utils';
 import { ReanimatedError } from '../../errors';
 import type {
   FilterArray,
@@ -11,7 +12,6 @@ import type {
   ValueProcessorContext,
 } from '../../types';
 import { isLength, isNumber } from '../../utils/guards';
-import { processColor } from './colors';
 
 // Capture filter functions and their content eg "brightness(0.5) opacity(1)" => [["brightness(0.5)", "brightness", "0.5"], ["opacity(1)", "opacity", "1"]]
 const FILTER_REGEX = /([\w-]+)\(([^()]*|\([^()]*\)|[^()]*\([^()]*\)[^()]*)\)/g;
