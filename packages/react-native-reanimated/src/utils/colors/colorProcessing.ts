@@ -5,12 +5,15 @@ import type {
   OpaqueColorValue,
 } from 'react-native';
 
-import type { StyleProps } from '../../../commonTypes';
-import { ColorProperties, processColorInitially } from '../../../utils';
-import { IS_ANDROID, IS_IOS } from '../../constants';
-import { ReanimatedError } from '../../errors';
-import { type ValueProcessorContext, ValueProcessorTarget } from '../../types';
-import { isRecord } from '../../utils';
+import { IS_ANDROID, IS_IOS } from '../../common/constants';
+import { ReanimatedError } from '../../common/errors';
+import {
+  type ValueProcessorContext,
+  ValueProcessorTarget,
+} from '../../common/types';
+import { isRecord } from '../../common/utils/guards';
+import type { StyleProps } from '../../commonTypes';
+import { ColorProperties, processColorInitially } from './Colors';
 
 /**
  * Copied from:

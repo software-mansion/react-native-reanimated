@@ -1,11 +1,4 @@
 'use strict';
-export {
-  DynamicColorIOS,
-  PlatformColor,
-  processColor,
-  processColorNumber,
-  processColorsInProps,
-} from './colors';
 export { processFilter } from './filter';
 export { processFontWeight } from './font';
 export { processInset, processInsetBlock, processInsetInline } from './insets';

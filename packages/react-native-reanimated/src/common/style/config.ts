@@ -1,11 +1,11 @@
 /* eslint-disable camelcase */
 'use strict';
+import { processColor } from '../../utils';
 import { IS_ANDROID } from '../constants';
 import type { PlainStyle } from '../types';
 import {
   processAspectRatio,
   processBoxShadow,
-  processColor,
   processFilter,
   processFontWeight,
   processGap,

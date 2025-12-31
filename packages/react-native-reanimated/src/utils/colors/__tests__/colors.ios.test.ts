@@ -1,13 +1,13 @@
 'use strict';
-import { ReanimatedError } from '../../../errors';
-import type { ProcessedDynamicColorObjectIOS } from '../colors';
+import { ReanimatedError } from '../../../common';
+import type { ProcessedDynamicColorObjectIOS } from '../colorProcessing';
 import {
   DynamicColorIOS,
   ERROR_MESSAGES,
   PlatformColor,
   processColor,
   processColorsInProps,
-} from '../colors';
+} from '../colorProcessing';
 
 describe('DynamicColorIOS support on iOS', () => {
   test('mutates dynamic colors in props', () => {

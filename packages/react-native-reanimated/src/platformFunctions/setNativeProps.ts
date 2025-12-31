@@ -1,12 +1,7 @@
 'use strict';
 import { RuntimeKind } from 'react-native-worklets';
 
-import {
-  IS_JEST,
-  logger,
-  processColorsInProps,
-  SHOULD_BE_USE_WEB,
-} from '../common';
+import { IS_JEST, logger, SHOULD_BE_USE_WEB } from '../common';
 import type {
   InstanceOrElement,
   ShadowNodeWrapper,
@@ -17,6 +12,7 @@ import type {
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
+import { processColorsInProps } from '../utils';
 
 type SetNativeProps = <TRef extends InstanceOrElement>(
   animatedRef: AnimatedRef<TRef>,

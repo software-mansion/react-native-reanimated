@@ -1,12 +1,9 @@
 'use strict';
 
-import {
-  unprocessColor,
-  unprocessColorsInProps,
-} from './common/style/processors/colors';
 import type { StyleProps } from './commonTypes';
 import type { IAnimatedComponentInternal } from './createAnimatedComponent/commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
+import { unprocessColor, unprocessColorsInProps } from './utils';
 
 const FLUSH_INTERVAL_MS = 500;
 

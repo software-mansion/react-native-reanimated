@@ -1,9 +1,7 @@
 'use strict';
-import { processColor, ReanimatedError } from '../../common';
-import type { SharedValue } from '../../commonTypes';
-import { makeMutable } from '../../core';
-import { useSharedValue } from '../../hook/useSharedValue';
+import { ReanimatedError } from '../../common/errors';
 import { Extrapolation, interpolate } from '../../interpolation';
+import { processColor } from './colorProcessing';
 import {
   blue,
   green,
@@ -415,33 +413,4 @@ export function interpolateColor(
       colorSpace as string
     }. Supported values are: ['RGB', 'HSV', 'LAB'].`
   );
-}
-
-export enum ColorSpace {
-  RGB = 0,
-  HSV = 1,
-  LAB = 2,
-}
-
-export interface InterpolateConfig {
-  inputRange: readonly number[];
-  outputRange: readonly (string | number)[];
-  colorSpace: ColorSpace;
-  cache: SharedValue<InterpolateRGB | InterpolateHSV | null>;
-  options: InterpolationOptions;
-}
-
-export function useInterpolateConfig(
-  inputRange: readonly number[],
-  outputRange: readonly (string | number)[],
-  colorSpace = ColorSpace.RGB,
-  options: InterpolationOptions = {}
-): SharedValue<InterpolateConfig> {
-  return useSharedValue<InterpolateConfig>({
-    inputRange,
-    outputRange,
-    colorSpace,
-    cache: makeMutable<InterpolateRGB | InterpolateHSV | null>(null),
-    options,
-  });
 }

@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 'use strict';
+/* eslint-disable @typescript-eslint/no-empty-function */
 
 import type {
   IWorkletsModule,

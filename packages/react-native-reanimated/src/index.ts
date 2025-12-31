@@ -47,7 +47,6 @@ export {
   withTiming,
 } from './animation';
 export { ReanimatedLogLevel } from './common';
-export { DynamicColorIOS, PlatformColor, processColor } from './common';
 export type {
   AnimatableValue,
   AnimatableValueObject,
@@ -117,6 +116,7 @@ export type {
   EventHandler,
   EventHandlerProcessed,
   FrameCallback,
+  InterpolateConfig,
   ReanimatedEvent,
   ScrollEvent,
   ScrollHandler,
@@ -125,6 +125,7 @@ export type {
   UseHandlerContext,
 } from './hook';
 export {
+  ColorSpace,
   useAnimatedKeyboard,
   useAnimatedProps,
   useAnimatedReaction,
@@ -137,6 +138,7 @@ export {
   useEvent,
   useFrameCallback,
   useHandler,
+  useInterpolateConfig,
   useReducedMotion,
   useScrollOffset,
   /** @deprecated Please use {@link useScrollOffset} instead. */
@@ -281,18 +283,19 @@ export {
 } from './screenTransition';
 export type { ParsedColorArray } from './utils';
 export type {
-  InterpolateConfig,
   InterpolateHSV,
   InterpolateRGB,
   InterpolationOptions,
 } from './utils';
-export { convertToRGBA, isColor } from './utils';
 export {
-  ColorSpace,
+  convertToRGBA,
+  DynamicColorIOS,
   /** @deprecated Please use {@link Extrapolation} instead. */
   Extrapolate,
   interpolateColor,
-  useInterpolateConfig,
+  isColor,
+  PlatformColor,
+  processColor,
 } from './utils';
 export type { WorkletRuntime } from './workletFunctions';
 export {

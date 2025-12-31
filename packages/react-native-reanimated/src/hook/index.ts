@@ -25,6 +25,8 @@ export type { FrameCallback } from './useFrameCallback';
 export { useFrameCallback } from './useFrameCallback';
 export type { UseHandlerContext } from './useHandler';
 export { useHandler } from './useHandler';
+export type { InterpolateConfig } from './useInterpolateConfig';
+export { ColorSpace, useInterpolateConfig } from './useInterpolateConfig';
 export { useReducedMotion } from './useReducedMotion';
 export { useScrollOffset } from './useScrollOffset';
 export { useSharedValue } from './useSharedValue';
