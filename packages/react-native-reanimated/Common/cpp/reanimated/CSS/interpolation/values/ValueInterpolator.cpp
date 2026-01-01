@@ -78,8 +78,6 @@ bool ValueInterpolator::updateKeyframesFromStyleChange(
 
   reversingAdjustedStartValue_ = oldStyleValue;
 
-  LOG(INFO) << "ValueInterpolator equalsReversingAdjustedStartValue: " << isEqual;
-
   return isEqual;
 }
 

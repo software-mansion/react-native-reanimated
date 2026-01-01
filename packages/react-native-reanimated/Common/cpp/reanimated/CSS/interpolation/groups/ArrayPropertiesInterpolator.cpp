@@ -51,9 +51,6 @@ bool ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
         i < lastSize ? lastUpdateArray[i] : null);
   }
 
-  LOG(INFO) << "ArrayPropertiesInterpolator allEqualReversingAdjustedStartValue: "
-            << allEqualReversingAdjustedStartValue;
-
   return allEqualReversingAdjustedStartValue;
 }
 

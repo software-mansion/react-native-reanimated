@@ -60,9 +60,6 @@ bool RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
         lastUpdateObject.getDefault(propertyName, null));
   }
 
-  LOG(INFO) << "RecordPropertiesInterpolator allEqualReversingAdjustedStartValue: "
-            << allEqualReversingAdjustedStartValue;
-
   return allEqualReversingAdjustedStartValue;
 }
 
