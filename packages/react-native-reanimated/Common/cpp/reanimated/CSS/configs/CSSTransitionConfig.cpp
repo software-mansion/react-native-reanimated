@@ -87,4 +87,34 @@ PartialCSSTransitionConfig parsePartialCSSTransitionConfig(jsi::Runtime &rt, con
   return result;
 }
 
+ChangedProps parseChangedPropsFromDiff(const folly::dynamic &diff) {
+  ChangedProps props;
+  folly::dynamic oldProps = folly::dynamic::object;
+  folly::dynamic newProps = folly::dynamic::object;
+
+  if (!diff.isObject()) {
+    // Return empty ChangedProps if diff is not an object
+    props.oldProps = std::move(oldProps);
+    props.newProps = std::move(newProps);
+    return props;
+  }
+
+  // Parse the diff object where each key is a changed property
+  // and value is [oldValue, newValue] array
+  for (const auto &[key, value] : diff.items()) {
+    const auto &propName = key.asString();
+
+    // Value should be an array [oldValue, newValue]
+    if (value.isArray() && value.size() == 2) {
+      oldProps[propName] = value[0];
+      newProps[propName] = value[1];
+      props.changedPropertyNames.push_back(propName);
+    }
+  }
+
+  props.oldProps = std::move(oldProps);
+  props.newProps = std::move(newProps);
+  return props;
+}
+
 } // namespace reanimated::css

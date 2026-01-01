@@ -54,7 +54,7 @@ export default class CSSManager implements ICSSManager {
       setViewStyle(this.viewTag, normalizedStyle);
     }
 
-    this.cssTransitionsManager.update(transitionProperties);
+    this.cssTransitionsManager.update(transitionProperties, normalizedStyle);
     this.cssAnimationsManager.update(animationProperties);
 
     // If the current update is not the fist one, we want to update CSS

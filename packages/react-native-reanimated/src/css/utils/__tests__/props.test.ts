@@ -1,7 +1,120 @@
 'use strict';
 import { css } from '../../stylesheet';
 import type { CSSStyle, CSSTransitionProperty } from '../../types';
-import { filterCSSAndStyleProperties } from '../props';
+import { filterCSSAndStyleProperties, getChangedProps } from '../props';
+
+describe('getChangedProps', () => {
+  test('returns empty object when both props are null', () => {
+    const result = getChangedProps(null, null);
+    expect(result).toEqual({});
+  });
+
+  test('returns all properties as new when oldProps is null', () => {
+    const newProps = { opacity: 1, transform: 'scale(2)' };
+    const result = getChangedProps(null, newProps);
+    expect(result).toEqual({
+      opacity: [undefined, 1],
+      transform: [undefined, 'scale(2)'],
+    });
+  });
+
+  test('returns all properties as removed when newProps is null', () => {
+    const oldProps = { opacity: 1, transform: 'scale(2)' };
+    const result = getChangedProps(oldProps, null);
+    expect(result).toEqual({
+      opacity: [1, undefined],
+      transform: ['scale(2)', undefined],
+    });
+  });
+
+  test('detects changed properties', () => {
+    const oldProps = { opacity: 0, transform: 'scale(1)', color: 'red' };
+    const newProps = { opacity: 1, transform: 'scale(1)', color: 'blue' };
+    const result = getChangedProps(oldProps, newProps);
+    expect(result).toEqual({
+      opacity: [0, 1],
+      color: ['red', 'blue'],
+    });
+  });
+
+  test('detects new properties', () => {
+    const oldProps = { opacity: 1 };
+    const newProps = { opacity: 1, transform: 'scale(2)' };
+    const result = getChangedProps(oldProps, newProps);
+    expect(result).toEqual({
+      transform: [undefined, 'scale(2)'],
+    });
+  });
+
+  test('detects removed properties', () => {
+    const oldProps = { opacity: 1, transform: 'scale(2)' };
+    const newProps = { opacity: 1 };
+    const result = getChangedProps(oldProps, newProps);
+    expect(result).toEqual({
+      transform: ['scale(2)', undefined],
+    });
+  });
+
+  test('returns empty object when props are identical', () => {
+    const props = { opacity: 1, transform: 'scale(2)' };
+    const result = getChangedProps(props, props);
+    expect(result).toEqual({});
+  });
+
+  test('handles undefined values correctly', () => {
+    const oldProps = { opacity: undefined, transform: 'scale(1)' };
+    const newProps = { opacity: 1, transform: undefined };
+    const result = getChangedProps(oldProps, newProps);
+    expect(result).toEqual({
+      opacity: [undefined, 1],
+      transform: ['scale(1)', undefined],
+    });
+  });
+
+  test('only diffs specified properties when allowedProperties is provided', () => {
+    const oldProps = { opacity: 0, transform: 'scale(1)', color: 'red' };
+    const newProps = { opacity: 1, transform: 'scale(2)', color: 'blue' };
+    const result = getChangedProps(oldProps, newProps, [
+      'opacity',
+      'transform',
+    ]);
+    expect(result).toEqual({
+      opacity: [0, 1],
+      transform: ['scale(1)', 'scale(2)'],
+    });
+    // color should not be included even though it changed
+  });
+
+  test('handles null allowedProperties correctly', () => {
+    const oldProps = { opacity: 0, color: 'red' };
+    const newProps = { opacity: 1, color: 'blue' };
+    const result = getChangedProps(oldProps, newProps, null);
+    // null means all properties should be checked
+    expect(result).toEqual({
+      opacity: [0, 1],
+      color: ['red', 'blue'],
+    });
+  });
+
+  test('uses deep comparison for complex values', () => {
+    const oldProps = {
+      transform: [{ scale: 1 }, { rotate: '0deg' }],
+      shadow: { offset: { x: 0, y: 0 }, color: 'black' },
+    };
+    const newProps = {
+      transform: [{ scale: 1 }, { rotate: '0deg' }], // Same value
+      shadow: { offset: { x: 0, y: 1 }, color: 'black' }, // Different
+    };
+    const result = getChangedProps(oldProps, newProps);
+    expect(result).toEqual({
+      shadow: [
+        { offset: { x: 0, y: 0 }, color: 'black' },
+        { offset: { x: 0, y: 1 }, color: 'black' },
+      ],
+    });
+    // transform should not be included since it's deeply equal
+  });
+});
 
 describe(filterCSSAndStyleProperties, () => {
   describe('animation config', () => {

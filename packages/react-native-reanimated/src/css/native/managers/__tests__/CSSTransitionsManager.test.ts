@@ -4,15 +4,15 @@ import type { CSSTransitionProperties } from '../../../types';
 import { normalizeCSSTransitionProperties } from '../../normalization';
 import {
   registerCSSTransition,
+  runCSSTransition,
   unregisterCSSTransition,
-  updateCSSTransition,
 } from '../../proxy';
 import CSSTransitionsManager from '../CSSTransitionsManager';
 
 jest.mock('../../proxy.ts', () => ({
   registerCSSTransition: jest.fn(),
   unregisterCSSTransition: jest.fn(),
-  updateCSSTransition: jest.fn(),
+  runCSSTransition: jest.fn(),
 }));
 
 describe('CSSTransitionsManager', () => {
@@ -39,7 +39,7 @@ describe('CSSTransitionsManager', () => {
           normalizeCSSTransitionProperties(transitionProperties)
         );
         expect(unregisterCSSTransition).not.toHaveBeenCalled();
-        expect(updateCSSTransition).not.toHaveBeenCalled();
+        expect(runCSSTransition).not.toHaveBeenCalled();
       });
     });
 
@@ -52,12 +52,12 @@ describe('CSSTransitionsManager', () => {
         manager.update(transitionProperties);
         expect(registerCSSTransition).toHaveBeenCalledTimes(1);
         expect(unregisterCSSTransition).not.toHaveBeenCalled();
-        expect(updateCSSTransition).not.toHaveBeenCalled();
+        expect(runCSSTransition).not.toHaveBeenCalled();
 
         manager.update(transitionProperties);
         expect(registerCSSTransition).toHaveBeenCalledTimes(1);
         expect(unregisterCSSTransition).not.toHaveBeenCalled();
-        expect(updateCSSTransition).not.toHaveBeenCalled();
+        expect(runCSSTransition).not.toHaveBeenCalled();
       });
 
       test('updates transition if method was called with different config', () => {
@@ -72,23 +72,92 @@ describe('CSSTransitionsManager', () => {
         manager.update(transitionProperties);
         expect(registerCSSTransition).toHaveBeenCalledTimes(1);
         expect(unregisterCSSTransition).not.toHaveBeenCalled();
-        expect(updateCSSTransition).not.toHaveBeenCalled();
+        expect(runCSSTransition).not.toHaveBeenCalled();
 
         manager.update(newTransitionConfig);
         expect(registerCSSTransition).toHaveBeenCalledTimes(1);
         expect(unregisterCSSTransition).not.toHaveBeenCalled();
-        expect(updateCSSTransition).toHaveBeenCalledTimes(1);
-        expect(updateCSSTransition).toHaveBeenCalledWith(viewTag, {
-          properties: ['transform'],
-          settings: {
-            transform: {
-              duration: 1500,
-              delay: 0,
-              timingFunction: 'ease',
-              allowDiscrete: false,
+        expect(runCSSTransition).toHaveBeenCalledTimes(1);
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          viewTag,
+          {},
+          {
+            properties: ['transform'],
+            settings: {
+              transform: {
+                duration: 1500,
+                delay: 0,
+                timingFunction: 'ease',
+                allowDiscrete: false,
+              },
             },
-          },
-        });
+          }
+        );
+      });
+
+      test('runs transition when props change', () => {
+        const transitionProperties: CSSTransitionProperties = {
+          transitionProperty: 'opacity',
+        };
+        const props1 = { opacity: 0 };
+        const props2 = { opacity: 1 };
+
+        manager.update(transitionProperties, props1);
+        expect(registerCSSTransition).toHaveBeenCalledTimes(1);
+        expect(runCSSTransition).not.toHaveBeenCalled();
+
+        manager.update(transitionProperties, props2);
+        expect(registerCSSTransition).toHaveBeenCalledTimes(1);
+        expect(runCSSTransition).toHaveBeenCalledTimes(1);
+        // Changed props now contains [oldValue, newValue] pairs
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          viewTag,
+          { opacity: [0, 1] },
+          {}
+        );
+      });
+
+      test('runs transition from undefined when props are initially null', () => {
+        const transitionProperties: CSSTransitionProperties = {
+          transitionProperty: 'opacity',
+        };
+        const props = { opacity: 1 };
+
+        // First update with null props
+        manager.update(transitionProperties, null);
+        expect(registerCSSTransition).toHaveBeenCalledTimes(1);
+        expect(runCSSTransition).not.toHaveBeenCalled();
+
+        // Update with actual props - should transition from undefined
+        manager.update(transitionProperties, props);
+        expect(registerCSSTransition).toHaveBeenCalledTimes(1);
+        expect(runCSSTransition).toHaveBeenCalledTimes(1);
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          viewTag,
+          { opacity: [undefined, 1] },
+          {}
+        );
+      });
+
+      test('detects removed properties', () => {
+        const transitionProperties: CSSTransitionProperties = {
+          transitionProperty: 'all',
+        };
+        const props1 = { opacity: 1, transform: 'scale(1)' };
+        const props2 = { opacity: 1 };
+
+        manager.update(transitionProperties, props1);
+        expect(registerCSSTransition).toHaveBeenCalledTimes(1);
+        expect(runCSSTransition).not.toHaveBeenCalled();
+
+        manager.update(transitionProperties, props2);
+        expect(registerCSSTransition).toHaveBeenCalledTimes(1);
+        expect(runCSSTransition).toHaveBeenCalledTimes(1);
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          viewTag,
+          { transform: ['scale(1)', undefined] },
+          {}
+        );
       });
     });
 
@@ -101,12 +170,12 @@ describe('CSSTransitionsManager', () => {
         manager.update(transitionProperties);
         expect(registerCSSTransition).toHaveBeenCalledTimes(1);
         expect(unregisterCSSTransition).not.toHaveBeenCalled();
-        expect(updateCSSTransition).not.toHaveBeenCalled();
+        expect(runCSSTransition).not.toHaveBeenCalled();
 
         manager.update(null);
         expect(registerCSSTransition).toHaveBeenCalledTimes(1);
         expect(unregisterCSSTransition).toHaveBeenCalledTimes(1);
-        expect(updateCSSTransition).not.toHaveBeenCalled();
+        expect(runCSSTransition).not.toHaveBeenCalled();
       });
     });
 
@@ -114,7 +183,7 @@ describe('CSSTransitionsManager', () => {
       manager.update(null);
       expect(registerCSSTransition).not.toHaveBeenCalled();
       expect(unregisterCSSTransition).not.toHaveBeenCalled();
-      expect(updateCSSTransition).not.toHaveBeenCalled();
+      expect(runCSSTransition).not.toHaveBeenCalled();
     });
   });
 });

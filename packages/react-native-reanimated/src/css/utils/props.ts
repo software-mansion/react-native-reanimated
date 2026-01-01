@@ -1,6 +1,7 @@
 'use strict';
 import type { AnyRecord, PlainStyle } from '../../common';
 import { logger } from '../../common';
+import type { StyleProps } from '../../commonTypes';
 import { isSharedValue } from '../../isSharedValue';
 import type {
   CSSAnimationProperties,
@@ -8,12 +9,79 @@ import type {
   CSSTransitionProperties,
   ExistingCSSAnimationProperties,
 } from '../types';
+import { deepEqual } from './equality';
 import {
   isAnimationProp,
   isCSSKeyframesObject,
   isCSSKeyframesRule,
   isTransitionProp,
 } from './guards';
+
+type PropsDiff = {
+  [key: string]: [unknown, unknown]; // [oldValue, newValue]
+};
+
+/**
+ * Calculates the difference between old and new props. Returns an object where
+ * each key is a changed property and the value is [oldValue, newValue]. When
+ * oldProps is null, all newProps are considered changes from undefined. When
+ * newProps is null, all oldProps are considered removals.
+ *
+ * @param allowedProperties - Optional list of properties to check. If provided,
+ *   only these properties are diffed.
+ */
+export function getChangedProps(
+  oldProps: StyleProps | null,
+  newProps: StyleProps | null,
+  allowedProperties?: string[] | null
+): PropsDiff {
+  const diff: PropsDiff = {};
+
+  if (oldProps === null && newProps === null) {
+    return diff;
+  }
+
+  // Determine which properties to check
+  const propsToCheck = allowedProperties || [
+    ...new Set([
+      ...Object.keys(oldProps ?? {}),
+      ...Object.keys(newProps ?? {}),
+    ]),
+  ];
+
+  if (oldProps === null && newProps !== null) {
+    // All properties in newProps are new (from undefined to value)
+    for (const key of propsToCheck) {
+      if (key in newProps) {
+        diff[key] = [undefined, newProps[key]];
+      }
+    }
+    return diff;
+  }
+
+  if (oldProps !== null && newProps === null) {
+    // All properties in oldProps are removed (from value to undefined)
+    for (const key of propsToCheck) {
+      if (key in oldProps) {
+        diff[key] = [oldProps[key], undefined];
+      }
+    }
+    return diff;
+  }
+
+  // Both oldProps and newProps are not null
+  for (const key of propsToCheck) {
+    const oldValue = oldProps![key];
+    const newValue = newProps![key];
+
+    // Use deep comparison for complex values
+    if (!deepEqual(oldValue, newValue)) {
+      diff[key] = [oldValue, newValue];
+    }
+  }
+
+  return diff;
+}
 
 export function filterCSSAndStyleProperties<S extends AnyRecord>(
   style: CSSStyle<S>

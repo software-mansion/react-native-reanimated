@@ -66,11 +66,12 @@ export function registerCSSTransition(
   ReanimatedModule.registerCSSTransition(shadowNodeWrapper, transitionConfig);
 }
 
-export function updateCSSTransition(
+export function runCSSTransition(
   viewTag: number,
+  changedProps: StyleProps,
   configUpdates: Partial<NormalizedCSSTransitionConfig>
 ) {
-  ReanimatedModule.updateCSSTransition(viewTag, configUpdates);
+  ReanimatedModule.runCSSTransition(viewTag, changedProps, configUpdates);
 }
 
 export function unregisterCSSTransition(viewTag: number) {

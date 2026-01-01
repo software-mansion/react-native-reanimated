@@ -239,11 +239,16 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     );
   }
 
-  updateCSSTransition(
+  runCSSTransition(
     viewTag: number,
+    changedProps: StyleProps,
     configUpdates: Partial<NormalizedCSSTransitionConfig>
   ) {
-    this.#reanimatedModuleProxy.updateCSSTransition(viewTag, configUpdates);
+    this.#reanimatedModuleProxy.runCSSTransition(
+      viewTag,
+      changedProps,
+      configUpdates
+    );
   }
 
   unregisterCSSTransition(viewTag: number) {
@@ -277,7 +282,7 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   updateCSSAnimations(): void {}
   unregisterCSSAnimations(): void {}
   registerCSSTransition(): void {}
-  updateCSSTransition(): void {}
+  runCSSTransition(): void {}
   unregisterCSSTransition(): void {}
   registerSensor(): number {
     return -1;

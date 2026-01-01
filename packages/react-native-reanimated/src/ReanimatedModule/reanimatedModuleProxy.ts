@@ -85,9 +85,10 @@ export interface ReanimatedModuleProxy {
     transitionConfig: NormalizedCSSTransitionConfig
   ): void;
 
-  updateCSSTransition(
+  runCSSTransition(
     viewTag: number,
-    settingsUpdates: Partial<NormalizedCSSTransitionConfig>
+    changedProps: StyleProps,
+    configUpdates: Partial<NormalizedCSSTransitionConfig>
   ): void;
 
   unregisterCSSTransition(viewTag: number): void;

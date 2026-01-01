@@ -327,12 +327,13 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
-  updateCSSTransition(
+  runCSSTransition(
     _viewTag: number,
-    _settingsUpdates: Partial<NormalizedCSSTransitionConfig>
+    _changedProps: StyleProps,
+    _configUpdates: Partial<NormalizedCSSTransitionConfig>
   ): void {
     throw new ReanimatedError(
-      '`updateCSSTransition` is not available in JSReanimated.'
+      '`runCSSTransition` is not available in JSReanimated.'
     );
   }
 

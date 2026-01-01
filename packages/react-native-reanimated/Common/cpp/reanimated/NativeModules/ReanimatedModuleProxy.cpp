@@ -441,12 +441,15 @@ void ReanimatedModuleProxy::registerCSSTransition(
   maybeRunCSSLoop();
 }
 
-void ReanimatedModuleProxy::updateCSSTransition(
+void ReanimatedModuleProxy::runCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
+    const jsi::Value &changedProps,
     const jsi::Value &configUpdates) {
   auto lock = cssTransitionsRegistry_->lock();
-  cssTransitionsRegistry_->updateSettings(viewTag.asNumber(), parsePartialCSSTransitionConfig(rt, configUpdates));
+  const auto changedPropsDynamic = jsi::dynamicFromValue(rt, changedProps);
+  const auto partialConfig = parsePartialCSSTransitionConfig(rt, configUpdates);
+  cssTransitionsRegistry_->run(viewTag.asNumber(), changedPropsDynamic, partialConfig);
   maybeRunCSSLoop();
 }
 

@@ -1,3 +1,4 @@
+#include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 
 #include <memory>
@@ -25,27 +26,65 @@ void CSSTransitionsRegistry::add(const std::shared_ptr<CSSTransition> &transitio
   const auto viewTag = shadowNode->getTag();
 
   registry_.insert({viewTag, transition});
-  PropsObserver observer = createPropsObserver(viewTag);
-  staticPropsRegistry_->setObserver(viewTag, std::move(observer));
 }
 
 void CSSTransitionsRegistry::remove(const Tag viewTag) {
   removeFromUpdatesRegistry(viewTag);
-  staticPropsRegistry_->removeObserver(viewTag);
   delayedTransitionsManager_.remove(viewTag);
   runningTransitionTags_.erase(viewTag);
   registry_.erase(viewTag);
 }
 
-void CSSTransitionsRegistry::updateSettings(const Tag viewTag, const PartialCSSTransitionConfig &config) {
-  const auto &transition = registry_[viewTag];
-  transition->updateSettings(config);
-
-  // Replace style overrides with the new ones if transition properties were
-  // updated (we want to keep overrides only for transitioned properties)
-  if (config.properties.has_value()) {
-    updateInUpdatesRegistry(transition, transition->getCurrentInterpolationStyle());
+void CSSTransitionsRegistry::run(
+    const Tag viewTag,
+    const folly::dynamic &changedProps,
+    const PartialCSSTransitionConfig &configUpdates) {
+  if (registry_.find(viewTag) == registry_.end()) {
+    return;
   }
+
+  const auto &transition = registry_[viewTag];
+
+  // Update transition settings if provided
+  if (configUpdates.properties.has_value() || configUpdates.settings.has_value()) {
+    transition->updateSettings(configUpdates);
+  }
+
+  // If no changed props, nothing to do
+  if (changedProps.empty() || !changedProps.isObject()) {
+    return;
+  }
+
+  // Parse the changed props diff from JS
+  ChangedProps props = parseChangedPropsFromDiff(changedProps);
+
+  if (props.changedPropertyNames.empty()) {
+    return;
+  }
+
+  // Filter changed props based on allowed properties
+  const auto allowedProperties = transition->getAllowedProperties(props.oldProps, props.newProps);
+  if (allowedProperties.has_value()) {
+    std::vector<std::string> filteredPropertyNames;
+    for (const auto &propName : props.changedPropertyNames) {
+      if (std::find(allowedProperties->begin(), allowedProperties->end(), propName) != allowedProperties->end()) {
+        filteredPropertyNames.push_back(propName);
+      }
+    }
+    props.changedPropertyNames = filteredPropertyNames;
+  }
+
+  if (props.changedPropertyNames.empty()) {
+    return;
+  }
+
+  std::lock_guard<std::mutex> lock{mutex_};
+
+  const auto &shadowNode = transition->getShadowNode();
+  const auto &lastUpdates = getUpdatesFromRegistry(shadowNode->getTag());
+  const auto &transitionStartStyle = transition->run(props, lastUpdates, getCurrentTimestamp_());
+  updateInUpdatesRegistry(transition, transitionStartStyle);
+  scheduleOrActivateTransition(transition);
 }
 
 void CSSTransitionsRegistry::update(const double timestamp) {
@@ -102,34 +141,6 @@ void CSSTransitionsRegistry::scheduleOrActivateTransition(const std::shared_ptr<
   } else {
     runningTransitionTags_.insert(viewTag);
   }
-}
-
-PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
-  return [weakThis = weak_from_this(), viewTag](const folly::dynamic &oldProps, const folly::dynamic &newProps) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-
-    const auto &transition = strongThis->registry_[viewTag];
-    const auto allowedProperties = transition->getAllowedProperties(oldProps, newProps);
-
-    const auto changedProps = getChangedProps(oldProps, newProps, allowedProperties);
-
-    if (changedProps.changedPropertyNames.empty()) {
-      return;
-    }
-
-    {
-      std::lock_guard<std::mutex> lock{strongThis->mutex_};
-
-      const auto &shadowNode = transition->getShadowNode();
-      const auto &lastUpdates = strongThis->getUpdatesFromRegistry(shadowNode->getTag());
-      const auto &transitionStartStyle = transition->run(changedProps, lastUpdates, strongThis->getCurrentTimestamp_());
-      strongThis->updateInUpdatesRegistry(transition, transitionStartStyle);
-      strongThis->scheduleOrActivateTransition(transition);
-    }
-  };
 }
 
 void CSSTransitionsRegistry::updateInUpdatesRegistry(

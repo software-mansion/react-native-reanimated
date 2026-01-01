@@ -3,6 +3,7 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/configs/common.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/CSS/utils/props.h>
 
 #include <string>
 #include <unordered_map>
@@ -39,5 +40,7 @@ CSSTransitionPropertiesSettings parseCSSTransitionPropertiesSettings(jsi::Runtim
 CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config);
 
 PartialCSSTransitionConfig parsePartialCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &partialConfig);
+
+ChangedProps parseChangedPropsFromDiff(const folly::dynamic &diff);
 
 } // namespace reanimated::css
