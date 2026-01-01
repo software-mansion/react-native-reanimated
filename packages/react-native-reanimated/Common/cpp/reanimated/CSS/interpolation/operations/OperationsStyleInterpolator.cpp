@@ -105,26 +105,19 @@ bool OperationsStyleInterpolator::updateKeyframesFromStyleChange(
     const folly::dynamic &oldStyleValue,
     const folly::dynamic &newStyleValue,
     const folly::dynamic &lastUpdateValue) {
-  const auto &prevStyleValue = lastUpdateValue.isNull() ? oldStyleValue : lastUpdateValue;
+  const auto oldStyleOperations = parseStyleOperations(oldStyleValue);
+  const auto newStyleOperations = parseStyleOperations(newStyleValue);
+  const auto lastUpdateOperations = parseStyleOperations(lastUpdateValue);
 
   keyframes_.clear();
   keyframes_.reserve(1);
   keyframes_.emplace_back(createStyleOperationsKeyframe(
-      0,
-      1,
-      parseStyleOperations(prevStyleValue).value_or(StyleOperations{}),
-      parseStyleOperations(newStyleValue).value_or(StyleOperations{})));
+      0, 1, lastUpdateOperations.has_value() ? lastUpdateOperations : oldStyleOperations, newStyleOperations));
 
-  const auto &newOperations = keyframes_.back()->toOperations;
+  bool equalsReversingAdjustedStartValue = areStyleOperationsEqual(reversingAdjustedStartValue_, newStyleOperations);
+  reversingAdjustedStartValue_ = oldStyleOperations;
 
-  // Check if new operations equal the reversing adjusted start value
-  bool isEqual = (reversingAdjustedStartValue_.has_value() == newOperations.has_value()) &&
-      (!newOperations.has_value() || reversingAdjustedStartValue_.value() == newOperations.value());
-
-  // Update reversing adjusted start value with old style value
-  reversingAdjustedStartValue_ = oldStyleValue.isNull() ? std::nullopt : parseStyleOperations(oldStyleValue);
-
-  return isEqual;
+  return equalsReversingAdjustedStartValue;
 }
 
 std::optional<StyleOperations> OperationsStyleInterpolator::parseStyleOperations(
@@ -242,6 +235,13 @@ folly::dynamic OperationsStyleInterpolator::interpolateOperations(
   return result;
 }
 
+StyleOperationsInterpolationContext OperationsStyleInterpolator::createUpdateContext(
+    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const double fallbackInterpolateThreshold) const {
+  return StyleOperationsInterpolationContext{
+      shadowNode, viewStylesRepository_, interpolators_, fallbackInterpolateThreshold};
+}
+
 folly::dynamic OperationsStyleInterpolator::convertOperationsToDynamic(const StyleOperations &operations) {
   auto result = folly::dynamic::array();
   result.reserve(operations.size());
@@ -253,11 +253,18 @@ folly::dynamic OperationsStyleInterpolator::convertOperationsToDynamic(const Sty
   return result;
 }
 
-StyleOperationsInterpolationContext OperationsStyleInterpolator::createUpdateContext(
-    const std::shared_ptr<const ShadowNode> &shadowNode,
-    const double fallbackInterpolateThreshold) const {
-  return StyleOperationsInterpolationContext{
-      shadowNode, viewStylesRepository_, interpolators_, fallbackInterpolateThreshold};
+bool OperationsStyleInterpolator::areStyleOperationsEqual(
+    const std::optional<StyleOperations> &ops1,
+    const std::optional<StyleOperations> &ops2) {
+  if (ops1.has_value() != ops2.has_value()) {
+    return false;
+  }
+  if (!ops1.has_value()) {
+    return true;
+  }
+  return std::equal(ops1->begin(), ops1->end(), ops2->begin(), ops2->end(), [](const auto &lhs, const auto &rhs) {
+    return *lhs == *rhs;
+  });
 }
 
 // OperationsStyleInterpolatorBase implementation

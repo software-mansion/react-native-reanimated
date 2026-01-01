@@ -50,17 +50,20 @@ bool RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
     propertyNamesSet.insert(key.asString());
   }
 
-  bool allEqual = true;
+  bool allEqualReversingAdjustedStartValue = true;
+
   for (const auto &propertyName : propertyNamesSet) {
     maybeCreateInterpolator(propertyName);
-    bool isEqual = interpolators_[propertyName]->updateKeyframesFromStyleChange(
+    allEqualReversingAdjustedStartValue &= interpolators_[propertyName]->updateKeyframesFromStyleChange(
         oldStyleObject.getDefault(propertyName, null),
         newStyleObject.getDefault(propertyName, null),
         lastUpdateObject.getDefault(propertyName, null));
-    allEqual = allEqual && isEqual;
   }
 
-  return allEqual;
+  LOG(INFO) << "RecordPropertiesInterpolator allEqualReversingAdjustedStartValue: "
+            << allEqualReversingAdjustedStartValue;
+
+  return allEqualReversingAdjustedStartValue;
 }
 
 folly::dynamic RecordPropertiesInterpolator::mapInterpolators(

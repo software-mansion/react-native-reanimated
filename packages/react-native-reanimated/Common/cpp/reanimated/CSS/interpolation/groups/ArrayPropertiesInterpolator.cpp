@@ -40,18 +40,21 @@ bool ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
 
   resizeInterpolators(valuesCount);
 
-  bool allEqual = true;
+  bool allEqualReversingAdjustedStartValue = true;
+
   for (size_t i = 0; i < valuesCount; ++i) {
     // These index checks ensure that interpolation works between 2 arrays
     // with different lengths
-    bool isEqual = interpolators_[i]->updateKeyframesFromStyleChange(
+    allEqualReversingAdjustedStartValue &= interpolators_[i]->updateKeyframesFromStyleChange(
         i < oldSize ? oldStyleArray[i] : null,
         i < newSize ? newStyleArray[i] : null,
         i < lastSize ? lastUpdateArray[i] : null);
-    allEqual = allEqual && isEqual;
   }
 
-  return allEqual;
+  LOG(INFO) << "ArrayPropertiesInterpolator allEqualReversingAdjustedStartValue: "
+            << allEqualReversingAdjustedStartValue;
+
+  return allEqualReversingAdjustedStartValue;
 }
 
 folly::dynamic ArrayPropertiesInterpolator::mapInterpolators(

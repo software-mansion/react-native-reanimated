@@ -79,10 +79,13 @@ class OperationsStyleInterpolator : public PropertyInterpolator {
       const StyleOperations &fromOperations,
       const StyleOperations &toOperations,
       double fallbackInterpolateThreshold) const;
-  static folly::dynamic convertOperationsToDynamic(const StyleOperations &operations);
   StyleOperationsInterpolationContext createUpdateContext(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       double fallbackInterpolateThreshold) const;
+  static folly::dynamic convertOperationsToDynamic(const StyleOperations &operations);
+  static bool areStyleOperationsEqual(
+      const std::optional<StyleOperations> &ops1,
+      const std::optional<StyleOperations> &ops2);
 };
 
 template <typename TOperation>
