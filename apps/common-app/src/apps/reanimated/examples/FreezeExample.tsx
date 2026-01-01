@@ -104,30 +104,38 @@ function HomeScreen() {
   const [freezed, setFreezed] = useState(false);
   const isFocused = useIsFocused();
 
+  const [count, setCount] = useState(0);
+
   useEffect(() => {
+    const interval = setInterval(() => {
+      setCount((x) => x + 1);
+    }, 1000);
+
     if (isFocused) {
       setFreezed(false);
     }
+
+    return () => clearInterval(interval);
   }, [isFocused]);
 
   return (
-    <Freeze freeze={freezed}>
-      <View style={styles.container}>
-        <Text>Home Screen</Text>
-        <Button
-          onPress={() => {
-            setFreezed(true);
-            navigation.navigate('screen1');
-          }}
-          title="Go to screen 1"
-        />
-        <Button onPress={nuke} title="Check for registry leaks" />
-        <AnimatedSwitch />
-        <CSSAnimation />
-        <CSSTransition />
-        <AnimatedStyleAnimation />
-      </View>
-    </Freeze>
+    // <Freeze freeze={freezed}>
+    <View style={styles.container}>
+      <Text>Home Screen</Text>
+      <Button
+        onPress={() => {
+          setFreezed(true);
+          navigation.navigate('screen1');
+        }}
+        title="Go to screen 1"
+      />
+      <Button onPress={nuke} title="Check for registry leaks" />
+      <AnimatedSwitch />
+      <CSSAnimation />
+      <CSSTransition />
+      <AnimatedStyleAnimation />
+    </View>
+    // </Freeze>
   );
 }
 

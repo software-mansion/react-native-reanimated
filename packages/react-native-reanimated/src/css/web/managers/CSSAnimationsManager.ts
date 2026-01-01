@@ -32,8 +32,8 @@ const isCSSKeyframesRuleImpl = (
 type ProcessedAnimation = {
   keyframesRule: CSSKeyframesRuleImpl;
   removable: boolean;
-  creationTimestamp: number;
   elapsedTime?: number;
+  lastAnimationTime?: number;
 };
 
 type ProcessedSettings = ConvertValuesToArrays<CSSAnimationSettings>;
@@ -44,6 +44,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   // Keys are processed keyframes
   private attachedAnimations: Record<string, ProcessedAnimation> = {};
   private unmountCleanupCalled = false;
+  private lastTimelineTime?: number;
 
   constructor(element: ReanimatedHTMLElement) {
     configureWebCSSAnimations();
@@ -57,16 +58,23 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
       return;
     }
 
-    const { animationName: definitions, ...animationSettings } =
-      convertPropertiesToArrays(animationProperties);
+    const {
+      animationName: definitions,
+      animationPlayState: playStates,
+      ...animationSettings
+    } = convertPropertiesToArrays(animationProperties);
 
     if (definitions.length === 0) {
       this.detach();
       return;
     }
 
-    const timestamp = Date.now();
-    const processedAnimations = definitions.map((definition) => {
+    const timelineTime = document.timeline.currentTime as number;
+    const activeAnimations = this.element.getAnimations
+      ? this.element.getAnimations()
+      : [];
+
+    const processedAnimations = definitions.map((definition, i) => {
       let processedAnimation: ProcessedAnimation;
 
       // If the CSSKeyframesRule instance was provided, we can just use it
@@ -76,7 +84,6 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
         ] ?? {
           keyframesRule: definition,
           removable: false,
-          creationTimestamp: timestamp,
         };
       } else {
         // If keyframes was defined as an object, the additional processing is needed
@@ -91,26 +98,77 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
             processedKeyframes
           ),
           removable: true,
-          creationTimestamp: timestamp,
         };
       }
 
-      if (this.unmountCleanupCalled) {
-        // unmountCleanup is called not only when the component truly unmounts, but also
-        // when display property is set to 'none' (e.g. during navigation between screens)
-        // In such a case, we don't want to restart the animation after re-entering the
-        // screen so we have to shift its delay by the time elapsed since the animation
-        // was started for the first time.
-        processedAnimation.elapsedTime =
-          timestamp - processedAnimation.creationTimestamp;
+      const activeAnimation = activeAnimations.find(
+        (a) =>
+          (a as CSSAnimation).animationName ===
+          processedAnimation.keyframesRule.name
+      );
+
+      if (processedAnimation.lastAnimationTime !== undefined) {
+        // If the animation is paused, we don't want to update the elapsed time
+        // because the animation is not supposed to be running.
+        const isPaused = playStates?.[i] === 'paused';
+
+        const timeDiff = timelineTime - (this.lastTimelineTime ?? timelineTime);
+
+        if (activeAnimation) {
+          const animationTime = activeAnimation.currentTime as number;
+
+          if (animationTime !== null && !isPaused) {
+            if (
+              processedAnimation.lastAnimationTime !== undefined &&
+              animationTime <= processedAnimation.lastAnimationTime
+            ) {
+              // The animation was restarted relative to the last time we checked
+              // (e.g. because the element was hidden and shown again)
+              // OR the animation is lagging behind real time (frozen in background).
+              // We want to shift the delay so that it looks like the animation
+              // continued running.
+              processedAnimation.elapsedTime =
+                Math.max(
+                  processedAnimation.elapsedTime ?? 0,
+                  processedAnimation.lastAnimationTime ?? 0
+                ) + timeDiff;
+            }
+
+            processedAnimation.lastAnimationTime = animationTime;
+          } else if (processedAnimation.elapsedTime !== undefined) {
+            processedAnimation.lastAnimationTime =
+              processedAnimation.elapsedTime;
+          }
+        } else if (!isPaused) {
+          // If the animation is not active (was removed by the browser, e.g.
+          // because display: none was set), we still want to update its
+          // elapsed time so that when it starts again, it continues from the
+          // correct point.
+          processedAnimation.elapsedTime =
+            Math.max(
+              processedAnimation.elapsedTime ?? 0,
+              processedAnimation.lastAnimationTime ?? 0
+            ) + timeDiff;
+
+          processedAnimation.lastAnimationTime = processedAnimation.elapsedTime;
+        }
+      } else if (activeAnimation) {
+        processedAnimation.lastAnimationTime =
+          (activeAnimation.currentTime as number) ?? 0;
+      } else {
+        processedAnimation.lastAnimationTime = 0;
       }
 
       return processedAnimation;
     });
 
+    this.lastTimelineTime = timelineTime;
     this.unmountCleanupCalled = false;
     this.updateAttachedAnimations(processedAnimations);
-    this.setElementAnimations(processedAnimations, animationSettings);
+    this.setElementAnimations(processedAnimations, {
+      ...animationSettings,
+      animationPlayState: playStates,
+    });
   }
 
   unmountCleanup(): void {
