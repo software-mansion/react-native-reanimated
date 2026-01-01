@@ -126,12 +126,11 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
               // (e.g. because the element was hidden and shown again)
               // OR the animation is lagging behind real time (frozen in background).
               // We want to shift the delay so that it looks like the animation
-              // continued running.
               processedAnimation.elapsedTime =
-                Math.max(
-                  processedAnimation.elapsedTime ?? 0,
-                  processedAnimation.lastAnimationTime ?? 0
-                ) + timeDiff;
+                (processedAnimation.elapsedTime ?? 0) +
+                (processedAnimation.lastAnimationTime ?? 0) +
+                timeDiff -
+                animationTime;
             }
 
             processedAnimation.lastAnimationTime = animationTime;
@@ -145,12 +144,11 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
           // elapsed time so that when it starts again, it continues from the
           // correct point.
           processedAnimation.elapsedTime =
-            Math.max(
-              processedAnimation.elapsedTime ?? 0,
-              processedAnimation.lastAnimationTime ?? 0
-            ) + timeDiff;
+            (processedAnimation.elapsedTime ?? 0) +
+            (processedAnimation.lastAnimationTime ?? 0) +
+            timeDiff;
 
-          processedAnimation.lastAnimationTime = processedAnimation.elapsedTime;
+          processedAnimation.lastAnimationTime = 0;
         }
       } else if (activeAnimation) {
         processedAnimation.lastAnimationTime =
