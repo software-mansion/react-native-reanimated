@@ -32,6 +32,7 @@ import DispatchCommandExample from './DispatchCommandExample';
 import DragAndSnapExample from './DragAndSnapExample';
 import DynamicColorIOSExample from './DynamicColorIOSExample';
 import PlatformColorExample from './PlatformColorExample';
+import CSSAnimationContinuityTest from './CSSAnimationContinuityTest';
 import EmojiWaterfallExample from './EmojiWaterfallExample';
 import StrictModeComparison from './LayoutAnimations/StrictModeComparisonExample';
 import ExtrapolationExample from './ExtrapolationExample';
@@ -235,6 +236,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '❄️',
     title: 'React freeze',
     screen: FreezeExample,
+  },
+  CSSAnimationContinuityTest: {
+    icon: '🔁',
+    title: 'CSS Continuity Test',
+    screen: CSSAnimationContinuityTest,
   },
   RunOnUIAsyncExample: {
     icon: '👷‍♂️',

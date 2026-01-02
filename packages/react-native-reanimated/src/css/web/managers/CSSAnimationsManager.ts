@@ -34,6 +34,7 @@ type ProcessedAnimation = {
   removable: boolean;
   elapsedTime?: number;
   lastAnimationTime?: number;
+  lastPlayState?: string;
 };
 
 type ProcessedSettings = ConvertValuesToArrays<CSSAnimationSettings>;
@@ -45,128 +46,229 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private attachedAnimations: Record<string, ProcessedAnimation> = {};
   private unmountCleanupCalled = false;
   private lastTimelineTime?: number;
+  private lastAnimationProperties: ExistingCSSAnimationProperties | null = null;
+  private isUpdating = false;
+  private resizeObserver: ResizeObserver | null = null;
+  private isHidden = false;
 
   constructor(element: ReanimatedHTMLElement) {
     configureWebCSSAnimations();
 
     this.element = element;
+    this.isHidden = element.offsetParent === null;
+
+    // Use ResizeObserver to detect when the element becomes visible (display: none -> block).
+    // This handles the "No Re-render" navigation case efficiently.
+    // ResizeObserver notifications are delivered before the paint, avoiding flicker.
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        if (this.isUpdating) {
+          return;
+        }
+
+        // Check if element is hidden (display: none results in 0x0 size)
+        // using offsetParent as a cheap visibility check
+        const isHidden = this.element.offsetParent === null;
+
+        if (!isHidden && this.isHidden) {
+          // Transitioned from hidden -> visible.
+          // The CSS animation was reset by the browser, so we must force an update
+          // to restore the correct delay and maintain continuity.
+          if (this.lastAnimationProperties) {
+            this.update(this.lastAnimationProperties);
+          }
+        }
+        this.isHidden = isHidden;
+      });
+
+      this.resizeObserver.observe(this.element as unknown as Element);
+    }
   }
 
   update(animationProperties: ExistingCSSAnimationProperties | null) {
-    if (!animationProperties) {
-      this.detach();
+    if (this.isUpdating) {
       return;
     }
+    this.isUpdating = true;
+    this.lastAnimationProperties = animationProperties;
 
-    const {
-      animationName: definitions,
-      animationPlayState: playStates,
-      ...animationSettings
-    } = convertPropertiesToArrays(animationProperties);
-
-    if (definitions.length === 0) {
-      this.detach();
-      return;
-    }
-
-    const timelineTime = document.timeline.currentTime as number;
-    const activeAnimations = this.element.getAnimations
-      ? this.element.getAnimations()
-      : [];
-
-    const processedAnimations = definitions.map((definition, i) => {
-      let processedAnimation: ProcessedAnimation;
-
-      // If the CSSKeyframesRule instance was provided, we can just use it
-      if (isCSSKeyframesRuleImpl(definition)) {
-        processedAnimation = this.attachedAnimations[
-          definition.processedKeyframes
-        ] ?? {
-          keyframesRule: definition,
-          removable: false,
-        };
-      } else {
-        // If keyframes was defined as an object, the additional processing is needed
-        const keyframes = definition as CSSAnimationKeyframes;
-        const processedKeyframes = processKeyframeDefinitions(keyframes);
-
-        // If the animation with the same keyframes was already attached, we can reuse it
-        // Otherwise, we need to create a new CSSKeyframesRule object
-        processedAnimation = this.attachedAnimations[processedKeyframes] ?? {
-          keyframesRule: new CSSKeyframesRuleImpl(
-            keyframes,
-            processedKeyframes
-          ),
-          removable: true,
-        };
+    // Use try-finally to ensure isUpdating is reset even if errors occur
+    try {
+      if (!animationProperties) {
+        this.detach();
+        return;
       }
 
-      const activeAnimation = activeAnimations.find(
-        (a) =>
-          (a as CSSAnimation).animationName ===
-          processedAnimation.keyframesRule.name
-      );
+      const {
+        animationName: definitions,
+        animationPlayState: playStates,
+        ...animationSettings
+      } = convertPropertiesToArrays(animationProperties);
 
-      if (processedAnimation.lastAnimationTime !== undefined) {
-        // If the animation is paused, we don't want to update the elapsed time
-        // because the animation is not supposed to be running.
-        const isPaused = playStates?.[i] === 'paused';
+      if (definitions.length === 0) {
+        this.detach();
+        return;
+      }
 
-        const timeDiff = timelineTime - (this.lastTimelineTime ?? timelineTime);
+      const timelineTime = document.timeline.currentTime as number;
+      const activeAnimations = this.element.getAnimations
+        ? this.element.getAnimations()
+        : [];
 
-        if (activeAnimation) {
-          const animationTime = activeAnimation.currentTime as number;
+      const processedAnimations = definitions.map((definition, i) => {
+        let processedAnimation: ProcessedAnimation;
 
-          if (animationTime !== null && !isPaused) {
+        // If the CSSKeyframesRule instance was provided, we can just use it
+        if (isCSSKeyframesRuleImpl(definition)) {
+          processedAnimation = this.attachedAnimations[
+            definition.processedKeyframes
+          ] ?? {
+            keyframesRule: definition,
+            removable: false,
+          };
+        } else {
+          // If keyframes was defined as an object, the additional processing is needed
+          const keyframes = definition as CSSAnimationKeyframes;
+          const processedKeyframes = processKeyframeDefinitions(keyframes);
+
+          // If the animation with the same keyframes was already attached, we can reuse it
+          // Otherwise, we need to create a new CSSKeyframesRule object
+          processedAnimation = this.attachedAnimations[processedKeyframes] ?? {
+            keyframesRule: new CSSKeyframesRuleImpl(
+              keyframes,
+              processedKeyframes
+            ),
+            removable: true,
+          };
+        }
+
+        const activeAnimation = activeAnimations.find(
+          (a) =>
+            (a as CSSAnimation).animationName ===
+            processedAnimation.keyframesRule.name
+        );
+
+        if (processedAnimation.lastAnimationTime !== undefined) {
+          // If the animation is paused, we don't want to update the elapsed time
+          // because the animation is not supposed to be running.
+          const isPaused = playStates?.[i] === 'paused';
+
+          const timeDiff =
+            timelineTime - (this.lastTimelineTime ?? timelineTime);
+
+          const recoveringFromHidden =
+            this.isHidden && this.element.offsetParent !== null;
+
+          if (activeAnimation && activeAnimation.currentTime !== null) {
+            const animationTime = activeAnimation.currentTime as number;
+
+            const wasPaused = processedAnimation.lastPlayState === 'paused';
+            const effectiveTimeDiff = wasPaused ? 0 : timeDiff;
+            const actualProgress =
+              animationTime - processedAnimation.lastAnimationTime;
+            const drift = effectiveTimeDiff - actualProgress;
+
+            /*
+            console.log('[AntiGravity] Update', {
+              drift,
+              recoveringFromHidden,
+              last: processedAnimation.lastAnimationTime,
+              current: animationTime,
+              timeDiff,
+              elapsed: processedAnimation.elapsedTime
+            });
+            */
             if (
               processedAnimation.lastAnimationTime !== undefined &&
-              animationTime <= processedAnimation.lastAnimationTime
+              (recoveringFromHidden || Math.abs(drift) > 50)
             ) {
               // The animation was restarted relative to the last time we checked
               // (e.g. because the element was hidden and shown again)
               // OR the animation is lagging behind real time (frozen in background).
               // We want to shift the delay so that it looks like the animation
+              // continued from the correct point.
               processedAnimation.elapsedTime =
                 (processedAnimation.elapsedTime ?? 0) +
-                (processedAnimation.lastAnimationTime ?? 0) +
-                timeDiff -
-                animationTime;
+                (processedAnimation.lastAnimationTime ?? 0) -
+                animationTime +
+                effectiveTimeDiff;
             }
 
             processedAnimation.lastAnimationTime = animationTime;
-          } else if (processedAnimation.elapsedTime !== undefined) {
+          } else if (!isPaused) {
+            // If the animation is not active (was removed by the browser, e.g.
+            // because display: none was set), we still want to update its
+            // elapsed time so that when it starts again, it continues from the
+            // correct point.
+
+            if (recoveringFromHidden) {
+              const wasPaused = processedAnimation.lastPlayState === 'paused';
+              processedAnimation.elapsedTime =
+                (processedAnimation.elapsedTime ?? 0) +
+                (processedAnimation.lastAnimationTime ?? 0) +
+                (wasPaused ? 0 : timeDiff);
+              processedAnimation.lastAnimationTime = 0;
+            } else {
+              processedAnimation.elapsedTime =
+                (processedAnimation.elapsedTime ?? 0) + timeDiff;
+            }
+
+            // processedAnimation.lastAnimationTime = 0; // Don't reset
+          } else if (activeAnimation) {
             processedAnimation.lastAnimationTime =
-              processedAnimation.elapsedTime;
+              (activeAnimation.currentTime as number) ?? 0;
+          } else {
+            // processedAnimation.lastAnimationTime = 0; // Don't reset
           }
-        } else if (!isPaused) {
-          // If the animation is not active (was removed by the browser, e.g.
-          // because display: none was set), we still want to update its
-          // elapsed time so that when it starts again, it continues from the
-          // correct point.
-          processedAnimation.elapsedTime =
-            (processedAnimation.elapsedTime ?? 0) +
-            (processedAnimation.lastAnimationTime ?? 0) +
-            timeDiff;
 
-          processedAnimation.lastAnimationTime = 0;
+          processedAnimation.lastPlayState = isPaused ? 'paused' : 'running';
+        } else if (activeAnimation) {
+          // First time seeing this animation.
+          // Check if this is actually a recovery scenario (Manager was active before).
+          const animationTime = (activeAnimation.currentTime as number) ?? 0;
+          const timeDiff =
+            timelineTime - (this.lastTimelineTime ?? timelineTime);
+          const isPaused = playStates?.[i] === 'paused';
+
+          if (
+            this.lastTimelineTime !== undefined &&
+            timeDiff > 50 &&
+            !isPaused
+          ) {
+            // Manager has history, but animation is new. Assume recovery/restart.
+            // Apply the same correction logic as re-renders.
+            // Only apply if NOT paused - paused animations shouldn't accumulate time.
+            processedAnimation.elapsedTime =
+              (processedAnimation.elapsedTime ?? 0) + timeDiff - animationTime;
+          }
+
+          processedAnimation.lastAnimationTime = animationTime;
+          processedAnimation.lastPlayState = isPaused ? 'paused' : 'running';
+        } else {
+          // processedAnimation.lastAnimationTime = 0; // Don't reset
         }
-      } else if (activeAnimation) {
-        processedAnimation.lastAnimationTime =
-          (activeAnimation.currentTime as number) ?? 0;
-      } else {
-        processedAnimation.lastAnimationTime = 0;
+
+        return processedAnimation;
+      });
+
+      this.lastTimelineTime = timelineTime;
+      this.unmountCleanupCalled = false;
+      this.updateAttachedAnimations(processedAnimations);
+
+      // We request the next frame to update the animations if the element is not hidden
+      // We check offsetParent directly because this.isHidden might be stale (it's updated in finally)
+      if (this.element.offsetParent === null) {
+        return;
       }
-
-      return processedAnimation;
-    });
-
-    this.lastTimelineTime = timelineTime;
-    this.unmountCleanupCalled = false;
-    this.updateAttachedAnimations(processedAnimations);
-    this.setElementAnimations(processedAnimations, {
-      ...animationSettings,
-      animationPlayState: playStates,
-    });
+      // We request the next frame to update the animations if the element is not hidden
+      this.setElementAnimations(processedAnimations, {
+        ...animationSettings,
+        animationPlayState: playStates,
+      });
+    } finally {
+      this.isUpdating = false;
+      this.isHidden = this.element.offsetParent === null;
+    }
   }
 
   unmountCleanup(): void {
@@ -180,6 +282,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
         this.removeAnimationsFromStyleSheet(
           Object.values(this.attachedAnimations)
         );
+        // this.attachedAnimations = {};
       });
     }
   }
@@ -195,7 +298,10 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
 
     this.removeAnimationsFromStyleSheet(attachedAnimations);
     this.unmountCleanupCalled = false;
-    this.attachedAnimations = {};
+    // this.attachedAnimations = {}; // Don't clear state on detach, it might be a temporary unmount/hide
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
+    this.lastAnimationProperties = null;
   }
 
   private updateAttachedAnimations(processedAnimations: ProcessedAnimation[]) {

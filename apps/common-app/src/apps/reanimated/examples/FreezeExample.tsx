@@ -119,23 +119,23 @@ function HomeScreen() {
   }, [isFocused]);
 
   return (
-    // <Freeze freeze={freezed}>
-    <View style={styles.container}>
-      <Text>Home Screen</Text>
-      <Button
-        onPress={() => {
-          setFreezed(true);
-          navigation.navigate('screen1');
-        }}
-        title="Go to screen 1"
-      />
-      <Button onPress={nuke} title="Check for registry leaks" />
-      <AnimatedSwitch />
-      <CSSAnimation />
-      <CSSTransition />
-      <AnimatedStyleAnimation />
-    </View>
-    // </Freeze>
+    <Freeze freeze={freezed}>
+      <View style={styles.container}>
+        <Text>Home Screen</Text>
+        <Button
+          onPress={() => {
+            setFreezed(true);
+            navigation.navigate('screen1');
+          }}
+          title="Go to screen 1"
+        />
+        <Button onPress={nuke} title="Check for registry leaks" />
+        <AnimatedSwitch />
+        <CSSAnimation />
+        <CSSTransition />
+        <AnimatedStyleAnimation />
+      </View>
+    </Freeze>
   );
 }
 
