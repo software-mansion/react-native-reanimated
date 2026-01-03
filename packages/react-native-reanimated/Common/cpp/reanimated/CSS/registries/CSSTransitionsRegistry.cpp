@@ -21,11 +21,14 @@ bool CSSTransitionsRegistry::hasUpdates() const {
   return !runningTransitionTags_.empty() || !delayedTransitionsManager_.empty();
 }
 
-void CSSTransitionsRegistry::add(const std::shared_ptr<CSSTransition> &transition) {
-  const auto &shadowNode = transition->getShadowNode();
+void CSSTransitionsRegistry::ensureTransition(
+    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
   const auto viewTag = shadowNode->getTag();
-
-  registry_.insert({viewTag, transition});
+  if (registry_.find(viewTag) == registry_.end()) {
+    auto transition = std::make_shared<CSSTransition>(shadowNode, viewStylesRepository);
+    registry_.insert({viewTag, transition});
+  }
 }
 
 void CSSTransitionsRegistry::remove(const Tag viewTag) {
@@ -38,17 +41,12 @@ void CSSTransitionsRegistry::remove(const Tag viewTag) {
 void CSSTransitionsRegistry::run(
     const Tag viewTag,
     const folly::dynamic &changedProps,
-    const PartialCSSTransitionConfig &configUpdates) {
+    const CSSTransitionPropertiesSettings &settings) { // Settings are required
   if (registry_.find(viewTag) == registry_.end()) {
     return;
   }
 
   const auto &transition = registry_[viewTag];
-
-  // Update transition settings if provided
-  if (configUpdates.properties.has_value() || configUpdates.settings.has_value()) {
-    transition->updateSettings(configUpdates);
-  }
 
   // If no changed props, nothing to do
   if (changedProps.empty() || !changedProps.isObject()) {
@@ -58,23 +56,7 @@ void CSSTransitionsRegistry::run(
   // Parse the changed props diff from JS
   ChangedProps props = parseChangedPropsFromDiff(changedProps);
 
-  if (props.changedPropertyNames.empty()) {
-    return;
-  }
-
-  // Filter changed props based on allowed properties
-  const auto allowedProperties = transition->getAllowedProperties(props.oldProps, props.newProps);
-  if (allowedProperties.has_value()) {
-    std::vector<std::string> filteredPropertyNames;
-    for (const auto &propName : props.changedPropertyNames) {
-      if (std::find(allowedProperties->begin(), allowedProperties->end(), propName) != allowedProperties->end()) {
-        filteredPropertyNames.push_back(propName);
-      }
-    }
-    props.changedPropertyNames = filteredPropertyNames;
-  }
-
-  if (props.changedPropertyNames.empty()) {
+  if (props.changedPropertyNames.empty() && props.removedPropertyNames.empty()) {
     return;
   }
 
@@ -82,7 +64,7 @@ void CSSTransitionsRegistry::run(
 
   const auto &shadowNode = transition->getShadowNode();
   const auto &lastUpdates = getUpdatesFromRegistry(shadowNode->getTag());
-  const auto &transitionStartStyle = transition->run(props, lastUpdates, getCurrentTimestamp_());
+  const auto &transitionStartStyle = transition->run(props, settings, lastUpdates, getCurrentTimestamp_());
   updateInUpdatesRegistry(transition, transitionStartStyle);
   scheduleOrActivateTransition(transition);
 }
@@ -147,32 +129,8 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
     const std::shared_ptr<CSSTransition> &transition,
     const folly::dynamic &updates) {
   const auto &shadowNode = transition->getShadowNode();
-  const auto &lastUpdates = getUpdatesFromRegistry(shadowNode->getTag());
-  const auto &transitionProperties = transition->getProperties();
-
-  folly::dynamic filteredUpdates = folly::dynamic::object;
-
-  if (!transitionProperties.has_value()) {
-    // If transitionProperty is set to 'all' (optional has no value), we have
-    // to keep the result of the previous transition updated with the new
-    // transition starting values
-    if (!lastUpdates.empty()) {
-      filteredUpdates = lastUpdates;
-    }
-  } else if (!lastUpdates.empty()) {
-    // Otherwise, we keep only allowed properties from the last updates
-    // and update the object with the new transition starting values
-    for (const auto &prop : transitionProperties.value()) {
-      if (lastUpdates.count(prop)) {
-        filteredUpdates[prop] = lastUpdates[prop];
-      }
-    }
-  }
-
-  // updated object contains only allowed properties so we don't need
-  // to do additional filtering here
-  filteredUpdates.update(updates);
-  setInUpdatesRegistry(shadowNode, filteredUpdates);
+  // Store only the current updates without merging with last updates
+  setInUpdatesRegistry(shadowNode, updates);
 }
 
 } // namespace reanimated::css

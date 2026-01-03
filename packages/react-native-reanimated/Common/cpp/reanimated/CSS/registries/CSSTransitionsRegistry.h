@@ -25,8 +25,10 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
   bool isEmpty() const override;
   bool hasUpdates() const;
 
-  void add(const std::shared_ptr<CSSTransition> &transition);
-  void run(Tag viewTag, const folly::dynamic &changedProps, const PartialCSSTransitionConfig &configUpdates);
+  void ensureTransition(
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+  void run(Tag viewTag, const folly::dynamic &changedProps, const CSSTransitionPropertiesSettings &settings);
   void remove(Tag viewTag) override;
 
   void update(double timestamp);

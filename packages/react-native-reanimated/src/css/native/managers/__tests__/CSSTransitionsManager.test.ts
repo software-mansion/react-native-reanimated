@@ -1,16 +1,10 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../../../commonTypes';
 import type { CSSTransitionProperties } from '../../../types';
-import { normalizeCSSTransitionProperties } from '../../normalization';
-import {
-  registerCSSTransition,
-  runCSSTransition,
-  unregisterCSSTransition,
-} from '../../proxy';
+import { runCSSTransition, unregisterCSSTransition } from '../../proxy';
 import CSSTransitionsManager from '../CSSTransitionsManager';
 
 jest.mock('../../proxy.ts', () => ({
-  registerCSSTransition: jest.fn(),
   unregisterCSSTransition: jest.fn(),
   runCSSTransition: jest.fn(),
 }));
@@ -26,36 +20,30 @@ describe('CSSTransitionsManager', () => {
   });
 
   describe('update', () => {
-    describe('attaching transition', () => {
-      test('registers a transition if there is no existing transition', () => {
+    describe('initial props', () => {
+      test('does not trigger transition if no props changed on first call', () => {
         const transitionProperties: CSSTransitionProperties = {
           transitionProperty: 'opacity',
         };
 
         manager.update(transitionProperties);
 
-        expect(registerCSSTransition).toHaveBeenCalledWith(
-          shadowNodeWrapper,
-          normalizeCSSTransitionProperties(transitionProperties)
-        );
         expect(unregisterCSSTransition).not.toHaveBeenCalled();
         expect(runCSSTransition).not.toHaveBeenCalled();
       });
     });
 
     describe('updating transition', () => {
-      test("doesn't update transition if method was called with the same config", () => {
+      test("doesn't trigger transition if props haven't changed", () => {
         const transitionProperties: CSSTransitionProperties = {
           transitionProperty: 'opacity',
         };
 
         manager.update(transitionProperties);
-        expect(registerCSSTransition).toHaveBeenCalledTimes(1);
         expect(unregisterCSSTransition).not.toHaveBeenCalled();
         expect(runCSSTransition).not.toHaveBeenCalled();
 
         manager.update(transitionProperties);
-        expect(registerCSSTransition).toHaveBeenCalledTimes(1);
         expect(unregisterCSSTransition).not.toHaveBeenCalled();
         expect(runCSSTransition).not.toHaveBeenCalled();
       });
@@ -68,28 +56,24 @@ describe('CSSTransitionsManager', () => {
           transitionProperty: 'transform',
           transitionDuration: '1.5s',
         };
+        const props = { opacity: 0.5 };
 
-        manager.update(transitionProperties);
-        expect(registerCSSTransition).toHaveBeenCalledTimes(1);
-        expect(unregisterCSSTransition).not.toHaveBeenCalled();
-        expect(runCSSTransition).not.toHaveBeenCalled();
+        manager.update(transitionProperties, props);
+        expect(runCSSTransition).toHaveBeenCalledTimes(1);
 
-        manager.update(newTransitionConfig);
-        expect(registerCSSTransition).toHaveBeenCalledTimes(1);
+        jest.clearAllMocks();
+        manager.update(newTransitionConfig, props);
         expect(unregisterCSSTransition).not.toHaveBeenCalled();
         expect(runCSSTransition).toHaveBeenCalledTimes(1);
         expect(runCSSTransition).toHaveBeenCalledWith(
-          viewTag,
-          {},
+          shadowNodeWrapper,
+          { opacity: null },
           {
-            properties: ['transform'],
-            settings: {
-              transform: {
-                duration: 1500,
-                delay: 0,
-                timingFunction: 'ease',
-                allowDiscrete: false,
-              },
+            transform: {
+              duration: 1500,
+              delay: 0,
+              timingFunction: 'ease',
+              allowDiscrete: false,
             },
           }
         );
@@ -103,39 +87,59 @@ describe('CSSTransitionsManager', () => {
         const props2 = { opacity: 1 };
 
         manager.update(transitionProperties, props1);
-        expect(registerCSSTransition).toHaveBeenCalledTimes(1);
-        expect(runCSSTransition).not.toHaveBeenCalled();
-
-        manager.update(transitionProperties, props2);
-        expect(registerCSSTransition).toHaveBeenCalledTimes(1);
         expect(runCSSTransition).toHaveBeenCalledTimes(1);
-        // Changed props now contains [oldValue, newValue] pairs
         expect(runCSSTransition).toHaveBeenCalledWith(
-          viewTag,
+          shadowNodeWrapper,
+          { opacity: [undefined, 0] },
+          {
+            opacity: {
+              duration: 0,
+              delay: 0,
+              timingFunction: 'ease',
+              allowDiscrete: false,
+            },
+          }
+        );
+
+        jest.clearAllMocks();
+        manager.update(transitionProperties, props2);
+        expect(runCSSTransition).toHaveBeenCalledTimes(1);
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          shadowNodeWrapper,
           { opacity: [0, 1] },
-          {}
+          {
+            opacity: {
+              duration: 0,
+              delay: 0,
+              timingFunction: 'ease',
+              allowDiscrete: false,
+            },
+          }
         );
       });
 
-      test('runs transition from undefined when props are initially null', () => {
+      test('runs transition from undefined when props are initially empty', () => {
         const transitionProperties: CSSTransitionProperties = {
           transitionProperty: 'opacity',
         };
         const props = { opacity: 1 };
 
-        // First update with null props
-        manager.update(transitionProperties, null);
-        expect(registerCSSTransition).toHaveBeenCalledTimes(1);
+        manager.update(transitionProperties);
         expect(runCSSTransition).not.toHaveBeenCalled();
 
-        // Update with actual props - should transition from undefined
         manager.update(transitionProperties, props);
-        expect(registerCSSTransition).toHaveBeenCalledTimes(1);
         expect(runCSSTransition).toHaveBeenCalledTimes(1);
         expect(runCSSTransition).toHaveBeenCalledWith(
-          viewTag,
+          shadowNodeWrapper,
           { opacity: [undefined, 1] },
-          {}
+          {
+            opacity: {
+              duration: 0,
+              delay: 0,
+              timingFunction: 'ease',
+              allowDiscrete: false,
+            },
+          }
         );
       });
 
@@ -147,17 +151,111 @@ describe('CSSTransitionsManager', () => {
         const props2 = { opacity: 1 };
 
         manager.update(transitionProperties, props1);
-        expect(registerCSSTransition).toHaveBeenCalledTimes(1);
-        expect(runCSSTransition).not.toHaveBeenCalled();
-
-        manager.update(transitionProperties, props2);
-        expect(registerCSSTransition).toHaveBeenCalledTimes(1);
         expect(runCSSTransition).toHaveBeenCalledTimes(1);
         expect(runCSSTransition).toHaveBeenCalledWith(
-          viewTag,
-          { transform: ['scale(1)', undefined] },
-          {}
+          shadowNodeWrapper,
+          { opacity: [undefined, 1], transform: [undefined, 'scale(1)'] },
+          {
+            all: {
+              duration: 0,
+              delay: 0,
+              timingFunction: 'ease',
+              allowDiscrete: false,
+            },
+          }
         );
+
+        jest.clearAllMocks();
+        manager.update(transitionProperties, props2);
+        expect(runCSSTransition).toHaveBeenCalledTimes(1);
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          shadowNodeWrapper,
+          { transform: ['scale(1)', undefined] },
+          {
+            all: {
+              duration: 0,
+              delay: 0,
+              timingFunction: 'ease',
+              allowDiscrete: false,
+            },
+          }
+        );
+      });
+
+      test('handles properties removed from transition config', () => {
+        const transitionProperties1: CSSTransitionProperties = {
+          transitionProperty: ['opacity', 'transform'],
+        };
+        const transitionProperties2: CSSTransitionProperties = {
+          transitionProperty: 'opacity',
+        };
+        const props = { opacity: 0.5, transform: 'scale(1.5)' };
+
+        manager.update(transitionProperties1, props);
+        expect(runCSSTransition).toHaveBeenCalledTimes(1);
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          shadowNodeWrapper,
+          { opacity: [undefined, 0.5], transform: [undefined, 'scale(1.5)'] },
+          {
+            opacity: {
+              duration: 0,
+              delay: 0,
+              timingFunction: 'ease',
+              allowDiscrete: false,
+            },
+            transform: {
+              duration: 0,
+              delay: 0,
+              timingFunction: 'ease',
+              allowDiscrete: false,
+            },
+          }
+        );
+
+        jest.clearAllMocks();
+        manager.update(transitionProperties2, props);
+        expect(runCSSTransition).toHaveBeenCalledTimes(1);
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          shadowNodeWrapper,
+          { transform: null },
+          {
+            opacity: {
+              duration: 0,
+              delay: 0,
+              timingFunction: 'ease',
+              allowDiscrete: false,
+            },
+          }
+        );
+      });
+
+      test('handles switching from specific properties to all', () => {
+        const transitionProperties1: CSSTransitionProperties = {
+          transitionProperty: 'opacity',
+        };
+        const transitionProperties2: CSSTransitionProperties = {
+          transitionProperty: 'all',
+        };
+        const props = { opacity: 0.5, transform: 'scale(1.5)' };
+
+        manager.update(transitionProperties1, props);
+        expect(runCSSTransition).toHaveBeenCalledTimes(1);
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          shadowNodeWrapper,
+          { opacity: [undefined, 0.5], transform: null },
+          {
+            opacity: {
+              duration: 0,
+              delay: 0,
+              timingFunction: 'ease',
+              allowDiscrete: false,
+            },
+          }
+        );
+
+        jest.clearAllMocks();
+        manager.update(transitionProperties2, props);
+        expect(runCSSTransition).not.toHaveBeenCalled();
       });
     });
 
@@ -168,22 +266,20 @@ describe('CSSTransitionsManager', () => {
         };
 
         manager.update(transitionProperties);
-        expect(registerCSSTransition).toHaveBeenCalledTimes(1);
         expect(unregisterCSSTransition).not.toHaveBeenCalled();
         expect(runCSSTransition).not.toHaveBeenCalled();
 
         manager.update(null);
-        expect(registerCSSTransition).toHaveBeenCalledTimes(1);
         expect(unregisterCSSTransition).toHaveBeenCalledTimes(1);
+        expect(unregisterCSSTransition).toHaveBeenCalledWith(viewTag);
         expect(runCSSTransition).not.toHaveBeenCalled();
       });
-    });
 
-    test("doesn't call detach if there is no existing transition", () => {
-      manager.update(null);
-      expect(registerCSSTransition).not.toHaveBeenCalled();
-      expect(unregisterCSSTransition).not.toHaveBeenCalled();
-      expect(runCSSTransition).not.toHaveBeenCalled();
+      test("doesn't call detach if there is no existing transition", () => {
+        manager.update(null);
+        expect(unregisterCSSTransition).not.toHaveBeenCalled();
+        expect(runCSSTransition).not.toHaveBeenCalled();
+      });
     });
   });
 });

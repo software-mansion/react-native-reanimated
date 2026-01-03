@@ -24,22 +24,17 @@ struct CSSTransitionConfig {
   CSSTransitionPropertiesSettings settings;
 };
 
-struct PartialCSSTransitionConfig {
-  std::optional<TransitionProperties> properties;
-  std::optional<CSSTransitionPropertiesSettings> settings;
-};
-
 std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
     const CSSTransitionPropertiesSettings &propertiesSettings,
     const std::string &propName);
 
 TransitionProperties getProperties(jsi::Runtime &rt, const jsi::Object &config);
 
-CSSTransitionPropertiesSettings parseCSSTransitionPropertiesSettings(jsi::Runtime &rt, const jsi::Object &settings);
+std::optional<CSSTransitionPropertiesSettings> parseCSSTransitionPropertiesSettings(
+    jsi::Runtime &rt,
+    const jsi::Value &settings);
 
 CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config);
-
-PartialCSSTransitionConfig parsePartialCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &partialConfig);
 
 ChangedProps parseChangedPropsFromDiff(const folly::dynamic &diff);
 

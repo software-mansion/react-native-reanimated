@@ -98,8 +98,10 @@ TransitionPropertyProgressProviders TransitionProgressProvider::getPropertyProgr
   return propertyProgressProviders_;
 }
 
-std::unordered_set<std::string> TransitionProgressProvider::getRemovedProperties() const {
-  return removedProperties_;
+std::unordered_set<std::string> TransitionProgressProvider::flushRemovedProperties() {
+  auto removedProperties = std::move(removedProperties_);
+  removedProperties_.clear();
+  return removedProperties;
 }
 
 void TransitionProgressProvider::discardFinishedProgressProviders() {
@@ -118,6 +120,8 @@ void TransitionProgressProvider::discardIrrelevantProgressProviders(
     // Remove property progress providers for properties not specified in the
     // transition property names
     if (transitionPropertyNames.find(it->first) == transitionPropertyNames.end()) {
+      // Track removed property for interpolator cleanup
+      removedProperties_.insert(it->first);
       it = propertyProgressProviders_.erase(it);
     } else {
       ++it;
@@ -125,12 +129,26 @@ void TransitionProgressProvider::discardIrrelevantProgressProviders(
   }
 }
 
+void TransitionProgressProvider::removeProgressProviders(const PropertyNames &propertyNames) {
+  for (const auto &propertyName : propertyNames) {
+    propertyProgressProviders_.erase(propertyName);
+    // Also add to removedProperties so interpolators can be cleaned up
+    removedProperties_.insert(propertyName);
+  }
+}
+
 void TransitionProgressProvider::runProgressProviders(
     const double timestamp,
     const CSSTransitionPropertiesSettings &propertiesSettings,
-    const PropertyNames &changedPropertyNames,
+    const ChangedProps &changedProps,
     const std::unordered_set<std::string> &reversedPropertyNames) {
-  for (const auto &propertyName : changedPropertyNames) {
+  // Handle removed properties first
+  if (!changedProps.removedPropertyNames.empty()) {
+    removeProgressProviders(changedProps.removedPropertyNames);
+  }
+
+  // Then handle changed properties
+  for (const auto &propertyName : changedProps.changedPropertyNames) {
     const auto propertySettingsOptional = getTransitionPropertySettings(propertiesSettings, propertyName);
 
     if (!propertySettingsOptional.has_value()) {
@@ -163,10 +181,10 @@ void TransitionProgressProvider::runProgressProviders(
 }
 
 void TransitionProgressProvider::update(const double timestamp) {
-  removedProperties_.clear();
-
   for (const auto &[propertyName, propertyProgressProvider] : propertyProgressProviders_) {
     propertyProgressProvider->update(timestamp);
+
+    // Track finished properties for removal
     if (propertyProgressProvider->getState() == TransitionProgressState::Finished) {
       removedProperties_.insert(propertyName);
     }

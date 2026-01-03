@@ -25,7 +25,7 @@ import type {
 import type {
   CSSAnimationUpdates,
   NormalizedCSSAnimationKeyframesConfig,
-  NormalizedCSSTransitionConfig,
+  NormalizedSingleCSSTransitionSettings,
 } from '../css/native';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
@@ -229,25 +229,15 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.unregisterCSSAnimations(viewTag);
   }
 
-  registerCSSTransition(
-    shadowNodeWrapper: ShadowNodeWrapper,
-    transitionConfig: NormalizedCSSTransitionConfig
-  ) {
-    this.#reanimatedModuleProxy.registerCSSTransition(
-      shadowNodeWrapper,
-      transitionConfig
-    );
-  }
-
   runCSSTransition(
-    viewTag: number,
+    shadowNodeWrapper: ShadowNodeWrapper,
     changedProps: StyleProps,
-    configUpdates: Partial<NormalizedCSSTransitionConfig>
+    settings: Record<string, NormalizedSingleCSSTransitionSettings>
   ) {
     this.#reanimatedModuleProxy.runCSSTransition(
-      viewTag,
+      shadowNodeWrapper,
       changedProps,
-      configUpdates
+      settings
     );
   }
 
@@ -281,7 +271,6 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   registerCSSAnimations(): void {}
   updateCSSAnimations(): void {}
   unregisterCSSAnimations(): void {}
-  registerCSSTransition(): void {}
   runCSSTransition(): void {}
   unregisterCSSTransition(): void {}
   registerSensor(): number {

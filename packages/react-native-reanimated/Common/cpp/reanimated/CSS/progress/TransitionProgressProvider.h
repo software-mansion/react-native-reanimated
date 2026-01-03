@@ -52,20 +52,20 @@ class TransitionProgressProvider final {
   TransitionProgressState getState() const;
   double getMinDelay(double timestamp) const;
   TransitionPropertyProgressProviders getPropertyProgressProviders() const;
-  std::unordered_set<std::string> getRemovedProperties() const;
+  std::unordered_set<std::string> flushRemovedProperties();
 
   void discardFinishedProgressProviders();
   void discardIrrelevantProgressProviders(const std::unordered_set<std::string> &transitionPropertyNames);
+  void removeProgressProviders(const PropertyNames &propertyNames);
   void runProgressProviders(
       double timestamp,
       const CSSTransitionPropertiesSettings &propertiesSettings,
-      const PropertyNames &changedPropertyNames,
+      const ChangedProps &changedProps,
       const std::unordered_set<std::string> &reversedPropertyNames);
   void update(double timestamp);
 
  private:
   TransitionPropertyProgressProviders propertyProgressProviders_;
-
   std::unordered_set<std::string> removedProperties_;
 
   std::shared_ptr<TransitionPropertyProgressProvider> createReversingShorteningProgressProvider(

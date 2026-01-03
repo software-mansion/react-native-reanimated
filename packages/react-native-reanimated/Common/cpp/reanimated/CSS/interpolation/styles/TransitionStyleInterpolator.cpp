@@ -29,9 +29,10 @@ folly::dynamic TransitionStyleInterpolator::interpolate(
   return result;
 }
 
-void TransitionStyleInterpolator::discardFinishedInterpolators(
-    const TransitionProgressProvider &transitionProgressProvider) {
-  for (const auto &propertyName : transitionProgressProvider.getRemovedProperties()) {
+void TransitionStyleInterpolator::removeObsoleteInterpolators(TransitionProgressProvider &transitionProgressProvider) {
+  // Remove interpolators for properties that have finished or been removed
+  const auto removedProperties = transitionProgressProvider.flushRemovedProperties();
+  for (const auto &propertyName : removedProperties) {
     interpolators_.erase(propertyName);
   }
 }

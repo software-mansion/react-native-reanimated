@@ -5,10 +5,8 @@ import type {
   CSSTransitionProperties,
   CSSTransitionProperty,
 } from '../../../types';
-import { areArraysEqual, deepEqual } from '../../../utils';
 import type {
   NormalizedCSSTransitionConfig,
-  NormalizedCSSTransitionConfigUpdates,
   NormalizedSingleCSSTransitionSettings,
 } from '../../types';
 import {
@@ -130,45 +128,7 @@ export function normalizeCSSTransitionProperties(
   }
 
   return {
-    properties: allPropertiesTransition ? 'all' : specificProperties.reverse(),
+    properties: allPropertiesTransition ? null : specificProperties.reverse(),
     settings,
   };
-}
-
-export function getNormalizedCSSTransitionConfigUpdates(
-  oldConfig: NormalizedCSSTransitionConfig,
-  newConfig: NormalizedCSSTransitionConfig
-): NormalizedCSSTransitionConfigUpdates {
-  const configUpdates: NormalizedCSSTransitionConfigUpdates = {};
-
-  if (
-    oldConfig.properties !== newConfig.properties &&
-    (!Array.isArray(oldConfig.properties) ||
-      !Array.isArray(newConfig.properties) ||
-      !areArraysEqual(oldConfig.properties, newConfig.properties))
-  ) {
-    configUpdates.properties = newConfig.properties;
-  }
-
-  const newSettingsKeys = Object.keys(newConfig.settings);
-  const oldSettingsKeys = Object.keys(oldConfig.settings);
-
-  if (newSettingsKeys.length !== oldSettingsKeys.length) {
-    configUpdates.settings = newConfig.settings;
-  } else {
-    for (const key of newSettingsKeys) {
-      if (
-        !oldConfig.settings[key] ||
-        // TODO - think of a better way to compare settings (necessary for
-        // timing functions comparison). Maybe add some custom way instead
-        // of deepEqual
-        !deepEqual(oldConfig.settings[key], newConfig.settings[key])
-      ) {
-        configUpdates.settings = newConfig.settings;
-        break;
-      }
-    }
-  }
-
-  return configUpdates;
 }

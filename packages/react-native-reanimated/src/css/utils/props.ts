@@ -18,66 +18,68 @@ import {
 } from './guards';
 
 type PropsDiff = {
-  [key: string]: [unknown, unknown]; // [oldValue, newValue]
+  [key: string]: [unknown, unknown] | null; // [oldValue, newValue] or null for removed
 };
 
 /**
  * Calculates the difference between old and new props. Returns an object where
  * each key is a changed property and the value is [oldValue, newValue]. When
- * oldProps is null, all newProps are considered changes from undefined. When
- * newProps is null, all oldProps are considered removals.
+ * allowedProperties changes, removed properties are marked with null.
  *
- * @param allowedProperties - Optional list of properties to check. If provided,
- *   only these properties are diffed.
+ * @param previousAllowedProperties - Previous list of allowed properties to
+ *   detect removed properties
  */
 export function getChangedProps(
-  oldProps: StyleProps | null,
-  newProps: StyleProps | null,
-  allowedProperties?: string[] | null
+  oldProps: StyleProps,
+  newProps: StyleProps,
+  allowedProperties?: string[] | null,
+  previousAllowedProperties?: string[] | null
 ): PropsDiff {
   const diff: PropsDiff = {};
 
-  if (oldProps === null && newProps === null) {
-    return diff;
-  }
-
   // Determine which properties to check
   const propsToCheck = allowedProperties || [
-    ...new Set([
-      ...Object.keys(oldProps ?? {}),
-      ...Object.keys(newProps ?? {}),
-    ]),
+    ...new Set([...Object.keys(oldProps), ...Object.keys(newProps)]),
   ];
 
-  if (oldProps === null && newProps !== null) {
-    // All properties in newProps are new (from undefined to value)
-    for (const key of propsToCheck) {
-      if (key in newProps) {
-        diff[key] = [undefined, newProps[key]];
-      }
-    }
-    return diff;
-  }
-
-  if (oldProps !== null && newProps === null) {
-    // All properties in oldProps are removed (from value to undefined)
-    for (const key of propsToCheck) {
-      if (key in oldProps) {
-        diff[key] = [oldProps[key], undefined];
-      }
-    }
-    return diff;
-  }
-
-  // Both oldProps and newProps are not null
+  // Check for changes in allowed properties
   for (const key of propsToCheck) {
-    const oldValue = oldProps![key];
-    const newValue = newProps![key];
-
-    // Use deep comparison for complex values
+    const oldValue = oldProps[key];
+    const newValue = newProps[key];
     if (!deepEqual(oldValue, newValue)) {
       diff[key] = [oldValue, newValue];
     }
+  }
+
+  // Mark removed properties when allowedProperties changes
+  if (allowedProperties !== previousAllowedProperties) {
+    // Case 1: Switching from all (null/undefined) to specific properties
+    if (!previousAllowedProperties && allowedProperties) {
+      const currentSet = new Set(allowedProperties);
+      const allProps = new Set([
+        ...Object.keys(oldProps),
+        ...Object.keys(newProps),
+      ]);
+      for (const prop of allProps) {
+        if (!currentSet.has(prop)) {
+          diff[prop] = null;
+        }
+      }
+    }
+    // Case 2: Switching between different specific property sets
+    else if (allowedProperties && previousAllowedProperties) {
+      const currentSet = new Set(allowedProperties);
+      for (const prop of previousAllowedProperties) {
+        if (
+          !currentSet.has(prop) &&
+          ((oldProps && prop in oldProps) || (newProps && prop in newProps))
+        ) {
+          diff[prop] = null;
+        }
+      }
+    }
+    // Case 3: Switching from specific to all (null/undefined) - no removals needed
+    // Case 4: Both are null/undefined - no removals needed
   }
 
   return diff;

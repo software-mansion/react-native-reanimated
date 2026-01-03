@@ -15,6 +15,7 @@ struct ChangedProps {
   const folly::dynamic oldProps;
   const folly::dynamic newProps;
   const PropertyNames changedPropertyNames;
+  const PropertyNames removedPropertyNames;
 };
 
 bool isDiscreteProperty(const std::string &propName, const std::string &componentName);

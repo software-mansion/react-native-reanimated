@@ -14,11 +14,11 @@
 namespace reanimated::css {
 
 template <typename TOperation>
-std::unique_ptr<StyleOperation> FilterOperationInterpolator<TOperation>::interpolate(
+std::unique_ptr<StyleOperation> FilterOperationInterpolator<TOperation>::interpolateTyped(
     double progress,
-    const std::shared_ptr<StyleOperation> &from,
-    const std::shared_ptr<StyleOperation> &to,
-    const StyleOperationsInterpolationContext &context) const {
+    const std::shared_ptr<FilterOperation> &from,
+    const std::shared_ptr<FilterOperation> &to,
+    const UpdateContext & /* context */) const {
   const auto &fromOp = std::static_pointer_cast<TOperation>(from);
   const auto &toOp = std::static_pointer_cast<TOperation>(to);
   return std::make_unique<TOperation>(fromOp->value.interpolate(progress, toOp->value));

@@ -1,4 +1,6 @@
+#include <reanimated/CSS/interpolation/filters/FilterOperation.h>
 #include <reanimated/CSS/interpolation/operations/StyleOperationInterpolator.h>
+#include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
 namespace reanimated::css {
 
@@ -14,5 +16,9 @@ std::shared_ptr<StyleOperation> StyleOperationInterpolator::resolveOperation(
     const StyleOperationsInterpolationContext &context) const {
   return operation;
 }
+
+// Explicit template instantiations for commonly used types
+template class StyleOperationInterpolatorBase<FilterOperation>;
+template class StyleOperationInterpolatorBase<TransformOperation>;
 
 } // namespace reanimated::css
