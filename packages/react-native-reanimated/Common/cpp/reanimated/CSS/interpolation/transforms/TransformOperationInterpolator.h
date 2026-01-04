@@ -7,6 +7,7 @@
 #include <reanimated/CSS/interpolation/transforms/operations/perspective.h>
 
 #include <memory>
+#include <utility>
 
 namespace reanimated::css {
 

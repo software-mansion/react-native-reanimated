@@ -13,6 +13,8 @@
 #include <reanimated/CSS/interpolation/transforms/operations/skew.h>
 #include <reanimated/CSS/interpolation/transforms/operations/translate.h>
 
+#include <memory>
+#include <string>
 #include <utility>
 
 namespace reanimated::css {

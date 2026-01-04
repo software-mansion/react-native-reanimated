@@ -3,6 +3,9 @@
 #include <reanimated/CSS/interpolation/filters/FilterOperation.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
+#include <memory>
+#include <vector>
+
 namespace reanimated::css {
 
 // OperationsStyleInterpolator implementation

@@ -1,5 +1,7 @@
 #include <reanimated/CSS/interpolation/operations/StyleOperationInterpolator.h>
 
+#include <memory>
+
 namespace reanimated::css {
 
 StyleOperationInterpolator::StyleOperationInterpolator(const std::shared_ptr<StyleOperation> &defaultOperation)
