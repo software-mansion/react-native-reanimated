@@ -11,22 +11,26 @@ namespace reanimated::css {
 
 // Base implementation for simple operations
 template <typename TOperation>
-std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::interpolateTyped(
+std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::interpolate(
     double progress,
-    const std::shared_ptr<TransformOperation> &from,
-    const std::shared_ptr<TransformOperation> &to,
-    const UpdateContext & /* context */) const {
+    const std::shared_ptr<StyleOperation> &from,
+    const std::shared_ptr<StyleOperation> &to,
+    const StyleOperationsInterpolationContext & /* context */) const {
   const auto &fromOp = *std::static_pointer_cast<TOperation>(from);
   const auto &toOp = *std::static_pointer_cast<TOperation>(to);
   return std::make_unique<TOperation>(fromOp.value.interpolate(progress, toOp.value));
 }
 
 // Specialization for PerspectiveOperation
-std::unique_ptr<StyleOperation> TransformOperationInterpolator<PerspectiveOperation>::interpolateTyped(
+TransformOperationInterpolator<PerspectiveOperation>::TransformOperationInterpolator(
+    const std::shared_ptr<PerspectiveOperation> &defaultOperation)
+    : StyleOperationInterpolator(defaultOperation) {}
+
+std::unique_ptr<StyleOperation> TransformOperationInterpolator<PerspectiveOperation>::interpolate(
     double progress,
-    const std::shared_ptr<TransformOperation> &from,
-    const std::shared_ptr<TransformOperation> &to,
-    const UpdateContext & /* context */) const {
+    const std::shared_ptr<StyleOperation> &from,
+    const std::shared_ptr<StyleOperation> &to,
+    const StyleOperationsInterpolationContext & /* context */) const {
   // TODO - check if this implementation is correct
   const auto &fromValue = std::static_pointer_cast<PerspectiveOperation>(from)->value;
   const auto &toValue = std::static_pointer_cast<PerspectiveOperation>(to)->value;
@@ -40,13 +44,17 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<PerspectiveOperat
 }
 
 // Specialization for MatrixOperation
-std::unique_ptr<StyleOperation> TransformOperationInterpolator<MatrixOperation>::interpolateTyped(
+TransformOperationInterpolator<MatrixOperation>::TransformOperationInterpolator(
+    const std::shared_ptr<MatrixOperation> &defaultOperation)
+    : StyleOperationInterpolator(defaultOperation) {}
+
+std::unique_ptr<StyleOperation> TransformOperationInterpolator<MatrixOperation>::interpolate(
     double progress,
-    const std::shared_ptr<TransformOperation> &from,
-    const std::shared_ptr<TransformOperation> &to,
-    const UpdateContext &context) const {
-  const auto fromOperation = from;
-  const auto toOperation = to;
+    const std::shared_ptr<StyleOperation> &from,
+    const std::shared_ptr<StyleOperation> &to,
+    const StyleOperationsInterpolationContext &context) const {
+  const auto fromOperation = std::static_pointer_cast<TransformOperation>(from);
+  const auto toOperation = std::static_pointer_cast<TransformOperation>(to);
   const auto shouldBe3D = fromOperation->is3D() || toOperation->is3D();
 
   const auto fromMatrix = matrixFromOperation(fromOperation, shouldBe3D, context);
@@ -84,7 +92,7 @@ MatrixType TransformOperationInterpolator<MatrixOperation>::interpolateMatrix(
 TransformMatrix::Shared TransformOperationInterpolator<MatrixOperation>::matrixFromOperation(
     const std::shared_ptr<TransformOperation> &operation,
     const bool shouldBe3D,
-    const UpdateContext &context) const {
+    const StyleOperationsInterpolationContext &context) const {
   const auto &matrixOperation = std::static_pointer_cast<MatrixOperation>(operation);
 
   if (std::holds_alternative<TransformMatrix::Shared>(matrixOperation->value)) {
@@ -135,11 +143,17 @@ template TransformMatrix3D TransformOperationInterpolator<MatrixOperation>::inte
 
 // Specialization for resolvable operations
 template <ResolvableOp TOperation>
-std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::interpolateTyped(
+TransformOperationInterpolator<TOperation>::TransformOperationInterpolator(
+    const std::shared_ptr<TOperation> &defaultOperation,
+    ResolvableValueInterpolatorConfig config)
+    : StyleOperationInterpolator(defaultOperation), config_(std::move(config)) {}
+
+template <ResolvableOp TOperation>
+std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::interpolate(
     double progress,
-    const std::shared_ptr<TransformOperation> &from,
-    const std::shared_ptr<TransformOperation> &to,
-    const UpdateContext &context) const {
+    const std::shared_ptr<StyleOperation> &from,
+    const std::shared_ptr<StyleOperation> &to,
+    const StyleOperationsInterpolationContext &context) const {
   const auto &fromOp = *std::static_pointer_cast<TOperation>(from);
   const auto &toOp = *std::static_pointer_cast<TOperation>(to);
 
@@ -148,9 +162,9 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::inte
 }
 
 template <ResolvableOp TOperation>
-std::shared_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::resolveTypedOperation(
-    const std::shared_ptr<TransformOperation> &operation,
-    const UpdateContext &context) const {
+std::shared_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::resolveOperation(
+    const std::shared_ptr<StyleOperation> &operation,
+    const StyleOperationsInterpolationContext &context) const {
   const auto &resolvableOp = std::static_pointer_cast<TOperation>(operation);
   const auto &resolved = resolvableOp->value.resolve(getResolvableValueContext(context));
 
@@ -161,6 +175,17 @@ std::shared_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::reso
   }
 
   return std::make_shared<TOperation>(resolved.value());
+}
+
+template <ResolvableOp TOperation>
+ResolvableValueInterpolationContext TransformOperationInterpolator<TOperation>::getResolvableValueContext(
+    const StyleOperationsInterpolationContext &context) const {
+  return ResolvableValueInterpolationContext{
+      .node = context.node,
+      .fallbackInterpolateThreshold = context.fallbackInterpolateThreshold,
+      .viewStylesRepository = context.viewStylesRepository,
+      .relativeProperty = config_.relativeProperty,
+      .relativeTo = config_.relativeTo};
 }
 
 // Rotate operations

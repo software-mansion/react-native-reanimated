@@ -81,31 +81,30 @@ CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value 
 }
 
 ChangedProps parseChangedPropsFromDiff(const folly::dynamic &diff) {
-  ChangedProps props;
-  props.oldProps = folly::dynamic::object;
-  props.newProps = folly::dynamic::object;
+  folly::dynamic oldProps = folly::dynamic::object();
+  folly::dynamic newProps = folly::dynamic::object();
+  PropertyNames changedPropertyNames;
+  PropertyNames removedPropertyNames;
 
-  if (!diff.isObject()) {
-    return props;
-  }
+  if (diff.isObject()) {
+    // Parse the diff object where each key is a changed property
+    // and value is either [oldValue, newValue] array or null for removed properties
+    for (const auto &[key, value] : diff.items()) {
+      const auto &propName = key.asString();
 
-  // Parse the diff object where each key is a changed property
-  // and value is either [oldValue, newValue] array or null for removed properties
-  for (const auto &[key, value] : diff.items()) {
-    const auto &propName = key.asString();
-
-    if (value.isNull()) {
-      // Property should be removed from transition immediately
-      props.removedPropertyNames.push_back(propName);
-    } else if (value.isArray() && value.size() == 2) {
-      // Normal transition: [oldValue, newValue]
-      props.oldProps[propName] = value[0];
-      props.newProps[propName] = value[1];
-      props.changedPropertyNames.push_back(propName);
+      if (value.isNull()) {
+        // Property should be removed from transition immediately
+        removedPropertyNames.emplace_back(propName);
+      } else if (value.isArray() && value.size() == 2) {
+        // Normal transition: [oldValue, newValue]
+        oldProps[propName] = value[0];
+        newProps[propName] = value[1];
+        changedPropertyNames.emplace_back(propName);
+      }
     }
   }
 
-  return props;
+  return ChangedProps{oldProps, newProps, changedPropertyNames, removedPropertyNames};
 }
 
 } // namespace reanimated::css
