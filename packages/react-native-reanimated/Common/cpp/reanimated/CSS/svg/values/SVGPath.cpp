@@ -177,7 +177,7 @@ SubPath SVGPath::interpolateSubPaths(const SubPath &from, const SubPath &to, dou
   Point newM = from.M.interpolate(t, to.M);
   SubPath result(newM);
 
-  result.Z = to.Z;
+  result.Z = t > 0.5 ? to.Z : from.Z;
 
   size_t longerSize = std::max(from.C.size(), to.C.size());
   size_t shorterSize = std::min(from.C.size(), to.C.size());
