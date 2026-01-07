@@ -1,10 +1,10 @@
 #include <jsi/jsi.h>
+#include <reanimated/CSS/utils/propsBuilderWrapper.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
-#include <reanimated/CSS/utils/propsBuilderWrapper.h>
 
 #include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/SharedItems/Serializable.h>
@@ -36,6 +36,24 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
   return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
 }
 #endif
+
+static const auto layoutProps = std::set<PropName>{
+    WIDTH,       HEIGHT,         FLEX,          MARGIN,     PADDING,         POSITION,   BORDER_WIDTH,   ALIGN_CONTENT,
+    ALIGN_ITEMS, ALIGN_SELF,     ASPECT_RATIO,  BOX_SIZING, DISPLAY,         FLEX_BASIS, FLEX_DIRECTION, ROW_GAP,
+    COLUMN_GAP,  FLEX_GROW,      FLEX_SHRINK,   FLEX_WRAP,  JUSTIFY_CONTENT, MAX_HEIGHT, MAX_WIDTH,      MIN_HEIGHT,
+    MIN_WIDTH,   STYLE_OVERFLOW, POSITION_TYPE, DIRECTION,  Z_INDEX,
+};
+
+static inline bool mutationHasLayoutUpdates(facebook::react::AnimatedProps &animatedProps) {
+  for (auto &prop : animatedProps.props) {
+    // TODO: there should also be a check for the dynamic part
+    if (layoutProps.contains(prop->propName)) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 ReanimatedModuleProxy::ReanimatedModuleProxy(
     const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
@@ -566,7 +584,7 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
       auto lock = cssTransitionsRegistry_->lock();
       // Update CSS transitions and flush updates
       cssTransitionsRegistry_->update(currentCssTimestamp_);
-      cssTransitionsRegistry_->flushUpdates(updatesBatch);
+      //      cssTransitionsRegistry_->flushUpdates(updatesBatch);
 
       cssTransitionsRegistry_->flushAnimatedPropsUpdates(updatesBatchAnimatedProps);
     }
@@ -590,14 +608,16 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
   printf("updatesBatchAnimatedProps size: %ld \n", updatesBatchAnimatedProps.size());
 
   AnimationMutations mutations;
-    
+
   // TODO: Use this when packing props from dynamic
   animationMutationsFromDynamic(mutations, updatesBatch);
-  
+
   // TODO: Use this when packing props from already prepared animated props
-//  for (auto &[node, animatedProp] : updatesBatchAnimatedProps) {
-//    mutations.push_back(AnimationMutation{node->getTag(), &node->getFamily(), std::move(animatedProp)});
-//  }
+  for (auto &[node, animatedProp] : updatesBatchAnimatedProps) {
+    bool hasLayoutUpdates = mutationHasLayoutUpdates(animatedProp);
+    mutations.batch.push_back(
+        AnimationMutation{node->getTag(), node->getFamilyShared(), std::move(animatedProp), hasLayoutUpdates});
+  }
 
   return mutations;
 }

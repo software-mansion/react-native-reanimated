@@ -1245,11 +1245,183 @@ void addJustifyContentToPropsBuilder(
   }
 }
 
+void addMaxWidthToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
+
+  const auto &storage = value.getStorage();
+  std::visit(
+      [&](const auto &active_value) {
+        using T = std::decay_t<decltype(active_value)>;
+
+        if constexpr (std::is_same_v<T, CSSLength>) {
+          const CSSLength &cssValue = active_value;
+          if (cssValue.isRelative) {
+          } else {
+          }
+
+        } else if constexpr (std::is_same_v<T, CSSKeyword>) {
+          // TODO: Handle this case
+        }
+      },
+      storage);
+}
+
+void addMinWidthToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  std::visit(
+      [&](const auto &active_value) {
+        using T = std::decay_t<decltype(active_value)>;
+
+        if constexpr (std::is_same_v<T, CSSLength>) {
+          const CSSLength &cssValue = active_value;
+          if (cssValue.isRelative) {
+          } else {
+          }
+
+        } else if constexpr (std::is_same_v<T, CSSKeyword>) {
+          // TODO: Handle this case
+        }
+      },
+      storage);
+}
+
+void addMaxHeightToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  std::visit(
+      [&](const auto &active_value) {
+        using T = std::decay_t<decltype(active_value)>;
+
+        if constexpr (std::is_same_v<T, CSSLength>) {
+          const CSSLength &cssValue = active_value;
+          if (cssValue.isRelative) {
+          } else {
+          }
+
+        } else if constexpr (std::is_same_v<T, CSSKeyword>) {
+          // TODO: Handle this case
+        }
+      },
+      storage);
+}
+
+void addMinHeightToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  std::visit(
+      [&](const auto &active_value) {
+        using T = std::decay_t<decltype(active_value)>;
+
+        if constexpr (std::is_same_v<T, CSSLength>) {
+          const CSSLength &cssValue = active_value;
+          if (cssValue.isRelative) {
+          } else {
+          }
+
+        } else if constexpr (std::is_same_v<T, CSSKeyword>) {
+          // TODO: Handle this case
+        }
+      },
+      storage);
+}
+
+void addPositionToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSKeyword>(storage);
+  const auto position = cssValue.toString();
+}
+
+void addZIndexToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSInteger> &value) {}
+
+void addDirectionToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSKeyword>(storage);
+  const auto direction = cssValue.toString();
+}
+
+void addBackfaceVisibilityToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSKeyword>(storage);
+  const auto backfaceVisibility = cssValue.toString();
+}
+
+void addBorderCurveToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSKeyword>(storage);
+  const auto borderCurve = cssValue.toString();
+}
+
+void addBorderStyleToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSKeyword>(storage);
+  const auto borderStyle = cssValue.toString();
+
+  //    propsBuilder->setBorderStyles();
+}
+
+void addElevationToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value) {}
+
+void addPointerEventsToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSKeyword>(storage);
+  const auto pointerEvents = cssValue.toString();
+}
+
+void addIsolationToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSKeyword>(storage);
+  const auto isolation = cssValue.toString();
+}
+
+void addCursorToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSKeyword>(storage);
+  const auto cursor = cssValue.toString();
+}
+
+void addBoxShadowToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSBoxShadow> &value) {}
+
+void addMixBlendModeToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSKeyword> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSKeyword>(storage);
+  const auto mixBlend = cssValue.toString();
+}
+
 void animationMutationsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch) {
   for (auto &[node, dynamic] : updatesBatch) {
     AnimatedPropsBuilder builder;
     builder.storeDynamic(dynamic);
-    mutations.push_back(AnimationMutation{node->getTag(), &node->getFamily(), builder.get()});
+     mutations.batch.push_back(
+         AnimationMutation{node->getTag(), node->getFamilyShared(), builder.get(), true});
   }
 }
 
