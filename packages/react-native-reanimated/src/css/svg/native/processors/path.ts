@@ -24,9 +24,7 @@ export const processSVGPath: ValueProcessor<string, string> = (d) => {
   let pathSegments: PathCommand[] = parsePathString(d);
   pathSegments = normalizePath(pathSegments);
 
-  const tmpFlat = pathSegments.flatMap((subArr) => subArr);
-
-  return tmpFlat.join(' ');
+  return pathSegments.flatMap((subArr) => subArr).join(' ');
 };
 
 function processPathSegment(
@@ -49,7 +47,7 @@ function processPathSegment(
     command = command === 'm' ? 'l' : 'L';
   }
 
-  while (true) {
+  do {
     if (args.length - argsStartIdx < PATH_COMMAND_LENGTHS[type]) {
       throw new ReanimatedError(
         ERROR_MESSAGES.invalidSVGPathCommand(command, args.slice(argsStartIdx))
@@ -61,11 +59,7 @@ function processPathSegment(
       ...args.slice(argsStartIdx, argsStartIdx + PATH_COMMAND_LENGTHS[type]),
     ]);
     argsStartIdx += PATH_COMMAND_LENGTHS[type];
-
-    if (args.length - argsStartIdx === 0) {
-      return;
-    }
-  }
+  } while (args.length - argsStartIdx !== 0);
 }
 
 function parsePathString(d: string): PathCommand[] {
