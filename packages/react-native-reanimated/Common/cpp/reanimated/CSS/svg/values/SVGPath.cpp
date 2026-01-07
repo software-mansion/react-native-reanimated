@@ -1,4 +1,3 @@
-#include <SVGPath.h>
 #include <reanimated/CSS/svg/values/SVGPath.h>
 
 #include <reanimated/CSS/common/transforms/vectors.h>
