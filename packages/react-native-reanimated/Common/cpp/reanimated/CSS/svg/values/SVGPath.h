@@ -1,7 +1,7 @@
 #pragma once
 
+#include <reanimated/CSS/common/transforms/vectors.h>
 #include <reanimated/CSS/common/values/CSSValue.h>
-#include <vectors.h>
 
 #include <concepts>
 #include <string>
@@ -26,7 +26,7 @@ struct SVGPath : public CSSSimpleValue<SVGPath> {
   template <typename T>
     requires std::constructible_from<std::string, T>
   explicit SVGPath(T &&value) : subPaths(parseSVGPath(std::forward<T>(value))) {}
-  explicit SVGPath(std::vector<SubPath> &&SubPaths);
+  explicit SVGPath(std::vector<SubPath> &&subPaths);
   explicit SVGPath(jsi::Runtime &rt, const jsi::Value &jsiValue);
   explicit SVGPath(const folly::dynamic &value);
 
@@ -45,9 +45,7 @@ struct SVGPath : public CSSSimpleValue<SVGPath> {
 
  protected:
   std::vector<SubPath> parseSVGPath(const std::string &value) const;
-
   std::vector<Cubic> splitCubic(Cubic cubic, int count) const;
-
   SubPath interpolateSubPaths(const SubPath &from, const SubPath &to, double t) const;
 
  private:

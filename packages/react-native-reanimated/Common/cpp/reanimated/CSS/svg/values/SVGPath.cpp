@@ -155,7 +155,7 @@ std::vector<SubPath> SVGPath::parseSVGPath(const std::string &value) const {
         }
       // Fallthrough
       default:
-        std::invalid_argument("[Reanimated] Invalid SVGPath string format.");
+        std::invalid_argument("[Reanimated] Invalid SVGPath string format (provided path: \"" + value + "\")");
     }
   }
 
@@ -213,14 +213,16 @@ SubPath SVGPath::interpolateSubPaths(const SubPath &from, const SubPath &to, dou
     }
 
     // ensure continuity
-    if (i == 0) {
-      newCubic[0] = result.M;
-    } else {
-      newCubic[0] = result.C.back()[3];
-    }
+    newCubic[0] = i == 0 ? result.M : result.C.back()[3];
 
     // Ensure tangent differs from 0
     {
+      // TODO: This implementation of path interpolation has a problem - if we interpolate
+      // a control point (e.g. of C) in a way that during its movement it collides with another point
+      // of the same element (so another control point or beginning/end) we efectively get rid of
+      // one of the points for this element for this frame, which breaks the math. I currently deal with it by
+      // 'nudging' the point a bit when I detect a collision, which is imperfect and can cause an unplesant 'jump'
+      // in the animation (visible in example 'Smooth Cubic Bézier curve'). We might want to rethink this in the future.
       constexpr double NUDGE_EPS = 5e-1;
       newCubic[1] = applyDirectionalNudge(newCubic[1], newCubic[0], newCubic[2], newCubic[3], NUDGE_EPS);
       newCubic[2] = applyDirectionalNudge(newCubic[2], newCubic[3], newCubic[1], newCubic[0], NUDGE_EPS);
@@ -246,7 +248,6 @@ Point SVGPath::applyDirectionalNudge(
   double dy0 = target[1] - anchor[1];
 
   if (dx0 * dx0 + dy0 * dy0 < epsilon * epsilon) {
-
     Point v = Point(guide[0] - anchor[0], guide[1] - anchor[1]);
     double vLen = v.length();
 
