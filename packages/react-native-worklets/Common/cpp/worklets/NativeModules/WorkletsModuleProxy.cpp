@@ -5,6 +5,7 @@
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/Defs.h>
+#include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
@@ -29,7 +30,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
     const std::shared_ptr<UIScheduler> &uiScheduler,
     std::function<bool()> &&isJavaScriptThread,
     RuntimeBindings runtimeBindings,
-    const std::shared_ptr<const JSBigStringBuffer> &script,
+    const std::shared_ptr<const ScriptBuffer> &script,
     const std::string &sourceUrl)
     : isDevBundle_(isDevBundleFromRNRuntime(rnRuntime)),
       jsQueue_(jsQueue),

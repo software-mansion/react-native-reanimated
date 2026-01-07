@@ -65,15 +65,20 @@ And that's it! Worklets is now configured in your Expo project.
 When using [React Native Community CLI](https://github.com/react-native-community/cli), you also need to manually add the `react-native-worklets/plugin` plugin to your `babel.config.js`.
 
 ```js {7}
-  module.exports = {
-    presets: [
-      ... // don't add it here :)
-    ],
-    plugins: [
-      ...
-      'react-native-worklets/plugin',
-    ],
-  };
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  // Your custom options.
+}
+
+module.exports = {
+  presets: [
+    ... // don't add it here :)
+  ],
+  plugins: [
+    ...
+    ['react-native-worklets/plugin', workletsPluginOptions],
+  ],
+};
 ```
 
 <details>

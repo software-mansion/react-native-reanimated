@@ -187,7 +187,7 @@ export function runOnUISync<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
   ...args: Args
 ): ReturnValue {
-  return WorkletsModule.executeOnUIRuntimeSync(
+  return WorkletsModule.runOnUISync(
     createSerializable(() => {
       'worklet';
       const result = worklet(...args);

@@ -17,7 +17,16 @@
     "allowJs": true,
     "checkJs": true,
     "noEmit": true,
-    "moduleSuffixes": [".native", ".ios", ".android", ""]
+    "moduleSuffixes": [
+      ".native.test",
+      ".native",
+      ".ios.test",
+      ".ios",
+      ".android.test",
+      ".android",
+      ".test",
+      ""
+    ]
   },
   "include": [".", "**/.*"],
   "exclude": ["**/__generatedWorklets"]

@@ -1,9 +1,16 @@
 import React, { useCallback, useReducer } from 'react';
-import { Button, Platform, StyleSheet, Text, View } from 'react-native';
 import {
-  getDynamicFeatureFlag,
+  Button,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import {
+  getDynamicFeatureFlag as getDynamicFeatureFlagReanimated,
   getStaticFeatureFlag as getStaticFeatureFlagReanimated,
-  setDynamicFeatureFlag,
+  setDynamicFeatureFlag as setDynamicFeatureFlagReanimated,
 } from 'react-native-reanimated';
 import { getStaticFeatureFlag as getStaticFeatureFlagWorklets } from 'react-native-worklets';
 
@@ -28,19 +35,24 @@ function getBundle() {
 }
 
 function getRuntime() {
-  if ('HermesInternal' in global) {
+  if ('HermesInternal' in globalThis) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const version =
       // @ts-ignore this is fine
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      global.HermesInternal?.getRuntimeProperties?.()['OSS Release Version'];
+      globalThis.HermesInternal?.getRuntimeProperties?.()[
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        'OSS Release Version'
+      ];
     return `Hermes (${version})`;
   }
   return 'unknown';
 }
 
 function getArchitecture() {
-  return 'nativeFabricUIManager' in global ? 'Fabric' : 'Paper';
+  return 'nativeFabricUIManager' in globalThis
+    ? 'New Architecture'
+    : 'Legacy Architecture';
 }
 
 function getReactNativeVersion() {
@@ -49,135 +61,117 @@ function getReactNativeVersion() {
   return `${major}.${minor}.${patch}${prerelease ? `-${prerelease}` : ''}`;
 }
 
+function isBundleModeEnabled() {
+  return '_WORKLETS_BUNDLE_MODE' in globalThis;
+}
+
+const staticFlagsReanimated = [
+  'DISABLE_COMMIT_PAUSING_MECHANISM',
+  'ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS',
+  'IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS',
+  'EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS',
+  'USE_SYNCHRONIZABLE_FOR_MUTABLES',
+  'USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS',
+  'ENABLE_SHARED_ELEMENT_TRANSITIONS',
+  'FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS',
+] as const;
+
+const staticFlagsWorklets = ['IOS_DYNAMIC_FRAMERATE_ENABLED'] as const;
+
+interface ItemProps {
+  label: string;
+  value: string | boolean;
+}
+
+function Item({ label, value }: ItemProps) {
+  return (
+    <View style={styles.item}>
+      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.value}>
+        {value === true ? (
+          <Text style={styles.true}>✅ true</Text>
+        ) : value === false ? (
+          <Text style={styles.false}>❌ false</Text>
+        ) : (
+          value
+        )}
+      </Text>
+    </View>
+  );
+}
+
 export default function AboutExample() {
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
   const handleToggleExampleDynamicFlag = useCallback(() => {
-    setDynamicFeatureFlag(
+    setDynamicFeatureFlagReanimated(
       'EXAMPLE_DYNAMIC_FLAG',
-      !getDynamicFeatureFlag('EXAMPLE_DYNAMIC_FLAG')
+      !getDynamicFeatureFlagReanimated('EXAMPLE_DYNAMIC_FLAG')
     );
     forceUpdate();
   }, [forceUpdate]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>
-        <Text style={styles.bold}>Platform:</Text> {getPlatform()}{' '}
-        {getPlatformVersion()}
-      </Text>
-      <Text style={styles.text}>
-        <Text style={styles.bold}>Bundle:</Text> {getBundle()}
-      </Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Item
+        label="Platform"
+        value={`${getPlatform()} ${getPlatformVersion()}`}
+      />
+      <Item label="Bundle" value={getBundle()} />
       {!isWeb() && (
         <>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>Architecture:</Text> {getArchitecture()}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>JS runtime:</Text> {getRuntime()}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>RN version:</Text>{' '}
-            {getReactNativeVersion()}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>Bundle mode:</Text>{' '}
-            {
-              // @ts-expect-error This global is not exposed.
-              globalThis._WORKLETS_BUNDLE_MODE ? 'Enabled' : 'Disabled'
-            }
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>DISABLE_COMMIT_PAUSING_MECHANISM:</Text>{' '}
-            {getStaticFeatureFlagReanimated('DISABLE_COMMIT_PAUSING_MECHANISM')
-              ? 'Enabled'
-              : 'Disabled'}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>
-              ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS:
-            </Text>{' '}
-            {getStaticFeatureFlagReanimated(
-              'ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS'
-            )
-              ? 'Enabled'
-              : 'Disabled'}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS:</Text>{' '}
-            {getStaticFeatureFlagReanimated('IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS')
-              ? 'Enabled'
-              : 'Disabled'}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>
-              EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS:
-            </Text>{' '}
-            {getStaticFeatureFlagReanimated(
-              'EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS'
-            )
-              ? 'Enabled'
-              : 'Disabled'}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>USE_SYNCHRONIZABLE_FOR_MUTABLES:</Text>{' '}
-            {getStaticFeatureFlagReanimated('USE_SYNCHRONIZABLE_FOR_MUTABLES')
-              ? 'Enabled'
-              : 'Disabled'}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>
-              USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS:
-            </Text>{' '}
-            {getStaticFeatureFlagReanimated(
-              'USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS'
-            )
-              ? 'Enabled'
-              : 'Disabled'}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>
-              FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS:
-            </Text>{' '}
-            {getStaticFeatureFlagReanimated(
-              'FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS'
-            )
-              ? 'Enabled'
-              : 'Disabled'}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>IOS_DYNAMIC_FRAMERATE_ENABLED:</Text>{' '}
-            {getStaticFeatureFlagWorklets('IOS_DYNAMIC_FRAMERATE_ENABLED')
-              ? 'Enabled'
-              : 'Disabled'}
-          </Text>
-          <Text style={styles.text}>
-            <Text style={styles.bold}>EXAMPLE_DYNAMIC_FLAG:</Text>{' '}
-            {getDynamicFeatureFlag('EXAMPLE_DYNAMIC_FLAG')
-              ? 'Enabled'
-              : 'Disabled'}
-          </Text>
+          <Item label="Architecture" value={getArchitecture()} />
+          <Item label="JS runtime" value={getRuntime()} />
+          <Item label="RN version" value={getReactNativeVersion()} />
+          <Item label="Bundle mode" value={isBundleModeEnabled()} />
+          {staticFlagsReanimated.map((name) => (
+            <Item
+              key={name}
+              label={name}
+              value={getStaticFeatureFlagReanimated(name)}
+            />
+          ))}
+          {staticFlagsWorklets.map((name) => (
+            <Item
+              key={name}
+              label={name}
+              value={getStaticFeatureFlagWorklets(name)}
+            />
+          ))}
+          <Item
+            label="EXAMPLE_DYNAMIC_FLAG"
+            value={getDynamicFeatureFlagReanimated('EXAMPLE_DYNAMIC_FLAG')}
+          />
           <Button
             title={`Toggle EXAMPLE_DYNAMIC_FLAG`}
             onPress={handleToggleExampleDynamicFlag}
           />
         </>
       )}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 20,
+    paddingBottom: 20,
   },
-  text: {
+  item: {
+    padding: 15,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'gray',
+  },
+  label: {
+    fontSize: 12,
+    marginBottom: 5,
+  },
+  value: {
     fontSize: 16,
-    marginVertical: 4,
   },
-  bold: {
-    fontWeight: 'bold',
+  true: {
+    color: 'green',
+  },
+  false: {
+    color: 'firebrick',
   },
 });

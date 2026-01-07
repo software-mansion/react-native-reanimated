@@ -4,14 +4,12 @@
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
 #include <react/jni/JMessageQueueThread.h>
-#include <worklets/Tools/Defs.h>
-#ifdef WORKLETS_BUNDLE_MODE
-#include <react/fabric/BundleWrapper.h>
-#endif // WORKLETS_BUNDLE_MODE
-
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
+#include <worklets/Tools/Defs.h>
+#include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/android/AndroidUIScheduler.h>
+#include <worklets/android/JScriptBufferWrapper.h>
 
 #include <memory>
 #include <string>
@@ -30,13 +28,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jlong jsContext,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
-      jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler
-#ifdef WORKLETS_BUNDLE_MODE
-      ,
-      jni::alias_ref<facebook::react::BundleWrapper::javaobject> bundleWrapper,
-      const std::string &sourceURL
-#endif // WORKLETS_BUNDLE_MODE
-  );
+      jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
+      jni::alias_ref<JScriptBufferWrapper::javaobject> jScriptBufferWrapper);
 
   static void registerNatives();
 
@@ -51,7 +44,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      const std::shared_ptr<const JSBigStringBuffer> &bundle,
+      const std::shared_ptr<const ScriptBuffer> &script,
       const std::string &sourceURL);
 
   void invalidateCpp();

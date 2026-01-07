@@ -1,5 +1,6 @@
 #import <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #import <worklets/Tools/Defs.h>
+#import <worklets/Tools/ScriptBuffer.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/Tools/WorkletsJSIUtils.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
@@ -12,11 +13,6 @@
 
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
-
-#if __has_include(<React/RCTBundleProvider.h>)
-// Bundle mode
-#import <React/RCTBundleProvider.h>
-#endif // __has_include(<React/RCTBundleProvider.h>)
 
 using namespace worklets;
 
@@ -38,17 +34,13 @@ using namespace worklets;
   return workletsModuleProxy_;
 }
 
-#if __has_include(<React/RCTBundleProvider.h>)
-// Bundle mode
-@synthesize bundleProvider = bundleProvider_;
-#endif // __has_include(<React/RCTBundleProvider.h>)
-
 - (void)checkBridgeless
 {
   auto isBridgeless = ![self.bridge isKindOfClass:[RCTCxxBridge class]];
   react_native_assert(isBridgeless && "[Worklets] react-native-worklets only supports bridgeless mode");
 }
 
+@synthesize bundleManager = bundleManager_;
 @synthesize callInvoker = callInvoker_;
 
 RCT_EXPORT_MODULE(WorkletsModule);
@@ -67,10 +59,20 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
       std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) { throw error; });
 
   std::string sourceURL = "";
-  std::shared_ptr<const JSBigStringBuffer> script = nullptr;
+  std::shared_ptr<const ScriptBuffer> script = nullptr;
 #ifdef WORKLETS_BUNDLE_MODE
-  script = [bundleProvider_ getBundle];
-  sourceURL = [[bundleProvider_ getSourceURL] UTF8String];
+  NSURL *url = bundleManager_.bundleURL;
+  NSData *data = [NSData dataWithContentsOfURL:url];
+  if (data) {
+    auto str = std::string(reinterpret_cast<const char *>([data bytes]), [data length]);
+    auto bigString = std::make_shared<const JSBigStdString>(str);
+    script = std::make_shared<const ScriptBuffer>(bigString);
+  } else {
+    NSString *errorMsg = [NSString stringWithFormat:@"[Worklets] Failed to load worklets bundle from URL: %@", url];
+    NSLog(@"%@", errorMsg);
+    throw std::runtime_error([errorMsg UTF8String]);
+  }
+  sourceURL = [[url absoluteString] UTF8String];
 #endif // WORKLETS_BUNDLE_MODE
 
   auto jsCallInvoker = callInvoker_.callInvoker;
