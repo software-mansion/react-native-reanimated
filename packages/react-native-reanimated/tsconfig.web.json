@@ -2,15 +2,21 @@
   "extends": "./tsconfig.native.json",
   "compilerOptions": {
     "paths": {
-      "moduleSuffixes": [".web", ""]
+      "moduleSuffixes": [".web.test", ".web", ""]
     }
   },
   "exclude": [
     "**/*.native.ts",
     "**/*.native.tsx",
+    "**/*.native.test.ts",
+    "**/*.native.test.tsx",
     "**/*.ios.ts",
     "**/*.ios.tsx",
+    "**/*.ios.test.ts",
+    "**/*.ios.test.tsx",
     "**/*.android.ts",
-    "**/*.android.tsx"
+    "**/*.android.tsx",
+    "**/*.android.test.ts",
+    "**/*.android.test.tsx"
   ]
 }

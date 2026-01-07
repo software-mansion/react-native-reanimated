@@ -36,19 +36,21 @@ Using this is straightforward for Babel plugins; you just need to pass an object
 Here's an example:
 
 ```js {7}
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  bundleMode: true,
+  disableInlineStylesWarning: true,
+  globals: ['myObjectOnUI'],
+  substituteWebPlatformChecks: true,
+}
+
 module.exports = {
   ...
   plugins: [
     ...
     [
       'react-native-worklets/plugin',
-      {
-        relativeSourceLocation: true,
-        disableInlineStylesWarning: true,
-        omitNativeOnlyData: true,
-        globals: ['myObjectOnUI'],
-        substituteWebPlatformChecks: true,
-      },
+      workletsPluginOptions
     ],
   ],
 };

@@ -74,6 +74,6 @@ const anotherWorkletRuntime = createWorkletRuntime({ name: 'anotherBackground' }
 scheduleOnRuntime(anotherWorkletRuntime, () => {
   scheduleOnRuntime(workletRuntime, (greeting: string) => {
     console.log(`${greeting} from the background Worklet Runtime`);
-  }, 'Hello'); // This will throw an error 🚨
+  }, 'Hello'); // This will throw an error outside of Bundle Mode 🚨
 });
 ```

@@ -1,6 +1,15 @@
 'use strict';
 
 import { ReanimatedError, type ValueProcessor } from '../../../../common';
+import {
+  arcToCubic,
+  lineToCubic,
+  NUMBER_PATTERN,
+  PATH_COMMAND_LENGTHS,
+  quadraticToCubic,
+  reflectControlPoint,
+  SEGMENT_PATTERN,
+} from '../../../utils';
 
 export const ERROR_MESSAGES = {
   invalidSVGPathCommand: (command: unknown, args: unknown) =>
@@ -15,321 +24,123 @@ export const processSVGPath: ValueProcessor<string, string> = (d) => {
   let pathSegments: PathCommand[] = parsePathString(d);
   pathSegments = normalizePath(pathSegments);
 
-  const tmpFlat = pathSegments.flatMap((subArr) => subArr);
-
-  return tmpFlat.join(' ');
+  return pathSegments.flatMap((subArr) => subArr).join(' ');
 };
 
-const length: Record<string, number> = {
-  a: 7,
-  c: 6,
-  h: 1,
-  l: 2,
-  m: 2,
-  q: 4,
-  s: 4,
-  t: 2,
-  v: 1,
-  z: 0,
-};
+function processPathSegment(
+  command: string,
+  args: number[],
+  pathSegments: PathCommand[]
+): void {
+  let type = command.toLowerCase();
 
-const segmentPattern = /([achlmqstvz])([^achlmqstvz]*)/gi;
-const numberPattern = /-?[0-9]*\.?[0-9]+(?:e[-+]?\d+)?/gi;
+  if (pathSegments.length === 0 && type !== 'm') {
+    throw new ReanimatedError(ERROR_MESSAGES.invalidSVGPathStart(command));
+  }
+
+  let argsStartIdx = 0;
+
+  if (type === 'm' && args.length > PATH_COMMAND_LENGTHS['m']) {
+    pathSegments.push([command, ...args.slice(0, PATH_COMMAND_LENGTHS['m'])]);
+    argsStartIdx += PATH_COMMAND_LENGTHS['m'];
+    type = 'l'; // If m has more than 2 (length['m']) arguments, use them in implicit l commands
+    command = command === 'm' ? 'l' : 'L';
+  }
+
+  do {
+    if (args.length - argsStartIdx < PATH_COMMAND_LENGTHS[type]) {
+      throw new ReanimatedError(
+        ERROR_MESSAGES.invalidSVGPathCommand(command, args.slice(argsStartIdx))
+      );
+    }
+
+    pathSegments.push([
+      command,
+      ...args.slice(argsStartIdx, argsStartIdx + PATH_COMMAND_LENGTHS[type]),
+    ]);
+    argsStartIdx += PATH_COMMAND_LENGTHS[type];
+  } while (args.length - argsStartIdx !== 0);
+}
 
 function parsePathString(d: string): PathCommand[] {
   const pathSegments: PathCommand[] = [];
-  d.replace(segmentPattern, (_, command: string, argsString: string) => {
-    let type = command.toLowerCase();
-    const numbers = argsString.match(numberPattern);
+
+  d.replace(SEGMENT_PATTERN, (_, command: string, argsString: string) => {
+    const numbers = argsString.match(NUMBER_PATTERN);
     const args = numbers ? numbers.map(Number) : [];
 
-    if (pathSegments.length === 0 && type !== 'm') {
-      throw new ReanimatedError(ERROR_MESSAGES.invalidSVGPathStart(command));
-    }
-
-    if (type === 'm' && args.length > length['m']) {
-      pathSegments.push([command, ...args.splice(0, length['m'])]);
-      type = 'l'; // If m has more than 2 arguments, use them in implicit l commands
-      command = command === 'm' ? 'l' : 'L';
-    }
-
-    while (true) {
-      if (args.length === length[type]) {
-        pathSegments.push([command, ...args]);
-        return '';
-      }
-
-      if (args.length < length[type]) {
-        throw new ReanimatedError(
-          ERROR_MESSAGES.invalidSVGPathCommand(command, args)
-        );
-      }
-
-      pathSegments.push([command, ...args.splice(0, length[type])]);
-    }
+    processPathSegment(command, args, pathSegments);
+    return '';
   });
+
   return pathSegments;
 }
 
 function normalizePath(pathSegments: PathCommand[]): PathCommand[] {
   const absoluteSegments = absolutizePath(pathSegments);
-
   const out: PathCommand[] = [];
 
-  let curX = 0,
-    curY = 0;
-  let startX = 0,
-    startY = 0;
-  // Last control point used for S and T commands.
-  // If previous command wasn't a curve, these default to curX, curY.
-  let ctrlX = 0,
-    ctrlY = 0;
-
-  // Reflect the control point around the current point: R = P + (P - C)
-  const reflect = (
-    x: number,
-    y: number,
-    oldCtrlX: number,
-    oldCtrlY: number
-  ) => {
-    return [x + (x - oldCtrlX), y + (y - oldCtrlY)];
+  const state: PathState = {
+    curX: 0,
+    curY: 0,
+    startX: 0,
+    startY: 0,
+    lastCubicCtrlX: 0,
+    lastCubicCtrlY: 0,
+    lastQuadCtrlX: 0,
+    lastQuadCtrlY: 0,
   };
 
   for (const seg of absoluteSegments) {
     let cmd = seg[0];
-    let args = seg.slice(1) as number[];
+    let args = [...seg.slice(1)] as number[];
 
-    let nextCtrlX: number | null = null;
-    let nextCtrlY: number | null = null;
-
-    if (cmd === 'H') {
-      // H x -> L x curY
-      cmd = 'L';
-      args = [args[0], curY];
-    } else if (cmd === 'V') {
-      // V y -> L curX y
-      cmd = 'L';
-      args = [curX, args[0]];
-    } else if (cmd === 'S') {
-      // S x2 y2 x y -> C (reflected ctrl) x2 y2 x y
-      const [rX, rY] = reflect(curX, curY, ctrlX, ctrlY);
+    if (cmd === 'S') {
+      const [rX, rY] = reflectControlPoint(
+        state.curX,
+        state.curY,
+        state.lastCubicCtrlX,
+        state.lastCubicCtrlY
+      );
       cmd = 'C';
       args = [rX, rY, args[0], args[1], args[2], args[3]];
     } else if (cmd === 'T') {
-      // T x y -> Q (reflected ctrl) x y
-      const [rX, rY] = reflect(curX, curY, ctrlX, ctrlY);
+      const [rX, rY] = reflectControlPoint(
+        state.curX,
+        state.curY,
+        state.lastQuadCtrlX,
+        state.lastQuadCtrlY
+      );
       cmd = 'Q';
       args = [rX, rY, args[0], args[1]];
     }
 
-    if (cmd === 'L') {
-      // L x y -> C (aligned ctrl) x y
-      const x = args[0];
-      const y = args[1];
-
-      const cp1x = curX + (x - curX) / 3;
-      const cp1y = curY + (y - curY) / 3;
-      const cp2x = curX + (2 * (x - curX)) / 3;
-      const cp2y = curY + (2 * (y - curY)) / 3;
-
-      // So C command doesn't use 'virtual' ctrl points
-      nextCtrlX = x;
-      nextCtrlY = y;
-
-      cmd = 'C';
-      args = [cp1x, cp1y, cp2x, cp2y, x, y];
-    } else if (cmd === 'Q') {
-      // Q cpX cpY x y -> C (degree elevated) x y
-      const qCpX = args[0];
-      const qCpY = args[1];
-      const x = args[2];
-      const y = args[3];
-
-      // This ensures a subsequent 'T' command reflects correctly.
-      nextCtrlX = qCpX;
-      nextCtrlY = qCpY;
-
-      const cp1x = curX + (2 / 3) * (qCpX - curX);
-      const cp1y = curY + (2 / 3) * (qCpY - curY);
-      const cp2x = x + (2 / 3) * (qCpX - x);
-      const cp2y = y + (2 / 3) * (qCpY - y);
-
-      cmd = 'C';
-      args = [cp1x, cp1y, cp2x, cp2y, x, y];
-    } else if (cmd === 'A') {
-      // A rx ry rot large sweep x y -> Multiple C commands
-      // Because A expands to multiple segments, we handle it explicitly here
-      // and skip the generic output phase.
-      const cubics = arcToCubic(
-        curX,
-        curY,
-        args[0],
-        args[1],
-        args[2],
-        args[3],
-        args[4],
-        args[5],
-        args[6]
-      );
-
-      for (const cubicArgs of cubics) {
-        out.push(['C', ...cubicArgs]);
-      }
-
-      const last = cubics[cubics.length - 1];
-      curX = last[4];
-      curY = last[5];
-      ctrlX = last[2];
-      ctrlY = last[3];
-
-      continue;
+    if (cmd === 'H') {
+      cmd = 'L';
+      args = [args[0], state.curY];
+    }
+    if (cmd === 'V') {
+      cmd = 'L';
+      args = [state.curX, args[0]];
     }
 
-    out.push([cmd, ...args]);
+    const result = handlers[cmd as keyof typeof handlers](state, args);
+    out.push(...result);
 
-    if (cmd === 'M') {
-      curX = args[0];
-      curY = args[1];
-      startX = curX;
-      startY = curY;
-      ctrlX = curX;
-      ctrlY = curY;
-    } else if (cmd === 'C') {
-      curX = args[4];
-      curY = args[5];
+    const isCubic = cmd === 'C';
+    const isQuad = cmd === 'Q';
 
-      // If we converted Q->C, we must use the Q control point.
-      // Otherwise, we use the C control point (args[2], args[3]).
-      if (nextCtrlX !== null && nextCtrlY !== null) {
-        ctrlX = nextCtrlX;
-        ctrlY = nextCtrlY;
-      } else {
-        ctrlX = args[2];
-        ctrlY = args[3];
-      }
-    } else if (cmd === 'Z') {
-      curX = startX;
-      curY = startY;
-      ctrlX = curX;
-      ctrlY = curY;
+    if (!isCubic) {
+      state.lastCubicCtrlX = state.curX;
+      state.lastCubicCtrlY = state.curY;
+    }
+    if (!isQuad) {
+      state.lastQuadCtrlX = state.curX;
+      state.lastQuadCtrlY = state.curY;
     }
   }
 
   return out;
-}
-
-function arcToCubic(
-  px: number,
-  py: number,
-  rx: number,
-  ry: number,
-  xAxisRotation: number,
-  largeArcFlag: number,
-  sweepFlag: number,
-  x: number,
-  y: number
-): number[][] {
-  const radian = (deg: number) => (deg * Math.PI) / 180;
-
-  // Degenerate case:
-  if (rx === 0 || ry === 0) {
-    const cp1x = px + (x - px) / 3;
-    const cp1y = py + (y - py) / 3;
-    const cp2x = px + (2 * (x - px)) / 3;
-    const cp2y = py + (2 * (y - py)) / 3;
-    return [[cp1x, cp1y, cp2x, cp2y, x, y]];
-  }
-
-  const phi = radian(xAxisRotation);
-  const sinPhi = Math.sin(phi);
-  const cosPhi = Math.cos(phi);
-
-  // endpoint parameterization -> center parameterization
-  const pxp = (cosPhi * (px - x)) / 2 + (sinPhi * (py - y)) / 2;
-  const pyp = (-sinPhi * (px - x)) / 2 + (cosPhi * (py - y)) / 2;
-
-  const rxSq = rx * rx;
-  const rySq = ry * ry;
-  const pxpSq = pxp * pxp;
-  const pypSq = pyp * pyp;
-
-  const radCheck = pxpSq / rxSq + pypSq / rySq;
-  if (radCheck > 1) {
-    const scale = Math.sqrt(radCheck);
-    rx *= scale;
-    ry *= scale;
-  }
-
-  const sign = largeArcFlag === sweepFlag ? -1 : 1;
-  const numerator = Math.max(0, rxSq * rySq - rxSq * pypSq - rySq * pxpSq);
-  const denominator = rxSq * pypSq + rySq * pxpSq;
-  const coef = sign * Math.sqrt(numerator / denominator);
-
-  const cxp = coef * ((rx * pyp) / ry);
-  const cyp = coef * (-(ry * pxp) / rx);
-
-  const cx = cosPhi * cxp - sinPhi * cyp + (px + x) / 2;
-  const cy = sinPhi * cxp + cosPhi * cyp + (py + y) / 2;
-
-  const angle = (uX: number, uY: number, vX: number, vY: number) => {
-    const acosSign = uX * vY - uY * vX < 0 ? -1 : 1;
-    const dot = uX * vX + uY * vY;
-    const ratio =
-      dot / (Math.sqrt(uX * uX + uY * uY) * Math.sqrt(vX * vX + vY * vY));
-    return acosSign * Math.acos(Math.max(-1, Math.min(1, ratio)));
-  };
-
-  const startVectorX = (pxp - cxp) / rx;
-  const startVectorY = (pyp - cyp) / ry;
-  const endVectorX = (-pxp - cxp) / rx;
-  const endVectorY = (-pyp - cyp) / ry;
-
-  const startAngle = angle(1, 0, startVectorX, startVectorY);
-  let deltaAngle = angle(startVectorX, startVectorY, endVectorX, endVectorY);
-
-  if (sweepFlag === 0 && deltaAngle > 0) deltaAngle -= 2 * Math.PI;
-  if (sweepFlag === 1 && deltaAngle < 0) deltaAngle += 2 * Math.PI;
-
-  // Split into segments
-  const segments = Math.ceil(Math.abs(deltaAngle) / (Math.PI / 2));
-  const segmentAngle = deltaAngle / segments;
-  const k = (4 / 3) * Math.tan(segmentAngle / 4);
-
-  const cubics: number[][] = [];
-
-  for (let i = 0; i < segments; i++) {
-    const a1 = startAngle + i * segmentAngle;
-    const a2 = startAngle + (i + 1) * segmentAngle;
-
-    const cos1 = Math.cos(a1),
-      sin1 = Math.sin(a1);
-    const cos2 = Math.cos(a2),
-      sin2 = Math.sin(a2);
-
-    // Calc control points on unit circle
-    // p1 = (cos1, sin1)
-    // p2 = (cos2, sin2)
-    // cp1 = p1 + k * (-sin1, cos1)
-    // cp2 = p2 - k * (-sin2, cos2)
-    const unitX1 = cos1 - k * sin1;
-    const unitY1 = sin1 + k * cos1;
-    const unitX2 = cos2 + k * sin2;
-    const unitY2 = sin2 - k * cos2;
-
-    // Transform to ellipse
-    const transform = (uX: number, uY: number) => [
-      cx + cosPhi * uX * rx - sinPhi * uY * ry,
-      cy + sinPhi * uX * rx + cosPhi * uY * ry,
-    ];
-
-    const [cp1x, cp1y] = transform(unitX1, unitY1);
-    const [cp2x, cp2y] = transform(unitX2, unitY2);
-    const [dstX, dstY] = transform(cos2, sin2);
-
-    cubics.push([cp1x, cp1y, cp2x, cp2y, dstX, dstY]);
-  }
-
-  return cubics;
 }
 
 function absolutizePath(pathSegments: PathCommand[]): PathCommand[] {
@@ -385,6 +196,83 @@ function absolutizePath(pathSegments: PathCommand[]): PathCommand[] {
           curY = args[args.length - 1];
         }
     }
+
     return [upperCmd, ...args];
   });
 }
+
+type PathState = {
+  curX: number;
+  curY: number;
+  startX: number;
+  startY: number;
+  lastCubicCtrlX: number;
+  lastCubicCtrlY: number;
+  lastQuadCtrlX: number;
+  lastQuadCtrlY: number;
+};
+
+const handlers = {
+  M: (state: PathState, args: number[]): PathCommand[] => {
+    const [x, y] = args;
+    state.curX = state.startX = x;
+    state.curY = state.startY = y;
+    return [['M', x, y]];
+  },
+
+  L: (state: PathState, args: number[]): PathCommand[] => {
+    const [x, y] = args;
+    const cubic = lineToCubic(state.curX, state.curY, x, y);
+    state.curX = x;
+    state.curY = y;
+    return [['C', ...cubic]];
+  },
+
+  Q: (state: PathState, args: number[]): PathCommand[] => {
+    const [qcx, qcy, x, y] = args;
+    const cubic = quadraticToCubic(state.curX, state.curY, qcx, qcy, x, y);
+    state.lastQuadCtrlX = qcx;
+    state.lastQuadCtrlY = qcy;
+    state.curX = x;
+    state.curY = y;
+    return [['C', ...cubic]];
+  },
+
+  C: (state: PathState, args: number[]): PathCommand[] => {
+    const [_cp1x, _cp1y, cp2x, cp2y, x, y] = args;
+    state.lastCubicCtrlX = cp2x;
+    state.lastCubicCtrlY = cp2y;
+    state.curX = x;
+    state.curY = y;
+    return [['C', ...args]];
+  },
+
+  A: (state: PathState, args: number[]): PathCommand[] => {
+    const cubics = arcToCubic(
+      state.curX,
+      state.curY,
+      args[0],
+      args[1],
+      args[2],
+      args[3],
+      args[4],
+      args[5],
+      args[6]
+    );
+    if (cubics.length === 0) return [];
+
+    const last = cubics[cubics.length - 1];
+    state.lastCubicCtrlX = last[2];
+    state.lastCubicCtrlY = last[3];
+    state.curX = last[4];
+    state.curY = last[5];
+
+    return cubics.map((c) => ['C', ...c]);
+  },
+
+  Z: (state: PathState): PathCommand[] => {
+    state.curX = state.startX;
+    state.curY = state.startY;
+    return [['Z']];
+  },
+};

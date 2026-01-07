@@ -21,6 +21,9 @@ string(
 
 string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
 
+if(${WORKLETS_PROFILING})
+  string(APPEND CMAKE_CXX_FLAGS " -DWORKLETS_PROFILING")
+endif()
 if(${IS_REANIMATED_EXAMPLE_APP})
   string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic")
 endif()
