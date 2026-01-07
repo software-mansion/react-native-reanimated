@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <functional>
 #include <optional>
+#include <regex>
 #include <string>
 
 namespace reanimated::css {
@@ -22,12 +23,26 @@ SVGPath::SVGPath(jsi::Runtime &rt, const jsi::Value &jsiValue) : SVGPath(jsiValu
 
 SVGPath::SVGPath(const folly::dynamic &value) : SVGPath(value.getString()) {}
 
+bool SVGPath::isNormalizedSVGPathString(const std::string &s) {
+  static const std::regex pathRegex(
+      R"(\s*(?:(?:M\s*(?:-?\d*\.?\d+(?:e[+-]?\d+)?\s*){2})|(?:C\s*(?:-?\d*\.?\d+(?:e[+-]?\d+)?\s*){6})|(?:Z\s*))*)",
+      std::regex_constants::optimize);
+
+  return std::regex_match(s, pathRegex);
+}
+
 bool SVGPath::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  return jsiValue.isString();
+  if (!jsiValue.isString()) {
+    return false;
+  }
+  return isNormalizedSVGPathString(jsiValue.getString(rt).utf8(rt));
 }
 
 bool SVGPath::canConstruct(const folly::dynamic &value) {
-  return value.isString();
+  if (!value.isString()) {
+    return false;
+  }
+  return isNormalizedSVGPathString(value.getString());
 }
 
 folly::dynamic SVGPath::toDynamic() const {

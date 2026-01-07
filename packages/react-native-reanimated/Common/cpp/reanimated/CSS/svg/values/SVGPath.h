@@ -30,6 +30,7 @@ struct SVGPath : public CSSSimpleValue<SVGPath> {
   explicit SVGPath(jsi::Runtime &rt, const jsi::Value &jsiValue);
   explicit SVGPath(const folly::dynamic &value);
 
+  static bool isNormalizedSVGPathString(const std::string &s);
   static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
   static bool canConstruct(const folly::dynamic &value);
 
