@@ -24,9 +24,15 @@ SVGPath::SVGPath(jsi::Runtime &rt, const jsi::Value &jsiValue) : SVGPath(jsiValu
 SVGPath::SVGPath(const folly::dynamic &value) : SVGPath(value.getString()) {}
 
 bool SVGPath::isNormalizedSVGPathString(const std::string &s) {
+  static constexpr auto WS = R"(\s*)";
+  static constexpr auto NUM = R"(-?\d*\.?\d+(?:e[+-]?\d+)?)";
+
+  static const std::string M_CMD = std::string("M") + WS + "(?:" + NUM + WS + "){2}";
+  static const std::string C_CMD = std::string("C") + WS + "(?:" + NUM + WS + "){6}";
+  static const std::string Z_CMD = std::string("Z") + WS;
+
   static const std::regex pathRegex(
-      R"(\s*(?:(?:M\s*(?:-?\d*\.?\d+(?:e[+-]?\d+)?\s*){2})|(?:C\s*(?:-?\d*\.?\d+(?:e[+-]?\d+)?\s*){6})|(?:Z\s*))*)",
-      std::regex_constants::optimize);
+      std::string(WS) + "(?:(?:" + M_CMD + ")|(?:" + C_CMD + ")|(?:" + Z_CMD + "))*", std::regex_constants::optimize);
 
   return std::regex_match(s, pathRegex);
 }
