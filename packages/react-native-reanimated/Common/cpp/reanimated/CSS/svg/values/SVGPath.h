@@ -17,7 +17,7 @@ struct SVGPath : public CSSSimpleValue<SVGPath> {
     Point M;
     std::vector<Cubic> C;
     bool Z;
-    SubPath(Point M) : M(M) {}
+    explicit SubPath(Point M) : M(M) {}
   };
 
   std::vector<SubPath> subPaths;

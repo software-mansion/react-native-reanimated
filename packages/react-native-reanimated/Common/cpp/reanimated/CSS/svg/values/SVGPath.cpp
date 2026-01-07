@@ -3,6 +3,7 @@
 
 #include <reanimated/CSS/common/transforms/vectors.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <functional>
 #include <optional>
