@@ -20,11 +20,24 @@ export type TextScaleStyles = {
 const SCALING_OFFSET_X = 1.0;
 const SCALING_OFFSET_Y = 1.22;
 
+// Get viewport dimensions for boundary checks
+const getViewportBounds = () => {
+  if (typeof window !== 'undefined') {
+    return {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+  }
+  return { width: 9999, height: 9999 }; // fallback for SSR
+};
+
 export const computeSelectionStyles = (
   position: { x: number; y: number },
   draggableIdentifier: DraggableId,
   dynamicStyles
 ): DynamicStyles => {
+  const viewport = getViewportBounds();
+  
   const isLeft =
     draggableIdentifier === DraggableId.BOTTOM_LEFT ||
     draggableIdentifier === DraggableId.TOP_LEFT;
@@ -67,11 +80,37 @@ export const computeSelectionStyles = (
       positionAdjustment.y = 0;
   }
 
+  // Calculate new position
+  let newLeft = dynamicStyles.left + positionAdjustment.x;
+  let newTop = dynamicStyles.top + positionAdjustment.y;
+  const newWidth = dynamicStyles.width + sizeChange.x;
+  const newHeight = dynamicStyles.height + sizeChange.y;
+
+  // Prevent dragging outside viewport boundaries
+  // Add padding to keep element at least partially visible
+  const minVisiblePortion = 50; // Minimum pixels that must remain visible
+  
+  // Constrain left/right movement
+  if (newLeft < -newWidth + minVisiblePortion) {
+    newLeft = -newWidth + minVisiblePortion;
+  }
+  if (newLeft > viewport.width - minVisiblePortion) {
+    newLeft = viewport.width - minVisiblePortion;
+  }
+  
+  // Constrain top/bottom movement
+  if (newTop < -newHeight + minVisiblePortion) {
+    newTop = -newHeight + minVisiblePortion;
+  }
+  if (newTop > viewport.height - minVisiblePortion) {
+    newTop = viewport.height - minVisiblePortion;
+  }
+
   return {
-    left: dynamicStyles.left + positionAdjustment.x,
-    top: dynamicStyles.top + positionAdjustment.y,
-    width: dynamicStyles.width + sizeChange.x,
-    height: dynamicStyles.height + sizeChange.y,
+    left: newLeft,
+    top: newTop,
+    width: newWidth,
+    height: newHeight,
   };
 };
 

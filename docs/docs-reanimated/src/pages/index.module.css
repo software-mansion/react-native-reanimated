@@ -2,6 +2,14 @@ html {
   scroll-behavior: smooth;
 }
 
+.landingContainer {
+  /* Prevent draggable elements from causing horizontal scrolling */
+  overflow-x: hidden;
+  /* Ensure page doesn't expand beyond intended dimensions */
+  position: relative;
+  width: 100%;
+}
+
 .heroBanner {
   padding: 4rem 0;
   text-align: center;

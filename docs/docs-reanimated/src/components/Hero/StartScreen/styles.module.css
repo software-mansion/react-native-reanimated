@@ -5,6 +5,8 @@
   height: 100vh;
   min-height: 70vw;
   background-color: transparent;
+  /* Prevent draggable elements from causing page overflow */
+  overflow: hidden;
 }
 
 .heading {

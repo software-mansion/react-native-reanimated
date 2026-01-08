@@ -10,6 +10,8 @@
   color: var(--swm-landing-heading-selected);
   line-height: 1;
   z-index: 1;
+  /* Prevent element from causing page expansion */
+  will-change: transform;
 
   /* normally one would do this with border dashed but that doesn't allow for modifying spacing between dashes */
   /* prettier-ignore */
