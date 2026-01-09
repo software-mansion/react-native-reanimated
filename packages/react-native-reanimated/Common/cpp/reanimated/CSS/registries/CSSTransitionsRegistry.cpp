@@ -66,6 +66,8 @@ void CSSTransitionsRegistry::update(const double timestamp) {
     auto animatedProps = transition->getAnimatedProps();
     addAnimatedPropsToBatch(transition->getShadowNode(), std::move(animatedProps));
 
+    updateInUpdatesRegistry(transition, updates);
+
     // We remove transition from running and schedule it when animation of one
     // of properties has finished and the other one is still delayed
     const auto &minDelay = transition->getMinDelay(timestamp);
