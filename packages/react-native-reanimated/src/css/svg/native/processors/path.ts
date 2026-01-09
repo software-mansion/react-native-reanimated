@@ -16,6 +16,8 @@ export const ERROR_MESSAGES = {
     `Invalid SVG Path command: ${JSON.stringify(command)} ${JSON.stringify(args)}`,
   invalidSVGPathStart: (command: string) =>
     `Invalid SVG Path: Path must start with "M" or "m", but found "${command}"`,
+  invalidNormalizedSVGPathCommand: (command: unknown, args: unknown) =>
+    `Invalid Normalized SVG Path command: ${JSON.stringify(command)} ${JSON.stringify(args)}`,
 };
 
 type PathCommand = [string, ...number[]];
@@ -24,6 +26,7 @@ export const processSVGPath: ValueProcessor<string, string> = (d) => {
   let pathSegments: PathCommand[] = parsePathString(d);
   pathSegments = normalizePath(pathSegments);
 
+  validateNormalizedPath(pathSegments);
   return pathSegments.flatMap((subArr) => subArr).join(' ');
 };
 
@@ -276,3 +279,18 @@ const handlers = {
     return [['Z']];
   },
 };
+
+function validateNormalizedPath(pathCommands: PathCommand[]): void {
+  const allowedCommands = ['M', 'C', 'Z'];
+
+  for (const [command, ...args] of pathCommands) {
+    if (
+      !allowedCommands.includes(command) ||
+      args.length != PATH_COMMAND_LENGTHS[command.toLowerCase()]
+    ) {
+      throw new ReanimatedError(
+        ERROR_MESSAGES.invalidNormalizedSVGPathCommand(command, args)
+      );
+    }
+  }
+}
