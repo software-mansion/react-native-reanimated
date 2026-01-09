@@ -7,6 +7,7 @@
 
 #include <folly/json.h>
 #include <memory>
+#include <unordered_map>
 
 using namespace facebook::react;
 
@@ -61,6 +62,20 @@ yoga::Align strToYogaAlign(std::string name) {
   }
 
   return yoga::Align::Auto;
+}
+
+yoga::Style::SizeLength strToYogaSizeLength(std::string keyword) {
+  if (keyword == "auto") {
+    return yoga::Style::SizeLength::ofAuto();
+  } else if (keyword == "stretch") {
+    return yoga::Style::SizeLength::ofStretch();
+  } else if (keyword == "fit-content") {
+    return yoga::Style::SizeLength::ofFitContent();
+  } else if (keyword == "max-content") {
+    return yoga::Style::SizeLength::ofMaxContent();
+  }
+
+  return yoga::Style::SizeLength::undefined();
 }
 
 void addFilter(
@@ -1019,21 +1034,19 @@ void addOutlineStyleToPropsBuilder(
     const CSSValueVariant<CSSKeyword> &value) {
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSKeyword>(storage);
-  OutlineStyle outlineStyle;
+  const auto outlineStyleStr = cssValue.toString();
+  static const std::unordered_map<std::string, OutlineStyle> outlineStyleMap = {
+      {"solid", OutlineStyle::Solid},
+      {"dotted", OutlineStyle::Dotted},
+      {"dashed", OutlineStyle::Dashed},
+  };
 
-  auto outlineStyleStr = cssValue.toString();
-
-  if (outlineStyleStr == "solid") {
-    outlineStyle = OutlineStyle::Solid;
-  } else if (outlineStyleStr == "dotted") {
-    outlineStyle = OutlineStyle::Dotted;
-  } else if (outlineStyleStr == "dashed") {
-    outlineStyle = OutlineStyle::Dashed;
-  } else {
+  const auto it = outlineStyleMap.find(outlineStyleStr);
+  if (it == outlineStyleMap.end()) {
     return;
   }
 
-  propsBuilder->setOutlineStyle(outlineStyle);
+  propsBuilder->setOutlineStyle(it->second);
 }
 
 void addOutlineWidthToPropsBuilder(
@@ -1101,11 +1114,17 @@ void addBoxSizingToPropsBuilder(
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto boxSizing = cssValue.toString();
-  if (boxSizing == "border-box") {
-    propsBuilder->setBoxSizing(yoga::BoxSizing::BorderBox);
-  } else if (boxSizing == "content-box") {
-    propsBuilder->setBoxSizing(yoga::BoxSizing::ContentBox);
+  static const std::unordered_map<std::string, yoga::BoxSizing> boxSizingMap = {
+      {"border-box", yoga::BoxSizing::BorderBox},
+      {"content-box", yoga::BoxSizing::ContentBox},
+  };
+
+  const auto it = boxSizingMap.find(boxSizing);
+  if (it == boxSizingMap.end()) {
+    return;
   }
+
+  propsBuilder->setBoxSizing(it->second);
 }
 
 void addDisplayToPropsBuilder(
@@ -1114,14 +1133,18 @@ void addDisplayToPropsBuilder(
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSDisplay>(storage);
   const auto display = cssValue.toString();
+  static const std::unordered_map<std::string, yoga::Display> displayMap = {
+      {"flex", yoga::Display::Flex},
+      {"none", yoga::Display::None},
+      {"contents", yoga::Display::Contents},
+  };
 
-  if (display == "flex") {
-    propsBuilder->setDisplay(yoga::Display::Flex);
-  } else if (display == "none") {
-    propsBuilder->setDisplay(yoga::Display::None);
-  } else if (display == "contents") {
-    propsBuilder->setDisplay(yoga::Display::Contents);
+  const auto it = displayMap.find(display);
+  if (it == displayMap.end()) {
+    return;
   }
+
+  propsBuilder->setDisplay(it->second);
 }
 
 void addFlexBasisToPropsBuilder(
@@ -1153,16 +1176,19 @@ void addFlexDirectionToPropsBuilder(
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto flexDirection = cssValue.toString();
+  static const std::unordered_map<std::string, yoga::FlexDirection> flexDirectionMap = {
+      {"column", yoga::FlexDirection::Column},
+      {"column-reverse", yoga::FlexDirection::ColumnReverse},
+      {"row", yoga::FlexDirection::Row},
+      {"row-reverse", yoga::FlexDirection::RowReverse},
+  };
 
-  if (flexDirection == "column") {
-    propsBuilder->setFlexDirection(yoga::FlexDirection::Column);
-  } else if (flexDirection == "column-reverse") {
-    propsBuilder->setFlexDirection(yoga::FlexDirection::ColumnReverse);
-  } else if (flexDirection == "row") {
-    propsBuilder->setFlexDirection(yoga::FlexDirection::Row);
-  } else if (flexDirection == "row-reverse") {
-    propsBuilder->setFlexDirection(yoga::FlexDirection::RowReverse);
+  const auto it = flexDirectionMap.find(flexDirection);
+  if (it == flexDirectionMap.end()) {
+    return;
   }
+
+  propsBuilder->setFlexDirection(it->second);
 }
 
 void addRowGapToPropsBuilder(
@@ -1213,14 +1239,18 @@ void addFlexWrapToPropsBuilder(
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto flexWrap = cssValue.toString();
+  static const std::unordered_map<std::string, yoga::Wrap> flexWrapMap = {
+      {"no-wrap", yoga::Wrap::NoWrap},
+      {"wrap", yoga::Wrap::Wrap},
+      {"wrap-reverse", yoga::Wrap::WrapReverse},
+  };
 
-  if (flexWrap == "no-wrap") {
-    propsBuilder->setFlexWrap(yoga::Wrap::NoWrap);
-  } else if (flexWrap == "wrap") {
-    propsBuilder->setFlexWrap(yoga::Wrap::Wrap);
-  } else if (flexWrap == "wrap-reverse") {
-    propsBuilder->setFlexWrap(yoga::Wrap::WrapReverse);
+  const auto it = flexWrapMap.find(flexWrap);
+  if (it == flexWrapMap.end()) {
+    return;
   }
+
+  propsBuilder->setFlexWrap(it->second);
 }
 
 void addJustifyContentToPropsBuilder(
@@ -1229,20 +1259,21 @@ void addJustifyContentToPropsBuilder(
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto justifyContent = cssValue.toString();
+  static const std::unordered_map<std::string, yoga::Justify> justifyContentMap = {
+      {"flex-start", yoga::Justify::FlexStart},
+      {"center", yoga::Justify::Center},
+      {"flex-end", yoga::Justify::FlexEnd},
+      {"space-between", yoga::Justify::SpaceBetween},
+      {"space-around", yoga::Justify::SpaceAround},
+      {"space-evenly", yoga::Justify::SpaceEvenly},
+  };
 
-  if (justifyContent == "flex-start") {
-    propsBuilder->setJustifyContent(yoga::Justify::FlexStart);
-  } else if (justifyContent == "center") {
-    propsBuilder->setJustifyContent(yoga::Justify::Center);
-  } else if (justifyContent == "flex-end") {
-    propsBuilder->setJustifyContent(yoga::Justify::FlexEnd);
-  } else if (justifyContent == "space-between") {
-    propsBuilder->setJustifyContent(yoga::Justify::SpaceBetween);
-  } else if (justifyContent == "space-around") {
-    propsBuilder->setJustifyContent(yoga::Justify::SpaceAround);
-  } else if (justifyContent == "space-evenly") {
-    propsBuilder->setJustifyContent(yoga::Justify::SpaceEvenly);
+  const auto it = justifyContentMap.find(justifyContent);
+  if (it == justifyContentMap.end()) {
+    return;
   }
+
+  propsBuilder->setJustifyContent(it->second);
 }
 
 void addMaxWidthToPropsBuilder(
@@ -1257,11 +1288,15 @@ void addMaxWidthToPropsBuilder(
         if constexpr (std::is_same_v<T, CSSLength>) {
           const CSSLength &cssValue = active_value;
           if (cssValue.isRelative) {
+            propsBuilder->setMaxWidth(yoga::Style::SizeLength::percent(cssValue.value));
           } else {
+            propsBuilder->setMaxWidth(yoga::Style::SizeLength::points(cssValue.value));
           }
 
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
-          // TODO: Handle this case
+          const CSSKeyword &cssValue = active_value;
+          const auto keyword = cssValue.toString();
+          propsBuilder->setMaxWidth(strToYogaSizeLength(keyword));
         }
       },
       storage);
@@ -1278,11 +1313,15 @@ void addMinWidthToPropsBuilder(
         if constexpr (std::is_same_v<T, CSSLength>) {
           const CSSLength &cssValue = active_value;
           if (cssValue.isRelative) {
+            propsBuilder->setMinWidth(yoga::Style::SizeLength::percent(cssValue.value));
           } else {
+            propsBuilder->setMinWidth(yoga::Style::SizeLength::points(cssValue.value));
           }
 
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
-          // TODO: Handle this case
+          const CSSKeyword &cssValue = active_value;
+          const auto keyword = cssValue.toString();
+          propsBuilder->setMinWidth(strToYogaSizeLength(keyword));
         }
       },
       storage);
@@ -1299,11 +1338,15 @@ void addMaxHeightToPropsBuilder(
         if constexpr (std::is_same_v<T, CSSLength>) {
           const CSSLength &cssValue = active_value;
           if (cssValue.isRelative) {
+            propsBuilder->setMaxHeight(yoga::Style::SizeLength::percent(cssValue.value));
           } else {
+            propsBuilder->setMaxHeight(yoga::Style::SizeLength::points(cssValue.value));
           }
 
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
-          // TODO: Handle this case
+          const CSSKeyword &cssValue = active_value;
+          const auto keyword = cssValue.toString();
+          propsBuilder->setMaxHeight(strToYogaSizeLength(keyword));
         }
       },
       storage);
@@ -1320,11 +1363,15 @@ void addMinHeightToPropsBuilder(
         if constexpr (std::is_same_v<T, CSSLength>) {
           const CSSLength &cssValue = active_value;
           if (cssValue.isRelative) {
+            propsBuilder->setMinHeight(yoga::Style::SizeLength::percent(cssValue.value));
           } else {
+            propsBuilder->setMinHeight(yoga::Style::SizeLength::points(cssValue.value));
           }
 
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
-          // TODO: Handle this case
+          const CSSKeyword &cssValue = active_value;
+          const auto keyword = cssValue.toString();
+          propsBuilder->setMinHeight(strToYogaSizeLength(keyword));
         }
       },
       storage);
@@ -1335,19 +1382,47 @@ void addPositionToPropsBuilder(
     const CSSValueVariant<CSSKeyword> &value) {
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSKeyword>(storage);
-  const auto position = cssValue.toString();
+  const auto keyword = cssValue.toString();
+  static const std::unordered_map<std::string, yoga::PositionType> positionMap = {
+      {"static", yoga::PositionType::Static},
+      {"absolute", yoga::PositionType::Absolute},
+      {"relative", yoga::PositionType::Relative},
+  };
+
+  const auto it = positionMap.find(keyword);
+  if (it == positionMap.end()) {
+    return;
+  }
+
+  propsBuilder->setPositionType(it->second);
 }
 
 void addZIndexToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<CSSInteger> &value) {}
+    const CSSValueVariant<CSSInteger> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSInteger>(storage);
+  propsBuilder->setZIndex(cssValue.value);
+}
 
 void addDirectionToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSKeyword>(storage);
-  const auto direction = cssValue.toString();
+  const auto keyword = cssValue.toString();
+  static const std::unordered_map<std::string, yoga::Direction> directionMap = {
+      {"inherit", yoga::Direction::Inherit},
+      {"ltr", yoga::Direction::LTR},
+      {"rtl", yoga::Direction::RTL},
+  };
+
+  const auto it = directionMap.find(keyword);
+  if (it == directionMap.end()) {
+    return;
+  }
+
+  propsBuilder->setDirection(it->second);
 }
 
 void addBackfaceVisibilityToPropsBuilder(
@@ -1356,6 +1431,7 @@ void addBackfaceVisibilityToPropsBuilder(
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto backfaceVisibility = cssValue.toString();
+  // TODO: Check this
 }
 
 void addBorderCurveToPropsBuilder(
@@ -1363,7 +1439,19 @@ void addBorderCurveToPropsBuilder(
     const CSSValueVariant<CSSKeyword> &value) {
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSKeyword>(storage);
-  const auto borderCurve = cssValue.toString();
+  const auto keyword = cssValue.toString();
+  static const std::unordered_map<std::string, BorderCurve> borderCurveMap = {
+      {"circular", BorderCurve::Circular},
+      {"continuous", BorderCurve::Continuous},
+  };
+
+  const auto it = borderCurveMap.find(keyword);
+  if (it == borderCurveMap.end()) {
+    return;
+  }
+
+  CascadedBorderCurves borderCurves{.all = it->second};
+  propsBuilder->setBorderCurves(borderCurves);
 }
 
 void addBorderStyleToPropsBuilder(
@@ -1371,21 +1459,47 @@ void addBorderStyleToPropsBuilder(
     const CSSValueVariant<CSSKeyword> &value) {
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSKeyword>(storage);
-  const auto borderStyle = cssValue.toString();
+  const auto keyword = cssValue.toString();
+  static const std::unordered_map<std::string, BorderStyle> borderStyleMap = {
+      {"solid", BorderStyle::Solid},
+      {"dotted", BorderStyle::Dotted},
+      {"dashed", BorderStyle::Dashed},
+  };
 
-  //    propsBuilder->setBorderStyles();
+  const auto it = borderStyleMap.find(keyword);
+  if (it == borderStyleMap.end()) {
+    return;
+  }
+
+  CascadedBorderStyles borderStyles = CascadedBorderStyles{.all = it->second};
+  propsBuilder->setBorderStyles(borderStyles);
 }
 
 void addElevationToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<CSSDouble> &value) {}
+    const CSSValueVariant<CSSDouble> &value) {
+  // TODO: Check this
+}
 
 void addPointerEventsToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSKeyword>(storage);
-  const auto pointerEvents = cssValue.toString();
+  const auto keyword = cssValue.toString();
+  static const std::unordered_map<std::string, PointerEventsMode> pointerEventsMap = {
+      {"auto", PointerEventsMode::Auto},
+      {"none", PointerEventsMode::None},
+      {"box-only", PointerEventsMode::BoxOnly},
+      {"box-none", PointerEventsMode::BoxNone},
+  };
+
+  const auto it = pointerEventsMap.find(keyword);
+  if (it == pointerEventsMap.end()) {
+    return;
+  }
+
+  propsBuilder->setPointerEvents(it->second);
 }
 
 void addIsolationToPropsBuilder(
@@ -1393,7 +1507,18 @@ void addIsolationToPropsBuilder(
     const CSSValueVariant<CSSKeyword> &value) {
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSKeyword>(storage);
-  const auto isolation = cssValue.toString();
+  const auto keyword = cssValue.toString();
+  static const std::unordered_map<std::string, Isolation> isolationMap = {
+      {"auto", Isolation::Auto},
+      {"isolate", Isolation::Isolate},
+  };
+
+  const auto it = isolationMap.find(keyword);
+  if (it == isolationMap.end()) {
+    return;
+  }
+
+  propsBuilder->setIsolation(it->second);
 }
 
 void addCursorToPropsBuilder(
@@ -1402,11 +1527,89 @@ void addCursorToPropsBuilder(
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto cursor = cssValue.toString();
+
+  static const std::unordered_map<std::string, Cursor> cursorMap = {
+      {"auto", Cursor::Auto},
+      {"alias", Cursor::Alias},
+      {"all-scroll", Cursor::AllScroll},
+      {"cell", Cursor::Cell},
+      {"col-resize", Cursor::ColResize},
+      {"context-menu", Cursor::ContextMenu},
+      {"copy", Cursor::Copy},
+      {"crosshair", Cursor::Crosshair},
+      {"default", Cursor::Default},
+      {"e-resize", Cursor::EResize},
+      {"ew-resize", Cursor::EWResize},
+      {"grab", Cursor::Grab},
+      {"grabbing", Cursor::Grabbing},
+      {"help", Cursor::Help},
+      {"move", Cursor::Move},
+      {"ne-resize", Cursor::NEResize},
+      {"nesw-resize", Cursor::NESWResize},
+      {"n-resize", Cursor::NResize},
+      {"ns-resize", Cursor::NSResize},
+      {"nw-resize", Cursor::NWResize},
+      {"nwse-resize", Cursor::NWSEResize},
+      {"no-drop", Cursor::NoDrop},
+      {"none", Cursor::None},
+      {"not-allowed", Cursor::NotAllowed},
+      {"pointer", Cursor::Pointer},
+      {"progress", Cursor::Progress},
+      {"row-resize", Cursor::RowResize},
+      {"s-resize", Cursor::SResize},
+      {"se-resize", Cursor::SEResize},
+      {"sw-resize", Cursor::SWResize},
+      {"text", Cursor::Text},
+      {"url", Cursor::Url},
+      {"w-resize", Cursor::WResize},
+      {"wait", Cursor::Wait},
+      {"zoom-in", Cursor::ZoomIn},
+      {"zoom-out", Cursor::ZoomOut},
+  };
+
+  const auto it = cursorMap.find(cursor);
+  if (it == cursorMap.end()) {
+    return;
+  }
+
+  propsBuilder->setCursor(it->second);
 }
 
 void addBoxShadowToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<CSSBoxShadow> &value) {}
+    const CSSValueVariant<CSSBoxShadow> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssValue = std::get<CSSBoxShadow>(storage);
+  SharedColor color = SharedColor(parseCSSColor(cssValue.color));
+  BoxShadow boxShadow = BoxShadow{
+      .offsetX = cssValue.offsetX.value,
+      .offsetY = cssValue.offsetY.value,
+      .blurRadius = cssValue.blurRadius.value,
+      .spreadDistance = cssValue.spreadDistance.value,
+      .color = color,
+      .inset = cssValue.inset.has_value() ? cssValue.inset.value().value : false,
+  };
+  bool isFound = false;
+  for (auto &prop : propsBuilder->props) {
+    if (prop->propName != BOX_SHADOW) {
+      continue;
+    }
+    auto *boxShadowProp = dynamic_cast<AnimatedProp<std::vector<BoxShadow>> *>(prop.get());
+
+    if (!boxShadowProp) {
+      continue;
+    }
+
+    boxShadowProp->value.push_back(boxShadow);
+    isFound = true;
+    break;
+  }
+
+  if (!isFound) {
+    std::vector<BoxShadow> boxShadowProp = std::vector<BoxShadow>{boxShadow};
+    propsBuilder->setBoxShadow(boxShadowProp);
+  }
+}
 
 void addMixBlendModeToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
@@ -1414,14 +1617,39 @@ void addMixBlendModeToPropsBuilder(
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto mixBlend = cssValue.toString();
+
+  static const std::unordered_map<std::string, BlendMode> mixBlendModeMap = {
+      {"normal", BlendMode::Normal},
+      {"multiply", BlendMode::Multiply},
+      {"screen", BlendMode::Screen},
+      {"overlay", BlendMode::Overlay},
+      {"darken", BlendMode::Darken},
+      {"lighten", BlendMode::Lighten},
+      {"color-dodge", BlendMode::ColorDodge},
+      {"color-burn", BlendMode::ColorBurn},
+      {"hard-light", BlendMode::HardLight},
+      {"soft-light", BlendMode::SoftLight},
+      {"difference", BlendMode::Difference},
+      {"exclusion", BlendMode::Exclusion},
+      {"hue", BlendMode::Hue},
+      {"saturation", BlendMode::Saturation},
+      {"color", BlendMode::Color},
+      {"luminosity", BlendMode::Luminosity},
+  };
+
+  const auto it = mixBlendModeMap.find(mixBlend);
+  if (it == mixBlendModeMap.end()) {
+    return;
+  }
+
+  propsBuilder->setMixBlendMode(it->second);
 }
 
 void animationMutationsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch) {
   for (auto &[node, dynamic] : updatesBatch) {
     AnimatedPropsBuilder builder;
     builder.storeDynamic(dynamic);
-     mutations.batch.push_back(
-         AnimationMutation{node->getTag(), node->getFamilyShared(), builder.get(), true});
+    mutations.batch.push_back(AnimationMutation{node->getTag(), node->getFamilyShared(), builder.get(), true});
   }
 }
 
