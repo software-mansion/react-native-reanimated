@@ -5,8 +5,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <functional>
-#include <optional>
-#include <regex>
 #include <string>
 
 namespace reanimated::css {
@@ -17,38 +15,92 @@ using SubPath = SVGPath::SubPath;
 
 SVGPath::SVGPath() : subPaths() {}
 
-SVGPath::SVGPath(std::vector<SubPath> &&subPaths) : subPaths(std::move(subPaths)) {}
+SVGPath::SVGPath(jsi::Runtime &rt, const jsi::Value &jsiValue) {
+  jsi::Array jsSubPaths = jsiValue.asObject(rt).asArray(rt);
+  size_t subPathCount = jsSubPaths.size(rt);
+  subPaths.reserve(subPathCount);
 
-SVGPath::SVGPath(jsi::Runtime &rt, const jsi::Value &jsiValue) : SVGPath(jsiValue.getString(rt).utf8(rt)) {}
+  for (size_t i = 0; i < subPathCount; ++i) {
+    jsi::Object jsSubPath = jsSubPaths.getValueAtIndex(rt, i).asObject(rt);
 
-SVGPath::SVGPath(const folly::dynamic &value) : SVGPath(value.getString()) {}
+    jsi::Object jsM = jsSubPath.getProperty(rt, "M").asObject(rt);
+    SubPath subPath(Point(jsM.getProperty(rt, "x").asNumber(), jsM.getProperty(rt, "y").asNumber()));
 
-bool SVGPath::isNormalizedSVGPathString(const std::string &s) {
-  static constexpr auto WS = R"(\s*)";
-  static constexpr auto NUM = R"(-?\d*\.?\d+(?:e[+-]?\d+)?)";
+    jsi::Array jsCubics = jsSubPath.getProperty(rt, "C").asObject(rt).asArray(rt);
+    size_t cubicCount = jsCubics.size(rt);
+    subPath.C.reserve(cubicCount);
 
-  static const std::string M_CMD = std::string("M") + WS + "(?:" + NUM + WS + "){2}";
-  static const std::string C_CMD = std::string("C") + WS + "(?:" + NUM + WS + "){6}";
-  static const std::string Z_CMD = std::string("Z") + WS;
+    for (size_t j = 0; j < cubicCount; ++j) {
+      jsi::Array jsCubic = jsCubics.getValueAtIndex(rt, j).asObject(rt).asArray(rt);
+      Cubic cubic;
+      for (size_t k = 0; k < 4; ++k) {
+        jsi::Object jsP = jsCubic.getValueAtIndex(rt, k).asObject(rt);
+        cubic[k] = Point(jsP.getProperty(rt, "x").asNumber(), jsP.getProperty(rt, "y").asNumber());
+      }
+      subPath.C.push_back(cubic);
+    }
 
-  static const std::regex pathRegex(
-      std::string(WS) + "(?:(?:" + M_CMD + ")|(?:" + C_CMD + ")|(?:" + Z_CMD + "))*", std::regex_constants::optimize);
+    subPath.Z = jsSubPath.getProperty(rt, "Z").asBool();
+    subPaths.push_back(std::move(subPath));
+  }
+}
 
-  return std::regex_match(s, pathRegex);
+SVGPath::SVGPath(const folly::dynamic &value) {
+  if (!value.isArray())
+    return;
+
+  subPaths.reserve(value.size());
+  for (const auto &jsSubPath : value) {
+    SubPath subPath(Point(jsSubPath["M"]["x"].asDouble(), jsSubPath["M"]["y"].asDouble()));
+
+    for (const auto &jsCubic : jsSubPath["C"]) {
+      Cubic cubic;
+      for (size_t k = 0; k < 4; ++k) {
+        cubic[k] = Point(jsCubic[k]["x"].asDouble(), jsCubic[k]["y"].asDouble());
+      }
+      subPath.C.push_back(cubic);
+    }
+
+    subPath.Z = jsSubPath["Z"].asBool();
+    subPaths.push_back(std::move(subPath));
+  }
 }
 
 bool SVGPath::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  if (!jsiValue.isString()) {
+  if (!jsiValue.isObject() || !jsiValue.asObject(rt).isArray(rt)) {
     return false;
   }
-  return isNormalizedSVGPathString(jsiValue.getString(rt).utf8(rt));
+
+  jsi::Array arr = jsiValue.asObject(rt).asArray(rt);
+  if (arr.size(rt) == 0)
+    return true;
+
+  jsi::Value first = arr.getValueAtIndex(rt, 0);
+  if (!first.isObject())
+    return false;
+
+  jsi::Object obj = first.asObject(rt);
+
+  return obj.hasProperty(rt, "M") && obj.hasProperty(rt, "C") && obj.hasProperty(rt, "Z") &&
+      obj.getProperty(rt, "C").asObject(rt).isArray(rt);
 }
 
 bool SVGPath::canConstruct(const folly::dynamic &value) {
-  if (!value.isString()) {
+  if (!value.isArray()) {
     return false;
   }
-  return isNormalizedSVGPathString(value.getString());
+
+  if (value.empty()) {
+    return true;
+  }
+
+  const auto &first = value[0];
+
+  if (!first.isObject()) {
+    return false;
+  }
+
+  return first.count("M") > 0 && first.count("C") > 0 && first.count("Z") > 0 && first["C"].isArray();
 }
 
 folly::dynamic SVGPath::toDynamic() const {
@@ -142,50 +194,9 @@ std::ostream &operator<<(std::ostream &os, const SVGPath &value) {
 
 #endif // NDEBUG
 
-std::vector<SubPath> SVGPath::parseSVGPath(const std::string &value) const {
-  std::vector<SubPath> result;
-  std::stringstream ss(value);
-  Point currPos;
-
-  // Format of input: (M num num |C num num num num num num |Z)*
-  while (ss >> std::ws && !ss.eof()) {
-    char cmd;
-    ss >> cmd;
-
-    switch (cmd) {
-      case 'M':
-        double x, y;
-        ss >> x >> y;
-        result.emplace_back(Point(x, y));
-        currPos = Point(x, y);
-        break;
-      case 'C':
-        if (!result.empty()) {
-          Point p0(currPos), p1, p2, p3;
-          ss >> p1[0] >> p1[1] >> p2[0] >> p2[1] >> p3[0] >> p3[1];
-          result.back().C.push_back({p0, p1, p2, p3});
-          currPos = p3;
-          break;
-        }
-      // Fallthrough
-      case 'Z':
-        if (!result.empty()) {
-          result.back().Z = true;
-          currPos = result.back().M;
-          break;
-        }
-      // Fallthrough
-      default:
-        std::invalid_argument("[Reanimated] Invalid SVGPath string format (provided path: \"" + value + "\")");
-    }
-  }
-
-  return result;
-}
-
 std::vector<Cubic> SVGPath::splitCubic(Cubic cubic, int count) const {
   std::vector<Cubic> result;
-  for (int i = 0; i < count; i++) {
+  for (int i = 0; i < count; ++i) {
     double t = 1.0 / (count - i);
     auto [st, nd] = singleSplitCubic(cubic, t);
     result.push_back(st);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glog/logging.h>
 #include <reanimated/CSS/common/transforms/vectors.h>
 #include <reanimated/CSS/common/values/CSSValue.h>
 
@@ -24,13 +25,11 @@ struct SVGPath : public CSSSimpleValue<SVGPath> {
 
   SVGPath();
   template <typename T>
-    requires std::constructible_from<std::string, T>
-  explicit SVGPath(T &&value) : subPaths(parseSVGPath(std::forward<T>(value))) {}
-  explicit SVGPath(std::vector<SubPath> &&subPaths);
+    requires std::is_same_v<std::decay_t<T>, std::vector<SubPath>>
+  explicit SVGPath(T &&subPaths) : subPaths(std::forward<T>(subPaths)) {}
   explicit SVGPath(jsi::Runtime &rt, const jsi::Value &jsiValue);
   explicit SVGPath(const folly::dynamic &value);
 
-  static bool isNormalizedSVGPathString(const std::string &s);
   static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
   static bool canConstruct(const folly::dynamic &value);
 
@@ -45,7 +44,6 @@ struct SVGPath : public CSSSimpleValue<SVGPath> {
 #endif // NDEBUG
 
  protected:
-  std::vector<SubPath> parseSVGPath(const std::string &value) const;
   std::vector<Cubic> splitCubic(Cubic cubic, int count) const;
   SubPath interpolateSubPaths(const SubPath &from, const SubPath &to, double t) const;
 

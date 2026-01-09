@@ -340,7 +340,7 @@ const InterpolatorFactoriesRecord SVG_RECT_INTERPOLATORS = mergeInterpolators(
 const InterpolatorFactoriesRecord SVG_PATH_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"d", value<SVGPath>("")},
+         {"d", value<SVGPath>(SVGPath())},
          {"opacity", value<CSSDouble>(1)},
      }});
 

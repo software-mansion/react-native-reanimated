@@ -1,6 +1,7 @@
 'use strict';
 
 import { ReanimatedError, type ValueProcessor } from '../../../../common';
+import { type Point } from '../../../types';
 import {
   arcToCubic,
   lineToCubic,
@@ -15,17 +16,70 @@ export const ERROR_MESSAGES = {
   invalidSVGPathCommand: (command: unknown, args: unknown) =>
     `Invalid SVG Path command: ${JSON.stringify(command)} ${JSON.stringify(args)}`,
   invalidSVGPathStart: (command: string) =>
-    `Invalid SVG Path: Path must start with "M" or "m", but found "${command}"`,
+    `Invalid SVG Path: Path must start with "M" or "m", but found "${JSON.stringify(command)}"`,
+  invalidNormalizedSVGPathCommand: (command: unknown, args: unknown) =>
+    `Invalid normalized SVG Path command: ${JSON.stringify(command)} ${JSON.stringify(args)}`,
+  invalidNormalizedSVGPath: (command: unknown) =>
+    `Invalid normalized SVG Path command: ${JSON.stringify(command)}`,
 };
 
 type PathCommand = [string, ...number[]];
+type Cubic = readonly [Point, Point, Point, Point];
+type SubPath = {
+  M: Point;
+  C: Cubic[];
+  Z: boolean;
+};
 
-export const processSVGPath: ValueProcessor<string, string> = (d) => {
+export const processSVGPath: ValueProcessor<string, SubPath[]> = (d) => {
   let pathSegments: PathCommand[] = parsePathString(d);
   pathSegments = normalizePath(pathSegments);
 
-  return pathSegments.flatMap((subArr) => subArr).join(' ');
+  return composeSubPaths(pathSegments);
 };
+
+function composeSubPaths(pathSegments: PathCommand[]): SubPath[] {
+  const result: SubPath[] = [];
+  let currPos: Point = { x: 0, y: 0 };
+  let startPos: Point = { x: 0, y: 0 };
+
+  for (const [cmd, ...args] of pathSegments) {
+    const ensureSubPath = (pos: Point) => {
+      if (result.length === 0 || result[result.length - 1].Z) {
+        result.push({ M: pos, C: [], Z: false });
+      }
+    };
+
+    switch (cmd) {
+      case 'M':
+        currPos = { x: args[0], y: args[1] };
+        startPos = currPos;
+        result.push({ M: currPos, C: [], Z: false });
+        break;
+      case 'C': {
+        ensureSubPath(currPos);
+        const p0 = currPos;
+        const p1 = { x: args[0], y: args[1] };
+        const p2 = { x: args[2], y: args[3] };
+        const p3 = { x: args[4], y: args[5] };
+
+        result[result.length - 1].C.push([p0, p1, p2, p3]);
+        currPos = p3;
+        break;
+      }
+      case 'Z':
+        if (result.length > 0) {
+          result[result.length - 1].Z = true;
+          currPos = startPos;
+        }
+        break;
+      default:
+        throw new ReanimatedError(ERROR_MESSAGES.invalidNormalizedSVGPath(cmd));
+    }
+  }
+
+  return result;
+}
 
 function processPathSegment(
   command: string,
