@@ -18,6 +18,10 @@ export const svgPropertiesRoutes = {
     name: 'Line',
     Component: svgAnimatedProperties.Line,
   },
+  Path: {
+    name: 'Path',
+    Component: svgAnimatedProperties.Path,
+  },
   Common: {
     name: 'Common',
     routes: {
