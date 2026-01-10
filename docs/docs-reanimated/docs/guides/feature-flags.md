@@ -186,7 +186,7 @@ Static flags are intended to be resolved during code compilation and cannot be c
 Static feature flags are not supported in environments where Reanimated is prebuilt with the default configuration of flags, like for instance in [Expo Go](https://expo.dev/go) and [RNRepo](https://rnrepo.org/).
 
 - It's not possible to modify static feature flags in Expo Go. Please consider using [Expo Prebuild](https://docs.expo.dev/workflow/continuous-native-generation/) instead.
-- If your project uses RNRepo, you need to force building Reanimated from source by adding it to the deny list as described in [RNRepo's documentation](https://github.com/software-mansion/rnrepo/blob/main/TROUBLESHOOTING.md#deny-list-configuration).
+- If your project uses RNRepo, you need to force building Reanimated from source by adding `react-native-reanimated` and `react-native-worklets` to the deny list as described in [RNRepo's documentation](https://github.com/software-mansion/rnrepo/blob/main/TROUBLESHOOTING.md#deny-list-configuration).
 
 :::
 
