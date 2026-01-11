@@ -18,14 +18,14 @@ type WebPropsBuilderConfig<P extends UnknownRecord = UnknownRecord> =
 export function createWebPropsBuilder<TProps extends UnknownRecord>(
   config: WebPropsBuilderConfig<TProps>
 ) {
-  let usedRuleBuilders = new Set<RuleBuilder<TProps>>();
+  const usedRuleBuilders = new Set<RuleBuilder<TProps>>();
 
   const propsBuilder = createPropsBuilder({
     config,
     processConfigValue(configValue, propertyKey) {
       // Handle false - exclude property
       if (configValue === false) {
-        return undefined;
+        return;
       }
 
       // Handle true - include as string
@@ -46,11 +46,12 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
       // Handle rule builders - store reference and return marker
       if (isRuleBuilder<TProps>(configValue)) {
         // Return a processor that feeds values to the rule builder and returns undefined
-        // so the property doesn't appear in the regular processed props
+        // so the property doesn't appear in the regular processed props (only the result
+        // of the rule builder will appear in the final style)
         return (value: unknown) => {
           usedRuleBuilders.add(configValue);
           configValue.add(propertyKey, value as TProps[keyof TProps]);
-          return undefined;
+          return;
         };
       }
 
@@ -58,41 +59,32 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
       if (hasValueProcessor(configValue)) {
         return configValue.process;
       }
-
-      return undefined;
     },
   });
 
   return {
     build(props: Partial<TProps>): string | null {
-      usedRuleBuilders = new Set<RuleBuilder<TProps>>();
+      usedRuleBuilders.clear();
 
       // Build props - rule builders are fed during processing
       const processedProps = propsBuilder.build(props);
 
       // Build only used rule builders and merge their results
-      const ruleBuilderProps = Array.from(
-        usedRuleBuilders
-      ).reduce<UnknownRecord>(
-        (acc, builder) => ({ ...acc, ...builder.build() }),
-        {}
-      );
-
-      // Merge all props
-      const allProps = { ...processedProps, ...ruleBuilderProps };
-
-      // Convert to CSS string
-      const entries = Object.entries(allProps).filter(([, value]) =>
-        isDefined(value)
-      );
-
-      if (entries.length === 0) {
-        return null;
+      for (const builder of usedRuleBuilders) {
+        Object.assign(processedProps, builder.build());
       }
 
-      return entries
-        .map(([key, value]) => `${kebabizeCamelCase(key)}: ${String(value)}`)
+      // Convert to CSS string
+      const cssString = Object.entries(processedProps)
+        .reduce<string[]>((acc, [key, value]) => {
+          if (isDefined(value)) {
+            acc.push(`${kebabizeCamelCase(key)}: ${value as string}`);
+          }
+          return acc;
+        }, [])
         .join('; ');
+
+      return cssString || null; // Return null if cssString is empty
     },
   };
 }

@@ -39,7 +39,7 @@ export function createWebRuleBuilder<
       // Handle name alias and/or value processor
       const isNameAlias = hasNameAlias(configValue);
       if (isNameAlias) {
-        nameAliases.set(String(propertyKey), configValue.name);
+        nameAliases.set(propertyKey as string, configValue.name);
       }
 
       if (hasValueProcessor(configValue)) {
@@ -50,8 +50,6 @@ export function createWebRuleBuilder<
       if (configValue === true || isNameAlias) {
         return (value) => String(value);
       }
-
-      return undefined;
     },
   });
 
@@ -60,25 +58,24 @@ export function createWebRuleBuilder<
       accumulatedProps[property] = value;
     },
     build(): TResult {
-      // Build all accumulated props
-      const processedProps = propsBuilder.build(accumulatedProps as TProps);
-
-      // Apply name aliases to processed props
-      const propsWithAliases: Record<string, string> = {};
-      for (const [key, value] of Object.entries(
-        processedProps as Record<string, string>
-      )) {
-        const aliasedKey = nameAliases.get(key) ?? key;
-        propsWithAliases[aliasedKey] = value;
-      }
-
-      // Call the handler with processed props
-      const result = buildHandler(propsWithAliases as ProcessedProps<TProps>);
-
       // Clear accumulated props for next build
       accumulatedProps = {};
 
-      return result;
+      // Build all accumulated props
+      let processedProps = propsBuilder.build(accumulatedProps as TProps);
+
+      // Apply name aliases to processed props
+      if (nameAliases.size) {
+        processedProps = Object.fromEntries(
+          Object.entries(processedProps).map(([key, value]) => [
+            nameAliases.get(key) ?? key,
+            value,
+          ])
+        );
+      }
+
+      // Call the handler with processed props
+      return buildHandler(processedProps as ProcessedProps<TProps>);
     },
   };
 }

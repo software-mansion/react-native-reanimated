@@ -1,11 +1,6 @@
 'use strict';
 'worklet';
-import type {
-  AnyFunction,
-  AnyRecord,
-  ConfigPropertyAlias,
-  UnknownRecord,
-} from '../types';
+import type { AnyRecord, ConfigPropertyAlias, UnknownRecord } from '../types';
 
 export const isDefined = <T>(value: T): value is NonNullable<T> =>
   value !== undefined && value !== null;
@@ -49,7 +44,7 @@ export const isConfigPropertyAlias = <P extends AnyRecord>(
 export const isReactNativeViewName = (componentName: string): boolean =>
   componentName.startsWith('RCT');
 
-export const hasValueProcessor = <T extends AnyFunction>(
+export const hasValueProcessor = <T extends (params: unknown) => unknown>(
   configValue: unknown
 ): configValue is { process: T } =>
   isRecord(configValue) && 'process' in configValue;

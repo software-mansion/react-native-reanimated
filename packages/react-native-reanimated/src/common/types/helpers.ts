@@ -30,5 +30,3 @@ export type ConvertValuesToArrays<T> = {
 export type ConvertValuesToArraysWithUndefined<T> = {
   [K in keyof T]-?: ConvertValueToArray<T[K]>;
 };
-
-export type AnyFunction = (...args: any[]) => any;
