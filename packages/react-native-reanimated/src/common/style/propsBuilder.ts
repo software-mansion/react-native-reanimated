@@ -14,7 +14,7 @@ const hasValueProcessor = (
 ): configValue is { process: ValueProcessor<unknown> } =>
   isRecord(configValue) && 'process' in configValue;
 
-type StylePropsBuilderPropertyConfig<
+type PropsBuilderPropertyConfig<
   TProps extends UnknownRecord = UnknownRecord,
   K extends keyof TProps = keyof TProps,
 > =
@@ -27,7 +27,7 @@ type StylePropsBuilderPropertyConfig<
     };
 
 export type PropsBuilderConfig<P extends UnknownRecord = UnknownRecord> = {
-  [K in keyof Required<P>]: StylePropsBuilderPropertyConfig<P, K>;
+  [K in keyof Required<P>]: PropsBuilderPropertyConfig<P, K>;
 };
 
 export function createNativePropsBuilder<TProps extends UnknownRecord>(
