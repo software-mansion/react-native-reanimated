@@ -1,5 +1,4 @@
 'use strict';
-import { SHOULD_BE_USE_WEB } from '../common';
 import type { AnimatedPropsAdapterFunction } from '../commonTypes';
 import type { DependencyList, UseAnimatedStyleInternal } from './commonTypes';
 import { useAnimatedStyle } from './useAnimatedStyle';
@@ -16,23 +15,7 @@ type UseAnimatedProps = <Props extends object>(
   isAnimatedProps?: boolean
 ) => Partial<Props>;
 
-function useAnimatedPropsJS<Props extends object>(
-  updater: () => Props,
-  deps?: DependencyList | null,
-  adapters?:
-    | AnimatedPropsAdapterFunction
-    | AnimatedPropsAdapterFunction[]
-    | null
-) {
-  return (useAnimatedStyle as UseAnimatedStyleInternal<Props>)(
-    updater,
-    deps,
-    adapters,
-    true
-  );
-}
-
-function useAnimatedPropsNative<Props extends object>(
+function useAnimatedPropsInternal<Props extends object>(
   updater: () => Props,
   deps?: DependencyList | null,
   adapters?:
@@ -62,6 +45,5 @@ function useAnimatedPropsNative<Props extends object>(
  *   property of an Animated component that you want to animate.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
  */
-export const useAnimatedProps: UseAnimatedProps = SHOULD_BE_USE_WEB
-  ? (useAnimatedPropsJS as UseAnimatedProps)
-  : (useAnimatedPropsNative as UseAnimatedProps);
+export const useAnimatedProps: UseAnimatedProps =
+  useAnimatedPropsInternal as UseAnimatedProps;

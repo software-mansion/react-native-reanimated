@@ -55,7 +55,7 @@ describe('registry', () => {
   });
 
   describe('registerComponentPropsBuilder', () => {
-    test('registers a style builder', () => {
+    test('registers a props builder', () => {
       const componentName = 'TestComponent';
       const config = { width: true, height: true };
 

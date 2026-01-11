@@ -6,6 +6,9 @@ import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import {
   IS_JEST,
+  processColorsInProps,
+  processTransform,
+  processTransformOrigin,
   propsBuilder,
   ReanimatedError,
   SHOULD_BE_USE_WEB,
@@ -48,6 +51,21 @@ if (SHOULD_BE_USE_WEB) {
 } else {
   updateProps = (viewDescriptors, updates, isAnimatedProps) => {
     'worklet';
+
+    // TODO: Remove this if once we have SVG props builder implemented
+    // We need to keep it for now to prevent regression in SVG props processing
+    if (isAnimatedProps) {
+      processColorsInProps(updates);
+      if ('transformOrigin' in updates) {
+        updates.transformOrigin = processTransformOrigin(
+          updates.transformOrigin
+        );
+      }
+      if ('transform' in updates) {
+        updates.transform = processTransform(updates.transform);
+      }
+    }
+
     global.UpdatePropsManager.update(
       viewDescriptors,
       // Use props builder only for style updaters, since animated props

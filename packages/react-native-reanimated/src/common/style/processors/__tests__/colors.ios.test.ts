@@ -6,9 +6,31 @@ import {
   ERROR_MESSAGES,
   PlatformColor,
   processColor,
+  processColorsInProps,
 } from '../colors';
 
 describe('DynamicColorIOS support on iOS', () => {
+  test('mutates dynamic colors in props', () => {
+    const props = {
+      backgroundColor: DynamicColorIOS({
+        light: '#abcdef',
+        dark: '#123456',
+        highContrastDark: '#ff00ff',
+      }),
+    };
+
+    processColorsInProps(props);
+
+    expect(props.backgroundColor).toEqual({
+      dynamic: {
+        light: 0xffabcdef,
+        dark: 0xff123456,
+        highContrastLight: undefined,
+        highContrastDark: 0xffff00ff,
+      },
+    });
+  });
+
   test('processColor converts DynamicColorIOS values', () => {
     const dynamic = DynamicColorIOS({
       light: '#ffffff',
@@ -44,6 +66,15 @@ describe('DynamicColorIOS support on iOS', () => {
 });
 
 describe('PlatformColor on iOS', () => {
+  test('processColorsInProps keeps PlatformColor', () => {
+    const platformColor = PlatformColor('systemBlue');
+    const props = { backgroundColor: platformColor };
+
+    processColorsInProps(props);
+
+    expect(props.backgroundColor).toBe(platformColor);
+  });
+
   test('processColor returns PlatformColor without change', () => {
     const platformColor = PlatformColor('systemBlue');
 

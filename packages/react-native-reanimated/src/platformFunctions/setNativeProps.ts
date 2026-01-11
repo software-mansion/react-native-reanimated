@@ -1,7 +1,12 @@
 'use strict';
 import { RuntimeKind } from 'react-native-worklets';
 
-import { IS_JEST, logger, propsBuilder, SHOULD_BE_USE_WEB } from '../common';
+import {
+  IS_JEST,
+  logger,
+  processColorsInProps,
+  SHOULD_BE_USE_WEB,
+} from '../common';
 import type {
   InstanceOrElement,
   ShadowNodeWrapper,
@@ -33,7 +38,7 @@ type SetNativeProps = <TRef extends InstanceOrElement>(
  */
 export let setNativeProps: SetNativeProps;
 
-export function setNativePropsNative(
+function setNativePropsNative(
   animatedRef: AnimatedRefOnJS | AnimatedRefOnUI,
   updates: StyleProps
 ) {
@@ -43,12 +48,8 @@ export function setNativePropsNative(
     return;
   }
   const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
-  global._updateProps!([
-    {
-      shadowNodeWrapper,
-      updates: propsBuilder.build(updates, { includeUnprocessed: true }),
-    },
-  ]);
+  processColorsInProps(updates);
+  global._updateProps!([{ shadowNodeWrapper, updates }]);
 }
 
 function setNativePropsJest() {
