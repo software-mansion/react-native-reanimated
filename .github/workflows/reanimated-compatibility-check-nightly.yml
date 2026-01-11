@@ -26,7 +26,7 @@ jobs:
 
   reanimated-compatibility-check-nightly:
     if: ${{github.repository == 'software-mansion/react-native-reanimated' && (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'Check compatibility'))}}
-    runs-on: ${{matrix.platform == 'iOS' && 'macos-15' || 'ubuntu-latest'}}
+    runs-on: ${{matrix.platform == 'iOS' && 'macos-26' || 'ubuntu-latest'}}
     needs: read-compatibility-json
     strategy:
       matrix:
