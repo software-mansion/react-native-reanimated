@@ -58,11 +58,11 @@ export function createWebRuleBuilder<
       accumulatedProps[property] = value;
     },
     build(): TResult {
-      // Clear accumulated props for next build
-      accumulatedProps = {};
-
       // Build all accumulated props
       let processedProps = propsBuilder.build(accumulatedProps as TProps);
+
+      // Clear accumulated props for next build
+      accumulatedProps = {};
 
       // Apply name aliases to processed props
       if (nameAliases.size) {
