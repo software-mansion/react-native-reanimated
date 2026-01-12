@@ -214,4 +214,14 @@ function AnimatedPropsTest() {
       />
     );
   }
+
+  function UseAnimatedPropsTestMultipleRejectInvalidType() {
+    const animatedProps = useAnimatedProps(() => ({
+      pointerEvents: 'none' as const,
+    }));
+    return (
+      // @ts-expect-error Invalid types are not supported - only useAnimatedProps results are allowed in the array
+      <Animated.View animatedProps={[animatedProps, 'invalid']} />
+    );
+  }
 }
