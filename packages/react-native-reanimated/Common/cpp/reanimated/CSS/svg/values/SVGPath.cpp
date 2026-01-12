@@ -145,7 +145,7 @@ std::ostream &operator<<(std::ostream &os, const SVGPath &value) {
 std::vector<SubPath> SVGPath::parseSVGPath(const std::string &value) const {
   std::vector<SubPath> result;
   std::stringstream ss(value);
-  Point currPos;
+  Point currPos{}, startPos{};
 
   // Format of input: (M num num |C num num num num num num |Z)*
   while (ss >> std::ws && !ss.eof()) {
@@ -155,26 +155,32 @@ std::vector<SubPath> SVGPath::parseSVGPath(const std::string &value) const {
     switch (cmd) {
       case 'M':
         double x, y;
-        ss >> x >> y;
+        if (!(ss >> x >> y)) {
+          throw std::invalid_argument("[Reanimated] Invalid coordinates for 'M' command in path: \"" + value + "\"");
+        }
         result.emplace_back(Point(x, y));
         currPos = Point(x, y);
+        startPos = currPos;
         break;
-      case 'C':
-        if (!result.empty()) {
-          Point p0(currPos), p1, p2, p3;
-          ss >> p1[0] >> p1[1] >> p2[0] >> p2[1] >> p3[0] >> p3[1];
-          result.back().C.push_back({p0, p1, p2, p3});
-          currPos = p3;
-          break;
+      case 'C': {
+        if (result.empty() || result.back().Z) {
+          result.emplace_back(currPos);
         }
-      // Fallthrough
+        Point p0(currPos), p1, p2, p3;
+        if (!(ss >> p1[0] >> p1[1] >> p2[0] >> p2[1] >> p3[0] >> p3[1])) {
+          throw std::invalid_argument("[Reanimated] Invalid coordinates for 'C' command in path: \"" + value + "\"");
+        }
+        result.back().C.push_back({p0, p1, p2, p3});
+        currPos = p3;
+        break;
+      }
       case 'Z':
         if (!result.empty()) {
           result.back().Z = true;
-          currPos = result.back().M;
+          currPos = startPos;
           break;
         }
-      // Fallthrough
+        // Fallthrough
       default:
         std::invalid_argument("[Reanimated] Invalid SVGPath string format (provided path: \"" + value + "\")");
     }
