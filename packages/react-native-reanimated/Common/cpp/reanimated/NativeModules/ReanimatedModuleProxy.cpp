@@ -425,28 +425,22 @@ void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
   cssAnimationsRegistry_->remove(viewTag.asNumber());
 }
 
-void ReanimatedModuleProxy::registerCSSTransition(
+void ReanimatedModuleProxy::runCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
-    const jsi::Value &transitionConfig) {
+    const jsi::Value &changedProps,
+    const jsi::Value &settings) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
-  auto transition = std::make_shared<CSSTransition>(
-      std::move(shadowNode), parseCSSTransitionConfig(rt, transitionConfig), viewStylesRepository_);
-
-  {
-    auto lock = cssTransitionsRegistry_->lock();
-    cssTransitionsRegistry_->add(transition);
-  }
-  maybeRunCSSLoop();
-}
-
-void ReanimatedModuleProxy::updateCSSTransition(
-    jsi::Runtime &rt,
-    const jsi::Value &viewTag,
-    const jsi::Value &configUpdates) {
   auto lock = cssTransitionsRegistry_->lock();
-  cssTransitionsRegistry_->updateSettings(viewTag.asNumber(), parsePartialCSSTransitionConfig(rt, configUpdates));
+
+  // Create transition if it doesn't exist
+  cssTransitionsRegistry_->ensureTransition(shadowNode, viewStylesRepository_);
+
+  const auto changedPropsDynamic = jsi::dynamicFromValue(rt, changedProps);
+  const auto parsedSettings = parseCSSTransitionPropertiesSettings(rt, settings);
+  // Settings are required by TypeScript API, so they should always be valid here
+  cssTransitionsRegistry_->run(shadowNode->getTag(), changedPropsDynamic, parsedSettings.value());
   maybeRunCSSLoop();
 }
 

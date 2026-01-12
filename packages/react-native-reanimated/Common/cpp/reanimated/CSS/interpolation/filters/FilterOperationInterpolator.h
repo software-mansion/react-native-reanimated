@@ -10,15 +10,16 @@
 namespace reanimated::css {
 
 template <typename TOperation>
-class FilterOperationInterpolator final : public StyleOperationInterpolator {
+class FilterOperationInterpolator final : public StyleOperationInterpolatorBase<FilterOperation> {
  public:
-  using StyleOperationInterpolator::StyleOperationInterpolator;
+  explicit FilterOperationInterpolator(const std::shared_ptr<FilterOperation> &defaultOperation)
+      : StyleOperationInterpolatorBase<FilterOperation>(defaultOperation) {}
 
-  std::unique_ptr<StyleOperation> interpolate(
+  std::unique_ptr<StyleOperation> interpolateTyped(
       double progress,
-      const std::shared_ptr<StyleOperation> &from,
-      const std::shared_ptr<StyleOperation> &to,
-      const StyleOperationsInterpolationContext &context) const override;
+      const std::shared_ptr<FilterOperation> &from,
+      const std::shared_ptr<FilterOperation> &to,
+      const UpdateContext &context) const override;
 };
 
 } // namespace reanimated::css

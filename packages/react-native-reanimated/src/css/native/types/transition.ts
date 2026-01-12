@@ -8,12 +8,7 @@ export type NormalizedSingleCSSTransitionSettings = {
   allowDiscrete: boolean;
 };
 
-export type NormalizedCSSTransitionPropertyNames = 'all' | string[];
-
 export type NormalizedCSSTransitionConfig = {
-  properties: NormalizedCSSTransitionPropertyNames;
+  properties: null | string[];
   settings: Record<string, NormalizedSingleCSSTransitionSettings>;
 };
-
-export type NormalizedCSSTransitionConfigUpdates =
-  Partial<NormalizedCSSTransitionConfig>;

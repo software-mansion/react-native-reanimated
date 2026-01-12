@@ -1,6 +1,7 @@
 'use strict';
 import type { AnyRecord, PlainStyle } from '../../common';
 import { logger } from '../../common';
+import type { StyleProps } from '../../commonTypes';
 import { isSharedValue } from '../../isSharedValue';
 import type {
   CSSAnimationProperties,
@@ -8,12 +9,81 @@ import type {
   CSSTransitionProperties,
   ExistingCSSAnimationProperties,
 } from '../types';
+import { deepEqual } from './equality';
 import {
   isAnimationProp,
   isCSSKeyframesObject,
   isCSSKeyframesRule,
   isTransitionProp,
 } from './guards';
+
+type PropsDiff = {
+  [key: string]: [unknown, unknown] | null; // [oldValue, newValue] or null for removed
+};
+
+/**
+ * Calculates the difference between old and new props. Returns an object where
+ * each key is a changed property and the value is [oldValue, newValue]. When
+ * allowedProperties changes, removed properties are marked with null.
+ *
+ * @param previousAllowedProperties - Previous list of allowed properties to
+ *   detect removed properties
+ */
+export function getChangedProps(
+  oldProps: StyleProps,
+  newProps: StyleProps,
+  allowedProperties?: string[] | null,
+  previousAllowedProperties?: string[] | null
+): PropsDiff {
+  const diff: PropsDiff = {};
+
+  // Determine which properties to check
+  const propsToCheck = allowedProperties || [
+    ...new Set([...Object.keys(oldProps), ...Object.keys(newProps)]),
+  ];
+
+  // Check for changes in allowed properties
+  for (const key of propsToCheck) {
+    const oldValue = oldProps[key];
+    const newValue = newProps[key];
+    if (!deepEqual(oldValue, newValue)) {
+      diff[key] = [oldValue, newValue];
+    }
+  }
+
+  // Mark removed properties when allowedProperties changes
+  if (allowedProperties !== previousAllowedProperties) {
+    // Case 1: Switching from all (null/undefined) to specific properties
+    if (!previousAllowedProperties && allowedProperties) {
+      const currentSet = new Set(allowedProperties);
+      const allProps = new Set([
+        ...Object.keys(oldProps),
+        ...Object.keys(newProps),
+      ]);
+      for (const prop of allProps) {
+        if (!currentSet.has(prop)) {
+          diff[prop] = null;
+        }
+      }
+    }
+    // Case 2: Switching between different specific property sets
+    else if (allowedProperties && previousAllowedProperties) {
+      const currentSet = new Set(allowedProperties);
+      for (const prop of previousAllowedProperties) {
+        if (
+          !currentSet.has(prop) &&
+          ((oldProps && prop in oldProps) || (newProps && prop in newProps))
+        ) {
+          diff[prop] = null;
+        }
+      }
+    }
+    // Case 3: Switching from specific to all (null/undefined) - no removals needed
+    // Case 4: Both are null/undefined - no removals needed
+  }
+
+  return diff;
+}
 
 export function filterCSSAndStyleProperties<S extends AnyRecord>(
   style: CSSStyle<S>

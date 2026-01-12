@@ -1,7 +1,152 @@
 'use strict';
 import { css } from '../../stylesheet';
 import type { CSSStyle, CSSTransitionProperty } from '../../types';
-import { filterCSSAndStyleProperties } from '../props';
+import { filterCSSAndStyleProperties, getChangedProps } from '../props';
+
+describe('getChangedProps', () => {
+  test('returns empty object when both props are empty', () => {
+    const result = getChangedProps({}, {});
+    expect(result).toEqual({});
+  });
+
+  test('returns all properties as new when oldProps is empty', () => {
+    const newProps = { opacity: 1, transform: 'scale(2)' };
+    const result = getChangedProps({}, newProps);
+    expect(result).toEqual({
+      opacity: [undefined, 1],
+      transform: [undefined, 'scale(2)'],
+    });
+  });
+
+  test('returns all properties as removed when newProps is empty', () => {
+    const oldProps = { opacity: 1, transform: 'scale(2)' };
+    const result = getChangedProps(oldProps, {});
+    expect(result).toEqual({
+      opacity: [1, undefined],
+      transform: ['scale(2)', undefined],
+    });
+  });
+
+  test('detects changed properties', () => {
+    const oldProps = { opacity: 0, transform: 'scale(1)', color: 'red' };
+    const newProps = { opacity: 1, transform: 'scale(1)', color: 'blue' };
+    const result = getChangedProps(oldProps, newProps);
+    expect(result).toEqual({
+      opacity: [0, 1],
+      color: ['red', 'blue'],
+    });
+  });
+
+  test('detects new properties', () => {
+    const oldProps = { opacity: 1 };
+    const newProps = { opacity: 1, transform: 'scale(2)' };
+    const result = getChangedProps(oldProps, newProps);
+    expect(result).toEqual({
+      transform: [undefined, 'scale(2)'],
+    });
+  });
+
+  test('detects removed properties', () => {
+    const oldProps = { opacity: 1, transform: 'scale(2)' };
+    const newProps = { opacity: 1 };
+    const result = getChangedProps(oldProps, newProps);
+    expect(result).toEqual({
+      transform: ['scale(2)', undefined],
+    });
+  });
+
+  test('returns empty object when props are identical', () => {
+    const props = { opacity: 1, transform: 'scale(2)' };
+    const result = getChangedProps(props, props);
+    expect(result).toEqual({});
+  });
+
+  test('handles undefined values correctly', () => {
+    const oldProps = { opacity: undefined, transform: 'scale(1)' };
+    const newProps = { opacity: 1, transform: undefined };
+    const result = getChangedProps(oldProps, newProps);
+    expect(result).toEqual({
+      opacity: [undefined, 1],
+      transform: ['scale(1)', undefined],
+    });
+  });
+
+  test('uses deep comparison for complex values', () => {
+    const oldProps = {
+      transform: [{ scale: 1 }, { rotate: '0deg' }],
+      shadow: { offset: { x: 0, y: 0 }, color: 'black' },
+    };
+    const newProps = {
+      transform: [{ scale: 1 }, { rotate: '0deg' }], // Same value
+      shadow: { offset: { x: 0, y: 1 }, color: 'black' }, // Different
+    };
+    const result = getChangedProps(oldProps, newProps);
+    expect(result).toEqual({
+      shadow: [
+        { offset: { x: 0, y: 0 }, color: 'black' },
+        { offset: { x: 0, y: 1 }, color: 'black' },
+      ],
+    });
+    // transform should not be included since it's deeply equal
+  });
+
+  test('handles undefined allowedProperties (treats as all)', () => {
+    const oldProps = { opacity: 0.5, transform: 'scale(1)', color: 'red' };
+    const newProps = { opacity: 1, transform: 'scale(2)', color: 'red' };
+    const result = getChangedProps(oldProps, newProps, undefined);
+    expect(result).toEqual({
+      opacity: [0.5, 1],
+      transform: ['scale(1)', 'scale(2)'],
+    });
+  });
+
+  test('switches from undefined (all) to specific properties', () => {
+    const oldProps = { opacity: 0.5, transform: 'scale(1)', color: 'red' };
+    const newProps = { opacity: 1, transform: 'scale(2)', color: 'blue' };
+    const result = getChangedProps(
+      oldProps,
+      newProps,
+      ['opacity', 'transform'],
+      undefined
+    );
+    expect(result).toEqual({
+      opacity: [0.5, 1],
+      transform: ['scale(1)', 'scale(2)'],
+      color: null, // marked as removed
+    });
+  });
+
+  test('switches from specific properties to undefined (all)', () => {
+    const oldProps = { opacity: 0.5, transform: 'scale(1)', color: 'red' };
+    const newProps = { opacity: 1, transform: 'scale(2)', color: 'blue' };
+    const result = getChangedProps(oldProps, newProps, undefined, [
+      'opacity',
+      'transform',
+    ]);
+    // No properties marked as removed when switching to all
+    expect(result).toEqual({
+      opacity: [0.5, 1],
+      transform: ['scale(1)', 'scale(2)'],
+      color: ['red', 'blue'],
+    });
+  });
+
+  test('switches between different specific property sets', () => {
+    const oldProps = { opacity: 0.5, transform: 'scale(1)', color: 'red' };
+    const newProps = { opacity: 1, transform: 'scale(2)', color: 'blue' };
+    const result = getChangedProps(
+      oldProps,
+      newProps,
+      ['opacity', 'color'],
+      ['opacity', 'transform']
+    );
+    expect(result).toEqual({
+      opacity: [0.5, 1],
+      color: ['red', 'blue'],
+      transform: null, // marked as removed
+    });
+  });
+});
 
 describe(filterCSSAndStyleProperties, () => {
   describe('animation config', () => {

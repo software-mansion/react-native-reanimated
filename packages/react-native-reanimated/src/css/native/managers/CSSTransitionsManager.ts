@@ -1,18 +1,12 @@
 'use strict';
-import type { ShadowNodeWrapper } from '../../../commonTypes';
+import type { ShadowNodeWrapper, StyleProps } from '../../../commonTypes';
 import type {
   CSSTransitionProperties,
   ICSSTransitionsManager,
 } from '../../types';
-import {
-  getNormalizedCSSTransitionConfigUpdates,
-  normalizeCSSTransitionProperties,
-} from '../normalization';
-import {
-  registerCSSTransition,
-  unregisterCSSTransition,
-  updateCSSTransition,
-} from '../proxy';
+import { getChangedProps } from '../../utils';
+import { normalizeCSSTransitionProperties } from '../normalization';
+import { runCSSTransition, unregisterCSSTransition } from '../proxy';
 import type { NormalizedCSSTransitionConfig } from '../types';
 
 export default class CSSTransitionsManager implements ICSSTransitionsManager {
@@ -20,13 +14,17 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
 
   private transitionConfig: NormalizedCSSTransitionConfig | null = null;
+  private lastProps: StyleProps = {};
 
   constructor(shadowNodeWrapper: ShadowNodeWrapper, viewTag: number) {
     this.viewTag = viewTag;
     this.shadowNodeWrapper = shadowNodeWrapper;
   }
 
-  update(transitionProperties: CSSTransitionProperties | null): void {
+  update(
+    transitionProperties: CSSTransitionProperties | null,
+    props: StyleProps = {}
+  ): void {
     if (!transitionProperties) {
       this.detach();
       return;
@@ -39,19 +37,24 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
       return;
     }
 
-    if (this.transitionConfig) {
-      const configUpdates = getNormalizedCSSTransitionConfigUpdates(
-        this.transitionConfig,
-        transitionConfig
-      );
+    const propsDiff = getChangedProps(
+      this.lastProps,
+      props,
+      transitionConfig.properties,
+      this.transitionConfig?.properties
+    );
 
-      if (Object.keys(configUpdates).length > 0) {
-        this.transitionConfig = transitionConfig;
-        updateCSSTransition(this.viewTag, configUpdates);
-      }
-    } else {
-      this.attachTransition(transitionConfig);
+    // Run transition only if there are changed props
+    if (Object.keys(propsDiff).length > 0) {
+      runCSSTransition(
+        this.shadowNodeWrapper,
+        propsDiff,
+        transitionConfig.settings
+      );
     }
+
+    this.transitionConfig = transitionConfig;
+    this.lastProps = props;
   }
 
   unmountCleanup(): void {
@@ -62,13 +65,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     if (this.transitionConfig) {
       unregisterCSSTransition(this.viewTag);
       this.transitionConfig = null;
-    }
-  }
-
-  private attachTransition(transitionConfig: NormalizedCSSTransitionConfig) {
-    if (!this.transitionConfig) {
-      registerCSSTransition(this.shadowNodeWrapper, transitionConfig);
-      this.transitionConfig = transitionConfig;
+      this.lastProps = {};
     }
   }
 }
