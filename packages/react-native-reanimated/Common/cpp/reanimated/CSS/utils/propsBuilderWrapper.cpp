@@ -124,71 +124,78 @@ void addTransform(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &
 
 void updateCascadedRectangleEdges(
     CascadedRectangleEdges<yoga::StyleLength> &edges,
-    float value,
-    std::string edgeName,
-    std::function<yoga::StyleLength(float)> yogaStyleLength) {
+    yoga::StyleLength value,
+    std::string edgeName) {
   auto nameHash = RAW_PROPS_KEY_HASH(edgeName);
   switch (nameHash) {
     case RAW_PROPS_KEY_HASH("all"): {
-      edges.all = yogaStyleLength(value);
+      edges.all = value;
       break;
     }
 
     case RAW_PROPS_KEY_HASH("left"): {
-      edges.left = yogaStyleLength(value);
+      edges.left = value;
       break;
     }
 
     case RAW_PROPS_KEY_HASH("right"): {
-      edges.right = yogaStyleLength(value);
+      edges.right = value;
       break;
     }
 
     case RAW_PROPS_KEY_HASH("top"): {
-      edges.top = yogaStyleLength(value);
+      edges.top = value;
       break;
     }
 
     case RAW_PROPS_KEY_HASH("bottom"): {
-      edges.bottom = yogaStyleLength(value);
+      edges.bottom = value;
       break;
     }
 
     case RAW_PROPS_KEY_HASH("start"): {
-      edges.start = yogaStyleLength(value);
+      edges.start = value;
       break;
     }
 
     case RAW_PROPS_KEY_HASH("end"): {
-      edges.end = yogaStyleLength(value);
+      edges.end = value;
       break;
     }
 
     case RAW_PROPS_KEY_HASH("horizontal"): {
-      edges.horizontal = yogaStyleLength(value);
+      edges.horizontal = value;
       break;
     }
 
     case RAW_PROPS_KEY_HASH("vertical"): {
-      edges.vertical = yogaStyleLength(value);
+      edges.vertical = value;
       break;
     }
 
     case RAW_PROPS_KEY_HASH("block"): {
-      edges.vertical = yogaStyleLength(value);
+      edges.vertical = value;
       break;
     }
 
     case RAW_PROPS_KEY_HASH("blockStart"): {
-      edges.vertical = yogaStyleLength(value);
+      edges.vertical = value;
       break;
     }
 
     case RAW_PROPS_KEY_HASH("blockEnd"): {
-      edges.vertical = yogaStyleLength(value);
+      edges.vertical = value;
       break;
     }
   }
+}
+
+void updateCascadedRectangleEdges(
+    CascadedRectangleEdges<yoga::StyleLength> &edges,
+    float value,
+    std::string edgeName,
+    std::function<yoga::StyleLength(float)> yogaStyleLength) {
+  updateCascadedRectangleEdges(edges, yogaStyleLength(value), edgeName);
 }
 
 void addMargin(
@@ -217,7 +224,21 @@ void addMargin(
               });
 
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
-          // TODO: Handle this case
+          const CSSKeyword &cssValue = active_value;
+          if (cssValue.toString() != "auto") {
+            return;
+          }
+
+          const auto yogaStyleLength = yoga::StyleLength::ofAuto();
+          updatePropOrAdd<CascadedRectangleEdges<yoga::StyleLength>>(
+              propsBuilder,
+              MARGIN,
+              [&](auto &margin) { updateCascadedRectangleEdges(margin, yogaStyleLength, marginPropName); },
+              [&]() {
+                CascadedRectangleEdges<yoga::StyleLength> margin{};
+                updateCascadedRectangleEdges(margin, yogaStyleLength, marginPropName);
+                propsBuilder->setMargin(margin);
+              });
         }
       },
       storage);
@@ -249,7 +270,21 @@ void addPadding(
               });
 
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
-          // TODO: Handle this case
+          const CSSKeyword &cssValue = active_value;
+          if (cssValue.toString() != "auto") {
+            return;
+          }
+
+          const auto yogaStyleLength = yoga::StyleLength::ofAuto();
+          updatePropOrAdd<CascadedRectangleEdges<yoga::StyleLength>>(
+              propsBuilder,
+              PADDING,
+              [&](auto &padding) { updateCascadedRectangleEdges(padding, yogaStyleLength, paddingPropName); },
+              [&]() {
+                CascadedRectangleEdges<yoga::StyleLength> padding{};
+                updateCascadedRectangleEdges(padding, yogaStyleLength, paddingPropName);
+                propsBuilder->setPadding(padding);
+              });
         }
       },
       storage);
@@ -417,7 +452,8 @@ void addWidthToPropsBuilder(
           }
 
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
-          // TODO: Handle this case
+          const CSSKeyword &cssValue = active_value;
+          propsBuilder->setWidth(strToYogaSizeLength(cssValue.toString()));
         }
       },
       storage);
@@ -441,7 +477,8 @@ void addHeightToPropsBuilder(
           }
 
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
-            // TODO: Handle this case
+          const CSSKeyword &cssValue = active_value;
+          propsBuilder->setHeight(strToYogaSizeLength(cssValue.toString()));
         }
       },
       storage);
@@ -886,7 +923,12 @@ void addMatrixTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     MatrixOperation &operation) {
   TransformMatrix::Shared transformMatrix = operation.toMatrix(true);
-  // TODO: implement this
+  Transform transform = Transform::Identity();
+  transform.operations.push_back(Transform::DefaultTransformOperation(TransformOperationType::Arbitrary));
+  for (size_t i = 0; i < transformMatrix->getSize() && i < transform.matrix.size(); ++i) {
+    transform.matrix[i] = static_cast<Float>((*transformMatrix)[i]);
+  }
+  addTransform(propsBuilder, transform);
 }
 
 void addBorderColorToPropsBuilder(
@@ -998,7 +1040,7 @@ void addFlexToPropsBuilder(
     const CSSValueVariant<CSSDouble> &value) {
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSDouble>(storage);
-  // TODO: implement this
+  propsBuilder->setFlex(yoga::FloatOptional(cssValue.value));
 }
 
 void addAlignContentToPropsBuilder(
@@ -1034,11 +1076,16 @@ void addAspectRatioToPropsBuilder(
       [&](const auto &active_value) {
         using T = std::decay_t<decltype(active_value)>;
 
-        if constexpr (std::is_same_v<T, CSSLength>) {
+        if constexpr (std::is_same_v<T, CSSDouble>) {
           const CSSDouble &cssValue = active_value;
           propsBuilder->setAspectRatio(yoga::FloatOptional(cssValue.value));
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
-          // TODO: Handle this case
+            const CSSKeyword &cssValue = active_value;
+            if (cssValue.toString() == "auto") {
+                // degenerate aspect ratios act as auto.
+                // see https://drafts.csswg.org/css-sizing-4/#valdef-aspect-ratio-ratio
+                propsBuilder->setAspectRatio(yoga::FloatOptional(0));
+            }
         }
       },
       storage);
@@ -1100,7 +1147,8 @@ void addFlexBasisToPropsBuilder(
             propsBuilder->setFlexBasis(yoga::Style::SizeLength::points(cssValue.value));
           }
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
-          // TODO: Handle this case
+            const CSSKeyword &cssValue = active_value;
+            propsBuilder->setFlexBasis(strToYogaSizeLength(cssValue.toString()));
         }
       },
       storage);
