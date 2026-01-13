@@ -78,55 +78,48 @@ yoga::Style::SizeLength strToYogaSizeLength(std::string keyword) {
   return yoga::Style::SizeLength::undefined();
 }
 
+template <typename T, typename PropName, typename UpdateFn, typename AddFn>
+void updatePropOrAdd(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    PropName propName,
+    UpdateFn updateExisting,
+    AddFn addNew) {
+  for (auto &prop : propsBuilder->props) {
+    if (prop->propName != propName) {
+      continue;
+    }
+
+    auto *typedProp = dynamic_cast<AnimatedProp<T> *>(prop.get());
+    if (!typedProp) {
+      continue;
+    }
+
+    updateExisting(typedProp->value);
+    return;
+  }
+
+  addNew();
+}
+
 void addFilter(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     FilterFunction filterFunction) {
-  bool isFound = false;
-  for (auto &prop : propsBuilder->props) {
-    if (prop->propName != FILTER) {
-      continue;
-    }
-
-    auto *filterProp = dynamic_cast<AnimatedProp<std::vector<FilterFunction>> *>(prop.get());
-
-    if (!filterProp) {
-      continue;
-    }
-
-    filterProp->value.push_back(filterFunction);
-
-    isFound = true;
-    break;
-  }
-
-  if (!isFound) {
-    std::vector<FilterFunction> filters{filterFunction};
-    propsBuilder->setFilter(filters);
-  }
+  updatePropOrAdd<std::vector<FilterFunction>>(
+      propsBuilder,
+      FILTER,
+      [&](auto &filters) { filters.push_back(filterFunction); },
+      [&]() {
+        std::vector<FilterFunction> filters{filterFunction};
+        propsBuilder->setFilter(filters);
+      });
 }
 
 void addTransform(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder, Transform transform) {
-  bool isFound = false;
-  for (auto &prop : propsBuilder->props) {
-    if (prop->propName != TRANSFORM) {
-      continue;
-    }
-
-    auto *transformProp = dynamic_cast<AnimatedProp<Transform> *>(prop.get());
-
-    if (!transformProp) {
-      continue;
-    }
-
-    transformProp->value = (transformProp->value) * transform;
-
-    isFound = true;
-    break;
-  }
-
-  if (!isFound) {
-    propsBuilder->setTransform(transform);
-  }
+  updatePropOrAdd<Transform>(
+      propsBuilder,
+      TRANSFORM,
+      [&](auto &existingTransform) { existingTransform = existingTransform * transform; },
+      [&]() { propsBuilder->setTransform(transform); });
 }
 
 void updateCascadedRectangleEdges(
@@ -211,28 +204,17 @@ void addMargin(
         if constexpr (std::is_same_v<T, CSSLength>) {
           const CSSLength &cssValue = active_value;
           const auto yogaStyleLength = cssValue.isRelative ? yoga::StyleLength::percent : yoga::StyleLength::points;
-          bool isFound = false;
-
-          for (auto &prop : propsBuilder->props) {
-            if (prop->propName != MARGIN) {
-              continue;
-            }
-            auto *marginProp = dynamic_cast<AnimatedProp<CascadedRectangleEdges<yoga::StyleLength>> *>(prop.get());
-
-            if (!marginProp) {
-              continue;
-            }
-
-            updateCascadedRectangleEdges(marginProp->value, cssValue.value, marginPropName, yogaStyleLength);
-            isFound = true;
-            break;
-          }
-
-          if (!isFound) {
-            CascadedRectangleEdges<yoga::StyleLength> margin{};
-            updateCascadedRectangleEdges(margin, cssValue.value, marginPropName, yogaStyleLength);
-            propsBuilder->setMargin(margin);
-          }
+          updatePropOrAdd<CascadedRectangleEdges<yoga::StyleLength>>(
+              propsBuilder,
+              MARGIN,
+              [&](auto &margin) {
+                updateCascadedRectangleEdges(margin, cssValue.value, marginPropName, yogaStyleLength);
+              },
+              [&]() {
+                CascadedRectangleEdges<yoga::StyleLength> margin{};
+                updateCascadedRectangleEdges(margin, cssValue.value, marginPropName, yogaStyleLength);
+                propsBuilder->setMargin(margin);
+              });
 
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
           // TODO: Handle this case
@@ -254,28 +236,17 @@ void addPadding(
         if constexpr (std::is_same_v<T, CSSLength>) {
           const CSSLength &cssValue = active_value;
           const auto yogaStyleLength = cssValue.isRelative ? yoga::StyleLength::percent : yoga::StyleLength::points;
-          bool isFound = false;
-
-          for (auto &prop : propsBuilder->props) {
-            if (prop->propName != PADDING) {
-              continue;
-            }
-            auto *paddingProp = dynamic_cast<AnimatedProp<CascadedRectangleEdges<yoga::StyleLength>> *>(prop.get());
-
-            if (!paddingProp) {
-              continue;
-            }
-
-            updateCascadedRectangleEdges(paddingProp->value, cssValue.value, paddingPropName, yogaStyleLength);
-            isFound = true;
-            break;
-          }
-
-          if (!isFound) {
-            CascadedRectangleEdges<yoga::StyleLength> padding{};
-            updateCascadedRectangleEdges(padding, cssValue.value, paddingPropName, yogaStyleLength);
-            propsBuilder->setPadding(padding);
-          }
+          updatePropOrAdd<CascadedRectangleEdges<yoga::StyleLength>>(
+              propsBuilder,
+              PADDING,
+              [&](auto &padding) {
+                updateCascadedRectangleEdges(padding, cssValue.value, paddingPropName, yogaStyleLength);
+              },
+              [&]() {
+                CascadedRectangleEdges<yoga::StyleLength> padding{};
+                updateCascadedRectangleEdges(padding, cssValue.value, paddingPropName, yogaStyleLength);
+                propsBuilder->setPadding(padding);
+              });
 
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
           // TODO: Handle this case
@@ -290,29 +261,17 @@ void addBorderWidth(
     std::string borderWidthPropName) {
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSDouble>(storage);
-  bool isFound = false;
-
-  for (auto &prop : propsBuilder->props) {
-    if (prop->propName != BORDER_WIDTH) {
-      continue;
-    }
-    auto *borderWidthProp = dynamic_cast<AnimatedProp<CascadedRectangleEdges<yoga::StyleLength>> *>(prop.get());
-
-    if (!borderWidthProp) {
-      continue;
-    }
-
-    updateCascadedRectangleEdges(
-        borderWidthProp->value, cssValue.value, borderWidthPropName, yoga::StyleLength::points);
-    isFound = true;
-    break;
-  }
-
-  if (!isFound) {
-    CascadedRectangleEdges<yoga::StyleLength> borderWidth{};
-    updateCascadedRectangleEdges(borderWidth, cssValue.value, borderWidthPropName, yoga::StyleLength::points);
-    propsBuilder->setBorderWidth(borderWidth);
-  }
+  updatePropOrAdd<CascadedRectangleEdges<yoga::StyleLength>>(
+      propsBuilder,
+      BORDER_WIDTH,
+      [&](auto &borderWidth) {
+        updateCascadedRectangleEdges(borderWidth, cssValue.value, borderWidthPropName, yoga::StyleLength::points);
+      },
+      [&]() {
+        CascadedRectangleEdges<yoga::StyleLength> borderWidth{};
+        updateCascadedRectangleEdges(borderWidth, cssValue.value, borderWidthPropName, yoga::StyleLength::points);
+        propsBuilder->setBorderWidth(borderWidth);
+      });
 }
 
 void addCascadedBorderRadiiToPropsBuilder(
@@ -367,27 +326,15 @@ void addCascadedBorderRadiiToPropsBuilder(
     }
   };
 
-  bool isFound = false;
-  for (auto &prop : propsBuilder->props) {
-    if (prop->propName != BORDER_RADII) {
-      continue;
-    }
-    auto *borderProp = dynamic_cast<AnimatedProp<CascadedBorderRadii> *>(prop.get());
-
-    if (!borderProp) {
-      continue;
-    }
-
-    updateBordeRadii(borderProp->value);
-    isFound = true;
-    break;
-  }
-
-  if (!isFound) {
-    CascadedBorderRadii borderRadii{};
-    updateBordeRadii(borderRadii);
-    propsBuilder->setBorderRadii(borderRadii);
-  }
+  updatePropOrAdd<CascadedBorderRadii>(
+      propsBuilder,
+      BORDER_RADII,
+      [&](auto &borderRadii) { updateBordeRadii(borderRadii); },
+      [&]() {
+        CascadedBorderRadii borderRadii{};
+        updateBordeRadii(borderRadii);
+        propsBuilder->setBorderRadii(borderRadii);
+      });
 }
 
 void addBorderColor(
@@ -439,27 +386,15 @@ void addBorderColor(
     }
   };
 
-  bool isFound = false;
-  for (auto &prop : propsBuilder->props) {
-    if (prop->propName != BORDER_COLOR) {
-      continue;
-    }
-    auto *borderColorProp = dynamic_cast<AnimatedProp<CascadedBorderColors> *>(prop.get());
-
-    if (!borderColorProp) {
-      continue;
-    }
-
-    updateBorderColor(borderColorProp->value);
-    isFound = true;
-    break;
-  }
-
-  if (!isFound) {
-    CascadedBorderColors borderColor{};
-    updateBorderColor(borderColor);
-    propsBuilder->setBorderColor(borderColor);
-  }
+  updatePropOrAdd<CascadedBorderColors>(
+      propsBuilder,
+      BORDER_COLOR,
+      [&](auto &borderColor) { updateBorderColor(borderColor); },
+      [&]() {
+        CascadedBorderColors borderColor{};
+        updateBorderColor(borderColor);
+        propsBuilder->setBorderColor(borderColor);
+      });
 }
 
 } // namespace
@@ -506,6 +441,7 @@ void addHeightToPropsBuilder(
           }
 
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
+            // TODO: Handle this case
         }
       },
       storage);
@@ -950,7 +886,7 @@ void addMatrixTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     MatrixOperation &operation) {
   TransformMatrix::Shared transformMatrix = operation.toMatrix(true);
-  //    transformMatrix->
+  // TODO: implement this
 }
 
 void addBorderColorToPropsBuilder(
@@ -1062,7 +998,7 @@ void addFlexToPropsBuilder(
     const CSSValueVariant<CSSDouble> &value) {
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSDouble>(storage);
-  //    propsBuilder->setF
+  // TODO: implement this
 }
 
 void addAlignContentToPropsBuilder(
@@ -1478,7 +1414,7 @@ void addBorderStyleToPropsBuilder(
 void addElevationToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDouble> &value) {
-  // TODO: Check this
+    // TODO: Check this
 }
 
 void addPointerEventsToPropsBuilder(
@@ -1589,26 +1525,14 @@ void addBoxShadowToPropsBuilder(
       .color = color,
       .inset = cssValue.inset.has_value() ? cssValue.inset.value().value : false,
   };
-  bool isFound = false;
-  for (auto &prop : propsBuilder->props) {
-    if (prop->propName != BOX_SHADOW) {
-      continue;
-    }
-    auto *boxShadowProp = dynamic_cast<AnimatedProp<std::vector<BoxShadow>> *>(prop.get());
-
-    if (!boxShadowProp) {
-      continue;
-    }
-
-    boxShadowProp->value.push_back(boxShadow);
-    isFound = true;
-    break;
-  }
-
-  if (!isFound) {
-    std::vector<BoxShadow> boxShadowProp = std::vector<BoxShadow>{boxShadow};
-    propsBuilder->setBoxShadow(boxShadowProp);
-  }
+  updatePropOrAdd<std::vector<BoxShadow>>(
+      propsBuilder,
+      BOX_SHADOW,
+      [&](auto &boxShadows) { boxShadows.push_back(boxShadow); },
+      [&]() {
+        std::vector<BoxShadow> boxShadowProp = std::vector<BoxShadow>{boxShadow};
+        propsBuilder->setBoxShadow(boxShadowProp);
+      });
 }
 
 void addMixBlendModeToPropsBuilder(
