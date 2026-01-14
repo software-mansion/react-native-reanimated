@@ -33,7 +33,7 @@ export const SVG_IMAGE_PROPERTIES_CONFIG: SvgStyleBuilderConfig<ImageProps> = {
 //   none: 2,
 // };
 
-// const alignEnum: { [align: string]: string } = [
+// const alignSet = new Set([
 //   'xMinYMin',
 //   'xMidYMin',
 //   'xMaxYMin',
@@ -44,29 +44,22 @@ export const SVG_IMAGE_PROPERTIES_CONFIG: SvgStyleBuilderConfig<ImageProps> = {
 //   'xMidYMax',
 //   'xMaxYMax',
 //   'none',
-// ].reduce((prev: { [align: string]: string }, name) => {
-//   prev[name] = name;
-//   return prev;
-// }, {});
+// ]);
 
 // type PreserveAspectRatioProcessor = ValueProcessor<
 //   string,
-//   Record<string, string | Number>
+//   Record<string, string | number>
 // >;
 
 // const spacesRegExp = /\s+/;
 
 // const processPreserveAspectRatio: PreserveAspectRatioProcessor = (value) => {
-//   const modes = value
-//     ? value.trim().split(spacesRegExp)
-//     : [];
+//   const modes = value ? value.trim().split(spacesRegExp) : [];
 //   const align = modes[0];
 //   const meetOrSlice = modes[1];
 
-//   return ({
-//     // align: alignEnum[align] || 'xMidYMid',
-//     // meetOrSlice: meetOrSliceTypes[meetOrSlice] || 0,
-//     align: 'xMaxYMid', //hardcoded, delte later
-//     meetOrSlice: 0,
-//   });
+//   return {
+//     align: alignSet.has(align) ? align : 'xMidYMid',
+//     meetOrSlice: meetOrSliceTypes[meetOrSlice] || 0,
+//   };
 // };
