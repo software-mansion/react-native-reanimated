@@ -106,7 +106,7 @@ describe('getChangedProps', () => {
     const result = getChangedProps(
       oldProps,
       newProps,
-      ['opacity', 'transform'],
+      new Set(['opacity', 'transform']),
       undefined
     );
     expect(result).toEqual({
@@ -119,10 +119,12 @@ describe('getChangedProps', () => {
   test('switches from specific properties to undefined (all)', () => {
     const oldProps = { opacity: 0.5, transform: 'scale(1)', color: 'red' };
     const newProps = { opacity: 1, transform: 'scale(2)', color: 'blue' };
-    const result = getChangedProps(oldProps, newProps, undefined, [
-      'opacity',
-      'transform',
-    ]);
+    const result = getChangedProps(
+      oldProps,
+      newProps,
+      undefined,
+      new Set(['opacity', 'transform'])
+    );
     // No properties marked as removed when switching to all
     expect(result).toEqual({
       opacity: [0.5, 1],
@@ -137,8 +139,8 @@ describe('getChangedProps', () => {
     const result = getChangedProps(
       oldProps,
       newProps,
-      ['opacity', 'color'],
-      ['opacity', 'transform']
+      new Set(['opacity', 'color']),
+      new Set(['opacity', 'transform'])
     );
     expect(result).toEqual({
       opacity: [0.5, 1],

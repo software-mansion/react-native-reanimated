@@ -50,7 +50,6 @@ folly::dynamic CSSTransition::update(const double timestamp) {
   progressProvider_.update(timestamp);
   auto result = styleInterpolator_.interpolate(shadowNode_, progressProvider_, allowDiscreteProperties_);
   styleInterpolator_.removeObsoleteInterpolators(progressProvider_);
-  progressProvider_.discardFinishedProgressProviders();
   return result;
 }
 

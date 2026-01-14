@@ -9,6 +9,6 @@ export type NormalizedSingleCSSTransitionSettings = {
 };
 
 export type NormalizedCSSTransitionConfig = {
-  properties: null | string[];
+  properties?: Set<string>;
   settings: Record<string, NormalizedSingleCSSTransitionSettings>;
 };

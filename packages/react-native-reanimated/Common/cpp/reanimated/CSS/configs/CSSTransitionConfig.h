@@ -24,18 +24,12 @@ struct CSSTransitionConfig {
   CSSTransitionPropertiesSettings settings;
 };
 
-std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
+CSSTransitionPropertySettings getTransitionPropertySettings(
     const CSSTransitionPropertiesSettings &propertiesSettings,
     const std::string &propName);
 
-TransitionProperties getProperties(jsi::Runtime &rt, const jsi::Object &config);
+CSSTransitionPropertiesSettings parseCSSTransitionPropertiesSettings(jsi::Runtime &rt, const jsi::Value &settings);
 
-std::optional<CSSTransitionPropertiesSettings> parseCSSTransitionPropertiesSettings(
-    jsi::Runtime &rt,
-    const jsi::Value &settings);
-
-CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config);
-
-ChangedProps parseChangedPropsFromDiff(const folly::dynamic &diff);
+ChangedProps parseChangedPropsFromDiff(jsi::Runtime &rt, const jsi::Value &diff);
 
 } // namespace reanimated::css

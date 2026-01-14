@@ -120,7 +120,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   void runCSSTransition(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeWrapper,
-      const jsi::Value &changedProps,
+      const jsi::Value &propsDiff,
       const jsi::Value &settings) override;
   void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) override;
 

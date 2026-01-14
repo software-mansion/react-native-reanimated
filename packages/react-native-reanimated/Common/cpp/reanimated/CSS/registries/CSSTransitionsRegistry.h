@@ -18,17 +18,16 @@ namespace reanimated::css {
 
 class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared_from_this<CSSTransitionsRegistry> {
  public:
-  CSSTransitionsRegistry(
-      const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
-      const GetAnimationTimestampFunction &getCurrentTimestamp);
+  CSSTransitionsRegistry(const GetAnimationTimestampFunction &getCurrentTimestamp);
 
   bool isEmpty() const override;
   bool hasUpdates() const;
 
-  void ensureTransition(
+  void run(
       const std::shared_ptr<const ShadowNode> &shadowNode,
+      const ChangedProps &changedProps,
+      const CSSTransitionPropertiesSettings &settings,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
-  void run(Tag viewTag, const folly::dynamic &changedProps, const CSSTransitionPropertiesSettings &settings);
   void remove(Tag viewTag) override;
 
   void update(double timestamp);
@@ -37,16 +36,17 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
   using Registry = std::unordered_map<Tag, std::shared_ptr<CSSTransition>>;
 
   const GetAnimationTimestampFunction &getCurrentTimestamp_;
-  const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
 
   Registry registry_;
 
   std::unordered_set<Tag> runningTransitionTags_;
   DelayedItemsManager<Tag> delayedTransitionsManager_;
 
+  std::shared_ptr<CSSTransition> getOrCreateTransition(
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
   void activateDelayedTransitions(double timestamp);
   void scheduleOrActivateTransition(const std::shared_ptr<CSSTransition> &transition);
-  void updateInUpdatesRegistry(const std::shared_ptr<CSSTransition> &transition, const folly::dynamic &updates);
 };
 
 } // namespace reanimated::css

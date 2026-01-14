@@ -15,8 +15,6 @@
 #include <reanimated/CSS/interpolation/filters/operations/saturate.h>
 #include <reanimated/CSS/interpolation/filters/operations/sepia.h>
 
-#include <memory>
-#include <string>
 #include <utility>
 
 namespace reanimated::css {

@@ -27,6 +27,7 @@ import type {
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedSingleCSSTransitionSettings,
 } from '../css/native';
+import type { PropsDiff } from '../css/types';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
@@ -231,7 +232,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   runCSSTransition(
     shadowNodeWrapper: ShadowNodeWrapper,
-    changedProps: StyleProps,
+    changedProps: PropsDiff,
     settings: Record<string, NormalizedSingleCSSTransitionSettings>
   ) {
     this.#reanimatedModuleProxy.runCSSTransition(

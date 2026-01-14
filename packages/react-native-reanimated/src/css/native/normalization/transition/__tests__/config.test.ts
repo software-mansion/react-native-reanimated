@@ -19,7 +19,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: null,
+        properties: undefined,
         settings: {
           all: {
             duration: 1500,
@@ -74,7 +74,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: null,
+        properties: undefined,
         settings: {
           all: {
             duration: 1500,
@@ -210,7 +210,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: null,
+        properties: undefined,
         settings: {
           all: {
             duration: 1500,
@@ -270,7 +270,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: null,
+        properties: undefined,
         settings: {
           all: {
             duration: 4000,

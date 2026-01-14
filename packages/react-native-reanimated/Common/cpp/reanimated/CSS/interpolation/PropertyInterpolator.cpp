@@ -3,9 +3,7 @@
 #include <worklets/Tools/JSISerializer.h>
 
 #include <memory>
-#include <string>
 #include <utility>
-#include <vector>
 
 namespace reanimated::css {
 

@@ -27,6 +27,7 @@ import type {
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedSingleCSSTransitionSettings,
 } from '../../css/native';
+import type { PropsDiff } from '../../css/types';
 import { assertWorkletsVersion } from '../../platform-specific/workletsVersion';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
@@ -320,7 +321,7 @@ class JSReanimated implements IReanimatedModule {
 
   runCSSTransition(
     _shadowNodeWrapper: ShadowNodeWrapper,
-    _changedProps: StyleProps,
+    _changedProps: PropsDiff,
     _settings: Record<string, NormalizedSingleCSSTransitionSettings>
   ): void {
     throw new ReanimatedError(

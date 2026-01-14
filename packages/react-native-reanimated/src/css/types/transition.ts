@@ -37,3 +37,7 @@ export type CSSTransitionProperties<S extends object = PlainStyle> =
   };
 
 export type CSSTransitionProp = keyof CSSTransitionProperties;
+
+export type PropsDiff = {
+  [key: string]: [unknown, unknown] | null; // [oldValue, newValue] or null for removed
+};

@@ -59,10 +59,10 @@ describe('CSSTransitionsManager', () => {
         const props = { opacity: 0.5 };
 
         manager.update(transitionProperties, props);
-        expect(runCSSTransition).toHaveBeenCalledTimes(1);
-
         jest.clearAllMocks();
+
         manager.update(newTransitionConfig, props);
+
         expect(unregisterCSSTransition).not.toHaveBeenCalled();
         expect(runCSSTransition).toHaveBeenCalledTimes(1);
         expect(runCSSTransition).toHaveBeenCalledWith(
@@ -79,34 +79,22 @@ describe('CSSTransitionsManager', () => {
         );
       });
 
-      test('runs transition when props change', () => {
+      test('runs transition from undefined if property was not present before ', () => {
         const transitionProperties: CSSTransitionProperties = {
           transitionProperty: 'opacity',
         };
-        const props1 = { opacity: 0 };
+        const props1 = {};
         const props2 = { opacity: 1 };
 
         manager.update(transitionProperties, props1);
-        expect(runCSSTransition).toHaveBeenCalledTimes(1);
-        expect(runCSSTransition).toHaveBeenCalledWith(
-          shadowNodeWrapper,
-          { opacity: [undefined, 0] },
-          {
-            opacity: {
-              duration: 0,
-              delay: 0,
-              timingFunction: 'ease',
-              allowDiscrete: false,
-            },
-          }
-        );
-
         jest.clearAllMocks();
+
         manager.update(transitionProperties, props2);
+
         expect(runCSSTransition).toHaveBeenCalledTimes(1);
         expect(runCSSTransition).toHaveBeenCalledWith(
           shadowNodeWrapper,
-          { opacity: [0, 1] },
+          { opacity: [undefined, 1] },
           {
             opacity: {
               duration: 0,
@@ -118,20 +106,22 @@ describe('CSSTransitionsManager', () => {
         );
       });
 
-      test('runs transition from undefined when props are initially empty', () => {
+      test('runs transition when props change with correct prop diff', () => {
         const transitionProperties: CSSTransitionProperties = {
           transitionProperty: 'opacity',
         };
-        const props = { opacity: 1 };
+        const props1 = { opacity: 0 };
+        const props2 = { opacity: 1 };
 
-        manager.update(transitionProperties);
-        expect(runCSSTransition).not.toHaveBeenCalled();
+        manager.update(transitionProperties, props1);
+        jest.clearAllMocks();
 
-        manager.update(transitionProperties, props);
+        manager.update(transitionProperties, props2);
+
         expect(runCSSTransition).toHaveBeenCalledTimes(1);
         expect(runCSSTransition).toHaveBeenCalledWith(
           shadowNodeWrapper,
-          { opacity: [undefined, 1] },
+          { opacity: [0, 1] },
           {
             opacity: {
               duration: 0,
@@ -151,22 +141,10 @@ describe('CSSTransitionsManager', () => {
         const props2 = { opacity: 1 };
 
         manager.update(transitionProperties, props1);
-        expect(runCSSTransition).toHaveBeenCalledTimes(1);
-        expect(runCSSTransition).toHaveBeenCalledWith(
-          shadowNodeWrapper,
-          { opacity: [undefined, 1], transform: [undefined, 'scale(1)'] },
-          {
-            all: {
-              duration: 0,
-              delay: 0,
-              timingFunction: 'ease',
-              allowDiscrete: false,
-            },
-          }
-        );
-
         jest.clearAllMocks();
+
         manager.update(transitionProperties, props2);
+
         expect(runCSSTransition).toHaveBeenCalledTimes(1);
         expect(runCSSTransition).toHaveBeenCalledWith(
           shadowNodeWrapper,
@@ -192,28 +170,10 @@ describe('CSSTransitionsManager', () => {
         const props = { opacity: 0.5, transform: 'scale(1.5)' };
 
         manager.update(transitionProperties1, props);
-        expect(runCSSTransition).toHaveBeenCalledTimes(1);
-        expect(runCSSTransition).toHaveBeenCalledWith(
-          shadowNodeWrapper,
-          { opacity: [undefined, 0.5], transform: [undefined, 'scale(1.5)'] },
-          {
-            opacity: {
-              duration: 0,
-              delay: 0,
-              timingFunction: 'ease',
-              allowDiscrete: false,
-            },
-            transform: {
-              duration: 0,
-              delay: 0,
-              timingFunction: 'ease',
-              allowDiscrete: false,
-            },
-          }
-        );
-
         jest.clearAllMocks();
+
         manager.update(transitionProperties2, props);
+
         expect(runCSSTransition).toHaveBeenCalledTimes(1);
         expect(runCSSTransition).toHaveBeenCalledWith(
           shadowNodeWrapper,
@@ -229,7 +189,7 @@ describe('CSSTransitionsManager', () => {
         );
       });
 
-      test('handles switching from specific properties to all', () => {
+      test('handles switching from specific properties to all when properties are unchanged', () => {
         const transitionProperties1: CSSTransitionProperties = {
           transitionProperty: 'opacity',
         };
@@ -239,12 +199,33 @@ describe('CSSTransitionsManager', () => {
         const props = { opacity: 0.5, transform: 'scale(1.5)' };
 
         manager.update(transitionProperties1, props);
+        jest.clearAllMocks();
+
+        manager.update(transitionProperties2, props);
+        expect(runCSSTransition).not.toHaveBeenCalled();
+      });
+
+      test('handles switching from specific properties to all when properties are changed', () => {
+        const transitionProperties1: CSSTransitionProperties = {
+          transitionProperty: 'opacity',
+        };
+        const transitionProperties2: CSSTransitionProperties = {
+          transitionProperty: 'all',
+        };
+        const props1 = { opacity: 0.5, transform: 'scale(1.5)' };
+        const props2 = { opacity: 0.5, transform: 'scale(2)' };
+
+        manager.update(transitionProperties1, props1);
+        jest.clearAllMocks();
+
+        manager.update(transitionProperties2, props2);
+
         expect(runCSSTransition).toHaveBeenCalledTimes(1);
         expect(runCSSTransition).toHaveBeenCalledWith(
           shadowNodeWrapper,
-          { opacity: [undefined, 0.5], transform: null },
+          { transform: ['scale(1.5)', 'scale(2)'] },
           {
-            opacity: {
+            all: {
               duration: 0,
               delay: 0,
               timingFunction: 'ease',
@@ -252,10 +233,6 @@ describe('CSSTransitionsManager', () => {
             },
           }
         );
-
-        jest.clearAllMocks();
-        manager.update(transitionProperties2, props);
-        expect(runCSSTransition).not.toHaveBeenCalled();
       });
     });
 

@@ -1,15 +1,10 @@
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 
-#include <memory>
-#include <utility>
-
 namespace reanimated::css {
 
-CSSTransitionsRegistry::CSSTransitionsRegistry(
-    const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
-    const GetAnimationTimestampFunction &getCurrentTimestamp)
-    : getCurrentTimestamp_(getCurrentTimestamp), staticPropsRegistry_(staticPropsRegistry) {}
+CSSTransitionsRegistry::CSSTransitionsRegistry(const GetAnimationTimestampFunction &getCurrentTimestamp)
+    : getCurrentTimestamp_(getCurrentTimestamp) {}
 
 bool CSSTransitionsRegistry::isEmpty() const {
   // The registry is empty if has no registered animations and no updates
@@ -21,16 +16,6 @@ bool CSSTransitionsRegistry::hasUpdates() const {
   return !runningTransitionTags_.empty() || !delayedTransitionsManager_.empty();
 }
 
-void CSSTransitionsRegistry::ensureTransition(
-    const std::shared_ptr<const ShadowNode> &shadowNode,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
-  const auto viewTag = shadowNode->getTag();
-  if (registry_.find(viewTag) == registry_.end()) {
-    auto transition = std::make_shared<CSSTransition>(shadowNode, viewStylesRepository);
-    registry_.insert({viewTag, transition});
-  }
-}
-
 void CSSTransitionsRegistry::remove(const Tag viewTag) {
   removeFromUpdatesRegistry(viewTag);
   delayedTransitionsManager_.remove(viewTag);
@@ -39,33 +24,14 @@ void CSSTransitionsRegistry::remove(const Tag viewTag) {
 }
 
 void CSSTransitionsRegistry::run(
-    const Tag viewTag,
-    const folly::dynamic &changedProps,
-    const CSSTransitionPropertiesSettings &settings) { // Settings are required
-  if (registry_.find(viewTag) == registry_.end()) {
-    return;
-  }
-
-  const auto &transition = registry_[viewTag];
-
-  // If no changed props, nothing to do
-  if (changedProps.empty() || !changedProps.isObject()) {
-    return;
-  }
-
-  // Parse the changed props diff from JS
-  ChangedProps props = parseChangedPropsFromDiff(changedProps);
-
-  if (props.changedPropertyNames.empty() && props.removedPropertyNames.empty()) {
-    return;
-  }
-
-  std::lock_guard<std::mutex> lock{mutex_};
-
-  const auto &shadowNode = transition->getShadowNode();
+    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const ChangedProps &changedProps,
+    const CSSTransitionPropertiesSettings &settings,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) { // Settings are required
+  const auto transition = getOrCreateTransition(shadowNode, viewStylesRepository);
   const auto &lastUpdates = getUpdatesFromRegistry(shadowNode->getTag());
-  const auto &transitionStartStyle = transition->run(props, settings, lastUpdates, getCurrentTimestamp_());
-  updateInUpdatesRegistry(transition, transitionStartStyle);
+  const auto &transitionStartStyle = transition->run(changedProps, settings, lastUpdates, getCurrentTimestamp_());
+  setInUpdatesRegistry(transition->getShadowNode(), transitionStartStyle);
   scheduleOrActivateTransition(transition);
 }
 
@@ -98,6 +64,19 @@ void CSSTransitionsRegistry::update(const double timestamp) {
   }
 }
 
+std::shared_ptr<CSSTransition> CSSTransitionsRegistry::getOrCreateTransition(
+    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
+  const auto viewTag = shadowNode->getTag();
+
+  if (registry_.find(viewTag) == registry_.end()) {
+    auto transition = std::make_shared<CSSTransition>(shadowNode, viewStylesRepository);
+    registry_.insert({viewTag, transition});
+  }
+
+  return registry_[viewTag];
+}
+
 void CSSTransitionsRegistry::activateDelayedTransitions(const double timestamp) {
   while (!delayedTransitionsManager_.empty() && delayedTransitionsManager_.top().timestamp <= timestamp) {
     const auto [_, viewTag] = delayedTransitionsManager_.pop();
@@ -123,14 +102,6 @@ void CSSTransitionsRegistry::scheduleOrActivateTransition(const std::shared_ptr<
   } else {
     runningTransitionTags_.insert(viewTag);
   }
-}
-
-void CSSTransitionsRegistry::updateInUpdatesRegistry(
-    const std::shared_ptr<CSSTransition> &transition,
-    const folly::dynamic &updates) {
-  const auto &shadowNode = transition->getShadowNode();
-  // Store only the current updates without merging with last updates
-  setInUpdatesRegistry(shadowNode, updates);
 }
 
 } // namespace reanimated::css

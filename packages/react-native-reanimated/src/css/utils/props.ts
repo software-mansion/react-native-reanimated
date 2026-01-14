@@ -1,13 +1,13 @@
 'use strict';
-import type { AnyRecord, PlainStyle } from '../../common';
+import type { AnyRecord, PlainStyle, UnknownRecord } from '../../common';
 import { logger } from '../../common';
-import type { StyleProps } from '../../commonTypes';
 import { isSharedValue } from '../../isSharedValue';
 import type {
   CSSAnimationProperties,
   CSSStyle,
   CSSTransitionProperties,
   ExistingCSSAnimationProperties,
+  PropsDiff,
 } from '../types';
 import { deepEqual } from './equality';
 import {
@@ -16,10 +16,6 @@ import {
   isCSSKeyframesRule,
   isTransitionProp,
 } from './guards';
-
-type PropsDiff = {
-  [key: string]: [unknown, unknown] | null; // [oldValue, newValue] or null for removed
-};
 
 /**
  * Calculates the difference between old and new props. Returns an object where
@@ -30,56 +26,56 @@ type PropsDiff = {
  *   detect removed properties
  */
 export function getChangedProps(
-  oldProps: StyleProps,
-  newProps: StyleProps,
-  allowedProperties?: string[] | null,
-  previousAllowedProperties?: string[] | null
+  oldProps: UnknownRecord,
+  newProps: UnknownRecord,
+  allowedProperties?: Set<string>,
+  previousAllowedProperties?: Set<string>
 ): PropsDiff {
   const diff: PropsDiff = {};
 
-  // Determine which properties to check
-  const propsToCheck = allowedProperties || [
-    ...new Set([...Object.keys(oldProps), ...Object.keys(newProps)]),
-  ];
+  if (!allowedProperties) {
+    // Fast path - no need to check allowed properties
+    for (const key in oldProps) {
+      const oldValue = oldProps[key];
+      const newValue = newProps[key];
+      if (!deepEqual(oldValue, newValue)) {
+        diff[key] = [oldValue, newValue];
+      }
+    }
+    for (const key in newProps) {
+      if (!(key in oldProps)) {
+        diff[key] = [undefined, newProps[key]];
+      }
+    }
+    return diff;
+  }
 
-  // Check for changes in allowed properties
-  for (const key of propsToCheck) {
-    const oldValue = oldProps[key];
-    const newValue = newProps[key];
-    if (!deepEqual(oldValue, newValue)) {
-      diff[key] = [oldValue, newValue];
+  // Slow path - check allowed properties
+  const oldKeys = Object.keys(oldProps);
+  const newKeys = Object.keys(newProps);
+  const keysToCheck = new Set(oldKeys.concat(newKeys));
+
+  for (const key of keysToCheck) {
+    if (allowedProperties.has(key)) {
+      const oldValue = oldProps[key];
+      const newValue = newProps[key];
+      if (!deepEqual(oldValue, newValue)) {
+        diff[key] = [oldValue, newValue];
+      }
+    } else if (
+      !previousAllowedProperties ||
+      previousAllowedProperties.has(key)
+    ) {
+      diff[key] = null;
     }
   }
 
-  // Mark removed properties when allowedProperties changes
-  if (allowedProperties !== previousAllowedProperties) {
-    // Case 1: Switching from all (null/undefined) to specific properties
-    if (!previousAllowedProperties && allowedProperties) {
-      const currentSet = new Set(allowedProperties);
-      const allProps = new Set([
-        ...Object.keys(oldProps),
-        ...Object.keys(newProps),
-      ]);
-      for (const prop of allProps) {
-        if (!currentSet.has(prop)) {
-          diff[prop] = null;
-        }
+  if (previousAllowedProperties) {
+    for (const key of previousAllowedProperties) {
+      if (!keysToCheck.has(key) && !allowedProperties.has(key)) {
+        diff[key] = null;
       }
     }
-    // Case 2: Switching between different specific property sets
-    else if (allowedProperties && previousAllowedProperties) {
-      const currentSet = new Set(allowedProperties);
-      for (const prop of previousAllowedProperties) {
-        if (
-          !currentSet.has(prop) &&
-          ((oldProps && prop in oldProps) || (newProps && prop in newProps))
-        ) {
-          diff[prop] = null;
-        }
-      }
-    }
-    // Case 3: Switching from specific to all (null/undefined) - no removals needed
-    // Case 4: Both are null/undefined - no removals needed
   }
 
   return diff;

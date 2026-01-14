@@ -79,7 +79,7 @@ export function normalizeCSSTransitionProperties(
     transitionDelay,
     transitionBehavior,
   } = expandedProperties;
-  const specificProperties: string[] = [];
+  const specificProperties = new Set<string>();
   let allPropertiesTransition = false;
   const settings: Record<string, NormalizedSingleCSSTransitionSettings> = {};
 
@@ -103,8 +103,8 @@ export function normalizeCSSTransitionProperties(
 
     if (property === 'all') {
       allPropertiesTransition = true;
-    } else {
-      specificProperties.push(property);
+    } else if (!allPropertiesTransition) {
+      specificProperties.add(property);
     }
 
     settings[property] = {
@@ -128,7 +128,7 @@ export function normalizeCSSTransitionProperties(
   }
 
   return {
-    properties: allPropertiesTransition ? null : specificProperties.reverse(),
+    properties: allPropertiesTransition ? undefined : specificProperties,
     settings,
   };
 }

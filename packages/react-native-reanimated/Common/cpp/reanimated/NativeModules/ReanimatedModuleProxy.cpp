@@ -62,7 +62,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(staticPropsRegistry_, animatedPropsRegistry_)),
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>(viewStylesRepository_)),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
-      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(staticPropsRegistry_, getAnimationTimestamp_)),
+      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(getAnimationTimestamp_)),
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
@@ -428,20 +428,17 @@ void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
 void ReanimatedModuleProxy::runCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
-    const jsi::Value &changedProps,
+    const jsi::Value &propsDiff,
     const jsi::Value &settings) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-
-  auto lock = cssTransitionsRegistry_->lock();
-
-  // Create transition if it doesn't exist
-  cssTransitionsRegistry_->ensureTransition(shadowNode, viewStylesRepository_);
-
-  const auto changedPropsDynamic = jsi::dynamicFromValue(rt, changedProps);
   const auto parsedSettings = parseCSSTransitionPropertiesSettings(rt, settings);
-  // Settings are required by TypeScript API, so they should always be valid here
-  cssTransitionsRegistry_->run(shadowNode->getTag(), changedPropsDynamic, parsedSettings.value());
-  maybeRunCSSLoop();
+  const auto changedProps = parseChangedPropsFromDiff(rt, propsDiff);
+
+  {
+    auto lock = cssTransitionsRegistry_->lock();
+    cssTransitionsRegistry_->run(shadowNode, changedProps, parsedSettings, viewStylesRepository_);
+    maybeRunCSSLoop();
+  }
 }
 
 void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) {

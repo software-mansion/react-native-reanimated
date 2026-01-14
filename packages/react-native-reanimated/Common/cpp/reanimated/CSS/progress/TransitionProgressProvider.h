@@ -54,7 +54,6 @@ class TransitionProgressProvider final {
   TransitionPropertyProgressProviders getPropertyProgressProviders() const;
   std::unordered_set<std::string> flushRemovedProperties();
 
-  void discardFinishedProgressProviders();
   void discardIrrelevantProgressProviders(const std::unordered_set<std::string> &transitionPropertyNames);
   void removeProgressProviders(const PropertyNames &propertyNames);
   void runProgressProviders(
@@ -66,7 +65,7 @@ class TransitionProgressProvider final {
 
  private:
   TransitionPropertyProgressProviders propertyProgressProviders_;
-  std::unordered_set<std::string> removedProperties_;
+  std::unordered_set<std::string> propertiesToRemove_;
 
   std::shared_ptr<TransitionPropertyProgressProvider> createReversingShorteningProgressProvider(
       double timestamp,

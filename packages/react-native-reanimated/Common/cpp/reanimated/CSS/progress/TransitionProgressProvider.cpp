@@ -100,19 +100,9 @@ TransitionPropertyProgressProviders TransitionProgressProvider::getPropertyProgr
 }
 
 std::unordered_set<std::string> TransitionProgressProvider::flushRemovedProperties() {
-  auto removedProperties = std::move(removedProperties_);
-  removedProperties_.clear();
+  auto removedProperties = std::move(propertiesToRemove_);
+  propertiesToRemove_.clear();
   return removedProperties;
-}
-
-void TransitionProgressProvider::discardFinishedProgressProviders() {
-  for (auto it = propertyProgressProviders_.begin(); it != propertyProgressProviders_.end();) {
-    if (it->second->getState() == TransitionProgressState::Finished) {
-      it = propertyProgressProviders_.erase(it);
-    } else {
-      ++it;
-    }
-  }
 }
 
 void TransitionProgressProvider::discardIrrelevantProgressProviders(
@@ -122,7 +112,7 @@ void TransitionProgressProvider::discardIrrelevantProgressProviders(
     // transition property names
     if (transitionPropertyNames.find(it->first) == transitionPropertyNames.end()) {
       // Track removed property for interpolator cleanup
-      removedProperties_.insert(it->first);
+      propertiesToRemove_.insert(it->first);
       it = propertyProgressProviders_.erase(it);
     } else {
       ++it;
@@ -134,7 +124,7 @@ void TransitionProgressProvider::removeProgressProviders(const PropertyNames &pr
   for (const auto &propertyName : propertyNames) {
     propertyProgressProviders_.erase(propertyName);
     // Also add to removedProperties so interpolators can be cleaned up
-    removedProperties_.insert(propertyName);
+    propertiesToRemove_.insert(propertyName);
   }
 }
 
@@ -150,13 +140,7 @@ void TransitionProgressProvider::runProgressProviders(
 
   // Then handle changed properties
   for (const auto &propertyName : changedProps.changedPropertyNames) {
-    const auto propertySettingsOptional = getTransitionPropertySettings(propertiesSettings, propertyName);
-
-    if (!propertySettingsOptional.has_value()) {
-      throw std::invalid_argument("[Reanimated] Property '" + propertyName + "' is not a valid transition property");
-    }
-
-    const auto &propertySettings = propertySettingsOptional.value();
+    const auto propertySettings = getTransitionPropertySettings(propertiesSettings, propertyName);
     const auto it = propertyProgressProviders_.find(propertyName);
 
     if (it != propertyProgressProviders_.end()) {
@@ -185,9 +169,8 @@ void TransitionProgressProvider::update(const double timestamp) {
   for (const auto &[propertyName, propertyProgressProvider] : propertyProgressProviders_) {
     propertyProgressProvider->update(timestamp);
 
-    // Track finished properties for removal
     if (propertyProgressProvider->getState() == TransitionProgressState::Finished) {
-      removedProperties_.insert(propertyName);
+      propertiesToRemove_.insert(propertyName);
     }
   }
 }
