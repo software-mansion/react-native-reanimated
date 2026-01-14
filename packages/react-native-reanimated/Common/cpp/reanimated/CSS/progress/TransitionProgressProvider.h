@@ -52,16 +52,15 @@ class TransitionProgressProvider final {
   TransitionProgressState getState() const;
   double getMinDelay(double timestamp) const;
   TransitionPropertyProgressProviders getPropertyProgressProviders() const;
-  std::unordered_set<std::string> flushRemovedProperties();
 
-  void discardIrrelevantProgressProviders(const std::unordered_set<std::string> &transitionPropertyNames);
-  void removeProgressProviders(const PropertyNames &propertyNames);
   void runProgressProviders(
       double timestamp,
       const CSSTransitionPropertiesSettings &propertiesSettings,
       const ChangedProps &changedProps,
       const std::unordered_set<std::string> &reversedPropertyNames);
   void update(double timestamp);
+  void removeListedProgressProviders(const PropertyNames &propertyNames);
+  std::unordered_set<std::string> removeFinishedProgressProviders();
 
  private:
   TransitionPropertyProgressProviders propertyProgressProviders_;

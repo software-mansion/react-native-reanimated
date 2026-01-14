@@ -20,6 +20,7 @@ folly::dynamic TransitionStyleInterpolator::interpolate(
   const auto allFallbackInterpolateThreshold = allowDiscreteProperties.contains("all") ? 0.5 : 0;
 
   for (const auto &[propertyName, progressProvider] : transitionProgressProvider.getPropertyProgressProviders()) {
+    LOG(INFO) << "Interpolate property: " << propertyName;
     const auto &interpolator = interpolators_.at(propertyName);
     const auto fallbackInterpolateThreshold =
         (allowDiscreteProperties.contains(propertyName)) ? 0.5 : allFallbackInterpolateThreshold;
@@ -29,15 +30,13 @@ folly::dynamic TransitionStyleInterpolator::interpolate(
   return result;
 }
 
-void TransitionStyleInterpolator::removeObsoleteInterpolators(TransitionProgressProvider &transitionProgressProvider) {
-  // Remove interpolators for properties that have finished or been removed
-  const auto removedProperties = transitionProgressProvider.flushRemovedProperties();
+void TransitionStyleInterpolator::removeListedInterpolators(const std::unordered_set<std::string> &removedProperties) {
   for (const auto &propertyName : removedProperties) {
     interpolators_.erase(propertyName);
   }
 }
 
-void TransitionStyleInterpolator::discardIrrelevantInterpolators(
+void TransitionStyleInterpolator::removeUnlistedInterpolators(
     const std::unordered_set<std::string> &transitionPropertyNames) {
   for (auto it = interpolators_.begin(); it != interpolators_.end();) {
     // Remove property interpolators for properties not specified in the

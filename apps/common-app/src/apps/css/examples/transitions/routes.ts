@@ -11,13 +11,13 @@ import {
 
 const routes = {
   AnimatedProperties: {
-    // CardComponent: routeCards.AnimatedPropertiesCard,
+    CardComponent: routeCards.AnimatedPropertiesCard,
     name: 'Animated Properties',
     Component: AnimatedProperties,
   },
   TransitionSettings: {
     name: 'Transition Settings',
-    // CardComponent: routeCards.TransitionSettingsCard,
+    CardComponent: routeCards.TransitionSettingsCard,
     routes: {
       TransitionProperty: {
         name: 'Transition Property',
@@ -65,7 +65,7 @@ const routes = {
   },
   RealWorldExamples: {
     name: 'Real World Examples',
-    // CardComponent: routeCards.RealWorldExamplesCard,
+    CardComponent: routeCards.RealWorldExamplesCard,
     routes: {
       AppSettings: {
         name: 'App Settings',
@@ -87,7 +87,7 @@ const routes = {
   },
   TestExamples: {
     name: 'Test Examples',
-    // CardComponent: routeCards.TestExamplesCard,
+    CardComponent: routeCards.TestExamplesCard,
     routes: {
       Playground: {
         name: 'Playground',

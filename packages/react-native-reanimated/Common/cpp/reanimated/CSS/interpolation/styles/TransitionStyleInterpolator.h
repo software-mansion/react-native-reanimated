@@ -23,8 +23,8 @@ class TransitionStyleInterpolator {
       const TransitionProgressProvider &transitionProgressProvider,
       const std::unordered_set<std::string> &allowDiscreteProperties) const;
 
-  void removeObsoleteInterpolators(TransitionProgressProvider &transitionProgressProvider);
-  void discardIrrelevantInterpolators(const std::unordered_set<std::string> &transitionPropertyNames);
+  void removeListedInterpolators(const std::unordered_set<std::string> &removedPropertyNames);
+  void removeUnlistedInterpolators(const std::unordered_set<std::string> &transitionPropertyNames);
   std::unordered_set<std::string> updateInterpolatedProperties(
       const ChangedProps &changedProps,
       const folly::dynamic &lastUpdateValue);

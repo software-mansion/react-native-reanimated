@@ -99,35 +99,6 @@ TransitionPropertyProgressProviders TransitionProgressProvider::getPropertyProgr
   return propertyProgressProviders_;
 }
 
-std::unordered_set<std::string> TransitionProgressProvider::flushRemovedProperties() {
-  auto removedProperties = std::move(propertiesToRemove_);
-  propertiesToRemove_.clear();
-  return removedProperties;
-}
-
-void TransitionProgressProvider::discardIrrelevantProgressProviders(
-    const std::unordered_set<std::string> &transitionPropertyNames) {
-  for (auto it = propertyProgressProviders_.begin(); it != propertyProgressProviders_.end();) {
-    // Remove property progress providers for properties not specified in the
-    // transition property names
-    if (transitionPropertyNames.find(it->first) == transitionPropertyNames.end()) {
-      // Track removed property for interpolator cleanup
-      propertiesToRemove_.insert(it->first);
-      it = propertyProgressProviders_.erase(it);
-    } else {
-      ++it;
-    }
-  }
-}
-
-void TransitionProgressProvider::removeProgressProviders(const PropertyNames &propertyNames) {
-  for (const auto &propertyName : propertyNames) {
-    propertyProgressProviders_.erase(propertyName);
-    // Also add to removedProperties so interpolators can be cleaned up
-    propertiesToRemove_.insert(propertyName);
-  }
-}
-
 void TransitionProgressProvider::runProgressProviders(
     const double timestamp,
     const CSSTransitionPropertiesSettings &propertiesSettings,
@@ -135,7 +106,7 @@ void TransitionProgressProvider::runProgressProviders(
     const std::unordered_set<std::string> &reversedPropertyNames) {
   // Handle removed properties first
   if (!changedProps.removedPropertyNames.empty()) {
-    removeProgressProviders(changedProps.removedPropertyNames);
+    removeListedProgressProviders(changedProps.removedPropertyNames);
   }
 
   // Then handle changed properties
@@ -149,6 +120,7 @@ void TransitionProgressProvider::runProgressProviders(
 
       if (reversedPropertyNames.find(propertyName) != reversedPropertyNames.end() &&
           progressProvider->getState() != TransitionProgressState::Finished) {
+        LOG(INFO) << "Insert reversed progress provider for property: " << propertyName;
         // Create reversing shortening progress provider for interrupted
         // reversing transition
         propertyProgressProviders_.insert_or_assign(
@@ -157,6 +129,7 @@ void TransitionProgressProvider::runProgressProviders(
       }
     }
 
+    LOG(INFO) << "Create progress provider for property: " << propertyName;
     // Create progress provider with the new settings
     propertyProgressProviders_.insert_or_assign(
         propertyName,
@@ -171,8 +144,27 @@ void TransitionProgressProvider::update(const double timestamp) {
 
     if (propertyProgressProvider->getState() == TransitionProgressState::Finished) {
       propertiesToRemove_.insert(propertyName);
+      LOG(INFO) << "[add to removed] update: " << propertyName;
     }
   }
+}
+
+void TransitionProgressProvider::removeListedProgressProviders(const PropertyNames &propertyNames) {
+  for (const auto &propertyName : propertyNames) {
+    propertyProgressProviders_.erase(propertyName);
+    LOG(INFO) << "[add to removed] removeProgressProviders: " << propertyName;
+  }
+}
+
+std::unordered_set<std::string> TransitionProgressProvider::removeFinishedProgressProviders() {
+  auto removedProperties = std::move(propertiesToRemove_);
+  propertiesToRemove_.clear();
+
+  for (const auto &propertyName : removedProperties) {
+    propertyProgressProviders_.erase(propertyName);
+  }
+
+  return removedProperties;
 }
 
 std::shared_ptr<TransitionPropertyProgressProvider>
