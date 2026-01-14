@@ -14,7 +14,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
 
   private transitionConfig: NormalizedCSSTransitionConfig | null = null;
-  private lastProps: StyleProps = {};
+  private lastProps: StyleProps | null = null;
 
   constructor(shadowNodeWrapper: ShadowNodeWrapper, viewTag: number) {
     this.viewTag = viewTag;
@@ -37,23 +37,25 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
       return;
     }
 
-    const propsDiff = getChangedProps(
-      this.lastProps,
-      props,
-      transitionConfig.properties,
-      this.transitionConfig?.properties
-    );
-
-    // Run transition only if there are changed props
-    if (Object.keys(propsDiff).length > 0) {
-      runCSSTransition(
-        this.shadowNodeWrapper,
-        propsDiff,
-        transitionConfig.settings
+    if (this.lastProps) {
+      const propsDiff = getChangedProps(
+        this.lastProps,
+        props,
+        transitionConfig.properties,
+        this.transitionConfig?.properties
       );
+
+      // Run transition only if there are changed props
+      if (Object.keys(propsDiff).length > 0) {
+        this.transitionConfig = transitionConfig;
+        runCSSTransition(
+          this.shadowNodeWrapper,
+          propsDiff,
+          transitionConfig.settings
+        );
+      }
     }
 
-    this.transitionConfig = transitionConfig;
     this.lastProps = props;
   }
 
@@ -65,7 +67,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     if (this.transitionConfig) {
       unregisterCSSTransition(this.viewTag);
       this.transitionConfig = null;
-      this.lastProps = {};
+      this.lastProps = null;
     }
   }
 }

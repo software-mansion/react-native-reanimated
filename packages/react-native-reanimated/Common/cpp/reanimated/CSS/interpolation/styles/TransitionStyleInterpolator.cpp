@@ -13,18 +13,13 @@ TransitionStyleInterpolator::TransitionStyleInterpolator(
 
 folly::dynamic TransitionStyleInterpolator::interpolate(
     const std::shared_ptr<const ShadowNode> &shadowNode,
-    const TransitionProgressProvider &transitionProgressProvider,
-    const std::unordered_set<std::string> &allowDiscreteProperties) const {
+    const TransitionProgressProvider &transitionProgressProvider) const {
   folly::dynamic result = folly::dynamic::object;
 
-  const auto allFallbackInterpolateThreshold = allowDiscreteProperties.contains("all") ? 0.5 : 0;
-
   for (const auto &[propertyName, progressProvider] : transitionProgressProvider.getPropertyProgressProviders()) {
-    LOG(INFO) << "Interpolate property: " << propertyName;
     const auto &interpolator = interpolators_.at(propertyName);
-    const auto fallbackInterpolateThreshold =
-        (allowDiscreteProperties.contains(propertyName)) ? 0.5 : allFallbackInterpolateThreshold;
-    result[propertyName] = interpolator->interpolate(shadowNode, progressProvider, fallbackInterpolateThreshold);
+    // TODO - get rid of the fallbackInterpolateThreshold param
+    result[propertyName] = interpolator->interpolate(shadowNode, progressProvider, 0.5);
   }
 
   return result;

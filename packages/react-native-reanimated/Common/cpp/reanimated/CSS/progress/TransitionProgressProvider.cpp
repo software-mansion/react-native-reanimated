@@ -120,7 +120,6 @@ void TransitionProgressProvider::runProgressProviders(
 
       if (reversedPropertyNames.find(propertyName) != reversedPropertyNames.end() &&
           progressProvider->getState() != TransitionProgressState::Finished) {
-        LOG(INFO) << "Insert reversed progress provider for property: " << propertyName;
         // Create reversing shortening progress provider for interrupted
         // reversing transition
         propertyProgressProviders_.insert_or_assign(
@@ -129,7 +128,6 @@ void TransitionProgressProvider::runProgressProviders(
       }
     }
 
-    LOG(INFO) << "Create progress provider for property: " << propertyName;
     // Create progress provider with the new settings
     propertyProgressProviders_.insert_or_assign(
         propertyName,
@@ -144,7 +142,6 @@ void TransitionProgressProvider::update(const double timestamp) {
 
     if (propertyProgressProvider->getState() == TransitionProgressState::Finished) {
       propertiesToRemove_.insert(propertyName);
-      LOG(INFO) << "[add to removed] update: " << propertyName;
     }
   }
 }
@@ -152,7 +149,6 @@ void TransitionProgressProvider::update(const double timestamp) {
 void TransitionProgressProvider::removeListedProgressProviders(const PropertyNames &propertyNames) {
   for (const auto &propertyName : propertyNames) {
     propertyProgressProviders_.erase(propertyName);
-    LOG(INFO) << "[add to removed] removeProgressProviders: " << propertyName;
   }
 }
 

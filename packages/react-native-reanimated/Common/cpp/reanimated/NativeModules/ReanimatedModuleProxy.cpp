@@ -437,8 +437,9 @@ void ReanimatedModuleProxy::runCSSTransition(
   {
     auto lock = cssTransitionsRegistry_->lock();
     cssTransitionsRegistry_->run(shadowNode, changedProps, parsedSettings, viewStylesRepository_);
-    maybeRunCSSLoop();
   }
+  
+  maybeRunCSSLoop();
 }
 
 void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) {

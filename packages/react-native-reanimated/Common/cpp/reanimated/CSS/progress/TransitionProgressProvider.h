@@ -3,7 +3,6 @@
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 #include <reanimated/CSS/progress/RawProgressProvider.h>
-#include <reanimated/CSS/utils/props.h>
 
 #include <memory>
 #include <string>
