@@ -14,6 +14,10 @@ export const svgPropertiesRoutes = {
     name: 'Ellipse',
     Component: svgAnimatedProperties.Ellipse,
   },
+  Image: {
+    name: 'Image',
+    Component: svgAnimatedProperties.Image,
+  },
   Line: {
     name: 'Line',
     Component: svgAnimatedProperties.Line,

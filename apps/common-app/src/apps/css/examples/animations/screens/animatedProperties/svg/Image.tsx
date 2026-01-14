@@ -2,28 +2,36 @@ import Animated, { type CSSAnimationKeyframes } from 'react-native-reanimated';
 // TODO: Fix me
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
-import { Rect, type RectProps, Svg } from 'react-native-svg';
+import { Image, type ImageProps, Svg } from 'react-native-svg';
 
 import { ExamplesScreen } from '@/apps/css/components';
-import { colors } from '@/theme';
 
-const AnimatedRect = Animated.createAnimatedComponent(Rect);
+const AnimatedImage = Animated.createAnimatedComponent(Image);
 
-export default function RectExample() {
+export default function ImageExample() {
   return (
-    <ExamplesScreen<{ keyframes: CSSAnimationKeyframes<RectProps> }, RectProps>
+    <ExamplesScreen<
+      { keyframes: CSSAnimationKeyframes<ImageProps>; viewBox?: string },
+      ImageProps
+    >
       buildAnimation={({ keyframes }) => ({
         animationName: keyframes,
         animationDirection: 'alternate',
-        animationDuration: '0.5s',
+        animationDuration: '1s',
         animationIterationCount: 'infinite',
-        animationTimingFunction: 'linear',
+        animationTimingFunction: 'ease-in-out',
       })}
-      renderExample={({ animation }) => (
-        <Svg height={100} width={100}>
-          <AnimatedRect
+      renderExample={({ animation, viewBox }) => (
+        <Svg
+          height={100}
+          viewBox={viewBox ?? '0 0 100 100'}
+          width={100}
+          preserveAspectRatio={'none'}>
+          <AnimatedImage
             animatedProps={animation}
-            fill={colors.primary}
+            href={
+              'https://miro.medium.com/v2/resize:fill:160:160/1*5QvEwVc_cxdJHcepbaRHhw.jpeg'
+            }
             height={60}
             width={60}
             x={20}
@@ -49,9 +57,11 @@ export default function RectExample() {
                 {
                   keyframes: {
                     from: {
+                      preserveAspectRatio: 'xMaxYMax',
                       x: '10%',
                     },
                     to: {
+                      preserveAspectRatio: 'xMaxYMax',
                       x: '50%',
                     },
                   },
@@ -173,6 +183,7 @@ export default function RectExample() {
                   keyframes: {
                     to: {
                       height: 80,
+                      preserveAspectRatio: 'none',
                     },
                   },
                   title: 'Absolute',
@@ -207,109 +218,6 @@ export default function RectExample() {
                 },
               ],
               title: 'Height',
-            },
-          ],
-        },
-        {
-          name: 'Corners',
-          sections: [
-            {
-              examples: [
-                {
-                  keyframes: {
-                    to: {
-                      rx: 20,
-                    },
-                  },
-                  title: 'Absolute',
-                  description: 'Animates from default `rx=0` to `rx=20`',
-                },
-                {
-                  keyframes: {
-                    from: {
-                      rx: '5%',
-                    },
-                    to: {
-                      rx: '20%',
-                    },
-                  },
-                  title: 'Percentage',
-                  description:
-                    'Animation using only percentage values for smooth relative scaling',
-                },
-                {
-                  keyframes: {
-                    from: {
-                      rx: 5,
-                    },
-                    to: {
-                      rx: '20%',
-                    },
-                  },
-                  title: 'Mixed',
-                  description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the horizontal radius is changed **abruptly**',
-                },
-              ],
-              title: 'Horizontal Radius (rx)',
-            },
-            {
-              examples: [
-                {
-                  keyframes: {
-                    to: {
-                      ry: 20,
-                    },
-                  },
-                  title: 'Absolute',
-                  description: 'Animates from default `ry=0` to `ry=20`',
-                },
-                {
-                  keyframes: {
-                    from: {
-                      ry: '5%',
-                    },
-                    to: {
-                      ry: '20%',
-                    },
-                  },
-                  title: 'Percentage',
-                  description:
-                    'Animation using only percentage values for smooth relative scaling',
-                },
-                {
-                  keyframes: {
-                    from: {
-                      ry: 5,
-                    },
-                    to: {
-                      ry: '20%',
-                    },
-                  },
-                  title: 'Mixed',
-                  description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the vertical radius is changed **abruptly**',
-                },
-              ],
-              title: 'Vertical Radius (ry)',
-            },
-          ],
-        },
-        {
-          name: 'Appearance',
-          sections: [
-            {
-              examples: [
-                {
-                  keyframes: {
-                    to: {
-                      opacity: 0,
-                    },
-                  },
-                  title: 'Opacity',
-                },
-              ],
-              title: 'Opacity',
             },
           ],
         },
