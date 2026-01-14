@@ -24,15 +24,13 @@ export default function ImageExample() {
       renderExample={({ animation, viewBox }) => (
         <Svg
           height={100}
+          preserveAspectRatio="none"
           viewBox={viewBox ?? '0 0 100 100'}
-          width={100}
-          preserveAspectRatio={'none'}>
+          width={100}>
           <AnimatedImage
             animatedProps={animation}
-            href={
-              'https://miro.medium.com/v2/resize:fill:160:160/1*5QvEwVc_cxdJHcepbaRHhw.jpeg'
-            }
             height={60}
+            href="https://miro.medium.com/v2/resize:fill:160:160/1*5QvEwVc_cxdJHcepbaRHhw.jpeg"
             width={60}
             x={20}
             y={20}
@@ -57,11 +55,9 @@ export default function ImageExample() {
                 {
                   keyframes: {
                     from: {
-                      preserveAspectRatio: 'xMaxYMax',
                       x: '10%',
                     },
                     to: {
-                      preserveAspectRatio: 'xMaxYMax',
                       x: '50%',
                     },
                   },
@@ -183,7 +179,6 @@ export default function ImageExample() {
                   keyframes: {
                     to: {
                       height: 80,
-                      preserveAspectRatio: 'none',
                     },
                   },
                   title: 'Absolute',
