@@ -55,6 +55,7 @@ template class SimpleValueInterpolator<CSSLength, CSSKeyword>;
 template class SimpleValueInterpolator<CSSDouble>;
 template class SimpleValueInterpolator<CSSDouble, CSSKeyword>;
 template class SimpleValueInterpolator<CSSInteger>;
+template class SimpleValueInterpolator<CSSIndex>;
 template class SimpleValueInterpolator<CSSAngle>;
 template class SimpleValueInterpolator<CSSColor>;
 template class SimpleValueInterpolator<CSSBoolean>;
