@@ -1080,12 +1080,12 @@ void addAspectRatioToPropsBuilder(
           const CSSDouble &cssValue = active_value;
           propsBuilder->setAspectRatio(yoga::FloatOptional(cssValue.value));
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
-            const CSSKeyword &cssValue = active_value;
-            if (cssValue.toString() == "auto") {
-                // degenerate aspect ratios act as auto.
-                // see https://drafts.csswg.org/css-sizing-4/#valdef-aspect-ratio-ratio
-                propsBuilder->setAspectRatio(yoga::FloatOptional(0));
-            }
+          const CSSKeyword &cssValue = active_value;
+          if (cssValue.toString() == "auto") {
+            // degenerate aspect ratios act as auto.
+            // see https://drafts.csswg.org/css-sizing-4/#valdef-aspect-ratio-ratio
+            propsBuilder->setAspectRatio(yoga::FloatOptional(0));
+          }
         }
       },
       storage);
@@ -1147,8 +1147,8 @@ void addFlexBasisToPropsBuilder(
             propsBuilder->setFlexBasis(yoga::Style::SizeLength::points(cssValue.value));
           }
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
-            const CSSKeyword &cssValue = active_value;
-            propsBuilder->setFlexBasis(strToYogaSizeLength(cssValue.toString()));
+          const CSSKeyword &cssValue = active_value;
+          propsBuilder->setFlexBasis(strToYogaSizeLength(cssValue.toString()));
         }
       },
       storage);
@@ -1414,8 +1414,19 @@ void addBackfaceVisibilityToPropsBuilder(
     const CSSValueVariant<CSSKeyword> &value) {
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSKeyword>(storage);
-  const auto backfaceVisibility = cssValue.toString();
-  // TODO: Check this
+  const auto keyword = cssValue.toString();
+  static const std::unordered_map<std::string, BackfaceVisibility> backfaceVisibilityMap = {
+      {"auto", BackfaceVisibility::Auto},
+      {"visible", BackfaceVisibility::Visible},
+      {"hidden", BackfaceVisibility::Hidden},
+  };
+
+  const auto it = backfaceVisibilityMap.find(keyword);
+  if (it == backfaceVisibilityMap.end()) {
+    return;
+  }
+
+  propsBuilder->setBackfaceVisibility(it->second);
 }
 
 void addBorderCurveToPropsBuilder(
@@ -1462,7 +1473,7 @@ void addBorderStyleToPropsBuilder(
 void addElevationToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDouble> &value) {
-    // TODO: Check this
+  // TODO: Check this
 }
 
 void addPointerEventsToPropsBuilder(
