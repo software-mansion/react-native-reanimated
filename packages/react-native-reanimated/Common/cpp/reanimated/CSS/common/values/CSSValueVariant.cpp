@@ -159,6 +159,7 @@ template class CSSValueVariant<CSSLength, CSSKeyword>;
 template class CSSValueVariant<CSSDouble>;
 template class CSSValueVariant<CSSDouble, CSSKeyword>;
 template class CSSValueVariant<CSSInteger>;
+template class CSSValueVariant<CSSIndex>;
 template class CSSValueVariant<CSSKeyword>;
 template class CSSValueVariant<CSSAngle>;
 template class CSSValueVariant<CSSBoolean>;

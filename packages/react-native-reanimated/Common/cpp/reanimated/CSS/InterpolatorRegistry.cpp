@@ -261,7 +261,7 @@ const InterpolatorFactoriesRecord SVG_COLOR_INTERPOLATORS = {
 const InterpolatorFactoriesRecord SVG_FILL_INTERPOLATORS = {
     {"fill", value<SVGBrush>(BLACK)},
     {"fillOpacity", value<CSSDouble>(1)},
-    {"fillRule", value<CSSInteger>(0)},
+    {"fillRule", value<CSSIndex>(0)},
 };
 
 const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
@@ -270,10 +270,10 @@ const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
     {"strokeOpacity", value<CSSDouble>(1)},
     {"strokeDasharray", value<SVGStrokeDashArray, CSSKeyword>(SVGStrokeDashArray())},
     {"strokeDashoffset", value<SVGLength>(0)},
-    {"strokeLinecap", value<CSSInteger>(0)},
-    {"strokeLinejoin", value<CSSInteger>(0)},
+    {"strokeLinecap", value<CSSIndex>(0)},
+    {"strokeLinejoin", value<CSSIndex>(0)},
     {"strokeMiterlimit", value<CSSDouble>(4)},
-    {"vectorEffect", value<CSSInteger>(0)},
+    {"vectorEffect", value<CSSIndex>(0)},
 };
 
 const InterpolatorFactoriesRecord SVG_CLIP_INTERPOLATORS = {
