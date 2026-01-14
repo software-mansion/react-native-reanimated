@@ -13,7 +13,6 @@ CSSTransition::CSSTransition(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : shadowNode_(std::move(shadowNode)),
       viewStylesRepository_(viewStylesRepository),
-      propsBuilder_(std::make_shared<AnimatedPropsBuilder>()),
       properties_(config.properties),
       settings_(config.settings),
       styleInterpolator_(TransitionStyleInterpolator(shadowNode_->getComponentName(), viewStylesRepository)),
@@ -37,8 +36,8 @@ TransitionProgressState CSSTransition::getState() const {
   return progressProvider_.getState();
 }
 
-folly::dynamic CSSTransition::getCurrentInterpolationStyle() const {
-  return styleInterpolator_.interpolate(shadowNode_, progressProvider_, propsBuilder_, allowDiscreteProperties_);
+folly::dynamic CSSTransition::getCurrentInterpolationStyle(std::shared_ptr<AnimatedPropsBuilder> propsBuilder) const {
+  return styleInterpolator_.interpolate(shadowNode_, progressProvider_, propsBuilder, allowDiscreteProperties_);
 }
 
 TransitionProperties CSSTransition::getProperties() const {
@@ -90,30 +89,25 @@ void CSSTransition::updateSettings(const PartialCSSTransitionConfig &config) {
 }
 
 folly::dynamic
-CSSTransition::run(const ChangedProps &changedProps, const folly::dynamic &lastUpdateValue, const double timestamp) {
+CSSTransition::run(const ChangedProps &changedProps, const folly::dynamic &lastUpdateValue, const double timestamp, std::shared_ptr<AnimatedPropsBuilder> propsBuilder) {
   progressProvider_.runProgressProviders(
       timestamp,
       settings_,
       changedProps.changedPropertyNames,
       styleInterpolator_.getReversedPropertyNames(changedProps.newProps));
   styleInterpolator_.updateInterpolatedProperties(changedProps, lastUpdateValue);
-  return update(timestamp);
+  return update(timestamp, propsBuilder);
 }
 
-folly::dynamic CSSTransition::update(const double timestamp) {
+folly::dynamic CSSTransition::update(const double timestamp, std::shared_ptr<AnimatedPropsBuilder> propsBuilder) {
   progressProvider_.update(timestamp);
-  auto result = styleInterpolator_.interpolate(shadowNode_, progressProvider_, propsBuilder_, allowDiscreteProperties_);
+  auto result = styleInterpolator_.interpolate(shadowNode_, progressProvider_, propsBuilder, allowDiscreteProperties_);
   // Remove interpolators for which interpolation has finished
   // (we won't need them anymore in the current transition)
   styleInterpolator_.discardFinishedInterpolators(progressProvider_);
   // And remove finished progress providers after they were used to calculate
   // the last frame of the transition
   progressProvider_.discardFinishedProgressProviders();
-  return result;
-}
-
-AnimatedProps CSSTransition::getAnimatedProps() {
-  AnimatedProps result = propsBuilder_->get();
   return result;
 }
 

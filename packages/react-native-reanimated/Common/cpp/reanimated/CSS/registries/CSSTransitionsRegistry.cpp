@@ -41,11 +41,13 @@ void CSSTransitionsRegistry::remove(const Tag viewTag) {
 void CSSTransitionsRegistry::updateSettings(const Tag viewTag, const PartialCSSTransitionConfig &config) {
   const auto &transition = registry_[viewTag];
   transition->updateSettings(config);
+    
+  std::shared_ptr<AnimatedPropsBuilder> propsBuilder = std::make_shared<AnimatedPropsBuilder>();
 
   // Replace style overrides with the new ones if transition properties were
   // updated (we want to keep overrides only for transitioned properties)
   if (config.properties.has_value()) {
-    updateInUpdatesRegistry(transition, transition->getCurrentInterpolationStyle());
+    updateInUpdatesRegistry(transition, transition->getCurrentInterpolationStyle(propsBuilder));
   }
 }
 
@@ -57,15 +59,14 @@ void CSSTransitionsRegistry::update(const double timestamp) {
   for (auto it = runningTransitionTags_.begin(); it != runningTransitionTags_.end();) {
     const auto &viewTag = *it;
     const auto &transition = registry_[viewTag];
+    std::shared_ptr<AnimatedPropsBuilder> propsBuilder = std::make_shared<AnimatedPropsBuilder>();
 
-    const folly::dynamic &updates = transition->update(timestamp);
+    const folly::dynamic &updates = transition->update(timestamp, propsBuilder);
     if (!updates.empty()) {
       addUpdatesToBatch(transition->getShadowNode(), updates);
     }
 
-    auto animatedProps = transition->getAnimatedProps();
-    addAnimatedPropsToBatch(transition->getShadowNode(), std::move(animatedProps));
-
+    addAnimatedPropsToBatch(transition->getShadowNode(), propsBuilder->get());
     updateInUpdatesRegistry(transition, updates);
 
     // We remove transition from running and schedule it when animation of one
@@ -131,7 +132,9 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
 
       const auto &shadowNode = transition->getShadowNode();
       const auto &lastUpdates = strongThis->getUpdatesFromRegistry(shadowNode->getTag());
-      const auto &transitionStartStyle = transition->run(changedProps, lastUpdates, strongThis->getCurrentTimestamp_());
+      std::shared_ptr<AnimatedPropsBuilder> propsBuilder = std::make_shared<AnimatedPropsBuilder>();
+      const auto &transitionStartStyle = transition->run(changedProps, lastUpdates, strongThis->getCurrentTimestamp_(), propsBuilder);
+      strongThis->addAnimatedPropsToBatch(transition->getShadowNode(), propsBuilder->get());
       strongThis->updateInUpdatesRegistry(transition, transitionStartStyle);
       strongThis->scheduleOrActivateTransition(transition);
     }

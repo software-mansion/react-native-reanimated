@@ -23,19 +23,17 @@ class CSSTransition {
   std::shared_ptr<const ShadowNode> getShadowNode() const;
   double getMinDelay(double timestamp) const;
   TransitionProgressState getState() const;
-  folly::dynamic getCurrentInterpolationStyle() const;
+  folly::dynamic getCurrentInterpolationStyle(std::shared_ptr<AnimatedPropsBuilder> propsBuilder) const;
   TransitionProperties getProperties() const;
   PropertyNames getAllowedProperties(const folly::dynamic &oldProps, const folly::dynamic &newProps);
 
   void updateSettings(const PartialCSSTransitionConfig &config);
-  folly::dynamic run(const ChangedProps &changedProps, const folly::dynamic &lastUpdateValue, double timestamp);
-  folly::dynamic update(double timestamp);
-  AnimatedProps getAnimatedProps();
+  folly::dynamic run(const ChangedProps &changedProps, const folly::dynamic &lastUpdateValue, double timestamp, std::shared_ptr<AnimatedPropsBuilder> propsBuilder);
+  folly::dynamic update(double timestamp, std::shared_ptr<AnimatedPropsBuilder> propsBuilder);
 
  private:
   const std::shared_ptr<const ShadowNode> shadowNode_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
-  const std::shared_ptr<AnimatedPropsBuilder> propsBuilder_;
   std::unordered_set<std::string> allowDiscreteProperties_;
   TransitionProperties properties_;
   CSSTransitionPropertiesSettings settings_;
