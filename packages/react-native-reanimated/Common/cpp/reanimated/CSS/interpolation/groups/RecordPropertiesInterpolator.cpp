@@ -8,7 +8,7 @@ namespace reanimated::css {
 
 RecordPropertiesInterpolator::RecordPropertiesInterpolator(
     const InterpolatorFactoriesRecord &factories,
-    const PropertyPath &propertyPath,
+    const std::vector<std::string> &propertyPath,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : GroupPropertiesInterpolator(propertyPath, viewStylesRepository), factories_(factories) {}
 

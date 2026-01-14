@@ -21,7 +21,7 @@ class SimpleValueInterpolator : public ValueInterpolator {
   using ValueType = CSSValueVariant<AllowedTypes...>;
 
   explicit SimpleValueInterpolator(
-      const PropertyPath &propertyPath,
+      const std::vector<std::string> &propertyPath,
       const ValueType &defaultStyleValue,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 

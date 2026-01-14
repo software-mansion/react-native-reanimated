@@ -11,7 +11,7 @@ namespace reanimated::css {
 class GroupPropertiesInterpolator : public PropertyInterpolator {
  public:
   GroupPropertiesInterpolator(
-      const PropertyPath &propertyPath,
+      const std::vector<std::string> &propertyPath,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
   folly::dynamic getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const override;

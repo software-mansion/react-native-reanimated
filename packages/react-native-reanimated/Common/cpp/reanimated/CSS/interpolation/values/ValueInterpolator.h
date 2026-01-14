@@ -23,7 +23,7 @@ struct ValueKeyframe {
 class ValueInterpolator : public PropertyInterpolator {
  public:
   explicit ValueInterpolator(
-      const PropertyPath &propertyPath,
+      const std::vector<std::string> &propertyPath,
       const std::shared_ptr<CSSValue> &defaultValue,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
   virtual ~ValueInterpolator() = default;

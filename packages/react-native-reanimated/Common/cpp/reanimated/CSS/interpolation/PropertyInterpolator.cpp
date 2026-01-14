@@ -8,7 +8,7 @@
 namespace reanimated::css {
 
 PropertyInterpolator::PropertyInterpolator(
-    PropertyPath propertyPath,
+    std::vector<std::string> propertyPath,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : propertyPath_(std::move(propertyPath)), viewStylesRepository_(viewStylesRepository) {}
 

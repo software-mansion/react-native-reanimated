@@ -34,7 +34,7 @@ class ViewStylesRepository {
 
   jsi::Value getNodeProp(const std::shared_ptr<const ShadowNode> &shadowNode, const std::string &propName);
   jsi::Value getParentNodeProp(const std::shared_ptr<const ShadowNode> &shadowNode, const std::string &propName);
-  folly::dynamic getStyleProp(Tag tag, const PropertyPath &propertyPath);
+  folly::dynamic getStyleProp(Tag tag, const std::vector<std::string> &propertyPath);
 
   void clearNodesCache();
 
@@ -47,7 +47,7 @@ class ViewStylesRepository {
 
   void updateCacheIfNeeded(CachedShadowNode &cachedNode, const std::shared_ptr<const ShadowNode> &shadowNode);
 
-  static folly::dynamic getPropertyValue(const folly::dynamic &value, const PropertyPath &propertyPath);
+  static folly::dynamic getPropertyValue(const folly::dynamic &value, const std::vector<std::string> &propertyPath);
 };
 
 } // namespace reanimated::css

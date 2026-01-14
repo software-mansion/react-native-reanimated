@@ -28,7 +28,7 @@ struct StyleOperationsKeyframe {
 class OperationsStyleInterpolator : public PropertyInterpolator {
  public:
   OperationsStyleInterpolator(
-      const PropertyPath &propertyPath,
+      const std::vector<std::string> &propertyPath,
       const std::shared_ptr<StyleOperationInterpolators> &interpolators,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const folly::dynamic &defaultStyleValueDynamic);

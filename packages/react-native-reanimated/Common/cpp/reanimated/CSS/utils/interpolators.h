@@ -10,13 +10,13 @@ namespace reanimated::css {
 
 std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
     const std::string &propertyName,
-    const PropertyPath &propertyPath,
+    const std::vector<std::string> &propertyPath,
     const InterpolatorFactoriesRecord &factories,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
 std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
     size_t arrayIndex,
-    const PropertyPath &propertyPath,
+    const std::vector<std::string> &propertyPath,
     const InterpolatorFactoriesArray &factories,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 

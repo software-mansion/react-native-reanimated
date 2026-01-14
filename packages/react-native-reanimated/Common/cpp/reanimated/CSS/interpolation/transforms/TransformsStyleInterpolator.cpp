@@ -7,7 +7,7 @@ namespace reanimated::css {
 const folly::dynamic defaultStyleValue = folly::dynamic::array(MatrixOperation(TransformMatrix3D()).toDynamic());
 
 TransformsStyleInterpolator::TransformsStyleInterpolator(
-    const PropertyPath &propertyPath,
+    const std::vector<std::string> &propertyPath,
     const std::shared_ptr<StyleOperationInterpolators> &interpolators,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : OperationsStyleInterpolatorBase<TransformOperation>(

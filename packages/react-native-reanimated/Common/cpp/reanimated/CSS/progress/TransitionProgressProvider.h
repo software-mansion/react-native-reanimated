@@ -58,7 +58,7 @@ class TransitionProgressProvider final {
       const ChangedProps &changedProps,
       const std::unordered_set<std::string> &reversedPropertyNames);
   void update(double timestamp);
-  void removeListedProgressProviders(const PropertyNames &propertyNames);
+  void removeListedProgressProviders(const std::vector<std::string> &propertyNames);
   std::unordered_set<std::string> removeFinishedProgressProviders();
 
  private:

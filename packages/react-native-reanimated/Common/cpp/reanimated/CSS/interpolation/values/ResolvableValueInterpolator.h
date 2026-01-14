@@ -24,7 +24,7 @@ class ResolvableValueInterpolator final : public SimpleValueInterpolator<Allowed
   using ValueType = typename SimpleValueInterpolator<AllowedTypes...>::ValueType;
 
   explicit ResolvableValueInterpolator(
-      const PropertyPath &propertyPath,
+      const std::vector<std::string> &propertyPath,
       const ValueType &defaultStyleValue,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const ResolvableValueInterpolatorConfig &config);

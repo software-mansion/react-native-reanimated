@@ -11,7 +11,7 @@ namespace reanimated::css {
 class FilterStyleInterpolator final : public OperationsStyleInterpolatorBase<FilterOperation> {
  public:
   FilterStyleInterpolator(
-      const PropertyPath &propertyPath,
+      const std::vector<std::string> &propertyPath,
       const std::shared_ptr<StyleOperationInterpolators> &interpolators,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 

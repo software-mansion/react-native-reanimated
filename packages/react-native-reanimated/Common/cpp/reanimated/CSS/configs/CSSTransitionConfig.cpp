@@ -14,8 +14,8 @@ bool isDiscreteProperty(const std::string &propName, const std::string &componen
 ChangedProps parseChangedPropsFromDiff(jsi::Runtime &rt, const jsi::Value &diff) {
   folly::dynamic oldProps = folly::dynamic::object();
   folly::dynamic newProps = folly::dynamic::object();
-  PropertyNames changedPropertyNames;
-  PropertyNames removedPropertyNames;
+  std::vector<string> changedPropertyNames;
+  std::vector<string> removedPropertyNames;
 
   const auto diffObj = diff.asObject(rt);
   const auto propertyNames = diffObj.getPropertyNames(rt);

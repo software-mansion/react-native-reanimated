@@ -5,7 +5,7 @@
 namespace reanimated::css {
 
 GroupPropertiesInterpolator::GroupPropertiesInterpolator(
-    const PropertyPath &propertyPath,
+    const std::vector<std::string> &propertyPath,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : PropertyInterpolator(propertyPath, viewStylesRepository) {}
 

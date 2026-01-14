@@ -16,7 +16,7 @@ namespace reanimated::css {
 class PropertyInterpolator {
  public:
   explicit PropertyInterpolator(
-      PropertyPath propertyPath,
+      std::vector<std::string> propertyPath,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
   virtual folly::dynamic getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const = 0;
@@ -36,7 +36,7 @@ class PropertyInterpolator {
       double fallbackInterpolateThreshold) const = 0;
 
  protected:
-  const PropertyPath propertyPath_;
+  const std::vector<std::string> propertyPath_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   std::string getPropertyPathString() const;
@@ -52,7 +52,7 @@ class PropertyInterpolatorFactory {
   virtual const CSSValue &getDefaultValue() const = 0;
 
   virtual std::shared_ptr<PropertyInterpolator> create(
-      const PropertyPath &propertyPath,
+      const std::vector<std::string> &propertyPath,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const = 0;
 };
 

@@ -65,7 +65,7 @@ jsi::Value ViewStylesRepository::getParentNodeProp(
   return getNodeProp(parentNode, propName);
 }
 
-folly::dynamic ViewStylesRepository::getStyleProp(const Tag tag, const PropertyPath &propertyPath) {
+folly::dynamic ViewStylesRepository::getStyleProp(const Tag tag, const std::vector<std::string> &propertyPath) {
   auto animatedValue = getPropertyValue(animatedPropsRegistry_->get(tag), propertyPath);
   if (!animatedValue.isNull()) {
     return animatedValue;
@@ -98,7 +98,7 @@ void ViewStylesRepository::updateCacheIfNeeded(
   cachedNode.viewProps = std::static_pointer_cast<const ViewProps>(newestCloneOfShadowNode->getProps());
 }
 
-folly::dynamic ViewStylesRepository::getPropertyValue(const folly::dynamic &value, const PropertyPath &propertyPath) {
+folly::dynamic ViewStylesRepository::getPropertyValue(const folly::dynamic &value, const std::vector<std::string> &propertyPath) {
   const folly::dynamic *currentValue = &value;
 
   for (size_t i = 0; i < propertyPath.size(); ++i) {

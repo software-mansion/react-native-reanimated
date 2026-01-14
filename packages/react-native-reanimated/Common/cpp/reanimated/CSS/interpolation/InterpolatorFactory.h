@@ -39,7 +39,7 @@ class SimpleValueInterpolatorFactory : public PropertyInterpolatorFactory {
   }
 
   std::shared_ptr<PropertyInterpolator> create(
-      const PropertyPath &propertyPath,
+      const std::vector<std::string> &propertyPath,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
     return std::make_shared<SimpleValueInterpolator<AllowedTypes...>>(
         propertyPath, defaultValue_, viewStylesRepository);
@@ -61,7 +61,7 @@ class ResolvableValueInterpolatorFactory : public PropertyInterpolatorFactory {
   }
 
   std::shared_ptr<PropertyInterpolator> create(
-      const PropertyPath &propertyPath,
+      const std::vector<std::string> &propertyPath,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const override {
     return std::make_shared<ResolvableValueInterpolator<AllowedTypes...>>(
         propertyPath, defaultValue_, viewStylesRepository, config_);

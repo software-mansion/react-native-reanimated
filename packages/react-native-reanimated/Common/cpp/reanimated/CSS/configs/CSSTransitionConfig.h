@@ -9,24 +9,16 @@
 
 namespace reanimated::css {
 
-struct CSSTransitionChangedProps {
-  const folly::dynamic oldProps;
-  const folly::dynamic newProps;
-  const PropertyNames changedPropertyNames;
-  const PropertyNames removedPropertyNames;
-};
-
-struct CSSTransitionPropertySettings {
+struct CSSTransitionPropertyUpdate {
+  std::pair<folly::dynamic, folly::dynamic> value;
   double duration;
-  EasingFunction easingFunction;
   double delay;
+  EasingFunction easingFunction;
 };
 
-using CSSTransitionSettingsMap = std::unordered_map<std::string, CSSTransitionPropertySettings>;
-
-using CSSTransitionConfigMap {
-  CSSTransitionChangedProps changedProps;
-  CSSTransitionSettingsMap propertySettings;
+struct CSSTransitionConfig {
+  std::unordered_map<std::string, CSSTransitionPropertyUpdate> updates;
+  std::vector<std::string> removedProperties;
 };
 
 CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value &config);

@@ -146,7 +146,7 @@ void TransitionProgressProvider::update(const double timestamp) {
   }
 }
 
-void TransitionProgressProvider::removeListedProgressProviders(const PropertyNames &propertyNames) {
+void TransitionProgressProvider::removeListedProgressProviders(const std::vector<std::string> &propertyNames) {
   for (const auto &propertyName : propertyNames) {
     propertyProgressProviders_.erase(propertyName);
   }

@@ -12,7 +12,7 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
  public:
   RecordPropertiesInterpolator(
       const InterpolatorFactoriesRecord &factories,
-      const PropertyPath &propertyPath,
+      const std::vector<std::string> &propertyPath,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
   virtual ~RecordPropertiesInterpolator() = default;
 

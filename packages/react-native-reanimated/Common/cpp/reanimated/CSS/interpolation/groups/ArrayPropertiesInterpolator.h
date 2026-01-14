@@ -11,7 +11,7 @@ class ArrayPropertiesInterpolator : public GroupPropertiesInterpolator {
  public:
   ArrayPropertiesInterpolator(
       const InterpolatorFactoriesArray &factories,
-      const PropertyPath &propertyPath,
+      const std::vector<std::string> &propertyPath,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
   virtual ~ArrayPropertiesInterpolator() = default;
 

@@ -1,11 +1,10 @@
 'use strict';
 import type { ShadowNodeWrapper, StyleProps } from '../../commonTypes';
 import { ReanimatedModule } from '../../ReanimatedModule';
-import type { PropsDiff } from '../types';
 import type {
   CSSAnimationUpdates,
+  CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
-  NormalizedSingleCSSTransitionSettings,
 } from './types';
 
 // COMMON
@@ -62,10 +61,9 @@ export function unregisterCSSAnimations(viewTag: number) {
 
 export function runCSSTransition(
   shadowNodeWrapper: ShadowNodeWrapper,
-  changedProps: PropsDiff,
-  settings: Record<string, NormalizedSingleCSSTransitionSettings>
+  transitionConfig: CSSTransitionConfig
 ) {
-  ReanimatedModule.runCSSTransition(shadowNodeWrapper, changedProps, settings);
+  ReanimatedModule.runCSSTransition(shadowNodeWrapper, transitionConfig);
 }
 
 export function unregisterCSSTransition(viewTag: number) {

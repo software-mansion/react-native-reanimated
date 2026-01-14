@@ -7,7 +7,10 @@ import type {
 import { getChangedProps } from '../../utils';
 import { normalizeCSSTransitionProperties } from '../normalization';
 import { runCSSTransition, unregisterCSSTransition } from '../proxy';
-import type { NormalizedCSSTransitionConfig } from '../types';
+import type {
+  CSSTransitionConfig,
+  NormalizedCSSTransitionConfig,
+} from '../types';
 
 export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private readonly viewTag: number;
@@ -46,13 +49,15 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
       );
 
       // Run transition only if there are changed props
-      if (Object.keys(propsDiff).length > 0) {
+      const changedProps = Object.keys(propsDiff);
+      if (changedProps.length > 0) {
         this.transitionConfig = transitionConfig;
-        runCSSTransition(
-          this.shadowNodeWrapper,
-          propsDiff,
-          transitionConfig.settings
+        const config = this.createTransitionConfig(
+          changedProps,
+          transitionConfig,
+          propsDiff
         );
+        runCSSTransition(this.shadowNodeWrapper, config);
       }
     }
 
@@ -69,5 +74,27 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
       this.transitionConfig = null;
       this.lastProps = null;
     }
+  }
+
+  private createTransitionConfig(
+    changedProps: string[],
+    transitionConfig: NormalizedCSSTransitionConfig,
+    propsDiff: StyleProps
+  ): CSSTransitionConfig {
+    const config: CSSTransitionConfig = {};
+    for (const prop of changedProps) {
+      const change = propsDiff[prop];
+      if (change === null) {
+        config[prop] = null;
+        continue;
+      }
+      const propertySettings =
+        transitionConfig.settings[prop] ?? transitionConfig.settings.all;
+      config[prop] = {
+        ...propertySettings,
+        value: change as [unknown, unknown],
+      };
+    }
+    return config;
   }
 }
