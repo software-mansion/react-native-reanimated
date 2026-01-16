@@ -95,7 +95,12 @@ export type { PerformanceMonitorProps } from './component/PerformanceMonitor';
 export { PerformanceMonitor } from './component/PerformanceMonitor';
 export { ReducedMotionConfig } from './component/ReducedMotionConfig';
 export type { AnimatedScrollViewProps } from './component/ScrollView';
-export { configureReanimatedLogger } from './ConfigHelper';
+export {
+  configureReanimatedLogger,
+  getDynamicFeatureFlag,
+  getStaticFeatureFlag,
+  setDynamicFeatureFlag,
+} from './config';
 export {
   enableLayoutAnimations,
   getViewProp,
@@ -106,11 +111,6 @@ export {
 export * from './css';
 export type { EasingFunctionFactory } from './Easing';
 export { Easing } from './Easing';
-export {
-  getDynamicFeatureFlag,
-  getStaticFeatureFlag,
-  setDynamicFeatureFlag,
-} from './featureFlags';
 export type { FrameInfo } from './frameCallback';
 export type { AnimatedProps, EntryOrExitLayoutType } from './helperTypes';
 export type {
