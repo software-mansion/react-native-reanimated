@@ -78,10 +78,6 @@ yoga::Style::SizeLength strToYogaSizeLength(std::string keyword) {
   return yoga::Style::SizeLength::undefined();
 }
 
-std::function<yoga::StyleLength(float)> getYogaStyleLengthFromCSSLength(const CSSLength &cssLength) {
-  return cssLength.isRelative ? yoga::StyleLength::percent : yoga::StyleLength::points;
-}
-
 template <typename T, typename PropName, typename UpdateFn, typename AddFn>
 void updatePropOrAdd(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
@@ -127,9 +123,25 @@ void addTransform(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &
 }
 
 ValueUnit cssLengthToValueUnit(const CSSLength &cssLength) {
-  return ValueUnit(
-      static_cast<float>(cssLength.value),
-      cssLength.isRelative ? UnitType::Percent : UnitType::Point);
+  const float value =
+      cssLength.isRelative ? static_cast<float>(cssLength.value * 100) : static_cast<float>(cssLength.value);
+  return ValueUnit(value, cssLength.isRelative ? UnitType::Percent : UnitType::Point);
+}
+
+yoga::StyleLength cssLengthToStyleLength(const CSSLength &cssValue) {
+  if (cssValue.isRelative) {
+    return yoga::StyleLength::percent(cssValue.value * 100);
+  }
+
+  return yoga::StyleLength::points(cssValue.value);
+}
+
+yoga::Style::SizeLength cssLengthToSizeLength(const CSSLength &cssValue) {
+  if (cssValue.isRelative) {
+    return yoga::Style::SizeLength::percent(cssValue.value * 100);
+  }
+
+  return yoga::Style::SizeLength::points(cssValue.value);
 }
 
 void addTransformOriginAxis(
@@ -159,9 +171,7 @@ void addTransformOriginAxis(
       });
 }
 
-void addTransformOriginZ(
-    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    double zValue) {
+void addTransformOriginZ(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder, double zValue) {
   updatePropOrAdd<TransformOrigin>(
       propsBuilder,
       TRANSFORM_ORIGIN,
@@ -241,14 +251,6 @@ void updateCascadedRectangleEdges(
   }
 }
 
-void updateCascadedRectangleEdges(
-    CascadedRectangleEdges<yoga::StyleLength> &edges,
-    float value,
-    std::string edgeName,
-    std::function<yoga::StyleLength(float)> yogaStyleLength) {
-  updateCascadedRectangleEdges(edges, yogaStyleLength(value), edgeName);
-}
-
 void addPositionEdge(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength, CSSKeyword> &value,
@@ -260,16 +262,14 @@ void addPositionEdge(
 
         if constexpr (std::is_same_v<T, CSSLength>) {
           const CSSLength &cssValue = active_value;
-          const auto yogaStyleLength = getYogaStyleLengthFromCSSLength(cssValue);
+          const auto yogaStyleLength = cssLengthToStyleLength(cssValue);
           updatePropOrAdd<CascadedRectangleEdges<yoga::StyleLength>>(
               propsBuilder,
               POSITION,
-              [&](auto &position) {
-                updateCascadedRectangleEdges(position, cssValue.value, edgeName, yogaStyleLength);
-              },
+              [&](auto &position) { updateCascadedRectangleEdges(position, yogaStyleLength, edgeName); },
               [&]() {
                 CascadedRectangleEdges<yoga::StyleLength> position{};
-                updateCascadedRectangleEdges(position, cssValue.value, edgeName, yogaStyleLength);
+                updateCascadedRectangleEdges(position, yogaStyleLength, edgeName);
                 propsBuilder->setPosition(position);
               });
 
@@ -305,16 +305,14 @@ void addMargin(
 
         if constexpr (std::is_same_v<T, CSSLength>) {
           const CSSLength &cssValue = active_value;
-          const auto yogaStyleLength = getYogaStyleLengthFromCSSLength(cssValue);
+          const auto yogaStyleLength = cssLengthToStyleLength(cssValue);
           updatePropOrAdd<CascadedRectangleEdges<yoga::StyleLength>>(
               propsBuilder,
               MARGIN,
-              [&](auto &margin) {
-                updateCascadedRectangleEdges(margin, cssValue.value, marginPropName, yogaStyleLength);
-              },
+              [&](auto &margin) { updateCascadedRectangleEdges(margin, yogaStyleLength, marginPropName); },
               [&]() {
                 CascadedRectangleEdges<yoga::StyleLength> margin{};
-                updateCascadedRectangleEdges(margin, cssValue.value, marginPropName, yogaStyleLength);
+                updateCascadedRectangleEdges(margin, yogaStyleLength, marginPropName);
                 propsBuilder->setMargin(margin);
               });
 
@@ -351,16 +349,14 @@ void addPadding(
 
         if constexpr (std::is_same_v<T, CSSLength>) {
           const CSSLength &cssValue = active_value;
-          const auto yogaStyleLength = getYogaStyleLengthFromCSSLength(cssValue);
+          const auto yogaStyleLength = cssLengthToStyleLength(cssValue);
           updatePropOrAdd<CascadedRectangleEdges<yoga::StyleLength>>(
               propsBuilder,
               PADDING,
-              [&](auto &padding) {
-                updateCascadedRectangleEdges(padding, cssValue.value, paddingPropName, yogaStyleLength);
-              },
+              [&](auto &padding) { updateCascadedRectangleEdges(padding, yogaStyleLength, paddingPropName); },
               [&]() {
                 CascadedRectangleEdges<yoga::StyleLength> padding{};
-                updateCascadedRectangleEdges(padding, cssValue.value, paddingPropName, yogaStyleLength);
+                updateCascadedRectangleEdges(padding, yogaStyleLength, paddingPropName);
                 propsBuilder->setPadding(padding);
               });
 
@@ -395,11 +391,11 @@ void addBorderWidth(
       propsBuilder,
       BORDER_WIDTH,
       [&](auto &borderWidth) {
-        updateCascadedRectangleEdges(borderWidth, cssValue.value, borderWidthPropName, yoga::StyleLength::points);
+        updateCascadedRectangleEdges(borderWidth, yoga::StyleLength::points(cssValue.value), borderWidthPropName);
       },
       [&]() {
         CascadedRectangleEdges<yoga::StyleLength> borderWidth{};
-        updateCascadedRectangleEdges(borderWidth, cssValue.value, borderWidthPropName, yoga::StyleLength::points);
+        updateCascadedRectangleEdges(borderWidth, yoga::StyleLength::points(cssValue.value), borderWidthPropName);
         propsBuilder->setBorderWidth(borderWidth);
       });
 }
@@ -540,11 +536,7 @@ void addWidthToPropsBuilder(
 
         if constexpr (std::is_same_v<T, CSSLength>) {
           const CSSLength &cssValue = active_value;
-          if (cssValue.isRelative) {
-            propsBuilder->setWidth(yoga::Style::SizeLength::percent(cssValue.value));
-          } else {
-            propsBuilder->setWidth(yoga::Style::SizeLength::points(cssValue.value));
-          }
+          propsBuilder->setWidth(cssLengthToSizeLength(cssValue));
 
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
           const CSSKeyword &cssValue = active_value;
@@ -565,11 +557,7 @@ void addHeightToPropsBuilder(
 
         if constexpr (std::is_same_v<T, CSSLength>) {
           const CSSLength &cssValue = active_value;
-          if (cssValue.isRelative) {
-            propsBuilder->setHeight(yoga::Style::SizeLength::percent(cssValue.value));
-          } else {
-            propsBuilder->setHeight(yoga::Style::SizeLength::points(cssValue.value));
-          }
+          propsBuilder->setHeight(cssLengthToSizeLength(cssValue));
 
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
           const CSSKeyword &cssValue = active_value;
@@ -1236,11 +1224,7 @@ void addFlexBasisToPropsBuilder(
 
         if constexpr (std::is_same_v<T, CSSLength>) {
           const CSSLength &cssValue = active_value;
-          if (cssValue.isRelative) {
-            propsBuilder->setFlexBasis(yoga::Style::SizeLength::percent(cssValue.value));
-          } else {
-            propsBuilder->setFlexBasis(yoga::Style::SizeLength::points(cssValue.value));
-          }
+          propsBuilder->setFlexBasis(cssLengthToSizeLength(cssValue));
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
           const CSSKeyword &cssValue = active_value;
           propsBuilder->setFlexBasis(strToYogaSizeLength(cssValue.toString()));
@@ -1275,12 +1259,7 @@ void addRowGapToPropsBuilder(
     const CSSValueVariant<CSSLength> &value) {
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSLength>(storage);
-
-  if (cssValue.isRelative) {
-    propsBuilder->setRowGap(yoga::StyleLength::percent(cssValue.value));
-  } else {
-    propsBuilder->setRowGap(yoga::StyleLength::points(cssValue.value));
-  }
+  propsBuilder->setRowGap(cssLengthToStyleLength(cssValue));
 }
 
 void addColumnGapToPropsBuilder(
@@ -1288,12 +1267,7 @@ void addColumnGapToPropsBuilder(
     const CSSValueVariant<CSSLength> &value) {
   const auto &storage = value.getStorage();
   const auto &cssValue = std::get<CSSLength>(storage);
-
-  if (cssValue.isRelative) {
-    propsBuilder->setColumnGap(yoga::StyleLength::percent(cssValue.value));
-  } else {
-    propsBuilder->setColumnGap(yoga::StyleLength::points(cssValue.value));
-  }
+  propsBuilder->setColumnGap(cssLengthToStyleLength(cssValue));
 }
 
 void addFlexGrowToPropsBuilder(
@@ -1366,11 +1340,7 @@ void addMaxWidthToPropsBuilder(
 
         if constexpr (std::is_same_v<T, CSSLength>) {
           const CSSLength &cssValue = active_value;
-          if (cssValue.isRelative) {
-            propsBuilder->setMaxWidth(yoga::Style::SizeLength::percent(cssValue.value));
-          } else {
-            propsBuilder->setMaxWidth(yoga::Style::SizeLength::points(cssValue.value));
-          }
+          propsBuilder->setMaxWidth(cssLengthToSizeLength(cssValue));
 
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
           const CSSKeyword &cssValue = active_value;
@@ -1391,11 +1361,7 @@ void addMinWidthToPropsBuilder(
 
         if constexpr (std::is_same_v<T, CSSLength>) {
           const CSSLength &cssValue = active_value;
-          if (cssValue.isRelative) {
-            propsBuilder->setMinWidth(yoga::Style::SizeLength::percent(cssValue.value));
-          } else {
-            propsBuilder->setMinWidth(yoga::Style::SizeLength::points(cssValue.value));
-          }
+          propsBuilder->setMinWidth(cssLengthToSizeLength(cssValue));
 
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
           const CSSKeyword &cssValue = active_value;
@@ -1416,11 +1382,7 @@ void addMaxHeightToPropsBuilder(
 
         if constexpr (std::is_same_v<T, CSSLength>) {
           const CSSLength &cssValue = active_value;
-          if (cssValue.isRelative) {
-            propsBuilder->setMaxHeight(yoga::Style::SizeLength::percent(cssValue.value));
-          } else {
-            propsBuilder->setMaxHeight(yoga::Style::SizeLength::points(cssValue.value));
-          }
+          propsBuilder->setMaxHeight(cssLengthToSizeLength(cssValue));
 
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
           const CSSKeyword &cssValue = active_value;
@@ -1441,11 +1403,7 @@ void addMinHeightToPropsBuilder(
 
         if constexpr (std::is_same_v<T, CSSLength>) {
           const CSSLength &cssValue = active_value;
-          if (cssValue.isRelative) {
-            propsBuilder->setMinHeight(yoga::Style::SizeLength::percent(cssValue.value));
-          } else {
-            propsBuilder->setMinHeight(yoga::Style::SizeLength::points(cssValue.value));
-          }
+          propsBuilder->setMinHeight(cssLengthToSizeLength(cssValue));
 
         } else if constexpr (std::is_same_v<T, CSSKeyword>) {
           const CSSKeyword &cssValue = active_value;
