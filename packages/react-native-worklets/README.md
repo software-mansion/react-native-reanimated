@@ -1,9 +1,4 @@
-<p align="center" style="margin:0; padding:0;">
-    <img width="100%" alt="React Native Worklets by Software Mansion" src="https://github.com/user-attachments/assets/fc32cc78-8d26-473b-9423-cbd05a97244d" />
-  <a href="https://stateofreactnative.com/">
-    <img width="1100" height="120" alt="sorn25-banner" src="https://github.com/user-attachments/assets/b73f9fc7-bdfc-4ed1-9968-c209782f0002" />
-  </a>
-</p>
+![header](https://github.com/user-attachments/assets/41b37472-e55a-4c54-9064-31258e03870c)
 
 ### The React Native multithreading library
 
