@@ -468,5 +468,41 @@ void addMixBlendModeToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value);
 
+void addBottomToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value);
+
+void addTopToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value);
+
+void addLeftToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value);
+
+void addRightToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value);
+
+void addStartToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value);
+
+void addEndToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value);
+
+void addTransformOriginXToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value);
+
+void addTransformOriginYToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value);
+
+void addTransformOriginZToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value);
+
 void animationMutationsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch);
 } // namespace reanimated::css

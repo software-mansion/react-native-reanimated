@@ -78,6 +78,10 @@ yoga::Style::SizeLength strToYogaSizeLength(std::string keyword) {
   return yoga::Style::SizeLength::undefined();
 }
 
+std::function<yoga::StyleLength(float)> getYogaStyleLengthFromCSSLength(const CSSLength &cssLength) {
+  return cssLength.isRelative ? yoga::StyleLength::percent : yoga::StyleLength::points;
+}
+
 template <typename T, typename PropName, typename UpdateFn, typename AddFn>
 void updatePropOrAdd(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
@@ -120,6 +124,53 @@ void addTransform(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &
       TRANSFORM,
       [&](auto &existingTransform) { existingTransform = existingTransform * transform; },
       [&]() { propsBuilder->setTransform(transform); });
+}
+
+ValueUnit cssLengthToValueUnit(const CSSLength &cssLength) {
+  return ValueUnit(
+      static_cast<float>(cssLength.value),
+      cssLength.isRelative ? UnitType::Percent : UnitType::Point);
+}
+
+void addTransformOriginAxis(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSLength &cssLength,
+    const std::string &axis) {
+  const auto valueUnit = cssLengthToValueUnit(cssLength);
+
+  updatePropOrAdd<TransformOrigin>(
+      propsBuilder,
+      TRANSFORM_ORIGIN,
+      [&](auto &transformOrigin) {
+        if (axis == "x") {
+          transformOrigin.xy[0] = valueUnit;
+        } else if (axis == "y") {
+          transformOrigin.xy[1] = valueUnit;
+        }
+      },
+      [&]() {
+        TransformOrigin transformOrigin{};
+        if (axis == "x") {
+          transformOrigin.xy[0] = valueUnit;
+        } else if (axis == "y") {
+          transformOrigin.xy[1] = valueUnit;
+        }
+        propsBuilder->setTransformOrigin(transformOrigin);
+      });
+}
+
+void addTransformOriginZ(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    double zValue) {
+  updatePropOrAdd<TransformOrigin>(
+      propsBuilder,
+      TRANSFORM_ORIGIN,
+      [&](auto &transformOrigin) { transformOrigin.z = static_cast<float>(zValue); },
+      [&]() {
+        TransformOrigin transformOrigin{};
+        transformOrigin.z = static_cast<float>(zValue);
+        propsBuilder->setTransformOrigin(transformOrigin);
+      });
 }
 
 void updateCascadedRectangleEdges(
@@ -198,6 +249,50 @@ void updateCascadedRectangleEdges(
   updateCascadedRectangleEdges(edges, yogaStyleLength(value), edgeName);
 }
 
+void addPositionEdge(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value,
+    const std::string &edgeName) {
+  const auto &storage = value.getStorage();
+  std::visit(
+      [&](const auto &active_value) {
+        using T = std::decay_t<decltype(active_value)>;
+
+        if constexpr (std::is_same_v<T, CSSLength>) {
+          const CSSLength &cssValue = active_value;
+          const auto yogaStyleLength = getYogaStyleLengthFromCSSLength(cssValue);
+          updatePropOrAdd<CascadedRectangleEdges<yoga::StyleLength>>(
+              propsBuilder,
+              POSITION,
+              [&](auto &position) {
+                updateCascadedRectangleEdges(position, cssValue.value, edgeName, yogaStyleLength);
+              },
+              [&]() {
+                CascadedRectangleEdges<yoga::StyleLength> position{};
+                updateCascadedRectangleEdges(position, cssValue.value, edgeName, yogaStyleLength);
+                propsBuilder->setPosition(position);
+              });
+
+        } else if constexpr (std::is_same_v<T, CSSKeyword>) {
+          const CSSKeyword &cssValue = active_value;
+          const auto keyword = cssValue.toString();
+
+          if (keyword == "auto") {
+            updatePropOrAdd<CascadedRectangleEdges<yoga::StyleLength>>(
+                propsBuilder,
+                POSITION,
+                [&](auto &position) { updateCascadedRectangleEdges(position, yoga::StyleLength::ofAuto(), edgeName); },
+                [&]() {
+                  CascadedRectangleEdges<yoga::StyleLength> position{};
+                  updateCascadedRectangleEdges(position, yoga::StyleLength::ofAuto(), edgeName);
+                  propsBuilder->setPosition(position);
+                });
+          }
+        }
+      },
+      storage);
+}
+
 void addMargin(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength, CSSKeyword> &value,
@@ -210,7 +305,7 @@ void addMargin(
 
         if constexpr (std::is_same_v<T, CSSLength>) {
           const CSSLength &cssValue = active_value;
-          const auto yogaStyleLength = cssValue.isRelative ? yoga::StyleLength::percent : yoga::StyleLength::points;
+          const auto yogaStyleLength = getYogaStyleLengthFromCSSLength(cssValue);
           updatePropOrAdd<CascadedRectangleEdges<yoga::StyleLength>>(
               propsBuilder,
               MARGIN,
@@ -256,7 +351,7 @@ void addPadding(
 
         if constexpr (std::is_same_v<T, CSSLength>) {
           const CSSLength &cssValue = active_value;
-          const auto yogaStyleLength = cssValue.isRelative ? yoga::StyleLength::percent : yoga::StyleLength::points;
+          const auto yogaStyleLength = getYogaStyleLengthFromCSSLength(cssValue);
           updatePropOrAdd<CascadedRectangleEdges<yoga::StyleLength>>(
               propsBuilder,
               PADDING,
@@ -1626,6 +1721,66 @@ void addMixBlendModeToPropsBuilder(
   }
 
   propsBuilder->setMixBlendMode(it->second);
+}
+
+void addBottomToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
+  addPositionEdge(propsBuilder, value, "bottom");
+}
+
+void addTopToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
+  addPositionEdge(propsBuilder, value, "top");
+}
+
+void addLeftToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
+  addPositionEdge(propsBuilder, value, "left");
+}
+
+void addRightToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
+  addPositionEdge(propsBuilder, value, "right");
+}
+
+void addStartToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
+  addPositionEdge(propsBuilder, value, "start");
+}
+
+void addEndToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
+  addPositionEdge(propsBuilder, value, "end");
+}
+
+void addTransformOriginXToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssLength = std::get<CSSLength>(storage);
+  addTransformOriginAxis(propsBuilder, cssLength, "x");
+}
+
+void addTransformOriginYToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSLength> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssLength = std::get<CSSLength>(storage);
+  addTransformOriginAxis(propsBuilder, cssLength, "y");
+}
+
+void addTransformOriginZToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSDouble> &value) {
+  const auto &storage = value.getStorage();
+  const auto &cssDouble = std::get<CSSDouble>(storage);
+  addTransformOriginZ(propsBuilder, cssDouble.value);
 }
 
 void animationMutationsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch) {

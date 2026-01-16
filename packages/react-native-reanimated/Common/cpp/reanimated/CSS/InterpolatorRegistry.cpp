@@ -39,10 +39,6 @@
 #include <reanimated/CSS/interpolation/filters/operations/sepia.h>
 #include <reanimated/CSS/utils/propsBuilderWrapper.h>
 
-#include <limits>
-#include <string>
-#include <vector>
-
 namespace reanimated::css {
 
 namespace {
@@ -99,29 +95,6 @@ using SVGLengthKeywordCallback = std::function<void(
 using SVGStrokeDashArrayKeywordCallback = std::function<void(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &,
     const CSSValueVariant<SVGStrokeDashArray, CSSKeyword> &)>;
-
-CSSLengthKeywordCallback getCSSLengthKeywordCallback(std::string propName) {
-  return [propName](
-             const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-             const CSSValueVariant<CSSLength, CSSKeyword> &value) {
-    const auto storage = value.getStorage();
-
-    std::visit(
-        [&](const auto &active_value) {
-          using T = std::decay_t<decltype(active_value)>;
-
-          if constexpr (std::is_same_v<T, CSSLength>) {
-            const CSSLength &cssLength = active_value;
-            // double value = length.value;
-
-            // printf("getCSSLengthKeywordCallback: propName %s, value %f \n", propName.c_str(), value);
-
-          } else if constexpr (std::is_same_v<T, CSSKeyword>) {
-          }
-        },
-        storage);
-  };
-}
 
 CSSLengthCallback getCSSLengthCallback(std::string propName) {
   return
@@ -244,10 +217,17 @@ const InterpolatorFactoriesRecord FLEX_INTERPOLATORS = {
     {"borderTopWidth", value<CSSDouble>(0, CSSDoubleCallback(addBorderTopWidthToPropsBuilder))},
     {"borderWidth", value<CSSDouble>(0, CSSDoubleCallback(addBorderWidthToPropsBuilder))},
     {"bottom",
-     value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"}, getCSSLengthKeywordCallback("bottom"))},
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "height"},
+         CSSLengthKeywordCallback(addBottomToPropsBuilder))},
     {"boxSizing", value<CSSKeyword>("border-box", CSSKeywordCallback(addBoxSizingToPropsBuilder))},
     {"display", value<CSSDisplay>("flex", CSSDisplayCallback(addDisplayToPropsBuilder))},
-    {"end", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"}, getCSSLengthKeywordCallback("end"))},
+    {"end",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(addEndToPropsBuilder))},
     {"flex", value<CSSDouble>(0, CSSDoubleCallback(addFlexToPropsBuilder))},
     {"flexBasis",
      value<CSSLength, CSSKeyword>(
@@ -266,7 +246,11 @@ const InterpolatorFactoriesRecord FLEX_INTERPOLATORS = {
          {RelativeTo::Parent, "height"},
          CSSLengthKeywordCallback(addHeightToPropsBuilder))},
     {"justifyContent", value<CSSKeyword>("flex-start", CSSKeywordCallback(addJustifyContentToPropsBuilder))},
-    {"left", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"}, getCSSLengthKeywordCallback("left"))},
+    {"left",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(addLeftToPropsBuilder))},
     {"margin",
      value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"}, CSSLengthKeywordCallback(addMarginToPropsBuilder))},
     {"marginBottom",
@@ -309,10 +293,26 @@ const InterpolatorFactoriesRecord FLEX_INTERPOLATORS = {
          0,
          {RelativeTo::Parent, "width"},
          CSSLengthKeywordCallback(addMarginVerticalToPropsBuilder))},
-    {"maxHeight", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"}, CSSLengthKeywordCallback(addMaxHeightToPropsBuilder))},
-    {"maxWidth", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"}, CSSLengthKeywordCallback(addMaxWidthToPropsBuilder))},
-    {"minHeight", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"}, CSSLengthKeywordCallback(addMinHeightToPropsBuilder))},
-    {"minWidth", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"}, CSSLengthKeywordCallback(addMinWidthToPropsBuilder))},
+    {"maxHeight",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "height"},
+         CSSLengthKeywordCallback(addMaxHeightToPropsBuilder))},
+    {"maxWidth",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(addMaxWidthToPropsBuilder))},
+    {"minHeight",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "height"},
+         CSSLengthKeywordCallback(addMinHeightToPropsBuilder))},
+    {"minWidth",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(addMinWidthToPropsBuilder))},
     {"overflow", value<CSSKeyword>("visible", getCSSKeywordCallback("visible"))},
     {"padding",
      value<CSSLength, CSSKeyword>(
@@ -361,10 +361,20 @@ const InterpolatorFactoriesRecord FLEX_INTERPOLATORS = {
          CSSLengthKeywordCallback(addPaddingVerticalToPropsBuilder))},
     {"position", value<CSSKeyword>("relative", CSSKeywordCallback(addPositionToPropsBuilder))},
     {"right",
-     value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"}, getCSSLengthKeywordCallback("right"))},
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(addRightToPropsBuilder))},
     {"start",
-     value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"}, getCSSLengthKeywordCallback("start"))},
-    {"top", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"}, getCSSLengthKeywordCallback("top"))},
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "width"},
+         CSSLengthKeywordCallback(addStartToPropsBuilder))},
+    {"top",
+     value<CSSLength, CSSKeyword>(
+         "auto",
+         {RelativeTo::Parent, "height"},
+         CSSLengthKeywordCallback(addTopToPropsBuilder))},
     {"width",
      value<CSSLength, CSSKeyword>(
          "auto",
@@ -386,9 +396,9 @@ const InterpolatorFactoriesRecord SHADOW_INTERPOLATORS_IOS = {
 const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
     {"transformOrigin",
      array(
-         {value<CSSLength>("50%", {RelativeTo::Self, "width"}, getCSSLengthKeywordCallback("transformOrigin")),
-          value<CSSLength>("50%", {RelativeTo::Self, "height"}, getCSSLengthKeywordCallback("transformOrigin")),
-          value<CSSDouble>(0, getCSSDoubleCallback("transformOrigin"))})},
+         {value<CSSLength>("50%", {RelativeTo::Self, "width"}, CSSLengthCallback(addTransformOriginXToPropsBuilder)),
+          value<CSSLength>("50%", {RelativeTo::Self, "height"}, CSSLengthCallback(addTransformOriginYToPropsBuilder)),
+          value<CSSDouble>(0, CSSDoubleCallback(addTransformOriginZToPropsBuilder))})},
     {"transform",
      transforms(
 
