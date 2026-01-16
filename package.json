@@ -72,6 +72,7 @@
     "typescript": "5.8.3"
   },
   "resolutions": {
-    "@react-native/gradle-plugin@npm:0.82.0": "patch:@react-native/gradle-plugin@npm%3A0.82.0#~/.yarn/patches/@react-native-gradle-plugin-npm-0.82.0-10aedc0588.patch"
+    "@react-native/gradle-plugin@npm:0.82.0": "patch:@react-native/gradle-plugin@npm%3A0.82.0#~/.yarn/patches/@react-native-gradle-plugin-npm-0.82.0-10aedc0588.patch",
+    "react-native-worklets": "0.7.1"
   }
 }

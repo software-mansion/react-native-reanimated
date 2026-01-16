@@ -127,7 +127,7 @@
     "react-native": "0.82.0",
     "react-native-builder-bob": "0.40.13",
     "react-native-web": "0.21.1",
-    "react-native-worklets": "workspace:*",
+    "react-native-worklets": "0.7.1",
     "react-test-renderer": "19.1.1",
     "typescript": "5.8.3"
   },
