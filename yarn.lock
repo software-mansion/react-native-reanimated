@@ -12746,7 +12746,7 @@ __metadata:
     react-native-mmkv: "npm:4.0.0"
     react-native-nitro-modules: "npm:0.31.9"
     react-native-pager-view: "npm:7.0.0"
-    react-native-reanimated: "workspace:*"
+    react-native-reanimated: "npm:4.2.1"
     react-native-safe-area-context: "npm:5.6.1"
     react-native-screens: "npm:4.19.0-nightly-20251125-46052f31e"
     react-native-svg: "npm:15.14.0"
@@ -20862,7 +20862,7 @@ __metadata:
     react: "npm:19.0.0"
     react-native: "npm:0.79.6"
     react-native-macos: "patch:react-native-macos@npm%3A0.79.0#~/.yarn/patches/react-native-macos-npm-0.79.0-449930c6bc.patch"
-    react-native-reanimated: "workspace:*"
+    react-native-reanimated: "npm:4.2.1"
     react-native-worklets: "workspace:*"
     typescript: "npm:5.8.3"
   languageName: unknown
@@ -24016,7 +24016,7 @@ __metadata:
     react: "npm:19.1.1"
     react-dom: "npm:19.1.1"
     react-native: "npm:0.82.0"
-    react-native-reanimated: "workspace:*"
+    react-native-reanimated: "npm:4.2.1"
     react-native-web: "npm:0.21.1"
     react-native-worklets: "workspace:*"
     start-server-and-test: "npm:2.1.2"
@@ -27097,21 +27097,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"react-native-reanimated@npm:4.2.0-nightly-20251017-235c127fd":
-  version: 4.2.0-nightly-20251017-235c127fd
-  resolution: "react-native-reanimated@npm:4.2.0-nightly-20251017-235c127fd"
+"react-native-reanimated@npm:4.2.1":
+  version: 4.2.1
+  resolution: "react-native-reanimated@npm:4.2.1"
   dependencies:
     react-native-is-edge-to-edge: "npm:1.2.1"
     semver: "npm:7.7.3"
   peerDependencies:
     react: "*"
     react-native: "*"
-    react-native-worklets: 0.7.0-nightly-20251017-235c127fd
-  checksum: 10/758d6221e531c95f31e841800de33b4c75d99bf594c32b14fb3012d512053ae09249bde6902897205203510a5b7f7f22c28b1d018a2c5ad62161a083a372f9fd
+    react-native-worklets: ">=0.7.0"
+  checksum: 10/869eb4c90b5464ac616bf048f77a309fd2c793020a662b80b874022f90256b7c955f43d7e7c4751c15f2f767c306e52c624cc37f3edff4fe0bbf26c2c3f955b7
   languageName: node
   linkType: hard
 
-"react-native-reanimated@workspace:*, react-native-reanimated@workspace:packages/react-native-reanimated":
+"react-native-reanimated@workspace:packages/react-native-reanimated":
   version: 0.0.0-use.local
   resolution: "react-native-reanimated@workspace:packages/react-native-reanimated"
   dependencies:
@@ -30684,7 +30684,7 @@ __metadata:
     prettier: "npm:3.6.2"
     react: "npm:19.1.0"
     react-native: "npm:react-native-tvos@0.81.1-1"
-    react-native-reanimated: "workspace:*"
+    react-native-reanimated: "npm:4.2.1"
     react-native-worklets: "workspace:*"
     react-test-renderer: "npm:19.1.1"
     typescript: "npm:5.8.3"
