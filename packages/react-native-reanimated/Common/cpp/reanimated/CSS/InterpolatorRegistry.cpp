@@ -317,6 +317,18 @@ const InterpolatorFactoriesRecord SVG_ELLIPSE_INTERPOLATORS = mergeInterpolators
          {"ry", value<SVGLength, CSSKeyword>(0)},
      }});
 
+const InterpolatorFactoriesRecord SVG_IMAGE_INTERPOLATORS = mergeInterpolators(
+    {SVG_COMMON_INTERPOLATORS,
+     InterpolatorFactoriesRecord{
+         {"x", value<SVGLength, CSSKeyword>(0)},
+         {"y", value<SVGLength, CSSKeyword>(0)},
+         {"width", value<SVGLength, CSSKeyword>(0)},
+         {"height", value<SVGLength, CSSKeyword>(0)},
+         // TODO: Check why this is not supported in RN-SVG and add support
+         // {"align", value<CSSKeyword>("xMidYMid")},
+         // {"meetOrSlice", value<CSSIndex>(0)},
+     }});
+
 const InterpolatorFactoriesRecord SVG_LINE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
@@ -360,6 +372,7 @@ ComponentInterpolatorsMap initializeRegistry() {
     // SVG Components
     registry["RNSVGCircle"] = SVG_CIRCLE_INTERPOLATORS;
     registry["RNSVGEllipse"] = SVG_ELLIPSE_INTERPOLATORS;
+    registry["RNSVGImage"] = SVG_IMAGE_INTERPOLATORS;
     registry["RNSVGLine"] = SVG_LINE_INTERPOLATORS;
     registry["RNSVGPath"] = SVG_PATH_INTERPOLATORS;
     registry["RNSVGRect"] = SVG_RECT_INTERPOLATORS;
