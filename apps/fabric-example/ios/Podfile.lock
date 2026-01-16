@@ -2609,7 +2609,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNReanimated (4.2.0-main):
+  - RNReanimated (4.2.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -2636,11 +2636,11 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 4.2.0-main)
+    - RNReanimated/reanimated (= 4.2.1)
     - RNWorklets
     - SocketRocket
     - Yoga
-  - RNReanimated/reanimated (4.2.0-main):
+  - RNReanimated/reanimated (4.2.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -2667,11 +2667,11 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 4.2.0-main)
+    - RNReanimated/reanimated/apple (= 4.2.1)
     - RNWorklets
     - SocketRocket
     - Yoga
-  - RNReanimated/reanimated/apple (4.2.0-main):
+  - RNReanimated/reanimated/apple (4.2.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -3258,7 +3258,7 @@ SPEC CHECKSUMS:
   RNCClipboard: 4b58c780f63676367640f23c8e114e9bd0cf86ac
   RNCMaskedView: 5ef8c95cbab95334a32763b72896a7b7d07e6299
   RNGestureHandler: f1dd7f92a0faa2868a919ab53bb9d66eb4ebfcf5
-  RNReanimated: 1782c9c9a967429f8570aa939576f9a9603fdb28
+  RNReanimated: ab1bb3d6e3a8addcc1976601915ebb2d303a72dc
   RNScreens: 42e7a4ec86914b9b22cea8db89abfa160e86be62
   RNSVG: 8c0bbfa480a24b24468f1c76bd852a4aac3178e6
   RNWorklets: a7a56460288ef685d8629d3429d3e0df9d23ca4a
