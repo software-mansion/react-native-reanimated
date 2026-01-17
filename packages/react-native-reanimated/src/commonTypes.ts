@@ -193,7 +193,7 @@ export interface SharedValue<Value = unknown> {
   addListener: (listenerID: number, listener: (value: Value) => void) => void;
   removeListener: (listenerID: number) => void;
   modify: (
-    modifier?: <T extends Value>(value: T) => T,
+    modifier?: (value: Value) => Value,
     forceUpdate?: boolean
   ) => void;
 }
