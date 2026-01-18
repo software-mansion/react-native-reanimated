@@ -1,5 +1,13 @@
 'use strict';
 import type {
+  PerspectiveTransform,
+  RotateXTransform,
+  RotateYTransform,
+  TranslateXTransform,
+  TranslateYTransform,
+} from 'react-native';
+
+import type {
   AnimationConfigFunction,
   EntryAnimationsValues,
   EntryExitAnimationFunction,
@@ -10,6 +18,7 @@ import type {
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
+import { ComplexExitAnimationBuilder } from '../animationBuilder/ComplexExitAnimationBuilder';
 
 /**
  * Rotate from top on the X axis. You can modify the behavior by chaining
@@ -323,7 +332,11 @@ export class FlipInEasyY
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipOutXUp
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    perspective: PerspectiveTransform['perspective'];
+    rotateX: RotateXTransform['rotateX'];
+    translateY: TranslateYTransform['translateY'];
+  }>
   implements IExitAnimationBuilder
 {
   static presetName = 'FlipOutXUp';
@@ -340,6 +353,9 @@ export class FlipOutXUp
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const translateYOverride = this.targetValues?.translateY;
+    const perspectiveOverride = this.targetValues?.perspective;
+    const rotateXOverride = this.targetValues?.rotateX;
 
     return (targetValues) => {
       'worklet';
@@ -354,12 +370,25 @@ export class FlipOutXUp
         },
         animations: {
           transform: [
-            { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateX: delayFunction(delay, animation('90deg', config)) },
+            {
+              perspective: delayFunction(
+                delay,
+                animation(perspectiveOverride ?? 500, config)
+              ),
+            },
+            {
+              rotateX: delayFunction(
+                delay,
+                animation(rotateXOverride ?? '90deg', config)
+              ),
+            },
             {
               translateY: delayFunction(
                 delay,
-                animation(-targetValues.currentHeight, config)
+                animation(
+                  translateYOverride ?? -targetValues.currentHeight,
+                  config
+                )
               ),
             },
           ],
@@ -380,7 +409,11 @@ export class FlipOutXUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipOutYLeft
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    perspective: PerspectiveTransform['perspective'];
+    rotateY: RotateYTransform['rotateY'];
+    translateX: TranslateXTransform['translateX'];
+  }>
   implements IExitAnimationBuilder
 {
   static presetName = 'FlipOutYLeft';
@@ -397,6 +430,9 @@ export class FlipOutYLeft
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const translateXOverride = this.targetValues?.translateX;
+    const perspectiveOverride = this.targetValues?.perspective;
+    const rotateYOverride = this.targetValues?.rotateY;
 
     return (targetValues) => {
       'worklet';
@@ -411,12 +447,25 @@ export class FlipOutYLeft
         },
         animations: {
           transform: [
-            { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateY: delayFunction(delay, animation('-90deg', config)) },
+            {
+              perspective: delayFunction(
+                delay,
+                animation(perspectiveOverride ?? 500, config)
+              ),
+            },
+            {
+              rotateY: delayFunction(
+                delay,
+                animation(rotateYOverride ?? '-90deg', config)
+              ),
+            },
             {
               translateX: delayFunction(
                 delay,
-                animation(-targetValues.currentWidth, config)
+                animation(
+                  translateXOverride ?? -targetValues.currentWidth,
+                  config
+                )
               ),
             },
           ],
@@ -437,7 +486,11 @@ export class FlipOutYLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipOutXDown
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    perspective: PerspectiveTransform['perspective'];
+    rotateX: RotateXTransform['rotateX'];
+    translateY: TranslateYTransform['translateY'];
+  }>
   implements IExitAnimationBuilder
 {
   static presetName = 'FlipOutXDown';
@@ -454,6 +507,9 @@ export class FlipOutXDown
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const translateYOverride = this.targetValues?.translateY;
+    const perspectiveOverride = this.targetValues?.perspective;
+    const rotateXOverride = this.targetValues?.rotateX;
 
     return (targetValues) => {
       'worklet';
@@ -468,12 +524,25 @@ export class FlipOutXDown
         },
         animations: {
           transform: [
-            { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateX: delayFunction(delay, animation('-90deg', config)) },
+            {
+              perspective: delayFunction(
+                delay,
+                animation(perspectiveOverride ?? 500, config)
+              ),
+            },
+            {
+              rotateX: delayFunction(
+                delay,
+                animation(rotateXOverride ?? '-90deg', config)
+              ),
+            },
             {
               translateY: delayFunction(
                 delay,
-                animation(targetValues.currentHeight, config)
+                animation(
+                  translateYOverride ?? targetValues.currentHeight,
+                  config
+                )
               ),
             },
           ],
@@ -494,7 +563,11 @@ export class FlipOutXDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipOutYRight
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    perspective: PerspectiveTransform['perspective'];
+    rotateY: RotateYTransform['rotateY'];
+    translateX: TranslateXTransform['translateX'];
+  }>
   implements IExitAnimationBuilder
 {
   static presetName = 'FlipOutYRight';
@@ -511,6 +584,9 @@ export class FlipOutYRight
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const perspectiveOverride = this.targetValues?.perspective;
+    const rotateYOverride = this.targetValues?.rotateY;
+    const translateXOverride = this.targetValues?.translateX;
 
     return (targetValues) => {
       'worklet';
@@ -525,12 +601,25 @@ export class FlipOutYRight
         },
         animations: {
           transform: [
-            { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateY: delayFunction(delay, animation('90deg', config)) },
+            {
+              perspective: delayFunction(
+                delay,
+                animation(perspectiveOverride ?? 500, config)
+              ),
+            },
+            {
+              rotateY: delayFunction(
+                delay,
+                animation(rotateYOverride ?? '90deg', config)
+              ),
+            },
             {
               translateX: delayFunction(
                 delay,
-                animation(targetValues.currentWidth, config)
+                animation(
+                  translateXOverride ?? targetValues.currentWidth,
+                  config
+                )
               ),
             },
           ],
@@ -551,7 +640,10 @@ export class FlipOutYRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipOutEasyX
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    perspective: PerspectiveTransform['perspective'];
+    rotateX: RotateXTransform['rotateX'];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FlipOutEasyX';
@@ -568,6 +660,8 @@ export class FlipOutEasyX
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const perspectiveOverride = this.targetValues?.perspective;
+    const rotateXOverride = this.targetValues?.rotateX;
 
     return () => {
       'worklet';
@@ -578,8 +672,18 @@ export class FlipOutEasyX
         },
         animations: {
           transform: [
-            { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateX: delayFunction(delay, animation('90deg', config)) },
+            {
+              perspective: delayFunction(
+                delay,
+                animation(perspectiveOverride ?? 500, config)
+              ),
+            },
+            {
+              rotateX: delayFunction(
+                delay,
+                animation(rotateXOverride ?? '90deg', config)
+              ),
+            },
           ],
         },
         callback,

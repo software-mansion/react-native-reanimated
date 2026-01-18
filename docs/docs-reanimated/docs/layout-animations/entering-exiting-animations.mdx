@@ -94,18 +94,33 @@ Available fade animations:
 
 These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-| Name           | Config                                           |
-| -------------- | ------------------------------------------------ |
-| `FadeIn`       | `{opacity: 0}`                                   |
-| `FadeInDown`   | `{opacity: 0, transform: [{ translateY: 25 }]}`  |
-| `FadeInLeft`   | `{opacity: 0, transform: [{ translateX: -25 }]}` |
-| `FadeInRight`  | `{opacity: 0, transform: [{ translateX: 25 }]}`  |
-| `FadeInUp`     | `{opacity: 0, transform: [{ translateY: -25 }]}` |
-| `FadeOut`      | `{opacity: 1}`                                   |
-| `FadeOutDown`  | `{opacity: 1, transform: [{ translateY: 0 }]}`   |
-| `FadeOutLeft`  | `{opacity: 1, transform: [{ translateX: 0 }]}`   |
-| `FadeOutRight` | `{opacity: 1, transform: [{ translateX: 0 }]}`   |
-| `FadeOutUp`    | `{opacity: 1, transform: [{ translateY: 0 }]}`   |
+| Name           | Config                                            |
+| -------------- | ------------------------------------------------- |
+| `FadeIn`       | `{ opacity: 0 }`                                  |
+| `FadeInDown`   | `{ opacity: 0, transform: [{ translateY: 25 }]}`  |
+| `FadeInLeft`   | `{ opacity: 0, transform: [{ translateX: -25 }]}` |
+| `FadeInRight`  | `{ opacity: 0, transform: [{ translateX: 25 }]}`  |
+| `FadeInUp`     | `{ opacity: 0, transform: [{ translateY: -25 }]}` |
+| `FadeOut`      | `{ opacity: 1}`                                   |
+| `FadeOutDown`  | `{ opacity: 1, transform: [{ translateY: 0 }]}`   |
+| `FadeOutLeft`  | `{ opacity: 1, transform: [{ translateX: 0 }]}`   |
+| `FadeOutRight` | `{ opacity: 1, transform: [{ translateX: 0 }]}`   |
+| `FadeOutUp`    | `{ opacity: 1, transform: [{ translateY: 0 }]}`   |
+
+</details>
+
+<details>
+<summary>Target values</summary>
+
+These are the target values for each exiting animation that can be customized with the `withTargetValues` modifier.
+
+| Name           | Config                            |
+| -------------- | --------------------------------- |
+| `FadeOut`      | `{ opacity: 0 }`                  |
+| `FadeOutDown`  | `{ opacity: 0, translateY: 25 }`  |
+| `FadeOutLeft`  | `{ opacity: 0, translateX: -25 }` |
+| `FadeOutRight` | `{ opacity: 0, translateX: 25 }`  |
+| `FadeOutUp`    | `{ opacity: 0, translateY: -25 }` |
 
 </details>
 
@@ -235,18 +250,33 @@ Available bounce animations:
 
 These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-| Name             | Config                                                |
-| ---------------- | ----------------------------------------------------- |
-| `BounceIn`       | `{transform: [{ scale: 0 }]}`                         |
-| `BounceInRight`  | `{transform: [{ translateX: values.windowWidth }]}`   |
-| `BounceInLeft`   | `{transform: [{ translateX: -values.windowWidth }]}`  |
-| `BounceInUp`     | `{transform: [{ translateY: -values.windowHeight }]}` |
-| `BounceInDown`   | `{transform: [{ translateY: values.windowHeight}]}`   |
-| `BounceOut`      | `{transform: [{ scale: 1 }]}`                         |
-| `BounceOutRight` | `{transform: [{ translateX: 0 }]}`                    |
-| `BounceOutLeft`  | `{transform: [{ translateX: 0 }]}`                    |
-| `BounceOutUp`    | `{transform: [{ translateY: 0 }]}`                    |
-| `BounceOutDown`  | `{transform: [{ translateY: 0 }]}`                    |
+| Name             | Config                                                 |
+| ---------------- | ------------------------------------------------------ |
+| `BounceIn`       | `{ transform: [{ scale: 0 }]}`                         |
+| `BounceInRight`  | `{ transform: [{ translateX: values.windowWidth }]}`   |
+| `BounceInLeft`   | `{ transform: [{ translateX: -values.windowWidth }]}`  |
+| `BounceInUp`     | `{ transform: [{ translateY: -values.windowHeight }]}` |
+| `BounceInDown`   | `{ transform: [{ translateY: values.windowHeight}]}`   |
+| `BounceOut`      | `{ transform: [{ scale: 1 }]}`                         |
+| `BounceOutRight` | `{ transform: [{ translateX: 0 }]}`                    |
+| `BounceOutLeft`  | `{ transform: [{ translateX: 0 }]}`                    |
+| `BounceOutUp`    | `{ transform: [{ translateY: 0 }]}`                    |
+| `BounceOutDown`  | `{ transform: [{ translateY: 0 }]}`                    |
+
+</details>
+
+<details>
+<summary>Target values</summary>
+
+These are the target values for each exiting animation that can be customized with the `withTargetValues` modifier.
+
+| Name             | Config                                 |
+| ---------------- | -------------------------------------- |
+| `BounceOut`      | `{ scale: 0 }`                         |
+| `BounceOutRight` | `{ translateX: values.windowWidth }`   |
+| `BounceOutLeft`  | `{ translateX: -values.windowWidth }`  |
+| `BounceOutUp`    | `{ translateY: -values.windowHeight }` |
+| `BounceOutDown`  | `{ translateY: values.windowHeight }`  |
 
 </details>
 
@@ -345,20 +375,36 @@ Available flip animations:
 
 These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-| Name            | Config                                                                                                   |
-| --------------- | -------------------------------------------------------------------------------------------------------- |
-| `FlipInEasyX`   | `{transform: [{ perspective: 500 }, { rotateX: '90deg' }]}`                                              |
-| `FlipInEasyY`   | `{transform: [{ perspective: 500 }, { rotateY: '90deg' }]}`                                              |
-| `FlipInXDown`   | `{transform: [{ perspective: 500 }, { rotateX: '-90deg' }, { translateY: targetValues.targetHeight }]}`  |
-| `FlipInXUp`     | `{transform: [{ perspective: 500 }, { rotateX: '90deg' }, { translateY: -targetValues.targetHeight }]}`  |
-| `FlipInYLeft`   | `{transform: [{ perspective: 500 }, { rotateY: '-90deg' }, { translateX: -targetValues.targetWidth } ]}` |
-| `FlipInYRight`  | `{transform: [{ perspective: 500 }, { rotateY: '90deg' }, { translateX: targetValues.targetWidth } ]}`   |
-| `FlipOutEasyX`  | `{transform: [{ perspective: 500 }, { rotateX: '0deg' }]}`                                               |
-| `FlipOutEasyY`  | `{transform: [{ perspective: 500 }, { rotateY: '0deg' }]}`                                               |
-| `FlipOutXDown`  | `{transform: [{ perspective: 500 }, { rotateX: '0deg' }, { translateY: 0 }]}`                            |
-| `FlipOutXUp`    | `{transform: [{ perspective: 500 }, { rotateX: '0deg' }, { translateY: 0 }]}`                            |
-| `FlipOutYLeft`  | `{transform: [{ perspective: 500 }, { rotateY: '0deg' }, { translateX: 0 }]}`                            |
-| `FlipOutYRight` | `{transform: [{ perspective: 500 }, { rotateY: '0deg' }, { translateX: 0 }]}`                            |
+| Name            | Config                                                                                                    |
+| --------------- | --------------------------------------------------------------------------------------------------------- |
+| `FlipInEasyX`   | `{ transform: [{ perspective: 500 }, { rotateX: '90deg' }]}`                                              |
+| `FlipInEasyY`   | `{ transform: [{ perspective: 500 }, { rotateY: '90deg' }]}`                                              |
+| `FlipInXDown`   | `{ transform: [{ perspective: 500 }, { rotateX: '-90deg' }, { translateY: targetValues.targetHeight }]}`  |
+| `FlipInXUp`     | `{ transform: [{ perspective: 500 }, { rotateX: '90deg' }, { translateY: -targetValues.targetHeight }]}`  |
+| `FlipInYLeft`   | `{ transform: [{ perspective: 500 }, { rotateY: '-90deg' }, { translateX: -targetValues.targetWidth } ]}` |
+| `FlipInYRight`  | `{ transform: [{ perspective: 500 }, { rotateY: '90deg' }, { translateX: targetValues.targetWidth } ]}`   |
+| `FlipOutEasyX`  | `{ transform: [{ perspective: 500 }, { rotateX: '0deg' }]}`                                               |
+| `FlipOutEasyY`  | `{ transform: [{ perspective: 500 }, { rotateY: '0deg' }]}`                                               |
+| `FlipOutXDown`  | `{ transform: [{ perspective: 500 }, { rotateX: '0deg' }, { translateY: 0 }]}`                            |
+| `FlipOutXUp`    | `{ transform: [{ perspective: 500 }, { rotateX: '0deg' }, { translateY: 0 }]}`                            |
+| `FlipOutYLeft`  | `{ transform: [{ perspective: 500 }, { rotateY: '0deg' }, { translateX: 0 }]}`                            |
+| `FlipOutYRight` | `{ transform: [{ perspective: 500 }, { rotateY: '0deg' }, { translateX: 0 }]}`                            |
+
+</details>
+
+<details>
+<summary>Target values</summary>
+
+These are the target values for each exiting animation that can be customized with the `withTargetValues` modifier.
+
+| Name            | Config                                                                            |
+| --------------- | --------------------------------------------------------------------------------- |
+| `FlipOutEasyX`  | `{ perspective: 500, rotateX: '90deg' }`                                          |
+| `FlipOutEasyY`  | `{ perspective: 500, rotateY: '90deg' }`                                          |
+| `FlipOutXDown`  | `{ perspective: 500, rotateX: '-90deg', translateY: targetValues.currentHeight }` |
+| `FlipOutXUp`    | `{ perspective: 500, rotateX: '90deg', translateY: -targetValues.currentHeight }` |
+| `FlipOutYLeft`  | `{ perspective: 500, rotateY: '-90deg', translateX: -targetValues.currentWidth }` |
+| `FlipOutYRight` | `{ perspective: 500, rotateY: '90deg', translateX: targetValues.currentWidth }`   |
 
 </details>
 
@@ -480,12 +526,24 @@ Available lightspeed animations:
 
 These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-| Name                 | Config                                                                               |
-| -------------------- | ------------------------------------------------------------------------------------ |
-| `LightSpeedInLeft`   | `{opacity: 0, transform: [{ translateX: -values.windowWidth }, { skewX: '45deg' }]}` |
-| `LightSpeedInRight`  | `{opacity: 0, transform: [{ translateX: values.windowWidth }, { skewX: '-45deg' }]}` |
-| `LightSpeedOutLeft`  | `{opacity: 1, transform: [{ translateX: 0 }, { skewX: '0deg' }]}`                    |
-| `LightSpeedOutRight` | `{opacity: 1, transform: [{ translateX: 0 }, { skewX: '0deg' }]}`                    |
+| Name                 | Config                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------- |
+| `LightSpeedInLeft`   | `{ opacity: 0, transform: [{ translateX: -values.windowWidth }, { skewX: '45deg' }]}` |
+| `LightSpeedInRight`  | `{ opacity: 0, transform: [{ translateX: values.windowWidth }, { skewX: '-45deg' }]}` |
+| `LightSpeedOutLeft`  | `{ opacity: 1, transform: [{ translateX: 0 }, { skewX: '0deg' }]}`                    |
+| `LightSpeedOutRight` | `{ opacity: 1, transform: [{ translateX: 0 }, { skewX: '0deg' }]}`                    |
+
+</details>
+
+<details>
+<summary>Target values</summary>
+
+These are the target values for each exiting animation that can be customized with the `withTargetValues` modifier.
+
+| Name                 | Config                                                         |
+| -------------------- | -------------------------------------------------------------- |
+| `LightSpeedOutLeft`  | `{opacity: 1, translateX: 0, skewX: '0deg' }`                  |
+| `LightSpeedOutRight` | `{opacity: 0, translateX: values.windowWidth, skewX: '0deg' }` |
 
 </details>
 
@@ -601,10 +659,21 @@ Available pinwheel animations:
 
 These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-| Name          | Config                                                   |
-| ------------- | -------------------------------------------------------- |
-| `PinwheelIn`  | `{opacity: 0, transform: [{ scale: 0 }, {rotate: '5'}]}` |
-| `PinwheelOut` | `{opacity: 1, transform: [{ scale: 1 }, {rotate: '0'}]}` |
+| Name          | Config                                                        |
+| ------------- | ------------------------------------------------------------- |
+| `PinwheelIn`  | `{ opacity: 0, transform: [{ scale: 0 }, {rotate: '5rad' }]}` |
+| `PinwheelOut` | `{ opacity: 1, transform: [{ scale: 1 }, {rotate: '0' }]}`    |
+
+</details>
+
+<details>
+<summary>Target values</summary>
+
+These are the target values for each exiting animation that can be customized with the `withTargetValues` modifier.
+
+| Name          | Config                                     |
+| ------------- | ------------------------------------------ |
+| `PinwheelOut` | `{ opacity: 0, scale: 0, rotate: '5rad' }` |
 
 </details>
 
@@ -724,12 +793,24 @@ Available roll animations:
 
 These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-| Name           | Config                                                                      |
-| -------------- | --------------------------------------------------------------------------- |
-| `RollInLeft`   | `{transform: [{ translateX: -values.windowWidth }, { rotate: '-180deg' }]}` |
-| `RollInRight`  | `{transform: [{ translateX: values.windowWidth }, { rotate: '180deg' }]}`   |
-| `RollOutLeft`  | `{transform: [{ translateX: 0 }, { rotate: '0deg' }]}`                      |
-| `RollOutRight` | `{transform: [{ translateX: 0 }, { rotate: '0deg' }]}`                      |
+| Name           | Config                                                                       |
+| -------------- | ---------------------------------------------------------------------------- |
+| `RollInLeft`   | `{ transform: [{ translateX: -values.windowWidth }, { rotate: '-180deg' }]}` |
+| `RollInRight`  | `{ transform: [{ translateX: values.windowWidth }, { rotate: '180deg' }]}`   |
+| `RollOutLeft`  | `{ transform: [{ translateX: 0 }, { rotate: '0deg' }]}`                      |
+| `RollOutRight` | `{ transform: [{ translateX: 0 }, { rotate: '0deg' }]}`                      |
+
+</details>
+
+<details>
+<summary>Target values</summary>
+
+These are the target values for each exiting animation that can be customized with the `withTargetValues` modifier.
+
+| Name           | Config                                                   |
+| -------------- | -------------------------------------------------------- |
+| `RollOutLeft`  | `{ translateX: -values.windowWidth, rotate: '-180deg' }` |
+| `RollOutRight` | `{ translateX: values.windowWidth, rotate: '180deg' }`   |
 
 </details>
 
@@ -857,16 +938,30 @@ Available rotate animations:
 
 These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-| Name                 | Config                                                                                                                                                                                     |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `RotateInDownLeft`   | `{opacity: 0, transform: [{ rotate: '-90deg' }, { translateX: values.targetWidth / 2 - values.targetHeight / 2 }, { translateY: -(values.targetWidth / 2 - values.targetHeight / 2) }]}`   |
-| `RotateInDownRight`  | `{opacity: 0, transform: [{ rotate: '90deg' }, { translateX: -(values.targetWidth / 2 - values.targetHeight / 2) }, { translateY: -(values.targetWidth / 2 - values.targetHeight / 2) }]}` |
-| `RotateInUpLeft`     | `{opacity: 0, transform: [{ rotate: '90deg' }, { translateX: values.targetWidth / 2 - values.targetHeight / 2 }, { translateY: values.targetWidth / 2 - values.targetHeight / 2 }]}`       |
-| `RotateInUpRight`    | `{opacity: 0, transform: [{ rotate: '-90deg' }, { translateX: -(values.targetWidth / 2 - values.targetHeight / 2) }, { translateY: values.targetWidth / 2 - values.targetHeight / 2 }]}`   |
-| `RotateOutDownLeft`  | `{opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
-| `RotateOutDownRight` | `{opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
-| `RotateOutUpLeft`    | `{opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
-| `RotateOutUpRight`   | `{opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
+| Name                 | Config                                                                                                                                                                                      |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RotateInDownLeft`   | `{ opacity: 0, transform: [{ rotate: '-90deg' }, { translateX: values.targetWidth / 2 - values.targetHeight / 2 }, { translateY: -(values.targetWidth / 2 - values.targetHeight / 2) }]}`   |
+| `RotateInDownRight`  | `{ opacity: 0, transform: [{ rotate: '90deg' }, { translateX: -(values.targetWidth / 2 - values.targetHeight / 2) }, { translateY: -(values.targetWidth / 2 - values.targetHeight / 2) }]}` |
+| `RotateInUpLeft`     | `{ opacity: 0, transform: [{ rotate: '90deg' }, { translateX: values.targetWidth / 2 - values.targetHeight / 2 }, { translateY: values.targetWidth / 2 - values.targetHeight / 2 }]}`       |
+| `RotateInUpRight`    | `{ opacity: 0, transform: [{ rotate: '-90deg' }, { translateX: -(values.targetWidth / 2 - values.targetHeight / 2) }, { translateY: values.targetWidth / 2 - values.targetHeight / 2 }]}`   |
+| `RotateOutDownLeft`  | `{ opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
+| `RotateOutDownRight` | `{ opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
+| `RotateOutUpLeft`    | `{ opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
+| `RotateOutUpRight`   | `{ opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
+
+</details>
+
+<details>
+<summary>Target values</summary>
+
+These are the target values for each exiting animation that can be customized with the `withTargetValues` modifier.
+
+| Name                 | Config                                                                                                                                                                  |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RotateOutDownLeft`  | `{ opacity: 0, rotate: '90deg', translateX: values.currentWidth / 2 - values.currentHeight / 2, translateY: values.currentWidth / 2 - values.currentHeight / 2 }`       |
+| `RotateOutDownRight` | `{ opacity: 0, rotate: '-90deg', translateX: -(values.currentWidth / 2 - values.currentHeight / 2), translateY: values.currentWidth / 2 - values.currentHeight / 2 }`   |
+| `RotateOutUpLeft`    | `{ opacity: 0, rotate: '-90deg', translateX: values.currentWidth / 2 - values.currentHeight / 2, translateY: -(values.currentWidth / 2 - values.currentHeight / 2) }`   |
+| `RotateOutUpRight`   | `{ opacity: 0, rotate: '90deg', translateX: -(values.currentWidth / 2 - values.currentHeight / 2), translateY: -(values.currentWidth / 2 - values.currentHeight / 2) }` |
 
 </details>
 
@@ -994,16 +1089,30 @@ Available slide animations:
 
 These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-| Name            | Config                                                  |
-| --------------- | ------------------------------------------------------- |
-| `SlideInDown`   | `{originY: values.targetOriginY + values.windowHeight}` |
-| `SlideInLeft`   | `{originX: values.targetOriginX - values.windowWidth}`  |
-| `SlideInRight`  | `{originX: values.targetOriginX + values.windowWidth}`  |
-| `SlideInUp`     | `{originY: -values.windowHeight}`                       |
-| `SlideOutDown`  | `{originY: values.currentOriginY}`                      |
-| `SlideOutLeft`  | `{originX: values.currentOriginX}`                      |
-| `SlideOutRight` | `{originX: values.currentOriginX}`                      |
-| `SlideOutUp`    | `{originY: values.currentOriginY}`                      |
+| Name            | Config                                                    |
+| --------------- | --------------------------------------------------------- |
+| `SlideInDown`   | `{ originY: values.targetOriginY + values.windowHeight }` |
+| `SlideInLeft`   | `{ originX: values.targetOriginX - values.windowWidth }`  |
+| `SlideInRight`  | `{ originX: values.targetOriginX + values.windowWidth }`  |
+| `SlideInUp`     | `{ originY: -values.windowHeight }`                       |
+| `SlideOutDown`  | `{ originY: values.currentOriginY }`                      |
+| `SlideOutLeft`  | `{ originX: values.currentOriginX }`                      |
+| `SlideOutRight` | `{ originX: values.currentOriginX }`                      |
+| `SlideOutUp`    | `{ originY: values.currentOriginY }`                      |
+
+</details>
+
+<details>
+<summary>Target values</summary>
+
+These are the target values for each exiting animation that can be customized with the `withTargetValues` modifier.
+
+| Name            | Config                                                                                    |
+| --------------- | ----------------------------------------------------------------------------------------- |
+| `SlideOutDown`  | `{ originY: Math.max(values.currentOriginY + values.windowHeight, values.windowHeight)}`  |
+| `SlideOutLeft`  | `{ originX: Math.max(values.currentOriginX - values.windowWidth, -values.windowWidth)}`   |
+| `SlideOutRight` | `{ originX: Math.max(values.currentOriginX + values.windowWidth, values.windowWidth)}`    |
+| `SlideOutUp`    | `{ originY: Math.max(values.currentOriginY - values.windowHeight, -values.windowHeight)}` |
 
 </details>
 
@@ -1122,12 +1231,24 @@ Available stretch animations:
 
 These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-| Name          | Config                         |
-| ------------- | ------------------------------ |
-| `StretchInX`  | `{transform: [{ scaleX: 0 }]}` |
-| `StretchInY`  | `{transform: [{ scaleY: 0 }]}` |
-| `StretchOutX` | `{transform: [{ scaleX: 1 }]}` |
-| `StretchOutY` | `{transform: [{ scaleY: 1 }]}` |
+| Name          | Config                          |
+| ------------- | ------------------------------- |
+| `StretchInX`  | `{ transform: [{ scaleX: 0 }]}` |
+| `StretchInY`  | `{ transform: [{ scaleY: 0 }]}` |
+| `StretchOutX` | `{ transform: [{ scaleX: 1 }]}` |
+| `StretchOutY` | `{ transform: [{ scaleY: 1 }]}` |
+
+</details>
+
+<details>
+<summary>Target values</summary>
+
+These are the target values for each exiting animation that can be customized with the `withTargetValues` modifier.
+
+| Name          | Config          |
+| ------------- | --------------- |
+| `StretchOutX` | `{ scaleX: 0 }` |
+| `StretchOutY` | `{ scaleY: 0 }` |
 
 </details>
 
@@ -1269,24 +1390,42 @@ Available zoom animations:
 
 These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-| Name              | Config                                                              |
-| ----------------- | ------------------------------------------------------------------- |
-| `ZoomIn`          | `{transform: [{ scale: 0 }]}`                                       |
-| `ZoomInDown`      | `{transform: [{ translateY: values.windowHeight }, { scale: 0 }]}`  |
-| `ZoomInEasyDown`  | `{transform: [{ translateY: values.targetHeight }, { scale: 0 }]}`  |
-| `ZoomInEasyUp`    | `{transform: [{ translateY: -values.targetHeight }, { scale: 0 }]}` |
-| `ZoomInLeft`      | `{transform: [{ translateX: -values.windowWidth }, { scale: 0 }]}`  |
-| `ZoomInRight`     | `{transform: [{ translateX: values.windowWidth }, { scale: 0 }]}`   |
-| `ZoomInRotate`    | `{transform: [{ scale: 0 }, { rotate: rotate }]}`                   |
-| `ZoomInUp`        | `{transform: [{ translateY: -values.windowHeight }, { scale: 0 }]}` |
-| `ZoomOut`         | `{transform: [{ scale: 1 }]}`                                       |
-| `ZoomOutDown`     | `{transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
-| `ZoomOutEasyDown` | `{transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
-| `ZoomOutEasyUp`   | `{transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
-| `ZoomOutLeft`     | `{transform: [{ translateX: 0 }, { scale: 1 }]}`                    |
-| `ZoomOutRight`    | `{transform: [{ translateX: 0 }, { scale: 1 }]}`                    |
-| `ZoomOutRotate`   | `{transform: [{ scale: 1 }, { rotate: '0' }]}`                      |
-| `ZoomOutUp`       | `{transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
+| Name              | Config                                                               |
+| ----------------- | -------------------------------------------------------------------- |
+| `ZoomIn`          | `{ transform: [{ scale: 0 }]}`                                       |
+| `ZoomInDown`      | `{ transform: [{ translateY: values.windowHeight }, { scale: 0 }]}`  |
+| `ZoomInEasyDown`  | `{ transform: [{ translateY: values.targetHeight }, { scale: 0 }]}`  |
+| `ZoomInEasyUp`    | `{ transform: [{ translateY: -values.targetHeight }, { scale: 0 }]}` |
+| `ZoomInLeft`      | `{ transform: [{ translateX: -values.windowWidth }, { scale: 0 }]}`  |
+| `ZoomInRight`     | `{ transform: [{ translateX: values.windowWidth }, { scale: 0 }]}`   |
+| `ZoomInRotate`    | `{ transform: [{ scale: 0 }, { rotate: rotate }]}`                   |
+| `ZoomInUp`        | `{ transform: [{ translateY: -values.windowHeight }, { scale: 0 }]}` |
+| `ZoomOut`         | `{ transform: [{ scale: 1 }]}`                                       |
+| `ZoomOutDown`     | `{ transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
+| `ZoomOutEasyDown` | `{ transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
+| `ZoomOutEasyUp`   | `{ transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
+| `ZoomOutLeft`     | `{ transform: [{ translateX: 0 }, { scale: 1 }]}`                    |
+| `ZoomOutRight`    | `{ transform: [{ translateX: 0 }, { scale: 1 }]}`                    |
+| `ZoomOutRotate`   | `{ transform: [{ scale: 1 }, { rotate: '0' }]}`                      |
+| `ZoomOutUp`       | `{ transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
+
+</details>
+
+<details>
+<summary>Target values</summary>
+
+These are the target values for each exiting animation that can be customized with the `withTargetValues` modifier.
+
+| Name              | Config                                            |
+| ----------------- | ------------------------------------------------- |
+| `ZoomOut`         | `{ scale: 0 }`                                    |
+| `ZoomOutDown`     | `{ translateY: values.currentHeight, scale: 0 }`  |
+| `ZoomOutEasyDown` | `{ translateY: values.currentHeight, scale: 0 }`  |
+| `ZoomOutEasyUp`   | `{ translateY: -values.currentHeight, scale: 0 }` |
+| `ZoomOutLeft`     | `{ translateX: -values.windowWidth, scale: 0 }`   |
+| `ZoomOutRight`    | `{ translateX: values.windowWidth, scale: 0 }`    |
+| `ZoomOutRotate`   | `{ scale: 1, rotate: '0.3' }`                     |
+| `ZoomOutUp`       | `{ translateY: -values.currentHeight, scale: 0 }` |
 
 </details>
 

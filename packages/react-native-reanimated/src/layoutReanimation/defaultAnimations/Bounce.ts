@@ -1,12 +1,14 @@
 'use strict';
 import { withSequence, withTiming } from '../../animation';
 import type {
+  AnimatableValue,
   EntryExitAnimationFunction,
   EntryExitAnimationsValues,
   IEntryExitAnimationBuilder,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
+import { ComplexExitAnimationBuilder } from '../animationBuilder/ComplexExitAnimationBuilder';
 
 /**
  * Bounce entering animation. You can modify the behavior by chaining methods
@@ -342,7 +344,7 @@ export class BounceInRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceOut
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{ scale: AnimatableValue }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceOut';
@@ -367,6 +369,7 @@ export class BounceOut
     const duration = this.getDuration();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const scaleOverride = this.targetValues?.scale;
 
     return () => {
       'worklet';
@@ -380,7 +383,7 @@ export class BounceOut
                   withTiming(1.1, { duration: duration * 0.15 }),
                   withTiming(0.9, { duration: duration * 0.15 }),
                   withTiming(1.2, { duration: duration * 0.15 }),
-                  withTiming(0, { duration: duration * 0.55 })
+                  withTiming(scaleOverride ?? 0, { duration: duration * 0.55 })
                 )
               ),
             },
@@ -406,7 +409,7 @@ export class BounceOut
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceOutDown
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{ translateY: AnimatableValue }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceOutDown';
@@ -431,6 +434,7 @@ export class BounceOutDown
     const duration = this.getDuration();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const translateYOverride = this.targetValues?.translateY;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -444,7 +448,7 @@ export class BounceOutDown
                   withTiming(-10, { duration: duration * 0.15 }),
                   withTiming(10, { duration: duration * 0.15 }),
                   withTiming(-20, { duration: duration * 0.15 }),
-                  withTiming(values.windowHeight, {
+                  withTiming(translateYOverride ?? values.windowHeight, {
                     duration: duration * 0.55,
                   })
                 )
@@ -472,7 +476,7 @@ export class BounceOutDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceOutUp
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{ translateY: AnimatableValue }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceOutUp';
@@ -497,6 +501,7 @@ export class BounceOutUp
     const duration = this.getDuration();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const translateYOverride = this.targetValues?.translateY;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -510,7 +515,7 @@ export class BounceOutUp
                   withTiming(10, { duration: duration * 0.15 }),
                   withTiming(-10, { duration: duration * 0.15 }),
                   withTiming(20, { duration: duration * 0.15 }),
-                  withTiming(-values.windowHeight, {
+                  withTiming(translateYOverride ?? -values.windowHeight, {
                     duration: duration * 0.55,
                   })
                 )
@@ -538,7 +543,7 @@ export class BounceOutUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceOutLeft
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{ translateX: AnimatableValue }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceOutLeft';
@@ -563,6 +568,7 @@ export class BounceOutLeft
     const duration = this.getDuration();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const translateXOverride = this.targetValues?.translateX;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -576,7 +582,7 @@ export class BounceOutLeft
                   withTiming(10, { duration: duration * 0.15 }),
                   withTiming(-10, { duration: duration * 0.15 }),
                   withTiming(20, { duration: duration * 0.15 }),
-                  withTiming(-values.windowWidth, {
+                  withTiming(translateXOverride ?? -values.windowWidth, {
                     duration: duration * 0.55,
                   })
                 )
@@ -604,7 +610,7 @@ export class BounceOutLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceOutRight
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{ translateX: AnimatableValue }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceOutRight';
@@ -629,6 +635,7 @@ export class BounceOutRight
     const duration = this.getDuration();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const translateXOverride = this.targetValues?.translateX;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -642,7 +649,7 @@ export class BounceOutRight
                   withTiming(-10, { duration: duration * 0.15 }),
                   withTiming(10, { duration: duration * 0.15 }),
                   withTiming(-20, { duration: duration * 0.15 }),
-                  withTiming(values.windowWidth, {
+                  withTiming(translateXOverride ?? values.windowWidth, {
                     duration: duration * 0.55,
                   })
                 )

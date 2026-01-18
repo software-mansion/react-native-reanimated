@@ -160,6 +160,7 @@ import WorkletRuntimeExample from './WorkletRuntimeExample';
 import InstanceDiscoveryExample from './InstanceDiscoveryExample';
 import ShadowNodesCloningExample from './ShadowNodesCloningExample';
 import EmptyExample from './EmptyExample';
+import DefaultAnimationsOverrides from './LayoutAnimations/DefaultAnimationsOverrides';
 
 export const REAPlatform = {
   IOS: 'ios',
@@ -897,6 +898,10 @@ export const EXAMPLES: Record<string, Example> = {
   DurationZeroExample: {
     title: '[LA] Duration zero',
     screen: DurationZeroExample,
+  },
+  DefaultAnimationsOverrides: {
+    title: '[LA] Default layout animations overrides',
+    screen: DefaultAnimationsOverrides,
   },
 
   // Shared Element Transitions

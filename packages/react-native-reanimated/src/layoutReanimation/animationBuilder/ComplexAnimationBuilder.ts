@@ -253,7 +253,7 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
   }
 
   /**
-   * Lets you override the initial config of the animation
+   * Lets you override the initial properties of the animation
    *
    * @param values - An object containing the styles to override.
    */

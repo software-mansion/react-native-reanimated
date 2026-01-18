@@ -1,4 +1,6 @@
 'use strict';
+import type { AnimatableNumericValue, RotateTransform } from 'react-native';
+
 import type {
   AnimationConfigFunction,
   EntryAnimationsValues,
@@ -8,6 +10,7 @@ import type {
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
+import { ComplexExitAnimationBuilder } from '../animationBuilder/ComplexExitAnimationBuilder';
 
 /**
  * Rotate to bottom from left edge. You can modify the behavior by chaining
@@ -235,7 +238,12 @@ export class RotateInUpRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateOutDownLeft
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    opacity: AnimatableNumericValue;
+    rotate: RotateTransform['rotate'];
+    translateX: AnimatableNumericValue;
+    translateY: AnimatableNumericValue;
+  }>
   implements IExitAnimationBuilder
 {
   static presetName = 'RotateOutDownLeft';
@@ -252,19 +260,32 @@ export class RotateOutDownLeft
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const opacityOverride = this.targetValues?.opacity;
+    const rotateOverride = this.targetValues?.rotate;
+    const translateXOverride = this.targetValues?.translateX;
+    const translateYOverride = this.targetValues?.translateY;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
+          opacity: delayFunction(
+            delay,
+            animation(opacityOverride ?? 0, config)
+          ),
           transform: [
-            { rotate: delayFunction(delay, animation('90deg', config)) },
+            {
+              rotate: delayFunction(
+                delay,
+                animation(rotateOverride ?? '90deg', config)
+              ),
+            },
             {
               translateX: delayFunction(
                 delay,
                 animation(
-                  values.currentWidth / 2 - values.currentHeight / 2,
+                  translateXOverride ??
+                    values.currentWidth / 2 - values.currentHeight / 2,
                   config
                 )
               ),
@@ -273,7 +294,8 @@ export class RotateOutDownLeft
               translateY: delayFunction(
                 delay,
                 animation(
-                  values.currentWidth / 2 - values.currentHeight / 2,
+                  translateYOverride ??
+                    values.currentWidth / 2 - values.currentHeight / 2,
                   config
                 )
               ),
@@ -301,7 +323,12 @@ export class RotateOutDownLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateOutDownRight
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    opacity: AnimatableNumericValue;
+    rotate: RotateTransform['rotate'];
+    translateX: AnimatableNumericValue;
+    translateY: AnimatableNumericValue;
+  }>
   implements IExitAnimationBuilder
 {
   static presetName = 'RotateOutDownRight';
@@ -318,19 +345,32 @@ export class RotateOutDownRight
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const opacityOverride = this.targetValues?.opacity;
+    const rotateOverride = this.targetValues?.rotate;
+    const translateXOverride = this.targetValues?.translateX;
+    const translateYOverride = this.targetValues?.translateY;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
+          opacity: delayFunction(
+            delay,
+            animation(opacityOverride ?? 0, config)
+          ),
           transform: [
-            { rotate: delayFunction(delay, animation('-90deg', config)) },
+            {
+              rotate: delayFunction(
+                delay,
+                animation(rotateOverride ?? '-90deg', config)
+              ),
+            },
             {
               translateX: delayFunction(
                 delay,
                 animation(
-                  -(values.currentWidth / 2 - values.currentHeight / 2),
+                  translateXOverride ??
+                    -(values.currentWidth / 2 - values.currentHeight / 2),
                   config
                 )
               ),
@@ -339,7 +379,8 @@ export class RotateOutDownRight
               translateY: delayFunction(
                 delay,
                 animation(
-                  values.currentWidth / 2 - values.currentHeight / 2,
+                  translateYOverride ??
+                    values.currentWidth / 2 - values.currentHeight / 2,
                   config
                 )
               ),
@@ -367,7 +408,12 @@ export class RotateOutDownRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateOutUpLeft
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    opacity: AnimatableNumericValue;
+    rotate: RotateTransform['rotate'];
+    translateX: AnimatableNumericValue;
+    translateY: AnimatableNumericValue;
+  }>
   implements IExitAnimationBuilder
 {
   static presetName = 'RotateOutUpLeft';
@@ -384,19 +430,32 @@ export class RotateOutUpLeft
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const opacityOverride = this.targetValues?.opacity;
+    const rotateOverride = this.targetValues?.rotate;
+    const translateXOverride = this.targetValues?.translateX;
+    const translateYOverride = this.targetValues?.translateY;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
+          opacity: delayFunction(
+            delay,
+            animation(opacityOverride ?? 0, config)
+          ),
           transform: [
-            { rotate: delayFunction(delay, animation('-90deg', config)) },
+            {
+              rotate: delayFunction(
+                delay,
+                animation(rotateOverride ?? '-90deg', config)
+              ),
+            },
             {
               translateX: delayFunction(
                 delay,
                 animation(
-                  values.currentWidth / 2 - values.currentHeight / 2,
+                  translateXOverride ??
+                    values.currentWidth / 2 - values.currentHeight / 2,
                   config
                 )
               ),
@@ -405,7 +464,8 @@ export class RotateOutUpLeft
               translateY: delayFunction(
                 delay,
                 animation(
-                  -(values.currentWidth / 2 - values.currentHeight / 2),
+                  translateYOverride ??
+                    -(values.currentWidth / 2 - values.currentHeight / 2),
                   config
                 )
               ),
@@ -433,7 +493,12 @@ export class RotateOutUpLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateOutUpRight
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    opacity: AnimatableNumericValue;
+    rotate: RotateTransform['rotate'];
+    translateX: AnimatableNumericValue;
+    translateY: AnimatableNumericValue;
+  }>
   implements IExitAnimationBuilder
 {
   static presetName = 'RotateOutUpRight';
@@ -450,19 +515,32 @@ export class RotateOutUpRight
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const opacityOverride = this.targetValues?.opacity;
+    const rotateOverride = this.targetValues?.rotate;
+    const translateXOverride = this.targetValues?.translateX;
+    const translateYOverride = this.targetValues?.translateY;
 
     return (values) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
+          opacity: delayFunction(
+            delay,
+            animation(opacityOverride ?? 0, config)
+          ),
           transform: [
-            { rotate: delayFunction(delay, animation('90deg', config)) },
+            {
+              rotate: delayFunction(
+                delay,
+                animation(rotateOverride ?? '90deg', config)
+              ),
+            },
             {
               translateX: delayFunction(
                 delay,
                 animation(
-                  -(values.currentWidth / 2 - values.currentHeight / 2),
+                  translateXOverride ??
+                    -(values.currentWidth / 2 - values.currentHeight / 2),
                   config
                 )
               ),
@@ -471,7 +549,8 @@ export class RotateOutUpRight
               translateY: delayFunction(
                 delay,
                 animation(
-                  -(values.currentWidth / 2 - values.currentHeight / 2),
+                  translateYOverride ??
+                    -(values.currentWidth / 2 - values.currentHeight / 2),
                   config
                 )
               ),

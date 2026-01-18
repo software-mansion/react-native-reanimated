@@ -8,6 +8,7 @@ import type {
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
+import { ComplexExitAnimationBuilder } from '../animationBuilder/ComplexExitAnimationBuilder';
 
 /**
  * Slide from right animation. You can modify the behavior by chaining methods
@@ -113,7 +114,7 @@ export class SlideInLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
  */
 export class SlideOutRight
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{ originX: number }>
   implements IExitAnimationBuilder
 {
   static presetName = 'SlideOutRight';
@@ -130,6 +131,7 @@ export class SlideOutRight
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const originXOverride = this.targetValues?.originX;
 
     return (values) => {
       'worklet';
@@ -138,10 +140,11 @@ export class SlideOutRight
           originX: delayFunction(
             delay,
             animation(
-              Math.max(
-                values.currentOriginX + values.windowWidth,
-                values.windowWidth
-              ),
+              originXOverride ??
+                Math.max(
+                  values.currentOriginX + values.windowWidth,
+                  values.windowWidth
+                ),
               config
             )
           ),
@@ -166,7 +169,7 @@ export class SlideOutRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
  */
 export class SlideOutLeft
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{ originX: number }>
   implements IExitAnimationBuilder
 {
   static presetName = 'SlideOutLeft';
@@ -183,6 +186,7 @@ export class SlideOutLeft
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const originXOverride = this.targetValues?.originX;
 
     return (values) => {
       'worklet';
@@ -191,10 +195,11 @@ export class SlideOutLeft
           originX: delayFunction(
             delay,
             animation(
-              Math.min(
-                values.currentOriginX - values.windowWidth,
-                -values.windowWidth
-              ),
+              originXOverride ??
+                Math.min(
+                  values.currentOriginX - values.windowWidth,
+                  -values.windowWidth
+                ),
               config
             )
           ),
@@ -313,7 +318,7 @@ export class SlideInDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
  */
 export class SlideOutUp
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{ originY: number }>
   implements IExitAnimationBuilder
 {
   static presetName = 'SlideOutUp';
@@ -330,6 +335,7 @@ export class SlideOutUp
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const originYOverride = this.targetValues?.originY;
 
     return (values) => {
       'worklet';
@@ -338,10 +344,11 @@ export class SlideOutUp
           originY: delayFunction(
             delay,
             animation(
-              Math.min(
-                values.currentOriginY - values.windowHeight,
-                -values.windowHeight
-              ),
+              originYOverride ??
+                Math.min(
+                  values.currentOriginY - values.windowHeight,
+                  -values.windowHeight
+                ),
               config
             )
           ),
@@ -363,7 +370,7 @@ export class SlideOutUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#slide
  */
 export class SlideOutDown
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{ originY: number }>
   implements IExitAnimationBuilder
 {
   static presetName = 'SlideOutDown';
@@ -380,6 +387,7 @@ export class SlideOutDown
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const originYOverride = this.targetValues?.originY;
 
     return (values) => {
       'worklet';
@@ -388,10 +396,11 @@ export class SlideOutDown
           originY: delayFunction(
             delay,
             animation(
-              Math.max(
-                values.currentOriginY + values.windowHeight,
-                values.windowHeight
-              ),
+              originYOverride ??
+                Math.max(
+                  values.currentOriginY + values.windowHeight,
+                  values.windowHeight
+                ),
               config
             )
           ),

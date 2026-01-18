@@ -1,4 +1,6 @@
 'use strict';
+import type { RotateTransform, TranslateXTransform } from 'react-native';
+
 import type {
   EntryExitAnimationFunction,
   EntryExitAnimationsValues,
@@ -6,6 +8,7 @@ import type {
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
+import { ComplexExitAnimationBuilder } from '../animationBuilder/ComplexExitAnimationBuilder';
 
 /**
  * Roll from left animation. You can modify the behavior by chaining methods
@@ -114,7 +117,10 @@ export class RollInRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#roll
  */
 export class RollOutLeft
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    translateX: TranslateXTransform['translateX'];
+    rotate: RotateTransform['rotate'];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'RollOutLeft';
@@ -131,6 +137,8 @@ export class RollOutLeft
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const translateXOverride = this.targetValues?.translateX;
+    const rotateOverride = this.targetValues?.rotate;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -140,10 +148,15 @@ export class RollOutLeft
             {
               translateX: delayFunction(
                 delay,
-                animation(-values.windowWidth, config)
+                animation(translateXOverride ?? -values.windowWidth, config)
               ),
             },
-            { rotate: delayFunction(delay, animation('-180deg', config)) },
+            {
+              rotate: delayFunction(
+                delay,
+                animation(rotateOverride ?? '-180deg', config)
+              ),
+            },
           ],
         },
         initialValues: {
@@ -166,7 +179,10 @@ export class RollOutLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#roll
  */
 export class RollOutRight
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    translateX: TranslateXTransform['translateX'];
+    rotate: RotateTransform['rotate'];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'RollOutRight';
@@ -183,6 +199,8 @@ export class RollOutRight
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const translateXOverride = this.targetValues?.translateX;
+    const rotateOverride = this.targetValues?.rotate;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -192,10 +210,15 @@ export class RollOutRight
             {
               translateX: delayFunction(
                 delay,
-                animation(values.windowWidth, config)
+                animation(translateXOverride ?? values.windowWidth, config)
               ),
             },
-            { rotate: delayFunction(delay, animation('180deg', config)) },
+            {
+              rotate: delayFunction(
+                delay,
+                animation(rotateOverride ?? '180deg', config)
+              ),
+            },
           ],
         },
         initialValues: {

@@ -1,4 +1,10 @@
 'use strict';
+import type {
+  AnimatableNumericValue,
+  SkewXTransform,
+  TranslateXTransform,
+} from 'react-native';
+
 import { withSequence, withTiming } from '../../animation';
 import type {
   EntryExitAnimationFunction,
@@ -7,6 +13,7 @@ import type {
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
+import { ComplexExitAnimationBuilder } from '../animationBuilder/ComplexExitAnimationBuilder';
 /**
  * Entry from right animation with change in skew and opacity. You can modify
  * the behavior by chaining methods like `.springify()` or `.duration(500)`.
@@ -145,7 +152,11 @@ export class LightSpeedInLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#lightspeed
  */
 export class LightSpeedOutRight
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    opacity: AnimatableNumericValue;
+    translateX: TranslateXTransform['translateX'];
+    skewX: SkewXTransform['skewX'];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'LightSpeedOutRight';
@@ -162,21 +173,30 @@ export class LightSpeedOutRight
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const opacityOverride = this.targetValues?.opacity;
+    const translateXOverride = this.targetValues?.translateX;
+    const skewXOverride = this.targetValues?.skewX;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
+          opacity: delayFunction(
+            delay,
+            animation(opacityOverride ?? 0, config)
+          ),
           transform: [
             {
               translateX: delayFunction(
                 delay,
-                animation(values.windowWidth, config)
+                animation(translateXOverride ?? values.windowWidth, config)
               ),
             },
             {
-              skewX: delayFunction(delay, animation('-45deg', config)),
+              skewX: delayFunction(
+                delay,
+                animation(skewXOverride ?? '-45deg', config)
+              ),
             },
           ],
         },
@@ -201,7 +221,11 @@ export class LightSpeedOutRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#lightspeed
  */
 export class LightSpeedOutLeft
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    opacity: AnimatableNumericValue;
+    translateX: TranslateXTransform['translateX'];
+    skewX: SkewXTransform['skewX'];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'LightSpeedOutLeft';
@@ -218,21 +242,30 @@ export class LightSpeedOutLeft
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const opacityOverride = this.targetValues?.opacity;
+    const translateXOverride = this.targetValues?.translateX;
+    const skewXOverride = this.targetValues?.skewX;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
+          opacity: delayFunction(
+            delay,
+            animation(opacityOverride ?? 0, config)
+          ),
           transform: [
             {
               translateX: delayFunction(
                 delay,
-                animation(-values.windowWidth, config)
+                animation(translateXOverride ?? -values.windowWidth, config)
               ),
             },
             {
-              skewX: delayFunction(delay, animation('45deg', config)),
+              skewX: delayFunction(
+                delay,
+                animation(skewXOverride ?? '45deg', config)
+              ),
             },
           ],
         },

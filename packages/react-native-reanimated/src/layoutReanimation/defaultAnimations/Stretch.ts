@@ -1,10 +1,13 @@
 'use strict';
+import type { ScaleXTransform, ScaleYTransform } from 'react-native';
+
 import type {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
+import { ComplexExitAnimationBuilder } from '../animationBuilder/ComplexExitAnimationBuilder';
 
 /**
  * Stretch animation on the X axis. You can modify the behavior by chaining
@@ -104,7 +107,7 @@ export class StretchInY
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#stretch
  */
 export class StretchOutX
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{ scaleX: ScaleXTransform }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'StretchOutX';
@@ -121,12 +124,20 @@ export class StretchOutX
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const overrideScaleX = this.targetValues?.scaleX;
 
     return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scaleX: delayFunction(delay, animation(0, config)) }],
+          transform: [
+            {
+              scaleX: delayFunction(
+                delay,
+                animation(overrideScaleX ?? 0, config)
+              ),
+            },
+          ],
         },
         initialValues: {
           transform: [{ scaleX: 1 }],
@@ -148,7 +159,7 @@ export class StretchOutX
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#stretch
  */
 export class StretchOutY
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{ scaleY: ScaleYTransform }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'StretchOutY';
@@ -165,12 +176,20 @@ export class StretchOutY
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const overrideScaleY = this.targetValues?.scaleY;
 
     return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scaleY: delayFunction(delay, animation(0, config)) }],
+          transform: [
+            {
+              scaleY: delayFunction(
+                delay,
+                animation(overrideScaleY ?? 0, config)
+              ),
+            },
+          ],
         },
         initialValues: {
           transform: [{ scaleY: 1 }],

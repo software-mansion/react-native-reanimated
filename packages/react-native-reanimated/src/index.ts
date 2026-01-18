@@ -183,6 +183,7 @@ export {
   BounceOutRight,
   BounceOutUp,
   ComplexAnimationBuilder,
+  ComplexExitAnimationBuilder,
   CurvedTransition,
   EntryExitTransition,
   // Fade

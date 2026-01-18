@@ -1,6 +1,7 @@
 'use strict';
 import type { Component, ElementType, JSX, RefObject } from 'react';
 import type {
+  AnimatableNumericValue,
   FlatList,
   HostInstance,
   ImageStyle,
@@ -492,3 +493,21 @@ export type InternalHostInstance = Partial<
 >;
 
 export type InstanceOrElement = InternalHostInstance | ElementType | Component;
+
+export type TransformProperties = {
+  perspective: AnimatableNumericValue;
+  rotate: AnimatableNumericValue;
+  rotateX: AnimatableNumericValue;
+  rotateY: AnimatableNumericValue;
+  rotateZ: AnimatableNumericValue;
+  scale: AnimatableNumericValue;
+  scaleX: AnimatableNumericValue;
+  scaleY: AnimatableNumericValue;
+  translateX: AnimatableNumericValue | `${number}%`;
+  translateY: AnimatableNumericValue | `${number}%`;
+  skewX: AnimatableNumericValue;
+  skewY: AnimatableNumericValue;
+  matrix: AnimatableNumericValue[];
+};
+
+export type TransformKey = keyof TransformProperties;

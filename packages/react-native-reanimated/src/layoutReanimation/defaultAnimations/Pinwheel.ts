@@ -1,10 +1,17 @@
 'use strict';
 import type {
+  AnimatableNumericValue,
+  RotateTransform,
+  ScaleTransform,
+} from 'react-native';
+
+import type {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
+import { ComplexExitAnimationBuilder } from '../animationBuilder/ComplexExitAnimationBuilder';
 
 /**
  * Entry with change in rotation, scale, and opacity. You can modify the
@@ -76,7 +83,11 @@ export class PinwheelIn
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#pinwheel
  */
 export class PinwheelOut
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    opacity: AnimatableNumericValue;
+    scale: ScaleTransform['scale'];
+    rotate: RotateTransform['rotate'];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'PinwheelOut';
@@ -93,18 +104,30 @@ export class PinwheelOut
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const opacityOverride = this.targetValues?.opacity;
+    const scaleOverride = this.targetValues?.scale;
+    const rotateOverride = this.targetValues?.rotate;
 
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
+          opacity: delayFunction(
+            delay,
+            animation(opacityOverride ?? 0, config)
+          ),
           transform: [
             {
-              scale: delayFunction(delay, animation(0, config)),
+              scale: delayFunction(
+                delay,
+                animation(scaleOverride ?? 0, config)
+              ),
             },
             {
-              rotate: delayFunction(delay, animation('5rad', config)),
+              rotate: delayFunction(
+                delay,
+                animation(rotateOverride ?? '5rad', config)
+              ),
             },
           ],
         },

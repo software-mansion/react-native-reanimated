@@ -1,5 +1,12 @@
 'use strict';
 import type {
+  RotateTransform,
+  ScaleTransform,
+  TranslateXTransform,
+  TranslateYTransform,
+} from 'react-native';
+
+import type {
   AnimationConfigFunction,
   EntryAnimationsValues,
   EntryExitAnimationFunction,
@@ -11,6 +18,7 @@ import type {
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
+import { ComplexExitAnimationBuilder } from '../animationBuilder/ComplexExitAnimationBuilder';
 
 /**
  * Scale from center animation. You can modify the behavior by chaining methods
@@ -396,7 +404,7 @@ export class ZoomInEasyDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOut
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{ scale: ScaleTransform }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomOut';
@@ -413,12 +421,20 @@ export class ZoomOut
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const overrideScale = this.targetValues?.scale;
 
     return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scale: delayFunction(delay, animation(0, config)) }],
+          transform: [
+            {
+              scale: delayFunction(
+                delay,
+                animation(overrideScale ?? 0, config)
+              ),
+            },
+          ],
         },
         initialValues: {
           transform: [{ scale: 1 }],
@@ -440,7 +456,10 @@ export class ZoomOut
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutRotate
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    scale: ScaleTransform['scale'];
+    rotate: RotateTransform['rotate'];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomOutRotate';
@@ -458,14 +477,26 @@ export class ZoomOutRotate
     const rotate = this.rotateV ? this.rotateV : '0.3';
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const overrideScale = this.targetValues?.scale;
+    const overrideRotate = this.targetValues?.rotate;
 
     return () => {
       'worklet';
       return {
         animations: {
           transform: [
-            { scale: delayFunction(delay, animation(0, config)) },
-            { rotate: delayFunction(delay, animation(rotate, config)) },
+            {
+              scale: delayFunction(
+                delay,
+                animation(overrideScale ?? 0, config)
+              ),
+            },
+            {
+              rotate: delayFunction(
+                delay,
+                animation(overrideRotate ?? rotate, config)
+              ),
+            },
           ],
         },
         initialValues: {
@@ -488,7 +519,10 @@ export class ZoomOutRotate
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutLeft
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    translateX: TranslateXTransform['translateX'];
+    scale: ScaleTransform['scale'];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomOutLeft';
@@ -505,6 +539,8 @@ export class ZoomOutLeft
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const overrideTranslateX = this.targetValues?.translateX;
+    const overrideScale = this.targetValues?.scale;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -514,10 +550,15 @@ export class ZoomOutLeft
             {
               translateX: delayFunction(
                 delay,
-                animation(-values.windowWidth, config)
+                animation(overrideTranslateX ?? -values.windowWidth, config)
               ),
             },
-            { scale: delayFunction(delay, animation(0, config)) },
+            {
+              scale: delayFunction(
+                delay,
+                animation(overrideScale ?? 0, config)
+              ),
+            },
           ],
         },
         initialValues: {
@@ -540,7 +581,10 @@ export class ZoomOutLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutRight
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    translateX: TranslateXTransform['translateX'];
+    scale: ScaleTransform['scale'];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomOutRight';
@@ -557,6 +601,8 @@ export class ZoomOutRight
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const overrideTranslateX = this.targetValues?.translateX;
+    const overrideScale = this.targetValues?.scale;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -566,10 +612,15 @@ export class ZoomOutRight
             {
               translateX: delayFunction(
                 delay,
-                animation(values.windowWidth, config)
+                animation(overrideTranslateX ?? values.windowWidth, config)
               ),
             },
-            { scale: delayFunction(delay, animation(0, config)) },
+            {
+              scale: delayFunction(
+                delay,
+                animation(overrideScale ?? 0, config)
+              ),
+            },
           ],
         },
         initialValues: {
@@ -592,7 +643,10 @@ export class ZoomOutRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutUp
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    translateY: TranslateYTransform['translateY'];
+    scale: ScaleTransform['scale'];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomOutUp';
@@ -609,6 +663,8 @@ export class ZoomOutUp
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const overrideTranslateY = this.targetValues?.translateY;
+    const overrideScale = this.targetValues?.scale;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -618,10 +674,15 @@ export class ZoomOutUp
             {
               translateY: delayFunction(
                 delay,
-                animation(-values.windowHeight, config)
+                animation(overrideTranslateY ?? -values.windowHeight, config)
               ),
             },
-            { scale: delayFunction(delay, animation(0, config)) },
+            {
+              scale: delayFunction(
+                delay,
+                animation(overrideScale ?? 0, config)
+              ),
+            },
           ],
         },
         initialValues: {
@@ -644,7 +705,10 @@ export class ZoomOutUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutDown
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    translateY: TranslateYTransform['translateY'];
+    scale: ScaleTransform['scale'];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomOutDown';
@@ -661,6 +725,8 @@ export class ZoomOutDown
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const overrideTranslateY = this.targetValues?.translateY;
+    const overrideScale = this.targetValues?.scale;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -670,10 +736,15 @@ export class ZoomOutDown
             {
               translateY: delayFunction(
                 delay,
-                animation(values.windowHeight, config)
+                animation(overrideTranslateY ?? values.windowHeight, config)
               ),
             },
-            { scale: delayFunction(delay, animation(0, config)) },
+            {
+              scale: delayFunction(
+                delay,
+                animation(overrideScale ?? 0, config)
+              ),
+            },
           ],
         },
         initialValues: {
@@ -696,7 +767,10 @@ export class ZoomOutDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutEasyUp
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    translateY: TranslateYTransform['translateY'];
+    scale: ScaleTransform['scale'];
+  }>
   implements IExitAnimationBuilder
 {
   static presetName = 'ZoomOutEasyUp';
@@ -713,6 +787,8 @@ export class ZoomOutEasyUp
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const overrideTranslateY = this.targetValues?.translateY;
+    const overrideScale = this.targetValues?.scale;
 
     return (values) => {
       'worklet';
@@ -722,10 +798,15 @@ export class ZoomOutEasyUp
             {
               translateY: delayFunction(
                 delay,
-                animation(-values.currentHeight, config)
+                animation(overrideTranslateY ?? -values.currentHeight, config)
               ),
             },
-            { scale: delayFunction(delay, animation(0, config)) },
+            {
+              scale: delayFunction(
+                delay,
+                animation(overrideScale ?? 0, config)
+              ),
+            },
           ],
         },
         initialValues: {
@@ -748,7 +829,10 @@ export class ZoomOutEasyUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutEasyDown
-  extends ComplexAnimationBuilder
+  extends ComplexExitAnimationBuilder<{
+    translateY: TranslateYTransform['translateY'];
+    scale: ScaleTransform['scale'];
+  }>
   implements IExitAnimationBuilder
 {
   static presetName = 'ZoomOutEasyDown';
@@ -765,6 +849,8 @@ export class ZoomOutEasyDown
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const overrideTranslateY = this.targetValues?.translateY;
+    const overrideScale = this.targetValues?.scale;
 
     return (values) => {
       'worklet';
@@ -774,10 +860,15 @@ export class ZoomOutEasyDown
             {
               translateY: delayFunction(
                 delay,
-                animation(values.currentHeight, config)
+                animation(overrideTranslateY ?? values.currentHeight, config)
               ),
             },
-            { scale: delayFunction(delay, animation(0, config)) },
+            {
+              scale: delayFunction(
+                delay,
+                animation(overrideScale ?? 0, config)
+              ),
+            },
           ],
         },
         initialValues: {

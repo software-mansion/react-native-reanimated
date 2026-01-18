@@ -324,6 +324,7 @@ const core = {
 const layoutReanimation = {
   BaseAnimationBuilder: new BaseAnimationMock(),
   ComplexAnimationBuilder: new BaseAnimationMock(),
+  ComplexExitAnimationBuilder: new BaseAnimationMock(),
   Keyframe: BaseAnimationMock,
   // Flip
   FlipInXUp: new BaseAnimationMock(),
