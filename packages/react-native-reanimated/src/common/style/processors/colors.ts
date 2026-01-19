@@ -232,6 +232,7 @@ export function processColorsInProps(props: StyleProps) {
   for (const key in props) {
     if (!ColorProperties.includes(key)) continue;
     const value = props[key];
+    if (value == null) continue;
     props[key] = Array.isArray(value)
       ? value.map((c) => processColor(c))
       : processColor(value);
