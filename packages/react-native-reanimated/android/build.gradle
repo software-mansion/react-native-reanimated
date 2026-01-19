@@ -231,7 +231,8 @@ android {
                     "**/libhermesvm.so",
                     "**/libhermestooling.so",
                     "**/libreactnative.so",
-                    "**/libjscexecutor.so",]
+                    "**/libjscexecutor.so",
+                    "**/libworklets.so",]
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
