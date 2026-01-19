@@ -3,6 +3,7 @@
 import { init } from './initializers/initializers';
 import { bundleModeInit } from './initializers/workletRuntimeEntry';
 
+// is-tree-shakable-suppress
 init();
 
 // @ts-expect-error We must trick the bundler to include

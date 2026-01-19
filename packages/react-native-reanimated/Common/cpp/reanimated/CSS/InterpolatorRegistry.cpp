@@ -15,6 +15,7 @@
 
 #include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGLength.h>
+#include <reanimated/CSS/svg/values/SVGPath.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
@@ -260,7 +261,7 @@ const InterpolatorFactoriesRecord SVG_COLOR_INTERPOLATORS = {
 const InterpolatorFactoriesRecord SVG_FILL_INTERPOLATORS = {
     {"fill", value<SVGBrush>(BLACK)},
     {"fillOpacity", value<CSSDouble>(1)},
-    {"fillRule", value<CSSInteger>(0)},
+    {"fillRule", value<CSSIndex>(0)},
 };
 
 const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
@@ -269,10 +270,10 @@ const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
     {"strokeOpacity", value<CSSDouble>(1)},
     {"strokeDasharray", value<SVGStrokeDashArray, CSSKeyword>(SVGStrokeDashArray())},
     {"strokeDashoffset", value<SVGLength>(0)},
-    {"strokeLinecap", value<CSSInteger>(0)},
-    {"strokeLinejoin", value<CSSInteger>(0)},
+    {"strokeLinecap", value<CSSIndex>(0)},
+    {"strokeLinejoin", value<CSSIndex>(0)},
     {"strokeMiterlimit", value<CSSDouble>(4)},
-    {"vectorEffect", value<CSSInteger>(0)},
+    {"vectorEffect", value<CSSIndex>(0)},
 };
 
 const InterpolatorFactoriesRecord SVG_CLIP_INTERPOLATORS = {
@@ -316,6 +317,18 @@ const InterpolatorFactoriesRecord SVG_ELLIPSE_INTERPOLATORS = mergeInterpolators
          {"ry", value<SVGLength, CSSKeyword>(0)},
      }});
 
+const InterpolatorFactoriesRecord SVG_IMAGE_INTERPOLATORS = mergeInterpolators(
+    {SVG_COMMON_INTERPOLATORS,
+     InterpolatorFactoriesRecord{
+         {"x", value<SVGLength, CSSKeyword>(0)},
+         {"y", value<SVGLength, CSSKeyword>(0)},
+         {"width", value<SVGLength, CSSKeyword>(0)},
+         {"height", value<SVGLength, CSSKeyword>(0)},
+         // TODO: Check why this is not supported in RN-SVG and add support
+         // {"align", value<CSSKeyword>("xMidYMid")},
+         // {"meetOrSlice", value<CSSIndex>(0)},
+     }});
+
 const InterpolatorFactoriesRecord SVG_LINE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
@@ -339,7 +352,8 @@ const InterpolatorFactoriesRecord SVG_RECT_INTERPOLATORS = mergeInterpolators(
 const InterpolatorFactoriesRecord SVG_PATH_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         // TODO - add more properties
+         {"d", value<SVGPath>("")},
+         {"opacity", value<CSSDouble>(1)},
      }});
 
 // ==================
@@ -358,6 +372,7 @@ ComponentInterpolatorsMap initializeRegistry() {
     // SVG Components
     registry["RNSVGCircle"] = SVG_CIRCLE_INTERPOLATORS;
     registry["RNSVGEllipse"] = SVG_ELLIPSE_INTERPOLATORS;
+    registry["RNSVGImage"] = SVG_IMAGE_INTERPOLATORS;
     registry["RNSVGLine"] = SVG_LINE_INTERPOLATORS;
     registry["RNSVGPath"] = SVG_PATH_INTERPOLATORS;
     registry["RNSVGRect"] = SVG_RECT_INTERPOLATORS;
