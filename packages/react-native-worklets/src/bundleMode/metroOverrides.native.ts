@@ -86,9 +86,9 @@ function assertWorkletRuntime(functionName: string) {
   }
 }
 
+/** Module factory mimicking the one used by Metro bundler. */
 function makeModuleFactory(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  moduleImpl: (moduleExports: Record<string, any>) => void
+  moduleImpl: (moduleExports: Record<string, unknown>) => void
 ) {
   return function (
     _global: unknown,
