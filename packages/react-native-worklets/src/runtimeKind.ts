@@ -29,6 +29,20 @@ export function getRuntimeKind(): RuntimeKind {
   return globalThis.__RUNTIME_KIND;
 }
 
+/**
+ * Programmatic way to check if the current runtime is a Worklet Runtime (UI or
+ * Worker).
+ *
+ * For more optimized calls you can check the value of
+ * `globalThis.__RUNTIME_KIND` directly.
+ *
+ * @returns `true` if the current runtime is a Worklet Runtime.
+ */
+export function isWorkletRuntime(): boolean {
+  'worklet';
+  return globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative;
+}
+
 if (globalThis.__RUNTIME_KIND === undefined) {
   // In Jest environments eager imports make this file to evaluate before
   // `initializers.ts` file, therefore we have to set the RuntimeKind here,
