@@ -31,6 +31,8 @@ export function silenceHMRWarnings() {
  * runtime. To provide better developer experience we override the main React
  * Native module with a proxy that puts an actionable warning.
  *
+ * Note that this doesn't affect deep imports.
+ *
  * Use only in dev builds.
  */
 export function disallowRNImports() {
@@ -123,15 +125,15 @@ function assertWorkletRuntime(functionName: string) {
   }
 }
 
+/** Module factory mimicking the one used by Metro bundler. */
 function makeModuleFactory(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  moduleImpl: (moduleExports: Record<string, any>) => void
+  moduleImpl: (moduleExports: Record<string, unknown>) => void
 ) {
   return function (
     _global: unknown,
-    _$$_REQUIRE: unknown,
-    _$$_IMPORT_DEFAULT: unknown,
-    _$$_IMPORT_ALL: unknown,
+    _require: unknown,
+    _importDefault: unknown,
+    _importAll: unknown,
     module: Record<string, unknown>,
     _exports: unknown,
     _dependencyMap: unknown
