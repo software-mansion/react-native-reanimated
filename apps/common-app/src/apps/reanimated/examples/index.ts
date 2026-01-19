@@ -160,6 +160,7 @@ import WorkletRuntimeExample from './WorkletRuntimeExample';
 import InstanceDiscoveryExample from './InstanceDiscoveryExample';
 import ShadowNodesCloningExample from './ShadowNodesCloningExample';
 import EmptyExample from './EmptyExample';
+import AnimatedPropsExample from './AnimatedPropsExample';
 
 export const REAPlatform = {
   IOS: 'ios',
@@ -261,6 +262,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🧠',
     title: 'Memo',
     screen: MemoExample,
+  },
+  AnimatedPropsExample: {
+    icon: '🎨',
+    title: 'Animated props',
+    screen: AnimatedPropsExample,
   },
   SerializableFreezingExample: {
     icon: '🥶',
