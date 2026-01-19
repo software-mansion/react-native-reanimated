@@ -12750,7 +12750,7 @@ __metadata:
     react-native-safe-area-context: "npm:5.6.1"
     react-native-screens: "npm:4.19.0-nightly-20251125-46052f31e"
     react-native-svg: "npm:15.14.0"
-    react-native-worklets: "npm:0.7.1"
+    react-native-worklets: "npm:0.7.2"
     react-strict-dom: "npm:0.0.54"
     react-test-renderer: "npm:19.1.1"
     typescript: "npm:5.8.3"
@@ -20863,7 +20863,7 @@ __metadata:
     react-native: "npm:0.79.6"
     react-native-macos: "patch:react-native-macos@npm%3A0.79.0#~/.yarn/patches/react-native-macos-npm-0.79.0-449930c6bc.patch"
     react-native-reanimated: "workspace:*"
-    react-native-worklets: "npm:0.7.1"
+    react-native-worklets: "npm:0.7.2"
     typescript: "npm:5.8.3"
   languageName: unknown
   linkType: soft
@@ -24018,7 +24018,7 @@ __metadata:
     react-native: "npm:0.82.0"
     react-native-reanimated: "workspace:*"
     react-native-web: "npm:0.21.1"
-    react-native-worklets: "npm:0.7.1"
+    react-native-worklets: "npm:0.7.2"
     start-server-and-test: "npm:2.1.2"
     typescript: "npm:5.8.3"
     webpack: "npm:5.102.1"
@@ -27142,7 +27142,7 @@ __metadata:
     react-native-builder-bob: "npm:0.40.13"
     react-native-is-edge-to-edge: "npm:1.2.1"
     react-native-web: "npm:0.21.1"
-    react-native-worklets: "npm:0.7.1"
+    react-native-worklets: "npm:0.7.2"
     react-test-renderer: "npm:19.1.1"
     semver: "npm:7.7.3"
     typescript: "npm:5.8.3"
@@ -27209,9 +27209,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-worklets@npm:0.7.1":
-  version: 0.7.1
-  resolution: "react-native-worklets@npm:0.7.1"
+"react-native-worklets@npm:0.7.2":
+  version: 0.7.2
+  resolution: "react-native-worklets@npm:0.7.2"
   dependencies:
     "@babel/plugin-transform-arrow-functions": "npm:7.27.1"
     "@babel/plugin-transform-class-properties": "npm:7.27.1"
@@ -27228,7 +27228,7 @@ __metadata:
     "@babel/core": "*"
     react: "*"
     react-native: "*"
-  checksum: 10/10015cbfc2c2eeb60d3a10a8f381efbbad9751dda403d5342c68c92960149d18977b230416f14592662941552173c9d4862012622401f1745e5af041248f07b4
+  checksum: 10/4bc9b71a3a63f589da6f9bc7d889218f4a0e8d80737fb79e9e78298924774a99db254089428a877b0f1e434acdd00099a86a2424f33bf908283eb1b60adaea0e
   languageName: node
   linkType: hard
 
@@ -30676,7 +30676,7 @@ __metadata:
     react: "npm:19.1.0"
     react-native: "npm:react-native-tvos@0.81.1-1"
     react-native-reanimated: "workspace:*"
-    react-native-worklets: "npm:0.7.1"
+    react-native-worklets: "npm:0.7.2"
     react-test-renderer: "npm:19.1.1"
     typescript: "npm:5.8.3"
   languageName: unknown
