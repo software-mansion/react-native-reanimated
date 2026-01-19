@@ -27,7 +27,7 @@ scheduleOnUI(() => {
 const workerRuntime = createWorkletRuntime();
 scheduleOnRuntime(workerRuntime, () => {
   // highlight-next-line
-  console.log(isWorkletRuntime()); // false
+  console.log(isWorkletRuntime()); // true
 })();
 ```
 
