@@ -1,6 +1,5 @@
 // @ts-nocheck
 delete global.MessageChannel;
-require('react-native-worklets/jestSetup');
 require('./src/jestUtils').setUpTests();
 
 jest.mock('react-native-worklets', () =>
