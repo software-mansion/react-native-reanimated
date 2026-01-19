@@ -28,10 +28,7 @@ interface SharedValue<Value = unknown> {
   set(value: Value | ((value: Value) => Value)): void;
   addListener: (listenerID: number, listener: (value: Value) => void) => void;
   removeListener: (listenerID: number) => void;
-  modify: (
-    modifier?: <T extends Value>(value: T) => T,
-    forceUpdate?: boolean
-  ) => void;
+  modify: (modifier?: (value: Value) => Value, forceUpdate?: boolean) => void;
 }
 
 interface DerivedValue<Value = unknown>
