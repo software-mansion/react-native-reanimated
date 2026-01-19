@@ -129,7 +129,7 @@ function callback(
       shouldStop.setBlocking(true);
       console.error('Axios error:', error);
     });
-  if (count > 32) {
+  if (count > 8) {
     return;
   }
 
