@@ -106,7 +106,7 @@ def getReanimatedStaticFeatureFlags() {
     return featureFlags.collect { key, value -> "[${key}:${value}]" }.join("")
 }
 
-if (isNewArchitectureEnabled()) {
+if (isNewArchitectureEnabled() && project != rootProject) {
     apply plugin: "com.facebook.react"
 }
 
