@@ -32,10 +32,9 @@ class ValueInterpolator : public PropertyInterpolator {
   folly::dynamic getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const override;
   folly::dynamic getFirstKeyframeValue() const override;
   folly::dynamic getLastKeyframeValue() const override;
-  bool equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
-  void updateKeyframesFromStyleChange(
+  bool updateKeyframesFromStyleChange(
       const folly::dynamic &oldStyleValue,
       const folly::dynamic &newStyleValue,
       const folly::dynamic &lastUpdateValue) override;

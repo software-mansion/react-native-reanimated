@@ -36,7 +36,8 @@
     "type:check:src:web": "yarn tsc --noEmit --project tsconfig.web.json",
     "type:check:app": "yarn workspace common-app type:check",
     "type:check:plugin": "yarn workspace babel-plugin-worklets type:check",
-    "type:check:tests": "../../scripts/test-ts.sh __typetests__"
+    "type:check:tests": "../../scripts/test-ts.sh __typetests__",
+    "tree-shake:check:web": "yarn is-tree-shakable --resolution web"
   },
   "repository": {
     "type": "git",
@@ -65,6 +66,7 @@
     "@babel/plugin-transform-unicode-regex": "7.27.1",
     "@babel/preset-typescript": "7.27.1",
     "convert-source-map": "2.0.0",
+    "is-tree-shakable": "0.4.1",
     "semver": "7.7.3"
   },
   "devDependencies": {
@@ -117,6 +119,15 @@
     "!**/__fixtures__",
     "!**/__mocks__",
     "!**/.*"
+  ],
+  "sideEffects": [
+    "./src/index.ts",
+    "./lib/module/index.js",
+    "./**/runtimeKind.{js,ts}",
+    "./**/serializable.native.{js,ts}",
+    "./**/workletRuntimeEntry.native.{js,ts}",
+    "./**/initializers.native.{js,ts}",
+    "./**/featureFlags.native.{js,ts}"
   ],
   "react-native-builder-bob": {
     "source": "src",

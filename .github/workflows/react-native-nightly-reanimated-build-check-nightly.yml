@@ -13,7 +13,7 @@ on:
 jobs:
   react-native-nightly-reanimated-build-check:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: ${{ matrix.platform == 'iOS' && 'macos-15' || 'ubuntu-latest'}}
+    runs-on: ${{ matrix.platform == 'iOS' && 'macos-26' || 'ubuntu-latest'}}
     strategy:
       matrix:
         platform: ['iOS', 'Android']
@@ -56,9 +56,11 @@ jobs:
       - name: Install Worklets
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
-      - name: Select Xcode (iOS)
+      - uses: ruby/setup-ruby@v1
         if: ${{ matrix.platform == 'iOS' }}
-        run: sudo xcode-select --switch /Applications/Xcode_16.4.app
+        with:
+          ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
       - name: Install Fabric Pods (iOS)
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}/ios
