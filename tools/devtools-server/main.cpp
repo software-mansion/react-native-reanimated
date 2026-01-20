@@ -146,6 +146,7 @@ struct TreeSnapshot {
   std::unordered_map<int32_t, ViewNode> nodes;
   std::vector<int32_t> rootTags;
   std::vector<reanimated::SimpleMutation> mutations; // Original mutations for this snapshot
+  std::set<int32_t> mutatedTags; // Tags that were mutated in this batch
 };
 
 // Global state
@@ -248,6 +249,11 @@ void applyMutations(const std::vector<reanimated::SimpleMutation> &mutations) {
   snapshot.nodes = g_currentTree;
   snapshot.rootTags = g_currentRoots;
   snapshot.mutations = mutations;
+
+  // Track which tags were mutated in this batch
+  for (const auto &mut : mutations) {
+    snapshot.mutatedTags.insert(mut.tag);
+  }
 
   std::cout << "Created snapshot #" << snapshot.id << " with " << snapshot.nodes.size() << " nodes and "
             << snapshot.rootTags.size() << " roots\n";
@@ -514,9 +520,10 @@ void drawViewTree3D(
       transform3D(x, y, w, h, rotationDeg, drawable.depth, depthSpacing, centerX, centerY, projection);
     }
 
-    // Draw rectangle
-    ImU32 color = reanimated::mutationTypeToColor(node.lastMutationType);
-    ImU32 borderColor = IM_COL32(255, 255, 255, 200);
+    // Draw rectangle - use grey if not mutated in this batch, otherwise use mutation type color
+    bool wasMutated = snapshot.mutatedTags.count(node.tag) > 0;
+    ImU32 color = wasMutated ? reanimated::mutationTypeToColor(node.lastMutationType) : IM_COL32(80, 80, 80, 255);
+    ImU32 borderColor = wasMutated ? IM_COL32(255, 255, 255, 200) : IM_COL32(120, 120, 120, 200);
 
     if (w > 0 && h > 0) {
       drawList->AddRectFilled(ImVec2(x, y), ImVec2(x + w, y + h), color);
@@ -524,6 +531,7 @@ void drawViewTree3D(
     }
 
     // Draw label
+    ImU32 textColor = wasMutated ? IM_COL32(255, 255, 255, 255) : IM_COL32(160, 160, 160, 255);
     char label[256];
     snprintf(
         label,
@@ -535,7 +543,7 @@ void drawViewTree3D(
         node.y,
         node.width,
         node.height);
-    drawList->AddText(ImVec2(x + 2, y + 2), IM_COL32(255, 255, 255, 255), label);
+    drawList->AddText(ImVec2(x + 2, y + 2), textColor, label);
   }
 }
 
