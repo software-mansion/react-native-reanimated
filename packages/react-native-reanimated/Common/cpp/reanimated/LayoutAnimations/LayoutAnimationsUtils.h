@@ -135,6 +135,11 @@ static inline bool isRNSScreen(const std::shared_ptr<LightNode> &node) {
   return !std::strcmp(componentName, "RNSScreen") || !std::strcmp(componentName, "RNSModalScreen");
 }
 
+static inline bool isSETBoundary(const std::shared_ptr<LightNode> &node) {
+  const auto nativeID = node->current.props->nativeId;
+  return !std::strcmp(nativeID.c_str(), "SharedTransitionBoundary");
+}
+
 static inline bool isRoot(const std::shared_ptr<LightNode> &node) {
   return node->current.tag % 10 == 1;
 }
