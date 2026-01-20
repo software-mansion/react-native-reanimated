@@ -56,6 +56,11 @@ class DevToolsClient {
     for (const auto &mutation : mutations) {
       SimpleMutation sm;
 
+      // Convert mutation type
+      sm.type = convertMutationType(mutation.type);
+      sm.parentTag = mutation.parentTag;
+      sm.index = mutation.index;
+
       // Get tag and component name based on mutation type
       if (mutation.type == ShadowViewMutation::Create || mutation.type == ShadowViewMutation::Insert ||
           mutation.type == ShadowViewMutation::Update) {
@@ -101,6 +106,23 @@ class DevToolsClient {
 
   DevToolsClient(const DevToolsClient &) = delete;
   DevToolsClient &operator=(const DevToolsClient &) = delete;
+
+  static MutationType convertMutationType(ShadowViewMutation::Type type) {
+    switch (type) {
+      case ShadowViewMutation::Create:
+        return MutationType::Create;
+      case ShadowViewMutation::Delete:
+        return MutationType::Delete;
+      case ShadowViewMutation::Insert:
+        return MutationType::Insert;
+      case ShadowViewMutation::Remove:
+        return MutationType::Remove;
+      case ShadowViewMutation::Update:
+        return MutationType::Update;
+      default:
+        return MutationType::Unknown;
+    }
+  }
 
   bool connect() {
     std::lock_guard<std::mutex> lock(mutex_);

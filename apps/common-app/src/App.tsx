@@ -1,4 +1,3 @@
-import { PortalProvider } from '@gorhom/portal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import type { NavigationState } from '@react-navigation/native';
@@ -9,12 +8,12 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Linking, LogBox, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { colors, flex, radius, text } from '@/theme';
 import { IS_MACOS, IS_WEB, noop } from '@/utils';
 
 import { CSSApp, ReanimatedApp } from './apps';
+import ManyScreensExample from './apps/reanimated/examples/SharedElementTransitions/ManyScreens';
 import { LeakCheck, NukeContext } from './components';
 
 LogBox.ignoreLogs([
@@ -75,15 +74,7 @@ export default function App() {
             prefixes: [],
           }}
           onStateChange={updateNavigationState}>
-          <PortalProvider>
-            {IS_MACOS ? (
-              <RootApp />
-            ) : (
-              <SafeAreaProvider>
-                <RootApp />
-              </SafeAreaProvider>
-            )}
-          </PortalProvider>
+          <ManyScreensExample />
         </NavigationContainer>
       </GestureHandlerRootView>
     </NukeContext>

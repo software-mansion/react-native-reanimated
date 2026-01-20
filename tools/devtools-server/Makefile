@@ -1,15 +1,80 @@
+# Reanimated DevTools Server Makefile
+# Requires: GLFW, OpenGL, and Dear ImGui
+
 CXX = clang++
-CXXFLAGS = -std=c++17 -Wall -Wextra -O2
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -DGL_SILENCE_DEPRECATION
+
+# ImGui source directory (will be downloaded if not present)
+IMGUI_DIR = imgui
+
+# Platform-specific settings
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+    # macOS
+    LIBS = -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
+    LIBS += $(shell pkg-config --libs glfw3 2>/dev/null || echo "-lglfw")
+    CXXFLAGS += $(shell pkg-config --cflags glfw3 2>/dev/null)
+else
+    # Linux
+    LIBS = -lGL -lglfw -ldl -lpthread
+endif
 
 TARGET = devtools-server
-SRC = main.cpp
+INCLUDES = -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
 
-all: $(TARGET)
+SRCS = main.cpp \
+       $(IMGUI_DIR)/imgui.cpp \
+       $(IMGUI_DIR)/imgui_draw.cpp \
+       $(IMGUI_DIR)/imgui_tables.cpp \
+       $(IMGUI_DIR)/imgui_widgets.cpp \
+       $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp \
+       $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
 
-$(TARGET): $(SRC)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SRC)
+OBJS = main.o imgui.o imgui_draw.o imgui_tables.o imgui_widgets.o imgui_impl_glfw.o imgui_impl_opengl3.o
+
+all: check-deps $(IMGUI_DIR) $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
+
+main.o: main.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
+
+imgui.o: $(IMGUI_DIR)/imgui.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
+
+imgui_draw.o: $(IMGUI_DIR)/imgui_draw.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
+
+imgui_tables.o: $(IMGUI_DIR)/imgui_tables.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
+
+imgui_widgets.o: $(IMGUI_DIR)/imgui_widgets.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
+
+imgui_impl_glfw.o: $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
+
+imgui_impl_opengl3.o: $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
+
+$(IMGUI_DIR):
+	@echo "Downloading Dear ImGui..."
+	@git clone --depth 1 --branch v1.90.1 https://github.com/ocornut/imgui.git $(IMGUI_DIR)
+
+check-deps:
+	@which pkg-config > /dev/null || (echo "Warning: pkg-config not found" && true)
+ifeq ($(UNAME_S),Darwin)
+	@which brew > /dev/null && brew list glfw > /dev/null 2>&1 || \
+		(echo "Please install GLFW: brew install glfw" && exit 1)
+else
+	@pkg-config --exists glfw3 || (echo "Please install GLFW: apt install libglfw3-dev" && exit 1)
+endif
 
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGET) $(OBJS)
 
-.PHONY: all clean
+clean-all: clean
+	rm -rf $(IMGUI_DIR)
+
+.PHONY: all clean clean-all check-deps
