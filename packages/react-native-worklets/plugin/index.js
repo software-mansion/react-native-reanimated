@@ -491,6 +491,7 @@ var require_globals = __commonJS({
       "require",
       "fetch",
       "XMLHttpRequest",
+      "WebSocket",
       "queueMicrotask",
       "requestAnimationFrame",
       "cancelAnimationFrame",

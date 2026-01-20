@@ -78,6 +78,13 @@ export function disallowRNImports() {
   modules.set(ReactNativeModuleId, mockModule);
 }
 
+/**
+ * To use code from React Native that obtains TurboModules we need to mock the
+ * registry even if the TurboModules aren't actually used.
+ *
+ * This is needed for example for the XHR setup code that is imported from React
+ * Native.
+ */
 export function mockTurboModuleRegistry() {
   const modules = require.getModules();
 
@@ -91,7 +98,8 @@ export function mockTurboModuleRegistry() {
 
   globalThis.TurboModules = TurboModules;
 
-  const moduleFactory = makeModuleFactory((module) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const moduleFactory = makeModuleFactory((module: any) => {
     function get(name: string) {
       return globalThis.TurboModules.get(name);
     }
@@ -102,7 +110,7 @@ export function mockTurboModuleRegistry() {
     module.exports.getEnforcing = getEnforcing;
   });
 
-  const mood = {
+  const metroModule = {
     dependencyMap: [],
     factory: moduleFactory,
     hasError: false,
@@ -114,7 +122,7 @@ export function mockTurboModuleRegistry() {
     },
   };
 
-  modules.set(TurboModuleRegistryId, mood);
+  modules.set(TurboModuleRegistryId, metroModule);
 }
 
 function assertWorkletRuntime(functionName: string) {

@@ -2,35 +2,64 @@
 
 import { WorkletsError } from '../debug/WorkletsError';
 
+/**
+ * Mocks necessary networking TurboModules on Worklet Runtimes to prevent
+ * crashes when code running on Worklet Runtimes tries to use networking APIs.
+ * The NetworkingModule itself is injected via C++.
+ */
 export function initializeNetworking() {
-  'worklet';
-
   const TurboModules = globalThis.TurboModules;
 
-  const errorProxyFactory = (moduleName: string) => {
-    return new Proxy(
-      {},
-      {
-        get: (__, propName) => {
-          throw new WorkletsError(
-            `${propName as string} not available in ${moduleName} on a Worklet Runtime.`
-          );
-        },
-      }
-    );
-  };
+  TurboModules.set(
+    'FileReaderModule',
+    makeMockTurboModuleFactory('FileReaderModule')
+  );
+  TurboModules.set(
+    'PlatformConstants',
+    makeMockTurboModuleFactory('PlatformConstants')
+  );
+  TurboModules.set(
+    'WebSocketModule',
+    makeMockTurboModuleFactory('WebSocketModule')
+  );
+  TurboModules.set(
+    'BlobModule',
+    makeMockTurboModuleFactory('BlobModule', ['addNetworkingHandler'])
+  );
 
-  try {
-    TurboModules.set('FileReaderModule', errorProxyFactory('FileReaderModule'));
-    TurboModules.set(
-      'PlatformConstants',
-      errorProxyFactory('PlatformConstants')
-    );
-    TurboModules.set('WebSocketModule', errorProxyFactory('WebSocketModule'));
-    TurboModules.set('BlobModule', errorProxyFactory('BlobModule'));
-  } catch (e) {
-    console.error('Error initializing networking:', e);
-  }
+  /**
+   * This require statement below is the key part of the implementation here. It
+   * pulls all the code that properly sets up XHR on a Runtime, using underlying
+   * C++ NetworkingModule. Thanks to that we can have the same JavaScript
+   * implementation for fetch on all runtimes in the app and we don't have to
+   * write the code ourselves.
+   */
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   require('react-native/Libraries/Core/setUpXHR');
+}
+
+const noopMethods = ['getConstants'];
+
+function makeMockTurboModuleFactory(name: string, extraNoopMethods?: string[]) {
+  const proxy = new Proxy(
+    {},
+    {
+      get: function get(_target, prop) {
+        if (
+          [...noopMethods, ...(extraNoopMethods ?? [])].includes(prop as string)
+        ) {
+          return () => {
+            return () => {};
+          };
+        }
+        throw new WorkletsError(
+          `You tried to call method '${String(
+            prop
+          )}' from '${name}' TurboModule on a Worklet Runtime. Using '${name}' TurboModule on a Worklet Runtime is not allowed.`
+        );
+      },
+    }
+  );
+
+  return proxy;
 }

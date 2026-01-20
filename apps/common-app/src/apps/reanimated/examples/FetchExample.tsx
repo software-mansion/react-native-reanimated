@@ -110,11 +110,15 @@ function testXHR(
   state.downloading = true;
 }
 
-function callback(runtime: WorkletRuntime, count: number) {
+function testFetch(runtime: WorkletRuntime, count: number) {
   'worklet';
+  if (count > 8) {
+    return;
+  }
+
   axios({
     method: 'get',
-    url: 'https://tomekzaw.pl',
+    url: `https://jsonplaceholder.typicode.com/todos/${count}`,
   })
     .then((response) => {
       console.log(`Received ${count} response on ${runtime.name}`);
@@ -123,9 +127,6 @@ function callback(runtime: WorkletRuntime, count: number) {
     .catch((error) => {
       console.error('Axios error:', error);
     });
-  if (count > 32) {
-    return;
-  }
 
   const nextRuntime =
     runtime.name === elephantRuntime.name
@@ -135,8 +136,15 @@ function callback(runtime: WorkletRuntime, count: number) {
         : elephantRuntime;
 
   setTimeout(() => {
-    scheduleOnRuntime(nextRuntime, callback, nextRuntime, count + 1);
+    scheduleOnRuntime(nextRuntime, testFetch, nextRuntime, count + 1);
   }, 100);
+}
+
+function testWebSocket() {
+  'worklet';
+  const socket = new WebSocket('ws://localhost:8080');
+
+  socket.addEventListener('open', () => {});
 }
 
 export default function App() {
@@ -145,7 +153,7 @@ export default function App() {
       <Button
         title="Test fetch chain"
         onPress={() => {
-          scheduleOnRuntime(elephantRuntime, callback, elephantRuntime, 0);
+          scheduleOnRuntime(elephantRuntime, testFetch, elephantRuntime, 1);
         }}
       />
       <Button
@@ -163,6 +171,12 @@ export default function App() {
           scheduleOnRuntime(monkeyRuntime, testXHR, true, true, false, false);
           scheduleOnRuntime(elephantRuntime, testXHR, true, true, true, false);
           scheduleOnRuntime(giraffeRuntime, testXHR, true, true, true, true);
+        }}
+      />
+      <Button
+        title="Test WebSocket (not implemented)"
+        onPress={() => {
+          scheduleOnRuntime(elephantRuntime, testWebSocket);
         }}
       />
     </View>

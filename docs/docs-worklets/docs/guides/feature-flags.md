@@ -10,7 +10,8 @@ Feature flags allow developers to opt-in for experimental changes or opt-out fro
 
 | Feature flag name                                                 |              Type               | Added in | Removed in | Default value |
 | ----------------------------------------------------------------- | :-----------------------------: | :------: | :--------: | :-----------: |
-| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled) | [static](#static-feature-flags) |  4.1.0   |  &ndash;   |    `true`     |
+| [`FETCH_PREVIEW_ENABLED`](#fetch_preview_enabled)                 | [static](#static-feature-flags) |  0.8.0   |  &ndash;   |    `false`    |
+| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled) | [static](#static-feature-flags) |  0.7.0   |  &ndash;   |    `true`     |
 
 :::info
 
@@ -19,6 +20,10 @@ Feature flags available in `react-native-reanimated` are listed [on this page](h
 :::
 
 ## Description of available feature flags
+
+### `FETCH_PREVIEW_ENABLED`
+
+<!-- When enabled, this feature flag allows previewing the upcoming fetch implementation in Worklets. The new implementation aims to enhance the performance and reliability of network requests made within Worklets. It introduces optimizations that reduce latency and improve the handling of concurrent requests. -->
 
 ### `IOS_DYNAMIC_FRAMERATE_ENABLED`
 

@@ -9,6 +9,7 @@ import { initializeNetworking } from '../bundleMode/network';
 import { setupCallGuard } from '../callGuard';
 import { registerReportFatalRemoteError } from '../debug/errors';
 import { registerWorkletsError, WorkletsError } from '../debug/WorkletsError';
+import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
 import { __installUnpacker as installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
 import { __installUnpacker as installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
@@ -142,41 +143,10 @@ function initializeWorkletRuntime() {
       mockTurboModuleRegistry();
     }
 
-    // const PolyfillFunctionsId = require.resolveWeak(
-    //   'react-native/Libraries/Utilities/PolyfillFunctions'
-    // );
-
-    // const polyfillFactory = function (
-    //   _global: unknown,
-    //   _$$_REQUIRE: unknown,
-    //   _$$_IMPORT_DEFAULT: unknown,
-    //   _$$_IMPORT_ALL: unknown,
-    //   module: Record<string, Record<string, unknown>>,
-    //   _exports: unknown,
-    //   _dependencyMap: unknown
-    // ) {
-    //   module.exports.polyfillGlobal = (
-    //     name: string,
-    //     getValue: () => unknown
-    //   ) => {
-    //     // globalThis._log('polyfillGlobal ' + name + ' ' + getValue);
-    //     (globalThis as Record<string, unknown>)[name] = getValue();
-    //   };
-    // };
-
-    // const polyfillMod = {
-    //   dependencyMap: [],
-    //   factory: polyfillFactory,
-    //   hasError: false,
-    //   importedAll: {},
-    //   importedDefault: {},
-    //   isInitialized: false,
-    //   publicModule: {
-    //     exports: {},
-    //   },
-    // };
-
-    // modules.set(PolyfillFunctionsId, polyfillMod);
+    if (getStaticFeatureFlag('FETCH_PREVIEW_ENABLED')) {
+      mockTurboModuleRegistry();
+      initializeNetworking();
+    }
   }
 }
 
@@ -206,14 +176,6 @@ function installRNBindingsOnUIRuntime() {
   }
 
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
-  let runtimeBoundInitializeNetworking: typeof initializeNetworking;
-  if (globalThis._WORKLETS_BUNDLE_MODE) {
-    /*
-     * Initialize networking has to be runtime bound because it needs
-     * TurboModules obtained from RN Runtime.
-     */
-    runtimeBoundInitializeNetworking = initializeNetworking;
-  }
 
   runOnUISync(() => {
     'worklet';
@@ -229,8 +191,5 @@ function installRNBindingsOnUIRuntime() {
     setupSetTimeout();
     setupSetImmediate();
     setupSetInterval();
-    if (globalThis._WORKLETS_BUNDLE_MODE) {
-      runtimeBoundInitializeNetworking();
-    }
   });
 }

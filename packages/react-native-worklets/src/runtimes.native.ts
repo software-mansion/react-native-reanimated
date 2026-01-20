@@ -1,6 +1,5 @@
 'use strict';
 
-import { initializeNetworking } from './bundleMode/network';
 import { setupCallGuard } from './callGuard';
 import { registerWorkletsError, WorkletsError } from './debug/WorkletsError';
 import {
@@ -87,15 +86,6 @@ export function createWorkletRuntime(
     );
   }
 
-  let runtimeBoundInitializeNetworking: typeof initializeNetworking;
-  if (globalThis._WORKLETS_BUNDLE_MODE) {
-    /*
-     * Initialize networking has to be runtime bound because it needs
-     * TurboModules obtained from RN Runtime.
-     */
-    runtimeBoundInitializeNetworking = initializeNetworking;
-  }
-
   return WorkletsModule.createWorkletRuntime(
     name,
     createSerializable(() => {
@@ -105,9 +95,6 @@ export function createWorkletRuntime(
       setupConsole(runtimeBoundCapturableConsole);
       if (enableEventLoop) {
         setupRunLoop(animationQueuePollingRate);
-      }
-      if (globalThis._WORKLETS_BUNDLE_MODE) {
-        runtimeBoundInitializeNetworking();
       }
       initializerFn?.();
     }),
