@@ -4,6 +4,7 @@
 
 #include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
 #include <react/renderer/animationbackend/AnimationBackend.h>
+#include <react/renderer/graphics/Transform.h>
 
 #include <folly/json.h>
 #include <memory>
@@ -126,6 +127,10 @@ ValueUnit cssLengthToValueUnit(const CSSLength &cssLength) {
   const float value =
       cssLength.isRelative ? static_cast<float>(cssLength.value * 100) : static_cast<float>(cssLength.value);
   return ValueUnit(value, cssLength.isRelative ? UnitType::Percent : UnitType::Point);
+}
+
+double cssLengthToDouble(const CSSLength &cssLength) {
+    return cssLength.isRelative ? cssLength.value * 100 : cssLength.value;
 }
 
 yoga::StyleLength cssLengthToStyleLength(const CSSLength &cssValue) {
@@ -909,97 +914,129 @@ void addSepiaFilterToPropsBuilder(
 void addPerspectiveTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     PerspectiveOperation &operation) {
-  double perspectiveValue = operation.value.value;
-  Transform t = t.Perspective(perspectiveValue);
-  addTransform(propsBuilder, t);
+    auto transform = Transform{};
+    auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Perspective);
+    auto value = ValueUnit(operation.value.value, UnitType::Point);
+    transformOperation.x = value;
+    transform.operations.push_back(transformOperation);
+    addTransform(propsBuilder, transform);
 }
 
 void addRotateTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     RotateOperation &operation) {
-  double rotateValue = operation.value.value;
-  Transform t = t.RotateZ(rotateValue);
-  addTransform(propsBuilder, t);
+    auto transform = Transform{};
+    auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Rotate);
+    auto value = ValueUnit(operation.value.value, UnitType::Point);
+    transformOperation.z = value;
+    transform.operations.push_back(transformOperation);
+    addTransform(propsBuilder, transform);
 }
 
 void addRotateXTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     RotateXOperation &operation) {
-  double rotateValue = operation.value.value;
-  Transform t = t.RotateX(rotateValue);
-  addTransform(propsBuilder, t);
+    auto transform = Transform{};
+    auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Rotate);
+    auto value = ValueUnit(operation.value.value, UnitType::Point);
+    transformOperation.x = value;
+    transform.operations.push_back(transformOperation);
+    addTransform(propsBuilder, transform);
 }
 
 void addRotateYTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     RotateYOperation &operation) {
-  double rotateValue = operation.value.value;
-  Transform t = t.RotateY(rotateValue);
-  addTransform(propsBuilder, t);
+    auto transform = Transform{};
+    auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Rotate);
+    auto value = ValueUnit(operation.value.value, UnitType::Point);
+    transformOperation.y = value;
+    transform.operations.push_back(transformOperation);
+    addTransform(propsBuilder, transform);
 }
 
 void addRotateZTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     RotateZOperation &operation) {
-  double rotateValue = operation.value.value;
-  Transform t = t.RotateZ(rotateValue);
-  addTransform(propsBuilder, t);
+    auto transform = Transform{};
+    auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Rotate);
+    auto value = ValueUnit(operation.value.value, UnitType::Point);
+    transformOperation.z = value;
+    transform.operations.push_back(transformOperation);
+    addTransform(propsBuilder, transform);
 }
 
 void addScaleTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     ScaleOperation &operation) {
-  double scaleValue = operation.value.value;
-  Transform t = t.Scale(scaleValue, scaleValue, scaleValue);
-  addTransform(propsBuilder, t);
+    auto transform = Transform{};
+    auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Scale);
+    auto value = ValueUnit(operation.value.value, UnitType::Point);
+    transformOperation.x = value;
+    transformOperation.y = value;
+    transformOperation.z = value;
+    transform.operations.push_back(transformOperation);
+    addTransform(propsBuilder, transform);
 }
 
 void addScaleXTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     ScaleXOperation &operation) {
-  double scaleValue = operation.value.value;
-  Transform t = t.Scale(scaleValue, 0, 0);
-  addTransform(propsBuilder, t);
+    auto transform = Transform{};
+    auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Scale);
+    transformOperation.x = ValueUnit(operation.value.value, UnitType::Point);
+    transform.operations.push_back(transformOperation);
+    addTransform(propsBuilder, transform);
 }
 
 void addScaleYTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     ScaleYOperation &operation) {
-  double scaleValue = operation.value.value;
-  Transform t = t.Scale(0, scaleValue, 0);
-  addTransform(propsBuilder, t);
+    auto transform = Transform{};
+    auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Scale);
+    transformOperation.y = ValueUnit(operation.value.value, UnitType::Point);
+    transform.operations.push_back(transformOperation);
+    addTransform(propsBuilder, transform);
 }
 
 void addTranslateXTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     TranslateXOperation &operation) {
-  double translateValue = operation.value.value;
-  Transform t = t.Translate(translateValue, 0, 0);
-  addTransform(propsBuilder, t);
+    auto transform = Transform{};
+    auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Translate);
+    transformOperation.x = cssLengthToValueUnit(operation.value);
+    transform.operations.push_back(transformOperation);
+    addTransform(propsBuilder, transform);
 }
 
 void addTranslateYTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     TranslateYOperation &operation) {
-  double translateValue = operation.value.value;
-  Transform t = t.Translate(0, translateValue, 0);
-  addTransform(propsBuilder, t);
+    auto transform = Transform{};
+    auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Translate);
+    transformOperation.y = cssLengthToValueUnit(operation.value);
+    transform.operations.push_back(transformOperation);
+    addTransform(propsBuilder, transform);
 }
 
 void addSkewXTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     SkewXOperation &operation) {
-  double skewValue = operation.value.value;
-  Transform t = t.Skew(skewValue, 0);
-  addTransform(propsBuilder, t);
+    auto transform = Transform{};
+    auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Skew);
+    transformOperation.x = ValueUnit(operation.value.value, UnitType::Point);
+    transform.operations.push_back(transformOperation);
+    addTransform(propsBuilder, transform);
 }
 
 void addSkewYTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     SkewYOperation &operation) {
-  double skewValue = operation.value.value;
-  Transform t = t.Skew(0, skewValue);
-  addTransform(propsBuilder, t);
+    auto transform = Transform{};
+    auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Skew);
+    transformOperation.y = ValueUnit(operation.value.value, UnitType::Point);
+    transform.operations.push_back(transformOperation);
+    addTransform(propsBuilder, transform);
 }
 
 void addMatrixTransformToPropsBuilder(
