@@ -1,9 +1,10 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useIsFocused } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, { SharedTransitionBoundary } from 'react-native-reanimated';
 
 function getStyle(index: number) {
   switch (index) {
@@ -25,23 +26,27 @@ type ScreenProps = {
 function Screen({ navigation, route }: NativeStackScreenProps<ScreenProps>) {
   const id = route.params?.id ?? 0;
   const showButtons = !!route.params?.showButtons;
+  const isActive = useIsFocused();
+  console.log('screen ', id, ' isActive:', isActive);
   return (
-    <View style={styles.container}>
-      <Text>Current id: {id}</Text>
-      {showButtons && id < 2 && (
-        <Button
-          title={`Go next ${id + 1}`}
-          onPress={() => navigation.push('Details', { id: id + 1 })}
-        />
-      )}
-      {showButtons && id > 0 && (
-        <Button
-          onPress={() => navigation.push('Details', { id: id - 1 })}
-          title={`Go next ${id - 1}`}
-        />
-      )}
-      <Animated.View style={getStyle(id)} sharedTransitionTag="test" />
-    </View>
+    <SharedTransitionBoundary isActive={isActive}>
+      <View style={styles.container}>
+        <Text>Current id: {id}</Text>
+        {showButtons && id < 2 && (
+          <Button
+            title={`Go next ${id + 1}`}
+            onPress={() => navigation.push('Details', { id: id + 1 })}
+          />
+        )}
+        {showButtons && id > 0 && (
+          <Button
+            onPress={() => navigation.push('Details', { id: id - 1 })}
+            title={`Go next ${id - 1}`}
+          />
+        )}
+        <Animated.View style={getStyle(id)} sharedTransitionTag="test" />
+      </View>
+    </SharedTransitionBoundary>
   );
 }
 
@@ -64,7 +69,7 @@ const StackB = createStack();
 
 function TabNavigatorExample() {
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false }}>
+    <Tab.Navigator screenOptions={{ headerShown: false, animation: 'shift' }}>
       <Tab.Screen
         name="A"
         initialParams={{ id: 0 }}

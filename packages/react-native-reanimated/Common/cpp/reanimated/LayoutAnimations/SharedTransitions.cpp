@@ -21,19 +21,16 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findTopScreen(
   std::shared_ptr<LightNode> result = nullptr;
   // TODO: We could get rid of the RNScreens c++ dependency if we create a custom native component that would be a boundary for Shared Element Transitions.
   // This way we could allow for transitions without screens, and across components on the same screen.
-  if (isRNSScreen(node)) {
-    bool isActive = false;
-#ifdef ANDROID
-    // TODO (future): this looks like a RNScreens bug - sometimes there is no active
-    // screen at a deeper level, when going back (uncomment the following when fixed)
-    // float f = node->current.props->rawProps.getDefault("activityState",
-    // 0).asDouble(); isActive = f == 2.0f;
-    isActive = true;
-#elif defined(HAS_SCREENS_PROPS)
-    isActive = std::static_pointer_cast<const RNSScreenProps>(node->current.props)->activityState == 2.0f;
-#endif
+
+  if (isSETBoundary(node)) {
+    auto viewProps = std::static_pointer_cast<const ViewProps>(node->current.props);
+    auto isActive = viewProps->opacity == 1;
     if (isActive) {
       result = node;
+      while (!isRNSScreen(result)) {
+        result = result->parent.lock();
+      }
+      return result;
     }
   }
   for (const auto &child : std::views::reverse(node->children)) {
