@@ -5,6 +5,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
+#include <reanimated/Tools/DevToolsClient.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <algorithm>
@@ -101,6 +102,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   transitions_.clear();
 
   insertContainers(filteredMutations, rootChildCount, surfaceId);
+
+  // Send mutations to dev tools if enabled
+  sendMutationsToDevTools(filteredMutations);
 
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }

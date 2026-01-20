@@ -2,6 +2,7 @@
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
+#include <reanimated/Tools/DevToolsClient.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
@@ -1318,6 +1319,9 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
       uiManager_->setAnimationDelegate(layoutAnimationsProxyLegacy.get());
       layoutAnimationsProxy_ = std::move(layoutAnimationsProxyLegacy);
     }
+
+    // Enable dev tools client for debugging mutations
+    setDevToolsEnabled(true);
   }
 }
 
