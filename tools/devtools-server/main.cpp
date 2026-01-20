@@ -5,6 +5,7 @@
 // Run: ./devtools-server
 
 #include <atomic>
+#include <cmath>
 #include <csignal>
 #include <cstdint>
 #include <cstring>
@@ -361,13 +362,20 @@ void networkThread(int port) {
   close(serverSocket);
 }
 
-void drawViewTree(
+// Structure to hold node drawing info for 3D sorting
+struct DrawableNode {
+  const ViewNode *node;
+  float absoluteX;
+  float absoluteY;
+  int depth;
+};
+
+// Collect all nodes with their absolute positions and depths
+void collectNodes(
     const TreeSnapshot &snapshot,
     const ViewNode &node,
-    ImDrawList *drawList,
-    ImVec2 offset,
-    float scale,
     const std::set<int32_t> &hiddenTags,
+    std::vector<DrawableNode> &outNodes,
     float parentX = 0,
     float parentY = 0,
     int depth = 0) {
@@ -380,41 +388,141 @@ void drawViewTree(
   float absoluteX = parentX + node.x;
   float absoluteY = parentY + node.y;
 
-  float x = offset.x + absoluteX * scale;
-  float y = offset.y + absoluteY * scale;
-  float w = node.width * scale;
-  float h = node.height * scale;
+  // Add this node
+  outNodes.push_back({&node, absoluteX, absoluteY, depth});
 
-  // Draw rectangle
-  ImU32 color = reanimated::mutationTypeToColor(node.lastMutationType);
-  ImU32 borderColor = IM_COL32(255, 255, 255, 200);
-
-  if (w > 0 && h > 0) {
-    drawList->AddRectFilled(ImVec2(x, y), ImVec2(x + w, y + h), color);
-    drawList->AddRect(ImVec2(x, y), ImVec2(x + w, y + h), borderColor);
-  }
-
-  // Draw label with component name, tag, position and dimensions
-  char label[256];
-  snprintf(
-      label,
-      sizeof(label),
-      "%s [%d]\n(%.0f,%.0f) %.0fx%.0f",
-      node.componentName.c_str(),
-      node.tag,
-      node.x,
-      node.y,
-      node.width,
-      node.height);
-  drawList->AddText(ImVec2(x + 2, y + 2), IM_COL32(255, 255, 255, 255), label);
-
-  // Draw children in order (index 0 first = behind, last index = on top)
+  // Collect children
   for (size_t i = 0; i < node.childTags.size(); ++i) {
     int32_t childTag = node.childTags[i];
     auto it = snapshot.nodes.find(childTag);
     if (it != snapshot.nodes.end()) {
-      drawViewTree(snapshot, it->second, drawList, offset, scale, hiddenTags, absoluteX, absoluteY, depth + 1);
+      collectNodes(snapshot, it->second, hiddenTags, outNodes, absoluteX, absoluteY, depth + 1);
     }
+  }
+}
+
+// Apply 3D rotation transform to a point
+// rotationDeg: rotation angle in degrees (0 = flat, 90 = fully rotated)
+// depth: the z-depth of the node (higher = closer to viewer)
+// centerX, centerY: the center point for rotation
+void transform3D(
+    float &x,
+    float &y,
+    float w,
+    float h,
+    float rotationDeg,
+    int depth,
+    float depthSpacing,
+    float centerX,
+    float centerY) {
+  // Convert rotation to radians
+  float rotationRad = rotationDeg * 3.14159265f / 180.0f;
+
+  // Calculate the z offset based on depth
+  float z = depth * depthSpacing;
+
+  // Apply rotation around Y axis (horizontal rotation)
+  // This creates the "exploded view" effect
+  float cosR = cosf(rotationRad);
+  float sinR = sinf(rotationRad);
+
+  // Translate to center, apply rotation, translate back
+  float relX = x + w / 2 - centerX;
+  float relY = y + h / 2 - centerY;
+
+  // Rotate in 3D space (around Y axis)
+  float newX = relX * cosR - z * sinR;
+  float newZ = relX * sinR + z * cosR;
+
+  // Apply perspective (simple projection)
+  float perspective = 1000.0f; // Distance to viewer
+  float scale = perspective / (perspective + newZ);
+
+  // Update position with perspective
+  x = centerX + newX * scale - w / 2;
+  y = centerY + relY * scale - h / 2;
+}
+
+void drawViewTree3D(
+    const TreeSnapshot &snapshot,
+    ImDrawList *drawList,
+    ImVec2 offset,
+    float scale,
+    const std::set<int32_t> &hiddenTags,
+    float rotationDeg,
+    float depthSpacing,
+    const std::vector<int32_t> &rootTags) {
+  // Collect all nodes
+  std::vector<DrawableNode> nodes;
+  for (int32_t rootTag : rootTags) {
+    auto it = snapshot.nodes.find(rootTag);
+    if (it != snapshot.nodes.end()) {
+      collectNodes(snapshot, it->second, hiddenTags, nodes);
+    }
+  }
+
+  if (nodes.empty()) {
+    return;
+  }
+
+  // Find the center point for rotation (use first root's center)
+  float centerX = offset.x + 200 * scale;
+  float centerY = offset.y + 400 * scale;
+
+  // Sort by depth (back to front for proper rendering)
+  // When rotated, we also need to consider x position for proper occlusion
+  float rotationRad = rotationDeg * 3.14159265f / 180.0f;
+  std::sort(nodes.begin(), nodes.end(), [&](const DrawableNode &a, const DrawableNode &b) {
+    // Calculate effective z for sorting
+    float zA = a.depth * depthSpacing;
+    float zB = b.depth * depthSpacing;
+
+    float relXA = a.absoluteX * scale;
+    float relXB = b.absoluteX * scale;
+
+    // Transform z by rotation
+    float effectiveZA = relXA * sinf(rotationRad) + zA * cosf(rotationRad);
+    float effectiveZB = relXB * sinf(rotationRad) + zB * cosf(rotationRad);
+
+    return effectiveZA < effectiveZB; // Draw farther nodes first
+  });
+
+  // Draw all nodes
+  for (const auto &drawable : nodes) {
+    const ViewNode &node = *drawable.node;
+
+    float x = offset.x + drawable.absoluteX * scale;
+    float y = offset.y + drawable.absoluteY * scale;
+    float w = node.width * scale;
+    float h = node.height * scale;
+
+    // Apply 3D transform if rotation is non-zero
+    if (std::abs(rotationDeg) > 0.1f) {
+      transform3D(x, y, w, h, rotationDeg, drawable.depth, depthSpacing, centerX, centerY);
+    }
+
+    // Draw rectangle
+    ImU32 color = reanimated::mutationTypeToColor(node.lastMutationType);
+    ImU32 borderColor = IM_COL32(255, 255, 255, 200);
+
+    if (w > 0 && h > 0) {
+      drawList->AddRectFilled(ImVec2(x, y), ImVec2(x + w, y + h), color);
+      drawList->AddRect(ImVec2(x, y), ImVec2(x + w, y + h), borderColor);
+    }
+
+    // Draw label
+    char label[256];
+    snprintf(
+        label,
+        sizeof(label),
+        "%s [%d]\n(%.0f,%.0f) %.0fx%.0f",
+        node.componentName.c_str(),
+        node.tag,
+        node.x,
+        node.y,
+        node.width,
+        node.height);
+    drawList->AddText(ImVec2(x + 2, y + 2), IM_COL32(255, 255, 255, 255), label);
   }
 }
 
@@ -462,6 +570,8 @@ int main(int argc, char *argv[]) {
   ImVec2 viewOffset(50, 50);
   char hiddenTagsInput[256] = "";
   std::set<int32_t> hiddenTags;
+  float rotationDeg = 0.0f;
+  float depthSpacing = 50.0f;
 
   while (!glfwWindowShouldClose(window) && g_running) {
     glfwPollEvents();
@@ -510,6 +620,15 @@ int main(int argc, char *argv[]) {
     ImGui::Separator();
     ImGui::SliderFloat("Scale", &viewScale, 0.1f, 2.0f);
     ImGui::DragFloat2("Offset", &viewOffset.x);
+
+    ImGui::Separator();
+    ImGui::Text("3D View:");
+    ImGui::SliderFloat("Rotation", &rotationDeg, -90.0f, 90.0f, "%.1f deg");
+    ImGui::SliderFloat("Depth Spacing", &depthSpacing, 0.0f, 200.0f);
+    if (ImGui::Button("Reset 3D")) {
+      rotationDeg = 0.0f;
+      depthSpacing = 50.0f;
+    }
 
     ImGui::Separator();
     ImGui::Text("Hidden Tags (comma-separated):");
@@ -586,18 +705,13 @@ int main(int argc, char *argv[]) {
         const auto &snapshot = g_snapshots[g_currentSnapshotIndex];
 
         ImDrawList *drawList = ImGui::GetWindowDrawList();
-        ImVec2 windowPos = ImGui::GetWindowPos();
         ImVec2 contentPos = ImGui::GetCursorScreenPos();
 
         ImVec2 actualOffset(contentPos.x + viewOffset.x, contentPos.y + viewOffset.y);
 
-        // Draw all root nodes
-        for (int32_t rootTag : snapshot.rootTags) {
-          auto it = snapshot.nodes.find(rootTag);
-          if (it != snapshot.nodes.end()) {
-            drawViewTree(snapshot, it->second, drawList, actualOffset, viewScale, hiddenTags);
-          }
-        }
+        // Draw using 3D view
+        drawViewTree3D(
+            snapshot, drawList, actualOffset, viewScale, hiddenTags, rotationDeg, depthSpacing, snapshot.rootTags);
       } else {
         ImGui::Text("No snapshots yet. Connect your app to see mutations.");
       }
