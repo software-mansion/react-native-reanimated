@@ -401,10 +401,13 @@ void collectNodes(
   }
 }
 
+enum class ProjectionType { Perspective, Isometric };
+
 // Apply 3D rotation transform to a point
 // rotationDeg: rotation angle in degrees (0 = flat, 90 = fully rotated)
 // depth: the z-depth of the node (higher = closer to viewer)
 // centerX, centerY: the center point for rotation
+// projection: Perspective or Isometric
 void transform3D(
     float &x,
     float &y,
@@ -414,7 +417,8 @@ void transform3D(
     int depth,
     float depthSpacing,
     float centerX,
-    float centerY) {
+    float centerY,
+    ProjectionType projection) {
   // Convert rotation to radians
   float rotationRad = rotationDeg * 3.14159265f / 180.0f;
 
@@ -434,13 +438,21 @@ void transform3D(
   float newX = relX * cosR - z * sinR;
   float newZ = relX * sinR + z * cosR;
 
-  // Apply perspective (simple projection)
-  float perspective = 1000.0f; // Distance to viewer
-  float scale = perspective / (perspective + newZ);
+  if (projection == ProjectionType::Perspective) {
+    // Apply perspective projection
+    float perspective = 1000.0f; // Distance to viewer
+    float projScale = perspective / (perspective + newZ);
 
-  // Update position with perspective
-  x = centerX + newX * scale - w / 2;
-  y = centerY + relY * scale - h / 2;
+    // Update position with perspective
+    x = centerX + newX * projScale - w / 2;
+    y = centerY + relY * projScale - h / 2;
+  } else {
+    // Isometric projection - no perspective scaling, just offset by z
+    // In isometric, we offset both x and y based on z to create depth effect
+    x = centerX + newX - w / 2;
+    // Offset y slightly based on z for the isometric "stacking" effect
+    y = centerY + relY - newZ * 0.3f - h / 2;
+  }
 }
 
 void drawViewTree3D(
@@ -451,6 +463,7 @@ void drawViewTree3D(
     const std::set<int32_t> &hiddenTags,
     float rotationDeg,
     float depthSpacing,
+    ProjectionType projection,
     const std::vector<int32_t> &rootTags) {
   // Collect all nodes
   std::vector<DrawableNode> nodes;
@@ -498,7 +511,7 @@ void drawViewTree3D(
 
     // Apply 3D transform if rotation is non-zero
     if (std::abs(rotationDeg) > 0.1f) {
-      transform3D(x, y, w, h, rotationDeg, drawable.depth, depthSpacing, centerX, centerY);
+      transform3D(x, y, w, h, rotationDeg, drawable.depth, depthSpacing, centerX, centerY, projection);
     }
 
     // Draw rectangle
@@ -572,6 +585,7 @@ int main(int argc, char *argv[]) {
   std::set<int32_t> hiddenTags;
   float rotationDeg = 0.0f;
   float depthSpacing = 50.0f;
+  int projectionType = 0; // 0 = Perspective, 1 = Isometric
 
   while (!glfwWindowShouldClose(window) && g_running) {
     glfwPollEvents();
@@ -625,6 +639,10 @@ int main(int argc, char *argv[]) {
     ImGui::Text("3D View:");
     ImGui::SliderFloat("Rotation", &rotationDeg, -90.0f, 90.0f, "%.1f deg");
     ImGui::SliderFloat("Depth Spacing", &depthSpacing, 0.0f, 200.0f);
+    ImGui::Text("Projection:");
+    ImGui::RadioButton("Perspective", &projectionType, 0);
+    ImGui::SameLine();
+    ImGui::RadioButton("Isometric", &projectionType, 1);
     if (ImGui::Button("Reset 3D")) {
       rotationDeg = 0.0f;
       depthSpacing = 50.0f;
@@ -710,8 +728,17 @@ int main(int argc, char *argv[]) {
         ImVec2 actualOffset(contentPos.x + viewOffset.x, contentPos.y + viewOffset.y);
 
         // Draw using 3D view
+        ProjectionType projection = (projectionType == 0) ? ProjectionType::Perspective : ProjectionType::Isometric;
         drawViewTree3D(
-            snapshot, drawList, actualOffset, viewScale, hiddenTags, rotationDeg, depthSpacing, snapshot.rootTags);
+            snapshot,
+            drawList,
+            actualOffset,
+            viewScale,
+            hiddenTags,
+            rotationDeg,
+            depthSpacing,
+            projection,
+            snapshot.rootTags);
       } else {
         ImGui::Text("No snapshots yet. Connect your app to see mutations.");
       }
