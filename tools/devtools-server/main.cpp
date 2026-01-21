@@ -414,83 +414,177 @@ int getSubtreeMaxDepth(
   return maxDepth;
 }
 
-// Collect all nodes with their absolute positions and z-depths
-// When siblings overlap, the later sibling's entire subtree is placed in front
-void collectNodesWithOverlapHandling(
+// First pass: collect all nodes with simple tree-based depth (no overlap handling)
+void collectNodesSimple(
     const TreeSnapshot &snapshot,
     const ViewNode &node,
     const std::set<int32_t> &hiddenTags,
     std::vector<DrawableNode> &outNodes,
-    float parentX = 0,
-    float parentY = 0,
-    float baseZDepth = 0) {
-  // Skip if this tag is in the hidden set
+    float parentX,
+    float parentY,
+    float depth) {
   if (hiddenTags.count(node.tag)) {
     return;
   }
 
-  // Accumulate position (coordinates are relative to parent)
   float absoluteX = parentX + node.x;
   float absoluteY = parentY + node.y;
 
-  // Add this node
-  outNodes.push_back({&node, absoluteX, absoluteY, baseZDepth});
+  outNodes.push_back({&node, absoluteX, absoluteY, depth});
 
-  // Store child info for overlap checking
-  struct ChildInfo {
-    const ViewNode *node;
-    float absX, absY;
-    float zStart;
-    int subtreeDepth;
-  };
-  std::vector<ChildInfo> processedChildren;
-
-  float childBaseDepth = baseZDepth + 1.0f;
-
-  for (size_t i = 0; i < node.childTags.size(); ++i) {
-    int32_t childTag = node.childTags[i];
+  for (int32_t childTag : node.childTags) {
     auto it = snapshot.nodes.find(childTag);
-    if (it == snapshot.nodes.end()) {
-      continue;
+    if (it != snapshot.nodes.end()) {
+      collectNodesSimple(snapshot, it->second, hiddenTags, outNodes, absoluteX, absoluteY, depth + 1);
     }
-    if (hiddenTags.count(childTag)) {
-      continue;
+  }
+}
+
+// Collect nodes and handle overlapping siblings by adjusting z-depths
+// Optimized version: O(n) precomputation instead of O(n²) repeated lookups
+void collectNodesWithOverlapHandling(
+    const TreeSnapshot &snapshot,
+    const std::set<int32_t> &hiddenTags,
+    std::vector<DrawableNode> &outNodes,
+    const std::vector<int32_t> &rootTags) {
+
+  // First, collect all nodes with simple depth
+  for (int32_t rootTag : rootTags) {
+    auto it = snapshot.nodes.find(rootTag);
+    if (it != snapshot.nodes.end()) {
+      collectNodesSimple(snapshot, it->second, hiddenTags, outNodes, 0, 0, 0);
     }
+  }
 
-    const ViewNode &child = it->second;
-    float childAbsX = absoluteX + child.x;
-    float childAbsY = absoluteY + child.y;
+  if (outNodes.empty())
+    return;
 
-    // Start at the base depth for children
-    float zDepthForThisChild = childBaseDepth;
+  size_t n = outNodes.size();
 
-    // Check overlap with previously processed siblings - if overlapping, place in front
-    for (const auto &prevChild : processedChildren) {
-      bool overlaps = rectsOverlap(
-          childAbsX,
-          childAbsY,
-          child.width,
-          child.height,
-          prevChild.absX,
-          prevChild.absY,
-          prevChild.node->width,
-          prevChild.node->height);
+  // === O(n) Precomputation ===
 
-      if (overlaps) {
-        // Place this child's subtree in front of the previous child's entire subtree
-        float minZAfterPrev = prevChild.zStart + prevChild.subtreeDepth + 1.0f;
-        zDepthForThisChild = std::max(zDepthForThisChild, minZAfterPrev);
+  // Map tag -> index for fast lookup
+  std::unordered_map<int32_t, size_t> tagToIndex;
+  tagToIndex.reserve(n);
+  for (size_t i = 0; i < n; ++i) {
+    tagToIndex[outNodes[i].node->tag] = i;
+  }
+
+  // Build parent -> children indices map
+  std::unordered_map<int32_t, std::vector<size_t>> parentToChildren;
+  for (size_t i = 0; i < n; ++i) {
+    parentToChildren[outNodes[i].node->parentTag].push_back(i);
+  }
+
+  // Precompute subtree indices for each node using DFS
+  // subtreeIndices[i] contains all indices in the subtree rooted at node i (including i)
+  std::vector<std::vector<size_t>> subtreeIndices(n);
+
+  // Process nodes in reverse order (children before parents in typical DFS order)
+  // But since collectNodesSimple does DFS, children come after parents
+  // So we process in reverse to build subtrees bottom-up
+  for (size_t i = n; i-- > 0;) {
+    int32_t tag = outNodes[i].node->tag;
+    subtreeIndices[i].push_back(i); // Include self
+
+    // Add all children's subtrees
+    auto childIt = parentToChildren.find(tag);
+    if (childIt != parentToChildren.end()) {
+      for (size_t childIdx : childIt->second) {
+        // Append child's entire subtree
+        subtreeIndices[i].insert(
+            subtreeIndices[i].end(), subtreeIndices[childIdx].begin(), subtreeIndices[childIdx].end());
       }
     }
+  }
 
-    // Get the subtree depth for this child
-    int subtreeDepth = getSubtreeMaxDepth(snapshot, child, hiddenTags, 0);
+  // Precompute max zDepth for each subtree (will be updated as we adjust)
+  std::vector<float> subtreeMaxZ(n);
+  for (size_t i = n; i-- > 0;) {
+    float maxZ = outNodes[i].zDepth;
+    int32_t tag = outNodes[i].node->tag;
+    auto childIt = parentToChildren.find(tag);
+    if (childIt != parentToChildren.end()) {
+      for (size_t childIdx : childIt->second) {
+        maxZ = std::max(maxZ, subtreeMaxZ[childIdx]);
+      }
+    }
+    subtreeMaxZ[i] = maxZ;
+  }
 
-    // Store this child's info for future overlap checks
-    processedChildren.push_back({&child, childAbsX, childAbsY, zDepthForThisChild, subtreeDepth});
+  // Get parent depths for sorting
+  std::unordered_map<int32_t, float> parentDepth;
+  for (auto &[parentTag, childIndices] : parentToChildren) {
+    if (!childIndices.empty()) {
+      parentDepth[parentTag] = outNodes[childIndices[0]].zDepth - 1;
+    }
+  }
 
-    // Recursively collect this child's subtree
-    collectNodesWithOverlapHandling(snapshot, child, hiddenTags, outNodes, absoluteX, absoluteY, zDepthForThisChild);
+  // Sort parents by depth (deepest first = bottom-up processing)
+  std::vector<int32_t> sortedParents;
+  sortedParents.reserve(parentToChildren.size());
+  for (auto &[parentTag, _] : parentToChildren) {
+    sortedParents.push_back(parentTag);
+  }
+  std::sort(sortedParents.begin(), sortedParents.end(), [&](int32_t a, int32_t b) {
+    return parentDepth[a] > parentDepth[b];
+  });
+
+  // === Process siblings bottom-up ===
+  for (int32_t parentTag : sortedParents) {
+    auto &childIndices = parentToChildren[parentTag];
+    if (childIndices.size() < 2)
+      continue;
+
+    for (size_t i = 1; i < childIndices.size(); ++i) {
+      size_t currIdx = childIndices[i];
+      DrawableNode &curr = outNodes[currIdx];
+
+      float currMinX = curr.absoluteX;
+      float currMinY = curr.absoluteY;
+      float currW = curr.node->width;
+      float currH = curr.node->height;
+
+      float maxZOffset = 0;
+
+      // Check against all previous siblings
+      for (size_t j = 0; j < i; ++j) {
+        size_t prevIdx = childIndices[j];
+        DrawableNode &prev = outNodes[prevIdx];
+
+        float prevMinX = prev.absoluteX;
+        float prevMinY = prev.absoluteY;
+        float prevW = prev.node->width;
+        float prevH = prev.node->height;
+
+        if (rectsOverlap(currMinX, currMinY, currW, currH, prevMinX, prevMinY, prevW, prevH)) {
+          // Use precomputed max z-depth of previous sibling's subtree
+          float maxPrevZ = subtreeMaxZ[prevIdx];
+          float neededOffset = (maxPrevZ + 1) - curr.zDepth;
+          maxZOffset = std::max(maxZOffset, neededOffset);
+        }
+      }
+
+      // Apply offset to current sibling and all its descendants
+      if (maxZOffset > 0) {
+        for (size_t idx : subtreeIndices[currIdx]) {
+          outNodes[idx].zDepth += maxZOffset;
+        }
+        // Update subtreeMaxZ for this node and propagate up
+        subtreeMaxZ[currIdx] += maxZOffset;
+
+        // Propagate max z update to ancestors
+        int32_t ancestorTag = outNodes[currIdx].node->parentTag;
+        while (ancestorTag >= 0) {
+          auto it = tagToIndex.find(ancestorTag);
+          if (it == tagToIndex.end())
+            break;
+          size_t ancestorIdx = it->second;
+          subtreeMaxZ[ancestorIdx] = std::max(subtreeMaxZ[ancestorIdx], subtreeMaxZ[currIdx]);
+          ancestorTag = outNodes[ancestorIdx].node->parentTag;
+        }
+      }
+    }
   }
 }
 
@@ -550,12 +644,7 @@ void drawViewTree3D(
     bool enableHover) {
   // Collect all nodes with overlap-aware depth layering
   std::vector<DrawableNode> nodes;
-  for (int32_t rootTag : rootTags) {
-    auto it = snapshot.nodes.find(rootTag);
-    if (it != snapshot.nodes.end()) {
-      collectNodesWithOverlapHandling(snapshot, it->second, hiddenTags, nodes, 0, 0, 0);
-    }
-  }
+  collectNodesWithOverlapHandling(snapshot, hiddenTags, nodes, rootTags);
 
   if (nodes.empty()) {
     return;
