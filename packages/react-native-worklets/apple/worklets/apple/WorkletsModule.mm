@@ -74,7 +74,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
   std::string sourceURL = "";
   std::shared_ptr<const ScriptBuffer> script = nullptr;
-#ifdef WORKLETS_BUNDLE_MODE
+#ifdef WORKLETS_BUNDLE_MODE_ENABLED
   id networkingModule = [moduleRegistry_ moduleForClass:RCTNetworking.class];
   workletsNetworking_ = [[WorkletsNetworking alloc] init:networkingModule];
   NSURL *url = bundleManager_.bundleURL;
@@ -89,7 +89,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
     throw std::runtime_error([errorMsg UTF8String]);
   }
   sourceURL = [[url absoluteString] UTF8String];
-#endif // WORKLETS_BUNDLE_MODE
+#endif // WORKLETS_BUNDLE_MODE_ENABLED
 
   auto jsCallInvoker = callInvoker_.callInvoker;
   auto uiScheduler = std::make_shared<IOSUIScheduler>();

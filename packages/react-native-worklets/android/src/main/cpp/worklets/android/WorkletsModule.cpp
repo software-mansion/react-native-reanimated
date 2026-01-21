@@ -57,11 +57,11 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
 
   std::shared_ptr<const ScriptBuffer> script = nullptr;
   std::string sourceURL;
-#ifdef WORKLETS_BUNDLE_MODE
+#ifdef WORKLETS_BUNDLE_MODE_ENABLED
   auto cxxWrapper = jScriptBufferWrapper->cthis();
   script = cxxWrapper->getScript();
   sourceURL = cxxWrapper->getSourceUrl();
-#endif // WORKLETS_BUNDLE_MODE
+#endif // WORKLETS_BUNDLE_MODE_ENABLED
 
   return makeCxxInstance(jThis, rnRuntime, messageQueueThread, jsCallInvoker, uiScheduler, script, sourceURL);
 }

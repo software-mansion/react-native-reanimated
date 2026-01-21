@@ -26,7 +26,7 @@ class NativeWorklets implements IWorkletsModule {
       globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative
     ) {
       WorkletsTurboModule?.installTurboModule();
-      if (__DEV__ && globalThis._WORKLETS_BUNDLE_MODE) {
+      if (__DEV__ && globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
         console.log(
           '[Worklets] Bundle mode initialization: Downloaded the bundle for Worklet Runtimes.'
         );

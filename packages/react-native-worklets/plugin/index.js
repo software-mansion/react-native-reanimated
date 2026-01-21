@@ -1308,7 +1308,7 @@ var require_bundleMode = __commonJS({
       }
       const object = left.get("object");
       const property = left.get("property");
-      if (!object.isIdentifier() || object.node.name !== "globalThis" || !property.isIdentifier() || property.node.name !== "_WORKLETS_BUNDLE_MODE") {
+      if (!object.isIdentifier() || object.node.name !== "globalThis" || !property.isIdentifier() || property.node.name !== "_WORKLETS_BUNDLE_MODE_ENABLED") {
         return;
       }
       const right = expressionPath.get("right");
