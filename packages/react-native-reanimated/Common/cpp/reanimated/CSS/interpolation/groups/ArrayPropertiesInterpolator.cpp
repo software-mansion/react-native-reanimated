@@ -11,25 +11,6 @@ ArrayPropertiesInterpolator::ArrayPropertiesInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : GroupPropertiesInterpolator(propertyPath, viewStylesRepository), factories_(factories) {}
 
-bool ArrayPropertiesInterpolator::equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const {
-  if (!propertyValue.isArray()) {
-    return false;
-  }
-
-  const auto valuesCount = propertyValue.size();
-  if (valuesCount != interpolators_.size()) {
-    return false;
-  }
-
-  for (size_t i = 0; i < valuesCount; ++i) {
-    if (!interpolators_[i]->equalsReversingAdjustedStartValue(propertyValue[i])) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 void ArrayPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) {
   const jsi::Array keyframesArray = keyframes.asObject(rt).asArray(rt);
   const size_t valuesCount = keyframesArray.size(rt);
@@ -41,7 +22,7 @@ void ArrayPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::V
   }
 }
 
-void ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
+bool ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
     const folly::dynamic &oldStyleValue,
     const folly::dynamic &newStyleValue,
     const folly::dynamic &lastUpdateValue) {
@@ -59,14 +40,18 @@ void ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
 
   resizeInterpolators(valuesCount);
 
+  bool allEqualReversingAdjustedStartValue = true;
+
   for (size_t i = 0; i < valuesCount; ++i) {
     // These index checks ensure that interpolation works between 2 arrays
     // with different lengths
-    interpolators_[i]->updateKeyframesFromStyleChange(
+    allEqualReversingAdjustedStartValue &= interpolators_[i]->updateKeyframesFromStyleChange(
         i < oldSize ? oldStyleArray[i] : null,
         i < newSize ? newStyleArray[i] : null,
         i < lastSize ? lastUpdateArray[i] : null);
   }
+
+  return allEqualReversingAdjustedStartValue;
 }
 
 folly::dynamic ArrayPropertiesInterpolator::mapInterpolators(
