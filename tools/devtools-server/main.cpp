@@ -375,18 +375,55 @@ struct DrawableNode {
   const ViewNode *node;
   float absoluteX;
   float absoluteY;
-  int depth;
+  float zDepth; // Changed from int depth to float for more flexible layering
 };
 
-// Collect all nodes with their absolute positions and depths
-void collectNodes(
+// Helper to check if two rectangles overlap
+// Uses a small epsilon to avoid false positives from floating-point imprecision
+// when rectangles share a border
+bool rectsOverlap(float x1, float y1, float w1, float h1, float x2, float y2, float w2, float h2) {
+  constexpr float epsilon = 0.01f; // Small tolerance for floating-point comparison
+
+  // Check if one rectangle is to the left of the other (with epsilon tolerance)
+  if (x1 + w1 <= x2 + epsilon || x2 + w2 <= x1 + epsilon)
+    return false;
+  // Check if one rectangle is above the other (with epsilon tolerance)
+  if (y1 + h1 <= y2 + epsilon || y2 + h2 <= y1 + epsilon)
+    return false;
+  return true;
+}
+
+// Calculate the maximum depth of a subtree
+int getSubtreeMaxDepth(
+    const TreeSnapshot &snapshot,
+    const ViewNode &node,
+    const std::set<int32_t> &hiddenTags,
+    int currentDepth = 0) {
+  if (hiddenTags.count(node.tag)) {
+    return currentDepth;
+  }
+
+  int maxDepth = currentDepth;
+  for (int32_t childTag : node.childTags) {
+    auto it = snapshot.nodes.find(childTag);
+    if (it != snapshot.nodes.end()) {
+      int childMax = getSubtreeMaxDepth(snapshot, it->second, hiddenTags, currentDepth + 1);
+      maxDepth = std::max(maxDepth, childMax);
+    }
+  }
+  return maxDepth;
+}
+
+// Collect all nodes with their absolute positions and z-depths
+// When siblings overlap, the later sibling's entire subtree is placed in front
+void collectNodesWithOverlapHandling(
     const TreeSnapshot &snapshot,
     const ViewNode &node,
     const std::set<int32_t> &hiddenTags,
     std::vector<DrawableNode> &outNodes,
     float parentX = 0,
     float parentY = 0,
-    int depth = 0) {
+    float baseZDepth = 0) {
   // Skip if this tag is in the hidden set
   if (hiddenTags.count(node.tag)) {
     return;
@@ -397,15 +434,63 @@ void collectNodes(
   float absoluteY = parentY + node.y;
 
   // Add this node
-  outNodes.push_back({&node, absoluteX, absoluteY, depth});
+  outNodes.push_back({&node, absoluteX, absoluteY, baseZDepth});
 
-  // Collect children
+  // Store child info for overlap checking
+  struct ChildInfo {
+    const ViewNode *node;
+    float absX, absY;
+    float zStart;
+    int subtreeDepth;
+  };
+  std::vector<ChildInfo> processedChildren;
+
+  float childBaseDepth = baseZDepth + 1.0f;
+
   for (size_t i = 0; i < node.childTags.size(); ++i) {
     int32_t childTag = node.childTags[i];
     auto it = snapshot.nodes.find(childTag);
-    if (it != snapshot.nodes.end()) {
-      collectNodes(snapshot, it->second, hiddenTags, outNodes, absoluteX, absoluteY, depth + 1);
+    if (it == snapshot.nodes.end()) {
+      continue;
     }
+    if (hiddenTags.count(childTag)) {
+      continue;
+    }
+
+    const ViewNode &child = it->second;
+    float childAbsX = absoluteX + child.x;
+    float childAbsY = absoluteY + child.y;
+
+    // Start at the base depth for children
+    float zDepthForThisChild = childBaseDepth;
+
+    // Check overlap with previously processed siblings - if overlapping, place in front
+    for (const auto &prevChild : processedChildren) {
+      bool overlaps = rectsOverlap(
+          childAbsX,
+          childAbsY,
+          child.width,
+          child.height,
+          prevChild.absX,
+          prevChild.absY,
+          prevChild.node->width,
+          prevChild.node->height);
+
+      if (overlaps) {
+        // Place this child's subtree in front of the previous child's entire subtree
+        float minZAfterPrev = prevChild.zStart + prevChild.subtreeDepth + 1.0f;
+        zDepthForThisChild = std::max(zDepthForThisChild, minZAfterPrev);
+      }
+    }
+
+    // Get the subtree depth for this child
+    int subtreeDepth = getSubtreeMaxDepth(snapshot, child, hiddenTags, 0);
+
+    // Store this child's info for future overlap checks
+    processedChildren.push_back({&child, childAbsX, childAbsY, zDepthForThisChild, subtreeDepth});
+
+    // Recursively collect this child's subtree
+    collectNodesWithOverlapHandling(snapshot, child, hiddenTags, outNodes, absoluteX, absoluteY, zDepthForThisChild);
   }
 }
 
@@ -422,7 +507,7 @@ void transform3D(
     float w,
     float h,
     float rotationDeg,
-    int depth,
+    float zDepth,
     float depthSpacing,
     float centerX,
     float centerY,
@@ -431,7 +516,7 @@ void transform3D(
   float rotationRad = rotationDeg * 3.14159265f / 180.0f;
 
   // Calculate the z offset based on depth
-  float z = depth * depthSpacing;
+  float z = zDepth * depthSpacing;
 
   // Apply rotation around Y axis (horizontal rotation)
   // This creates the "exploded view" effect
@@ -473,12 +558,12 @@ void drawViewTree3D(
     float depthSpacing,
     ProjectionType projection,
     const std::vector<int32_t> &rootTags) {
-  // Collect all nodes
+  // Collect all nodes with overlap-aware depth layering
   std::vector<DrawableNode> nodes;
   for (int32_t rootTag : rootTags) {
     auto it = snapshot.nodes.find(rootTag);
     if (it != snapshot.nodes.end()) {
-      collectNodes(snapshot, it->second, hiddenTags, nodes);
+      collectNodesWithOverlapHandling(snapshot, it->second, hiddenTags, nodes, 0, 0, 0);
     }
   }
 
@@ -491,19 +576,27 @@ void drawViewTree3D(
   float centerY = offset.y + 400 * scale;
 
   // Sort by depth (back to front for proper rendering)
-  // When rotated, we also need to consider x position for proper occlusion
+  // We need to sort by the actual 3D position after rotation, taking into account
+  // both the node's position and its depth in the hierarchy.
+  // The key insight: depth acts as a Z offset that pushes nodes "out" towards the viewer.
   float rotationRad = rotationDeg * 3.14159265f / 180.0f;
+  float cosR = cosf(rotationRad);
+  float sinR = sinf(rotationRad);
+
   std::sort(nodes.begin(), nodes.end(), [&](const DrawableNode &a, const DrawableNode &b) {
-    // Calculate effective z for sorting
-    float zA = a.depth * depthSpacing;
-    float zB = b.depth * depthSpacing;
+    // Calculate the 3D position for sorting
+    // X position relative to center
+    float relXA = (a.absoluteX + a.node->width / 2) * scale;
+    float relXB = (b.absoluteX + b.node->width / 2) * scale;
 
-    float relXA = a.absoluteX * scale;
-    float relXB = b.absoluteX * scale;
+    // Z position from depth (hierarchy depth pushes nodes towards viewer)
+    float zA = a.zDepth * depthSpacing;
+    float zB = b.zDepth * depthSpacing;
 
-    // Transform z by rotation
-    float effectiveZA = relXA * sinf(rotationRad) + zA * cosf(rotationRad);
-    float effectiveZB = relXB * sinf(rotationRad) + zB * cosf(rotationRad);
+    // After rotation around Y axis, the new Z coordinate determines draw order
+    // newZ = x * sin(rotation) + z * cos(rotation)
+    float effectiveZA = relXA * sinR + zA * cosR;
+    float effectiveZB = relXB * sinR + zB * cosR;
 
     return effectiveZA < effectiveZB; // Draw farther nodes first
   });
@@ -527,7 +620,7 @@ void drawViewTree3D(
 
     // Apply 3D transform if rotation is non-zero
     if (std::abs(rotationDeg) > 0.1f) {
-      transform3D(x, y, w, h, rotationDeg, drawable.depth, depthSpacing, centerX, centerY, projection);
+      transform3D(x, y, w, h, rotationDeg, drawable.zDepth, depthSpacing, centerX, centerY, projection);
     }
 
     // Draw rectangle - use grey if not mutated in this batch, otherwise use mutation type color
