@@ -17,6 +17,3 @@ export type NormalizedCSSTransitionConfig = {
   properties: string[] | undefined;
   settings: Record<string, NormalizedSingleCSSTransitionSettings>;
 };
-
-export type NormalizedCSSTransitionConfigUpdates =
-  Partial<NormalizedCSSTransitionConfig>;

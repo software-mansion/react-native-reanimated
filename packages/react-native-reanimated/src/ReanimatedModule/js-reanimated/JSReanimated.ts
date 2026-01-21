@@ -26,7 +26,6 @@ import type {
   CSSAnimationUpdates,
   CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
-  NormalizedCSSTransitionConfig,
 } from '../../css/native';
 import { assertWorkletsVersion } from '../../platform-specific/workletsVersion';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
@@ -316,24 +315,6 @@ class JSReanimated implements IReanimatedModule {
   unregisterCSSAnimations(_viewTag: number): void {
     throw new ReanimatedError(
       '`unregisterCSSAnimations` is not available in JSReanimated.'
-    );
-  }
-
-  registerCSSTransition(
-    _shadowNodeWrapper: ShadowNodeWrapper,
-    _transitionConfig: NormalizedCSSTransitionConfig
-  ): void {
-    throw new ReanimatedError(
-      '`registerCSSTransition` is not available in JSReanimated.'
-    );
-  }
-
-  updateCSSTransition(
-    _viewTag: number,
-    _settingsUpdates: Partial<NormalizedCSSTransitionConfig>
-  ): void {
-    throw new ReanimatedError(
-      '`updateCSSTransition` is not available in JSReanimated.'
     );
   }
 
