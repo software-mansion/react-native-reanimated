@@ -12,15 +12,16 @@ index 14883eb1f1..b4ffa2a4d8 100644
  # https://docs.gradle.org/current/userguide/configuration_cache.html
  org.gradle.configuration-cache=true
 diff --git a/apps/fabric-example/babel.config.js b/apps/fabric-example/babel.config.js
-index 3e9952b8c8..c1be446d45 100644
+index 3e9952b8c8..a565523f7a 100644
 --- a/apps/fabric-example/babel.config.js
 +++ b/apps/fabric-example/babel.config.js
-@@ -1,7 +1,7 @@
+@@ -1,7 +1,8 @@
  /** @type {import('react-native-worklets/plugin').PluginOptions} */
  const workletsPluginOptions = {
    // Uncomment the next line to enable bundle mode.
 -  // bundleMode: true,
 +  bundleMode: true,
++  workletizableModules: ['axios'],
  };
  
  /** @type {import('@babel/core').TransformOptions} */
@@ -38,10 +39,10 @@ index 586a04355d..cfb49acaf8 100644
  platform :ios, min_ios_version_supported
  prepare_react_native_project!
 diff --git a/apps/fabric-example/metro.config.js b/apps/fabric-example/metro.config.js
-index fcf4a483fe..2c82f6b46e 100644
+index 0d317aee07..a4953192ed 100644
 --- a/apps/fabric-example/metro.config.js
 +++ b/apps/fabric-example/metro.config.js
-@@ -32,8 +32,8 @@ let config = {
+@@ -34,8 +34,8 @@ let config = {
  config = mergeConfig(defaultConfig, config);
  
  // Uncomment the following to enable bundle mode.
