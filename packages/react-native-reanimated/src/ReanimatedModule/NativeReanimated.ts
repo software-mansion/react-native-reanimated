@@ -24,6 +24,7 @@ import type {
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
 } from '../css/native';
@@ -246,6 +247,13 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.updateCSSTransition(viewTag, configUpdates);
   }
 
+  runCSSTransition(
+    _shadowNodeWrapper: ShadowNodeWrapper,
+    _transitionConfig: CSSTransitionConfig
+  ): void {
+    // TODO - call native module's method once the C++ layer is ready
+  }
+
   unregisterCSSTransition(viewTag: number) {
     this.#reanimatedModuleProxy.unregisterCSSTransition(viewTag);
   }
@@ -278,6 +286,7 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   unregisterCSSAnimations(): void {}
   registerCSSTransition(): void {}
   updateCSSTransition(): void {}
+  runCSSTransition(): void {}
   unregisterCSSTransition(): void {}
   registerSensor(): number {
     return -1;

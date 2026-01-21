@@ -10,7 +10,7 @@ import { filterCSSAndStyleProperties } from '../../utils';
 import { setViewStyle } from '../proxy';
 import { getPropsBuilder, hasPropsBuilder } from '../registry';
 import CSSAnimationsManager from './CSSAnimationsManager';
-import CSSTransitionsManager from './CSSTransitionsManager';
+import CSSTransitionsManager from './CSSTransitionsManager.old';
 
 export default class CSSManager implements ICSSManager {
   private readonly cssAnimationsManager: CSSAnimationsManager;

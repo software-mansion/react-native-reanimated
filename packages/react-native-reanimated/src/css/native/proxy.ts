@@ -3,6 +3,7 @@ import type { ShadowNodeWrapper, StyleProps } from '../../commonTypes';
 import { ReanimatedModule } from '../../ReanimatedModule';
 import type {
   CSSAnimationUpdates,
+  CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
 } from './types';
@@ -71,6 +72,13 @@ export function updateCSSTransition(
   configUpdates: Partial<NormalizedCSSTransitionConfig>
 ) {
   ReanimatedModule.updateCSSTransition(viewTag, configUpdates);
+}
+
+export function runCSSTransition(
+  _shadowNodeWrapper: ShadowNodeWrapper,
+  _transitionConfig: CSSTransitionConfig
+) {
+  // TODO - implement once C++ layer is ready
 }
 
 export function unregisterCSSTransition(viewTag: number) {

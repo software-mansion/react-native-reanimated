@@ -6,10 +6,7 @@ import type {
   CSSTransitionProperty,
   Repeat,
 } from '../../../../types';
-import type {
-  NormalizedCSSTransitionConfig,
-  NormalizedCSSTransitionPropertyNames,
-} from '../../../types';
+import type { NormalizedCSSTransitionConfig } from '../../../types';
 import {
   ERROR_MESSAGES,
   getNormalizedCSSTransitionConfigUpdates,
@@ -28,7 +25,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: 'all',
+        properties: undefined,
         settings: {
           all: {
             duration: 1500,
@@ -83,7 +80,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: 'all',
+        properties: undefined,
         settings: {
           all: {
             duration: 1500,
@@ -219,7 +216,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: 'all',
+        properties: undefined,
         settings: {
           all: {
             duration: 1500,
@@ -258,7 +255,7 @@ describe(normalizeCSSTransitionProperties, () => {
       const config: CSSTransitionProperties = { transitionDuration: '2s' };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: 'all',
+        properties: undefined,
         settings: {
           all: {
             duration: 2000,
@@ -279,7 +276,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: 'all',
+        properties: undefined,
         settings: {
           all: {
             duration: 4000,
@@ -335,7 +332,7 @@ describe(normalizeCSSTransitionProperties, () => {
 describe(getNormalizedCSSTransitionConfigUpdates, () => {
   test('returns empty object if nothing changed', () => {
     const oldConfig: NormalizedCSSTransitionConfig = {
-      properties: 'all',
+      properties: undefined,
       settings: {
         all: {
           duration: 1500,
@@ -346,7 +343,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
       },
     };
     const newConfig: NormalizedCSSTransitionConfig = {
-      properties: 'all',
+      properties: undefined,
       settings: {
         all: {
           duration: 1500,
@@ -364,13 +361,13 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
 
   describe('property changes', () => {
     test.each([
-      ['all', ['opacity'], ['opacity']],
-      [['opacity'], 'all', 'all'],
+      [undefined, ['opacity'], ['opacity']],
+      [['opacity'], undefined, undefined],
       [['opacity'], ['transform'], ['transform']],
-      [['opacity', 'transform'], 'all', 'all'],
-      ['all', ['opacity', 'transform'], ['opacity', 'transform']],
+      [['opacity', 'transform'], undefined, undefined],
+      [undefined, ['opacity', 'transform'], ['opacity', 'transform']],
       [['opacity', 'transform'], ['opacity'], ['opacity']],
-    ] satisfies Repeat<NormalizedCSSTransitionPropertyNames, 3>[])(
+    ] satisfies Repeat<string[] | undefined, 3>[])(
       'returns property update if properties changed from %p to %p',
       (oldProperties, newProperties, expected) => {
         const oldConfig: NormalizedCSSTransitionConfig = {
@@ -388,11 +385,10 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
       }
     );
 
-    test.each([
-      'all',
-      ['opacity'],
-      ['opacity', 'transform'],
-    ] satisfies NormalizedCSSTransitionPropertyNames[])(
+    test.each([undefined, ['opacity'], ['opacity', 'transform']] satisfies (
+      | string[]
+      | undefined
+    )[])(
       'does not return property update if properties did not change from %p',
       (properties) => {
         const oldConfig: NormalizedCSSTransitionConfig = {
@@ -415,7 +411,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
     describe('single transition settings', () => {
       test('returns all new settings if at least one setting changed', () => {
         const oldConfig: NormalizedCSSTransitionConfig = {
-          properties: 'all',
+          properties: undefined,
           settings: {
             all: {
               duration: 1500,
@@ -426,7 +422,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
           },
         };
         const newConfig: NormalizedCSSTransitionConfig = {
-          properties: 'all',
+          properties: undefined,
           settings: {
             all: {
               duration: 1500,
@@ -453,7 +449,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
 
       test('returns empty object if nothing changed', () => {
         const oldConfig: NormalizedCSSTransitionConfig = {
-          properties: 'all',
+          properties: undefined,
           settings: {
             all: {
               duration: 1500,
@@ -464,7 +460,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
           },
         };
         const newConfig: NormalizedCSSTransitionConfig = {
-          properties: 'all',
+          properties: undefined,
           settings: {
             all: {
               duration: 1500,

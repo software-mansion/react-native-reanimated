@@ -24,6 +24,7 @@ import type {
 import { SensorType } from '../../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
 } from '../../css/native';
@@ -333,6 +334,15 @@ class JSReanimated implements IReanimatedModule {
   ): void {
     throw new ReanimatedError(
       '`updateCSSTransition` is not available in JSReanimated.'
+    );
+  }
+
+  runCSSTransition(
+    _shadowNodeWrapper: ShadowNodeWrapper,
+    _transitionConfig: CSSTransitionConfig
+  ): void {
+    throw new ReanimatedError(
+      '`runCSSTransition` is not available in JSReanimated.'
     );
   }
 
