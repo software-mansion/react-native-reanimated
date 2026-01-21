@@ -113,11 +113,11 @@ const char *mutationTypeToString(MutationType type) {
 ImU32 mutationTypeToColor(MutationType type) {
   switch (type) {
     case MutationType::Create:
-      return IM_COL32(100, 200, 100, 255); // Green
+      return IM_COL32(100, 150, 200, 255); // Blue
     case MutationType::Delete:
       return IM_COL32(200, 100, 100, 255); // Red
     case MutationType::Insert:
-      return IM_COL32(100, 150, 200, 255); // Blue
+      return IM_COL32(100, 200, 100, 255); // Green
     case MutationType::Remove:
       return IM_COL32(200, 150, 100, 255); // Orange
     case MutationType::Update:
@@ -137,6 +137,7 @@ struct ViewNode {
   float x, y, width, height;
   reanimated::MutationType lastMutationType;
   std::vector<int32_t> childTags;
+  int32_t indexInParent = -1;
 };
 
 // Snapshot of the view tree at a point in time
@@ -187,6 +188,7 @@ void applyMutations(const std::vector<reanimated::SimpleMutation> &mutations) {
           auto &node = g_currentTree[mut.tag];
           node.parentTag = mut.parentTag;
           node.lastMutationType = mut.type;
+          node.indexInParent = mut.index;
 
           // Add to parent's children
           if (mut.parentTag >= 0 && g_currentTree.count(mut.parentTag)) {
@@ -570,6 +572,7 @@ void drawViewTree3D(
       ImGui::Text("Size: %.1f x %.1f", rect.node->width, rect.node->height);
       ImGui::Separator();
       ImGui::Text("Parent Tag: %d", rect.node->parentTag);
+      ImGui::Text("Index in Parent: %d", rect.node->indexInParent);
       ImGui::Text("Children: %zu", rect.node->childTags.size());
       ImGui::Separator();
       const char *mutationType = reanimated::mutationTypeToString(rect.node->lastMutationType);
