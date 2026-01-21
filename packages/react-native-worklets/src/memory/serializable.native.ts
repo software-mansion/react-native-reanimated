@@ -174,7 +174,7 @@ export function createSerializable<TValue>(
     return cloneArray(value, shouldPersistRemote, depth);
   }
   if (
-    globalThis._WORKLETS_BUNDLE_MODE &&
+    globalThis._WORKLETS_BUNDLE_MODE_ENABLED &&
     isFunction &&
     (value as WorkletImport).__bundleData
   ) {
@@ -238,7 +238,7 @@ export function createSerializable<TValue>(
   return inaccessibleObject(value);
 }
 
-if (globalThis._WORKLETS_BUNDLE_MODE) {
+if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
   // TODO: Do it programmatically.
   createSerializable.__bundleData = {
     imported: 'createSerializable',
@@ -870,7 +870,7 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
 
 /** @deprecated This function is no longer supported. */
 export const makeShareableCloneOnUIRecursive = (
-  globalThis._WORKLETS_BUNDLE_MODE
+  globalThis._WORKLETS_BUNDLE_MODE_ENABLED
     ? createSerializable
     : makeShareableCloneOnUIRecursiveLEGACY
 ) as typeof makeShareableCloneOnUIRecursiveLEGACY;

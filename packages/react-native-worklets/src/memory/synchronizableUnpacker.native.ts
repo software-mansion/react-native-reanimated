@@ -6,7 +6,7 @@ import { type Synchronizable, type SynchronizableRef } from './types';
 export function __installUnpacker() {
   // TODO: Add cache for synchronizables.
   const serializer =
-    !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE
+    !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE_ENABLED
       ? (value: unknown, _: unknown) => createSerializable(value)
       : globalThis._createSerializable;
 

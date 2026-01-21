@@ -85,12 +85,22 @@ def getStaticFeatureFlags() {
         }
     }
 
+    return featureFlags;
+}
+
+def getStaticFeatureFlagsString(featureFlags) {
     return featureFlags.collect { key, value -> "[${key}:${value}]" }.join("")
+}
+
+def isFlagEnabled(featureFlags, flagName) {
+    return (featureFlags.containsKey(flagName) && featureFlags[flagName] == "true");
 }
 
 if (isNewArchitectureEnabled() && project != rootProject) {
     apply plugin: "com.facebook.react"
 }
+
+def featureFlags = getStaticFeatureFlags()
 
 def packageDir = project.projectDir.parentFile
 def reactNativeRootDir = resolveReactNativeDirectory()
@@ -99,8 +109,8 @@ def REACT_NATIVE_VERSION = getReactNativeVersion()
 def WORKLETS_VERSION = getWorkletsVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
-def BUNDLE_MODE = safeAppExtGet("workletsBundleMode", false)
-def WORKLETS_FEATURE_FLAGS = getStaticFeatureFlags()
+def BUNDLE_MODE_ENABLED = isFlagEnabled(featureFlags, "BUNDLE_MODE_ENABLED");
+def WORKLETS_FEATURE_FLAGS = getStaticFeatureFlagsString(featureFlags)
 def HERMES_V1_ENABLED = safeAppExtGet("hermesV1Enabled", false)
 def WORKLETS_PROFILING = safeAppExtGet("enableWorkletsProfiling", false)
 
@@ -187,7 +197,7 @@ android {
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
         buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
-        buildConfigField("boolean", "BUNDLE_MODE", BUNDLE_MODE.toString())
+        buildConfigField("boolean", "BUNDLE_MODE_ENABLED", BUNDLE_MODE_ENABLED.toString())
 
         externalNativeBuild {
             cmake {
@@ -197,7 +207,7 @@ android {
                         "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
                         "-DJS_RUNTIME=${JS_RUNTIME}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
-                        "-DWORKLETS_BUNDLE_MODE=${BUNDLE_MODE}",
+                        "-DWORKLETS_BUNDLE_MODE_ENABLED=${BUNDLE_MODE_ENABLED}",
                         "-DWORKLETS_PROFILING=${WORKLETS_PROFILING}",
                         "-DWORKLETS_VERSION=${WORKLETS_VERSION}",
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",

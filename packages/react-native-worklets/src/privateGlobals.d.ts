@@ -18,7 +18,7 @@ declare global {
 
   var _toString: (value: unknown) => string;
   var __workletsModuleProxy: WorkletsModuleProxy | undefined;
-  var _WORKLETS_BUNDLE_MODE: boolean | undefined;
+  var _WORKLETS_BUNDLE_MODE_ENABLED: boolean | undefined;
   var _WORKLETS_VERSION_CPP: string | undefined;
   var _WORKLETS_VERSION_JS: string | undefined;
   var _createSerializable: <T>(

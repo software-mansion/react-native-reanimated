@@ -57,7 +57,8 @@
   "worklets": {
     "staticFeatureFlags": {
       "RUNTIME_TEST_FLAG": true,
-      "IOS_DYNAMIC_FRAMERATE_ENABLED": true
+      "IOS_DYNAMIC_FRAMERATE_ENABLED": true,
+      "BUNDLE_MODE_ENABLED": false
     }
   }
 }

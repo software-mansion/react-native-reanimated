@@ -1,6 +1,6 @@
 {
-  "label": "Experimental",
-  "position": 5,
+  "label": "Bundle Mode",
+  "position": 2,
   "link": {
     "type": "generated-index"
   }
