@@ -5,7 +5,6 @@ import type {
   CSSAnimationUpdates,
   CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
-  NormalizedCSSTransitionConfig,
 } from './types';
 
 // COMMON
@@ -60,25 +59,11 @@ export function unregisterCSSAnimations(viewTag: number) {
 
 // TRANSITIONS
 
-export function registerCSSTransition(
-  shadowNodeWrapper: ShadowNodeWrapper,
-  transitionConfig: NormalizedCSSTransitionConfig
-) {
-  ReanimatedModule.registerCSSTransition(shadowNodeWrapper, transitionConfig);
-}
-
-export function updateCSSTransition(
-  viewTag: number,
-  configUpdates: Partial<NormalizedCSSTransitionConfig>
-) {
-  ReanimatedModule.updateCSSTransition(viewTag, configUpdates);
-}
-
 export function runCSSTransition(
-  _shadowNodeWrapper: ShadowNodeWrapper,
-  _transitionConfig: CSSTransitionConfig
+  shadowNodeWrapper: ShadowNodeWrapper,
+  transitionConfig: CSSTransitionConfig
 ) {
-  // TODO - implement once C++ layer is ready
+  ReanimatedModule.runCSSTransition(shadowNodeWrapper, transitionConfig);
 }
 
 export function unregisterCSSTransition(viewTag: number) {
