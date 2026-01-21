@@ -102,7 +102,7 @@ export function init() {
 
 /** A function that should be run on any kind of runtime. */
 function initializeRuntime() {
-  if (globalThis._WORKLETS_BUNDLE_MODE) {
+  if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
   }
   installSynchronizableUnpacker();
@@ -127,7 +127,7 @@ function initializeRNRuntime() {
 
 /** A function that should be run only on Worklet runtimes. */
 function initializeWorkletRuntime() {
-  if (globalThis._WORKLETS_BUNDLE_MODE) {
+  if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     setupCallGuard();
 
     if (__DEV__) {
@@ -206,7 +206,7 @@ function installRNBindingsOnUIRuntime() {
 
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
 
-  if (!globalThis._WORKLETS_BUNDLE_MODE) {
+  if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     /** In bundle mode Runtimes setup their callGuard themselves. */
     runOnUISync(setupCallGuard);
 
