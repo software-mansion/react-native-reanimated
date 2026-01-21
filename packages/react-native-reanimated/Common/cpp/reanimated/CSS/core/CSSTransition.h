@@ -26,7 +26,7 @@ class CSSTransition {
   TransitionProperties getProperties() const;
   PropertyNames getAllowedProperties(const folly::dynamic &oldProps, const folly::dynamic &newProps);
 
-  void updateSettings(const PartialCSSTransitionConfig &config);
+  void updateSettings(const CSSTransitionConfig &config);
   folly::dynamic run(const ChangedProps &changedProps, const folly::dynamic &lastUpdateValue, double timestamp);
   folly::dynamic update(double timestamp);
 
