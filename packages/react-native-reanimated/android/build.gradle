@@ -13,7 +13,12 @@ def safeAppExtGet(prop, fallback) {
 }
 
 def isNewArchitectureEnabled() {
-    // To opt-in for the New Architecture, you can either:
+    // In React Native 0.82+, users can no longer opt-out of the New Architecture.
+    if(getReactNativeMinorVersion() >= 82){
+        return true
+    }
+
+    // In older versions, to opt-in for the New Architecture, you can either:
     // - Set `newArchEnabled` to true inside the `gradle.properties` file
     // - Invoke gradle with `-newArchEnabled=true`
     // - Set an environment variable `ORG_GRADLE_PROJECT_newArchEnabled=true`
@@ -101,7 +106,7 @@ def getReanimatedStaticFeatureFlags() {
     return featureFlags.collect { key, value -> "[${key}:${value}]" }.join("")
 }
 
-if (isNewArchitectureEnabled()) {
+if (isNewArchitectureEnabled() && project != rootProject) {
     apply plugin: "com.facebook.react"
 }
 
