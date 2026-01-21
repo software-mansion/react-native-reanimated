@@ -41,7 +41,6 @@ void CSSTransitionsRegistry::remove(const Tag viewTag) {
 void CSSTransitionsRegistry::updateSettings(const Tag viewTag, const PartialCSSTransitionConfig &config) {
   const auto &transition = registry_[viewTag];
   transition->updateSettings(config);
-    
   std::shared_ptr<AnimatedPropsBuilder> propsBuilder = std::make_shared<AnimatedPropsBuilder>();
 
   // Replace style overrides with the new ones if transition properties were
@@ -64,9 +63,9 @@ void CSSTransitionsRegistry::update(const double timestamp) {
     const folly::dynamic &updates = transition->update(timestamp, propsBuilder);
     if (!updates.empty()) {
       addUpdatesToBatch(transition->getShadowNode(), updates);
+      addAnimatedPropsToBatch(transition->getShadowNode(), propsBuilder->get());
     }
 
-    addAnimatedPropsToBatch(transition->getShadowNode(), propsBuilder->get());
     updateInUpdatesRegistry(transition, updates);
 
     // We remove transition from running and schedule it when animation of one
@@ -133,7 +132,8 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
       const auto &shadowNode = transition->getShadowNode();
       const auto &lastUpdates = strongThis->getUpdatesFromRegistry(shadowNode->getTag());
       std::shared_ptr<AnimatedPropsBuilder> propsBuilder = std::make_shared<AnimatedPropsBuilder>();
-      const auto &transitionStartStyle = transition->run(changedProps, lastUpdates, strongThis->getCurrentTimestamp_(), propsBuilder);
+      const auto &transitionStartStyle =
+          transition->run(changedProps, lastUpdates, strongThis->getCurrentTimestamp_(), propsBuilder);
       strongThis->addAnimatedPropsToBatch(transition->getShadowNode(), propsBuilder->get());
       strongThis->updateInUpdatesRegistry(transition, transitionStartStyle);
       strongThis->scheduleOrActivateTransition(transition);

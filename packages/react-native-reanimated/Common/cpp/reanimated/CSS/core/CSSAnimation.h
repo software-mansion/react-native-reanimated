@@ -32,18 +32,17 @@ class CSSAnimation {
   bool hasForwardsFillMode() const;
   bool hasBackwardsFillMode() const;
 
-  folly::dynamic getCurrentInterpolationStyle() const;
+  folly::dynamic getCurrentInterpolationStyle(std::shared_ptr<AnimatedPropsBuilder> propsBuilder) const;
   folly::dynamic getBackwardsFillStyle() const;
   folly::dynamic getResetStyle() const;
 
   void run(double timestamp);
-  folly::dynamic update(double timestamp);
+  folly::dynamic update(double timestamp, std::shared_ptr<AnimatedPropsBuilder> propsBuilder);
   void updateSettings(const PartialCSSAnimationSettings &updatedSettings, double timestamp);
 
  private:
   const std::string name_;
   const std::shared_ptr<const ShadowNode> shadowNode_;
-  const std::shared_ptr<AnimatedPropsBuilder> propsBuilder_;
   AnimationFillMode fillMode_;
 
   const std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;

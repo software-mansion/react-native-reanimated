@@ -172,6 +172,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     const double timestamp,
     const bool addToBatch) {
   folly::dynamic result = folly::dynamic::object;
+  std::shared_ptr<AnimatedPropsBuilder> propsBuilder = std::make_shared<AnimatedPropsBuilder>();
   std::shared_ptr<const ShadowNode> shadowNode = nullptr;
   bool hasUpdates = false;
 
@@ -185,7 +186,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     }
 
     bool updatesAddedToBatch = false;
-    const auto updates = animation->update(timestamp);
+    const auto updates = animation->update(timestamp, propsBuilder);
     const auto newState = animation->getState(timestamp);
 
     if (newState == AnimationProgressState::Finished) {
@@ -216,6 +217,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
 
   if (hasUpdates) {
     addUpdatesToBatch(shadowNode, result);
+    addAnimatedPropsToBatch(shadowNode, propsBuilder->get());
   }
 }
 
@@ -263,6 +265,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(const Tag viewTag, const do
 
   folly::dynamic updatedStyle = folly::dynamic::object;
   std::shared_ptr<const ShadowNode> shadowNode = nullptr;
+  std::shared_ptr<AnimatedPropsBuilder> propsBuilder = std::make_shared<AnimatedPropsBuilder>();
 
   for (const auto &animation : it->second.animationsVector) {
     const auto startTimestamp = animation->getStartTimestamp(timestamp);
@@ -277,7 +280,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(const Tag viewTag, const do
         (currentState == AnimationProgressState::Paused && timestamp >= animation->getStartTimestamp(timestamp)) ||
         // Animation is finished and has fill forwards fill mode
         (currentState == AnimationProgressState::Finished && animation->hasForwardsFillMode())) {
-      style = animation->getCurrentInterpolationStyle();
+      style = animation->getCurrentInterpolationStyle(propsBuilder);
     }
 
     if (!shadowNode) {

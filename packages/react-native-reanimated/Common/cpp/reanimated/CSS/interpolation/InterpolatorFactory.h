@@ -62,7 +62,7 @@ class ResolvableValueInterpolatorFactory : public PropertyInterpolatorFactory {
       const TValue &defaultValue,
       ResolvableValueInterpolatorConfig config,
       std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)>
-          addToPropsBuilder = nullptr)
+          addToPropsBuilder)
       : PropertyInterpolatorFactory(),
         defaultValue_(defaultValue),
         config_(std::move(config)),
@@ -123,9 +123,13 @@ CSSValueVariant<AllowedTypes...> createCSSValue(const auto &defaultValue) {
  * Value interpolator factories
  */
 template <typename... AllowedTypes>
-auto value(const auto &defaultValue, std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)> addToPropsBuilder) -> std::enable_if_t<
-    (std::is_constructible_v<AllowedTypes, decltype(defaultValue)> || ...),
-    std::shared_ptr<PropertyInterpolatorFactory>> {
+auto value(
+    const auto &defaultValue,
+    std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)>
+        addToPropsBuilder)
+    -> std::enable_if_t<
+        (std::is_constructible_v<AllowedTypes, decltype(defaultValue)> || ...),
+        std::shared_ptr<PropertyInterpolatorFactory>> {
   // Create a concrete CSSValue from the defaultValue
   auto cssValue = createCSSValue<AllowedTypes...>(defaultValue);
   return std::make_shared<SimpleValueInterpolatorFactory<AllowedTypes...>>(std::move(cssValue), addToPropsBuilder);
@@ -135,7 +139,8 @@ template <typename... AllowedTypes>
 auto value(
     const auto &defaultValue,
     ResolvableValueInterpolatorConfig config,
-    std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)> addToPropsBuilder)
+    std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)>
+        addToPropsBuilder)
     -> std::enable_if_t<
         (std::is_constructible_v<AllowedTypes, decltype(defaultValue)> || ...),
         std::shared_ptr<PropertyInterpolatorFactory>> {
@@ -149,17 +154,26 @@ auto value(
  * Transform operation interpolator factories
  */
 template <typename TOperation>
-auto transformOp(const auto &defaultValue, std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder) -> std::enable_if_t<
-    std::is_base_of_v<TransformOperation, TOperation> && std::is_constructible_v<TOperation, decltype(defaultValue)>,
-    std::shared_ptr<StyleOperationInterpolator>> {
-  return std::make_shared<TransformOperationInterpolator<TOperation>>(std::make_shared<TOperation>(defaultValue), addToPropsBuilder);
+auto transformOp(
+    const auto &defaultValue,
+    std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder)
+    -> std::enable_if_t<
+        std::is_base_of_v<TransformOperation, TOperation> &&
+            std::is_constructible_v<TOperation, decltype(defaultValue)>,
+        std::shared_ptr<StyleOperationInterpolator>> {
+  return std::make_shared<TransformOperationInterpolator<TOperation>>(
+      std::make_shared<TOperation>(defaultValue), addToPropsBuilder);
 }
 
 template <typename TOperation>
-auto transformOp(const auto &defaultValue, ResolvableValueInterpolatorConfig config, std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder) -> std::enable_if_t<
-    std::is_base_of_v<TransformOperation, TOperation> && std::is_constructible_v<TOperation, decltype(defaultValue)> &&
-        ResolvableOp<TOperation>,
-    std::shared_ptr<StyleOperationInterpolator>> {
+auto transformOp(
+    const auto &defaultValue,
+    ResolvableValueInterpolatorConfig config,
+    std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder)
+    -> std::enable_if_t<
+        std::is_base_of_v<TransformOperation, TOperation> &&
+            std::is_constructible_v<TOperation, decltype(defaultValue)> && ResolvableOp<TOperation>,
+        std::shared_ptr<StyleOperationInterpolator>> {
   return std::make_shared<TransformOperationInterpolator<TOperation>>(
       std::make_shared<TOperation>(defaultValue), std::move(config), addToPropsBuilder);
 }
@@ -168,10 +182,14 @@ auto transformOp(const auto &defaultValue, ResolvableValueInterpolatorConfig con
  * Filter operation interpolator factories
  */
 template <typename TOperation>
-auto filterOp(const auto &defaultValue, std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder) -> std::enable_if_t<
-    std::is_base_of_v<FilterOperation, TOperation> && std::is_constructible_v<TOperation, decltype(defaultValue)>,
-    std::shared_ptr<StyleOperationInterpolator>> {
-  return std::make_shared<FilterOperationInterpolator<TOperation>>(std::make_shared<TOperation>(defaultValue), addToPropsBuilder);
+auto filterOp(
+    const auto &defaultValue,
+    std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder)
+    -> std::enable_if_t<
+        std::is_base_of_v<FilterOperation, TOperation> && std::is_constructible_v<TOperation, decltype(defaultValue)>,
+        std::shared_ptr<StyleOperationInterpolator>> {
+  return std::make_shared<FilterOperationInterpolator<TOperation>>(
+      std::make_shared<TOperation>(defaultValue), addToPropsBuilder);
 }
 
 template <typename TOperation>
