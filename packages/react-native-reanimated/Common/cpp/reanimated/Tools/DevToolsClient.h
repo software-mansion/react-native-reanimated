@@ -2,6 +2,7 @@
 
 #include <reanimated/Tools/DevToolsProtocol.h>
 
+#include <react/renderer/components/view/ViewProps.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 
 #ifdef __APPLE__
@@ -74,7 +75,14 @@ class DevToolsClient {
         sm.y = view.layoutMetrics.frame.origin.y;
         sm.width = view.layoutMetrics.frame.size.width;
         sm.height = view.layoutMetrics.frame.size.height;
-        sm.backgroundColor = 0; // Could extract from props if needed
+        auto viewProps = std::dynamic_pointer_cast<const ViewProps>(view.props);
+        if (viewProps) {
+          sm.opacity = viewProps->opacity;
+          sm.backgroundColor = (*viewProps->backgroundColor).getColor();
+        } else {
+          sm.opacity = 0;
+          sm.backgroundColor = 0;
+        }
       } else {
         const auto &view = mutation.oldChildShadowView;
         sm.tag = view.tag;
@@ -86,7 +94,14 @@ class DevToolsClient {
         sm.y = view.layoutMetrics.frame.origin.y;
         sm.width = view.layoutMetrics.frame.size.width;
         sm.height = view.layoutMetrics.frame.size.height;
-        sm.backgroundColor = 0;
+        auto viewProps = std::dynamic_pointer_cast<const ViewProps>(view.props);
+        if (viewProps) {
+          sm.opacity = viewProps->opacity;
+          sm.backgroundColor = (*viewProps->backgroundColor).getColor();
+        } else {
+          sm.opacity = 0;
+          sm.backgroundColor = 0;
+        }
       }
 
       simpleMutations.push_back(sm);

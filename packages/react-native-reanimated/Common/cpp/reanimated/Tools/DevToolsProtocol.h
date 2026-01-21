@@ -25,7 +25,8 @@ struct SimpleMutation {
   float y;
   float width;
   float height;
-  uint32_t backgroundColor; // RGBA packed into uint32
+  int32_t backgroundColor; // RGBA packed into uint32
+  float opacity; // Opacity value
 
   SimpleMutation()
       : tag(0),
@@ -37,7 +38,8 @@ struct SimpleMutation {
         y(0),
         width(0),
         height(0),
-        backgroundColor(0) {
+        backgroundColor(0),
+        opacity(1.0f) {
     componentName[0] = '\0';
   }
 

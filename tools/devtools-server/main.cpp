@@ -47,7 +47,8 @@ struct SimpleMutation {
   float y;
   float width;
   float height;
-  uint32_t backgroundColor;
+  int32_t backgroundColor;
+  float opacity;
 };
 #pragma pack(pop)
 
@@ -138,6 +139,8 @@ struct ViewNode {
   reanimated::MutationType lastMutationType;
   std::vector<int32_t> childTags;
   int32_t indexInParent = -1;
+  float opacity = 1.0f;
+  int32_t backgroundColor = 0xffffffff;
 };
 
 // Snapshot of the view tree at a point in time
@@ -176,6 +179,8 @@ void applyMutations(const std::vector<reanimated::SimpleMutation> &mutations) {
         node.width = mut.width;
         node.height = mut.height;
         node.lastMutationType = mut.type;
+        node.opacity = mut.opacity;
+        node.backgroundColor = mut.backgroundColor;
         g_currentTree[mut.tag] = node;
         break;
       }
@@ -189,6 +194,7 @@ void applyMutations(const std::vector<reanimated::SimpleMutation> &mutations) {
           node.parentTag = mut.parentTag;
           node.lastMutationType = mut.type;
           node.indexInParent = mut.index;
+          node.backgroundColor = mut.backgroundColor;
 
           // Add to parent's children
           if (mut.parentTag >= 0 && g_currentTree.count(mut.parentTag)) {
@@ -236,6 +242,8 @@ void applyMutations(const std::vector<reanimated::SimpleMutation> &mutations) {
           node.width = mut.width;
           node.height = mut.height;
           node.lastMutationType = mut.type;
+          node.opacity = mut.opacity;
+          node.backgroundColor = mut.backgroundColor;
         }
         break;
       }
@@ -746,7 +754,8 @@ void drawViewTree3D(
     const ViewNode &node = *tn.drawable->node;
 
     bool wasMutated = snapshot.mutatedTags.count(node.tag) > 0;
-    ImU32 color = wasMutated ? reanimated::mutationTypeToColor(node.lastMutationType) : IM_COL32(80, 80, 80, 255);
+    ImU32 color = wasMutated ? reanimated::mutationTypeToColor(node.lastMutationType)
+                             : IM_COL32(80, 80, 80, static_cast<int>(node.opacity * 255));
     ImU32 borderColor = wasMutated ? IM_COL32(255, 255, 255, 200) : IM_COL32(120, 120, 120, 200);
 
     // Draw as quad
@@ -814,6 +823,17 @@ void drawViewTree3D(
       ImGui::Separator();
       ImGui::Text("Position: (%.1f, %.1f)", item.node->x, item.node->y);
       ImGui::Text("Size: %.1f x %.1f", item.node->width, item.node->height);
+      ImGui::Text("Opacity: %.2f", item.node->opacity);
+      ImGui::Text("Background Color:");
+      ImGui::SameLine();
+      //color is argb and should be rgba
+      uint32_t argbColor = static_cast<uint32_t>(item.node->backgroundColor);
+      uint32_t rgbaColor = ((argbColor & 0xFF000000) >> 24) | // A
+          ((argbColor & 0x00FF0000) << 8) | // R
+          ((argbColor & 0x0000FF00) << 8) | // G
+          ((argbColor & 0x000000FF) << 8); // B
+      ImVec4 bgColor = ImGui::ColorConvertU32ToFloat4(rgbaColor);
+      ImGui::TextColored(bgColor, "%08X", rgbaColor);
       ImGui::Separator();
       ImGui::Text("Parent Tag: %d", item.node->parentTag);
       ImGui::Text("Index in Parent: %d", item.node->indexInParent);
