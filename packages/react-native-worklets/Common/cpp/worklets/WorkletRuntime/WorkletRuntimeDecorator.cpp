@@ -238,60 +238,47 @@ void WorkletRuntimeDecorator::installNetworking(
     const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
   auto TurboModules = rt.global().getPropertyAsObject(rt, "TurboModules");
 
-  auto Networking = TurboModules.getPropertyAsFunction(rt, "get").callWithThis(
-      rt, TurboModules, "Networking");
+  auto Networking = TurboModules.getPropertyAsFunction(rt, "get").callWithThis(rt, TurboModules, "Networking");
 
   auto jsiSendRequest = jsi::Function::createFromHostFunction(
       rt,
       jsi::PropNameID::forAscii(rt, "sendRequest"),
       2,
       [sendRequest = runtimeBindings->sendRequest](
-          jsi::Runtime &rt,
-          const jsi::Value &thisValue,
-          const jsi::Value *args,
-          size_t count) {
+          jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
         auto &query = args[0];
         auto responseSender = args[1].asObject(rt).asFunction(rt);
         sendRequest(rt, query, std::move(responseSender));
         return jsi::Value::undefined();
       });
 
-  Networking.asObject(rt).setProperty(
-      rt, "sendRequest", std::move(jsiSendRequest));
+  Networking.asObject(rt).setProperty(rt, "sendRequest", std::move(jsiSendRequest));
 
   auto jsiAbortRequest = jsi::Function::createFromHostFunction(
       rt,
       jsi::PropNameID::forAscii(rt, "abortRequest"),
       1,
       [abortRequest = runtimeBindings->abortRequest](
-          jsi::Runtime &rt,
-          const jsi::Value &thisValue,
-          const jsi::Value *args,
-          size_t count) {
+          jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
         auto requestID = args[0].asNumber();
         abortRequest(rt, requestID);
         return jsi::Value::undefined();
       });
 
-  Networking.asObject(rt).setProperty(
-      rt, "abortRequest", std::move(jsiAbortRequest));
+  Networking.asObject(rt).setProperty(rt, "abortRequest", std::move(jsiAbortRequest));
 
   auto jsiClearCookies = jsi::Function::createFromHostFunction(
       rt,
       jsi::PropNameID::forAscii(rt, "clearCookies"),
       1,
       [clearCookies = runtimeBindings->clearCookies](
-          jsi::Runtime &rt,
-          const jsi::Value &thisValue,
-          const jsi::Value *args,
-          size_t count) {
+          jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
         auto responseSender = args[0].asObject(rt).asFunction(rt);
         clearCookies(rt, std::move(responseSender));
         return jsi::Value::undefined();
       });
 
-  Networking.asObject(rt).setProperty(
-      rt, "clearCookies", std::move(jsiClearCookies));
+  Networking.asObject(rt).setProperty(rt, "clearCookies", std::move(jsiClearCookies));
 }
 #endif // WORKLETS_BUNDLE_MODE
 

@@ -2,6 +2,7 @@
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
+#include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/android/AnimationFrameCallback.h>
 #include <worklets/android/WorkletsModule.h>
 
@@ -31,7 +32,7 @@ WorkletsModule::WorkletsModule(
           jsCallInvoker,
           uiScheduler,
           getIsOnJSQueueThread(),
-          RuntimeBindings{.requestAnimationFrame = getRequestAnimationFrame()},
+          std::make_shared<RuntimeBindings>(RuntimeBindings{.requestAnimationFrame = getRequestAnimationFrame()}),
           script,
           sourceURL)) {
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();

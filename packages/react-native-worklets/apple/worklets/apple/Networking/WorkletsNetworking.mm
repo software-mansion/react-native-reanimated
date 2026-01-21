@@ -6,21 +6,21 @@
 #import <mutex>
 
 #import <FBReactNativeSpec/FBReactNativeSpec.h>
+#import <React-Core/React/RCTFollyConvert.h>
+#import <React-jsi/jsi/JSIDynamic.h>
 #import <React/RCTAssert.h>
 #import <React/RCTConvert.h>
+#import <React/RCTHTTPRequestHandler.h>
+#import <React/RCTInspectorNetworkReporter.h>
 #import <React/RCTLog.h>
+#import <React/RCTNetworkPlugins.h>
 #import <React/RCTNetworkTask.h>
 #import <React/RCTNetworking.h>
 #import <React/RCTUtils.h>
-#import <React/RCTHTTPRequestHandler.h>
 #import <react/featureflags/ReactNativeFeatureFlags.h>
-#import <React/RCTInspectorNetworkReporter.h>
-#import <React/RCTNetworkPlugins.h>
-#import <React-Core/React/RCTFollyConvert.h>
-#import <React-jsi/jsi/JSIDynamic.h>
 
-#import <worklets/apple/Networking/WorkletsNetworking.h>
 #import <worklets/WorkletRuntime/WorkletRuntime.h>
+#import <worklets/apple/Networking/WorkletsNetworking.h>
 
 using namespace worklets;
 
@@ -307,8 +307,8 @@ static NSString *WorkletsGenerateFormBoundary()
                                 //                                });
                                 //                                self->uiScheduler_->scheduleOnUI([block, request](){
                                 auto strongWorkletRuntime = workletRuntime.lock();
-                               strongWorkletRuntime->schedule(
-                                   [completionBlock, request](jsi::Runtime &rt) { completionBlock(request, rt); });
+                                strongWorkletRuntime->schedule(
+                                    [completionBlock, request](jsi::Runtime &rt) { completionBlock(request, rt); });
 
                                 return (RCTURLRequestCancellationBlock)nil;
                               }];
@@ -430,10 +430,10 @@ static NSString *WorkletsGenerateFormBoundary()
                    return;
                  }
 
-                strongWorkletRuntime->schedule(^{
-                  cancellationBlock = callback(
-                      error, data ? @{@"body" : data, @"contentType" : RCTNullIfNil(response.MIMEType)} : nil);
-                });
+                 strongWorkletRuntime->schedule(^{
+                   cancellationBlock = callback(
+                       error, data ? @{@"body" : data, @"contentType" : RCTNullIfNil(response.MIMEType)} : nil);
+                 });
                }];
 
     [task start];
@@ -611,8 +611,8 @@ static NSString *WorkletsGenerateFormBoundary()
         NSUInteger initialCarryLength = incrementalDataCarry.length;
 
         NSString *responseString = [WorkletsNetworking decodeTextData:data
-                                                            fromResponse:task.response
-                                                           withCarryData:incrementalDataCarry];
+                                                         fromResponse:task.response
+                                                        withCarryData:incrementalDataCarry];
         if (!responseString) {
           RCTLogWarn(@"Received data was not a string, or was not a recognised encoding.");
           return;
@@ -651,7 +651,7 @@ static NSString *WorkletsGenerateFormBoundary()
         @[ task.requestID, RCTNullIfNil(error.localizedDescription), error.code == kCFURLErrorTimedOut ? @YES : @NO ];
 
     [strongSelf emitDeviceEvent:@"didCompleteNetworkResponse" argFactory:responseJSON rt:rt];
-    
+
     [strongSelf->_tasksLock lock];
     [strongSelf->_tasksByRequestID removeObjectForKey:task.requestID];
     [strongSelf->_tasksLock unlock];

@@ -26,14 +26,10 @@ class WorkletRuntimeDecorator {
       const std::shared_ptr<EventLoop> &eventLoop);
 
 #ifdef WORKLETS_BUNDLE_MODE
-  static void postEvaluateScript(
-      jsi::Runtime &rt,
-      const std::shared_ptr<RuntimeBindings> &runtimeBindings);
+  static void postEvaluateScript(jsi::Runtime &rt, const std::shared_ptr<RuntimeBindings> &runtimeBindings);
 
  private:
-  static void installNetworking(
-      jsi::Runtime &rt,
-      const std::shared_ptr<RuntimeBindings> &runtimeBindings);
+  static void installNetworking(jsi::Runtime &rt, const std::shared_ptr<RuntimeBindings> &runtimeBindings);
 #endif // WORKLETS_BUNDLE_MODE
 };
 

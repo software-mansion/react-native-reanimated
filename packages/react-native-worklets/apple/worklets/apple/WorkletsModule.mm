@@ -15,9 +15,9 @@
 #import <React/RCTCallInvoker.h>
 
 #ifdef WORKLETS_BUNDLE_MODE
-#import <worklets/apple/Networking/WorkletsNetworking.h>
 #import <React/RCTNetworking.h>
 #import <ReactCommon/RCTTurboModule.h>
+#import <worklets/apple/Networking/WorkletsNetworking.h>
 
 #import <FBReactNativeSpec/FBReactNativeSpec.h>
 #endif // WORKLETS_BUNDLE_MODE
@@ -139,7 +139,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
                                     animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
         [animationFrameQueue requestAnimationFrame:callback];
       }
-      #ifdef WORKLETS_BUNDLE_MODE
+#ifdef WORKLETS_BUNDLE_MODE
       ,
       .abortRequest =
           [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, const jsi::Value &requestID) {
@@ -157,7 +157,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
             [workletsNetworking jsiSendRequest:rt jquery:query responseSender:(std::move(responseSender))];
             return jsi::Value::undefined();
           }
-      #endif // WORKLETS_BUNDLE_MODE
+#endif // WORKLETS_BUNDLE_MODE
   });
 }
 
