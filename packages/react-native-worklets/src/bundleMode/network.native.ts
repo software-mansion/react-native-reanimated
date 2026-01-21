@@ -10,21 +10,15 @@ import { WorkletsError } from '../debug/WorkletsError';
 export function initializeNetworking() {
   const TurboModules = globalThis.TurboModules;
 
-  TurboModules.set(
-    'FileReaderModule',
-    makeMockTurboModuleFactory('FileReaderModule')
-  );
+  TurboModules.set('FileReaderModule', makeMockTurboModule('FileReaderModule'));
   TurboModules.set(
     'PlatformConstants',
-    makeMockTurboModuleFactory('PlatformConstants')
+    makeMockTurboModule('PlatformConstants')
   );
-  TurboModules.set(
-    'WebSocketModule',
-    makeMockTurboModuleFactory('WebSocketModule')
-  );
+  TurboModules.set('WebSocketModule', makeMockTurboModule('WebSocketModule'));
   TurboModules.set(
     'BlobModule',
-    makeMockTurboModuleFactory('BlobModule', ['addNetworkingHandler'])
+    makeMockTurboModule('BlobModule', ['addNetworkingHandler'])
   );
 
   /**
@@ -40,7 +34,7 @@ export function initializeNetworking() {
 
 const noopMethods = ['getConstants'];
 
-function makeMockTurboModuleFactory(name: string, extraNoopMethods?: string[]) {
+function makeMockTurboModule(name: string, extraNoopMethods?: string[]) {
   const proxy = new Proxy(
     {},
     {

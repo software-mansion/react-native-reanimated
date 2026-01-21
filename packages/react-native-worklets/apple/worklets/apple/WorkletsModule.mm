@@ -14,13 +14,12 @@
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
 
-#ifdef WORKLETS_BUNDLE_MODE
+#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 #import <React/RCTNetworking.h>
 #import <ReactCommon/RCTTurboModule.h>
 #import <worklets/apple/Networking/WorkletsNetworking.h>
-
 #import <FBReactNativeSpec/FBReactNativeSpec.h>
-#endif // WORKLETS_BUNDLE_MODE
+#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 
 using namespace worklets;
 
@@ -31,9 +30,9 @@ using namespace worklets;
 @implementation WorkletsModule {
   AnimationFrameQueue *animationFrameQueue_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
-#ifdef WORKLETS_BUNDLE_MODE
+#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
   WorkletsNetworking *workletsNetworking_;
-#endif // WORKLETS_BUNDLE_MODE
+#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
 #endif // NDEBUG
@@ -53,9 +52,9 @@ using namespace worklets;
 
 @synthesize bundleManager = bundleManager_;
 @synthesize callInvoker = callInvoker_;
-#ifdef WORKLETS_BUNDLE_MODE
+#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 @synthesize moduleRegistry = moduleRegistry_;
-#endif // WORKLETS_BUNDLE_MODE
+#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 
 RCT_EXPORT_MODULE(WorkletsModule);
 
@@ -75,8 +74,10 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   std::string sourceURL = "";
   std::shared_ptr<const ScriptBuffer> script = nullptr;
 #ifdef WORKLETS_BUNDLE_MODE_ENABLED
+#if defined(WORKLETS_FETCH_PREVIEW_ENABLED)
   id networkingModule = [moduleRegistry_ moduleForClass:RCTNetworking.class];
   workletsNetworking_ = [[WorkletsNetworking alloc] init:networkingModule];
+#endif // defined(WORKLETS_FETCH_PREVIEW_ENABLED)
   NSURL *url = bundleManager_.bundleURL;
   NSData *data = [NSData dataWithContentsOfURL:url];
   if (data) {
@@ -139,7 +140,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
                                     animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
         [animationFrameQueue requestAnimationFrame:callback];
       }
-#ifdef WORKLETS_BUNDLE_MODE
+#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
       ,
       .abortRequest =
           [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, const jsi::Value &requestID) {
@@ -157,7 +158,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
             [workletsNetworking jsiSendRequest:rt jquery:query responseSender:(std::move(responseSender))];
             return jsi::Value::undefined();
           }
-#endif // WORKLETS_BUNDLE_MODE
+#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
   });
 }
 

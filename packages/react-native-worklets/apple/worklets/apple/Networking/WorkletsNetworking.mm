@@ -1,4 +1,4 @@
-#ifdef WORKLETS_BUNDLE_MODE
+#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 /*
  * This file is based on RCTNetworking.mm from React Native.
  */
@@ -703,4 +703,4 @@ using ArgFactory = std::function<void(facebook::jsi::Runtime &runtime, std::vect
 }
 
 @end
-#endif // WORKLETS_BUNDLE_MODE
+#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
