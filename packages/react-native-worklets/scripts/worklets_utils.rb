@@ -10,7 +10,7 @@ def worklets_find_config()
   result = {
     :bundle_mode_flag => nil,
     :dynamic_frameworks_worklets_dir => nil,
-    :feature_flags_string => nil,
+    :feature_flags_flag => nil,
     :is_reanimated_example_app => nil,
     :is_tvos_target => nil,
     :react_native_version => nil,
