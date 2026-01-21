@@ -178,8 +178,8 @@ export interface Example {
     ios: boolean;
     android: boolean;
   };
-  missingOnFabric?: boolean;
   disabledPlatforms?: (typeof REAPlatform)[keyof typeof REAPlatform][];
+  needsBundleMode?: boolean;
 }
 
 export const EXAMPLES: Record<string, Example> = {
@@ -251,8 +251,9 @@ export const EXAMPLES: Record<string, Example> = {
   },
   FetchExample: {
     icon: '📡',
-    title: 'Fetch & XHR (Bundle Mode only)',
+    title: 'Fetch & XHR (Bundle Mode)',
     screen: FetchExample,
+    needsBundleMode: true,
   },
   ModifyExample: {
     icon: '🪛',
