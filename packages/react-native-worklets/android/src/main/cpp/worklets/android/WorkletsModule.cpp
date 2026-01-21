@@ -8,6 +8,7 @@
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
+#include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/android/AnimationFrameCallback.h>
 #include <worklets/android/WorkletsModule.h>
@@ -41,10 +42,14 @@ WorkletsModule::WorkletsModule(
           uiScheduler,
           getIsOnJSQueueThread(),
           std::make_shared<RuntimeBindings>(RuntimeBindings{
+              .requestAnimationFrame = getRequestAnimationFrame()
+#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW)
+                  ,
               .abortRequest = getAbortRequest(),
               .clearCookies = getClearCookies(),
-              .sendRequest = getSendRequest(),
-              .requestAnimationFrame = getRequestAnimationFrame()}),
+              .sendRequest = getSendRequest()
+#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW)
+          }),
           script,
           sourceURL)) {
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
@@ -72,11 +77,11 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
 
   std::shared_ptr<const ScriptBuffer> script = nullptr;
   std::string sourceURL;
-#ifdef WORKLETS_BUNDLE_MODE
+#ifdef WORKLETS_BUNDLE_MODE_ENABLED
   auto cxxWrapper = jScriptBufferWrapper->cthis();
   script = cxxWrapper->getScript();
   sourceURL = cxxWrapper->getSourceUrl();
-#endif // WORKLETS_BUNDLE_MODE
+#endif // WORKLETS_BUNDLE_MODE_ENABLED
 
   return makeCxxInstance(jThis, rnRuntime, messageQueueThread, jsCallInvoker, uiScheduler, script, sourceURL);
 }

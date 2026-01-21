@@ -113,6 +113,7 @@ const notCapturedIdentifiers = [
   'require',
   'fetch',
   'XMLHttpRequest',
+  'WebSocket',
 
   // Run loop
   'queueMicrotask',

@@ -161,6 +161,7 @@ import InstanceDiscoveryExample from './InstanceDiscoveryExample';
 import FetchExample from './FetchExample';
 import ShadowNodesCloningExample from './ShadowNodesCloningExample';
 import EmptyExample from './EmptyExample';
+import AnimatedPropsExample from './AnimatedPropsExample';
 
 export const REAPlatform = {
   IOS: 'ios',
@@ -177,8 +178,8 @@ export interface Example {
     ios: boolean;
     android: boolean;
   };
-  missingOnFabric?: boolean;
   disabledPlatforms?: (typeof REAPlatform)[keyof typeof REAPlatform][];
+  needsBundleMode?: boolean;
 }
 
 export const EXAMPLES: Record<string, Example> = {
@@ -250,8 +251,9 @@ export const EXAMPLES: Record<string, Example> = {
   },
   FetchExample: {
     icon: '📡',
-    title: 'Fetch & XHR (Bundle Mode only)',
+    title: 'Fetch & XHR (Bundle Mode)',
     screen: FetchExample,
+    needsBundleMode: true,
   },
   ModifyExample: {
     icon: '🪛',
@@ -267,6 +269,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🧠',
     title: 'Memo',
     screen: MemoExample,
+  },
+  AnimatedPropsExample: {
+    icon: '🎨',
+    title: 'Animated props',
+    screen: AnimatedPropsExample,
   },
   SerializableFreezingExample: {
     icon: '🥶',

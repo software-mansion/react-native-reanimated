@@ -21,6 +21,7 @@ import {
   removeCSSAnimation,
 } from '../domUtils';
 import { CSSKeyframesRuleImpl } from '../keyframes';
+import { normalizeIterationCount } from '../normalization';
 import { maybeAddSuffixes, parseTimingFunction } from '../utils';
 
 const isCSSKeyframesRuleImpl = (
@@ -197,7 +198,9 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
 
     if (animationSettings.animationIterationCount) {
       this.element.style.animationIterationCount =
-        animationSettings.animationIterationCount.join(',');
+        animationSettings.animationIterationCount
+          .map(normalizeIterationCount)
+          .join(',');
     }
 
     if (animationSettings.animationDirection) {

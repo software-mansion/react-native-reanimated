@@ -50,10 +50,7 @@ function getWorklet(
       worklet = getWorkletFromMetroRequire(workletHash, closureVariables);
     } catch (e) {
       logger.error(
-        'Unable to resolve worklet with hash ' +
-          workletHash +
-          '. Try reloading the app. Reason: ' +
-          (e as Error).message
+        `Unable to resolve worklet with hash ${workletHash}. Try reloading the app. Original error: ${(e as Error).message}`
       );
     }
   } else {

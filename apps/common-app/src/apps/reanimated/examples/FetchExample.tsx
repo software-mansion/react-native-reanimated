@@ -117,9 +117,13 @@ function callback(
   count: number
 ) {
   'worklet';
+  if (count > 8) {
+    return;
+  }
+
   axios({
     method: 'get',
-    url: 'https://tomekzaw.pl',
+    url: `https://jsonplaceholder.typicode.com/todos/${count}`,
   })
     .then((response) => {
       console.log(`Received ${count} response on ${runtime.name}`);

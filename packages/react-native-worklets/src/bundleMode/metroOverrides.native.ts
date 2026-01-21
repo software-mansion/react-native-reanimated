@@ -31,6 +31,8 @@ export function silenceHMRWarnings() {
  * runtime. To provide better developer experience we override the main React
  * Native module with a proxy that puts an actionable warning.
  *
+ * Note that this doesn't affect deep imports.
+ *
  * Use only in dev builds.
  */
 export function disallowRNImports() {
@@ -76,6 +78,13 @@ export function disallowRNImports() {
   modules.set(ReactNativeModuleId, mockModule);
 }
 
+/**
+ * To use code from React Native that obtains TurboModules we need to mock the
+ * registry even if the TurboModules aren't actually used.
+ *
+ * This is needed for example for the XHR setup code that is imported from React
+ * Native.
+ */
 export function mockTurboModuleRegistry() {
   const modules = require.getModules();
 
@@ -89,7 +98,8 @@ export function mockTurboModuleRegistry() {
 
   globalThis.TurboModules = TurboModules;
 
-  const moduleFactory = makeModuleFactory((module) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const moduleFactory = makeModuleFactory((module: any) => {
     function get(name: string) {
       return globalThis.TurboModules.get(name);
     }
@@ -100,7 +110,7 @@ export function mockTurboModuleRegistry() {
     module.exports.getEnforcing = getEnforcing;
   });
 
-  const mood = {
+  const metroModule = {
     dependencyMap: [],
     factory: moduleFactory,
     hasError: false,
@@ -112,7 +122,7 @@ export function mockTurboModuleRegistry() {
     },
   };
 
-  modules.set(TurboModuleRegistryId, mood);
+  modules.set(TurboModuleRegistryId, metroModule);
 }
 
 function assertWorkletRuntime(functionName: string) {
@@ -123,15 +133,15 @@ function assertWorkletRuntime(functionName: string) {
   }
 }
 
+/** Module factory mimicking the one used by Metro bundler. */
 function makeModuleFactory(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  moduleImpl: (moduleExports: Record<string, any>) => void
+  moduleImpl: (moduleExports: Record<string, unknown>) => void
 ) {
   return function (
     _global: unknown,
-    _$$_REQUIRE: unknown,
-    _$$_IMPORT_DEFAULT: unknown,
-    _$$_IMPORT_ALL: unknown,
+    _require: unknown,
+    _importDefault: unknown,
+    _importAll: unknown,
     module: Record<string, unknown>,
     _exports: unknown,
     _dependencyMap: unknown

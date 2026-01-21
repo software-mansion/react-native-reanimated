@@ -80,7 +80,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     var sourceURL = context.getSourceURL();
 
     ScriptBufferWrapper scriptBufferWrapper = null;
-    if (BuildConfig.BUNDLE_MODE) {
+    if (BuildConfig.BUNDLE_MODE_ENABLED) {
       scriptBufferWrapper = new ScriptBufferWrapper(sourceURL, context.getAssets());
     }
 

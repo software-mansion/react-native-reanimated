@@ -9,7 +9,11 @@ using namespace facebook;
 namespace worklets {
 
 struct RuntimeBindings {
-  // #ifdef WORKLETS_BUNDLE_MODE
+  using RequestAnimationFrame = std::function<void(std::function<void(const double)>)>;
+
+  const RequestAnimationFrame requestAnimationFrame;
+
+#if defined(WORKLETS_BUNDLE_MODE) && defined(WORKLETS_FETCH_PREVIEW)
   using AbortRequest = std::function<void(jsi::Runtime &rt, double requestId)>;
   using ClearCookies = std::function<void(jsi::Runtime &rt, jsi::Function &&responseSender)>;
 #ifdef ANDROID
@@ -31,11 +35,7 @@ struct RuntimeBindings {
   const AbortRequest abortRequest;
   const ClearCookies clearCookies;
   const SendRequest sendRequest;
-  // #endif // WORKLETS_BUNDLE_MODE
-
-  using RequestAnimationFrame = std::function<void(std::function<void(const double)>)>;
-
-  const RequestAnimationFrame requestAnimationFrame;
+#endif // defined(WORKLETS_BUNDLE_MODE) && defined(WORKLETS_FETCH_PREVIEW)
 };
 
 } // namespace worklets

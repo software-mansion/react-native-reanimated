@@ -20,10 +20,10 @@ export type DynamicFlagName = keyof Omit<
  * without specific keys.
  */
 export const DefaultStaticFeatureFlags = {
-  BUNDLE_MODE: false,
-  FETCH_ON_WORKLET_RUNTIMES: false,
-  IOS_DYNAMIC_FRAMERATE_ENABLED: true,
   RUNTIME_TEST_FLAG: false,
+  BUNDLE_MODE_ENABLED: false,
+  FETCH_PREVIEW_ENABLED: false,
+  IOS_DYNAMIC_FRAMERATE_ENABLED: true,
 } as const satisfies typeof StaticFeatureFlagsJSON;
 
 export type StaticFeatureFlagsSchema = {
