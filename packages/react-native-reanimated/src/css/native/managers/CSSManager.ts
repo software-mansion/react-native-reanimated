@@ -1,5 +1,4 @@
 'use strict';
-import type { AnyRecord } from '../../../common';
 import { ReanimatedError } from '../../../common';
 import type { PropsBuilder } from '../../../common/style';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
@@ -17,7 +16,7 @@ export default class CSSManager implements ICSSManager {
   private readonly cssTransitionsManager: CSSTransitionsManager;
   private readonly viewTag: number;
   private readonly viewName: string;
-  private readonly styleBuilder: PropsBuilder<AnyRecord> | null = null;
+  private readonly styleBuilder: PropsBuilder | null = null;
   private isFirstUpdate: boolean = true;
 
   constructor({ shadowNodeWrapper, viewTag, viewName = 'RCTView' }: ViewInfo) {
