@@ -89,7 +89,7 @@ def getStaticFeatureFlags() {
 }
 
 def getStaticFeatureFlagsString(featureFlags) {
-    return "-DWORKLETS_FEATURE_FLAGS=\"${featureFlags.collect { key, value -> "[${key}:${value}]" }.join("")}\""
+    return featureFlags.collect { key, value -> "[${key}:${value}]" }.join("")
 }
 
 def isFlagEnabled(featureFlags, flagName) {
@@ -109,8 +109,8 @@ def REACT_NATIVE_VERSION = getReactNativeVersion()
 def WORKLETS_VERSION = getWorkletsVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
-def WORKLETS_FEATURE_FLAGS_STRING = getStaticFeatureFlagsString(featureFlags)
 def BUNDLE_MODE_ENABLED = isFlagEnabled(featureFlags, "BUNDLE_MODE_ENABLED");
+def WORKLETS_FEATURE_FLAGS = getStaticFeatureFlagsString(featureFlags)
 def HERMES_V1_ENABLED = safeAppExtGet("hermesV1Enabled", false)
 def WORKLETS_PROFILING = safeAppExtGet("enableWorkletsProfiling", false)
 
@@ -211,7 +211,7 @@ android {
                         "-DWORKLETS_PROFILING=${WORKLETS_PROFILING}",
                         "-DWORKLETS_VERSION=${WORKLETS_VERSION}",
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
-                        "-DWORKLETS_FEATURE_FLAGS=${WORKLETS_FEATURE_FLAGS_STRING}",
+                        "-DWORKLETS_FEATURE_FLAGS=${WORKLETS_FEATURE_FLAGS}",
                         "-DHERMES_V1_ENABLED=${HERMES_V1_ENABLED}"
                 abiFilters(*reactNativeArchitectures())
                 targets("worklets")
