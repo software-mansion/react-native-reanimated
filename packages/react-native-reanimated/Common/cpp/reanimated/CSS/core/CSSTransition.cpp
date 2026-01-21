@@ -13,8 +13,15 @@ CSSTransition::CSSTransition(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : shadowNode_(std::move(shadowNode)),
       viewStylesRepository_(viewStylesRepository),
-      properties_(config.properties),
-      settings_(config.settings),
+      properties_(config.changedProperties.empty() ? std::nullopt : [&config]() {
+        PropertyNames propertyNames;
+        propertyNames.reserve(config.changedProperties.size());
+        for (const auto &[key, _] : config.changedProperties) {
+          propertyNames.emplace_back(key);
+        }
+        return std::make_optional(propertyNames);
+      }()),
+      settings_(config.changedProperties),
       styleInterpolator_(TransitionStyleInterpolator(shadowNode_->getComponentName(), viewStylesRepository)),
       progressProvider_(TransitionProgressProvider()) {
   updateAllowedDiscreteProperties();
@@ -78,13 +85,32 @@ PropertyNames CSSTransition::getAllowedProperties(const folly::dynamic &oldProps
   return {allAllowedProps.begin(), allAllowedProps.end()};
 }
 
-void CSSTransition::updateSettings(const PartialCSSTransitionConfig &config) {
-  if (config.properties.has_value()) {
-    updateTransitionProperties(config.properties.value());
-  }
-  if (config.settings.has_value()) {
-    settings_ = config.settings.value();
+void CSSTransition::updateSettings(const CSSTransitionConfig &config) {
+  // Update changed properties
+  if (!config.changedProperties.empty()) {
+    PropertyNames propertyNames;
+    propertyNames.reserve(config.changedProperties.size());
+    for (const auto &[key, _] : config.changedProperties) {
+      propertyNames.emplace_back(key);
+    }
+    updateTransitionProperties(std::make_optional(propertyNames));
+    settings_ = config.changedProperties;
     updateAllowedDiscreteProperties();
+  }
+  // Handle removed properties - remove them from current settings
+  for (const auto &removedProp : config.removedProperties) {
+    settings_.erase(removedProp);
+  }
+  // Update properties list if settings changed
+  if (!settings_.empty()) {
+    PropertyNames currentProperties;
+    currentProperties.reserve(settings_.size());
+    for (const auto &[key, _] : settings_) {
+      currentProperties.emplace_back(key);
+    }
+    updateTransitionProperties(std::make_optional(currentProperties));
+  } else {
+    updateTransitionProperties(std::nullopt);
   }
 }
 
