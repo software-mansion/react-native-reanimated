@@ -1,10 +1,10 @@
 'use strict';
 import {
-  BASE_PROPERTIES_CONFIG,
   ERROR_MESSAGES,
   getPropsBuilder,
   hasPropsBuilder,
   registerComponentPropsBuilder,
+  STYLE_PROPERTIES_CONFIG,
 } from '../../../common';
 
 describe('registry', () => {
@@ -68,7 +68,7 @@ describe('registry', () => {
     test('works with base properties config', () => {
       const componentName = 'BaseConfigComponent';
 
-      registerComponentPropsBuilder(componentName, BASE_PROPERTIES_CONFIG);
+      registerComponentPropsBuilder(componentName, STYLE_PROPERTIES_CONFIG);
 
       expect(hasPropsBuilder(componentName)).toBe(true);
       expect(getPropsBuilder(componentName)).toBeDefined();

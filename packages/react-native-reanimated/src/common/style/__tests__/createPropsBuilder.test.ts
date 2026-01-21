@@ -38,7 +38,8 @@ const createBuilder = (configOverrides: Partial<TestConfig>) => {
     config,
     processConfigValue(configValue) {
       if (configValue === true) {
-        return (value: unknown) => value;
+        // No custom processing needed
+        return true;
       }
 
       if (configValue === 'loop') {

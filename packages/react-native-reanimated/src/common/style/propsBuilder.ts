@@ -6,7 +6,7 @@ import type {
   ValueProcessor,
 } from '../types';
 import { isConfigPropertyAlias, isRecord } from '../utils';
-import { BASE_PROPERTIES_CONFIG } from './config';
+import { STYLE_PROPERTIES_CONFIG } from './config';
 import createPropsBuilder from './createPropsBuilder';
 
 const hasValueProcessor = (
@@ -37,10 +37,8 @@ export function createNativePropsBuilder<TProps extends UnknownRecord>(
     config,
     processConfigValue(configValue) {
       if (configValue === true) {
-        return (value) => {
-          'worklet';
-          return value;
-        };
+        // No custom processing needed
+        return true;
       }
       if (isConfigPropertyAlias<TProps>(configValue)) {
         return config[configValue.as];
@@ -57,8 +55,6 @@ export function createNativePropsBuilder<TProps extends UnknownRecord>(
 
 export type NativePropsBuilder = ReturnType<typeof createNativePropsBuilder>;
 
-const stylePropsBuilder = createNativePropsBuilder<PlainStyle>(
-  BASE_PROPERTIES_CONFIG
+export const stylePropsBuilder = createNativePropsBuilder<PlainStyle>(
+  STYLE_PROPERTIES_CONFIG
 );
-
-export default stylePropsBuilder;
