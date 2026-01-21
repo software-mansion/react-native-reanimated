@@ -8,17 +8,16 @@ end
 
 def worklets_find_config()
   result = {
-    :bundle_mode => nil,
+    :bundle_mode_flag => nil,
+    :dynamic_frameworks_worklets_dir => nil,
+    :feature_flags_flag => nil,
     :is_reanimated_example_app => nil,
     :is_tvos_target => nil,
     :react_native_version => nil,
     :react_native_minor_version => nil,
     :react_native_node_modules_dir => nil,
     :react_native_common_dir => nil,
-    :dynamic_frameworks_worklets_dir => nil,
   }
-
-  result[:bundle_mode] = ENV["WORKLETS_BUNDLE_MODE"] == "1"
 
   react_native_node_modules_dir = File.join(File.dirname(`cd "#{Pod::Config.instance.installation_root.to_s}" && node --print "require.resolve('react-native/package.json')"`), '..')
   react_native_json = worklets_try_to_parse_react_native_package_json(react_native_node_modules_dir)
@@ -51,6 +50,10 @@ def worklets_find_config()
   react_native_worklets_dir_relative = Pathname.new(react_native_worklets_dir_absolute).relative_path_from(pods_root).to_s
   result[:dynamic_frameworks_worklets_dir] = react_native_worklets_dir_relative
 
+  feature_flags = worklets_get_static_feature_flags()
+  result[:feature_flags_flag] = worklets_get_static_feature_flags_flag(feature_flags)
+  result[:bundle_mode_flag] = worklets_get_flag_from_feature_flags(feature_flags, 'BUNDLE_MODE_ENABLED')
+
   return result
 end
 
@@ -64,6 +67,14 @@ end
 def worklets_assert_new_architecture_enabled(new_arch_enabled)
   if !new_arch_enabled
     raise "[Worklets] Worklets require the New Architecture to be enabled. If you have `RCT_NEW_ARCH_ENABLED=0` set in your environment you should remove it."
+  end
+end
+
+def worklets_get_flag_from_feature_flags(feature_flags, flag_name)
+  if feature_flags[flag_name] == 'true'
+    return "-DWORKLETS_#{flag_name}"
+  else
+    return ''
   end
 end
 
@@ -89,6 +100,9 @@ def worklets_get_static_feature_flags()
       end
     end
   end
+  return feature_flags
+end
 
-  return feature_flags.map { |key, value| "[#{key}:#{value}]" }.join('')
+def worklets_get_static_feature_flags_flag(feature_flags)
+  return "-DWORKLETS_FEATURE_FLAGS=\"#{feature_flags.map { |key, value| "[#{key}:#{value}]" }.join('')}\""
 end
