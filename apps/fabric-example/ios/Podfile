@@ -12,7 +12,7 @@ ENV['IS_REANIMATED_PROFILING'] = '1'
 ENV['IS_WORKLETS_PROFILING'] = '1'
 
 # Uncomment the next line to enable bundle mode.
-ENV['WORKLETS_BUNDLE_MODE'] = '1'
+# ENV['WORKLETS_BUNDLE_MODE'] = '1'
 
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
