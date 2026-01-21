@@ -36,7 +36,7 @@
     "typescript": "5.8.3"
   },
   "engines": {
-    "node": ">=20.13.0"
+    "node": ">= 22.11.0"
   },
   "installConfig": {
     "hoistingLimits": "workspaces",
