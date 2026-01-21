@@ -164,7 +164,7 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext,
       SurfaceId surfaceId) const;
-  void addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList &mutations) const;
+  bool addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList &mutations) const;
   void updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation) const;
   std::shared_ptr<ShadowView> cloneViewWithoutOpacity(
       facebook::react::ShadowViewMutation &mutation,

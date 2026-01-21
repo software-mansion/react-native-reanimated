@@ -120,7 +120,8 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   void cleanupAnimations(
       ShadowViewMutationList &filteredMutations,
       const PropsParserContext &propsParserContext,
-      SurfaceId surfaceId) const;
+      SurfaceId surfaceId,
+      bool shouldCleanupLayoutAnimations) const;
   void cleanupSharedTransitions(
       ShadowViewMutationList &filteredMutations,
       const PropsParserContext &propsParserContext,
@@ -182,7 +183,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
 
   void handleRemovals(ShadowViewMutationList &filteredMutations, std::vector<std::shared_ptr<LightNode>> &roots) const;
 
-  void addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList &mutations) const;
+  bool addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList &mutations) const;
   void updateOngoingAnimationTarget(const int tag, const ShadowViewMutation &mutation) const;
   ShadowView cloneViewWithoutOpacity(const ShadowView &shadowView, const PropsParserContext &propsParserContext) const;
 

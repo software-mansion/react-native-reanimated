@@ -93,9 +93,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   handleRemovals(filteredMutations, exiting_);
   exiting_.clear();
 
-  addOngoingAnimations(surfaceId, filteredMutations);
+  auto shouldCleanupLA = addOngoingAnimations(surfaceId, filteredMutations);
 
-  cleanupAnimations(filteredMutations, propsParserContext, surfaceId);
+  cleanupAnimations(filteredMutations, propsParserContext, surfaceId, shouldCleanupLA);
 
   transitionMap_.clear();
   transitions_.clear();
@@ -362,11 +362,14 @@ void LayoutAnimationsProxy_Experimental::handleRemovals(
   deadNodes.clear();
 }
 
-void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList &mutations)
+bool LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList &mutations)
     const {
   ReanimatedSystraceSection s1("addOngoingAnimations");
   auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
 #ifdef ANDROID
+  if (updateMap.empty()) {
+    return true;
+  }
   std::vector<int> tagsToUpdate;
   tagsToUpdate.reserve(updateMap.size());
   for (auto &[tag, updateValues] : updateMap) {
@@ -375,7 +378,8 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceI
 
   auto maybeCorrectedTags = preserveMountedTags_(tagsToUpdate);
   if (!maybeCorrectedTags.has_value()) {
-    return;
+    // We have views to animated, but we are on js thread. Let's defer any cleanup.
+    return false;
   }
 
   auto correctedTags = maybeCorrectedTags->get();
@@ -416,6 +420,7 @@ void LayoutAnimationsProxy_Experimental::addOngoingAnimations(SurfaceId surfaceI
     layoutAnimation.currentView = newView;
   }
   updateMap.clear();
+  return true;
 }
 
 void LayoutAnimationsProxy_Experimental::endAnimationsRecursively(
@@ -620,10 +625,14 @@ void LayoutAnimationsProxy_Experimental::maybeUpdateWindowDimensions(
 void LayoutAnimationsProxy_Experimental::cleanupAnimations(
     ShadowViewMutationList &filteredMutations,
     const PropsParserContext &propsParserContext,
-    SurfaceId surfaceId) const {
+    SurfaceId surfaceId,
+    bool shouldCleanupLayoutAnimations) const {
   ReanimatedSystraceSection s("cleanupAnimations");
   cleanupSharedTransitions(filteredMutations, propsParserContext, surfaceId);
 
+  if (!shouldCleanupLayoutAnimations) {
+    return;
+  }
 #ifdef ANDROID
   restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId);
 #endif // ANDROID
