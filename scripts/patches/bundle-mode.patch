@@ -28,15 +28,17 @@ index 0d317aee07..a4953192ed 100644
  module.exports = wrapWithReanimatedMetroConfig(
    mergeConfig(defaultConfig, config)
 diff --git a/apps/fabric-example/package.json b/apps/fabric-example/package.json
-index 1ecda08bf7..5ba2d820e0 100644
+index ae8474192b..4021932d9f 100644
 --- a/apps/fabric-example/package.json
 +++ b/apps/fabric-example/package.json
-@@ -46,7 +46,7 @@
+@@ -46,8 +46,8 @@
      "staticFeatureFlags": {
        "RUNTIME_TEST_FLAG": true,
        "IOS_DYNAMIC_FRAMERATE_ENABLED": true,
--      "BUNDLE_MODE_ENABLED": false
-+      "BUNDLE_MODE_ENABLED": true
+-      "BUNDLE_MODE_ENABLED": false,
+-      "FETCH_PREVIEW_ENABLED": false
++      "BUNDLE_MODE_ENABLED": true,
++      "FETCH_PREVIEW_ENABLED": true
      }
    }
  }
