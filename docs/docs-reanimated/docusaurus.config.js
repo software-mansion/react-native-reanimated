@@ -139,7 +139,7 @@ const config = {
           'All trademarks and copyrights belong to their respective owners.',
       },
       prism: {
-        additionalLanguages: ['bash', 'diff', 'json', 'mermaid', 'ruby'],
+        additionalLanguages: ['bash', 'diff', 'json', 'mermaid'],
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
       },

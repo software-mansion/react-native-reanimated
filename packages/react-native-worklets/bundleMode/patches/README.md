@@ -68,4 +68,4 @@ Instructions here are similar to the npm ones, but you should use Yarn commands 
 
 ## Contributions
 
-If you're using a different package manager than the ones listed above or if you want to use a different version of React Native, feel free to contribute to this repository!
+If you're using a different package manager than the ones listed above or if you want to use a different version of React Native, feel free to contribute patches and instructions!
