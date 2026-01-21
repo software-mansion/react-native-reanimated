@@ -511,8 +511,10 @@ var require_globals = __commonJS({
     function initializeState(state) {
       state.workletNumber = 1;
       state.classesToWorkletize = [];
-      initializeGlobals();
-      addCustomGlobals(state);
+      if (!state.opts.strictGlobal) {
+        initializeGlobals();
+        addCustomGlobals(state);
+      }
     }
     exports2.defaultGlobals = new Set(notCapturedIdentifiers.concat(notCapturedIdentifiers_DEPRECATED));
     function initializeGlobals() {
@@ -561,14 +563,14 @@ var require_closure = __commonJS({
             binding = idPath.scope.getBinding(name);
           }
           if (!binding) {
-            if (globals_12.globals.has(name)) {
+            if (!state.opts.strictGlobal && globals_12.globals.has(name)) {
               return;
             }
             capturedNames.add(name);
             closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
             return;
           }
-          if (globals_12.outsideBindingsToCaptureFromGlobalScope.has(name) || !state.opts.bundleMode && globals_12.internalBindingsToCaptureFromGlobalScope.has(name)) {
+          if (!state.opts.strictGlobal && (globals_12.outsideBindingsToCaptureFromGlobalScope.has(name) || !state.opts.bundleMode && globals_12.internalBindingsToCaptureFromGlobalScope.has(name))) {
             return;
           }
           if ("id" in funPath.node) {

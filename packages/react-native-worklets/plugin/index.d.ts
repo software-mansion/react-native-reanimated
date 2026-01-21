@@ -8,6 +8,7 @@ export interface PluginOptions {
   globals?: string[];
   omitNativeOnlyData?: boolean;
   relativeSourceLocation?: boolean;
+  strictGlobal?: boolean;
   substituteWebPlatformChecks?: boolean;
   workletizableModules?: string[];
 }

@@ -96,6 +96,9 @@ export interface PluginOptions {
    */
   relativeSourceLocation?: boolean;
 
+  /** TODO: */
+  strictGlobal?: boolean;
+
   /**
    * This option can also be useful for Web apps. In Reanimated, there are
    * numerous checks to determine the right function implementation for a

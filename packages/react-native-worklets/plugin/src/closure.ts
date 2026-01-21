@@ -59,7 +59,7 @@ export function getClosure(
            * from the global scope. In this case we have to avoid capturing
            * certain identifiers.
            */
-          if (globals.has(name)) {
+          if (!state.opts.strictGlobal && globals.has(name)) {
             return;
           }
           capturedNames.add(name);
@@ -68,9 +68,10 @@ export function getClosure(
         }
 
         if (
-          outsideBindingsToCaptureFromGlobalScope.has(name) ||
-          (!state.opts.bundleMode &&
-            internalBindingsToCaptureFromGlobalScope.has(name))
+          !state.opts.strictGlobal &&
+          (outsideBindingsToCaptureFromGlobalScope.has(name) ||
+            (!state.opts.bundleMode &&
+              internalBindingsToCaptureFromGlobalScope.has(name)))
         ) {
           /**
            * In legacy bundling we have to purposefully ignore some bound
