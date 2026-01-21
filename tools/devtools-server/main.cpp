@@ -506,6 +506,14 @@ void drawViewTree3D(
     return effectiveZA < effectiveZB; // Draw farther nodes first
   });
 
+  // Store drawn rectangles for hover detection (in draw order, so last = topmost)
+  struct DrawnRect {
+    float x, y, w, h;
+    const ViewNode *node;
+    bool wasMutated;
+  };
+  std::vector<DrawnRect> drawnRects;
+
   // Draw all nodes
   for (const auto &drawable : nodes) {
     const ViewNode &node = *drawable.node;
@@ -528,6 +536,7 @@ void drawViewTree3D(
     if (w > 0 && h > 0) {
       drawList->AddRectFilled(ImVec2(x, y), ImVec2(x + w, y + h), color);
       drawList->AddRect(ImVec2(x, y), ImVec2(x + w, y + h), borderColor);
+      drawnRects.push_back({x, y, w, h, &node, wasMutated});
     }
 
     // Draw label
@@ -544,6 +553,39 @@ void drawViewTree3D(
         node.width,
         node.height);
     drawList->AddText(ImVec2(x + 2, y + 2), textColor, label);
+  }
+
+  // Check for hover (iterate in reverse to get topmost first)
+  ImVec2 mousePos = ImGui::GetMousePos();
+  for (auto it = drawnRects.rbegin(); it != drawnRects.rend(); ++it) {
+    const auto &rect = *it;
+    if (mousePos.x >= rect.x && mousePos.x <= rect.x + rect.w && mousePos.y >= rect.y &&
+        mousePos.y <= rect.y + rect.h) {
+      // Found hovered node - show tooltip
+      ImGui::BeginTooltip();
+      ImGui::Text("Component: %s", rect.node->componentName.c_str());
+      ImGui::Text("Tag: %d", rect.node->tag);
+      ImGui::Separator();
+      ImGui::Text("Position: (%.1f, %.1f)", rect.node->x, rect.node->y);
+      ImGui::Text("Size: %.1f x %.1f", rect.node->width, rect.node->height);
+      ImGui::Separator();
+      ImGui::Text("Parent Tag: %d", rect.node->parentTag);
+      ImGui::Text("Children: %zu", rect.node->childTags.size());
+      ImGui::Separator();
+      const char *mutationType = reanimated::mutationTypeToString(rect.node->lastMutationType);
+      if (rect.wasMutated) {
+        ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "Mutated: %s", mutationType);
+      } else {
+        ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Not mutated this batch");
+        ImGui::Text("Last mutation: %s", mutationType);
+      }
+      ImGui::EndTooltip();
+
+      // Highlight hovered rect
+      drawList->AddRect(
+          ImVec2(rect.x, rect.y), ImVec2(rect.x + rect.w, rect.y + rect.h), IM_COL32(255, 255, 0, 255), 0.0f, 0, 3.0f);
+      break; // Only show tooltip for topmost
+    }
   }
 }
 
@@ -723,15 +765,67 @@ int main(int argc, char *argv[]) {
     ImGui::End();
 
     // View tree visualization
-    ImGui::Begin("View Tree");
+    // Allow window movement when Alt is held, otherwise capture input for pan/zoom
+    bool altHeld = ImGui::GetIO().KeyAlt;
+    ImGuiWindowFlags viewTreeFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+    ImGui::Begin("View Tree", nullptr, viewTreeFlags);
     {
       std::lock_guard<std::mutex> lock(g_mutex);
+
+      // Get window info for input handling
+      ImVec2 windowSize = ImGui::GetWindowSize();
+      ImVec2 contentPos = ImGui::GetCursorScreenPos();
+      ImVec2 contentSize = ImGui::GetContentRegionAvail();
+      ImVec2 mousePos = ImGui::GetMousePos();
+
+      bool isCanvasHovered = false;
+      bool isCanvasActive = false;
+
+      // Only create invisible button when Alt is NOT held - this allows window dragging when Alt is pressed
+      if (!altHeld) {
+        ImGui::InvisibleButton("##viewtree_canvas", contentSize);
+        isCanvasHovered = ImGui::IsItemHovered();
+        isCanvasActive = ImGui::IsItemActive();
+
+        // Handle panning with mouse drag (left or middle button)
+        if (isCanvasActive && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+          ImVec2 delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
+          viewOffset.x += delta.x;
+          viewOffset.y += delta.y;
+          ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
+        }
+        if (isCanvasHovered && ImGui::IsMouseDragging(ImGuiMouseButton_Middle)) {
+          ImVec2 delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Middle);
+          viewOffset.x += delta.x;
+          viewOffset.y += delta.y;
+          ImGui::ResetMouseDragDelta(ImGuiMouseButton_Middle);
+        }
+
+        // Handle zoom with scroll wheel
+        if (isCanvasHovered) {
+          float scrollY = ImGui::GetIO().MouseWheel;
+          if (std::abs(scrollY) > 0.0f) {
+            // Zoom centered on mouse position
+            float zoomFactor = 1.0f + scrollY * 0.1f;
+            float newScale = viewScale * zoomFactor;
+            newScale = std::max(0.05f, std::min(5.0f, newScale)); // Clamp scale
+
+            // Adjust offset to zoom towards mouse position
+            float mouseRelX = mousePos.x - contentPos.x - viewOffset.x;
+            float mouseRelY = mousePos.y - contentPos.y - viewOffset.y;
+
+            viewOffset.x -= mouseRelX * (newScale / viewScale - 1.0f);
+            viewOffset.y -= mouseRelY * (newScale / viewScale - 1.0f);
+
+            viewScale = newScale;
+          }
+        }
+      }
 
       if (g_currentSnapshotIndex >= 0 && g_currentSnapshotIndex < static_cast<int>(g_snapshots.size())) {
         const auto &snapshot = g_snapshots[g_currentSnapshotIndex];
 
         ImDrawList *drawList = ImGui::GetWindowDrawList();
-        ImVec2 contentPos = ImGui::GetCursorScreenPos();
 
         ImVec2 actualOffset(contentPos.x + viewOffset.x, contentPos.y + viewOffset.y);
 
@@ -747,7 +841,12 @@ int main(int argc, char *argv[]) {
             depthSpacing,
             projection,
             snapshot.rootTags);
+
+        // Show hint text
+        ImGui::SetCursorPos(ImVec2(10, windowSize.y - 25));
+        ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Drag to pan, scroll to zoom, hold Alt to move window");
       } else {
+        ImGui::SetCursorPos(ImVec2(10, 30));
         ImGui::Text("No snapshots yet. Connect your app to see mutations.");
       }
     }
