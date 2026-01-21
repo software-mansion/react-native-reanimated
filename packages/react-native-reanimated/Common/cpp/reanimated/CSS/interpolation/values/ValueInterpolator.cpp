@@ -13,10 +13,12 @@ namespace reanimated::css {
 ValueInterpolator::ValueInterpolator(
     const PropertyPath &propertyPath,
     const std::shared_ptr<CSSValue> &defaultValue,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+    std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValue &)> addToPropsBuilder)
     : PropertyInterpolator(propertyPath, viewStylesRepository),
       defaultStyleValue_(defaultValue),
-      defaultStyleValueDynamic_(defaultValue->toDynamic()) {}
+      defaultStyleValueDynamic_(defaultValue->toDynamic()),
+      addToPropsBuilder_(addToPropsBuilder) {}
 
 folly::dynamic ValueInterpolator::getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const {
   return viewStylesRepository_->getStyleProp(shadowNode->getTag(), propertyPath_);
@@ -109,9 +111,11 @@ folly::dynamic ValueInterpolator::interpolate(
   const auto keyframeProgress = progressProvider->getKeyframeProgress(fromKeyframe.offset, toKeyframe.offset);
 
   if (keyframeProgress == 1.0) {
+    addToPropsBuilder_(propsBuilder, *toValue);
     return toValue->toDynamic();
   }
   if (keyframeProgress == 0.0) {
+    addToPropsBuilder_(propsBuilder, *fromValue);
     return fromValue->toDynamic();
   }
 

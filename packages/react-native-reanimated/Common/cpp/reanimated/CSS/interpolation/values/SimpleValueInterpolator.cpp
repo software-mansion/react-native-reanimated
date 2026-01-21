@@ -26,7 +26,13 @@ SimpleValueInterpolator<AllowedTypes...>::SimpleValueInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)>
         addToPropsBuilder)
-    : ValueInterpolator(propertyPath, std::make_shared<ValueType>(defaultStyleValue), viewStylesRepository),
+    : ValueInterpolator(
+          propertyPath,
+          std::make_shared<ValueType>(defaultStyleValue),
+          viewStylesRepository,
+          [addToPropsBuilder](const std::shared_ptr<AnimatedPropsBuilder> &builder, const CSSValue &value) {
+            addToPropsBuilder(builder, static_cast<const CSSValueVariant<AllowedTypes...> &>(value));
+          }),
       addToPropsBuilder_(addToPropsBuilder) {}
 
 template <typename... AllowedTypes>
