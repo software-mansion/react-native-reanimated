@@ -23,14 +23,14 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
   const propsBuilder = createPropsBuilder({
     config,
     processConfigValue(configValue, propertyKey) {
+      // Handle true - include unchanged
+      if (configValue === true) {
+        return true;
+      }
+
       // Handle false - exclude property
       if (configValue === false) {
         return;
-      }
-
-      // Handle true - include as string
-      if (configValue === true) {
-        return (value) => String(value);
       }
 
       // Handle suffix (e.g., 'px')
@@ -48,7 +48,7 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
         // Return a processor that feeds values to the rule builder and returns undefined
         // so the property doesn't appear in the regular processed props (only the result
         // of the rule builder will appear in the final style)
-        return (value: unknown) => {
+        return (value) => {
           usedRuleBuilders.add(configValue);
           configValue.add(propertyKey, value as TProps[keyof TProps]);
           return;
@@ -89,6 +89,5 @@ export function createWebPropsBuilder<TProps extends UnknownRecord>(
   };
 }
 
-const webPropsBuilder = createWebPropsBuilder<PlainStyle>(PROPERTIES_CONFIG);
-
-export default webPropsBuilder;
+export const webPropsBuilder =
+  createWebPropsBuilder<PlainStyle>(PROPERTIES_CONFIG);
