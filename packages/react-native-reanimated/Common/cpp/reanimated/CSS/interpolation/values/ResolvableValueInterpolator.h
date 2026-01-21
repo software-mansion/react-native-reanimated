@@ -41,7 +41,8 @@ class ResolvableValueInterpolator final : public SimpleValueInterpolator<Allowed
 
  private:
   const ResolvableValueInterpolatorConfig &config_;
-  std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)> addToPropsBuilder_;
+  std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)>
+      addToPropsBuilder_;
 };
 
 } // namespace reanimated::css

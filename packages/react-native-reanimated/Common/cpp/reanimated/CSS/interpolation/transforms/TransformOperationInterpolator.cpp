@@ -12,7 +12,8 @@ namespace reanimated::css {
 // Base implementation for simple operations
 template <typename TOperation>
 TransformOperationInterpolator<TOperation>::TransformOperationInterpolator(
-    const std::shared_ptr<TOperation> &defaultOperation, std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder)
+    const std::shared_ptr<TOperation> &defaultOperation,
+    std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder)
     : addToPropsBuilder_(addToPropsBuilder), StyleOperationInterpolator(defaultOperation) {}
 
 template <typename TOperation>
@@ -31,7 +32,8 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::inte
 
 // Specialization for PerspectiveOperation
 TransformOperationInterpolator<PerspectiveOperation>::TransformOperationInterpolator(
-    const std::shared_ptr<PerspectiveOperation> &defaultOperation, std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, PerspectiveOperation &)> addToPropsBuilder)
+    const std::shared_ptr<PerspectiveOperation> &defaultOperation,
+    std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, PerspectiveOperation &)> addToPropsBuilder)
     : addToPropsBuilder_(addToPropsBuilder), StyleOperationInterpolator(defaultOperation) {}
 
 std::unique_ptr<StyleOperation> TransformOperationInterpolator<PerspectiveOperation>::interpolate(
@@ -45,7 +47,7 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<PerspectiveOperat
   const auto &toValue = std::static_pointer_cast<PerspectiveOperation>(to)->value;
 
   if (fromValue.value == 0)
-      return std::make_unique<PerspectiveOperation>(toValue);
+    return std::make_unique<PerspectiveOperation>(toValue);
   if (toValue.value == 0)
     return std::make_unique<PerspectiveOperation>(fromValue);
 
@@ -56,7 +58,8 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<PerspectiveOperat
 
 // Specialization for MatrixOperation
 TransformOperationInterpolator<MatrixOperation>::TransformOperationInterpolator(
-    const std::shared_ptr<MatrixOperation> &defaultOperation, std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, MatrixOperation &)> addToPropsBuilder)
+    const std::shared_ptr<MatrixOperation> &defaultOperation,
+    std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, MatrixOperation &)> addToPropsBuilder)
     : addToPropsBuilder_(addToPropsBuilder), StyleOperationInterpolator(defaultOperation) {}
 
 std::unique_ptr<StyleOperation> TransformOperationInterpolator<MatrixOperation>::interpolate(
@@ -173,8 +176,8 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::inte
   const auto &fromOp = *std::static_pointer_cast<TOperation>(from);
   const auto &toOp = *std::static_pointer_cast<TOperation>(to);
 
-  auto operation = std::make_unique<TOperation>(
-      fromOp.value.interpolate(progress, toOp.value, getResolvableValueContext(context)));
+  auto operation =
+      std::make_unique<TOperation>(fromOp.value.interpolate(progress, toOp.value, getResolvableValueContext(context)));
   addToPropsBuilder_(propsBuilder, *operation);
   return operation;
 }

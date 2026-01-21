@@ -1,7 +1,6 @@
 #include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
 #include <reanimated/CSS/utils/propsBuilderWrapper.h>
 
-#include <folly/json.h>
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -48,15 +47,9 @@ folly::dynamic TransitionStyleInterpolator::interpolate(
     const auto &interpolator = interpolators_.at(propertyName);
     const auto fallbackInterpolateThreshold =
         (allowDiscreteProperties.contains(propertyName)) ? 0.5 : allFallbackInterpolateThreshold;
-    const auto interpolatedValue =
+
+    result[propertyName] =
         interpolator->interpolate(shadowNode, progressProvider, propsBuilder, fallbackInterpolateThreshold);
-
-    printf(
-        "property name: %s, interpolatedValue: %s \n", propertyName.c_str(), folly::toJson(interpolatedValue).c_str());
-
-     addToPropsBuilder(propsBuilder, interpolatedValue, propertyName);
-
-    result[propertyName] = interpolatedValue;
   }
 
   return result;

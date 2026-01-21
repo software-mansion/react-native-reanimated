@@ -13,7 +13,9 @@ namespace reanimated::css {
 template <typename TOperation>
 class TransformOperationInterpolator : public StyleOperationInterpolator {
  public:
-    explicit TransformOperationInterpolator(const std::shared_ptr<TOperation> &defaultOperation, std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder);
+  explicit TransformOperationInterpolator(
+      const std::shared_ptr<TOperation> &defaultOperation,
+      std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder);
   using StyleOperationInterpolator::StyleOperationInterpolator;
 
   std::unique_ptr<StyleOperation> interpolate(
@@ -22,16 +24,18 @@ class TransformOperationInterpolator : public StyleOperationInterpolator {
       const std::shared_ptr<StyleOperation> &to,
       const StyleOperationsInterpolationContext &context,
       const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const override;
-    
-private:
-    std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder_;
+
+ private:
+  std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder_;
 };
 
 // Specialization for PerspectiveOperation
 template <>
 class TransformOperationInterpolator<PerspectiveOperation> : public StyleOperationInterpolator {
  public:
-  explicit TransformOperationInterpolator(const std::shared_ptr<PerspectiveOperation> &defaultOperation, std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, PerspectiveOperation &)> addToPropsBuilder);
+  explicit TransformOperationInterpolator(
+      const std::shared_ptr<PerspectiveOperation> &defaultOperation,
+      std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, PerspectiveOperation &)> addToPropsBuilder);
 
   std::unique_ptr<StyleOperation> interpolate(
       double progress,
@@ -39,16 +43,18 @@ class TransformOperationInterpolator<PerspectiveOperation> : public StyleOperati
       const std::shared_ptr<StyleOperation> &to,
       const StyleOperationsInterpolationContext &context,
       const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const override;
-    
-private:
-    std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, PerspectiveOperation &)> addToPropsBuilder_;
+
+ private:
+  std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, PerspectiveOperation &)> addToPropsBuilder_;
 };
 
 // Specialization for MatrixOperation
 template <>
 class TransformOperationInterpolator<MatrixOperation> : public StyleOperationInterpolator {
  public:
-  explicit TransformOperationInterpolator(const std::shared_ptr<MatrixOperation> &defaultOperation, std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, MatrixOperation &)> addToPropsBuilder);
+  explicit TransformOperationInterpolator(
+      const std::shared_ptr<MatrixOperation> &defaultOperation,
+      std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, MatrixOperation &)> addToPropsBuilder);
 
   std::unique_ptr<StyleOperation> interpolate(
       double progress,
@@ -66,9 +72,9 @@ class TransformOperationInterpolator<MatrixOperation> : public StyleOperationInt
       const std::shared_ptr<TransformOperation> &operation,
       bool shouldBe3D,
       const StyleOperationsInterpolationContext &context) const;
-    
-private:
-    std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, MatrixOperation &)> addToPropsBuilder_;
+
+ private:
+  std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, MatrixOperation &)> addToPropsBuilder_;
 };
 
 // Specialization for resolvable operations
@@ -96,10 +102,9 @@ class TransformOperationInterpolator<TOperation> : public StyleOperationInterpol
 
   ResolvableValueInterpolationContext getResolvableValueContext(
       const StyleOperationsInterpolationContext &context) const;
-    
-    
-private:
-    std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder_;
+
+ private:
+  std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder_;
 };
 
 } // namespace reanimated::css
