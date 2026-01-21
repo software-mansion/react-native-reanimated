@@ -494,58 +494,47 @@ void collectNodesWithOverlapHandling(
   }
 }
 
-enum class ProjectionType { Perspective, Isometric };
+enum class ViewMode { Layered, True3D };
 
-// Apply 3D rotation transform to a point
-// rotationDeg: rotation angle in degrees (0 = flat, 90 = fully rotated)
-// depth: the z-depth of the node (higher = closer to viewer)
-// centerX, centerY: the center point for rotation
-// projection: Perspective or Isometric
-void transform3D(
-    float &x,
-    float &y,
-    float w,
-    float h,
-    float rotationDeg,
-    float zDepth,
-    float depthSpacing,
+// Transform a single point in 3D space and project to 2D using orthographic projection
+// (parallel lines stay parallel - no perspective distortion)
+void transformPoint3D(
+    float inX,
+    float inY,
+    float inZ,
+    float rotationRad,
     float centerX,
     float centerY,
-    ProjectionType projection) {
-  // Convert rotation to radians
-  float rotationRad = rotationDeg * 3.14159265f / 180.0f;
+    float centerZ,
+    float &outX,
+    float &outY,
+    float &outZ) {
+  // Translate to center
+  float relX = inX - centerX;
+  float relY = inY - centerY;
+  float relZ = inZ - centerZ;
 
-  // Calculate the z offset based on depth
-  float z = zDepth * depthSpacing;
-
-  // Apply rotation around Y axis (horizontal rotation)
-  // This creates the "exploded view" effect
+  // Rotate around Y axis
   float cosR = cosf(rotationRad);
   float sinR = sinf(rotationRad);
+  float newX = relX * cosR - relZ * sinR;
+  float newZ = relX * sinR + relZ * cosR;
 
-  // Translate to center, apply rotation, translate back
-  float relX = x + w / 2 - centerX;
-  float relY = y + h / 2 - centerY;
+  // Orthographic projection - no Y offset, just X changes from rotation
+  outX = centerX + newX;
+  outY = centerY + relY;
+  outZ = newZ;
+}
 
-  // Rotate in 3D space (around Y axis)
-  float newX = relX * cosR - z * sinR;
-  float newZ = relX * sinR + z * cosR;
+// For layered mode: simple X offset based on depth only
+void transformLayered(float &x, float rotationDeg, float zDepth, float depthSpacing) {
+  float rotationRad = rotationDeg * 3.14159265f / 180.0f;
+  float z = zDepth * depthSpacing;
 
-  if (projection == ProjectionType::Perspective) {
-    // Apply perspective projection
-    float perspective = 1000.0f; // Distance to viewer
-    float projScale = perspective / (perspective + newZ);
+  float sinR = sinf(rotationRad);
 
-    // Update position with perspective
-    x = centerX + newX * projScale - w / 2;
-    y = centerY + relY * projScale - h / 2;
-  } else {
-    // Isometric projection - no perspective scaling, just offset by z
-    // In isometric, we offset both x and y based on z to create depth effect
-    x = centerX + newX - w / 2;
-    // Offset y slightly based on z for the isometric "stacking" effect
-    y = centerY + relY - newZ * 0.3f - h / 2;
-  }
+  // Offset X based on depth and rotation (layers slide left/right)
+  x = x - z * sinR;
 }
 
 void drawViewTree3D(
@@ -556,8 +545,9 @@ void drawViewTree3D(
     const std::set<int32_t> &hiddenTags,
     float rotationDeg,
     float depthSpacing,
-    ProjectionType projection,
-    const std::vector<int32_t> &rootTags) {
+    ViewMode viewMode,
+    const std::vector<int32_t> &rootTags,
+    bool enableHover) {
   // Collect all nodes with overlap-aware depth layering
   std::vector<DrawableNode> nodes;
   for (int32_t rootTag : rootTags) {
@@ -571,45 +561,31 @@ void drawViewTree3D(
     return;
   }
 
-  // Find the center point for rotation (use first root's center)
+  float rotationRad = rotationDeg * 3.14159265f / 180.0f;
+
+  // Find center point for rotation
   float centerX = offset.x + 200 * scale;
   float centerY = offset.y + 400 * scale;
+  float centerZ = 0;
 
-  // Sort by depth (back to front for proper rendering)
-  // We need to sort by the actual 3D position after rotation, taking into account
-  // both the node's position and its depth in the hierarchy.
-  // The key insight: depth acts as a Z offset that pushes nodes "out" towards the viewer.
-  float rotationRad = rotationDeg * 3.14159265f / 180.0f;
-  float cosR = cosf(rotationRad);
-  float sinR = sinf(rotationRad);
-
-  std::sort(nodes.begin(), nodes.end(), [&](const DrawableNode &a, const DrawableNode &b) {
-    // Calculate the 3D position for sorting
-    // X position relative to center
-    float relXA = (a.absoluteX + a.node->width / 2) * scale;
-    float relXB = (b.absoluteX + b.node->width / 2) * scale;
-
-    // Z position from depth (hierarchy depth pushes nodes towards viewer)
-    float zA = a.zDepth * depthSpacing;
-    float zB = b.zDepth * depthSpacing;
-
-    // After rotation around Y axis, the new Z coordinate determines draw order
-    // newZ = x * sin(rotation) + z * cos(rotation)
-    float effectiveZA = relXA * sinR + zA * cosR;
-    float effectiveZB = relXB * sinR + zB * cosR;
-
-    return effectiveZA < effectiveZB; // Draw farther nodes first
-  });
-
-  // Store drawn rectangles for hover detection (in draw order, so last = topmost)
-  struct DrawnRect {
-    float x, y, w, h;
+  // Structure for drawn items (for hover detection)
+  struct DrawnItem {
+    ImVec2 points[4]; // Quad corners for hit testing
     const ViewNode *node;
     bool wasMutated;
+    float sortZ;
   };
-  std::vector<DrawnRect> drawnRects;
+  std::vector<DrawnItem> drawnItems;
 
-  // Draw all nodes
+  // Pre-calculate transformed positions and sort Z for each node
+  struct TransformedNode {
+    const DrawableNode *drawable;
+    ImVec2 corners[4]; // Transformed corners
+    float sortZ;
+  };
+  std::vector<TransformedNode> transformedNodes;
+  transformedNodes.reserve(nodes.size());
+
   for (const auto &drawable : nodes) {
     const ViewNode &node = *drawable.node;
 
@@ -617,24 +593,87 @@ void drawViewTree3D(
     float y = offset.y + drawable.absoluteY * scale;
     float w = node.width * scale;
     float h = node.height * scale;
+    float z = drawable.zDepth * depthSpacing;
 
-    // Apply 3D transform if rotation is non-zero
-    if (std::abs(rotationDeg) > 0.1f) {
-      transform3D(x, y, w, h, rotationDeg, drawable.zDepth, depthSpacing, centerX, centerY, projection);
+    TransformedNode tn;
+    tn.drawable = &drawable;
+
+    if (viewMode == ViewMode::True3D && std::abs(rotationDeg) > 0.1f) {
+      // True 3D: transform all 4 corners
+      float corners3D[4][3] = {
+          {x, y, z}, // top-left
+          {x + w, y, z}, // top-right
+          {x + w, y + h, z}, // bottom-right
+          {x, y + h, z} // bottom-left
+      };
+
+      float totalZ = 0;
+      for (int i = 0; i < 4; i++) {
+        float outX, outY, outZ;
+        transformPoint3D(
+            corners3D[i][0],
+            corners3D[i][1],
+            corners3D[i][2],
+            rotationRad,
+            centerX,
+            centerY,
+            centerZ,
+            outX,
+            outY,
+            outZ);
+        tn.corners[i] = ImVec2(outX, outY);
+        totalZ += outZ;
+      }
+      tn.sortZ = totalZ / 4.0f; // Average Z for sorting
+    } else if (viewMode == ViewMode::Layered && std::abs(rotationDeg) > 0.1f) {
+      // Layered mode: all corners stay as rectangle, just offset X by depth
+      float layerX = x;
+      transformLayered(layerX, rotationDeg, drawable.zDepth, depthSpacing);
+
+      tn.corners[0] = ImVec2(layerX, y);
+      tn.corners[1] = ImVec2(layerX + w, y);
+      tn.corners[2] = ImVec2(layerX + w, y + h);
+      tn.corners[3] = ImVec2(layerX, y + h);
+      tn.sortZ = drawable.zDepth; // Higher depth = drawn later (on top)
+    } else {
+      // No rotation - simple rectangle
+      tn.corners[0] = ImVec2(x, y);
+      tn.corners[1] = ImVec2(x + w, y);
+      tn.corners[2] = ImVec2(x + w, y + h);
+      tn.corners[3] = ImVec2(x, y + h);
+      tn.sortZ = drawable.zDepth; // Higher depth = drawn later (on top)
     }
 
-    // Draw rectangle - use grey if not mutated in this batch, otherwise use mutation type color
+    transformedNodes.push_back(tn);
+  }
+
+  // Sort back to front
+  std::sort(transformedNodes.begin(), transformedNodes.end(), [](const TransformedNode &a, const TransformedNode &b) {
+    return a.sortZ < b.sortZ;
+  });
+
+  // Draw all nodes
+  for (const auto &tn : transformedNodes) {
+    const ViewNode &node = *tn.drawable->node;
+
     bool wasMutated = snapshot.mutatedTags.count(node.tag) > 0;
     ImU32 color = wasMutated ? reanimated::mutationTypeToColor(node.lastMutationType) : IM_COL32(80, 80, 80, 255);
     ImU32 borderColor = wasMutated ? IM_COL32(255, 255, 255, 200) : IM_COL32(120, 120, 120, 200);
 
-    if (w > 0 && h > 0) {
-      drawList->AddRectFilled(ImVec2(x, y), ImVec2(x + w, y + h), color);
-      drawList->AddRect(ImVec2(x, y), ImVec2(x + w, y + h), borderColor);
-      drawnRects.push_back({x, y, w, h, &node, wasMutated});
-    }
+    // Draw as quad
+    drawList->AddQuadFilled(tn.corners[0], tn.corners[1], tn.corners[2], tn.corners[3], color);
+    drawList->AddQuad(tn.corners[0], tn.corners[1], tn.corners[2], tn.corners[3], borderColor);
 
-    // Draw label
+    // Store for hover detection
+    DrawnItem item;
+    for (int i = 0; i < 4; i++)
+      item.points[i] = tn.corners[i];
+    item.node = &node;
+    item.wasMutated = wasMutated;
+    item.sortZ = tn.sortZ;
+    drawnItems.push_back(item);
+
+    // Draw label at top-left corner
     ImU32 textColor = wasMutated ? IM_COL32(255, 255, 255, 255) : IM_COL32(160, 160, 160, 255);
     char label[256];
     snprintf(
@@ -647,29 +686,52 @@ void drawViewTree3D(
         node.y,
         node.width,
         node.height);
-    drawList->AddText(ImVec2(x + 2, y + 2), textColor, label);
+    drawList->AddText(ImVec2(tn.corners[0].x + 2, tn.corners[0].y + 2), textColor, label);
   }
 
-  // Check for hover (iterate in reverse to get topmost first)
+  // Check for hover using point-in-quad test (iterate in reverse for topmost first)
+  // Only check hover if enabled (i.e., canvas is hovered)
+  if (!enableHover) {
+    return;
+  }
+
   ImVec2 mousePos = ImGui::GetMousePos();
-  for (auto it = drawnRects.rbegin(); it != drawnRects.rend(); ++it) {
-    const auto &rect = *it;
-    if (mousePos.x >= rect.x && mousePos.x <= rect.x + rect.w && mousePos.y >= rect.y &&
-        mousePos.y <= rect.y + rect.h) {
+
+  // Point-in-quad test using ray casting (works for any convex or concave quad)
+  auto pointInQuad = [](ImVec2 p, const ImVec2 quad[4]) -> bool {
+    int intersections = 0;
+    for (int i = 0; i < 4; i++) {
+      ImVec2 v1 = quad[i];
+      ImVec2 v2 = quad[(i + 1) % 4];
+
+      // Check if ray from p going right intersects edge v1-v2
+      if ((v1.y > p.y) != (v2.y > p.y)) {
+        float xIntersect = v1.x + (p.y - v1.y) / (v2.y - v1.y) * (v2.x - v1.x);
+        if (p.x < xIntersect) {
+          intersections++;
+        }
+      }
+    }
+    return (intersections % 2) == 1;
+  };
+
+  for (auto it = drawnItems.rbegin(); it != drawnItems.rend(); ++it) {
+    const auto &item = *it;
+    if (pointInQuad(mousePos, item.points)) {
       // Found hovered node - show tooltip
       ImGui::BeginTooltip();
-      ImGui::Text("Component: %s", rect.node->componentName.c_str());
-      ImGui::Text("Tag: %d", rect.node->tag);
+      ImGui::Text("Component: %s", item.node->componentName.c_str());
+      ImGui::Text("Tag: %d", item.node->tag);
       ImGui::Separator();
-      ImGui::Text("Position: (%.1f, %.1f)", rect.node->x, rect.node->y);
-      ImGui::Text("Size: %.1f x %.1f", rect.node->width, rect.node->height);
+      ImGui::Text("Position: (%.1f, %.1f)", item.node->x, item.node->y);
+      ImGui::Text("Size: %.1f x %.1f", item.node->width, item.node->height);
       ImGui::Separator();
-      ImGui::Text("Parent Tag: %d", rect.node->parentTag);
-      ImGui::Text("Index in Parent: %d", rect.node->indexInParent);
-      ImGui::Text("Children: %zu", rect.node->childTags.size());
+      ImGui::Text("Parent Tag: %d", item.node->parentTag);
+      ImGui::Text("Index in Parent: %d", item.node->indexInParent);
+      ImGui::Text("Children: %zu", item.node->childTags.size());
       ImGui::Separator();
-      const char *mutationType = reanimated::mutationTypeToString(rect.node->lastMutationType);
-      if (rect.wasMutated) {
+      const char *mutationType = reanimated::mutationTypeToString(item.node->lastMutationType);
+      if (item.wasMutated) {
         ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "Mutated: %s", mutationType);
       } else {
         ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Not mutated this batch");
@@ -677,10 +739,10 @@ void drawViewTree3D(
       }
       ImGui::EndTooltip();
 
-      // Highlight hovered rect
-      drawList->AddRect(
-          ImVec2(rect.x, rect.y), ImVec2(rect.x + rect.w, rect.y + rect.h), IM_COL32(255, 255, 0, 255), 0.0f, 0, 3.0f);
-      break; // Only show tooltip for topmost
+      // Highlight hovered quad
+      drawList->AddQuad(
+          item.points[0], item.points[1], item.points[2], item.points[3], IM_COL32(255, 255, 0, 255), 3.0f);
+      break;
     }
   }
 }
@@ -731,7 +793,7 @@ int main(int argc, char *argv[]) {
   std::set<int32_t> hiddenTags;
   float rotationDeg = 0.0f;
   float depthSpacing = 50.0f;
-  int projectionType = 0; // 0 = Perspective, 1 = Isometric
+  int viewModeInt = 0; // 0 = Layered, 1 = True3D
 
   while (!glfwWindowShouldClose(window) && g_running) {
     glfwPollEvents();
@@ -785,10 +847,10 @@ int main(int argc, char *argv[]) {
     ImGui::Text("3D View:");
     ImGui::SliderFloat("Rotation", &rotationDeg, -90.0f, 90.0f, "%.1f deg");
     ImGui::SliderFloat("Depth Spacing", &depthSpacing, 0.0f, 200.0f);
-    ImGui::Text("Projection:");
-    ImGui::RadioButton("Perspective", &projectionType, 0);
+    ImGui::Text("View Mode:");
+    ImGui::RadioButton("Layered", &viewModeInt, 0);
     ImGui::SameLine();
-    ImGui::RadioButton("Isometric", &projectionType, 1);
+    ImGui::RadioButton("True 3D", &viewModeInt, 1);
     if (ImGui::Button("Reset 3D")) {
       rotationDeg = 0.0f;
       depthSpacing = 50.0f;
@@ -926,7 +988,7 @@ int main(int argc, char *argv[]) {
         ImVec2 actualOffset(contentPos.x + viewOffset.x, contentPos.y + viewOffset.y);
 
         // Draw using 3D view
-        ProjectionType projection = (projectionType == 0) ? ProjectionType::Perspective : ProjectionType::Isometric;
+        ViewMode viewMode = (viewModeInt == 0) ? ViewMode::Layered : ViewMode::True3D;
         drawViewTree3D(
             snapshot,
             drawList,
@@ -935,8 +997,9 @@ int main(int argc, char *argv[]) {
             hiddenTags,
             rotationDeg,
             depthSpacing,
-            projection,
-            snapshot.rootTags);
+            viewMode,
+            snapshot.rootTags,
+            isCanvasHovered);
 
         // Show hint text
         ImGui::SetCursorPos(ImVec2(10, windowSize.y - 25));
