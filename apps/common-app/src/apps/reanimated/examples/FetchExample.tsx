@@ -12,7 +12,7 @@ const elephantRuntime = createWorkletRuntime({
 });
 
 const giraffeRuntime = createWorkletRuntime({
-  name: 'giraffe  ',
+  name: 'giraffe',
 });
 
 const monkeyRuntime = createWorkletRuntime({
