@@ -2,11 +2,14 @@
 
 import {
   disallowRNImports,
+  mockTurboModuleRegistry,
   silenceHMRWarnings,
 } from '../bundleMode/metroOverrides';
+import { initializeNetworking } from '../bundleMode/network';
 import { setupCallGuard } from '../callGuard';
 import { registerReportFatalRemoteError } from '../debug/errors';
 import { registerWorkletsError, WorkletsError } from '../debug/WorkletsError';
+import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
 import { __installUnpacker as installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
 import { __installUnpacker as installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
@@ -138,6 +141,11 @@ function initializeWorkletRuntime() {
       silenceHMRWarnings();
       disallowRNImports();
     }
+
+    if (getStaticFeatureFlag('FETCH_PREVIEW_ENABLED')) {
+      mockTurboModuleRegistry();
+      initializeNetworking();
+    }
   }
 }
 
@@ -152,8 +160,6 @@ function installRNBindingsOnUIRuntime() {
     );
   }
 
-  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
-
   if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     /** In bundle mode Runtimes setup their callGuard themselves. */
     runOnUISync(setupCallGuard);
@@ -167,6 +173,8 @@ function installRNBindingsOnUIRuntime() {
      */
     runOnUISync(registerWorkletsError);
   }
+
+  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
 
   runOnUISync(() => {
     'worklet';

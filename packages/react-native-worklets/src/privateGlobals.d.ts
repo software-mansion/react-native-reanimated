@@ -81,6 +81,12 @@ declare global {
   var __hasNativeState: (value: object) => boolean;
   /** Only in Debug builds. */
   var __isHostObject: (value: object) => boolean;
+  /**
+   * Only in Bundle Mode.
+   *
+   * Only on Worklet Runtimes.
+   */
+  var TurboModules: Map<string, unknown>;
   interface NodeRequire {
     resolveWeak(id: string): number;
     getModules(): Map<number, unknown>;

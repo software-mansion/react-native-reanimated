@@ -103,6 +103,7 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
 #ifdef WORKLETS_BUNDLE_MODE_ENABLED
   auto script = jsiWorkletsModuleProxy->getScript();
   const auto &sourceUrl = jsiWorkletsModuleProxy->getSourceUrl();
+  auto runtimeBindings = jsiWorkletsModuleProxy->getRuntimeBindings();
 #endif // WORKLETS_BUNDLE_MODE_ENABLED
 
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
@@ -124,8 +125,12 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
       const auto newMessage = "[Worklets] Failed to initialize runtime. Reason: " + message;
       JSLogger::reportFatalErrorOnJS(
           jsScheduler, {.message = newMessage, .stack = stack, .name = "WorkletsError", .jsEngine = "Worklets"});
+      return;
     }
   }
+
+  WorkletRuntimeDecorator::postEvaluateScript(rt, runtimeBindings);
+
 #else
   // Legacy behavior
   auto valueUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);

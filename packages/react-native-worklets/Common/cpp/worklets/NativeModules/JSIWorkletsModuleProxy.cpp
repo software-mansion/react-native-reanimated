@@ -159,7 +159,8 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::shared_ptr<MemoryManager> &memoryManager,
     const std::shared_ptr<RuntimeManager> &runtimeManager,
-    const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime)
+    const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
+    const std::shared_ptr<RuntimeBindings> &runtimeBindings)
     : jsi::HostObject(),
       isDevBundle_(isDevBundle),
       script_(script),
@@ -169,7 +170,8 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       uiScheduler_(uiScheduler),
       memoryManager_(memoryManager),
       runtimeManager_(runtimeManager),
-      uiWorkletRuntime_(uiWorkletRuntime) {}
+      uiWorkletRuntime_(uiWorkletRuntime),
+      runtimeBindings_(runtimeBindings) {}
 
 JSIWorkletsModuleProxy::~JSIWorkletsModuleProxy() = default;
 

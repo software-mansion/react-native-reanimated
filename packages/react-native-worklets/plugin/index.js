@@ -489,6 +489,9 @@ var require_globals = __commonJS({
       "performance",
       "arguments",
       "require",
+      "fetch",
+      "XMLHttpRequest",
+      "WebSocket",
       "queueMicrotask",
       "requestAnimationFrame",
       "cancelAnimationFrame",
@@ -614,11 +617,15 @@ var require_closure = __commonJS({
       return imported.path.parentPath.node.source.value.startsWith(".");
     }
     function isAllowedForRelativeImports(filename, workletizableModules) {
-      return !!filename && (filename.includes("react-native-worklets") || !!(workletizableModules === null || workletizableModules === void 0 ? void 0 : workletizableModules.some((module3) => filename.includes(module3))));
+      return !!filename && (alwaysAllowed.some((module3) => filename.includes(module3)) || !!(workletizableModules === null || workletizableModules === void 0 ? void 0 : workletizableModules.some((module3) => filename.includes(module3))));
     }
     function isWorkletizableModule(source, workletizableModules) {
-      return source.startsWith("react-native-worklets") || !!(workletizableModules === null || workletizableModules === void 0 ? void 0 : workletizableModules.some((module3) => source.startsWith(module3)));
+      return alwaysAllowed.some((module3) => source.startsWith(module3)) || !!(workletizableModules === null || workletizableModules === void 0 ? void 0 : workletizableModules.some((module3) => source.startsWith(module3)));
     }
+    var alwaysAllowed = [
+      "react-native-worklets",
+      "react-native/Libraries/Core/setUpXHR"
+    ];
   }
 });
 

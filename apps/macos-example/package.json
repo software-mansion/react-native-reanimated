@@ -55,7 +55,8 @@
     "staticFeatureFlags": {
       "RUNTIME_TEST_FLAG": true,
       "IOS_DYNAMIC_FRAMERATE_ENABLED": true,
-      "BUNDLE_MODE_ENABLED": false
+      "BUNDLE_MODE_ENABLED": false,
+      "FETCH_PREVIEW_ENABLED": false
     }
   }
 }
