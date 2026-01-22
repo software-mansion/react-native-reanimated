@@ -1,4 +1,5 @@
 {
   "RUNTIME_TEST_FLAG": false,
+  "BUNDLE_MODE_ENABLED": false,
   "IOS_DYNAMIC_FRAMERATE_ENABLED": true
 }
