@@ -189,6 +189,16 @@ constexpr float PROFILER_ROW_HEIGHT = 24.0f;
 constexpr float PROFILER_ROW_SPACING = 4.0f;
 constexpr float PROFILER_HEADER_WIDTH = 150.0f;
 
+// Hovered event info for tooltip
+struct HoveredEventInfo {
+  bool isValid = false;
+  std::string name;
+  std::string threadName;
+  double durationUs;
+  double startTimeMs;
+  double endTimeMs;
+};
+
 void applyMutations(const std::vector<reanimated::SimpleMutation> &mutations) {
   std::lock_guard<std::mutex> lock(g_mutex);
 
@@ -972,21 +982,26 @@ ImU32 getColorForStringId(uint32_t stringId) {
 }
 
 // Render the profiler timeline with virtualization
-void renderProfilerTimeline(ImDrawList *drawList, ImVec2 windowPos, ImVec2 windowSize) {
+HoveredEventInfo renderProfilerTimeline(ImDrawList *drawList, ImVec2 windowPos, ImVec2 windowSize) {
+  HoveredEventInfo hoveredEvent;
   std::lock_guard<std::mutex> lock(g_profilerMutex);
 
   if (g_threadTimelines.empty() || g_profilerMinTimeNs == UINT64_MAX) {
     ImGui::SetCursorPos(ImVec2(10, 30));
     ImGui::Text("No profiler data yet. Waiting for events...");
-    return;
+    return hoveredEvent;
   }
+
+  // Get mouse position for hover detection
+  ImVec2 mousePos = ImGui::GetMousePos();
+  bool isHoveringCanvas = ImGui::IsItemHovered();
 
   // Timeline area (after header)
   float timelineX = windowPos.x + PROFILER_HEADER_WIDTH;
   float timelineWidth = windowSize.x - PROFILER_HEADER_WIDTH;
 
   if (timelineWidth <= 0)
-    return;
+    return hoveredEvent;
 
   // Calculate total time range
   uint64_t totalTimeRangeNs = g_profilerMaxTimeNs - g_profilerMinTimeNs;
@@ -1098,6 +1113,22 @@ void renderProfilerTimeline(ImDrawList *drawList, ImVec2 windowPos, ImVec2 windo
         drawList->AddRectFilled(eventMin, eventMax, eventColor);
         drawList->AddRect(eventMin, eventMax, IM_COL32(255, 255, 255, 100));
 
+        // Check if mouse is hovering over this event
+        if (isHoveringCanvas && mousePos.x >= eventMin.x && mousePos.x <= eventMax.x && mousePos.y >= eventMin.y &&
+            mousePos.y <= eventMax.y) {
+          // Highlight the hovered event
+          drawList->AddRect(eventMin, eventMax, IM_COL32(255, 255, 0, 255), 0.0f, 0, 2.0f);
+
+          // Store hover info
+          hoveredEvent.isValid = true;
+          auto it = reanimated::g_profilerStrings.find(event.stringId);
+          hoveredEvent.name = (it != reanimated::g_profilerStrings.end()) ? it->second : "Unknown";
+          hoveredEvent.threadName = timeline.threadName;
+          hoveredEvent.durationUs = (eventEndRel - eventStartRel) / 1000.0;
+          hoveredEvent.startTimeMs = eventStartRel / 1000000.0;
+          hoveredEvent.endTimeMs = eventEndRel / 1000000.0;
+        }
+
         // Draw event label if wide enough
         if (width > 40) {
           std::string name = "?";
@@ -1142,6 +1173,8 @@ void renderProfilerTimeline(ImDrawList *drawList, ImVec2 windowPos, ImVec2 windo
       ImVec2(windowPos.x + PROFILER_HEADER_WIDTH, windowPos.y),
       ImVec2(windowPos.x + PROFILER_HEADER_WIDTH, windowPos.y + windowSize.y),
       IM_COL32(80, 80, 80, 255));
+
+  return hoveredEvent;
 }
 
 int main(int argc, char *argv[]) {
@@ -1462,7 +1495,6 @@ int main(int argc, char *argv[]) {
       if (profilerFocused) {
         constexpr double PAN_SPEED_FACTOR = 20.0; // Pixels worth of panning per frame
         constexpr float ZOOM_SPEED = 1.1f;
-        constexpr float VERTICAL_PAN_SPEED = 20.0f; // pixels per frame
 
         // Horizontal pan: A (left) and D (right)
         if (ImGui::IsKeyDown(ImGuiKey_A)) {
@@ -1476,14 +1508,16 @@ int main(int argc, char *argv[]) {
           g_profilerViewStartNs += PAN_SPEED_FACTOR * g_profilerNsPerPixel;
         }
 
-        // Vertical pan: W (up) and S (down)
+        // Zoom: W (zoom in) and S (zoom out)
         if (ImGui::IsKeyDown(ImGuiKey_W)) {
-          g_profilerViewOffsetY -= VERTICAL_PAN_SPEED;
-          if (g_profilerViewOffsetY < 0)
-            g_profilerViewOffsetY = 0;
+          g_profilerNsPerPixel /= ZOOM_SPEED;
+          if (g_profilerNsPerPixel < 10.0) // Min 10ns per pixel
+            g_profilerNsPerPixel = 10.0;
         }
         if (ImGui::IsKeyDown(ImGuiKey_S)) {
-          g_profilerViewOffsetY += VERTICAL_PAN_SPEED;
+          g_profilerNsPerPixel *= ZOOM_SPEED;
+          if (g_profilerNsPerPixel > 1000000000.0) // Max 1s per pixel
+            g_profilerNsPerPixel = 1000000000.0;
         }
 
         // Zoom: Q (zoom out) and E (zoom in)
@@ -1532,14 +1566,26 @@ int main(int argc, char *argv[]) {
         // Create an invisible button to capture input
         ImGui::InvisibleButton("##profiler_canvas", windowSize);
 
-        // Render the timeline
+        // Render the timeline and get hovered event
         ImDrawList *drawList = ImGui::GetWindowDrawList();
-        renderProfilerTimeline(drawList, windowPos, windowSize);
+        HoveredEventInfo hoveredEvent = renderProfilerTimeline(drawList, windowPos, windowSize);
+
+        // Show tooltip if hovering over an event
+        if (hoveredEvent.isValid) {
+          ImGui::BeginTooltip();
+          ImGui::Text("Event: %s", hoveredEvent.name.c_str());
+          ImGui::Text("Thread: %s", hoveredEvent.threadName.c_str());
+          ImGui::Text("Duration: %.2f us", hoveredEvent.durationUs);
+          ImGui::Text("Start: %.3f ms", hoveredEvent.startTimeMs);
+          ImGui::Text("End: %.3f ms", hoveredEvent.endTimeMs);
+          ImGui::EndTooltip();
+        }
       }
 
       // Controls hint at bottom
       ImGui::SetCursorPos(ImVec2(10, ImGui::GetWindowHeight() - 25));
-      ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "WASD: pan | Q/E/scroll: zoom | R: reset");
+      ImGui::TextColored(
+          ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "A/D: pan | W/S/Q/E/scroll: zoom | R: reset | hover for details");
     }
     ImGui::End();
 

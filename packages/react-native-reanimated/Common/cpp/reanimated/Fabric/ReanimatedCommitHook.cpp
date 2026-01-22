@@ -1,6 +1,7 @@
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
+#include <reanimated/Tools/DevToolsClient.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
@@ -60,6 +61,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 #endif
     ) noexcept {
   ReanimatedSystraceSection s("ReanimatedCommitHook::shadowTreeWillCommit");
+  REANIMATED_PROFILE_SECTION("shadowTreeWillCommit");
 
   maybeInitializeLayoutAnimations(newRootShadowNode->getSurfaceId());
 
