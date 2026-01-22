@@ -1,5 +1,9 @@
 'use strict';
 
+import {
+  disallowRNImports,
+  silenceHMRWarnings,
+} from '../bundleMode/metroOverrides';
 import { setupCallGuard } from '../callGuard';
 import { registerReportFatalRemoteError } from '../debug/errors';
 import { registerWorkletsError, WorkletsError } from '../debug/WorkletsError';
@@ -131,64 +135,8 @@ function initializeWorkletRuntime() {
     setupCallGuard();
 
     if (__DEV__) {
-      /*
-       * Temporary workaround for Metro bundler. We must implement a dummy
-       * Refresh module to prevent Metro from throwing irrelevant errors.
-       */
-      const Refresh = new Proxy(
-        {},
-        {
-          get() {
-            return () => {};
-          },
-        }
-      );
-
-      globalThis.__r.Refresh = Refresh;
-
-      /* Gracefully handle unwanted imports from React Native. */
-      const modules = require.getModules();
-      const ReactNativeModuleId = require.resolveWeak('react-native');
-
-      const factory = function (
-        _global: unknown,
-        _require: unknown,
-        _importDefault: unknown,
-        _importAll: unknown,
-        module: Record<string, unknown>,
-        _exports: unknown,
-        _dependencyMap: unknown
-      ) {
-        module.exports = new Proxy(
-          {},
-          {
-            get: function get(_target, prop) {
-              globalThis.console.warn(
-                `You tried to import '${String(prop)}' from 'react-native' module on a Worklet Runtime. Using 'react-native' module on a Worklet Runtime is not allowed.`
-              );
-              return {
-                get() {
-                  return undefined;
-                },
-              };
-            },
-          }
-        );
-      };
-
-      const mod = {
-        dependencyMap: [],
-        factory,
-        hasError: false,
-        importedAll: {},
-        importedDefault: {},
-        isInitialized: false,
-        publicModule: {
-          exports: {},
-        },
-      };
-
-      modules.set(ReactNativeModuleId, mod);
+      silenceHMRWarnings();
+      disallowRNImports();
     }
   }
 }
