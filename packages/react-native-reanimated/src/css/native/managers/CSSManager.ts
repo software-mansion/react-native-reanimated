@@ -11,7 +11,7 @@ import type { ICSSManager } from '../../types/interfaces';
 import { filterCSSAndStyleProperties } from '../../utils';
 import { setViewStyle } from '../proxy';
 import CSSAnimationsManager from './CSSAnimationsManager';
-import CSSTransitionsManager from './CSSTransitionsManager';
+import CSSTransitionsManager from './CSSTransitionsManager.old';
 
 export default class CSSManager implements ICSSManager {
   private readonly cssAnimationsManager: CSSAnimationsManager;

@@ -130,7 +130,9 @@ export function normalizeCSSTransitionProperties(
   }
 
   return {
-    properties: allPropertiesTransition ? 'all' : specificProperties.reverse(),
+    properties: allPropertiesTransition
+      ? undefined
+      : specificProperties.reverse(),
     settings,
   };
 }
