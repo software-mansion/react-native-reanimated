@@ -13,7 +13,7 @@ struct RuntimeBindings {
 
   const RequestAnimationFrame requestAnimationFrame;
 
-#if defined(WORKLETS_BUNDLE_MODE) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
   using AbortRequest = std::function<void(jsi::Runtime &rt, double requestId)>;
   using ClearCookies = std::function<void(jsi::Runtime &rt, jsi::Function &&responseSender)>;
 #ifdef ANDROID
@@ -35,7 +35,7 @@ struct RuntimeBindings {
   const AbortRequest abortRequest;
   const ClearCookies clearCookies;
   const SendRequest sendRequest;
-#endif // defined(WORKLETS_BUNDLE_MODE) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 };
 
 } // namespace worklets

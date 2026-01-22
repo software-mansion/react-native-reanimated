@@ -1,8 +1,8 @@
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 
-#ifdef ANDROID
+#if defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 #include <worklets/android/WorkletsModule.h>
-#endif // ANDROID
+#endif // defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 
 #include <memory>
 #include <string>
@@ -16,10 +16,10 @@ AsyncQueueImpl::AsyncQueueImpl(const std::string &name) : state_(std::make_share
 #if __APPLE__
     pthread_setname_np(name.c_str());
 #endif
-#ifdef ANDROID
+#if defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
     JNIEnv *env = nullptr;
     /* auto result =  */ WorkletsModule::jvm_->AttachCurrentThread(reinterpret_cast<JNIEnv **>(&env), nullptr);
-#endif // ANDROID
+#endif // defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
     while (state->running) {
       std::unique_lock<std::mutex> lock(state->mutex);
       state->cv.wait(lock, [state] { return !state->queue.empty() || !state->running; });
@@ -34,9 +34,9 @@ AsyncQueueImpl::AsyncQueueImpl(const std::string &name) : state_(std::make_share
       lock.unlock();
       job();
     }
-#ifdef ANDROID
+#if defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
     WorkletsModule::jvm_->DetachCurrentThread();
-#endif // ANDROID
+#endif // defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
   });
 #ifdef ANDROID
   pthread_setname_np(thread.native_handle(), name.c_str());

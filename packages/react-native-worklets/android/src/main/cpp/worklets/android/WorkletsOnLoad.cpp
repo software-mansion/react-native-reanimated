@@ -12,6 +12,8 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
     worklets::AndroidUIScheduler::registerNatives();
     worklets::AnimationFrameCallback::registerNatives();
     worklets::JScriptBufferWrapper::registerNatives();
+#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
     worklets::JWorkletRuntimeWrapper::registerNatives();
+#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
   });
 }

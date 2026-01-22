@@ -1,13 +1,10 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
+/**
+* Based on ProgressRequestBody.kt from React Native 
+*/
 
 @file:Suppress("DEPRECATION_ERROR") // Conflicting okio versions
 
-package com.swmansion.worklets
+package com.swmansion.worklets.networking
 
 import java.io.FilterOutputStream
 import java.io.IOException

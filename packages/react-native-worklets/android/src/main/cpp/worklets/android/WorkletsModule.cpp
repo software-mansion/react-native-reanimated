@@ -1,23 +1,26 @@
+#include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
+#include <worklets/Tools/ScriptBuffer.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
+#include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
+#include <worklets/WorkletRuntime/RuntimeBindings.h>
+#include <worklets/android/AnimationFrameCallback.h>
+#include <worklets/android/WorkletsModule.h>
+
+#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 #include <folly/json/dynamic.h>
 #include <jni.h>
 #include <jsi/JSIDynamic.h>
 #include <react/jni/JCallback.h>
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
-#include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
-#include <worklets/Tools/ScriptBuffer.h>
-#include <worklets/Tools/WorkletsJSIUtils.h>
-#include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
-#include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
-#include <worklets/android/AnimationFrameCallback.h>
-#include <worklets/android/WorkletsModule.h>
-
+#include <worklets/android/JWorkletRuntimeWrapper.h>
 #include <cstdint>
+#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+
 #include <memory>
 #include <string>
 #include <utility>
-#include "worklets/android/JWorkletRuntimeWrapper.h"
 
 namespace worklets {
 
@@ -43,12 +46,12 @@ WorkletsModule::WorkletsModule(
           getIsOnJSQueueThread(),
           std::make_shared<RuntimeBindings>(RuntimeBindings{
               .requestAnimationFrame = getRequestAnimationFrame()
-#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW)
+#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
                   ,
               .abortRequest = getAbortRequest(),
               .clearCookies = getClearCookies(),
               .sendRequest = getSendRequest()
-#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW)
+#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
           }),
           script,
           sourceURL)) {
@@ -69,8 +72,6 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<JScriptBufferWrapper::javaobject>
         jScriptBufferWrapper // NOLINT //(performance-unnecessary-value-param)
 ) {
-
-  // JNIEnv::GetJavaVM(jvm_);
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext); // NOLINT //(performance-no-int-to-ptr)
   auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
@@ -94,6 +95,7 @@ RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame(
   };
 }
 
+#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 RuntimeBindings::AbortRequest WorkletsModule::getAbortRequest() {
   return [javaPart = javaPart_](jsi::Runtime &rt, double requestId) -> void {
     static const auto jAbortRequest = javaPart->getClass()->getMethod<void(int, double)>("abortRequest");
@@ -166,6 +168,7 @@ RuntimeBindings::SendRequest WorkletsModule::getSendRequest() {
         withCredentials);
   };
 }
+#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 
 std::function<bool()> WorkletsModule::getIsOnJSQueueThread() {
   return [javaPart = javaPart_]() -> bool {
@@ -178,10 +181,14 @@ void WorkletsModule::invalidateCpp() {
   workletsModuleProxy_.reset();
 }
 
+#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 JavaVM *WorkletsModule::jvm_ = nullptr;
+#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 
 void WorkletsModule::registerNatives(JavaVM *vm) {
+#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
   jvm_ = vm;
+#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
   registerHybrid({
       makeNativeMethod("initHybrid", WorkletsModule::initHybrid),
       makeNativeMethod("invalidateCpp", WorkletsModule::invalidateCpp),

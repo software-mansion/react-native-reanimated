@@ -1,6 +1,10 @@
+/**
+* Based on OkHttpCallUtil.kt from React Native 
+*/
+
 @file:Suppress("DEPRECATION_ERROR") // Conflicting okhttp versions
 
-package com.swmansion.worklets
+package com.swmansion.worklets.networking
 
 import okhttp3.OkHttpClient
 /*

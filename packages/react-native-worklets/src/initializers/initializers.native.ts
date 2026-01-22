@@ -141,7 +141,6 @@ function initializeWorkletRuntime() {
       silenceHMRWarnings();
       disallowRNImports();
     }
-    mockTurboModuleRegistry();
 
     if (getStaticFeatureFlag('FETCH_PREVIEW_ENABLED')) {
       mockTurboModuleRegistry();

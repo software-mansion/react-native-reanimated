@@ -1,11 +1,8 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
+/**
+* Based on HeaderUtil.kt from React Native 
+*/
 
-package com.swmansion.worklets
+package com.swmansion.worklets.networking
 
 /**
  * The class purpose is to weaken too strict OkHttp restriction on http headers. See:

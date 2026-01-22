@@ -1,7 +1,11 @@
+/**
+* Based on Networking.kt from React Native 
+*/
+
 // Conflicting okhttp versions
 @file:Suppress("DEPRECATION_ERROR")
 
-package com.swmansion.worklets
+package com.swmansion.worklets.networking
 
 import android.net.Uri
 import android.util.Base64

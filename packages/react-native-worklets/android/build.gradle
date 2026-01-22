@@ -160,9 +160,9 @@ if (project == rootProject) {
 apply plugin: "com.android.library"
 apply plugin: "maven-publish"
 apply plugin: "de.undercouch.download"
+apply plugin: 'org.jetbrains.kotlin.android'
 
 apply from: "./fix-prefab.gradle"
-apply plugin: 'org.jetbrains.kotlin.android'
 
 
 android {
@@ -214,7 +214,7 @@ android {
                         "-DWORKLETS_PROFILING=${WORKLETS_PROFILING}",
                         "-DWORKLETS_VERSION=${WORKLETS_VERSION}",
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
-                        "-DWORKLETS_FEATURE_FLAGS=${WORKLETS_FEATURE_FLAGS_FLAG}",
+                        "-DWORKLETS_FEATURE_FLAGS=${WORKLETS_FEATURE_FLAGS}",
                         "-DHERMES_V1_ENABLED=${HERMES_V1_ENABLED}"
                 abiFilters(*reactNativeArchitectures())
                 targets("worklets")
@@ -255,7 +255,7 @@ android {
     packagingOptions {
         // For some reason gradle only complains about the duplicated version of librrc_root and libreact_render libraries
         // while there are more libraries copied in intermediates folder of the lib build directory, we exclude
-        // only the ones that make the build fail (ideally we should only include libreanimated but we
+        // only the ones that make the build fail (ideally we should only include libworklets but we
         // are only allowed to specify exclude patterns)
         excludes = ["META-INF",
                     "META-INF/**",
@@ -271,6 +271,17 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
+    }
+    sourceSets {
+        main {
+            java {
+                if (FETCH_PREVIEW_ENABLED) {
+                    srcDirs += "src/networking"
+                } else {
+                    srcDirs += "src/no-networking"
+                }
+            }
+        }
     }
     kotlinOptions {
         jvmTarget = '17'

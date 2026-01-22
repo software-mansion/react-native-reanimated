@@ -171,6 +171,13 @@ function initializeRuntimes() {
   }
 }
 
+function testWebSocket() {
+  'worklet';
+  const socket = new WebSocket('ws://localhost:8080');
+
+  socket.addEventListener('open', () => {});
+}
+
 export default function App() {
   return (
     <View style={styles.container}>
@@ -209,6 +216,12 @@ export default function App() {
           scheduleOnRuntime(monkeyRuntime, testXHR, true, true, false, false);
           scheduleOnRuntime(elephantRuntime, testXHR, true, true, true, false);
           scheduleOnRuntime(giraffeRuntime, testXHR, true, true, true, true);
+        }}
+      />
+      <Button
+        title="Test WebSocket (not implemented)"
+        onPress={() => {
+          scheduleOnRuntime(elephantRuntime, testWebSocket);
         }}
       />
     </View>

@@ -1,3 +1,5 @@
+#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+
 /**
  * Based on
  * https://github.com/facebook/react-native/blob/main/packages/react-native/ReactAndroid/src/main/jni/react/jni/JSLoader.cpp
@@ -51,3 +53,5 @@ void JWorkletRuntimeWrapper::registerNatives() {
        makeNativeMethod("cxxGetRuntimeId", JWorkletRuntimeWrapper::getRuntimeId)});
 }
 } // namespace worklets
+
+#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)

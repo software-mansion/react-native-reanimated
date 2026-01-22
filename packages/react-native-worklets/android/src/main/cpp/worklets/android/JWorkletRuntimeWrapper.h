@@ -1,3 +1,5 @@
+#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+
 #pragma once
 
 #include <fbjni/fbjni.h>
@@ -38,3 +40,5 @@ class JWorkletRuntimeWrapper : public jni::HybridClass<JWorkletRuntimeWrapper> {
 };
 
 } // namespace worklets
+
+#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
