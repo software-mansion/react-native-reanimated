@@ -15,10 +15,10 @@
 #import <React/RCTCallInvoker.h>
 
 #if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#import <FBReactNativeSpec/FBReactNativeSpec.h>
 #import <React/RCTNetworking.h>
 #import <ReactCommon/RCTTurboModule.h>
 #import <worklets/apple/Networking/WorkletsNetworking.h>
-#import <FBReactNativeSpec/FBReactNativeSpec.h>
 #endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 
 using namespace worklets;
