@@ -11,7 +11,7 @@ import type { ICSSManager } from '../../types/interfaces';
 import { filterCSSAndStyleProperties } from '../../utils';
 import { setViewStyle } from '../proxy';
 import CSSAnimationsManager from './CSSAnimationsManager';
-import CSSTransitionsManager from './CSSTransitionsManager.old';
+import CSSTransitionsManager from './CSSTransitionsManager';
 
 export default class CSSManager implements ICSSManager {
   private readonly cssAnimationsManager: CSSAnimationsManager;
@@ -56,7 +56,10 @@ export default class CSSManager implements ICSSManager {
       setViewStyle(this.viewTag, normalizedStyle);
     }
 
-    this.cssTransitionsManager.update(transitionProperties);
+    this.cssTransitionsManager.update(
+      transitionProperties,
+      normalizedStyle ?? {}
+    );
     this.cssAnimationsManager.update(animationProperties);
 
     // If the current update is not the fist one, we want to update CSS
