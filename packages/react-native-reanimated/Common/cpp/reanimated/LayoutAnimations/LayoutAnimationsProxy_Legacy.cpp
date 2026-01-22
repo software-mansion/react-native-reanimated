@@ -39,17 +39,22 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   std::vector<std::shared_ptr<MutationNode>> roots;
   std::unordered_map<Tag, Tag> movedViews;
 
-  addOngoingAnimations(surfaceId, filteredMutations);
+  auto shouldCleanup = addOngoingAnimations(surfaceId, filteredMutations);
 
+  if (shouldCleanup) {
+    // we don't want to do the cleanup when addOngoingAnimations failed
+    // due to being called on the js thread (this can happen only on android)
 #ifdef ANDROID
-  restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId);
+    restoreOpacityInCaseOfFlakyEnteringAnimation(surfaceId);
 #endif // ANDROID
-  for (const auto tag : finishedAnimationTags_) {
-    auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
-    layoutAnimations_.erase(tag);
-    updateMap.erase(tag);
+
+    for (const auto tag : finishedAnimationTags_) {
+      auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+      layoutAnimations_.erase(tag);
+      updateMap.erase(tag);
+    }
+    finishedAnimationTags_.clear();
   }
-  finishedAnimationTags_.clear();
 
   parseRemoveMutations(movedViews, mutations, roots);
 
@@ -298,8 +303,9 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
           auto layoutAnimationIt = layoutAnimations_.find(tag);
           if (layoutAnimationIt == layoutAnimations_.end()) {
             if (oldShadowViewsForReparentings.contains(tag)) {
-              filteredMutations.push_back(ShadowViewMutation::InsertMutation(
-                  mutationParent, oldShadowViewsForReparentings[tag], mutation.index));
+              filteredMutations.push_back(
+                  ShadowViewMutation::InsertMutation(
+                      mutationParent, oldShadowViewsForReparentings[tag], mutation.index));
             } else {
               filteredMutations.push_back(mutation);
             }
@@ -372,9 +378,12 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
   }
 }
 
-void LayoutAnimationsProxy_Legacy::addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList &mutations) const {
+bool LayoutAnimationsProxy_Legacy::addOngoingAnimations(SurfaceId surfaceId, ShadowViewMutationList &mutations) const {
   auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
 #ifdef ANDROID
+  if (updateMap.empty()) {
+    return true;
+  }
   std::vector<int> tagsToUpdate;
   tagsToUpdate.reserve(updateMap.size());
 
@@ -384,7 +393,8 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(SurfaceId surfaceId, Sha
 
   auto maybeCorrectedTags = preserveMountedTags_(tagsToUpdate);
   if (!maybeCorrectedTags.has_value()) {
-    return;
+    // We have views to animated, but we are on js thread. Let's defer any cleanup.
+    return false;
   }
 
   auto correctedTags = maybeCorrectedTags->get();
@@ -423,6 +433,7 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(SurfaceId surfaceId, Sha
     layoutAnimation.currentView = newView;
   }
   updateMap.clear();
+  return true;
 }
 
 void LayoutAnimationsProxy_Legacy::endAnimationsRecursively(
