@@ -1,72 +1,140 @@
 'use strict';
-import type { PlainStyle } from '../../types';
+
+import { ReanimatedError } from '../../errors';
+import type { ValueProcessor } from '../../types';
 import { ValueProcessorTarget } from '../../types';
 import createPropsBuilder from '../createPropsBuilder';
-// TODO - add more tests
+
+type TestStyle = {
+  width?: number;
+  margin?: string | number;
+  borderRadius?: number;
+  padding?: number;
+  shadowColor?: number;
+  shadowOpacity?: number;
+  shadowRadius?: number;
+  height?: number;
+};
+
+type ConfigEntry = boolean | { process: ValueProcessor } | 'loop';
+
+type TestConfig = Record<keyof TestStyle, ConfigEntry>;
+
+const BASE_CONFIG: TestConfig = {
+  width: false,
+  margin: false,
+  borderRadius: false,
+  padding: false,
+  shadowColor: false,
+  shadowOpacity: false,
+  shadowRadius: false,
+  height: false,
+};
+
+const createBuilder = (configOverrides: Partial<TestConfig>) => {
+  const config: TestConfig = { ...BASE_CONFIG, ...configOverrides };
+
+  return createPropsBuilder<TestStyle, TestConfig>({
+    config,
+    processConfigValue(configValue) {
+      if (configValue === true) {
+        // No custom processing needed
+        return true;
+      }
+
+      if (configValue === 'loop') {
+        return configValue;
+      }
+
+      if (
+        configValue &&
+        typeof configValue === 'object' &&
+        'process' in configValue &&
+        typeof configValue.process === 'function'
+      ) {
+        return configValue.process;
+      }
+
+      return undefined;
+    },
+  });
+};
 
 describe(createPropsBuilder, () => {
-  const styleBuilder = createPropsBuilder({
-    width: true,
-    margin: true,
-    borderRadius: true,
-    flexDirection: true,
-  });
+  test('ignores properties not present in config', () => {
+    const builder = createBuilder({ width: true });
 
-  test("doesn't include undefined values", () => {
-    const style: PlainStyle = {
-      width: undefined,
-      margin: 'auto',
-      borderRadius: 10,
-      flexDirection: undefined,
+    const style: TestStyle = {
+      width: 120,
+      height: 300,
     };
 
-    expect(styleBuilder.buildFrom(style)).toEqual({
-      margin: 'auto',
-      borderRadius: 10,
-    });
+    expect(builder.build(style)).toEqual({ width: 120 });
   });
 
-  test("doesn't include properties that are not in the config", () => {
-    const style: PlainStyle = {
-      width: 100,
-      height: 100, // height is not in the config
-    };
-
-    expect(styleBuilder.buildFrom(style)).toEqual({
-      width: 100,
+  test('passes provided context to processors', () => {
+    const processor = jest.fn().mockReturnValue(24);
+    const builder = createBuilder({
+      borderRadius: { process: processor },
     });
-  });
 
-  test('passes context to processors', () => {
-    const processor = jest.fn();
-
-    const builder = createPropsBuilder(
-      {
-        borderRadius: {
-          process: processor,
-        },
-      },
+    builder.build(
+      { borderRadius: 12 },
       {
         target: ValueProcessorTarget.CSS,
       }
     );
 
-    builder.buildFrom({ borderRadius: 5 });
-
-    expect(processor).toHaveBeenCalledWith(5, {
+    expect(processor).toHaveBeenCalledWith(12, {
       target: ValueProcessorTarget.CSS,
     });
   });
 
-  test('uses default target when none provided', () => {
-    const processor = jest.fn();
+  test('uses default target context when target not set', () => {
+    const processor = jest.fn().mockReturnValue(10);
+    const builder = createBuilder({
+      padding: { process: processor },
+    });
 
-    const builder = createPropsBuilder({ padding: { process: processor } });
+    builder.build({ padding: 5 });
 
-    builder.buildFrom({ padding: 8 });
-
-    expect(processor).toHaveBeenCalledWith(8, {
+    expect(processor).toHaveBeenCalledWith(5, {
       target: ValueProcessorTarget.Default,
     });
+  });
+
+  test('merges record results without overwriting original props', () => {
+    const builder = createBuilder({
+      shadowColor: {
+        process: () => ({
+          shadowOpacity: 0.5,
+          shadowRadius: 6,
+        }),
+      },
+      shadowOpacity: true,
+      shadowRadius: true,
+    });
+
+    const style: TestStyle = {
+      shadowColor: 0xff0000,
+      shadowOpacity: 0.8,
+    };
+
+    expect(builder.build(style)).toEqual({
+      shadowOpacity: 0.8,
+      shadowRadius: 6,
+    });
+  });
+
+  test('throws when processor resolution exceeds maximum depth', () => {
+    expect(() =>
+      createBuilder({
+        width: 'loop',
+      })
+    ).toThrow(
+      new ReanimatedError(
+        'Max process depth for props builder reached for property width'
+      )
+    );
   });
 });
