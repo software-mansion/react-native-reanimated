@@ -29,7 +29,7 @@
     "@babel/core": "7.28.4",
     "@expo/next-adapter": "6.0.0",
     "@next/bundle-analyzer": "15.5.4",
-    "cypress": "15.4.0",
+    "cypress": "patch:cypress@npm%3A15.4.0#~/.yarn/patches/cypress-npm-15.4.0-c92384506d.patch",
     "eslint": "9.37.0",
     "next-compose-plugins": "2.2.1",
     "prettier": "3.6.2",
