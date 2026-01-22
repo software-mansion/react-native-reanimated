@@ -188,6 +188,8 @@ bool g_profilerLockToLatest = true; // Auto-scroll to latest events
 constexpr float PROFILER_ROW_HEIGHT = 24.0f;
 constexpr float PROFILER_ROW_SPACING = 4.0f;
 constexpr float PROFILER_HEADER_WIDTH = 150.0f;
+constexpr float PROFILER_EVENT_HEIGHT = 18.0f; // Height of individual event bar
+constexpr float PROFILER_EVENT_SPACING = 2.0f; // Spacing between event lanes
 
 // Hovered event info for tooltip
 struct HoveredEventInfo {
@@ -198,6 +200,66 @@ struct HoveredEventInfo {
   double startTimeMs;
   double endTimeMs;
 };
+
+// Event with assigned depth for rendering nested events
+struct EventWithDepth {
+  const ProfilerEventData *event;
+  int depth; // Lane/row within the thread
+  double startRel;
+  double endRel;
+};
+
+// Assign depth to events based on overlaps (similar to Chrome DevTools or Tracy)
+std::vector<EventWithDepth> assignEventDepths(const std::vector<ProfilerEventData> &events, uint64_t minTimeNs) {
+  std::vector<EventWithDepth> eventsWithDepth;
+  eventsWithDepth.reserve(events.size());
+
+  // Convert to relative times and create EventWithDepth objects
+  for (const auto &event : events) {
+    EventWithDepth ewd;
+    ewd.event = &event;
+    ewd.startRel = static_cast<double>(event.startTimeNs - minTimeNs);
+    ewd.endRel = static_cast<double>(event.endTimeNs - minTimeNs);
+    ewd.depth = 0;
+    eventsWithDepth.push_back(ewd);
+  }
+
+  // Sort by start time, then by duration (longer events first)
+  std::sort(eventsWithDepth.begin(), eventsWithDepth.end(), [](const EventWithDepth &a, const EventWithDepth &b) {
+    if (a.startRel != b.startRel)
+      return a.startRel < b.startRel;
+    return (b.endRel - b.startRel) < (a.endRel - a.startRel); // Longer duration first
+  });
+
+  // Assign depths using a greedy algorithm
+  // Track the end time of the last event in each depth level
+  std::vector<double> depthEndTimes;
+
+  for (auto &ewd : eventsWithDepth) {
+    // Find the first depth where this event doesn't overlap
+    int assignedDepth = -1;
+    bool foundSlot = false;
+
+    for (size_t d = 0; d < depthEndTimes.size(); ++d) {
+      if (ewd.startRel >= depthEndTimes[d]) {
+        assignedDepth = static_cast<int>(d);
+        depthEndTimes[d] = ewd.endRel;
+        foundSlot = true;
+        break;
+      }
+    }
+
+    // If no slot found, create a new depth
+    if (!foundSlot) {
+      assignedDepth = static_cast<int>(depthEndTimes.size());
+      depthEndTimes.push_back(ewd.endRel);
+    }
+
+    ewd.depth = assignedDepth;
+  }
+
+  return eventsWithDepth;
+}
 
 void applyMutations(const std::vector<reanimated::SimpleMutation> &mutations) {
   std::lock_guard<std::mutex> lock(g_mutex);
@@ -1066,9 +1128,21 @@ HoveredEventInfo renderProfilerTimeline(ImDrawList *drawList, ImVec2 windowPos, 
   for (uint32_t threadId : threadIds) {
     const auto &timeline = g_threadTimelines[threadId];
 
+    // Assign depths to events for this thread
+    std::vector<EventWithDepth> eventsWithDepth = assignEventDepths(timeline.events, g_profilerMinTimeNs);
+
+    // Calculate max depth to determine row height
+    int maxDepth = 0;
+    for (const auto &ewd : eventsWithDepth) {
+      maxDepth = std::max(maxDepth, ewd.depth);
+    }
+
+    // Calculate actual row height based on number of depth levels
+    float threadRowHeight = PROFILER_ROW_HEIGHT + maxDepth * (PROFILER_EVENT_HEIGHT + PROFILER_EVENT_SPACING);
+
     // Check if this row is visible
     float rowTop = windowPos.y + currentY;
-    float rowBottom = rowTop + PROFILER_ROW_HEIGHT;
+    float rowBottom = rowTop + threadRowHeight;
 
     if (rowBottom >= windowPos.y && rowTop < windowPos.y + windowSize.y) {
       // Draw row background (alternating colors)
@@ -1081,11 +1155,10 @@ HoveredEventInfo renderProfilerTimeline(ImDrawList *drawList, ImVec2 windowPos, 
       snprintf(threadLabel, sizeof(threadLabel), "%s (%zu)", timeline.threadName.c_str(), timeline.events.size());
       drawList->AddText(ImVec2(windowPos.x + 5, rowTop + 4), IM_COL32(255, 255, 255, 255), threadLabel);
 
-      // Draw events for this thread (with virtualization)
-      for (const auto &event : timeline.events) {
-        // Convert to relative time
-        double eventStartRel = static_cast<double>(event.startTimeNs - g_profilerMinTimeNs);
-        double eventEndRel = static_cast<double>(event.endTimeNs - g_profilerMinTimeNs);
+      // Draw events for this thread with depth-based positioning
+      for (const auto &ewd : eventsWithDepth) {
+        double eventStartRel = ewd.startRel;
+        double eventEndRel = ewd.endRel;
 
         // Check if event is in visible time range
         if (eventEndRel < viewStartNs || eventStartRel > viewEndNs) {
@@ -1106,10 +1179,13 @@ HoveredEventInfo renderProfilerTimeline(ImDrawList *drawList, ImVec2 windowPos, 
           width = 1.0f;
         }
 
+        // Calculate Y position based on depth
+        float eventY = rowTop + 2 + ewd.depth * (PROFILER_EVENT_HEIGHT + PROFILER_EVENT_SPACING);
+
         // Draw event rectangle
-        ImU32 eventColor = getColorForStringId(event.stringId);
-        ImVec2 eventMin(startX, rowTop + 2);
-        ImVec2 eventMax(endX, rowBottom - 2);
+        ImU32 eventColor = getColorForStringId(ewd.event->stringId);
+        ImVec2 eventMin(startX, eventY);
+        ImVec2 eventMax(endX, eventY + PROFILER_EVENT_HEIGHT);
         drawList->AddRectFilled(eventMin, eventMax, eventColor);
         drawList->AddRect(eventMin, eventMax, IM_COL32(255, 255, 255, 100));
 
@@ -1121,7 +1197,7 @@ HoveredEventInfo renderProfilerTimeline(ImDrawList *drawList, ImVec2 windowPos, 
 
           // Store hover info
           hoveredEvent.isValid = true;
-          auto it = reanimated::g_profilerStrings.find(event.stringId);
+          auto it = reanimated::g_profilerStrings.find(ewd.event->stringId);
           hoveredEvent.name = (it != reanimated::g_profilerStrings.end()) ? it->second : "Unknown";
           hoveredEvent.threadName = timeline.threadName;
           hoveredEvent.durationUs = (eventEndRel - eventStartRel) / 1000.0;
@@ -1132,7 +1208,7 @@ HoveredEventInfo renderProfilerTimeline(ImDrawList *drawList, ImVec2 windowPos, 
         // Draw event label if wide enough
         if (width > 40) {
           std::string name = "?";
-          auto it = reanimated::g_profilerStrings.find(event.stringId);
+          auto it = reanimated::g_profilerStrings.find(ewd.event->stringId);
           if (it != reanimated::g_profilerStrings.end()) {
             name = it->second;
           }
@@ -1151,7 +1227,7 @@ HoveredEventInfo renderProfilerTimeline(ImDrawList *drawList, ImVec2 windowPos, 
           drawList->AddText(
               nullptr,
               0.0f,
-              ImVec2(startX + 2, rowTop + 4),
+              ImVec2(startX + 2, eventY + 2),
               IM_COL32(255, 255, 255, 255),
               label,
               nullptr,
@@ -1165,7 +1241,7 @@ HoveredEventInfo renderProfilerTimeline(ImDrawList *drawList, ImVec2 windowPos, 
           ImVec2(windowPos.x, rowBottom), ImVec2(windowPos.x + windowSize.x, rowBottom), IM_COL32(80, 80, 80, 255));
     }
 
-    currentY += PROFILER_ROW_HEIGHT + PROFILER_ROW_SPACING;
+    currentY += threadRowHeight + PROFILER_ROW_SPACING;
   }
 
   // Draw vertical line at header edge
