@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Button } from 'react-native';
+import { StyleSheet, View, Button, Text } from 'react-native';
 import {
   createWorkletRuntime,
   scheduleOnRuntime,
@@ -150,6 +150,7 @@ function testWebSocket() {
 export default function App() {
   return (
     <View style={styles.container}>
+      <Text>Check console output</Text>
       <Button
         title="Test fetch chain"
         onPress={() => {

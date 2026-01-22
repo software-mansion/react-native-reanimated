@@ -29,9 +29,9 @@ class WorkletRuntimeDecorator {
   static void postEvaluateScript(jsi::Runtime &rt, const std::shared_ptr<RuntimeBindings> &runtimeBindings);
 
  private:
-#if defined(__APPLE__) && defined(WORKLETS_FETCH_PREVIEW)
+#if defined(__APPLE__) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
   static void installNetworking(jsi::Runtime &rt, const std::shared_ptr<RuntimeBindings> &runtimeBindings);
-#endif // defined(__APPLE__) && defined(WORKLETS_FETCH_PREVIEW)
+#endif // defined(__APPLE__) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 #endif // WORKLETS_BUNDLE_MODE_ENABLED
 };
 

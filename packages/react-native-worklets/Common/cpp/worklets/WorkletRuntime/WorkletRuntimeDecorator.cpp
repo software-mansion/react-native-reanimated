@@ -230,12 +230,12 @@ void WorkletRuntimeDecorator::decorate(
 void WorkletRuntimeDecorator::postEvaluateScript(
     jsi::Runtime &rt,
     const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
-#if defined(__APPLE__) && defined(WORKLETS_FETCH_PREVIEW)
+#if defined(__APPLE__) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
   installNetworking(rt, runtimeBindings);
-#endif // defined(__APPLE__) && defined(WORKLETS_FETCH_PREVIEW)
+#endif // defined(__APPLE__) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 }
 
-#if defined(__APPLE__) && defined(WORKLETS_FETCH_PREVIEW)
+#if defined(__APPLE__) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 void WorkletRuntimeDecorator::installNetworking(
     jsi::Runtime &rt,
     const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
@@ -283,7 +283,7 @@ void WorkletRuntimeDecorator::installNetworking(
 
   Networking.asObject(rt).setProperty(rt, "clearCookies", std::move(jsiClearCookies));
 }
-#endif // defined(__APPLE__) && defined(WORKLETS_FETCH_PREVIEW)
+#endif // defined(__APPLE__) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 #endif // WORKLETS_BUNDLE_MODE_ENABLED
 
 } // namespace worklets
