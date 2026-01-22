@@ -68,7 +68,7 @@ struct ProfilerStringEntry {
 // Profiler event
 struct ProfilerEvent {
   uint32_t stringId;
-  uint32_t padding;
+  uint32_t threadId;
   uint64_t startTimeNs;
   uint64_t endTimeNs;
 };
@@ -158,6 +158,36 @@ int g_snapshotCounter = 0;
 // Current tree state (accumulated)
 std::unordered_map<int32_t, ViewNode> g_currentTree;
 std::vector<int32_t> g_currentRoots;
+
+// Profiler timeline data structures
+struct ProfilerEventData {
+  uint32_t stringId;
+  uint32_t threadId;
+  uint64_t startTimeNs;
+  uint64_t endTimeNs;
+};
+
+// Per-thread timeline
+struct ThreadTimeline {
+  uint32_t threadId;
+  std::string threadName;
+  std::vector<ProfilerEventData> events;
+};
+
+// Global profiler state
+std::mutex g_profilerMutex;
+std::unordered_map<uint32_t, ThreadTimeline> g_threadTimelines;
+uint64_t g_profilerMinTimeNs = UINT64_MAX;
+uint64_t g_profilerMaxTimeNs = 0;
+
+// Profiler view state (all times are relative to g_profilerMinTimeNs)
+double g_profilerViewStartNs = 0.0; // Left edge of view in nanoseconds (relative)
+float g_profilerViewOffsetY = 0.0f; // Vertical scroll in pixels
+double g_profilerNsPerPixel = 100000.0; // Nanoseconds per pixel (zoom level)
+bool g_profilerLockToLatest = true; // Auto-scroll to latest events
+constexpr float PROFILER_ROW_HEIGHT = 24.0f;
+constexpr float PROFILER_ROW_SPACING = 4.0f;
+constexpr float PROFILER_HEADER_WIDTH = 150.0f;
 
 void applyMutations(const std::vector<reanimated::SimpleMutation> &mutations) {
   std::lock_guard<std::mutex> lock(g_mutex);
@@ -393,12 +423,33 @@ void networkThread(int port) {
             }
 
             case reanimated::DevToolsMessageType::ProfilerEvents: {
+              std::lock_guard<std::mutex> profilerLock(g_profilerMutex);
+
               std::cout << "Received " << header.payloadCount << " profiler events:\n";
               for (uint32_t i = 0; i < header.payloadCount; ++i) {
                 reanimated::ProfilerEvent event;
                 memcpy(&event, payloadPtr + i * sizeof(reanimated::ProfilerEvent), sizeof(event));
 
-                // Look up the string name
+                // Store event in timeline
+                ProfilerEventData eventData;
+                eventData.stringId = event.stringId;
+                eventData.threadId = event.threadId;
+                eventData.startTimeNs = event.startTimeNs;
+                eventData.endTimeNs = event.endTimeNs;
+
+                // Get or create thread timeline
+                auto &timeline = g_threadTimelines[event.threadId];
+                timeline.threadId = event.threadId;
+                if (timeline.threadName.empty()) {
+                  timeline.threadName = "Thread " + std::to_string(event.threadId);
+                }
+                timeline.events.push_back(eventData);
+
+                // Update global time range
+                g_profilerMinTimeNs = std::min(g_profilerMinTimeNs, event.startTimeNs);
+                g_profilerMaxTimeNs = std::max(g_profilerMaxTimeNs, event.endTimeNs);
+
+                // Look up the string name for console output
                 std::string name = "unknown";
                 auto it = reanimated::g_profilerStrings.find(event.stringId);
                 if (it != reanimated::g_profilerStrings.end()) {
@@ -407,8 +458,8 @@ void networkThread(int port) {
 
                 // Calculate duration in milliseconds
                 double durationMs = static_cast<double>(event.endTimeNs - event.startTimeNs) / 1000000.0;
-                std::cout << "  [PROFILE] " << name << ": " << std::fixed << std::setprecision(3) << durationMs
-                          << "ms\n";
+                std::cout << "  [PROFILE] Thread " << event.threadId << " - " << name << ": " << std::fixed
+                          << std::setprecision(3) << durationMs << "ms\n";
               }
               break;
             }
@@ -910,6 +961,189 @@ void drawViewTree3D(
   }
 }
 
+// Helper function to generate a color for an event based on its string ID
+ImU32 getColorForStringId(uint32_t stringId) {
+  // Use a deterministic color based on string ID
+  uint32_t hash = stringId * 2654435761u; // Knuth's multiplicative hash
+  uint8_t r = 100 + (hash & 0xFF) % 155;
+  uint8_t g = 100 + ((hash >> 8) & 0xFF) % 155;
+  uint8_t b = 100 + ((hash >> 16) & 0xFF) % 155;
+  return IM_COL32(r, g, b, 255);
+}
+
+// Render the profiler timeline with virtualization
+void renderProfilerTimeline(ImDrawList *drawList, ImVec2 windowPos, ImVec2 windowSize) {
+  std::lock_guard<std::mutex> lock(g_profilerMutex);
+
+  if (g_threadTimelines.empty() || g_profilerMinTimeNs == UINT64_MAX) {
+    ImGui::SetCursorPos(ImVec2(10, 30));
+    ImGui::Text("No profiler data yet. Waiting for events...");
+    return;
+  }
+
+  // Timeline area (after header)
+  float timelineX = windowPos.x + PROFILER_HEADER_WIDTH;
+  float timelineWidth = windowSize.x - PROFILER_HEADER_WIDTH;
+
+  if (timelineWidth <= 0)
+    return;
+
+  // Calculate total time range
+  uint64_t totalTimeRangeNs = g_profilerMaxTimeNs - g_profilerMinTimeNs;
+
+  // If locked to latest, auto-scroll to show latest events
+  if (g_profilerLockToLatest && totalTimeRangeNs > 0) {
+    double viewWidthNs = timelineWidth * g_profilerNsPerPixel;
+    g_profilerViewStartNs = static_cast<double>(totalTimeRangeNs) - viewWidthNs;
+    if (g_profilerViewStartNs < 0)
+      g_profilerViewStartNs = 0;
+  }
+
+  // View bounds in relative nanoseconds
+  double viewStartNs = g_profilerViewStartNs;
+  double viewEndNs = viewStartNs + timelineWidth * g_profilerNsPerPixel;
+
+  // Header background
+  drawList->AddRectFilled(
+      windowPos, ImVec2(windowPos.x + PROFILER_HEADER_WIDTH, windowPos.y + windowSize.y), IM_COL32(40, 40, 40, 255));
+
+  // Draw grid lines (time markers)
+  double gridInterval = 1000000.0; // 1ms
+  double viewRangeNs = viewEndNs - viewStartNs;
+  if (viewRangeNs > 50000000)
+    gridInterval = 10000000.0; // 10ms
+  if (viewRangeNs > 500000000)
+    gridInterval = 100000000.0; // 100ms
+  if (viewRangeNs < 5000000)
+    gridInterval = 100000.0; // 0.1ms
+  if (viewRangeNs < 500000)
+    gridInterval = 10000.0; // 0.01ms
+
+  double firstGrid = std::floor(viewStartNs / gridInterval) * gridInterval;
+  for (double t = firstGrid; t <= viewEndNs; t += gridInterval) {
+    if (t < viewStartNs)
+      continue;
+    float x = timelineX + static_cast<float>((t - viewStartNs) / g_profilerNsPerPixel);
+    if (x >= timelineX && x < timelineX + timelineWidth) {
+      drawList->AddLine(ImVec2(x, windowPos.y), ImVec2(x, windowPos.y + windowSize.y), IM_COL32(60, 60, 60, 255));
+
+      // Time label
+      double timeMs = t / 1000000.0;
+      char timeLabel[32];
+      if (timeMs >= 1.0) {
+        snprintf(timeLabel, sizeof(timeLabel), "%.1fms", timeMs);
+      } else {
+        snprintf(timeLabel, sizeof(timeLabel), "%.2fms", timeMs);
+      }
+      drawList->AddText(ImVec2(x + 2, windowPos.y + 2), IM_COL32(150, 150, 150, 255), timeLabel);
+    }
+  }
+
+  // Sort threads by ID for consistent ordering
+  std::vector<uint32_t> threadIds;
+  for (const auto &[threadId, timeline] : g_threadTimelines) {
+    threadIds.push_back(threadId);
+  }
+  std::sort(threadIds.begin(), threadIds.end());
+
+  // Render each thread timeline
+  float currentY = 20.0f - g_profilerViewOffsetY; // Start below time labels
+  for (uint32_t threadId : threadIds) {
+    const auto &timeline = g_threadTimelines[threadId];
+
+    // Check if this row is visible
+    float rowTop = windowPos.y + currentY;
+    float rowBottom = rowTop + PROFILER_ROW_HEIGHT;
+
+    if (rowBottom >= windowPos.y && rowTop < windowPos.y + windowSize.y) {
+      // Draw row background (alternating colors)
+      size_t threadIndex = std::find(threadIds.begin(), threadIds.end(), threadId) - threadIds.begin();
+      ImU32 rowBgColor = (threadIndex % 2 == 0) ? IM_COL32(30, 30, 35, 255) : IM_COL32(35, 35, 40, 255);
+      drawList->AddRectFilled(ImVec2(timelineX, rowTop), ImVec2(timelineX + timelineWidth, rowBottom), rowBgColor);
+
+      // Draw thread label in header
+      char threadLabel[128];
+      snprintf(threadLabel, sizeof(threadLabel), "%s (%zu)", timeline.threadName.c_str(), timeline.events.size());
+      drawList->AddText(ImVec2(windowPos.x + 5, rowTop + 4), IM_COL32(255, 255, 255, 255), threadLabel);
+
+      // Draw events for this thread (with virtualization)
+      for (const auto &event : timeline.events) {
+        // Convert to relative time
+        double eventStartRel = static_cast<double>(event.startTimeNs - g_profilerMinTimeNs);
+        double eventEndRel = static_cast<double>(event.endTimeNs - g_profilerMinTimeNs);
+
+        // Check if event is in visible time range
+        if (eventEndRel < viewStartNs || eventStartRel > viewEndNs) {
+          continue;
+        }
+
+        // Calculate pixel positions
+        float startX = timelineX + static_cast<float>((eventStartRel - viewStartNs) / g_profilerNsPerPixel);
+        float endX = timelineX + static_cast<float>((eventEndRel - viewStartNs) / g_profilerNsPerPixel);
+
+        // Clamp to visible area
+        startX = std::max(startX, timelineX);
+        endX = std::min(endX, timelineX + timelineWidth);
+
+        float width = endX - startX;
+        if (width < 1.0f) {
+          endX = startX + 1.0f; // Minimum width for visibility
+          width = 1.0f;
+        }
+
+        // Draw event rectangle
+        ImU32 eventColor = getColorForStringId(event.stringId);
+        ImVec2 eventMin(startX, rowTop + 2);
+        ImVec2 eventMax(endX, rowBottom - 2);
+        drawList->AddRectFilled(eventMin, eventMax, eventColor);
+        drawList->AddRect(eventMin, eventMax, IM_COL32(255, 255, 255, 100));
+
+        // Draw event label if wide enough
+        if (width > 40) {
+          std::string name = "?";
+          auto it = reanimated::g_profilerStrings.find(event.stringId);
+          if (it != reanimated::g_profilerStrings.end()) {
+            name = it->second;
+          }
+
+          // Add duration to label
+          double durationUs = (eventEndRel - eventStartRel) / 1000.0;
+          char label[128];
+          if (width > 120) {
+            snprintf(label, sizeof(label), "%s (%.1fus)", name.c_str(), durationUs);
+          } else {
+            snprintf(label, sizeof(label), "%s", name.c_str());
+          }
+
+          // Clip text to event bounds
+          ImVec4 clipRect(eventMin.x, eventMin.y, eventMax.x, eventMax.y);
+          drawList->AddText(
+              nullptr,
+              0.0f,
+              ImVec2(startX + 2, rowTop + 4),
+              IM_COL32(255, 255, 255, 255),
+              label,
+              nullptr,
+              0.0f,
+              &clipRect);
+        }
+      }
+
+      // Draw horizontal separator
+      drawList->AddLine(
+          ImVec2(windowPos.x, rowBottom), ImVec2(windowPos.x + windowSize.x, rowBottom), IM_COL32(80, 80, 80, 255));
+    }
+
+    currentY += PROFILER_ROW_HEIGHT + PROFILER_ROW_SPACING;
+  }
+
+  // Draw vertical line at header edge
+  drawList->AddLine(
+      ImVec2(windowPos.x + PROFILER_HEADER_WIDTH, windowPos.y),
+      ImVec2(windowPos.x + PROFILER_HEADER_WIDTH, windowPos.y + windowSize.y),
+      IM_COL32(80, 80, 80, 255));
+}
+
 int main(int argc, char *argv[]) {
   int port = 8765;
   if (argc > 1) {
@@ -957,6 +1191,9 @@ int main(int argc, char *argv[]) {
   float rotationDeg = 0.0f;
   float depthSpacing = 50.0f;
   int viewModeInt = 0; // 0 = Layered, 1 = True3D
+
+  // Initialize profiler view
+  g_profilerNsPerPixel = 100000.0; // 100 microseconds per pixel (good default)
 
   while (!glfwWindowShouldClose(window) && g_running) {
     glfwPollEvents();
@@ -1171,6 +1408,138 @@ int main(int argc, char *argv[]) {
         ImGui::SetCursorPos(ImVec2(10, 30));
         ImGui::Text("No snapshots yet. Connect your app to see mutations.");
       }
+    }
+    ImGui::End();
+
+    // Profiler Timeline window
+    ImGui::Begin("Profiler Timeline", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+    {
+      // Controls toolbar at top
+      ImGui::Checkbox("Lock to latest", &g_profilerLockToLatest);
+      ImGui::SameLine();
+      if (ImGui::Button("Reset View")) {
+        g_profilerViewStartNs = 0.0;
+        g_profilerViewOffsetY = 0.0f;
+        g_profilerNsPerPixel = 100000.0; // 100us per pixel
+        g_profilerLockToLatest = true;
+      }
+      ImGui::SameLine();
+      if (ImGui::Button("Clear")) {
+        std::lock_guard<std::mutex> lock(g_profilerMutex);
+        g_threadTimelines.clear();
+        g_profilerMinTimeNs = UINT64_MAX;
+        g_profilerMaxTimeNs = 0;
+      }
+
+      // Info overlay
+      {
+        std::lock_guard<std::mutex> lock(g_profilerMutex);
+        size_t totalEvents = 0;
+        for (const auto &[tid, timeline] : g_threadTimelines) {
+          totalEvents += timeline.events.size();
+        }
+
+        // Format zoom level nicely
+        const char *zoomUnit = "ns/px";
+        double zoomValue = g_profilerNsPerPixel;
+        if (zoomValue >= 1000000.0) {
+          zoomValue /= 1000000.0;
+          zoomUnit = "ms/px";
+        } else if (zoomValue >= 1000.0) {
+          zoomValue /= 1000.0;
+          zoomUnit = "us/px";
+        }
+
+        ImGui::SameLine(ImGui::GetWindowWidth() - 350);
+        ImGui::Text(
+            "Threads: %zu | Events: %zu | Zoom: %.1f %s", g_threadTimelines.size(), totalEvents, zoomValue, zoomUnit);
+      }
+
+      ImGui::Separator();
+
+      // Handle WASD navigation and zoom
+      bool profilerFocused = ImGui::IsWindowFocused();
+      if (profilerFocused) {
+        constexpr double PAN_SPEED_FACTOR = 20.0; // Pixels worth of panning per frame
+        constexpr float ZOOM_SPEED = 1.1f;
+        constexpr float VERTICAL_PAN_SPEED = 20.0f; // pixels per frame
+
+        // Horizontal pan: A (left) and D (right)
+        if (ImGui::IsKeyDown(ImGuiKey_A)) {
+          g_profilerLockToLatest = false; // User took control
+          g_profilerViewStartNs -= PAN_SPEED_FACTOR * g_profilerNsPerPixel;
+          if (g_profilerViewStartNs < 0)
+            g_profilerViewStartNs = 0;
+        }
+        if (ImGui::IsKeyDown(ImGuiKey_D)) {
+          g_profilerLockToLatest = false; // User took control
+          g_profilerViewStartNs += PAN_SPEED_FACTOR * g_profilerNsPerPixel;
+        }
+
+        // Vertical pan: W (up) and S (down)
+        if (ImGui::IsKeyDown(ImGuiKey_W)) {
+          g_profilerViewOffsetY -= VERTICAL_PAN_SPEED;
+          if (g_profilerViewOffsetY < 0)
+            g_profilerViewOffsetY = 0;
+        }
+        if (ImGui::IsKeyDown(ImGuiKey_S)) {
+          g_profilerViewOffsetY += VERTICAL_PAN_SPEED;
+        }
+
+        // Zoom: Q (zoom out) and E (zoom in)
+        if (ImGui::IsKeyDown(ImGuiKey_Q)) {
+          g_profilerNsPerPixel *= ZOOM_SPEED;
+          if (g_profilerNsPerPixel > 1000000000.0) // Max 1s per pixel
+            g_profilerNsPerPixel = 1000000000.0;
+        }
+        if (ImGui::IsKeyDown(ImGuiKey_E)) {
+          g_profilerNsPerPixel /= ZOOM_SPEED;
+          if (g_profilerNsPerPixel < 10.0) // Min 10ns per pixel
+            g_profilerNsPerPixel = 10.0;
+        }
+
+        // Mouse wheel zoom (zoom towards mouse position)
+        float scrollY = ImGui::GetIO().MouseWheel;
+        if (std::abs(scrollY) > 0.0f) {
+          double zoomFactor = 1.0 + scrollY * 0.1;
+          g_profilerNsPerPixel /= zoomFactor;
+          g_profilerNsPerPixel = std::max(10.0, std::min(1000000000.0, g_profilerNsPerPixel));
+        }
+
+        // Reset view: R
+        if (ImGui::IsKeyPressed(ImGuiKey_R)) {
+          g_profilerViewStartNs = 0.0;
+          g_profilerViewOffsetY = 0.0f;
+          g_profilerNsPerPixel = 100000.0; // 100us per pixel
+          g_profilerLockToLatest = true;
+        }
+      }
+
+      // Get window size for rendering (after toolbar)
+      ImVec2 windowSize = ImGui::GetContentRegionAvail();
+      ImVec2 windowPos = ImGui::GetCursorScreenPos();
+
+      // Auto-scroll to latest when locked
+      if (g_profilerLockToLatest && g_profilerMaxTimeNs > g_profilerMinTimeNs) {
+        double timeRangeNs = static_cast<double>(g_profilerMaxTimeNs - g_profilerMinTimeNs);
+        double viewWidthNs = windowSize.x * g_profilerNsPerPixel;
+        // Position view so latest events are visible on the right
+        g_profilerViewStartNs = std::max(0.0, timeRangeNs - viewWidthNs * 0.9);
+      }
+
+      // Only render if window has valid size
+      if (windowSize.x > 0 && windowSize.y > 0) {
+        // Create an invisible button to capture input
+        ImGui::InvisibleButton("##profiler_canvas", windowSize);
+
+        // Render the timeline
+        ImDrawList *drawList = ImGui::GetWindowDrawList();
+        renderProfilerTimeline(drawList, windowPos, windowSize);
+      }
+
+      // Controls hint at bottom
+      ImGui::SetCursorPos(ImVec2(10, ImGui::GetWindowHeight() - 25));
+      ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "WASD: pan | Q/E/scroll: zoom | R: reset");
     }
     ImGui::End();
 

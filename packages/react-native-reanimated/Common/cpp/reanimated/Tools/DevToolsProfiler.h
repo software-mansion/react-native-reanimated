@@ -6,6 +6,7 @@
 #include <chrono>
 #include <memory>
 #include <mutex>
+#include <thread>
 #include <vector>
 
 namespace reanimated {
@@ -100,6 +101,7 @@ class ProfilerSection {
     ProfilerEventInternal event;
     // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
     event.namePtr = reinterpret_cast<uint64_t>(name_);
+    event.threadId = std::hash<std::thread::id>{}(std::this_thread::get_id());
     // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
     event.startTimeNs = startTimeNs_;
     event.endTimeNs = std::chrono::steady_clock::now().time_since_epoch().count();

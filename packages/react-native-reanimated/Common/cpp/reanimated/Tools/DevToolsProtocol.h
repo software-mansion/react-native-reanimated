@@ -90,7 +90,7 @@ struct ProfilerStringEntry {
 // Profiler event - sent over the wire
 struct ProfilerEvent {
   uint32_t stringId;
-  uint32_t padding; // Align to 8 bytes
+  uint32_t threadId; // Thread ID for timeline visualization
   uint64_t startTimeNs;
   uint64_t endTimeNs;
 };
@@ -99,6 +99,7 @@ struct ProfilerEvent {
 // Internal profiler event - stores pointer, resolved on background thread
 struct ProfilerEventInternal {
   uint64_t namePtr; // const char* cast to uint64_t
+  uint64_t threadId; // Thread ID
   uint64_t startTimeNs;
   uint64_t endTimeNs;
 };

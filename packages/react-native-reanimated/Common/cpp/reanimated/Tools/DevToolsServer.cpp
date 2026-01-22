@@ -254,7 +254,7 @@ std::vector<ProfilerEvent> DevToolsServer::resolveProfilerEvents(const std::vect
 
     ProfilerEvent resolvedEvent;
     resolvedEvent.stringId = stringId;
-    resolvedEvent.padding = 0;
+    resolvedEvent.threadId = static_cast<uint32_t>(event.threadId);
     resolvedEvent.startTimeNs = event.startTimeNs;
     resolvedEvent.endTimeNs = event.endTimeNs;
     resolved.push_back(resolvedEvent);
