@@ -86,7 +86,7 @@ function HomeScreen({ navigation }: HomeScreenProps) {
           disabled={
             EXAMPLES[name].disabledPlatforms?.includes(Platform.OS) ||
             (EXAMPLES[name]?.needsBundleMode &&
-              !globalThis.__WORKLETS_BUNDLE_MODE_ENABLED)
+              !globalThis._WORKLETS_BUNDLE_MODE_ENABLED)
           }
           wasClicked={wasClicked.includes(name)}
         />
@@ -187,7 +187,7 @@ function App() {
 }
 
 declare global {
-  var __WORKLETS_BUNDLE_MODE_ENABLED: boolean | undefined;
+  var _WORKLETS_BUNDLE_MODE_ENABLED: boolean | undefined;
 }
 
 const styles = StyleSheet.create({

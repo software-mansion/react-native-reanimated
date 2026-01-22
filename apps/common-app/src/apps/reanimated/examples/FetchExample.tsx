@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Button } from 'react-native';
+import { StyleSheet, View, Button, Text } from 'react-native';
 import {
   createWorkletRuntime,
   scheduleOnRuntime,
@@ -163,7 +163,7 @@ function initializeRuntimes() {
       name: 'elephant',
     });
     giraffeRuntime = createWorkletRuntime({
-      name: 'giraffe  ',
+      name: 'giraffe',
     });
     monkeyRuntime = createWorkletRuntime({
       name: 'monkey',
@@ -174,6 +174,7 @@ function initializeRuntimes() {
 export default function App() {
   return (
     <View style={styles.container}>
+      <Text>Check console output</Text>
       <Button
         title="Test fetch chain"
         onPress={() => {

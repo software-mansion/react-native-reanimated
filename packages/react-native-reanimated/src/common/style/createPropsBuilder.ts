@@ -1,103 +1,118 @@
 'use strict';
-
-import type { AnyRecord, ValueProcessorContext } from '../types';
-import { ValueProcessorTarget } from '../types';
-import { isConfigPropertyAlias, isDefined, isRecord } from '../utils';
+import { ReanimatedError } from '../errors';
 import type {
-  PropsBuilder,
-  PropsBuilderConfig,
-  StyleBuildMiddleware,
-} from './types';
+  UnknownRecord,
+  ValueProcessor,
+  ValueProcessorContext,
+} from '../types';
+import { ValueProcessorTarget } from '../types';
+import { isRecord } from '../utils';
 
-type StyleBuilderOptions<P extends AnyRecord> = {
-  buildMiddleware?: StyleBuildMiddleware<P>;
-  separatelyInterpolatedNestedProperties?: (keyof P)[];
-  target?: ValueProcessorTarget;
+const MAX_PROCESS_DEPTH = 10;
+
+type CreatePropsBuilderParams<TPropsConfig> = {
+  config: TPropsConfig;
+  processConfigValue: (
+    configValue: TPropsConfig[keyof TPropsConfig],
+    propertyKey: keyof TPropsConfig
+  ) => ValueProcessor | TPropsConfig[keyof TPropsConfig] | undefined;
 };
 
-class StyleBuilderImpl<P extends AnyRecord> implements PropsBuilder<P> {
-  private readonly buildMiddleware: StyleBuildMiddleware<P>;
-  private readonly config: PropsBuilderConfig<P>;
-  private readonly separatelyInterpolatedNestedProperties_: (keyof P)[];
-  private readonly context: ValueProcessorContext;
-
-  private processedProps = {} as P;
-
-  constructor(config: PropsBuilderConfig<P>, options?: StyleBuilderOptions<P>) {
-    this.config = config;
-    this.buildMiddleware = options?.buildMiddleware ?? ((props) => props);
-    this.separatelyInterpolatedNestedProperties_ =
-      options?.separatelyInterpolatedNestedProperties ?? [];
-    this.context = {
-      target: options?.target ?? ValueProcessorTarget.Default,
-    };
-  }
-
-  isSeparatelyInterpolatedNestedProperty(property: keyof P): boolean {
-    return this.separatelyInterpolatedNestedProperties_.includes(property);
-  }
-
-  add(property: keyof P, value: P[keyof P]): void {
-    const configValue = this.config[property];
-
-    if (!configValue || !isDefined(value)) {
-      return;
+type PropsBuilderResult<TProps> = {
+  build(
+    props: Partial<TProps>,
+    options?: {
+      target?: ValueProcessorTarget;
+      includeUnprocessed?: boolean;
     }
+  ): UnknownRecord;
+};
 
-    if (configValue === true) {
-      this.maybeAssignProp(property, value);
-    } else if (isConfigPropertyAlias<P>(configValue)) {
-      this.add(configValue.as, value);
-    } else {
-      const { process } = configValue;
-      const processedValue = process ? process(value, this.context) : value;
+export default function createPropsBuilder<
+  TProps extends UnknownRecord,
+  TPropsConfig extends UnknownRecord,
+>({
+  processConfigValue,
+  config,
+}: CreatePropsBuilderParams<TPropsConfig>): PropsBuilderResult<TProps> {
+  const processedConfig = Object.entries(config).reduce<
+    Record<string, ValueProcessor | true>
+  >((acc, [key, configValue]) => {
+    let processedValue: ReturnType<typeof processConfigValue> =
+      configValue as TPropsConfig[keyof TPropsConfig];
 
-      if (!isDefined(processedValue)) {
-        return;
+    let depth = 0;
+    while (processedValue) {
+      if (++depth > MAX_PROCESS_DEPTH) {
+        throw new ReanimatedError(
+          `Max process depth for props builder reached for property ${key}`
+        );
       }
 
-      if (isRecord<P>(processedValue)) {
-        this.maybeAssignProps(processedValue);
-      } else {
-        this.maybeAssignProp(property, processedValue);
+      // If the value returned from the processConfigValue function is a function,
+      // that means it's a terminal value that will be used to process the value
+      // of the property. We can break the loop at this point.
+      if (typeof processedValue === 'function' || processedValue === true) {
+        acc[key] = processedValue as ValueProcessor | true;
+        break;
       }
-    }
-  }
 
-  build(): P | null {
-    const result = this.buildMiddleware(this.processedProps);
-    this.cleanup();
-
-    if (Object.keys(result).length === 0) {
-      return null;
+      // Otherwise, we need to continue processing the value.
+      processedValue = processConfigValue(
+        processedValue,
+        key as keyof TPropsConfig
+      );
     }
 
-    return result;
-  }
+    return acc;
+  }, {});
 
-  buildFrom(props: P): P | null {
-    Object.entries(props).forEach(([key, value]) => this.add(key, value));
-    return this.build();
-  }
+  return {
+    build(props, options) {
+      'worklet';
+      const context: ValueProcessorContext = {
+        target: options?.target ?? ValueProcessorTarget.Default,
+      };
 
-  private maybeAssignProp(property: keyof P, value: P[keyof P]) {
-    this.processedProps[property] ??= value;
-  }
+      const result: UnknownRecord = {};
 
-  private maybeAssignProps(props: P) {
-    Object.entries(props).forEach(([key, value]) =>
-      this.maybeAssignProp(key, value)
-    );
-  }
+      for (const property in props) {
+        const configValue = processedConfig[property];
+        const value = props[property];
 
-  private cleanup() {
-    this.processedProps = {} as P;
-  }
-}
+        // Simple case, no need for processing
+        if (configValue === true) {
+          result[property] = value;
+          continue;
+        }
 
-export default function createPropsBuilder<P extends AnyRecord>(
-  config: PropsBuilderConfig<P>,
-  options?: StyleBuilderOptions<P>
-): PropsBuilder<Partial<P>> {
-  return new StyleBuilderImpl(config, options);
+        // Prop is not supported or value is undefined
+        if (!configValue || value === undefined) {
+          if (options?.includeUnprocessed) {
+            result[property] = value;
+          }
+          continue;
+        }
+
+        const processedValue = configValue(value, context);
+
+        if (isRecord(processedValue) && !isRecord(value)) {
+          // The value processor may return multiple values for a single property
+          // as a record of new property names and processed values. In such a case,
+          // we want to store properties from this record in the result object only if
+          // they are not already present in the original props object (we don't want
+          // override properties specified by the user).
+          for (const processedKey in processedValue) {
+            if (!(processedKey in props)) {
+              result[processedKey] = processedValue[processedKey];
+            }
+          }
+        } else {
+          result[property] = processedValue;
+        }
+      }
+
+      return result;
+    },
+  };
 }
