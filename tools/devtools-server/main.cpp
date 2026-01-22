@@ -9,6 +9,7 @@
 #include <csignal>
 #include <cstdint>
 #include <cstring>
+#include <iomanip>
 #include <iostream>
 #include <map>
 #include <mutex>
@@ -33,6 +34,13 @@
 // IMPORTANT: Must match exactly with client side!
 namespace reanimated {
 
+// Message type discriminator
+enum class DevToolsMessageType : uint8_t {
+  Mutations = 0,
+  ProfilerStringRegistry = 1,
+  ProfilerEvents = 2,
+};
+
 enum class MutationType : uint8_t { Create = 0, Delete = 1, Insert = 2, Remove = 3, Update = 4, Unknown = 255 };
 
 #pragma pack(push, 1)
@@ -50,49 +58,36 @@ struct SimpleMutation {
   int32_t backgroundColor;
   float opacity;
 };
-#pragma pack(pop)
+
+// Profiler string registry entry
+struct ProfilerStringEntry {
+  uint32_t stringId;
+  char name[64];
+};
+
+// Profiler event
+struct ProfilerEvent {
+  uint32_t stringId;
+  uint32_t padding;
+  uint64_t startTimeNs;
+  uint64_t endTimeNs;
+};
 
 struct DevToolsMessageHeader {
   uint32_t magic;
   uint32_t version;
-  uint32_t numMutations;
+  DevToolsMessageType type;
+  uint8_t padding[3];
+  uint32_t payloadCount;
   uint32_t reserved;
 
   static constexpr uint32_t MAGIC = 0xDEADBEEF;
-  static constexpr uint32_t VERSION = 2;
+  static constexpr uint32_t VERSION = 3;
 };
+#pragma pack(pop)
 
-struct DevToolsMessage {
-  DevToolsMessageHeader header;
-  std::vector<SimpleMutation> mutations;
-
-  static bool deserialize(const uint8_t *data, size_t size, DevToolsMessage &outMessage) {
-    if (size < sizeof(DevToolsMessageHeader)) {
-      return false;
-    }
-
-    memcpy(&outMessage.header, data, sizeof(DevToolsMessageHeader));
-
-    if (outMessage.header.magic != DevToolsMessageHeader::MAGIC) {
-      return false;
-    }
-
-    size_t expectedSize = sizeof(DevToolsMessageHeader) + outMessage.header.numMutations * sizeof(SimpleMutation);
-    if (size < expectedSize) {
-      return false;
-    }
-
-    outMessage.mutations.resize(outMessage.header.numMutations);
-    if (outMessage.header.numMutations > 0) {
-      memcpy(
-          outMessage.mutations.data(),
-          data + sizeof(DevToolsMessageHeader),
-          outMessage.header.numMutations * sizeof(SimpleMutation));
-    }
-
-    return true;
-  }
-};
+// Profiler string registry (maps ID -> name)
+std::unordered_map<uint32_t, std::string> g_profilerStrings;
 
 const char *mutationTypeToString(MutationType type) {
   switch (type) {
@@ -338,26 +333,85 @@ void networkThread(int port) {
           memcpy(&header, pendingData.data(), sizeof(header));
 
           if (header.magic != reanimated::DevToolsMessageHeader::MAGIC) {
+            std::cerr << "Invalid magic number, clearing pending data\n";
             pendingData.clear();
             break;
           }
 
-          size_t expectedSize =
-              sizeof(reanimated::DevToolsMessageHeader) + header.numMutations * sizeof(reanimated::SimpleMutation);
-
-          if (pendingData.size() < expectedSize) {
-            break;
+          // Calculate payload size based on message type
+          size_t payloadSize = 0;
+          switch (header.type) {
+            case reanimated::DevToolsMessageType::Mutations:
+              payloadSize = header.payloadCount * sizeof(reanimated::SimpleMutation);
+              break;
+            case reanimated::DevToolsMessageType::ProfilerStringRegistry:
+              payloadSize = header.payloadCount * sizeof(reanimated::ProfilerStringEntry);
+              break;
+            case reanimated::DevToolsMessageType::ProfilerEvents:
+              payloadSize = header.payloadCount * sizeof(reanimated::ProfilerEvent);
+              break;
+            default:
+              std::cerr << "Unknown message type: " << static_cast<int>(header.type) << "\n";
+              pendingData.clear();
+              continue;
           }
 
-          reanimated::DevToolsMessage message;
-          if (reanimated::DevToolsMessage::deserialize(pendingData.data(), expectedSize, message)) {
-            std::cout << "Received " << message.mutations.size() << " mutations:\n";
-            for (const auto &mut : message.mutations) {
-              std::cout << "  " << reanimated::mutationTypeToString(mut.type) << " tag=" << mut.tag
-                        << " parent=" << mut.parentTag << " idx=" << mut.index << " " << mut.componentName << " ("
-                        << mut.x << "," << mut.y << "," << mut.width << "," << mut.height << ")\n";
+          size_t expectedSize = sizeof(reanimated::DevToolsMessageHeader) + payloadSize;
+
+          if (pendingData.size() < expectedSize) {
+            break; // Wait for more data
+          }
+
+          // Process based on message type
+          const uint8_t *payloadPtr = pendingData.data() + sizeof(reanimated::DevToolsMessageHeader);
+
+          switch (header.type) {
+            case reanimated::DevToolsMessageType::Mutations: {
+              std::vector<reanimated::SimpleMutation> mutations(header.payloadCount);
+              memcpy(mutations.data(), payloadPtr, payloadSize);
+
+              std::cout << "Received " << mutations.size() << " mutations:\n";
+              for (const auto &mut : mutations) {
+                std::cout << "  " << reanimated::mutationTypeToString(mut.type) << " tag=" << mut.tag
+                          << " parent=" << mut.parentTag << " idx=" << mut.index << " " << mut.componentName << " ("
+                          << mut.x << "," << mut.y << "," << mut.width << "," << mut.height << ")\n";
+              }
+              applyMutations(mutations);
+              break;
             }
-            applyMutations(message.mutations);
+
+            case reanimated::DevToolsMessageType::ProfilerStringRegistry: {
+              std::cout << "Received " << header.payloadCount << " profiler string entries:\n";
+              for (uint32_t i = 0; i < header.payloadCount; ++i) {
+                reanimated::ProfilerStringEntry entry;
+                memcpy(&entry, payloadPtr + i * sizeof(reanimated::ProfilerStringEntry), sizeof(entry));
+                entry.name[sizeof(entry.name) - 1] = '\0'; // Ensure null termination
+                reanimated::g_profilerStrings[entry.stringId] = entry.name;
+                std::cout << "  [" << entry.stringId << "] = \"" << entry.name << "\"\n";
+              }
+              break;
+            }
+
+            case reanimated::DevToolsMessageType::ProfilerEvents: {
+              std::cout << "Received " << header.payloadCount << " profiler events:\n";
+              for (uint32_t i = 0; i < header.payloadCount; ++i) {
+                reanimated::ProfilerEvent event;
+                memcpy(&event, payloadPtr + i * sizeof(reanimated::ProfilerEvent), sizeof(event));
+
+                // Look up the string name
+                std::string name = "unknown";
+                auto it = reanimated::g_profilerStrings.find(event.stringId);
+                if (it != reanimated::g_profilerStrings.end()) {
+                  name = it->second;
+                }
+
+                // Calculate duration in milliseconds
+                double durationMs = static_cast<double>(event.endTimeNs - event.startTimeNs) / 1000000.0;
+                std::cout << "  [PROFILE] " << name << ": " << std::fixed << std::setprecision(3) << durationMs
+                          << "ms\n";
+              }
+              break;
+            }
           }
 
           pendingData.erase(pendingData.begin(), pendingData.begin() + expectedSize);

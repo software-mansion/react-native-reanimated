@@ -608,6 +608,7 @@ double ReanimatedModuleProxy::getCssTimestamp() {
 
 void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
+  REANIMATED_PROFILE_SECTION("performOperations");
 
   if (!isTriggeredByEvent) {
     auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
@@ -1321,6 +1322,8 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
     }
 
     // Enable dev tools client for debugging mutations
+    // Pre-allocate profiler buffers for main threads (UI, JS, worklet)
+    DevToolsProfiler::getInstance().preallocateBuffers(3);
     setDevToolsEnabled(true);
   }
 }

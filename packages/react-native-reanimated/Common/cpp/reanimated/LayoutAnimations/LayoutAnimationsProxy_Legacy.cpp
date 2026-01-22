@@ -28,6 +28,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
     MountingTransaction::Number transactionNumber,
     const TransactionTelemetry &telemetry,
     ShadowViewMutationList mutations) const {
+  REANIMATED_PROFILE_SECTION("pullTransaction");
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << std::endl;
   LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " " << surfaceId << std::endl;
@@ -302,9 +303,8 @@ void LayoutAnimationsProxy_Legacy::handleUpdatesAndEnterings(
           auto layoutAnimationIt = layoutAnimations_.find(tag);
           if (layoutAnimationIt == layoutAnimations_.end()) {
             if (oldShadowViewsForReparentings.contains(tag)) {
-              filteredMutations.push_back(
-                  ShadowViewMutation::InsertMutation(
-                      mutationParent, oldShadowViewsForReparentings[tag], mutation.index));
+              filteredMutations.push_back(ShadowViewMutation::InsertMutation(
+                  mutationParent, oldShadowViewsForReparentings[tag], mutation.index));
             } else {
               filteredMutations.push_back(mutation);
             }

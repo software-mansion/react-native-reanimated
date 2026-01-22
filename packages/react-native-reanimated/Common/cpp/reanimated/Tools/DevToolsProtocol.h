@@ -7,6 +7,13 @@
 
 namespace reanimated {
 
+// Message type discriminator
+enum class DevToolsMessageType : uint8_t {
+  Mutations = 0,
+  ProfilerStringRegistry = 1,
+  ProfilerEvents = 2,
+};
+
 // Mutation types matching ShadowViewMutation::Type
 enum class MutationType : uint8_t { Create = 0, Delete = 1, Insert = 2, Remove = 3, Update = 4, Unknown = 255 };
 
@@ -63,7 +70,8 @@ struct SimpleMutation {
         y(y),
         width(width),
         height(height),
-        backgroundColor(bgColor) {
+        backgroundColor(bgColor),
+        opacity(1.0f) {
     if (name) {
       strncpy(componentName, name, sizeof(componentName) - 1);
       componentName[sizeof(componentName) - 1] = '\0';
@@ -72,72 +80,54 @@ struct SimpleMutation {
     }
   }
 };
+
+// Profiler string registry entry - maps ID to name
+struct ProfilerStringEntry {
+  uint32_t stringId;
+  char name[64];
+};
+
+// Profiler event - sent over the wire
+struct ProfilerEvent {
+  uint32_t stringId;
+  uint32_t padding; // Align to 8 bytes
+  uint64_t startTimeNs;
+  uint64_t endTimeNs;
+};
 #pragma pack(pop)
 
+// Internal profiler event - stores pointer, resolved on background thread
+struct ProfilerEventInternal {
+  uint64_t namePtr; // const char* cast to uint64_t
+  uint64_t startTimeNs;
+  uint64_t endTimeNs;
+};
+
 // Message header for the protocol
+#pragma pack(push, 1)
 struct DevToolsMessageHeader {
   uint32_t magic; // Magic number to identify valid messages: 0xDEADBEEF
   uint32_t version; // Protocol version
-  uint32_t numMutations;
+  DevToolsMessageType type; // Message type
+  uint8_t padding[3]; // Alignment padding
+  uint32_t payloadCount; // Number of items in payload
   uint32_t reserved;
 
   static constexpr uint32_t MAGIC = 0xDEADBEEF;
-  static constexpr uint32_t VERSION = 2; // Bumped version for new protocol
+  static constexpr uint32_t VERSION = 3;
 
-  DevToolsMessageHeader() : magic(MAGIC), version(VERSION), numMutations(0), reserved(0) {}
-  explicit DevToolsMessageHeader(uint32_t count) : magic(MAGIC), version(VERSION), numMutations(count), reserved(0) {}
+  DevToolsMessageHeader()
+      : magic(MAGIC),
+        version(VERSION),
+        type(DevToolsMessageType::Mutations),
+        padding{0, 0, 0},
+        payloadCount(0),
+        reserved(0) {}
+
+  DevToolsMessageHeader(DevToolsMessageType msgType, uint32_t count)
+      : magic(MAGIC), version(VERSION), type(msgType), padding{0, 0, 0}, payloadCount(count), reserved(0) {}
 };
-
-// Complete message structure
-struct DevToolsMessage {
-  DevToolsMessageHeader header;
-  std::vector<SimpleMutation> mutations;
-
-  DevToolsMessage() = default;
-  explicit DevToolsMessage(const std::vector<SimpleMutation> &muts)
-      : header(static_cast<uint32_t>(muts.size())), mutations(muts) {}
-
-  // Serialize the message to a byte buffer
-  std::vector<uint8_t> serialize() const {
-    size_t headerSize = sizeof(DevToolsMessageHeader);
-    size_t mutationsSize = mutations.size() * sizeof(SimpleMutation);
-    std::vector<uint8_t> buffer(headerSize + mutationsSize);
-
-    memcpy(buffer.data(), &header, headerSize);
-    if (!mutations.empty()) {
-      memcpy(buffer.data() + headerSize, mutations.data(), mutationsSize);
-    }
-    return buffer;
-  }
-
-  // Deserialize from a byte buffer
-  static bool deserialize(const uint8_t *data, size_t size, DevToolsMessage &outMessage) {
-    if (size < sizeof(DevToolsMessageHeader)) {
-      return false;
-    }
-
-    memcpy(&outMessage.header, data, sizeof(DevToolsMessageHeader));
-
-    if (outMessage.header.magic != DevToolsMessageHeader::MAGIC) {
-      return false;
-    }
-
-    size_t expectedSize = sizeof(DevToolsMessageHeader) + outMessage.header.numMutations * sizeof(SimpleMutation);
-    if (size < expectedSize) {
-      return false;
-    }
-
-    outMessage.mutations.resize(outMessage.header.numMutations);
-    if (outMessage.header.numMutations > 0) {
-      memcpy(
-          outMessage.mutations.data(),
-          data + sizeof(DevToolsMessageHeader),
-          outMessage.header.numMutations * sizeof(SimpleMutation));
-    }
-
-    return true;
-  }
-};
+#pragma pack(pop)
 
 inline const char *mutationTypeToString(MutationType type) {
   switch (type) {

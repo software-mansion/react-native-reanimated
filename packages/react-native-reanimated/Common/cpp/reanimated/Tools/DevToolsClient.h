@@ -1,24 +1,13 @@
 #pragma once
 
+#include <reanimated/Tools/DevToolsProfiler.h>
 #include <reanimated/Tools/DevToolsProtocol.h>
+#include <reanimated/Tools/DevToolsServer.h>
 
 #include <react/renderer/components/view/ViewProps.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 
-#ifdef __APPLE__
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#elif defined(ANDROID)
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#endif
-
 #include <atomic>
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -26,11 +15,15 @@ namespace reanimated {
 
 using namespace facebook::react;
 
+/**
+ * DevToolsClient - Converts React Native mutations to SimpleMutation format
+ *
+ * This class handles the conversion of ShadowViewMutation to our wire format.
+ * Network I/O is delegated to DevToolsServer (background thread).
+ * Also triggers profiler flush when sending mutations.
+ */
 class DevToolsClient {
  public:
-  static constexpr int DEFAULT_PORT = 8765;
-  static constexpr const char *DEFAULT_HOST = "127.0.0.1";
-
   static DevToolsClient &getInstance() {
     static DevToolsClient instance;
     return instance;
@@ -39,6 +32,9 @@ class DevToolsClient {
   // Enable/disable the client
   void setEnabled(bool enabled) {
     enabled_ = enabled;
+    if (enabled) {
+      DevToolsServer::getInstance().start();
+    }
   }
 
   bool isEnabled() const {
@@ -78,9 +74,13 @@ class DevToolsClient {
         auto viewProps = std::dynamic_pointer_cast<const ViewProps>(view.props);
         if (viewProps) {
           sm.opacity = viewProps->opacity;
-          sm.backgroundColor = (*viewProps->backgroundColor).getColor();
+          if (viewProps->backgroundColor) {
+            sm.backgroundColor = static_cast<int32_t>(*viewProps->backgroundColor);
+          } else {
+            sm.backgroundColor = 0;
+          }
         } else {
-          sm.opacity = 0;
+          sm.opacity = 1.0f;
           sm.backgroundColor = 0;
         }
       } else {
@@ -97,9 +97,13 @@ class DevToolsClient {
         auto viewProps = std::dynamic_pointer_cast<const ViewProps>(view.props);
         if (viewProps) {
           sm.opacity = viewProps->opacity;
-          sm.backgroundColor = (*viewProps->backgroundColor).getColor();
+          if (viewProps->backgroundColor) {
+            sm.backgroundColor = static_cast<int32_t>(*viewProps->backgroundColor);
+          } else {
+            sm.backgroundColor = 0;
+          }
         } else {
-          sm.opacity = 0;
+          sm.opacity = 1.0f;
           sm.backgroundColor = 0;
         }
       }
@@ -108,16 +112,17 @@ class DevToolsClient {
     }
 
     if (!simpleMutations.empty()) {
-      sendToServer(simpleMutations);
+      // Send mutations to background thread
+      DevToolsServer::getInstance().sendMutations(std::move(simpleMutations));
+
+      // Also flush profiler events
+      DevToolsProfiler::getInstance().flush();
     }
   }
 
  private:
-  DevToolsClient() : enabled_(false), socket_(-1) {}
-
-  ~DevToolsClient() {
-    disconnect();
-  }
+  DevToolsClient() : enabled_(false) {}
+  ~DevToolsClient() = default;
 
   DevToolsClient(const DevToolsClient &) = delete;
   DevToolsClient &operator=(const DevToolsClient &) = delete;
@@ -139,76 +144,7 @@ class DevToolsClient {
     }
   }
 
-  bool connect() {
-    std::lock_guard<std::mutex> lock(mutex_);
-
-    if (socket_ >= 0) {
-      return true; // Already connected
-    }
-
-#if defined(__APPLE__) || defined(ANDROID)
-    socket_ = socket(AF_INET, SOCK_STREAM, 0);
-    if (socket_ < 0) {
-      return false;
-    }
-
-    // Set socket to non-blocking for connection with timeout
-    struct timeval timeout;
-    timeout.tv_sec = 0;
-    timeout.tv_usec = 100000; // 100ms timeout
-    setsockopt(socket_, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
-
-    struct sockaddr_in serverAddr;
-    memset(&serverAddr, 0, sizeof(serverAddr));
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(DEFAULT_PORT);
-    inet_pton(AF_INET, DEFAULT_HOST, &serverAddr.sin_addr);
-
-    if (::connect(socket_, reinterpret_cast<struct sockaddr *>(&serverAddr), sizeof(serverAddr)) < 0) {
-      close(socket_);
-      socket_ = -1;
-      return false;
-    }
-
-    return true;
-#else
-    return false;
-#endif
-  }
-
-  void disconnect() {
-    std::lock_guard<std::mutex> lock(mutex_);
-#if defined(__APPLE__) || defined(ANDROID)
-    if (socket_ >= 0) {
-      close(socket_);
-      socket_ = -1;
-    }
-#endif
-  }
-
-  void sendToServer(const std::vector<SimpleMutation> &mutations) {
-    // Try to connect if not connected
-    if (!connect()) {
-      return; // Server not available, silently ignore
-    }
-
-#if defined(__APPLE__) || defined(ANDROID)
-    DevToolsMessage message(mutations);
-    auto buffer = message.serialize();
-
-    std::lock_guard<std::mutex> lock(mutex_);
-    ssize_t sent = send(socket_, buffer.data(), buffer.size(), 0);
-    if (sent < 0) {
-      // Connection lost, close socket to trigger reconnect on next send
-      close(socket_);
-      socket_ = -1;
-    }
-#endif
-  }
-
   std::atomic<bool> enabled_;
-  int socket_;
-  std::mutex mutex_;
 };
 
 // Convenience function to send mutations
