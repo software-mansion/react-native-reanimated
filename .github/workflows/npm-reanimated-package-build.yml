@@ -91,24 +91,6 @@ jobs:
         run: >-
           ./createNPMPackage.sh ${{ inputs.option }}
 
-      - name: Check if any node_modules were packed
-        working-directory: ${{ env.REANIMATED_DIR }}
-        id: node_modules
-        run: >-
-          ! grep --silent -E "node_modules/.+" build.log
-
-      - name: Show build log
-        working-directory: ${{ env.REANIMATED_DIR }}
-        if: failure() && steps.build.outcome == 'failure'
-        run: >-
-          cat build.log
-
-      - name: Show packed node_modules
-        working-directory: ${{ env.REANIMATED_DIR }}
-        if: failure() && steps.node_modules.outcome == 'failure'
-        run: >-
-          ! grep -E "node_modules/.+" build.log
-
       - name: Add package name to env
         working-directory: ${{ env.REANIMATED_DIR }}
         run: echo "PACKAGE_NAME=$(ls -l | egrep -o "react-native-reanimated-(.*)(=?\.tgz)")" >> $GITHUB_ENV
