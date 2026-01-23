@@ -313,7 +313,7 @@ const InterpolatorFactoriesRecord FLEX_INTERPOLATORS = {
          "auto",
          {RelativeTo::Parent, "width"},
          CSSLengthKeywordCallback(addMinWidthToPropsBuilder))},
-    {"overflow", value<CSSKeyword>("visible", getCSSKeywordCallback("visible"))},
+    {"overflow", value<CSSKeyword>("visible", CSSKeywordCallback(addOverflowToPropsBuilder))},
     {"padding",
      value<CSSLength, CSSKeyword>(
          0,
@@ -384,14 +384,14 @@ const InterpolatorFactoriesRecord FLEX_INTERPOLATORS = {
     {"direction", value<CSSKeyword>("inherit", CSSKeywordCallback(addDirectionToPropsBuilder))}};
 
 const InterpolatorFactoriesRecord SHADOW_INTERPOLATORS_IOS = {
-    {"shadowColor", value<CSSColor>(BLACK, getCSSColorCallback("shadowColor"))},
+    {"shadowColor", value<CSSColor>(BLACK, CSSColorCallback(addShadowColorToPropsBuilder))},
     {"shadowOffset",
      record({
-         {"width", value<CSSDouble>(0, getCSSDoubleCallback("shadowOffset.width"))},
-         {"height", value<CSSDouble>(0, getCSSDoubleCallback("shadowOffset.height"))},
+         {"width", value<CSSDouble>(0, CSSDoubleCallback(addShadowOffsetWidthToPropsBuilder))},
+         {"height", value<CSSDouble>(0, CSSDoubleCallback(addShadowOffsetHeightToPropsBuilder))},
      })},
-    {"shadowRadius", value<CSSDouble>(0, getCSSDoubleCallback("shadowRaius"))},
-    {"shadowOpacity", value<CSSDouble>(1, getCSSDoubleCallback("shadowOpacity"))}};
+    {"shadowRadius", value<CSSDouble>(0, CSSDoubleCallback(addShadowRadiusToPropsBuilder))},
+    {"shadowOpacity", value<CSSDouble>(1, CSSDoubleCallback(addShadowOpacityToPropsBuilder))}};
 
 const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
     {"transformOrigin",

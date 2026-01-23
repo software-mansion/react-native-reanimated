@@ -1591,6 +1591,26 @@ void addElevationToPropsBuilder(
   // TODO: Check this
 }
 
+void addOverflowToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+                               const CSSValueVariant<CSSKeyword> &value) {
+    const auto &storage = value.getStorage();
+    const auto &cssValue = std::get<CSSKeyword>(storage);
+    const auto keyword = cssValue.toString();
+    static const std::unordered_map<std::string, yoga::Overflow> overflowStyleMap = {
+        {"visible", yoga::Overflow::Visible},
+        {"hidden", yoga::Overflow::Hidden},
+        {"scroll", yoga::Overflow::Scroll},
+    };
+
+    const auto it = overflowStyleMap.find(keyword);
+    if (it == overflowStyleMap.end()) {
+      return;
+    }
+    
+    propsBuilder->setOverflow(it->second);
+}
+
 void addPointerEventsToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
@@ -1838,7 +1858,11 @@ void addShadowRadiusToPropsBuilder(
 
 void addShadowOpacityToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<CSSDouble> &value) {}
+    const CSSValueVariant<CSSDouble> &value) {
+    const auto &storage = value.getStorage();
+    const auto &cssValue = std::get<CSSDouble>(storage);
+    propsBuilder->setShadowOpacity(cssValue.value);
+}
 
 void animationMutationsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch) {
   for (auto &[node, dynamic] : updatesBatch) {
