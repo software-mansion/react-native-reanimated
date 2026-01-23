@@ -54,7 +54,6 @@ Pod::Spec.new do |s|
   # See https://github.com/facebook/react-native/blob/c925872e72d2422be46670777bfa2111e13c9e4c/packages/react-native/scripts/cocoapods/new_architecture.rb#L71.
   install_modules_dependencies(s)
 
-  s.dependency 'React-jsi'
   using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
   if using_hermes && !$worklets_config[:is_tvos_target]
     s.dependency 'React-hermes'
@@ -64,14 +63,10 @@ Pod::Spec.new do |s|
     "USE_HEADERMAP" => "YES",
     "DEFINES_MODULE" => "YES",
     "HEADER_SEARCH_PATHS" => [
-      '"$(PODS_TARGET_SRCROOT)/ReactCommon"',
-      '"$(PODS_TARGET_SRCROOT)"',
-      '"$(PODS_ROOT)/RCT-Folly"',
-      '"$(PODS_ROOT)/boost"',
-      '"$(PODS_ROOT)/boost-for-react-native"',
-      '"$(PODS_ROOT)/DoubleConversion"',
-      '"$(PODS_ROOT)/Headers/Private/React-Core"',
-      '"$(PODS_ROOT)/Headers/Private/Yoga"',
+      '$(inherited)',
+      "\"$(PODS_ROOT)/#{$worklets_config[:react_native_common_dir]}\"",
+      "\"$(PODS_ROOT)/#{$worklets_config[:dynamic_frameworks_worklets_dir]}/apple\"",
+      "\"$(PODS_ROOT)/#{$worklets_config[:dynamic_frameworks_worklets_dir]}/Common/cpp\"",
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
@@ -79,18 +74,4 @@ Pod::Spec.new do |s|
     "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => "$(inherited)",
     "OTHER_CFLAGS" => "$(inherited) #{feature_flags} #{version_flags} #{worklets_profiling_flag} #{bundle_mode_flag} #{fetch_preview_flag} #{hermes_v1_flag}",
   }
-  s.xcconfig = {
-    "HEADER_SEARCH_PATHS" => [
-      '"$(PODS_ROOT)/boost"',
-      '"$(PODS_ROOT)/boost-for-react-native"',
-      '"$(PODS_ROOT)/glog"',
-      '"$(PODS_ROOT)/RCT-Folly"',
-      '"$(PODS_ROOT)/Headers/Public/React-hermes"',
-      '"$(PODS_ROOT)/Headers/Public/hermes-engine"',
-      "\"$(PODS_ROOT)/#{$worklets_config[:react_native_common_dir]}\"",
-      "\"$(PODS_ROOT)/#{$worklets_config[:dynamic_frameworks_worklets_dir]}/apple\"",
-      "\"$(PODS_ROOT)/#{$worklets_config[:dynamic_frameworks_worklets_dir]}/Common/cpp\"",
-    ].join(' '),
-  }
-  
 end
