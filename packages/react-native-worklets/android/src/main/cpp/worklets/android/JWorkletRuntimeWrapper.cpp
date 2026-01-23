@@ -25,7 +25,7 @@ local_ref<JWorkletRuntimeWrapper::JavaPart> JWorkletRuntimeWrapper::makeJWorklet
 JWorkletRuntimeWrapper::JWorkletRuntimeWrapper(std::shared_ptr<WorkletRuntime> workletRuntime, uint64_t runtimeId)
     : workletRuntime_(std::move(workletRuntime)) {}
 
-void JWorkletRuntimeWrapper::emitDeviceEvent(
+void JWorkletRuntimeWrapper::cxxEmitDeviceEvent(
     jni::alias_ref<WritableNativeArray::javaobject> params // NOLINT //(performance-unnecessary-value-param
 ) {
   workletRuntime_->schedule([params = params->cthis()->consume()](jsi::Runtime &rt) {
@@ -43,14 +43,15 @@ void JWorkletRuntimeWrapper::emitDeviceEvent(
   });
 }
 
-int JWorkletRuntimeWrapper::getRuntimeId() {
+int JWorkletRuntimeWrapper::cxxGetRuntimeId() {
   return static_cast<int>(workletRuntime_->getRuntimeId());
 }
 
 void JWorkletRuntimeWrapper::registerNatives() {
+    javaClassStatic()->registerNatives({});
   registerHybrid(
-      {makeNativeMethod("cxxEmitDeviceEvent", JWorkletRuntimeWrapper::emitDeviceEvent),
-       makeNativeMethod("cxxGetRuntimeId", JWorkletRuntimeWrapper::getRuntimeId)});
+      {makeNativeMethod("cxxEmitDeviceEvent", JWorkletRuntimeWrapper::cxxEmitDeviceEvent),
+       makeNativeMethod("cxxGetRuntimeId", JWorkletRuntimeWrapper::cxxGetRuntimeId)});
 }
 } // namespace worklets
 

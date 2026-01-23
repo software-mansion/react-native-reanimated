@@ -4,7 +4,7 @@
 
 @file:Suppress("DEPRECATION_ERROR") // Conflicting okhttp versions
 
-package com.swmansion.worklets.networking
+package com.swmansion.worklets
 
 import android.os.Bundle
 import android.util.Base64
@@ -154,10 +154,6 @@ runtimeWrapper: WorkletRuntimeWrapper,
       error: String?,
       e: Throwable?,
   ) {
-//    if (ReactNativeFeatureFlags.enableNetworkEventReporting()) {
-//      InspectorNetworkReporter.reportRequestFailed(devToolsRequestId, false)
-//    }
-//    runtimeWrapper.emitDeviceEvent(
       runtimeWrapper.emitDeviceEvent(
         "didCompleteNetworkResponse",
         buildReadableArray {
@@ -177,9 +173,6 @@ runtimeWrapper: WorkletRuntimeWrapper,
       devToolsRequestId: String,
       encodedDataLength: Long,
   ) {
-//    if (ReactNativeFeatureFlags.enableNetworkEventReporting()) {
-//      InspectorNetworkReporter.reportResponseEnd(devToolsRequestId, encodedDataLength)
-//    }
     runtimeWrapper.emitDeviceEvent(
         "didCompleteNetworkResponse",
         buildReadableArray {

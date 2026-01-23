@@ -5,7 +5,7 @@
 // Conflicting okhttp versions
 @file:Suppress("DEPRECATION_ERROR")
 
-package com.swmansion.worklets.networking
+package com.swmansion.worklets
 
 import android.net.Uri
 import android.util.Base64

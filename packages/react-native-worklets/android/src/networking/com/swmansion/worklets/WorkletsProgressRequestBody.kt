@@ -4,7 +4,7 @@
 
 @file:Suppress("DEPRECATION_ERROR") // Conflicting okio versions
 
-package com.swmansion.worklets.networking
+package com.swmansion.worklets
 
 import java.io.FilterOutputStream
 import java.io.IOException

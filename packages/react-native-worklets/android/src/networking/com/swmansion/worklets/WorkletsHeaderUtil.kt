@@ -2,7 +2,7 @@
 * Based on HeaderUtil.kt from React Native 
 */
 
-package com.swmansion.worklets.networking
+package com.swmansion.worklets
 
 /**
  * The class purpose is to weaken too strict OkHttp restriction on http headers. See:

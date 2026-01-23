@@ -3,6 +3,7 @@ package com.swmansion.worklets;
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -11,6 +12,7 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
 import com.facebook.react.bridge.ReadableNativeMap;
+import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.module.annotations.ReactModule;
@@ -18,7 +20,6 @@ import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.worklets.runloop.AnimationFrameCallback;
 import com.swmansion.worklets.runloop.AnimationFrameQueue;
-import com.swmansion.worklets.networking.WorkletsNetworking;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -84,6 +85,9 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     if (BuildConfig.BUNDLE_MODE_ENABLED) {
       scriptBufferWrapper = new ScriptBufferWrapper(sourceURL, context.getAssets());
     }
+
+    ReadableNativeArray arr = Arguments.fromJavaArgs(new Object[]{});
+    WritableNativeArray arr2 = Arguments.fromJavaArgs(new Object[]{});
 
     mHybridData =
         initHybrid(

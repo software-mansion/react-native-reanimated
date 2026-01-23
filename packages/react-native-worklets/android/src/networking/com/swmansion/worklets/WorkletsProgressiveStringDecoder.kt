@@ -2,7 +2,7 @@
 * Based on ProgressiveStringDecoder.kt from React Native 
 */
 
-package com.swmansion.worklets.networking
+package com.swmansion.worklets
 
 import com.facebook.common.logging.FLog
 import com.facebook.react.common.ReactConstants

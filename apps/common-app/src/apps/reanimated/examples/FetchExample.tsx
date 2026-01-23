@@ -184,7 +184,10 @@ export default function App() {
       <Text>Check console output</Text>
       <Button
         title="Test fetch chain"
-        onPress={() => {
+        onPress={async () => {
+          const data = fetch('https://jsonplaceholder.typicode.com/todos/1');
+          await data;
+          console.log(data);
           initializeRuntimes();
           shouldStop.setBlocking(false);
           scheduleOnRuntime(

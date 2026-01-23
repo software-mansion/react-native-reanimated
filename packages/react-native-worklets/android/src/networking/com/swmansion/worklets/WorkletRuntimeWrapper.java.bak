@@ -1,0 +1,32 @@
+package com.swmansion.worklets;
+
+import com.facebook.jni.HybridData;
+import com.facebook.proguard.annotations.DoNotStrip;
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.ReadableNativeArray;
+import com.facebook.react.bridge.WritableNativeArray;
+
+@SuppressWarnings("JavaJniMissingFunction")
+public class WorkletRuntimeWrapper {
+
+  @DoNotStrip
+  @SuppressWarnings({"FieldCanBeLocal", "unused"})
+  private final HybridData mHybridData;
+
+  @DoNotStrip
+  private WorkletRuntimeWrapper(HybridData hybridData) {
+    mHybridData = hybridData;
+  }
+
+  public void emitDeviceEvent(String eventName, Object params) {
+    cxxEmitDeviceEvent(Arguments.fromJavaArgs(new Object[]{eventName, params}));
+  }
+
+  int getRuntimeId() {
+      return cxxGetRuntimeId();
+  }
+
+  private native void cxxEmitDeviceEvent(WritableNativeArray params);
+  private native int cxxGetRuntimeId();
+
+}

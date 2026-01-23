@@ -4,7 +4,7 @@
 
 @file:Suppress("DEPRECATION_ERROR") // Conflicting okhttp versions
 
-package com.swmansion.worklets.networking
+package com.swmansion.worklets
 
 import java.io.IOException
 import okhttp3.MediaType

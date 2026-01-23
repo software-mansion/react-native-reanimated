@@ -1,4 +1,4 @@
-package com.swmansion.worklets.networking
+package com.swmansion.worklets
 
 import com.facebook.jni.HybridData
 import com.facebook.jni.annotations.DoNotStrip
