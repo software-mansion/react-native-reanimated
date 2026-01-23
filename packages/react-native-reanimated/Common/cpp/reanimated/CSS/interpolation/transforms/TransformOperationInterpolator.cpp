@@ -46,10 +46,14 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<PerspectiveOperat
   const auto &fromValue = std::static_pointer_cast<PerspectiveOperation>(from)->value;
   const auto &toValue = std::static_pointer_cast<PerspectiveOperation>(to)->value;
 
-  if (fromValue.value == 0)
+  if (fromValue.value == 0) {
+    addToPropsBuilder_(propsBuilder, *std::static_pointer_cast<PerspectiveOperation>(from));
     return std::make_unique<PerspectiveOperation>(toValue);
-  if (toValue.value == 0)
+  }
+  if (toValue.value == 0) {
+    addToPropsBuilder_(propsBuilder, *std::static_pointer_cast<PerspectiveOperation>(to));
     return std::make_unique<PerspectiveOperation>(fromValue);
+  }
 
   auto operation = std::make_unique<PerspectiveOperation>(fromValue.interpolate(progress, toValue));
   addToPropsBuilder_(propsBuilder, *operation);
@@ -76,7 +80,10 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<MatrixOperation>:
   const auto toMatrix = matrixFromOperation(toOperation, shouldBe3D, context);
 
   if (shouldBe3D) {
-    return std::make_unique<MatrixOperation>(interpolateMatrix<TransformMatrix3D>(progress, fromMatrix, toMatrix));
+    auto operation =
+        std::make_unique<MatrixOperation>(interpolateMatrix<TransformMatrix3D>(progress, fromMatrix, toMatrix));
+    addToPropsBuilder_(propsBuilder, *operation);
+    return operation;
   }
 
   const auto result2D = interpolateMatrix<TransformMatrix2D>(progress, fromMatrix, toMatrix);
