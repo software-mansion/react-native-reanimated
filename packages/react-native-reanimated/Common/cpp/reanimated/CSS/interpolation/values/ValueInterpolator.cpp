@@ -3,8 +3,6 @@
 #include <reanimated/CSS/common/values/CSSValueVariant.h>
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
 
-#include <folly/json.h>
-
 #include <memory>
 #include <utility>
 
