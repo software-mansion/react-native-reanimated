@@ -3,7 +3,9 @@
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
 #include <worklets/android/JWorkletRuntimeWrapper.h>
+
 #include <utility>
+#include <vector>
 
 namespace worklets {
 
