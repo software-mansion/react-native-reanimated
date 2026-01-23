@@ -1,10 +1,9 @@
-#include <react/jni/ReadableNativeArray.h>
-#include <react/jni/WritableNativeArray.h>
-#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
-
 #pragma once
 
+#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+
 #include <fbjni/fbjni.h>
+#include <react/jni/ReadableNativeArray.h>
 #include <react/jni/WritableNativeArray.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
