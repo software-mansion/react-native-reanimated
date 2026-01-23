@@ -122,7 +122,7 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
     const auto &message = error.getMessage();
     const auto &stack = error.getStack();
     if (!message.starts_with("[Worklets] Worklets initialized successfully")) {
-      const auto newMessage = "[Worklets] Failed to initialize runtime. Reason: " + message;
+      const auto newMessage = "[Worklets] Failed to initialize runtime. Reason: " + message + " " + stack;
       JSLogger::reportFatalErrorOnJS(
           jsScheduler, {.message = newMessage, .stack = stack, .name = "WorkletsError", .jsEngine = "Worklets"});
       return;

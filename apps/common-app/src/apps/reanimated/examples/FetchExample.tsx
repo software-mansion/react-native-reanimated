@@ -4,20 +4,17 @@ import {
   createWorkletRuntime,
   scheduleOnRuntime,
   type WorkletRuntime,
+  createSynchronizable,
 } from 'react-native-worklets';
 import axios from 'axios';
 
-const elephantRuntime = createWorkletRuntime({
-  name: 'elephant',
-});
+let elephantRuntime: WorkletRuntime;
 
-const giraffeRuntime = createWorkletRuntime({
-  name: 'giraffe',
-});
+let giraffeRuntime: WorkletRuntime;
 
-const monkeyRuntime = createWorkletRuntime({
-  name: 'monkey',
-});
+let monkeyRuntime: WorkletRuntime;
+
+const shouldStop = createSynchronizable(false);
 
 function testXHR(
   readystateHandler: boolean,
@@ -110,7 +107,15 @@ function testXHR(
   state.downloading = true;
 }
 
-function testFetch(runtime: WorkletRuntime, count: number) {
+function testFetch(
+  runtime: WorkletRuntime,
+  runtimes: {
+    elephant: WorkletRuntime;
+    giraffe: WorkletRuntime;
+    monkey: WorkletRuntime;
+  },
+  count: number
+) {
   'worklet';
   if (count > 8) {
     return;
@@ -125,19 +130,45 @@ function testFetch(runtime: WorkletRuntime, count: number) {
       console.log(response.data);
     })
     .catch((error) => {
+      shouldStop.setBlocking(true);
       console.error('Axios error:', error);
     });
+  if (count > 8) {
+    return;
+  }
 
   const nextRuntime =
-    runtime.name === elephantRuntime.name
-      ? giraffeRuntime
-      : runtime.name === giraffeRuntime.name
-        ? monkeyRuntime
-        : elephantRuntime;
+    runtime.name === runtimes.elephant.name
+      ? runtimes.giraffe
+      : runtime.name === runtimes.giraffe.name
+        ? runtimes.monkey
+        : runtimes.elephant;
 
   setTimeout(() => {
-    scheduleOnRuntime(nextRuntime, testFetch, nextRuntime, count + 1);
+    if (!shouldStop.getDirty()) {
+      scheduleOnRuntime(
+        nextRuntime,
+        testFetch,
+        nextRuntime,
+        runtimes,
+        count + 1
+      );
+    }
   }, 100);
+}
+
+function initializeRuntimes() {
+  if (!elephantRuntime) {
+    elephantRuntime = createWorkletRuntime({
+      name: 'elephant',
+    });
+    giraffeRuntime = createWorkletRuntime({
+      name: 'giraffe',
+    });
+    monkeyRuntime = createWorkletRuntime({
+      name: 'monkey',
+    });
+  }
 }
 
 function testWebSocket() {
@@ -154,12 +185,25 @@ export default function App() {
       <Button
         title="Test fetch chain"
         onPress={() => {
-          scheduleOnRuntime(elephantRuntime, testFetch, elephantRuntime, 1);
+          initializeRuntimes();
+          shouldStop.setBlocking(false);
+          scheduleOnRuntime(
+            elephantRuntime,
+            testFetch,
+            elephantRuntime,
+            {
+              elephant: elephantRuntime,
+              giraffe: giraffeRuntime,
+              monkey: monkeyRuntime,
+            },
+            1
+          );
         }}
       />
       <Button
         title="Test XHR"
         onPress={() => {
+          initializeRuntimes();
           scheduleOnRuntime(
             elephantRuntime,
             testXHR,

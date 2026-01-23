@@ -110,6 +110,7 @@ def WORKLETS_VERSION = getWorkletsVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
 def BUNDLE_MODE_ENABLED = isFlagEnabled(featureFlags, "BUNDLE_MODE_ENABLED");
+def FETCH_PREVIEW_ENABLED = isFlagEnabled(featureFlags, "FETCH_PREVIEW_ENABLED");
 def WORKLETS_FEATURE_FLAGS = getStaticFeatureFlagsString(featureFlags)
 def HERMES_V1_ENABLED = safeAppExtGet("hermesV1Enabled", false)
 def WORKLETS_PROFILING = safeAppExtGet("enableWorkletsProfiling", false)
@@ -152,13 +153,15 @@ buildscript {
     }
 }
 
-if (project == rootProject) {
-    apply from: "spotless.gradle"
-}
-
 apply plugin: "com.android.library"
 apply plugin: "maven-publish"
 apply plugin: "de.undercouch.download"
+
+if (project == rootProject) {
+    apply from: "spotless.gradle"
+} else {
+    apply plugin: "org.jetbrains.kotlin.android"
+}
 
 apply from: "./fix-prefab.gradle"
 
@@ -208,6 +211,7 @@ android {
                         "-DJS_RUNTIME=${JS_RUNTIME}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
                         "-DWORKLETS_BUNDLE_MODE_ENABLED=${BUNDLE_MODE_ENABLED}",
+                        "-DWORKLETS_FETCH_PREVIEW_ENABLED=${FETCH_PREVIEW_ENABLED}",
                         "-DWORKLETS_PROFILING=${WORKLETS_PROFILING}",
                         "-DWORKLETS_VERSION=${WORKLETS_VERSION}",
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
@@ -252,7 +256,7 @@ android {
     packagingOptions {
         // For some reason gradle only complains about the duplicated version of librrc_root and libreact_render libraries
         // while there are more libraries copied in intermediates folder of the lib build directory, we exclude
-        // only the ones that make the build fail (ideally we should only include libreanimated but we
+        // only the ones that make the build fail (ideally we should only include libworklets but we
         // are only allowed to specify exclude patterns)
         excludes = ["META-INF",
                     "META-INF/**",
@@ -268,6 +272,22 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
+    }
+    sourceSets {
+        main {
+            java {
+                if (FETCH_PREVIEW_ENABLED) {
+                    srcDirs += "src/networking"
+                } else {
+                    srcDirs += "src/no-networking"
+                }
+            }
+        }
+    }
+    if(project != rootProject) {
+        kotlinOptions {
+            jvmTarget = '17'
+        }
     }
     tasks.withType(ExternalNativeBuildJsonTask).tap {
         configureEach { compileTask ->
@@ -345,6 +365,7 @@ dependencies {
     implementation "androidx.core:core:1.15.0"
 
     implementation "com.facebook.react:react-android" // version substituted by RNGP
+    implementation "androidx.core:core-ktx:1.17.0"
     if (JS_RUNTIME == "hermes") {
         implementation "com.facebook.react:hermes-android" // version substituted by RNGP
     }

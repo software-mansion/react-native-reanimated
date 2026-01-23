@@ -230,12 +230,12 @@ void WorkletRuntimeDecorator::decorate(
 void WorkletRuntimeDecorator::postEvaluateScript(
     jsi::Runtime &rt,
     const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
-#if defined(__APPLE__) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
   installNetworking(rt, runtimeBindings);
-#endif // defined(__APPLE__) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 }
 
-#if defined(__APPLE__) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
 void WorkletRuntimeDecorator::installNetworking(
     jsi::Runtime &rt,
     const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
@@ -243,6 +243,27 @@ void WorkletRuntimeDecorator::installNetworking(
 
   auto Networking = TurboModules.getPropertyAsFunction(rt, "get").callWithThis(rt, TurboModules, "Networking");
 
+#ifdef ANDROID
+  auto jsiSendRequest = jsi::Function::createFromHostFunction(
+      rt,
+      jsi::PropNameID::forAscii(rt, "sendRequest"),
+      9,
+      [sendRequest = runtimeBindings->sendRequest](
+          jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+        auto method = args[0].asString(rt);
+        auto url = args[1].asString(rt);
+        auto requestId = args[2].asNumber();
+        auto headers = args[3].asObject(rt).asArray(rt);
+        auto data = args[4].asObject(rt);
+        auto responseType = args[5].asString(rt);
+        auto incrementalUpdates = args[6].asBool();
+        auto timeout = args[7].asNumber();
+        auto withCredentials = args[8].asBool();
+        sendRequest(
+            rt, method, url, requestId, headers, data, responseType, incrementalUpdates, timeout, withCredentials);
+        return jsi::Value::undefined();
+      });
+#else
   auto jsiSendRequest = jsi::Function::createFromHostFunction(
       rt,
       jsi::PropNameID::forAscii(rt, "sendRequest"),
@@ -254,6 +275,7 @@ void WorkletRuntimeDecorator::installNetworking(
         sendRequest(rt, query, std::move(responseSender));
         return jsi::Value::undefined();
       });
+#endif // ANDROID
 
   Networking.asObject(rt).setProperty(rt, "sendRequest", std::move(jsiSendRequest));
 
@@ -283,7 +305,7 @@ void WorkletRuntimeDecorator::installNetworking(
 
   Networking.asObject(rt).setProperty(rt, "clearCookies", std::move(jsiClearCookies));
 }
-#endif // defined(__APPLE__) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 #endif // WORKLETS_BUNDLE_MODE_ENABLED
 
 } // namespace worklets
