@@ -1,4 +1,5 @@
 #include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
+#include <reanimated/Tools/FeatureFlags.h>
 
 #include <memory>
 #include <string>
@@ -217,7 +218,9 @@ void CSSAnimationsRegistry::updateViewAnimations(
 
   if (hasUpdates) {
     addUpdatesToBatch(shadowNode, result);
-    addAnimatedPropsToBatch(shadowNode, propsBuilder->get());
+    if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+      addAnimatedPropsToBatch(shadowNode, propsBuilder->get());
+    }
   }
 }
 

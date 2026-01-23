@@ -1,4 +1,5 @@
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
+#include <reanimated/Tools/FeatureFlags.h>
 
 #include <folly/json.h>
 #include <memory>
@@ -63,7 +64,9 @@ void CSSTransitionsRegistry::update(const double timestamp) {
     const folly::dynamic &updates = transition->update(timestamp, propsBuilder);
     if (!updates.empty()) {
       addUpdatesToBatch(transition->getShadowNode(), updates);
-      addAnimatedPropsToBatch(transition->getShadowNode(), propsBuilder->get());
+      if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+        addAnimatedPropsToBatch(transition->getShadowNode(), propsBuilder->get());
+      }
     }
 
     updateInUpdatesRegistry(transition, updates);
@@ -134,7 +137,9 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
       std::shared_ptr<AnimatedPropsBuilder> propsBuilder = std::make_shared<AnimatedPropsBuilder>();
       const auto &transitionStartStyle =
           transition->run(changedProps, lastUpdates, strongThis->getCurrentTimestamp_(), propsBuilder);
-      strongThis->addAnimatedPropsToBatch(transition->getShadowNode(), propsBuilder->get());
+      if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+        strongThis->addAnimatedPropsToBatch(transition->getShadowNode(), propsBuilder->get());
+      }
       strongThis->updateInUpdatesRegistry(transition, transitionStartStyle);
       strongThis->scheduleOrActivateTransition(transition);
     }
