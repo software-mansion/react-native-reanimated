@@ -5,9 +5,7 @@
 #pragma once
 
 #include <fbjni/fbjni.h>
-#include <react/jni/JSLoader.h>
-#include <react/jni/ReadableNativeArray.h>
-// #include <react/jni/WritableNativeArray.h>
+#include <react/jni/WritableNativeArray.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
@@ -19,8 +17,7 @@ using namespace facebook::react;
 using namespace facebook::jni;
 
 /**
- * JScriptBufferWrapper is a JNI wrapper class that holds a ScriptBuffer containing 
- * JavaScript code and its source URL, to be evaluated on a WorkletRuntime.
+    * JNI wrapper around WorkletRuntime to expose its methods to Java.
  */
 class JWorkletRuntimeWrapper : public jni::HybridClass<JWorkletRuntimeWrapper> {
  public:

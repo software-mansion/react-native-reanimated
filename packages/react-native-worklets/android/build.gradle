@@ -155,12 +155,13 @@ buildscript {
 
 if (project == rootProject) {
     apply from: "spotless.gradle"
+} else {
+    apply plugin: "org.jetbrains.kotlin.android"
 }
 
 apply plugin: "com.android.library"
 apply plugin: "maven-publish"
 apply plugin: "de.undercouch.download"
-apply plugin: 'org.jetbrains.kotlin.android'
 
 apply from: "./fix-prefab.gradle"
 
@@ -283,8 +284,10 @@ android {
             }
         }
     }
-    kotlinOptions {
-        jvmTarget = '17'
+    if(project != rootProject) {
+        kotlinOptions {
+            jvmTarget = '17'
+        }
     }
     tasks.withType(ExternalNativeBuildJsonTask).tap {
         configureEach { compileTask ->
@@ -362,7 +365,7 @@ dependencies {
     implementation "androidx.core:core:1.15.0"
 
     implementation "com.facebook.react:react-android" // version substituted by RNGP
-    implementation 'androidx.core:core-ktx:1.17.0'
+    implementation "androidx.core:core-ktx:1.17.0"
     if (JS_RUNTIME == "hermes") {
         implementation "com.facebook.react:hermes-android" // version substituted by RNGP
     }

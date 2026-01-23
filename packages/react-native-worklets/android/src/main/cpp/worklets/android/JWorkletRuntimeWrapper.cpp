@@ -1,15 +1,7 @@
 #if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 
-/**
- * Based on
- * https://github.com/facebook/react-native/blob/main/packages/react-native/ReactAndroid/src/main/jni/react/jni/JSLoader.cpp
- */
-
-#include <fbjni/detail/References.h>
-#include <fbjni/detail/Registration.h>
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
-#include <react/jni/WritableNativeArray.h>
 #include <worklets/android/JWorkletRuntimeWrapper.h>
 #include <utility>
 
@@ -48,7 +40,7 @@ int JWorkletRuntimeWrapper::cxxGetRuntimeId() {
 }
 
 void JWorkletRuntimeWrapper::registerNatives() {
-    javaClassStatic()->registerNatives({});
+  javaClassStatic()->registerNatives({});
   registerHybrid(
       {makeNativeMethod("cxxEmitDeviceEvent", JWorkletRuntimeWrapper::cxxEmitDeviceEvent),
        makeNativeMethod("cxxGetRuntimeId", JWorkletRuntimeWrapper::cxxGetRuntimeId)});

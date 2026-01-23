@@ -19,7 +19,6 @@ import com.facebook.react.modules.network.ForwardingCookieHandler
 import com.facebook.react.modules.network.NetworkInterceptorCreator;
 import com.facebook.react.modules.network.NetworkingModule
 import com.facebook.react.modules.network.OkHttpClientProvider
-//import com.facebook.react.common.network.OkHttpCallUtil
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.util.ArrayList

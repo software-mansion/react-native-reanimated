@@ -2,7 +2,6 @@
 
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
-#include <jni.h>
 #include <jsi/jsi.h>
 #include <react/jni/JMessageQueueThread.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
@@ -32,7 +31,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<worklets::AndroidUIScheduler::javaobject> androidUIScheduler,
       jni::alias_ref<JScriptBufferWrapper::javaobject> jScriptBufferWrapper);
 
-  static void registerNatives(JavaVM *vm);
+  static void registerNatives();
 
   inline std::shared_ptr<WorkletsModuleProxy> getWorkletsModuleProxy() {
     return workletsModuleProxy_;
@@ -68,11 +67,6 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
   jni::global_ref<WorkletsModule::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
-#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
-  static JavaVM *jvm_;
-
-  friend class AsyncQueueImpl;
-#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 };
 
 } // namespace worklets

@@ -15,7 +15,6 @@
 #include <react/jni/ReadableNativeMap.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/android/JWorkletRuntimeWrapper.h>
-#include <cstdint>
 #endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 
 #include <memory>
@@ -180,14 +179,7 @@ void WorkletsModule::invalidateCpp() {
   workletsModuleProxy_.reset();
 }
 
-#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
-JavaVM *WorkletsModule::jvm_ = nullptr;
-#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
-
-void WorkletsModule::registerNatives(JavaVM *vm) {
-#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
-  jvm_ = vm;
-#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+void WorkletsModule::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", WorkletsModule::initHybrid),
       makeNativeMethod("invalidateCpp", WorkletsModule::invalidateCpp),
