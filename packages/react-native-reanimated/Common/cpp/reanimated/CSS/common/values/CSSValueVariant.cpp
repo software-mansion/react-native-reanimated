@@ -158,6 +158,11 @@ std::variant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::getStorage() con
   return storage_;
 };
 
+template <CSSValueDerived... AllowedTypes>
+const std::variant<AllowedTypes...> &CSSValueVariant<AllowedTypes...>::getStorageRef() const {
+  return storage_;
+}
+
 template class CSSValueVariant<CSSLength>;
 template class CSSValueVariant<CSSLength, CSSKeyword>;
 template class CSSValueVariant<CSSDouble>;

@@ -100,8 +100,9 @@ class CSSValueVariant final : public CSSValue {
       const double progress,
       const CSSValueVariant &to,
       const ResolvableValueInterpolationContext &context) const;
- 
+
   std::variant<AllowedTypes...> getStorage() const;
+  const std::variant<AllowedTypes...> &getStorageRef() const;
 
  private:
   std::variant<AllowedTypes...> storage_;

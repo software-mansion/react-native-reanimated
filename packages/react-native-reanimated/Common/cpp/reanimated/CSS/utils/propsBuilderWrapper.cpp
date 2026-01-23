@@ -286,7 +286,7 @@ void addPositionEdge(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength, CSSKeyword> &value,
     const std::string &edgeName) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   std::visit(
       [&](const auto &active_value) {
         using T = std::decay_t<decltype(active_value)>;
@@ -328,7 +328,7 @@ void addMargin(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength, CSSKeyword> &value,
     std::string marginPropName) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
 
   std::visit(
       [&](const auto &active_value) {
@@ -372,7 +372,7 @@ void addPadding(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength, CSSKeyword> &value,
     std::string paddingPropName) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
 
   std::visit(
       [&](const auto &active_value) {
@@ -416,7 +416,7 @@ void addBorderWidth(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDouble> &value,
     std::string borderWidthPropName) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSDouble>(storage);
   updatePropOrAdd<CascadedRectangleEdges<yoga::StyleLength>>(
       propsBuilder,
@@ -435,7 +435,7 @@ void addCascadedBorderRadiiToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength> &value,
     std::string borderRadiiPropName) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSLength>(storage);
 
   const auto updateBordeRadii = [&](CascadedBorderRadii &borderRadii) {
@@ -498,7 +498,7 @@ void addBorderColor(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSColor> &value,
     std::string borderColorPropName) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssColor = std::get<CSSColor>(storage);
 
   const auto updateBorderColor = [&](CascadedBorderColors &borderColor) {
@@ -560,7 +560,7 @@ void addWidthToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength, CSSKeyword> &value) {
 
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   std::visit(
       [&](const auto &active_value) {
         using T = std::decay_t<decltype(active_value)>;
@@ -581,7 +581,7 @@ void addHeightToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength, CSSKeyword> &value) {
 
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   std::visit(
       [&](const auto &active_value) {
         using T = std::decay_t<decltype(active_value)>;
@@ -601,7 +601,7 @@ void addHeightToPropsBuilder(
 void addBackgroundColorToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSColor> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSColor>(storage);
   auto color = parseCSSColor(cssValue);
   propsBuilder->setBackgroundColor(SharedColor(color));
@@ -610,7 +610,7 @@ void addBackgroundColorToPropsBuilder(
 void addOpacityToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDouble> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSDouble>(storage);
   propsBuilder->setOpacity(cssValue.value);
 }
@@ -1139,7 +1139,7 @@ void addBorderBlockStartColorToPropsBuilder(
 void addOutlineColorToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSColor> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssColor = std::get<CSSColor>(storage);
   propsBuilder->setOutlineColor(SharedColor(parseCSSColor(cssColor)));
 }
@@ -1147,7 +1147,7 @@ void addOutlineColorToPropsBuilder(
 void addOutlineOffsetToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDouble> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSDouble>(storage);
   propsBuilder->setOutlineOffset(cssValue.value);
 }
@@ -1155,7 +1155,7 @@ void addOutlineOffsetToPropsBuilder(
 void addOutlineStyleToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto outlineStyleStr = cssValue.toString();
   static const std::unordered_map<std::string, OutlineStyle> outlineStyleMap = {
@@ -1175,7 +1175,7 @@ void addOutlineStyleToPropsBuilder(
 void addOutlineWidthToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDouble> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSDouble>(storage);
   propsBuilder->setOutlineWidth(cssValue.value);
 }
@@ -1183,7 +1183,7 @@ void addOutlineWidthToPropsBuilder(
 void addFlexToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDouble> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSDouble>(storage);
   propsBuilder->setFlex(yoga::FloatOptional(cssValue.value));
 }
@@ -1191,7 +1191,7 @@ void addFlexToPropsBuilder(
 void addAlignContentToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   propsBuilder->setAlignContent(strToYogaAlign(cssValue.toString()));
 }
@@ -1199,7 +1199,7 @@ void addAlignContentToPropsBuilder(
 void addAlignItemsToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   propsBuilder->setAlignItems(strToYogaAlign(cssValue.toString()));
 }
@@ -1207,7 +1207,7 @@ void addAlignItemsToPropsBuilder(
 void addAlignSelfToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   propsBuilder->setAlignSelf(strToYogaAlign(cssValue.toString()));
 }
@@ -1215,7 +1215,7 @@ void addAlignSelfToPropsBuilder(
 void addAspectRatioToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDouble, CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
 
   std::visit(
       [&](const auto &active_value) {
@@ -1239,7 +1239,7 @@ void addAspectRatioToPropsBuilder(
 void addBoxSizingToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto boxSizing = cssValue.toString();
   static const std::unordered_map<std::string, yoga::BoxSizing> boxSizingMap = {
@@ -1258,7 +1258,7 @@ void addBoxSizingToPropsBuilder(
 void addDisplayToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDisplay> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSDisplay>(storage);
   const auto display = cssValue.toString();
   static const std::unordered_map<std::string, yoga::Display> displayMap = {
@@ -1278,7 +1278,7 @@ void addDisplayToPropsBuilder(
 void addFlexBasisToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength, CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
 
   std::visit(
       [&](const auto &active_value) {
@@ -1298,7 +1298,7 @@ void addFlexBasisToPropsBuilder(
 void addFlexDirectionToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto flexDirection = cssValue.toString();
   static const std::unordered_map<std::string, yoga::FlexDirection> flexDirectionMap = {
@@ -1319,7 +1319,7 @@ void addFlexDirectionToPropsBuilder(
 void addRowGapToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSLength>(storage);
   propsBuilder->setRowGap(cssLengthToStyleLength(cssValue));
 }
@@ -1327,7 +1327,7 @@ void addRowGapToPropsBuilder(
 void addColumnGapToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSLength>(storage);
   propsBuilder->setColumnGap(cssLengthToStyleLength(cssValue));
 }
@@ -1335,7 +1335,7 @@ void addColumnGapToPropsBuilder(
 void addFlexGrowToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDouble> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSDouble>(storage);
   propsBuilder->setFlexGrow(yoga::FloatOptional(cssValue.value));
 }
@@ -1343,7 +1343,7 @@ void addFlexGrowToPropsBuilder(
 void addFlexShrinkToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDouble> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSDouble>(storage);
   propsBuilder->setFlexShrink(yoga::FloatOptional(cssValue.value));
 }
@@ -1351,7 +1351,7 @@ void addFlexShrinkToPropsBuilder(
 void addFlexWrapToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto flexWrap = cssValue.toString();
   static const std::unordered_map<std::string, yoga::Wrap> flexWrapMap = {
@@ -1371,7 +1371,7 @@ void addFlexWrapToPropsBuilder(
 void addJustifyContentToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto justifyContent = cssValue.toString();
   static const std::unordered_map<std::string, yoga::Justify> justifyContentMap = {
@@ -1395,7 +1395,7 @@ void addMaxWidthToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength, CSSKeyword> &value) {
 
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   std::visit(
       [&](const auto &active_value) {
         using T = std::decay_t<decltype(active_value)>;
@@ -1416,7 +1416,7 @@ void addMaxWidthToPropsBuilder(
 void addMinWidthToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength, CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   std::visit(
       [&](const auto &active_value) {
         using T = std::decay_t<decltype(active_value)>;
@@ -1437,7 +1437,7 @@ void addMinWidthToPropsBuilder(
 void addMaxHeightToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength, CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   std::visit(
       [&](const auto &active_value) {
         using T = std::decay_t<decltype(active_value)>;
@@ -1458,7 +1458,7 @@ void addMaxHeightToPropsBuilder(
 void addMinHeightToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength, CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   std::visit(
       [&](const auto &active_value) {
         using T = std::decay_t<decltype(active_value)>;
@@ -1479,7 +1479,7 @@ void addMinHeightToPropsBuilder(
 void addPositionToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto keyword = cssValue.toString();
   static const std::unordered_map<std::string, yoga::PositionType> positionMap = {
@@ -1499,7 +1499,7 @@ void addPositionToPropsBuilder(
 void addZIndexToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSInteger> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSInteger>(storage);
   propsBuilder->setZIndex(cssValue.value);
 }
@@ -1507,7 +1507,7 @@ void addZIndexToPropsBuilder(
 void addDirectionToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto keyword = cssValue.toString();
   static const std::unordered_map<std::string, yoga::Direction> directionMap = {
@@ -1527,7 +1527,7 @@ void addDirectionToPropsBuilder(
 void addBackfaceVisibilityToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto keyword = cssValue.toString();
   static const std::unordered_map<std::string, BackfaceVisibility> backfaceVisibilityMap = {
@@ -1547,7 +1547,7 @@ void addBackfaceVisibilityToPropsBuilder(
 void addBorderCurveToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto keyword = cssValue.toString();
   static const std::unordered_map<std::string, BorderCurve> borderCurveMap = {
@@ -1567,7 +1567,7 @@ void addBorderCurveToPropsBuilder(
 void addBorderStyleToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto keyword = cssValue.toString();
   static const std::unordered_map<std::string, BorderStyle> borderStyleMap = {
@@ -1593,28 +1593,28 @@ void addElevationToPropsBuilder(
 
 void addOverflowToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-                               const CSSValueVariant<CSSKeyword> &value) {
-    const auto &storage = value.getStorage();
-    const auto &cssValue = std::get<CSSKeyword>(storage);
-    const auto keyword = cssValue.toString();
-    static const std::unordered_map<std::string, yoga::Overflow> overflowStyleMap = {
-        {"visible", yoga::Overflow::Visible},
-        {"hidden", yoga::Overflow::Hidden},
-        {"scroll", yoga::Overflow::Scroll},
-    };
+    const CSSValueVariant<CSSKeyword> &value) {
+  const auto &storage = value.getStorageRef();
+  const auto &cssValue = std::get<CSSKeyword>(storage);
+  const auto keyword = cssValue.toString();
+  static const std::unordered_map<std::string, yoga::Overflow> overflowStyleMap = {
+      {"visible", yoga::Overflow::Visible},
+      {"hidden", yoga::Overflow::Hidden},
+      {"scroll", yoga::Overflow::Scroll},
+  };
 
-    const auto it = overflowStyleMap.find(keyword);
-    if (it == overflowStyleMap.end()) {
-      return;
-    }
-    
-    propsBuilder->setOverflow(it->second);
+  const auto it = overflowStyleMap.find(keyword);
+  if (it == overflowStyleMap.end()) {
+    return;
+  }
+
+  propsBuilder->setOverflow(it->second);
 }
 
 void addPointerEventsToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto keyword = cssValue.toString();
   static const std::unordered_map<std::string, PointerEventsMode> pointerEventsMap = {
@@ -1635,7 +1635,7 @@ void addPointerEventsToPropsBuilder(
 void addIsolationToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto keyword = cssValue.toString();
   static const std::unordered_map<std::string, Isolation> isolationMap = {
@@ -1654,7 +1654,7 @@ void addIsolationToPropsBuilder(
 void addCursorToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto cursor = cssValue.toString();
 
@@ -1708,7 +1708,7 @@ void addCursorToPropsBuilder(
 void addBoxShadowToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSBoxShadow> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSBoxShadow>(storage);
   SharedColor color = SharedColor(parseCSSColor(cssValue.color));
   BoxShadow boxShadow = BoxShadow{
@@ -1732,7 +1732,7 @@ void addBoxShadowToPropsBuilder(
 void addMixBlendModeToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSKeyword> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSKeyword>(storage);
   const auto mixBlend = cssValue.toString();
 
@@ -1802,7 +1802,7 @@ void addEndToPropsBuilder(
 void addTransformOriginXToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssLength = std::get<CSSLength>(storage);
   addTransformOriginAxis(propsBuilder, cssLength, "x");
 }
@@ -1810,7 +1810,7 @@ void addTransformOriginXToPropsBuilder(
 void addTransformOriginYToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssLength = std::get<CSSLength>(storage);
   addTransformOriginAxis(propsBuilder, cssLength, "y");
 }
@@ -1818,7 +1818,7 @@ void addTransformOriginYToPropsBuilder(
 void addTransformOriginZToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDouble> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssDouble = std::get<CSSDouble>(storage);
   addTransformOriginZ(propsBuilder, cssDouble.value);
 }
@@ -1826,7 +1826,7 @@ void addTransformOriginZToPropsBuilder(
 void addShadowColorToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSColor> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSColor>(storage);
   auto color = parseCSSColor(cssValue);
   propsBuilder->setShadowColor(SharedColor(color));
@@ -1835,7 +1835,7 @@ void addShadowColorToPropsBuilder(
 void addShadowOffsetWidthToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDouble> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSDouble>(storage);
   addShadowOffsetAxis(propsBuilder, cssValue, "width");
 }
@@ -1843,7 +1843,7 @@ void addShadowOffsetWidthToPropsBuilder(
 void addShadowOffsetHeightToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDouble> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSDouble>(storage);
   addShadowOffsetAxis(propsBuilder, cssValue, "height");
 }
@@ -1851,7 +1851,7 @@ void addShadowOffsetHeightToPropsBuilder(
 void addShadowRadiusToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDouble> &value) {
-  const auto &storage = value.getStorage();
+  const auto &storage = value.getStorageRef();
   const auto &cssValue = std::get<CSSDouble>(storage);
   propsBuilder->setShadowRadius(cssValue.value);
 }
@@ -1859,9 +1859,9 @@ void addShadowRadiusToPropsBuilder(
 void addShadowOpacityToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDouble> &value) {
-    const auto &storage = value.getStorage();
-    const auto &cssValue = std::get<CSSDouble>(storage);
-    propsBuilder->setShadowOpacity(cssValue.value);
+  const auto &storage = value.getStorageRef();
+  const auto &cssValue = std::get<CSSDouble>(storage);
+  propsBuilder->setShadowOpacity(cssValue.value);
 }
 
 void animationMutationsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch) {
