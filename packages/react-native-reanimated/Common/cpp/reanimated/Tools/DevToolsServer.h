@@ -69,7 +69,7 @@ class DevToolsServer {
 
   // Send data to server
   void sendPendingData();
-  void sendMutationsBatch(const std::vector<SimpleMutation> &mutations);
+  void sendMutationsBatch(const std::vector<SimpleMutation> &mutations, uint64_t timestamp);
   void sendProfilerStringsBatch(const std::vector<ProfilerStringEntry> &strings);
   void sendProfilerEventsBatch(const std::vector<ProfilerEvent> &events);
   bool sendRawData(const void *data, size_t size);
@@ -78,6 +78,15 @@ class DevToolsServer {
   std::vector<ProfilerEvent> resolveProfilerEvents(const std::vector<ProfilerEventInternal> &events);
   uint32_t getOrRegisterString(const char *name);
 
+  // Helper to get current timestamp
+  static uint64_t getCurrentTimestampNs();
+
+  // Mutation batch with timestamp
+  struct MutationBatch {
+    std::vector<SimpleMutation> mutations;
+    uint64_t timestampNs;
+  };
+
   // Network thread
   std::thread networkThread_;
   std::atomic<bool> running_{false};
@@ -85,7 +94,7 @@ class DevToolsServer {
   // Work queues (protected by queueMutex_)
   std::mutex queueMutex_;
   std::condition_variable queueCondition_;
-  std::vector<std::vector<SimpleMutation>> pendingMutations_;
+  std::vector<MutationBatch> pendingMutations_;
   std::vector<std::vector<ProfilerEventInternal>> pendingProfilerEvents_;
   bool flushRequested_{false};
 

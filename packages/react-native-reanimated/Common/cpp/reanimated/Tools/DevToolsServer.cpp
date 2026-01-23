@@ -53,8 +53,12 @@ void DevToolsServer::sendMutations(std::vector<SimpleMutation> &&mutations) {
     return;
   }
 
+  MutationBatch batch;
+  batch.mutations = std::move(mutations);
+  batch.timestampNs = getCurrentTimestampNs();
+
   std::lock_guard<std::mutex> lock(queueMutex_);
-  pendingMutations_.push_back(std::move(mutations));
+  pendingMutations_.push_back(std::move(batch));
   flushRequested_ = true;
   queueCondition_.notify_one();
 }
@@ -77,7 +81,7 @@ void DevToolsServer::requestFlush() {
 
 void DevToolsServer::networkThreadLoop() {
   while (running_.load(std::memory_order_acquire)) {
-    std::vector<std::vector<SimpleMutation>> mutationBatches;
+    std::vector<MutationBatch> mutationBatches;
     std::vector<std::vector<ProfilerEventInternal>> profilerBatches;
 
     {
@@ -104,9 +108,9 @@ void DevToolsServer::networkThreadLoop() {
     // Send data (outside lock)
     if (!mutationBatches.empty() || !profilerBatches.empty()) {
       if (connectIfNeeded()) {
-        // Send mutations
+        // Send mutations with timestamps
         for (const auto &batch : mutationBatches) {
-          sendMutationsBatch(batch);
+          sendMutationsBatch(batch.mutations, batch.timestampNs);
         }
 
         // Resolve and send profiler events
@@ -193,12 +197,12 @@ bool DevToolsServer::sendRawData(const void *data, size_t size) {
 #endif
 }
 
-void DevToolsServer::sendMutationsBatch(const std::vector<SimpleMutation> &mutations) {
+void DevToolsServer::sendMutationsBatch(const std::vector<SimpleMutation> &mutations, uint64_t timestamp) {
   if (mutations.empty()) {
     return;
   }
 
-  DevToolsMessageHeader header(DevToolsMessageType::Mutations, static_cast<uint32_t>(mutations.size()));
+  DevToolsMessageHeader header(DevToolsMessageType::Mutations, static_cast<uint32_t>(mutations.size()), timestamp);
 
   // Send header
   if (!sendRawData(&header, sizeof(header))) {
@@ -282,6 +286,12 @@ uint32_t DevToolsServer::getOrRegisterString(const char *name) {
   pendingStringRegistrations_.push_back(entry);
 
   return id;
+}
+
+uint64_t DevToolsServer::getCurrentTimestampNs() {
+  auto now = std::chrono::steady_clock::now();
+  auto duration = now.time_since_epoch();
+  return std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
 }
 
 } // namespace reanimated

@@ -79,10 +79,10 @@ struct DevToolsMessageHeader {
   DevToolsMessageType type;
   uint8_t padding[3];
   uint32_t payloadCount;
-  uint32_t reserved;
+  uint64_t timestampNs; // Timestamp in nanoseconds
 
   static constexpr uint32_t MAGIC = 0xDEADBEEF;
-  static constexpr uint32_t VERSION = 3;
+  static constexpr uint32_t VERSION = 4; // Updated version to match protocol
 };
 #pragma pack(pop)
 
@@ -146,6 +146,7 @@ struct TreeSnapshot {
   std::vector<int32_t> rootTags;
   std::vector<reanimated::SimpleMutation> mutations; // Original mutations for this snapshot
   std::set<int32_t> mutatedTags; // Tags that were mutated in this batch
+  uint64_t timestampNs = 0; // Timestamp when mutations were captured
 };
 
 // Global state
@@ -165,6 +166,7 @@ struct ProfilerEventData {
   uint32_t threadId;
   uint64_t startTimeNs;
   uint64_t endTimeNs;
+  int snapshotId = -1; // Linked snapshot ID (assigned by matching timestamps)
 };
 
 // Per-thread timeline
@@ -199,6 +201,7 @@ struct HoveredEventInfo {
   double durationUs;
   double startTimeMs;
   double endTimeMs;
+  int snapshotId = -1; // Linked snapshot ID
 };
 
 // Event with assigned depth for rendering nested events
@@ -261,7 +264,10 @@ std::vector<EventWithDepth> assignEventDepths(const std::vector<ProfilerEventDat
   return eventsWithDepth;
 }
 
-void applyMutations(const std::vector<reanimated::SimpleMutation> &mutations) {
+// Forward declarations
+int findSnapshotForTimestamp(uint64_t timestampNs);
+
+void applyMutations(const std::vector<reanimated::SimpleMutation> &mutations, uint64_t timestampNs) {
   std::lock_guard<std::mutex> lock(g_mutex);
 
   for (const auto &mut : mutations) {
@@ -356,6 +362,7 @@ void applyMutations(const std::vector<reanimated::SimpleMutation> &mutations) {
   snapshot.nodes = g_currentTree;
   snapshot.rootTags = g_currentRoots;
   snapshot.mutations = mutations;
+  snapshot.timestampNs = timestampNs; // Store timestamp for linking to profiler events
 
   // Track which tags were mutated in this batch
   for (const auto &mut : mutations) {
@@ -363,7 +370,7 @@ void applyMutations(const std::vector<reanimated::SimpleMutation> &mutations) {
   }
 
   std::cout << "Created snapshot #" << snapshot.id << " with " << snapshot.nodes.size() << " nodes and "
-            << snapshot.rootTags.size() << " roots\n";
+            << snapshot.rootTags.size() << " roots (timestamp: " << timestampNs << ")\n";
   for (int32_t rootTag : snapshot.rootTags) {
     std::cout << "  Root: " << rootTag << "\n";
   }
@@ -472,13 +479,13 @@ void networkThread(int port) {
               std::vector<reanimated::SimpleMutation> mutations(header.payloadCount);
               memcpy(mutations.data(), payloadPtr, payloadSize);
 
-              std::cout << "Received " << mutations.size() << " mutations:\n";
+              std::cout << "Received " << mutations.size() << " mutations (timestamp: " << header.timestampNs << "):\n";
               for (const auto &mut : mutations) {
                 std::cout << "  " << reanimated::mutationTypeToString(mut.type) << " tag=" << mut.tag
                           << " parent=" << mut.parentTag << " idx=" << mut.index << " " << mut.componentName << " ("
                           << mut.x << "," << mut.y << "," << mut.width << "," << mut.height << ")\n";
               }
-              applyMutations(mutations);
+              applyMutations(mutations, header.timestampNs);
               break;
             }
 
@@ -509,6 +516,10 @@ void networkThread(int port) {
                 eventData.startTimeNs = event.startTimeNs;
                 eventData.endTimeNs = event.endTimeNs;
 
+                // Link to snapshot by matching timestamps (use midpoint of event)
+                uint64_t eventMidpointNs = (event.startTimeNs + event.endTimeNs) / 2;
+                eventData.snapshotId = findSnapshotForTimestamp(eventMidpointNs);
+
                 // Get or create thread timeline
                 auto &timeline = g_threadTimelines[event.threadId];
                 timeline.threadId = event.threadId;
@@ -531,7 +542,11 @@ void networkThread(int port) {
                 // Calculate duration in milliseconds
                 double durationMs = static_cast<double>(event.endTimeNs - event.startTimeNs) / 1000000.0;
                 std::cout << "  [PROFILE] Thread " << event.threadId << " - " << name << ": " << std::fixed
-                          << std::setprecision(3) << durationMs << "ms\n";
+                          << std::setprecision(3) << durationMs << "ms";
+                if (eventData.snapshotId >= 0) {
+                  std::cout << " (snapshot #" << eventData.snapshotId << ")";
+                }
+                std::cout << "\n";
               }
               break;
             }
@@ -1043,6 +1058,36 @@ ImU32 getColorForStringId(uint32_t stringId) {
   return IM_COL32(r, g, b, 255);
 }
 
+// Find the snapshot that best matches a given timestamp
+// Returns snapshot ID or -1 if no match
+int findSnapshotForTimestamp(uint64_t timestampNs) {
+  std::lock_guard<std::mutex> lock(g_mutex);
+
+  if (g_snapshots.empty()) {
+    return -1;
+  }
+
+  // Find the snapshot with the closest timestamp (within a reasonable window)
+  constexpr uint64_t MAX_TIMESTAMP_DIFF_NS = 100000000; // 100ms tolerance
+  int bestSnapshotId = -1;
+  uint64_t minDiff = UINT64_MAX;
+
+  for (const auto &snapshot : g_snapshots) {
+    if (snapshot.timestampNs == 0)
+      continue; // Skip snapshots without timestamp
+
+    uint64_t diff = (timestampNs > snapshot.timestampNs) ? (timestampNs - snapshot.timestampNs)
+                                                         : (snapshot.timestampNs - timestampNs);
+
+    if (diff < minDiff && diff < MAX_TIMESTAMP_DIFF_NS) {
+      minDiff = diff;
+      bestSnapshotId = snapshot.id;
+    }
+  }
+
+  return bestSnapshotId;
+}
+
 // Render the profiler timeline with virtualization
 HoveredEventInfo renderProfilerTimeline(ImDrawList *drawList, ImVec2 windowPos, ImVec2 windowSize) {
   HoveredEventInfo hoveredEvent;
@@ -1203,6 +1248,7 @@ HoveredEventInfo renderProfilerTimeline(ImDrawList *drawList, ImVec2 windowPos, 
           hoveredEvent.durationUs = (eventEndRel - eventStartRel) / 1000.0;
           hoveredEvent.startTimeMs = eventStartRel / 1000000.0;
           hoveredEvent.endTimeMs = eventEndRel / 1000000.0;
+          hoveredEvent.snapshotId = ewd.event->snapshotId; // Include linked snapshot ID
         }
 
         // Draw event label if wide enough
@@ -1647,13 +1693,32 @@ int main(int argc, char *argv[]) {
         HoveredEventInfo hoveredEvent = renderProfilerTimeline(drawList, windowPos, windowSize);
 
         // Show tooltip if hovering over an event
+        // Show tooltip if hovering over an event
         if (hoveredEvent.isValid) {
+          // Handle double-click to jump to snapshot
+          if (ImGui::IsMouseDoubleClicked(0) && hoveredEvent.snapshotId >= 0) {
+            std::lock_guard<std::mutex> lock(g_mutex);
+            // Find the snapshot index
+            for (size_t i = 0; i < g_snapshots.size(); ++i) {
+              if (g_snapshots[i].id == hoveredEvent.snapshotId) {
+                g_currentSnapshotIndex = static_cast<int>(i);
+                std::cout << "Jumped to snapshot #" << hoveredEvent.snapshotId << " from profiler event\n";
+                break;
+              }
+            }
+          }
+
           ImGui::BeginTooltip();
           ImGui::Text("Event: %s", hoveredEvent.name.c_str());
           ImGui::Text("Thread: %s", hoveredEvent.threadName.c_str());
           ImGui::Text("Duration: %.2f us", hoveredEvent.durationUs);
           ImGui::Text("Start: %.3f ms", hoveredEvent.startTimeMs);
           ImGui::Text("End: %.3f ms", hoveredEvent.endTimeMs);
+          if (hoveredEvent.snapshotId >= 0) {
+            ImGui::Separator();
+            ImGui::Text("Snapshot: #%d", hoveredEvent.snapshotId);
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Double-click to view");
+          }
           ImGui::EndTooltip();
         }
       }

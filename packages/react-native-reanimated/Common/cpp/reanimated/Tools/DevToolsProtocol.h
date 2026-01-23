@@ -112,10 +112,10 @@ struct DevToolsMessageHeader {
   DevToolsMessageType type; // Message type
   uint8_t padding[3]; // Alignment padding
   uint32_t payloadCount; // Number of items in payload
-  uint32_t reserved;
+  uint64_t timestampNs; // Timestamp in nanoseconds (for linking profiler events to mutations)
 
   static constexpr uint32_t MAGIC = 0xDEADBEEF;
-  static constexpr uint32_t VERSION = 3;
+  static constexpr uint32_t VERSION = 4; // Incremented version for protocol change
 
   DevToolsMessageHeader()
       : magic(MAGIC),
@@ -123,10 +123,10 @@ struct DevToolsMessageHeader {
         type(DevToolsMessageType::Mutations),
         padding{0, 0, 0},
         payloadCount(0),
-        reserved(0) {}
+        timestampNs(0) {}
 
-  DevToolsMessageHeader(DevToolsMessageType msgType, uint32_t count)
-      : magic(MAGIC), version(VERSION), type(msgType), padding{0, 0, 0}, payloadCount(count), reserved(0) {}
+  DevToolsMessageHeader(DevToolsMessageType msgType, uint32_t count, uint64_t timestamp = 0)
+      : magic(MAGIC), version(VERSION), type(msgType), padding{0, 0, 0}, payloadCount(count), timestampNs(timestamp) {}
 };
 #pragma pack(pop)
 
