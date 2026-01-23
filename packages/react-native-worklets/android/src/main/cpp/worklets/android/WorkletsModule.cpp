@@ -138,35 +138,33 @@ RuntimeBindings::SendRequest WorkletsModule::getSendRequest() {
              bool incrementalUpdates,
              double timeout,
              bool withCredentials) {
-      static const auto jSendRequest = javaPart->getClass()
-              ->getMethod<void(
-                      JWorkletRuntimeWrapper::javaobject,
-                      std::string /* method */,
-                      std::string /* url */,
-                      double /* requestId */,
-                      ReadableNativeArray::javaobject /* headers */,
-                      ReadableNativeMap::javaobject /* data */,
-                      std::string /* responseType */,
-                      bool /* incrementalUpdates */,
-                      double /* timeout */,
-                      bool /* withCredentials */
-              )>("sendRequest");
-      auto workletRuntime = WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt).lock();
+    static const auto jSendRequest = javaPart->getClass()
+                                         ->getMethod<void(
+                                             JWorkletRuntimeWrapper::javaobject,
+                                             std::string /* method */,
+                                             std::string /* url */,
+                                             double /* requestId */,
+                                             ReadableNativeArray::javaobject /* headers */,
+                                             ReadableNativeMap::javaobject /* data */,
+                                             std::string /* responseType */,
+                                             bool /* incrementalUpdates */,
+                                             double /* timeout */,
+                                             bool /* withCredentials */
+                                             )>("sendRequest");
+    auto workletRuntime = WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt).lock();
 
-          jSendRequest(
-                  javaPart.get(),
-                  JWorkletRuntimeWrapper::makeJWorkletRuntimeWrapper(workletRuntime).get(),
-                  method.utf8(rt),
-                  url.utf8(rt),
-                  requestId,
-                  ReadableNativeArray::newObjectCxxArgs(
-                          jsi::dynamicFromValue(rt, jsi::Value(std::move(headers)))).get(),
-                  ReadableNativeMap::newObjectCxxArgs(
-                          jsi::dynamicFromValue(rt, jsi::Value(std::move(data)))).get(),
-                  responseType.utf8(rt),
-                  incrementalUpdates,
-                  timeout,
-                  withCredentials);
+    jSendRequest(
+        javaPart.get(),
+        JWorkletRuntimeWrapper::makeJWorkletRuntimeWrapper(workletRuntime).get(),
+        method.utf8(rt),
+        url.utf8(rt),
+        requestId,
+        ReadableNativeArray::newObjectCxxArgs(jsi::dynamicFromValue(rt, jsi::Value(std::move(headers)))).get(),
+        ReadableNativeMap::newObjectCxxArgs(jsi::dynamicFromValue(rt, jsi::Value(std::move(data)))).get(),
+        responseType.utf8(rt),
+        incrementalUpdates,
+        timeout,
+        withCredentials);
   };
 }
 #endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)

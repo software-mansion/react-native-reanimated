@@ -107,7 +107,7 @@ function testXHR(
   state.downloading = true;
 }
 
-function callback(
+function testFetch(
   runtime: WorkletRuntime,
   runtimes: {
     elephant: WorkletRuntime;
@@ -148,7 +148,7 @@ function callback(
     if (!shouldStop.getDirty()) {
       scheduleOnRuntime(
         nextRuntime,
-        callback,
+        testFetch,
         nextRuntime,
         runtimes,
         count + 1
@@ -184,15 +184,12 @@ export default function App() {
       <Text>Check console output</Text>
       <Button
         title="Test fetch chain"
-        onPress={async () => {
-          const data = fetch('https://jsonplaceholder.typicode.com/todos/1');
-          await data;
-          console.log(data);
+        onPress={() => {
           initializeRuntimes();
           shouldStop.setBlocking(false);
           scheduleOnRuntime(
             elephantRuntime,
-            callback,
+            testFetch,
             elephantRuntime,
             {
               elephant: elephantRuntime,
