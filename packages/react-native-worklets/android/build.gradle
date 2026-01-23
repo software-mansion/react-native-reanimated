@@ -153,15 +153,15 @@ buildscript {
     }
 }
 
+apply plugin: "com.android.library"
+apply plugin: "maven-publish"
+apply plugin: "de.undercouch.download"
+
 if (project == rootProject) {
     apply from: "spotless.gradle"
 } else {
     apply plugin: "org.jetbrains.kotlin.android"
 }
-
-apply plugin: "com.android.library"
-apply plugin: "maven-publish"
-apply plugin: "de.undercouch.download"
 
 apply from: "./fix-prefab.gradle"
 
