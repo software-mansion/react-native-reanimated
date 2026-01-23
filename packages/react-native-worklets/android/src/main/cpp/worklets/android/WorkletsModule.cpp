@@ -153,10 +153,6 @@ RuntimeBindings::SendRequest WorkletsModule::getSendRequest() {
               )>("sendRequest");
       auto workletRuntime = WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt).lock();
 
-      ReadableNativeArray::registerNatives();
-      ReadableNativeMap::registerNatives();
-
-      try {
           jSendRequest(
                   javaPart.get(),
                   JWorkletRuntimeWrapper::makeJWorkletRuntimeWrapper(workletRuntime).get(),
@@ -171,9 +167,6 @@ RuntimeBindings::SendRequest WorkletsModule::getSendRequest() {
                   incrementalUpdates,
                   timeout,
                   withCredentials);
-      } catch (jni::JniException &e) {
-          react_native_assert(&e);
-      }
   };
 }
 #endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)

@@ -1,3 +1,5 @@
+#include <fbjni/detail/Environment.h>
+#include <jni.h>
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 
 #if defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
@@ -12,33 +14,45 @@
 namespace worklets {
 
 AsyncQueueImpl::AsyncQueueImpl(const std::string &name) : state_(std::make_shared<AsyncQueueState>()) {
-  auto thread = std::thread([name, state = state_] {
+#if defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+  auto *env = jni::Environment::current();
+    JavaVM *jvm = nullptr;
+    env->GetJavaVM(&jvm);
+#endif // defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+  auto thread = std::thread([name,
+                             state = state_
+#if defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+                             ,
+                             jvm
+#endif // defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+  ] {
 #if __APPLE__
     pthread_setname_np(name.c_str());
 #endif
 #if defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
-    JNIEnv *env = nullptr;
-    /* auto result =  */ WorkletsModule::jvm_->AttachCurrentThread(reinterpret_cast<JNIEnv **>(&env), nullptr);
+    jvm->AttachCurrentThread(nullptr, nullptr);
+    jni::ThreadScope::WithClassLoader([state, jvm]() {
 #endif // defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
-    while (state->running) {
-      std::unique_lock<std::mutex> lock(state->mutex);
-      state->cv.wait(lock, [state] { return !state->queue.empty() || !state->running; });
-      if (!state->running) {
-        return;
+      while (state->running) {
+        std::unique_lock<std::mutex> lock(state->mutex);
+        state->cv.wait(lock, [state] { return !state->queue.empty() || !state->running; });
+        if (!state->running) {
+          return;
+        }
+        if (state->queue.empty()) {
+          continue;
+        }
+        auto job = std::move(state->queue.front());
+        state->queue.pop();
+        lock.unlock();
+        job();
       }
-      if (state->queue.empty()) {
-        continue;
-      }
-      auto job = std::move(state->queue.front());
-      state->queue.pop();
-      lock.unlock();
-      job();
-    }
 #if defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
-    WorkletsModule::jvm_->DetachCurrentThread();
+      jvm->DetachCurrentThread();
 #endif // defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
-  });
+    });
 #ifdef ANDROID
+  });
   pthread_setname_np(thread.native_handle(), name.c_str());
 #endif
   thread.detach();
