@@ -1,9 +1,7 @@
 #pragma once
 
 #include <imgui.h>
-#include <array>
 #include <atomic>
-#include <chrono>
 #include <cstdint>
 #include <mutex>
 #include <set>
@@ -54,14 +52,6 @@ struct UIState {
   bool profilerLockToLatest = true;
   HoveredEventInfo hoveredEvent;
 
-  // FPS counter (optional, enabled with -DENABLE_FPS_COUNTER=ON)
-#ifdef ENABLE_FPS_COUNTER
-  std::array<double, 120> frameTimesNs{};
-  size_t frameTimeIndex = 0;
-  size_t frameTimesRecorded = 0;
-  double frameTimeSumNs = 0.0;
-  std::chrono::steady_clock::time_point lastFrameTimePoint = std::chrono::steady_clock::now();
-#endif
 };
 
 // Main application state - composition of data and UI

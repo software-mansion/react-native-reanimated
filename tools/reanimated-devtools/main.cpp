@@ -13,8 +13,6 @@
 #include "imgui_impl_opengl3.h"
 
 #include "app_state.h"
-#include "data_structures.h"
-#include "protocol.h"
 
 // Window render functions
 #include "windows/controls_window.h"
@@ -77,10 +75,6 @@ int main(int argc, char *argv[]) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-
-#ifdef ENABLE_FPS_COUNTER
-    windows::updateFpsCounter(appState);
-#endif
 
     // Render all windows
     windows::renderControlsWindow(appState);
