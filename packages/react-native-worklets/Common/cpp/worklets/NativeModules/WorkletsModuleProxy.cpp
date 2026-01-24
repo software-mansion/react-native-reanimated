@@ -37,7 +37,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       jsScheduler_(std::make_shared<JSScheduler>(rnRuntime, jsCallInvoker, std::move(isJavaScriptThread))),
       uiScheduler_(uiScheduler),
       jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
-      runtimeBindings_(std::move(runtimeBindings)),
+      runtimeBindings_(runtimeBindings),
       script_(script),
       sourceUrl_(sourceUrl),
       memoryManager_(std::make_shared<MemoryManager>()),
