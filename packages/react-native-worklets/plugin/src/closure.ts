@@ -157,7 +157,7 @@ function isAllowedForRelativeImports(
 ): boolean {
   return (
     !!filename &&
-    (filename.includes('react-native-worklets') ||
+    (alwaysAllowed.some((module) => filename.includes(module)) ||
       !!workletizableModules?.some((module) => filename.includes(module)))
   );
 }
@@ -167,7 +167,12 @@ function isWorkletizableModule(
   workletizableModules?: string[]
 ): boolean {
   return (
-    source.startsWith('react-native-worklets') ||
+    alwaysAllowed.some((module) => source.startsWith(module)) ||
     !!workletizableModules?.some((module) => source.startsWith(module))
   );
 }
+
+const alwaysAllowed = [
+  'react-native-worklets',
+  'react-native/Libraries/Core/setUpXHR', // for networking
+];

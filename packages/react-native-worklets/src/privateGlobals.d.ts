@@ -18,7 +18,7 @@ declare global {
 
   var _toString: (value: unknown) => string;
   var __workletsModuleProxy: WorkletsModuleProxy | undefined;
-  var _WORKLETS_BUNDLE_MODE: boolean | undefined;
+  var _WORKLETS_BUNDLE_MODE_ENABLED: boolean | undefined;
   var _WORKLETS_VERSION_CPP: string | undefined;
   var _WORKLETS_VERSION_JS: string | undefined;
   var _createSerializable: <T>(
@@ -81,6 +81,12 @@ declare global {
   var __hasNativeState: (value: object) => boolean;
   /** Only in Debug builds. */
   var __isHostObject: (value: object) => boolean;
+  /**
+   * Only in Bundle Mode.
+   *
+   * Only on Worklet Runtimes.
+   */
+  var TurboModules: Map<string, unknown>;
   interface NodeRequire {
     resolveWeak(id: string): number;
     getModules(): Map<number, unknown>;

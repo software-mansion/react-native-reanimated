@@ -28,6 +28,8 @@ class AsyncQueueImpl : public AsyncQueue {
   void push(std::function<void()> &&job) override;
 
  private:
+  static void runLoop(const std::shared_ptr<AsyncQueueState> &state);
+
   const std::shared_ptr<AsyncQueueState> state_;
 };
 

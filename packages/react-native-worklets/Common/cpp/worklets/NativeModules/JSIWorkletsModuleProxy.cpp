@@ -87,7 +87,7 @@ inline jsi::Value createWorkletRuntime(
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
-#ifdef WORKLETS_BUNDLE_MODE
+#ifdef WORKLETS_BUNDLE_MODE_ENABLED
 inline jsi::Value propagateModuleUpdate(
     const std::shared_ptr<RuntimeManager> &runtimeManager,
     const std::string &code,
@@ -102,7 +102,7 @@ inline jsi::Value propagateModuleUpdate(
   }
   return jsi::Value::undefined();
 }
-#endif // WORKLETS_BUNDLE_MODE
+#endif // WORKLETS_BUNDLE_MODE_ENABLED
 
 inline jsi::Value reportFatalErrorOnJS(
     const std::shared_ptr<JSScheduler> &jsScheduler,
@@ -159,7 +159,8 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::shared_ptr<MemoryManager> &memoryManager,
     const std::shared_ptr<RuntimeManager> &runtimeManager,
-    const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime)
+    const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
+    const std::shared_ptr<RuntimeBindings> &runtimeBindings)
     : jsi::HostObject(),
       isDevBundle_(isDevBundle),
       script_(script),
@@ -169,7 +170,8 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       uiScheduler_(uiScheduler),
       memoryManager_(memoryManager),
       runtimeManager_(runtimeManager),
-      uiWorkletRuntime_(uiWorkletRuntime) {}
+      uiWorkletRuntime_(uiWorkletRuntime),
+      runtimeBindings_(runtimeBindings) {}
 
 JSIWorkletsModuleProxy::~JSIWorkletsModuleProxy() = default;
 
@@ -213,9 +215,9 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "synchronizableLock"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "synchronizableUnlock"));
 
-#ifdef WORKLETS_BUNDLE_MODE
+#ifdef WORKLETS_BUNDLE_MODE_ENABLED
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "propagateModuleUpdate"));
-#endif // WORKLETS_BUNDLE_MODE
+#endif // WORKLETS_BUNDLE_MODE_ENABLED
 
   return propertyNames;
 }
@@ -508,7 +510,7 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         });
   }
 
-#ifdef WORKLETS_BUNDLE_MODE
+#ifdef WORKLETS_BUNDLE_MODE_ENABLED
   if (name == "propagateModuleUpdate") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -522,7 +524,7 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
               /* sourceURL */ args[1].asString(rt).utf8(rt));
         });
   }
-#endif // WORKLETS_BUNDLE_MODE
+#endif // WORKLETS_BUNDLE_MODE_ENABLED
 
   if (name == "getStaticFeatureFlag") {
     return jsi::Function::createFromHostFunction(

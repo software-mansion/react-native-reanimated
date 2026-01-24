@@ -100,17 +100,18 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
   const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
   const auto memoryManager_ = jsiWorkletsModuleProxy->getMemoryManager();
-#ifdef WORKLETS_BUNDLE_MODE
+#ifdef WORKLETS_BUNDLE_MODE_ENABLED
   auto script = jsiWorkletsModuleProxy->getScript();
   const auto &sourceUrl = jsiWorkletsModuleProxy->getSourceUrl();
-#endif // WORKLETS_BUNDLE_MODE
+  auto runtimeBindings = jsiWorkletsModuleProxy->getRuntimeBindings();
+#endif // WORKLETS_BUNDLE_MODE_ENABLED
 
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
 
   WorkletRuntimeDecorator::decorate(
       rt, name_, jsScheduler, isDevBundle, std::move(optimizedJsiWorkletsModuleProxy), eventLoop_);
 
-#ifdef WORKLETS_BUNDLE_MODE
+#ifdef WORKLETS_BUNDLE_MODE_ENABLED
   if (!script) {
     throw std::runtime_error("[Worklets] Expected to receive the bundle, but got nullptr instead.");
   }
@@ -121,11 +122,15 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
     const auto &message = error.getMessage();
     const auto &stack = error.getStack();
     if (!message.starts_with("[Worklets] Worklets initialized successfully")) {
-      const auto newMessage = "[Worklets] Failed to initialize runtime. Reason: " + message;
+      const auto newMessage = "[Worklets] Failed to initialize runtime. Reason: " + message + " " + stack;
       JSLogger::reportFatalErrorOnJS(
           jsScheduler, {.message = newMessage, .stack = stack, .name = "WorkletsError", .jsEngine = "Worklets"});
+      return;
     }
   }
+
+  WorkletRuntimeDecorator::postEvaluateScript(rt, runtimeBindings);
+
 #else
   // Legacy behavior
   auto valueUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
@@ -136,7 +141,7 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
 
   auto customSerializableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(CustomSerializableUnpackerCode);
   rt.evaluateJavaScript(customSerializableUnpackerBuffer, "customSerializableUnpacker");
-#endif // WORKLETS_BUNDLE_MODE
+#endif // WORKLETS_BUNDLE_MODE_ENABLED
   try {
     memoryManager_->loadAllCustomSerializables(shared_from_this());
   } catch (jsi::JSError &e) {
