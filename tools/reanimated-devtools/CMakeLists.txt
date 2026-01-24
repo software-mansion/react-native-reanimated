@@ -132,6 +132,9 @@ target_include_directories(windows PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 target_link_libraries(windows PUBLIC imgui data)
+if(ENABLE_FPS_COUNTER)
+    target_compile_definitions(windows PUBLIC ENABLE_FPS_COUNTER)
+endif()
 
 # ============================================================================
 # Main Executable
