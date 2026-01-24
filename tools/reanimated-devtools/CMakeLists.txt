@@ -95,12 +95,57 @@ else()
 endif()
 
 # ============================================================================
+# Protocol & Data Processing Libraries
+# ============================================================================
+
+# Protocol support library
+add_library(protocol STATIC
+    src/protocol.cpp
+)
+target_include_directories(protocol PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+target_link_libraries(protocol PUBLIC imgui)
+
+# Data processing library
+add_library(data STATIC
+    src/data/mutation_processor.cpp
+    src/data/profiler_processor.cpp
+    src/data/network_handler.cpp
+)
+target_include_directories(data PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(data PUBLIC protocol)
+
+# Window rendering library
+add_library(windows STATIC
+    src/windows/controls_window.cpp
+    src/windows/mutations_window.cpp
+    src/windows/view_tree_window.cpp
+    src/windows/profiler_window.cpp
+    src/windows/fps_window.cpp
+)
+target_include_directories(windows PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(windows PUBLIC imgui data)
+
+# ============================================================================
 # Main Executable
 # ============================================================================
 
 add_executable(reanimated-devtools main.cpp)
-target_link_libraries(reanimated-devtools PRIVATE imgui)
-target_compile_definitions(reanimated-devtools PRIVATE ENABLE_FPS_COUNTER)
+target_include_directories(reanimated-devtools PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(reanimated-devtools PRIVATE imgui data windows)
+if(ENABLE_FPS_COUNTER)
+    target_compile_definitions(reanimated-devtools PRIVATE ENABLE_FPS_COUNTER)
+endif()
 
 # Platform-specific flags
 if(APPLE)
