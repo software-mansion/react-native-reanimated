@@ -385,6 +385,63 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
+    test('implicitly captures globals', () => {
+      const input = html`<script>
+        function f() {
+          'worklet';
+          globalStuff();
+        }
+      </script>`;
+      const { code, ast } = runPlugin(input, { ast: true });
+      let closureBindings;
+      traverse(ast!, {
+        enter(path) {
+          if (
+            path.isAssignmentExpression() &&
+            'property' in path.node.left &&
+            'name' in path.node.left.property &&
+            'properties' in path.node.right &&
+            path.node.left.property.name === '__closure'
+          ) {
+            closureBindings = path.node.right.properties;
+          }
+        },
+      });
+      expect(closureBindings).not.toEqual([]);
+      expect(code).toContain('globalStuff: globalStuff');
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't implicitly captures globals in strict mode", () => {
+      const input = html`<script>
+        function f() {
+          'worklet';
+          globalStuff();
+        }
+      </script>`;
+      const { code, ast } = runPlugin(
+        input,
+        { ast: true },
+        { strictGlobal: true }
+      );
+      let closureBindings;
+      traverse(ast!, {
+        enter(path) {
+          if (
+            path.isAssignmentExpression() &&
+            'property' in path.node.left &&
+            'name' in path.node.left.property &&
+            'properties' in path.node.right &&
+            path.node.left.property.name === '__closure'
+          ) {
+            closureBindings = path.node.right.properties;
+          }
+        },
+      });
+      expect(closureBindings).toEqual([]);
+      expect(code).toMatchSnapshot();
+    });
+
     test('captures locally bound variables named like globals', () => {
       const input = html`<script>
         const console = {

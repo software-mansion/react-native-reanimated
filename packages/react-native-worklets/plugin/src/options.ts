@@ -96,7 +96,14 @@ export interface PluginOptions {
    */
   relativeSourceLocation?: boolean;
 
-  /** TODO: */
+  /**
+   * This option makes it so no global identifiers are implicitly captured in
+   * worklets' closures between runtimes.
+   *
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#strictglobal}
+   *
+   * Defaults to `false`.
+   */
   strictGlobal?: boolean;
 
   /**
