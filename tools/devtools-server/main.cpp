@@ -369,11 +369,11 @@ void applyMutations(const std::vector<reanimated::SimpleMutation> &mutations, ui
     snapshot.mutatedTags.insert(mut.tag);
   }
 
-  std::cout << "Created snapshot #" << snapshot.id << " with " << snapshot.nodes.size() << " nodes and "
-            << snapshot.rootTags.size() << " roots (timestamp: " << timestampNs << ")\n";
-  for (int32_t rootTag : snapshot.rootTags) {
-    std::cout << "  Root: " << rootTag << "\n";
-  }
+  // std::cout << "Created snapshot #" << snapshot.id << " with " << snapshot.nodes.size() << " nodes and "
+  // << snapshot.rootTags.size() << " roots (timestamp: " << timestampNs << ")\n";
+  // for (int32_t rootTag : snapshot.rootTags) {
+  // std::cout << "  Root: " << rootTag << "\n";
+  // }
 
   g_snapshots.push_back(snapshot);
   g_currentSnapshotIndex = static_cast<int>(g_snapshots.size()) - 1;
@@ -479,24 +479,16 @@ void networkThread(int port) {
               std::vector<reanimated::SimpleMutation> mutations(header.payloadCount);
               memcpy(mutations.data(), payloadPtr, payloadSize);
 
-              std::cout << "Received " << mutations.size() << " mutations (timestamp: " << header.timestampNs << "):\n";
-              for (const auto &mut : mutations) {
-                std::cout << "  " << reanimated::mutationTypeToString(mut.type) << " tag=" << mut.tag
-                          << " parent=" << mut.parentTag << " idx=" << mut.index << " " << mut.componentName << " ("
-                          << mut.x << "," << mut.y << "," << mut.width << "," << mut.height << ")\n";
-              }
               applyMutations(mutations, header.timestampNs);
               break;
             }
 
             case reanimated::DevToolsMessageType::ProfilerStringRegistry: {
-              std::cout << "Received " << header.payloadCount << " profiler string entries:\n";
               for (uint32_t i = 0; i < header.payloadCount; ++i) {
                 reanimated::ProfilerStringEntry entry;
                 memcpy(&entry, payloadPtr + i * sizeof(reanimated::ProfilerStringEntry), sizeof(entry));
                 entry.name[sizeof(entry.name) - 1] = '\0'; // Ensure null termination
                 reanimated::g_profilerStrings[entry.stringId] = entry.name;
-                std::cout << "  [" << entry.stringId << "] = \"" << entry.name << "\"\n";
               }
               break;
             }
@@ -504,7 +496,6 @@ void networkThread(int port) {
             case reanimated::DevToolsMessageType::ProfilerEvents: {
               std::lock_guard<std::mutex> profilerLock(g_profilerMutex);
 
-              std::cout << "Received " << header.payloadCount << " profiler events:\n";
               for (uint32_t i = 0; i < header.payloadCount; ++i) {
                 reanimated::ProfilerEvent event;
                 memcpy(&event, payloadPtr + i * sizeof(reanimated::ProfilerEvent), sizeof(event));
@@ -538,15 +529,6 @@ void networkThread(int port) {
                 if (it != reanimated::g_profilerStrings.end()) {
                   name = it->second;
                 }
-
-                // Calculate duration in milliseconds
-                double durationMs = static_cast<double>(event.endTimeNs - event.startTimeNs) / 1000000.0;
-                std::cout << "  [PROFILE] Thread " << event.threadId << " - " << name << ": " << std::fixed
-                          << std::setprecision(3) << durationMs << "ms";
-                if (eventData.snapshotId >= 0) {
-                  std::cout << " (snapshot #" << eventData.snapshotId << ")";
-                }
-                std::cout << "\n";
               }
               break;
             }
@@ -555,7 +537,6 @@ void networkThread(int port) {
           pendingData.erase(pendingData.begin(), pendingData.begin() + expectedSize);
         }
       } else if (bytesRead == 0) {
-        std::cout << "Client disconnected\n";
         close(clientSocket);
         clientSocket = -1;
       }
@@ -1358,6 +1339,10 @@ int main(int argc, char *argv[]) {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
+    ImGui::Begin("Framerate");
+    ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+    ImGui::End();
+
     // Control panel
     ImGui::Begin("Controls");
 
@@ -1702,7 +1687,6 @@ int main(int argc, char *argv[]) {
             for (size_t i = 0; i < g_snapshots.size(); ++i) {
               if (g_snapshots[i].id == hoveredEvent.snapshotId) {
                 g_currentSnapshotIndex = static_cast<int>(i);
-                std::cout << "Jumped to snapshot #" << hoveredEvent.snapshotId << " from profiler event\n";
                 break;
               }
             }
