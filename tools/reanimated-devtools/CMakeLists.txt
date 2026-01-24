@@ -104,6 +104,8 @@ add_library(protocol STATIC
 )
 target_include_directories(protocol PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    # Shared protocol definitions from Reanimated
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../packages/react-native-reanimated/Common/cpp
 )
 target_link_libraries(protocol PUBLIC imgui)
 

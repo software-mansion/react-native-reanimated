@@ -2,22 +2,7 @@
 
 namespace reanimated {
 
-const char *mutationTypeToString(MutationType type) {
-  switch (type) {
-    case MutationType::Create:
-      return "CREATE";
-    case MutationType::Delete:
-      return "DELETE";
-    case MutationType::Insert:
-      return "INSERT";
-    case MutationType::Remove:
-      return "REMOVE";
-    case MutationType::Update:
-      return "UPDATE";
-    default:
-      return "UNKNOWN";
-  }
-}
+// mutationTypeToString() is now provided by the shared DevToolsProtocol.h header (inline)
 
 ImU32 mutationTypeToColor(MutationType type) {
   switch (type) {
