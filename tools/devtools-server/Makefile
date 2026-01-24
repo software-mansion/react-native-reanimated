@@ -32,7 +32,10 @@ SRCS = main.cpp \
 
 OBJS = main.o imgui.o imgui_draw.o imgui_tables.o imgui_widgets.o imgui_impl_glfw.o imgui_impl_opengl3.o
 
-all: check-deps $(IMGUI_DIR) $(TARGET)
+# Get absolute path for compile_commands.json
+WORKDIR := $(shell pwd)
+
+all: check-deps $(IMGUI_DIR) compile_commands.json $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
@@ -71,10 +74,51 @@ else
 	@pkg-config --exists glfw3 || (echo "Please install GLFW: apt install libglfw3-dev" && exit 1)
 endif
 
+compile_commands.json: $(IMGUI_DIR)
+	@echo "Generating compile_commands.json for LSP..."
+	@echo '[' > compile_commands.json
+	@echo '  {' >> compile_commands.json
+	@echo '    "directory": "$(WORKDIR)",' >> compile_commands.json
+	@echo '    "command": "$(CXX) $(CXXFLAGS) $(INCLUDES) -c main.cpp -o main.o",' >> compile_commands.json
+	@echo '    "file": "main.cpp"' >> compile_commands.json
+	@echo '  },' >> compile_commands.json
+	@echo '  {' >> compile_commands.json
+	@echo '    "directory": "$(WORKDIR)",' >> compile_commands.json
+	@echo '    "command": "$(CXX) $(CXXFLAGS) $(INCLUDES) -c $(IMGUI_DIR)/imgui.cpp -o imgui.o",' >> compile_commands.json
+	@echo '    "file": "$(IMGUI_DIR)/imgui.cpp"' >> compile_commands.json
+	@echo '  },' >> compile_commands.json
+	@echo '  {' >> compile_commands.json
+	@echo '    "directory": "$(WORKDIR)",' >> compile_commands.json
+	@echo '    "command": "$(CXX) $(CXXFLAGS) $(INCLUDES) -c $(IMGUI_DIR)/imgui_draw.cpp -o imgui_draw.o",' >> compile_commands.json
+	@echo '    "file": "$(IMGUI_DIR)/imgui_draw.cpp"' >> compile_commands.json
+	@echo '  },' >> compile_commands.json
+	@echo '  {' >> compile_commands.json
+	@echo '    "directory": "$(WORKDIR)",' >> compile_commands.json
+	@echo '    "command": "$(CXX) $(CXXFLAGS) $(INCLUDES) -c $(IMGUI_DIR)/imgui_tables.cpp -o imgui_tables.o",' >> compile_commands.json
+	@echo '    "file": "$(IMGUI_DIR)/imgui_tables.cpp"' >> compile_commands.json
+	@echo '  },' >> compile_commands.json
+	@echo '  {' >> compile_commands.json
+	@echo '    "directory": "$(WORKDIR)",' >> compile_commands.json
+	@echo '    "command": "$(CXX) $(CXXFLAGS) $(INCLUDES) -c $(IMGUI_DIR)/imgui_widgets.cpp -o imgui_widgets.o",' >> compile_commands.json
+	@echo '    "file": "$(IMGUI_DIR)/imgui_widgets.cpp"' >> compile_commands.json
+	@echo '  },' >> compile_commands.json
+	@echo '  {' >> compile_commands.json
+	@echo '    "directory": "$(WORKDIR)",' >> compile_commands.json
+	@echo '    "command": "$(CXX) $(CXXFLAGS) $(INCLUDES) -c $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp -o imgui_impl_glfw.o",' >> compile_commands.json
+	@echo '    "file": "$(IMGUI_DIR)/backends/imgui_impl_glfw.cpp"' >> compile_commands.json
+	@echo '  },' >> compile_commands.json
+	@echo '  {' >> compile_commands.json
+	@echo '    "directory": "$(WORKDIR)",' >> compile_commands.json
+	@echo '    "command": "$(CXX) $(CXXFLAGS) $(INCLUDES) -c $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp -o imgui_impl_opengl3.o",' >> compile_commands.json
+	@echo '    "file": "$(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp"' >> compile_commands.json
+	@echo '  }' >> compile_commands.json
+	@echo ']' >> compile_commands.json
+	@echo "Done! compile_commands.json generated."
+
 clean:
 	rm -f $(TARGET) $(OBJS)
 
 clean-all: clean
-	rm -rf $(IMGUI_DIR)
+	rm -rf $(IMGUI_DIR) compile_commands.json .clangd .vscode
 
-.PHONY: all clean clean-all check-deps
+.PHONY: all clean clean-all check-deps compile_commands.json

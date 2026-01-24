@@ -1,0 +1,20 @@
+CompileFlags:
+  Add:
+    - "-std=c++17"
+    - "-DGL_SILENCE_DEPRECATION"
+    - "-I/opt/homebrew/Cellar/glfw/3.4/include"
+    - "-Iimgui"
+    - "-Iimgui/backends"
+  CompilationDatabase: .
+
+Diagnostics:
+  UnusedIncludes: None
+  MissingIncludes: None
+
+InlayHints:
+  Enabled: Yes
+  ParameterNames: Yes
+  DeducedTypes: Yes
+
+Hover:
+  ShowAKA: Yes

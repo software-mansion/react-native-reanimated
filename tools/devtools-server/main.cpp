@@ -788,7 +788,7 @@ void collectNodesWithOverlapHandling(
   }
 }
 
-enum class ViewMode { Layered, True3D };
+enum class ViewMode : uint8_t { Layered, True3D };
 
 // Transform a single point in 3D space and project to 2D using orthographic projection
 // (parallel lines stay parallel - no perspective distortion)
@@ -1163,6 +1163,7 @@ HoveredEventInfo renderProfilerTimeline(ImDrawList *drawList, ImVec2 windowPos, 
 
   // Sort threads by ID for consistent ordering
   std::vector<uint32_t> threadIds;
+  threadIds.reserve(g_threadTimelines.size());
   for (const auto &[threadId, timeline] : g_threadTimelines) {
     threadIds.push_back(threadId);
   }
@@ -1692,7 +1693,6 @@ int main(int argc, char *argv[]) {
         ImDrawList *drawList = ImGui::GetWindowDrawList();
         HoveredEventInfo hoveredEvent = renderProfilerTimeline(drawList, windowPos, windowSize);
 
-        // Show tooltip if hovering over an event
         // Show tooltip if hovering over an event
         if (hoveredEvent.isValid) {
           // Handle double-click to jump to snapshot
