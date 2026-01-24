@@ -1,0 +1,31 @@
+# Build artifacts
+build/
+*.o
+*.a
+*.dylib
+*.so
+reanimated-devtools
+devtools-server
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# LSP (auto-generated)
+compile_commands.json
+
+# IDE
+.vscode/
+.clangd
+.idea/
+*.swp
+
+# macOS
+.DS_Store
+
+# ImGui runtime
+imgui.ini

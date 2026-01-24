@@ -41,6 +41,9 @@ jsconfig.json
 .project
 .vscode
 
+# zed
+.zed
+
 # BUCK
 buck-out/
 bin/

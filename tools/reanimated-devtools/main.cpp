@@ -9,9 +9,7 @@
 #include <csignal>
 #include <cstdint>
 #include <cstring>
-#include <iomanip>
 #include <iostream>
-#include <map>
 #include <mutex>
 #include <set>
 #include <sstream>
@@ -1339,10 +1337,6 @@ int main(int argc, char *argv[]) {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    ImGui::Begin("Framerate");
-    ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-    ImGui::End();
-
     // Control panel
     ImGui::Begin("Controls");
 
@@ -1715,6 +1709,20 @@ int main(int argc, char *argv[]) {
     ImGui::End();
 
     // Render
+#ifdef ENABLE_FPS_COUNTER
+    // FPS overlay in top-right corner of the application window
+    const ImGuiIO &io = ImGui::GetIO();
+    ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 10, 10), ImGuiCond_Always, ImVec2(1.0f, 0.0f));
+    ImGui::SetNextWindowBgAlpha(0.5f);
+    ImGuiWindowFlags fpsWindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize |
+        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav |
+        ImGuiWindowFlags_NoMove;
+    if (ImGui::Begin("##FPS", nullptr, fpsWindowFlags)) {
+      ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "%.1f FPS", io.Framerate);
+    }
+    ImGui::End();
+#endif
+
     ImGui::Render();
     int displayW, displayH;
     glfwGetFramebufferSize(window, &displayW, &displayH);
