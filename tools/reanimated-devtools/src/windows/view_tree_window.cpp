@@ -2,6 +2,7 @@
 #include <imgui.h>
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <unordered_map>
 #include "protocol.h"
 
@@ -18,6 +19,11 @@ struct DrawableNode {
 };
 
 enum class ViewMode : uint8_t { Layered, True3D };
+
+ImU32 argbToAbgr(uint32_t argbColor) {
+  return (argbColor & 0xFF000000) | ((argbColor & 0x00FF0000) >> 16) | (argbColor & 0x0000FF00) |
+      ((argbColor & 0x000000FF) << 16);
+}
 
 // Helper to check if two rectangles overlap
 bool rectsOverlap(float x1, float y1, float w1, float h1, float x2, float y2, float w2, float h2) {
@@ -341,10 +347,18 @@ void drawViewTree3D(
     const ViewNode &node = *tn.drawable->node;
 
     bool wasMutated = snapshot.mutatedTags.count(node.tag) > 0;
-    ImU32 color = wasMutated ? reanimated::mutationTypeToColor(node.lastMutationType)
-                             : IM_COL32(80, 80, 80, static_cast<int>(node.opacity * 255));
-    ImU32 borderColor = wasMutated ? IM_COL32(255, 255, 255, 200) : IM_COL32(120, 120, 120, 200);
+    ImU32 color, borderColor;
 
+    if (state.ui.showBackgroundColor) {
+      uint32_t argbColor = static_cast<uint32_t>(node.backgroundColor);
+      auto abgr = argbToAbgr(argbColor);
+      color = (static_cast<uint32_t>(((abgr & 0xFF000000) >> 24) * node.opacity) << 24) | (abgr & 0x00FFFFFF);
+      borderColor = wasMutated ? reanimated::mutationTypeToColor(node.lastMutationType) : IM_COL32(120, 120, 120, 200);
+    } else {
+      color = wasMutated ? reanimated::mutationTypeToColor(node.lastMutationType)
+                               : IM_COL32(80, 80, 80, static_cast<int>(node.opacity * 255));
+      borderColor = wasMutated ? IM_COL32(255, 255, 255, 200) : IM_COL32(120, 120, 120, 200);
+    }
     drawList->AddQuadFilled(tn.corners[0], tn.corners[1], tn.corners[2], tn.corners[3], color);
     drawList->AddQuad(tn.corners[0], tn.corners[1], tn.corners[2], tn.corners[3], borderColor);
 
@@ -404,11 +418,11 @@ void drawViewTree3D(
       ImGui::Text("Opacity: %.2f", item.node->opacity);
       ImGui::Text("Background Color:");
       ImGui::SameLine();
-      uint32_t argbColor = static_cast<uint32_t>(item.node->backgroundColor);
-      uint32_t rgbaColor = ((argbColor & 0xFF000000) >> 24) | ((argbColor & 0x00FF0000) << 8) |
-          ((argbColor & 0x0000FF00) << 8) | ((argbColor & 0x000000FF) << 8);
-      ImVec4 bgColor = ImGui::ColorConvertU32ToFloat4(rgbaColor);
-      ImGui::TextColored(bgColor, "%08X", rgbaColor);
+      auto argbColor = static_cast<uint32_t>(item.node->backgroundColor);
+      auto abgrColor = argbToAbgr(argbColor);
+      auto bgColor = ImGui::ColorConvertU32ToFloat4(abgrColor);
+      ImGui::TextColored(bgColor, "%08X", argbColor);
+
       ImGui::Separator();
       ImGui::Text("Parent Tag: %d", item.node->parentTag);
       ImGui::Text("Index in Parent: %d", item.node->indexInParent);
@@ -460,7 +474,7 @@ void renderViewTreeWindow(app::AppState &state) {
       }
       if (isCanvasHovered && ImGui::IsMouseDragging(ImGuiMouseButton_Middle)) {
         ImVec2 delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Middle);
-        state.ui.rotationDeg += delta.x;
+        state.ui.rotationDeg -= delta.x;
         ImGui::ResetMouseDragDelta(ImGuiMouseButton_Middle);
       }
 

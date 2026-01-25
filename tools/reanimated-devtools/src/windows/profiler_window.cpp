@@ -382,7 +382,11 @@ void renderProfilerWindow(app::AppState &state) {
         ImGui::BeginTooltip();
         ImGui::Text("Event: %s", hoveredEvent.name.c_str());
         ImGui::Text("Thread: %s", hoveredEvent.threadName.c_str());
-        ImGui::Text("Duration: %.2f us", hoveredEvent.durationUs);
+        if (hoveredEvent.durationUs < 1000.0) {
+          ImGui::Text("Duration: %.2f µs", hoveredEvent.durationUs);
+        } else {
+          ImGui::Text("Duration: %.2f ms", hoveredEvent.durationUs / 1000.0);
+        }
         ImGui::Text("Start: %.3f ms", hoveredEvent.startTimeMs);
         ImGui::Text("End: %.3f ms", hoveredEvent.endTimeMs);
         if (hoveredEvent.snapshotId >= 0) {

@@ -86,6 +86,9 @@ void renderControlsWindow(app::AppState &state) {
   if (!state.ui.hiddenTags.empty()) {
     ImGui::Text("Hiding %zu tags", state.ui.hiddenTags.size());
   }
+  ImGui::Separator();
+
+  ImGui::Checkbox("Show Background Colors", &state.ui.showBackgroundColor);
 
   ImGui::Separator();
   ImGui::Text("Legend:");

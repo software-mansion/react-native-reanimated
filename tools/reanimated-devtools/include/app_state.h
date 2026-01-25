@@ -45,6 +45,7 @@ struct UIState {
   int viewModeInt = 1; // 0=Layered, 1=True3D
   std::set<int32_t> hiddenTags;
   char hiddenTagsInput[256] = "";
+  bool showBackgroundColor = false;
 
   // Profiler view state
   double profilerViewStartNs = 0.0;
