@@ -59,6 +59,7 @@ int getSubtreeMaxDepth(
 
 // First pass: collect all nodes with simple tree-based depth (no overlap handling)
 void collectNodesSimple(
+    const app::AppState &state,
     const TreeSnapshot &snapshot,
     const ViewNode &node,
     const std::set<int32_t> &hiddenTags,
@@ -75,16 +76,22 @@ void collectNodesSimple(
 
   outNodes.push_back({&node, absoluteX, absoluteY, depth});
 
+  float offsetY = 0.0f;
   for (int32_t childTag : node.childTags) {
     auto it = snapshot.nodes.find(childTag);
     if (it != snapshot.nodes.end()) {
-      collectNodesSimple(snapshot, it->second, hiddenTags, outNodes, absoluteX, absoluteY, depth + 1);
+      auto &childNode = it->second;
+      if (state.ui.adjustRNSScreensHeaders && childNode.componentName == "RNSScreen") {
+        offsetY = node.height - childNode.height;
+      }
+      collectNodesSimple(state, snapshot, childNode, hiddenTags, outNodes, absoluteX, absoluteY + offsetY, depth + 1);
     }
   }
 }
 
 // Collect nodes and handle overlapping siblings by adjusting z-depths
 void collectNodesWithOverlapHandling(
+    const app::AppState &state,
     const TreeSnapshot &snapshot,
     const std::set<int32_t> &hiddenTags,
     std::vector<DrawableNode> &outNodes,
@@ -93,7 +100,7 @@ void collectNodesWithOverlapHandling(
   for (int32_t rootTag : rootTags) {
     auto it = snapshot.nodes.find(rootTag);
     if (it != snapshot.nodes.end()) {
-      collectNodesSimple(snapshot, it->second, hiddenTags, outNodes, 0, 0, 0);
+      collectNodesSimple(state, snapshot, it->second, hiddenTags, outNodes, 0, 0, 0);
     }
   }
 
@@ -258,7 +265,7 @@ void drawViewTree3D(
     const std::vector<int32_t> &rootTags,
     bool enableHover) {
   std::vector<DrawableNode> nodes;
-  collectNodesWithOverlapHandling(snapshot, hiddenTags, nodes, rootTags);
+  collectNodesWithOverlapHandling(state, snapshot, hiddenTags, nodes, rootTags);
 
   if (nodes.empty()) {
     return;
@@ -356,7 +363,7 @@ void drawViewTree3D(
       borderColor = wasMutated ? reanimated::mutationTypeToColor(node.lastMutationType) : IM_COL32(120, 120, 120, 200);
     } else {
       color = wasMutated ? reanimated::mutationTypeToColor(node.lastMutationType)
-                               : IM_COL32(80, 80, 80, static_cast<int>(node.opacity * 255));
+                         : IM_COL32(80, 80, 80, static_cast<int>(node.opacity * 255));
       borderColor = wasMutated ? IM_COL32(255, 255, 255, 200) : IM_COL32(120, 120, 120, 200);
     }
     drawList->AddQuadFilled(tn.corners[0], tn.corners[1], tn.corners[2], tn.corners[3], color);

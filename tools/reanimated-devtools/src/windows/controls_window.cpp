@@ -86,11 +86,17 @@ void renderControlsWindow(app::AppState &state) {
   if (!state.ui.hiddenTags.empty()) {
     ImGui::Text("Hiding %zu tags", state.ui.hiddenTags.size());
   }
+
   ImGui::Separator();
 
   ImGui::Checkbox("Show Background Colors", &state.ui.showBackgroundColor);
 
   ImGui::Separator();
+
+  ImGui::Checkbox("Adjust RNScreens Headers", &state.ui.adjustRNSScreensHeaders);
+
+  ImGui::Separator();
+
   ImGui::Text("Legend:");
   ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "CREATE");
   ImGui::TextColored(ImVec4(0.8f, 0.4f, 0.4f, 1.0f), "DELETE");

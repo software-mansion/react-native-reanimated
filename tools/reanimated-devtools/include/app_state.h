@@ -46,6 +46,7 @@ struct UIState {
   std::set<int32_t> hiddenTags;
   char hiddenTagsInput[256] = "";
   bool showBackgroundColor = false;
+  bool adjustRNSScreensHeaders = false;
 
   // Profiler view state
   double profilerViewStartNs = 0.0;
