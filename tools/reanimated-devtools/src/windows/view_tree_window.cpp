@@ -240,6 +240,7 @@ void transformLayered(float &x, float rotationDeg, float zDepth, float depthSpac
 }
 
 void drawViewTree3D(
+    app::AppState &state,
     const TreeSnapshot &snapshot,
     ImDrawList *drawList,
     ImVec2 offset,
@@ -395,6 +396,9 @@ void drawViewTree3D(
   for (auto it = drawnItems.rbegin(); it != drawnItems.rend(); ++it) {
     const auto &item = *it;
     if (pointInQuad(mousePos, item.points)) {
+        if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)){
+            state.ui.hiddenTags.insert(item.node->tag);
+        }
       ImGui::BeginTooltip();
       ImGui::Text("Component: %s", item.node->componentName.c_str());
       ImGui::Text("Tag: %d", item.node->tag);
@@ -460,8 +464,7 @@ void renderViewTreeWindow(app::AppState &state) {
       }
       if (isCanvasHovered && ImGui::IsMouseDragging(ImGuiMouseButton_Middle)) {
         ImVec2 delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Middle);
-        state.ui.viewOffset.x += delta.x;
-        state.ui.viewOffset.y += delta.y;
+        state.ui.rotationDeg += delta.x;
         ImGui::ResetMouseDragDelta(ImGuiMouseButton_Middle);
       }
 
@@ -493,6 +496,7 @@ void renderViewTreeWindow(app::AppState &state) {
 
       ViewMode viewMode = (state.ui.viewModeInt == 0) ? ViewMode::Layered : ViewMode::True3D;
       drawViewTree3D(
+          state,
           snapshot,
           windowDrawList,
           actualOffset,
