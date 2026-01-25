@@ -506,7 +506,8 @@ export default class AnimatedComponent
     }
 
     const skipEntering = this.context?.current;
-    const nativeID = skipEntering ? undefined : `${this.reanimatedID}`;
+    const nativeID =
+      skipEntering || IS_WEB ? undefined : `${this.reanimatedID}`;
 
     const jestProps = IS_JEST
       ? {
