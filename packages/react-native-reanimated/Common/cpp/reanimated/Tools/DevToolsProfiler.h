@@ -16,6 +16,7 @@ class DevToolsServer;
 
 // Configurable buffer size
 constexpr size_t PROFILER_BUFFER_INITIAL_SIZE = 1024;
+constexpr size_t PROFILER_PREALLOCATED_BUFFERS = 3;
 
 /**
  * ProfilerThreadBuffer - Per-thread double buffer for profiler events
@@ -24,12 +25,12 @@ constexpr size_t PROFILER_BUFFER_INITIAL_SIZE = 1024;
  * The swap operation is lock-free for the common case (just an atomic flag).
  * Only the swap itself needs a mutex to prevent concurrent swaps.
  */
-class ProfilerThreadBuffer {
+class ProfilerThreadInfo {
  public:
-  explicit ProfilerThreadBuffer(size_t initialSize = PROFILER_BUFFER_INITIAL_SIZE);
+  explicit ProfilerThreadInfo(size_t initialSize = PROFILER_BUFFER_INITIAL_SIZE);
 
   // Add event to active buffer (lock-free, called from app thread)
-  void addEvent(const ProfilerEventInternal &event);
+  void addEvent(ProfilerEventInternal &event);
 
   // Swap buffers and return the ready one (called from flush)
   // Returns empty vector if nothing to collect
@@ -38,11 +39,29 @@ class ProfilerThreadBuffer {
   // Check if active buffer has data
   bool hasEvents() const;
 
+  // Update thread local data
+  void updateThreadInfo();
+
+  // Get thread name (can be called from any thread)
+  std::string getThreadName() const;
+
+  // Get thread ID
+  std::thread::id getThreadId() const;
+
+  // Check if thread metadata has been sent (for synchronization with frontend)
+  bool hasMetadataBeenSent() const;
+
+  // Mark metadata as sent
+  void markMetadataAsSent();
+
  private:
   std::vector<ProfilerEventInternal> bufferA_;
   std::vector<ProfilerEventInternal> bufferB_;
   std::atomic<bool> activeIsA_{true};
   std::mutex swapMutex_; // Only held during swap
+  std::thread::id threadId_{std::this_thread::get_id()};
+  std::string threadName_;
+  std::atomic<bool> metadataSent_{false};
 };
 
 /**
@@ -56,30 +75,29 @@ class DevToolsProfiler {
   static DevToolsProfiler &getInstance();
 
   // Get thread-local buffer (creates if needed)
-  ProfilerThreadBuffer &getThreadBuffer();
-
-  // Pre-allocate buffers for important threads (call early during init)
-  void preallocateBuffers(size_t count);
+  ProfilerThreadInfo &getThreadBuffer();
 
   // Flush all thread buffers to DevToolsServer
   void flush();
 
  private:
-  DevToolsProfiler() = default;
+  DevToolsProfiler() {
+    // Pre-allocate buffers for important threads
+    for (size_t i = 0; i < PROFILER_PREALLOCATED_BUFFERS; ++i) {
+      buffers_.emplace_back(std::make_unique<ProfilerThreadInfo>());
+    }
+  }
 
   DevToolsProfiler(const DevToolsProfiler &) = delete;
   DevToolsProfiler &operator=(const DevToolsProfiler &) = delete;
 
   // Track all thread buffers for flushing
   std::mutex threadBuffersMutex_;
-  std::vector<ProfilerThreadBuffer *> threadBuffers_;
+  std::vector<ProfilerThreadInfo *> threadBuffers_;
 
-  // Pre-allocated buffers (grabbed by first N threads)
-  std::vector<std::unique_ptr<ProfilerThreadBuffer>> preallocatedBuffers_;
   std::atomic<size_t> preallocatedIndex_{0};
-
   // Dynamically allocated buffers for threads beyond preallocated count
-  std::vector<std::unique_ptr<ProfilerThreadBuffer>> dynamicBuffers_;
+  std::vector<std::unique_ptr<ProfilerThreadInfo>> buffers_;
 };
 
 /**
@@ -101,7 +119,6 @@ class ProfilerSection {
     ProfilerEventInternal event;
     // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
     event.namePtr = reinterpret_cast<uint64_t>(name_);
-    event.threadId = std::hash<std::thread::id>{}(std::this_thread::get_id());
     // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
     event.startTimeNs = startTimeNs_;
     event.endTimeNs = std::chrono::steady_clock::now().time_since_epoch().count();

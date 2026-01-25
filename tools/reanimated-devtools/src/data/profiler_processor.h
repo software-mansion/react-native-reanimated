@@ -9,6 +9,7 @@ namespace data {
 std::vector<EventWithDepth> assignEventDepths(const std::vector<ProfilerEventData> &events, uint64_t minTimeNs);
 void recordProfilerEvent(app::AppState &state, const reanimated::ProfilerEvent &event);
 void registerProfilerString(app::AppState &state, uint32_t id, const std::string &name);
+void recordThreadMetadata(app::AppState &state, uint32_t threadId, const std::string &threadName);
 int findSnapshotForTimestamp(app::AppState &state, uint64_t timestampNs);
 
 } // namespace data

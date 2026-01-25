@@ -2,8 +2,6 @@
 
 #include <cstdint>
 #include <cstring>
-#include <string>
-#include <vector>
 
 namespace reanimated {
 
@@ -12,6 +10,7 @@ enum class DevToolsMessageType : uint8_t {
   Mutations = 0,
   ProfilerStringRegistry = 1,
   ProfilerEvents = 2,
+  ThreadMetadata = 3,
 };
 
 // Mutation types matching ShadowViewMutation::Type
@@ -94,6 +93,12 @@ struct ProfilerEvent {
   uint64_t startTimeNs;
   uint64_t endTimeNs;
 };
+
+// Thread metadata - sent once when a thread first appears
+struct ThreadMetadata {
+  uint32_t threadId; // Thread ID hash
+  char threadName[64]; // Human-readable thread name (e.g., "RenderThread", "JSThread")
+};
 #pragma pack(pop)
 
 // Internal profiler event - stores pointer, resolved on background thread
@@ -115,7 +120,7 @@ struct DevToolsMessageHeader {
   uint64_t timestampNs; // Timestamp in nanoseconds (for linking profiler events to mutations)
 
   static constexpr uint32_t MAGIC = 0xDEADBEEF;
-  static constexpr uint32_t VERSION = 4; // Incremented version for protocol change
+  static constexpr uint32_t VERSION = 5; // Added ThreadMetadata message type
 
   DevToolsMessageHeader()
       : magic(MAGIC),

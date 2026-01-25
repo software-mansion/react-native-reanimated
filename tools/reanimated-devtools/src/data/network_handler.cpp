@@ -93,6 +93,9 @@ void networkThread(app::AppState &state, int port) {
             case reanimated::DevToolsMessageType::ProfilerEvents:
               payloadSize = header.payloadCount * sizeof(reanimated::ProfilerEvent);
               break;
+            case reanimated::DevToolsMessageType::ThreadMetadata:
+              payloadSize = header.payloadCount * sizeof(reanimated::ThreadMetadata);
+              break;
             default:
               std::cerr << "Unknown message type: " << static_cast<int>(header.type) << "\n";
               pendingData.clear();
@@ -132,6 +135,16 @@ void networkThread(app::AppState &state, int port) {
                 reanimated::ProfilerEvent event;
                 memcpy(&event, payloadPtr + i * sizeof(reanimated::ProfilerEvent), sizeof(event));
                 recordProfilerEvent(state, event);
+              }
+              break;
+            }
+
+            case reanimated::DevToolsMessageType::ThreadMetadata: {
+              for (uint32_t i = 0; i < header.payloadCount; ++i) {
+                reanimated::ThreadMetadata metadata;
+                memcpy(&metadata, payloadPtr + i * sizeof(reanimated::ThreadMetadata), sizeof(metadata));
+                metadata.threadName[sizeof(metadata.threadName) - 1] = '\0'; // Ensure null termination
+                recordThreadMetadata(state, metadata.threadId, metadata.threadName);
               }
               break;
             }

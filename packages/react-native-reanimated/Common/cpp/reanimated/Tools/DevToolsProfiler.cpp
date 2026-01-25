@@ -1,3 +1,8 @@
+#ifdef ANDROID
+#include <pthread.h>
+#elif defined(__APPLE__)
+#include <dispatch/dispatch.h>
+#endif
 #include <reanimated/Tools/DevToolsProfiler.h>
 #include <reanimated/Tools/DevToolsServer.h>
 
@@ -5,18 +10,19 @@ namespace reanimated {
 
 // ProfilerThreadBuffer implementation
 
-ProfilerThreadBuffer::ProfilerThreadBuffer(size_t initialSize) {
+ProfilerThreadInfo::ProfilerThreadInfo(size_t initialSize) {
   bufferA_.reserve(initialSize);
   bufferB_.reserve(initialSize);
 }
 
-void ProfilerThreadBuffer::addEvent(const ProfilerEventInternal &event) {
+void ProfilerThreadInfo::addEvent(ProfilerEventInternal &event) {
   // No lock needed - only this thread writes to active buffer
   auto &active = activeIsA_.load(std::memory_order_acquire) ? bufferA_ : bufferB_;
+  event.threadId = std::hash<std::thread::id>{}(threadId_);
   active.push_back(event);
 }
 
-std::vector<ProfilerEventInternal> ProfilerThreadBuffer::swapAndCollect() {
+std::vector<ProfilerEventInternal> ProfilerThreadInfo::swapAndCollect() {
   std::lock_guard<std::mutex> lock(swapMutex_);
 
   bool wasA = activeIsA_.load(std::memory_order_acquire);
@@ -38,10 +44,50 @@ std::vector<ProfilerEventInternal> ProfilerThreadBuffer::swapAndCollect() {
   return result;
 }
 
-bool ProfilerThreadBuffer::hasEvents() const {
+bool ProfilerThreadInfo::hasEvents() const {
   bool isA = activeIsA_.load(std::memory_order_acquire);
   const auto &active = isA ? bufferA_ : bufferB_;
   return !active.empty();
+}
+
+void ProfilerThreadInfo::updateThreadInfo() {
+  threadId_ = std::this_thread::get_id();
+#ifdef ANDROID
+
+#if __ANDROID_API__ >= 26
+  char threadName[64];
+  pthread_getname_np(pthread_self(), threadName, sizeof(threadName));
+  threadName_ = threadName;
+#else
+  // Fallback for older Android versions
+  threadName_ = "Thread " + std::to_string(std::hash<std::thread::id>{}(threadId_));
+#endif
+#elif defined(__APPLE__)
+  const char *threadName = dispatch_queue_get_label(DISPATCH_CURRENT_QUEUE_LABEL);
+  if (!strcmp(threadName, dispatch_queue_get_label(dispatch_get_main_queue()))) {
+    threadName_ = threadName;
+  } else {
+    char threadName[64];
+    pthread_getname_np(pthread_self(), threadName, sizeof(threadName));
+    threadName_ = threadName;
+  }
+#endif
+}
+
+std::string ProfilerThreadInfo::getThreadName() const {
+  return threadName_;
+}
+
+std::thread::id ProfilerThreadInfo::getThreadId() const {
+  return threadId_;
+}
+
+bool ProfilerThreadInfo::hasMetadataBeenSent() const {
+  return metadataSent_.load(std::memory_order_acquire);
+}
+
+void ProfilerThreadInfo::markMetadataAsSent() {
+  metadataSent_.store(true, std::memory_order_release);
 }
 
 // DevToolsProfiler implementation
@@ -51,43 +97,47 @@ DevToolsProfiler &DevToolsProfiler::getInstance() {
   return instance;
 }
 
-ProfilerThreadBuffer &DevToolsProfiler::getThreadBuffer() {
-  thread_local ProfilerThreadBuffer *buffer = nullptr;
+ProfilerThreadInfo &DevToolsProfiler::getThreadBuffer() {
+  thread_local ProfilerThreadInfo *threadInfo = nullptr;
 
-  if (buffer == nullptr) {
+  if (threadInfo == nullptr) {
     // Try to grab a preallocated buffer
     size_t idx = preallocatedIndex_.fetch_add(1, std::memory_order_relaxed);
-    if (idx < preallocatedBuffers_.size()) {
-      buffer = preallocatedBuffers_[idx].get();
+    if (idx < PROFILER_PREALLOCATED_BUFFERS) {
+      threadInfo = buffers_[idx].get();
+      threadInfo->updateThreadInfo();
       // Register for flushing
       std::lock_guard<std::mutex> lock(threadBuffersMutex_);
-      threadBuffers_.push_back(buffer);
+      threadBuffers_.push_back(threadInfo);
     } else {
       // Create new buffer and store in dynamicBuffers_ to manage lifetime
-      auto newBuffer = std::make_unique<ProfilerThreadBuffer>();
-      buffer = newBuffer.get();
+      auto newBuffer = std::make_unique<ProfilerThreadInfo>();
+      newBuffer->updateThreadInfo();
+      threadInfo = newBuffer.get();
       // Register for flushing and store ownership
       std::lock_guard<std::mutex> lock(threadBuffersMutex_);
-      dynamicBuffers_.push_back(std::move(newBuffer));
-      threadBuffers_.push_back(buffer);
+      buffers_.push_back(std::move(newBuffer));
+      threadBuffers_.push_back(threadInfo);
     }
   }
 
-  return *buffer;
-}
-
-void DevToolsProfiler::preallocateBuffers(size_t count) {
-  preallocatedBuffers_.reserve(count);
-  for (size_t i = 0; i < count; ++i) {
-    preallocatedBuffers_.push_back(std::make_unique<ProfilerThreadBuffer>());
-  }
+  return *threadInfo;
 }
 
 void DevToolsProfiler::flush() {
-  std::vector<ProfilerThreadBuffer *> buffers;
+  std::vector<ProfilerThreadInfo *> buffers;
   {
     std::lock_guard<std::mutex> lock(threadBuffersMutex_);
     buffers = threadBuffers_;
+  }
+
+  // Send thread metadata for any threads that haven't been announced yet
+  for (auto *buffer : buffers) {
+    if (!buffer->hasMetadataBeenSent()) {
+      uint32_t threadId = std::hash<std::thread::id>{}(buffer->getThreadId());
+      DevToolsServer::getInstance().sendThreadMetadata(threadId, buffer->getThreadName());
+      buffer->markMetadataAsSent();
+    }
   }
 
   // Collect events from all thread buffers

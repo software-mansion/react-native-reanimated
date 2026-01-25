@@ -74,7 +74,13 @@ void recordProfilerEvent(app::AppState &state, const reanimated::ProfilerEvent &
   auto &timeline = state.data.threadTimelines[event.threadId];
   timeline.threadId = event.threadId;
   if (timeline.threadName.empty()) {
-    timeline.threadName = "Thread " + std::to_string(event.threadId);
+    // Use stored thread name or fall back to generic name
+    auto nameIt = state.data.threadNames.find(event.threadId);
+    if (nameIt != state.data.threadNames.end()) {
+      timeline.threadName = nameIt->second;
+    } else {
+      timeline.threadName = "Thread " + std::to_string(event.threadId);
+    }
   }
   timeline.events.push_back(eventData);
 
@@ -86,6 +92,17 @@ void recordProfilerEvent(app::AppState &state, const reanimated::ProfilerEvent &
 void registerProfilerString(app::AppState &state, uint32_t id, const std::string &name) {
   std::lock_guard<std::mutex> lock(state.data.profilerMutex);
   state.data.profilerStrings[id] = name;
+}
+
+void recordThreadMetadata(app::AppState &state, uint32_t threadId, const std::string &threadName) {
+  std::lock_guard<std::mutex> lock(state.data.profilerMutex);
+  state.data.threadNames[threadId] = threadName;
+
+  // Update existing timeline if it exists
+  auto it = state.data.threadTimelines.find(threadId);
+  if (it != state.data.threadTimelines.end()) {
+    it->second.threadName = threadName;
+  }
 }
 
 int findSnapshotForTimestamp(app::AppState &state, uint64_t timestampNs) {

@@ -45,6 +45,9 @@ class DevToolsServer {
   // Events contain raw pointers that will be resolved on the network thread
   void sendProfilerEvents(std::vector<ProfilerEventInternal> &&events);
 
+  // Send thread metadata (called once per thread, from any thread)
+  void sendThreadMetadata(uint32_t threadId, const std::string &threadName);
+
   // Request an immediate flush (called when sending mutations)
   void requestFlush();
 
@@ -72,6 +75,7 @@ class DevToolsServer {
   void sendMutationsBatch(const std::vector<SimpleMutation> &mutations, uint64_t timestamp);
   void sendProfilerStringsBatch(const std::vector<ProfilerStringEntry> &strings);
   void sendProfilerEventsBatch(const std::vector<ProfilerEvent> &events);
+  void sendThreadMetadataBatch(const std::vector<ThreadMetadata> &metadata);
   bool sendRawData(const void *data, size_t size);
 
   // Resolve profiler event pointers to IDs (called on network thread only)
@@ -96,6 +100,7 @@ class DevToolsServer {
   std::condition_variable queueCondition_;
   std::vector<MutationBatch> pendingMutations_;
   std::vector<std::vector<ProfilerEventInternal>> pendingProfilerEvents_;
+  std::vector<ThreadMetadata> pendingThreadMetadata_;
   bool flushRequested_{false};
 
   // String registry (only accessed from network thread - no mutex needed)

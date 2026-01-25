@@ -27,6 +27,7 @@ struct DataState {
   std::mutex profilerMutex;
   std::unordered_map<uint32_t, ThreadTimeline> threadTimelines;
   std::unordered_map<uint32_t, std::string> profilerStrings;
+  std::unordered_map<uint32_t, std::string> threadNames; // Thread ID -> human-readable name
   uint64_t profilerMinTimeNs = UINT64_MAX;
   uint64_t profilerMaxTimeNs = 0;
 
@@ -51,7 +52,6 @@ struct UIState {
   double profilerNsPerPixel = 100000.0;
   bool profilerLockToLatest = true;
   HoveredEventInfo hoveredEvent;
-
 };
 
 // Main application state - composition of data and UI

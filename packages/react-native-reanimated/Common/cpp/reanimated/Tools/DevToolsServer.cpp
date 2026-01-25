@@ -73,6 +73,21 @@ void DevToolsServer::sendProfilerEvents(std::vector<ProfilerEventInternal> &&eve
   queueCondition_.notify_one();
 }
 
+void DevToolsServer::sendThreadMetadata(uint32_t threadId, const std::string &threadName) {
+  if (!running_.load(std::memory_order_acquire)) {
+    return;
+  }
+
+  ThreadMetadata metadata;
+  metadata.threadId = threadId;
+  strncpy(metadata.threadName, threadName.c_str(), sizeof(metadata.threadName) - 1);
+  metadata.threadName[sizeof(metadata.threadName) - 1] = '\0';
+
+  std::lock_guard<std::mutex> lock(queueMutex_);
+  pendingThreadMetadata_.push_back(metadata);
+  queueCondition_.notify_one();
+}
+
 void DevToolsServer::requestFlush() {
   std::lock_guard<std::mutex> lock(queueMutex_);
   flushRequested_ = true;
@@ -83,14 +98,15 @@ void DevToolsServer::networkThreadLoop() {
   while (running_.load(std::memory_order_acquire)) {
     std::vector<MutationBatch> mutationBatches;
     std::vector<std::vector<ProfilerEventInternal>> profilerBatches;
+    std::vector<ThreadMetadata> threadMetadata;
 
     {
       std::unique_lock<std::mutex> lock(queueMutex_);
 
       // Wait until: work available OR timeout OR stop requested
       queueCondition_.wait_for(lock, FLUSH_INTERVAL, [this] {
-        return !pendingMutations_.empty() || !pendingProfilerEvents_.empty() || flushRequested_ ||
-            !running_.load(std::memory_order_acquire);
+        return !pendingMutations_.empty() || !pendingProfilerEvents_.empty() || !pendingThreadMetadata_.empty() ||
+            flushRequested_ || !running_.load(std::memory_order_acquire);
       });
 
       if (!running_.load(std::memory_order_acquire)) {
@@ -100,14 +116,21 @@ void DevToolsServer::networkThreadLoop() {
       // Grab all pending work
       mutationBatches = std::move(pendingMutations_);
       profilerBatches = std::move(pendingProfilerEvents_);
+      threadMetadata = std::move(pendingThreadMetadata_);
       pendingMutations_.clear();
       pendingProfilerEvents_.clear();
+      pendingThreadMetadata_.clear();
       flushRequested_ = false;
     }
 
     // Send data (outside lock)
-    if (!mutationBatches.empty() || !profilerBatches.empty()) {
+    if (!mutationBatches.empty() || !profilerBatches.empty() || !threadMetadata.empty()) {
       if (connectIfNeeded()) {
+        // Send thread metadata first (for visualization labels)
+        if (!threadMetadata.empty()) {
+          sendThreadMetadataBatch(threadMetadata);
+        }
+
         // Send mutations with timestamps
         for (const auto &batch : mutationBatches) {
           sendMutationsBatch(batch.mutations, batch.timestampNs);
@@ -243,6 +266,22 @@ void DevToolsServer::sendProfilerEventsBatch(const std::vector<ProfilerEvent> &e
 
   // Send payload
   sendRawData(events.data(), events.size() * sizeof(ProfilerEvent));
+}
+
+void DevToolsServer::sendThreadMetadataBatch(const std::vector<ThreadMetadata> &metadata) {
+  if (metadata.empty()) {
+    return;
+  }
+
+  DevToolsMessageHeader header(DevToolsMessageType::ThreadMetadata, static_cast<uint32_t>(metadata.size()));
+
+  // Send header
+  if (!sendRawData(&header, sizeof(header))) {
+    return;
+  }
+
+  // Send payload
+  sendRawData(metadata.data(), metadata.size() * sizeof(ThreadMetadata));
 }
 
 std::vector<ProfilerEvent> DevToolsServer::resolveProfilerEvents(const std::vector<ProfilerEventInternal> &events) {
