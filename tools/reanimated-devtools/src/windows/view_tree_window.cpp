@@ -396,9 +396,9 @@ void drawViewTree3D(
   for (auto it = drawnItems.rbegin(); it != drawnItems.rend(); ++it) {
     const auto &item = *it;
     if (pointInQuad(mousePos, item.points)) {
-        if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)){
-            state.ui.hiddenTags.insert(item.node->tag);
-        }
+      if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+        state.ui.hiddenTags.insert(item.node->tag);
+      }
       ImGui::BeginTooltip();
       ImGui::Text("Component: %s", item.node->componentName.c_str());
       ImGui::Text("Tag: %d", item.node->tag);
