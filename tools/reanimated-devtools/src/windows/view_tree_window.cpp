@@ -432,7 +432,7 @@ void drawViewTree3D(
 
 } // anonymous namespace
 
-void renderViewTreeWindow(app::AppState &state, ImDrawList *drawList) {
+void renderViewTreeWindow(app::AppState &state) {
   bool altHeld = ImGui::GetIO().KeyAlt;
   ImGuiWindowFlags viewTreeFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
   ImGui::Begin("View Tree", nullptr, viewTreeFlags);

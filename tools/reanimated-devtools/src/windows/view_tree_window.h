@@ -5,6 +5,6 @@
 
 namespace windows {
 
-void renderViewTreeWindow(app::AppState &state, ImDrawList *drawList);
+void renderViewTreeWindow(app::AppState &state);
 
 } // namespace windows

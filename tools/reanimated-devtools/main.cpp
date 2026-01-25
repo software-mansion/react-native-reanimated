@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
     // Render all windows
     windows::renderControlsWindow(appState);
     windows::renderMutationsWindow(appState);
-    windows::renderViewTreeWindow(appState, ImGui::GetWindowDrawList());
+    windows::renderViewTreeWindow(appState);
     windows::renderProfilerWindow(appState);
 
 #ifdef ENABLE_FPS_COUNTER
