@@ -358,17 +358,13 @@ void drawViewTree3D(
 
     ImU32 textColor = wasMutated ? IM_COL32(255, 255, 255, 255) : IM_COL32(160, 160, 160, 255);
     char label[256];
-    snprintf(
-        label,
-        sizeof(label),
-        "%s [%d]\n(%.0f,%.0f) %.0fx%.0f",
-        node.componentName.c_str(),
-        node.tag,
-        node.x,
-        node.y,
-        node.width,
-        node.height);
-    drawList->AddText(ImVec2(tn.corners[0].x + 2, tn.corners[0].y + 2), textColor, label);
+    if (node.componentName == "View") {
+      snprintf(label, sizeof(label), "%d", node.tag);
+      drawList->AddText(ImVec2(tn.corners[0].x + 2, tn.corners[0].y + 2), textColor, label);
+    } else {
+      snprintf(label, sizeof(label), "%s\n%d", node.componentName.c_str(), node.tag);
+      drawList->AddText(ImVec2(tn.corners[0].x + 2, tn.corners[0].y + 2), textColor, label);
+    }
   }
 
   if (!enableHover) {
