@@ -43,148 +43,16 @@ namespace reanimated::css {
 
 namespace {
 
-using CSSLengthKeywordCallback = std::function<void(
-    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &,
-    const CSSValueVariant<CSSLength, CSSKeyword> &)>;
+template <typename... AllowedTypes>
+using CSSCallback = std::function<
+    void(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)>;
 
-using CSSLengthCallback = std::function<
-    void(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<CSSLength> &)>;
-
-using CSSDoubleCallback = std::function<
-    void(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<CSSDouble> &)>;
-
-using CSSColorCallback = std::function<
-    void(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<CSSColor> &)>;
-
-using CSSKeywordCallback = std::function<
-    void(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<CSSKeyword> &)>;
-
-using CSSDoubleKeywordCallback = std::function<void(
-    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &,
-    const CSSValueVariant<CSSDouble, CSSKeyword> &)>;
-
-using CSSDisplayCallback = std::function<
-    void(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<CSSDisplay> &)>;
-
-using CSSIntegerCallback = std::function<
-    void(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<CSSInteger> &)>;
-
-using CSSBooleanCallback = std::function<
-    void(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<CSSBoolean> &)>;
-
-using CSSAngleCallback = std::function<
-    void(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<CSSAngle> &)>;
-
-using CSSBoxShadowCallback = std::function<
-    void(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<CSSBoxShadow> &)>;
-
-using CSSDiscreteKeywordArrayCallback = std::function<void(
-    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &,
-    const CSSValueVariant<CSSDiscreteArray<CSSKeyword>> &)>;
-
-using SVGBrushCallback = std::function<
-    void(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<SVGBrush> &)>;
-
-using SVGLengthCallback = std::function<
-    void(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<SVGLength> &)>;
-
-using SVGLengthKeywordCallback = std::function<void(
-    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &,
-    const CSSValueVariant<SVGLength, CSSKeyword> &)>;
-
-using SVGStrokeDashArrayKeywordCallback = std::function<void(
-    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &,
-    const CSSValueVariant<SVGStrokeDashArray, CSSKeyword> &)>;
-
-CSSLengthCallback getCSSLengthCallback(std::string propName) {
-  return
-      [propName](const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<CSSLength> &) {
-      };
-}
-
-CSSDoubleCallback getCSSDoubleCallback(std::string propName) {
-  return
-      [propName](const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<CSSDouble> &) {
-      };
-}
-
-CSSColorCallback getCSSColorCallback(std::string propName) {
-  return [propName](const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<CSSColor> &) {
-
-  };
-}
-
-CSSKeywordCallback getCSSKeywordCallback(std::string propName) {
-  return
-      [propName](const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<CSSKeyword> &) {
-      };
-}
-
-CSSDoubleKeywordCallback getCSSDoubleKeywordCallback(std::string propName) {
-  return [propName](
-             const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &,
-             const CSSValueVariant<CSSDouble, CSSKeyword> &) {
-  };
-}
-
-CSSDisplayCallback getCSSDisplayCallback(std::string propName) {
-  return
-      [propName](const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<CSSDisplay> &) {
-      };
-}
-
-CSSIntegerCallback getCSSIntegerCallback(std::string propName) {
-  return
-      [propName](const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<CSSInteger> &) {
-      };
-}
-
-CSSBooleanCallback getCSSBooleanCallback(std::string propName) {
-  return
-      [propName](const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<CSSBoolean> &) {
-      };
-}
-
-CSSAngleCallback getCSSAngleCallback(std::string propName) {
-  return [propName](const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<CSSAngle> &) {
-  };
-}
-
-CSSBoxShadowCallback getCSSBoxShadowCallback(std::string propName) {
-  return [propName](
-             const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<CSSBoxShadow> &) {
-  };
-}
-
-CSSDiscreteKeywordArrayCallback getCSSDiscreteKeywordArrayCallback(std::string propName) {
-  return [propName](
-             const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &,
-             const CSSValueVariant<CSSDiscreteArray<CSSKeyword>> &) {
-  };
-}
-
-SVGBrushCallback getSVGBrushCallback(std::string propName) {
-  return [propName](const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<SVGBrush> &) {
-  };
-}
-
-SVGLengthCallback getSVGLengthCallback(std::string propName) {
-  return
-      [propName](const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<SVGLength> &) {
-      };
-}
-
-SVGLengthKeywordCallback getSVGLengthKeywordCallback(std::string propName) {
-  return [propName](
-             const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &,
-             const CSSValueVariant<SVGLength, CSSKeyword> &) {
-  };
-}
-
-SVGStrokeDashArrayKeywordCallback getSVGStrokeDashArrayKeywordCallback(std::string propName) {
-  return [propName](
-             const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &,
-             const CSSValueVariant<SVGStrokeDashArray, CSSKeyword> &) {
+// Returns a dummy callback for unsupported properties.
+// Use this when a property needs to be registered for interpolation but
+// doesn't have AnimatedPropsBuilder support yet.
+template <typename... AllowedTypes>
+CSSCallback<AllowedTypes...> unsupported() {
+  return [](const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &) {
   };
 }
 
@@ -205,200 +73,200 @@ InterpolatorFactoriesRecord mergeInterpolators(const std::vector<InterpolatorFac
 // ==========================
 
 const InterpolatorFactoriesRecord FLEX_INTERPOLATORS = {
-    {"alignContent", value<CSSKeyword>("flex-start", CSSKeywordCallback(addAlignContentToPropsBuilder))},
-    {"alignItems", value<CSSKeyword>("stretch", CSSKeywordCallback(addAlignItemsToPropsBuilder))},
-    {"alignSelf", value<CSSKeyword>("auto", CSSKeywordCallback(addAlignSelfToPropsBuilder))},
-    {"aspectRatio", value<CSSDouble, CSSKeyword>("auto", CSSDoubleKeywordCallback(addAspectRatioToPropsBuilder))},
-    {"borderBottomWidth", value<CSSDouble>(0, CSSDoubleCallback(addBorderBottomWidthToPropsBuilder))},
-    {"borderEndWidth", value<CSSDouble>(0, CSSDoubleCallback(addBorderEndWidthToPropsBuilder))},
-    {"borderLeftWidth", value<CSSDouble>(0, CSSDoubleCallback(addBorderLeftWidthToPropsBuilder))},
-    {"borderRightWidth", value<CSSDouble>(0, CSSDoubleCallback(addBorderRightWidthToPropsBuilder))},
-    {"borderStartWidth", value<CSSDouble>(0, CSSDoubleCallback(addBorderStartWidthToPropsBuilder))},
-    {"borderTopWidth", value<CSSDouble>(0, CSSDoubleCallback(addBorderTopWidthToPropsBuilder))},
-    {"borderWidth", value<CSSDouble>(0, CSSDoubleCallback(addBorderWidthToPropsBuilder))},
+    {"alignContent", value<CSSKeyword>("flex-start", CSSCallback<CSSKeyword>(addAlignContentToPropsBuilder))},
+    {"alignItems", value<CSSKeyword>("stretch", CSSCallback<CSSKeyword>(addAlignItemsToPropsBuilder))},
+    {"alignSelf", value<CSSKeyword>("auto", CSSCallback<CSSKeyword>(addAlignSelfToPropsBuilder))},
+    {"aspectRatio", value<CSSDouble, CSSKeyword>("auto", CSSCallback<CSSDouble, CSSKeyword>(addAspectRatioToPropsBuilder))},
+    {"borderBottomWidth", value<CSSDouble>(0, CSSCallback<CSSDouble>(addBorderBottomWidthToPropsBuilder))},
+    {"borderEndWidth", value<CSSDouble>(0, CSSCallback<CSSDouble>(addBorderEndWidthToPropsBuilder))},
+    {"borderLeftWidth", value<CSSDouble>(0, CSSCallback<CSSDouble>(addBorderLeftWidthToPropsBuilder))},
+    {"borderRightWidth", value<CSSDouble>(0, CSSCallback<CSSDouble>(addBorderRightWidthToPropsBuilder))},
+    {"borderStartWidth", value<CSSDouble>(0, CSSCallback<CSSDouble>(addBorderStartWidthToPropsBuilder))},
+    {"borderTopWidth", value<CSSDouble>(0, CSSCallback<CSSDouble>(addBorderTopWidthToPropsBuilder))},
+    {"borderWidth", value<CSSDouble>(0, CSSCallback<CSSDouble>(addBorderWidthToPropsBuilder))},
     {"bottom",
      value<CSSLength, CSSKeyword>(
          "auto",
          {RelativeTo::Parent, "height"},
-         CSSLengthKeywordCallback(addBottomToPropsBuilder))},
-    {"boxSizing", value<CSSKeyword>("border-box", CSSKeywordCallback(addBoxSizingToPropsBuilder))},
-    {"display", value<CSSDisplay>("flex", CSSDisplayCallback(addDisplayToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addBottomToPropsBuilder))},
+    {"boxSizing", value<CSSKeyword>("border-box", CSSCallback<CSSKeyword>(addBoxSizingToPropsBuilder))},
+    {"display", value<CSSDisplay>("flex", CSSCallback<CSSDisplay>(addDisplayToPropsBuilder))},
     {"end",
      value<CSSLength, CSSKeyword>(
          "auto",
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addEndToPropsBuilder))},
-    {"flex", value<CSSDouble>(0, CSSDoubleCallback(addFlexToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addEndToPropsBuilder))},
+    {"flex", value<CSSDouble>(0, CSSCallback<CSSDouble>(addFlexToPropsBuilder))},
     {"flexBasis",
      value<CSSLength, CSSKeyword>(
          "auto",
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addFlexBasisToPropsBuilder))},
-    {"flexDirection", value<CSSKeyword>("column", CSSKeywordCallback(addFlexDirectionToPropsBuilder))},
-    {"rowGap", value<CSSLength>(0, {RelativeTo::Self, "height"}, CSSLengthCallback(addRowGapToPropsBuilder))},
-    {"columnGap", value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSLengthCallback(addColumnGapToPropsBuilder))},
-    {"flexGrow", value<CSSDouble>(0, CSSDoubleCallback(addFlexGrowToPropsBuilder))},
-    {"flexShrink", value<CSSDouble>(0, CSSDoubleCallback(addFlexShrinkToPropsBuilder))},
-    {"flexWrap", value<CSSKeyword>("no-wrap", CSSKeywordCallback(addFlexWrapToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addFlexBasisToPropsBuilder))},
+    {"flexDirection", value<CSSKeyword>("column", CSSCallback<CSSKeyword>(addFlexDirectionToPropsBuilder))},
+    {"rowGap", value<CSSLength>(0, {RelativeTo::Self, "height"}, CSSCallback<CSSLength>(addRowGapToPropsBuilder))},
+    {"columnGap", value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addColumnGapToPropsBuilder))},
+    {"flexGrow", value<CSSDouble>(0, CSSCallback<CSSDouble>(addFlexGrowToPropsBuilder))},
+    {"flexShrink", value<CSSDouble>(0, CSSCallback<CSSDouble>(addFlexShrinkToPropsBuilder))},
+    {"flexWrap", value<CSSKeyword>("no-wrap", CSSCallback<CSSKeyword>(addFlexWrapToPropsBuilder))},
     {"height",
      value<CSSLength, CSSKeyword>(
          "auto",
          {RelativeTo::Parent, "height"},
-         CSSLengthKeywordCallback(addHeightToPropsBuilder))},
-    {"justifyContent", value<CSSKeyword>("flex-start", CSSKeywordCallback(addJustifyContentToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addHeightToPropsBuilder))},
+    {"justifyContent", value<CSSKeyword>("flex-start", CSSCallback<CSSKeyword>(addJustifyContentToPropsBuilder))},
     {"left",
      value<CSSLength, CSSKeyword>(
          "auto",
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addLeftToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addLeftToPropsBuilder))},
     {"margin",
-     value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"}, CSSLengthKeywordCallback(addMarginToPropsBuilder))},
+     value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"}, CSSCallback<CSSLength, CSSKeyword>(addMarginToPropsBuilder))},
     {"marginBottom",
      value<CSSLength, CSSKeyword>(
          0,
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addMarginBottomToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addMarginBottomToPropsBuilder))},
     {"marginEnd",
      value<CSSLength, CSSKeyword>(
          0,
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addMarginEndToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addMarginEndToPropsBuilder))},
     {"marginHorizontal",
      value<CSSLength, CSSKeyword>(
          0,
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addMarginHorizontalToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addMarginHorizontalToPropsBuilder))},
     {"marginLeft",
      value<CSSLength, CSSKeyword>(
          0,
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addMarginLeftToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addMarginLeftToPropsBuilder))},
     {"marginRight",
      value<CSSLength, CSSKeyword>(
          0,
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addMarginRightToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addMarginRightToPropsBuilder))},
     {"marginStart",
      value<CSSLength, CSSKeyword>(
          0,
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addMarginStartToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addMarginStartToPropsBuilder))},
     {"marginTop",
      value<CSSLength, CSSKeyword>(
          0,
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addMarginTopToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addMarginTopToPropsBuilder))},
     {"marginVertical",
      value<CSSLength, CSSKeyword>(
          0,
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addMarginVerticalToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addMarginVerticalToPropsBuilder))},
     {"maxHeight",
      value<CSSLength, CSSKeyword>(
          "auto",
          {RelativeTo::Parent, "height"},
-         CSSLengthKeywordCallback(addMaxHeightToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addMaxHeightToPropsBuilder))},
     {"maxWidth",
      value<CSSLength, CSSKeyword>(
          "auto",
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addMaxWidthToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addMaxWidthToPropsBuilder))},
     {"minHeight",
      value<CSSLength, CSSKeyword>(
          "auto",
          {RelativeTo::Parent, "height"},
-         CSSLengthKeywordCallback(addMinHeightToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addMinHeightToPropsBuilder))},
     {"minWidth",
      value<CSSLength, CSSKeyword>(
          "auto",
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addMinWidthToPropsBuilder))},
-    {"overflow", value<CSSKeyword>("visible", CSSKeywordCallback(addOverflowToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addMinWidthToPropsBuilder))},
+    {"overflow", value<CSSKeyword>("visible", CSSCallback<CSSKeyword>(addOverflowToPropsBuilder))},
     {"padding",
      value<CSSLength, CSSKeyword>(
          0,
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addPaddingToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addPaddingToPropsBuilder))},
     {"paddingBottom",
      value<CSSLength, CSSKeyword>(
          0,
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addPaddingBottomToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addPaddingBottomToPropsBuilder))},
     {"paddingEnd",
      value<CSSLength, CSSKeyword>(
          0,
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addPaddingEndToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addPaddingEndToPropsBuilder))},
     {"paddingHorizontal",
      value<CSSLength, CSSKeyword>(
          0,
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addPaddingHorizontalToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addPaddingHorizontalToPropsBuilder))},
     {"paddingLeft",
      value<CSSLength, CSSKeyword>(
          0,
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addPaddingLeftToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addPaddingLeftToPropsBuilder))},
     {"paddingRight",
      value<CSSLength, CSSKeyword>(
          0,
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addPaddingRightToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addPaddingRightToPropsBuilder))},
     {"paddingStart",
      value<CSSLength, CSSKeyword>(
          0,
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addPaddingStartToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addPaddingStartToPropsBuilder))},
     {"paddingTop",
      value<CSSLength, CSSKeyword>(
          0,
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addPaddingTopToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addPaddingTopToPropsBuilder))},
     {"paddingVertical",
      value<CSSLength, CSSKeyword>(
          0,
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addPaddingVerticalToPropsBuilder))},
-    {"position", value<CSSKeyword>("relative", CSSKeywordCallback(addPositionToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addPaddingVerticalToPropsBuilder))},
+    {"position", value<CSSKeyword>("relative", CSSCallback<CSSKeyword>(addPositionToPropsBuilder))},
     {"right",
      value<CSSLength, CSSKeyword>(
          "auto",
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addRightToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addRightToPropsBuilder))},
     {"start",
      value<CSSLength, CSSKeyword>(
          "auto",
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addStartToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addStartToPropsBuilder))},
     {"top",
      value<CSSLength, CSSKeyword>(
          "auto",
          {RelativeTo::Parent, "height"},
-         CSSLengthKeywordCallback(addTopToPropsBuilder))},
+         CSSCallback<CSSLength, CSSKeyword>(addTopToPropsBuilder))},
     {"width",
      value<CSSLength, CSSKeyword>(
          "auto",
          {RelativeTo::Parent, "width"},
-         CSSLengthKeywordCallback(addWidthToPropsBuilder))},
-    {"zIndex", value<CSSInteger>(0, CSSIntegerCallback(addZIndexToPropsBuilder))},
-    {"direction", value<CSSKeyword>("inherit", CSSKeywordCallback(addDirectionToPropsBuilder))}};
+         CSSCallback<CSSLength, CSSKeyword>(addWidthToPropsBuilder))},
+    {"zIndex", value<CSSInteger>(0, CSSCallback<CSSInteger>(addZIndexToPropsBuilder))},
+    {"direction", value<CSSKeyword>("inherit", CSSCallback<CSSKeyword>(addDirectionToPropsBuilder))}};
 
 const InterpolatorFactoriesRecord SHADOW_INTERPOLATORS_IOS = {
-    {"shadowColor", value<CSSColor>(BLACK, CSSColorCallback(addShadowColorToPropsBuilder))},
+    {"shadowColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addShadowColorToPropsBuilder))},
     {"shadowOffset",
      record({
-         {"width", value<CSSDouble>(0, CSSDoubleCallback(addShadowOffsetWidthToPropsBuilder))},
-         {"height", value<CSSDouble>(0, CSSDoubleCallback(addShadowOffsetHeightToPropsBuilder))},
+         {"width", value<CSSDouble>(0, CSSCallback<CSSDouble>(addShadowOffsetWidthToPropsBuilder))},
+         {"height", value<CSSDouble>(0, CSSCallback<CSSDouble>(addShadowOffsetHeightToPropsBuilder))},
      })},
-    {"shadowRadius", value<CSSDouble>(0, CSSDoubleCallback(addShadowRadiusToPropsBuilder))},
-    {"shadowOpacity", value<CSSDouble>(1, CSSDoubleCallback(addShadowOpacityToPropsBuilder))}};
+    {"shadowRadius", value<CSSDouble>(0, CSSCallback<CSSDouble>(addShadowRadiusToPropsBuilder))},
+    {"shadowOpacity", value<CSSDouble>(1, CSSCallback<CSSDouble>(addShadowOpacityToPropsBuilder))}};
 
 const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
     {"transformOrigin",
      array(
-         {value<CSSLength>("50%", {RelativeTo::Self, "width"}, CSSLengthCallback(addTransformOriginXToPropsBuilder)),
-          value<CSSLength>("50%", {RelativeTo::Self, "height"}, CSSLengthCallback(addTransformOriginYToPropsBuilder)),
-          value<CSSDouble>(0, CSSDoubleCallback(addTransformOriginZToPropsBuilder))})},
+         {value<CSSLength>("50%", {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addTransformOriginXToPropsBuilder)),
+          value<CSSLength>("50%", {RelativeTo::Self, "height"}, CSSCallback<CSSLength>(addTransformOriginYToPropsBuilder)),
+          value<CSSDouble>(0, CSSCallback<CSSDouble>(addTransformOriginZToPropsBuilder))})},
     {"transform",
      transforms(
 
@@ -442,77 +310,77 @@ const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
      TRANSFORMS_INTERPOLATORS,
      FILTER_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"backfaceVisibility", value<CSSKeyword>("visible", CSSKeywordCallback(addBackfaceVisibilityToPropsBuilder))},
-         {"backgroundColor", value<CSSColor>(TRANSPARENT, CSSColorCallback(addBackgroundColorToPropsBuilder))},
-         {"borderBlockColor", value<CSSColor>(BLACK, CSSColorCallback(addBorderBlockColorToPropsBuilder))},
-         {"borderBlockEndColor", value<CSSColor>(BLACK, CSSColorCallback(addBorderBlockEndColorToPropsBuilder))},
-         {"borderBlockStartColor", value<CSSColor>(BLACK, CSSColorCallback(addBorderBlockStartColorToPropsBuilder))},
-         {"borderBottomColor", value<CSSColor>(BLACK, CSSColorCallback(addBorderBottomColorToPropsBuilder))},
+         {"backfaceVisibility", value<CSSKeyword>("visible", CSSCallback<CSSKeyword>(addBackfaceVisibilityToPropsBuilder))},
+         {"backgroundColor", value<CSSColor>(TRANSPARENT, CSSCallback<CSSColor>(addBackgroundColorToPropsBuilder))},
+         {"borderBlockColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderBlockColorToPropsBuilder))},
+         {"borderBlockEndColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderBlockEndColorToPropsBuilder))},
+         {"borderBlockStartColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderBlockStartColorToPropsBuilder))},
+         {"borderBottomColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderBottomColorToPropsBuilder))},
          {"borderBottomEndRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSLengthCallback(addBorderBottomEndRadiusToPropsBuilder))},
+          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderBottomEndRadiusToPropsBuilder))},
          {"borderBottomLeftRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSLengthCallback(addBorderBottomLeftRadiusToPropsBuilder))},
+          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderBottomLeftRadiusToPropsBuilder))},
          {"borderBottomRightRadius",
           value<CSSLength>(
               0,
               {RelativeTo::Self, "width"},
-              CSSLengthCallback(addBorderBottomRightRadiusToPropsBuilder))},
+              CSSCallback<CSSLength>(addBorderBottomRightRadiusToPropsBuilder))},
          {"borderBottomStartRadius",
           value<CSSLength>(
               0,
               {RelativeTo::Self, "width"},
-              CSSLengthCallback(addBorderBottomStartRadiusToPropsBuilder))},
-         {"borderColor", value<CSSColor>(BLACK, CSSColorCallback(addBorderColorToPropsBuilder))},
-         {"borderCurve", value<CSSKeyword>("circular", CSSKeywordCallback(addBorderCurveToPropsBuilder))},
-         {"borderEndColor", value<CSSColor>(BLACK, CSSColorCallback(addBorderEndColorToPropsBuilder))},
+              CSSCallback<CSSLength>(addBorderBottomStartRadiusToPropsBuilder))},
+         {"borderColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderColorToPropsBuilder))},
+         {"borderCurve", value<CSSKeyword>("circular", CSSCallback<CSSKeyword>(addBorderCurveToPropsBuilder))},
+         {"borderEndColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderEndColorToPropsBuilder))},
          {"borderEndEndRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSLengthCallback(addBorderEndEndRadiusToPropsBuilder))},
+          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderEndEndRadiusToPropsBuilder))},
          {"borderEndStartRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSLengthCallback(addBorderEndStartRadiusToPropsBuilder))},
-         {"borderLeftColor", value<CSSColor>(BLACK, CSSColorCallback(addBorderLeftColorToPropsBuilder))},
+          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderEndStartRadiusToPropsBuilder))},
+         {"borderLeftColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderLeftColorToPropsBuilder))},
          {"borderRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSLengthCallback(addBorderRadiusToPropsBuilder))},
-         {"borderRightColor", value<CSSColor>(BLACK, CSSColorCallback(addBorderRightColorToPropsBuilder))},
-         {"borderStartColor", value<CSSColor>(BLACK, CSSColorCallback(addBorderStartColorToPropsBuilder))},
+          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderRadiusToPropsBuilder))},
+         {"borderRightColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderRightColorToPropsBuilder))},
+         {"borderStartColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderStartColorToPropsBuilder))},
          {"borderStartEndRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSLengthCallback(addBorderStartEndRadiusToPropsBuilder))},
+          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderStartEndRadiusToPropsBuilder))},
          {"borderStartStartRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSLengthCallback(addBorderStartStartRadiusToPropsBuilder))},
-         {"borderStyle", value<CSSKeyword>("solid", CSSKeywordCallback(addBorderStyleToPropsBuilder))},
-         {"borderTopColor", value<CSSColor>(BLACK, CSSColorCallback(addBorderTopColorToPropsBuilder))},
+          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderStartStartRadiusToPropsBuilder))},
+         {"borderStyle", value<CSSKeyword>("solid", CSSCallback<CSSKeyword>(addBorderStyleToPropsBuilder))},
+         {"borderTopColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderTopColorToPropsBuilder))},
          {"borderTopEndRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSLengthCallback(addBorderTopEndRadiusToPropsBuilder))},
+          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderTopEndRadiusToPropsBuilder))},
          {"borderTopLeftRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSLengthCallback(addBorderTopLeftRadiusToPropsBuilder))},
+          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderTopLeftRadiusToPropsBuilder))},
          {"borderTopRightRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSLengthCallback(addBorderTopRightRadiusToPropsBuilder))},
+          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderTopRightRadiusToPropsBuilder))},
          {"borderTopStartRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSLengthCallback(addBorderTopStartRadiusToPropsBuilder))},
-         {"outlineColor", value<CSSColor>(BLACK, CSSColorCallback(addOutlineColorToPropsBuilder))},
-         {"outlineOffset", value<CSSDouble>(0, CSSDoubleCallback(addOutlineOffsetToPropsBuilder))},
-         {"outlineStyle", value<CSSKeyword>("solid", CSSKeywordCallback(addOutlineStyleToPropsBuilder))},
-         {"outlineWidth", value<CSSDouble>(0, CSSDoubleCallback(addOutlineWidthToPropsBuilder))},
-         {"opacity", value<CSSDouble>(1, CSSDoubleCallback(addOpacityToPropsBuilder))},
-         {"elevation", value<CSSDouble>(0, CSSDoubleCallback(addElevationToPropsBuilder))},
-         {"pointerEvents", value<CSSKeyword>("auto", CSSKeywordCallback(addPointerEventsToPropsBuilder))},
-         {"isolation", value<CSSKeyword>("auto", CSSKeywordCallback(addIsolationToPropsBuilder))},
-         {"cursor", value<CSSKeyword>("auto", CSSKeywordCallback(addCursorToPropsBuilder))},
-         {"boxShadow", array({value<CSSBoxShadow>(CSSBoxShadow(), CSSBoxShadowCallback(addBoxShadowToPropsBuilder))})},
-         {"mixBlendMode", value<CSSKeyword>("normal", CSSKeywordCallback(addMixBlendModeToPropsBuilder))},
+          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderTopStartRadiusToPropsBuilder))},
+         {"outlineColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addOutlineColorToPropsBuilder))},
+         {"outlineOffset", value<CSSDouble>(0, CSSCallback<CSSDouble>(addOutlineOffsetToPropsBuilder))},
+         {"outlineStyle", value<CSSKeyword>("solid", CSSCallback<CSSKeyword>(addOutlineStyleToPropsBuilder))},
+         {"outlineWidth", value<CSSDouble>(0, CSSCallback<CSSDouble>(addOutlineWidthToPropsBuilder))},
+         {"opacity", value<CSSDouble>(1, CSSCallback<CSSDouble>(addOpacityToPropsBuilder))},
+         {"elevation", value<CSSDouble>(0, CSSCallback<CSSDouble>(addElevationToPropsBuilder))},
+         {"pointerEvents", value<CSSKeyword>("auto", CSSCallback<CSSKeyword>(addPointerEventsToPropsBuilder))},
+         {"isolation", value<CSSKeyword>("auto", CSSCallback<CSSKeyword>(addIsolationToPropsBuilder))},
+         {"cursor", value<CSSKeyword>("auto", CSSCallback<CSSKeyword>(addCursorToPropsBuilder))},
+         {"boxShadow", array({value<CSSBoxShadow>(CSSBoxShadow(), CSSCallback<CSSBoxShadow>(addBoxShadowToPropsBuilder))})},
+         {"mixBlendMode", value<CSSKeyword>("normal", CSSCallback<CSSKeyword>(addMixBlendModeToPropsBuilder))},
      }});
 
 const InterpolatorFactoriesRecord TEXT_INTERPOLATORS_IOS = {
     {"fontVariant",
-     value<CSSDiscreteArray<CSSKeyword>>(std::vector<CSSKeyword>{}, getCSSDiscreteKeywordArrayCallback("fontVariant"))},
-    {"textDecorationColor", value<CSSColor>(BLACK, getCSSColorCallback("textDecorationColor"))},
-    {"textDecorationStyle", value<CSSKeyword>("solid", getCSSKeywordCallback("textDecorationStyle"))},
-    {"writingDirection", value<CSSKeyword>("auto", getCSSKeywordCallback("writingDirection"))},
+     value<CSSDiscreteArray<CSSKeyword>>(std::vector<CSSKeyword>{}, unsupported<CSSDiscreteArray<CSSKeyword>>())},
+    {"textDecorationColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(unsupported<CSSColor>()))},
+    {"textDecorationStyle", value<CSSKeyword>("solid", unsupported<CSSKeyword>())},
+    {"writingDirection", value<CSSKeyword>("auto", unsupported<CSSKeyword>())},
 };
 
 const InterpolatorFactoriesRecord TEXT_INTERPOLATORS_ANDROID = {
-    {"textAlignVertical", value<CSSKeyword>("auto", getCSSKeywordCallback("textAlignVertical"))},
-    {"verticalAlign", value<CSSKeyword>("auto", getCSSKeywordCallback("verticalAlign"))},
-    {"includeFontPadding", value<CSSBoolean>(false, getCSSBooleanCallback("includeFontPadding"))},
+    {"textAlignVertical", value<CSSKeyword>("auto", unsupported<CSSKeyword>())},
+    {"verticalAlign", value<CSSKeyword>("auto", unsupported<CSSKeyword>())},
+    {"includeFontPadding", value<CSSBoolean>(false, unsupported<CSSBoolean>())},
 };
 
 const InterpolatorFactoriesRecord TEXT_INTERPOLATORS = mergeInterpolators(
@@ -520,34 +388,33 @@ const InterpolatorFactoriesRecord TEXT_INTERPOLATORS = mergeInterpolators(
      TEXT_INTERPOLATORS_IOS,
      TEXT_INTERPOLATORS_ANDROID,
      InterpolatorFactoriesRecord{
-         {"color", value<CSSColor>(BLACK, getCSSColorCallback("color"))},
-         {"fontFamily", value<CSSKeyword>("inherit", getCSSKeywordCallback("fontFamily"))},
-         {"fontSize", value<CSSDouble>(14, getCSSDoubleCallback("fontSize"))},
-         {"fontStyle", value<CSSKeyword>("normal", getCSSKeywordCallback("fontStyle"))},
-         {"fontWeight", value<CSSKeyword>("normal", getCSSKeywordCallback("fontWeight"))},
-         {"letterSpacing", value<CSSDouble>(0, getCSSDoubleCallback("letterSpacing"))},
-         {"lineHeight",
-          value<CSSDouble>(14, getCSSDoubleCallback("lineHeight"))}, // TODO - should inherit from fontSize
-         {"textAlign", value<CSSKeyword>("auto", getCSSKeywordCallback("textAlign"))},
-         {"textDecorationLine", value<CSSKeyword>("none", getCSSKeywordCallback("textDecorationLine"))},
-         {"textDecorationThickness", value<CSSDouble>(1, getCSSDoubleCallback("textDecorationThickness"))},
-         {"textShadowColor", value<CSSColor>(BLACK, getCSSColorCallback("textShadowColor"))},
+         {"color", value<CSSColor>(BLACK, unsupported<CSSColor>())},
+         {"fontFamily", value<CSSKeyword>("inherit", unsupported<CSSKeyword>())},
+         {"fontSize", value<CSSDouble>(14, unsupported<CSSDouble>())},
+         {"fontStyle", value<CSSKeyword>("normal", unsupported<CSSKeyword>())},
+         {"fontWeight", value<CSSKeyword>("normal", unsupported<CSSKeyword>())},
+         {"letterSpacing", value<CSSDouble>(0, unsupported<CSSDouble>())},
+         {"lineHeight", value<CSSDouble>(14, unsupported<CSSDouble>())}, // TODO - should inherit from fontSize
+         {"textAlign", value<CSSKeyword>("auto", unsupported<CSSKeyword>())},
+         {"textDecorationLine", value<CSSKeyword>("none", unsupported<CSSKeyword>())},
+         {"textDecorationThickness", value<CSSDouble>(1, unsupported<CSSDouble>())},
+         {"textShadowColor", value<CSSColor>(BLACK, unsupported<CSSColor>())},
          {"textShadowOffset",
           record({
-              {"width", value<CSSDouble>(0, getCSSDoubleCallback("textShadowOffset.width"))},
-              {"height", value<CSSDouble>(0, getCSSDoubleCallback("textShadowOffset.height"))},
+              {"width", value<CSSDouble>(0, unsupported<CSSDouble>())},
+              {"height", value<CSSDouble>(0, unsupported<CSSDouble>())},
           })},
-         {"textShadowRadius", value<CSSDouble>(0, getCSSDoubleCallback("textShadowRadius"))},
-         {"textTransform", value<CSSKeyword>("none", getCSSKeywordCallback("textTransform"))},
-         {"userSelect", value<CSSKeyword>("auto", getCSSKeywordCallback("userSelect"))},
+         {"textShadowRadius", value<CSSDouble>(0, unsupported<CSSDouble>())},
+         {"textTransform", value<CSSKeyword>("none", unsupported<CSSKeyword>())},
+         {"userSelect", value<CSSKeyword>("auto", unsupported<CSSKeyword>())},
      }});
 
 const InterpolatorFactoriesRecord IMAGE_INTERPOLATORS = mergeInterpolators(
     {VIEW_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"resizeMode", value<CSSKeyword>("cover", getCSSKeywordCallback("resizeMode"))},
-         {"overlayColor", value<CSSColor>(BLACK, getCSSColorCallback("overlayColor"))},
-         {"tintColor", value<CSSColor>(BLACK, getCSSColorCallback("tintColor"))},
+         {"resizeMode", value<CSSKeyword>("cover", unsupported<CSSKeyword>())},
+         {"overlayColor", value<CSSColor>(BLACK, unsupported<CSSColor>())},
+         {"tintColor", value<CSSColor>(BLACK, unsupported<CSSColor>())},
      }});
 
 // =================
@@ -555,89 +422,87 @@ const InterpolatorFactoriesRecord IMAGE_INTERPOLATORS = mergeInterpolators(
 // =================
 
 const InterpolatorFactoriesRecord SVG_COLOR_INTERPOLATORS = {
-    {"color", value<SVGBrush>(BLACK, getSVGBrushCallback("svg.color"))},
+    {"color", value<SVGBrush>(BLACK, unsupported<SVGBrush>())},
 };
 
 const InterpolatorFactoriesRecord SVG_FILL_INTERPOLATORS = {
-    {"fill", value<SVGBrush>(BLACK, getSVGBrushCallback("svg.fill"))},
-    {"fillOpacity", value<CSSDouble>(1, getCSSDoubleCallback("svg.fillOpacity"))},
-    {"fillRule", value<CSSInteger>(0, getCSSIntegerCallback("svg.fillRule"))},
+    {"fill", value<SVGBrush>(BLACK, unsupported<SVGBrush>())},
+    {"fillOpacity", value<CSSDouble>(1, unsupported<CSSDouble>())},
+    {"fillRule", value<CSSInteger>(0, unsupported<CSSInteger>())},
 };
 
 const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
-    {"stroke", value<SVGBrush>(BLACK, getSVGBrushCallback("svg.stroke"))},
-    {"strokeWidth", value<SVGLength>(1, getSVGLengthCallback("svg.strokeWidth"))},
-    {"strokeOpacity", value<CSSDouble>(1, getCSSDoubleCallback("svg.strokeOpacity"))},
+    {"stroke", value<SVGBrush>(BLACK, unsupported<SVGBrush>())},
+    {"strokeWidth", value<SVGLength>(1, unsupported<SVGLength>())},
+    {"strokeOpacity", value<CSSDouble>(1, unsupported<CSSDouble>())},
     {"strokeDasharray",
-     value<SVGStrokeDashArray, CSSKeyword>(
-         SVGStrokeDashArray(),
-         getSVGStrokeDashArrayKeywordCallback("svg.strokeDasharray"))},
-    {"strokeDashoffset", value<SVGLength>(0, getSVGLengthCallback("svg.strokeDashoffset"))},
-    {"strokeLinecap", value<CSSInteger>(0, getCSSIntegerCallback("svg.strokeLinecap"))},
-    {"strokeLinejoin", value<CSSInteger>(0, getCSSIntegerCallback("svg.strokeLinejoin"))},
-    {"strokeMiterlimit", value<CSSDouble>(4, getCSSDoubleCallback("svg.strokeMiterlimit"))},
-    {"vectorEffect", value<CSSInteger>(0, getCSSIntegerCallback("svg.vectorEffect"))},
+     value<SVGStrokeDashArray, CSSKeyword>(SVGStrokeDashArray(), unsupported<SVGStrokeDashArray, CSSKeyword>())},
+    {"strokeDashoffset", value<SVGLength>(0, unsupported<SVGLength>())},
+    {"strokeLinecap", value<CSSInteger>(0, unsupported<CSSInteger>())},
+    {"strokeLinejoin", value<CSSInteger>(0, unsupported<CSSInteger>())},
+    {"strokeMiterlimit", value<CSSDouble>(4, unsupported<CSSDouble>())},
+    {"vectorEffect", value<CSSInteger>(0, unsupported<CSSInteger>())},
 };
 
 const InterpolatorFactoriesRecord SVG_CLIP_INTERPOLATORS = {
-    {"clipRule", value<CSSKeyword>("nonzero", getCSSKeywordCallback("svg.clipRule"))},
-    {"clipPath", value<CSSKeyword>("none", getCSSKeywordCallback("svg.clipPath"))},
+    {"clipRule", value<CSSKeyword>("nonzero", unsupported<CSSKeyword>())},
+    {"clipPath", value<CSSKeyword>("none", unsupported<CSSKeyword>())},
 };
 
 const InterpolatorFactoriesRecord SVG_TRANSFORM_INTERPOLATORS = {
-    {"translateX", value<SVGLength>(0, getSVGLengthCallback("svg.translateX"))},
-    {"translateY", value<SVGLength>(0, getSVGLengthCallback("svg.translateY"))},
-    {"originX", value<SVGLength>(0, getSVGLengthCallback("svg.originX"))},
-    {"originY", value<SVGLength>(0, getSVGLengthCallback("svg.originY"))},
-    {"scaleX", value<CSSDouble>(1, getCSSDoubleCallback("svg.scaleX"))},
-    {"scaleY", value<CSSDouble>(1, getCSSDoubleCallback("svg.scaleY"))},
-    {"skewX", value<CSSAngle>(0, getCSSAngleCallback("svg.skewX"))},
-    {"skewY", value<CSSAngle>(0, getCSSAngleCallback("svg.skewY"))},
-    {"rotation", value<CSSAngle>(0, getCSSAngleCallback("svg.rotation"))},
+    {"translateX", value<SVGLength>(0, unsupported<SVGLength>())},
+    {"translateY", value<SVGLength>(0, unsupported<SVGLength>())},
+    {"originX", value<SVGLength>(0, unsupported<SVGLength>())},
+    {"originY", value<SVGLength>(0, unsupported<SVGLength>())},
+    {"scaleX", value<CSSDouble>(1, unsupported<CSSDouble>())},
+    {"scaleY", value<CSSDouble>(1, unsupported<CSSDouble>())},
+    {"skewX", value<CSSAngle>(0, unsupported<CSSAngle>())},
+    {"skewY", value<CSSAngle>(0, unsupported<CSSAngle>())},
+    {"rotation", value<CSSAngle>(0, unsupported<CSSAngle>())},
 };
 
 const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS = mergeInterpolators({
     SVG_COLOR_INTERPOLATORS,
     SVG_FILL_INTERPOLATORS,
     SVG_STROKE_INTERPOLATORS,
-    InterpolatorFactoriesRecord{{"opacity", value<CSSDouble>(1, getCSSDoubleCallback("svg.opacity"))}},
+    InterpolatorFactoriesRecord{{"opacity", value<CSSDouble>(1, unsupported<CSSDouble>())}},
 });
 
 const InterpolatorFactoriesRecord SVG_CIRCLE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"cx", value<SVGLength, CSSKeyword>(0, getSVGLengthKeywordCallback("svg.circle.cx"))},
-         {"cy", value<SVGLength, CSSKeyword>(0, getSVGLengthKeywordCallback("svg.circle.cy"))},
-         {"r", value<SVGLength, CSSKeyword>(0, getSVGLengthKeywordCallback("svg.circle.r"))},
+         {"cx", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"cy", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"r", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
      }});
 
 const InterpolatorFactoriesRecord SVG_ELLIPSE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"cx", value<SVGLength, CSSKeyword>(0, getSVGLengthKeywordCallback("svg.ellipse.cx"))},
-         {"cy", value<SVGLength, CSSKeyword>(0, getSVGLengthKeywordCallback("svg.ellipse.cy"))},
-         {"rx", value<SVGLength, CSSKeyword>(0, getSVGLengthKeywordCallback("svg.ellipse.rx"))},
-         {"ry", value<SVGLength, CSSKeyword>(0, getSVGLengthKeywordCallback("svg.ellipse.ry"))},
+         {"cx", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"cy", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"rx", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"ry", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
      }});
 
 const InterpolatorFactoriesRecord SVG_LINE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"x1", value<SVGLength, CSSKeyword>(0, getSVGLengthKeywordCallback("svg.line.x1"))},
-         {"y1", value<SVGLength, CSSKeyword>(0, getSVGLengthKeywordCallback("svg.line.y1"))},
-         {"x2", value<SVGLength, CSSKeyword>(0, getSVGLengthKeywordCallback("svg.line.x2"))},
-         {"y2", value<SVGLength, CSSKeyword>(0, getSVGLengthKeywordCallback("svg.line.y2"))},
+         {"x1", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"y1", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"x2", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"y2", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
      }});
 
 const InterpolatorFactoriesRecord SVG_RECT_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"x", value<SVGLength, CSSKeyword>(0, getSVGLengthKeywordCallback("svg.rect.x"))},
-         {"y", value<SVGLength, CSSKeyword>(0, getSVGLengthKeywordCallback("svg.rect.y"))},
-         {"width", value<SVGLength, CSSKeyword>(0, getSVGLengthKeywordCallback("svg.rect.width"))},
-         {"height", value<SVGLength, CSSKeyword>(0, getSVGLengthKeywordCallback("svg.rect.height"))},
-         {"rx", value<SVGLength, CSSKeyword>(0, getSVGLengthKeywordCallback("svg.rect.rx"))},
-         {"ry", value<SVGLength, CSSKeyword>(0, getSVGLengthKeywordCallback("svg.rect.ry"))},
+         {"x", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"y", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"width", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"height", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"rx", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"ry", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
      }});
 
 const InterpolatorFactoriesRecord SVG_PATH_INTERPOLATORS = mergeInterpolators(
