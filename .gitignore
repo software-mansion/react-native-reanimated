@@ -42,7 +42,7 @@ jsconfig.json
 .vscode
 
 # zed
-.zed
+.zed/
 
 # BUCK
 buck-out/

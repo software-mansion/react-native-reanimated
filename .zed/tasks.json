@@ -1,0 +1,17 @@
+// Project tasks configuration. See https://zed.dev/docs/tasks for documentation.
+//
+// Example:
+[
+  {
+    "label": "Launch Reanimated DevTools",
+    "command": "cd tools/reanimated-devtools && ./build/reanimated-devtools",
+  },
+  {
+    "label": "Build and Launch Reanimated DevTools",
+    "command": "cd tools/reanimated-devtools && cmake --build build && ./build/reanimated-devtools",
+  },
+  {
+    "label": "Set up Cmake for Reanimated DevTools",
+    "command": "cd tools/reanimated-devtools && cmake -B build",
+  },
+]
