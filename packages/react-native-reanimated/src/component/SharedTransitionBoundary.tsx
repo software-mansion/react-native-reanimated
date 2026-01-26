@@ -1,6 +1,5 @@
 'use strict';
-import { View } from 'react-native';
-
+import { View, StyleSheet } from 'react-native';
 import { RNReanimatedSharedTransitionBoundary } from '../specs';
 
 export interface SharedTransitionBoundaryProps {
@@ -9,13 +8,21 @@ export interface SharedTransitionBoundaryProps {
 }
 
 export function SharedTransitionBoundary(props: SharedTransitionBoundaryProps) {
-  const { isActive } = props;
+  const { isActive, children } = props;
 
   return (
-    <RNReanimatedSharedTransitionBoundary isActive={isActive}>
-      <View style={{ flex: 1 }}>{props.children}</View>
+    <RNReanimatedSharedTransitionBoundary
+      style={styles.contents}
+      isActive={isActive}>
+        {children}
     </RNReanimatedSharedTransitionBoundary>
   );
 }
+
+const styles = StyleSheet.create({
+  contents: {
+    display: 'contents',
+  },
+});
 
 export default SharedTransitionBoundary;

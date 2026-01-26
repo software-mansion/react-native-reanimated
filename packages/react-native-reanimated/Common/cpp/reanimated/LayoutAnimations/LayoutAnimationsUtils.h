@@ -1,7 +1,7 @@
 #pragma once
 
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-
+#include <Common/NativeView/react/renderer/components/rnreanimated/RNReanimatedSharedTransitionBoundaryShadowNode.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
 
@@ -136,8 +136,7 @@ static inline bool isRNSScreen(const std::shared_ptr<LightNode> &node) {
 }
 
 static inline bool isSETBoundary(const std::shared_ptr<LightNode> &node) {
-  const auto nativeID = node->current.props->nativeId;
-  return !std::strcmp(nativeID.c_str(), "SharedTransitionBoundary");
+  return !std::strcmp(node->current.componentName, RNReanimatedSharedTransitionBoundaryComponentName);
 }
 
 static inline bool isRoot(const std::shared_ptr<LightNode> &node) {

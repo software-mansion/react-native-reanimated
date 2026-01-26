@@ -9,7 +9,7 @@
 #endif // !ANDROID
 
 #include <folly/dynamic.h>
-
+#include <react/renderer/components/rnreanimated/Props.h>
 #include <ranges>
 
 namespace reanimated {
@@ -23,8 +23,8 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findTopScreen(
   // This way we could allow for transitions without screens, and across components on the same screen.
 
   if (isSETBoundary(node)) {
-    auto viewProps = std::static_pointer_cast<const ViewProps>(node->current.props);
-    auto isActive = viewProps->opacity == 1;
+    auto boundaryProps = std::static_pointer_cast<const RNReanimatedSharedTransitionBoundaryProps>(node->current.props);
+    auto isActive = boundaryProps->isActive;
     if (isActive) {
       result = node;
       while (!isRNSScreen(result)) {

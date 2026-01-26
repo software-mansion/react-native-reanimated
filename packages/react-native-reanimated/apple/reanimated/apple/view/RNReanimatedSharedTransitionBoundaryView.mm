@@ -1,6 +1,6 @@
 #import <reanimated/apple/view/RNReanimatedSharedTransitionBoundaryView.h>
 
-#import <react/renderer/components/rnreanimated/ComponentDescriptors.h>
+#import <Common/NativeView/react/renderer/components/rnreanimated/ComponentDescriptors.h>
 #import <react/renderer/components/rnreanimated/EventEmitters.h>
 #import <react/renderer/components/rnreanimated/Props.h>
 #import <react/renderer/components/rnreanimated/RCTComponentViewHelpers.h>
