@@ -76,7 +76,8 @@ const InterpolatorFactoriesRecord FLEX_INTERPOLATORS = {
     {"alignContent", value<CSSKeyword>("flex-start", CSSCallback<CSSKeyword>(addAlignContentToPropsBuilder))},
     {"alignItems", value<CSSKeyword>("stretch", CSSCallback<CSSKeyword>(addAlignItemsToPropsBuilder))},
     {"alignSelf", value<CSSKeyword>("auto", CSSCallback<CSSKeyword>(addAlignSelfToPropsBuilder))},
-    {"aspectRatio", value<CSSDouble, CSSKeyword>("auto", CSSCallback<CSSDouble, CSSKeyword>(addAspectRatioToPropsBuilder))},
+    {"aspectRatio",
+     value<CSSDouble, CSSKeyword>("auto", CSSCallback<CSSDouble, CSSKeyword>(addAspectRatioToPropsBuilder))},
     {"borderBottomWidth", value<CSSDouble>(0, CSSCallback<CSSDouble>(addBorderBottomWidthToPropsBuilder))},
     {"borderEndWidth", value<CSSDouble>(0, CSSCallback<CSSDouble>(addBorderEndWidthToPropsBuilder))},
     {"borderLeftWidth", value<CSSDouble>(0, CSSCallback<CSSDouble>(addBorderLeftWidthToPropsBuilder))},
@@ -120,7 +121,10 @@ const InterpolatorFactoriesRecord FLEX_INTERPOLATORS = {
          {RelativeTo::Parent, "width"},
          CSSCallback<CSSLength, CSSKeyword>(addLeftToPropsBuilder))},
     {"margin",
-     value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"}, CSSCallback<CSSLength, CSSKeyword>(addMarginToPropsBuilder))},
+     value<CSSLength, CSSKeyword>(
+         0,
+         {RelativeTo::Parent, "width"},
+         CSSCallback<CSSLength, CSSKeyword>(addMarginToPropsBuilder))},
     {"marginBottom",
      value<CSSLength, CSSKeyword>(
          0,
@@ -264,8 +268,14 @@ const InterpolatorFactoriesRecord SHADOW_INTERPOLATORS_IOS = {
 const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
     {"transformOrigin",
      array(
-         {value<CSSLength>("50%", {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addTransformOriginXToPropsBuilder)),
-          value<CSSLength>("50%", {RelativeTo::Self, "height"}, CSSCallback<CSSLength>(addTransformOriginYToPropsBuilder)),
+         {value<CSSLength>(
+              "50%",
+              {RelativeTo::Self, "width"},
+              CSSCallback<CSSLength>(addTransformOriginXToPropsBuilder)),
+          value<CSSLength>(
+              "50%",
+              {RelativeTo::Self, "height"},
+              CSSCallback<CSSLength>(addTransformOriginYToPropsBuilder)),
           value<CSSDouble>(0, CSSCallback<CSSDouble>(addTransformOriginZToPropsBuilder))})},
     {"transform",
      transforms(
@@ -310,16 +320,24 @@ const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
      TRANSFORMS_INTERPOLATORS,
      FILTER_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"backfaceVisibility", value<CSSKeyword>("visible", CSSCallback<CSSKeyword>(addBackfaceVisibilityToPropsBuilder))},
+         {"backfaceVisibility",
+          value<CSSKeyword>("visible", CSSCallback<CSSKeyword>(addBackfaceVisibilityToPropsBuilder))},
          {"backgroundColor", value<CSSColor>(TRANSPARENT, CSSCallback<CSSColor>(addBackgroundColorToPropsBuilder))},
          {"borderBlockColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderBlockColorToPropsBuilder))},
          {"borderBlockEndColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderBlockEndColorToPropsBuilder))},
-         {"borderBlockStartColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderBlockStartColorToPropsBuilder))},
+         {"borderBlockStartColor",
+          value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderBlockStartColorToPropsBuilder))},
          {"borderBottomColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderBottomColorToPropsBuilder))},
          {"borderBottomEndRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderBottomEndRadiusToPropsBuilder))},
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSCallback<CSSLength>(addBorderBottomEndRadiusToPropsBuilder))},
          {"borderBottomLeftRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderBottomLeftRadiusToPropsBuilder))},
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSCallback<CSSLength>(addBorderBottomLeftRadiusToPropsBuilder))},
          {"borderBottomRightRadius",
           value<CSSLength>(
               0,
@@ -334,28 +352,52 @@ const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
          {"borderCurve", value<CSSKeyword>("circular", CSSCallback<CSSKeyword>(addBorderCurveToPropsBuilder))},
          {"borderEndColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderEndColorToPropsBuilder))},
          {"borderEndEndRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderEndEndRadiusToPropsBuilder))},
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSCallback<CSSLength>(addBorderEndEndRadiusToPropsBuilder))},
          {"borderEndStartRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderEndStartRadiusToPropsBuilder))},
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSCallback<CSSLength>(addBorderEndStartRadiusToPropsBuilder))},
          {"borderLeftColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderLeftColorToPropsBuilder))},
          {"borderRadius",
           value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderRadiusToPropsBuilder))},
          {"borderRightColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderRightColorToPropsBuilder))},
          {"borderStartColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderStartColorToPropsBuilder))},
          {"borderStartEndRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderStartEndRadiusToPropsBuilder))},
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSCallback<CSSLength>(addBorderStartEndRadiusToPropsBuilder))},
          {"borderStartStartRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderStartStartRadiusToPropsBuilder))},
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSCallback<CSSLength>(addBorderStartStartRadiusToPropsBuilder))},
          {"borderStyle", value<CSSKeyword>("solid", CSSCallback<CSSKeyword>(addBorderStyleToPropsBuilder))},
          {"borderTopColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderTopColorToPropsBuilder))},
          {"borderTopEndRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderTopEndRadiusToPropsBuilder))},
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSCallback<CSSLength>(addBorderTopEndRadiusToPropsBuilder))},
          {"borderTopLeftRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderTopLeftRadiusToPropsBuilder))},
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSCallback<CSSLength>(addBorderTopLeftRadiusToPropsBuilder))},
          {"borderTopRightRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderTopRightRadiusToPropsBuilder))},
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSCallback<CSSLength>(addBorderTopRightRadiusToPropsBuilder))},
          {"borderTopStartRadius",
-          value<CSSLength>(0, {RelativeTo::Self, "width"}, CSSCallback<CSSLength>(addBorderTopStartRadiusToPropsBuilder))},
+          value<CSSLength>(
+              0,
+              {RelativeTo::Self, "width"},
+              CSSCallback<CSSLength>(addBorderTopStartRadiusToPropsBuilder))},
          {"outlineColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addOutlineColorToPropsBuilder))},
          {"outlineOffset", value<CSSDouble>(0, CSSCallback<CSSDouble>(addOutlineOffsetToPropsBuilder))},
          {"outlineStyle", value<CSSKeyword>("solid", CSSCallback<CSSKeyword>(addOutlineStyleToPropsBuilder))},
@@ -365,10 +407,12 @@ const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
          {"pointerEvents", value<CSSKeyword>("auto", CSSCallback<CSSKeyword>(addPointerEventsToPropsBuilder))},
          {"isolation", value<CSSKeyword>("auto", CSSCallback<CSSKeyword>(addIsolationToPropsBuilder))},
          {"cursor", value<CSSKeyword>("auto", CSSCallback<CSSKeyword>(addCursorToPropsBuilder))},
-         {"boxShadow", array({value<CSSBoxShadow>(CSSBoxShadow(), CSSCallback<CSSBoxShadow>(addBoxShadowToPropsBuilder))})},
+         {"boxShadow",
+          array({value<CSSBoxShadow>(CSSBoxShadow(), CSSCallback<CSSBoxShadow>(addBoxShadowToPropsBuilder))})},
          {"mixBlendMode", value<CSSKeyword>("normal", CSSCallback<CSSKeyword>(addMixBlendModeToPropsBuilder))},
      }});
 
+// TEXT, IMAGE and SVG props are not supported by the animation backend.
 const InterpolatorFactoriesRecord TEXT_INTERPOLATORS_IOS = {
     {"fontVariant",
      value<CSSDiscreteArray<CSSKeyword>>(std::vector<CSSKeyword>{}, unsupported<CSSDiscreteArray<CSSKeyword>>())},
