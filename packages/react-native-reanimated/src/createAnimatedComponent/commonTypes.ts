@@ -156,6 +156,8 @@ export interface IAnimatedComponentInternal
   context: React.ContextType<typeof SkipEnteringContext>;
   setNativeProps: (props: StyleProps) => void;
   _syncStylePropsBackToReact: (props: StyleProps) => void;
+  _detachStyles: () => void;
+  _willUnmount: boolean;
 }
 
 export type NestedArray<T> = T | NestedArray<T>[];

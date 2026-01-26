@@ -1,5 +1,6 @@
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
+#include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <memory>
@@ -9,8 +10,12 @@ namespace reanimated {
 ReanimatedMountHook::ReanimatedMountHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-    const std::function<void()> &requestFlush)
-    : uiManager_(uiManager), updatesRegistryManager_(updatesRegistryManager), requestFlush_(requestFlush) {
+    const std::function<void()> &requestFlush,
+    const std::weak_ptr<ReanimatedModuleProxy> &moduleProxy)
+    : uiManager_(uiManager),
+      updatesRegistryManager_(updatesRegistryManager),
+      requestFlush_(requestFlush),
+      moduleProxy_(moduleProxy) {
   uiManager_->registerMountHook(*this);
 }
 
@@ -42,7 +47,13 @@ void ReanimatedMountHook::shadowTreeDidMount(
 
   {
     auto lock = updatesRegistryManager_->lock();
-    updatesRegistryManager_->handleNodeRemovals(*rootShadowNode);
+    auto callback = [this](Tag tag, bool isFrozen) {
+      auto moduleProxy = moduleProxy_.lock();
+      if (moduleProxy) {
+        moduleProxy->onNodeRemovalDecision(tag, isFrozen);
+      }
+    };
+    updatesRegistryManager_->handleNodeRemovals(*rootShadowNode, callback);
 
     // When commit from React Native has finished, we reset the skip commit flag
     // in order to allow Reanimated to commit its tree
