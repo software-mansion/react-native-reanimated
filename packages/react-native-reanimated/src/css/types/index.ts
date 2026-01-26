@@ -8,5 +8,6 @@ export type * from './helpers';
 export type * from './interfaces';
 export type * from './props';
 export type * from './transition';
+export type * from './gradients';
 
 export type CSSStyleProp = CSSTransitionProp | CSSAnimationProp;

@@ -1,0 +1,181 @@
+#include <reanimated/CSS/svg/values/SVGStops.h>
+
+#include <algorithm>
+#include <cstddef>
+#include <functional>
+#include <optional>
+#include <regex>
+#include <string>
+
+namespace reanimated::css {
+
+SVGStops::SVGStops() : stops{} {}
+
+// maybe change the api to accept the same format as 'gradient' in rnSVG
+SVGStops::SVGStops(jsi::Runtime &rt, const jsi::Value &jsiValue) {
+  if (!jsiValue.isObject() || !jsiValue.asObject(rt).isArray(rt))
+    return;
+
+  jsi::Array array = jsiValue.asObject(rt).asArray(rt);
+  size_t length = array.size(rt);
+  stops.reserve(length);
+
+  for (size_t i = 0; i < length; i++) {
+    jsi::Object item = array.getValueAtIndex(rt, i).asObject(rt);
+
+    double offset = item.getProperty(rt, "offset").asNumber();
+    jsi::Value colorVal = item.getProperty(rt, "color");
+
+    stops.emplace_back(offset, SVGBrush(rt, colorVal));
+  }
+}
+
+SVGStops::SVGStops(const folly::dynamic &value) {
+  if (!value.isArray())
+    return;
+
+  stops.reserve(value.size());
+
+  for (const auto &item : value) {
+    if (!item.isObject())
+      continue;
+
+    double offset = item.getDefault("offset", 0.0).asDouble();
+    double opacity = item.getDefault("opacity", 1.0).asDouble();
+
+    stops.emplace_back(offset, SVGBrush(item["color"]));
+  }
+}
+
+bool SVGStops::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
+  if (!jsiValue.isObject()) {
+    return false;
+  }
+
+  auto obj = jsiValue.asObject(rt);
+
+  if (!obj.isArray(rt)) {
+    return false;
+  }
+
+  auto array = obj.asArray(rt);
+  size_t len = array.size(rt);
+
+  if (len == 0) {
+    return true;
+  }
+
+  jsi::Value first = array.getValueAtIndex(rt, 0);
+  if (!first.isObject()) {
+    return false;
+  }
+
+  auto firstObj = first.asObject(rt);
+
+  return firstObj.hasProperty(rt, "offset");
+}
+
+bool SVGStops::canConstruct(const folly::dynamic &value) {
+  if (!value.isArray()) {
+    return false;
+  }
+
+  if (value.empty()) {
+    return true;
+  }
+
+  const auto &first = value[0];
+  if (!first.isObject()) {
+    return false;
+  }
+
+  return first.count("offset") > 0;
+}
+
+folly::dynamic SVGStops::toDynamic() const {
+  folly::dynamic array = folly::dynamic::array;
+
+  for (const auto &stop : stops) {
+    array.push_back(stop.offset);
+    array.push_back(stop.color.toDynamic()); // make sure this one is good format
+  }
+
+  return array;
+}
+
+std::string SVGStops::toString() const {
+  if (stops.empty()) {
+    return "none";
+  }
+
+  std::stringstream ss;
+  ss << "stops(";
+  for (size_t i = 0; i < stops.size(); ++i) {
+    ss << stops[i].color.toString() << " " << (stops[i].offset * 100) << "%";
+    if (i < stops.size() - 1) {
+      ss << ", ";
+    }
+  }
+  ss << ")";
+  return ss.str();
+}
+
+SVGStops SVGStops::interpolate(double progress, const SVGStops &to) const {
+  if (progress <= 0.0)
+    return *this;
+  if (progress >= 1.0)
+    return to;
+
+  const auto &fromStops = stops;
+  const auto &toStops = to.stops;
+
+  if (fromStops.empty())
+    return to;
+  if (toStops.empty())
+    return *this;
+
+  size_t fromSize = fromStops.size();
+  size_t toSize = toStops.size();
+  size_t longerSize = std::max(toSize, fromSize);
+
+  std::vector<GradientStop> interpolatedStops;
+  interpolatedStops.reserve(longerSize);
+
+  for (size_t i = 0; i < longerSize; ++i) {
+    double ratio = (longerSize > 1) ? static_cast<double>(i) / (static_cast<double>(longerSize) - 1.0) : 0.0;
+
+    size_t fromIdx = static_cast<size_t>(std::round(ratio * (fromSize - 1)));
+    size_t toIdx = static_cast<size_t>(std::round(ratio * (toSize - 1)));
+
+    const auto &sFrom = fromStops[fromIdx];
+    const auto &sTo = toStops[toIdx];
+
+    double mixedOffset = sFrom.offset + (sTo.offset - sFrom.offset) * progress;
+
+    SVGBrush mixedBrush = sFrom.color.interpolate(progress, sTo.color);
+
+    interpolatedStops.emplace_back(mixedOffset, std::move(mixedBrush));
+  }
+
+  return SVGStops(std::move(interpolatedStops));
+}
+
+bool SVGStops::operator==(const SVGStops &other) const {
+  return toString() == other.toString();
+}
+
+#ifndef NDEBUG
+std::ostream &operator<<(std::ostream &os, const SVGStops &value) {
+  os << "SVGStops{ count: " << value.stops.size() << ", data: [";
+  for (size_t i = 0; i < value.stops.size(); ++i) {
+    os << "{ offset: " << value.stops[i].offset << ", brush: " << value.stops[i].color.toString() << " }";
+    if (i < value.stops.size() - 1) {
+      os << ", ";
+    }
+  }
+  os << "] }";
+  return os;
+}
+#endif
+
+} // namespace reanimated::css
