@@ -26,6 +26,10 @@ export const svgPropertiesRoutes = {
     name: 'Path',
     Component: svgAnimatedProperties.Path,
   },
+  RadialGradient: {
+    name: 'RadialGradient',
+    Component: svgAnimatedProperties.RadialGradient,
+  },
   Common: {
     name: 'Common',
     routes: {

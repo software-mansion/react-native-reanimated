@@ -15,6 +15,10 @@ import * as Animated from './Animated';
 
 export default Animated;
 
+// Address in some way \/\/\/\/
+export * from './css/types/';
+// Address in some way /\/\/\/\
+
 export { createAnimatedComponent } from './Animated';
 export type {
   DecayAnimation,

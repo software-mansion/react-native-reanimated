@@ -16,6 +16,7 @@
 #include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGLength.h>
 #include <reanimated/CSS/svg/values/SVGPath.h>
+#include <reanimated/CSS/svg/values/SVGStops.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
@@ -353,7 +354,21 @@ const InterpolatorFactoriesRecord SVG_PATH_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
          {"d", value<SVGPath>("")},
-         {"opacity", value<CSSDouble>(1)},
+     }});
+
+const InterpolatorFactoriesRecord SVG_RADIAL_GRADIENT_INTERPOLATORS = mergeInterpolators(
+    {SVG_COMMON_INTERPOLATORS,
+     InterpolatorFactoriesRecord{
+         {"r", value<SVGLength, CSSKeyword>("50%")},
+         {"fx", value<SVGLength, CSSKeyword>(0)},
+         {"fy", value<SVGLength, CSSKeyword>(0)},
+         {"rx", value<SVGLength, CSSKeyword>(0)},
+         {"ry", value<SVGLength, CSSKeyword>(0)},
+         {"cx", value<SVGLength, CSSKeyword>("50%")},
+         {"cy", value<SVGLength, CSSKeyword>("50%")},
+         {"gradient", value<SVGStops>(SVGStops())},
+         // {"gradientUnits", value<CSSKeyword>("objectBoundingBox")},
+         // {"gradientTransform", value<CSSKeyword>("")},
      }});
 
 // ==================
@@ -376,6 +391,7 @@ ComponentInterpolatorsMap initializeRegistry() {
     registry["RNSVGLine"] = SVG_LINE_INTERPOLATORS;
     registry["RNSVGPath"] = SVG_PATH_INTERPOLATORS;
     registry["RNSVGRect"] = SVG_RECT_INTERPOLATORS;
+    registry["RNSVGRadialGradient"] = SVG_RADIAL_GRADIENT_INTERPOLATORS;
   }
 
   return registry;
