@@ -102,8 +102,9 @@ export default function createPropsBuilder<
           // we want to store properties from this record in the result object only if
           // they are not already present in the original props object (we don't want
           // override properties specified by the user).
+          // /\/\/\/\ Wrong in current implementation
           for (const processedKey in processedValue) {
-            if (!(processedKey in props)) {
+            if (!(processedKey in result)) {
               result[processedKey] = processedValue[processedKey];
             }
           }
