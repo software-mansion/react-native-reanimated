@@ -296,6 +296,7 @@ export {
   ScreenTransition,
   startScreenTransition,
 } from './screenTransition';
+export { RNReanimatedSharedTransitionBoundary } from './specs';
 export type { WorkletRuntime } from './workletFunctions';
 export {
   createWorkletRuntime,
