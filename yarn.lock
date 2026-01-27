@@ -15013,6 +15013,59 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cypress@patch:cypress@npm%3A15.4.0#~/.yarn/patches/cypress-npm-15.4.0-c92384506d.patch":
+  version: 15.4.0
+  resolution: "cypress@patch:cypress@npm%3A15.4.0#~/.yarn/patches/cypress-npm-15.4.0-c92384506d.patch::version=15.4.0&hash=5595d4"
+  dependencies:
+    "@cypress/request": "npm:^3.0.9"
+    "@cypress/xvfb": "npm:^1.2.4"
+    "@types/sinonjs__fake-timers": "npm:8.1.1"
+    "@types/sizzle": "npm:^2.3.2"
+    "@types/tmp": "npm:^0.2.3"
+    arch: "npm:^2.2.0"
+    blob-util: "npm:^2.0.2"
+    bluebird: "npm:^3.7.2"
+    buffer: "npm:^5.7.1"
+    cachedir: "npm:^2.3.0"
+    chalk: "npm:^4.1.0"
+    ci-info: "npm:^4.1.0"
+    cli-cursor: "npm:^3.1.0"
+    cli-table3: "npm:0.6.1"
+    commander: "npm:^6.2.1"
+    common-tags: "npm:^1.8.0"
+    dayjs: "npm:^1.10.4"
+    debug: "npm:^4.3.4"
+    enquirer: "npm:^2.3.6"
+    eventemitter2: "npm:6.4.7"
+    execa: "npm:4.1.0"
+    executable: "npm:^4.1.1"
+    extract-zip: "npm:2.0.1"
+    figures: "npm:^3.2.0"
+    fs-extra: "npm:^9.1.0"
+    hasha: "npm:5.2.2"
+    is-installed-globally: "npm:~0.4.0"
+    listr2: "npm:^3.8.3"
+    lodash: "npm:^4.17.21"
+    log-symbols: "npm:^4.0.0"
+    minimist: "npm:^1.2.8"
+    ospath: "npm:^1.2.2"
+    pretty-bytes: "npm:^5.6.0"
+    process: "npm:^0.11.10"
+    proxy-from-env: "npm:1.0.0"
+    request-progress: "npm:^3.0.0"
+    semver: "npm:^7.7.1"
+    supports-color: "npm:^8.1.1"
+    systeminformation: "npm:5.27.7"
+    tmp: "npm:~0.2.4"
+    tree-kill: "npm:1.2.2"
+    untildify: "npm:^4.0.0"
+    yauzl: "npm:^2.10.0"
+  bin:
+    cypress: bin/cypress
+  checksum: 10/24b49d65fdcc053a90888a26fffe250d785d0bf87804195a4e1e58a401f9f17b6b8b8890068dbb680a9c26e339a661cccab30c132621e536912cbd6fa30c4b82
+  languageName: node
+  linkType: hard
+
 "cytoscape-cose-bilkent@npm:^4.1.0":
   version: 4.1.0
   resolution: "cytoscape-cose-bilkent@npm:4.1.0"
@@ -25812,7 +25865,7 @@ __metadata:
     "@babel/core": "npm:7.28.4"
     "@expo/next-adapter": "npm:6.0.0"
     "@next/bundle-analyzer": "npm:15.5.4"
-    cypress: "npm:15.4.0"
+    cypress: "patch:cypress@npm%3A15.4.0#~/.yarn/patches/cypress-npm-15.4.0-c92384506d.patch"
     eslint: "npm:9.37.0"
     expo: "npm:54.0.13"
     next: "npm:15.5.4"

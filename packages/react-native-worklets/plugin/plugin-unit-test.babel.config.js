@@ -2,5 +2,5 @@
 // in their project by creating a new app from template.
 /** @type {import('@babel/core').TransformOptions} */
 module.exports = {
-  presets: ['module:@react-native/babel-preset'],
+  presets: ['@react-native/babel-preset'],
 };
