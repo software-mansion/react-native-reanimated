@@ -448,10 +448,11 @@ var _worklet_2294411833184_init_data = {
 };
 var Foo = (0, _createClass2.default)(function Foo() {
   (0, _classCallCheck2.default)(this, Foo);
-  this.bar = function null1Factory(_ref) {
-    var _worklet_2294411833184_init_data = _ref._worklet_2294411833184_init_data;
+  this.bar = function null1Factory({
+    _worklet_2294411833184_init_data
+  }) {
     var _e = [new global.Error(), 1, -27];
-    var null1 = function null1(x) {
+    var null1 = function (x) {
       return x + 2;
     };
     null1.__closure = {};
@@ -461,7 +462,7 @@ var Foo = (0, _createClass2.default)(function Foo() {
     null1.__stackDetails = _e;
     return null1;
   }({
-    _worklet_2294411833184_init_data: _worklet_2294411833184_init_data
+    _worklet_2294411833184_init_data
   });
 });"
 `;
@@ -475,24 +476,25 @@ var _worklet_8889327806636_init_data = {
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-var Foo = (0, _createClass2.default)(function Foo_null1Factory(_ref) {
-  var _worklet_8889327806636_init_data = _ref._worklet_8889327806636_init_data,
-    _classCallCheck = _ref._classCallCheck;
+var Foo = (0, _createClass2.default)(function Foo_null1Factory({
+  _worklet_8889327806636_init_data,
+  _classCallCheck
+}) {
   var _e = [new global.Error(), -2, -27];
-  var _Foo = function Foo(x) {
-    _classCallCheck(this, _Foo);
+  var Foo = function (x) {
+    _classCallCheck(this, Foo);
     this.x = x;
   };
-  _Foo.__closure = {
-    _classCallCheck: _classCallCheck
+  Foo.__closure = {
+    _classCallCheck
   };
-  _Foo.__workletHash = 8889327806636;
-  _Foo.__pluginVersion = "x.y.z";
-  _Foo.__initData = _worklet_8889327806636_init_data;
-  _Foo.__stackDetails = _e;
-  return _Foo;
+  Foo.__workletHash = 8889327806636;
+  Foo.__pluginVersion = "x.y.z";
+  Foo.__initData = _worklet_8889327806636_init_data;
+  Foo.__stackDetails = _e;
+  return Foo;
 }({
-  _worklet_8889327806636_init_data: _worklet_8889327806636_init_data,
+  _worklet_8889327806636_init_data,
   _classCallCheck: _classCallCheck2.default
 }));"
 `;
@@ -502,8 +504,8 @@ exports[`babel plugin for class worklets workletizes getter 1`] = `
 var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
 var x = 5;
-var _worklet_13515258128853_init_data = {
-  code: "function get_null1(){const{x}=this.__closure;return x+2;}",
+var _worklet_12154687872924_init_data = {
+  code: "function null1(){const{x}=this.__closure;return x+2;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
@@ -513,24 +515,25 @@ var Foo = function () {
   }
   return (0, _createClass2.default)(Foo, [{
     key: "bar",
-    get: function get_null1Factory(_ref) {
-      var _worklet_13515258128853_init_data = _ref._worklet_13515258128853_init_data,
-        x = _ref.x;
+    get: function null1Factory({
+      _worklet_12154687872924_init_data,
+      x
+    }) {
       var _e = [new global.Error(), -2, -27];
-      var get = function get() {
+      var null1 = function () {
         return x + 2;
       };
-      get.__closure = {
-        x: x
+      null1.__closure = {
+        x
       };
-      get.__workletHash = 13515258128853;
-      get.__pluginVersion = "x.y.z";
-      get.__initData = _worklet_13515258128853_init_data;
-      get.__stackDetails = _e;
-      return get;
+      null1.__workletHash = 12154687872924;
+      null1.__pluginVersion = "x.y.z";
+      null1.__initData = _worklet_12154687872924_init_data;
+      null1.__stackDetails = _e;
+      return null1;
     }({
-      _worklet_13515258128853_init_data: _worklet_13515258128853_init_data,
-      x: x
+      _worklet_12154687872924_init_data,
+      x
     })
   }]);
 }();"
@@ -551,10 +554,11 @@ var Foo = function () {
   }
   return (0, _createClass2.default)(Foo, [{
     key: "bar",
-    value: function bar_null1Factory(_ref) {
-      var _worklet_10686480819086_init_data = _ref._worklet_10686480819086_init_data;
+    value: function bar_null1Factory({
+      _worklet_10686480819086_init_data
+    }) {
       var _e = [new global.Error(), 1, -27];
-      var bar = function bar(x) {
+      var bar = function (x) {
         return x + 2;
       };
       bar.__closure = {};
@@ -564,7 +568,7 @@ var Foo = function () {
       bar.__stackDetails = _e;
       return bar;
     }({
-      _worklet_10686480819086_init_data: _worklet_10686480819086_init_data
+      _worklet_10686480819086_init_data
     })
   }]);
 }();"
@@ -574,8 +578,8 @@ exports[`babel plugin for class worklets workletizes setter 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-var _worklet_14784735859354_init_data = {
-  code: "function set_null1(x){this.x=x+2;}",
+var _worklet_12886579048455_init_data = {
+  code: "function null1(x){this.x=x+2;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
@@ -585,20 +589,21 @@ var Foo = function () {
   }
   return (0, _createClass2.default)(Foo, [{
     key: "bar",
-    set: function set_null1Factory(_ref) {
-      var _worklet_14784735859354_init_data = _ref._worklet_14784735859354_init_data;
+    set: function null1Factory({
+      _worklet_12886579048455_init_data
+    }) {
       var _e = [new global.Error(), 1, -27];
-      var set = function set(x) {
+      var null1 = function (x) {
         this.x = x + 2;
       };
-      set.__closure = {};
-      set.__workletHash = 14784735859354;
-      set.__pluginVersion = "x.y.z";
-      set.__initData = _worklet_14784735859354_init_data;
-      set.__stackDetails = _e;
-      return set;
+      null1.__closure = {};
+      null1.__workletHash = 12886579048455;
+      null1.__pluginVersion = "x.y.z";
+      null1.__initData = _worklet_12886579048455_init_data;
+      null1.__stackDetails = _e;
+      return null1;
     }({
-      _worklet_14784735859354_init_data: _worklet_14784735859354_init_data
+      _worklet_12886579048455_init_data
     })
   }]);
 }();"
@@ -616,10 +621,11 @@ var _worklet_2294411833184_init_data = {
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-Foo.bar = function null1Factory(_ref) {
-  var _worklet_2294411833184_init_data = _ref._worklet_2294411833184_init_data;
+Foo.bar = function null1Factory({
+  _worklet_2294411833184_init_data
+}) {
   var _e = [new global.Error(), 1, -27];
-  var null1 = function null1(x) {
+  var null1 = function (x) {
     return x + 2;
   };
   null1.__closure = {};
@@ -629,7 +635,7 @@ Foo.bar = function null1Factory(_ref) {
   null1.__stackDetails = _e;
   return null1;
 }({
-  _worklet_2294411833184_init_data: _worklet_2294411833184_init_data
+  _worklet_2294411833184_init_data
 });"
 `;
 
@@ -648,10 +654,11 @@ var Foo = function () {
   }
   return (0, _createClass2.default)(Foo, null, [{
     key: "bar",
-    value: function bar_null1Factory(_ref) {
-      var _worklet_10686480819086_init_data = _ref._worklet_10686480819086_init_data;
+    value: function bar_null1Factory({
+      _worklet_10686480819086_init_data
+    }) {
       var _e = [new global.Error(), 1, -27];
-      var bar = function bar(x) {
+      var bar = function (x) {
         return x + 2;
       };
       bar.__closure = {};
@@ -661,7 +668,7 @@ var Foo = function () {
       bar.__stackDetails = _e;
       return bar;
     }({
-      _worklet_10686480819086_init_data: _worklet_10686480819086_init_data
+      _worklet_10686480819086_init_data
     })
   }]);
 }();"
