@@ -63,9 +63,10 @@ void CSSTransitionsRegistry::update(const double timestamp) {
 
     const folly::dynamic &updates = transition->update(timestamp, propsBuilder);
     if (!updates.empty()) {
-      addUpdatesToBatch(transition->getShadowNode(), updates);
       if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
         addAnimatedPropsToBatch(transition->getShadowNode(), propsBuilder->get());
+      } else {
+        addUpdatesToBatch(transition->getShadowNode(), updates);
       }
     }
 

@@ -217,9 +217,10 @@ void CSSAnimationsRegistry::updateViewAnimations(
   }
 
   if (hasUpdates) {
-    addUpdatesToBatch(shadowNode, result);
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
       addAnimatedPropsToBatch(shadowNode, propsBuilder->get());
+    } else {
+      addUpdatesToBatch(shadowNode, result);
     }
   }
 }
