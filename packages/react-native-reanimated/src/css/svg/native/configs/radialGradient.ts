@@ -6,6 +6,7 @@ import type { RadialGradientProps } from 'react-native-svg';
 
 import {
   processSVGGradientStops,
+  processSVGGradientUnits,
   processSVGRadialGradientFocalX,
   processSVGRadialGradientFocalY,
   processSVGRadialGradientRadius,
@@ -24,6 +25,6 @@ export const SVG_RADIAL_GRADIENT_PROPERTIES_CONFIG: SvgStyleBuilderConfig<Radial
     fx: true,
     fy: true,
     gradient: { process: processSVGGradientStops },
-    // gradientUnits: true, // 'objectBoundingBox' | 'userSpaceOnUse'; how to enforce this type
+    gradientUnits: { process: processSVGGradientUnits },
     // gradientTransform // TODO: implement
   };

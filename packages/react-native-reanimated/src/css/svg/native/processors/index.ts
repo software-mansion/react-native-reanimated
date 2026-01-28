@@ -1,15 +1,13 @@
 'use strict';
 export * from './colors';
+export { processSVGGradientUnits } from './gradientUnits';
 export * from './others';
 export { processSVGPath } from './path';
-<<<<<<< HEAD
 export * from './percentage';
-=======
 export {
-  processSVGRadialGradientRadius,
   processSVGRadialGradientFocalX,
   processSVGRadialGradientFocalY,
+  processSVGRadialGradientRadius,
 } from './radialGradientCoords';
 export { processSVGGradientStops } from './stops';
->>>>>>> a026fda457 (Start implementing the gradinet animations)
 export { processStrokeDashArray } from './stroke';
