@@ -39,6 +39,10 @@ void CSSTransitionsRegistry::remove(const Tag viewTag) {
   registry_.erase(viewTag);
 }
 
+bool CSSTransitionsRegistry::hasTransition(const Tag viewTag) const {
+  return registry_.find(viewTag) != registry_.end();
+}
+
 void CSSTransitionsRegistry::updateSettings(const Tag viewTag, const PartialCSSTransitionConfig &config) {
   const auto &transition = registry_[viewTag];
   transition->updateSettings(config);

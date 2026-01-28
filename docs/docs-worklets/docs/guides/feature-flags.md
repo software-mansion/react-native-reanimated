@@ -44,6 +44,14 @@ Static flags are intended to be resolved during code compilation and cannot be c
 2. Run `pod install` (iOS only)
 3. Rebuild the native app
 
+:::warning
+Static feature flags are not supported in environments where Worklets is prebuilt with the default configuration of flags, like for instance in [Expo Go](https://expo.dev/go) and [RNRepo](https://rnrepo.org/).
+
+- It's not possible to modify static feature flags in Expo Go. Please consider using [Expo Prebuild](https://docs.expo.dev/workflow/continuous-native-generation/) instead.
+- If your project uses RNRepo, you need to force building Worklets from source by adding it to the deny list as described in [RNRepo's documentation](https://github.com/software-mansion/rnrepo/blob/main/TROUBLESHOOTING.md#deny-list-configuration).
+
+:::
+
 To read a static feature flag value in JavaScript, you can use `getStaticFeatureFlag` function.
 
 ## Dynamic feature flags
@@ -60,13 +68,14 @@ To read a dynamic feature flag value in JavaScript, you can use `getDynamicFeatu
 
 ## Comparison of static and dynamic feature flags
 
-|                                          | Static feature flags | Dynamic feature flags |
-| ---------------------------------------- | :------------------: | :-------------------: |
-| Value is known during app build          |          ✅          |          ❌           |
-| Value may change during app lifetime     |          ❌          |          ✅           |
-| Value change requires app rebuild        |          ✅          |          ❌           |
-| Can be changed via public JavaScript API |          ❌          |          ✅           |
-| Can be changed via app's `package.json`  |          ✅          |          ❌           |
+|                                             | Static feature flags | Dynamic feature flags |
+| ------------------------------------------- | :------------------: | :-------------------: |
+| Value is known during app build             |          ✅          |          ❌           |
+| Value may change during app lifetime        |          ❌          |          ✅           |
+| Value change requires app rebuild           |          ✅          |          ❌           |
+| Can be changed via public JavaScript API    |          ❌          |          ✅           |
+| Can be changed via app's `package.json`     |          ✅          |          ❌           |
+| Can be changed when using Expo Go or RNRepo |          ❌          |          ✅           |
 
 ## Remarks for contributors
 

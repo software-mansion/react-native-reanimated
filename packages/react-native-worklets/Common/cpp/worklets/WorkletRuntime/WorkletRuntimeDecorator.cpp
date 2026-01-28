@@ -226,4 +226,86 @@ void WorkletRuntimeDecorator::decorate(
       });
 }
 
+#ifdef WORKLETS_BUNDLE_MODE_ENABLED
+void WorkletRuntimeDecorator::postEvaluateScript(
+    jsi::Runtime &rt,
+    const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
+  installNetworking(rt, runtimeBindings);
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
+}
+
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
+void WorkletRuntimeDecorator::installNetworking(
+    jsi::Runtime &rt,
+    const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
+  auto TurboModules = rt.global().getPropertyAsObject(rt, "TurboModules");
+
+  auto Networking = TurboModules.getPropertyAsFunction(rt, "get").callWithThis(rt, TurboModules, "Networking");
+
+#ifdef ANDROID
+  auto jsiSendRequest = jsi::Function::createFromHostFunction(
+      rt,
+      jsi::PropNameID::forAscii(rt, "sendRequest"),
+      9,
+      [sendRequest = runtimeBindings->sendRequest](
+          jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+        auto method = args[0].asString(rt);
+        auto url = args[1].asString(rt);
+        auto requestId = args[2].asNumber();
+        auto headers = args[3].asObject(rt).asArray(rt);
+        auto data = args[4].asObject(rt);
+        auto responseType = args[5].asString(rt);
+        auto incrementalUpdates = args[6].asBool();
+        auto timeout = args[7].asNumber();
+        auto withCredentials = args[8].asBool();
+        sendRequest(
+            rt, method, url, requestId, headers, data, responseType, incrementalUpdates, timeout, withCredentials);
+        return jsi::Value::undefined();
+      });
+#else
+  auto jsiSendRequest = jsi::Function::createFromHostFunction(
+      rt,
+      jsi::PropNameID::forAscii(rt, "sendRequest"),
+      2,
+      [sendRequest = runtimeBindings->sendRequest](
+          jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+        auto &query = args[0];
+        auto responseSender = args[1].asObject(rt).asFunction(rt);
+        sendRequest(rt, query, std::move(responseSender));
+        return jsi::Value::undefined();
+      });
+#endif // ANDROID
+
+  Networking.asObject(rt).setProperty(rt, "sendRequest", std::move(jsiSendRequest));
+
+  auto jsiAbortRequest = jsi::Function::createFromHostFunction(
+      rt,
+      jsi::PropNameID::forAscii(rt, "abortRequest"),
+      1,
+      [abortRequest = runtimeBindings->abortRequest](
+          jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+        auto requestID = args[0].asNumber();
+        abortRequest(rt, requestID);
+        return jsi::Value::undefined();
+      });
+
+  Networking.asObject(rt).setProperty(rt, "abortRequest", std::move(jsiAbortRequest));
+
+  auto jsiClearCookies = jsi::Function::createFromHostFunction(
+      rt,
+      jsi::PropNameID::forAscii(rt, "clearCookies"),
+      1,
+      [clearCookies = runtimeBindings->clearCookies](
+          jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+        auto responseSender = args[0].asObject(rt).asFunction(rt);
+        clearCookies(rt, std::move(responseSender));
+        return jsi::Value::undefined();
+      });
+
+  Networking.asObject(rt).setProperty(rt, "clearCookies", std::move(jsiClearCookies));
+}
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
+#endif // WORKLETS_BUNDLE_MODE_ENABLED
+
 } // namespace worklets

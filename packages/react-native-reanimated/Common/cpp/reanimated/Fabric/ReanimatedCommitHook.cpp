@@ -17,7 +17,7 @@ namespace reanimated {
 ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
-    const std::shared_ptr<LayoutAnimationsProxy> &layoutAnimationsProxy)
+    const std::shared_ptr<LayoutAnimationsProxyCommon> &layoutAnimationsProxy)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
       layoutAnimationsProxy_(layoutAnimationsProxy) {
@@ -33,16 +33,19 @@ void ReanimatedCommitHook::maybeInitializeLayoutAnimations(SurfaceId surfaceId) 
   if (surfaceId > currentMaxSurfaceId_) {
     // when a new surfaceId is observed we call setMountingOverrideDelegate
     // for all yet unseen surfaces
-    uiManager_->getShadowTreeRegistry().enumerate(
-        [strongThis = shared_from_this()](const ShadowTree &shadowTree, bool &stop) {
-          // Executed synchronously.
-          if (shadowTree.getSurfaceId() <= strongThis->currentMaxSurfaceId_) {
-            // the set function actually adds our delegate to a list, so we
-            // shouldn't invoke it twice for the same surface
-            return;
-          }
-          shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(strongThis->layoutAnimationsProxy_);
-        });
+    uiManager_->getShadowTreeRegistry().enumerate([strongThis = shared_from_this()](
+                                                      const ShadowTree &shadowTree, bool &stop) {
+      // Executed synchronously.
+      if (shadowTree.getSurfaceId() <= strongThis->currentMaxSurfaceId_) {
+        // the set function actually adds our delegate to a list, so we
+        // shouldn't invoke it twice for the same surface
+        return;
+      }
+      // TODO: We should consider registering a new instance of proxy for each surface.
+      // The current approach will encounter problems on platforms where it is more common to have multiple surfaces.
+      strongThis->layoutAnimationsProxy_->startSurface(shadowTree.getSurfaceId());
+      shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(strongThis->layoutAnimationsProxy_);
+    });
     currentMaxSurfaceId_ = surfaceId;
   }
 }

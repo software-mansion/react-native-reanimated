@@ -15,7 +15,7 @@
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
@@ -119,10 +119,11 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
       override;
   void unregisterCSSAnimations(const jsi::Value &viewTag) override;
 
-  void registerCSSTransition(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &transitionConfig)
+  void runCSSTransition(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &transitionConfig)
       override;
-  void updateCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &configUpdates) override;
   void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag) override;
+
+  jsi::Value getSettledUpdates(jsi::Runtime &rt) override;
 
   void cssLoopCallback(const double /*timestampMs*/);
 
@@ -194,6 +195,9 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   GetAnimationTimestampFunction getAnimationTimestamp_;
   std::vector<std::function<void(const double)>> backendCallbacks_;
 
+#ifdef __APPLE__
+  ForceScreenSnapshotFunction forceScreenSnapshot_;
+#endif
   bool cssLoopRunning_{false};
   bool shouldUpdateCssAnimations_{true};
   double currentCssTimestamp_{0};
@@ -210,7 +214,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   const PreserveMountedTagsFunction filterUnmountedTagsFunction_;
 
   std::shared_ptr<UIManager> uiManager_;
-  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
+  std::shared_ptr<LayoutAnimationsProxyCommon> layoutAnimationsProxy_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
   std::set<SurfaceId> layoutAnimationFlushRequests_;

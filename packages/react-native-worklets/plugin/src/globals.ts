@@ -111,6 +111,9 @@ const notCapturedIdentifiers = [
   'performance',
   'arguments', // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
   'require',
+  'fetch',
+  'XMLHttpRequest',
+  'WebSocket',
 
   // Run loop
   'queueMicrotask',

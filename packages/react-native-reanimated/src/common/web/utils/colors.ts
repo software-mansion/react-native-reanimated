@@ -10,11 +10,8 @@ export function opacifyColor(
   'worklet';
   const colorNumber = processColorInitially(color);
 
-  if (colorNumber === null) {
-    return null;
-  }
-  if (colorNumber === false) {
-    return 'transparent';
+  if (!colorNumber) {
+    return colorNumber === 0x00000000 ? 'transparent' : null;
   }
 
   const a = (colorNumber >> 24) & 0xff;

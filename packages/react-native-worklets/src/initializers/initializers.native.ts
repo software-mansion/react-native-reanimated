@@ -1,8 +1,15 @@
 'use strict';
 
+import {
+  disallowRNImports,
+  mockTurboModuleRegistry,
+  silenceHMRWarnings,
+} from '../bundleMode/metroOverrides';
+import { initializeNetworking } from '../bundleMode/network';
 import { setupCallGuard } from '../callGuard';
 import { registerReportFatalRemoteError } from '../debug/errors';
 import { registerWorkletsError, WorkletsError } from '../debug/WorkletsError';
+import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
 import { __installUnpacker as installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
 import { __installUnpacker as installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
@@ -102,7 +109,7 @@ export function init() {
 
 /** A function that should be run on any kind of runtime. */
 function initializeRuntime() {
-  if (globalThis._WORKLETS_BUNDLE_MODE) {
+  if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
   }
   installSynchronizableUnpacker();
@@ -127,68 +134,17 @@ function initializeRNRuntime() {
 
 /** A function that should be run only on Worklet runtimes. */
 function initializeWorkletRuntime() {
-  if (globalThis._WORKLETS_BUNDLE_MODE) {
+  if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     setupCallGuard();
 
     if (__DEV__) {
-      /*
-       * Temporary workaround for Metro bundler. We must implement a dummy
-       * Refresh module to prevent Metro from throwing irrelevant errors.
-       */
-      const Refresh = new Proxy(
-        {},
-        {
-          get() {
-            return () => {};
-          },
-        }
-      );
+      silenceHMRWarnings();
+      disallowRNImports();
+    }
 
-      globalThis.__r.Refresh = Refresh;
-
-      /* Gracefully handle unwanted imports from React Native. */
-      const modules = require.getModules();
-      const ReactNativeModuleId = require.resolveWeak('react-native');
-
-      const factory = function (
-        _global: unknown,
-        _require: unknown,
-        _importDefault: unknown,
-        _importAll: unknown,
-        module: Record<string, unknown>,
-        _exports: unknown,
-        _dependencyMap: unknown
-      ) {
-        module.exports = new Proxy(
-          {},
-          {
-            get: function get(_target, prop) {
-              globalThis.console.warn(
-                `You tried to import '${String(prop)}' from 'react-native' module on a Worklet Runtime. Using 'react-native' module on a Worklet Runtime is not allowed.`
-              );
-              return {
-                get() {
-                  return undefined;
-                },
-              };
-            },
-          }
-        );
-      };
-
-      const mod = {
-        dependencyMap: [],
-        factory,
-        hasError: false,
-        importedAll: {},
-        importedDefault: {},
-        isInitialized: false,
-        publicModule: {
-          exports: {},
-        },
-      };
-
-      modules.set(ReactNativeModuleId, mod);
+    if (getStaticFeatureFlag('FETCH_PREVIEW_ENABLED')) {
+      mockTurboModuleRegistry();
+      initializeNetworking();
     }
   }
 }
@@ -204,9 +160,7 @@ function installRNBindingsOnUIRuntime() {
     );
   }
 
-  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
-
-  if (!globalThis._WORKLETS_BUNDLE_MODE) {
+  if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     /** In bundle mode Runtimes setup their callGuard themselves. */
     runOnUISync(setupCallGuard);
 
@@ -219,6 +173,8 @@ function installRNBindingsOnUIRuntime() {
      */
     runOnUISync(registerWorkletsError);
   }
+
+  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
 
   runOnUISync(() => {
     'worklet';

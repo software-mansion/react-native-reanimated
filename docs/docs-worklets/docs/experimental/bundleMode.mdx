@@ -28,50 +28,49 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
 
 1. **Modify your Babel configuration**. In your `babel.config.js` file, add the following:
 
-   ```javascript
-   module.exports = {
-     plugins: [
-       [
-         'react-native-worklets/plugin',
-         {
-           // highlight-next-line
-           bundleMode: true,
-         },
-       ],
-       // Your other plugins...
-     ],
-   };
-   ```
+```javascript
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  bundleMode: true,
+}
 
-   [Example reference](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app/blob/main/babel.config.js).
+module.exports = {
+  presets: [
+    ... // don't add it here :)
+  ],
+  plugins: [
+    ...
+    ['react-native-worklets/plugin', workletsPluginOptions],
+  ],
+};
+```
+
+[Example reference](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app/blob/main/babel.config.js).
 
 2. **Modify your Metro configuration**. In your `metro.config.js` file, apply the config required for the bundle mode. For example:
 
-   ```javascript
-   const {
-     getDefaultConfig,
-     mergeConfig,
-   } = require('@react-native/metro-config');
-   // highlight-next-line
-   const {
-     // highlight-next-line
-     bundleModeMetroConfig,
-     // highlight-next-line
-   } = require('react-native-worklets/bundleMode');
+```javascript
+const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
+// highlight-next-line
+const {
+  // highlight-next-line
+  bundleModeMetroConfig,
+  // highlight-next-line
+} = require('react-native-worklets/bundleMode');
 
-   const config = {
-     // Your config
-   };
+const config = {
+  // Your config
+};
 
-   module.exports = mergeConfig(
-     getDefaultConfig(__dirname),
-     // highlight-next-line
-     bundleModeMetroConfig,
-     config
-   );
-   ```
+module.exports = mergeConfig(
+  getDefaultConfig(__dirname),
+  // highlight-next-line
+  bundleModeMetroConfig,
+  config
+);
+```
 
-   [Example reference](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app/blob/main/metro.config.js)
+[Example reference](https://github.com/software-mansion-labs/Bundle-Mode-showcase-app/blob/main/metro.config.js)
 
 3. Apply the necessary package patches from [worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches).
 
