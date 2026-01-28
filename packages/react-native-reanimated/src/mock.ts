@@ -32,6 +32,7 @@ import {
   setUpTests,
   withReanimatedTimer,
 } from './index';
+import { worklet } from './jestUtils';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const NOOP = () => {};
@@ -445,6 +446,7 @@ const jestUtils = {
   advanceAnimationByFrame,
   setUpTests,
   getAnimatedStyle,
+  worklet,
 };
 
 const LayoutAnimationConfig = {
