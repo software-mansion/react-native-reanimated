@@ -47,14 +47,10 @@ Run prebuild to update the native code in the `ios` and `android` directories.
 
 <Tabs groupId="package-managers">
   <TabItem value="npm" label="NPM">
-    ```bash
-    npx expo prebuild
-    ```
+    ```bash npx expo prebuild ```
   </TabItem>
   <TabItem value="yarn" label="YARN">
-    ```bash
-    yarn expo prebuild
-    ```
+    ```bash yarn expo prebuild ```
   </TabItem>
 </Tabs>
 
@@ -65,21 +61,18 @@ And that's it! Worklets is now configured in your Expo project.
 When using [React Native Community CLI](https://github.com/react-native-community/cli), you also need to manually add the `react-native-worklets/plugin` plugin to your `babel.config.js`.
 
 ```js {7}
-/** @type {import('react-native-worklets/plugin').PluginOptions} */
-const workletsPluginOptions = {
-  // Your custom options.
-}
-
 module.exports = {
   presets: [
     ... // don't add it here :)
   ],
   plugins: [
     ...
-    ['react-native-worklets/plugin', workletsPluginOptions],
+    'react-native-worklets/plugin',
   ],
 };
 ```
+
+Worklets Babel plugin comes with several options, you can explore what they are and how to use them in the [Options for Worklets Babel Plugin](/docs/worklets-babel-plugin/plugin-options) section.
 
 <details>
 <summary>Why do I need this?</summary>
@@ -96,17 +89,12 @@ To learn more about the plugin head onto to [Worklets babel plugin](/docs/workle
 
 <Tabs groupId="package-managers">
   <TabItem value="npm" label="NPM">
-    ```bash
-    npm start -- --reset-cache
-    ```
+    ```bash npm start -- --reset-cache ```
   </TabItem>
   <TabItem value="yarn" label="YARN">
-    ```bash
-    yarn start --reset-cache
-    ```
+    ```bash yarn start --reset-cache ```
   </TabItem>
 </Tabs>
-
 
 #### Android
 
