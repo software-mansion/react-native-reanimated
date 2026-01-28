@@ -14,7 +14,7 @@ template <typename TOperation>
 TransformOperationInterpolator<TOperation>::TransformOperationInterpolator(
     const std::shared_ptr<TOperation> &defaultOperation,
     std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder)
-    : addToPropsBuilder_(addToPropsBuilder), StyleOperationInterpolator(defaultOperation) {}
+    : StyleOperationInterpolator(defaultOperation), addToPropsBuilder_(addToPropsBuilder) {}
 
 template <typename TOperation>
 std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::interpolate(
@@ -34,7 +34,7 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::inte
 TransformOperationInterpolator<PerspectiveOperation>::TransformOperationInterpolator(
     const std::shared_ptr<PerspectiveOperation> &defaultOperation,
     std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, PerspectiveOperation &)> addToPropsBuilder)
-    : addToPropsBuilder_(addToPropsBuilder), StyleOperationInterpolator(defaultOperation) {}
+    : StyleOperationInterpolator(defaultOperation), addToPropsBuilder_(addToPropsBuilder) {}
 
 std::unique_ptr<StyleOperation> TransformOperationInterpolator<PerspectiveOperation>::interpolate(
     double progress,
@@ -64,7 +64,7 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<PerspectiveOperat
 TransformOperationInterpolator<MatrixOperation>::TransformOperationInterpolator(
     const std::shared_ptr<MatrixOperation> &defaultOperation,
     std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, MatrixOperation &)> addToPropsBuilder)
-    : addToPropsBuilder_(addToPropsBuilder), StyleOperationInterpolator(defaultOperation) {}
+    : StyleOperationInterpolator(defaultOperation), addToPropsBuilder_(addToPropsBuilder) {}
 
 std::unique_ptr<StyleOperation> TransformOperationInterpolator<MatrixOperation>::interpolate(
     double progress,
@@ -171,7 +171,7 @@ TransformOperationInterpolator<TOperation>::TransformOperationInterpolator(
     const std::shared_ptr<TOperation> &defaultOperation,
     ResolvableValueInterpolatorConfig config,
     std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder)
-    : addToPropsBuilder_(addToPropsBuilder), StyleOperationInterpolator(defaultOperation), config_(std::move(config)) {}
+    : StyleOperationInterpolator(defaultOperation), config_(std::move(config)), addToPropsBuilder_(addToPropsBuilder) {}
 
 template <ResolvableOp TOperation>
 std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::interpolate(
