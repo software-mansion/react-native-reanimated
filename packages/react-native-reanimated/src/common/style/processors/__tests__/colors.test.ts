@@ -48,6 +48,14 @@ describe(processColorsInProps, () => {
       expect(props).toEqual({ [key]: value });
     });
   });
+
+  test('skips undefined color values', () => {
+    const props = { backgroundColor: undefined };
+
+    processColorsInProps(props);
+
+    expect(props).toEqual(props);
+  });
 });
 
 describe(processColor, () => {
