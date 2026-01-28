@@ -4,6 +4,7 @@ import Ellipse from './Ellipse';
 import Image from './Image';
 import Line from './Line';
 import Rect from './Rect';
+import RadialGradient from './RadialGradient';
 import Path from './Path';
 
 export default {
@@ -14,4 +15,5 @@ export default {
   Path,
   common,
   Rect,
+  RadialGradient,
 };
