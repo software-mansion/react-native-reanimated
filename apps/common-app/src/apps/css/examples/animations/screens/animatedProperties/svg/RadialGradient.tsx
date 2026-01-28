@@ -4,17 +4,21 @@ import Animated, { type CSSAnimationKeyframes } from 'react-native-reanimated';
 // @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
 import { Defs, RadialGradient, Rect, Svg } from 'react-native-svg';
 
-import { type RadialGradientProps } from 'react-native-svg';
+import { type CSSRadialGradientProps } from 'react-native-reanimated';
 
 import { ExamplesScreen } from '@/apps/css/components';
 
 const AnimatedGrad = Animated.createAnimatedComponent(RadialGradient);
 
+const DefsWithChildren = Defs as React.ComponentType<{
+  children?: React.ReactNode;
+}>;
+
 export default function StopExample() {
   return (
     <ExamplesScreen<
-      { keyframes: CSSAnimationKeyframes<RadialGradientProps> },
-      RadialGradientProps
+      { keyframes: CSSAnimationKeyframes<CSSRadialGradientProps> },
+      CSSRadialGradientProps
     >
       buildAnimation={({ keyframes }) => ({
         animationName: keyframes,
@@ -25,12 +29,13 @@ export default function StopExample() {
       })}
       renderExample={({ animation }) => (
         <Svg height={300} width={300}>
-          <Defs>
+          <DefsWithChildren>
             <AnimatedGrad
               animatedProps={animation}
               gradientUnits="objectBoundingBox"
-              id="radialGrad"></AnimatedGrad>
-          </Defs>
+              id="radialGrad"
+            />
+          </DefsWithChildren>
           <Rect
             fill="url(#radialGrad)"
             height={100}
@@ -393,7 +398,11 @@ export default function StopExample() {
                       r: 20,
                       gradient: [
                         { offset: '0%', color: '#ff0080', opacity: 1 },
-                        { offset: '100%', color: '#4b0082', opacity: 1 },
+                        {
+                          offset: '100%',
+                          color: '#4b0082',
+                          opacity: 1,
+                        },
                       ],
                     },
                     to: {

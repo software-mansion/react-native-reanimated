@@ -15,14 +15,6 @@ import * as Animated from './Animated';
 
 export default Animated;
 
-// Address in some way \/\/\/\/
-export type {
-  GradientStop,
-  LinearGradientProps,
-  RadialGradientProps,
-} from 'react-native-svg';
-// Address in some way /\/\/\/\
-
 export { createAnimatedComponent } from './Animated';
 export type {
   DecayAnimation,
