@@ -7,7 +7,7 @@ import {
   createHandlers,
   createUseHandlerError,
   renderHookWithHandlers,
-} from './useHandler.common';
+} from './useHandlerHelpers';
 
 describe('useHandler (native)', () => {
   describe('valid cases', () => {
