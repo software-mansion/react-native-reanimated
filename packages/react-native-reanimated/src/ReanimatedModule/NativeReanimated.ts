@@ -199,6 +199,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.unmarkNodeAsRemovable(viewTag);
   }
 
+  setNodeRemovalCallback(callback: (tag: number, isFrozen: boolean) => void) {
+    this.#reanimatedModuleProxy.setNodeRemovalCallback(callback);
+  }
+
   registerCSSKeyframes(
     animationName: string,
     viewName: string,
@@ -263,6 +267,7 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   setViewStyle(): void {}
   markNodeAsRemovable(): void {}
   unmarkNodeAsRemovable(): void {}
+  setNodeRemovalCallback(): void {}
   registerCSSKeyframes(): void {}
   unregisterCSSKeyframes(): void {}
   applyCSSAnimations(): void {}
