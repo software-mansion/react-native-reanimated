@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 public class RNReanimatedSharedTransitionBoundaryView extends ViewGroup {
   public RNReanimatedSharedTransitionBoundaryView(Context context) {
     super(context);
+    this.setClipChildren(false);
   }
 
   @Override

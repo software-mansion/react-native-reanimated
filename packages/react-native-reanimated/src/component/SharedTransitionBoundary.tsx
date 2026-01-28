@@ -1,11 +1,11 @@
 'use strict';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+
 import { RNReanimatedSharedTransitionBoundary } from '../specs';
 
-export interface SharedTransitionBoundaryProps {
+export type SharedTransitionBoundaryProps = React.PropsWithChildren<{
   isActive: boolean;
-  children: React.ReactNode;
-}
+}>;
 
 export function SharedTransitionBoundary(props: SharedTransitionBoundaryProps) {
   const { isActive, children } = props;
@@ -14,13 +14,14 @@ export function SharedTransitionBoundary(props: SharedTransitionBoundaryProps) {
     <RNReanimatedSharedTransitionBoundary
       style={styles.contents}
       isActive={isActive}>
-        {children}
+      {children}
     </RNReanimatedSharedTransitionBoundary>
   );
 }
 
 const styles = StyleSheet.create({
   contents: {
+    overflow: 'visible',
     display: 'contents',
   },
 });
