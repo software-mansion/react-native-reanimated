@@ -32,14 +32,10 @@ Install `react-native-reanimated` and `react-native-worklets` packages from npm:
 
 <Tabs groupId="package-managers">
   <TabItem value="npm" label="NPM">
-    ```bash
-    npm install react-native-reanimated
-    ```
+    ```bash npm install react-native-reanimated ```
   </TabItem>
   <TabItem value="yarn" label="YARN">
-    ```bash
-    yarn add react-native-reanimated
-    ```
+    ```bash yarn add react-native-reanimated ```
   </TabItem>
 </Tabs>
 
@@ -51,14 +47,10 @@ You can read more about Worklets in the [Worklets documentation](https://docs.sw
 <Tabs groupId="package-managers">
   <TabItem value="npm" label="NPM">
     {/* TODO - add information about the necessity to specify a proper version of the library compatible with reanimated */}
-    ```bash 
-    npm install react-native-worklets
-    ```
+    ```bash npm install react-native-worklets ```
   </TabItem>
   <TabItem value="yarn" label="YARN">
-    ```bash
-    yarn add react-native-worklets
-    ```
+    ```bash yarn add react-native-worklets ```
   </TabItem>
 </Tabs>
 
@@ -68,14 +60,10 @@ Run prebuild to update the native code in the `ios` and `android` directories.
 
 <Tabs groupId="package-managers">
   <TabItem value="npm" label="NPM">
-    ```bash
-    npx expo prebuild
-    ```
+    ```bash npx expo prebuild ```
   </TabItem>
   <TabItem value="yarn" label="YARN">
-    ```bash
-    yarn expo prebuild
-    ```
+    ```bash yarn expo prebuild ```
   </TabItem>
 </Tabs>
 
@@ -86,18 +74,13 @@ And that's it! Reanimated 4 is now configured in your Expo project.
 When using [React Native Community CLI](https://github.com/react-native-community/cli), you also need to manually add the `react-native-worklets/plugin` plugin to your `babel.config.js`.
 
 ```js {7}
-  /** @type {import('react-native-worklets/plugin').PluginOptions} */
-  const workletsPluginOptions = {
-    // Your custom options.
-  }
-
   module.exports = {
     presets: [
       ... // don't add it here :)
     ],
     plugins: [
       ...
-      ['react-native-worklets/plugin', workletsPluginOptions],
+      'react-native-worklets/plugin',
     ],
   };
 ```
@@ -107,6 +90,8 @@ When using [React Native Community CLI](https://github.com/react-native-communit
 `react-native-worklets/plugin` has to be listed last.
 
 :::
+
+Worklets Babel plugin comes with several customization options, you can explore what they are and how to use them in the [Worklets docs](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options) section.
 
 <details>
 <summary>Why do I need this?</summary>
@@ -123,14 +108,10 @@ To learn more about the plugin head onto to [Worklets Babel plugin docs page](ht
 
 <Tabs groupId="package-managers">
   <TabItem value="npm" label="NPM">
-    ```bash
-    npm start -- --reset-cache
-    ```
+    ```bash npm start -- --reset-cache ```
   </TabItem>
   <TabItem value="yarn" label="YARN">
-    ```bash
-    yarn start --reset-cache
-    ```
+    ```bash yarn start --reset-cache ```
   </TabItem>
 </Tabs>
 
@@ -154,23 +135,14 @@ To use Reanimated on the web all you need to do is to install and add [`@babel/p
 
 <Tabs groupId="package-managers">
   <TabItem value="npm" label="NPM">
-    ```bash
-    npm install @babel/plugin-proposal-export-namespace-from
-    ```
+    ```bash npm install @babel/plugin-proposal-export-namespace-from ```
   </TabItem>
   <TabItem value="yarn" label="YARN">
-    ```bash
-    yarn add @babel/plugin-proposal-export-namespace-from
-    ```
+    ```bash yarn add @babel/plugin-proposal-export-namespace-from ```
   </TabItem>
 </Tabs>
 
 ```js {7}
-  /** @type {import('react-native-worklets/plugin').PluginOptions} */
-  const workletsPluginOptions = {
-    // Your custom options.
-  }
-
   module.exports = {
       presets: [
         ... // don't add it here :)
@@ -178,7 +150,7 @@ To use Reanimated on the web all you need to do is to install and add [`@babel/p
       plugins: [
           ...
           '@babel/plugin-proposal-export-namespace-from',
-          ['react-native-worklets/plugin', workletsPluginOptions],
+          'react-native-worklets/plugin',
       ],
   };
 ```
