@@ -2,7 +2,7 @@
 import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction } from 'react-native-worklets';
 
-import { ReanimatedError } from '../common';
+import { IS_WEB, ReanimatedError } from '../common';
 import type { DependencyList } from './commonTypes';
 
 // Builds one big hash from multiple worklets' hashes.
@@ -24,15 +24,40 @@ export function buildDependencies(
   dependencies: DependencyList,
   handlers: Record<string, WorkletFunction>
 ) {
-  const handlersList = Object.values(handlers).filter(
-    (handler) => handler !== undefined
+  const result = dependencies ?? [];
+
+  const nonWorkletHandlerNames = Object.entries(handlers).reduce<string[]>(
+    (acc, [name, handler]) => {
+      if (!isWorkletFunction(handler)) {
+        acc.push(name);
+      }
+      return acc;
+    },
+    []
   );
-  if (!dependencies) {
-    return handlersList;
+
+  if (nonWorkletHandlerNames.length === 0) {
+    result.push(buildWorkletsHash(handlers));
+    return result;
   }
 
-  dependencies.push(buildWorkletsHash(handlersList));
-  return dependencies;
+  const handlerNames = nonWorkletHandlerNames.join(', ');
+
+  // On native, only worklets are allowed
+  if (!IS_WEB) {
+    throw new ReanimatedError(
+      `Passed handlers that are not worklets. Only worklet functions are allowed. Handlers "${handlerNames}" are not worklets.`
+    );
+  }
+
+  // On web, non-worklets are allowed only when dependencies are provided
+  if (!dependencies) {
+    throw new ReanimatedError(
+      `Passed handlers that are not worklets. Please provide a dependency array to use non-worklet handlers or pass only worklet functions. Handlers "${handlerNames}" are not worklets.`
+    );
+  }
+
+  return result;
 }
 
 function areWorkletsEqual(
