@@ -367,7 +367,7 @@ const InterpolatorFactoriesRecord SVG_RADIAL_GRADIENT_INTERPOLATORS = mergeInter
          {"cx", value<SVGLength, CSSKeyword>("50%")},
          {"cy", value<SVGLength, CSSKeyword>("50%")},
          {"gradient", value<SVGStops>(SVGStops())},
-         // {"gradientUnits", value<CSSKeyword>("objectBoundingBox")},
+         {"gradientUnits", value<CSSIndex>(0)},
          // {"gradientTransform", value<CSSKeyword>("")},
      }});
 

@@ -375,6 +375,70 @@ export default function StopExample() {
             },
           ],
         },
+        {
+          name: 'Units',
+          sections: [
+            {
+              title: 'Coordinate Systems',
+              examples: [
+                {
+                  title: 'Absolute user space',
+                  description:
+                    'Uses gradientUnits: "userSpaceOnUse". Coordinates are absolute pixels relative to the Svg canvas.',
+                  keyframes: {
+                    from: {
+                      gradientUnits: 'userSpaceOnUse',
+                      cx: 150,
+                      cy: 150,
+                      r: 20,
+                      gradient: [
+                        { offset: '0%', color: '#ff0080', opacity: 1 },
+                        { offset: '100%', color: '#4b0082', opacity: 1 },
+                      ],
+                    },
+                    to: {
+                      gradientUnits: 'userSpaceOnUse',
+                      cx: 150,
+                      cy: 150,
+                      r: 40,
+                      gradient: [
+                        { offset: '0%', color: '#00ffff', opacity: 1 },
+                        { offset: '100%', color: '#0000ff', opacity: 1 },
+                      ],
+                    },
+                  },
+                },
+                {
+                  title: 'Interpolating unit systems',
+                  description:
+                    'Interpolating between "objectBoundingBox" and "userSpaceOnUse" causes a "jump" as 0.5 of rect size suddenly becomes 0.5px.',
+                  keyframes: {
+                    from: {
+                      gradientUnits: 'objectBoundingBox',
+                      cx: 0.5,
+                      cy: 0.5,
+                      r: 0.5,
+                      gradient: [
+                        { offset: '0%', color: 'yellow', opacity: 1 },
+                        { offset: '100%', color: 'red', opacity: 1 },
+                      ],
+                    },
+                    to: {
+                      gradientUnits: 'userSpaceOnUse',
+                      cx: 150,
+                      cy: 150,
+                      r: 50,
+                      gradient: [
+                        { offset: '0%', color: 'yellow', opacity: 1 },
+                        { offset: '100%', color: 'red', opacity: 1 },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        },
       ]}
     />
   );
