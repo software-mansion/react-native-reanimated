@@ -161,7 +161,7 @@ export default function StopExample() {
                 {
                   title: 'Focal point bug',
                   description:
-                    'Focal point has to remain in the circle to avoid bugs like this',
+                    'Focal point has to remain in the gradient to avoid bugs like this',
                   keyframes: {
                     from: {
                       cx: '50%',
