@@ -5,6 +5,7 @@ import { registerWorkletsError, WorkletsError } from './debug/WorkletsError';
 import {
   getMemorySafeCapturableConsole,
   setupConsole,
+  setupSerializer,
 } from './initializers/initializers';
 import {
   createSerializable,
@@ -91,6 +92,7 @@ export function createWorkletRuntime(
     createSerializable(() => {
       'worklet';
       setupCallGuard();
+      setupSerializer();
       registerWorkletsError();
       setupConsole(runtimeBoundCapturableConsole);
       if (enableEventLoop) {
