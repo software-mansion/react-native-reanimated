@@ -97,7 +97,7 @@ folly::dynamic SVGStops::toDynamic() const {
 
   for (const auto &stop : stops) {
     array.push_back(stop.offset);
-    array.push_back(stop.color.toDynamic()); 
+    array.push_back(stop.color.toDynamic());
   }
 
   return array;
