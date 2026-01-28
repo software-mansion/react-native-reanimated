@@ -1,7 +1,6 @@
 'use strict';
 
-import { type GradientStop } from 'react-native-svg';
-
+import { type CSSGradientStop } from '../../../../types';
 import { type ProcessedGradientStop, processSVGGradientStops } from '../stops';
 
 describe(processSVGGradientStops, () => {
@@ -50,7 +49,7 @@ describe(processSVGGradientStops, () => {
     });
 
     test('defaults offset to 0 if not provided', () => {
-      const input = [{ color: 'red' }] as GradientStop[];
+      const input = [{ color: 'red' }] as CSSGradientStop[];
       const result = processSVGGradientStops(input) as ProcessedGradientStop[];
       expect(result[0].offset).toBe(0);
     });

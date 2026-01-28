@@ -1,7 +1,7 @@
 'use strict';
 
 import { type ValueProcessor } from '../../../../common';
-import { GradientStop } from 'react-native-svg';
+import type { CSSGradientStop } from '../../../types';
 import { processColorSVG } from './colors';
 import { processOpacity } from './opacity';
 
@@ -12,7 +12,7 @@ export interface ProcessedGradientStop {
 }
 
 export const processSVGGradientStops: ValueProcessor<
-  GradientStop[],
+  CSSGradientStop[],
   ProcessedGradientStop[]
 > = (stops) => {
   if (!stops || !Array.isArray(stops)) {

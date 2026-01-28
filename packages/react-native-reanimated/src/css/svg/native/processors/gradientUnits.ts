@@ -1,5 +1,5 @@
 'use strict';
-import type { NumberProp, Units } from 'react-native-svg';
+import type { Units } from 'react-native-svg';
 
 import type { ValueProcessor } from '../../../../common';
 
