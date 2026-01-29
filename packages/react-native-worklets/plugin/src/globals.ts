@@ -154,8 +154,10 @@ const notCapturedIdentifiers_DEPRECATED = ['_IS_FABRIC'];
 export function initializeState(state: WorkletsPluginPass) {
   state.workletNumber = 1;
   state.classesToWorkletize = [];
-  initializeGlobals();
-  addCustomGlobals(state);
+  if (!state.opts.strictGlobal) {
+    initializeGlobals();
+    addCustomGlobals(state);
+  }
 }
 
 export const defaultGlobals = new Set(
