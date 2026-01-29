@@ -277,7 +277,7 @@ var require_types = __commonJS({
       return (0, types_12.isObjectExpression)(node);
     }
     exports2.workletClassFactorySuffix = "__classFactory";
-    exports2.generatedWorkletsDir = "__generatedWorklets";
+    exports2.generatedWorkletsDir = ".worklets";
   }
 });
 
