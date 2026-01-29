@@ -8,9 +8,9 @@ namespace worklets {
 
 const char SynchronizableUnpackerCode[] =
     R"DELIMITER__((function () {
-  var serializer = !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE_ENABLED ? function (value, _) {
-    return (0, _serializable.createSerializable)(value);
-  } : globalThis._createSerializable;
+  var serializer = !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE_ENABLED ? _serializable.createSerializable : function (value) {
+    return globalThis.__serializer(value);
+  };
   function synchronizableUnpacker(synchronizableRef) {
     var synchronizable = synchronizableRef;
     var proxy = globalThis.__workletsModuleProxy;
@@ -28,12 +28,12 @@ const char SynchronizableUnpackerCode[] =
         synchronizable.lock();
         var prev = synchronizable.getBlocking();
         newValue = func(prev);
-        proxy.synchronizableSetBlocking(synchronizable, serializer(newValue, undefined));
+        proxy.synchronizableSetBlocking(synchronizable, serializer(newValue));
         synchronizable.unlock();
       } else {
         var value = valueOrFunction;
         newValue = value;
-        proxy.synchronizableSetBlocking(synchronizable, serializer(newValue, undefined));
+        proxy.synchronizableSetBlocking(synchronizable, serializer(newValue));
       }
     };
     synchronizable.lock = function () {
