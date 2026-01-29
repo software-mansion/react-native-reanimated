@@ -326,13 +326,18 @@ describe('Test Synchronizable serialization', () => {
     const workletRuntime = createWorkletRuntime({ name: 'primitive-test' });
     const synchronizable = createSynchronizable(0);
 
+    // RN Runtime
     synchronizable.setBlocking(1);
     expect(synchronizable.getBlocking()).toBe(1);
+
+    // UI Runtime
     runOnUISync(() => {
       'worklet';
       synchronizable.setBlocking(2);
     });
     expect(synchronizable.getBlocking()).toBe(2);
+
+    // Worker Runtime
     runOnRuntimeSync(workletRuntime, () => {
       'worklet';
       synchronizable.setBlocking(3);
@@ -343,13 +348,19 @@ describe('Test Synchronizable serialization', () => {
   test('Synchronizable accepts objects', () => {
     const workletRuntime = createWorkletRuntime({ name: 'object-test' });
     const synchronizable = createSynchronizable({ a: 0 });
+
+    // RN Runtime
     synchronizable.setBlocking({ a: 1 });
     expect(synchronizable.getBlocking().a).toBe(1);
+
+    // UI Runtime
     runOnUISync(() => {
       'worklet';
       synchronizable.setBlocking({ a: 2 });
     });
     expect(synchronizable.getBlocking().a).toBe(2);
+
+    // Worker Runtime
     runOnRuntimeSync(workletRuntime, () => {
       'worklet';
       synchronizable.setBlocking({ a: 3 });

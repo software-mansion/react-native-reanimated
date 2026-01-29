@@ -55,11 +55,7 @@ declare global {
   var _createSerializableSynchronizable: (
     value: object
   ) => FlatShareableRef<object>;
-  /**
-   * Only outside of Bundle Mode.
-   *
-   * Only on Worklet Runtimes.
-   */
+  /** Only outside of Bundle Mode and only on Worklet Runtimes. */
   var __serializer: typeof makeShareableCloneOnUIRecursive;
   var __callMicrotasks: () => void;
   var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
@@ -88,11 +84,7 @@ declare global {
   var __hasNativeState: (value: object) => boolean;
   /** Only in Debug builds. */
   var __isHostObject: (value: object) => boolean;
-  /**
-   * Only in Bundle Mode.
-   *
-   * Only on Worklet Runtimes.
-   */
+  /** Only in Bundle Mode and only on Worklet Runtimes. */
   var TurboModules: Map<string, unknown>;
   interface NodeRequire {
     resolveWeak(id: string): number;
