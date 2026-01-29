@@ -1,5 +1,6 @@
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
 const workletsPluginOptions = {
+  strictGlobal: false,
   // Uncomment the following to enable bundle mode.
   // bundleMode: true,
   // workletizableModules: ['axios'],

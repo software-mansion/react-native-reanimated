@@ -1,5 +1,7 @@
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
-const workletsPluginOptions = {};
+const workletsPluginOptions = {
+  strictGlobal: true,
+};
 
 /** @type {import('@babel/core').TransformOptions} */
 module.exports = {
