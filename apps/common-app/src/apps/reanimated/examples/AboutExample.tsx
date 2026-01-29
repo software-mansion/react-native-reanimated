@@ -62,7 +62,7 @@ function getReactNativeVersion() {
 }
 
 function isBundleModeEnabled() {
-  return '_WORKLETS_BUNDLE_MODE_ENABLED' in globalThis;
+  return !!globalThis._WORKLETS_BUNDLE_MODE_ENABLED;
 }
 
 const staticFlagsReanimated = [

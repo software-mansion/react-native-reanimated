@@ -89,7 +89,7 @@ export function processColorNumber(value: unknown): number | null {
 }
 
 function unprocessColorNumber(value: number): string {
-  const a = value >>> 24;
+  const a = (value >>> 24) / 255;
   const r = (value << 8) >>> 24;
   const g = (value << 16) >>> 24;
   const b = (value << 24) >>> 24;

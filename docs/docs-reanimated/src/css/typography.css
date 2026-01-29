@@ -167,8 +167,7 @@ code {
 .markdown a {
   font-weight: 500;
   text-decoration: none;
-
-  border-bottom: 1px solid var(--ifm-font-color-base);
+  border-bottom: 1px solid var(--ifm-link-color);
 }
 
 /* Sidebar */

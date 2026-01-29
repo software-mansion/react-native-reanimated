@@ -33,7 +33,6 @@ exports[`Tests of animations withTiming animation 1`] = `
         },
       ]
     }
-    nativeID="1"
     style={
       [
         {
@@ -144,7 +143,6 @@ exports[`Tests of animations withTiming animation, change shared value outside c
         },
       ]
     }
-    nativeID="11"
     style={
       [
         {
@@ -255,7 +253,6 @@ exports[`Tests of animations withTiming animation, compare all styles 1`] = `
         },
       ]
     }
-    nativeID="7"
     style={
       [
         {
@@ -366,7 +363,6 @@ exports[`Tests of animations withTiming animation, define shared value outside c
         },
       ]
     }
-    nativeID="9"
     style={
       [
         {
@@ -477,7 +473,6 @@ exports[`Tests of animations withTiming animation, get animated style 1`] = `
         },
       ]
     }
-    nativeID="3"
     style={
       [
         {
@@ -588,7 +583,6 @@ exports[`Tests of animations withTiming animation, width in a middle of animatio
         },
       ]
     }
-    nativeID="5"
     style={
       [
         {

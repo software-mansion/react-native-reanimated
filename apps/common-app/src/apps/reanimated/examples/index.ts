@@ -158,6 +158,7 @@ import WorkletExample from './WorkletExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import InstanceDiscoveryExample from './InstanceDiscoveryExample';
+import FetchExample from './FetchExample';
 import ShadowNodesCloningExample from './ShadowNodesCloningExample';
 import EmptyExample from './EmptyExample';
 import AnimatedPropsExample from './AnimatedPropsExample';
@@ -177,8 +178,8 @@ export interface Example {
     ios: boolean;
     android: boolean;
   };
-  missingOnFabric?: boolean;
   disabledPlatforms?: (typeof REAPlatform)[keyof typeof REAPlatform][];
+  needsBundleMode?: boolean;
 }
 
 export const EXAMPLES: Record<string, Example> = {
@@ -247,6 +248,12 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Worklet runtime',
     screen: WorkletRuntimeExample,
     disabledPlatforms: [REAPlatform.WEB],
+  },
+  FetchExample: {
+    icon: '📡',
+    title: 'Fetch & XHR (Bundle Mode)',
+    screen: FetchExample,
+    needsBundleMode: true,
   },
   ModifyExample: {
     icon: '🪛',
