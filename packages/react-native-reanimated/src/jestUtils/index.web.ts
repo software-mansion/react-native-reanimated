@@ -22,3 +22,5 @@ export function setUpTests() {
 export function getAnimatedStyle() {
   // NOOP
 }
+
+export { worklet } from './common';

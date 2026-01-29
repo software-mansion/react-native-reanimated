@@ -1,16 +1,17 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 'use strict';
 
+import type React from 'react';
 import type { ReactTestInstance } from 'react-test-renderer';
 
-import { IS_JEST, logger, ReanimatedError } from './common';
+import { IS_JEST, logger, ReanimatedError } from '../common';
 import type {
   AnimatedComponentProps,
   AnimatedProps,
   IAnimatedComponentInternal,
   InitialComponentProps,
-} from './createAnimatedComponent/commonTypes';
-import type { DefaultStyle } from './hook/commonTypes';
+} from '../createAnimatedComponent/commonTypes';
+import type { DefaultStyle } from '../hook/commonTypes';
 
 declare global {
   namespace jest {
@@ -353,3 +354,6 @@ export const getAnimatedStyle = (component: ReactTestInstance) => {
     component as unknown as TestComponent
   );
 };
+
+/** @knipIgnore */
+export { worklet } from './common';
