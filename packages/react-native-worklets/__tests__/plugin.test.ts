@@ -390,14 +390,18 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    test('implicitly captures globals', () => {
+    test('implicitly captures globals with strictGlobal disabled', () => {
       const input = html`<script>
         function f() {
           'worklet';
           globalStuff();
         }
       </script>`;
-      const { code, ast } = runPlugin(input, { ast: true });
+      const { code, ast } = runPlugin(
+        input,
+        { ast: true },
+        { strictGlobal: false }
+      );
       let closureBindings;
       traverse(ast!, {
         enter(path) {
@@ -413,7 +417,7 @@ describe('babel plugin', () => {
         },
       });
       expect(closureBindings).not.toEqual([]);
-      expect(code).toContain('globalStuff: globalStuff');
+      expect(code).toMatch(/f\.__closure = {\s*globalStuff/gm);
       expect(code).toMatchSnapshot();
     });
 

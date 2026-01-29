@@ -875,15 +875,16 @@ const f = function f_null1Factory({
 `;
 
 exports[`babel plugin for closure capturing doesn't implicitly captures globals in strict mode 1`] = `
-"var _worklet_6265214055858_init_data = {
+"const _worklet_6265214055858_init_data = {
   code: "function f_null1(){globalStuff();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-var f = function f_null1Factory(_ref) {
-  var _worklet_6265214055858_init_data = _ref._worklet_6265214055858_init_data;
-  var _e = [new global.Error(), 1, -27];
-  var f = function f() {
+const f = function f_null1Factory({
+  _worklet_6265214055858_init_data
+}) {
+  const _e = [new global.Error(), 1, -27];
+  const f = function () {
     globalStuff();
   };
   f.__closure = {};
@@ -893,25 +894,26 @@ var f = function f_null1Factory(_ref) {
   f.__stackDetails = _e;
   return f;
 }({
-  _worklet_6265214055858_init_data: _worklet_6265214055858_init_data
+  _worklet_6265214055858_init_data
 });"
 `;
 
-exports[`babel plugin for closure capturing implicitly captures globals 1`] = `
-"var _worklet_8293213327607_init_data = {
+exports[`babel plugin for closure capturing implicitly captures globals with strictGlobal disabled 1`] = `
+"const _worklet_8293213327607_init_data = {
   code: "function f_null1(){const{globalStuff}=this.__closure;globalStuff();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-var f = function f_null1Factory(_ref) {
-  var _worklet_8293213327607_init_data = _ref._worklet_8293213327607_init_data,
-    globalStuff = _ref.globalStuff;
-  var _e = [new global.Error(), -2, -27];
-  var f = function f() {
+const f = function f_null1Factory({
+  _worklet_8293213327607_init_data,
+  globalStuff
+}) {
+  const _e = [new global.Error(), -2, -27];
+  const f = function () {
     globalStuff();
   };
   f.__closure = {
-    globalStuff: globalStuff
+    globalStuff
   };
   f.__workletHash = 8293213327607;
   f.__pluginVersion = "x.y.z";
@@ -919,8 +921,8 @@ var f = function f_null1Factory(_ref) {
   f.__stackDetails = _e;
   return f;
 }({
-  _worklet_8293213327607_init_data: _worklet_8293213327607_init_data,
-  globalStuff: globalStuff
+  _worklet_8293213327607_init_data,
+  globalStuff
 });"
 `;
 
