@@ -123,8 +123,8 @@ export function createWorkletRuntime(
  *   or another [Worker
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
  *   unless the [Bundle
- *   Mode](https://docs.swmansion.com/react-native-worklets/docs/experimental/bundleMode)
- *   is enabled.
+ *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
+ *   enabled.
  *
  * @param workletRuntime - The runtime to schedule the worklet on.
  * @param worklet - The worklet to schedule.
@@ -208,8 +208,8 @@ type WorkletRuntimeConfigInternal = WorkletRuntimeConfig & {
  *   or another [Worker
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
  *   unless the [Bundle
- *   Mode](https://docs.swmansion.com/react-native-worklets/docs/experimental/bundleMode)
- *   is enabled.
+ *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
+ *   enabled.
  *
  * @param workletRuntime - The runtime to run the worklet on.
  * @param worklet - The worklet to run.
