@@ -5,7 +5,11 @@ import type { FlatList, FlatListProps } from 'react-native';
 
 import type { AnyRecord } from '../common';
 import type { InstanceOrElement } from '../commonTypes';
-import type { AnimatedProps } from '../helperTypes';
+import type {
+  AnimatedProps,
+  AnimatedPropsProp,
+  AnimatedPropsWithInference,
+} from '../helperTypes';
 import type { AnimatedRef } from '../hook';
 import type { ExtractElementRef } from '../hook/commonTypes';
 import type { Options } from './AnimatedComponent';
@@ -22,14 +26,29 @@ type AnimatedComponentRef<TInstance> =
   // with the useAnimatedRef hook call without specifying the type
   | AnimatedRef;
 
-export type AnimatedComponentType<
+/**
+ * Component type returned by createAnimatedComponent that supports generic
+ * inference for animatedProps. This allows TypeScript to make required props
+ * optional when they are provided via animatedProps.
+ */
+export interface AnimatedComponentType<
   Props extends AnyRecord = object,
   Instance = unknown,
-> = (
-  props: Omit<AnimatedProps<Props>, 'ref'> & {
-    ref?: AnimatedComponentRef<Instance>;
-  }
-) => ReactNode;
+> {
+  // Overload 1: When animatedProps is provided, infer AP and make those props optional
+  <AP extends Partial<AnimatedPropsProp<Props>>>(
+    props: Omit<AnimatedPropsWithInference<Props, AP>, 'ref'> & {
+      ref?: AnimatedComponentRef<Instance>;
+    }
+  ): ReactNode;
+
+  // Overload 2: Default - no animatedProps or animatedProps without specific inference
+  (
+    props: Omit<AnimatedProps<Props>, 'ref'> & {
+      ref?: AnimatedComponentRef<Instance>;
+    }
+  ): ReactNode;
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnimatableComponent<C extends ComponentType<any>> = C & {
@@ -90,11 +109,8 @@ export function createAnimatedComponent<
     }
   }
 
-  const animatedComponent = (
-    props: Omit<AnimatedProps<React.ComponentProps<TInstance>>, 'ref'> & {
-      ref?: AnimatedComponentRef<TInstance>;
-    }
-  ) => (
+  // Create the base function
+  const animatedComponentFn = (props: Record<string, unknown>) => (
     <AnimatedComponent
       // TODO - fix broken reanimated types and remove type duplicates
       {...(props as AnimatedComponentProps<InitialComponentProps>)}
@@ -105,8 +121,12 @@ export function createAnimatedComponent<
     />
   );
 
-  animatedComponent.displayName =
+  animatedComponentFn.displayName =
     Component.displayName || Component.name || 'Component';
 
-  return animatedComponent;
+  // Cast to AnimatedComponentType to enable generic inference for animatedProps
+  return animatedComponentFn as unknown as AnimatedComponentType<
+    Readonly<React.ComponentProps<TInstance>>,
+    TInstance
+  >;
 }

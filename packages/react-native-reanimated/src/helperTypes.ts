@@ -99,17 +99,66 @@ type SharedTransitionProps = {
   sharedTransitionStyle?: SharedTransition;
 };
 
-export type AnimatedProps<Props extends object> = RestProps<Props> &
-  AnimatedStyleProps<Props> &
-  LayoutProps & {
-    /**
-     * Lets you animate component props.
-     *
-     * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
-     */
-    animatedProps?: NestedArray<
-      CSSStyle<ComponentPropsWithoutStyle<Partial<Props>>>
-    >; // TODO - improve type once useAnimatedProps is typed properly. For now it is typed in the same way as the normal style prop, so it is assignable to the CSSStyle type
-  } & SharedTransitionProps;
+/**
+ * Type representing what can be passed to animatedProps. Exported for use with
+ * AnimatedComponentType.
+ */
+export type AnimatedPropsProp<Props extends object> = CSSStyle<
+  ComponentPropsWithoutStyle<Partial<Props>>
+>;
+
+export type AnimatedProps<
+  Props extends object,
+  AP extends Partial<AnimatedPropsProp<Props>> = never,
+> = [AP] extends [never]
+  ? // Default: all props remain as-is
+    RestProps<Props> &
+      AnimatedStyleProps<Props> &
+      LayoutProps &
+      SharedTransitionProps & {
+        /**
+         * Lets you animate component props.
+         *
+         * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
+         */
+        animatedProps?: NestedArray<AnimatedPropsProp<Props>>;
+      }
+  : // When AP is provided: props in AP become optional
+    Omit<RestProps<Props>, keyof AP> &
+      Partial<Pick<RestProps<Props>, keyof AP & keyof RestProps<Props>>> &
+      Omit<AnimatedStyleProps<Props>, keyof AP> &
+      Partial<
+        Pick<
+          AnimatedStyleProps<Props>,
+          keyof AP & keyof AnimatedStyleProps<Props>
+        >
+      > &
+      LayoutProps &
+      SharedTransitionProps & {
+        /**
+         * Lets you animate component props.
+         *
+         * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps
+         */
+        animatedProps?: AP;
+      };
+
+/**
+ * Props type when animatedProps is provided with a specific type. Props that
+ * are keys of AP become optional.
+ */
+export type AnimatedPropsWithInference<
+  Props extends object,
+  AP extends object,
+> = Omit<RestProps<Props>, keyof AP> &
+  Partial<Pick<RestProps<Props>, keyof AP & keyof RestProps<Props>>> &
+  Omit<AnimatedStyleProps<Props>, keyof AP> &
+  Partial<
+    Pick<AnimatedStyleProps<Props>, keyof AP & keyof AnimatedStyleProps<Props>>
+  > &
+  LayoutProps &
+  SharedTransitionProps & {
+    animatedProps: AP;
+  };
 
 // THE LAND OF THE DEPRECATED

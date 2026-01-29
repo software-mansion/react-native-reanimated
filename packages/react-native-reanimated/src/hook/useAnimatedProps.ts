@@ -5,15 +5,18 @@ import { useAnimatedStyle } from './useAnimatedStyle';
 
 // TODO: we should make sure that when useAP is used we are not assigning styles
 
-type UseAnimatedProps = <Props extends object>(
-  updater: () => Partial<Props>,
+type UseAnimatedProps = <
+  Props extends object,
+  TResult extends Partial<Props> = Partial<Props>,
+>(
+  updater: () => TResult,
   dependencies?: DependencyList | null,
   adapters?:
     | AnimatedPropsAdapterFunction
     | AnimatedPropsAdapterFunction[]
     | null,
   isAnimatedProps?: boolean
-) => Partial<Props>;
+) => TResult;
 
 function useAnimatedPropsInternal<Props extends object>(
   updater: () => Props,
