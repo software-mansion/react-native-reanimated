@@ -5,6 +5,7 @@ import { registerReportFatalRemoteError } from '../debug/errors';
 import { registerWorkletsError, WorkletsError } from '../debug/WorkletsError';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
 import { __installUnpacker as installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
+import { makeShareableCloneOnUIRecursive } from '../memory/serializable';
 import { __installUnpacker as installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
 import { setupSetImmediate } from '../runLoop/common/setImmediatePolyfill';
 import { setupSetInterval } from '../runLoop/common/setIntervalPolyfill';
@@ -80,6 +81,11 @@ export function setupConsole(boundCapturableConsole: typeof console) {
     error: (...args) => scheduleOnRN(boundCapturableConsole.error, ...args),
     info: (...args) => scheduleOnRN(boundCapturableConsole.info, ...args),
   };
+}
+
+export function setupSerializer() {
+  'worklet';
+  globalThis.__serializer = makeShareableCloneOnUIRecursive;
 }
 
 let initialized = false;
@@ -210,14 +216,11 @@ function installRNBindingsOnUIRuntime() {
     /** In bundle mode Runtimes setup their callGuard themselves. */
     runOnUISync(setupCallGuard);
 
-    /**
-     * Register WorkletsError in the UI runtime global scope. (we are using
-     * `executeOnUIRuntimeSync` here to make sure that the changes are applied
-     * before any async operations are executed on the UI runtime).
-     *
-     * There's no need to register the error in bundle mode.
-     */
+    /** In Bundle Mode the error is taken from the bundle. */
     runOnUISync(registerWorkletsError);
+
+    /** In Bundle Mode the serializer is taken from the bundle. */
+    runOnUISync(setupSerializer);
   }
 
   runOnUISync(() => {

@@ -319,3 +319,35 @@ describe('Test Synchronizable access', () => {
     expect(Math.max(valueRN, valueUI, valueBG)).toBe(targetValue * 3);
   });
 });
+
+describe('Test Synchronizable serialization', () => {
+  test('Synchronizable accepts primitives', () => {
+    const synchronizable = createSynchronizable(0);
+
+    // RN Runtime
+    synchronizable.setBlocking(1);
+    expect(synchronizable.getBlocking()).toBe(1);
+
+    // UI Runtime
+    runOnUISync(() => {
+      'worklet';
+      synchronizable.setBlocking(2);
+    });
+    expect(synchronizable.getBlocking()).toBe(2);
+  });
+
+  test('Synchronizable accepts objects', () => {
+    const synchronizable = createSynchronizable({ a: 0 });
+
+    // RN Runtime
+    synchronizable.setBlocking({ a: 1 });
+    expect(synchronizable.getBlocking().a).toBe(1);
+
+    // UI Runtime
+    runOnUISync(() => {
+      'worklet';
+      synchronizable.setBlocking({ a: 2 });
+    });
+    expect(synchronizable.getBlocking().a).toBe(2);
+  });
+});
