@@ -29,7 +29,7 @@ However, there are some important differences in how closures work in worklets c
 
 ## Closure behavior on the same JavaScript Runtime
 
-If you call a worklet on the same runtime where it's defined, its closure gets copies of references to the original variables. This means that reassigning the original variable will not affect the value inside the worklet.
+If you call a worklet on the same runtime where it's defined (the [React Native Runtime](docs/fundamentals/runtimeKinds#rn-runtime)), its closure gets copies of references to the original variables. This means that reassigning the original variable will not affect the value inside the worklet.
 
 ```tsx
 let count = 0;
@@ -57,47 +57,54 @@ increment();
 console.log(count); // Still prints 0
 ```
 
-If you want to modify object references - reassigning still won't affect the original variable, but mutating the object will:
+The behavior is slightly different for object (non-primitive) references:
 
-```tsx
-let obj = { value: 0 };
+- Reassigning the reference in the surrounding scope does not affect the worklet's closure.
 
-function logValue() {
-  'worklet';
-  console.log(obj.value);
-}
+  ```tsx
+  let obj = { value: 0 };
 
-obj = { value: 1 };
-logValue(); // Prints 0
-```
+  function logValue() {
+    'worklet';
+    console.log(obj.value);
+  }
 
-```tsx
-let obj = { value: 0 };
+  obj = { value: 1 };
+  logValue(); // Prints 0
+  ```
 
-function mutate() {
-  'worklet';
-  obj.value += 1;
-}
+- Mutating the object inside the worklet affects the object in the surrounding scope, since they reference the same object.
 
-mutate();
-console.log(obj.value); // Prints 1
-```
+  ```tsx
+  let obj = { value: 0 };
 
-```tsx
-let obj = { value: 0 };
+  function mutate() {
+    'worklet';
+    obj.value += 1;
+  }
 
-function logValue() {
-  'worklet';
-  console.log(obj.value);
-}
+  mutate();
+  console.log(obj.value); // Prints 1
+  ```
 
-obj.value = 1;
-logValue(); // Prints 1
-```
+- Mutating the object in the surrounding scope affects the object inside the worklet, since they reference the same object.
+
+  ```tsx
+  let obj = { value: 0 };
+
+  function logValue() {
+    'worklet';
+    console.log(obj.value);
+  }
+
+    obj.value = 1;
+    logValue(); // Prints 1
+
+  ```
 
 ## Closure behavior across different JavaScript Runtimes
 
-When a worklet is executed in a different JavaScript runtime than the Runtime of its origin, the closure behavior is different again. **The closure in the worklet becomes an exact copy of the variables from the surrounding scope at the moment of its invocation.** This is a necessity due to the fact that different runtimes cannot share references to the same objects, they cannot share memory directly.
+When a worklet is executed in a different JavaScript runtime than the Runtime of its origin (a [Worklet Runtime](docs/fundamentals/runtimeKinds#worklet-runtime)), the closure behavior is different again. **The closure in the worklet becomes an exact copy of the variables from the surrounding scope at the moment of its invocation.** This is a necessity due to the fact that different runtimes cannot share references to the same objects, they cannot share memory directly.
 
 ```tsx
 let obj = { value: 0 };
