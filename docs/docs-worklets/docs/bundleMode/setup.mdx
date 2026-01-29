@@ -4,6 +4,8 @@ sidebar_position: 2
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import ThemedImage from '@theme/ThemedImage';
 
 # Setup
 
@@ -32,13 +34,11 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
 
 1. **Modify your Babel configuration**. [Worklets Babel Plugin](/docs/worklets-babel-plugin/about) needs to know that it has to prepare your code for the Bundle Mode. In your `babel.config.js` file, add the following:
 
-   ```javascript
+   ```javascript {2-5,13}
    /** @type {import('react-native-worklets/plugin').PluginOptions} */
-   // highlight-next-line
    const workletsPluginOptions = {
-     // highlight-next-line
      bundleMode: true,
-     // highlight-next-line
+     strictGlobal: true, // optional, but recommended
    }
 
    module.exports = {
@@ -47,7 +47,6 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
      ],
      plugins: [
        ...
-       // highlight-next-line
        ['react-native-worklets/plugin', workletsPluginOptions],
      ],
    };
@@ -57,25 +56,22 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
 
 2. **Modify your Metro configuration**. Metro needs to be configured pre-load Bundle Mode entry points into your JavaScript bundle. In your `metro.config.js` file, apply the config required for the bundle mode. For example:
 
-   ```javascript
+   ```javascript {6-8,16}
    const {
      getDefaultConfig,
      mergeConfig,
    } = require('@react-native/metro-config');
-   // highlight-next-line
+
    const {
-     // highlight-next-line
      bundleModeMetroConfig,
-     // highlight-next-line
    } = require('react-native-worklets/bundleMode');
 
    const config = {
-     // Your config
+     // Your Metro config
    };
 
    module.exports = mergeConfig(
      getDefaultConfig(__dirname),
-     // highlight-next-line
      bundleModeMetroConfig,
      config
    );
@@ -90,9 +86,6 @@ For Worklets to know that it should run in Bundle Mode, you need to toggle on `W
 _This step is optional but highly recommended._
 
 If you run the app after just executing the above steps, you will see an error "Failed to get the SHA-1 for ...":
-
-import useBaseUrl from '@docusaurus/useBaseUrl';
-import ThemedImage from '@theme/ThemedImage';
 
 <ThemedImage
   sources={{
@@ -140,14 +133,18 @@ Make sure to clear your Metro bundler's cache to ensure that all the changes are
 
 <Tabs groupId="package-managers">
   <TabItem value="npm" label="NPM">
-    ```bash npm start -- --reset-cache ```
+    ```bash
+    npm start -- --reset-cache
+    ```
   </TabItem>
   <TabItem value="yarn" label="YARN">
-    ```bash yarn start --reset-cache ```
+    ```bash
+    yarn start --reset-cache
+    ```
   </TabItem>
 </Tabs>
 
-And that's it! You can now happily enjoy the Bundle Mode!
+And that's it! You can now happily enjoy the Bundle Mode! You can learn more about using the Bundle Mode [here](/docs/bundleMode/usage).
 
 ## Reference
 
