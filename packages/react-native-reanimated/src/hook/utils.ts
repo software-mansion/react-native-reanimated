@@ -41,6 +41,10 @@ export function buildDependencies(
     return result;
   }
 
+  if (!__DEV__) {
+    return result;
+  }
+
   const handlerNames = nonWorkletHandlerNames.join(', ');
 
   // On native, only worklets are allowed
