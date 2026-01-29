@@ -161,6 +161,7 @@ import InstanceDiscoveryExample from './InstanceDiscoveryExample';
 import ShadowNodesCloningExample from './ShadowNodesCloningExample';
 import EmptyExample from './EmptyExample';
 import AnimatedPropsExample from './AnimatedPropsExample';
+import ScreenlessBasic from './SharedElementTransitions/ScreenlessBasic';
 
 export const REAPlatform = {
   IOS: 'ios',
@@ -1034,6 +1035,14 @@ export const EXAMPLES: Record<string, Example> = {
       // not implemented
       ios: false,
       android: false,
+    },
+  },
+  ScreenlessBasic: {
+    title: '[SET] Screenless Basic',
+    screen: ScreenlessBasic,
+    shouldWork: {
+      ios: true,
+      android: true,
     },
   },
 } as const;
