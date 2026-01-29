@@ -1,10 +1,10 @@
 diff --git a/apps/fabric-example/babel.config.js b/apps/fabric-example/babel.config.js
-index 32037220c7..a45429269f 100644
+index ea4ad7a5f8..52318bd40c 100644
 --- a/apps/fabric-example/babel.config.js
 +++ b/apps/fabric-example/babel.config.js
-@@ -1,8 +1,8 @@
- /** @type {import('react-native-worklets/plugin').PluginOptions} */
+@@ -2,8 +2,8 @@
  const workletsPluginOptions = {
+   strictGlobal: true,
    // Uncomment the following to enable bundle mode.
 -  // bundleMode: true,
 -  // workletizableModules: ['axios'],
@@ -14,10 +14,10 @@ index 32037220c7..a45429269f 100644
  
  /** @type {import('@babel/core').TransformOptions} */
 diff --git a/apps/fabric-example/metro.config.js b/apps/fabric-example/metro.config.js
-index 0d317aee07..a4953192ed 100644
+index afe4c07b49..eece71ae7f 100644
 --- a/apps/fabric-example/metro.config.js
 +++ b/apps/fabric-example/metro.config.js
-@@ -34,8 +34,8 @@ let config = {
+@@ -33,8 +33,8 @@ let config = {
  config = mergeConfig(defaultConfig, config);
  
  // Uncomment the following to enable bundle mode.
@@ -29,10 +29,10 @@ index 0d317aee07..a4953192ed 100644
  module.exports = wrapWithReanimatedMetroConfig(
    mergeConfig(defaultConfig, config)
 diff --git a/apps/fabric-example/package.json b/apps/fabric-example/package.json
-index ae8474192b..4021932d9f 100644
+index 85d2dbe679..d3a3b79d2a 100644
 --- a/apps/fabric-example/package.json
 +++ b/apps/fabric-example/package.json
-@@ -46,8 +46,8 @@
+@@ -45,8 +45,8 @@
      "staticFeatureFlags": {
        "RUNTIME_TEST_FLAG": true,
        "IOS_DYNAMIC_FRAMERATE_ENABLED": true,
@@ -44,10 +44,10 @@ index ae8474192b..4021932d9f 100644
    }
  }
 diff --git a/package.json b/package.json
-index 141335c036..e4e01e00a6 100644
+index 390419dccc..04b68c48d4 100644
 --- a/package.json
 +++ b/package.json
-@@ -70,5 +70,9 @@
+@@ -76,5 +76,9 @@
      "react-native-builder-bob": "0.40.13",
      "shelljs": "0.10.0",
      "typescript": "5.8.3"
