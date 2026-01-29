@@ -1,6 +1,10 @@
 import React from 'react';
-import { Button, StyleSheet, Text, View } from 'react-native';
-import Animated, { SharedTransitionBoundary } from 'react-native-reanimated';
+import { Button, StyleSheet, View } from 'react-native';
+import Animated, {
+  SharedTransitionBoundary,
+  SlideInDown,
+  FadeOutRight,
+} from 'react-native-reanimated';
 
 export default function EmptyExample() {
   const [activeID, setActiveID] = React.useState(0);
@@ -17,14 +21,22 @@ export default function EmptyExample() {
         </SharedTransitionBoundary>
       </View>
       {activeID === 1 && (
-        <View style={styles.fakeScreen}>
+        <Animated.View
+          entering={SlideInDown}
+          exiting={FadeOutRight}
+          style={styles.fakeScreen}>
           <SharedTransitionBoundary isActive={activeID === 1}>
             <Animated.View
               sharedTransitionTag="tag"
-              style={{ backgroundColor: 'blue', width: 100, height: 100 }}
+              style={{
+                backgroundColor: 'blue',
+                width: 100,
+                height: 100,
+                transform: [{ rotate: '-225deg' }],
+              }}
             />
           </SharedTransitionBoundary>
-        </View>
+        </Animated.View>
       )}
     </View>
   );
@@ -33,13 +45,15 @@ export default function EmptyExample() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginTop: 150,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   fakeScreen: {
     backgroundColor: 'grey',
     width: 200,
     height: 200,
     margin: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

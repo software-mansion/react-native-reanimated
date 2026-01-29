@@ -2,7 +2,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useIsFocused } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { memo } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, { SharedTransitionBoundary } from 'react-native-reanimated';
 
@@ -17,20 +17,33 @@ function getStyle(index: number) {
   }
 }
 
+function RenderLogger({ id }: { id: number }) {
+  console.log('RenderLogger rendered', id);
+  return null;
+}
+
+function Clicker() {
+  console.log('Clicker clicked');
+  const [count, setCount] = React.useState(0);
+  return <Button title="Click me" onPress={() => setCount(count + 1)} />;
+}
+
 type ScreenProps = {
   [key: string]: {
     id?: number;
     showButtons?: boolean;
   };
 };
-function Screen({ navigation, route }: NativeStackScreenProps<ScreenProps>) {
-  const id = route.params?.id ?? 0;
-  const showButtons = !!route.params?.showButtons;
-  const isActive = useIsFocused();
-  console.log('screen ', id, ' isActive:', isActive);
-  return (
-    <SharedTransitionBoundary isActive={isActive}>
+
+const ScreenContent = memo(
+  ({ navigation, route }: NativeStackScreenProps<ScreenProps>) => {
+    const id = route.params?.id ?? 0;
+    const showButtons = !!route.params?.showButtons;
+
+    return (
       <View style={styles.container}>
+        <RenderLogger id={id} />
+        <Clicker />
         <Text>Current id: {id}</Text>
         {showButtons && id < 2 && (
           <Button
@@ -46,6 +59,17 @@ function Screen({ navigation, route }: NativeStackScreenProps<ScreenProps>) {
         )}
         <Animated.View style={getStyle(id)} sharedTransitionTag="test" />
       </View>
+    );
+  }
+);
+
+function Screen({ navigation, route }: NativeStackScreenProps<ScreenProps>) {
+  const id = route.params?.id ?? 0;
+  const isActive = useIsFocused();
+  console.log('screen ', id, ' isActive:', isActive);
+  return (
+    <SharedTransitionBoundary isActive={isActive}>
+      <ScreenContent navigation={navigation} route={route} />
     </SharedTransitionBoundary>
   );
 }
@@ -69,7 +93,7 @@ const StackB = createStack();
 
 function TabNavigatorExample() {
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false, animation: 'shift' }}>
+    <Tab.Navigator screenOptions={{ headerShown: false, animation: 'none' }}>
       <Tab.Screen
         name="A"
         initialParams={{ id: 0 }}

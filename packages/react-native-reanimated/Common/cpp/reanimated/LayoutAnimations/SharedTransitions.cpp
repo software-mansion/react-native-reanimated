@@ -27,9 +27,6 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findTopScreen(
     auto isActive = boundaryProps->isActive;
     if (isActive) {
       result = node;
-      while (!isRNSScreen(result)) {
-        result = result->parent.lock();
-      }
       return result;
     }
   }
