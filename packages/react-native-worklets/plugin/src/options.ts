@@ -97,6 +97,16 @@ export interface PluginOptions {
   relativeSourceLocation?: boolean;
 
   /**
+   * This option makes it so no global identifiers are implicitly captured in
+   * worklets' closures between runtimes.
+   *
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#strictglobal}
+   *
+   * Defaults to `false`.
+   */
+  strictGlobal?: boolean;
+
+  /**
    * This option can also be useful for Web apps. In Reanimated, there are
    * numerous checks to determine the right function implementation for a
    * specific target platform. Enabling this option changes all the checks that
