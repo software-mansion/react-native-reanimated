@@ -53,31 +53,7 @@ Pod::Spec.new do |s|
     "USE_HEADERMAP" => "YES",
     "DEFINES_MODULE" => "YES",
     "HEADER_SEARCH_PATHS" => [
-      '"$(PODS_TARGET_SRCROOT)/ReactCommon"',
-      '"$(PODS_TARGET_SRCROOT)"',
-      '"$(PODS_ROOT)/RCT-Folly"',
-      '"$(PODS_ROOT)/boost"',
-      '"$(PODS_ROOT)/boost-for-react-native"',
-      '"$(PODS_ROOT)/DoubleConversion"',
-      '"$(PODS_ROOT)/Headers/Private/React-Core"',
-      '"$(PODS_ROOT)/Headers/Private/Yoga"',
-      '"$(PODS_ROOT)/Headers/Public/RNWorklets"',
-    ].join(' '),
-    "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
-    "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
-    "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => '$(inherited)',
-    "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => '$(inherited)',
-  }
-  s.compiler_flags = boost_compiler_flags
-  s.xcconfig = {
-    "HEADER_SEARCH_PATHS" => [
-      '"$(PODS_ROOT)/boost"',
-      '"$(PODS_ROOT)/boost-for-react-native"',
-      '"$(PODS_ROOT)/glog"',
-      '"$(PODS_ROOT)/RCT-Folly"',
-      '"$(PODS_ROOT)/Headers/Public/React-hermes"',
-      '"$(PODS_ROOT)/Headers/Public/hermes-engine"',
-      '"$(PODS_ROOT)/Headers/Public/RNWorklets"',
+      '$(inherited)',
       "\"$(PODS_ROOT)/#{$config[:react_native_common_dir]}\"",
       "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_reanimated_dir]}/apple\"",
       "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_reanimated_dir]}/Common/cpp\"",
@@ -85,13 +61,17 @@ Pod::Spec.new do |s|
       "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_worklets_dir]}/apple\"",
       "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_worklets_dir]}/Common/cpp\"",
     ].join(' '),
+    "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
+    "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
+    "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => '$(inherited)',
+    "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => '$(inherited)',
     "OTHER_CFLAGS" => "$(inherited) #{example_flag} #{version_flags} #{compilation_metadata_generation_flag} #{feature_flags} #{reanimated_profiling_flag}",
   }
+  s.compiler_flags = boost_compiler_flags
   s.requires_arc = true
 
   install_modules_dependencies(s)
 
-  s.dependency 'React-jsi'
   using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
   if using_hermes && !$config[:is_tvos_target]
     s.dependency 'React-hermes'
