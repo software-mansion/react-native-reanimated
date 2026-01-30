@@ -27,17 +27,22 @@ class ResolvableValueInterpolator final : public SimpleValueInterpolator<Allowed
       const PropertyPath &propertyPath,
       const ValueType &defaultStyleValue,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const ResolvableValueInterpolatorConfig &config);
+      const ResolvableValueInterpolatorConfig &config,
+      std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)>
+          addToPropsBuilder);
 
  protected:
   folly::dynamic interpolateValue(
       double progress,
       const std::shared_ptr<CSSValue> &fromValue,
       const std::shared_ptr<CSSValue> &toValue,
-      const ValueInterpolationContext &context) const override;
+      const ValueInterpolationContext &context,
+      const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const override;
 
  private:
   const ResolvableValueInterpolatorConfig &config_;
+  std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)>
+      addToPropsBuilder_;
 };
 
 } // namespace reanimated::css
