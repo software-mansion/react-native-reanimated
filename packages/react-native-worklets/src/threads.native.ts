@@ -47,13 +47,6 @@ export function setupMicrotasks() {
   };
 }
 
-function callMicrotasksOnUIThread() {
-  'worklet';
-  globalThis.__callMicrotasks();
-}
-
-export const callMicrotasks = callMicrotasksOnUIThread;
-
 /**
  * Lets you schedule a function to be executed on the [UI
  * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
@@ -398,26 +391,11 @@ function flushUIQueue(): void {
         queue.forEach(([workletFunction, workletArgs, jobResolve]) => {
           const result = workletFunction(...workletArgs);
           if (jobResolve) {
-            runOnJS(jobResolve)(result);
+            scheduleOnRN(jobResolve, result);
           }
         });
-        callMicrotasks();
+        globalThis.__callMicrotasks();
       })
     );
   });
-}
-
-/**
- * Added temporarily for integration with `react-native-audio-api`. Don't depend
- * on this API as it may change without notice.
- */
-// eslint-disable-next-line camelcase
-export function unstable_eventLoopTask<TArgs extends unknown[], TRet>(
-  worklet: (...args: TArgs) => TRet
-) {
-  return (...args: TArgs) => {
-    'worklet';
-    worklet(...args);
-    callMicrotasks();
-  };
 }

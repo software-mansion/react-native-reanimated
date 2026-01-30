@@ -95,8 +95,6 @@ const WorkletAPI = {
   ): void {
     WorkletAPI.runOnUI(worklet)(...args);
   },
-  // eslint-disable-next-line camelcase
-  unstable_eventLoopTask: NOOP_FACTORY,
   isWorkletFunction: isWorkletFunction,
   WorkletsModule: {},
 };
