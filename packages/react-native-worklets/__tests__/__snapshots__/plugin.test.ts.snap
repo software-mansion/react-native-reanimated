@@ -2453,6 +2453,28 @@ var foo = function foo_null1Factory(_ref) {
 });"
 `;
 
+exports[`babel plugin for inline styles doesn't show a warning if the user uses ['value'] inside inline style 1`] = `
+"var _jsxRuntime = require("react/jsx-runtime");
+function App() {
+  return (0, _jsxRuntime.jsx)(Animated.View, {
+    style: {
+      width: object['value']
+    }
+  });
+}"
+`;
+
+exports[`babel plugin for inline styles doesn't show a warning if the user uses [value] inside inline style 1`] = `
+"var _jsxRuntime = require("react/jsx-runtime");
+function App() {
+  return (0, _jsxRuntime.jsx)(Animated.View, {
+    style: {
+      width: object[value]
+    }
+  });
+}"
+`;
+
 exports[`babel plugin for inline styles doesn't show a warning if user writes something like style={styles.value} 1`] = `
 "var _jsxRuntime = require("react/jsx-runtime");
 function App() {
