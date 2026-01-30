@@ -11,8 +11,10 @@ import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
 } from './memory/serializable';
+import { serializableMappingCache } from './memory/serializableMappingCache';
 import { setupRunLoop } from './runLoop/workletRuntime';
 import { RuntimeKind } from './runtimeKind';
+import { scheduleOnRN } from './threads';
 import type {
   WorkletFunction,
   WorkletRuntime,
@@ -235,5 +237,87 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
       const result = worklet(...args);
       return makeShareableCloneOnUIRecursive(result);
     })
+  );
+}
+
+/**
+ * Lets you asynchronously run a
+ * [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)
+ * on a [Worker
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime)
+ * and get the result via a Promise.
+ *
+ * - The worklet is scheduled on the Worker Runtime's Async Queue
+ * - Returns a Promise that resolves with the worklet's return value
+ * - This function cannot be called from the [UI
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
+ *   or another [Worker
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
+ *   unless the [Bundle
+ *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
+ *   enabled.
+ *
+ * @param workletRuntime - The runtime to run the worklet on.
+ * @param worklet - The worklet to run.
+ * @param args - The arguments to pass to the worklet.
+ * @returns A Promise that resolves to the return value of the worklet.
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRuntimeAsync
+ */
+// @ts-expect-error This overload is correct since it's what user sees in their code
+// before it's transformed by Worklets Babel plugin.
+export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): Promise<ReturnValue>;
+
+export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: WorkletFunction<Args, ReturnValue>,
+  ...args: Args
+): Promise<ReturnValue> {
+  if (__DEV__ && !isWorkletFunction(worklet)) {
+    throw new WorkletsError(
+      'The function passed to `runOnRuntimeAsync` is not a worklet.'
+    );
+  }
+
+  return new Promise<ReturnValue>((resolve) => {
+    if (__DEV__) {
+      // in DEV mode we call serializable conversion here because in case the object
+      // can't be converted, we will get a meaningful stack-trace as opposed to the
+      // situation when conversion is only done via microtask queue. This does not
+      // make the app particularily less efficient as converted objects are cached
+      // and for a given worklet the conversion only happens once.
+      createSerializable(worklet);
+      createSerializable(args);
+    }
+
+    WorkletsModule.scheduleOnRuntime(
+      workletRuntime,
+      createSerializable(() => {
+        'worklet';
+        const result = worklet(...args);
+        scheduleOnRN(resolve, result);
+        globalThis.__flushMicrotasks();
+      })
+    );
+  });
+}
+
+if (__DEV__) {
+  function runOnRuntimeAsyncWorklet(): void {
+    'worklet';
+    throw new WorkletsError(
+      '`runOnRuntimeAsync` cannot be called from a Worker Runtime. Please call the function synchronously or use `queueMicrotask` instead.'
+    );
+  }
+
+  const serializableRunOnRuntimeAsyncWorklet = createSerializable(
+    runOnRuntimeAsyncWorklet
+  );
+  serializableMappingCache.set(
+    runOnRuntimeAsync,
+    serializableRunOnRuntimeAsyncWorklet
   );
 }
