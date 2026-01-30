@@ -18,8 +18,6 @@ class TransitionStyleInterpolator {
       const std::string &componentName,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  std::unordered_set<std::string> getReversedPropertyNames(const folly::dynamic &newPropertyValues) const;
-
   folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const TransitionProgressProvider &transitionProgressProvider,
@@ -27,7 +25,9 @@ class TransitionStyleInterpolator {
 
   void discardFinishedInterpolators(const TransitionProgressProvider &transitionProgressProvider);
   void discardIrrelevantInterpolators(const std::unordered_set<std::string> &transitionPropertyNames);
-  void updateInterpolatedProperties(const ChangedProps &changedProps, const folly::dynamic &lastUpdateValue);
+  std::unordered_set<std::string> updateInterpolatedProperties(
+      const ChangedProps &changedProps,
+      const folly::dynamic &lastUpdateValue);
 
  private:
   using MapInterpolatorsCallback = std::function<

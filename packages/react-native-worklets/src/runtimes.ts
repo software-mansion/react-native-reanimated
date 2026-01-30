@@ -38,3 +38,13 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
 export function scheduleOnRuntime(): never {
   throw new WorkletsError('`scheduleOnRuntime` is not supported on web.');
 }
+
+export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): ReturnValue;
+
+export function runOnRuntimeSync(): never {
+  throw new WorkletsError('`runOnRuntimeSync` is not supported on web.');
+}

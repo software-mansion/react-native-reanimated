@@ -32,11 +32,11 @@
     "eslint": "9.37.0",
     "jest": "30.2.0",
     "prettier": "3.6.2",
-    "react-test-renderer": "19.1.1",
+    "react-test-renderer": "19.2.3",
     "typescript": "5.8.3"
   },
   "engines": {
-    "node": ">=20.13.0"
+    "node": ">= 22.11.0"
   },
   "installConfig": {
     "hoistingLimits": "workspaces",
@@ -50,13 +50,16 @@
       "IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS": true,
       "EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS": true,
       "USE_SYNCHRONIZABLE_FOR_MUTABLES": true,
-      "USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS": true
+      "USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS": true,
+      "FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS": true
     }
   },
   "worklets": {
     "staticFeatureFlags": {
       "RUNTIME_TEST_FLAG": true,
-      "IOS_DYNAMIC_FRAMERATE_ENABLED": true
+      "IOS_DYNAMIC_FRAMERATE_ENABLED": true,
+      "BUNDLE_MODE_ENABLED": false,
+      "FETCH_PREVIEW_ENABLED": false
     }
   }
 }
