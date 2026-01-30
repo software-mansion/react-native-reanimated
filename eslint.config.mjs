@@ -50,12 +50,12 @@ const tsRules = {
 
   '@typescript-eslint/consistent-type-imports': [
     'error',
-    { prefer: 'type-imports' },
+    { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
   ],
 
   '@typescript-eslint/consistent-type-exports': [
     'error',
-    { fixMixedExportsWithInlineTypeSpecifier: false },
+    { fixMixedExportsWithInlineTypeSpecifier: true },
   ],
 
   '@typescript-eslint/no-non-null-assertion': 'off',
