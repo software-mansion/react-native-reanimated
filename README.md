@@ -1,20 +1,11 @@
-<table style="width: 100%;">
-<tr>
-<td style="width: 50%;">
-<img src="https://user-images.githubusercontent.com/16062886/117443145-ff868480-af37-11eb-8680-648bccf0d0ce.png" alt="React Native Reanimated by Software Mansion" width="100%">
-</td>
-<td style="width: 50%;">
-<img src="https://github.com/user-attachments/assets/41b37472-e55a-4c54-9064-31258e03870c" alt="React Native Worklets by Software Mansion" width="100%">
-</td>
-</tr>
-</table>
+<img src="https://github.com/user-attachments/assets/6c34ccd9-f193-4177-94f0-f21d5fe1bceb" alt="React Native Reanimated and React Native Worklets by Software Mansion" width="100%">
 
 # Reanimated & Worklets
 
 This repository contains two main packages:
 
-- [React Native Reanimated](/packages/react-native-reanimated) - a library for creating smooth animations and interactions in React Native,
-- [React Native Worklets](/packages/react-native-worklets) - a library that enables multi-threaded JavaScript execution in React Native applications.
+- [React Native Reanimated](/packages/react-native-reanimated) — a library for creating smooth animations and interactions in React Native,
+- [React Native Worklets](/packages/react-native-worklets) — a library that enables multi-threaded JavaScript execution in React Native applications.
 
 ### Create smooth animations with an excellent developer experience.
 
@@ -48,8 +39,8 @@ If your app still runs on the old architecture, please consider adopting the New
 
 You can find more information about Reanimated and Worklets, their API references and more in their dedicated documentation pages:
 
-- Reanimated Documentation: [https://docs.swmansion.com/react-native-reanimated/](https://docs.swmansion.com/react-native-reanimated/)
-- Worklets Documentation: [https://docs.swmansion.com/react-native-reanimated/docs/worklets/](https://docs.swmansion.com/react-native-worklets/docs/worklets/)
+- Reanimated — [https://docs.swmansion.com/react-native-reanimated/](https://docs.swmansion.com/react-native-reanimated/)
+- Worklets — [https://docs.swmansion.com/react-native-worklets/](https://docs.swmansion.com/react-native-worklets/)
 
 ## Examples
 
