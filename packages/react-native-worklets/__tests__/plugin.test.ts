@@ -1228,6 +1228,34 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
+    test("doesn't show a warning if the user uses ['value'] inside inline style", () => {
+      const input = html`<script>
+        function App() {
+          return <Animated.View style={{ width: object['value'] }} />;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, {
+        plugins: ['@babel/plugin-syntax-jsx'],
+      });
+      expect(code).not.toHaveInlineStyleWarning();
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't show a warning if the user uses [value] inside inline style", () => {
+      const input = html`<script>
+        function App() {
+          return <Animated.View style={{ width: object[value] }} />;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, {
+        plugins: ['@babel/plugin-syntax-jsx'],
+      });
+      expect(code).not.toHaveInlineStyleWarning();
+      expect(code).toMatchSnapshot();
+    });
+
     test('shows a warning if user uses .value inside inline style, style array', () => {
       const input = html`<script>
         function App() {
