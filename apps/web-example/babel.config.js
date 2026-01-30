@@ -1,3 +1,8 @@
+/** @type {import('react-native-worklets/plugin').PluginOptions} */
+const workletsPluginOptions = {
+  strictGlobal: true,
+};
+
 /** @type {import('@babel/core').ConfigFunction} */
 module.exports = function (api) {
   const plugins = [
@@ -18,7 +23,7 @@ module.exports = function (api) {
   if (disableBabelPlugin) {
     console.log('Starting Web example without Babel plugin.');
   } else {
-    plugins.push('react-native-worklets/plugin');
+    plugins.push(['react-native-worklets/plugin', workletsPluginOptions]);
   }
 
   return {

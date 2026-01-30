@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import {
+  ColorValue,
   DynamicColorIOS as RNDynamicColorIOS,
   StyleSheet,
   Text,
@@ -29,7 +30,13 @@ const getDynamicColors = () => {
   };
 };
 
-const Swatches = ({ colors, label }: { colors: any; label: string }) => {
+const Swatches = ({
+  colors,
+  label,
+}: {
+  colors: ColorValue[];
+  label: string;
+}) => {
   const dynamicColors = getDynamicColors();
   return (
     <>

@@ -14,9 +14,13 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
    - For patches:
      - `git switch <current-stable>` e.g. `git switch 3.17-stable` then `git pull`.
    - For minors:
-     - If latest major, create another stable branch from `main`, i.e.:
-       `git switch main` then `git pull` then `git switch -c 4.20-stable`
-     - If older major, create another stable branch from the last one, i.e.: `git switch 3.17-stable` then `git pull` then `git switch -c 3.18-stable`.
+   
+    *   <details><summary>Reanimated v4</summary>Create another stable branch from `main`, i.e.: `git switch main` then `git pull` then `git switch -c 4.20-stable`
+    </details>
+     
+     *   <details><summary>Reanimated v3</summary>Create another stable branch from the last one, i.e.: `git switch 3.17-stable` then `git pull` then `git switch -c 3.18-stable`. Then you need to cherry pick the PRs you want     to include in your release.
+    </details>
+    
 
 3. Create a new release branch:
 
@@ -26,24 +30,36 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
    - `cd packages/react-native-reanimated && node ./scripts/set-reanimated-version.js x.y.z`
 
-5. If releasing v4, make sure to update required version of `react-native-worklets` in `scripts/worklets-version.json`.
+5. <details><summary>Reanimated v4</summary>
+    
+   Make sure to update required version of `react-native-worklets` in `scripts/worklets-version.json`.
+    </details>
 
 6. Update the **Compatibility Table** in the documentation:
 
    - You need to do this in a separate PR as docs are hosted on `main`,
    - Use `&ndash;` (–) symbol instead of normal dash (-).
 
-7. If releasing v3, run `bundle install && bundle exec pod install` in all example apps to update following files:
+7. Install Pods:
+* <details><summary>Reanimated v4</summary>
 
+    Run `yarn build-all` in the root directory.
+</details>
+
+* <details><summary>Reanimated v3</summary>
+
+    run `bundle install && bundle exec pod install` in all example apps to update following files:
    - `paper-example/ios/Podfile.lock`
    - `fabric-example/ios/Podfile.lock`
    - `tvos-example/ios/Podfile.lock`
    - `macos-example/macos/Podfile.lock`
+    </details>
+---
+8. <details><summary>Reanimated v3</summary>
 
-   If releasing v4, run `yarn build-all` in the root directory.
-
-8. When releasing v3, make sure to update the branch used for nightly releases of Reanimated 3 in [the workflow](../../.github/workflows/npm-reanimated-publish-nightly.yml).
-
+    When releasing v3, make sure to update the branch used for nightly releases of Reanimated 3 in [the workflow](../../.github/workflows/npm-reanimated-publish-nightly.yml).
+    </details>
+---
 9. When releasing a minor version, update the minimal supported React Native version:
 
    - Android: `build.gradle`
@@ -52,6 +68,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
 10. Testing:
 
+    - Run `yarn test:e2e` in the repository root and ensure all tests pass before proceeding with the release.
     - Run the examples from Reanimated app, especially those affected by release changes.
     - Test each example app on each platform (if possible, run in both **release** and **debug** mode using **Android** and **iOS**).
     - On rare cases it might be necessary to also test unusual configurations, i.e. **release** app with a **development** bundle. Please consult the team for more instructions here.
@@ -141,7 +158,9 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
       <img width="346" alt="upload_7933257ba4df136251188391ad2693f0" src="https://github.com/user-attachments/assets/383648da-ef25-4b84-83b5-1c484a702488" />
 
     - Choose **target** - it will a be current stable branch e.g. `3.17-stable`,
-    - Choose **previous tag** - it will be from previous release e.g. `3.17.1`,
+    - Choose **previous tag**:
+        - For minor it will be a previous minor e.g. when releasing `4.2.0`, the **previous tag** is `4.1.0`,
+        - For patch it will be previous release e.g. when releasing `3.17.2` the **previous tag** is `3.17.1`,
     - Attach previously downloaded artifact (`.tgz`),
     - Generate release notes,
     - When making at least a minor release or a patch release with numerous commits, please highlight the key changes beside the automatically generated notes, like [here](https://github.com/software-mansion/react-native-reanimated/releases/tag/3.17.0),

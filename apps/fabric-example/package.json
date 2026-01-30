@@ -13,8 +13,8 @@
   },
   "dependencies": {
     "common-app": "workspace:*",
-    "react": "19.1.1",
-    "react-native": "0.82.0"
+    "react": "19.2.3",
+    "react-native": "0.84.0-rc.2"
   },
   "devDependencies": {
     "@types/react": "19.2.2",
@@ -23,7 +23,7 @@
     "typescript": "5.8.3"
   },
   "engines": {
-    "node": ">=20.13.0"
+    "node": ">= 22.11.0"
   },
   "installConfig": {
     "selfReferences": false
@@ -36,13 +36,17 @@
       "IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS": true,
       "EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS": true,
       "USE_SYNCHRONIZABLE_FOR_MUTABLES": true,
-      "USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS": true
+      "USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS": true,
+      "ENABLE_SHARED_ELEMENT_TRANSITIONS": true,
+      "FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS": true
     }
   },
   "worklets": {
     "staticFeatureFlags": {
       "RUNTIME_TEST_FLAG": true,
-      "IOS_DYNAMIC_FRAMERATE_ENABLED": true
+      "IOS_DYNAMIC_FRAMERATE_ENABLED": true,
+      "BUNDLE_MODE_ENABLED": false,
+      "FETCH_PREVIEW_ENABLED": false
     }
   }
 }

@@ -62,23 +62,29 @@ std::optional<std::pair<StyleOperations, StyleOperations>> TransformsStyleInterp
   while (!shouldInterpolateMatrices && i < fromOperations.size() && j < toOperations.size()) {
     const auto &fromOperation = std::static_pointer_cast<TransformOperation>(fromOperations[i]);
     const auto &toOperation = std::static_pointer_cast<TransformOperation>(toOperations[j]);
+    const auto fromType = static_cast<TransformOp>(fromOperation->type);
+    const auto toType = static_cast<TransformOp>(toOperation->type);
 
     // Case 1: Types match directly
-    if (fromOperation->type == toOperation->type) {
+    if (fromType == toType) {
       fromOperationsResult.emplace_back(fromOperation);
       toOperationsResult.emplace_back(toOperation);
       i++;
       j++;
-    } else if (fromOperation->canConvertTo(static_cast<TransformOp>(toOperation->type))) {
+    } else if (fromOperation->canConvertTo(toType)) {
       // Case 2: Operations can be converted to each other's type
       addConvertedOperations(fromOperation, toOperation, fromOperationsResult, toOperationsResult);
       i++;
       j++;
-    } else if (toOperation->canConvertTo(static_cast<TransformOp>(fromOperation->type))) {
+    } else if (toOperation->canConvertTo(fromType)) {
       addConvertedOperations(toOperation, fromOperation, toOperationsResult, fromOperationsResult);
       i++;
       j++;
     } else {
+      if (fromType == TransformOp::Perspective || toType == TransformOp::Perspective) {
+        shouldInterpolateMatrices = true;
+        break;
+      }
       // Case 3: Use default values if no conversion possible
       bool toExistsLaterInFrom = lastIndexInFrom.count(toOperation->type) && lastIndexInFrom[toOperation->type] > i;
       bool fromExistsLaterInTo = lastIndexInTo.count(fromOperation->type) && lastIndexInTo[fromOperation->type] > j;

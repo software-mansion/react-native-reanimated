@@ -66,6 +66,7 @@ class Serializable {
     TurboModuleLikeType,
     ImportType,
     SynchronizableType,
+    CustomType,
   };
 
   explicit Serializable(ValueType valueType) : valueType_(valueType) {}
@@ -383,6 +384,27 @@ class SerializableTurboModuleLike : public Serializable {
  private:
   const std::unique_ptr<SerializableHostObject> proto_;
   const std::unique_ptr<SerializableObject> properties_;
+};
+
+jsi::Function getCustomSerializableUnpacker(jsi::Runtime &rt);
+
+class CustomSerializable : public Serializable {
+ public:
+  CustomSerializable(std::shared_ptr<Serializable> data, const int typeId)
+      : Serializable(ValueType::CustomType), data_(std::move(data)), typeId_(typeId) {}
+
+  jsi::Value toJSValue(jsi::Runtime &rt) override;
+
+ private:
+  const std::shared_ptr<Serializable> data_;
+  const int typeId_;
+};
+
+struct SerializationData {
+  std::shared_ptr<SerializableWorklet> determine;
+  std::shared_ptr<SerializableWorklet> pack;
+  std::shared_ptr<SerializableWorklet> unpack;
+  int typeId;
 };
 
 } // namespace worklets

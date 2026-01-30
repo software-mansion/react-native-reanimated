@@ -3,6 +3,7 @@
 import { init } from './initializers/initializers';
 import { bundleModeInit } from './initializers/workletRuntimeEntry';
 
+// is-tree-shakable-suppress
 init();
 
 // @ts-expect-error We must trick the bundler to include
@@ -27,18 +28,31 @@ export {
   setDynamicFeatureFlag,
 } from './featureFlags/featureFlags';
 export { isSynchronizable } from './memory/isSynchronizable';
-export { createSerializable, isSerializableRef } from './memory/serializable';
+export {
+  createSerializable,
+  isSerializableRef,
+  registerCustomSerializable,
+} from './memory/serializable';
 export { serializableMappingCache } from './memory/serializableMappingCache';
 export { createSynchronizable } from './memory/synchronizable';
 export type {
+  RegistrationData,
   SerializableRef,
   Synchronizable,
   SynchronizableRef,
 } from './memory/types';
-export { getRuntimeKind, RuntimeKind } from './runtimeKind';
+export {
+  getRuntimeKind,
+  isRNRuntime,
+  isUIRuntime,
+  isWorkerRuntime,
+  isWorkletRuntime,
+  RuntimeKind,
+} from './runtimeKind';
 export {
   createWorkletRuntime,
   runOnRuntime,
+  runOnRuntimeSync,
   scheduleOnRuntime,
 } from './runtimes';
 export {

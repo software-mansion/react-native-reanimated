@@ -168,8 +168,8 @@ export function clampRGBA(RGBA: ParsedColorArray): void {
   }
 }
 
-const names: Record<string, number | false> = {
-  transparent: false,
+const names: Record<string, number> = {
+  transparent: 0x00000000,
 
   /* spell-checker: disable */
   // http://www.w3.org/TR/css3-color/#svg-color
@@ -354,7 +354,7 @@ export const ColorProperties = [
   'stroke',
 ];
 
-export function normalizeColor(color: unknown): number | false | null {
+export function normalizeColor(color: unknown): number | null {
   'worklet';
 
   if (typeof color === 'number') {
@@ -622,7 +622,7 @@ export const hsvToColor = (
   return rgbaColor(r, g, b, a);
 };
 
-export function processColorInitially(color: unknown): number | false | null {
+export function processColorInitially(color: unknown): number | null {
   'worklet';
   if (color === null || color === undefined) {
     return null;
@@ -645,7 +645,7 @@ export function processColorInitially(color: unknown): number | false | null {
   return ((colorNumber << 24) | (colorNumber >>> 8)) >>> 0; // alpha rgb
 }
 
-export function isColor(value: unknown): boolean {
+export function isColor(value: unknown): value is string {
   'worklet';
   if (typeof value !== 'string') {
     return false;

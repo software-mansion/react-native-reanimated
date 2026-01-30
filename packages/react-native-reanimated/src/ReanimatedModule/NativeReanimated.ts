@@ -16,6 +16,7 @@ import {
 import type {
   InternalHostInstance,
   LayoutAnimationBatchItem,
+  SettledUpdate,
   ShadowNodeWrapper,
   StyleProps,
   Value3D,
@@ -23,8 +24,8 @@ import type {
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
-  NormalizedCSSTransitionConfig,
 } from '../css/native';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
@@ -228,25 +229,22 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.unregisterCSSAnimations(viewTag);
   }
 
-  registerCSSTransition(
+  runCSSTransition(
     shadowNodeWrapper: ShadowNodeWrapper,
-    transitionConfig: NormalizedCSSTransitionConfig
-  ) {
-    this.#reanimatedModuleProxy.registerCSSTransition(
+    transitionConfig: CSSTransitionConfig
+  ): void {
+    this.#reanimatedModuleProxy.runCSSTransition(
       shadowNodeWrapper,
       transitionConfig
     );
   }
 
-  updateCSSTransition(
-    viewTag: number,
-    configUpdates: Partial<NormalizedCSSTransitionConfig>
-  ) {
-    this.#reanimatedModuleProxy.updateCSSTransition(viewTag, configUpdates);
-  }
-
   unregisterCSSTransition(viewTag: number) {
     this.#reanimatedModuleProxy.unregisterCSSTransition(viewTag);
+  }
+
+  getSettledUpdates(): SettledUpdate[] {
+    return this.#reanimatedModuleProxy.getSettledUpdates();
   }
 }
 
@@ -271,8 +269,7 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   registerCSSAnimations(): void {}
   updateCSSAnimations(): void {}
   unregisterCSSAnimations(): void {}
-  registerCSSTransition(): void {}
-  updateCSSTransition(): void {}
+  runCSSTransition(): void {}
   unregisterCSSTransition(): void {}
   registerSensor(): number {
     return -1;
@@ -286,5 +283,9 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   unregisterEventHandler(): void {}
   getViewProp() {
     return null!;
+  }
+
+  getSettledUpdates(): SettledUpdate[] {
+    return [];
   }
 }

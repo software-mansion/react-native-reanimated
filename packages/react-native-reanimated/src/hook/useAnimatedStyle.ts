@@ -271,7 +271,7 @@ function styleUpdater(
       }
 
       if (updates) {
-        updateProps(viewDescriptors, updates);
+        updateProps(viewDescriptors, updates, isAnimatedProps);
       }
 
       if (!allFinished) {
@@ -289,7 +289,7 @@ function styleUpdater(
     }
 
     if (hasNonAnimatedValues) {
-      updateProps(viewDescriptors, nonAnimatedNewValues);
+      updateProps(viewDescriptors, nonAnimatedNewValues, isAnimatedProps);
     }
   } else {
     state.isAnimationCancelled = true;
@@ -608,7 +608,22 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
           toJSON: animatedStyleHandleToJSON,
           styleUpdaterContainer,
         }
-      : { viewDescriptors, initial, styleUpdaterContainer };
+      : __DEV__
+        ? ({
+            get _requiresAnimatedComponent() {
+              throw new ReanimatedError(
+                'Perhaps you are trying to pass an animated style to a non-animated component. Try creating an animated component using `createAnimatedComponent` function or use `Animated.*` components.'
+              );
+            },
+            viewDescriptors,
+            initial,
+            styleUpdaterContainer,
+          } as AnimatedStyleHandle<Style | AnimatedProps>)
+        : {
+            viewDescriptors,
+            initial,
+            styleUpdaterContainer,
+          };
   }
 
   return animatedStyleHandle.current;

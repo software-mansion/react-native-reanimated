@@ -1,0 +1,10 @@
+diff --git a/types/cypress-expect.d.ts b/types/cypress-expect.d.ts
+index bea4c7f566d362f988b534ac4ef2791f4052ed6f..bd0cbe5c6c7cae7a1b47aad53e6df50bae231fa7 100644
+--- a/types/cypress-expect.d.ts
++++ b/types/cypress-expect.d.ts
+@@ -1,3 +1,3 @@
+ // Cypress adds chai expect and assert to global
+-declare var expect: Chai.ExpectStatic
+-declare var assert: Chai.AssertStatic
++// declare var expect: Chai.ExpectStatic
++// declare var assert: Chai.AssertStatic

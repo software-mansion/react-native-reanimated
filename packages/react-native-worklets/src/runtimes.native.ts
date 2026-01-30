@@ -5,6 +5,7 @@ import { registerWorkletsError, WorkletsError } from './debug/WorkletsError';
 import {
   getMemorySafeCapturableConsole,
   setupConsole,
+  setupSerializer,
 } from './initializers/initializers';
 import {
   createSerializable,
@@ -91,6 +92,7 @@ export function createWorkletRuntime(
     createSerializable(() => {
       'worklet';
       setupCallGuard();
+      setupSerializer();
       registerWorkletsError();
       setupConsole(runtimeBoundCapturableConsole);
       if (enableEventLoop) {
@@ -108,21 +110,21 @@ export function createWorkletRuntime(
  * Lets you asynchronously run a
  * [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)
  * on a [Worker
- * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-runtime).
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
  *
  * Check
  * {@link https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds}
  * for more information about the different runtime kinds.
  *
  * - The worklet is scheduled on the Worker Runtime's [Async
- *   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/Public/AsyncQueue.h)
+ *   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
  * - The function cannot be scheduled on the Worker Runtime from [UI
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-runtime)
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
  *   or another [Worker
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worker-runtime),
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
  *   unless the [Bundle
- *   Mode](https://docs.swmansion.com/react-native-worklets/docs/experimental/bundleMode)
- *   is enabled.
+ *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
+ *   enabled.
  *
  * @param workletRuntime - The runtime to schedule the worklet on.
  * @param worklet - The worklet to schedule.
@@ -196,3 +198,42 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
 type WorkletRuntimeConfigInternal = WorkletRuntimeConfig & {
   initializer?: WorkletFunction<[], void>;
 };
+
+/**
+ * Lets you run a function synchronously on a [Worker
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
+ *
+ * - This function cannot be called from the [UI
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
+ *   or another [Worker
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
+ *   unless the [Bundle
+ *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
+ *   enabled.
+ *
+ * @param workletRuntime - The runtime to run the worklet on.
+ * @param worklet - The worklet to run.
+ * @param args - The arguments to pass to the worklet.
+ * @returns The return value of the worklet.
+ */
+export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): ReturnValue {
+  'worklet';
+  if (__DEV__ && !isWorkletFunction(worklet)) {
+    throw new WorkletsError(
+      'The function passed to `runOnRuntimeSync` is not a worklet.'
+    );
+  }
+
+  return WorkletsModule.runOnRuntimeSync(
+    workletRuntime,
+    createSerializable(() => {
+      'worklet';
+      const result = worklet(...args);
+      return makeShareableCloneOnUIRecursive(result);
+    })
+  );
+}

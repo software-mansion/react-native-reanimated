@@ -113,4 +113,10 @@ jsi::Value makeSerializableObject(
   return SerializableJSRef::newNativeStateObject(rt, serializable);
 }
 
+jsi::Value makeCustomSerializable(jsi::Runtime &rt, const jsi::Value &data, const int typeId) {
+  auto rawData = extractSerializableOrThrow(rt, data, "[Worklets] Data must be a Serializable object.");
+  auto customSerializable = std::make_shared<CustomSerializable>(rawData, typeId);
+  return SerializableJSRef::newNativeStateObject(rt, customSerializable);
+}
+
 } // namespace worklets

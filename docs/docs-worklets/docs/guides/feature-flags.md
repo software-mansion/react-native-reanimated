@@ -8,9 +8,11 @@ Feature flags allow developers to opt-in for experimental changes or opt-out fro
 
 ## Summary of available feature flags
 
-| Feature flag name                                                 |              Type               | Added in | Removed in | Default value |
-| ----------------------------------------------------------------- | :-----------------------------: | :------: | :--------: | :-----------: |
-| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled) | [static](#static-feature-flags) |  4.1.0   |  &ndash;   |    `true`     |
+| Feature flag name                                                  |              Type               | Added in | Removed in | Default value |
+| ------------------------------------------------------------------ | :-----------------------------: | :------: | :--------: | :-----------: |
+| [`BUNDLE_MODE_ENABLED`](#bundle_mode_enabled-)                     | [static](#static-feature-flags) |  0.8.0   |  &ndash;   |    `false`    |
+| [`FETCH_PREVIEW_ENABLED`](#fetch_preview_enabled-)                 | [static](#static-feature-flags) |  0.8.0   |  &ndash;   |    `false`    |
+| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled-) | [static](#static-feature-flags) |  0.6.0   |  &ndash;   |    `true`     |
 
 :::info
 
@@ -20,7 +22,16 @@ Feature flags available in `react-native-reanimated` are listed [on this page](h
 
 ## Description of available feature flags
 
-### `IOS_DYNAMIC_FRAMERATE_ENABLED`
+### `BUNDLE_MODE_ENABLED` <AvailableFrom version="0.8.0" />
+
+This feature flag enables [the Bundle Mode](/docs/bundleMode/). Make sure to follow the rest of the [setup instructions](/docs/bundleMode/setup/) after enabling this flag.
+
+### `FETCH_PREVIEW_ENABLED` <AvailableFrom version="0.8.0" />
+
+This feature flag enables the [preview of fetch API on Worklet Runtimes](/docs/bundleMode/usage#running-network-requests-in-worklets) in the [Bundle Mode](/docs/bundleMode/). Make sure to follow the rest of the [setup instructions](/docs/bundleMode/setup/) after enabling this flag.
+**This flag requires `BUNDLE_MODE_ENABLED` flag to be enabled as well.**
+
+### `IOS_DYNAMIC_FRAMERATE_ENABLED` <AvailableFrom version="0.6.0" />
 
 This feature flags is supposed to improve the visual perception and perceived smoothness of computationally expensive animations. When enabled, the frame rate will be automatically adjusted for current workload of the UI thread. For instance, if the device fails to run animations in 120 fps which would usually results in irregular frame drops, the mechanism will fallback to stable 60 fps. For more details, see [PR #7624](https://github.com/software-mansion/react-native-reanimated/pull/7624).
 
@@ -44,6 +55,14 @@ Static flags are intended to be resolved during code compilation and cannot be c
 2. Run `pod install` (iOS only)
 3. Rebuild the native app
 
+:::warning
+Static feature flags are not supported in environments where Worklets is prebuilt with the default configuration of flags, like for instance in [Expo Go](https://expo.dev/go) and [RNRepo](https://rnrepo.org/).
+
+- It's not possible to modify static feature flags in Expo Go. Please consider using [Expo Prebuild](https://docs.expo.dev/workflow/continuous-native-generation/) instead.
+- If your project uses RNRepo, you need to force building Worklets from source by adding it to the deny list as described in [RNRepo's documentation](https://github.com/software-mansion/rnrepo/blob/main/TROUBLESHOOTING.md#deny-list-configuration).
+
+:::
+
 To read a static feature flag value in JavaScript, you can use `getStaticFeatureFlag` function.
 
 ## Dynamic feature flags
@@ -60,13 +79,14 @@ To read a dynamic feature flag value in JavaScript, you can use `getDynamicFeatu
 
 ## Comparison of static and dynamic feature flags
 
-|                                          | Static feature flags | Dynamic feature flags |
-| ---------------------------------------- | :------------------: | :-------------------: |
-| Value is known during app build          |          ✅          |          ❌           |
-| Value may change during app lifetime     |          ❌          |          ✅           |
-| Value change requires app rebuild        |          ✅          |          ❌           |
-| Can be changed via public JavaScript API |          ❌          |          ✅           |
-| Can be changed via app's `package.json`  |          ✅          |          ❌           |
+|                                             | Static feature flags | Dynamic feature flags |
+| ------------------------------------------- | :------------------: | :-------------------: |
+| Value is known during app build             |          ✅          |          ❌           |
+| Value may change during app lifetime        |          ❌          |          ✅           |
+| Value change requires app rebuild           |          ✅          |          ❌           |
+| Can be changed via public JavaScript API    |          ❌          |          ✅           |
+| Can be changed via app's `package.json`     |          ✅          |          ❌           |
+| Can be changed when using Expo Go or RNRepo |          ❌          |          ✅           |
 
 ## Remarks for contributors
 

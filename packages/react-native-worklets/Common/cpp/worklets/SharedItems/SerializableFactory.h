@@ -8,12 +8,6 @@
 
 namespace worklets {
 
-jsi::Value makeSerializableClone(
-    jsi::Runtime &rt,
-    const jsi::Value &value,
-    const jsi::Value &shouldRetainRemote,
-    const jsi::Value &nativeStateSource);
-
 jsi::Value makeSerializableString(jsi::Runtime &rt, const jsi::String &string);
 
 jsi::Value makeSerializableNumber(jsi::Runtime &rt, double number);
@@ -52,5 +46,7 @@ jsi::Value makeSerializableInitializer(jsi::Runtime &rt, const jsi::Object &init
 jsi::Value makeSerializableFunction(jsi::Runtime &rt, jsi::Function function);
 
 jsi::Value makeSerializableWorklet(jsi::Runtime &rt, const jsi::Object &object, const bool &shouldRetainRemote);
+
+jsi::Value makeCustomSerializable(jsi::Runtime &rt, const jsi::Value &data, int typeId);
 
 } // namespace worklets

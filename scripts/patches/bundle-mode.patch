@@ -1,72 +1,24 @@
-diff --git a/apps/fabric-example/android/gradle.properties b/apps/fabric-example/android/gradle.properties
-index d183897bec..7fdf50386b 100644
---- a/apps/fabric-example/android/gradle.properties
-+++ b/apps/fabric-example/android/gradle.properties
-@@ -49,7 +49,7 @@ isReanimatedExampleApp=true
- enableReanimatedProfiling=true
- 
- # Uncomment the next line to enable bundle mode.
--# workletsBundleMode=true
-+workletsBundleMode=true
- 
- # https://docs.gradle.org/current/userguide/configuration_cache.html
- org.gradle.configuration-cache=true
-diff --git a/apps/fabric-example/android/settings.gradle b/apps/fabric-example/android/settings.gradle
-index afaf8c45a5..c3c5434878 100644
---- a/apps/fabric-example/android/settings.gradle
-+++ b/apps/fabric-example/android/settings.gradle
-@@ -7,11 +7,11 @@ includeBuild('../../../node_modules/@react-native/gradle-plugin')
- 
- // Build from source (https://reactnative.dev/contributing/how-to-build-from-source)
- // NOTE: Please do not remove these lines even though they are commented out.
--// includeBuild('../../../node_modules/react-native') {
--//     dependencySubstitution {
--//         substitute(module("com.facebook.react:react-android")).using(project(":packages:react-native:ReactAndroid"))
--//         substitute(module("com.facebook.react:react-native")).using(project(":packages:react-native:ReactAndroid"))
--//         substitute(module("com.facebook.react:hermes-android")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
--//         substitute(module("com.facebook.react:hermes-engine")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
--//     }
--// }
-+includeBuild('../../../node_modules/react-native') {
-+    dependencySubstitution {
-+        substitute(module("com.facebook.react:react-android")).using(project(":packages:react-native:ReactAndroid"))
-+        substitute(module("com.facebook.react:react-native")).using(project(":packages:react-native:ReactAndroid"))
-+        substitute(module("com.facebook.react:hermes-android")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
-+        substitute(module("com.facebook.react:hermes-engine")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
-+    }
-+}
 diff --git a/apps/fabric-example/babel.config.js b/apps/fabric-example/babel.config.js
-index 259ed1ad84..ebdbea9d22 100644
+index ea4ad7a5f8..52318bd40c 100644
 --- a/apps/fabric-example/babel.config.js
 +++ b/apps/fabric-example/babel.config.js
-@@ -6,7 +6,7 @@ module.exports = {
-       'react-native-worklets/plugin',
-       {
-         // Uncomment the next line to enable bundle mode.
--        // bundleMode: true,
-+        bundleMode: true,
-       },
-     ],
-     [
-diff --git a/apps/fabric-example/ios/Podfile b/apps/fabric-example/ios/Podfile
-index 3f8fe4a6e2..e208389ca3 100644
---- a/apps/fabric-example/ios/Podfile
-+++ b/apps/fabric-example/ios/Podfile
-@@ -10,7 +10,7 @@ require_relative '../../../packages/react-native-reanimated/scripts/clangd-add-x
- ENV['IS_REANIMATED_EXAMPLE_APP'] = '1'
+@@ -2,8 +2,8 @@
+ const workletsPluginOptions = {
+   strictGlobal: true,
+   // Uncomment the following to enable bundle mode.
+-  // bundleMode: true,
+-  // workletizableModules: ['axios'],
++  bundleMode: true,
++  workletizableModules: ['axios'],
+ };
  
- # Uncomment the next line to enable bundle mode.
--# ENV['WORKLETS_BUNDLE_MODE'] = '1'
-+ENV['WORKLETS_BUNDLE_MODE'] = '1'
- 
- platform :ios, min_ios_version_supported
- prepare_react_native_project!
+ /** @type {import('@babel/core').TransformOptions} */
 diff --git a/apps/fabric-example/metro.config.js b/apps/fabric-example/metro.config.js
-index ac70ff22bc..cb06730da7 100644
+index afe4c07b49..eece71ae7f 100644
 --- a/apps/fabric-example/metro.config.js
 +++ b/apps/fabric-example/metro.config.js
 @@ -33,8 +33,8 @@ let config = {
- config = mergeConfig(getDefaultConfig(__dirname), config);
+ config = mergeConfig(defaultConfig, config);
  
  // Uncomment the following to enable bundle mode.
 -// const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
@@ -75,19 +27,33 @@ index ac70ff22bc..cb06730da7 100644
 +config = mergeConfig(config, bundleModeMetroConfig);
  
  module.exports = wrapWithReanimatedMetroConfig(
-   mergeConfig(getDefaultConfig(__dirname), config)
+   mergeConfig(defaultConfig, config)
+diff --git a/apps/fabric-example/package.json b/apps/fabric-example/package.json
+index 85d2dbe679..d3a3b79d2a 100644
+--- a/apps/fabric-example/package.json
++++ b/apps/fabric-example/package.json
+@@ -45,8 +45,8 @@
+     "staticFeatureFlags": {
+       "RUNTIME_TEST_FLAG": true,
+       "IOS_DYNAMIC_FRAMERATE_ENABLED": true,
+-      "BUNDLE_MODE_ENABLED": false,
+-      "FETCH_PREVIEW_ENABLED": false
++      "BUNDLE_MODE_ENABLED": true,
++      "FETCH_PREVIEW_ENABLED": true
+     }
+   }
+ }
 diff --git a/package.json b/package.json
-index f020af7a46..9f9727afb9 100644
+index 390419dccc..04b68c48d4 100644
 --- a/package.json
 +++ b/package.json
-@@ -69,5 +69,10 @@
+@@ -76,5 +76,9 @@
      "react-native-builder-bob": "0.40.13",
      "shelljs": "0.10.0",
      "typescript": "5.8.3"
 +  },
 +  "resolutions": {
-+    "metro": "patch:metro@npm%3A0.83.1#~/.yarn/patches/metro-npm-0.83.1-241fe42591.patch",
-+    "metro-runtime": "patch:metro-runtime@npm%3A0.83.1#~/.yarn/patches/metro-runtime-npm-0.83.1-c3d616063e.patch",
-+    "react-native": "patch:react-native@npm%3A0.82.0#~/.yarn/patches/react-native-npm-0.82.0-228ad0ffa7.patch"
++    "metro": "patch:metro@npm%3A0.83.2#~/.yarn/patches/metro-npm-0.83.2-d09f48ca84.patch",
++    "metro-runtime": "patch:metro-runtime@npm%3A0.83.2#~/.yarn/patches/metro-runtime-npm-0.83.2-c614bbd3b9.patch"
    }
  }
