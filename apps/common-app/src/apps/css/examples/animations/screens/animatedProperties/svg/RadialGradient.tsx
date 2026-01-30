@@ -14,7 +14,7 @@ const DefsWithChildren = Defs as React.ComponentType<{
   children?: React.ReactNode;
 }>;
 
-export default function StopExample() {
+export default function RadialGradientExample() {
   return (
     <ExamplesScreen<
       { keyframes: CSSAnimationKeyframes<CSSRadialGradientProps> },
