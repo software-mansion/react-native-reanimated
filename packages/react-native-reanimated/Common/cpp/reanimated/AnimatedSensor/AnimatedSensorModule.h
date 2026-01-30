@@ -2,8 +2,8 @@
 
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
-#include <worklets/SharedItems/Serializable.h>
-#include <worklets/WorkletRuntime/WorkletRuntime.h>
+#include <RNWorklets/Serializable.h>
+#include <RNWorklets/WorkletRuntime.h>
 
 #include <jsi/jsi.h>
 
