@@ -11,7 +11,6 @@ namespace reanimated::css {
 
 SVGStops::SVGStops() : stops{} {}
 
-// maybe change the api to accept the same format as 'gradient' in rnSVG
 SVGStops::SVGStops(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   if (!jsiValue.isObject() || !jsiValue.asObject(rt).isArray(rt))
     return;
@@ -41,7 +40,6 @@ SVGStops::SVGStops(const folly::dynamic &value) {
       continue;
 
     double offset = item.getDefault("offset", 0.0).asDouble();
-    double opacity = item.getDefault("opacity", 1.0).asDouble();
 
     stops.emplace_back(offset, SVGBrush(item["color"]));
   }
@@ -144,8 +142,8 @@ SVGStops SVGStops::interpolate(double progress, const SVGStops &to) const {
   for (size_t i = 0; i < longerSize; ++i) {
     double ratio = (longerSize > 1) ? static_cast<double>(i) / (static_cast<double>(longerSize) - 1.0) : 0.0;
 
-    size_t fromIdx = static_cast<size_t>(std::round(ratio * (fromSize - 1)));
-    size_t toIdx = static_cast<size_t>(std::round(ratio * (toSize - 1)));
+    auto fromIdx = static_cast<size_t>(std::round(ratio * (fromSize - 1)));
+    auto toIdx = static_cast<size_t>(std::round(ratio * (toSize - 1)));
 
     const auto &sFrom = fromStops[fromIdx];
     const auto &sTo = toStops[toIdx];
