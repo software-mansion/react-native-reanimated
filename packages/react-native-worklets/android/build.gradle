@@ -5,6 +5,7 @@ import javax.inject.Inject
 import java.nio.file.Files
 import java.nio.file.Paths
 import org.apache.tools.ant.taskdefs.condition.Os
+import javax.inject.Inject
 
 def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
@@ -16,7 +17,12 @@ def safeAppExtGet(prop, fallback) {
 }
 
 def isNewArchitectureEnabled() {
-    // To opt-in for the New Architecture, you can either:
+    // In React Native 0.82+, users can no longer opt-out of the New Architecture.
+    if(getReactNativeMinorVersion() >= 82){
+        return true
+    }
+
+    // In older versions, to opt-in for the New Architecture, you can either:
     // - Set `newArchEnabled` to true inside the `gradle.properties` file
     // - Invoke gradle with `-newArchEnabled=true`
     // - Set an environment variable `ORG_GRADLE_PROJECT_newArchEnabled=true`
@@ -30,19 +36,15 @@ def resolveReactNativeDirectory() {
     }
 
     // Fallback to node resolver for custom directory structures like monorepos.
-    def reactNativePackage = file(
-        providers.exec {
-            workingDir(rootDir)
-            commandLine("node", "--print", "require.resolve('react-native/package.json')")
-        }.standardOutput.asText.get().trim()
-    )
+    def reactNativePackage = file(providers.exec {
+        workingDir(rootDir)
+        commandLine("node", "--print", "require.resolve('react-native/package.json')")
+    }.standardOutput.asText.get().trim())
     if (reactNativePackage.exists()) {
         return reactNativePackage.parentFile
     }
 
-    throw new GradleException(
-        "[Worklets] Unable to resolve react-native location in node_modules. You should set project extension property (in `app/build.gradle`) named `REACT_NATIVE_NODE_MODULES_DIR` with the path to react-native in node_modules."
-    )
+    throw new GradleException("[Worklets] Unable to resolve react-native location in node_modules. You should set project extension property (in `app/build.gradle`) named `REACT_NATIVE_NODE_MODULES_DIR` with the path to react-native in node_modules.")
 }
 
 def getReactNativeVersion() {
@@ -63,7 +65,7 @@ def getWorkletsVersion() {
     return json.version
 }
 
-def toPlatformFileString(String path) {
+static def toPlatformFileString(String path) {
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
         path = path.replace(File.separatorChar, '/' as char)
     }
@@ -77,24 +79,32 @@ def getStaticFeatureFlags() {
     if (!staticFeatureFlagsFile.exists()) {
         throw new GradleException("[Worklets] Feature flags file not found at ${staticFeatureFlagsFile.absolutePath}.")
     }
-    new JsonSlurper().parseText(staticFeatureFlagsFile.text).each { key, value ->
-        featureFlags[key] = value.toString()
+    new JsonSlurper().parseText(staticFeatureFlagsFile.text).each { key, value -> featureFlags[key] = value.toString()
     }
 
     def packageJsonFile = file(rootDir.path + "/../package.json")
     if (packageJsonFile.exists()) {
         def packageJson = new JsonSlurper().parseText(packageJsonFile.text)
-        packageJson.worklets?.staticFeatureFlags?.each { key, value ->
-            featureFlags[key] = value.toString()
+        packageJson.worklets?.staticFeatureFlags?.each { key, value -> featureFlags[key] = value.toString()
         }
     }
 
+    return featureFlags;
+}
+
+def getStaticFeatureFlagsString(featureFlags) {
     return featureFlags.collect { key, value -> "[${key}:${value}]" }.join("")
 }
 
-if (isNewArchitectureEnabled()) {
+def isFlagEnabled(featureFlags, flagName) {
+    return (featureFlags.containsKey(flagName) && featureFlags[flagName] == "true");
+}
+
+if (isNewArchitectureEnabled() && project != rootProject) {
     apply plugin: "com.facebook.react"
 }
+
+def featureFlags = getStaticFeatureFlags()
 
 def packageDir = project.projectDir.parentFile
 def reactNativeRootDir = resolveReactNativeDirectory()
@@ -103,14 +113,16 @@ def REACT_NATIVE_VERSION = getReactNativeVersion()
 def WORKLETS_VERSION = getWorkletsVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
-def BUNDLE_MODE = safeAppExtGet("workletsBundleMode", false)
-def WORKLETS_FEATURE_FLAGS = getStaticFeatureFlags()
+def BUNDLE_MODE_ENABLED = isFlagEnabled(featureFlags, "BUNDLE_MODE_ENABLED");
+def FETCH_PREVIEW_ENABLED = isFlagEnabled(featureFlags, "FETCH_PREVIEW_ENABLED");
+def WORKLETS_FEATURE_FLAGS = getStaticFeatureFlagsString(featureFlags)
 def HERMES_V1_ENABLED = safeAppExtGet("hermesV1Enabled", false)
+def WORKLETS_PROFILING = safeAppExtGet("enableWorkletsProfiling", false)
 
 // Set version for prefab
 version WORKLETS_VERSION
 
-def workletsPrefabHeadersDir = project.file("$buildDir/prefab-headers/worklets")
+def workletsPrefabHeadersDir = project.file("${getLayout().getBuildDirectory().getAsFile().get().absolutePath}/prefab-headers/worklets")
 
 def JS_RUNTIME = {
     // Override JS runtime with environment variable
@@ -139,19 +151,21 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:8.2.1"
+        classpath "com.android.tools.build:gradle:8.13.1"
         classpath "de.undercouch:gradle-download-task:5.6.0"
-        classpath "com.diffplug.spotless:spotless-plugin-gradle:6.25.0"
+        classpath "com.diffplug.spotless:spotless-plugin-gradle:8.1.0"
     }
-}
-
-if (project == rootProject) {
-    apply from: "spotless.gradle"
 }
 
 apply plugin: "com.android.library"
 apply plugin: "maven-publish"
 apply plugin: "de.undercouch.download"
+
+if (project == rootProject) {
+    apply from: "spotless.gradle"
+} else {
+    apply plugin: "org.jetbrains.kotlin.android"
+}
 
 apply from: "./fix-prefab.gradle"
 
@@ -186,10 +200,11 @@ android {
         versionCode 1
         versionName WORKLETS_VERSION
 
+        buildConfigField("boolean", "WORKLETS_PROFILING", WORKLETS_PROFILING.toString())
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
         buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
-        buildConfigField("boolean", "BUNDLE_MODE", BUNDLE_MODE.toString())
+        buildConfigField("boolean", "BUNDLE_MODE_ENABLED", BUNDLE_MODE_ENABLED.toString())
 
         externalNativeBuild {
             cmake {
@@ -199,12 +214,14 @@ android {
                         "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
                         "-DJS_RUNTIME=${JS_RUNTIME}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
-                        "-DWORKLETS_BUNDLE_MODE=${BUNDLE_MODE}",
+                        "-DWORKLETS_BUNDLE_MODE_ENABLED=${BUNDLE_MODE_ENABLED}",
+                        "-DWORKLETS_FETCH_PREVIEW_ENABLED=${FETCH_PREVIEW_ENABLED}",
+                        "-DWORKLETS_PROFILING=${WORKLETS_PROFILING}",
                         "-DWORKLETS_VERSION=${WORKLETS_VERSION}",
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
                         "-DWORKLETS_FEATURE_FLAGS=${WORKLETS_FEATURE_FLAGS}",
                         "-DHERMES_V1_ENABLED=${HERMES_V1_ENABLED}"
-                abiFilters (*reactNativeArchitectures())
+                abiFilters(*reactNativeArchitectures())
                 targets("worklets")
             }
         }
@@ -243,20 +260,18 @@ android {
     packagingOptions {
         // For some reason gradle only complains about the duplicated version of librrc_root and libreact_render libraries
         // while there are more libraries copied in intermediates folder of the lib build directory, we exclude
-        // only the ones that make the build fail (ideally we should only include libreanimated but we
+        // only the ones that make the build fail (ideally we should only include libworklets but we
         // are only allowed to specify exclude patterns)
-        excludes = [
-                "META-INF",
-                "META-INF/**",
-                "**/libc++_shared.so",
-                "**/libfbjni.so",
-                "**/libjsi.so",
-                "**/libhermes.so",
-                "**/libhermesvm.so",
-                "**/libhermestooling.so",
-                "**/libreactnative.so",
-                "**/libjscexecutor.so",
-        ]
+        excludes = ["META-INF",
+                    "META-INF/**",
+                    "**/libc++_shared.so",
+                    "**/libfbjni.so",
+                    "**/libjsi.so",
+                    "**/libhermes.so",
+                    "**/libhermesvm.so",
+                    "**/libhermestooling.so",
+                    "**/libreactnative.so",
+                    "**/libjscexecutor.so",]
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -265,16 +280,21 @@ android {
     sourceSets {
         main {
             java {
-                if (BUNDLE_MODE) {
-                    srcDirs += "src/experimentalBundling"
+                if (FETCH_PREVIEW_ENABLED) {
+                    srcDirs += "src/networking"
                 } else {
-                    srcDirs += "src/legacyBundling"
+                    srcDirs += "src/no-networking"
                 }
             }
         }
     }
-    tasks.withType(ExternalNativeBuildJsonTask) {
-        compileTask ->
+    if(project != rootProject) {
+        kotlinOptions {
+            jvmTarget = '17'
+        }
+    }
+    tasks.withType(ExternalNativeBuildJsonTask).tap {
+        configureEach { compileTask ->
             compileTask.doLast {
                 if (!IS_REANIMATED_EXAMPLE_APP) {
                     return
@@ -287,6 +307,7 @@ android {
 
                 println("Generated clangd metadata.")
             }
+        }
     }
 }
 
@@ -296,7 +317,7 @@ def validateReactNativeVersionResult = providers.exec {
     ignoreExitValue = true
 }
 
-task assertMinimalReactNativeVersionTask {
+tasks.register('assertMinimalReactNativeVersionTask') {
     doFirst {
         if (validateReactNativeVersionResult.getResult().get().exitValue != 0) {
             throw new GradleException(validateReactNativeVersionResult.getStandardError().getAsText().get().trim())
@@ -306,7 +327,7 @@ task assertMinimalReactNativeVersionTask {
 
 preBuild.dependsOn(assertMinimalReactNativeVersionTask)
 
-task assertNewArchitectureEnabledTask {
+tasks.register('assertNewArchitectureEnabledTask') {
     onlyIf { !IS_NEW_ARCHITECTURE_ENABLED }
     doFirst {
         throw new GradleException("[Worklets] Worklets require new architecture to be enabled. Please enable it by setting `newArchEnabled` to `true` in `gradle.properties`.")
@@ -315,11 +336,11 @@ task assertNewArchitectureEnabledTask {
 
 preBuild.dependsOn(assertNewArchitectureEnabledTask)
 
-task prepareWorkletsHeadersForPrefabs(type: Copy) {
+tasks.register('prepareWorkletsHeadersForPrefabs', Copy) {
     from("$projectDir/src/main/cpp")
     from("$projectDir/../Common/cpp")
     include("worklets/**/*.h")
-    into(workletsPrefabHeadersDir)
+    into(workletsPrefabHeadersDir.absolutePath)
 }
 
 def workletsPublicTargetDir = file("${workletsPrefabHeadersDir}/RNWorklets")
@@ -345,6 +366,20 @@ task preparePublicHeadersForPrefabs_experimental {
 
         links.each { link ->
             Files.createSymbolicLink(link[1].toPath(), link[0].toPath())
+                    }
+    }
+}
+interface FSService {
+    @Inject
+    FileSystemOperations getFs()
+}
+
+tasks.register('cleanCMakeCache') {
+    def fsProvider = project.objects.newInstance(FSService)
+    def cxxDir = file("${projectDir}/.cxx")
+    doFirst {
+        fsProvider.fs.delete {
+            delete cxxDir
         }
     }
 }
@@ -427,11 +462,20 @@ preBuild.dependsOn(preparePublicHeadersForPrefabs_experimental)
 
 dependencies {
     implementation "com.facebook.yoga:proguard-annotations:1.19.0"
-    implementation "androidx.transition:transition:1.1.0"
-    implementation "androidx.core:core:1.6.0"
+    implementation "androidx.transition:transition:1.6.0"
+    implementation "androidx.core:core:1.15.0"
 
     implementation "com.facebook.react:react-android" // version substituted by RNGP
+    implementation "androidx.core:core-ktx:1.17.0"
     if (JS_RUNTIME == "hermes") {
         implementation "com.facebook.react:hermes-android" // version substituted by RNGP
+    }
+}
+
+preBuild.dependsOn(prepareWorkletsHeadersForPrefabs)
+
+afterEvaluate {
+    tasks.named("clean") {
+        it.finalizedBy(cleanCMakeCache)
     }
 }

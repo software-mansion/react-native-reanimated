@@ -32,7 +32,6 @@ class AnimatedSensorModule {
 
  public:
   explicit AnimatedSensorModule(const PlatformDepMethodsHolder &platformDepMethodsHolder);
-  ~AnimatedSensorModule();
 
   jsi::Value registerSensor(
       jsi::Runtime &rt,

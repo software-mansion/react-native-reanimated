@@ -3,6 +3,7 @@
 import { init } from './initializers/initializers';
 import { bundleModeInit } from './initializers/workletRuntimeEntry';
 
+// is-tree-shakable-suppress
 init();
 
 // @ts-expect-error We must trick the bundler to include
@@ -40,10 +41,18 @@ export type {
   Synchronizable,
   SynchronizableRef,
 } from './memory/types';
-export { getRuntimeKind, RuntimeKind } from './runtimeKind';
+export {
+  getRuntimeKind,
+  isRNRuntime,
+  isUIRuntime,
+  isWorkerRuntime,
+  isWorkletRuntime,
+  RuntimeKind,
+} from './runtimeKind';
 export {
   createWorkletRuntime,
   runOnRuntime,
+  runOnRuntimeSync,
   scheduleOnRuntime,
 } from './runtimes';
 export {

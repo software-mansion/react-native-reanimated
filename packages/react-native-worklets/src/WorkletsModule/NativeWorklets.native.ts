@@ -26,6 +26,11 @@ class NativeWorklets implements IWorkletsModule {
       globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative
     ) {
       WorkletsTurboModule?.installTurboModule();
+      if (__DEV__ && globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+        console.log(
+          '[Worklets] Bundle mode initialization: Downloaded the bundle for Worklet Runtimes.'
+        );
+      }
     }
     if (global.__workletsModuleProxy === undefined) {
       throw new WorkletsError(
@@ -177,10 +182,8 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.scheduleOnUI(serializable);
   }
 
-  executeOnUIRuntimeSync<TValue, TReturn>(
-    serializable: SerializableRef<TValue>
-  ): TReturn {
-    return this.#workletsModuleProxy.executeOnUIRuntimeSync(serializable);
+  runOnUISync<TValue, TReturn>(worklet: SerializableRef<TValue>): TReturn {
+    return this.#workletsModuleProxy.runOnUISync(worklet);
   }
 
   createWorkletRuntime(
@@ -207,6 +210,13 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       workletRuntime,
       serializableWorklet
     );
+  }
+
+  runOnRuntimeSync<TValue, TReturn>(
+    workletRuntime: WorkletRuntime,
+    worklet: SerializableRef<TValue>
+  ): TReturn {
+    return this.#workletsModuleProxy.runOnRuntimeSync(workletRuntime, worklet);
   }
 
   createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {

@@ -1,7 +1,7 @@
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 import groovy.json.JsonSlurper
-import java.nio.file.Paths
 import org.apache.tools.ant.taskdefs.condition.Os
+import javax.inject.Inject
 
 def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
@@ -13,7 +13,12 @@ def safeAppExtGet(prop, fallback) {
 }
 
 def isNewArchitectureEnabled() {
-    // To opt-in for the New Architecture, you can either:
+    // In React Native 0.82+, users can no longer opt-out of the New Architecture.
+    if(getReactNativeMinorVersion() >= 82){
+        return true
+    }
+
+    // In older versions, to opt-in for the New Architecture, you can either:
     // - Set `newArchEnabled` to true inside the `gradle.properties` file
     // - Invoke gradle with `-newArchEnabled=true`
     // - Set an environment variable `ORG_GRADLE_PROJECT_newArchEnabled=true`
@@ -27,19 +32,15 @@ def resolveReactNativeDirectory() {
     }
 
     // Fallback to node resolver for custom directory structures like monorepos.
-    def reactNativePackage = file(
-        providers.exec {
-            workingDir(rootDir)
-            commandLine("node", "--print", "require.resolve('react-native/package.json')")
-        }.standardOutput.asText.get().trim()
-    )
+    def reactNativePackage = file(providers.exec {
+        workingDir(rootDir)
+        commandLine("node", "--print", "require.resolve('react-native/package.json')")
+    }.standardOutput.asText.get().trim())
     if (reactNativePackage.exists()) {
         return reactNativePackage.parentFile
     }
 
-    throw new GradleException(
-        "[Reanimated] Unable to resolve react-native location in node_modules. You should set project extension property (in `app/build.gradle`) named `REACT_NATIVE_NODE_MODULES_DIR` with the path to react-native in node_modules."
-    )
+    throw new GradleException("[Reanimated] Unable to resolve react-native location in node_modules. You should set project extension property (in `app/build.gradle`) named `REACT_NATIVE_NODE_MODULES_DIR` with the path to react-native in node_modules.")
 }
 
 def resolveReactNativeWorkletsDirectory() {
@@ -49,19 +50,15 @@ def resolveReactNativeWorkletsDirectory() {
     }
 
     // Fallback to node resolver for custom directory structures like monorepos.
-    def reactNativeWorkletsPackage = file(
-        providers.exec {
-            workingDir(rootDir)
-            commandLine("node", "--print", "require.resolve('react-native-worklets/package.json')")
-        }.standardOutput.asText.get().trim()
-    )
+    def reactNativeWorkletsPackage = file(providers.exec {
+        workingDir(rootDir)
+        commandLine("node", "--print", "require.resolve('react-native-worklets/package.json')")
+    }.standardOutput.asText.get().trim())
     if (reactNativeWorkletsPackage.exists()) {
         return reactNativeWorkletsPackage.parentFile
     }
 
-    throw new GradleException(
-        "[Reanimated] Unable to resolve react-native-worklets location in node_modules. You should set project extension property (in `app/build.gradle`) named `REACT_NATIVE_WORKLETS_NODE_MODULES_DIR` with the path to react-native-worklets in node_modules."
-    )
+    throw new GradleException("[Reanimated] Unable to resolve react-native-worklets location in node_modules. You should set project extension property (in `app/build.gradle`) named `REACT_NATIVE_WORKLETS_NODE_MODULES_DIR` with the path to react-native-worklets in node_modules.")
 }
 
 def getReactNativeVersion() {
@@ -82,11 +79,11 @@ def getReanimatedVersion() {
     return json.version
 }
 
-def toPlatformFileString(String path) {
-  if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-      path = path.replace(File.separatorChar, '/' as char)
-  }
-  return path
+static def toPlatformFileString(String path) {
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        path = path.replace(File.separatorChar, '/' as char)
+    }
+    return path
 }
 
 def getReanimatedStaticFeatureFlags() {
@@ -96,22 +93,20 @@ def getReanimatedStaticFeatureFlags() {
     if (!staticFeatureFlagsFile.exists()) {
         throw new GradleException("[Reanimated] Feature flags file not found at ${staticFeatureFlagsFile.absolutePath}.")
     }
-    new JsonSlurper().parseText(staticFeatureFlagsFile.text).each { key, value ->
-        featureFlags[key] = value.toString()
+    new JsonSlurper().parseText(staticFeatureFlagsFile.text).each { key, value -> featureFlags[key] = value.toString()
     }
 
     def packageJsonFile = file(rootDir.path + "/../package.json")
     if (packageJsonFile.exists()) {
         def packageJson = new JsonSlurper().parseText(packageJsonFile.text)
-        packageJson.reanimated?.staticFeatureFlags?.each { key, value ->
-            featureFlags[key] = value.toString()
+        packageJson.reanimated?.staticFeatureFlags?.each { key, value -> featureFlags[key] = value.toString()
         }
     }
 
     return featureFlags.collect { key, value -> "[${key}:${value}]" }.join("")
 }
 
-if (isNewArchitectureEnabled()) {
+if (isNewArchitectureEnabled() && project != rootProject) {
     apply plugin: "com.facebook.react"
 }
 
@@ -129,7 +124,7 @@ def REANIMATED_FEATURE_FLAGS = getReanimatedStaticFeatureFlags()
 // Set version for prefab
 version REANIMATED_VERSION
 
-def reanimatedPrefabHeadersDir = project.file("$buildDir/prefab-headers/reanimated")
+def reanimatedPrefabHeadersDir = project.file("${getLayout().getBuildDirectory().getAsFile().get().absolutePath}/prefab-headers/reanimated")
 
 def reactNativeArchitectures() {
     def value = project.getProperties().get("reactNativeArchitectures")
@@ -142,9 +137,9 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:8.2.1"
+        classpath "com.android.tools.build:gradle:8.13.1"
         classpath "de.undercouch:gradle-download-task:5.6.0"
-        classpath "com.diffplug.spotless:spotless-plugin-gradle:6.25.0"
+        classpath "com.diffplug.spotless:spotless-plugin-gradle:8.1.0"
     }
 }
 
@@ -203,7 +198,7 @@ android {
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}",
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
                         "-DREANIMATED_FEATURE_FLAGS=${REANIMATED_FEATURE_FLAGS}"
-                abiFilters (*reactNativeArchitectures())
+                abiFilters(*reactNativeArchitectures())
                 targets("reanimated")
             }
         }
@@ -231,25 +226,24 @@ android {
         // while there are more libraries copied in intermediates folder of the lib build directory, we exclude
         // only the ones that make the build fail (ideally we should only include libreanimated but we
         // are only allowed to specify exclude patterns)
-        excludes = [
-                "META-INF",
-                "META-INF/**",
-                "**/libc++_shared.so",
-                "**/libfbjni.so",
-                "**/libjsi.so",
-                "**/libhermes.so",
-                "**/libhermesvm.so",
-                "**/libhermestooling.so",
-                "**/libreactnative.so",
-                "**/libjscexecutor.so",
-        ]
+        excludes = ["META-INF",
+                    "META-INF/**",
+                    "**/libc++_shared.so",
+                    "**/libfbjni.so",
+                    "**/libjsi.so",
+                    "**/libhermes.so",
+                    "**/libhermesvm.so",
+                    "**/libhermestooling.so",
+                    "**/libreactnative.so",
+                    "**/libjscexecutor.so",
+                    "**/libworklets.so",]
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-    tasks.withType(ExternalNativeBuildJsonTask) {
-        compileTask ->
+    tasks.withType(ExternalNativeBuildJsonTask).tap {
+        configureEach { compileTask ->
             compileTask.doLast {
                 if (!IS_REANIMATED_EXAMPLE_APP) {
                     return
@@ -262,6 +256,7 @@ android {
 
                 println("Generated clangd metadata.")
             }
+        }
     }
 }
 
@@ -271,7 +266,7 @@ def validateReactNativeVersionResult = providers.exec {
     ignoreExitValue = true
 }
 
-task assertMinimalReactNativeVersionTask {
+tasks.register('assertMinimalReactNativeVersionTask') {
     doFirst {
         if (validateReactNativeVersionResult.getResult().get().exitValue != 0) {
             throw new GradleException(validateReactNativeVersionResult.getStandardError().getAsText().get().trim())
@@ -281,7 +276,7 @@ task assertMinimalReactNativeVersionTask {
 
 preBuild.dependsOn(assertMinimalReactNativeVersionTask)
 
-task assertNewArchitectureEnabledTask {
+tasks.register('assertNewArchitectureEnabledTask') {
     onlyIf { !IS_NEW_ARCHITECTURE_ENABLED }
     doFirst {
         throw new GradleException("[Reanimated] Reanimated requires new architecture to be enabled. Please enable it by setting `newArchEnabled` to `true` in `gradle.properties`.")
@@ -296,7 +291,7 @@ def validateWorkletsBuildResult = providers.exec {
     ignoreExitValue = true
 }
 
-task assertWorkletsVersionTask {
+tasks.register('assertWorkletsVersionTask') {
     doFirst {
         if (validateWorkletsBuildResult.getResult().get().exitValue != 0) {
             throw new GradleException(validateWorkletsBuildResult.getStandardError().getAsText().get().trim())
@@ -306,7 +301,7 @@ task assertWorkletsVersionTask {
 
 preBuild.dependsOn(assertWorkletsVersionTask)
 
-task prepareReanimatedHeadersForPrefabs(type: Copy) {
+tasks.register('prepareReanimatedHeadersForPrefabs', Copy) {
     from("$projectDir/src/main/cpp")
     from("$projectDir/../Common/cpp")
     include("reanimated/**/*.h")
@@ -315,6 +310,16 @@ task prepareReanimatedHeadersForPrefabs(type: Copy) {
 
 interface FSService {
     @Inject FileSystemOperations getFs()
+}
+
+tasks.register('cleanCMakeCache') {
+    def fsProvider = project.objects.newInstance(FSService)
+    def cxxDir = file("${projectDir}/.cxx")
+    doFirst {
+        fsProvider.fs.delete {
+            delete cxxDir
+        }
+    }
 }
 
 // def cleanCmakeCacheTask = tasks.register('cleanCmakeCache', Delete) {
@@ -341,11 +346,11 @@ repositories {
 
 dependencies {
     implementation "com.facebook.yoga:proguard-annotations:1.19.0"
-    implementation "androidx.transition:transition:1.1.0"
-    implementation "androidx.core:core:1.6.0"
+    implementation "androidx.transition:transition:1.6.0"
+    implementation "androidx.core:core:1.15.0"
 
     implementation "com.facebook.react:react-android" // version substituted by RNGP
- 
+
     if (project == rootProject) {
         // This is needed for linting in Reanimated's repo.
     } else {
@@ -398,5 +403,14 @@ if (project != rootProject) {
         tasks.getByName("externalNativeBuildDebug").dependsOn(findProject(":react-native-worklets").tasks.getByName("externalNativeBuildDebug"))
         tasks.getByName("externalNativeBuildRelease").dependsOn(findProject(":react-native-worklets").tasks.getByName("externalNativeBuildRelease"))
         // tasks.getByName("configureCMakeDebug").dependsOn(findProject(":react-native-worklets").tasks.getByName("configureCMakeDebug"))
+        // tasks.named("externalNativeBuildDebug").configure {
+        //     dependsOn(findProject(":react-native-worklets").tasks.named("externalNativeBuildDebug"))
+        // }
+        // tasks.named("externalNativeBuildRelease").configure {
+        //     dependsOn(findProject(":react-native-worklets").tasks.named("externalNativeBuildRelease"))
+        // }
+        // tasks.named("clean") {
+        //     it.finalizedBy(cleanCMakeCache)
+        // }
     }
 }

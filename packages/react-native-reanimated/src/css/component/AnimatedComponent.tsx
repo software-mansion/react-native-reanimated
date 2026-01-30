@@ -33,8 +33,9 @@ export type AnimatedComponentProps = Record<string, unknown> & {
 // to the main one)
 export default class AnimatedComponent<
     P extends AnyRecord = AnimatedComponentProps,
+    S extends AnyRecord = Record<string, unknown>,
   >
-  extends Component<P>
+  extends Component<P, S>
   implements IAnimatedComponentInternalBase
 {
   ChildComponent: AnyComponent;

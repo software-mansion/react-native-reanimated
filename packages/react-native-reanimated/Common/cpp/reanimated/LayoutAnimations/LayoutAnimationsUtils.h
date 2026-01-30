@@ -13,12 +13,15 @@
 
 namespace reanimated {
 
+enum BeforeOrAfter { BEFORE = 0, AFTER = 1 };
+
 struct Rect {
   double width, height;
 };
 
 struct Frame {
   std::optional<double> x, y, width, height;
+  Frame(double x, double y, double width, double height) : x(x), y(y), width(width), height(height) {}
   Frame(jsi::Runtime &runtime, const jsi::Object &newStyle) {
     if (newStyle.hasProperty(runtime, "originX")) {
       x = newStyle.getProperty(runtime, "originX").asNumber();
@@ -56,43 +59,42 @@ struct Snapshot {
 typedef enum class ExitingState : std::uint8_t {
   UNDEFINED = 1,
   WAITING = 2,
-  ANIMATING = 4,
-  DEAD = 8,
-  MOVED = 16,
-  DELETED = 32,
+  ANIMATING = 3,
+  DEAD = 4,
+  DELETED = 5,
 } ExitingState;
 
 struct MutationNode;
 
-/**
- Represents a view that was either removed or had a child removed from the
- ShadowTree
- */
-struct Node {
-  std::vector<std::shared_ptr<MutationNode>> children, unflattenedChildren;
-  std::shared_ptr<Node> parent, unflattenedParent;
-  Tag tag;
-  void removeChildFromUnflattenedTree(const std::shared_ptr<MutationNode> &child);
-  void applyMutationToIndices(const ShadowViewMutation &mutation);
-  void insertChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
-  void insertUnflattenedChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
-  virtual bool isMutationMode();
-  explicit Node(const Tag tag) : tag(tag) {}
-  Node(Node &&node) noexcept
-      : children(std::move(node.children)), unflattenedChildren(std::move(node.unflattenedChildren)), tag(node.tag) {}
-  Node(Node &node) : children(node.children), unflattenedChildren(node.unflattenedChildren), tag(node.tag) {}
-  virtual ~Node() = default;
+enum TransitionState {
+  NONE = 0,
+  START = 1,
+  ACTIVE = 2,
+  END = 3,
+  CANCELLED = 4,
 };
 
-/**
- Represents a view that was removed from the ShadowTree
- */
-struct MutationNode : public Node {
-  ShadowViewMutation mutation;
+enum Intent {
+  NO_INTENT = 0,
+  TO_MOVE = 1,
+  TO_DELETE = 2,
+};
+
+struct LightNode {
+  ShadowView previous;
+  ShadowView current;
   ExitingState state = ExitingState::UNDEFINED;
-  explicit MutationNode(ShadowViewMutation &mutation) : Node(mutation.oldChildShadowView.tag), mutation(mutation) {}
-  MutationNode(ShadowViewMutation &mutation, Node &&node) : Node(std::move(node)), mutation(mutation) {}
-  bool isMutationMode() override;
+  std::weak_ptr<LightNode> parent;
+  std::vector<std::shared_ptr<LightNode>> children;
+  int removeChild(std::shared_ptr<LightNode> child) {
+    for (int i = children.size() - 1; i >= 0; i--) {
+      if (children[i]->current.tag == child->current.tag) {
+        children.erase(children.begin() + i);
+        return i;
+      }
+    }
+    return -1;
+  }
 };
 
 struct SurfaceManager {
@@ -104,7 +106,7 @@ struct SurfaceManager {
   Rect getWindow(SurfaceId surfaceId);
 };
 
-static inline void updateLayoutMetrics(LayoutMetrics &layoutMetrics, Frame &frame) {
+static inline void updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame &frame) {
   // we use optional's here to avoid overwriting non-animated values
   if (frame.width) {
     layoutMetrics.frame.size.width = *frame.width;
@@ -120,39 +122,25 @@ static inline void updateLayoutMetrics(LayoutMetrics &layoutMetrics, Frame &fram
   }
 }
 
-static inline bool isRNSScreen(const std::shared_ptr<MutationNode> &node) {
-  const auto &componentName = node->mutation.oldChildShadowView.componentName;
+static inline bool isRNSScreenOrStack(const std::shared_ptr<LightNode> &node) {
+  const auto componentName = node->current.componentName;
+  react_native_assert(componentName && "Component name is nullptr");
   return !std::strcmp(componentName, "RNSScreenStack") || !std::strcmp(componentName, "RNSScreen") ||
       !std::strcmp(componentName, "RNSModalScreen");
 }
 
-static inline bool hasLayoutChanged(const ShadowViewMutation &mutation) {
-  return mutation.oldChildShadowView.layoutMetrics.frame != mutation.newChildShadowView.layoutMetrics.frame;
+static inline bool isRNSScreen(const std::shared_ptr<LightNode> &node) {
+  const auto componentName = node->current.componentName;
+  react_native_assert(componentName && "Component name is nullptr");
+  return !std::strcmp(componentName, "RNSScreen") || !std::strcmp(componentName, "RNSModalScreen");
 }
 
-static inline void mergeAndSwap(
-    std::vector<std::shared_ptr<MutationNode>> &A,
-    std::vector<std::shared_ptr<MutationNode>> &B) {
-  std::vector<std::shared_ptr<MutationNode>> merged;
-  auto it1 = A.begin(), it2 = B.begin();
-  while (it1 != A.end() && it2 != B.end()) {
-    if ((*it1)->mutation.index < (*it2)->mutation.index) {
-      merged.push_back(*it1);
-      it1++;
-    } else {
-      merged.push_back(*it2);
-      it2++;
-    }
-  }
-  while (it1 != A.end()) {
-    merged.push_back(*it1);
-    it1++;
-  }
-  while (it2 != B.end()) {
-    merged.push_back(*it2);
-    it2++;
-  }
-  std::swap(A, merged);
+static inline bool isRoot(const std::shared_ptr<LightNode> &node) {
+  return node->current.tag % 10 == 1;
+}
+
+static inline bool hasLayoutChanged(const ShadowViewMutation &mutation) {
+  return mutation.oldChildShadowView.layoutMetrics.frame != mutation.newChildShadowView.layoutMetrics.frame;
 }
 
 } // namespace reanimated

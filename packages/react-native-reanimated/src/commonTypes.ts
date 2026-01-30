@@ -94,6 +94,10 @@ export enum LayoutAnimationType {
   ENTERING = 1,
   EXITING = 2,
   LAYOUT = 3,
+  SHARED_ELEMENT_TRANSITION = 4,
+  SHARED_ELEMENT_TRANSITION_NATIVE_ID = 5,
+  SHARED_ELEMENT_TRANSITION_PROGRESS = 6,
+  SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID = 7,
 }
 
 export type LayoutAnimationFunction = (
@@ -162,6 +166,7 @@ export interface LayoutAnimationBatchItem {
   viewTag: number;
   type: LayoutAnimationType;
   config: SerializableRef<Keyframe | LayoutAnimationFunction> | undefined;
+  sharedTransitionTag?: string;
 }
 
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
@@ -187,10 +192,7 @@ export interface SharedValue<Value = unknown> {
   set(value: Value | ((value: Value) => Value)): void;
   addListener: (listenerID: number, listener: (value: Value) => void) => void;
   removeListener: (listenerID: number) => void;
-  modify: (
-    modifier?: <T extends Value>(value: T) => T,
-    forceUpdate?: boolean
-  ) => void;
+  modify: (modifier?: (value: Value) => Value, forceUpdate?: boolean) => void;
 }
 
 /**
@@ -201,7 +203,7 @@ export interface SharedValue<Value = unknown> {
  */
 type SharedValueDisableContravariance<Value = unknown> = Omit<
   SharedValue<Value>,
-  'set'
+  'set' | 'modify'
 >;
 
 export interface Mutable<Value = unknown> extends SharedValue<Value> {
@@ -359,6 +361,11 @@ export enum InterfaceOrientation {
 
 export type ShadowNodeWrapper = {
   __nativeStateShadowNodeWrapper: never;
+};
+
+export type SettledUpdate = {
+  viewTag: number;
+  styleProps: StyleProps;
 };
 
 export enum KeyboardState {

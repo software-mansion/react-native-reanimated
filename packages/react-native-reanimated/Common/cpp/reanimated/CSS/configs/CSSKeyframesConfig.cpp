@@ -11,7 +11,7 @@ std::shared_ptr<AnimationStyleInterpolator> createStyleInterpolator(
     const std::string &componentName,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
   return std::make_shared<AnimationStyleInterpolator>(
-      rt, config.getProperty(rt, "keyframesStyle"), componentName, viewStylesRepository);
+      rt, config.getProperty(rt, "propKeyframes"), componentName, viewStylesRepository);
 }
 
 std::shared_ptr<KeyframeEasingFunctions> getKeyframeTimingFunctions(jsi::Runtime &rt, const jsi::Object &config) {

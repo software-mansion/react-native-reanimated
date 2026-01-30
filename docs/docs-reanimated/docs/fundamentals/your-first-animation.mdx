@@ -88,7 +88,7 @@ export default function App() {
   const width = useSharedValue(100);
 
   const handlePress = () => {
-    width.value = width.value + 50;
+    width.value = Math.random() * 100 + 50;
   };
 
   return (
@@ -106,8 +106,6 @@ export default function App() {
 }
 ```
 
-Please hold on a second before you shorten `width.value = width.value + 50` to `width.value += 50`. We're preparing this code for the final step which will finally bring our animation to life!
-
 :::caution
 
 It's a common mistake to modify a shared value directly like this: ~~`sv = sv + 100;`~~. Always remember to access the shared value by using the `.value` property instead. Here, the correct usage would be `sv.value = sv.value + 100;`.
@@ -116,7 +114,7 @@ It's a common mistake to modify a shared value directly like this: ~~`sv = sv + 
 
 ## Using an animation function
 
-Finally, import `withSpring` function and wrap around `width.value + 50` in the `handlePress` function so that the value which `withSpring` returns modifies the shared value. This will create a bouncy spring animation that transitions the width of the element from its current value (here `width.value`) to the new one (here `width.value + 50`).
+Finally, import `withSpring` function and wrap around `Math.random() * 100 + 50` in the `handlePress` function so that the value which `withSpring` returns modifies the shared value. This will create a bouncy spring animation that transitions the width of the element from its current value (here `width.value`) to the new one (here `Math.random() * 100 + 50`).
 
 ```jsx {2,8}
 import { Button, View } from 'react-native';
@@ -126,7 +124,7 @@ export default function App() {
   const width = useSharedValue(100);
 
   const handlePress = () => {
-    width.value = withSpring(width.value + 50);
+    width.value = withSpring(Math.random() * 100 + 50);
   };
 
   return (
