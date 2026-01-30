@@ -1,4 +1,7 @@
 #include <worklets/RunLoop/AsyncQueueImpl.h>
+#ifdef ANDROID
+#include <worklets/android/WorkletsModule.h>
+#endif // ANDROID
 
 #if defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 #include <fbjni/detail/Environment.h>

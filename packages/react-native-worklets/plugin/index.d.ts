@@ -65,11 +65,12 @@ export interface PluginOptions {
    * - Defaults to an empty array `[]`.
    */
   globals?: string[];
+  limitInitDataHoisting?: boolean;
   /**
    * This option comes in handy for Web apps. Because Babel ordinarily doesn't
-   * get information about the target platform, it includes worklet data in
-   * the bundle that only Native apps find relevant. If you enable this
-   * option, your bundle size will be smaller.
+   * get information about the target platform, it includes worklet data in the
+   * bundle that only Native apps find relevant. If you enable this option, your
+   * bundle size will be smaller.
    *
    * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#omitnativeonlydata}
    *
@@ -78,10 +79,9 @@ export interface PluginOptions {
   omitNativeOnlyData?: boolean;
   /**
    * This option dictates the passed file location for a worklet's source map.
-   * If you enable this option, the file paths will be relative to
-   * `process.cwd` (the current directory where Babel executes). This can be
-   * handy for Jest test snapshots to ensure consistent results across
-   * machines.
+   * If you enable this option, the file paths will be relative to `process.cwd`
+   * (the current directory where Babel executes). This can be handy for Jest
+   * test snapshots to ensure consistent results across machines.
    *
    * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#relativesourcelocation}
    *
@@ -100,9 +100,9 @@ export interface PluginOptions {
   /**
    * This option can also be useful for Web apps. In Reanimated, there are
    * numerous checks to determine the right function implementation for a
-   * specific target platform. Enabling this option changes all the checks
-   * that identify if the target is a Web app to `true`. This alteration can
-   * aid in tree-shaking and contribute to reducing the bundle size.
+   * specific target platform. Enabling this option changes all the checks that
+   * identify if the target is a Web app to `true`. This alteration can aid in
+   * tree-shaking and contribute to reducing the bundle size.
    *
    * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#substitutewebplatformchecks}
    *

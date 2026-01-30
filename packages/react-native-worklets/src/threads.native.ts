@@ -1,6 +1,7 @@
 'use strict';
 
 import { WorkletsError } from './debug/WorkletsError';
+import { shareableMappingCache } from './deprecated';
 import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
@@ -195,6 +196,23 @@ export function runOnUISync<Args extends unknown[], ReturnValue>(
     })
   );
 }
+
+export function runOnUISync_WORKLET<Args extends unknown[], ReturnValue>(
+  worklet: WorkletFunction<Args, ReturnValue>,
+  ...args: Args
+): ReturnValue {
+  'worklet';
+  return globalThis.__workletsModuleProxy.runOnUISync(
+    makeShareableCloneOnUIRecursive(() => {
+      'worklet';
+      console.log('worklet', worklet);
+      const result = worklet(...args);
+      return makeShareableCloneOnUIRecursive(result);
+    })
+  );
+}
+
+shareableMappingCache.set(runOnUISync, createSerializable(runOnUISync_WORKLET));
 
 // @ts-expect-error This overload is correct since it's what user sees in their code
 // before it's transformed by Worklets Babel plugin.
