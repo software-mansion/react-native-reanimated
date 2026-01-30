@@ -48,3 +48,13 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
 export function runOnRuntimeSync(): never {
   throw new WorkletsError('`runOnRuntimeSync` is not supported on web.');
 }
+
+export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): Promise<ReturnValue>;
+
+export function runOnRuntimeAsync(): never {
+  throw new WorkletsError('`runOnRuntimeAsync` is not supported on web.');
+}

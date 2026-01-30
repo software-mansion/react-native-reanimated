@@ -35,6 +35,18 @@ const WorkletAPI = {
   RuntimeKind: RuntimeKind,
   createWorkletRuntime: NOOP_FACTORY,
   runOnRuntime: ID,
+  runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
+    _workletRuntime: unknown,
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): Promise<ReturnValue> {
+    return new Promise<ReturnValue>((resolve) => {
+      mockedRequestAnimationFrame(() => {
+        const result = worklet(...args);
+        resolve(result);
+      });
+    });
+  },
   scheduleOnRuntime: IMMEDIATE_CALLBACK_INVOCATION,
   createSerializable: ID,
   isSerializableRef: ID,
