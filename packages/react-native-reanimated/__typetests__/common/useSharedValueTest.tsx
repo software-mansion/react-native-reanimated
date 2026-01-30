@@ -131,3 +131,12 @@ function UseSharedValueTestUseAnimatedStyle() {
 
   return <Animated.View style={[animatedStyle1, animatedStyle2]} />;
 }
+
+function UseSharedValueTestModify() {
+  const sv = useSharedValue<number[]>([1, 2, 3]);
+
+  sv.modify((value) => {
+    'worklet';
+    return value;
+  });
+}

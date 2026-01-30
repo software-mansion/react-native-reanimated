@@ -111,6 +111,9 @@ const notCapturedIdentifiers = [
   'performance',
   'arguments', // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
   'require',
+  'fetch',
+  'XMLHttpRequest',
+  'WebSocket',
 
   // Run loop
   'queueMicrotask',
@@ -151,8 +154,10 @@ const notCapturedIdentifiers_DEPRECATED = ['_IS_FABRIC'];
 export function initializeState(state: WorkletsPluginPass) {
   state.workletNumber = 1;
   state.classesToWorkletize = [];
-  initializeGlobals();
-  addCustomGlobals(state);
+  if (!state.opts.strictGlobal) {
+    initializeGlobals();
+    addCustomGlobals(state);
+  }
 }
 
 export const defaultGlobals = new Set(

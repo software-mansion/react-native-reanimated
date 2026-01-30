@@ -28,13 +28,12 @@ import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMerg
 import CopySerializablePerformanceTest from './CopySerializablePerformanceTest';
 import CounterExample from './CounterExample';
 import CubesExample from './CubesExample';
-import PagerExample from './CustomHandler/PagerExample';
 import DispatchCommandExample from './DispatchCommandExample';
 import DragAndSnapExample from './DragAndSnapExample';
 import DynamicColorIOSExample from './DynamicColorIOSExample';
 import PlatformColorExample from './PlatformColorExample';
 import EmojiWaterfallExample from './EmojiWaterfallExample';
-import EmptyExample from './EmptyExample';
+import StrictModeComparison from './LayoutAnimations/StrictModeComparisonExample';
 import ExtrapolationExample from './ExtrapolationExample';
 import FilterExample from './FilterExample';
 import FlatListWithLayoutAnimations from './FlatListWithLayoutAnimationsExample';
@@ -159,7 +158,10 @@ import WorkletExample from './WorkletExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import InstanceDiscoveryExample from './InstanceDiscoveryExample';
+import FetchExample from './FetchExample';
 import ShadowNodesCloningExample from './ShadowNodesCloningExample';
+import EmptyExample from './EmptyExample';
+import AnimatedPropsExample from './AnimatedPropsExample';
 
 export const REAPlatform = {
   IOS: 'ios',
@@ -176,8 +178,8 @@ export interface Example {
     ios: boolean;
     android: boolean;
   };
-  missingOnFabric?: boolean;
   disabledPlatforms?: (typeof REAPlatform)[keyof typeof REAPlatform][];
+  needsBundleMode?: boolean;
 }
 
 export const EXAMPLES: Record<string, Example> = {
@@ -247,6 +249,12 @@ export const EXAMPLES: Record<string, Example> = {
     screen: WorkletRuntimeExample,
     disabledPlatforms: [REAPlatform.WEB],
   },
+  FetchExample: {
+    icon: '📡',
+    title: 'Fetch & XHR (Bundle Mode)',
+    screen: FetchExample,
+    needsBundleMode: true,
+  },
   ModifyExample: {
     icon: '🪛',
     title: 'Modify',
@@ -261,6 +269,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🧠',
     title: 'Memo',
     screen: MemoExample,
+  },
+  AnimatedPropsExample: {
+    icon: '🎨',
+    title: 'Animated props',
+    screen: AnimatedPropsExample,
   },
   SerializableFreezingExample: {
     icon: '🥶',
@@ -756,10 +769,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Wobble example',
     screen: WobbleExample,
   },
-  PagerExample: {
-    title: 'Pager example',
-    screen: PagerExample,
-  },
   TransformOriginExample: {
     title: 'Transform origin example',
     screen: TransformOriginExample,
@@ -829,6 +838,10 @@ export const EXAMPLES: Record<string, Example> = {
   MountingUnmounting: {
     title: '[LA] Mounting Unmounting',
     screen: MountingUnmounting,
+  },
+  StrictModeComparison: {
+    title: '[LA] Strict Mode Comparison',
+    screen: StrictModeComparison,
   },
   ReactionsCounterExample: {
     title: '[LA] Reactions counter',

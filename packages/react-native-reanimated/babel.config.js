@@ -1,5 +1,8 @@
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
-const workletsPluginOptions = { disableInlineStylesWarning: true };
+const workletsPluginOptions = {
+  disableInlineStylesWarning: true,
+  strictGlobal: true,
+};
 
 /** @type {import('@babel/core').TransformOptions} */
 module.exports = {

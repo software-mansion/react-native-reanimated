@@ -6,18 +6,14 @@ import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import {
   IS_JEST,
-  processBoxShadowNative,
   processColorsInProps,
-  processFilter,
   processTransform,
+  processTransformOrigin,
   ReanimatedError,
   SHOULD_BE_USE_WEB,
+  stylePropsBuilder,
 } from '../common';
-import {
-  processBoxShadowWeb,
-  processFilterWeb,
-  processTransformOrigin,
-} from '../common/web';
+import { processBoxShadowWeb, processFilterWeb } from '../common/web';
 import type {
   AnimatedStyle,
   ShadowNodeWrapper,
@@ -53,26 +49,30 @@ if (SHOULD_BE_USE_WEB) {
     });
   };
 } else {
-  updateProps = (viewDescriptors, updates) => {
+  updateProps = (viewDescriptors, updates, isAnimatedProps) => {
     'worklet';
-    /* TODO: Improve this config structure in the future
-     * The goal is to create a simplified version of `src/css/platform/native/config.ts`,
-     * containing only properties that require processing and their associated processors
-     * */
-    processColorsInProps(updates);
-    if ('transformOrigin' in updates) {
-      updates.transformOrigin = processTransformOrigin(updates.transformOrigin);
+
+    // TODO: Remove this if once we have SVG props builder implemented
+    // We need to keep it for now to prevent regression in SVG props processing
+    if (isAnimatedProps) {
+      processColorsInProps(updates);
+      if ('transformOrigin' in updates) {
+        updates.transformOrigin = processTransformOrigin(
+          updates.transformOrigin
+        );
+      }
+      if ('transform' in updates) {
+        updates.transform = processTransform(updates.transform);
+      }
     }
-    if ('transform' in updates) {
-      updates.transform = processTransform(updates.transform);
-    }
-    if ('boxShadow' in updates) {
-      updates.boxShadow = processBoxShadowNative(updates.boxShadow);
-    }
-    if ('filter' in updates) {
-      updates.filter = processFilter(updates.filter);
-    }
-    global.UpdatePropsManager.update(viewDescriptors, updates);
+
+    global.UpdatePropsManager.update(
+      viewDescriptors,
+      // Use props builder only for style updaters, since animated props
+      // can contain any properties of different types, depending on the
+      // component, which we cannot process properly with the props builder.
+      isAnimatedProps ? updates : stylePropsBuilder.build(updates)
+    );
   };
 }
 

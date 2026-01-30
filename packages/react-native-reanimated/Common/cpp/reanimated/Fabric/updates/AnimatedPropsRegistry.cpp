@@ -33,13 +33,15 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
 
 void AnimatedPropsRegistry::remove(const Tag tag) {
   updatesRegistry_.erase(tag);
+  timestampMap_.erase(tag);
 }
 
 jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt, const double timestamp) {
   std::vector<std::pair<Tag, std::reference_wrapper<const folly::dynamic>>> updates;
 
   for (const auto &[viewTag, pair] : updatesRegistry_) {
-    if (timestampMap_.at(viewTag) < timestamp) {
+    auto it = timestampMap_.find(viewTag);
+    if (it != timestampMap_.end() && it->second < timestamp) {
       updates.emplace_back(viewTag, std::cref(pair.second));
     }
   }

@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES6",
-    "removeComments": true,
+    "removeComments": false,
     "module": "commonjs",
     "skipLibCheck": true,
     "sourceMap": true,

@@ -10,10 +10,6 @@ AnimatedSensorModule::AnimatedSensorModule(const PlatformDepMethodsHolder &platf
     : platformRegisterSensorFunction_(platformDepMethodsHolder.registerSensor),
       platformUnregisterSensorFunction_(platformDepMethodsHolder.unregisterSensor) {}
 
-AnimatedSensorModule::~AnimatedSensorModule() {
-  react_native_assert(sensorsIds_.empty() && "Tried to deallocate AnimatedSensorModule with registered sensors");
-}
-
 jsi::Value AnimatedSensorModule::registerSensor(
     jsi::Runtime &rt,
     const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime,

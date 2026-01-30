@@ -192,10 +192,7 @@ export interface SharedValue<Value = unknown> {
   set(value: Value | ((value: Value) => Value)): void;
   addListener: (listenerID: number, listener: (value: Value) => void) => void;
   removeListener: (listenerID: number) => void;
-  modify: (
-    modifier?: <T extends Value>(value: T) => T,
-    forceUpdate?: boolean
-  ) => void;
+  modify: (modifier?: (value: Value) => Value, forceUpdate?: boolean) => void;
 }
 
 /**
@@ -206,7 +203,7 @@ export interface SharedValue<Value = unknown> {
  */
 type SharedValueDisableContravariance<Value = unknown> = Omit<
   SharedValue<Value>,
-  'set'
+  'set' | 'modify'
 >;
 
 export interface Mutable<Value = unknown> extends SharedValue<Value> {

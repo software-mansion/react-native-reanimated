@@ -44,3 +44,13 @@ export function getUIWorkletRuntime(): WorkletRuntime;
 export function getUIWorkletRuntime(): never {
   throw new WorkletsError('`getUIWorkletRuntime` is not supported on web.');
 }
+
+export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): ReturnValue;
+
+export function runOnRuntimeSync(): never {
+  throw new WorkletsError('`runOnRuntimeSync` is not supported on web.');
+}

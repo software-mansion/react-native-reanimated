@@ -82,7 +82,7 @@ export type AnimatedComponentProps<
 > = P & {
   ref?: Ref<Component>;
   style?: NestedArray<StyleProps>;
-  animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
+  animatedProps?: NestedArray<Partial<AnimatedComponentProps<AnimatedProps>>>;
   jestAnimatedValues?: RefObject<AnimatedProps>;
   animatedStyle?: StyleProps;
   sharedTransitionTag?: string;

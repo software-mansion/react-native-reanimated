@@ -206,7 +206,7 @@ const config = tsEslint.config(
     '**/lib/**',
     '**/.next/**',
     '**/macos/**',
-    '**/__generatedWorklets__/**',
+    '**/.worklets/**',
   ])
 );
 

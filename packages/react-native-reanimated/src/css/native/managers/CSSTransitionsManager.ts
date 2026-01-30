@@ -1,56 +1,70 @@
 'use strict';
+import type { UnknownRecord } from '../../../common';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type {
   CSSTransitionProperties,
   ICSSTransitionsManager,
 } from '../../types';
-import {
-  getNormalizedCSSTransitionConfigUpdates,
-  normalizeCSSTransitionProperties,
-} from '../normalization';
-import {
-  registerCSSTransition,
-  unregisterCSSTransition,
-  updateCSSTransition,
-} from '../proxy';
-import type { NormalizedCSSTransitionConfig } from '../types';
+import { deepEqual } from '../../utils';
+import { normalizeCSSTransitionProperties } from '../normalization';
+import { runCSSTransition, unregisterCSSTransition } from '../proxy';
+import type {
+  CSSTransitionConfig,
+  NormalizedCSSTransitionConfig,
+} from '../types';
 
 export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private readonly viewTag: number;
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
 
-  private transitionConfig: NormalizedCSSTransitionConfig | null = null;
+  private lastAppliedProps: UnknownRecord | null = null;
 
   constructor(shadowNodeWrapper: ShadowNodeWrapper, viewTag: number) {
     this.viewTag = viewTag;
     this.shadowNodeWrapper = shadowNodeWrapper;
   }
 
-  update(transitionProperties: CSSTransitionProperties | null): void {
-    if (!transitionProperties) {
-      this.detach();
-      return;
-    }
-
+  update(
+    transitionProperties: CSSTransitionProperties | null,
+    props: UnknownRecord = {}
+  ): void {
     const transitionConfig =
+      transitionProperties &&
       normalizeCSSTransitionProperties(transitionProperties);
+
     if (!transitionConfig) {
       this.detach();
       return;
     }
 
-    if (this.transitionConfig) {
-      const configUpdates = getNormalizedCSSTransitionConfigUpdates(
-        this.transitionConfig,
-        transitionConfig
-      );
+    const prevProps = this.lastAppliedProps; // Active props from last update
+    const nextProps: UnknownRecord = {}; // Active props from this update
 
-      if (Object.keys(configUpdates).length > 0) {
-        this.transitionConfig = transitionConfig;
-        updateCSSTransition(this.viewTag, configUpdates);
-      }
+    // Filter new props based on the new transition config
+    if (!transitionConfig.properties) {
+      Object.assign(nextProps, props);
     } else {
-      this.attachTransition(transitionConfig);
+      for (const property of transitionConfig.properties) {
+        if (property in props) {
+          nextProps[property] = props[property];
+        }
+      }
+    }
+
+    this.lastAppliedProps = nextProps;
+
+    if (!prevProps) {
+      return;
+    }
+
+    const config = this.buildTransitionConfig(
+      prevProps,
+      nextProps,
+      transitionConfig
+    );
+
+    if (Object.keys(config).length) {
+      runCSSTransition(this.shadowNodeWrapper, config);
     }
   }
 
@@ -59,16 +73,57 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   }
 
   private detach() {
-    if (this.transitionConfig) {
+    if (this.lastAppliedProps) {
       unregisterCSSTransition(this.viewTag);
-      this.transitionConfig = null;
+      this.lastAppliedProps = null;
     }
   }
 
-  private attachTransition(transitionConfig: NormalizedCSSTransitionConfig) {
-    if (!this.transitionConfig) {
-      registerCSSTransition(this.shadowNodeWrapper, transitionConfig);
-      this.transitionConfig = transitionConfig;
+  private buildTransitionConfig(
+    oldProps: UnknownRecord,
+    newProps: UnknownRecord,
+    newTransitionConfig: NormalizedCSSTransitionConfig
+  ): CSSTransitionConfig {
+    const result: CSSTransitionConfig = {};
+
+    const newTransitionProperties = newTransitionConfig.properties;
+    const allowedProperties = !newTransitionProperties
+      ? null
+      : new Set(newTransitionProperties);
+
+    // Get property changes which we want to trigger transitions for
+    for (const key in newProps) {
+      const newValue = newProps[key];
+      const oldValue = oldProps[key];
+
+      if (!deepEqual(oldValue, newValue)) {
+        result[key] = {
+          ...this.getPropertySettings(key, newTransitionConfig),
+          value: [oldValue, newValue],
+        };
+      }
     }
+
+    // Clear up old properties that are no longer allowed
+    for (const key in oldProps) {
+      if (allowedProperties && !allowedProperties.has(key)) {
+        result[key] = null;
+      } else if (!(key in newProps)) {
+        // Property was removed from props but is still allowed
+        result[key] = {
+          ...this.getPropertySettings(key, newTransitionConfig),
+          value: [oldProps[key], undefined],
+        };
+      }
+    }
+
+    return result;
+  }
+
+  private getPropertySettings(
+    property: string,
+    config: NormalizedCSSTransitionConfig
+  ) {
+    return config.settings[property] ?? config.settings.all;
   }
 }

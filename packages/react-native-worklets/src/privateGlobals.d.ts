@@ -7,6 +7,7 @@ import type { reportFatalRemoteError } from './debug/errors';
 import type { CustomSerializableUnpacker } from './memory/customSerializableUnpacker';
 import type { ShareableGuestUnpacker } from './memory/shareableGuestUnpacker';
 import type { ShareableHostUnpacker } from './memory/shareableHostUnpacker';
+import type { makeShareableCloneOnUIRecursive } from './memory/serializable';
 import type { SynchronizableUnpacker } from './memory/synchronizableUnpacker';
 import type { CustomSerializationRegistry } from './memory/types';
 import type { Queue } from './runLoop/workletRuntime/taskQueue';
@@ -20,7 +21,7 @@ declare global {
 
   var _toString: (value: unknown) => string;
   var __workletsModuleProxy: WorkletsModuleProxy;
-  var _WORKLETS_BUNDLE_MODE: boolean | undefined;
+  var _WORKLETS_BUNDLE_MODE_ENABLED: boolean | undefined;
   var _WORKLETS_VERSION_CPP: string | undefined;
   var _WORKLETS_VERSION_JS: string | undefined;
   var _createSerializable: <T>(
@@ -56,6 +57,8 @@ declare global {
   var _createSerializableSynchronizable: (
     value: object
   ) => FlatShareableRef<object>;
+  /** Only outside of Bundle Mode on Worklet Runtimes. */
+  var __serializer: typeof makeShareableCloneOnUIRecursive;
   var __callMicrotasks: () => void;
   var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
   var _scheduleRemoteFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
@@ -88,6 +91,8 @@ declare global {
   var __makeSerializableCloneOnUIRecursive: <TValue>(
     value: TValue
   ) => SerializableRef<TValue>;
+  /** Only in Bundle Mode on Worklet Runtimes. */
+  var TurboModules: Map<string, unknown>;
   interface NodeRequire {
     resolveWeak(id: string): number;
     getModules(): Map<number, unknown>;

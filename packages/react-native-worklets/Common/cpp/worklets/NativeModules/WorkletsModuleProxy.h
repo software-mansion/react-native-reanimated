@@ -9,6 +9,7 @@
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/JSScheduler.h>
+#include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
@@ -27,8 +28,8 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       std::function<bool()> &&isJavaScriptQueue,
-      RuntimeBindings runtimeBindings,
-      const std::shared_ptr<const JSBigStringBuffer> &script,
+      const std::shared_ptr<RuntimeBindings> &runtimeBindings,
+      const std::shared_ptr<const ScriptBuffer> &script,
       const std::string &sourceUrl);
 
   ~WorkletsModuleProxy();
@@ -65,8 +66,8 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   const std::shared_ptr<JSLogger> jsLogger_;
-  const RuntimeBindings runtimeBindings_;
-  const std::shared_ptr<const JSBigStringBuffer> script_;
+  const std::shared_ptr<RuntimeBindings> runtimeBindings_;
+  const std::shared_ptr<const ScriptBuffer> script_;
   const std::string sourceUrl_;
   const std::shared_ptr<MemoryManager> memoryManager_;
   const std::shared_ptr<RuntimeManager> runtimeManager_;

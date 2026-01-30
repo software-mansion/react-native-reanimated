@@ -11,28 +11,6 @@ TransitionStyleInterpolator::TransitionStyleInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : componentName_(componentName), viewStylesRepository_(viewStylesRepository) {}
 
-std::unordered_set<std::string> TransitionStyleInterpolator::getReversedPropertyNames(
-    const folly::dynamic &newPropertyValues) const {
-  std::unordered_set<std::string> reversedProperties;
-
-  if (!newPropertyValues.isObject()) {
-    return reversedProperties;
-  }
-
-  for (const auto &[propertyName, propertyValue] : newPropertyValues.items()) {
-    const auto propertyNameStr = propertyName.getString();
-    const auto it = interpolators_.find(propertyNameStr);
-    if (it != interpolators_.end() &&
-        // First keyframe value of the previous transition is the reversing
-        // adjusted start value
-        it->second->equalsReversingAdjustedStartValue(propertyValue)) {
-      reversedProperties.insert(propertyNameStr);
-    }
-  }
-
-  return reversedProperties;
-}
-
 folly::dynamic TransitionStyleInterpolator::interpolate(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const TransitionProgressProvider &transitionProgressProvider,
@@ -71,9 +49,10 @@ void TransitionStyleInterpolator::discardIrrelevantInterpolators(
   }
 }
 
-void TransitionStyleInterpolator::updateInterpolatedProperties(
+std::unordered_set<std::string> TransitionStyleInterpolator::updateInterpolatedProperties(
     const ChangedProps &changedProps,
     const folly::dynamic &lastUpdateValue) {
+  std::unordered_set<std::string> reversedProperties;
   const auto &oldPropsObj = changedProps.oldProps;
   const auto &newPropsObj = changedProps.newProps;
 
@@ -96,8 +75,12 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
     const auto &lastValue =
         (shouldCreateInterpolator || lastUpdateValue.empty()) ? empty : lastUpdateValue.getDefault(propertyName, empty);
 
-    it->second->updateKeyframesFromStyleChange(oldValue, newValue, lastValue);
+    const bool isReversed = it->second->updateKeyframesFromStyleChange(oldValue, newValue, lastValue);
+    if (isReversed) {
+      reversedProperties.insert(propertyName);
+    }
   }
+  return reversedProperties;
 }
 
 } // namespace reanimated::css

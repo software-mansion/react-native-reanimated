@@ -90,12 +90,8 @@ void CSSTransition::updateSettings(const PartialCSSTransitionConfig &config) {
 
 folly::dynamic
 CSSTransition::run(const ChangedProps &changedProps, const folly::dynamic &lastUpdateValue, const double timestamp) {
-  progressProvider_.runProgressProviders(
-      timestamp,
-      settings_,
-      changedProps.changedPropertyNames,
-      styleInterpolator_.getReversedPropertyNames(changedProps.newProps));
-  styleInterpolator_.updateInterpolatedProperties(changedProps, lastUpdateValue);
+  const auto reversedProperties = styleInterpolator_.updateInterpolatedProperties(changedProps, lastUpdateValue);
+  progressProvider_.runProgressProviders(timestamp, settings_, changedProps.changedPropertyNames, reversedProperties);
   return update(timestamp);
 }
 

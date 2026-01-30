@@ -1,5 +1,7 @@
 'use strict';
+
 import { logger } from '../../common';
+import { removeElementAnimation } from '../../common/web';
 import { LayoutAnimationType, ReduceMotion } from '../../commonTypes';
 import type { EasingFunctionFactory } from '../../Easing';
 import { EasingNameSymbol } from '../../Easing';
@@ -28,6 +30,28 @@ import {
   WebEasings,
 } from './Easing.web';
 import { prepareCurvedTransition } from './transition/Curved.web';
+
+function getSnapshotForElement(element: HTMLElement): ReanimatedSnapshot {
+  const existingSnapshot = snapshots.get(element);
+
+  if (existingSnapshot) {
+    return existingSnapshot;
+  }
+
+  const rect = element.getBoundingClientRect();
+
+  const fallbackSnapshot: ReanimatedSnapshot = {
+    top: rect.top,
+    left: rect.left,
+    width: rect.width,
+    height: rect.height,
+    scrollOffsets: getElementScrollValue(element),
+  };
+
+  snapshots.set(element, fallbackSnapshot);
+
+  return fallbackSnapshot;
+}
 
 function getEasingFromConfig(config: CustomConfig): string {
   if (!config.easingV) {
@@ -175,10 +199,16 @@ export function setElementAnimation(
 
   const configureAnimation = () => {
     element.style.animationName = animationName;
-    element.style.animationFillMode = 'backwards';
     element.style.animationDuration = `${duration}s`;
     element.style.animationDelay = `${delay}s`;
     element.style.animationTimingFunction = easing;
+
+    if (
+      animationConfig.animationType === LayoutAnimationType.ENTERING &&
+      delay > 0
+    ) {
+      element.style.animationFillMode = 'backwards';
+    }
   };
 
   if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
@@ -234,7 +264,7 @@ export function setElementAnimation(
   if (!(animationName in Animations)) {
     scheduleAnimationCleanup(animationName, duration + delay, () => {
       if (shouldSavePosition) {
-        setElementPosition(element, snapshots.get(element)!);
+        setElementPosition(element, getSnapshotForElement(element));
       }
 
       maybeRemoveElement();
@@ -317,6 +347,21 @@ function getElementScrollValue(element: HTMLElement): ScrollOffsets {
   return scrollOffsets;
 }
 
+function cleanupEnteringAnimations(element: HTMLElement) {
+  const animationName = element.style.animationName;
+
+  // Check if the animation name indicates it's an entering animation
+  if (animationName && animationName.startsWith('REA-ENTERING-')) {
+    removeElementAnimation(element);
+  }
+
+  for (const child of Array.from(element.children)) {
+    if (child instanceof HTMLElement) {
+      cleanupEnteringAnimations(child);
+    }
+  }
+}
+
 export function handleExitingAnimation(
   element: ReanimatedHTMLElement,
   animationConfig: AnimationConfig
@@ -344,6 +389,10 @@ export function handleExitingAnimation(
   };
   saveScrollPosition(element);
 
+  // Clean up entering animations on all descendants before moving them to the dummy.
+  // This prevents entering animations from restarting when elements are moved to a new parent.
+  cleanupEnteringAnimations(element);
+
   // After cloning the element, we want to move all children from original element to its clone. This is because original element
   // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.
   // Using element.cloneNode(true) doesn't solve the problem, because it creates copy of children and we won't be able to set their animations
@@ -367,7 +416,7 @@ export function handleExitingAnimation(
   };
   restoreScrollPosition(dummy);
 
-  const snapshot = snapshots.get(element)!;
+  const snapshot = getSnapshotForElement(element);
 
   const scrollOffsets = getElementScrollValue(element);
 

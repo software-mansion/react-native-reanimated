@@ -5,6 +5,7 @@ import {
   kebabizeCamelCase,
   maybeAddSuffix,
 } from '../../../common';
+import { removeElementAnimation } from '../../../common/web';
 import type { ReanimatedHTMLElement } from '../../../ReanimatedModule/js-reanimated';
 import type {
   CSSAnimationKeyframes,
@@ -20,6 +21,7 @@ import {
   removeCSSAnimation,
 } from '../domUtils';
 import { CSSKeyframesRuleImpl } from '../keyframes';
+import { normalizeIterationCount } from '../normalization';
 import { maybeAddSuffixes, parseTimingFunction } from '../utils';
 
 const isCSSKeyframesRuleImpl = (
@@ -133,12 +135,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
       return;
     }
 
-    this.element.style.animationDuration = '';
-    this.element.style.animationDelay = '';
-    this.element.style.animationDirection = '';
-    this.element.style.animationFillMode = '';
-    this.element.style.animationPlayState = '';
-    this.element.style.animationTimingFunction = '';
+    removeElementAnimation(this.element);
 
     this.removeAnimationsFromStyleSheet(attachedAnimations);
     this.unmountCleanupCalled = false;
@@ -201,7 +198,9 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
 
     if (animationSettings.animationIterationCount) {
       this.element.style.animationIterationCount =
-        animationSettings.animationIterationCount.join(',');
+        animationSettings.animationIterationCount
+          .map(normalizeIterationCount)
+          .join(',');
     }
 
     if (animationSettings.animationDirection) {

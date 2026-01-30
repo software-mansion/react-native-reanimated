@@ -16,7 +16,7 @@ import type {
   TransformProps,
 } from 'react-native-svg';
 
-import type { StyleBuilderConfig } from '../../../../common';
+import type { PropsBuilderConfig } from '../../../../common';
 import {
   convertStringToNumber,
   processColorSVG,
@@ -26,11 +26,11 @@ import {
 
 const colorAttributes = { process: processColorSVG };
 
-const colorProps: StyleBuilderConfig<ColorProps> = {
+const colorProps: PropsBuilderConfig<ColorProps> = {
   color: colorAttributes,
 };
 
-const fillProps: StyleBuilderConfig<FillProps> = {
+const fillProps: PropsBuilderConfig<FillProps> = {
   fill: colorAttributes,
   fillOpacity: { process: processOpacity },
   fillRule: {
@@ -41,7 +41,7 @@ const fillProps: StyleBuilderConfig<FillProps> = {
   },
 };
 
-const strokeProps: StyleBuilderConfig<StrokeProps> = {
+const strokeProps: PropsBuilderConfig<StrokeProps> = {
   stroke: colorAttributes,
   strokeWidth: true,
   strokeOpacity: { process: processOpacity },
@@ -74,12 +74,12 @@ const strokeProps: StyleBuilderConfig<StrokeProps> = {
   },
 };
 
-const clipProps: StyleBuilderConfig<ClipProps> = {
+const clipProps: PropsBuilderConfig<ClipProps> = {
   clipRule: true,
   clipPath: true, // TODO - maybe preprocess this?
 };
 
-const transformProps: StyleBuilderConfig<TransformProps> = {
+const transformProps: PropsBuilderConfig<TransformProps> = {
   translate: true, // TODO - add preprocessor (NumberArray) and split to translateX and translateY
   translateX: true,
   translateY: true,
@@ -98,25 +98,25 @@ const transformProps: StyleBuilderConfig<TransformProps> = {
   transform: true, // TODO - add preprocessor
 };
 
-const responderProps: StyleBuilderConfig<
+const responderProps: PropsBuilderConfig<
   Omit<ResponderProps, keyof GestureResponderHandlers>
 > = {
   pointerEvents: true,
 };
 
 // TODO - check what these props are doing and if we need to preprocess them
-const commonMarkerProps: StyleBuilderConfig<CommonMarkerProps> = {
+const commonMarkerProps: PropsBuilderConfig<CommonMarkerProps> = {
   marker: true,
   markerStart: true,
   markerMid: true,
   markerEnd: true,
 };
 
-const commonMaskProps: StyleBuilderConfig<CommonMaskProps> = {
+const commonMaskProps: PropsBuilderConfig<CommonMaskProps> = {
   mask: true, // TODO - add preprocessor
 };
 
-const commonFilterProps: StyleBuilderConfig<CommonFilterProps> = {
+const commonFilterProps: PropsBuilderConfig<CommonFilterProps> = {
   filter: true, // TODO - add preprocessor
 };
 
@@ -127,7 +127,7 @@ type NonAnimatablePropNames =
   | keyof NativeProps
   | keyof AccessibilityProps;
 
-export type SvgStyleBuilderConfig<T> = StyleBuilderConfig<
+export type SvgStyleBuilderConfig<T> = PropsBuilderConfig<
   Omit<T, NonAnimatablePropNames>
 >;
 

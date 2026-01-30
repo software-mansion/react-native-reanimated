@@ -27,6 +27,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
 
   void add(const std::shared_ptr<CSSTransition> &transition);
   void updateSettings(Tag viewTag, const PartialCSSTransitionConfig &config);
+  bool hasTransition(Tag viewTag) const;
   void remove(Tag viewTag) override;
 
   void update(double timestamp);

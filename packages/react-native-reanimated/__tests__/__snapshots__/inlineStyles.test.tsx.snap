@@ -31,7 +31,6 @@ exports[`Tests of inline styles Double inline styles (array) 1`] = `
         },
       ]
     }
-    nativeID="7"
     style={
       [
         {
@@ -133,7 +132,6 @@ exports[`Tests of inline styles Double inline styles (single object) 1`] = `
         "width": "100",
       }
     }
-    nativeID="5"
     style={
       [
         {
@@ -236,7 +234,6 @@ exports[`Tests of inline styles Inline & useAnimatedStyle() 1`] = `
         },
       ]
     }
-    nativeID="9"
     style={
       [
         {
@@ -337,7 +334,6 @@ exports[`Tests of inline styles Inline styles 1`] = `
         "width": "100",
       }
     }
-    nativeID="1"
     style={
       [
         {
@@ -437,7 +433,6 @@ exports[`Tests of inline styles Inline styles with withTiming 1`] = `
         "width": "100",
       }
     }
-    nativeID="3"
     style={
       [
         {

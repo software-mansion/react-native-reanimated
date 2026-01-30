@@ -12,14 +12,6 @@ RecordPropertiesInterpolator::RecordPropertiesInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : GroupPropertiesInterpolator(propertyPath, viewStylesRepository), factories_(factories) {}
 
-bool RecordPropertiesInterpolator::equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const {
-  return std::ranges::all_of(propertyValue.items(), [this](const auto &item) {
-    const auto &[propName, propValue] = item;
-    const auto it = interpolators_.find(propName.getString());
-    return it != interpolators_.end() && it->second->equalsReversingAdjustedStartValue(propValue);
-  });
-}
-
 void RecordPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) {
   // TODO - maybe add a possibility to remove interpolators that are no longer
   // used (for now, for simplicity, we only add new ones)
@@ -37,7 +29,7 @@ void RecordPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::
   }
 }
 
-void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
+bool RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
     const folly::dynamic &oldStyleValue,
     const folly::dynamic &newStyleValue,
     const folly::dynamic &lastUpdateValue) {
@@ -58,13 +50,17 @@ void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
     propertyNamesSet.insert(key.asString());
   }
 
+  bool allEqualReversingAdjustedStartValue = true;
+
   for (const auto &propertyName : propertyNamesSet) {
     maybeCreateInterpolator(propertyName);
-    interpolators_[propertyName]->updateKeyframesFromStyleChange(
+    allEqualReversingAdjustedStartValue &= interpolators_[propertyName]->updateKeyframesFromStyleChange(
         oldStyleObject.getDefault(propertyName, null),
         newStyleObject.getDefault(propertyName, null),
         lastUpdateObject.getDefault(propertyName, null));
   }
+
+  return allEqualReversingAdjustedStartValue;
 }
 
 folly::dynamic RecordPropertiesInterpolator::mapInterpolators(

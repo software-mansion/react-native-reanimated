@@ -23,7 +23,6 @@ exports[`jestUtils differentiates matching with shouldMatchAllProps option with 
         },
       ]
     }
-    nativeID="1"
     style={
       [
         {

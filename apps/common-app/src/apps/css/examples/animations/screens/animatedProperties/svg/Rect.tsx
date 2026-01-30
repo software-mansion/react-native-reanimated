@@ -15,7 +15,7 @@ export default function RectExample() {
       buildAnimation={({ keyframes }) => ({
         animationName: keyframes,
         animationDirection: 'alternate',
-        animationDuration: '1s',
+        animationDuration: '0.5s',
         animationIterationCount: 'infinite',
         animationTimingFunction: 'linear',
       })}
@@ -124,8 +124,13 @@ export default function RectExample() {
               examples: [
                 {
                   keyframes: {
+                    from: {
+                      width: 0,
+                      height: 0,
+                    },
                     to: {
                       width: 80,
+                      height: 80,
                     },
                   },
                   title: 'Absolute',
@@ -134,9 +139,11 @@ export default function RectExample() {
                 {
                   keyframes: {
                     from: {
-                      width: '30%',
+                      height: '0%',
+                      width: '0%',
                     },
                     to: {
+                      height: '70%',
                       width: '70%',
                     },
                   },

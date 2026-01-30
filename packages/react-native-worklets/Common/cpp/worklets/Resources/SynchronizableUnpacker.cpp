@@ -1,16 +1,16 @@
 // This file was generated with
-  // `packages/react-native-worklets/scripts/export-unpackers.js`.
-  // Please do not modify it directly.
+// `packages/react-native-worklets/scripts/export-unpackers.js`.
+// Please do not modify it directly.
 
-  #include <worklets/Resources/Unpackers.h>
+#include <worklets/Resources/Unpackers.h>
 
-  namespace worklets {
+namespace worklets {
 
-  const char SynchronizableUnpackerCode[] =
-      R"DELIMITER__((function () {
-  var serializer = globalThis.__RUNTIME_KIND === 1 || globalThis._WORKLETS_BUNDLE_MODE ? function (value, _) {
-    return createSerializable(value);
-  } : globalThis._createSerializable;
+const char SynchronizableUnpackerCode[] =
+    R"DELIMITER__((function () {
+  var serializer = !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE_ENABLED ? _serializable.createSerializable : function (value) {
+    return globalThis.__serializer(value);
+  };
   function synchronizableUnpacker(synchronizableRef) {
     var synchronizable = synchronizableRef;
     var proxy = globalThis.__workletsModuleProxy;
@@ -28,12 +28,12 @@
         synchronizable.lock();
         var prev = synchronizable.getBlocking();
         newValue = func(prev);
-        proxy.synchronizableSetBlocking(synchronizable, serializer(newValue, undefined));
+        proxy.synchronizableSetBlocking(synchronizable, serializer(newValue));
         synchronizable.unlock();
       } else {
         var value = valueOrFunction;
         newValue = value;
-        proxy.synchronizableSetBlocking(synchronizable, serializer(newValue, undefined));
+        proxy.synchronizableSetBlocking(synchronizable, serializer(newValue));
       }
     };
     synchronizable.lock = function () {
@@ -46,5 +46,4 @@
   }
   globalThis.__synchronizableUnpacker = synchronizableUnpacker;
 })();)DELIMITER__";
-  } // namespace worklets
-  
+} // namespace worklets
