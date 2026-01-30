@@ -3,10 +3,6 @@
 import { WorkletsError } from './debug/WorkletsError';
 import { mockedRequestAnimationFrame } from './runLoop/uiRuntime/mockedRequestAnimationFrame';
 
-export function callMicrotasks(): void {
-  // on web flushing is a noop as immediates are handled by the browser
-}
-
 export function scheduleOnUI<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue,
   ...args: Args
@@ -98,11 +94,6 @@ function flushUIQueue(): void {
       });
     });
   });
-}
-
-// eslint-disable-next-line camelcase
-export function unstable_eventLoopTask(): never {
-  throw new WorkletsError('`unstable_eventLoopTask` is not supported on web.');
 }
 
 const requestAnimationFrameImpl = !globalThis.requestAnimationFrame
