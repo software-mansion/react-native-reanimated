@@ -287,6 +287,12 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
+  setNodeRemovalCallback(_callback: (tag: number, isFrozen: boolean) => void): void {
+    throw new ReanimatedError(
+      'setNodeRemovalCallback is not available in JSReanimated.'
+    );
+  }
+
   registerCSSKeyframes(
     _animationName: string,
     _viewName: string,
