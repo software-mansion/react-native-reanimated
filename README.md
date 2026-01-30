@@ -1,4 +1,4 @@
-<img src="https://github.com/user-attachments/assets/6c34ccd9-f193-4177-94f0-f21d5fe1bceb" alt="React Native Reanimated and React Native Worklets by Software Mansion" width="100%">
+<img src="https://github.com/user-attachments/assets/a516a6ef-fc1e-4d38-a4d8-6d53d6e51a21" alt="React Native Reanimated and React Native Worklets by Software Mansion" width="100%">
 
 # Reanimated & Worklets
 
