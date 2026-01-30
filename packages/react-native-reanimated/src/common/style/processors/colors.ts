@@ -9,6 +9,7 @@ import { ColorProperties, processColorInitially } from '../../../Colors';
 import type { StyleProps } from '../../../commonTypes';
 import { IS_ANDROID, IS_IOS } from '../../constants';
 import { ReanimatedError } from '../../errors';
+import { type ValueProcessorContext, ValueProcessorTarget } from '../../types';
 import { isRecord } from '../../utils';
 
 /**
@@ -67,6 +68,8 @@ function isDynamicColorObjectIOS(
 export const ERROR_MESSAGES = {
   invalidColor: (color: unknown) =>
     `Invalid color value: ${JSON.stringify(color)}`,
+  invalidProcessedColor: (color: unknown) =>
+    `Invalid processed color value: ${JSON.stringify(color)}`,
   dynamicNotAvailableOnPlatform: () =>
     'DynamicColorIOS is not available on this platform.',
 };
@@ -82,15 +85,15 @@ export function processColorNumber(value: unknown): number | null {
     normalizedColor = normalizedColor | 0x0;
   }
 
-  if (normalizedColor !== null) {
-    // The normalizedColor can be a boolean false value for the transparent color, but
-    // we can safely cast it to number. Since boolean false is essentially 0, it can be
-    // used in all numeric operations without issues. We use a boolean false value to
-    // distinguish the transparent color from other colors.
-    return normalizedColor as number;
-  }
+  return normalizedColor;
+}
 
-  return null;
+function unprocessColorNumber(value: number): string {
+  const a = (value >>> 24) / 255;
+  const r = (value << 8) >>> 24;
+  const g = (value << 16) >>> 24;
+  const b = (value << 24) >>> 24;
+  return `rgba(${r},${g},${b},${a})`;
 }
 
 export type ProcessedDynamicColorObjectIOS = {
@@ -132,6 +135,22 @@ function processDynamicColorObjectIOS(
   };
 }
 
+function unprocessDynamicColorObjectIOS(
+  value: ProcessedDynamicColorObjectIOS
+): DynamicColorObjectIOS {
+  const result = {} as DynamicColorIOSTuple;
+
+  for (const property of DynamicColorIOSProperties) {
+    if (value.dynamic[property] !== undefined) {
+      result[property] = unprocessColorNumber(value.dynamic[property]);
+    }
+  }
+
+  return {
+    dynamic: result,
+  };
+}
+
 type ProcessedColor =
   | number
   | PlatformColorObject
@@ -141,15 +160,36 @@ type ProcessedColor =
  * Processes a color value and returns a normalized color representation.
  *
  * @param value - The color value to process (string, number, or ColorValue)
+ * @param context - Optional for target-specific processing context (e.g. CSS)
  * @returns The processed color value - `number` for valid colors, `false` for
  *   transparent colors
  */
-export function processColor(value: string | number): number;
-export function processColor(value: unknown): ProcessedColor;
-export function processColor(value: unknown): ProcessedColor {
+export function processColor(
+  value: string | number,
+  context?: ValueProcessorContext
+): number;
+export function processColor(
+  value: unknown,
+  context?: ValueProcessorContext
+): ProcessedColor;
+export function processColor(
+  value: unknown,
+  context?: ValueProcessorContext
+): ProcessedColor {
   let result: ProcessedColor | null = processColorNumber(value); // try to convert to a number first (most common case)
 
-  if (result !== null) {
+  if (result) {
+    return result;
+  }
+  if (result === 0) {
+    if (
+      context?.target === ValueProcessorTarget.CSS &&
+      value === 'transparent'
+    ) {
+      // For CSS, we have to return `false` to distinguish the true 'transparent' from the 0x00000000 color
+      // and properly interpolate between the transparent and the non-transparent color.
+      return false as unknown as number; // TODO - figure out a better way to handle this instead of type casting
+    }
     return result;
   }
 
@@ -170,6 +210,24 @@ export function processColor(value: unknown): ProcessedColor {
   return result;
 }
 
+export function unprocessColor(
+  value: ProcessedColor
+): string | PlatformColorObject | DynamicColorObjectIOS {
+  if (typeof value === 'number') {
+    return unprocessColorNumber(value);
+  }
+  if (isPlatformColorObject(value)) {
+    return value;
+  }
+  if (isDynamicColorObjectIOS(value)) {
+    if (!IS_IOS) {
+      throw new ReanimatedError(ERROR_MESSAGES.dynamicNotAvailableOnPlatform());
+    }
+    return unprocessDynamicColorObjectIOS(value);
+  }
+  throw new ReanimatedError(ERROR_MESSAGES.invalidProcessedColor(value));
+}
+
 export function processColorsInProps(props: StyleProps) {
   for (const key in props) {
     if (!ColorProperties.includes(key)) continue;
@@ -177,5 +235,15 @@ export function processColorsInProps(props: StyleProps) {
     props[key] = Array.isArray(value)
       ? value.map((c) => processColor(c))
       : processColor(value);
+  }
+}
+
+export function unprocessColorsInProps(props: StyleProps) {
+  for (const key in props) {
+    if (!ColorProperties.includes(key)) continue;
+    const value = props[key];
+    props[key] = Array.isArray(value)
+      ? value.map((c) => unprocessColor(c))
+      : unprocessColor(value);
   }
 }

@@ -45,6 +45,6 @@ Arguments to pass to the function.
 
 - The callback passed as the argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ready to be run on the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime).
 
-- Make sure not to execute `scheduleOnUI` on the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime) or [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime) as this will result in an error, unless you have the [Bundle Mode](/docs/experimental/bundleMode) enabled.
+- Make sure not to execute `scheduleOnUI` on the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime) or [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime) as this will result in an error, unless you have the [Bundle Mode](/docs/bundleMode/) enabled.
 
 - On the Web, `scheduleOnUI` schedules work to run on the next animation frame using `requestAnimationFrame`.

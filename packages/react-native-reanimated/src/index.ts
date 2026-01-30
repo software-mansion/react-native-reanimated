@@ -7,6 +7,7 @@ import { ReanimatedModule } from './ReanimatedModule';
 
 // TODO: Specify the initialization pipeline since now there's no
 // universal source of truth for it.
+// is-tree-shakable-suppress
 initializeReanimatedModule(ReanimatedModule);
 
 // eslint-disable-next-line import/first
@@ -238,6 +239,7 @@ export {
   RotateOutUpLeft,
   RotateOutUpRight,
   SequencedTransition,
+  SharedTransition,
   SlideInDown,
   SlideInLeft,
   // Slide

@@ -66,7 +66,7 @@ export const callMicrotasks = callMicrotasksOnUIThread;
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
  *   or a [Worker
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
- *   unless you have the [Bundle Mode](/docs/experimental/bundleMode) enabled.
+ *   unless you have the [Bundle Mode](/docs/bundleMode/) enabled.
  *
  * @param fun - A reference to a function you want to schedule on the [UI
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
@@ -187,7 +187,7 @@ export function runOnUISync<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
   ...args: Args
 ): ReturnValue {
-  return WorkletsModule.executeOnUIRuntimeSync(
+  return WorkletsModule.runOnUISync(
     createSerializable(() => {
       'worklet';
       const result = worklet(...args);
