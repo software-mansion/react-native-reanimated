@@ -1,11 +1,61 @@
 #include "windows/controls_window.h"
 #include <imgui.h>
 #include <sstream>
+#include "data/network_handler.h"
 
 namespace windows {
 
 void renderControlsWindow(app::AppState &state) {
   ImGui::Begin("Controls");
+
+  // Connection status indicator
+  app::ConnectionState connState;
+  std::string connectionError;
+  std::string disconnectReason;
+  int connectedPort = 0;
+
+  {
+    std::lock_guard<std::mutex> lock(state.data.connectionMutex);
+    connState = state.data.connectionState;
+    connectionError = state.data.connectionError;
+    disconnectReason = state.data.disconnectReason;
+    connectedPort = state.data.connectedPort;
+  }
+
+  if (connState == app::ConnectionState::Connected) {
+    ImGui::TextColored(ImVec4(0.2f, 0.9f, 0.2f, 1.0f), "Connected (port %d)", connectedPort);
+  } else {
+    ImVec4 indicatorColor =
+        (connState == app::ConnectionState::Scanning) ? ImVec4(0.9f, 0.6f, 0.2f, 1.0f) : ImVec4(0.9f, 0.2f, 0.2f, 1.0f);
+    const char *statusText = (connState == app::ConnectionState::Scanning) ? "Scanning..." : "Disconnected";
+    ImGui::TextColored(indicatorColor, "%s", statusText);
+    if (ImGui::Button("Reconnect")) {
+      state.ui.showConnectionWindow = true;
+    }
+  }
+
+  // Show connection error if any
+  if (!connectionError.empty()) {
+    ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Error: %s", connectionError.c_str());
+  }
+
+  // Show disconnect reason if we just disconnected
+  if (!disconnectReason.empty()) {
+    ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.4f, 1.0f), "Disconnected: %s", disconnectReason.c_str());
+  }
+
+  // Show overflow warnings
+  long profilerOverflow = state.data.profilerOverflowCount.load();
+  long mutationsOverflow = state.data.mutationsOverflowCount.load();
+
+  if (profilerOverflow) {
+    ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Warning: Profiler events were dropped (%ld occurrences)", profilerOverflow);
+  }
+  if (mutationsOverflow) {
+    ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Warning: Mutation data was dropped (%ld occurrences)", mutationsOverflow);
+  }
+
+  ImGui::Separator();
 
   {
     std::lock_guard<std::mutex> lock(state.data.snapshotMutex);

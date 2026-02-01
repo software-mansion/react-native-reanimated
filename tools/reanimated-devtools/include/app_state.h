@@ -9,13 +9,14 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <atomic>
 #include "data_structures.h"
 
 // Application state - split into data and UI components
 namespace app {
 
 // Connection states
-enum class ConnectionState { Disconnected, Scanning, Connected };
+enum class ConnectionState : std::uint8_t { Disconnected, Scanning, Connected };
 
 // Discovered device info
 struct DiscoveredDevice {
@@ -27,6 +28,7 @@ struct DiscoveredDevice {
   uint32_t bufferedMutations;
   bool hasMutationsOverflow;
   bool valid; // Set to true if DeviceInfo was received and validated
+  std::string errorMessage; // Set if connection succeeded but handshake failed
 };
 
 // Thread-safe data state (protected by mutexes)
@@ -55,8 +57,8 @@ struct DataState {
   std::unordered_map<uint32_t, std::string> threadNames; // Thread ID -> human-readable name
   uint64_t profilerMinTimeNs = UINT64_MAX;
   uint64_t profilerMaxTimeNs = 0;
-  bool profilerOverflowOccurred{false};
-  bool mutationsOverflowOccurred{false};
+  std::atomic<long> profilerOverflowCount{0};
+  std::atomic<long> mutationsOverflowCount{0};
 
   // Lifecycle
   std::atomic<bool> running{true};

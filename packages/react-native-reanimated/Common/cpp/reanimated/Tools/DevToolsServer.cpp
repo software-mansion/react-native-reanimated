@@ -166,6 +166,10 @@ void DevToolsServer::networkThreadLoop() {
       }
     }
 
+    // Flush profiler events from thread-local buffers to the queue
+    // This must be done periodically to collect events from all threads
+    DevToolsProfiler::getInstance().flush();
+
     // Process pending work
     std::vector<MutationBatch> mutationBatches;
     std::vector<std::vector<ProfilerEventInternal>> profilerBatches;
@@ -396,7 +400,11 @@ void DevToolsServer::acceptClients() {
   clientSocket_ = newSocket;
   hasActiveClient_ = true;
 
-  // Set socket timeout for sends
+  // Set client socket to non-blocking mode
+  // This is critical - accept() returns a new socket that defaults to blocking
+  fcntl(clientSocket_, F_SETFL, O_NONBLOCK);
+
+  // Set socket timeout for sends (as a safety net)
   struct timeval timeout;
   timeout.tv_sec = 0;
   timeout.tv_usec = 100000; // 100ms timeout

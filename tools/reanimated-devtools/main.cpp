@@ -79,23 +79,14 @@ int main(int /* argc */, char * /* argv */[]) {
     // Create fullscreen dockspace
     ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 
-    // Always render connection window (can be toggled via menu)
+    // Always render connection window (only visible when needed)
     windows::renderConnectionWindow(appState);
 
-    // Check connection state to decide which windows to show
-    app::ConnectionState connState;
-    {
-      std::lock_guard<std::mutex> lock(appState.data.connectionMutex);
-      connState = appState.data.connectionState;
-    }
-
-    // Only show data windows when connected
-    if (connState == app::ConnectionState::Connected) {
-      windows::renderControlsWindow(appState);
-      windows::renderMutationsWindow(appState);
-      windows::renderViewTreeWindow(appState);
-      windows::renderProfilerWindow(appState);
-    }
+    // Always render data windows - they persist data even when disconnected
+    windows::renderControlsWindow(appState);
+    windows::renderMutationsWindow(appState);
+    windows::renderViewTreeWindow(appState);
+    windows::renderProfilerWindow(appState);
 
 #ifdef ENABLE_FPS_COUNTER
     windows::renderFpsWindow(appState);

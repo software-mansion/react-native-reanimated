@@ -76,14 +76,12 @@ void renderDeviceList(app::AppState &state) {
   app::ConnectionState connState;
   std::vector<app::DiscoveredDevice> devices;
   int selectedIndex;
-  std::string error;
 
   {
     std::lock_guard<std::mutex> lock(state.data.connectionMutex);
     connState = state.data.connectionState;
     devices = state.data.discoveredDevices;
     selectedIndex = state.data.selectedDeviceIndex;
-    error = state.data.connectionError;
   }
 
   // Header with refresh button and auto-refresh toggle
@@ -113,35 +111,47 @@ void renderDeviceList(app::AppState &state) {
 
     for (size_t i = 0; i < devices.size(); ++i) {
       const auto &device = devices[i];
-      if (!device.valid)
-        continue;
-
       bool isSelected = (static_cast<int>(i) == selectedIndex);
       ImGui::PushID(static_cast<int>(i));
 
-      // Format device entry
-      char label[256];
-      if (device.port == device.internalPort) {
-        snprintf(label, sizeof(label), "%s (port %d)", device.deviceName.c_str(), device.port);
-      } else {
-        snprintf(label, sizeof(label), "%s (port %d forwarded from %d)", device.deviceName.c_str(), device.port,
-                 device.internalPort);
-      }
+      if (!device.valid && !device.errorMessage.empty()) {
+        // Show device with handshake error (connected but failed validation)
+        char label[256];
+        snprintf(label, sizeof(label), "Port %d - %s", device.port, device.errorMessage.c_str());
 
-      if (ImGui::Selectable(label, isSelected)) {
-        std::lock_guard<std::mutex> lock(state.data.connectionMutex);
-        state.data.selectedDeviceIndex = static_cast<int>(i);
-      }
+        // Show in orange/red to indicate error
+        ImGui::TextColored(ImVec4(0.9f, 0.5f, 0.2f, 1.0f), "%s", label);
+        // Not selectable since we can't connect
+      } else if (device.valid) {
+        // Format device entry for valid devices
+        char label[256];
+        if (device.port == device.internalPort) {
+          snprintf(label, sizeof(label), "%s (port %d)", device.deviceName.c_str(), device.port);
+        } else {
+          snprintf(
+              label,
+              sizeof(label),
+              "%s (port %d forwarded from %d)",
+              device.deviceName.c_str(),
+              device.port,
+              device.internalPort);
+        }
 
-      // Show buffer info on same line
-      if (device.bufferedProfilerEvents > 0 || device.bufferedMutations > 0) {
-        ImGui::SameLine();
-        ImGui::TextColored(
-            ImVec4(0.6f, 0.8f, 0.6f, 1.0f),
-            "[%u events, %u mutations%s]",
-            device.bufferedProfilerEvents,
-            device.bufferedMutations,
-            device.hasMutationsOverflow ? " (overflow)" : "");
+        if (ImGui::Selectable(label, isSelected)) {
+          std::lock_guard<std::mutex> lock(state.data.connectionMutex);
+          state.data.selectedDeviceIndex = static_cast<int>(i);
+        }
+
+        // Show buffer info on same line
+        if (device.bufferedProfilerEvents > 0 || device.bufferedMutations > 0) {
+          ImGui::SameLine();
+          ImGui::TextColored(
+              ImVec4(0.6f, 0.8f, 0.6f, 1.0f),
+              "[%u events, %u mutations%s]",
+              device.bufferedProfilerEvents,
+              device.bufferedMutations,
+              device.hasMutationsOverflow ? " (overflow)" : "");
+        }
       }
 
       ImGui::PopID();
@@ -168,11 +178,6 @@ void renderDeviceList(app::AppState &state) {
 
   if (!canConnect) {
     ImGui::EndDisabled();
-  }
-
-  // Show error if any
-  if (!error.empty()) {
-    ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Error: %s", error.c_str());
   }
 }
 
@@ -213,53 +218,31 @@ void renderSetupHelp(app::AppState &state) {
   }
 }
 
-void renderConnectedStatus(app::AppState &state) {
-  int port;
-  std::string disconnectReason;
-
-  {
-    std::lock_guard<std::mutex> lock(state.data.connectionMutex);
-    port = state.data.connectedPort;
-    disconnectReason = state.data.disconnectReason;
-  }
-
-  ImGui::TextColored(ImVec4(0.4f, 0.9f, 0.4f, 1.0f), "Connected to port %d", port);
-
-  if (ImGui::Button("Disconnect")) {
-    data::disconnect(state);
-  }
-
-  // Show disconnect reason if we just disconnected
-  if (!disconnectReason.empty()) {
-    ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.4f, 1.0f), "Last disconnect: %s", disconnectReason.c_str());
-  }
-
-  // Show overflow warnings
-  bool profilerOverflow = false;
-  bool mutationsOverflow = false;
-
-  {
-    std::lock_guard<std::mutex> profilerLock(state.data.profilerMutex);
-    profilerOverflow = state.data.profilerOverflowOccurred;
-  }
-  {
-    std::lock_guard<std::mutex> snapshotLock(state.data.snapshotMutex);
-    mutationsOverflow = state.data.mutationsOverflowOccurred;
-  }
-
-  if (profilerOverflow) {
-    ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Warning: Profiler events were dropped (overflow)");
-  }
-  if (mutationsOverflow) {
-    ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Warning: Mutation data was dropped (overflow)");
-  }
-}
-
 } // namespace
 
 void renderConnectionWindow(app::AppState &state) {
+  // Hide window when connected
+  app::ConnectionState connState;
+  {
+    std::lock_guard<std::mutex> lock(state.data.connectionMutex);
+    connState = state.data.connectionState;
+  }
+
+  if (connState == app::ConnectionState::Connected) {
+    // Stop auto-refresh when connected
+    if (g_autoRefreshRunning.load()) {
+      stopAutoRefresh();
+    }
+    return;
+  }
+
   if (!state.ui.showConnectionWindow) {
     return;
+  }
+
+  // Start auto-refresh when disconnected
+  if (!g_autoRefreshRunning.load()) {
+    startAutoRefresh(state);
   }
 
   // Center the window on first use
@@ -270,27 +253,7 @@ void renderConnectionWindow(app::AppState &state) {
     return;
   }
 
-  app::ConnectionState connState;
-  {
-    std::lock_guard<std::mutex> lock(state.data.connectionMutex);
-    connState = state.data.connectionState;
-  }
-
-  // Start auto-refresh when disconnected
-  if (connState != app::ConnectionState::Connected && !g_autoRefreshRunning.load()) {
-    startAutoRefresh(state);
-  }
-
-  // Stop auto-refresh when connected
-  if (connState == app::ConnectionState::Connected && g_autoRefreshRunning.load()) {
-    stopAutoRefresh();
-  }
-
-  if (connState == app::ConnectionState::Connected) {
-    renderConnectedStatus(state);
-  } else {
-    renderDeviceList(state);
-  }
+  renderDeviceList(state);
 
   ImGui::Separator();
   renderSetupHelp(state);

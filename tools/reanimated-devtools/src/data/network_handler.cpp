@@ -41,7 +41,12 @@ int getTimeoutForPort(uint16_t port) {
 
 // Try to connect to a port and get DeviceInfo
 // Returns true if successful and populates device info
+// If handshake fails, device is still populated with errorMessage set
 bool probePort(uint16_t port, app::DiscoveredDevice &device, int timeoutMs) {
+  device.port = port;
+  device.valid = false;
+  device.errorMessage.clear();
+
   int sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock < 0)
     return false;
@@ -103,9 +108,27 @@ bool probePort(uint16_t port, app::DiscoveredDevice &device, int timeoutMs) {
   }
 
   // Validate header
-  if (header.magic != reanimated::DevToolsMessageHeader::MAGIC ||
-      header.version != reanimated::DevToolsMessageHeader::VERSION ||
-      header.type != reanimated::DevToolsMessageType::DeviceInfo || header.payloadCount != 1) {
+  if (header.magic != reanimated::DevToolsMessageHeader::MAGIC) {
+    device.errorMessage = "Wrong protocol (bad magic)";
+    close(sock);
+    return false;
+  }
+
+  if (header.version != reanimated::DevToolsMessageHeader::VERSION) {
+    device.errorMessage = "Protocol v" + std::to_string(header.version) + " (expected v" +
+        std::to_string(reanimated::DevToolsMessageHeader::VERSION) + ")";
+    close(sock);
+    return false;
+  }
+
+  if (header.type != reanimated::DevToolsMessageType::DeviceInfo) {
+    device.errorMessage = "Unexpected message type";
+    close(sock);
+    return false;
+  }
+
+  if (header.payloadCount != 1) {
+    device.errorMessage = "Invalid payload count";
     close(sock);
     return false;
   }
@@ -125,7 +148,6 @@ bool probePort(uint16_t port, app::DiscoveredDevice &device, int timeoutMs) {
   device.bufferedProfilerEvents = info.bufferedProfilerEvents;
   device.bufferedMutations = info.bufferedMutations;
   device.hasMutationsOverflow = info.hasMutationsOverflow != 0;
-  device.port = port;
   device.valid = true;
 
   // Close the probe connection
@@ -169,7 +191,10 @@ void scanForDevices(app::AppState &state, bool hardRefresh) {
     device.port = port;
 
     int timeout = getTimeoutForPort(port);
-    if (probePort(port, device, timeout)) {
+    probePort(port, device, timeout);
+    // Add device to list if valid OR if we have an error message
+    // (error message means TCP connected but handshake failed)
+    if (device.valid || !device.errorMessage.empty()) {
       devices.push_back(device);
     }
 
@@ -188,6 +213,31 @@ void scanForDevices(app::AppState &state, bool hardRefresh) {
 }
 
 bool connectToDevice(app::AppState &state, uint16_t port) {
+  // Clear all previous data before connecting to a new device
+  {
+    std::lock_guard<std::mutex> snapshotLock(state.data.snapshotMutex);
+    state.data.snapshots.clear();
+    state.data.currentTree.clear();
+    state.data.currentRoots.clear();
+    state.data.currentSnapshotIndex = -1;
+    state.data.snapshotCounter = 0;
+    state.data.mutationsOverflowCount = false;
+  }
+  {
+    std::lock_guard<std::mutex> profilerLock(state.data.profilerMutex);
+    state.data.threadTimelines.clear();
+    state.data.profilerStrings.clear();
+    state.data.threadNames.clear();
+    state.data.profilerMinTimeNs = UINT64_MAX;
+    state.data.profilerMaxTimeNs = 0;
+    state.data.profilerOverflowCount = 0;
+  }
+  {
+    std::lock_guard<std::mutex> connLock(state.data.connectionMutex);
+    state.data.disconnectReason.clear();
+    state.data.connectionError.clear();
+  }
+
   // Create socket
   int sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock < 0) {
@@ -257,6 +307,8 @@ bool connectToDevice(app::AppState &state, uint16_t port) {
     state.data.connectionState = app::ConnectionState::Connected;
     state.data.connectedPort = port;
     state.data.connectionError.clear();
+    // Hide connection window now that we're connected
+    state.ui.showConnectionWindow = false;
   }
 
   std::cout << "Connected to device on port " << port << " (buffered: " << deviceInfo.bufferedProfilerEvents
@@ -274,15 +326,15 @@ void disconnect(app::AppState &state) {
     std::lock_guard<std::mutex> lock(state.data.connectionMutex);
     state.data.connectionState = app::ConnectionState::Disconnected;
     state.data.connectedPort = 0;
+    // Clear device list so it gets repolled on reconnect
+    // This ensures we don't show stale device info
+    state.data.discoveredDevices.clear();
+    state.data.selectedDeviceIndex = -1;
   }
 
-  // Clear profiler data on disconnect so we don't have stale string IDs
-  {
-    std::lock_guard<std::mutex> lock(state.data.profilerMutex);
-    state.data.profilerStrings.clear();
-    state.data.threadNames.clear();
-    state.data.profilerOverflowOccurred = false;
-  }
+  // NOTE: We do NOT clear mutation/profiler data here.
+  // The data persists until we connect to a NEW device.
+  // This allows users to analyze data after disconnect.
 }
 
 void networkThread(app::AppState &state) {
@@ -432,16 +484,12 @@ void networkThread(app::AppState &state) {
           }
 
           case reanimated::DevToolsMessageType::ProfilerOverflow: {
-            std::cerr << "Profiler overflow detected\n";
-            std::lock_guard<std::mutex> lock(state.data.profilerMutex);
-            state.data.profilerOverflowOccurred = true;
+            state.data.profilerOverflowCount.fetch_add(1);
             break;
           }
 
           case reanimated::DevToolsMessageType::MutationsOverflow: {
-            std::cerr << "Mutations overflow detected\n";
-            std::lock_guard<std::mutex> lock(state.data.snapshotMutex);
-            state.data.mutationsOverflowOccurred = true;
+            state.data.mutationsOverflowCount.fetch_add(1);
             break;
           }
 
