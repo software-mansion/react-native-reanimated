@@ -282,7 +282,7 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
     );
   }
 
-  return new Promise<ReturnValue>((resolve) => {
+  return new Promise<ReturnValue>((resolve, reject) => {
     if (__DEV__) {
       // in DEV mode we call serializable conversion here because in case the object
       // can't be converted, we will get a meaningful stack-trace as opposed to the
@@ -297,8 +297,12 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
       workletRuntime,
       createSerializable(() => {
         'worklet';
-        const result = worklet(...args);
-        scheduleOnRN(resolve, result);
+        try {
+          const result = worklet(...args);
+          scheduleOnRN(resolve, result);
+        } catch (error) {
+          scheduleOnRN(reject, error);
+        }
         globalThis.__flushMicrotasks();
       })
     );
