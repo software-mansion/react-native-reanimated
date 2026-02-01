@@ -120,11 +120,12 @@ bool probePort(uint16_t port, app::DiscoveredDevice &device, int timeoutMs) {
 
   // Populate device info
   device.deviceName = info.deviceName;
-  device.port = info.port;
+  device.internalPort = info.port;
   device.appStartTimeNs = info.appStartTimeNs;
   device.bufferedProfilerEvents = info.bufferedProfilerEvents;
   device.bufferedMutations = info.bufferedMutations;
   device.hasMutationsOverflow = info.hasMutationsOverflow != 0;
+  device.port = port;
   device.valid = true;
 
   // Close the probe connection

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <imgui.h>
+#include <sys/types.h>
 #include <atomic>
 #include <cstdint>
 #include <mutex>
@@ -19,7 +20,8 @@ enum class ConnectionState { Disconnected, Scanning, Connected };
 // Discovered device info
 struct DiscoveredDevice {
   std::string deviceName;
-  uint16_t port;
+  uint16_t internalPort; // Port reported by the device
+  uint16_t port; // Port we tried to connect to
   uint64_t appStartTimeNs;
   uint32_t bufferedProfilerEvents;
   uint32_t bufferedMutations;

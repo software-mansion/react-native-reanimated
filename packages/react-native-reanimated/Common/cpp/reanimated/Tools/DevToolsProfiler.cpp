@@ -1,155 +1,139 @@
-#include <reanimated/Tools/DevToolsProtocol.h>
+#include <reanimated/Tools/DevToolsProfiler.h>
+#include <reanimated/Tools/DevToolsServer.h>
 
-#include <atomic>
-#include <chrono>
-#include <condition_variable>
-#include <mutex>
-#include <thread>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
+#include <functional>
+
+#ifdef ANDROID
+#include <pthread.h>
+#if __ANDROID_API__ >= 26
+#define HAS_PTHREAD_GETNAME 1
+#endif
+#elif defined(__APPLE__)
+#include <dispatch/dispatch.h>
+#include <pthread.h>
+#define HAS_PTHREAD_GETNAME 1
+#endif
 
 namespace reanimated {
 
-/**
- * DevToolsServer - TCP Server for DevTools connections
- *
- * Runs a server on the app side that DevTools connects to.
- * This allows connecting to already-running apps and supports
- * multiple apps running simultaneously (different ports).
- *
- * Features:
- * - Binds to first available port in range 8765-8784
- * - Buffers data when no client connected
- * - Flushes buffers on client connect
- * - Supports one client at a time (rejects additional connections)
- */
-class DevToolsServer {
- public:
-  static DevToolsServer &getInstance();
+// ProfilerThreadInfo implementation
 
-  // Start the server (binds to port, starts network thread)
-  void start();
+ProfilerThreadInfo::ProfilerThreadInfo() {
+  updateThreadInfo();
+}
 
-  // Stop the server and close all connections
-  void stop();
+bool ProfilerThreadInfo::addEvent(const ProfilerEventInternal &event) {
+  ProfilerEventInternal eventWithThread = event;
+  eventWithThread.threadId = threadIdHash_;
+  return events_.push(eventWithThread);
+}
 
-  // Queue mutations for sending (takes ownership, called from any thread)
-  void sendMutations(std::vector<SimpleMutation> &&mutations);
+void ProfilerThreadInfo::updateThreadInfo() {
+  threadIdHash_ = static_cast<uint32_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
 
-  // Queue profiler events for sending (called from any thread)
-  // Events contain raw pointers that will be resolved on the network thread
-  void sendProfilerEvents(std::vector<ProfilerEventInternal> &&events);
+#if defined(__APPLE__)
+  // On Apple, use dispatch queue label only for main queue
+  // For other threads, use pthread name which is more descriptive
+  if (pthread_main_np() != 0) {
+    // We're on the main thread, use dispatch queue label
+    const char *queueLabel = dispatch_queue_get_label(DISPATCH_CURRENT_QUEUE_LABEL);
+    if (queueLabel && queueLabel[0] != '\0') {
+      threadName_ = queueLabel;
+    } else {
+      threadName_ = "Main Thread";
+    }
+  } else {
+    // We're on a background thread, use pthread name
+    char buffer[64];
+    if (pthread_getname_np(pthread_self(), buffer, sizeof(buffer)) == 0 && buffer[0] != '\0') {
+      threadName_ = buffer;
+    } else {
+      threadName_ = "Thread " + std::to_string(threadIdHash_);
+    }
+  }
+#elif defined(ANDROID) && defined(HAS_PTHREAD_GETNAME)
+  char buffer[64];
+  if (pthread_getname_np(pthread_self(), buffer, sizeof(buffer)) == 0 && buffer[0] != '\0') {
+    threadName_ = buffer;
+  } else {
+    threadName_ = "Thread " + std::to_string(threadIdHash_);
+  }
+#else
+  threadName_ = "Thread " + std::to_string(threadIdHash_);
+#endif
+}
 
-  // Queue profiler overflow notification
-  void sendProfilerOverflow(uint32_t threadId, const char *message);
+std::string ProfilerThreadInfo::getThreadName() const {
+  return threadName_;
+}
 
-  // Send thread metadata (called once per thread, from any thread)
-  void sendThreadMetadata(uint32_t threadId, const std::string &threadName);
+// DevToolsProfiler implementation
 
-  // Request an immediate flush (called when sending mutations)
-  void requestFlush();
+DevToolsProfiler &DevToolsProfiler::getInstance() {
+  static DevToolsProfiler instance;
+  return instance;
+}
 
-  // Check if server is running (thread-safe)
-  bool isRunning() const {
-    return running_.load(std::memory_order_acquire);
+ProfilerThreadInfo &DevToolsProfiler::getThreadBuffer() {
+  thread_local ProfilerThreadInfo *threadInfo = nullptr;
+
+  if (threadInfo == nullptr) {
+    auto newBuffer = std::make_unique<ProfilerThreadInfo>();
+    threadInfo = newBuffer.get();
+
+    // Register for flushing
+    std::lock_guard<std::mutex> lock(threadBuffersMutex_);
+    threadBuffers_.push_back(std::move(newBuffer));
   }
 
-  // Called by profiler when client disconnects - resets tracking state
-  void onClientDisconnected();
+  return *threadInfo;
+}
 
- private:
-  DevToolsServer() = default;
-  ~DevToolsServer();
+void DevToolsProfiler::flush() {
+  // Get list of buffers (under lock)
+  std::vector<ProfilerThreadInfo *> buffers;
+  {
+    std::lock_guard<std::mutex> lock(threadBuffersMutex_);
+    buffers.reserve(threadBuffers_.size());
+    for (const auto &buffer : threadBuffers_) {
+      buffers.push_back(buffer.get());
+    }
+  }
 
-  DevToolsServer(const DevToolsServer &) = delete;
-  DevToolsServer &operator=(const DevToolsServer &) = delete;
+  // Collect events from all thread buffers
+  std::vector<ProfilerEventInternal> allEvents;
 
-  // Network thread main loop
-  void networkThreadLoop();
+  for (auto *buffer : buffers) {
+    bool wasOverflowed = false;
+    size_t count = buffer->drainEvents(std::back_inserter(allEvents), wasOverflowed);
 
-  // Server socket management
-  bool bindToAvailablePort();
-  void acceptClients();
-  void handleClient();
+    // Send overflow notification if needed
+    if (wasOverflowed) {
+      DevToolsServer::getInstance().sendProfilerOverflow(
+          buffer->getThreadIdHash(), "Profiler buffer overflowed - some events were dropped");
+    }
 
-  // Send buffered data to newly connected client
-  void flushBuffersToClient();
+    // Send thread metadata if new and has events
+    if (count > 0 && !buffer->hasMetadataBeenSent()) {
+      DevToolsServer::getInstance().sendThreadMetadata(buffer->getThreadIdHash(), buffer->getThreadName());
+      buffer->markMetadataAsSent();
+    }
+  }
 
-  // Handle client handshake - waits for ClientReady message
-  // Returns true if handshake completed successfully, false if disconnected/error
-  bool handleClientHandshake();
+  // Send to server
+  if (!allEvents.empty()) {
+    DevToolsServer::getInstance().sendProfilerEvents(std::move(allEvents));
+  }
+}
 
-  // Send data to client
-  void sendPendingData();
-  void sendDeviceInfo();
-  void sendConnectionRejected(int socket, const char *reason);
-  void sendMutationsBatch(const std::vector<SimpleMutation> &mutations, uint64_t timestamp);
-  void sendProfilerStringsBatch(const std::vector<ProfilerStringEntry> &strings);
-  void sendProfilerEventsBatch(const std::vector<ProfilerEvent> &events);
-  void sendThreadMetadataBatch(const std::vector<ThreadMetadata> &metadata);
-  void sendProfilerOverflowBatch(const std::vector<ProfilerOverflowMessage> &overflows);
-  void sendMutationsOverflow();
-  bool sendRawData(const void *data, size_t size);
-
-  // Resolve profiler event pointers to IDs (called on network thread only)
-  std::vector<ProfilerEvent> resolveProfilerEvents(const std::vector<ProfilerEventInternal> &events);
-  uint32_t getOrRegisterString(const char *name);
-
-  // Helper to get current timestamp
-  static uint64_t getCurrentTimestampNs();
-
-  // Check if client is still connected (non-blocking)
-  // Returns false if client disconnected
-  bool checkClientConnection();
-
-  // Mutation batch with timestamp
-  struct MutationBatch {
-    std::vector<SimpleMutation> mutations;
-    uint64_t timestampNs;
-  };
-
-  // Network thread
-  std::thread networkThread_;
-  std::atomic<bool> running_{false};
-
-  // Server state (all accessed only from network thread except noted)
-  uint16_t boundPort_{0}; // Network thread only
-  bool hasActiveClient_{false}; // Network thread only
-  bool clientReady_{false}; // Network thread only - true after ClientReady received
-  bool firstClientEverConnected_{false}; // Network thread only
-  int serverSocket_{-1}; // Network thread only
-  int clientSocket_{-1}; // Network thread only
-
-  // App start time for DeviceInfo
-  uint64_t appStartTimeNs_{0};
-
-  // Work queues (protected by queueMutex_)
-  std::mutex queueMutex_;
-  std::condition_variable queueCondition_;
-  std::vector<MutationBatch> pendingMutations_;
-  std::vector<std::vector<ProfilerEventInternal>> pendingProfilerEvents_;
-  std::vector<ThreadMetadata> pendingThreadMetadata_;
-  std::vector<ProfilerOverflowMessage> pendingProfilerOverflows_;
-  bool flushRequested_{false};
-
-  // Buffered data (for when no client is connected)
-  std::vector<MutationBatch> bufferedMutations_;
-  std::vector<ProfilerEventInternal> bufferedProfilerEvents_;
-  std::vector<ThreadMetadata> bufferedThreadMetadata_;
-  bool mutationsOverflowed_{false};
-
-  // Tracking what has been sent to current client
-  std::unordered_set<uint32_t> threadMetadataSent_;
-  std::unordered_set<const char *> stringsSent_;
-
-  // String registry (only accessed from network thread - no mutex needed)
-  std::unordered_map<const char *, uint32_t> pointerToId_;
-  std::vector<ProfilerStringEntry> pendingStringRegistrations_;
-  uint32_t nextStringId_{1};
-
-  // Sockets
-  static constexpr int INVALID_SOCKET = -1;
-};
+void DevToolsProfiler::onClientDisconnected() {
+  std::lock_guard<std::mutex> lock(threadBuffersMutex_);
+  for (auto &buffer : threadBuffers_) {
+    buffer->clearMetadataSent();
+    // Immediately resend metadata so it's buffered for next client
+    DevToolsServer::getInstance().sendThreadMetadata(buffer->getThreadIdHash(), buffer->getThreadName());
+    buffer->markMetadataAsSent();
+  }
+}
 
 } // namespace reanimated

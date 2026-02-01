@@ -13,7 +13,7 @@ struct DevToolsConfig {
   static constexpr uint16_t PORT_COUNT = PORT_END - PORT_START + 1; // 20 ports
 
   // Per-thread profiler ring buffer size (must be power of 2)
-  static constexpr size_t PROFILER_BUFFER_SIZE = 1024;
+  static constexpr size_t PROFILER_BUFFER_SIZE = 1;
 
   // Thread metadata circular buffer limit
   static constexpr size_t MAX_THREAD_METADATA = 512;

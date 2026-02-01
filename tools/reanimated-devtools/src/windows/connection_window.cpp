@@ -121,7 +121,12 @@ void renderDeviceList(app::AppState &state) {
 
       // Format device entry
       char label[256];
-      snprintf(label, sizeof(label), "%s (port %d)", device.deviceName.c_str(), device.port);
+      if (device.port == device.internalPort) {
+        snprintf(label, sizeof(label), "%s (port %d)", device.deviceName.c_str(), device.port);
+      } else {
+        snprintf(label, sizeof(label), "%s (port %d forwarded from %d)", device.deviceName.c_str(), device.port,
+                 device.internalPort);
+      }
 
       if (ImGui::Selectable(label, isSelected)) {
         std::lock_guard<std::mutex> lock(state.data.connectionMutex);
