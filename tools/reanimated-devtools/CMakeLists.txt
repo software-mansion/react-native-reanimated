@@ -123,6 +123,7 @@ target_link_libraries(data PUBLIC protocol)
 
 # Window rendering library
 add_library(windows STATIC
+    src/windows/connection_window.cpp
     src/windows/controls_window.cpp
     src/windows/mutations_window.cpp
     src/windows/view_tree_window.cpp

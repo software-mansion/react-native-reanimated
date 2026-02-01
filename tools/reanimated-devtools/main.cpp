@@ -1,8 +1,11 @@
-// Reanimated DevTools Server with ImGui Frontend
-// A C++ server that receives mutation data from Reanimated and visualizes it.
+// Reanimated DevTools - Client Application
+// Connects to Reanimated apps running DevTools server and visualizes data.
+//
+// Architecture: App acts as server (binds to port 8765-8784),
+// DevTools connects as client.
 //
 // Build: make
-// Run: ./devtools-server
+// Run: ./devtools
 
 #include <iostream>
 #include <thread>
@@ -15,6 +18,7 @@
 #include "app_state.h"
 
 // Window render functions
+#include "windows/connection_window.h"
 #include "windows/controls_window.h"
 #include "windows/fps_window.h"
 #include "windows/mutations_window.h"
@@ -24,17 +28,12 @@
 // Data processing
 #include "data/network_handler.h"
 
-int main(int argc, char *argv[]) {
-  int port = 8765;
-  if (argc > 1) {
-    port = std::atoi(argv[1]);
-  }
-
+int main(int /* argc */, char * /* argv */[]) {
   // Create application state
   app::AppState appState;
 
-  // Start network thread
-  std::thread netThread(data::networkThread, std::ref(appState), port);
+  // Start network thread (handles connection state and data receiving)
+  std::thread netThread(data::networkThread, std::ref(appState));
 
   // Initialize GLFW
   if (!glfwInit()) {
@@ -80,11 +79,23 @@ int main(int argc, char *argv[]) {
     // Create fullscreen dockspace
     ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 
-    // Render all windows
-    windows::renderControlsWindow(appState);
-    windows::renderMutationsWindow(appState);
-    windows::renderViewTreeWindow(appState);
-    windows::renderProfilerWindow(appState);
+    // Always render connection window (can be toggled via menu)
+    windows::renderConnectionWindow(appState);
+
+    // Check connection state to decide which windows to show
+    app::ConnectionState connState;
+    {
+      std::lock_guard<std::mutex> lock(appState.data.connectionMutex);
+      connState = appState.data.connectionState;
+    }
+
+    // Only show data windows when connected
+    if (connState == app::ConnectionState::Connected) {
+      windows::renderControlsWindow(appState);
+      windows::renderMutationsWindow(appState);
+      windows::renderViewTreeWindow(appState);
+      windows::renderProfilerWindow(appState);
+    }
 
 #ifdef ENABLE_FPS_COUNTER
     windows::renderFpsWindow(appState);
@@ -104,6 +115,7 @@ int main(int argc, char *argv[]) {
 
   // Cleanup
   appState.data.running = false;
+  windows::cleanupConnectionWindow();
   netThread.join();
 
   ImGui_ImplOpenGL3_Shutdown();

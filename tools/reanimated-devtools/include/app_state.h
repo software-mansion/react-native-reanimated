@@ -13,8 +13,31 @@
 // Application state - split into data and UI components
 namespace app {
 
+// Connection states
+enum class ConnectionState { Disconnected, Scanning, Connected };
+
+// Discovered device info
+struct DiscoveredDevice {
+  std::string deviceName;
+  uint16_t port;
+  uint64_t appStartTimeNs;
+  uint32_t bufferedProfilerEvents;
+  uint32_t bufferedMutations;
+  bool hasMutationsOverflow;
+  bool valid; // Set to true if DeviceInfo was received and validated
+};
+
 // Thread-safe data state (protected by mutexes)
 struct DataState {
+  // Connection state (protected by connectionMutex)
+  std::mutex connectionMutex;
+  ConnectionState connectionState{ConnectionState::Disconnected};
+  std::vector<DiscoveredDevice> discoveredDevices;
+  int selectedDeviceIndex{-1};
+  int connectedPort{0};
+  std::string connectionError;
+  std::string disconnectReason;
+
   // Snapshots & view tree (protected by snapshotMutex)
   std::mutex snapshotMutex;
   std::vector<TreeSnapshot> snapshots;
@@ -30,6 +53,8 @@ struct DataState {
   std::unordered_map<uint32_t, std::string> threadNames; // Thread ID -> human-readable name
   uint64_t profilerMinTimeNs = UINT64_MAX;
   uint64_t profilerMaxTimeNs = 0;
+  bool profilerOverflowOccurred{false};
+  bool mutationsOverflowOccurred{false};
 
   // Lifecycle
   std::atomic<bool> running{true};
@@ -54,6 +79,9 @@ struct UIState {
   double profilerNsPerPixel = 100000.0;
   bool profilerLockToLatest = true;
   HoveredEventInfo hoveredEvent;
+
+  // Connection window state
+  bool showConnectionWindow{true};
 };
 
 // Main application state - composition of data and UI

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/Tools/DevToolsProtocol.h>
+#include <reanimated/Tools/SPSCRingBuffer.h>
 
 #include <atomic>
 #include <chrono>
@@ -14,52 +15,64 @@ namespace reanimated {
 // Forward declaration
 class DevToolsServer;
 
-// Configurable buffer size
-constexpr size_t PROFILER_BUFFER_INITIAL_SIZE = 1024;
-constexpr size_t PROFILER_PREALLOCATED_BUFFERS = 3;
-
 /**
- * ProfilerThreadBuffer - Per-thread double buffer for profiler events
+ * ProfilerThreadBuffer - Per-thread SPSC ring buffer for profiler events
  *
- * Uses two buffers: one for writing (active) and one for reading (ready).
- * The swap operation is lock-free for the common case (just an atomic flag).
- * Only the swap itself needs a mutex to prevent concurrent swaps.
+ * Each thread has its own buffer that is:
+ * - Written to by the profiler thread (producer) - wait-free
+ * - Read from by the network thread (consumer) - wait-free
+ *
+
  */
 class ProfilerThreadInfo {
  public:
-  explicit ProfilerThreadInfo(size_t initialSize = PROFILER_BUFFER_INITIAL_SIZE);
+  explicit ProfilerThreadInfo();
 
-  // Add event to active buffer (lock-free, called from app thread)
-  void addEvent(ProfilerEventInternal &event);
+  // Add event to ring buffer (lock-free, called from profiler thread)
+  // Returns false if buffer is full (event dropped)
+  bool addEvent(const ProfilerEventInternal &event);
 
-  // Swap buffers and return the ready one (called from flush)
-  // Returns empty vector if nothing to collect
-  std::vector<ProfilerEventInternal> swapAndCollect();
+  // Drain all available events (called from network thread)
+  // Returns number of events drained, sets wasOverflowed if overflow occurred
+  template <typename OutputIt>
+  size_t drainEvents(OutputIt out, bool &wasOverflowed) {
+    return events_.drainBounded(out, wasOverflowed);
+  }
 
-  // Check if active buffer has data
-  bool hasEvents() const;
+  // Check if buffer has events
+  bool hasEvents() const {
+    return !events_.empty();
+  }
 
-  // Update thread local data
+  // Update thread local data (name, id)
   void updateThreadInfo();
 
   // Get thread name (can be called from any thread)
   std::string getThreadName() const;
 
-  // Get thread ID
-  std::thread::id getThreadId() const;
+  // Get thread ID hash
+  uint32_t getThreadIdHash() const {
+    return threadIdHash_;
+  }
 
-  // Check if thread metadata has been sent (for synchronization with frontend)
-  bool hasMetadataBeenSent() const;
+  // Check if thread metadata has been sent to current client
+  bool hasMetadataBeenSent() const {
+    return metadataSent_.load(std::memory_order_acquire);
+  }
 
   // Mark metadata as sent
-  void markMetadataAsSent();
+  void markMetadataAsSent() {
+    metadataSent_.store(true, std::memory_order_release);
+  }
+
+  // Clear metadata sent flag (called on client disconnect)
+  void clearMetadataSent() {
+    metadataSent_.store(false, std::memory_order_release);
+  }
 
  private:
-  std::vector<ProfilerEventInternal> bufferA_;
-  std::vector<ProfilerEventInternal> bufferB_;
-  std::atomic<bool> activeIsA_{true};
-  std::mutex swapMutex_; // Only held during swap
-  std::thread::id threadId_{std::this_thread::get_id()};
+  SPSCRingBuffer<ProfilerEventInternal, DevToolsConfig::PROFILER_BUFFER_SIZE> events_;
+  uint32_t threadIdHash_{0};
   std::string threadName_;
   std::atomic<bool> metadataSent_{false};
 };
@@ -67,8 +80,10 @@ class ProfilerThreadInfo {
 /**
  * DevToolsProfiler - Global profiler manager
  *
- * Manages thread-local buffers and coordinates flushing to DevToolsServer.
- * Pre-allocates buffers for important threads to avoid allocation overhead.
+ * Manages thread-local SPSC buffers and coordinates flushing to DevToolsServer.
+ *
+ * NOTE: Thread buffers are never cleaned up when threads die.
+ * This is acceptable for React Native where threads are long-lived.
  */
 class DevToolsProfiler {
  public:
@@ -80,24 +95,18 @@ class DevToolsProfiler {
   // Flush all thread buffers to DevToolsServer
   void flush();
 
+  // Called when client disconnects - resets metadata sent flags
+  void onClientDisconnected();
+
  private:
-  DevToolsProfiler() {
-    // Pre-allocate buffers for important threads
-    for (size_t i = 0; i < PROFILER_PREALLOCATED_BUFFERS; ++i) {
-      buffers_.emplace_back(std::make_unique<ProfilerThreadInfo>());
-    }
-  }
+  DevToolsProfiler() = default;
 
   DevToolsProfiler(const DevToolsProfiler &) = delete;
   DevToolsProfiler &operator=(const DevToolsProfiler &) = delete;
 
   // Track all thread buffers for flushing
   std::mutex threadBuffersMutex_;
-  std::vector<ProfilerThreadInfo *> threadBuffers_;
-
-  std::atomic<size_t> preallocatedIndex_{0};
-  // Dynamically allocated buffers for threads beyond preallocated count
-  std::vector<std::unique_ptr<ProfilerThreadInfo>> buffers_;
+  std::vector<std::unique_ptr<ProfilerThreadInfo>> threadBuffers_;
 };
 
 /**
@@ -106,7 +115,7 @@ class DevToolsProfiler {
  * Records start time on construction, end time + event on destruction.
  * Designed for minimal overhead:
  * - Constructor: just store pointer + steady_clock::now()
- * - Destructor: steady_clock::now() + buffer push (no locks, no string lookup)
+ * - Destructor: steady_clock::now() + buffer push (no locks, wait-free)
  *
  * String-to-ID resolution happens on the background thread.
  */
@@ -120,6 +129,7 @@ class ProfilerSection {
     // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
     event.namePtr = reinterpret_cast<uint64_t>(name_);
     // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
+    event.threadId = 0; // Will be set by addEvent
     event.startTimeNs = startTimeNs_;
     event.endTimeNs = std::chrono::steady_clock::now().time_since_epoch().count();
     DevToolsProfiler::getInstance().getThreadBuffer().addEvent(event);

@@ -5,12 +5,39 @@
 
 namespace reanimated {
 
+// DevTools configuration - all constexpr for easy customization
+struct DevToolsConfig {
+  // Port range for server binding
+  static constexpr uint16_t PORT_START = 8765;
+  static constexpr uint16_t PORT_END = 8784;
+  static constexpr uint16_t PORT_COUNT = PORT_END - PORT_START + 1; // 20 ports
+
+  // Per-thread profiler ring buffer size (must be power of 2)
+  static constexpr size_t PROFILER_BUFFER_SIZE = 1024;
+
+  // Thread metadata circular buffer limit
+  static constexpr size_t MAX_THREAD_METADATA = 512;
+
+  // Mutations buffer (only used until first client connects)
+  static constexpr size_t MUTATIONS_BUFFER_MAX_COUNT = 10000;
+
+  // Network thread flush interval
+  static constexpr int FLUSH_INTERVAL_MS = 300;
+};
+
 // Message type discriminator
 enum class DevToolsMessageType : uint8_t {
   Mutations = 0,
   ProfilerStringRegistry = 1,
   ProfilerEvents = 2,
   ThreadMetadata = 3,
+  // New message types for server-in-app architecture
+  DeviceInfo = 4,
+  ConnectionRejected = 5,
+  ProfilerOverflow = 6,
+  MutationsOverflow = 7,
+  // Client-to-server messages
+  ClientReady = 8, // Client is ready to receive data (sent after DeviceInfo)
 };
 
 // Mutation types matching ShadowViewMutation::Type
@@ -99,6 +126,44 @@ struct ThreadMetadata {
   uint32_t threadId; // Thread ID hash
   char threadName[64]; // Human-readable thread name (e.g., "RenderThread", "JSThread")
 };
+
+// Device info - sent immediately when client connects
+struct DeviceInfoMessage {
+  char deviceName[128]; // Platform-provided or "Unknown Device"
+  uint16_t port; // Port the server is listening on
+  uint8_t padding1[2]; // Alignment
+  uint64_t appStartTimeNs; // When the app started (for uptime display)
+  uint32_t bufferedProfilerEvents; // Approximate count of buffered profiler events
+  uint32_t bufferedMutations; // Count of buffered mutations
+  uint8_t hasMutationsOverflow; // 1 if some mutations were dropped due to overflow
+  uint8_t padding2[3]; // Alignment
+};
+
+// Connection rejected - sent when another client is already connected
+struct ConnectionRejectedMessage {
+  char reason[256]; // Human-readable reason (e.g., "App already has an active connection")
+};
+
+// Profiler overflow notification - sent when profiler data was dropped
+struct ProfilerOverflowMessage {
+  uint32_t threadId; // Thread that overflowed
+  uint64_t timestampNs; // When overflow was detected
+  char message[128]; // Human-readable message
+};
+
+// Mutations overflow notification - sent when mutations buffer overflowed
+struct MutationsOverflowMessage {
+  uint64_t timestampNs; // When overflow was detected
+  uint32_t droppedCount; // Approximate number of mutations dropped
+  uint8_t padding[4]; // Alignment
+  char message[128]; // Human-readable message
+};
+
+// Client ready message - sent by client after DeviceInfo to indicate it wants data
+struct ClientReadyMessage {
+  uint8_t protocolVersion; // Client's protocol version for version negotiation
+  uint8_t padding[7]; // Alignment
+};
 #pragma pack(pop)
 
 // Internal profiler event - stores pointer, resolved on background thread
@@ -120,7 +185,7 @@ struct DevToolsMessageHeader {
   uint64_t timestampNs; // Timestamp in nanoseconds (for linking profiler events to mutations)
 
   static constexpr uint32_t MAGIC = 0xDEADBEEF;
-  static constexpr uint32_t VERSION = 5; // Added ThreadMetadata message type
+  static constexpr uint32_t VERSION = 7; // Server-in-app with ClientReady handshake
 
   DevToolsMessageHeader()
       : magic(MAGIC),
