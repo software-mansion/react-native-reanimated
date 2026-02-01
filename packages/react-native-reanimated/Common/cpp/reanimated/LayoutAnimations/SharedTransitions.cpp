@@ -25,7 +25,7 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findTopScreen(
   if (isSETBoundary(node)) {
     auto boundaryProps = std::static_pointer_cast<const RNReanimatedSharedTransitionBoundaryProps>(node->current.props);
     auto isActive = boundaryProps->isActive;
-    if (isActive) {
+    if (isActive && node->state == ExitingState::UNDEFINED) {
       result = node;
       return result;
     }

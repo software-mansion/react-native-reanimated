@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { memo } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, { SharedTransitionBoundary } from 'react-native-reanimated';
+import EmptyExample from '../EmptyExample';
 
 function getStyle(index: number) {
   switch (index) {
@@ -45,19 +46,20 @@ const ScreenContent = memo(
         <RenderLogger id={id} />
         <Clicker />
         <Text>Current id: {id}</Text>
+        {id === 1 && <EmptyExample />}
         {showButtons && id < 2 && (
           <Button
             title={`Go next ${id + 1}`}
             onPress={() => navigation.push('Details', { id: id + 1 })}
           />
         )}
-        {showButtons && id > 0 && (
+        {/* {showButtons && id > 0 && (
           <Button
             onPress={() => navigation.push('Details', { id: id - 1 })}
             title={`Go next ${id - 1}`}
           />
-        )}
-        <Animated.View style={getStyle(id)} sharedTransitionTag="test" />
+        )} */}
+        <Animated.View style={getStyle(id)} sharedTransitionTag="tag" />
       </View>
     );
   }
@@ -66,9 +68,8 @@ const ScreenContent = memo(
 function Screen({ navigation, route }: NativeStackScreenProps<ScreenProps>) {
   const id = route.params?.id ?? 0;
   const isActive = useIsFocused();
-  console.log('screen ', id, ' isActive:', isActive);
   return (
-    <SharedTransitionBoundary isActive={isActive}>
+    <SharedTransitionBoundary isActive={isActive && id === 0}>
       <ScreenContent navigation={navigation} route={route} />
     </SharedTransitionBoundary>
   );
@@ -124,6 +125,7 @@ const styles = StyleSheet.create({
     width: 200,
     height: 100,
     backgroundColor: 'blue',
+    opacity: 0,
   },
   box3: {
     width: 150,

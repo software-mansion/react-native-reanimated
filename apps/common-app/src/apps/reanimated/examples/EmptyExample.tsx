@@ -1,20 +1,26 @@
+import { useIsFocused } from '@react-navigation/native';
 import React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   SharedTransitionBoundary,
   SlideInDown,
   FadeOutRight,
+  SharedTransition,
 } from 'react-native-reanimated';
+
+const transition = SharedTransition.duration(3000);
 
 export default function EmptyExample() {
   const [activeID, setActiveID] = React.useState(0);
+  const isFocused = useIsFocused();
 
   return (
     <View style={styles.container}>
       <Button onPress={() => setActiveID((id) => 1 - id)} title="toggle" />
       <View style={styles.fakeScreen}>
-        <SharedTransitionBoundary isActive={activeID === 0}>
+        <SharedTransitionBoundary isActive={isFocused && activeID === 0}>
           <Animated.View
+            sharedTransitionStyle={transition}
             sharedTransitionTag="tag"
             style={{ backgroundColor: 'red', width: 100, height: 100 }}
           />
@@ -23,9 +29,9 @@ export default function EmptyExample() {
       {activeID === 1 && (
         <Animated.View
           entering={SlideInDown}
-          exiting={FadeOutRight}
+          exiting={FadeOutRight.duration(1000)}
           style={styles.fakeScreen}>
-          <SharedTransitionBoundary isActive={activeID === 1}>
+          <SharedTransitionBoundary isActive={isFocused && activeID === 1}>
             <Animated.View
               sharedTransitionTag="tag"
               style={{
