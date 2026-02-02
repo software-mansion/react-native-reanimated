@@ -1,9 +1,8 @@
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 
-#if defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
-#include <fbjni/detail/Environment.h>
-#include <jni.h>
-#endif // defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#if defined(ANDROID)
+#include <fbjni/fbjni.h>
+#endif // defined(ANDROID)
 
 #include <memory>
 #include <string>
@@ -33,13 +32,13 @@ void AsyncQueueImpl::runLoop(const std::shared_ptr<AsyncQueueState> &state) {
 
 AsyncQueueImpl::AsyncQueueImpl(const std::string &name) : state_(std::make_shared<AsyncQueueState>()) {
   auto thread = std::thread([name, state = state_] {
-#ifdef ANDROID
+#if defined(ANDROID)
     pthread_setname_np(pthread_self(), name.c_str());
     jni::ThreadScope::WithClassLoader([state]() { AsyncQueueImpl::runLoop(state); });
-#else // !ANDROID
+#else
     pthread_setname_np(name.c_str());
     AsyncQueueImpl::runLoop(state);
-#endif // ANDROID
+#endif // defined(ANDROID)
   });
   thread.detach();
 }
