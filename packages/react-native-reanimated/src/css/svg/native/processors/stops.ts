@@ -1,6 +1,6 @@
 'use strict';
 
-import { type ValueProcessor } from '../../../../common';
+import { logger, type ValueProcessor } from '../../../../common';
 import type { CSSGradientStop } from '../../../types';
 import { processColorSVG } from './colors';
 import { processOpacity } from './opacity';
@@ -11,11 +11,14 @@ export interface ProcessedGradientStop {
   opacity: number;
 }
 
+const NO_STOPS_WARNING = 'No stops in SVG gradient';
+
 export const processSVGGradientStops: ValueProcessor<
   CSSGradientStop[],
   ProcessedGradientStop[]
 > = (stops) => {
-  if (!stops || !Array.isArray(stops)) {
+  if (!stops || !Array.isArray(stops) || stops.length === 0) {
+    logger.warn(NO_STOPS_WARNING);
     return [];
   }
 
