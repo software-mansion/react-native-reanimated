@@ -44,7 +44,7 @@ module.exports = {
           if (idFileMap.has(moduleName)) {
             return idFileMap.get(moduleName);
           }
-          if (moduleName.includes('react-native-worklets/.worklets/')) {
+          if (moduleName.replace(/\\/g, '/').includes('react-native-worklets/.worklets/')) {
             const base = path.basename(moduleName, '.js');
             const id = Number(base);
             idFileMap.set(moduleName, id);
