@@ -14,9 +14,9 @@
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
+#include <react/featureflags/ReactNativeFeatureFlags.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
-#include <react/featureflags/ReactNativeFeatureFlags.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 
@@ -664,8 +664,6 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
           surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
     }
 
-    //    jsi::Runtime &rt = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
-
     UpdatesBatch updatesBatch;
     UpdatesBatchAnimatedProps updatesBatchAnimatedProps;
     {
@@ -707,6 +705,16 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
       bool hasLayoutUpdates = mutationHasLayoutUpdates(animatedProp);
       mutations.batch.push_back(
           AnimationMutation{node->getTag(), node->getFamilyShared(), std::move(animatedProp), hasLayoutUpdates});
+    }
+
+    if (mutations.batch.size() == 0) {
+      // Empty mutations batch implies finished animation
+      std::weak_ptr<UIManagerAnimationBackend> unstableAnimationBackend = uiManager_->unstable_getAnimationBackend();
+      if (auto locked = unstableAnimationBackend.lock()) {
+        std::static_pointer_cast<AnimationBackend>(locked)->stop(callbackId_);
+      }
+
+      isAnimationRunning_ = false;
     }
 
     return mutations;
@@ -1386,30 +1394,25 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
     backendCallbacks_ = std::vector<std::function<void(AnimationTimestamp)>>();
     requestRender_ = [this](std::function<void(const double)> callback) {
       std::weak_ptr<UIManagerAnimationBackend> unstableAnimationBackend = uiManager_->unstable_getAnimationBackend();
-      backendCallbacks_.push_back(callback);
+      backendCallbacks_.push_back(
+          [callback = std::move(callback)](AnimationTimestamp timestamp) { callback(timestamp.count()); });
+        
       if (auto locked = unstableAnimationBackend.lock()) {
         auto animationBackend = std::static_pointer_cast<AnimationBackend>(locked);
-        if (backendCallbacks_.size() == 1) {
-          animationBackend->start(
-              [this](double timestamp) {
-                if (auto locked = uiManager_->unstable_getAnimationBackend().lock()) {
-                  std::static_pointer_cast<AnimationBackend>(locked)->stop(false);
-                }
+        if (isAnimationRunning_ == false) {
+          callbackId_ = animationBackend->start([this](AnimationTimestamp timestamp) {
+            auto copy = std::move(backendCallbacks_);
+            for (auto &cb : copy) {
+              cb(timestamp);
+            }
 
-                auto copy = std::move(backendCallbacks_);
-                for (auto &cb : copy) {
-                  cb(timestamp);
-                }
-
-                return performOperationsForBackend();
-              },
-              false);
+            return performOperationsForBackend();
+          });
+          isAnimationRunning_ = true;
         }
       }
     };
   }
-
-  //    requestRender_([this](const double tmp) {});
 
   initializeLayoutAnimationsProxy();
 
