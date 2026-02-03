@@ -1732,7 +1732,7 @@ var require_inlineStylesWarning = __commonJS({
     }
     function processPropertyValueForInlineStylesWarning(path) {
       if (path.isMemberExpression() && (0, types_12.isIdentifier)(path.node.property)) {
-        if (path.node.property.name === "value") {
+        if (!path.node.computed && path.node.property.name === "value") {
           path.replaceWith(generateInlineStylesWarning(path));
         }
       }
