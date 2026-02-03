@@ -1,6 +1,5 @@
 'use strict';
 
-import { WorkletsError } from './debug/WorkletsError';
 import { mockedRequestAnimationFrame } from './runLoop/uiRuntime/mockedRequestAnimationFrame';
 import { RuntimeKind } from './runtimeKind';
 import { isWorkletFunction } from './workletFunction';
@@ -41,18 +40,7 @@ const WorkletAPI = {
     worklet: (...args: Args) => ReturnValue,
     ...args: Args
   ): Promise<ReturnValue> {
-    return new Promise<ReturnValue>((resolve, reject) => {
-      mockedRequestAnimationFrame(() => {
-        try {
-          const result = worklet(...args);
-          resolve(result);
-        } catch (error) {
-          reject(
-            error instanceof Error ? error : new WorkletsError(String(error))
-          );
-        }
-      });
-    });
+    return WorkletAPI.runOnUIAsync(worklet)(...args);
   },
   scheduleOnRuntime: IMMEDIATE_CALLBACK_INVOCATION,
   createSerializable: ID,

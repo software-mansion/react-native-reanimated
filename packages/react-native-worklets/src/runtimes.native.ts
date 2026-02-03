@@ -249,13 +249,8 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
  *
  * - The worklet is scheduled on the Worker Runtime's Async Queue
  * - Returns a Promise that resolves with the worklet's return value
- * - This function cannot be called from the [UI
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
- *   or another [Worker
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
- *   unless the [Bundle
- *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
- *   enabled.
+ * - This function can only be called from the [RN
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
  *
  * @param workletRuntime - The runtime to run the worklet on.
  * @param worklet - The worklet to run.
@@ -276,10 +271,17 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
   ...args: Args
 ): Promise<ReturnValue> {
-  if (__DEV__ && !isWorkletFunction(worklet)) {
-    throw new WorkletsError(
-      'The function passed to `runOnRuntimeAsync` is not a worklet.'
-    );
+  if (__DEV__) {
+    if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
+      throw new WorkletsError(
+        '`runOnRuntimeAsync` can only be called on the RN Runtime.'
+      );
+    }
+    if (!isWorkletFunction(worklet)) {
+      throw new WorkletsError(
+        'The function passed to `runOnRuntimeAsync` is not a worklet.'
+      );
+    }
   }
 
   return new Promise<ReturnValue>((resolve, reject) => {
@@ -303,7 +305,7 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
         } catch (error) {
           scheduleOnRN(reject, error);
         }
-        globalThis.__flushMicrotasks();
+        globalThis?.__flushMicrotasks?.();
       })
     );
   });
@@ -313,7 +315,7 @@ if (__DEV__) {
   function runOnRuntimeAsyncWorklet(): void {
     'worklet';
     throw new WorkletsError(
-      '`runOnRuntimeAsync` cannot be called from a Worker Runtime. Please call the function synchronously or use `queueMicrotask` instead.'
+      '`runOnRuntimeAsync` can only be called on the RN Runtime.'
     );
   }
 
