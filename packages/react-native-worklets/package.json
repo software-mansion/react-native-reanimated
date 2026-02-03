@@ -81,8 +81,8 @@
     "knip": "5.61.3",
     "madge": "8.0.0",
     "prettier": "3.6.2",
-    "react": "19.2.0",
-    "react-native": "0.83.0-rc.4",
+    "react": "19.2.3",
+    "react-native": "0.84.0-rc.4",
     "react-native-builder-bob": "0.40.13",
     "typescript": "5.8.3"
   },
