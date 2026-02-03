@@ -5,7 +5,7 @@ import Animated, {
 // TODO: Fix me
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
-import { Defs, RadialGradient, Rect, Svg } from 'react-native-svg';
+import { Defs, RadialGradient, Rect, Stop, Svg } from 'react-native-svg';
 
 import { ExamplesScreen } from '@/apps/css/components';
 
@@ -39,8 +39,13 @@ export default function RadialGradientExample() {
             <AnimatedGrad
               animatedProps={animation}
               gradientUnits="objectBoundingBox"
-              id="radialGrad"
-            />
+              id="radialGrad">
+              {[
+                // TODO: Remove the necessity for this hack.
+                // Hack to mute RNSVG warning "gradient without stops"
+                <Stop key="fallback" />,
+              ]}
+            </AnimatedGrad>
           </DefsWithChildren>
           <Rect
             fill="url(#radialGrad)"
