@@ -119,7 +119,7 @@ void addTransform(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &
   updatePropOrAdd<Transform>(
       propsBuilder,
       TRANSFORM,
-      [&](auto &existingTransform) { existingTransform = existingTransform * transform; },
+      [&](Transform &existingTransform) { existingTransform = existingTransform * transform; },
       [&]() { propsBuilder->setTransform(transform); });
 }
 
@@ -127,10 +127,6 @@ ValueUnit cssLengthToValueUnit(const CSSLength &cssLength) {
   const float value =
       cssLength.isRelative ? static_cast<float>(cssLength.value * 100) : static_cast<float>(cssLength.value);
   return ValueUnit(value, cssLength.isRelative ? UnitType::Percent : UnitType::Point);
-}
-
-double cssLengthToDouble(const CSSLength &cssLength) {
-  return cssLength.isRelative ? cssLength.value * 100 : cssLength.value;
 }
 
 yoga::StyleLength cssLengthToStyleLength(const CSSLength &cssValue) {
@@ -846,7 +842,7 @@ void addPaddingVerticalToPropsBuilder(
 void addBlurFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     BlurOperation &operation) {
-  double blurValue = operation.value.value;
+  Float blurValue = static_cast<Float>(operation.value.value);
   FilterFunction filterFunction = FilterFunction{FilterType::Blur, std::variant<Float, DropShadowParams>{blurValue}};
   addFilter(propsBuilder, filterFunction);
 }
@@ -854,7 +850,7 @@ void addBlurFilterToPropsBuilder(
 void addBrightnessFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     BrightnessOperation &operation) {
-  double brightnessValue = operation.value.value;
+  Float brightnessValue = static_cast<Float>(operation.value.value);
   FilterFunction filterFunction =
       FilterFunction{FilterType::Brightness, std::variant<Float, DropShadowParams>{brightnessValue}};
   addFilter(propsBuilder, filterFunction);
@@ -863,9 +859,10 @@ void addBrightnessFilterToPropsBuilder(
 void addContrastFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     ContrastOperation &operation) {
-  double contrastValue = operation.value.value;
+  Float contrastValue = static_cast<Float>(operation.value.value);
   FilterFunction filterFuntion =
       FilterFunction{FilterType::Contrast, std::variant<Float, DropShadowParams>{contrastValue}};
+  addFilter(propsBuilder, filterFuntion);
 }
 
 void addDropShadowFilterToPropsBuilder(
@@ -873,9 +870,9 @@ void addDropShadowFilterToPropsBuilder(
     DropShadowOperation &operation) {
 
   DropShadowParams dropShadowParams = DropShadowParams{
-      operation.value.offsetX.value,
-      operation.value.offsetY.value,
-      operation.value.standardDeviation.value,
+      static_cast<Float>(operation.value.offsetX.value),
+      static_cast<Float>(operation.value.offsetY.value),
+      static_cast<Float>(operation.value.standardDeviation.value),
       SharedColor(parseCSSColor(operation.value.color))};
 
   FilterFunction filterFunction =
@@ -886,7 +883,7 @@ void addDropShadowFilterToPropsBuilder(
 void addGrayscaleFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     GrayscaleOperation &operation) {
-  double grayScaleValue = operation.value.value;
+  Float grayScaleValue = static_cast<Float>(operation.value.value);
   FilterFunction filterFunction =
       FilterFunction{FilterType::Grayscale, std::variant<Float, DropShadowParams>{grayScaleValue}};
   addFilter(propsBuilder, filterFunction);
@@ -895,7 +892,7 @@ void addGrayscaleFilterToPropsBuilder(
 void addHueRotateFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     HueRotateOperation &operation) {
-  double hueRotateValue = operation.value.value;
+  Float hueRotateValue = static_cast<Float>(operation.value.value);
   FilterFunction filterFunction =
       FilterFunction{FilterType::HueRotate, std::variant<Float, DropShadowParams>{hueRotateValue}};
   addFilter(propsBuilder, filterFunction);
@@ -904,7 +901,7 @@ void addHueRotateFilterToPropsBuilder(
 void addInvertFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     InvertOperation &operation) {
-  double invertValue = operation.value.value;
+  Float invertValue = static_cast<Float>(operation.value.value);
   FilterFunction filterFunction =
       FilterFunction{FilterType::Invert, std::variant<Float, DropShadowParams>{invertValue}};
   addFilter(propsBuilder, filterFunction);
@@ -913,7 +910,7 @@ void addInvertFilterToPropsBuilder(
 void addOpacityFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     OpacityOperation &operation) {
-  double opacityValue = operation.value.value;
+  Float opacityValue = static_cast<Float>(operation.value.value);
   FilterFunction filterFunction =
       FilterFunction{FilterType::Opacity, std::variant<Float, DropShadowParams>{opacityValue}};
   addFilter(propsBuilder, filterFunction);
@@ -922,7 +919,7 @@ void addOpacityFilterToPropsBuilder(
 void addSaturateFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     SaturateOperation &operation) {
-  double saturateValue = operation.value.value;
+  Float saturateValue = static_cast<Float>(operation.value.value);
   FilterFunction filterFunction =
       FilterFunction{FilterType::Saturate, std::variant<Float, DropShadowParams>{saturateValue}};
   addFilter(propsBuilder, filterFunction);
@@ -931,7 +928,7 @@ void addSaturateFilterToPropsBuilder(
 void addSepiaFilterToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     SepiaOperation &operation) {
-  double sepiaValue = operation.value.value;
+  Float sepiaValue = static_cast<Float>(operation.value.value);
   FilterFunction filterFunction = FilterFunction{FilterType::Sepia, std::variant<Float, DropShadowParams>{sepiaValue}};
   addFilter(propsBuilder, filterFunction);
 }
@@ -939,7 +936,7 @@ void addSepiaFilterToPropsBuilder(
 void addPerspectiveTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     PerspectiveOperation &operation) {
-  auto transform = Transform{};
+  Transform transform{};
   auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Perspective);
   auto value = ValueUnit(operation.value.value, UnitType::Point);
   transformOperation.x = value;
@@ -950,7 +947,7 @@ void addPerspectiveTransformToPropsBuilder(
 void addRotateTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     RotateOperation &operation) {
-  auto transform = Transform{};
+  Transform transform{};
   auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Rotate);
   auto value = ValueUnit(operation.value.value, UnitType::Point);
   transformOperation.z = value;
@@ -961,7 +958,7 @@ void addRotateTransformToPropsBuilder(
 void addRotateXTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     RotateXOperation &operation) {
-  auto transform = Transform{};
+  Transform transform{};
   auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Rotate);
   auto value = ValueUnit(operation.value.value, UnitType::Point);
   transformOperation.x = value;
@@ -972,7 +969,7 @@ void addRotateXTransformToPropsBuilder(
 void addRotateYTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     RotateYOperation &operation) {
-  auto transform = Transform{};
+  Transform transform{};
   auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Rotate);
   auto value = ValueUnit(operation.value.value, UnitType::Point);
   transformOperation.y = value;
@@ -983,7 +980,7 @@ void addRotateYTransformToPropsBuilder(
 void addRotateZTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     RotateZOperation &operation) {
-  auto transform = Transform{};
+  Transform transform{};
   auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Rotate);
   auto value = ValueUnit(operation.value.value, UnitType::Point);
   transformOperation.z = value;
@@ -994,7 +991,7 @@ void addRotateZTransformToPropsBuilder(
 void addScaleTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     ScaleOperation &operation) {
-  auto transform = Transform{};
+  Transform transform{};
   auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Scale);
   auto value = ValueUnit(operation.value.value, UnitType::Point);
   transformOperation.x = value;
@@ -1007,7 +1004,7 @@ void addScaleTransformToPropsBuilder(
 void addScaleXTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     ScaleXOperation &operation) {
-  auto transform = Transform{};
+  Transform transform{};
   auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Scale);
   transformOperation.x = ValueUnit(operation.value.value, UnitType::Point);
   transform.operations.push_back(transformOperation);
@@ -1017,7 +1014,7 @@ void addScaleXTransformToPropsBuilder(
 void addScaleYTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     ScaleYOperation &operation) {
-  auto transform = Transform{};
+  Transform transform{};
   auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Scale);
   transformOperation.y = ValueUnit(operation.value.value, UnitType::Point);
   transform.operations.push_back(transformOperation);
@@ -1027,7 +1024,7 @@ void addScaleYTransformToPropsBuilder(
 void addTranslateXTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     TranslateXOperation &operation) {
-  auto transform = Transform{};
+  Transform transform{};
   auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Translate);
   transformOperation.x = cssLengthToValueUnit(operation.value);
   transform.operations.push_back(transformOperation);
@@ -1037,7 +1034,7 @@ void addTranslateXTransformToPropsBuilder(
 void addTranslateYTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     TranslateYOperation &operation) {
-  auto transform = Transform{};
+  Transform transform{};
   auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Translate);
   transformOperation.y = cssLengthToValueUnit(operation.value);
   transform.operations.push_back(transformOperation);
@@ -1047,7 +1044,7 @@ void addTranslateYTransformToPropsBuilder(
 void addSkewXTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     SkewXOperation &operation) {
-  auto transform = Transform{};
+  Transform transform{};
   auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Skew);
   transformOperation.x = ValueUnit(operation.value.value, UnitType::Point);
   transform.operations.push_back(transformOperation);
@@ -1057,7 +1054,7 @@ void addSkewXTransformToPropsBuilder(
 void addSkewYTransformToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     SkewYOperation &operation) {
-  auto transform = Transform{};
+  Transform transform{};
   auto transformOperation = Transform::DefaultTransformOperation(TransformOperationType::Skew);
   transformOperation.y = ValueUnit(operation.value.value, UnitType::Point);
   transform.operations.push_back(transformOperation);
@@ -1712,10 +1709,10 @@ void addBoxShadowToPropsBuilder(
   const auto &cssValue = std::get<CSSBoxShadow>(storage);
   SharedColor color = SharedColor(parseCSSColor(cssValue.color));
   BoxShadow boxShadow = BoxShadow{
-      .offsetX = cssValue.offsetX.value,
-      .offsetY = cssValue.offsetY.value,
-      .blurRadius = cssValue.blurRadius.value,
-      .spreadDistance = cssValue.spreadDistance.value,
+      .offsetX = static_cast<Float>(cssValue.offsetX.value),
+      .offsetY = static_cast<Float>(cssValue.offsetY.value),
+      .blurRadius = static_cast<Float>(cssValue.blurRadius.value),
+      .spreadDistance = static_cast<Float>(cssValue.spreadDistance.value),
       .color = color,
       .inset = cssValue.inset.has_value() ? cssValue.inset.value().value : false,
   };
