@@ -1,10 +1,11 @@
-import Animated, { type CSSAnimationKeyframes } from 'react-native-reanimated';
+import Animated, {
+  type CSSAnimationKeyframes,
+  type CSSRadialGradientProps,
+} from 'react-native-reanimated';
 // TODO: Fix me
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
 import { Defs, RadialGradient, Rect, Svg } from 'react-native-svg';
-
-import { type CSSRadialGradientProps } from 'react-native-reanimated';
 
 import { ExamplesScreen } from '@/apps/css/components';
 
@@ -13,6 +14,11 @@ const AnimatedGrad = Animated.createAnimatedComponent(RadialGradient);
 const DefsWithChildren = Defs as React.ComponentType<{
   children?: React.ReactNode;
 }>;
+
+// TODO:
+// Remove when RNSVG fixes 'Unable to apply focus point of RadialGradient on Android' problem.
+const FOCAL_POINT_DISCLAIMER =
+  '(Note: fx/fy animations currently work only on iOS due to RNSVG Android limitations)';
 
 export default function RadialGradientExample() {
   return (
@@ -53,8 +59,7 @@ export default function RadialGradientExample() {
               examples: [
                 {
                   title: 'Pulsating orb',
-                  description:
-                    'Smoothly animates radius and shifts the center slightly (constant number of stops).',
+                  description: `Smoothly animates radius and shifts the center slightly.\n\n${FOCAL_POINT_DISCLAIMER}`,
                   keyframes: {
                     from: {
                       fx: '30%',
@@ -165,8 +170,7 @@ export default function RadialGradientExample() {
               examples: [
                 {
                   title: 'Focal point bug',
-                  description:
-                    'Focal point has to remain in the gradient to avoid bugs like this',
+                  description: `Focal point has to remain in the gradient to avoid bugs like this.\n\n${FOCAL_POINT_DISCLAIMER}`,
                   keyframes: {
                     from: {
                       cx: '50%',
@@ -192,8 +196,7 @@ export default function RadialGradientExample() {
                 },
                 {
                   title: 'Focal point pos - decimal fraction',
-                  description:
-                    'You can interpolate between decimal fraction coords.',
+                  description: `You can interpolate between decimal fraction coords.\n\n${FOCAL_POINT_DISCLAIMER}`,
                   keyframes: {
                     from: {
                       fx: 0.5,
@@ -217,7 +220,7 @@ export default function RadialGradientExample() {
                 },
                 {
                   title: 'Focal point pos - percentage',
-                  description: 'You can interpolate between percentage coords.',
+                  description: `You can interpolate between percentage coords.\n\n${FOCAL_POINT_DISCLAIMER}`,
                   keyframes: {
                     from: {
                       fx: '50%',
@@ -241,8 +244,7 @@ export default function RadialGradientExample() {
                 },
                 {
                   title: 'Focal point pos - mix',
-                  description:
-                    "You can't mix percentages and decimal fractions.",
+                  description: `You can't mix percentages and decimal fractions.\n\n${FOCAL_POINT_DISCLAIMER}`,
                   keyframes: {
                     from: {
                       fx: '50%',
@@ -350,8 +352,7 @@ export default function RadialGradientExample() {
               examples: [
                 {
                   title: 'Movement combination',
-                  description:
-                    'You can move gradient center and focal point independently.',
+                  description: `You can move gradient center and focal point independently.\n\n${FOCAL_POINT_DISCLAIMER}`,
                   keyframes: {
                     from: {
                       cx: '50%',
