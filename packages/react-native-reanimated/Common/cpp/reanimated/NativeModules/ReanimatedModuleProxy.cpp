@@ -16,6 +16,7 @@
 
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
+#include <react/featureflags/ReactNativeFeatureFlags.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 
@@ -1373,9 +1374,16 @@ jsi::Value ReanimatedModuleProxy::measure(jsi::Runtime &rt, const jsi::Value &sh
 void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
   viewStylesRepository_->setUIManager(uiManager_);
-  backendCallbacks_ = std::vector<std::function<void(const double)>>();
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    if (!ReactNativeFeatureFlags::useSharedAnimatedBackend()) {
+      jsLogger_->warnOnJS(
+          "[Reanimated] USE_ANIMATION_BACKEND flag is enabled, but "
+          "ReactNativeFeatureFlags::useSharedAnimatedBackend is disabled. "
+          "Animations will not work properly.");
+    }
+
+    backendCallbacks_ = std::vector<std::function<void(AnimationTimestamp)>>();
     requestRender_ = [this](std::function<void(const double)> callback) {
       std::weak_ptr<UIManagerAnimationBackend> unstableAnimationBackend = uiManager_->unstable_getAnimationBackend();
       backendCallbacks_.push_back(callback);
