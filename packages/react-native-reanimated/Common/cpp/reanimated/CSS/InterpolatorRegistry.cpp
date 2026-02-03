@@ -533,10 +533,10 @@ const InterpolatorFactoriesRecord SVG_ELLIPSE_INTERPOLATORS = mergeInterpolators
 const InterpolatorFactoriesRecord SVG_IMAGE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"x", value<SVGLength, CSSKeyword>(0)},
-         {"y", value<SVGLength, CSSKeyword>(0)},
-         {"width", value<SVGLength, CSSKeyword>(0)},
-         {"height", value<SVGLength, CSSKeyword>(0)},
+         {"x", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"y", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"width", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"height", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
          // TODO: Check why this is not supported in RN-SVG and add support
          // {"align", value<CSSKeyword>("xMidYMid")},
          // {"meetOrSlice", value<CSSIndex>(0)},
@@ -565,8 +565,8 @@ const InterpolatorFactoriesRecord SVG_RECT_INTERPOLATORS = mergeInterpolators(
 const InterpolatorFactoriesRecord SVG_PATH_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"d", value<SVGPath>("")},
-         {"opacity", value<CSSDouble>(1)},
+         {"d", value<SVGPath>("", unsupported<SVGPath>())},
+         {"opacity", value<CSSDouble>(1, unsupported<CSSDouble>())},
      }});
 
 // ==================
