@@ -339,6 +339,19 @@ const InterpolatorFactoriesRecord SVG_LINE_INTERPOLATORS = mergeInterpolators(
          {"y2", value<SVGLength, CSSKeyword>(0)},
      }});
 
+const InterpolatorFactoriesRecord SVG_LINEAR_GRADIENT_INTERPOLATORS = mergeInterpolators(
+    {SVG_COMMON_INTERPOLATORS,
+     InterpolatorFactoriesRecord{
+         {"x1", value<SVGLength, CSSKeyword>("0%")},
+         {"x2", value<SVGLength, CSSKeyword>("100%")},
+         {"y1", value<SVGLength, CSSKeyword>("0%")},
+         {"y2", value<SVGLength, CSSKeyword>("0%")},
+         {"gradient", value<SVGStops>(SVGStops())},
+         {"gradientUnits", value<CSSIndex>(0)},
+         // TODO: Implement 'gradientTransform'
+         // {"gradientTransform", value<CSSKeyword>("")},
+     }});
+
 const InterpolatorFactoriesRecord SVG_RECT_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
@@ -390,6 +403,7 @@ ComponentInterpolatorsMap initializeRegistry() {
     registry["RNSVGEllipse"] = SVG_ELLIPSE_INTERPOLATORS;
     registry["RNSVGImage"] = SVG_IMAGE_INTERPOLATORS;
     registry["RNSVGLine"] = SVG_LINE_INTERPOLATORS;
+    registry["RNSVGLinearGradient"] = SVG_LINEAR_GRADIENT_INTERPOLATORS;
     registry["RNSVGPath"] = SVG_PATH_INTERPOLATORS;
     registry["RNSVGRect"] = SVG_RECT_INTERPOLATORS;
     registry["RNSVGRadialGradient"] = SVG_RADIAL_GRADIENT_INTERPOLATORS;

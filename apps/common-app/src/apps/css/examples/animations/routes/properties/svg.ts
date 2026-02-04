@@ -22,6 +22,10 @@ export const svgPropertiesRoutes = {
     name: 'Line',
     Component: svgAnimatedProperties.Line,
   },
+  LinearGradient: {
+    name: 'LinearGradient',
+    Component: svgAnimatedProperties.LinearGradient,
+  },
   Path: {
     name: 'Path',
     Component: svgAnimatedProperties.Path,
