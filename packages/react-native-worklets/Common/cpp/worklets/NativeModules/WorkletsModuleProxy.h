@@ -4,6 +4,7 @@
 #include <jsi/jsi.h>
 #include <jsireact/JSIExecutor.h>
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
+#include <worklets/NativeModules/IWorkletsModuleProxy.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/SharedItems/MemoryManager.h>
 #include <worklets/Tools/Defs.h>
@@ -20,7 +21,7 @@
 
 namespace worklets {
 
-class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModuleProxy> {
+class WorkletsModuleProxy : public IWorkletsModuleProxy, public std::enable_shared_from_this<WorkletsModuleProxy> {
  public:
   explicit WorkletsModuleProxy(
       jsi::Runtime &rnRuntime,
@@ -32,7 +33,7 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
       const std::shared_ptr<const ScriptBuffer> &script,
       const std::string &sourceUrl);
 
-  ~WorkletsModuleProxy();
+  ~WorkletsModuleProxy() override;
 
   [[nodiscard]] inline std::shared_ptr<MessageQueueThread> getJSQueue() const {
     return jsQueue_;
@@ -42,7 +43,7 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
     return jsScheduler_;
   }
 
-  [[nodiscard]] inline std::shared_ptr<UIScheduler> getUIScheduler() const {
+  [[nodiscard]] inline std::shared_ptr<UIScheduler> getUIScheduler() const override {
     return uiScheduler_;
   }
 
@@ -50,7 +51,7 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
     return jsLogger_;
   }
 
-  [[nodiscard]] inline std::shared_ptr<WorkletRuntime> getUIWorkletRuntime() const {
+  [[nodiscard]] inline std::shared_ptr<WorkletRuntime> getUIWorkletRuntime() const override {
     return uiWorkletRuntime_;
   }
 

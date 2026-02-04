@@ -39,7 +39,7 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
 #endif
 
 ReanimatedModuleProxy::ReanimatedModuleProxy(
-    const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
+    const std::shared_ptr<IWorkletsModuleProxy> &workletsModuleProxy,
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<CallInvoker> &jsCallInvoker,
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
@@ -256,7 +256,7 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
     jsi::Runtime &uiRuntime = strongThis->workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
     const auto resultStr = strongThis->obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
 
-    strongThis->workletsModuleProxy_->getJSScheduler()->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
+    strongThis->jsInvoker_->invokeAsync([=](jsi::Runtime &rnRuntime) {
       const auto resultValue = jsi::String::createFromUtf8(rnRuntime, resultStr);
       funPtr->call(rnRuntime, resultValue);
     });

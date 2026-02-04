@@ -21,9 +21,8 @@
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
 
-#include <worklets/NativeModules/WorkletsModuleProxy.h>
+#include <worklets/NativeModules/IWorkletsModuleProxy.h>
 #include <worklets/Registries/EventHandlerRegistry.h>
-#include <worklets/Tools/UIScheduler.h>
 
 #include <react/renderer/componentregistry/componentNameByReactViewName.h>
 #include <react/renderer/core/ShadowNode.h>
@@ -48,7 +47,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
                               public std::enable_shared_from_this<ReanimatedModuleProxy> {
  public:
   ReanimatedModuleProxy(
-      const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
+      const std::shared_ptr<IWorkletsModuleProxy> &workletsModuleProxy,
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,
@@ -164,7 +163,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
     return isReducedMotion_;
   }
 
-  [[nodiscard]] inline std::shared_ptr<WorkletsModuleProxy> getWorkletsModuleProxy() const {
+  [[nodiscard]] inline std::shared_ptr<IWorkletsModuleProxy> getWorkletsModuleProxy() const {
     return workletsModuleProxy_;
   }
 
@@ -176,7 +175,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   const bool isReducedMotion_;
   bool shouldFlushRegistry_ = false;
-  std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+  std::shared_ptr<IWorkletsModuleProxy> workletsModuleProxy_;
 
   std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry_;
   const RequestRenderFunction requestRender_;
