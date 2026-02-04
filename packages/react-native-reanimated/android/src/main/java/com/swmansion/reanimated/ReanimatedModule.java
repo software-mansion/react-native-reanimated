@@ -9,13 +9,12 @@ import com.swmansion.worklets.WorkletsModule;
 @ReactModule(name = ReanimatedModule.NAME)
 public class ReanimatedModule extends NativeReanimatedModuleSpec implements LifecycleEventListener {
   private final NodesManager mNodesManager;
-  private final WorkletsModule mWorkletsModule;
 
   public ReanimatedModule(ReactApplicationContext reactContext) {
     super(reactContext);
     reactContext.assertOnJSQueueThread();
-    mWorkletsModule = reactContext.getNativeModule(WorkletsModule.class);
-    mNodesManager = new NodesManager(reactContext, mWorkletsModule);
+    WorkletsModule workletsModule = reactContext.getNativeModule(WorkletsModule.class);
+    mNodesManager = new NodesManager(reactContext, workletsModule);
   }
 
   @Override
