@@ -1,0 +1,42 @@
+name: Install Pods
+description: Install CocoaPods dependencies with caching
+
+inputs:
+  working-directory:
+    description: The app directory (e.g., apps/fabric-example)
+    required: true
+  pod-directory:
+    description: The pod directory relative to working-directory (e.g., ios, macos)
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Get Podfile.lock hash
+      id: pods-cache-key
+      shell: bash
+      run: |
+        PODFILE_LOCK="${{ inputs.working-directory }}/${{ inputs.pod-directory }}/Podfile.lock"
+        if [ -f "$PODFILE_LOCK" ]; then
+          HASH=$(shasum -a 256 "$PODFILE_LOCK" | cut -d' ' -f1)
+          echo "hash=${HASH:0:16}" >> $GITHUB_OUTPUT
+        else
+          echo "hash=no-lockfile" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Restore Pods cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ inputs.working-directory }}/${{ inputs.pod-directory }}/Pods
+          ~/Library/Caches/CocoaPods
+        key: pods-${{ inputs.pod-directory }}-${{ steps.pods-cache-key.outputs.hash }}
+        restore-keys: |
+          pods-${{ inputs.pod-directory }}-
+
+    - name: Install Pods
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}/${{ inputs.pod-directory }}
+      run: |
+        bundle install
+        bundle exec pod update

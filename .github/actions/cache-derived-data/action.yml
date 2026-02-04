@@ -1,0 +1,33 @@
+name: Cache DerivedData
+description: Cache Xcode DerivedData for faster builds
+
+inputs:
+  platform:
+    description: The platform (ios, macos, tvos)
+    required: true
+  working-directory:
+    description: The app directory (e.g., apps/fabric-example)
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Get source files hash
+      id: derived-key
+      shell: bash
+      run: |
+        # Hash key sources: Podfile.lock + native code files
+        HASH=$({ \
+          find ${{ inputs.working-directory }} -name "Podfile.lock" -exec cat {} \; 2>/dev/null; \
+          find packages -type f \( -name "*.m" -o -name "*.mm" -o -name "*.h" -o -name "*.swift" -o -name "*.cpp" \) \
+            \( -path "*/apple/*" -o -path "*/Common/*" \) -exec cat {} \; 2>/dev/null; \
+        } | shasum -a 256 | cut -d' ' -f1)
+        echo "hash=${HASH:0:16}" >> $GITHUB_OUTPUT
+
+    - name: Restore DerivedData cache
+      uses: actions/cache@v4
+      with:
+        path: ~/Library/Developer/Xcode/DerivedData
+        key: derived-${{ inputs.platform }}-${{ steps.derived-key.outputs.hash }}
+        restore-keys: |
+          derived-${{ inputs.platform }}-
