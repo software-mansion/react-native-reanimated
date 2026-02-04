@@ -2,9 +2,9 @@
 sidebar_position: 42 # Use alphabetical order
 ---
 
-# runOnRuntimeAsync
+# runOnRuntimeAsync <AvailableFrom version="0.8.0"/>
 
-`runOnRuntimeAsync` lets you asynchronously run [workletized](/docs/fundamentals/glossary#to-workletize) functions on a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
+`runOnRuntimeAsync` lets you asynchronously run [worklets](/docs/fundamentals/glossary#worklet) on a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
 It returns a Promise of the worklet's return value. The Promise is resolved asynchronously, not immediately after the callback execution.
 
 ## Reference
@@ -16,12 +16,12 @@ const workletRuntime = createWorkletRuntime({ name: 'background' });
 
 // RN Runtime, JS thread
 
-const result: Promise<number> = await runOnRuntimeAsync(workletRuntime, (): number => {
+const result: Promise<number> = runOnRuntimeAsync(workletRuntime, (): number => {
   'worklet';
   return 2 + 2;
 });
 
-result; // 4
+await result; // 4
 ```
 
 <details>
