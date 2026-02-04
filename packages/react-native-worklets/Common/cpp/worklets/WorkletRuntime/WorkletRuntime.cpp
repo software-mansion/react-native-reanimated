@@ -17,6 +17,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "worklets/WorkletRuntime/IWorkletRuntime.h"
 
 #if JS_RUNTIME_HERMES
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
@@ -75,9 +76,14 @@ WorkletRuntime::WorkletRuntime(
     const std::string &name,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop)
-    : runtimeId_(runtimeId),
-      runtimeMutex_(std::make_shared<std::recursive_mutex>()),
-      runtime_(makeRuntime(jsQueue, name, runtimeMutex_)),
+    : IWorkletRuntime(
+          std::make_shared<std::recursive_mutex>(),
+          makeRuntime(
+              jsQueue,
+              name,
+              // TODO: Temporary fix for the constructor...
+              std::make_shared<std::recursive_mutex>())),
+      runtimeId_(runtimeId),
       name_(name),
       queue_(queue) {
   jsi::Runtime &rt = *runtime_;
@@ -257,7 +263,7 @@ void scheduleOnRuntime(
 }
 
 #if REACT_NATIVE_MINOR_VERSION >= 81
-std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
+std::weak_ptr<IWorkletRuntime> IWorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
   auto runtimeData = rt.getRuntimeData(RuntimeData::weakRuntimeUUID);
   if (!runtimeData) [[unlikely]] {
     throw std::runtime_error(
@@ -267,28 +273,13 @@ std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::
   auto weakHolder = std::static_pointer_cast<WeakRuntimeHolder>(runtimeData);
   return weakHolder->weakRuntime;
 }
+#else
+std::weak_ptr<IWorkletRuntime> IWorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &) {
+  throw std::runtime_error(
+      "[Worklets] `IWorkletRuntime::getWeakRuntimeFromJSIRuntime` is not supported"
+      "on React Native versions below 0.81.");
+}
 #endif // REACT_NATIVE_MINOR_VERSION >= 81
-
-/* #region deprecated */
-
-void WorkletRuntime::runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet) {
-  schedule(worklet);
-}
-
-jsi::Value WorkletRuntime::executeSync(jsi::Runtime &caller, const jsi::Value &worklet) const {
-  auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
-      caller, worklet, "[Worklets] Only worklets can be executed synchronously on UI runtime.");
-  auto result = runSyncSerialized(serializableWorklet);
-  return result->toJSValue(caller);
-}
-
-jsi::Value WorkletRuntime::executeSync(std::function<jsi::Value(jsi::Runtime &)> &&job) const {
-  return runSync(job);
-}
-
-jsi::Value WorkletRuntime::executeSync(const std::function<jsi::Value(jsi::Runtime &)> &job) const {
-  return runSync(job);
-}
 
 #ifndef NDEBUG
 static const auto callGuardLambda = [](facebook::jsi::Runtime &rt,
@@ -298,7 +289,7 @@ static const auto callGuardLambda = [](facebook::jsi::Runtime &rt,
   return args[0].asObject(rt).asFunction(rt).call(rt, args + 1, count - 1);
 };
 
-jsi::Function WorkletRuntime::getCallGuard(jsi::Runtime &rt) {
+jsi::Function IWorkletRuntime::getCallGuard(jsi::Runtime &rt) {
   auto callGuard = rt.global().getProperty(rt, "__callGuardDEV");
   if (callGuard.isObject()) {
     // Use JS implementation if `__callGuardDEV` has already been installed.
@@ -314,7 +305,5 @@ jsi::Function WorkletRuntime::getCallGuard(jsi::Runtime &rt) {
   return jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, "callGuard"), 1, callGuardLambda);
 }
 #endif // NDEBUG
-
-/* #endregion */
 
 } // namespace worklets

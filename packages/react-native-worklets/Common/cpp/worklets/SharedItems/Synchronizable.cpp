@@ -1,4 +1,5 @@
 #include <react/debug/react_native_assert.h>
+#include <worklets/SharedItems/SerializableDetail.h>
 #include <worklets/SharedItems/Synchronizable.h>
 
 #include <memory>

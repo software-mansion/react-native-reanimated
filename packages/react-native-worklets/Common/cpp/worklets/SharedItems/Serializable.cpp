@@ -1,5 +1,6 @@
 #include <jsi/jsi.h>
 #include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/SerializableDetail.h>
 
 #include <memory>
 #include <string>
@@ -199,8 +200,6 @@ std::shared_ptr<Serializable> extractSerializableOrThrow(
   }
   throw std::runtime_error(errorMessage);
 }
-
-Serializable::~Serializable() = default;
 
 std::shared_ptr<Serializable> Serializable::undefined() {
   static auto undefined = std::make_shared<SerializableScalar>();
