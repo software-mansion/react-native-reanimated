@@ -7762,6 +7762,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native/gradle-plugin@patch:@react-native/gradle-plugin@npm%3A0.82.0#~/.yarn/patches/@react-native-gradle-plugin-npm-0.82.0-10aedc0588.patch":
+  version: 0.82.0
+  resolution: "@react-native/gradle-plugin@patch:@react-native/gradle-plugin@npm%3A0.82.0#~/.yarn/patches/@react-native-gradle-plugin-npm-0.82.0-10aedc0588.patch::version=0.82.0&hash=60e1b9"
+  checksum: 10/493d986f2b23678dacd32a5e20a1c4b94e981b5d1abdf6fd35a9fb195b61900250dabb05d54e64af7e779c5b2e55cb96f431c16db0ba326ae8c0d43c5956616d
+  languageName: node
+  linkType: hard
+
 "@react-native/js-polyfills@npm:0.79.6":
   version: 0.79.6
   resolution: "@react-native/js-polyfills@npm:0.79.6"
