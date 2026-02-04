@@ -11,8 +11,6 @@
 #import <reanimated/apple/native/NativeProxy.h>
 #import <reanimated/Tools/SingleInstanceChecker.h>
 
-#import <worklets/apple/WorkletsModule.h>
-
 using namespace facebook::react;
 using namespace reanimated;
 
@@ -23,7 +21,7 @@ using namespace reanimated;
 @implementation ReanimatedModule {
   __weak RCTSurfacePresenter *_surfacePresenter;
 #ifndef NDEBUG
-  SingleInstanceChecker<ReanimatedModule> singleInstanceChecker_;
+  reanimated::SingleInstanceChecker<ReanimatedModule> singleInstanceChecker_;
 #endif // NDEBUG
   bool hasListeners;
 }

@@ -3,7 +3,9 @@
 #import <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #import <reanimated/apple/REANodesManager.h>
 
-#import <worklets/apple/WorkletsModule.h>
+@interface WorkletsModule : NSObject
+- (std::shared_ptr<worklets::WorkletsModuleProxy>)getWorkletsModuleProxy;
+@end
 
 namespace reanimated {
 
