@@ -1,10 +1,7 @@
 #pragma once
 
-#include <worklets/Tools/JSLogger.h>
-
 #include <jsi/jsi.h>
 
-#include <memory>
 #include <string>
 
 using namespace facebook;
@@ -12,7 +9,7 @@ using namespace facebook;
 namespace reanimated {
 
 std::string getReanimatedCppVersion();
-void injectReanimatedCppVersion(jsi::Runtime &);
-void checkJSVersion(jsi::Runtime &, const std::shared_ptr<worklets::JSLogger> &);
+void injectReanimatedCppVersion(jsi::Runtime &rt);
+void checkJSVersion(jsi::Runtime &rt);
 
 }; // namespace reanimated

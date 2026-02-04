@@ -9,8 +9,8 @@
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/ReanimatedModule.h>
 #import <reanimated/apple/native/NativeProxy.h>
+#import <reanimated/Tools/SingleInstanceChecker.h>
 
-#import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/apple/WorkletsModule.h>
 
 using namespace facebook::react;

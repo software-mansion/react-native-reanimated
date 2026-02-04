@@ -19,11 +19,10 @@
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
+#include <reanimated/Tools/SingleInstanceChecker.h>
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/Registries/EventHandlerRegistry.h>
-#include <worklets/Tools/JSScheduler.h>
-#include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
 
 #include <react/renderer/componentregistry/componentNameByReactViewName.h>
@@ -89,10 +88,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   bool
   handleEvent(const std::string &eventName, const int emitterReactTag, const jsi::Value &payload, double currentTime);
-
-  inline std::shared_ptr<JSLogger> getJSLogger() const {
-    return jsLogger_;
-  }
 
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
 
@@ -188,7 +183,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   volatile bool renderRequested_{false};
   std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
-  const std::shared_ptr<JSLogger> jsLogger_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
 #ifdef __APPLE__
@@ -220,7 +214,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;
 
 #ifndef NDEBUG
-  worklets::SingleInstanceChecker<ReanimatedModuleProxy> singleInstanceChecker_;
+  SingleInstanceChecker<ReanimatedModuleProxy> singleInstanceChecker_;
 #endif // NDEBUG
 };
 
