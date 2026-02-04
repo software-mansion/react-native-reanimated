@@ -30,3 +30,9 @@ export const isShareableRef = isSerializableRef;
 
 /** @deprecated Use {@link serializableMappingCache} instead. */
 export const shareableMappingCache = serializableMappingCache;
+
+/** @deprecated NOOP, don't use. */
+export function callMicrotasks(): void {
+  'worklet';
+  // NOOP for backwards compatibility.
+}

@@ -14,6 +14,7 @@ if (globalThis._ALWAYS_FALSE) {
 }
 
 export {
+  callMicrotasks,
   isShareableRef,
   makeShareable,
   type MakeShareableClone,
@@ -57,7 +58,6 @@ export {
   scheduleOnRuntime,
 } from './runtimes';
 export {
-  callMicrotasks,
   executeOnUIRuntimeSync,
   runOnJS,
   runOnUI,
@@ -65,8 +65,6 @@ export {
   runOnUISync,
   scheduleOnRN,
   scheduleOnUI,
-  // eslint-disable-next-line camelcase
-  unstable_eventLoopTask,
 } from './threads';
 export type {
   WorkletFunction,
