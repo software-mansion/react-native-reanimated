@@ -815,6 +815,14 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
           value
         ) as FlatSerializableRef<TValue>;
       }
+      // if ((value as Record<string, unknown>).__shareableRef) {
+      //   console.log('handling __shareableRef');
+      //   // @ts-expect-error wwww
+      //   global._createSerializable(value.__shareableRef, undefined);
+      // }
+      if ((value as Record<string, unknown>).__serializableRef) {
+        return value as FlatSerializableRef<TValue>;
+      }
       if (Object.getPrototypeOf(value) !== Object.prototype) {
         const length = globalThis.__customSerializationRegistry.length;
         for (let i = 0; i < length; i++) {

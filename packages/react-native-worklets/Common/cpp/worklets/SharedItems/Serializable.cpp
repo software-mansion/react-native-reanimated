@@ -23,6 +23,10 @@ jsi::Value makeSerializableClone(
   std::shared_ptr<Serializable> serializable;
   if (value.isObject()) {
     auto object = value.asObject(rt);
+    // if(object.hasNativeState(rt)) {
+    //     // TODO: temporary
+    //     return SerializableJSRef::newNativeStateObject(rt, extractSerializableOrThrow(rt, value));
+    // }
     if (!object.getProperty(rt, "__workletHash").isUndefined()) {
       // We pass `false` because this function is invoked only
       // by `makeSerializableCloneOnUIRecursive` which doesn't
@@ -193,7 +197,7 @@ std::shared_ptr<Serializable> extractSerializableOrThrow(
       auto nativeState = object.getNativeState(rt);
       return std::dynamic_pointer_cast<SerializableJSRef>(nativeState)->value();
     }
-    throw std::runtime_error("[Worklets] Attempted to extract from a Object that wasn't converted to a Serializable.");
+    throw std::runtime_error("[Worklets] Attempted to extract from an Object that wasn't converted to a Serializable.");
   } else if (maybeSerializableValue.isUndefined()) {
     return Serializable::undefined();
   }

@@ -100,6 +100,8 @@ export function createWorkletRuntime(
       if (enableEventLoop) {
         setupRunLoop(animationQueuePollingRate);
       }
+      globalThis.__makeSerializableCloneOnUIRecursive =
+        makeShareableCloneOnUIRecursive;
       initializerFn?.();
     }),
     useDefaultQueue,
@@ -160,16 +162,16 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
         worklet(...args);
       })
     );
+  } else {
+    WorkletsModule.scheduleOnRuntime(
+      workletRuntime,
+      createSerializable(() => {
+        'worklet';
+        worklet(...args);
+        globalThis.__flushMicrotasks();
+      })
+    );
   }
-
-  WorkletsModule.scheduleOnRuntime(
-    workletRuntime,
-    createSerializable(() => {
-      'worklet';
-      worklet(...args);
-      globalThis.__flushMicrotasks();
-    })
-  );
 }
 
 /**
@@ -200,6 +202,10 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
 type WorkletRuntimeConfigInternal = WorkletRuntimeConfig & {
   initializer?: WorkletFunction<[], void>;
 };
+
+export function getUIWorkletRuntime(): WorkletRuntime {
+  return WorkletsModule.getUIWorkletRuntime();
+}
 
 /**
  * Lets you run a function synchronously on a [Worker

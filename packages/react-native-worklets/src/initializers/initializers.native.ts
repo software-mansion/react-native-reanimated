@@ -13,6 +13,8 @@ import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
 import { __installUnpacker as installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
 import { makeShareableCloneOnUIRecursive } from '../memory/serializable';
+import { __installUnpacker as installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
+import { __installUnpacker as installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
 import { __installUnpacker as installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
 import { setupSetImmediate } from '../runLoop/common/setImmediatePolyfill';
 import { setupSetInterval } from '../runLoop/common/setIntervalPolyfill';
@@ -25,7 +27,7 @@ import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
 
 if (globalThis.__RUNTIME_KIND === undefined) {
-  // The only runtime that doesn't have `__RUNTIME_KIND` preconfigured
+  // The only runtime that doesn't have `__RUNTIME_KIND` pre-configured
   // is the RN Runtime. We must set it as soon as possible.
   globalThis.__RUNTIME_KIND = RuntimeKind.ReactNative;
 }
@@ -81,8 +83,21 @@ export function setupConsole(boundCapturableConsole: typeof console) {
   'worklet';
   // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
   globalThis.console = {
-    assert: (...args) => scheduleOnRN(boundCapturableConsole.assert, ...args),
-    debug: (...args) => scheduleOnRN(boundCapturableConsole.debug, ...args),
+    assert: (...args) =>
+      scheduleOnRN(
+        boundCapturableConsole.assert,
+        args.map((arg) => String(arg))
+      ),
+    debug: (...args) =>
+      scheduleOnRN(
+        boundCapturableConsole.debug,
+        args.map((arg) => String(arg))
+      ),
+    // log: (...args) =>
+    //   scheduleOnRN(
+    //     boundCapturableConsole.log,
+    //     args.map((arg) => String(arg))
+    //   ),
     log: (...args) => scheduleOnRN(boundCapturableConsole.log, ...args),
     warn: (...args) => scheduleOnRN(boundCapturableConsole.warn, ...args),
     error: (...args) => scheduleOnRN(boundCapturableConsole.error, ...args),
@@ -120,6 +135,8 @@ function initializeRuntime() {
   }
   installSynchronizableUnpacker();
   installCustomSerializableUnpacker();
+  installShareableHostUnpacker();
+  installShareableGuestUnpacker();
 }
 
 /** A function that should be run only on React Native runtime. */
@@ -193,5 +210,7 @@ function installRNBindingsOnUIRuntime() {
     setupSetTimeout();
     setupSetImmediate();
     setupSetInterval();
+    globalThis.__makeSerializableCloneOnUIRecursive =
+      makeShareableCloneOnUIRecursive;
   });
 }
