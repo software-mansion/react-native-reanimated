@@ -309,8 +309,7 @@ tasks.register('prepareReanimatedHeadersForPrefabs', Copy) {
 }
 
 interface FSService {
-    @Inject
-    FileSystemOperations getFs()
+    @Inject FileSystemOperations getFs()
 }
 
 tasks.register('cleanCMakeCache') {
@@ -322,6 +321,23 @@ tasks.register('cleanCMakeCache') {
         }
     }
 }
+
+// def cleanCmakeCacheTask = tasks.register('cleanCmakeCache', Delete) {
+//     def fsService = project.objects.newInstance(FSService)
+//     def projectDir = project.projectDir
+//     doLast {
+//         println "Cleaning CMake build cache in ${projectDir}"
+//         fsService.fs.delete {
+//             delete "${projectDir}/build"
+//             delete "${projectDir}/.cxx"
+//         }
+//     }
+// }
+
+// // Ensure this runs after any externalNativeBuildClean* task
+// tasks.matching { it.name.startsWith('externalNativeBuildClean') }.configureEach {
+//     finalizedBy(cleanCmakeCacheTask)
+// }
 
 repositories {
     mavenCentral()
@@ -346,20 +362,55 @@ dependencies {
     }
 }
 
+// println "Tasks in the project:"
+// tasks.each { task ->
+//     println task.name
+// }
+
 preBuild.dependsOn(prepareReanimatedHeadersForPrefabs)
 
 if (project != rootProject) {
     evaluationDependsOn(":react-native-worklets")
 
     afterEvaluate {
-        tasks.named("externalNativeBuildDebug").configure {
-            dependsOn(findProject(":react-native-worklets").tasks.named("externalNativeBuildDebug"))
-        }
-        tasks.named("externalNativeBuildRelease").configure {
-            dependsOn(findProject(":react-native-worklets").tasks.named("externalNativeBuildRelease"))
-        }
-        tasks.named("clean") {
-            it.finalizedBy(cleanCMakeCache)
-        }
+//        def workletsTaskPath = ":react-native-worklets:prepareWorkletsHeadersForPrefabs_v2"
+
+        // 2. Find all tasks that trigger the C++ build (ExternalNativeBuildTask)
+        // This covers both Debug and Release variants automatically.
+//        tasks.withType(com.android.build.gradle.tasks.ExternalNativeBuildTask).configureEach { cxxTask ->
+//
+//            // 3. Add the dependency
+//            // We use the String path to avoid errors if the worklets project hasn't fully configured yet.
+//            cxxTask.dependsOn(workletsTaskPath)
+//        }
+            // 1. Find the target project
+            // def workletsProject = findProject(":react-native-worklets")
+
+            // if (workletsProject != null) {
+            //     // 2. Find the preBuild task in the target project
+            //     def workletsPreBuildTask = workletsProject.tasks.findByName("preBuild")
+
+            //     if (workletsPreBuildTask != null) {
+            //         // 3. Make the current project's preBuild task depend on the target's preBuild
+            //         tasks.getByName("preBuild").dependsOn(workletsPreBuildTask)
+            //         println("[Reanimated] Configured preBuild to depend on :react-native-worklets:preBuild.")
+            //     } else {
+            //         logger.warn("[Reanimated] Could not find 'preBuild' task in ':react-native-worklets'. Dependency not set.")
+            //     }
+            // } else {
+            //     logger.warn("[Reanimated] Could not find project ':react-native-worklets'. Dependency not set.")
+            // }
+        tasks.getByName("externalNativeBuildDebug").dependsOn(findProject(":react-native-worklets").tasks.getByName("externalNativeBuildDebug"))
+        tasks.getByName("externalNativeBuildRelease").dependsOn(findProject(":react-native-worklets").tasks.getByName("externalNativeBuildRelease"))
+        // tasks.getByName("configureCMakeDebug").dependsOn(findProject(":react-native-worklets").tasks.getByName("configureCMakeDebug"))
+        // tasks.named("externalNativeBuildDebug").configure {
+        //     dependsOn(findProject(":react-native-worklets").tasks.named("externalNativeBuildDebug"))
+        // }
+        // tasks.named("externalNativeBuildRelease").configure {
+        //     dependsOn(findProject(":react-native-worklets").tasks.named("externalNativeBuildRelease"))
+        // }
+        // tasks.named("clean") {
+        //     it.finalizedBy(cleanCMakeCache)
+        // }
     }
 }
