@@ -35,6 +35,13 @@ const WorkletAPI = {
   RuntimeKind: RuntimeKind,
   createWorkletRuntime: NOOP_FACTORY,
   runOnRuntime: ID,
+  runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
+    _workletRuntime: unknown,
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): Promise<ReturnValue> {
+    return WorkletAPI.runOnUIAsync(worklet)(...args);
+  },
   scheduleOnRuntime: IMMEDIATE_CALLBACK_INVOCATION,
   createSerializable: ID,
   isSerializableRef: ID,
