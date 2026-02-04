@@ -1,4 +1,5 @@
 #include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/SerializableFactory.h>
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/PlatformLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>

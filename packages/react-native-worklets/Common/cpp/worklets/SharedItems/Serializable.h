@@ -93,7 +93,27 @@ class RetainingSerializable : virtual public BaseClass {
   explicit RetainingSerializable(jsi::Runtime &rt, Args &&...args)
       : BaseClass(rt, std::forward<Args>(args)...), primaryRuntime_(&rt) {}
 
-  jsi::Value toJSValue(jsi::Runtime &rt);
+  jsi::Value toJSValue(jsi::Runtime &rt) {
+    if (&rt == primaryRuntime_) {
+      // TODO: it is suboptimal to generate new object every time getJS is
+      // called on host runtime – the objects we are generating already exists
+      // and we should possibly just grab a hold of such object and use it here
+      // instead of creating a new JS representation. As far as I understand the
+      // only case where it can be realistically called this way is when a
+      // shared value is created and then accessed on the same runtime
+      return BaseClass::toJSValue(rt);
+    }
+    if (secondaryValue_ == nullptr) {
+      auto value = BaseClass::toJSValue(rt);
+      secondaryValue_ = std::make_unique<jsi::Value>(rt, value);
+      secondaryRuntime_ = &rt;
+      return value;
+    }
+    if (&rt == secondaryRuntime_) {
+      return jsi::Value(rt, *secondaryValue_);
+    }
+    return BaseClass::toJSValue(rt);
+  }
 
   ~RetainingSerializable() {
     cleanupIfRuntimeExists(secondaryRuntime_, secondaryValue_);
@@ -126,47 +146,6 @@ jsi::Value makeSerializableClone(
     const jsi::Value &value,
     const jsi::Value &shouldRetainRemote,
     const jsi::Value &nativeStateSource);
-
-jsi::Value makeSerializableString(jsi::Runtime &rt, const jsi::String &string);
-
-jsi::Value makeSerializableNumber(jsi::Runtime &rt, double number);
-
-jsi::Value makeSerializableBoolean(jsi::Runtime &rt, bool boolean);
-
-jsi::Value makeSerializableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint);
-
-jsi::Value makeSerializableUndefined(jsi::Runtime &rt);
-
-jsi::Value makeSerializableNull(jsi::Runtime &rt);
-
-jsi::Value makeSerializableTurboModuleLike(
-    jsi::Runtime &rt,
-    const jsi::Object &object,
-    const std::shared_ptr<jsi::HostObject> &proto);
-
-jsi::Value makeSerializableObject(
-    jsi::Runtime &rt,
-    jsi::Object object,
-    bool shouldRetainRemote,
-    const jsi::Value &nativeStateSource);
-
-jsi::Value makeSerializableImport(jsi::Runtime &rt, double source, const jsi::String &imported);
-
-jsi::Value makeSerializableHostObject(jsi::Runtime &rt, const std::shared_ptr<jsi::HostObject> &value);
-
-jsi::Value makeSerializableArray(jsi::Runtime &rt, const jsi::Array &array, const jsi::Value &shouldRetainRemote);
-
-jsi::Value makeSerializableMap(jsi::Runtime &rt, const jsi::Array &keys, const jsi::Array &values);
-
-jsi::Value makeSerializableSet(jsi::Runtime &rt, const jsi::Array &values);
-
-jsi::Value makeSerializableInitializer(jsi::Runtime &rt, const jsi::Object &initializerObject);
-
-jsi::Value makeSerializableFunction(jsi::Runtime &rt, jsi::Function function);
-
-jsi::Value makeSerializableWorklet(jsi::Runtime &rt, const jsi::Object &object, const bool &shouldRetainRemote);
-
-jsi::Value makeCustomSerializable(jsi::Runtime &rt, const jsi::Value &data, int typeId);
 
 std::shared_ptr<Serializable> extractSerializableOrThrow(
     jsi::Runtime &rt,
