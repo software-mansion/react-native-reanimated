@@ -95,7 +95,7 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
   if (transitionState_ == START) {
     auto root = lightNodes_[surfaceId];
     auto beforeTopScreen = topScreen[surfaceId];
-    auto afterTopScreen = lightNodes_[transitionTag_];
+    auto afterTopScreen = transitionTargetScreen_;
     if (beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen) {
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext);
       findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext);
@@ -164,7 +164,7 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
       }
     }
     if (transitionState_ == END) {
-      topScreen[surfaceId] = lightNodes_[transitionTag_];
+      topScreen[surfaceId] = transitionTargetScreen_;
       synchronized_ = false;
     }
     sharedTransitionManager_->containerTags_.clear();
@@ -292,7 +292,6 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgres
     bool isClosing,
     bool isGoingForward) {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  transitionUpdated_ = true;
   bool isAndroid;
 #ifdef ANDROID
   isAndroid = true;
@@ -302,17 +301,28 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgres
   // TODO (future): this new approach causes all back transitions to be progress
   // transitions (maybe that's ok?)
   if (!isClosing && !isGoingForward && !isAndroid) {
+    const auto &targetScreen = lightNodes_[tag];
+    react_native_assert(targetScreen && "LightNode is nullptr");
+    const auto surfaceId = targetScreen->current.surfaceId;
+    const auto parent = targetScreen->parent.lock();
+    react_native_assert(parent && "LightNode parent is nullptr");
+    if (!std::strcmp(parent->current.componentName, "RNSScreenNavigationContainer")) {
+      // we are interested here only in Screens that are on the Stack
+      return {};
+    }
+
+    transitionUpdated_ = true;
     transitionProgress_ = progress;
     if (transitionState_ == NONE && progress < 1) {
       transitionState_ = START;
       transitionTag_ = tag;
+      // there could be a nasted navigator on the Stack, so we need to find it
+      transitionTargetScreen_ = findTopScreen(targetScreen);
     } else if (transitionState_ == ACTIVE && progress == 1) {
       transitionState_ = END;
     }
-    const auto &node = lightNodes_[tag];
-    react_native_assert(node && "LightNode is nullptr");
 
-    transitioningSurfaceId_ = node->current.surfaceId;
+    transitioningSurfaceId_ = surfaceId;
     return transitioningSurfaceId_;
   }
   return {};

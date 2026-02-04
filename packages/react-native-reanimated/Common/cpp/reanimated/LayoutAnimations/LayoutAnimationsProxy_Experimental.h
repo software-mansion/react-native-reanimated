@@ -42,6 +42,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable std::unordered_map<Tag, int> leastRemoved;
   mutable std::unordered_set<Tag> activeTransitions_;
   mutable Tag transitionTag_;
+  mutable std::shared_ptr<LightNode> transitionTargetScreen_;
   mutable double transitionProgress_;
   mutable bool transitionUpdated_;
   mutable TransitionState transitionState_ = NONE;
