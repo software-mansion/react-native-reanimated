@@ -33,7 +33,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
 
   static void registerNatives();
 
-  ~NativeProxy();
+  ~NativeProxy() override;
 
  private:
   friend HybridBase;
