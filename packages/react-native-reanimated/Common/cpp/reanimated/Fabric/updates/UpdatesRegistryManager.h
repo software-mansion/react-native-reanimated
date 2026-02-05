@@ -6,6 +6,7 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
+#include <functional>
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -35,7 +36,8 @@ class UpdatesRegistryManager {
 
   void markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode);
   void unmarkNodeAsRemovable(Tag viewTag);
-  void handleNodeRemovals(const RootShadowNode &rootShadowNode);
+  using NodeRemovalCallback = std::function<void(Tag, bool)>;
+  void handleNodeRemovals(const RootShadowNode &rootShadowNode, const NodeRemovalCallback &callback = {});
   PropsMap collectProps();
 
 #ifdef ANDROID
