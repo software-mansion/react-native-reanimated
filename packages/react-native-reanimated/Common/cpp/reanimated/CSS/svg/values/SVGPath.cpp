@@ -186,6 +186,12 @@ std::vector<SubPath> SVGPath::parseSVGPath(const std::string &value) const {
     }
   }
 
+  // Remove all empty subpaths
+  if (result.size() > 0) {
+    result.erase(
+        std::remove_if(result.begin(), result.end(), [](const SubPath &sp) { return sp.C.empty(); }), result.end());
+  }
+
   return result;
 }
 
