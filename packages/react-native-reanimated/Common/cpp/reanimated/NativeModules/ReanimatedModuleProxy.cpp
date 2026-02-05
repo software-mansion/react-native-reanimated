@@ -677,6 +677,7 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
         // Update CSS transitions and flush updates
         cssTransitionsRegistry_->update(currentCssTimestamp_);
         cssTransitionsRegistry_->flushAnimatedPropsUpdates(updatesBatchAnimatedProps);
+        cssTransitionsRegistry_->flushUpdates(updatesBatch);
       }
 
       {
@@ -690,6 +691,7 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
         // Update CSS animations and flush updates
         cssAnimationsRegistry_->update(currentCssTimestamp_);
         cssAnimationsRegistry_->flushAnimatedPropsUpdates(updatesBatchAnimatedProps);
+        cssAnimationsRegistry_->flushUpdates(updatesBatch);
       }
 
       shouldUpdateCssAnimations_ = false;
@@ -697,15 +699,14 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
 
     AnimationMutations mutations;
 
-    // packing props from dynamic
-    animationMutationsFromDynamic(mutations, updatesBatch);
-
     // packing props from already prepared animated props
     for (auto &[node, animatedProp] : updatesBatchAnimatedProps) {
       bool hasLayoutUpdates = mutationHasLayoutUpdates(animatedProp);
       mutations.batch.push_back(
           AnimationMutation{node->getTag(), node->getFamilyShared(), std::move(animatedProp), hasLayoutUpdates});
     }
+
+    addNonLayoutPropsFromDynamic(mutations, updatesBatch);
 
     if (mutations.batch.size() == 0) {
       // Empty mutations batch implies finished animation
@@ -1396,7 +1397,7 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
       std::weak_ptr<UIManagerAnimationBackend> unstableAnimationBackend = uiManager_->unstable_getAnimationBackend();
       backendCallbacks_.push_back(
           [callback = std::move(callback)](AnimationTimestamp timestamp) { callback(timestamp.count()); });
-        
+
       if (auto locked = unstableAnimationBackend.lock()) {
         auto animationBackend = std::static_pointer_cast<AnimationBackend>(locked);
         if (isAnimationRunning_ == false) {

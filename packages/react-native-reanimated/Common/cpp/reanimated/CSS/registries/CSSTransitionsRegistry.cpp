@@ -69,9 +69,8 @@ void CSSTransitionsRegistry::update(const double timestamp) {
     if (!updates.empty()) {
       if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
         addAnimatedPropsToBatch(transition->getShadowNode(), propsBuilder->get());
-      } else {
-        addUpdatesToBatch(transition->getShadowNode(), updates);
       }
+      addUpdatesToBatch(transition->getShadowNode(), updates);
     }
 
     updateInUpdatesRegistry(transition, updates);

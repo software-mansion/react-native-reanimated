@@ -27,7 +27,12 @@
 #include <reanimated/CSS/interpolation/transforms/operations/skew.h>
 #include <reanimated/CSS/interpolation/transforms/operations/translate.h>
 
+#include <optional>
+#include <string>
+
 namespace reanimated::css {
+std::optional<facebook::react::PropName> propNameFromString(const std::string &propName);
+
 void addWidthToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSLength, CSSKeyword> &value);
@@ -529,4 +534,6 @@ void addShadowOpacityToPropsBuilder(
     const CSSValueVariant<CSSDouble> &value);
 
 void animationMutationsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch);
+
+void addNonLayoutPropsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch);
 } // namespace reanimated::css
