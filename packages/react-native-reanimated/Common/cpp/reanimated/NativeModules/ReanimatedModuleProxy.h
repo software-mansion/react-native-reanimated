@@ -26,9 +26,11 @@
 #include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
 
+#include <react/renderer/animationbackend/AnimationBackend.h>
 #include <react/renderer/componentregistry/componentNameByReactViewName.h>
 #include <react/renderer/core/ShadowNode.h>
 #include <react/renderer/uimanager/UIManager.h>
+#include <react/renderer/uimanager/UIManagerAnimationBackend.h>
 
 #include <memory>
 #include <set>
@@ -100,6 +102,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   double getCssTimestamp();
 
   void performOperations(const bool isTriggeredByEvent);
+  AnimationMutations performOperationsForBackend();
 
   void setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) override;
 
@@ -184,13 +187,17 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
 
   std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry_;
-  const RequestRenderFunction requestRender_;
+  RequestRenderFunction requestRender_;
   volatile bool renderRequested_{false};
+  bool isAnimationRunning_{false};
+  CallbackId callbackId_;
   std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
   const std::shared_ptr<JSLogger> jsLogger_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
+  std::vector<std::function<void(AnimationTimestamp)>> backendCallbacks_;
+
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
 #endif

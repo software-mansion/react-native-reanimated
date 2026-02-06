@@ -23,7 +23,9 @@ class SimpleValueInterpolator : public ValueInterpolator {
   explicit SimpleValueInterpolator(
       const PropertyPath &propertyPath,
       const ValueType &defaultStyleValue,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+      std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)>
+          addToPropsBuilder);
 
  protected:
   std::shared_ptr<CSSValue> createValue(jsi::Runtime &rt, const jsi::Value &value) const override;
@@ -34,7 +36,12 @@ class SimpleValueInterpolator : public ValueInterpolator {
       double progress,
       const std::shared_ptr<CSSValue> &fromValue,
       const std::shared_ptr<CSSValue> &toValue,
-      const ValueInterpolationContext &context) const override;
+      const ValueInterpolationContext &context,
+      const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const override;
+
+ private:
+  std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)>
+      addToPropsBuilder_;
 };
 
 } // namespace reanimated::css

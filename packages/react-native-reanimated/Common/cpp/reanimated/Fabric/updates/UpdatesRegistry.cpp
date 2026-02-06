@@ -38,6 +38,15 @@ void UpdatesRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
   }
 }
 
+void UpdatesRegistry::flushAnimatedPropsUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
+  auto copiedUpdatesBatch = std::move(updatesBatchAnimatedProps_);
+  updatesBatchAnimatedProps_.clear();
+
+  for (auto &[shadowNode, props] : copiedUpdatesBatch) {
+    updatesBatch.emplace_back(shadowNode, std::move(props));
+  }
+}
+
 void UpdatesRegistry::collectProps(PropsMap &propsMap) {
   std::lock_guard<std::mutex> lock{mutex_};
 
@@ -61,6 +70,12 @@ void UpdatesRegistry::addUpdatesToBatch(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const folly::dynamic &props) {
   updatesBatch_.emplace_back(shadowNode, props);
+}
+
+void UpdatesRegistry::addAnimatedPropsToBatch(
+    const std::shared_ptr<const ShadowNode> &shadowNode,
+    AnimatedProps animatedProps) {
+  updatesBatchAnimatedProps_.emplace_back(shadowNode, std::move(animatedProps));
 }
 
 void UpdatesRegistry::setInUpdatesRegistry(
