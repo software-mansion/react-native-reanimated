@@ -663,13 +663,13 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
       uiManager_->getShadowTreeRegistry().visit(
           surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
     }
- 
-    // batch for css animations and transitions for folly::dynamic updates used on Android
+
+    // folly::dynamic updates (CSS transitions/animations); Android only when props reconciliation is OFF.
     UpdatesBatch cssUpdatesBatch;
-    // batch for animations which are send in as rawProps in AnimatedProps
+    // raw prop updates coming from AnimatedProps registry (folly::dynamic).
     UpdatesBatch animatedUpdatesBatch;
-    // batch with AnimatedProps used on iOS, for layout props on Android when props 2.0 is disabled and on Android for all props when props 2.0 are enabled.
-    UpdatesBatchAnimatedProps updatesBatchAnimatedProps;
+    // AnimatedProps used by the backend; iOS always, Android for layout props when props reconciliation is OFF, and for all props when it is ON.
+    UpdatesBatchAnimatedProps animatedPropsUpdatesBatch;
     {
       ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
 
@@ -680,7 +680,7 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
         auto lock = cssTransitionsRegistry_->lock();
         // Update CSS transitions and flush updates
         cssTransitionsRegistry_->update(currentCssTimestamp_);
-        cssTransitionsRegistry_->flushAnimatedPropsUpdates(updatesBatchAnimatedProps);
+        cssTransitionsRegistry_->flushAnimatedPropsUpdates(animatedPropsUpdatesBatch);
         cssTransitionsRegistry_->flushUpdates(cssUpdatesBatch);
       }
 
@@ -694,7 +694,7 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
         auto lock = cssAnimationsRegistry_->lock();
         // Update CSS animations and flush updates
         cssAnimationsRegistry_->update(currentCssTimestamp_);
-        cssAnimationsRegistry_->flushAnimatedPropsUpdates(updatesBatchAnimatedProps);
+        cssAnimationsRegistry_->flushAnimatedPropsUpdates(animatedPropsUpdatesBatch);
         cssAnimationsRegistry_->flushUpdates(cssUpdatesBatch);
       }
 
@@ -703,13 +703,14 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
 
     AnimationMutations mutations;
 
-    // packing props from already prepared animated props
-    for (auto &[node, animatedProp] : updatesBatchAnimatedProps) {
+    // collecting css mutations in AnimatedProps format
+    for (auto &[node, animatedProp] : animatedPropsUpdatesBatch) {
       bool hasLayoutUpdates = mutationHasLayoutUpdates(animatedProp);
       mutations.batch.push_back(
           AnimationMutation{node->getTag(), node->getFamilyShared(), std::move(animatedProp), hasLayoutUpdates});
     }
 
+    // only on Android if props reconciliation is OFF
     addNonLayoutPropsFromDynamic(mutations, cssUpdatesBatch);
     mergeAnimationUpdatesBatch(mutations, animatedUpdatesBatch);
 
