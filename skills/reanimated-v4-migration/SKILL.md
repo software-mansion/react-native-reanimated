@@ -19,6 +19,8 @@ This skill guides migration from React Native Reanimated v3 to v4.
 4. Remove deprecated hooks
 5. Update withSpring configuration if needed
 6. Remove deprecated functions
+7. Update withRepeat infinite loop syntax
+8. Replace useAnimatedKeyboard if used
 
 ## Step 1: Install Dependencies
 
@@ -210,6 +212,24 @@ Safe to remove—these were no-ops in v3 and the concept no longer exists in v4.
 + withRepeat(animation, 0)  // v4
 ```
 
+## Step 8: useAnimatedKeyboard Deprecated
+
+`useAnimatedKeyboard` has persistent bugs on iOS. Migrate to `react-native-keyboard-controller`:
+
+```diff
+- import { useAnimatedKeyboard } from 'react-native-reanimated';
++ import { useAnimatedKeyboard } from 'react-native-keyboard-controller';
+```
+
+Install the replacement:
+```bash
+npm install react-native-keyboard-controller
+```
+
+## Removed Engine Support
+
+**react-native-v8 is no longer supported.** The V8 engine project was abandoned (no updates since August 2024). If your app uses V8, you must switch to Hermes or JSC.
+
 ## Additional Moved APIs (No Signature Changes)
 
 These can be imported from either package, but `react-native-worklets` is preferred:
@@ -240,4 +260,6 @@ import {
 | `useScrollViewOffset` | `useScrollOffset` | Renamed |
 | `useWorkletCallback` | `useCallback` + `'worklet'` | Removed |
 | `useAnimatedGestureHandler` | Gesture API | Removed |
+| `useAnimatedKeyboard` | `react-native-keyboard-controller` | Deprecated |
+| `withRepeat(anim, -1)` | `withRepeat(anim, 0)` | Infinite loop |
 | `'react-native-reanimated/plugin'` | `'react-native-worklets/plugin'` | Babel |
