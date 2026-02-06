@@ -2159,11 +2159,46 @@ void addShadowOpacityToPropsBuilder(
   propsBuilder->setShadowOpacity(cssValue.value);
 }
 
-void animationMutationsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch) {
+bool hasLayoutProps(const folly::dynamic &props) {
+  for (const auto &key : props.keys()) {
+    const auto propName = propNameFromString(key.asString());
+    if (propName.has_value() && isLayoutProp(propName.value())) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void mergeDynamicIntoMutations(
+    AnimationMutations &mutations,
+    const std::shared_ptr<const ShadowNode> &node,
+    folly::dynamic props,
+    bool hasLayoutUpdates) {
+  const auto tag = node->getTag();
+  for (auto &mutation : mutations.batch) {
+    if (mutation.tag != tag) {
+      continue;
+    }
+
+    if (mutation.props.rawProps) {
+      auto mergedDynamic = folly::dynamic::merge(mutation.props.rawProps->toDynamic(), props);
+      mutation.props.rawProps = std::make_unique<RawProps>(std::move(mergedDynamic));
+    } else {
+      mutation.props.rawProps = std::make_unique<RawProps>(props);
+    }
+
+    mutation.hasLayoutUpdates = mutation.hasLayoutUpdates || hasLayoutUpdates;
+    return;
+  }
+
+  AnimatedPropsBuilder builder;
+  builder.storeDynamic(props);
+  mutations.batch.push_back(AnimationMutation{tag, node->getFamilyShared(), builder.get(), hasLayoutUpdates});
+}
+
+void mergeAnimationUpdatesBatch(AnimationMutations &mutations, UpdatesBatch &updatesBatch) {
   for (auto &[node, dynamic] : updatesBatch) {
-    AnimatedPropsBuilder builder;
-    builder.storeDynamic(dynamic);
-    mutations.batch.push_back(AnimationMutation{node->getTag(), node->getFamilyShared(), builder.get(), true});
+    mergeDynamicIntoMutations(mutations, node, dynamic, hasLayoutProps(dynamic));
   }
 }
 
@@ -2173,7 +2208,6 @@ void addNonLayoutPropsFromDynamic(AnimationMutations &mutations, UpdatesBatch &u
   }
 
   for (auto &[node, dynamic] : updatesBatch) {
-    AnimatedPropsBuilder builder;
     folly::dynamic nonLayoutProps = folly::dynamic::object();
 
     for (const auto &key : dynamic.keys()) {
@@ -2190,29 +2224,7 @@ void addNonLayoutPropsFromDynamic(AnimationMutations &mutations, UpdatesBatch &u
       continue;
     }
 
-    const auto tag = node->getTag();
-    auto didMerge = false;
-    for (auto &mutation : mutations.batch) {
-      if (mutation.tag != tag) {
-        continue;
-      }
-
-      if (mutation.props.rawProps) {
-        auto mergedDynamic = folly::dynamic::merge(mutation.props.rawProps->toDynamic(), nonLayoutProps);
-        mutation.props.rawProps = std::make_unique<RawProps>(std::move(mergedDynamic));
-      } else {
-        mutation.props.rawProps = std::make_unique<RawProps>(nonLayoutProps);
-      }
-      didMerge = true;
-      break;
-    }
-
-    if (didMerge) {
-      continue;
-    }
-
-    builder.storeDynamic(nonLayoutProps);
-    mutations.batch.push_back(AnimationMutation{tag, node->getFamilyShared(), builder.get(), false});
+    mergeDynamicIntoMutations(mutations, node, nonLayoutProps, false);
   }
 }
 

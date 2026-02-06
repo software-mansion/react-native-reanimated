@@ -533,7 +533,7 @@ void addShadowOpacityToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDouble> &value);
 
-void animationMutationsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch);
-
 void addNonLayoutPropsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch);
+
+void mergeAnimationUpdatesBatch(AnimationMutations &mutations, UpdatesBatch &updatesBatch);
 } // namespace reanimated::css
