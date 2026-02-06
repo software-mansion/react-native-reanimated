@@ -2,6 +2,7 @@
 #include <reanimated/CSS/utils/propsBuilderWrapper.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
+#include <react/featureflags/ReactNativeFeatureFlags.h>
 #include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
 #include <react/renderer/animationbackend/AnimationBackend.h>
 #include <react/renderer/core/RawProps.h>
@@ -23,13 +24,24 @@ static const auto layoutProps = std::set<PropName>{
     COLUMN_GAP,  FLEX_GROW,      FLEX_SHRINK,   FLEX_WRAP,  JUSTIFY_CONTENT, MAX_HEIGHT, MAX_WIDTH,      MIN_HEIGHT,
     MIN_WIDTH,   STYLE_OVERFLOW, POSITION_TYPE, DIRECTION,  Z_INDEX};
 
+// On Android, non-layout props need to be packed into the rawProps unless props 2.0 are enabled.
+bool shouldFilterNonLayoutProps() {
+#ifdef ANDROID
+  return !ReactNativeFeatureFlags::enablePropsUpdateReconciliationAndroid();
+#else
+  return false;
+#endif
+}
+
 bool isLayoutProp(PropName propName) {
   return layoutProps.contains(propName);
 }
 
-// On Android, non-layout props need to be packed into the rawProps unless props 2.0 are enabled.
 inline bool shouldSkipNonLayoutProp(PropName propName) {
-  return !isLayoutProp(propName);
+  if (shouldFilterNonLayoutProps()) {
+    return !isLayoutProp(propName);
+  }
+  return false;
 }
 
 int32_t parseCSSColor(CSSColor color) {
@@ -2156,6 +2168,10 @@ void animationMutationsFromDynamic(AnimationMutations &mutations, UpdatesBatch &
 }
 
 void addNonLayoutPropsFromDynamic(AnimationMutations &mutations, UpdatesBatch &updatesBatch) {
+  if (!shouldFilterNonLayoutProps()) {
+    return;
+  }
+
   for (auto &[node, dynamic] : updatesBatch) {
     AnimatedPropsBuilder builder;
     folly::dynamic nonLayoutProps = folly::dynamic::object();
