@@ -15,11 +15,16 @@ export function getShadowNodeWrapperFromRef(
 
   if (!resolvedInstance) {
     if (ref.getNativeScrollRef) {
-      resolvedInstance = (ref.getNativeScrollRef() as any)
-        .__internalInstanceHandle;
-    } else if ((ref as any)._reactInternals) {
+      const nativeScrollRef = ref.getNativeScrollRef();
+      if (nativeScrollRef) {
+        resolvedInstance = (nativeScrollRef as any)
+          .__internalInstanceHandle;
+      }
+    }
+    if (!resolvedInstance && (ref as any)._reactInternals) {
       resolvedInstance = findHostInstance(ref).__internalInstanceHandle;
-    } else {
+    }
+    if (!resolvedInstance) {
       throw new ReanimatedError(`Failed to find host instance for a ref.}`);
     }
   }
