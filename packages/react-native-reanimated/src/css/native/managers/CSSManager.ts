@@ -1,14 +1,15 @@
 'use strict';
-import type { AnyRecord } from '../../../common';
-import { ReanimatedError } from '../../../common';
-import type { StyleBuilder } from '../../../common/style';
+import {
+  getPropsBuilder,
+  hasPropsBuilder,
+  ReanimatedError,
+} from '../../../common';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
 import type { CSSStyle } from '../../types';
 import type { ICSSManager } from '../../types/interfaces';
 import { filterCSSAndStyleProperties } from '../../utils';
 import { setViewStyle } from '../proxy';
-import { getStyleBuilder, hasStyleBuilder } from '../registry';
 import CSSAnimationsManager from './CSSAnimationsManager';
 import CSSTransitionsManager from './CSSTransitionsManager';
 
@@ -17,7 +18,8 @@ export default class CSSManager implements ICSSManager {
   private readonly cssTransitionsManager: CSSTransitionsManager;
   private readonly viewTag: number;
   private readonly viewName: string;
-  private readonly styleBuilder: StyleBuilder<AnyRecord> | null = null;
+  private readonly propsBuilder: ReturnType<typeof getPropsBuilder> | null =
+    null;
   private isFirstUpdate: boolean = true;
 
   constructor({ shadowNodeWrapper, viewTag, viewName = 'RCTView' }: ViewInfo) {
@@ -25,8 +27,8 @@ export default class CSSManager implements ICSSManager {
     const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
 
     this.viewName = viewName;
-    this.styleBuilder = hasStyleBuilder(viewName)
-      ? getStyleBuilder(viewName)
+    this.propsBuilder = hasPropsBuilder(viewName)
+      ? getPropsBuilder(viewName)
       : null;
     this.cssAnimationsManager = new CSSAnimationsManager(
       wrapper,
@@ -40,13 +42,13 @@ export default class CSSManager implements ICSSManager {
     const [animationProperties, transitionProperties, filteredStyle] =
       filterCSSAndStyleProperties(style);
 
-    if (!this.styleBuilder && (animationProperties || transitionProperties)) {
+    if (!this.propsBuilder && (animationProperties || transitionProperties)) {
       throw new ReanimatedError(
         `Tried to apply CSS animations to ${this.viewName} which is not supported`
       );
     }
 
-    const normalizedStyle = this.styleBuilder?.buildFrom(filteredStyle);
+    const normalizedStyle = this.propsBuilder?.build(filteredStyle);
 
     // If the update is called during the first css style update, we won't
     // trigger CSS transitions and set styles before attaching CSS transitions
@@ -54,7 +56,10 @@ export default class CSSManager implements ICSSManager {
       setViewStyle(this.viewTag, normalizedStyle);
     }
 
-    this.cssTransitionsManager.update(transitionProperties);
+    this.cssTransitionsManager.update(
+      transitionProperties,
+      normalizedStyle ?? {}
+    );
     this.cssAnimationsManager.update(animationProperties);
 
     // If the current update is not the fist one, we want to update CSS

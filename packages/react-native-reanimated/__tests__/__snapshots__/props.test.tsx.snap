@@ -50,7 +50,6 @@ exports[`Test of boxShadow prop boxShadow prop animation 1`] = `
         },
       ]
     }
-    nativeID="2"
     onBlur={[Function]}
     onClick={[Function]}
     onFocus={[Function]}
@@ -121,7 +120,6 @@ exports[`Test of boxShadow prop boxShadow prop animation 1`] = `
         },
       ]
     }
-    nativeID="3"
     onBlur={[Function]}
     onClick={[Function]}
     onFocus={[Function]}
@@ -203,7 +201,6 @@ exports[`Test of boxShadow prop boxShadow prop animation, get animated style 1`]
         },
       ]
     }
-    nativeID="8"
     onBlur={[Function]}
     onClick={[Function]}
     onFocus={[Function]}
@@ -274,7 +271,6 @@ exports[`Test of boxShadow prop boxShadow prop animation, get animated style 1`]
         },
       ]
     }
-    nativeID="9"
     onBlur={[Function]}
     onClick={[Function]}
     onFocus={[Function]}
@@ -356,7 +352,6 @@ exports[`Test of boxShadow prop one boxShadow string parsing 1`] = `
         },
       ]
     }
-    nativeID="12"
     onBlur={[Function]}
     onClick={[Function]}
     onFocus={[Function]}
@@ -427,7 +422,6 @@ exports[`Test of boxShadow prop one boxShadow string parsing 1`] = `
         },
       ]
     }
-    nativeID="13"
     onBlur={[Function]}
     onClick={[Function]}
     onFocus={[Function]}

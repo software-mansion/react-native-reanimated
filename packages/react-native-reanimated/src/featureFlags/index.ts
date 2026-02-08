@@ -49,6 +49,7 @@ export const DynamicFlags: DynamicFlagsType = {
     }
   },
 };
+// is-tree-shakable-suppress
 DynamicFlags.init();
 
 // Public API function to update a feature flag

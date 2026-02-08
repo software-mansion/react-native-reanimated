@@ -6,7 +6,7 @@ import type { WorkletsPluginPass } from './types';
 /**
  * This function replaces the `false` value in
  *
- * `globalThis._WORKLETS_BUNDLE_MODE = false;`
+ * `globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;`
  *
  * With `true` in the `workletRuntimeEntry` file when the `bundleMode` option is
  * enabled in the Babel plugin.
@@ -43,7 +43,7 @@ export function toggleBundleMode(
     !object.isIdentifier() ||
     object.node.name !== 'globalThis' ||
     !property.isIdentifier() ||
-    property.node.name !== '_WORKLETS_BUNDLE_MODE'
+    property.node.name !== '_WORKLETS_BUNDLE_MODE_ENABLED'
   ) {
     return;
   }

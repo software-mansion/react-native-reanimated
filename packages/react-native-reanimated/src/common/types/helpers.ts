@@ -13,6 +13,7 @@ export type Maybe<T> = T | null | undefined;
 export type NonMutable<T> = T extends object ? Readonly<T> : T;
 
 export type AnyRecord = Record<string, any>;
+export type UnknownRecord = Record<string, unknown>;
 
 export type AnyComponent = ComponentType<any>;
 

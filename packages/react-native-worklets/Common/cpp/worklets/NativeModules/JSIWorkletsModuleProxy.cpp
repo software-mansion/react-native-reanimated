@@ -4,6 +4,7 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/SerializableFactory.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/FeatureFlags.h>
@@ -87,7 +88,7 @@ inline jsi::Value createWorkletRuntime(
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
-#ifdef WORKLETS_BUNDLE_MODE
+#ifdef WORKLETS_BUNDLE_MODE_ENABLED
 inline jsi::Value propagateModuleUpdate(
     const std::shared_ptr<RuntimeManager> &runtimeManager,
     const std::string &code,
@@ -102,7 +103,7 @@ inline jsi::Value propagateModuleUpdate(
   }
   return jsi::Value::undefined();
 }
-#endif // WORKLETS_BUNDLE_MODE
+#endif // WORKLETS_BUNDLE_MODE_ENABLED
 
 inline jsi::Value reportFatalErrorOnJS(
     const std::shared_ptr<JSScheduler> &jsScheduler,
@@ -152,14 +153,15 @@ inline void registerCustomSerializable(
 
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const bool isDevBundle,
-    const std::shared_ptr<const JSBigStringBuffer> &script,
+    const std::shared_ptr<const ScriptBuffer> &script,
     const std::string &sourceUrl,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::shared_ptr<MemoryManager> &memoryManager,
     const std::shared_ptr<RuntimeManager> &runtimeManager,
-    const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime)
+    const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
+    const std::shared_ptr<RuntimeBindings> &runtimeBindings)
     : jsi::HostObject(),
       isDevBundle_(isDevBundle),
       script_(script),
@@ -169,19 +171,8 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       uiScheduler_(uiScheduler),
       memoryManager_(memoryManager),
       runtimeManager_(runtimeManager),
-      uiWorkletRuntime_(uiWorkletRuntime) {}
-
-JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other)
-    : jsi::HostObject(),
-      isDevBundle_(other.isDevBundle_),
-      script_(other.script_),
-      sourceUrl_(other.sourceUrl_),
-      jsQueue_(other.jsQueue_),
-      jsScheduler_(other.jsScheduler_),
-      uiScheduler_(other.uiScheduler_),
-      memoryManager_(other.memoryManager_),
-      runtimeManager_(other.runtimeManager_),
-      uiWorkletRuntime_(other.uiWorkletRuntime_) {}
+      uiWorkletRuntime_(uiWorkletRuntime),
+      runtimeBindings_(runtimeBindings) {}
 
 JSIWorkletsModuleProxy::~JSIWorkletsModuleProxy() = default;
 
@@ -225,9 +216,9 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "synchronizableLock"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "synchronizableUnlock"));
 
-#ifdef WORKLETS_BUNDLE_MODE
+#ifdef WORKLETS_BUNDLE_MODE_ENABLED
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "propagateModuleUpdate"));
-#endif // WORKLETS_BUNDLE_MODE
+#endif // WORKLETS_BUNDLE_MODE_ENABLED
 
   return propertyNames;
 }
@@ -520,7 +511,7 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         });
   }
 
-#ifdef WORKLETS_BUNDLE_MODE
+#ifdef WORKLETS_BUNDLE_MODE_ENABLED
   if (name == "propagateModuleUpdate") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -534,7 +525,7 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
               /* sourceURL */ args[1].asString(rt).utf8(rt));
         });
   }
-#endif // WORKLETS_BUNDLE_MODE
+#endif // WORKLETS_BUNDLE_MODE_ENABLED
 
   if (name == "getStaticFeatureFlag") {
     return jsi::Function::createFromHostFunction(

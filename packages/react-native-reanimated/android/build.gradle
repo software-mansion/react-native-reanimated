@@ -13,7 +13,12 @@ def safeAppExtGet(prop, fallback) {
 }
 
 def isNewArchitectureEnabled() {
-    // To opt-in for the New Architecture, you can either:
+    // In React Native 0.82+, users can no longer opt-out of the New Architecture.
+    if(getReactNativeMinorVersion() >= 82){
+        return true
+    }
+
+    // In older versions, to opt-in for the New Architecture, you can either:
     // - Set `newArchEnabled` to true inside the `gradle.properties` file
     // - Invoke gradle with `-newArchEnabled=true`
     // - Set an environment variable `ORG_GRADLE_PROJECT_newArchEnabled=true`
@@ -101,7 +106,7 @@ def getReanimatedStaticFeatureFlags() {
     return featureFlags.collect { key, value -> "[${key}:${value}]" }.join("")
 }
 
-if (isNewArchitectureEnabled()) {
+if (isNewArchitectureEnabled() && project != rootProject) {
     apply plugin: "com.facebook.react"
 }
 
@@ -119,7 +124,7 @@ def REANIMATED_FEATURE_FLAGS = getReanimatedStaticFeatureFlags()
 // Set version for prefab
 version REANIMATED_VERSION
 
-def reanimatedPrefabHeadersDir = project.file("${getLayout().getBuildDirectory()}/prefab-headers/reanimated")
+def reanimatedPrefabHeadersDir = project.file("${getLayout().getBuildDirectory().getAsFile().get().absolutePath}/prefab-headers/reanimated")
 
 def reactNativeArchitectures() {
     def value = project.getProperties().get("reactNativeArchitectures")
@@ -188,7 +193,6 @@ android {
                         "-DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}",
                         "-DANDROID_TOOLCHAIN=clang",
                         "-DREACT_NATIVE_DIR=${toPlatformFileString(reactNativeRootDir.path)}",
-                        "-DREACT_NATIVE_WORKLETS_DIR=${toPlatformFileString(reactNativeWorkletsRootDir.path)}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
                         "-DREANIMATED_PROFILING=${REANIMATED_PROFILING}",
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}",
@@ -231,7 +235,8 @@ android {
                     "**/libhermesvm.so",
                     "**/libhermestooling.so",
                     "**/libreactnative.so",
-                    "**/libjscexecutor.so",]
+                    "**/libjscexecutor.so",
+                    "**/libworklets.so",]
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -326,7 +331,7 @@ repositories {
 dependencies {
     implementation "com.facebook.yoga:proguard-annotations:1.19.0"
     implementation "androidx.transition:transition:1.6.0"
-    implementation "androidx.core:core:1.17.0"
+    implementation "androidx.core:core:1.15.0"
 
     implementation "com.facebook.react:react-android" // version substituted by RNGP
 

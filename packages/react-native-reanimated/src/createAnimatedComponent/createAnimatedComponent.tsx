@@ -91,7 +91,7 @@ export function createAnimatedComponent<
   }
 
   const animatedComponent = (
-    props: AnimatedProps<InitialComponentProps> & {
+    props: Omit<AnimatedProps<React.ComponentProps<TInstance>>, 'ref'> & {
       ref?: AnimatedComponentRef<TInstance>;
     }
   ) => (

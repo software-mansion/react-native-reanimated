@@ -13,8 +13,8 @@
   },
   "dependencies": {
     "common-app": "workspace:*",
-    "react": "19.2.0",
-    "react-native": "0.83.0-rc.5"
+    "react": "19.2.3",
+    "react-native": "0.84.0-rc.4"
   },
   "devDependencies": {
     "@types/react": "19.2.2",
@@ -23,11 +23,10 @@
     "typescript": "5.8.3"
   },
   "engines": {
-    "node": ">=20.13.0"
+    "node": ">= 22.11.0"
   },
   "installConfig": {
-    "selfReferences": false,
-    "hoistingLimits": "workspaces"
+    "selfReferences": false
   },
   "reanimated": {
     "staticFeatureFlags": {
@@ -45,7 +44,9 @@
   "worklets": {
     "staticFeatureFlags": {
       "RUNTIME_TEST_FLAG": true,
-      "IOS_DYNAMIC_FRAMERATE_ENABLED": true
+      "IOS_DYNAMIC_FRAMERATE_ENABLED": true,
+      "BUNDLE_MODE_ENABLED": false,
+      "FETCH_PREVIEW_ENABLED": false
     }
   }
 }

@@ -18,7 +18,6 @@ exports[`useSharedValue retains value on rerender 1`] = `
       "opacity": 1,
     }
   }
-  nativeID="1"
   style={
     [
       {
