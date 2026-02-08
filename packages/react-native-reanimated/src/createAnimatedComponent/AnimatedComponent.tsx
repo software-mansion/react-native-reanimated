@@ -531,24 +531,14 @@ export default class AnimatedComponent
       // TODO: handle case when `text` property is not present during initial render but appears later on
 
       // Pass the current value of animated prop `text` as `children` so that the text displays correctly during first render
-      filteredProps.children =
-        filteredProps.text === ''
-          ? '\u200b' // use zero-width space when text is empty
-          : typeof filteredProps.text === 'number'
-            ? String(filteredProps.text)
-            : filteredProps.text;
+      filteredProps.children = normalizeTextProp(filteredProps.text);
     }
 
     // if (
     //   this.ChildComponent.displayName === 'Text' &&
     //   isSharedValue(this.props.text)
     // ) {
-    //   filteredProps.children =
-    //     filteredProps.text === ''
-    //       ? '\u200b' // use zero-width space when text is empty
-    //       : typeof filteredProps.text === 'number'
-    //         ? String(filteredProps.text)
-    //         : filteredProps.text;
+    //   filteredProps.children = normalizeTextProp(filteredProps.text);
     // }
 
     // if (this.ChildComponent.displayName === 'Text') {
@@ -601,4 +591,11 @@ function filterOutAnimatedStyles(
       }
       return styleElement;
     });
+}
+
+function normalizeTextProp(text: unknown): string {
+  if (text === '') {
+    return '\u200b'; // use zero-width space when text is empty to prevent collapsing of the Text component
+  }
+  return String(text); // convert numbers to string, keep strings as they are
 }
