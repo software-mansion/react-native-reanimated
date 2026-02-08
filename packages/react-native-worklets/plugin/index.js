@@ -345,9 +345,9 @@ var require_types = __commonJS({
     function isWorkletizableObjectNode(node) {
       return (0, types_12.isObjectExpression)(node);
     }
-    exports2.workletClassFactorySuffix = "__classFactory";
-    exports2.generatedWorkletsDir = ".worklets";
-  }
+    exports2.workletClassFactorySuffix = '__classFactory';
+    exports2.generatedWorkletsDir = '.worklets';
+  },
 });
 
 // lib/referencedWorklets.js
@@ -584,115 +584,115 @@ var require_globals = __commonJS({
       // Note that objects' properties don't need to be listed since we always only capture the whole object,
       // e.g. `global.__ErrorUtils` or `Intl.DateTimeFormat`.
       // Value properties
-      "globalThis",
-      "Infinity",
-      "NaN",
-      "undefined",
+      'globalThis',
+      'Infinity',
+      'NaN',
+      'undefined',
       // Function properties
-      "eval",
-      "isFinite",
-      "isNaN",
-      "parseFloat",
-      "parseInt",
-      "decodeURI",
-      "decodeURIComponent",
-      "encodeURI",
-      "encodeURIComponent",
-      "escape",
-      "unescape",
+      'eval',
+      'isFinite',
+      'isNaN',
+      'parseFloat',
+      'parseInt',
+      'decodeURI',
+      'decodeURIComponent',
+      'encodeURI',
+      'encodeURIComponent',
+      'escape',
+      'unescape',
       // Fundamental objects
-      "Object",
-      "Function",
-      "Boolean",
-      "Symbol",
+      'Object',
+      'Function',
+      'Boolean',
+      'Symbol',
       // Error objects
-      "Error",
-      "AggregateError",
-      "EvalError",
-      "RangeError",
-      "ReferenceError",
-      "SyntaxError",
-      "TypeError",
-      "URIError",
-      "InternalError",
+      'Error',
+      'AggregateError',
+      'EvalError',
+      'RangeError',
+      'ReferenceError',
+      'SyntaxError',
+      'TypeError',
+      'URIError',
+      'InternalError',
       // Numbers and dates
-      "Number",
-      "BigInt",
-      "Math",
-      "Date",
+      'Number',
+      'BigInt',
+      'Math',
+      'Date',
       // Text processing
-      "String",
-      "RegExp",
+      'String',
+      'RegExp',
       // Indexed collections
-      "Array",
-      "Int8Array",
-      "Uint8Array",
-      "Uint8ClampedArray",
-      "Int16Array",
-      "Uint16Array",
-      "Int32Array",
-      "Uint32Array",
-      "BigInt64Array",
-      "BigUint64Array",
-      "Float32Array",
-      "Float64Array",
+      'Array',
+      'Int8Array',
+      'Uint8Array',
+      'Uint8ClampedArray',
+      'Int16Array',
+      'Uint16Array',
+      'Int32Array',
+      'Uint32Array',
+      'BigInt64Array',
+      'BigUint64Array',
+      'Float32Array',
+      'Float64Array',
       // Keyed collections
-      "Map",
-      "Set",
-      "WeakMap",
-      "WeakSet",
+      'Map',
+      'Set',
+      'WeakMap',
+      'WeakSet',
       // Structured data
-      "ArrayBuffer",
-      "SharedArrayBuffer",
-      "DataView",
-      "Atomics",
-      "JSON",
+      'ArrayBuffer',
+      'SharedArrayBuffer',
+      'DataView',
+      'Atomics',
+      'JSON',
       // Managing memory
-      "WeakRef",
-      "FinalizationRegistry",
+      'WeakRef',
+      'FinalizationRegistry',
       // Control abstraction objects
-      "Iterator",
-      "AsyncIterator",
-      "Promise",
-      "GeneratorFunction",
-      "AsyncGeneratorFunction",
-      "Generator",
-      "AsyncGenerator",
-      "AsyncFunction",
+      'Iterator',
+      'AsyncIterator',
+      'Promise',
+      'GeneratorFunction',
+      'AsyncGeneratorFunction',
+      'Generator',
+      'AsyncGenerator',
+      'AsyncFunction',
       // Reflection
-      "Reflect",
-      "Proxy",
+      'Reflect',
+      'Proxy',
       // Internationalization
-      "Intl",
+      'Intl',
       // Other stuff
-      "null",
-      "this",
-      "global",
-      "window",
-      "globalThis",
-      "self",
-      "console",
-      "performance",
-      "arguments",
+      'null',
+      'this',
+      'global',
+      'window',
+      'globalThis',
+      'self',
+      'console',
+      'performance',
+      'arguments',
       // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
-      "require",
-      "fetch",
-      "XMLHttpRequest",
-      "WebSocket",
+      'require',
+      'fetch',
+      'XMLHttpRequest',
+      'WebSocket',
       // Run loop
-      "queueMicrotask",
-      "requestAnimationFrame",
-      "cancelAnimationFrame",
-      "setTimeout",
-      "clearTimeout",
-      "setImmediate",
-      "clearImmediate",
-      "setInterval",
-      "clearInterval",
+      'queueMicrotask',
+      'requestAnimationFrame',
+      'cancelAnimationFrame',
+      'setTimeout',
+      'clearTimeout',
+      'setImmediate',
+      'clearImmediate',
+      'setInterval',
+      'clearInterval',
       // Hermes
-      "HermesInternal",
+      'HermesInternal',
       // Worklets
-      "_WORKLET"
+      '_WORKLET',
     ];
     exports2.outsideBindingsToCaptureFromGlobalScope = /* @__PURE__ */ new Set([
       'ReanimatedError',
@@ -739,26 +739,13 @@ var require_closure = __commonJS({
       const libraryBindingsToImport = /* @__PURE__ */ new Set();
       const relativeBindingsToImport = /* @__PURE__ */ new Set();
       let recrawled = false;
-      funPath.traverse({
-        "TSType|TSTypeAliasDeclaration|TSInterfaceDeclaration"(typePath) {
-          typePath.skip();
-        },
-        ReferencedIdentifier(idPath) {
-          if (idPath.isJSXIdentifier()) {
-            return;
-          }
-          const name = idPath.node.name;
-          if (capturedNames.has(name)) {
-            return;
-          }
-          let binding = idPath.scope.getBinding(name);
-          if (!binding && !recrawled) {
-            recrawled = true;
-            idPath.scope.crawl();
-            binding = idPath.scope.getBinding(name);
-          }
-          if (!binding) {
-            if (state.opts.strictGlobal || globals_12.globals.has(name)) {
+      funPath.traverse(
+        {
+          'TSType|TSTypeAliasDeclaration|TSInterfaceDeclaration'(typePath) {
+            typePath.skip();
+          },
+          ReferencedIdentifier(idPath) {
+            if (idPath.isJSXIdentifier()) {
               return;
             }
             const name = idPath.node.name;
@@ -772,7 +759,7 @@ var require_closure = __commonJS({
               binding = idPath.scope.getBinding(name);
             }
             if (!binding) {
-              if (globals_12.globals.has(name)) {
+              if (state.opts.strictGlobal || globals_12.globals.has(name)) {
                 return;
               }
               capturedNames.add(name);
@@ -845,17 +832,30 @@ var require_closure = __commonJS({
       return imported.path.parentPath.node.source.value.startsWith('.');
     }
     function isAllowedForRelativeImports(filename, workletizableModules) {
-      return !!filename && (alwaysAllowed.some((module3) => filename.includes(module3)) || !!(workletizableModules === null || workletizableModules === void 0 ? void 0 : workletizableModules.some((module3) => filename.includes(module3))));
+      return (
+        !!filename &&
+        (alwaysAllowed.some((module3) => filename.includes(module3)) ||
+          !!(workletizableModules === null || workletizableModules === void 0
+            ? void 0
+            : workletizableModules.some((module3) =>
+                filename.includes(module3)
+              )))
+      );
     }
     function isWorkletizableModule(source, workletizableModules) {
-      return alwaysAllowed.some((module3) => source.startsWith(module3)) || !!(workletizableModules === null || workletizableModules === void 0 ? void 0 : workletizableModules.some((module3) => source.startsWith(module3)));
+      return (
+        alwaysAllowed.some((module3) => source.startsWith(module3)) ||
+        !!(workletizableModules === null || workletizableModules === void 0
+          ? void 0
+          : workletizableModules.some((module3) => source.startsWith(module3)))
+      );
     }
     var alwaysAllowed = [
-      "react-native-worklets",
-      "react-native/Libraries/Core/setUpXHR"
+      'react-native-worklets',
+      'react-native/Libraries/Core/setUpXHR',
       // for networking
     ];
-  }
+  },
 });
 
 // lib/generate.js
@@ -1550,15 +1550,38 @@ var require_workletFactory = __commonJS({
         );
       }
       if (!(0, utils_1.isRelease)()) {
-        statements.unshift((0, types_12.variableDeclaration)("const", [
-          (0, types_12.variableDeclarator)((0, types_12.identifier)("_e"), (0, types_12.arrayExpression)([
-            (0, types_12.newExpression)((0, types_12.memberExpression)((0, types_12.identifier)("global"), (0, types_12.identifier)("Error")), []),
-            (0, types_12.numericLiteral)(lineOffset),
-            (0, types_12.numericLiteral)(-27)
-            // the placement of opening bracket after Exception in line that defined '_e' variable
-          ]))
-        ]));
-        statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__stackDetails"), false), (0, types_12.identifier)("_e"))));
+        statements.unshift(
+          (0, types_12.variableDeclaration)('const', [
+            (0, types_12.variableDeclarator)(
+              (0, types_12.identifier)('_e'),
+              (0, types_12.arrayExpression)([
+                (0, types_12.newExpression)(
+                  (0, types_12.memberExpression)(
+                    (0, types_12.identifier)('global'),
+                    (0, types_12.identifier)('Error')
+                  ),
+                  []
+                ),
+                (0, types_12.numericLiteral)(lineOffset),
+                (0, types_12.numericLiteral)(-27),
+                // the placement of opening bracket after Exception in line that defined '_e' variable
+              ])
+            ),
+          ])
+        );
+        statements.push(
+          (0, types_12.expressionStatement)(
+            (0, types_12.assignmentExpression)(
+              '=',
+              (0, types_12.memberExpression)(
+                (0, types_12.identifier)(reactName),
+                (0, types_12.identifier)('__stackDetails'),
+                false
+              ),
+              (0, types_12.identifier)('_e')
+            )
+          )
+        );
       }
       statements.push(
         (0, types_12.returnStatement)((0, types_12.identifier)(reactName))
@@ -1762,13 +1785,17 @@ var require_workletSubstitution = __commonJS({
       return true;
     }
     function processWorklet(path, state) {
-      path.traverse({
-        // @ts-expect-error TypeScript doesn't like this syntax here.
-        [types_2.WorkletizableFunction](subPath, passedState) {
-          processIfWithWorkletDirective(subPath, passedState);
-        }
-      }, state);
-      const workletFactoryCall = (0, workletFactoryCall_1.makeWorkletFactoryCall)(path, state);
+      path.traverse(
+        {
+          // @ts-expect-error TypeScript doesn't like this syntax here.
+          [types_2.WorkletizableFunction](subPath, passedState) {
+            processIfWithWorkletDirective(subPath, passedState);
+          },
+        },
+        state
+      );
+      const workletFactoryCall = (0,
+      workletFactoryCall_1.makeWorkletFactoryCall)(path, state);
       substituteWorkletWithWorkletFactoryCall(path, workletFactoryCall);
       path.scope.getProgramParent().crawl();
     }
@@ -1849,7 +1876,7 @@ var require_objectWorklets = __commonJS({
         if (property.isObjectMethod()) {
           (0, workletSubstitution_12.processWorklet)(property, state);
         } else if (property.isObjectProperty()) {
-          const value = property.get("value");
+          const value = property.get('value');
           tryProcessingNode(
             value,
             state,
@@ -1891,50 +1918,54 @@ var require_autoworkletization = __commonJS({
       ),
     ]);
     var reanimatedFunctionHooks = /* @__PURE__ */ new Set([
-      "useFrameCallback",
-      "useAnimatedStyle",
-      "useAnimatedProps",
-      "createAnimatedPropAdapter",
-      "useDerivedValue",
-      "useAnimatedScrollHandler",
-      "useAnimatedReaction",
+      'useFrameCallback',
+      'useAnimatedStyle',
+      'useAnimatedProps',
+      'createAnimatedPropAdapter',
+      'useDerivedValue',
+      'useAnimatedScrollHandler',
+      'useAnimatedReaction',
       // animations' callbacks
-      "withTiming",
-      "withSpring",
-      "withDecay",
-      "withRepeat",
+      'withTiming',
+      'withSpring',
+      'withDecay',
+      'withRepeat',
       // scheduling functions
-      "runOnUI",
-      "executeOnUIRuntimeSync",
-      "scheduleOnUI",
-      "runOnUISync",
-      "runOnUIAsync",
-      "runOnRuntime",
-      "runOnRuntimeAsync",
-      "scheduleOnRuntime"
+      'runOnUI',
+      'executeOnUIRuntimeSync',
+      'scheduleOnUI',
+      'runOnUISync',
+      'runOnUIAsync',
+      'runOnRuntime',
+      'runOnRuntimeAsync',
+      'scheduleOnRuntime',
     ]);
     var reanimatedFunctionArgsToWorkletize = new Map([
-      ["useFrameCallback", [0]],
-      ["useAnimatedStyle", [0]],
-      ["useAnimatedProps", [0]],
-      ["createAnimatedPropAdapter", [0]],
-      ["useDerivedValue", [0]],
-      ["useAnimatedScrollHandler", [0]],
-      ["useAnimatedReaction", [0, 1]],
-      ["withTiming", [2]],
-      ["withSpring", [2]],
-      ["withDecay", [1]],
-      ["withRepeat", [3]],
-      ["runOnUI", [0]],
-      ["executeOnUIRuntimeSync", [0]],
-      ["scheduleOnUI", [0]],
-      ["runOnUISync", [0]],
-      ["runOnUIAsync", [0]],
-      ["runOnRuntime", [1]],
-      ["runOnRuntimeAsync", [1]],
-      ["scheduleOnRuntime", [1]],
-      ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerObjectHooks).map((name) => [name, [0]]),
-      ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerBuilderMethods).map((name) => [name, [0]])
+      ['useFrameCallback', [0]],
+      ['useAnimatedStyle', [0]],
+      ['useAnimatedProps', [0]],
+      ['createAnimatedPropAdapter', [0]],
+      ['useDerivedValue', [0]],
+      ['useAnimatedScrollHandler', [0]],
+      ['useAnimatedReaction', [0, 1]],
+      ['withTiming', [2]],
+      ['withSpring', [2]],
+      ['withDecay', [1]],
+      ['withRepeat', [3]],
+      ['runOnUI', [0]],
+      ['executeOnUIRuntimeSync', [0]],
+      ['scheduleOnUI', [0]],
+      ['runOnUISync', [0]],
+      ['runOnUIAsync', [0]],
+      ['runOnRuntime', [1]],
+      ['runOnRuntimeAsync', [1]],
+      ['scheduleOnRuntime', [1]],
+      ...Array.from(
+        gestureHandlerAutoworkletization_1.gestureHandlerObjectHooks
+      ).map((name) => [name, [0]]),
+      ...Array.from(
+        gestureHandlerAutoworkletization_1.gestureHandlerBuilderMethods
+      ).map((name) => [name, [0]]),
     ]);
     function processIfAutoworkletizableCallback(path, state) {
       if (
@@ -2026,9 +2057,14 @@ var require_bundleMode = __commonJS({
       if (!left.isMemberExpression()) {
         return;
       }
-      const object = left.get("object");
-      const property = left.get("property");
-      if (!object.isIdentifier() || object.node.name !== "globalThis" || !property.isIdentifier() || property.node.name !== "_WORKLETS_BUNDLE_MODE_ENABLED") {
+      const object = left.get('object');
+      const property = left.get('property');
+      if (
+        !object.isIdentifier() ||
+        object.node.name !== 'globalThis' ||
+        !property.isIdentifier() ||
+        property.node.name !== '_WORKLETS_BUNDLE_MODE_ENABLED'
+      ) {
         return;
       }
       const right = expressionPath.get('right');
@@ -2277,7 +2313,11 @@ var require_class = __commonJS({
       sorted.push(current);
       stack.delete(current.name);
     }
-    function isOutsideDependency(identifierPath, bindingIdentifiers, functionPath) {
+    function isOutsideDependency(
+      identifierPath,
+      bindingIdentifiers,
+      functionPath
+    ) {
       return (
         // We don't care about identifiers that were just declared.
         identifierPath.isReferencedIdentifier() && // We don't care about identifiers that are bound in the scope.
@@ -2591,8 +2631,11 @@ var require_inlineStylesWarning = __commonJS({
       );
     }
     function processPropertyValueForInlineStylesWarning(path) {
-      if (path.isMemberExpression() && (0, types_12.isIdentifier)(path.node.property)) {
-        if (!path.node.computed && path.node.property.name === "value") {
+      if (
+        path.isMemberExpression() &&
+        (0, types_12.isIdentifier)(path.node.property)
+      ) {
+        if (!path.node.computed && path.node.property.name === 'value') {
           path.replaceWith(generateInlineStylesWarning(path));
         }
       }
