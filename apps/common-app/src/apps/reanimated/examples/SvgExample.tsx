@@ -26,7 +26,7 @@ export default function SvgExample() {
   });
 
   const [, setCount] = useState(0);
-  r;
+
   useEffect(() => {
     const id = setInterval(() => setCount((c) => c + 1), 1000);
     return () => clearInterval(id);
