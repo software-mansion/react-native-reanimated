@@ -56,6 +56,8 @@ export default function AnimatedTextExample() {
 
   const [show, setShow] = useState(false);
 
+  const [, setCount] = useState(0);
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Animated text is an inline prop */}
@@ -166,6 +168,13 @@ export default function AnimatedTextExample() {
         <Button
           title="Render non-empty Animated.Text with animated text (throws an error)"
           onPress={() => setShow(true)}
+        />
+      </View>
+
+      <View style={styles.row}>
+        <Button
+          title="Force re-render"
+          onPress={() => setCount((c) => c + 1)}
         />
       </View>
     </ScrollView>
