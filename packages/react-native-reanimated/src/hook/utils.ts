@@ -2,7 +2,7 @@
 import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction } from 'react-native-worklets';
 
-import { IS_WEB, ReanimatedError } from '../common';
+import { IS_WEB, logger, ReanimatedError } from '../common';
 import type { DependencyList } from './commonTypes';
 
 // Builds one big hash from multiple worklets' hashes.
@@ -21,7 +21,7 @@ export function buildWorkletsHash<Args extends unknown[], ReturnValue>(
 
 // Builds dependencies array for useEvent handlers.
 export function buildDependencies(
-  dependencies: DependencyList,
+  dependencies: DependencyList | undefined,
   handlers: Record<string, WorkletFunction>
 ) {
   const result = dependencies ?? [];
@@ -56,9 +56,10 @@ export function buildDependencies(
 
   // On web, non-worklets are allowed only when dependencies are provided
   if (!dependencies) {
-    throw new ReanimatedError(
-      `Passed handlers that are not worklets. Please provide a dependency array to use non-worklet handlers or pass only worklet functions. Handlers "${handlerNames}" are not worklets.`
+    logger.warn(
+      `Non-worklet handlers ("${handlerNames}") were passed without a dependency array. This will cause the hook to update on every render. Please provide a dependency array or use only worklet functions instead.`
     );
+    return undefined;
   }
 
   return result;

@@ -88,10 +88,8 @@ export function useHandler<
     handlers as Record<string, WorkletFunction>
   );
 
-  const doDependenciesDiffer = !areDependenciesEqual(
-    dependencies,
-    savedDependencies
-  );
+  const doDependenciesDiffer =
+    !areDependenciesEqual(dependencies, savedDependencies) || !dependencies;
   initRef.current.savedDependencies = dependencies;
   const useWeb = IS_WEB || IS_JEST;
 

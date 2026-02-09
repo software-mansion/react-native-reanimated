@@ -1,12 +1,21 @@
 'use strict';
 import { renderHook } from '@testing-library/react-native';
 
+import { logger } from '../../common';
 import { worklet } from '../../jestUtils';
 import { useHandler } from '../useHandler';
-import {
-  createUseHandlerError,
-  renderHookWithHandlers,
-} from './useHandlerHelpers';
+import { renderHookWithHandlers } from './useHandlerHelpers';
+
+jest.mock('../../common', () => {
+  const originalModule = jest.requireActual('../../common');
+  return {
+    ...originalModule,
+    logger: {
+      warn: jest.fn(),
+      error: jest.fn(),
+    },
+  };
+});
 
 describe('useHandler (web)', () => {
   describe('valid cases', () => {
@@ -258,19 +267,46 @@ describe('useHandler (web)', () => {
     });
   });
 
-  describe('invalid cases (web requires dependencies for non-worklets)', () => {
-    test('should throw error when non-worklet handler is passed without dependencies', () => {
+  describe('non-worklets without dependencies (web warnings and re-renders)', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    test('should warn and indicate dependencies differ when non-worklet handler is passed without dependencies', () => {
       const regularHandler = jest.fn();
       const handlers = {
         onPress: regularHandler,
       };
 
-      expect(() => {
-        renderHook(() => useHandler(handlers));
-      }).toThrow(createUseHandlerError('onPress', true));
+      const { result } = renderHook(() => useHandler(handlers));
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Non-worklet handlers ("onPress") were passed without a dependency array. This will cause the hook to update on every render. Please provide a dependency array or use only worklet functions instead.'
+      );
+      expect(result.current.doDependenciesDiffer).toBe(true);
     });
 
-    test('should throw error when multiple non-worklet handlers are passed without dependencies', () => {
+    test('should warn and indicate dependencies differ on every render', () => {
+      const regularHandler = jest.fn();
+      const handlers = {
+        onPress: regularHandler,
+      };
+
+      const { result, rerender } = renderHookWithHandlers(handlers);
+
+      expect(result.current.doDependenciesDiffer).toBe(true);
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+
+      rerender({ handlers });
+      expect(result.current.doDependenciesDiffer).toBe(true);
+      expect(logger.warn).toHaveBeenCalledTimes(2);
+
+      rerender({ handlers });
+      expect(result.current.doDependenciesDiffer).toBe(true);
+      expect(logger.warn).toHaveBeenCalledTimes(3);
+    });
+
+    test('should warn when multiple non-worklet handlers are passed without dependencies', () => {
       const regularHandler1 = jest.fn();
       const regularHandler2 = jest.fn();
       const handlers = {
@@ -278,12 +314,15 @@ describe('useHandler (web)', () => {
         onPress: regularHandler2,
       };
 
-      expect(() => {
-        renderHook(() => useHandler(handlers));
-      }).toThrow(createUseHandlerError(['onScroll', 'onPress'], true));
+      const { result } = renderHook(() => useHandler(handlers));
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Non-worklet handlers ("onScroll, onPress") were passed without a dependency array. This will cause the hook to update on every render. Please provide a dependency array or use only worklet functions instead.'
+      );
+      expect(result.current.doDependenciesDiffer).toBe(true);
     });
 
-    test('should throw error on re-render when handlers change from valid to invalid', () => {
+    test('should warn and indicate dependencies differ on re-render when handlers change from valid to ones without dependencies', () => {
       const workletHandler = worklet();
       const regularHandler = jest.fn();
       const validHandlers = {
@@ -294,24 +333,37 @@ describe('useHandler (web)', () => {
         onPress: regularHandler,
       };
 
-      const { rerender } = renderHookWithHandlers(validHandlers);
+      const { result, rerender } = renderHookWithHandlers(validHandlers);
 
-      expect(() => {
-        rerender({ handlers: invalidHandlers });
-      }).toThrow(createUseHandlerError('onPress', true));
+      expect(result.current.doDependenciesDiffer).toBe(true);
+      expect(logger.warn).not.toHaveBeenCalled();
+
+      rerender({ handlers: invalidHandlers });
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Non-worklet handlers ("onPress") were passed without a dependency array. This will cause the hook to update on every render. Please provide a dependency array or use only worklet functions instead.'
+      );
+      expect(result.current.doDependenciesDiffer).toBe(true);
     });
 
-    test('should NOT throw error when empty array is provided as dependencies', () => {
+    test('should NOT warn or indicate frequent change when empty array is provided as dependencies', () => {
       const regularHandler = jest.fn();
       const handlers = {
         onPress: regularHandler,
       };
       const dependencies: unknown[] = [];
 
-      // Empty array is still valid dependencies, should not throw
-      expect(() => {
-        renderHook(() => useHandler(handlers, dependencies));
-      }).not.toThrow();
+      const { result, rerender } = renderHookWithHandlers(
+        handlers,
+        dependencies
+      );
+
+      expect(logger.warn).not.toHaveBeenCalled();
+      // On first render, savedDependencies is [], so it matches and doDependenciesDiffer is false
+      expect(result.current.doDependenciesDiffer).toBe(false);
+
+      rerender({ handlers, deps: dependencies });
+      expect(logger.warn).not.toHaveBeenCalled();
+      expect(result.current.doDependenciesDiffer).toBe(false);
     });
   });
 });

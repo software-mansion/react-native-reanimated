@@ -72,7 +72,7 @@ export function useComposedEventHandler<
       }
     });
 
-  const { doDependenciesDiffer } = useHandler(workletsRecord);
+  const { doDependenciesDiffer } = useHandler(workletsRecord, handlers);
 
   return useEvent<Event, Context>(
     (event) => {
