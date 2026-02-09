@@ -35,19 +35,22 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => ios_min_version, :tvos => "9.0", :osx => "10.14", :visionos => "1.0" }
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
-  s.subspec "worklets" do |ss|
-    ss.source_files = "Common/cpp/worklets/**/*.{cpp,h}"
-    ss.header_dir = "worklets"
-    ss.header_mappings_dir = "Common/cpp/worklets"
+  s.module_map = "module.modulemap"
+  s.header_dir = "worklets"
 
-    ss.subspec "apple" do |sss|
-      # Please be careful with the snakes.
-      # 🐍🐍🐍
-      # Thank you for your understanding.
-      sss.source_files = "apple/worklets/**/*.{mm,h,m}"
-      sss.header_dir = "worklets"
-      sss.header_mappings_dir = "apple/worklets"
-    end
+  s.subspec "common" do |ss|
+    # Please be careful with the snakes.
+    # 🐍🐍🐍
+    # Thank you for your understanding.
+    ss.source_files = "Common/cpp/worklets/**/*.{cpp,h}"
+    ss.public_header_files = "Common/cpp/worklets/**/*.h"
+    ss.header_mappings_dir = "Common/cpp/worklets"
+  end
+
+  s.subspec "apple" do |ss|
+    ss.source_files = "apple/worklets/**/*.{mm,h,m}"
+    ss.public_header_files = "apple/worklets/**/*.h"
+    ss.header_mappings_dir = "apple/worklets"
   end
 
   # Use install_modules_dependencies helper to install the dependencies.
@@ -81,6 +84,7 @@ Pod::Spec.new do |s|
   }
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => [
+      '$(inherited)',
       '"$(PODS_ROOT)/boost"',
       '"$(PODS_ROOT)/boost-for-react-native"',
       '"$(PODS_ROOT)/glog"',
@@ -88,8 +92,7 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/Headers/Public/React-hermes"',
       '"$(PODS_ROOT)/Headers/Public/hermes-engine"',
       "\"$(PODS_ROOT)/#{$worklets_config[:react_native_common_dir]}\"",
-      "\"$(PODS_ROOT)/#{$worklets_config[:dynamic_frameworks_worklets_dir]}/apple\"",
-      "\"$(PODS_ROOT)/#{$worklets_config[:dynamic_frameworks_worklets_dir]}/Common/cpp\"",
+
     ].join(' '),
   }
   

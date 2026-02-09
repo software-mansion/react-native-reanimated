@@ -1,0 +1,157 @@
+module reanimated {
+  module "AnimatedSensor" {
+    header "reanimated/AnimatedSensor/AnimatedSensorModule.h"
+    export *
+  }
+  module "CSS" {
+    header "reanimated/CSS/common/definitions.h"
+    header "reanimated/CSS/common/filters/FilterOp.h"
+    header "reanimated/CSS/common/transforms/Quaternion.h"
+    header "reanimated/CSS/common/transforms/TransformMatrix.h"
+    header "reanimated/CSS/common/transforms/TransformMatrix2D.h"
+    header "reanimated/CSS/common/transforms/TransformMatrix3D.h"
+    header "reanimated/CSS/common/transforms/TransformOp.h"
+    header "reanimated/CSS/common/transforms/vectors.h"
+    header "reanimated/CSS/common/values/complex/CSSBoxShadow.h"
+    header "reanimated/CSS/common/values/complex/CSSDropShadow.h"
+    header "reanimated/CSS/common/values/CSSAngle.h"
+    header "reanimated/CSS/common/values/CSSBoolean.h"
+    header "reanimated/CSS/common/values/CSSColor.h"
+    header "reanimated/CSS/common/values/CSSDiscreteArray.h"
+    header "reanimated/CSS/common/values/CSSKeyword.h"
+    header "reanimated/CSS/common/values/CSSLength.h"
+    header "reanimated/CSS/common/values/CSSNumber.h"
+    header "reanimated/CSS/common/values/CSSValue.h"
+    header "reanimated/CSS/common/values/CSSValueVariant.h"
+    header "reanimated/CSS/configs/common.h"
+    header "reanimated/CSS/configs/CSSAnimationConfig.h"
+    header "reanimated/CSS/configs/CSSKeyframesConfig.h"
+    header "reanimated/CSS/configs/CSSTransitionConfig.h"
+    header "reanimated/CSS/core/CSSAnimation.h"
+    header "reanimated/CSS/core/CSSTransition.h"
+    header "reanimated/CSS/easing/cubicBezier.h"
+    header "reanimated/CSS/easing/EasingFunctions.h"
+    header "reanimated/CSS/easing/linear.h"
+    header "reanimated/CSS/easing/steps.h"
+    header "reanimated/CSS/interpolation/configs.h"
+    header "reanimated/CSS/interpolation/filters/FilterOperation.h"
+    header "reanimated/CSS/interpolation/filters/FilterOperationInterpolator.h"
+    header "reanimated/CSS/interpolation/filters/FilterStyleInterpolator.h"
+    header "reanimated/CSS/interpolation/filters/operations/blur.h"
+    header "reanimated/CSS/interpolation/filters/operations/brightness.h"
+    header "reanimated/CSS/interpolation/filters/operations/contrast.h"
+    header "reanimated/CSS/interpolation/filters/operations/dropShadow.h"
+    header "reanimated/CSS/interpolation/filters/operations/grayscale.h"
+    header "reanimated/CSS/interpolation/filters/operations/hueRotate.h"
+    header "reanimated/CSS/interpolation/filters/operations/invert.h"
+    header "reanimated/CSS/interpolation/filters/operations/opacity.h"
+    header "reanimated/CSS/interpolation/filters/operations/saturate.h"
+    header "reanimated/CSS/interpolation/filters/operations/sepia.h"
+    header "reanimated/CSS/interpolation/groups/ArrayPropertiesInterpolator.h"
+    header "reanimated/CSS/interpolation/groups/GroupPropertiesInterpolator.h"
+    header "reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h"
+    header "reanimated/CSS/interpolation/InterpolatorFactory.h"
+    header "reanimated/CSS/interpolation/operations/OperationsStyleInterpolator.h"
+    header "reanimated/CSS/interpolation/operations/StyleOperation.h"
+    header "reanimated/CSS/interpolation/operations/StyleOperationInterpolator.h"
+    header "reanimated/CSS/interpolation/PropertyInterpolator.h"
+    header "reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h"
+    header "reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h"
+    header "reanimated/CSS/interpolation/transforms/operations/matrix.h"
+    header "reanimated/CSS/interpolation/transforms/operations/perspective.h"
+    header "reanimated/CSS/interpolation/transforms/operations/rotate.h"
+    header "reanimated/CSS/interpolation/transforms/operations/scale.h"
+    header "reanimated/CSS/interpolation/transforms/operations/skew.h"
+    header "reanimated/CSS/interpolation/transforms/operations/translate.h"
+    header "reanimated/CSS/interpolation/transforms/TransformOperation.h"
+    header "reanimated/CSS/interpolation/transforms/TransformOperationInterpolator.h"
+    header "reanimated/CSS/interpolation/transforms/TransformsStyleInterpolator.h"
+    header "reanimated/CSS/interpolation/values/ResolvableValueInterpolator.h"
+    header "reanimated/CSS/interpolation/values/SimpleValueInterpolator.h"
+    header "reanimated/CSS/interpolation/values/ValueInterpolator.h"
+    header "reanimated/CSS/InterpolatorRegistry.h"
+    header "reanimated/CSS/misc/ViewStylesRepository.h"
+    header "reanimated/CSS/progress/AnimationProgressProvider.h"
+    header "reanimated/CSS/progress/KeyframeProgressProvider.h"
+    header "reanimated/CSS/progress/RawProgressProvider.h"
+    header "reanimated/CSS/progress/TransitionProgressProvider.h"
+    header "reanimated/CSS/registries/CSSAnimationsRegistry.h"
+    header "reanimated/CSS/registries/CSSKeyframesRegistry.h"
+    header "reanimated/CSS/registries/CSSTransitionsRegistry.h"
+    header "reanimated/CSS/registries/StaticPropsRegistry.h"
+    header "reanimated/CSS/svg/values/SVGBrush.h"
+    header "reanimated/CSS/svg/values/SVGLength.h"
+    header "reanimated/CSS/svg/values/SVGPath.h"
+    header "reanimated/CSS/svg/values/SVGStrokeDashArray.h"
+    header "reanimated/CSS/utils/algorithms.h"
+    header "reanimated/CSS/utils/DelayedItemsManager.h"
+    header "reanimated/CSS/utils/interpolators.h"
+    header "reanimated/CSS/utils/props.h"
+    export *
+  }
+  module "Fabric" {
+    header "reanimated/Fabric/ReanimatedCommitHook.h"
+    header "reanimated/Fabric/ReanimatedCommitShadowNode.h"
+    header "reanimated/Fabric/ReanimatedMountHook.h"
+    header "reanimated/Fabric/ShadowTreeCloner.h"
+    header "reanimated/Fabric/updates/AnimatedPropsRegistry.h"
+    header "reanimated/Fabric/updates/UpdatesRegistry.h"
+    header "reanimated/Fabric/updates/UpdatesRegistryManager.h"
+    export *
+  }
+  module "LayoutAnimations" {
+    header "reanimated/LayoutAnimations/LayoutAnimationsManager.h"
+    header "reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h"
+    header "reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h"
+    header "reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h"
+    header "reanimated/LayoutAnimations/LayoutAnimationsUtils.h"
+    header "reanimated/LayoutAnimations/LayoutAnimationType.h"
+    header "reanimated/LayoutAnimations/PropsDiffer.h"
+    export *
+  }
+  module "NativeModules" {
+    header "reanimated/NativeModules/PropValueProcessor.h"
+    header "reanimated/NativeModules/ReanimatedModuleProxy.h"
+    header "reanimated/NativeModules/ReanimatedModuleProxySpec.h"
+    export *
+  }
+  module "RuntimeDecorators" {
+    header "reanimated/RuntimeDecorators/RNRuntimeDecorator.h"
+    header "reanimated/RuntimeDecorators/UIRuntimeDecorator.h"
+    export *
+  }
+  module "Tools" {
+    header "reanimated/Tools/FeatureFlags.h"
+    header "reanimated/Tools/PlatformDepMethodsHolder.h"
+    header "reanimated/Tools/ReanimatedSystraceSection.h"
+    header "reanimated/Tools/ReanimatedVersion.h"
+    export *
+  }
+  module "apple" {
+    module "keyboardObserver" {
+      header "reanimated/keyboardObserver/REAKeyboardEventObserver.h"
+      header "reanimated/keyboardObserver/REAKeyboardEventObserver.mm"
+      export *
+    }
+    module "native" {
+      header "reanimated/native/NativeProxy.h"
+      header "reanimated/native/NativeProxy.mm"
+      header "reanimated/native/PlatformDepMethodsHolderImpl.h"
+      header "reanimated/native/PlatformDepMethodsHolderImpl.mm"
+      header "reanimated/native/REAJSIUtils.h"
+      header "reanimated/native/SetGestureState.h"
+      header "reanimated/native/SetGestureState.mm"
+      export *
+    }
+    module "sensor" {
+      header "reanimated/sensor/ReanimatedSensor.h"
+      header "reanimated/sensor/ReanimatedSensor.m"
+      header "reanimated/sensor/ReanimatedSensorContainer.h"
+      header "reanimated/sensor/ReanimatedSensorContainer.m"
+      header "reanimated/sensor/ReanimatedSensorType.h"
+      export *
+    }
+    export *
+  }
+  export *
+}

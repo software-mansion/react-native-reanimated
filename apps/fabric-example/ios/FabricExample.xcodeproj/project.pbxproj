@@ -15,9 +15,9 @@
 		36CFC86374C74A93AFC6F37B /* Poppins-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 40201E86F4154AF6BA7D9D68 /* Poppins-ExtraLight.ttf */; };
 		3ED29A9583024AB287A348E3 /* Poppins-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5EE828465DFA40CCAD4C2BBB /* Poppins-Light.ttf */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
-		7672FDCE44F245480142DDD7 /* libPods-FabricExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 28C28DD379A4F63159381776 /* libPods-FabricExample.a */; };
 		7E23737D7AB942FC9F2DB5BC /* Poppins-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F48B9C5F2C7F46D4AF205A72 /* Poppins-Black.ttf */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		940F99C92AFC89EEE9DF7C54 /* Pods_FabricExample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D1B67D1E30393858960E0F1E /* Pods_FabricExample.framework */; };
 		BD279FF3747F4A548A65D128 /* Poppins-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E7907DF98A294F2D9672CB3E /* Poppins-Regular.ttf */; };
 		BDBBD9F50A6744649FFA1379 /* Poppins-Thin.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 849F4FC4D7AC4BA291D6C4B4 /* Poppins-Thin.ttf */; };
 		D509140DC52141079A0DB2B6 /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = C06453E54CB742B58CB6EFDC /* OFL.txt */; };
@@ -33,7 +33,6 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = FabricExample/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = FabricExample/Info.plist; sourceTree = "<group>"; };
 		192DDE7394C0421AABAD1E39 /* Poppins-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-ExtraBold.ttf"; path = "../assets/fonts/Poppins/Poppins-ExtraBold.ttf"; sourceTree = "<group>"; };
-		28C28DD379A4F63159381776 /* libPods-FabricExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FabricExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2E32E1E9D61FF701E74576F1 /* Pods-FabricExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FabricExample.release.xcconfig"; path = "Target Support Files/Pods-FabricExample/Pods-FabricExample.release.xcconfig"; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-FabricExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FabricExample.debug.xcconfig"; path = "Target Support Files/Pods-FabricExample/Pods-FabricExample.debug.xcconfig"; sourceTree = "<group>"; };
 		40201E86F4154AF6BA7D9D68 /* Poppins-ExtraLight.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-ExtraLight.ttf"; path = "../assets/fonts/Poppins/Poppins-ExtraLight.ttf"; sourceTree = "<group>"; };
@@ -46,6 +45,7 @@
 		B0F6A560FF814A07A5056D5C /* Poppins-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Medium.ttf"; path = "../assets/fonts/Poppins/Poppins-Medium.ttf"; sourceTree = "<group>"; };
 		C06453E54CB742B58CB6EFDC /* OFL.txt */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = OFL.txt; path = ../assets/fonts/Poppins/OFL.txt; sourceTree = "<group>"; };
 		C200C1012D33B96D00F25439 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = FabricExample/AppDelegate.swift; sourceTree = "<group>"; };
+		D1B67D1E30393858960E0F1E /* Pods_FabricExample.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_FabricExample.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E7907DF98A294F2D9672CB3E /* Poppins-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Regular.ttf"; path = "../assets/fonts/Poppins/Poppins-Regular.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F48B9C5F2C7F46D4AF205A72 /* Poppins-Black.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Black.ttf"; path = "../assets/fonts/Poppins/Poppins-Black.ttf"; sourceTree = "<group>"; };
@@ -57,7 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7672FDCE44F245480142DDD7 /* libPods-FabricExample.a in Frameworks */,
+				940F99C92AFC89EEE9DF7C54 /* Pods_FabricExample.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -81,7 +81,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				28C28DD379A4F63159381776 /* libPods-FabricExample.a */,
+				D1B67D1E30393858960E0F1E /* Pods_FabricExample.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -436,6 +436,16 @@
 					"${PODS_CONFIGURATION_BUILD_DIR}/React-NativeModulesApple/React_NativeModulesApple.framework/Headers",
 					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers",
 					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers/react/renderer/graphics/platform/ios",
+					"${PODS_ROOT}/ReactCommon",
+					"${PODS_ROOT}/ReactCommon/react/nativemodule/core",
+					"${PODS_ROOT}/React-runtimeexecutor",
+					"${PODS_ROOT}/React-runtimeexecutor/platform/ios",
+					"${PODS_ROOT}/ReactCommon-Samples",
+					"${PODS_ROOT}/ReactCommon-Samples/platform/ios",
+					"${PODS_ROOT}/React-Fabric/react/renderer/components/view/platform/cxx",
+					"${PODS_ROOT}/React-NativeModulesApple",
+					"${PODS_ROOT}/React-graphics",
+					"${PODS_ROOT}/React-graphics/react/renderer/graphics/platform/ios",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
 				LD = "";
@@ -530,6 +540,16 @@
 					"${PODS_CONFIGURATION_BUILD_DIR}/React-NativeModulesApple/React_NativeModulesApple.framework/Headers",
 					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers",
 					"${PODS_CONFIGURATION_BUILD_DIR}/React-graphics/React_graphics.framework/Headers/react/renderer/graphics/platform/ios",
+					"${PODS_ROOT}/ReactCommon",
+					"${PODS_ROOT}/ReactCommon/react/nativemodule/core",
+					"${PODS_ROOT}/React-runtimeexecutor",
+					"${PODS_ROOT}/React-runtimeexecutor/platform/ios",
+					"${PODS_ROOT}/ReactCommon-Samples",
+					"${PODS_ROOT}/ReactCommon-Samples/platform/ios",
+					"${PODS_ROOT}/React-Fabric/react/renderer/components/view/platform/cxx",
+					"${PODS_ROOT}/React-NativeModulesApple",
+					"${PODS_ROOT}/React-graphics",
+					"${PODS_ROOT}/React-graphics/react/renderer/graphics/platform/ios",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
 				LD = "";

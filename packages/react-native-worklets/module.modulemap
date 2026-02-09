@@ -1,0 +1,75 @@
+module worklets {
+  module "AnimationFrameQueue" {
+    header "worklets/AnimationFrameQueue/AnimationFrameBatchinator.h"
+    export *
+  }
+  module "NativeModules" {
+    header "worklets/NativeModules/JSIWorkletsModuleProxy.h"
+    header "worklets/NativeModules/WorkletsModuleProxy.h"
+    export *
+  }
+  module "Registries" {
+    header "worklets/Registries/EventHandlerRegistry.h"
+    header "worklets/Registries/WorkletRuntimeRegistry.h"
+    export *
+  }
+  module "Resources" {
+    header "worklets/Resources/Unpackers.h"
+    export *
+  }
+  module "RunLoop" {
+    header "worklets/RunLoop/AsyncQueue.h"
+    header "worklets/RunLoop/AsyncQueueImpl.h"
+    header "worklets/RunLoop/EventLoop.h"
+    export *
+  }
+  module "SharedItems" {
+    header "worklets/SharedItems/MemoryManager.h"
+    header "worklets/SharedItems/Serializable.h"
+    header "worklets/SharedItems/SerializableFactory.h"
+    header "worklets/SharedItems/Synchronizable.h"
+    header "worklets/SharedItems/SynchronizableAccess.h"
+    export *
+  }
+  module "Tools" {
+    header "worklets/Tools/Defs.h"
+    header "worklets/Tools/FeatureFlags.h"
+    header "worklets/Tools/JSISerializer.h"
+    header "worklets/Tools/JSLogger.h"
+    header "worklets/Tools/JSScheduler.h"
+    header "worklets/Tools/PlatformLogger.h"
+    header "worklets/Tools/ScriptBuffer.h"
+    header "worklets/Tools/SingleInstanceChecker.h"
+    header "worklets/Tools/ThreadSafeQueue.h"
+    header "worklets/Tools/UIScheduler.h"
+    header "worklets/Tools/VersionUtils.h"
+    header "worklets/Tools/WorkletEventHandler.h"
+    header "worklets/Tools/WorkletsJSIUtils.h"
+    header "worklets/Tools/WorkletsSystraceSection.h"
+    header "worklets/Tools/WorkletsVersion.h"
+    export *
+  }
+  module "WorkletRuntime" {
+    header "worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h"
+    header "worklets/WorkletRuntime/RuntimeBindings.h"
+    header "worklets/WorkletRuntime/RuntimeData.h"
+    header "worklets/WorkletRuntime/RuntimeHolder.h"
+    header "worklets/WorkletRuntime/RuntimeKind.h"
+    header "worklets/WorkletRuntime/RuntimeManager.h"
+    header "worklets/WorkletRuntime/UIRuntimeDecorator.h"
+    header "worklets/WorkletRuntime/WorkletHermesRuntime.h"
+    header "worklets/WorkletRuntime/WorkletRuntime.h"
+    header "worklets/WorkletRuntime/WorkletRuntimeCollector.h"
+    header "worklets/WorkletRuntime/WorkletRuntimeDecorator.h"
+    export *
+  }
+  module "apple" {
+    module "Networking" {
+      header "worklets/Networking/WorkletsNetworking.h"
+      header "worklets/Networking/WorkletsNetworking.mm"
+      export *
+    }
+    export *
+  }
+  export *
+}
