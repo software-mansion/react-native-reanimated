@@ -20,7 +20,7 @@ void RNRuntimeDecorator::decorate(
   rnRuntime.global().setProperty(rnRuntime, "_WORKLET_RUNTIME", workletRuntimeValue);
 
 #ifndef NDEBUG
-  checkJSVersion(rnRuntime, reanimatedModuleProxy->getJSLogger());
+  checkJSVersion(rnRuntime);
 #endif // NDEBUG
 
 #ifdef IS_REANIMATED_EXAMPLE_APP
