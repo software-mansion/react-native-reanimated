@@ -55,7 +55,7 @@ export function buildDependencies(
   }
 
   // On web, non-worklets are allowed only when dependencies are provided
-  if (!dependencies) {
+  if (__DEV__ && !dependencies) {
     logger.warn(
       `Non-worklet handlers ("${handlerNames}") were passed without a dependency array. This will cause the hook to update on every render. Please provide a dependency array or use only worklet functions instead.`
     );
