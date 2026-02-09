@@ -14,7 +14,7 @@ def safeAppExtGet(prop, fallback) {
 
 def isNewArchitectureEnabled() {
     // In React Native 0.82+, users can no longer opt-out of the New Architecture.
-    if(getReactNativeMinorVersion() >= 82){
+    if (getReactNativeMinorVersion() >= 82) {
         return true
     }
 
@@ -53,6 +53,19 @@ def getReactNativeVersion() {
 def getReactNativeMinorVersion() {
     def reactNativeVersion = getReactNativeVersion()
     return reactNativeVersion.startsWith("0.0.0-") ? 1000 : reactNativeVersion.split("\\.")[1].toInteger()
+}
+
+def getHermesV1Enabled() {
+    // Even though `HERMES_V1_ENABLED` is now centralized
+    // in `react-native-flags.cmake` for React Native >= 0.84
+    // that CMake file depends on definitions provided
+    // in local `externalNativeBuild` configuration of the LIBRARY.
+    // I hope this is only a temporary workaround.
+    if (getReactNativeMinorVersion() >= 84) {
+        return safeAppExtGet("hermesV1Enabled", true)
+    } else {
+        return safeAppExtGet("hermesV1Enabled", false)
+    }
 }
 
 def getWorkletsVersion() {
@@ -112,7 +125,7 @@ def IS_REANIMATED_EXAMPLE_APP = safeAppExtGet("isReanimatedExampleApp", false)
 def BUNDLE_MODE_ENABLED = isFlagEnabled(featureFlags, "BUNDLE_MODE_ENABLED");
 def FETCH_PREVIEW_ENABLED = isFlagEnabled(featureFlags, "FETCH_PREVIEW_ENABLED");
 def WORKLETS_FEATURE_FLAGS = getStaticFeatureFlagsString(featureFlags)
-def HERMES_V1_ENABLED = safeAppExtGet("hermesV1Enabled", false)
+def HERMES_V1_ENABLED = getHermesV1Enabled()
 def WORKLETS_PROFILING = safeAppExtGet("enableWorkletsProfiling", false)
 
 // Set version for prefab
@@ -284,7 +297,7 @@ android {
             }
         }
     }
-    if(project != rootProject) {
+    if (project != rootProject) {
         kotlinOptions {
             jvmTarget = '17'
         }
