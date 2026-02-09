@@ -19,11 +19,11 @@
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
+#include <reanimated/Tools/SingleInstanceChecker.h>
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/Tools/JSScheduler.h>
-#include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
 
 #include <react/renderer/componentregistry/componentNameByReactViewName.h>
@@ -220,7 +220,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;
 
 #ifndef NDEBUG
-  worklets::SingleInstanceChecker<ReanimatedModuleProxy> singleInstanceChecker_;
+  SingleInstanceChecker<ReanimatedModuleProxy> singleInstanceChecker_;
 #endif // NDEBUG
 };
 
