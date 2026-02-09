@@ -28,6 +28,8 @@ function getEntryPoints() {
   return entryPoints;
 }
 
+const workletsDirPath = path.join('react-native-worklets', '.worklets');
+
 module.exports = {
   bundleModeMetroConfig: {
     serializer: {
@@ -44,9 +46,7 @@ module.exports = {
           if (idFileMap.has(moduleName)) {
             return idFileMap.get(moduleName);
           }
-          if (
-            moduleName.includes('react-native-worklets/__generatedWorklets/')
-          ) {
+          if (moduleName.includes(workletsDirPath)) {
             const base = path.basename(moduleName, '.js');
             const id = Number(base);
             idFileMap.set(moduleName, id);
@@ -63,9 +63,7 @@ module.exports = {
         /** @type {string} */ moduleName,
         /** @type {any} */ platform
       ) => {
-        if (
-          moduleName.startsWith('react-native-worklets/__generatedWorklets/')
-        ) {
+        if (moduleName.startsWith('react-native-worklets/.worklets/')) {
           const fullModuleName = path.join(
             workletsPackageParentDir,
             moduleName
