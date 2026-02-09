@@ -16,8 +16,13 @@ string(
   CMAKE_CXX_FLAGS
   " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}\
     -DWORKLETS_VERSION=${WORKLETS_VERSION}\
-    -DWORKLETS_FEATURE_FLAGS=\"${WORKLETS_FEATURE_FLAGS}\"\
-    -DHERMES_V1_ENABLED=${HERMES_V1_ENABLED}")
+    -DWORKLETS_FEATURE_FLAGS=\"${WORKLETS_FEATURE_FLAGS}\"")
+
+# HERMES_V1_ENABLED is centralized in react-native-flags.cmake for RN >= 84.
+# Only define manually for older versions to avoid macro redefinition error.
+if(REACT_NATIVE_MINOR_VERSION LESS 84)
+  string(APPEND CMAKE_CXX_FLAGS " -DHERMES_V1_ENABLED=${HERMES_V1_ENABLED}")
+endif()
 
 string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
 
