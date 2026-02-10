@@ -83,7 +83,6 @@ Pod::Spec.new do |s|
   }
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => [
-      '$(inherited)',
       '"$(PODS_ROOT)/boost"',
       '"$(PODS_ROOT)/boost-for-react-native"',
       '"$(PODS_ROOT)/glog"',
