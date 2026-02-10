@@ -1,46 +1,4 @@
 module reanimated {
-  module "AnimatedSensor" {
-    umbrella "reanimated/AnimatedSensor"
-    export *
-  }
-  module "CSS" {
-    umbrella "reanimated/CSS"
-    export *
-  }
-  module "Fabric" {
-    umbrella "reanimated/Fabric"
-    export *
-  }
-  module "LayoutAnimations" {
-    umbrella "reanimated/LayoutAnimations"
-    export *
-  }
-  module "NativeModules" {
-    umbrella "reanimated/NativeModules"
-    export *
-  }
-  module "RuntimeDecorators" {
-    umbrella "reanimated/RuntimeDecorators"
-    export *
-  }
-  module "Tools" {
-    umbrella "reanimated/Tools"
-    export *
-  }
-  module "apple" {
-    module "keyboardObserver" {
-      umbrella "reanimated/keyboardObserver"
-      export *
-    }
-    module "native" {
-      umbrella "reanimated/native"
-      export *
-    }
-    module "sensor" {
-      umbrella "reanimated/sensor"
-      export *
-    }
-    export *
-  }
+  umbrella "reanimated"
   export *
 }

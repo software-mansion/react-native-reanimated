@@ -1,42 +1,4 @@
 module worklets {
-  module "AnimationFrameQueue" {
-    umbrella "worklets/AnimationFrameQueue"
-    export *
-  }
-  module "NativeModules" {
-    umbrella "worklets/NativeModules"
-    export *
-  }
-  module "Registries" {
-    umbrella "worklets/Registries"
-    export *
-  }
-  module "Resources" {
-    umbrella "worklets/Resources"
-    export *
-  }
-  module "RunLoop" {
-    umbrella "worklets/RunLoop"
-    export *
-  }
-  module "SharedItems" {
-    umbrella "worklets/SharedItems"
-    export *
-  }
-  module "Tools" {
-    umbrella "worklets/Tools"
-    export *
-  }
-  module "WorkletRuntime" {
-    umbrella "worklets/WorkletRuntime"
-    export *
-  }
-  module "apple" {
-    module "Networking" {
-      umbrella "worklets/Networking"
-      export *
-    }
-    export *
-  }
+  umbrella "worklets"
   export *
 }
