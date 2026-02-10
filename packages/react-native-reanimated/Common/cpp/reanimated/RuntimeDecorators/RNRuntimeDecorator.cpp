@@ -1,6 +1,6 @@
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
+#include <reanimated/Tools/ReaJSIUtils.h>
 #include <reanimated/Tools/ReanimatedVersion.h>
-#include <worklets/Tools/WorkletsJSIUtils.h>
 
 #include <memory>
 
@@ -20,7 +20,7 @@ void RNRuntimeDecorator::decorate(
   rnRuntime.global().setProperty(rnRuntime, "_WORKLET_RUNTIME", workletRuntimeValue);
 
 #ifndef NDEBUG
-  checkJSVersion(rnRuntime, reanimatedModuleProxy->getJSLogger());
+  checkJSVersion(rnRuntime);
 #endif // NDEBUG
 
 #ifdef IS_REANIMATED_EXAMPLE_APP
