@@ -65,8 +65,8 @@ void checkJSVersion(jsi::Runtime &rt) {
             "C++ side failed to resolve JavaScript code "
             "version\n") +
             "See " + docsBaseUrl +
-            "/guides/"
-            "troubleshooting#c-side-failed-to-resolve-javascript-code-version` for "
+            "guides/"
+            "troubleshooting#c-side-failed-to-resolve-javascript-code-version for "
             "more details.");
     return;
   }
