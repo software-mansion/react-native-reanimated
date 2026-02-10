@@ -33,14 +33,14 @@ const DEFAULT_TRANSITION_CONFIG: SelectableConfig<
     options: ['width', 'height', 'transform'],
     value: ['width', 'height', 'transform'],
   },
-  // eslint-disable-next-line perfectionist/sort-objects
+
   $transitionDuration: {
     canDisable: true,
     maxNumberOfValues: 3,
     options: ['0s', '1s', '2s', '5s'],
     value: ['1s', '2s'],
   },
-  // eslint-disable-next-line perfectionist/sort-objects
+
   $transitionDelay: {
     canDisable: true,
     maxNumberOfValues: 3,

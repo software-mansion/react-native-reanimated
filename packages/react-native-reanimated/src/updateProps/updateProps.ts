@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
 
 import type { RefObject } from 'react';

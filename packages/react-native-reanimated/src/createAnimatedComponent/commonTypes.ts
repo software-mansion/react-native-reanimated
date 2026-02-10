@@ -160,7 +160,6 @@ export interface IAnimatedComponentInternal
 
 export type NestedArray<T> = T | NestedArray<T>[];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyComponent = React.ComponentType<any>;
 
 export interface InitialComponentProps extends Record<string, unknown> {

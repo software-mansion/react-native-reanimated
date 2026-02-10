@@ -249,7 +249,7 @@ const RNGHScrollViewExample = ({ animated, ref }: ExampleProps) => {
     scrollFromJS() {
       console.log(getRuntimeKind());
       // @ts-ignore This is broken with react-native-strict-api types.
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
       aref.current?.scrollTo({ y: getRandomOffset(), animated });
     },
     scrollFromUI() {

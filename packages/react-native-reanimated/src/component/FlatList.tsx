@@ -94,7 +94,7 @@ interface AnimatedFlatListComplement<T> extends FlatList<T> {
 }
 
 // We need explicit any here, because this is the exact same type that is used in React Native types.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const FlatListRender = function <Item = any>(
   props: ReanimatedFlatListPropsWithLayout<Item>,
   ref: React.Ref<FlatList>
@@ -152,7 +152,7 @@ const FlatListRender = function <Item = any>(
 
 export const ReanimatedFlatList = FlatListRender as <
   // We need explicit any here, because this is the exact same type that is used in React Native types.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   ItemT = any,
 >(
   props: ReanimatedFlatListPropsWithLayout<ItemT> & {
@@ -160,6 +160,5 @@ export const ReanimatedFlatList = FlatListRender as <
   }
 ) => React.ReactElement;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ReanimatedFlatList<T = any> = typeof AnimatedFlatList &
   AnimatedFlatListComplement<T>;

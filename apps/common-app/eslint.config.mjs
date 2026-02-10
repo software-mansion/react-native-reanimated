@@ -12,10 +12,10 @@ import reactNative from 'eslint-plugin-react-native';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import unusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
-import tsEslint from 'typescript-eslint';
+import { parser, config, configs } from 'typescript-eslint';
 
 /** @type {import('typescript-eslint').ConfigWithExtends[]} */
-export default tsEslint.config(
+export default config(
   jsEslint.configs.recommended,
   react.configs.flat.recommended,
   importPlugin.flatConfigs.recommended,
@@ -23,7 +23,7 @@ export default tsEslint.config(
   {
     languageOptions: {
       parserOptions: {
-        parser: tsEslint.parser,
+        parser: parser,
         project: [
           './tsconfig.json',
           './tsconfig.web.json',
@@ -292,7 +292,7 @@ export default tsEslint.config(
     },
   },
   {
-    extends: [tsEslint.configs.recommendedTypeChecked],
+    extends: [configs.recommendedTypeChecked],
     rules: {
       '@typescript-eslint/array-type': ['error', { default: 'generic' }],
       '@typescript-eslint/consistent-type-exports': 'error',

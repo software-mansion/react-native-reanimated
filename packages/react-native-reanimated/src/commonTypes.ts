@@ -482,7 +482,7 @@ export type InternalHostInstance = Partial<
     getNativeScrollRef: () => Maybe<
       Partial<InternalHostInstance & typeof ScrollView>
     >;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     getScrollableNode: () => any;
     __internalInstanceHandle: AnyRecord;
   }
