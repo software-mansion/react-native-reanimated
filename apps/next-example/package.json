@@ -23,7 +23,7 @@
     "react-native-reanimated": "workspace:*",
     "react-native-web": "0.21.1",
     "react-native-worklets": "workspace:*",
-    "webpack": "5.102.1"
+    "webpack": "5.104.1"
   },
   "devDependencies": {
     "@babel/core": "7.28.4",
