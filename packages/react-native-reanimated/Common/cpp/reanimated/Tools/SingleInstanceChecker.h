@@ -59,7 +59,7 @@ SingleInstanceChecker<T>::SingleInstanceChecker() {
   instanceCount_++;
   assertWithMessage(
       instanceCount_ <= 2,
-      "[Worklets] More than two instances of " + className +
+      "[Reanimated] More than two instances of " + className +
           " present. This may indicate a memory leak due to a retain cycle.");
 }
 
