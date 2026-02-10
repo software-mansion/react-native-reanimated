@@ -18,8 +18,8 @@ runs:
       run: |
         PODFILE_LOCK="${{ inputs.working-directory }}/${{ inputs.pod-directory }}/Podfile.lock"
         if [ -f "$PODFILE_LOCK" ]; then
-          HASH=$(shasum -a 256 "$PODFILE_LOCK" | cut -d' ' -f1)
-          echo "hash=${HASH:0:16}" >> $GITHUB_OUTPUT
+          HASH=$(grep "PODFILE CHECKSUM:" "$PODFILE_LOCK" | awk '{print $3}')
+          echo "hash=$HASH" >> $GITHUB_OUTPUT
         else
           echo "hash=no-lockfile" >> $GITHUB_OUTPUT
         fi
@@ -30,13 +30,13 @@ runs:
         path: |
           ${{ inputs.working-directory }}/${{ inputs.pod-directory }}/Pods
           ~/Library/Caches/CocoaPods
-        key: pods-${{ inputs.pod-directory }}-${{ steps.pods-cache-key.outputs.hash }}
+        key: pods-${{ inputs.working-directory }}-${{ inputs.pod-directory }}-${{ steps.pods-cache-key.outputs.hash }}
         restore-keys: |
-          pods-${{ inputs.pod-directory }}-
+          pods-${{ inputs.working-directory }}-${{ inputs.pod-directory }}-
 
     - name: Install Pods
       shell: bash
       working-directory: ${{ inputs.working-directory }}/${{ inputs.pod-directory }}
       run: |
         bundle install
-        bundle exec pod update
+        bundle exec pod update hermes-engine --no-repo-update

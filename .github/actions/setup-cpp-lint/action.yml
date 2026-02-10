@@ -23,9 +23,9 @@ runs:
       shell: bash
       run: |
         python -m pip install --upgrade pip
-        pip install cpplint==1.6.1
+        python -m pip install cpplint==1.6.1
 
     - name: Install cmakelang
       if: ${{ inputs.install-cmakelang == 'true' }}
       shell: bash
-      run: pip install cmakelang==0.6.13
+      run: python -m pip install cmakelang==0.6.13
