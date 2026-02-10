@@ -37,7 +37,6 @@ Pod::Spec.new do |s|
 
   s.dependency "RNWorklets"
 
-  s.module_map = "module.modulemap"
   s.header_dir = "reanimated"
   
   s.subspec "common" do |ss|
