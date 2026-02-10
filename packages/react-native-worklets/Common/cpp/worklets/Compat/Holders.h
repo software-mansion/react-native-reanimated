@@ -3,6 +3,8 @@
 #include <jsi/jsi.h>
 #include <worklets/Compat/ReanimatedApi.h>
 
+#include <memory>
+
 namespace worklets {
 
 class NativeStateWorkletRuntimeHolder : public facebook::jsi::NativeState {
