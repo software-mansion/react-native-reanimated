@@ -30,7 +30,7 @@ inline int get<int>(jsi::Runtime &, const jsi::Value *value) {
 template <>
 inline bool get<bool>(jsi::Runtime &, const jsi::Value *value) {
   if (!value->isBool()) {
-    throw jsi::JSINativeException("[Worklets] Expected a boolean.");
+    throw jsi::JSINativeException("[Reanimated] Expected a boolean.");
   }
   return value->getBool();
 }
@@ -55,8 +55,8 @@ inline jsi::Value const &get<jsi::Value const &>(jsi::Runtime &, const jsi::Valu
 
 // BEGIN implementations for `convertArgs` specializations.
 // specialization for empty `Targs` - returns an empty tuple
-template <typename... Args>
-inline std::enable_if_t<(sizeof...(Args) == 0), std::tuple<>> convertArgs(jsi::Runtime &, const jsi::Value *) {
+template <typename... TArgs>
+inline std::enable_if_t<(sizeof...(TArgs) == 0), std::tuple<>> convertArgs(jsi::Runtime &, const jsi::Value *) {
   return std::make_tuple();
 }
 
