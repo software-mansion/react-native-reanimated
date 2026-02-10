@@ -3,7 +3,7 @@
 #import <reanimated/apple/REAReducedMotion.h>
 #import <reanimated/apple/native/NativeProxy.h>
 #import <reanimated/apple/native/PlatformDepMethodsHolderImpl.h>
-#import <reanimated/apple/native/ReaJSIUtils.h>
+#import <reanimated/apple/native/REAJSIUtils.h>
 
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;
