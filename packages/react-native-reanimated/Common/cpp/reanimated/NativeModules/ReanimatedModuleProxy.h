@@ -8,6 +8,7 @@
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registries/StaticPropsRegistry.h>
+#include <reanimated/Events/UIEventHandlerRegistry.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
@@ -22,7 +23,6 @@
 #include <reanimated/Tools/SingleInstanceChecker.h>
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
-#include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/UIScheduler.h>
 
@@ -177,7 +177,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   bool shouldFlushRegistry_ = false;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
 
-  std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry_;
+  std::unique_ptr<UIEventHandlerRegistry> eventHandlerRegistry_;
   const RequestRenderFunction requestRender_;
   volatile bool renderRequested_{false};
   std::function<void(const double)> onRenderCallback_;
