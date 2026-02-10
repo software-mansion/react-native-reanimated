@@ -6,7 +6,12 @@ import type {
   SerializableRef,
   WorkletFunction,
 } from 'react-native-worklets';
-import { runOnUISync, WorkletsModule } from 'react-native-worklets';
+import {
+  getUIRuntime,
+  getUIScheduler,
+  runOnUISync,
+  WorkletsModule,
+} from 'react-native-worklets';
 
 import {
   ReanimatedError,
@@ -70,6 +75,8 @@ class NativeReanimatedModule implements IReanimatedModule {
     }
     global._REANIMATED_VERSION_JS = jsVersion;
     if (global.__reanimatedModuleProxy === undefined && ReanimatedTurboModule) {
+      globalThis.__UI_WORKLET_RUNTIME = getUIRuntime();
+      globalThis.__UI_SCHEDULER = getUIScheduler();
       if (!ReanimatedTurboModule.installTurboModule()) {
         // This path means that React Native has failed on reload.
         // We don't want to throw any errors to not mislead the users
@@ -78,6 +85,8 @@ class NativeReanimatedModule implements IReanimatedModule {
         this.#reanimatedModuleProxy = new DummyReanimatedModuleProxy();
         return;
       }
+      delete globalThis.__UI_WORKLET_RUNTIME;
+      delete globalThis.__UI_SCHEDULER;
     }
     if (global.__reanimatedModuleProxy === undefined) {
       throw new ReanimatedError(

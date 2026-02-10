@@ -327,3 +327,11 @@ if (__DEV__) {
     serializableRunOnRuntimeAsyncWorklet
   );
 }
+
+export function getUIRuntime(): object {
+  return WorkletsModule.getUIRuntime();
+}
+
+export function getUIScheduler(): object {
+  return WorkletsModule.getUIScheduler();
+}

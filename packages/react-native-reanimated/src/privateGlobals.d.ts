@@ -79,4 +79,6 @@ declare global {
    *   future.
    */
   var __frameTimestamp: number | undefined;
+  var __UI_WORKLET_RUNTIME: object | undefined;
+  var __UI_SCHEDULER: object | undefined;
 }

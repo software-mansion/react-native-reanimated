@@ -15,6 +15,7 @@
 
 using namespace facebook::react;
 using namespace reanimated;
+using namespace worklets;
 
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;
@@ -154,10 +155,13 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   react_native_assert(self.bridge.runtime != nullptr);
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
-  auto reanimatedModuleProxy =
-      reanimated::createReanimatedModuleProxy(_nodesManager, _moduleRegistry, rnRuntime, jsCallInvoker, workletsModule);
+  auto uiWorkletRuntime = [workletsModule getWorkletsModuleProxy]->getUIWorkletRuntime();
+  auto uiScheduler = [workletsModule getWorkletsModuleProxy]->getUIScheduler();
 
-  auto &uiRuntime = [workletsModule getWorkletsModuleProxy]->getUIWorkletRuntime() -> getJSIRuntime();
+  auto reanimatedModuleProxy =
+      reanimated::createReanimatedModuleProxy(_nodesManager, _moduleRegistry, rnRuntime, jsCallInvoker, uiWorkletRuntime, uiScheduler);
+
+  auto &uiRuntime = uiWorkletRuntime->getJSIRuntime();
 
   RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy);
   [self attachReactEventListener:reanimatedModuleProxy];

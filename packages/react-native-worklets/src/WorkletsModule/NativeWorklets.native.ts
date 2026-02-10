@@ -280,6 +280,14 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   setDynamicFeatureFlag(name: string, value: boolean) {
     this.#workletsModuleProxy.setDynamicFeatureFlag(name, value);
   }
+
+  getUIRuntime(): object {
+    return this.#workletsModuleProxy.getUIRuntime();
+  }
+
+  getUIScheduler(): object {
+    return this.#workletsModuleProxy.getUIScheduler();
+  }
 }
 
 export const WorkletsModule: IWorkletsModule = new NativeWorklets();

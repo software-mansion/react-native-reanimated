@@ -1,5 +1,8 @@
 #pragma once
 
+#include <react/renderer/componentregistry/componentNameByReactViewName.h>
+#include <react/renderer/core/ShadowNode.h>
+#include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/core/CSSTransition.h>
@@ -21,14 +24,8 @@
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
-
-#include <worklets/NativeModules/WorkletsModuleProxy.h>
-#include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/UIScheduler.h>
-
-#include <react/renderer/componentregistry/componentNameByReactViewName.h>
-#include <react/renderer/core/ShadowNode.h>
-#include <react/renderer/uimanager/UIManager.h>
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
 #include <set>
@@ -47,7 +44,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
                               public std::enable_shared_from_this<ReanimatedModuleProxy> {
  public:
   ReanimatedModuleProxy(
-      const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
+      const std::shared_ptr<worklets::WorkletRuntime> &uiRuntime,
+      const std::shared_ptr<worklets::UIScheduler> &uiScheduler,
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,
@@ -163,10 +161,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
     return isReducedMotion_;
   }
 
-  [[nodiscard]] inline std::shared_ptr<WorkletsModuleProxy> getWorkletsModuleProxy() const {
-    return workletsModuleProxy_;
-  }
-
   void requestFlushRegistry();
   std::function<std::string()> createRegistriesLeakCheck();
 
@@ -175,7 +169,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   const bool isReducedMotion_;
   bool shouldFlushRegistry_ = false;
-  std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+  std::shared_ptr<worklets::WorkletRuntime> uiRuntime_;
+  std::shared_ptr<worklets::UIScheduler> uiScheduler_;
 
   std::unique_ptr<UIEventHandlerRegistry> eventHandlerRegistry_;
   const RequestRenderFunction requestRender_;
