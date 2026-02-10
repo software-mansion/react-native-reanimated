@@ -1,10 +1,16 @@
-![header](https://github.com/user-attachments/assets/41b37472-e55a-4c54-9064-31258e03870c)
+<img src="https://github.com/user-attachments/assets/41b37472-e55a-4c54-9064-31258e03870c" alt="React Native Worklets by Software Mansion" width="100%">
 
 ### The React Native multithreading library
 
-React Native Worklets is a library that allows you to run JavaScript code in parallel on multiple threads and runtimes.
+React Native Worklets is a library that allows you to run JavaScript code in parallel on multiple threads and runtimes, without writing any native code.
 
-While the library is in transitional period where we hone the API, all its features are functionally stable and ready to use in production.
+## Nightly CI state
+
+[![NPM Worklets publish [Nightly]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish-nightly.yml)
+[![Lint clang-tidy [Nightly]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml)
+[![Expo DevClient build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/expo-devclient-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/expo-devclient-build-check-nightly.yml)
+[![Worklets Bundle Mode build check [Nightly]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/worklets-bundle-mode-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/worklets-bundle-mode-build-check-nightly.yml)
+[![URL validation](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml)
 
 ## Documentation
 

@@ -36,8 +36,6 @@
     "type:check:strict:app": "yarn workspace common-app type:check:strict",
     "build": "yarn workspace react-native-worklets build && bob build",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
-    "prepack": "cp ../../README.md ./README.md",
-    "postpack": "rm ./README.md",
     "tree-shake:check:web": "yarn is-tree-shakable --resolution web"
   },
   "main": "lib/module/index",
