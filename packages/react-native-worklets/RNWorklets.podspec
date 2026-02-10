@@ -38,9 +38,6 @@ Pod::Spec.new do |s|
   s.header_dir = "worklets"
 
   s.subspec "common" do |ss|
-    # Please be careful with the snakes.
-    # 🐍🐍🐍
-    # Thank you for your understanding.
     ss.source_files = "Common/cpp/worklets/**/*.{cpp,h}"
     ss.public_header_files = "Common/cpp/worklets/**/*.h"
     ss.header_mappings_dir = "Common/cpp/worklets"
