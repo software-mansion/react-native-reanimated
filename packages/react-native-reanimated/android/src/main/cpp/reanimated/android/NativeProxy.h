@@ -1,8 +1,7 @@
 #pragma once
 
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
-
-#include <worklets/android/WorkletsModule.h>
 
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
@@ -26,20 +25,19 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
   static auto constexpr kJavaDescriptor = "Lcom/swmansion/reanimated/NativeProxy;";
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> jThis,
-      jni::alias_ref<WorkletsModule::javaobject> jWorkletsModule,
       jlong jsContext,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject> fabricUIManager);
 
   static void registerNatives();
 
-  ~NativeProxy();
+  ~NativeProxy() override;
 
  private:
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
-  std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+  std::shared_ptr<WorkletRuntimeHolder> uiRuntimeHolder_;
   std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
 #ifndef NDEBUG
   void checkJavaVersion();
@@ -93,10 +91,11 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
 
   explicit NativeProxy(
       jni::alias_ref<NativeProxy::jhybridobject> jThis,
-      const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
       jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-      jni::alias_ref<facebook::react::JFabricUIManager::javaobject> fabricUIManager);
+      jni::alias_ref<facebook::react::JFabricUIManager::javaobject> fabricUIManager,
+      const std::shared_ptr<WorkletRuntimeHolder> &uiRuntimeHolder,
+      const std::shared_ptr<UISchedulerHolder> &uiSchedulerHolder);
 
   void invalidateCpp();
 };

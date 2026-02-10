@@ -636,7 +636,7 @@ void LayoutAnimationsProxy_Legacy::startEnteringAnimation(const int tag, ShadowV
   auto &viewProps = static_cast<const ViewProps &>(*mutation.newChildShadowView.props);
   auto opacity = viewProps.opacity;
 
-  uiScheduler_->scheduleOnUI([weakThis = weak_from_this(), finalView, current, mutation, opacity, tag]() {
+  scheduleOnUI(uiSchedulerHolder_, [weakThis = weak_from_this(), finalView, current, mutation, opacity, tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -675,7 +675,7 @@ void LayoutAnimationsProxy_Legacy::startExitingAnimation(const int tag, ShadowVi
 #endif
   auto surfaceId = mutation.oldChildShadowView.surfaceId;
 
-  uiScheduler_->scheduleOnUI([weakThis = weak_from_this(), tag, mutation, surfaceId]() {
+  scheduleOnUI(uiSchedulerHolder_, [weakThis = weak_from_this(), tag, mutation, surfaceId]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -714,7 +714,7 @@ void LayoutAnimationsProxy_Legacy::startLayoutAnimation(const int tag, const Sha
 #endif
   auto surfaceId = mutation.oldChildShadowView.surfaceId;
 
-  uiScheduler_->scheduleOnUI([weakThis = weak_from_this(), mutation, surfaceId, tag]() {
+  scheduleOnUI(uiSchedulerHolder_, [weakThis = weak_from_this(), mutation, surfaceId, tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -763,7 +763,7 @@ void LayoutAnimationsProxy_Legacy::maybeCancelAnimation(const int tag) const {
     return;
   }
   layoutAnimations_.erase(tag);
-  uiScheduler_->scheduleOnUI([weakThis = weak_from_this(), tag]() {
+  scheduleOnUI(uiSchedulerHolder_, [weakThis = weak_from_this(), tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -824,7 +824,7 @@ void LayoutAnimationsProxy_Legacy::maybeUpdateWindowDimensions(
   }
 }
 
-void Node::applyMutationToIndices(ShadowViewMutation mutation) {
+void Node::applyMutationToIndices(const ShadowViewMutation &mutation) {
   const auto parentTag = mutation.parentTag;
   if (tag != parentTag) {
     return;
@@ -840,7 +840,7 @@ void Node::applyMutationToIndices(ShadowViewMutation mutation) {
 }
 
 // Should only be called on unflattened parents
-void Node::removeChildFromUnflattenedTree(std::shared_ptr<MutationNode> child) {
+void Node::removeChildFromUnflattenedTree(const std::shared_ptr<MutationNode> &child) {
   for (int i = unflattenedChildren.size() - 1; i >= 0; i--) {
     if (unflattenedChildren[i]->tag == child->tag) {
       unflattenedChildren.erase(unflattenedChildren.begin() + i);

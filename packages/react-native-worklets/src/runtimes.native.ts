@@ -327,3 +327,11 @@ if (__DEV__) {
     serializableRunOnRuntimeAsyncWorklet
   );
 }
+
+export function getUIRuntimeHolder(): object {
+  return WorkletsModule.getUIRuntimeHolder();
+}
+
+export function getUISchedulerHolder(): object {
+  return WorkletsModule.getUISchedulerHolder();
+}

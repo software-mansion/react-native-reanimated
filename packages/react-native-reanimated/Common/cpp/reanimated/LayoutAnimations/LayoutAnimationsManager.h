@@ -1,28 +1,23 @@
 #pragma once
 
+#include <jsi/jsi.h>
 #include <react/renderer/graphics/Transform.h>
 #include <react/renderer/mounting/ShadowView.h>
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 
-#include <worklets/SharedItems/Serializable.h>
-#include <worklets/Tools/JSLogger.h>
-
-#include <jsi/jsi.h>
 #include <stdio.h>
-#include <functional>
 #include <memory>
 #include <mutex>
-#include <stack>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
 namespace reanimated {
 
 using namespace facebook;
-using namespace worklets;
+using namespace facebook::react;
 using SharedTag = std::string;
 
 // [0] is before and [1] is after (best to use BeforeOrAfter enum)
@@ -50,8 +45,7 @@ struct LayoutAnimationConfig {
 
 class LayoutAnimationsManager {
  public:
-  explicit LayoutAnimationsManager(const std::shared_ptr<JSLogger> &jsLogger)
-      : jsLogger_(jsLogger), sharedTransitionManager_(std::make_shared<SharedTransitionManager>()) {}
+  explicit LayoutAnimationsManager() : sharedTransitionManager_(std::make_shared<SharedTransitionManager>()) {}
   void configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch);
   void setShouldAnimateExiting(const int tag, const bool value);
   bool shouldAnimateExiting(const int tag, const bool shouldAnimate);
@@ -66,7 +60,6 @@ class LayoutAnimationsManager {
  private:
   std::unordered_map<int, std::shared_ptr<Serializable>> &getConfigsForType(const LayoutAnimationType type);
 
-  std::shared_ptr<JSLogger> jsLogger_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimationsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitionsForNativeID_;

@@ -4,18 +4,14 @@ import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.module.annotations.ReactModule;
-import com.swmansion.worklets.WorkletsModule;
 
 @ReactModule(name = ReanimatedModule.NAME)
 public class ReanimatedModule extends NativeReanimatedModuleSpec implements LifecycleEventListener {
-  private final NodesManager mNodesManager;
-  private final WorkletsModule mWorkletsModule;
+  private NodesManager mNodesManager;
 
   public ReanimatedModule(ReactApplicationContext reactContext) {
     super(reactContext);
     reactContext.assertOnJSQueueThread();
-    mWorkletsModule = reactContext.getNativeModule(WorkletsModule.class);
-    mNodesManager = new NodesManager(reactContext, mWorkletsModule);
   }
 
   @Override
@@ -27,12 +23,16 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
 
   @Override
   public void onHostPause() {
-    mNodesManager.onHostPause();
+      if(mNodesManager != null) {
+          mNodesManager.onHostPause();
+      }
   }
 
   @Override
   public void onHostResume() {
-    mNodesManager.onHostResume();
+      if(mNodesManager != null) {
+          mNodesManager.onHostResume();
+      }
   }
 
   @Override
@@ -47,6 +47,8 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
 
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean installTurboModule() {
+    ReactApplicationContext reactContext = getReactApplicationContext();
+    mNodesManager = new NodesManager(reactContext);
     getReactApplicationContext().assertOnJSQueueThread();
     mNodesManager.getNativeProxy().installJSIBindings();
     return true;
@@ -65,7 +67,9 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
   @Override
   public void invalidate() {
     super.invalidate();
-    mNodesManager.invalidate();
+    if(mNodesManager != null) {
+        mNodesManager.invalidate();
+    }
     ReactApplicationContext reactContext = getReactApplicationContext();
     reactContext.removeLifecycleEventListener(this);
   }

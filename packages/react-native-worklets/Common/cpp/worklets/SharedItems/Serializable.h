@@ -1,13 +1,13 @@
 #pragma once
 
 #include <worklets/Registries/WorkletRuntimeRegistry.h>
+#include <worklets/SharedItems/SerializableBase.h>
 
 #include <jsi/jsi.h>
 
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
 using namespace facebook;
 
@@ -38,48 +38,6 @@ inline void cleanupIfRuntimeExists(jsi::Runtime *rt, std::unique_ptr<jsi::Value>
     value.release(); // NOLINT
   }
 }
-
-class Serializable {
- public:
-  virtual jsi::Value toJSValue(jsi::Runtime &rt) = 0;
-
-  virtual ~Serializable();
-
-  enum class ValueType : std::uint8_t {
-    UndefinedType,
-    NullType,
-    BooleanType,
-    NumberType,
-    // SymbolType, TODO
-    BigIntType,
-    StringType,
-    ObjectType,
-    ArrayType,
-    MapType,
-    SetType,
-    WorkletType,
-    RemoteFunctionType,
-    HandleType,
-    HostObjectType,
-    HostFunctionType,
-    ArrayBufferType,
-    TurboModuleLikeType,
-    ImportType,
-    SynchronizableType,
-    CustomType,
-  };
-
-  explicit Serializable(ValueType valueType) : valueType_(valueType) {}
-
-  inline ValueType valueType() const {
-    return valueType_;
-  }
-
-  static std::shared_ptr<Serializable> undefined();
-
- protected:
-  ValueType valueType_;
-};
 
 template <typename BaseClass>
 class RetainingSerializable : virtual public BaseClass {

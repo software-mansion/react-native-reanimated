@@ -1,6 +1,8 @@
+#include <jsi/jsi.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 
+#include <worklets/Compat/ReanimatedApi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Serializable.h>
@@ -10,6 +12,8 @@
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
+#include <cstdint>
+#include "worklets/WorkletRuntime/WorkletRuntime.h"
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
@@ -219,6 +223,9 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
 #ifdef WORKLETS_BUNDLE_MODE_ENABLED
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "propagateModuleUpdate"));
 #endif // WORKLETS_BUNDLE_MODE_ENABLED
+
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getUIRuntimeHolder"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getUISchedulerHolder"));
 
   return propertyNames;
 }
@@ -542,6 +549,37 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
               /* name */ args[0].asString(rt).utf8(rt),
               /* value */ args[1].asBool());
           return jsi::Value::undefined();
+        });
+  }
+
+  if (name == "getUIRuntimeHolder") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        0,
+        [uiWorkletRuntime = uiWorkletRuntime_](
+            jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          const auto heapSharedPtr = // NOLINT(cppcoreguidelines-owning-memory)
+              new std::shared_ptr<WorkletRuntime>(uiWorkletRuntime);
+          auto holder = std::make_shared<WorkletRuntimeHolder>(reinterpret_cast<uintptr_t>(heapSharedPtr));
+          auto obj = jsi::Object(rt);
+          obj.setNativeState(rt, std::move(holder));
+          return obj;
+        });
+  }
+
+  if (name == "getUISchedulerHolder") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        0,
+        [uiScheduler = uiScheduler_](
+            jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          auto heapSharedPtr = new std::shared_ptr<UIScheduler>(uiScheduler); // NOLINT(cppcoreguidelines-owning-memory)
+          auto holder = std::make_shared<UISchedulerHolder>(reinterpret_cast<uintptr_t>(heapSharedPtr));
+          auto obj = jsi::Object(rt);
+          obj.setNativeState(rt, std::move(holder));
+          return obj;
         });
   }
 
