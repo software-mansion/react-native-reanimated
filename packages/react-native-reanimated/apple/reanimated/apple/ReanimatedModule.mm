@@ -183,18 +183,16 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 - (std::shared_ptr<WorkletRuntimeHolder>)getUIRuntimeHolder:(jsi::Runtime &)rnRuntime
 {
   const auto global = rnRuntime.global();
-  const auto uiRuntimeHolder = global.getProperty(rnRuntime, "__UI_WORKLET_RUNTIME_HOLDER")
-                                   .asObject(rnRuntime)
-                                   .getNativeState<WorkletRuntimeHolder>(rnRuntime);
+  const auto uiRuntimeHolder = getWorkletRuntimeHolderFromNativeStateObject(
+      rnRuntime, global.getProperty(rnRuntime, "__UI_WORKLET_RUNTIME_HOLDER").asObject(rnRuntime));
   return uiRuntimeHolder;
 }
 
 - (std::shared_ptr<UISchedulerHolder>)getUISchedulerHolder:(jsi::Runtime &)rnRuntime
 {
   const auto global = rnRuntime.global();
-  const auto uiSchedulerHolder = global.getProperty(rnRuntime, "__UI_SCHEDULER_HOLDER")
-                                     .asObject(rnRuntime)
-                                     .getNativeState<UISchedulerHolder>(rnRuntime);
+  const auto uiSchedulerHolder = getUISchedulerHolderFromNativeStateObject(
+      rnRuntime, global.getProperty(rnRuntime, "__UI_SCHEDULER_HOLDER").asObject(rnRuntime));
   return uiSchedulerHolder;
 }
 

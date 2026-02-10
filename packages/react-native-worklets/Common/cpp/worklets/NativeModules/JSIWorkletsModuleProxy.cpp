@@ -1,7 +1,7 @@
 #include <jsi/jsi.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
-
+#include <worklets/Compat/Holders.h>
 #include <worklets/Compat/ReanimatedApi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
@@ -561,7 +561,7 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
           const auto heapSharedPtr = // NOLINT(cppcoreguidelines-owning-memory)
               new std::shared_ptr<WorkletRuntime>(uiWorkletRuntime);
-          auto holder = std::make_shared<WorkletRuntimeHolder>(reinterpret_cast<uintptr_t>(heapSharedPtr));
+          auto holder = std::make_shared<NativeStateWorkletRuntimeHolder>(reinterpret_cast<uintptr_t>(heapSharedPtr));
           auto obj = jsi::Object(rt);
           obj.setNativeState(rt, std::move(holder));
           return obj;
@@ -576,7 +576,7 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         [uiScheduler = uiScheduler_](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
           auto heapSharedPtr = new std::shared_ptr<UIScheduler>(uiScheduler); // NOLINT(cppcoreguidelines-owning-memory)
-          auto holder = std::make_shared<UISchedulerHolder>(reinterpret_cast<uintptr_t>(heapSharedPtr));
+          auto holder = std::make_shared<NativeStateUISchedulerHolder>(reinterpret_cast<uintptr_t>(heapSharedPtr));
           auto obj = jsi::Object(rt);
           obj.setNativeState(rt, std::move(holder));
           return obj;

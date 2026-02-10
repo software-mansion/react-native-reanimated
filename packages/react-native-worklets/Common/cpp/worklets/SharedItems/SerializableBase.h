@@ -1,8 +1,12 @@
 #pragma once
 
-#include <jsi/jsi.h>
-
 #include <memory>
+
+namespace facebook::jsi {
+class Runtime;
+class Value;
+class Object;
+} // namespace facebook::jsi
 
 namespace worklets {
 

@@ -1,4 +1,5 @@
 #include <jsi/jsi.h>
+#include <worklets/Compat/Holders.h>
 #include <worklets/Compat/ReanimatedApi.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/JSISerializer.h>
@@ -70,6 +71,18 @@ UISchedulerHolder::~UISchedulerHolder() {
   auto uiSchedulerSharedPtr =
       reinterpret_cast<std::shared_ptr<UIScheduler> *>(sharedPtr_); // NOLINT(performance-no-int-to-ptr)
   delete uiSchedulerSharedPtr; //NOLINT(cppcoreguidelines-owning-memory)
+}
+
+std::shared_ptr<WorkletRuntimeHolder> getWorkletRuntimeHolderFromNativeStateObject(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Object &object) {
+  return object.getNativeState<NativeStateWorkletRuntimeHolder>(rt)->holder_;
+}
+
+std::shared_ptr<UISchedulerHolder> getUISchedulerHolderFromNativeStateObject(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Object &object) {
+  return object.getNativeState<NativeStateUISchedulerHolder>(rt)->holder_;
 }
 
 } // namespace worklets

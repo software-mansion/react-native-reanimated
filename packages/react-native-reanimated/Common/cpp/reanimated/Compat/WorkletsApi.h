@@ -1,9 +1,15 @@
 #pragma once
 
-#include <jsi/jsi.h>
-
 #include <cstdint>
+#include <functional>
 #include <memory>
+#include <string>
+
+namespace facebook::jsi {
+class Runtime;
+class Value;
+class Object;
+} // namespace facebook::jsi
 
 namespace worklets {
 
@@ -49,23 +55,31 @@ class Serializable {
   ValueType valueType_;
 };
 
-class WorkletRuntimeHolder : public facebook::jsi::NativeState {
+class WorkletRuntimeHolder {
  public:
   explicit WorkletRuntimeHolder(uintptr_t sharedPtr) : sharedPtr_(sharedPtr) {}
 
-  ~WorkletRuntimeHolder() override;
+  ~WorkletRuntimeHolder();
 
   uintptr_t sharedPtr_;
 };
 
-class UISchedulerHolder : public facebook::jsi::NativeState {
+class UISchedulerHolder {
  public:
   explicit UISchedulerHolder(uintptr_t sharedPtr) : sharedPtr_(sharedPtr) {}
 
-  ~UISchedulerHolder() override;
+  ~UISchedulerHolder();
 
   uintptr_t sharedPtr_;
 };
+
+extern std::shared_ptr<WorkletRuntimeHolder> getWorkletRuntimeHolderFromNativeStateObject(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Object &object);
+
+extern std::shared_ptr<UISchedulerHolder> getUISchedulerHolderFromNativeStateObject(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Object &object);
 
 extern facebook::jsi::Runtime *getRuntimeAddressFromHolder(const std::shared_ptr<WorkletRuntimeHolder> &holder);
 
