@@ -3,7 +3,9 @@
 #include <memory>
 #include <string>
 
-namespace worklets {
+namespace reanimated {
+
+using namespace worklets;
 
 void UIEventHandler::process(
     const std::shared_ptr<WorkletRuntimeHolder> &uiRuntimeHolder,
@@ -28,4 +30,4 @@ bool UIEventHandler::shouldIgnoreEmitterReactTag() const {
   return emitterReactTag_ == -1;
 }
 
-} // namespace worklets
+} // namespace reanimated

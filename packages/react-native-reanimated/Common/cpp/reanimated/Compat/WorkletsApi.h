@@ -110,5 +110,3 @@ extern void runSyncOnRuntime(
     const facebook::jsi::Value &arg1);
 
 } // namespace worklets
-
-using namespace worklets;

@@ -8,26 +8,26 @@
 
 using namespace facebook;
 
-namespace worklets {
+namespace reanimated {
 
 class UIEventHandler {
   const uint64_t handlerId_;
   const uint64_t emitterReactTag_;
   const std::string eventName_;
-  const std::shared_ptr<Serializable> handlerFunction_;
+  const std::shared_ptr<worklets::Serializable> handlerFunction_;
 
  public:
   UIEventHandler(
       const uint64_t handlerId,
       const std::string &eventName,
       const uint64_t emitterReactTag,
-      const std::shared_ptr<Serializable> &handlerFunction)
+      const std::shared_ptr<worklets::Serializable> &handlerFunction)
       : handlerId_(handlerId),
         emitterReactTag_(emitterReactTag),
         eventName_(eventName),
         handlerFunction_(handlerFunction) {}
   void process(
-      const std::shared_ptr<WorkletRuntimeHolder> &uiRuntimeHolder,
+      const std::shared_ptr<worklets::WorkletRuntimeHolder> &uiRuntimeHolder,
       double eventTimestamp,
       const jsi::Value &eventValue) const;
   uint64_t getHandlerId() const;
@@ -36,4 +36,4 @@ class UIEventHandler {
   bool shouldIgnoreEmitterReactTag() const;
 };
 
-} // namespace worklets
+} // namespace reanimated

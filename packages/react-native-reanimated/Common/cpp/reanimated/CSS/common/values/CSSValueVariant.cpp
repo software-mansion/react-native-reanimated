@@ -19,6 +19,8 @@
 
 namespace reanimated::css {
 
+using namespace worklets;
+
 template <CSSValueDerived... AllowedTypes>
 CSSValueVariant<AllowedTypes...>::CSSValueVariant(std::variant<AllowedTypes...> &&storage)
     : storage_(std::move(storage)) {}

@@ -30,7 +30,7 @@ class AnimatedSensorModule {
 
   jsi::Value registerSensor(
       jsi::Runtime &rt,
-      const std::shared_ptr<WorkletRuntimeHolder> &uiRuntimeHolder,
+      const std::shared_ptr<worklets::WorkletRuntimeHolder> &uiRuntimeHolder,
       const jsi::Value &sensorType,
       const jsi::Value &interval,
       const jsi::Value &iosReferenceFrame,

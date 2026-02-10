@@ -25,6 +25,8 @@
 
 namespace reanimated {
 
+using namespace worklets;
+
 #if REACT_NATIVE_MINOR_VERSION >= 81
 static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
     jsi::Runtime &rt,
@@ -44,7 +46,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       isReducedMotion_(isReducedMotion),
       uiRuntimeHolder_(uiRuntimeHolder),
       uiSchedulerHolder_(uiSchedulerHolder),
-      eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
+      eventHandlerRegistry_(std::make_unique<UIEventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       animatedSensorModule_(platformDepMethodsHolder),
       layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>()),

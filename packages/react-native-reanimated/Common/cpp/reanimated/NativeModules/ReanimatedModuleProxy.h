@@ -9,7 +9,7 @@
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registries/StaticPropsRegistry.h>
 #include <reanimated/Compat/WorkletsApi.h>
-#include <reanimated/Events/EventHandlerRegistry.h>
+#include <reanimated/Events/UIEventHandlerRegistry.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
@@ -44,8 +44,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
                               public std::enable_shared_from_this<ReanimatedModuleProxy> {
  public:
   ReanimatedModuleProxy(
-      const std::shared_ptr<WorkletRuntimeHolder> &uiRuntimeHolder,
-      const std::shared_ptr<UISchedulerHolder> &uiSchedulerHolder,
+      const std::shared_ptr<worklets::WorkletRuntimeHolder> &uiRuntimeHolder,
+      const std::shared_ptr<worklets::UISchedulerHolder> &uiSchedulerHolder,
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,
@@ -169,10 +169,10 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   const bool isReducedMotion_;
   bool shouldFlushRegistry_ = false;
-  std::shared_ptr<WorkletRuntimeHolder> uiRuntimeHolder_;
-  std::shared_ptr<UISchedulerHolder> uiSchedulerHolder_;
+  std::shared_ptr<worklets::WorkletRuntimeHolder> uiRuntimeHolder_;
+  std::shared_ptr<worklets::UISchedulerHolder> uiSchedulerHolder_;
 
-  std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry_;
+  std::unique_ptr<UIEventHandlerRegistry> eventHandlerRegistry_;
   const RequestRenderFunction requestRender_;
   volatile bool renderRequested_{false};
   std::function<void(const double)> onRenderCallback_;

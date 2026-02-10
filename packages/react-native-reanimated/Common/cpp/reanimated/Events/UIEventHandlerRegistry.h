@@ -13,11 +13,9 @@
 
 using namespace facebook;
 
-using namespace worklets;
-
 namespace reanimated {
 
-class EventHandlerRegistry {
+class UIEventHandlerRegistry {
   std::map<std::pair<int, std::string>, std::unordered_map<uint64_t, std::shared_ptr<UIEventHandler>>>
       eventMappingsWithTag;
   std::map<std::string, std::unordered_map<uint64_t, std::shared_ptr<UIEventHandler>>> eventMappingsWithoutTag;
@@ -29,7 +27,7 @@ class EventHandlerRegistry {
   void unregisterEventHandler(const uint64_t id);
 
   void processEvent(
-      const std::shared_ptr<WorkletRuntimeHolder> &uiRuntimeHolder,
+      const std::shared_ptr<worklets::WorkletRuntimeHolder> &uiRuntimeHolder,
       const double eventTimestamp,
       const std::string &eventName,
       const int emitterReactTag,

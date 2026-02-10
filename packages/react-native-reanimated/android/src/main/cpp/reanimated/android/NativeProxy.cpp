@@ -17,6 +17,7 @@
 
 namespace reanimated {
 
+using namespace worklets;
 using namespace facebook;
 using namespace react;
 

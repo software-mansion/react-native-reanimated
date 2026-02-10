@@ -1,5 +1,5 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
-#include <reanimated/Tools/JSIUtils.h>
+#include <reanimated/Tools/ReaJSIUtils.h>
 
 #include <utility>
 

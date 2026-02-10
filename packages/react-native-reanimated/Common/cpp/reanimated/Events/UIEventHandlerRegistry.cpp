@@ -1,4 +1,4 @@
-#include <reanimated/Events/EventHandlerRegistry.h>
+#include <reanimated/Events/UIEventHandlerRegistry.h>
 
 #include <memory>
 #include <string>
@@ -7,7 +7,9 @@
 
 namespace reanimated {
 
-void EventHandlerRegistry::registerEventHandler(const std::shared_ptr<UIEventHandler> &eventHandler) {
+using namespace worklets;
+
+void UIEventHandlerRegistry::registerEventHandler(const std::shared_ptr<UIEventHandler> &eventHandler) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   const auto &eventName = eventHandler->getEventName();
   auto handlerId = eventHandler->getHandlerId();
@@ -22,7 +24,7 @@ void EventHandlerRegistry::registerEventHandler(const std::shared_ptr<UIEventHan
   eventHandlers[handlerId] = eventHandler;
 }
 
-void EventHandlerRegistry::unregisterEventHandler(const uint64_t id) {
+void UIEventHandlerRegistry::unregisterEventHandler(const uint64_t id) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   auto handlerIt = eventHandlers.find(id);
   if (handlerIt != eventHandlers.end()) {
@@ -50,7 +52,7 @@ void EventHandlerRegistry::unregisterEventHandler(const uint64_t id) {
   }
 }
 
-void EventHandlerRegistry::processEvent(
+void UIEventHandlerRegistry::processEvent(
     const std::shared_ptr<WorkletRuntimeHolder> &uiWorkletRuntime,
     const double eventTimestamp,
     const std::string &eventName,
@@ -82,7 +84,7 @@ void EventHandlerRegistry::processEvent(
   }
 }
 
-bool EventHandlerRegistry::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) {
+bool UIEventHandlerRegistry::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   const auto eventHash = std::make_pair(emitterReactTag, eventName);
   auto it = eventMappingsWithTag.find(eventHash);

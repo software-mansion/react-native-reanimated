@@ -1,5 +1,5 @@
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
-#include <reanimated/Tools/JSIUtils.h>
+#include <reanimated/Tools/ReaJSIUtils.h>
 #include <reanimated/Tools/ReanimatedVersion.h>
 
 #include <memory>

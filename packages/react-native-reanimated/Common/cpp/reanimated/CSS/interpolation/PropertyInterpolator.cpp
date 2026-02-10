@@ -6,6 +6,8 @@
 
 namespace reanimated::css {
 
+using namespace worklets;
+
 PropertyInterpolator::PropertyInterpolator(
     PropertyPath propertyPath,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
