@@ -36,9 +36,12 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
   s.subspec "worklets" do |ss|
-    ss.source_files = "Common/cpp/worklets/**/*.{cpp,h}"
-    ss.header_dir = "worklets"
-    ss.header_mappings_dir = "Common/cpp/worklets"
+    ss.subspec "common" do |sss|
+      sss.source_files = "Common/cpp/worklets/**/*.{h,cpp}"
+      sss.header_dir = "worklets"
+      sss.header_mappings_dir = "Common/cpp/worklets"
+      sss.public_header_files = "**/*.h"
+    end
 
     ss.subspec "apple" do |sss|
       # Please be careful with the snakes.
@@ -47,6 +50,16 @@ Pod::Spec.new do |s|
       sss.source_files = "apple/worklets/**/*.{mm,h,m}"
       sss.header_dir = "worklets"
       sss.header_mappings_dir = "apple/worklets"
+      sss.public_header_files = "**/*.h"
+    end
+
+    ss.subspec "public" do |sss|
+      sss.source_files = 
+        "Common/cpp/worklets/RunLoop/AsyncQueue.h",
+        "Common/cpp/worklets/WorkletRuntime/WorkletRuntime.h",
+        "Common/cpp/worklets/SharedItems/Serializable.h",
+        "Common/cpp/worklets/SharedItems/Synchronizable.h"
+      sss.public_header_files = "**/*.h"
     end
   end
 

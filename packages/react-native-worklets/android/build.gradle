@@ -1,5 +1,9 @@
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 import groovy.json.JsonSlurper
+
+import javax.inject.Inject
+import java.nio.file.Files
+import java.nio.file.Paths
 import org.apache.tools.ant.taskdefs.condition.Os
 import javax.inject.Inject
 
@@ -352,6 +356,32 @@ tasks.register('prepareWorkletsHeadersForPrefabs', Copy) {
     into(workletsPrefabHeadersDir.absolutePath)
 }
 
+def workletsPublicTargetDir = file("${workletsPrefabHeadersDir}/RNWorklets")
+
+tasks.register('cleanWorkletsHeaders', Delete) {
+    delete workletsPublicTargetDir
+}
+
+
+task preparePublicHeadersForPrefabs_experimental {
+    dependsOn prepareWorkletsHeadersForPrefabs
+    dependsOn cleanWorkletsHeaders
+
+    def links = [
+            [file("${workletsPrefabHeadersDir}/worklets/WorkletRuntime/WorkletRuntime.h"), file("${workletsPublicTargetDir}/WorkletRuntime.h")],
+            [file("${workletsPrefabHeadersDir}/worklets/RunLoop/AsyncQueue.h"), file("${workletsPublicTargetDir}/AsyncQueue.h")],
+            [file("${workletsPrefabHeadersDir}/worklets/SharedItems/Serializable.h"), file("${workletsPublicTargetDir}/Serializable.h")],
+            [file("${workletsPrefabHeadersDir}/worklets/SharedItems/Synchronizable.h"), file("${workletsPublicTargetDir}/Synchronizable.h")]
+        ]
+
+    doLast {
+        workletsPublicTargetDir.mkdirs()
+
+        links.each { link ->
+            Files.createSymbolicLink(link[1].toPath(), link[0].toPath())
+                    }
+    }
+}
 interface FSService {
     @Inject
     FileSystemOperations getFs()
@@ -367,10 +397,81 @@ tasks.register('cleanCMakeCache') {
     }
 }
 
+interface FSService {
+    @Inject FileSystemOperations getFs()
+}
+
+afterEvaluate {
+    // Make sure that Gradle Sync in Android Studio doesn't complain about
+    // missing prefab-headers directory for header inclusions
+    workletsPrefabHeadersDir.mkdirs()
+}
+
+def cleanCmakeCacheTask = tasks.register('cleanCmakeCache', Delete) {
+    def fsService = project.objects.newInstance(FSService)
+    def projectDir = project.projectDir
+    doLast {
+        println "Cleaning CMake build cache in ${projectDir}"
+        fsService.fs.delete {
+            delete "${projectDir}/build"
+            delete "${projectDir}/.cxx"
+        }
+    }
+}
+
+// Ensure this runs after any externalNativeBuildClean* task
+tasks.matching { it.name.startsWith('externalNativeBuildClean') }.configureEach {
+    finalizedBy(cleanCmakeCacheTask)
+}
+
 repositories {
     mavenCentral()
     google()
 }
+
+tasks.named('preBuild') {
+    def projectDir = project.projectDir
+    def fsService = project.objects.newInstance(FSService)
+    
+    // 1. Define the actual copy action inside doFirst
+    doFirst {
+        // println("📝 [Worklets] Copying headers for Prefabs...")
+        
+        // Ensure the destination exists
+        // workletsPrefabHeadersDir.mkdirs() 
+        // fsService.fs.delete {
+        //     delete workletsPrefabHeadersDir
+        // }
+
+        workletsPrefabHeadersDir.mkdirs()
+
+        // Use the project.copy closure to perform file operations
+        fsService.fs.copy {
+            from("$projectDir/src/main/cpp")
+            from("$projectDir/../Common/cpp")
+            include("worklets/**/*.h")
+            into(workletsPrefabHeadersDir)
+        }
+    }
+    
+    // 2. Define the output for incremental builds
+    // This tells Gradle that if workletsPrefabHeadersDir is unchanged, it can skip running this task.
+//    outputs.dir(workletsPrefabHeadersDir)
+    
+    // 3. Define inputs (optional but recommended for correctness)
+    // This tells Gradle which files this task uses, so if they change, the task runs again.
+    inputs.files(
+        fileTree("$projectDir/src/main/cpp") {
+            include("worklets/**/*.h")
+        },
+        fileTree("$projectDir/../Common/cpp") {
+            include("worklets/**/*.h")
+        }
+    ).withPropertyName('workletHeaders')
+}
+
+preBuild.dependsOn(prepareWorkletsHeadersForPrefabs)
+preBuild.dependsOn(preparePublicHeadersForPrefabs_experimental)
 
 dependencies {
     implementation "com.facebook.yoga:proguard-annotations:1.19.0"
@@ -391,4 +492,3 @@ afterEvaluate {
         it.finalizedBy(cleanCMakeCache)
     }
 }
-
