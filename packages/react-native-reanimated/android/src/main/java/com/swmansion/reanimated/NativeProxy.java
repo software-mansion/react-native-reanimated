@@ -3,8 +3,6 @@ package com.swmansion.reanimated;
 import android.content.ContentResolver;
 import android.os.SystemClock;
 import android.provider.Settings;
-import android.util.Log;
-
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
@@ -32,7 +30,6 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.PrimitiveIterator;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
 
 /**
  * @noinspection JavaJniMissingFunction
@@ -88,7 +85,8 @@ public class NativeProxy {
     mFabricUIManager =
         (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
 
-    CallInvokerHolderImpl callInvokerHolder = (CallInvokerHolderImpl) context.getJSCallInvokerHolder();
+    CallInvokerHolderImpl callInvokerHolder =
+        (CallInvokerHolderImpl) context.getJSCallInvokerHolder();
     mHybridData =
         initHybrid(
             Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
@@ -101,9 +99,7 @@ public class NativeProxy {
 
   @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(
-      long jsContext,
-      CallInvokerHolderImpl jsCallInvokerHolder,
-      FabricUIManager fabricUIManager);
+      long jsContext, CallInvokerHolderImpl jsCallInvokerHolder, FabricUIManager fabricUIManager);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 
@@ -133,17 +129,16 @@ public class NativeProxy {
     }
     mNodesManager.enableSlowAnimations(slowAnimationsEnabled, ANIMATIONS_DRAG_FACTOR);
     try {
-            Class<NativeModule> WorkletsModuleClass =
-          (Class<NativeModule>)
-              Class.forName("com.swmansion.worklets.WorkletsModule");
-              NativeModule workletsModule = mContext.get().getNativeModule(WorkletsModuleClass);
-              if (workletsModule != null) {
-                try {
-                  workletsModule.getClass().getMethod("toggleSlowAnimations").invoke(workletsModule);
-                } catch (Exception e) {
-                  // Method not available or invocation failed
-                }
-              }
+      Class<NativeModule> WorkletsModuleClass =
+          (Class<NativeModule>) Class.forName("com.swmansion.worklets.WorkletsModule");
+      NativeModule workletsModule = mContext.get().getNativeModule(WorkletsModuleClass);
+      if (workletsModule != null) {
+        try {
+          workletsModule.getClass().getMethod("toggleSlowAnimations").invoke(workletsModule);
+        } catch (Exception e) {
+          // Method not available or invocation failed
+        }
+      }
     } catch (ClassNotFoundException e) {
       // WorkletsModule is not available, we can ignore this.
     }

@@ -12,8 +12,8 @@
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <cstdint>
-#include "worklets/WorkletRuntime/WorkletRuntime.h"
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
