@@ -198,8 +198,11 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 - (std::shared_ptr<UIScheduler>)getUIScheduler:(jsi::Runtime &)rnRuntime
 {
   const auto global = rnRuntime.global();
-  const auto uiScheduler = 
-      rnRuntime, global.getProperty(rnRuntime, "__UI_SCHEDULER_HOLDER").asObject(rnRuntime).getNativeState<UISchedulerHolder>(rnRuntime)->scheduler_;
+  const auto uiScheduler = rnRuntime,
+             global.getProperty(rnRuntime, "__UI_SCHEDULER_HOLDER")
+                 .asObject(rnRuntime)
+                 .getNativeState<UISchedulerHolder>(rnRuntime)
+                 ->scheduler_;
   return uiScheduler;
 }
 
