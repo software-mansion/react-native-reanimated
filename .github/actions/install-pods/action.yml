@@ -12,6 +12,11 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Echo ls
+      shell: bash
+      run: |
+        ls
+        pwd
     - name: Get Podfile.lock hash
       id: pods-cache-key
       shell: bash
