@@ -5,7 +5,7 @@ import { type ProcessedGradientStop, processSVGGradientStops } from '../stops';
 
 describe(processSVGGradientStops, () => {
   test('returns empty array for invalid input', () => {
-    // @ts-ignore improper argument
+    // @ts-expect-error improper argument
     expect(processSVGGradientStops(null)).toEqual([]);
     expect(processSVGGradientStops([])).toEqual([]);
   });
