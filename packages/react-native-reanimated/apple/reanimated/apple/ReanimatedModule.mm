@@ -12,7 +12,6 @@
 #import <reanimated/apple/native/NativeProxy.h>
 
 #import <worklets/Compat/Holders.h>
-#import <worklets/apple/WorkletsModule.h>
 
 using namespace facebook::react;
 using namespace reanimated;
@@ -131,7 +130,8 @@ RCT_EXPORT_MODULE(ReanimatedModule);
  */
 - (BOOL)hasReactNativeFailedReload
 {
-  return ![_moduleRegistry moduleIsInitialized:WorkletsModule.class];
+  id workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
+  return ![_moduleRegistry moduleIsInitialized:[workletsModule class]];
 }
 
 - (void)checkBridgeless
@@ -159,7 +159,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   const auto uiScheduler = [self getUIScheduler:rnRuntime];
 
   auto reanimatedModuleProxy = reanimated::createReanimatedModuleProxy(
-      _nodesManager, _moduleRegistry, rnRuntime, jsCallInvoker, uiWorkletRuntime, uiScheduler);
+      _nodesManager, _moduleRegistry, rnRuntime, jsCallInvoker, uiRuntime, uiScheduler);
 
   auto &uiRuntime = uiWorkletRuntime->getJSIRuntime();
 
@@ -198,10 +198,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 - (std::shared_ptr<UIScheduler>)getUIScheduler:(jsi::Runtime &)rnRuntime
 {
   const auto global = rnRuntime.global();
-  const auto uiScheduler = global.getProperty(rnRuntime, "__UI_SCHEDULER_HOLDER")
-                               .asObject(rnRuntime)
-                               .getNativeState<UISchedulerHolder>(rnRuntime)
-                               ->scheduler_;
+  const auto uiScheduler = 
+      rnRuntime, global.getProperty(rnRuntime, "__UI_SCHEDULER_HOLDER").asObject(rnRuntime).getNativeState<UISchedulerHolder>(rnRuntime)->scheduler_;
   return uiScheduler;
 }
 
