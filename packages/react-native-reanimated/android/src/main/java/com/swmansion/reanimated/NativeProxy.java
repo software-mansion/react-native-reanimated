@@ -102,9 +102,7 @@ public class NativeProxy {
 
   @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(
-      long jsContext,
-      CallInvokerHolderImpl jsCallInvokerHolder,
-      FabricUIManager fabricUIManager);
+      long jsContext, CallInvokerHolderImpl jsCallInvokerHolder, FabricUIManager fabricUIManager);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 
