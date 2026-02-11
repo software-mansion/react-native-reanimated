@@ -281,12 +281,12 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     this.#workletsModuleProxy.setDynamicFeatureFlag(name, value);
   }
 
-  getUIRuntime(): object {
-    return this.#workletsModuleProxy.getUIRuntime();
+  getUIRuntimeHolder(): object {
+    return this.#workletsModuleProxy.getUIRuntimeHolder();
   }
 
-  getUIScheduler(): object {
-    return this.#workletsModuleProxy.getUIScheduler();
+  getUISchedulerHolder(): object {
+    return this.#workletsModuleProxy.getUISchedulerHolder();
   }
 }
 

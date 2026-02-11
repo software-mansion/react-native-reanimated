@@ -20,8 +20,8 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<CallInvoker> &jsInvoker,
-    std::shared_ptr<WorkletRuntime> uiWorkletRuntime,
-    std::shared_ptr<UIScheduler> uiScheduler)
+    const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime,
+    const std::shared_ptr<UIScheduler> &uiScheduler)
 {
   REAAssertJavaScriptQueue();
 

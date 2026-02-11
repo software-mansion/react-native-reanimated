@@ -185,17 +185,17 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   return std::make_shared<facebook::react::NativeReanimatedModuleSpecJSI>(params);
 }
 
-- (std::shared_ptr<WorkletRuntimeHolder>)getUIRuntime:(jsi::Runtime &)rnRuntime
+- (std::shared_ptr<WorkletRuntime>)getUIRuntime:(jsi::Runtime &)rnRuntime
 {
   const auto global = rnRuntime.global();
-  const auto uiRuntime = global.getProperty(rnRuntime, "__UI_WORKLET_RUNTIME")
+  const auto uiRuntime = global.getProperty(rnRuntime, "__UI_WORKLET_RUNTIME_HOLDER")
                              .asObject(rnRuntime)
                              .getNativeState<WorkletRuntimeHolder>(rnRuntime)
                              ->runtime_;
   return uiRuntime;
 }
 
-- (std::shared_ptr<UISchedulerHolder>)getUIScheduler:(jsi::Runtime &)rnRuntime
+- (std::shared_ptr<UIScheduler>)getUIScheduler:(jsi::Runtime &)rnRuntime
 {
   const auto global = rnRuntime.global();
   const auto uiScheduler = global.getProperty(rnRuntime, "__UI_SCHEDULER_HOLDER")

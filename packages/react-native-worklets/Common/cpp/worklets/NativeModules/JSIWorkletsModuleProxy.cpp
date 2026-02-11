@@ -220,8 +220,8 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "propagateModuleUpdate"));
 #endif // WORKLETS_BUNDLE_MODE_ENABLED
 
-  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getUIRuntime"));
-  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getUIScheduler"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getUIRuntimeHolder"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getUISchedulerHolder"));
 
   return propertyNames;
 }
@@ -548,7 +548,7 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         });
   }
 
-  if (name == "getUIRuntime") {
+  if (name == "getUIRuntimeHolder") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
@@ -556,12 +556,12 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         [uiWorkletRuntime = uiWorkletRuntime_](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
           auto obj = jsi::Object(rt);
-          obj.setNativeState(rt, std::make_shared<NativeStateWorkletRuntimeHolder>(uiWorkletRuntime.lock()));
+          obj.setNativeState(rt, std::make_shared<WorkletRuntimeHolder>(uiWorkletRuntime.lock()));
           return obj;
         });
   }
 
-  if (name == "getUIScheduler") {
+  if (name == "getUISchedulerHolder") {
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
@@ -569,7 +569,7 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         [uiScheduler = uiScheduler_](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
           auto obj = jsi::Object(rt);
-          obj.setNativeState(rt, std::make_shared<NativeStateUISchedulerHolder>(uiScheduler));
+          obj.setNativeState(rt, std::make_shared<UISchedulerHolder>(uiScheduler));
           return obj;
         });
   }

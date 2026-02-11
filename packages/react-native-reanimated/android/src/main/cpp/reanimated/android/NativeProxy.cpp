@@ -73,12 +73,12 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
   const auto global = rnRuntime.global();
   const auto uiRuntime = global.getProperty(rnRuntime, "__UI_WORKLET_RUNTIME")
                              .asObject(rnRuntime)
-                             .getNativeState<NativeStateWorkletRuntimeHolder>(rnRuntime)
+                             .getNativeState<WorkletRuntimeHolder>(rnRuntime)
                              ->runtime_;
 
   const auto uiScheduler = global.getProperty(rnRuntime, "__UI_SCHEDULER")
                                .asObject(rnRuntime)
-                               .getNativeState<NativeStateUISchedulerHolder>(rnRuntime)
+                               .getNativeState<UISchedulerHolder>(rnRuntime)
                                ->scheduler_;
 
   return makeCxxInstance(jThis, &rnRuntime, jsCallInvoker, fabricUIManager, uiRuntime, uiScheduler);

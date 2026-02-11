@@ -328,10 +328,10 @@ if (__DEV__) {
   );
 }
 
-export function getUIRuntime(): object {
-  return WorkletsModule.getUIRuntime();
+export function getUIRuntimeHolder(): object {
+  return WorkletsModule.getUIRuntimeHolder();
 }
 
-export function getUIScheduler(): object {
-  return WorkletsModule.getUIScheduler();
+export function getUISchedulerHolder(): object {
+  return WorkletsModule.getUISchedulerHolder();
 }

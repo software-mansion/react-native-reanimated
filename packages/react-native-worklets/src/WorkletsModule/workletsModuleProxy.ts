@@ -137,9 +137,9 @@ export interface WorkletsModuleProxy {
 
   setDynamicFeatureFlag(name: string, value: boolean): void;
 
-  getUIRuntime(): object;
+  getUIRuntimeHolder(): object;
 
-  getUIScheduler(): object;
+  getUISchedulerHolder(): object;
 }
 
 export type IWorkletsModule = WorkletsModuleProxy;

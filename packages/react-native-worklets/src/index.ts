@@ -51,8 +51,8 @@ export {
 } from './runtimeKind';
 export {
   createWorkletRuntime,
-  getUIRuntime,
-  getUIScheduler,
+  getUIRuntimeHolder,
+  getUISchedulerHolder,
   runOnRuntime,
   runOnRuntimeAsync,
   runOnRuntimeSync,
