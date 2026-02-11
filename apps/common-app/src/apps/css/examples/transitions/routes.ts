@@ -12,86 +12,86 @@ import {
 const routes = {
   AnimatedProperties: {
     CardComponent: routeCards.AnimatedPropertiesCard,
-    name: 'Animated Properties',
     Component: AnimatedProperties,
-  },
-  TransitionSettings: {
-    name: 'Transition Settings',
-    CardComponent: routeCards.TransitionSettingsCard,
-    routes: {
-      TransitionProperty: {
-        name: 'Transition Property',
-        Component: transitionSettings.TransitionProperty,
-      },
-      TransitionDuration: {
-        name: 'Transition Duration',
-        Component: transitionSettings.TransitionDuration,
-      },
-      TransitionDelay: {
-        name: 'Transition Delay',
-        Component: transitionSettings.TransitionDelay,
-      },
-      TransitionTimingFunction: {
-        name: 'Transition Timing Function',
-        Component: transitionSettings.TransitionTimingFunction,
-      },
-      TransitionBehavior: {
-        name: 'Transition Behavior',
-        Component: transitionSettings.TransitionBehavior,
-      },
-    },
+    name: 'Animated Properties',
   },
   Miscellaneous: {
-    name: 'Miscellaneous',
     CardComponent: routeCards.MiscellaneousCard,
+    name: 'Miscellaneous',
     routes: {
       ChangingTransitionProperty: {
-        name: 'Changing Transition Property',
         Component: miscellaneous.ChangingTransitionProperty,
-      },
-      UpdatingTransitionSettings: {
-        name: 'Updating Transition Settings',
-        Component: miscellaneous.UpdatingTransitionSettings,
+        name: 'Changing Transition Property',
       },
       MultipleTransitionSettings: {
-        name: 'Multiple Transition Settings',
         Component: miscellaneous.MultipleTransitionSettings,
+        name: 'Multiple Transition Settings',
       },
       ReversingShortening: {
-        name: 'Reversing Shortening',
         Component: miscellaneous.ReversingShortening,
+        name: 'Reversing Shortening',
+      },
+      UpdatingTransitionSettings: {
+        Component: miscellaneous.UpdatingTransitionSettings,
+        name: 'Updating Transition Settings',
       },
     },
   },
   RealWorldExamples: {
-    name: 'Real World Examples',
     CardComponent: routeCards.RealWorldExamplesCard,
+    name: 'Real World Examples',
     routes: {
       AppSettings: {
-        name: 'App Settings',
         Component: realWorldExamples.AppSettings,
-      },
-      FlexGallery: {
-        name: 'Flex Gallery',
-        Component: realWorldExamples.FlexGallery,
+        name: 'App Settings',
       },
       CircularPopupMenu: {
-        name: 'Circular Popup Menu',
         Component: realWorldExamples.CircularPopupMenu,
+        name: 'Circular Popup Menu',
+      },
+      FlexGallery: {
+        Component: realWorldExamples.FlexGallery,
+        name: 'Flex Gallery',
       },
       HamburgerMenuButtons: {
-        name: 'Hamburger Menu Buttons',
         Component: realWorldExamples.HamburgerMenuButtons,
+        name: 'Hamburger Menu Buttons',
       },
     },
   },
   TestExamples: {
-    name: 'Test Examples',
     CardComponent: routeCards.TestExamplesCard,
+    name: 'Test Examples',
     routes: {
       Playground: {
-        name: 'Playground',
         Component: testExamples.Playground,
+        name: 'Playground',
+      },
+    },
+  },
+  TransitionSettings: {
+    CardComponent: routeCards.TransitionSettingsCard,
+    name: 'Transition Settings',
+    routes: {
+      TransitionBehavior: {
+        Component: transitionSettings.TransitionBehavior,
+        name: 'Transition Behavior',
+      },
+      TransitionDelay: {
+        Component: transitionSettings.TransitionDelay,
+        name: 'Transition Delay',
+      },
+      TransitionDuration: {
+        Component: transitionSettings.TransitionDuration,
+        name: 'Transition Duration',
+      },
+      TransitionProperty: {
+        Component: transitionSettings.TransitionProperty,
+        name: 'Transition Property',
+      },
+      TransitionTimingFunction: {
+        Component: transitionSettings.TransitionTimingFunction,
+        name: 'Transition Timing Function',
       },
     },
   },

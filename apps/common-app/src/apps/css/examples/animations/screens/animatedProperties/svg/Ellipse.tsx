@@ -16,10 +16,10 @@ export default function EllipseExample() {
       EllipseProps
     >
       buildAnimation={({ keyframes }) => ({
-        animationName: keyframes,
         animationDirection: 'alternate',
         animationDuration: '1s',
         animationIterationCount: 'infinite',
+        animationName: keyframes,
         animationTimingFunction: 'linear',
       })}
       renderExample={({ animation }) => (
@@ -50,6 +50,8 @@ export default function EllipseExample() {
                   title: 'Absolute values',
                 },
                 {
+                  description:
+                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the ellipse radii are changed **abruptly**',
                   keyframes: {
                     from: {
                       rx: 10,
@@ -61,10 +63,10 @@ export default function EllipseExample() {
                     },
                   },
                   title: 'Relative values (from absolute to percentage)',
-                  description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the ellipse radii are changed **abruptly**',
                 },
                 {
+                  description:
+                    'Animation using only percentage values for smooth relative scaling',
                   keyframes: {
                     from: {
                       rx: '10%',
@@ -76,8 +78,6 @@ export default function EllipseExample() {
                     },
                   },
                   title: 'Percentage values (from 10%/8% to 40%/30%)',
-                  description:
-                    'Animation using only percentage values for smooth relative scaling',
                 },
               ],
               title: 'Ellipse Radii',
@@ -93,6 +93,8 @@ export default function EllipseExample() {
                   title: 'Horizontal Radius (rx) - Absolute',
                 },
                 {
+                  description:
+                    'Animation using only percentage values for smooth relative scaling',
                   keyframes: {
                     from: {
                       rx: '10%',
@@ -102,10 +104,10 @@ export default function EllipseExample() {
                     },
                   },
                   title: 'Horizontal Radius (rx) - Percentage',
-                  description:
-                    'Animation using only percentage values for smooth relative scaling',
                 },
                 {
+                  description:
+                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the horizontal radius is changed **abruptly**',
                   keyframes: {
                     from: {
                       rx: 10,
@@ -115,8 +117,6 @@ export default function EllipseExample() {
                     },
                   },
                   title: 'Horizontal Radius (rx) - Mixed',
-                  description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the horizontal radius is changed **abruptly**',
                 },
               ],
               title: 'Horizontal Radius (rx)',
@@ -132,6 +132,8 @@ export default function EllipseExample() {
                   title: 'Vertical Radius (ry) - Absolute',
                 },
                 {
+                  description:
+                    'Animation using only percentage values for smooth relative scaling',
                   keyframes: {
                     from: {
                       ry: '10%',
@@ -141,10 +143,10 @@ export default function EllipseExample() {
                     },
                   },
                   title: 'Vertical Radius (ry) - Percentage',
-                  description:
-                    'Animation using only percentage values for smooth relative scaling',
                 },
                 {
+                  description:
+                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the vertical radius is changed **abruptly**',
                   keyframes: {
                     from: {
                       ry: 10,
@@ -154,8 +156,6 @@ export default function EllipseExample() {
                     },
                   },
                   title: 'Vertical Radius (ry) - Mixed',
-                  description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the vertical radius is changed **abruptly**',
                 },
               ],
               title: 'Vertical Radius (ry)',
@@ -176,6 +176,8 @@ export default function EllipseExample() {
                   title: 'Absolute value',
                 },
                 {
+                  description:
+                    '0 is the same as 0%, so the ellipse animation is smooth between 0 and 100%',
                   keyframes: {
                     from: {
                       cx: 0,
@@ -185,10 +187,10 @@ export default function EllipseExample() {
                     },
                   },
                   title: 'Relative value (from 0 to 100%)',
-                  description:
-                    '0 is the same as 0%, so the ellipse animation is smooth between 0 and 100%',
                 },
                 {
+                  description:
+                    'Interpolation between absolute and relative values is not supported in SVG, thus the ellipse position is changed abruptly',
                   keyframes: {
                     from: {
                       cx: 50,
@@ -198,8 +200,6 @@ export default function EllipseExample() {
                     },
                   },
                   title: 'Mixed values (from 50 to 100%)',
-                  description:
-                    'Interpolation between absolute and relative values is not supported in SVG, thus the ellipse position is changed abruptly',
                 },
               ],
               title: 'Ellipse Center X',
@@ -215,6 +215,8 @@ export default function EllipseExample() {
                   title: 'Absolute value',
                 },
                 {
+                  description:
+                    '0 is the same as 0%, so the ellipse animation is smooth between 0 and 100%',
                   keyframes: {
                     from: {
                       cy: 0,
@@ -224,10 +226,10 @@ export default function EllipseExample() {
                     },
                   },
                   title: 'Relative values (from 0 to 100%)',
-                  description:
-                    '0 is the same as 0%, so the ellipse animation is smooth between 0 and 100%',
                 },
                 {
+                  description:
+                    'Interpolation between absolute and relative values is not supported in SVG, thus the ellipse position is changed abruptly',
                   keyframes: {
                     from: {
                       cy: 50,
@@ -237,8 +239,6 @@ export default function EllipseExample() {
                     },
                   },
                   title: 'Mixed values (from 50 to 100%)',
-                  description:
-                    'Interpolation between absolute and relative values is not supported in SVG, thus the ellipse position is changed abruptly',
                 },
               ],
               title: 'Ellipse Center Y',

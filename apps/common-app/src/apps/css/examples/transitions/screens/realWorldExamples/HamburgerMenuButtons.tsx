@@ -106,7 +106,7 @@ type ExampleProps = {
   autoOpen?: boolean;
 };
 
-function Example({ Component, autoOpen, title }: ExampleProps) {
+function Example({ autoOpen, Component, title }: ExampleProps) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {

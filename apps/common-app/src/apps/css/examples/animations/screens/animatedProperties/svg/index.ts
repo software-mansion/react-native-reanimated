@@ -8,10 +8,10 @@ import Rect from './Rect';
 
 export default {
   Circle,
+  common,
   Ellipse,
   Image,
   Line,
   Path,
-  common,
   Rect,
 };

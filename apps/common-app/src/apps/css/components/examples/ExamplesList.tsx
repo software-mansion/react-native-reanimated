@@ -33,8 +33,8 @@ export default function ExamplesList<
   P extends AnyRecord,
   S extends AnyRecord = PlainStyle,
 >({
-  CardComponent = ExampleCard,
   buildAnimation,
+  CardComponent = ExampleCard,
   renderExample,
   sections,
 }: ExamplesListProps<P, S>) {
@@ -77,8 +77,8 @@ type ExampleProps<P, S extends AnyRecord> = {
   P;
 
 function Example<P extends AnyRecord, S extends AnyRecord>({
-  CardComponent,
   buildAnimation,
+  CardComponent,
   collapsedExampleHeight,
   denseCode = true,
   description,

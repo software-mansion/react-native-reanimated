@@ -22,10 +22,10 @@ type SearchBarProps = {
 };
 
 export default function SearchBar({
-  onChangeText,
-  value,
-  showProgress,
   onCancel,
+  onChangeText,
+  showProgress,
+  value,
 }: SearchBarProps) {
   const inputRef = useAnimatedRef<TextInput>();
 

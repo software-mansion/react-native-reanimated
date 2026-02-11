@@ -27,15 +27,14 @@ import {
 import { colors, flex, radius, sizes, spacing } from '@/theme';
 
 const DEFAULT_TRANSITION_CONFIG: SelectableConfig<CSSTransitionProperties> = {
-  transitionProperty: 'all',
+  $transitionDelay: {
+    options: ['0s', '1s', '2s', '5s'],
+    value: '0s',
+  },
 
   $transitionDuration: {
     options: ['0s', '1s', '2s', '5s'],
     value: '1s',
-  },
-  $transitionDelay: {
-    options: ['0s', '1s', '2s', '5s'],
-    value: '0s',
   },
   $transitionTimingFunction: {
     options: [
@@ -49,6 +48,7 @@ const DEFAULT_TRANSITION_CONFIG: SelectableConfig<CSSTransitionProperties> = {
     ],
     value: 'linear',
   },
+  transitionProperty: 'all',
 };
 
 type ExampleProps = {

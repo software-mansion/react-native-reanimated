@@ -15,14 +15,14 @@ export default function Position() {
           '0%': {
             position: 'static',
           },
-          '50%': {
-            left: spacing.xl,
-            position: 'relative',
-            top: spacing.xl,
-          },
           '100%': {
             left: spacing.xl,
             position: 'absolute',
+            top: spacing.xl,
+          },
+          '50%': {
+            left: spacing.xl,
+            position: 'relative',
             top: spacing.xl,
           },
         },

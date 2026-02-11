@@ -163,7 +163,7 @@ export default function SearchFilters({
   return (
     <View
       style={
-        IS_WEB && { width: 600, maxWidth: '100%', marginHorizontal: 'auto' }
+        IS_WEB && { marginHorizontal: 'auto', maxWidth: '100%', width: 600 }
       }>
       <Text style={styles.title}>Searching in:</Text>
       <ScrollView
@@ -201,10 +201,10 @@ export default function SearchFilters({
                 renderInput={renderInput}
                 selected={key}
                 styleOptions={{
-                  inputStyle: styles.filterInput,
-                  inputTextStyle: styles.filterInputText,
                   chevronColor: colors.primary,
                   dropdownStyle: styles.dropdown,
+                  inputStyle: styles.filterInput,
+                  inputTextStyle: styles.filterInputText,
                 }}
                 fitInScreen
                 onSelect={(value) => handleSelect(key, value)}

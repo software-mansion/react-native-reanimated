@@ -12,15 +12,15 @@ export default function BackfaceVisibility() {
         animationDuration: '4s',
         animationIterationCount: 'infinite',
         animationName: {
+          '100%': {
+            backfaceVisibility: 'visible',
+            transform: [{ perspective: 100 }, { rotateY: '180deg' }],
+          },
           '50%': {
             backfaceVisibility: 'visible',
           },
           '75%': {
             backfaceVisibility: 'hidden',
-          },
-          '100%': {
-            backfaceVisibility: 'visible',
-            transform: [{ perspective: 100 }, { rotateY: '180deg' }],
           },
         },
         animationTimingFunction: 'linear',

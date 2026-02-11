@@ -28,10 +28,11 @@ import { colors, flex, radius, sizes, spacing } from '@/theme';
 const DEFAULT_TRANSITION_CONFIG: SelectableConfig<
   Partial<CSSTransitionProperties>
 > = {
-  $transitionProperty: {
+  $transitionDelay: {
+    canDisable: true,
     maxNumberOfValues: 3,
-    options: ['width', 'height', 'transform'],
-    value: ['width', 'height', 'transform'],
+    options: ['0s', '1s', '2s', '5s'],
+    value: ['0s', '1s'],
   },
 
   $transitionDuration: {
@@ -41,11 +42,10 @@ const DEFAULT_TRANSITION_CONFIG: SelectableConfig<
     value: ['1s', '2s'],
   },
 
-  $transitionDelay: {
-    canDisable: true,
+  $transitionProperty: {
     maxNumberOfValues: 3,
-    options: ['0s', '1s', '2s', '5s'],
-    value: ['0s', '1s'],
+    options: ['width', 'height', 'transform'],
+    value: ['width', 'height', 'transform'],
   },
   $transitionTimingFunction: {
     canDisable: true,
