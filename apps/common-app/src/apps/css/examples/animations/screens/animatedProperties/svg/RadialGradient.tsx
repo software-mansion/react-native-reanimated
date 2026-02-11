@@ -5,15 +5,11 @@ import Animated, {
 // TODO: Fix me
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
-import { Defs, RadialGradient, Rect, Stop, Svg } from 'react-native-svg';
+import { RadialGradient, Rect, Svg } from 'react-native-svg';
 
 import { ExamplesScreen } from '@/apps/css/components';
 
 const AnimatedGrad = Animated.createAnimatedComponent(RadialGradient);
-
-const DefsWithChildren = Defs as React.ComponentType<{
-  children?: React.ReactNode;
-}>;
 
 // TODO:
 // Remove when RNSVG fixes 'Unable to apply focus point of RadialGradient on Android' problem.
@@ -35,18 +31,11 @@ export default function RadialGradientExample() {
       })}
       renderExample={({ animation }) => (
         <Svg height={300} width={300}>
-          <DefsWithChildren>
-            <AnimatedGrad
-              animatedProps={animation}
-              gradientUnits="objectBoundingBox"
-              id="radialGrad">
-              {[
-                // TODO: Remove the necessity for this hack.
-                // Hack to mute RNSVG warning "gradient without stops"
-                <Stop key="fallback" />,
-              ]}
-            </AnimatedGrad>
-          </DefsWithChildren>
+          <AnimatedGrad
+            animatedProps={animation}
+            gradientUnits="objectBoundingBox"
+            id="radialGrad"
+          />
           <Rect
             fill="url(#radialGrad)"
             height={100}
