@@ -18,9 +18,8 @@ runs:
       run: |
         PODFILE_LOCK="${{ inputs.working-directory }}/${{ inputs.pod-directory }}/Podfile.lock"
         if [ -f "$PODFILE_LOCK" ]; then
-          HASH=$(grep "PODFILE CHECKSUM:" "$PODFILE_LOCK" | awk '{print $3}')
-          echo "hash=$HASH" >> $GITHUB_OUTPUT
-        else
+            HASH=$(sha256sum "$PODFILE_LOCK" | awk '{print $1}')
+            echo "hash=$HASH" >> $GITHUB_OUTPUT    else
           echo "hash=no-lockfile" >> $GITHUB_OUTPUT
         fi
 
