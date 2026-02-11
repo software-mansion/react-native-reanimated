@@ -12,11 +12,6 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Echo ls
-      shell: bash
-      run: |
-        ls
-        pwd
     - name: Get Podfile.lock hash
       id: pods-cache-key
       shell: bash
@@ -24,7 +19,8 @@ runs:
         PODFILE_LOCK="${{ inputs.working-directory }}/${{ inputs.pod-directory }}/Podfile.lock"
         if [ -f "$PODFILE_LOCK" ]; then
             HASH=$(sha256sum "$PODFILE_LOCK" | awk '{print $1}')
-            echo "hash=$HASH" >> $GITHUB_OUTPUT    else
+            echo "hash=$HASH" >> $GITHUB_OUTPUT
+        else
           echo "hash=no-lockfile" >> $GITHUB_OUTPUT
         fi
 
