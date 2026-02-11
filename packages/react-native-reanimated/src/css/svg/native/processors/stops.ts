@@ -3,7 +3,7 @@
 import { logger, type ValueProcessor } from '../../../../common';
 import type { CSSGradientStop } from '../../../types';
 import { processColorSVG } from './colors';
-import { processOpacity } from './opacity';
+import { processPercentage } from './percentage';
 
 export interface ProcessedGradientStop {
   offset: number;
@@ -25,7 +25,7 @@ export const processSVGGradientStops: ValueProcessor<
   const processed = stops.map((stop) => {
     const rawColor = stop.color && processColorSVG(stop.color);
     const stopOpacity =
-      stop.opacity !== undefined ? processOpacity(stop.opacity) : 1;
+      stop.opacity !== undefined ? processPercentage(stop.opacity) : 1;
     const finalColor =
       typeof rawColor === 'number' && typeof stopOpacity === 'number'
         ? ((Math.round(stopOpacity * 255) << 24) | (rawColor & 0x00ffffff)) >>>
@@ -33,7 +33,7 @@ export const processSVGGradientStops: ValueProcessor<
         : rawColor;
 
     return {
-      offset: processOpacity(stop.offset || 0), // should we rename this processor?
+      offset: processPercentage(stop.offset || 0),
       color: finalColor,
     } as ProcessedGradientStop;
   });
