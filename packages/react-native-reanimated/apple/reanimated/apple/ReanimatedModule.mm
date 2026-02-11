@@ -11,8 +11,8 @@
 #import <reanimated/apple/ReanimatedModule.h>
 #import <reanimated/apple/native/NativeProxy.h>
 
-#import <worklets/apple/WorkletsModule.h>
 #import <worklets/Compat/Holders.h>
+#import <worklets/apple/WorkletsModule.h>
 
 using namespace facebook::react;
 using namespace reanimated;
