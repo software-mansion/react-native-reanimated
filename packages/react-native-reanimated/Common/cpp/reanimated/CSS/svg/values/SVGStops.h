@@ -16,7 +16,7 @@ struct SVGStops : public CSSSimpleValue<SVGStops> {
     SVGBrush color;
   };
 
-  SVGStops();
+  SVGStops() = default;
   template <typename T>
     requires(!std::same_as<std::decay_t<T>, SVGStops>) && std::constructible_from<std::vector<GradientStop>, T>
   explicit SVGStops(T &&value) : stops{std::forward<T>(value)} {}
