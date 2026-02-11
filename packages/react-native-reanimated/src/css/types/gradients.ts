@@ -21,7 +21,7 @@ export type CSSRadialGradientProps = {
   r?: NumberProp;
   gradientUnits?: Units;
   // TODO: Implement 'gradientTransform'
-  // gradientTransform?: TransformProps['transform'];
+  // gradientTransform?: TransformsArray;
   id?: string;
   gradient?: CSSGradientStop[];
 };
@@ -33,7 +33,7 @@ export type CSSLinearGradientProps = {
   y2?: NumberProp;
   gradientUnits?: Units;
   // TODO: Implement 'gradientTransform'
-  // gradientTransform?: TransformProps['transform'];
+  // gradientTransform?: TransformsArray;
   id?: string;
   gradient?: CSSGradientStop[];
 };
