@@ -15741,6 +15741,7 @@ __metadata:
     "@docusaurus/core": "npm:3.9.2"
     "@docusaurus/module-type-aliases": "npm:3.9.2"
     "@docusaurus/plugin-debug": "npm:3.9.2"
+    "@docusaurus/plugin-google-tag-manager": "npm:3.9.2"
     "@docusaurus/preset-classic": "npm:3.9.2"
     "@docusaurus/theme-common": "npm:3.9.2"
     "@docusaurus/theme-mermaid": "npm:3.9.2"
