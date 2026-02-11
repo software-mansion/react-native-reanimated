@@ -37,16 +37,18 @@ Pod::Spec.new do |s|
 
   s.dependency "RNWorklets"
 
-  s.subspec "reanimated" do |ss|
+  s.header_dir = "reanimated"
+  
+  s.subspec "common" do |ss|
     ss.source_files = "Common/cpp/reanimated/**/*.{cpp,h}"
-    ss.header_dir = "reanimated"
+    ss.public_header_files = "Common/cpp/reanimated/**/*.h"
     ss.header_mappings_dir = "Common/cpp/reanimated"
+  end
 
-    ss.subspec "apple" do |sss|
-      sss.source_files = "apple/reanimated/**/*.{mm,h,m}"
-      sss.header_dir = "reanimated"
-      sss.header_mappings_dir = "apple/reanimated"
-    end
+  s.subspec "apple" do |ss|
+    ss.source_files = "apple/reanimated/**/*.{mm,h,m}"
+    ss.public_header_files = "apple/reanimated/**/*.h"
+    ss.header_mappings_dir = "apple/reanimated"
   end
 
   s.pod_target_xcconfig = {
@@ -79,11 +81,6 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/Headers/Public/hermes-engine"',
       '"$(PODS_ROOT)/Headers/Public/RNWorklets"',
       "\"$(PODS_ROOT)/#{$config[:react_native_common_dir]}\"",
-      "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_reanimated_dir]}/apple\"",
-      "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_reanimated_dir]}/Common/cpp\"",
-      "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_reanimated_dir]}/Common/NativeView\"",
-      "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_worklets_dir]}/apple\"",
-      "\"$(PODS_ROOT)/#{$config[:dynamic_frameworks_worklets_dir]}/Common/cpp\"",
     ].join(' '),
     "OTHER_CFLAGS" => "$(inherited) #{example_flag} #{version_flags} #{compilation_metadata_generation_flag} #{feature_flags} #{reanimated_profiling_flag}",
   }
