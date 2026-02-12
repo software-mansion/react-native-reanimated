@@ -220,7 +220,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
       addAnimatedPropsToBatch(shadowNode, propsBuilder->get());
     }
-      addUpdatesToBatch(shadowNode, result);
+    addUpdatesToBatch(shadowNode, result);
   }
 }
 

@@ -714,7 +714,8 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
     addNonLayoutPropsFromDynamic(mutations, cssUpdatesBatch);
     mergeAnimationUpdatesBatch(mutations, animatedUpdatesBatch);
 
-    if (mutations.batch.size() == 0) {
+    if (mutations.batch.size() == 0 && !cssTransitionsRegistry_->hasUpdates() &&
+        !cssAnimationsRegistry_->hasUpdates()) {
       // Empty mutations batch implies finished animation
       std::weak_ptr<UIManagerAnimationBackend> unstableAnimationBackend = uiManager_->unstable_getAnimationBackend();
       if (auto locked = unstableAnimationBackend.lock()) {
