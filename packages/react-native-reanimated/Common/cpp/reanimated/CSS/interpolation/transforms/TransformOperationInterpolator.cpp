@@ -30,6 +30,13 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<TOperation>::inte
   return operation;
 }
 
+template <typename TOperation>
+void TransformOperationInterpolator<TOperation>::addDiscreteStyleOperationToPropsBuilder(
+    const std::shared_ptr<StyleOperation> &operation,
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const {
+    addToPropsBuilder_(propsBuilder, *std::static_pointer_cast<TOperation>(operation));
+}
+
 // Specialization for PerspectiveOperation
 TransformOperationInterpolator<PerspectiveOperation>::TransformOperationInterpolator(
     const std::shared_ptr<PerspectiveOperation> &defaultOperation,

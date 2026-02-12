@@ -24,6 +24,11 @@ class TransformOperationInterpolator : public StyleOperationInterpolator {
       const std::shared_ptr<StyleOperation> &to,
       const StyleOperationsInterpolationContext &context,
       const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const override;
+    
+  void addDiscreteStyleOperationToPropsBuilder(
+        const std::shared_ptr<StyleOperation> &operation,
+        const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const override;
+
 
  private:
   std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, TOperation &)> addToPropsBuilder_;

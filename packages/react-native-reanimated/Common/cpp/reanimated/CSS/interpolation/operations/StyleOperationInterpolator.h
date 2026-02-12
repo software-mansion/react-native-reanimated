@@ -35,6 +35,9 @@ class StyleOperationInterpolator {
   virtual std::shared_ptr<StyleOperation> resolveOperation(
       const std::shared_ptr<StyleOperation> &operation,
       const UpdateContext &context) const;
+  virtual void addDiscreteStyleOperationToPropsBuilder(
+      const std::shared_ptr<StyleOperation> &operation,
+      const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const;
 
  private:
   const std::shared_ptr<StyleOperation> defaultOperation_;

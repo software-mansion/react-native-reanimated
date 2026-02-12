@@ -33,6 +33,13 @@ std::unique_ptr<StyleOperation> FilterOperationInterpolator<TOperation>::interpo
   return operation;
 }
 
+template <typename TOperation>
+void FilterOperationInterpolator<TOperation>::addDiscreteStyleOperationToPropsBuilder(
+    const std::shared_ptr<StyleOperation> &operation,
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const {
+    addToPropsBuilder_(propsBuilder, *std::static_pointer_cast<TOperation>(operation));
+}
+
 template class FilterOperationInterpolator<BlurOperation>;
 template class FilterOperationInterpolator<BrightnessOperation>;
 template class FilterOperationInterpolator<ContrastOperation>;

@@ -65,6 +65,12 @@ folly::dynamic OperationsStyleInterpolator::interpolate(
   if (keyframe->isDiscrete) {
     const auto &operations =
         progress < fallbackInterpolateThreshold ? keyframe->fromOperations.value() : keyframe->toOperations.value();
+      
+      for (auto &operation : operations) {
+          const auto &interpolator = interpolators_->at(operation->type);
+          interpolator->addDiscreteStyleOperationToPropsBuilder(operation, propsBuilder);
+      }
+      
     return convertOperationsToDynamic(operations);
   }
 
