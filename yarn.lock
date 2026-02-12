@@ -8150,29 +8150,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native/eslint-config@npm:0.83.0-rc.4":
-  version: 0.83.0-rc.4
-  resolution: "@react-native/eslint-config@npm:0.83.0-rc.4"
-  dependencies:
-    "@babel/core": "npm:^7.25.2"
-    "@babel/eslint-parser": "npm:^7.25.1"
-    "@react-native/eslint-plugin": "npm:0.83.0-rc.4"
-    "@typescript-eslint/eslint-plugin": "npm:^8.36.0"
-    "@typescript-eslint/parser": "npm:^8.36.0"
-    eslint-config-prettier: "npm:^8.5.0"
-    eslint-plugin-eslint-comments: "npm:^3.2.0"
-    eslint-plugin-ft-flow: "npm:^2.0.1"
-    eslint-plugin-jest: "npm:^29.0.1"
-    eslint-plugin-react: "npm:^7.30.1"
-    eslint-plugin-react-hooks: "npm:^7.0.1"
-    eslint-plugin-react-native: "npm:^4.0.0"
-  peerDependencies:
-    eslint: ">=8"
-    prettier: ">=2"
-  checksum: 10/3039509b1c0fdcbe841a1835d79169e8994a06e8b42a3929923b3403ca97615b221d4703bc30fd3a4a2868adb2e9a5c1db2ea9126ff605a979f3eb4873e2466d
-  languageName: node
-  linkType: hard
-
 "@react-native/eslint-config@npm:0.84.0":
   version: 0.84.0
   resolution: "@react-native/eslint-config@npm:0.84.0"
@@ -8207,13 +8184,6 @@ __metadata:
   version: 0.81.1
   resolution: "@react-native/eslint-plugin@npm:0.81.1"
   checksum: 10/84fde65381a9de4c859c12756b7bf2bafe2543933fc072ca8bf767cdec886bfadecfe6e0f17943ed1dd98c7cb6e8c84ae8f7f83543a81dc76d4bb803d759c299
-  languageName: node
-  linkType: hard
-
-"@react-native/eslint-plugin@npm:0.83.0-rc.4":
-  version: 0.83.0-rc.4
-  resolution: "@react-native/eslint-plugin@npm:0.83.0-rc.4"
-  checksum: 10/90bc7807bbe1e91dddd0ebb6611bafb0abb92f24db7cc43938d8d2d1edad5db923ec9ae5b25ad61967d1a817ecba7a13c22ac01859475455faca19e7f17a8bcc
   languageName: node
   linkType: hard
 
@@ -29278,7 +29248,7 @@ __metadata:
     "@babel/plugin-transform-unicode-regex": "npm:7.27.1"
     "@babel/preset-typescript": "npm:7.27.1"
     "@react-native-community/cli": "npm:20.0.0"
-    "@react-native/eslint-config": "npm:0.83.0-rc.4"
+    "@react-native/eslint-config": "npm:0.84.0"
     "@types/jest": "npm:30.0.0"
     "@types/node": "npm:24.7.0"
     "@types/react": "npm:19.2.2"
