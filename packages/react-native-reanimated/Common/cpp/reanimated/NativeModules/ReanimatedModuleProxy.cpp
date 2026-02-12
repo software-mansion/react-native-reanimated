@@ -1,3 +1,4 @@
+#include <cxxreact/TraceSection.h>
 #include <jsi/jsi.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
@@ -9,6 +10,8 @@
 #include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/WorkletEventHandler.h>
+#include "reanimated/Tools/DevToolsProfiler.h"
+#include "reanimated/Tools/DevToolsProtocol.h"
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
@@ -1322,6 +1325,15 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
     }
 
     setDevToolsEnabled(true);
+    Eventer::getInstance().setAddF([](facebook::react::ProfilerEventInternal &event) {
+      DevToolsProfiler::getInstance().getThreadBuffer().addEvent(ProfilerEventInternal{
+          .type = event.type == facebook::react::ProfilerEventType::Begin ? ProfilerEventType::Begin
+                                                                          : ProfilerEventType::End,
+          .namePtr = event.namePtr,
+          .threadId = event.threadId,
+          .timeNs = event.timeNs,
+      });
+    });
   }
 }
 

@@ -116,7 +116,7 @@ class DevToolsClient {
       DevToolsServer::getInstance().sendMutations(std::move(simpleMutations));
 
       // Also flush profiler events
-      DevToolsProfiler::getInstance().flush();
+      //      DevToolsProfiler::getInstance().flush();
     }
   }
 

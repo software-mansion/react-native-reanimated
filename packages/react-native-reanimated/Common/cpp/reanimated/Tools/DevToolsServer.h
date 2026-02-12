@@ -43,9 +43,6 @@ class DevToolsServer {
   // Events contain raw pointers that will be resolved on the network thread
   void sendProfilerEvents(std::vector<ProfilerEventInternal> &&events);
 
-  // Queue profiler overflow notification
-  void sendProfilerOverflow(uint32_t threadId, const char *message);
-
   // Send thread metadata (called once per thread, from any thread)
   void sendThreadMetadata(uint32_t threadId, const std::string &threadName);
 
@@ -90,8 +87,6 @@ class DevToolsServer {
   void sendProfilerStringsBatch(const std::vector<ProfilerStringEntry> &strings);
   void sendProfilerEventsBatch(const std::vector<ProfilerEvent> &events);
   void sendThreadMetadataBatch(const std::vector<ThreadMetadata> &metadata);
-  void sendProfilerOverflowBatch(const std::vector<ProfilerOverflowMessage> &overflows);
-  void sendMutationsOverflow();
   bool sendRawData(const void *data, size_t size);
 
   // Resolve profiler event pointers to IDs (called on network thread only)
@@ -123,8 +118,7 @@ class DevToolsServer {
   int serverSocket_{-1}; // Network thread only
   int clientSocket_{-1}; // Network thread only
 
-  // App start time for DeviceInfo
-  uint64_t appStartTimeNs_{0};
+  uint64_t devToolsStartTimeNs_{0};
 
   // Work queues (protected by queueMutex_)
   std::mutex queueMutex_;
@@ -132,14 +126,12 @@ class DevToolsServer {
   std::vector<MutationBatch> pendingMutations_;
   std::vector<std::vector<ProfilerEventInternal>> pendingProfilerEvents_;
   std::vector<ThreadMetadata> pendingThreadMetadata_;
-  std::vector<ProfilerOverflowMessage> pendingProfilerOverflows_;
   bool flushRequested_{false};
 
   // Buffered data (for when no client is connected)
   std::vector<MutationBatch> bufferedMutations_;
   std::vector<ProfilerEventInternal> bufferedProfilerEvents_;
   std::vector<ThreadMetadata> bufferedThreadMetadata_;
-  bool mutationsOverflowed_{false};
 
   // Tracking what has been sent to current client
   std::unordered_set<uint32_t> threadMetadataSent_;

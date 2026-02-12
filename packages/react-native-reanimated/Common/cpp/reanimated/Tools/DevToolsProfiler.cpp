@@ -22,10 +22,16 @@ ProfilerThreadInfo::ProfilerThreadInfo() {
   updateThreadInfo();
 }
 
-bool ProfilerThreadInfo::addEvent(const ProfilerEventInternal &event) {
+void ProfilerThreadInfo::addEvent(const ProfilerEventInternal &event) {
+  static thread_local uint32_t expectedThreadId = 0;
+  if (expectedThreadId == 0) {
+    expectedThreadId = threadIdHash_;
+  } else if (expectedThreadId != threadIdHash_) {
+    LOG(ERROR) << "SPSC violation! Expected thread " << expectedThreadId << " but called from " << threadIdHash_;
+  }
   ProfilerEventInternal eventWithThread = event;
   eventWithThread.threadId = threadIdHash_;
-  return events_.push(eventWithThread);
+  events_.push(eventWithThread);
 }
 
 void ProfilerThreadInfo::updateThreadInfo() {
@@ -104,14 +110,7 @@ void DevToolsProfiler::flush() {
   std::vector<ProfilerEventInternal> allEvents;
 
   for (auto *buffer : buffers) {
-    bool wasOverflowed = false;
-    size_t count = buffer->drainEvents(std::back_inserter(allEvents), wasOverflowed);
-
-    // Send overflow notification if needed
-    if (wasOverflowed) {
-      DevToolsServer::getInstance().sendProfilerOverflow(
-          buffer->getThreadIdHash(), "Profiler buffer overflowed - some events were dropped");
-    }
+    size_t count = buffer->drainEvents(allEvents);
 
     // Send thread metadata if new and has events
     if (count > 0 && !buffer->hasMetadataBeenSent()) {
@@ -122,6 +121,22 @@ void DevToolsProfiler::flush() {
 
   // Send to server
   if (!allEvents.empty()) {
+    static std::unordered_map<uint64_t, int> depthMap;
+
+    for (auto &event : allEvents) {
+      if (!depthMap.contains(event.threadId)) {
+        depthMap[event.threadId] = -1;
+      }
+      auto &depth = depthMap[event.threadId];
+      if (event.type == Begin) {
+        depth++;
+      } else {
+        if (depth < 0) {
+          throw "dupa";
+        }
+        depth--;
+      }
+    }
     DevToolsServer::getInstance().sendProfilerEvents(std::move(allEvents));
   }
 }

@@ -34,17 +34,17 @@ struct TreeSnapshot {
 // Profiler timeline data structures
 struct ProfilerEventData {
   uint32_t stringId;
-  uint32_t threadId;
   uint64_t startTimeNs;
   uint64_t endTimeNs;
-  int snapshotId = -1; // Linked snapshot ID (assigned by matching timestamps)
 };
 
 // Per-thread timeline
 struct ThreadTimeline {
+  int currentDepth = -1;
   uint32_t threadId;
   std::string threadName;
-  std::vector<ProfilerEventData> events;
+  std::vector<std::vector<ProfilerEventData>> eventsPerLane;
+  uint64_t lastKnownTimeNs = 0;
 };
 
 // Hovered event info for tooltip
@@ -55,13 +55,4 @@ struct HoveredEventInfo {
   double durationUs;
   double startTimeMs;
   double endTimeMs;
-  int snapshotId = -1; // Linked snapshot ID
-};
-
-// Event with assigned depth for rendering nested events
-struct EventWithDepth {
-  const ProfilerEventData *event;
-  int depth; // Lane/row within the thread
-  double startRel;
-  double endRel;
 };

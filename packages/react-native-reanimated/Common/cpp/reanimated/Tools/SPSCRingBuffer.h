@@ -1,8 +1,10 @@
 #pragma once
 
+#include <glog/logging.h>
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
+#include <thread>
 #include <type_traits>
 #include <utility>
 
@@ -47,18 +49,20 @@ class SPSCRingBuffer {
   static constexpr size_t Mask = ActualCapacity - 1;
 
  public:
-  SPSCRingBuffer() : head_(0), tail_(0), overflowed_(false) {}
+  SPSCRingBuffer() : head_(0), tail_(0) {}
 
   // Push an item (producer thread only)
-  // Returns true if successful, false if buffer is full (overflow)
-  bool push(T &&item) {
+  void push(T &&item) {
     const size_t currentHead = head_.load(std::memory_order_relaxed);
     const size_t nextHead = (currentHead + 1) & Mask;
 
     // Check if full
     if (nextHead == tail_.load(std::memory_order_acquire)) {
-      overflowed_.store(true, std::memory_order_relaxed);
-      return false; // Buffer full - overflow
+      //buffer is full, block
+      while (nextHead == tail_.load(std::memory_order_acquire)) {
+        LOG(INFO) << "SPSCRingBuffer is full, producer is waiting...";
+        std::this_thread::yield();
+      }
     }
 
     // Write item
@@ -66,12 +70,11 @@ class SPSCRingBuffer {
 
     // Update head
     head_.store(nextHead, std::memory_order_release);
-    return true;
   }
 
   // Convenience overload for const ref
-  bool push(const T &item) {
-    return push(T(item));
+  void push(const T &item) {
+    push(T(item));
   }
 
   bool empty() const {
@@ -82,17 +85,10 @@ class SPSCRingBuffer {
     return ActualCapacity;
   }
 
-  // Drain all items that were in the buffer at the moment of call (consumer
-  // thread only) Sets wasOverflowed to true if overflow occurred since last
-  // drain Returns number of items drained
-  template <typename OutputIt>
-  size_t drainBounded(OutputIt out, bool &wasOverflowed) {
+  size_t drainBounded(std::vector<T> &events) {
     // Snapshot head at start - only drain up to this point
     const size_t snapshotHead = head_.load(std::memory_order_acquire);
     const size_t currentTail = tail_.load(std::memory_order_relaxed);
-
-    // Check and clear overflow flag
-    wasOverflowed = overflowed_.exchange(false, std::memory_order_relaxed);
 
     // Calculate count
     const size_t count = (snapshotHead - currentTail) & Mask;
@@ -100,7 +96,7 @@ class SPSCRingBuffer {
     // Read all items directly (single consumer, no need to update tail
     // incrementally)
     for (size_t i = 0; i < count; ++i) {
-      *out++ = buffer_[(currentTail + i) & Mask];
+      events.push_back(buffer_[(currentTail + i) & Mask]);
     }
 
     // Update tail once at the end
@@ -115,7 +111,6 @@ class SPSCRingBuffer {
   // Align head and tail to separate cache lines to prevent false sharing
   alignas(64) std::atomic<size_t> head_;
   alignas(64) std::atomic<size_t> tail_;
-  std::atomic<bool> overflowed_;
 };
 
 } // namespace reanimated

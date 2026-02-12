@@ -29,14 +29,12 @@ class ProfilerThreadInfo {
   explicit ProfilerThreadInfo();
 
   // Add event to ring buffer (lock-free, called from profiler thread)
-  // Returns false if buffer is full (event dropped)
-  bool addEvent(const ProfilerEventInternal &event);
+  void addEvent(const ProfilerEventInternal &event);
 
   // Drain all available events (called from network thread)
-  // Returns number of events drained, sets wasOverflowed if overflow occurred
-  template <typename OutputIt>
-  size_t drainEvents(OutputIt out, bool &wasOverflowed) {
-    return events_.drainBounded(out, wasOverflowed);
+  // Returns number of events drained
+  size_t drainEvents(std::vector<ProfilerEventInternal> &events) {
+    return events_.drainBounded(events);
   }
 
   // Check if buffer has events
@@ -121,17 +119,19 @@ class DevToolsProfiler {
  */
 class ProfilerSection {
  public:
-  explicit ProfilerSection(const char *name)
-      : name_(name), startTimeNs_(std::chrono::steady_clock::now().time_since_epoch().count()) {}
+  explicit ProfilerSection(const char *name) {
+    auto startTimeNs = std::chrono::steady_clock::now().time_since_epoch().count();
+    ProfilerEventInternal event;
+    event.type = ProfilerEventType::Begin;
+    event.timeNs = startTimeNs;
+    event.namePtr = name;
+    DevToolsProfiler::getInstance().getThreadBuffer().addEvent(event);
+  }
 
   ~ProfilerSection() {
     ProfilerEventInternal event;
-    // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
-    event.namePtr = reinterpret_cast<uint64_t>(name_);
-    // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
-    event.threadId = 0; // Will be set by addEvent
-    event.startTimeNs = startTimeNs_;
-    event.endTimeNs = std::chrono::steady_clock::now().time_since_epoch().count();
+    event.type = ProfilerEventType::End;
+    event.timeNs = std::chrono::steady_clock::now().time_since_epoch().count();
     DevToolsProfiler::getInstance().getThreadBuffer().addEvent(event);
   }
 
@@ -140,10 +140,6 @@ class ProfilerSection {
   ProfilerSection &operator=(const ProfilerSection &) = delete;
   ProfilerSection(ProfilerSection &&) = delete;
   ProfilerSection &operator=(ProfilerSection &&) = delete;
-
- private:
-  const char *name_;
-  uint64_t startTimeNs_;
 };
 
 // Convenience macro - creates a static string literal and ProfilerSection

@@ -9,7 +9,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <atomic>
 #include "data_structures.h"
 
 // Application state - split into data and UI components
@@ -26,7 +25,6 @@ struct DiscoveredDevice {
   uint64_t appStartTimeNs;
   uint32_t bufferedProfilerEvents;
   uint32_t bufferedMutations;
-  bool hasMutationsOverflow;
   bool valid; // Set to true if DeviceInfo was received and validated
   std::string errorMessage; // Set if connection succeeded but handshake failed
 };
@@ -55,10 +53,6 @@ struct DataState {
   std::unordered_map<uint32_t, ThreadTimeline> threadTimelines;
   std::unordered_map<uint32_t, std::string> profilerStrings;
   std::unordered_map<uint32_t, std::string> threadNames; // Thread ID -> human-readable name
-  uint64_t profilerMinTimeNs = UINT64_MAX;
-  uint64_t profilerMaxTimeNs = 0;
-  std::atomic<long> profilerOverflowCount{0};
-  std::atomic<long> mutationsOverflowCount{0};
 
   // Lifecycle
   std::atomic<bool> running{true};
@@ -78,8 +72,7 @@ struct UIState {
   bool adjustRNSScreensHeaders = false;
 
   // Profiler view state
-  double profilerViewStartNs = 0.0;
-  float profilerViewOffsetY = 0.0f;
+  double profilerViewEndNs = 0.0;
   double profilerNsPerPixel = 100000.0;
   bool profilerLockToLatest = true;
   HoveredEventInfo hoveredEvent;

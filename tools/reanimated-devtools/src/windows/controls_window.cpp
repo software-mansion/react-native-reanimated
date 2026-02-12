@@ -44,17 +44,6 @@ void renderControlsWindow(app::AppState &state) {
     ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.4f, 1.0f), "Disconnected: %s", disconnectReason.c_str());
   }
 
-  // Show overflow warnings
-  long profilerOverflow = state.data.profilerOverflowCount.load();
-  long mutationsOverflow = state.data.mutationsOverflowCount.load();
-
-  if (profilerOverflow) {
-    ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Warning: Profiler events were dropped (%ld occurrences)", profilerOverflow);
-  }
-  if (mutationsOverflow) {
-    ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Warning: Mutation data was dropped (%ld occurrences)", mutationsOverflow);
-  }
-
   ImGui::Separator();
 
   {

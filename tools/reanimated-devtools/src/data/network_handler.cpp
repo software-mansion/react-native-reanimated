@@ -147,7 +147,6 @@ bool probePort(uint16_t port, app::DiscoveredDevice &device, int timeoutMs) {
   device.appStartTimeNs = info.appStartTimeNs;
   device.bufferedProfilerEvents = info.bufferedProfilerEvents;
   device.bufferedMutations = info.bufferedMutations;
-  device.hasMutationsOverflow = info.hasMutationsOverflow != 0;
   device.valid = true;
 
   // Close the probe connection
@@ -221,16 +220,12 @@ bool connectToDevice(app::AppState &state, uint16_t port) {
     state.data.currentRoots.clear();
     state.data.currentSnapshotIndex = -1;
     state.data.snapshotCounter = 0;
-    state.data.mutationsOverflowCount = false;
   }
   {
     std::lock_guard<std::mutex> profilerLock(state.data.profilerMutex);
     state.data.threadTimelines.clear();
     state.data.profilerStrings.clear();
     state.data.threadNames.clear();
-    state.data.profilerMinTimeNs = UINT64_MAX;
-    state.data.profilerMaxTimeNs = 0;
-    state.data.profilerOverflowCount = 0;
   }
   {
     std::lock_guard<std::mutex> connLock(state.data.connectionMutex);
@@ -406,12 +401,6 @@ void networkThread(app::AppState &state) {
           case reanimated::DevToolsMessageType::ConnectionRejected:
             payloadSize = header.payloadCount * sizeof(reanimated::ConnectionRejectedMessage);
             break;
-          case reanimated::DevToolsMessageType::ProfilerOverflow:
-            payloadSize = header.payloadCount * sizeof(reanimated::ProfilerOverflowMessage);
-            break;
-          case reanimated::DevToolsMessageType::MutationsOverflow:
-            payloadSize = header.payloadCount * sizeof(reanimated::MutationsOverflowMessage);
-            break;
           default:
             std::cerr << "Unknown message type: " << static_cast<int>(header.type) << "\n";
             pendingData.clear();
@@ -480,16 +469,6 @@ void networkThread(app::AppState &state) {
               std::lock_guard<std::mutex> lock(state.data.connectionMutex);
               state.data.disconnectReason = msg.reason;
             }
-            break;
-          }
-
-          case reanimated::DevToolsMessageType::ProfilerOverflow: {
-            state.data.profilerOverflowCount.fetch_add(1);
-            break;
-          }
-
-          case reanimated::DevToolsMessageType::MutationsOverflow: {
-            state.data.mutationsOverflowCount.fetch_add(1);
             break;
           }
 

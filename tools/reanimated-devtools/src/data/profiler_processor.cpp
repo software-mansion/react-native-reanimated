@@ -1,92 +1,74 @@
 #include "data/profiler_processor.h"
 #include <algorithm>
+#include <cstdint>
+#include <iostream>
 #include "app_state.h"
+#include "data_structures.h"
 #include "protocol.h"
 
 namespace data {
 
-std::vector<EventWithDepth> assignEventDepths(const std::vector<ProfilerEventData> &events, uint64_t minTimeNs) {
-  std::vector<EventWithDepth> eventsWithDepth;
-  eventsWithDepth.reserve(events.size());
-
-  // Convert to relative times and create EventWithDepth objects
-  for (const auto &event : events) {
-    EventWithDepth ewd;
-    ewd.event = &event;
-    ewd.startRel = static_cast<double>(event.startTimeNs - minTimeNs);
-    ewd.endRel = static_cast<double>(event.endTimeNs - minTimeNs);
-    ewd.depth = 0;
-    eventsWithDepth.push_back(ewd);
+ThreadTimeline &getOrCreateThreadTimeline(app::AppState &state, uint32_t threadId) {
+  if (!state.data.threadTimelines.count(threadId)) {
+    std::cout << "Creating new timeline for threadId=" << threadId << "\n";
   }
-
-  // Sort by start time, then by duration (longer events first)
-  std::sort(eventsWithDepth.begin(), eventsWithDepth.end(), [](const EventWithDepth &a, const EventWithDepth &b) {
-    if (a.startRel != b.startRel)
-      return a.startRel < b.startRel;
-    return (b.endRel - b.startRel) < (a.endRel - a.startRel); // Longer duration first
-  });
-
-  // Assign depths using a greedy algorithm
-  // Track the end time of the last event in each depth level
-  std::vector<double> depthEndTimes;
-
-  for (auto &ewd : eventsWithDepth) {
-    // Find the first depth where this event doesn't overlap
-    int assignedDepth = -1;
-    bool foundSlot = false;
-
-    for (size_t d = 0; d < depthEndTimes.size(); ++d) {
-      if (ewd.startRel >= depthEndTimes[d]) {
-        assignedDepth = static_cast<int>(d);
-        depthEndTimes[d] = ewd.endRel;
-        foundSlot = true;
-        break;
-      }
-    }
-
-    // If no slot found, create a new depth
-    if (!foundSlot) {
-      assignedDepth = static_cast<int>(depthEndTimes.size());
-      depthEndTimes.push_back(ewd.endRel);
-    }
-
-    ewd.depth = assignedDepth;
-  }
-
-  return eventsWithDepth;
-}
-
-void recordProfilerEvent(app::AppState &state, const reanimated::ProfilerEvent &event) {
-  std::lock_guard<std::mutex> lock(state.data.profilerMutex);
-
-  // Store event in timeline
-  ProfilerEventData eventData;
-  eventData.stringId = event.stringId;
-  eventData.threadId = event.threadId;
-  eventData.startTimeNs = event.startTimeNs;
-  eventData.endTimeNs = event.endTimeNs;
-
-  // Link to snapshot by matching timestamps (use midpoint of event)
-  uint64_t eventMidpointNs = (event.startTimeNs + event.endTimeNs) / 2;
-  eventData.snapshotId = findSnapshotForTimestamp(state, eventMidpointNs);
-
-  // Get or create thread timeline
-  auto &timeline = state.data.threadTimelines[event.threadId];
-  timeline.threadId = event.threadId;
+  auto &timeline = state.data.threadTimelines[threadId];
+  timeline.threadId = threadId;
   if (timeline.threadName.empty()) {
+
     // Use stored thread name or fall back to generic name
-    auto nameIt = state.data.threadNames.find(event.threadId);
+    auto nameIt = state.data.threadNames.find(threadId);
     if (nameIt != state.data.threadNames.end()) {
       timeline.threadName = nameIt->second;
     } else {
-      timeline.threadName = "Thread " + std::to_string(event.threadId);
+      timeline.threadName = "Thread " + std::to_string(threadId);
     }
   }
-  timeline.events.push_back(eventData);
+  return timeline;
+}
 
-  // Update global time range
-  state.data.profilerMinTimeNs = std::min(state.data.profilerMinTimeNs, event.startTimeNs);
-  state.data.profilerMaxTimeNs = std::max(state.data.profilerMaxTimeNs, event.endTimeNs);
+void recordProfilerEvent(app::AppState &state, const reanimated::ProfilerEvent &event) {
+  static bool broken = false;
+  if (broken) {
+    return;
+  }
+
+  std::lock_guard<std::mutex> lock(state.data.profilerMutex);
+
+  auto &timeline = getOrCreateThreadTimeline(state, event.threadId);
+  auto &depth = timeline.currentDepth;
+  timeline.lastKnownTimeNs = event.timeNs;
+
+  if (event.type == reanimated::ProfilerEventType::Begin) {
+    depth++;
+    ProfilerEventData eventData;
+    eventData.stringId = event.stringId;
+    eventData.startTimeNs = event.timeNs;
+    eventData.endTimeNs = UINT64_MAX; // Will be filled on End event
+
+    if (depth >= timeline.eventsPerLane.size()) {
+      timeline.eventsPerLane.push_back({eventData});
+    } else {
+      timeline.eventsPerLane[depth].push_back(eventData);
+    }
+
+  } else if (event.type == reanimated::ProfilerEventType::End) {
+    if (depth < 0) {
+      std::cerr << "Warning: Received End event without matching Begin for threadId=" << event.threadId
+                << " stringId=" << event.stringId << "\n";
+      for (size_t laneIdx = 0; laneIdx < timeline.eventsPerLane.size(); laneIdx++) {
+        const auto &laneEvents = timeline.eventsPerLane[laneIdx];
+        const auto lastEvent = laneEvents.back();
+        std::cerr << "  Lane " << laneIdx << ": " << laneEvents.size() << " events\n"
+                  << "last event: " << state.data.profilerStrings.at(lastEvent.stringId)
+                  << "time range: " << lastEvent.startTimeNs << " -> " << lastEvent.endTimeNs << "\n";
+      }
+      broken = true;
+      return;
+    }
+    timeline.eventsPerLane[depth].back().endTimeNs = event.timeNs;
+    depth--;
+  }
 }
 
 void registerProfilerString(app::AppState &state, uint32_t id, const std::string &name) {

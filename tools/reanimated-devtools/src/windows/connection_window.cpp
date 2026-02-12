@@ -147,10 +147,9 @@ void renderDeviceList(app::AppState &state) {
           ImGui::SameLine();
           ImGui::TextColored(
               ImVec4(0.6f, 0.8f, 0.6f, 1.0f),
-              "[%u events, %u mutations%s]",
+              "[%u events, %u mutations]",
               device.bufferedProfilerEvents,
-              device.bufferedMutations,
-              device.hasMutationsOverflow ? " (overflow)" : "");
+              device.bufferedMutations);
         }
       }
 

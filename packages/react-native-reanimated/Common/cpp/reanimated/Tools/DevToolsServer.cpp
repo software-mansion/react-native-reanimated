@@ -2,6 +2,7 @@
 #include <reanimated/Tools/DevToolsServer.h>
 
 #include <cstring>
+#include "reanimated/Tools/DevToolsProtocol.h"
 
 #if defined(__APPLE__) || defined(ANDROID)
 #include <arpa/inet.h>
@@ -29,7 +30,7 @@ void DevToolsServer::start() {
     return; // Already running
   }
 
-  appStartTimeNs_ = getCurrentTimestampNs();
+  devToolsStartTimeNs_ = getCurrentTimestampNs();
   networkThread_ = std::thread([this]() { networkThreadLoop(); });
 }
 
@@ -81,22 +82,6 @@ void DevToolsServer::sendProfilerEvents(std::vector<ProfilerEventInternal> &&eve
 
   std::lock_guard<std::mutex> lock(queueMutex_);
   pendingProfilerEvents_.push_back(std::move(events));
-  queueCondition_.notify_one();
-}
-
-void DevToolsServer::sendProfilerOverflow(uint32_t threadId, const char *message) {
-  if (!running_.load(std::memory_order_acquire)) {
-    return;
-  }
-
-  ProfilerOverflowMessage overflow;
-  overflow.threadId = threadId;
-  overflow.timestampNs = getCurrentTimestampNs();
-  strncpy(overflow.message, message, sizeof(overflow.message) - 1);
-  overflow.message[sizeof(overflow.message) - 1] = '\0';
-
-  std::lock_guard<std::mutex> lock(queueMutex_);
-  pendingProfilerOverflows_.push_back(overflow);
   queueCondition_.notify_one();
 }
 
@@ -174,7 +159,6 @@ void DevToolsServer::networkThreadLoop() {
     std::vector<MutationBatch> mutationBatches;
     std::vector<std::vector<ProfilerEventInternal>> profilerBatches;
     std::vector<ThreadMetadata> threadMetadata;
-    std::vector<ProfilerOverflowMessage> profilerOverflows;
 
     {
       std::unique_lock<std::mutex> lock(queueMutex_);
@@ -183,7 +167,7 @@ void DevToolsServer::networkThreadLoop() {
       // Also wake up if we have a client waiting for handshake
       queueCondition_.wait_for(lock, std::chrono::milliseconds(DevToolsConfig::FLUSH_INTERVAL_MS), [this] {
         return !pendingMutations_.empty() || !pendingProfilerEvents_.empty() || !pendingThreadMetadata_.empty() ||
-            !pendingProfilerOverflows_.empty() || flushRequested_ || !running_.load(std::memory_order_acquire) ||
+            flushRequested_ || !running_.load(std::memory_order_acquire) ||
             (clientSocket_ != INVALID_SOCKET && !clientReady_);
       });
 
@@ -195,11 +179,9 @@ void DevToolsServer::networkThreadLoop() {
       mutationBatches = std::move(pendingMutations_);
       profilerBatches = std::move(pendingProfilerEvents_);
       threadMetadata = std::move(pendingThreadMetadata_);
-      profilerOverflows = std::move(pendingProfilerOverflows_);
       pendingMutations_.clear();
       pendingProfilerEvents_.clear();
       pendingThreadMetadata_.clear();
-      pendingProfilerOverflows_.clear();
       flushRequested_ = false;
     }
 
@@ -218,10 +200,6 @@ void DevToolsServer::networkThreadLoop() {
 
     // Only send data if client has completed handshake
     if (clientSocket_ != INVALID_SOCKET && clientReady_) {
-      // Send profiler overflows first
-      if (!profilerOverflows.empty()) {
-        sendProfilerOverflowBatch(profilerOverflows);
-      }
 
       // Send thread metadata (only for threads not yet sent to this client)
       std::vector<ThreadMetadata> newMetadata;
@@ -281,7 +259,9 @@ void DevToolsServer::networkThreadLoop() {
           if (bufferedMutations_.size() < DevToolsConfig::MUTATIONS_BUFFER_MAX_COUNT) {
             bufferedMutations_.push_back(std::move(batch));
           } else {
-            mutationsOverflowed_ = true;
+            LOG(WARNING)
+                << "DevTools: Mutations buffer overflow - new mutations will be discarded until first client connects";
+            break;
           }
         }
       }
@@ -437,12 +417,6 @@ void DevToolsServer::flushBuffersToClient() {
     bufferedThreadMetadata_.clear();
   }
 
-  // Send mutations overflow warning if needed
-  if (mutationsOverflowed_) {
-    sendMutationsOverflow();
-    mutationsOverflowed_ = false;
-  }
-
   // Send all buffered mutations
   for (const auto &batch : bufferedMutations_) {
     sendMutationsBatch(batch.mutations, batch.timestampNs);
@@ -541,13 +515,12 @@ void DevToolsServer::sendDeviceInfo() {
 #endif
 
   info.port = boundPort_;
-  info.appStartTimeNs = appStartTimeNs_;
+  info.appStartTimeNs = devToolsStartTimeNs_;
   info.bufferedProfilerEvents = static_cast<uint32_t>(bufferedProfilerEvents_.size());
   info.bufferedMutations = 0;
   for (const auto &batch : bufferedMutations_) {
     info.bufferedMutations += static_cast<uint32_t>(batch.mutations.size());
   }
-  info.hasMutationsOverflow = mutationsOverflowed_ ? 1 : 0;
 
   DevToolsMessageHeader header(DevToolsMessageType::DeviceInfo, 1);
   sendRawData(&header, sizeof(header));
@@ -612,8 +585,25 @@ void DevToolsServer::sendProfilerEventsBatch(const std::vector<ProfilerEvent> &e
 
   DevToolsMessageHeader header(DevToolsMessageType::ProfilerEvents, static_cast<uint32_t>(events.size()));
 
+  static std::unordered_map<uint32_t, int> depthMap;
+
   if (!sendRawData(&header, sizeof(header))) {
     return;
+  }
+
+  for (auto &event : events) {
+    if (!depthMap.contains(event.threadId)) {
+      depthMap[event.threadId] = -1;
+    }
+    auto &depth = depthMap[event.threadId];
+    if (event.type == Begin) {
+      depth++;
+    } else {
+      if (depth < 0) {
+        throw "dupa";
+      }
+      depth--;
+    }
   }
 
   sendRawData(events.data(), events.size() * sizeof(ProfilerEvent));
@@ -631,36 +621,6 @@ void DevToolsServer::sendThreadMetadataBatch(const std::vector<ThreadMetadata> &
   }
 
   sendRawData(metadata.data(), metadata.size() * sizeof(ThreadMetadata));
-}
-
-void DevToolsServer::sendProfilerOverflowBatch(const std::vector<ProfilerOverflowMessage> &overflows) {
-  if (overflows.empty()) {
-    return;
-  }
-
-  DevToolsMessageHeader header(DevToolsMessageType::ProfilerOverflow, static_cast<uint32_t>(overflows.size()));
-
-  if (!sendRawData(&header, sizeof(header))) {
-    return;
-  }
-
-  sendRawData(overflows.data(), overflows.size() * sizeof(ProfilerOverflowMessage));
-}
-
-void DevToolsServer::sendMutationsOverflow() {
-  MutationsOverflowMessage msg;
-  memset(&msg, 0, sizeof(msg));
-  msg.timestampNs = getCurrentTimestampNs();
-  msg.droppedCount = 0; // We don't track exact count
-  strncpy(msg.message, "Mutations buffer overflowed before first client connected", sizeof(msg.message) - 1);
-
-  DevToolsMessageHeader header(DevToolsMessageType::MutationsOverflow, 1);
-
-  if (!sendRawData(&header, sizeof(header))) {
-    return;
-  }
-
-  sendRawData(&msg, sizeof(msg));
 }
 
 bool DevToolsServer::sendRawData(const void *data, size_t size) {
@@ -692,17 +652,18 @@ std::vector<ProfilerEvent> DevToolsServer::resolveProfilerEvents(const std::vect
   resolved.reserve(events.size());
 
   for (const auto &event : events) {
-    // NOLINTBEGIN(performance-no-int-to-ptr)
-    // Intentional: namePtr stores a static string literal pointer as uint64_t
-    const char *name = reinterpret_cast<const char *>(event.namePtr);
-    // NOLINTEND(performance-no-int-to-ptr)
-    uint32_t stringId = getOrRegisterString(name);
-
     ProfilerEvent resolvedEvent;
-    resolvedEvent.stringId = stringId;
+
+    if (event.type == ProfilerEventType::Begin) {
+      // NOLINTBEGIN(performance-no-int-to-ptr)
+      // Intentional: namePtr stores a static string literal pointer as uint64_t
+      const char *name = reinterpret_cast<const char *>(event.namePtr);
+      // NOLINTEND(performance-no-int-to-ptr)
+      resolvedEvent.stringId = getOrRegisterString(name);
+    }
+    resolvedEvent.type = event.type;
     resolvedEvent.threadId = static_cast<uint32_t>(event.threadId);
-    resolvedEvent.startTimeNs = event.startTimeNs;
-    resolvedEvent.endTimeNs = event.endTimeNs;
+    resolvedEvent.timeNs = event.timeNs - devToolsStartTimeNs_;
     resolved.push_back(resolvedEvent);
   }
 

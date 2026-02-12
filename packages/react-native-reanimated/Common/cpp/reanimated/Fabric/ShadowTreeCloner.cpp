@@ -4,12 +4,13 @@
 #include <memory>
 #include <ranges>
 #include <utility>
+#include "reanimated/Tools/DevToolsProfiler.h"
 
 namespace reanimated {
 
 Props::Shared mergeProps(const ShadowNode &shadowNode, const PropsMap &propsMap, const ShadowNodeFamily &family) {
   ReanimatedSystraceSection s("ShadowTreeCloner::mergeProps");
-
+  REANIMATED_PROFILE_SECTION("ShadowTreeCloner::mergeProps");
   const auto it = propsMap.find(&family);
 
   if (it == propsMap.end()) {
