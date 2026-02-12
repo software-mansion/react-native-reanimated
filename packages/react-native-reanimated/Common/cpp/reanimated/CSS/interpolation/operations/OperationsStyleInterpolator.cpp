@@ -30,14 +30,38 @@ folly::dynamic OperationsStyleInterpolator::getResetStyle(const std::shared_ptr<
   return styleValue;
 }
 
-folly::dynamic OperationsStyleInterpolator::getFirstKeyframeValue() const {
+folly::dynamic OperationsStyleInterpolator::getFirstKeyframeValue(
+    std::shared_ptr<AnimatedPropsBuilder> propsBuilder) const {
   const auto &fromOperations = keyframes_.front()->fromOperations;
-  return fromOperations.has_value() ? convertOperationsToDynamic(fromOperations.value()) : defaultStyleValueDynamic_;
+
+  if (fromOperations.has_value()) {
+    for (const auto &operation : fromOperations.value()) {
+      const auto &interpolator = interpolators_->at(operation->type);
+      interpolator->addDiscreteStyleOperationToPropsBuilder(operation, propsBuilder);
+    }
+    return convertOperationsToDynamic(fromOperations.value());
+  }
+
+  auto defaultStyleCopy = defaultStyleValueDynamic_;
+  propsBuilder->storeDynamic(defaultStyleCopy);
+  return defaultStyleCopy;
 }
 
-folly::dynamic OperationsStyleInterpolator::getLastKeyframeValue() const {
+folly::dynamic OperationsStyleInterpolator::getLastKeyframeValue(
+    std::shared_ptr<AnimatedPropsBuilder> propsBuilder) const {
   const auto &toOperations = keyframes_.back()->toOperations;
-  return toOperations.has_value() ? convertOperationsToDynamic(toOperations.value()) : defaultStyleValueDynamic_;
+
+  if (toOperations.has_value()) {
+    for (const auto &operation : toOperations.value()) {
+      const auto &interpolator = interpolators_->at(operation->type);
+      interpolator->addDiscreteStyleOperationToPropsBuilder(operation, propsBuilder);
+    }
+    return convertOperationsToDynamic(toOperations.value());
+  }
+
+  auto defaultStyleCopy = defaultStyleValueDynamic_;
+  propsBuilder->storeDynamic(defaultStyleCopy);
+  return defaultStyleCopy;
 }
 
 folly::dynamic OperationsStyleInterpolator::interpolate(
@@ -65,12 +89,12 @@ folly::dynamic OperationsStyleInterpolator::interpolate(
   if (keyframe->isDiscrete) {
     const auto &operations =
         progress < fallbackInterpolateThreshold ? keyframe->fromOperations.value() : keyframe->toOperations.value();
-      
-      for (auto &operation : operations) {
-          const auto &interpolator = interpolators_->at(operation->type);
-          interpolator->addDiscreteStyleOperationToPropsBuilder(operation, propsBuilder);
-      }
-      
+
+    for (auto &operation : operations) {
+      const auto &interpolator = interpolators_->at(operation->type);
+      interpolator->addDiscreteStyleOperationToPropsBuilder(operation, propsBuilder);
+    }
+
     return convertOperationsToDynamic(operations);
   }
 
