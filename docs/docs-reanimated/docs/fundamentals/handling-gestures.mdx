@@ -16,7 +16,7 @@ Let's start with the simplest gesture - tapping. Tap gesture detects fingers tou
 
 In this example, we'll create a circle that will grow and change color on touch.
 
-First, let's wrap our app with [`GestureHandlerRootView`](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/installation/#js). Make sure to keep the `GestureHandlerRootView` as close to the actual root view as possible. That'll ensure that our gestures will work as expected with each other.
+First, let's wrap our app with [`GestureHandlerRootView`](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/installation). Make sure to keep the `GestureHandlerRootView` as close to the actual root view as possible. That'll ensure that our gestures will work as expected with each other.
 
 ```jsx
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -30,7 +30,7 @@ function App() {
 }
 ```
 
-New tap gestures are defined with `Gesture.Tap()` in your component's body. You can define the behavior of the gesture by chaining methods like [`onBegin`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/tap-gesture/#onbegincallback), [`onStart`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/tap-gesture/#onstartcallback), [`onEnd`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/tap-gesture/#onendcallback), or [`onFinalize`](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/tap-gesture/#onfinalizecallback) on the gesture. We'll use them to update a shared value just after the gesture begins and return to the initial value when the gesture finishes.
+New tap gestures are defined with `Gesture.Tap()` in your component's body. You can define the behavior of the gesture by chaining methods like [`onBegin`](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/tap-gesture/#onbegincallback), [`onStart`](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/tap-gesture/#onstartcallback), [`onEnd`](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/tap-gesture/#onendcallback), or [`onFinalize`](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/tap-gesture/#onfinalizecallback) on the gesture. We'll use them to update a shared value just after the gesture begins and return to the initial value when the gesture finishes.
 
 import TapGesture from '@site/src/examples/HandlingGestures/TapGesture';
 import TapGestureSrc from '!!raw-loader!@site/src/examples/HandlingGestures/TapGesture';
@@ -68,7 +68,7 @@ import PanGestureSrc from '!!raw-loader!@site/src/examples/HandlingGestures/PanG
 
 <CollapsibleCode showLines={[17, 33]} src={PanGestureSrc} />
 
-The callback passed to `onChange` comes with some [event data](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pan-gesture#event-data) that has a bunch of handy properties. One of them is `translationX` which indicates how much the object has moved on the X axis. We stored that in a shared value to move the circle accordingly. To make the circle come back to its initial place all you have to do is to reset the `offset.value` in the `onFinalize` method. We can use `withSpring` or `withTiming` functions to make it come back with an animation.
+The callback passed to `onChange` comes with some [event data](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/pan-gesture#event-data) that has a bunch of handy properties. One of them is `translationX` which indicates how much the object has moved on the X axis. We stored that in a shared value to move the circle accordingly. To make the circle come back to its initial place all you have to do is to reset the `offset.value` in the `onFinalize` method. We can use `withSpring` or `withTiming` functions to make it come back with an animation.
 
 All that's left to do is to adjust the logic in `useAnimatedStyle` to handle the offset.
 
@@ -118,6 +118,6 @@ In this section, we went through the basics of handling gestures with Reanimated
 
 ## What's next?
 
-In this article, we've barely scratched the surface of what's possible with gestures in Reanimated. Besides [Tap](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/tap-gesture) and [Pan](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pan-gesture) gestures Gesture Handler comes with many more e.g. [Pinch](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/pinch-gesture) or [Fling](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/fling-gesture). We welcome you to dive into the [Quick start](https://docs.swmansion.com/react-native-gesture-handler/docs/guides/quickstart) section of the React Native Gesture Handler documentation and explore all the possibilities that this library comes with.
+In this article, we've barely scratched the surface of what's possible with gestures in Reanimated. Besides [Tap](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/tap-gesture) and [Pan](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/pan-gesture) gestures Gesture Handler comes with many more e.g. [Pinch](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/pinch-gesture) or [Fling](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/fling-gesture). We welcome you to dive into the [Quick start](https://docs.swmansion.com/react-native-gesture-handler/docs/guides/quickstart) section of the React Native Gesture Handler documentation and explore all the possibilities that this library comes with.
 
 In [the next section](/docs/fundamentals/glossary), Let's explore a glossary of terms together!
