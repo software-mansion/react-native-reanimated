@@ -31,6 +31,7 @@ export const processSVGGradientStops = ((stops) => {
 
   intermediate.sort((a, b) => Number(a.offset) - Number(b.offset));
 
+  // This linearised format is used to be consistent with what RNSVG does
   const ret: ProcessedGradientStop[] = [];
   for (const item of intermediate) {
     ret.push(item.offset);
