@@ -1,12 +1,12 @@
 #include <reanimated/CSS/svg/values/SVGStops.h>
 
+#include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <algorithm>
 #include <cstddef>
 #include <functional>
 #include <optional>
 #include <regex>
 #include <string>
-#include "reanimated/CSS/svg/values/SVGBrush.h"
 
 namespace reanimated::css {
 
