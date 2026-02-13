@@ -175,6 +175,9 @@ void CSSAnimationsRegistry::updateViewAnimations(
   folly::dynamic result = folly::dynamic::object;
   std::shared_ptr<AnimatedPropsBuilder> propsBuilder = std::make_shared<AnimatedPropsBuilder>();
   std::shared_ptr<const ShadowNode> shadowNode = nullptr;
+  // We collect reset updates to avoid merging AnimatedProps for now.
+  std::vector<std::shared_ptr<AnimatedPropsBuilder>> resetPropsUpdates;
+
   bool hasUpdates = false;
 
   for (const auto animationIndex : animationIndices) {
@@ -196,7 +199,13 @@ void CSSAnimationsRegistry::updateViewAnimations(
       if (addToBatch && !animation->hasForwardsFillMode()) {
         //  We also have to manually commit style values
         // reverting the changes applied by the animation.
-        hasUpdates = addStyleUpdates(result, animation->getResetStyle(), false) || hasUpdates;
+        auto resetStyle = animation->getResetStyle();
+        hasUpdates = addStyleUpdates(result, resetStyle, false) || hasUpdates;
+        if (hasUpdates) {
+          std::shared_ptr<AnimatedPropsBuilder> resetPropsBuilder = std::make_shared<AnimatedPropsBuilder>();
+          resetPropsBuilder->storeDynamic(resetStyle);
+          resetPropsUpdates.push_back(resetPropsBuilder);
+        }
         updatesAddedToBatch = true;
         // We want to remove style changes applied by the animation that is
         // finished and has no forwards fill mode. We cannot simply remove
@@ -219,6 +228,10 @@ void CSSAnimationsRegistry::updateViewAnimations(
   if (hasUpdates) {
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
       addAnimatedPropsToBatch(shadowNode, propsBuilder->get());
+      // overrides previous styles if not empty
+      for (auto &delayedPropsBuilder : resetPropsUpdates) {
+        addAnimatedPropsToBatch(shadowNode, delayedPropsBuilder->get());
+      }
     }
     addUpdatesToBatch(shadowNode, result);
   }
