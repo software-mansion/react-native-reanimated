@@ -1,6 +1,6 @@
+#include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGStops.h>
 
-#include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <algorithm>
 #include <cstddef>
 #include <functional>
