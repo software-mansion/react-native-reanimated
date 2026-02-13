@@ -41,7 +41,7 @@ TransitionProperties CSSTransition::getProperties() const {
 folly::dynamic
 CSSTransition::run(const CSSTransitionConfig &config, const folly::dynamic &lastUpdateValue, const double timestamp) {
   // Update interpolators and progress providers for changed properties
-  handleChangedProperties(config, lastUpdateValue, timestamp);
+  handleChangedProperties(config, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
   // Remove interpolators and progress providers for no longer transitioned props
   handleRemovedProperties(config);
   // Return the first transition frame
@@ -67,6 +67,13 @@ void CSSTransition::handleChangedProperties(
   const auto null = folly::dynamic();
 
   for (const auto &[propertyName, propertySettings] : config.changedProperties) {
+    const auto allowDiscrete = propertySettings.allowDiscrete;
+
+    if (!allowDiscrete && isDiscreteProperty(propertyName, shadowNode_->getComponentName())) {
+      removeProperty(propertyName);
+      continue;
+    }
+
     transitionProperties_.insert(propertyName);
 
     // Update the transition style interpolator
@@ -74,7 +81,10 @@ void CSSTransition::handleChangedProperties(
     const auto lastValue = lastUpdateValue.getDefault(propertyName, null);
     const auto isReversed =
         styleInterpolator_.createOrUpdateInterpolator(propertyName, valueChange.first, valueChange.second, lastValue);
-    styleInterpolator_.setAllowDiscrete(propertyName, propertySettings.allowDiscrete);
+
+    // We still pass allowDiscrete to use correct threshold for interpolation between incompatible values
+    // (e.g. when someone passes a keyword and a numeric value - in this case we interpolate them as discrete values)
+    styleInterpolator_.setAllowDiscrete(propertyName, allowDiscrete);
 
     // Update the transition progress provider
     progressProvider_.runProgressProvider(propertyName, propertySettings, isReversed, timestamp);
@@ -83,10 +93,14 @@ void CSSTransition::handleChangedProperties(
 
 void CSSTransition::handleRemovedProperties(const CSSTransitionConfig &config) {
   for (const auto &propertyName : config.removedProperties) {
-    transitionProperties_.erase(propertyName);
-    styleInterpolator_.removeProperty(propertyName);
-    progressProvider_.removeProperty(propertyName);
+    removeProperty(propertyName);
   }
+}
+
+void CSSTransition::removeProperty(const std::string &propertyName) {
+  transitionProperties_.erase(propertyName);
+  styleInterpolator_.removeProperty(propertyName);
+  progressProvider_.removeProperty(propertyName);
 }
 
 } // namespace reanimated::css

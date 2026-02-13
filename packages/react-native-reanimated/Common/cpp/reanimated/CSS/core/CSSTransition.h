@@ -37,6 +37,7 @@ class CSSTransition {
   void
   handleChangedProperties(const CSSTransitionConfig &config, const folly::dynamic &lastUpdateValue, double timestamp);
   void handleRemovedProperties(const CSSTransitionConfig &config);
+  void removeProperty(const std::string &propertyName);
 };
 
 } // namespace reanimated::css

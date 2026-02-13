@@ -35,6 +35,7 @@ void CSSTransitionsRegistry::run(std::shared_ptr<const ShadowNode> shadowNode, c
 
   auto initialUpdate = transition->run(config, lastUpdates, timestamp);
 
+  scheduleOrActivateTransition(transition);
   updateInUpdatesRegistry(transition, initialUpdate);
 }
 

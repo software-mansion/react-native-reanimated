@@ -117,14 +117,15 @@ void TransitionProgressProvider::runProgressProvider(
       // Create reversing shortening progress provider for interrupted reversing transition
       propertyProgressProviders_.insert_or_assign(
           propertyName, createReversingShorteningProgressProvider(timestamp, settings, *progressProvider));
+      return;
     }
-  } else {
-    // Create progress provider with the new settings
-    propertyProgressProviders_.insert_or_assign(
-        propertyName,
-        std::make_shared<TransitionPropertyProgressProvider>(
-            timestamp, settings.duration, settings.delay, settings.easingFunction));
   }
+
+  // Create progress provider with the new settings
+  propertyProgressProviders_.insert_or_assign(
+      propertyName,
+      std::make_shared<TransitionPropertyProgressProvider>(
+          timestamp, settings.duration, settings.delay, settings.easingFunction));
 }
 
 void TransitionProgressProvider::removeProperty(const std::string &propertyName) {
