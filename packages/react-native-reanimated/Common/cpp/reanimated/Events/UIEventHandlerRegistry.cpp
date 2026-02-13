@@ -1,17 +1,16 @@
-// EventHandlerRegistry was fully moved to Reanimated.
-// This file is kept only for backwards compatibility with older versions of Reanimated.
-
-#include <worklets/Registries/EventHandlerRegistry.h>
-#include <worklets/Tools/WorkletEventHandler.h>
+#include <reanimated/Events/UIEventHandler.h>
+#include <reanimated/Events/UIEventHandlerRegistry.h>
 
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-namespace worklets {
+using namespace worklets;
 
-void EventHandlerRegistry::registerEventHandler(const std::shared_ptr<WorkletEventHandler> &eventHandler) {
+namespace reanimated {
+
+void UIEventHandlerRegistry::registerEventHandler(const std::shared_ptr<UIEventHandler> &eventHandler) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   const auto &eventName = eventHandler->getEventName();
   auto handlerId = eventHandler->getHandlerId();
@@ -26,7 +25,7 @@ void EventHandlerRegistry::registerEventHandler(const std::shared_ptr<WorkletEve
   eventHandlers[handlerId] = eventHandler;
 }
 
-void EventHandlerRegistry::unregisterEventHandler(const uint64_t id) {
+void UIEventHandlerRegistry::unregisterEventHandler(const uint64_t id) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   auto handlerIt = eventHandlers.find(id);
   if (handlerIt != eventHandlers.end()) {
@@ -54,13 +53,13 @@ void EventHandlerRegistry::unregisterEventHandler(const uint64_t id) {
   }
 }
 
-void EventHandlerRegistry::processEvent(
+void UIEventHandlerRegistry::processEvent(
     const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime,
     const double eventTimestamp,
     const std::string &eventName,
     const int emitterReactTag,
     const jsi::Value &eventPayload) {
-  std::vector<std::shared_ptr<WorkletEventHandler>> handlersForEvent;
+  std::vector<std::shared_ptr<UIEventHandler>> handlersForEvent;
   {
     const std::lock_guard<std::mutex> lock(instanceMutex);
     auto handlersIt = eventMappingsWithoutTag.find(eventName);
@@ -85,11 +84,11 @@ void EventHandlerRegistry::processEvent(
   }
 }
 
-bool EventHandlerRegistry::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) {
+bool UIEventHandlerRegistry::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
   const auto eventHash = std::make_pair(emitterReactTag, eventName);
   auto it = eventMappingsWithTag.find(eventHash);
   return it != eventMappingsWithTag.end() && !it->second.empty();
 }
 
-} // namespace worklets
+} // namespace reanimated

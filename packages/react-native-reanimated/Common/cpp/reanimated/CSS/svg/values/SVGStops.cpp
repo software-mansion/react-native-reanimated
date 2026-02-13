@@ -1,3 +1,4 @@
+#include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGStops.h>
 
 #include <algorithm>
@@ -9,39 +10,26 @@
 
 namespace reanimated::css {
 
-SVGStops::SVGStops() : stops{} {}
-
 SVGStops::SVGStops(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  if (!jsiValue.isObject() || !jsiValue.asObject(rt).isArray(rt))
-    return;
-
   jsi::Array array = jsiValue.asObject(rt).asArray(rt);
   size_t length = array.size(rt);
-  stops.reserve(length);
 
-  for (size_t i = 0; i < length; i++) {
-    jsi::Object item = array.getValueAtIndex(rt, i).asObject(rt);
+  stops.reserve(length / 2);
 
-    double offset = item.getProperty(rt, "offset").asNumber();
-    jsi::Value colorVal = item.getProperty(rt, "color");
+  for (size_t i = 0; i < length; i += 2) {
+    double offset = array.getValueAtIndex(rt, i).asNumber();
+    auto colorVal = array.getValueAtIndex(rt, i + 1);
 
     stops.emplace_back(offset, SVGBrush(rt, colorVal));
   }
 }
 
 SVGStops::SVGStops(const folly::dynamic &value) {
-  if (!value.isArray())
-    return;
+  stops.reserve(value.size() / 2);
 
-  stops.reserve(value.size());
-
-  for (const auto &item : value) {
-    if (!item.isObject())
-      continue;
-
-    double offset = item.getDefault("offset", 0.0).asDouble();
-
-    stops.emplace_back(offset, SVGBrush(item["color"]));
+  for (size_t i = 0; i < value.size(); i += 2) {
+    double offset = value[i].asDouble();
+    stops.emplace_back(offset, SVGBrush(value[i + 1]));
   }
 }
 
@@ -51,26 +39,26 @@ bool SVGStops::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   }
 
   auto obj = jsiValue.asObject(rt);
-
   if (!obj.isArray(rt)) {
     return false;
   }
 
   auto array = obj.asArray(rt);
-  size_t len = array.size(rt);
+  size_t length = array.size(rt);
 
-  if (len == 0) {
+  if (length == 0) {
     return true;
   }
 
-  jsi::Value first = array.getValueAtIndex(rt, 0);
-  if (!first.isObject()) {
+  // [offset, brush, offset, brush, ...]
+  if (length % 2 != 0) {
     return false;
   }
 
-  auto firstObj = first.asObject(rt);
+  auto firstOffset = array.getValueAtIndex(rt, 0);
+  auto firstBrush = array.getValueAtIndex(rt, 1);
 
-  return firstObj.hasProperty(rt, "offset");
+  return firstOffset.isNumber() && SVGBrush::canConstruct(rt, firstBrush);
 }
 
 bool SVGStops::canConstruct(const folly::dynamic &value) {
@@ -82,12 +70,15 @@ bool SVGStops::canConstruct(const folly::dynamic &value) {
     return true;
   }
 
-  const auto &first = value[0];
-  if (!first.isObject()) {
+  // [offset, brush, offset, brush, ...]
+  if (value.size() % 2 != 0) {
     return false;
   }
 
-  return first.count("offset") > 0;
+  const auto &firstOffset = value[0];
+  const auto &firstBrush = value[1];
+
+  return firstOffset.isNumber() && SVGBrush::canConstruct(firstBrush);
 }
 
 folly::dynamic SVGStops::toDynamic() const {
@@ -119,18 +110,12 @@ std::string SVGStops::toString() const {
 }
 
 SVGStops SVGStops::interpolate(double progress, const SVGStops &to) const {
-  if (progress <= 0.0)
-    return *this;
-  if (progress >= 1.0)
-    return to;
-
   const auto &fromStops = stops;
   const auto &toStops = to.stops;
 
-  if (fromStops.empty())
-    return to;
-  if (toStops.empty())
-    return *this;
+  if (fromStops.empty() || toStops.empty()) {
+    return progress < 0.5 ? *this : to;
+  }
 
   size_t fromSize = fromStops.size();
   size_t toSize = toStops.size();

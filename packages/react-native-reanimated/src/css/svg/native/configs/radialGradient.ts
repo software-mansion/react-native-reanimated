@@ -21,6 +21,6 @@ export const SVG_RADIAL_GRADIENT_PROPERTIES_CONFIG: SvgStyleBuilderConfig<CSSRad
     gradientUnits: {
       process: (gradinetUnits) => (gradinetUnits === 'userSpaceOnUse' ? 1 : 0),
     },
-    // TODO: implement 'gradientTransform'
+    // TODO: Implement 'gradientTransform'
     // gradientTransform: true,
   };

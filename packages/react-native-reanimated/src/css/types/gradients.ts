@@ -3,7 +3,7 @@
 import 'react-native-svg';
 
 import type { ColorValue } from 'react-native';
-import type { NumberProp, TransformProps, Units } from 'react-native-svg';
+import type { NumberProp, Units } from 'react-native-svg';
 
 export type CSSGradientStop = {
   offset: NumberProp;
@@ -20,7 +20,8 @@ export type CSSRadialGradientProps = {
   cy?: NumberProp;
   r?: NumberProp;
   gradientUnits?: Units;
-  gradientTransform?: TransformProps['transform'];
+  // TODO: Implement 'gradientTransform'
+  // gradientTransform?: TransformsArray;
   id?: string;
   gradient?: CSSGradientStop[];
 };
@@ -31,7 +32,8 @@ export type CSSLinearGradientProps = {
   y1?: NumberProp;
   y2?: NumberProp;
   gradientUnits?: Units;
-  gradientTransform?: TransformProps['transform'];
+  // TODO: Implement 'gradientTransform'
+  // gradientTransform?: TransformsArray;
   id?: string;
   gradient?: CSSGradientStop[];
 };

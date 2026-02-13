@@ -5,15 +5,11 @@ import Animated, {
 // TODO: Fix me
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
-import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
+import { LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
 
 import { ExamplesScreen } from '@/apps/css/components';
 
 const AnimatedGrad = Animated.createAnimatedComponent(LinearGradient);
-
-const DefsWithChildren = Defs as React.ComponentType<{
-  children?: React.ReactNode;
-}>;
 
 export default function LinearGradientExample() {
   return (
@@ -30,18 +26,11 @@ export default function LinearGradientExample() {
       })}
       renderExample={({ animation }) => (
         <Svg height={300} width={300}>
-          <DefsWithChildren>
-            <AnimatedGrad
-              animatedProps={animation}
-              gradientUnits="objectBoundingBox"
-              id="linearGrad">
-              {[
-                // TODO: Remove the necessity for this hack.
-                // Hack to mute RNSVG warning "gradient without stops"
-                <Stop key="fallback" />,
-              ]}
-            </AnimatedGrad>
-          </DefsWithChildren>
+          <AnimatedGrad
+            animatedProps={animation}
+            gradientUnits="objectBoundingBox"
+            id="linearGrad"
+          />
           <Rect
             fill="url(#linearGrad)"
             height={100}
@@ -246,6 +235,52 @@ export default function LinearGradientExample() {
                 },
               ],
               title: 'Changing number of stops',
+            },
+            {
+              examples: [
+                {
+                  title: 'Disappearing center',
+                  description: 'Center of the gradient becomes transparent.',
+                  keyframes: {
+                    from: {
+                      gradient: [
+                        { offset: '0%', color: '#f00', opacity: 1 },
+                        { offset: '50%', color: '#00f', opacity: 1 },
+                        { offset: '100%', color: '#0f0', opacity: 1 },
+                      ],
+                    },
+                    to: {
+                      gradient: [
+                        { offset: '0%', color: '#f00', opacity: 1 },
+                        { offset: '50%', color: '#00f', opacity: 0 },
+                        { offset: '100%', color: '#0f0', opacity: 1 },
+                      ],
+                    },
+                  },
+                },
+                {
+                  title: 'Opacity calculation',
+                  description:
+                    "Stop's opacity is multiplied by color's opacity.",
+                  keyframes: {
+                    from: {
+                      gradient: [
+                        { offset: '0%', color: '#f00', opacity: 1 },
+                        { offset: '50%', color: '#00f', opacity: 1 },
+                        { offset: '100%', color: '#0f0', opacity: 1 },
+                      ],
+                    },
+                    to: {
+                      gradient: [
+                        { offset: '0%', color: '#f00', opacity: 1 },
+                        { offset: '50%', color: '#00f0', opacity: 1 },
+                        { offset: '100%', color: '#0f0', opacity: 1 },
+                      ],
+                    },
+                  },
+                },
+              ],
+              title: 'Opacity',
             },
           ],
         },
@@ -458,6 +493,82 @@ export default function LinearGradientExample() {
                   },
                 },
               ],
+            },
+          ],
+        },
+        {
+          name: 'Stops as children and props',
+          renderExample: ({ animation }) => (
+            <Svg height={300} width={300}>
+              <AnimatedGrad
+                animatedProps={animation}
+                gradientUnits="objectBoundingBox"
+                id="linearGrad2">
+                <Stop offset="0%" stopColor="red" stopOpacity="1" />
+                <Stop offset="50%" stopColor="yellow" stopOpacity="1" />
+              </AnimatedGrad>
+              <Rect
+                fill="url(#linearGrad2)"
+                height={100}
+                width={100}
+                x={100}
+                y={100}
+              />
+            </Svg>
+          ),
+          sections: [
+            {
+              examples: [
+                {
+                  title: 'Children stops',
+                  description: `If no animation between stops is needed, the stops can be provided as children of the animated LinearGradient. `,
+                  keyframes: {
+                    from: {
+                      x1: 0,
+                      y1: 0,
+                      x2: 1,
+                      y2: 1,
+                    },
+                    to: {
+                      x1: 1,
+                      y1: 0,
+                      x2: 0,
+                      y2: 1,
+                    },
+                  },
+                },
+                {
+                  title: 'Prop stops',
+                  description: `If there is an animation between stops needed, the stops have to be provided through the gradient prop.`,
+                  keyframes: {
+                    from: {
+                      gradient: [
+                        { offset: '0%', color: 'red' },
+                        { offset: '50%', color: 'yellow' },
+                      ],
+                    },
+                    to: {
+                      gradient: [
+                        { offset: '0%', color: '#00ffff', opacity: 1 },
+                        { offset: '100%', color: '#0000ff', opacity: 0.8 },
+                      ],
+                    },
+                  },
+                },
+                {
+                  title: 'Mixed stops',
+                  description: `You cannot mix children stops and prop stops. It will result in prop stops being prioritized.`,
+                  keyframes: {
+                    to: {
+                      gradient: [
+                        { offset: '0%', color: '#00ffff', opacity: 1 },
+                        { offset: '100%', color: '#0000ff', opacity: 0.8 },
+                      ],
+                    },
+                  },
+                },
+              ],
+              title: 'Stops as props or as children',
             },
           ],
         },
