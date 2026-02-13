@@ -6,19 +6,19 @@
 #include <optional>
 #include <regex>
 #include <string>
+#include "reanimated/CSS/svg/values/SVGBrush.h"
 
 namespace reanimated::css {
 
 SVGStops::SVGStops(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   jsi::Array array = jsiValue.asObject(rt).asArray(rt);
   size_t length = array.size(rt);
-  stops.reserve(length);
 
-  for (size_t i = 0; i < length; i++) {
-    auto item = array.getValueAtIndex(rt, i).asObject(rt);
+  stops.reserve(length / 2);
 
-    double offset = item.getProperty(rt, "offset").asNumber();
-    auto colorVal = item.getProperty(rt, "color");
+  for (size_t i = 0; i < length; i += 2) {
+    double offset = array.getValueAtIndex(rt, i).asNumber();
+    auto colorVal = array.getValueAtIndex(rt, i + 1);
 
     stops.emplace_back(offset, SVGBrush(rt, colorVal));
   }
@@ -39,25 +39,26 @@ bool SVGStops::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   }
 
   auto obj = jsiValue.asObject(rt);
-
   if (!obj.isArray(rt)) {
     return false;
   }
 
   auto array = obj.asArray(rt);
+  size_t length = array.size(rt);
 
-  if (array.size(rt) == 0) {
+  if (length == 0) {
     return true;
   }
 
-  auto first = array.getValueAtIndex(rt, 0);
-  if (!first.isObject()) {
+  // [offset, brush, offset, brush, ...]
+  if (length % 2 != 0) {
     return false;
   }
 
-  auto firstObj = first.asObject(rt);
+  auto firstOffset = array.getValueAtIndex(rt, 0);
+  auto firstBrush = array.getValueAtIndex(rt, 1);
 
-  return firstObj.hasProperty(rt, "offset");
+  return firstOffset.isNumber() && SVGBrush::canConstruct(rt, firstBrush);
 }
 
 bool SVGStops::canConstruct(const folly::dynamic &value) {
@@ -69,12 +70,15 @@ bool SVGStops::canConstruct(const folly::dynamic &value) {
     return true;
   }
 
-  const auto &first = value[0];
-  if (!first.isObject()) {
+  // [offset, brush, offset, brush, ...]
+  if (value.size() % 2 != 0) {
     return false;
   }
 
-  return first.count("offset") > 0;
+  const auto &firstOffset = value[0];
+  const auto &firstBrush = value[1];
+
+  return firstOffset.isNumber() && SVGBrush::canConstruct(firstBrush);
 }
 
 folly::dynamic SVGStops::toDynamic() const {

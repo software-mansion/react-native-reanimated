@@ -15,11 +15,9 @@ describe(processSVGGradientStops, () => {
       const input = [{ offset: 0, color: 'red' }];
       const result = processSVGGradientStops(input);
 
-      // (1.0 * 255) << 24 | 0xff0000 => 0xff000000 | 0x00ff0000 => 4293918720
-      expect(result[0]).toEqual({
-        offset: 0,
-        color: 4294901760, // 0xFFFF0000
-      });
+      // (1.0 * 255) << 24 | 0xff0000 => 0xff000000 | 0x00ff0000 => 4294901760
+      expect(result[0]).toBe(0);
+      expect(result[1]).toBe(4294901760); // 0xFFFF0000
     });
 
     it('merges opacity into the color integer using bitwise operations', () => {
@@ -29,8 +27,8 @@ describe(processSVGGradientStops, () => {
       // Alpha: Math.round(0.5 * 255) = 128 (0x80)
       // Color: 0x0000ff
       // Result: (0x80 << 24) | 0x0000ff = 0x800000ff (2147483903)
-      expect(result[0].color).toBe(2147483903);
-      expect(result[0].offset).toBe(0.5);
+      expect(result[0]).toBe(0.5);
+      expect(result[1]).toBe(2147483903);
     });
 
     it('merges opacity into the color integer using bitwise operations', () => {
@@ -40,8 +38,8 @@ describe(processSVGGradientStops, () => {
       // Alpha: Math.round(0.5 * 238) = 119 (0x77)
       // Color: 0x0000ffee
       // Result: (0x77 << 24) | 0x0000ff = 0x770000ff (1996488959)
-      expect(result[0].color).toBe(1996488959);
-      expect(result[0].offset).toBe(0.5);
+      expect(result[0]).toBe(0.5);
+      expect(result[1]).toBe(1996488959);
     });
   });
 
@@ -54,15 +52,15 @@ describe(processSVGGradientStops, () => {
       ];
       const result = processSVGGradientStops(input);
 
-      expect(result[0].offset).toBe(0);
-      expect(result[1].offset).toBe(0.5);
-      expect(result[2].offset).toBe(1);
+      expect(result[0]).toBe(0);
+      expect(result[2]).toBe(0.5);
+      expect(result[4]).toBe(1);
     });
 
     test('defaults offset to 0 if not provided', () => {
       const input = [{ color: 'red' }] as CSSGradientStop[];
       const result = processSVGGradientStops(input);
-      expect(result[0].offset).toBe(0);
+      expect(result[0]).toBe(0);
     });
   });
 
@@ -75,7 +73,7 @@ describe(processSVGGradientStops, () => {
       'for opacity %p and color %p returns color integer %p',
       (opacity, color, expectedColor) => {
         const result = processSVGGradientStops([{ offset: 0, color, opacity }]);
-        expect(result[0].color).toBe(expectedColor);
+        expect(result[1]).toBe(expectedColor);
       }
     );
   });

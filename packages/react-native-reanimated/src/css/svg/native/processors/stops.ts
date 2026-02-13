@@ -5,11 +5,7 @@ import type { CSSGradientStop } from '../../../types';
 import { processColorSVG } from './colors';
 import { processPercentage } from './percentage';
 
-interface ProcessedGradientStop {
-  offset: number;
-  color: number | false | string;
-  opacity: number;
-}
+type ProcessedGradientStop = number | string | false;
 
 const NO_STOPS_WARNING = 'No stops in SVG gradient';
 
@@ -18,9 +14,9 @@ export const processSVGGradientStops = ((stops) => {
     logger.warn(NO_STOPS_WARNING);
     return [];
   }
-  const processed = stops.map((stop) => {
+  const intermediate = stops.map((stop) => {
     const rawColor = stop.color && processColorSVG(stop.color);
-    const stopOpacity = stop.opacity !== processPercentage(stop.opacity ?? 1);
+    const stopOpacity = processPercentage(stop.opacity ?? 1);
     const finalColor =
       typeof rawColor === 'number' && typeof stopOpacity === 'number'
         ? ((Math.round(((rawColor >>> 24) & 0xff) * stopOpacity) << 24) |
@@ -30,7 +26,16 @@ export const processSVGGradientStops = ((stops) => {
     return {
       offset: processPercentage(stop.offset ?? 0),
       color: finalColor,
-    } as ProcessedGradientStop;
-  });
-  return processed.sort((a, b) => Number(a.offset) - Number(b.offset));
+    };
+  }) as { offset: number; color: number | false | string }[];
+
+  intermediate.sort((a, b) => Number(a.offset) - Number(b.offset));
+
+  const ret: ProcessedGradientStop[] = [];
+  for (const item of intermediate) {
+    ret.push(item.offset);
+    ret.push(item.color);
+  }
+
+  return ret;
 }) satisfies ValueProcessor<CSSGradientStop[], ProcessedGradientStop[]>;
