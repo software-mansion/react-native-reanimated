@@ -1,9 +1,9 @@
 #pragma once
 
+#include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
-#include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
 
 #include <memory>
 #include <string>
@@ -33,7 +33,7 @@ class CSSAnimation {
   bool hasBackwardsFillMode() const;
 
   folly::dynamic getCurrentInterpolationStyle(std::shared_ptr<AnimatedPropsBuilder> propsBuilder) const;
-  folly::dynamic getBackwardsFillStyle(std::shared_ptr<AnimatedPropsBuilder> propsBuilder) const;
+  folly::dynamic getBackwardsFillStyle() const;
   folly::dynamic getResetStyle() const;
 
   void run(double timestamp);

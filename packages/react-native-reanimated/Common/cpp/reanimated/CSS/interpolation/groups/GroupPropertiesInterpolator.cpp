@@ -19,14 +19,14 @@ folly::dynamic GroupPropertiesInterpolator::getResetStyle(const std::shared_ptr<
       [&](PropertyInterpolator &interpolator) -> folly::dynamic { return interpolator.getResetStyle(shadowNode); });
 }
 
-folly::dynamic GroupPropertiesInterpolator::getFirstKeyframeValue(std::shared_ptr<AnimatedPropsBuilder> propsBuilder) const {
+folly::dynamic GroupPropertiesInterpolator::getFirstKeyframeValue() const {
   return mapInterpolators(
-      [&](PropertyInterpolator &interpolator) -> folly::dynamic { return interpolator.getFirstKeyframeValue(propsBuilder); });
+      [&](PropertyInterpolator &interpolator) -> folly::dynamic { return interpolator.getFirstKeyframeValue(); });
 }
 
-folly::dynamic GroupPropertiesInterpolator::getLastKeyframeValue(std::shared_ptr<AnimatedPropsBuilder> propsBuilder) const {
+folly::dynamic GroupPropertiesInterpolator::getLastKeyframeValue() const {
   return mapInterpolators(
-      [&](PropertyInterpolator &interpolator) -> folly::dynamic { return interpolator.getLastKeyframeValue(propsBuilder); });
+      [&](PropertyInterpolator &interpolator) -> folly::dynamic { return interpolator.getLastKeyframeValue(); });
 }
 
 folly::dynamic GroupPropertiesInterpolator::interpolate(

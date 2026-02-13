@@ -22,8 +22,8 @@ class PropertyInterpolator {
 
   virtual folly::dynamic getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const = 0;
   virtual folly::dynamic getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const = 0;
-  virtual folly::dynamic getFirstKeyframeValue(std::shared_ptr<AnimatedPropsBuilder> propsBuilder) const = 0;
-  virtual folly::dynamic getLastKeyframeValue(std::shared_ptr<AnimatedPropsBuilder> propsBuilder) const = 0;
+  virtual folly::dynamic getFirstKeyframeValue() const = 0;
+  virtual folly::dynamic getLastKeyframeValue() const = 0;
 
   virtual void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) = 0;
   virtual bool updateKeyframesFromStyleChange(

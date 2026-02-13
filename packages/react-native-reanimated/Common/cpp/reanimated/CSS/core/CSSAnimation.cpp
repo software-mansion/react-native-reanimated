@@ -65,8 +65,8 @@ folly::dynamic CSSAnimation::getCurrentInterpolationStyle(std::shared_ptr<Animat
       shadowNode_, progressProvider_, propsBuilder, FALLBACK_INTERPOLATION_THRESHOLD);
 }
 
-folly::dynamic CSSAnimation::getBackwardsFillStyle(std::shared_ptr<AnimatedPropsBuilder> propsBuilder) const {
-  return isReversed() ? styleInterpolator_->getLastKeyframeValue(propsBuilder) : styleInterpolator_->getFirstKeyframeValue(propsBuilder);
+folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
+  return isReversed() ? styleInterpolator_->getLastKeyframeValue() : styleInterpolator_->getFirstKeyframeValue();
 }
 
 folly::dynamic CSSAnimation::getResetStyle() const {
@@ -88,7 +88,7 @@ folly::dynamic CSSAnimation::update(const double timestamp, std::shared_ptr<Anim
   // add this check to make sure that animation doesn't start with the negative
   // progress)
   if (progressProvider_->getState(timestamp) == AnimationProgressState::Pending) {
-    return hasBackwardsFillMode() ? getBackwardsFillStyle(propsBuilder) : folly::dynamic();
+    return hasBackwardsFillMode() ? getBackwardsFillStyle() : folly::dynamic();
   }
 
   return styleInterpolator_->interpolate(

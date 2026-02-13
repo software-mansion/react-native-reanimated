@@ -32,20 +32,12 @@ folly::dynamic ValueInterpolator::getResetStyle(const std::shared_ptr<const Shad
   return styleValue;
 }
 
-folly::dynamic ValueInterpolator::getFirstKeyframeValue(std::shared_ptr<AnimatedPropsBuilder> propsBuilder) const {
-  auto firstKeyframeValue = keyframes_.front().value;
-  if (firstKeyframeValue.has_value()) {
-    addToPropsBuilder_(propsBuilder, *firstKeyframeValue.value());
-  }
-  return convertOptionalToDynamic(std::move(firstKeyframeValue));
+folly::dynamic ValueInterpolator::getFirstKeyframeValue() const {
+  return convertOptionalToDynamic(keyframes_.front().value);
 }
 
-folly::dynamic ValueInterpolator::getLastKeyframeValue(std::shared_ptr<AnimatedPropsBuilder> propsBuilder) const {
-  auto lastKeyframeValue = keyframes_.back().value;
-  if (lastKeyframeValue.has_value()) {
-    addToPropsBuilder_(propsBuilder, *lastKeyframeValue.value());
-  }
-  return convertOptionalToDynamic(lastKeyframeValue);
+folly::dynamic ValueInterpolator::getLastKeyframeValue() const {
+  return convertOptionalToDynamic(keyframes_.back().value);
 }
 
 void ValueInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) {

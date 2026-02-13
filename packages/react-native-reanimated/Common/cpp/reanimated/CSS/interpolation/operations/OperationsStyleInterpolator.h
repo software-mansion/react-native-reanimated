@@ -35,8 +35,8 @@ class OperationsStyleInterpolator : public PropertyInterpolator {
 
   folly::dynamic getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const override;
   folly::dynamic getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const override;
-  folly::dynamic getFirstKeyframeValue(std::shared_ptr<AnimatedPropsBuilder> propsBuilder) const override;
-  folly::dynamic getLastKeyframeValue(std::shared_ptr<AnimatedPropsBuilder> propsBuilder) const override;
+  folly::dynamic getFirstKeyframeValue() const override;
+  folly::dynamic getLastKeyframeValue() const override;
 
   folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,

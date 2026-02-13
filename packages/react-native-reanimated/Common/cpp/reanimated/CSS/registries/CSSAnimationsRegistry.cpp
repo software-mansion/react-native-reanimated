@@ -289,7 +289,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(const Tag viewTag, const do
     folly::dynamic style;
     const auto &currentState = animation->getState(timestamp);
     if (startTimestamp > timestamp && animation->hasBackwardsFillMode()) {
-      style = animation->getBackwardsFillStyle(propsBuilder);
+      style = animation->getBackwardsFillStyle();
     } else if (
         currentState == AnimationProgressState::Running ||
         // Animation is paused after start (was running before)
