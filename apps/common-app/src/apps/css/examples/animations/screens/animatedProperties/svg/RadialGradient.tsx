@@ -5,7 +5,7 @@ import Animated, {
 // TODO: Fix me
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
-import { RadialGradient, Rect, Svg } from 'react-native-svg';
+import { RadialGradient, Rect, Stop, Svg } from 'react-native-svg';
 
 import { ExamplesScreen } from '@/apps/css/components';
 
@@ -147,6 +147,26 @@ export default function RadialGradientExample() {
                     to: {
                       gradient: [
                         { offset: '0%', color: '#9b0808', opacity: 0 },
+                        { offset: '100%', color: '#35e20a', opacity: 1 },
+                      ],
+                    },
+                  },
+                },
+                {
+                  title: 'Opacity calculation',
+                  description:
+                    "Stop's opacity is multiplied by color's opacity.",
+
+                  keyframes: {
+                    from: {
+                      gradient: [
+                        { offset: '0%', color: '#9b0808', opacity: 1 },
+                        { offset: '100%', color: '#35e20a', opacity: 1 },
+                      ],
+                    },
+                    to: {
+                      gradient: [
+                        { offset: '0%', color: '#9b080800', opacity: 1 },
                         { offset: '100%', color: '#35e20a', opacity: 1 },
                       ],
                     },
@@ -440,6 +460,84 @@ export default function RadialGradientExample() {
                   },
                 },
               ],
+            },
+          ],
+        },
+        {
+          name: 'Stops as children and props',
+          renderExample: ({ animation }) => (
+            <Svg height={300} width={300}>
+              <AnimatedGrad
+                animatedProps={animation}
+                gradientUnits="objectBoundingBox"
+                id="radialGrad2">
+                <Stop offset="0%" stopColor="red" stopOpacity="1" />
+                <Stop offset="50%" stopColor="yellow" stopOpacity="1" />
+              </AnimatedGrad>
+              <Rect
+                fill="url(#radialGrad2)"
+                height={100}
+                width={100}
+                x={100}
+                y={100}
+              />
+            </Svg>
+          ),
+          sections: [
+            {
+              examples: [
+                {
+                  title: 'Children stops',
+                  description: `If no animation between stops is needed, the stops can be provided as children of the animated RadialGradient. \n\n${FOCAL_POINT_DISCLAIMER}`,
+                  keyframes: {
+                    from: {
+                      fx: '30%',
+                      fy: '30%',
+                      cx: '50%',
+                      cy: '50%',
+                      r: '30%',
+                    },
+                    to: {
+                      fx: '30%',
+                      fy: '30%',
+                      cx: '45%',
+                      cy: '45%',
+                      r: '60%',
+                    },
+                  },
+                },
+                {
+                  title: 'Prop stops',
+                  description: `If there is an animation between stops needed, the stops have to be provided as the gradient prop.`,
+                  keyframes: {
+                    from: {
+                      gradient: [
+                        { offset: '0%', color: 'red' },
+                        { offset: '50%', color: 'yellow' },
+                      ],
+                    },
+                    to: {
+                      gradient: [
+                        { offset: '0%', color: '#00ffff', opacity: 1 },
+                        { offset: '100%', color: '#0000ff', opacity: 0.8 },
+                      ],
+                    },
+                  },
+                },
+                {
+                  title: 'Mixed stops',
+                  description: `You cannot mix children stops and prop stops. It will result in prop stops being prioritized.`,
+                  keyframes: {
+                    to: {
+                      gradient: [
+                        { offset: '0%', color: '#00ffff', opacity: 1 },
+                        { offset: '100%', color: '#0000ff', opacity: 0.8 },
+                      ],
+                    },
+                  },
+                },
+              ],
+              title: 'Stops as props or as children',
             },
           ],
         },

@@ -24,7 +24,8 @@ export const processSVGGradientStops = ((stops) => {
       stop.opacity !== undefined ? processPercentage(stop.opacity) : 1;
     const finalColor =
       typeof rawColor === 'number' && typeof stopOpacity === 'number'
-        ? ((Math.round(stopOpacity * 255) << 24) | (rawColor & 0x00ffffff)) >>>
+        ? ((Math.round(((rawColor >>> 24) & 0xff) * stopOpacity) << 24) |
+            (rawColor & 0x00ffffff)) >>>
           0
         : rawColor;
     return {

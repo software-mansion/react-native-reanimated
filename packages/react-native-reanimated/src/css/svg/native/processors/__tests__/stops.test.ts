@@ -32,6 +32,17 @@ describe(processSVGGradientStops, () => {
       expect(result[0].color).toBe(2147483903);
       expect(result[0].offset).toBe(0.5);
     });
+
+    it('merges opacity into the color integer using bitwise operations', () => {
+      const input = [{ offset: 0.5, color: '#0000ffee', opacity: 0.5 }];
+      const result = processSVGGradientStops(input);
+
+      // Alpha: Math.round(0.5 * 238) = 119 (0x77)
+      // Color: 0x0000ffee
+      // Result: (0x77 << 24) | 0x0000ff = 0x770000ff (1996488959)
+      expect(result[0].color).toBe(1996488959);
+      expect(result[0].offset).toBe(0.5);
+    });
   });
 
   describe('Sorting and Offsets', () => {
