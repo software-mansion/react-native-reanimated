@@ -25,9 +25,6 @@ SVGStops::SVGStops(jsi::Runtime &rt, const jsi::Value &jsiValue) {
 }
 
 SVGStops::SVGStops(const folly::dynamic &value) {
-  if (!value.isArray())
-    return;
-
   stops.reserve(value.size() / 2);
 
   for (size_t i = 0; i < value.size(); i += 2) {

@@ -20,8 +20,7 @@ export const processSVGGradientStops = ((stops) => {
   }
   const processed = stops.map((stop) => {
     const rawColor = stop.color && processColorSVG(stop.color);
-    const stopOpacity =
-      stop.opacity !== undefined ? processPercentage(stop.opacity) : 1;
+    const stopOpacity = stop.opacity !== processPercentage(stop.opacity ?? 1);
     const finalColor =
       typeof rawColor === 'number' && typeof stopOpacity === 'number'
         ? ((Math.round(((rawColor >>> 24) & 0xff) * stopOpacity) << 24) |
@@ -29,11 +28,9 @@ export const processSVGGradientStops = ((stops) => {
           0
         : rawColor;
     return {
-      offset: processPercentage(stop.offset || 0),
+      offset: processPercentage(stop.offset ?? 0),
       color: finalColor,
     } as ProcessedGradientStop;
   });
-  return processed.sort((a, b) => {
-    return Number(a.offset) - Number(b.offset);
-  });
+  return processed.sort((a, b) => Number(a.offset) - Number(b.offset));
 }) satisfies ValueProcessor<CSSGradientStop[], ProcessedGradientStop[]>;
