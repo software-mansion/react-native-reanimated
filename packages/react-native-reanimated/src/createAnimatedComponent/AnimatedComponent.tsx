@@ -2,6 +2,7 @@
 import '../layoutReanimation/animationsManager';
 
 import type React from 'react';
+import { Fragment } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { checkStyleOverwriting, maybeBuild } from '../animationBuilder';
@@ -517,6 +518,16 @@ export default class AnimatedComponent
       };
     } else if (!skipEntering && !IS_WEB) {
       nativeID = `${this.reanimatedID}`;
+    }
+
+    // TODO: Remove need for this \/\/\/\/.
+    // RNSVG expects Gradient elem to have stops passed as children. When we want to animate them,
+    // we provide them using `gradient` prop.
+    // Hack below gets rid of RNSVG warnings about children being empty.
+    if (this.ChildComponent.displayName === 'RadialGradient') {
+      if (filteredProps.children === undefined) {
+        filteredProps.children = <Fragment />;
+      }
     }
 
     if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {

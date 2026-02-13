@@ -22,7 +22,10 @@ module.exports = function (api) {
   api.cache.invalidate(() => disableBabelPlugin);
   if (disableBabelPlugin) {
     console.log('Starting Web example without Babel plugin.');
-    console.log('DISABLE_BABEL_PLUGIN env var:', process.env.DISABLE_BABEL_PLUGIN);
+    console.log(
+      'DISABLE_BABEL_PLUGIN env var:',
+      process.env.DISABLE_BABEL_PLUGIN
+    );
   } else {
     plugins.push(['react-native-worklets/plugin', workletsPluginOptions]);
   }
