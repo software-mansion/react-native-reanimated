@@ -1,4 +1,9 @@
-import React, { useState } from 'react';
+import React, {
+  useState,
+  useRef,
+  useImperativeHandle,
+  forwardRef,
+} from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedProps,
@@ -11,40 +16,37 @@ type SwitchProps = {
   y?: number;
 };
 
-class Switch extends React.Component<SwitchProps> {
-  rectRef: Rect | null = null;
+type SwitchRef = {
+  getAnimatableRef: () => Rect | null;
+};
+
+const Switch = forwardRef<SwitchRef, SwitchProps>(({ y }, ref) => {
+  const rectRef = useRef<Rect | null>(null);
 
   // When an animated version of the Switch is created we want to animate the inner Rect instead of the outer Svg component.
-  getAnimatableRef() {
-    return this.rectRef;
-  }
+  useImperativeHandle(ref, () => ({
+    getAnimatableRef() {
+      return rectRef.current;
+    },
+  }));
 
-  render() {
-    return (
-      <Svg height="310" width="70">
-        <Rect
-          x="5"
-          y="5"
-          width="60"
-          height="300"
-          fill="none"
-          stroke={'black'}
-          strokeWidth={10}
-        />
-        <Rect
-          x="10"
-          y={this.props.y}
-          width="50"
-          height="40"
-          fill="red"
-          ref={(component) => {
-            this.rectRef = component;
-          }}
-        />
-      </Svg>
-    );
-  }
-}
+  return (
+    <Svg height="310" width="70">
+      <Rect
+        x="5"
+        y="5"
+        width="60"
+        height="300"
+        fill="none"
+        stroke={'black'}
+        strokeWidth={10}
+      />
+      <Rect x="10" y={y} width="50" height="40" fill="red" ref={rectRef} />
+    </Svg>
+  );
+});
+
+Switch.displayName = 'Switch';
 
 const AnimatedSwitch = Animated.createAnimatedComponent(Switch);
 export default function AnimatableRefExample() {
