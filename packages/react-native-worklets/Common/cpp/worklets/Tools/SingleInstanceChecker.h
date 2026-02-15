@@ -51,11 +51,8 @@ class SingleInstanceChecker {
 template <class T>
 SingleInstanceChecker<T>::SingleInstanceChecker() {
   int status = 0;
-  char *demangled =
-      __cxxabiv1::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status);
-  std::string className = (status == 0 && demangled != nullptr)
-      ? demangled
-      : typeid(T).name();
+  char *demangled = __cxxabiv1::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status);
+  std::string className = (status == 0 && demangled != nullptr) ? demangled : typeid(T).name();
   std::free(demangled);
 
   // React Native can spawn up to two instances of a Native Module at the same
