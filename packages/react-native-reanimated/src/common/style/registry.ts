@@ -102,6 +102,13 @@ export function registerComponentPropsBuilder<P extends UnknownRecord>(
   // initialize the generalization with the default config.
   if (options.componentChildName && !hasPropsBuilder(componentName)) {
     PROPS_BUILDERS.set(componentName, createNativePropsBuilder(config));
+
+    if (options.separatelyInterpolatedNestedProperties?.length) {
+      COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES.set(
+        componentName,
+        new Set(options.separatelyInterpolatedNestedProperties)
+      );
+    }
   }
 
   if (options.separatelyInterpolatedNestedProperties?.length) {
