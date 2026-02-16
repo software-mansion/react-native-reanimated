@@ -24,6 +24,10 @@ const nativeProject = createProject({
   displayName: 'native',
   preset: 'react-native',
   testEnvironment: 'node',
+  transformIgnorePatterns: [
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|react-native-worklets)/)',
+  ],
+  testRegex: '.*(?<!\\.(?:ios|android|web))\\.test\\.(?:js|jsx|ts|tsx)$',
   testPathIgnorePatterns: ['\\.web\\.test\\.(?:js|jsx|ts|tsx)$'],
 });
 

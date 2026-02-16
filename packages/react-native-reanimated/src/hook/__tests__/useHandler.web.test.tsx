@@ -1,10 +1,12 @@
 'use strict';
-import { renderHook } from '@testing-library/react-native';
+import { renderHook } from '@testing-library/react';
 
 import { logger } from '../../common';
 import { worklet } from '../../jestUtils';
 import { useHandler } from '../useHandler';
-import { renderHookWithHandlers } from './useHandlerHelpers';
+import { createRenderHookWithHandlers } from './useHandlerHelpers';
+
+const renderHookWithHandlers = createRenderHookWithHandlers(renderHook);
 
 jest.mock('../../common', () => {
   const originalModule = jest.requireActual('../../common');
