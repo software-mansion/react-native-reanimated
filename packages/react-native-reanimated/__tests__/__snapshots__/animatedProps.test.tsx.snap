@@ -19,7 +19,6 @@ exports[`animatedProps Multiple animated props objects matches snapshot 1`] = `
         "value": {},
       }
     }
-    nativeID="3"
     placeholder="Click count: 0"
     testID="text"
     text="Box width: 20"
@@ -104,7 +103,6 @@ exports[`animatedProps Single animated props object matches snapshot 1`] = `
         "value": {},
       }
     }
-    nativeID="0"
     testID="text"
     text="Box width: 20"
   />
