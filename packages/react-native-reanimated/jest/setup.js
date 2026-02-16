@@ -1,9 +1,9 @@
 // @ts-nocheck
 delete global.MessageChannel;
-require('./src/jestUtils').setUpTests();
+require('../src/jestUtils').setUpTests();
 
 jest.mock('react-native-worklets', () =>
-  require('react-native-worklets/src/mock')
+  require('react-native-worklets/lib/module/mock')
 );
 
 global.__reanimatedLoggerConfig = {

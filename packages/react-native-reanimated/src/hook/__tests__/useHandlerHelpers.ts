@@ -1,5 +1,4 @@
 'use strict';
-import { renderHook } from '@testing-library/react-native';
 
 import { ReanimatedError } from '../../common';
 import { worklet } from '../../jestUtils';
@@ -36,20 +35,32 @@ export function createHandlers() {
   };
 }
 
-export function renderHookWithHandlers(
-  handlers: Record<string, unknown>,
-  dependencies?: unknown[]
+type UseHandlerRenderProps = {
+  handlers: Record<string, unknown>;
+  deps?: unknown[];
+};
+
+type RenderHookImplementation = (
+  callback: (props: UseHandlerRenderProps) => ReturnType<typeof useHandler>,
+  options: { initialProps: UseHandlerRenderProps }
+) => {
+  result: { current: ReturnType<typeof useHandler> };
+  rerender: (props: UseHandlerRenderProps) => void;
+};
+
+export function createRenderHookWithHandlers(
+  renderHookImplementation: RenderHookImplementation
 ) {
-  return renderHook(
-    ({
-      handlers: h,
-      deps,
-    }: {
-      handlers: Record<string, unknown>;
-      deps?: unknown[];
-    }) => useHandler(h as Parameters<typeof useHandler>[0], deps),
-    {
-      initialProps: { handlers, deps: dependencies },
-    }
-  );
+  return function runRenderHookWithHandlers(
+    handlers: Record<string, unknown>,
+    dependencies?: unknown[]
+  ) {
+    return renderHookImplementation(
+      ({ handlers: h, deps }) =>
+        useHandler(h as Parameters<typeof useHandler>[0], deps),
+      {
+        initialProps: { handlers, deps: dependencies },
+      }
+    );
+  };
 }

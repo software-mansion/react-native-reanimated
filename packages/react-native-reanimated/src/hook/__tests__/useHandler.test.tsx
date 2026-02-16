@@ -5,9 +5,11 @@ import { worklet } from '../../jestUtils';
 import { useHandler } from '../useHandler';
 import {
   createHandlers,
+  createRenderHookWithHandlers,
   createUseHandlerError,
-  renderHookWithHandlers,
 } from './useHandlerHelpers';
+
+const renderHookWithHandlers = createRenderHookWithHandlers(renderHook);
 
 describe('useHandler (native)', () => {
   describe('valid cases', () => {
