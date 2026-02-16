@@ -515,7 +515,7 @@ export default class AnimatedComponent
         jestAnimatedStyle: this.jestAnimatedStyle,
         jestAnimatedProps: this.jestAnimatedProps,
       };
-    } else if (!skipEntering) {
+    } else if (!skipEntering && !IS_WEB) {
       nativeID = `${this.reanimatedID}`;
     }
 
