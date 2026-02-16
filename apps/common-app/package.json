@@ -30,7 +30,7 @@
     "@react-navigation/native-stack": "7.3.27",
     "@react-navigation/stack": "7.4.9",
     "@shopify/flash-list": "2.1.0",
-    "axios": "1.10.0",
+    "axios": "1.13.5",
     "d3-shape": "3.2.0",
     "fuse.js": "patch:fuse.js@npm%3A7.1.0#~/.yarn/patches/fuse.js-npm-7.1.0-5dcae892a6.patch",
     "react": "19.2.3",
