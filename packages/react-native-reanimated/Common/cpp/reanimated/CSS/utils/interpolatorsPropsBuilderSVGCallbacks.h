@@ -15,6 +15,8 @@
 
 namespace reanimated::css {
 
+// Callbacks for svg-related props that are stored via `rawProps`.
+
 void addSvgColorToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<SVGBrush> &value);

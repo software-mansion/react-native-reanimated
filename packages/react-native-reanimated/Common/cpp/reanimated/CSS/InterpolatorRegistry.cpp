@@ -39,6 +39,7 @@
 #include <reanimated/CSS/interpolation/filters/operations/saturate.h>
 #include <reanimated/CSS/interpolation/filters/operations/sepia.h>
 #include <reanimated/CSS/utils/interpolatorPropsBuilderCallbacks.h>
+#include <reanimated/CSS/utils/interpolatorPropsBuilderImageCallbacks.h>
 #include <reanimated/CSS/utils/interpolatorPropsBuilderTextCallbacks.h>
 #include <reanimated/CSS/utils/interpolatorsPropsBuilderSVGCallbacks.h>
 
@@ -49,15 +50,6 @@ namespace {
 template <typename... AllowedTypes>
 using CSSCallback = std::function<
     void(const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)>;
-
-// Returns a dummy callback for unsupported properties.
-// Use this when a property needs to be registered for interpolation but
-// doesn't have AnimatedPropsBuilder support yet.
-template <typename... AllowedTypes>
-CSSCallback<AllowedTypes...> unsupported() {
-  return [](const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &) {
-  };
-}
 
 // Private implementation details
 const std::array<uint8_t, 4> BLACK = {0, 0, 0, 255};
@@ -422,8 +414,7 @@ const InterpolatorFactoriesRecord TEXT_INTERPOLATORS_IOS = {
          std::vector<CSSKeyword>{},
          CSSCallback<CSSDiscreteArray<CSSKeyword>>(addFontVariantToPropsBuilder))},
     {"textDecorationColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addTextDecorationColorToPropsBuilder))},
-    {"textDecorationStyle",
-     value<CSSKeyword>("solid", CSSCallback<CSSKeyword>(addTextDecorationStyleToPropsBuilder))},
+    {"textDecorationStyle", value<CSSKeyword>("solid", CSSCallback<CSSKeyword>(addTextDecorationStyleToPropsBuilder))},
     {"writingDirection", value<CSSKeyword>("auto", CSSCallback<CSSKeyword>(addWritingDirectionToPropsBuilder))},
 };
 
@@ -445,7 +436,9 @@ const InterpolatorFactoriesRecord TEXT_INTERPOLATORS = mergeInterpolators(
          {"fontWeight", value<CSSKeyword>("normal", CSSCallback<CSSKeyword>(addFontWeightToPropsBuilder))},
          {"letterSpacing", value<CSSDouble>(0, CSSCallback<CSSDouble>(addLetterSpacingToPropsBuilder))},
          {"lineHeight",
-          value<CSSDouble>(14, CSSCallback<CSSDouble>(addLineHeightToPropsBuilder))}, // TODO - should inherit from fontSize
+          value<CSSDouble>(
+              14,
+              CSSCallback<CSSDouble>(addLineHeightToPropsBuilder))}, // TODO - should inherit from fontSize
          {"textAlign", value<CSSKeyword>("auto", CSSCallback<CSSKeyword>(addTextAlignToPropsBuilder))},
          {"textDecorationLine",
           value<CSSKeyword>("none", CSSCallback<CSSKeyword>(addTextDecorationLineToPropsBuilder))},
@@ -465,9 +458,9 @@ const InterpolatorFactoriesRecord TEXT_INTERPOLATORS = mergeInterpolators(
 const InterpolatorFactoriesRecord IMAGE_INTERPOLATORS = mergeInterpolators(
     {VIEW_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"resizeMode", value<CSSKeyword>("cover", unsupported<CSSKeyword>())},
-         {"overlayColor", value<CSSColor>(BLACK, unsupported<CSSColor>())},
-         {"tintColor", value<CSSColor>(BLACK, unsupported<CSSColor>())},
+         {"resizeMode", value<CSSKeyword>("cover", CSSCallback<CSSKeyword>(addImageResizeModeToPropsBuilder))},
+         {"overlayColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addImageOverlayColorToPropsBuilder))},
+         {"tintColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addImageTintColorToPropsBuilder))},
      }});
 
 // =================
