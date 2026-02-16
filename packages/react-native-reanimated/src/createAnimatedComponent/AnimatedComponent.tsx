@@ -506,16 +506,18 @@ export default class AnimatedComponent
     }
 
     const skipEntering = this.context?.current;
-    const nativeID = skipEntering ? undefined : `${this.reanimatedID}`;
+    let nativeID, jestProps;
 
-    const jestProps = IS_JEST
-      ? {
-          jestInlineStyle:
-            this.props.style && filterOutAnimatedStyles(this.props.style),
-          jestAnimatedStyle: this.jestAnimatedStyle,
-          jestAnimatedProps: this.jestAnimatedProps,
-        }
-      : {};
+    if (IS_JEST) {
+      jestProps = {
+        jestInlineStyle:
+          this.props.style && filterOutAnimatedStyles(this.props.style),
+        jestAnimatedStyle: this.jestAnimatedStyle,
+        jestAnimatedProps: this.jestAnimatedProps,
+      };
+    } else if (!skipEntering && !IS_WEB) {
+      nativeID = `${this.reanimatedID}`;
+    }
 
     if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
       const flatStyles = StyleSheet.flatten(filteredProps.style as object);
