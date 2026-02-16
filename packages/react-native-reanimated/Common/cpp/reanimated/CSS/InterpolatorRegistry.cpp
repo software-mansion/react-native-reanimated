@@ -39,6 +39,7 @@
 #include <reanimated/CSS/interpolation/filters/operations/saturate.h>
 #include <reanimated/CSS/interpolation/filters/operations/sepia.h>
 #include <reanimated/CSS/utils/interpolatorPropsBuilderCallbacks.h>
+#include <reanimated/CSS/utils/interpolatorPropsBuilderTextCallbacks.h>
 #include <reanimated/CSS/utils/interpolatorsPropsBuilderSVGCallbacks.h>
 
 namespace reanimated::css {
@@ -417,16 +418,19 @@ const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
 // TEXT, IMAGE and SVG props are not supported by the animation backend.
 const InterpolatorFactoriesRecord TEXT_INTERPOLATORS_IOS = {
     {"fontVariant",
-     value<CSSDiscreteArray<CSSKeyword>>(std::vector<CSSKeyword>{}, unsupported<CSSDiscreteArray<CSSKeyword>>())},
-    {"textDecorationColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(unsupported<CSSColor>()))},
-    {"textDecorationStyle", value<CSSKeyword>("solid", unsupported<CSSKeyword>())},
-    {"writingDirection", value<CSSKeyword>("auto", unsupported<CSSKeyword>())},
+     value<CSSDiscreteArray<CSSKeyword>>(
+         std::vector<CSSKeyword>{},
+         CSSCallback<CSSDiscreteArray<CSSKeyword>>(addFontVariantToPropsBuilder))},
+    {"textDecorationColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addTextDecorationColorToPropsBuilder))},
+    {"textDecorationStyle",
+     value<CSSKeyword>("solid", CSSCallback<CSSKeyword>(addTextDecorationStyleToPropsBuilder))},
+    {"writingDirection", value<CSSKeyword>("auto", CSSCallback<CSSKeyword>(addWritingDirectionToPropsBuilder))},
 };
 
 const InterpolatorFactoriesRecord TEXT_INTERPOLATORS_ANDROID = {
-    {"textAlignVertical", value<CSSKeyword>("auto", unsupported<CSSKeyword>())},
-    {"verticalAlign", value<CSSKeyword>("auto", unsupported<CSSKeyword>())},
-    {"includeFontPadding", value<CSSBoolean>(false, unsupported<CSSBoolean>())},
+    {"textAlignVertical", value<CSSKeyword>("auto", CSSCallback<CSSKeyword>(addTextAlignVerticalToPropsBuilder))},
+    {"verticalAlign", value<CSSKeyword>("auto", CSSCallback<CSSKeyword>(addVerticalAlignToPropsBuilder))},
+    {"includeFontPadding", value<CSSBoolean>(false, CSSCallback<CSSBoolean>(addIncludeFontPaddingToPropsBuilder))},
 };
 
 const InterpolatorFactoriesRecord TEXT_INTERPOLATORS = mergeInterpolators(
@@ -434,25 +438,28 @@ const InterpolatorFactoriesRecord TEXT_INTERPOLATORS = mergeInterpolators(
      TEXT_INTERPOLATORS_IOS,
      TEXT_INTERPOLATORS_ANDROID,
      InterpolatorFactoriesRecord{
-         {"color", value<CSSColor>(BLACK, unsupported<CSSColor>())},
-         {"fontFamily", value<CSSKeyword>("inherit", unsupported<CSSKeyword>())},
-         {"fontSize", value<CSSDouble>(14, unsupported<CSSDouble>())},
-         {"fontStyle", value<CSSKeyword>("normal", unsupported<CSSKeyword>())},
-         {"fontWeight", value<CSSKeyword>("normal", unsupported<CSSKeyword>())},
-         {"letterSpacing", value<CSSDouble>(0, unsupported<CSSDouble>())},
-         {"lineHeight", value<CSSDouble>(14, unsupported<CSSDouble>())}, // TODO - should inherit from fontSize
-         {"textAlign", value<CSSKeyword>("auto", unsupported<CSSKeyword>())},
-         {"textDecorationLine", value<CSSKeyword>("none", unsupported<CSSKeyword>())},
-         {"textDecorationThickness", value<CSSDouble>(1, unsupported<CSSDouble>())},
-         {"textShadowColor", value<CSSColor>(BLACK, unsupported<CSSColor>())},
+         {"color", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addTextColorToPropsBuilder))},
+         {"fontFamily", value<CSSKeyword>("inherit", CSSCallback<CSSKeyword>(addFontFamilyToPropsBuilder))},
+         {"fontSize", value<CSSDouble>(14, CSSCallback<CSSDouble>(addFontSizeToPropsBuilder))},
+         {"fontStyle", value<CSSKeyword>("normal", CSSCallback<CSSKeyword>(addFontStyleToPropsBuilder))},
+         {"fontWeight", value<CSSKeyword>("normal", CSSCallback<CSSKeyword>(addFontWeightToPropsBuilder))},
+         {"letterSpacing", value<CSSDouble>(0, CSSCallback<CSSDouble>(addLetterSpacingToPropsBuilder))},
+         {"lineHeight",
+          value<CSSDouble>(14, CSSCallback<CSSDouble>(addLineHeightToPropsBuilder))}, // TODO - should inherit from fontSize
+         {"textAlign", value<CSSKeyword>("auto", CSSCallback<CSSKeyword>(addTextAlignToPropsBuilder))},
+         {"textDecorationLine",
+          value<CSSKeyword>("none", CSSCallback<CSSKeyword>(addTextDecorationLineToPropsBuilder))},
+         {"textDecorationThickness",
+          value<CSSDouble>(1, CSSCallback<CSSDouble>(addTextDecorationThicknessToPropsBuilder))},
+         {"textShadowColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addTextShadowColorToPropsBuilder))},
          {"textShadowOffset",
           record({
-              {"width", value<CSSDouble>(0, unsupported<CSSDouble>())},
-              {"height", value<CSSDouble>(0, unsupported<CSSDouble>())},
+              {"width", value<CSSDouble>(0, CSSCallback<CSSDouble>(addTextShadowOffsetWidthToPropsBuilder))},
+              {"height", value<CSSDouble>(0, CSSCallback<CSSDouble>(addTextShadowOffsetHeightToPropsBuilder))},
           })},
-         {"textShadowRadius", value<CSSDouble>(0, unsupported<CSSDouble>())},
-         {"textTransform", value<CSSKeyword>("none", unsupported<CSSKeyword>())},
-         {"userSelect", value<CSSKeyword>("auto", unsupported<CSSKeyword>())},
+         {"textShadowRadius", value<CSSDouble>(0, CSSCallback<CSSDouble>(addTextShadowRadiusToPropsBuilder))},
+         {"textTransform", value<CSSKeyword>("none", CSSCallback<CSSKeyword>(addTextTransformToPropsBuilder))},
+         {"userSelect", value<CSSKeyword>("auto", CSSCallback<CSSKeyword>(addUserSelectToPropsBuilder))},
      }});
 
 const InterpolatorFactoriesRecord IMAGE_INTERPOLATORS = mergeInterpolators(
