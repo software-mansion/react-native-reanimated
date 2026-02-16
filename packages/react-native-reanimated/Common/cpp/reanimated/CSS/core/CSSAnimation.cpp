@@ -60,7 +60,8 @@ bool CSSAnimation::hasBackwardsFillMode() const {
   return fillMode_ == AnimationFillMode::Backwards || fillMode_ == AnimationFillMode::Both;
 }
 
-folly::dynamic CSSAnimation::getCurrentInterpolationStyle(std::shared_ptr<AnimatedPropsBuilder> propsBuilder) const {
+folly::dynamic CSSAnimation::getCurrentInterpolationStyle(
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const {
   return styleInterpolator_->interpolate(
       shadowNode_, progressProvider_, propsBuilder, FALLBACK_INTERPOLATION_THRESHOLD);
 }
@@ -80,7 +81,7 @@ void CSSAnimation::run(const double timestamp) {
   progressProvider_->play(timestamp);
 }
 
-folly::dynamic CSSAnimation::update(const double timestamp, std::shared_ptr<AnimatedPropsBuilder> propsBuilder) {
+folly::dynamic CSSAnimation::update(const double timestamp, const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) {
   progressProvider_->update(timestamp);
 
   // Check if the animation has not started yet because of the delay

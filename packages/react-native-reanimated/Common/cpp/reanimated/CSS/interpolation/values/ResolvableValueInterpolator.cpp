@@ -46,9 +46,7 @@ folly::dynamic ResolvableValueInterpolator<AllowedTypes...>::interpolateValue(
        .relativeProperty = config_.relativeProperty,
        .relativeTo = config_.relativeTo});
 
-  if (addToPropsBuilder_) {
-    addToPropsBuilder_(propsBuilder, interpolatedValue);
-  }
+  addToPropsBuilder_(propsBuilder, interpolatedValue);
 
   return interpolatedValue.toDynamic();
 }

@@ -32,12 +32,12 @@ class CSSAnimation {
   bool hasForwardsFillMode() const;
   bool hasBackwardsFillMode() const;
 
-  folly::dynamic getCurrentInterpolationStyle(std::shared_ptr<AnimatedPropsBuilder> propsBuilder) const;
+  folly::dynamic getCurrentInterpolationStyle(const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const;
   folly::dynamic getBackwardsFillStyle() const;
   folly::dynamic getResetStyle() const;
 
   void run(double timestamp);
-  folly::dynamic update(double timestamp, std::shared_ptr<AnimatedPropsBuilder> propsBuilder);
+  folly::dynamic update(double timestamp, const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder);
   void updateSettings(const PartialCSSAnimationSettings &updatedSettings, double timestamp);
 
  private:

@@ -28,7 +28,7 @@ class SimpleValueInterpolatorFactory : public PropertyInterpolatorFactory {
   explicit SimpleValueInterpolatorFactory(
       const TValue &defaultValue,
       std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &)>
-          addToPropsBuilder = nullptr)
+          addToPropsBuilder)
       : PropertyInterpolatorFactory(), defaultValue_(defaultValue), addToPropsBuilder_(addToPropsBuilder) {}
 
   bool isDiscreteProperty() const override {

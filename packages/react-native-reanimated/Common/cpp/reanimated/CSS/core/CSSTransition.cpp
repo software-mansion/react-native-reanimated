@@ -36,7 +36,8 @@ TransitionProgressState CSSTransition::getState() const {
   return progressProvider_.getState();
 }
 
-folly::dynamic CSSTransition::getCurrentInterpolationStyle(std::shared_ptr<AnimatedPropsBuilder> propsBuilder) const {
+folly::dynamic CSSTransition::getCurrentInterpolationStyle(
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const {
   return styleInterpolator_.interpolate(shadowNode_, progressProvider_, propsBuilder, allowDiscreteProperties_);
 }
 
@@ -92,13 +93,15 @@ folly::dynamic CSSTransition::run(
     const ChangedProps &changedProps,
     const folly::dynamic &lastUpdateValue,
     const double timestamp,
-    std::shared_ptr<AnimatedPropsBuilder> propsBuilder) {
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) {
   const auto reversedProperties = styleInterpolator_.updateInterpolatedProperties(changedProps, lastUpdateValue);
   progressProvider_.runProgressProviders(timestamp, settings_, changedProps.changedPropertyNames, reversedProperties);
   return update(timestamp, propsBuilder);
 }
 
-folly::dynamic CSSTransition::update(const double timestamp, std::shared_ptr<AnimatedPropsBuilder> propsBuilder) {
+folly::dynamic CSSTransition::update(
+    const double timestamp,
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) {
   progressProvider_.update(timestamp);
   auto result = styleInterpolator_.interpolate(shadowNode_, progressProvider_, propsBuilder, allowDiscreteProperties_);
   // Remove interpolators for which interpolation has finished

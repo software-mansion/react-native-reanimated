@@ -59,9 +59,7 @@ folly::dynamic SimpleValueInterpolator<AllowedTypes...>::interpolateValue(
   const auto &to = std::static_pointer_cast<ValueType>(toValue);
   const auto interpolatedValue = from->interpolate(progress, *to, context);
 
-  if (addToPropsBuilder_) {
-    addToPropsBuilder_(propsBuilder, interpolatedValue);
-  }
+  addToPropsBuilder_(propsBuilder, interpolatedValue);
 
   return interpolatedValue.toDynamic();
 }
