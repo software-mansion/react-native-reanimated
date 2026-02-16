@@ -1,5 +1,5 @@
 #include <reanimated/CSS/utils/animationUpdatesBatchUtils.h>
-#include <reanimated/CSS/utils/interpolatorsPropsBuilderSVGCallbacks.h>
+#include <reanimated/CSS/utils/interpolatorPropsBuilderSVGCallbacks.h>
 
 namespace reanimated::css {
 

@@ -41,7 +41,7 @@
 #include <reanimated/CSS/utils/interpolatorPropsBuilderCallbacks.h>
 #include <reanimated/CSS/utils/interpolatorPropsBuilderImageCallbacks.h>
 #include <reanimated/CSS/utils/interpolatorPropsBuilderTextCallbacks.h>
-#include <reanimated/CSS/utils/interpolatorsPropsBuilderSVGCallbacks.h>
+#include <reanimated/CSS/utils/interpolatorPropsBuilderSVGCallbacks.h>
 
 namespace reanimated::css {
 
