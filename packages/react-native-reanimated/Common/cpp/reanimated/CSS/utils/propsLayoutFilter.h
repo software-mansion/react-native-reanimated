@@ -1,7 +1,13 @@
 #pragma once
 
+#include <reanimated/CSS/utils/propNameFromString.h>
+
 #include <react/featureflags/ReactNativeFeatureFlags.h>
+#include <react/renderer/animationbackend/AnimatedProps.h>
 #include <react/renderer/animationbackend/AnimationBackend.h>
+#include <react/renderer/core/RawProps.h>
+
+#include <folly/dynamic.h>
 
 #include <set>
 
@@ -60,6 +66,32 @@ inline bool shouldSkipNonLayoutProp(facebook::react::PropName propName) {
   if (shouldFilterNonLayoutProps()) {
     return !isLayoutProp(propName);
   }
+  return false;
+}
+
+inline bool mutationHasLayoutUpdates(const facebook::react::AnimatedProps &animatedProps) {
+  for (const auto &prop : animatedProps.props) {
+    if (isLayoutProp(prop->propName)) {
+      return true;
+    }
+  }
+
+  if (!animatedProps.rawProps) {
+    return false;
+  }
+
+  const auto rawPropsDynamic = animatedProps.rawProps->toDynamic();
+  for (const auto &key : rawPropsDynamic.keys()) {
+    if (!key.isString()) {
+      continue;
+    }
+
+    const auto propName = propNameFromString(key.asString());
+    if (propName.has_value() && isLayoutProp(propName.value())) {
+      return true;
+    }
+  }
+
   return false;
 }
 
