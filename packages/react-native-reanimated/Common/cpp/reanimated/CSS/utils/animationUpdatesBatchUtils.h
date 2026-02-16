@@ -1,0 +1,207 @@
+#pragma once
+
+#include <reanimated/CSS/utils/propsLayoutFilter.h>
+#include <reanimated/Fabric/updates/UpdatesRegistry.h>
+
+#include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
+#include <react/renderer/animationbackend/AnimationBackend.h>
+#include <react/renderer/core/RawProps.h>
+
+#include <folly/dynamic.h>
+
+#include <memory>
+#include <optional>
+#include <string>
+#include <unordered_map>
+
+namespace reanimated::css {
+
+inline std::optional<facebook::react::PropName> propNameFromString(const std::string &propName) {
+  static const std::unordered_map<std::string, facebook::react::PropName> propNameMap = {
+      {"opacity", facebook::react::OPACITY},
+      {"width", facebook::react::WIDTH},
+      {"height", facebook::react::HEIGHT},
+      {"borderRadius", facebook::react::BORDER_RADII},
+      {"borderTopRightRadius", facebook::react::BORDER_RADII},
+      {"borderTopLeftRadius", facebook::react::BORDER_RADII},
+      {"borderBottomRightRadius", facebook::react::BORDER_RADII},
+      {"borderBottomLeftRadius", facebook::react::BORDER_RADII},
+      {"borderTopStartRadius", facebook::react::BORDER_RADII},
+      {"borderTopEndRadius", facebook::react::BORDER_RADII},
+      {"borderBottomStartRadius", facebook::react::BORDER_RADII},
+      {"borderBottomEndRadius", facebook::react::BORDER_RADII},
+      {"borderStartStartRadius", facebook::react::BORDER_RADII},
+      {"borderStartEndRadius", facebook::react::BORDER_RADII},
+      {"borderEndStartRadius", facebook::react::BORDER_RADII},
+      {"borderEndEndRadius", facebook::react::BORDER_RADII},
+      {"borderWidth", facebook::react::BORDER_WIDTH},
+      {"borderBottomWidth", facebook::react::BORDER_WIDTH},
+      {"borderTopWidth", facebook::react::BORDER_WIDTH},
+      {"borderLeftWidth", facebook::react::BORDER_WIDTH},
+      {"borderRightWidth", facebook::react::BORDER_WIDTH},
+      {"borderStartWidth", facebook::react::BORDER_WIDTH},
+      {"borderEndWidth", facebook::react::BORDER_WIDTH},
+      {"borderColor", facebook::react::BORDER_COLOR},
+      {"borderEndColor", facebook::react::BORDER_COLOR},
+      {"borderStartColor", facebook::react::BORDER_COLOR},
+      {"borderLeftColor", facebook::react::BORDER_COLOR},
+      {"borderRightColor", facebook::react::BORDER_COLOR},
+      {"borderTopColor", facebook::react::BORDER_COLOR},
+      {"borderBottomColor", facebook::react::BORDER_COLOR},
+      {"borderBlockColor", facebook::react::BORDER_COLOR},
+      {"borderBlockEndColor", facebook::react::BORDER_COLOR},
+      {"borderBlockStartColor", facebook::react::BORDER_COLOR},
+      {"margin", facebook::react::MARGIN},
+      {"marginTop", facebook::react::MARGIN},
+      {"marginBottom", facebook::react::MARGIN},
+      {"marginLeft", facebook::react::MARGIN},
+      {"marginRight", facebook::react::MARGIN},
+      {"marginStart", facebook::react::MARGIN},
+      {"marginEnd", facebook::react::MARGIN},
+      {"marginHorizontal", facebook::react::MARGIN},
+      {"marginVertical", facebook::react::MARGIN},
+      {"padding", facebook::react::PADDING},
+      {"paddingTop", facebook::react::PADDING},
+      {"paddingBottom", facebook::react::PADDING},
+      {"paddingLeft", facebook::react::PADDING},
+      {"paddingRight", facebook::react::PADDING},
+      {"paddingStart", facebook::react::PADDING},
+      {"paddingEnd", facebook::react::PADDING},
+      {"paddingHorizontal", facebook::react::PADDING},
+      {"paddingVertical", facebook::react::PADDING},
+      {"top", facebook::react::POSITION},
+      {"bottom", facebook::react::POSITION},
+      {"left", facebook::react::POSITION},
+      {"right", facebook::react::POSITION},
+      {"start", facebook::react::POSITION},
+      {"end", facebook::react::POSITION},
+      {"position", facebook::react::POSITION_TYPE},
+      {"flex", facebook::react::FLEX},
+      {"transform", facebook::react::TRANSFORM},
+      {"transformOriginX", facebook::react::TRANSFORM_ORIGIN},
+      {"transformOriginY", facebook::react::TRANSFORM_ORIGIN},
+      {"transformOriginZ", facebook::react::TRANSFORM_ORIGIN},
+      {"backgroundColor", facebook::react::BACKGROUND_COLOR},
+      {"shadowColor", facebook::react::SHADOW_COLOR},
+      {"shadowOffsetWidth", facebook::react::SHADOW_OFFSET},
+      {"shadowOffsetHeight", facebook::react::SHADOW_OFFSET},
+      {"shadowOpacity", facebook::react::SHADOW_OPACITY},
+      {"shadowRadius", facebook::react::SHADOW_RADIUS},
+      {"filter", facebook::react::FILTER},
+      {"outlineColor", facebook::react::OUTLINE_COLOR},
+      {"outlineOffset", facebook::react::OUTLINE_OFFSET},
+      {"outlineStyle", facebook::react::OUTLINE_STYLE},
+      {"outlineWidth", facebook::react::OUTLINE_WIDTH},
+      {"alignContent", facebook::react::ALIGN_CONTENT},
+      {"alignItems", facebook::react::ALIGN_ITEMS},
+      {"alignSelf", facebook::react::ALIGN_SELF},
+      {"aspectRatio", facebook::react::ASPECT_RATIO},
+      {"boxSizing", facebook::react::BOX_SIZING},
+      {"display", facebook::react::DISPLAY},
+      {"flexBasis", facebook::react::FLEX_BASIS},
+      {"flexDirection", facebook::react::FLEX_DIRECTION},
+      {"rowGap", facebook::react::ROW_GAP},
+      {"columnGap", facebook::react::COLUMN_GAP},
+      {"flexGrow", facebook::react::FLEX_GROW},
+      {"flexShrink", facebook::react::FLEX_SHRINK},
+      {"flexWrap", facebook::react::FLEX_WRAP},
+      {"justifyContent", facebook::react::JUSTIFY_CONTENT},
+      {"maxHeight", facebook::react::MAX_HEIGHT},
+      {"maxWidth", facebook::react::MAX_WIDTH},
+      {"minHeight", facebook::react::MIN_HEIGHT},
+      {"minWidth", facebook::react::MIN_WIDTH},
+      {"overflow", facebook::react::STYLE_OVERFLOW},
+      {"zIndex", facebook::react::Z_INDEX},
+      {"direction", facebook::react::DIRECTION},
+      {"borderCurve", facebook::react::BORDER_CURVES},
+      {"borderStyle", facebook::react::BORDER_STYLES},
+      {"pointerEvents", facebook::react::POINTER_EVENTS},
+      {"isolation", facebook::react::ISOLATION},
+      {"cursor", facebook::react::CURSOR},
+      {"boxShadow", facebook::react::BOX_SHADOW},
+      {"mixBlendMode", facebook::react::MIX_BLEND_MODE},
+      {"backfaceVisibility", facebook::react::BACKFACE_VISIBILITY},
+  };
+
+  const auto it = propNameMap.find(propName);
+  if (it == propNameMap.end()) {
+    return std::nullopt;
+  }
+  return it->second;
+}
+
+inline bool hasLayoutProps(const folly::dynamic &props) {
+  for (const auto &key : props.keys()) {
+    const auto propName = propNameFromString(key.asString());
+    if (propName.has_value() && isLayoutProp(propName.value())) {
+      return true;
+    }
+  }
+  return false;
+}
+
+inline void mergeDynamicIntoMutations(
+    facebook::react::AnimationMutations &mutations,
+    const std::shared_ptr<const facebook::react::ShadowNode> &node,
+    folly::dynamic props,
+    bool hasLayoutUpdates) {
+  const auto tag = node->getTag();
+  for (auto &mutation : mutations.batch) {
+    if (mutation.tag != tag) {
+      continue;
+    }
+
+    if (mutation.props.rawProps) {
+      auto mergedDynamic = folly::dynamic::merge(mutation.props.rawProps->toDynamic(), props);
+      mutation.props.rawProps = std::make_unique<facebook::react::RawProps>(std::move(mergedDynamic));
+    } else {
+      mutation.props.rawProps = std::make_unique<facebook::react::RawProps>(props);
+    }
+
+    mutation.hasLayoutUpdates = mutation.hasLayoutUpdates || hasLayoutUpdates;
+    return;
+  }
+
+  facebook::react::AnimatedPropsBuilder builder;
+  builder.storeDynamic(props);
+  mutations.batch.push_back(facebook::react::AnimationMutation{
+      tag,
+      node->getFamilyShared(),
+      builder.get(),
+      hasLayoutUpdates,
+  });
+}
+
+inline void mergeAnimationUpdatesBatch(facebook::react::AnimationMutations &mutations, UpdatesBatch &updatesBatch) {
+  for (auto &[node, dynamic] : updatesBatch) {
+    mergeDynamicIntoMutations(mutations, node, dynamic, hasLayoutProps(dynamic));
+  }
+}
+
+inline void addNonLayoutPropsFromDynamic(facebook::react::AnimationMutations &mutations, UpdatesBatch &updatesBatch) {
+  if (!shouldFilterNonLayoutProps()) {
+    return;
+  }
+
+  for (auto &[node, dynamic] : updatesBatch) {
+    folly::dynamic nonLayoutProps = folly::dynamic::object();
+
+    for (const auto &key : dynamic.keys()) {
+      const auto propNameKey = key.asString();
+      const auto propName = propNameFromString(propNameKey);
+      if (!propName.has_value() || isLayoutProp(propName.value())) {
+        continue;
+      }
+
+      nonLayoutProps[propNameKey] = dynamic[propNameKey];
+    }
+
+    if (nonLayoutProps.empty()) {
+      continue;
+    }
+
+    mergeDynamicIntoMutations(mutations, node, nonLayoutProps, false);
+  }
+}
+
+} // namespace reanimated::css
