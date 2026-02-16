@@ -1,6 +1,6 @@
 {
   "name": "react-native-worklets",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "The React Native multithreading library",
   "keywords": [
     "react-native",
