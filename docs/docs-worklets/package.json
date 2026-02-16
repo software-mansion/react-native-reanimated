@@ -47,7 +47,7 @@
     "babel-preset-expo": "9.2.2",
     "babel-preset-react-native": "4.0.1",
     "clsx": "2.1.0",
-    "glob": "10.4.2",
+    "glob": "10.5.0",
     "prettier": "3.6.2",
     "prism-react-renderer": "2.1.0",
     "raf": "3.4.1",

@@ -15703,7 +15703,7 @@ __metadata:
     copy-webpack-plugin: "npm:11.0.0"
     esbuild: "npm:0.25.10"
     esbuild-register: "npm:3.5.0"
-    glob: "npm:10.4.2"
+    glob: "npm:10.5.0"
     prettier: "npm:3.6.2"
     prism-react-renderer: "npm:2.1.0"
     raf: "npm:3.4.1"
@@ -15767,7 +15767,7 @@ __metadata:
     copy-webpack-plugin: "npm:11.0.0"
     esbuild: "npm:0.25.10"
     esbuild-register: "npm:3.5.0"
-    glob: "npm:10.4.2"
+    glob: "npm:10.5.0"
     prettier: "npm:3.6.2"
     prism-react-renderer: "npm:2.1.0"
     raf: "npm:3.4.1"
@@ -18651,23 +18651,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"glob@npm:10.4.2":
-  version: 10.4.2
-  resolution: "glob@npm:10.4.2"
-  dependencies:
-    foreground-child: "npm:^3.1.0"
-    jackspeak: "npm:^3.1.2"
-    minimatch: "npm:^9.0.4"
-    minipass: "npm:^7.1.2"
-    package-json-from-dist: "npm:^1.0.0"
-    path-scurry: "npm:^1.11.1"
-  bin:
-    glob: dist/esm/bin.mjs
-  checksum: 10/e412776b5952a818eba790c830bea161c9a56813fd767d8c4c49f855603b1fb962b3e73f1f627a47298a57d2992b9f0f2fe15cf93e74ecaaa63fb45d63fdd090
-  languageName: node
-  linkType: hard
-
-"glob@npm:^10.2.2, glob@npm:^10.3.10, glob@npm:^10.4.2":
+"glob@npm:10.5.0, glob@npm:^10.2.2, glob@npm:^10.3.10, glob@npm:^10.4.2":
   version: 10.5.0
   resolution: "glob@npm:10.5.0"
   dependencies:
