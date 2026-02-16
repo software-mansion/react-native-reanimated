@@ -39,6 +39,7 @@
 #include <reanimated/CSS/interpolation/filters/operations/saturate.h>
 #include <reanimated/CSS/interpolation/filters/operations/sepia.h>
 #include <reanimated/CSS/utils/interpolatorPropsBuilderCallbacks.h>
+#include <reanimated/CSS/utils/interpolatorsPropsBuilderSVGCallbacks.h>
 
 namespace reanimated::css {
 
@@ -467,76 +468,78 @@ const InterpolatorFactoriesRecord IMAGE_INTERPOLATORS = mergeInterpolators(
 // =================
 
 const InterpolatorFactoriesRecord SVG_COLOR_INTERPOLATORS = {
-    {"color", value<SVGBrush>(BLACK, unsupported<SVGBrush>())},
+    {"color", value<SVGBrush>(BLACK, CSSCallback<SVGBrush>(addSvgColorToPropsBuilder))},
 };
 
 const InterpolatorFactoriesRecord SVG_FILL_INTERPOLATORS = {
-    {"fill", value<SVGBrush>(BLACK, unsupported<SVGBrush>())},
-    {"fillOpacity", value<CSSDouble>(1, unsupported<CSSDouble>())},
-    {"fillRule", value<CSSIndex>(0, unsupported<CSSIndex>())},
+    {"fill", value<SVGBrush>(BLACK, CSSCallback<SVGBrush>(addSvgFillToPropsBuilder))},
+    {"fillOpacity", value<CSSDouble>(1, CSSCallback<CSSDouble>(addSvgFillOpacityToPropsBuilder))},
+    {"fillRule", value<CSSIndex>(0, CSSCallback<CSSIndex>(addSvgFillRuleToPropsBuilder))},
 };
 
 const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
-    {"stroke", value<SVGBrush>(BLACK, unsupported<SVGBrush>())},
-    {"strokeWidth", value<SVGLength>(1, unsupported<SVGLength>())},
-    {"strokeOpacity", value<CSSDouble>(1, unsupported<CSSDouble>())},
+    {"stroke", value<SVGBrush>(BLACK, CSSCallback<SVGBrush>(addSvgStrokeToPropsBuilder))},
+    {"strokeWidth", value<SVGLength>(1, CSSCallback<SVGLength>(addSvgStrokeWidthToPropsBuilder))},
+    {"strokeOpacity", value<CSSDouble>(1, CSSCallback<CSSDouble>(addSvgStrokeOpacityToPropsBuilder))},
     {"strokeDasharray",
-     value<SVGStrokeDashArray, CSSKeyword>(SVGStrokeDashArray(), unsupported<SVGStrokeDashArray, CSSKeyword>())},
-    {"strokeDashoffset", value<SVGLength>(0, unsupported<SVGLength>())},
-    {"strokeLinecap", value<CSSIndex>(0, unsupported<CSSIndex>())},
-    {"strokeLinejoin", value<CSSIndex>(0, unsupported<CSSIndex>())},
-    {"strokeMiterlimit", value<CSSDouble>(4, unsupported<CSSDouble>())},
-    {"vectorEffect", value<CSSIndex>(0, unsupported<CSSIndex>())},
+     value<SVGStrokeDashArray, CSSKeyword>(
+         SVGStrokeDashArray(),
+         CSSCallback<SVGStrokeDashArray, CSSKeyword>(addSvgStrokeDasharrayToPropsBuilder))},
+    {"strokeDashoffset", value<SVGLength>(0, CSSCallback<SVGLength>(addSvgStrokeDashoffsetToPropsBuilder))},
+    {"strokeLinecap", value<CSSIndex>(0, CSSCallback<CSSIndex>(addSvgStrokeLinecapToPropsBuilder))},
+    {"strokeLinejoin", value<CSSIndex>(0, CSSCallback<CSSIndex>(addSvgStrokeLinejoinToPropsBuilder))},
+    {"strokeMiterlimit", value<CSSDouble>(4, CSSCallback<CSSDouble>(addSvgStrokeMiterlimitToPropsBuilder))},
+    {"vectorEffect", value<CSSIndex>(0, CSSCallback<CSSIndex>(addSvgVectorEffectToPropsBuilder))},
 };
 
 const InterpolatorFactoriesRecord SVG_CLIP_INTERPOLATORS = {
-    {"clipRule", value<CSSKeyword>("nonzero", unsupported<CSSKeyword>())},
-    {"clipPath", value<CSSKeyword>("none", unsupported<CSSKeyword>())},
+    {"clipRule", value<CSSKeyword>("nonzero", CSSCallback<CSSKeyword>(addSvgClipRuleToPropsBuilder))},
+    {"clipPath", value<CSSKeyword>("none", CSSCallback<CSSKeyword>(addSvgClipPathToPropsBuilder))},
 };
 
 const InterpolatorFactoriesRecord SVG_TRANSFORM_INTERPOLATORS = {
-    {"translateX", value<SVGLength>(0, unsupported<SVGLength>())},
-    {"translateY", value<SVGLength>(0, unsupported<SVGLength>())},
-    {"originX", value<SVGLength>(0, unsupported<SVGLength>())},
-    {"originY", value<SVGLength>(0, unsupported<SVGLength>())},
-    {"scaleX", value<CSSDouble>(1, unsupported<CSSDouble>())},
-    {"scaleY", value<CSSDouble>(1, unsupported<CSSDouble>())},
-    {"skewX", value<CSSAngle>(0, unsupported<CSSAngle>())},
-    {"skewY", value<CSSAngle>(0, unsupported<CSSAngle>())},
-    {"rotation", value<CSSAngle>(0, unsupported<CSSAngle>())},
+    {"translateX", value<SVGLength>(0, CSSCallback<SVGLength>(addSvgTranslateXToPropsBuilder))},
+    {"translateY", value<SVGLength>(0, CSSCallback<SVGLength>(addSvgTranslateYToPropsBuilder))},
+    {"originX", value<SVGLength>(0, CSSCallback<SVGLength>(addSvgOriginXToPropsBuilder))},
+    {"originY", value<SVGLength>(0, CSSCallback<SVGLength>(addSvgOriginYToPropsBuilder))},
+    {"scaleX", value<CSSDouble>(1, CSSCallback<CSSDouble>(addSvgScaleXToPropsBuilder))},
+    {"scaleY", value<CSSDouble>(1, CSSCallback<CSSDouble>(addSvgScaleYToPropsBuilder))},
+    {"skewX", value<CSSAngle>(0, CSSCallback<CSSAngle>(addSvgSkewXToPropsBuilder))},
+    {"skewY", value<CSSAngle>(0, CSSCallback<CSSAngle>(addSvgSkewYToPropsBuilder))},
+    {"rotation", value<CSSAngle>(0, CSSCallback<CSSAngle>(addSvgRotationToPropsBuilder))},
 };
 
 const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS = mergeInterpolators({
     SVG_COLOR_INTERPOLATORS,
     SVG_FILL_INTERPOLATORS,
     SVG_STROKE_INTERPOLATORS,
-    InterpolatorFactoriesRecord{{"opacity", value<CSSDouble>(1, unsupported<CSSDouble>())}},
+    InterpolatorFactoriesRecord{{"opacity", value<CSSDouble>(1, CSSCallback<CSSDouble>(addSvgOpacityToPropsBuilder))}},
 });
 
 const InterpolatorFactoriesRecord SVG_CIRCLE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"cx", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
-         {"cy", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
-         {"r", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"cx", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgCxToPropsBuilder))},
+         {"cy", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgCyToPropsBuilder))},
+         {"r", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgRToPropsBuilder))},
      }});
 
 const InterpolatorFactoriesRecord SVG_ELLIPSE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"cx", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
-         {"cy", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
-         {"rx", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
-         {"ry", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"cx", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgCxToPropsBuilder))},
+         {"cy", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgCyToPropsBuilder))},
+         {"rx", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgRxToPropsBuilder))},
+         {"ry", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgRyToPropsBuilder))},
      }});
 
 const InterpolatorFactoriesRecord SVG_IMAGE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"x", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
-         {"y", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
-         {"width", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
-         {"height", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"x", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgXToPropsBuilder))},
+         {"y", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgYToPropsBuilder))},
+         {"width", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgWidthToPropsBuilder))},
+         {"height", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgHeightToPropsBuilder))},
          // TODO: Check why this is not supported in RN-SVG and add support
          // {"align", value<CSSKeyword>("xMidYMid")},
          // {"meetOrSlice", value<CSSIndex>(0)},
@@ -545,28 +548,28 @@ const InterpolatorFactoriesRecord SVG_IMAGE_INTERPOLATORS = mergeInterpolators(
 const InterpolatorFactoriesRecord SVG_LINE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"x1", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
-         {"y1", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
-         {"x2", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
-         {"y2", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"x1", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgX1ToPropsBuilder))},
+         {"y1", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgY1ToPropsBuilder))},
+         {"x2", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgX2ToPropsBuilder))},
+         {"y2", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgY2ToPropsBuilder))},
      }});
 
 const InterpolatorFactoriesRecord SVG_RECT_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"x", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
-         {"y", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
-         {"width", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
-         {"height", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
-         {"rx", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
-         {"ry", value<SVGLength, CSSKeyword>(0, unsupported<SVGLength, CSSKeyword>())},
+         {"x", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgXToPropsBuilder))},
+         {"y", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgYToPropsBuilder))},
+         {"width", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgWidthToPropsBuilder))},
+         {"height", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgHeightToPropsBuilder))},
+         {"rx", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgRectRxToPropsBuilder))},
+         {"ry", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgRectRyToPropsBuilder))},
      }});
 
 const InterpolatorFactoriesRecord SVG_PATH_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"d", value<SVGPath>("", unsupported<SVGPath>())},
-         {"opacity", value<CSSDouble>(1, unsupported<CSSDouble>())},
+         {"d", value<SVGPath>("", CSSCallback<SVGPath>(addSvgPathDToPropsBuilder))},
+         {"opacity", value<CSSDouble>(1, CSSCallback<CSSDouble>(addSvgOpacityToPropsBuilder))},
      }});
 
 // ==================
