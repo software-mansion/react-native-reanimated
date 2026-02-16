@@ -1,5 +1,5 @@
 #include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
-#include <reanimated/CSS/utils/propsBuilderWrapper.h>
+#include <reanimated/CSS/utils/interpolatorPropsBuilderCallbacks.h>
 
 #include <memory>
 #include <string>

@@ -1,5 +1,5 @@
 #include <reanimated/CSS/common/values/CSSAngle.h>
-#include <reanimated/CSS/utils/propsBuilderWrapper.h>
+#include <reanimated/CSS/utils/interpolatorPropsBuilderCallbacks.h>
 #include <reanimated/CSS/utils/propsLayoutFilter.h>
 
 #include <react/renderer/animationbackend/AnimatedPropsBuilder.h>

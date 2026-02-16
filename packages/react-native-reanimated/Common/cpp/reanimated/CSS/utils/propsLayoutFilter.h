@@ -16,7 +16,7 @@ inline bool shouldFilterNonLayoutProps() {
 #endif
 }
 
-inline const std::set<facebook::react::PropName> &layoutProps() {
+inline const std::set<facebook::react::PropName> &layoutPropNames() {
   static const std::set<facebook::react::PropName> props = {
       facebook::react::WIDTH,
       facebook::react::HEIGHT,
@@ -53,7 +53,7 @@ inline const std::set<facebook::react::PropName> &layoutProps() {
 }
 
 inline bool isLayoutProp(facebook::react::PropName propName) {
-  return layoutProps().contains(propName);
+  return layoutPropNames().contains(propName);
 }
 
 inline bool shouldSkipNonLayoutProp(facebook::react::PropName propName) {

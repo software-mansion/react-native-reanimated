@@ -38,7 +38,7 @@
 #include <reanimated/CSS/interpolation/filters/operations/opacity.h>
 #include <reanimated/CSS/interpolation/filters/operations/saturate.h>
 #include <reanimated/CSS/interpolation/filters/operations/sepia.h>
-#include <reanimated/CSS/utils/propsBuilderWrapper.h>
+#include <reanimated/CSS/utils/interpolatorPropsBuilderCallbacks.h>
 
 namespace reanimated::css {
 
