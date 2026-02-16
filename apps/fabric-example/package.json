@@ -13,8 +13,8 @@
   },
   "dependencies": {
     "common-app": "workspace:*",
-    "react": "19.1.1",
-    "react-native": "0.82.0"
+    "react": "19.2.3",
+    "react-native": "0.84.0"
   },
   "devDependencies": {
     "@types/react": "19.2.2",
@@ -23,7 +23,7 @@
     "typescript": "5.8.3"
   },
   "engines": {
-    "node": ">=20.13.0"
+    "node": ">= 22.11.0"
   },
   "installConfig": {
     "selfReferences": false

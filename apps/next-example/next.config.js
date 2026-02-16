@@ -19,7 +19,7 @@ module.exports = withPlugins([withBundleAnalyzer, withExpo], {
   typescript: {
     ignoreBuildErrors: true,
   },
-  transpilePackages: ['react-native-reanimated', 'react-native', 'expo'],
+  transpilePackages: ['react-native-reanimated', 'react-native', 'expo', 'react-native-worklets'],
   webpack(config) {
     if (disableMinification) {
       config.optimization.minimizer = [];

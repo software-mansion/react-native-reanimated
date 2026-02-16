@@ -15,14 +15,16 @@
   "dependencies": {
     "common-app": "workspace:*",
     "expo": "54.0.13",
-    "react": "19.1.1",
-    "react-dom": "19.1.1",
-    "react-native": "0.82.0",
-    "react-native-web": "0.21.1"
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.84.0",
+    "react-native-web": "0.21.2",
+    "react-strict-dom": "0.0.54"
   },
   "devDependencies": {
     "@expo/metro-runtime": "6.1.2",
     "@types/react": "19.2.2",
+    "babel-preset-expo": "54.0.10",
     "eslint": "9.37.0",
     "prettier": "3.6.2",
     "serve": "14.2.5",
