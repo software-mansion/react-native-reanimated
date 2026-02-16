@@ -22,18 +22,22 @@ export default class CSSManager implements ICSSManager {
     null;
   private isFirstUpdate: boolean = true;
 
-  constructor({ shadowNodeWrapper, viewTag, viewName = 'RCTView' }: ViewInfo) {
+  constructor(
+    { shadowNodeWrapper, viewTag, viewName = 'RCTView' }: ViewInfo,
+    componentChildName?: string
+  ) {
     const tag = (this.viewTag = viewTag as number);
     const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
 
     this.viewName = viewName;
-    this.propsBuilder = hasPropsBuilder(viewName)
-      ? getPropsBuilder(viewName)
+    this.propsBuilder = hasPropsBuilder(viewName, componentChildName)
+      ? getPropsBuilder(viewName, componentChildName)
       : null;
     this.cssAnimationsManager = new CSSAnimationsManager(
       wrapper,
       viewName,
-      tag
+      tag,
+      componentChildName
     );
     this.cssTransitionsManager = new CSSTransitionsManager(wrapper, tag);
   }

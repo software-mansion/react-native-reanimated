@@ -18,12 +18,14 @@ export default class CSSKeyframesRuleImpl<
   }
 
   getNormalizedKeyframesConfig(
-    viewName: string
+    viewName: string,
+    componentChildName?: string
   ): NormalizedCSSAnimationKeyframesConfig {
     if (!this.normalizedKeyframesCache_[viewName]) {
       this.normalizedKeyframesCache_[viewName] = normalizeAnimationKeyframes(
         this.cssRules,
-        viewName
+        viewName,
+        componentChildName
       );
     }
 
