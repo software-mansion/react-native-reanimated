@@ -38,8 +38,26 @@ export default function ColorExample() {
     return { tintColor: makeColor(sv.value) };
   });
 
-  // TODO: textDecorationColor, tintColor, textShadowColor, overlayColor
+  const styleTextShadow = useAnimatedStyle(() => {
+    return {
+      textShadowColor: makeColor(sv.value),
+      textShadowOffset: { width: 3, height: 3 },
+      textShadowRadius: 2,
+    };
+  });
 
+  const styleTextDecoration = useAnimatedStyle(() => {
+    return {
+      textDecorationLine: 'underline',
+      textDecorationColor: makeColor(sv.value),
+      fontSize: 30,
+      fontWeight: '600',
+    };
+  });
+
+
+  // TODO: overlayColor
+  
   const handleToggle = () => {
     ref.current = 1 - ref.current;
     sv.value = withTiming(ref.current, { duration: 1500 });
@@ -55,6 +73,12 @@ export default function ColorExample() {
         style={[styles.image5, style5]}
         source={require('./assets/logo.png')}
       />
+       <Animated.Text style={[styleTextShadow]}>
+        Text Shadow
+      </Animated.Text>
+      <Animated.Text style={[styleTextDecoration]}>
+        Text Decoration
+      </Animated.Text>
       <View style={styles.buttons}>
         <Button onPress={handleToggle} title="Toggle shared value" />
       </View>
