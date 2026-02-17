@@ -22,16 +22,16 @@ void ArrayPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::V
   }
 }
 
-bool ArrayPropertiesInterpolator::updateKeyframes(const folly::dynamic &fromValue, const folly::dynamic &toValue) {
-  const auto emptyArray = folly::dynamic::array();
-  const auto null = folly::dynamic();
+bool ArrayPropertiesInterpolator::updateKeyframes(
+    jsi::Runtime &rt,
+    const jsi::Value &fromValue,
+    const jsi::Value &toValue) {
+  const auto fromArray = fromValue.isUndefined() ? jsi::Array(rt, 0) : fromValue.asObject(rt).asArray(rt);
+  const auto toArray = toValue.isUndefined() ? jsi::Array(rt, 0) : toValue.asObject(rt).asArray(rt);
 
-  const auto &fromArray = fromValue.empty() ? emptyArray : fromValue;
-  const auto &toArray = toValue.empty() ? emptyArray : toValue;
-
-  const size_t oldSize = fromArray.size();
-  const size_t newSize = toArray.size();
-  const size_t valuesCount = std::max(oldSize, newSize);
+  const size_t fromSize = fromArray.size();
+  const size_t toSize = toArray.size();
+  const size_t valuesCount = std::max(fromSize, toSize);
 
   resizeInterpolators(valuesCount);
 
@@ -40,8 +40,9 @@ bool ArrayPropertiesInterpolator::updateKeyframes(const folly::dynamic &fromValu
   for (size_t i = 0; i < valuesCount; ++i) {
     // These index checks ensure that interpolation works between 2 arrays
     // with different lengths
-    areAllPropsReversed &=
-        interpolators_[i]->updateKeyframes(i < oldSize ? fromArray[i] : null, i < newSize ? toArray[i] : null);
+    areAllPropsReversed &= interpolators_[i]->updateKeyframes(
+        i < fromSize ? fromArray.getValueAtIndex(rt, i) : jsi::Value::undefined(),
+        i < toSize ? toArray.getValueAtIndex(rt, i) : jsi::Value::undefined());
   }
 
   return areAllPropsReversed;

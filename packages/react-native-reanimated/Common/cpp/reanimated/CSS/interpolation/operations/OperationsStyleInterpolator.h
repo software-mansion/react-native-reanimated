@@ -44,7 +44,7 @@ class OperationsStyleInterpolator : public PropertyInterpolator {
       const double fallbackInterpolateThreshold) const override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
-  bool updateKeyframes(const folly::dynamic &fromValue, const folly::dynamic &toValue) override;
+  bool updateKeyframes(jsi::Runtime &rt, const jsi::Value &fromValue, const jsi::Value &toValue) override;
 
  protected:
   const std::shared_ptr<StyleOperationInterpolators> interpolators_;

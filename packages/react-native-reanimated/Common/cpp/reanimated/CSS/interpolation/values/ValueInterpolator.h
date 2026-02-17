@@ -34,7 +34,7 @@ class ValueInterpolator : public PropertyInterpolator {
   folly::dynamic getLastKeyframeValue() const override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
-  bool updateKeyframes(const folly::dynamic &from, const folly::dynamic &to) override;
+  bool updateKeyframes(jsi::Runtime &rt, const jsi::Value &fromValue, const jsi::Value &toValue) override;
 
   folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,

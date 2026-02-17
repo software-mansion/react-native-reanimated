@@ -4,7 +4,7 @@
 #include <reanimated/CSS/configs/common.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
-#include <folly/dynamic.h>
+#include <jsi/jsi.h>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -13,7 +13,7 @@
 namespace reanimated::css {
 
 struct CSSTransitionPropertySettings {
-  std::pair<folly::dynamic, folly::dynamic> value;
+  std::pair<jsi::Value, jsi::Value> value;
   double duration;
   EasingFunction easingFunction;
   double delay;

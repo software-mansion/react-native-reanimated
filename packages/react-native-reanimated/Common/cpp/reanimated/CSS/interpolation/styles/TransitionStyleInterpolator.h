@@ -23,9 +23,10 @@ class TransitionStyleInterpolator {
       const TransitionProgressProvider &transitionProgressProvider) const;
 
   bool createOrUpdateInterpolator(
+      jsi::Runtime &rt,
       const std::string &propertyName,
-      const folly::dynamic &oldValue,
-      const folly::dynamic &newValue,
+      const jsi::Value &oldValue,
+      const jsi::Value &newValue,
       const folly::dynamic &lastValue);
   void setAllowDiscrete(const std::string &propertyName, bool allowDiscrete);
   void removeProperty(const std::string &propertyName);
