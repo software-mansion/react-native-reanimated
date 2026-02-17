@@ -1,7 +1,5 @@
 #include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
 
-#include <jsi/JSIDynamic.h>
-
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -30,15 +28,10 @@ folly::dynamic TransitionStyleInterpolator::interpolate(
 bool TransitionStyleInterpolator::createOrUpdateInterpolator(
     jsi::Runtime &rt,
     const std::string &propertyName,
-    const jsi::Value &oldValue,
-    const jsi::Value &newValue,
-    const folly::dynamic &lastValue) {
+    const jsi::Value &fromValue,
+    const jsi::Value &toValue) {
   const auto &interpolator = getOrCreateInterpolator(propertyName);
-  return interpolator->updateKeyframes(
-      // TODO - get rid of lastValue dynamic in the future
-      rt,
-      lastValue.isNull() ? oldValue : jsi::valueFromDynamic(rt, lastValue),
-      newValue);
+  return interpolator->updateKeyframes(rt, fromValue, toValue);
 }
 
 void TransitionStyleInterpolator::setAllowDiscrete(const std::string &propertyName, const bool allowDiscrete) {

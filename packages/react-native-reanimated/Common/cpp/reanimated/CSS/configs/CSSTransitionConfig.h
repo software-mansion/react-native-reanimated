@@ -1,7 +1,5 @@
 #pragma once
 
-#include <reanimated/CSS/common/definitions.h>
-#include <reanimated/CSS/configs/common.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
 #include <jsi/jsi.h>

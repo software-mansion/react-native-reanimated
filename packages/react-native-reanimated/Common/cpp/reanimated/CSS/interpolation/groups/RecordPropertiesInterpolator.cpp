@@ -57,6 +57,7 @@ bool RecordPropertiesInterpolator::updateKeyframes(
     maybeCreateInterpolator(propertyName);
     const auto propNameID = jsi::PropNameID::forUtf8(rt, propertyName);
     areAllPropsReversed &= interpolators_[propertyName]->updateKeyframes(
+        rt,
         fromObject.hasProperty(rt, propNameID) ? fromObject.getProperty(rt, propNameID) : jsi::Value::undefined(),
         toObject.hasProperty(rt, propNameID) ? toObject.getProperty(rt, propNameID) : jsi::Value::undefined());
   }

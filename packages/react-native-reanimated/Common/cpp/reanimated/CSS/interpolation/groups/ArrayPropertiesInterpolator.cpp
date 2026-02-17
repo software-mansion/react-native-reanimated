@@ -29,8 +29,8 @@ bool ArrayPropertiesInterpolator::updateKeyframes(
   const auto fromArray = fromValue.isUndefined() ? jsi::Array(rt, 0) : fromValue.asObject(rt).asArray(rt);
   const auto toArray = toValue.isUndefined() ? jsi::Array(rt, 0) : toValue.asObject(rt).asArray(rt);
 
-  const size_t fromSize = fromArray.size();
-  const size_t toSize = toArray.size();
+  const size_t fromSize = fromArray.size(rt);
+  const size_t toSize = toArray.size(rt);
   const size_t valuesCount = std::max(fromSize, toSize);
 
   resizeInterpolators(valuesCount);
@@ -41,6 +41,7 @@ bool ArrayPropertiesInterpolator::updateKeyframes(
     // These index checks ensure that interpolation works between 2 arrays
     // with different lengths
     areAllPropsReversed &= interpolators_[i]->updateKeyframes(
+        rt,
         i < fromSize ? fromArray.getValueAtIndex(rt, i) : jsi::Value::undefined(),
         i < toSize ? toArray.getValueAtIndex(rt, i) : jsi::Value::undefined());
   }

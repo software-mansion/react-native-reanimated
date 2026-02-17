@@ -1,5 +1,7 @@
 #include <reanimated/CSS/core/CSSTransition.h>
 
+#include <jsi/JSIDynamic.h>
+
 #include <memory>
 #include <string>
 #include <utility>
@@ -82,9 +84,16 @@ void CSSTransition::handleChangedProperties(
 
     // Update the transition style interpolator
     const auto &valueChange = propertySettings.value;
-    const auto lastValue = lastUpdateValue.getDefault(propertyName, null);
-    const auto isReversed = styleInterpolator_.createOrUpdateInterpolator(
-        rt, propertyName, valueChange.first, valueChange.second, lastValue);
+
+    bool isReversed;
+    if (lastUpdateValue.count(propertyName)) {
+      // TODO - get rid of lastValue dynamic in the future
+      isReversed = styleInterpolator_.createOrUpdateInterpolator(
+          rt, propertyName, jsi::valueFromDynamic(rt, lastUpdateValue.at(propertyName)), valueChange.second);
+    } else {
+      isReversed =
+          styleInterpolator_.createOrUpdateInterpolator(rt, propertyName, valueChange.first, valueChange.second);
+    }
 
     // We still pass allowDiscrete to use correct threshold for interpolation between incompatible values
     // (e.g. when someone passes a keyword and a numeric value - in this case we interpolate them as discrete values)
