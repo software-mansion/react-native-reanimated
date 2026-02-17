@@ -41,7 +41,7 @@
     "react-native-reanimated": "workspace:*",
     "react-native-safe-area-context": "5.6.1",
     "react-native-screens": "4.19.0-nightly-20251125-46052f31e",
-    "react-native-svg": "15.14.0",
+    "react-native-svg": "15.15.3",
     "react-native-worklets": "workspace:*",
     "react-strict-dom": "0.0.54"
   },
