@@ -16,6 +16,7 @@
 #include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGLength.h>
 #include <reanimated/CSS/svg/values/SVGPath.h>
+#include <reanimated/CSS/svg/values/SVGStops.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
 #include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
@@ -40,8 +41,8 @@
 #include <reanimated/CSS/interpolation/filters/operations/sepia.h>
 #include <reanimated/CSS/utils/interpolatorPropsBuilderCallbacks.h>
 #include <reanimated/CSS/utils/interpolatorPropsBuilderImageCallbacks.h>
-#include <reanimated/CSS/utils/interpolatorPropsBuilderTextCallbacks.h>
 #include <reanimated/CSS/utils/interpolatorPropsBuilderSVGCallbacks.h>
+#include <reanimated/CSS/utils/interpolatorPropsBuilderTextCallbacks.h>
 
 namespace reanimated::css {
 
@@ -554,6 +555,19 @@ const InterpolatorFactoriesRecord SVG_LINE_INTERPOLATORS = mergeInterpolators(
          {"y2", value<SVGLength, CSSKeyword>(0, CSSCallback<SVGLength, CSSKeyword>(addSvgY2ToPropsBuilder))},
      }});
 
+const InterpolatorFactoriesRecord SVG_LINEAR_GRADIENT_INTERPOLATORS = mergeInterpolators(
+    {SVG_COMMON_INTERPOLATORS,
+     InterpolatorFactoriesRecord{
+         {"x1", value<SVGLength, CSSKeyword>("0%")},
+         {"x2", value<SVGLength, CSSKeyword>("100%")},
+         {"y1", value<SVGLength, CSSKeyword>("0%")},
+         {"y2", value<SVGLength, CSSKeyword>("0%")},
+         {"gradient", value<SVGStops>(SVGStops())},
+         {"gradientUnits", value<CSSIndex>(0)},
+         // TODO: Implement 'gradientTransform'
+         // {"gradientTransform", value<CSSKeyword>("")},
+     }});
+
 const InterpolatorFactoriesRecord SVG_RECT_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
@@ -570,6 +584,22 @@ const InterpolatorFactoriesRecord SVG_PATH_INTERPOLATORS = mergeInterpolators(
      InterpolatorFactoriesRecord{
          {"d", value<SVGPath>("", CSSCallback<SVGPath>(addSvgPathDToPropsBuilder))},
          {"opacity", value<CSSDouble>(1, CSSCallback<CSSDouble>(addSvgOpacityToPropsBuilder))},
+     }});
+
+const InterpolatorFactoriesRecord SVG_RADIAL_GRADIENT_INTERPOLATORS = mergeInterpolators(
+    {SVG_COMMON_INTERPOLATORS,
+     InterpolatorFactoriesRecord{
+         {"r", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>())},
+         {"fx", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>())},
+         {"fy", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>())},
+         {"rx", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>())},
+         {"ry", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>())},
+         {"cx", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>())},
+         {"cy", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>())},
+         {"gradient", value<SVGStops>(SVGStops(), CSSCallback<SVGStops>())},
+         {"gradientUnits", value<CSSIndex>(0, CSSCallback<CSSIndex>())},
+         // TODO: Implement 'gradientTransform'
+         // {"gradientTransform", value<CSSKeyword>("")},
      }});
 
 // ==================
@@ -590,8 +620,10 @@ ComponentInterpolatorsMap initializeRegistry() {
     registry["RNSVGEllipse"] = SVG_ELLIPSE_INTERPOLATORS;
     registry["RNSVGImage"] = SVG_IMAGE_INTERPOLATORS;
     registry["RNSVGLine"] = SVG_LINE_INTERPOLATORS;
+    registry["RNSVGLinearGradient"] = SVG_LINEAR_GRADIENT_INTERPOLATORS;
     registry["RNSVGPath"] = SVG_PATH_INTERPOLATORS;
     registry["RNSVGRect"] = SVG_RECT_INTERPOLATORS;
+    registry["RNSVGRadialGradient"] = SVG_RADIAL_GRADIENT_INTERPOLATORS;
   }
 
   return registry;

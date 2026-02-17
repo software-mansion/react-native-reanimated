@@ -8,6 +8,7 @@
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registries/StaticPropsRegistry.h>
+#include <reanimated/Events/UIEventHandlerRegistry.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
@@ -19,11 +20,10 @@
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
+#include <reanimated/Tools/SingleInstanceChecker.h>
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
-#include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/Tools/JSScheduler.h>
-#include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
 
 #include <react/renderer/animationbackend/AnimationBackend.h>
@@ -35,8 +35,6 @@
 #include <memory>
 #include <set>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -91,10 +89,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   bool
   handleEvent(const std::string &eventName, const int emitterReactTag, const jsi::Value &payload, double currentTime);
-
-  inline std::shared_ptr<JSLogger> getJSLogger() const {
-    return jsLogger_;
-  }
 
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
 
@@ -186,14 +180,13 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   bool shouldFlushRegistry_ = false;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
 
-  std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry_;
   RequestRenderFunction requestRender_;
+  std::unique_ptr<UIEventHandlerRegistry> eventHandlerRegistry_;
   volatile bool renderRequested_{false};
   bool isAnimationRunning_{false};
   CallbackId callbackId_;
   std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
-  const std::shared_ptr<JSLogger> jsLogger_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
   std::vector<std::function<void(AnimationTimestamp)>> backendCallbacks_;
@@ -227,7 +220,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;
 
 #ifndef NDEBUG
-  worklets::SingleInstanceChecker<ReanimatedModuleProxy> singleInstanceChecker_;
+  SingleInstanceChecker<ReanimatedModuleProxy> singleInstanceChecker_;
 #endif // NDEBUG
 };
 

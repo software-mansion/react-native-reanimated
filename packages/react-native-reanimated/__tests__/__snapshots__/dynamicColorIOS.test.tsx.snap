@@ -49,7 +49,6 @@ exports[`DynamicColorIOS test colors are animating 1`] = `
       },
     ]
   }
-  nativeID="1"
   onBlur={[Function]}
   onClick={[Function]}
   onFocus={[Function]}

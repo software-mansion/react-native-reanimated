@@ -22,6 +22,7 @@ interface PluginOptions {
   globals?: string[];
   omitNativeOnlyData?: boolean;
   relativeSourceLocation?: boolean;
+  strictGlobal?: boolean;
   substituteWebPlatformChecks?: boolean;
   workletizableModules?: string[];
 }
@@ -31,11 +32,11 @@ interface PluginOptions {
 
 ## How to use
 
-Using this is straightforward for Babel plugins; you just need to pass an object containing the options to the plugin in your `babel.config.js` file. Make sure to pass the plugin and its options as a two-element array.
+Using this is straightforward for Babel plugins; you just need to pass an object containing the options to the plugin in your `babel.config.js` file. Make sure to pass the plugin and its options as a **two-element array**.
 
 Here's an example:
 
-```js {7}
+```js {13-16}
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
 const workletsPluginOptions = {
   bundleMode: true,
@@ -62,7 +63,7 @@ module.exports = {
 
 Defaults to `false`.
 
-Enables the [Bundle Mode](/docs/experimental/bundleMode).
+Enables the [Bundle Mode](/docs/bundleMode/).
 
 ### disableInlineStylesWarning
 
@@ -106,7 +107,7 @@ This option turns off the source map generation for worklets. Mostly used for te
 
 ### disableWorkletClasses <AvailableFrom version="0.7.0"/>
 
-Defaults to `false`
+Defaults to `false`.
 
 Disables [Worklet Classes
 support](/docs/worklets-babel-plugin/about#experimental-worklet-classes).
@@ -177,7 +178,7 @@ function run() {
 }
 ```
 
-Without `global` as a whitelisted identifier in this case, you'd only get:
+Without `global` as an blocklisted identifier in this case, you'd only get:
 
 ```
 JS THREAD
@@ -186,7 +187,7 @@ JS THREAD
 
 This output occurs because the entire `global` object (!) would be copied to the UI thread for it to be assigned by `setOnUI`. Then, `readOnUI` would again copy the `global` object and read from this copy.
 
-There is a [huge list of identifiers whitelisted by default](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/globals.ts).
+There is a [huge list of identifiers blocklisted by default](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/globals.ts).
 
 ### omitNativeOnlyData
 
@@ -200,6 +201,54 @@ Defaults to `false`.
 
 This option dictates the passed file location for a worklet's source map. If you enable this option, the file paths will be relative to `process.cwd` (the current directory where Babel executes). This can be handy for Jest test snapshots to ensure consistent results across machines.
 
+### strictGlobal <AvailableFrom version="0.8.0"/>
+
+:::note
+We highly recommend enabling this option as it will be enabled by default in the future.
+:::
+
+Defaults to `false`.
+
+This option changes how global variables are handled inside worklets. You can read more about closures and global scoping [here](/docs/fundamentals/closures#global-scoping).
+
+With this option disabled, accessing global variables inside worklets will lead to capturing them from the scheduler scope:
+
+```tsx
+global.something = 10;
+
+function setOnUI() {
+  'worklet';
+  console.log(something); // Captured from scheduler scope, prints 10
+}
+```
+
+When you enable `strictGlobal`, accessing a global variable inside a worklet will result in accessing it directly from the global scope of the worklet runtime:
+
+```tsx
+global.something = 10;
+
+function setOnUI() {
+  'worklet';
+  console.log(something); // undefined - accessed from worklet global scope
+}
+```
+
+To actually access the global variable from another runtime you must assign it to a local variable and use it in the worklet:
+
+```tsx
+global.something = 10;
+const localSomething = global.something;
+
+function setOnUI() {
+  'worklet';
+  console.log(localSomething); // prints 10
+}
+```
+
+While it might seem handy to copy everything implicitly, it can lead to unexpected behavior when the captured object shouldn't be copied between runtimes. Compare this to the [globals option](#globals), which allows you to specify which global variables should not be copied to the worklet runtime at all.
+
+`strictGlobal` takes precedence over the `globals` option.
+
 ### substituteWebPlatformChecks
 
 Defaults to `false`.
@@ -210,4 +259,4 @@ This option can also be useful for Web apps. In Reanimated, there are numerous c
 
 Defaults to an empty array.
 
-This option allows you to register modules as safe to use on Worklet Runtimes in the [Bundle Mode](/docs/experimental/bundleMode).
+This option allows you to register modules as safe to use on Worklet Runtimes in the [Bundle Mode](/docs/bundleMode/).

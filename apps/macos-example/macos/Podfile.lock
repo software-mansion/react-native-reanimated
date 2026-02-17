@@ -1825,10 +1825,11 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 4.3.0-main)
+    - RNReanimated/apple (= 4.3.0-main)
+    - RNReanimated/common (= 4.3.0-main)
     - RNWorklets
     - Yoga
-  - RNReanimated/reanimated (4.3.0-main):
+  - RNReanimated/apple (4.3.0-main):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1851,10 +1852,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 4.3.0-main)
     - RNWorklets
     - Yoga
-  - RNReanimated/reanimated/apple (4.3.0-main):
+  - RNReanimated/common (4.3.0-main):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1951,9 +1951,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNWorklets/worklets (= 0.8.0-main)
+    - RNWorklets/apple (= 0.8.0-main)
+    - RNWorklets/common (= 0.8.0-main)
     - Yoga
-  - RNWorklets/worklets (0.8.0-main):
+  - RNWorklets/apple (0.8.0-main):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1976,9 +1977,8 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNWorklets/worklets/apple (= 0.8.0-main)
     - Yoga
-  - RNWorklets/worklets/apple (0.8.0-main):
+  - RNWorklets/common (0.8.0-main):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2046,7 +2046,7 @@ DEPENDENCIES:
   - React-logger (from `../node_modules/react-native-macos/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native-macos/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native-macos/ReactCommon/react/nativemodule/microtasks`)
-  - react-native-safe-area-context (from `../../common-app/node_modules/react-native-safe-area-context`)
+  - react-native-safe-area-context (from `../../../node_modules/react-native-safe-area-context`)
   - React-NativeModulesApple (from `../node_modules/react-native-macos/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-oscompat (from `../node_modules/react-native-macos/ReactCommon/oscompat`)
   - React-perflogger (from `../node_modules/react-native-macos/ReactCommon/reactperflogger`)
@@ -2078,11 +2078,11 @@ DEPENDENCIES:
   - ReactAppDependencyProvider (from `build/generated/ios`)
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native-macos/ReactCommon`)
-  - "RNCAsyncStorage (from `../../common-app/node_modules/@react-native-async-storage/async-storage`)"
-  - "RNCClipboard (from `../../common-app/node_modules/@react-native-clipboard/clipboard`)"
-  - RNGestureHandler (from `../../common-app/node_modules/react-native-gesture-handler`)
+  - "RNCAsyncStorage (from `../../../node_modules/@react-native-async-storage/async-storage`)"
+  - "RNCClipboard (from `../../../node_modules/@react-native-clipboard/clipboard`)"
+  - RNGestureHandler (from `../../../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
-  - RNSVG (from `../../common-app/node_modules/react-native-svg`)
+  - RNSVG (from `../../../node_modules/react-native-svg`)
   - RNWorklets (from `../node_modules/react-native-worklets`)
   - SocketRocket (from `../node_modules/react-native-macos/third-party-podspecs/SocketRocket.podspec`)
   - Yoga (from `../node_modules/react-native-macos/ReactCommon/yoga`)
@@ -2166,7 +2166,7 @@ EXTERNAL SOURCES:
   React-microtasksnativemodule:
     :path: "../node_modules/react-native-macos/ReactCommon/react/nativemodule/microtasks"
   react-native-safe-area-context:
-    :path: "../../common-app/node_modules/react-native-safe-area-context"
+    :path: "../../../node_modules/react-native-safe-area-context"
   React-NativeModulesApple:
     :path: "../node_modules/react-native-macos/ReactCommon/react/nativemodule/core/platform/ios"
   React-oscompat:
@@ -2230,15 +2230,15 @@ EXTERNAL SOURCES:
   ReactCommon:
     :path: "../node_modules/react-native-macos/ReactCommon"
   RNCAsyncStorage:
-    :path: "../../common-app/node_modules/@react-native-async-storage/async-storage"
+    :path: "../../../node_modules/@react-native-async-storage/async-storage"
   RNCClipboard:
-    :path: "../../common-app/node_modules/@react-native-clipboard/clipboard"
+    :path: "../../../node_modules/@react-native-clipboard/clipboard"
   RNGestureHandler:
-    :path: "../../common-app/node_modules/react-native-gesture-handler"
+    :path: "../../../node_modules/react-native-gesture-handler"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
   RNSVG:
-    :path: "../../common-app/node_modules/react-native-svg"
+    :path: "../../../node_modules/react-native-svg"
   RNWorklets:
     :path: "../node_modules/react-native-worklets"
   SocketRocket:
@@ -2320,9 +2320,9 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: a1c8cc8a99c32de1244a9cf707bf9d83d0de0f71
   RNCClipboard: ea6045252d5c0753cf17f62290f647dc0096f6ac
   RNGestureHandler: 0397fea67f39d5a2d17fcf4a028e206f7ba098ba
-  RNReanimated: a63ab5642960d879b3da4fcaa4229f437c249531
+  RNReanimated: a62d194d40fa022887dcfbfbb445cc972490d13b
   RNSVG: 681f8ef5ca50e13cb3c6c88a907ea89b68fee74f
-  RNWorklets: e8821f23a7f8c2d7774b38e2865034c01982f247
+  RNWorklets: 0c278a439407775ff4daa82b3ef34106153b8508
   SocketRocket: 03f7111df1a343b162bf5b06ead333be808e1e0a
   Yoga: 45ce05cb11db042ba2e5e51a2dfaf0ff63d269f9
 

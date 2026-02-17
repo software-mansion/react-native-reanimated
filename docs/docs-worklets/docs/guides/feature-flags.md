@@ -8,9 +8,11 @@ Feature flags allow developers to opt-in for experimental changes or opt-out fro
 
 ## Summary of available feature flags
 
-| Feature flag name                                                 |              Type               | Added in | Removed in | Default value |
-| ----------------------------------------------------------------- | :-----------------------------: | :------: | :--------: | :-----------: |
-| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled) | [static](#static-feature-flags) |  4.1.0   |  &ndash;   |    `true`     |
+| Feature flag name                                                  |              Type               | Added in | Removed in | Default value |
+| ------------------------------------------------------------------ | :-----------------------------: | :------: | :--------: | :-----------: |
+| [`BUNDLE_MODE_ENABLED`](#bundle_mode_enabled-)                     | [static](#static-feature-flags) |  0.8.0   |  &ndash;   |    `false`    |
+| [`FETCH_PREVIEW_ENABLED`](#fetch_preview_enabled-)                 | [static](#static-feature-flags) |  0.8.0   |  &ndash;   |    `false`    |
+| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled-) | [static](#static-feature-flags) |  0.6.0   |  &ndash;   |    `true`     |
 
 :::info
 
@@ -20,7 +22,16 @@ Feature flags available in `react-native-reanimated` are listed [on this page](h
 
 ## Description of available feature flags
 
-### `IOS_DYNAMIC_FRAMERATE_ENABLED`
+### `BUNDLE_MODE_ENABLED` <AvailableFrom version="0.8.0" />
+
+This feature flag enables [the Bundle Mode](/docs/bundleMode/). Make sure to follow the rest of the [setup instructions](/docs/bundleMode/setup/) after enabling this flag.
+
+### `FETCH_PREVIEW_ENABLED` <AvailableFrom version="0.8.0" />
+
+This feature flag enables the [preview of fetch API on Worklet Runtimes](/docs/bundleMode/usage#running-network-requests-in-worklets) in the [Bundle Mode](/docs/bundleMode/). Make sure to follow the rest of the [setup instructions](/docs/bundleMode/setup/) after enabling this flag.
+**This flag requires `BUNDLE_MODE_ENABLED` flag to be enabled as well.**
+
+### `IOS_DYNAMIC_FRAMERATE_ENABLED` <AvailableFrom version="0.6.0" />
 
 This feature flags is supposed to improve the visual perception and perceived smoothness of computationally expensive animations. When enabled, the frame rate will be automatically adjusted for current workload of the UI thread. For instance, if the device fails to run animations in 120 fps which would usually results in irregular frame drops, the mechanism will fallback to stable 60 fps. For more details, see [PR #7624](https://github.com/software-mansion/react-native-reanimated/pull/7624).
 

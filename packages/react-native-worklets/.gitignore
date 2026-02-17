@@ -62,4 +62,4 @@ apple/generated
 android/generated
 
 # worklets
-__generatedWorklets/
+.worklets/

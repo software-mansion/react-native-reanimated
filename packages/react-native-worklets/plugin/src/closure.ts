@@ -59,7 +59,7 @@ export function getClosure(
            * from the global scope. In this case we have to avoid capturing
            * certain identifiers.
            */
-          if (globals.has(name)) {
+          if (state.opts.strictGlobal || globals.has(name)) {
             return;
           }
           capturedNames.add(name);

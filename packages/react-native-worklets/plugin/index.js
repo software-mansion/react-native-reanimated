@@ -277,7 +277,7 @@ var require_types = __commonJS({
       return (0, types_12.isObjectExpression)(node);
     }
     exports2.workletClassFactorySuffix = "__classFactory";
-    exports2.generatedWorkletsDir = "__generatedWorklets";
+    exports2.generatedWorkletsDir = ".worklets";
   }
 });
 
@@ -411,10 +411,15 @@ var require_globals = __commonJS({
     exports2.initializeGlobals = initializeGlobals;
     exports2.addCustomGlobals = addCustomGlobals;
     var notCapturedIdentifiers = [
+      // Based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
+      // Note that objects' properties don't need to be listed since we always only capture the whole object,
+      // e.g. `global.__ErrorUtils` or `Intl.DateTimeFormat`.
+      // Value properties
       "globalThis",
       "Infinity",
       "NaN",
       "undefined",
+      // Function properties
       "eval",
       "isFinite",
       "isNaN",
@@ -426,10 +431,12 @@ var require_globals = __commonJS({
       "encodeURIComponent",
       "escape",
       "unescape",
+      // Fundamental objects
       "Object",
       "Function",
       "Boolean",
       "Symbol",
+      // Error objects
       "Error",
       "AggregateError",
       "EvalError",
@@ -439,12 +446,15 @@ var require_globals = __commonJS({
       "TypeError",
       "URIError",
       "InternalError",
+      // Numbers and dates
       "Number",
       "BigInt",
       "Math",
       "Date",
+      // Text processing
       "String",
       "RegExp",
+      // Indexed collections
       "Array",
       "Int8Array",
       "Uint8Array",
@@ -457,17 +467,21 @@ var require_globals = __commonJS({
       "BigUint64Array",
       "Float32Array",
       "Float64Array",
+      // Keyed collections
       "Map",
       "Set",
       "WeakMap",
       "WeakSet",
+      // Structured data
       "ArrayBuffer",
       "SharedArrayBuffer",
       "DataView",
       "Atomics",
       "JSON",
+      // Managing memory
       "WeakRef",
       "FinalizationRegistry",
+      // Control abstraction objects
       "Iterator",
       "AsyncIterator",
       "Promise",
@@ -476,9 +490,12 @@ var require_globals = __commonJS({
       "Generator",
       "AsyncGenerator",
       "AsyncFunction",
+      // Reflection
       "Reflect",
       "Proxy",
+      // Internationalization
       "Intl",
+      // Other stuff
       "null",
       "this",
       "global",
@@ -488,10 +505,12 @@ var require_globals = __commonJS({
       "console",
       "performance",
       "arguments",
+      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
       "require",
       "fetch",
       "XMLHttpRequest",
       "WebSocket",
+      // Run loop
       "queueMicrotask",
       "requestAnimationFrame",
       "cancelAnimationFrame",
@@ -501,7 +520,9 @@ var require_globals = __commonJS({
       "clearImmediate",
       "setInterval",
       "clearInterval",
+      // Hermes
       "HermesInternal",
+      // Worklets
       "_WORKLET"
     ];
     exports2.outsideBindingsToCaptureFromGlobalScope = /* @__PURE__ */ new Set([
@@ -514,8 +535,10 @@ var require_globals = __commonJS({
     function initializeState(state) {
       state.workletNumber = 1;
       state.classesToWorkletize = [];
-      initializeGlobals();
-      addCustomGlobals(state);
+      if (!state.opts.strictGlobal) {
+        initializeGlobals();
+        addCustomGlobals(state);
+      }
     }
     exports2.defaultGlobals = new Set(notCapturedIdentifiers.concat(notCapturedIdentifiers_DEPRECATED));
     function initializeGlobals() {
@@ -564,7 +587,7 @@ var require_closure = __commonJS({
             binding = idPath.scope.getBinding(name);
           }
           if (!binding) {
-            if (globals_12.globals.has(name)) {
+            if (state.opts.strictGlobal || globals_12.globals.has(name)) {
               return;
             }
             capturedNames.add(name);
@@ -625,6 +648,7 @@ var require_closure = __commonJS({
     var alwaysAllowed = [
       "react-native-worklets",
       "react-native/Libraries/Core/setUpXHR"
+      // for networking
     ];
   }
 });
@@ -986,6 +1010,7 @@ var require_workletFactory = __commonJS({
             (0, types_12.newExpression)((0, types_12.memberExpression)((0, types_12.identifier)("global"), (0, types_12.identifier)("Error")), []),
             (0, types_12.numericLiteral)(lineOffset),
             (0, types_12.numericLiteral)(-27)
+            // the placement of opening bracket after Exception in line that defined '_e' variable
           ]))
         ]));
         statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__stackDetails"), false), (0, types_12.identifier)("_e"))));
@@ -1131,6 +1156,7 @@ var require_workletSubstitution = __commonJS({
     }
     function processWorklet(path, state) {
       path.traverse({
+        // @ts-expect-error TypeScript doesn't like this syntax here.
         [types_2.WorkletizableFunction](subPath, passedState) {
           processIfWithWorkletDirective(subPath, passedState);
         }
@@ -1187,7 +1213,14 @@ var require_objectWorklets = __commonJS({
           (0, workletSubstitution_12.processWorklet)(property, state);
         } else if (property.isObjectProperty()) {
           const value = property.get("value");
-          tryProcessingNode(value, state, true, false);
+          tryProcessingNode(
+            value,
+            state,
+            true,
+            // acceptWorkletizableFunction
+            false
+            // acceptObject
+          );
         } else {
           throw new Error(`[Reanimated] '${property.type}' as to-be workletized argument is not supported for object hooks.`);
         }
@@ -1220,16 +1253,19 @@ var require_autoworkletization = __commonJS({
       "useDerivedValue",
       "useAnimatedScrollHandler",
       "useAnimatedReaction",
+      // animations' callbacks
       "withTiming",
       "withSpring",
       "withDecay",
       "withRepeat",
+      // scheduling functions
       "runOnUI",
       "executeOnUIRuntimeSync",
       "scheduleOnUI",
       "runOnUISync",
       "runOnUIAsync",
       "runOnRuntime",
+      "runOnRuntimeAsync",
       "scheduleOnRuntime"
     ]);
     var reanimatedFunctionArgsToWorkletize = new Map([
@@ -1250,6 +1286,7 @@ var require_autoworkletization = __commonJS({
       ["runOnUISync", [0]],
       ["runOnUIAsync", [0]],
       ["runOnRuntime", [1]],
+      ["runOnRuntimeAsync", [1]],
       ["scheduleOnRuntime", [1]],
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerObjectHooks).map((name) => [name, [0]]),
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerBuilderMethods).map((name) => [name, [0]])
@@ -1481,7 +1518,15 @@ var require_class = __commonJS({
       stack.delete(current.name);
     }
     function isOutsideDependency(identifierPath, bindingIdentifiers, functionPath) {
-      return identifierPath.isReferencedIdentifier() && !(identifierPath.node.name in bindingIdentifiers) && !functionPath.scope.hasOwnBinding(identifierPath.node.name) && functionPath.scope.hasReference(identifierPath.node.name);
+      return (
+        // We don't care about identifiers that were just declared.
+        identifierPath.isReferencedIdentifier() && // We don't care about identifiers that are bound in the scope.
+        !(identifierPath.node.name in bindingIdentifiers) && // This I don't exactly understand, but the function identifier itself isn't in `bindingIdentifiers`,
+        // but it return true on `hasOwnBinding`.
+        !functionPath.scope.hasOwnBinding(identifierPath.node.name) && // `hasReference` returns true for global identifiers, like `Object`,
+        // we don't want to include those.
+        functionPath.scope.hasReference(identifierPath.node.name)
+      );
     }
     function isWorkletizableClass(classPath, state) {
       var _a;
@@ -1689,7 +1734,7 @@ var require_inlineStylesWarning = __commonJS({
     }
     function processPropertyValueForInlineStylesWarning(path) {
       if (path.isMemberExpression() && (0, types_12.isIdentifier)(path.node.property)) {
-        if (path.node.property.name === "value") {
+        if (!path.node.computed && path.node.property.name === "value") {
           path.replaceWith(generateInlineStylesWarning(path));
         }
       }

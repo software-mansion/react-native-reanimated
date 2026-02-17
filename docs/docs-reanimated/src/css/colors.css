@@ -121,6 +121,8 @@
   /* Typography */
   --ifm-heading-color: var(--ifm-color-primary);
   --ifm-font-color-base: var(--swm-navy-light-100);
+  --ifm-link-color: var(--swm-blue-light-100);
+  --ifm-link-hover-color: var(--swm-blue-light-60);
 
   /* Tabs */
   --swm-tab: var(--swm-navy-light-20);
@@ -327,6 +329,8 @@
 
   /* Typography */
   --ifm-font-color-base: var(--swm-navy-light-10);
+  --ifm-link-color: var(--swm-blue-dark-80);
+  --ifm-link-hover-color: var(--swm-blue-dark-60);
 
   /* Tabs */
   --swm-tab: var(--swm-navy-light-60);

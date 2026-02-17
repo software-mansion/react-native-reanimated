@@ -14,6 +14,7 @@
 #include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGLength.h>
 #include <reanimated/CSS/svg/values/SVGPath.h>
+#include <reanimated/CSS/svg/values/SVGStops.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
 #include <memory>
@@ -81,6 +82,7 @@ template class SimpleValueInterpolator<CSSDiscreteArray<CSSKeyword>>;
 template class SimpleValueInterpolator<SVGLength>;
 template class SimpleValueInterpolator<SVGLength, CSSKeyword>;
 template class SimpleValueInterpolator<SVGPath>;
+template class SimpleValueInterpolator<SVGStops>;
 template class SimpleValueInterpolator<SVGStrokeDashArray, CSSKeyword>;
 template class SimpleValueInterpolator<SVGBrush>;
 

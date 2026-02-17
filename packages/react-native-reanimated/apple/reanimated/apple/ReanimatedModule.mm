@@ -4,13 +4,13 @@
 #import <React/RCTSurfacePresenter.h>
 
 #import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
+#import <reanimated/Tools/SingleInstanceChecker.h>
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/ReanimatedModule.h>
 #import <reanimated/apple/native/NativeProxy.h>
 
-#import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/apple/WorkletsModule.h>
 
 using namespace facebook::react;
@@ -23,7 +23,7 @@ using namespace reanimated;
 @implementation ReanimatedModule {
   __weak RCTSurfacePresenter *_surfacePresenter;
 #ifndef NDEBUG
-  SingleInstanceChecker<ReanimatedModule> singleInstanceChecker_;
+  reanimated::SingleInstanceChecker<ReanimatedModule> singleInstanceChecker_;
 #endif // NDEBUG
   bool hasListeners;
 }

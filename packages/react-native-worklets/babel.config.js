@@ -1,3 +1,9 @@
+/** @type {import('./plugin').PluginOptions} */
+const workletsPluginOptions = {
+  strictGlobal: true,
+  disableInlineStylesWarning: true,
+};
+
 /** @type {import('@babel/core').TransformOptions} */
 module.exports = {
   presets: [
@@ -12,5 +18,5 @@ module.exports = {
     '@babel/preset-typescript',
     '@react-native/babel-preset',
   ],
-  plugins: [['./plugin', { disableInlineStylesWarning: true }]],
+  plugins: [['./plugin', workletsPluginOptions]],
 };

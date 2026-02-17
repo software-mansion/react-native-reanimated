@@ -42,7 +42,7 @@ export default function RuntimeTestsExample() {
           },
         },
         {
-          testSuiteName: 'serializable',
+          testSuiteName: 'memory',
           importTest: () => {
             require('./tests/memory/createSerializable.test');
             require('./tests/memory/createSerializableOnUI.test');

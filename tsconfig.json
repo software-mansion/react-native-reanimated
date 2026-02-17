@@ -29,5 +29,5 @@
     ]
   },
   "include": [".", "**/.*"],
-  "exclude": ["**/__generatedWorklets"]
+  "exclude": ["**/.worklets"]
 }

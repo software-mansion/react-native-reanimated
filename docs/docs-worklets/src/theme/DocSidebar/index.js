@@ -14,7 +14,11 @@ export default function DocSidebarWrapper(props) {
   };
 
   const newItems = [];
-  const experimentalItems = [];
+  const experimentalItems = [
+    'bundleMode/overview',
+    'bundleMode/setup',
+    'bundleMode/usage',
+  ];
   const unreleasedItems = [];
   const deprecatedItems = [
     'threading/callMicrotasks',

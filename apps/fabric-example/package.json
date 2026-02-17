@@ -14,7 +14,7 @@
   "dependencies": {
     "common-app": "workspace:*",
     "react": "19.2.3",
-    "react-native": "0.83.0"
+    "react-native": "0.84.0"
   },
   "devDependencies": {
     "@types/react": "19.2.2",
@@ -26,8 +26,7 @@
     "node": ">= 22.11.0"
   },
   "installConfig": {
-    "selfReferences": false,
-    "hoistingLimits": "workspaces"
+    "selfReferences": false
   },
   "reanimated": {
     "staticFeatureFlags": {

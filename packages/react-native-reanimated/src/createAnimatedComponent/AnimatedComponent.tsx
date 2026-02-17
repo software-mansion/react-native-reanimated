@@ -2,6 +2,7 @@
 import '../layoutReanimation/animationsManager';
 
 import type React from 'react';
+import { Fragment } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { checkStyleOverwriting, maybeBuild } from '../animationBuilder';
@@ -506,16 +507,31 @@ export default class AnimatedComponent
     }
 
     const skipEntering = this.context?.current;
-    const nativeID = skipEntering ? undefined : `${this.reanimatedID}`;
+    let nativeID, jestProps;
 
-    const jestProps = IS_JEST
-      ? {
-          jestInlineStyle:
-            this.props.style && filterOutAnimatedStyles(this.props.style),
-          jestAnimatedStyle: this.jestAnimatedStyle,
-          jestAnimatedProps: this.jestAnimatedProps,
-        }
-      : {};
+    if (IS_JEST) {
+      jestProps = {
+        jestInlineStyle:
+          this.props.style && filterOutAnimatedStyles(this.props.style),
+        jestAnimatedStyle: this.jestAnimatedStyle,
+        jestAnimatedProps: this.jestAnimatedProps,
+      };
+    } else if (!skipEntering && !IS_WEB) {
+      nativeID = `${this.reanimatedID}`;
+    }
+
+    // TODO: Remove need for this \/\/\/\/.
+    // RNSVG expects Gradient elem to have stops passed as children. When we want to animate them,
+    // we provide them using `gradient` prop.
+    // Hack below gets rid of RNSVG warnings about not having children.
+    if (
+      this.ChildComponent.displayName === 'RadialGradient' ||
+      this.ChildComponent.displayName === 'LinearGradient'
+    ) {
+      if (filteredProps.children === undefined) {
+        filteredProps.children = <Fragment />;
+      }
+    }
 
     if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
       const flatStyles = StyleSheet.flatten(filteredProps.style as object);

@@ -38,6 +38,7 @@ const reanimatedFunctionHooks = new Set([
   'runOnUISync',
   'runOnUIAsync',
   'runOnRuntime',
+  'runOnRuntimeAsync',
   'scheduleOnRuntime',
 ]);
 
@@ -59,6 +60,7 @@ const reanimatedFunctionArgsToWorkletize = new Map([
   ['runOnUISync', [0]],
   ['runOnUIAsync', [0]],
   ['runOnRuntime', [1]],
+  ['runOnRuntimeAsync', [1]],
   ['scheduleOnRuntime', [1]],
   ...Array.from(gestureHandlerObjectHooks).map((name) => [name, [0]]),
   ...Array.from(gestureHandlerBuilderMethods).map((name) => [name, [0]]),

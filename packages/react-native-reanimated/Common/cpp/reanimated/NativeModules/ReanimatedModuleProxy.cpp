@@ -1,14 +1,14 @@
 #include <jsi/jsi.h>
 #include <reanimated/CSS/utils/animationUpdatesBatchUtils.h>
+#include <reanimated/Events/UIEventHandler.h>
+#include <reanimated/Events/UIEventHandlerRegistry.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
-#include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/SharedItems/Serializable.h>
-#include <worklets/Tools/WorkletEventHandler.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
@@ -49,11 +49,10 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
     : ReanimatedModuleProxySpec(jsCallInvoker),
       isReducedMotion_(isReducedMotion),
       workletsModuleProxy_(workletsModuleProxy),
-      eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
+      eventHandlerRegistry_(std::make_unique<UIEventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       animatedSensorModule_(platformDepMethodsHolder),
-      jsLogger_(std::make_shared<JSLogger>(workletsModuleProxy->getJSScheduler())),
-      layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>(jsLogger_)),
+      layoutAnimationsManager_(std::make_shared<LayoutAnimationsManager>()),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
 #ifdef __APPLE__
       forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
@@ -216,7 +215,7 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
       return;
     }
     auto handler =
-        std::make_shared<WorkletEventHandler>(newRegistrationId, eventNameStr, emitterReactTagInt, handlerSerializable);
+        std::make_shared<UIEventHandler>(newRegistrationId, eventNameStr, emitterReactTagInt, handlerSerializable);
     strongThis->eventHandlerRegistry_->registerEventHandler(handler);
   });
 
