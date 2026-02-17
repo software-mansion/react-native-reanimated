@@ -54,7 +54,7 @@ bool ValueInterpolator::updateKeyframes(const folly::dynamic &fromValue, const f
   auto from = fromValue.isNull() ? defaultStyleValue_ : createValue(fromValue);
   auto to = toValue.isNull() ? defaultStyleValue_ : createValue(toValue);
 
-  const auto equalsReversingAdjustedStartValue = *to == *reversingAdjustedStartValue_;
+  const auto equalsReversingAdjustedStartValue = reversingAdjustedStartValue_ && (*to == *reversingAdjustedStartValue_);
   reversingAdjustedStartValue_ = keyframes_.empty() ? from : keyframes_[1].value.value();
 
   keyframes_ = {ValueKeyframe{0, std::move(from)}, ValueKeyframe{1, std::move(to)}};
