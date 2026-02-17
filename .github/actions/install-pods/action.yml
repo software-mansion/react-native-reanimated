@@ -12,25 +12,29 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Get Podfile.lock hash
-      id: pods-cache-key
-      shell: bash
-      run: |
-        PODFILE_LOCK="${{ inputs.working-directory }}/${{ inputs.pod-directory }}/Podfile.lock"
-        if [ -f "$PODFILE_LOCK" ]; then
-            HASH=$(sha256sum "$PODFILE_LOCK" | awk '{print $1}')
-            echo "hash=$HASH" >> $GITHUB_OUTPUT
-        else
-          echo "hash=no-lockfile" >> $GITHUB_OUTPUT
-        fi
-
     - name: Restore Pods cache
       uses: actions/cache@v4
       with:
         path: |
           ${{ inputs.working-directory }}/${{ inputs.pod-directory }}/Pods
           ~/Library/Caches/CocoaPods
-        key: pods-${{ inputs.working-directory }}-${{ inputs.pod-directory }}-${{ steps.pods-cache-key.outputs.hash }}
+        key: pods-${{ inputs.working-directory }}-${{ inputs.pod-directory }}-${{ hashFiles(
+          format('{0}/{1}/Podfile.lock', inputs['working-directory'], inputs['pod-directory']),
+          'packages/react-native-reanimated/apple/**/*.h',
+          'packages/react-native-reanimated/apple/**/*.m',
+          'packages/react-native-reanimated/apple/**/*.mm',
+          'packages/react-native-reanimated/apple/**/*.cpp',
+          'packages/react-native-reanimated/apple/**/*.swift',
+          'packages/react-native-reanimated/Common/**/*.h',
+          'packages/react-native-reanimated/Common/**/*.cpp',
+          'packages/react-native-worklets/apple/**/*.h',
+          'packages/react-native-worklets/apple/**/*.m',
+          'packages/react-native-worklets/apple/**/*.mm',
+          'packages/react-native-worklets/apple/**/*.cpp',
+          'packages/react-native-worklets/apple/**/*.swift',
+          'packages/react-native-worklets/Common/**/*.h',
+          'packages/react-native-worklets/Common/**/*.cpp'
+          ) }}
         restore-keys: |
           pods-${{ inputs.working-directory }}-${{ inputs.pod-directory }}-
 

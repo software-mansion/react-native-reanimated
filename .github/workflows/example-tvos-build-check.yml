@@ -73,6 +73,7 @@ jobs:
         with:
           platform: tvos
           working-directory: ${{ env.WORKING_DIRECTORY }}
+          pod-directory: ios
 
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios

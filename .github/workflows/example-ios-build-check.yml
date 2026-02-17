@@ -81,7 +81,8 @@ jobs:
         with:
           platform: ios
           working-directory: ${{ env.WORKING_DIRECTORY }}
+          pod-directory: ios
 
       - name: Build app
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn react-native run-ios --no-packager --scheme "Debug FabricExample"
+        working-directory: ${{ env.WORKING_DIRECTORY }}/ios
+        run: xcodebuild -workspace FabricExample.xcworkspace -configuration Debug -scheme "Debug FabricExample" -destination "generic/platform=iOS Simulator" -quiet

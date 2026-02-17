@@ -8,6 +8,10 @@ inputs:
   working-directory:
     description: The app directory (e.g., apps/fabric-example)
     required: true
+  pod-directory:
+    description: The pod directory relative to working-directory (e.g., ios, macos)
+    required: false
+    default: 'ios'
 
 runs:
   using: 'composite'
@@ -17,7 +21,22 @@ runs:
       with:
         path: ~/Library/Developer/Xcode/DerivedData
         key: derived-${{ inputs.platform }}-${{ hashFiles(
-          format('{0}/Podfile', inputs['working-directory']),
-          format('{0}/Podfile.lock', inputs['working-directory']),
+          format('{0}/{1}/Podfile', inputs['working-directory'], inputs['pod-directory']),
+          format('{0}/{1}/Podfile.lock', inputs['working-directory'], inputs['pod-directory']),
           format('{0}/**/*.xcworkspace/**', inputs['working-directory']),
-          format('{0}/**/*.xcodeproj/**', inputs['working-directory']))}}
+          format('{0}/**/*.xcodeproj/**', inputs['working-directory']),
+          'packages/react-native-reanimated/apple/**/*.h',
+          'packages/react-native-reanimated/apple/**/*.m',
+          'packages/react-native-reanimated/apple/**/*.mm',
+          'packages/react-native-reanimated/apple/**/*.cpp',
+          'packages/react-native-reanimated/apple/**/*.swift',
+          'packages/react-native-reanimated/Common/**/*.h',
+          'packages/react-native-reanimated/Common/**/*.cpp',
+          'packages/react-native-worklets/apple/**/*.h',
+          'packages/react-native-worklets/apple/**/*.m',
+          'packages/react-native-worklets/apple/**/*.mm',
+          'packages/react-native-worklets/apple/**/*.cpp',
+          'packages/react-native-worklets/apple/**/*.swift',
+          'packages/react-native-worklets/Common/**/*.h',
+          'packages/react-native-worklets/Common/**/*.cpp'
+          ) }}

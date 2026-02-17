@@ -73,7 +73,8 @@ jobs:
         with:
           platform: macos
           working-directory: ${{ env.WORKING_DIRECTORY }}
+          pod-directory: macos
 
       - name: Build app
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn macos --scheme "Debug MacOSExample"
+        working-directory: ${{ env.WORKING_DIRECTORY }}/macos
+        run: xcodebuild -workspace MacOSExample.xcworkspace -configuration Debug -scheme "Debug MacOSExample" -destination "generic/platform=macOS" -quiet
