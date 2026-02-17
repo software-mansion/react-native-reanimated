@@ -18,7 +18,8 @@ runs:
         path: |
           ${{ inputs.working-directory }}/${{ inputs.pod-directory }}/Pods
           ~/Library/Caches/CocoaPods
-        key: pods-${{ inputs.working-directory }}-${{ inputs.pod-directory }}-${{ hashFiles(
+        key:
+          pods-${{ inputs.working-directory }}-${{ inputs.pod-directory }}-${{ hashFiles(
           format('{0}/{1}/Podfile.lock', inputs['working-directory'], inputs['pod-directory']),
           'packages/react-native-reanimated/apple/**/*.h',
           'packages/react-native-reanimated/apple/**/*.m',
