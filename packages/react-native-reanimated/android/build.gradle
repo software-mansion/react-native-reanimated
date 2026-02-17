@@ -211,13 +211,6 @@ android {
             path "CMakeLists.txt"
         }
     }
-    buildTypes {
-        debug {
-            packagingOptions {
-                doNotStrip "**/**/*.so"
-            }
-        }
-    }
     lintOptions {
         abortOnError false
     }
@@ -257,6 +250,12 @@ android {
                 println("Generated clangd metadata.")
             }
         }
+    }
+}
+
+androidComponents {
+    onVariants(selector().withBuildType("debug")) {
+        packaging.jniLibs.keepDebugSymbols.add("**/**/*.so")
     }
 }
 
