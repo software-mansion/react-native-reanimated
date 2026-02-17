@@ -5,7 +5,6 @@
 #include <memory>
 #include <string>
 #include <type_traits>
-#include <typeinfo>
 
 namespace reanimated::css {
 
@@ -35,9 +34,7 @@ struct CSSValue {
 
   virtual ~CSSValue() = default;
 
-  virtual bool operator==(const CSSValue &other) const {
-    return typeid(*this) == typeid(other);
-  }
+  virtual bool operator==(const CSSValue &other) const = 0;
 
   virtual folly::dynamic toDynamic() const = 0;
   virtual std::string toString() const = 0;
