@@ -1,0 +1,112 @@
+---
+sidebar_position: 5
+---
+
+# WebWorker
+
+Web Workers makes it possible to run a worklet function in a separate/background thread (`WorkletRuntime`).
+Once created, a worker instance allows communication between the main UI thread and the background thread using message passing.
+
+:::info
+Reanimated `WebWorker` API is modelled on the basis of the [Web Workers API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API) but is not fully compatible with it yet. It utilizes Reanimated's Worklet Runtimes.
+:::
+
+## Reference
+
+### Usage in JavaScript
+
+```jsx
+import { WebWorker } from 'react-native-worklets';
+
+// Create a new worker, name has to be unique
+const worker = new WebWorker('WebWorker#1', () => {
+  'worklet';
+  console.log('Hello from the background thread');
+
+  // Define the handler for messages received FROM the main thread
+  global.onmessage = (event) => {
+    console.log(`Worker received: ${event.data}`);
+
+    // Example: Send a message back to the main thread
+    const result = event.data * 2;
+    global.postMessage(`Worker calculated: ${result}`);
+  };
+});
+
+// Define the handler for messages received FROM the worker thread
+worker.onmessage = (event) => {
+  console.log(`Main thread received: ${event.data}`);
+};
+
+// Define the handler for errors occurring IN the worker thread
+worker.onerror = (event) => {
+  console.error(`Error in worker: ${event.data}`);
+};
+
+// Send a message TO the worker thread
+worker.postMessage(10);
+
+// Later, when the worker is no longer needed:
+// worker.terminate();
+```
+
+### Constructor `new WebWorker(name, script)`
+
+Creates and initializes a new Web Worker instance.
+
+### Arguments
+
+#### `name` (string)
+
+A unique name used to identify the underlying `WorkletRuntime`.
+
+#### `script` (function)
+
+A function that will be executed in the background `WorkletRuntime`.
+- It **must** be a [Worklet](/docs/next/fundamentals/glossary#worklet).
+- It **should define** a global `onmessage` handler (`global.onmessage = (event) => { ... }`) within its scope to process messages sent *to* the worker via the `worker.postMessage()` method. The received message is in `event.data`.
+- It **can call** the global `postMessage` function (`global.postMessage(data)`) within its scope to send messages *from* the worker back *to* the main thread's `worker.onmessage` handler.
+
+### Returns
+
+A `WebWorker` instance which provides methods and properties to interact with the background worker thread.
+Internally, the `WebWorker` class extends `EventEmitter` to manage message and error handling.
+This means you can also use `addListener('message', listener)` and `addListener('error', listener)` as alternatives to setting the `onmessage` and `onerror` properties.
+
+### Instance Properties and Methods
+
+#### `onmessage`
+
+A property (getter/setter) for a function on the **main thread** that will be called when a message is received *from* the background worker thread (i.e., when `global.postMessage()` is called inside the worker `script`). The event object passed to the handler has a `data` property containing the message payload.
+
+```js
+worker.onmessage = (event) => {
+  console.log('Message from worker:', event.data);
+};
+```
+
+#### `onerror`
+
+A property (getter/setter) for a function on the **main thread** that will be called when an uncaught error occurs *within* the background worker thread, specifically when processing an incoming message via the worker's `global.onmessage`. The event object passed to the handler has a `data` property containing the error message string.
+
+```js
+worker.onerror = (event) => {
+  console.error('Error from worker:', event.data);
+};
+```
+
+#### `terminate()`
+
+Stops the worker thread and cleans up associated resources. Removes any attached `onmessage` and `onerror` listeners.
+
+```js
+worker.terminate();
+```
+
+#### `postMessage(data)`
+
+Sends a message *to* the background worker thread, triggering the `global.onmessage` handler defined within the worker's `script`.
+
+```js
+worker.postMessage({ type: 'CALCULATE', value: 42 });
+```
