@@ -1145,9 +1145,8 @@ void addBorderStyleToPropsBuilder(
 void addElevationToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<CSSDouble> &value) {
-  // TODO: Check this
-    const auto &storage = value.getStorageRef();
-    const auto &cssDouble = std::get<CSSDouble>(storage);
+  const auto &storage = value.getStorageRef();
+  const auto &cssDouble = std::get<CSSDouble>(storage);
   folly::dynamic d = folly::dynamic::object("elevation", cssDouble.value);
   propsBuilder->storeDynamic(d);
 }
