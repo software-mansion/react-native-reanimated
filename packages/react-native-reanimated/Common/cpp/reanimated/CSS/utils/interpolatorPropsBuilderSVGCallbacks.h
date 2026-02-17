@@ -11,6 +11,7 @@
 #include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGLength.h>
 #include <reanimated/CSS/svg/values/SVGPath.h>
+#include <reanimated/CSS/svg/values/SVGStops.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
 namespace reanimated::css {
@@ -180,5 +181,21 @@ void addSvgRectRxToPropsBuilder(
 void addSvgRectRyToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<SVGLength, CSSKeyword> &value);
+
+void addSvgFxToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<SVGLength, CSSKeyword> &value);
+
+void addSvgFyToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<SVGLength, CSSKeyword> &value);
+
+void addSvgGradientToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<SVGStops> &value);
+
+void addSvgGradientUnitsToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSIndex> &value);
 
 } // namespace reanimated::css

@@ -558,12 +558,12 @@ const InterpolatorFactoriesRecord SVG_LINE_INTERPOLATORS = mergeInterpolators(
 const InterpolatorFactoriesRecord SVG_LINEAR_GRADIENT_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"x1", value<SVGLength, CSSKeyword>("0%")},
-         {"x2", value<SVGLength, CSSKeyword>("100%")},
-         {"y1", value<SVGLength, CSSKeyword>("0%")},
-         {"y2", value<SVGLength, CSSKeyword>("0%")},
-         {"gradient", value<SVGStops>(SVGStops())},
-         {"gradientUnits", value<CSSIndex>(0)},
+         {"x1", value<SVGLength, CSSKeyword>("0%", CSSCallback<SVGLength, CSSKeyword>(addSvgX1ToPropsBuilder))},
+         {"x2", value<SVGLength, CSSKeyword>("100%", CSSCallback<SVGLength, CSSKeyword>(addSvgX2ToPropsBuilder))},
+         {"y1", value<SVGLength, CSSKeyword>("0%", CSSCallback<SVGLength, CSSKeyword>(addSvgY1ToPropsBuilder))},
+         {"y2", value<SVGLength, CSSKeyword>("0%", CSSCallback<SVGLength, CSSKeyword>(addSvgY2ToPropsBuilder))},
+         {"gradient", value<SVGStops>(SVGStops(), CSSCallback<SVGStops>(addSvgGradientToPropsBuilder))},
+         {"gradientUnits", value<CSSIndex>(0, CSSCallback<CSSIndex>(addSvgGradientUnitsToPropsBuilder))},
          // TODO: Implement 'gradientTransform'
          // {"gradientTransform", value<CSSKeyword>("")},
      }});
@@ -589,15 +589,15 @@ const InterpolatorFactoriesRecord SVG_PATH_INTERPOLATORS = mergeInterpolators(
 const InterpolatorFactoriesRecord SVG_RADIAL_GRADIENT_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"r", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>())},
-         {"fx", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>())},
-         {"fy", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>())},
-         {"rx", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>())},
-         {"ry", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>())},
-         {"cx", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>())},
-         {"cy", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>())},
-         {"gradient", value<SVGStops>(SVGStops(), CSSCallback<SVGStops>())},
-         {"gradientUnits", value<CSSIndex>(0, CSSCallback<CSSIndex>())},
+         {"r", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>(addSvgRToPropsBuilder))},
+         {"fx", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>(addSvgFxToPropsBuilder))},
+         {"fy", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>(addSvgFyToPropsBuilder))},
+         {"rx", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>(addSvgRxToPropsBuilder))},
+         {"ry", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>(addSvgRyToPropsBuilder))},
+         {"cx", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>(addSvgCxToPropsBuilder))},
+         {"cy", value<SVGLength, CSSKeyword>("50%", CSSCallback<SVGLength, CSSKeyword>(addSvgCyToPropsBuilder))},
+         {"gradient", value<SVGStops>(SVGStops(), CSSCallback<SVGStops>(addSvgGradientToPropsBuilder))},
+         {"gradientUnits", value<CSSIndex>(0, CSSCallback<CSSIndex>(addSvgGradientUnitsToPropsBuilder))},
          // TODO: Implement 'gradientTransform'
          // {"gradientTransform", value<CSSKeyword>("")},
      }});

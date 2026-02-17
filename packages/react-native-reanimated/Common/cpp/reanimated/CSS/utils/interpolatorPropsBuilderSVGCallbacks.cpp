@@ -1,6 +1,8 @@
 #include <reanimated/CSS/utils/animationUpdatesBatchUtils.h>
 #include <reanimated/CSS/utils/interpolatorPropsBuilderSVGCallbacks.h>
 
+#include <reanimated/CSS/svg/values/SVGStops.h>
+
 namespace reanimated::css {
 
 void addSvgColorToPropsBuilder(
@@ -247,6 +249,30 @@ void addSvgRectRyToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
     const CSSValueVariant<SVGLength, CSSKeyword> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "ry", value);
+}
+
+void addSvgFxToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<SVGLength, CSSKeyword> &value) {
+  storeCssValueVariantAsRawProp(propsBuilder, "fx", value);
+}
+
+void addSvgFyToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<SVGLength, CSSKeyword> &value) {
+  storeCssValueVariantAsRawProp(propsBuilder, "fy", value);
+}
+
+void addSvgGradientToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<SVGStops> &value) {
+  storeCssValueVariantAsRawProp(propsBuilder, "gradient", value);
+}
+
+void addSvgGradientUnitsToPropsBuilder(
+    const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
+    const CSSValueVariant<CSSIndex> &value) {
+  storeCssValueVariantAsRawProp(propsBuilder, "gradientUnits", value);
 }
 
 } // namespace reanimated::css
