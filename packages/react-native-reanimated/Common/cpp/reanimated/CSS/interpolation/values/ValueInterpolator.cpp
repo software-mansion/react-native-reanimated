@@ -50,35 +50,16 @@ void ValueInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyf
   }
 }
 
-bool ValueInterpolator::updateKeyframesFromStyleChange(
-    const folly::dynamic &oldStyleValue,
-    const folly::dynamic &newStyleValue,
-    const folly::dynamic &lastUpdateValue) {
-  ValueKeyframe firstKeyframe, lastKeyframe;
+bool ValueInterpolator::updateKeyframes(const folly::dynamic &fromValue, const folly::dynamic &toValue) {
+  auto from = fromValue.isNull() ? defaultStyleValue_ : createValue(fromValue);
+  auto to = toValue.isNull() ? defaultStyleValue_ : createValue(toValue);
 
-  if (!lastUpdateValue.isNull()) {
-    firstKeyframe = ValueKeyframe{0, createValue(lastUpdateValue)};
-  } else if (!oldStyleValue.isNull()) {
-    firstKeyframe = ValueKeyframe{0, createValue(oldStyleValue)};
-  } else {
-    firstKeyframe = ValueKeyframe{0, defaultStyleValue_};
-  }
+  const auto equalsReversingAdjustedStartValue = *to == *reversingAdjustedStartValue_;
+  reversingAdjustedStartValue_ = keyframes_.empty() ? from : keyframes_[1].value.value();
 
-  if (newStyleValue.isNull()) {
-    lastKeyframe = ValueKeyframe{1, defaultStyleValue_};
-  } else {
-    lastKeyframe = ValueKeyframe{1, createValue(newStyleValue)};
-  }
+  keyframes_ = {ValueKeyframe{0, std::move(from)}, ValueKeyframe{1, std::move(to)}};
 
-  keyframes_ = {std::move(firstKeyframe), std::move(lastKeyframe)};
-
-  // Check if new value equals the reversing adjusted start value
-  bool isEqual =
-      reversingAdjustedStartValue_.isNull() ? newStyleValue.isNull() : (reversingAdjustedStartValue_ == newStyleValue);
-
-  reversingAdjustedStartValue_ = oldStyleValue;
-
-  return isEqual;
+  return equalsReversingAdjustedStartValue;
 }
 
 folly::dynamic ValueInterpolator::interpolate(

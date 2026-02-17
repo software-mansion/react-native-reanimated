@@ -14,7 +14,8 @@ OperationsStyleInterpolator::OperationsStyleInterpolator(
     const folly::dynamic &defaultStyleValueDynamic)
     : PropertyInterpolator(propertyPath, viewStylesRepository),
       interpolators_(interpolators),
-      defaultStyleValueDynamic_(defaultStyleValueDynamic) {}
+      defaultStyleValueDynamic_(defaultStyleValueDynamic),
+      reversingAdjustedStartValue_(std::nullopt) {}
 
 folly::dynamic OperationsStyleInterpolator::getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const {
   return viewStylesRepository_->getStyleProp(shadowNode->getTag(), propertyPath_);
@@ -101,21 +102,16 @@ void OperationsStyleInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::V
   }
 }
 
-bool OperationsStyleInterpolator::updateKeyframesFromStyleChange(
-    const folly::dynamic &oldStyleValue,
-    const folly::dynamic &newStyleValue,
-    const folly::dynamic &lastUpdateValue) {
-  const auto oldStyleOperations = parseStyleOperations(oldStyleValue);
-  const auto newStyleOperations = parseStyleOperations(newStyleValue);
-  const auto lastUpdateOperations = parseStyleOperations(lastUpdateValue);
+bool OperationsStyleInterpolator::updateKeyframes(const folly::dynamic &fromValue, const folly::dynamic &toValue) {
+  const auto fromOperations = parseStyleOperations(fromValue);
+  const auto toOperations = parseStyleOperations(toValue);
+
+  const auto equalsReversingAdjustedStartValue = areStyleOperationsEqual(toOperations, reversingAdjustedStartValue_);
+  reversingAdjustedStartValue_ = keyframes_.empty() ? fromOperations : keyframes_[0]->toOperations;
 
   keyframes_.clear();
   keyframes_.reserve(1);
-  keyframes_.emplace_back(createStyleOperationsKeyframe(
-      0, 1, lastUpdateOperations.has_value() ? lastUpdateOperations : oldStyleOperations, newStyleOperations));
-
-  bool equalsReversingAdjustedStartValue = areStyleOperationsEqual(reversingAdjustedStartValue_, newStyleOperations);
-  reversingAdjustedStartValue_ = oldStyleOperations;
+  keyframes_.emplace_back(createStyleOperationsKeyframe(0, 1, fromOperations, toOperations));
 
   return equalsReversingAdjustedStartValue;
 }
