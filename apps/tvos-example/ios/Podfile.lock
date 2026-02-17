@@ -2252,7 +2252,7 @@ PODS:
     - React-perflogger (= 0.81.1-1)
     - React-utils (= 0.81.1-1)
     - SocketRocket
-  - RNReanimated (4.2.1):
+  - RNReanimated (4.2.2):
     - boost
     - DoubleConversion
     - fast_float
@@ -2278,11 +2278,11 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 4.2.1)
+    - RNReanimated/reanimated (= 4.2.2)
     - RNWorklets
     - SocketRocket
     - Yoga
-  - RNReanimated/reanimated (4.2.1):
+  - RNReanimated/reanimated (4.2.2):
     - boost
     - DoubleConversion
     - fast_float
@@ -2308,11 +2308,11 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 4.2.1)
+    - RNReanimated/reanimated/apple (= 4.2.2)
     - RNWorklets
     - SocketRocket
     - Yoga
-  - RNReanimated/reanimated/apple (4.2.1):
+  - RNReanimated/reanimated/apple (4.2.2):
     - boost
     - DoubleConversion
     - fast_float
@@ -2341,7 +2341,7 @@ PODS:
     - RNWorklets
     - SocketRocket
     - Yoga
-  - RNWorklets (0.7.2):
+  - RNWorklets (0.8.0-nightly-20260211-96ab3f00d):
     - boost
     - DoubleConversion
     - fast_float
@@ -2367,10 +2367,11 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNWorklets/worklets (= 0.7.2)
+    - RNWorklets/apple (= 0.8.0-nightly-20260211-96ab3f00d)
+    - RNWorklets/common (= 0.8.0-nightly-20260211-96ab3f00d)
     - SocketRocket
     - Yoga
-  - RNWorklets/worklets (0.7.2):
+  - RNWorklets/apple (0.8.0-nightly-20260211-96ab3f00d):
     - boost
     - DoubleConversion
     - fast_float
@@ -2396,10 +2397,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNWorklets/worklets/apple (= 0.7.2)
     - SocketRocket
     - Yoga
-  - RNWorklets/worklets/apple (0.7.2):
+  - RNWorklets/common (0.8.0-nightly-20260211-96ab3f00d):
     - boost
     - DoubleConversion
     - fast_float
@@ -2731,8 +2731,8 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 02d17caeffffa513b02bb1ba394bbf1e8f46df86
   ReactCodegen: f4d6e6fd5140eade461ffb5579795197956868c8
   ReactCommon: c178596d3ef05508bb6c0f88bfbbc281b5c4222b
-  RNReanimated: 10881033ff99a34f6a7145b1aa61338b68c0e3cc
-  RNWorklets: 167780042a310e7386c4daf41f9850dd53989854
+  RNReanimated: 118eb235790e5c54c325fae23ed8458dbac1eaa8
+  RNWorklets: 995b35c06791fb194ae5be29732d667a007ae550
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 0e792f39294e864568930600eeb71135364f777d
 
