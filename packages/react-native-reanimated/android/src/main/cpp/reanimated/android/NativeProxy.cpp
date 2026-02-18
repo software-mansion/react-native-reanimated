@@ -71,12 +71,12 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto &rnRuntime = *reinterpret_cast<jsi::Runtime *>(jsContext); // NOLINT //(performance-no-int-to-ptr)
   const auto global = rnRuntime.global();
-  const auto uiRuntime = global.getProperty(rnRuntime, "__UI_WORKLET_RUNTIME")
+  const auto uiRuntime = global.getProperty(rnRuntime, "__UI_WORKLET_RUNTIME_HOLDER")
                              .asObject(rnRuntime)
                              .getNativeState<WorkletRuntimeHolder>(rnRuntime)
                              ->runtime_;
 
-  const auto uiScheduler = global.getProperty(rnRuntime, "__UI_SCHEDULER")
+  const auto uiScheduler = global.getProperty(rnRuntime, "__UI_SCHEDULER_HOLDER")
                                .asObject(rnRuntime)
                                .getNativeState<UISchedulerHolder>(rnRuntime)
                                ->scheduler_;

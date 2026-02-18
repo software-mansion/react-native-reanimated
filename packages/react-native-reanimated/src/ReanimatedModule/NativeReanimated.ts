@@ -74,20 +74,17 @@ class NativeReanimatedModule implements IReanimatedModule {
       assertWorkletsVersion();
     }
     global._REANIMATED_VERSION_JS = jsVersion;
-    if (global.__reanimatedModuleProxy === undefined && ReanimatedTurboModule) {
-      globalThis.__UI_WORKLET_RUNTIME_HOLDER = getUIRuntimeHolder();
-      globalThis.__UI_SCHEDULER_HOLDER = getUISchedulerHolder();
-      if (!ReanimatedTurboModule.installTurboModule()) {
-        // This path means that React Native has failed on reload.
-        // We don't want to throw any errors to not mislead the users
-        // that the problem is related to Reanimated.
-        // We install a DummyReanimatedModuleProxy instead.
-        this.#reanimatedModuleProxy = new DummyReanimatedModuleProxy();
-        return;
-      }
-      delete globalThis.__UI_WORKLET_RUNTIME_HOLDER;
-      delete globalThis.__UI_SCHEDULER_HOLDER;
+
+    const status = installTurboModule();
+    if (!status) {
+      // This path means that React Native has failed on reload.
+      // We don't want to throw any errors to not mislead the users
+      // that the problem is related to Reanimated.
+      // We install a DummyReanimatedModuleProxy instead.
+      this.#reanimatedModuleProxy = new DummyReanimatedModuleProxy();
+      return;
     }
+
     if (global.__reanimatedModuleProxy === undefined) {
       throw new ReanimatedError(
         `Native part of Reanimated doesn't seem to be initialized.
@@ -297,4 +294,17 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   getSettledUpdates(): SettledUpdate[] {
     return [];
   }
+}
+
+function installTurboModule() {
+  if (globalThis.__reanimatedModuleProxy || !ReanimatedTurboModule) {
+    return false;
+  }
+
+  globalThis.__UI_WORKLET_RUNTIME_HOLDER = getUIRuntimeHolder();
+  globalThis.__UI_SCHEDULER_HOLDER = getUISchedulerHolder();
+  const status = ReanimatedTurboModule.installTurboModule();
+  delete globalThis.__UI_WORKLET_RUNTIME_HOLDER;
+  delete globalThis.__UI_SCHEDULER_HOLDER;
+  return status;
 }
