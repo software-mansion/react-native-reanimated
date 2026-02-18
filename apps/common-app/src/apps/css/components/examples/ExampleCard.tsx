@@ -177,12 +177,6 @@ const styles = StyleSheet.create({
     height: 0,
     width: 0,
   },
-  itemWrapper: {
-    backgroundColor: colors.background2,
-    borderRadius: radius.sm,
-    overflow: 'hidden',
-    padding: spacing.xs,
-  },
   itemsContainer: {
     gap: spacing.sm,
   },
@@ -192,6 +186,12 @@ const styles = StyleSheet.create({
   },
   itemsContainerExpanded: {
     flexDirection: 'column',
+  },
+  itemWrapper: {
+    backgroundColor: colors.background2,
+    borderRadius: radius.sm,
+    overflow: 'hidden',
+    padding: spacing.xs,
   },
   titleRow: {
     alignItems: 'center',

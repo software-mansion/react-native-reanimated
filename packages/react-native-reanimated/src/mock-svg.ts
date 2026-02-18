@@ -13,10 +13,12 @@ const createComponent = function (name: string) {
       return React.createElement(name, this.props, this.props.children);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setNativeProps(props: Record<string, any>) {
       this._props = { ...this._props, ...props };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _props: any;
   };
 };

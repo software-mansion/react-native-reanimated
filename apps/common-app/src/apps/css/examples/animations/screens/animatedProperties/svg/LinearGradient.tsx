@@ -18,10 +18,10 @@ export default function LinearGradientExample() {
       CSSLinearGradientProps
     >
       buildAnimation={({ keyframes }) => ({
-        animationName: keyframes,
         animationDirection: 'alternate',
         animationDuration: '2s',
         animationIterationCount: 'infinite',
+        animationName: keyframes,
         animationTimingFunction: 'ease-in-out',
       })}
       renderExample={({ animation }) => (
@@ -47,114 +47,114 @@ export default function LinearGradientExample() {
             {
               examples: [
                 {
-                  title: 'Diagonal Slide',
                   description:
                     'Transitions from a top-left/bottom-right flow to a top-right/bottom-left flow.',
                   keyframes: {
                     from: {
-                      x1: '0%',
-                      y1: '0%',
-                      x2: '100%',
-                      y2: '100%',
                       gradient: [
-                        { offset: '0%', color: '#ff00cc', opacity: 1 },
-                        { offset: '100%', color: '#3333ff', opacity: 1 },
+                        { color: '#ff00cc', offset: '0%', opacity: 1 },
+                        { color: '#3333ff', offset: '100%', opacity: 1 },
                       ],
+                      x1: '0%',
+                      x2: '100%',
+                      y1: '0%',
+                      y2: '100%',
                     },
                     to: {
-                      x1: '100%',
-                      y1: '0%',
-                      x2: '0%',
-                      y2: '100%',
                       gradient: [
-                        { offset: '0%', color: '#ff00cc', opacity: 1 },
-                        { offset: '100%', color: '#3333ff', opacity: 1 },
+                        { color: '#ff00cc', offset: '0%', opacity: 1 },
+                        { color: '#3333ff', offset: '100%', opacity: 1 },
                       ],
+                      x1: '100%',
+                      x2: '0%',
+                      y1: '0%',
+                      y2: '100%',
                     },
                   },
+                  title: 'Diagonal Slide',
                 },
                 {
-                  title: 'Prismatic Pivot',
                   description:
                     'The gradient axis folds from a full diagonal into a centered quadrant, creating a rotating kaleidoscope effect.',
                   keyframes: {
                     from: {
                       gradient: [
-                        { offset: '0%', color: '#e40c54', opacity: 1 },
-                        { offset: '50%', color: '#3333ff', opacity: 1 },
-                        { offset: '100%', color: '#14c926', opacity: 1 },
+                        { color: '#e40c54', offset: '0%', opacity: 1 },
+                        { color: '#3333ff', offset: '50%', opacity: 1 },
+                        { color: '#14c926', offset: '100%', opacity: 1 },
                       ],
                     },
                     to: {
-                      x1: '50%',
-                      y1: '50%',
-                      x2: '0%',
-                      y2: '100%',
                       gradient: [
-                        { offset: '0%', color: '#13c8d8', opacity: 1 },
-                        { offset: '50%', color: '#aad315', opacity: 1 },
-                        { offset: '100%', color: '#d1089f', opacity: 1 },
+                        { color: '#13c8d8', offset: '0%', opacity: 1 },
+                        { color: '#aad315', offset: '50%', opacity: 1 },
+                        { color: '#d1089f', offset: '100%', opacity: 1 },
                       ],
+                      x1: '50%',
+                      x2: '0%',
+                      y1: '50%',
+                      y2: '100%',
                     },
                   },
+                  title: 'Prismatic Pivot',
                 },
                 {
-                  title: 'Scanning Beam',
                   description:
                     'A vertical highlight that "scans" across the shape horizontally.',
                   keyframes: {
                     from: {
+                      gradient: [
+                        { color: '#333', offset: '0%', opacity: 1 },
+                        { color: '#fff', offset: '50%', opacity: 1 },
+                        { color: '#333', offset: '100%', opacity: 1 },
+                      ],
                       x1: '-50%',
                       x2: '0%',
                       y1: '0%',
                       y2: '0%',
-                      gradient: [
-                        { offset: '0%', color: '#333', opacity: 1 },
-                        { offset: '50%', color: '#fff', opacity: 1 },
-                        { offset: '100%', color: '#333', opacity: 1 },
-                      ],
                     },
                     to: {
+                      gradient: [
+                        { color: '#333', offset: '0%', opacity: 1 },
+                        { color: '#fff', offset: '50%', opacity: 1 },
+                        { color: '#333', offset: '100%', opacity: 1 },
+                      ],
                       x1: '100%',
                       x2: '150%',
                       y1: '0%',
                       y2: '0%',
-                      gradient: [
-                        { offset: '0%', color: '#333', opacity: 1 },
-                        { offset: '50%', color: '#fff', opacity: 1 },
-                        { offset: '100%', color: '#333', opacity: 1 },
-                      ],
                     },
                   },
+                  title: 'Scanning Beam',
                 },
                 {
-                  title: 'Liquid Rise',
                   description:
                     'Uses identical offsets to create a sharp, moving water-line effect.',
                   keyframes: {
                     from: {
-                      y1: '100%',
-                      x2: '0%',
-                      y2: '0%',
                       gradient: [
-                        { offset: '0%', color: '#12568d', opacity: 1 },
-                        { offset: '10%', color: '#2196f3', opacity: 1 },
-                        { offset: '10%', color: '#e0e0e0', opacity: 1 },
-                        { offset: '100%', color: '#e0e0e0', opacity: 1 },
+                        { color: '#12568d', offset: '0%', opacity: 1 },
+                        { color: '#2196f3', offset: '10%', opacity: 1 },
+                        { color: '#e0e0e0', offset: '10%', opacity: 1 },
+                        { color: '#e0e0e0', offset: '100%', opacity: 1 },
                       ],
+                      x2: '0%',
+                      y1: '100%',
+                      y2: '0%',
                     },
                     to: {
-                      y1: '100%',
-                      x2: '0%',
-                      y2: '0%',
                       gradient: [
-                        { offset: '0%', color: '#12568d', opacity: 1 },
-                        { offset: '70%', color: '#2196f3', opacity: 1 },
-                        { offset: '70%', color: '#e0e0e0', opacity: 1 },
-                        { offset: '100%', color: '#e0e0e0', opacity: 1 },
+                        { color: '#12568d', offset: '0%', opacity: 1 },
+                        { color: '#2196f3', offset: '70%', opacity: 1 },
+                        { color: '#e0e0e0', offset: '70%', opacity: 1 },
+                        { color: '#e0e0e0', offset: '100%', opacity: 1 },
                       ],
+                      x2: '0%',
+                      y1: '100%',
+                      y2: '0%',
                     },
                   },
+                  title: 'Liquid Rise',
                 },
               ],
               title: 'Movement and colors',
@@ -162,76 +162,76 @@ export default function LinearGradientExample() {
             {
               examples: [
                 {
-                  title: 'Prism Expansion 1',
                   description:
                     'Adding detail and complexity mid-animation (by creating new stops).',
                   keyframes: {
                     from: {
                       gradient: [
-                        { offset: '0%', color: '#f00', opacity: 1 },
-                        { offset: '100%', color: '#00f', opacity: 1 },
+                        { color: '#f00', offset: '0%', opacity: 1 },
+                        { color: '#00f', offset: '100%', opacity: 1 },
                       ],
                     },
                     to: {
                       gradient: [
-                        { offset: '0%', color: '#f00', opacity: 1 },
-                        { offset: '33%', color: '#0f0', opacity: 1 },
-                        { offset: '66%', color: '#ff0', opacity: 1 },
-                        { offset: '100%', color: '#00f', opacity: 1 },
+                        { color: '#f00', offset: '0%', opacity: 1 },
+                        { color: '#0f0', offset: '33%', opacity: 1 },
+                        { color: '#ff0', offset: '66%', opacity: 1 },
+                        { color: '#00f', offset: '100%', opacity: 1 },
                       ],
                     },
                   },
+                  title: 'Prism Expansion 1',
                 },
                 {
-                  title: 'Prism Expansion 2',
                   description:
                     'Adding detail and complexity mid-animation (by changing color).',
                   keyframes: {
                     from: {
                       gradient: [
-                        { offset: '0%', color: '#f00', opacity: 1 },
-                        { offset: '33%', color: '#f00', opacity: 1 },
-                        { offset: '66%', color: '#00f', opacity: 1 },
-                        { offset: '100%', color: '#00f', opacity: 1 },
+                        { color: '#f00', offset: '0%', opacity: 1 },
+                        { color: '#f00', offset: '33%', opacity: 1 },
+                        { color: '#00f', offset: '66%', opacity: 1 },
+                        { color: '#00f', offset: '100%', opacity: 1 },
                       ],
                     },
                     to: {
                       gradient: [
-                        { offset: '0%', color: '#f00', opacity: 1 },
-                        { offset: '33%', color: '#0f0', opacity: 1 },
-                        { offset: '66%', color: '#ff0', opacity: 1 },
-                        { offset: '100%', color: '#00f', opacity: 1 },
+                        { color: '#f00', offset: '0%', opacity: 1 },
+                        { color: '#0f0', offset: '33%', opacity: 1 },
+                        { color: '#ff0', offset: '66%', opacity: 1 },
+                        { color: '#00f', offset: '100%', opacity: 1 },
                       ],
                     },
                   },
+                  title: 'Prism Expansion 2',
                 },
                 {
-                  title: 'Twilight over the ocean',
                   description:
                     'Morphing a complex warm sunset into a deep, simple midnight blue.',
                   keyframes: {
                     from: {
-                      y1: '0%',
-                      x2: '0%',
-                      y2: '100%',
                       gradient: [
-                        { offset: '20%', color: '#ff5f6d', opacity: 1 },
-                        { offset: '40%', color: '#ffc371', opacity: 1 },
-                        { offset: '70%', color: '#1739bd', opacity: 1 },
-                        { offset: '100%', color: '#000000', opacity: 1 },
+                        { color: '#ff5f6d', offset: '20%', opacity: 1 },
+                        { color: '#ffc371', offset: '40%', opacity: 1 },
+                        { color: '#1739bd', offset: '70%', opacity: 1 },
+                        { color: '#000000', offset: '100%', opacity: 1 },
                       ],
+                      x2: '0%',
+                      y1: '0%',
+                      y2: '100%',
                     },
                     to: {
-                      y1: '0%',
-                      x2: '0%',
-                      y2: '100%',
-
                       gradient: [
-                        { offset: '0%', color: '#221a72', opacity: 1 },
-                        { offset: '100%', color: '#000000', opacity: 1 },
+                        { color: '#221a72', offset: '0%', opacity: 1 },
+                        { color: '#000000', offset: '100%', opacity: 1 },
                       ],
+                      x2: '0%',
+                      y1: '0%',
+
+                      y2: '100%',
                     },
                   },
+                  title: 'Twilight over the ocean',
                 },
               ],
               title: 'Changing number of stops',
@@ -239,45 +239,45 @@ export default function LinearGradientExample() {
             {
               examples: [
                 {
-                  title: 'Disappearing center',
                   description: 'Center of the gradient becomes transparent.',
                   keyframes: {
                     from: {
                       gradient: [
-                        { offset: '0%', color: '#f00', opacity: 1 },
-                        { offset: '50%', color: '#00f', opacity: 1 },
-                        { offset: '100%', color: '#0f0', opacity: 1 },
+                        { color: '#f00', offset: '0%', opacity: 1 },
+                        { color: '#00f', offset: '50%', opacity: 1 },
+                        { color: '#0f0', offset: '100%', opacity: 1 },
                       ],
                     },
                     to: {
                       gradient: [
-                        { offset: '0%', color: '#f00', opacity: 1 },
-                        { offset: '50%', color: '#00f', opacity: 0 },
-                        { offset: '100%', color: '#0f0', opacity: 1 },
+                        { color: '#f00', offset: '0%', opacity: 1 },
+                        { color: '#00f', offset: '50%', opacity: 0 },
+                        { color: '#0f0', offset: '100%', opacity: 1 },
                       ],
                     },
                   },
+                  title: 'Disappearing center',
                 },
                 {
-                  title: 'Opacity calculation',
                   description:
                     "Stop's opacity is multiplied by color's opacity.",
                   keyframes: {
                     from: {
                       gradient: [
-                        { offset: '0%', color: '#f00', opacity: 1 },
-                        { offset: '50%', color: '#00f', opacity: 1 },
-                        { offset: '100%', color: '#0f0', opacity: 1 },
+                        { color: '#f00', offset: '0%', opacity: 1 },
+                        { color: '#00f', offset: '50%', opacity: 1 },
+                        { color: '#0f0', offset: '100%', opacity: 1 },
                       ],
                     },
                     to: {
                       gradient: [
-                        { offset: '0%', color: '#f00', opacity: 1 },
-                        { offset: '50%', color: '#00f0', opacity: 1 },
-                        { offset: '100%', color: '#0f0', opacity: 1 },
+                        { color: '#f00', offset: '0%', opacity: 1 },
+                        { color: '#00f0', offset: '50%', opacity: 1 },
+                        { color: '#0f0', offset: '100%', opacity: 1 },
                       ],
                     },
                   },
+                  title: 'Opacity calculation',
                 },
               ],
               title: 'Opacity',
@@ -288,135 +288,135 @@ export default function LinearGradientExample() {
           name: 'Position',
           sections: [
             {
-              title: 'Start Point (x1, y1)',
               examples: [
                 {
-                  title: 'Start pos - decimal fraction',
                   description:
                     'Interpolating the origin point using 0-1 range decimal fractions.',
                   keyframes: {
                     from: {
-                      x1: 0.5,
-                      y1: 0.5,
-                      x2: 1,
-                      y2: 1,
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
+                      x1: 0.5,
+                      x2: 1,
+                      y1: 0.5,
+                      y2: 1,
                     },
                     to: {
-                      x1: 0,
-                      y1: 0,
-                      x2: 1,
-                      y2: 1,
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
+                      x1: 0,
+                      x2: 1,
+                      y1: 0,
+                      y2: 1,
                     },
                   },
+                  title: 'Start pos - decimal fraction',
                 },
                 {
-                  title: 'Start pos - percentage',
                   description:
                     'Interpolating the origin point using percentage strings.',
                   keyframes: {
                     from: {
-                      x1: '50%',
-                      y1: '50%',
-                      x2: '100%',
-                      y2: '100%',
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
+                      x1: '50%',
+                      x2: '100%',
+                      y1: '50%',
+                      y2: '100%',
                     },
                     to: {
-                      x1: '0%',
-                      y1: '0%',
-                      x2: '100%',
-                      y2: '100%',
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
+                      x1: '0%',
+                      x2: '100%',
+                      y1: '0%',
+                      y2: '100%',
                     },
                   },
+                  title: 'Start pos - percentage',
                 },
               ],
+              title: 'Start Point (x1, y1)',
             },
             {
-              title: 'End Point (x2, y2)',
               examples: [
                 {
-                  title: 'End point sweep',
                   description:
                     'Moving the destination point while keeping the origin fixed.',
                   keyframes: {
                     from: {
-                      x1: '0%',
-                      y1: '0%',
-                      x2: '100%',
-                      y2: '0%',
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
+                      x1: '0%',
+                      x2: '100%',
+                      y1: '0%',
+                      y2: '0%',
                     },
                     to: {
-                      x1: '0%',
-                      y1: '0%',
-                      x2: '50%',
-                      y2: '100%',
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
+                      x1: '0%',
+                      x2: '50%',
+                      y1: '0%',
+                      y2: '100%',
                     },
                   },
+                  title: 'End point sweep',
                 },
               ],
+              title: 'End Point (x2, y2)',
             },
             {
-              title: 'Combined Vector Motion',
               examples: [
                 {
-                  title: 'Parallel Slide',
                   description:
                     'Moving both start and end points simultaneously to shift the gradient "beam".',
                   keyframes: {
                     from: {
+                      gradient: [
+                        { color: 'black', offset: '0%', opacity: 1 },
+                        { color: 'white', offset: '50%', opacity: 1 },
+                        { color: 'black', offset: '100%', opacity: 1 },
+                      ],
                       x1: '0%',
                       x2: '20%',
                       y1: '0%',
                       y2: '0%',
-                      gradient: [
-                        { offset: '0%', color: 'black', opacity: 1 },
-                        { offset: '50%', color: 'white', opacity: 1 },
-                        { offset: '100%', color: 'black', opacity: 1 },
-                      ],
                     },
                     to: {
+                      gradient: [
+                        { color: 'black', offset: '0%', opacity: 1 },
+                        { color: 'white', offset: '50%', opacity: 1 },
+                        { color: 'black', offset: '100%', opacity: 1 },
+                      ],
                       x1: '80%',
                       x2: '100%',
                       y1: '0%',
                       y2: '0%',
-                      gradient: [
-                        { offset: '0%', color: 'black', opacity: 1 },
-                        { offset: '50%', color: 'white', opacity: 1 },
-                        { offset: '100%', color: 'black', opacity: 1 },
-                      ],
                     },
                   },
+                  title: 'Parallel Slide',
                 },
               ],
+              title: 'Combined Vector Motion',
             },
           ],
         },
@@ -424,75 +424,75 @@ export default function LinearGradientExample() {
           name: 'Units',
           sections: [
             {
-              title: 'Coordinate Systems',
               examples: [
                 {
-                  title: 'Absolute user space',
                   description:
                     'Uses gradientUnits: "userSpaceOnUse". Coordinates are absolute pixels relative to the Svg canvas.',
                   keyframes: {
                     from: {
-                      gradientUnits: 'userSpaceOnUse',
-                      x1: 0,
-                      y1: 300,
-                      x2: 300,
-                      y2: 0,
                       gradient: [
-                        { offset: '0%', color: '#0000ff', opacity: 1 },
+                        { color: '#0000ff', offset: '0%', opacity: 1 },
                         {
-                          offset: '100%',
                           color: '#ff0000',
+                          offset: '100%',
                           opacity: 1,
                         },
                       ],
+                      gradientUnits: 'userSpaceOnUse',
+                      x1: 0,
+                      x2: 300,
+                      y1: 300,
+                      y2: 0,
                     },
                     to: {
-                      gradientUnits: 'userSpaceOnUse',
-                      x1: 0,
-                      y1: 0,
-                      x2: 300,
-                      y2: 300,
                       gradient: [
-                        { offset: '0%', color: '#0000ff', opacity: 1 },
+                        { color: '#0000ff', offset: '0%', opacity: 1 },
                         {
-                          offset: '100%',
                           color: '#ff0000',
+                          offset: '100%',
                           opacity: 1,
                         },
                       ],
+                      gradientUnits: 'userSpaceOnUse',
+                      x1: 0,
+                      x2: 300,
+                      y1: 0,
+                      y2: 300,
                     },
                   },
+                  title: 'Absolute user space',
                 },
                 {
-                  title: 'Interpolating unit systems',
                   description:
                     'Interpolating between "objectBoundingBox" and "userSpaceOnUse" causes a "jump" as 0.5 of rect size suddenly becomes 0.5px.',
                   keyframes: {
                     from: {
+                      gradient: [
+                        { color: 'yellow', offset: '0%', opacity: 1 },
+                        { color: 'red', offset: '100%', opacity: 1 },
+                      ],
                       gradientUnits: 'objectBoundingBox',
                       x1: 0,
-                      y1: 0.5,
                       x2: 1,
+                      y1: 0.5,
                       y2: 0.5,
-                      gradient: [
-                        { offset: '0%', color: 'yellow', opacity: 1 },
-                        { offset: '100%', color: 'red', opacity: 1 },
-                      ],
                     },
                     to: {
+                      gradient: [
+                        { color: 'yellow', offset: '0%', opacity: 1 },
+                        { color: 'red', offset: '100%', opacity: 1 },
+                      ],
                       gradientUnits: 'userSpaceOnUse',
                       x1: 0,
-                      y1: 0.5,
                       x2: 1,
+                      y1: 0.5,
                       y2: 0.5,
-                      gradient: [
-                        { offset: '0%', color: 'yellow', opacity: 1 },
-                        { offset: '100%', color: 'red', opacity: 1 },
-                      ],
                     },
                   },
+                  title: 'Interpolating unit systems',
                 },
               ],
+              title: 'Coordinate Systems',
             },
           ],
         },
@@ -520,52 +520,52 @@ export default function LinearGradientExample() {
             {
               examples: [
                 {
-                  title: 'Children stops',
                   description: `If no animation between stops is needed, the stops can be provided as children of the animated LinearGradient. `,
                   keyframes: {
                     from: {
                       x1: 0,
-                      y1: 0,
                       x2: 1,
+                      y1: 0,
                       y2: 1,
                     },
                     to: {
                       x1: 1,
-                      y1: 0,
                       x2: 0,
+                      y1: 0,
                       y2: 1,
                     },
                   },
+                  title: 'Children stops',
                 },
                 {
-                  title: 'Prop stops',
                   description: `If there is an animation between stops needed, the stops have to be provided through the gradient prop.`,
                   keyframes: {
                     from: {
                       gradient: [
-                        { offset: '0%', color: 'red' },
-                        { offset: '50%', color: 'yellow' },
+                        { color: 'red', offset: '0%' },
+                        { color: 'yellow', offset: '50%' },
                       ],
                     },
                     to: {
                       gradient: [
-                        { offset: '0%', color: '#00ffff', opacity: 1 },
-                        { offset: '100%', color: '#0000ff', opacity: 0.8 },
+                        { color: '#00ffff', offset: '0%', opacity: 1 },
+                        { color: '#0000ff', offset: '100%', opacity: 0.8 },
                       ],
                     },
                   },
+                  title: 'Prop stops',
                 },
                 {
-                  title: 'Mixed stops',
                   description: `You cannot mix children stops and prop stops. It will result in prop stops being prioritized.`,
                   keyframes: {
                     to: {
                       gradient: [
-                        { offset: '0%', color: '#00ffff', opacity: 1 },
-                        { offset: '100%', color: '#0000ff', opacity: 0.8 },
+                        { color: '#00ffff', offset: '0%', opacity: 1 },
+                        { color: '#0000ff', offset: '100%', opacity: 0.8 },
                       ],
                     },
                   },
+                  title: 'Mixed stops',
                 },
               ],
               title: 'Stops as props or as children',

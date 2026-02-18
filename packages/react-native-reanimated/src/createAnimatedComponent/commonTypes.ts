@@ -44,7 +44,7 @@ export interface IInlinePropManager {
 export type AnimatedComponentTypeInternal = Component &
   IAnimatedComponentInternal;
 
-// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents, @typescript-eslint/no-explicit-any
 export type PropUpdates = StyleProps | AnimatedStyle<any>;
 
 export interface IPropsFilter {
