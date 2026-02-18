@@ -39,7 +39,9 @@ export interface TransitionData {
   reversed?: boolean;
   easingX?: string;
   easingY?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   entering?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   exiting?: any;
 }
 

@@ -1,13 +1,13 @@
 // This file was generated with
-  // `packages/react-native-worklets/scripts/export-unpackers.js`.
-  // Please do not modify it directly.
+// `packages/react-native-worklets/scripts/export-unpackers.js`.
+// Please do not modify it directly.
 
-  #include <worklets/Resources/Unpackers.h>
+#include <worklets/Resources/Unpackers.h>
 
-  namespace worklets {
+namespace worklets {
 
-  const char ShareableHostUnpackerCode[] =
-      R"DELIMITER__((function () {
+const char ShareableHostUnpackerCode[] =
+    R"DELIMITER__((function () {
   function shareableHostUnpacker(initial, hostDecorator) {
     initial = typeof initial === 'function' ? initial() : initial;
     var hostShareable = {
@@ -23,5 +23,4 @@
   }
   globalThis.__shareableHostUnpacker = shareableHostUnpacker;
 })();)DELIMITER__";
-  } // namespace worklets
-  
+} // namespace worklets

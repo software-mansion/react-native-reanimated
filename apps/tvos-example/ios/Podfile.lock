@@ -2278,11 +2278,12 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 4.3.0-main)
+    - RNReanimated/apple (= 4.3.0-main)
+    - RNReanimated/common (= 4.3.0-main)
     - RNWorklets
     - SocketRocket
     - Yoga
-  - RNReanimated/reanimated (4.3.0-main):
+  - RNReanimated/apple (4.3.0-main):
     - boost
     - DoubleConversion
     - fast_float
@@ -2308,11 +2309,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 4.3.0-main)
     - RNWorklets
     - SocketRocket
     - Yoga
-  - RNReanimated/reanimated/apple (4.3.0-main):
+  - RNReanimated/common (4.3.0-main):
     - boost
     - DoubleConversion
     - fast_float
@@ -2367,10 +2367,11 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNWorklets/worklets (= 0.8.0-main)
+    - RNWorklets/apple (= 0.8.0-main)
+    - RNWorklets/common (= 0.8.0-main)
     - SocketRocket
     - Yoga
-  - RNWorklets/worklets (0.8.0-main):
+  - RNWorklets/apple (0.8.0-main):
     - boost
     - DoubleConversion
     - fast_float
@@ -2396,10 +2397,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNWorklets/worklets/apple (= 0.8.0-main)
     - SocketRocket
     - Yoga
-  - RNWorklets/worklets/apple (0.8.0-main):
+  - RNWorklets/common (0.8.0-main):
     - boost
     - DoubleConversion
     - fast_float
@@ -2731,8 +2731,8 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 02d17caeffffa513b02bb1ba394bbf1e8f46df86
   ReactCodegen: f4d6e6fd5140eade461ffb5579795197956868c8
   ReactCommon: c178596d3ef05508bb6c0f88bfbbc281b5c4222b
-  RNReanimated: ae88e2e7dc777e0e98b642f085a8c244c344047f
-  RNWorklets: 9ac78ac8aee2a8a4c5d649012f52b351ddc40219
+  RNReanimated: 2eed5d06da4238c8f50c3ac4a06824118b62ce30
+  RNWorklets: 33d0e9f9cf407c9f8b665f670c33c312adebaea3
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 0e792f39294e864568930600eeb71135364f777d
 

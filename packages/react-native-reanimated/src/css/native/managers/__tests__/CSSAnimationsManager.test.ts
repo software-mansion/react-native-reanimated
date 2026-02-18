@@ -307,6 +307,7 @@ describe('CSSAnimationsManager', () => {
             },
           ],
         });
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const attachedAnimations = (manager as any).attachedAnimations;
         jest.clearAllMocks();
@@ -329,6 +330,7 @@ describe('CSSAnimationsManager', () => {
         // Animations should be still attached because call to unmountCleanup
         // doesn't necessarily mean that the component will be removed.
         // We handle this animations cleanup in the CPP implementation.
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         expect((manager as any).attachedAnimations).toEqual(attachedAnimations);
         expect(unregisterCSSAnimations).not.toHaveBeenCalled();

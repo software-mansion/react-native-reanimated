@@ -173,6 +173,7 @@ function TransformsExample() {
             { skewX: '-10deg' },
           ],
         },
+        // eslint-disable-next-line perfectionist/sort-objects
         '100%': {
           transform: [{ rotate: '360deg' }, { scaleX: 1 }, { skewX: '0deg' }],
         },

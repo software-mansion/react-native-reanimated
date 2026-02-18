@@ -1,13 +1,13 @@
 // This file was generated with
-  // `packages/react-native-worklets/scripts/export-unpackers.js`.
-  // Please do not modify it directly.
+// `packages/react-native-worklets/scripts/export-unpackers.js`.
+// Please do not modify it directly.
 
-  #include <worklets/Resources/Unpackers.h>
+#include <worklets/Resources/Unpackers.h>
 
-  namespace worklets {
+namespace worklets {
 
-  const char ShareableGuestUnpackerCode[] =
-      R"DELIMITER__((function () {
+const char ShareableGuestUnpackerCode[] =
+    R"DELIMITER__((function () {
   var runOnUISync;
   var scheduleOnUI;
   var runOnUIAsync;
@@ -195,5 +195,4 @@
   }
   globalThis.__shareableGuestUnpacker = shareableGuestUnpacker;
 })();)DELIMITER__";
-  } // namespace worklets
-  
+} // namespace worklets

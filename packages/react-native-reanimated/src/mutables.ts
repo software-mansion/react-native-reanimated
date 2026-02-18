@@ -1,6 +1,6 @@
 'use strict';
 
-import type { Shareable, Synchronizable } from 'react-native-worklets';
+import type { Synchronizable } from 'react-native-worklets';
 import {
   createSerializable,
   createShareable,
@@ -9,13 +9,13 @@ import {
   scheduleOnUI,
   serializableMappingCache,
 } from 'react-native-worklets';
+import type { PureShareableHost } from 'react-native-worklets/lib/typescript/memory/types';
 
 import { IS_JEST, logger, ReanimatedError, SHOULD_BE_USE_WEB } from './common';
 import type { Mutable } from './commonTypes';
 import { getStaticFeatureFlag } from './featureFlags';
 import { isFirstReactRender, isReactRendering } from './reactUtils';
 import { valueSetter } from './valueSetter';
-import type { PureShareableHost } from 'react-native-worklets/lib/typescript/memory/types';
 
 function shouldWarnAboutAccessDuringRender() {
   return __DEV__ && isReactRendering() && !isFirstReactRender();
@@ -100,7 +100,7 @@ function hideInternalValueProp<Value>(mutable: PartialMutable<Value>) {
   });
 }
 
-// eslint-disable-next-line camelcase
+// eslint-disable-next-line camelcase, @typescript-eslint/no-unused-vars
 function experimental_makeMutableUI<Value>(
   initial: Value,
   dirtyFlag: Synchronizable<boolean>
@@ -157,6 +157,7 @@ function experimental_makeMutableUI<Value>(
   return mutable as Mutable<Value>;
 }
 
+// eslint-disable-next-line camelcase
 function experimental_decorate_makeMutableUI<TValue>(
   shareableHost: PureShareableHost<TValue>,
   dirtyFlag: Synchronizable<boolean>
@@ -194,7 +195,7 @@ function experimental_decorate_makeMutableUI<TValue>(
       enumerable: false,
     },
     modify: {
-      value: (modifier, forceUpdate = true) => {
+      value: (modifier: (value: TValue) => TValue, forceUpdate = true) => {
         valueSetter(
           shareableHost as unknown as Mutable<TValue>,
           modifier !== undefined ? modifier(value) : value,
@@ -238,6 +239,7 @@ function experimental_decorate_makeMutableUI<TValue>(
     },
   });
 
+  // @ts-ignore TODO: fix
   addCompilerSafeGetAndSet(shareableHost);
 
   return shareableHost;
@@ -322,6 +324,7 @@ function experimental_makeMutableNative<TValue>(
                 shareableGuest as unknown as Mutable<TValue>
               );
             } else {
+              // @ts-ignore TODO: fix
               latest = shareableGuest.getSync();
             }
             return latest;
@@ -338,6 +341,7 @@ function experimental_makeMutableNative<TValue>(
         modify: {
           value: (modifier: (value: TValue) => TValue, forceUpdate = true) => {
             scheduleOnUI(() => {
+              // @ts-ignore TODO: fix
               shareableGuest.modify(modifier, forceUpdate);
             });
           },

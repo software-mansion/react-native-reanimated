@@ -20,14 +20,16 @@ class TransitionStyleInterpolator {
 
   folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,
-      const TransitionProgressProvider &transitionProgressProvider,
-      const std::unordered_set<std::string> &allowDiscreteProperties) const;
+      const TransitionProgressProvider &transitionProgressProvider) const;
 
+  bool createOrUpdateInterpolator(
+      jsi::Runtime &rt,
+      const std::string &propertyName,
+      const jsi::Value &fromValue,
+      const jsi::Value &toValue);
+  void setAllowDiscrete(const std::string &propertyName, bool allowDiscrete);
+  void removeProperty(const std::string &propertyName);
   void discardFinishedInterpolators(const TransitionProgressProvider &transitionProgressProvider);
-  void discardIrrelevantInterpolators(const std::unordered_set<std::string> &transitionPropertyNames);
-  std::unordered_set<std::string> updateInterpolatedProperties(
-      const ChangedProps &changedProps,
-      const folly::dynamic &lastUpdateValue);
 
  private:
   using MapInterpolatorsCallback = std::function<
@@ -37,6 +39,9 @@ class TransitionStyleInterpolator {
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   PropertyInterpolatorsRecord interpolators_;
+  std::unordered_set<std::string> allowDiscreteProperties_;
+
+  std::shared_ptr<PropertyInterpolator> getOrCreateInterpolator(const std::string &propertyName);
 };
 
 } // namespace reanimated::css

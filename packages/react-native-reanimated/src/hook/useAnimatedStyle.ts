@@ -38,7 +38,9 @@ import {
 } from './utils';
 
 interface AnimatedState {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   last: AnimatedStyle<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animations: AnimatedStyle<any>;
   isAnimationRunning: boolean;
   isAnimationCancelled: boolean;
@@ -46,7 +48,9 @@ interface AnimatedState {
 
 interface AnimatedUpdaterData {
   initial: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: AnimatedStyle<any>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     updater: () => AnimatedStyle<any>;
   };
   remoteState: AnimatedState;
@@ -56,8 +60,11 @@ interface AnimatedUpdaterData {
 
 function prepareAnimation(
   frameTimestamp: number,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animatedProp: AnimatedStyle<any>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lastAnimation: AnimatedStyle<any>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lastValue: AnimatedStyle<any>
 ): void {
   'worklet';
@@ -115,9 +122,11 @@ function prepareAnimation(
 }
 
 function runAnimations(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animation: AnimatedStyle<any>,
   timestamp: Timestamp,
   key: number | string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   result: AnimatedStyle<any>,
   animationsActive: SharedValue<boolean>,
   forceCopyAnimation?: boolean
@@ -196,6 +205,7 @@ function runAnimations(
 
 function styleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
   animationsActive: SharedValue<boolean>,
@@ -235,6 +245,7 @@ function styleUpdater(
         return;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const updates: AnimatedStyle<any> = {};
       let allFinished = true;
       for (const propName in animations) {
@@ -304,14 +315,17 @@ function styleUpdater(
 
 function jestStyleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
   animationsActive: SharedValue<boolean>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animatedValues: RefObject<AnimatedStyle<any>>,
   adapters: AnimatedPropsAdapterFunction[],
   forceUpdate?: boolean
 ): void {
   'worklet';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const animations: AnimatedStyle<any> = state.animations ?? {};
   const newValues = updater() ?? {};
   const oldValues = state.last;
@@ -344,6 +358,7 @@ function jestStyleUpdater(
       return;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updates: AnimatedStyle<any> = {};
     let allFinished = true;
     Object.keys(animations).forEach((propName) => {

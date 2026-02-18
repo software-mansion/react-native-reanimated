@@ -5,7 +5,7 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Serializable.h>
-#include <worklets/SharedItems/Shareable.h>
+#include <worklets/SharedItems/SerializableFactory.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/FeatureFlags.h>

@@ -54,6 +54,7 @@ export {
 export {
   createWorkletRuntime,
   runOnRuntime,
+  runOnRuntimeAsync,
   runOnRuntimeSync,
   scheduleOnRuntime,
 } from './runtimes';

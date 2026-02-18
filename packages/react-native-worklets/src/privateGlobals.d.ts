@@ -5,9 +5,9 @@
 import type { callGuardDEV } from './callGuard';
 import type { reportFatalRemoteError } from './debug/errors';
 import type { CustomSerializableUnpacker } from './memory/customSerializableUnpacker';
+import type { makeShareableCloneOnUIRecursive } from './memory/serializable';
 import type { ShareableGuestUnpacker } from './memory/shareableGuestUnpacker';
 import type { ShareableHostUnpacker } from './memory/shareableHostUnpacker';
-import type { makeShareableCloneOnUIRecursive } from './memory/serializable';
 import type { SynchronizableUnpacker } from './memory/synchronizableUnpacker';
 import type { CustomSerializationRegistry } from './memory/types';
 import type { Queue } from './runLoop/workletRuntime/taskQueue';

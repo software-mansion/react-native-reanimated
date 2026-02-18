@@ -67,6 +67,7 @@ const flameEven = css.keyframes({
     backgroundColor: COLORS.orange,
     zIndex: 1000000,
   },
+  // eslint-disable-next-line perfectionist/sort-objects
   '100%': {
     backgroundColor: COLORS.red,
     bottom: '150%',
@@ -96,6 +97,7 @@ const flameOdd = css.keyframes({
     backgroundColor: COLORS.orange,
     zIndex: 1000000,
   },
+  // eslint-disable-next-line perfectionist/sort-objects
   '100%': {
     backgroundColor: COLORS.red,
     bottom: '170%',

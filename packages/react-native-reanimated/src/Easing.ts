@@ -260,10 +260,11 @@ function inOut(easing: EasingFunction): EasingFunction {
 
 /**
  * The `steps` easing function jumps between discrete values at regular
- * intervals, creating a stepped animation effect. The `n` parameter determines
- * the number of steps in the animation, and the `roundToNextStep` parameter
- * determines whether the animation should start at the beginning or end of each
- * step.
+ * intervals, creating a stepped animation effect.
+ *
+ * @param n - Determines the number of steps in the animation. Defaults to `10`.
+ * @param roundToNextStep - Determines whether the animation should start at the
+ *   beginning or end of each step. Defaults to `true`.
  */
 function steps(n = 10, roundToNextStep = true): EasingFunction {
   'worklet';

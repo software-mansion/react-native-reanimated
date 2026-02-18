@@ -75,9 +75,13 @@ inline std::tuple<T, Rest...> convertArgs(jsi::Runtime &rt, const jsi::Value *ar
 // returns a tuple with the result of casting `args` to appropriate
 // native C++ types needed to call `function`
 template <typename Ret, typename... Args>
-std::tuple<Args...>
-getArgsForFunction(std::function<Ret(Args...)>, jsi::Runtime &rt, const jsi::Value *args, const size_t count, std::string_view name) {
-        std::string str = std::string("Argument list has different length than expected in function ") + *(name.data());
+std::tuple<Args...> getArgsForFunction(
+    std::function<Ret(Args...)>,
+    jsi::Runtime &rt,
+    const jsi::Value *args,
+    const size_t count,
+    std::string_view name) {
+  std::string str = std::string("Argument list has different length than expected in function ") + *(name.data());
   react_native_assert(sizeof...(Args) == count && str.c_str());
   return convertArgs<Args...>(rt, args);
 }

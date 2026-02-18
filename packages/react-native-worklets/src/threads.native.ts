@@ -197,6 +197,7 @@ export function runOnUISync<Args extends unknown[], ReturnValue>(
   );
 }
 
+// eslint-disable-next-line camelcase
 export function runOnUISync_WORKLET<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
   ...args: Args

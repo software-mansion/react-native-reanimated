@@ -1,3 +1,6 @@
+// WorkletEventHandler was fully moved to Reanimated.
+// This file is kept only for backwards compatibility with older versions of Reanimated.
+
 #pragma once
 
 #include <worklets/SharedItems/Serializable.h>
