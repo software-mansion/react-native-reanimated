@@ -1374,10 +1374,12 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     if (!ReactNativeFeatureFlags::useSharedAnimatedBackend()) {
-      jsLogger_->warnOnJS(
-          "[Reanimated] USE_ANIMATION_BACKEND flag is enabled, but "
-          "ReactNativeFeatureFlags::useSharedAnimatedBackend is disabled. "
-          "Animations will not work properly.");
+      const auto message =
+          std::string("[Reanimated] USE_ANIMATION_BACKEND flag is enabled, but ") +
+          "ReactNativeFeatureFlags::useSharedAnimatedBackend is disabled. " +
+          "Animations will not work properly.";
+
+      workletsModuleProxy_->getJSLogger()->warnOnJS(message);
     }
 
     backendCallbacks_ = std::vector<std::function<void(AnimationTimestamp)>>();
