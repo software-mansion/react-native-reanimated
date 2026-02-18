@@ -60,11 +60,6 @@ const DEFAULT_ANIMATION_CONFIG: SelectableConfig<CSSAnimationProperties> = {
       transform: [{ translateX: -sizes.lg }],
       width: sizes.xl,
     },
-    '100%': {
-      backgroundColor: colors.primaryLight,
-      transform: [{ translateX: sizes.lg }],
-      width: sizes.lg,
-    },
     '33%': {
       $animationTimingFunction: getOptions(steps(4)),
       transform: [{ translateY: sizes.md }],
@@ -73,6 +68,12 @@ const DEFAULT_ANIMATION_CONFIG: SelectableConfig<CSSAnimationProperties> = {
       $animationTimingFunction: getOptions('linear', true),
       backgroundColor: colors.primaryDark,
       transform: [{ translateY: -sizes.md }],
+    },
+    // eslint-disable-next-line perfectionist/sort-objects
+    '100%': {
+      backgroundColor: colors.primaryLight,
+      transform: [{ translateX: sizes.lg }],
+      width: sizes.lg,
     },
   },
 };

@@ -199,11 +199,12 @@ export default function StrokeExample() {
               description:
                 '`strokeDashArray` is set to `10` and `strokeWidth` is set to `5`',
               keyframes: {
-                '50%': {
-                  strokeLinecap: 'round',
-                },
                 from: {
                   strokeLinecap: 'butt',
+                },
+                // eslint-disable-next-line perfectionist/sort-objects
+                '50%': {
+                  strokeLinecap: 'round',
                 },
                 to: {
                   strokeLinecap: 'square',
@@ -222,11 +223,12 @@ export default function StrokeExample() {
           examples: [
             {
               keyframes: {
-                '50%': {
-                  strokeLinejoin: 'round',
-                },
                 from: {
                   strokeLinejoin: 'miter',
+                },
+                // eslint-disable-next-line perfectionist/sort-objects
+                '50%': {
+                  strokeLinejoin: 'round',
                 },
                 to: {
                   strokeLinejoin: 'bevel',

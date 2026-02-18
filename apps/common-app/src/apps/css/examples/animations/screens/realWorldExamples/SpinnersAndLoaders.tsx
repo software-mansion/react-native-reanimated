@@ -595,15 +595,16 @@ const rectangle = css.keyframes({
   '0%': {
     transform: [{ perspective: 2 * SPINNER_SIZE }],
   },
+  '50%': {
+    transform: [{ perspective: 2 * SPINNER_SIZE }, { rotateX: '-180deg' }],
+  },
+  // eslint-disable-next-line perfectionist/sort-objects
   '100%': {
     transform: [
       { perspective: 2 * SPINNER_SIZE },
       { rotateX: '-180deg' },
       { rotateY: '-180deg' },
     ],
-  },
-  '50%': {
-    transform: [{ perspective: 2 * SPINNER_SIZE }, { rotateX: '-180deg' }],
   },
 });
 

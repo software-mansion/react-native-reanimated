@@ -28,24 +28,24 @@ import { colors, flex, radius, sizes, spacing } from '@/theme';
 const DEFAULT_TRANSITION_CONFIG: SelectableConfig<
   Partial<CSSTransitionProperties>
 > = {
-  $transitionDelay: {
-    canDisable: true,
+  $transitionProperty: {
     maxNumberOfValues: 3,
-    options: ['0s', '1s', '2s', '5s'],
-    value: ['0s', '1s'],
+    options: ['width', 'height', 'transform'],
+    value: ['width', 'height', 'transform'],
   },
-
+  // eslint-disable-next-line perfectionist/sort-objects
   $transitionDuration: {
     canDisable: true,
     maxNumberOfValues: 3,
     options: ['0s', '1s', '2s', '5s'],
     value: ['1s', '2s'],
   },
-
-  $transitionProperty: {
+  // eslint-disable-next-line perfectionist/sort-objects
+  $transitionDelay: {
+    canDisable: true,
     maxNumberOfValues: 3,
-    options: ['width', 'height', 'transform'],
-    value: ['width', 'height', 'transform'],
+    options: ['0s', '1s', '2s', '5s'],
+    value: ['0s', '1s'],
   },
   $transitionTimingFunction: {
     canDisable: true,

@@ -15,14 +15,15 @@ export default function Position() {
           '0%': {
             position: 'static',
           },
-          '100%': {
-            left: spacing.xl,
-            position: 'absolute',
-            top: spacing.xl,
-          },
           '50%': {
             left: spacing.xl,
             position: 'relative',
+            top: spacing.xl,
+          },
+          // eslint-disable-next-line perfectionist/sort-objects
+          '100%': {
+            left: spacing.xl,
+            position: 'absolute',
             top: spacing.xl,
           },
         },

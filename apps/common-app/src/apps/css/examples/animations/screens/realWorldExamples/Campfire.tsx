@@ -57,14 +57,6 @@ const flameEven = css.keyframes({
     width: '0%',
     zIndex: 1000000,
   },
-  '100%': {
-    backgroundColor: COLORS.red,
-    bottom: '150%',
-    height: '0%',
-    right: '170%',
-    width: '0%',
-    zIndex: -10,
-  },
   '25%': {
     bottom: '1%',
     height: '100%',
@@ -74,6 +66,15 @@ const flameEven = css.keyframes({
   '40%': {
     backgroundColor: COLORS.orange,
     zIndex: 1000000,
+  },
+  // eslint-disable-next-line perfectionist/sort-objects
+  '100%': {
+    backgroundColor: COLORS.red,
+    bottom: '150%',
+    height: '0%',
+    right: '170%',
+    width: '0%',
+    zIndex: -10,
   },
 });
 
@@ -86,14 +87,6 @@ const flameOdd = css.keyframes({
     width: '0%',
     zIndex: 1000000,
   },
-  '100%': {
-    backgroundColor: COLORS.red,
-    bottom: '170%',
-    height: '0%',
-    right: '150%',
-    width: '0%',
-    zIndex: -10,
-  },
   '25%': {
     bottom: '2%',
     height: '100%',
@@ -103,6 +96,15 @@ const flameOdd = css.keyframes({
   '40%': {
     backgroundColor: COLORS.orange,
     zIndex: 1000000,
+  },
+  // eslint-disable-next-line perfectionist/sort-objects
+  '100%': {
+    backgroundColor: COLORS.red,
+    bottom: '170%',
+    height: '0%',
+    right: '150%',
+    width: '0%',
+    zIndex: -10,
   },
 });
 

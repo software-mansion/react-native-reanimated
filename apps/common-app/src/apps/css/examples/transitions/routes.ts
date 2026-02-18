@@ -1,3 +1,5 @@
+/* eslint-disable perfectionist/sort-objects */
+
 import type { RouteNames, Routes } from '@/apps/css/navigation/types';
 
 import routeCards from './routeCards';
@@ -12,86 +14,86 @@ import {
 const routes = {
   AnimatedProperties: {
     CardComponent: routeCards.AnimatedPropertiesCard,
-    Component: AnimatedProperties,
     name: 'Animated Properties',
+    Component: AnimatedProperties,
+  },
+  TransitionSettings: {
+    name: 'Transition Settings',
+    CardComponent: routeCards.TransitionSettingsCard,
+    routes: {
+      TransitionProperty: {
+        name: 'Transition Property',
+        Component: transitionSettings.TransitionProperty,
+      },
+      TransitionDuration: {
+        name: 'Transition Duration',
+        Component: transitionSettings.TransitionDuration,
+      },
+      TransitionDelay: {
+        name: 'Transition Delay',
+        Component: transitionSettings.TransitionDelay,
+      },
+      TransitionTimingFunction: {
+        name: 'Transition Timing Function',
+        Component: transitionSettings.TransitionTimingFunction,
+      },
+      TransitionBehavior: {
+        name: 'Transition Behavior',
+        Component: transitionSettings.TransitionBehavior,
+      },
+    },
   },
   Miscellaneous: {
-    CardComponent: routeCards.MiscellaneousCard,
     name: 'Miscellaneous',
+    CardComponent: routeCards.MiscellaneousCard,
     routes: {
       ChangingTransitionProperty: {
-        Component: miscellaneous.ChangingTransitionProperty,
         name: 'Changing Transition Property',
-      },
-      MultipleTransitionSettings: {
-        Component: miscellaneous.MultipleTransitionSettings,
-        name: 'Multiple Transition Settings',
-      },
-      ReversingShortening: {
-        Component: miscellaneous.ReversingShortening,
-        name: 'Reversing Shortening',
+        Component: miscellaneous.ChangingTransitionProperty,
       },
       UpdatingTransitionSettings: {
-        Component: miscellaneous.UpdatingTransitionSettings,
         name: 'Updating Transition Settings',
+        Component: miscellaneous.UpdatingTransitionSettings,
+      },
+      MultipleTransitionSettings: {
+        name: 'Multiple Transition Settings',
+        Component: miscellaneous.MultipleTransitionSettings,
+      },
+      ReversingShortening: {
+        name: 'Reversing Shortening',
+        Component: miscellaneous.ReversingShortening,
       },
     },
   },
   RealWorldExamples: {
-    CardComponent: routeCards.RealWorldExamplesCard,
     name: 'Real World Examples',
+    CardComponent: routeCards.RealWorldExamplesCard,
     routes: {
       AppSettings: {
-        Component: realWorldExamples.AppSettings,
         name: 'App Settings',
-      },
-      CircularPopupMenu: {
-        Component: realWorldExamples.CircularPopupMenu,
-        name: 'Circular Popup Menu',
+        Component: realWorldExamples.AppSettings,
       },
       FlexGallery: {
-        Component: realWorldExamples.FlexGallery,
         name: 'Flex Gallery',
+        Component: realWorldExamples.FlexGallery,
+      },
+      CircularPopupMenu: {
+        name: 'Circular Popup Menu',
+        Component: realWorldExamples.CircularPopupMenu,
       },
       HamburgerMenuButtons: {
-        Component: realWorldExamples.HamburgerMenuButtons,
         name: 'Hamburger Menu Buttons',
+        Component: realWorldExamples.HamburgerMenuButtons,
       },
     },
   },
   TestExamples: {
-    CardComponent: routeCards.TestExamplesCard,
     name: 'Test Examples',
+    CardComponent: routeCards.TestExamplesCard,
     routes: {
       Playground: {
-        Component: testExamples.Playground,
         name: 'Playground',
-      },
-    },
-  },
-  TransitionSettings: {
-    CardComponent: routeCards.TransitionSettingsCard,
-    name: 'Transition Settings',
-    routes: {
-      TransitionBehavior: {
-        Component: transitionSettings.TransitionBehavior,
-        name: 'Transition Behavior',
-      },
-      TransitionDelay: {
-        Component: transitionSettings.TransitionDelay,
-        name: 'Transition Delay',
-      },
-      TransitionDuration: {
-        Component: transitionSettings.TransitionDuration,
-        name: 'Transition Duration',
-      },
-      TransitionProperty: {
-        Component: transitionSettings.TransitionProperty,
-        name: 'Transition Property',
-      },
-      TransitionTimingFunction: {
-        Component: transitionSettings.TransitionTimingFunction,
-        name: 'Transition Timing Function',
+        Component: testExamples.Playground,
       },
     },
   },

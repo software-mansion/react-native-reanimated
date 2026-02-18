@@ -1,3 +1,5 @@
+/* eslint-disable perfectionist/sort-objects */
+
 import { useCallback, useState } from 'react';
 import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
@@ -27,14 +29,14 @@ import {
 import { colors, flex, radius, sizes, spacing } from '@/theme';
 
 const DEFAULT_TRANSITION_CONFIG: SelectableConfig<CSSTransitionProperties> = {
-  $transitionDelay: {
-    options: ['0s', '1s', '2s', '5s'],
-    value: '0s',
-  },
-
+  transitionProperty: 'all',
   $transitionDuration: {
     options: ['0s', '1s', '2s', '5s'],
     value: '1s',
+  },
+  $transitionDelay: {
+    options: ['0s', '1s', '2s', '5s'],
+    value: '0s',
   },
   $transitionTimingFunction: {
     options: [
@@ -48,7 +50,6 @@ const DEFAULT_TRANSITION_CONFIG: SelectableConfig<CSSTransitionProperties> = {
     ],
     value: 'linear',
   },
-  transitionProperty: 'all',
 };
 
 type ExampleProps = {

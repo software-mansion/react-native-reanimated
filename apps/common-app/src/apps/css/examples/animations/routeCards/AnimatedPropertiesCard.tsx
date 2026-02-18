@@ -160,9 +160,6 @@ function TransformsExample() {
         '0%': {
           transform: [{ rotate: '0deg' }, { scaleX: 1 }, { skewX: '0deg' }],
         },
-        '100%': {
-          transform: [{ rotate: '360deg' }, { scaleX: 1 }, { skewX: '0deg' }],
-        },
         '25%': {
           transform: [{ rotate: '90deg' }, { scaleX: 1.2 }, { skewX: '10deg' }],
         },
@@ -175,6 +172,10 @@ function TransformsExample() {
             { scaleX: 1.2 },
             { skewX: '-10deg' },
           ],
+        },
+        // eslint-disable-next-line perfectionist/sort-objects
+        '100%': {
+          transform: [{ rotate: '360deg' }, { scaleX: 1 }, { skewX: '0deg' }],
         },
       }),
     []

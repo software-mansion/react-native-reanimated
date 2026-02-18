@@ -36,9 +36,6 @@ export default function MixBlendMode() {
                 '0%, 100%': {
                   mixBlendMode: 'normal',
                 },
-                '100%': {
-                  mixBlendMode: 'luminosity',
-                },
                 '13.33%': {
                   mixBlendMode: 'screen',
                 },
@@ -80,6 +77,10 @@ export default function MixBlendMode() {
                 },
                 '93.33%': {
                   mixBlendMode: 'color',
+                },
+                // eslint-disable-next-line perfectionist/sort-objects
+                '100%': {
+                  mixBlendMode: 'luminosity',
                 },
               },
               minExampleHeight: 1.5 * sizes.xxxl,
