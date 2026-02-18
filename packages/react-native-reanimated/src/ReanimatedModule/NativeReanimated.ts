@@ -75,14 +75,16 @@ class NativeReanimatedModule implements IReanimatedModule {
     }
     global._REANIMATED_VERSION_JS = jsVersion;
 
-    const status = installTurboModule();
-    if (!status) {
-      // This path means that React Native has failed on reload.
-      // We don't want to throw any errors to not mislead the users
-      // that the problem is related to Reanimated.
-      // We install a DummyReanimatedModuleProxy instead.
-      this.#reanimatedModuleProxy = new DummyReanimatedModuleProxy();
-      return;
+    if (ReanimatedTurboModule) {
+      const status = installTurboModule();
+      if (!status) {
+        // This path means that React Native has failed on reload.
+        // We don't want to throw any errors to not mislead the users
+        // that the problem is related to Reanimated.
+        // We install a DummyReanimatedModuleProxy instead.
+        this.#reanimatedModuleProxy = new DummyReanimatedModuleProxy();
+        return;
+      }
     }
 
     if (global.__reanimatedModuleProxy === undefined) {
@@ -297,13 +299,13 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
 }
 
 function installTurboModule() {
-  if (globalThis.__reanimatedModuleProxy || !ReanimatedTurboModule) {
-    return false;
+  if (globalThis.__reanimatedModuleProxy) {
+    return true;
   }
 
   globalThis.__UI_WORKLET_RUNTIME_HOLDER = getUIRuntimeHolder();
   globalThis.__UI_SCHEDULER_HOLDER = getUISchedulerHolder();
-  const status = ReanimatedTurboModule.installTurboModule();
+  const status = ReanimatedTurboModule!.installTurboModule();
   delete globalThis.__UI_WORKLET_RUNTIME_HOLDER;
   delete globalThis.__UI_SCHEDULER_HOLDER;
   return status;

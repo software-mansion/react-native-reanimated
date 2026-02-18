@@ -71,15 +71,16 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto &rnRuntime = *reinterpret_cast<jsi::Runtime *>(jsContext); // NOLINT //(performance-no-int-to-ptr)
   const auto global = rnRuntime.global();
-  const auto uiRuntime = global.getProperty(rnRuntime, "__UI_WORKLET_RUNTIME_HOLDER")
-                             .asObject(rnRuntime)
-                             .getNativeState<WorkletRuntimeHolder>(rnRuntime)
-                             ->runtime_;
 
-  const auto uiScheduler = global.getProperty(rnRuntime, "__UI_SCHEDULER_HOLDER")
-                               .asObject(rnRuntime)
-                               .getNativeState<UISchedulerHolder>(rnRuntime)
-                               ->scheduler_;
+  const auto uiRuntime =
+      std::static_pointer_cast<WorkletRuntimeHolder>(
+          global.getProperty(rnRuntime, "__UI_WORKLET_RUNTIME_HOLDER").asObject(rnRuntime).getNativeState(rnRuntime))
+          ->runtime_;
+
+  const auto uiScheduler =
+      std::static_pointer_cast<UISchedulerHolder>(
+          global.getProperty(rnRuntime, "__UI_SCHEDULER_HOLDER").asObject(rnRuntime).getNativeState(rnRuntime))
+          ->scheduler_;
 
   return makeCxxInstance(jThis, &rnRuntime, jsCallInvoker, fabricUIManager, uiRuntime, uiScheduler);
 }
