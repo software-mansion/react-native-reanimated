@@ -26,12 +26,12 @@ folly::dynamic TransitionStyleInterpolator::interpolate(
 }
 
 bool TransitionStyleInterpolator::createOrUpdateInterpolator(
+    jsi::Runtime &rt,
     const std::string &propertyName,
-    const folly::dynamic &oldValue,
-    const folly::dynamic &newValue,
-    const folly::dynamic &lastValue) {
+    const jsi::Value &fromValue,
+    const jsi::Value &toValue) {
   const auto &interpolator = getOrCreateInterpolator(propertyName);
-  return interpolator->updateKeyframes(lastValue.isNull() ? oldValue : lastValue, newValue);
+  return interpolator->updateKeyframes(rt, fromValue, toValue);
 }
 
 void TransitionStyleInterpolator::setAllowDiscrete(const std::string &propertyName, const bool allowDiscrete) {
