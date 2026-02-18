@@ -1,3 +1,6 @@
+#include <reanimated/CSS/common/values/CSSKeyword.h>
+#include <reanimated/CSS/common/values/CSSLength.h>
+#include <reanimated/CSS/common/values/CSSValueVariant.h>
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
 
 #include <memory>
@@ -8,10 +11,12 @@ namespace reanimated::css {
 ValueInterpolator::ValueInterpolator(
     const PropertyPath &propertyPath,
     const std::shared_ptr<CSSValue> &defaultValue,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+    std::function<void(const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValue &)> addToPropsBuilder)
     : PropertyInterpolator(propertyPath, viewStylesRepository),
       defaultStyleValue_(defaultValue),
-      defaultStyleValueDynamic_(defaultValue->toDynamic()) {}
+      defaultStyleValueDynamic_(defaultValue->toDynamic()),
+      addToPropsBuilder_(addToPropsBuilder) {}
 
 folly::dynamic ValueInterpolator::getStyleValue(const std::shared_ptr<const ShadowNode> &shadowNode) const {
   return viewStylesRepository_->getStyleProp(shadowNode->getTag(), propertyPath_);
@@ -84,6 +89,7 @@ bool ValueInterpolator::updateKeyframesFromStyleChange(
 folly::dynamic ValueInterpolator::interpolate(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder,
     const double fallbackInterpolateThreshold) const {
   const auto toIndex = getToKeyframeIndex(progressProvider);
   const auto fromIndex = toIndex - 1;
@@ -103,9 +109,11 @@ folly::dynamic ValueInterpolator::interpolate(
   const auto keyframeProgress = progressProvider->getKeyframeProgress(fromKeyframe.offset, toKeyframe.offset);
 
   if (keyframeProgress == 1.0) {
+    addToPropsBuilder_(propsBuilder, *toValue);
     return toValue->toDynamic();
   }
   if (keyframeProgress == 0.0) {
+    addToPropsBuilder_(propsBuilder, *fromValue);
     return fromValue->toDynamic();
   }
 
@@ -113,7 +121,8 @@ folly::dynamic ValueInterpolator::interpolate(
       keyframeProgress,
       fromValue,
       toValue,
-      {.node = shadowNode, .fallbackInterpolateThreshold = fallbackInterpolateThreshold});
+      {.node = shadowNode, .fallbackInterpolateThreshold = fallbackInterpolateThreshold},
+      propsBuilder);
 }
 
 folly::dynamic ValueInterpolator::convertOptionalToDynamic(

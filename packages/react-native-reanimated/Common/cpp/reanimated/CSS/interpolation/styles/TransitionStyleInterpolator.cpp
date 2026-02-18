@@ -1,4 +1,5 @@
 #include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
+#include <reanimated/CSS/utils/interpolatorPropsBuilderCallbacks.h>
 
 #include <memory>
 #include <string>
@@ -14,6 +15,7 @@ TransitionStyleInterpolator::TransitionStyleInterpolator(
 folly::dynamic TransitionStyleInterpolator::interpolate(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const TransitionProgressProvider &transitionProgressProvider,
+    const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder,
     const std::unordered_set<std::string> &allowDiscreteProperties) const {
   folly::dynamic result = folly::dynamic::object;
 
@@ -23,7 +25,9 @@ folly::dynamic TransitionStyleInterpolator::interpolate(
     const auto &interpolator = interpolators_.at(propertyName);
     const auto fallbackInterpolateThreshold =
         (allowDiscreteProperties.contains(propertyName)) ? 0.5 : allFallbackInterpolateThreshold;
-    result[propertyName] = interpolator->interpolate(shadowNode, progressProvider, fallbackInterpolateThreshold);
+
+    result[propertyName] =
+        interpolator->interpolate(shadowNode, progressProvider, propsBuilder, fallbackInterpolateThreshold);
   }
 
   return result;

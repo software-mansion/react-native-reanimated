@@ -1,4 +1,5 @@
 #include <jsi/jsi.h>
+#include <reanimated/CSS/utils/animationUpdatesBatchUtils.h>
 #include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/Events/UIEventHandlerRegistry.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
@@ -13,6 +14,7 @@
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
+#include <react/featureflags/ReactNativeFeatureFlags.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
@@ -633,7 +635,89 @@ double ReanimatedModuleProxy::getCssTimestamp() {
   return currentCssTimestamp_;
 }
 
+AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperationsForBackend");
+
+    auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
+    for (const auto surfaceId : flushRequestsCopy) {
+      uiManager_->getShadowTreeRegistry().visit(
+          surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
+    }
+
+    // folly::dynamic updates (CSS transitions/animations); Android only when props reconciliation is OFF.
+    UpdatesBatch cssUpdatesBatch;
+    // raw prop updates coming from AnimatedProps registry (folly::dynamic).
+    UpdatesBatch animatedUpdatesBatch;
+    // AnimatedProps used by the backend; iOS always, Android for layout props when props reconciliation is OFF, and for all props when it is ON.
+    UpdatesBatchAnimatedProps animatedPropsUpdatesBatch;
+    {
+      ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
+
+      auto lock = updatesRegistryManager_->lock();
+
+      if (shouldUpdateCssAnimations_) {
+        currentCssTimestamp_ = getAnimationTimestamp_();
+        auto lock = cssTransitionsRegistry_->lock();
+        // Update CSS transitions and flush updates
+        cssTransitionsRegistry_->update(currentCssTimestamp_);
+        cssTransitionsRegistry_->flushAnimatedPropsUpdates(animatedPropsUpdatesBatch);
+        cssTransitionsRegistry_->flushUpdates(cssUpdatesBatch);
+      }
+
+      {
+        auto lock = animatedPropsRegistry_->lock();
+        // Flush all animated props updates
+        animatedPropsRegistry_->flushUpdates(animatedUpdatesBatch);
+      }
+
+      if (shouldUpdateCssAnimations_) {
+        auto lock = cssAnimationsRegistry_->lock();
+        // Update CSS animations and flush updates
+        cssAnimationsRegistry_->update(currentCssTimestamp_);
+        cssAnimationsRegistry_->flushAnimatedPropsUpdates(animatedPropsUpdatesBatch);
+        cssAnimationsRegistry_->flushUpdates(cssUpdatesBatch);
+      }
+
+      shouldUpdateCssAnimations_ = false;
+    }
+
+    AnimationMutations mutations;
+
+    // collecting css mutations in AnimatedProps format
+    for (auto &[node, animatedProp] : animatedPropsUpdatesBatch) {
+      bool hasLayoutUpdates = mutationHasLayoutUpdates(animatedProp);
+      mutations.batch.push_back(
+          AnimationMutation{node->getTag(), node->getFamilyShared(), std::move(animatedProp), hasLayoutUpdates});
+    }
+
+    // only on Android if props reconciliation is OFF
+    addNonLayoutPropsFromDynamic(mutations, cssUpdatesBatch);
+    mergeAnimationUpdatesBatch(mutations, animatedUpdatesBatch);
+
+    if (mutations.batch.size() == 0 && !cssTransitionsRegistry_->hasUpdates() &&
+        !cssAnimationsRegistry_->hasUpdates()) {
+      // Empty mutations batch implies finished animation
+      std::weak_ptr<UIManagerAnimationBackend> unstableAnimationBackend = uiManager_->unstable_getAnimationBackend();
+      if (auto locked = unstableAnimationBackend.lock()) {
+        std::static_pointer_cast<AnimationBackend>(locked)->stop(callbackId_);
+      }
+
+      isAnimationRunning_ = false;
+    }
+
+    return mutations;
+  }
+
+  return AnimationMutations{};
+}
+
 void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    requestRender_([](double const tmp) {});
+    return;
+  }
+
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
   if (!isTriggeredByEvent) {
@@ -1144,9 +1228,9 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
 
   commitUpdates(rt, updatesBatch);
 
-  // Clear the entire cache after the commit
-  // (we don't know if the view is updated from outside of Reanimated
-  // so we have to clear the entire cache)
+  //   Clear the entire cache after the commit
+  //   (we don't know if the view is updated from outside of Reanimated
+  //   so we have to clear the entire cache)
   viewStylesRepository_->clearNodesCache();
 }
 
@@ -1288,6 +1372,37 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
   uiManager_ = uiManager;
   viewStylesRepository_->setUIManager(uiManager_);
 
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    if (!ReactNativeFeatureFlags::useSharedAnimatedBackend()) {
+      jsLogger_->warnOnJS(
+          "[Reanimated] USE_ANIMATION_BACKEND flag is enabled, but "
+          "ReactNativeFeatureFlags::useSharedAnimatedBackend is disabled. "
+          "Animations will not work properly.");
+    }
+
+    backendCallbacks_ = std::vector<std::function<void(AnimationTimestamp)>>();
+    requestRender_ = [this](std::function<void(const double)> callback) {
+      std::weak_ptr<UIManagerAnimationBackend> unstableAnimationBackend = uiManager_->unstable_getAnimationBackend();
+      backendCallbacks_.push_back(
+          [callback = std::move(callback)](AnimationTimestamp timestamp) { callback(timestamp.count()); });
+
+      if (auto locked = unstableAnimationBackend.lock()) {
+        auto animationBackend = std::static_pointer_cast<AnimationBackend>(locked);
+        if (isAnimationRunning_ == false) {
+          callbackId_ = animationBackend->start([this](AnimationTimestamp timestamp) {
+            auto copy = std::move(backendCallbacks_);
+            for (auto &cb : copy) {
+              cb(timestamp);
+            }
+
+            return performOperationsForBackend();
+          });
+          isAnimationRunning_ = true;
+        }
+      }
+    };
+  }
+
   initializeLayoutAnimationsProxy();
 
   const std::function<void()> request = [weakThis = weak_from_this()]() {
@@ -1298,7 +1413,11 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
 
     strongThis->requestFlushRegistry();
   };
-  mountHook_ = std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, request);
+
+  if constexpr (!StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    mountHook_ = std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, request);
+  }
+
   commitHook_ = std::make_shared<ReanimatedCommitHook>(uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
 }
 

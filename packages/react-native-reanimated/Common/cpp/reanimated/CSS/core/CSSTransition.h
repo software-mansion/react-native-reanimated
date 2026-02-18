@@ -1,5 +1,6 @@
 #pragma once
 
+#include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
@@ -22,13 +23,17 @@ class CSSTransition {
   std::shared_ptr<const ShadowNode> getShadowNode() const;
   double getMinDelay(double timestamp) const;
   TransitionProgressState getState() const;
-  folly::dynamic getCurrentInterpolationStyle() const;
+  folly::dynamic getCurrentInterpolationStyle(const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder) const;
   TransitionProperties getProperties() const;
   PropertyNames getAllowedProperties(const folly::dynamic &oldProps, const folly::dynamic &newProps);
 
   void updateSettings(const PartialCSSTransitionConfig &config);
-  folly::dynamic run(const ChangedProps &changedProps, const folly::dynamic &lastUpdateValue, double timestamp);
-  folly::dynamic update(double timestamp);
+  folly::dynamic run(
+      const ChangedProps &changedProps,
+      const folly::dynamic &lastUpdateValue,
+      double timestamp,
+      const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder);
+  folly::dynamic update(double timestamp, const std::shared_ptr<AnimatedPropsBuilder> &propsBuilder);
 
  private:
   const std::shared_ptr<const ShadowNode> shadowNode_;

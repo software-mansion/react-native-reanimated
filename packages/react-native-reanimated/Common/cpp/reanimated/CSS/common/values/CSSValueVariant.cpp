@@ -155,6 +155,16 @@ CSSValueVariant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::fallbackInter
   return (progress < fallbackInterpolateThreshold) ? *this : to;
 }
 
+template <CSSValueDerived... AllowedTypes>
+std::variant<AllowedTypes...> CSSValueVariant<AllowedTypes...>::getStorage() const {
+  return storage_;
+};
+
+template <CSSValueDerived... AllowedTypes>
+const std::variant<AllowedTypes...> &CSSValueVariant<AllowedTypes...>::getStorageRef() const {
+  return storage_;
+}
+
 template class CSSValueVariant<CSSLength>;
 template class CSSValueVariant<CSSLength, CSSKeyword>;
 template class CSSValueVariant<CSSDouble>;
