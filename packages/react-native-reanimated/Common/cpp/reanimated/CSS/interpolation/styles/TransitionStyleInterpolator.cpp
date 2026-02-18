@@ -31,7 +31,6 @@ bool TransitionStyleInterpolator::createOrUpdateInterpolator(
     const folly::dynamic &newValue,
     const folly::dynamic &lastValue) {
   const auto &interpolator = getOrCreateInterpolator(propertyName);
-  // TODO - check if is good
   return interpolator->updateKeyframes(lastValue.isNull() ? oldValue : lastValue, newValue);
 }
 
