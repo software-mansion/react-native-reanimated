@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <typeinfo>
 
 namespace reanimated::css {
 
@@ -34,6 +35,8 @@ struct CSSValue {
 
   virtual ~CSSValue() = default;
 
+  virtual bool operator==(const CSSValue &other) const = 0;
+
   virtual folly::dynamic toDynamic() const = 0;
   virtual std::string toString() const = 0;
 };
@@ -42,6 +45,11 @@ struct CSSValue {
 template <typename TDerived>
 struct CSSSimpleValue : public CSSValue {
   static constexpr bool is_resolvable_value = false;
+
+  bool operator==(const CSSValue &other) const override {
+    return typeid(*this) == typeid(other) &&
+        *static_cast<const TDerived *>(this) == static_cast<const TDerived &>(other);
+  }
 
   virtual TDerived interpolate(double progress, const TDerived &to) const = 0;
   virtual bool canInterpolateTo(const TDerived &to) const {
@@ -53,6 +61,11 @@ struct CSSSimpleValue : public CSSValue {
 template <typename TDerived, typename TResolved = TDerived>
 struct CSSResolvableValue : public CSSValue {
   static constexpr bool is_resolvable_value = true;
+
+  bool operator==(const CSSValue &other) const override {
+    return typeid(*this) == typeid(other) &&
+        *static_cast<const TDerived *>(this) == static_cast<const TDerived &>(other);
+  }
 
   virtual TDerived interpolate(double progress, const TDerived &to, const ResolvableValueInterpolationContext &context)
       const = 0;
