@@ -5,6 +5,8 @@
 #include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
+#include <folly/dynamic.h>
+#include <jsi/jsi.h>
 #include <memory>
 #include <string>
 
@@ -23,7 +25,8 @@ class CSSTransition {
   folly::dynamic getCurrentInterpolationStyle() const;
   TransitionProperties getProperties() const;
 
-  folly::dynamic run(const CSSTransitionConfig &config, const folly::dynamic &lastUpdateValue, double timestamp);
+  folly::dynamic
+  run(jsi::Runtime &rt, const CSSTransitionConfig &config, const folly::dynamic &lastUpdateValue, double timestamp);
   folly::dynamic update(double timestamp);
 
  private:
@@ -34,8 +37,11 @@ class CSSTransition {
   TransitionStyleInterpolator styleInterpolator_;
   TransitionProgressProvider progressProvider_;
 
-  void
-  handleChangedProperties(const CSSTransitionConfig &config, const folly::dynamic &lastUpdateValue, double timestamp);
+  void handleChangedProperties(
+      jsi::Runtime &rt,
+      const CSSTransitionConfig &config,
+      const folly::dynamic &lastUpdateValue,
+      double timestamp);
   void handleRemovedProperties(const CSSTransitionConfig &config);
   void removeProperty(const std::string &propertyName);
 };

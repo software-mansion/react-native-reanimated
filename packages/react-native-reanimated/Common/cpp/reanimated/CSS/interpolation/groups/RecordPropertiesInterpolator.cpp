@@ -29,29 +29,37 @@ void RecordPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::
   }
 }
 
-bool RecordPropertiesInterpolator::updateKeyframes(const folly::dynamic &fromValue, const folly::dynamic &toValue) {
+bool RecordPropertiesInterpolator::updateKeyframes(
+    jsi::Runtime &rt,
+    const jsi::Value &fromValue,
+    const jsi::Value &toValue) {
   // TODO - maybe add a possibility to remove interpolators that are no longer
   // used (for now, for simplicity, we only add new ones)
-  const folly::dynamic emptyObject = folly::dynamic::object();
-  const auto null = folly::dynamic();
+  const auto fromObject = fromValue.isUndefined() ? jsi::Object(rt) : fromValue.asObject(rt);
+  const auto toObject = toValue.isUndefined() ? jsi::Object(rt) : toValue.asObject(rt);
 
-  const auto &fromObj = fromValue.empty() ? emptyObject : fromValue;
-  const auto &toObj = toValue.empty() ? emptyObject : toValue;
+  const auto fromPropertyNames = fromObject.getPropertyNames(rt);
+  const auto toPropertyNames = toObject.getPropertyNames(rt);
+  const auto fromSize = fromPropertyNames.size(rt);
+  const auto toSize = toPropertyNames.size(rt);
 
   std::unordered_set<std::string> propertyNamesSet;
-  for (const auto &key : fromObj.keys()) {
-    propertyNamesSet.insert(key.asString());
+  for (size_t i = 0; i < fromSize; ++i) {
+    propertyNamesSet.insert(fromPropertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt));
   }
-  for (const auto &key : toObj.keys()) {
-    propertyNamesSet.insert(key.asString());
+  for (size_t i = 0; i < toSize; ++i) {
+    propertyNamesSet.insert(toPropertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt));
   }
 
   bool areAllPropsReversed = true;
 
   for (const auto &propertyName : propertyNamesSet) {
     maybeCreateInterpolator(propertyName);
+    const auto propNameID = jsi::PropNameID::forUtf8(rt, propertyName);
     areAllPropsReversed &= interpolators_[propertyName]->updateKeyframes(
-        fromObj.getDefault(propertyName, null), toObj.getDefault(propertyName, null));
+        rt,
+        fromObject.hasProperty(rt, propNameID) ? fromObject.getProperty(rt, propNameID) : jsi::Value::undefined(),
+        toObject.hasProperty(rt, propNameID) ? toObject.getProperty(rt, propNameID) : jsi::Value::undefined());
   }
 
   return areAllPropsReversed;

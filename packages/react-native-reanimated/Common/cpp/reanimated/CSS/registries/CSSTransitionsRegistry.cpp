@@ -20,7 +20,10 @@ bool CSSTransitionsRegistry::hasUpdates() const {
   return !runningTransitionTags_.empty() || !delayedTransitionsManager_.empty();
 }
 
-void CSSTransitionsRegistry::run(std::shared_ptr<const ShadowNode> shadowNode, const CSSTransitionConfig &config) {
+void CSSTransitionsRegistry::run(
+    jsi::Runtime &rt,
+    std::shared_ptr<const ShadowNode> shadowNode,
+    const CSSTransitionConfig &config) {
   const auto viewTag = shadowNode->getTag();
 
   if (!registry_.contains(viewTag)) {
@@ -33,7 +36,7 @@ void CSSTransitionsRegistry::run(std::shared_ptr<const ShadowNode> shadowNode, c
   const auto &lastUpdates = getUpdatesFromRegistry(shadowNode->getTag());
   const auto timestamp = getCurrentTimestamp_();
 
-  auto initialUpdate = transition->run(config, lastUpdates, timestamp);
+  auto initialUpdate = transition->run(rt, config, lastUpdates, timestamp);
 
   scheduleOrActivateTransition(transition);
   updateInUpdatesRegistry(transition, initialUpdate);

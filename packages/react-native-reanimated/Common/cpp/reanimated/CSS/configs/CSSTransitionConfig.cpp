@@ -1,6 +1,5 @@
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
-
-#include <jsi/JSIDynamic.h>
+#include <reanimated/CSS/configs/common.h>
 
 namespace reanimated::css {
 
@@ -25,13 +24,13 @@ CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value 
       const auto propertySettingsObj = propertyValue.asObject(rt);
 
       const auto valueArray = propertySettingsObj.getProperty(rt, "value").asObject(rt).asArray(rt);
-      const auto oldValue = valueArray.getValueAtIndex(rt, 0);
-      const auto newValue = valueArray.getValueAtIndex(rt, 1);
+      auto oldValue = valueArray.getValueAtIndex(rt, 0);
+      auto newValue = valueArray.getValueAtIndex(rt, 1);
 
       result.changedProperties.emplace(
           propertyName,
           CSSTransitionPropertySettings{
-              std::make_pair(dynamicFromValue(rt, oldValue), dynamicFromValue(rt, newValue)),
+              std::make_pair(std::move(oldValue), std::move(newValue)),
               getDuration(rt, propertySettingsObj),
               getTimingFunction(rt, propertySettingsObj),
               getDelay(rt, propertySettingsObj),

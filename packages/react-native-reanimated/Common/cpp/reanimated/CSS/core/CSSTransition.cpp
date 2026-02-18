@@ -1,5 +1,7 @@
 #include <reanimated/CSS/core/CSSTransition.h>
 
+#include <jsi/JSIDynamic.h>
+
 #include <memory>
 #include <string>
 #include <utility>
@@ -38,10 +40,13 @@ TransitionProperties CSSTransition::getProperties() const {
   return transitionProperties_;
 }
 
-folly::dynamic
-CSSTransition::run(const CSSTransitionConfig &config, const folly::dynamic &lastUpdateValue, const double timestamp) {
+folly::dynamic CSSTransition::run(
+    jsi::Runtime &rt,
+    const CSSTransitionConfig &config,
+    const folly::dynamic &lastUpdateValue,
+    const double timestamp) {
   // Update interpolators and progress providers for changed properties
-  handleChangedProperties(config, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
+  handleChangedProperties(rt, config, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
   // Remove interpolators and progress providers for no longer transitioned props
   handleRemovedProperties(config);
   // Return the first transition frame
@@ -61,6 +66,7 @@ folly::dynamic CSSTransition::update(const double timestamp) {
 }
 
 void CSSTransition::handleChangedProperties(
+    jsi::Runtime &rt,
     const CSSTransitionConfig &config,
     const folly::dynamic &lastUpdateValue,
     const double timestamp) {
@@ -77,10 +83,17 @@ void CSSTransition::handleChangedProperties(
     transitionProperties_.insert(propertyName);
 
     // Update the transition style interpolator
-    const auto valueChange = propertySettings.value;
-    const auto lastValue = lastUpdateValue.getDefault(propertyName, null);
-    const auto isReversed =
-        styleInterpolator_.createOrUpdateInterpolator(propertyName, valueChange.first, valueChange.second, lastValue);
+    const auto &valueChange = propertySettings.value;
+
+    bool isReversed;
+    if (lastUpdateValue.count(propertyName)) {
+      // TODO - get rid of lastValue dynamic in the future
+      isReversed = styleInterpolator_.createOrUpdateInterpolator(
+          rt, propertyName, jsi::valueFromDynamic(rt, lastUpdateValue.at(propertyName)), valueChange.second);
+    } else {
+      isReversed =
+          styleInterpolator_.createOrUpdateInterpolator(rt, propertyName, valueChange.first, valueChange.second);
+    }
 
     // We still pass allowDiscrete to use correct threshold for interpolation between incompatible values
     // (e.g. when someone passes a keyword and a numeric value - in this case we interpolate them as discrete values)
