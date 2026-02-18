@@ -44,7 +44,7 @@ export interface IInlinePropManager {
 export type AnimatedComponentTypeInternal = Component &
   IAnimatedComponentInternal;
 
-// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents, @typescript-eslint/no-explicit-any
 export type PropUpdates = StyleProps | AnimatedStyle<any>;
 
 export interface IPropsFilter {
@@ -160,6 +160,7 @@ export interface IAnimatedComponentInternal
 
 export type NestedArray<T> = T | NestedArray<T>[];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyComponent = React.ComponentType<any>;
 
 export interface InitialComponentProps extends Record<string, unknown> {

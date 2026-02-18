@@ -80,6 +80,7 @@ export const withDecay = function (
     if (userConfig) {
       Object.keys(userConfig).forEach(
         (key) =>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ((config as any)[key] = userConfig[key as keyof typeof userConfig])
       );
     }

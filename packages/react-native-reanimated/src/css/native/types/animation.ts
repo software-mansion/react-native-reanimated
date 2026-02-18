@@ -15,7 +15,8 @@ type CSSPropKeyframe<V> = {
 export type PropsWithKeyframes<TProps = UnknownRecord> = {
   [P in keyof TProps]: TProps[P] extends infer U | undefined
     ? U extends object
-      ? U extends Array<any>
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        U extends Array<any>
         ? CSSPropKeyframe<U> // If the value is an array, don't iterate over its values and treat it as the end value
         : { [K in keyof U]: PropsWithKeyframes<U[K]> }
       : P extends 'transform' // Don't allow transform to be passed as a string in keyframes

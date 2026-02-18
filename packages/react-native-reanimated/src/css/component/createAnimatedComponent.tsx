@@ -26,7 +26,7 @@ type AnimatedComponentType<
  * @deprecated Please use `Animated.FlatList` component instead of calling
  *   `Animated.createAnimatedComponent(FlatList)` manually.
  */
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createAnimatedComponent<T = any>(
   Component: typeof FlatList<T>
 ): AnimatedComponentType<
@@ -41,6 +41,7 @@ export function createAnimatedComponent<T = any>(
  * @returns A component that Reanimated is capable of animating.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createAnimatedComponent<TInstance extends ComponentType<any>>(
   Component: TInstance
 ): AnimatedComponentType<
@@ -48,6 +49,7 @@ export function createAnimatedComponent<TInstance extends ComponentType<any>>(
   ComponentRef<TInstance>
 >;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createAnimatedComponent<TInstance extends ComponentType<any>>(
   Component: TInstance
 ): AnimatedComponentType<

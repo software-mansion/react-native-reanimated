@@ -17,6 +17,7 @@ import { AnimatedView } from './View';
 
 const AnimatedFlatList = createAnimatedComponent(FlatList);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface CellRendererComponentProps<ItemT = any> {
   index: number;
   item: ItemT;
@@ -28,13 +29,14 @@ interface CellRendererComponentProps<ItemT = any> {
 const createCellRendererComponent = (
   itemLayoutAnimationRef?: RefObject<ILayoutAnimationBuilder | undefined>,
   cellRendererComponentStyleRef?: RefObject<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ReanimatedFlatListPropsWithLayout<any>['CellRendererComponentStyle']
   >
 ) => {
   const CellRendererComponent = (props: CellRendererComponentProps) => {
     return (
       <AnimatedView
-        // TODO TYPESCRIPT This is temporary cast is to get rid of .d.ts file.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         layout={itemLayoutAnimationRef?.current as any}
         onLayout={props.onLayout}
         style={[
@@ -94,7 +96,7 @@ interface AnimatedFlatListComplement<T> extends FlatList<T> {
 }
 
 // We need explicit any here, because this is the exact same type that is used in React Native types.
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const FlatListRender = function <Item = any>(
   props: ReanimatedFlatListPropsWithLayout<Item>,
   ref: React.Ref<FlatList>
@@ -152,7 +154,7 @@ const FlatListRender = function <Item = any>(
 
 export const ReanimatedFlatList = FlatListRender as <
   // We need explicit any here, because this is the exact same type that is used in React Native types.
-
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ItemT = any,
 >(
   props: ReanimatedFlatListPropsWithLayout<ItemT> & {
@@ -160,5 +162,6 @@ export const ReanimatedFlatList = FlatListRender as <
   }
 ) => React.ReactElement;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ReanimatedFlatList<T = any> = typeof AnimatedFlatList &
   AnimatedFlatListComplement<T>;

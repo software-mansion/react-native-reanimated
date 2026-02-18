@@ -24,6 +24,7 @@ function parseAnimationName(
 }
 
 export const create = <T extends NamedStyles<T>>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   styles: T & NamedStyles<any>
 ): T => {
   // TODO - implement more optimizations and correctness checks in dev here

@@ -28,7 +28,7 @@ const config = tsEslint.config(
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
       '@typescript-eslint/no-empty-function': 'error',
-      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-expressions': 'error',
       'n/no-unpublished-import': [
         'warn',

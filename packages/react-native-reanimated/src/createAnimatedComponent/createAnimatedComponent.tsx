@@ -31,6 +31,7 @@ export type AnimatedComponentType<
   }
 ) => ReactNode;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnimatableComponent<C extends ComponentType<any>> = C & {
   jsProps?: string[];
 };
@@ -39,7 +40,7 @@ type AnimatableComponent<C extends ComponentType<any>> = C & {
  * @deprecated Please use `Animated.FlatList` component instead of calling
  *   `Animated.createAnimatedComponent(FlatList)` manually.
  */
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createAnimatedComponent<T = any>(
   Component: typeof FlatList<T>,
   options?: Options<InitialComponentProps>
@@ -61,6 +62,7 @@ export function createAnimatedComponent<T = any>(
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent
  */
 export function createAnimatedComponent<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TInstance extends AnimatableComponent<ComponentType<any>>,
 >(
   Component: TInstance,
@@ -68,6 +70,7 @@ export function createAnimatedComponent<
 ): AnimatedComponentType<Readonly<React.ComponentProps<TInstance>>, TInstance>;
 
 export function createAnimatedComponent<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TInstance extends AnimatableComponent<ComponentType<any>>,
 >(
   Component: TInstance,

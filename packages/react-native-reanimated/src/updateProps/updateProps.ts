@@ -77,8 +77,11 @@ if (SHOULD_BE_USE_WEB) {
 
 export const updatePropsJestWrapper = (
   viewDescriptors: ViewDescriptorsWrapper,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updates: AnimatedStyle<any>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animatedValues: RefObject<AnimatedStyle<any>>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   adapters: ((updates: AnimatedStyle<any>) => void)[]
 ): void => {
   adapters.forEach((adapter) => {

@@ -51,6 +51,7 @@ function AnimatedComponentPropsTest() {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function AnimatedComponentPropsTestReanimatedProps(prop: any) {
   class CustomClassComponent extends React.Component<unknown> {
     render() {
