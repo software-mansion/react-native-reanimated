@@ -9,8 +9,7 @@
     "worklets"
   ],
   "scripts": {
-    "build": "yarn workspace babel-plugin-worklets build && bob build && yarn build:unpackers",
-    "build:unpackers": "node ./scripts/export-unpackers.js",
+    "build": "yarn workspace babel-plugin-worklets build && bob build",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
     "find-unused-code:js": "knip",
     "format": "yarn format:js && yarn format:plugin && yarn format:common && yarn format:android && yarn format:apple",

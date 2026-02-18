@@ -15,15 +15,17 @@ export function installSynchronizableUnpacker() {
   function synchronizableUnpacker<TValue>(
     synchronizableRef: SynchronizableRef<TValue>
   ): Synchronizable<TValue> {
-    if (globalThis.failAfterLogBox === 1) {
-      throw new Error('test');
-    }
     const synchronizable =
       synchronizableRef as unknown as Synchronizable<TValue>;
     const proxy = globalThis.__workletsModuleProxy;
 
     synchronizable.__synchronizableRef = true;
     synchronizable.getDirty = () => {
+      // @ts-ignore wwww
+      if (globalThis.__RUNTIME_KIND !== 1 && globalThis.__failAfterLogBox) {
+        // eslint-disable-next-line reanimated/use-worklets-error
+        throw new Error('test');
+      }
       return proxy.synchronizableGetDirty(synchronizable);
     };
     synchronizable.getBlocking = () => {
