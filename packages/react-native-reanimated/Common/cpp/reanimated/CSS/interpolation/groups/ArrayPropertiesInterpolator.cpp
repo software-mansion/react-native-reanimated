@@ -22,36 +22,29 @@ void ArrayPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::V
   }
 }
 
-bool ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
-    const folly::dynamic &oldStyleValue,
-    const folly::dynamic &newStyleValue,
-    const folly::dynamic &lastUpdateValue) {
+bool ArrayPropertiesInterpolator::updateKeyframes(const folly::dynamic &fromValue, const folly::dynamic &toValue) {
   const auto emptyArray = folly::dynamic::array();
   const auto null = folly::dynamic();
 
-  const auto &oldStyleArray = oldStyleValue.empty() ? emptyArray : oldStyleValue;
-  const auto &newStyleArray = newStyleValue.empty() ? emptyArray : newStyleValue;
-  const auto &lastUpdateArray = lastUpdateValue.empty() ? emptyArray : lastUpdateValue;
+  const auto &fromArray = fromValue.empty() ? emptyArray : fromValue;
+  const auto &toArray = toValue.empty() ? emptyArray : toValue;
 
-  const size_t oldSize = oldStyleArray.size();
-  const size_t newSize = newStyleArray.size();
-  const size_t lastSize = lastUpdateArray.size();
+  const size_t oldSize = fromArray.size();
+  const size_t newSize = toArray.size();
   const size_t valuesCount = std::max(oldSize, newSize);
 
   resizeInterpolators(valuesCount);
 
-  bool allEqualReversingAdjustedStartValue = true;
+  bool areAllPropsReversed = true;
 
   for (size_t i = 0; i < valuesCount; ++i) {
     // These index checks ensure that interpolation works between 2 arrays
     // with different lengths
-    allEqualReversingAdjustedStartValue &= interpolators_[i]->updateKeyframesFromStyleChange(
-        i < oldSize ? oldStyleArray[i] : null,
-        i < newSize ? newStyleArray[i] : null,
-        i < lastSize ? lastUpdateArray[i] : null);
+    areAllPropsReversed &=
+        interpolators_[i]->updateKeyframes(i < oldSize ? fromArray[i] : null, i < newSize ? toArray[i] : null);
   }
 
-  return allEqualReversingAdjustedStartValue;
+  return areAllPropsReversed;
 }
 
 folly::dynamic ArrayPropertiesInterpolator::mapInterpolators(

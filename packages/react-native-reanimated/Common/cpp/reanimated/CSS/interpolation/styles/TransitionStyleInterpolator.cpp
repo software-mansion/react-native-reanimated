@@ -31,7 +31,7 @@ bool TransitionStyleInterpolator::createOrUpdateInterpolator(
     const folly::dynamic &newValue,
     const folly::dynamic &lastValue) {
   const auto &interpolator = getOrCreateInterpolator(propertyName);
-  return interpolator->updateKeyframesFromStyleChange(oldValue, newValue, lastValue);
+  return interpolator->updateKeyframes(lastValue.isNull() ? oldValue : lastValue, newValue);
 }
 
 void TransitionStyleInterpolator::setAllowDiscrete(const std::string &propertyName, const bool allowDiscrete) {

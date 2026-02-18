@@ -29,38 +29,32 @@ void RecordPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::
   }
 }
 
-bool RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
-    const folly::dynamic &oldStyleValue,
-    const folly::dynamic &newStyleValue,
-    const folly::dynamic &lastUpdateValue) {
+bool RecordPropertiesInterpolator::updateKeyframes(const folly::dynamic &fromValue, const folly::dynamic &toValue) {
   // TODO - maybe add a possibility to remove interpolators that are no longer
   // used (for now, for simplicity, we only add new ones)
   const folly::dynamic emptyObject = folly::dynamic::object();
   const auto null = folly::dynamic();
 
-  const auto &oldStyleObject = oldStyleValue.empty() ? emptyObject : oldStyleValue;
-  const auto &newStyleObject = newStyleValue.empty() ? emptyObject : newStyleValue;
-  const auto &lastUpdateObject = lastUpdateValue.empty() ? emptyObject : lastUpdateValue;
+  const auto &fromObj = fromValue.empty() ? emptyObject : fromValue;
+  const auto &toObj = toValue.empty() ? emptyObject : toValue;
 
   std::unordered_set<std::string> propertyNamesSet;
-  for (const auto &key : oldStyleObject.keys()) {
+  for (const auto &key : fromObj.keys()) {
     propertyNamesSet.insert(key.asString());
   }
-  for (const auto &key : newStyleObject.keys()) {
+  for (const auto &key : toObj.keys()) {
     propertyNamesSet.insert(key.asString());
   }
 
-  bool allEqualReversingAdjustedStartValue = true;
+  bool areAllPropsReversed = true;
 
   for (const auto &propertyName : propertyNamesSet) {
     maybeCreateInterpolator(propertyName);
-    allEqualReversingAdjustedStartValue &= interpolators_[propertyName]->updateKeyframesFromStyleChange(
-        oldStyleObject.getDefault(propertyName, null),
-        newStyleObject.getDefault(propertyName, null),
-        lastUpdateObject.getDefault(propertyName, null));
+    areAllPropsReversed &= interpolators_[propertyName]->updateKeyframes(
+        fromObj.getDefault(propertyName, null), toObj.getDefault(propertyName, null));
   }
 
-  return allEqualReversingAdjustedStartValue;
+  return areAllPropsReversed;
 }
 
 folly::dynamic RecordPropertiesInterpolator::mapInterpolators(

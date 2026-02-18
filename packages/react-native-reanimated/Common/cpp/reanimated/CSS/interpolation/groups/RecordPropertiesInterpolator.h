@@ -17,10 +17,7 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
   virtual ~RecordPropertiesInterpolator() = default;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
-  bool updateKeyframesFromStyleChange(
-      const folly::dynamic &oldStyleValue,
-      const folly::dynamic &newStyleValue,
-      const folly::dynamic &lastUpdateValue) override;
+  bool updateKeyframes(const folly::dynamic &fromValue, const folly::dynamic &toValue) override;
 
  protected:
   folly::dynamic mapInterpolators(const std::function<folly::dynamic(PropertyInterpolator &)> &callback) const override;
