@@ -180,8 +180,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   bool shouldFlushRegistry_ = false;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
 
-  RequestRenderFunction requestRender_;
   std::unique_ptr<UIEventHandlerRegistry> eventHandlerRegistry_;
+  RequestRenderFunction requestRender_;
   volatile bool renderRequested_{false};
   bool isAnimationRunning_{false};
   CallbackId callbackId_;
