@@ -47,7 +47,7 @@ export default function ColorExample() {
   });
 
   // TODO: overlayColor
-  
+
   const handleToggle = () => {
     ref.current = 1 - ref.current;
     sv.value = withTiming(ref.current, { duration: 1500 });
@@ -56,17 +56,24 @@ export default function ColorExample() {
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.box, animatedBackgroundColor]} />
-      <Animated.View style={[styles.box, styles.borderBox, animatedBorderColor]} />
-      <Animated.Text style={[styles.bigText, animatedTextColor]}>Reanimated</Animated.Text>
-      <Animated.View style={[styles.box, styles.shadowBox, animatedBoxShadow]} />
+      <Animated.View
+        style={[styles.box, styles.borderBox, animatedBorderColor]}
+      />
+      <Animated.Text style={[styles.bigText, animatedTextColor]}>
+        Reanimated
+      </Animated.Text>
+      <Animated.View
+        style={[styles.box, styles.shadowBox, animatedBoxShadow]}
+      />
       <Animated.Image
         style={[styles.image, animatedTintColor]}
         source={require('./assets/logo.png')}
       />
-       <Animated.Text style={[styles.textShadowStyle, animatedTextShadowColor]}>
+      <Animated.Text style={[styles.textShadowStyle, animatedTextShadowColor]}>
         Text Shadow
       </Animated.Text>
-      <Animated.Text style={[styles.textDecorationStyle, animatedTextDecorationColor]}>
+      <Animated.Text
+        style={[styles.textDecorationStyle, animatedTextDecorationColor]}>
         Text Decoration
       </Animated.Text>
       <View style={styles.buttons}>
