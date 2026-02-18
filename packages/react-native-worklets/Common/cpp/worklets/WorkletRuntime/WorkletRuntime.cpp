@@ -1,5 +1,4 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
-#include <worklets/Resources/Unpackers.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/JSLogger.h>
@@ -104,6 +103,10 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
   auto script = jsiWorkletsModuleProxy->getScript();
   const auto &sourceUrl = jsiWorkletsModuleProxy->getSourceUrl();
   auto runtimeBindings = jsiWorkletsModuleProxy->getRuntimeBindings();
+#else
+  // Legacy behavior
+  const auto unpackerLoader = jsiWorkletsModuleProxy->getUnpackerLoader();
+  unpackerLoader->installUnpackers(rt);
 #endif // WORKLETS_BUNDLE_MODE_ENABLED
 
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
@@ -131,16 +134,6 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
 
   WorkletRuntimeDecorator::postEvaluateScript(rt, runtimeBindings);
 
-#else
-  // Legacy behavior
-  auto valueUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
-  rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
-
-  auto synchronizableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(SynchronizableUnpackerCode);
-  rt.evaluateJavaScript(synchronizableUnpackerBuffer, "synchronizableUnpacker");
-
-  auto customSerializableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(CustomSerializableUnpackerCode);
-  rt.evaluateJavaScript(customSerializableUnpackerBuffer, "customSerializableUnpacker");
 #endif // WORKLETS_BUNDLE_MODE_ENABLED
   try {
     memoryManager_->loadAllCustomSerializables(shared_from_this());

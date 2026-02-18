@@ -87,6 +87,12 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     return true;
   }
 
+  @OptIn(markerClass = FrameworkAPI.class)
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public void start() {
+    startCpp();
+  }
+
   public void requestAnimationFrame(AnimationFrameCallback animationFrameCallback) {
     mAnimationFrameQueue.requestAnimationFrame(animationFrameCallback);
   }
@@ -119,6 +125,8 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
   }
 
   private native void invalidateCpp();
+
+  private native void startCpp();
 
   @Override
   public void onHostResume() {

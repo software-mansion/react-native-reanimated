@@ -3,10 +3,13 @@
 import { checkCppVersion } from '../debug/checkCppVersion';
 import { jsVersion } from '../debug/jsVersion';
 import { WorkletsError } from '../debug/WorkletsError';
+import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
+import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
 import type { SerializableRef, SynchronizableRef } from '../memory/types';
+import { installValueUnpacker } from '../memory/valueUnpacker';
 import { RuntimeKind } from '../runtimeKind';
 import { WorkletsTurboModule } from '../specs';
-import type { WorkletRuntime } from '../types';
+import type { WorkletFunction, WorkletRuntime } from '../types';
 import type {
   IWorkletsModule,
   WorkletsModuleProxy,
@@ -25,12 +28,28 @@ class NativeWorklets implements IWorkletsModule {
       global.__workletsModuleProxy === undefined &&
       globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative
     ) {
-      WorkletsTurboModule?.installTurboModule();
+      WorkletsTurboModule!.installTurboModule();
       if (__DEV__ && globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
         console.log(
           '[Worklets] Bundle mode initialization: Downloaded the bundle for Worklet Runtimes.'
         );
       }
+      (global.__workletsModuleProxy as WorkletsModuleProxy).loadUnpackers(
+        (installValueUnpacker as WorkletFunction).__initData!.code,
+        (installSynchronizableUnpacker as WorkletFunction).__initData!.code,
+        (installCustomSerializableUnpacker as WorkletFunction).__initData!.code,
+        (installValueUnpacker as WorkletFunction).__initData!.location ?? '',
+        (installSynchronizableUnpacker as WorkletFunction).__initData!
+          .location ?? '',
+        (installCustomSerializableUnpacker as WorkletFunction).__initData!
+          .location ?? '',
+        (installValueUnpacker as WorkletFunction).__initData!.sourceMap ?? '',
+        (installSynchronizableUnpacker as WorkletFunction).__initData!
+          .sourceMap ?? '',
+        (installCustomSerializableUnpacker as WorkletFunction).__initData!
+          .sourceMap ?? ''
+      );
+      WorkletsTurboModule!.start();
     }
     if (global.__workletsModuleProxy === undefined) {
       throw new WorkletsError(
@@ -49,6 +68,30 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       this.#workletsModuleProxy.createSerializableBoolean(true);
     this.#serializableFalse =
       this.#workletsModuleProxy.createSerializableBoolean(false);
+  }
+
+  loadUnpackers(
+    valueUnpackerCode: string,
+    synchronizableUnpackerCode: string,
+    customSerializableUnpackerCode: string,
+    valueUnpackerLocation: string,
+    synchronizableUnpackerLocation: string,
+    customSerializableUnpackerLocation: string,
+    valueUnpackerSourceMap: string,
+    synchronizableUnpackerSourceMap: string,
+    customSerializableUnpackerSourceMap: string
+  ) {
+    return this.#workletsModuleProxy.loadUnpackers(
+      valueUnpackerCode,
+      synchronizableUnpackerCode,
+      customSerializableUnpackerCode,
+      valueUnpackerLocation,
+      synchronizableUnpackerLocation,
+      customSerializableUnpackerLocation,
+      valueUnpackerSourceMap,
+      synchronizableUnpackerSourceMap,
+      customSerializableUnpackerSourceMap
+    );
   }
 
   createSerializable<TValue>(

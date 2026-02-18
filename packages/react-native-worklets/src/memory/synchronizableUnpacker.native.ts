@@ -3,16 +3,21 @@
 import { createSerializable } from './serializable';
 import { type Synchronizable, type SynchronizableRef } from './types';
 
-export function __installUnpacker() {
+export function installSynchronizableUnpacker() {
+  'worklet';
+  'no-worklet-closure';
   // TODO: Add cache for synchronizables.
   const serializer =
-    !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE_ENABLED
+    globalThis.__RUNTIME_KIND === 1 || globalThis._WORKLETS_BUNDLE_MODE_ENABLED
       ? createSerializable
       : (value: unknown) => globalThis.__serializer(value);
 
   function synchronizableUnpacker<TValue>(
     synchronizableRef: SynchronizableRef<TValue>
   ): Synchronizable<TValue> {
+    if (globalThis.failAfterLogBox === 1) {
+      throw new Error('test');
+    }
     const synchronizable =
       synchronizableRef as unknown as Synchronizable<TValue>;
     const proxy = globalThis.__workletsModuleProxy;

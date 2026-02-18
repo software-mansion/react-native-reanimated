@@ -7,6 +7,7 @@
 
 #include <worklets/SharedItems/MemoryManager.h>
 #include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/UnpackerLoader.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
@@ -18,7 +19,7 @@
 #endif // __ANDROID__
 
 #include <jsi/jsi.h>
-
+#include <jsireact/JSIExecutor.h>
 #include <memory>
 #include <string>
 #include <vector>
@@ -41,7 +42,8 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
       const std::shared_ptr<MemoryManager> &memoryManager,
       const std::shared_ptr<RuntimeManager> &runtimeManager,
       const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
-      const std::shared_ptr<RuntimeBindings> &runtimeBindings);
+      const std::shared_ptr<RuntimeBindings> &runtimeBindings,
+      const std::shared_ptr<UnpackerLoader> &unpackerLoader);
 
   JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other) = default;
 
@@ -87,6 +89,10 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
     return runtimeBindings_;
   }
 
+  [[nodiscard]] std::shared_ptr<UnpackerLoader> getUnpackerLoader() const {
+    return unpackerLoader_;
+  }
+
  private:
   const bool isDevBundle_;
   const std::shared_ptr<const ScriptBuffer> script_;
@@ -98,6 +104,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
   const std::shared_ptr<RuntimeManager> runtimeManager_;
   const std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
   const std::shared_ptr<RuntimeBindings> runtimeBindings_;
+  const std::shared_ptr<UnpackerLoader> unpackerLoader_;
 };
 
 } // namespace worklets

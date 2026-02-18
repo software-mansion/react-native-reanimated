@@ -11,7 +11,9 @@ declare global {
     | undefined;
 }
 
-function __installUnpacker() {
+export function installValueUnpacker() {
+  'worklet';
+  'no-worklet-closure';
   const workletsCache = new Map<number, () => unknown>();
   const handleCache = new WeakMap<object, unknown>();
 
@@ -20,8 +22,6 @@ function __installUnpacker() {
     category?: string,
     remoteFunctionName?: string
   ): unknown {
-    // eslint-disable-next-line strict
-    'use strict';
     const workletHash = objectToUnpack.__workletHash;
     if (workletHash !== undefined) {
       let workletFun = workletsCache.get(workletHash);

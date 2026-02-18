@@ -47,6 +47,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       const std::shared_ptr<const ScriptBuffer> &script,
       const std::string &sourceURL);
 
+  void startCpp();
+
   void invalidateCpp();
 
   template <class Signature>
