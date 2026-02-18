@@ -16,45 +16,35 @@ export default function ColorExample() {
 
   const sv = useSharedValue(0);
 
-  const style1 = useAnimatedStyle(() => {
+  const animatedBgColor = useAnimatedStyle(() => {
     return { backgroundColor: makeColor(sv.value) };
   });
 
-  const style2 = useAnimatedStyle(() => {
+  const animatedBorderColor = useAnimatedStyle(() => {
     return { borderColor: makeColor(sv.value) };
   });
 
-  const style3 = useAnimatedStyle(() => {
+  const animatedTextColor = useAnimatedStyle(() => {
     return { color: makeColor(sv.value) };
   });
 
-  const style4 = useAnimatedStyle(() => {
+  const animatedBoxShadow = useAnimatedStyle(() => {
     return {
       boxShadow: '20px 20px 5px 0px ' + makeColor(sv.value),
     };
   });
 
-  const style5 = useAnimatedStyle(() => {
+  const animatedTintColor = useAnimatedStyle(() => {
     return { tintColor: makeColor(sv.value) };
   });
 
-  const styleTextShadow = useAnimatedStyle(() => {
-    return {
-      textShadowColor: makeColor(sv.value),
-      textShadowOffset: { width: 3, height: 3 },
-      textShadowRadius: 2,
-    };
+  const animatedTextShadowColor = useAnimatedStyle(() => {
+    return { textShadowColor: makeColor(sv.value) };
   });
 
-  const styleTextDecoration = useAnimatedStyle(() => {
-    return {
-      textDecorationLine: 'underline',
-      textDecorationColor: makeColor(sv.value),
-      fontSize: 30,
-      fontWeight: '600',
-    };
+  const animatedTextDecorationColor = useAnimatedStyle(() => {
+    return { textDecorationColor: makeColor(sv.value) };
   });
-
 
   // TODO: overlayColor
   
@@ -65,18 +55,18 @@ export default function ColorExample() {
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.box1, style1]} />
-      <Animated.View style={[styles.box2, style2]} />
-      <Animated.Text style={[styles.text3, style3]}>Reanimated</Animated.Text>
-      <Animated.View style={[styles.box4, style4]} />
+      <Animated.View style={[styles.box, animatedBgColor]} />
+      <Animated.View style={[styles.box, styles.borderBox, animatedBorderColor]} />
+      <Animated.Text style={[styles.bigText, animatedTextColor]}>Reanimated</Animated.Text>
+      <Animated.View style={[styles.box, styles.shadowBox, animatedBoxShadow]} />
       <Animated.Image
-        style={[styles.image5, style5]}
+        style={[styles.image, animatedTintColor]}
         source={require('./assets/logo.png')}
       />
-       <Animated.Text style={[styleTextShadow]}>
+       <Animated.Text style={[styles.textShadowStyle, animatedTextShadowColor]}>
         Text Shadow
       </Animated.Text>
-      <Animated.Text style={[styleTextDecoration]}>
+      <Animated.Text style={[styles.textDecorationStyle, animatedTextDecorationColor]}>
         Text Decoration
       </Animated.Text>
       <View style={styles.buttons}>
@@ -92,28 +82,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  box1: {
+  box: {
     width: 100,
     height: 100,
     backgroundColor: 'black',
     marginBottom: 20,
   },
-  box2: {
-    width: 100,
-    height: 100,
+  borderBox: {
     borderWidth: 10,
     borderColor: 'black',
-    marginBottom: 20,
   },
-  text3: {
+  bigText: {
     fontSize: 40,
     fontWeight: 'bold',
     color: 'black',
     marginBottom: 20,
   },
-  box4: {
-    width: 100,
-    height: 100,
+  shadowBox: {
     backgroundColor: 'lightgray',
     shadowOffset: {
       width: 20,
@@ -125,9 +110,22 @@ const styles = StyleSheet.create({
     elevation: 20,
     marginBottom: 50,
   },
-  image5: {
+  image: {
     width: 150,
     height: 120,
+  },
+  textShadowStyle: {
+    fontSize: 30,
+    fontWeight: '600',
+    textShadowOffset: { width: 3, height: 3 },
+    textShadowRadius: 2,
+    marginBottom: 20,
+  },
+  textDecorationStyle: {
+    fontSize: 30,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+    marginBottom: 20,
   },
   buttons: {
     marginTop: 20,
