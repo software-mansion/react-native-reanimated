@@ -83,10 +83,7 @@ bool CSSValueVariant<AllowedTypes...>::operator==(const CSSValueVariant &other) 
 
 template <CSSValueDerived... AllowedTypes>
 bool CSSValueVariant<AllowedTypes...>::operator==(const CSSValue &other) const {
-  if (auto *o = dynamic_cast<const CSSValueVariant *>(&other)) {
-    return *this == *o;
-  }
-  return false;
+  return typeid(*this) == typeid(other) && *this == static_cast<const CSSValueVariant &>(other);
 }
 
 template <CSSValueDerived... AllowedTypes>
