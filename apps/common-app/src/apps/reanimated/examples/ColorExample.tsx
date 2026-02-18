@@ -16,7 +16,7 @@ export default function ColorExample() {
 
   const sv = useSharedValue(0);
 
-  const animatedBgColor = useAnimatedStyle(() => {
+  const animatedBackgroundColor = useAnimatedStyle(() => {
     return { backgroundColor: makeColor(sv.value) };
   });
 
@@ -55,7 +55,7 @@ export default function ColorExample() {
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.box, animatedBgColor]} />
+      <Animated.View style={[styles.box, animatedBackgroundColor]} />
       <Animated.View style={[styles.box, styles.borderBox, animatedBorderColor]} />
       <Animated.Text style={[styles.bigText, animatedTextColor]}>Reanimated</Animated.Text>
       <Animated.View style={[styles.box, styles.shadowBox, animatedBoxShadow]} />
