@@ -24,10 +24,6 @@ jsi::Value makeSerializableClone(
   std::shared_ptr<Serializable> serializable;
   if (value.isObject()) {
     auto object = value.asObject(rt);
-    // if(object.hasNativeState(rt)) {
-    //     // TODO: temporary
-    //     return SerializableJSRef::newNativeStateObject(rt, extractSerializableOrThrow(rt, value));
-    // }
     if (!object.getProperty(rt, "__workletHash").isUndefined()) {
       // We pass `false` because this function is invoked only
       // by `makeSerializableCloneOnUIRecursive` which doesn't

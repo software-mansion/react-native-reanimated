@@ -1,7 +1,5 @@
 'use strict';
 
-import 'react-native-svg';
-
 import type { ColorValue } from 'react-native';
 import type { NumberProp, Units } from 'react-native-svg';
 

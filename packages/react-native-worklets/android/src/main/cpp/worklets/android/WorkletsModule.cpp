@@ -27,8 +27,6 @@ namespace worklets {
 using namespace facebook;
 using namespace react;
 
-JavaVM *WorkletsModule::vm = nullptr;
-
 WorkletsModule::WorkletsModule(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
     jsi::Runtime *rnRuntime,
