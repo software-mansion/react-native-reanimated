@@ -1,32 +1,6 @@
 'use strict';
 import type { AnimationObject, Mutable } from './commonTypes';
 
-function isAnimationObject<Value>(
-  value: unknown
-): value is AnimationObject<Value> {
-  'worklet';
-  return (
-    value !== null &&
-    typeof value === 'object' &&
-    'onFrame' in value &&
-    'onStart' in value
-  );
-}
-
-function resolveAnimation<Value>(
-  value: unknown
-): AnimationObject<Value> | undefined {
-  'worklet';
-  if (typeof value === 'function') {
-    // Call the factory function and store the result in value to check
-    // if the value returned by the factory function is an AnimationObject
-    value = value();
-  }
-  if (isAnimationObject<Value>(value)) {
-    return value;
-  }
-}
-
 export function valueSetter<Value>(
   mutable: Mutable<Value>,
   value: Value,
@@ -34,11 +8,28 @@ export function valueSetter<Value>(
 ): void {
   'worklet';
   const previousAnimation = mutable._animation;
-  const animation = resolveAnimation<Value>(value);
 
   if (previousAnimation) {
     previousAnimation.cancelled = true;
     mutable._animation = null;
+  }
+
+  let animation: AnimationObject<Value> | undefined;
+
+  if (typeof value === 'function') {
+    // Call the factory function and store the result in value to check
+    // if the value returned by the factory function is an AnimationObject
+    value = value();
+  }
+
+  // Check if the value is an AnimationObject
+  if (
+    value !== null &&
+    typeof value === 'object' &&
+    'onFrame' in value &&
+    'onStart' in value
+  ) {
+    animation = value as AnimationObject<Value>;
   }
 
   if (!animation) {
