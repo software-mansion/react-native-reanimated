@@ -6,7 +6,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import type { WithSpringConfig } from 'react-native-reanimated';
+import type { AnimatedStyle, WithSpringConfig } from 'react-native-reanimated';
 
 const VIOLET = '#b58df1';
 const BORDER_WIDTH = 4;
@@ -29,7 +29,7 @@ function Visualiser({
   testedStyle,
   description,
 }: {
-  testedStyle: ViewStyle;
+  testedStyle: AnimatedStyle;
   description: string;
 }) {
   return (

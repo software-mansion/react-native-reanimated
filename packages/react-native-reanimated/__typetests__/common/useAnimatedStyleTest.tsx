@@ -1,9 +1,27 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  ImageBackground,
+  KeyboardAvoidingView,
+  Pressable,
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  SectionList,
+  Text,
+  TextInput,
+  TouchableHighlight,
+  TouchableOpacity,
+  View,
+  VirtualizedList,
+} from 'react-native';
 
 import Animated, { useAnimatedStyle, useSharedValue } from '../..';
 
-function UseAnimatedStyleTest() {
+function UseAnimatedStyleInAnimatedComponent() {
   function UseAnimatedStyleTest1() {
     const sv = useSharedValue(0);
     const animatedStyle = useAnimatedStyle(() => {
@@ -279,5 +297,143 @@ function UseAnimatedStyleTest() {
     // @ts-expect-error since the animated style cannot be a number.
     const animatedStyle = useAnimatedStyle(() => 5);
     return <Animated.View style={animatedStyle} />;
+  }
+}
+
+function UseAnimatedStyleInNonAnimatedComponents() {
+  function UseAnimatedStyleTestAllComponentsSingleStyle() {
+    const width = useSharedValue(50);
+    const animatedStyle = useAnimatedStyle(() => ({ width: width.value }));
+
+    return (
+      <>
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <ActivityIndicator style={animatedStyle} />
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <Image source={{ uri: 'uri' }} style={animatedStyle} />
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <ImageBackground source={{ uri: 'uri' }} style={animatedStyle} />
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <KeyboardAvoidingView style={animatedStyle} />
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <Pressable style={animatedStyle}>
+          <View />
+        </Pressable>
+        <RefreshControl
+          refreshing={false}
+          onRefresh={() => null}
+          // @ts-expect-error animated styles cannot be passed to non-animated components
+          style={animatedStyle}
+        />
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <ScrollView style={animatedStyle} />
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <Text style={animatedStyle}>label</Text>
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <TextInput style={animatedStyle} />
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <TouchableHighlight style={animatedStyle} underlayColor="transparent">
+          <View />
+        </TouchableHighlight>
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <TouchableOpacity style={animatedStyle}>
+          <View />
+        </TouchableOpacity>
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <View style={animatedStyle} />
+        <FlatList
+          data={[1]}
+          renderItem={() => <View />}
+          // @ts-expect-error animated styles cannot be passed to non-animated components
+          style={animatedStyle}
+        />
+        <SectionList
+          sections={[{ title: 'title', data: [1] }]}
+          renderItem={() => <View />}
+          // @ts-expect-error animated styles cannot be passed to non-animated components
+          style={animatedStyle}
+        />
+        <VirtualizedList
+          data={[1]}
+          getItem={(data, index) => data[index]}
+          getItemCount={(data) => data.length}
+          renderItem={() => <View />}
+          // @ts-expect-error animated styles cannot be passed to non-animated components
+          style={animatedStyle}
+        />
+      </>
+    );
+  }
+
+  function UseAnimatedStyleTestAllComponentsMixedStyleArray() {
+    const width = useSharedValue(50);
+    const animatedStyle = useAnimatedStyle(() => ({ width: width.value }));
+    const plainStyle = { opacity: 1 };
+
+    return (
+      <>
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <ActivityIndicator style={[plainStyle, animatedStyle]} />
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <Image source={{ uri: 'uri' }} style={[animatedStyle, plainStyle]} />
+        <ImageBackground
+          source={{ uri: 'uri' }}
+          // @ts-expect-error animated styles cannot be passed to non-animated components
+          style={[plainStyle, animatedStyle]}
+        />
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <KeyboardAvoidingView style={[animatedStyle, plainStyle]} />
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <Pressable style={[plainStyle, animatedStyle]}>
+          <View />
+        </Pressable>
+        <RefreshControl
+          refreshing={false}
+          onRefresh={() => null}
+          // @ts-expect-error animated styles cannot be passed to non-animated components
+          style={[animatedStyle, plainStyle]}
+        />
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <SafeAreaView style={[plainStyle, animatedStyle]} />
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <ScrollView style={[animatedStyle, plainStyle]} />
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <Text style={[plainStyle, animatedStyle]}>label</Text>
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <TextInput style={[animatedStyle, plainStyle]} />
+        <TouchableHighlight
+          // @ts-expect-error animated styles cannot be passed to non-animated components
+          style={[plainStyle, animatedStyle]}
+          underlayColor="transparent">
+          <View />
+        </TouchableHighlight>
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <TouchableOpacity style={[animatedStyle, plainStyle]}>
+          <View />
+        </TouchableOpacity>
+        {/* @ts-expect-error animated styles cannot be passed to non-animated components */}
+        <View style={[plainStyle, animatedStyle]} />
+        <FlatList
+          data={[1]}
+          renderItem={() => <View />}
+          // @ts-expect-error animated styles cannot be passed to non-animated components
+          style={[animatedStyle, plainStyle]}
+        />
+        <SectionList
+          sections={[{ title: 'title', data: [1] }]}
+          renderItem={() => <View />}
+          // @ts-expect-error animated styles cannot be passed to non-animated components
+          style={[plainStyle, animatedStyle]}
+        />
+        <VirtualizedList
+          data={[1]}
+          getItem={(data, index) => data[index]}
+          getItemCount={(data) => data.length}
+          renderItem={() => <View />}
+          // @ts-expect-error animated styles cannot be passed to non-animated components
+          style={[animatedStyle, plainStyle]}
+        />
+      </>
+    );
   }
 }

@@ -28,6 +28,7 @@ const createReactNativeProject = (config = {}) =>
   createProject({
     preset: 'react-native',
     testEnvironment: 'node',
+    resolver: 'react-native-worklets/jest/resolver',
     ...config,
   });
 

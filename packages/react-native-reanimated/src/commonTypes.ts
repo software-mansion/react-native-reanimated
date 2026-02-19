@@ -3,7 +3,6 @@ import type { Component, ElementType, JSX, RefObject } from 'react';
 import type {
   FlatList,
   HostInstance,
-  ImageStyle,
   ScrollView,
   SectionList,
   TextStyle,
@@ -15,6 +14,7 @@ import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 import type { AnyRecord, Maybe } from './common';
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
 import type { EasingFunctionFactory } from './Easing';
+import type { AnimatedStyleHandle, DefaultStyle } from './hook/commonTypes';
 
 type LayoutAnimationOptions =
   | 'originX'
@@ -171,6 +171,7 @@ export interface LayoutAnimationBatchItem {
 }
 
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
+
 export interface StyleProps extends ViewStyle, TextStyle {
   originX?: number;
   originY?: number;
@@ -454,13 +455,12 @@ type MaybeSharedValueRecursive<Value> = Value extends readonly (infer Item)[]
           }
     : MaybeSharedValue<Value>;
 
-type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
-
 // Ideally we want AnimatedStyle to not be generic, but there are
 // so many dependencies on it being generic that it's not feasible at the moment.
 export type AnimatedStyle<Style = DefaultStyle> =
   | (Style & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) // TODO - maybe add css animation config somewhere else
-  | MaybeSharedValueRecursive<Style>;
+  | MaybeSharedValueRecursive<Style>
+  | AnimatedStyleHandle<Style>;
 
 export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
