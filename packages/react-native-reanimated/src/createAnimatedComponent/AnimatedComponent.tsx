@@ -546,9 +546,9 @@ export default class AnimatedComponent
     //   console.log(filteredProps.text);
     // }
 
-    if (this.ChildComponent.displayName === 'Circle') {
-      console.log('filteredProps', filteredProps);
-    }
+    // if (this.ChildComponent.displayName === 'Circle') {
+    //   console.log('filteredProps', filteredProps);
+    // }
 
     // TODO: Remove need for this \/\/\/\/.
     // RNSVG expects Gradient elem to have stops passed as children. When we want to animate them,
