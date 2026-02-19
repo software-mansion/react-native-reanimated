@@ -1,6 +1,7 @@
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
+#include <cstring>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -55,7 +56,9 @@ void UpdatesRegistryManager::unmarkNodeAsRemovable(Tag viewTag) {
   removableShadowNodes_.erase(viewTag);
 }
 
-void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadowNode) {
+void UpdatesRegistryManager::handleNodeRemovals(
+    const RootShadowNode &rootShadowNode,
+    const NodeRemovalCallback &callback) {
   RemovableShadowNodes remainingShadowNodes;
 
   for (const auto &[tag, shadowNode] : removableShadowNodes_) {
@@ -63,7 +66,26 @@ void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadow
       continue;
     }
 
-    if (shadowNode->getFamily().getAncestors(rootShadowNode).empty()) {
+    const auto &ancestors = shadowNode->getFamily().getAncestors(rootShadowNode);
+
+    // Determine if component is frozen
+    // isFrozen=true means component still has parents (with Suspense parent being one of them)
+    // isFrozen=false means component is truly unmounting
+    bool isFrozen = false;
+    for (const auto &[parentNode, _] : ancestors) {
+      const auto parentComponentName = parentNode.get().getComponentName();
+      if (strstr(parentComponentName, "Suspense") != nullptr) {
+        isFrozen = true;
+        break;
+      }
+    }
+
+    // Notify JavaScript about the freeze decision
+    if (callback) {
+      callback(tag, isFrozen);
+    }
+
+    if (ancestors.empty()) {
       for (auto &registry : registries_) {
         registry->remove(tag);
       }

@@ -361,6 +361,22 @@ void ReanimatedModuleProxy::unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::V
   updatesRegistryManager_->unmarkNodeAsRemovable(viewTag.asNumber());
 }
 
+void ReanimatedModuleProxy::setNodeRemovalCallback(jsi::Runtime &rt, const jsi::Value &callback) {
+  if (callback.isObject() && callback.asObject(rt).isFunction(rt)) {
+    nodeRemovalCallback_ =
+        react::AsyncCallback<>(rt, callback.asObject(rt).asFunction(rt), jsInvoker_);
+  }
+}
+
+void ReanimatedModuleProxy::onNodeRemovalDecision(Tag tag, bool isFrozen) {
+  if (nodeRemovalCallback_) {
+    // Use custom lambda to manually convert to JSI values (JSI supports int/bool via jsi::Value)
+    nodeRemovalCallback_->call([tag, isFrozen](jsi::Runtime &rt, jsi::Function &callback) {
+      callback.call(rt, jsi::Value(static_cast<int>(tag)), jsi::Value(isFrozen));
+    });
+  }
+}
+
 void ReanimatedModuleProxy::registerCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
@@ -1259,7 +1275,8 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
 
     strongThis->requestFlushRegistry();
   };
-  mountHook_ = std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, request);
+  mountHook_ =
+      std::make_shared<ReanimatedMountHook>(uiManager_, updatesRegistryManager_, request, weak_from_this());
   commitHook_ = std::make_shared<ReanimatedCommitHook>(uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
 }
 

@@ -66,6 +66,7 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
   // Cleanup
   virtual void markNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) = 0;
   virtual void unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &viewTag) = 0;
+  virtual void setNodeRemovalCallback(jsi::Runtime &rt, const jsi::Value &callback) = 0;
 
   // CSS animation keyframes
   virtual void registerCSSKeyframes(

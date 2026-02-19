@@ -6,7 +6,7 @@ import { Fragment } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { checkStyleOverwriting, maybeBuild } from '../animationBuilder';
-import { IS_JEST, IS_WEB, logger } from '../common';
+import { IS_JEST, IS_WEB, logger, SHOULD_BE_USE_WEB } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
@@ -26,6 +26,7 @@ import type { CustomConfig } from '../layoutReanimation/web/config';
 import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
 import { PropsRegistryGarbageCollector } from '../PropsRegistryGarbageCollector';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
+import { ReanimatedModule } from '../ReanimatedModule';
 import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
 import type {
   AnimatedComponentProps,
@@ -52,6 +53,32 @@ if (IS_WEB) {
 
 const FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS =
   getStaticFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS') && !IS_WEB;
+
+const componentRegistry = new Map<number, IAnimatedComponentInternal>();
+
+// Register callback for freeze detection (native only)
+if (!SHOULD_BE_USE_WEB) {
+  ReanimatedModule.setNodeRemovalCallback((tag: number, isFrozen: boolean) => {
+    const component = componentRegistry.get(tag);
+    if (!component || !component._willUnmount) {
+      // Skip if component doesn't exist or already handled (remounted before callback fired)
+      return;
+    }
+
+    if (!isFrozen) {
+      // Component truly unmounted - safe to clean up
+      component._detachStyles();
+      if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
+        PropsRegistryGarbageCollector.unregisterView(tag);
+      }
+      jsPropsUpdater.unregisterComponent(component);
+      componentRegistry.delete(tag);
+    }
+
+    // Always clear flag whether frozen or unmounted
+    component._willUnmount = false;
+  });
+}
 
 export type Options<P> = {
   setNativeProps?: (ref: AnimatedComponentRef, props: P) => void;
@@ -121,11 +148,12 @@ export default class AnimatedComponent
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
-    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
-      const viewTag = this.getComponentViewTag();
-      if (viewTag !== -1) {
-        PropsRegistryGarbageCollector.registerView(viewTag, this);
-      }
+    const viewTag = this.getComponentViewTag();
+    if (!SHOULD_BE_USE_WEB && viewTag !== -1) {
+      componentRegistry.set(viewTag, this);
+    }
+    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS && viewTag !== -1) {
+      PropsRegistryGarbageCollector.registerView(viewTag, this);
     }
 
     if (this._options?.jsProps?.length) {
@@ -183,18 +211,19 @@ export default class AnimatedComponent
   componentWillUnmount() {
     super.componentWillUnmount();
     this._NativeEventsManager?.detachEvents();
-    this._detachStyles();
     this._InlinePropManager.detachInlineProps();
 
-    if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
-      const viewTag = this.getComponentViewTag();
-      if (viewTag !== -1) {
+    const viewTag = this.getComponentViewTag();
+    const shouldDeferCleanup = !SHOULD_BE_USE_WEB;
+    if (!shouldDeferCleanup) {
+      this._detachStyles();
+      if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS && viewTag !== -1) {
         PropsRegistryGarbageCollector.unregisterView(viewTag);
       }
-    }
-
-    if (this._options?.jsProps?.length) {
       jsPropsUpdater.unregisterComponent(this);
+      if (viewTag !== -1) {
+        componentRegistry.delete(viewTag);
+      }
     }
 
     const exiting = this.props.exiting;

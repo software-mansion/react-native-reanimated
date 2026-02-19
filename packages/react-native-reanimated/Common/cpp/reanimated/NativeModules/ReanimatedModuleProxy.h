@@ -22,6 +22,7 @@
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
 
+#include <react/bridging/Function.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/UIScheduler.h>
@@ -31,6 +32,7 @@
 #include <react/renderer/uimanager/UIManager.h>
 
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <utility>
@@ -99,6 +101,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   void markNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) override;
   void unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &viewTag) override;
+  void setNodeRemovalCallback(jsi::Runtime &rt, const jsi::Value &callback) override;
+  void onNodeRemovalDecision(Tag tag, bool isFrozen);
 
   void registerCSSKeyframes(
       jsi::Runtime &rt,
@@ -211,6 +215,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   const KeyboardEventSubscribeFunction subscribeForKeyboardEventsFunction_;
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;
+
+  std::optional<react::AsyncCallback<>> nodeRemovalCallback_;
 
 #ifndef NDEBUG
   SingleInstanceChecker<ReanimatedModuleProxy> singleInstanceChecker_;
