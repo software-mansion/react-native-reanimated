@@ -3,7 +3,7 @@ import type { AnimationObject, Mutable } from './commonTypes';
 
 export function valueSetter<Value = unknown>(
   mutable: Mutable<Value>,
-  valueOrFactory: Value,
+  value: Value,
   forceUpdate = false
 ): void {
   'worklet';
@@ -16,11 +16,10 @@ export function valueSetter<Value = unknown>(
 
   // Call the factory function and store the result in value to check
   // if the value returned by the factory function is an AnimationObject
-  const value: Value =
-    typeof valueOrFactory === 'function' ? valueOrFactory() : valueOrFactory;
+  const unwrappedValue: Value = typeof value === 'function' ? value() : value;
   const valueObject =
-    typeof value === 'object' && value !== null
-      ? (value as Record<string, unknown>)
+    typeof unwrappedValue === 'object' && unwrappedValue !== null
+      ? (unwrappedValue as Record<string, unknown>)
       : {};
 
   // Check if the value returned by the factory function is not an AnimationObject
@@ -34,7 +33,7 @@ export function valueSetter<Value = unknown>(
     return;
   }
 
-  const animation = value as AnimationObject<Value>;
+  const animation = unwrappedValue as AnimationObject<Value>;
 
   // prevent setting again to the same value and triggering the mappers that
   // treat this value as an input this happens when the animation's target value
