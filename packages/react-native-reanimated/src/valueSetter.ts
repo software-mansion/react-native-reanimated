@@ -17,13 +17,17 @@ export function valueSetter<Value = unknown>(
   // Call the factory function and store the result in value to check
   // if the value returned by the factory function is an AnimationObject
   const unwrappedValue: Value = typeof value === 'function' ? value() : value;
-  const valueObject =
-    typeof unwrappedValue === 'object' && unwrappedValue !== null
-      ? (unwrappedValue as Record<string, unknown>)
-      : {};
+  let animation: AnimationObject<Value> | null = null;
 
-  // Check if the value returned by the factory function is not an AnimationObject
-  if (valueObject.onFrame === undefined || valueObject.onStart === undefined) {
+  if (unwrappedValue && typeof unwrappedValue === 'object') {
+    const valueObject = unwrappedValue as Record<string, unknown>;
+    // Check if the object has onFrame and onStart properties (is an AnimationObject)
+    if (valueObject.onFrame && valueObject.onStart) {
+      animation = valueObject as AnimationObject<Value>;
+    }
+  }
+
+  if (!animation) {
     // update the value of the mutable only if it's different from the current
     // value or if forceUpdate is true to prevent triggering mappers that treat
     // this value as an input
@@ -32,8 +36,6 @@ export function valueSetter<Value = unknown>(
     }
     return;
   }
-
-  const animation = unwrappedValue as AnimationObject<Value>;
 
   // prevent setting again to the same value and triggering the mappers that
   // treat this value as an input this happens when the animation's target value
