@@ -174,6 +174,37 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
   }
 }
 
+export function scheduleOnRuntimeFromId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): void {
+  'worklet';
+  if (__DEV__ && !isWorkletFunction(worklet)) {
+    throw new WorkletsError(
+      'The function passed to `scheduleOnRuntime` is not a worklet.'
+    );
+  }
+  const proxy = globalThis.__workletsModuleProxy;
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
+    proxy.scheduleOnRuntimeFromId(
+      runtimeId,
+      makeShareableCloneOnUIRecursive(() => {
+        'worklet';
+        worklet(...args);
+      })
+    );
+  } else {
+    proxy.scheduleOnRuntimeFromId(
+      runtimeId,
+      createSerializable(() => {
+        'worklet';
+        worklet(...args);
+      })
+    );
+  }
+}
+
 /**
  * @deprecated Use `scheduleOnRuntime` instead.
  *
@@ -236,7 +267,8 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
     );
   }
 
-  return WorkletsModule.runOnRuntimeSync(
+  const proxy = globalThis.__workletsModuleProxy;
+  return proxy.runOnRuntimeSync(
     workletRuntime,
     createSerializable(() => {
       'worklet';
@@ -244,6 +276,40 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
       return makeShareableCloneOnUIRecursive(result);
     })
   );
+}
+
+export function runOnRuntimeSyncFromId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): ReturnValue {
+  'worklet';
+  if (__DEV__ && !isWorkletFunction(worklet)) {
+    throw new WorkletsError(
+      'The function passed to `runOnRuntimeSyncFromId` is not a worklet.'
+    );
+  }
+
+  const proxy = globalThis.__workletsModuleProxy;
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
+    return proxy.runOnRuntimeSyncFromId(
+      runtimeId,
+      makeShareableCloneOnUIRecursive(() => {
+        'worklet';
+        const result = worklet(...args);
+        return makeShareableCloneOnUIRecursive(result);
+      })
+    );
+  } else {
+    return proxy.runOnRuntimeSyncFromId(
+      runtimeId,
+      createSerializable(() => {
+        'worklet';
+        const result = worklet(...args);
+        return makeShareableCloneOnUIRecursive(result);
+      })
+    );
+  }
 }
 
 /**

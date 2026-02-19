@@ -74,6 +74,7 @@ export function createShareable<TShared = unknown>(
     ) as unknown as Shareable<TShared>;
   } else {
     return globalThis.__shareableGuestUnpacker(
+      1,
       shareableRef,
       guestDecorator
     ) as unknown as Shareable<TShared>;

@@ -1,7 +1,4 @@
 #include <worklets/RunLoop/AsyncQueueImpl.h>
-#ifdef ANDROID
-#include <worklets/android/WorkletsModule.h>
-#endif // ANDROID
 
 #ifdef ANDROID
 #include <fbjni/fbjni.h>

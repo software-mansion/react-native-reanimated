@@ -6,6 +6,7 @@
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
+#include <worklets/SharedItems/Shareable.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/FeatureFlags.h>
@@ -209,8 +210,10 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnUI"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnUISync"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnRuntimeSync"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnRuntimeSyncFromId"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createWorkletRuntime"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnRuntime"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnRuntimeFromId"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "reportFatalErrorOnJS"));
 
   /* #endregion Worklet Runtime */
@@ -233,10 +236,6 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   /* #region Shareable */
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createShareable"));
-  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "shareableGetAsync"));
-  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "shareableGetSync"));
-  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "shareableSetAsync"));
-  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "shareableSetSync"));
 
   /* #endregion Shareable */
   /* #region Bundle Mode */
@@ -446,6 +445,25 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         });
   }
 
+  if (name == "runOnRuntimeSyncFromId") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [runtimeManager = runtimeManager_](
+            jsi::Runtime &rt, const jsi ::Value &thisValue, const jsi::Value *args, size_t count) {
+          const auto runtimeId = args[0].asNumber();
+          const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
+          if (!workletRuntime) {
+            throw jsi::JSError(rt, "[Worklets] No worklet runtime found for id: " + std::to_string(runtimeId));
+          }
+          auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
+              rt, args[1], "[Worklets] Only worklets can be executed on a worklet runtime.");
+          // return jsi::Value::undefined();
+          return workletRuntime->runSyncSerialized(serializableWorklet)->toJSValue(rt);
+        });
+  }
+
   if (name == "createWorkletRuntime") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -483,6 +501,26 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
     return jsi::Function::createFromHostFunction(
         rt, propName, 2, [](jsi::Runtime &rt, const jsi ::Value &thisValue, const jsi::Value *args, size_t count) {
           worklets::scheduleOnRuntime(rt, args[0], args[1]);
+          return jsi::Value::undefined();
+        });
+  }
+
+  if (name == "scheduleOnRuntimeFromId") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [runtimeManager = runtimeManager_](
+            jsi::Runtime &rt, const jsi ::Value &thisValue, const jsi::Value *args, size_t count) {
+          const auto runtimeId = args[0].asNumber();
+          const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
+          if (!workletRuntime) {
+            throw jsi::JSError(rt, "[Worklets] No worklet runtime found for id: " + std::to_string(runtimeId));
+          }
+          // worklets::scheduleOnRuntime(rt, workletRuntime, args[1]);
+          const auto worklet = extractSerializableOrThrow<SerializableWorklet>(
+              rt, args[1], "[Worklets] Only worklets can be scheduled to run on a worklet runtime.");
+          workletRuntime->schedule(worklet);
           return jsi::Value::undefined();
         });
   }
@@ -595,42 +633,6 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
           auto decorateGuest = extractSerializableOrThrow(rt, args[3]);
           auto shareable = std::make_shared<Shareable>(hostRuntime, serializable, decorateHost, decorateGuest);
           return SerializableJSRef::newNativeStateObject(rt, shareable);
-        });
-  }
-  if (name == "shareableGetAsync") {
-    return jsi::Function::createFromHostFunction(
-        rt, propName, 1, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return jsi::Value::undefined();
-          // auto shareable = extractShareableOrThrow(rt, args[0]);
-          // return shareable->getAsync()->toJSValue(rt);
-        });
-  }
-  if (name == "shareableGetSync") {
-    return jsi::Function::createFromHostFunction(
-        rt, propName, 1, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return jsi::Value::undefined();
-          // auto shareable = extractShareableOrThrow(rt, args[0]);
-          // return shareable->getSync()->toJSValue(rt);
-        });
-  }
-  if (name == "shareableSetAsync") {
-    return jsi::Function::createFromHostFunction(
-        rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return jsi::Value::undefined();
-          // auto shareable = extractShareableOrThrow(rt, args[0]);
-          // auto newValue = extractSerializableOrThrow(rt, args[1], "[Worklets] Value must be a Serializable.");
-          // shareable->setAsync(newValue);
-          // return jsi::Value::undefined();
-        });
-  }
-  if (name == "shareableSetSync") {
-    return jsi::Function::createFromHostFunction(
-        rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return jsi::Value::undefined();
-          // auto shareable = extractShareableOrThrow(rt, args[0]);
-          // auto newValue = extractSerializableOrThrow(rt, args[1], "[Worklets] Value must be a Serializable.");
-          // shareable->setSync(newValue);
-          // return jsi::Value::undefined();
         });
   }
 

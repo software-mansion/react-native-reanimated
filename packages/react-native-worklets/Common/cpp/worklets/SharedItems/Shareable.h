@@ -23,7 +23,7 @@ class Shareable : public Serializable, public std::enable_shared_from_this<Share
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
- private:
+  //  private:
   std::weak_ptr<WorkletRuntime> hostRuntime_;
   std::shared_ptr<Serializable> initial_;
   std::unique_ptr<jsi::Value> hostValue_;

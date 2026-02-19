@@ -54,6 +54,7 @@ jsi::Value Shareable::toJSValue(jsi::Runtime &rt) {
   const auto weakWorkletRuntime = WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt);
   const auto strongWorkletRuntime = weakWorkletRuntime.lock();
   const auto strongHostRuntime = hostRuntime_.lock();
+  const auto hostId = strongHostRuntime->getRuntimeId();
   if (!strongWorkletRuntime || !strongHostRuntime) {
     // return jsi::Value::undefined(); // TODO: Handle it properly
     // RN Runtime
@@ -70,7 +71,7 @@ jsi::Value Shareable::toJSValue(jsi::Runtime &rt) {
   } else {
     const auto shareableUnpacker = getShareableGuestUnpacker(rt);
     const auto ref = SerializableJSRef::newNativeStateObject(rt, shared_from_this());
-    return shareableUnpacker.call(rt, ref, decorateGuest_->toJSValue(rt));
+    return shareableUnpacker.call(rt, static_cast<double>(hostId), ref, decorateGuest_->toJSValue(rt));
   }
 }
 

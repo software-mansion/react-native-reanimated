@@ -2,11 +2,12 @@
 
 import { WorkletsError } from '../debug/WorkletsError';
 import {
-  runOnUIAsync as RNRuntimeRunOnUIAsync,
-  runOnUISync as RNRuntimeRunOnUISync,
-  scheduleOnUI as RNRuntimeScheduleOnUI,
-} from '../threads';
+  runOnRuntimeSyncFromId as RNRuntimeRunOnRuntimeSyncFromId,
+  scheduleOnRuntimeFromId as RNRuntimeScheduleOnRuntimeFromId,
+} from '../runtimes';
+import { runOnUIAsync as RNRuntimeRunOnUIAsync } from '../threads';
 import type { WorkletFunction } from '../types';
+import { createSerializable } from './serializable';
 // import { createSerializable } from './serializable';
 import { serializableMappingCache } from './serializableMappingCache';
 import type {
@@ -18,51 +19,54 @@ import type {
 } from './types';
 
 export function __installUnpacker() {
-  // const serializer =
-  //   globalThis.__RUNTIME_KIND === 1 || globalThis._WORKLETS_BUNDLE_MODE
-  //     ? (value: unknown, _: unknown) => createSerializable(value)
-  //     : globalThis._createSerializable;
-
-  let runOnUISync: typeof RNRuntimeRunOnUISync;
-  let scheduleOnUI: typeof RNRuntimeScheduleOnUI;
+  let runOnRuntimeSyncFromId: typeof RNRuntimeRunOnRuntimeSyncFromId;
+  let scheduleOnRuntimeFromId: typeof RNRuntimeScheduleOnRuntimeFromId;
   let runOnUIAsync: typeof RNRuntimeRunOnUIAsync;
   let memoize: (
     unpacked: Shareable<unknown>,
     serialized: SerializableRef<unknown>
   ) => void;
+  const serializer =
+    globalThis.__RUNTIME_KIND === 1 || globalThis._WORKLETS_BUNDLE_MODE_ENABLED
+      ? createSerializable
+      : (value: unknown) => globalThis.__serializer(value);
 
   if (globalThis.__RUNTIME_KIND === 1 /* RuntimeKind.ReactNative */) {
-    runOnUISync = RNRuntimeRunOnUISync;
-    scheduleOnUI = RNRuntimeScheduleOnUI;
+    runOnRuntimeSyncFromId = RNRuntimeRunOnRuntimeSyncFromId;
+    scheduleOnRuntimeFromId = RNRuntimeScheduleOnRuntimeFromId;
     runOnUIAsync = RNRuntimeRunOnUIAsync;
     memoize = (unpacked, serialized) => {
       serializableMappingCache.set(unpacked, serialized);
     };
   } else {
     const proxy = globalThis.__workletsModuleProxy;
-    runOnUISync = ((worklet: WorkletFunction, ...args: unknown[]) => {
-      // console.log(new Error().stack);
-      return proxy.runOnUISync(
-        globalThis.__makeSerializableCloneOnUIRecursive(() => {
-          'worklet';
-          // console.log(new Error().stack);
-          return globalThis.__makeSerializableCloneOnUIRecursive(
-            worklet(...args)
-          );
-        })
-      );
-    }) as typeof RNRuntimeRunOnUISync;
+    runOnRuntimeSyncFromId = ((
+      hostId: number,
+      worklet: WorkletFunction,
+      ...args: unknown[]
+    ) => {
+      const serializedWorklet = serializer(() => {
+        'worklet';
+        return globalThis.__makeSerializableCloneOnUIRecursive(
+          worklet(...args)
+        );
+      });
+      return proxy.runOnRuntimeSyncFromId(hostId, serializedWorklet);
+    }) as typeof RNRuntimeRunOnRuntimeSyncFromId;
 
-    scheduleOnUI = ((worklet: WorkletFunction, ...args: unknown[]) => {
-      proxy.scheduleOnUI(
-        globalThis.__makeSerializableCloneOnUIRecursive(() => {
+    scheduleOnRuntimeFromId = ((
+      hostId: number,
+      worklet: WorkletFunction,
+      ...args: unknown[]
+    ) => {
+      proxy.scheduleOnRuntimeFromId(
+        hostId,
+        serializer(() => {
           'worklet';
-          return globalThis.__makeSerializableCloneOnUIRecursive(
-            worklet(...args)
-          );
+          return globalThis.__serializer(worklet(...args));
         })
       );
-    }) as typeof RNRuntimeScheduleOnUI;
+    }) as typeof RNRuntimeScheduleOnRuntimeFromId;
 
     runOnUIAsync = () => {
       throw new WorkletsError(
@@ -83,6 +87,7 @@ export function __installUnpacker() {
    *   side. Undefined on the Ref Runtime side.
    */
   function shareableGuestUnpacker<TShared = unknown>(
+    hostId: number,
     shareableRef: SerializableRef<TShared> | Shareable<TShared>,
     guestDecorator?: ShareableGuestDecorator<TShared>
   ): Shareable<TShared> {
@@ -107,35 +112,6 @@ export function __installUnpacker() {
       (shareableRef as HostRuntimeType).value = newValue;
     };
 
-    // let shareableGuest = {
-    //   getAsync() {
-    //     return runOnUIAsync(get);
-    //   },
-
-    //   getSync() {
-    //     return runOnUISync(get);
-    //   },
-
-    //   setAsync(value: TShared | ((prev: TShared) => TShared)) {
-    //     if (typeof value === 'function') {
-    //       scheduleOnUI(setWithSetter, value as (prev: TShared) => TShared);
-    //     } else {
-    //       scheduleOnUI(setWithValue, value);
-    //     }
-    //   },
-
-    //   setSync(value: TShared | ((prev: TShared) => TShared)) {
-    //     if (typeof value === 'function') {
-    //       runOnUISync(setWithSetter, value as (prev: TShared) => TShared);
-    //     } else {
-    //       runOnUISync(setWithValue, value);
-    //     }
-    //   },
-
-    //   isHost: false,
-    //   __shareableRef: shareableRef as unknown as boolean, // TODO: temporary
-    // } as PureShareableGuest<TShared>;
-
     // @ts-expect-error wwww
     shareableRef.getAsync = () => {
       return runOnUIAsync(get);
@@ -143,24 +119,32 @@ export function __installUnpacker() {
 
     // @ts-expect-error wwww
     shareableRef.getSync = () => {
-      return runOnUISync(get);
+      return runOnRuntimeSyncFromId(hostId, get);
     };
 
     // @ts-expect-error wwww
     shareableRef.setAsync = (value: TShared | ((prev: TShared) => TShared)) => {
       if (typeof value === 'function') {
-        scheduleOnUI(setWithSetter, value as (prev: TShared) => TShared);
+        scheduleOnRuntimeFromId(
+          hostId,
+          setWithSetter,
+          value as (prev: TShared) => TShared
+        );
       } else {
-        scheduleOnUI(setWithValue, value);
+        scheduleOnRuntimeFromId(hostId, setWithValue, value);
       }
     };
 
     // @ts-expect-error wwww
     shareableRef.setSync = (value: TShared | ((prev: TShared) => TShared)) => {
       if (typeof value === 'function') {
-        runOnUISync(setWithSetter, value as (prev: TShared) => TShared);
+        runOnRuntimeSyncFromId(
+          hostId,
+          setWithSetter,
+          value as (prev: TShared) => TShared
+        );
       } else {
-        runOnUISync(setWithValue, value);
+        runOnRuntimeSyncFromId(hostId, setWithValue, value);
       }
     };
 
@@ -188,6 +172,7 @@ export function __installUnpacker() {
 }
 
 export type ShareableUnpacker<TValue = unknown> = (
+  hostId: number,
   shareableRef: SerializableRef<TValue>,
   decorateGuest?: ShareableGuestDecorator<TValue>
 ) => Shareable<TValue>;

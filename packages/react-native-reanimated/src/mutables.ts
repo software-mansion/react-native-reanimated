@@ -299,7 +299,6 @@ const USE_SYNCHRONIZABLE_FOR_MUTABLES = getStaticFeatureFlag(
 function experimental_makeMutableNative<TValue>(
   initial: TValue
 ): Mutable<TValue> {
-  let latest = initial;
   const dirtyFlag = createSynchronizable(false);
   const shareable = createShareable('UI', initial, {
     hostDecorator: (shareableHost) => {
@@ -308,6 +307,7 @@ function experimental_makeMutableNative<TValue>(
     },
     guestDecorator: (shareableGuest) => {
       'worklet';
+      let latest = initial;
       Object.defineProperties(shareableGuest, {
         value: {
           get() {
