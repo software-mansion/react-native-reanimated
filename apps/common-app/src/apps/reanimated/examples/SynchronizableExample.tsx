@@ -67,6 +67,7 @@ export default function SynchronizablePerformanceExample() {
 
   function getDirtySetBlocking() {
     'worklet';
+    globalThis.__failAfterLogBox = true;
     const start = performance.now();
     for (let i = 0; i < targetValue; i++) {
       const value = synchronizable.getDirty();

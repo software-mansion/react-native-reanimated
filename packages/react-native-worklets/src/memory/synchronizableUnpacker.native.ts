@@ -3,10 +3,12 @@
 import { createSerializable } from './serializable';
 import { type Synchronizable, type SynchronizableRef } from './types';
 
-export function __installUnpacker() {
+export function installSynchronizableUnpacker() {
+  'worklet';
+  'no-worklet-closure';
   // TODO: Add cache for synchronizables.
   const serializer =
-    !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE_ENABLED
+    globalThis.__RUNTIME_KIND === 1 || globalThis._WORKLETS_BUNDLE_MODE_ENABLED
       ? createSerializable
       : (value: unknown) => globalThis.__serializer(value);
 
@@ -19,6 +21,11 @@ export function __installUnpacker() {
 
     synchronizable.__synchronizableRef = true;
     synchronizable.getDirty = () => {
+      // @ts-ignore wwww
+      if (globalThis.__RUNTIME_KIND !== 1 && globalThis.__failAfterLogBox) {
+        // eslint-disable-next-line reanimated/use-worklets-error
+        throw new Error('test');
+      }
       return proxy.synchronizableGetDirty(synchronizable);
     };
     synchronizable.getBlocking = () => {

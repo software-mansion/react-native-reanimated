@@ -1,5 +1,6 @@
 import type { NodePath } from '@babel/core';
 import generate from '@babel/generator';
+import type { Binding } from '@babel/traverse';
 import type {
   ExpressionStatement,
   FunctionExpression,
@@ -59,7 +60,8 @@ export function makeWorkletFactory(
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
-  removeWorkletDirective(fun);
+  const includeClosure = !hasNoClosureDirective(fun);
+  stripWorkletDirectives(fun);
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
@@ -97,7 +99,13 @@ export function makeWorkletFactory(
     closureVariables,
     libraryBindingsToImport,
     relativeBindingsToImport,
-  } = getClosure(fun, state);
+  } = includeClosure
+    ? getClosure(fun, state)
+    : {
+        closureVariables: [],
+        libraryBindingsToImport: new Set<Binding>(),
+        relativeBindingsToImport: new Set<Binding>(),
+      };
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -387,11 +395,32 @@ export function makeWorkletFactory(
   return { factory, factoryCallParamPack, workletHash };
 }
 
-function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {
+function hasNoClosureDirective(path: NodePath<WorkletizableFunction>): boolean {
+  if (!path.node.body) {
+    return false;
+  }
+
+  const bodyPath = path.get('body');
+  let hasDirective = false;
+  if (bodyPath.isBlockStatement()) {
+    hasDirective = bodyPath.get('directives').some((directivePath) => {
+      if (
+        directivePath.isDirective() &&
+        directivePath.node.value.value === 'no-worklet-closure'
+      ) {
+        return true;
+      }
+    });
+  }
+  return hasDirective;
+}
+
+function stripWorkletDirectives(fun: NodePath<WorkletizableFunction>): void {
   fun.traverse({
     DirectiveLiteral(nodePath) {
       if (
-        nodePath.node.value === 'worklet' &&
+        (nodePath.node.value === 'worklet' ||
+          nodePath.node.value === 'no-worklet-closure') &&
         nodePath.getFunctionParent() === fun
       ) {
         nodePath.parentPath.remove();

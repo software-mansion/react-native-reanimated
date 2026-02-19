@@ -5,6 +5,18 @@ import type { WorkletRuntime } from '../types';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */
 export interface WorkletsModuleProxy {
+  loadUnpackers(
+    valueUnpackerCode: string,
+    synchronizableUnpackerCode: string,
+    customSerializableUnpackerCode: string,
+    valueUnpackerLocation: string,
+    synchronizableUnpackerLocation: string,
+    customSerializableUnpackerLocation: string,
+    valueUnpackerSourceMap: string,
+    synchronizableUnpackerSourceMap: string,
+    customSerializableUnpackerSourceMap: string
+  ): void;
+
   createSerializable<TValue>(
     value: TValue,
     shouldPersistRemote: boolean,
@@ -136,6 +148,10 @@ export interface WorkletsModuleProxy {
   getStaticFeatureFlag(name: string): boolean;
 
   setDynamicFeatureFlag(name: string, value: boolean): void;
+
+  getUIRuntimeHolder(): object;
+
+  getUISchedulerHolder(): object;
 }
 
 export type IWorkletsModule = WorkletsModuleProxy;

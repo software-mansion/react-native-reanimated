@@ -55,11 +55,6 @@ WorkletsModule::WorkletsModule(
           }),
           script,
           sourceURL)) {
-  auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
-  auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
-      *rnRuntime_, std::static_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));
-  RNRuntimeWorkletDecorator::decorate(
-      *rnRuntime_, std::move(optimizedJsiWorkletsModuleProxy), workletsModuleProxy_->getJSLogger());
 }
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
@@ -180,10 +175,15 @@ void WorkletsModule::invalidateCpp() {
   workletsModuleProxy_.reset();
 }
 
+void WorkletsModule::startCpp() {
+  workletsModuleProxy_->start();
+}
+
 void WorkletsModule::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", WorkletsModule::initHybrid),
       makeNativeMethod("invalidateCpp", WorkletsModule::invalidateCpp),
+      makeNativeMethod("startCpp", WorkletsModule::startCpp),
   });
 }
 

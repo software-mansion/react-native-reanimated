@@ -92,6 +92,15 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     return true;
   }
 
+  @OptIn(markerClass = FrameworkAPI.class)
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public void start() {
+    var context = getReactApplicationContext();
+    context.assertOnJSQueueThread();
+
+    startCpp();
+  }
+
   public void abortRequest(int runtimeId, double requestIdAsDouble) {
     mWorkletsNetworking.jsiAbortRequest(runtimeId, requestIdAsDouble);
   }
@@ -154,6 +163,8 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     }
     mAndroidUIScheduler.deactivate();
   }
+
+  private native void startCpp();
 
   private native void invalidateCpp();
 

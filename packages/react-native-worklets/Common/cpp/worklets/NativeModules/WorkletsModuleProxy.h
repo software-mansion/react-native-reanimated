@@ -6,6 +6,7 @@
 #include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/SharedItems/MemoryManager.h>
+#include <worklets/SharedItems/UnpackerLoader.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/JSScheduler.h>
@@ -22,6 +23,8 @@ namespace worklets {
 
 class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModuleProxy> {
  public:
+  void start();
+
   explicit WorkletsModuleProxy(
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
@@ -71,7 +74,9 @@ class WorkletsModuleProxy : public std::enable_shared_from_this<WorkletsModulePr
   const std::string sourceUrl_;
   const std::shared_ptr<MemoryManager> memoryManager_;
   const std::shared_ptr<RuntimeManager> runtimeManager_;
+  const std::shared_ptr<UnpackerLoader> unpackerLoader_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
+  const std::shared_ptr<JSIWorkletsModuleProxy> rnRuntimeProxy_;
   std::shared_ptr<AnimationFrameBatchinator> animationFrameBatchinator_;
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModuleProxy> singleInstanceChecker_;

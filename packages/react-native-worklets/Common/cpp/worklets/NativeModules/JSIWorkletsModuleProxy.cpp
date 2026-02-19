@@ -1,6 +1,6 @@
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
-
+#include <worklets/Compat/Holders.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Serializable.h>
@@ -161,7 +161,8 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const std::shared_ptr<MemoryManager> &memoryManager,
     const std::shared_ptr<RuntimeManager> &runtimeManager,
     const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
-    const std::shared_ptr<RuntimeBindings> &runtimeBindings)
+    const std::shared_ptr<RuntimeBindings> &runtimeBindings,
+    const std::shared_ptr<UnpackerLoader> &unpackerLoader)
     : jsi::HostObject(),
       isDevBundle_(isDevBundle),
       script_(script),
@@ -172,12 +173,15 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       memoryManager_(memoryManager),
       runtimeManager_(runtimeManager),
       uiWorkletRuntime_(uiWorkletRuntime),
-      runtimeBindings_(runtimeBindings) {}
+      runtimeBindings_(runtimeBindings),
+      unpackerLoader_(unpackerLoader) {}
 
 JSIWorkletsModuleProxy::~JSIWorkletsModuleProxy() = default;
 
 std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runtime &rt) {
   std::vector<jsi::PropNameID> propertyNames;
+
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "loadUnpackers"));
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializable"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableBigInt"));
@@ -220,11 +224,45 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "propagateModuleUpdate"));
 #endif // WORKLETS_BUNDLE_MODE_ENABLED
 
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getUIRuntimeHolder"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getUISchedulerHolder"));
+
   return propertyNames;
 }
 
 jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &propName) {
   const auto name = propName.utf8(rt);
+
+  if (name == "loadUnpackers") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        9,
+        [unpackerLoader = unpackerLoader_](
+            jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          const auto valueUnpackerCode = args[0].asString(rt).utf8(rt);
+          const auto synchronizableUnpackerCode = args[1].asString(rt).utf8(rt);
+          const auto customSerializableUnpackerCode = args[2].asString(rt).utf8(rt);
+          const auto valueUnpackerLocation = args[3].asString(rt).utf8(rt);
+          const auto synchronizableUnpackerLocation = args[4].asString(rt).utf8(rt);
+          const auto customSerializableUnpackerLocation = args[5].asString(rt).utf8(rt);
+          const auto valueUnpackerSourceMap = args[6].asString(rt).utf8(rt);
+          const auto synchronizableUnpackerSourceMap = args[7].asString(rt).utf8(rt);
+          const auto customSerializableUnpackerSourceMap = args[8].asString(rt).utf8(rt);
+
+          unpackerLoader->loadUnpackers(
+              valueUnpackerCode,
+              synchronizableUnpackerCode,
+              customSerializableUnpackerCode,
+              valueUnpackerLocation,
+              synchronizableUnpackerLocation,
+              customSerializableUnpackerLocation,
+              valueUnpackerSourceMap,
+              synchronizableUnpackerSourceMap,
+              customSerializableUnpackerSourceMap);
+          return jsi::Value::undefined();
+        });
+  }
 
   if (name == "createSerializable") {
     return jsi::Function::createFromHostFunction(
@@ -542,6 +580,32 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
               /* name */ args[0].asString(rt).utf8(rt),
               /* value */ args[1].asBool());
           return jsi::Value::undefined();
+        });
+  }
+
+  if (name == "getUIRuntimeHolder") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        0,
+        [uiWorkletRuntime = uiWorkletRuntime_](
+            jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          auto obj = jsi::Object(rt);
+          obj.setNativeState(rt, std::make_shared<WorkletRuntimeHolder>(uiWorkletRuntime.lock()));
+          return obj;
+        });
+  }
+
+  if (name == "getUISchedulerHolder") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        0,
+        [uiScheduler = uiScheduler_](
+            jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          auto obj = jsi::Object(rt);
+          obj.setNativeState(rt, std::make_shared<UISchedulerHolder>(uiScheduler));
+          return obj;
         });
   }
 
