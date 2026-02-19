@@ -82,13 +82,11 @@ function enqueueUI<Args extends unknown[], ReturnValue>(
   if (IS_JEST) {
     mockedRequestAnimationFrame(() => {
       const result = worklet(...args);
-      if (resolve) {
-        resolve(result);
-      }
+      resolve?.(result);
     });
   } else {
-    const job = [worklet, args, resolve] as UIJob<Args, ReturnValue>;
-    runOnUIQueue.push(job as unknown as UIJob);
+    const job = [worklet, args, resolve];
+    runOnUIQueue.push(job as UIJob);
     if (runOnUIQueue.length === 1) {
       flushUIQueue();
     }
