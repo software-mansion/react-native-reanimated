@@ -243,7 +243,7 @@ function experimental_makeMutableNative<Value>(initial: Value): Mutable<Value> {
     },
     set _value(_newValue: Value) {
       throw new ReanimatedError(
-        'Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
+        'Setting `_value` directly is only possible on the UI runtime. Perhaps you wanted to assign to `value` instead?'
       );
     },
 
