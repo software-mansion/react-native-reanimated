@@ -98,8 +98,18 @@ export interface WorkletsModuleProxy {
     worklet: SerializableRef<TValue>
   ): void;
 
+  scheduleOnRuntimeFromId<TValue>(
+    runtimeId: number,
+    worklet: SerializableRef<TValue>
+  ): void;
+
   runOnRuntimeSync<TValue, TReturn>(
     workletRuntime: WorkletRuntime,
+    worklet: SerializableRef<TValue>
+  ): TReturn;
+
+  runOnRuntimeSyncFromId<TValue, TReturn>(
+    hostId: number,
     worklet: SerializableRef<TValue>
   ): TReturn;
 

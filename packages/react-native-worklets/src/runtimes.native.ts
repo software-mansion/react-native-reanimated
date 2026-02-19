@@ -152,24 +152,92 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
       'The function passed to `scheduleOnRuntime` is not a worklet.'
     );
   }
+  const proxy = globalThis.__workletsModuleProxy;
   if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
-    globalThis._scheduleOnRuntime(
+    proxy.scheduleOnRuntime(
       workletRuntime,
       makeShareableCloneOnUIRecursive(() => {
         'worklet';
         worklet(...args);
+        globalThis.__flushMicrotasks?.();
+      })
+    );
+  } else {
+    proxy.scheduleOnRuntime(
+      workletRuntime,
+      createSerializable(() => {
+        'worklet';
+        worklet(...args);
+        globalThis.__flushMicrotasks?.();
       })
     );
   }
+}
 
-  WorkletsModule.scheduleOnRuntime(
-    workletRuntime,
-    createSerializable(() => {
-      'worklet';
-      worklet(...args);
-      globalThis.__flushMicrotasks();
-    })
-  );
+/**
+ * Lets you asynchronously run a
+ * [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)
+ * on a [Worker
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
+ *
+ * Check
+ * {@link https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds}
+ * for more information about the different runtime kinds.
+ *
+ * - The worklet is scheduled on the Worker Runtime's [Async
+ *   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
+ * - The function cannot be scheduled on the Worker Runtime from [UI
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
+ *   or another [Worker
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
+ *   unless the [Bundle
+ *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
+ *   enabled.
+ *
+ * @param runtimeId - The id of the runtime to schedule the worklet on.
+ * @param worklet - The worklet to schedule.
+ * @param args - The arguments to pass to the worklet.
+ * @returns The return value of the worklet.
+ */
+// @ts-expect-error This overload is correct since it's what user sees in their code
+// before it's transformed by Worklets Babel plugin.
+export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): void;
+
+export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: WorkletFunction<Args, ReturnValue>,
+  ...args: Args
+): void {
+  'worklet';
+  if (__DEV__ && !isWorkletFunction(worklet)) {
+    throw new WorkletsError(
+      'The function passed to `scheduleOnRuntimeWithId` is not a worklet.'
+    );
+  }
+  const proxy = globalThis.__workletsModuleProxy;
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
+    proxy.scheduleOnRuntimeFromId(
+      runtimeId,
+      makeShareableCloneOnUIRecursive(() => {
+        'worklet';
+        worklet(...args);
+        globalThis.__flushMicrotasks?.();
+      })
+    );
+  } else {
+    proxy.scheduleOnRuntimeFromId(
+      runtimeId,
+      createSerializable(() => {
+        'worklet';
+        worklet(...args);
+        globalThis.__flushMicrotasks?.();
+      })
+    );
+  }
 }
 
 /**
@@ -230,14 +298,86 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
     );
   }
 
-  return WorkletsModule.runOnRuntimeSync(
-    workletRuntime,
-    createSerializable(() => {
-      'worklet';
-      const result = worklet(...args);
-      return makeShareableCloneOnUIRecursive(result);
-    })
-  );
+  const proxy = globalThis.__workletsModuleProxy;
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
+    return proxy.runOnRuntimeSync(
+      workletRuntime,
+      makeShareableCloneOnUIRecursive(() => {
+        'worklet';
+        const result = worklet(...args);
+        return makeShareableCloneOnUIRecursive(result);
+      })
+    );
+  } else {
+    return proxy.runOnRuntimeSync(
+      workletRuntime,
+      createSerializable(() => {
+        'worklet';
+        const result = worklet(...args);
+        return makeShareableCloneOnUIRecursive(result);
+      })
+    );
+  }
+}
+
+/**
+ * Lets you run a function synchronously on a [Worker
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime)
+ * identified by its id.
+ *
+ * - This function cannot be called from the [UI
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
+ *   or another [Worker
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
+ *   unless the [Bundle
+ *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
+ *   enabled.
+ *
+ * @param runtimeId - The id of the runtime to run the worklet on.
+ * @param worklet - The worklet to run.
+ * @param args - The arguments to pass to the worklet.
+ * @returns The return value of the worklet.
+ */
+// @ts-expect-error This overload is correct since it's what user sees in their code
+// before it's transformed by Worklets Babel plugin.
+export function runOnRuntimeSyncFromId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): ReturnValue;
+
+export function runOnRuntimeSyncFromId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: WorkletFunction<Args, ReturnValue>,
+  ...args: Args
+): ReturnValue {
+  'worklet';
+  if (__DEV__ && !isWorkletFunction(worklet)) {
+    throw new WorkletsError(
+      'The function passed to `runOnRuntimeSyncFromId` is not a worklet.'
+    );
+  }
+
+  const proxy = globalThis.__workletsModuleProxy;
+  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
+    return proxy.runOnRuntimeSyncFromId(
+      runtimeId,
+      makeShareableCloneOnUIRecursive(() => {
+        'worklet';
+        const result = worklet(...args);
+        return makeShareableCloneOnUIRecursive(result);
+      })
+    );
+  } else {
+    return proxy.runOnRuntimeSyncFromId(
+      runtimeId,
+      createSerializable(() => {
+        'worklet';
+        const result = worklet(...args);
+        return makeShareableCloneOnUIRecursive(result);
+      })
+    );
+  }
 }
 
 /**

@@ -230,6 +230,9 @@ jsi::Value WorkletRuntime::get(jsi::Runtime &rt, const jsi::PropNameID &propName
   if (name == "name") {
     return jsi::String::createFromUtf8(rt, name_);
   }
+  if (name == "runtimeId") {
+    return jsi::Value(static_cast<double>(runtimeId_));
+  }
   return jsi::Value::undefined();
 }
 
