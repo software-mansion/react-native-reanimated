@@ -462,12 +462,11 @@ function checkSharedValueUsage(
  *   property of an Animated component you want to animate.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle
  */
-// You cannot pass Shared Values to `useAnimatedStyle` directly.
-// @ts-expect-error This overload is required by our API.
+// @ts-expect-error Public type definition which strips internals.
 export function useAnimatedStyle<Style extends DefaultStyle>(
   updater: () => Style,
   dependencies?: DependencyList | null
-): Style;
+): AnimatedStyleHandle<Style>;
 
 export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
   updater:
@@ -623,22 +622,11 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
           toJSON: animatedStyleHandleToJSON,
           styleUpdaterContainer,
         }
-      : __DEV__
-        ? ({
-            get _requiresAnimatedComponent() {
-              throw new ReanimatedError(
-                'Perhaps you are trying to pass an animated style to a non-animated component. Try creating an animated component using `createAnimatedComponent` function or use `Animated.*` components.'
-              );
-            },
-            viewDescriptors,
-            initial,
-            styleUpdaterContainer,
-          } as AnimatedStyleHandle<Style | AnimatedProps>)
-        : {
-            viewDescriptors,
-            initial,
-            styleUpdaterContainer,
-          };
+      : {
+          viewDescriptors,
+          initial,
+          styleUpdaterContainer,
+        };
   }
 
   return animatedStyleHandle.current;

@@ -238,12 +238,12 @@ function experimental_makeMutableNative<Value>(initial: Value): Mutable<Value> {
 
     get _value(): Value {
       throw new ReanimatedError(
-        'Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
+        'Reading from `_value` directly is only possible on the UI runtime. Perhaps you wanted to access `value` instead?'
       );
     },
     set _value(_newValue: Value) {
       throw new ReanimatedError(
-        'Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
+        'Setting `_value` directly is only possible on the UI runtime. Perhaps you wanted to assign to `value` instead?'
       );
     },
 
@@ -299,12 +299,12 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
 
     get _value(): Value {
       throw new ReanimatedError(
-        'Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
+        'Reading from `_value` directly is only possible on the UI runtime. Perhaps you wanted to access `value` instead?'
       );
     },
     set _value(_newValue: Value) {
       throw new ReanimatedError(
-        'Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
+        'Setting `_value` directly is only possible on the UI runtime. Perhaps you wanted to assign to `value` instead?'
       );
     },
 
