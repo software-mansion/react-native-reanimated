@@ -61,7 +61,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(staticPropsRegistry_, animatedPropsRegistry_)),
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>(viewStylesRepository_)),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
-      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(staticPropsRegistry_, getAnimationTimestamp_)),
+      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(getAnimationTimestamp_, viewStylesRepository_)),
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
@@ -428,51 +428,12 @@ void ReanimatedModuleProxy::runCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &transitionConfig) {
-  // TODO: This is a temporary compatibility layer and will be removed in the next PR
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  const auto viewTag = shadowNode->getTag();
-
-  const auto configObj = transitionConfig.asObject(rt);
-  const auto propertyNames = configObj.getPropertyNames(rt);
-  PropertyNames transitionProperties;
-  CSSTransitionPropertiesSettings settings;
-
-  for (size_t i = 0; i < propertyNames.size(rt); ++i) {
-    const auto propertyName = propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    const auto propertyValue = configObj.getProperty(rt, jsi::PropNameID::forUtf8(rt, propertyName));
-    if (propertyValue.isNull() || propertyValue.isUndefined()) {
-      continue;
-    }
-
-    const auto propertySettingsObj = propertyValue.asObject(rt);
-    settings.emplace(
-        propertyName,
-        CSSTransitionPropertySettings{
-            getDuration(rt, propertySettingsObj),
-            getTimingFunction(rt, propertySettingsObj),
-            getDelay(rt, propertySettingsObj),
-            propertySettingsObj.getProperty(rt, "allowDiscrete").asBool()});
-    transitionProperties.emplace_back(propertyName);
-  }
+  const auto config = parseCSSTransitionConfig(rt, transitionConfig);
 
   {
     auto lock = cssTransitionsRegistry_->lock();
-    if (!cssTransitionsRegistry_->hasTransition(viewTag)) {
-      CSSTransitionConfig fullConfig;
-      fullConfig.properties = std::make_optional(transitionProperties);
-      fullConfig.settings = settings;
-      auto transition = std::make_shared<CSSTransition>(std::move(shadowNode), fullConfig, viewStylesRepository_);
-      cssTransitionsRegistry_->add(transition);
-    } else {
-      PartialCSSTransitionConfig partialConfig;
-      if (!transitionProperties.empty()) {
-        partialConfig.properties = std::make_optional(std::make_optional(transitionProperties));
-      }
-      if (!settings.empty()) {
-        partialConfig.settings = settings;
-      }
-      cssTransitionsRegistry_->updateSettings(viewTag, partialConfig);
-    }
+    cssTransitionsRegistry_->run(rt, std::move(shadowNode), config);
   }
 
   maybeRunCSSLoop();

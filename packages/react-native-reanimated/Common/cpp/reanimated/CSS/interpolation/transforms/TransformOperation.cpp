@@ -196,7 +196,10 @@ folly::dynamic TransformOperationBase<TOperation, TValue>::valueToDynamic() cons
 
 template <TransformOp TOperation, typename TValue>
 bool TransformOperationBase<TOperation, TValue>::areValuesEqual(const StyleOperation &other) const {
-  return value == static_cast<const TransformOperationBase<TOperation, TValue> &>(other).value;
+  if (typeid(*this) == typeid(other)) {
+    return value == static_cast<const TransformOperationBase<TOperation, TValue> &>(other).value;
+  }
+  return false;
 }
 
 // Rotate operations

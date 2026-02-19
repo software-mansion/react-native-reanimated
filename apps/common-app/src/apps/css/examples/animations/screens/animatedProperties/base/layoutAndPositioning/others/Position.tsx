@@ -20,6 +20,7 @@ export default function Position() {
             position: 'relative',
             top: spacing.xl,
           },
+          // eslint-disable-next-line perfectionist/sort-objects
           '100%': {
             left: spacing.xl,
             position: 'absolute',

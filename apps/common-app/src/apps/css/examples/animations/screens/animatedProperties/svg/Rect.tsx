@@ -13,10 +13,10 @@ export default function RectExample() {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes<RectProps> }, RectProps>
       buildAnimation={({ keyframes }) => ({
-        animationName: keyframes,
         animationDirection: 'alternate',
         animationDuration: '0.5s',
         animationIterationCount: 'infinite',
+        animationName: keyframes,
         animationTimingFunction: 'linear',
       })}
       renderExample={({ animation }) => (
@@ -38,15 +38,17 @@ export default function RectExample() {
             {
               examples: [
                 {
+                  description: 'Animates from default `x=20` to `x=50`',
                   keyframes: {
                     to: {
                       x: 50,
                     },
                   },
                   title: 'Absolute',
-                  description: 'Animates from default `x=20` to `x=50`',
                 },
                 {
+                  description:
+                    'Animation using only percentage values for smooth relative positioning',
                   keyframes: {
                     from: {
                       x: '10%',
@@ -56,10 +58,10 @@ export default function RectExample() {
                     },
                   },
                   title: 'Percentage',
-                  description:
-                    'Animation using only percentage values for smooth relative positioning',
                 },
                 {
+                  description:
+                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the X position is changed **abruptly**',
                   keyframes: {
                     from: {
                       x: 20,
@@ -69,8 +71,6 @@ export default function RectExample() {
                     },
                   },
                   title: 'Mixed',
-                  description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the X position is changed **abruptly**',
                 },
               ],
               title: 'X Position',
@@ -78,15 +78,17 @@ export default function RectExample() {
             {
               examples: [
                 {
+                  description: 'Animates from default `y=20` to `y=50`',
                   keyframes: {
                     to: {
                       y: 50,
                     },
                   },
                   title: 'Absolute',
-                  description: 'Animates from default `y=20` to `y=50`',
                 },
                 {
+                  description:
+                    'Animation using only percentage values for smooth relative positioning',
                   keyframes: {
                     from: {
                       y: '10%',
@@ -96,10 +98,10 @@ export default function RectExample() {
                     },
                   },
                   title: 'Percentage',
-                  description:
-                    'Animation using only percentage values for smooth relative positioning',
                 },
                 {
+                  description:
+                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the Y position is changed **abruptly**',
                   keyframes: {
                     from: {
                       y: 20,
@@ -109,8 +111,6 @@ export default function RectExample() {
                     },
                   },
                   title: 'Mixed',
-                  description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the Y position is changed **abruptly**',
                 },
               ],
               title: 'Y Position',
@@ -123,20 +123,22 @@ export default function RectExample() {
             {
               examples: [
                 {
+                  description: 'Animates from default `width=60` to `width=80`',
                   keyframes: {
                     from: {
-                      width: 0,
                       height: 0,
+                      width: 0,
                     },
                     to: {
-                      width: 80,
                       height: 80,
+                      width: 80,
                     },
                   },
                   title: 'Absolute',
-                  description: 'Animates from default `width=60` to `width=80`',
                 },
                 {
+                  description:
+                    'Animation using only percentage values for smooth relative scaling',
                   keyframes: {
                     from: {
                       height: '0%',
@@ -148,10 +150,10 @@ export default function RectExample() {
                     },
                   },
                   title: 'Percentage',
-                  description:
-                    'Animation using only percentage values for smooth relative scaling',
                 },
                 {
+                  description:
+                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the width is changed **abruptly**',
                   keyframes: {
                     from: {
                       width: 60,
@@ -161,8 +163,6 @@ export default function RectExample() {
                     },
                   },
                   title: 'Mixed',
-                  description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the width is changed **abruptly**',
                 },
               ],
               title: 'Width',
@@ -170,16 +170,18 @@ export default function RectExample() {
             {
               examples: [
                 {
+                  description:
+                    'Animates from default `height=60` to `height=80`',
                   keyframes: {
                     to: {
                       height: 80,
                     },
                   },
                   title: 'Absolute',
-                  description:
-                    'Animates from default `height=60` to `height=80`',
                 },
                 {
+                  description:
+                    'Animation using only percentage values for smooth relative scaling',
                   keyframes: {
                     from: {
                       height: '30%',
@@ -189,10 +191,10 @@ export default function RectExample() {
                     },
                   },
                   title: 'Percentage',
-                  description:
-                    'Animation using only percentage values for smooth relative scaling',
                 },
                 {
+                  description:
+                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the height is changed **abruptly**',
                   keyframes: {
                     from: {
                       height: 60,
@@ -202,8 +204,6 @@ export default function RectExample() {
                     },
                   },
                   title: 'Mixed',
-                  description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the height is changed **abruptly**',
                 },
               ],
               title: 'Height',
@@ -216,15 +216,17 @@ export default function RectExample() {
             {
               examples: [
                 {
+                  description: 'Animates from default `rx=0` to `rx=20`',
                   keyframes: {
                     to: {
                       rx: 20,
                     },
                   },
                   title: 'Absolute',
-                  description: 'Animates from default `rx=0` to `rx=20`',
                 },
                 {
+                  description:
+                    'Animation using only percentage values for smooth relative scaling',
                   keyframes: {
                     from: {
                       rx: '5%',
@@ -234,10 +236,10 @@ export default function RectExample() {
                     },
                   },
                   title: 'Percentage',
-                  description:
-                    'Animation using only percentage values for smooth relative scaling',
                 },
                 {
+                  description:
+                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the horizontal radius is changed **abruptly**',
                   keyframes: {
                     from: {
                       rx: 5,
@@ -247,8 +249,6 @@ export default function RectExample() {
                     },
                   },
                   title: 'Mixed',
-                  description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the horizontal radius is changed **abruptly**',
                 },
               ],
               title: 'Horizontal Radius (rx)',
@@ -256,15 +256,17 @@ export default function RectExample() {
             {
               examples: [
                 {
+                  description: 'Animates from default `ry=0` to `ry=20`',
                   keyframes: {
                     to: {
                       ry: 20,
                     },
                   },
                   title: 'Absolute',
-                  description: 'Animates from default `ry=0` to `ry=20`',
                 },
                 {
+                  description:
+                    'Animation using only percentage values for smooth relative scaling',
                   keyframes: {
                     from: {
                       ry: '5%',
@@ -274,10 +276,10 @@ export default function RectExample() {
                     },
                   },
                   title: 'Percentage',
-                  description:
-                    'Animation using only percentage values for smooth relative scaling',
                 },
                 {
+                  description:
+                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the vertical radius is changed **abruptly**',
                   keyframes: {
                     from: {
                       ry: 5,
@@ -287,8 +289,6 @@ export default function RectExample() {
                     },
                   },
                   title: 'Mixed',
-                  description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the vertical radius is changed **abruptly**',
                 },
               ],
               title: 'Vertical Radius (ry)',

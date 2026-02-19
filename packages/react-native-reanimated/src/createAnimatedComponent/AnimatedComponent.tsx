@@ -523,8 +523,11 @@ export default class AnimatedComponent
     // TODO: Remove need for this \/\/\/\/.
     // RNSVG expects Gradient elem to have stops passed as children. When we want to animate them,
     // we provide them using `gradient` prop.
-    // Hack below gets rid of RNSVG warnings about children being empty.
-    if (this.ChildComponent.displayName === 'RadialGradient') {
+    // Hack below gets rid of RNSVG warnings about not having children.
+    if (
+      this.ChildComponent.displayName === 'RadialGradient' ||
+      this.ChildComponent.displayName === 'LinearGradient'
+    ) {
       if (filteredProps.children === undefined) {
         filteredProps.children = <Fragment />;
       }

@@ -5,6 +5,7 @@ import {
   SVG_ELLIPSE_PROPERTIES_CONFIG,
   SVG_IMAGE_PROPERTIES_CONFIG,
   SVG_LINE_PROPERTIES_CONFIG,
+  SVG_LINEAR_GRADIENT_PROPERTIES_CONFIG,
   SVG_PATH_PROPERTIES_CONFIG,
   SVG_RADIAL_GRADIENT_PROPERTIES_CONFIG,
   SVG_RECT_PROPERTIES_CONFIG,
@@ -15,6 +16,10 @@ export function initSvgCssSupport() {
   registerComponentPropsBuilder('RNSVGEllipse', SVG_ELLIPSE_PROPERTIES_CONFIG);
   registerComponentPropsBuilder('RNSVGImage', SVG_IMAGE_PROPERTIES_CONFIG);
   registerComponentPropsBuilder('RNSVGLine', SVG_LINE_PROPERTIES_CONFIG);
+  registerComponentPropsBuilder(
+    'RNSVGLinearGradient',
+    SVG_LINEAR_GRADIENT_PROPERTIES_CONFIG
+  );
   registerComponentPropsBuilder(
     'RNSVGRadialGradient',
     SVG_RADIAL_GRADIENT_PROPERTIES_CONFIG
