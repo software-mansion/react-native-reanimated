@@ -114,13 +114,15 @@ function AnimatedPropsTest() {
       renderItem: () => null,
     }));
 
-    // Should pass because required props are set but fails
-    // because AnimatedProps are incorrectly typed.
+    // This test has a generic type mismatch issue:
+    // createAnimatedComponent(FlatList) creates FlatListProps<unknown>
+    // but requiredProps is FlatListProps<string>
+    // TODO: Fix generic propagation in createAnimatedComponent for FlatList
     return (
       <>
-        {/* @ts-expect-error Fails due to bad type. */}
+        {/* @ts-expect-error Generic type mismatch (string vs unknown) */}
         <AnimatedFlatList animatedProps={requiredProps} />;
-        {/* @ts-expect-error Fails due to bad type. */}
+        {/* @ts-expect-error Animated.FlatList uses separate typing */}
         <Animated.FlatList animatedProps={requiredProps} />;
       </>
     );
@@ -131,17 +133,18 @@ function AnimatedPropsTest() {
     const partOfRequiredProps = useAnimatedProps<FlatListProps<string>>(() => ({
       data: ['1'],
     }));
-    // TODO
-    // Should pass because required props are set but fails
-    // because useAnimatedProps and createAnimatedComponent are incorrectly typed.
+    // This test has a generic type mismatch issue:
+    // createAnimatedComponent(FlatList) creates FlatListProps<unknown>
+    // but partOfRequiredProps is FlatListProps<string>
+    // TODO: Fix generic propagation in createAnimatedComponent for FlatList
     return (
       <>
         <AnimatedFlatList
           renderItem={() => null}
-          // @ts-expect-error Fails due to bad type.
+          // @ts-expect-error Generic type mismatch (string vs unknown)
           animatedProps={partOfRequiredProps}
         />
-        {/* @ts-expect-error Fails due to bad type. */}
+        {/* @ts-expect-error Generic type mismatch + Animated.FlatList uses separate typing */}
         <Animated.FlatList
           animatedProps={partOfRequiredProps}
           renderItem={() => null}
@@ -222,6 +225,62 @@ function AnimatedPropsTest() {
     return (
       // @ts-expect-error Invalid types are not supported - only useAnimatedProps results are allowed in the array
       <Animated.View animatedProps={[animatedProps, 'invalid']} />
+    );
+  }
+
+  // Test that required props become optional when provided via animatedProps
+  function AnimatedPropsRequiredPropsBecomeOptional() {
+    interface CustomProps {
+      requiredProp: number;
+      optionalProp?: string;
+    }
+
+    function CustomComponent(props: CustomProps) {
+      return null;
+    }
+
+    const AnimatedCustom = Animated.createAnimatedComponent(CustomComponent);
+
+    const animatedProps = useAnimatedProps(() => ({
+      requiredProp: 42,
+    }));
+
+    // With the new typing, `requiredProp` is optional because it's provided via animatedProps
+    return (
+      <>
+        <AnimatedCustom animatedProps={animatedProps} />
+        <AnimatedCustom animatedProps={animatedProps} optionalProp="test" />
+        {/* Can still pass requiredProp directly if desired */}
+        <AnimatedCustom requiredProp={100} />
+      </>
+    );
+  }
+
+  // Test that props NOT in animatedProps are still required
+  function AnimatedPropsPartialRequiredStillRequired() {
+    interface CustomProps {
+      requiredProp1: number;
+      requiredProp2: string;
+    }
+
+    function CustomComponent(props: CustomProps) {
+      return null;
+    }
+
+    const AnimatedCustom = Animated.createAnimatedComponent(CustomComponent);
+
+    // Only provide requiredProp1 via animatedProps
+    const animatedProps = useAnimatedProps(() => ({
+      requiredProp1: 42,
+    }));
+
+    return (
+      <>
+        {/* requiredProp2 must still be provided directly */}
+        <AnimatedCustom animatedProps={animatedProps} requiredProp2="test" />
+        {/* @ts-expect-error requiredProp2 is missing */}
+        <AnimatedCustom animatedProps={animatedProps} />
+      </>
     );
   }
 }
