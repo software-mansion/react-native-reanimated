@@ -1,9 +1,9 @@
 'use strict';
 import type { AnimationObject, Mutable } from './commonTypes';
 
-export function valueSetter<Value>(
+export function valueSetter<Value = unknown>(
   mutable: Mutable<Value>,
-  value: Value,
+  valueOrFactory: Value,
   forceUpdate = false
 ): void {
   'worklet';
@@ -16,15 +16,15 @@ export function valueSetter<Value>(
 
   // Call the factory function and store the result in value to check
   // if the value returned by the factory function is an AnimationObject
-  const maybeAnimation = typeof value === 'function' ? value() : value;
+  const value: Value =
+    typeof valueOrFactory === 'function' ? valueOrFactory() : valueOrFactory;
+  const valueObject =
+    typeof value === 'object' && value !== null
+      ? (value as Record<string, unknown>)
+      : {};
 
   // Check if the value returned by the factory function is not an AnimationObject
-  if (
-    maybeAnimation === null ||
-    typeof maybeAnimation !== 'object' ||
-    !('onFrame' in maybeAnimation) ||
-    !('onStart' in maybeAnimation)
-  ) {
+  if (valueObject.onFrame === undefined || valueObject.onStart === undefined) {
     // update the value of the mutable only if it's different from the current
     // value or if forceUpdate is true to prevent triggering mappers that treat
     // this value as an input
@@ -34,7 +34,7 @@ export function valueSetter<Value>(
     return;
   }
 
-  const animation = maybeAnimation as AnimationObject<Value>;
+  const animation = value as AnimationObject<Value>;
 
   // prevent setting again to the same value and triggering the mappers that
   // treat this value as an input this happens when the animation's target value
@@ -77,9 +77,6 @@ export function valueSetter<Value>(
     animation.finished = true;
     animation.timestamp = timestamp;
 
-    // TODO TYPESCRIPT
-    // For now I'll assume that `animation.current` is always defined
-    // but actually need to dive into animations to understand it
     mutable._value = animation.current!;
     if (finished) {
       animation.callback?.(true /* finished */);
