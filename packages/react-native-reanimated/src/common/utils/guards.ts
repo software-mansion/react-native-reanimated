@@ -41,9 +41,6 @@ export const isConfigPropertyAlias = <P extends AnyRecord>(
   'as' in value &&
   typeof value.as === 'string';
 
-export const isReactNativeViewName = (componentName: string): boolean =>
-  componentName.startsWith('RCT');
-
 export const hasValueProcessor = <T extends (params: unknown) => unknown>(
   configValue: unknown
 ): configValue is { process: T } =>
