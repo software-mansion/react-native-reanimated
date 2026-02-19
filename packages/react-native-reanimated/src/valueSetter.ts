@@ -14,25 +14,17 @@ export function valueSetter<Value>(
     mutable._animation = null;
   }
 
-  let animation: AnimationObject<Value> | undefined;
+  // Call the factory function and store the result in value to check
+  // if the value returned by the factory function is an AnimationObject
+  const maybeAnimation = typeof value === 'function' ? value() : value;
 
-  if (typeof value === 'function') {
-    // Call the factory function and store the result in value to check
-    // if the value returned by the factory function is an AnimationObject
-    value = value();
-  }
-
-  // Check if the value is an AnimationObject
+  // Check if the value returned by the factory function is not an AnimationObject
   if (
-    value !== null &&
-    typeof value === 'object' &&
-    'onFrame' in value &&
-    'onStart' in value
+    maybeAnimation === null ||
+    typeof maybeAnimation !== 'object' ||
+    !('onFrame' in maybeAnimation) ||
+    !('onStart' in maybeAnimation)
   ) {
-    animation = value as AnimationObject<Value>;
-  }
-
-  if (!animation) {
     // update the value of the mutable only if it's different from the current
     // value or if forceUpdate is true to prevent triggering mappers that treat
     // this value as an input
@@ -41,6 +33,8 @@ export function valueSetter<Value>(
     }
     return;
   }
+
+  const animation = maybeAnimation as AnimationObject<Value>;
 
   // prevent setting again to the same value and triggering the mappers that
   // treat this value as an input this happens when the animation's target value
