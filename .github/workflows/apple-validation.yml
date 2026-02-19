@@ -1,0 +1,60 @@
+name: Apple validation
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/apple-validation.yml'
+      - '.github/actions/apple-validation/**'
+      - 'packages/react-native-reanimated/apple/**'
+      - 'packages/react-native-reanimated/package.json'
+      - 'packages/react-native-reanimated/scripts/validate-apple.sh'
+      - 'packages/react-native-reanimated/scripts/cpplint.sh'
+      - 'packages/react-native-reanimated/Common/cpp/**'
+      - 'packages/react-native-worklets/apple/**'
+      - 'packages/react-native-worklets/package.json'
+      - 'packages/react-native-worklets/Common/**'
+  pull_request:
+    paths:
+      - '.github/workflows/apple-validation.yml'
+      - '.github/actions/apple-validation/**'
+      - 'packages/react-native-reanimated/apple/**'
+      - 'packages/react-native-reanimated/package.json'
+      - 'packages/react-native-reanimated/scripts/validate-apple.sh'
+      - 'packages/react-native-reanimated/scripts/cpplint.sh'
+      - 'packages/react-native-reanimated/Common/cpp/**'
+      - 'packages/react-native-worklets/apple/**'
+      - 'packages/react-native-worklets/package.json'
+      - 'packages/react-native-worklets/Common/**'
+  merge_group:
+    branches:
+      - main
+  workflow_call:
+    inputs:
+      package:
+        type: string
+        required: false
+        description: 'Package to validate (react-native-reanimated or react-native-worklets). If not specified, validates both.'
+  workflow_dispatch:
+
+jobs:
+  apple-validation:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ inputs.package && fromJSON(format('["{0}"]', inputs.package)) || fromJSON('["react-native-reanimated", "react-native-worklets"]') }}
+    concurrency:
+      group: apple-validation-${{ matrix.package }}-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Apple validation
+        uses: ./.github/actions/apple-validation
+        with:
+          package-dir: packages/${{ matrix.package }}

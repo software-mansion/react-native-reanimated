@@ -1,5 +1,5 @@
 'use strict';
-export type { AnimatedProps } from './commonTypes';
+
 export type {
   AnimatedComponentRef,
   AnimatedComponentType,

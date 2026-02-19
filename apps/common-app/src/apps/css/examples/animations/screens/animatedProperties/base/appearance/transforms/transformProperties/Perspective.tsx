@@ -65,10 +65,10 @@ export default function Perspective() {
             'Negative perspective values are allowed (not on the **web**). They **invert** the view transformation relative to the **transformation origin** (e.g. invert the rotation direction).',
           examples: [
             {
+              description: 'Perspective is between 20 and -100',
               from: [{ perspective: 20 }, { rotateY: '30deg' }],
               num: 12,
               title: 'With Y rotation',
-              description: 'Perspective is between 20 and -100',
               to: [{ perspective: -100 }, { rotateY: '30deg' }],
             },
           ],
