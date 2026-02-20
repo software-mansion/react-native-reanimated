@@ -13,12 +13,8 @@
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
+
 #include <cstdint>
-
-#ifdef __ANDROID__
-#include <fbjni/fbjni.h>
-#endif // __ANDROID__
-
 #include <memory>
 #include <string>
 #include <utility>

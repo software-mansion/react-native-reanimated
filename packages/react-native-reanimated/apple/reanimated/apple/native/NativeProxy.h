@@ -11,9 +11,8 @@ std::shared_ptr<reanimated::ReanimatedModuleProxy> createReanimatedModuleProxy(
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsInvoker,
-    jsi::Runtime &uiRuntime,
-    std::shared_ptr<worklets::WorkletRuntimeHolder> uiRuntimeHolder,
-    std::shared_ptr<worklets::UISchedulerHolder> uiSchedulerHolder);
+    const std::shared_ptr<worklets::WorkletRuntimeHolder> &uiRuntimeHolder,
+    const std::shared_ptr<worklets::UISchedulerHolder> &uiSchedulerHolder);
 
 } // namespace reanimated
 

@@ -538,7 +538,7 @@ void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) con
     return;
   }
   layoutAnimations_.erase(tag);
-  scheduleOnUI(uiSchedulerHolder_, [=, weakThis = weak_from_this()]() {
+  scheduleOnUI(uiSchedulerHolder_, [weakThis = weak_from_this(), tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;

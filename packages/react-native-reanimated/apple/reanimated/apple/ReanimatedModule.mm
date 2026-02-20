@@ -154,11 +154,11 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
   const auto uiRuntimeHolder = [self getUIRuntimeHolder:rnRuntime];
   const auto uiSchedulerHolder = [self getUISchedulerHolder:rnRuntime];
-  auto &uiRuntime = *getRuntimeAddressFromHolder(uiRuntimeHolder);
 
   auto reanimatedModuleProxy = reanimated::createReanimatedModuleProxy(
-      _nodesManager, _moduleRegistry, rnRuntime, jsCallInvoker, uiRuntime, uiRuntimeHolder, uiSchedulerHolder);
+      _nodesManager, _moduleRegistry, rnRuntime, jsCallInvoker, uiRuntimeHolder, uiSchedulerHolder);
 
+  auto &uiRuntime = *getRuntimeAddressFromHolder(uiRuntimeHolder);
   RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy);
   [self attachReactEventListener:reanimatedModuleProxy];
 

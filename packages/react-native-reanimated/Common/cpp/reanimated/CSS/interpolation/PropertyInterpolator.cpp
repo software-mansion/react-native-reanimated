@@ -36,7 +36,6 @@ std::vector<std::pair<double, jsi::Value>> PropertyInterpolator::parseJSIKeyfram
     throw std::invalid_argument(
         "[Reanimated] Received invalid keyframes object for property: " + getPropertyPathString() +
         ".\n\nExpected an array of objects with 'offset' and 'value' properties, got: " +
-        // TODO: Convert to string inside VM
         std::string(JSIValueToString(rt, keyframes)));
   }
 

@@ -46,11 +46,6 @@ export function createNativeReanimatedModule(): IReanimatedModule {
   return new NativeReanimatedModule();
 }
 
-declare global {
-  var __UI_WORKLET_RUNTIME_HOLDER: object | undefined;
-  var __UI_SCHEDULER_HOLDER: object | undefined;
-}
-
 function assertSingleReanimatedInstance() {
   if (
     global._REANIMATED_VERSION_JS !== undefined &&
@@ -79,10 +74,10 @@ class NativeReanimatedModule implements IReanimatedModule {
       assertWorkletsVersion();
     }
     global._REANIMATED_VERSION_JS = jsVersion;
-    if (global.__reanimatedModuleProxy === undefined && ReanimatedTurboModule) {
-      globalThis.__UI_WORKLET_RUNTIME_HOLDER = getUIRuntimeHolder();
-      globalThis.__UI_SCHEDULER_HOLDER = getUISchedulerHolder();
-      if (!ReanimatedTurboModule.installTurboModule()) {
+
+    if (ReanimatedTurboModule) {
+      const status = installTurboModule();
+      if (!status) {
         // This path means that React Native has failed on reload.
         // We don't want to throw any errors to not mislead the users
         // that the problem is related to Reanimated.
@@ -90,7 +85,6 @@ class NativeReanimatedModule implements IReanimatedModule {
         this.#reanimatedModuleProxy = new DummyReanimatedModuleProxy();
         return;
       }
-      delete globalThis.__UI_WORKLET_RUNTIME_HOLDER;
     }
 
     if (global.__reanimatedModuleProxy === undefined) {

@@ -48,8 +48,8 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean installTurboModule() {
     ReactApplicationContext reactContext = getReactApplicationContext();
+    reactContext.assertOnJSQueueThread();
     mNodesManager = new NodesManager(reactContext);
-    getReactApplicationContext().assertOnJSQueueThread();
     mNodesManager.getNativeProxy().installJSIBindings();
     return true;
   }
