@@ -1,20 +1,16 @@
 #pragma once
 
+#include <jsi/jsi.h>
 #include <react/renderer/graphics/Transform.h>
 #include <react/renderer/mounting/ShadowView.h>
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 
-#include <worklets/SharedItems/Serializable.h>
-
-#include <jsi/jsi.h>
 #include <stdio.h>
-#include <functional>
 #include <memory>
 #include <mutex>
-#include <stack>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -22,7 +18,6 @@ namespace reanimated {
 
 using namespace facebook;
 using namespace facebook::react;
-using namespace worklets;
 using SharedTag = std::string;
 
 // [0] is before and [1] is after (best to use BeforeOrAfter enum)
@@ -44,7 +39,7 @@ using Transitions = std::vector<std::pair<SharedTag, Transition>>;
 struct LayoutAnimationConfig {
   int tag;
   LayoutAnimationType type;
-  std::shared_ptr<Serializable> config;
+  std::shared_ptr<worklets::Serializable> config;
   std::string sharedTransitionTag;
 };
 
@@ -63,15 +58,15 @@ class LayoutAnimationsManager {
   std::shared_ptr<SharedTransitionManager> getSharedTransitionManager();
 
  private:
-  std::unordered_map<int, std::shared_ptr<Serializable>> &getConfigsForType(const LayoutAnimationType type);
+  std::unordered_map<int, std::shared_ptr<worklets::Serializable>> &getConfigsForType(const LayoutAnimationType type);
 
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
-  std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimationsForNativeID_;
-  std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitionsForNativeID_;
-  std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitions_;
-  std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimations_;
-  std::unordered_map<int, std::shared_ptr<Serializable>> exitingAnimations_;
-  std::unordered_map<int, std::shared_ptr<Serializable>> layoutAnimations_;
+  std::unordered_map<int, std::shared_ptr<worklets::Serializable>> enteringAnimationsForNativeID_;
+  std::unordered_map<int, std::shared_ptr<worklets::Serializable>> sharedTransitionsForNativeID_;
+  std::unordered_map<int, std::shared_ptr<worklets::Serializable>> sharedTransitions_;
+  std::unordered_map<int, std::shared_ptr<worklets::Serializable>> enteringAnimations_;
+  std::unordered_map<int, std::shared_ptr<worklets::Serializable>> exitingAnimations_;
+  std::unordered_map<int, std::shared_ptr<worklets::Serializable>> layoutAnimations_;
   std::unordered_map<int, bool> shouldAnimateExitingForTag_;
   mutable std::recursive_mutex animationsMutex_; // Protects `enteringAnimations_`, `exitingAnimations_`,
   // `layoutAnimations_` and `shouldAnimateExitingForTag_`.
