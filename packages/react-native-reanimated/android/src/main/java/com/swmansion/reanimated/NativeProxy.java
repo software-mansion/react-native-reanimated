@@ -3,6 +3,7 @@ package com.swmansion.reanimated;
 import android.content.ContentResolver;
 import android.os.SystemClock;
 import android.provider.Settings;
+import android.util.Log;
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
@@ -136,11 +137,11 @@ public class NativeProxy {
         try {
           workletsModule.getClass().getMethod("toggleSlowAnimations").invoke(workletsModule);
         } catch (Exception e) {
-          // Method not available or invocation failed, we can ignore this.
+          Log.e("Reanimated", "Failed to toggle slow animations in WorkletsModule", e);
         }
       }
     } catch (ClassNotFoundException e) {
-      // WorkletsModule is not available, we can ignore this.
+      Log.e("Reanimated", "WorkletsModule not found when toggling slow animations", e);
     }
   }
 
