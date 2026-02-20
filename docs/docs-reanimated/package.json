@@ -64,7 +64,7 @@
     "source-map-loader": "4.0.1",
     "typescript": "5.8.3",
     "usehooks-ts": "2.9.1",
-    "webpack": "5.102.1"
+    "webpack": "5.104.1"
   },
   "devDependencies": {
     "@babel/preset-flow": "7.25.9",
