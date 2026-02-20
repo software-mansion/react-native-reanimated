@@ -56,7 +56,9 @@ export {
   runOnRuntime,
   runOnRuntimeAsync,
   runOnRuntimeSync,
+  runOnRuntimeSyncFromId,
   scheduleOnRuntime,
+  scheduleOnRuntimeWithId,
 } from './runtimes';
 export {
   callMicrotasks,
