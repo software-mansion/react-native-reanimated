@@ -181,10 +181,6 @@ apply from: "./fix-prefab.gradle"
 
 android {
     compileSdkVersion safeExtGet("compileSdkVersion", 36)
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
 
     namespace "com.swmansion.worklets"
 
