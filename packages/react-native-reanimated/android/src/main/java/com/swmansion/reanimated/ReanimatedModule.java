@@ -4,12 +4,10 @@ import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.module.annotations.ReactModule;
-import com.swmansion.worklets.WorkletsModule;
 
 @ReactModule(name = ReanimatedModule.NAME)
 public class ReanimatedModule extends NativeReanimatedModuleSpec implements LifecycleEventListener {
   private NodesManager mNodesManager;
-  private WorkletsModule mWorkletsModule;
   private boolean mTurboModuleInstalled = false;
 
   public ReanimatedModule(ReactApplicationContext reactContext) {
@@ -52,8 +50,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec implements Life
   public boolean installTurboModule() {
     var reactContext = getReactApplicationContext();
     reactContext.assertOnJSQueueThread();
-    mWorkletsModule = reactContext.getNativeModule(WorkletsModule.class);
-    mNodesManager = new NodesManager(reactContext, mWorkletsModule);
+    mNodesManager = new NodesManager(reactContext);
     mNodesManager.getNativeProxy().installJSIBindings();
     return true;
   }
