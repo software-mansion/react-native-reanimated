@@ -23,7 +23,31 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
     const jsi::Value &updates = item.getProperty(rt, "updates");
-    addUpdatesToBatch(shadowNode, jsi::dynamicFromValue(rt, updates));
+    auto props = jsi::dynamicFromValue(rt, updates);
+
+    if (!strcmp(shadowNode->getComponentName(), "Paragraph") || !strcmp(shadowNode->getComponentName(), "Text")) {
+      bool hasTextProp = false;
+      for (const auto &[key, value] : props.items()) {
+        if (key == "text") {
+          hasTextProp = true;
+          // Pass the text prop to child component
+          const auto &childShadowNode = shadowNode->getChildren()[0];
+          react_native_assert(!strcmp(childShadowNode->getComponentName(), "RawText"));
+          addUpdatesToBatch(childShadowNode, folly::dynamic::object("text", value.asString()));
+          if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
+            timestampMap_[childShadowNode->getTag()] = timestamp;
+          }
+          break;
+        }
+      }
+      if (hasTextProp && props.size() == 1) {
+        // Skip adding empty batch for the parent component
+        continue;
+      }
+      props.erase("text");
+    }
+
+    addUpdatesToBatch(shadowNode, props);
 
     if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
       timestampMap_[shadowNode->getTag()] = timestamp;

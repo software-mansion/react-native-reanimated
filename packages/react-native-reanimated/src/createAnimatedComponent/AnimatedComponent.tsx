@@ -6,7 +6,7 @@ import { Fragment } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { checkStyleOverwriting, maybeBuild } from '../animationBuilder';
-import { IS_JEST, IS_WEB, logger } from '../common';
+import { IS_JEST, IS_WEB, logger, ReanimatedError } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
@@ -520,6 +520,36 @@ export default class AnimatedComponent
       nativeID = `${this.reanimatedID}`;
     }
 
+    if (
+      this.ChildComponent.displayName === 'Text' &&
+      filteredProps.text !== undefined
+    ) {
+      if (filteredProps.children !== undefined) {
+        throw new ReanimatedError(
+          '<Animated.Text> component with animated prop `text` must be empty.'
+        );
+      }
+      // TODO: handle case when `text` property is not present during initial render but appears later on
+
+      // Pass the current value of animated prop `text` as `children` so that the text displays correctly during first render
+      filteredProps.children = normalizeTextProp(filteredProps.text);
+    }
+
+    // if (
+    //   this.ChildComponent.displayName === 'Text' &&
+    //   isSharedValue(this.props.text)
+    // ) {
+    //   filteredProps.children = normalizeTextProp(filteredProps.text);
+    // }
+
+    // if (this.ChildComponent.displayName === 'Text') {
+    //   console.log(filteredProps.text);
+    // }
+
+    // if (this.ChildComponent.displayName === 'Circle') {
+    //   console.log('filteredProps', filteredProps);
+    // }
+
     // TODO: Remove need for this \/\/\/\/.
     // RNSVG expects Gradient elem to have stops passed as children. When we want to animate them,
     // we provide them using `gradient` prop.
@@ -575,4 +605,11 @@ function filterOutAnimatedStyles(
       }
       return styleElement;
     });
+}
+
+function normalizeTextProp(text: unknown): string {
+  if (text === '') {
+    return '\u200b'; // use zero-width space when text is empty to prevent collapsing of the Text component
+  }
+  return String(text); // convert numbers to string, keep strings as they are
 }
