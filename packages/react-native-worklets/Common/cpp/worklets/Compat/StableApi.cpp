@@ -1,6 +1,6 @@
 #include <jsi/jsi.h>
 #include <worklets/Compat/Holders.h>
-#include <worklets/Compat/ReanimatedApi.h>
+#include <worklets/Compat/StableApi.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>

@@ -1,7 +1,7 @@
 #pragma once
 
+#include <worklets/Compat/StableApi.h>
 #include <worklets/Registries/WorkletRuntimeRegistry.h>
-#include <worklets/SharedItems/SerializableBase.h>
 
 #include <jsi/jsi.h>
 

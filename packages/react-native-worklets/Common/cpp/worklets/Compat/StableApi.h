@@ -1,7 +1,5 @@
 #pragma once
 
-#include <worklets/SharedItems/SerializableBase.h>
-
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -14,6 +12,49 @@ class Object;
 } // namespace facebook::jsi
 
 namespace worklets {
+
+class Serializable {
+ public:
+  virtual facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt) = 0;
+
+  virtual ~Serializable();
+
+  enum class ValueType : std::uint8_t {
+    ArrayBufferType,
+    ArrayType,
+    BigIntType,
+    BooleanType,
+    CustomType,
+    HandleType,
+    HostFunctionType,
+    HostObjectType,
+    ImportType,
+    MapType,
+    NullType,
+    NumberType,
+    ObjectType,
+    RemoteFunctionType,
+    SetType,
+    ShareableType,
+    StringType,
+    SymbolType,
+    SynchronizableType,
+    TurboModuleLikeType,
+    UndefinedType,
+    WorkletType,
+  };
+
+  explicit Serializable(ValueType valueType) : valueType_(valueType) {}
+
+  inline ValueType valueType() const {
+    return valueType_;
+  }
+
+  static std::shared_ptr<Serializable> undefined();
+
+ protected:
+  ValueType valueType_;
+};
 
 class WorkletRuntimeHolder {
  public:

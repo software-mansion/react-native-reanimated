@@ -22,7 +22,6 @@ class Serializable {
   enum class ValueType : std::uint8_t {
     ArrayBufferType,
     ArrayType,
-    BeginType,
     BigIntType,
     BooleanType,
     CustomType,
