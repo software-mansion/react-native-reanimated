@@ -2,10 +2,11 @@
 
 #include <memory>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 namespace reanimated {
+
+using namespace worklets;
 
 void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);

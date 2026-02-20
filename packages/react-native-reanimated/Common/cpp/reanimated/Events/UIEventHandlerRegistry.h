@@ -1,7 +1,8 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <worklets/WorkletRuntime/WorkletRuntime.h>
+#include <reanimated/Compat/WorkletsApi.h>
+#include <reanimated/Events/UIEventHandler.h>
 
 #include <map>
 #include <memory>
@@ -13,8 +14,6 @@
 using namespace facebook;
 
 namespace reanimated {
-
-class UIEventHandler;
 
 class UIEventHandlerRegistry {
   std::map<std::pair<int, std::string>, std::unordered_map<uint64_t, std::shared_ptr<UIEventHandler>>>
@@ -28,7 +27,7 @@ class UIEventHandlerRegistry {
   void unregisterEventHandler(const uint64_t id);
 
   void processEvent(
-      const std::shared_ptr<worklets::WorkletRuntime> &uiRuntime,
+      const std::shared_ptr<worklets::WorkletRuntimeHolder> &uiRuntimeHolder,
       const double eventTimestamp,
       const std::string &eventName,
       const int emitterReactTag,
