@@ -11,7 +11,6 @@
 #include <memory>
 #include <optional>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 namespace reanimated {
@@ -40,16 +39,16 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       std::shared_ptr<facebook::react::CallInvoker> jsInvoker
 #endif
       )
-      : layoutAnimationsManager_(std::move(layoutAnimationsManager)),
-        contextContainer_(std::move(contextContainer)),
-        componentDescriptorRegistry_(std::move(componentDescriptorRegistry)),
+      : layoutAnimationsManager_(layoutAnimationsManager),
+        contextContainer_(contextContainer),
+        componentDescriptorRegistry_(componentDescriptorRegistry),
         uiRuntime_(uiRuntime),
         uiSchedulerHolder_(uiSchedulerHolder)
 #ifdef ANDROID
         ,
-        preserveMountedTags_(std::move(filterUnmountedTagsFunction)),
-        uiManager_(std::move(uiManager)),
-        jsInvoker_(std::move(jsInvoker))
+        preserveMountedTags_(filterUnmountedTagsFunction),
+        uiManager_(uiManager),
+        jsInvoker_(jsInvoker)
 #endif
   {
   }

@@ -24,7 +24,7 @@ class ReanimatedModuleProxy;
 
 using namespace facebook;
 
-typedef enum ExitingState_Legacy : std::uint8_t {
+typedef enum ExitingState_Legacy {
   UNDEFINED = 1,
   WAITING = 2,
   ANIMATING = 4,
@@ -43,13 +43,13 @@ struct Node {
   std::vector<std::shared_ptr<MutationNode>> children, unflattenedChildren;
   std::shared_ptr<Node> parent, unflattenedParent;
   Tag tag;
-  void removeChildFromUnflattenedTree(const std::shared_ptr<MutationNode> &child);
-  void applyMutationToIndices(const ShadowViewMutation &mutation);
+  void removeChildFromUnflattenedTree(std::shared_ptr<MutationNode> child);
+  void applyMutationToIndices(ShadowViewMutation mutation);
   void insertChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
   void insertUnflattenedChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
   virtual bool isMutationNode();
   explicit Node(const Tag tag) : tag(tag) {}
-  Node(Node &&node) noexcept
+  Node(Node &&node)
       : children(std::move(node.children)), unflattenedChildren(std::move(node.unflattenedChildren)), tag(node.tag) {}
   Node(Node &node) : children(node.children), unflattenedChildren(node.unflattenedChildren), tag(node.tag) {}
   virtual ~Node() = default;
@@ -66,7 +66,7 @@ struct MutationNode : public Node {
   bool isMutationNode() override;
 };
 
-static inline bool isRNSScreen(const std::shared_ptr<MutationNode> &node) {
+static inline bool isRNSScreen(std::shared_ptr<MutationNode> node) {
   const auto &componentName = node->mutation.oldChildShadowView.componentName;
   return !std::strcmp(componentName, "RNSScreenStack") || !std::strcmp(componentName, "RNSScreen") ||
       !std::strcmp(componentName, "RNSModalScreen");

@@ -200,8 +200,8 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
 
   uint64_t newRegistrationId = NEXT_EVENT_HANDLER_ID++;
   auto eventNameStr = eventName.asString(rt).utf8(rt);
-  auto handlerSerializable =
-      extractSerializable(rt, worklet, "[Reanimated] Event handler must be a serializable worklet.");
+  auto handlerSerializable = extractSerializable(
+      rt, worklet, "[Reanimated] Event handler must be a serializable worklet.", Serializable::ValueType::WorkletType);
   int emitterReactTagInt = emitterReactTag.asNumber();
 
   scheduleOnUI(uiSchedulerHolder_, [=, weakThis = weak_from_this()]() {
@@ -286,7 +286,8 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     if (config.isUndefined()) {
       batchItem.config = nullptr;
     } else {
-      batchItem.config = extractSerializable(rt, config, "[Reanimated] Layout animation config must be an object.");
+      batchItem.config = extractSerializable(
+          rt, config, "[Reanimated] Layout animation config must be an object.", Serializable::ValueType::ObjectType);
     }
     auto sharedTag = item.getProperty(rt, "sharedTransitionTag");
     if (!sharedTag.isUndefined()) {
@@ -1336,8 +1337,11 @@ jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
     const jsi::Value &handlerWorklet,
     const jsi::Value &isStatusBarTranslucent,
     const jsi::Value &isNavigationBarTranslucent) {
-  auto serializableHandler =
-      extractSerializable(rt, handlerWorklet, "[Reanimated] Keyboard event handler must be a worklet.");
+  auto serializableHandler = extractSerializable(
+      rt,
+      handlerWorklet,
+      "[Reanimated] Keyboard event handler must be a worklet.",
+      Serializable::ValueType::WorkletType);
   return subscribeForKeyboardEventsFunction_(
       [=, weakThis = weak_from_this()](int keyboardState, int height) {
         auto strongThis = weakThis.lock();

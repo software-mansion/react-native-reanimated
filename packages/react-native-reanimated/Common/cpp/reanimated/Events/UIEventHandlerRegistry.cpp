@@ -1,3 +1,4 @@
+#include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/Events/UIEventHandlerRegistry.h>
 
 #include <memory>

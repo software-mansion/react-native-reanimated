@@ -2,7 +2,6 @@
 
 #include <jsi/jsi.h>
 #include <reanimated/Compat/WorkletsApi.h>
-#include <reanimated/Events/UIEventHandler.h>
 
 #include <map>
 #include <memory>
@@ -14,6 +13,8 @@
 using namespace facebook;
 
 namespace reanimated {
+
+class UIEventHandler;
 
 class UIEventHandlerRegistry {
   std::map<std::pair<int, std::string>, std::unordered_map<uint64_t, std::shared_ptr<UIEventHandler>>>

@@ -7,10 +7,13 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 
 #include <stdio.h>
+#include <functional>
 #include <memory>
 #include <mutex>
+#include <stack>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 

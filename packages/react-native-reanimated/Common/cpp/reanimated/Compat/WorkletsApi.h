@@ -86,14 +86,16 @@ extern facebook::jsi::Runtime *getRuntimeAddressFromHolder(const std::shared_ptr
 
 extern void scheduleOnUI(const std::shared_ptr<UISchedulerHolder> &uiSchedulerHolder, const std::function<void()> &job);
 
-// TODO: Remove the use of this function from Reanimated
 extern std::string JSIValueToString(facebook::jsi::Runtime &rt, const facebook::jsi::Value &value);
 
 extern std::shared_ptr<Serializable>
 extractSerializable(facebook::jsi::Runtime &rt, const facebook::jsi::Value &value, const std::string &errorMessage);
 
-extern std::shared_ptr<Serializable>
-extractWorklet(facebook::jsi::Runtime &rt, const facebook::jsi::Value &value, const std::string &errorMessage);
+extern std::shared_ptr<Serializable> extractSerializable(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &value,
+    const std::string &errorMessage,
+    const Serializable::ValueType expectedType);
 
 extern void runSyncOnRuntime(
     const std::shared_ptr<WorkletRuntimeHolder> &runtimeHolder,

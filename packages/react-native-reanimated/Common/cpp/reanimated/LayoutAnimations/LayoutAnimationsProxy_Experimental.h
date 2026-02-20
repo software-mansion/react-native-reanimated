@@ -62,16 +62,16 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable ForceScreenSnapshotFunction forceScreenSnapshot_;
 
   LayoutAnimationsProxy_Experimental(
-      std::shared_ptr<LayoutAnimationsManager> &layoutAnimationsManager,
-      const SharedComponentDescriptorRegistry &componentDescriptorRegistry,
-      const std::shared_ptr<const ContextContainer> &contextContainer,
+      std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager,
+      SharedComponentDescriptorRegistry componentDescriptorRegistry,
+      std::shared_ptr<const ContextContainer> contextContainer,
       jsi::Runtime &uiRuntime,
       const std::shared_ptr<worklets::UISchedulerHolder> &uiSchedulerHolder
 #ifdef ANDROID
       ,
-      const PreserveMountedTagsFunction &filterUnmountedTagsFunction,
-      const std::shared_ptr<UIManager> &uiManager,
-      const std::shared_ptr<CallInvoker> &jsInvoker
+      PreserveMountedTagsFunction filterUnmountedTagsFunction,
+      std::shared_ptr<UIManager> uiManager,
+      std::shared_ptr<CallInvoker> jsInvoker
 #endif
       )
       : LayoutAnimationsProxyCommon(

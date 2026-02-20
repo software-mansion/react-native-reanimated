@@ -42,7 +42,7 @@ CSSValueVariant<AllowedTypes...>::CSSValueVariant(jsi::Runtime &rt, const jsi::V
   // Try constructing with each allowed type until one succeeds
   if (!(tryOne.template operator()<AllowedTypes>() || ...)) {
     throw std::runtime_error(
-        "[Reanimated] No compatible type found for construction from: " + std::string(JSIValueToString(rt, jsiValue)));
+        "[Reanimated] No compatible type found for construction from: " + JSIValueToString(rt, jsiValue));
   }
 }
 
