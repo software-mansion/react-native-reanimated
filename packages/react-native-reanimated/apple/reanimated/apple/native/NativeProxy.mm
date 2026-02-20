@@ -1,3 +1,4 @@
+#import <reanimated/Compat/WorkletsApi.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAReducedMotion.h>
@@ -20,18 +21,18 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<CallInvoker> &jsInvoker,
-    const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime,
-    const std::shared_ptr<UIScheduler> &uiScheduler)
+    const std::shared_ptr<WorkletRuntimeHolder> &uiRuntimeHolder,
+    const std::shared_ptr<UISchedulerHolder> &uiSchedulerHolder)
 {
   REAAssertJavaScriptQueue();
 
   PlatformDepMethodsHolder platformDepMethodsHolder = makePlatformDepMethodsHolder(moduleRegistry, nodesManager);
 
   auto reanimatedModuleProxy = std::make_shared<ReanimatedModuleProxy>(
-      uiWorkletRuntime, uiScheduler, rnRuntime, jsInvoker, platformDepMethodsHolder, getIsReducedMotion());
+      uiRuntimeHolder, uiSchedulerHolder, rnRuntime, jsInvoker, platformDepMethodsHolder, getIsReducedMotion());
   reanimatedModuleProxy->init(platformDepMethodsHolder);
 
-  jsi::Runtime &uiRuntime = uiWorkletRuntime->getJSIRuntime();
+  auto &uiRuntime = *getRuntimeAddressFromHolder(uiRuntimeHolder);
 
   [nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler

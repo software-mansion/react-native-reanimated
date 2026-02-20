@@ -1,25 +1,26 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <worklets/Tools/UIScheduler.h>
-#include <worklets/WorkletRuntime/WorkletRuntime.h>
+#include <worklets/Compat/StableApi.h>
 
 #include <memory>
 
 namespace worklets {
 
-class WorkletRuntimeHolder : public facebook::jsi::NativeState {
+class NativeStateWorkletRuntimeHolder : public facebook::jsi::NativeState {
  public:
-  explicit WorkletRuntimeHolder(const std::shared_ptr<WorkletRuntime> &runtime) : runtime_(runtime) {}
+  explicit NativeStateWorkletRuntimeHolder(uintptr_t sharedPtr)
+      : holder_(std::make_shared<WorkletRuntimeHolder>(sharedPtr)) {}
 
-  const std::shared_ptr<WorkletRuntime> runtime_;
+  const std::shared_ptr<WorkletRuntimeHolder> holder_;
 };
 
-class UISchedulerHolder : public facebook::jsi::NativeState {
+class NativeStateUISchedulerHolder : public facebook::jsi::NativeState {
  public:
-  explicit UISchedulerHolder(const std::shared_ptr<UIScheduler> &scheduler) : scheduler_(scheduler) {}
+  explicit NativeStateUISchedulerHolder(uintptr_t sharedPtr)
+      : holder_(std::make_shared<UISchedulerHolder>(sharedPtr)) {}
 
-  const std::shared_ptr<UIScheduler> scheduler_;
+  const std::shared_ptr<UISchedulerHolder> holder_;
 };
 
 } // namespace worklets

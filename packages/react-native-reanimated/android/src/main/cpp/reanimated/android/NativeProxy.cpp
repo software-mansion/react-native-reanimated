@@ -1,4 +1,5 @@
-#include <react/fabric/Binding.h>
+#include <react/fabric/FabricUIManagerBinding.h>
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/ReanimatedVersion.h>
@@ -7,7 +8,6 @@
 #include <reanimated/android/KeyboardWorkletWrapper.h>
 #include <reanimated/android/NativeProxy.h>
 #include <reanimated/android/SensorSetter.h>
-#include <worklets/Compat/Holders.h>
 
 #include <memory>
 #include <string>
@@ -25,14 +25,14 @@ NativeProxy::NativeProxy(
     jsi::Runtime *rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject> fabricUIManager,
-    const std::shared_ptr<WorkletRuntime> &uiRuntime,
-    const std::shared_ptr<UIScheduler> &uiScheduler)
+    const std::shared_ptr<WorkletRuntimeHolder> &uiRuntimeHolder,
+    const std::shared_ptr<UISchedulerHolder> &uiSchedulerHolder)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
-      uiRuntime_(uiRuntime),
+      uiRuntimeHolder_(uiRuntimeHolder),
       reanimatedModuleProxy_(std::make_shared<ReanimatedModuleProxy>(
-          uiRuntime,
-          uiScheduler,
+          uiRuntimeHolder,
+          uiSchedulerHolder,
           *rnRuntime,
           jsCallInvoker,
           getPlatformDependentMethods(),
@@ -71,18 +71,13 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto &rnRuntime = *reinterpret_cast<jsi::Runtime *>(jsContext); // NOLINT //(performance-no-int-to-ptr)
   const auto global = rnRuntime.global();
+  const auto uiRuntimeHolder = getWorkletRuntimeHolderFromNativeStateObject(
+      rnRuntime, global.getProperty(rnRuntime, "__UI_WORKLET_RUNTIME_HOLDER").asObject(rnRuntime));
 
-  const auto uiRuntime =
-      std::static_pointer_cast<WorkletRuntimeHolder>(
-          global.getProperty(rnRuntime, "__UI_WORKLET_RUNTIME_HOLDER").asObject(rnRuntime).getNativeState(rnRuntime))
-          ->runtime_;
+  const auto uiSchedulerHolder = getUISchedulerHolderFromNativeStateObject(
+      rnRuntime, global.getProperty(rnRuntime, "__UI_SCHEDULER_HOLDER").asObject(rnRuntime));
 
-  const auto uiScheduler =
-      std::static_pointer_cast<UISchedulerHolder>(
-          global.getProperty(rnRuntime, "__UI_SCHEDULER_HOLDER").asObject(rnRuntime).getNativeState(rnRuntime))
-          ->scheduler_;
-
-  return makeCxxInstance(jThis, &rnRuntime, jsCallInvoker, fabricUIManager, uiRuntime, uiScheduler);
+  return makeCxxInstance(jThis, &rnRuntime, jsCallInvoker, fabricUIManager, uiRuntimeHolder, uiSchedulerHolder);
 }
 
 #ifndef NDEBUG
@@ -120,7 +115,8 @@ void NativeProxy::injectCppVersion() {
 
 void NativeProxy::installJSIBindings() {
   jsi::Runtime &rnRuntime = *rnRuntime_;
-  RNRuntimeDecorator::decorate(rnRuntime, uiRuntime_->getJSIRuntime(), reanimatedModuleProxy_);
+  auto &uiRuntime = *getRuntimeAddressFromHolder(uiRuntimeHolder_);
+  RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy_);
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) {
@@ -258,7 +254,7 @@ void NativeProxy::handleEvent(
     return;
   }
 
-  auto &uiRuntime = uiRuntime_->getJSIRuntime();
+  auto &uiRuntime = *getRuntimeAddressFromHolder(uiRuntimeHolder_);
   jsi::Value payload;
   try {
     payload = jsi::Value::createFromJsonUtf8(uiRuntime, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
@@ -306,7 +302,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 }
 
 void NativeProxy::invalidateCpp() {
-  uiRuntime_.reset();
+  uiRuntimeHolder_.reset();
   // cleanup all animated sensors here, since the next line resets
   // the pointer and it will be too late after it
   reanimatedModuleProxy_->cleanupSensors();

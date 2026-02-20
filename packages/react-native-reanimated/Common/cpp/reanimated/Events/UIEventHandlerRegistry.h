@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <worklets/WorkletRuntime/WorkletRuntime.h>
+#include <reanimated/Compat/WorkletsApi.h>
 
 #include <map>
 #include <memory>
@@ -28,7 +28,7 @@ class UIEventHandlerRegistry {
   void unregisterEventHandler(const uint64_t id);
 
   void processEvent(
-      const std::shared_ptr<worklets::WorkletRuntime> &uiRuntime,
+      const std::shared_ptr<worklets::WorkletRuntimeHolder> &uiRuntimeHolder,
       const double eventTimestamp,
       const std::string &eventName,
       const int emitterReactTag,

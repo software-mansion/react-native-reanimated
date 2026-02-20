@@ -11,6 +11,7 @@
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registries/StaticPropsRegistry.h>
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandlerRegistry.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
@@ -24,8 +25,6 @@
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
-#include <worklets/Tools/UIScheduler.h>
-#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
 #include <set>
@@ -44,8 +43,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
                               public std::enable_shared_from_this<ReanimatedModuleProxy> {
  public:
   ReanimatedModuleProxy(
-      const std::shared_ptr<worklets::WorkletRuntime> &uiRuntime,
-      const std::shared_ptr<worklets::UIScheduler> &uiScheduler,
+      const std::shared_ptr<worklets::WorkletRuntimeHolder> &uiRuntimeHolder,
+      const std::shared_ptr<worklets::UISchedulerHolder> &uiSchedulerHolder,
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,
@@ -169,8 +168,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   const bool isReducedMotion_;
   bool shouldFlushRegistry_ = false;
-  std::shared_ptr<worklets::WorkletRuntime> uiRuntime_;
-  std::shared_ptr<worklets::UIScheduler> uiScheduler_;
+  std::shared_ptr<worklets::WorkletRuntimeHolder> uiRuntimeHolder_;
+  std::shared_ptr<worklets::UISchedulerHolder> uiSchedulerHolder_;
 
   std::unique_ptr<UIEventHandlerRegistry> eventHandlerRegistry_;
   const RequestRenderFunction requestRender_;

@@ -5,11 +5,11 @@
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerAnimationDelegate.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
-#include <worklets/Tools/UIScheduler.h>
 
 #include <memory>
 #include <string>
@@ -116,7 +116,7 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
       SharedComponentDescriptorRegistry componentDescriptorRegistry,
       std::shared_ptr<const ContextContainer> contextContainer,
       jsi::Runtime &uiRuntime,
-      const std::shared_ptr<UIScheduler> &uiScheduler
+      const std::shared_ptr<worklets::UISchedulerHolder> &uiScheduler
 #ifdef ANDROID
       ,
       PreserveMountedTagsFunction filterUnmountedTagsFunction,

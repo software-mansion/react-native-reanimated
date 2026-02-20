@@ -1,11 +1,10 @@
 #pragma once
 
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
-
-#include <worklets/Tools/UIScheduler.h>
 
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/graphics/Transform.h>
@@ -67,7 +66,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
       SharedComponentDescriptorRegistry componentDescriptorRegistry,
       std::shared_ptr<const ContextContainer> contextContainer,
       jsi::Runtime &uiRuntime,
-      const std::shared_ptr<UIScheduler> uiScheduler
+      const std::shared_ptr<worklets::UISchedulerHolder> &uiSchedulerHolder
 #ifdef ANDROID
       ,
       PreserveMountedTagsFunction filterUnmountedTagsFunction,
@@ -80,7 +79,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
             componentDescriptorRegistry,
             contextContainer,
             uiRuntime,
-            uiScheduler
+            uiSchedulerHolder
 #ifdef ANDROID
             ,
             filterUnmountedTagsFunction,

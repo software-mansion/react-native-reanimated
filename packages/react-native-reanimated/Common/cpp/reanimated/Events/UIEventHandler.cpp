@@ -3,15 +3,15 @@
 #include <memory>
 #include <string>
 
-using namespace worklets;
-
 namespace reanimated {
 
+using namespace worklets;
+
 void UIEventHandler::process(
-    const std::shared_ptr<WorkletRuntime> &uiRuntime,
+    const std::shared_ptr<WorkletRuntimeHolder> &uiRuntimeHolder,
     const double eventTimestamp,
     const jsi::Value &eventValue) const {
-  uiRuntime->runSync(handlerFunction_, jsi::Value(eventTimestamp), eventValue);
+  runSyncOnRuntime(uiRuntimeHolder, handlerFunction_, jsi::Value(eventTimestamp), eventValue);
 }
 
 uint64_t UIEventHandler::getHandlerId() const {
