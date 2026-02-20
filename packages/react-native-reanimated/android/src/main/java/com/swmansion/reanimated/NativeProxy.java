@@ -92,7 +92,6 @@ public class NativeProxy {
     CallInvokerHolderImpl callInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
     mHybridData =
         initHybrid(
-            workletsModule,
             Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
             callInvokerHolder,
             mFabricUIManager);
@@ -103,10 +102,7 @@ public class NativeProxy {
 
   @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(
-      WorkletsModule workletsModule,
-      long jsContext,
-      CallInvokerHolderImpl jsCallInvokerHolder,
-      FabricUIManager fabricUIManager);
+      long jsContext, CallInvokerHolderImpl jsCallInvokerHolder, FabricUIManager fabricUIManager);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 

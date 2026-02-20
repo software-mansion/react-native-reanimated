@@ -11,10 +11,12 @@
 #import <reanimated/apple/ReanimatedModule.h>
 #import <reanimated/apple/native/NativeProxy.h>
 
+#import <worklets/Compat/Holders.h>
 #import <worklets/apple/WorkletsModule.h>
 
 using namespace facebook::react;
 using namespace reanimated;
+using namespace worklets;
 
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;
@@ -146,7 +148,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
     return @NO;
   }
 
-  WorkletsModule *workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
   auto jsCallInvoker = _callInvoker.callInvoker;
 
   react_native_assert(self.bridge != nullptr);
@@ -154,10 +155,13 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   react_native_assert(self.bridge.runtime != nullptr);
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
-  auto reanimatedModuleProxy =
-      reanimated::createReanimatedModuleProxy(_nodesManager, _moduleRegistry, rnRuntime, jsCallInvoker, workletsModule);
+  const auto uiWorkletRuntime = [self getUIRuntime:rnRuntime];
+  const auto uiScheduler = [self getUIScheduler:rnRuntime];
 
-  auto &uiRuntime = [workletsModule getWorkletsModuleProxy]->getUIWorkletRuntime() -> getJSIRuntime();
+  auto reanimatedModuleProxy = reanimated::createReanimatedModuleProxy(
+      _nodesManager, _moduleRegistry, rnRuntime, jsCallInvoker, uiWorkletRuntime, uiScheduler);
+
+  auto &uiRuntime = uiWorkletRuntime->getJSIRuntime();
 
   RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy);
   [self attachReactEventListener:reanimatedModuleProxy];
@@ -179,6 +183,26 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   [self checkBridgeless];
   REAAssertJavaScriptQueue();
   return std::make_shared<facebook::react::NativeReanimatedModuleSpecJSI>(params);
+}
+
+- (std::shared_ptr<WorkletRuntime>)getUIRuntime:(jsi::Runtime &)rnRuntime
+{
+  const auto global = rnRuntime.global();
+  const auto uiRuntime = global.getProperty(rnRuntime, "__UI_WORKLET_RUNTIME_HOLDER")
+                             .asObject(rnRuntime)
+                             .getNativeState<WorkletRuntimeHolder>(rnRuntime)
+                             ->runtime_;
+  return uiRuntime;
+}
+
+- (std::shared_ptr<UIScheduler>)getUIScheduler:(jsi::Runtime &)rnRuntime
+{
+  const auto global = rnRuntime.global();
+  const auto uiScheduler = global.getProperty(rnRuntime, "__UI_SCHEDULER_HOLDER")
+                               .asObject(rnRuntime)
+                               .getNativeState<UISchedulerHolder>(rnRuntime)
+                               ->scheduler_;
+  return uiScheduler;
 }
 
 @end

@@ -6,7 +6,12 @@ import type {
   SerializableRef,
   WorkletFunction,
 } from 'react-native-worklets';
-import { runOnUISync, WorkletsModule } from 'react-native-worklets';
+import {
+  getUIRuntimeHolder,
+  getUISchedulerHolder,
+  runOnUISync,
+  WorkletsModule,
+} from 'react-native-worklets';
 
 import {
   ReanimatedError,
@@ -69,8 +74,10 @@ class NativeReanimatedModule implements IReanimatedModule {
       assertWorkletsVersion();
     }
     global._REANIMATED_VERSION_JS = jsVersion;
-    if (global.__reanimatedModuleProxy === undefined && ReanimatedTurboModule) {
-      if (!ReanimatedTurboModule.installTurboModule()) {
+
+    if (ReanimatedTurboModule) {
+      const status = installTurboModule();
+      if (!status) {
         // This path means that React Native has failed on reload.
         // We don't want to throw any errors to not mislead the users
         // that the problem is related to Reanimated.
@@ -79,6 +86,7 @@ class NativeReanimatedModule implements IReanimatedModule {
         return;
       }
     }
+
     if (global.__reanimatedModuleProxy === undefined) {
       throw new ReanimatedError(
         `Native part of Reanimated doesn't seem to be initialized.
@@ -288,4 +296,17 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   getSettledUpdates(): SettledUpdate[] {
     return [];
   }
+}
+
+function installTurboModule() {
+  if (globalThis.__reanimatedModuleProxy) {
+    return true;
+  }
+
+  globalThis.__UI_WORKLET_RUNTIME_HOLDER = getUIRuntimeHolder();
+  globalThis.__UI_SCHEDULER_HOLDER = getUISchedulerHolder();
+  const status = ReanimatedTurboModule!.installTurboModule();
+  delete globalThis.__UI_WORKLET_RUNTIME_HOLDER;
+  delete globalThis.__UI_SCHEDULER_HOLDER;
+  return status;
 }
