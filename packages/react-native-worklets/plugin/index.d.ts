@@ -65,6 +65,7 @@ export interface PluginOptions {
    * - Defaults to an empty array `[]`.
    */
   globals?: string[];
+  limitInitDataHoisting?: boolean;
   /**
    * This option comes in handy for Web apps. Because Babel ordinarily doesn't
    * get information about the target platform, it includes worklet data in

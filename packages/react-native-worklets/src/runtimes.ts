@@ -39,6 +39,12 @@ export function scheduleOnRuntime(): never {
   throw new WorkletsError('`scheduleOnRuntime` is not supported on web.');
 }
 
+export function getUIWorkletRuntime(): WorkletRuntime;
+
+export function getUIWorkletRuntime(): never {
+  throw new WorkletsError('`getUIWorkletRuntime` is not supported on web.');
+}
+
 export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
   workletRuntime: WorkletRuntime,
   worklet: (...args: Args) => ReturnValue,

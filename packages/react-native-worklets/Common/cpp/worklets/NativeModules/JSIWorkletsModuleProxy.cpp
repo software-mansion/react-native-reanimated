@@ -1,3 +1,4 @@
+#include <jsi/jsi.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 #include <worklets/Compat/Holders.h>
@@ -5,6 +6,7 @@
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
+#include <worklets/SharedItems/Shareable.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/FeatureFlags.h>
@@ -179,6 +181,8 @@ JSIWorkletsModuleProxy::~JSIWorkletsModuleProxy() = default;
 std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runtime &rt) {
   std::vector<jsi::PropNameID> propertyNames;
 
+  /* #region Serializable */
+
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializable"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableBigInt"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableBoolean"));
@@ -199,15 +203,27 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createCustomSerializable"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "registerCustomSerializable"));
 
+  /* #endregion Serializable */
+  /* #region Worklet Runtime */
+
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getUIWorkletRuntime"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnUI"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnUISync"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnRuntimeSync"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnRuntimeSyncFromId"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createWorkletRuntime"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnRuntime"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnRuntimeFromId"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "reportFatalErrorOnJS"));
+
+  /* #endregion Worklet Runtime */
+  /* #region Feature Flags */
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getStaticFeatureFlag"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "setDynamicFeatureFlag"));
+
+  /* #endregion Feature Flags */
+  /* #region Synchronizable */
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSynchronizable"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "synchronizableGetDirty"));
@@ -215,6 +231,14 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "synchronizableSetBlocking"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "synchronizableLock"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "synchronizableUnlock"));
+
+  /* #endregion Synchronizable */
+  /* #region Shareable */
+
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createShareable"));
+
+  /* #endregion Shareable */
+  /* #region Bundle Mode */
 
 #ifdef WORKLETS_BUNDLE_MODE_ENABLED
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "propagateModuleUpdate"));
@@ -228,6 +252,8 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
 
 jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &propName) {
   const auto name = propName.utf8(rt);
+
+  /* #region Serializable */
 
   if (name == "createSerializable") {
     return jsi::Function::createFromHostFunction(
@@ -374,6 +400,24 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         });
   }
 
+  /* #endregion Serializable */
+  /* #region Worklet Runtime */
+
+  if (name == "getUIWorkletRuntime") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        0,
+        [weakUIWorkletRuntime = uiWorkletRuntime_](
+            jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
+          auto strongUIWorkletRuntime = weakUIWorkletRuntime.lock();
+          if (!strongUIWorkletRuntime) {
+            return jsi::Value::undefined();
+          }
+          return jsi::Object::createFromHostObject(rt, strongUIWorkletRuntime);
+        });
+  }
+
   if (name == "scheduleOnUI") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -401,6 +445,25 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
     return jsi::Function::createFromHostFunction(
         rt, propName, 2, [](jsi::Runtime &rt, const jsi ::Value &thisValue, const jsi::Value *args, size_t count) {
           return runOnRuntimeSync(rt, args[0], args[1]);
+        });
+  }
+
+  if (name == "runOnRuntimeSyncFromId") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [runtimeManager = runtimeManager_](
+            jsi::Runtime &rt, const jsi ::Value &thisValue, const jsi::Value *args, size_t count) {
+          const auto runtimeId = args[0].asNumber();
+          const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
+          if (!workletRuntime) {
+            throw jsi::JSError(rt, "[Worklets] No worklet runtime found for id: " + std::to_string(runtimeId));
+          }
+          auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
+              rt, args[1], "[Worklets] Only worklets can be executed on a worklet runtime.");
+          // return jsi::Value::undefined();
+          return workletRuntime->runSyncSerialized(serializableWorklet)->toJSValue(rt);
         });
   }
 
@@ -445,6 +508,26 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         });
   }
 
+  if (name == "scheduleOnRuntimeFromId") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [runtimeManager = runtimeManager_](
+            jsi::Runtime &rt, const jsi ::Value &thisValue, const jsi::Value *args, size_t count) {
+          const auto runtimeId = args[0].asNumber();
+          const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
+          if (!workletRuntime) {
+            throw jsi::JSError(rt, "[Worklets] No worklet runtime found for id: " + std::to_string(runtimeId));
+          }
+          // worklets::scheduleOnRuntime(rt, workletRuntime, args[1]);
+          const auto worklet = extractSerializableOrThrow<SerializableWorklet>(
+              rt, args[1], "[Worklets] Only worklets can be scheduled to run on a worklet runtime.");
+          workletRuntime->schedule(worklet);
+          return jsi::Value::undefined();
+        });
+  }
+
   if (name == "reportFatalErrorOnJS") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -460,6 +543,30 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
               /* jsEngine */ args[3].asString(rt).utf8(rt));
         });
   }
+
+  /* #endregion Worklet Runtime */
+  /* #region Feature Flags */
+
+  if (name == "getStaticFeatureFlag") {
+    return jsi::Function::createFromHostFunction(
+        rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          return worklets::StaticFeatureFlags::getFlag(
+              /* name */ args[0].asString(rt).utf8(rt));
+        });
+  }
+
+  if (name == "setDynamicFeatureFlag") {
+    return jsi::Function::createFromHostFunction(
+        rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          worklets::DynamicFeatureFlags::setFlag(
+              /* name */ args[0].asString(rt).utf8(rt),
+              /* value */ args[1].asBool());
+          return jsi::Value::undefined();
+        });
+  }
+
+  /* #endregion Feature Flags */
+  /* #region Synchronizable */
 
   if (name == "createSynchronizable") {
     return jsi::Function::createFromHostFunction(
@@ -514,6 +621,27 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         });
   }
 
+  /* #endregion Synchronizable */
+  /* #region Shareable */
+
+  if (name == "createShareable") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        4,
+        [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
+          auto hostRuntime = args[0].asObject(rt).getHostObject<WorkletRuntime>(rt);
+          auto serializable = extractSerializableOrThrow(rt, args[1], "[Worklets] Value must be a Serializable.");
+          auto decorateHost = extractSerializableOrThrow(rt, args[2]);
+          auto decorateGuest = extractSerializableOrThrow(rt, args[3]);
+          auto shareable = std::make_shared<Shareable>(hostRuntime, serializable, decorateHost, decorateGuest);
+          return SerializableJSRef::newNativeStateObject(rt, shareable);
+        });
+  }
+
+  /* #endregion Shareable */
+  /* #region Bundle Mode */
+
 #ifdef WORKLETS_BUNDLE_MODE_ENABLED
   if (name == "propagateModuleUpdate") {
     return jsi::Function::createFromHostFunction(
@@ -530,23 +658,7 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
   }
 #endif // WORKLETS_BUNDLE_MODE_ENABLED
 
-  if (name == "getStaticFeatureFlag") {
-    return jsi::Function::createFromHostFunction(
-        rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          return worklets::StaticFeatureFlags::getFlag(
-              /* name */ args[0].asString(rt).utf8(rt));
-        });
-  }
-
-  if (name == "setDynamicFeatureFlag") {
-    return jsi::Function::createFromHostFunction(
-        rt, propName, 2, [](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          worklets::DynamicFeatureFlags::setFlag(
-              /* name */ args[0].asString(rt).utf8(rt),
-              /* value */ args[1].asBool());
-          return jsi::Value::undefined();
-        });
-  }
+  /* #endregion Bundle Mode */
 
   if (name == "getUIRuntimeHolder") {
     return jsi::Function::createFromHostFunction(
