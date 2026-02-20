@@ -2,6 +2,9 @@
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <reanimated/Compat/WorkletsApi.h>
 
+#include <memory>
+#include <utility>
+
 namespace reanimated {
 
 using namespace worklets;
@@ -20,8 +23,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
   SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
 
   auto serializableHandler =
-      // TODO: try static type_checking here for Worklet
-      extractSerializable(rnRuntime, sensorDataHandler, "[Reanimated] Sensor event handler must be a worklet.");
+      extractWorklet(rnRuntime, sensorDataHandler, "[Reanimated] Sensor event handler must be a worklet.");
 
   int sensorId = platformRegisterSensorFunction_(
       static_cast<int>(sensorType),
