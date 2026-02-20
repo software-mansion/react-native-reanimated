@@ -26,17 +26,20 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
   private readonly viewName: string;
   private readonly viewTag: number;
+  private readonly componentChildName?: string;
 
   private attachedAnimations: ProcessedAnimation[] = [];
 
   constructor(
     shadowNodeWrapper: ShadowNodeWrapper,
     viewName: string,
-    viewTag: number
+    viewTag: number,
+    componentChildName?: string
   ) {
     this.shadowNodeWrapper = shadowNodeWrapper;
     this.viewName = viewName;
     this.viewTag = viewTag;
+    this.componentChildName = componentChildName;
   }
 
   update(animationProperties: ExistingCSSAnimationProperties | null): void {
@@ -81,7 +84,12 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
 
     // Register keyframes for all new animations
     processedAnimations.forEach(({ keyframesRule }) => {
-      cssKeyframesRegistry.add(keyframesRule, this.viewName, this.viewTag);
+      cssKeyframesRegistry.add(
+        keyframesRule,
+        this.viewName,
+        this.viewTag,
+        this.componentChildName
+      );
       newAnimationNames.add(keyframesRule.name);
     });
 
