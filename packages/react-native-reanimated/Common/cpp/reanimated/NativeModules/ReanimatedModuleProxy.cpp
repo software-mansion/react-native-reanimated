@@ -432,7 +432,7 @@ void ReanimatedModuleProxy::runCSSTransition(
 
   {
     auto lock = cssTransitionsRegistry_->lock();
-    cssTransitionsRegistry_->run(rt, std::move(shadowNode), config);
+    cssTransitionsRegistry_->run(rt, shadowNode, config);
   }
 
   maybeRunCSSLoop();
