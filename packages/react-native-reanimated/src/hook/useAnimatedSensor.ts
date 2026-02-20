@@ -1,6 +1,5 @@
 'use strict';
 import { useEffect, useMemo, useRef } from 'react';
-import { callMicrotasks } from 'react-native-worklets';
 
 import type {
   AnimatedSensor,
@@ -154,7 +153,6 @@ export function useAnimatedSensor(
         }
       }
       sensorData.value = data;
-      callMicrotasks();
     });
 
     if (id !== -1) {
