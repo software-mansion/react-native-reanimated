@@ -37,7 +37,7 @@ class Serializable {
     SetType,
     ShareableType,
     StringType,
-    SymbolType,
+    SymbolType, // Unused, kept for future use.
     SynchronizableType,
     TurboModuleLikeType,
     UndefinedType,
@@ -46,7 +46,7 @@ class Serializable {
 
   explicit Serializable(ValueType valueType) : valueType_(valueType) {}
 
-  inline ValueType valueType() const {
+  ValueType valueType() const {
     return valueType_;
   }
 
