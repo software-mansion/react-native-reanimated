@@ -1,0 +1,127 @@
+name: Reanimated + Worklets compatibility check
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/reanimated-worklets-compatibility-check.yml'
+      - '.github/workflows/helper/read-reanimated-worklets-compatibility.js'
+  pull_request:
+    paths:
+      - '.github/workflows/reanimated-worklets-compatibility-check.yml'
+      - '.github/workflows/helper/read-reanimated-worklets-compatibility.js'
+  workflow_dispatch:
+  schedule:
+    - cron: '30 2 * * *'
+
+jobs:
+  read-compatibility-json:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-outputs.outputs.matrix }}
+      matrix-size: ${{ steps.set-outputs.outputs.matrix-size }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Read and resolve compatibility matrix
+        run: node .github/workflows/helper/read-reanimated-worklets-compatibility.js
+
+      - name: Set outputs
+        id: set-outputs
+        run: |
+          echo "matrix=$(cat /tmp/reanimated-worklets-matrix.json)" >> "$GITHUB_OUTPUT"
+          echo "matrix-size=$(jq 'length' /tmp/reanimated-worklets-matrix.json)" >> "$GITHUB_OUTPUT"
+
+  reanimated-worklets-compatibility-check:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: ubuntu-latest
+    needs: read-compatibility-json
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.read-compatibility-json.outputs.matrix) }}
+    env:
+      APP_NAME: app
+      BUILD_MARKER_DIR: .compatibility-build-markers
+      YARN_ENABLE_HARDENED_MODE: 0
+    steps:
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Set up JDK 18
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '18'
+
+      - name: Restore result cache
+        id: result-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.BUILD_MARKER_DIR }}/${{ matrix.cacheKey }}.success
+          key: reanimated-worklets-compat-${{ matrix.cacheKey }}
+
+      - name: Skip already validated combination
+        if: steps.result-cache.outputs.cache-hit == 'true'
+        run: |
+          echo "Skipping already validated combination:"
+          echo "RN=${{ matrix.reactNativeVersion }} | Reanimated=${{ matrix.reanimatedVersion }} | Worklets=${{ matrix.workletsVersion }}"
+
+      - name: Setup Yarn
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        run: corepack enable && yarn init -2
+
+      - name: Install React Native CLI
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        run: yarn add @react-native-community/cli
+
+      - name: Create app
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        run: |
+          yarn rnc-cli init "${APP_NAME}" \
+            --version "${{ matrix.reactNativeVersion }}" \
+            --skip-install \
+            --install-pods 0 \
+            --skip-git-init
+
+      - name: Setup Yarn Modern in app
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        working-directory: ${{ env.APP_NAME }}
+        run: |
+          touch yarn.lock
+          yarn set version berry
+          yarn config set nodeLinker node-modules
+
+      - name: Install Reanimated and Worklets
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        working-directory: ${{ env.APP_NAME }}
+        run: |
+          yarn add "react-native-reanimated@${{ matrix.reanimatedVersion }}"
+          yarn add "react-native-worklets@${{ matrix.workletsVersion }}"
+
+      - name: Build app (Android Debug)
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        working-directory: ${{ env.APP_NAME }}/android
+        run: ./gradlew assembleDebug --console=plain
+
+      - name: Mark combination as successful
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "${BUILD_MARKER_DIR}"
+          echo "ok" > "${BUILD_MARKER_DIR}/${{ matrix.cacheKey }}.success"
+
+      - name: Save result cache
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.BUILD_MARKER_DIR }}/${{ matrix.cacheKey }}.success
+          key: reanimated-worklets-compat-${{ matrix.cacheKey }}
