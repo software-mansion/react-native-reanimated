@@ -20,28 +20,28 @@ class Serializable {
   virtual ~Serializable();
 
   enum class ValueType : std::uint8_t {
-    ArrayBufferType,
-    ArrayType,
-    BigIntType,
-    BooleanType,
-    CustomType,
-    HandleType,
-    HostFunctionType,
-    HostObjectType,
-    ImportType,
-    MapType,
-    NullType,
-    NumberType,
-    ObjectType,
-    RemoteFunctionType,
-    SetType,
-    ShareableType,
-    StringType,
-    SymbolType,
-    SynchronizableType,
-    TurboModuleLikeType,
     UndefinedType,
+    NullType,
+    BooleanType,
+    NumberType,
+    SymbolType, // Unused currently
+    BigIntType,
+    StringType,
+    ObjectType,
+    ArrayType,
+    MapType,
+    SetType,
     WorkletType,
+    RemoteFunctionType,
+    HandleType,
+    HostObjectType,
+    HostFunctionType,
+    ArrayBufferType,
+    TurboModuleLikeType,
+    ImportType,
+    SynchronizableType,
+    CustomType,
+    ShareableType // Unused currently
   };
 
   explicit Serializable(ValueType valueType) : valueType_(valueType) {}
