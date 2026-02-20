@@ -180,7 +180,11 @@ apply from: "./fix-prefab.gradle"
 
 
 android {
-    compileSdkVersion safeExtGet("compileSdkVersion", 34)
+    compileSdkVersion safeExtGet("compileSdkVersion", 36)
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 
     namespace "com.swmansion.worklets"
 
@@ -204,8 +208,8 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion safeExtGet("minSdkVersion", 23)
-        targetSdkVersion safeExtGet("targetSdkVersion", 34)
+        minSdkVersion safeExtGet("minSdkVersion", 24)
+        targetSdkVersion safeExtGet("targetSdkVersion", 36)
         versionCode 1
         versionName WORKLETS_VERSION
 
