@@ -9,6 +9,9 @@
 #include <react/fabric/JFabricUIManager.h>
 #include <react/jni/WritableNativeMap.h>
 #include <react/renderer/scheduler/Scheduler.h>
+#include <reanimated/NativeModules/ReanimatedModuleProxy.h>
+#include <worklets/Tools/UIScheduler.h>
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
 #include <string>

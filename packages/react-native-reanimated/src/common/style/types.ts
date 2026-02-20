@@ -13,6 +13,7 @@ type PropsBuilderPropertyConfig<
   | {
       // value can have any type as it is passed to CPP where we can expect a different
       // type than in the React Native stylesheet (e.g. number for colors instead of string)
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       process: ValueProcessor<Required<P>[K], any>; // for custom value processing
     };

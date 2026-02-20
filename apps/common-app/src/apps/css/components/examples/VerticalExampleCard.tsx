@@ -131,16 +131,16 @@ const styles = StyleSheet.create({
     height: 'auto',
     padding: spacing.xs,
   },
+  itemsContainer: {
+    flexDirection: 'column',
+    gap: spacing.sm,
+    height: 'auto',
+  },
   itemWrapper: {
     backgroundColor: colors.background2,
     borderRadius: radius.sm,
     overflow: 'hidden',
     padding: spacing.xs,
-  },
-  itemsContainer: {
-    flexDirection: 'column',
-    gap: spacing.sm,
-    height: 'auto',
   },
   titleRow: {
     alignItems: 'center',

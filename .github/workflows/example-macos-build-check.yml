@@ -5,6 +5,8 @@ on:
   pull_request:
     paths:
       - .github/workflows/example-macos-build-check.yml
+      - .github/actions/install-pods/**
+      - .github/actions/cache-derived-data/**
       - packages/react-native-reanimated/RNReanimated.podspec
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
@@ -22,6 +24,8 @@ on:
       - main
     paths:
       - .github/workflows/example-macos-build-check.yml
+      - .github/actions/install-pods/**
+      - .github/actions/cache-derived-data/**
       - packages/react-native-reanimated/RNReanimated.podspec
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
@@ -52,19 +56,25 @@ jobs:
           ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
-      # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
       - name: Install monorepo node dependencies
         run: yarn install --immutable
       - name: Build Reanimated package
         working-directory: ${{ env.REANIMATED_DIR }}
         run: yarn build
 
-      - name: Install Pods
-        working-directory: ${{ env.WORKING_DIRECTORY }}/macos
-        run: |
-          bundle install
-          bundle exec pod update
+      - name: Install Pods (with caching)
+        uses: ./.github/actions/install-pods
+        with:
+          working-directory: ${{ env.WORKING_DIRECTORY }}
+          pod-directory: macos
+
+      - name: Cache DerivedData
+        uses: ./.github/actions/cache-derived-data
+        with:
+          platform: macos
+          working-directory: ${{ env.WORKING_DIRECTORY }}
+          pod-directory: macos
 
       - name: Build app
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn macos --scheme "Debug MacOSExample"
+        working-directory: ${{ env.WORKING_DIRECTORY }}/macos
+        run: xcodebuild -workspace MacOSExample.xcworkspace -configuration Debug -scheme "Debug MacOSExample" -destination "generic/platform=macOS" -quiet

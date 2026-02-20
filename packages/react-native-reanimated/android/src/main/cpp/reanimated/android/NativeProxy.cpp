@@ -7,8 +7,7 @@
 #include <reanimated/android/KeyboardWorkletWrapper.h>
 #include <reanimated/android/NativeProxy.h>
 #include <reanimated/android/SensorSetter.h>
-
-#include <react/fabric/Binding.h>
+#include <worklets/Compat/Holders.h>
 
 #include <memory>
 #include <string>

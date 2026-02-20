@@ -1,5 +1,8 @@
 #pragma once
 
+#include <react/renderer/componentregistry/componentNameByReactViewName.h>
+#include <react/renderer/core/ShadowNode.h>
+#include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/core/CSSTransition.h>
@@ -22,10 +25,6 @@
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
-
-#include <react/renderer/componentregistry/componentNameByReactViewName.h>
-#include <react/renderer/core/ShadowNode.h>
-#include <react/renderer/uimanager/UIManager.h>
 
 #include <memory>
 #include <set>

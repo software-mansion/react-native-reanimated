@@ -20,7 +20,7 @@ import type { PropsBuilderConfig } from '../../../../common';
 import {
   convertStringToNumber,
   processColorSVG,
-  processOpacity,
+  processPercentage,
   processStrokeDashArray,
 } from '../processors';
 
@@ -32,7 +32,7 @@ const colorProps: PropsBuilderConfig<ColorProps> = {
 
 const fillProps: PropsBuilderConfig<FillProps> = {
   fill: colorAttributes,
-  fillOpacity: { process: processOpacity },
+  fillOpacity: { process: processPercentage },
   fillRule: {
     process: convertStringToNumber({
       evenodd: 0,
@@ -44,7 +44,7 @@ const fillProps: PropsBuilderConfig<FillProps> = {
 const strokeProps: PropsBuilderConfig<StrokeProps> = {
   stroke: colorAttributes,
   strokeWidth: true,
-  strokeOpacity: { process: processOpacity },
+  strokeOpacity: { process: processPercentage },
   strokeDasharray: { process: processStrokeDashArray },
   strokeDashoffset: true,
   strokeLinecap: {
@@ -141,5 +141,5 @@ export const commonSvgProps = {
   ...commonMarkerProps,
   ...commonMaskProps,
   ...commonFilterProps,
-  opacity: { process: processOpacity },
+  opacity: { process: processPercentage },
 } as const;

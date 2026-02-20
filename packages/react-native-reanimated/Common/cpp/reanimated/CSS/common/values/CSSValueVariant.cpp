@@ -10,6 +10,7 @@
 #include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGLength.h>
 #include <reanimated/CSS/svg/values/SVGPath.h>
+#include <reanimated/CSS/svg/values/SVGStops.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 #include <reanimated/Compat/WorkletsApi.h>
 
@@ -84,10 +85,7 @@ bool CSSValueVariant<AllowedTypes...>::operator==(const CSSValueVariant &other) 
 
 template <CSSValueDerived... AllowedTypes>
 bool CSSValueVariant<AllowedTypes...>::operator==(const CSSValue &other) const {
-  if (auto *o = dynamic_cast<const CSSValueVariant *>(&other)) {
-    return *this == *o;
-  }
-  return false;
+  return typeid(*this) == typeid(other) && *this == static_cast<const CSSValueVariant &>(other);
 }
 
 template <CSSValueDerived... AllowedTypes>
@@ -173,6 +171,7 @@ template class CSSValueVariant<CSSDiscreteArray<CSSKeyword>>;
 template class CSSValueVariant<SVGLength>;
 template class CSSValueVariant<SVGLength, CSSKeyword>;
 template class CSSValueVariant<SVGPath>;
+template class CSSValueVariant<SVGStops>;
 template class CSSValueVariant<SVGStrokeDashArray, CSSKeyword>;
 template class CSSValueVariant<SVGBrush>;
 

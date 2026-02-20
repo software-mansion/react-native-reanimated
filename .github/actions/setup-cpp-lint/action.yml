@@ -1,0 +1,31 @@
+name: Setup C++ lint tools
+description: Sets up Python with cpplint and optionally cmakelang for C++ linting
+
+inputs:
+  python-version:
+    description: Python version to use
+    default: '3.13'
+    required: false
+  install-cmakelang:
+    description: Whether to install cmakelang (for CMakeLists.txt linting)
+    default: 'false'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python ${{ inputs.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install cpplint
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install cpplint==1.6.1
+
+    - name: Install cmakelang
+      if: ${{ inputs.install-cmakelang == 'true' }}
+      shell: bash
+      run: python -m pip install cmakelang==0.6.13

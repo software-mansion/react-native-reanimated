@@ -92,6 +92,7 @@ class NativeReanimatedModule implements IReanimatedModule {
       }
       delete globalThis.__UI_WORKLET_RUNTIME_HOLDER;
     }
+
     if (global.__reanimatedModuleProxy === undefined) {
       throw new ReanimatedError(
         `Native part of Reanimated doesn't seem to be initialized.
@@ -301,4 +302,17 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   getSettledUpdates(): SettledUpdate[] {
     return [];
   }
+}
+
+function installTurboModule() {
+  if (globalThis.__reanimatedModuleProxy) {
+    return true;
+  }
+
+  globalThis.__UI_WORKLET_RUNTIME_HOLDER = getUIRuntimeHolder();
+  globalThis.__UI_SCHEDULER_HOLDER = getUISchedulerHolder();
+  const status = ReanimatedTurboModule!.installTurboModule();
+  delete globalThis.__UI_WORKLET_RUNTIME_HOLDER;
+  delete globalThis.__UI_SCHEDULER_HOLDER;
+  return status;
 }
