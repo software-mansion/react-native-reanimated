@@ -12,7 +12,6 @@
 #import <reanimated/apple/native/NativeProxy.h>
 
 #import <worklets/Compat/Holders.h>
-#import <worklets/apple/WorkletsModule.h>
 
 using namespace facebook::react;
 using namespace reanimated;
@@ -131,7 +130,8 @@ RCT_EXPORT_MODULE(ReanimatedModule);
  */
 - (BOOL)hasReactNativeFailedReload
 {
-  return ![_moduleRegistry moduleIsInitialized:WorkletsModule.class];
+  id workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
+  return ![_moduleRegistry moduleIsInitialized:[workletsModule class]];
 }
 
 - (void)checkBridgeless

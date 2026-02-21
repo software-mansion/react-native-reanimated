@@ -3,6 +3,7 @@ package com.swmansion.reanimated;
 import android.content.ContentResolver;
 import android.os.SystemClock;
 import android.provider.Settings;
+import android.util.Log;
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
@@ -25,8 +26,6 @@ import com.swmansion.reanimated.nativeProxy.EventHandler;
 import com.swmansion.reanimated.nativeProxy.SensorSetter;
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
 import com.swmansion.reanimated.sensor.ReanimatedSensorType;
-import com.swmansion.worklets.JSCallInvokerResolver;
-import com.swmansion.worklets.WorkletsModule;
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.Objects;
@@ -41,7 +40,6 @@ public class NativeProxy {
     SoLoader.loadLibrary("reanimated");
   }
 
-  protected final WorkletsModule mWorkletsModule;
   protected NodesManager mNodesManager;
   protected final FabricUIManager mFabricUIManager;
   protected final WeakReference<ReactApplicationContext> mContext;
@@ -64,10 +62,9 @@ public class NativeProxy {
   private final HybridData mHybridData;
 
   public @OptIn(markerClass = FrameworkAPI.class) NativeProxy(
-      ReactApplicationContext context, WorkletsModule workletsModule, NodesManager nodesManager) {
+      ReactApplicationContext context, NodesManager nodesManager) {
     context.assertOnJSQueueThread();
 
-    mWorkletsModule = workletsModule;
     mContext = new WeakReference<>(context);
     reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
     keyboardAnimationManager = new KeyboardAnimationManager(mContext);
@@ -89,7 +86,8 @@ public class NativeProxy {
     mFabricUIManager =
         (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
 
-    CallInvokerHolderImpl callInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
+    CallInvokerHolderImpl callInvokerHolder =
+        (CallInvokerHolderImpl) context.getJSCallInvokerHolder();
     mHybridData =
         initHybrid(
             Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
@@ -131,7 +129,20 @@ public class NativeProxy {
       firstUptime = SystemClock.uptimeMillis();
     }
     mNodesManager.enableSlowAnimations(slowAnimationsEnabled, ANIMATIONS_DRAG_FACTOR);
-    mWorkletsModule.toggleSlowAnimations();
+    try {
+      Class<NativeModule> WorkletsModuleClass =
+          (Class<NativeModule>) Class.forName("com.swmansion.worklets.WorkletsModule");
+      NativeModule workletsModule = mContext.get().getNativeModule(WorkletsModuleClass);
+      if (workletsModule != null) {
+        try {
+          workletsModule.getClass().getMethod("toggleSlowAnimations").invoke(workletsModule);
+        } catch (Exception e) {
+          Log.e("Reanimated", "Failed to toggle slow animations in WorkletsModule", e);
+        }
+      }
+    } catch (ClassNotFoundException e) {
+      Log.e("Reanimated", "WorkletsModule not found when toggling slow animations", e);
+    }
   }
 
   private void addDevMenuOption() {
