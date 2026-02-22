@@ -1,3 +1,4 @@
+#include <jsi/jsi.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 #include <worklets/Compat/Holders.h>
@@ -10,10 +11,6 @@
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
-
-#ifdef __ANDROID__
-#include <fbjni/fbjni.h>
-#endif // __ANDROID__
 
 #include <memory>
 #include <string>
