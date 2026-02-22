@@ -1,7 +1,7 @@
 {
   "fabric": {
     "nightly": {
-      "react-native": ["0.80", "0.81", "0.82", "0.83", "0.84"],
+      "react-native": ["0.81", "0.82", "0.83", "0.84"],
       "react-native-worklets": ["nightly"]
     },
     "4.2.x": {
