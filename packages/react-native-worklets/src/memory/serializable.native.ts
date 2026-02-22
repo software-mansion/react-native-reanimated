@@ -478,7 +478,7 @@ function cloneWorklet<TValue extends WorkletFunction>(
   }
   const clonedProps: Record<string, unknown> = cloneObjectProperties(
     value,
-    true,
+    shouldPersistRemote,
     depth
   );
   // to save on transferring static __initData field of worklet structure
