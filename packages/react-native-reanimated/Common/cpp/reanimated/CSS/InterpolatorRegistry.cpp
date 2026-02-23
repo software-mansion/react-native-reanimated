@@ -387,6 +387,7 @@ ComponentInterpolatorsMap initializeRegistry() {
     registry["RNSVGPath"] = SVG_PATH_INTERPOLATORS;
     registry["RNSVGRect"] = SVG_RECT_INTERPOLATORS;
     registry["RNSVGRadialGradient"] = SVG_RADIAL_GRADIENT_INTERPOLATORS;
+    // registry["RNSVGPath$Polyline"] = SVG_PATH_INTERPOLATORS;
   }
 
   return registry;
