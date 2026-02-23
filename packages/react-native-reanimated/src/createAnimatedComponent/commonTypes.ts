@@ -24,12 +24,9 @@ export interface AnimatedProps extends Record<string, unknown> {
 export interface ViewInfo {
   viewTag: number | AnimatedComponentRef | HTMLElement | null;
   shadowNodeWrapper: ShadowNodeWrapper | null;
-  // The React Native bridge view name (e.g. "RCTText"), sourced from
-  // uiViewClassName. This differs from both the JS component name (e.g.
-  // "Text") and the native Fabric component name (e.g. "Paragraph"). On the
-  // C++ side it is converted to the native component name via
-  // componentNameByReactViewName before being used as a registry key.
-  // (see react/renderer/componentregistry/componentNameByReactViewName.cpp)
+  // The React Native view class name for the host component
+  // (e.g. "RCTText" for Text). See getViewInfo.ts for the full naming
+  // convention used in CSS.
   reactViewName?: string;
   DOMElement?: HTMLElement | null;
 }

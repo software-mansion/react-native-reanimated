@@ -2,20 +2,19 @@
 
 import type { HostInstance } from '../platform-specific/types';
 
-// Component naming conventions used across the JS-to-native bridge:
+// Component naming convention:
 //
 //  jsComponentName     - The React/JS-facing name (e.g. "Text").
-//                        Accessed via component.componentName in JS.
-//  reactViewName       - The React Native bridge view class name
-//                        (e.g. "RCTText"), sourced from uiViewClassName.
-//                        This is what is passed across the bridge.
-//  nativeComponentName - The Fabric/C++ component name (e.g. "Paragraph"),
-//                        obtained on the C++ side by converting reactViewName
-//                        via componentNameByReactViewName(). Used as the key
-//                        in all C++ CSS registries.
-//
-// For 3rd-party components (e.g. SVG) reactViewName and nativeComponentName
-// are identical. For built-in RN components they differ.
+//                        Accessed via Component.componentName in JS.
+//  reactViewName       - The name React Native uses to identify the component
+//                        (e.g. "RCTText"). This is what we use to identify
+//                        the underlying React Native component name (it is the
+//                        same as the native component name for most of third-party
+//                        components (e.g. SVG) but is often different for built-in
+//                        RN components (e.g. "RCTView").
+//  nativeComponentName - The Fabric/C++ component name (e.g. "Paragraph").
+//                        Can be obtained on the C++ side by converting
+//                        reactViewName via componentNameByReactViewName().
 export function getViewInfo(element: HostInstance): {
   reactViewName?: string;
   viewTag?: number;

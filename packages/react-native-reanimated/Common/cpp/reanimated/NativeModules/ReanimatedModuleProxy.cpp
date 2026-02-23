@@ -360,21 +360,6 @@ void ReanimatedModuleProxy::unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::V
   updatesRegistryManager_->unmarkNodeAsRemovable(viewTag.asNumber());
 }
 
-// Component naming across the JS-to-native bridge:
-//
-//  jsComponentName     - The React/JS-facing name (e.g. "Text").
-//                        Accessed via component.componentName in JS.
-//  reactViewName       - The React Native bridge view class name
-//                        (e.g. "RCTText"), sourced from uiViewClassName.
-//                        This is what JS passes across the bridge.
-//  nativeComponentName - The Fabric/C++ component name (e.g. "Paragraph"),
-//                        obtained by converting reactViewName via
-//                        componentNameByReactViewName(). Used as the key
-//                        in all C++ CSS registries.
-//
-// For 3rd-party components (e.g. SVG) reactViewName and nativeComponentName
-// are identical. For built-in RN components they differ.
-
 void ReanimatedModuleProxy::registerCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
