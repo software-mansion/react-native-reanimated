@@ -360,25 +360,39 @@ void ReanimatedModuleProxy::unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::V
   updatesRegistryManager_->unmarkNodeAsRemovable(viewTag.asNumber());
 }
 
+// Component naming across the JS-to-native bridge:
+//
+//  jsComponentName     - The React/JS-facing name (e.g. "Text").
+//                        Accessed via component.componentName in JS.
+//  reactViewName       - The React Native bridge view class name
+//                        (e.g. "RCTText"), sourced from uiViewClassName.
+//                        This is what JS passes across the bridge.
+//  nativeComponentName - The Fabric/C++ component name (e.g. "Paragraph"),
+//                        obtained by converting reactViewName via
+//                        componentNameByReactViewName(). Used as the key
+//                        in all C++ CSS registries.
+//
+// For 3rd-party components (e.g. SVG) reactViewName and nativeComponentName
+// are identical. For built-in RN components they differ.
+
 void ReanimatedModuleProxy::registerCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
-    const jsi::Value &viewName,
+    const jsi::Value &reactViewName,
     const jsi::Value &keyframesConfig) {
-  // Convert react view name to Fabric component name
-  const auto componentName = componentNameByReactViewName(viewName.asString(rt).utf8(rt));
+  const auto nativeComponentName = componentNameByReactViewName(reactViewName.asString(rt).utf8(rt));
   cssAnimationKeyframesRegistry_->set(
       animationName.asString(rt).utf8(rt),
-      componentName,
-      parseCSSAnimationKeyframesConfig(rt, keyframesConfig, componentName, viewStylesRepository_));
+      nativeComponentName,
+      parseCSSAnimationKeyframesConfig(rt, keyframesConfig, nativeComponentName, viewStylesRepository_));
 }
 
 void ReanimatedModuleProxy::unregisterCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
-    const jsi::Value &viewName) {
+    const jsi::Value &reactViewName) {
   cssAnimationKeyframesRegistry_->remove(
-      animationName.asString(rt).utf8(rt), componentNameByReactViewName(viewName.asString(rt).utf8(rt)));
+      animationName.asString(rt).utf8(rt), componentNameByReactViewName(reactViewName.asString(rt).utf8(rt)));
 }
 
 void ReanimatedModuleProxy::applyCSSAnimations(
