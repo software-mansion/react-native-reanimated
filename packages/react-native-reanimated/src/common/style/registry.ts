@@ -12,14 +12,14 @@ import {
 export const ERROR_MESSAGES = {
   propsBuilderNotFound: (
     componentName: string,
-    componentChildName?: string
+    componentNameJS?: string
   ) => {
     const compoundComponentName = getCompoundComponentName(
       componentName,
-      componentChildName
+      componentNameJS
     );
 
-    const namesPart = componentChildName
+    const namesPart = componentNameJS
       ? `${compoundComponentName} or ${componentName}`
       : componentName;
 
@@ -43,11 +43,11 @@ const PROPS_BUILDERS = new Map<string, NativePropsBuilder>();
 
 export function hasPropsBuilder(
   componentName: string,
-  componentChildName?: string
+  componentNameJS?: string
 ): boolean {
   const compoundComponentName = getCompoundComponentName(
     componentName,
-    componentChildName
+    componentNameJS
   );
 
   return (
@@ -59,11 +59,11 @@ export function hasPropsBuilder(
 
 export function getPropsBuilder(
   componentName: string,
-  componentChildName?: string
+  componentNameJS?: string
 ): NativePropsBuilder {
   const compoundComponentName = getCompoundComponentName(
     componentName,
-    componentChildName
+    componentNameJS
   );
 
   const componentPropsBuilder =
@@ -80,7 +80,7 @@ export function getPropsBuilder(
   }
 
   throw new ReanimatedError(
-    ERROR_MESSAGES.propsBuilderNotFound(componentName, componentChildName)
+    ERROR_MESSAGES.propsBuilderNotFound(componentName, componentNameJS)
   );
 }
 
@@ -89,18 +89,18 @@ export function registerComponentPropsBuilder<P extends UnknownRecord>(
   config: PropsBuilderConfig<P>,
   options: {
     separatelyInterpolatedNestedProperties?: readonly string[];
-    componentChildName?: string;
+    componentNameJS?: string;
   } = {}
 ) {
   const compoundComponentName = getCompoundComponentName(
     componentName,
-    options.componentChildName
+    options.componentNameJS
   );
   PROPS_BUILDERS.set(compoundComponentName, createNativePropsBuilder(config));
 
   // If the generalized version is missing but a specialization is provided,
   // initialize the generalization with the default config.
-  if (options.componentChildName && !hasPropsBuilder(componentName)) {
+  if (options.componentNameJS && !hasPropsBuilder(componentName)) {
     PROPS_BUILDERS.set(componentName, createNativePropsBuilder(config));
 
     if (options.separatelyInterpolatedNestedProperties?.length) {
@@ -121,11 +121,11 @@ export function registerComponentPropsBuilder<P extends UnknownRecord>(
 
 export function getSeparatelyInterpolatedNestedProperties(
   componentName: string,
-  componentChildName?: string
+  componentNameJS?: string
 ): ReadonlySet<string> {
   const compoundComponentName = getCompoundComponentName(
     componentName,
-    componentChildName
+    componentNameJS
   );
   return (
     COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES.get(
@@ -138,9 +138,9 @@ export function getSeparatelyInterpolatedNestedProperties(
 
 function getCompoundComponentName(
   componentName: string,
-  componentChildName?: string
+  componentNameJS?: string
 ): string {
-  return componentChildName
-    ? `${componentName}$${componentChildName}`
+  return componentNameJS
+    ? `${componentName}$${componentNameJS}`
     : componentName;
 }

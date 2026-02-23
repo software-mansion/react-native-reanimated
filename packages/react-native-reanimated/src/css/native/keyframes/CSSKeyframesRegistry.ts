@@ -34,7 +34,7 @@ class CSSKeyframesRegistry {
     keyframesRule: CSSKeyframesRuleImpl,
     viewName: string,
     viewTag: number,
-    componentChildName?: string
+    componentNameJS?: string
   ) {
     const existingKeyframesEntry = this.nameToKeyframes_.get(
       keyframesRule.name
@@ -69,7 +69,7 @@ class CSSKeyframesRegistry {
     registerCSSKeyframes(
       keyframesRule.name,
       viewName,
-      keyframesRule.getNormalizedKeyframesConfig(viewName, componentChildName)
+      keyframesRule.getNormalizedKeyframesConfig(viewName, componentNameJS)
     );
   }
 

@@ -20,23 +20,23 @@ describe('registry', () => {
 
     test('returns true for registered compound component names', () => {
       const componentName = 'CustomComponent';
-      const componentChildName = 'CustomComponentChild';
+      const componentNameJS = 'CustomComponentChild';
       const config = { width: true, height: true };
 
       registerComponentPropsBuilder(componentName, config, {
-        componentChildName: componentChildName,
+        componentNameJS: componentNameJS,
       });
 
-      expect(hasPropsBuilder(componentName, componentChildName)).toBe(true);
+      expect(hasPropsBuilder(componentName, componentNameJS)).toBe(true);
     });
 
     test('returns true for component names if compound component was registered ', () => {
       const componentName = 'CustomComponent';
-      const componentChildName = 'CustomComponentChild';
+      const componentNameJS = 'CustomComponentChild';
       const config = { width: true, height: true };
 
       registerComponentPropsBuilder(componentName, config, {
-        componentChildName: componentChildName,
+        componentNameJS: componentNameJS,
       });
 
       expect(hasPropsBuilder(componentName)).toBe(true);
@@ -66,13 +66,13 @@ describe('registry', () => {
 
     test('returns registered props builder for custom compound component', () => {
       const componentName = 'CustomComponent';
-      const componentChildName = 'CustomComponentChild';
+      const componentNameJS = 'CustomComponentChild';
       const config = { width: true, height: true };
 
       registerComponentPropsBuilder(componentName, config, {
-        componentChildName: componentChildName,
+        componentNameJS: componentNameJS,
       });
-      const propsBuilder = getPropsBuilder(componentName, componentChildName);
+      const propsBuilder = getPropsBuilder(componentName, componentNameJS);
 
       expect(propsBuilder).toBeDefined();
       expect(typeof propsBuilder.build).toBe('function');
@@ -80,11 +80,11 @@ describe('registry', () => {
 
     test('returns registered props builder for component if custom compound component was registered', () => {
       const componentName = 'CustomComponent';
-      const componentChildName = 'CustomComponentChild';
+      const componentNameJS = 'CustomComponentChild';
       const config = { width: true, height: true };
 
       registerComponentPropsBuilder(componentName, config, {
-        componentChildName: componentChildName,
+        componentNameJS: componentNameJS,
       });
       const propsBuilder = getPropsBuilder(componentName);
 
@@ -94,16 +94,16 @@ describe('registry', () => {
 
     test('returns registered props builder for component different than for the compound component', () => {
       const componentName = 'CustomComponent';
-      const componentChildName = 'CustomComponentChild';
+      const componentNameJS = 'CustomComponentChild';
       const config = { width: true, height: true };
       const config2 = { width: true, height: true, length: true };
 
       registerComponentPropsBuilder(componentName, config);
       registerComponentPropsBuilder(componentName, config2, {
-        componentChildName: componentChildName,
+        componentNameJS: componentNameJS,
       });
       const propsBuilder = getPropsBuilder(componentName);
-      const propsBuilder2 = getPropsBuilder(componentName, componentChildName);
+      const propsBuilder2 = getPropsBuilder(componentName, componentNameJS);
 
       expect(propsBuilder).toBeDefined();
       expect(typeof propsBuilder.build).toBe('function');
