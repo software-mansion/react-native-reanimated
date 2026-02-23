@@ -13,6 +13,9 @@ class Object;
 
 namespace worklets {
 
+class WorkletRuntime;
+class UIScheduler;
+
 class Serializable {
  public:
   virtual facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt) = 0;
@@ -58,20 +61,16 @@ class Serializable {
 
 class WorkletRuntimeHolder {
  public:
-  explicit WorkletRuntimeHolder(uintptr_t sharedPtr) : sharedPtr_(sharedPtr) {}
+  explicit WorkletRuntimeHolder(const std::shared_ptr<WorkletRuntime> &workletRuntime);
 
-  ~WorkletRuntimeHolder();
-
-  uintptr_t sharedPtr_;
+  const std::shared_ptr<WorkletRuntime> workletRuntime_;
 };
 
 class UISchedulerHolder {
  public:
-  explicit UISchedulerHolder(uintptr_t sharedPtr) : sharedPtr_(sharedPtr) {}
+  explicit UISchedulerHolder(const std::shared_ptr<UIScheduler> &uiScheduler);
 
-  ~UISchedulerHolder();
-
-  uintptr_t sharedPtr_;
+  const std::shared_ptr<UIScheduler> uiScheduler_;
 };
 
 extern std::shared_ptr<WorkletRuntimeHolder> getWorkletRuntimeHolderFromNativeStateObject(

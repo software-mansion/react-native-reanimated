@@ -14,7 +14,6 @@
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
-#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -555,9 +554,7 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         0,
         [uiWorkletRuntime = uiWorkletRuntime_](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          const auto heapSharedPtr = // NOLINT//(cppcoreguidelines-owning-memory)
-              new std::shared_ptr<WorkletRuntime>(uiWorkletRuntime);
-          auto holder = std::make_shared<NativeStateWorkletRuntimeHolder>(reinterpret_cast<uintptr_t>(heapSharedPtr));
+          auto holder = std::make_shared<NativeStateWorkletRuntimeHolder>(uiWorkletRuntime.lock());
           auto obj = jsi::Object(rt);
           obj.setNativeState(rt, std::move(holder));
           return obj;
@@ -571,9 +568,7 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         0,
         [uiScheduler = uiScheduler_](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          // NOLINTNEXTLINE//(cppcoreguidelines-owning-memory)
-          const auto heapSharedPtr = new std::shared_ptr<UIScheduler>(uiScheduler);
-          auto holder = std::make_shared<NativeStateUISchedulerHolder>(reinterpret_cast<uintptr_t>(heapSharedPtr));
+          auto holder = std::make_shared<NativeStateUISchedulerHolder>(uiScheduler);
           auto obj = jsi::Object(rt);
           obj.setNativeState(rt, std::move(holder));
           return obj;

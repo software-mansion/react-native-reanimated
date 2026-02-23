@@ -10,19 +10,23 @@
 
 namespace worklets {
 
+WorkletRuntimeHolder::WorkletRuntimeHolder(const std::shared_ptr<WorkletRuntime> &workletRuntime)
+    : workletRuntime_(workletRuntime) {}
+
+UISchedulerHolder::UISchedulerHolder(const std::shared_ptr<UIScheduler> &uiScheduler) : uiScheduler_(uiScheduler) {}
+
 std::string JSIValueToString(facebook::jsi::Runtime &rt, const facebook::jsi::Value &value) {
   return worklets::stringifyJSIValue(rt, value);
 }
 
 void scheduleOnUI(const std::shared_ptr<UISchedulerHolder> &uiSchedulerHolder, const std::function<void()> &job) {
-  // NOLINTNEXTLINE//(performance-no-int-to-ptr)
-  auto &uiScheduler = *reinterpret_cast<std::shared_ptr<UIScheduler> *>(uiSchedulerHolder->sharedPtr_);
+  auto uiScheduler = uiSchedulerHolder->uiScheduler_;
   uiScheduler->scheduleOnUI(job);
 }
 
 facebook::jsi::Runtime *getRuntimeAddressFromHolder(const std::shared_ptr<WorkletRuntimeHolder> &holder) {
-  // NOLINTNEXTLINE//(performance-no-int-to-ptr)
-  return &(reinterpret_cast<std::weak_ptr<WorkletRuntime> *>(holder->sharedPtr_)->lock()->getJSIRuntime());
+  auto workletRuntime = holder->workletRuntime_;
+  return &(workletRuntime->getJSIRuntime());
 }
 
 std::shared_ptr<Serializable>
@@ -87,8 +91,7 @@ std::shared_ptr<Serializable> extractSerializable(
 extern void runSyncOnRuntime(
     const std::shared_ptr<WorkletRuntimeHolder> &runtimeHolder,
     const std::shared_ptr<Serializable> &worklet) {
-  // NOLINTNEXTLINE//(performance-no-int-to-ptr)
-  auto &workletRuntime = *reinterpret_cast<std::shared_ptr<WorkletRuntime> *>(runtimeHolder->sharedPtr_);
+  auto workletRuntime = runtimeHolder->workletRuntime_;
   workletRuntime->runSync(std::static_pointer_cast<SerializableWorklet>(worklet));
 }
 
@@ -96,8 +99,7 @@ extern void runSyncOnRuntime(
     const std::shared_ptr<WorkletRuntimeHolder> &runtimeHolder,
     const std::shared_ptr<Serializable> &worklet,
     const facebook::jsi::Value &arg0) {
-  // NOLINTNEXTLINE//(performance-no-int-to-ptr)
-  auto &workletRuntime = *reinterpret_cast<std::shared_ptr<WorkletRuntime> *>(runtimeHolder->sharedPtr_);
+  auto workletRuntime = runtimeHolder->workletRuntime_;
   workletRuntime->runSync(std::static_pointer_cast<SerializableWorklet>(worklet), arg0);
 }
 
@@ -106,21 +108,8 @@ extern void runSyncOnRuntime(
     const std::shared_ptr<Serializable> &worklet,
     const facebook::jsi::Value &arg0,
     const facebook::jsi::Value &arg1) {
-  // NOLINTNEXTLINE//(performance-no-int-to-ptr)
-  auto &workletRuntime = *reinterpret_cast<std::shared_ptr<WorkletRuntime> *>(runtimeHolder->sharedPtr_);
+  auto workletRuntime = runtimeHolder->workletRuntime_;
   workletRuntime->runSync(std::static_pointer_cast<SerializableWorklet>(worklet), arg0, arg1);
-}
-
-WorkletRuntimeHolder::~WorkletRuntimeHolder() {
-  auto workletRuntimeSharedPtr =
-      reinterpret_cast<std::shared_ptr<WorkletRuntime> *>(sharedPtr_); // NOLINT//(performance-no-int-to-ptr)
-  delete workletRuntimeSharedPtr; //NOLINT//(cppcoreguidelines-owning-memory)
-}
-
-UISchedulerHolder::~UISchedulerHolder() {
-  auto uiSchedulerSharedPtr =
-      reinterpret_cast<std::shared_ptr<UIScheduler> *>(sharedPtr_); // NOLINT//(performance-no-int-to-ptr)
-  delete uiSchedulerSharedPtr; //NOLINT//(cppcoreguidelines-owning-memory)
 }
 
 std::shared_ptr<WorkletRuntimeHolder> getWorkletRuntimeHolderFromNativeStateObject(

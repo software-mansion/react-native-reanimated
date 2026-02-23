@@ -1,6 +1,7 @@
 #include <jsi/jsi.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <reanimated/Compat/WorkletsApi.h>
+#include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
