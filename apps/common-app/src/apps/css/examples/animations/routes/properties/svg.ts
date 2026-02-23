@@ -43,6 +43,10 @@ export const svgPropertiesRoutes = {
     Component: svgAnimatedProperties.Path,
     name: 'Path',
   },
+  Polyline: {
+    name: 'Polyline',
+    Component: svgAnimatedProperties.Polyline,
+  },
   RadialGradient: {
     Component: svgAnimatedProperties.RadialGradient,
     name: 'RadialGradient',

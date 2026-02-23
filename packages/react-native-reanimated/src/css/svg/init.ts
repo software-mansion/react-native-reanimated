@@ -8,6 +8,7 @@ import {
   SVG_LINE_PROPERTIES_CONFIG,
   SVG_LINEAR_GRADIENT_PROPERTIES_CONFIG,
   SVG_PATH_PROPERTIES_CONFIG,
+  SVG_POLYLINE_PROPERTIES_CONFIG,
   SVG_RADIAL_GRADIENT_PROPERTIES_CONFIG,
   SVG_RECT_PROPERTIES_CONFIG,
 } from './native';
@@ -26,6 +27,7 @@ export function initSvgCssSupport() {
     SVG_RADIAL_GRADIENT_PROPERTIES_CONFIG
   );
   registerComponentPropsBuilder('RNSVGPath', SVG_PATH_PROPERTIES_CONFIG);
+  registerComponentPropsBuilder('RNSVGPath', SVG_POLYLINE_PROPERTIES_CONFIG, {componentNameJS: "Polyline"}); // change the interface
   registerComponentPropsBuilder('RNSVGRect', SVG_RECT_PROPERTIES_CONFIG);
 
   // Fallback for all SVG components that aren't explicitly registered

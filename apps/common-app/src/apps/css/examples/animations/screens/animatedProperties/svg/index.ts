@@ -8,6 +8,7 @@ import LinearGradient from './LinearGradient';
 import Path from './Path';
 import RadialGradient from './RadialGradient';
 import Rect from './Rect';
+import Polyline from './Polyline';
 
 export default {
   Circle,
@@ -18,6 +19,7 @@ export default {
   Line,
   LinearGradient,
   Path,
+  Polyline,
   RadialGradient,
   Rect,
 };
