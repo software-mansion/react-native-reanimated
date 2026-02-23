@@ -1,27 +1,22 @@
 #include <jsi/jsi.h>
+#include <react/renderer/scheduler/Scheduler.h>
+#include <react/renderer/uimanager/UIManagerBinding.h>
 #include <reanimated/Events/UIEventHandler.h>
-#include <reanimated/Events/UIEventHandlerRegistry.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
-
 #include <worklets/SharedItems/Serializable.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
 
-#include <react/renderer/scheduler/Scheduler.h>
-#include <react/renderer/uimanager/UIManagerBinding.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
-
 #include <functional>
-#include <iomanip>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -29,6 +24,8 @@
 #include <vector>
 
 namespace reanimated {
+
+using namespace worklets;
 
 #if REACT_NATIVE_MINOR_VERSION >= 81
 static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
@@ -39,14 +36,16 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
 #endif
 
 ReanimatedModuleProxy::ReanimatedModuleProxy(
-    const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
+    const std::shared_ptr<WorkletRuntime> &uiRuntime,
+    const std::shared_ptr<UIScheduler> &uiScheduler,
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<CallInvoker> &jsCallInvoker,
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
     const bool isReducedMotion)
     : ReanimatedModuleProxySpec(jsCallInvoker),
       isReducedMotion_(isReducedMotion),
-      workletsModuleProxy_(workletsModuleProxy),
+      uiRuntime_(uiRuntime),
+      uiScheduler_(uiScheduler),
       eventHandlerRegistry_(std::make_unique<UIEventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       animatedSensorModule_(platformDepMethodsHolder),
@@ -174,7 +173,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     return strongThis->obtainProp(rt, shadowNodeWrapper, propName);
   };
 
-  jsi::Runtime &uiRuntime = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+  jsi::Runtime &uiRuntime = uiRuntime_->getJSIRuntime();
   UIRuntimeDecorator::decorate(
       uiRuntime,
       obtainProp,
@@ -207,7 +206,7 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
       rt, worklet, "[Reanimated] Event handler must be a serializable worklet.");
   int emitterReactTagInt = emitterReactTag.asNumber();
 
-  workletsModuleProxy_->getUIScheduler()->scheduleOnUI([=, weakThis = weak_from_this()]() {
+  uiScheduler_->scheduleOnUI([=, weakThis = weak_from_this()]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -222,7 +221,7 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
 
 void ReanimatedModuleProxy::unregisterEventHandler(jsi::Runtime &, const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
-  workletsModuleProxy_->getUIScheduler()->scheduleOnUI([=, weakThis = weak_from_this()]() {
+  uiScheduler_->scheduleOnUI([=, weakThis = weak_from_this()]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -248,15 +247,15 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
   const auto propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
   const auto funPtr = std::make_shared<jsi::Function>(callback.getObject(rnRuntime).asFunction(rnRuntime));
   const auto shadowNode = shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
-  workletsModuleProxy_->getUIScheduler()->scheduleOnUI([=, weakThis = weak_from_this()]() {
+  uiScheduler_->scheduleOnUI([=, weakThis = weak_from_this()]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
     }
-    jsi::Runtime &uiRuntime = strongThis->workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+    jsi::Runtime &uiRuntime = strongThis->uiRuntime_->getJSIRuntime();
     const auto resultStr = strongThis->obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
 
-    strongThis->workletsModuleProxy_->getJSScheduler()->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
+    strongThis->jsInvoker_->invokeAsync([=](jsi::Runtime &rnRuntime) {
       const auto resultValue = jsi::String::createFromUtf8(rnRuntime, resultStr);
       funPtr->call(rnRuntime, resultValue);
     });
@@ -331,7 +330,7 @@ jsi::Value ReanimatedModuleProxy::registerSensor(
     const jsi::Value &iosReferenceFrame,
     const jsi::Value &sensorDataHandler) {
   return animatedSensorModule_.registerSensor(
-      rt, workletsModuleProxy_->getUIWorkletRuntime(), sensorType, interval, iosReferenceFrame, sensorDataHandler);
+      rt, uiRuntime_, sensorType, interval, iosReferenceFrame, sensorDataHandler);
 }
 
 void ReanimatedModuleProxy::unregisterSensor(jsi::Runtime &, const jsi::Value &sensorId) {
@@ -433,7 +432,7 @@ void ReanimatedModuleProxy::runCSSTransition(
 
   {
     auto lock = cssTransitionsRegistry_->lock();
-    cssTransitionsRegistry_->run(rt, std::move(shadowNode), config);
+    cssTransitionsRegistry_->run(rt, shadowNode, config);
   }
 
   maybeRunCSSLoop();
@@ -470,8 +469,7 @@ bool ReanimatedModuleProxy::handleEvent(
     double currentTime) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::handleEvent");
 
-  eventHandlerRegistry_->processEvent(
-      workletsModuleProxy_->getUIWorkletRuntime(), currentTime, eventName, emitterReactTag, payload);
+  eventHandlerRegistry_->processEvent(uiRuntime_, currentTime, eventName, emitterReactTag, payload);
 
   // TODO: return true if Reanimated successfully handled the event
   // to avoid sending it to JavaScript
@@ -499,12 +497,12 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     if (eventType == "onTransitionProgress") {
-      jsi::Runtime &rt = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+      jsi::Runtime &uiRuntime = uiRuntime_->getJSIRuntime();
       const auto &eventPayload = rawEvent.eventPayload;
-      jsi::Object payload = eventPayload->asJSIValue(rt).asObject(rt);
-      auto progress = payload.getProperty(rt, "progress").asNumber();
-      auto closing = static_cast<bool>(payload.getProperty(rt, "closing").asNumber());
-      auto goingForward = static_cast<bool>(payload.getProperty(rt, "goingForward").asNumber());
+      jsi::Object payload = eventPayload->asJSIValue(uiRuntime).asObject(uiRuntime);
+      auto progress = payload.getProperty(uiRuntime, "progress").asNumber();
+      auto closing = static_cast<bool>(payload.getProperty(uiRuntime, "closing").asNumber());
+      auto goingForward = static_cast<bool>(payload.getProperty(uiRuntime, "goingForward").asNumber());
 
       if (!layoutAnimationsProxy_) {
         return false;
@@ -536,9 +534,9 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
     return false;
   }
 
-  jsi::Runtime &rt = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+  jsi::Runtime &uiRuntime = uiRuntime_->getJSIRuntime();
   const auto &eventPayload = rawEvent.eventPayload;
-  jsi::Value payload = eventPayload->asJSIValue(rt);
+  jsi::Value payload = eventPayload->asJSIValue(uiRuntime);
 
   auto res = handleEvent(eventType, tag, payload, currentTime);
   // TODO: we should call performOperations conditionally if event is handled
@@ -573,7 +571,7 @@ void ReanimatedModuleProxy::maybeRunCSSLoop() {
 
   cssLoopRunning_ = true;
 
-  workletsModuleProxy_->getUIScheduler()->scheduleOnUI([weakThis = weak_from_this()]() {
+  uiScheduler_->scheduleOnUI([=, weakThis = weak_from_this()]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -605,7 +603,7 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
     }
   }
 
-  jsi::Runtime &rt = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+  jsi::Runtime &uiRuntime = uiRuntime_->getJSIRuntime();
 
   UpdatesBatch updatesBatch;
   {
@@ -1103,7 +1101,7 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
     return;
   }
 
-  commitUpdates(rt, updatesBatch);
+  commitUpdates(uiRuntime, updatesBatch);
 
   // Clear the entire cache after the commit
   // (we don't know if the view is updated from outside of Reanimated
@@ -1206,7 +1204,7 @@ void ReanimatedModuleProxy::dispatchCommand(
 
 jsi::String
 ReanimatedModuleProxy::obtainProp(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &propName) {
-  jsi::Runtime &uiRuntime = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+  jsi::Runtime &uiRuntime = uiRuntime_->getJSIRuntime();
   const auto propNameStr = propName.asString(rt).utf8(rt);
   const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto resultStr = obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
@@ -1276,10 +1274,10 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
           layoutAnimationsManager_,
           componentDescriptorRegistry,
           scheduler->getContextContainer(),
-          workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
-          workletsModuleProxy_->getUIScheduler()
+          uiRuntime_->getJSIRuntime(),
+          uiScheduler_
 #ifdef ANDROID
-              ,
+          ,
           filterUnmountedTagsFunction_,
           uiManager_,
           jsInvoker_
@@ -1294,10 +1292,10 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
           layoutAnimationsManager_,
           componentDescriptorRegistry,
           scheduler->getContextContainer(),
-          workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
-          workletsModuleProxy_->getUIScheduler()
+          uiRuntime_->getJSIRuntime(),
+          uiScheduler_
 #ifdef ANDROID
-              ,
+          ,
           filterUnmountedTagsFunction_,
           uiManager_,
           jsInvoker_
@@ -1349,8 +1347,7 @@ jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
         if (!strongThis) {
           return;
         }
-        strongThis->workletsModuleProxy_->getUIWorkletRuntime()->runSync(
-            serializableHandler, jsi::Value(keyboardState), jsi::Value(height));
+        strongThis->uiRuntime_->runSync(serializableHandler, jsi::Value(keyboardState), jsi::Value(height));
       },
       isStatusBarTranslucent.getBool(),
       isNavigationBarTranslucent.getBool());

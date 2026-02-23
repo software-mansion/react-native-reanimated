@@ -13,25 +13,25 @@ namespace reanimated {
 
 using namespace facebook;
 using namespace react;
+using namespace worklets;
 
 std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
     REANodesManager *nodesManager,
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<CallInvoker> &jsInvoker,
-    WorkletsModule *workletsModule)
+    const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime,
+    const std::shared_ptr<UIScheduler> &uiScheduler)
 {
   REAAssertJavaScriptQueue();
 
   PlatformDepMethodsHolder platformDepMethodsHolder = makePlatformDepMethodsHolder(moduleRegistry, nodesManager);
 
-  const auto workletsModuleProxy = [workletsModule getWorkletsModuleProxy];
-
   auto reanimatedModuleProxy = std::make_shared<ReanimatedModuleProxy>(
-      workletsModuleProxy, rnRuntime, jsInvoker, platformDepMethodsHolder, getIsReducedMotion());
+      uiWorkletRuntime, uiScheduler, rnRuntime, jsInvoker, platformDepMethodsHolder, getIsReducedMotion());
   reanimatedModuleProxy->init(platformDepMethodsHolder);
 
-  jsi::Runtime &uiRuntime = workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime();
+  jsi::Runtime &uiRuntime = uiWorkletRuntime->getJSIRuntime();
 
   [nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler

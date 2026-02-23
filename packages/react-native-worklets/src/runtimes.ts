@@ -78,3 +78,11 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
 export function runOnRuntimeAsync(): never {
   throw new WorkletsError('`runOnRuntimeAsync` is not supported on web.');
 }
+
+export function getUIRuntimeHolder(): object {
+  throw new WorkletsError('`getUIRuntimeHolder` is not supported on web.');
+}
+
+export function getUISchedulerHolder(): object {
+  throw new WorkletsError('`getUISchedulerHolder` is not supported on web.');
+}
