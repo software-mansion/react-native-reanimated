@@ -1266,7 +1266,10 @@ var require_autoworkletization = __commonJS({
       "runOnUIAsync",
       "runOnRuntime",
       "runOnRuntimeAsync",
-      "scheduleOnRuntime"
+      "runOnRuntimeSync",
+      "runOnRuntimeSyncWithId",
+      "scheduleOnRuntime",
+      "scheduleOnRuntimeWithId"
     ]);
     var reanimatedFunctionArgsToWorkletize = new Map([
       ["useFrameCallback", [0]],
@@ -1287,7 +1290,10 @@ var require_autoworkletization = __commonJS({
       ["runOnUIAsync", [0]],
       ["runOnRuntime", [1]],
       ["runOnRuntimeAsync", [1]],
+      ["runOnRuntimeSync", [1]],
+      ["runOnRuntimeSyncWithId", [1]],
       ["scheduleOnRuntime", [1]],
+      ["scheduleOnRuntimeWithId", [1]],
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerObjectHooks).map((name) => [name, [0]]),
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerBuilderMethods).map((name) => [name, [0]])
     ]);

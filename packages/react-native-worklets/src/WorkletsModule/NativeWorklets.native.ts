@@ -212,11 +212,11 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  scheduleOnRuntimeFromId<TValue>(
+  scheduleOnRuntimeWithId<TValue>(
     runtimeId: number,
     worklet: SerializableRef<TValue>
   ) {
-    return this.#workletsModuleProxy.scheduleOnRuntimeFromId(
+    return this.#workletsModuleProxy.scheduleOnRuntimeWithId(
       runtimeId,
       worklet
     );
@@ -229,11 +229,11 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.runOnRuntimeSync(workletRuntime, worklet);
   }
 
-  runOnRuntimeSyncFromId<TValue, TReturn>(
+  runOnRuntimeSyncWithId<TValue, TReturn>(
     hostId: number,
     worklet: SerializableRef<TValue>
   ): TReturn {
-    return this.#workletsModuleProxy.runOnRuntimeSyncFromId(hostId, worklet);
+    return this.#workletsModuleProxy.runOnRuntimeSyncWithId(hostId, worklet);
   }
 
   createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {

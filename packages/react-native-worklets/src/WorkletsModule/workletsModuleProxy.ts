@@ -98,7 +98,7 @@ export interface WorkletsModuleProxy {
     worklet: SerializableRef<TValue>
   ): void;
 
-  scheduleOnRuntimeFromId<TValue>(
+  scheduleOnRuntimeWithId<TValue>(
     runtimeId: number,
     worklet: SerializableRef<TValue>
   ): void;
@@ -108,7 +108,7 @@ export interface WorkletsModuleProxy {
     worklet: SerializableRef<TValue>
   ): TReturn;
 
-  runOnRuntimeSyncFromId<TValue, TReturn>(
+  runOnRuntimeSyncWithId<TValue, TReturn>(
     hostId: number,
     worklet: SerializableRef<TValue>
   ): TReturn;

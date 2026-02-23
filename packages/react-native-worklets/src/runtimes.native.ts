@@ -24,6 +24,12 @@ import { isWorkletFunction } from './workletFunction';
 import { WorkletsModule } from './WorkletsModule/NativeWorklets';
 
 /**
+ * The ID of the [UI Worklet
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
+ */
+export const UIRuntimeID = RuntimeKind.UI;
+
+/**
  * Lets you create a new JS runtime which can be used to run worklets possibly
  * on different threads than JS or UI thread.
  *
@@ -122,7 +128,7 @@ export function createWorkletRuntime(
  *   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
  * - The function cannot be scheduled on the Worker Runtime from [UI
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
- *   or another [Worker
+ *   or a [Worker
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
  *   unless the [Bundle
  *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
@@ -178,7 +184,8 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
  * Lets you asynchronously run a
  * [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)
  * on a [Worker
- * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime)
+ * identified by the runtime's id.
  *
  * Check
  * {@link https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds}
@@ -186,13 +193,15 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
  *
  * - The worklet is scheduled on the Worker Runtime's [Async
  *   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
- * - The function cannot be scheduled on the Worker Runtime from [UI
+ * - This function cannot be called from the [UI
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
- *   or another [Worker
+ *   or a [Worker
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
  *   unless the [Bundle
  *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
  *   enabled.
+ * - You can target the UI Runtime with this function by passing
+ *   {@link UIRuntimeID} as the `runtimeId` argument.
  *
  * @param runtimeId - The id of the runtime to schedule the worklet on.
  * @param worklet - The worklet to schedule.
@@ -220,7 +229,7 @@ export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
   }
   const proxy = globalThis.__workletsModuleProxy;
   if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
-    proxy.scheduleOnRuntimeFromId(
+    proxy.scheduleOnRuntimeWithId(
       runtimeId,
       makeShareableCloneOnUIRecursive(() => {
         'worklet';
@@ -229,7 +238,7 @@ export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
       })
     );
   } else {
-    proxy.scheduleOnRuntimeFromId(
+    proxy.scheduleOnRuntimeWithId(
       runtimeId,
       createSerializable(() => {
         'worklet';
@@ -275,7 +284,7 @@ type WorkletRuntimeConfigInternal = WorkletRuntimeConfig & {
  *
  * - This function cannot be called from the [UI
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
- *   or another [Worker
+ *   or a [Worker
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
  *   unless the [Bundle
  *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
@@ -323,15 +332,17 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
 /**
  * Lets you run a function synchronously on a [Worker
  * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime)
- * identified by its id.
+ * identified by the runtime's id.
  *
  * - This function cannot be called from the [UI
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
- *   or another [Worker
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
+ *   or a [Worker
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
- *   unless the [Bundle
+ *   unless you the [Bundle
  *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
  *   enabled.
+ * - You can target the UI Runtime with this function by passing
+ *   {@link UIRuntimeID} as the `runtimeId` argument.
  *
  * @param runtimeId - The id of the runtime to run the worklet on.
  * @param worklet - The worklet to run.
@@ -340,13 +351,13 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
  */
 // @ts-expect-error This overload is correct since it's what user sees in their code
 // before it's transformed by Worklets Babel plugin.
-export function runOnRuntimeSyncFromId<Args extends unknown[], ReturnValue>(
+export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
   runtimeId: number,
   worklet: (...args: Args) => ReturnValue,
   ...args: Args
 ): ReturnValue;
 
-export function runOnRuntimeSyncFromId<Args extends unknown[], ReturnValue>(
+export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
   runtimeId: number,
   worklet: WorkletFunction<Args, ReturnValue>,
   ...args: Args
@@ -360,7 +371,7 @@ export function runOnRuntimeSyncFromId<Args extends unknown[], ReturnValue>(
 
   const proxy = globalThis.__workletsModuleProxy;
   if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
-    return proxy.runOnRuntimeSyncFromId(
+    return proxy.runOnRuntimeSyncWithId(
       runtimeId,
       makeShareableCloneOnUIRecursive(() => {
         'worklet';
@@ -369,7 +380,7 @@ export function runOnRuntimeSyncFromId<Args extends unknown[], ReturnValue>(
       })
     );
   } else {
-    return proxy.runOnRuntimeSyncFromId(
+    return proxy.runOnRuntimeSyncWithId(
       runtimeId,
       createSerializable(() => {
         'worklet';
