@@ -1,5 +1,8 @@
 'use strict';
-import { registerComponentPropsBuilder } from '../../common';
+import {
+  getCompoundComponentName,
+  registerComponentPropsBuilder,
+} from '../../common';
 import {
   SVG_CIRCLE_PROPERTIES_CONFIG,
   SVG_COMMON_PROPERTIES_CONFIG,
@@ -27,7 +30,10 @@ export function initSvgCssSupport() {
     SVG_RADIAL_GRADIENT_PROPERTIES_CONFIG
   );
   registerComponentPropsBuilder('RNSVGPath', SVG_PATH_PROPERTIES_CONFIG);
-  registerComponentPropsBuilder('RNSVGPath', SVG_POLYLINE_PROPERTIES_CONFIG, {componentNameJS: "Polyline"}); // change the interface
+  registerComponentPropsBuilder(
+    getCompoundComponentName('RNSVGPath', 'Polyline'),
+    SVG_POLYLINE_PROPERTIES_CONFIG
+  );
   registerComponentPropsBuilder('RNSVGRect', SVG_RECT_PROPERTIES_CONFIG);
 
   // Fallback for all SVG components that aren't explicitly registered

@@ -10,7 +10,8 @@ import { commonSvgProps } from './common';
 
 // TODO: Fix me
 // @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
-export const SVG_POLYLINE_PROPERTIES_CONFIG: SvgStyleBuilderConfig<PolylineProps> = {
-  ...commonSvgProps,
-  points: {process: processPolylinePoints}
-};
+export const SVG_POLYLINE_PROPERTIES_CONFIG: SvgStyleBuilderConfig<PolylineProps> =
+  {
+    ...commonSvgProps,
+    points: { process: processPolylinePoints },
+  };
