@@ -8,7 +8,7 @@ import type {
   WorkletRuntimeConfig,
 } from './types';
 
-export const UIRuntimeID = RuntimeKind.UI;
+export const UIRuntimeId = RuntimeKind.UI;
 
 export function createWorkletRuntime(
   config?: WorkletRuntimeConfig

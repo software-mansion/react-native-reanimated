@@ -27,7 +27,7 @@ import { WorkletsModule } from './WorkletsModule/NativeWorklets';
  * The ID of the [UI Worklet
  * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
  */
-export const UIRuntimeID = RuntimeKind.UI;
+export const UIRuntimeId = RuntimeKind.UI;
 
 /**
  * Lets you create a new JS runtime which can be used to run worklets possibly
@@ -201,7 +201,7 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
  *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
  *   enabled.
  * - You can target the UI Runtime with this function by passing
- *   {@link UIRuntimeID} as the `runtimeId` argument.
+ *   {@link UIRuntimeId} as the `runtimeId` argument.
  *
  * @param runtimeId - The id of the runtime to schedule the worklet on.
  * @param worklet - The worklet to schedule.
@@ -330,8 +330,8 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
 }
 
 /**
- * Lets you run a function synchronously on a [Worker
- * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime)
+ * Lets you run a function synchronously on a [Worklet
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime)
  * identified by the runtime's id.
  *
  * - This function cannot be called from the [UI
@@ -342,7 +342,7 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
  *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
  *   enabled.
  * - You can target the UI Runtime with this function by passing
- *   {@link UIRuntimeID} as the `runtimeId` argument.
+ *   {@link UIRuntimeId} as the `runtimeId` argument.
  *
  * @param runtimeId - The id of the runtime to run the worklet on.
  * @param worklet - The worklet to run.

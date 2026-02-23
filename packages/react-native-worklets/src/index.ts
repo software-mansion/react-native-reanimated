@@ -59,7 +59,7 @@ export {
   runOnRuntimeSyncWithId,
   scheduleOnRuntime,
   scheduleOnRuntimeWithId,
-  UIRuntimeID,
+  UIRuntimeId,
 } from './runtimes';
 export {
   callMicrotasks,

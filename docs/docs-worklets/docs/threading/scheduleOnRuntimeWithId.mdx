@@ -1,0 +1,81 @@
+---
+title: scheduleOnRuntimeWithId
+sidebar_position: 42 # Use alphabetical order
+---
+
+# scheduleOnRuntimeWithId <AvailableFrom version="0.8.0"/>
+
+`scheduleOnRuntimeWithId` is a variant of [scheduleOnRuntime](/docs/threading/scheduleOnRuntime) where you use the runtime's id instead of the runtime object. It's useful when you don't have access to the runtime object, but you know its id.
+
+## Reference
+
+```javascript
+import { scheduleOnRuntimeWithId, createWorkletRuntime } from 'react-native-worklets';
+
+const workletRuntime = createWorkletRuntime({ name: 'background' });
+
+scheduleOnRuntimeWithId(workletRuntime.runtimeId, (greeting: string) => {
+  console.log(`${greeting} from the background Worklet Runtime`);
+}, 'Hello');
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): void;
+```
+
+</details>
+
+## Arguments
+
+### runtimeId
+
+The id of the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) to schedule the worklet on. You can get the id from the runtime object by accessing its `runtimeId` property.
+
+### worklet
+
+A reference to a function you want to execute on the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime).
+
+### args
+
+Arguments to the function you want to execute on the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime).
+
+## Remarks
+
+- The worklet is scheduled on the Worker Runtime's [Async
+  Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
+- You can target the UI Runtime by passing [UIRuntimeID](/docs/threading/UIRuntimeID) as the runtime id.
+- The worklet cannot be scheduled on the Worker Runtime from [UI
+  Runtime](/docs/fundamentals/runtimeKinds#ui-runtime) or another [Worker
+  Runtime](/docs/fundamentals/runtimeKinds#worker-runtime), unless the [Bundle Mode](/docs/bundleMode/) is enabled.
+
+```javascript
+import { createWorkletRuntime, scheduleOnRuntimeWithId } from 'react-native-worklets';
+
+const workletRuntime = createWorkletRuntime({ name: 'background' });
+
+runOnUI(() => {
+  scheduleOnRuntimeWithId(workletRuntime.runtimeId, (greeting: string) => {
+    console.log(`${greeting} from the background Worklet Runtime`);
+  }, 'Hello'); // This will throw an error outside of Bundle Mode 🚨
+});
+```
+
+```javascript
+import { createWorkletRuntime, scheduleOnRuntimeWithId } from 'react-native-worklets';
+
+const workletRuntime = createWorkletRuntime({ name: 'background' });
+const anotherWorkletRuntime = createWorkletRuntime({ name: 'anotherBackground' });
+
+scheduleOnRuntimeWithId(workletRuntime.runtimeId, () => {
+  scheduleOnRuntimeWithId(anotherWorkletRuntime.runtimeId, (greeting: string) => {
+    console.log(`${greeting} from the background Worklet Runtime`);
+  }, 'Hello'); // This will throw an error outside of Bundle Mode 🚨
+});
+```
