@@ -10,10 +10,7 @@ import {
 } from './propsBuilder';
 
 export const ERROR_MESSAGES = {
-  propsBuilderNotFound: (
-    componentName: string,
-    componentNameJS?: string
-  ) => {
+  propsBuilderNotFound: (componentName: string, componentNameJS?: string) => {
     const compoundComponentName = getCompoundComponentName(
       componentName,
       componentNameJS
@@ -85,27 +82,29 @@ export function getPropsBuilder(
 }
 
 export function registerComponentPropsBuilder<P extends UnknownRecord>(
-  componentName: string,
+  compoundComponentName: string,
   config: PropsBuilderConfig<P>,
   options: {
     separatelyInterpolatedNestedProperties?: readonly string[];
-    componentNameJS?: string;
   } = {}
 ) {
-  const compoundComponentName = getCompoundComponentName(
-    componentName,
-    options.componentNameJS
-  );
+  const dollarIndex = compoundComponentName.indexOf('$');
+  const nativeName =
+    dollarIndex !== -1
+      ? compoundComponentName.slice(0, dollarIndex)
+      : compoundComponentName;
+  const hasJSAlias = dollarIndex !== -1;
+
   PROPS_BUILDERS.set(compoundComponentName, createNativePropsBuilder(config));
 
   // If the generalized version is missing but a specialization is provided,
   // initialize the generalization with the default config.
-  if (options.componentNameJS && !hasPropsBuilder(componentName)) {
-    PROPS_BUILDERS.set(componentName, createNativePropsBuilder(config));
+  if (hasJSAlias && !hasPropsBuilder(nativeName)) {
+    PROPS_BUILDERS.set(nativeName, createNativePropsBuilder(config));
 
     if (options.separatelyInterpolatedNestedProperties?.length) {
       COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES.set(
-        componentName,
+        nativeName,
         new Set(options.separatelyInterpolatedNestedProperties)
       );
     }
@@ -136,7 +135,7 @@ export function getSeparatelyInterpolatedNestedProperties(
   );
 }
 
-function getCompoundComponentName(
+export function getCompoundComponentName(
   componentName: string,
   componentNameJS?: string
 ): string {

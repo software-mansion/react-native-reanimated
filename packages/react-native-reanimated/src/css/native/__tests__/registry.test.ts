@@ -1,6 +1,7 @@
 'use strict';
 import {
   ERROR_MESSAGES,
+  getCompoundComponentName,
   getPropsBuilder,
   hasPropsBuilder,
   registerComponentPropsBuilder,
@@ -23,9 +24,10 @@ describe('registry', () => {
       const componentNameJS = 'CustomComponentChild';
       const config = { width: true, height: true };
 
-      registerComponentPropsBuilder(componentName, config, {
-        componentNameJS: componentNameJS,
-      });
+      registerComponentPropsBuilder(
+        getCompoundComponentName(componentName, componentNameJS),
+        config
+      );
 
       expect(hasPropsBuilder(componentName, componentNameJS)).toBe(true);
     });
@@ -35,9 +37,10 @@ describe('registry', () => {
       const componentNameJS = 'CustomComponentChild';
       const config = { width: true, height: true };
 
-      registerComponentPropsBuilder(componentName, config, {
-        componentNameJS: componentNameJS,
-      });
+      registerComponentPropsBuilder(
+        getCompoundComponentName(componentName, componentNameJS),
+        config
+      );
 
       expect(hasPropsBuilder(componentName)).toBe(true);
     });
@@ -69,9 +72,10 @@ describe('registry', () => {
       const componentNameJS = 'CustomComponentChild';
       const config = { width: true, height: true };
 
-      registerComponentPropsBuilder(componentName, config, {
-        componentNameJS: componentNameJS,
-      });
+      registerComponentPropsBuilder(
+        getCompoundComponentName(componentName, componentNameJS),
+        config
+      );
       const propsBuilder = getPropsBuilder(componentName, componentNameJS);
 
       expect(propsBuilder).toBeDefined();
@@ -83,9 +87,11 @@ describe('registry', () => {
       const componentNameJS = 'CustomComponentChild';
       const config = { width: true, height: true };
 
-      registerComponentPropsBuilder(componentName, config, {
-        componentNameJS: componentNameJS,
-      });
+      registerComponentPropsBuilder(
+        getCompoundComponentName(componentName, componentNameJS),
+        config
+      );
+
       const propsBuilder = getPropsBuilder(componentName);
 
       expect(propsBuilder).toBeDefined();
@@ -99,9 +105,11 @@ describe('registry', () => {
       const config2 = { width: true, height: true, length: true };
 
       registerComponentPropsBuilder(componentName, config);
-      registerComponentPropsBuilder(componentName, config2, {
-        componentNameJS: componentNameJS,
-      });
+      registerComponentPropsBuilder(
+        getCompoundComponentName(componentName, componentNameJS),
+        config2
+      );
+
       const propsBuilder = getPropsBuilder(componentName);
       const propsBuilder2 = getPropsBuilder(componentName, componentNameJS);
 
