@@ -158,26 +158,15 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
       'The function passed to `scheduleOnRuntime` is not a worklet.'
     );
   }
-  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
-    const proxy = globalThis.__workletsModuleProxy;
-    proxy.scheduleOnRuntime(
-      workletRuntime,
-      makeShareableCloneOnUIRecursive(() => {
-        'worklet';
-        worklet(...args);
-        globalThis.__flushMicrotasks?.();
-      })
-    );
-  } else {
-    WorkletsModule.scheduleOnRuntime(
-      workletRuntime,
-      createSerializable(() => {
-        'worklet';
-        worklet(...args);
-        globalThis.__flushMicrotasks?.();
-      })
-    );
-  }
+
+  WorkletsModule.scheduleOnRuntime(
+    workletRuntime,
+    createSerializable(() => {
+      'worklet';
+      worklet(...args);
+      globalThis.__flushMicrotasks?.();
+    })
+  );
 }
 
 /**
@@ -227,26 +216,15 @@ export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
       'The function passed to `scheduleOnRuntimeWithId` is not a worklet.'
     );
   }
-  const proxy = globalThis.__workletsModuleProxy;
-  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
-    proxy.scheduleOnRuntimeWithId(
-      runtimeId,
-      makeShareableCloneOnUIRecursive(() => {
-        'worklet';
-        worklet(...args);
-        globalThis.__flushMicrotasks?.();
-      })
-    );
-  } else {
-    proxy.scheduleOnRuntimeWithId(
-      runtimeId,
-      createSerializable(() => {
-        'worklet';
-        worklet(...args);
-        globalThis.__flushMicrotasks?.();
-      })
-    );
-  }
+
+  WorkletsModule.scheduleOnRuntimeWithId(
+    runtimeId,
+    createSerializable(() => {
+      'worklet';
+      worklet(...args);
+      globalThis.__flushMicrotasks?.();
+    })
+  );
 }
 
 /**
@@ -307,26 +285,14 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
     );
   }
 
-  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
-    const proxy = globalThis.__workletsModuleProxy;
-    return proxy.runOnRuntimeSync(
-      workletRuntime,
-      makeShareableCloneOnUIRecursive(() => {
-        'worklet';
-        const result = worklet(...args);
-        return makeShareableCloneOnUIRecursive(result);
-      })
-    );
-  } else {
-    return WorkletsModule.runOnRuntimeSync(
-      workletRuntime,
-      createSerializable(() => {
-        'worklet';
-        const result = worklet(...args);
-        return makeShareableCloneOnUIRecursive(result);
-      })
-    );
-  }
+  return WorkletsModule.runOnRuntimeSync(
+    workletRuntime,
+    createSerializable(() => {
+      'worklet';
+      const result = worklet(...args);
+      return makeShareableCloneOnUIRecursive(result);
+    })
+  );
 }
 
 /**
@@ -369,26 +335,14 @@ export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
     );
   }
 
-  const proxy = globalThis.__workletsModuleProxy;
-  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
-    return proxy.runOnRuntimeSyncWithId(
-      runtimeId,
-      makeShareableCloneOnUIRecursive(() => {
-        'worklet';
-        const result = worklet(...args);
-        return makeShareableCloneOnUIRecursive(result);
-      })
-    );
-  } else {
-    return proxy.runOnRuntimeSyncWithId(
-      runtimeId,
-      createSerializable(() => {
-        'worklet';
-        const result = worklet(...args);
-        return makeShareableCloneOnUIRecursive(result);
-      })
-    );
-  }
+  return WorkletsModule.runOnRuntimeSyncWithId(
+    runtimeId,
+    createSerializable(() => {
+      'worklet';
+      const result = worklet(...args);
+      return makeShareableCloneOnUIRecursive(result);
+    })
+  );
 }
 
 /**
