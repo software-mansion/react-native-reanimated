@@ -57,8 +57,10 @@ class UpdatesRegistryManager {
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;
 
-  static void
-  addToPropsMap(PropsMap &propsMap, const std::shared_ptr<const ShadowNode> &shadowNode, const folly::dynamic &props);
+  static void addToPropsMap(
+      PropsMap &propsMap,
+      const std::shared_ptr<const ShadowNodeFamily> &family,
+      const folly::dynamic &props);
 #endif
 };
 

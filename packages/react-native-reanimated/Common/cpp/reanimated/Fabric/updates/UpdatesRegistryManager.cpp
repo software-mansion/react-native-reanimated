@@ -97,15 +97,14 @@ bool UpdatesRegistryManager::hasPropsToRevert() {
 
 void UpdatesRegistryManager::addToPropsMap(
     PropsMap &propsMap,
-    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const std::shared_ptr<const ShadowNodeFamily> &family,
     const folly::dynamic &props) {
-  auto &family = shadowNode->getFamily();
-  auto it = propsMap.find(&family);
+  auto it = propsMap.find(family);
 
   if (it == propsMap.cend()) {
     auto propsVector = std::vector<RawProps>{};
     propsVector.emplace_back(props);
-    propsMap.emplace(&family, propsVector);
+    propsMap.emplace(family, propsVector);
   } else {
     it->second.emplace_back(props);
   }
@@ -117,7 +116,7 @@ void UpdatesRegistryManager::collectPropsToRevertBySurface(std::unordered_map<Su
   }
 
   for (const auto &[tag, pair] : propsToRevertMap_) {
-    const auto &[shadowNode, props] = pair;
+    const auto &[family, props] = pair;
     const auto &staticStyle = staticPropsRegistry_->get(tag);
     folly::dynamic filteredStyle = folly::dynamic::object;
 
@@ -127,7 +126,7 @@ void UpdatesRegistryManager::collectPropsToRevertBySurface(std::unordered_map<Su
         continue;
       }
 
-      const auto &componentName = shadowNode->getComponentName();
+      const auto &componentName = family->getComponentName();
       const auto &interpolators = getComponentInterpolators(componentName);
       const auto &it = interpolators.find(propName);
 
@@ -139,16 +138,16 @@ void UpdatesRegistryManager::collectPropsToRevertBySurface(std::unordered_map<Su
       filteredStyle[propName] = nullptr;
     }
 
-    const auto &surfaceId = shadowNode->getSurfaceId();
+    const auto &surfaceId = family->getSurfaceId();
     auto &propsMap = propsMapBySurface[surfaceId];
 
-    addToPropsMap(propsMap, shadowNode, filteredStyle);
+    addToPropsMap(propsMap, family, filteredStyle);
   }
 }
 
 void UpdatesRegistryManager::clearPropsToRevert(const SurfaceId surfaceId) {
   for (auto it = propsToRevertMap_.begin(); it != propsToRevertMap_.end();) {
-    if (it->second.shadowNode->getSurfaceId() == surfaceId) {
+    if (it->second.family->getSurfaceId() == surfaceId) {
       it = propsToRevertMap_.erase(it);
     } else {
       ++it;

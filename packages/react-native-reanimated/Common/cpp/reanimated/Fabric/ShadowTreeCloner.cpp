@@ -7,10 +7,13 @@
 
 namespace reanimated {
 
-Props::Shared mergeProps(const ShadowNode &shadowNode, const PropsMap &propsMap, const ShadowNodeFamily &family) {
+Props::Shared mergeProps(
+    const ShadowNode &shadowNode,
+    const PropsMap &propsMap,
+    const std::shared_ptr<const ShadowNodeFamily> &family) {
   ReanimatedSystraceSection s("ShadowTreeCloner::mergeProps");
 
-  const auto it = propsMap.find(&family);
+  const auto it = propsMap.find(family);
 
   if (it == propsMap.end()) {
     return ShadowNodeFragment::propsPlaceholder();
@@ -41,7 +44,7 @@ std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
     const ShadowNode &shadowNode,
     const ChildrenMap &childrenMap,
     const PropsMap &propsMap) {
-  const auto family = &shadowNode.getFamily();
+  const auto family = shadowNode.getFamilyShared();
   const auto affectedChildrenIt = childrenMap.find(family);
   auto children = shadowNode.getChildren();
 
@@ -52,7 +55,7 @@ std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
   }
 
   return shadowNode.clone(
-      {mergeProps(shadowNode, propsMap, *family),
+      {mergeProps(shadowNode, propsMap, family),
        std::make_shared<std::vector<std::shared_ptr<const ShadowNode>>>(children),
        shadowNode.getState(),
        false});
@@ -70,7 +73,7 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(const RootShadowNode &oldRo
       const auto ancestors = family->getAncestors(oldRootNode);
 
       for (const auto &[parentNode, index] : std::ranges::reverse_view(ancestors)) {
-        const auto parentFamily = &parentNode.get().getFamily();
+        const auto parentFamily = parentNode.get().getFamilyShared();
         auto &affectedChildren = childrenMap[parentFamily];
 
         if (affectedChildren.contains(index)) {

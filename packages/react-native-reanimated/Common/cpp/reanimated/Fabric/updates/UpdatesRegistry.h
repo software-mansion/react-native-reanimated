@@ -2,7 +2,7 @@
 
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 
-#include <react/renderer/core/ShadowNode.h>
+#include <react/renderer/core/ShadowNodeFamily.h>
 
 #include <jsi/jsi.h>
 #include <memory>
@@ -17,12 +17,12 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-using UpdatesBatch = std::vector<std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
-using RegistryMap = std::unordered_map<Tag, std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
+using UpdatesBatch = std::vector<std::pair<std::shared_ptr<const ShadowNodeFamily>, folly::dynamic>>;
+using RegistryMap = std::unordered_map<Tag, std::pair<std::shared_ptr<const ShadowNodeFamily>, folly::dynamic>>;
 
 #ifdef ANDROID
 struct PropsToRevert {
-  std::shared_ptr<const ShadowNode> shadowNode;
+  std::shared_ptr<const ShadowNodeFamily> family;
   std::unordered_set<std::string> props;
 };
 
@@ -51,9 +51,9 @@ class UpdatesRegistry {
   mutable std::mutex mutex_;
   RegistryMap updatesRegistry_;
 
-  void addUpdatesToBatch(const std::shared_ptr<const ShadowNode> &shadowNode, const folly::dynamic &props);
+  void addUpdatesToBatch(const std::shared_ptr<const ShadowNodeFamily> &family, const folly::dynamic &props);
   folly::dynamic getUpdatesFromRegistry(const Tag tag) const;
-  void setInUpdatesRegistry(const std::shared_ptr<const ShadowNode> &shadowNode, const folly::dynamic &props);
+  void setInUpdatesRegistry(const std::shared_ptr<const ShadowNodeFamily> &family, const folly::dynamic &props);
   void removeFromUpdatesRegistry(Tag tag);
 
  private:
