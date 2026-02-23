@@ -128,7 +128,7 @@ export function createWorkletRuntime(
  *   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
  * - The function cannot be scheduled on the Worker Runtime from [UI
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
- *   or a [Worker
+ *   or another [Worker
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
  *   unless the [Bundle
  *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
@@ -158,8 +158,8 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
       'The function passed to `scheduleOnRuntime` is not a worklet.'
     );
   }
-  const proxy = globalThis.__workletsModuleProxy;
   if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
+    const proxy = globalThis.__workletsModuleProxy;
     proxy.scheduleOnRuntime(
       workletRuntime,
       makeShareableCloneOnUIRecursive(() => {
@@ -169,7 +169,7 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
       })
     );
   } else {
-    proxy.scheduleOnRuntime(
+    WorkletsModule.scheduleOnRuntime(
       workletRuntime,
       createSerializable(() => {
         'worklet';
@@ -284,7 +284,7 @@ type WorkletRuntimeConfigInternal = WorkletRuntimeConfig & {
  *
  * - This function cannot be called from the [UI
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
- *   or a [Worker
+ *   or another [Worker
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
  *   unless the [Bundle
  *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
@@ -307,8 +307,8 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
     );
   }
 
-  const proxy = globalThis.__workletsModuleProxy;
   if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
+    const proxy = globalThis.__workletsModuleProxy;
     return proxy.runOnRuntimeSync(
       workletRuntime,
       makeShareableCloneOnUIRecursive(() => {
@@ -318,7 +318,7 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
       })
     );
   } else {
-    return proxy.runOnRuntimeSync(
+    return WorkletsModule.runOnRuntimeSync(
       workletRuntime,
       createSerializable(() => {
         'worklet';
