@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://docs.swmansion.com/react-native-reanimated/examples</id>
     <title>React Native Reanimated Blog</title>
-    <updated>2026-02-19T17:30:09.000Z</updated>
+    <updated>2026-02-23T11:48:27.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://docs.swmansion.com/react-native-reanimated/examples"/>
     <subtitle>React Native Reanimated Blog</subtitle>
@@ -11,7 +11,7 @@
         <title type="html"><![CDATA[Accordion]]></title>
         <id>https://docs.swmansion.com/react-native-reanimated/examples/accordion</id>
         <link href="https://docs.swmansion.com/react-native-reanimated/examples/accordion"/>
-        <updated>2026-02-19T17:30:09.000Z</updated>
+        <updated>2026-02-23T11:48:27.000Z</updated>
         <summary type="html"><![CDATA[An accordion allows to show and hide a piece of content with a smooth animation. Commonly used in "FAQ" sections.]]></summary>
         <content type="html"><![CDATA[<p>An accordion allows to show and hide a piece of content with a smooth animation. Commonly used in "FAQ" sections.</p>
 <!-- -->
@@ -28,7 +28,7 @@
         <title type="html"><![CDATA[Bottom Sheet]]></title>
         <id>https://docs.swmansion.com/react-native-reanimated/examples/bottomsheet</id>
         <link href="https://docs.swmansion.com/react-native-reanimated/examples/bottomsheet"/>
-        <updated>2026-02-19T17:30:09.000Z</updated>
+        <updated>2026-02-23T11:48:27.000Z</updated>
         <summary type="html"><![CDATA[Bottom sheets are surfaces containing supplementary content, anchored to the bottom of the screen. They can provide users with quick access to contextual information, actions, or settings without interrupting their current workflow.]]></summary>
         <content type="html"><![CDATA[<p>Bottom sheets are surfaces containing supplementary content, anchored to the bottom of the screen. They can provide users with quick access to contextual information, actions, or settings without interrupting their current workflow.</p>
 <p>Looking for a ready-to-use solution? We recommend <a href="https://www.npmjs.com/package/@gorhom/bottom-sheet" target="_blank" rel="noopener noreferrer" class="">@gorhom/bottom-sheet</a>.</p>
@@ -47,7 +47,7 @@
         <title type="html"><![CDATA[Flip Card]]></title>
         <id>https://docs.swmansion.com/react-native-reanimated/examples/flipCard</id>
         <link href="https://docs.swmansion.com/react-native-reanimated/examples/flipCard"/>
-        <updated>2026-02-19T17:30:09.000Z</updated>
+        <updated>2026-02-23T11:48:27.000Z</updated>
         <summary type="html"><![CDATA[Flip card allows you to display different content depending on whether the card is flipped or not. It can be especially useful when you do not want to display some data immediately after entering the screen (e.g. secure data) and only after fulfilling a certain condition or performing an action.]]></summary>
         <content type="html"><![CDATA[<p>Flip card allows you to display different content depending on whether the card is flipped or not. It can be especially useful when you do not want to display some data immediately after entering the screen (e.g. secure data) and only after fulfilling a certain condition or performing an action.</p>
 <!-- -->
@@ -65,7 +65,7 @@
         <title type="html"><![CDATA[Floating Action Button]]></title>
         <id>https://docs.swmansion.com/react-native-reanimated/examples/floatingactionbutton</id>
         <link href="https://docs.swmansion.com/react-native-reanimated/examples/floatingactionbutton"/>
-        <updated>2026-02-19T17:30:09.000Z</updated>
+        <updated>2026-02-23T11:48:27.000Z</updated>
         <summary type="html"><![CDATA[Floating Action Button provides user with easy-accessible panel with primary or most common actions on the screen.]]></summary>
         <content type="html"><![CDATA[<p>Floating Action Button provides user with easy-accessible panel with primary or most common actions on the screen.</p>
 <!-- -->
@@ -87,7 +87,7 @@
         <title type="html"><![CDATA[Marquee]]></title>
         <id>https://docs.swmansion.com/react-native-reanimated/examples/marquee</id>
         <link href="https://docs.swmansion.com/react-native-reanimated/examples/marquee"/>
-        <updated>2026-02-19T17:30:09.000Z</updated>
+        <updated>2026-02-23T11:48:27.000Z</updated>
         <summary type="html"><![CDATA[A marquee is an element used to display scrolling content horizontally within a confined space. It's commonly seen in applications to information such as news tickers, advertisements, or any content that needs continuous display within a limited area.]]></summary>
         <content type="html"><![CDATA[<p>A marquee is an element used to display scrolling content horizontally within a confined space. It's commonly seen in applications to information such as news tickers, advertisements, or any content that needs continuous display within a limited area.</p>
 <p>Looking for a ready-to-use solution? We recommend <a href="https://www.npmjs.com/package/@animatereactnative/marquee" target="_blank" rel="noopener noreferrer" class="">@animatereactnative/marquee</a>.</p>
@@ -111,7 +111,7 @@
         <title type="html"><![CDATA[Section List]]></title>
         <id>https://docs.swmansion.com/react-native-reanimated/examples/sectionlist</id>
         <link href="https://docs.swmansion.com/react-native-reanimated/examples/sectionlist"/>
-        <updated>2026-02-19T17:30:09.000Z</updated>
+        <updated>2026-02-23T11:48:27.000Z</updated>
         <summary type="html"><![CDATA[Section lists allow you to organize long lists of content by dividing them with headings.]]></summary>
         <content type="html"><![CDATA[<p>Section lists allow you to organize long lists of content by dividing them with headings.</p>
 <div>Loading...</div>
@@ -141,7 +141,7 @@
         <title type="html"><![CDATA[Slider]]></title>
         <id>https://docs.swmansion.com/react-native-reanimated/examples/slider</id>
         <link href="https://docs.swmansion.com/react-native-reanimated/examples/slider"/>
-        <updated>2026-02-19T17:30:09.000Z</updated>
+        <updated>2026-02-23T11:48:27.000Z</updated>
         <summary type="html"><![CDATA[Slider allows users to adjust a value or control a setting by sliding a handle along a track. It is commonly used to adjust settings such as volume, brightness, or in this case, the width of a box.]]></summary>
         <content type="html"><![CDATA[<p>Slider allows users to adjust a value or control a setting by sliding a handle along a track. It is commonly used to adjust settings such as volume, brightness, or in this case, the width of a box.</p>
 <!-- -->
@@ -165,7 +165,7 @@
         <title type="html"><![CDATA[Switch]]></title>
         <id>https://docs.swmansion.com/react-native-reanimated/examples/switch</id>
         <link href="https://docs.swmansion.com/react-native-reanimated/examples/switch"/>
-        <updated>2026-02-19T17:30:09.000Z</updated>
+        <updated>2026-02-23T11:48:27.000Z</updated>
         <summary type="html"><![CDATA[A switch element is a user interface component that allows users to toggle between two or more states. It is commonly used to turn on/off a setting, enable/disable a feature, or select between options.]]></summary>
         <content type="html"><![CDATA[<p>A switch element is a user interface component that allows users to toggle between two or more states. It is commonly used to turn on/off a setting, enable/disable a feature, or select between options.</p>
 <!-- -->
