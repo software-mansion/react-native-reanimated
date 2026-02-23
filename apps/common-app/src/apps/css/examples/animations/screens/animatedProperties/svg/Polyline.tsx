@@ -5,13 +5,14 @@ import Animated, { type CSSAnimationKeyframes } from 'react-native-reanimated';
 import { Polyline, type PolylineProps, Svg } from 'react-native-svg';
 
 import { ExamplesScreen } from '@/apps/css/components';
+import { colors } from '@/theme';
 
 const AnimatedPolyline = Animated.createAnimatedComponent(Polyline);
 
 export default function PolylineExample() {
   return (
     <ExamplesScreen<
-      { keyframes: CSSAnimationKeyframes<PolylineProps>; viewBox?: string },
+      { keyframes: CSSAnimationKeyframes<PolylineProps> },
       PolylineProps
     >
       buildAnimation={({ keyframes }) => ({
@@ -21,40 +22,131 @@ export default function PolylineExample() {
         animationIterationCount: 'infinite',
         animationTimingFunction: 'ease-in-out',
       })}
-      renderExample={({ animation, viewBox }) => (
-        <Svg height={100} viewBox={viewBox ?? '0 0 200 200'} width={100}>
+      renderExample={({ animation }) => (
+        <Svg height={100} viewBox="0 0 100 100" width={100}>
           <AnimatedPolyline
             animatedProps={animation}
-            // points={[100, 100, 150, 25, 150, 75, 200, 0]}
-            fill="none" 
-            stroke="black"
+            fill="none"
+            points="10,80 30,20 50,80 70,20 90,80"
+            stroke={colors.primary}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={4}
           />
         </Svg>
       )}
       tabs={[
         {
-          name: 'Primitives',
+          name: 'Points',
           sections: [
             {
+              title: 'Same Number of Points',
               examples: [
                 {
                   keyframes: {
                     from: {
-                      points: "101,100 150,25 150,75 200,0",
-                      fill: "none",
+                      points: '10,80 30,20 50,80 70,20 90,80',
                     },
                     to: {
-                      fill: "black",
-                      points: "102,100 150,25 150,75 200,0"
+                      points: '10,20 30,80 50,20 70,80 90,20',
                     },
                   },
-                  title: 'Line',
+                  title: 'Zigzag',
+                  description:
+                    'Smooth interpolation between two zigzag shapes with the same number of points',
+                },
+                {
+                  keyframes: {
+                    from: {
+                      points: '10,50 27,20 44,50 61,80 78,50 95,20',
+                    },
+                    to: {
+                      points: '10,50 27,80 44,50 61,20 78,50 95,80',
+                    },
+                  },
+                  title: 'Wave',
+                  description:
+                    'Smooth animation between two wave phases with the same number of points',
+                },
+                {
+                  keyframes: {
+                    from: {
+                      points: '10,90 10,10 90,10',
+                    },
+                    to: {
+                      points: '90,90 10,90 90,10',
+                    },
+                  },
+                  title: 'Corner sweep',
+                  description:
+                    'Points morph from one corner configuration to another',
+                },
+                {
+                  keyframes: {
+                    from: {
+                      points: '10,50 30,10 50,50 70,90 90,50',
+                    },
+                    to: {
+                      points: '10,50 30,90 50,50 70,10 90,50',
+                    },
+                  },
+                  title: 'S-curve',
+                  description:
+                    'Smooth animation of an S-curve between two mirror states',
                 },
               ],
-              title: 'Const number of points',
+            },
+            {
+              title: 'Different Number of Points',
+              examples: [
+                {
+                  keyframes: {
+                    from: {
+                      points: '10,80 50,20 90,80',
+                    },
+                    to: {
+                      points: '10,80 30,20 50,80 70,20 90,80',
+                    },
+                  },
+                  title: 'Growing polyline',
+                  description:
+                    'Interpolation between different numbers of points is **not supported**, so the points change **abruptly**',
+                },
+                {
+                  keyframes: {
+                    from: {
+                      points: '10,50 25,20 40,80 55,20 70,80 85,20 90,50',
+                    },
+                    to: {
+                      points: '10,50 50,20 90,50',
+                    },
+                  },
+                  title: 'Shrinking polyline',
+                  description:
+                    'Reducing the number of points also causes an **abrupt** change instead of a smooth transition',
+                },
+              ],
             },
           ],
-        }
+        },
+        {
+          name: 'Appearance',
+          sections: [
+            {
+              title: 'Opacity',
+              examples: [
+                {
+                  keyframes: {
+                    to: {
+                      opacity: 0,
+                    },
+                  },
+                  title: 'Opacity',
+                },
+              ],
+            },
+          ],
+        },
       ]}
     />
   );
