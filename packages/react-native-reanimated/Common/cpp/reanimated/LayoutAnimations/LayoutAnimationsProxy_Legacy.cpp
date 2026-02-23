@@ -824,7 +824,7 @@ void LayoutAnimationsProxy_Legacy::maybeUpdateWindowDimensions(
   }
 }
 
-void Node::applyMutationToIndices(ShadowViewMutation mutation) {
+void Node::applyMutationToIndices(const ShadowViewMutation &mutation) {
   const auto parentTag = mutation.parentTag;
   if (tag != parentTag) {
     return;
@@ -840,7 +840,7 @@ void Node::applyMutationToIndices(ShadowViewMutation mutation) {
 }
 
 // Should only be called on unflattened parents
-void Node::removeChildFromUnflattenedTree(std::shared_ptr<MutationNode> child) {
+void Node::removeChildFromUnflattenedTree(const std::shared_ptr<MutationNode> &child) {
   for (int i = unflattenedChildren.size() - 1; i >= 0; i--) {
     if (unflattenedChildren[i]->tag == child->tag) {
       unflattenedChildren.erase(unflattenedChildren.begin() + i);

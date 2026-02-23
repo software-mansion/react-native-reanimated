@@ -27,16 +27,16 @@ struct LayoutAnimation {
 class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDelegate {
  public:
   LayoutAnimationsProxyCommon(
-      std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager,
-      SharedComponentDescriptorRegistry componentDescriptorRegistry,
-      std::shared_ptr<const ContextContainer> contextContainer,
+      const std::shared_ptr<LayoutAnimationsManager> &layoutAnimationsManager,
+      const SharedComponentDescriptorRegistry &componentDescriptorRegistry,
+      const std::shared_ptr<const ContextContainer> &contextContainer,
       jsi::Runtime &uiRuntime,
       const std::shared_ptr<worklets::UISchedulerHolder> &uiSchedulerHolder
 #ifdef ANDROID
       ,
-      PreserveMountedTagsFunction filterUnmountedTagsFunction,
-      std::shared_ptr<facebook::react::UIManager> uiManager,
-      std::shared_ptr<facebook::react::CallInvoker> jsInvoker
+      const PreserveMountedTagsFunction &filterUnmountedTagsFunction,
+      const std::shared_ptr<facebook::react::UIManager> &uiManager,
+      const std::shared_ptr<facebook::react::CallInvoker> &jsInvoker
 #endif
       )
       : layoutAnimationsManager_(layoutAnimationsManager),
