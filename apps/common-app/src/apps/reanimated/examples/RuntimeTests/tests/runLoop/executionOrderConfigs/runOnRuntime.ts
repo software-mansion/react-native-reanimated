@@ -6,7 +6,7 @@ export const CONFIG: [MethodsName, number, MethodsName, number][] = [
   ['setTimeout', 1, 'requestAnimationFrame', 2],
   ['setTimeout', 1, 'setInterval', 2],
   ['setTimeout', 2, 'queueMicrotask', 1],
-  ['setTimeout', 2, 'topLevel', 1], // this mf
+  ['setTimeout', 2, 'topLevel', 1],
 
   ['setImmediate', 1, 'setTimeout', 2],
   ['setImmediate', 1, 'setImmediate', 2],
