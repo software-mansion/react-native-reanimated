@@ -4,14 +4,14 @@ import {
   runOnRuntimeSyncWithId,
   runOnUISync,
   RuntimeKind,
-  UIRuntimeID,
+  UIRuntimeId,
 } from 'react-native-worklets';
 import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
 
 describe('runOnRuntimeSyncWithId', () => {
   describe('from RN Runtime', () => {
     test('to UI Runtime', () => {
-      const result = runOnRuntimeSyncWithId(UIRuntimeID, () => {
+      const result = runOnRuntimeSyncWithId(UIRuntimeId, () => {
         'worklet';
         return globalThis.__RUNTIME_KIND;
       });
@@ -44,7 +44,7 @@ describe('runOnRuntimeSyncWithId', () => {
     if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
       test('to UI Runtime', () => {
         const result = runOnUISync(() => {
-          const resultOnUI = runOnRuntimeSyncWithId(UIRuntimeID, () => {
+          const resultOnUI = runOnRuntimeSyncWithId(UIRuntimeId, () => {
             'worklet';
             return globalThis.__RUNTIME_KIND;
           });
@@ -92,7 +92,7 @@ describe('runOnRuntimeSyncWithId', () => {
 
         const result = runOnRuntimeSync(workletRuntime, () => {
           'worklet';
-          const resultOnWorker = runOnRuntimeSyncWithId(UIRuntimeID, () => {
+          const resultOnWorker = runOnRuntimeSyncWithId(UIRuntimeId, () => {
             'worklet';
             return globalThis.__RUNTIME_KIND;
           });

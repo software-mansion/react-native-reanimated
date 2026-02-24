@@ -4,7 +4,7 @@ import {
   scheduleOnRuntime,
   scheduleOnRuntimeWithId,
   scheduleOnUI,
-  UIRuntimeID,
+  UIRuntimeId,
 } from 'react-native-worklets';
 import { describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
 
@@ -26,7 +26,7 @@ describe('scheduleOnRuntimeWithId', () => {
   describe('from RN Runtime', () => {
     test('to UI Runtime', async () => {
       value = 0;
-      scheduleOnRuntimeWithId(UIRuntimeID, () => {
+      scheduleOnRuntimeWithId(UIRuntimeId, () => {
         'worklet';
         scheduleOnRN(callback, 100);
       });
@@ -65,7 +65,7 @@ describe('scheduleOnRuntimeWithId', () => {
           'worklet';
           // @ts-expect-error TODO: fix RemoteFunction re-serialization.
           const remoteFunction = callback.__remoteFunction as typeof callback;
-          scheduleOnRuntimeWithId(UIRuntimeID, () => {
+          scheduleOnRuntimeWithId(UIRuntimeId, () => {
             'worklet';
             scheduleOnRN(remoteFunction, 100);
           });
@@ -121,7 +121,7 @@ describe('scheduleOnRuntimeWithId', () => {
           'worklet';
           // @ts-expect-error TODO: fix RemoteFunction re-serialization.
           const remoteFunction = callback.__remoteFunction as typeof callback;
-          scheduleOnRuntimeWithId(UIRuntimeID, () => {
+          scheduleOnRuntimeWithId(UIRuntimeId, () => {
             'worklet';
             scheduleOnRN(remoteFunction, 100);
           });
