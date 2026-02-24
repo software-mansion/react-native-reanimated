@@ -108,11 +108,6 @@ function flushUIQueue(): void {
   });
 }
 
-// eslint-disable-next-line camelcase
-export function unstable_eventLoopTask(): never {
-  throw new WorkletsError('`unstable_eventLoopTask` is not supported on web.');
-}
-
 const requestAnimationFrameImpl = !globalThis.requestAnimationFrame
   ? mockedRequestAnimationFrame
   : globalThis.requestAnimationFrame;
