@@ -1,78 +1,122 @@
-import { createSynchronizable, createWorkletRuntime, scheduleOnRN, scheduleOnRuntime } from 'react-native-worklets';
-import { describe, expect, test, waitForNotification, notify } from '../../ReJest/RuntimeTestsApi';
-import { ComparisonMode } from '../../ReJest/types';
-
-const NOTIFICATION_NAME = 'NOTIFICATION_NAME';
+import { createWorkletRuntime, scheduleOnRuntime, scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
+import { beforeEach, describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
 
 describe('scheduleOnRuntime', () => {
-  // For now there is no way to schedule a function on the Worker Runtime from the UI Runtime
-  //   test('should schedule a function on the RN runtime from UI', async () => {
-  //     // Arrange
-  //     const synchronizable = createSynchronizable(0);
-  //     const workletRuntime = createWorkletRuntime({ name: 'test' });
-  //     const onJSCallback = () => {
-  //       notify(NOTIFICATION_NAME);
-  //     };
+  const PASS_NOTIFICATION = 'PASS';
+  const FAIL_NOTIFICATION = 'FAIL';
+  let value = 0;
+  let reason = '';
 
-  //     // Act
-  //     scheduleOnUI(() => {
-  //       'worklet';
-  //       scheduleOnRuntime(workletRuntime, () => {
-  //         'worklet';
-  //         synchronizable.setBlocking(100);
-  //         scheduleOnRN(onJSCallback);
-  //       });
-  //     });
+  const callbackPass = (num: number) => {
+    value = num;
+    notify(PASS_NOTIFICATION);
+  };
 
-  //     // Assert
-  //     await waitForNotify(NOTIFICATION_NAME);
-  //   });
+  const callbackFail = (rea: string) => {
+    reason = rea;
+    notify(FAIL_NOTIFICATION);
+  };
 
-  test('should schedule a function on the Worker Runtime from RN Runtime', async () => {
-    // Arrange
-    const synchronizable = createSynchronizable(0);
-    const workletRuntime = createWorkletRuntime({ name: 'test' });
-
-    const onJSCallback = () => {
-      notify(NOTIFICATION_NAME);
-    };
-
-    // Act
-    scheduleOnRuntime(workletRuntime, () => {
-      'worklet';
-      synchronizable.setBlocking(100);
-      scheduleOnRN(onJSCallback);
+  test('setup beforeEach', () => {
+    // TODO: there's a bug in ReJest and beforeEach has to be registered
+    // inside a test case.
+    beforeEach(() => {
+      value = 0;
+      reason = '';
     });
-
-    // Assert
-    await waitForNotification(NOTIFICATION_NAME);
-    expect(synchronizable.getBlocking()).toBe(100, ComparisonMode.NUMBER);
   });
 
-  // For now there is no way to schedule a function on the Worker Runtime from the other Worker Runtime
-  //   test('should schedule a function on the RN runtime from workletRuntime', async () => {
-  //     // Arrange
-  //     const synchronizable = createSynchronizable(0);
-  //     const workletRuntime = createWorkletRuntime({ name: 'test' });
-  //     const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
+  test('schedules on RN Runtime to a Worker Runtime', async () => {
+    const workletRuntime = createWorkletRuntime({ name: 'test' });
 
-  //     const onJSCallback = () => {
-  //       notify(NOTIFICATION_NAME);
-  //     };
+    scheduleOnRuntime(workletRuntime, () => {
+      'worklet';
+      scheduleOnRN(callbackPass, 42);
+    });
 
-  //     // Act
-  //     scheduleOnRuntime(workletRuntime, () => {
-  //       'worklet';
+    await waitForNotification(PASS_NOTIFICATION);
+    expect(value).toBe(42);
+  });
 
-  //       scheduleOnRuntime(workletRuntime2, () => {
-  //         'worklet';
-  //         synchronizable.setBlocking(200);
-  //         scheduleOnRN(onJSCallback);
-  //       });
-  //     });
+  if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+    test('schedules on UI Runtime to a Worker Runtime', async () => {
+      const workletRuntime = createWorkletRuntime({ name: 'test' });
 
-  //     // Assert
-  //     await waitForNotify(NOTIFICATION_NAME);
-  //     expect(synchronizable.getBlocking()).toBe(200, ComparisonMode.NUMBER);
-  //   });
+      scheduleOnUI(() => {
+        'worklet';
+        // @ts-expect-error TODO: fix RemoteFunction re-serialization.
+        const remoteFunction = callbackPass.__remoteFunction as typeof callbackPass;
+
+        scheduleOnRuntime(workletRuntime, () => {
+          'worklet';
+          scheduleOnRN(remoteFunction, 42);
+        });
+      });
+
+      await waitForNotification(PASS_NOTIFICATION);
+      expect(value).toBe(42);
+    });
+
+    test('schedules on Worker Runtime to another Worker Runtime', async () => {
+      const workletRuntime1 = createWorkletRuntime({ name: 'test1' });
+      const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
+
+      scheduleOnRuntime(workletRuntime1, () => {
+        'worklet';
+        // @ts-expect-error TODO: fix RemoteFunction re-serialization.
+        const remoteFunction = callbackPass.__remoteFunction as typeof callbackPass;
+
+        scheduleOnRuntime(workletRuntime2, () => {
+          'worklet';
+          scheduleOnRN(remoteFunction, 42);
+        });
+      });
+
+      await waitForNotification(PASS_NOTIFICATION);
+      expect(value).toBe(42);
+    });
+  } else {
+    test('throws when scheduling on UI Runtime to a Worker Runtime', async () => {
+      const workletRuntime = createWorkletRuntime({ name: 'test' });
+
+      scheduleOnUI(() => {
+        'worklet';
+        try {
+          scheduleOnRuntime(workletRuntime, () => {
+            'worklet';
+            scheduleOnRN(callbackPass, 42);
+          });
+        } catch (error) {
+          scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+        }
+      });
+
+      await waitForNotification(FAIL_NOTIFICATION);
+      expect(reason).toBe(
+        '[Worklets] scheduleOnRuntime cannot be called on Worklet Runtimes outside of the Bundle Mode.',
+      );
+    });
+
+    test('throws when scheduling on Worker Runtime to another Worker Runtime', async () => {
+      const workletRuntime1 = createWorkletRuntime({ name: 'test1' });
+      const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
+
+      scheduleOnRuntime(workletRuntime1, () => {
+        'worklet';
+        try {
+          scheduleOnRuntime(workletRuntime2, () => {
+            'worklet';
+            scheduleOnRN(callbackPass, 42);
+          });
+        } catch (error) {
+          scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
+        }
+      });
+
+      await waitForNotification(FAIL_NOTIFICATION);
+      expect(reason).toBe(
+        '[Worklets] scheduleOnRuntime cannot be called on Worklet Runtimes outside of the Bundle Mode.',
+      );
+    });
+  }
 });

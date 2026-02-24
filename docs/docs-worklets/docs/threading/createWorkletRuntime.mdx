@@ -66,7 +66,3 @@ An optional worklet that will be run synchronously on the same thread immediatel
 - Worklet runtimes come with `performance.now` and `console.*` methods installed out-of-the-box. Other APIs are not available and need to be injected into the runtime or captured via worklet closure.
 
 - In development mode, all unhandled errors thrown in the runtime (except for those thrown in `initializer`) will be caught and thus logged to the console and displayed in a LogBox.
-
-- You can use Chrome DevTools to debug the runtime (Hermes only). The runtime will appear in the devices list as `name` passed to `createWorkletRuntime`.
-
-- Shared values are only partially supported in worklet runtimes. If you want to write to a shared value from the RN runtime and read it on the worklet runtime, you need to perform the assignment using [`runOnRuntime`](/docs/threading/runOnRuntime). Otherwise, the value will be updated only in the RN and UI runtimes.

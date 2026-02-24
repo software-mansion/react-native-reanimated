@@ -1,78 +1,50 @@
-import { createWorkletRuntime, scheduleOnRuntime, scheduleOnUI, scheduleOnRN } from 'react-native-worklets';
-import {
-  describe,
-  expect,
-  getRegisteredValue,
-  registerValue,
-  render,
-  test,
-  waitForNotification,
-  notify,
-} from '../../ReJest/RuntimeTestsApi';
-import { SharedValue, useSharedValue } from 'react-native-reanimated';
-import { ComparisonMode } from '../../ReJest/types';
-import { View } from 'react-native';
-import { useEffect } from 'react';
-
-const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
-const NOTIFICATION_NAME = 'NOTIFICATION_NAME';
-
-const TestComponent = ({ runFrom }: { runFrom: 'ui' | 'js' | 'workletRuntime' }) => {
-  const sharedValue = useSharedValue(0);
-  registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
-
-  useEffect(() => {
-    const callback = (num: number) => {
-      sharedValue.value = num;
-      notify(NOTIFICATION_NAME);
-    };
-    if (runFrom === 'ui') {
-      scheduleOnUI(() => {
-        scheduleOnRN(callback, 100);
-      });
-    } else if (runFrom === 'js') {
-      scheduleOnRN(callback, 100);
-    } else if (runFrom === 'workletRuntime') {
-      const workletRuntime = createWorkletRuntime();
-      scheduleOnRuntime(workletRuntime, () => {
-        'worklet';
-        scheduleOnRN(callback, 100);
-      });
-    }
-  }, [runFrom, sharedValue]);
-
-  return <View />;
-};
+import { createWorkletRuntime, scheduleOnRuntime, scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
+import { describe, expect, notify, test, waitForNotification, beforeEach } from '../../ReJest/RuntimeTestsApi';
 
 describe('scheduleOnRN', () => {
-  test('should schedule a function on the RN runtime from UI', async () => {
-    // Arrange & Act
-    await render(<TestComponent runFrom="ui" />);
+  const PASS_NOTIFICATION = 'PASS';
+  let value = 0;
 
-    // Assert
-    await waitForNotification(NOTIFICATION_NAME);
-    const sharedValueOnUI = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValueOnUI.onJS).toBe(100, ComparisonMode.NUMBER);
-    expect(sharedValueOnUI.onUI).toBe(100, ComparisonMode.NUMBER);
+  const callbackPass = (num: number) => {
+    value = num;
+    notify(PASS_NOTIFICATION);
+  };
+
+  test('setup beforeEach', () => {
+    // TODO: there's a bug in ReJest and beforeEach has to be registered
+    // inside a test case.
+    beforeEach(() => {
+      value = 0;
+    });
   });
 
-  test('should schedule a function on the RN runtime from JS', async () => {
-    // Arrange & Act
-    await render(<TestComponent runFrom="js" />);
+  test('schedules on RN Runtime to RN Runtime', async () => {
+    scheduleOnRN(callbackPass, 42);
 
-    // Assert
-    await waitForNotification(NOTIFICATION_NAME);
-    const sharedValueOnJS = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValueOnJS.onJS).toBe(100, ComparisonMode.NUMBER);
+    await waitForNotification(PASS_NOTIFICATION);
+    expect(value).toBe(42);
   });
 
-  test('should schedule a function on the RN runtime from workletRuntime', async () => {
-    // Arrange & Act
-    await render(<TestComponent runFrom="workletRuntime" />);
+  test('schedules on UI Runtime to RN Runtime', async () => {
+    scheduleOnUI(() => {
+      'worklet';
+      scheduleOnRN(callbackPass, 42);
+    });
 
-    // Assert
-    await waitForNotification(NOTIFICATION_NAME);
-    const sharedValueOnWorkletRuntime = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValueOnWorkletRuntime.onJS).toBe(100, ComparisonMode.NUMBER);
+    await waitForNotification(PASS_NOTIFICATION);
+    expect(value).toBe(42);
+  });
+
+  test('schedules on Worker Runtime to RN Runtime', async () => {
+    const workletRuntime = createWorkletRuntime({ name: 'test' });
+
+    scheduleOnRuntime(workletRuntime, () => {
+      'worklet';
+
+      scheduleOnRN(callbackPass, 42);
+    });
+
+    await waitForNotification(PASS_NOTIFICATION);
+    expect(value).toBe(42);
   });
 });
