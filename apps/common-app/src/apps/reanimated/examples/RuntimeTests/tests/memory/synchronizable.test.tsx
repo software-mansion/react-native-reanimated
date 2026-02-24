@@ -13,10 +13,9 @@ import {
 import { describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
 
 const NOTIFICATION = 'NOTIFICATION';
+const workletRuntime = createWorkletRuntime({ name: 'test' });
 
 describe('Test Synchronizable creation and serialization', () => {
-  const workletRuntime = createWorkletRuntime({ name: 'test' });
-
   test('createSynchronizable returns Synchronizable', () => {
     const synchronizable = createSynchronizable(0);
 
@@ -181,8 +180,6 @@ function dispatch(
 }
 
 describe('Test Synchronizable access', () => {
-  const workletRuntime = createWorkletRuntime({ name: 'test' });
-
   test('dirty reading yields intermediate values', async () => {
     let valueRN = 0;
     let valueUI = 0;
@@ -321,8 +318,6 @@ describe('Test Synchronizable access', () => {
 });
 
 describe('Test Synchronizable serialization', () => {
-  const workletRuntime = createWorkletRuntime({ name: 'test' });
-
   test('Synchronizable accepts primitives', () => {
     const synchronizable = createSynchronizable(0);
 
@@ -346,7 +341,6 @@ describe('Test Synchronizable serialization', () => {
   });
 
   test('Synchronizable accepts objects', () => {
-    const workletRuntime = createWorkletRuntime({ name: 'object-test' });
     const synchronizable = createSynchronizable({ a: 0 });
 
     // RN Runtime
