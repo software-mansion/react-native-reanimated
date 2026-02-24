@@ -11,7 +11,10 @@ const AnimatedG = Animated.createAnimatedComponent(G);
 
 export default function GroupExample() {
   return (
-    <ExamplesScreen<{ keyframes: CSSAnimationKeyframes<GProps> }, GProps>
+    <ExamplesScreen<
+      { keyframes: CSSAnimationKeyframes<GProps>; props?: GProps },
+      GProps
+    >
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',
         animationDuration: '1s',
@@ -19,11 +22,9 @@ export default function GroupExample() {
         animationName: keyframes,
         animationTimingFunction: 'linear',
       })}
-      renderExample={({ animation }) => (
+      renderExample={({ animation, props }) => (
         <Svg height={100} width={100}>
-          {/* TODO: Remove the requirement of passing the animated prop
-              inline - it should work without setting it on the component */}
-          <AnimatedG animatedProps={animation} fill={colors.primary}>
+          <AnimatedG animatedProps={animation} {...props}>
             <Circle cx={30} cy={50} r={20} />
             <Rect height={30} width={30} x={55} y={35} />
           </AnimatedG>
@@ -43,6 +44,9 @@ export default function GroupExample() {
                       opacity: 0,
                     },
                   },
+                  props: {
+                    fill: colors.primary,
+                  },
                   title: 'Opacity',
                 },
               ],
@@ -58,6 +62,9 @@ export default function GroupExample() {
                       fill: 'red',
                     },
                   },
+                  props: {
+                    fill: colors.primary, // TODO - remove the necessity of passing animated props separately as inline props
+                  },
                   title: 'Fill color',
                 },
                 {
@@ -65,6 +72,10 @@ export default function GroupExample() {
                     to: {
                       fillOpacity: 0.2,
                     },
+                  },
+                  props: {
+                    fill: colors.primary,
+                    fillOpacity: 1, // TODO - remove the necessity of passing animated props separately as inline props
                   },
                   title: 'Fill opacity',
                 },
@@ -81,21 +92,30 @@ export default function GroupExample() {
                 {
                   keyframes: {
                     from: {
-                      stroke: 'transparent',
+                      stroke: 'blue',
                       strokeWidth: 0,
                     },
                     to: {
                       stroke: 'red',
-                      strokeWidth: 3,
+                      strokeWidth: 10,
                     },
+                  },
+                  props: {
+                    stroke: colors.primary, // TODO - remove the necessity of passing animated props separately as inline props
+                    strokeWidth: 1, // TODO - remove the necessity of passing animated props separately as inline props
                   },
                   title: 'Stroke color and width',
                 },
                 {
                   keyframes: {
                     to: {
-                      strokeOpacity: 0.2,
+                      strokeOpacity: 0.2, // TODO - remove the necessity of passing animated props separately as inline props
                     },
+                  },
+                  props: {
+                    stroke: colors.primary,
+                    strokeOpacity: 1, // TODO - remove the necessity of passing animated props separately as inline props
+                    strokeWidth: 10,
                   },
                   title: 'Stroke opacity',
                 },
