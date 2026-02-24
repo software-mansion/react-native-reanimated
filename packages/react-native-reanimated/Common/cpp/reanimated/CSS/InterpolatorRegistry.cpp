@@ -397,8 +397,8 @@ ComponentInterpolatorsMap registry = initializeRegistry();
 
 } // namespace
 
-const InterpolatorFactoriesRecord &getComponentInterpolators(const std::string &componentName) {
-  if (auto it = registry.find(componentName); it != registry.end()) {
+const InterpolatorFactoriesRecord &getComponentInterpolators(const std::string &nativeComponentName) {
+  if (auto it = registry.find(nativeComponentName); it != registry.end()) {
     return it->second;
   }
 
@@ -408,9 +408,9 @@ const InterpolatorFactoriesRecord &getComponentInterpolators(const std::string &
 }
 
 void registerComponentInterpolators(
-    const std::string &componentName,
+    const std::string &nativeComponentName,
     const InterpolatorFactoriesRecord &interpolators) {
-  registry[componentName] = interpolators;
+  registry[nativeComponentName] = interpolators;
 }
 
 } // namespace reanimated::css
