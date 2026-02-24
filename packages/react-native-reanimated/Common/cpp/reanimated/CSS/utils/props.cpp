@@ -5,8 +5,8 @@
 
 namespace reanimated::css {
 
-bool isDiscreteProperty(const std::string &propName, const std::string &componentName) {
-  const auto &interpolators = getComponentInterpolators(componentName);
+bool isDiscreteProperty(const std::string &propName, const std::string &nativeComponentName) {
+  const auto &interpolators = getComponentInterpolators(nativeComponentName);
   const auto it = interpolators.find(propName);
   if (it == interpolators.end()) {
     return false;

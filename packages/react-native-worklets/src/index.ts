@@ -70,8 +70,6 @@ export {
   runOnUISync,
   scheduleOnRN,
   scheduleOnUI,
-  // eslint-disable-next-line camelcase
-  unstable_eventLoopTask,
 } from './threads';
 export type {
   WorkletFunction,

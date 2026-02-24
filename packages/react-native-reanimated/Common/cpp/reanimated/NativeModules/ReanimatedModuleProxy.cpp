@@ -363,22 +363,21 @@ void ReanimatedModuleProxy::unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::V
 void ReanimatedModuleProxy::registerCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
-    const jsi::Value &viewName,
+    const jsi::Value &reactViewName,
     const jsi::Value &keyframesConfig) {
-  // Convert react view name to Fabric component name
-  const auto componentName = componentNameByReactViewName(viewName.asString(rt).utf8(rt));
+  const auto nativeComponentName = componentNameByReactViewName(reactViewName.asString(rt).utf8(rt));
   cssAnimationKeyframesRegistry_->set(
       animationName.asString(rt).utf8(rt),
-      componentName,
-      parseCSSAnimationKeyframesConfig(rt, keyframesConfig, componentName, viewStylesRepository_));
+      nativeComponentName,
+      parseCSSAnimationKeyframesConfig(rt, keyframesConfig, nativeComponentName, viewStylesRepository_));
 }
 
 void ReanimatedModuleProxy::unregisterCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
-    const jsi::Value &viewName) {
+    const jsi::Value &reactViewName) {
   cssAnimationKeyframesRegistry_->remove(
-      animationName.asString(rt).utf8(rt), componentNameByReactViewName(viewName.asString(rt).utf8(rt)));
+      animationName.asString(rt).utf8(rt), componentNameByReactViewName(reactViewName.asString(rt).utf8(rt)));
 }
 
 void ReanimatedModuleProxy::applyCSSAnimations(

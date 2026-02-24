@@ -15,9 +15,9 @@ class CSSKeyframesRegistry {
  public:
   explicit CSSKeyframesRegistry(const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  const CSSKeyframesConfig &get(const std::string &animationName, const std::string &componentName);
-  void set(const std::string &animationName, const std::string &componentName, CSSKeyframesConfig &&config);
-  void remove(const std::string &animationName, const std::string &componentName);
+  const CSSKeyframesConfig &get(const std::string &animationName, const std::string &nativeComponentName);
+  void set(const std::string &animationName, const std::string &nativeComponentName, CSSKeyframesConfig &&config);
+  void remove(const std::string &animationName, const std::string &nativeComponentName);
 
  private:
   using ConfigsByComponentName = std::unordered_map<std::string, CSSKeyframesConfig>;

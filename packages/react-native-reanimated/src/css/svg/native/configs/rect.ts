@@ -5,10 +5,10 @@
 import type { RectProps } from 'react-native-svg';
 
 import type { SvgStyleBuilderConfig } from './common';
-import { commonSvgProps } from './common';
+import { SVG_COMMON_PROPERTIES_CONFIG } from './common';
 
 export const SVG_RECT_PROPERTIES_CONFIG: SvgStyleBuilderConfig<RectProps> = {
-  ...commonSvgProps,
+  ...SVG_COMMON_PROPERTIES_CONFIG,
   x: true,
   y: true,
   rx: true,

@@ -1,61 +1,50 @@
-import { createWorkletRuntime, scheduleOnRuntime, scheduleOnUI, scheduleOnRN } from 'react-native-worklets';
-import { describe, expect, test, waitForNotification, notify } from '../../ReJest/RuntimeTestsApi';
-
-const NOTIFICATION_NAME = 'NOTIFICATION_NAME';
+import { createWorkletRuntime, scheduleOnRuntime, scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
+import { describe, expect, notify, test, waitForNotification, beforeEach } from '../../ReJest/RuntimeTestsApi';
 
 describe('scheduleOnRN', () => {
-  test('should schedule a function on the RN runtime from UI', async () => {
-    // Arrange
-    let value = 0;
-    const callback = (num: number) => {
-      value = num;
-      notify(NOTIFICATION_NAME);
-    };
+  const PASS_NOTIFICATION = 'PASS';
+  let value = 0;
 
-    // Act
+  const workletRuntime = createWorkletRuntime({ name: 'test' });
+
+  const callbackPass = (num: number) => {
+    value = num;
+    notify(PASS_NOTIFICATION);
+  };
+
+  test('setup beforeEach', () => {
+    // TODO: there's a bug in ReJest and beforeEach has to be registered
+    // inside a test case.
+    beforeEach(() => {
+      value = 0;
+    });
+  });
+
+  test('schedules on RN Runtime to RN Runtime', async () => {
+    scheduleOnRN(callbackPass, 42);
+
+    await waitForNotification(PASS_NOTIFICATION);
+    expect(value).toBe(42);
+  });
+
+  test('schedules on UI Runtime to RN Runtime', async () => {
     scheduleOnUI(() => {
       'worklet';
-      scheduleOnRN(callback, 100);
+      scheduleOnRN(callbackPass, 42);
     });
 
-    // Assert
-    await waitForNotification(NOTIFICATION_NAME);
-    expect(value).toBe(100);
+    await waitForNotification(PASS_NOTIFICATION);
+    expect(value).toBe(42);
   });
 
-  test('should schedule a function on the RN runtime from JS', async () => {
-    // Arrange
-    let value = 0;
-    const callback = (num: number) => {
-      value = num;
-      notify(NOTIFICATION_NAME);
-    };
-
-    // Act
-    scheduleOnRN(callback, 100);
-
-    // Assert
-    await waitForNotification(NOTIFICATION_NAME);
-    expect(value).toBe(100);
-  });
-
-  test('should schedule a function on the RN runtime from workletRuntime', async () => {
-    // Arrange
-    let value = 0;
-    const callback = (num: number) => {
-      value = num;
-      notify(NOTIFICATION_NAME);
-    };
-    const workletRuntime = createWorkletRuntime();
-
-    // Act
+  test('schedules on Worker Runtime to RN Runtime', async () => {
     scheduleOnRuntime(workletRuntime, () => {
       'worklet';
-      scheduleOnRN(callback, 100);
+
+      scheduleOnRN(callbackPass, 42);
     });
 
-    // Assert
-    await waitForNotification(NOTIFICATION_NAME);
-    expect(value).toBe(100);
+    await waitForNotification(PASS_NOTIFICATION);
+    expect(value).toBe(42);
   });
 });

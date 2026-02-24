@@ -7,9 +7,9 @@
 namespace reanimated::css {
 
 TransitionStyleInterpolator::TransitionStyleInterpolator(
-    const std::string &componentName,
+    const std::string &nativeComponentName,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : componentName_(componentName), viewStylesRepository_(viewStylesRepository) {}
+    : nativeComponentName_(nativeComponentName), viewStylesRepository_(viewStylesRepository) {}
 
 folly::dynamic TransitionStyleInterpolator::interpolate(
     const std::shared_ptr<const ShadowNode> &shadowNode,
@@ -59,7 +59,8 @@ std::shared_ptr<PropertyInterpolator> TransitionStyleInterpolator::getOrCreateIn
   if (!interpolators_.contains(propertyName)) {
     interpolators_.emplace(
         propertyName,
-        createPropertyInterpolator(propertyName, {}, getComponentInterpolators(componentName_), viewStylesRepository_));
+        createPropertyInterpolator(
+            propertyName, {}, getComponentInterpolators(nativeComponentName_), viewStylesRepository_));
   }
 
   return interpolators_.at(propertyName);
