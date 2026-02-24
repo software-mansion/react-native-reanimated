@@ -24,9 +24,37 @@ This skill guides migration from React Native Reanimated v3 to v4.
 
 ## Step 1: Install Dependencies
 
+Before installing, detect the project's package manager by checking for lock files (`yarn.lock` → yarn, `pnpm-lock.yaml` → pnpm, `bun.lockb` / `bun.lock` → bun, `package-lock.json` → npm). Use the detected package manager for **all** install commands in this migration.
+
+Next, determine the correct `react-native-worklets` version using the compatibility table below.
+
+### Reanimated ↔ react-native-worklets Compatibility
+
+| Reanimated     | react-native-worklets |
+|----------------|-----------------------|
+| 4.2.2 – 4.2.x | 0.7.x                |
+| 4.2.0 – 4.2.1 | 0.7.x                |
+| 4.1.x          | 0.5.x / 0.6.x / 0.7.x |
+| 4.0.x          | 0.4.x                |
+
+### Reanimated ↔ React Native Compatibility
+
+| Reanimated     | React Native          |
+|----------------|-----------------------|
+| 4.2.2 – 4.2.x | 0.80 – 0.84          |
+| 4.2.0 – 4.2.1 | 0.80 – 0.83          |
+| 4.1.x          | 0.78 – 0.82          |
+| 4.0.x          | 0.78 – 0.81          |
+
+Check the project's current React Native version (`react-native` in package.json) and the target Reanimated 4 version to pick the correct worklets version. If the compatibility info above appears outdated, verify at: https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility/
+
+Install using the detected package manager and the compatible version. For example, for Reanimated 4.2.x with yarn:
+
 ```bash
-npm install react-native-worklets
+yarn add react-native-worklets@^0.7.0
 ```
+
+Replace the version specifier with the one that matches the project's Reanimated version per the table above.
 
 Rebuild native apps after installation.
 
@@ -204,12 +232,14 @@ Safe to remove—these were no-ops in v3 and the concept no longer exists in v4.
 + const offset = useScrollOffset(ref);
 ```
 
-## Step 7: withRepeat Infinite Loop Change
+## Step 7: withRepeat Infinite Loop Convention
+
+In v4, any non-positive value (0, -1, etc.) causes the animation to repeat indefinitely. While `-1` still works, the convention in v4 is to use `0`:
 
 ```diff
-// Infinite loop
-- withRepeat(animation, -1) // v3
-+ withRepeat(animation, 0)  // v4
+// Infinite loop (optional, -1 still works)
+- withRepeat(animation, -1)
++ withRepeat(animation, 0)
 ```
 
 ## Step 8: useAnimatedKeyboard Deprecated
@@ -221,9 +251,9 @@ Safe to remove—these were no-ops in v3 and the concept no longer exists in v4.
 + import { useAnimatedKeyboard } from 'react-native-keyboard-controller';
 ```
 
-Install the replacement:
+Install the replacement using the project's package manager (detected in Step 1):
 ```bash
-npm install react-native-keyboard-controller
+yarn add react-native-keyboard-controller
 ```
 
 ## Removed Engine Support
