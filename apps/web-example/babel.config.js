@@ -22,12 +22,26 @@ module.exports = function (api) {
   api.cache.invalidate(() => disableBabelPlugin);
   if (disableBabelPlugin) {
     console.log('Starting Web example without Babel plugin.');
+    console.log(
+      'DISABLE_BABEL_PLUGIN env var:',
+      process.env.DISABLE_BABEL_PLUGIN
+    );
   } else {
     plugins.push(['react-native-worklets/plugin', workletsPluginOptions]);
   }
 
   return {
-    presets: ['babel-preset-expo', 'react-strict-dom/babel-preset'],
+    presets: [
+      [
+        'babel-preset-expo',
+        {
+          // Disable worklets and reanimated plugins from babel-preset-expo when DISABLE_BABEL_PLUGIN is set
+          worklets: !disableBabelPlugin,
+          reanimated: !disableBabelPlugin,
+        },
+      ],
+      'react-strict-dom/babel-preset',
+    ],
     plugins,
   };
 };

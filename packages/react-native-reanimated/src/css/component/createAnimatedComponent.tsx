@@ -41,20 +41,16 @@ export function createAnimatedComponent<T = any>(
  * @returns A component that Reanimated is capable of animating.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent
  */
-export function createAnimatedComponent<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  TInstance extends ComponentType<any>,
->(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function createAnimatedComponent<TInstance extends ComponentType<any>>(
   Component: TInstance
 ): AnimatedComponentType<
   Readonly<React.ComponentProps<TInstance>>,
   ComponentRef<TInstance>
 >;
 
-export function createAnimatedComponent<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  TInstance extends ComponentType<any>,
->(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function createAnimatedComponent<TInstance extends ComponentType<any>>(
   Component: TInstance
 ): AnimatedComponentType<
   Readonly<React.ComponentProps<TInstance>>,

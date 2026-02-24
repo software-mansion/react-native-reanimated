@@ -68,16 +68,17 @@ export default function FillAndColorExample() {
     >
       renderExample={({ animation, render }) => render(animation)}
       buildAnimation={({ keyframes }) => ({
-        animationName: keyframes,
         animationDuration: '2s',
         animationIterationCount: 'infinite',
+        animationName: keyframes,
         animationTimingFunction: 'linear',
       })}
       sections={[
         {
-          title: 'Color',
           examples: [
             {
+              description:
+                '`color` property is used everywhere where the `"currentColor"` is used as a value. For example, here we set `fill` property to `"currentColor"``',
               keyframes: {
                 '50%': {
                   color: 'hsl(130, 80%, 25%)',
@@ -93,16 +94,13 @@ export default function FillAndColorExample() {
                 />
               ),
               title: 'Color',
-              description:
-                '`color` property is used everywhere where the `"currentColor"` is used as a value. For example, here we set `fill` property to `"currentColor"``',
             },
           ],
+          title: 'Color',
         },
         {
-          title: 'Fill props',
           examples: [
             {
-              title: 'Fill',
               description:
                 'In this example we animate only the `fill` property without setting the `color` property',
               keyframes: {
@@ -114,9 +112,9 @@ export default function FillAndColorExample() {
                 },
               },
               render: (animation) => <CircleExample animation={animation} />,
+              title: 'Fill',
             },
             {
-              title: 'Fill Opacity',
               description:
                 'In this example we animate the `fillOpacity` property',
               keyframes: {
@@ -128,9 +126,9 @@ export default function FillAndColorExample() {
                 },
               },
               render: (animation) => <CircleExample animation={animation} />,
+              title: 'Fill Opacity',
             },
             {
-              title: 'Fill Rule',
               description: 'In this example we animate the `fillRule` property',
               keyframes: {
                 from: {
@@ -141,8 +139,10 @@ export default function FillAndColorExample() {
                 },
               },
               render: (animation) => <PolygonExample animation={animation} />,
+              title: 'Fill Rule',
             },
           ],
+          title: 'Fill props',
         },
       ]}
     />

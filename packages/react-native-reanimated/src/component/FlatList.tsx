@@ -17,6 +17,7 @@ import { AnimatedView } from './View';
 
 const AnimatedFlatList = createAnimatedComponent(FlatList);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface CellRendererComponentProps<ItemT = any> {
   index: number;
   item: ItemT;
@@ -28,13 +29,14 @@ interface CellRendererComponentProps<ItemT = any> {
 const createCellRendererComponent = (
   itemLayoutAnimationRef?: RefObject<ILayoutAnimationBuilder | undefined>,
   cellRendererComponentStyleRef?: RefObject<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ReanimatedFlatListPropsWithLayout<any>['CellRendererComponentStyle']
   >
 ) => {
   const CellRendererComponent = (props: CellRendererComponentProps) => {
     return (
       <AnimatedView
-        // TODO TYPESCRIPT This is temporary cast is to get rid of .d.ts file.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         layout={itemLayoutAnimationRef?.current as any}
         onLayout={props.onLayout}
         style={[

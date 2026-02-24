@@ -136,14 +136,14 @@ class JSReanimated implements IReanimatedModule {
           if (this.platform === Platform.WEB_ANDROID) {
             [x, y, z] = [-x, -y, -z];
           }
-          // TODO TYPESCRIPT on web SerializableRef is the value itself so we call it directly
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (eventHandler as any)({ x, y, z, interfaceOrientation: 0 });
         };
       case SensorType.GYROSCOPE:
       case SensorType.MAGNETIC_FIELD:
         return () => {
           const { x, y, z } = sensor;
-          // TODO TYPESCRIPT on web SerializableRef is the value itself so we call it directly
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (eventHandler as any)({ x, y, z, interfaceOrientation: 0 });
         };
       case SensorType.ROTATION:
@@ -166,7 +166,7 @@ class JSReanimated implements IReanimatedModule {
             2.0 * (qx * qy + qw * qz),
             qw * qw + qx * qx - qy * qy - qz * qz
           );
-          // TODO TYPESCRIPT on web SerializableRef is the value itself so we call it directly
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (eventHandler as any)({
             qw,
             qx,

@@ -136,6 +136,10 @@ export interface WorkletsModuleProxy {
   getStaticFeatureFlag(name: string): boolean;
 
   setDynamicFeatureFlag(name: string, value: boolean): void;
+
+  getUIRuntimeHolder(): object;
+
+  getUISchedulerHolder(): object;
 }
 
 export type IWorkletsModule = WorkletsModuleProxy;
