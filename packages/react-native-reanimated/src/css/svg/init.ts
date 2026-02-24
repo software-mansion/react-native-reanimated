@@ -2,6 +2,7 @@
 import { registerComponentPropsBuilder } from '../../common';
 import {
   SVG_CIRCLE_PROPERTIES_CONFIG,
+  SVG_COMMON_PROPERTIES_CONFIG,
   SVG_ELLIPSE_PROPERTIES_CONFIG,
   SVG_IMAGE_PROPERTIES_CONFIG,
   SVG_LINE_PROPERTIES_CONFIG,
@@ -27,5 +28,6 @@ export function initSvgCssSupport() {
   registerComponentPropsBuilder('RNSVGPath', SVG_PATH_PROPERTIES_CONFIG);
   registerComponentPropsBuilder('RNSVGRect', SVG_RECT_PROPERTIES_CONFIG);
 
-  // TODO: Add more SVG components as they are implemented
+  // Fallback for all SVG components that aren't explicitly registered
+  registerComponentPropsBuilder(/^RNSVG/, SVG_COMMON_PROPERTIES_CONFIG);
 }
