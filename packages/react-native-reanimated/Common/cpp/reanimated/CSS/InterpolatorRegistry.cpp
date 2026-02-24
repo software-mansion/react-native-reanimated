@@ -402,7 +402,7 @@ const InterpolatorFactoriesRecord &getComponentInterpolators(const std::string &
   }
 
   // Use SVG common interpolators as a fallback for unregistered SVG components
-  if (SVG_FEATURE_ENABLED && nativeComponentName.rfind("RNSVG", 0) == 0) {
+  if (SVG_FEATURE_ENABLED && nativeComponentName.starts_with("RNSVG")) {
     return SVG_COMMON_INTERPOLATORS;
   }
 
