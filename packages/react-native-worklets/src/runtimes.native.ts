@@ -325,7 +325,6 @@ export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
   ...args: Args
 ): ReturnValue {
-  'worklet';
   if (__DEV__ && !isWorkletFunction(worklet)) {
     throw new WorkletsError(
       'The function passed to `runOnRuntimeSyncFromId` is not a worklet.'
@@ -421,6 +420,8 @@ if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
   addGuardImplementation(runOnRuntimeAsync);
   addGuardImplementation(runOnRuntimeSync);
   addGuardImplementation(scheduleOnRuntime);
+  addGuardImplementation(runOnRuntimeSyncWithId);
+  addGuardImplementation(scheduleOnRuntimeWithId);
 }
 
 export function getUIRuntimeHolder(): object {

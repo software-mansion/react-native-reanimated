@@ -9,6 +9,9 @@ import {
 import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
 
 describe('runOnRuntimeSyncWithId', () => {
+  const workletRuntime1 = createWorkletRuntime({ name: 'test1' });
+  const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
+
   describe('from RN Runtime', () => {
     test('to UI Runtime', () => {
       const result = runOnRuntimeSyncWithId(UIRuntimeId, () => {
@@ -20,8 +23,7 @@ describe('runOnRuntimeSyncWithId', () => {
     });
 
     test('to Worker Runtime', () => {
-      const workletRuntime = createWorkletRuntime({ name: 'test' });
-      const result = runOnRuntimeSyncWithId(workletRuntime.runtimeId, () => {
+      const result = runOnRuntimeSyncWithId(workletRuntime1.runtimeId, () => {
         'worklet';
         return globalThis.__RUNTIME_KIND;
       });
@@ -56,10 +58,9 @@ describe('runOnRuntimeSyncWithId', () => {
       });
 
       test('to Worker Runtime', () => {
-        const workletRuntime = createWorkletRuntime({ name: 'test' });
         const result = runOnUISync(() => {
           'worklet';
-          const resultOnUI = runOnRuntimeSyncWithId(workletRuntime.runtimeId, () => {
+          const resultOnUI = runOnRuntimeSyncWithId(workletRuntime1.runtimeId, () => {
             'worklet';
             return globalThis.__RUNTIME_KIND;
           });
@@ -88,9 +89,7 @@ describe('runOnRuntimeSyncWithId', () => {
   describe('from Worker Runtime', () => {
     if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
       test('to UI Runtime', () => {
-        const workletRuntime = createWorkletRuntime({ name: 'test' });
-
-        const result = runOnRuntimeSync(workletRuntime, () => {
+        const result = runOnRuntimeSync(workletRuntime1, () => {
           'worklet';
           const resultOnWorker = runOnRuntimeSyncWithId(UIRuntimeId, () => {
             'worklet';
@@ -103,10 +102,9 @@ describe('runOnRuntimeSyncWithId', () => {
       });
 
       test('to self', () => {
-        const workletRuntime = createWorkletRuntime({ name: 'test' });
-        const result = runOnRuntimeSyncWithId(workletRuntime.runtimeId, () => {
+        const result = runOnRuntimeSyncWithId(workletRuntime1.runtimeId, () => {
           'worklet';
-          const resultOnWorker = runOnRuntimeSyncWithId(workletRuntime.runtimeId, () => {
+          const resultOnWorker = runOnRuntimeSyncWithId(workletRuntime1.runtimeId, () => {
             'worklet';
             return globalThis.__RUNTIME_KIND;
           });
@@ -117,9 +115,6 @@ describe('runOnRuntimeSyncWithId', () => {
       });
 
       test('to other Worker Runtime', () => {
-        const workletRuntime1 = createWorkletRuntime({ name: 'test1' });
-        const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
-
         const result = runOnRuntimeSyncWithId(workletRuntime1.runtimeId, () => {
           'worklet';
           const resultOnWorker = runOnRuntimeSyncWithId(workletRuntime2.runtimeId, () => {
@@ -133,9 +128,8 @@ describe('runOnRuntimeSyncWithId', () => {
       });
 
       test('to non-existing Runtime', async () => {
-        const workletRuntime = createWorkletRuntime({ name: 'test' });
         const fun = () =>
-          runOnRuntimeSyncWithId(workletRuntime.runtimeId, () => {
+          runOnRuntimeSyncWithId(workletRuntime1.runtimeId, () => {
             'worklet';
             const resultOnWorker = runOnRuntimeSyncWithId(9999, () => {
               'worklet';

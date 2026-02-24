@@ -23,6 +23,9 @@ describe('scheduleOnRuntimeWithId', () => {
     notify(FAIL_NOTIFICATION);
   };
 
+  const workletRuntime1 = createWorkletRuntime({ name: 'test1' });
+  const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
+
   describe('from RN Runtime', () => {
     test('to UI Runtime', async () => {
       value = 0;
@@ -36,8 +39,7 @@ describe('scheduleOnRuntimeWithId', () => {
     });
 
     test('to Worker Runtime', async () => {
-      const workletRuntime = createWorkletRuntime({ name: 'test' });
-      scheduleOnRuntimeWithId(workletRuntime.runtimeId, () => {
+      scheduleOnRuntimeWithId(workletRuntime1.runtimeId, () => {
         'worklet';
         scheduleOnRN(callback, 100);
       });
@@ -75,13 +77,12 @@ describe('scheduleOnRuntimeWithId', () => {
       });
 
       test('to Worker Runtime', async () => {
-        const workletRuntime = createWorkletRuntime({ name: 'test' });
         scheduleOnUI(() => {
           'worklet';
           // @ts-expect-error TODO: fix RemoteFunction re-serialization.
           const remoteFunction = callback.__remoteFunction as typeof callback;
 
-          scheduleOnRuntimeWithId(workletRuntime.runtimeId, () => {
+          scheduleOnRuntimeWithId(workletRuntime1.runtimeId, () => {
             'worklet';
             scheduleOnRN(remoteFunction, 100);
           });
@@ -116,8 +117,7 @@ describe('scheduleOnRuntimeWithId', () => {
   describe('from Worker Runtime', () => {
     if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
       test('to UI Runtime', async () => {
-        const workletRuntime = createWorkletRuntime({ name: 'test' });
-        scheduleOnRuntime(workletRuntime, () => {
+        scheduleOnRuntime(workletRuntime1, () => {
           'worklet';
           // @ts-expect-error TODO: fix RemoteFunction re-serialization.
           const remoteFunction = callback.__remoteFunction as typeof callback;
@@ -130,12 +130,11 @@ describe('scheduleOnRuntimeWithId', () => {
         expect(value).toBe(100);
       });
       test('to self', async () => {
-        const workletRuntime = createWorkletRuntime({ name: 'test' });
-        scheduleOnRuntime(workletRuntime, () => {
+        scheduleOnRuntime(workletRuntime1, () => {
           'worklet';
           // @ts-expect-error TODO: fix RemoteFunction re-serialization.
           const remoteFunction = callback.__remoteFunction as typeof callback;
-          scheduleOnRuntimeWithId(workletRuntime.runtimeId, () => {
+          scheduleOnRuntimeWithId(workletRuntime1.runtimeId, () => {
             'worklet';
             scheduleOnRN(remoteFunction, 100);
           });
@@ -144,8 +143,6 @@ describe('scheduleOnRuntimeWithId', () => {
         expect(value).toBe(100);
       });
       test('to other Worker Runtime', async () => {
-        const workletRuntime1 = createWorkletRuntime({ name: 'test1' });
-        const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
         scheduleOnRuntime(workletRuntime1, () => {
           'worklet';
           // @ts-expect-error TODO: fix RemoteFunction re-serialization.
@@ -159,9 +156,8 @@ describe('scheduleOnRuntimeWithId', () => {
         expect(value).toBe(100);
       });
       test('to non-existing Runtime', async () => {
-        const workletRuntime = createWorkletRuntime({ name: 'test' });
         const fun = () =>
-          scheduleOnRuntime(workletRuntime, () => {
+          scheduleOnRuntime(workletRuntime1, () => {
             'worklet';
             // @ts-expect-error TODO: fix RemoteFunction re-serialization.
             const remoteFunction = callback.__remoteFunction as typeof callback;
