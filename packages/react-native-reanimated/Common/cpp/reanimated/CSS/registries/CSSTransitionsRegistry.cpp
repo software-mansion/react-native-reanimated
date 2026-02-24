@@ -22,7 +22,7 @@ bool CSSTransitionsRegistry::hasUpdates() const {
 
 void CSSTransitionsRegistry::run(
     jsi::Runtime &rt,
-    std::shared_ptr<const ShadowNode> shadowNode,
+    const std::shared_ptr<const ShadowNode> &shadowNode,
     const CSSTransitionConfig &config) {
   const auto viewTag = shadowNode->getTag();
 

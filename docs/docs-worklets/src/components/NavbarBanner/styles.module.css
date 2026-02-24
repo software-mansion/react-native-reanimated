@@ -1,0 +1,47 @@
+.banner {
+  display: flex;
+  height: 50px;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #001a72;
+  text-decoration: none;
+}
+
+.banner:hover {
+  color: #001a72 !important;
+  text-decoration: none !important;
+}
+
+.banner:hover * {
+  text-decoration: none !important;
+}
+
+.banner:hover .underline {
+  text-decoration: underline !important;
+  text-underline-offset: 2px;
+}
+
+.hiddenOnMobile {
+  display: inline;
+}
+
+@media (max-width: 768px) {
+  .hiddenOnMobile {
+    display: none;
+  }
+}
+
+.icon {
+  height: 28px;
+  width: auto;
+  transform: rotate(-90deg);
+}
+
+.underline {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

@@ -15,7 +15,7 @@ namespace reanimated::css {
 class TransitionStyleInterpolator {
  public:
   TransitionStyleInterpolator(
-      const std::string &componentName,
+      const std::string &nativeComponentName,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
   folly::dynamic interpolate(
@@ -35,7 +35,7 @@ class TransitionStyleInterpolator {
   using MapInterpolatorsCallback = std::function<
       folly::dynamic(const std::shared_ptr<PropertyInterpolator> &, const std::shared_ptr<KeyframeProgressProvider> &)>;
 
-  const std::string componentName_;
+  const std::string nativeComponentName_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   PropertyInterpolatorsRecord interpolators_;

@@ -17,7 +17,6 @@ import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
-import com.swmansion.worklets.WorkletsModule;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -62,7 +61,7 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
-  public NodesManager(ReactApplicationContext context, WorkletsModule workletsModule) {
+  public NodesManager(ReactApplicationContext context) {
     context.assertOnJSQueueThread();
 
     UIManager uiManager = UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
@@ -79,7 +78,7 @@ public class NodesManager implements EventDispatcherListener {
           }
         };
 
-    mNativeProxy = new NativeProxy(context, workletsModule, this);
+    mNativeProxy = new NativeProxy(context, this);
     mFabricUIManager = (FabricUIManager) uiManager;
     mFabricUIManager.getEventDispatcher().addListener(this);
   }
