@@ -13,6 +13,8 @@ describe('runOnUISync', () => {
   let value = 0;
   let reason = '';
 
+  const workletRuntime = createWorkletRuntime({ name: 'test' });
+
   const callbackPass = (num: number) => {
     value = num;
     notify(PASS_NOTIFICATION);
@@ -59,8 +61,6 @@ describe('runOnUISync', () => {
     });
 
     test('schedules on Worker Runtime to UI Runtime', async () => {
-      const workletRuntime = createWorkletRuntime({ name: 'test' });
-
       scheduleOnRuntime(workletRuntime, () => {
         'worklet';
 
@@ -94,8 +94,6 @@ describe('runOnUISync', () => {
     });
 
     test('throws when scheduling on Worker Runtime to UI Runtime', async () => {
-      const workletRuntime = createWorkletRuntime({ name: 'test' });
-
       scheduleOnRuntime(workletRuntime, () => {
         'worklet';
         try {

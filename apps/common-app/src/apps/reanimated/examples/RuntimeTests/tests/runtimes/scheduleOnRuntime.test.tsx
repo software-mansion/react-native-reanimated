@@ -7,6 +7,9 @@ describe('scheduleOnRuntime', () => {
   let value = 0;
   let reason = '';
 
+  const workletRuntime1 = createWorkletRuntime({ name: 'test1' });
+  const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
+
   const callbackPass = (num: number) => {
     value = num;
     notify(PASS_NOTIFICATION);
@@ -27,9 +30,7 @@ describe('scheduleOnRuntime', () => {
   });
 
   test('schedules on RN Runtime to a Worker Runtime', async () => {
-    const workletRuntime = createWorkletRuntime({ name: 'test' });
-
-    scheduleOnRuntime(workletRuntime, () => {
+    scheduleOnRuntime(workletRuntime1, () => {
       'worklet';
       scheduleOnRN(callbackPass, 42);
     });
@@ -40,14 +41,12 @@ describe('scheduleOnRuntime', () => {
 
   if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     test('schedules on UI Runtime to a Worker Runtime', async () => {
-      const workletRuntime = createWorkletRuntime({ name: 'test' });
-
       scheduleOnUI(() => {
         'worklet';
         // @ts-expect-error TODO: fix RemoteFunction re-serialization.
         const remoteFunction = callbackPass.__remoteFunction as typeof callbackPass;
 
-        scheduleOnRuntime(workletRuntime, () => {
+        scheduleOnRuntime(workletRuntime1, () => {
           'worklet';
           scheduleOnRN(remoteFunction, 42);
         });
@@ -58,9 +57,6 @@ describe('scheduleOnRuntime', () => {
     });
 
     test('schedules on Worker Runtime to another Worker Runtime', async () => {
-      const workletRuntime1 = createWorkletRuntime({ name: 'test1' });
-      const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
-
       scheduleOnRuntime(workletRuntime1, () => {
         'worklet';
         // @ts-expect-error TODO: fix RemoteFunction re-serialization.
@@ -77,12 +73,10 @@ describe('scheduleOnRuntime', () => {
     });
   } else {
     test('throws when scheduling on UI Runtime to a Worker Runtime', async () => {
-      const workletRuntime = createWorkletRuntime({ name: 'test' });
-
       scheduleOnUI(() => {
         'worklet';
         try {
-          scheduleOnRuntime(workletRuntime, () => {
+          scheduleOnRuntime(workletRuntime1, () => {
             'worklet';
             scheduleOnRN(callbackPass, 42);
           });
@@ -98,9 +92,6 @@ describe('scheduleOnRuntime', () => {
     });
 
     test('throws when scheduling on Worker Runtime to another Worker Runtime', async () => {
-      const workletRuntime1 = createWorkletRuntime({ name: 'test1' });
-      const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
-
       scheduleOnRuntime(workletRuntime1, () => {
         'worklet';
         try {

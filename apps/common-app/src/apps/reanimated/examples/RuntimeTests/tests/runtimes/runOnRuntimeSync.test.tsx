@@ -13,6 +13,9 @@ describe('runOnRuntimeSync', () => {
   let value = 0;
   let reason = '';
 
+  const workletRuntime1 = createWorkletRuntime({ name: 'test1' });
+  const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
+
   const callbackPass = (num: number) => {
     value = num;
     notify(PASS_NOTIFICATION);
@@ -33,9 +36,7 @@ describe('runOnRuntimeSync', () => {
   });
 
   test('schedules on RN Runtime to a Worker Runtime', () => {
-    const workletRuntime = createWorkletRuntime({ name: 'test' });
-
-    const result = runOnRuntimeSync(workletRuntime, () => {
+    const result = runOnRuntimeSync(workletRuntime1, () => {
       'worklet';
       return 42;
     });
@@ -45,12 +46,10 @@ describe('runOnRuntimeSync', () => {
 
   if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     test('schedules on UI Runtime to a Worker Runtime', async () => {
-      const workletRuntime = createWorkletRuntime({ name: 'test' });
-
       scheduleOnUI(() => {
         'worklet';
 
-        const result = runOnRuntimeSync(workletRuntime, () => {
+        const result = runOnRuntimeSync(workletRuntime1, () => {
           'worklet';
           return 42;
         });
@@ -63,9 +62,6 @@ describe('runOnRuntimeSync', () => {
     });
 
     test('schedules on Worker Runtime to another Worker Runtime', async () => {
-      const workletRuntime1 = createWorkletRuntime({ name: 'test1' });
-      const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
-
       scheduleOnRuntime(workletRuntime1, () => {
         'worklet';
 
@@ -82,12 +78,10 @@ describe('runOnRuntimeSync', () => {
     });
   } else {
     test('throws when scheduling on UI Runtime to a Worker Runtime', async () => {
-      const workletRuntime = createWorkletRuntime({ name: 'test' });
-
       scheduleOnUI(() => {
         'worklet';
         try {
-          runOnRuntimeSync(workletRuntime, () => {
+          runOnRuntimeSync(workletRuntime1, () => {
             'worklet';
             return 42;
           });
@@ -103,9 +97,6 @@ describe('runOnRuntimeSync', () => {
     });
 
     test('throws when scheduling on Worker Runtime to another Worker Runtime', async () => {
-      const workletRuntime1 = createWorkletRuntime({ name: 'test1' });
-      const workletRuntime2 = createWorkletRuntime({ name: 'test2' });
-
       scheduleOnRuntime(workletRuntime1, () => {
         'worklet';
         try {

@@ -7,6 +7,8 @@ describe('scheduleOnUI', () => {
   let value = 0;
   let reason = '';
 
+  const workletRuntime = createWorkletRuntime({ name: 'test' });
+
   const callbackPass = (num: number) => {
     value = num;
     notify(PASS_NOTIFICATION);
@@ -54,8 +56,6 @@ describe('scheduleOnUI', () => {
     });
 
     test('schedules on Worker Runtime to UI Runtime', async () => {
-      const workletRuntime = createWorkletRuntime({ name: 'test' });
-
       scheduleOnRuntime(workletRuntime, () => {
         'worklet';
         // @ts-expect-error TODO: fix RemoteFunction re-serialization.
@@ -89,8 +89,6 @@ describe('scheduleOnUI', () => {
     });
 
     test('throws when scheduling on Worker Runtime to UI Runtime', async () => {
-      const workletRuntime = createWorkletRuntime({ name: 'test' });
-
       scheduleOnRuntime(workletRuntime, () => {
         'worklet';
         try {

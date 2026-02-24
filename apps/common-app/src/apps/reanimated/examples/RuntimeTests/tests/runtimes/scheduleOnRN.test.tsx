@@ -5,6 +5,8 @@ describe('scheduleOnRN', () => {
   const PASS_NOTIFICATION = 'PASS';
   let value = 0;
 
+  const workletRuntime = createWorkletRuntime({ name: 'test' });
+
   const callbackPass = (num: number) => {
     value = num;
     notify(PASS_NOTIFICATION);
@@ -36,8 +38,6 @@ describe('scheduleOnRN', () => {
   });
 
   test('schedules on Worker Runtime to RN Runtime', async () => {
-    const workletRuntime = createWorkletRuntime({ name: 'test' });
-
     scheduleOnRuntime(workletRuntime, () => {
       'worklet';
 

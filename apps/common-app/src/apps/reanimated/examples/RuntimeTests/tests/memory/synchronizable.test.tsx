@@ -8,12 +8,15 @@ import {
   scheduleOnRuntime,
   type Synchronizable,
   runOnRuntimeSync,
+  type WorkletRuntime,
 } from 'react-native-worklets';
 import { describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
 
 const NOTIFICATION = 'NOTIFICATION';
 
 describe('Test Synchronizable creation and serialization', () => {
+  const workletRuntime = createWorkletRuntime({ name: 'test' });
+
   test('createSynchronizable returns Synchronizable', () => {
     const synchronizable = createSynchronizable(0);
 
@@ -39,10 +42,7 @@ describe('Test Synchronizable creation and serialization', () => {
     };
 
     // Act
-    const runtime = createWorkletRuntime({
-      name: 'test',
-    });
-    scheduleOnRuntime(runtime, () => {
+    scheduleOnRuntime(workletRuntime, () => {
       'worklet';
       const value = synchronizable.getBlocking();
       scheduleOnRN(onJSCallback, value);
@@ -73,10 +73,7 @@ describe('Test Synchronizable creation and serialization', () => {
     };
 
     // Act
-    const runtime = createWorkletRuntime({
-      name: 'test',
-    });
-    scheduleOnRuntime(runtime, () => {
+    scheduleOnRuntime(workletRuntime, () => {
       'worklet';
       scheduleOnRN(onJSCallback, synchronizable);
     });
@@ -158,14 +155,14 @@ function imperativeLockGetSet(synchronizable: Synchronizable<number>) {
 }
 
 function dispatch(
+  workletRuntime: WorkletRuntime,
   method: (synchronizable: Synchronizable<number>) => number,
   callbackRN: (value: number) => void,
   callbackUI: (value: number) => void,
   callbackBG: (value: number) => void,
 ) {
   const synchronizable = createSynchronizable(initialValue);
-  const runtime = createWorkletRuntime({ name: 'test' });
-  scheduleOnRuntime(runtime, () => {
+  scheduleOnRuntime(workletRuntime, () => {
     'worklet';
     const value = method(synchronizable);
     scheduleOnRN(callbackBG, value);
@@ -184,6 +181,8 @@ function dispatch(
 }
 
 describe('Test Synchronizable access', () => {
+  const workletRuntime = createWorkletRuntime({ name: 'test' });
+
   test('dirty reading yields intermediate values', async () => {
     let valueRN = 0;
     let valueUI = 0;
@@ -210,7 +209,7 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    dispatch(getDirtySetBlocking, setValueRN, setValueUI, setValueBG);
+    dispatch(workletRuntime, getDirtySetBlocking, setValueRN, setValueUI, setValueBG);
 
     await waitForNotification(NOTIFICATION);
 
@@ -245,7 +244,7 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    dispatch(getBlockingSetBlocking, setValueRN, setValueUI, setValueBG);
+    dispatch(workletRuntime, getBlockingSetBlocking, setValueRN, setValueUI, setValueBG);
 
     await waitForNotification(NOTIFICATION);
 
@@ -280,7 +279,7 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    dispatch(transactionGetSet, setValueRN, setValueUI, setValueBG);
+    dispatch(workletRuntime, transactionGetSet, setValueRN, setValueUI, setValueBG);
 
     await waitForNotification(NOTIFICATION);
 
@@ -313,7 +312,7 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    dispatch(imperativeLockGetSet, setValueRN, setValueUI, setValueBG);
+    dispatch(workletRuntime, imperativeLockGetSet, setValueRN, setValueUI, setValueBG);
 
     await waitForNotification(NOTIFICATION);
 
@@ -322,8 +321,9 @@ describe('Test Synchronizable access', () => {
 });
 
 describe('Test Synchronizable serialization', () => {
+  const workletRuntime = createWorkletRuntime({ name: 'test' });
+
   test('Synchronizable accepts primitives', () => {
-    const workletRuntime = createWorkletRuntime({ name: 'primitive-test' });
     const synchronizable = createSynchronizable(0);
 
     // RN Runtime
