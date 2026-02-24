@@ -241,17 +241,16 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
 // SVG INTERPOLATORS
 // =================
 
-const InterpolatorFactoriesRecord SVG_COLOR_INTERPOLATORS = {
+const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS = {
+    // Color
     {"color", value<SVGBrush>(BLACK)},
-};
 
-const InterpolatorFactoriesRecord SVG_FILL_INTERPOLATORS = {
+    // Fill
     {"fill", value<SVGBrush>(BLACK)},
     {"fillOpacity", value<CSSDouble>(1)},
     {"fillRule", value<CSSIndex>(0)},
-};
 
-const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
+    // Stroke
     {"stroke", value<SVGBrush>(BLACK)},
     {"strokeWidth", value<SVGLength>(1)},
     {"strokeOpacity", value<CSSDouble>(1)},
@@ -261,14 +260,12 @@ const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
     {"strokeLinejoin", value<CSSIndex>(0)},
     {"strokeMiterlimit", value<CSSDouble>(4)},
     {"vectorEffect", value<CSSIndex>(0)},
-};
 
-const InterpolatorFactoriesRecord SVG_CLIP_INTERPOLATORS = {
+    // Clip
     {"clipRule", value<CSSKeyword>("nonzero")},
     {"clipPath", value<CSSKeyword>("none")},
-};
 
-const InterpolatorFactoriesRecord SVG_TRANSFORM_INTERPOLATORS = {
+    // Transform
     {"translateX", value<SVGLength>(0)},
     {"translateY", value<SVGLength>(0)},
     {"originX", value<SVGLength>(0)},
@@ -278,14 +275,14 @@ const InterpolatorFactoriesRecord SVG_TRANSFORM_INTERPOLATORS = {
     {"skewX", value<CSSAngle>(0)},
     {"skewY", value<CSSAngle>(0)},
     {"rotation", value<CSSAngle>(0)},
+
+    // General
+    {"opacity", value<CSSDouble>(1)},
 };
 
-const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS = mergeInterpolators({
-    SVG_COLOR_INTERPOLATORS,
-    SVG_FILL_INTERPOLATORS,
-    SVG_STROKE_INTERPOLATORS,
-    InterpolatorFactoriesRecord{{"opacity", value<CSSDouble>(1)}},
-});
+// ================================
+// SVG Component-Specific Interpolators
+// ================================
 
 const InterpolatorFactoriesRecord SVG_CIRCLE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
@@ -375,10 +372,12 @@ const InterpolatorFactoriesRecord SVG_RADIAL_GRADIENT_INTERPOLATORS = mergeInter
 // COMPONENT REGISTRY
 // ==================
 
+constexpr bool SVG_FEATURE_ENABLED = StaticFeatureFlags::getFlag("EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS");
+
 ComponentInterpolatorsMap initializeRegistry() {
   ComponentInterpolatorsMap registry = {};
 
-  if (StaticFeatureFlags::getFlag("EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS")) {
+  if (SVG_FEATURE_ENABLED) {
     // SVG Components
     registry["RNSVGCircle"] = SVG_CIRCLE_INTERPOLATORS;
     registry["RNSVGEllipse"] = SVG_ELLIPSE_INTERPOLATORS;
@@ -400,6 +399,11 @@ ComponentInterpolatorsMap registry = initializeRegistry();
 const InterpolatorFactoriesRecord &getComponentInterpolators(const std::string &nativeComponentName) {
   if (auto it = registry.find(nativeComponentName); it != registry.end()) {
     return it->second;
+  }
+
+  // Use SVG common interpolators as a fallback for unregistered SVG components
+  if (SVG_FEATURE_ENABLED && nativeComponentName.starts_with("RNSVG")) {
+    return SVG_COMMON_INTERPOLATORS;
   }
 
   // Use default style interpolators as a fallback for unknown components
