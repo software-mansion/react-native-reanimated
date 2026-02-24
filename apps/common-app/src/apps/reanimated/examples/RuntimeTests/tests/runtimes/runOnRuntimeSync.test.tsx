@@ -102,7 +102,7 @@ describe('runOnRuntimeSync', () => {
         try {
           runOnRuntimeSync(workletRuntime2, () => {
             'worklet';
-            return 84;
+            return 42;
           });
         } catch (error) {
           scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));

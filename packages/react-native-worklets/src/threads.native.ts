@@ -384,7 +384,7 @@ function flushUIQueue(): void {
 
 if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
   /**
-   * QoL guards to give a meaningful errors message when a user tries to call
+   * QoL guards to give a meaningful error message when the user tries to call
    * these functions on Worklet Runtimes outside of the Bundle Mode.
    */
   addGuardImplementation(runOnUIAsync);
