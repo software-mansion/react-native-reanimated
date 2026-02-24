@@ -2,6 +2,7 @@
 
 import { setupCallGuard } from './callGuard';
 import { registerWorkletsError, WorkletsError } from './debug/WorkletsError';
+import { addGuardImplementation } from './guardImplementation';
 import {
   getMemorySafeCapturableConsole,
   setupConsole,
@@ -11,7 +12,6 @@ import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
 } from './memory/serializable';
-import { serializableMappingCache } from './memory/serializableMappingCache';
 import { setupRunLoop } from './runLoop/workletRuntime';
 import { RuntimeKind } from './runtimeKind';
 import { scheduleOnRN } from './threads';
@@ -146,19 +146,9 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
   ...args: Args
 ): void {
-  'worklet';
   if (__DEV__ && !isWorkletFunction(worklet)) {
     throw new WorkletsError(
       'The function passed to `scheduleOnRuntime` is not a worklet.'
-    );
-  }
-  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
-    globalThis._scheduleOnRuntime(
-      workletRuntime,
-      makeShareableCloneOnUIRecursive(() => {
-        'worklet';
-        worklet(...args);
-      })
     );
   }
 
@@ -167,7 +157,7 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
     createSerializable(() => {
       'worklet';
       worklet(...args);
-      globalThis.__flushMicrotasks();
+      globalThis.__flushMicrotasks?.();
     })
   );
 }
@@ -223,7 +213,6 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue,
   ...args: Args
 ): ReturnValue {
-  'worklet';
   if (__DEV__ && !isWorkletFunction(worklet)) {
     throw new WorkletsError(
       'The function passed to `runOnRuntimeSync` is not a worklet.'
@@ -305,27 +294,20 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
         } catch (error) {
           scheduleOnRN(reject, error);
         }
-        globalThis?.__flushMicrotasks?.();
+        globalThis.__flushMicrotasks?.();
       })
     );
   });
 }
 
-if (__DEV__) {
-  function runOnRuntimeAsyncWorklet(): void {
-    'worklet';
-    throw new WorkletsError(
-      '`runOnRuntimeAsync` can only be called on the RN Runtime.'
-    );
-  }
-
-  const serializableRunOnRuntimeAsyncWorklet = createSerializable(
-    runOnRuntimeAsyncWorklet
-  );
-  serializableMappingCache.set(
-    runOnRuntimeAsync,
-    serializableRunOnRuntimeAsyncWorklet
-  );
+if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+  /**
+   * QoL guards to give a meaningful error message when the user tries to call
+   * these functions on Worklet Runtimes outside of the Bundle Mode.
+   */
+  addGuardImplementation(runOnRuntimeAsync);
+  addGuardImplementation(runOnRuntimeSync);
+  addGuardImplementation(scheduleOnRuntime);
 }
 
 export function getUIRuntimeHolder(): object {
