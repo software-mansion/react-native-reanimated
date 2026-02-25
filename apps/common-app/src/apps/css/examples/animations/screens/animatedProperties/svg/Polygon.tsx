@@ -98,7 +98,7 @@ export default function PolygonExample() {
               examples: [
                 {
                   description:
-                    'Interpolation between different numbers of points is **not supported**, so the points change **abruptly**',
+                    'Smooth interpolation between shapes with different numbers of points (triangle to diamond)',
                   keyframes: {
                     from: {
                       points: '50,10 90,90 10,90',
@@ -111,7 +111,7 @@ export default function PolygonExample() {
                 },
                 {
                   description:
-                    'Reducing the number of points also causes an **abrupt** change instead of a smooth transition',
+                    'Smooth interpolation when reducing the number of points (pentagon to triangle)',
                   keyframes: {
                     from: {
                       points: '50,5 95,35 80,90 20,90 5,35',
