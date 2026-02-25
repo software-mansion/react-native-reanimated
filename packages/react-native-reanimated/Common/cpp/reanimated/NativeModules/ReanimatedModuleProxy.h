@@ -102,12 +102,19 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
       jsi::Runtime &rt,
       const jsi::Value &animationName,
       const jsi::Value &reactViewName,
+      const jsi::Value &jsComponentName,
       const jsi::Value &keyframesConfig) override;
-  void unregisterCSSKeyframes(jsi::Runtime &rt, const jsi::Value &animationName, const jsi::Value &reactViewName)
-      override;
+  void unregisterCSSKeyframes(
+      jsi::Runtime &rt,
+      const jsi::Value &animationName,
+      const jsi::Value &reactViewName,
+      const jsi::Value &jsComponentName) override;
 
-  void applyCSSAnimations(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &animationUpdates)
-      override;
+  void applyCSSAnimations(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper,
+      const jsi::Value &jsComponentName,
+      const jsi::Value &animationUpdates) override;
   void unregisterCSSAnimations(const jsi::Value &viewTag) override;
 
   void runCSSTransition(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &transitionConfig)

@@ -1,5 +1,6 @@
 'use strict';
 import type { PlainStyle } from '../../../common';
+import { getCompoundComponentName } from '../../../common';
 import { CSSKeyframesRuleBase } from '../../models';
 import type { CSSAnimationKeyframes } from '../../types';
 import { normalizeAnimationKeyframes } from '../normalization';
@@ -18,13 +19,15 @@ export default class CSSKeyframesRuleImpl<
   }
 
   getNormalizedKeyframesConfig(
-    reactViewName: string
+    reactViewName: string,
+    jsComponentName: string
   ): NormalizedCSSAnimationKeyframesConfig {
-    if (!this.normalizedKeyframesCache_[reactViewName]) {
-      this.normalizedKeyframesCache_[reactViewName] =
-        normalizeAnimationKeyframes(this.cssRules, reactViewName);
-    }
-
-    return this.normalizedKeyframesCache_[reactViewName];
+    const cacheKey = getCompoundComponentName(reactViewName, jsComponentName);
+    this.normalizedKeyframesCache_[cacheKey] ??= normalizeAnimationKeyframes(
+      this.cssRules,
+      reactViewName,
+      jsComponentName
+    );
+    return this.normalizedKeyframesCache_[cacheKey];
   }
 }

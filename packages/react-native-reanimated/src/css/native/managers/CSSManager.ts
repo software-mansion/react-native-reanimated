@@ -16,19 +16,19 @@ export default class CSSManager implements ICSSManager {
   private readonly propsBuilder: ReturnType<typeof getPropsBuilder>;
   private isFirstUpdate: boolean = true;
 
-  constructor({
-    shadowNodeWrapper,
-    viewTag,
-    reactViewName = 'RCTView',
-  }: ViewInfo) {
+  constructor(
+    { shadowNodeWrapper, viewTag, reactViewName = 'RCTView' }: ViewInfo,
+    jsComponentName = ''
+  ) {
     const tag = (this.viewTag = viewTag as number);
     const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
 
-    this.propsBuilder = getPropsBuilder(reactViewName);
+    this.propsBuilder = getPropsBuilder(reactViewName, jsComponentName);
     this.cssAnimationsManager = new CSSAnimationsManager(
       wrapper,
+      tag,
       reactViewName,
-      tag
+      jsComponentName
     );
     this.cssTransitionsManager = new CSSTransitionsManager(wrapper, tag);
   }

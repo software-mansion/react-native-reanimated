@@ -25,9 +25,19 @@ const PATTERN_PROPS_BUILDERS: Array<{
   entry: PropsBuilderEntry;
 }> = [];
 
-function findEntry(componentName: string): PropsBuilderEntry | undefined {
-  // 1. Exact component name match
-  const exact = PROPS_BUILDERS.get(componentName);
+function findEntry(
+  reactViewName: string,
+  jsComponentName: string
+): PropsBuilderEntry | null {
+  const compoundComponentName = getCompoundComponentName(
+    reactViewName,
+    jsComponentName
+  );
+
+  // 1. Exact component name match (check compound first, then reactViewName)
+  const exact =
+    PROPS_BUILDERS.get(compoundComponentName) ??
+    PROPS_BUILDERS.get(reactViewName);
   if (exact) {
     return exact;
   }
@@ -36,18 +46,32 @@ function findEntry(componentName: string): PropsBuilderEntry | undefined {
   for (const { matcher, entry } of PATTERN_PROPS_BUILDERS) {
     const matches =
       matcher instanceof RegExp
-        ? matcher.test(componentName)
-        : matcher(componentName);
+        ? matcher.test(compoundComponentName) || matcher.test(reactViewName)
+        : matcher(compoundComponentName) || matcher(reactViewName);
     if (matches) {
       return entry;
     }
   }
 
-  return undefined;
+  return null;
 }
 
-export function getPropsBuilder(componentName: string): NativePropsBuilder {
-  return findEntry(componentName)?.builder ?? stylePropsBuilder;
+export function getCompoundComponentName(
+  reactViewName: string,
+  jsComponentName: string
+): string {
+  return jsComponentName
+    ? `${reactViewName}$${jsComponentName}`
+    : reactViewName;
+}
+
+export function getPropsBuilder(
+  reactViewName: string,
+  jsComponentName: string
+): NativePropsBuilder {
+  return (
+    findEntry(reactViewName, jsComponentName)?.builder ?? stylePropsBuilder
+  );
 }
 
 export function registerComponentPropsBuilder<P extends UnknownRecord>(
@@ -73,10 +97,12 @@ export function registerComponentPropsBuilder<P extends UnknownRecord>(
 }
 
 export function getSeparatelyInterpolatedNestedProperties(
-  componentName: string
+  reactViewName: string,
+  jsComponentName: string
 ): ReadonlySet<string> {
   return (
-    findEntry(componentName)?.separatelyInterpolatedNestedProperties ??
+    findEntry(reactViewName, jsComponentName)
+      ?.separatelyInterpolatedNestedProperties ??
     DEFAULT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES
   );
 }

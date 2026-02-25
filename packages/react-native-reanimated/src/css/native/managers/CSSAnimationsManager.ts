@@ -24,19 +24,22 @@ type ProcessedAnimation = {
 
 export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
-  private readonly reactViewName: string;
   private readonly viewTag: number;
+  private readonly reactViewName: string;
+  private readonly jsComponentName: string;
 
   private attachedAnimations: ProcessedAnimation[] = [];
 
   constructor(
     shadowNodeWrapper: ShadowNodeWrapper,
+    viewTag: number,
     reactViewName: string,
-    viewTag: number
+    jsComponentName: string
   ) {
     this.shadowNodeWrapper = shadowNodeWrapper;
-    this.reactViewName = reactViewName;
     this.viewTag = viewTag;
+    this.reactViewName = reactViewName;
+    this.jsComponentName = jsComponentName;
   }
 
   update(animationProperties: ExistingCSSAnimationProperties | null): void {
@@ -60,7 +63,11 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
         return;
       }
 
-      applyCSSAnimations(this.shadowNodeWrapper, animationUpdates);
+      applyCSSAnimations(
+        this.shadowNodeWrapper,
+        this.jsComponentName,
+        animationUpdates
+      );
     }
   }
 
@@ -81,7 +88,12 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
 
     // Register keyframes for all new animations
     processedAnimations.forEach(({ keyframesRule }) => {
-      cssKeyframesRegistry.add(keyframesRule, this.reactViewName, this.viewTag);
+      cssKeyframesRegistry.add(
+        keyframesRule,
+        this.viewTag,
+        this.reactViewName,
+        this.jsComponentName
+      );
       newAnimationNames.add(keyframesRule.name);
     });
 
@@ -89,7 +101,12 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     // to the view
     this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
       if (!newAnimationNames.has(name)) {
-        cssKeyframesRegistry.remove(name, this.reactViewName, this.viewTag);
+        cssKeyframesRegistry.remove(
+          name,
+          this.viewTag,
+          this.reactViewName,
+          this.jsComponentName
+        );
       }
     });
   }
@@ -98,7 +115,12 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     // Unregister keyframes usage by the view (it is necessary to clean up
     // keyframes from the CPP registry once all views that use them are unmounted)
     this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
-      cssKeyframesRegistry.remove(name, this.reactViewName, this.viewTag);
+      cssKeyframesRegistry.remove(
+        name,
+        this.viewTag,
+        this.reactViewName,
+        this.jsComponentName
+      );
     });
   }
 

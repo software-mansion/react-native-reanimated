@@ -28,29 +28,41 @@ export function unmarkNodeAsRemovable(viewTag: number) {
 export function registerCSSKeyframes(
   animationName: string,
   reactViewName: string,
+  jsComponentName: string,
   keyframesConfig: NormalizedCSSAnimationKeyframesConfig
 ) {
   ReanimatedModule.registerCSSKeyframes(
     animationName,
     reactViewName,
+    jsComponentName,
     keyframesConfig
   );
 }
 
 export function unregisterCSSKeyframes(
   animationName: string,
-  reactViewName: string
+  reactViewName: string,
+  jsComponentName: string
 ) {
-  ReanimatedModule.unregisterCSSKeyframes(animationName, reactViewName);
+  ReanimatedModule.unregisterCSSKeyframes(
+    animationName,
+    reactViewName,
+    jsComponentName
+  );
 }
 
 // View animations
 
 export function applyCSSAnimations(
   shadowNodeWrapper: ShadowNodeWrapper,
+  jsComponentName: string,
   animationUpdates: CSSAnimationUpdates
 ) {
-  ReanimatedModule.applyCSSAnimations(shadowNodeWrapper, animationUpdates);
+  ReanimatedModule.applyCSSAnimations(
+    shadowNodeWrapper,
+    jsComponentName,
+    animationUpdates
+  );
 }
 
 export function unregisterCSSAnimations(viewTag: number) {
