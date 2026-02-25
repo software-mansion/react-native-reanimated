@@ -77,6 +77,7 @@ import OlympicAnimation from './LayoutAnimations/OlympicAnimation';
 import ReactionsCounterExample from './LayoutAnimations/ReactionsCounterExample';
 import ReducedMotionLayoutExample from './LayoutAnimations/ReducedMotionLayoutExample';
 import ReparentingExample from './LayoutAnimations/ReparentingExample';
+import SharedValueFunctions from './SharedValueFunctions';
 import SpringLayoutAnimation from './LayoutAnimations/SpringLayoutAnimation';
 import SwipeableList from './LayoutAnimations/SwipeableList';
 import SyncBackToReactExample from './SyncBackToReactExample';
@@ -706,6 +707,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🌑',
     title: 'Shadow Nodes Cloning',
     screen: ShadowNodesCloningExample,
+  },
+  SharedValueFunctions: {
+    icon: '🧑‍🔬',
+    title: 'Shared Value Functions',
+    screen: SharedValueFunctions,
   },
 
   // Old examples
