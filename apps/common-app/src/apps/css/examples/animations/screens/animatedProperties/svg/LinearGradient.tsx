@@ -52,8 +52,8 @@ export default function LinearGradientExample() {
                   keyframes: {
                     from: {
                       gradient: [
-                        { color: '#ff00cc', offset: '0%', opacity: 1 },
-                        { color: '#3333ff', offset: '100%', opacity: 1 },
+                        { color: '#ff00cc', offset: '0%' },
+                        { color: '#3333ff', offset: '100%' },
                       ],
                       x1: '0%',
                       x2: '100%',
@@ -62,8 +62,8 @@ export default function LinearGradientExample() {
                     },
                     to: {
                       gradient: [
-                        { color: '#ff00cc', offset: '0%', opacity: 1 },
-                        { color: '#3333ff', offset: '100%', opacity: 1 },
+                        { color: '#ff00cc', offset: '0%' },
+                        { color: '#3333ff', offset: '100%' },
                       ],
                       x1: '100%',
                       x2: '0%',
@@ -79,16 +79,16 @@ export default function LinearGradientExample() {
                   keyframes: {
                     from: {
                       gradient: [
-                        { color: '#e40c54', offset: '0%', opacity: 1 },
-                        { color: '#3333ff', offset: '50%', opacity: 1 },
-                        { color: '#14c926', offset: '100%', opacity: 1 },
+                        { color: '#e40c54', offset: '0%' },
+                        { color: '#3333ff', offset: '50%' },
+                        { color: '#14c926', offset: '100%' },
                       ],
                     },
                     to: {
                       gradient: [
-                        { color: '#13c8d8', offset: '0%', opacity: 1 },
-                        { color: '#aad315', offset: '50%', opacity: 1 },
-                        { color: '#d1089f', offset: '100%', opacity: 1 },
+                        { color: '#13c8d8', offset: '0%' },
+                        { color: '#aad315', offset: '50%' },
+                        { color: '#d1089f', offset: '100%' },
                       ],
                       x1: '50%',
                       x2: '0%',
@@ -104,9 +104,9 @@ export default function LinearGradientExample() {
                   keyframes: {
                     from: {
                       gradient: [
-                        { color: '#333', offset: '0%', opacity: 1 },
-                        { color: '#fff', offset: '50%', opacity: 1 },
-                        { color: '#333', offset: '100%', opacity: 1 },
+                        { color: '#333', offset: '0%' },
+                        { color: '#fff', offset: '50%' },
+                        { color: '#333', offset: '100%' },
                       ],
                       x1: '-50%',
                       x2: '0%',
@@ -115,9 +115,9 @@ export default function LinearGradientExample() {
                     },
                     to: {
                       gradient: [
-                        { color: '#333', offset: '0%', opacity: 1 },
-                        { color: '#fff', offset: '50%', opacity: 1 },
-                        { color: '#333', offset: '100%', opacity: 1 },
+                        { color: '#333', offset: '0%' },
+                        { color: '#fff', offset: '50%' },
+                        { color: '#333', offset: '100%' },
                       ],
                       x1: '100%',
                       x2: '150%',
@@ -133,10 +133,10 @@ export default function LinearGradientExample() {
                   keyframes: {
                     from: {
                       gradient: [
-                        { color: '#12568d', offset: '0%', opacity: 1 },
-                        { color: '#2196f3', offset: '10%', opacity: 1 },
-                        { color: '#e0e0e0', offset: '10%', opacity: 1 },
-                        { color: '#e0e0e0', offset: '100%', opacity: 1 },
+                        { color: '#12568d', offset: '0%' },
+                        { color: '#2196f3', offset: '10%' },
+                        { color: '#e0e0e0', offset: '10%' },
+                        { color: '#e0e0e0', offset: '100%' },
                       ],
                       x2: '0%',
                       y1: '100%',
@@ -144,10 +144,10 @@ export default function LinearGradientExample() {
                     },
                     to: {
                       gradient: [
-                        { color: '#12568d', offset: '0%', opacity: 1 },
-                        { color: '#2196f3', offset: '70%', opacity: 1 },
-                        { color: '#e0e0e0', offset: '70%', opacity: 1 },
-                        { color: '#e0e0e0', offset: '100%', opacity: 1 },
+                        { color: '#12568d', offset: '0%' },
+                        { color: '#2196f3', offset: '70%' },
+                        { color: '#e0e0e0', offset: '70%' },
+                        { color: '#e0e0e0', offset: '100%' },
                       ],
                       x2: '0%',
                       y1: '100%',
@@ -167,16 +167,16 @@ export default function LinearGradientExample() {
                   keyframes: {
                     from: {
                       gradient: [
-                        { color: '#f00', offset: '0%', opacity: 1 },
-                        { color: '#00f', offset: '100%', opacity: 1 },
+                        { color: '#f00', offset: '0%' },
+                        { color: '#00f', offset: '100%' },
                       ],
                     },
                     to: {
                       gradient: [
-                        { color: '#f00', offset: '0%', opacity: 1 },
-                        { color: '#0f0', offset: '33%', opacity: 1 },
-                        { color: '#ff0', offset: '66%', opacity: 1 },
-                        { color: '#00f', offset: '100%', opacity: 1 },
+                        { color: '#f00', offset: '0%' },
+                        { color: '#0f0', offset: '33%' },
+                        { color: '#ff0', offset: '66%' },
+                        { color: '#00f', offset: '100%' },
                       ],
                     },
                   },
@@ -188,18 +188,18 @@ export default function LinearGradientExample() {
                   keyframes: {
                     from: {
                       gradient: [
-                        { color: '#f00', offset: '0%', opacity: 1 },
-                        { color: '#f00', offset: '33%', opacity: 1 },
-                        { color: '#00f', offset: '66%', opacity: 1 },
-                        { color: '#00f', offset: '100%', opacity: 1 },
+                        { color: '#f00', offset: '0%' },
+                        { color: '#f00', offset: '33%' },
+                        { color: '#00f', offset: '66%' },
+                        { color: '#00f', offset: '100%' },
                       ],
                     },
                     to: {
                       gradient: [
-                        { color: '#f00', offset: '0%', opacity: 1 },
-                        { color: '#0f0', offset: '33%', opacity: 1 },
-                        { color: '#ff0', offset: '66%', opacity: 1 },
-                        { color: '#00f', offset: '100%', opacity: 1 },
+                        { color: '#f00', offset: '0%' },
+                        { color: '#0f0', offset: '33%' },
+                        { color: '#ff0', offset: '66%' },
+                        { color: '#00f', offset: '100%' },
                       ],
                     },
                   },
@@ -211,10 +211,10 @@ export default function LinearGradientExample() {
                   keyframes: {
                     from: {
                       gradient: [
-                        { color: '#ff5f6d', offset: '20%', opacity: 1 },
-                        { color: '#ffc371', offset: '40%', opacity: 1 },
-                        { color: '#1739bd', offset: '70%', opacity: 1 },
-                        { color: '#000000', offset: '100%', opacity: 1 },
+                        { color: '#ff5f6d', offset: '20%' },
+                        { color: '#ffc371', offset: '40%' },
+                        { color: '#1739bd', offset: '70%' },
+                        { color: '#000000', offset: '100%' },
                       ],
                       x2: '0%',
                       y1: '0%',
@@ -222,8 +222,8 @@ export default function LinearGradientExample() {
                     },
                     to: {
                       gradient: [
-                        { color: '#221a72', offset: '0%', opacity: 1 },
-                        { color: '#000000', offset: '100%', opacity: 1 },
+                        { color: '#221a72', offset: '0%' },
+                        { color: '#000000', offset: '100%' },
                       ],
                       x2: '0%',
                       y1: '0%',
@@ -243,16 +243,16 @@ export default function LinearGradientExample() {
                   keyframes: {
                     from: {
                       gradient: [
-                        { color: '#f00', offset: '0%', opacity: 1 },
-                        { color: '#00f', offset: '50%', opacity: 1 },
-                        { color: '#0f0', offset: '100%', opacity: 1 },
+                        { color: '#f00', offset: '0%' },
+                        { color: '#00f', offset: '50%' },
+                        { color: '#0f0', offset: '100%' },
                       ],
                     },
                     to: {
                       gradient: [
-                        { color: '#f00', offset: '0%', opacity: 1 },
+                        { color: '#f00', offset: '0%' },
                         { color: '#00f', offset: '50%', opacity: 0 },
-                        { color: '#0f0', offset: '100%', opacity: 1 },
+                        { color: '#0f0', offset: '100%' },
                       ],
                     },
                   },
@@ -264,16 +264,16 @@ export default function LinearGradientExample() {
                   keyframes: {
                     from: {
                       gradient: [
-                        { color: '#f00', offset: '0%', opacity: 1 },
-                        { color: '#00f', offset: '50%', opacity: 1 },
-                        { color: '#0f0', offset: '100%', opacity: 1 },
+                        { color: '#f00', offset: '0%' },
+                        { color: '#00f', offset: '50%' },
+                        { color: '#0f0', offset: '100%' },
                       ],
                     },
                     to: {
                       gradient: [
-                        { color: '#f00', offset: '0%', opacity: 1 },
-                        { color: '#00f0', offset: '50%', opacity: 1 },
-                        { color: '#0f0', offset: '100%', opacity: 1 },
+                        { color: '#f00', offset: '0%' },
+                        { color: '#00f0', offset: '50%' },
+                        { color: '#0f0', offset: '100%' },
                       ],
                     },
                   },
@@ -295,9 +295,9 @@ export default function LinearGradientExample() {
                   keyframes: {
                     from: {
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                       x1: 0.5,
                       x2: 1,
@@ -306,9 +306,9 @@ export default function LinearGradientExample() {
                     },
                     to: {
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                       x1: 0,
                       x2: 1,
@@ -324,9 +324,9 @@ export default function LinearGradientExample() {
                   keyframes: {
                     from: {
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                       x1: '50%',
                       x2: '100%',
@@ -335,9 +335,9 @@ export default function LinearGradientExample() {
                     },
                     to: {
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                       x1: '0%',
                       x2: '100%',
@@ -346,6 +346,35 @@ export default function LinearGradientExample() {
                     },
                   },
                   title: 'Start pos - percentage',
+                },
+                {
+                  description:
+                    'Mixing decimal fractions and percentages across start/end points.',
+                  keyframes: {
+                    from: {
+                      gradient: [
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
+                      ],
+                      x1: 0.5,
+                      x2: '100%',
+                      y1: '0%',
+                      y2: 1,
+                    },
+                    to: {
+                      gradient: [
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
+                      ],
+                      x1: '0%',
+                      x2: 0.5,
+                      y1: 0.5,
+                      y2: '50%',
+                    },
+                  },
+                  title: 'Mixed units',
                 },
               ],
               title: 'Start Point (x1, y1)',
@@ -358,9 +387,9 @@ export default function LinearGradientExample() {
                   keyframes: {
                     from: {
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                       x1: '0%',
                       x2: '100%',
@@ -369,9 +398,9 @@ export default function LinearGradientExample() {
                     },
                     to: {
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                       x1: '0%',
                       x2: '50%',
@@ -392,9 +421,9 @@ export default function LinearGradientExample() {
                   keyframes: {
                     from: {
                       gradient: [
-                        { color: 'black', offset: '0%', opacity: 1 },
-                        { color: 'white', offset: '50%', opacity: 1 },
-                        { color: 'black', offset: '100%', opacity: 1 },
+                        { color: 'black', offset: '0%' },
+                        { color: 'white', offset: '50%' },
+                        { color: 'black', offset: '100%' },
                       ],
                       x1: '0%',
                       x2: '20%',
@@ -403,9 +432,9 @@ export default function LinearGradientExample() {
                     },
                     to: {
                       gradient: [
-                        { color: 'black', offset: '0%', opacity: 1 },
-                        { color: 'white', offset: '50%', opacity: 1 },
-                        { color: 'black', offset: '100%', opacity: 1 },
+                        { color: 'black', offset: '0%' },
+                        { color: 'white', offset: '50%' },
+                        { color: 'black', offset: '100%' },
                       ],
                       x1: '80%',
                       x2: '100%',
@@ -431,7 +460,7 @@ export default function LinearGradientExample() {
                   keyframes: {
                     from: {
                       gradient: [
-                        { color: '#0000ff', offset: '0%', opacity: 1 },
+                        { color: '#0000ff', offset: '0%' },
                         {
                           color: '#ff0000',
                           offset: '100%',
@@ -446,7 +475,7 @@ export default function LinearGradientExample() {
                     },
                     to: {
                       gradient: [
-                        { color: '#0000ff', offset: '0%', opacity: 1 },
+                        { color: '#0000ff', offset: '0%' },
                         {
                           color: '#ff0000',
                           offset: '100%',
@@ -468,8 +497,8 @@ export default function LinearGradientExample() {
                   keyframes: {
                     from: {
                       gradient: [
-                        { color: 'yellow', offset: '0%', opacity: 1 },
-                        { color: 'red', offset: '100%', opacity: 1 },
+                        { color: 'yellow', offset: '0%' },
+                        { color: 'red', offset: '100%' },
                       ],
                       gradientUnits: 'objectBoundingBox',
                       x1: 0,
@@ -479,8 +508,8 @@ export default function LinearGradientExample() {
                     },
                     to: {
                       gradient: [
-                        { color: 'yellow', offset: '0%', opacity: 1 },
-                        { color: 'red', offset: '100%', opacity: 1 },
+                        { color: 'yellow', offset: '0%' },
+                        { color: 'red', offset: '100%' },
                       ],
                       gradientUnits: 'userSpaceOnUse',
                       x1: 0,
@@ -548,7 +577,7 @@ export default function LinearGradientExample() {
                     },
                     to: {
                       gradient: [
-                        { color: '#00ffff', offset: '0%', opacity: 1 },
+                        { color: '#00ffff', offset: '0%' },
                         { color: '#0000ff', offset: '100%', opacity: 0.8 },
                       ],
                     },
@@ -560,7 +589,7 @@ export default function LinearGradientExample() {
                   keyframes: {
                     to: {
                       gradient: [
-                        { color: '#00ffff', offset: '0%', opacity: 1 },
+                        { color: '#00ffff', offset: '0%' },
                         { color: '#0000ff', offset: '100%', opacity: 0.8 },
                       ],
                     },

@@ -60,7 +60,7 @@ export default function RadialGradientExample() {
                       fx: '30%',
                       fy: '30%',
                       gradient: [
-                        { color: '#ff0080', offset: '0%', opacity: 1 },
+                        { color: '#ff0080', offset: '0%' },
                         { color: '#4b0082', offset: '100%', opacity: 0.2 },
                       ],
                       r: '30%',
@@ -71,7 +71,7 @@ export default function RadialGradientExample() {
                       fx: '30%',
                       fy: '30%',
                       gradient: [
-                        { color: '#00ffff', offset: '0%', opacity: 1 },
+                        { color: '#00ffff', offset: '0%' },
                         { color: '#0000ff', offset: '100%', opacity: 0.8 },
                       ],
                       r: '60%',
@@ -85,14 +85,14 @@ export default function RadialGradientExample() {
                   keyframes: {
                     from: {
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'blue', offset: '90%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'blue', offset: '90%' },
                       ],
                     },
                     to: {
                       gradient: [
-                        { color: 'blue', offset: '10%', opacity: 1 },
-                        { color: 'red', offset: '100%', opacity: 1 },
+                        { color: 'blue', offset: '10%' },
+                        { color: 'red', offset: '100%' },
                       ],
                     },
                   },
@@ -111,18 +111,18 @@ export default function RadialGradientExample() {
                       cx: '25%',
                       cy: '25%',
                       gradient: [
-                        { color: '#fdbb2d', offset: '0%', opacity: 1 },
-                        { color: '#22c1c3', offset: '100%', opacity: 1 },
+                        { color: '#fdbb2d', offset: '0%' },
+                        { color: '#22c1c3', offset: '100%' },
                       ],
                     },
                     to: {
                       cx: '25%',
                       cy: '25%',
                       gradient: [
-                        { color: '#fdbb2d', offset: '0%', opacity: 1 },
-                        { color: '#b21f1f', offset: '30%', opacity: 1 },
-                        { color: '#1a2a6c', offset: '60%', opacity: 1 },
-                        { color: '#000000', offset: '100%', opacity: 1 },
+                        { color: '#fdbb2d', offset: '0%' },
+                        { color: '#b21f1f', offset: '30%' },
+                        { color: '#1a2a6c', offset: '60%' },
+                        { color: '#000000', offset: '100%' },
                       ],
                     },
                   },
@@ -138,14 +138,14 @@ export default function RadialGradientExample() {
                   keyframes: {
                     from: {
                       gradient: [
-                        { color: '#9b0808', offset: '0%', opacity: 1 },
-                        { color: '#35e20a', offset: '100%', opacity: 1 },
+                        { color: '#9b0808', offset: '0%' },
+                        { color: '#35e20a', offset: '100%' },
                       ],
                     },
                     to: {
                       gradient: [
                         { color: '#9b0808', offset: '0%', opacity: 0 },
-                        { color: '#35e20a', offset: '100%', opacity: 1 },
+                        { color: '#35e20a', offset: '100%' },
                       ],
                     },
                   },
@@ -158,14 +158,14 @@ export default function RadialGradientExample() {
                   keyframes: {
                     from: {
                       gradient: [
-                        { color: '#9b0808', offset: '0%', opacity: 1 },
-                        { color: '#35e20a', offset: '100%', opacity: 1 },
+                        { color: '#9b0808', offset: '0%' },
+                        { color: '#35e20a', offset: '100%' },
                       ],
                     },
                     to: {
                       gradient: [
-                        { color: '#9b080800', offset: '0%', opacity: 1 },
-                        { color: '#35e20a', offset: '100%', opacity: 1 },
+                        { color: '#9b080800', offset: '0%' },
+                        { color: '#35e20a', offset: '100%' },
                       ],
                     },
                   },
@@ -189,8 +189,8 @@ export default function RadialGradientExample() {
                       cx: '50%',
                       cy: '50%',
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                       r: '20%',
                     },
@@ -200,8 +200,8 @@ export default function RadialGradientExample() {
                       fx: '50%',
                       fy: '50%',
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                       r: '20%',
                     },
@@ -215,18 +215,18 @@ export default function RadialGradientExample() {
                       fx: 0.5,
                       fy: 0.5,
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                     },
                     to: {
                       fx: 0.3,
                       fy: 0.3,
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                     },
                   },
@@ -239,18 +239,18 @@ export default function RadialGradientExample() {
                       fx: '50%',
                       fy: '50%',
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                     },
                     to: {
                       fx: '30%',
                       fy: '30%',
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                     },
                   },
@@ -263,18 +263,18 @@ export default function RadialGradientExample() {
                       fx: '50%',
                       fy: '50%',
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                     },
                     to: {
                       fx: 0.3,
                       fy: 0.3,
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                     },
                   },
@@ -293,18 +293,18 @@ export default function RadialGradientExample() {
                       cx: 0.5,
                       cy: 0.5,
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                     },
                     to: {
                       cx: 0.3,
                       cy: 0.3,
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                     },
                   },
@@ -317,18 +317,18 @@ export default function RadialGradientExample() {
                       cx: '50%',
                       cy: '50%',
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                     },
                     to: {
                       cx: '30%',
                       cy: '30%',
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                     },
                   },
@@ -342,18 +342,18 @@ export default function RadialGradientExample() {
                       cx: '50%',
                       cy: '50%',
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                     },
                     to: {
                       cx: 0.3,
                       cy: 0.3,
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                     },
                   },
@@ -371,9 +371,9 @@ export default function RadialGradientExample() {
                       cx: '50%',
                       cy: '50%',
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                     },
                     to: {
@@ -382,13 +382,43 @@ export default function RadialGradientExample() {
                       fx: '45%',
                       fy: '45%',
                       gradient: [
-                        { color: 'red', offset: '0%', opacity: 1 },
-                        { color: 'green', offset: '50%', opacity: 1 },
-                        { color: 'blue', offset: '100%', opacity: 1 },
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
                       ],
                     },
                   },
                   title: 'Movement combination',
+                },
+                {
+                  description: `Mixing decimal fractions and percentages across different gradient properties.\n\n${FOCAL_POINT_DISCLAIMER}`,
+                  keyframes: {
+                    from: {
+                      cx: 0.5,
+                      cy: '50%',
+                      fx: '40%',
+                      fy: 0.4,
+                      gradient: [
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
+                      ],
+                      r: '40%',
+                    },
+                    to: {
+                      cx: '30%',
+                      cy: 0.3,
+                      fx: 0.3,
+                      fy: '30%',
+                      gradient: [
+                        { color: 'red', offset: '0%' },
+                        { color: 'green', offset: '50%' },
+                        { color: 'blue', offset: '100%' },
+                      ],
+                      r: 0.2,
+                    },
+                  },
+                  title: 'Mixed units',
                 },
               ],
               title: 'Gradient and focal point position',
@@ -408,7 +438,7 @@ export default function RadialGradientExample() {
                       cx: 150,
                       cy: 150,
                       gradient: [
-                        { color: '#ff0080', offset: '0%', opacity: 1 },
+                        { color: '#ff0080', offset: '0%' },
                         {
                           color: '#4b0082',
                           offset: '100%',
@@ -422,8 +452,8 @@ export default function RadialGradientExample() {
                       cx: 150,
                       cy: 150,
                       gradient: [
-                        { color: '#00ffff', offset: '0%', opacity: 1 },
-                        { color: '#0000ff', offset: '100%', opacity: 1 },
+                        { color: '#00ffff', offset: '0%' },
+                        { color: '#0000ff', offset: '100%' },
                       ],
                       gradientUnits: 'userSpaceOnUse',
                       r: 40,
@@ -439,8 +469,8 @@ export default function RadialGradientExample() {
                       cx: 0.5,
                       cy: 0.5,
                       gradient: [
-                        { color: 'yellow', offset: '0%', opacity: 1 },
-                        { color: 'red', offset: '100%', opacity: 1 },
+                        { color: 'yellow', offset: '0%' },
+                        { color: 'red', offset: '100%' },
                       ],
                       gradientUnits: 'objectBoundingBox',
                       r: 0.5,
@@ -449,8 +479,8 @@ export default function RadialGradientExample() {
                       cx: 150,
                       cy: 150,
                       gradient: [
-                        { color: 'yellow', offset: '0%', opacity: 1 },
-                        { color: 'red', offset: '100%', opacity: 1 },
+                        { color: 'yellow', offset: '0%' },
+                        { color: 'red', offset: '100%' },
                       ],
                       gradientUnits: 'userSpaceOnUse',
                       r: 50,
@@ -517,7 +547,7 @@ export default function RadialGradientExample() {
                     },
                     to: {
                       gradient: [
-                        { color: '#00ffff', offset: '0%', opacity: 1 },
+                        { color: '#00ffff', offset: '0%' },
                         { color: '#0000ff', offset: '100%', opacity: 0.8 },
                       ],
                     },
@@ -529,7 +559,7 @@ export default function RadialGradientExample() {
                   keyframes: {
                     to: {
                       gradient: [
-                        { color: '#00ffff', offset: '0%', opacity: 1 },
+                        { color: '#00ffff', offset: '0%' },
                         { color: '#0000ff', offset: '100%', opacity: 0.8 },
                       ],
                     },

@@ -321,19 +321,6 @@ const InterpolatorFactoriesRecord SVG_LINE_INTERPOLATORS = mergeInterpolators(
          {"y2", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
      }});
 
-const InterpolatorFactoriesRecord SVG_LINEAR_GRADIENT_INTERPOLATORS = mergeInterpolators(
-    {SVG_COMMON_INTERPOLATORS,
-     InterpolatorFactoriesRecord{
-         {"x1", value<CSSLength, CSSKeyword>("0%", {RelativeTo::Self, "width"})},
-         {"x2", value<CSSLength, CSSKeyword>("100%", {RelativeTo::Self, "width"})},
-         {"y1", value<CSSLength, CSSKeyword>("0%", {RelativeTo::Self, "height"})},
-         {"y2", value<CSSLength, CSSKeyword>("0%", {RelativeTo::Self, "height"})},
-         {"gradient", value<SVGStops>(SVGStops())},
-         {"gradientUnits", value<CSSIndex>(0)},
-         // TODO: Implement 'gradientTransform'
-         // {"gradientTransform", value<CSSKeyword>("")},
-     }});
-
 const InterpolatorFactoriesRecord SVG_RECT_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
@@ -351,16 +338,29 @@ const InterpolatorFactoriesRecord SVG_PATH_INTERPOLATORS = mergeInterpolators(
          {"d", value<SVGPath>("")},
      }});
 
+const InterpolatorFactoriesRecord SVG_LINEAR_GRADIENT_INTERPOLATORS = mergeInterpolators(
+    {SVG_COMMON_INTERPOLATORS,
+     InterpolatorFactoriesRecord{
+         {"x1", value<CSSDouble>(0)},
+         {"x2", value<CSSDouble>(1)},
+         {"y1", value<CSSDouble>(0)},
+         {"y2", value<CSSDouble>(0)},
+         {"gradient", value<SVGStops>(SVGStops())},
+         {"gradientUnits", value<CSSIndex>(0)},
+         // TODO: Implement 'gradientTransform'
+         // {"gradientTransform", value<CSSKeyword>("")},
+     }});
+
 const InterpolatorFactoriesRecord SVG_RADIAL_GRADIENT_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"r", value<CSSLength, CSSKeyword>("50%", {RelativeTo::Self, "width"})},
-         {"fx", value<CSSLength, CSSKeyword>("50%", {RelativeTo::Self, "width"})},
-         {"fy", value<CSSLength, CSSKeyword>("50%", {RelativeTo::Self, "height"})},
-         {"rx", value<CSSLength, CSSKeyword>("50%", {RelativeTo::Self, "width"})},
-         {"ry", value<CSSLength, CSSKeyword>("50%", {RelativeTo::Self, "height"})},
-         {"cx", value<CSSLength, CSSKeyword>("50%", {RelativeTo::Self, "width"})},
-         {"cy", value<CSSLength, CSSKeyword>("50%", {RelativeTo::Self, "height"})},
+         {"r", value<CSSDouble>(0.5)},
+         {"fx", value<CSSDouble>(0.5)},
+         {"fy", value<CSSDouble>(0.5)},
+         {"rx", value<CSSDouble>(0.5)},
+         {"ry", value<CSSDouble>(0.5)},
+         {"cx", value<CSSDouble>(0.5)},
+         {"cy", value<CSSDouble>(0.5)},
          {"gradient", value<SVGStops>(SVGStops())},
          {"gradientUnits", value<CSSIndex>(0)},
          // TODO: Implement 'gradientTransform'
