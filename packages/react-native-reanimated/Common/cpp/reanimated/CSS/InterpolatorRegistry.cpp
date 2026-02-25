@@ -251,10 +251,10 @@ const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS = {
 
     // Stroke
     {"stroke", value<SVGBrush>(BLACK)},
-    {"strokeWidth", value<CSSLength>(1, {RelativeTo::Self, "width"})},
+    {"strokeWidth", value<CSSLength>(1, {RelativeTo::Parent, "width"})},
     {"strokeOpacity", value<CSSDouble>(1)},
-    {"strokeDasharray", value<SVGStrokeDashArray, CSSKeyword>(SVGStrokeDashArray(), {RelativeTo::Self, "width"})},
-    {"strokeDashoffset", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+    {"strokeDasharray", value<SVGStrokeDashArray, CSSKeyword>(SVGStrokeDashArray(), {RelativeTo::Parent, "width"})},
+    {"strokeDashoffset", value<CSSLength>(0, {RelativeTo::Parent, "width"})},
     {"strokeLinecap", value<CSSIndex>(0)},
     {"strokeLinejoin", value<CSSIndex>(0)},
     {"strokeMiterlimit", value<CSSDouble>(4)},
@@ -286,27 +286,27 @@ const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS = {
 const InterpolatorFactoriesRecord SVG_CIRCLE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"cx", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "width"})},
-         {"cy", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "height"})},
-         {"r", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "width"})},
+         {"cx", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"cy", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
+         {"r", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
      }});
 
 const InterpolatorFactoriesRecord SVG_ELLIPSE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"cx", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "width"})},
-         {"cy", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "height"})},
-         {"rx", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "width"})},
-         {"ry", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "height"})},
+         {"cx", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"cy", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
+         {"rx", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"ry", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
      }});
 
 const InterpolatorFactoriesRecord SVG_IMAGE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"x", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "width"})},
-         {"y", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "height"})},
-         {"width", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "width"})},
-         {"height", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "height"})},
+         {"x", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"y", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
+         {"width", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"height", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
          // TODO: Check why this is not supported in RN-SVG and add support
          // {"align", value<CSSKeyword>("xMidYMid")},
          // {"meetOrSlice", value<CSSIndex>(0)},
@@ -315,10 +315,10 @@ const InterpolatorFactoriesRecord SVG_IMAGE_INTERPOLATORS = mergeInterpolators(
 const InterpolatorFactoriesRecord SVG_LINE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"x1", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "width"})},
-         {"y1", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "height"})},
-         {"x2", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "width"})},
-         {"y2", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "height"})},
+         {"x1", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"y1", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
+         {"x2", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"y2", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
      }});
 
 const InterpolatorFactoriesRecord SVG_LINEAR_GRADIENT_INTERPOLATORS = mergeInterpolators(
@@ -337,10 +337,10 @@ const InterpolatorFactoriesRecord SVG_LINEAR_GRADIENT_INTERPOLATORS = mergeInter
 const InterpolatorFactoriesRecord SVG_RECT_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"x", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "width"})},
-         {"y", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "height"})},
-         {"width", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "width"})},
-         {"height", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "height"})},
+         {"x", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"y", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
+         {"width", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"height", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
          {"rx", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "width"})},
          {"ry", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "height"})},
      }});

@@ -191,7 +191,7 @@ export default function StrokeExample() {
                   strokeDasharray: [8, '15%'],
                 },
                 to: {
-                  strokeDasharray: [25, '5%'],
+                  strokeDasharray: ['5%', 5],
                 },
               },
               props: {
