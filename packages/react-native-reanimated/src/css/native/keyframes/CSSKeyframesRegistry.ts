@@ -91,15 +91,15 @@ class CSSKeyframesRegistry {
       return;
     }
 
-    const compoundComponentKey = getCompoundComponentName(
+    const compoundComponentName = getCompoundComponentName(
       reactViewName,
       jsComponentName
     );
-    const componentEntry = keyframesEntry.usedBy[compoundComponentKey];
+    const componentEntry = keyframesEntry.usedBy[compoundComponentName];
     componentEntry.delete(viewTag);
 
     if (componentEntry.size === 0) {
-      delete keyframesEntry.usedBy[compoundComponentKey];
+      delete keyframesEntry.usedBy[compoundComponentName];
       unregisterCSSKeyframes(animationName, reactViewName, jsComponentName);
     }
 

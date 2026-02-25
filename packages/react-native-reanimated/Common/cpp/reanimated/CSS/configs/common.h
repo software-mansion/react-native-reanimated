@@ -13,8 +13,9 @@ EasingFunction getTimingFunction(jsi::Runtime &rt, const jsi::Object &config);
 
 double getDelay(jsi::Runtime &rt, const jsi::Object &config);
 
-std::string makeCSSComponentKey(jsi::Runtime &rt, const jsi::Value &reactViewName, const jsi::Value &jsComponentName);
 std::string
-makeCSSComponentKey(jsi::Runtime &rt, const std::string &nativeComponentName, const jsi::Value &jsComponentName);
+getCompoundComponentName(jsi::Runtime &rt, const jsi::Value &reactViewName, const jsi::Value &jsComponentName);
+std::string
+getCompoundComponentName(jsi::Runtime &rt, const std::string &nativeComponentName, const jsi::Value &jsComponentName);
 
 } // namespace reanimated::css

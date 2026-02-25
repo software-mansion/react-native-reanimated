@@ -368,7 +368,7 @@ void ReanimatedModuleProxy::registerCSSKeyframes(
   const auto nativeComponentName = componentNameByReactViewName(reactViewName.asString(rt).utf8(rt));
   cssAnimationKeyframesRegistry_->set(
       animationName.asString(rt).utf8(rt),
-      makeCSSComponentKey(rt, reactViewName, jsComponentName),
+      getCompoundComponentName(rt, reactViewName, jsComponentName),
       parseCSSAnimationKeyframesConfig(rt, keyframesConfig, nativeComponentName, viewStylesRepository_));
 }
 
@@ -378,7 +378,7 @@ void ReanimatedModuleProxy::unregisterCSSKeyframes(
     const jsi::Value &reactViewName,
     const jsi::Value &jsComponentName) {
   cssAnimationKeyframesRegistry_->remove(
-      animationName.asString(rt).utf8(rt), makeCSSComponentKey(rt, reactViewName, jsComponentName));
+      animationName.asString(rt).utf8(rt), getCompoundComponentName(rt, reactViewName, jsComponentName));
 }
 
 void ReanimatedModuleProxy::applyCSSAnimations(
@@ -405,7 +405,7 @@ void ReanimatedModuleProxy::applyCSSAnimations(
       const auto &animationName = animationNames[index];
       const std::string nativeComponentName = shadowNode->getComponentName();
       const auto keyframesConfigOpt = cssAnimationKeyframesRegistry_->get(
-          animationName, makeCSSComponentKey(rt, nativeComponentName, jsComponentName));
+          animationName, getCompoundComponentName(rt, nativeComponentName, jsComponentName));
 
       if (!keyframesConfigOpt) {
         const auto jsComponentNameStr = jsComponentName.asString(rt).utf8(rt);

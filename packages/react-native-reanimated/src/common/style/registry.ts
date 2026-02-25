@@ -60,9 +60,7 @@ export function getCompoundComponentName(
   reactViewName: string,
   jsComponentName: string
 ): string {
-  return jsComponentName
-    ? `${reactViewName}$${jsComponentName}`
-    : reactViewName;
+  return `${reactViewName}$${jsComponentName}`;
 }
 
 export function getPropsBuilder(
