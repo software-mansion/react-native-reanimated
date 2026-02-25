@@ -253,7 +253,7 @@ const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS = {
     {"stroke", value<SVGBrush>(BLACK)},
     {"strokeWidth", value<CSSLength>(1, {RelativeTo::Self, "width"})},
     {"strokeOpacity", value<CSSDouble>(1)},
-    {"strokeDasharray", value<SVGStrokeDashArray, CSSKeyword>(SVGStrokeDashArray())},
+    {"strokeDasharray", value<SVGStrokeDashArray, CSSKeyword>(SVGStrokeDashArray(), {RelativeTo::Self, "width"})},
     {"strokeDashoffset", value<CSSLength>(0, {RelativeTo::Self, "width"})},
     {"strokeLinecap", value<CSSIndex>(0)},
     {"strokeLinejoin", value<CSSIndex>(0)},
