@@ -1265,6 +1265,7 @@ var require_autoworkletization = __commonJS({
       "runOnUISync",
       "runOnUIAsync",
       "runOnRuntime",
+      "runOnRuntimeSync",
       "runOnRuntimeAsync",
       "scheduleOnRuntime"
     ]);
@@ -1286,6 +1287,7 @@ var require_autoworkletization = __commonJS({
       ["runOnUISync", [0]],
       ["runOnUIAsync", [0]],
       ["runOnRuntime", [1]],
+      ["runOnRuntimeSync", [1]],
       ["runOnRuntimeAsync", [1]],
       ["scheduleOnRuntime", [1]],
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerObjectHooks).map((name) => [name, [0]]),

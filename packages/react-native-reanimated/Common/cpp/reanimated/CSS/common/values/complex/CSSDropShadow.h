@@ -26,10 +26,10 @@ struct CSSDropShadow : public CSSSimpleValue<CSSDropShadow> {
   static bool canConstruct(const folly::dynamic &value);
   static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
 
-  folly::dynamic toDynamic() const;
-  std::string toString() const;
+  folly::dynamic toDynamic() const override;
+  std::string toString() const override;
 
-  CSSDropShadow interpolate(double progress, const CSSDropShadow &to) const;
+  CSSDropShadow interpolate(double progress, const CSSDropShadow &to) const override;
 
   bool operator==(const CSSDropShadow &other) const;
 

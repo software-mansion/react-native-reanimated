@@ -24,22 +24,19 @@ type ProcessedAnimation = {
 
 export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
-  private readonly viewName: string;
+  private readonly reactViewName: string;
   private readonly viewTag: number;
-  private readonly componentNameJS?: string;
 
   private attachedAnimations: ProcessedAnimation[] = [];
 
   constructor(
     shadowNodeWrapper: ShadowNodeWrapper,
-    viewName: string,
-    viewTag: number,
-    componentNameJS?: string
+    reactViewName: string,
+    viewTag: number
   ) {
     this.shadowNodeWrapper = shadowNodeWrapper;
-    this.viewName = viewName;
+    this.reactViewName = reactViewName;
     this.viewTag = viewTag;
-    this.componentNameJS = componentNameJS;
   }
 
   update(animationProperties: ExistingCSSAnimationProperties | null): void {
@@ -84,12 +81,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
 
     // Register keyframes for all new animations
     processedAnimations.forEach(({ keyframesRule }) => {
-      cssKeyframesRegistry.add(
-        keyframesRule,
-        this.viewName,
-        this.viewTag,
-        this.componentNameJS
-      );
+      cssKeyframesRegistry.add(keyframesRule, this.reactViewName, this.viewTag);
       newAnimationNames.add(keyframesRule.name);
     });
 
@@ -97,7 +89,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     // to the view
     this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
       if (!newAnimationNames.has(name)) {
-        cssKeyframesRegistry.remove(name, this.viewName, this.viewTag);
+        cssKeyframesRegistry.remove(name, this.reactViewName, this.viewTag);
       }
     });
   }
@@ -106,7 +98,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
     // Unregister keyframes usage by the view (it is necessary to clean up
     // keyframes from the CPP registry once all views that use them are unmounted)
     this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
-      cssKeyframesRegistry.remove(name, this.viewName, this.viewTag);
+      cssKeyframesRegistry.remove(name, this.reactViewName, this.viewTag);
     });
   }
 

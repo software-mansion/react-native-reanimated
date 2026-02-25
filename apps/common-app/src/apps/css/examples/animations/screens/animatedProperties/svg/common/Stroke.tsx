@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import type {
   CSSAnimationKeyframes,
   CSSAnimationProperties,
@@ -8,7 +9,6 @@ import { Circle, Path, Svg } from 'react-native-svg';
 
 import { ExamplesScreen } from '@/apps/css/components';
 import { colors } from '@/theme';
-import type { JSX } from 'react';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedPath = Animated.createAnimatedComponent(Path);
@@ -28,10 +28,10 @@ export default function StrokeExample() {
       },
       StrokeProps
     >
-      buildAnimation={({ keyframes, animationProps }) => ({
-        animationName: keyframes,
+      buildAnimation={({ animationProps, keyframes }) => ({
         animationDuration: '1s',
         animationIterationCount: 'infinite',
+        animationName: keyframes,
         animationTimingFunction: 'linear',
         ...animationProps,
       })}
@@ -52,9 +52,9 @@ export default function StrokeExample() {
       }
       sections={[
         {
-          title: 'Stroke',
           examples: [
             {
+              description: '`strokeWidth` is set to `10`',
               keyframes: {
                 from: {
                   stroke: 'blue',
@@ -63,16 +63,15 @@ export default function StrokeExample() {
                   stroke: 'red',
                 },
               },
-              title: 'Changing stroke (color)',
-              description: '`strokeWidth` is set to `10`',
               props: {
                 strokeWidth: 10,
               },
+              title: 'Changing stroke (color)',
             },
           ],
+          title: 'Stroke',
         },
         {
-          title: 'strokeWidth',
           examples: [
             {
               keyframes: {
@@ -83,6 +82,8 @@ export default function StrokeExample() {
               title: 'Absolute value',
             },
             {
+              description:
+                'The default `strokeWidth` is 1 and it is not smoothly animated to `20%`. To get a smooth animation, we need to specify a % value in all keyframes',
               keyframes: {
                 from: {
                   strokeWidth: '10%',
@@ -92,13 +93,11 @@ export default function StrokeExample() {
                 },
               },
               title: 'Relative value',
-              description:
-                'The default `strokeWidth` is 1 and it is not smoothly animated to `20%`. To get a smooth animation, we need to specify a % value in all keyframes',
             },
           ],
+          title: 'strokeWidth',
         },
         {
-          title: 'strokeOpacity',
           examples: [
             {
               keyframes: {
@@ -112,11 +111,13 @@ export default function StrokeExample() {
               title: 'Absolute value',
             },
           ],
+          title: 'strokeOpacity',
         },
         {
-          title: 'strokeDasharray',
           examples: [
             {
+              description:
+                'Does not animate and this is a correct behavior (the same as on the web)',
               keyframes: {
                 to: {
                   strokeDasharray: 10,
@@ -126,10 +127,10 @@ export default function StrokeExample() {
                 strokeWidth: 5,
               },
               title: 'From default to single value',
-              description:
-                'Does not animate and this is a correct behavior (the same as on the web)',
             },
             {
+              description:
+                'Animates properly if values are specified in all keyframes',
               keyframes: {
                 from: {
                   strokeDasharray: 0,
@@ -142,10 +143,10 @@ export default function StrokeExample() {
                 strokeWidth: 5,
               },
               title: 'From single to single value',
-              description:
-                'Animates properly if values are specified in all keyframes',
             },
             {
+              description:
+                'Uses `10` as the `from` keyframe value (always the first element of the second keyframe in the interpolation pair if the first one is empty)',
               keyframes: {
                 to: {
                   strokeDasharray: [10, 20, 30],
@@ -155,8 +156,6 @@ export default function StrokeExample() {
                 strokeWidth: 5,
               },
               title: 'Array value',
-              description:
-                'Uses `10` as the `from` keyframe value (always the first element of the second keyframe in the interpolation pair if the first one is empty)',
             },
             {
               keyframes: {
@@ -173,34 +172,37 @@ export default function StrokeExample() {
               title: 'Array value with different number of elements',
             },
           ],
+          title: 'strokeDasharray',
         },
         {
-          title: 'strokeDashoffset',
           examples: [
             {
+              description:
+                '`strokeDashArray` is set to `10` and `strokeWidth` is set to `5`',
               keyframes: {
                 to: {
                   strokeDashoffset: 100,
                 },
               },
               props: {
-                strokeWidth: 5,
                 strokeDasharray: 10,
+                strokeWidth: 5,
               },
               title: 'Absolute value',
-              description:
-                '`strokeDashArray` is set to `10` and `strokeWidth` is set to `5`',
             },
           ],
+          title: 'strokeDashoffset',
         },
         {
-          title: 'strokeLinecap',
           examples: [
             {
+              description:
+                '`strokeDashArray` is set to `10` and `strokeWidth` is set to `5`',
               keyframes: {
                 from: {
                   strokeLinecap: 'butt',
                 },
+                // eslint-disable-next-line perfectionist/sort-objects
                 '50%': {
                   strokeLinecap: 'round',
                 },
@@ -209,23 +211,22 @@ export default function StrokeExample() {
                 },
               },
               props: {
-                strokeWidth: 15,
                 strokeDasharray: 20,
+                strokeWidth: 15,
               },
               title: 'Changing `strokeLinecap`',
-              description:
-                '`strokeDashArray` is set to `10` and `strokeWidth` is set to `5`',
             },
           ],
+          title: 'strokeLinecap',
         },
         {
-          title: 'strokeLinejoin',
           examples: [
             {
               keyframes: {
                 from: {
                   strokeLinejoin: 'miter',
                 },
+                // eslint-disable-next-line perfectionist/sort-objects
                 '50%': {
                   strokeLinejoin: 'round',
                 },
@@ -246,6 +247,7 @@ export default function StrokeExample() {
               title: 'Changing `strokeLinejoin`',
             },
           ],
+          title: 'strokeLinejoin',
         },
         // TODO - this prop doesn't work in RN SVG so the example is commented
         // out for now
@@ -283,7 +285,6 @@ export default function StrokeExample() {
         //   ],
         // },
         {
-          title: 'vectorEffect',
           examples: [
             {
               keyframes: {
@@ -309,6 +310,7 @@ export default function StrokeExample() {
               title: 'Changing `strokeMiterlimit`',
             },
           ],
+          title: 'vectorEffect',
         },
       ]}
     />

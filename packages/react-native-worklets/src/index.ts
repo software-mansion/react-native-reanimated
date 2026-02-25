@@ -51,6 +51,8 @@ export {
 } from './runtimeKind';
 export {
   createWorkletRuntime,
+  getUIRuntimeHolder,
+  getUISchedulerHolder,
   runOnRuntime,
   runOnRuntimeAsync,
   runOnRuntimeSync,
@@ -65,8 +67,6 @@ export {
   runOnUISync,
   scheduleOnRN,
   scheduleOnUI,
-  // eslint-disable-next-line camelcase
-  unstable_eventLoopTask,
 } from './threads';
 export type {
   WorkletFunction,

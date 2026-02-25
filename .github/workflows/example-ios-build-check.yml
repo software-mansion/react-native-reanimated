@@ -5,6 +5,8 @@ on:
   pull_request:
     paths:
       - .github/workflows/example-ios-build-check.yml
+      - .github/actions/install-pods/**
+      - .github/actions/cache-derived-data/**
       - packages/react-native-reanimated/RNReanimated.podspec
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
@@ -22,6 +24,8 @@ on:
       - main
     paths:
       - .github/workflows/example-ios-build-check.yml
+      - .github/actions/install-pods/**
+      - .github/actions/cache-derived-data/**
       - packages/react-native-reanimated/RNReanimated.podspec
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
@@ -66,13 +70,19 @@ jobs:
         working-directory: ${{ env.REANIMATED_DIR }}
         run: yarn build
 
-      # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
-      - name: Install Pods
-        working-directory: ${{ env.WORKING_DIRECTORY }}/ios
-        run: |
-          bundle install
-          bundle exec pod update
+      - name: Install Pods (with caching)
+        uses: ./.github/actions/install-pods
+        with:
+          working-directory: ${{ env.WORKING_DIRECTORY }}
+          pod-directory: ios
+
+      - name: Cache DerivedData
+        uses: ./.github/actions/cache-derived-data
+        with:
+          platform: ios
+          working-directory: ${{ env.WORKING_DIRECTORY }}
+          pod-directory: ios
 
       - name: Build app
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn react-native run-ios --no-packager --scheme "Debug FabricExample"
+        working-directory: ${{ env.WORKING_DIRECTORY }}/ios
+        run: xcodebuild -workspace FabricExample.xcworkspace -configuration Debug -scheme "Debug FabricExample" -destination "generic/platform=iOS Simulator" -quiet

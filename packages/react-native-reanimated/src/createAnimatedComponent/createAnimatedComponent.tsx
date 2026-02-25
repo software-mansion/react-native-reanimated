@@ -1,6 +1,11 @@
 'use strict';
-import type { ComponentRef, ComponentType, ReactNode, Ref } from 'react';
-import type React from 'react';
+import type {
+  ComponentProps,
+  ComponentRef,
+  ComponentType,
+  ReactNode,
+  Ref,
+} from 'react';
 import type { FlatList, FlatListProps } from 'react-native';
 
 import type { AnyRecord } from '../common';
@@ -67,7 +72,7 @@ export function createAnimatedComponent<
 >(
   Component: TInstance,
   options?: Options<InitialComponentProps>
-): AnimatedComponentType<Readonly<React.ComponentProps<TInstance>>, TInstance>;
+): AnimatedComponentType<Readonly<ComponentProps<TInstance>>, TInstance>;
 
 export function createAnimatedComponent<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -75,7 +80,7 @@ export function createAnimatedComponent<
 >(
   Component: TInstance,
   options?: Options<InitialComponentProps>
-): AnimatedComponentType<Readonly<React.ComponentProps<TInstance>>, TInstance> {
+): AnimatedComponentType<Readonly<ComponentProps<TInstance>>, TInstance> {
   class AnimatedComponent extends AnimatedComponentImpl {
     static displayName = `AnimatedComponent(${
       Component.displayName || Component.name || 'Component'
@@ -91,7 +96,7 @@ export function createAnimatedComponent<
   }
 
   const animatedComponent = (
-    props: Omit<AnimatedProps<React.ComponentProps<TInstance>>, 'ref'> & {
+    props: Omit<AnimatedProps<ComponentProps<TInstance>>, 'ref'> & {
       ref?: AnimatedComponentRef<TInstance>;
     }
   ) => (

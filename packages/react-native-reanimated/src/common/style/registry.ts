@@ -1,28 +1,11 @@
 'use strict';
-import { ReanimatedError } from '../errors';
 import type { UnknownRecord } from '../types';
-import { isReactNativeViewName } from '../utils/guards';
 import {
   createNativePropsBuilder,
   type NativePropsBuilder,
   type PropsBuilderConfig,
   stylePropsBuilder,
 } from './propsBuilder';
-
-export const ERROR_MESSAGES = {
-  propsBuilderNotFound: (componentName: string, componentNameJS?: string) => {
-    const compoundComponentName = getCompoundComponentName(
-      componentName,
-      componentNameJS
-    );
-
-    const namesPart = componentNameJS
-      ? `${compoundComponentName} or ${componentName}`
-      : componentName;
-
-    return `CSS props builder for component ${namesPart} was not found`;
-  },
-};
 
 const DEFAULT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Set<string>([
   'boxShadow',
@@ -31,115 +14,69 @@ const DEFAULT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Set<string>([
   'transformOrigin',
 ]);
 
-const COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES = new Map<
-  string,
-  Set<string>
->();
+type PropsBuilderEntry = {
+  builder: NativePropsBuilder;
+  separatelyInterpolatedNestedProperties?: ReadonlySet<string>;
+};
 
-const PROPS_BUILDERS = new Map<string, NativePropsBuilder>();
+const PROPS_BUILDERS = new Map<string, PropsBuilderEntry>();
+const PATTERN_PROPS_BUILDERS: Array<{
+  matcher: RegExp | ((name: string) => boolean);
+  entry: PropsBuilderEntry;
+}> = [];
 
-export function hasPropsBuilder(
-  componentName: string,
-  componentNameJS?: string
-): boolean {
-  const compoundComponentName = getCompoundComponentName(
-    componentName,
-    componentNameJS
-  );
+function findEntry(componentName: string): PropsBuilderEntry | undefined {
+  // 1. Exact component name match
+  const exact = PROPS_BUILDERS.get(componentName);
+  if (exact) {
+    return exact;
+  }
 
-  return (
-    !!PROPS_BUILDERS.get(compoundComponentName) ||
-    !!PROPS_BUILDERS.get(componentName) ||
-    isReactNativeViewName(componentName)
-  );
+  // 2. Pattern matches in registration order
+  for (const { matcher, entry } of PATTERN_PROPS_BUILDERS) {
+    const matches =
+      matcher instanceof RegExp
+        ? matcher.test(componentName)
+        : matcher(componentName);
+    if (matches) {
+      return entry;
+    }
+  }
+
+  return undefined;
 }
 
-export function getPropsBuilder(
-  componentName: string,
-  componentNameJS?: string
-): NativePropsBuilder {
-  const compoundComponentName = getCompoundComponentName(
-    componentName,
-    componentNameJS
-  );
-
-  const componentPropsBuilder =
-    PROPS_BUILDERS.get(compoundComponentName) ??
-    PROPS_BUILDERS.get(componentName);
-
-  if (componentPropsBuilder) {
-    return componentPropsBuilder;
-  }
-
-  if (isReactNativeViewName(componentName)) {
-    // This captures all React Native components (prefixed with RCT)
-    return stylePropsBuilder;
-  }
-
-  throw new ReanimatedError(
-    ERROR_MESSAGES.propsBuilderNotFound(componentName, componentNameJS)
-  );
+export function getPropsBuilder(componentName: string): NativePropsBuilder {
+  return findEntry(componentName)?.builder ?? stylePropsBuilder;
 }
 
 export function registerComponentPropsBuilder<P extends UnknownRecord>(
-  compoundComponentName: string,
+  componentName: string | RegExp | ((name: string) => boolean),
   config: PropsBuilderConfig<P>,
   options: {
     separatelyInterpolatedNestedProperties?: readonly string[];
   } = {}
 ) {
-  const dollarIndex = compoundComponentName.indexOf('$');
-  const nativeName =
-    dollarIndex !== -1
-      ? compoundComponentName.slice(0, dollarIndex)
-      : compoundComponentName;
-  const hasJSAlias = dollarIndex !== -1;
+  const entry: PropsBuilderEntry = {
+    builder: createNativePropsBuilder(config),
+    separatelyInterpolatedNestedProperties: options
+      .separatelyInterpolatedNestedProperties?.length
+      ? new Set(options.separatelyInterpolatedNestedProperties)
+      : undefined,
+  };
 
-  PROPS_BUILDERS.set(compoundComponentName, createNativePropsBuilder(config));
-
-  // If the generalized version is missing but a specialization is provided,
-  // initialize the generalization with the default config.
-  if (hasJSAlias && !hasPropsBuilder(nativeName)) {
-    PROPS_BUILDERS.set(nativeName, createNativePropsBuilder(config));
-
-    if (options.separatelyInterpolatedNestedProperties?.length) {
-      COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES.set(
-        nativeName,
-        new Set(options.separatelyInterpolatedNestedProperties)
-      );
-    }
-  }
-
-  if (options.separatelyInterpolatedNestedProperties?.length) {
-    COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES.set(
-      compoundComponentName,
-      new Set(options.separatelyInterpolatedNestedProperties)
-    );
+  if (typeof componentName === 'string') {
+    PROPS_BUILDERS.set(componentName, entry);
+  } else {
+    PATTERN_PROPS_BUILDERS.push({ matcher: componentName, entry });
   }
 }
 
 export function getSeparatelyInterpolatedNestedProperties(
-  componentName: string,
-  componentNameJS?: string
+  componentName: string
 ): ReadonlySet<string> {
-  const compoundComponentName = getCompoundComponentName(
-    componentName,
-    componentNameJS
-  );
   return (
-    COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES.get(
-      compoundComponentName
-    ) ??
-    COMPONENT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES.get(componentName) ??
+    findEntry(componentName)?.separatelyInterpolatedNestedProperties ??
     DEFAULT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES
   );
-}
-
-export function getCompoundComponentName(
-  componentName: string,
-  componentNameJS?: string
-): string {
-  return componentNameJS
-    ? `${componentName}$${componentNameJS}`
-    : componentName;
 }

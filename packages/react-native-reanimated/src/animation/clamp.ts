@@ -84,9 +84,11 @@ export const withClamp = function <T extends number | string>(
       }
 
       function onStart(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         animation: Animation<any>,
         value: AnimatableValue,
         now: Timestamp,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         previousAnimation: Animation<any> | null
       ): void {
         animation.current = value;

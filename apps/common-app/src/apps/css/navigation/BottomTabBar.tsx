@@ -12,13 +12,13 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
+import { scheduleOnUI } from 'react-native-worklets';
 
 import { BOTTOM_BAR_HEIGHT } from '@/apps/css/navigation/constants';
 import type { TabRoute } from '@/apps/css/navigation/types';
 import { colors, flex, spacing, text } from '@/theme';
 
 import { useLocalNavigationRef } from './LocalNavigationProvider';
-import { scheduleOnUI } from 'react-native-worklets';
 
 const TABS_GAP = spacing.xxs;
 

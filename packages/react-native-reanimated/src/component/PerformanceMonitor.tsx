@@ -169,7 +169,7 @@ export type PerformanceMonitorProps = {
  * Paper and Fabric architectures.
  *
  * @param smoothingFrames - Determines amount of saved frames which will be used
- *   for fps value smoothing.
+ *   for fps value smoothing. Defaults to `20`.
  */
 export function PerformanceMonitor({
   smoothingFrames = DEFAULT_BUFFER_SIZE,

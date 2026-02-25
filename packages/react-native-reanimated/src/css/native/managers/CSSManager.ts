@@ -1,9 +1,5 @@
 'use strict';
-import {
-  getPropsBuilder,
-  hasPropsBuilder,
-  ReanimatedError,
-} from '../../../common';
+import { getPropsBuilder } from '../../../common';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
 import type { CSSStyle } from '../../types';
@@ -17,27 +13,22 @@ export default class CSSManager implements ICSSManager {
   private readonly cssAnimationsManager: CSSAnimationsManager;
   private readonly cssTransitionsManager: CSSTransitionsManager;
   private readonly viewTag: number;
-  private readonly viewName: string;
-  private readonly propsBuilder: ReturnType<typeof getPropsBuilder> | null =
-    null;
+  private readonly propsBuilder: ReturnType<typeof getPropsBuilder>;
   private isFirstUpdate: boolean = true;
 
-  constructor(
-    { shadowNodeWrapper, viewTag, viewName = 'RCTView' }: ViewInfo,
-    componentNameJS?: string
-  ) {
+  constructor({
+    shadowNodeWrapper,
+    viewTag,
+    reactViewName = 'RCTView',
+  }: ViewInfo) {
     const tag = (this.viewTag = viewTag as number);
     const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
 
-    this.viewName = viewName;
-    this.propsBuilder = hasPropsBuilder(viewName, componentNameJS)
-      ? getPropsBuilder(viewName, componentNameJS)
-      : null;
+    this.propsBuilder = getPropsBuilder(reactViewName);
     this.cssAnimationsManager = new CSSAnimationsManager(
       wrapper,
-      viewName,
-      tag,
-      componentNameJS
+      reactViewName,
+      tag
     );
     this.cssTransitionsManager = new CSSTransitionsManager(wrapper, tag);
   }
@@ -46,13 +37,7 @@ export default class CSSManager implements ICSSManager {
     const [animationProperties, transitionProperties, filteredStyle] =
       filterCSSAndStyleProperties(style);
 
-    if (!this.propsBuilder && (animationProperties || transitionProperties)) {
-      throw new ReanimatedError(
-        `Tried to apply CSS animations to ${this.viewName} which is not supported`
-      );
-    }
-
-    const normalizedStyle = this.propsBuilder?.build(filteredStyle);
+    const normalizedStyle = this.propsBuilder.build(filteredStyle);
 
     // If the update is called during the first css style update, we won't
     // trigger CSS transitions and set styles before attaching CSS transitions

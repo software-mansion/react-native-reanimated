@@ -36,9 +36,6 @@ export default function MixBlendMode() {
                 '0%, 100%': {
                   mixBlendMode: 'normal',
                 },
-                '6.67%': {
-                  mixBlendMode: 'multiply',
-                },
                 '13.33%': {
                   mixBlendMode: 'screen',
                 },
@@ -60,6 +57,9 @@ export default function MixBlendMode() {
                 '53.33%': {
                   mixBlendMode: 'hard-light',
                 },
+                '6.67%': {
+                  mixBlendMode: 'multiply',
+                },
                 '60%': {
                   mixBlendMode: 'soft-light',
                 },
@@ -78,6 +78,7 @@ export default function MixBlendMode() {
                 '93.33%': {
                   mixBlendMode: 'color',
                 },
+                // eslint-disable-next-line perfectionist/sort-objects
                 '100%': {
                   mixBlendMode: 'luminosity',
                 },
