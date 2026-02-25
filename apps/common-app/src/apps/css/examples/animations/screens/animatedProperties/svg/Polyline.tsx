@@ -16,10 +16,10 @@ export default function PolylineExample() {
       PolylineProps
     >
       buildAnimation={({ keyframes }) => ({
-        animationName: keyframes,
         animationDirection: 'alternate',
         animationDuration: '1s',
         animationIterationCount: 'infinite',
+        animationName: keyframes,
         animationTimingFunction: 'ease-in-out',
       })}
       renderExample={({ animation }) => (
@@ -40,9 +40,10 @@ export default function PolylineExample() {
           name: 'Points',
           sections: [
             {
-              title: 'Same Number of Points',
               examples: [
                 {
+                  description:
+                    'Smooth interpolation between two zigzag shapes with the same number of points',
                   keyframes: {
                     from: {
                       points: '10,80 30,20 50,80 70,20 90,80',
@@ -52,10 +53,10 @@ export default function PolylineExample() {
                     },
                   },
                   title: 'Zigzag',
-                  description:
-                    'Smooth interpolation between two zigzag shapes with the same number of points',
                 },
                 {
+                  description:
+                    'Smooth animation between two wave phases with the same number of points',
                   keyframes: {
                     from: {
                       points: '10,50 27,20 44,50 61,80 78,50 95,20',
@@ -65,10 +66,10 @@ export default function PolylineExample() {
                     },
                   },
                   title: 'Wave',
-                  description:
-                    'Smooth animation between two wave phases with the same number of points',
                 },
                 {
+                  description:
+                    'Points morph from one corner configuration to another',
                   keyframes: {
                     from: {
                       points: '10,90 10,10 90,10',
@@ -78,10 +79,10 @@ export default function PolylineExample() {
                     },
                   },
                   title: 'Corner sweep',
-                  description:
-                    'Points morph from one corner configuration to another',
                 },
                 {
+                  description:
+                    'Smooth animation of an S-curve between two mirror states',
                   keyframes: {
                     from: {
                       points: '10,50 30,10 50,50 70,90 90,50',
@@ -91,15 +92,15 @@ export default function PolylineExample() {
                     },
                   },
                   title: 'S-curve',
-                  description:
-                    'Smooth animation of an S-curve between two mirror states',
                 },
               ],
+              title: 'Same Number of Points',
             },
             {
-              title: 'Different Number of Points',
               examples: [
                 {
+                  description:
+                    'Interpolation between different numbers of points is **not supported**, so the points change **abruptly**',
                   keyframes: {
                     from: {
                       points: '10,80 50,20 90,80',
@@ -109,10 +110,10 @@ export default function PolylineExample() {
                     },
                   },
                   title: 'Growing polyline',
-                  description:
-                    'Interpolation between different numbers of points is **not supported**, so the points change **abruptly**',
                 },
                 {
+                  description:
+                    'Reducing the number of points also causes an **abrupt** change instead of a smooth transition',
                   keyframes: {
                     from: {
                       points: '10,50 25,20 40,80 55,20 70,80 85,20 90,50',
@@ -122,10 +123,9 @@ export default function PolylineExample() {
                     },
                   },
                   title: 'Shrinking polyline',
-                  description:
-                    'Reducing the number of points also causes an **abrupt** change instead of a smooth transition',
                 },
               ],
+              title: 'Different Number of Points',
             },
           ],
         },
@@ -133,7 +133,6 @@ export default function PolylineExample() {
           name: 'Appearance',
           sections: [
             {
-              title: 'Opacity',
               examples: [
                 {
                   keyframes: {
@@ -144,6 +143,7 @@ export default function PolylineExample() {
                   title: 'Opacity',
                 },
               ],
+              title: 'Opacity',
             },
           ],
         },

@@ -15,6 +15,6 @@ export const processPolylinePoints: ValueProcessor<
         .replace(/([^eE])-/g, '$1 -')
         .split(/(?:\s+|\s*,\s*)/g)
         .join(' ')}`
-    ) as string,
+    ),
   };
 };
