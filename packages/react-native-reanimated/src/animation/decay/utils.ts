@@ -17,7 +17,7 @@ export interface DecayAnimation extends Animation<DecayAnimation> {
   startTimestamp: Timestamp;
   initialVelocity: number;
   velocity: number;
-  current: AnimatableValue | undefined;
+  current: AnimatableValue;
 }
 
 export interface InnerDecayAnimation
