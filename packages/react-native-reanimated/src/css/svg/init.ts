@@ -11,6 +11,7 @@ import {
   SVG_LINE_PROPERTIES_CONFIG,
   SVG_LINEAR_GRADIENT_PROPERTIES_CONFIG,
   SVG_PATH_PROPERTIES_CONFIG,
+  SVG_POLYGON_PROPERTIES_CONFIG,
   SVG_POLYLINE_PROPERTIES_CONFIG,
   SVG_RADIAL_GRADIENT_PROPERTIES_CONFIG,
   SVG_RECT_PROPERTIES_CONFIG,
@@ -30,6 +31,10 @@ export function initSvgCssSupport() {
     SVG_RADIAL_GRADIENT_PROPERTIES_CONFIG
   );
   registerComponentPropsBuilder('RNSVGPath', SVG_PATH_PROPERTIES_CONFIG);
+  registerComponentPropsBuilder(
+    getCompoundComponentName('RNSVGPath', 'Polygon'),
+    SVG_POLYGON_PROPERTIES_CONFIG
+  );
   registerComponentPropsBuilder(
     getCompoundComponentName('RNSVGPath', 'Polyline'),
     SVG_POLYLINE_PROPERTIES_CONFIG
