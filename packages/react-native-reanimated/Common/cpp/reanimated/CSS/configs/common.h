@@ -1,8 +1,8 @@
 #pragma once
 
+#include <jsi/jsi.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
-#include <jsi/jsi.h>
 #include <string>
 
 namespace reanimated::css {
