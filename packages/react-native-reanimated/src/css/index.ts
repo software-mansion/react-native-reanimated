@@ -17,6 +17,7 @@ export type {
   CSSGradientStop,
   CSSKeyframesRule,
   CSSLinearGradientProps,
+  CSSPatternProps,
   CSSRadialGradientProps,
   CSSStyle,
   CSSTransitionDelay,

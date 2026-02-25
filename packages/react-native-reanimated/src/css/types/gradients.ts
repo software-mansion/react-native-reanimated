@@ -35,3 +35,15 @@ export type CSSLinearGradientProps = {
   id?: string;
   gradient?: CSSGradientStop[];
 };
+
+export type CSSPatternProps = {
+  x?: NumberProp;
+  y?: NumberProp;
+  width?: NumberProp;
+  height?: NumberProp;
+  patternUnits?: Units;
+  patternContentUnits?: Units;
+  id?: string;
+  // TODO: Implement 'patternTransform'
+  // patternTransform?: TransformProps['transform'];
+};

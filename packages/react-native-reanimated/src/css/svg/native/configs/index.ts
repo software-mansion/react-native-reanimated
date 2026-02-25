@@ -6,6 +6,7 @@ export * from './image';
 export * from './line';
 export * from './linearGradient';
 export * from './path';
+export * from './pattern';
 export * from './polyline';
 export * from './radialGradient';
 export * from './rect';
