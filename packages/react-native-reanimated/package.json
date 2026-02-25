@@ -130,7 +130,7 @@
     "react-dom": "19.2.3",
     "react-native": "0.84.0",
     "react-native-builder-bob": "0.40.13",
-    "react-native-svg": "15.14.0",
+    "react-native-svg": "15.15.3",
     "react-native-web": "0.21.1",
     "react-native-worklets": "workspace:*",
     "react-test-renderer": "19.2.3",
