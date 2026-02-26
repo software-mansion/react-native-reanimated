@@ -301,7 +301,7 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
  *   or a [Worker
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
- *   unless you the [Bundle
+ *   unless the [Bundle
  *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
  *   enabled.
  * - You can target the UI Runtime with this function by passing
@@ -327,7 +327,7 @@ export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
 ): ReturnValue {
   if (__DEV__ && !isWorkletFunction(worklet)) {
     throw new WorkletsError(
-      'The function passed to `runOnRuntimeSyncFromId` is not a worklet.'
+      'The function passed to `runOnRuntimeSyncWithId` is not a worklet.'
     );
   }
 

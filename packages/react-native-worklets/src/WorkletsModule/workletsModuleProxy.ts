@@ -109,7 +109,7 @@ export interface WorkletsModuleProxy {
   ): TReturn;
 
   runOnRuntimeSyncWithId<TValue, TReturn>(
-    hostId: number,
+    runtimeId: number,
     worklet: SerializableRef<TValue>
   ): TReturn;
 

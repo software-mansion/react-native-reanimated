@@ -230,10 +230,10 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   }
 
   runOnRuntimeSyncWithId<TValue, TReturn>(
-    hostId: number,
+    runtimeId: number,
     worklet: SerializableRef<TValue>
   ): TReturn {
-    return this.#workletsModuleProxy.runOnRuntimeSyncWithId(hostId, worklet);
+    return this.#workletsModuleProxy.runOnRuntimeSyncWithId(runtimeId, worklet);
   }
 
   createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {
