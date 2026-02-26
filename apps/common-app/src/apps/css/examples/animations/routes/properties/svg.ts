@@ -23,6 +23,10 @@ export const svgPropertiesRoutes = {
     Component: svgAnimatedProperties.Ellipse,
     name: 'Ellipse',
   },
+  Group: {
+    Component: svgAnimatedProperties.Group,
+    name: 'Group',
+  },
   Image: {
     Component: svgAnimatedProperties.Image,
     name: 'Image',
