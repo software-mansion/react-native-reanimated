@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "4.3.0-main",
+  "version": "4.2.0-main",
   "description": "More powerful alternative to Animated library for React Native.",
   "keywords": [
     "react-native",
@@ -36,7 +36,8 @@
     "type:check:strict:app": "yarn workspace common-app type:check:strict",
     "build": "yarn workspace react-native-worklets build && bob build",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
-    "tree-shake:check:web": "yarn is-tree-shakable --resolution web"
+    "tree-shake:check:web": "yarn is-tree-shakable --resolution web",
+    "validate-peers": "node ../../scripts/validate-compatibility-peer-dependencies.js"
   },
   "main": "lib/module/index",
   "module": "lib/module/index",
@@ -95,9 +96,8 @@
     "semver": "7.7.3"
   },
   "peerDependencies": {
-    "react": "*",
-    "react-native": "*",
-    "react-native-worklets": ">=0.7.0"
+    "react-native": "0.81 - 0.84",
+    "react-native-worklets": "nightly"
   },
   "devDependencies": {
     "@babel/core": "7.28.4",

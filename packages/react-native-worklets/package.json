@@ -37,7 +37,8 @@
     "type:check:app": "yarn workspace common-app type:check",
     "type:check:plugin": "yarn workspace babel-plugin-worklets type:check",
     "type:check:tests": "../../scripts/test-ts.sh __typetests__",
-    "tree-shake:check:web": "yarn is-tree-shakable --resolution web"
+    "tree-shake:check:web": "yarn is-tree-shakable --resolution web",
+    "validate-peers": "node ../../scripts/validate-compatibility-peer-dependencies.js"
   },
   "repository": {
     "type": "git",
@@ -51,9 +52,7 @@
   },
   "homepage": "https://docs.swmansion.com/react-native-worklets",
   "peerDependencies": {
-    "@babel/core": "*",
-    "react": "*",
-    "react-native": "*"
+    "react-native": "0.79 - 0.84"
   },
   "dependencies": {
     "@babel/plugin-transform-arrow-functions": "7.27.1",
