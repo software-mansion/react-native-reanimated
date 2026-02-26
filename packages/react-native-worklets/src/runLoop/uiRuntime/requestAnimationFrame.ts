@@ -1,10 +1,9 @@
 'use strict';
 
-import { callMicrotasks } from '../../threads';
-
 export function setupRequestAnimationFrame() {
   'worklet';
   const nativeRequestAnimationFrame = globalThis.requestAnimationFrame;
+  const callMicrotasks = globalThis.__callMicrotasks;
 
   let queuedCallbacks: ((timestamp: number) => void)[] = [];
   let queuedCallbacksBegin = 0;
@@ -14,9 +13,7 @@ export function setupRequestAnimationFrame() {
   let flushedCallbacksBegin = 0;
   let flushedCallbacksEnd = 0;
 
-  let flushRequested = false;
-
-  globalThis.__flushAnimationFrame = (timestamp: number) => {
+  function executeQueue(timestamp: number) {
     flushedCallbacks = queuedCallbacks;
     queuedCallbacks = [];
 
@@ -31,28 +28,17 @@ export function setupRequestAnimationFrame() {
     flushedCallbacksBegin = flushedCallbacksEnd;
 
     callMicrotasks();
-  };
+  }
 
-  globalThis.requestAnimationFrame = (
+  function requestAnimationFrame(
     callback: (timestamp: number) => void
-  ): number => {
+  ): number {
     const handle = queuedCallbacksEnd++;
-
     queuedCallbacks.push(callback);
-    if (!flushRequested) {
-      flushRequested = true;
-
-      nativeRequestAnimationFrame((timestamp) => {
-        flushRequested = false;
-        globalThis.__frameTimestamp = timestamp;
-        globalThis.__flushAnimationFrame(timestamp);
-        globalThis.__frameTimestamp = undefined;
-      });
-    }
     return handle;
-  };
+  }
 
-  globalThis.cancelAnimationFrame = (handle: number) => {
+  function cancelAnimationFrame(handle: number) {
     if (handle < flushedCallbacksBegin || handle >= queuedCallbacksEnd) {
       return;
     }
@@ -62,5 +48,23 @@ export function setupRequestAnimationFrame() {
     } else {
       queuedCallbacks[handle - queuedCallbacksBegin] = () => {};
     }
+  }
+
+  function flushQueue(timestamp: number) {
+    globalThis.__frameTimestamp = timestamp;
+    executeQueue(timestamp);
+    globalThis.__frameTimestamp = undefined;
+
+    /* Schedule next frame */
+    nativeRequestAnimationFrame(flushQueue);
+  }
+
+  globalThis.requestAnimationFrame = requestAnimationFrame;
+  globalThis.cancelAnimationFrame = cancelAnimationFrame;
+  globalThis.__flushAnimationFrame = () => {
+    // NOOP for backwards compatibility
   };
+
+  /* Start the loop */
+  nativeRequestAnimationFrame(flushQueue);
 }
