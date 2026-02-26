@@ -8,3 +8,4 @@ export * from './linearGradient';
 export * from './path';
 export * from './radialGradient';
 export * from './rect';
+export * from './text';

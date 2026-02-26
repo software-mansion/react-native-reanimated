@@ -8,6 +8,7 @@ import LinearGradient from './LinearGradient';
 import Path from './Path';
 import RadialGradient from './RadialGradient';
 import Rect from './Rect';
+import Text from './Text';
 
 export default {
   Circle,
@@ -20,4 +21,5 @@ export default {
   Path,
   RadialGradient,
   Rect,
+  Text,
 };

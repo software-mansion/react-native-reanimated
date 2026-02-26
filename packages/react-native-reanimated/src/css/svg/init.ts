@@ -10,6 +10,7 @@ import {
   SVG_PATH_PROPERTIES_CONFIG,
   SVG_RADIAL_GRADIENT_PROPERTIES_CONFIG,
   SVG_RECT_PROPERTIES_CONFIG,
+  SVG_TEXT_PROPERTIES_CONFIG,
 } from './native';
 
 export function initSvgCssSupport() {
@@ -27,6 +28,7 @@ export function initSvgCssSupport() {
   );
   registerComponentPropsBuilder('RNSVGPath', SVG_PATH_PROPERTIES_CONFIG);
   registerComponentPropsBuilder('RNSVGRect', SVG_RECT_PROPERTIES_CONFIG);
+  registerComponentPropsBuilder('RNSVGText', SVG_TEXT_PROPERTIES_CONFIG);
 
   // Fallback for all SVG components that aren't explicitly registered
   registerComponentPropsBuilder(/^RNSVG/, SVG_COMMON_PROPERTIES_CONFIG);

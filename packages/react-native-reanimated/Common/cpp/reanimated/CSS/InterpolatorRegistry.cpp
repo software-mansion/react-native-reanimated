@@ -367,6 +367,16 @@ const InterpolatorFactoriesRecord SVG_RADIAL_GRADIENT_INTERPOLATORS = mergeInter
          // {"gradientTransform", value<CSSKeyword>("")},
      }});
 
+const InterpolatorFactoriesRecord SVG_TEXT_INTERPOLATORS = mergeInterpolators(
+    {SVG_COMMON_INTERPOLATORS,
+     InterpolatorFactoriesRecord{
+         {"x", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"y", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
+         {"dx", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"dy", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
+         {"rotate", value<CSSAngle>(0)},
+     }});
+
 // ==================
 // COMPONENT REGISTRY
 // ==================
@@ -386,6 +396,7 @@ ComponentInterpolatorsMap initializeRegistry() {
     registry["RNSVGPath"] = SVG_PATH_INTERPOLATORS;
     registry["RNSVGRect"] = SVG_RECT_INTERPOLATORS;
     registry["RNSVGRadialGradient"] = SVG_RADIAL_GRADIENT_INTERPOLATORS;
+    registry["RNSVGText"] = SVG_TEXT_INTERPOLATORS;
   }
 
   return registry;
