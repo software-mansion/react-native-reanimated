@@ -57,7 +57,10 @@ export {
   runOnRuntime,
   runOnRuntimeAsync,
   runOnRuntimeSync,
+  runOnRuntimeSyncWithId,
   scheduleOnRuntime,
+  scheduleOnRuntimeWithId,
+  UIRuntimeId,
 } from './runtimes';
 export {
   executeOnUIRuntimeSync,

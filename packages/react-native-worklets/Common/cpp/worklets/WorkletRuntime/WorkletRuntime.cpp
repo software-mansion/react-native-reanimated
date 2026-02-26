@@ -230,6 +230,9 @@ jsi::Value WorkletRuntime::get(jsi::Runtime &rt, const jsi::PropNameID &propName
   if (name == "name") {
     return jsi::String::createFromUtf8(rt, name_);
   }
+  if (name == "runtimeId") {
+    return jsi::Value(static_cast<double>(runtimeId_));
+  }
   return jsi::Value::undefined();
 }
 
@@ -237,6 +240,7 @@ std::vector<jsi::PropNameID> WorkletRuntime::getPropertyNames(jsi::Runtime &rt) 
   std::vector<jsi::PropNameID> result;
   result.push_back(jsi::PropNameID::forUtf8(rt, "toString"));
   result.push_back(jsi::PropNameID::forUtf8(rt, "name"));
+  result.push_back(jsi::PropNameID::forUtf8(rt, "runtimeId"));
   return result;
 }
 
