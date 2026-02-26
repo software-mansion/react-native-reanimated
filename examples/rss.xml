@@ -4,7 +4,7 @@
         <title>React Native Reanimated Blog</title>
         <link>https://docs.swmansion.com/react-native-reanimated/examples</link>
         <description>React Native Reanimated Blog</description>
-        <lastBuildDate>Wed, 25 Feb 2026 21:48:00 GMT</lastBuildDate>
+        <lastBuildDate>Thu, 26 Feb 2026 12:07:10 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>en</language>
@@ -12,7 +12,7 @@
             <title><![CDATA[Accordion]]></title>
             <link>https://docs.swmansion.com/react-native-reanimated/examples/accordion</link>
             <guid>https://docs.swmansion.com/react-native-reanimated/examples/accordion</guid>
-            <pubDate>Wed, 25 Feb 2026 21:48:00 GMT</pubDate>
+            <pubDate>Thu, 26 Feb 2026 12:07:10 GMT</pubDate>
             <description><![CDATA[An accordion allows to show and hide a piece of content with a smooth animation. Commonly used in "FAQ" sections.]]></description>
             <content:encoded><![CDATA[<p>An accordion allows to show and hide a piece of content with a smooth animation. Commonly used in "FAQ" sections.</p>
 <!-- -->
@@ -29,7 +29,7 @@
             <title><![CDATA[Bottom Sheet]]></title>
             <link>https://docs.swmansion.com/react-native-reanimated/examples/bottomsheet</link>
             <guid>https://docs.swmansion.com/react-native-reanimated/examples/bottomsheet</guid>
-            <pubDate>Wed, 25 Feb 2026 21:48:00 GMT</pubDate>
+            <pubDate>Thu, 26 Feb 2026 12:07:10 GMT</pubDate>
             <description><![CDATA[Bottom sheets are surfaces containing supplementary content, anchored to the bottom of the screen. They can provide users with quick access to contextual information, actions, or settings without interrupting their current workflow.]]></description>
             <content:encoded><![CDATA[<p>Bottom sheets are surfaces containing supplementary content, anchored to the bottom of the screen. They can provide users with quick access to contextual information, actions, or settings without interrupting their current workflow.</p>
 <p>Looking for a ready-to-use solution? We recommend <a href="https://www.npmjs.com/package/@gorhom/bottom-sheet" target="_blank" rel="noopener noreferrer" class="">@gorhom/bottom-sheet</a>.</p>
@@ -48,7 +48,7 @@
             <title><![CDATA[Flip Card]]></title>
             <link>https://docs.swmansion.com/react-native-reanimated/examples/flipCard</link>
             <guid>https://docs.swmansion.com/react-native-reanimated/examples/flipCard</guid>
-            <pubDate>Wed, 25 Feb 2026 21:48:00 GMT</pubDate>
+            <pubDate>Thu, 26 Feb 2026 12:07:10 GMT</pubDate>
             <description><![CDATA[Flip card allows you to display different content depending on whether the card is flipped or not. It can be especially useful when you do not want to display some data immediately after entering the screen (e.g. secure data) and only after fulfilling a certain condition or performing an action.]]></description>
             <content:encoded><![CDATA[<p>Flip card allows you to display different content depending on whether the card is flipped or not. It can be especially useful when you do not want to display some data immediately after entering the screen (e.g. secure data) and only after fulfilling a certain condition or performing an action.</p>
 <!-- -->
@@ -66,7 +66,7 @@
             <title><![CDATA[Floating Action Button]]></title>
             <link>https://docs.swmansion.com/react-native-reanimated/examples/floatingactionbutton</link>
             <guid>https://docs.swmansion.com/react-native-reanimated/examples/floatingactionbutton</guid>
-            <pubDate>Wed, 25 Feb 2026 21:48:00 GMT</pubDate>
+            <pubDate>Thu, 26 Feb 2026 12:07:10 GMT</pubDate>
             <description><![CDATA[Floating Action Button provides user with easy-accessible panel with primary or most common actions on the screen.]]></description>
             <content:encoded><![CDATA[<p>Floating Action Button provides user with easy-accessible panel with primary or most common actions on the screen.</p>
 <!-- -->
@@ -88,7 +88,7 @@
             <title><![CDATA[Marquee]]></title>
             <link>https://docs.swmansion.com/react-native-reanimated/examples/marquee</link>
             <guid>https://docs.swmansion.com/react-native-reanimated/examples/marquee</guid>
-            <pubDate>Wed, 25 Feb 2026 21:48:00 GMT</pubDate>
+            <pubDate>Thu, 26 Feb 2026 12:07:10 GMT</pubDate>
             <description><![CDATA[A marquee is an element used to display scrolling content horizontally within a confined space. It's commonly seen in applications to information such as news tickers, advertisements, or any content that needs continuous display within a limited area.]]></description>
             <content:encoded><![CDATA[<p>A marquee is an element used to display scrolling content horizontally within a confined space. It's commonly seen in applications to information such as news tickers, advertisements, or any content that needs continuous display within a limited area.</p>
 <p>Looking for a ready-to-use solution? We recommend <a href="https://www.npmjs.com/package/@animatereactnative/marquee" target="_blank" rel="noopener noreferrer" class="">@animatereactnative/marquee</a>.</p>
@@ -112,7 +112,7 @@
             <title><![CDATA[Section List]]></title>
             <link>https://docs.swmansion.com/react-native-reanimated/examples/sectionlist</link>
             <guid>https://docs.swmansion.com/react-native-reanimated/examples/sectionlist</guid>
-            <pubDate>Wed, 25 Feb 2026 21:48:00 GMT</pubDate>
+            <pubDate>Thu, 26 Feb 2026 12:07:10 GMT</pubDate>
             <description><![CDATA[Section lists allow you to organize long lists of content by dividing them with headings.]]></description>
             <content:encoded><![CDATA[<p>Section lists allow you to organize long lists of content by dividing them with headings.</p>
 <div>Loading...</div>
@@ -142,7 +142,7 @@
             <title><![CDATA[Slider]]></title>
             <link>https://docs.swmansion.com/react-native-reanimated/examples/slider</link>
             <guid>https://docs.swmansion.com/react-native-reanimated/examples/slider</guid>
-            <pubDate>Wed, 25 Feb 2026 21:48:00 GMT</pubDate>
+            <pubDate>Thu, 26 Feb 2026 12:07:10 GMT</pubDate>
             <description><![CDATA[Slider allows users to adjust a value or control a setting by sliding a handle along a track. It is commonly used to adjust settings such as volume, brightness, or in this case, the width of a box.]]></description>
             <content:encoded><![CDATA[<p>Slider allows users to adjust a value or control a setting by sliding a handle along a track. It is commonly used to adjust settings such as volume, brightness, or in this case, the width of a box.</p>
 <!-- -->
@@ -166,7 +166,7 @@
             <title><![CDATA[Switch]]></title>
             <link>https://docs.swmansion.com/react-native-reanimated/examples/switch</link>
             <guid>https://docs.swmansion.com/react-native-reanimated/examples/switch</guid>
-            <pubDate>Wed, 25 Feb 2026 21:48:00 GMT</pubDate>
+            <pubDate>Thu, 26 Feb 2026 12:07:10 GMT</pubDate>
             <description><![CDATA[A switch element is a user interface component that allows users to toggle between two or more states. It is commonly used to turn on/off a setting, enable/disable a feature, or select between options.]]></description>
             <content:encoded><![CDATA[<p>A switch element is a user interface component that allows users to toggle between two or more states. It is commonly used to turn on/off a setting, enable/disable a feature, or select between options.</p>
 <!-- -->
