@@ -69,6 +69,7 @@ const DEFAULT_ANIMATION_CONFIG: SelectableConfig<CSSAnimationProperties> = {
       backgroundColor: colors.primaryDark,
       transform: [{ translateY: -sizes.md }],
     },
+    // eslint-disable-next-line perfectionist/sort-objects
     '100%': {
       backgroundColor: colors.primaryLight,
       transform: [{ translateX: sizes.lg }],

@@ -27,21 +27,21 @@ export function unmarkNodeAsRemovable(viewTag: number) {
 
 export function registerCSSKeyframes(
   animationName: string,
-  viewName: string,
+  reactViewName: string,
   keyframesConfig: NormalizedCSSAnimationKeyframesConfig
 ) {
   ReanimatedModule.registerCSSKeyframes(
     animationName,
-    viewName,
+    reactViewName,
     keyframesConfig
   );
 }
 
 export function unregisterCSSKeyframes(
   animationName: string,
-  viewName: string
+  reactViewName: string
 ) {
-  ReanimatedModule.unregisterCSSKeyframes(animationName, viewName);
+  ReanimatedModule.unregisterCSSKeyframes(animationName, reactViewName);
 }
 
 // View animations

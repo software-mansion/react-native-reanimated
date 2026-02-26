@@ -1,11 +1,11 @@
 'use strict';
 
 import { WorkletsError } from './debug/WorkletsError';
+import { addGuardImplementation } from './guardImplementation';
 import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
 } from './memory/serializable';
-import { serializableMappingCache } from './memory/serializableMappingCache';
 import { RuntimeKind } from './runtimeKind';
 import type { WorkletFunction, WorkletImport } from './types';
 import { isWorkletFunction } from './workletFunction';
@@ -135,18 +135,6 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
   return (...args: Args) => {
     scheduleOnUI(worklet, ...args);
   };
-}
-
-if (__DEV__) {
-  function runOnUIWorklet(): void {
-    'worklet';
-    throw new WorkletsError(
-      '`runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
-    );
-  }
-
-  const serializableRunOnUIWorklet = createSerializable(runOnUIWorklet);
-  serializableMappingCache.set(runOnUI, serializableRunOnUIWorklet);
 }
 
 /**
@@ -356,19 +344,6 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
   });
 }
 
-if (__DEV__) {
-  function runOnUIAsyncWorklet(): void {
-    'worklet';
-    throw new WorkletsError(
-      '`runOnUIAsync` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
-    );
-  }
-
-  const serializableRunOnUIAsyncWorklet =
-    createSerializable(runOnUIAsyncWorklet);
-  serializableMappingCache.set(runOnUIAsync, serializableRunOnUIAsyncWorklet);
-}
-
 function enqueueUI<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
   args: Args,
@@ -398,4 +373,14 @@ function flushUIQueue(): void {
       })
     );
   });
+}
+
+if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+  /**
+   * QoL guards to give a meaningful error message when the user tries to call
+   * these functions on Worklet Runtimes outside of the Bundle Mode.
+   */
+  addGuardImplementation(runOnUIAsync);
+  addGuardImplementation(runOnUISync);
+  addGuardImplementation(scheduleOnUI);
 }

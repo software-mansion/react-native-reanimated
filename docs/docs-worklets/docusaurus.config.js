@@ -56,11 +56,6 @@ const config = {
           versions: { current: { label: '0.x' } },
         },
         theme: { customCss: require.resolve('./src/css/index.css') },
-        // TODO: Add google analytics
-        // gtag: {
-        //   trackingID: 'G-RNYQG9GVFJ',
-        //   anonymizeIP: true,
-        // },
       }),
     ],
   ],
@@ -121,6 +116,15 @@ const config = {
       },
     }),
   plugins: [
+    ...[
+      process.env.NODE_ENV === 'production' && '@docusaurus/plugin-debug',
+      process.env.NODE_ENV === 'production' && [
+        '@docusaurus/plugin-google-tag-manager',
+        {
+          containerId: 'GTM-KHX5NRM8',
+        },
+      ],
+    ].filter(Boolean),
     function svgModulePlugin() {
       return {
         name: 'svg-module-plugin',
@@ -151,9 +155,6 @@ const config = {
         },
       };
     },
-    ...[
-      process.env.NODE_ENV === 'production' && '@docusaurus/plugin-debug',
-    ].filter(Boolean),
     async function reanimatedDocusaurusPlugin(context, options) {
       return {
         name: 'react-native-worklets/docusaurus-plugin',

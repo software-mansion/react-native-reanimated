@@ -52,7 +52,10 @@ export {
 } from './runtimeKind';
 export {
   createWorkletRuntime,
+  getUIRuntimeHolder,
+  getUISchedulerHolder,
   runOnRuntime,
+  runOnRuntimeAsync,
   runOnRuntimeSync,
   scheduleOnRuntime,
 } from './runtimes';

@@ -1,11 +1,11 @@
 import type React from 'react';
 import {
+  type JSX,
   memo,
   useCallback,
   useImperativeHandle,
   useRef,
   useState,
-  type JSX,
 } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type {

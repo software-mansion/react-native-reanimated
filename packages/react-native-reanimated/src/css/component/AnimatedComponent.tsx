@@ -71,7 +71,7 @@ export default class AnimatedComponent<
     let viewTag: number | typeof this._componentRef;
     let shadowNodeWrapper: ShadowNodeWrapper | null = null;
     let DOMElement: HTMLElement | null = null;
-    let viewName: string | undefined;
+    let reactViewName: string | undefined;
 
     if (SHOULD_BE_USE_WEB) {
       // At this point we assume that `_setComponentRef` was already called and `_component` is set.
@@ -94,13 +94,13 @@ export default class AnimatedComponent<
 
       const viewInfo = getViewInfo(hostInstance);
       viewTag = viewInfo.viewTag ?? -1;
-      viewName = viewInfo.viewName;
+      reactViewName = viewInfo.reactViewName;
       shadowNodeWrapper = getShadowNodeWrapperFromRef(
         this as InternalHostInstance,
         hostInstance
       );
     }
-    this._viewInfo = { viewTag, shadowNodeWrapper, viewName };
+    this._viewInfo = { viewTag, shadowNodeWrapper, reactViewName };
     if (DOMElement) {
       this._viewInfo.DOMElement = DOMElement;
     }

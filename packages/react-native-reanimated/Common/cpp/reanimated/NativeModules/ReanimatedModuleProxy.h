@@ -1,5 +1,8 @@
 #pragma once
 
+#include <react/renderer/componentregistry/componentNameByReactViewName.h>
+#include <react/renderer/core/ShadowNode.h>
+#include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/core/CSSTransition.h>
@@ -8,6 +11,7 @@
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registries/StaticPropsRegistry.h>
+#include <reanimated/Events/UIEventHandlerRegistry.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
@@ -19,22 +23,13 @@
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
-
-#include <worklets/NativeModules/WorkletsModuleProxy.h>
-#include <worklets/Registries/EventHandlerRegistry.h>
-#include <worklets/Tools/JSScheduler.h>
-#include <worklets/Tools/SingleInstanceChecker.h>
+#include <reanimated/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
-
-#include <react/renderer/componentregistry/componentNameByReactViewName.h>
-#include <react/renderer/core/ShadowNode.h>
-#include <react/renderer/uimanager/UIManager.h>
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
 #include <set>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -49,7 +44,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
                               public std::enable_shared_from_this<ReanimatedModuleProxy> {
  public:
   ReanimatedModuleProxy(
-      const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
+      const std::shared_ptr<worklets::WorkletRuntime> &uiRuntime,
+      const std::shared_ptr<worklets::UIScheduler> &uiScheduler,
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,
@@ -90,10 +86,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   bool
   handleEvent(const std::string &eventName, const int emitterReactTag, const jsi::Value &payload, double currentTime);
 
-  inline std::shared_ptr<JSLogger> getJSLogger() const {
-    return jsLogger_;
-  }
-
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
 
   void maybeRunCSSLoop();
@@ -109,9 +101,10 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   void registerCSSKeyframes(
       jsi::Runtime &rt,
       const jsi::Value &animationName,
-      const jsi::Value &viewName,
+      const jsi::Value &reactViewName,
       const jsi::Value &keyframesConfig) override;
-  void unregisterCSSKeyframes(jsi::Runtime &rt, const jsi::Value &animationName, const jsi::Value &viewName) override;
+  void unregisterCSSKeyframes(jsi::Runtime &rt, const jsi::Value &animationName, const jsi::Value &reactViewName)
+      override;
 
   void applyCSSAnimations(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &animationUpdates)
       override;
@@ -169,10 +162,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
     return isReducedMotion_;
   }
 
-  [[nodiscard]] inline std::shared_ptr<WorkletsModuleProxy> getWorkletsModuleProxy() const {
-    return workletsModuleProxy_;
-  }
-
   void requestFlushRegistry();
   std::function<std::string()> createRegistriesLeakCheck();
 
@@ -181,14 +170,14 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   const bool isReducedMotion_;
   bool shouldFlushRegistry_ = false;
-  std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+  std::shared_ptr<worklets::WorkletRuntime> uiRuntime_;
+  std::shared_ptr<worklets::UIScheduler> uiScheduler_;
 
-  std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry_;
+  std::unique_ptr<UIEventHandlerRegistry> eventHandlerRegistry_;
   const RequestRenderFunction requestRender_;
   volatile bool renderRequested_{false};
   std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
-  const std::shared_ptr<JSLogger> jsLogger_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
 #ifdef __APPLE__
@@ -220,7 +209,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;
 
 #ifndef NDEBUG
-  worklets::SingleInstanceChecker<ReanimatedModuleProxy> singleInstanceChecker_;
+  SingleInstanceChecker<ReanimatedModuleProxy> singleInstanceChecker_;
 #endif // NDEBUG
 };
 

@@ -16,6 +16,7 @@
 #include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGLength.h>
 #include <reanimated/CSS/svg/values/SVGPath.h>
+#include <reanimated/CSS/svg/values/SVGStops.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
@@ -62,7 +63,8 @@ InterpolatorFactoriesRecord mergeInterpolators(const std::vector<InterpolatorFac
 // React Native Interpolators
 // ==========================
 
-const InterpolatorFactoriesRecord FLEX_INTERPOLATORS = {
+const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
+    // Flexbox
     {"alignContent", value<CSSKeyword>("flex-start")},
     {"alignItems", value<CSSKeyword>("stretch")},
     {"alignSelf", value<CSSKeyword>("auto")},
@@ -118,15 +120,15 @@ const InterpolatorFactoriesRecord FLEX_INTERPOLATORS = {
     {"top", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "height"})},
     {"width", value<CSSLength, CSSKeyword>("auto", {RelativeTo::Parent, "width"})},
     {"zIndex", value<CSSInteger>(0)},
-    {"direction", value<CSSKeyword>("inherit")}};
+    {"direction", value<CSSKeyword>("inherit")},
 
-const InterpolatorFactoriesRecord SHADOW_INTERPOLATORS_IOS = {
+    // Shadow (iOS)
     {"shadowColor", value<CSSColor>(BLACK)},
     {"shadowOffset", record({{"width", value<CSSDouble>(0)}, {"height", value<CSSDouble>(0)}})},
     {"shadowRadius", value<CSSDouble>(0)},
-    {"shadowOpacity", value<CSSDouble>(1)}};
+    {"shadowOpacity", value<CSSDouble>(1)},
 
-const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
+    // Transforms
     {"transformOrigin",
      array(
          {value<CSSLength>("50%", {RelativeTo::Self, "width"}),
@@ -147,9 +149,8 @@ const InterpolatorFactoriesRecord TRANSFORMS_INTERPOLATORS = {
           {"skewX", transformOp<SkewXOperation>("0deg")},
           {"skewY", transformOp<SkewYOperation>("0deg")},
           {"matrix", transformOp<MatrixOperation>(TransformMatrix2D())}})},
-};
 
-const InterpolatorFactoriesRecord FILTER_INTERPOLATORS = {
+    // Filters
     {"filter",
      filters(
          {{"blur", filterOp<BlurOperation>(0)},
@@ -161,110 +162,95 @@ const InterpolatorFactoriesRecord FILTER_INTERPOLATORS = {
           {"invert", filterOp<InvertOperation>(0)},
           {"opacity", filterOp<OpacityOperation>(1)},
           {"saturate", filterOp<SaturateOperation>(1)},
-          {"sepia", filterOp<SepiaOperation>(0)}})}};
+          {"sepia", filterOp<SepiaOperation>(0)}})},
 
-const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
-    {FLEX_INTERPOLATORS,
-     SHADOW_INTERPOLATORS_IOS,
-     TRANSFORMS_INTERPOLATORS,
-     FILTER_INTERPOLATORS,
-     InterpolatorFactoriesRecord{
-         {"backfaceVisibility", value<CSSKeyword>("visible")},
-         {"backgroundColor", value<CSSColor>(TRANSPARENT)},
-         {"borderBlockColor", value<CSSColor>(BLACK)},
-         {"borderBlockEndColor", value<CSSColor>(BLACK)},
-         {"borderBlockStartColor", value<CSSColor>(BLACK)},
-         {"borderBottomColor", value<CSSColor>(BLACK)},
-         {"borderBottomEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderBottomLeftRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderBottomRightRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderBottomStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderColor", value<CSSColor>(BLACK)},
-         {"borderCurve", value<CSSKeyword>("circular")},
-         {"borderEndColor", value<CSSColor>(BLACK)},
-         {"borderEndEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderEndStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderLeftColor", value<CSSColor>(BLACK)},
-         {"borderRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderRightColor", value<CSSColor>(BLACK)},
-         {"borderStartColor", value<CSSColor>(BLACK)},
-         {"borderStartEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderStartStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderStyle", value<CSSKeyword>("solid")},
-         {"borderTopColor", value<CSSColor>(BLACK)},
-         {"borderTopEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderTopLeftRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderTopRightRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"borderTopStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
-         {"outlineColor", value<CSSColor>(BLACK)},
-         {"outlineOffset", value<CSSDouble>(0)},
-         {"outlineStyle", value<CSSKeyword>("solid")},
-         {"outlineWidth", value<CSSDouble>(0)},
-         {"opacity", value<CSSDouble>(1)},
-         {"elevation", value<CSSDouble>(0)},
-         {"pointerEvents", value<CSSKeyword>("auto")},
-         {"isolation", value<CSSKeyword>("auto")},
-         {"cursor", value<CSSKeyword>("auto")},
-         {"boxShadow", array({value<CSSBoxShadow>(CSSBoxShadow())})},
-         {"mixBlendMode", value<CSSKeyword>("normal")}}});
+    // View
+    {"backfaceVisibility", value<CSSKeyword>("visible")},
+    {"backgroundColor", value<CSSColor>(TRANSPARENT)},
+    {"borderBlockColor", value<CSSColor>(BLACK)},
+    {"borderBlockEndColor", value<CSSColor>(BLACK)},
+    {"borderBlockStartColor", value<CSSColor>(BLACK)},
+    {"borderBottomColor", value<CSSColor>(BLACK)},
+    {"borderBottomEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+    {"borderBottomLeftRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+    {"borderBottomRightRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+    {"borderBottomStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+    {"borderColor", value<CSSColor>(BLACK)},
+    {"borderCurve", value<CSSKeyword>("circular")},
+    {"borderEndColor", value<CSSColor>(BLACK)},
+    {"borderEndEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+    {"borderEndStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+    {"borderLeftColor", value<CSSColor>(BLACK)},
+    {"borderRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+    {"borderRightColor", value<CSSColor>(BLACK)},
+    {"borderStartColor", value<CSSColor>(BLACK)},
+    {"borderStartEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+    {"borderStartStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+    {"borderStyle", value<CSSKeyword>("solid")},
+    {"borderTopColor", value<CSSColor>(BLACK)},
+    {"borderTopEndRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+    {"borderTopLeftRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+    {"borderTopRightRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+    {"borderTopStartRadius", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+    {"outlineColor", value<CSSColor>(BLACK)},
+    {"outlineOffset", value<CSSDouble>(0)},
+    {"outlineStyle", value<CSSKeyword>("solid")},
+    {"outlineWidth", value<CSSDouble>(0)},
+    {"opacity", value<CSSDouble>(1)},
+    {"elevation", value<CSSDouble>(0)},
+    {"pointerEvents", value<CSSKeyword>("auto")},
+    {"isolation", value<CSSKeyword>("auto")},
+    {"cursor", value<CSSKeyword>("auto")},
+    {"boxShadow", array({value<CSSBoxShadow>(CSSBoxShadow())})},
+    {"mixBlendMode", value<CSSKeyword>("normal")},
 
-const InterpolatorFactoriesRecord TEXT_INTERPOLATORS_IOS = {
+    // Text
+    {"color", value<CSSColor>(BLACK)},
+    {"fontFamily", value<CSSKeyword>("inherit")},
+    {"fontSize", value<CSSDouble>(14)},
+    {"fontStyle", value<CSSKeyword>("normal")},
+    {"fontWeight", value<CSSKeyword>("normal")},
+    {"letterSpacing", value<CSSDouble>(0)},
+    {"lineHeight", value<CSSDouble>(14)}, // TODO - should inherit from fontSize
+    {"textAlign", value<CSSKeyword>("auto")},
+    {"textDecorationLine", value<CSSKeyword>("none")},
+    {"textShadowColor", value<CSSColor>(BLACK)},
+    {"textShadowOffset", record({{"width", value<CSSDouble>(0)}, {"height", value<CSSDouble>(0)}})},
+    {"textShadowRadius", value<CSSDouble>(0)},
+    {"textTransform", value<CSSKeyword>("none")},
+    {"userSelect", value<CSSKeyword>("auto")},
+
+    // Text (iOS)
     {"fontVariant", value<CSSDiscreteArray<CSSKeyword>>(std::vector<CSSKeyword>{})},
     {"textDecorationColor", value<CSSColor>(BLACK)},
     {"textDecorationStyle", value<CSSKeyword>("solid")},
     {"writingDirection", value<CSSKeyword>("auto")},
-};
 
-const InterpolatorFactoriesRecord TEXT_INTERPOLATORS_ANDROID = {
+    // Text (Android)
     {"textAlignVertical", value<CSSKeyword>("auto")},
     {"verticalAlign", value<CSSKeyword>("auto")},
     {"includeFontPadding", value<CSSBoolean>(false)},
+
+    // Image
+    {"resizeMode", value<CSSKeyword>("cover")},
+    {"overlayColor", value<CSSColor>(BLACK)},
+    {"tintColor", value<CSSColor>(BLACK)},
 };
-
-const InterpolatorFactoriesRecord TEXT_INTERPOLATORS = mergeInterpolators(
-    {VIEW_INTERPOLATORS,
-     TEXT_INTERPOLATORS_IOS,
-     TEXT_INTERPOLATORS_ANDROID,
-     InterpolatorFactoriesRecord{
-         {"color", value<CSSColor>(BLACK)},
-         {"fontFamily", value<CSSKeyword>("inherit")},
-         {"fontSize", value<CSSDouble>(14)},
-         {"fontStyle", value<CSSKeyword>("normal")},
-         {"fontWeight", value<CSSKeyword>("normal")},
-         {"letterSpacing", value<CSSDouble>(0)},
-         {"lineHeight", value<CSSDouble>(14)}, // TODO - should inherit from fontSize
-         {"textAlign", value<CSSKeyword>("auto")},
-         {"textDecorationLine", value<CSSKeyword>("none")},
-         {"textShadowColor", value<CSSColor>(BLACK)},
-         {"textShadowOffset", record({{"width", value<CSSDouble>(0)}, {"height", value<CSSDouble>(0)}})},
-         {"textShadowRadius", value<CSSDouble>(0)},
-         {"textTransform", value<CSSKeyword>("none")},
-         {"userSelect", value<CSSKeyword>("auto")},
-     }});
-
-const InterpolatorFactoriesRecord IMAGE_INTERPOLATORS = mergeInterpolators(
-    {VIEW_INTERPOLATORS,
-     InterpolatorFactoriesRecord{
-         {"resizeMode", value<CSSKeyword>("cover")},
-         {"overlayColor", value<CSSColor>(BLACK)},
-         {"tintColor", value<CSSColor>(BLACK)},
-     }});
 
 // =================
 // SVG INTERPOLATORS
 // =================
 
-const InterpolatorFactoriesRecord SVG_COLOR_INTERPOLATORS = {
+const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS = {
+    // Color
     {"color", value<SVGBrush>(BLACK)},
-};
 
-const InterpolatorFactoriesRecord SVG_FILL_INTERPOLATORS = {
+    // Fill
     {"fill", value<SVGBrush>(BLACK)},
     {"fillOpacity", value<CSSDouble>(1)},
     {"fillRule", value<CSSIndex>(0)},
-};
 
-const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
+    // Stroke
     {"stroke", value<SVGBrush>(BLACK)},
     {"strokeWidth", value<SVGLength>(1)},
     {"strokeOpacity", value<CSSDouble>(1)},
@@ -274,14 +260,12 @@ const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
     {"strokeLinejoin", value<CSSIndex>(0)},
     {"strokeMiterlimit", value<CSSDouble>(4)},
     {"vectorEffect", value<CSSIndex>(0)},
-};
 
-const InterpolatorFactoriesRecord SVG_CLIP_INTERPOLATORS = {
+    // Clip
     {"clipRule", value<CSSKeyword>("nonzero")},
     {"clipPath", value<CSSKeyword>("none")},
-};
 
-const InterpolatorFactoriesRecord SVG_TRANSFORM_INTERPOLATORS = {
+    // Transform
     {"translateX", value<SVGLength>(0)},
     {"translateY", value<SVGLength>(0)},
     {"originX", value<SVGLength>(0)},
@@ -291,14 +275,14 @@ const InterpolatorFactoriesRecord SVG_TRANSFORM_INTERPOLATORS = {
     {"skewX", value<CSSAngle>(0)},
     {"skewY", value<CSSAngle>(0)},
     {"rotation", value<CSSAngle>(0)},
+
+    // General
+    {"opacity", value<CSSDouble>(1)},
 };
 
-const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS = mergeInterpolators({
-    SVG_COLOR_INTERPOLATORS,
-    SVG_FILL_INTERPOLATORS,
-    SVG_STROKE_INTERPOLATORS,
-    InterpolatorFactoriesRecord{{"opacity", value<CSSDouble>(1)}},
-});
+// ================================
+// SVG Component-Specific Interpolators
+// ================================
 
 const InterpolatorFactoriesRecord SVG_CIRCLE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
@@ -338,6 +322,19 @@ const InterpolatorFactoriesRecord SVG_LINE_INTERPOLATORS = mergeInterpolators(
          {"y2", value<SVGLength, CSSKeyword>(0)},
      }});
 
+const InterpolatorFactoriesRecord SVG_LINEAR_GRADIENT_INTERPOLATORS = mergeInterpolators(
+    {SVG_COMMON_INTERPOLATORS,
+     InterpolatorFactoriesRecord{
+         {"x1", value<SVGLength, CSSKeyword>("0%")},
+         {"x2", value<SVGLength, CSSKeyword>("100%")},
+         {"y1", value<SVGLength, CSSKeyword>("0%")},
+         {"y2", value<SVGLength, CSSKeyword>("0%")},
+         {"gradient", value<SVGStops>(SVGStops())},
+         {"gradientUnits", value<CSSIndex>(0)},
+         // TODO: Implement 'gradientTransform'
+         // {"gradientTransform", value<CSSKeyword>("")},
+     }});
+
 const InterpolatorFactoriesRecord SVG_RECT_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
@@ -353,29 +350,43 @@ const InterpolatorFactoriesRecord SVG_PATH_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
          {"d", value<SVGPath>("")},
-         {"opacity", value<CSSDouble>(1)},
+     }});
+
+const InterpolatorFactoriesRecord SVG_RADIAL_GRADIENT_INTERPOLATORS = mergeInterpolators(
+    {SVG_COMMON_INTERPOLATORS,
+     InterpolatorFactoriesRecord{
+         {"r", value<SVGLength, CSSKeyword>("50%")},
+         {"fx", value<SVGLength, CSSKeyword>("50%")},
+         {"fy", value<SVGLength, CSSKeyword>("50%")},
+         {"rx", value<SVGLength, CSSKeyword>("50%")},
+         {"ry", value<SVGLength, CSSKeyword>("50%")},
+         {"cx", value<SVGLength, CSSKeyword>("50%")},
+         {"cy", value<SVGLength, CSSKeyword>("50%")},
+         {"gradient", value<SVGStops>(SVGStops())},
+         {"gradientUnits", value<CSSIndex>(0)},
+         // TODO: Implement 'gradientTransform'
+         // {"gradientTransform", value<CSSKeyword>("")},
      }});
 
 // ==================
 // COMPONENT REGISTRY
 // ==================
 
-ComponentInterpolatorsMap initializeRegistry() {
-  ComponentInterpolatorsMap registry = {
-      // React Native Components
-      {"View", VIEW_INTERPOLATORS},
-      {"Paragraph", TEXT_INTERPOLATORS},
-      {"Image", IMAGE_INTERPOLATORS},
-  };
+constexpr bool SVG_FEATURE_ENABLED = StaticFeatureFlags::getFlag("EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS");
 
-  if (StaticFeatureFlags::getFlag("EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS")) {
+ComponentInterpolatorsMap initializeRegistry() {
+  ComponentInterpolatorsMap registry = {};
+
+  if (SVG_FEATURE_ENABLED) {
     // SVG Components
     registry["RNSVGCircle"] = SVG_CIRCLE_INTERPOLATORS;
     registry["RNSVGEllipse"] = SVG_ELLIPSE_INTERPOLATORS;
     registry["RNSVGImage"] = SVG_IMAGE_INTERPOLATORS;
     registry["RNSVGLine"] = SVG_LINE_INTERPOLATORS;
+    registry["RNSVGLinearGradient"] = SVG_LINEAR_GRADIENT_INTERPOLATORS;
     registry["RNSVGPath"] = SVG_PATH_INTERPOLATORS;
     registry["RNSVGRect"] = SVG_RECT_INTERPOLATORS;
+    registry["RNSVGRadialGradient"] = SVG_RADIAL_GRADIENT_INTERPOLATORS;
   }
 
   return registry;
@@ -385,21 +396,25 @@ ComponentInterpolatorsMap registry = initializeRegistry();
 
 } // namespace
 
-const InterpolatorFactoriesRecord &getComponentInterpolators(const std::string &componentName) {
-  if (auto it = registry.find(componentName); it != registry.end()) {
+const InterpolatorFactoriesRecord &getComponentInterpolators(const std::string &nativeComponentName) {
+  if (auto it = registry.find(nativeComponentName); it != registry.end()) {
     return it->second;
   }
 
-  // Use View interpolators as a fallback for unknown components
-  // (e.g. we get the ScrollView component name for the ScrollView component
-  // but it should be styled in the same way as a View)
-  return VIEW_INTERPOLATORS;
+  // Use SVG common interpolators as a fallback for unregistered SVG components
+  if (SVG_FEATURE_ENABLED && nativeComponentName.starts_with("RNSVG")) {
+    return SVG_COMMON_INTERPOLATORS;
+  }
+
+  // Use default style interpolators as a fallback for unknown components
+  // (e.g. ExpoImage, which is not a RN component but should support RN Image styles)
+  return STYLE_INTERPOLATORS;
 }
 
 void registerComponentInterpolators(
-    const std::string &componentName,
+    const std::string &nativeComponentName,
     const InterpolatorFactoriesRecord &interpolators) {
-  registry[componentName] = interpolators;
+  registry[nativeComponentName] = interpolators;
 }
 
 } // namespace reanimated::css

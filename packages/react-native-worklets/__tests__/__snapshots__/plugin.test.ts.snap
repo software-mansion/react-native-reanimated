@@ -2528,6 +2528,22 @@ const foo = function foo_null1Factory({
 });"
 `;
 
+exports[`babel plugin for inline styles doesn't show a warning if the user uses ['value'] inside inline style 1`] = `
+"function App() {
+  return <Animated.View style={{
+    width: object['value']
+  }} />;
+}"
+`;
+
+exports[`babel plugin for inline styles doesn't show a warning if the user uses [value] inside inline style 1`] = `
+"function App() {
+  return <Animated.View style={{
+    width: object[value]
+  }} />;
+}"
+`;
+
 exports[`babel plugin for inline styles doesn't show a warning if user writes something like style={styles.value} 1`] = `
 "function App() {
   return <Animated.View style={styles.value} />;

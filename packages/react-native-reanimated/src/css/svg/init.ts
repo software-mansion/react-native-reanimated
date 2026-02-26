@@ -2,10 +2,13 @@
 import { registerComponentPropsBuilder } from '../../common';
 import {
   SVG_CIRCLE_PROPERTIES_CONFIG,
+  SVG_COMMON_PROPERTIES_CONFIG,
   SVG_ELLIPSE_PROPERTIES_CONFIG,
   SVG_IMAGE_PROPERTIES_CONFIG,
   SVG_LINE_PROPERTIES_CONFIG,
+  SVG_LINEAR_GRADIENT_PROPERTIES_CONFIG,
   SVG_PATH_PROPERTIES_CONFIG,
+  SVG_RADIAL_GRADIENT_PROPERTIES_CONFIG,
   SVG_RECT_PROPERTIES_CONFIG,
 } from './native';
 
@@ -14,8 +17,17 @@ export function initSvgCssSupport() {
   registerComponentPropsBuilder('RNSVGEllipse', SVG_ELLIPSE_PROPERTIES_CONFIG);
   registerComponentPropsBuilder('RNSVGImage', SVG_IMAGE_PROPERTIES_CONFIG);
   registerComponentPropsBuilder('RNSVGLine', SVG_LINE_PROPERTIES_CONFIG);
+  registerComponentPropsBuilder(
+    'RNSVGLinearGradient',
+    SVG_LINEAR_GRADIENT_PROPERTIES_CONFIG
+  );
+  registerComponentPropsBuilder(
+    'RNSVGRadialGradient',
+    SVG_RADIAL_GRADIENT_PROPERTIES_CONFIG
+  );
   registerComponentPropsBuilder('RNSVGPath', SVG_PATH_PROPERTIES_CONFIG);
   registerComponentPropsBuilder('RNSVGRect', SVG_RECT_PROPERTIES_CONFIG);
 
-  // TODO: Add more SVG components as they are implemented
+  // Fallback for all SVG components that aren't explicitly registered
+  registerComponentPropsBuilder(/^RNSVG/, SVG_COMMON_PROPERTIES_CONFIG);
 }

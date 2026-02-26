@@ -1265,6 +1265,8 @@ var require_autoworkletization = __commonJS({
       "runOnUISync",
       "runOnUIAsync",
       "runOnRuntime",
+      "runOnRuntimeSync",
+      "runOnRuntimeAsync",
       "scheduleOnRuntime"
     ]);
     var reanimatedFunctionArgsToWorkletize = new Map([
@@ -1285,6 +1287,8 @@ var require_autoworkletization = __commonJS({
       ["runOnUISync", [0]],
       ["runOnUIAsync", [0]],
       ["runOnRuntime", [1]],
+      ["runOnRuntimeSync", [1]],
+      ["runOnRuntimeAsync", [1]],
       ["scheduleOnRuntime", [1]],
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerObjectHooks).map((name) => [name, [0]]),
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerBuilderMethods).map((name) => [name, [0]])
@@ -1732,7 +1736,7 @@ var require_inlineStylesWarning = __commonJS({
     }
     function processPropertyValueForInlineStylesWarning(path) {
       if (path.isMemberExpression() && (0, types_12.isIdentifier)(path.node.property)) {
-        if (path.node.property.name === "value") {
+        if (!path.node.computed && path.node.property.name === "value") {
           path.replaceWith(generateInlineStylesWarning(path));
         }
       }

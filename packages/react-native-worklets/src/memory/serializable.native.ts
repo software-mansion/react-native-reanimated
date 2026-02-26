@@ -478,7 +478,7 @@ function cloneWorklet<TValue extends WorkletFunction>(
   }
   const clonedProps: Record<string, unknown> = cloneObjectProperties(
     value,
-    true,
+    shouldPersistRemote,
     depth
   );
   // to save on transferring static __initData field of worklet structure
@@ -814,6 +814,9 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
         return global._createSerializableSynchronizable(
           value
         ) as FlatSerializableRef<TValue>;
+      }
+      if ((value as Record<string, unknown>).__serializableRef) {
+        return value as FlatSerializableRef<TValue>;
       }
       if (Object.getPrototypeOf(value) !== Object.prototype) {
         const length = globalThis.__customSerializationRegistry.length;
