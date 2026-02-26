@@ -4,7 +4,7 @@ import type { HostInstance } from '../platform-specific/types';
 
 // Component naming convention:
 //
-//  componentDisplayName     - The React/JS-facing name (e.g. "Text").
+//  componentDisplayNam - The React/JS-facing name (e.g. "Text").
 //                        Accessed via Component.componentName in JS.
 //  reactViewName       - The name React Native uses to identify the component
 //                        (e.g. "RCTText"). This is what we use to identify

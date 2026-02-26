@@ -159,8 +159,8 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(const std::shared_ptr<CallI
   methodMap_["markNodeAsRemovable"] = MethodMetadata{1, REANIMATED_SPEC_PREFIX(markNodeAsRemovable)};
   methodMap_["unmarkNodeAsRemovable"] = MethodMetadata{1, REANIMATED_SPEC_PREFIX(unmarkNodeAsRemovable)};
 
-  methodMap_["registerCSSKeyframes"] = MethodMetadata{4, REANIMATED_SPEC_PREFIX(registerCSSKeyframes)};
-  methodMap_["unregisterCSSKeyframes"] = MethodMetadata{3, REANIMATED_SPEC_PREFIX(unregisterCSSKeyframes)};
+  methodMap_["registerCSSKeyframes"] = MethodMetadata{3, REANIMATED_SPEC_PREFIX(registerCSSKeyframes)};
+  methodMap_["unregisterCSSKeyframes"] = MethodMetadata{2, REANIMATED_SPEC_PREFIX(unregisterCSSKeyframes)};
 
   methodMap_["applyCSSAnimations"] = MethodMetadata{3, REANIMATED_SPEC_PREFIX(applyCSSAnimations)};
   methodMap_["unregisterCSSAnimations"] = MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSAnimations)};
