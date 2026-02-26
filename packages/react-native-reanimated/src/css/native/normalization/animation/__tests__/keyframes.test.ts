@@ -1,5 +1,9 @@
 'use strict';
-import { getPropsBuilder, ReanimatedError } from '../../../../../common';
+import {
+  getCompoundComponentName,
+  getPropsBuilder,
+  ReanimatedError,
+} from '../../../../../common';
 import type { Repeat } from '../../../../types';
 import {
   ERROR_MESSAGES,
@@ -12,6 +16,8 @@ type PropsBuilderInstance = ReturnType<typeof getPropsBuilder>;
 type BuildFn = PropsBuilderInstance['build'];
 type BuildReturn = ReturnType<BuildFn>;
 type BuildArgs = Parameters<BuildFn>;
+
+const COMPOUND_COMPONENT_NAME = getCompoundComponentName('RCTView', 'View');
 
 describe(normalizeKeyframeSelector, () => {
   describe('single selector', () => {
@@ -132,7 +138,7 @@ describe(processKeyframes, () => {
   });
 
   describe('complex properties', () => {
-    const propsBuilder = getPropsBuilder('RCTView', 'View');
+    const propsBuilder = getPropsBuilder(COMPOUND_COMPONENT_NAME);
 
     test('transform preserves array of operations', () => {
       const keyframes = {
@@ -325,8 +331,7 @@ describe(normalizeAnimationKeyframes, () => {
         },
         to: { opacity: 1 },
       },
-      'RCTView',
-      'View'
+      COMPOUND_COMPONENT_NAME
     );
 
     expect(result).toEqual({
@@ -353,8 +358,7 @@ describe(normalizeAnimationKeyframes, () => {
         from: { opacity: 0, animationTimingFunction: 'ease-in' },
         to: { opacity: 1, animationTimingFunction: 'ease-out' },
       },
-      'RCTView',
-      'View'
+      COMPOUND_COMPONENT_NAME
     );
 
     expect(result).toEqual({

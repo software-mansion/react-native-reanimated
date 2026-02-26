@@ -1,4 +1,5 @@
 'use strict';
+import { getCompoundComponentName } from '../../../../common';
 import type { ShadowNodeWrapper } from '../../../../commonTypes';
 import { ANIMATION_NAME_PREFIX } from '../../../constants';
 import { CSSKeyframesRuleBase } from '../../../models';
@@ -14,7 +15,11 @@ import {
 import CSSAnimationsManager from '../CSSAnimationsManager';
 
 const VIEW_NAME = 'RCTView'; // Must be a valid view name
-const JS_COMPONENT_NAME = 'View';
+const COMPONENT_DISPLAY_NAME = 'View';
+const COMPOUND_COMPONENT_NAME = getCompoundComponentName(
+  VIEW_NAME,
+  COMPONENT_DISPLAY_NAME
+);
 
 const animationName = (id: number) => `${ANIMATION_NAME_PREFIX}${id}`;
 
@@ -35,8 +40,7 @@ describe('CSSAnimationsManager', () => {
     manager = new CSSAnimationsManager(
       shadowNodeWrapper,
       viewTag,
-      VIEW_NAME,
-      JS_COMPONENT_NAME
+      COMPOUND_COMPONENT_NAME
     );
     // @ts-expect-error - reset private property
     CSSKeyframesRuleBase.currentAnimationID = 0;
@@ -60,7 +64,7 @@ describe('CSSAnimationsManager', () => {
         expect(applyCSSAnimations).toHaveBeenCalledTimes(1);
         expect(applyCSSAnimations).toHaveBeenCalledWith(
           shadowNodeWrapper,
-          JS_COMPONENT_NAME,
+          COMPOUND_COMPONENT_NAME,
           {
             animationNames: [animationName(0)],
             newAnimationSettings: {
@@ -97,7 +101,7 @@ describe('CSSAnimationsManager', () => {
         expect(applyCSSAnimations).toHaveBeenNthCalledWith(
           2,
           shadowNodeWrapper,
-          JS_COMPONENT_NAME,
+          COMPOUND_COMPONENT_NAME,
           {
             settingsUpdates: {
               0: { duration: 3000, timingFunction: 'ease-in', delay: 0 },
@@ -130,7 +134,7 @@ describe('CSSAnimationsManager', () => {
         expect(applyCSSAnimations).toHaveBeenNthCalledWith(
           2,
           shadowNodeWrapper,
-          JS_COMPONENT_NAME,
+          COMPOUND_COMPONENT_NAME,
           {
             animationNames: [animationName(1)],
             newAnimationSettings: {
@@ -145,14 +149,12 @@ describe('CSSAnimationsManager', () => {
         const manager1 = new CSSAnimationsManager(
           shadowNodeWrapper,
           1,
-          VIEW_NAME,
-          JS_COMPONENT_NAME
+          COMPOUND_COMPONENT_NAME
         );
         const manager2 = new CSSAnimationsManager(
           shadowNodeWrapper,
           2,
-          VIEW_NAME,
-          JS_COMPONENT_NAME
+          COMPOUND_COMPONENT_NAME
         );
 
         const getKeyframes = () => ({
@@ -245,7 +247,7 @@ describe('CSSAnimationsManager', () => {
           expect(applyCSSAnimations).toHaveBeenCalledTimes(1);
           expect(applyCSSAnimations).toHaveBeenLastCalledWith(
             shadowNodeWrapper,
-            JS_COMPONENT_NAME,
+            COMPOUND_COMPONENT_NAME,
             {
               animationNames: [animation1Name, animation2Name],
               newAnimationSettings: {
@@ -263,7 +265,7 @@ describe('CSSAnimationsManager', () => {
           expect(applyCSSAnimations).toHaveBeenCalledTimes(2);
           expect(applyCSSAnimations).toHaveBeenLastCalledWith(
             shadowNodeWrapper,
-            JS_COMPONENT_NAME,
+            COMPOUND_COMPONENT_NAME,
             {
               animationNames: [animation2Name, animation1Name],
             }
@@ -279,7 +281,7 @@ describe('CSSAnimationsManager', () => {
           expect(applyCSSAnimations).toHaveBeenCalledTimes(1);
           expect(applyCSSAnimations).toHaveBeenLastCalledWith(
             shadowNodeWrapper,
-            JS_COMPONENT_NAME,
+            COMPOUND_COMPONENT_NAME,
             {
               animationNames: [animation1Name, animation2Name],
               newAnimationSettings: {
@@ -297,7 +299,7 @@ describe('CSSAnimationsManager', () => {
           expect(applyCSSAnimations).toHaveBeenCalledTimes(2);
           expect(applyCSSAnimations).toHaveBeenLastCalledWith(
             shadowNodeWrapper,
-            JS_COMPONENT_NAME,
+            COMPOUND_COMPONENT_NAME,
             {
               animationNames: [animation2Name, animation1Name],
               settingsUpdates: {
@@ -337,14 +339,12 @@ describe('CSSAnimationsManager', () => {
         expect(unregisterCSSKeyframes).toHaveBeenNthCalledWith(
           1,
           attachedAnimations[0].keyframesRule.name,
-          VIEW_NAME,
-          JS_COMPONENT_NAME
+          COMPOUND_COMPONENT_NAME
         );
         expect(unregisterCSSKeyframes).toHaveBeenNthCalledWith(
           2,
           attachedAnimations[1].keyframesRule.name,
-          VIEW_NAME,
-          JS_COMPONENT_NAME
+          COMPOUND_COMPONENT_NAME
         );
 
         // Animations should be still attached because call to unmountCleanup

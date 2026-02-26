@@ -18,15 +18,12 @@ double getDelay(jsi::Runtime &rt, const jsi::Object &config) {
   return config.getProperty(rt, "delay").asNumber();
 }
 
-std::string
-getCompoundComponentName(jsi::Runtime &rt, const jsi::Value &reactViewName, const jsi::Value &jsComponentName) {
-  const auto nativeComponentName = componentNameByReactViewName(reactViewName.asString(rt).utf8(rt));
-  return nativeComponentName + "$" + jsComponentName.asString(rt).utf8(rt);
-}
-
-std::string
-getCompoundComponentName(jsi::Runtime &rt, const std::string &nativeComponentName, const jsi::Value &jsComponentName) {
-  return nativeComponentName + "$" + jsComponentName.asString(rt).utf8(rt);
+std::pair<std::string, std::string> splitCompoundComponentName(const std::string &compoundComponentName) {
+  const auto pos = compoundComponentName.find('$');
+  if (pos == std::string::npos) {
+    return {compoundComponentName, ""};
+  }
+  return {compoundComponentName.substr(0, pos), compoundComponentName.substr(pos + 1)};
 }
 
 } // namespace reanimated::css

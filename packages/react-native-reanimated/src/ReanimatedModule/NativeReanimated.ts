@@ -201,38 +201,31 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   registerCSSKeyframes(
     animationName: string,
-    reactViewName: string,
-    jsComponentName: string,
+    compoundComponentName: string,
     keyframesConfig: NormalizedCSSAnimationKeyframesConfig
   ) {
     this.#reanimatedModuleProxy.registerCSSKeyframes(
       animationName,
-      reactViewName,
-      jsComponentName,
+      compoundComponentName,
       keyframesConfig
     );
   }
 
-  unregisterCSSKeyframes(
-    animationName: string,
-    reactViewName: string,
-    jsComponentName: string
-  ) {
+  unregisterCSSKeyframes(animationName: string, compoundComponentName: string) {
     this.#reanimatedModuleProxy.unregisterCSSKeyframes(
       animationName,
-      reactViewName,
-      jsComponentName
+      compoundComponentName
     );
   }
 
   applyCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,
-    jsComponentName: string,
+    compoundComponentName: string,
     animationUpdates: CSSAnimationUpdates
   ) {
     this.#reanimatedModuleProxy.applyCSSAnimations(
       shadowNodeWrapper,
-      jsComponentName,
+      compoundComponentName,
       animationUpdates
     );
   }

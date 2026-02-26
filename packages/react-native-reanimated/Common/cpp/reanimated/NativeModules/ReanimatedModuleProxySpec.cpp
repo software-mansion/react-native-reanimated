@@ -95,14 +95,14 @@ static jsi::Value REANIMATED_SPEC_PREFIX(
 static jsi::Value REANIMATED_SPEC_PREFIX(
     registerCSSKeyframes)(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value *args, size_t) {
   static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->registerCSSKeyframes(rt, std::move(args[0]), std::move(args[1]), std::move(args[2]), std::move(args[3]));
+      ->registerCSSKeyframes(rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
   return jsi::Value::undefined();
 }
 
 static jsi::Value REANIMATED_SPEC_PREFIX(
     unregisterCSSKeyframes)(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value *args, size_t) {
   static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->unregisterCSSKeyframes(rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
+      ->unregisterCSSKeyframes(rt, std::move(args[0]), std::move(args[1]));
   return jsi::Value::undefined();
 }
 

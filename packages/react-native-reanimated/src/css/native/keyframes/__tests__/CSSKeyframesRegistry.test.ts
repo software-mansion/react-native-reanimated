@@ -1,10 +1,15 @@
 'use strict';
+import { getCompoundComponentName } from '../../../../common';
 import { registerCSSKeyframes, unregisterCSSKeyframes } from '../../proxy';
 import cssKeyframesRegistry from '../CSSKeyframesRegistry';
 import CSSKeyframesRuleImpl from '../CSSKeyframesRuleImpl';
 
 const VIEW_NAME = 'RCTView'; // Must be a valid view name
-const JS_COMPONENT_NAME = 'View';
+const COMPONENT_DISPLAY_NAME = 'View';
+const COMPOUND_COMPONENT_NAME = getCompoundComponentName(
+  VIEW_NAME,
+  COMPONENT_DISPLAY_NAME
+);
 
 jest.mock('../../proxy.ts', () => ({
   registerCSSKeyframes: jest.fn(),
@@ -35,20 +40,17 @@ describe('CSSKeyframesRegistry', () => {
       cssKeyframesRegistry.add(
         keyframesRule1,
         viewTag1,
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       );
 
       const keyframesConfig = keyframesRule1.getNormalizedKeyframesConfig(
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       );
 
       expect(registerCSSKeyframes).toHaveBeenCalledTimes(1);
       expect(registerCSSKeyframes).toHaveBeenCalledWith(
         keyframesRule1.name,
-        VIEW_NAME,
-        JS_COMPONENT_NAME,
+        COMPOUND_COMPONENT_NAME,
         keyframesConfig
       );
       expect(unregisterCSSKeyframes).not.toHaveBeenCalled();
@@ -58,26 +60,22 @@ describe('CSSKeyframesRegistry', () => {
       cssKeyframesRegistry.add(
         keyframesRule1,
         viewTag1,
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       );
       cssKeyframesRegistry.add(
         keyframesRule1,
         viewTag2,
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       ); // animation won't be registered again, even though the viewTag is different
 
       const keyframesConfig = keyframesRule1.getNormalizedKeyframesConfig(
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       );
 
       expect(registerCSSKeyframes).toHaveBeenCalledTimes(1);
       expect(registerCSSKeyframes).toHaveBeenCalledWith(
         keyframesRule1.name,
-        VIEW_NAME,
-        JS_COMPONENT_NAME,
+        COMPOUND_COMPONENT_NAME,
         keyframesConfig
       );
       expect(unregisterCSSKeyframes).not.toHaveBeenCalled();
@@ -87,38 +85,32 @@ describe('CSSKeyframesRegistry', () => {
       cssKeyframesRegistry.add(
         keyframesRule1,
         viewTag1,
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       );
       cssKeyframesRegistry.add(
         keyframesRule2,
         viewTag1,
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       ); // viewTag can be the same, animations aren't added separately for different views
 
       const keyframesConfig1 = keyframesRule1.getNormalizedKeyframesConfig(
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       );
       const keyframesConfig2 = keyframesRule2.getNormalizedKeyframesConfig(
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       );
 
       expect(registerCSSKeyframes).toHaveBeenCalledTimes(2);
       expect(registerCSSKeyframes).toHaveBeenNthCalledWith(
         1,
         keyframesRule1.name,
-        VIEW_NAME,
-        JS_COMPONENT_NAME,
+        COMPOUND_COMPONENT_NAME,
         keyframesConfig1
       );
       expect(registerCSSKeyframes).toHaveBeenNthCalledWith(
         2,
         keyframesRule2.name,
-        VIEW_NAME,
-        JS_COMPONENT_NAME,
+        COMPOUND_COMPONENT_NAME,
         keyframesConfig2
       );
       expect(unregisterCSSKeyframes).not.toHaveBeenCalled();
@@ -130,21 +122,18 @@ describe('CSSKeyframesRegistry', () => {
       cssKeyframesRegistry.add(
         keyframesRule1,
         viewTag1,
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       );
       cssKeyframesRegistry.remove(
         keyframesRule1.name,
         viewTag1,
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       );
 
       expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(1);
       expect(unregisterCSSKeyframes).toHaveBeenCalledWith(
         keyframesRule1.name,
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       );
     });
 
@@ -152,14 +141,12 @@ describe('CSSKeyframesRegistry', () => {
       cssKeyframesRegistry.add(
         keyframesRule1,
         viewTag1,
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       );
       cssKeyframesRegistry.remove(
         keyframesRule1.name,
         viewTag2,
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       );
 
       expect(unregisterCSSKeyframes).not.toHaveBeenCalled();
@@ -169,20 +156,17 @@ describe('CSSKeyframesRegistry', () => {
       cssKeyframesRegistry.add(
         keyframesRule1,
         viewTag1,
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       );
       cssKeyframesRegistry.add(
         keyframesRule1,
         viewTag2,
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       );
       cssKeyframesRegistry.add(
         keyframesRule1,
         viewTag3,
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       );
 
       expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(0);
@@ -190,24 +174,21 @@ describe('CSSKeyframesRegistry', () => {
       cssKeyframesRegistry.remove(
         keyframesRule1.name,
         viewTag1,
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       );
       expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(0);
 
       cssKeyframesRegistry.remove(
         keyframesRule1.name,
         viewTag2,
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       );
       expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(0);
 
       cssKeyframesRegistry.remove(
         keyframesRule1.name,
         viewTag3,
-        VIEW_NAME,
-        JS_COMPONENT_NAME
+        COMPOUND_COMPONENT_NAME
       );
       expect(unregisterCSSKeyframes).toHaveBeenCalledTimes(1); // Finally, the animation is removed
     });

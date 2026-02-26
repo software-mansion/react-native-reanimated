@@ -1,5 +1,5 @@
 'use strict';
-import { getPropsBuilder } from '../../../common';
+import { getCompoundComponentName, getPropsBuilder } from '../../../common';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
 import type { CSSStyle } from '../../types';
@@ -18,17 +18,21 @@ export default class CSSManager implements ICSSManager {
 
   constructor(
     { shadowNodeWrapper, viewTag, reactViewName = 'RCTView' }: ViewInfo,
-    jsComponentName = ''
+    componentDisplayName = ''
   ) {
     const tag = (this.viewTag = viewTag as number);
     const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
 
-    this.propsBuilder = getPropsBuilder(reactViewName, jsComponentName);
+    const compoundComponentName = getCompoundComponentName(
+      reactViewName,
+      componentDisplayName
+    );
+
+    this.propsBuilder = getPropsBuilder(compoundComponentName);
     this.cssAnimationsManager = new CSSAnimationsManager(
       wrapper,
       tag,
-      reactViewName,
-      jsComponentName
+      compoundComponentName
     );
     this.cssTransitionsManager = new CSSTransitionsManager(wrapper, tag);
   }
