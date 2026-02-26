@@ -861,7 +861,7 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
 
       UpdatesBatch synchronousUpdatesBatch, shadowTreeUpdatesBatch;
 
-      for (const auto &[shadowNode, props] : updatesBatch) {
+      for (const auto &[family, props] : updatesBatch) {
         bool hasOnlySynchronousProps = true;
         for (const auto &[key, value] : props.items()) {
           const auto keyStr = key.asString();
@@ -872,9 +872,9 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
           }
         }
         if (hasOnlySynchronousProps) {
-          synchronousUpdatesBatch.emplace_back(shadowNode, props);
+          synchronousUpdatesBatch.emplace_back(family, props);
         } else {
-          shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
+          shadowTreeUpdatesBatch.emplace_back(family, props);
         }
       }
 
@@ -884,9 +884,9 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
         intBuffer.reserve(1024);
         doubleBuffer.reserve(1024);
 
-        for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
+        for (const auto &[family, props] : synchronousUpdatesBatch) {
           intBuffer.push_back(CMD_START_OF_VIEW);
-          intBuffer.push_back(shadowNode->getTag());
+          intBuffer.push_back(family->getTag());
           for (const auto &[key, value] : props.items()) {
             const auto command = propNameToCommand(key.getString());
             switch (command) {
@@ -1062,7 +1062,7 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
 
       UpdatesBatch synchronousUpdatesBatch, shadowTreeUpdatesBatch;
 
-      for (const auto &[shadowNode, props] : updatesBatch) {
+      for (const auto &[family, props] : updatesBatch) {
         bool hasOnlySynchronousProps = true;
         for (const auto &key : props.keys()) {
           const auto keyStr = key.asString();
@@ -1072,14 +1072,14 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
           }
         }
         if (hasOnlySynchronousProps) {
-          synchronousUpdatesBatch.emplace_back(shadowNode, props);
+          synchronousUpdatesBatch.emplace_back(family, props);
         } else {
-          shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
+          shadowTreeUpdatesBatch.emplace_back(family, props);
         }
       }
 
-      for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
-        synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
+      for (const auto &[family, props] : synchronousUpdatesBatch) {
+        synchronouslyUpdateUIPropsFunction_(family->getTag(), props);
       }
 
       updatesBatch = std::move(shadowTreeUpdatesBatch);
@@ -1138,10 +1138,8 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
       }
     }
   } else {
-    for (auto const &[shadowNode, props] : updatesBatch) {
-      SurfaceId surfaceId = shadowNode->getSurfaceId();
-      auto family = &shadowNode->getFamily();
-      react_native_assert(family->getSurfaceId() == surfaceId);
+    for (auto const &[family, props] : updatesBatch) {
+      SurfaceId surfaceId = family->getSurfaceId();
       propsMapBySurface[surfaceId][family].emplace_back(props);
     }
   }
