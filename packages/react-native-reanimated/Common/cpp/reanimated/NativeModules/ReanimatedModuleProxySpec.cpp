@@ -109,7 +109,7 @@ static jsi::Value REANIMATED_SPEC_PREFIX(
 static jsi::Value REANIMATED_SPEC_PREFIX(
     applyCSSAnimations)(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value *args, size_t) {
   static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->applyCSSAnimations(rt, std::move(args[0]), std::move(args[1]));
+      ->applyCSSAnimations(rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
   return jsi::Value::undefined();
 }
 
@@ -162,7 +162,7 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(const std::shared_ptr<CallI
   methodMap_["registerCSSKeyframes"] = MethodMetadata{3, REANIMATED_SPEC_PREFIX(registerCSSKeyframes)};
   methodMap_["unregisterCSSKeyframes"] = MethodMetadata{2, REANIMATED_SPEC_PREFIX(unregisterCSSKeyframes)};
 
-  methodMap_["applyCSSAnimations"] = MethodMetadata{2, REANIMATED_SPEC_PREFIX(applyCSSAnimations)};
+  methodMap_["applyCSSAnimations"] = MethodMetadata{3, REANIMATED_SPEC_PREFIX(applyCSSAnimations)};
   methodMap_["unregisterCSSAnimations"] = MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSAnimations)};
 
   methodMap_["runCSSTransition"] = MethodMetadata{2, REANIMATED_SPEC_PREFIX(runCSSTransition)};
