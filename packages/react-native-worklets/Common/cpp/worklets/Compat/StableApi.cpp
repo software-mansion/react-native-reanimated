@@ -4,6 +4,7 @@
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/JSISerializer.h>
+#include <worklets/WorkletRuntime/RuntimeHolder.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
@@ -21,6 +22,24 @@ void scheduleOnUI(const std::shared_ptr<UIScheduler> &uiScheduler, const std::fu
 facebook::jsi::Runtime *getJSIRuntimeFromWorkletRuntime(const std::shared_ptr<WorkletRuntime> &workletRuntime) {
   return &(workletRuntime->getJSIRuntime());
 }
+
+std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
+#if REACT_NATIVE_MINOR_VERSION >= 81
+  auto runtimeData = rt.getRuntimeData(RuntimeData::weakRuntimeUUID);
+  if (!runtimeData) [[unlikely]] {
+    throw std::runtime_error(
+        "[Worklets] No weak runtime data found on the provided JSI runtime."
+        " Perhaps the JSI Runtime is not a WorkletRuntime?");
+  }
+  auto weakHolder = std::static_pointer_cast<WeakRuntimeHolder>(runtimeData);
+  return weakHolder->weakRuntime;
+#else
+  throw std::runtime_error(
+      "[Worklets] Retrieving WorkletRuntime from JSI Runtime is not supported in React Native versions below 0.81.");
+#endif // REACT_NATIVE_MINOR_VERSION >= 81
+}
+
+/* #region deprecated */
 
 std::shared_ptr<Serializable>
 extractSerializable(facebook::jsi::Runtime &rt, const facebook::jsi::Value &value, const std::string &errorMessage) {
@@ -77,7 +96,8 @@ std::shared_ptr<Serializable> extractSerializable(
       throw std::runtime_error("[Worklets] Not implemented.");
     case Serializable::ValueType::ShareableType:
       throw std::runtime_error("[Worklets] Not implemented.");
-      break;
+    default:
+      throw std::runtime_error("[Worklets] Invalid expected type provided to extractSerializable.");
   }
 }
 

@@ -260,19 +260,6 @@ void scheduleOnRuntime(
   workletRuntime->schedule(serializableWorklet);
 }
 
-#if REACT_NATIVE_MINOR_VERSION >= 81
-std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
-  auto runtimeData = rt.getRuntimeData(RuntimeData::weakRuntimeUUID);
-  if (!runtimeData) [[unlikely]] {
-    throw std::runtime_error(
-        "[Worklets] No weak runtime data found on the provided JSI runtime."
-        " Perhaps the JSI Runtime is not a WorkletRuntime?");
-  }
-  auto weakHolder = std::static_pointer_cast<WeakRuntimeHolder>(runtimeData);
-  return weakHolder->weakRuntime;
-}
-#endif // REACT_NATIVE_MINOR_VERSION >= 81
-
 /* #region deprecated */
 
 void WorkletRuntime::runAsyncGuarded(const std::shared_ptr<SerializableWorklet> &worklet) {
