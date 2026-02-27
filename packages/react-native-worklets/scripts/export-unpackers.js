@@ -9,6 +9,10 @@ const generate = require('@babel/generator').default;
 const path = require('path');
 const fs = require('fs');
 const assert = require('assert').strict;
+const workletsBabelPlugin = require('../plugin');
+
+/** @type {import('../plugin/').PluginOptions} */
+const workletsBabelPluginOptions = {};
 
 exportToCpp('valueUnpacker.native.ts', 'ValueUnpacker');
 exportToCpp('synchronizableUnpacker.native.ts', 'SynchronizableUnpacker');
@@ -31,10 +35,12 @@ function exportToCpp(sourceFilePath, outputFilename) {
         ['@babel/preset-env', { modules: false }],
         '@babel/preset-typescript',
       ],
+      plugins: [[workletsBabelPlugin, workletsBabelPluginOptions]],
       sourceType: 'unambiguous',
       code: false,
       ast: true,
       comments: false,
+      configFile: false,
     }
   );
 
@@ -90,4 +96,6 @@ const char ${cstrName}[] =
 `,
     'utf8'
   );
+
+  console.log(`✅ Exported ${sourceFilePath} to ${outputFilename}.cpp`);
 }
