@@ -1,7 +1,7 @@
 import React from 'react';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import { Navbar } from '@swmansion/t-rex-ui';
-import NavbarBanner from '@site/src/components/NavbarBanner';
+import TopPromoRotator from '@site/src/components/TopPromoRotator';
 
 export default function NavbarWrapper(props) {
   const titleImages = {
@@ -14,7 +14,7 @@ export default function NavbarWrapper(props) {
   };
   return (
     <>
-      <NavbarBanner />
+      <TopPromoRotator />
       <Navbar heroImages={heroImages} titleImages={titleImages} {...props} />
     </>
   );
