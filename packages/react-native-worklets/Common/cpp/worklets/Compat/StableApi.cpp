@@ -101,20 +101,20 @@ std::shared_ptr<Serializable> extractSerializable(
   }
 }
 
-extern void runSyncOnRuntime(
+void runSyncOnRuntime(
     const std::shared_ptr<WorkletRuntime> &workletRuntime,
     const std::shared_ptr<Serializable> &worklet) {
   workletRuntime->runSync(std::static_pointer_cast<SerializableWorklet>(worklet));
 }
 
-extern void runSyncOnRuntime(
+void runSyncOnRuntime(
     const std::shared_ptr<WorkletRuntime> &workletRuntime,
     const std::shared_ptr<Serializable> &worklet,
     const facebook::jsi::Value &arg0) {
   workletRuntime->runSync(std::static_pointer_cast<SerializableWorklet>(worklet), arg0);
 }
 
-extern void runSyncOnRuntime(
+void runSyncOnRuntime(
     const std::shared_ptr<WorkletRuntime> &workletRuntime,
     const std::shared_ptr<Serializable> &worklet,
     const facebook::jsi::Value &arg0,
