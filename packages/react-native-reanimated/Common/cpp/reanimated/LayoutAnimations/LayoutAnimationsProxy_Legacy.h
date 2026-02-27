@@ -116,7 +116,7 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
       const SharedComponentDescriptorRegistry &componentDescriptorRegistry,
       const std::shared_ptr<const ContextContainer> &contextContainer,
       jsi::Runtime &uiRuntime,
-      const std::shared_ptr<worklets::UISchedulerHolder> &uiScheduler
+      const std::shared_ptr<UIScheduler> &uiScheduler
 #ifdef ANDROID
       ,
       const PreserveMountedTagsFunction &filterUnmountedTagsFunction,

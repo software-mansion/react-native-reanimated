@@ -12,6 +12,7 @@
 #include <reanimated/CSS/svg/values/SVGPath.h>
 #include <reanimated/CSS/svg/values/SVGStops.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
+
 #include <worklets/Compat/StableApi.h>
 
 #include <string>
@@ -19,8 +20,6 @@
 #include <vector>
 
 namespace reanimated::css {
-
-using namespace worklets;
 
 template <CSSValueDerived... AllowedTypes>
 CSSValueVariant<AllowedTypes...>::CSSValueVariant(std::variant<AllowedTypes...> &&storage)
@@ -42,7 +41,7 @@ CSSValueVariant<AllowedTypes...>::CSSValueVariant(jsi::Runtime &rt, const jsi::V
   // Try constructing with each allowed type until one succeeds
   if (!(tryOne.template operator()<AllowedTypes>() || ...)) {
     throw std::runtime_error(
-        "[Reanimated] No compatible type found for construction from: " + JSIValueToString(rt, jsiValue));
+        "[Reanimated] No compatible type found for construction from: " + worklets::JSIValueToString(rt, jsiValue));
   }
 }
 

@@ -27,7 +27,6 @@ class Serializable {
     NullType,
     BooleanType,
     NumberType,
-    SymbolType, // Unused currently
     BigIntType,
     StringType,
     ObjectType,
@@ -44,7 +43,8 @@ class Serializable {
     ImportType,
     SynchronizableType,
     CustomType,
-    ShareableType // Unused currently
+    SymbolType, /* unused */
+    ShareableType
   };
 
   explicit Serializable(ValueType valueType) : valueType_(valueType) {}
@@ -59,31 +59,19 @@ class Serializable {
   ValueType valueType_;
 };
 
-class WorkletRuntimeHolder {
- public:
-  explicit WorkletRuntimeHolder(const std::shared_ptr<WorkletRuntime> &workletRuntime);
-
-  const std::shared_ptr<WorkletRuntime> workletRuntime_;
-};
-
-class UISchedulerHolder {
- public:
-  explicit UISchedulerHolder(const std::shared_ptr<UIScheduler> &sharedPtr);
-
-  const std::shared_ptr<UIScheduler> uiScheduler_;
-};
-
-extern std::shared_ptr<WorkletRuntimeHolder> getWorkletRuntimeHolderFromNativeStateObject(
+extern std::shared_ptr<WorkletRuntime> getWorkletRuntimeFromHolder(
     facebook::jsi::Runtime &rt,
     const facebook::jsi::Object &object);
 
-extern std::shared_ptr<UISchedulerHolder> getUISchedulerHolderFromNativeStateObject(
+extern std::shared_ptr<UIScheduler> getUISchedulerFromHolder(
     facebook::jsi::Runtime &rt,
     const facebook::jsi::Object &object);
 
-extern facebook::jsi::Runtime *getRuntimeAddressFromHolder(const std::shared_ptr<WorkletRuntimeHolder> &holder);
+extern facebook::jsi::Runtime *getJSIRuntimeFromWorkletRuntime(const std::shared_ptr<WorkletRuntime> &workletRuntime);
 
-extern void scheduleOnUI(const std::shared_ptr<UISchedulerHolder> &uiSchedulerHolder, const std::function<void()> &job);
+extern std::weak_ptr<WorkletRuntime> getWeakRuntimeFromJSIRuntime(facebook::jsi::Runtime &rt);
+
+extern void scheduleOnUI(const std::shared_ptr<UIScheduler> &uiScheduler, const std::function<void()> &job);
 
 extern std::string JSIValueToString(facebook::jsi::Runtime &rt, const facebook::jsi::Value &value);
 
@@ -97,16 +85,16 @@ extern std::shared_ptr<Serializable> extractSerializable(
     const Serializable::ValueType expectedType);
 
 extern void runSyncOnRuntime(
-    const std::shared_ptr<WorkletRuntimeHolder> &runtimeHolder,
+    const std::shared_ptr<WorkletRuntime> &workletRuntime,
     const std::shared_ptr<Serializable> &worklet);
 
 extern void runSyncOnRuntime(
-    const std::shared_ptr<WorkletRuntimeHolder> &runtimeHolder,
+    const std::shared_ptr<WorkletRuntime> &workletRuntime,
     const std::shared_ptr<Serializable> &worklet,
     const facebook::jsi::Value &arg0);
 
 extern void runSyncOnRuntime(
-    const std::shared_ptr<WorkletRuntimeHolder> &runtimeHolder,
+    const std::shared_ptr<WorkletRuntime> &workletRuntime,
     const std::shared_ptr<Serializable> &worklet,
     const facebook::jsi::Value &arg0,
     const facebook::jsi::Value &arg1);

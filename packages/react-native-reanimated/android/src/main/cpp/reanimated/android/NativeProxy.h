@@ -36,7 +36,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
-  std::shared_ptr<worklets::WorkletRuntimeHolder> uiRuntimeHolder_;
+  std::shared_ptr<worklets::WorkletRuntime> uiRuntime_;
   std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
 #ifndef NDEBUG
   void checkJavaVersion();
@@ -93,8 +93,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
       jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject> fabricUIManager,
-      const std::shared_ptr<worklets::WorkletRuntimeHolder> &uiRuntimeHolder,
-      const std::shared_ptr<worklets::UISchedulerHolder> &uiSchedulerHolder);
+      const std::shared_ptr<worklets::WorkletRuntime> &uiRuntime,
+      const std::shared_ptr<worklets::UIScheduler> &uiScheduler);
 
   void invalidateCpp();
 };

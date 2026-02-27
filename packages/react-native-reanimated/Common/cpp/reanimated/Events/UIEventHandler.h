@@ -27,7 +27,7 @@ class UIEventHandler {
         eventName_(eventName),
         handlerFunction_(handlerFunction) {}
   void process(
-      const std::shared_ptr<worklets::WorkletRuntimeHolder> &uiRuntimeHolder,
+      const std::shared_ptr<worklets::WorkletRuntime> &uiRuntime,
       double eventTimestamp,
       const jsi::Value &eventValue) const;
   uint64_t getHandlerId() const;

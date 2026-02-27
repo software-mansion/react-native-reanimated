@@ -7,8 +7,6 @@
 
 namespace reanimated {
 
-using namespace worklets;
-
 void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   for (const auto &layoutAnimationConfig : layoutAnimationsBatch) {

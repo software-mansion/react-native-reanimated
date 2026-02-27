@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
+
 #include <worklets/Compat/StableApi.h>
 
 #include <jsi/jsi.h>
@@ -11,6 +12,7 @@
 namespace reanimated {
 
 using namespace facebook;
+using namespace worklets;
 
 enum class SensorType : std::uint8_t {
   ACCELEROMETER = 1,
@@ -29,8 +31,8 @@ class AnimatedSensorModule {
   explicit AnimatedSensorModule(const PlatformDepMethodsHolder &platformDepMethodsHolder);
 
   jsi::Value registerSensor(
-      jsi::Runtime &rt,
-      const std::shared_ptr<worklets::WorkletRuntimeHolder> &uiRuntimeHolder,
+      jsi::Runtime &rnRuntime,
+      const std::shared_ptr<WorkletRuntime> &uiRuntime,
       const jsi::Value &sensorType,
       const jsi::Value &interval,
       const jsi::Value &iosReferenceFrame,

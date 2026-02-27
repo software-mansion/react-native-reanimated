@@ -31,7 +31,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       const SharedComponentDescriptorRegistry &componentDescriptorRegistry,
       const std::shared_ptr<const ContextContainer> &contextContainer,
       jsi::Runtime &uiRuntime,
-      const std::shared_ptr<worklets::UISchedulerHolder> &uiSchedulerHolder
+      const std::shared_ptr<UIScheduler> &uiScheduler
 #ifdef ANDROID
       ,
       const PreserveMountedTagsFunction &filterUnmountedTagsFunction,
@@ -43,7 +43,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
         contextContainer_(contextContainer),
         componentDescriptorRegistry_(componentDescriptorRegistry),
         uiRuntime_(uiRuntime),
-        uiSchedulerHolder_(uiSchedulerHolder)
+        uiScheduler_(uiScheduler)
 #ifdef ANDROID
         ,
         preserveMountedTags_(filterUnmountedTagsFunction),
@@ -66,7 +66,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   std::shared_ptr<const ContextContainer> contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
   jsi::Runtime &uiRuntime_;
-  const std::shared_ptr<worklets::UISchedulerHolder> uiSchedulerHolder_;
+  const std::shared_ptr<UIScheduler> uiScheduler_;
   PreserveMountedTagsFunction preserveMountedTags_;
 
 #ifdef ANDROID

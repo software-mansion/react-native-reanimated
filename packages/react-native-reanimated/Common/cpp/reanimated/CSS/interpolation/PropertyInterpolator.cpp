@@ -1,12 +1,11 @@
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
+
 #include <worklets/Compat/StableApi.h>
 
 #include <memory>
 #include <utility>
 
 namespace reanimated::css {
-
-using namespace worklets;
 
 PropertyInterpolator::PropertyInterpolator(
     PropertyPath propertyPath,
@@ -36,7 +35,7 @@ std::vector<std::pair<double, jsi::Value>> PropertyInterpolator::parseJSIKeyfram
     throw std::invalid_argument(
         "[Reanimated] Received invalid keyframes object for property: " + getPropertyPathString() +
         ".\n\nExpected an array of objects with 'offset' and 'value' properties, got: " +
-        JSIValueToString(rt, keyframes));
+        worklets::JSIValueToString(rt, keyframes));
   }
 
   const auto keyframeArray = keyframes.asObject(rt).asArray(rt);

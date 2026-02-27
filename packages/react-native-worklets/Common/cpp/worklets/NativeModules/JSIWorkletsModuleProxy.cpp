@@ -12,7 +12,6 @@
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
-#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
 #include <string>
@@ -595,9 +594,13 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         0,
         [uiWorkletRuntime = uiWorkletRuntime_](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          auto holder = std::make_shared<NativeStateWorkletRuntimeHolder>(uiWorkletRuntime.lock());
+          const auto strongUIWorkletRuntime = uiWorkletRuntime.lock();
+          if (!strongUIWorkletRuntime) {
+            throw jsi::JSError(rt, "[Worklets] UI Worklet Runtime is not available.");
+          }
+          auto nativeState = std::make_shared<WorkletRuntimeHolder>(strongUIWorkletRuntime);
           auto obj = jsi::Object(rt);
-          obj.setNativeState(rt, std::move(holder));
+          obj.setNativeState(rt, std::move(nativeState));
           return obj;
         });
   }
@@ -609,9 +612,9 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         0,
         [uiScheduler = uiScheduler_](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-          auto holder = std::make_shared<NativeStateUISchedulerHolder>(uiScheduler);
+          auto nativeState = std::make_shared<UISchedulerHolder>(uiScheduler);
           auto obj = jsi::Object(rt);
-          obj.setNativeState(rt, std::move(holder));
+          obj.setNativeState(rt, std::move(nativeState));
           return obj;
         });
   }

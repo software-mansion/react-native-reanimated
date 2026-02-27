@@ -28,7 +28,7 @@ class UIEventHandlerRegistry {
   void unregisterEventHandler(const uint64_t id);
 
   void processEvent(
-      const std::shared_ptr<worklets::WorkletRuntimeHolder> &uiRuntimeHolder,
+      const std::shared_ptr<worklets::WorkletRuntime> &uiRuntime,
       const double eventTimestamp,
       const std::string &eventName,
       const int emitterReactTag,

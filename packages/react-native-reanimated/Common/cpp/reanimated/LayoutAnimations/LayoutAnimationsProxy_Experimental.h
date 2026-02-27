@@ -4,6 +4,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
+
 #include <worklets/Compat/StableApi.h>
 
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
@@ -66,7 +67,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
       const SharedComponentDescriptorRegistry &componentDescriptorRegistry,
       const std::shared_ptr<const ContextContainer> &contextContainer,
       jsi::Runtime &uiRuntime,
-      const std::shared_ptr<worklets::UISchedulerHolder> &uiSchedulerHolder
+      const std::shared_ptr<UIScheduler> &uiScheduler
 #ifdef ANDROID
       ,
       const PreserveMountedTagsFunction &filterUnmountedTagsFunction,
@@ -79,7 +80,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
             componentDescriptorRegistry,
             contextContainer,
             uiRuntime,
-            uiSchedulerHolder
+            uiScheduler
 #ifdef ANDROID
             ,
             filterUnmountedTagsFunction,

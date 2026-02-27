@@ -6,9 +6,9 @@
 #include <utility>
 #include <vector>
 
-namespace reanimated {
-
 using namespace worklets;
+
+namespace reanimated {
 
 void UIEventHandlerRegistry::registerEventHandler(const std::shared_ptr<UIEventHandler> &eventHandler) {
   const std::lock_guard<std::mutex> lock(instanceMutex);
@@ -54,7 +54,7 @@ void UIEventHandlerRegistry::unregisterEventHandler(const uint64_t id) {
 }
 
 void UIEventHandlerRegistry::processEvent(
-    const std::shared_ptr<WorkletRuntimeHolder> &uiWorkletRuntime,
+    const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime,
     const double eventTimestamp,
     const std::string &eventName,
     const int emitterReactTag,
@@ -77,7 +77,7 @@ void UIEventHandlerRegistry::processEvent(
     }
   }
 
-  jsi::Runtime &uiRuntime = *getRuntimeAddressFromHolder(uiWorkletRuntime);
+  jsi::Runtime &uiRuntime = *getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
   eventPayload.asObject(uiRuntime).setProperty(
       uiRuntime, "eventName", jsi::String::createFromUtf8(uiRuntime, eventName));
   for (const auto &handler : handlersForEvent) {
