@@ -4,10 +4,6 @@ import { WorkletsError } from './debug/WorkletsError';
 import { IS_JEST } from './platformChecker';
 import { mockedRequestAnimationFrame } from './runLoop/uiRuntime/mockedRequestAnimationFrame';
 
-export function callMicrotasks(): void {
-  // on web flushing is a noop as immediates are handled by the browser
-}
-
 export function scheduleOnUI<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue,
   ...args: Args

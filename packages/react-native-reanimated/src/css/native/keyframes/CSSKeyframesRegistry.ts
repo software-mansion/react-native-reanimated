@@ -1,5 +1,4 @@
 'use strict';
-import { getCompoundComponentName } from '../../../common';
 import { registerCSSKeyframes, unregisterCSSKeyframes } from '../proxy';
 import type CSSKeyframesRuleImpl from './CSSKeyframesRuleImpl';
 
@@ -34,13 +33,8 @@ class CSSKeyframesRegistry {
   add(
     keyframesRule: CSSKeyframesRuleImpl,
     viewTag: number,
-    reactViewName: string,
-    jsComponentName: string
+    compoundComponentName: string
   ) {
-    const compoundComponentName = getCompoundComponentName(
-      reactViewName,
-      jsComponentName
-    );
     const existingKeyframesEntry = this.nameToKeyframes_.get(
       keyframesRule.name
     );
@@ -72,35 +66,31 @@ class CSSKeyframesRegistry {
 
     // Register animation keyframes only if they are not already registered
     // (when they are added for the first time)
+    const normalizedKeyframesConfig =
+      keyframesRule.getNormalizedKeyframesConfig(compoundComponentName);
     registerCSSKeyframes(
       keyframesRule.name,
-      reactViewName,
-      jsComponentName,
-      keyframesRule.getNormalizedKeyframesConfig(reactViewName, jsComponentName)
+      compoundComponentName,
+      normalizedKeyframesConfig
     );
   }
 
   remove(
     animationName: string,
     viewTag: number,
-    reactViewName: string,
-    jsComponentName: string
+    compoundComponentName: string
   ) {
     const keyframesEntry = this.nameToKeyframes_.get(animationName);
     if (!keyframesEntry) {
       return;
     }
 
-    const compoundComponentName = getCompoundComponentName(
-      reactViewName,
-      jsComponentName
-    );
     const componentEntry = keyframesEntry.usedBy[compoundComponentName];
     componentEntry.delete(viewTag);
 
     if (componentEntry.size === 0) {
       delete keyframesEntry.usedBy[compoundComponentName];
-      unregisterCSSKeyframes(animationName, reactViewName, jsComponentName);
+      unregisterCSSKeyframes(animationName, compoundComponentName);
     }
 
     if (Object.keys(keyframesEntry.usedBy).length === 0) {

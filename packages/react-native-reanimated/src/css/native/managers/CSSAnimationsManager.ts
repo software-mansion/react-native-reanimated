@@ -25,21 +25,18 @@ type ProcessedAnimation = {
 export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
   private readonly viewTag: number;
-  private readonly reactViewName: string;
-  private readonly jsComponentName: string;
+  private readonly compoundComponentName: string;
 
   private attachedAnimations: ProcessedAnimation[] = [];
 
   constructor(
     shadowNodeWrapper: ShadowNodeWrapper,
     viewTag: number,
-    reactViewName: string,
-    jsComponentName: string
+    compoundComponentName: string
   ) {
     this.shadowNodeWrapper = shadowNodeWrapper;
     this.viewTag = viewTag;
-    this.reactViewName = reactViewName;
-    this.jsComponentName = jsComponentName;
+    this.compoundComponentName = compoundComponentName;
   }
 
   update(animationProperties: ExistingCSSAnimationProperties | null): void {
@@ -65,7 +62,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
 
       applyCSSAnimations(
         this.shadowNodeWrapper,
-        this.jsComponentName,
+        this.compoundComponentName,
         animationUpdates
       );
     }
@@ -91,8 +88,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
       cssKeyframesRegistry.add(
         keyframesRule,
         this.viewTag,
-        this.reactViewName,
-        this.jsComponentName
+        this.compoundComponentName
       );
       newAnimationNames.add(keyframesRule.name);
     });
@@ -104,8 +100,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
         cssKeyframesRegistry.remove(
           name,
           this.viewTag,
-          this.reactViewName,
-          this.jsComponentName
+          this.compoundComponentName
         );
       }
     });
@@ -118,8 +113,7 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
       cssKeyframesRegistry.remove(
         name,
         this.viewTag,
-        this.reactViewName,
-        this.jsComponentName
+        this.compoundComponentName
       );
     });
   }
