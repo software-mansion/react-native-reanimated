@@ -185,12 +185,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 // Android
 std::shared_ptr<WorkletRuntime> extractWorkletRuntime(jsi::Runtime &rt, const jsi::Value &value);
 
-struct WeakWorkletRuntimeHolder : jsi::NativeState {
-  explicit WeakWorkletRuntimeHolder(const std::weak_ptr<WorkletRuntime> &weakWorkletRuntime)
-      : weakWorkletRuntime(weakWorkletRuntime) {}
-  const std::weak_ptr<WorkletRuntime> weakWorkletRuntime;
-};
-
 void scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,

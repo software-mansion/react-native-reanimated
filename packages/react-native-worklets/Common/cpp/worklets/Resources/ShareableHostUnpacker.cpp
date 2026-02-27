@@ -9,7 +9,6 @@ namespace worklets {
 const char ShareableHostUnpackerCode[] =
     R"DELIMITER__((function () {
   function shareableHostUnpacker(initial, hostDecorator) {
-    initial = typeof initial === 'function' ? initial() : initial;
     var hostShareable = {
       isHost: true,
       __shareableRef: true,

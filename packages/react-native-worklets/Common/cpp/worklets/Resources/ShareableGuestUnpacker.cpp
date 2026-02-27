@@ -9,20 +9,21 @@ namespace worklets {
 const char ShareableGuestUnpackerCode[] =
     R"DELIMITER__((function () {
   var runOnRuntimeSyncFromId;
+  var memoize;
   var scheduleOnRuntimeFromId;
   var runOnUIAsync;
-  var memoize;
-  var serializer = globalThis.__RUNTIME_KIND === 1 || globalThis._WORKLETS_BUNDLE_MODE_ENABLED ? createSerializable : function (value) {
-    return globalThis.__serializer(value);
-  };
+  var serializer;
   if (globalThis.__RUNTIME_KIND === 1 || globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-    runOnRuntimeSyncFromId = RNRuntimeRunOnRuntimeSyncFromId;
-    scheduleOnRuntimeFromId = RNRuntimeScheduleOnRuntimeFromId;
-    runOnUIAsync = RNRuntimeRunOnUIAsync;
-    memoize = function memoize(unpacked, serialized) {
-      serializableMappingCache.set(unpacked, serialized);
-    };
+    serializer = createSerializable;
+    memoize = serializableMappingCache.set.bind(serializableMappingCache);
+    runOnRuntimeSyncFromId = BundleRunOnRuntimeSyncFromId;
+    scheduleOnRuntimeFromId = BundleScheduleOnRuntimeFromId;
+    runOnUIAsync = BundleRuntimeRunOnUIAsync;
   } else {
+    serializer = function serializer(value) {
+      return globalThis.__serializer(value);
+    };
+    memoize = function memoize() {};
     var proxy = globalThis.__workletsModuleProxy;
     runOnRuntimeSyncFromId = function runOnRuntimeSyncFromId(hostId, worklet) {
       const _worklet_15370944365151_init_data = {
@@ -90,7 +91,6 @@ const char ShareableGuestUnpackerCode[] =
     runOnUIAsync = function runOnUIAsync() {
       throw new WorkletsError('runOnUIAsync is not supported on Worklet Runtimes yet');
     };
-    memoize = function memoize() {};
   }
   function shareableGuestUnpacker(hostId, shareableRef, guestDecorator) {
     const _worklet_12483657757151_init_data = {
@@ -106,6 +106,8 @@ const char ShareableGuestUnpackerCode[] =
       location: "src/memory/shareableGuestUnpacker.native.ts"
     };
     var shareableGuest = shareableRef;
+    shareableGuest.isHost = false;
+    shareableGuest.__shareableRef = true;
     var get = function shareableGuestUnpackerNativeTs3Factory(_ref3) {
       var _worklet_6656248753821_init_data = _ref3._worklet_6656248753821_init_data,
         shareableGuest = _ref3.shareableGuest;
@@ -185,8 +187,6 @@ const char ShareableGuestUnpackerCode[] =
         runOnRuntimeSyncFromId(hostId, setWithValue, value);
       }
     };
-    shareableGuest.isHost = false;
-    shareableGuest.__shareableRef = true;
     if (guestDecorator) {
       shareableGuest = guestDecorator(shareableGuest);
     }

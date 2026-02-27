@@ -30,7 +30,7 @@ class Shareable : public Serializable, public std::enable_shared_from_this<Share
   void initHostValue();
 
   const std::weak_ptr<WorkletRuntime> hostRuntime_;
-  const RuntimeData::Id hostRuntimeId_;
+  const RuntimeData::RuntimeId hostRuntimeId_;
   jsi::Runtime &hostJSIRuntime_;
   std::shared_ptr<Serializable> initial_;
   const bool initSynchronously_;

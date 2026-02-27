@@ -1,9 +1,8 @@
 'use strict';
 
 import { WorkletsError } from '../debug/WorkletsError';
-import { getRuntimeKind, RuntimeKind } from '../runtimeKind';
+import { addGuardImplementation } from '../guardImplementation';
 import { UIRuntimeId } from '../runtimes';
-import type { WorkletRuntime } from '../types';
 import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
 import { createSerializable } from './serializable';
@@ -18,7 +17,7 @@ export function createShareable<
   THostDecorated = unknown,
   TGuestDecorated = unknown,
 >(
-  hostRuntime: WorkletRuntime,
+  hostRuntimeId: number,
   initial: SerializableRef<TValue>,
   config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
 ): Shareable<TValue, THostDecorated, TGuestDecorated>;
@@ -28,7 +27,7 @@ export function createShareable<
   THostDecorated = unknown,
   TGuestDecorated = unknown,
 >(
-  hostRuntime: 'UI',
+  hostRuntimeId: typeof UIRuntimeId,
   initial: TValue,
   config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
 ): Shareable<TValue, THostDecorated, TGuestDecorated>;
@@ -38,20 +37,22 @@ export function createShareable<
   THostDecorated = unknown,
   TGuestDecorated = unknown,
 >(
-  hostRuntime: WorkletRuntime | 'UI',
+  hostRuntimeId: number,
   initial: TValue,
   config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
 ): Shareable<TValue, THostDecorated, TGuestDecorated> {
-  if (hostRuntime !== 'UI') {
+  if (hostRuntimeId !== UIRuntimeId) {
     throw new WorkletsError('Only UI host runtime is supported currently');
   }
 
   const { hostDecorator, guestDecorator, initSynchronously } = config || {};
-  if (hostDecorator && !isWorkletFunction(hostDecorator)) {
-    throw new WorkletsError('hostDecorator must be a worklet function');
-  }
-  if (guestDecorator && !isWorkletFunction(guestDecorator)) {
-    throw new WorkletsError('guestDecorator must be a worklet function');
+  if (__DEV__) {
+    if (hostDecorator && !isWorkletFunction(hostDecorator)) {
+      throw new WorkletsError('hostDecorator must be a worklet function');
+    }
+    if (guestDecorator && !isWorkletFunction(guestDecorator)) {
+      throw new WorkletsError('guestDecorator must be a worklet function');
+    }
   }
 
   const shareableRef = WorkletsModule.createShareable(
@@ -62,13 +63,13 @@ export function createShareable<
     createSerializable(guestDecorator)
   );
 
-  if (getRuntimeKind() === RuntimeKind.UI) {
-    return globalThis.__shareableHostUnpacker(initial, hostDecorator);
-  } else {
-    return globalThis.__shareableGuestUnpacker(
-      UIRuntimeId,
-      shareableRef,
-      guestDecorator
-    );
-  }
+  return globalThis.__shareableGuestUnpacker(
+    UIRuntimeId,
+    shareableRef,
+    guestDecorator
+  );
+}
+
+if (__DEV__ && globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+  addGuardImplementation(createShareable);
 }

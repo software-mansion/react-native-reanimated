@@ -1,7 +1,7 @@
 'use strict';
 
 import { WorkletsError } from '../debug/WorkletsError';
-import type { WorkletRuntime } from '../types';
+import type { UIRuntimeId } from '../runtimes';
 import type { SerializableRef, Shareable, ShareableConfig } from './types';
 
 /**
@@ -13,7 +13,7 @@ export function createShareable<
   THostDecorated = unknown,
   TGuestDecorated = unknown,
 >(
-  hostRuntime: WorkletRuntime,
+  hostRuntimeId: number,
   initial: SerializableRef<TValue>,
   config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
 ): Shareable<TValue, THostDecorated, TGuestDecorated>;
@@ -23,7 +23,7 @@ export function createShareable<
   THostDecorated = unknown,
   TGuestDecorated = unknown,
 >(
-  hostRuntime: 'UI',
+  hostRuntimeId: typeof UIRuntimeId,
   initial: TValue,
   config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
 ): Shareable<TValue, THostDecorated, TGuestDecorated>;
@@ -33,7 +33,7 @@ export function createShareable<
   THostDecorated = unknown,
   TGuestDecorated = unknown,
 >(
-  _hostRuntime: WorkletRuntime | 'UI',
+  _hostRuntimeId: number,
   _initial: TValue,
   _config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
 ): Shareable<TValue, THostDecorated, TGuestDecorated> {

@@ -8,6 +8,7 @@ import {
   type ShareableHostDecorator,
   isShareable,
   type ShareableHost,
+  UIRuntimeId,
 } from 'react-native-worklets';
 import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
 
@@ -85,18 +86,18 @@ describe('Shareable hosted on UI', () => {
   const runtime = createWorkletRuntime({ name: 'test' });
 
   test.each(initModes)('can be hosted on UI (%s)', async initMode => {
-    const fn = () => createShareable('UI', 0, getInitOptions(initMode));
+    const fn = () => createShareable(UIRuntimeId, 0, getInitOptions(initMode));
     await expect(fn).not.toThrow();
   });
 
   test.each(initModes)('is recognized as shareable on RN Runtime (%s)', initMode => {
-    const shareable = createShareable('UI', 0, getInitOptions(initMode));
+    const shareable = createShareable(UIRuntimeId, 0, getInitOptions(initMode));
     const isShareableResult = isShareable(shareable);
     expect(isShareableResult).toBe(true);
   });
 
   test.each(initModes)('is recognized as shareable on UI Runtime (%s)', initMode => {
-    const shareable = createShareable('UI', 0, getInitOptions(initMode));
+    const shareable = createShareable(UIRuntimeId, 0, getInitOptions(initMode));
     const isShareableResult = runOnUISync(() => {
       'worklet';
       return isShareable(shareable);
@@ -105,7 +106,7 @@ describe('Shareable hosted on UI', () => {
   });
 
   test.each(initModes)('is recognized as shareable on Worker Runtime (%s)', initMode => {
-    const shareable = createShareable('UI', 0, getInitOptions(initMode));
+    const shareable = createShareable(UIRuntimeId, 0, getInitOptions(initMode));
     const isShareableResult = runOnRuntimeSync(runtime, () => {
       'worklet';
       return isShareable(shareable);
@@ -114,13 +115,13 @@ describe('Shareable hosted on UI', () => {
   });
 
   test.each(initModes)('reads value on UI Runtime (%s)', initMode => {
-    const shareable = createShareable('UI', 0, getInitOptions(initMode));
+    const shareable = createShareable(UIRuntimeId, 0, getInitOptions(initMode));
     const value = runOnUISync(() => (shareable as ShareableHost<number>).value);
     expect(value).toBe(0);
   });
 
   test.each(initModes)('sets value on UI Runtime (%s)', initMode => {
-    const shareable = createShareable('UI', 0, getInitOptions(initMode));
+    const shareable = createShareable(UIRuntimeId, 0, getInitOptions(initMode));
     const value = runOnUISync(() => {
       shareable.value = 42;
       return shareable.value;
@@ -129,33 +130,33 @@ describe('Shareable hosted on UI', () => {
   });
 
   test.each(initModes)('getSync as guest on RN Runtime (%s)', initMode => {
-    const shareable = createShareable('UI', 0, getInitOptions(initMode));
+    const shareable = createShareable(UIRuntimeId, 0, getInitOptions(initMode));
     const value = (shareable as ShareableGuest<number>).getSync();
     expect(value).toBe(0);
   });
 
   test.each(initModes)('getAsync as guest on RN Runtime (%s)', async initMode => {
-    const shareable = createShareable('UI', 0, getInitOptions(initMode));
+    const shareable = createShareable(UIRuntimeId, 0, getInitOptions(initMode));
     const value = await (shareable as ShareableGuest<number>).getAsync();
     expect(value).toBe(0);
   });
 
   test.each(initModes)('setSync as guest on RN Runtime (%s)', initMode => {
-    const shareable = createShareable('UI', 0, getInitOptions(initMode));
+    const shareable = createShareable(UIRuntimeId, 0, getInitOptions(initMode));
     (shareable as ShareableGuest<number>).setSync(42);
     const value = (shareable as ShareableGuest<number>).getSync();
     expect(value).toBe(42);
   });
 
   test.each(initModes)('setAsync as guest on RN Runtime (%s)', async initMode => {
-    const shareable = createShareable('UI', 0, getInitOptions(initMode));
+    const shareable = createShareable(UIRuntimeId, 0, getInitOptions(initMode));
     (shareable as ShareableGuest<number>).setAsync(42);
     const value = await (shareable as ShareableGuest<number>).getAsync();
     expect(value).toBe(42);
   });
 
   test.each(initModes)('getSync as guest on Worker Runtime (%s)', initMode => {
-    const shareable = createShareable('UI', 0, getInitOptions(initMode));
+    const shareable = createShareable(UIRuntimeId, 0, getInitOptions(initMode));
 
     const value = runOnRuntimeSync(runtime, () => {
       'worklet';
@@ -170,7 +171,7 @@ describe('Shareable hosted on UI', () => {
   });
 
   test.each(initModes)('setSync as guest on Worker Runtime (%s)', initMode => {
-    const shareable = createShareable('UI', 0, getInitOptions(initMode));
+    const shareable = createShareable(UIRuntimeId, 0, getInitOptions(initMode));
 
     runOnRuntimeSync(runtime, () => {
       'worklet';
@@ -182,7 +183,7 @@ describe('Shareable hosted on UI', () => {
   });
 
   test.each(initModes)('setAsync as guest on Worker Runtime (%s)', async initMode => {
-    const shareable = createShareable('UI', 0, getInitOptions(initMode));
+    const shareable = createShareable(UIRuntimeId, 0, getInitOptions(initMode));
 
     runOnRuntimeSync(runtime, () => {
       'worklet';
@@ -194,7 +195,7 @@ describe('Shareable hosted on UI', () => {
   });
 
   test.each(initModes)('host decorator adds property (%s)', initMode => {
-    const shareable = createShareable('UI', 0, {
+    const shareable = createShareable(UIRuntimeId, 0, {
       ...getInitOptions(initMode),
       hostDecorator: decorateHostProperty,
     });
@@ -206,7 +207,7 @@ describe('Shareable hosted on UI', () => {
   });
 
   test.each(initModes)('host decorator adds function (%s)', initMode => {
-    const shareable = createShareable('UI', 0, {
+    const shareable = createShareable(UIRuntimeId, 0, {
       ...getInitOptions(initMode),
       hostDecorator: decorateHostFunction,
     });
@@ -218,7 +219,7 @@ describe('Shareable hosted on UI', () => {
   });
 
   test.each(initModes)('host decorator overrides getter (%s)', initMode => {
-    const shareable = createShareable('UI', 0, {
+    const shareable = createShareable(UIRuntimeId, 0, {
       ...getInitOptions(initMode),
       hostDecorator: decorateHostGetter,
     });
@@ -227,7 +228,7 @@ describe('Shareable hosted on UI', () => {
   });
 
   test.each(initModes)('host decorator overrides setter (%s)', initMode => {
-    const shareable = createShareable('UI', 0, {
+    const shareable = createShareable(UIRuntimeId, 0, {
       ...getInitOptions(initMode),
       hostDecorator: decorateHostSetter,
     });
@@ -245,7 +246,7 @@ describe('Shareable hosted on UI', () => {
   });
 
   test.each(initModes)('guest decorator on RN Runtime adds property (%s)', initMode => {
-    const shareable = createShareable('UI', 0, {
+    const shareable = createShareable(UIRuntimeId, 0, {
       ...getInitOptions(initMode),
       guestDecorator: decorateGuestProperty,
     });
@@ -254,7 +255,7 @@ describe('Shareable hosted on UI', () => {
   });
 
   test.each(initModes)('guest decorator on RN Runtime adds function (%s)', initMode => {
-    const shareable = createShareable('UI', 0, {
+    const shareable = createShareable(UIRuntimeId, 0, {
       ...getInitOptions(initMode),
       guestDecorator: decorateGuestFunction,
     });
@@ -263,7 +264,7 @@ describe('Shareable hosted on UI', () => {
   });
 
   test.each(initModes)('guest decorator on RN Runtime overrides method (%s)', initMode => {
-    const shareable = createShareable('UI', 0, {
+    const shareable = createShareable(UIRuntimeId, 0, {
       ...getInitOptions(initMode),
       guestDecorator: decorateGuestOverride,
     });
@@ -272,7 +273,7 @@ describe('Shareable hosted on UI', () => {
   });
 
   test.each(initModes)('guest decorator on Worker Runtime adds property (%s)', initMode => {
-    const shareable = createShareable('UI', 0, {
+    const shareable = createShareable(UIRuntimeId, 0, {
       ...getInitOptions(initMode),
       guestDecorator: decorateGuestProperty,
     });
@@ -287,7 +288,7 @@ describe('Shareable hosted on UI', () => {
   });
 
   test.each(initModes)('guest decorator on Worker Runtime adds function (%s)', initMode => {
-    const shareable = createShareable('UI', 0, {
+    const shareable = createShareable(UIRuntimeId, 0, {
       ...getInitOptions(initMode),
       guestDecorator: decorateGuestFunction,
     });
@@ -302,7 +303,7 @@ describe('Shareable hosted on UI', () => {
   });
 
   test.each(initModes)('guest decorator on Worker Runtime overrides method (%s)', initMode => {
-    const shareable = createShareable('UI', 0, {
+    const shareable = createShareable(UIRuntimeId, 0, {
       ...getInitOptions(initMode),
       guestDecorator: decorateGuestOverride,
     });

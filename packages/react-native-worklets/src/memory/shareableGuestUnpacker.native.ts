@@ -2,10 +2,10 @@
 
 import { WorkletsError } from '../debug/WorkletsError';
 import {
-  runOnRuntimeSyncWithId as RNRuntimeRunOnRuntimeSyncFromId,
-  scheduleOnRuntimeWithId as RNRuntimeScheduleOnRuntimeFromId,
+  runOnRuntimeSyncWithId as BundleRunOnRuntimeSyncFromId,
+  scheduleOnRuntimeWithId as BundleScheduleOnRuntimeFromId,
 } from '../runtimes';
-import { runOnUIAsync as RNRuntimeRunOnUIAsync } from '../threads';
+import { runOnUIAsync as BundleRuntimeRunOnUIAsync } from '../threads';
 import type { WorkletFunction } from '../types';
 import { createSerializable } from './serializable';
 import { serializableMappingCache } from './serializableMappingCache';
@@ -18,29 +18,34 @@ import type {
 } from './types';
 
 export function __installUnpacker() {
-  let runOnRuntimeSyncFromId: typeof RNRuntimeRunOnRuntimeSyncFromId;
-  let scheduleOnRuntimeFromId: typeof RNRuntimeScheduleOnRuntimeFromId;
-  let runOnUIAsync: typeof RNRuntimeRunOnUIAsync;
+  let runOnRuntimeSyncFromId: typeof BundleRunOnRuntimeSyncFromId;
   let memoize: (
     unpacked: Shareable<unknown>,
     serialized: SerializableRef<unknown>
   ) => void;
-  const serializer =
-    globalThis.__RUNTIME_KIND === 1 || globalThis._WORKLETS_BUNDLE_MODE_ENABLED
-      ? createSerializable
-      : (value: unknown) => globalThis.__serializer(value);
+
+  let scheduleOnRuntimeFromId: typeof BundleScheduleOnRuntimeFromId;
+  let runOnUIAsync: typeof BundleRuntimeRunOnUIAsync;
+  let serializer: (value: unknown) => SerializableRef<unknown>;
 
   if (
-    globalThis.__RUNTIME_KIND === 1 /* RuntimeKind.ReactNative */ ||
+    globalThis.__RUNTIME_KIND === 1 ||
     globalThis._WORKLETS_BUNDLE_MODE_ENABLED
   ) {
-    runOnRuntimeSyncFromId = RNRuntimeRunOnRuntimeSyncFromId;
-    scheduleOnRuntimeFromId = RNRuntimeScheduleOnRuntimeFromId;
-    runOnUIAsync = RNRuntimeRunOnUIAsync;
-    memoize = (unpacked, serialized) => {
-      serializableMappingCache.set(unpacked, serialized);
-    };
+    serializer = createSerializable;
+    memoize = serializableMappingCache.set.bind(serializableMappingCache);
+
+    runOnRuntimeSyncFromId = BundleRunOnRuntimeSyncFromId;
+    scheduleOnRuntimeFromId = BundleScheduleOnRuntimeFromId;
+    runOnUIAsync = BundleRuntimeRunOnUIAsync;
   } else {
+    // Serializer can't be inlined here because it might be yet undefined
+    // when the unpacker is installed.
+    serializer = (value: unknown) => globalThis.__serializer(value);
+    memoize = () => {
+      // No-op on Worklet Runtimes outside of Bundle Mode.
+    };
+
     const proxy = globalThis.__workletsModuleProxy;
     runOnRuntimeSyncFromId = ((
       hostId: number,
@@ -52,7 +57,7 @@ export function __installUnpacker() {
         return globalThis.__serializer(worklet(...args));
       });
       return proxy.runOnRuntimeSyncWithId(hostId, serializedWorklet);
-    }) as typeof RNRuntimeRunOnRuntimeSyncFromId;
+    }) as typeof BundleRunOnRuntimeSyncFromId;
 
     scheduleOnRuntimeFromId = ((
       hostId: number,
@@ -66,16 +71,12 @@ export function __installUnpacker() {
           return globalThis.__serializer(worklet(...args));
         })
       );
-    }) as typeof RNRuntimeScheduleOnRuntimeFromId;
+    }) as typeof BundleScheduleOnRuntimeFromId;
 
     runOnUIAsync = () => {
       throw new WorkletsError(
         'runOnUIAsync is not supported on Worklet Runtimes yet'
       );
-    };
-
-    memoize = () => {
-      // No-op on Worklet Runtimes outside of Bundle Mode.
     };
   }
 
@@ -88,6 +89,9 @@ export function __installUnpacker() {
     type Guest = ShareableGuest<TValue>;
 
     let shareableGuest = shareableRef as unknown as Shareable<TValue>;
+
+    shareableGuest.isHost = false;
+    shareableGuest.__shareableRef = true;
 
     const get = () => {
       'worklet';
@@ -137,9 +141,6 @@ export function __installUnpacker() {
         runOnRuntimeSyncFromId(hostId, setWithValue, value);
       }
     };
-
-    shareableGuest.isHost = false;
-    shareableGuest.__shareableRef = true;
 
     if (guestDecorator) {
       shareableGuest = guestDecorator(shareableGuest as Guest);

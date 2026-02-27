@@ -7,9 +7,6 @@ export function __installUnpacker() {
     initial: TValue,
     hostDecorator?: ShareableHostDecorator<TValue>
   ): Shareable<TValue> {
-    initial =
-      typeof initial === 'function' ? (initial as () => TValue)() : initial;
-
     let hostShareable = {
       isHost: true,
       __shareableRef: true,

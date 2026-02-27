@@ -194,10 +194,6 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  getUIWorkletRuntime(): WorkletRuntime {
-    return this.#workletsModuleProxy.getUIWorkletRuntime();
-  }
-
   scheduleOnUI<TValue>(serializable: SerializableRef<TValue>) {
     return this.#workletsModuleProxy.scheduleOnUI(serializable);
   }
