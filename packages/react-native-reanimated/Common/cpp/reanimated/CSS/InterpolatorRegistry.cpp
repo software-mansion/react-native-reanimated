@@ -42,7 +42,6 @@
 #include <limits>
 #include <string>
 #include <vector>
-#include "common/values/CSSLength.h"
 
 namespace reanimated::css {
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <reanimated/CSS/common/values/CSSLength.h>
-#include <reanimated/CSS/common/values/CSSValue.h>
 
 #include <concepts>
 #include <string>

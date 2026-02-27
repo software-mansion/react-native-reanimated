@@ -33,7 +33,6 @@ bool CSSLengthArray::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) 
   return true;
 }
 
-// Overkill?
 bool CSSLengthArray::canConstruct(const folly::dynamic &value) {
   return value.isArray() &&
       std::all_of(value.begin(), value.end(), [](const auto &item) { return CSSLength::canConstruct(item); });
@@ -80,10 +79,10 @@ CSSLengthArray CSSLengthArray::interpolate(
   result.reserve(longerSize);
 
   for (size_t i = 0; i < longerSize; ++i) {
-    double ratio = (longerSize > 1) ? static_cast<double>(i) / (static_cast<double>(longerSize) - 1.0) : 0.0;
+    double ratio = (longerSize > 1) ? static_cast<double>(i) / (longerSize - 1.0) : 0.0;
 
-    auto fromIdx = static_cast<size_t>(std::round(ratio * static_cast<double>(fromSize - 1)));
-    auto toIdx = static_cast<size_t>(std::round(ratio * static_cast<double>(toSize - 1)));
+    auto fromIdx = static_cast<size_t>(std::round(ratio * (fromSize - 1)));
+    auto toIdx = static_cast<size_t>(std::round(ratio * (toSize - 1)));
 
     result.emplace_back(fromLengths[fromIdx].interpolate(progress, toLengths[toIdx], context));
   }
