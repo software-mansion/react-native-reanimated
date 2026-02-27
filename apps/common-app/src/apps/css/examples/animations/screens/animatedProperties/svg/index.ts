@@ -6,6 +6,7 @@ import Image from './Image';
 import Line from './Line';
 import LinearGradient from './LinearGradient';
 import Path from './Path';
+import Polyline from './Polyline';
 import RadialGradient from './RadialGradient';
 import Rect from './Rect';
 
@@ -18,6 +19,7 @@ export default {
   Line,
   LinearGradient,
   Path,
+  Polyline,
   RadialGradient,
   Rect,
 };
