@@ -87,7 +87,7 @@ std::shared_ptr<Serializable> extractSerializableOrThrow(
       auto nativeState = object.getNativeState(rt);
       return std::dynamic_pointer_cast<SerializableJSRef>(nativeState)->value();
     }
-    throw std::runtime_error("[Worklets] Attempted to extract from a Object that wasn't converted to a Serializable.");
+    throw std::runtime_error("[Worklets] Attempted to extract from an Object that wasn't converted to a Serializable.");
   } else if (maybeSerializableValue.isUndefined()) {
     return Serializable::undefined();
   }

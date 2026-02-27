@@ -120,7 +120,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     return *runtime_;
   }
 
-  [[nodiscard]] uint64_t getRuntimeId() const noexcept {
+  [[nodiscard]] RuntimeData::Id getRuntimeId() const noexcept {
     return runtimeId_;
   }
 
@@ -129,7 +129,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   }
 
   explicit WorkletRuntime(
-      uint64_t runtimeId,
+      RuntimeData::Id runtimeId,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::string &name,
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
@@ -173,7 +173,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 #endif // NDEBUG
 
  private:
-  const uint64_t runtimeId_;
+  const RuntimeData::Id runtimeId_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
   const std::string name_;
@@ -184,6 +184,12 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 // This function needs to be non-inline to avoid problems with dynamic_cast on
 // Android
 std::shared_ptr<WorkletRuntime> extractWorkletRuntime(jsi::Runtime &rt, const jsi::Value &value);
+
+struct WeakWorkletRuntimeHolder : jsi::NativeState {
+  explicit WeakWorkletRuntimeHolder(const std::weak_ptr<WorkletRuntime> &weakWorkletRuntime)
+      : weakWorkletRuntime(weakWorkletRuntime) {}
+  const std::weak_ptr<WorkletRuntime> weakWorkletRuntime;
+};
 
 void scheduleOnRuntime(
     jsi::Runtime &rt,

@@ -6,6 +6,7 @@
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
+#include <worklets/SharedItems/Shareable.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/FeatureFlags.h>
@@ -214,6 +215,8 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "synchronizableSetBlocking"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "synchronizableLock"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "synchronizableUnlock"));
+
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createShareable"));
 
 #ifdef WORKLETS_BUNDLE_MODE_ENABLED
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "propagateModuleUpdate"));
@@ -549,6 +552,29 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
           auto synchronizable = extractSynchronizableOrThrow(rt, args[0]);
           synchronizable->unlock();
           return jsi::Value::undefined();
+        });
+  }
+
+  if (name == "createShareable") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        5,
+        [runtimeManager = runtimeManager_](
+            jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
+          const int hostRuntimeId = args[0].asNumber();
+          const auto hostRuntime = runtimeManager->getRuntime(hostRuntimeId);
+          if (!hostRuntime) {
+            throw jsi::JSError(
+                rt, "[Worklets] createShareable: no worklet runtime found for id " + std::to_string(hostRuntimeId));
+          }
+          const auto initial = extractSerializableOrThrow(rt, args[1], "[Worklets] Value must be a Serializable.");
+          const auto initSynchronously = args[2].asBool();
+          const auto decorateHost = extractSerializableOrThrow(rt, args[3]);
+          const auto decorateGuest = extractSerializableOrThrow(rt, args[4]);
+          const auto shareable =
+              std::make_shared<Shareable>(hostRuntime, initial, initSynchronously, decorateHost, decorateGuest);
+          return SerializableJSRef::newNativeStateObject(rt, shareable);
         });
   }
 

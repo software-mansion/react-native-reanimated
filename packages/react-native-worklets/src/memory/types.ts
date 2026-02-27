@@ -77,3 +77,76 @@ export type SerializationData<TValue extends object, TPacked = unknown> = Omit<
 };
 
 export type CustomSerializationRegistry = SerializationData<object, unknown>[];
+
+export type ShareableHostProps<TValue = unknown> = {
+  value: TValue;
+};
+
+export type ShareableHostMeta = {
+  isHost: true;
+  __shareableRef: true;
+};
+
+export type PureShareableHost<TValue = unknown> = ShareableHostProps<TValue> &
+  ShareableHostMeta;
+
+export type ShareableHostDecorator<TValue = unknown, TDecorated = unknown> = (
+  shareable: PureShareableHost<TValue> & TDecorated
+) => PureShareableHost<TValue> & TDecorated;
+
+export type ShareableGuestMeta = {
+  isHost: false;
+  __shareableRef: true;
+};
+
+export type ShareableGuestProps<TValue = unknown> = {
+  getAsync(): Promise<TValue>;
+  getSync(): TValue;
+  setAsync(value: TValue | ((prev: TValue) => TValue)): void;
+  setSync(value: TValue | ((prev: TValue) => TValue)): void;
+};
+
+export type PureShareableGuest<TValue = unknown> = ShareableGuestProps<TValue> &
+  ShareableGuestMeta;
+
+export type ShareableGuestDecorator<TValue = unknown, TDecorated = unknown> = (
+  shareable: PureShareableGuest<TValue> & TDecorated
+) => PureShareableGuest<TValue> & TDecorated;
+
+export type ShareableHost<
+  TValue = unknown,
+  THostDecorated = unknown,
+  TGuestDecorated = unknown,
+> = ShareableHostMeta &
+  ShareableHostProps<TValue> &
+  (THostDecorated extends object ? THostDecorated : object) &
+  Partial<
+    ShareableGuestProps<TValue> &
+      (TGuestDecorated extends object ? Partial<TGuestDecorated> : object)
+  >;
+
+export type ShareableGuest<
+  TValue = unknown,
+  THostDecorated = unknown,
+  TGuestDecorated = unknown,
+> = ShareableGuestMeta &
+  ShareableGuestProps<TValue> &
+  (TGuestDecorated extends object ? TGuestDecorated : object) &
+  Partial<
+    ShareableHostProps<TValue> &
+      (THostDecorated extends object ? Partial<THostDecorated> : object)
+  >;
+
+export type Shareable<
+  TValue = unknown,
+  THostDecorated = unknown,
+  TGuestDecorated = unknown,
+> =
+  | ShareableHost<TValue, THostDecorated, TGuestDecorated>
+  | ShareableGuest<TValue, THostDecorated, TGuestDecorated>;
+
+export type ShareableConfig<TValue, THostDecorated, TGuestDecorated> = {
+  hostDecorator?: ShareableHostDecorator<TValue, THostDecorated>;
+  guestDecorator?: ShareableGuestDecorator<TValue, TGuestDecorated>;
+  initSynchronously?: boolean;
+};
