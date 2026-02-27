@@ -2,10 +2,6 @@ import { svgAnimatedProperties } from '@/apps/css/examples/animations/screens';
 import type { Routes } from '@/apps/css/navigation/types';
 
 export const svgPropertiesRoutes = {
-  Circle: {
-    Component: svgAnimatedProperties.Circle,
-    name: 'Circle',
-  },
   Common: {
     name: 'Common',
     routes: {
@@ -19,44 +15,53 @@ export const svgPropertiesRoutes = {
       },
     },
   },
-  Ellipse: {
-    Component: svgAnimatedProperties.Ellipse,
-    name: 'Ellipse',
-  },
-  Group: {
-    Component: svgAnimatedProperties.Group,
-    name: 'Group',
-  },
-  Image: {
-    Component: svgAnimatedProperties.Image,
-    name: 'Image',
-  },
-  Line: {
-    Component: svgAnimatedProperties.Line,
-    name: 'Line',
-  },
-  LinearGradient: {
-    Component: svgAnimatedProperties.LinearGradient,
-    name: 'LinearGradient',
-  },
-  Path: {
-    Component: svgAnimatedProperties.Path,
-    name: 'Path',
-  },
-  Polygon: {
-    Component: svgAnimatedProperties.Polygon,
-    name: 'Polygon',
-  },
-  Polyline: {
-    Component: svgAnimatedProperties.Polyline,
-    name: 'Polyline',
-  },
-  RadialGradient: {
-    Component: svgAnimatedProperties.RadialGradient,
-    name: 'RadialGradient',
-  },
-  Rect: {
-    Component: svgAnimatedProperties.Rect,
-    name: 'Rect',
+  Components: {
+    name: 'Components',
+    routes: {
+      Circle: {
+        Component: svgAnimatedProperties.Circle,
+        name: 'Circle',
+      },
+      Ellipse: {
+        Component: svgAnimatedProperties.Ellipse,
+        name: 'Ellipse',
+      },
+      Group: {
+        Component: svgAnimatedProperties.Group,
+        name: 'Group',
+      },
+      Image: {
+        Component: svgAnimatedProperties.Image,
+        name: 'Image',
+      },
+      Line: {
+        Component: svgAnimatedProperties.Line,
+        name: 'Line',
+      },
+      LinearGradient: {
+        Component: svgAnimatedProperties.LinearGradient,
+        name: 'LinearGradient',
+      },
+      Path: {
+        Component: svgAnimatedProperties.Path,
+        name: 'Path',
+      },
+      Polygon: {
+        Component: svgAnimatedProperties.Polygon,
+        name: 'Polygon',
+      },
+      Polyline: {
+        Component: svgAnimatedProperties.Polyline,
+        name: 'Polyline',
+      },
+      RadialGradient: {
+        Component: svgAnimatedProperties.RadialGradient,
+        name: 'RadialGradient',
+      },
+      Rect: {
+        Component: svgAnimatedProperties.Rect,
+        name: 'Rect',
+      },
+    },
   },
 } satisfies Routes;
