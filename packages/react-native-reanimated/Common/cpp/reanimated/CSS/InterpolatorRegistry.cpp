@@ -42,6 +42,7 @@
 #include <limits>
 #include <string>
 #include <vector>
+#include "common/values/CSSLength.h"
 
 namespace reanimated::css {
 
@@ -371,11 +372,14 @@ const InterpolatorFactoriesRecord SVG_RADIAL_GRADIENT_INTERPOLATORS = mergeInter
 const InterpolatorFactoriesRecord SVG_TEXT_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"x", value<CSSLengthArray>(CSSLengthArray())},
-         {"y", value<CSSLengthArray>(CSSLengthArray())},
-         {"dx", value<CSSLengthArray>(CSSLengthArray())},
-         {"dy", value<CSSLengthArray>(CSSLengthArray())},
-         {"rotate", value<CSSLengthArray>(CSSLengthArray())},
+         {"x", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "width"})},
+         {"y", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "height"})},
+         {"dx", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "width"})},
+         {"dy", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "height"})},
+         {"rotate", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "width"})},
+         // TODO: Implement when supported by RNSVG
+         //  {"textLength", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         //  {"lengthAdjust", value<CSSKeyword>("spacing")},
      }});
 
 // ==================

@@ -2,7 +2,6 @@
 
 #include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSValue.h>
-#include <reanimated/CSS/svg/values/SVGBrush.h>
 
 #include <concepts>
 #include <string>
@@ -11,7 +10,7 @@
 
 namespace reanimated::css {
 
-struct CSSLengthArray : public CSSSimpleValue<CSSLengthArray> {
+struct CSSLengthArray : public CSSResolvableValue<CSSLengthArray> {
 
   CSSLengthArray() = default;
   template <typename T>
@@ -25,7 +24,10 @@ struct CSSLengthArray : public CSSSimpleValue<CSSLengthArray> {
 
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
-  CSSLengthArray interpolate(double progress, const CSSLengthArray &to) const override;
+  CSSLengthArray interpolate(
+      double progress,
+      const CSSLengthArray &to,
+      const ResolvableValueInterpolationContext &context) const override;
 
   bool operator==(const CSSLengthArray &other) const;
 

@@ -33,6 +33,7 @@ bool CSSLengthArray::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) 
   return true;
 }
 
+// Overkill?
 bool CSSLengthArray::canConstruct(const folly::dynamic &value) {
   return value.isArray() &&
       std::all_of(value.begin(), value.end(), [](const auto &item) { return CSSLength::canConstruct(item); });
@@ -60,7 +61,10 @@ std::string CSSLengthArray::toString() const {
   return ss.str();
 }
 
-CSSLengthArray CSSLengthArray::interpolate(double progress, const CSSLengthArray &to) const {
+CSSLengthArray CSSLengthArray::interpolate(
+    double progress,
+    const CSSLengthArray &to,
+    const ResolvableValueInterpolationContext &context) const {
   const auto &fromLengths = lengths;
   const auto &toLengths = to.lengths;
 
@@ -81,13 +85,7 @@ CSSLengthArray CSSLengthArray::interpolate(double progress, const CSSLengthArray
     auto fromIdx = static_cast<size_t>(std::round(ratio * static_cast<double>(fromSize - 1)));
     auto toIdx = static_cast<size_t>(std::round(ratio * static_cast<double>(toSize - 1)));
 
-    const auto &fromLen = fromLengths[fromIdx];
-    const auto &toLen = toLengths[toIdx];
-
-    double interpolatedValue = fromLen.value + (toLen.value - fromLen.value) * progress;
-    bool isRelative = fromLen.isRelative || toLen.isRelative;
-
-    result.emplace_back(interpolatedValue, isRelative);
+    result.emplace_back(fromLengths[fromIdx].interpolate(progress, toLengths[toIdx], context));
   }
 
   return CSSLengthArray(std::move(result));

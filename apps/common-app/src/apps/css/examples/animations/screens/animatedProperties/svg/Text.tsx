@@ -45,7 +45,20 @@ export default function TextExample() {
                       x: 30,
                     },
                     to: {
-                      x: [150],
+                      x: 150,
+                    },
+                  },
+                  title: 'Absolute value',
+                },
+                {
+                  description:
+                    'Animates x position from 30 to 150 using absolute values',
+                  keyframes: {
+                    from: {
+                      x: 30,
+                    },
+                    to: {
+                      x: [30, 100],
                     },
                   },
                   title: 'Absolute value',
@@ -64,7 +77,6 @@ export default function TextExample() {
                   title: 'Percentage values (from 5% to 75%)',
                 },
                 {
-                  // TODO: Mixed absolute/percentage interpolation is broken
                   description:
                     'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
@@ -109,7 +121,6 @@ export default function TextExample() {
                   title: 'Percentage values (from 30% to 80%)',
                 },
                 {
-                  // TODO: Mixed absolute/percentage interpolation is broken for SVG text y — needs to be fixed
                   description:
                     'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
@@ -149,6 +160,19 @@ export default function TextExample() {
                     },
                     to: {
                       dx: [0, 3, 6, 9, 12, 9, 6, 3, 0],
+                    },
+                  },
+                  title: 'Per-glyph spread',
+                },
+                {
+                  description:
+                    'Animates per-glyph horizontal offsets to spread the letters apart',
+                  keyframes: {
+                    from: {
+                      dx: 0,
+                    },
+                    to: {
+                      dx: [0, 100],
                     },
                   },
                   title: 'Per-glyph spread',
