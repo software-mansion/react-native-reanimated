@@ -1,4 +1,4 @@
-#import <reanimated/Compat/WorkletsApi.h>
+#import <worklets/Compat/StableApi.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAReducedMotion.h>

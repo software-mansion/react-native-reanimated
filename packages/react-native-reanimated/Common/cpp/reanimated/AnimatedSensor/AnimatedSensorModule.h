@@ -1,7 +1,7 @@
 #pragma once
 
-#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
+#include <worklets/Compat/StableApi.h>
 
 #include <jsi/jsi.h>
 

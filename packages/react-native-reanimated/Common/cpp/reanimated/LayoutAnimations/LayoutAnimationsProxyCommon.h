@@ -4,9 +4,9 @@
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/uimanager/UIManager.h>
-#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
+#include <worklets/Compat/StableApi.h>
 
 #include <memory>
 #include <optional>

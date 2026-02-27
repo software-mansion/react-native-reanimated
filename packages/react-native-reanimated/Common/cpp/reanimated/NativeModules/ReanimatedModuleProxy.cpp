@@ -1,5 +1,4 @@
 #include <react/renderer/scheduler/Scheduler.h>
-#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
@@ -8,6 +7,7 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
+#include <worklets/Compat/StableApi.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>

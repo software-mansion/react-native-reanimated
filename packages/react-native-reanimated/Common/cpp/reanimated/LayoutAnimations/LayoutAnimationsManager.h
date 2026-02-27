@@ -3,8 +3,8 @@
 #include <jsi/jsi.h>
 #include <react/renderer/graphics/Transform.h>
 #include <react/renderer/mounting/ShadowView.h>
-#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
+#include <worklets/Compat/StableApi.h>
 
 #include <stdio.h>
 #include <functional>

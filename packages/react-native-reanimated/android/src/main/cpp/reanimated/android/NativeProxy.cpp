@@ -1,5 +1,4 @@
 #include <react/fabric/FabricUIManagerBinding.h>
-#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/ReanimatedVersion.h>
@@ -8,6 +7,7 @@
 #include <reanimated/android/KeyboardWorkletWrapper.h>
 #include <reanimated/android/NativeProxy.h>
 #include <reanimated/android/SensorSetter.h>
+#include <worklets/Compat/StableApi.h>
 
 #include <memory>
 #include <string>
