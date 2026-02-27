@@ -144,11 +144,11 @@ function processProps(
 
 export function normalizeAnimationKeyframes(
   keyframes: CSSAnimationKeyframes,
-  viewName: string
+  compoundComponentName: string
 ): NormalizedCSSAnimationKeyframesConfig {
-  const propsBuilder = getPropsBuilder(viewName);
+  const propsBuilder = getPropsBuilder(compoundComponentName);
   const separatelyInterpolatedNestedProperties =
-    getSeparatelyInterpolatedNestedProperties(viewName);
+    getSeparatelyInterpolatedNestedProperties(compoundComponentName);
   const propKeyframes: PropsWithKeyframes = {};
   const timingFunctions: NormalizedCSSKeyframeTimingFunctions = {};
 

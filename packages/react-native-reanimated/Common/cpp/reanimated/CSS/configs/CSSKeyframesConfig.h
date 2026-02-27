@@ -20,7 +20,7 @@ struct CSSKeyframesConfig {
 CSSKeyframesConfig parseCSSAnimationKeyframesConfig(
     jsi::Runtime &rt,
     const jsi::Value &config,
-    const std::string &componentName,
+    const std::string &compoundComponentName,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
 } // namespace reanimated::css

@@ -1,0 +1,25 @@
+---
+title: UIRuntimeId
+sidebar_position: 42 # Use alphabetical order
+---
+
+# UIRuntimeId <AvailableFrom version="0.8.0"/>
+
+The value of the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime)'s id. Each [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) has a unique id that can be used to target it from functions like [runOnRuntimeSyncWithId](/docs/threading/runOnRuntimeSyncWithId) and [scheduleOnRuntimeWithId](/docs/threading/scheduleOnRuntimeWithId).
+
+## Reference
+
+```javascript
+import { UIRuntimeId } from 'react-native-worklets';
+
+console.log(UIRuntimeId); // 2
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+const UIRuntimeId: number;
+```
+
+</details>

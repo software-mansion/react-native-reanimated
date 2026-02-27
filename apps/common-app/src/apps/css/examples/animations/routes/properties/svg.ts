@@ -23,6 +23,10 @@ export const svgPropertiesRoutes = {
     Component: svgAnimatedProperties.Ellipse,
     name: 'Ellipse',
   },
+  Group: {
+    Component: svgAnimatedProperties.Group,
+    name: 'Group',
+  },
   Image: {
     Component: svgAnimatedProperties.Image,
     name: 'Image',
@@ -38,6 +42,10 @@ export const svgPropertiesRoutes = {
   Path: {
     Component: svgAnimatedProperties.Path,
     name: 'Path',
+  },
+  Polyline: {
+    Component: svgAnimatedProperties.Polyline,
+    name: 'Polyline',
   },
   RadialGradient: {
     Component: svgAnimatedProperties.RadialGradient,

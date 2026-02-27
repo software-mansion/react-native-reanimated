@@ -201,8 +201,10 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnUI"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnUISync"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnRuntimeSync"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnRuntimeSyncWithId"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createWorkletRuntime"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnRuntime"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnRuntimeWithId"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "reportFatalErrorOnJS"));
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getStaticFeatureFlag"));
@@ -403,6 +405,25 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         });
   }
 
+  if (name == "runOnRuntimeSyncWithId") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [runtimeManager = runtimeManager_](
+            jsi::Runtime &rt, const jsi ::Value &thisValue, const jsi::Value *args, size_t count) {
+          const int runtimeId = args[0].asNumber();
+          const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
+          if (!workletRuntime) {
+            throw jsi::JSError(
+                rt, "[Worklets] runOnRuntimeSyncWithId: no worklet runtime found for id " + std::to_string(runtimeId));
+          }
+          auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
+              rt, args[1], "[Worklets] Only worklets can be executed on a worklet runtime.");
+          return workletRuntime->runSyncSerialized(serializableWorklet)->toJSValue(rt);
+        });
+  }
+
   if (name == "createWorkletRuntime") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -440,6 +461,26 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
     return jsi::Function::createFromHostFunction(
         rt, propName, 2, [](jsi::Runtime &rt, const jsi ::Value &thisValue, const jsi::Value *args, size_t count) {
           worklets::scheduleOnRuntime(rt, args[0], args[1]);
+          return jsi::Value::undefined();
+        });
+  }
+
+  if (name == "scheduleOnRuntimeWithId") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [runtimeManager = runtimeManager_](
+            jsi::Runtime &rt, const jsi ::Value &thisValue, const jsi::Value *args, size_t count) {
+          const int runtimeId = args[0].asNumber();
+          const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
+          if (!workletRuntime) {
+            throw jsi::JSError(
+                rt, "[Worklets] scheduleOnRuntimeWithId: no worklet runtime found for id " + std::to_string(runtimeId));
+          }
+          const auto worklet = extractSerializableOrThrow<SerializableWorklet>(
+              rt, args[1], "[Worklets] Only worklets can be scheduled to run on a worklet runtime.");
+          workletRuntime->schedule(worklet);
           return jsi::Value::undefined();
         });
   }

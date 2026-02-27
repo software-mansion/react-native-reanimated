@@ -68,6 +68,8 @@ const getTestData = () => {
 };
 
 describe('Test HybridObject Support', () => {
+  const workletRuntime = createWorkletRuntime();
+
   test('passes HybridObjects from RN runtime to UI runtime', () => {
     // Arrange
     const { storage, testValue, testKey } = getTestData();
@@ -100,14 +102,13 @@ describe('Test HybridObject Support', () => {
 
   test('passes HybridObjects from RN runtime to Worker runtime', async () => {
     // Arrange
-    const runtime = createWorkletRuntime();
     const pass = createSynchronizable<undefined | number>(undefined);
     const notificationName = 'done';
     const { storage, testValue, testKey } = getTestData();
     storage.set(testKey, testValue);
 
     // Act
-    scheduleOnRuntime(runtime, () => {
+    scheduleOnRuntime(workletRuntime, () => {
       'worklet';
       pass.setBlocking(storage.getNumber(testKey));
       notify(notificationName);
@@ -121,7 +122,6 @@ describe('Test HybridObject Support', () => {
 
   test('passes HybridObjects from Worker Runtime to RN runtime', async () => {
     // Arrange
-    const runtime = createWorkletRuntime();
     const notificationName = 'done';
     let returnedStorage: MMKV | null = null;
     const { storage, testValue, testKey } = getTestData();
@@ -130,7 +130,7 @@ describe('Test HybridObject Support', () => {
     const setReturnValue = (value: any) => (returnedStorage = value);
 
     // Act
-    scheduleOnRuntime(runtime, () => {
+    scheduleOnRuntime(workletRuntime, () => {
       'worklet';
       scheduleOnRN(setReturnValue, storage);
       notify(notificationName);

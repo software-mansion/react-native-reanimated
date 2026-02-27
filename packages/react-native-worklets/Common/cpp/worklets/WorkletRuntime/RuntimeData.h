@@ -1,16 +1,19 @@
 #pragma once
 
 #include <jsi/jsi.h>
+
 #include <string>
 
 namespace worklets {
 namespace RuntimeData {
 
+using RuntimeId = uint64_t;
+
 /**
  * Unused, but kept for possible future use.
  */
-constexpr uint64_t rnRuntimeId{0};
-constexpr uint64_t uiRuntimeId{1};
+constexpr RuntimeId rnRuntimeId{1};
+constexpr RuntimeId uiRuntimeId{2};
 extern const std::string uiRuntimeName;
 
 #if REACT_NATIVE_MINOR_VERSION >= 81
