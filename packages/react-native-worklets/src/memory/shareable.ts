@@ -4,6 +4,16 @@ import { WorkletsError } from '../debug/WorkletsError';
 import type { UIRuntimeId } from '../runtimes';
 import type { SerializableRef, Shareable, ShareableConfig } from './types';
 
+export function createShareable<
+  TValue = unknown,
+  THostDecorated = unknown,
+  TGuestDecorated = unknown,
+>(
+  hostRuntimeId: typeof UIRuntimeId,
+  initial: TValue,
+  config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
+): Shareable<TValue, THostDecorated, TGuestDecorated>;
+
 /**
  * @deprecated Only UI host runtime is supported now. Use {@link UIRuntimeId} as
  *   the `hostRuntimeId` argument.
@@ -15,16 +25,6 @@ export function createShareable<
 >(
   hostRuntimeId: number,
   initial: SerializableRef<TValue>,
-  config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
-): Shareable<TValue, THostDecorated, TGuestDecorated>;
-
-export function createShareable<
-  TValue = unknown,
-  THostDecorated = unknown,
-  TGuestDecorated = unknown,
->(
-  hostRuntimeId: typeof UIRuntimeId,
-  initial: TValue,
   config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
 ): Shareable<TValue, THostDecorated, TGuestDecorated>;
 
