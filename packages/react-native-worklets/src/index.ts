@@ -39,8 +39,6 @@ export { serializableMappingCache } from './memory/serializableMappingCache';
 export { createShareable } from './memory/shareable';
 export { createSynchronizable } from './memory/synchronizable';
 export type {
-  PureShareableGuest,
-  PureShareableHost,
   RegistrationData,
   SerializableRef,
   Shareable,

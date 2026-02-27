@@ -44,12 +44,12 @@ export default function RuntimeTestsExample() {
         {
           testSuiteName: 'memory',
           importTest: () => {
-            // require('./tests/memory/createSerializable.test');
-            // require('./tests/memory/createSerializableOnUI.test');
-            // require('./tests/memory/isSerializableRef.test');
-            // require('./tests/memory/synchronizable.test');
-            // require('./tests/memory/customSerializable.test');
-            // require('./tests/memory/hybridObjectSupport.test');
+            require('./tests/memory/createSerializable.test');
+            require('./tests/memory/createSerializableOnUI.test');
+            require('./tests/memory/isSerializableRef.test');
+            require('./tests/memory/synchronizable.test');
+            require('./tests/memory/customSerializable.test');
+            require('./tests/memory/hybridObjectSupport.test');
             require('./tests/memory/shareable.test');
           },
         },

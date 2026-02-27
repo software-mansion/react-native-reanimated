@@ -26,7 +26,7 @@ declare global {
   var _WORKLETS_VERSION_JS: string | undefined;
   var _createSerializable: <T>(
     value: T,
-    nativeStateSource: object | undefined
+    nativeStateSource?: object
   ) => FlatSerializableRef<T>;
   var _createSerializableString: (value: string) => FlatSerializableRef<string>;
   var _createSerializableNumber: (value: number) => FlatSerializableRef<number>;

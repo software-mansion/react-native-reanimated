@@ -87,12 +87,9 @@ export type ShareableHostMeta = {
   __shareableRef: true;
 };
 
-export type PureShareableHost<TValue = unknown> = ShareableHostProps<TValue> &
-  ShareableHostMeta;
-
 export type ShareableHostDecorator<TValue = unknown, TDecorated = unknown> = (
-  shareable: PureShareableHost<TValue> & TDecorated
-) => PureShareableHost<TValue> & TDecorated;
+  shareable: ShareableHost<TValue> & TDecorated
+) => ShareableHost<TValue> & TDecorated;
 
 export type ShareableGuestMeta = {
   isHost: false;
@@ -106,44 +103,39 @@ export type ShareableGuestProps<TValue = unknown> = {
   setSync(value: TValue | ((prev: TValue) => TValue)): void;
 };
 
-export type PureShareableGuest<TValue = unknown> = ShareableGuestProps<TValue> &
-  ShareableGuestMeta;
-
 export type ShareableGuestDecorator<TValue = unknown, TDecorated = unknown> = (
-  shareable: PureShareableGuest<TValue> & TDecorated
-) => PureShareableGuest<TValue> & TDecorated;
+  shareable: ShareableGuest<TValue> & TDecorated
+) => ShareableGuest<TValue> & TDecorated;
 
 export type ShareableHost<
   TValue = unknown,
   THostDecorated = unknown,
-  TGuestDecorated = unknown,
 > = ShareableHostMeta &
   ShareableHostProps<TValue> &
-  (THostDecorated extends object ? THostDecorated : object) &
-  Partial<
-    ShareableGuestProps<TValue> &
-      (TGuestDecorated extends object ? Partial<TGuestDecorated> : object)
-  >;
+  (THostDecorated extends object ? THostDecorated : object);
 
 export type ShareableGuest<
   TValue = unknown,
-  THostDecorated = unknown,
   TGuestDecorated = unknown,
 > = ShareableGuestMeta &
   ShareableGuestProps<TValue> &
-  (TGuestDecorated extends object ? TGuestDecorated : object) &
-  Partial<
-    ShareableHostProps<TValue> &
-      (THostDecorated extends object ? Partial<THostDecorated> : object)
-  >;
+  (TGuestDecorated extends object ? TGuestDecorated : object);
 
 export type Shareable<
   TValue = unknown,
   THostDecorated = unknown,
   TGuestDecorated = unknown,
 > =
-  | ShareableHost<TValue, THostDecorated, TGuestDecorated>
-  | ShareableGuest<TValue, THostDecorated, TGuestDecorated>;
+  | (ShareableHost<TValue, THostDecorated> &
+      Partial<
+        ShareableGuestProps<TValue> &
+          (TGuestDecorated extends object ? Partial<TGuestDecorated> : object)
+      >)
+  | (ShareableGuest<TValue, TGuestDecorated> &
+      Partial<
+        ShareableHostProps<TValue> &
+          (THostDecorated extends object ? Partial<THostDecorated> : object)
+      >);
 
 export type ShareableConfig<TValue, THostDecorated, TGuestDecorated> = {
   hostDecorator?: ShareableHostDecorator<TValue, THostDecorated>;

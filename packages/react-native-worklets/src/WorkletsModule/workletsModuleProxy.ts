@@ -84,7 +84,7 @@ export interface WorkletsModuleProxy {
   createShareable<TValue = unknown>(
     hostRuntimeId: number,
     initial: SerializableRef<TValue>,
-    iniotSynchronously: boolean,
+    initSynchronously: boolean,
     decorateHost: SerializableRef,
     decorateRef: SerializableRef
   ): SerializableRef<TValue>;

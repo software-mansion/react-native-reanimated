@@ -79,13 +79,6 @@ export function __installUnpacker() {
     };
   }
 
-  /**
-   * @param shareableRef - Is of type {@link SerializableRef} on the Ref Runtime
-   *   side and of type {@link Shareable} on the Host Runtime side.
-   * @param isHost - Whether the unpacker is running on the Host Runtime side.
-   * @param initial - Initial value to use when running on the Host Runtime
-   *   side. Undefined on the Ref Runtime side.
-   */
   function shareableGuestUnpacker<TValue>(
     hostId: number,
     shareableRef: SerializableRef<TValue>,

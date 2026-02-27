@@ -7,8 +7,6 @@ import {
   type ShareableGuestDecorator,
   type ShareableHostDecorator,
   isShareable,
-  type PureShareableHost,
-  type PureShareableGuest,
 } from 'react-native-worklets';
 import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
 
@@ -16,9 +14,7 @@ type StringDecorated = {
   myDecoration: string;
 };
 
-const decorateGuestProperty: ShareableGuestDecorator<number, StringDecorated> = (
-  shareable: PureShareableGuest<number> & StringDecorated,
-) => {
+const decorateGuestProperty: ShareableGuestDecorator<number, StringDecorated> = shareable => {
   'worklet';
   shareable.myDecoration = 'decorated';
   return shareable;
@@ -28,15 +24,13 @@ type FunctionDecorated = {
   myDecorationFunction: () => string;
 };
 
-const decorateGuestFunction: ShareableGuestDecorator<number, FunctionDecorated> = (
-  shareable: PureShareableGuest<number> & FunctionDecorated,
-) => {
+const decorateGuestFunction: ShareableGuestDecorator<number, FunctionDecorated> = shareable => {
   'worklet';
   shareable.myDecorationFunction = () => 'decorated function';
   return shareable;
 };
 
-const decorateGuestOverride: ShareableGuestDecorator<number> = (shareable: PureShareableGuest<number>) => {
+const decorateGuestOverride: ShareableGuestDecorator<number> = shareable => {
   'worklet';
   shareable.getSync = () => {
     return -1;
@@ -44,23 +38,19 @@ const decorateGuestOverride: ShareableGuestDecorator<number> = (shareable: PureS
   return shareable;
 };
 
-const decorateHostProperty: ShareableHostDecorator<number, StringDecorated> = (
-  shareable: PureShareableHost<number> & StringDecorated,
-) => {
+const decorateHostProperty: ShareableHostDecorator<number, StringDecorated> = shareable => {
   'worklet';
   shareable.myDecoration = 'decorated host';
   return shareable;
 };
 
-const decorateHostFunction: ShareableHostDecorator<number, FunctionDecorated> = (
-  shareable: PureShareableHost<number> & FunctionDecorated,
-) => {
+const decorateHostFunction: ShareableHostDecorator<number, FunctionDecorated> = shareable => {
   'worklet';
   shareable.myDecorationFunction = () => 'decorated function';
   return shareable;
 };
 
-const decorateHostGetter: ShareableHostDecorator<number> = (shareable: PureShareableHost<number>) => {
+const decorateHostGetter: ShareableHostDecorator<number> = shareable => {
   'worklet';
   Object.defineProperty(shareable, 'value', {
     get() {
@@ -70,7 +60,7 @@ const decorateHostGetter: ShareableHostDecorator<number> = (shareable: PureShare
   return shareable;
 };
 
-const decorateHostSetter: ShareableHostDecorator<number> = (shareable: PureShareableHost<number>) => {
+const decorateHostSetter: ShareableHostDecorator<number> = shareable => {
   'worklet';
   let value = shareable.value;
   Object.defineProperty(shareable, 'value', {

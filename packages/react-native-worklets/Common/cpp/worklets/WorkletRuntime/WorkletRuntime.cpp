@@ -269,7 +269,6 @@ void scheduleOnRuntime(
 std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
   auto runtimeData = rt.getRuntimeData(RuntimeData::weakRuntimeUUID);
   if (!runtimeData) [[unlikely]] {
-    // return std::weak_ptr<WorkletRuntime>();
     throw std::runtime_error(
         "[Worklets] No weak runtime data found on the provided JSI runtime."
         " Perhaps the JSI Runtime is not a WorkletRuntime?");

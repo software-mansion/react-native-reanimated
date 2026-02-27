@@ -1,19 +1,8 @@
 'use strict';
 
-import type {
-  PureShareableHost,
-  Shareable,
-  ShareableHostDecorator,
-} from './types';
+import type { Shareable, ShareableHost, ShareableHostDecorator } from './types';
 
 export function __installUnpacker() {
-  /**
-   * @param shareableRef - Is of type {@link SerializableRef} on the Ref Runtime
-   *   side and of type {@link Shareable} on the Host Runtime side.
-   * @param isHost - Whether the unpacker is running on the Host Runtime side.
-   * @param initial - Initial value to use when running on the Host Runtime
-   *   side. Undefined on the Ref Runtime side.
-   */
   function shareableHostUnpacker<TValue = unknown>(
     initial: TValue,
     hostDecorator?: ShareableHostDecorator<TValue>
@@ -25,7 +14,7 @@ export function __installUnpacker() {
       isHost: true,
       __shareableRef: true,
       value: initial,
-    } as PureShareableHost<TValue>;
+    } as ShareableHost<TValue>;
 
     if (hostDecorator) {
       hostShareable = hostDecorator(hostShareable);
