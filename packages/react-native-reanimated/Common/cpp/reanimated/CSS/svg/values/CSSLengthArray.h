@@ -9,6 +9,9 @@
 
 namespace reanimated::css {
 
+// TODO:
+// This class can be changed into a template in the future
+// Then it can be also used for interpolating the SVGStops
 struct CSSLengthArray : public CSSResolvableValue<CSSLengthArray> {
 
   CSSLengthArray() = default;
