@@ -50,8 +50,21 @@ const compatibilityPath = path.join(
   'compatibility.json'
 );
 
+const workletsCompatibilityPath = path.join(
+  __dirname,
+  '..',
+  '..',
+  '..',
+  'packages',
+  'react-native-worklets',
+  'compatibility.json'
+);
+
 const compatibilityData = JSON.parse(
   fs.readFileSync(compatibilityPath, 'utf8')
+);
+const workletsCompatibilityData = JSON.parse(
+  fs.readFileSync(workletsCompatibilityPath, 'utf8')
 );
 
 const fabricCompatibility = compatibilityData.fabric;
@@ -69,21 +82,38 @@ for (const [reanimatedRange, details] of Object.entries(fabricCompatibility)) {
     continue;
   }
 
-  const latestReactNativeMinor = [...reactNativeVersions]
-    .sort(compareMinorVersions)
-    .at(-1);
-  const reactNativeRange = toRange(latestReactNativeMinor);
   const reanimatedNpmRange = toRange(reanimatedRange);
-  const resolvedReactNativeVersion = resolveNpmVersion(
-    'react-native',
-    reactNativeRange
-  );
   const resolvedReanimatedVersion = resolveNpmVersion(
     'react-native-reanimated',
     reanimatedNpmRange
   );
 
   for (const workletsRange of workletsRanges) {
+    const workletsDetails = workletsCompatibilityData[workletsRange];
+    const workletsReactNativeVersions = workletsDetails?.['react-native'] || [];
+
+    if (workletsReactNativeVersions.length === 0) {
+      continue;
+    }
+
+    const commonReactNativeVersions = reactNativeVersions.filter((version) =>
+      workletsReactNativeVersions.includes(version)
+    );
+
+    if (commonReactNativeVersions.length === 0) {
+      continue;
+    }
+
+    const latestCommonReactNativeMinor = [...commonReactNativeVersions]
+      .sort(compareMinorVersions)
+      .at(-1);
+    const reactNativeRange = toRange(latestCommonReactNativeMinor);
+
+    const resolvedReactNativeVersion = resolveNpmVersion(
+      'react-native',
+      reactNativeRange
+    );
+
     const workletsNpmRange = toRange(workletsRange);
     const resolvedWorkletsVersion = resolveNpmVersion(
       'react-native-worklets',
