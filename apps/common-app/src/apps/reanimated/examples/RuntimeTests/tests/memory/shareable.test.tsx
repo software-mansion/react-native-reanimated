@@ -7,6 +7,7 @@ import {
   type ShareableGuestDecorator,
   type ShareableHostDecorator,
   isShareable,
+  type ShareableHost,
 } from 'react-native-worklets';
 import { describe, expect, test } from '../../ReJest/RuntimeTestsApi';
 
@@ -114,7 +115,7 @@ describe('Shareable hosted on UI', () => {
 
   test.each(initModes)('reads value on UI Runtime (%s)', initMode => {
     const shareable = createShareable('UI', 0, getInitOptions(initMode));
-    const value = runOnUISync(() => (shareable as ShareableGuest<number>).value);
+    const value = runOnUISync(() => (shareable as ShareableHost<number>).value);
     expect(value).toBe(0);
   });
 
