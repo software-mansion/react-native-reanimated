@@ -153,7 +153,7 @@ export function __installUnpacker() {
   globalThis.__shareableGuestUnpacker = shareableGuestUnpacker;
 }
 
-export type ShareableUnpacker<TValue = unknown> = (
+export type ShareableGuestUnpacker<TValue = unknown> = (
   hostId: number,
   shareableRef: SerializableRef<TValue>,
   decorateGuest?: ShareableGuestDecorator<TValue>

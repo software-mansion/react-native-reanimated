@@ -86,15 +86,11 @@ declare global {
   var __hasNativeState: (value: object) => boolean;
   /** Only in Debug builds. */
   var __isHostObject: (value: object) => boolean;
-  var __shareableHostUnpacker: ShareableHostUnpacker<
-    TValue,
-    THostDecorated,
-    TGuestDecorated
-  >;
+  var __shareableHostUnpacker: ShareableHostUnpacker<unknown, unknown, unknown>;
   var __shareableGuestUnpacker: ShareableGuestUnpacker<
-    TValue,
-    THostDecorated,
-    TGuestDecorated
+    unknown,
+    unknown,
+    unknown
   >;
   /** Only in Bundle Mode on Worklet Runtimes. */
   var TurboModules: Map<string, unknown>;

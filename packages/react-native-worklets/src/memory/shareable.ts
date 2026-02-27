@@ -37,5 +37,5 @@ export function createShareable<
   _initial: TValue,
   _config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
 ): Shareable<TValue, THostDecorated, TGuestDecorated> {
-  throw new WorkletsError('`createSynchronizable` is not supported on web.');
+  throw new WorkletsError('`createShareable` is not supported on web.');
 }

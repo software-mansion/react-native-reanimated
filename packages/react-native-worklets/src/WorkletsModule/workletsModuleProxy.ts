@@ -86,7 +86,7 @@ export interface WorkletsModuleProxy {
     initial: SerializableRef<TValue>,
     initSynchronously: boolean,
     decorateHost: SerializableRef,
-    decorateRef: SerializableRef
+    decorateGuest: SerializableRef
   ): SerializableRef<TValue>;
 
   scheduleOnUI<TValue>(serializable: SerializableRef<TValue>): void;
