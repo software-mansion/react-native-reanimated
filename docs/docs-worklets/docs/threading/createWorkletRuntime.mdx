@@ -37,6 +37,7 @@ runtime->runGuarded(worklet, ...args);
 type WorkletRuntime = {
   __hostObjectWorkletRuntime: never;
   readonly name: string;
+  readonly runtimeId: number;
 };
 
 function createWorkletRuntime(

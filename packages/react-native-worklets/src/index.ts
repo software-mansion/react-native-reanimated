@@ -14,6 +14,7 @@ if (globalThis._ALWAYS_FALSE) {
 }
 
 export {
+  callMicrotasks,
   isShareableRef,
   makeShareable,
   type MakeShareableClone,
@@ -56,10 +57,12 @@ export {
   runOnRuntime,
   runOnRuntimeAsync,
   runOnRuntimeSync,
+  runOnRuntimeSyncWithId,
   scheduleOnRuntime,
+  scheduleOnRuntimeWithId,
+  UIRuntimeId,
 } from './runtimes';
 export {
-  callMicrotasks,
   executeOnUIRuntimeSync,
   runOnJS,
   runOnUI,

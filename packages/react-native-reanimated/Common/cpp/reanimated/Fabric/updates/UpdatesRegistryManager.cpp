@@ -127,8 +127,8 @@ void UpdatesRegistryManager::collectPropsToRevertBySurface(std::unordered_map<Su
         continue;
       }
 
-      const auto &componentName = shadowNode->getComponentName();
-      const auto &interpolators = getComponentInterpolators(componentName);
+      const auto &nativeComponentName = shadowNode->getComponentName();
+      const auto &interpolators = getComponentInterpolators(nativeComponentName);
       const auto &it = interpolators.find(propName);
 
       if (it != interpolators.end()) {
