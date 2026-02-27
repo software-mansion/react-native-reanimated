@@ -15,7 +15,7 @@ class Shareable : public Serializable, public std::enable_shared_from_this<Share
 
   Shareable(
       const std::shared_ptr<WorkletRuntime> &hostRuntime,
-      const std::shared_ptr<Serializable> &initial_,
+      const std::shared_ptr<Serializable> &initial,
       const bool initSynchronously,
       const std::shared_ptr<Serializable> &decorateHost,
       const std::shared_ptr<Serializable> &decorateGuest);
@@ -29,7 +29,7 @@ class Shareable : public Serializable, public std::enable_shared_from_this<Share
   jsi::Value guestJSValue(jsi::Runtime &rt);
   void initHostValue();
 
-  const std::weak_ptr<WorkletRuntime> hostRuntime_;
+  const std::weak_ptr<WorkletRuntime> weakHostRuntime_;
   const RuntimeData::RuntimeId hostRuntimeId_;
   jsi::Runtime &hostJSIRuntime_;
   std::shared_ptr<Serializable> initial_;

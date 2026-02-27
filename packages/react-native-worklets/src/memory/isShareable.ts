@@ -3,7 +3,7 @@
 import type { Shareable } from './types';
 
 export function isShareable<
-  TValue,
+  TValue = unknown,
   THostDecorated = unknown,
   TGuestDecorated = unknown,
 >(value: unknown): value is Shareable<TValue, THostDecorated, TGuestDecorated> {

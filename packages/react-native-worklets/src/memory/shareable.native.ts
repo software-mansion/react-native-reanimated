@@ -9,8 +9,8 @@ import { createSerializable } from './serializable';
 import type { SerializableRef, Shareable, ShareableConfig } from './types';
 
 /**
- * @deprecated Only UI host runtime is supported now. Use 'UI' as the
- *   hostRuntime argument.
+ * @deprecated Only UI host runtime is supported now. Use {@link UIRuntimeId} as
+ *   the `hostRuntimeId` argument.
  */
 export function createShareable<
   TValue = unknown,
@@ -41,12 +41,11 @@ export function createShareable<
   initial: TValue,
   config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
 ): Shareable<TValue, THostDecorated, TGuestDecorated> {
-  if (hostRuntimeId !== UIRuntimeId) {
-    throw new WorkletsError('Only UI host runtime is supported currently');
-  }
-
   const { hostDecorator, guestDecorator, initSynchronously } = config || {};
   if (__DEV__) {
+    if (hostRuntimeId !== UIRuntimeId) {
+      throw new WorkletsError('Only UI host runtime is supported currently');
+    }
     if (hostDecorator && !isWorkletFunction(hostDecorator)) {
       throw new WorkletsError('hostDecorator must be a worklet function');
     }

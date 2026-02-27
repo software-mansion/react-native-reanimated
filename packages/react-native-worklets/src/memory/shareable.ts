@@ -5,8 +5,8 @@ import type { UIRuntimeId } from '../runtimes';
 import type { SerializableRef, Shareable, ShareableConfig } from './types';
 
 /**
- * @deprecated Only UI host runtime is supported now. Use 'UI' as the
- *   hostRuntime argument.
+ * @deprecated Only UI host runtime is supported now. Use {@link UIRuntimeId} as
+ *   the `hostRuntimeId` argument.
  */
 export function createShareable<
   TValue = unknown,

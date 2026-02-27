@@ -24,7 +24,7 @@ Shareable::Shareable(
     const std::shared_ptr<Serializable> &decorateHost,
     const std::shared_ptr<Serializable> &decorateGuest)
     : Serializable(ValueType::ShareableType),
-      hostRuntime_(hostRuntime),
+      weakHostRuntime_(hostRuntime),
       hostRuntimeId_(hostRuntime->getRuntimeId()),
       hostJSIRuntime_(hostRuntime->getJSIRuntime()),
       initial_(initial),
@@ -37,9 +37,9 @@ Shareable::Shareable(
 }
 
 Shareable::~Shareable() {
-  const auto strongHostRuntime = hostRuntime_.lock();
+  const auto strongHostRuntime = weakHostRuntime_.lock();
   if (strongHostRuntime && hostValue_) {
-    strongHostRuntime->runSync([this](jsi::Runtime &rt) { cleanupIfRuntimeExists(&rt, hostValue_); });
+    strongHostRuntime->runSync([this](jsi::Runtime &rt) { hostValue_.reset(); });
   } else {
     hostValue_.release();
   }
