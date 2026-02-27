@@ -11,10 +11,7 @@ const AnimatedText = Animated.createAnimatedComponent(Text);
 
 export default function TextExample() {
   return (
-    <ExamplesScreen<
-      { keyframes: CSSAnimationKeyframes<TextProps> },
-      TextProps
-    >
+    <ExamplesScreen<{ keyframes: CSSAnimationKeyframes<TextProps> }, TextProps>
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',
         animationDuration: '1s',
@@ -28,9 +25,7 @@ export default function TextExample() {
             animatedProps={animation}
             fill={colors.primary}
             fontSize={20}
-            x={[30]}
-            dx={[4, 10, 20]}
-            rotate={[20, 10]}
+            x={30}
             y={40}>
             Hello SVG
           </AnimatedText>
@@ -43,13 +38,17 @@ export default function TextExample() {
             {
               examples: [
                 {
-                  description: 'Animates from default `x=10` to `x=100`',
+                  description:
+                    'Animates x position from 30 to 150 using absolute values',
                   keyframes: {
+                    from: {
+                      x: 30,
+                    },
                     to: {
-                      x: 100,
+                      x: [150],
                     },
                   },
-                  title: 'Absolute',
+                  title: 'Absolute value',
                 },
                 {
                   description:
@@ -59,23 +58,24 @@ export default function TextExample() {
                       x: '5%',
                     },
                     to: {
-                      x: '50%',
+                      x: '75%',
                     },
                   },
-                  title: 'Percentage',
+                  title: 'Percentage values (from 5% to 75%)',
                 },
                 {
+                  // TODO: Mixed absolute/percentage interpolation is broken
                   description:
                     'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
-                      x: 10,
+                      x: 30,
                     },
                     to: {
-                      x: '50%',
+                      x: '75%',
                     },
                   },
-                  title: 'Mixed',
+                  title: 'Mixed values (from 30 to 75%)',
                 },
               ],
               title: 'X Position',
@@ -83,13 +83,17 @@ export default function TextExample() {
             {
               examples: [
                 {
-                  description: 'Animates from default `y=40` to `y=20`',
+                  description:
+                    'Animates y position from 40 to 15 using absolute values',
                   keyframes: {
+                    from: {
+                      y: 40,
+                    },
                     to: {
-                      y: 20,
+                      y: 15,
                     },
                   },
-                  title: 'Absolute',
+                  title: 'Absolute value',
                 },
                 {
                   description:
@@ -102,9 +106,10 @@ export default function TextExample() {
                       y: '80%',
                     },
                   },
-                  title: 'Percentage',
+                  title: 'Percentage values (from 30% to 80%)',
                 },
                 {
+                  // TODO: Mixed absolute/percentage interpolation is broken for SVG text y — needs to be fixed
                   description:
                     'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
@@ -115,10 +120,107 @@ export default function TextExample() {
                       y: '80%',
                     },
                   },
-                  title: 'Mixed',
+                  title: 'Mixed values (from 20 to 80%)',
                 },
               ],
               title: 'Y Position',
+            },
+            {
+              examples: [
+                {
+                  description:
+                    'Shifts the whole text horizontally by animating a single dx offset',
+                  keyframes: {
+                    from: {
+                      dx: 0,
+                    },
+                    to: {
+                      dx: 30,
+                    },
+                  },
+                  title: 'Absolute value',
+                },
+                {
+                  description:
+                    'Animates per-glyph horizontal offsets to spread the letters apart',
+                  keyframes: {
+                    from: {
+                      dx: 0,
+                    },
+                    to: {
+                      dx: [0, 3, 6, 9, 12, 9, 6, 3, 0],
+                    },
+                  },
+                  title: 'Per-glyph spread',
+                },
+              ],
+              title: 'DX (Horizontal Offset)',
+            },
+            {
+              examples: [
+                {
+                  description:
+                    'Shifts the whole text vertically by animating a single dy offset',
+                  keyframes: {
+                    from: {
+                      dy: 0,
+                    },
+                    to: {
+                      dy: 15,
+                    },
+                  },
+                  title: 'Absolute value',
+                },
+                {
+                  description:
+                    'Animates per-glyph vertical offsets to create a wave effect',
+                  keyframes: {
+                    from: {
+                      dy: 0,
+                    },
+                    to: {
+                      dy: [0, -8, -12, -8, 0, 8, 12, 8, 0],
+                    },
+                  },
+                  title: 'Per-glyph wave',
+                },
+              ],
+              title: 'DY (Vertical Offset)',
+            },
+          ],
+        },
+        {
+          name: 'Rotation',
+          sections: [
+            {
+              examples: [
+                {
+                  description: 'Rotates the entire text from 0° to 30°',
+                  keyframes: {
+                    from: {
+                      rotate: 0,
+                    },
+                    to: {
+                      rotate: 30,
+                    },
+                  },
+                  title: 'Absolute value',
+                },
+                {
+                  description:
+                    'Animates per-glyph rotation to create a cascading tilt effect',
+                  keyframes: {
+                    from: {
+                      rotate: 0,
+                    },
+                    to: {
+                      rotate: [0, 5, 10, 20, 30, 20, 10, 5, 0],
+                    },
+                  },
+                  title: 'Per-glyph cascade',
+                },
+              ],
+              title: 'Rotation',
             },
           ],
         },

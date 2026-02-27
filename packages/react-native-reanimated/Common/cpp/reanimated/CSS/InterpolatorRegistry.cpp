@@ -13,6 +13,7 @@
 #include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
 
+#include <reanimated/CSS/svg/values/CSSLengthArray.h>
 #include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGPath.h>
 #include <reanimated/CSS/svg/values/SVGStops.h>
@@ -370,11 +371,11 @@ const InterpolatorFactoriesRecord SVG_RADIAL_GRADIENT_INTERPOLATORS = mergeInter
 const InterpolatorFactoriesRecord SVG_TEXT_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"x", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-         {"y", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
-         {"dx", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
-         {"dy", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
-         {"rotate", value<CSSAngle>(0)},
+         {"x", value<CSSLengthArray>(CSSLengthArray())},
+         {"y", value<CSSLengthArray>(CSSLengthArray())},
+         {"dx", value<CSSLengthArray>(CSSLengthArray())},
+         {"dy", value<CSSLengthArray>(CSSLengthArray())},
+         {"rotate", value<CSSLengthArray>(CSSLengthArray())},
      }});
 
 // ==================

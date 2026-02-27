@@ -4,9 +4,9 @@
 // @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
 import type { TextProps } from 'react-native-svg';
 
+import { processNumberArray } from '../processors';
 import type { SvgStyleBuilderConfig } from './common';
 import { SVG_COMMON_PROPERTIES_CONFIG } from './common';
-import { processNumberArray } from '../processors';
 
 export const SVG_TEXT_PROPERTIES_CONFIG: SvgStyleBuilderConfig<TextProps> = {
   ...SVG_COMMON_PROPERTIES_CONFIG,
@@ -17,7 +17,6 @@ export const SVG_TEXT_PROPERTIES_CONFIG: SvgStyleBuilderConfig<TextProps> = {
   dx: { process: processNumberArray },
   dy: { process: processNumberArray },
   rotate: { process: processNumberArray },
-
 
   children: false,
   inlineSize: false,
@@ -41,5 +40,5 @@ export const SVG_TEXT_PROPERTIES_CONFIG: SvgStyleBuilderConfig<TextProps> = {
   wordSpacing: false,
   kerning: false,
   fontVariantLigatures: false,
-  fontVariationSettings: false
+  fontVariationSettings: false,
 };
