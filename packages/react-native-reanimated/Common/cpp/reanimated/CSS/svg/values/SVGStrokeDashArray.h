@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/svg/values/SVGLength.h>
+#include <reanimated/CSS/common/values/CSSLength.h>
 
 #include <numeric>
 #include <string>
@@ -8,11 +8,11 @@
 
 namespace reanimated::css {
 
-struct SVGStrokeDashArray : public CSSSimpleValue<SVGStrokeDashArray> {
-  std::vector<SVGLength> values;
+struct SVGStrokeDashArray : public CSSResolvableValue<SVGStrokeDashArray> {
+  std::vector<CSSLength> values;
 
   SVGStrokeDashArray();
-  explicit SVGStrokeDashArray(const std::vector<SVGLength> &values);
+  explicit SVGStrokeDashArray(const std::vector<CSSLength> &values);
   explicit SVGStrokeDashArray(jsi::Runtime &rt, const jsi::Value &jsiValue);
   explicit SVGStrokeDashArray(const folly::dynamic &value);
 
@@ -21,7 +21,10 @@ struct SVGStrokeDashArray : public CSSSimpleValue<SVGStrokeDashArray> {
 
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
-  SVGStrokeDashArray interpolate(double progress, const SVGStrokeDashArray &to) const override;
+  SVGStrokeDashArray interpolate(
+      double progress,
+      const SVGStrokeDashArray &to,
+      const ResolvableValueInterpolationContext &context) const override;
 
   bool operator==(const SVGStrokeDashArray &other) const;
 
