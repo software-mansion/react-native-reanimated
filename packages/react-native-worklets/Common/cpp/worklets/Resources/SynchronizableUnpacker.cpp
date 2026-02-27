@@ -8,7 +8,7 @@ namespace worklets {
 
 const char SynchronizableUnpackerCode[] =
     R"DELIMITER__((function () {
-  var serializer = !globalThis._WORKLET || globalThis._WORKLETS_BUNDLE_MODE_ENABLED ? createSerializable : function (value) {
+  var serializer = globalThis.__RUNTIME_KIND === 1 || globalThis._WORKLETS_BUNDLE_MODE_ENABLED ? createSerializable : function (value) {
     return globalThis.__serializer(value);
   };
   function synchronizableUnpacker(synchronizableRef) {
