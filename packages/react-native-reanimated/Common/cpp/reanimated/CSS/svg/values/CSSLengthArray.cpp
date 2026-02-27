@@ -11,6 +11,7 @@ CSSLengthArray::CSSLengthArray(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   for (size_t i = 0; i < arraySize; ++i) {
     lengths.emplace_back(rt, array.getValueAtIndex(rt, i));
   }
+  ensureLengthsNonempty();
 }
 
 CSSLengthArray::CSSLengthArray(const folly::dynamic &value) {
@@ -18,6 +19,7 @@ CSSLengthArray::CSSLengthArray(const folly::dynamic &value) {
   for (const auto &item : value) {
     lengths.emplace_back(item);
   }
+  ensureLengthsNonempty();
 }
 
 bool CSSLengthArray::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
@@ -67,10 +69,6 @@ CSSLengthArray CSSLengthArray::interpolate(
   const auto &fromLengths = lengths;
   const auto &toLengths = to.lengths;
 
-  if (fromLengths.empty() || toLengths.empty()) {
-    return progress < 0.5 ? *this : to;
-  }
-
   size_t fromSize = fromLengths.size();
   size_t toSize = toLengths.size();
   size_t longerSize = std::max(fromSize, toSize);
@@ -102,5 +100,11 @@ std::ostream &operator<<(std::ostream &os, const CSSLengthArray &value) {
 }
 
 #endif // NDEBUG
+
+void CSSLengthArray::ensureLengthsNonempty() {
+  if (lengths.empty()) {
+    lengths.emplace_back(0);
+  }
+}
 
 } // namespace reanimated::css

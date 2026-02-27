@@ -15,10 +15,14 @@ namespace reanimated::css {
 struct CSSLengthArray : public CSSResolvableValue<CSSLengthArray> {
 
   CSSLengthArray() = default;
-  explicit CSSLengthArray(CSSLength singleValue) : lengths{std::move(singleValue)} {}
+  explicit CSSLengthArray(CSSLength singleValue) : lengths{std::move(singleValue)} {
+    ensureLengthsNonempty();
+  }
   template <typename T>
     requires(!std::same_as<std::decay_t<T>, CSSLengthArray>) && std::constructible_from<std::vector<CSSLength>, T>
-  explicit CSSLengthArray(T &&value) : lengths{std::forward<T>(value)} {}
+  explicit CSSLengthArray(T &&value) : lengths{std::forward<T>(value)} {
+    ensureLengthsNonempty();
+  }
   explicit CSSLengthArray(jsi::Runtime &rt, const jsi::Value &jsiValue);
   explicit CSSLengthArray(const folly::dynamic &value);
 
@@ -40,6 +44,8 @@ struct CSSLengthArray : public CSSResolvableValue<CSSLengthArray> {
 
  private:
   std::vector<CSSLength> lengths;
+
+  void ensureLengthsNonempty();
 };
 
 } // namespace reanimated::css
