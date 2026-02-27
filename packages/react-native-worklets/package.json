@@ -52,6 +52,8 @@
   },
   "homepage": "https://docs.swmansion.com/react-native-worklets",
   "peerDependencies": {
+    "@babel/core": "*",
+    "react": "*",
     "react-native": "0.79 - 0.84"
   },
   "dependencies": {

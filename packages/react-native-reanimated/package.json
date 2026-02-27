@@ -96,8 +96,9 @@
     "semver": "7.7.3"
   },
   "peerDependencies": {
+    "react": "*",
     "react-native": "0.81 - 0.84",
-    "react-native-worklets": "nightly"
+    "react-native-worklets": "*"
   },
   "devDependencies": {
     "@babel/core": "7.28.4",
