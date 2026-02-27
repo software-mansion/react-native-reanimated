@@ -14,8 +14,6 @@ const workletsBabelPlugin = require('../plugin');
 /** @type {import('../plugin/').PluginOptions} */
 const workletsBabelPluginOptions = {
   limitInitDataHoisting: true,
-  disableSourceMaps: true,
-  relativeSourceLocation: true,
 };
 
 exportToCpp('valueUnpacker.native.ts', 'ValueUnpacker');
