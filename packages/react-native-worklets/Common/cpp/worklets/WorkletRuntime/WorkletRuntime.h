@@ -120,7 +120,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     return *runtime_;
   }
 
-  [[nodiscard]] RuntimeData::Id getRuntimeId() const noexcept {
+  [[nodiscard]] RuntimeData::RuntimeId getRuntimeId() const noexcept {
     return runtimeId_;
   }
 
@@ -129,7 +129,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   }
 
   explicit WorkletRuntime(
-      RuntimeData::Id runtimeId,
+      RuntimeData::RuntimeId runtimeId,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::string &name,
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
@@ -173,7 +173,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 #endif // NDEBUG
 
  private:
-  const RuntimeData::Id runtimeId_;
+  const RuntimeData::RuntimeId runtimeId_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
   const std::string name_;
