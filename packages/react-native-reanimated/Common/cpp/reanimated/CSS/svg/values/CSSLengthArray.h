@@ -15,6 +15,7 @@ namespace reanimated::css {
 struct CSSLengthArray : public CSSResolvableValue<CSSLengthArray> {
 
   CSSLengthArray() = default;
+  explicit CSSLengthArray(CSSLength singleValue) : lengths{std::move(singleValue)} {}
   template <typename T>
     requires(!std::same_as<std::decay_t<T>, CSSLengthArray>) && std::constructible_from<std::vector<CSSLength>, T>
   explicit CSSLengthArray(T &&value) : lengths{std::forward<T>(value)} {}

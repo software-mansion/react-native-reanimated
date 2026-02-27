@@ -371,11 +371,11 @@ const InterpolatorFactoriesRecord SVG_RADIAL_GRADIENT_INTERPOLATORS = mergeInter
 const InterpolatorFactoriesRecord SVG_TEXT_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"x", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "width"})},
-         {"y", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "height"})},
-         {"dx", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "width"})},
-         {"dy", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "height"})},
-         {"rotate", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "width"})},
+         {"x", value<CSSLengthArray>(CSSLengthArray(CSSLength("0%")), {RelativeTo::Parent, "width"})},
+         {"y", value<CSSLengthArray>(CSSLengthArray(CSSLength("0%")), {RelativeTo::Parent, "height"})},
+         {"dx", value<CSSLengthArray>(CSSLengthArray(CSSLength("0%")), {RelativeTo::Parent, "width"})},
+         {"dy", value<CSSLengthArray>(CSSLengthArray(CSSLength("0%")), {RelativeTo::Parent, "height"})},
+         {"rotate", value<CSSLengthArray>(CSSLengthArray(CSSLength("0%")), {RelativeTo::Parent, "width"})},
          // TODO: Implement when supported by RNSVG
          //  {"textLength", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
          //  {"lengthAdjust", value<CSSKeyword>("spacing")},

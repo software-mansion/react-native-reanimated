@@ -142,9 +142,6 @@ export default function TextExample() {
                   description:
                     'Shifts the whole text horizontally by animating a single dx offset',
                   keyframes: {
-                    from: {
-                      dx: 0,
-                    },
                     to: {
                       dx: 30,
                     },
@@ -155,9 +152,6 @@ export default function TextExample() {
                   description:
                     'Animates per-glyph horizontal offsets to spread the letters apart',
                   keyframes: {
-                    from: {
-                      dx: 0,
-                    },
                     to: {
                       dx: [0, 3, 6, 9, 12, 9, 6, 3, 0],
                     },
@@ -168,9 +162,6 @@ export default function TextExample() {
                   description:
                     'Animates per-glyph horizontal offsets to spread the letters apart',
                   keyframes: {
-                    from: {
-                      dx: 0,
-                    },
                     to: {
                       dx: [0, 100],
                     },
@@ -186,9 +177,6 @@ export default function TextExample() {
                   description:
                     'Shifts the whole text vertically by animating a single dy offset',
                   keyframes: {
-                    from: {
-                      dy: 0,
-                    },
                     to: {
                       dy: 15,
                     },
@@ -199,9 +187,6 @@ export default function TextExample() {
                   description:
                     'Animates per-glyph vertical offsets to create a wave effect',
                   keyframes: {
-                    from: {
-                      dy: 0,
-                    },
                     to: {
                       dy: [0, -8, -12, -8, 0, 8, 12, 8, 0],
                     },
@@ -221,9 +206,6 @@ export default function TextExample() {
                 {
                   description: 'Rotates the entire text from 0° to 30°',
                   keyframes: {
-                    from: {
-                      rotate: 0,
-                    },
                     to: {
                       rotate: 30,
                     },
@@ -234,9 +216,6 @@ export default function TextExample() {
                   description:
                     'Animates per-glyph rotation to create a cascading tilt effect',
                   keyframes: {
-                    from: {
-                      rotate: 0,
-                    },
                     to: {
                       rotate: [0, 5, 10, 20, 30, 20, 10, 5, 0],
                     },
