@@ -81,6 +81,14 @@ export interface WorkletsModuleProxy {
     typeId: number
   ): void;
 
+  createShareable<TValue = unknown>(
+    hostRuntimeId: number,
+    initial: SerializableRef<TValue>,
+    initSynchronously: boolean,
+    decorateHost: SerializableRef,
+    decorateGuest: SerializableRef
+  ): SerializableRef<TValue>;
+
   scheduleOnUI<TValue>(serializable: SerializableRef<TValue>): void;
 
   runOnUISync<TValue, TReturn>(serializable: SerializableRef<TValue>): TReturn;
