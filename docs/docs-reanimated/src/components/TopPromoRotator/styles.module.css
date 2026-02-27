@@ -67,3 +67,17 @@
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+.closeButton {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: #001a72;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  font-size: 16px;
+}
