@@ -47,6 +47,22 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
       }
       continue;
     }
+    if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID) {
+      if (config == nullptr) {
+        progressSharedTransitionsForNativeID_.erase(tag);
+      } else {
+        progressSharedTransitionsForNativeID_[tag] = config;
+      }
+      continue;
+    }
+    if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
+      if (config == nullptr) {
+        progressSharedTransitions_.erase(tag);
+      } else {
+        progressSharedTransitions_[tag] = config;
+      }
+      continue;
+    }
     if (config == nullptr) {
       getConfigsForType(type).erase(tag);
     } else {
@@ -136,10 +152,47 @@ void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, con
   }
   sharedTransitionsForNativeID_.erase(nativeId);
   sharedTransitionManager_->nativeIDToName_.erase(nativeId);
+
+  // Transfer progress shared transition config from nativeId to view tag
+  const auto progressConfig = progressSharedTransitionsForNativeID_[nativeId];
+  if (progressConfig) {
+    progressSharedTransitions_.insert_or_assign(tag, progressConfig);
+  }
+  progressSharedTransitionsForNativeID_.erase(nativeId);
 }
 
 std::shared_ptr<SharedTransitionManager> LayoutAnimationsManager::getSharedTransitionManager() {
   return sharedTransitionManager_;
+}
+
+bool LayoutAnimationsManager::hasProgressConfig(const int tag) {
+  auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+  return progressSharedTransitions_.contains(tag);
+}
+
+std::optional<jsi::Value> LayoutAnimationsManager::callProgressWorklet(
+    jsi::Runtime &rt,
+    const int tag,
+    const jsi::Value &propsDiff,
+    double progress) {
+  std::shared_ptr<Serializable> config;
+  {
+    auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
+    auto it = progressSharedTransitions_.find(tag);
+    if (it == progressSharedTransitions_.end()) {
+      return std::nullopt;
+    }
+    config = it->second;
+  }
+  auto configValue = config->toJSValue(rt);
+  if (!configValue.isObject() || !configValue.asObject(rt).isFunction(rt)) {
+    return std::nullopt;
+  }
+  auto result = configValue.asObject(rt).asFunction(rt).call(rt, propsDiff, jsi::Value(progress));
+  if (!result.isObject()) {
+    return std::nullopt;
+  }
+  return std::move(result);
 }
 
 std::unordered_map<int, std::shared_ptr<Serializable>> &LayoutAnimationsManager::getConfigsForType(
