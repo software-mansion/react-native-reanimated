@@ -1,13 +1,10 @@
 import React, { useCallback } from 'react';
-import { Button, StyleSheet, TextInput, View } from 'react-native';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedProps,
-  useDerivedValue,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-
-const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 const DELTAS = [-100, -10, -1, 1, 10, 100];
 
@@ -16,12 +13,8 @@ export default function AmountExample() {
 
   const sv = useSharedValue(ref.current);
 
-  const text = useDerivedValue(() => {
-    return `$${sv.value.toFixed(2)}`;
-  });
-
   const animatedProps = useAnimatedProps(() => {
-    return { text: text.value, defaultValue: text.value };
+    return { text: `$${sv.value.toFixed(2)}` };
   });
 
   const setValue = useCallback(
@@ -36,12 +29,7 @@ export default function AmountExample() {
 
   return (
     <View style={styles.container}>
-      <AnimatedTextInput
-        animatedProps={animatedProps}
-        style={styles.text}
-        editable={false}
-        underlineColorAndroid="transparent"
-      />
+      <Animated.Text animatedProps={animatedProps} style={styles.text} />
       <View style={styles.row}>
         {DELTAS.map((delta) => (
           <Button
@@ -65,7 +53,6 @@ const styles = StyleSheet.create({
     fontSize: 80,
     fontWeight: 'bold',
     fontVariant: ['tabular-nums'],
-    textAlign: 'center',
   },
   row: {
     flexDirection: 'row',

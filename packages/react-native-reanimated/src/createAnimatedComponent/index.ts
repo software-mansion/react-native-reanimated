@@ -1,4 +1,7 @@
 'use strict';
 
-export type { AnimatedComponentType } from './createAnimatedComponent';
+export type {
+  AnimatedComponentRef,
+  AnimatedComponentType,
+} from './createAnimatedComponent';
 export { createAnimatedComponent } from './createAnimatedComponent';

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedProps,
+  useDerivedValue,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -13,13 +14,23 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 export default function SvgExample() {
   const sv = useSharedValue(0);
 
-  sv.value = withRepeat(withTiming(1, { duration: 500 }), -1, true);
+  useEffect(() => {
+    sv.value = 0;
+    sv.value = withRepeat(withTiming(1, { duration: 500 }), -1, true);
+  }, [sv]);
+
+  const rSv = useDerivedValue(() => `${12 + sv.value * 38}%`);
 
   const animatedProps = useAnimatedProps(() => {
-    return {
-      r: `${1 + sv.value * 49}%`,
-    };
+    return { r: rSv.value };
   });
+
+  const [, setCount] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setCount((c) => c + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -28,7 +39,8 @@ export default function SvgExample() {
           cx="50%"
           cy="50%"
           fill="lime"
-          animatedProps={animatedProps}
+          // animatedProps={animatedProps}
+          r={rSv}
         />
       </Svg>
     </View>

@@ -1,0 +1,102 @@
+---
+id: text-animations
+title: Text animations
+sidebar_label: Text animations
+---
+
+# Text animations
+
+This guide explains how to animate text using Reanimated. In particular, it focuses on the type of text animations in which the sequence of characters changes between individual animation frames, like in a stopwatch or a digital speedometer.
+
+## Animating text style
+
+For animating text style (e.g. text color, font size or text shadow), you need to use [`useAnimatedStyle`](/docs/core/useAnimatedStyle) hook and pass the animated styles to `Animated.Text` component just like you would do with any other animated component.
+
+## Animating text content
+
+For animating the text content itself, you need to choose one of the approaches described below.
+
+### Using `Animated.Text` <AvailableFrom version="4.3.0" />
+
+The recommended approach is to animate the `text` property of `Animated.Text` component using [`useAnimatedProps`](/docs/core/useAnimatedProps) hook.
+
+The `Animated.Text` component with animated `text` property must have no children. The current value of `text` animated prop will be passed as the children during the first render and will be updated accordingly on the UI thread without triggering a React render afterwards.
+
+For convenience, the value of `text` property can also be a number. Reanimated will automatically perform the string conversion under the hood. However, it is recommended to manually format the value using [`Math.round()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/round) function or [`.toFixed()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toFixed) method.
+
+In particular, the `text` property may be an empty string. If the value of `text` property is an empty string during the initial render, Reanimated will pass a [zero-width space character](https://en.wikipedia.org/wiki/Zero-width_space) as children prop to force the creation of the text content shadow node. This is an implementation detail and should not affect the behavior of the component.
+
+This approach also works in case of nested text, when the `Animated.Text` component is placed inside another `Text` component or even `Animated.Text` component with animated style.
+
+For more cases, please refer to [this demo](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/src/apps/reanimated/examples/AnimatedTextExample.tsx) in our example app.
+
+```tsx
+function Counter() {
+  const sv = useSharedValue(0);
+
+  // ...
+
+  const animatedProps = useAnimatedProps(() => {
+    return {
+      // highlight-next-line
+      text: `Current value: ${Math.round(sv.value)}`,
+    };
+  });
+
+  // highlight-next-line
+  return <Animated.Text animatedProps={animatedProps} />;
+}
+```
+
+Alternatively, you can create another shared value with the desired text using [`useDerivedValue`](/docs/core/useDerivedValue) hook and pass the shared value as inline `text` prop:
+
+```tsx
+function Counter() {
+  // ...
+
+  const text = useDerivedValue(() => {
+    // highlight-next-line
+    return `Current value: ${Math.round(sv.value)}`;
+  });
+
+  // highlight-next-line
+  return <Animated.Text text={text} />;
+}
+```
+
+:::tip
+When animating numbers, it is recommended to apply `fontVariant: ['tabular-nums']` style to the animated counter. This way each digit has the same width which makes the layout stable and reduces the perceived shakiness of the text content, resulting in better user experience.
+:::
+
+### Using `AnimatedTextInput`
+
+Another approach is to animate the value of `TextInput` component. This approach is no longer recommended. In some cases, the contents can be incorrectly cropped resulting in showing the ellipsis instead of the last character. Also, it is prone to crashes during a reload ([link to the issue](https://github.com/software-mansion/react-native-reanimated/issues/7647)).
+
+Reanimated does not expose `Animated.TextInput` on its own, so you need to create an animated component yourself using [`createAnimatedComponent`](/docs/core/createAnimatedComponent) function:
+
+```tsx
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+```
+
+You need to animate both the `defaultValue` prop (for the initial render) and the `text` prop (for the consecutive animation frames) using [`useAnimatedProps`](/docs/core/useAnimatedProps) hook:
+
+```tsx
+const animatedProps = useAnimatedProps(() => {
+  const text = `Current value: ${Math.round(sv.value)}`;
+  // highlight-next-line
+  return { text, defaultValue: text };
+});
+```
+
+Finally, you can use the `AnimatedTextInput` component with the animated props. Don't forget to set `editable` prop to `false` to disable user interactions as well as set `underlineColorAndroid` to `transparent`.
+
+```tsx
+return (
+  <AnimatedTextInput
+    // highlight-next-line
+    animatedProps={animatedProps}
+    editable={false}
+    underlineColorAndroid="transparent"
+  />
+);
+```

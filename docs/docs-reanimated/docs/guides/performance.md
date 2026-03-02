@@ -123,10 +123,6 @@ const pan = useMemo(
 );
 ```
 
-### 💡 Animate `TextInput` instead of re-rendering `Text` component
+### 💡 Use `Animated.Text` instead of re-rendering `Text` component
 
-When implementing an animated number counter, don't use React state to periodically update the counter. Instead, store the number in a shared value and use an animated `TextInput` component to display the current value. For more details, see [this example](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/src/apps/reanimated/examples/CounterExample.tsx).
-
-```
-
-```
+When implementing text animations (e.g. animated counters), don't use React state to periodically update the counter. Instead, store the number in a shared value and use an `Animated.Text` component with animated `text` prop using [`useAnimatedProps`](/docs/core/useAnimatedProps) or inline props in order to display the current value. For more details, see [Text animations](/docs/guides/text-animations) guide.
