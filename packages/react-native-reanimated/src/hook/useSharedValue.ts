@@ -16,8 +16,12 @@ import { makeMutable } from '../core';
  *   `initialValue` - {@link SharedValue}.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue
  */
-export function useSharedValue<Value>(initialValue: Value): SharedValue<Value> {
-  const [mutable] = useState(() => makeMutable(initialValue));
+export function useSharedValue<Value>(initialValue: Value | (() => Value)): SharedValue<Value> {
+  const [mutable] = useState(() => {
+    const value = typeof initialValue === 'function' ? (initialValue as () => Value)() : initialValue;
+
+    return makeMutable(value);
+  });
   useEffect(() => {
     return () => {
       cancelAnimation(mutable);
