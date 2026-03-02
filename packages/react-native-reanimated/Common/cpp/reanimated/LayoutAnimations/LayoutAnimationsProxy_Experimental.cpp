@@ -38,11 +38,11 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     updateLightTree(propsParserContext, mutations, filteredMutations);
     handleProgressTransition(filteredMutations, mutations, propsParserContext, surfaceId);
   } else if (!synchronized_) {
-    auto actualTop = topScreen[surfaceId];
     updateLightTree(propsParserContext, mutations, filteredMutations);
-    auto reactTop = findTopScreen(lightNodes_[surfaceId]);
-    if (reactTop == actualTop) {
+    if (!lightNodes_.contains(closingScreenTag_)) {
+      topScreen[surfaceId] = findActiveBoundary(lightNodes_[surfaceId]);
       synchronized_ = true;
+      closingScreenTag_ = -1;
     }
   } else if (!mutations.empty()) {
     auto root = lightNodes_[surfaceId];
@@ -55,7 +55,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
 
     updateLightTree(propsParserContext, mutations, filteredMutations);
 
-    auto afterTopScreen = findTopScreen(root);
+    auto afterTopScreen = findActiveBoundary(root);
     topScreen[surfaceId] = afterTopScreen;
     if (afterTopScreen) {
       ReanimatedSystraceSection s("find after elements");
