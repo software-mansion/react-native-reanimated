@@ -31,7 +31,7 @@ const ignoredPatterns = [
   'cypress',
   'vendor',
   'DerivedData',
-  'docusaurus.config.js ', // the script wrongly parses some text in this file as links
+  'docusaurus.config ', // the script wrongly parses some text in this file as links
 ];
 
 const urlRegex =
@@ -131,6 +131,10 @@ const skippedUrls = [
   'cvedetails.com', // 403 - not allowing bots
   'swmansion.dev/api', // not allowed on CI
   'swmansion.com/react-native', // wrongly detected as a link
+  'classic.yarnpkg.com', // tends to timeout on CI
+  'testing-library.com/docs', // tends to fail on CI
+  'babeljs.io/docs', // tends to fail on CI
+  'reactnative.dev', // tends to fail on CI
 ];
 
 scanLinks();
