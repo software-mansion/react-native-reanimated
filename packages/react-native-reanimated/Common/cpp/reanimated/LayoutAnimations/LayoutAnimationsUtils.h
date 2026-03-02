@@ -62,6 +62,7 @@ typedef enum class ExitingState : std::uint8_t {
   ANIMATING = 3,
   DEAD = 4,
   DELETED = 5,
+  WILL_EXIT = 6,
 } ExitingState;
 
 struct MutationNode;
@@ -84,6 +85,7 @@ struct LightNode {
   ShadowView previous;
   ShadowView current;
   ExitingState state = ExitingState::UNDEFINED;
+  int phantomCount = 0;
   std::weak_ptr<LightNode> parent;
   std::vector<std::shared_ptr<LightNode>> children;
   int removeChild(const std::shared_ptr<LightNode> &child) {
