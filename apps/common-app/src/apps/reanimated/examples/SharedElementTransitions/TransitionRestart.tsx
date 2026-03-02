@@ -1,10 +1,12 @@
-import type { ParamListBase } from '@react-navigation/native';
+import { type ParamListBase } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated, { SharedTransition } from 'react-native-reanimated';
+
+import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
 
 const Stack = createNativeStackNavigator();
 const transition = undefined;
@@ -38,7 +40,7 @@ function SharedViewWithAnimation({ style }: { style: StyleProp<ViewStyle> }) {
   );
 }
 
-function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.flexOne}>
       <SharedView style={styles.redBox} />
@@ -57,7 +59,7 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   );
 }
 
-function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen2Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.container}>
       <SharedView style={styles.greenBox} />
@@ -72,7 +74,7 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
   );
 }
 
-function Screen3({ navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen3Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.flexOne}>
       <SharedView style={styles.blueBox} />
@@ -82,6 +84,10 @@ function Screen3({ navigation }: NativeStackScreenProps<ParamListBase>) {
     </View>
   );
 }
+
+const Screen1 = withSharedTransitionBoundary(Screen1Content);
+const Screen2 = withSharedTransitionBoundary(Screen2Content);
+const Screen3 = withSharedTransitionBoundary(Screen3Content);
 
 export default function TransitionRestartExample() {
   return (

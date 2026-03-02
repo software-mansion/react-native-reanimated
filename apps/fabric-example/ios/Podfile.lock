@@ -1977,6 +1977,7 @@ PODS:
     - ReactNativeDependencies
     - RNReanimated/apple (= 4.3.0-main)
     - RNReanimated/common (= 4.3.0-main)
+    - RNReanimated/view (= 4.3.0-main)
     - RNWorklets
     - Yoga
   - RNReanimated/apple (4.3.0-main):
@@ -2027,18 +2028,12 @@ PODS:
     - ReactNativeDependencies
     - RNWorklets
     - Yoga
-  - RNReanimated/reanimated/view (4.3.0-main):
-    - boost
-    - DoubleConversion
-    - fast_float
-    - fmt
-    - glog
+  - RNReanimated/view (4.3.0-main):
     - hermes-engine
-    - RCT-Folly
-    - RCT-Folly/Fabric
     - RCTRequired
     - RCTTypeSafety
     - React-Core
+    - React-Core-prebuilt
     - React-debug
     - React-Fabric
     - React-featureflags
@@ -2054,8 +2049,8 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
     - RNWorklets
-    - SocketRocket
     - Yoga
   - RNScreens (4.19.0-nightly-20251125-46052f31e):
     - hermes-engine
