@@ -1,59 +1,47 @@
-import { useIsFocused, type ParamListBase } from '@react-navigation/native';
+import { type ParamListBase } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
-import Animated, { SharedTransitionBoundary } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
+
+import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
 
 const Stack = createNativeStackNavigator();
 
-function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
-  const isFocused = useIsFocused();
+function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
-    <SharedTransitionBoundary isActive={isFocused}>
-      <View style={styles.flexOne}>
-        <Animated.View style={styles.redBox} sharedTransitionTag="tag1" />
-        <Button
-          title="Screen2"
-          onPress={() => navigation.navigate('Screen2')}
-        />
-        <Button
-          title="Screen3"
-          onPress={() => navigation.navigate('Screen3')}
-        />
-      </View>
-    </SharedTransitionBoundary>
+    <View style={styles.flexOne}>
+      <Animated.View style={styles.redBox} sharedTransitionTag="tag1" />
+      <Button title="Screen2" onPress={() => navigation.navigate('Screen2')} />
+      <Button title="Screen3" onPress={() => navigation.navigate('Screen3')} />
+    </View>
   );
 }
 
-function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
-  const isFocused = useIsFocused();
+function Screen2Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
-    <SharedTransitionBoundary isActive={isFocused}>
-      <View style={styles.container}>
-        <Animated.View style={styles.greenBox} sharedTransitionTag="tag1" />
-        <Button title="Screen1" onPress={() => navigation.popTo('Screen1')} />
-        <Button
-          title="Screen3"
-          onPress={() => navigation.navigate('Screen3')}
-        />
-      </View>
-    </SharedTransitionBoundary>
+    <View style={styles.container}>
+      <Animated.View style={styles.greenBox} sharedTransitionTag="tag1" />
+      <Button title="Screen1" onPress={() => navigation.popTo('Screen1')} />
+      <Button title="Screen3" onPress={() => navigation.navigate('Screen3')} />
+    </View>
   );
 }
 
-function Screen3({ navigation }: NativeStackScreenProps<ParamListBase>) {
-  const isFocused = useIsFocused();
+function Screen3Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
-    <SharedTransitionBoundary isActive={isFocused}>
-      <View style={styles.flexOne}>
-        <Animated.View style={styles.blueBox} sharedTransitionTag="tag1" />
-        <Button title="Screen1" onPress={() => navigation.popTo('Screen1')} />
-        <Button title="Screen2" onPress={() => navigation.popTo('Screen2')} />
-      </View>
-    </SharedTransitionBoundary>
+    <View style={styles.flexOne}>
+      <Animated.View style={styles.blueBox} sharedTransitionTag="tag1" />
+      <Button title="Screen1" onPress={() => navigation.popTo('Screen1')} />
+      <Button title="Screen2" onPress={() => navigation.popTo('Screen2')} />
+    </View>
   );
 }
+
+const Screen1 = withSharedTransitionBoundary(Screen1Content);
+const Screen2 = withSharedTransitionBoundary(Screen2Content);
+const Screen3 = withSharedTransitionBoundary(Screen3Content);
 
 export default function ManyScreensExample() {
   return (
