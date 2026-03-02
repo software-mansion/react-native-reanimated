@@ -6,19 +6,6 @@ export const svgPropertiesRoutes = {
     Component: svgAnimatedProperties.Circle,
     name: 'Circle',
   },
-  Common: {
-    name: 'Common',
-    routes: {
-      FillAndColor: {
-        Component: svgAnimatedProperties.common.FillAndColor,
-        name: 'Fill and Color',
-      },
-      Stroke: {
-        Component: svgAnimatedProperties.common.Stroke,
-        name: 'Stroke',
-      },
-    },
-  },
   Ellipse: {
     Component: svgAnimatedProperties.Ellipse,
     name: 'Ellipse',
@@ -58,5 +45,18 @@ export const svgPropertiesRoutes = {
   Rect: {
     Component: svgAnimatedProperties.Rect,
     name: 'Rect',
+  },
+  Common: {
+    name: 'Common',
+    routes: {
+      FillAndColor: {
+        Component: svgAnimatedProperties.common.FillAndColor,
+        name: 'Fill and Color',
+      },
+      Stroke: {
+        Component: svgAnimatedProperties.common.Stroke,
+        name: 'Stroke',
+      },
+    },
   },
 } satisfies Routes;
