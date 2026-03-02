@@ -23,13 +23,15 @@ const extensions = [
   '.swift',
 ];
 // Every hidden directory is ignored as well.
-const ignoredDirectories = [
+const ignoredPatterns = [
   'node_modules',
   'Pods',
   'lib',
   'build',
   'cypress',
   'vendor',
+  'DerivedData',
+  'docusaurus.config.js ', // the script wrongly parses some text in this file as links
 ];
 
 const urlRegex =
@@ -44,7 +46,7 @@ async function getFileAndUrls(dir) {
   const files = await Promise.all(
     directories.map(async (file) => {
       const resource = path.resolve(dir, file.name);
-      if (file.name.startsWith('.') || ignoredDirectories.includes(file.name)) {
+      if (file.name.startsWith('.') || ignoredPatterns.includes(file.name)) {
         return [];
       } else if (file.isDirectory()) {
         return getFileAndUrls(resource);
@@ -78,11 +80,7 @@ function validUrls(data) {
     }
     const currentData = data[index];
     if (
-      currentData.url.includes('twitter.com') || // redirect issue
-      currentData.url.includes('blog.swmansion.com') || // authorization issue
-      currentData.url.includes('opensource.org') || // request from GitHub actions probably blocked
-      currentData.url.includes('good+first+issue') || // sometimes we don't have any issues with this label
-      currentData.url.includes('codepen') // getting 403 no matter what
+      skippedUrls.some((skippedUrl) => currentData.url.includes(skippedUrl))
     ) {
       index++;
       sendRequest();
@@ -93,8 +91,7 @@ function validUrls(data) {
     })
       .then((response) => {
         const status = response.status;
-        if (![200, 301, 302, 307].includes(status)) {
-          // console.error(response);
+        if (![200, 301, 302, 307, 503].includes(status)) {
           console.error(
             `🔴 Invalid link: ${response.url} status: ${status} in file: ${currentData.file}\n`
           );
@@ -119,5 +116,21 @@ async function scanLinks() {
   const data = await getFileAndUrls(currentDir);
   validUrls(data);
 }
+
+const skippedUrls = [
+  'localhost',
+  'twitter.com', // redirect issue
+  'blog.swmansion.com', // authorization issue
+  'opensource.org', // request from GitHub actions probably blocked
+  'good+first+issue', // sometimes we don't have any issues with this label
+  'codepen', // getting 403 no matter what
+  'github.com/user-attachments/assets', // seems to be broken on CI
+  'filesamples.com', // 403 - not allowing bots
+  'freepik.com', // 403 - not allowing bots
+  'npmjs.com', // 403 - not allowing bots
+  'cvedetails.com', // 403 - not allowing bots
+  'swmansion.dev/api', // not allowed on CI
+  'swmansion.com/react-native', // wrongly detected as a link
+];
 
 scanLinks();
