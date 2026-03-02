@@ -32,14 +32,14 @@ class CSSKeyframesRegistry {
 
   add(
     keyframesRule: CSSKeyframesRuleImpl,
-    reactViewName: string,
-    viewTag: number
+    viewTag: number,
+    compoundComponentName: string
   ) {
     const existingKeyframesEntry = this.nameToKeyframes_.get(
       keyframesRule.name
     );
     const existingComponentEntry =
-      existingKeyframesEntry?.usedBy[reactViewName];
+      existingKeyframesEntry?.usedBy[compoundComponentName];
 
     if (existingComponentEntry) {
       // Just add the view tag to the existing component entry if keyframes
@@ -51,11 +51,11 @@ class CSSKeyframesRegistry {
     // Otherwise, we have to register keyframes preprocessed for the specific
     // component name
     if (existingKeyframesEntry) {
-      existingKeyframesEntry.usedBy[reactViewName] = new Set([viewTag]);
+      existingKeyframesEntry.usedBy[compoundComponentName] = new Set([viewTag]);
     } else {
       this.nameToKeyframes_.set(keyframesRule.name, {
         keyframesRule,
-        usedBy: { [reactViewName]: new Set([viewTag]) },
+        usedBy: { [compoundComponentName]: new Set([viewTag]) },
       });
     }
 
@@ -66,25 +66,31 @@ class CSSKeyframesRegistry {
 
     // Register animation keyframes only if they are not already registered
     // (when they are added for the first time)
+    const normalizedKeyframesConfig =
+      keyframesRule.getNormalizedKeyframesConfig(compoundComponentName);
     registerCSSKeyframes(
       keyframesRule.name,
-      reactViewName,
-      keyframesRule.getNormalizedKeyframesConfig(reactViewName)
+      compoundComponentName,
+      normalizedKeyframesConfig
     );
   }
 
-  remove(animationName: string, reactViewName: string, viewTag: number) {
+  remove(
+    animationName: string,
+    viewTag: number,
+    compoundComponentName: string
+  ) {
     const keyframesEntry = this.nameToKeyframes_.get(animationName);
     if (!keyframesEntry) {
       return;
     }
 
-    const componentEntry = keyframesEntry.usedBy[reactViewName];
+    const componentEntry = keyframesEntry.usedBy[compoundComponentName];
     componentEntry.delete(viewTag);
 
     if (componentEntry.size === 0) {
-      delete keyframesEntry.usedBy[reactViewName];
-      unregisterCSSKeyframes(animationName, reactViewName);
+      delete keyframesEntry.usedBy[compoundComponentName];
+      unregisterCSSKeyframes(animationName, compoundComponentName);
     }
 
     if (Object.keys(keyframesEntry.usedBy).length === 0) {

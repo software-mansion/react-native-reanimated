@@ -67,14 +67,18 @@ export interface ReanimatedModuleProxy {
 
   registerCSSKeyframes(
     animationName: string,
-    viewName: string,
+    compoundComponentName: string,
     keyframesConfig: NormalizedCSSAnimationKeyframesConfig
   ): void;
 
-  unregisterCSSKeyframes(animationName: string, viewName: string): void;
+  unregisterCSSKeyframes(
+    animationName: string,
+    compoundComponentName: string
+  ): void;
 
   applyCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,
+    compoundComponentName: string,
     animationUpdates: CSSAnimationUpdates
   ): void;
 

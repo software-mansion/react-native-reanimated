@@ -47,13 +47,6 @@ export function setupMicrotasks() {
   };
 }
 
-function callMicrotasksOnUIThread() {
-  'worklet';
-  globalThis.__callMicrotasks();
-}
-
-export const callMicrotasks = callMicrotasksOnUIThread;
-
 /**
  * Lets you schedule a function to be executed on the [UI
  * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
@@ -376,7 +369,7 @@ function flushUIQueue(): void {
             scheduleOnRN(jobResolve, result);
           }
         });
-        callMicrotasks();
+        globalThis.__callMicrotasks();
       })
     );
   });
