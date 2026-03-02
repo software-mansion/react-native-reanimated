@@ -14,7 +14,9 @@ namespace reanimated::css {
 // Then it can be also used for interpolating the SVGStops
 struct CSSLengthArray : public CSSResolvableValue<CSSLengthArray> {
 
-  CSSLengthArray() = default;
+  CSSLengthArray() {
+    ensureLengthsNonempty();
+  }
   explicit CSSLengthArray(CSSLength singleValue) : lengths{std::move(singleValue)} {
     ensureLengthsNonempty();
   }
