@@ -21,6 +21,7 @@ struct LayoutAnimation {
   std::optional<double> opacity;
   bool isViewAlreadyMounted = false;
   int count = 1;
+  std::shared_ptr<jsi::Value> propsDiff;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 };
 

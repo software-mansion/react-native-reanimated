@@ -61,6 +61,9 @@ class LayoutAnimationsManager {
   void transferConfigFromNativeID(const int nativeId, const int tag);
   void transferSharedConfig(const Tag from, const Tag to);
   std::shared_ptr<SharedTransitionManager> getSharedTransitionManager();
+  bool hasProgressConfig(const int tag);
+  std::optional<jsi::Value>
+  callProgressWorklet(jsi::Runtime &rt, const int tag, const jsi::Value &propsDiff, double progress);
 
  private:
   std::unordered_map<int, std::shared_ptr<Serializable>> &getConfigsForType(const LayoutAnimationType type);
@@ -69,6 +72,8 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimationsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitionsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Serializable>> sharedTransitions_;
+  std::unordered_map<int, std::shared_ptr<Serializable>> progressSharedTransitions_;
+  std::unordered_map<int, std::shared_ptr<Serializable>> progressSharedTransitionsForNativeID_;
   std::unordered_map<int, std::shared_ptr<Serializable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Serializable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Serializable>> layoutAnimations_;
