@@ -46,6 +46,10 @@ export const svgPropertiesRoutes = {
     Component: svgAnimatedProperties.Rect,
     name: 'Rect',
   },
+  Text: {
+    Component: svgAnimatedProperties.Text,
+    name: 'Text',
+  },
   Common: {
     name: 'Common',
     routes: {
