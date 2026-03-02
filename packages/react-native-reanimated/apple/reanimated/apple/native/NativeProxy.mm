@@ -31,7 +31,7 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
       uiWorkletRuntime, uiScheduler, rnRuntime, jsInvoker, platformDepMethodsHolder, getIsReducedMotion());
   reanimatedModuleProxy->init(platformDepMethodsHolder);
 
-  jsi::Runtime &uiRuntime = uiWorkletRuntime->getJSIRuntime();
+  auto &uiRuntime = *getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
 
   [nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler

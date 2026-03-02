@@ -9,7 +9,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
-#include <worklets/Tools/UIScheduler.h>
+#include <worklets/Compat/StableApi.h>
 
 #include <memory>
 #include <string>

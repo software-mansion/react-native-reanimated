@@ -2,8 +2,7 @@
 
 #import <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #import <reanimated/apple/REANodesManager.h>
-#import <worklets/Tools/UIScheduler.h>
-#import <worklets/WorkletRuntime/WorkletRuntime.h>
+#import <worklets/Compat/StableApi.h>
 
 namespace reanimated {
 

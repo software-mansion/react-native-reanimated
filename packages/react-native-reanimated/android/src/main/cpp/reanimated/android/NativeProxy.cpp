@@ -7,7 +7,7 @@
 #include <reanimated/android/KeyboardWorkletWrapper.h>
 #include <reanimated/android/NativeProxy.h>
 #include <reanimated/android/SensorSetter.h>
-#include <worklets/Compat/Holders.h>
+#include <worklets/Compat/StableApi.h>
 
 #include <memory>
 #include <string>
@@ -71,16 +71,11 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto &rnRuntime = *reinterpret_cast<jsi::Runtime *>(jsContext); // NOLINT //(performance-no-int-to-ptr)
   const auto global = rnRuntime.global();
-
   const auto uiRuntime =
-      std::static_pointer_cast<WorkletRuntimeHolder>(
-          global.getProperty(rnRuntime, "__UI_WORKLET_RUNTIME_HOLDER").asObject(rnRuntime).getNativeState(rnRuntime))
-          ->runtime_;
+      getWorkletRuntimeFromHolder(rnRuntime, global.getPropertyAsObject(rnRuntime, "__UI_WORKLET_RUNTIME_HOLDER"));
 
   const auto uiScheduler =
-      std::static_pointer_cast<UISchedulerHolder>(
-          global.getProperty(rnRuntime, "__UI_SCHEDULER_HOLDER").asObject(rnRuntime).getNativeState(rnRuntime))
-          ->scheduler_;
+      getUISchedulerFromHolder(rnRuntime, global.getPropertyAsObject(rnRuntime, "__UI_SCHEDULER_HOLDER"));
 
   return makeCxxInstance(jThis, &rnRuntime, jsCallInvoker, fabricUIManager, uiRuntime, uiScheduler);
 }
@@ -120,7 +115,8 @@ void NativeProxy::injectCppVersion() {
 
 void NativeProxy::installJSIBindings() {
   jsi::Runtime &rnRuntime = *rnRuntime_;
-  RNRuntimeDecorator::decorate(rnRuntime, uiRuntime_->getJSIRuntime(), reanimatedModuleProxy_);
+  auto &uiRuntime = *getJSIRuntimeFromWorkletRuntime(uiRuntime_);
+  RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy_);
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) {
@@ -258,7 +254,7 @@ void NativeProxy::handleEvent(
     return;
   }
 
-  auto &uiRuntime = uiRuntime_->getJSIRuntime();
+  auto &uiRuntime = *getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   jsi::Value payload;
   try {
     payload = jsi::Value::createFromJsonUtf8(uiRuntime, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());

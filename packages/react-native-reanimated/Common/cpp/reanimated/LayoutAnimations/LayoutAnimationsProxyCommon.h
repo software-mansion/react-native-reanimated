@@ -6,7 +6,7 @@
 #include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
-#include <worklets/Tools/UIScheduler.h>
+#include <worklets/Compat/StableApi.h>
 
 #include <memory>
 #include <optional>

@@ -1,8 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <worklets/SharedItems/Serializable.h>
-#include <worklets/WorkletRuntime/WorkletRuntime.h>
+#include <worklets/Compat/StableApi.h>
 
 #include <memory>
 #include <string>
@@ -15,14 +14,14 @@ class UIEventHandler {
   const uint64_t handlerId_;
   const uint64_t emitterReactTag_;
   const std::string eventName_;
-  const std::shared_ptr<worklets::SerializableWorklet> handlerFunction_;
+  const std::shared_ptr<worklets::Serializable> handlerFunction_;
 
  public:
   UIEventHandler(
       const uint64_t handlerId,
       const std::string &eventName,
       const uint64_t emitterReactTag,
-      const std::shared_ptr<worklets::SerializableWorklet> &handlerFunction)
+      const std::shared_ptr<worklets::Serializable> &handlerFunction)
       : handlerId_(handlerId),
         emitterReactTag_(emitterReactTag),
         eventName_(eventName),

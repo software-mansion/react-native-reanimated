@@ -538,7 +538,7 @@ void LayoutAnimationsProxy_Experimental::maybeCancelAnimation(const int tag) con
     return;
   }
   layoutAnimations_.erase(tag);
-  uiScheduler_->scheduleOnUI([weakThis = weak_from_this(), tag]() {
+  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -679,8 +679,8 @@ void LayoutAnimationsProxy_Experimental::startEnteringAnimation(const std::share
   react_native_assert(parent && "Parent node is nullptr");
   const auto parentTag = parent->current.tag;
 
-  uiScheduler_->scheduleOnUI(
-      [weakThis = weak_from_this(), finalView, currentView, newChildShadowView, parentTag, opacity]() {
+  scheduleOnUI(
+      uiScheduler_, [weakThis = weak_from_this(), finalView, currentView, newChildShadowView, parentTag, opacity]() {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
@@ -724,7 +724,7 @@ void LayoutAnimationsProxy_Experimental::startExitingAnimation(const std::shared
   react_native_assert(parent && "Parent node is nullptr");
   const auto parentTag = parent->current.tag;
 
-  uiScheduler_->scheduleOnUI([weakThis = weak_from_this(), tag, parentTag, oldChildShadowView, surfaceId]() {
+  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), tag, parentTag, oldChildShadowView, surfaceId]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -766,8 +766,8 @@ void LayoutAnimationsProxy_Experimental::startLayoutAnimation(const std::shared_
   react_native_assert(parent && "Parent node is nullptr");
   const auto parentTag = parent->current.tag;
 
-  uiScheduler_->scheduleOnUI(
-      [weakThis = weak_from_this(), surfaceId, oldChildShadowView, newChildShadowView, parentTag, tag]() {
+  scheduleOnUI(
+      uiScheduler_, [weakThis = weak_from_this(), surfaceId, oldChildShadowView, newChildShadowView, parentTag, tag]() {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
@@ -811,7 +811,7 @@ void LayoutAnimationsProxy_Experimental::startSharedTransition(
     const ShadowView &before,
     const ShadowView &after,
     SurfaceId surfaceId) const {
-  uiScheduler_->scheduleOnUI([weakThis = weak_from_this(), before, after, surfaceId, tag]() {
+  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), before, after, surfaceId, tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -844,7 +844,7 @@ void LayoutAnimationsProxy_Experimental::startProgressTransition(
     const ShadowView &before,
     const ShadowView &after,
     SurfaceId surfaceId) const {
-  uiScheduler_->scheduleOnUI([weakThis = weak_from_this(), before, after, surfaceId]() {
+  scheduleOnUI(uiScheduler_, [weakThis = weak_from_this(), before, after, surfaceId]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
