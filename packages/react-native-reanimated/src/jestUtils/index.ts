@@ -13,6 +13,16 @@ import type {
 } from '../createAnimatedComponent/commonTypes';
 import type { DefaultStyle } from '../hook/commonTypes';
 
+// // Mock RNReanimatedSharedTransitionBoundary
+// jest.mock(
+//   'react-native-reanimated/lib/module/specs/RNReanimatedSharedTransitionBoundaryNativeComponent',
+//   () => ({})
+// );
+// jest.mock(
+//   'react-native-reanimated/src/specs/RNReanimatedSharedTransitionBoundaryNativeComponent',
+//   () => ({})
+// );
+
 declare global {
   namespace jest {
     interface Matchers<R> {
