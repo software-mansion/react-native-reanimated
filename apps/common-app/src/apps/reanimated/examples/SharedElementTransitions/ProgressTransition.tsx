@@ -1,14 +1,7 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
-import {
-  Dimensions,
-  Pressable,
-  StatusBar,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   FadeInDown,
   FadeInLeft,
@@ -22,6 +15,7 @@ import Animated, {
 import coffeeImage from './assets/coffee/coffee.png';
 import espressoImage from './assets/coffee/coffee_espresso.png';
 import latteImage from './assets/coffee/coffee_latte.png';
+import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -65,7 +59,7 @@ const DATA = [
 
 const Stack = createNativeStackNavigator<StackParamList>();
 
-function HomeScreen({
+function HomeScreenContent({
   navigation,
 }: NativeStackScreenProps<StackParamList, 'Home'>) {
   return (
@@ -162,7 +156,7 @@ const homeStyles = StyleSheet.create({
   },
 });
 
-function DetailsScreen({
+function DetailsScreenContent({
   navigation,
   route,
 }: NativeStackScreenProps<StackParamList, 'Details'>) {
@@ -305,6 +299,9 @@ const detailStyles = StyleSheet.create({
     borderColor: TEXT,
   },
 });
+
+const HomeScreen = withSharedTransitionBoundary(HomeScreenContent);
+const DetailsScreen = withSharedTransitionBoundary(DetailsScreenContent);
 
 export default function ProgressTransitionExample() {
   return (
