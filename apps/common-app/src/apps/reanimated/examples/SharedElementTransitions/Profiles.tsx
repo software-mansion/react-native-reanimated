@@ -46,17 +46,15 @@ const springOptions = {
   damping: 15,
 };
 
-const transition = undefined;
-
-// SharedTransition.custom((values) => {
-//   'worklet';
-//   return {
-//     width: withSpring(values.targetWidth, springOptions),
-//     height: withSpring(values.targetHeight, springOptions),
-//     originX: withSpring(values.targetOriginX, springOptions),
-//     originY: withSpring(values.targetOriginY, springOptions),
-//   };
-// });
+const transition = SharedTransition.custom((values) => {
+  'worklet';
+  return {
+    width: withSpring(values.target.width, springOptions),
+    height: withSpring(values.target.height, springOptions),
+    originX: withSpring(values.target.originX, springOptions),
+    originY: withSpring(values.target.originY, springOptions),
+  };
+});
 
 const Stack = createNativeStackNavigator<StackParamList>();
 

@@ -30,43 +30,35 @@ void PropsDiffer::diffFrame(jsi::Runtime &rt) {
   const auto &targetFrame = targetView_.layoutMetrics.frame;
   const auto &sourceOrigin = sourceFrame.origin;
   const auto &targetOrigin = targetFrame.origin;
-  if (sourceOrigin.x != targetOrigin.x) {
-    sourceValues_.setProperty(rt, "originX", sourceOrigin.x);
-    targetValues_.setProperty(rt, "originX", targetOrigin.x);
-    sourceValues_.setProperty(rt, "globalOriginX", sourceOrigin.x);
-    targetValues_.setProperty(rt, "globalOriginX", targetOrigin.x);
-  }
-  if (sourceOrigin.y != targetOrigin.y) {
-    sourceValues_.setProperty(rt, "originY", sourceOrigin.y);
-    targetValues_.setProperty(rt, "originY", targetOrigin.y);
-    sourceValues_.setProperty(rt, "globalOriginY", sourceOrigin.y);
-    targetValues_.setProperty(rt, "globalOriginY", targetOrigin.y);
-  }
+
+  sourceValues_.setProperty(rt, "originX", sourceOrigin.x);
+  targetValues_.setProperty(rt, "originX", targetOrigin.x);
+  sourceValues_.setProperty(rt, "globalOriginX", sourceOrigin.x);
+  targetValues_.setProperty(rt, "globalOriginX", targetOrigin.x);
+
+  sourceValues_.setProperty(rt, "originY", sourceOrigin.y);
+  targetValues_.setProperty(rt, "originY", targetOrigin.y);
+  sourceValues_.setProperty(rt, "globalOriginY", sourceOrigin.y);
+  targetValues_.setProperty(rt, "globalOriginY", targetOrigin.y);
 
   const auto &sourceSize = sourceFrame.size;
   const auto &targetSize = targetFrame.size;
-  if (sourceSize.width != targetSize.width) {
-    sourceValues_.setProperty(rt, "width", sourceSize.width);
-    targetValues_.setProperty(rt, "width", targetSize.width);
-  }
-  if (sourceSize.height != targetSize.height) {
-    sourceValues_.setProperty(rt, "height", sourceSize.height);
-    targetValues_.setProperty(rt, "height", targetSize.height);
-  }
+
+  sourceValues_.setProperty(rt, "width", sourceSize.width);
+  targetValues_.setProperty(rt, "width", targetSize.width);
+
+  sourceValues_.setProperty(rt, "height", sourceSize.height);
+  targetValues_.setProperty(rt, "height", targetSize.height);
 }
 
 void PropsDiffer::diffOpacity(jsi::Runtime &rt) {
-  if (sourceViewProps_.opacity != targetViewProps_.opacity) {
-    sourceValues_.setProperty(rt, "opacity", sourceViewProps_.opacity);
-    targetValues_.setProperty(rt, "opacity", targetViewProps_.opacity);
-  }
+  sourceValues_.setProperty(rt, "opacity", sourceViewProps_.opacity);
+  targetValues_.setProperty(rt, "opacity", targetViewProps_.opacity);
 }
 
 void PropsDiffer::diffBackgroundColor(jsi::Runtime &rt) {
-  if (sourceViewProps_.backgroundColor != targetViewProps_.backgroundColor) {
-    sourceValues_.setProperty(rt, "backgroundColor", react::toString(sourceViewProps_.backgroundColor));
-    targetValues_.setProperty(rt, "backgroundColor", react::toString(targetViewProps_.backgroundColor));
-  }
+  sourceValues_.setProperty(rt, "backgroundColor", react::toString(sourceViewProps_.backgroundColor));
+  targetValues_.setProperty(rt, "backgroundColor", react::toString(targetViewProps_.backgroundColor));
 }
 
 void PropsDiffer::diffTransform(jsi::Runtime &rt) {
@@ -175,12 +167,6 @@ void PropsDiffer::diffTransformOrigin(jsi::Runtime &rt) {
   const auto &sourceTransformOrigin = sourceViewProps_.transformOrigin;
   const auto &targetTransformOrigin = targetViewProps_.transformOrigin;
 
-  if (sourceTransformOrigin.xy[0] == targetTransformOrigin.xy[0] &&
-      sourceTransformOrigin.xy[1] == targetTransformOrigin.xy[1] &&
-      sourceTransformOrigin.z == targetTransformOrigin.z) {
-    return;
-  }
-
   addTransformOriginToDiff(rt, sourceTransformOrigin, sourceValues_, sourceView_);
   addTransformOriginToDiff(rt, targetTransformOrigin, targetValues_, targetView_);
 }
@@ -240,11 +226,10 @@ void PropsDiffer::diffShadow(jsi::Runtime &rt) {
     targetValues_.setProperty(rt, "boxShadow", targetBoxShadowArray);
   }
 
-  if (sourceViewProps_.shadowColor != targetViewProps_.shadowColor) {
-    sourceValues_.setProperty(rt, "shadowColor", toString(sourceViewProps_.shadowColor));
-    targetValues_.setProperty(rt, "shadowColor", toString(targetViewProps_.shadowColor));
-  }
-  if (sourceViewProps_.shadowOffset != targetViewProps_.shadowOffset) {
+  sourceValues_.setProperty(rt, "shadowColor", toString(sourceViewProps_.shadowColor));
+  targetValues_.setProperty(rt, "shadowColor", toString(targetViewProps_.shadowColor));
+
+  {
     jsi::Object sourceShadowOffset(rt), targetShadowOffset(rt);
     sourceShadowOffset.setProperty(rt, "width", sourceViewProps_.shadowOffset.width);
     sourceShadowOffset.setProperty(rt, "height", sourceViewProps_.shadowOffset.height);
@@ -253,19 +238,16 @@ void PropsDiffer::diffShadow(jsi::Runtime &rt) {
     sourceValues_.setProperty(rt, "shadowOffset", sourceShadowOffset);
     targetValues_.setProperty(rt, "shadowOffset", targetShadowOffset);
   }
-  if (sourceViewProps_.shadowOpacity != targetViewProps_.shadowOpacity) {
-    sourceValues_.setProperty(rt, "shadowOpacity", sourceViewProps_.shadowOpacity);
-    targetValues_.setProperty(rt, "shadowOpacity", targetViewProps_.shadowOpacity);
-  }
-  if (sourceViewProps_.shadowRadius != targetViewProps_.shadowRadius) {
-    sourceValues_.setProperty(rt, "shadowRadius", sourceViewProps_.shadowRadius);
-    targetValues_.setProperty(rt, "shadowRadius", targetViewProps_.shadowRadius);
-  }
+
+  sourceValues_.setProperty(rt, "shadowOpacity", sourceViewProps_.shadowOpacity);
+  targetValues_.setProperty(rt, "shadowOpacity", targetViewProps_.shadowOpacity);
+
+  sourceValues_.setProperty(rt, "shadowRadius", sourceViewProps_.shadowRadius);
+  targetValues_.setProperty(rt, "shadowRadius", targetViewProps_.shadowRadius);
+
 #ifdef ANDROID
-  if (sourceViewProps_.elevation != targetViewProps_.elevation) {
-    sourceValues_.setProperty(rt, "elevation", sourceViewProps_.elevation);
-    targetValues_.setProperty(rt, "elevation", targetViewProps_.elevation);
-  }
+  sourceValues_.setProperty(rt, "elevation", sourceViewProps_.elevation);
+  targetValues_.setProperty(rt, "elevation", targetViewProps_.elevation);
 #endif
 }
 
@@ -351,9 +333,6 @@ void PropsDiffer::diffBorderRadius(
   ValueUnit defaultValue;
   const auto &source = sourceValue.value_or(defaultValue).value;
   const auto &target = targetValue.value_or(defaultValue).value;
-  if (source == target) {
-    return;
-  }
   // In React Native, we can't set asymmetric border radii for the edges of a
   // corner using pixels. This limitation means we can't properly animate
   // between units in percentages and pixels.
@@ -393,20 +372,16 @@ void PropsDiffer::diffBorderWidth(
     jsi::Runtime &rt,
     float defaultSourceWidth,
     float defaultTargetWidth) {
-  const auto source = sourceValue.value_or(0);
-  const auto target = targetValue.value_or(0);
-  if (source != target) {
-    if (sourceValue.has_value()) {
-      sourceValues_.setProperty(rt, name, source);
-    } else {
-      sourceValues_.setProperty(rt, name, defaultSourceWidth);
-    }
+  if (sourceValue.has_value()) {
+    sourceValues_.setProperty(rt, name, sourceValue.value());
+  } else {
+    sourceValues_.setProperty(rt, name, defaultSourceWidth);
+  }
 
-    if (targetValue.has_value()) {
-      targetValues_.setProperty(rt, name, target);
-    } else {
-      targetValues_.setProperty(rt, name, defaultTargetWidth);
-    }
+  if (targetValue.has_value()) {
+    targetValues_.setProperty(rt, name, targetValue.value());
+  } else {
+    targetValues_.setProperty(rt, name, defaultTargetWidth);
   }
 }
 
@@ -416,22 +391,18 @@ void PropsDiffer::diffBorderColors(
     const char *name,
     jsi::Runtime &rt) {
   SharedColor defaultValue;
-  const auto &source = sourceValue.value_or(defaultValue);
-  const auto &target = targetValue.value_or(defaultValue);
-  if (source != target) {
-    if (sourceValue.has_value()) {
-      sourceValues_.setProperty(rt, name, toString(source));
-    } else {
-      auto const &maybeDefaultColor = sourceViewProps_.borderColors.all.value_or(defaultValue);
-      sourceValues_.setProperty(rt, name, toString(maybeDefaultColor));
-    }
+  if (sourceValue.has_value()) {
+    sourceValues_.setProperty(rt, name, toString(sourceValue.value()));
+  } else {
+    auto const &maybeDefaultColor = sourceViewProps_.borderColors.all.value_or(defaultValue);
+    sourceValues_.setProperty(rt, name, toString(maybeDefaultColor));
+  }
 
-    if (targetValue.has_value()) {
-      targetValues_.setProperty(rt, name, toString(target));
-    } else {
-      auto const &maybeDefaultColor = targetViewProps_.borderColors.all.value_or(defaultValue);
-      targetValues_.setProperty(rt, name, toString(maybeDefaultColor));
-    }
+  if (targetValue.has_value()) {
+    targetValues_.setProperty(rt, name, toString(targetValue.value()));
+  } else {
+    auto const &maybeDefaultColor = targetViewProps_.borderColors.all.value_or(defaultValue);
+    targetValues_.setProperty(rt, name, toString(maybeDefaultColor));
   }
 }
 

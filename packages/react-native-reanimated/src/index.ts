@@ -171,7 +171,13 @@ export {
   setUpTests,
   withReanimatedTimer,
 } from './jestUtils';
-export type { ReanimatedKeyframe } from './layoutReanimation';
+export type {
+  CustomSharedTransitionAnimation,
+  ProgressSharedTransitionAnimation,
+  ReanimatedKeyframe,
+  SharedTransitionAnimationsValues,
+  SharedTransitionSnapshotValues,
+} from './layoutReanimation';
 export {
   BaseAnimationBuilder,
   // Bounce
@@ -242,6 +248,7 @@ export {
   RotateOutUpRight,
   SequencedTransition,
   SharedTransition,
+  SharedTransitionType,
   SlideInDown,
   SlideInLeft,
   // Slide
