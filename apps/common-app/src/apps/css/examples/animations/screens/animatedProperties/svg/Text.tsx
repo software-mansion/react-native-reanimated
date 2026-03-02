@@ -19,6 +19,10 @@ export default function TextExample() {
         animationName: keyframes,
         animationTimingFunction: 'linear',
       })}
+      // TODO:
+      // Check why adding animation of props
+      // like 'fontSize' works only if
+      // prop not used as an inline prop (so in case of'fontSize' line 31 commented out)
       renderExample={({ animation }) => (
         <Svg height={60} width={200}>
           <AnimatedText

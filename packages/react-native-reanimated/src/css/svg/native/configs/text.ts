@@ -18,6 +18,8 @@ export const SVG_TEXT_PROPERTIES_CONFIG: SvgStyleBuilderConfig<TextProps> = {
   dy: { process: processNumberArray },
   rotate: { process: processNumberArray },
 
+  // TODO:
+  // implement them
   lengthAdjust: false,
   textLength: false,
   children: false,
