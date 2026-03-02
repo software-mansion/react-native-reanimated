@@ -4,14 +4,11 @@ import type {
 } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  TouchableNativeFeedback,
-  View,
-} from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import photo from './assets/image.jpg';
+
+import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
 
 type ParamList = {
   Screen1?: object;
@@ -76,7 +73,9 @@ function Card({
   );
 }
 
-function Screen1({ navigation }: NativeStackScreenProps<ParamList, 'Screen1'>) {
+function Screen1Content({
+  navigation,
+}: NativeStackScreenProps<ParamList, 'Screen1'>) {
   return (
     <Animated.ScrollView style={styles.flexOne}>
       {[...Array(6)].map((_, i) => (
@@ -92,7 +91,7 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamList, 'Screen1'>) {
   );
 }
 
-function Screen2({
+function Screen2Content({
   route,
   navigation,
 }: NativeStackScreenProps<ParamList, 'Screen2'>) {
@@ -110,6 +109,9 @@ function Screen2({
     </View>
   );
 }
+
+const Screen1 = withSharedTransitionBoundary(Screen1Content);
+const Screen2 = withSharedTransitionBoundary(Screen2Content);
 
 export default function CardExample() {
   return (

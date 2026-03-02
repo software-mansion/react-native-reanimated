@@ -7,6 +7,7 @@ import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
 import firstPhoto from './assets/doge.jpg';
 import secondPhoto from './assets/angry-doge.jpg';
+import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
 
 const Stack = createNativeStackNavigator();
 
@@ -98,7 +99,10 @@ function DogeScreen({
   );
 }
 
-function Screen1({ route, navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen1Content({
+  route,
+  navigation,
+}: NativeStackScreenProps<ParamListBase>) {
   return (
     <DogeScreen
       route={route}
@@ -110,7 +114,10 @@ function Screen1({ route, navigation }: NativeStackScreenProps<ParamListBase>) {
   );
 }
 
-function Screen2({ route, navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen2Content({
+  route,
+  navigation,
+}: NativeStackScreenProps<ParamListBase>) {
   return (
     <DogeScreen
       route={route}
@@ -122,7 +129,10 @@ function Screen2({ route, navigation }: NativeStackScreenProps<ParamListBase>) {
   );
 }
 
-function Screen3({ route, navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen3Content({
+  route,
+  navigation,
+}: NativeStackScreenProps<ParamListBase>) {
   return (
     <DogeScreen
       route={route}
@@ -134,7 +144,10 @@ function Screen3({ route, navigation }: NativeStackScreenProps<ParamListBase>) {
   );
 }
 
-function Screen4({ route, navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen4Content({
+  route,
+  navigation,
+}: NativeStackScreenProps<ParamListBase>) {
   return (
     <DogeScreen
       route={route}
@@ -145,6 +158,11 @@ function Screen4({ route, navigation }: NativeStackScreenProps<ParamListBase>) {
     />
   );
 }
+
+const Screen1 = withSharedTransitionBoundary(Screen1Content);
+const Screen2 = withSharedTransitionBoundary(Screen2Content);
+const Screen3 = withSharedTransitionBoundary(Screen3Content);
+const Screen4 = withSharedTransitionBoundary(Screen4Content);
 
 export default function DuplicateTagsExample() {
   return (

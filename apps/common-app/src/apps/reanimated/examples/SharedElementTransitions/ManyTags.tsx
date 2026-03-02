@@ -6,10 +6,11 @@ import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import photo from './assets/image.jpg';
+import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
 
 const Stack = createNativeStackNavigator();
 
-function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <Animated.ScrollView style={styles.flexOne}>
       <View style={styles.container}>
@@ -37,7 +38,7 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   );
 }
 
-function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen2Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.flexOne}>
       <Text style={styles.text}>
@@ -68,6 +69,9 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
     </View>
   );
 }
+
+const Screen1 = withSharedTransitionBoundary(Screen1Content);
+const Screen2 = withSharedTransitionBoundary(Screen2Content);
 
 export default function ManyTagsExample() {
   return (

@@ -1,12 +1,8 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
-import { Pressable, StyleSheet, TouchableNativeFeedback } from 'react-native';
-import {
-  Gesture,
-  GestureDetector,
-  type PanGestureHandlerGestureEvent,
-} from 'react-native-gesture-handler';
+import { Pressable, StyleSheet } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
   useAnimatedStyle,
@@ -14,6 +10,8 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import photo from './assets/image.jpg';
+
+import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
 
 type ParamList = {
   Screen1?: object;
@@ -74,7 +72,9 @@ function Card({
   );
 }
 
-function Screen1({ navigation }: NativeStackScreenProps<ParamList, 'Screen1'>) {
+function Screen1Content({
+  navigation,
+}: NativeStackScreenProps<ParamList, 'Screen1'>) {
   return (
     <Animated.ScrollView style={styles.flexOne}>
       {[...Array(6)].map((_, i) => (
@@ -96,13 +96,11 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamList, 'Screen1'>) {
   );
 }
 
-function Screen2({
+function Screen2Content({
   route,
   navigation,
 }: NativeStackScreenProps<ParamList, 'Screen2'>) {
   const { title, sharedTransitionTag } = route.params;
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
 
   const goNext = () => {
     navigation.popTo('Screen1', {
@@ -114,10 +112,6 @@ function Screen2({
   const translation = {
     x: useSharedValue(0),
     y: useSharedValue(0),
-  };
-  type AnimatedGHContext = {
-    startX: number;
-    startY: number;
   };
 
   const gestureHandler = Gesture.Pan()
@@ -167,6 +161,9 @@ function Screen2({
     </GestureDetector>
   );
 }
+
+const Screen1 = withSharedTransitionBoundary(Screen1Content);
+const Screen2 = withSharedTransitionBoundary(Screen2Content);
 
 export default function ModalsExample() {
   return (

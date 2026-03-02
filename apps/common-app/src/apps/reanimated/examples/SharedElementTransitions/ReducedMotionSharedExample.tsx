@@ -9,6 +9,8 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
+import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
+
 const Stack = createNativeStackNavigator();
 
 // const EXAMPLES = [
@@ -73,7 +75,7 @@ const Stack = createNativeStackNavigator();
 // },
 // ];
 
-function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <Animated.ScrollView style={styles.flexOne}>
       {/* {EXAMPLES.map(({ text, transition }, i) => (
@@ -100,7 +102,7 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   );
 }
 
-function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen2Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.flexOne}>
       {/* {EXAMPLES.map(({ text, transition }, i) => (
@@ -123,6 +125,9 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
     </View>
   );
 }
+
+const Screen1 = withSharedTransitionBoundary(Screen1Content);
+const Screen2 = withSharedTransitionBoundary(Screen2Content);
 
 export default function ReducedMotionSharedExample() {
   return (

@@ -16,6 +16,8 @@ import {
 import Animated from 'react-native-reanimated';
 import photo from './assets/image.jpg';
 
+import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
+
 type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 
 type Item = {
@@ -66,7 +68,9 @@ const Item = ({ item, parentItem, onPress }: ItemProps) => (
   </TouchableOpacity>
 );
 
-function Screen1({ navigation }: NativeStackScreenProps<ParamList, 'Screen1'>) {
+function Screen1Content({
+  navigation,
+}: NativeStackScreenProps<ParamList, 'Screen1'>) {
   const renderItem = ({ item, parentItem }: ListItemWithParent<Item>) => {
     return (
       <Item
@@ -103,7 +107,7 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamList, 'Screen1'>) {
   );
 }
 
-function Screen2({
+function Screen2Content({
   route,
   navigation,
 }: NativeStackScreenProps<ParamList, 'Screen2'>) {
@@ -118,6 +122,9 @@ function Screen2({
     </View>
   );
 }
+
+const Screen1 = withSharedTransitionBoundary(Screen1Content);
+const Screen2 = withSharedTransitionBoundary(Screen2Content);
 
 export default function FlatListExample() {
   return (
