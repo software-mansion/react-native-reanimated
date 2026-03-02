@@ -10,3 +10,4 @@ export * from './polygon';
 export * from './polyline';
 export * from './radialGradient';
 export * from './rect';
+export * from './text';

@@ -10,6 +10,7 @@ import Polygon from './Polygon';
 import Polyline from './Polyline';
 import RadialGradient from './RadialGradient';
 import Rect from './Rect';
+import Text from './Text';
 
 export default {
   Circle,
@@ -24,4 +25,5 @@ export default {
   Polyline,
   RadialGradient,
   Rect,
+  Text,
 };
