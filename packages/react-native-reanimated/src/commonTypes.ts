@@ -173,9 +173,7 @@ export type StylePropsWithArrayTransform = StyleProps & {
 export interface LayoutAnimationBatchItem {
   viewTag: number;
   type: LayoutAnimationType;
-  config:
-    | SerializableRef<ReanimatedKeyframe | LayoutAnimationFunction>
-    | undefined;
+  config: SerializableRef | undefined;
   sharedTransitionTag?: string;
 }
 
