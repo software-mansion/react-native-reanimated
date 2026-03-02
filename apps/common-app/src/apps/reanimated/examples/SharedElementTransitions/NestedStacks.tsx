@@ -5,9 +5,11 @@ import * as React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
+import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
+
 const Stack = createNativeStackNavigator();
 
-function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen1Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.flexOne}>
       <Animated.View style={styles.redBox} sharedTransitionTag="tag1" />
@@ -17,7 +19,7 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
   );
 }
 
-function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen2Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.container}>
       <Animated.View style={styles.greenBox} sharedTransitionTag="tag1" />
@@ -27,7 +29,7 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
   );
 }
 
-function Screen3({ navigation }: NativeStackScreenProps<ParamListBase>) {
+function Screen3Content({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.flexOne}>
       <Animated.View style={styles.blueBox} sharedTransitionTag="tag1" />
@@ -36,6 +38,10 @@ function Screen3({ navigation }: NativeStackScreenProps<ParamListBase>) {
     </View>
   );
 }
+
+const Screen1 = withSharedTransitionBoundary(Screen1Content);
+const Screen2 = withSharedTransitionBoundary(Screen2Content);
+const Screen3 = withSharedTransitionBoundary(Screen3Content);
 
 function NestedStack() {
   return (
