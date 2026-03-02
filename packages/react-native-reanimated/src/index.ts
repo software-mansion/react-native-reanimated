@@ -96,6 +96,8 @@ export type { PerformanceMonitorProps } from './component/PerformanceMonitor';
 export { PerformanceMonitor } from './component/PerformanceMonitor';
 export { ReducedMotionConfig } from './component/ReducedMotionConfig';
 export type { AnimatedScrollViewProps } from './component/ScrollView';
+export type { SharedTransitionBoundaryProps } from './component/SharedTransitionBoundary';
+export { SharedTransitionBoundary } from './component/SharedTransitionBoundary';
 export { configureReanimatedLogger } from './ConfigHelper';
 export {
   enableLayoutAnimations,
@@ -295,6 +297,7 @@ export {
   ScreenTransition,
   startScreenTransition,
 } from './screenTransition';
+export { RNReanimatedSharedTransitionBoundary } from './specs';
 export type { WorkletRuntime } from './workletFunctions';
 export {
   createWorkletRuntime,

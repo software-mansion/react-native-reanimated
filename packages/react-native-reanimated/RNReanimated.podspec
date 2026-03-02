@@ -51,6 +51,12 @@ Pod::Spec.new do |s|
     ss.header_mappings_dir = "apple/reanimated"
   end
 
+  s.subspec "view" do |ss|
+      ss.source_files = "Common/NativeView/**/*.{mm,h,cpp}"
+      ss.header_dir = ""
+      ss.header_mappings_dir = "Common/NativeView"
+  end
+
   s.pod_target_xcconfig = {
     "USE_HEADERMAP" => "YES",
     "DEFINES_MODULE" => "YES",
