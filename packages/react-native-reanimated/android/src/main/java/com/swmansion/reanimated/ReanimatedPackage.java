@@ -11,7 +11,10 @@ import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.module.annotations.ReactModuleList;
 import com.facebook.react.module.model.ReactModuleInfo;
 import com.facebook.react.module.model.ReactModuleInfoProvider;
+import com.facebook.react.uimanager.ViewManager;
+import com.swmansion.reanimated.view.RNReanimatedSharedTransitionBoundaryManager;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -27,6 +30,11 @@ public class ReanimatedPackage extends BaseReactPackage implements ReactPackage 
       case ReanimatedModule.NAME -> new ReanimatedModule(reactContext);
       default -> null;
     };
+  }
+
+  @Override
+  public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
+    return List.of(new RNReanimatedSharedTransitionBoundaryManager());
   }
 
   @Override
