@@ -220,11 +220,11 @@ function ImageTransition({ activeImage, onClose }: ImageTransitionProps) {
   }, [animationProgress, backdropOpacity, imageOpacity]);
 
   return (
-    <View style={StyleSheet.absoluteFillObject}>
+    <View style={StyleSheet.absoluteFill}>
       <Animated.View style={[styles.backdrop, backdropStyles]} />
 
       <GestureDetector gesture={gesture}>
-        <Animated.View style={StyleSheet.absoluteFillObject}>
+        <Animated.View style={StyleSheet.absoluteFill}>
           <AnimatedImage source={{ uri }} style={imageStyles} />
         </Animated.View>
       </GestureDetector>
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   },
 
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'black',
   },
 });

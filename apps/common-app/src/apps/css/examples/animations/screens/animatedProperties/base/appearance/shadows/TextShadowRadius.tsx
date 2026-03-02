@@ -22,7 +22,7 @@ export default function TextShadowRadius() {
             animation,
             Platform.select({
               android: {
-                ...StyleSheet.absoluteFillObject,
+                ...StyleSheet.absoluteFill,
                 textAlign: 'center',
                 textAlignVertical: 'center',
               },

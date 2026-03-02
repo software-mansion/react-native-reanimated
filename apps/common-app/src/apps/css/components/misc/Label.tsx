@@ -72,7 +72,7 @@ export default function Label({ size = 'small', type }: LabelProps) {
 
 const styles = StyleSheet.create({
   background: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     opacity: 0.05,
   },
   label: {
