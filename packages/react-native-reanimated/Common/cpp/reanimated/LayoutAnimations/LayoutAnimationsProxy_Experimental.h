@@ -197,6 +197,11 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
       const std::shared_ptr<LightNode> &node,
       ShadowViewMutationList &mutations,
       StartAnimationsRecursivelyConfig config) const;
+  bool willHaveExitAnimation(
+      const std::shared_ptr<LightNode> &node,
+      const std::unordered_set<Tag> &deleted,
+      const std::unordered_set<Tag> &moved,
+      bool shouldAnimate) const;
   void endAnimationsRecursively(const std::shared_ptr<LightNode> &node, int index, ShadowViewMutationList &mutations)
       const;
   void maybeDropAncestors(const std::shared_ptr<LightNode> &node, ShadowViewMutationList &cleanupMutations) const;
