@@ -86,8 +86,9 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/RCT-Folly"',
       '"$(PODS_ROOT)/Headers/Public/React-hermes"',
       '"$(PODS_ROOT)/Headers/Public/hermes-engine"',
+      # for static frameworks
       "\"$(PODS_ROOT)/#{$worklets_config[:react_native_common_dir]}\"",
-
+      "\"$(PODS_ROOT)/#{$worklets_config[:react_native_common_dir]}/jsitooling\"",
     ].join(' '),
   }
   
