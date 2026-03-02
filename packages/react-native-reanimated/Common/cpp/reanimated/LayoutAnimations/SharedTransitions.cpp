@@ -9,35 +9,44 @@
 #endif // !ANDROID
 
 #include <folly/dynamic.h>
-
+#include <react/renderer/components/rnreanimated/Props.h>
 #include <ranges>
 
 namespace reanimated {
 
 // MARK: Shared Element Transitions
 
-std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findTopScreen(
+std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findActiveBoundary(
     const std::shared_ptr<LightNode> &node) const {
   std::shared_ptr<LightNode> result = nullptr;
-  // TODO: We could get rid of the RNScreens c++ dependency if we create a custom native component that would be a boundary for Shared Element Transitions.
-  // This way we could allow for transitions without screens, and across components on the same screen.
-  if (isRNSScreen(node)) {
-    bool isActive = false;
-#ifdef ANDROID
-    // TODO (future): this looks like a RNScreens bug - sometimes there is no active
-    // screen at a deeper level, when going back (uncomment the following when fixed)
-    // float f = node->current.props->rawProps.getDefault("activityState",
-    // 0).asDouble(); isActive = f == 2.0f;
-    isActive = true;
-#elif defined(HAS_SCREENS_PROPS)
-    isActive = std::static_pointer_cast<const RNSScreenProps>(node->current.props)->activityState == 2.0f;
-#endif
-    if (isActive) {
+
+  if (isSETBoundary(node)) {
+    auto boundaryProps = std::static_pointer_cast<const RNReanimatedSharedTransitionBoundaryProps>(node->current.props);
+    auto isActive = boundaryProps->isActive;
+    if (isActive && node->state == ExitingState::UNDEFINED) {
       result = node;
+      return result;
     }
   }
   for (const auto &child : std::views::reverse(node->children)) {
-    auto top = findTopScreen(child);
+    auto top = findActiveBoundary(child);
+    if (top) {
+      return top;
+    }
+  }
+
+  return result;
+}
+
+std::shared_ptr<LightNode> LayoutAnimationsProxy_Experimental::findBoundaryGuess(
+    const std::shared_ptr<LightNode> &node) const {
+  std::shared_ptr<LightNode> result = nullptr;
+
+  if (isSETBoundary(node)) {
+    result = node;
+  }
+  for (const auto &child : std::views::reverse(node->children)) {
+    auto top = findBoundaryGuess(child);
     if (top) {
       return top;
     }
@@ -95,7 +104,7 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
   if (transitionState_ == START) {
     auto root = lightNodes_[surfaceId];
     auto beforeTopScreen = topScreen[surfaceId];
-    auto afterTopScreen = lightNodes_[transitionTag_];
+    auto afterTopScreen = findBoundaryGuess(lightNodes_[transitionTag_]);
     if (beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen) {
       findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext);
       findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext);
@@ -164,7 +173,6 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
       }
     }
     if (transitionState_ == END) {
-      topScreen[surfaceId] = lightNodes_[transitionTag_];
       synchronized_ = false;
     }
     sharedTransitionManager_->containerTags_.clear();
@@ -301,6 +309,9 @@ std::optional<SurfaceId> LayoutAnimationsProxy_Experimental::onTransitionProgres
 #endif
   // TODO (future): this new approach causes all back transitions to be progress
   // transitions (maybe that's ok?)
+  if (isClosing && !isGoingForward && !isAndroid) {
+    closingScreenTag_ = tag;
+  }
   if (!isClosing && !isGoingForward && !isAndroid) {
     transitionProgress_ = progress;
     if (transitionState_ == NONE && progress < 1) {

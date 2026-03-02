@@ -153,10 +153,15 @@
   },
   "codegenConfig": {
     "name": "rnreanimated",
-    "type": "modules",
+    "type": "all",
     "jsSrcsDir": "./src/specs",
     "android": {
       "javaPackageName": "com.swmansion.reanimated"
+    },
+    "ios": {
+      "componentProvider": {
+        "RNReanimatedSharedTransitionBoundary": "RNReanimatedSharedTransitionBoundaryView"
+      }
     }
   },
   "sideEffects": [
