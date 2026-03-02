@@ -23,7 +23,7 @@ const extensions = [
   '.swift',
 ];
 // Every hidden directory is ignored as well.
-const ignoredPatterns = [
+const ignoredDirs = [
   'node_modules',
   'Pods',
   'lib',
@@ -31,7 +31,10 @@ const ignoredPatterns = [
   'cypress',
   'vendor',
   'DerivedData',
-  'docusaurus.config ', // the script wrongly parses some text in this file as links
+];
+
+const ignoredFiles = [
+  'docusaurus.config.js', // the script wrongly parses some text in this file as links
 ];
 
 const urlRegex =
@@ -46,7 +49,11 @@ async function getFileAndUrls(dir) {
   const files = await Promise.all(
     directories.map(async (file) => {
       const resource = path.resolve(dir, file.name);
-      if (file.name.startsWith('.') || ignoredPatterns.includes(file.name)) {
+      if (
+        file.name.startsWith('.') ||
+        ignoredDirs.includes(file.name) ||
+        ignoredFiles.includes(file.name)
+      ) {
         return [];
       } else if (file.isDirectory()) {
         return getFileAndUrls(resource);
@@ -130,7 +137,6 @@ const skippedUrls = [
   'npmjs.com', // 403 - not allowing bots
   'cvedetails.com', // 403 - not allowing bots
   'swmansion.dev/api', // not allowed on CI
-  'swmansion.com/react-native', // wrongly detected as a link
   'classic.yarnpkg.com', // tends to timeout on CI
   'testing-library.com/docs', // tends to fail on CI
   'babeljs.io/docs', // tends to fail on CI
