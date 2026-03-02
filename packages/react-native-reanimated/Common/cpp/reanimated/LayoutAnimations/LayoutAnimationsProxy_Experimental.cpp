@@ -938,7 +938,7 @@ void LayoutAnimationsProxy_Experimental::startProgressTransition(
     const ShadowView &before,
     const ShadowView &after,
     SurfaceId surfaceId) const {
-  uiScheduler_->scheduleOnUI([weakThis = weak_from_this(), before, after, surfaceId]() {
+  uiScheduler_->scheduleOnUI([weakThis = weak_from_this(), before, after, surfaceId, tag]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -952,6 +952,14 @@ void LayoutAnimationsProxy_Experimental::startProgressTransition(
       oldView = strongThis->maybeCreateLayoutAnimation(oldView, after, surfaceId);
       window = strongThis->surfaceManager.getWindow(surfaceId);
     }
+
+    auto &uiRuntime = strongThis->uiRuntime_;
+    auto propsDiffer = PropsDiffer(uiRuntime, oldView, after);
+    auto propsDiff = propsDiffer.computeDiff(uiRuntime);
+    propsDiff.setProperty(uiRuntime, "windowWidth", window.width);
+    propsDiff.setProperty(uiRuntime, "windowHeight", window.height);
+
+    strongThis->layoutAnimations_[tag].propsDiff = std::make_shared<jsi::Value>(uiRuntime, std::move(propsDiff));
   });
 }
 

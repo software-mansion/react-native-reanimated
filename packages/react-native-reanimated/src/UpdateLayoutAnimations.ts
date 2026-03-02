@@ -7,6 +7,7 @@ import type {
   LayoutAnimationFunction,
   LayoutAnimationType,
 } from './commonTypes';
+import type { ProgressSharedTransitionAnimation } from './layoutReanimation/SharedTransition';
 import { configureLayoutAnimationBatch } from './core';
 
 function createUpdateManager() {
@@ -54,7 +55,10 @@ function createUpdateManager() {
 export let updateLayoutAnimations: (
   viewTag: number,
   type: LayoutAnimationType,
-  config?: Keyframe | LayoutAnimationFunction,
+  config?:
+    | Keyframe
+    | LayoutAnimationFunction
+    | ProgressSharedTransitionAnimation,
   isUnmounting?: boolean,
   sharedTransitionTag?: string
 ) => void;
