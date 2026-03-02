@@ -15,8 +15,8 @@ import { colors, flex, radius, text } from '@/theme';
 import { IS_MACOS, IS_WEB, noop } from '@/utils';
 
 import { CSSApp, ReanimatedApp } from './apps';
+import { SharedTransitionProvider } from './apps/reanimated/examples/SharedElementTransitions/SharedTransitionContext';
 import { LeakCheck, NukeContext } from './components';
-import { SharedTransitionBoundary } from 'react-native-reanimated';
 
 LogBox.ignoreLogs([
   "Deep imports from the 'react-native' package are deprecated",
@@ -77,13 +77,15 @@ export default function App() {
           }}
           onStateChange={updateNavigationState}>
           <PortalProvider>
-            {IS_MACOS ? (
-              <RootApp />
-            ) : (
-              <SafeAreaProvider>
+            <SharedTransitionProvider>
+              {IS_MACOS ? (
                 <RootApp />
-              </SafeAreaProvider>
-            )}
+              ) : (
+                <SafeAreaProvider>
+                  <RootApp />
+                </SafeAreaProvider>
+              )}
+            </SharedTransitionProvider>
           </PortalProvider>
         </NavigationContainer>
       </GestureHandlerRootView>
