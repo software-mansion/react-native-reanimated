@@ -1,9 +1,11 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useIsFocused } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { memo } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, { SharedTransitionBoundary } from 'react-native-reanimated';
+import EmptyExample from '../EmptyExample';
 
 function getStyle(index: number) {
   switch (index) {
@@ -16,32 +18,60 @@ function getStyle(index: number) {
   }
 }
 
+function RenderLogger({ id }: { id: number }) {
+  console.log('RenderLogger rendered', id);
+  return null;
+}
+
+function Clicker() {
+  console.log('Clicker clicked');
+  const [count, setCount] = React.useState(0);
+  return <Button title="Click me" onPress={() => setCount(count + 1)} />;
+}
+
 type ScreenProps = {
   [key: string]: {
     id?: number;
     showButtons?: boolean;
   };
 };
+
+const ScreenContent = memo(
+  ({ navigation, route }: NativeStackScreenProps<ScreenProps>) => {
+    const id = route.params?.id ?? 0;
+    const showButtons = !!route.params?.showButtons;
+
+    return (
+      <View style={styles.container}>
+        <RenderLogger id={id} />
+        <Clicker />
+        <Text>Current id: {id}</Text>
+        {id === 1 && <EmptyExample />}
+        {showButtons && id < 2 && (
+          <Button
+            title={`Go next ${id + 1}`}
+            onPress={() => navigation.push('Details', { id: id + 1 })}
+          />
+        )}
+        {/* {showButtons && id > 0 && (
+          <Button
+            onPress={() => navigation.push('Details', { id: id - 1 })}
+            title={`Go next ${id - 1}`}
+          />
+        )} */}
+        <Animated.View style={getStyle(id)} sharedTransitionTag="tag" />
+      </View>
+    );
+  }
+);
+
 function Screen({ navigation, route }: NativeStackScreenProps<ScreenProps>) {
   const id = route.params?.id ?? 0;
-  const showButtons = !!route.params?.showButtons;
+  const isActive = useIsFocused();
   return (
-    <View style={styles.container}>
-      <Text>Current id: {id}</Text>
-      {showButtons && id < 2 && (
-        <Button
-          title={`Go next ${id + 1}`}
-          onPress={() => navigation.push('Details', { id: id + 1 })}
-        />
-      )}
-      {showButtons && id > 0 && (
-        <Button
-          onPress={() => navigation.push('Details', { id: id - 1 })}
-          title={`Go next ${id - 1}`}
-        />
-      )}
-      <Animated.View style={getStyle(id)} sharedTransitionTag="test" />
-    </View>
+    <SharedTransitionBoundary isActive={isActive && id === 0}>
+      <ScreenContent navigation={navigation} route={route} />
+    </SharedTransitionBoundary>
   );
 }
 
@@ -64,7 +94,7 @@ const StackB = createStack();
 
 function TabNavigatorExample() {
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false }}>
+    <Tab.Navigator screenOptions={{ headerShown: false, animation: 'none' }}>
       <Tab.Screen
         name="A"
         initialParams={{ id: 0 }}
@@ -95,6 +125,7 @@ const styles = StyleSheet.create({
     width: 200,
     height: 100,
     backgroundColor: 'blue',
+    opacity: 0,
   },
   box3: {
     width: 150,

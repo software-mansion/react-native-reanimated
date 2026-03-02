@@ -16,6 +16,7 @@ import { IS_MACOS, IS_WEB, noop } from '@/utils';
 
 import { CSSApp, ReanimatedApp } from './apps';
 import { LeakCheck, NukeContext } from './components';
+import { SharedTransitionBoundary } from 'react-native-reanimated';
 
 LogBox.ignoreLogs([
   "Deep imports from the 'react-native' package are deprecated",
