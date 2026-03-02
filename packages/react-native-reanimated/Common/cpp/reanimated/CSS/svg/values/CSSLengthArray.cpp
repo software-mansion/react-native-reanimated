@@ -1,5 +1,6 @@
 #include <reanimated/CSS/svg/values/CSSLengthArray.h>
 
+#include <algorithm>
 #include <sstream>
 
 namespace reanimated::css {
