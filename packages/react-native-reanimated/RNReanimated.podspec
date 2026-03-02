@@ -80,7 +80,9 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/Headers/Public/React-hermes"',
       '"$(PODS_ROOT)/Headers/Public/hermes-engine"',
       '"$(PODS_ROOT)/Headers/Public/RNWorklets"',
+      # for static frameworks
       "\"$(PODS_ROOT)/#{$config[:react_native_common_dir]}\"",
+      "\"$(PODS_ROOT)/#{$config[:react_native_common_dir]}/jsitooling\"",
     ].join(' '),
     "OTHER_CFLAGS" => "$(inherited) #{example_flag} #{version_flags} #{compilation_metadata_generation_flag} #{feature_flags} #{reanimated_profiling_flag}",
   }
