@@ -1070,29 +1070,28 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
           "transform",
       };
 
-      UpdatesBatch synchronousUpdatesBatch, shadowTreeUpdatesBatch;
+      UpdatesBatch synchronousUpdatesBatch;
 
       for (const auto &[shadowNode, props] : updatesBatch) {
-        bool hasOnlySynchronousProps = true;
-        for (const auto &key : props.keys()) {
+        folly::dynamic synchronousPropsForNode = folly::dynamic::object();
+
+        for (const auto &[key, value] : props.items()) {
           const auto keyStr = key.asString();
-          if (!synchronousProps.contains(keyStr)) {
-            hasOnlySynchronousProps = false;
-            break;
+          if (synchronousProps.contains(keyStr)) {
+            synchronousPropsForNode[key] = value;
           }
         }
-        if (hasOnlySynchronousProps) {
-          synchronousUpdatesBatch.emplace_back(shadowNode, props);
-        } else {
-          shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
+
+        if (!synchronousPropsForNode.empty()) {
+          synchronousUpdatesBatch.emplace_back(shadowNode, synchronousPropsForNode);
         }
       }
 
-      for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
-        synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
+      if (!synchronousUpdatesBatch.empty()) {
+        for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
+          synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
+        }
       }
-
-      updatesBatch = std::move(shadowTreeUpdatesBatch);
     }
 #endif // __APPLE__
 
