@@ -60,7 +60,8 @@ export function setupRequestAnimationFrame() {
   }
 
   globalThis.requestAnimationFrame = requestAnimationFrame;
-  globalThis.cancelAnimationFrame = cancelAnimationFrame;
+  globalThis.cancelAnimationFrame =
+    cancelAnimationFrame as typeof globalThis.cancelAnimationFrame;
   globalThis.__flushAnimationFrame = () => {
     // NOOP for backwards compatibility
   };

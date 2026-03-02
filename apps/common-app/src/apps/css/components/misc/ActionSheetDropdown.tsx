@@ -368,7 +368,7 @@ function Backdrop({ handleClose }: BackdropProps): JSX.Element {
 
 const styles = StyleSheet.create({
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0, 0, 0, 0.2)',
   },
   scrollBarThumb: {

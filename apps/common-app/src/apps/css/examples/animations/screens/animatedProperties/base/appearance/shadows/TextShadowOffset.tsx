@@ -22,7 +22,7 @@ export default function TextShadowOffset() {
             animation,
             Platform.select({
               android: {
-                ...StyleSheet.absoluteFillObject,
+                ...StyleSheet.absoluteFill,
                 textAlign: 'center',
                 textAlignVertical: 'center',
               },
