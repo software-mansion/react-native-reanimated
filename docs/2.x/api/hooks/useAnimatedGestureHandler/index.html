@@ -17,8 +17,8 @@
 
 
 
-<script src="/react-native-reanimated/js/snack-helpers.js" async></script><link rel="stylesheet" href="/react-native-reanimated/assets/css/styles.560d5fa2.css">
-<script src="/react-native-reanimated/assets/js/runtime~main.5e0665a4.js" defer="defer"></script>
+<script src="/react-native-reanimated/js/snack-helpers.js" async></script><link rel="stylesheet" href="/react-native-reanimated/assets/css/styles.fca9b672.css">
+<script src="/react-native-reanimated/assets/js/runtime~main.c1dbcc1c.js" defer="defer"></script>
 <script src="/react-native-reanimated/assets/js/main.2a61003c.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -63,7 +63,7 @@ This object will persist in between events and across worklet handlers for all t
 The handler should be passed under <code>onGestureEvent</code> parameter regardless of what gesture states we are interested in processing.</p>
 <p>Note: Since version 2.10.0 of <code>react-native-gesture-handler</code>, to use this hook on web, you have to pass returned handler object to both <code>onGestureEvent</code> and <code>onHandlerStateChange</code> parameters.</p>
 <h2 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="example">Example<a href="#example" class="hash-link" aria-label="Direct link to Example" title="Direct link to Example" translate="no">​</a></h2>
-<p>In the below example we use <a href="https://docs.swmansion.com/react-native-gesture-handler/docs/gesture-handlers/pan-gh/" target="_blank" rel="noopener noreferrer" class=""><code>PanGestureHandler</code></a> to register for pan gesture events performed on the rendered View.
+<p>In the below example we use <a href="https://docs.swmansion.com/react-native-gesture-handler/docs/2.x/gesture-handlers/pan-gh/" target="_blank" rel="noopener noreferrer" class=""><code>PanGestureHandler</code></a> to register for pan gesture events performed on the rendered View.
 We attach three handler worklets that are going to be triggered when the gesture starts, when it is active and the user is panning, and when the gesture is over.
 We create a shared value <code>x</code> that will correspond to the x-translation of the box.
 In <code>onStart</code> handler worklet we use <code>context</code> to save the current value of <code>x</code> and therefore remember the place at which the gesture started.
