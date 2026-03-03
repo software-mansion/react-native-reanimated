@@ -64,6 +64,7 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/Headers/Private/React-Core"',
       '"$(PODS_ROOT)/Headers/Private/Yoga"',
       '"$(PODS_ROOT)/Headers/Public/RNWorklets"',
+      '"${PODS_CONFIGURATION_BUILD_DIR}/React-jsitooling/JSITooling.framework/Headers"',
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
@@ -89,6 +90,7 @@ Pod::Spec.new do |s|
   install_modules_dependencies(s)
 
   s.dependency 'React-jsi'
+  s.dependency 'React-jsitooling'
   using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
   if using_hermes && !$config[:is_tvos_target]
     s.dependency 'React-hermes'
