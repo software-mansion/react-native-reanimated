@@ -10,11 +10,11 @@ import type {
 import { ReduceMotion } from '../../commonTypes';
 
 export class BaseAnimationBuilder {
-  durationV?: number;
-  delayV?: number;
+  durationV?: number | undefined;
+  delayV?: number | undefined;
   reduceMotionV: ReduceMotion = ReduceMotion.System;
   randomizeDelay = false;
-  callbackV?: (finished: boolean) => void;
+  callbackV?: ((finished: boolean) => void) | undefined;
 
   static createInstance: <T extends typeof BaseAnimationBuilder>(
     this: T

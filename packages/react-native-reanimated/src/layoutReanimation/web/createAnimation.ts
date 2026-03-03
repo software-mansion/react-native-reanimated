@@ -74,7 +74,9 @@ export function createCustomKeyFrameAnimation(
 ) {
   for (const value of Object.values(keyframeDefinitions)) {
     if (value.transform) {
-      value.transform = addPxToTransform(value.transform as TransformType);
+      value.transform = addPxToTransform(
+        value.transform as unknown as TransformType
+      );
     }
   }
 
