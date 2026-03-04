@@ -130,7 +130,7 @@
     "react-dom": "19.2.3",
     "react-native": "0.85.0-rc.0",
     "react-native-builder-bob": "0.40.13",
-    "react-native-svg": "15.15.3",
+    "react-native-svg": "patch:react-native-svg@npm%3A15.15.3#~/.yarn/patches/react-native-svg-npm-15.15.3-0699a4dc13.patch",
     "react-native-web": "0.21.1",
     "react-native-worklets": "workspace:*",
     "react-test-renderer": "19.2.3",
