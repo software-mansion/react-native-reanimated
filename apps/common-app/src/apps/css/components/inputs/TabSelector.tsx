@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   buttons: {
-    ...StyleSheet.absoluteFill,
+    ...(StyleSheet.absoluteFill as object),
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
