@@ -145,7 +145,7 @@ const TabView: TabViewComponent = ({ children }: TabViewProps) => {
 
 const styles = StyleSheet.create({
   tab: {
-    ...StyleSheet.absoluteFill,
+    ...(StyleSheet.absoluteFill as object),
   },
   tabBar: {
     backgroundColor: colors.white,

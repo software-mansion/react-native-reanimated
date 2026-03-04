@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xl,
   },
   fontSizeBackground: {
-    ...StyleSheet.absoluteFill,
+    ...(StyleSheet.absoluteFill as object),
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderColor: 'rgba(255, 255, 255, 0.5)',
     borderRadius: radius.full,
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     width: sizes.md,
   },
   switchBackground: {
-    ...StyleSheet.absoluteFill,
+    ...(StyleSheet.absoluteFill as object),
     borderRadius: radius.full,
   },
   switchThumb: {
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     width: 20,
   },
   thumbPressIndicator: {
-    ...StyleSheet.absoluteFill,
+    ...(StyleSheet.absoluteFill as object),
     backgroundColor: colors.white,
     borderRadius: radius.full,
   },
