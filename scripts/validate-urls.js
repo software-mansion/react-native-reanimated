@@ -90,7 +90,6 @@ function validUrls(data) {
       skippedUrls.some((skippedUrl) => currentData.url.includes(skippedUrl))
     ) {
       index++;
-      sendRequest();
       return;
     }
     fetch(currentData.url, {
