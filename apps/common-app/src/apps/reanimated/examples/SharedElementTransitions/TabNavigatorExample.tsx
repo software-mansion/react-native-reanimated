@@ -94,7 +94,12 @@ const StackB = createStack();
 
 function TabNavigatorExample() {
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false, animation: 'none' }}>
+    <Tab.Navigator
+      // `react-native-screens` detaches native views for inactive screens
+      // this conflicts with shared element transitions as results in view disappearing
+      // so we disable this behavior
+      detachInactiveScreens={false}
+      screenOptions={{ headerShown: false, animation: 'none' }}>
       <Tab.Screen
         name="A"
         initialParams={{ id: 0 }}
