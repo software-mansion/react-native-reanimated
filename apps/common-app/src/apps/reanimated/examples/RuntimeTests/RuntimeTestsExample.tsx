@@ -50,6 +50,7 @@ export default function RuntimeTestsExample() {
             require('./tests/memory/synchronizable.test');
             require('./tests/memory/customSerializable.test');
             require('./tests/memory/hybridObjectSupport.test');
+            require('./tests/memory/shareable.test');
           },
         },
         {

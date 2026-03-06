@@ -984,9 +984,14 @@ var require_workletFactory = __commonJS({
       }
       const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
       if (shouldIncludeInitData && !state.opts.bundleMode) {
-        pathForStringDefinitions.insertBefore((0, types_12.variableDeclaration)("const", [
+        const initDataDeclaration = (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
-        ]));
+        ]);
+        if (state.opts.limitInitDataHoisting) {
+          fun.getFunctionParent().node.body.body.unshift(initDataDeclaration);
+        } else {
+          pathForStringDefinitions.insertBefore(initDataDeclaration);
+        }
       }
       (0, assert_1.strict)(!(0, types_12.isFunctionDeclaration)(funExpression), "[Reanimated] `funExpression` is a `FunctionDeclaration`.");
       (0, assert_1.strict)(!(0, types_12.isObjectMethod)(funExpression), "[Reanimated] `funExpression` is an `ObjectMethod`.");
