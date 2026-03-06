@@ -4,7 +4,7 @@
 #include <react/renderer/mounting/ShadowView.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 
-#include <worklets/Compat/StableApi.h>
+#include <reanimated/Compat/WorkletsApi.h>
 
 #include <jsi/jsi.h>
 #include <stdio.h>

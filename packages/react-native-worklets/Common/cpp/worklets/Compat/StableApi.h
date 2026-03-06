@@ -1,5 +1,7 @@
 #pragma once
 
+#define WORKLETS_STABLE_API_VERSION "0.8.0"
+
 #include <cstdint>
 #include <functional>
 #include <memory>
