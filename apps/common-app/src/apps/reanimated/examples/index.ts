@@ -27,7 +27,6 @@ import ComposedHandlerDifferentEventsExample from './ComposedHandlerDifferentEve
 import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMergingExample';
 import CopySerializablePerformanceTest from './CopySerializablePerformanceTest';
 import CounterExample from './CounterExample';
-import CubesExample from './CubesExample';
 import DispatchCommandExample from './DispatchCommandExample';
 import DragAndSnapExample from './DragAndSnapExample';
 import DynamicColorIOSExample from './DynamicColorIOSExample';
@@ -93,7 +92,6 @@ import ModalExitingExample from './ModalExitingExample';
 import ModifyExample from './ModifyExample';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
 import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
-import OldAnimatedSensorExample from './OldAnimatedSensorExample';
 import OldMeasureExample from './OldMeasureExample';
 import OpacityTransformExample from './OpacityTransformExample';
 import OverlappingBoxesExample from './OverlappingBoxesExample';
@@ -154,7 +152,6 @@ import WidthExample from './WidthExample';
 import WithClampExample from './WithClampExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
-import WorkletExample from './WorkletExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import InstanceDiscoveryExample from './InstanceDiscoveryExample';
 import FetchExample from './FetchExample';
@@ -512,11 +509,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'measure',
     screen: MeasureExample,
   },
-  WorkletExample: {
-    icon: '🧵',
-    title: 'scheduleOnRN / scheduleOnUI',
-    screen: WorkletExample,
-  },
   BabelVersionCheckExample: {
     icon: '📦',
     title: 'Babel version check',
@@ -724,10 +716,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Chat heads',
     screen: ChatHeadsExample,
   },
-  CubesExample: {
-    title: 'Cubes',
-    screen: CubesExample,
-  },
   DragAndSnapExample: {
     title: 'Drag and snap',
     screen: DragAndSnapExample,
@@ -743,10 +731,6 @@ export const EXAMPLES: Record<string, Example> = {
   InvertedFlatListExample: {
     title: 'Inverted FlatList example',
     screen: InvertedFlatListExample,
-  },
-  OldAnimatedSensorExample: {
-    title: 'Old animated sensor example',
-    screen: OldAnimatedSensorExample,
   },
   OldMeasureExample: {
     title: 'Accordion',
