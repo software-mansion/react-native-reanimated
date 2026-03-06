@@ -41,15 +41,15 @@ export type ParsedDropShadow = {
 };
 
 export type ParsedFilterFunction =
-  | { brightness?: number }
-  | { contrast?: number }
-  | { dropShadow?: ParsedDropShadow }
-  | { grayscale?: number }
-  | { hueRotate?: number }
-  | { invert?: number }
-  | { opacity?: number }
-  | { saturate?: number }
-  | { sepia?: number }
-  | { blur?: number };
+  | { brightness?: number | undefined }
+  | { contrast?: number | undefined }
+  | { dropShadow?: ParsedDropShadow | undefined }
+  | { grayscale?: number | undefined }
+  | { hueRotate?: number | undefined }
+  | { invert?: number | undefined }
+  | { opacity?: number | undefined }
+  | { saturate?: number | undefined }
+  | { sepia?: number | undefined }
+  | { blur?: number | undefined };
 
 export type FilterArray = ParsedFilterFunction[];

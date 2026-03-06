@@ -17,7 +17,7 @@ type Mapper = {
   dirty: boolean;
   worklet: () => void;
   inputs: MapperExtractedInputs;
-  outputs?: MapperOutputs;
+  outputs?: MapperOutputs | undefined;
 };
 
 function createMapperRegistry() {

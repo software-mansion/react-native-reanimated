@@ -12,7 +12,7 @@ import { has } from './utils';
 
 export class NativeEventsManager implements INativeEventsManager {
   readonly #managedComponent: ManagedAnimatedComponent;
-  readonly #componentOptions?: ComponentOptions;
+  readonly #componentOptions?: ComponentOptions | undefined;
   #eventViewTag = -1;
 
   constructor(component: ManagedAnimatedComponent, options?: ComponentOptions) {

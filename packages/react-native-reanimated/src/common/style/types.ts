@@ -15,7 +15,7 @@ type PropsBuilderPropertyConfig<
       // type than in the React Native stylesheet (e.g. number for colors instead of string)
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      process: ValueProcessor<Required<P>[K], any>; // for custom value processing
+      process: ValueProcessor<Exclude<Required<P>[K], undefined>, any>; // for custom value processing
     };
 
 export type PropsBuilderConfig<P extends AnyRecord = AnyRecord> = {

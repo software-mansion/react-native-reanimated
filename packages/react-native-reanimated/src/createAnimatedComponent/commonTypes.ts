@@ -27,8 +27,8 @@ export interface ViewInfo {
   // The React Native view class name for the host component
   // (e.g. "RCTText" for Text). See getViewInfo.ts for the full naming
   // convention used in CSS.
-  reactViewName?: string;
-  DOMElement?: HTMLElement | null;
+  reactViewName?: string | undefined;
+  DOMElement?: (HTMLElement | null) | undefined;
 }
 
 export interface IInlinePropManager {
@@ -128,7 +128,7 @@ export interface IAnimatedComponentInternalBase {
   ChildComponent: AnyComponent;
   _componentRef: AnimatedComponentRef | HTMLElement | null;
   _hasAnimatedRef: boolean;
-  _viewInfo?: ViewInfo;
+  _viewInfo?: ViewInfo | undefined;
 
   /**
    * Used for Layout Animations and Animated Styles. It is not related to event
@@ -150,7 +150,7 @@ export interface IAnimatedComponentInternal
   _InlinePropManager: IInlinePropManager;
   _PropsFilter: IPropsFilter;
   /** Doesn't exist on web. */
-  _NativeEventsManager?: INativeEventsManager;
+  _NativeEventsManager?: INativeEventsManager | undefined;
   context: React.ContextType<typeof SkipEnteringContext>;
   setNativeProps: (props: StyleProps) => void;
   _syncStylePropsBackToReact: (props: StyleProps) => void;
