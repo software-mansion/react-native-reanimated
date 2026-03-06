@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   Easing,
@@ -10,28 +10,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Circle, G, Path, Polygon, Rect, Svg } from 'react-native-svg';
-
-const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
-
-function TextInputDemo({ sv }: { sv: SharedValue<number> }) {
-  const animatedProps = useAnimatedProps(() => {
-    return {
-      text: `${Math.round(sv.value * 100)}`,
-      defaultValue: `${Math.round(sv.value * 100)}`,
-    };
-  }, []);
-
-  return (
-    <View style={styles.demo}>
-      <Text style={styles.text}>AnimatedTextInput</Text>
-      <AnimatedTextInput
-        animatedProps={animatedProps}
-        style={styles.input}
-        editable={false}
-      />
-    </View>
-  );
-}
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -172,7 +150,6 @@ export default function ThirdPartyComponentsExample() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <TextInputDemo sv={sv} />
       <SvgCircleDemo sv={sv} />
       <SvgRectDemo sv={sv} />
       <SvgPathDemo sv={sv} />
@@ -194,10 +171,5 @@ const styles = StyleSheet.create({
   },
   text: {
     textAlign: 'center',
-  },
-  input: {
-    fontSize: 100,
-    textAlign: 'center',
-    width: 200,
   },
 });
