@@ -37,7 +37,14 @@ export function buildDependencies(
   );
 
   if (nonWorkletHandlerNames.length === 0) {
-    result.push(buildWorkletsHash(handlers));
+    if (dependencies) {
+      result.push(buildWorkletsHash(handlers));
+    } else {
+      const handlersList = Object.values(handlers);
+
+      result.push(...handlersList);
+    }
+
     return result;
   }
 
