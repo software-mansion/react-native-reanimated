@@ -67,6 +67,7 @@ declare global {
   var __customSerializationRegistry: CustomSerializationRegistry;
   var __customSerializableUnpacker: CustomSerializableUnpacker;
   var __callGuardDEV: typeof callGuardDEV | undefined;
+  /** @deprecated Don't flush animation frames imperatively. Don't use. */
   var __flushAnimationFrame: (timestamp: number) => void;
   var __frameTimestamp: number | undefined;
   var _log: (value: unknown) => void;
