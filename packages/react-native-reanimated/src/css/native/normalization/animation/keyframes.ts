@@ -120,7 +120,7 @@ function processProps(
     }
 
     if (
-      isRecord(value) &&
+      (isRecord(value) || Array.isArray(value)) &&
       separatelyInterpolatedNestedProperties.has(property)
     ) {
       if (!keyframeProps[property]) {
