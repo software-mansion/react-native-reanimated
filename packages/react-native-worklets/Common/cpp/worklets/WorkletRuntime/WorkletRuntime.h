@@ -4,12 +4,13 @@
 #include <jsi/jsi.h>
 #include <jsireact/JSIExecutor.h>
 #include <react/debug/react_native_assert.h>
-
 #include <worklets/RunLoop/AsyncQueue.h>
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 #include <worklets/RunLoop/EventLoop.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/JSScheduler.h>
+#include <worklets/Tools/ScriptBuffer.h>
+#include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
 #include <memory>
@@ -128,15 +129,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     return name_;
   }
 
-  explicit WorkletRuntime(
-      RuntimeData::RuntimeId runtimeId,
-      const std::shared_ptr<MessageQueueThread> &jsQueue,
-      const std::string &name,
-      const std::shared_ptr<AsyncQueue> &queue = nullptr,
-      bool enableEventLoop = true);
-
-  void init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy);
-
   /* #region deprecated */
 
   /** @deprecated Use `runSync` instead. */
@@ -173,12 +165,32 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 #endif // NDEBUG
 
  private:
+  WorkletRuntime(
+      RuntimeData::RuntimeId runtimeId,
+      const std::shared_ptr<MessageQueueThread> &jsQueue,
+      const std::string &name,
+      const std::shared_ptr<AsyncQueue> &queue = nullptr,
+      bool enableEventLoop = true);
+
+  void init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy);
+
+  void bundleModeInit(
+      const std::shared_ptr<JSScheduler> &jsScheduler,
+      const std::shared_ptr<const ScriptBuffer> &script,
+      const std::string &sourceUrl,
+      const std::shared_ptr<RuntimeBindings> &runtimeBindings);
+
+  void legacyModeInit();
+
   const RuntimeData::RuntimeId runtimeId_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
   std::shared_ptr<EventLoop> eventLoop_;
+
+  friend class WorkletsModuleProxy;
+  friend class RuntimeManager;
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on

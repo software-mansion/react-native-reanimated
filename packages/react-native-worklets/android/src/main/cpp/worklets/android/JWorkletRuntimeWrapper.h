@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
 
 #include <fbjni/fbjni.h>
 #include <react/jni/ReadableNativeArray.h>
@@ -40,4 +40,4 @@ class JWorkletRuntimeWrapper : public jni::HybridClass<JWorkletRuntimeWrapper> {
 
 } // namespace worklets
 
-#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
