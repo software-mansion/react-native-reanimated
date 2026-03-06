@@ -1,17 +1,20 @@
 package com.swmansion.reanimated.nativeProxy;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.UIManagerModule;
-import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.facebook.react.uimanager.events.RCTModernEventEmitter;
 
 @DoNotStrip
-public class EventHandler implements RCTEventEmitter {
+public class EventHandler implements RCTModernEventEmitter {
 
-  @DoNotStrip private final HybridData mHybridData;
+  @SuppressWarnings("FieldCanBeLocal")
+  @DoNotStrip
+  private final HybridData mHybridData;
 
   public UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
 
@@ -21,17 +24,39 @@ public class EventHandler implements RCTEventEmitter {
   }
 
   @Override
-  public void receiveEvent(int emitterReactTag, String eventName, @Nullable WritableMap event) {
+  public void receiveEvent(
+      int emitterReactTag, @NonNull String eventName, @Nullable WritableMap event) {
     String resolvedEventName = mCustomEventNamesResolver.resolveCustomEventName(eventName);
     receiveEvent(resolvedEventName, emitterReactTag, event);
   }
 
+  @SuppressWarnings("JavaJniMissingFunction")
   public native void receiveEvent(
       String eventName, int emitterReactTag, @Nullable WritableMap event);
 
   @Override
   public void receiveTouches(
-      String eventName, WritableArray touches, WritableArray changedIndices) {
+      @NonNull String eventName,
+      @NonNull WritableArray touches,
+      @NonNull WritableArray changedIndices) {
     // not interested in processing touch events this way, we process raw events only
+  }
+
+  @Override
+  public void receiveEvent(
+      int surfaceId, int targetTag, @NonNull String eventName, @Nullable WritableMap params) {
+    // NOT IMPLEMENTED
+  }
+
+  @Override
+  public void receiveEvent(
+      int surfaceId,
+      int targetTag,
+      @NonNull String eventName,
+      boolean canCoalesceEvent,
+      int customCoalesceKey,
+      @Nullable WritableMap params,
+      int category) {
+    // NOT IMPLEMENTED
   }
 }

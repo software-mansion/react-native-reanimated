@@ -15,7 +15,7 @@ import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.common.UIManagerType;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
-import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.facebook.react.uimanager.events.RCTModernEventEmitter;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +38,7 @@ public class NodesManager implements EventDispatcherListener {
   private final GuardedFrameCallback mChoreographerCallback;
   protected final UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
   private final AtomicBoolean mCallbackPosted = new AtomicBoolean();
-  private RCTEventEmitter mCustomEventHandler = new NoopEventHandler();
+  private RCTModernEventEmitter mCustomEventHandler = new NoopEventHandler();
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
   private double lastFrameTimeMs;
@@ -217,7 +217,7 @@ public class NodesManager implements EventDispatcherListener {
     return mCustomEventNamesResolver;
   }
 
-  public void registerEventHandler(RCTEventEmitter handler) {
+  public void registerEventHandler(RCTModernEventEmitter handler) {
     mCustomEventHandler = handler;
   }
 
