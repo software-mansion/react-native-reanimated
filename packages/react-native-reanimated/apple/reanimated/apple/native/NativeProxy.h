@@ -1,8 +1,8 @@
 #if __cplusplus
 
-#import <reanimated/Compat/WorkletsApi.h>
 #import <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #import <reanimated/apple/REANodesManager.h>
+#import <worklets/Compat/StableApi.h>
 
 namespace reanimated {
 

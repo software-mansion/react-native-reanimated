@@ -5,11 +5,11 @@
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerAnimationDelegate.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
-#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
+#include <worklets/Compat/StableApi.h>
 
 #include <memory>
 #include <string>

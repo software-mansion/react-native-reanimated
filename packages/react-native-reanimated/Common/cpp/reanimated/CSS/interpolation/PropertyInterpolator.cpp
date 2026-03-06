@@ -1,6 +1,6 @@
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 
-#include <reanimated/Compat/WorkletsApi.h>
+#include <worklets/Compat/StableApi.h>
 
 #include <memory>
 #include <utility>

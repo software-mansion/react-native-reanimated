@@ -13,7 +13,7 @@
 #include <reanimated/CSS/svg/values/SVGStops.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
-#include <reanimated/Compat/WorkletsApi.h>
+#include <worklets/Compat/StableApi.h>
 
 #include <string>
 #include <utility>

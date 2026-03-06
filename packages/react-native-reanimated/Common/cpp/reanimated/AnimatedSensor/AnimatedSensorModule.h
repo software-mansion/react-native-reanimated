@@ -2,7 +2,7 @@
 
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
-#include <reanimated/Compat/WorkletsApi.h>
+#include <worklets/Compat/StableApi.h>
 
 #include <jsi/jsi.h>
 
