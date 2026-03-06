@@ -152,7 +152,6 @@ import WidthExample from './WidthExample';
 import WithClampExample from './WithClampExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
-import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import InstanceDiscoveryExample from './InstanceDiscoveryExample';
 import FetchExample from './FetchExample';
@@ -266,6 +265,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🧠',
     title: 'Memo',
     screen: MemoExample,
+    shouldWork: {
+      // TODO: fix, broken in https://github.com/software-mansion/react-native-reanimated/pull/7604
+      ios: false,
+      android: false,
+    },
   },
   AnimatedPropsExample: {
     icon: '🎨',
@@ -615,11 +619,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⌨',
     title: 'Log test',
     screen: LogExample,
-  },
-  WorkletFactoryCrash: {
-    icon: '🏭',
-    title: 'Worklet factory crash',
-    screen: WorkletFactoryCrash,
   },
   HabitsExample: {
     icon: '🧑‍💻',
