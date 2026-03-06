@@ -85,7 +85,7 @@ export type WorkletRuntime = WorkletRuntimeFromWorklets;
 
 /**
  * @deprecated Please import [`isWorkletFunction` directly from
- *   `react-native-worklets`](https://docs.swmansion.com/react-native-worklets/docs/threading/isWorkletFunction/)
+ *   `react-native-worklets`](https://docs.swmansion.com/react-native-worklets/docs/utility/isWorkletFunction/)
  *   instead of `react-native-reanimated`.
  */
 export const isWorkletFunction = isWorkletFunctionFromWorklets;

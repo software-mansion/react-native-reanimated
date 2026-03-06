@@ -60,9 +60,12 @@ export function setupRequestAnimationFrame() {
   }
 
   globalThis.requestAnimationFrame = requestAnimationFrame;
-  globalThis.cancelAnimationFrame = cancelAnimationFrame;
-  globalThis.__flushAnimationFrame = () => {
-    // NOOP for backwards compatibility
+  globalThis.cancelAnimationFrame =
+    cancelAnimationFrame as typeof globalThis.cancelAnimationFrame;
+  globalThis.__flushAnimationFrame = (eventTimestamp: number) => {
+    // TODO: Remove this in the future.
+    // Reanimated uses this method to trigger event synchronously.
+    flushQueue(eventTimestamp);
   };
 
   /* Start the loop */

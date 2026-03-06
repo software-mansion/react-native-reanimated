@@ -7,6 +7,12 @@ import type { ImageProps } from 'react-native-svg';
 import type { SvgStyleBuilderConfig } from './common';
 import { SVG_COMMON_PROPERTIES_CONFIG } from './common';
 
+// TODO:
+// Currently if we provide width or height as 0 to RNSVG,
+// it won't be handled properly. We should introduce some
+// custom value that can't be set to 0,
+// instead the zero would be rounded to sth like 0.000001.
+
 // TODO: Fix me
 // @ts-ignore RNSVG doesn't export types for web, see https://github.com/software-mansion/react-native-svg/pull/2801
 export const SVG_IMAGE_PROPERTIES_CONFIG: SvgStyleBuilderConfig<ImageProps> = {

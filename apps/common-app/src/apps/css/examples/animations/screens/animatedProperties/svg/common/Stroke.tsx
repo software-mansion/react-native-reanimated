@@ -171,6 +171,34 @@ export default function StrokeExample() {
               },
               title: 'Array value with different number of elements',
             },
+            {
+              keyframes: {
+                from: {
+                  strokeDasharray: ['10%', '5%'],
+                },
+                to: {
+                  strokeDasharray: ['25%', '12%'],
+                },
+              },
+              props: {
+                strokeWidth: 5,
+              },
+              title: 'Percentage values',
+            },
+            {
+              keyframes: {
+                from: {
+                  strokeDasharray: [8, '15%'],
+                },
+                to: {
+                  strokeDasharray: ['5%', 5],
+                },
+              },
+              props: {
+                strokeWidth: 5,
+              },
+              title: 'Mixed values (number + percentage)',
+            },
           ],
           title: 'strokeDasharray',
         },
