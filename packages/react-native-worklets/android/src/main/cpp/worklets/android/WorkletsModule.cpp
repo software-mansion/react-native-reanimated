@@ -5,8 +5,9 @@
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/android/AnimationFrameCallback.h>
 #include <worklets/android/WorkletsModule.h>
+#include "worklets/WorkletRuntime/BundleModeConfig.h"
 
-#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
 #include <folly/json/dynamic.h>
 #include <jni.h>
 #include <jsi/JSIDynamic.h>
@@ -15,7 +16,7 @@
 #include <react/jni/ReadableNativeMap.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/android/JWorkletRuntimeWrapper.h>
-#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 
 #include <memory>
 #include <string>
@@ -46,15 +47,18 @@ WorkletsModule::WorkletsModule(
           getIsOnJSQueueThread(),
           std::make_shared<RuntimeBindings>(RuntimeBindings{
               .requestAnimationFrame = getRequestAnimationFrame()
-#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
                   ,
               .abortRequest = getAbortRequest(),
               .clearCookies = getClearCookies(),
               .sendRequest = getSendRequest()
-#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
           }),
-          script,
-          sourceURL)) {
+          BundleModeConfig{
+              .enabled = true, // TODO: temporary
+              .bundleURL = sourceURL,
+              .bundleScript = script,
+          })) {
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
       *rnRuntime_, std::static_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));
@@ -78,11 +82,9 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
 
   std::shared_ptr<const ScriptBuffer> script = nullptr;
   std::string sourceURL;
-#ifdef WORKLETS_BUNDLE_MODE_ENABLED
   auto cxxWrapper = jScriptBufferWrapper->cthis();
   script = cxxWrapper->getScript();
   sourceURL = cxxWrapper->getSourceUrl();
-#endif // WORKLETS_BUNDLE_MODE_ENABLED
 
   return makeCxxInstance(jThis, rnRuntime, messageQueueThread, jsCallInvoker, uiScheduler, script, sourceURL);
 }
@@ -95,7 +97,7 @@ RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame(
   };
 }
 
-#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
 RuntimeBindings::AbortRequest WorkletsModule::getAbortRequest() {
   return [javaPart = javaPart_](jsi::Runtime &rt, double requestId) -> void {
     static const auto jAbortRequest = javaPart->getClass()->getMethod<void(int, double)>("abortRequest");
@@ -167,7 +169,7 @@ RuntimeBindings::SendRequest WorkletsModule::getSendRequest() {
         withCredentials);
   };
 }
-#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 
 std::function<bool()> WorkletsModule::getIsOnJSQueueThread() {
   return [javaPart = javaPart_]() -> bool {

@@ -67,7 +67,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
 
   @OptIn(markerClass = FrameworkAPI.class)
   @ReactMethod(isBlockingSynchronousMethod = true)
-  public boolean installTurboModule() {
+  public boolean installTurboModule(boolean bundleModeEnabled) {
     var context = getReactApplicationContext();
 
     context.assertOnJSQueueThread();
