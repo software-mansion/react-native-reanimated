@@ -67,7 +67,7 @@ export default function ImageExample() {
                 },
                 {
                   description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the X position is changed **abruptly**',
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
                       x: 20,
@@ -107,7 +107,7 @@ export default function ImageExample() {
                 },
                 {
                   description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the Y position is changed **abruptly**',
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
                       y: 20,
@@ -129,11 +129,11 @@ export default function ImageExample() {
             {
               examples: [
                 {
-                  description: 'Animates from default `width=60` to `width=80`',
+                  description: 'Animates width and height from `10` to `80`',
                   keyframes: {
                     from: {
-                      height: 0,
-                      width: 0,
+                      height: 10,
+                      width: 10,
                     },
                     to: {
                       height: 80,
@@ -147,8 +147,8 @@ export default function ImageExample() {
                     'Animation using only percentage values for smooth relative scaling',
                   keyframes: {
                     from: {
-                      height: '0%',
-                      width: '0%',
+                      height: '10%',
+                      width: '10%',
                     },
                     to: {
                       height: '70%',
@@ -159,10 +159,10 @@ export default function ImageExample() {
                 },
                 {
                   description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the width is changed **abruptly**',
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
-                      width: 60,
+                      width: 30,
                     },
                     to: {
                       width: '70%',
@@ -200,10 +200,10 @@ export default function ImageExample() {
                 },
                 {
                   description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the height is changed **abruptly**',
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
-                      height: 60,
+                      height: 30,
                     },
                     to: {
                       height: '70%',

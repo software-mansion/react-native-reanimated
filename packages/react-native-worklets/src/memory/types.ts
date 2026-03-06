@@ -38,7 +38,7 @@ export type Synchronizable<TValue = unknown> = SerializableRef<TValue> &
 
 /**
  * Registration data for
- * [registerCustomSerializable](https://docs.swmansion.com/react-native-reanimated/docs/memory/registerCustomSerializable)
+ * [registerCustomSerializable](https://docs.swmansion.com/react-native-worklets/docs/memory/registerCustomSerializable)
  * function.
  */
 export type RegistrationData<TValue extends object, TPacked = unknown> = {
@@ -58,7 +58,7 @@ export type RegistrationData<TValue extends object, TPacked = unknown> = {
    * A worklet that packs the JavaScript value of type `TValue` into a value
    * that can be serialized by default as Serializable. The function must return
    * a [supported type for
-   * Serialization](https://docs.swmansion.com/react-native-reanimated/docs/memory/Serializable#supported-types).
+   * Serialization](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable#supported-types).
    */
   pack: (value: TValue) => TPacked;
   /**

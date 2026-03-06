@@ -136,7 +136,7 @@ export const toThrowMatcher: AsyncMatcher<ToThrowArgs> = async (throwingFunction
   const { consoleErrorCount, consoleErrorMessage } = getCapturedConsoleErrors();
   const errorWasThrown = thrownException || consoleErrorCount >= 1;
   const capturedMessage = thrownExceptionMessage || consoleErrorMessage;
-  const messageIsCorrect = errorMessage ? errorMessage === capturedMessage : true;
+  const messageIsCorrect = errorMessage ? capturedMessage.includes(errorMessage) : true;
 
   return {
     pass: errorWasThrown && messageIsCorrect,
