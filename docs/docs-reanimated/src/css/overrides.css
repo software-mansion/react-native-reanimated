@@ -151,3 +151,7 @@ button[class*='DocSearch-Button'] {
 [class*='hireUsContainer'] {
   display: none;
 }
+
+[class*='headerWithBadges'] {
+  align-items: baseline
+}
