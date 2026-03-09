@@ -231,10 +231,6 @@ function makeMutableNative<TValue>(initial: TValue): Mutable<TValue> {
   return mutable as Mutable<TValue>;
 }
 
-interface JestMutable<TValue> extends Mutable<TValue> {
-  toJSON: () => string;
-}
-
 function makeMutableWeb<TValue>(initial: TValue): Mutable<TValue> {
   let value: TValue = initial;
   const listeners = new Map<number, Listener<TValue>>();
