@@ -23,20 +23,8 @@ facebook::jsi::Runtime *getJSIRuntimeFromWorkletRuntime(const std::shared_ptr<Wo
   return &(workletRuntime->getJSIRuntime());
 }
 
-std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
-#if REACT_NATIVE_MINOR_VERSION >= 81
-  auto runtimeData = rt.getRuntimeData(RuntimeData::weakRuntimeUUID);
-  if (!runtimeData) [[unlikely]] {
-    throw std::runtime_error(
-        "[Worklets] No weak runtime data found on the provided JSI runtime."
-        " Perhaps the JSI Runtime is not a WorkletRuntime?");
-  }
-  auto weakHolder = std::static_pointer_cast<WeakRuntimeHolder>(runtimeData);
-  return weakHolder->weakRuntime;
-#else
-  throw std::runtime_error(
-      "[Worklets] Retrieving WorkletRuntime from JSI Runtime is not supported in React Native versions below 0.81.");
-#endif // REACT_NATIVE_MINOR_VERSION >= 81
+std::weak_ptr<WorkletRuntime> getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
+  return WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt);
 }
 
 /* #region deprecated */
