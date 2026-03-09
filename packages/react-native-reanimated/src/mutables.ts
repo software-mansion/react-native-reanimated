@@ -177,7 +177,7 @@ function makeMutableNative<TValue>(initial: TValue): Mutable<TValue> {
   const mutable: PartialMutable<TValue> = {
     get value(): TValue {
       checkInvalidReadDuringRender();
-      if (dirtyFlag?.getBlocking()) {
+      if (dirtyFlag === undefined || dirtyFlag.getBlocking()) {
         const uiValueGetter = (svArg: Mutable<TValue>) =>
           runOnUISync((sv) => {
             sv.setDirty?.(false);
