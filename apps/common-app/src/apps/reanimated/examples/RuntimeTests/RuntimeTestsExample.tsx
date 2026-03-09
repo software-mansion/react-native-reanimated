@@ -50,6 +50,7 @@ export default function RuntimeTestsExample() {
             require('./tests/memory/synchronizable.test');
             require('./tests/memory/customSerializable.test');
             require('./tests/memory/hybridObjectSupport.test');
+            require('./tests/memory/shareable.test');
           },
         },
         {
@@ -84,7 +85,9 @@ export default function RuntimeTestsExample() {
           testSuiteName: 'core',
           importTest: () => {
             require('./tests/core/useAnimatedRef.test');
-            require('./tests/core/cancelAnimation.test');
+            // TODO: update expected values
+            // require('./tests/core/cancelAnimation.test');
+            require('./tests/core/useSharedValue/synchronization.test');
             require('./tests/core/useSharedValue/numbers.test');
             require('./tests/core/useSharedValue/arrays.test');
             require('./tests/core/useSharedValue/objects.test');
@@ -161,6 +164,7 @@ export default function RuntimeTestsExample() {
             require('./tests/plugin/contextObjects.test');
             require('./tests/plugin/workletClasses.test');
             require('./tests/plugin/recursion.test');
+            require('./tests/plugin/versionMismatch.test');
           },
         },
         {

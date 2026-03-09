@@ -11,7 +11,7 @@ import type {
   SharedValue,
 } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
-import { legacy_makeMutableUI as makeMutableUI } from '../mutables';
+import { makeMutableUI } from '../mutables';
 
 const TAG_OFFSET = 1e9;
 
