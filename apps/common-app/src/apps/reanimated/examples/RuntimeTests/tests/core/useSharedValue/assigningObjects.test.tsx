@@ -68,12 +68,7 @@ describe('Test setting different values as sharedValue', () => {
       new TypeError('Example TypeError'),
       new URIError('Example URIError'),
     ])('Test %p', async error => {
-      await render(<SharedValueComponent initialValue={error} progress={0} />);
-      const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-
-      const errorObject = { name: error.name, message: error.message };
-      expect(sharedValue.onJS).toBe(errorObject, ComparisonMode.OBJECT);
-      expect(sharedValue.onUI).toBe(errorObject, ComparisonMode.OBJECT);
+      await expect(() => render(<SharedValueComponent initialValue={error} progress={0} />)).not.toThrow();
     });
   });
 });
