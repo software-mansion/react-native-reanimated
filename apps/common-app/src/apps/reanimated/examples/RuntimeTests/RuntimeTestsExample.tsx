@@ -85,7 +85,7 @@ export default function RuntimeTestsExample() {
           testSuiteName: 'core',
           importTest: () => {
             require('./tests/core/useAnimatedRef.test');
-            // TODO: fix
+            // TODO: update expected values
             // require('./tests/core/cancelAnimation.test');
             require('./tests/core/useSharedValue/synchronization.test');
             require('./tests/core/useSharedValue/numbers.test');

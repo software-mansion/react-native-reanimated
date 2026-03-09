@@ -263,10 +263,6 @@ function mutableGuestDecorator<TValue>(
   return mutable;
 }
 
-interface JestMutable<TValue> extends Mutable<TValue> {
-  toJSON: () => string;
-}
-
 function makeMutableWeb<TValue>(initial: TValue): Mutable<TValue> {
   let value: TValue = initial;
   const listeners = new Map<number, Listener<TValue>>();
