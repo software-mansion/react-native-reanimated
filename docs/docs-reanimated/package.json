@@ -69,9 +69,9 @@
   },
   "devDependencies": {
     "@babel/preset-flow": "7.25.9",
-    "@docusaurus/module-type-aliases": "^3.9.2",
-    "@docusaurus/tsconfig": "^3.9.2",
-    "@docusaurus/types": "^3.9.2",
+    "@docusaurus/module-type-aliases": "3.9.2",
+    "@docusaurus/tsconfig": "3.9.2",
+    "@docusaurus/types": "3.9.2",
     "@types/raf": "3.4.3",
     "copy-webpack-plugin": "11.0.0",
     "esbuild": "0.25.10",
