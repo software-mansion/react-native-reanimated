@@ -128,7 +128,7 @@ function processProps(
       }
       processProps(
         offset,
-        value,
+        value as UnknownRecord,
         keyframeProps[property],
         separatelyInterpolatedNestedProperties
       );
