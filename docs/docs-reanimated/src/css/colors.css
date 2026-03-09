@@ -309,6 +309,22 @@
   --codeblock-diff-deleted-color-dark: var(--swm-red-dark-40);
   --codeblock-diff-deleted-background-light: var(--swm-red-light-20);
   --codeblock-diff-deleted-background-dark: var(--swm-red-dark-140);
+
+  /* Markdown copy button */
+  --swm-markdown-copy-button-color: var(--swm-navy-light-100);
+  --swm-markdown-copy-button-border-color: var(--swm-navy-light-100);
+  --swm-markdown-copy-button-background-hover: var(--swm-navy-light-10);
+  --swm-markdown-copy-button-item-color: var(--swm-navy-light-60);
+  --swm-markdown-copy-button-item-background: var(--swm-background);
+  --swm-markdown-copy-button-item-background-hover: var(--ifm-color-emphasis-100);
+  --swm-markdown-copy-button-item-color-hover: var(--swm-navy-light-100);
+
+
+  /* Badges */
+  --swm-platform-badge-background: var(--swm-green-dark-120);
+  --swm-platform-badge-color: var(--swm-off-white);
+  --swm-available-from-badge-background: var(--swm-yellow-light-40);
+  --swm-available-from-badge-color: var(--swm-navy-light-100);
 }
 
 :root[data-theme='dark'] {
@@ -496,6 +512,21 @@
   --swm-compatibility-supported-background: var(--swm-green-dark-120);
   --swm-compatibility-not-supported-background: var(--swm-red-dark-120);
   --swm-compatibility-text-color: var(--swm-navy-dark-20);
+
+  /* Markdown copy button */
+  --swm-markdown-copy-button-color: var(--swm-navy-light-40);
+  --swm-markdown-copy-button-border-color: var(--swm-navy-light-40);
+  --swm-markdown-copy-button-background-hover: var(--ifm-color-emphasis-100);
+  --swm-markdown-copy-button-item-color: var(--swm-navy-light-40);
+  --swm-markdown-copy-button-item-background: var(--swm-background);
+  --swm-markdown-copy-button-item-background-hover: var(--ifm-color-emphasis-100);
+  --swm-markdown-copy-button-item-color-hover: var(--swm-off-white);
+
+  /* Badges */
+  --swm-platform-badge-background: var(--swm-green-dark-120);
+  --swm-platform-badge-color: var(--swm-off-white);
+  --swm-available-from-badge-background: var(--swm-yellow-dark-120);
+  --swm-available-from-badge-color: var(--swm-off-white);
 }
 
 code {
