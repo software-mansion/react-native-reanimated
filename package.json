@@ -76,9 +76,5 @@
     "react-native-builder-bob": "0.40.13",
     "shelljs": "0.10.0",
     "typescript": "5.8.3"
-  },
-  "resolutions": {
-    "@docsearch/react": "4.4.0",
-    "@docsearch/css": "4.4.0"
   }
 }

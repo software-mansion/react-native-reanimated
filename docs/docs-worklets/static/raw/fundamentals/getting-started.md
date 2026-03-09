@@ -1,10 +1,3 @@
----
-sidebar_position: 1
----
-
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # Getting started
 
 ## What is React Native Worklets?
@@ -15,9 +8,9 @@ While the library is in transitional period where we hone the API, all its featu
 
 ## Prerequisites
 
-:::info
-Worklets library isn't tested on the Legacy Architecture (Paper). We highly recommend migrating to the [New Architecture (Fabric)](https://reactnative.dev/architecture/landing-page) prior to using Worklets.
-:::
+> **Info**
+>
+> Worklets library isn't tested on the Legacy Architecture (Paper). We highly recommend migrating to the [New Architecture (Fabric)](https://reactnative.dev/architecture/landing-page) prior to using Worklets.
 
 ## Installation
 
@@ -25,37 +18,25 @@ Worklets library isn't tested on the Legacy Architecture (Paper). We highly reco
 
 Install `react-native-worklets` package from npm:
 
-<Tabs groupId="package-managers">
-  <TabItem value="npm" label="NPM">
-    ```bash
-    npm install react-native-worklets
-    ```
+```bash
+npm install react-native-worklets
+```
 
-  </TabItem>
-  <TabItem value="yarn" label="YARN">
-    ```bash
-    yarn add react-native-worklets
-    ```
-
-  </TabItem>
-</Tabs>
+```bash
+yarn add react-native-worklets
+```
 
 ### Step 2: Rebuild native dependencies
 
 Run prebuild to update the native code in the `ios` and `android` directories.
 
-<Tabs groupId="package-managers">
-  <TabItem value="npm" label="NPM">
-    ```bash
-    npx expo prebuild
-    ```
-  </TabItem>
-  <TabItem value="yarn" label="YARN">
-    ```bash
-    yarn expo prebuild
-    ```
-  </TabItem>
-</Tabs>
+```bash
+npx expo prebuild
+```
+
+```bash
+yarn expo prebuild
+```
 
 And that's it! Worklets is now configured in your Expo project.
 
@@ -77,8 +58,7 @@ module.exports = {
 
 Worklets Babel plugin comes with several options, you can explore what they are and how to use them in the [Options for Worklets Babel Plugin](/docs/worklets-babel-plugin/plugin-options) section.
 
-<details>
-<summary>Why do I need this?</summary>
+Why do I need this?
 
 In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime)
 
@@ -86,22 +66,15 @@ Since [Expo SDK 54](https://expo.dev/changelog/sdk-54-beta#notable-breaking-chan
 
 To learn more about the plugin head onto to [Worklets babel plugin](/docs/worklets-babel-plugin/about) section.
 
-</details>
-
 #### Clear Metro bundler cache (recommended)
 
-<Tabs groupId="package-managers">
-  <TabItem value="npm" label="NPM">
-    ```bash
-    npm start -- --reset-cache
-    ```
-  </TabItem>
-  <TabItem value="yarn" label="YARN">
-    ```bash
-    yarn start --reset-cache
-    ```
-  </TabItem>
-</Tabs>
+```bash
+npm start -- --reset-cache
+```
+
+```bash
+yarn start --reset-cache
+```
 
 #### Android
 
