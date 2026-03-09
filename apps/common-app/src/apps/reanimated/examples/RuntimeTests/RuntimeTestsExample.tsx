@@ -86,6 +86,7 @@ export default function RuntimeTestsExample() {
           importTest: () => {
             require('./tests/core/useAnimatedRef.test');
             require('./tests/core/cancelAnimation.test');
+            require('./tests/core/useSharedValue/synchronization.test');
             require('./tests/core/useSharedValue/numbers.test');
             require('./tests/core/useSharedValue/arrays.test');
             require('./tests/core/useSharedValue/objects.test');
