@@ -2927,9 +2927,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docsearch/core@npm:4.3.1":
-  version: 4.3.1
-  resolution: "@docsearch/core@npm:4.3.1"
+"@docsearch/core@npm:4.4.0":
+  version: 4.4.0
+  resolution: "@docsearch/core@npm:4.4.0"
   peerDependencies:
     "@types/react": ">= 16.8.0 < 20.0.0"
     react: ">= 16.8.0 < 20.0.0"
@@ -2941,25 +2941,25 @@ __metadata:
       optional: true
     react-dom:
       optional: true
-  checksum: 10/5098acad9d6e537f24c7ac67fbd0540df686a034851da974e573194862e95c714e99de53cd6a610f6b00ae7f3acaae396696a13b55e585dc3b20b9e29e383044
+  checksum: 10/9d927d50eb22f7b3ea3616d846a46b6f63a0b7424f60fe7482d295e83d5a4c50dfb7e953097fcd110e1d8d67c86706f9b0539d66a55562318505afcf4e24260e
   languageName: node
   linkType: hard
 
-"@docsearch/css@npm:4.3.2":
-  version: 4.3.2
-  resolution: "@docsearch/css@npm:4.3.2"
-  checksum: 10/f9ac7692db4f39dd51be8021b75544911fe04d796a3fcd887e852d2a221a59be5e4a1ad0c13fd6ca65fa602d9f1b70dd16a0c10e382142c8e8370ad8d5d82be0
+"@docsearch/css@npm:4.4.0":
+  version: 4.4.0
+  resolution: "@docsearch/css@npm:4.4.0"
+  checksum: 10/a8ad479480c8a9a1602f2d4ff8162682ceed28e634854d1b5806b8cde167bb287d7be2f4d41cf552966cf35d3737c46ff964b45a31807f851037b7b74e3e624b
   languageName: node
   linkType: hard
 
-"@docsearch/react@npm:^3.9.0 || ^4.1.0":
-  version: 4.3.2
-  resolution: "@docsearch/react@npm:4.3.2"
+"@docsearch/react@npm:4.4.0":
+  version: 4.4.0
+  resolution: "@docsearch/react@npm:4.4.0"
   dependencies:
     "@ai-sdk/react": "npm:^2.0.30"
     "@algolia/autocomplete-core": "npm:1.19.2"
-    "@docsearch/core": "npm:4.3.1"
-    "@docsearch/css": "npm:4.3.2"
+    "@docsearch/core": "npm:4.4.0"
+    "@docsearch/css": "npm:4.4.0"
     ai: "npm:^5.0.30"
     algoliasearch: "npm:^5.28.0"
     marked: "npm:^16.3.0"
@@ -2978,7 +2978,7 @@ __metadata:
       optional: true
     search-insights:
       optional: true
-  checksum: 10/43d73c97ea091335194f11addba04a622d7b01e8b7177e4e1f1b45687b5cb4f778c7db2752ede83d7840204c644cadd211dd4a8f6e608a3ae04b7afd8025381e
+  checksum: 10/9abd98ec1e49b53ff73afbd48612dea8a4dafd4014c1300ebdf43c325f3e872c22106bfe1951bd273c044c561dde948ec2def688d7dc9510e3c21824f6331373
   languageName: node
   linkType: hard
 
@@ -3155,7 +3155,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docusaurus/module-type-aliases@npm:3.9.2, @docusaurus/module-type-aliases@npm:^3.8.1":
+"@docusaurus/module-type-aliases@npm:3.9.2, @docusaurus/module-type-aliases@npm:^3.8.1, @docusaurus/module-type-aliases@npm:^3.9.2":
   version: 3.9.2
   resolution: "@docusaurus/module-type-aliases@npm:3.9.2"
   dependencies:
@@ -3511,14 +3511,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docusaurus/tsconfig@npm:3.9.2":
+"@docusaurus/tsconfig@npm:3.9.2, @docusaurus/tsconfig@npm:^3.9.2":
   version: 3.9.2
   resolution: "@docusaurus/tsconfig@npm:3.9.2"
   checksum: 10/8e08e352ab8285d4601822dbd424700a7c875b30dd2eefb087f540e62e5a9f05026368625ce3e89948380f0b232ecd7a52e03ce069fab4de1e6a39dedf324d1b
   languageName: node
   linkType: hard
 
-"@docusaurus/types@npm:3.9.2":
+"@docusaurus/types@npm:3.9.2, @docusaurus/types@npm:^3.9.2":
   version: 3.9.2
   resolution: "@docusaurus/types@npm:3.9.2"
   dependencies:
@@ -8477,6 +8477,36 @@ __metadata:
     react: "*"
     react-dom: "*"
   checksum: 10/bb9f52b24a8a9c1bb87e766263a8f40973013644505072240a6c25ff5286bbf5f6a586959c89f64d579d880cc1677246e8d4e601d26e6c686e52fb7a35fc62af
+  languageName: node
+  linkType: hard
+
+"@swmansion/t-rex-ui@npm:1.3.0":
+  version: 1.3.0
+  resolution: "@swmansion/t-rex-ui@npm:1.3.0"
+  dependencies:
+    "@docusaurus/core": "npm:3.9.2"
+    "@docusaurus/module-type-aliases": "npm:3.9.2"
+    "@docusaurus/plugin-debug": "npm:3.9.2"
+    "@docusaurus/preset-classic": "npm:3.9.2"
+    "@docusaurus/theme-search-algolia": "npm:3.9.2"
+    fs-extra: "npm:^11.3.3"
+    gray-matter: "npm:^4.0.3"
+    remark-mdx: "npm:^3.0.0"
+    remark-parse: "npm:^11.0.0"
+    remark-stringify: "npm:^11.0.0"
+    unified: "npm:^11.0.5"
+  peerDependencies:
+    "@docsearch/core": ^4.4.0
+    "@docsearch/css": ^4.4.0
+    "@docsearch/sidepanel": ^4.4.0
+    "@emotion/react": "*"
+    "@emotion/styled": "*"
+    "@mui/material": ">=5.0.0"
+    copy-text-to-clipboard: ^3.2.2
+    react: "*"
+    react-dom: "*"
+    react-icons: "*"
+  checksum: 10/627dca72a097ec618f81eb3adb46fe27d3de8a1367f55672cda22fbedf7ebcde469aa440ad971b6199d4bc4c8d7433a2c64db7a626ed0767f510d352b21214d5
   languageName: node
   linkType: hard
 
@@ -13850,6 +13880,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"copy-text-to-clipboard@npm:3.2.2":
+  version: 3.2.2
+  resolution: "copy-text-to-clipboard@npm:3.2.2"
+  checksum: 10/ae512de746632eb0cc3fe78ba16022b46134f835aa411d372798ee76c93baae8faa6b2cf5052ebd132ec6a2016124dc19786b231e5c0d333999c5d448e7a2e42
+  languageName: node
+  linkType: hard
+
 "copy-webpack-plugin@npm:11.0.0, copy-webpack-plugin@npm:^11.0.0":
   version: 11.0.0
   resolution: "copy-webpack-plugin@npm:11.0.0"
@@ -15377,22 +15414,22 @@ __metadata:
     "@dnd-kit/core": "npm:6.3.1"
     "@dnd-kit/modifiers": "npm:9.0.0"
     "@docusaurus/core": "npm:3.9.2"
-    "@docusaurus/module-type-aliases": "npm:3.9.2"
+    "@docusaurus/module-type-aliases": "npm:^3.9.2"
     "@docusaurus/plugin-debug": "npm:3.9.2"
     "@docusaurus/plugin-google-tag-manager": "npm:3.9.2"
     "@docusaurus/preset-classic": "npm:3.9.2"
     "@docusaurus/theme-common": "npm:3.9.2"
     "@docusaurus/theme-mermaid": "npm:3.9.2"
     "@docusaurus/theme-search-algolia": "npm:3.9.2"
-    "@docusaurus/tsconfig": "npm:3.9.2"
-    "@docusaurus/types": "npm:3.9.2"
+    "@docusaurus/tsconfig": "npm:^3.9.2"
+    "@docusaurus/types": "npm:^3.9.2"
     "@emotion/react": "npm:11.14.0"
     "@emotion/styled": "npm:11.14.0"
     "@mdx-js/react": "npm:3.0.0"
     "@mui/material": "npm:7.1.0"
     "@react-native/assets-registry": "npm:0.83.0"
     "@shopify/flash-list": "npm:2.1.0"
-    "@swmansion/t-rex-ui": "npm:1.1.0"
+    "@swmansion/t-rex-ui": "npm:1.3.0"
     "@types/raf": "npm:3.4.3"
     "@types/react": "npm:19.2.2"
     "@vercel/og": "npm:0.6.2"
@@ -15401,6 +15438,7 @@ __metadata:
     babel-preset-expo: "npm:9.2.2"
     babel-preset-react-native: "npm:4.0.1"
     clsx: "npm:2.1.0"
+    copy-text-to-clipboard: "npm:3.2.2"
     copy-webpack-plugin: "npm:11.0.0"
     esbuild: "npm:0.25.10"
     esbuild-register: "npm:3.5.0"
@@ -17991,6 +18029,17 @@ __metadata:
     jsonfile: "npm:^6.0.1"
     universalify: "npm:^2.0.0"
   checksum: 10/d559545c73fda69c75aa786f345c2f738b623b42aea850200b1582e006a35278f63787179e3194ba19413c26a280441758952b0c7e88dd96762d497e365a6c3e
+  languageName: node
+  linkType: hard
+
+"fs-extra@npm:^11.3.3":
+  version: 11.3.3
+  resolution: "fs-extra@npm:11.3.3"
+  dependencies:
+    graceful-fs: "npm:^4.2.0"
+    jsonfile: "npm:^6.0.1"
+    universalify: "npm:^2.0.0"
+  checksum: 10/daeaefafbebe8fa6efd2fb96fc926f2c952be5877811f00a6794f0d64e0128e3d0d93368cd328f8f063b45deacf385c40e3d931aa46014245431cd2f4f89c67a
   languageName: node
   linkType: hard
 
@@ -32121,7 +32170,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"unified@npm:^11.0.0, unified@npm:^11.0.3, unified@npm:^11.0.4":
+"unified@npm:^11.0.0, unified@npm:^11.0.3, unified@npm:^11.0.4, unified@npm:^11.0.5":
   version: 11.0.5
   resolution: "unified@npm:11.0.5"
   dependencies:

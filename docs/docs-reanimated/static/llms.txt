@@ -1,0 +1,134 @@
+# Documentation
+
+## _shared
+
+- [_docs_compatibility_info](https://docs.swmansion.com/react-native-reanimated/docs/_shared/_docs_compatibility_info)
+- [_unreleased_info](https://docs.swmansion.com/react-native-reanimated/docs/_shared/_unreleased_info)
+
+## advanced
+
+- [dispatchCommand](https://docs.swmansion.com/react-native-reanimated/docs/advanced/dispatchCommand)
+- [makeMutable](https://docs.swmansion.com/react-native-reanimated/docs/advanced/makeMutable)
+- [measure](https://docs.swmansion.com/react-native-reanimated/docs/advanced/measure)
+- [setNativeProps](https://docs.swmansion.com/react-native-reanimated/docs/advanced/setNativeProps)
+- [useAnimatedReaction](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useAnimatedReaction)
+- [useComposedEventHandler](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useComposedEventHandler)
+- [useEvent](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useEvent)
+- [useFrameCallback](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useFrameCallback)
+- [useHandler](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useHandler)
+
+## animations/_shared
+
+- [animationToValue](https://docs.swmansion.com/react-native-reanimated/docs/animations/_shared/animationToValue)
+
+## animations
+
+- [withClamp](https://docs.swmansion.com/react-native-reanimated/docs/animations/withClamp)
+- [withDecay](https://docs.swmansion.com/react-native-reanimated/docs/animations/withDecay)
+- [withDelay](https://docs.swmansion.com/react-native-reanimated/docs/animations/withDelay)
+- [withRepeat](https://docs.swmansion.com/react-native-reanimated/docs/animations/withRepeat)
+- [withSequence](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSequence)
+- [withSpring](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring)
+- [withTiming](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming)
+
+## core
+
+- [cancelAnimation](https://docs.swmansion.com/react-native-reanimated/docs/core/cancelAnimation)
+- [createAnimatedComponent](https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent)
+- [useAnimatedProps](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps)
+- [useAnimatedRef](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef)
+- [useAnimatedStyle](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle)
+- [useDerivedValue](https://docs.swmansion.com/react-native-reanimated/docs/core/useDerivedValue)
+- [useSharedValue](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue)
+
+## css-animations
+
+- [animation-delay](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-delay)
+- [animation-direction](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-direction)
+- [animation-duration](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-duration)
+- [animation-fill-mode](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-fill-mode)
+- [animation-iteration-count](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-iteration-count)
+- [animation-name](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-name)
+- [animation-play-state](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-play-state)
+- [animation-timing-function](https://docs.swmansion.com/react-native-reanimated/docs/css-animations/animation-timing-function)
+
+## css-transitions
+
+- [transition-behavior](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-behavior)
+- [transition-delay](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-delay)
+- [transition-duration](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-duration)
+- [transition-property](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-property)
+- [transition-timing-function](https://docs.swmansion.com/react-native-reanimated/docs/css-transitions/transition-timing-function)
+
+## debugging
+
+- [accurate-call-stacks](https://docs.swmansion.com/react-native-reanimated/docs/debugging/accurate-call-stacks)
+- [logger-configuration](https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration)
+
+## device
+
+- [ReducedMotionConfig](https://docs.swmansion.com/react-native-reanimated/docs/device/ReducedMotionConfig)
+- [useAnimatedKeyboard](https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedKeyboard)
+- [useAnimatedSensor](https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedSensor)
+- [useReducedMotion](https://docs.swmansion.com/react-native-reanimated/docs/device/useReducedMotion)
+
+## fundamentals
+
+- [_animating-colors](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/_animating-colors)
+- [animating-styles-and-props](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/animating-styles-and-props)
+- [applying-modifiers](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/applying-modifiers)
+- [customizing-animation](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/customizing-animation)
+- [getting-started](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started)
+- [glossary](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary)
+- [handling-gestures](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/handling-gestures)
+- [your-first-animation](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/your-first-animation)
+
+## guides
+
+- [accessibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility)
+- [Building for Android on Windows](https://docs.swmansion.com/react-native-reanimated/docs/guides/building-for-android-on-windows)
+- [compatibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility)
+- [Contributing](https://docs.swmansion.com/react-native-reanimated/docs/guides/contributing)
+- [debugging-worklets](https://docs.swmansion.com/react-native-reanimated/docs/guides/debugging-worklets)
+- [Feature flags](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags)
+- [Migrating from Reanimated 1.x to 2.x](https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-1.x)
+- [Migrating from Reanimated 2.x to 3.x](https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-2.x)
+- [Migrating from Reanimated 3.x to 4.x](https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-3.x)
+- [Performance](https://docs.swmansion.com/react-native-reanimated/docs/guides/performance)
+- [supported-properties](https://docs.swmansion.com/react-native-reanimated/docs/guides/supported-properties)
+- [testing-with-jest](https://docs.swmansion.com/react-native-reanimated/docs/guides/testing-with-jest)
+- [Troubleshooting](https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting)
+- [Web Support](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support)
+- [worklets](https://docs.swmansion.com/react-native-reanimated/docs/guides/worklets)
+
+## layout-animations
+
+- [custom-animations](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/custom-animations)
+- [entering-exiting-animations](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations)
+- [keyframe-animations](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/keyframe-animations)
+- [LayoutAnimationConfig](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-animation-config)
+- [layout-transitions](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions)
+- [List Layout Animations](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/list-layout-animations)
+
+## reanimated-babel-plugin
+
+- [About](https://docs.swmansion.com/react-native-reanimated/docs/reanimated-babel-plugin/about)
+
+## scroll
+
+- [scrollTo](https://docs.swmansion.com/react-native-reanimated/docs/scroll/scrollTo)
+- [useAnimatedScrollHandler](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useAnimatedScrollHandler)
+- [useScrollOffset](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useScrollOffset)
+
+## shared-element-transitions
+
+- [Shared Element Transitions](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview)
+
+## utilities
+
+- [DynamicColorIOS](https://docs.swmansion.com/react-native-reanimated/docs/utilities/DynamicColorIOS)
+- [clamp](https://docs.swmansion.com/react-native-reanimated/docs/utilities/clamp)
+- [getRelativeCoords](https://docs.swmansion.com/react-native-reanimated/docs/utilities/getRelativeCoords)
+- [interpolate](https://docs.swmansion.com/react-native-reanimated/docs/utilities/interpolate)
+- [interpolateColor](https://docs.swmansion.com/react-native-reanimated/docs/utilities/interpolateColor)
+

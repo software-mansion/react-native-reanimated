@@ -1,0 +1,11 @@
+# Compatibility table
+
+> **Info**
+>
+> Reanimated 4 works only with the React Native New Architecture. If your app still uses the old architecture, you can use Reanimated in version 3 which is still actively maintained.
+
+### Supported React Native versions
+
+### Supported react-native-worklets versions
+
+`react-native-worklets` is a dependency of Reanimated 4. However, Reanimated 3 will not work with `react-native-worklets` installed. Make sure to have a correct version of `react-native-worklets` installed when using Reanimated 4.

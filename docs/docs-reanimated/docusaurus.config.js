@@ -80,6 +80,7 @@ const config = {
         },
       }),
     ],
+    require.resolve('@swmansion/t-rex-ui/preset')
   ],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
