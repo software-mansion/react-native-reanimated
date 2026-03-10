@@ -1,4 +1,4 @@
-# registerCustomSerializable&#x20;
+# registerCustomSerializable
 
 `registerCustomSerializable` lets you register your own pre-serialization and post-deserialization logic. This is necessary for objects with prototypes different than just `Object.prototype` or some other built-in prototypes like `Map` etc. Worklets can't handle such objects by default to convert into [Serializables](/docs/memory/serializable) hence you need to register them as **Custom Serializables**. This way you can tell Worklets how to transfer your custom data structures between different Runtimes without manually serializing and deserializing them every time.
 
@@ -141,6 +141,6 @@ flowchart TD
 
 ## Remarks
 
-* To use Custom Serializables which require `new` keyword for instantiation, you need to [disable Worklet Classes](/docs/worklets-babel-plugin/plugin-options#disableworkletclasses-) option in Worklets Babel plugin configuration.
+* To use Custom Serializables which require `new` keyword for instantiation, you need to [disable Worklet Classes](/docs/worklets-babel-plugin/plugin-options#disableworkletclasses) option in Worklets Babel plugin configuration.
 * Custom Serializables are global and shared between all [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime). Once you register a Custom Serializable, it will be available in all Runtimes.
 * You can use `registerCustomSerializable` only on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).

@@ -1,4 +1,4 @@
-# Synchronizable&#x20;
+# Synchronizable
 
 Synchronizable is a type of shared memory not tied to any JavaScript Runtime. It can be accessed from any JavaScript Runtime and C++. The value held by Synchronizable behaves like a standard JavaScript value.
 

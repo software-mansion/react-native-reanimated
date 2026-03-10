@@ -1,4 +1,4 @@
-# runOnRuntimeSync&#x20;
+# runOnRuntimeSync
 
 `runOnRuntimeSync` lets you run a [workletized](/docs/fundamentals/glossary#to-workletize) function synchronously on a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime). It's blocking - meaning that it can preempt the runtime from a thread that's currently executing it.
 

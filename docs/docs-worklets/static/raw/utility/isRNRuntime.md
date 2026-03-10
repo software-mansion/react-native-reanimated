@@ -1,4 +1,4 @@
-# isRNRuntime&#x20;
+# isRNRuntime
 
 Checks if the current runtime is the [React Native Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
 

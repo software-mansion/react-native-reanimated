@@ -28,7 +28,7 @@ jest.mock('react-native-worklets', () =>
 );
 ```
 
-## Using the Web implementation&#x20;
+## Using the Web implementation
 
 Override Jest resolver to enforce resolving web implementation of React Native Worklets instead of pulling the native one. Modify your `jest.config.js` file to include the following code:
 

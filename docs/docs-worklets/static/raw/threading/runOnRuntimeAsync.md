@@ -1,4 +1,4 @@
-# runOnRuntimeAsync&#x20;
+# runOnRuntimeAsync
 
 `runOnRuntimeAsync` lets you asynchronously run [worklets](/docs/fundamentals/glossary#worklet) on a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
 It returns a Promise of the worklet's return value. The Promise is resolved asynchronously, not immediately after the callback execution.

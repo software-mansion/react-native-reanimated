@@ -573,9 +573,9 @@ Feature flags allow developers to opt-in for experimental changes or opt-out fro
 
 | Feature flag name                                                  |              Type               | Added in | Removed in | Default value |
 | ------------------------------------------------------------------ | :-----------------------------: | :------: | :--------: | :-----------: |
-| [`BUNDLE_MODE_ENABLED`](#bundle_mode_enabled-)                     | [static](#static-feature-flags) |  0.8.0   |  –   |    `false`    |
-| [`FETCH_PREVIEW_ENABLED`](#fetch_preview_enabled-)                 | [static](#static-feature-flags) |  0.8.0   |  –   |    `false`    |
-| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled-) | [static](#static-feature-flags) |  0.6.0   |  –   |    `true`     |
+| [`BUNDLE_MODE_ENABLED`](#bundle_mode_enabled)                     | [static](#static-feature-flags) |  0.8.0   |  –   |    `false`    |
+| [`FETCH_PREVIEW_ENABLED`](#fetch_preview_enabled)                 | [static](#static-feature-flags) |  0.8.0   |  –   |    `false`    |
+| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled) | [static](#static-feature-flags) |  0.6.0   |  –   |    `true`     |
 
 > **Info**
 >
@@ -583,16 +583,16 @@ Feature flags allow developers to opt-in for experimental changes or opt-out fro
 
 ## Description of available feature flags
 
-### `BUNDLE_MODE_ENABLED`&#x20;
+### `BUNDLE_MODE_ENABLED`
 
 This feature flag enables [the Bundle Mode](/docs/bundleMode/). Make sure to follow the rest of the [setup instructions](/docs/bundleMode/setup/) after enabling this flag.
 
-### `FETCH_PREVIEW_ENABLED`&#x20;
+### `FETCH_PREVIEW_ENABLED`
 
 This feature flag enables the [preview of fetch API on Worklet Runtimes](/docs/bundleMode/usage#running-network-requests-in-worklets) in the [Bundle Mode](/docs/bundleMode/). Make sure to follow the rest of the [setup instructions](/docs/bundleMode/setup/) after enabling this flag.
 **This flag requires `BUNDLE_MODE_ENABLED` flag to be enabled as well.**
 
-### `IOS_DYNAMIC_FRAMERATE_ENABLED`&#x20;
+### `IOS_DYNAMIC_FRAMERATE_ENABLED`
 
 This feature flags is supposed to improve the visual perception and perceived smoothness of computationally expensive animations. When enabled, the frame rate will be automatically adjusted for current workload of the UI thread. For instance, if the device fails to run animations in 120 fps which would usually results in irregular frame drops, the mechanism will fallback to stable 60 fps. For more details, see [PR #7624](https://github.com/software-mansion/react-native-reanimated/pull/7624).
 
@@ -693,7 +693,7 @@ jest.mock('react-native-worklets', () =>
 );
 ```
 
-## Using the Web implementation&#x20;
+## Using the Web implementation
 
 Override Jest resolver to enforce resolving web implementation of React Native Worklets instead of pulling the native one. Modify your `jest.config.js` file to include the following code:
 
@@ -971,7 +971,7 @@ The JavaScript value to be converted into a Serializable reference. It must be o
 # URL: https://docs.swmansion.com/react-native-worklets/docs/memory/createSynchronizable
 # Title: createSynchronizable
 
-# createSynchronizable&#x20;
+# createSynchronizable
 
 Creates a new [Synchronizable](/docs/memory/synchronizable) holding the provided initial value. Returns the created Synchronizable.
 
@@ -1040,7 +1040,7 @@ The value to be checked.
 # URL: https://docs.swmansion.com/react-native-worklets/docs/memory/isSynchronizable
 # Title: isSynchronizable
 
-# isSynchronizable&#x20;
+# isSynchronizable
 
 Asserts whether a value is a [Synchronizable](/docs/memory/synchronizable).
 
@@ -1211,7 +1211,7 @@ function makeShareableCloneRecursive<T>(value: T): ShareableRef<T> {
 # URL: https://docs.swmansion.com/react-native-worklets/docs/memory/registerCustomSerializable
 # Title: registerCustomSerializable
 
-# registerCustomSerializable&#x20;
+# registerCustomSerializable
 
 `registerCustomSerializable` lets you register your own pre-serialization and post-deserialization logic. This is necessary for objects with prototypes different than just `Object.prototype` or some other built-in prototypes like `Map` etc. Worklets can't handle such objects by default to convert into [Serializables](/docs/memory/serializable) hence you need to register them as **Custom Serializables**. This way you can tell Worklets how to transfer your custom data structures between different Runtimes without manually serializing and deserializing them every time.
 
@@ -1354,7 +1354,7 @@ flowchart TD
 
 ## Remarks
 
-* To use Custom Serializables which require `new` keyword for instantiation, you need to [disable Worklet Classes](/docs/worklets-babel-plugin/plugin-options#disableworkletclasses-) option in Worklets Babel plugin configuration.
+* To use Custom Serializables which require `new` keyword for instantiation, you need to [disable Worklet Classes](/docs/worklets-babel-plugin/plugin-options#disableworkletclasses) option in Worklets Babel plugin configuration.
 * Custom Serializables are global and shared between all [Worklet Runtimes](/docs/fundamentals/runtimeKinds#worklet-runtime). Once you register a Custom Serializable, it will be available in all Runtimes.
 * You can use `registerCustomSerializable` only on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
 
@@ -1397,7 +1397,7 @@ If you want to transfer objects with custom prototypes across Runtimes, you can 
 # URL: https://docs.swmansion.com/react-native-worklets/docs/memory/synchronizable
 # Title: Synchronizable
 
-# Synchronizable&#x20;
+# Synchronizable
 
 Synchronizable is a type of shared memory not tied to any JavaScript Runtime. It can be accessed from any JavaScript Runtime and C++. The value held by Synchronizable behaves like a standard JavaScript value.
 
@@ -1760,7 +1760,7 @@ A reference to a function you want to execute on the [UI thread](/docs/fundament
 # URL: https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRuntimeAsync
 # Title: runOnRuntimeAsync
 
-# runOnRuntimeAsync&#x20;
+# runOnRuntimeAsync
 
 `runOnRuntimeAsync` lets you asynchronously run [worklets](/docs/fundamentals/glossary#worklet) on a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
 It returns a Promise of the worklet's return value. The Promise is resolved asynchronously, not immediately after the callback execution.
@@ -1849,7 +1849,7 @@ async function performHeavyComputation(data: number[]) {
 # URL: https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRuntimeSync
 # Title: runOnRuntimeSync
 
-# runOnRuntimeSync&#x20;
+# runOnRuntimeSync
 
 `runOnRuntimeSync` lets you run a [workletized](/docs/fundamentals/glossary#to-workletize) function synchronously on a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime). It's blocking - meaning that it can preempt the runtime from a thread that's currently executing it.
 
@@ -2398,7 +2398,7 @@ Be aware that accessing the global variable `__RUNTIME_KIND` before importing an
 # URL: https://docs.swmansion.com/react-native-worklets/docs/utility/isRNRuntime
 # Title: isRNRuntime
 
-# isRNRuntime&#x20;
+# isRNRuntime
 
 Checks if the current runtime is the [React Native Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
 
@@ -2444,7 +2444,7 @@ function isRNRuntime(): boolean;
 # URL: https://docs.swmansion.com/react-native-worklets/docs/utility/isUIRuntime
 # Title: isUIRuntime
 
-# isUIRuntime&#x20;
+# isUIRuntime
 
 Checks if the current runtime is the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime).
 
@@ -2490,7 +2490,7 @@ function isUIRuntime(): boolean;
 # URL: https://docs.swmansion.com/react-native-worklets/docs/utility/isWorkerRuntime
 # Title: isWorkerRuntime
 
-# isWorkerRuntime&#x20;
+# isWorkerRuntime
 
 Checks if the current runtime is a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
 
@@ -2631,7 +2631,7 @@ A function to check if it is a worklet function.
 # URL: https://docs.swmansion.com/react-native-worklets/docs/utility/isWorkletRuntime
 # Title: isWorkletRuntime
 
-# isWorkletRuntime&#x20;
+# isWorkletRuntime
 
 Checks if the current runtime is a [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime), either the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime) or a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
 
@@ -3072,7 +3072,7 @@ Defaults to `false`.
 
 This option turns off the source map generation for worklets. Mostly used for testing purposes.
 
-### disableWorkletClasses&#x20;
+### disableWorkletClasses
 
 Defaults to `false`.
 
@@ -3168,7 +3168,7 @@ Defaults to `false`.
 
 This option dictates the passed file location for a worklet's source map. If you enable this option, the file paths will be relative to `process.cwd` (the current directory where Babel executes). This can be handy for Jest test snapshots to ensure consistent results across machines.
 
-### strictGlobal&#x20;
+### strictGlobal
 
 > **Note**
 >

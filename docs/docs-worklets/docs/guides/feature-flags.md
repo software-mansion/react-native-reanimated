@@ -10,9 +10,9 @@ Feature flags allow developers to opt-in for experimental changes or opt-out fro
 
 | Feature flag name                                                  |              Type               | Added in | Removed in | Default value |
 | ------------------------------------------------------------------ | :-----------------------------: | :------: | :--------: | :-----------: |
-| [`BUNDLE_MODE_ENABLED`](#bundle_mode_enabled-)                     | [static](#static-feature-flags) |  0.8.0   |  &ndash;   |    `false`    |
-| [`FETCH_PREVIEW_ENABLED`](#fetch_preview_enabled-)                 | [static](#static-feature-flags) |  0.8.0   |  &ndash;   |    `false`    |
-| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled-) | [static](#static-feature-flags) |  0.6.0   |  &ndash;   |    `true`     |
+| [`BUNDLE_MODE_ENABLED`](#bundle_mode_enabled)                     | [static](#static-feature-flags) |  0.8.0   |  &ndash;   |    `false`    |
+| [`FETCH_PREVIEW_ENABLED`](#fetch_preview_enabled)                 | [static](#static-feature-flags) |  0.8.0   |  &ndash;   |    `false`    |
+| [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled) | [static](#static-feature-flags) |  0.6.0   |  &ndash;   |    `true`     |
 
 :::info
 

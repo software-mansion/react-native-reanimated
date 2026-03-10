@@ -1,4 +1,4 @@
-# isUIRuntime&#x20;
+# isUIRuntime
 
 Checks if the current runtime is the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime).
 

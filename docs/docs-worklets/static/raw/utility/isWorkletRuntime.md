@@ -1,4 +1,4 @@
-# isWorkletRuntime&#x20;
+# isWorkletRuntime
 
 Checks if the current runtime is a [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime), either the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime) or a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
 

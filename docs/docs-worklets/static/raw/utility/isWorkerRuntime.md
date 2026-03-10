@@ -1,4 +1,4 @@
-# isWorkerRuntime&#x20;
+# isWorkerRuntime
 
 Checks if the current runtime is a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
 

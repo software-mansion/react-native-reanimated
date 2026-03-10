@@ -1,4 +1,4 @@
-# createSynchronizable&#x20;
+# createSynchronizable
 
 Creates a new [Synchronizable](/docs/memory/synchronizable) holding the provided initial value. Returns the created Synchronizable.
 

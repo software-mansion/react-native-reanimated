@@ -1,4 +1,4 @@
-# isSynchronizable&#x20;
+# isSynchronizable
 
 Asserts whether a value is a [Synchronizable](/docs/memory/synchronizable).
 
