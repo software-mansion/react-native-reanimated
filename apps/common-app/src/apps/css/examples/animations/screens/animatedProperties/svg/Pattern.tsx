@@ -61,6 +61,8 @@ export default function PatternExample() {
           name: 'Position',
           sections: [
             {
+              description:
+                '**x** property does not work on **Android** (not only in animations but also in regular inline styles)',
               examples: [
                 {
                   description:
@@ -92,13 +94,16 @@ export default function PatternExample() {
                 },
                 {
                   description: MIXED_UNITS_NOTE,
-                  keyframes: { from: { x: 15 }, to: { x: '30%' } },
+                  keyframes: { from: { x: 20 }, to: { x: '5%' } },
                   title: 'Mixed',
                 },
               ],
+              labelTypes: ['iOS'],
               title: 'X Offset',
             },
             {
+              description:
+                '**y** property does not work on **Android** (not only in animations but also in regular inline styles)',
               examples: [
                 {
                   description:
@@ -130,10 +135,11 @@ export default function PatternExample() {
                 },
                 {
                   description: MIXED_UNITS_NOTE,
-                  keyframes: { from: { y: 15 }, to: { y: '30%' } },
+                  keyframes: { from: { y: 20 }, to: { y: '5%' } },
                   title: 'Mixed',
                 },
               ],
+              labelTypes: ['iOS'],
               title: 'Y Offset',
             },
           ],
