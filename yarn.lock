@@ -7600,6 +7600,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native/jest-preset@patch:@react-native/jest-preset@npm%3A0.85.0-rc.1#~/.yarn/patches/@react-native-jest-preset-npm-0.85.0-rc.1-b8e9692393.patch":
+  version: 0.85.0-rc.1
+  resolution: "@react-native/jest-preset@patch:@react-native/jest-preset@npm%3A0.85.0-rc.1#~/.yarn/patches/@react-native-jest-preset-npm-0.85.0-rc.1-b8e9692393.patch::version=0.85.0-rc.1&hash=9d56ea"
+  dependencies:
+    "@jest/create-cache-key-function": "npm:^29.7.0"
+    "@react-native/js-polyfills": "npm:0.85.0-rc.1"
+    babel-jest: "npm:^29.7.0"
+    jest-environment-node: "npm:^29.7.0"
+    regenerator-runtime: "npm:^0.13.2"
+  peerDependencies:
+    react: ^19.2.3
+  checksum: 10/09447884e71b06e226a2534ceda2bedc9b8eeaafc51ab80b00e9216c11a10a4983b2cad465e3fabd87609d7311c8785687de885d60c8ff1bfb8c9d65f44a9f98
+  languageName: node
+  linkType: hard
+
 "@react-native/js-polyfills@npm:0.79.6":
   version: 0.79.6
   resolution: "@react-native/js-polyfills@npm:0.79.6"
@@ -28319,7 +28334,7 @@ __metadata:
     "@babel/preset-env": "npm:7.28.3"
     "@react-native/babel-preset": "npm:0.85.0-rc.1"
     "@react-native/eslint-config": "npm:0.85.0-rc.1"
-    "@react-native/jest-preset": "npm:0.85.0-rc.1"
+    "@react-native/jest-preset": "patch:@react-native/jest-preset@npm%3A0.85.0-rc.1#~/.yarn/patches/@react-native-jest-preset-npm-0.85.0-rc.1-b8e9692393.patch"
     "@react-native/metro-config": "npm:0.85.0-rc.1"
     "@react-native/typescript-config": "npm:0.85.0-rc.1"
     "@shopify/flash-list": "npm:2.1.0"
@@ -28489,7 +28504,7 @@ __metadata:
     "@babel/preset-typescript": "npm:7.27.1"
     "@react-native-community/cli": "npm:20.1.0"
     "@react-native/eslint-config": "npm:0.83.0"
-    "@react-native/jest-preset": "npm:0.85.0-rc.1"
+    "@react-native/jest-preset": "patch:@react-native/jest-preset@npm%3A0.85.0-rc.1#~/.yarn/patches/@react-native-jest-preset-npm-0.85.0-rc.1-b8e9692393.patch"
     "@types/jest": "npm:30.0.0"
     "@types/node": "npm:24.7.0"
     "@types/react": "npm:19.2.2"
