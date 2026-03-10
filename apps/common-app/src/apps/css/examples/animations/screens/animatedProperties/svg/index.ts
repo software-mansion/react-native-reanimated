@@ -6,8 +6,11 @@ import Image from './Image';
 import Line from './Line';
 import LinearGradient from './LinearGradient';
 import Path from './Path';
+import Polygon from './Polygon';
+import Polyline from './Polyline';
 import RadialGradient from './RadialGradient';
 import Rect from './Rect';
+import Text from './Text';
 
 export default {
   Circle,
@@ -18,6 +21,9 @@ export default {
   Line,
   LinearGradient,
   Path,
+  Polygon,
+  Polyline,
   RadialGradient,
   Rect,
+  Text,
 };

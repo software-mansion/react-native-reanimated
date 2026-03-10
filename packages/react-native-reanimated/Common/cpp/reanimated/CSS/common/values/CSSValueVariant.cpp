@@ -7,8 +7,8 @@
 #include <reanimated/CSS/common/values/CSSNumber.h>
 #include <reanimated/CSS/common/values/CSSValueVariant.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
+#include <reanimated/CSS/svg/values/CSSLengthArray.h>
 #include <reanimated/CSS/svg/values/SVGBrush.h>
-#include <reanimated/CSS/svg/values/SVGLength.h>
 #include <reanimated/CSS/svg/values/SVGPath.h>
 #include <reanimated/CSS/svg/values/SVGStops.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
@@ -166,9 +166,8 @@ template class CSSValueVariant<CSSDisplay>;
 template class CSSValueVariant<CSSBoxShadow>;
 template class CSSValueVariant<CSSDiscreteArray<CSSKeyword>>;
 
-template class CSSValueVariant<SVGLength>;
-template class CSSValueVariant<SVGLength, CSSKeyword>;
 template class CSSValueVariant<SVGPath>;
+template class CSSValueVariant<CSSLengthArray>;
 template class CSSValueVariant<SVGStops>;
 template class CSSValueVariant<SVGStrokeDashArray, CSSKeyword>;
 template class CSSValueVariant<SVGBrush>;

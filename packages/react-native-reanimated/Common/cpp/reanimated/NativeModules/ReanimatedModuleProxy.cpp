@@ -1,4 +1,3 @@
-#include <jsi/jsi.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <reanimated/Events/UIEventHandler.h>
@@ -363,26 +362,27 @@ void ReanimatedModuleProxy::unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::V
 void ReanimatedModuleProxy::registerCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
-    const jsi::Value &reactViewName,
+    const jsi::Value &compoundComponentName,
     const jsi::Value &keyframesConfig) {
-  const auto nativeComponentName = componentNameByReactViewName(reactViewName.asString(rt).utf8(rt));
+  const auto compoundComponentNameStr = compoundComponentName.asString(rt).utf8(rt);
   cssAnimationKeyframesRegistry_->set(
       animationName.asString(rt).utf8(rt),
-      nativeComponentName,
-      parseCSSAnimationKeyframesConfig(rt, keyframesConfig, nativeComponentName, viewStylesRepository_));
+      compoundComponentNameStr,
+      parseCSSAnimationKeyframesConfig(rt, keyframesConfig, compoundComponentNameStr, viewStylesRepository_));
 }
 
 void ReanimatedModuleProxy::unregisterCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
-    const jsi::Value &reactViewName) {
+    const jsi::Value &compoundComponentName) {
   cssAnimationKeyframesRegistry_->remove(
-      animationName.asString(rt).utf8(rt), componentNameByReactViewName(reactViewName.asString(rt).utf8(rt)));
+      animationName.asString(rt).utf8(rt), compoundComponentName.asString(rt).utf8(rt));
 }
 
 void ReanimatedModuleProxy::applyCSSAnimations(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &compoundComponentName,
     const jsi::Value &animationUpdates) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto timestamp = getCssTimestamp();
@@ -401,10 +401,20 @@ void ReanimatedModuleProxy::applyCSSAnimations(
       }
 
       const auto &animationName = animationNames[index];
-      const auto &keyframesConfig = cssAnimationKeyframesRegistry_->get(animationName, shadowNode->getComponentName());
+      const auto nativeComponentName = shadowNode->getComponentName();
+      const auto compoundComponentNameStr = compoundComponentName.asString(rt).utf8(rt);
+      const auto keyframesConfigOpt = cssAnimationKeyframesRegistry_->get(animationName, compoundComponentNameStr);
+
+      if (!keyframesConfigOpt) {
+        throw std::runtime_error(
+            "[Reanimated] No keyframes with name `" + animationName + "` were registered for component `" +
+            splitCompoundComponentName(compoundComponentNameStr).second + "` (" + nativeComponentName + ")");
+      }
 
       newAnimations.emplace(
-          index, std::make_shared<CSSAnimation>(rt, shadowNode, animationName, keyframesConfig, settings, timestamp));
+          index,
+          std::make_shared<CSSAnimation>(
+              rt, shadowNode, animationName, keyframesConfigOpt->get(), settings, timestamp));
     }
   }
 

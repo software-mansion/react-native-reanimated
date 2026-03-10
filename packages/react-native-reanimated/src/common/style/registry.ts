@@ -25,29 +25,41 @@ const PATTERN_PROPS_BUILDERS: Array<{
   entry: PropsBuilderEntry;
 }> = [];
 
-function findEntry(componentName: string): PropsBuilderEntry | undefined {
-  // 1. Exact component name match
-  const exact = PROPS_BUILDERS.get(componentName);
+function findEntry(compoundComponentName: string): PropsBuilderEntry | null {
+  const [reactViewName] = compoundComponentName.split('$');
+
+  const exact =
+    PROPS_BUILDERS.get(compoundComponentName) ??
+    PROPS_BUILDERS.get(reactViewName);
   if (exact) {
     return exact;
   }
 
-  // 2. Pattern matches in registration order
+  // Pattern matches in registration order
   for (const { matcher, entry } of PATTERN_PROPS_BUILDERS) {
     const matches =
       matcher instanceof RegExp
-        ? matcher.test(componentName)
-        : matcher(componentName);
+        ? matcher.test(compoundComponentName) || matcher.test(reactViewName)
+        : matcher(compoundComponentName) || matcher(reactViewName);
     if (matches) {
       return entry;
     }
   }
 
-  return undefined;
+  return null;
 }
 
-export function getPropsBuilder(componentName: string): NativePropsBuilder {
-  return findEntry(componentName)?.builder ?? stylePropsBuilder;
+export function getCompoundComponentName(
+  reactViewName: string,
+  componentDisplayName: string
+): string {
+  return `${reactViewName}$${componentDisplayName}`;
+}
+
+export function getPropsBuilder(
+  compoundComponentName: string
+): NativePropsBuilder {
+  return findEntry(compoundComponentName)?.builder ?? stylePropsBuilder;
 }
 
 export function registerComponentPropsBuilder<P extends UnknownRecord>(
@@ -73,10 +85,10 @@ export function registerComponentPropsBuilder<P extends UnknownRecord>(
 }
 
 export function getSeparatelyInterpolatedNestedProperties(
-  componentName: string
+  compoundComponentName: string
 ): ReadonlySet<string> {
   return (
-    findEntry(componentName)?.separatelyInterpolatedNestedProperties ??
+    findEntry(compoundComponentName)?.separatelyInterpolatedNestedProperties ??
     DEFAULT_SEPARATELY_INTERPOLATED_NESTED_PROPERTIES
   );
 }

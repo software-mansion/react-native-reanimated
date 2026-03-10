@@ -51,7 +51,7 @@ export default function EllipseExample() {
                 },
                 {
                   description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the ellipse radii are changed **abruptly**',
+                    'Smoothly interpolates between absolute and percentage values by resolving them to the same unit',
                   keyframes: {
                     from: {
                       rx: 10,
@@ -107,7 +107,7 @@ export default function EllipseExample() {
                 },
                 {
                   description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the horizontal radius is changed **abruptly**',
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
                       rx: 10,
@@ -146,7 +146,7 @@ export default function EllipseExample() {
                 },
                 {
                   description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the vertical radius is changed **abruptly**',
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
                       ry: 10,
@@ -190,7 +190,7 @@ export default function EllipseExample() {
                 },
                 {
                   description:
-                    'Interpolation between absolute and relative values is not supported in SVG, thus the ellipse position is changed abruptly',
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
                       cx: 50,
@@ -229,7 +229,7 @@ export default function EllipseExample() {
                 },
                 {
                   description:
-                    'Interpolation between absolute and relative values is not supported in SVG, thus the ellipse position is changed abruptly',
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
                       cy: 50,

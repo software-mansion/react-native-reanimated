@@ -1,5 +1,5 @@
 'use strict';
-import { renderHook } from '@testing-library/react-native';
+import { renderHook } from '@testing-library/react';
 
 import { logger } from '../../common';
 import { worklet } from '../../jestUtils';

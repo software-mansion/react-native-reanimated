@@ -51,8 +51,8 @@ void ValueInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyf
 }
 
 bool ValueInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &fromValue, const jsi::Value &toValue) {
-  auto from = fromValue.isNull() ? defaultStyleValue_ : createValue(rt, fromValue);
-  auto to = toValue.isNull() ? defaultStyleValue_ : createValue(rt, toValue);
+  auto from = fromValue.isUndefined() ? defaultStyleValue_ : createValue(rt, fromValue);
+  auto to = toValue.isUndefined() ? defaultStyleValue_ : createValue(rt, toValue);
 
   const auto equalsReversingAdjustedStartValue = reversingAdjustedStartValue_ && (*to == *reversingAdjustedStartValue_);
   reversingAdjustedStartValue_ = keyframes_.empty() ? from : keyframes_[1].value.value();

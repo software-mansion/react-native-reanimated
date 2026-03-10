@@ -1,10 +1,9 @@
-
 #pragma once
 
 #include <cxxreact/MessageQueueThread.h>
+#include <jsi/jsi.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
-
 #include <worklets/SharedItems/MemoryManager.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/Defs.h>
@@ -12,12 +11,6 @@
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
-
-#ifdef __ANDROID__
-#include <fbjni/fbjni.h>
-#endif // __ANDROID__
-
-#include <jsi/jsi.h>
 
 #include <memory>
 #include <string>
