@@ -159,7 +159,7 @@ const ringPart = css.keyframes({
 
 const ringStyles = css.create({
   part: {
-    ...StyleSheet.absoluteFill,
+    ...(StyleSheet.absoluteFill as object),
     animationDuration: '1.2s',
     animationIterationCount: 'infinite',
     animationName: ringPart,
@@ -455,7 +455,7 @@ const dualRing = css.keyframes({
 
 const dualRingStyles = css.create({
   ring: {
-    ...StyleSheet.absoluteFill,
+    ...(StyleSheet.absoluteFill as object),
     animationDuration: '0.6s',
     animationIterationCount: 'infinite',
     animationName: dualRing,
@@ -573,7 +573,7 @@ const doublePulse = css.keyframes({
 
 const doublePulseStyles = css.create({
   pulse: {
-    ...StyleSheet.absoluteFill,
+    ...(StyleSheet.absoluteFill as object),
     animationDuration: '1.5s',
     animationIterationCount: 'infinite',
     animationName: doublePulse,
@@ -778,7 +778,7 @@ const diamondStyles = css.create({
     justifyContent: 'center',
   },
   part: {
-    ...StyleSheet.absoluteFill,
+    ...(StyleSheet.absoluteFill as object),
     animationDuration: '2.4s',
     animationIterationCount: 'infinite',
     animationName: diamond,

@@ -41,7 +41,8 @@ jobs:
             echo "REACT_NATIVE_TAG=next" >> $GITHUB_ENV
           fi
       - name: Install React Native CLI
-        run: yarn add @react-native-community/cli
+        # temporary version lock due to bug in version 20.1.2
+        run: yarn add @react-native-community/cli@20.1.1
       - name: Create app
         run: yarn rnc-cli init ${{ env.APP_NAME }} --version ${{ env.REACT_NATIVE_TAG }} --pm yarn --skip-install --install-pods false --skip-git-init
       - name: Setup Yarn Modern in app

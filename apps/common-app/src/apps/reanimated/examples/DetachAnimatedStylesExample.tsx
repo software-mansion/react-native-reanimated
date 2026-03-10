@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Button, StyleSheet, View } from 'react-native';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   interpolateColor,
   useAnimatedStyle,
@@ -56,6 +56,11 @@ export default function DetachAnimatedStylesExample() {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.text}>
+        This example demonstrates that you can&apos;t detach animated styles
+        from a component once they are applied as it will lead to undefined
+        behavior.
+      </Text>
       <Animated.View
         style={[
           styles.box,
@@ -90,5 +95,9 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     backgroundColor: 'black',
+  },
+  text: {
+    padding: 20,
+    textAlign: 'justify',
   },
 });
