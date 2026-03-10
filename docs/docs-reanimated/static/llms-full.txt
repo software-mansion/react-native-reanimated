@@ -3501,7 +3501,7 @@ Hook `useAnimatedKeyboard` returns an object containing these fields:
 
 * On Android SDK \< 30, when status bar is hidden, the keyboard reverts to the default Android behavior.
 
-* &#x20;On iPad, when the keyboard is floating, the
+- On iPad, when the keyboard is floating, the
   hook will always return height: 0
   and state: CLOSED.
 
