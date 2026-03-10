@@ -327,9 +327,10 @@
   --swm-markdown-copy-button-background-hover: var(--swm-navy-light-10);
   --swm-markdown-copy-button-item-color: var(--swm-navy-light-60);
   --swm-markdown-copy-button-item-background: var(--swm-background);
-  --swm-markdown-copy-button-item-background-hover: var(--ifm-color-emphasis-100);
+  --swm-markdown-copy-button-item-background-hover: var(
+    --ifm-color-emphasis-100
+  );
   --swm-markdown-copy-button-item-color-hover: var(--swm-navy-light-100);
-
 
   /* Badges */
   --swm-platform-badge-background: var(--swm-green-dark-120);
@@ -540,7 +541,9 @@
   --swm-markdown-copy-button-background-hover: var(--ifm-color-emphasis-100);
   --swm-markdown-copy-button-item-color: var(--swm-navy-light-40);
   --swm-markdown-copy-button-item-background: var(--swm-background);
-  --swm-markdown-copy-button-item-background-hover: var(--ifm-color-emphasis-100);
+  --swm-markdown-copy-button-item-background-hover: var(
+    --ifm-color-emphasis-100
+  );
   --swm-markdown-copy-button-item-color-hover: var(--swm-off-white);
 
   /* Badges */
