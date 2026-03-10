@@ -38,6 +38,11 @@ void UpdatesRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
   }
 }
 
+UpdatesBatch UpdatesRegistry::getPendingUpdates() const {
+  std::lock_guard<std::mutex> lock{mutex_};
+  return updatesBatch_;
+}
+
 void UpdatesRegistry::collectProps(PropsMap &propsMap) {
   std::lock_guard<std::mutex> lock{mutex_};
 

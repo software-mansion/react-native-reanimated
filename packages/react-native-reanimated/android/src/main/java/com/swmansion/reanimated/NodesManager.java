@@ -43,6 +43,7 @@ public class NodesManager implements EventDispatcherListener {
   private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
   private double lastFrameTimeMs;
   private FabricUIManager mFabricUIManager;
+  private final DrawPassDetector mDrawPassDetector;
 
   public NativeProxy getNativeProxy() {
     return mNativeProxy;
@@ -55,6 +56,8 @@ public class NodesManager implements EventDispatcherListener {
       mNativeProxy.invalidate();
       mNativeProxy = null;
     }
+
+    mDrawPassDetector.invalidate();
 
     if (mFabricUIManager != null) {
       mFabricUIManager.getEventDispatcher().removeListener(this);
@@ -80,6 +83,7 @@ public class NodesManager implements EventDispatcherListener {
 
     mNativeProxy = new NativeProxy(context, this);
     mFabricUIManager = (FabricUIManager) uiManager;
+    mDrawPassDetector = new DrawPassDetector(context);
     mFabricUIManager.getEventDispatcher().addListener(this);
   }
 
@@ -114,11 +118,32 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
-  public void performOperations(boolean isTriggeredByEvent) {
+  public void performOperations() {
     UiThreadUtil.assertOnUiThread();
     if (mNativeProxy != null) {
-      mNativeProxy.performOperations(isTriggeredByEvent);
+      mNativeProxy.performOperations();
     }
+  }
+
+  void performNonLayoutOperations() {
+    UiThreadUtil.assertOnUiThread();
+    if (mNativeProxy != null) {
+      mNativeProxy.performNonLayoutOperations();
+    }
+  }
+
+  void performOperationsRespectingDrawPass() {
+    if (isInDrawPass()) {
+      performNonLayoutOperations();
+      startUpdatingOnAnimationFrame();
+      return;
+    }
+
+    performOperations();
+  }
+
+  boolean isInDrawPass() {
+    return mDrawPassDetector.isInDrawPass();
   }
 
   private void onAnimationFrame(long frameTimeNanos) {
@@ -128,6 +153,8 @@ public class NodesManager implements EventDispatcherListener {
       if (BuildConfig.REANIMATED_PROFILING) {
         Trace.beginSection("onAnimationFrame");
       }
+
+      mDrawPassDetector.initialize();
 
       double currentFrameTimeMs = frameTimeNanos / 1000000.;
       if (mSlowAnimationsEnabled) {
@@ -154,7 +181,7 @@ public class NodesManager implements EventDispatcherListener {
           }
         }
 
-        performOperations(false);
+        performOperations();
       }
 
       mCallbackPosted.set(false);
@@ -187,8 +214,9 @@ public class NodesManager implements EventDispatcherListener {
       // Events can be dispatched from any thread so we have to make sure handleEvent is run from
       // the UI thread.
       if (UiThreadUtil.isOnUiThread()) {
+        mDrawPassDetector.initialize();
         handleEvent(event);
-        performOperations(true);
+        performOperationsRespectingDrawPass();
       } else {
         String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
         int viewTag = event.getViewTag();
