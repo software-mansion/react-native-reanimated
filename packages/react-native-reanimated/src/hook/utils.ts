@@ -175,6 +175,7 @@ export function validateAnimatedStyles(styles: unknown[] | object) {
   }
 }
 
+// Detects fast refresh by comparing useMemo (reset on refresh) with useRef (preserved on refresh).
 export function useHasFastRefreshed() {
   const fastRefreshSignal = useMemo(() => ({}), []);
   const prevSignalRef = useRef(fastRefreshSignal);
