@@ -4,6 +4,7 @@ import { isWorkletFunction } from 'react-native-worklets';
 
 import { IS_WEB, logger, ReanimatedError } from '../common';
 import type { DependencyList } from './commonTypes';
+import { useMemo, useRef } from 'react';
 
 // Builds one big hash from multiple worklets' hashes.
 export function buildWorkletsHash<Args extends unknown[], ReturnValue>(
@@ -172,4 +173,17 @@ export function validateAnimatedStyles(styles: unknown[] | object) {
       '`useAnimatedStyle` has to return an object and cannot return static styles combined with dynamic ones. Please do merging where a component receives props.'
     );
   }
+}
+
+export function useHasFastRefreshed() {
+  const fastRefreshSignal = useMemo(() => ({}), []);
+  const prevSignalRef = useRef(fastRefreshSignal);
+
+  const isFastRefresh = prevSignalRef.current !== fastRefreshSignal;
+
+  if (isFastRefresh) {
+    prevSignalRef.current = fastRefreshSignal;
+  }
+
+  return isFastRefresh;
 }
