@@ -172,7 +172,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     return strongThis->obtainProp(rt, shadowNodeWrapper, propName);
   };
 
-  jsi::Runtime &uiRuntime = *getJSIRuntimeFromWorkletRuntime(uiRuntime_);
+  jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   UIRuntimeDecorator::decorate(
       uiRuntime,
       obtainProp,
@@ -251,7 +251,7 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
     if (!strongThis) {
       return;
     }
-    jsi::Runtime &uiRuntime = *getJSIRuntimeFromWorkletRuntime(strongThis->uiRuntime_);
+    jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(strongThis->uiRuntime_);
     const auto resultStr = strongThis->obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
 
     strongThis->jsInvoker_->invokeAsync([=](jsi::Runtime &rnRuntime) {
@@ -506,7 +506,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     if (eventType == "onTransitionProgress") {
-      jsi::Runtime &uiRuntime = *getJSIRuntimeFromWorkletRuntime(uiRuntime_);
+      jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
       const auto &eventPayload = rawEvent.eventPayload;
       jsi::Object payload = eventPayload->asJSIValue(uiRuntime).asObject(uiRuntime);
       auto progress = payload.getProperty(uiRuntime, "progress").asNumber();
@@ -543,7 +543,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
     return false;
   }
 
-  jsi::Runtime &uiRuntime = *getJSIRuntimeFromWorkletRuntime(uiRuntime_);
+  jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   const auto &eventPayload = rawEvent.eventPayload;
   jsi::Value payload = eventPayload->asJSIValue(uiRuntime);
 
@@ -612,7 +612,7 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
     }
   }
 
-  jsi::Runtime &uiRuntime = *getJSIRuntimeFromWorkletRuntime(uiRuntime_);
+  jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
 
   UpdatesBatch updatesBatch;
   {
@@ -1213,7 +1213,7 @@ void ReanimatedModuleProxy::dispatchCommand(
 
 jsi::String
 ReanimatedModuleProxy::obtainProp(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &propName) {
-  jsi::Runtime &uiRuntime = *getJSIRuntimeFromWorkletRuntime(uiRuntime_);
+  jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   const auto propNameStr = propName.asString(rt).utf8(rt);
   const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto resultStr = obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
@@ -1283,7 +1283,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
           layoutAnimationsManager_,
           componentDescriptorRegistry,
           scheduler->getContextContainer(),
-          *getJSIRuntimeFromWorkletRuntime(uiRuntime_),
+          getJSIRuntimeFromWorkletRuntime(uiRuntime_),
           uiScheduler_
 #ifdef ANDROID
           ,
@@ -1301,7 +1301,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
           layoutAnimationsManager_,
           componentDescriptorRegistry,
           scheduler->getContextContainer(),
-          *getJSIRuntimeFromWorkletRuntime(uiRuntime_),
+          getJSIRuntimeFromWorkletRuntime(uiRuntime_),
           uiScheduler_
 #ifdef ANDROID
           ,

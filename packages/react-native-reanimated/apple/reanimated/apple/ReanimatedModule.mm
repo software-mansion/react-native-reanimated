@@ -161,7 +161,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   auto reanimatedModuleProxy = reanimated::createReanimatedModuleProxy(
       _nodesManager, _moduleRegistry, rnRuntime, jsCallInvoker, uiWorkletRuntime, uiScheduler);
 
-  auto &uiRuntime = *getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
+  auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
   RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy);
   [self attachReactEventListener:reanimatedModuleProxy];
 

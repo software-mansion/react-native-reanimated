@@ -11,7 +11,7 @@
 
 namespace worklets {
 
-std::string JSIValueToString(facebook::jsi::Runtime &rt, const facebook::jsi::Value &value) {
+std::string JSIValueToStdString(facebook::jsi::Runtime &rt, const facebook::jsi::Value &value) {
   return worklets::stringifyJSIValue(rt, value);
 }
 
@@ -19,8 +19,8 @@ void scheduleOnUI(const std::shared_ptr<UIScheduler> &uiScheduler, const std::fu
   uiScheduler->scheduleOnUI(job);
 }
 
-facebook::jsi::Runtime *getJSIRuntimeFromWorkletRuntime(const std::shared_ptr<WorkletRuntime> &workletRuntime) {
-  return &(workletRuntime->getJSIRuntime());
+facebook::jsi::Runtime &getJSIRuntimeFromWorkletRuntime(const std::shared_ptr<WorkletRuntime> &workletRuntime) {
+  return workletRuntime->getJSIRuntime();
 }
 
 std::weak_ptr<WorkletRuntime> getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {

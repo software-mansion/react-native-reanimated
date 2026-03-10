@@ -77,7 +77,7 @@ void UIEventHandlerRegistry::processEvent(
     }
   }
 
-  jsi::Runtime &uiRuntime = *getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
+  jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
   eventPayload.asObject(uiRuntime).setProperty(
       uiRuntime, "eventName", jsi::String::createFromUtf8(uiRuntime, eventName));
   for (const auto &handler : handlersForEvent) {

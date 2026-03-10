@@ -115,7 +115,7 @@ void NativeProxy::injectCppVersion() {
 
 void NativeProxy::installJSIBindings() {
   jsi::Runtime &rnRuntime = *rnRuntime_;
-  auto &uiRuntime = *getJSIRuntimeFromWorkletRuntime(uiRuntime_);
+  auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy_);
 }
 
@@ -254,7 +254,7 @@ void NativeProxy::handleEvent(
     return;
   }
 
-  auto &uiRuntime = *getJSIRuntimeFromWorkletRuntime(uiRuntime_);
+  auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   jsi::Value payload;
   try {
     payload = jsi::Value::createFromJsonUtf8(uiRuntime, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());

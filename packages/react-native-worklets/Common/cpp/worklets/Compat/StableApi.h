@@ -67,13 +67,13 @@ extern std::shared_ptr<UIScheduler> getUISchedulerFromHolder(
     facebook::jsi::Runtime &rt,
     const facebook::jsi::Object &object);
 
-extern facebook::jsi::Runtime *getJSIRuntimeFromWorkletRuntime(const std::shared_ptr<WorkletRuntime> &workletRuntime);
+extern facebook::jsi::Runtime &getJSIRuntimeFromWorkletRuntime(const std::shared_ptr<WorkletRuntime> &workletRuntime);
 
 extern std::weak_ptr<WorkletRuntime> getWeakRuntimeFromJSIRuntime(facebook::jsi::Runtime &rt);
 
 extern void scheduleOnUI(const std::shared_ptr<UIScheduler> &uiScheduler, const std::function<void()> &job);
 
-extern std::string JSIValueToString(facebook::jsi::Runtime &rt, const facebook::jsi::Value &value);
+extern std::string JSIValueToStdString(facebook::jsi::Runtime &rt, const facebook::jsi::Value &value);
 
 extern std::shared_ptr<Serializable>
 extractSerializable(facebook::jsi::Runtime &rt, const facebook::jsi::Value &value, const std::string &errorMessage);
