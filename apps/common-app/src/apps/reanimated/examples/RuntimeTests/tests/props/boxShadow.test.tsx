@@ -114,7 +114,6 @@ describe('animation of BoxShadow', () => {
     const passiveBoxShadowFinal = JSON.parse(
       await passiveComponent.getAnimatedStyle('boxShadow'),
     ) as unknown as BoxShadowValue[];
-
     const activeBoxShadowFinal = JSON.parse(
       await activeComponent.getAnimatedStyle('boxShadow'),
     ) as unknown as BoxShadowValue[];
