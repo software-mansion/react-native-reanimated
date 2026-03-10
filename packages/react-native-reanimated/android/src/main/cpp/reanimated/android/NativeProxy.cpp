@@ -127,8 +127,8 @@ bool NativeProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, cons
   return reanimatedModuleProxy_->isAnyHandlerWaitingForEvent(eventName, emitterReactTag);
 }
 
-void NativeProxy::performOperations(const bool isTriggeredByEvent) {
-  reanimatedModuleProxy_->performOperations(isTriggeredByEvent);
+void NativeProxy::performOperations() {
+  reanimatedModuleProxy_->performOperations();
 }
 
 void NativeProxy::performNonLayoutOperations() {

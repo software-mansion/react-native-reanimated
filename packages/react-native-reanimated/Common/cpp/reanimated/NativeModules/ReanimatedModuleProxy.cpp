@@ -627,7 +627,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   // (res == true), but for now handleEvent always returns false. Thankfully,
   // performOperations does not trigger a lot of code if there is nothing to
   // be done so this is fine for now.
-  performOperations(true);
+  performOperations();
   return res;
 }
 
@@ -676,15 +676,13 @@ double ReanimatedModuleProxy::getCssTimestamp() {
   return currentCssTimestamp_;
 }
 
-void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
+void ReanimatedModuleProxy::performOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
-  if (!isTriggeredByEvent) {
-    auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
-    for (const auto surfaceId : flushRequestsCopy) {
-      uiManager_->getShadowTreeRegistry().visit(
-          surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
-    }
+  auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
+  for (const auto surfaceId : flushRequestsCopy) {
+    uiManager_->getShadowTreeRegistry().visit(
+        surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
   }
 
   jsi::Runtime &uiRuntime = uiRuntime_->getJSIRuntime();

@@ -71,6 +71,7 @@ public class NodesManager implements EventDispatcherListener {
     assert uiManager != null;
     mCustomEventNamesResolver = uiManager::resolveCustomDirectEventName;
     mEventEmitter = context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
+    mDrawPassDetector = new DrawPassDetector(context);
 
     mReactChoreographer = ReactChoreographer.getInstance();
     mChoreographerCallback =
@@ -83,7 +84,6 @@ public class NodesManager implements EventDispatcherListener {
 
     mNativeProxy = new NativeProxy(context, this);
     mFabricUIManager = (FabricUIManager) uiManager;
-    mDrawPassDetector = new DrawPassDetector(context);
     mFabricUIManager.getEventDispatcher().addListener(this);
   }
 
