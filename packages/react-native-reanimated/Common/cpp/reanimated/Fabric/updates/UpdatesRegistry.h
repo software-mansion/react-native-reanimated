@@ -45,7 +45,6 @@ class UpdatesRegistry {
 #endif
 
   void flushUpdates(UpdatesBatch &updatesBatch);
-  UpdatesBatch getPendingUpdates() const;
   void collectProps(PropsMap &propsMap);
 
  protected:

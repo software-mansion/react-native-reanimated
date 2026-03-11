@@ -688,6 +688,7 @@ void ReanimatedModuleProxy::performOperations() {
   jsi::Runtime &uiRuntime = uiRuntime_->getJSIRuntime();
 
   UpdatesBatch updatesBatch;
+  std::swap(updatesBatch, deferredLayoutUpdatesBatch_);
   {
     ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
 
@@ -745,8 +746,13 @@ void ReanimatedModuleProxy::performOperations() {
 void ReanimatedModuleProxy::performNonLayoutOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performNonLayoutOperations");
 
-  auto updatesBatch = animatedPropsRegistry_->getPendingUpdates();
+  UpdatesBatch updatesBatch;
+  {
+    auto lock = animatedPropsRegistry_->lock();
+    animatedPropsRegistry_->flushUpdates(updatesBatch);
+  }
   applySynchronousUpdates(updatesBatch, true);
+  deferredLayoutUpdatesBatch_ = std::move(updatesBatch);
 }
 
 void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, const bool allowPartialUpdates) {
