@@ -1,8 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React from 'react';
-
-import { useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   interpolate,
@@ -11,7 +10,12 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 
-const Stack = createNativeStackNavigator();
+type AndroidDrawPassParamList = {
+  Description: undefined;
+  ScrollList: undefined;
+};
+
+const Stack = createNativeStackNavigator<AndroidDrawPassParamList>();
 const LIST_ITEM_COUNT = 80;
 
 export default function AndroidDrawPassExample() {
@@ -26,7 +30,8 @@ export default function AndroidDrawPassExample() {
 }
 
 function DescriptionScreen() {
-  const navigation = useNavigation();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<AndroidDrawPassParamList>>();
 
   return (
     <View style={descriptionStyles.centered}>
@@ -51,7 +56,7 @@ function DescriptionScreen() {
       </Text>
       <Button
         title="Go to scroll list"
-        onPress={() => navigation.navigate('ScrollList' as never)}
+        onPress={() => navigation.navigate('ScrollList')}
       />
     </View>
   );
