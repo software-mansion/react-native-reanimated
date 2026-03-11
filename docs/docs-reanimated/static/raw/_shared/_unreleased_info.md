@@ -1,3 +1,0 @@
-> **Info**
->
-> This page refers to changes that haven't been released yet. They will become available in the next minor release of Reanimated.
