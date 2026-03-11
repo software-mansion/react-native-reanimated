@@ -62,7 +62,7 @@ export default function CircleExample() {
                 },
                 {
                   description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the circle radius is changed **abruptly**',
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
                       r: 10,
@@ -106,7 +106,7 @@ export default function CircleExample() {
                 },
                 {
                   description:
-                    'Interpolation between absolute and relative values is not supported in SVG, thus the circle position is changed abruptly',
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
                       cx: 50,
@@ -145,7 +145,7 @@ export default function CircleExample() {
                 },
                 {
                   description:
-                    'Interpolation between absolute and relative values is not supported in SVG, thus the circle position is changed abruptly',
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
                       cy: 50,

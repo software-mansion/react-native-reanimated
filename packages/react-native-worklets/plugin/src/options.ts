@@ -1,7 +1,7 @@
 export interface PluginOptions {
   /**
    * Enables the [Bundle
-   * Mode](https://docs.swmansion.com/react-native-worklets/docs/experimental/bundle-mode).
+   * Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode).
    *
    * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#bundle-mode}
    *
@@ -72,6 +72,9 @@ export interface PluginOptions {
    */
   globals?: string[];
 
+  /** Temporary internal option to create ShareableUnpacker. */
+  limitInitDataHoisting?: boolean;
+
   /**
    * This option comes in handy for Web apps. Because Babel ordinarily doesn't
    * get information about the target platform, it includes worklet data in the
@@ -122,7 +125,7 @@ export interface PluginOptions {
   /**
    * This option allows you to register modules as safe to use on Worklet
    * Runtimes in the [Bundle
-   * Mode](https://docs.swmansion.com/react-native-worklets/docs/experimental/bundle-mode).
+   * Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode).
    *
    * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options#workletizablemodules}
    *

@@ -44,4 +44,4 @@ runs:
       working-directory: ${{ inputs.working-directory }}/${{ inputs.pod-directory }}
       run: |
         bundle install
-        bundle exec pod update hermes-engine --no-repo-update
+        bundle exec pod update --no-repo-update

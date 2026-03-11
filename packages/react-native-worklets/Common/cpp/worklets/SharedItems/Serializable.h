@@ -50,7 +50,6 @@ class Serializable {
     NullType,
     BooleanType,
     NumberType,
-    // SymbolType, TODO
     BigIntType,
     StringType,
     ObjectType,
@@ -67,6 +66,8 @@ class Serializable {
     ImportType,
     SynchronizableType,
     CustomType,
+    SymbolType, /* unused */
+    ShareableType,
   };
 
   explicit Serializable(ValueType valueType) : valueType_(valueType) {}

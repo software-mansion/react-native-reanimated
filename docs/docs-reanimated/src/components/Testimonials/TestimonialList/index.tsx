@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import clsx from 'clsx';
-import styles from './styles.module.css';
 import TestimonialItem from '@site/src/components/Testimonials/TestimonialItem';
+import clsx from 'clsx';
+import React, { useEffect, useState } from 'react';
+
+import styles from './styles.module.css';
 
 const items = [
   {
@@ -39,7 +40,7 @@ const items = [
     link: 'https://twitter.com/bran_aust/status/1754907731536863670',
     image: {
       alt: 'brandon austin',
-      src: 'https://pbs.twimg.com/profile_images/1886569538356977664/HSO3O8hT_400x400.jpg',
+      src: 'https://pbs.twimg.com/profile_images/1963741259186532352/i8PXAyFU_400x400.jpg',
     },
   },
   {
@@ -49,7 +50,7 @@ const items = [
     link: 'https://twitter.com/codewithnomi_/status/1754910812584436199',
     image: {
       alt: 'syed noman',
-      src: 'https://pbs.twimg.com/profile_images/1830471268178546688/ZmDKS2cM_400x400.jpg',
+      src: 'https://pbs.twimg.com/profile_images/2001708244700667904/mYkC_6PQ_400x400.jpg',
     },
   },
   {
@@ -59,7 +60,7 @@ const items = [
     link: 'https://twitter.com/daniel_mark01/status/1754925618494337459',
     image: {
       alt: 'daniel grychtol',
-      src: 'https://pbs.twimg.com/profile_images/1602243131537235968/o6KWUmHw_400x400.jpg',
+      src: 'https://pbs.twimg.com/profile_images/1979995516042702849/ESeyj8pK_400x400.jpg',
     },
   },
 ];

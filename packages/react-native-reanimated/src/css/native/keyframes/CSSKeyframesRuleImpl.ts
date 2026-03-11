@@ -18,13 +18,10 @@ export default class CSSKeyframesRuleImpl<
   }
 
   getNormalizedKeyframesConfig(
-    reactViewName: string
+    compoundComponentName: string
   ): NormalizedCSSAnimationKeyframesConfig {
-    if (!this.normalizedKeyframesCache_[reactViewName]) {
-      this.normalizedKeyframesCache_[reactViewName] =
-        normalizeAnimationKeyframes(this.cssRules, reactViewName);
-    }
-
-    return this.normalizedKeyframesCache_[reactViewName];
+    this.normalizedKeyframesCache_[compoundComponentName] ??=
+      normalizeAnimationKeyframes(this.cssRules, compoundComponentName);
+    return this.normalizedKeyframesCache_[compoundComponentName];
   }
 }

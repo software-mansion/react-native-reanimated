@@ -69,7 +69,9 @@ struct CSSResolvableValue : public CSSValue {
 
   virtual TDerived interpolate(double progress, const TDerived &to, const ResolvableValueInterpolationContext &context)
       const = 0;
-  virtual std::optional<TResolved> resolve(const ResolvableValueInterpolationContext &context) const = 0;
+  virtual std::optional<TResolved> resolve(const ResolvableValueInterpolationContext &context) const {
+    return std::nullopt;
+  }
   virtual bool canInterpolateTo(const TDerived &to) const {
     return true;
   }

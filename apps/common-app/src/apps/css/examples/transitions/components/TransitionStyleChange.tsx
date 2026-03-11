@@ -139,7 +139,7 @@ export default memo(TransitionStyleChange);
 
 const styles = StyleSheet.create({
   activeCardBackground: {
-    ...StyleSheet.absoluteFillObject,
+    ...(StyleSheet.absoluteFill as object),
     backgroundColor: colors.primary,
     borderRadius: radius.md,
   },
