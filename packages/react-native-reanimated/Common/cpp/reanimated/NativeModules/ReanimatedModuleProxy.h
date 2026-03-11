@@ -179,6 +179,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
  private:
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
+  void applySynchronousUpdates(UpdatesBatch &updatesBatch);
 
   const bool isReducedMotion_;
   bool shouldFlushRegistry_ = false;
