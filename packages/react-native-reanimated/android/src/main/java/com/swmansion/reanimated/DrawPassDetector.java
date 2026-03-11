@@ -6,6 +6,8 @@ import android.os.Looper;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.UiThreadUtil;
+
 import javax.annotation.Nullable;
 
 /** Tracks whether the current UI thread turn is inside a draw pass. */
@@ -60,6 +62,14 @@ class DrawPassDetector {
   }
 
   void invalidate() {
+    if (UiThreadUtil.isOnUiThread()) {
+      invalidateOnUiThread();
+    } else {
+      mHandler.post(this::invalidateOnUiThread);
+    }
+  }
+
+  private void invalidateOnUiThread() {
     if (mDecorView != null) {
       ViewTreeObserver observer = mDecorView.getViewTreeObserver();
       if (observer.isAlive()) {
