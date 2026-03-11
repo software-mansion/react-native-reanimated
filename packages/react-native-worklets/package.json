@@ -52,6 +52,7 @@
   "homepage": "https://docs.swmansion.com/react-native-worklets",
   "peerDependencies": {
     "@babel/core": "*",
+    "@react-native/metro-config": "*",
     "react": "*",
     "react-native": "*"
   },
@@ -115,6 +116,8 @@
     "!android/gradlew",
     "!android/gradlew.bat",
     "!android/local.properties",
+    "!.worklets",
+    ".worklets/dummy.md",
     "!**/__tests__",
     "!**/__fixtures__",
     "!**/__mocks__",
@@ -149,13 +152,6 @@
     "jsSrcsDir": "src/specs",
     "android": {
       "javaPackageName": "com.swmansion.worklets"
-    },
-    "ios": {
-      "modulesConformingToProtocol": {
-        "RCTBundleConsumer": [
-          "WorkletsModule"
-        ]
-      }
     }
   }
 }
