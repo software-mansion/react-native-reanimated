@@ -1,7 +1,13 @@
 /* eslint-disable */
 // @ts-nocheck
-const { getDefaultConfig } = require('@react-native/metro-config');
 const path = require('path');
+
+let getDefaultConfig = () => ({});
+try {
+  getDefaultConfig = require('@react-native/metro-config').getDefaultConfig;
+} catch {
+  /* empty */
+}
 
 const workletsPackageParentDir = path.resolve(__dirname, '../..');
 
@@ -27,7 +33,8 @@ const bundleModeMetroConfig = {
     getModulesRunBeforeMainModule(/** @type {string} dirname */ dirname) {
       return [
         ...getEntryPoints(),
-        ...defaults.serializer.getModulesRunBeforeMainModule(dirname),
+        ...(defaults?.serializer?.getModulesRunBeforeMainModule?.(dirname) ||
+          []),
       ];
     },
     createModuleIdFactory() {
