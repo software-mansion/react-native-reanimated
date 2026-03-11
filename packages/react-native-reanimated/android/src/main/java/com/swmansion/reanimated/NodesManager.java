@@ -133,6 +133,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   void performOperationsRespectingDrawPass() {
+    mDrawPassDetector.initialize();
     if (isInDrawPass()) {
       performNonLayoutOperations();
       startUpdatingOnAnimationFrame();
@@ -214,7 +215,6 @@ public class NodesManager implements EventDispatcherListener {
       // Events can be dispatched from any thread so we have to make sure handleEvent is run from
       // the UI thread.
       if (UiThreadUtil.isOnUiThread()) {
-        mDrawPassDetector.initialize();
         handleEvent(event);
         performOperationsRespectingDrawPass();
       } else {
