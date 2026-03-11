@@ -355,4 +355,4 @@ export const getAnimatedStyle = (component: ReactTestInstance) => {
   );
 };
 
-export { worklet } from './common';
+export { cloneWorklet, worklet } from './common';
