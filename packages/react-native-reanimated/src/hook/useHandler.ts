@@ -5,7 +5,11 @@ import { makeShareable } from 'react-native-worklets';
 
 import { IS_JEST, IS_WEB } from '../common';
 import type { DependencyList, ReanimatedEvent } from './commonTypes';
-import { areDependenciesEqual, buildDependencies, useHasFastRefreshed } from './utils';
+import {
+  areDependenciesEqual,
+  buildDependencies,
+  useHasFastRefreshed
+} from './utils';
 
 interface GeneralHandler<
   Event extends object,
@@ -98,7 +102,10 @@ export function useHandler<
   );
 
   const doDependenciesDiffer =
-    isFastRefresh || !areDependenciesEqual(dependencies, savedDependencies) || !dependencies;
+    isFastRefresh ||
+    !areDependenciesEqual(dependencies, savedDependencies) ||
+    !dependencies;
+
   initRef.current.savedDependencies = dependencies;
   const useWeb = IS_WEB || IS_JEST;
 
