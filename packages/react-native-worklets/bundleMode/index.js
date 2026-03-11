@@ -20,7 +20,7 @@ function bundleModeResolveRequest(
   /** @type {string} */ moduleName,
   /** @type {any} */ platform
 ) {
-  if (moduleName.startsWith('react-native-worklets/.worklets/')) {
+  if (moduleName.startsWith(workletsDirPath)) {
     const fullModuleName = path.join(workletsPackageParentDir, moduleName);
     return { type: 'sourceFile', filePath: fullModuleName };
   }
@@ -37,23 +37,7 @@ const bundleModeMetroConfig = {
           []),
       ];
     },
-    createModuleIdFactory() {
-      let nextId = 0;
-      const idFileMap = new Map();
-      return (/** @type {string} */ moduleName) => {
-        if (idFileMap.has(moduleName)) {
-          return idFileMap.get(moduleName);
-        }
-        if (moduleName.includes(workletsDirPath)) {
-          const base = path.basename(moduleName, '.js');
-          const id = Number(base);
-          idFileMap.set(moduleName, id);
-          return id;
-        }
-        idFileMap.set(moduleName, nextId++);
-        return idFileMap.get(moduleName);
-      };
-    },
+    createModuleIdFactory: bundleModeCreateModuleIdFactory,
   },
   resolver: {
     resolveRequest: (
@@ -61,7 +45,7 @@ const bundleModeMetroConfig = {
       /** @type {string} */ moduleName,
       /** @type {any} */ platform
     ) => {
-      if (moduleName.startsWith('react-native-worklets/.worklets/')) {
+      if (moduleName.startsWith(workletsDirPath)) {
         const fullModuleName = path.join(workletsPackageParentDir, moduleName);
         return { type: 'sourceFile', filePath: fullModuleName };
       }
@@ -77,12 +61,10 @@ function getBundleModeMetroConfig(config) {
 
   config.serializer.getModulesRunBeforeMainModule = (
     /** @type {string} dirname */ dirname
-  ) => {
-    return [
-      ...getEntryPoints(),
-      ...(currentGetModulesRunBeforeMainModule?.(dirname) || []),
-    ];
-  };
+  ) => [
+    ...getEntryPoints(),
+    ...(currentGetModulesRunBeforeMainModule?.(dirname) || []),
+  ];
 
   config.serializer.createModuleIdFactory = bundleModeCreateModuleIdFactory;
 
