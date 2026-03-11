@@ -689,9 +689,6 @@ var require_generate = __commonJS({
         comments: false
       })) === null || _a === void 0 ? void 0 : _a.code;
       (0, assert_1.default)(transformedProg, "[Worklets] `transformedProg` is undefined.");
-      if (!(0, fs_1.existsSync)(filesDirPath)) {
-        (0, fs_1.mkdirSync)(filesDirPath, {});
-      }
       const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
       (0, fs_1.writeFileSync)(dedicatedFilePath, transformedProg);
     }

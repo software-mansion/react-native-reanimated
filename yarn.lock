@@ -29213,6 +29213,7 @@ __metadata:
     typescript: "npm:5.8.3"
   peerDependencies:
     "@babel/core": "*"
+    "@react-native/metro-config": "*"
     react: "*"
     react-native: "*"
   languageName: unknown
