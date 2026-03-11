@@ -164,3 +164,7 @@ button[class*='DocSearch-Button'] {
     }
   }
 }
+
+[class*='headerWithBadges'] {
+  align-items: baseline;
+}
