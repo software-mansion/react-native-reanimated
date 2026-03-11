@@ -7,7 +7,6 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.UiThreadUtil;
-
 import javax.annotation.Nullable;
 
 /** Tracks whether the current UI thread turn is inside a draw pass. */
