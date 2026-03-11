@@ -65,6 +65,7 @@
     "@babel/plugin-transform-template-literals": "7.27.1",
     "@babel/plugin-transform-unicode-regex": "7.27.1",
     "@babel/preset-typescript": "7.27.1",
+    "@react-native/metro-config": "^0.83.2",
     "convert-source-map": "2.0.0",
     "is-tree-shakable": "0.4.1",
     "semver": "7.7.3"
@@ -117,6 +118,8 @@
     "!android/gradlew",
     "!android/gradlew.bat",
     "!android/local.properties",
+    "!.worklets",
+    ".worklets/dummy.md",
     "!**/__tests__",
     "!**/__fixtures__",
     "!**/__mocks__",
@@ -151,13 +154,6 @@
     "jsSrcsDir": "src/specs",
     "android": {
       "javaPackageName": "com.swmansion.worklets"
-    },
-    "ios": {
-      "modulesConformingToProtocol": {
-        "RCTBundleConsumer": [
-          "WorkletsModule"
-        ]
-      }
     }
   }
 }

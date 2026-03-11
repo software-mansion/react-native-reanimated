@@ -28,7 +28,8 @@
     "format:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run format",
     "lint": "yarn lint:root && yarn lint:workspaces",
     "lint:workspaces": "yarn workspaces foreach --all --exclude \"react-native-reanimated-monorepo\" --parallel --topological-dev run lint",
-    "lint:root": "eslint . --ignore-pattern 'packages/**' --ignore-pattern 'apps/**' --ignore-pattern 'docs/**' && yarn prettier --check --ignore-path .gitignore --ignore-path .prettierignore --ignore-path .prettiereslintignore ."
+    "lint:root": "eslint . --ignore-pattern 'packages/**' --ignore-pattern 'apps/**' --ignore-pattern 'docs/**' && yarn prettier --check --ignore-path .gitignore --ignore-path .prettierignore --ignore-path .prettiereslintignore .",
+    "toggle-bundle-mode": "bash ./scripts/toggle-bundle-mode.sh"
   },
   "devDependencies": {
     "@babel/core": "7.28.4",
@@ -76,5 +77,9 @@
     "react-native-builder-bob": "0.40.13",
     "shelljs": "0.10.0",
     "typescript": "5.8.3"
+  },
+  "resolutions": {
+    "metro": "patch:metro@npm%3A0.83.2#~/.yarn/patches/metro-npm-0.83.2-d09f48ca84.patch",
+    "metro-runtime": "patch:metro-runtime@npm%3A0.83.2#~/.yarn/patches/metro-runtime-npm-0.83.2-c614bbd3b9.patch"
   }
 }

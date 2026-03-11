@@ -30,6 +30,7 @@ function getEntryPoints() {
 
 const workletsDirPath = path.join('react-native-worklets', '.worklets');
 
+/** @type {import('@react-native/metro-config').MetroConfig} */
 module.exports = {
   bundleModeMetroConfig: {
     serializer: {
@@ -72,6 +73,13 @@ module.exports = {
         }
         return context.resolveRequest(context, moduleName, platform);
       },
+    },
+    transformer: {
+      getTransformOptions: async () => ({
+        transform: {
+          inlineRequires: true,
+        },
+      }),
     },
   },
 };
