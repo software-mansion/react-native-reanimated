@@ -1,9 +1,0 @@
-# Compatibility table
-
-> **Info**
->
-> Worklets aren't tested on the Legacy Architecture (Paper). We highly recommend migrating to the New Architecture (Fabric) prior to using Worklets.
-
-### Supported React Native versions
-
-The rule of thumb is that Worklets support at least the last three minor versions of React Native.
