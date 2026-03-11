@@ -50,13 +50,17 @@ export function setupRequestAnimationFrame() {
     }
   }
 
+  function nativeFlushQueue(timestamp: number) {
+    flushQueue(timestamp);
+
+    /* Schedule next frame */
+    nativeRequestAnimationFrame(nativeFlushQueue);
+  }
+
   function flushQueue(timestamp: number) {
     globalThis.__frameTimestamp = timestamp;
     executeQueue(timestamp);
     globalThis.__frameTimestamp = undefined;
-
-    /* Schedule next frame */
-    nativeRequestAnimationFrame(flushQueue);
   }
 
   globalThis.requestAnimationFrame = requestAnimationFrame;
@@ -69,5 +73,5 @@ export function setupRequestAnimationFrame() {
   };
 
   /* Start the loop */
-  nativeRequestAnimationFrame(flushQueue);
+  nativeRequestAnimationFrame(nativeFlushQueue);
 }
