@@ -1,12 +1,16 @@
 'use strict';
 
-import type { Synchronizable } from 'react-native-worklets';
+import type {
+  ShareableGuest,
+  ShareableHost,
+  Synchronizable,
+} from 'react-native-worklets';
 import {
-  createSerializable,
+  createShareable,
   createSynchronizable,
   runOnUISync,
   scheduleOnUI,
-  serializableMappingCache,
+  UIRuntimeId,
 } from 'react-native-worklets';
 
 import { IS_JEST, logger, ReanimatedError, SHOULD_BE_USE_WEB } from './common';
@@ -102,133 +106,161 @@ function hideInternalValueProp<TValue>(mutable: PartialMutable<TValue>) {
   });
 }
 
-export function makeMutableUI<TValue>(
-  initial: TValue,
+function mutableHostDecorator<TValue>(
+  mutable: ShareableHost<TValue> & Mutable<TValue>,
   dirtyFlag?: Synchronizable<boolean>
-): Mutable<TValue> {
+): ShareableHost<TValue> & Mutable<TValue> {
   'worklet';
   const listeners = new Map<number, Listener<TValue>>();
-  let value = initial;
+  let value = mutable.value;
   let isDirty = false;
 
-  const mutable: PartialMutable<TValue> = {
-    get value() {
-      return value;
+  Object.defineProperties(mutable, {
+    value: {
+      get() {
+        return value;
+      },
+      set(newValue) {
+        valueSetter(mutable, newValue);
+      },
     },
-    set value(newValue) {
-      valueSetter(mutable as Mutable<TValue>, newValue);
+    _value: {
+      get(): TValue {
+        return value;
+      },
+      set(newValue: TValue) {
+        if (!isDirty) {
+          this.setDirty(true);
+        }
+        value = newValue;
+        listeners.forEach((listener) => {
+          listener(newValue);
+        });
+      },
     },
-    get _value(): TValue {
-      return value;
+    modify: {
+      value: (modifier: (value: TValue) => TValue, forceUpdate = true) => {
+        valueSetter(
+          mutable as Mutable<TValue>,
+          modifier !== undefined ? modifier(value) : value,
+          forceUpdate
+        );
+      },
     },
-    set _value(newValue: TValue) {
-      if (!isDirty) {
-        this.setDirty!(true);
-      }
-      value = newValue;
-      listeners.forEach((listener) => {
-        listener(newValue);
-      });
+    addListener: {
+      value: (id: number, listener: Listener<TValue>) => {
+        listeners.set(id, listener);
+      },
     },
-    modify: (modifier, forceUpdate = true) => {
-      valueSetter(
-        mutable as Mutable<TValue>,
-        modifier !== undefined ? modifier(value) : value,
-        forceUpdate
-      );
+    removeListener: {
+      value: (id: number) => {
+        listeners.delete(id);
+      },
     },
-    addListener: (id: number, listener: Listener<TValue>) => {
-      listeners.set(id, listener);
-    },
-    removeListener: (id: number) => {
-      listeners.delete(id);
-    },
-    setDirty: (dirty: boolean) => {
-      dirtyFlag?.setBlocking(dirty);
-      isDirty = dirty;
+    setDirty: {
+      value: (dirty: boolean) => {
+        dirtyFlag?.setBlocking(dirty);
+        isDirty = dirty;
+      },
     },
 
-    _animation: null,
-    _isReanimatedSharedValue: true,
-  };
+    _animation: {
+      value: null,
+    },
+    _isReanimatedSharedValue: {
+      value: true,
+    },
+  });
 
   hideInternalValueProp(mutable);
   addCompilerSafeGetAndSet(mutable);
 
-  return mutable as Mutable<TValue>;
+  return mutable;
 }
 
 const USE_SYNCHRONIZABLE_FOR_MUTABLES = getStaticFeatureFlag(
   'USE_SYNCHRONIZABLE_FOR_MUTABLES'
 );
 
-function makeMutableNative<TValue>(initial: TValue): Mutable<TValue> {
+function mutableGuestDecorator<TValue>(
+  initial: TValue,
+  mutable: ShareableGuest<TValue> & Mutable<TValue>,
+  dirtyFlag?: Synchronizable<boolean>
+): ShareableGuest<TValue> & Mutable<TValue> {
+  'worklet';
   let latest = initial;
-  const dirtyFlag = USE_SYNCHRONIZABLE_FOR_MUTABLES
-    ? createSynchronizable(false)
-    : undefined;
-  const handle = createSerializable({
-    __init: () => {
-      'worklet';
-      return makeMutableUI(initial, dirtyFlag);
+
+  Object.defineProperties(mutable, {
+    value: {
+      get() {
+        if (globalThis.__RUNTIME_KIND === 1) {
+          checkInvalidReadDuringRender();
+        }
+
+        if (globalThis.__RUNTIME_KIND !== 1 || dirtyFlag === undefined) {
+          latest = mutable.getSync();
+        } else if (dirtyFlag.getBlocking()) {
+          const uiValueGetter = (svArg: Mutable<TValue>) =>
+            runOnUISync((sv) => {
+              sv.setDirty?.(false);
+              return sv.value;
+            }, svArg);
+          latest = uiValueGetter(mutable as Mutable<TValue>);
+        }
+        return latest;
+      },
+      set(newValue) {
+        if (globalThis.__RUNTIME_KIND === 1) {
+          checkInvalidWriteDuringRender();
+        }
+        mutable.setAsync(newValue);
+      },
+    },
+
+    _value: {
+      get() {
+        throw new ReanimatedError(
+          'Reading from `_value` directly is only possible on the UI runtime. Perhaps you wanted to access `value` instead?'
+        );
+      },
+      set(_newValue) {
+        throw new ReanimatedError(
+          'Setting `_value` directly is only possible on the UI runtime. Perhaps you wanted to assign to `value` instead?'
+        );
+      },
+    },
+
+    modify: {
+      value: (modifier: (value: TValue) => TValue, forceUpdate = true) => {
+        scheduleOnUI(() => {
+          mutable.modify(modifier, forceUpdate);
+        });
+      },
+    },
+    addListener: {
+      value: () => {
+        throw new ReanimatedError(
+          'Adding listeners is only possible on the UI runtime.'
+        );
+      },
+    },
+    removeListener: {
+      value: () => {
+        throw new ReanimatedError(
+          'Removing listeners is only possible on the UI runtime.'
+        );
+      },
+    },
+
+    _isReanimatedSharedValue: {
+      value: true,
     },
   });
-
-  const mutable: PartialMutable<TValue> = {
-    get value(): TValue {
-      checkInvalidReadDuringRender();
-      if (dirtyFlag === undefined || dirtyFlag.getBlocking()) {
-        const uiValueGetter = (svArg: Mutable<TValue>) =>
-          runOnUISync((sv) => {
-            sv.setDirty?.(false);
-            return sv.value;
-          }, svArg);
-        latest = uiValueGetter(mutable as Mutable<TValue>);
-      }
-      return latest;
-    },
-    set value(newValue) {
-      checkInvalidWriteDuringRender();
-      scheduleOnUI(() => {
-        mutable.value = newValue;
-      });
-    },
-
-    get _value(): TValue {
-      throw new ReanimatedError(
-        'Reading from `_value` directly is only possible on the UI runtime. Perhaps you wanted to access `value` instead?'
-      );
-    },
-    set _value(_newValue: TValue) {
-      throw new ReanimatedError(
-        'Setting `_value` directly is only possible on the UI runtime. Perhaps you wanted to assign to `value` instead?'
-      );
-    },
-
-    modify: (modifier, forceUpdate = true) => {
-      scheduleOnUI(() => {
-        mutable.modify(modifier, forceUpdate);
-      });
-    },
-    addListener: () => {
-      throw new ReanimatedError(
-        'Adding listeners is only possible on the UI runtime.'
-      );
-    },
-    removeListener: () => {
-      throw new ReanimatedError(
-        'Removing listeners is only possible on the UI runtime.'
-      );
-    },
-
-    _isReanimatedSharedValue: true,
-  };
 
   hideInternalValueProp(mutable);
   addCompilerSafeGetAndSet(mutable);
 
-  serializableMappingCache.set(mutable, handle);
-  return mutable as Mutable<TValue>;
+  return mutable;
 }
 
 function makeMutableWeb<TValue>(initial: TValue): Mutable<TValue> {
@@ -282,6 +314,29 @@ function makeMutableWeb<TValue>(initial: TValue): Mutable<TValue> {
   return mutable as Mutable<TValue>;
 }
 
+function makeMutableNative<TValue>(initial: TValue): Mutable<TValue> {
+  const dirtyFlag = USE_SYNCHRONIZABLE_FOR_MUTABLES
+    ? createSynchronizable(false)
+    : undefined;
+
+  const shareable = createShareable<TValue, Mutable<TValue>, Mutable<TValue>>(
+    UIRuntimeId,
+    initial,
+    {
+      hostDecorator: (shareableHost) => {
+        'worklet';
+        return mutableHostDecorator(shareableHost, dirtyFlag);
+      },
+      guestDecorator: (shareableGuest) => {
+        'worklet';
+        return mutableGuestDecorator(initial, shareableGuest, dirtyFlag);
+      },
+    }
+  );
+
+  return shareable;
+}
+
 export const makeMutable = SHOULD_BE_USE_WEB
   ? makeMutableWeb
   : makeMutableNative;
@@ -292,4 +347,14 @@ interface JestMutable<TValue> extends Mutable<TValue> {
 
 function mutableToJSON<TValue>(value: TValue): string {
   return JSON.stringify(value);
+}
+
+/** @deprecated Used only in `animationsManager.ts`. Don't use. */
+export function makeMutableUI<TValue>(initial: TValue): Mutable<TValue> {
+  'worklet';
+  const mutable = mutableHostDecorator({
+    value: initial,
+  } as ShareableHost<TValue> & Mutable<TValue>);
+
+  return mutable;
 }

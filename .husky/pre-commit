@@ -4,6 +4,11 @@ print() {
   echo "    [PRECOMMIT]: $1" >&2
 }
 
+if git rev-parse -q --verify MERGE_HEAD >/dev/null; then
+  print "Merge commit detected. Skipping pre-commit hooks."
+  exit 0
+fi
+
 check_and_lint_docs() {
   local staged_files="$1"
   local docs_path="$2"
