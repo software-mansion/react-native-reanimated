@@ -12,6 +12,7 @@ import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
 } from './memory/serializable';
+import { serializableMappingCache } from './memory/serializableMappingCache';
 import { setupRunLoop } from './runLoop/workletRuntime';
 import { RuntimeKind } from './runtimeKind';
 import { scheduleOnRN } from './threads';
@@ -168,6 +169,35 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
   );
 }
 
+if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+  function scheduleOnRuntimeWorklet<Args extends unknown[], ReturnValue>(
+    workletRuntime: WorkletRuntime,
+    worklet: WorkletFunction<Args, ReturnValue>,
+    ...args: Args
+  ): void {
+    'worklet';
+    if (__DEV__ && !isWorkletFunction(worklet)) {
+      throw new WorkletsError(
+        'The function passed to `scheduleOnRuntime` is not a worklet.'
+      );
+    }
+
+    globalThis.__workletsModuleProxy.scheduleOnRuntime(
+      workletRuntime,
+      globalThis.__serializer(() => {
+        'worklet';
+        worklet(...args);
+        globalThis.__flushMicrotasks?.();
+      })
+    );
+  }
+
+  serializableMappingCache.set(
+    scheduleOnRuntime,
+    createSerializable(scheduleOnRuntimeWorklet)
+  );
+}
+
 /**
  * Lets you asynchronously run a
  * [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)
@@ -222,6 +252,35 @@ export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
       worklet(...args);
       globalThis.__flushMicrotasks?.();
     })
+  );
+}
+
+if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+  function scheduleOnRuntimeWithIdWorklet<Args extends unknown[], ReturnValue>(
+    runtimeId: number,
+    worklet: WorkletFunction<Args, ReturnValue>,
+    ...args: Args
+  ): void {
+    'worklet';
+    if (__DEV__ && !isWorkletFunction(worklet)) {
+      throw new WorkletsError(
+        'The function passed to `scheduleOnRuntime` is not a worklet.'
+      );
+    }
+
+    globalThis.__workletsModuleProxy.scheduleOnRuntimeWithId(
+      runtimeId,
+      globalThis.__serializer(() => {
+        'worklet';
+        worklet(...args);
+        globalThis.__flushMicrotasks?.();
+      })
+    );
+  }
+
+  serializableMappingCache.set(
+    scheduleOnRuntimeWithId,
+    createSerializable(scheduleOnRuntimeWithIdWorklet)
   );
 }
 
@@ -419,9 +478,7 @@ if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
    */
   addGuardImplementation(runOnRuntimeAsync);
   addGuardImplementation(runOnRuntimeSync);
-  addGuardImplementation(scheduleOnRuntime);
   addGuardImplementation(runOnRuntimeSyncWithId);
-  addGuardImplementation(scheduleOnRuntimeWithId);
 }
 
 export function getUIRuntimeHolder(): object {
