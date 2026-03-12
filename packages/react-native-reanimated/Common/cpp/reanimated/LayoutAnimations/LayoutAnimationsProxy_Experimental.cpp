@@ -201,6 +201,10 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
         } else if (layoutAnimationsManager_->hasLayoutAnimation(tag, ENTERING)) {
           entering_.push_back(node);
           filteredMutations.push_back(mutation);
+        } else if (sharedTransitionManager_->tagToName_.contains(tag) && isInsideInactiveSETBoundary(node)) {
+          auto hiddenView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
+          filteredMutations.push_back(
+              ShadowViewMutation::InsertMutation(mutation.parentTag, hiddenView, mutation.index));
         } else {
           filteredMutations.push_back(mutation);
         }

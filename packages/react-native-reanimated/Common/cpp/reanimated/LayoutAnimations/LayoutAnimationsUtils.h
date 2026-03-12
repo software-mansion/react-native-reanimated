@@ -139,6 +139,19 @@ static inline bool isSETBoundary(const std::shared_ptr<LightNode> &node) {
   return !std::strcmp(node->current.componentName, RNReanimatedSharedTransitionBoundaryComponentName);
 }
 
+static inline bool isInsideInactiveSETBoundary(const std::shared_ptr<LightNode> &node) {
+  auto current = node->parent.lock();
+  while (current) {
+    if (isSETBoundary(current)) {
+      auto boundaryProps =
+          std::static_pointer_cast<const RNReanimatedSharedTransitionBoundaryProps>(current->current.props);
+      return !boundaryProps->isActive;
+    }
+    current = current->parent.lock();
+  }
+  return false;
+}
+
 static inline bool isRoot(const std::shared_ptr<LightNode> &node) {
   return node->current.tag % 10 == 1;
 }
