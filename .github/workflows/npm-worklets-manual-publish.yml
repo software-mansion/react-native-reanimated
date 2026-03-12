@@ -1,0 +1,77 @@
+# Workflow for building and optionally manually publishing react-native-worklets
+# npm package. Workflow assumes the package has its version already set correctly.
+name: NPM Worklets publish
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: NPM dist-tag to publish under.
+        required: false
+        type: string
+        default: latest
+      publish_on_npm:
+        description: Whether to publish the package on NPM after building or just perform a dry-run.
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  npm-worklets-publish:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PACKAGE_NAME: PLACEHOLDER # Will be reassigned later on.
+      WORKLETS_DIR: packages/react-native-worklets
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      # Ensure npm 11.5.1 or later is installed for OIDC
+      - name: Update npm
+        shell: bash
+        run: npm install -g npm@latest
+
+      - name: Install monorepo node dependencies
+        shell: bash
+        run: yarn install --immutable
+        env:
+          YARN_ENABLE_HARDENED_MODE: 0
+
+      - name: Build package
+        shell: bash
+        working-directory: ${{ env.WORKLETS_DIR }}
+        id: build
+        run: >-
+          ./createNPMPackage.sh
+
+      - name: Add package name to env
+        shell: bash
+        working-directory: ${{ env.WORKLETS_DIR }}
+        run: echo "PACKAGE_NAME=$(ls -l | egrep -o "react-native-worklets-(.*)(=?\.tgz)")" >> $GITHUB_ENV
+
+      - name: Assert PACKAGE_NAME
+        shell: bash
+        if: ${{ env.PACKAGE_NAME == 'PLACEHOLDER' }}
+        run: exit 1 # This should never happen.
+
+      - name: Upload npm package to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PACKAGE_NAME }}
+          path: '${{ env.WORKLETS_DIR }}/${{ env.PACKAGE_NAME }}'
+
+      - name: Publish to NPM
+        if: ${{ inputs.publish_on_npm }}
+        shell: bash
+        run: npm publish ${{ env.WORKLETS_DIR }}/${{ env.PACKAGE_NAME }} --tag ${{ inputs.tag }} --provenance
+
+      - name: Dry run publish
+        if: ${{ !inputs.publish_on_npm }}
+        shell: bash
+        run: npm publish ${{ env.WORKLETS_DIR }}/${{ env.PACKAGE_NAME }} --tag ${{ inputs.tag }} --provenance --dry-run
