@@ -85,26 +85,6 @@ function addCompilerSafeGetAndSet<TValue>(
     },
   });
 }
-/**
- * Hides the internal `_value` property of a mutable. It won't be visible to:
- *
- * - `Object.keys`,
- * - `const prop in obj`,
- * - Etc.
- *
- * This way when the user accidentally sends the SharedValue to React, he won't
- * get an obscure error message.
- *
- * We hide for both _React runtime_ and _Worklet runtime_ mutables for
- * uniformity of behavior.
- */
-function hideInternalValueProp<TValue>(mutable: PartialMutable<TValue>) {
-  'worklet';
-  Object.defineProperty(mutable, '_value', {
-    configurable: false,
-    enumerable: false,
-  });
-}
 
 function mutableHostDecorator<TValue>(
   mutable: ShareableHost<TValue> & Mutable<TValue>,
@@ -123,7 +103,10 @@ function mutableHostDecorator<TValue>(
       set(newValue) {
         valueSetter(mutable, newValue);
       },
+      enumerable: true,
+      configurable: true,
     },
+
     _value: {
       get(): TValue {
         return value;
@@ -138,6 +121,7 @@ function mutableHostDecorator<TValue>(
         });
       },
     },
+
     modify: {
       value: (modifier: (value: TValue) => TValue, forceUpdate = true) => {
         valueSetter(
@@ -146,33 +130,54 @@ function mutableHostDecorator<TValue>(
           forceUpdate
         );
       },
+      writable: true,
+      enumerable: true,
+      configurable: true,
     },
+
     addListener: {
       value: (id: number, listener: Listener<TValue>) => {
         listeners.set(id, listener);
       },
+      writable: true,
+      enumerable: true,
+      configurable: true,
     },
+
     removeListener: {
       value: (id: number) => {
         listeners.delete(id);
       },
+      writable: true,
+      enumerable: true,
+      configurable: true,
     },
+
     setDirty: {
       value: (dirty: boolean) => {
         dirtyFlag?.setBlocking(dirty);
         isDirty = dirty;
       },
+      writable: true,
+      enumerable: true,
+      configurable: true,
     },
 
     _animation: {
       value: null,
+      writable: true,
+      enumerable: true,
+      configurable: true,
     },
+
     _isReanimatedSharedValue: {
       value: true,
+      writable: true,
+      enumerable: true,
+      configurable: true,
     },
   });
 
-  hideInternalValueProp(mutable);
   addCompilerSafeGetAndSet(mutable);
 
   return mutable;
@@ -215,6 +220,8 @@ function mutableGuestDecorator<TValue>(
         }
         mutable.setAsync(newValue);
       },
+      enumerable: true,
+      configurable: true,
     },
 
     _value: {
@@ -236,28 +243,41 @@ function mutableGuestDecorator<TValue>(
           mutable.modify(modifier, forceUpdate);
         });
       },
+      writable: true,
+      enumerable: true,
+      configurable: true,
     },
+
     addListener: {
       value: () => {
         throw new ReanimatedError(
           'Adding listeners is only possible on the UI runtime.'
         );
       },
+      writable: true,
+      enumerable: true,
+      configurable: true,
     },
+
     removeListener: {
       value: () => {
         throw new ReanimatedError(
           'Removing listeners is only possible on the UI runtime.'
         );
       },
+      writable: true,
+      enumerable: true,
+      configurable: true,
     },
 
     _isReanimatedSharedValue: {
       value: true,
+      writable: true,
+      enumerable: true,
+      configurable: true,
     },
   });
 
-  hideInternalValueProp(mutable);
   addCompilerSafeGetAndSet(mutable);
 
   return mutable;
@@ -304,7 +324,12 @@ function makeMutableWeb<TValue>(initial: TValue): Mutable<TValue> {
     _isReanimatedSharedValue: true,
   };
 
-  hideInternalValueProp(mutable);
+  // Hide `_value` from accidental enumeration.
+  Object.defineProperty(mutable, '_value', {
+    configurable: false,
+    enumerable: false,
+  });
+
   addCompilerSafeGetAndSet(mutable);
 
   if (IS_JEST) {
