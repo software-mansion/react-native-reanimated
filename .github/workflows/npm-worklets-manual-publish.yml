@@ -81,9 +81,9 @@ jobs:
       - name: Publish to NPM
         if: ${{ inputs.publish_on_npm }}
         shell: bash
-        run: npm publish ${{ env.WORKLETS_DIR }}/${{ env.PACKAGE_NAME }} --tag ${{ inputs.tag }} --provenance
+        run: npm publish ${{ env.WORKLETS_DIR }}/${{ env.PACKAGE_NAME }} --tag ${{ inputs.tag || 'latest' }} --provenance
 
       - name: Dry run publish
         if: ${{ !inputs.publish_on_npm }}
         shell: bash
-        run: npm publish ${{ env.WORKLETS_DIR }}/${{ env.PACKAGE_NAME }} --tag ${{ inputs.tag }} --provenance --dry-run
+        run: npm publish ${{ env.WORKLETS_DIR }}/${{ env.PACKAGE_NAME }} --tag ${{ inputs.tag || 'latest' }} --provenance --dry-run
