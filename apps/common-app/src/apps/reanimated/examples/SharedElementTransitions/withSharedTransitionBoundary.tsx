@@ -1,23 +1,7 @@
 'use strict';
-import { useIsFocused, useNavigation } from '@react-navigation/native';
-import React, { memo, useEffect, useLayoutEffect } from 'react';
+import { useIsFocused } from '@react-navigation/native';
+import React, { memo } from 'react';
 import { SharedTransitionBoundary } from 'react-native-reanimated';
-
-import { useSharedTransitionContext } from './SharedTransitionContext';
-
-function useSETFocused() {
-  const context = useSharedTransitionContext();
-  const focused = useIsFocused();
-
-  // When gaining focus, notify siblings. Cleanup handles unmount-while-focused.
-  useLayoutEffect(() => {
-    if (focused) {
-      context.notify();
-    }
-  }, [focused]);
-
-  return focused;
-}
 
 export function withSharedTransitionBoundary<P extends object>(
   WrappedComponent: React.ComponentType<P>
@@ -25,7 +9,7 @@ export function withSharedTransitionBoundary<P extends object>(
   const MemoizedContent = memo(WrappedComponent);
 
   return function WithSharedTransitionBoundary(props: P) {
-    const isFocused = useSETFocused();
+    const isFocused = useIsFocused();
     return (
       <SharedTransitionBoundary isActive={isFocused}>
         <MemoizedContent {...props} />
