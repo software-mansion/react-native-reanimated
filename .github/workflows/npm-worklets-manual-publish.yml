@@ -81,5 +81,4 @@ jobs:
       - name: Dry run publish
         if: ${{ !inputs.publish_on_npm }}
         shell: bash
-        # 'latest' is a temporary fallback for testing
         run: npm publish ${{ env.WORKLETS_DIR }}/${{ env.PACKAGE_NAME }} --tag ${{ inputs.tag }} --provenance --dry-run

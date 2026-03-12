@@ -2,13 +2,9 @@ name: NPM Worklets publish
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
-  pull_request:
-    # temporarily trigger on pull_request for testing
-    branches:
-      - main
   schedule:
-    # for nightlies
-    - cron: '27 23 * * *' # at 23:27 every day
+    # for nightlies, at 23:27 every day
+    - cron: '27 23 * * *'
   workflow_dispatch:
     # for manual publishing
     inputs:
@@ -25,7 +21,7 @@ on:
 
 permissions:
   contents: read
-  id-token: write # For publishing on NPM using OIDC
+  id-token: write # for publishing on NPM using OIDC
 
 jobs:
   npm-worklets-publish-nightly:
@@ -36,8 +32,8 @@ jobs:
       publish_on_npm: true
 
   npm-worklets-publish-manual:
-    if: github.repository == 'software-mansion/react-native-reanimated'
+    if: github.repository == 'software-mansion/react-native-reanimated' && github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/npm-worklets-manual-publish.yml
     with:
-      tag: ${{ github.event.inputs.tag || 'latest' }}
-      publish_on_npm: ${{ github.event.inputs.publish_on_npm || false }}
+      tag: ${{ github.event.inputs.tag }}
+      publish_on_npm: ${{ github.event.inputs.publish_on_npm }}
