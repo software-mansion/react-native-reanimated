@@ -127,13 +127,6 @@ export function createWorkletRuntime(
  *
  * - The worklet is scheduled on the Worker Runtime's [Async
  *   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
- * - The function cannot be scheduled on the Worker Runtime from [UI
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
- *   or another [Worker
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
- *   unless the [Bundle
- *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
- *   enabled.
  *
  * @param workletRuntime - The runtime to schedule the worklet on.
  * @param worklet - The worklet to schedule.
@@ -211,15 +204,6 @@ if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
  *
  * - The worklet is scheduled on the Worker Runtime's [Async
  *   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
- * - This function cannot be called from the [UI
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
- *   or a [Worker
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
- *   unless the [Bundle
- *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
- *   enabled.
- * - You can target the UI Runtime with this function by passing
- *   {@link UIRuntimeId} as the `runtimeId` argument.
  *
  * @param runtimeId - The id of the runtime to schedule the worklet on.
  * @param worklet - The worklet to schedule.
@@ -264,7 +248,7 @@ if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     'worklet';
     if (__DEV__ && !isWorkletFunction(worklet)) {
       throw new WorkletsError(
-        'The function passed to `scheduleOnRuntime` is not a worklet.'
+        'The function passed to `scheduleOnRuntimeWithId` is not a worklet.'
       );
     }
 

@@ -134,7 +134,6 @@ describe('scheduleOnRuntimeWithId', () => {
   test('from Worker Runtime to UI Runtime', async () => {
     scheduleOnRuntime(workletRuntime1, () => {
       'worklet';
-      (globalThis as localGlobal).__notifyPass(42);
       scheduleOnRuntimeWithId(UIRuntimeId, () => {
         'worklet';
         (globalThis as localGlobal).__notifyPass(42);
