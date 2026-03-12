@@ -4,6 +4,10 @@ name: NPM Worklets publish
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
+  # temporarily trigger on pull_request for testing
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       tag:
