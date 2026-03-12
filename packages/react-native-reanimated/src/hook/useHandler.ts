@@ -22,9 +22,13 @@ export interface UseHandlerContext<Context extends UnknownRecord> {
 }
 
 function validateHandlers(handlers: UnknownRecord) {
-  const nonWorkletNames = Object.entries(handlers)
-    .filter(([, handler]) => !isWorkletFunction(handler))
-    .map(([name]) => name);
+  const nonWorkletNames = Object.entries(handlers).reduce<string[]>(
+    (acc, [name, handler]) => {
+      if (!isWorkletFunction(handler)) acc.push(name);
+      return acc;
+    },
+    []
+  );
 
   if (nonWorkletNames.length > 0) {
     throw new ReanimatedError(
