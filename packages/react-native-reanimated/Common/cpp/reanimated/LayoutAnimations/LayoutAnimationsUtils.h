@@ -1,9 +1,9 @@
 #pragma once
 
-#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <Common/NativeView/react/renderer/components/rnreanimated/RNReanimatedSharedTransitionBoundaryShadowNode.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
 #include <memory>
 #include <unordered_map>
@@ -137,6 +137,19 @@ static inline bool isRNSScreen(const std::shared_ptr<LightNode> &node) {
 
 static inline bool isSETBoundary(const std::shared_ptr<LightNode> &node) {
   return !std::strcmp(node->current.componentName, RNReanimatedSharedTransitionBoundaryComponentName);
+}
+
+static inline bool isInsideInactiveSETBoundary(const std::shared_ptr<LightNode> &node) {
+  auto current = node->parent.lock();
+  while (current) {
+    if (isSETBoundary(current)) {
+      auto boundaryProps =
+          std::static_pointer_cast<const RNReanimatedSharedTransitionBoundaryProps>(current->current.props);
+      return !boundaryProps->isActive;
+    }
+    current = current->parent.lock();
+  }
+  return false;
 }
 
 static inline bool isRoot(const std::shared_ptr<LightNode> &node) {
