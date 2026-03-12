@@ -1,25 +1,20 @@
 # Workflow for building and optionally manually publishing react-native-worklets
 # npm package. Workflow assumes the package has its version already set correctly.
+# You can trigger this workflow by manually dispatching `npm-worklets-publish.yml`.
 name: NPM Worklets manual publish
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
-  # temporarily trigger on pull_request for testing
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:
+  workflow_call:
     inputs:
       tag:
         description: NPM dist-tag to publish under.
-        required: false
+        required: true
         type: string
-        default: latest
       publish_on_npm:
         description: Whether to publish the package on NPM after building or just perform a dry-run.
-        required: false
+        required: true
         type: boolean
-        default: false
 
 jobs:
   npm-worklets-manual-publish:
@@ -87,4 +82,4 @@ jobs:
         if: ${{ !inputs.publish_on_npm }}
         shell: bash
         # 'latest' is a temporary fallback for testing
-        run: npm publish ${{ env.WORKLETS_DIR }}/${{ env.PACKAGE_NAME }} --tag ${{ inputs.tag || 'latest' }} --provenance --dry-run
+        run: npm publish ${{ env.WORKLETS_DIR }}/${{ env.PACKAGE_NAME }} --tag ${{ inputs.tag }} --provenance --dry-run
