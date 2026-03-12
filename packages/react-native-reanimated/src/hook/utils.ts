@@ -1,130 +1,83 @@
 'use strict';
-import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction } from 'react-native-worklets';
 
-import { IS_WEB, logger, ReanimatedError } from '../common';
-import type { DependencyList } from './commonTypes';
+import type { UnknownRecord } from '../common';
+import { ReanimatedError } from '../common';
 
-// Builds one big hash from multiple worklets' hashes.
-export function buildWorkletsHash<Args extends unknown[], ReturnValue>(
-  worklets:
-    | Record<string, WorkletFunction<Args, ReturnValue>>
-    | WorkletFunction<Args, ReturnValue>[]
-) {
-  // For arrays `Object.values` returns the array itself.
-  return Object.values(worklets).reduce(
-    (acc, worklet: WorkletFunction<Args, ReturnValue>) =>
-      acc + worklet.__workletHash.toString(),
-    ''
-  );
-}
+const objectIs: (a: unknown, b: unknown) => boolean =
+  typeof Object.is === 'function'
+    ? Object.is
+    : (x, y) =>
+        (x === y && (x !== 0 || 1 / (x as number) === 1 / (y as number))) ||
+        (Number.isNaN(x as number) && Number.isNaN(y as number));
 
-// Builds dependencies array for useEvent handlers.
-export function buildDependencies(
-  dependencies: DependencyList | undefined,
-  handlers: Record<string, WorkletFunction>
-) {
-  const result = dependencies ?? [];
-
-  const nonWorkletHandlerNames = Object.entries(handlers).reduce<string[]>(
-    (acc, [name, handler]) => {
-      if (!isWorkletFunction(handler)) {
-        acc.push(name);
-      }
-      return acc;
-    },
-    []
-  );
-
-  if (nonWorkletHandlerNames.length === 0) {
-    result.push(buildWorkletsHash(handlers));
-    return result;
-  }
-
-  if (!__DEV__) {
-    return result;
-  }
-
-  const handlerNames = nonWorkletHandlerNames.join(', ');
-
-  // On native, only worklets are allowed
-  if (!IS_WEB) {
-    throw new ReanimatedError(
-      `Passed handlers that are not worklets. Only worklet functions are allowed. Handlers "${handlerNames}" are not worklets.`
-    );
-  }
-
-  // On web, non-worklets are allowed only when dependencies are provided
-  if (__DEV__ && !dependencies) {
-    logger.warn(
-      `Non-worklet handlers ("${handlerNames}") were passed without a dependency array. This will cause the hook to update on every render. Please provide a dependency array or use only worklet functions instead.`
-    );
-    return undefined;
-  }
-
-  return result;
-}
-
-function areWorkletsEqual(
-  worklet1: WorkletFunction,
-  worklet2: WorkletFunction
-) {
-  if (worklet1.__workletHash === worklet2.__workletHash) {
-    const closure1Keys = Object.keys(worklet1.__closure);
-    const closure2Keys = Object.keys(worklet2.__closure);
-
-    return (
-      closure1Keys.length === closure2Keys.length &&
-      closure1Keys.every(
-        (key) =>
-          key in worklet2.__closure &&
-          worklet1.__closure[key] === worklet2.__closure[key]
-      )
-    );
-  }
-
-  return false;
-}
-
-// This is supposed to work as useEffect comparison.
-export function areDependenciesEqual(
-  nextDependencies: DependencyList,
-  prevDependencies: DependencyList
-) {
-  function is(x: number, y: number) {
-    return (
-      (x === y && (x !== 0 || 1 / x === 1 / y)) ||
-      (Number.isNaN(x) && Number.isNaN(y))
-    );
-  }
-  const objectIs: (nextDeps: unknown, prevDeps: unknown) => boolean =
-    typeof Object.is === 'function' ? Object.is : is;
-
-  function areHookInputsEqual(
-    nextDeps: DependencyList,
-    prevDeps: DependencyList
-  ) {
-    if (!nextDeps || !prevDeps || prevDeps.length !== nextDeps.length) {
-      return false;
-    }
-
-    for (let i = 0; i < prevDeps.length; ++i) {
-      const nextDep = nextDeps[i];
-      const prevDep = prevDeps[i];
-      if (objectIs(nextDep, prevDep)) {
-        continue;
-      }
-      if (!isWorkletFunction(nextDep) || !isWorkletFunction(prevDep)) {
-        return false;
-      }
-      if (!areWorkletsEqual(nextDep, prevDep)) {
-        return false;
-      }
-    }
+function areSingleValuesEqual(next: unknown, prev: unknown): boolean {
+  if (objectIs(next, prev)) {
     return true;
   }
 
-  return areHookInputsEqual(nextDependencies, prevDependencies);
+  if (
+    !isWorkletFunction(next) ||
+    !isWorkletFunction(prev) ||
+    next.__workletHash !== prev.__workletHash
+  ) {
+    return false;
+  }
+
+  const nextClosure = next.__closure;
+  const prevClosure = prev.__closure;
+
+  const nextKeys = Object.keys(nextClosure);
+  const prevKeys = Object.keys(prevClosure);
+
+  return (
+    prevKeys.length === nextKeys.length &&
+    prevKeys.every(
+      (key) =>
+        key in nextClosure && objectIs(nextClosure[key], prevClosure[key])
+    )
+  );
+}
+
+export function areDependenciesEqual(
+  nextDeps: Array<unknown> | undefined,
+  prevDeps: Array<unknown> | undefined
+) {
+  if (!nextDeps || !prevDeps || nextDeps.length !== prevDeps.length) {
+    return false;
+  }
+
+  for (let i = 0; i < prevDeps.length; ++i) {
+    if (!areSingleValuesEqual(nextDeps[i], prevDeps[i])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+export function areRecordValuesEqual(
+  next: UnknownRecord | undefined,
+  prev: UnknownRecord | undefined
+) {
+  if (!next || !prev) {
+    return false;
+  }
+
+  const nextKeys = Object.keys(next);
+  const prevKeys = Object.keys(prev);
+
+  if (nextKeys.length !== prevKeys.length) {
+    return false;
+  }
+
+  for (const key of prevKeys) {
+    if (!areSingleValuesEqual(next[key], prev[key])) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 export function isAnimated(prop: unknown) {
