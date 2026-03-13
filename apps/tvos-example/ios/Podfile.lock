@@ -2341,7 +2341,7 @@ PODS:
     - RNWorklets
     - SocketRocket
     - Yoga
-  - RNWorklets (0.8.0-main):
+  - RNWorklets (0.8.0-rc.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2367,11 +2367,11 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNWorklets/apple (= 0.8.0-main)
-    - RNWorklets/common (= 0.8.0-main)
+    - RNWorklets/apple (= 0.8.0-rc.0)
+    - RNWorklets/common (= 0.8.0-rc.0)
     - SocketRocket
     - Yoga
-  - RNWorklets/apple (0.8.0-main):
+  - RNWorklets/apple (0.8.0-rc.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2399,7 +2399,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNWorklets/common (0.8.0-main):
+  - RNWorklets/common (0.8.0-rc.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2732,7 +2732,7 @@ SPEC CHECKSUMS:
   ReactCodegen: f4d6e6fd5140eade461ffb5579795197956868c8
   ReactCommon: c178596d3ef05508bb6c0f88bfbbc281b5c4222b
   RNReanimated: 98cca9d12c28c89aa7743bbc5b3d3d127a29ab1d
-  RNWorklets: a0f85f091f2c735dd531fa6abed05558dafacde0
+  RNWorklets: 43b43d3469425ddce5a14891def93f55c7970c0e
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 0e792f39294e864568930600eeb71135364f777d
 
