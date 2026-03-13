@@ -15,24 +15,28 @@ function compareMinorVersions(a, b) {
 
 function resolveNpmVersion(pkgName, versionRange) {
   const spec = `${pkgName}@${versionRange}`;
-  const rawOutput = execSync(`npm view "${spec}" version --json`, {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-  }).trim();
+  try {
+    const rawOutput = execSync(`npm view "${spec}" version --json`, {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }).trim();
 
-  const parsed = JSON.parse(rawOutput);
-  if (Array.isArray(parsed)) {
-    return parsed[parsed.length - 1];
+    if (!rawOutput) {
+      return null;
+    }
+
+    const parsed = JSON.parse(rawOutput);
+    if (Array.isArray(parsed)) {
+      return parsed[parsed.length - 1];
+    }
+
+    return parsed;
+  } catch {
+    return null;
   }
-
-  return parsed;
 }
 
 function toRange(version) {
-  if (version === 'nightly') {
-    return 'nightly';
-  }
-
   return version.includes('x') ? version : `${version}.x`;
 }
 
@@ -67,6 +71,10 @@ const fabricCompatibility = compatibilityData.fabric;
 const matrixEntries = [];
 
 for (const [reanimatedRange, details] of Object.entries(fabricCompatibility)) {
+  if (reanimatedRange === 'nightly') {
+    continue;
+  }
+
   const workletsRanges = details['react-native-worklets'];
   const reactNativeVersions = details['react-native'] || [];
 
@@ -83,6 +91,10 @@ for (const [reanimatedRange, details] of Object.entries(fabricCompatibility)) {
     'react-native-reanimated',
     reanimatedNpmRange
   );
+
+  if (!resolvedReanimatedVersion) {
+    continue;
+  }
 
   for (const workletsRange of workletsRanges) {
     const workletsDetails = workletsCompatibilityData[workletsRange];
@@ -110,11 +122,19 @@ for (const [reanimatedRange, details] of Object.entries(fabricCompatibility)) {
       reactNativeRange
     );
 
+    if (!resolvedReactNativeVersion) {
+      continue;
+    }
+
     const workletsNpmRange = toRange(workletsRange);
     const resolvedWorkletsVersion = resolveNpmVersion(
       'react-native-worklets',
       workletsNpmRange
     );
+
+    if (!resolvedWorkletsVersion) {
+      continue;
+    }
 
     matrixEntries.push({
       reactNativeVersion: resolvedReactNativeVersion,
