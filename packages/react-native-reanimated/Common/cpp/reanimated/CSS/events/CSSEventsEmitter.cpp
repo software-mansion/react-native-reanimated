@@ -1,5 +1,6 @@
 #include <reanimated/CSS/events/CSSEventsEmitter.h>
 
+#include <string>
 #include <utility>
 
 using namespace facebook;
