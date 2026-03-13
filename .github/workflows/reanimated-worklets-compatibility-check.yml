@@ -39,7 +39,7 @@ jobs:
           echo "matrix=$(cat /tmp/reanimated-worklets-matrix.json)" >> "$GITHUB_OUTPUT"
           echo "matrix-size=$(jq 'length' /tmp/reanimated-worklets-matrix.json)" >> "$GITHUB_OUTPUT"
 
-  reanimated-worklets-compatibility-check:
+  reanimated-worklets-compatibility-check-android:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     needs: read-compatibility-json
@@ -49,9 +49,11 @@ jobs:
         include: ${{ fromJson(needs.read-compatibility-json.outputs.matrix) }}
     env:
       APP_NAME: app
+      CACHE_KEY: ${{ matrix.reactNativeVersion }}-${{ matrix.reanimatedVersion }}-${{ matrix.workletsVersion }}
       BUILD_MARKER_DIR: .compatibility-build-markers
-      YARN_ENABLE_HARDENED_MODE: 0
     steps:
+      - uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -67,8 +69,8 @@ jobs:
         id: result-cache
         uses: actions/cache/restore@v4
         with:
-          path: ${{ env.BUILD_MARKER_DIR }}/${{ matrix.cacheKey }}.success
-          key: reanimated-worklets-compat-${{ matrix.cacheKey }}
+          path: ${{ env.BUILD_MARKER_DIR }}/${{ env.CACHE_KEY }}.success
+          key: reanimated-worklets-compat-android-${{ env.CACHE_KEY }}
 
       - name: Skip already validated combination
         if: steps.result-cache.outputs.cache-hit == 'true'
@@ -76,37 +78,13 @@ jobs:
           echo "Skipping already validated combination:"
           echo "RN=${{ matrix.reactNativeVersion }} | Reanimated=${{ matrix.reanimatedVersion }} | Worklets=${{ matrix.workletsVersion }}"
 
-      - name: Setup Yarn
+      - name: Create RNC CLI app
         if: steps.result-cache.outputs.cache-hit != 'true'
-        run: corepack enable && yarn init -2
-
-      - name: Install React Native CLI
-        if: steps.result-cache.outputs.cache-hit != 'true'
-        run: yarn add @react-native-community/cli
-
-      - name: Create app
-        if: steps.result-cache.outputs.cache-hit != 'true'
-        run: |
-          yarn rnc-cli init "${APP_NAME}" \
-            --version "${{ matrix.reactNativeVersion }}" \
-            --skip-install \
-            --install-pods 0 \
-            --skip-git-init
-
-      - name: Setup Yarn Modern in app
-        if: steps.result-cache.outputs.cache-hit != 'true'
-        working-directory: ${{ env.APP_NAME }}
-        run: |
-          touch yarn.lock
-          yarn set version berry
-          yarn config set nodeLinker node-modules
-
-      - name: Install Reanimated and Worklets
-        if: steps.result-cache.outputs.cache-hit != 'true'
-        working-directory: ${{ env.APP_NAME }}
-        run: |
-          yarn add "react-native-reanimated@${{ matrix.reanimatedVersion }}"
-          yarn add "react-native-worklets@${{ matrix.workletsVersion }}"
+        uses: ./.github/actions/create-rnc-cli-app
+        with:
+          react-native-version: ${{ matrix.reactNativeVersion }}
+          reanimated-version: ${{ matrix.reanimatedVersion }}
+          worklets-version: ${{ matrix.workletsVersion }}
 
       - name: Build app (Android Debug)
         if: steps.result-cache.outputs.cache-hit != 'true'
@@ -117,11 +95,82 @@ jobs:
         if: steps.result-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p "${BUILD_MARKER_DIR}"
-          echo "ok" > "${BUILD_MARKER_DIR}/${{ matrix.cacheKey }}.success"
+          echo "ok" > "${BUILD_MARKER_DIR}/${{ env.CACHE_KEY }}.success"
 
       - name: Save result cache
         if: steps.result-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
-          path: ${{ env.BUILD_MARKER_DIR }}/${{ matrix.cacheKey }}.success
-          key: reanimated-worklets-compat-${{ matrix.cacheKey }}
+          path: ${{ env.BUILD_MARKER_DIR }}/${{ env.CACHE_KEY }}.success
+          key: reanimated-worklets-compat-android-${{ env.CACHE_KEY }}
+
+  reanimated-worklets-compatibility-check-ios:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: macos-26
+    needs: read-compatibility-json
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.read-compatibility-json.outputs.matrix) }}
+    env:
+      APP_NAME: app
+      CACHE_KEY: ${{ matrix.reactNativeVersion }}-${{ matrix.reanimatedVersion }}-${{ matrix.workletsVersion }}
+      BUILD_MARKER_DIR: .compatibility-build-markers
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Restore result cache
+        id: result-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.BUILD_MARKER_DIR }}/${{ env.CACHE_KEY }}.success
+          key: reanimated-worklets-compat-ios-${{ env.CACHE_KEY }}
+
+      - name: Skip already validated combination
+        if: steps.result-cache.outputs.cache-hit == 'true'
+        run: |
+          echo "Skipping already validated combination:"
+          echo "RN=${{ matrix.reactNativeVersion }} | Reanimated=${{ matrix.reanimatedVersion }} | Worklets=${{ matrix.workletsVersion }}"
+
+      - name: Create RNC CLI app
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/create-rnc-cli-app
+        with:
+          react-native-version: ${{ matrix.reactNativeVersion }}
+          reanimated-version: ${{ matrix.reanimatedVersion }}
+          worklets-version: ${{ matrix.workletsVersion }}
+
+      - name: Install CocoaPods
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        working-directory: ${{ env.APP_NAME }}/ios
+        run: bundle install && bundle exec pod install
+
+      - name: Build app (iOS Debug)
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        working-directory: ${{ env.APP_NAME }}/ios
+        run: |
+          xcodebuild build \
+            -workspace "${APP_NAME}.xcworkspace" \
+            -scheme "${APP_NAME}" \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            CODE_SIGNING_ALLOWED=NO | xcpretty
+
+      - name: Mark combination as successful
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "${BUILD_MARKER_DIR}"
+          echo "ok" > "${BUILD_MARKER_DIR}/${{ env.CACHE_KEY }}.success"
+
+      - name: Save result cache
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.BUILD_MARKER_DIR }}/${{ env.CACHE_KEY }}.success
+          key: reanimated-worklets-compat-ios-${{ env.CACHE_KEY }}

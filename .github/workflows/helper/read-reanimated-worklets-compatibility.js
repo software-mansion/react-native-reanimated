@@ -36,10 +36,6 @@ function toRange(version) {
   return version.includes('x') ? version : `${version}.x`;
 }
 
-function sanitizeForKey(value) {
-  return value.replace(/[^a-zA-Z0-9._-]/g, '-');
-}
-
 const compatibilityPath = path.join(
   __dirname,
   '..',
@@ -120,31 +116,21 @@ for (const [reanimatedRange, details] of Object.entries(fabricCompatibility)) {
       workletsNpmRange
     );
 
-    const cacheKey = [
-      sanitizeForKey(resolvedReactNativeVersion),
-      sanitizeForKey(resolvedReanimatedVersion),
-      sanitizeForKey(resolvedWorkletsVersion),
-      'android-debug-v1',
-    ].join('-');
-
     matrixEntries.push({
-      reactNativeRange,
       reactNativeVersion: resolvedReactNativeVersion,
-      reanimatedRange: reanimatedNpmRange,
       reanimatedVersion: resolvedReanimatedVersion,
-      workletsRange: workletsNpmRange,
       workletsVersion: resolvedWorkletsVersion,
-      cacheKey,
     });
   }
 }
 
-const uniqueByCacheKey = new Map();
+const uniqueEntries = new Map();
 for (const entry of matrixEntries) {
-  uniqueByCacheKey.set(entry.cacheKey, entry);
+  const key = `${entry.reactNativeVersion}-${entry.reanimatedVersion}-${entry.workletsVersion}`;
+  uniqueEntries.set(key, entry);
 }
 
-const matrix = Array.from(uniqueByCacheKey.values());
+const matrix = Array.from(uniqueEntries.values());
 
 fs.writeFileSync(
   '/tmp/reanimated-worklets-matrix.json',
