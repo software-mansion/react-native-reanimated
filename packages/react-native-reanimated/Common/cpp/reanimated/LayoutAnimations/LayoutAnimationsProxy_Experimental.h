@@ -5,7 +5,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
-#include <worklets/Tools/UIScheduler.h>
+#include <worklets/Compat/StableApi.h>
 
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/graphics/Transform.h>

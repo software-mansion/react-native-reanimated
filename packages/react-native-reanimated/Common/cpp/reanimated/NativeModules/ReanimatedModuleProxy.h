@@ -24,8 +24,7 @@
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
-#include <worklets/Tools/UIScheduler.h>
-#include <worklets/WorkletRuntime/WorkletRuntime.h>
+#include <worklets/Compat/StableApi.h>
 
 #include <memory>
 #include <set>
