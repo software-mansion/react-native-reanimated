@@ -61,7 +61,12 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
       ReanimatedSystraceSection s("find after elements");
       findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext);
 #ifdef __APPLE__
-      forceScreenSnapshot_(afterTopScreen->current.tag);
+      // this is a temporary workaround for RNScreens on iOS, which takes
+      // the snapshot of the popped screen before we hide the shared element,
+      // the issue should be gone with the new stack implementation
+      if (auto screen = findParentRNSScreen(afterTopScreen)) {
+        forceScreenSnapshot_(screen->current.tag);
+      }
 #endif
     }
     const bool hasScreenChanged = beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen;
