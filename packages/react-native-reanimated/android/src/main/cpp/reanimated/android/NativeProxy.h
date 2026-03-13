@@ -63,6 +63,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
       const std::string &eventName,
       const int emitterReactTag);
   void performOperations();
+  void performNonLayoutOperations();
   bool getIsReducedMotion();
   void requestRender(std::function<void(double)> onRender);
   void registerEventHandler();

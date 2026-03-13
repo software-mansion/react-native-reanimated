@@ -32,6 +32,18 @@ void UpdatesRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
   }
 }
 
+UpdatesBatch UpdatesRegistry::getPendingUpdates() {
+  auto lock = std::lock_guard<std::mutex>{mutex_};
+  flushUpdatesToRegistry(updatesBatch_);
+
+  UpdatesBatch updatesBatch;
+  for (const auto &[tag, pair] : updatesRegistry_) {
+    const auto &[shadowNode, props] = pair;
+    updatesBatch.emplace_back(shadowNode, props);
+  }
+  return updatesBatch;
+}
+
 void UpdatesRegistry::collectProps(PropsMap &propsMap) {
   std::lock_guard<std::mutex> lock{mutex_};
 

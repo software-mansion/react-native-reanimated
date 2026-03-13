@@ -51,28 +51,58 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
     const UpdatesBatch &updatesBatch,
     const std::unordered_set<std::string> &synchronousPropNames,
-    const bool shouldRequireIntegerColors = false) {
+    const bool shouldRequireIntegerColors = false,
+    const bool allowPartialViews = false) {
   UpdatesBatch synchronousUpdatesBatch;
   UpdatesBatch shadowTreeUpdatesBatch;
 
   for (const auto &[shadowNode, props] : updatesBatch) {
-    bool hasOnlySynchronousProps = true;
+    if (allowPartialViews) {
+      folly::dynamic synchronousProps = folly::dynamic::object();
+      folly::dynamic shadowTreeProps = folly::dynamic::object();
 
-    for (const auto &[key, value] : props.items()) {
-      const auto keyStr = key.asString();
-      const bool isColorProp =
-          keyStr == "color" || keyStr.find("Color") != std::string::npos;
-      if (!synchronousPropNames.contains(keyStr) ||
-          (shouldRequireIntegerColors && isColorProp && !value.isInt())) {
-        hasOnlySynchronousProps = false;
-        break;
+      for (const auto &[key, value] : props.items()) {
+        const auto keyStr = key.asString();
+        const bool isColorProp =
+            keyStr == "color" || keyStr.find("Color") != std::string::npos;
+        const bool isSynchronous = synchronousPropNames.contains(keyStr) &&
+            (!shouldRequireIntegerColors || !isColorProp || value.isInt());
+        if (isSynchronous) {
+          synchronousProps[keyStr] = value;
+        } else {
+          shadowTreeProps[keyStr] = value;
+        }
       }
-    }
 
-    if (hasOnlySynchronousProps) {
-      synchronousUpdatesBatch.emplace_back(shadowNode, props);
+      if (!synchronousProps.empty()) {
+        synchronousUpdatesBatch.emplace_back(
+            shadowNode, std::move(synchronousProps));
+      }
+
+      if (!shadowTreeProps.empty()) {
+        shadowTreeUpdatesBatch.emplace_back(
+            shadowNode, std::move(shadowTreeProps));
+      }
     } else {
-      shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
+      bool hasOnlySynchronousProps = true;
+
+      for (const auto &[key, value] : props.items()) {
+        const auto keyStr = key.asString();
+        const bool isColorProp =
+            keyStr == "color" || keyStr.find("Color") != std::string::npos;
+        const bool isSynchronous = synchronousPropNames.contains(keyStr) &&
+            (!shouldRequireIntegerColors || !isColorProp || value.isInt());
+        if (!isSynchronous) {
+          hasOnlySynchronousProps = false;
+          break;
+        }
+      }
+
+      if (hasOnlySynchronousProps) {
+        synchronousUpdatesBatch.emplace_back(shadowNode, props);
+      } else {
+        shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
+      }
     }
   }
 
@@ -768,8 +798,18 @@ void ReanimatedModuleProxy::performOperations() {
   viewStylesRepository_->clearNodesCache();
 }
 
+void ReanimatedModuleProxy::performNonLayoutOperations() {
+  ReanimatedSystraceSection s(
+      "ReanimatedModuleProxy::performNonLayoutOperations");
+
+  UpdatesBatch updatesBatch = animatedPropsRegistry_->getPendingUpdates();
+
+  applySynchronousUpdates(updatesBatch, true);
+}
+
 void ReanimatedModuleProxy::applySynchronousUpdates(
-    UpdatesBatch &updatesBatch) {
+    UpdatesBatch &updatesBatch,
+    const bool allowPartialUpdates) {
 #ifdef ANDROID
   static const std::unordered_set<std::string> synchronousProps = {
       "opacity",
@@ -993,8 +1033,8 @@ void ReanimatedModuleProxy::applySynchronousUpdates(
     throw std::runtime_error("[Reanimated] Unsupported transform: " + name);
   };
 
-  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
-      partitionUpdates(updatesBatch, synchronousProps, true);
+  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] = partitionUpdates(
+      updatesBatch, synchronousProps, true, allowPartialUpdates);
 
   if (!synchronousUpdatesBatch.empty()) {
     std::vector<int> intBuffer;
