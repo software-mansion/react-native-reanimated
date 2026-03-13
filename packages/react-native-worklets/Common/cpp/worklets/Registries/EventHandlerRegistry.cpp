@@ -1,3 +1,6 @@
+// EventHandlerRegistry was fully moved to Reanimated.
+// This file is kept only for backwards compatibility with older versions of Reanimated.
+
 #include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/Tools/WorkletEventHandler.h>
 

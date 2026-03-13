@@ -3,6 +3,8 @@ import { ReanimatedError } from '../../../../../common';
 import type { CSSAnimationKeyframeSelector } from '../../../../types';
 import { ERROR_MESSAGES, normalizeAnimationKeyframes } from '../keyframes';
 
+const COMPONENT_DISPLAY_NAME = 'View';
+
 describe(normalizeAnimationKeyframes, () => {
   describe('offset normalization', () => {
     describe('when offset is valid', () => {
@@ -17,7 +19,10 @@ describe(normalizeAnimationKeyframes, () => {
         [1, 1],
       ])(`normalizes %p to %p`, (offset, expected) => {
         expect(
-          normalizeAnimationKeyframes({ [offset]: { opacity: 1 } }, 'RCTView')
+          normalizeAnimationKeyframes(
+            { [offset]: { opacity: 1 } },
+            COMPONENT_DISPLAY_NAME
+          )
         ).toEqual({
           propKeyframes: { opacity: [{ offset: expected, value: 1 }] },
           keyframeTimingFunctions: {},
@@ -31,7 +36,10 @@ describe(normalizeAnimationKeyframes, () => {
         (offset) => {
           const value = offset as CSSAnimationKeyframeSelector;
           expect(() =>
-            normalizeAnimationKeyframes({ [value]: { opacity: 1 } }, 'RCTView')
+            normalizeAnimationKeyframes(
+              { [value]: { opacity: 1 } },
+              COMPONENT_DISPLAY_NAME
+            )
           ).toThrow(
             new ReanimatedError(ERROR_MESSAGES.invalidOffsetType(value))
           );
@@ -45,7 +53,10 @@ describe(normalizeAnimationKeyframes, () => {
         (offset) => {
           const value = offset as CSSAnimationKeyframeSelector;
           expect(() =>
-            normalizeAnimationKeyframes({ [value]: { opacity: 1 } }, 'RCTView')
+            normalizeAnimationKeyframes(
+              { [value]: { opacity: 1 } },
+              COMPONENT_DISPLAY_NAME
+            )
           ).toThrow(
             new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(value))
           );
@@ -64,7 +75,10 @@ describe(normalizeAnimationKeyframes, () => {
         ['0, 0.5, 1', [0, 0.5, 1]],
       ])('normalizes %p to %p', (offset, expected) => {
         expect(
-          normalizeAnimationKeyframes({ [offset]: { opacity: 1 } }, 'RCTView')
+          normalizeAnimationKeyframes(
+            { [offset]: { opacity: 1 } },
+            COMPONENT_DISPLAY_NAME
+          )
         ).toEqual({
           keyframeTimingFunctions: {},
           propKeyframes: {
@@ -85,7 +99,10 @@ describe(normalizeAnimationKeyframes, () => {
       ])('throws an error for %p', (offset, errorMsg) => {
         const value = offset as CSSAnimationKeyframeSelector;
         expect(() =>
-          normalizeAnimationKeyframes({ [value]: { opacity: 1 } }, 'RCTView')
+          normalizeAnimationKeyframes(
+            { [value]: { opacity: 1 } },
+            COMPONENT_DISPLAY_NAME
+          )
         ).toThrow(new ReanimatedError(errorMsg));
       });
     });
@@ -100,7 +117,7 @@ describe(normalizeAnimationKeyframes, () => {
             '50%': { opacity: 0.5 },
             to: { opacity: 1 },
           },
-          'RCTView'
+          COMPONENT_DISPLAY_NAME
         )
       ).toEqual({
         propKeyframes: {
@@ -121,7 +138,7 @@ describe(normalizeAnimationKeyframes, () => {
             from: { shadowOffset: { width: 0, height: 0 } },
             to: { shadowOffset: { width: 10, height: 10 } },
           },
-          'RCTView'
+          COMPONENT_DISPLAY_NAME
         )
       ).toEqual({
         propKeyframes: {
@@ -150,7 +167,7 @@ describe(normalizeAnimationKeyframes, () => {
             '25%': { opacity: 0.25 },
             from: { opacity: 0 },
           },
-          'RCTView'
+          COMPONENT_DISPLAY_NAME
         )
       ).toEqual({
         propKeyframes: {
@@ -173,7 +190,7 @@ describe(normalizeAnimationKeyframes, () => {
             from: { transform: [{ scale: 0 }, { rotate: '0deg' }] },
             to: { transform: [{ scale: 1 }, { rotate: '360deg' }] },
           },
-          'RCTView'
+          COMPONENT_DISPLAY_NAME
         )
       ).toEqual({
         propKeyframes: {
@@ -193,7 +210,7 @@ describe(normalizeAnimationKeyframes, () => {
             from: { opacity: 0, transform: undefined },
             to: { opacity: 1 },
           },
-          'RCTView'
+          COMPONENT_DISPLAY_NAME
         )
       ).toEqual({
         propKeyframes: {
@@ -214,7 +231,7 @@ describe(normalizeAnimationKeyframes, () => {
             '50%': { opacity: 0.5 },
             to: {},
           },
-          'RCTView'
+          COMPONENT_DISPLAY_NAME
         )
       ).toEqual({
         propKeyframes: {
@@ -235,7 +252,7 @@ describe(normalizeAnimationKeyframes, () => {
             '50%': { opacity: 0.75 },
             '75%': { opacity: 1, animationTimingFunction: 'ease-out' },
           },
-          'RCTView'
+          COMPONENT_DISPLAY_NAME
         )
       ).toEqual({
         propKeyframes: {
@@ -266,7 +283,7 @@ describe(normalizeAnimationKeyframes, () => {
           {
             '0%, 100%': { opacity: 0, animationTimingFunction: 'ease-in' },
           },
-          'RCTView'
+          COMPONENT_DISPLAY_NAME
         )
       ).toEqual({
         propKeyframes: {

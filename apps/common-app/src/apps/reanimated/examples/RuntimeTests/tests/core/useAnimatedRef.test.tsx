@@ -71,8 +71,7 @@ describe('Test *****useAnimatedRef*****', () => {
     const Component = () => {
       const animatedRef = useAnimatedRef<Animated.Image>();
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      return <Animated.Image ref={animatedRef} source={{ uri: require('../../../assets/doge.png') }} />;
+      return <Animated.Image ref={animatedRef} src={'../../../assets/doge.png'} />;
     };
 
     test('mounts without crashing', async () => {
@@ -138,8 +137,7 @@ describe('Test *****useAnimatedRef*****', () => {
       return (
         <AnimatedImageBackground
           ref={animatedRef}
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          source={{ uri: require('../../../assets/doge.png') }}
+          src={'../../../assets/doge.png'}
           style={{ width: 100, height: 100 }}
         />
       );

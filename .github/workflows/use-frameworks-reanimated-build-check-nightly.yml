@@ -33,7 +33,8 @@ jobs:
         # Pre-installing it with Yarn seems to improve stability.
         run: corepack enable && yarn init
       - name: Install React Native
-        run: yarn add @react-native-community/cli
+        # temporary version lock due to bug in version 20.1.2
+        run: yarn add @react-native-community/cli@20.1.1
       - name: Create app
         run: yarn rnc-cli init ${{ env.APP_NAME }} --skip-install --install-pods false --skip-git-init
       - name: Setup Yarn Modern in app

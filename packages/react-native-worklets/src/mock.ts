@@ -16,7 +16,7 @@ globalThis._log = console.log;
 globalThis._getAnimationTimestamp = () => performance.now();
 // requestAnimationFrame react-native jest's setup is incorrect as it polyfills
 // the method directly using setTimeout, therefore the callback doesn't get the
-// expected timestamp as the only argument: https://github.com/facebook/react-native/blob/main/packages/react-native/jest/setup.js#L28
+// expected timestamp as the only argument.
 // We override this setup here to make sure that callbacks get the proper timestamps
 // when executed. For non-jest environments we define requestAnimationFrame in setupRequestAnimationFrame
 // @ts-ignore TypeScript uses Node definition for rAF, setTimeout, etc which returns a Timeout object rather than a number
@@ -35,6 +35,13 @@ const WorkletAPI = {
   RuntimeKind: RuntimeKind,
   createWorkletRuntime: NOOP_FACTORY,
   runOnRuntime: ID,
+  runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
+    _workletRuntime: unknown,
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): Promise<ReturnValue> {
+    return WorkletAPI.runOnUIAsync(worklet, ...args);
+  },
   scheduleOnRuntime: IMMEDIATE_CALLBACK_INVOCATION,
   createSerializable: ID,
   isSerializableRef: ID,
@@ -71,16 +78,15 @@ const WorkletAPI = {
     };
   },
   runOnUIAsync<Args extends unknown[], ReturnValue>(
-    worklet: (...args: Args) => ReturnValue
-  ): (...args: Args) => Promise<ReturnValue> {
-    return (...args: Args) => {
-      return new Promise<ReturnValue>((resolve) => {
-        mockedRequestAnimationFrame(() => {
-          const result = worklet(...args);
-          resolve(result);
-        });
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): Promise<ReturnValue> {
+    return new Promise<ReturnValue>((resolve) => {
+      mockedRequestAnimationFrame(() => {
+        const result = worklet(...args);
+        resolve(result);
       });
-    };
+    });
   },
   runOnUISync: IMMEDIATE_CALLBACK_INVOCATION,
   scheduleOnRN<Args extends unknown[], ReturnValue>(
@@ -95,8 +101,6 @@ const WorkletAPI = {
   ): void {
     WorkletAPI.runOnUI(worklet)(...args);
   },
-  // eslint-disable-next-line camelcase
-  unstable_eventLoopTask: NOOP_FACTORY,
   isWorkletFunction: isWorkletFunction,
   WorkletsModule: {},
 };

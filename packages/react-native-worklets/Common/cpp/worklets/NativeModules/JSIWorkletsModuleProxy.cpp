@@ -1,18 +1,17 @@
+#include <jsi/jsi.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
-
+#include <worklets/Compat/Holders.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/SerializableFactory.h>
+#include <worklets/SharedItems/Shareable.h>
 #include <worklets/SharedItems/Synchronizable.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
-
-#ifdef __ANDROID__
-#include <fbjni/fbjni.h>
-#endif // __ANDROID__
 
 #include <memory>
 #include <string>
@@ -201,8 +200,10 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnUI"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnUISync"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnRuntimeSync"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "runOnRuntimeSyncWithId"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createWorkletRuntime"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnRuntime"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "scheduleOnRuntimeWithId"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "reportFatalErrorOnJS"));
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getStaticFeatureFlag"));
@@ -215,9 +216,14 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "synchronizableLock"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "synchronizableUnlock"));
 
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createShareable"));
+
 #ifdef WORKLETS_BUNDLE_MODE_ENABLED
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "propagateModuleUpdate"));
 #endif // WORKLETS_BUNDLE_MODE_ENABLED
+
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getUIRuntimeHolder"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getUISchedulerHolder"));
 
   return propertyNames;
 }
@@ -400,6 +406,25 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         });
   }
 
+  if (name == "runOnRuntimeSyncWithId") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [runtimeManager = runtimeManager_](
+            jsi::Runtime &rt, const jsi ::Value &thisValue, const jsi::Value *args, size_t count) {
+          const int runtimeId = args[0].asNumber();
+          const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
+          if (!workletRuntime) {
+            throw jsi::JSError(
+                rt, "[Worklets] runOnRuntimeSyncWithId: no worklet runtime found for id " + std::to_string(runtimeId));
+          }
+          auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
+              rt, args[1], "[Worklets] Only worklets can be executed on a worklet runtime.");
+          return workletRuntime->runSyncSerialized(serializableWorklet)->toJSValue(rt);
+        });
+  }
+
   if (name == "createWorkletRuntime") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -437,6 +462,26 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
     return jsi::Function::createFromHostFunction(
         rt, propName, 2, [](jsi::Runtime &rt, const jsi ::Value &thisValue, const jsi::Value *args, size_t count) {
           worklets::scheduleOnRuntime(rt, args[0], args[1]);
+          return jsi::Value::undefined();
+        });
+  }
+
+  if (name == "scheduleOnRuntimeWithId") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        2,
+        [runtimeManager = runtimeManager_](
+            jsi::Runtime &rt, const jsi ::Value &thisValue, const jsi::Value *args, size_t count) {
+          const int runtimeId = args[0].asNumber();
+          const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
+          if (!workletRuntime) {
+            throw jsi::JSError(
+                rt, "[Worklets] scheduleOnRuntimeWithId: no worklet runtime found for id " + std::to_string(runtimeId));
+          }
+          const auto worklet = extractSerializableOrThrow<SerializableWorklet>(
+              rt, args[1], "[Worklets] Only worklets can be scheduled to run on a worklet runtime.");
+          workletRuntime->schedule(worklet);
           return jsi::Value::undefined();
         });
   }
@@ -510,6 +555,29 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         });
   }
 
+  if (name == "createShareable") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        5,
+        [runtimeManager = runtimeManager_](
+            jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value {
+          const int hostRuntimeId = args[0].asNumber();
+          const auto hostRuntime = runtimeManager->getRuntime(hostRuntimeId);
+          if (!hostRuntime) {
+            throw jsi::JSError(
+                rt, "[Worklets] createShareable: no worklet runtime found for id " + std::to_string(hostRuntimeId));
+          }
+          const auto initial = extractSerializableOrThrow(rt, args[1], "[Worklets] Value must be a Serializable.");
+          const auto initSynchronously = args[2].asBool();
+          const auto decorateHost = extractSerializableOrThrow(rt, args[3]);
+          const auto decorateGuest = extractSerializableOrThrow(rt, args[4]);
+          const auto shareable =
+              std::make_shared<Shareable>(hostRuntime, initial, initSynchronously, decorateHost, decorateGuest);
+          return SerializableJSRef::newNativeStateObject(rt, shareable);
+        });
+  }
+
 #ifdef WORKLETS_BUNDLE_MODE_ENABLED
   if (name == "propagateModuleUpdate") {
     return jsi::Function::createFromHostFunction(
@@ -541,6 +609,32 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
               /* name */ args[0].asString(rt).utf8(rt),
               /* value */ args[1].asBool());
           return jsi::Value::undefined();
+        });
+  }
+
+  if (name == "getUIRuntimeHolder") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        0,
+        [uiWorkletRuntime = uiWorkletRuntime_](
+            jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          auto obj = jsi::Object(rt);
+          obj.setNativeState(rt, std::make_shared<WorkletRuntimeHolder>(uiWorkletRuntime.lock()));
+          return obj;
+        });
+  }
+
+  if (name == "getUISchedulerHolder") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        0,
+        [uiScheduler = uiScheduler_](
+            jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          auto obj = jsi::Object(rt);
+          obj.setNativeState(rt, std::make_shared<UISchedulerHolder>(uiScheduler));
+          return obj;
         });
   }
 

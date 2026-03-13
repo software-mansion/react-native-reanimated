@@ -20,12 +20,12 @@ export const ERROR_MESSAGES = {
 
 type PathCommand = [string, ...number[]];
 
-export const processSVGPath: ValueProcessor<string, string> = (d) => {
+export const processSVGPath = ((d) => {
   let pathSegments: PathCommand[] = parsePathString(d);
   pathSegments = normalizePath(pathSegments);
 
   return pathSegments.flatMap((subArr) => subArr).join(' ');
-};
+}) satisfies ValueProcessor<string, string>;
 
 function processPathSegment(
   command: string,

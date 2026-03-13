@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "build": "yarn workspace babel-plugin-worklets build && bob build && yarn build:unpackers",
-    "build:unpackers": "node ./scripts/export-unpackers.js",
+    "build:unpackers": "NODE_ENV='production' node ./scripts/export-unpackers.js",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
     "find-unused-code:js": "knip",
     "format": "yarn format:js && yarn format:plugin && yarn format:common && yarn format:android && yarn format:apple",
@@ -75,6 +75,7 @@
     "@babel/core": "7.28.4",
     "@react-native-community/cli": "20.1.0",
     "@react-native/eslint-config": "0.83.0",
+    "@react-native/jest-preset": "patch:@react-native/jest-preset@npm%3A0.85.0-rc.1#~/.yarn/patches/@react-native-jest-preset-npm-0.85.0-rc.1-b8e9692393.patch",
     "@types/jest": "30.0.0",
     "@types/node": "24.7.0",
     "@types/react": "19.2.2",
@@ -86,7 +87,7 @@
     "madge": "8.0.0",
     "prettier": "3.6.2",
     "react": "19.2.3",
-    "react-native": "0.84.0-rc.2",
+    "react-native": "0.85.0-rc.1",
     "react-native-builder-bob": "0.40.13",
     "typescript": "5.8.3"
   },
@@ -106,6 +107,7 @@
     "bundleMode/index.d.ts",
     "scripts/worklets_utils.rb",
     "scripts/validate-react-native-version.js",
+    "jest",
     "plugin/index.js",
     "plugin/index.d.ts",
     "*.podspec",

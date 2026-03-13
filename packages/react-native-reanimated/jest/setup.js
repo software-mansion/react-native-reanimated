@@ -1,27 +1,19 @@
 // @ts-nocheck
-delete global.MessageChannel;
-require('react-native-worklets/jestSetup');
 require('../src/jestUtils').setUpTests();
-
-jest.mock('react-native-worklets', () =>
-  require('react-native-worklets/src/mock')
-);
 
 global.__reanimatedLoggerConfig = {
   logFunction: (data) => {
     switch (data.level) {
-      case 'warn':
+      case 1: // ReanimatedLogLevel.warn
         // eslint-disable-next-line reanimated/use-logger
-        console.warn(data.message.content);
+        console.warn(data.message);
         break;
-      case 'error':
-      case 'fatal':
-      case 'syntax':
+      case 2: // ReanimatedLogLevel.error
         // eslint-disable-next-line reanimated/use-logger
-        console.error(data.message.content);
+        console.error(data.message);
         break;
     }
   },
-  level: 'warn',
+  level: 1, // ReanimatedLogLevel.warn
   strict: false,
 };

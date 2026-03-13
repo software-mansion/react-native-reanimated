@@ -2,6 +2,7 @@
 
 import { setupCallGuard } from './callGuard';
 import { registerWorkletsError, WorkletsError } from './debug/WorkletsError';
+import { addGuardImplementation } from './guardImplementation';
 import {
   getMemorySafeCapturableConsole,
   setupConsole,
@@ -11,8 +12,10 @@ import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
 } from './memory/serializable';
+import { serializableMappingCache } from './memory/serializableMappingCache';
 import { setupRunLoop } from './runLoop/workletRuntime';
 import { RuntimeKind } from './runtimeKind';
+import { scheduleOnRN } from './threads';
 import type {
   WorkletFunction,
   WorkletRuntime,
@@ -20,6 +23,12 @@ import type {
 } from './types';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsModule } from './WorkletsModule/NativeWorklets';
+
+/**
+ * The ID of the [UI Worklet
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
+ */
+export const UIRuntimeId = RuntimeKind.UI as 2;
 
 /**
  * Lets you create a new JS runtime which can be used to run worklets possibly
@@ -118,13 +127,6 @@ export function createWorkletRuntime(
  *
  * - The worklet is scheduled on the Worker Runtime's [Async
  *   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
- * - The function cannot be scheduled on the Worker Runtime from [UI
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
- *   or another [Worker
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
- *   unless the [Bundle
- *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
- *   enabled.
  *
  * @param workletRuntime - The runtime to schedule the worklet on.
  * @param worklet - The worklet to schedule.
@@ -144,19 +146,9 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>,
   ...args: Args
 ): void {
-  'worklet';
   if (__DEV__ && !isWorkletFunction(worklet)) {
     throw new WorkletsError(
       'The function passed to `scheduleOnRuntime` is not a worklet.'
-    );
-  }
-  if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
-    globalThis._scheduleOnRuntime(
-      workletRuntime,
-      makeShareableCloneOnUIRecursive(() => {
-        'worklet';
-        worklet(...args);
-      })
     );
   }
 
@@ -165,8 +157,114 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
     createSerializable(() => {
       'worklet';
       worklet(...args);
-      globalThis.__flushMicrotasks();
+      globalThis.__flushMicrotasks?.();
     })
+  );
+}
+
+if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+  function scheduleOnRuntimeWorklet<Args extends unknown[], ReturnValue>(
+    workletRuntime: WorkletRuntime,
+    worklet: WorkletFunction<Args, ReturnValue>,
+    ...args: Args
+  ): void {
+    'worklet';
+    if (__DEV__ && !isWorkletFunction(worklet)) {
+      throw new WorkletsError(
+        'The function passed to `scheduleOnRuntime` is not a worklet.'
+      );
+    }
+
+    globalThis.__workletsModuleProxy.scheduleOnRuntime(
+      workletRuntime,
+      globalThis.__serializer(() => {
+        'worklet';
+        worklet(...args);
+        globalThis.__flushMicrotasks?.();
+      })
+    );
+  }
+
+  serializableMappingCache.set(
+    scheduleOnRuntime,
+    createSerializable(scheduleOnRuntimeWorklet)
+  );
+}
+
+/**
+ * Lets you asynchronously run a
+ * [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)
+ * on a [Worker
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime)
+ * identified by the runtime's id.
+ *
+ * Check
+ * {@link https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds}
+ * for more information about the different runtime kinds.
+ *
+ * - The worklet is scheduled on the Worker Runtime's [Async
+ *   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
+ *
+ * @param runtimeId - The id of the runtime to schedule the worklet on.
+ * @param worklet - The worklet to schedule.
+ * @param args - The arguments to pass to the worklet.
+ * @returns The return value of the worklet.
+ */
+// @ts-expect-error This overload is correct since it's what user sees in their code
+// before it's transformed by Worklets Babel plugin.
+export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): void;
+
+export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: WorkletFunction<Args, ReturnValue>,
+  ...args: Args
+): void {
+  if (__DEV__ && !isWorkletFunction(worklet)) {
+    throw new WorkletsError(
+      'The function passed to `scheduleOnRuntimeWithId` is not a worklet.'
+    );
+  }
+
+  WorkletsModule.scheduleOnRuntimeWithId(
+    runtimeId,
+    createSerializable(() => {
+      'worklet';
+      worklet(...args);
+      globalThis.__flushMicrotasks?.();
+    })
+  );
+}
+
+if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+  function scheduleOnRuntimeWithIdWorklet<Args extends unknown[], ReturnValue>(
+    runtimeId: number,
+    worklet: WorkletFunction<Args, ReturnValue>,
+    ...args: Args
+  ): void {
+    'worklet';
+    if (__DEV__ && !isWorkletFunction(worklet)) {
+      throw new WorkletsError(
+        'The function passed to `scheduleOnRuntimeWithId` is not a worklet.'
+      );
+    }
+
+    globalThis.__workletsModuleProxy.scheduleOnRuntimeWithId(
+      runtimeId,
+      globalThis.__serializer(() => {
+        'worklet';
+        worklet(...args);
+        globalThis.__flushMicrotasks?.();
+      })
+    );
+  }
+
+  serializableMappingCache.set(
+    scheduleOnRuntimeWithId,
+    createSerializable(scheduleOnRuntimeWithIdWorklet)
   );
 }
 
@@ -221,7 +319,6 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue,
   ...args: Args
 ): ReturnValue {
-  'worklet';
   if (__DEV__ && !isWorkletFunction(worklet)) {
     throw new WorkletsError(
       'The function passed to `runOnRuntimeSync` is not a worklet.'
@@ -236,4 +333,142 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
       return makeShareableCloneOnUIRecursive(result);
     })
   );
+}
+
+/**
+ * Lets you run a function synchronously on a [Worklet
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime)
+ * identified by the runtime's id.
+ *
+ * - This function cannot be called from the [UI
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
+ *   or a [Worker
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
+ *   unless the [Bundle
+ *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
+ *   enabled.
+ * - You can target the UI Runtime with this function by passing
+ *   {@link UIRuntimeId} as the `runtimeId` argument.
+ *
+ * @param runtimeId - The id of the runtime to run the worklet on.
+ * @param worklet - The worklet to run.
+ * @param args - The arguments to pass to the worklet.
+ * @returns The return value of the worklet.
+ */
+// @ts-expect-error This overload is correct since it's what user sees in their code
+// before it's transformed by Worklets Babel plugin.
+export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): ReturnValue;
+
+export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: WorkletFunction<Args, ReturnValue>,
+  ...args: Args
+): ReturnValue {
+  if (__DEV__ && !isWorkletFunction(worklet)) {
+    throw new WorkletsError(
+      'The function passed to `runOnRuntimeSyncWithId` is not a worklet.'
+    );
+  }
+
+  return WorkletsModule.runOnRuntimeSyncWithId(
+    runtimeId,
+    createSerializable(() => {
+      'worklet';
+      const result = worklet(...args);
+      return makeShareableCloneOnUIRecursive(result);
+    })
+  );
+}
+
+/**
+ * Lets you asynchronously run a
+ * [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)
+ * on a [Worker
+ * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime)
+ * and get the result via a Promise.
+ *
+ * - The worklet is scheduled on the Worker Runtime's Async Queue
+ * - Returns a Promise that resolves with the worklet's return value
+ * - This function can only be called from the [RN
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
+ *
+ * @param workletRuntime - The runtime to run the worklet on.
+ * @param worklet - The worklet to run.
+ * @param args - The arguments to pass to the worklet.
+ * @returns A Promise that resolves to the return value of the worklet.
+ * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRuntimeAsync
+ */
+// @ts-expect-error This overload is correct since it's what user sees in their code
+// before it's transformed by Worklets Babel plugin.
+export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): Promise<ReturnValue>;
+
+export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: WorkletFunction<Args, ReturnValue>,
+  ...args: Args
+): Promise<ReturnValue> {
+  if (__DEV__) {
+    if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
+      throw new WorkletsError(
+        '`runOnRuntimeAsync` can only be called on the RN Runtime.'
+      );
+    }
+    if (!isWorkletFunction(worklet)) {
+      throw new WorkletsError(
+        'The function passed to `runOnRuntimeAsync` is not a worklet.'
+      );
+    }
+  }
+
+  return new Promise<ReturnValue>((resolve, reject) => {
+    if (__DEV__) {
+      // in DEV mode we call serializable conversion here because in case the object
+      // can't be converted, we will get a meaningful stack-trace as opposed to the
+      // situation when conversion is only done via microtask queue. This does not
+      // make the app particularily less efficient as converted objects are cached
+      // and for a given worklet the conversion only happens once.
+      createSerializable(worklet);
+      createSerializable(args);
+    }
+
+    WorkletsModule.scheduleOnRuntime(
+      workletRuntime,
+      createSerializable(() => {
+        'worklet';
+        try {
+          const result = worklet(...args);
+          scheduleOnRN(resolve, result);
+        } catch (error) {
+          scheduleOnRN(reject, error);
+        }
+        globalThis.__flushMicrotasks?.();
+      })
+    );
+  });
+}
+
+if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+  /**
+   * QoL guards to give a meaningful error message when the user tries to call
+   * these functions on Worklet Runtimes outside of the Bundle Mode.
+   */
+  addGuardImplementation(runOnRuntimeAsync);
+  addGuardImplementation(runOnRuntimeSync);
+  addGuardImplementation(runOnRuntimeSyncWithId);
+}
+
+export function getUIRuntimeHolder(): object {
+  return WorkletsModule.getUIRuntimeHolder();
+}
+
+export function getUISchedulerHolder(): object {
+  return WorkletsModule.getUISchedulerHolder();
 }

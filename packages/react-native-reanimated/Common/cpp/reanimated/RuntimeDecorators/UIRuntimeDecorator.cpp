@@ -1,11 +1,9 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
-#include <worklets/Tools/WorkletsJSIUtils.h>
+#include <reanimated/Tools/ReaJSIUtils.h>
 
 #include <utility>
 
 namespace reanimated {
-
-using namespace worklets;
 
 void UIRuntimeDecorator::decorate(
     jsi::Runtime &uiRuntime,

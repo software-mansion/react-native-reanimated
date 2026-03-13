@@ -1,0 +1,22 @@
+name: Common validation
+description: Lint C++ code in Common directory
+
+inputs:
+  package-dir:
+    description: The package directory (e.g., packages/react-native-reanimated)
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up C++ lint tools
+      uses: ./.github/actions/setup-cpp-lint
+
+    - name: Install monorepo node dependencies
+      shell: bash
+      run: yarn install --immutable
+
+    - name: Lint Common
+      shell: bash
+      working-directory: ${{ inputs.package-dir }}
+      run: yarn lint:common

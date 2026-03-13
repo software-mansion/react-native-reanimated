@@ -58,9 +58,10 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
 
 <Tabs groupId="framework">
   <TabItem value="expo" label="Expo">
-    ```javascript {4,9}
+    ```javascript {3,10}
     // Learn more https://docs.expo.io/guides/customizing-metro
     const { getDefaultConfig, mergeConfig } = require("expo/metro-config");
+    const { getBundleModeMetroConfig } = require("react-native-worklets/bundleMode");
 
     @type {import('expo/metro-config').MetroConfig} */
     let config = getDefaultConfig(__dirname);
