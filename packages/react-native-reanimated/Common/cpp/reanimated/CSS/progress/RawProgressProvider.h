@@ -7,6 +7,8 @@ class RawProgressProvider {
  public:
   RawProgressProvider(double timestamp, double duration, double delay);
 
+  double getDuration() const;
+  double getDelay() const;
   void setDuration(double duration);
   void setDelay(double delay);
 

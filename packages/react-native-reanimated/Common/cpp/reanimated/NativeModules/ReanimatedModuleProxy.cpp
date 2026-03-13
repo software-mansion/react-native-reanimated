@@ -498,7 +498,14 @@ void ReanimatedModuleProxy::applyCSSAnimations(
   {
     auto lock = cssAnimationsRegistry_->lock();
     cssAnimationsRegistry_->apply(
-        rt, shadowNode, updates.animationNames, newAnimations, updates.settingsUpdates, timestamp);
+        rt,
+        shadowNode,
+        updates.animationNames,
+        newAnimations,
+        updates.settingsUpdates,
+        // TODO: replace this placeholder with the actual event listeners
+        0,
+        timestamp);
   }
 
   maybeRunCSSLoop();

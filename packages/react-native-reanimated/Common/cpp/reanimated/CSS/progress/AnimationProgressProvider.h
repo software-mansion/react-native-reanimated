@@ -33,6 +33,8 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   void setEasingFunction(const EasingFunction &easingFunction);
 
   AnimationDirection getDirection() const;
+  unsigned getCurrentIteration() const;
+  double getIterationCount() const;
   double getGlobalProgress() const override;
   double getKeyframeProgress(double fromOffset, double toOffset) const override;
   AnimationProgressState getState(double timestamp) const;
