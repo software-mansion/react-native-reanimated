@@ -5,27 +5,23 @@
 
 namespace reanimated::css {
 
-CSSAnimationEvent createAnimationStartEvent(
-    const facebook::react::Tag viewTag,
-    const std::shared_ptr<CSSAnimation> &animation) {
+CSSEvent createAnimationStartEvent(const facebook::react::Tag viewTag, const std::shared_ptr<CSSAnimation> &animation) {
   const auto activeDuration = animation->getDuration() * animation->getIterationCount();
   const auto elapsedTime = std::min(std::max(-animation->getDelay(), 0.0), activeDuration);
-  return {viewTag, CSSAnimationEventType::AnimationStart, animation->getName(), elapsedTime};
+  return {viewTag, "animationstart", animation->getName(), elapsedTime};
 }
 
-CSSAnimationEvent createAnimationIterationEvent(
+CSSEvent createAnimationIterationEvent(
     const facebook::react::Tag viewTag,
     const std::shared_ptr<CSSAnimation> &animation,
     const unsigned iteration) {
   const auto elapsedTime = static_cast<double>(iteration - 1) * animation->getDuration();
-  return {viewTag, CSSAnimationEventType::AnimationIteration, animation->getName(), elapsedTime};
+  return {viewTag, "animationiteration", animation->getName(), elapsedTime};
 }
 
-CSSAnimationEvent createAnimationEndEvent(
-    const facebook::react::Tag viewTag,
-    const std::shared_ptr<CSSAnimation> &animation) {
+CSSEvent createAnimationEndEvent(const facebook::react::Tag viewTag, const std::shared_ptr<CSSAnimation> &animation) {
   const auto elapsedTime = animation->getDuration() * animation->getIterationCount();
-  return {viewTag, CSSAnimationEventType::AnimationEnd, animation->getName(), elapsedTime};
+  return {viewTag, "animationend", animation->getName(), elapsedTime};
 }
 
 } // namespace reanimated::css

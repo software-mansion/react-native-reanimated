@@ -8,6 +8,9 @@
 
 namespace reanimated::css {
 
+CSSAnimationsRegistry::CSSAnimationsRegistry(const std::shared_ptr<CSSEventsEmitter> &eventsEmitter)
+    : eventsEmitter_(eventsEmitter) {}
+
 bool CSSAnimationsRegistry::isEmpty() const {
   // The registry is empty if has no registered animations and no updates
   // stored in the updates registry
@@ -90,12 +93,6 @@ void CSSAnimationsRegistry::update(const double timestamp) {
       ++it;
     }
   }
-}
-
-std::vector<CSSAnimationEvent> CSSAnimationsRegistry::flushEvents() {
-  std::vector<CSSAnimationEvent> events;
-  events.swap(pendingEvents_);
-  return events;
 }
 
 CSSAnimationsVector CSSAnimationsRegistry::buildAnimationsVector(
@@ -211,7 +208,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
 
     if (detectEvents) {
       const AnimationStateSnapshot afterSnapshot = {newState, animation->getCurrentIteration()};
-      detectAnimationEvents(viewTag, animation, beforeSnapshot, afterSnapshot);
+      scheduleAnimationEvents(viewTag, animation, beforeSnapshot, afterSnapshot);
     }
 
     if (newState == AnimationProgressState::Finished) {
@@ -344,7 +341,7 @@ void CSSAnimationsRegistry::handleAnimationsToRevert(const double timestamp) {
   animationsToRevertMap_.clear();
 }
 
-void CSSAnimationsRegistry::detectAnimationEvents(
+void CSSAnimationsRegistry::scheduleAnimationEvents(
     const Tag viewTag,
     const std::shared_ptr<CSSAnimation> &animation,
     const AnimationStateSnapshot &before,
@@ -353,17 +350,17 @@ void CSSAnimationsRegistry::detectAnimationEvents(
 
   if (hasListener(listeners, CSSAnimationEventType::AnimationStart) &&
       before.state == AnimationProgressState::Pending && after.state != AnimationProgressState::Pending) {
-    pendingEvents_.emplace_back(createAnimationStartEvent(viewTag, animation));
+    eventsEmitter_->schedule(createAnimationStartEvent(viewTag, animation));
   }
 
   if (hasListener(listeners, CSSAnimationEventType::AnimationIteration) &&
       after.state == AnimationProgressState::Running && after.iteration > before.iteration) {
-    pendingEvents_.emplace_back(createAnimationIterationEvent(viewTag, animation, after.iteration));
+    eventsEmitter_->schedule(createAnimationIterationEvent(viewTag, animation, after.iteration));
   }
 
   if (hasListener(listeners, CSSAnimationEventType::AnimationEnd) && before.state != AnimationProgressState::Finished &&
       after.state == AnimationProgressState::Finished) {
-    pendingEvents_.emplace_back(createAnimationEndEvent(viewTag, animation));
+    eventsEmitter_->schedule(createAnimationEndEvent(viewTag, animation));
   }
 }
 

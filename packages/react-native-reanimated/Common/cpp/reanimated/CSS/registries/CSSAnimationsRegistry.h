@@ -3,6 +3,7 @@
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/events/CSSAnimationEvent.h>
+#include <reanimated/CSS/events/CSSEventsEmitter.h>
 #include <reanimated/CSS/utils/DelayedItemsManager.h>
 #include <reanimated/CSS/utils/props.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
@@ -24,6 +25,8 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
  public:
   using SettingsUpdates = std::vector<std::pair<size_t, PartialCSSAnimationSettings>>;
 
+  explicit CSSAnimationsRegistry(const std::shared_ptr<CSSEventsEmitter> &eventsEmitter);
+
   bool isEmpty() const override;
   bool hasUpdates() const;
 
@@ -38,7 +41,6 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
   void remove(Tag viewTag) override;
 
   void update(double timestamp);
-  std::vector<CSSAnimationEvent> flushEvents();
 
  private:
   struct AnimationStateSnapshot {
@@ -56,6 +58,8 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
 
   using Registry = std::unordered_map<Tag, RegistryEntry>;
 
+  const std::shared_ptr<CSSEventsEmitter> eventsEmitter_;
+
   Registry registry_;
 
   RunningAnimationIndicesMap runningAnimationIndicesMap_;
@@ -63,7 +67,6 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
   DelayedItemsManager<std::shared_ptr<CSSAnimation>> delayedAnimationsManager_;
 
   std::unordered_map<Tag, CSSAnimationEventListeners> eventListenersMap_;
-  std::vector<CSSAnimationEvent> pendingEvents_;
 
   CSSAnimationsVector buildAnimationsVector(
       jsi::Runtime &rt,
@@ -85,7 +88,7 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
   void activateDelayedAnimations(double timestamp);
   void handleAnimationsToRevert(double timestamp);
 
-  void detectAnimationEvents(
+  void scheduleAnimationEvents(
       Tag viewTag,
       const std::shared_ptr<CSSAnimation> &animation,
       const AnimationStateSnapshot &before,

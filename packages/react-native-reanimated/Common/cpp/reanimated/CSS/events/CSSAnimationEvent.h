@@ -1,10 +1,9 @@
 #pragma once
 
-#include <react/renderer/core/ReactPrimitives.h>
+#include <reanimated/CSS/events/CSSEvent.h>
 
 #include <cstdint>
 #include <memory>
-#include <string>
 
 namespace reanimated::css {
 
@@ -24,20 +23,11 @@ inline bool hasListener(CSSAnimationEventListeners listeners, CSSAnimationEventT
   return (listeners & static_cast<std::uint8_t>(type)) != 0;
 }
 
-struct CSSAnimationEvent {
-  facebook::react::Tag viewTag;
-  CSSAnimationEventType type;
-  std::string animationName;
-  double elapsedTime; // in milliseconds (convert to seconds at dispatch time)
-};
-
-CSSAnimationEvent createAnimationStartEvent(
-    facebook::react::Tag viewTag,
-    const std::shared_ptr<CSSAnimation> &animation);
-CSSAnimationEvent createAnimationIterationEvent(
+CSSEvent createAnimationStartEvent(facebook::react::Tag viewTag, const std::shared_ptr<CSSAnimation> &animation);
+CSSEvent createAnimationIterationEvent(
     facebook::react::Tag viewTag,
     const std::shared_ptr<CSSAnimation> &animation,
     unsigned iteration);
-CSSAnimationEvent createAnimationEndEvent(facebook::react::Tag viewTag, const std::shared_ptr<CSSAnimation> &animation);
+CSSEvent createAnimationEndEvent(facebook::react::Tag viewTag, const std::shared_ptr<CSSAnimation> &animation);
 
 } // namespace reanimated::css
