@@ -12,12 +12,21 @@ const createProject = ({
   modulePathIgnorePatterns = [],
   setupFiles = [],
   setupFilesAfterEnv = [],
+  transformIgnorePatterns = [],
   ...rest
 } = {}) => ({
   ...rest,
-  modulePathIgnorePatterns: [...modulePathIgnorePatterns, '<rootDir>/lib'],
+  modulePathIgnorePatterns: [
+    ...modulePathIgnorePatterns,
+    '<rootDir>/lib',
+    'react-native-worklets/lib',
+  ],
   setupFiles: [...setupFiles, ...sharedSetupFiles],
   setupFilesAfterEnv: [...setupFilesAfterEnv, ...sharedSetupFilesAfterEnv],
+  transformIgnorePatterns: [
+    ...transformIgnorePatterns,
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|react-native-worklets)/)',
+  ],
 });
 
 /**

@@ -2252,7 +2252,7 @@ PODS:
     - React-perflogger (= 0.81.1-1)
     - React-utils (= 0.81.1-1)
     - SocketRocket
-  - RNReanimated (4.3.0-main):
+  - RNReanimated (4.3.0-rc.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2278,12 +2278,12 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/apple (= 4.3.0-main)
-    - RNReanimated/common (= 4.3.0-main)
+    - RNReanimated/apple (= 4.3.0-rc.0)
+    - RNReanimated/common (= 4.3.0-rc.0)
     - RNWorklets
     - SocketRocket
     - Yoga
-  - RNReanimated/apple (4.3.0-main):
+  - RNReanimated/apple (4.3.0-rc.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2312,7 +2312,7 @@ PODS:
     - RNWorklets
     - SocketRocket
     - Yoga
-  - RNReanimated/common (4.3.0-main):
+  - RNReanimated/common (4.3.0-rc.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2731,7 +2731,7 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 02d17caeffffa513b02bb1ba394bbf1e8f46df86
   ReactCodegen: f4d6e6fd5140eade461ffb5579795197956868c8
   ReactCommon: c178596d3ef05508bb6c0f88bfbbc281b5c4222b
-  RNReanimated: 98cca9d12c28c89aa7743bbc5b3d3d127a29ab1d
+  RNReanimated: 3fda99c659a259f74cb1b1c8fe416c3a8fa9415d
   RNWorklets: 43b43d3469425ddce5a14891def93f55c7970c0e
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 0e792f39294e864568930600eeb71135364f777d
