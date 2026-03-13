@@ -68,9 +68,9 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       for (const auto &[key, value] : props.items()) {
         const auto keyStr = key.asString();
         const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
-        const bool shouldApplySynchronously =
+        const bool isSynchronous =
             synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isInt());
-        if (shouldApplySynchronously) {
+        if (isSynchronous) {
           synchronousProps[keyStr] = value;
         } else {
           shadowTreeProps[keyStr] = value;
@@ -90,7 +90,9 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       for (const auto &[key, value] : props.items()) {
         const auto keyStr = key.asString();
         const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
-        if (!synchronousPropNames.contains(keyStr) || (shouldRequireIntegerColors && isColorProp && !value.isInt())) {
+        const bool isSynchronous =
+            synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isInt());
+        if (!isSynchronous) {
           hasOnlySynchronousProps = false;
           break;
         }
