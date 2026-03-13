@@ -178,6 +178,22 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
+  createShareable<TValue = unknown>(
+    hostRuntimeId: number,
+    initial: SerializableRef<TValue>,
+    initSynchronously: boolean,
+    decorateHost: SerializableRef,
+    decorateRef: SerializableRef
+  ): SerializableRef<TValue> {
+    return this.#workletsModuleProxy.createShareable(
+      hostRuntimeId,
+      initial,
+      initSynchronously,
+      decorateHost,
+      decorateRef
+    );
+  }
+
   scheduleOnUI<TValue>(serializable: SerializableRef<TValue>) {
     return this.#workletsModuleProxy.scheduleOnUI(serializable);
   }
@@ -202,13 +218,23 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  scheduleOnRuntime<T>(
+  scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
-    serializableWorklet: SerializableRef<T>
+    serializableWorklet: SerializableRef<TValue>
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntime(
       workletRuntime,
       serializableWorklet
+    );
+  }
+
+  scheduleOnRuntimeWithId<TValue>(
+    runtimeId: number,
+    worklet: SerializableRef<TValue>
+  ) {
+    return this.#workletsModuleProxy.scheduleOnRuntimeWithId(
+      runtimeId,
+      worklet
     );
   }
 
@@ -217,6 +243,13 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     worklet: SerializableRef<TValue>
   ): TReturn {
     return this.#workletsModuleProxy.runOnRuntimeSync(workletRuntime, worklet);
+  }
+
+  runOnRuntimeSyncWithId<TValue, TReturn>(
+    runtimeId: number,
+    worklet: SerializableRef<TValue>
+  ): TReturn {
+    return this.#workletsModuleProxy.runOnRuntimeSyncWithId(runtimeId, worklet);
   }
 
   createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {
@@ -279,6 +312,14 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   setDynamicFeatureFlag(name: string, value: boolean) {
     this.#workletsModuleProxy.setDynamicFeatureFlag(name, value);
+  }
+
+  getUIRuntimeHolder(): object {
+    return this.#workletsModuleProxy.getUIRuntimeHolder();
+  }
+
+  getUISchedulerHolder(): object {
+    return this.#workletsModuleProxy.getUISchedulerHolder();
   }
 }
 

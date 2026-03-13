@@ -355,5 +355,4 @@ export const getAnimatedStyle = (component: ReactTestInstance) => {
   );
 };
 
-/** @knipIgnore */
 export { worklet } from './common';

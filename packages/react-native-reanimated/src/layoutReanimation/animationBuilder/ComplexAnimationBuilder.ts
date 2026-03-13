@@ -123,10 +123,10 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
    */
   static damping<T extends typeof ComplexAnimationBuilder>(
     this: T,
-    damping: number
+    value: number
   ) {
     const instance = this.createInstance();
-    return instance.damping(damping);
+    return instance.damping(value);
   }
 
   damping(damping: number): this {

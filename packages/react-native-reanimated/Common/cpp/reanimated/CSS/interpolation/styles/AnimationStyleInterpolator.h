@@ -16,9 +16,9 @@ class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
   explicit AnimationStyleInterpolator(
       jsi::Runtime &rt,
       const jsi::Value &keyframes,
-      const std::string &componentName,
+      const std::string &nativeComponentName,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      : RecordPropertiesInterpolator(getComponentInterpolators(componentName), {}, viewStylesRepository) {
+      : RecordPropertiesInterpolator(getComponentInterpolators(nativeComponentName), {}, viewStylesRepository) {
     updateKeyframes(rt, keyframes);
   }
 };

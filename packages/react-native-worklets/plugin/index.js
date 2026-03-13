@@ -981,9 +981,14 @@ var require_workletFactory = __commonJS({
       }
       const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
       if (shouldIncludeInitData && !state.opts.bundleMode) {
-        pathForStringDefinitions.insertBefore((0, types_12.variableDeclaration)("const", [
+        const initDataDeclaration = (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
-        ]));
+        ]);
+        if (state.opts.limitInitDataHoisting) {
+          fun.getFunctionParent().node.body.body.unshift(initDataDeclaration);
+        } else {
+          pathForStringDefinitions.insertBefore(initDataDeclaration);
+        }
       }
       (0, assert_1.strict)(!(0, types_12.isFunctionDeclaration)(funExpression), "[Reanimated] `funExpression` is a `FunctionDeclaration`.");
       (0, assert_1.strict)(!(0, types_12.isObjectMethod)(funExpression), "[Reanimated] `funExpression` is an `ObjectMethod`.");
@@ -1262,7 +1267,11 @@ var require_autoworkletization = __commonJS({
       "runOnUISync",
       "runOnUIAsync",
       "runOnRuntime",
-      "scheduleOnRuntime"
+      "runOnRuntimeSync",
+      "runOnRuntimeAsync",
+      "scheduleOnRuntime",
+      "runOnRuntimeSyncWithId",
+      "scheduleOnRuntimeWithId"
     ]);
     var reanimatedFunctionArgsToWorkletize = new Map([
       ["useFrameCallback", [0]],
@@ -1282,7 +1291,11 @@ var require_autoworkletization = __commonJS({
       ["runOnUISync", [0]],
       ["runOnUIAsync", [0]],
       ["runOnRuntime", [1]],
+      ["runOnRuntimeSync", [1]],
+      ["runOnRuntimeAsync", [1]],
       ["scheduleOnRuntime", [1]],
+      ["runOnRuntimeSyncWithId", [1]],
+      ["scheduleOnRuntimeWithId", [1]],
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerObjectHooks).map((name) => [name, [0]]),
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerBuilderMethods).map((name) => [name, [0]])
     ]);
@@ -1729,7 +1742,7 @@ var require_inlineStylesWarning = __commonJS({
     }
     function processPropertyValueForInlineStylesWarning(path) {
       if (path.isMemberExpression() && (0, types_12.isIdentifier)(path.node.property)) {
-        if (path.node.property.name === "value") {
+        if (!path.node.computed && path.node.property.name === "value") {
           path.replaceWith(generateInlineStylesWarning(path));
         }
       }

@@ -132,7 +132,7 @@ function PerformanceNowDemo() {
     });
     scheduleOnUI(() => {
       console.log('UI', performance.now());
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+
       console.log('AT', global._getAnimationTimestamp());
     });
   };

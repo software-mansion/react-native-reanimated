@@ -1,0 +1,56 @@
+name: Common validation
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/common-validation.yml'
+      - '.github/actions/setup-cpp-lint/**'
+      - '.github/actions/common-validation/**'
+      - 'packages/react-native-reanimated/scripts/cpplint.sh'
+      - 'packages/react-native-reanimated/scripts/validate-includes.sh'
+      - 'packages/react-native-reanimated/Common/cpp/**'
+      - 'packages/react-native-worklets/scripts/cpplint.sh'
+      - 'packages/react-native-worklets/scripts/validate-includes.sh'
+      - 'packages/react-native-worklets/Common/cpp/**'
+  pull_request:
+    paths:
+      - '.github/workflows/common-validation.yml'
+      - '.github/actions/setup-cpp-lint/**'
+      - '.github/actions/common-validation/**'
+      - 'packages/react-native-reanimated/scripts/cpplint.sh'
+      - 'packages/react-native-reanimated/scripts/validate-includes.sh'
+      - 'packages/react-native-reanimated/Common/cpp/**'
+      - 'packages/react-native-worklets/scripts/cpplint.sh'
+      - 'packages/react-native-worklets/scripts/validate-includes.sh'
+      - 'packages/react-native-worklets/Common/cpp/**'
+  merge_group:
+    branches:
+      - main
+  workflow_call:
+    inputs:
+      package:
+        type: string
+        required: false
+        description: 'Package to validate (react-native-reanimated or react-native-worklets). If not specified, validates both.'
+  workflow_dispatch:
+
+jobs:
+  common-validation:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ inputs.package && fromJSON(format('["{0}"]', inputs.package)) || fromJSON('["react-native-reanimated", "react-native-worklets"]') }}
+    concurrency:
+      group: common-validation-${{ matrix.package }}-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Common validation
+        uses: ./.github/actions/common-validation
+        with:
+          package-dir: packages/${{ matrix.package }}

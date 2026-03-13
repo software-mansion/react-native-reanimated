@@ -24,7 +24,7 @@ class ReanimatedModuleProxy;
 
 using namespace facebook;
 
-typedef enum ExitingState_Legacy {
+typedef enum ExitingState_Legacy : std::uint8_t {
   UNDEFINED = 1,
   WAITING = 2,
   ANIMATING = 4,
@@ -43,13 +43,13 @@ struct Node {
   std::vector<std::shared_ptr<MutationNode>> children, unflattenedChildren;
   std::shared_ptr<Node> parent, unflattenedParent;
   Tag tag;
-  void removeChildFromUnflattenedTree(std::shared_ptr<MutationNode> child);
-  void applyMutationToIndices(ShadowViewMutation mutation);
+  void removeChildFromUnflattenedTree(const std::shared_ptr<MutationNode> &child);
+  void applyMutationToIndices(const ShadowViewMutation &mutation);
   void insertChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
   void insertUnflattenedChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
   virtual bool isMutationNode();
   explicit Node(const Tag tag) : tag(tag) {}
-  Node(Node &&node)
+  Node(Node &&node) noexcept
       : children(std::move(node.children)), unflattenedChildren(std::move(node.unflattenedChildren)), tag(node.tag) {}
   Node(Node &node) : children(node.children), unflattenedChildren(node.unflattenedChildren), tag(node.tag) {}
   virtual ~Node() = default;
@@ -66,7 +66,7 @@ struct MutationNode : public Node {
   bool isMutationNode() override;
 };
 
-static inline bool isRNSScreen(std::shared_ptr<MutationNode> node) {
+static inline bool isRNSScreen(const std::shared_ptr<MutationNode> &node) {
   const auto &componentName = node->mutation.oldChildShadowView.componentName;
   return !std::strcmp(componentName, "RNSScreenStack") || !std::strcmp(componentName, "RNSScreen") ||
       !std::strcmp(componentName, "RNSModalScreen");
@@ -112,29 +112,29 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon,
   mutable std::unordered_set<SurfaceId> surfacesToRemove_;
 
   LayoutAnimationsProxy_Legacy(
-      std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager,
-      SharedComponentDescriptorRegistry componentDescriptorRegistry,
-      std::shared_ptr<const ContextContainer> contextContainer,
+      const std::shared_ptr<LayoutAnimationsManager> &layoutAnimationsManager,
+      const SharedComponentDescriptorRegistry &componentDescriptorRegistry,
+      const std::shared_ptr<const ContextContainer> &contextContainer,
       jsi::Runtime &uiRuntime,
       const std::shared_ptr<UIScheduler> &uiScheduler
 #ifdef ANDROID
       ,
-      PreserveMountedTagsFunction filterUnmountedTagsFunction,
-      std::shared_ptr<UIManager> uiManager,
-      std::shared_ptr<CallInvoker> jsInvoker
+      const PreserveMountedTagsFunction &filterUnmountedTagsFunction,
+      const std::shared_ptr<UIManager> &uiManager,
+      const std::shared_ptr<CallInvoker> &jsInvoker
 #endif
       )
       : LayoutAnimationsProxyCommon(
-            std::move(layoutAnimationsManager),
-            std::move(componentDescriptorRegistry),
-            std::move(contextContainer),
+            layoutAnimationsManager,
+            componentDescriptorRegistry,
+            contextContainer,
             uiRuntime,
             uiScheduler
 #ifdef ANDROID
             ,
-            std::move(filterUnmountedTagsFunction),
-            std::move(uiManager),
-            std::move(jsInvoker)
+            filterUnmountedTagsFunction,
+            uiManager,
+            jsInvoker
 #endif
         ) {
   }

@@ -13,7 +13,7 @@
 
 namespace reanimated {
 
-enum BeforeOrAfter { BEFORE = 0, AFTER = 1 };
+enum BeforeOrAfter : std::uint8_t { BEFORE = 0, AFTER = 1 };
 
 struct Rect {
   double width, height;
@@ -66,7 +66,7 @@ typedef enum class ExitingState : std::uint8_t {
 
 struct MutationNode;
 
-enum TransitionState {
+enum TransitionState : std::uint8_t {
   NONE = 0,
   START = 1,
   ACTIVE = 2,
@@ -74,7 +74,7 @@ enum TransitionState {
   CANCELLED = 4,
 };
 
-enum Intent {
+enum Intent : std::uint8_t {
   NO_INTENT = 0,
   TO_MOVE = 1,
   TO_DELETE = 2,
@@ -86,7 +86,7 @@ struct LightNode {
   ExitingState state = ExitingState::UNDEFINED;
   std::weak_ptr<LightNode> parent;
   std::vector<std::shared_ptr<LightNode>> children;
-  int removeChild(std::shared_ptr<LightNode> child) {
+  int removeChild(const std::shared_ptr<LightNode> &child) {
     for (int i = children.size() - 1; i >= 0; i--) {
       if (children[i]->current.tag == child->current.tag) {
         children.erase(children.begin() + i);

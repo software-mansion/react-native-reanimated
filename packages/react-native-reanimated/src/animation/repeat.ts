@@ -104,6 +104,7 @@ export const withRepeat = function <T extends AnimationObject>(
         animation: RepeatAnimation,
         value: AnimatableValue,
         now: Timestamp,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         previousAnimation: Animation<any> | null
       ): void {
         animation.startValue = value;

@@ -26,12 +26,12 @@ type StaggerProps = PropsWithChildren<{
 }>;
 
 export default function Stagger({
-  ParentComponent,
   children,
   delay = 0,
-  interval = 100,
   enabled = true,
+  interval = 100,
   itemLayout = LinearTransition,
+  ParentComponent,
   wrapperStye,
 }: StaggerProps) {
   const childrenArray = Children.toArray(children);
