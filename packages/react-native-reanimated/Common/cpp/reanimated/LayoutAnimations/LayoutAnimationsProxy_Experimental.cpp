@@ -202,9 +202,10 @@ void LayoutAnimationsProxy_Experimental::updateLightTree(
           entering_.push_back(node);
           filteredMutations.push_back(mutation);
         } else if (sharedTransitionManager_->tagToName_.contains(tag) && isInsideInactiveSETBoundary(node)) {
+          filteredMutations.push_back(mutation);
           auto hiddenView = cloneViewWithoutOpacity(mutation.newChildShadowView, propsParserContext);
           filteredMutations.push_back(
-              ShadowViewMutation::InsertMutation(mutation.parentTag, hiddenView, mutation.index));
+              ShadowViewMutation::UpdateMutation(mutation.newChildShadowView, hiddenView, mutation.parentTag));
         } else {
           filteredMutations.push_back(mutation);
         }
@@ -580,6 +581,8 @@ ShadowView LayoutAnimationsProxy_Experimental::cloneViewWithoutOpacity(
   const folly::dynamic opacity = folly::dynamic::object("opacity", 0);
   auto newProps =
       getComponentDescriptorForShadowView(newView).cloneProps(propsParserContext, newView.props, RawProps(opacity));
+  auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));
+  viewProps->opacity = 0;
   newView.props = newProps;
   return newView;
 }
