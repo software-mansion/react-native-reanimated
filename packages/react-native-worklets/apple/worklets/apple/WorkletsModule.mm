@@ -100,7 +100,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
       uiScheduler,
       std::move(isJavaScriptQueue),
       runtimeBindings,
-      BundleModeConfig{.enabled = bundleModeEnabled, .script = script, .sourceURL = sourceURL});
+      BundleModeConfig{.enabled = static_cast<bool>(bundleModeEnabled), .script = script, .sourceURL = sourceURL});
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
       rnRuntime, std::static_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));
