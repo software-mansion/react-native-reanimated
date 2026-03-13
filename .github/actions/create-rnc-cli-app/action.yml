@@ -53,3 +53,16 @@ runs:
       run: |
         npm install "react-native-reanimated@${{ inputs.reanimated-version }}"
         npm install "react-native-worklets@${{ inputs.worklets-version }}"
+
+    - name: Setup Ruby (iOS)
+      if: ${{ runner.os == 'macOS' }}
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
+        bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+
+    - name: Install Pods (iOS)
+      if: ${{ runner.os == 'macOS' }}
+      working-directory: ${{ inputs.app-name }}/ios
+      shell: bash
+      run: bundle install && bundle exec pod install

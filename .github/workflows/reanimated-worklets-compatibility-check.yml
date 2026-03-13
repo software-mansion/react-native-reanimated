@@ -145,11 +145,6 @@ jobs:
           reanimated-version: ${{ matrix.reanimatedVersion }}
           worklets-version: ${{ matrix.workletsVersion }}
 
-      - name: Install CocoaPods
-        if: steps.result-cache.outputs.cache-hit != 'true'
-        working-directory: ${{ env.APP_NAME }}/ios
-        run: bundle install && bundle exec pod install
-
       - name: Build app (iOS Debug)
         if: steps.result-cache.outputs.cache-hit != 'true'
         working-directory: ${{ env.APP_NAME }}/ios
