@@ -44,7 +44,7 @@ function createAnimatedComponent<P extends object>(
 
 #### `component`
 
-The component you want to make animatable. Function components have to be wrapped with `React.forwardRef()`.
+The component you want to make animatable. Function components have to be wrapped with `React.forwardRef()` or support `ref` as a prop (from React 19 onwards). If you want to animate a specific child of your component or have `useImperativeHandle` in a function component, expose a [`getAnimatableRef` function](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/src/apps/reanimated/examples/AnimatableRefExample.tsx), which returns the ref to the animatable child.
 
 ### Returns
 
