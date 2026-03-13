@@ -1334,9 +1334,8 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[SET] Tab Navigator',
     screen: TabNavigatorExample,
     shouldWork: {
-      // not implemented
-      ios: false,
-      android: false,
+      ios: true,
+      android: true,
     },
   },
   ScreenlessBasic: {
