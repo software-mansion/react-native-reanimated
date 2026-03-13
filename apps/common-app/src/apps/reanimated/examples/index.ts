@@ -157,6 +157,7 @@ import InstanceDiscoveryExample from './InstanceDiscoveryExample';
 import FetchExample from './FetchExample';
 import ShadowNodesCloningExample from './ShadowNodesCloningExample';
 import EmptyExample from './EmptyExample';
+import AndroidDrawPassExample from './AndroidDrawPassExample';
 import AnimatedPropsExample from './AnimatedPropsExample';
 
 export const REAPlatform = {
@@ -201,6 +202,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔄',
     title: 'Sync back to React',
     screen: SyncBackToReactExample,
+  },
+  AndroidDrawPassExample: {
+    icon: '✍️',
+    title: 'Android Draw Pass',
+    screen: AndroidDrawPassExample,
   },
   DetachAnimatedStylesExample: {
     icon: '⛓️‍💥',

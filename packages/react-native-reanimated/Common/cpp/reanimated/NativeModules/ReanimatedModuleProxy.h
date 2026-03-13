@@ -91,7 +91,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   void maybeRunCSSLoop();
   double getCssTimestamp();
 
-  void performOperations(const bool isTriggeredByEvent);
+  void performOperations();
+  void performNonLayoutOperations();
 
   void setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) override;
 
@@ -172,6 +173,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
  private:
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
+  void applySynchronousUpdates(UpdatesBatch &updatesBatch, bool allowPartialUpdates = false);
 
   const bool isReducedMotion_;
   bool shouldFlushRegistry_ = false;

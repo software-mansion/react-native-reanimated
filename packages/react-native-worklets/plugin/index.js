@@ -689,9 +689,6 @@ var require_generate = __commonJS({
         comments: false
       })) === null || _a === void 0 ? void 0 : _a.code;
       (0, assert_1.default)(transformedProg, "[Worklets] `transformedProg` is undefined.");
-      if (!(0, fs_1.existsSync)(filesDirPath)) {
-        (0, fs_1.mkdirSync)(filesDirPath, {});
-      }
       const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
       (0, fs_1.writeFileSync)(dedicatedFilePath, transformedProg);
     }
@@ -984,9 +981,14 @@ var require_workletFactory = __commonJS({
       }
       const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
       if (shouldIncludeInitData && !state.opts.bundleMode) {
-        pathForStringDefinitions.insertBefore((0, types_12.variableDeclaration)("const", [
+        const initDataDeclaration = (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
-        ]));
+        ]);
+        if (state.opts.limitInitDataHoisting) {
+          fun.getFunctionParent().node.body.body.unshift(initDataDeclaration);
+        } else {
+          pathForStringDefinitions.insertBefore(initDataDeclaration);
+        }
       }
       (0, assert_1.strict)(!(0, types_12.isFunctionDeclaration)(funExpression), "[Reanimated] `funExpression` is a `FunctionDeclaration`.");
       (0, assert_1.strict)(!(0, types_12.isObjectMethod)(funExpression), "[Reanimated] `funExpression` is an `ObjectMethod`.");
