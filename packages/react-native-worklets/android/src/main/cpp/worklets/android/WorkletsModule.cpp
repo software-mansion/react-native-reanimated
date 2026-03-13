@@ -1,11 +1,11 @@
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
+#include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/android/AnimationFrameCallback.h>
 #include <worklets/android/WorkletsModule.h>
-#include "worklets/WorkletRuntime/BundleModeConfig.h"
 
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
 #include <folly/json/dynamic.h>
@@ -30,13 +30,12 @@ using namespace react;
 
 WorkletsModule::WorkletsModule(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
+    const BundleModeConfig &bundleModeConfig,
     jsi::Runtime *rnRuntime,
     jni::alias_ref<JavaMessageQueueThread::javaobject>
         messageQueueThread, // NOLINT //(performance-unnecessary-value-param)
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-    const std::shared_ptr<UIScheduler> &uiScheduler,
-    const std::shared_ptr<const ScriptBuffer> &script,
-    const std::string &sourceURL)
+    const std::shared_ptr<UIScheduler> &uiScheduler)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       workletsModuleProxy_(std::make_shared<WorkletsModuleProxy>(
@@ -54,11 +53,7 @@ WorkletsModule::WorkletsModule(
               .sendRequest = getSendRequest()
 #endif // WORKLETS_FETCH_PREVIEW_ENABLED
           }),
-          BundleModeConfig{
-              .enabled = true, // TODO: temporary
-              .bundleURL = sourceURL,
-              .bundleScript = script,
-          })) {
+          bundleModeConfig)) {
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
       *rnRuntime_, std::static_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));
@@ -68,6 +63,7 @@ WorkletsModule::WorkletsModule(
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
+    jboolean bundleModeEnabled,
     jlong jsContext,
     jni::alias_ref<JavaMessageQueueThread::javaobject>
         messageQueueThread, // NOLINT //(performance-unnecessary-value-param)
@@ -82,11 +78,23 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
 
   std::shared_ptr<const ScriptBuffer> script = nullptr;
   std::string sourceURL;
-  auto cxxWrapper = jScriptBufferWrapper->cthis();
-  script = cxxWrapper->getScript();
-  sourceURL = cxxWrapper->getSourceUrl();
+  if (bundleModeEnabled) {
+    auto cxxWrapper = jScriptBufferWrapper->cthis();
+    script = cxxWrapper->getScript();
+    sourceURL = cxxWrapper->getSourceUrl();
+  }
 
-  return makeCxxInstance(jThis, rnRuntime, messageQueueThread, jsCallInvoker, uiScheduler, script, sourceURL);
+  return makeCxxInstance(
+      jThis,
+      BundleModeConfig{
+          .enabled = static_cast<bool>(bundleModeEnabled),
+          .script = script,
+          .sourceURL = sourceURL,
+      },
+      rnRuntime,
+      messageQueueThread,
+      jsCallInvoker,
+      uiScheduler);
 }
 
 RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame() {

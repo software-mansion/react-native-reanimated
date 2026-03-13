@@ -49,6 +49,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
 
   @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(
+      boolean bundleModeEnabled,
       long jsContext,
       MessageQueueThread messageQueueThread,
       CallInvokerHolderImpl jsCallInvokerHolder,
@@ -78,12 +79,13 @@ public class WorkletsModule extends NativeWorkletsModuleSpec implements Lifecycl
     var sourceURL = context.getSourceURL();
 
     ScriptBufferWrapper scriptBufferWrapper = null;
-    if (BuildConfig.BUNDLE_MODE_ENABLED) {
+    if (bundleModeEnabled) {
       scriptBufferWrapper = new ScriptBufferWrapper(sourceURL, context.getAssets());
     }
 
     mHybridData =
         initHybrid(
+            bundleModeEnabled,
             jsContext,
             mMessageQueueThread,
             jsCallInvokerHolder,

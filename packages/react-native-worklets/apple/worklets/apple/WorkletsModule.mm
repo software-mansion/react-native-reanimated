@@ -58,7 +58,7 @@ using namespace worklets;
 
 RCT_EXPORT_MODULE(WorkletsModule);
 
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule:(BOOL)bundleModeEnabled)
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnabled)
 {
   react_native_assert(self.bridge != nullptr);
   [self checkBridgeless];
@@ -74,9 +74,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule:(BOOL)bundleModeEnable
   std::string sourceURL = "";
   std::shared_ptr<const ScriptBuffer> script = nullptr;
 
-  if(bundleModeEnabled) {
+  if (bundleModeEnabled) {
     NSURL *url = bundleManager_.bundleURL;
-    script = [self getBundleScript:url];
+    script = [self getScript:url];
     sourceURL = [[url absoluteString] UTF8String];
   }
 
@@ -94,7 +94,13 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule:(BOOL)bundleModeEnable
   auto runtimeBindings = [self getRuntimeBindings];
 
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
-      rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(isJavaScriptQueue), runtimeBindings, BundleModeConfig{.enabled = bundleModeEnabled, .bundleURL = sourceURL, .bundleScript = script});
+      rnRuntime,
+      jsQueue,
+      jsCallInvoker,
+      uiScheduler,
+      std::move(isJavaScriptQueue),
+      runtimeBindings,
+      BundleModeConfig{.enabled = bundleModeEnabled, .script = script, .sourceURL = sourceURL});
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
       rnRuntime, std::static_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));
@@ -126,19 +132,19 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule:(BOOL)bundleModeEnable
   return std::make_shared<facebook::react::NativeWorkletsModuleSpecJSI>(params);
 }
 
-- (std::shared_ptr<const ScriptBuffer>)getBundleScript:(NSURL *)url
+- (std::shared_ptr<const ScriptBuffer>)getScript:(NSURL *)url
 {
   NSData *data = [NSData dataWithContentsOfURL:url];
 
   if (!data) [[unlikely]] {
-        NSString *errorMsg = [NSString stringWithFormat:@"[Worklets] Failed to load worklets bundle from URL: %@", url];
+    NSString *errorMsg = [NSString stringWithFormat:@"[Worklets] Failed to load worklets bundle from URL: %@", url];
     NSLog(@"%@", errorMsg);
     throw std::runtime_error([errorMsg UTF8String]);
   }
 
-    auto str = std::string(reinterpret_cast<const char *>([data bytes]), [data length]);
-    auto bigString = std::make_shared<const JSBigStdString>(str);
-    return std::make_shared<const ScriptBuffer>(bigString);
+  auto str = std::string(reinterpret_cast<const char *>([data bytes]), [data length]);
+  auto bigString = std::make_shared<const JSBigStdString>(str);
+  return std::make_shared<const ScriptBuffer>(bigString);
 }
 
 - (std::shared_ptr<RuntimeBindings>)getRuntimeBindings

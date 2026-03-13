@@ -65,11 +65,11 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
   }
 
   [[nodiscard]] std::shared_ptr<const ScriptBuffer> getScript() const {
-    return bundleModeConfig_.bundleScript;
+    return bundleModeConfig_.script;
   }
 
   [[nodiscard]] std::string getSourceUrl() const {
-    return bundleModeConfig_.bundleURL;
+    return bundleModeConfig_.sourceURL;
   }
 
   [[nodiscard]] std::shared_ptr<MemoryManager> getMemoryManager() const {

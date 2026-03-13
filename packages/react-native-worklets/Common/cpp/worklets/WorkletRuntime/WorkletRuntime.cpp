@@ -17,8 +17,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "worklets/Tools/JSScheduler.h"
-#include "worklets/Tools/ScriptBuffer.h"
 
 #if JS_RUNTIME_HERMES
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>

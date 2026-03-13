@@ -5,7 +5,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "worklets/WorkletRuntime/WorkletRuntime.h"
 
 namespace worklets {
 
