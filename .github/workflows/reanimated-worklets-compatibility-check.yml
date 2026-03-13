@@ -154,8 +154,8 @@ jobs:
             -scheme "${APP_NAME}" \
             -configuration Debug \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
-            CODE_SIGNING_ALLOWED=NO | xcpretty
+            -destination 'generic/platform=iOS Simulator' \
+            -quiet
 
       - name: Mark combination as successful
         if: steps.result-cache.outputs.cache-hit != 'true'
