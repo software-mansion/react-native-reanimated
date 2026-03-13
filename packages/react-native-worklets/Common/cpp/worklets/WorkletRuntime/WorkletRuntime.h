@@ -129,6 +129,15 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     return name_;
   }
 
+  explicit WorkletRuntime(
+      RuntimeData::RuntimeId runtimeId,
+      const std::shared_ptr<MessageQueueThread> &jsQueue,
+      const std::string &name,
+      const std::shared_ptr<AsyncQueue> &queue = nullptr,
+      bool enableEventLoop = true);
+
+  void init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy);
+
   /* #region deprecated */
 
   /** @deprecated Use `runSync` instead. */
@@ -165,15 +174,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 #endif // NDEBUG
 
  private:
-  WorkletRuntime(
-      RuntimeData::RuntimeId runtimeId,
-      const std::shared_ptr<MessageQueueThread> &jsQueue,
-      const std::string &name,
-      const std::shared_ptr<AsyncQueue> &queue = nullptr,
-      bool enableEventLoop = true);
-
-  void init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy);
-
   void bundleModeInit(
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<const ScriptBuffer> &script,
@@ -188,9 +188,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
   std::shared_ptr<EventLoop> eventLoop_;
-
-  friend class WorkletsModuleProxy;
-  friend class RuntimeManager;
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on
