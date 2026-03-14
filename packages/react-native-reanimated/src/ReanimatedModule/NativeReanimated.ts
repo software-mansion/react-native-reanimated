@@ -303,7 +303,7 @@ function installTurboModule() {
   globalThis.__UI_WORKLET_RUNTIME_HOLDER = getUIRuntimeHolder();
   globalThis.__UI_SCHEDULER_HOLDER = getUISchedulerHolder();
   const status = ReanimatedTurboModule!.installTurboModule();
-  delete globalThis.__UI_WORKLET_RUNTIME_HOLDER;
-  delete globalThis.__UI_SCHEDULER_HOLDER;
+  globalThis.__UI_WORKLET_RUNTIME_HOLDER = undefined;
+  globalThis.__UI_SCHEDULER_HOLDER = undefined;
   return status;
 }

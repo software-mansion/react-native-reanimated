@@ -24,7 +24,7 @@ import { Easing } from '../../Easing';
 interface KeyframePoint {
   duration: number;
   value: number | string;
-  easing?: EasingFunction | EasingFunctionFactory;
+  easing?: (EasingFunction | EasingFunctionFactory) | undefined;
 }
 interface ParsedKeyframesDefinition {
   initialValues: StyleProps;
@@ -32,12 +32,12 @@ interface ParsedKeyframesDefinition {
 }
 
 class InnerKeyframe implements IEntryExitAnimationBuilder {
-  durationV?: number;
-  delayV?: number;
+  durationV?: number | undefined;
+  delayV?: number | undefined;
   reduceMotionV: ReduceMotion = ReduceMotion.System;
-  callbackV?: (finished: boolean) => void;
+  callbackV?: ((finished: boolean) => void) | undefined;
   definitions: MaybeInvalidKeyframeProps;
-  parsedAnimation?: EntryExitAnimationFunction;
+  parsedAnimation?: EntryExitAnimationFunction | undefined;
 
   /*
     Keyframe definition should be passed in the constructor as the map
@@ -131,7 +131,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       key: string;
       value: string | number;
       currentKeyPoint: number;
-      easing?: EasingFunction | EasingFunctionFactory;
+      easing?: (EasingFunction | EasingFunctionFactory) | undefined;
     }): void => {
       if (!(key in parsedKeyframes)) {
         throw new ReanimatedError(
@@ -238,11 +238,11 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       return this.parsedAnimation;
     }
 
-    this.parsedAnimation = () => {
+    const parsedAnimation: EntryExitAnimationFunction = () => {
       'worklet';
       const animations: StylePropsWithArrayTransform = {};
 
-      /* 
+      /*
             For each style property, an animations sequence is created that corresponds with its key points.
             Transform style properties require special handling because of their nested structure.
       */
@@ -302,7 +302,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
         callback,
       };
     };
-    return this.parsedAnimation;
+    this.parsedAnimation = parsedAnimation;
+    return parsedAnimation;
   };
 }
 

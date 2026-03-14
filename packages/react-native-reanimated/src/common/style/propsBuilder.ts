@@ -18,7 +18,7 @@ type PropsBuilderPropertyConfig<
   | {
       // value can have any type as it is passed to CPP where we can expect a different
       // type than in the React Native stylesheet (e.g. number for colors instead of string)
-      process: ValueProcessor<Required<TProps>[K], unknown>; // for custom value processing
+      process: ValueProcessor<Exclude<Required<TProps>[K], undefined>, unknown>; // for custom value processing
     };
 
 export type PropsBuilderConfig<P extends UnknownRecord = UnknownRecord> = {

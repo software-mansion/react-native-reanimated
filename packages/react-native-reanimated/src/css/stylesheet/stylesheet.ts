@@ -32,7 +32,10 @@ export const create = <T extends NamedStyles<T>>(
   for (const key in styles) {
     const style = styles[key];
     if (style.animationName) {
-      style.animationName = parseAnimationName(style.animationName);
+      const parsedName = parseAnimationName(style.animationName);
+      if (parsedName !== undefined) {
+        style.animationName = parsedName;
+      }
     }
   }
 
