@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Button, Dimensions, StyleSheet, View } from 'react-native';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -7,7 +7,6 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { scheduleOnUI } from 'react-native-worklets';
 
 const { width, height } = Dimensions.get('window');
 
@@ -82,32 +81,10 @@ function Bokeh({ count }: BokehProps) {
   return circles.map((circleProps, i) => <Circle {...circleProps} key={i} />);
 }
 
-declare global {
-  var _startProfiling: (meanHzFreq?: number) => void;
-  var _stopProfiling: () => string;
-}
-
 export default function BokehExample() {
-  const handleStartProfiling = () => {
-    scheduleOnUI(() => {
-      'worklet';
-      globalThis._startProfiling(6000);
-    });
-  };
-
-  const handleStopProfiling = () => {
-    scheduleOnUI(() => {
-      'worklet';
-      const path = globalThis._stopProfiling();
-      console.log(`Trace saved to ${path}`);
-    });
-  };
-
   return (
     <View style={styles.container}>
-      <Bokeh count={50} />
-      <Button title="Start profiling" onPress={handleStartProfiling} />
-      <Button title="Stop profiling" onPress={handleStopProfiling} />
+      <Bokeh count={100} />
     </View>
   );
 }

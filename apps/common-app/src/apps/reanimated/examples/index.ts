@@ -61,6 +61,7 @@ import DetachAnimatedStylesExample from './DetachAnimatedStylesExample';
 import DurationZeroExample from './LayoutAnimations/DurationZero';
 import FlatListSkipEnteringExiting from './LayoutAnimations/FlatListSkipEnteringExiting';
 import HabitsExample from './LayoutAnimations/HabitsExample';
+import HermesSamplingProfilerExample from './HermesSamplingProfilerExample';
 import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
 import LayoutTransitionExample from './LayoutAnimations/LayoutTransitionExample';
 import ListItemLayoutAnimation from './LayoutAnimations/ListItemLayoutAnimation';
@@ -197,6 +198,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🎞️',
     title: 'FPS',
     screen: FpsExample,
+  },
+  HermesSamplingProfilerExample: {
+    icon: '📊',
+    title: 'Hermes sampling profiler',
+    screen: HermesSamplingProfilerExample,
   },
   SyncBackToReactExample: {
     icon: '🔄',
