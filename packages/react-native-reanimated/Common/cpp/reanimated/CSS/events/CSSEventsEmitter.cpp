@@ -1,5 +1,6 @@
 #include <reanimated/CSS/events/CSSEventsEmitter.h>
 
+#include <string>
 #include <utility>
 
 using namespace facebook;
@@ -8,11 +9,19 @@ namespace reanimated::css {
 
 namespace {
 
+bool isAnimationEvent(const std::string &type) {
+  return type.rfind("animation", 0) == 0;
+}
+
 jsi::Object eventToJSIObject(jsi::Runtime &rt, const CSSEvent &event) {
   auto obj = jsi::Object(rt);
   obj.setProperty(rt, "viewTag", event.viewTag);
   obj.setProperty(rt, "type", jsi::String::createFromUtf8(rt, event.type));
-  obj.setProperty(rt, "animationName", jsi::String::createFromUtf8(rt, event.targetName));
+  obj.setProperty(
+      rt,
+      // TODO - add support for transition events
+      isAnimationEvent(event.type) ? "animationName" : "propertyName",
+      jsi::String::createFromUtf8(rt, event.targetName));
   obj.setProperty(rt, "elapsedTime", event.elapsedTime);
   return obj;
 }
