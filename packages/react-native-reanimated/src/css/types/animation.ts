@@ -58,6 +58,11 @@ export type CSSAnimationProperties<S extends object = PlainStyle> =
       | 'none';
   };
 
+export type CSSAnimationEventType =
+  | 'animationstart'
+  | 'animationend'
+  | 'animationiteration';
+
 export type ExistingCSSAnimationProperties<S extends object = PlainStyle> =
   CSSAnimationProperties<S> & {
     animationName: AddArrayPropertyType<

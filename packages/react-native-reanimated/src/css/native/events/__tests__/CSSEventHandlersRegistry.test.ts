@@ -1,6 +1,6 @@
 'use strict';
 import { ANIMATION_NAME_PREFIX } from '../../../constants';
-import type { CSSAnimationEventType } from '../CSSEventHandlersRegistry';
+import type { CSSAnimationEventType } from '../../../types';
 import cssEventHandlersRegistry from '../CSSEventHandlersRegistry';
 
 const animationName = (id: number) => `${ANIMATION_NAME_PREFIX}${id}`;
@@ -27,10 +27,12 @@ describe('CSSEventHandlersRegistry', () => {
     cssEventHandlersRegistry.clear();
   });
 
-  describe('addListener', () => {
+  describe('setListeners', () => {
     test('registers a handler for a view and event type', () => {
       const handler = jest.fn();
-      cssEventHandlersRegistry.addListener(viewTag1, 'animationstart', handler);
+      cssEventHandlersRegistry.setListeners(viewTag1, {
+        animationstart: handler,
+      });
 
       const event = animationEvent(viewTag1, 'animationstart', 0);
       cssEventHandlersRegistry.handleEvents([event]);
@@ -39,11 +41,15 @@ describe('CSSEventHandlersRegistry', () => {
       expect(handler).toHaveBeenCalledWith(event);
     });
 
-    test('replaces existing handler for the same view and event type', () => {
+    test('replaces existing handlers when called again', () => {
       const handler1 = jest.fn();
       const handler2 = jest.fn();
-      cssEventHandlersRegistry.addListener(viewTag1, 'animationend', handler1);
-      cssEventHandlersRegistry.addListener(viewTag1, 'animationend', handler2);
+      cssEventHandlersRegistry.setListeners(viewTag1, {
+        animationend: handler1,
+      });
+      cssEventHandlersRegistry.setListeners(viewTag1, {
+        animationend: handler2,
+      });
 
       const event = animationEvent(viewTag1, 'animationend', 1);
       cssEventHandlersRegistry.handleEvents([event]);
@@ -56,16 +62,10 @@ describe('CSSEventHandlersRegistry', () => {
     test('supports multiple event types for the same view', () => {
       const startHandler = jest.fn();
       const endHandler = jest.fn();
-      cssEventHandlersRegistry.addListener(
-        viewTag1,
-        'animationstart',
-        startHandler
-      );
-      cssEventHandlersRegistry.addListener(
-        viewTag1,
-        'animationend',
-        endHandler
-      );
+      cssEventHandlersRegistry.setListeners(viewTag1, {
+        animationstart: startHandler,
+        animationend: endHandler,
+      });
 
       const startEvent = animationEvent(viewTag1, 'animationstart', 0);
       const endEvent = animationEvent(viewTag1, 'animationend', 1);
@@ -80,16 +80,12 @@ describe('CSSEventHandlersRegistry', () => {
     test('supports handlers for different views', () => {
       const handler1 = jest.fn();
       const handler2 = jest.fn();
-      cssEventHandlersRegistry.addListener(
-        viewTag1,
-        'animationstart',
-        handler1
-      );
-      cssEventHandlersRegistry.addListener(
-        viewTag2,
-        'animationstart',
-        handler2
-      );
+      cssEventHandlersRegistry.setListeners(viewTag1, {
+        animationstart: handler1,
+      });
+      cssEventHandlersRegistry.setListeners(viewTag2, {
+        animationstart: handler2,
+      });
 
       const event = animationEvent(viewTag1, 'animationstart', 0);
       cssEventHandlersRegistry.handleEvents([event]);
@@ -98,13 +94,13 @@ describe('CSSEventHandlersRegistry', () => {
       expect(handler1).toHaveBeenCalledWith(event);
       expect(handler2).not.toHaveBeenCalled();
     });
-  });
 
-  describe('removeListener', () => {
-    test('stops the handler from being called', () => {
+    test('clears handlers when passed empty object', () => {
       const handler = jest.fn();
-      cssEventHandlersRegistry.addListener(viewTag1, 'animationstart', handler);
-      cssEventHandlersRegistry.removeListener(viewTag1, 'animationstart');
+      cssEventHandlersRegistry.setListeners(viewTag1, {
+        animationstart: handler,
+      });
+      cssEventHandlersRegistry.setListeners(viewTag1, {});
 
       cssEventHandlersRegistry.handleEvents([
         animationEvent(viewTag1, 'animationstart', 0),
@@ -113,9 +109,9 @@ describe('CSSEventHandlersRegistry', () => {
       expect(handler).not.toHaveBeenCalled();
     });
 
-    test('does not throw for non-existent view', () => {
+    test('does not throw for non-existent view when clearing', () => {
       expect(() => {
-        cssEventHandlersRegistry.removeListener(999, 'animationstart');
+        cssEventHandlersRegistry.setListeners(999, {});
       }).not.toThrow();
     });
   });
@@ -123,7 +119,9 @@ describe('CSSEventHandlersRegistry', () => {
   describe('handleEvents', () => {
     test('ignores events for views with no handlers', () => {
       const handler = jest.fn();
-      cssEventHandlersRegistry.addListener(viewTag1, 'animationstart', handler);
+      cssEventHandlersRegistry.setListeners(viewTag1, {
+        animationstart: handler,
+      });
 
       cssEventHandlersRegistry.handleEvents([
         animationEvent(viewTag2, 'animationstart', 0),
@@ -134,7 +132,9 @@ describe('CSSEventHandlersRegistry', () => {
 
     test('ignores events for unregistered event types', () => {
       const handler = jest.fn();
-      cssEventHandlersRegistry.addListener(viewTag1, 'animationstart', handler);
+      cssEventHandlersRegistry.setListeners(viewTag1, {
+        animationstart: handler,
+      });
 
       cssEventHandlersRegistry.handleEvents([
         animationEvent(viewTag1, 'animationend', 1),
@@ -145,25 +145,11 @@ describe('CSSEventHandlersRegistry', () => {
 
     test('dispatches multiple events in batch order', () => {
       const calls: string[] = [];
-      const startHandler = () => calls.push('start');
-      const iterationHandler = () => calls.push('iteration');
-      const endHandler = () => calls.push('end');
-
-      cssEventHandlersRegistry.addListener(
-        viewTag1,
-        'animationstart',
-        startHandler
-      );
-      cssEventHandlersRegistry.addListener(
-        viewTag1,
-        'animationiteration',
-        iterationHandler
-      );
-      cssEventHandlersRegistry.addListener(
-        viewTag1,
-        'animationend',
-        endHandler
-      );
+      cssEventHandlersRegistry.setListeners(viewTag1, {
+        animationstart: () => calls.push('start'),
+        animationiteration: () => calls.push('iteration'),
+        animationend: () => calls.push('end'),
+      });
 
       cssEventHandlersRegistry.handleEvents([
         animationEvent(viewTag1, 'animationstart', 0),

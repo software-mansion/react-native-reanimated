@@ -1,9 +1,6 @@
 'use strict';
 
-export type CSSAnimationEventType =
-  | 'animationstart'
-  | 'animationend'
-  | 'animationiteration';
+import type { CSSAnimationEventType } from '../../types';
 
 type CSSEventType = CSSAnimationEventType; // TODO - add CSS transition events support
 
@@ -18,7 +15,9 @@ type CSSEventPayload = CSSAnimationEventPayload;
 
 type CSSEventHandler = (event: CSSEventPayload) => void;
 
-type ViewEventHandlers = Map<CSSEventType, CSSEventHandler>;
+type CSSEventHandlersMap = {
+  [K in CSSEventType]?: CSSEventHandler;
+};
 
 /**
  * Singleton registry that stores CSS event handlers (e.g. onAnimationStart,
@@ -26,30 +25,18 @@ type ViewEventHandlers = Map<CSSEventType, CSSEventHandler>;
  * `handleEvents` method, which routes each event to the correct handler.
  */
 class CSSEventHandlersRegistry {
-  private readonly handlers_: Map<number, ViewEventHandlers> = new Map();
+  private readonly handlers_: Map<number, CSSEventHandlersMap> = new Map();
 
-  addListener(
-    viewTag: number,
-    eventType: CSSEventType,
-    handler: CSSEventHandler
-  ): void {
-    let viewHandlers = this.handlers_.get(viewTag);
-    if (!viewHandlers) {
-      viewHandlers = new Map();
-      this.handlers_.set(viewTag, viewHandlers);
-    }
-    viewHandlers.set(eventType, handler);
-  }
-
-  removeListener(viewTag: number, eventType: CSSEventType): void {
-    const viewHandlers = this.handlers_.get(viewTag);
-    if (!viewHandlers) {
+  setListeners(viewTag: number, handlers: CSSEventHandlersMap): void {
+    if (Object.keys(handlers).length === 0) {
+      this.handlers_.delete(viewTag);
       return;
     }
-    viewHandlers.delete(eventType);
-    if (viewHandlers.size === 0) {
-      this.handlers_.delete(viewTag);
-    }
+    this.handlers_.set(viewTag, handlers);
+  }
+
+  clearListeners(viewTag: number): void {
+    this.handlers_.delete(viewTag);
   }
 
   /**
@@ -58,7 +45,7 @@ class CSSEventHandlersRegistry {
    */
   handleEvents(events: CSSEventPayload[]): void {
     for (const event of events) {
-      this.handlers_.get(event.viewTag)?.get(event.type)?.(event);
+      this.handlers_.get(event.viewTag)?.[event.type]?.(event);
     }
   }
 
