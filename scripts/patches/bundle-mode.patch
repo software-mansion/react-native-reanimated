@@ -29,25 +29,24 @@ index afe4c07b49..eece71ae7f 100644
  module.exports = wrapWithReanimatedMetroConfig(
    mergeConfig(defaultConfig, config)
 diff --git a/apps/fabric-example/package.json b/apps/fabric-example/package.json
-index 85d2dbe679..d3a3b79d2a 100644
+index 3413d160ce..83a8c44afc 100644
 --- a/apps/fabric-example/package.json
 +++ b/apps/fabric-example/package.json
-@@ -45,8 +45,8 @@
+@@ -45,8 +45,7 @@
      "staticFeatureFlags": {
        "RUNTIME_TEST_FLAG": true,
        "IOS_DYNAMIC_FRAMERATE_ENABLED": true,
 -      "BUNDLE_MODE_ENABLED": false,
 -      "FETCH_PREVIEW_ENABLED": false
-+      "BUNDLE_MODE_ENABLED": true,
-+      "FETCH_PREVIEW_ENABLED": true
++      "BUNDLE_MODE_ENABLED": true
      }
    }
  }
 diff --git a/package.json b/package.json
-index 390419dccc..04b68c48d4 100644
+index 3df798d778..95415975b0 100644
 --- a/package.json
 +++ b/package.json
-@@ -76,5 +76,9 @@
+@@ -77,5 +77,9 @@
      "react-native-builder-bob": "0.40.13",
      "shelljs": "0.10.0",
      "typescript": "5.8.3"

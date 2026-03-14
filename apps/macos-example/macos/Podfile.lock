@@ -2322,7 +2322,7 @@ SPEC CHECKSUMS:
   RNGestureHandler: 0397fea67f39d5a2d17fcf4a028e206f7ba098ba
   RNReanimated: cc397a8fd73be06222f48adf8aa2a4a81f594cc4
   RNSVG: daa45ddcc2e01ef3eb8d20f59c29beb68cec3933
-  RNWorklets: 47753d4cbcd68a34386b5fff68c9eff69a4b9b99
+  RNWorklets: e8ded71d1334b4dd663b4f4801e9bd7b77a9999f
   SocketRocket: 03f7111df1a343b162bf5b06ead333be808e1e0a
   Yoga: 45ce05cb11db042ba2e5e51a2dfaf0ff63d269f9
 
