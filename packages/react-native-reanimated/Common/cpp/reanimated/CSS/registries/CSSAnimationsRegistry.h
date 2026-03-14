@@ -2,6 +2,8 @@
 
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
+#include <reanimated/CSS/events/CSSAnimationEvent.h>
+#include <reanimated/CSS/events/CSSEventsEmitter.h>
 #include <reanimated/CSS/utils/DelayedItemsManager.h>
 #include <reanimated/CSS/utils/props.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
@@ -23,6 +25,8 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
  public:
   using SettingsUpdates = std::vector<std::pair<size_t, PartialCSSAnimationSettings>>;
 
+  explicit CSSAnimationsRegistry(const std::shared_ptr<CSSEventsEmitter> &eventsEmitter);
+
   bool isEmpty() const override;
   bool hasUpdates() const;
 
@@ -32,12 +36,18 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
       const std::optional<std::vector<std::string>> &animationNames,
       const CSSAnimationsMap &newAnimations,
       const CSSAnimationSettingsUpdatesMap &settingsUpdates,
+      CSSAnimationEventListeners eventListeners,
       double timestamp);
   void remove(Tag viewTag) override;
 
   void update(double timestamp);
 
  private:
+  struct AnimationStateSnapshot {
+    AnimationProgressState state;
+    unsigned iteration;
+  };
+
   using AnimationToIndexMap = std::unordered_map<std::shared_ptr<CSSAnimation>, size_t>;
   using RunningAnimationIndicesMap = std::unordered_map<Tag, std::set<size_t>>;
   using AnimationsToRevertMap = std::unordered_map<Tag, std::unordered_set<size_t>>;
@@ -48,11 +58,15 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
 
   using Registry = std::unordered_map<Tag, RegistryEntry>;
 
+  const std::shared_ptr<CSSEventsEmitter> eventsEmitter_;
+
   Registry registry_;
 
   RunningAnimationIndicesMap runningAnimationIndicesMap_;
   AnimationsToRevertMap animationsToRevertMap_;
   DelayedItemsManager<std::shared_ptr<CSSAnimation>> delayedAnimationsManager_;
+
+  std::unordered_map<Tag, CSSAnimationEventListeners> eventListenersMap_;
 
   CSSAnimationsVector buildAnimationsVector(
       jsi::Runtime &rt,
@@ -73,6 +87,12 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
   void applyViewAnimationsStyle(Tag viewTag, double timestamp);
   void activateDelayedAnimations(double timestamp);
   void handleAnimationsToRevert(double timestamp);
+
+  void scheduleAnimationEvents(
+      Tag viewTag,
+      const std::shared_ptr<CSSAnimation> &animation,
+      const AnimationStateSnapshot &before,
+      const AnimationStateSnapshot &after);
 
   static bool addStyleUpdates(folly::dynamic &target, const folly::dynamic &updates, bool shouldOverride);
 };

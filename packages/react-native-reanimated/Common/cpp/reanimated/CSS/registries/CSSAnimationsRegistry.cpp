@@ -8,6 +8,9 @@
 
 namespace reanimated::css {
 
+CSSAnimationsRegistry::CSSAnimationsRegistry(const std::shared_ptr<CSSEventsEmitter> &eventsEmitter)
+    : eventsEmitter_(eventsEmitter) {}
+
 bool CSSAnimationsRegistry::isEmpty() const {
   // The registry is empty if has no registered animations and no updates
   // stored in the updates registry
@@ -24,10 +27,19 @@ void CSSAnimationsRegistry::apply(
     const std::optional<std::vector<std::string>> &animationNames,
     const CSSAnimationsMap &newAnimations,
     const CSSAnimationSettingsUpdatesMap &settingsUpdates,
-    double timestamp) {
+    const CSSAnimationEventListeners eventListeners,
+    const double timestamp) {
   auto animationsVector = buildAnimationsVector(rt, shadowNode, animationNames, newAnimations);
 
   const auto viewTag = shadowNode->getTag();
+
+  // Update event listener tracking based on current callback props
+  if (eventListeners != 0) {
+    eventListenersMap_[viewTag] = eventListeners;
+  } else {
+    eventListenersMap_.erase(viewTag);
+  }
+
   if (animationsVector.empty()) {
     remove(viewTag);
     return;
@@ -60,6 +72,7 @@ void CSSAnimationsRegistry::remove(const Tag viewTag) {
   removeViewAnimations(viewTag);
   removeFromUpdatesRegistry(viewTag);
   registry_.erase(viewTag);
+  eventListenersMap_.erase(viewTag);
 }
 
 void CSSAnimationsRegistry::update(const double timestamp) {
@@ -175,18 +188,28 @@ void CSSAnimationsRegistry::updateViewAnimations(
   std::shared_ptr<const ShadowNode> shadowNode = nullptr;
   bool hasUpdates = false;
 
+  const bool detectEvents = eventListenersMap_.count(viewTag) > 0;
+
   for (const auto animationIndex : animationIndices) {
     const auto &animation = registry_[viewTag].animationsVector[animationIndex];
     if (!shadowNode) {
       shadowNode = animation->getShadowNode();
     }
-    if (animation->getState(timestamp) == AnimationProgressState::Pending) {
+
+    const AnimationStateSnapshot beforeSnapshot = {animation->getState(timestamp), animation->getCurrentIteration()};
+
+    if (beforeSnapshot.state == AnimationProgressState::Pending) {
       animation->run(timestamp);
     }
 
     bool updatesAddedToBatch = false;
     const auto updates = animation->update(timestamp);
     const auto newState = animation->getState(timestamp);
+
+    if (detectEvents) {
+      const AnimationStateSnapshot afterSnapshot = {newState, animation->getCurrentIteration()};
+      scheduleAnimationEvents(viewTag, animation, beforeSnapshot, afterSnapshot);
+    }
 
     if (newState == AnimationProgressState::Finished) {
       // Revert changes applied during animation if there is no forwards fill
@@ -316,6 +339,29 @@ void CSSAnimationsRegistry::handleAnimationsToRevert(const double timestamp) {
     applyViewAnimationsStyle(viewTag, timestamp);
   }
   animationsToRevertMap_.clear();
+}
+
+void CSSAnimationsRegistry::scheduleAnimationEvents(
+    const Tag viewTag,
+    const std::shared_ptr<CSSAnimation> &animation,
+    const AnimationStateSnapshot &before,
+    const AnimationStateSnapshot &after) {
+  const auto listeners = eventListenersMap_.at(viewTag);
+
+  if (hasListener(listeners, CSSAnimationEventType::AnimationStart) &&
+      before.state == AnimationProgressState::Pending && after.state != AnimationProgressState::Pending) {
+    eventsEmitter_->schedule(createAnimationStartEvent(viewTag, animation));
+  }
+
+  if (hasListener(listeners, CSSAnimationEventType::AnimationIteration) &&
+      after.state == AnimationProgressState::Running && after.iteration > before.iteration) {
+    eventsEmitter_->schedule(createAnimationIterationEvent(viewTag, animation, after.iteration));
+  }
+
+  if (hasListener(listeners, CSSAnimationEventType::AnimationEnd) && before.state != AnimationProgressState::Finished &&
+      after.state == AnimationProgressState::Finished) {
+    eventsEmitter_->schedule(createAnimationEndEvent(viewTag, animation));
+  }
 }
 
 bool CSSAnimationsRegistry::addStyleUpdates(
