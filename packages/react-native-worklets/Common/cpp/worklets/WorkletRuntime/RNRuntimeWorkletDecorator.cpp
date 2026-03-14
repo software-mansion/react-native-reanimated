@@ -6,6 +6,7 @@
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 
 #include <memory>
+#include <string>
 #include <utility>
 
 namespace worklets {
