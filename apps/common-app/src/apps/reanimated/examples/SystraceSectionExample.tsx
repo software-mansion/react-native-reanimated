@@ -12,6 +12,7 @@ function handlePress() {
   scheduleOnUI(() => {
     globalThis._beginSection('SystraceSectionExample');
     const start = performance.now();
+    // eslint-disable-next-line no-empty
     while (performance.now() - start < 1000) {}
     globalThis._endSection();
   });
