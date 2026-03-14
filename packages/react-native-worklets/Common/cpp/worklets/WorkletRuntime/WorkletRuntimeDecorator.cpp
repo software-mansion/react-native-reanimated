@@ -1,5 +1,6 @@
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
+#include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/PlatformLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
@@ -7,10 +8,17 @@
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
+#include <chrono>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
+
+#if JS_RUNTIME_HERMES
+#include <hermes/hermes.h>
+#include <filesystem>
+#endif // JS_RUNTIME_HERMES
 
 namespace worklets {
 
@@ -22,6 +30,16 @@ static inline double performanceNow() {
   constexpr double NANOSECONDS_IN_MILLISECOND = 1000000.0;
   return duration / NANOSECONDS_IN_MILLISECOND;
 }
+
+#if JS_RUNTIME_HERMES
+static std::string generateUniqueProfilePath() {
+  auto now = std::chrono::steady_clock::now().time_since_epoch().count();
+  std::ostringstream oss;
+  oss << "profile-" << now << ".cpuprofile";
+  std::filesystem::path dir = std::filesystem::temp_directory_path();
+  return (dir / oss.str()).string();
+}
+#endif // JS_RUNTIME_HERMES
 
 static inline std::vector<jsi::Value> parseArgs(
     jsi::Runtime &rt,
@@ -209,6 +227,34 @@ void WorkletRuntimeDecorator::decorate(
             return jsi::Value(performanceNow());
           }));
   rt.global().setProperty(rt, "performance", performance);
+
+#if JS_RUNTIME_HERMES
+  jsi_utils::installJsiFunction(rt, "_startProfiling", [](jsi::Runtime &rt) {
+    auto *ihermes = jsi::castInterface<facebook::hermes::IHermes>(&rt);
+    if (ihermes) {
+      ihermes->registerForProfiling();
+    }
+    auto *api = jsi::castInterface<facebook::hermes::IHermesRootAPI>(facebook::hermes::makeHermesRootAPI());
+    if (api) {
+      api->enableSamplingProfiler(600);
+    }
+    return jsi::Value::undefined();
+  });
+
+  jsi_utils::installJsiFunction(rt, "_stopProfiling", [](jsi::Runtime &rt) {
+    std::string path = generateUniqueProfilePath();
+    auto *api = jsi::castInterface<facebook::hermes::IHermesRootAPI>(facebook::hermes::makeHermesRootAPI());
+    if (api) {
+      api->dumpSampledTraceToFile(path);
+      api->disableSamplingProfiler();
+    }
+    auto *ihermes = jsi::castInterface<facebook::hermes::IHermes>(&rt);
+    if (ihermes) {
+      ihermes->unregisterForProfiling();
+    }
+    return jsi::String::createFromUtf8(rt, path);
+  });
+#endif // JS_RUNTIME_HERMES
 
   jsi_utils::installJsiFunction(
       rt,

@@ -24,6 +24,8 @@ declare global {
   var _REANIMATED_VERSION_JS: string | undefined;
   var __reanimatedModuleProxy: ReanimatedModuleProxy | undefined;
   var _log: (value: unknown) => void;
+  var _startProfiling: () => void;
+  var _stopProfiling: () => string;
   var _notifyAboutProgress: (
     tag: number,
     value: Record<string, unknown>

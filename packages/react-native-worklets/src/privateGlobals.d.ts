@@ -73,6 +73,8 @@ declare global {
   var __flushAnimationFrame: (timestamp: number) => void;
   var __frameTimestamp: number | undefined;
   var _log: (value: unknown) => void;
+  var _startProfiling: () => void;
+  var _stopProfiling: () => string;
   var _getAnimationTimestamp: () => number;
   var _scheduleOnRuntime: (
     runtime: WorkletRuntime,
