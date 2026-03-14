@@ -229,18 +229,30 @@ void WorkletRuntimeDecorator::decorate(
   rt.global().setProperty(rt, "performance", performance);
 
 #if JS_RUNTIME_HERMES
-  jsi_utils::installJsiFunction(rt, "_startProfiling", [](jsi::Runtime &rt) {
-    auto *ihermes = jsi::castInterface<facebook::hermes::IHermes>(&rt);
-    if (ihermes) {
-      ihermes->registerForProfiling();
-    }
-    auto *api = jsi::castInterface<facebook::hermes::IHermesRootAPI>(facebook::hermes::makeHermesRootAPI());
-    if (api) {
-      api->enableSamplingProfiler(600);
-    }
-    return jsi::Value::undefined();
-  });
+  rt.global().setProperty(
+      rt,
+      "_startProfiling",
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, "_startProfiling"),
+          1,
+          [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) {
+            const double meanHzFreq =
+                (count > 0 && !args[0].isUndefined()) ? args[0].asNumber() : 100.0;
+            auto *ihermes = jsi::castInterface<facebook::hermes::IHermes>(&rt);
+            if (ihermes) {
+              ihermes->registerForProfiling();
+            }
+            auto *api =
+                jsi::castInterface<facebook::hermes::IHermesRootAPI>(facebook::hermes::makeHermesRootAPI());
+            if (api) {
+              api->enableSamplingProfiler(meanHzFreq);
+            }
+            return jsi::Value::undefined();
+          }));
+#endif // JS_RUNTIME_HERMES
 
+#if JS_RUNTIME_HERMES
   jsi_utils::installJsiFunction(rt, "_stopProfiling", [](jsi::Runtime &rt) {
     std::string path = generateUniqueProfilePath();
     auto *api = jsi::castInterface<facebook::hermes::IHermesRootAPI>(facebook::hermes::makeHermesRootAPI());

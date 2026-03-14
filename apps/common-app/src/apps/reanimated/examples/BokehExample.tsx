@@ -83,7 +83,7 @@ function Bokeh({ count }: BokehProps) {
 }
 
 declare global {
-  var _startProfiling: () => void;
+  var _startProfiling: (meanHzFreq?: number) => void;
   var _stopProfiling: () => string;
 }
 
@@ -91,7 +91,7 @@ export default function BokehExample() {
   const handleStartProfiling = () => {
     scheduleOnUI(() => {
       'worklet';
-      globalThis._startProfiling();
+      globalThis._startProfiling(6000);
     });
   };
 
