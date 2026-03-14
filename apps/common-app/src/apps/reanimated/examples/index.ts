@@ -144,6 +144,7 @@ import SvgExample from './SvgExample';
 import SwipeableListExample from './SwipeableListExample';
 import SynchronizablePerformanceExample from './SynchronizableExample';
 import SynchronousPropsExample from './SynchronousPropsExample';
+import SystraceSectionExample from './SystraceSectionExample';
 import ThirdPartyComponentsExample from './ThirdPartyComponentsExample';
 import TransformExample from './TransformExample';
 import TransformOriginExample from './TransformOriginExample';
@@ -197,6 +198,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🎞️',
     title: 'FPS',
     screen: FpsExample,
+  },
+  SystraceSectionExample: {
+    icon: '📊',
+    title: 'Systrace section',
+    screen: SystraceSectionExample,
   },
   SyncBackToReactExample: {
     icon: '🔄',
