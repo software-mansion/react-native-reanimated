@@ -4,6 +4,10 @@ import { type CSSGradientStop } from '../../../../types';
 import { processSVGGradientStops } from '../stops';
 
 describe(processSVGGradientStops, () => {
+  beforeAll(() => {
+    jest.spyOn(console, 'warn').mockImplementation(jest.fn());
+  });
+
   test('returns empty array for invalid input', () => {
     // @ts-expect-error improper argument
     expect(processSVGGradientStops(null)).toEqual([]);
