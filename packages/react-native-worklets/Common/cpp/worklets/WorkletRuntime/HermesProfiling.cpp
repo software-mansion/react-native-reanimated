@@ -1,5 +1,5 @@
-#include <worklets/WorkletRuntime/HermesProfiling.h>
 #include <worklets/Tools/Defs.h>
+#include <worklets/WorkletRuntime/HermesProfiling.h>
 
 #include <string>
 
@@ -29,8 +29,7 @@ void startProfiling(facebook::jsi::Runtime &rt, double meanHzFreq) {
   if (ihermes) {
     ihermes->registerForProfiling();
   }
-  auto *api = facebook::jsi::castInterface<facebook::hermes::IHermesRootAPI>(
-      facebook::hermes::makeHermesRootAPI());
+  auto *api = facebook::jsi::castInterface<facebook::hermes::IHermesRootAPI>(facebook::hermes::makeHermesRootAPI());
   if (api) {
     api->enableSamplingProfiler(meanHzFreq);
   }
@@ -43,8 +42,7 @@ void startProfiling(facebook::jsi::Runtime &rt, double meanHzFreq) {
 std::string stopProfiling(facebook::jsi::Runtime &rt) {
 #if JS_RUNTIME_HERMES
   std::string path = generateUniqueProfilePath();
-  auto *api = facebook::jsi::castInterface<facebook::hermes::IHermesRootAPI>(
-      facebook::hermes::makeHermesRootAPI());
+  auto *api = facebook::jsi::castInterface<facebook::hermes::IHermesRootAPI>(facebook::hermes::makeHermesRootAPI());
   if (api) {
     api->dumpSampledTraceToFile(path);
     api->disableSamplingProfiler();

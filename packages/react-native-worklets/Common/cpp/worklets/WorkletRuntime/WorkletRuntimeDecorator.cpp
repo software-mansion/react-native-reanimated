@@ -222,8 +222,7 @@ void WorkletRuntimeDecorator::decorate(
           jsi::PropNameID::forAscii(rt, "_startProfiling"),
           1,
           [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) {
-            const double meanHzFreq =
-                (count > 0 && !args[0].isUndefined()) ? args[0].asNumber() : 100.0;
+            const double meanHzFreq = (count > 0 && !args[0].isUndefined()) ? args[0].asNumber() : 100.0;
             startProfiling(rt, meanHzFreq);
             return jsi::Value::undefined();
           }));
