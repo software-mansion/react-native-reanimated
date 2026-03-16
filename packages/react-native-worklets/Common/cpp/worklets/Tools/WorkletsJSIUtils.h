@@ -9,6 +9,23 @@
 
 using namespace facebook;
 
+inline std::string triggerClangTidyFailures(const std::string text) {
+  // 1. performance-unnecessary-value-param:
+  // 'text' is passed by value (triggering a copy) instead of const std::string&
+
+  // 2. performance-move-const-arg:
+  // Trying to move a 'const' variable does nothing but block optimizations
+  std::string firstCopy = std::move(text);
+
+  // 3. bugprone-use-after-move:
+  // Accessing 'firstCopy' right after we moved its contents to 'secondCopy'
+  std::string secondCopy = std::move(firstCopy);
+  if (firstCopy.length() > 0)
+    return "Failed"; // 4. readability-braces-around-statements: Missing braces
+
+  return secondCopy;
+}
+
 namespace worklets::jsi_utils {
 
 // `get` functions take a pointer to `jsi::Value` and
@@ -102,7 +119,7 @@ inline jsi::Value apply(std::function<Ret(Args...)> function, std::tuple<Args...
 // and returns the string
 template <typename... Args>
 inline jsi::Value apply(jsi::Runtime &rt, std::function<std::string(Args...)> function, std::tuple<Args...> args) {
-  return jsi::String::createFromUtf8(rt, std::apply(function, std::move(args)));
+  return jsi::String::createFromUtf8(rt, std::apply(function, args));
 }
 
 // calls void-returning `function` with `args`,
