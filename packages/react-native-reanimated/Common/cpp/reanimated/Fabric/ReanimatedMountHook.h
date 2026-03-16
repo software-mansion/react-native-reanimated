@@ -21,12 +21,7 @@ class ReanimatedMountHook : public UIManagerMountHook {
 
   void shadowTreeDidMount(
       RootShadowNode::Shared const &rootShadowNode,
-#if REACT_NATIVE_MINOR_VERSION >= 81
-      HighResTimeStamp mountTime
-#else
-      double mountTime
-#endif // REACT_NATIVE_MINOR_VERSION >= 81
-      ) noexcept override;
+      HighResTimeStamp mountTime) noexcept override;
 
  private:
   const std::shared_ptr<UIManager> uiManager_;

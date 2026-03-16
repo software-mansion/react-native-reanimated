@@ -55,7 +55,7 @@
     "@babel/core": "*",
     "@react-native/metro-config": "*",
     "react": "*",
-    "react-native": "0.79 - 0.84"
+    "react-native": "0.81 - 0.85"
   },
   "dependencies": {
     "@babel/plugin-transform-arrow-functions": "7.27.1",
