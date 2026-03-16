@@ -1,6 +1,5 @@
 {
   // To explore web types in your IDE you can temporarily change this line to:
   // "extends": "./tsconfig.web.json"
-  // brrr
   "extends": "./tsconfig.native.json"
 }
