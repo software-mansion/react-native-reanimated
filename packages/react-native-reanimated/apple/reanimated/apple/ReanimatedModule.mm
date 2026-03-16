@@ -3,6 +3,7 @@
 #import <React/RCTScheduler.h>
 #import <React/RCTSurfacePresenter.h>
 
+#import <reanimated/Compat/WorkletsApi.h>
 #import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #import <reanimated/Tools/SingleInstanceChecker.h>
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
@@ -10,7 +11,6 @@
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/ReanimatedModule.h>
 #import <reanimated/apple/native/NativeProxy.h>
-#import <reanimated/Compat/WorkletsApi.h>
 
 using namespace facebook::react;
 using namespace reanimated;
