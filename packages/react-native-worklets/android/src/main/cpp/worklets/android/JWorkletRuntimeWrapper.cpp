@@ -1,4 +1,4 @@
-#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
 
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
@@ -49,4 +49,4 @@ void JWorkletRuntimeWrapper::registerNatives() {
 }
 } // namespace worklets
 
-#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
