@@ -2,9 +2,8 @@
 
 #include <react/renderer/graphics/Transform.h>
 #include <react/renderer/mounting/ShadowView.h>
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
-
-#include <worklets/Compat/StableApi.h>
 
 #include <jsi/jsi.h>
 #include <stdio.h>

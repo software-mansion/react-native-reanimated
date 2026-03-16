@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <worklets/Compat/StableApi.h>
+#include <reanimated/Compat/WorkletsApi.h>
 
 #include <map>
 #include <memory>
