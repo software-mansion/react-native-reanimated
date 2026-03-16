@@ -100,7 +100,7 @@ export default function PolylineExample() {
               examples: [
                 {
                   description:
-                    'Interpolation between different numbers of points is **not supported**, so the points change **abruptly**',
+                    'Smooth interpolation between shapes with different numbers of points',
                   keyframes: {
                     from: {
                       points: '10,80 50,20 90,80',
@@ -113,7 +113,7 @@ export default function PolylineExample() {
                 },
                 {
                   description:
-                    'Reducing the number of points also causes an **abrupt** change instead of a smooth transition',
+                    'Smooth interpolation when reducing the number of points',
                   keyframes: {
                     from: {
                       points: '10,50 25,20 40,80 55,20 70,80 85,20 90,50',

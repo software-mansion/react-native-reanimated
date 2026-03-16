@@ -11,9 +11,12 @@ import {
   SVG_LINE_PROPERTIES_CONFIG,
   SVG_LINEAR_GRADIENT_PROPERTIES_CONFIG,
   SVG_PATH_PROPERTIES_CONFIG,
+  SVG_PATTERN_PROPERTIES_CONFIG,
+  SVG_POLYGON_PROPERTIES_CONFIG,
   SVG_POLYLINE_PROPERTIES_CONFIG,
   SVG_RADIAL_GRADIENT_PROPERTIES_CONFIG,
   SVG_RECT_PROPERTIES_CONFIG,
+  SVG_TEXT_PROPERTIES_CONFIG,
 } from './native';
 
 export function initSvgCssSupport() {
@@ -30,11 +33,17 @@ export function initSvgCssSupport() {
     SVG_RADIAL_GRADIENT_PROPERTIES_CONFIG
   );
   registerComponentPropsBuilder('RNSVGPath', SVG_PATH_PROPERTIES_CONFIG);
+  registerComponentPropsBuilder('RNSVGPattern', SVG_PATTERN_PROPERTIES_CONFIG);
+  registerComponentPropsBuilder(
+    getCompoundComponentName('RNSVGPath', 'Polygon'),
+    SVG_POLYGON_PROPERTIES_CONFIG
+  );
   registerComponentPropsBuilder(
     getCompoundComponentName('RNSVGPath', 'Polyline'),
     SVG_POLYLINE_PROPERTIES_CONFIG
   );
   registerComponentPropsBuilder('RNSVGRect', SVG_RECT_PROPERTIES_CONFIG);
+  registerComponentPropsBuilder('RNSVGText', SVG_TEXT_PROPERTIES_CONFIG);
 
   // Fallback for all SVG components that aren't explicitly registered
   registerComponentPropsBuilder(/^RNSVG/, SVG_COMMON_PROPERTIES_CONFIG);

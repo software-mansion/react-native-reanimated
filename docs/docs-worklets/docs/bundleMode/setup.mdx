@@ -56,26 +56,46 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
 
 2. **Modify your Metro configuration**. Metro needs to be configured pre-load Bundle Mode entry points into your JavaScript bundle. In your `metro.config.js` file, apply the config required for the bundle mode. For example:
 
-   ```javascript {6-8,16}
-   const {
-     getDefaultConfig,
-     mergeConfig,
-   } = require('@react-native/metro-config');
+<Tabs groupId="framework">
+  <TabItem value="expo" label="Expo">
+    ```javascript {3,10}
+    // Learn more https://docs.expo.io/guides/customizing-metro
+    const { getDefaultConfig, mergeConfig } = require("expo/metro-config");
+    const { getBundleModeMetroConfig } = require("react-native-worklets/bundleMode");
 
-   const {
-     bundleModeMetroConfig,
-   } = require('react-native-worklets/bundleMode');
+    @type {import('expo/metro-config').MetroConfig} */
+    let config = getDefaultConfig(__dirname);
 
-   const config = {
-     // Your Metro config
-   };
+    // Your modifications to the config
 
-   module.exports = mergeConfig(
-     getDefaultConfig(__dirname),
-     bundleModeMetroConfig,
-     config
-   );
-   ```
+    config = getBundleModeMetroConfig(config);
+
+    module.exports = config;
+    ```
+
+  </TabItem>
+  <TabItem value="react-native-community" label="React Native Community">
+    ```javascript {6,12-16}
+    const {
+      getDefaultConfig,
+      mergeConfig,
+    } = require('@react-native/metro-config');
+
+    const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
+
+    const config = {
+      // Your Metro config
+    };
+
+    module.exports = mergeConfig(
+      getDefaultConfig(__dirname),
+      bundleModeMetroConfig,
+      config
+    );
+    ```
+
+  </TabItem>
+</Tabs>
 
 ## Configure your app
 

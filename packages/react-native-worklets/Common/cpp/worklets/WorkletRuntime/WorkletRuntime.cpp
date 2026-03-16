@@ -139,6 +139,11 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
   auto synchronizableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(SynchronizableUnpackerCode);
   rt.evaluateJavaScript(synchronizableUnpackerBuffer, "synchronizableUnpacker");
 
+  auto shareableHostUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(ShareableHostUnpackerCode);
+  rt.evaluateJavaScript(shareableHostUnpackerBuffer, "shareableHostUnpacker");
+  auto shareableGuestUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(ShareableGuestUnpackerCode);
+  rt.evaluateJavaScript(shareableGuestUnpackerBuffer, "shareableGuestUnpacker");
+
   auto customSerializableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(CustomSerializableUnpackerCode);
   rt.evaluateJavaScript(customSerializableUnpackerBuffer, "customSerializableUnpacker");
 #endif // WORKLETS_BUNDLE_MODE_ENABLED
@@ -260,8 +265,8 @@ void scheduleOnRuntime(
   workletRuntime->schedule(serializableWorklet);
 }
 
-#if REACT_NATIVE_MINOR_VERSION >= 81
 std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
+#if REACT_NATIVE_MINOR_VERSION >= 81
   auto runtimeData = rt.getRuntimeData(RuntimeData::weakRuntimeUUID);
   if (!runtimeData) [[unlikely]] {
     throw std::runtime_error(
@@ -270,8 +275,11 @@ std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::
   }
   auto weakHolder = std::static_pointer_cast<WeakRuntimeHolder>(runtimeData);
   return weakHolder->weakRuntime;
-}
+#else
+  throw std::runtime_error(
+      "[Worklets] Retrieving WorkletRuntime from JSI Runtime is not supported in React Native versions below 0.81.");
 #endif // REACT_NATIVE_MINOR_VERSION >= 81
+}
 
 /* #region deprecated */
 

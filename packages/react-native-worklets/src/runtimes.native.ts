@@ -12,6 +12,7 @@ import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
 } from './memory/serializable';
+import { serializableMappingCache } from './memory/serializableMappingCache';
 import { setupRunLoop } from './runLoop/workletRuntime';
 import { RuntimeKind } from './runtimeKind';
 import { scheduleOnRN } from './threads';
@@ -27,7 +28,7 @@ import { WorkletsModule } from './WorkletsModule/NativeWorklets';
  * The ID of the [UI Worklet
  * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
  */
-export const UIRuntimeId = RuntimeKind.UI;
+export const UIRuntimeId = RuntimeKind.UI as 2;
 
 /**
  * Lets you create a new JS runtime which can be used to run worklets possibly
@@ -126,13 +127,6 @@ export function createWorkletRuntime(
  *
  * - The worklet is scheduled on the Worker Runtime's [Async
  *   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
- * - The function cannot be scheduled on the Worker Runtime from [UI
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
- *   or another [Worker
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
- *   unless the [Bundle
- *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
- *   enabled.
  *
  * @param workletRuntime - The runtime to schedule the worklet on.
  * @param worklet - The worklet to schedule.
@@ -168,6 +162,35 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
   );
 }
 
+if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+  function scheduleOnRuntimeWorklet<Args extends unknown[], ReturnValue>(
+    workletRuntime: WorkletRuntime,
+    worklet: WorkletFunction<Args, ReturnValue>,
+    ...args: Args
+  ): void {
+    'worklet';
+    if (__DEV__ && !isWorkletFunction(worklet)) {
+      throw new WorkletsError(
+        'The function passed to `scheduleOnRuntime` is not a worklet.'
+      );
+    }
+
+    globalThis.__workletsModuleProxy.scheduleOnRuntime(
+      workletRuntime,
+      globalThis.__serializer(() => {
+        'worklet';
+        worklet(...args);
+        globalThis.__flushMicrotasks?.();
+      })
+    );
+  }
+
+  serializableMappingCache.set(
+    scheduleOnRuntime,
+    createSerializable(scheduleOnRuntimeWorklet)
+  );
+}
+
 /**
  * Lets you asynchronously run a
  * [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)
@@ -181,15 +204,6 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
  *
  * - The worklet is scheduled on the Worker Runtime's [Async
  *   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
- * - This function cannot be called from the [UI
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
- *   or a [Worker
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
- *   unless the [Bundle
- *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
- *   enabled.
- * - You can target the UI Runtime with this function by passing
- *   {@link UIRuntimeId} as the `runtimeId` argument.
  *
  * @param runtimeId - The id of the runtime to schedule the worklet on.
  * @param worklet - The worklet to schedule.
@@ -222,6 +236,35 @@ export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
       worklet(...args);
       globalThis.__flushMicrotasks?.();
     })
+  );
+}
+
+if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+  function scheduleOnRuntimeWithIdWorklet<Args extends unknown[], ReturnValue>(
+    runtimeId: number,
+    worklet: WorkletFunction<Args, ReturnValue>,
+    ...args: Args
+  ): void {
+    'worklet';
+    if (__DEV__ && !isWorkletFunction(worklet)) {
+      throw new WorkletsError(
+        'The function passed to `scheduleOnRuntimeWithId` is not a worklet.'
+      );
+    }
+
+    globalThis.__workletsModuleProxy.scheduleOnRuntimeWithId(
+      runtimeId,
+      globalThis.__serializer(() => {
+        'worklet';
+        worklet(...args);
+        globalThis.__flushMicrotasks?.();
+      })
+    );
+  }
+
+  serializableMappingCache.set(
+    scheduleOnRuntimeWithId,
+    createSerializable(scheduleOnRuntimeWithIdWorklet)
   );
 }
 
@@ -419,9 +462,7 @@ if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
    */
   addGuardImplementation(runOnRuntimeAsync);
   addGuardImplementation(runOnRuntimeSync);
-  addGuardImplementation(scheduleOnRuntime);
   addGuardImplementation(runOnRuntimeSyncWithId);
-  addGuardImplementation(scheduleOnRuntimeWithId);
 }
 
 export function getUIRuntimeHolder(): object {

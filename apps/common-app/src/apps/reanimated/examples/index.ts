@@ -27,7 +27,6 @@ import ComposedHandlerDifferentEventsExample from './ComposedHandlerDifferentEve
 import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMergingExample';
 import CopySerializablePerformanceTest from './CopySerializablePerformanceTest';
 import CounterExample from './CounterExample';
-import CubesExample from './CubesExample';
 import DispatchCommandExample from './DispatchCommandExample';
 import DragAndSnapExample from './DragAndSnapExample';
 import DynamicColorIOSExample from './DynamicColorIOSExample';
@@ -93,7 +92,6 @@ import ModalExitingExample from './ModalExitingExample';
 import ModifyExample from './ModifyExample';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
 import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
-import OldAnimatedSensorExample from './OldAnimatedSensorExample';
 import OldMeasureExample from './OldMeasureExample';
 import OpacityTransformExample from './OpacityTransformExample';
 import OverlappingBoxesExample from './OverlappingBoxesExample';
@@ -154,13 +152,12 @@ import WidthExample from './WidthExample';
 import WithClampExample from './WithClampExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
-import WorkletExample from './WorkletExample';
-import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import InstanceDiscoveryExample from './InstanceDiscoveryExample';
 import FetchExample from './FetchExample';
 import ShadowNodesCloningExample from './ShadowNodesCloningExample';
 import EmptyExample from './EmptyExample';
+import AndroidDrawPassExample from './AndroidDrawPassExample';
 import AnimatedPropsExample from './AnimatedPropsExample';
 
 export const REAPlatform = {
@@ -205,6 +202,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔄',
     title: 'Sync back to React',
     screen: SyncBackToReactExample,
+  },
+  AndroidDrawPassExample: {
+    icon: '✍️',
+    title: 'Android Draw Pass',
+    screen: AndroidDrawPassExample,
   },
   DetachAnimatedStylesExample: {
     icon: '⛓️‍💥',
@@ -269,6 +271,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🧠',
     title: 'Memo',
     screen: MemoExample,
+    shouldWork: {
+      // TODO: fix, broken in https://github.com/software-mansion/react-native-reanimated/pull/7604
+      ios: false,
+      android: false,
+    },
   },
   AnimatedPropsExample: {
     icon: '🎨',
@@ -508,11 +515,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'measure',
     screen: MeasureExample,
   },
-  WorkletExample: {
-    icon: '🧵',
-    title: 'scheduleOnRN / scheduleOnUI',
-    screen: WorkletExample,
-  },
   BabelVersionCheckExample: {
     icon: '📦',
     title: 'Babel version check',
@@ -624,11 +626,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Log test',
     screen: LogExample,
   },
-  WorkletFactoryCrash: {
-    icon: '🏭',
-    title: 'Worklet factory crash',
-    screen: WorkletFactoryCrash,
-  },
   HabitsExample: {
     icon: '🧑‍💻',
     title: 'Habits',
@@ -725,10 +722,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Chat heads',
     screen: ChatHeadsExample,
   },
-  CubesExample: {
-    title: 'Cubes',
-    screen: CubesExample,
-  },
   DragAndSnapExample: {
     title: 'Drag and snap',
     screen: DragAndSnapExample,
@@ -744,10 +737,6 @@ export const EXAMPLES: Record<string, Example> = {
   InvertedFlatListExample: {
     title: 'Inverted FlatList example',
     screen: InvertedFlatListExample,
-  },
-  OldAnimatedSensorExample: {
-    title: 'Old animated sensor example',
-    screen: OldAnimatedSensorExample,
   },
   OldMeasureExample: {
     title: 'Accordion',

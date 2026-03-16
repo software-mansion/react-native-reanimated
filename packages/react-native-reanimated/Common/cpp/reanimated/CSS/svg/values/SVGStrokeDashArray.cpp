@@ -7,7 +7,7 @@ namespace reanimated::css {
 
 SVGStrokeDashArray::SVGStrokeDashArray() : values() {}
 
-SVGStrokeDashArray::SVGStrokeDashArray(const std::vector<SVGLength> &values) : values(values) {}
+SVGStrokeDashArray::SVGStrokeDashArray(const std::vector<CSSLength> &values) : values(values) {}
 
 SVGStrokeDashArray::SVGStrokeDashArray(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   const auto &array = jsiValue.asObject(rt).asArray(rt);
@@ -30,7 +30,7 @@ bool SVGStrokeDashArray::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiVal
   }
   const auto &array = jsiValue.asObject(rt).asArray(rt);
   for (size_t i = 0; i < array.size(rt); ++i) {
-    if (!SVGLength::canConstruct(rt, array.getValueAtIndex(rt, i))) {
+    if (!CSSLength::canConstruct(rt, array.getValueAtIndex(rt, i))) {
       return false;
     }
   }
@@ -39,7 +39,7 @@ bool SVGStrokeDashArray::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiVal
 
 bool SVGStrokeDashArray::canConstruct(const folly::dynamic &value) {
   return value.isArray() &&
-      std::all_of(value.begin(), value.end(), [](const auto &value) { return SVGLength::canConstruct(value); });
+      std::all_of(value.begin(), value.end(), [](const auto &value) { return CSSLength::canConstruct(value); });
 }
 
 folly::dynamic SVGStrokeDashArray::toDynamic() const {
@@ -64,8 +64,11 @@ std::string SVGStrokeDashArray::toString() const {
   return ss.str();
 }
 
-SVGStrokeDashArray SVGStrokeDashArray::interpolate(double progress, const SVGStrokeDashArray &to) const {
-  std::vector<SVGLength> result;
+SVGStrokeDashArray SVGStrokeDashArray::interpolate(
+    double progress,
+    const SVGStrokeDashArray &to,
+    const ResolvableValueInterpolationContext &context) const {
+  std::vector<CSSLength> result;
   auto fromValues = values;
   auto toValues = to.values;
 
@@ -88,7 +91,7 @@ SVGStrokeDashArray SVGStrokeDashArray::interpolate(double progress, const SVGStr
   result.reserve(resultSize);
 
   for (size_t i = 0; i < resultSize; i++) {
-    result.emplace_back(fromValues[i % fromSize].interpolate(progress, toValues[i % toSize]));
+    result.emplace_back(fromValues[i % fromSize].interpolate(progress, toValues[i % toSize], context));
   }
 
   return SVGStrokeDashArray(result);
