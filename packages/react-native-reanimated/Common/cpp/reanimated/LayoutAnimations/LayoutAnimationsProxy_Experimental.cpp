@@ -32,7 +32,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   ShadowViewMutationList filteredMutations;
   auto rootChildCount = static_cast<int>(lightNodes_[surfaceId]->children.size());
   const std::vector<std::shared_ptr<MutationNode>> roots;
-  const bool isInTransition = transitionState_;
+  const bool isInTransition = static_cast<bool>(transitionState_);
 
   if (isInTransition) {
     updateLightTree(propsParserContext, mutations, filteredMutations);
@@ -50,7 +50,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     auto beforeTopScreen = topScreen[surfaceId];
     if (beforeTopScreen) {
       ReanimatedSystraceSection s("find before elements");
-      findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext);
+      findSharedElementsOnScreen(beforeTopScreen, BeforeOrAfter::BEFORE, propsParserContext);
     }
 
     updateLightTree(propsParserContext, mutations, filteredMutations);
@@ -59,7 +59,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     topScreen[surfaceId] = afterTopScreen;
     if (afterTopScreen) {
       ReanimatedSystraceSection s("find after elements");
-      findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext);
+      findSharedElementsOnScreen(afterTopScreen, BeforeOrAfter::AFTER, propsParserContext);
 #ifdef __APPLE__
       forceScreenSnapshot_(afterTopScreen->current.tag);
 #endif
@@ -71,9 +71,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
       // To keep things simple, we put mutations related to source views before all muatations
       // and mutations to hide target views after all mutations.
       std::vector<ShadowViewMutation> mergedMutations;
-      hideTransitioningViews(BEFORE, mergedMutations, propsParserContext);
+      hideTransitioningViews(BeforeOrAfter::BEFORE, mergedMutations, propsParserContext);
       mergedMutations.insert(mergedMutations.end(), filteredMutations.begin(), filteredMutations.end());
-      hideTransitioningViews(AFTER, mergedMutations, propsParserContext);
+      hideTransitioningViews(BeforeOrAfter::AFTER, mergedMutations, propsParserContext);
       std::swap(filteredMutations, mergedMutations);
     }
 
