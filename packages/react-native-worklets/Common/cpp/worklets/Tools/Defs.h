@@ -1,3 +1,5 @@
+#pragma once
+
 #if __APPLE__ && __has_include(<hermes/hermes.h>)
 #define JS_RUNTIME_HERMES 1
 #endif
