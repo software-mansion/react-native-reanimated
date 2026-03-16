@@ -27,7 +27,7 @@
     "lint:apple": "../../scripts/validate-apple.sh && yarn format:apple --dry-run -Werror",
     "lint:common": "../../scripts/validate-common.sh && ../../scripts/cpplint.sh Common && yarn format:common --dry-run -Werror",
     "lint:cmake": "find ./android -type d \\( -name build -o -name .cxx \\) -prune -o -type f -name 'CMakeLists.txt' -print | xargs ../../scripts/lint-cmake.sh",
-    "lint:clang-tidy": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs ../../scripts/clang-tidy-lint.sh",
+    "lint:clang-tidy": "../../scripts/clang-tidy-lint.sh \"Common\"",
     "lint:js": "eslint src && yarn prettier --check src",
     "lint:plugin": "yarn workspace babel-plugin-worklets lint",
     "test": "jest",
