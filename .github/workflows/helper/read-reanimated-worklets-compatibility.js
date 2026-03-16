@@ -131,24 +131,15 @@ for (const [reanimatedRange, details] of Object.entries(fabricCompatibility)) {
   }
 }
 
-const matrix = {};
+const uniqueEntries = new Map();
 for (const entry of matrixEntries) {
-  const key = `${entry.reanimatedVersion}-${entry.workletsVersion}`;
-  if (!matrix[entry.reactNativeVersion]) {
-    matrix[entry.reactNativeVersion] = new Map();
-  }
-  matrix[entry.reactNativeVersion].set(key, {
-    reanimatedVersion: entry.reanimatedVersion,
-    workletsVersion: entry.workletsVersion,
-  });
+  const key = `${entry.reactNativeVersion}-${entry.reanimatedVersion}-${entry.workletsVersion}`;
+  uniqueEntries.set(key, entry);
 }
 
-const result = {};
-for (const [rnVersion, entries] of Object.entries(matrix)) {
-  result[rnVersion] = Array.from(entries.values());
-}
+const matrix = Array.from(uniqueEntries.values());
 
 fs.writeFileSync(
   '/tmp/reanimated-worklets-matrix.json',
-  JSON.stringify(result)
+  JSON.stringify(matrix)
 );
