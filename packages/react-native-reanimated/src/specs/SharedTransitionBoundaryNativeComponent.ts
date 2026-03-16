@@ -2,7 +2,7 @@
 import type { HostComponent, ViewProps } from 'react-native';
 import { codegenNativeComponent } from 'react-native';
 
-export interface NativeProps extends ViewProps {
+interface NativeProps extends ViewProps {
   isActive: boolean;
 }
 
