@@ -2,17 +2,6 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-function compareMinorVersions(a, b) {
-  const [aMajor, aMinor] = a.split('.').map(Number);
-  const [bMajor, bMinor] = b.split('.').map(Number);
-
-  if (aMajor !== bMajor) {
-    return aMajor - bMajor;
-  }
-
-  return aMinor - bMinor;
-}
-
 function resolveNpmVersion(pkgName, versionRange) {
   const spec = `${pkgName}@${versionRange}`;
   try {
@@ -112,20 +101,6 @@ for (const [reanimatedRange, details] of Object.entries(fabricCompatibility)) {
       continue;
     }
 
-    const latestCommonReactNativeMinor = [...commonReactNativeVersions]
-      .sort(compareMinorVersions)
-      .at(-1);
-    const reactNativeRange = toRange(latestCommonReactNativeMinor);
-
-    const resolvedReactNativeVersion = resolveNpmVersion(
-      'react-native',
-      reactNativeRange
-    );
-
-    if (!resolvedReactNativeVersion) {
-      continue;
-    }
-
     const workletsNpmRange = toRange(workletsRange);
     const resolvedWorkletsVersion = resolveNpmVersion(
       'react-native-worklets',
@@ -136,23 +111,44 @@ for (const [reanimatedRange, details] of Object.entries(fabricCompatibility)) {
       continue;
     }
 
-    matrixEntries.push({
-      reactNativeVersion: resolvedReactNativeVersion,
-      reanimatedVersion: resolvedReanimatedVersion,
-      workletsVersion: resolvedWorkletsVersion,
-    });
+    for (const rnMinor of commonReactNativeVersions) {
+      const reactNativeRange = toRange(rnMinor);
+      const resolvedReactNativeVersion = resolveNpmVersion(
+        'react-native',
+        reactNativeRange
+      );
+
+      if (!resolvedReactNativeVersion) {
+        continue;
+      }
+
+      matrixEntries.push({
+        reactNativeVersion: resolvedReactNativeVersion,
+        reanimatedVersion: resolvedReanimatedVersion,
+        workletsVersion: resolvedWorkletsVersion,
+      });
+    }
   }
 }
 
-const uniqueEntries = new Map();
+const matrix = {};
 for (const entry of matrixEntries) {
-  const key = `${entry.reactNativeVersion}-${entry.reanimatedVersion}-${entry.workletsVersion}`;
-  uniqueEntries.set(key, entry);
+  const key = `${entry.reanimatedVersion}-${entry.workletsVersion}`;
+  if (!matrix[entry.reactNativeVersion]) {
+    matrix[entry.reactNativeVersion] = new Map();
+  }
+  matrix[entry.reactNativeVersion].set(key, {
+    reanimatedVersion: entry.reanimatedVersion,
+    workletsVersion: entry.workletsVersion,
+  });
 }
 
-const matrix = Array.from(uniqueEntries.values());
+const result = {};
+for (const [rnVersion, entries] of Object.entries(matrix)) {
+  result[rnVersion] = Array.from(entries.values());
+}
 
 fs.writeFileSync(
   '/tmp/reanimated-worklets-matrix.json',
-  JSON.stringify(matrix)
+  JSON.stringify(result)
 );
