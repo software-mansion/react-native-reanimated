@@ -25,5 +25,3 @@ const styles = StyleSheet.create({
     display: 'contents',
   },
 });
-
-export default SharedTransitionBoundary;
