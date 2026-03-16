@@ -18856,8 +18856,8 @@ __metadata:
     typescript: "npm:5.8.3"
   peerDependencies:
     react: "*"
-    react-native: "*"
-    react-native-worklets: ">=0.5.0"
+    react-native: 0.78 - 0.82
+    react-native-worklets: 0.5 - 0.8
   languageName: unknown
   linkType: soft
 

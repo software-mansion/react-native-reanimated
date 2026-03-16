@@ -34,7 +34,8 @@
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
     "use-strict-check": "node ../../scripts/validate-use-strict.js",
     "prepack": "cp ../../README.md ./README.md",
-    "postpack": "rm ./README.md"
+    "postpack": "rm ./README.md",
+    "validate-peers": "node ../../scripts/validate-compatibility-peer-dependencies.js"
   },
   "main": "lib/module/index",
   "module": "lib/module/index",
@@ -93,8 +94,8 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "*",
-    "react-native-worklets": ">=0.5.0"
+    "react-native": "0.78 - 0.82",
+    "react-native-worklets": "0.5 - 0.8"
   },
   "devDependencies": {
     "@babel/cli": "^7.20.0",

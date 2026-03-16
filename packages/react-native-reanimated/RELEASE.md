@@ -28,7 +28,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
 5. If releasing v4, make sure to update required version of `react-native-worklets` in `scripts/worklets-version.json`.
 
-6. Update the **Compatibility Table** in the documentation:
+6. Update `peerDependencies` in `packages/react-native-reanimated/package.json` to align with the versions declared in the **Compatibility** file.
 
    - You need to do this in a separate PR as docs are hosted on `main`,
    - Use `&ndash;` (–) symbol instead of normal dash (-).
