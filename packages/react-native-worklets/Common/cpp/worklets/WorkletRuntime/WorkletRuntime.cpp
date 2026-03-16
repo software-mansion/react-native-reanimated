@@ -100,18 +100,36 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
   const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
   const auto memoryManager_ = jsiWorkletsModuleProxy->getMemoryManager();
-#ifdef WORKLETS_BUNDLE_MODE_ENABLED
-  auto script = jsiWorkletsModuleProxy->getScript();
+  const auto script = jsiWorkletsModuleProxy->getScript();
   const auto &sourceUrl = jsiWorkletsModuleProxy->getSourceUrl();
-  auto runtimeBindings = jsiWorkletsModuleProxy->getRuntimeBindings();
-#endif // WORKLETS_BUNDLE_MODE_ENABLED
+  const auto runtimeBindings = jsiWorkletsModuleProxy->getRuntimeBindings();
+  const auto bundleModeEnabled = jsiWorkletsModuleProxy->isBundleModeEnabled();
 
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
 
   WorkletRuntimeDecorator::decorate(
       rt, name_, jsScheduler, isDevBundle, std::move(optimizedJsiWorkletsModuleProxy), eventLoop_);
 
-#ifdef WORKLETS_BUNDLE_MODE_ENABLED
+  if (bundleModeEnabled) {
+    bundleModeInit(jsScheduler, script, sourceUrl, runtimeBindings);
+  } else {
+    legacyModeInit();
+  }
+
+  try {
+    memoryManager_->loadAllCustomSerializables(shared_from_this());
+  } catch (jsi::JSError &e) {
+    throw std::runtime_error(std::string("[Worklets] Failed to load custom serializables. Reason: ") + e.getMessage());
+  }
+}
+
+void WorkletRuntime::bundleModeInit(
+    const std::shared_ptr<JSScheduler> &jsScheduler,
+    const std::shared_ptr<const ScriptBuffer> &script,
+    const std::string &sourceUrl,
+    const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
+  jsi::Runtime &rt = *runtime_;
+
   if (!script) {
     throw std::runtime_error("[Worklets] Expected to receive the bundle, but got nullptr instead.");
   }
@@ -130,9 +148,11 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
   }
 
   WorkletRuntimeDecorator::postEvaluateScript(rt, runtimeBindings);
+}
 
-#else
-  // Legacy behavior
+void WorkletRuntime::legacyModeInit() {
+  jsi::Runtime &rt = *runtime_;
+
   auto valueUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(ValueUnpackerCode);
   rt.evaluateJavaScript(valueUnpackerBuffer, "valueUnpacker");
 
@@ -146,12 +166,6 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
 
   auto customSerializableUnpackerBuffer = std::make_shared<const jsi::StringBuffer>(CustomSerializableUnpackerCode);
   rt.evaluateJavaScript(customSerializableUnpackerBuffer, "customSerializableUnpacker");
-#endif // WORKLETS_BUNDLE_MODE_ENABLED
-  try {
-    memoryManager_->loadAllCustomSerializables(shared_from_this());
-  } catch (jsi::JSError &e) {
-    throw std::runtime_error(std::string("[Worklets] Failed to load custom serializables. Reason: ") + e.getMessage());
-  }
 }
 
 /* #region schedule */
@@ -265,8 +279,8 @@ void scheduleOnRuntime(
   workletRuntime->schedule(serializableWorklet);
 }
 
-#if REACT_NATIVE_MINOR_VERSION >= 81
 std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
+#if REACT_NATIVE_MINOR_VERSION >= 81
   auto runtimeData = rt.getRuntimeData(RuntimeData::weakRuntimeUUID);
   if (!runtimeData) [[unlikely]] {
     throw std::runtime_error(
@@ -275,8 +289,11 @@ std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::
   }
   auto weakHolder = std::static_pointer_cast<WeakRuntimeHolder>(runtimeData);
   return weakHolder->weakRuntime;
-}
+#else
+  throw std::runtime_error(
+      "[Worklets] Retrieving WorkletRuntime from JSI Runtime is not supported in React Native versions below 0.81.");
 #endif // REACT_NATIVE_MINOR_VERSION >= 81
+}
 
 /* #region deprecated */
 

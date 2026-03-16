@@ -7,8 +7,7 @@
 #include <react/jni/WritableNativeMap.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
-#include <worklets/Tools/UIScheduler.h>
-#include <worklets/WorkletRuntime/WorkletRuntime.h>
+#include <worklets/Compat/StableApi.h>
 
 #include <memory>
 #include <string>

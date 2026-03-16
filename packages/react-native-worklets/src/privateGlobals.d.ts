@@ -75,6 +75,8 @@ declare global {
   var _log: (value: unknown) => void;
   var _startProfiling: (meanHzFreq?: number) => void;
   var _stopProfiling: () => string;
+  var _beginSection: (name: string) => void;
+  var _endSection: () => void;
   var _getAnimationTimestamp: () => number;
   var _scheduleOnRuntime: (
     runtime: WorkletRuntime,
