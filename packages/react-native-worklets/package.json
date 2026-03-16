@@ -35,7 +35,8 @@
     "type:check:src": "",
     "type:check:app": "",
     "type:check:plugin": "",
-    "type:check:tests": ""
+    "type:check:tests": "",
+    "validate-peers": ""
   },
   "repository": {
     "type": "git",
@@ -51,7 +52,7 @@
   "peerDependencies": {
     "@babel/core": "*",
     "react": "*",
-    "react-native": "*"
+    "react-native": "0.79 - 0.84"
   },
   "dependencies": {
     "@babel/plugin-transform-arrow-functions": "7.27.1",
