@@ -96,7 +96,7 @@ target_include_directories(
 # build shared lib
 set_target_properties(worklets PROPERTIES LINKER_LANGUAGE CXX)
 
-target_link_libraries(worklets log ReactAndroid::reactnative ReactAndroid::jsi
+target_link_libraries(worklets android log ReactAndroid::reactnative ReactAndroid::jsi
                       fbjni::fbjni)
 
 if(${JS_RUNTIME} STREQUAL "hermes")

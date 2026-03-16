@@ -7,10 +7,35 @@
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
+#ifdef ANDROID
+#include <android/trace.h>
+#endif
+
+#if defined(__APPLE__)
+#include <os/trace_base.h>
+#if OS_LOG_TARGET_HAS_10_15_FEATURES
+#include <os/log.h>
+#include <os/signpost.h>
+#endif
+#endif
+
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
+
+#if defined(__APPLE__) && OS_LOG_TARGET_HAS_10_15_FEATURES
+static os_log_t workletsInstrumentsLogHandle = nullptr;
+static thread_local os_signpost_id_t tls_signpostId = OS_SIGNPOST_ID_INVALID;
+static thread_local std::string tls_signpostName;
+
+static os_log_t getWorkletsInstrumentsLogHandle() {
+  if (!workletsInstrumentsLogHandle) {
+    workletsInstrumentsLogHandle = os_log_create("dev.worklets.instruments", OS_LOG_CATEGORY_POINTS_OF_INTEREST);
+  }
+  return workletsInstrumentsLogHandle;
+}
+#endif
 
 namespace worklets {
 
@@ -85,6 +110,33 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(rt, "_toString", [](jsi::Runtime &rt, const jsi::Value &value) {
     return jsi::String::createFromUtf8(rt, stringifyJSIValue(rt, value));
+  });
+
+  jsi_utils::installJsiFunction(rt, "_beginSection", [](jsi::Runtime &rt, const jsi::Value &nameValue) {
+#ifdef ANDROID
+    ATrace_beginSection(nameValue.asString(rt).utf8(rt).c_str());
+#elif defined(__APPLE__) && OS_LOG_TARGET_HAS_10_15_FEATURES
+    os_log_t logHandle = getWorkletsInstrumentsLogHandle();
+    if (os_signpost_enabled(logHandle)) {
+      tls_signpostName = nameValue.asString(rt).utf8(rt);
+      tls_signpostId = os_signpost_id_make_with_pointer(logHandle, &tls_signpostId);
+      os_signpost_interval_begin(logHandle, tls_signpostId, "Worklets", "%s", tls_signpostName.c_str());
+    }
+#endif
+    return jsi::Value::undefined();
+  });
+
+  jsi_utils::installJsiFunction(rt, "_endSection", [](jsi::Runtime &rt) {
+#ifdef ANDROID
+    ATrace_endSection();
+#elif defined(__APPLE__) && OS_LOG_TARGET_HAS_10_15_FEATURES
+    os_log_t logHandle = getWorkletsInstrumentsLogHandle();
+    if (os_signpost_enabled(logHandle) && tls_signpostId != OS_SIGNPOST_ID_INVALID) {
+      os_signpost_interval_end(logHandle, tls_signpostId, "Worklets", "%s end", tls_signpostName.c_str());
+      tls_signpostId = OS_SIGNPOST_ID_INVALID;
+    }
+#endif
+    return jsi::Value::undefined();
   });
 
   jsi_utils::installJsiFunction(
