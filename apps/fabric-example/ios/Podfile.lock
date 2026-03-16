@@ -1955,6 +1955,7 @@ PODS:
     - ReactNativeDependencies
     - RNReanimated/apple (= 4.4.0-main)
     - RNReanimated/common (= 4.4.0-main)
+    - RNReanimated/view (= 4.4.0-main)
     - RNWorklets
     - Yoga
   - RNReanimated/apple (4.4.0-main):
@@ -2005,6 +2006,31 @@ PODS:
     - ReactNativeDependencies
     - RNWorklets
     - Yoga
+  - RNReanimated/view (4.4.0-main):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - RNWorklets
+    - Yoga
+  - RNScreens (4.24.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
