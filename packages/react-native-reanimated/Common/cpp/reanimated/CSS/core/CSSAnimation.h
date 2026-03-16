@@ -26,6 +26,10 @@ class CSSAnimation {
 
   double getStartTimestamp(double timestamp) const;
   AnimationProgressState getState(double timestamp) const;
+  unsigned getCurrentIteration() const;
+  double getDuration() const;
+  double getDelay() const;
+  double getIterationCount() const;
   bool isReversed() const;
 
   bool hasForwardsFillMode() const;

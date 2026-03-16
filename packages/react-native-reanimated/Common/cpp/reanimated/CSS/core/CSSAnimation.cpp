@@ -46,6 +46,22 @@ AnimationProgressState CSSAnimation::getState(double timestamp) const {
   return progressProvider_->getState(timestamp);
 }
 
+unsigned CSSAnimation::getCurrentIteration() const {
+  return progressProvider_->getCurrentIteration();
+}
+
+double CSSAnimation::getDuration() const {
+  return progressProvider_->getDuration();
+}
+
+double CSSAnimation::getDelay() const {
+  return progressProvider_->getDelay();
+}
+
+double CSSAnimation::getIterationCount() const {
+  return progressProvider_->getIterationCount();
+}
+
 bool CSSAnimation::isReversed() const {
   const auto direction = progressProvider_->getDirection();
   return direction == AnimationDirection::Reverse || direction == AnimationDirection::AlternateReverse;

@@ -35,6 +35,14 @@ AnimationDirection AnimationProgressProvider::getDirection() const {
   return direction_;
 }
 
+unsigned AnimationProgressProvider::getCurrentIteration() const {
+  return currentIteration_;
+}
+
+double AnimationProgressProvider::getIterationCount() const {
+  return iterationCount_;
+}
+
 double AnimationProgressProvider::getGlobalProgress() const {
   return applyAnimationDirection(rawProgress_.value_or(0));
 }
