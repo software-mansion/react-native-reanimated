@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cxxreact/JSBigString.h>
 #include <jsi/jsi.h>
+#include <worklets/Tools/Defs.h>
 
 #include <memory>
 #include <utility>

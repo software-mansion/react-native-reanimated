@@ -227,7 +227,6 @@ void WorkletRuntimeDecorator::decorate(
       });
 }
 
-#ifdef WORKLETS_BUNDLE_MODE_ENABLED
 void WorkletRuntimeDecorator::postEvaluateScript(
     jsi::Runtime &rt,
     const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
@@ -307,6 +306,5 @@ void WorkletRuntimeDecorator::installNetworking(
   Networking.asObject(rt).setProperty(rt, "clearCookies", std::move(jsiClearCookies));
 }
 #endif // WORKLETS_FETCH_PREVIEW_ENABLED
-#endif // WORKLETS_BUNDLE_MODE_ENABLED
 
 } // namespace worklets
