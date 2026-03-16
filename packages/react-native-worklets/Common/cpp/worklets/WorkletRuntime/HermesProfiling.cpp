@@ -25,6 +25,7 @@ static std::string generateUniqueProfilePath() {
 
 void startProfiling(facebook::jsi::Runtime &rt, double meanHzFreq) {
 #if JS_RUNTIME_HERMES
+#if REACT_NATIVE_MINOR_VERSION >= 81
   auto *ihermes = facebook::jsi::castInterface<facebook::hermes::IHermes>(&rt);
   if (ihermes) {
     ihermes->registerForProfiling();
@@ -36,12 +37,18 @@ void startProfiling(facebook::jsi::Runtime &rt, double meanHzFreq) {
 #else
   (void)rt;
   (void)meanHzFreq;
+  facebook::hermes::HermesRuntime::enableSamplingProfiler();
+#endif
+#else
+  (void)rt;
+  (void)meanHzFreq;
 #endif
 }
 
 std::string stopProfiling(facebook::jsi::Runtime &rt) {
 #if JS_RUNTIME_HERMES
   std::string path = generateUniqueProfilePath();
+#if REACT_NATIVE_MINOR_VERSION >= 81
   auto *api = facebook::jsi::castInterface<facebook::hermes::IHermesRootAPI>(facebook::hermes::makeHermesRootAPI());
   if (api) {
     api->dumpSampledTraceToFile(path);
@@ -51,6 +58,11 @@ std::string stopProfiling(facebook::jsi::Runtime &rt) {
   if (ihermes) {
     ihermes->unregisterForProfiling();
   }
+#else
+  (void)rt;
+  facebook::hermes::HermesRuntime::dumpSampledTraceToFile(path);
+  facebook::hermes::HermesRuntime::disableSamplingProfiler();
+#endif
   return path;
 #else
   (void)rt;
