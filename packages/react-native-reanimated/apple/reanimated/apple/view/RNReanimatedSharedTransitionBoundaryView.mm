@@ -16,9 +16,6 @@ using namespace facebook::react;
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps
 {
-  //  const auto &oldViewProps = *std::static_pointer_cast<RNReanimatedSharedTransitionBoundaryProps const>(_props);
-  //  const auto &newViewProps = *std::static_pointer_cast<RNReanimatedSharedTransitionBoundaryProps const>(props);
-
   [super updateProps:props oldProps:oldProps];
 }
 
