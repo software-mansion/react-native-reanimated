@@ -27,8 +27,6 @@ std::weak_ptr<WorkletRuntime> getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
   return WorkletRuntime::getWeakRuntimeFromJSIRuntime(rt);
 }
 
-/* #region deprecated */
-
 std::shared_ptr<Serializable>
 extractSerializable(facebook::jsi::Runtime &rt, const facebook::jsi::Value &value, const std::string &errorMessage) {
   return extractSerializableOrThrow(rt, value, errorMessage);
