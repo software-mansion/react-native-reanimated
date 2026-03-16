@@ -1,15 +1,8 @@
+#include <folly/dynamic.h>
+#include <react/renderer/components/rnreanimated/Props.h>
 #include <react/renderer/components/scrollview/ScrollViewState.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
-#ifndef ANDROID
-#if __has_include(<react/renderer/components/rnscreens/Props.h>)
-#define HAS_SCREENS_PROPS
-#include <react/renderer/components/rnscreens/Props.h>
-#endif
-#endif // !ANDROID
-
-#include <folly/dynamic.h>
-#include <react/renderer/components/rnreanimated/Props.h>
 #include <ranges>
 
 namespace reanimated {

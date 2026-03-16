@@ -34,12 +34,8 @@ class RNReanimatedSharedTransitionBoundaryShadowNode final : public ConcreteView
     initialize();
   }
 
-  void layout(LayoutContext layoutContext) override;
-  void appendChild(const std::shared_ptr<const ShadowNode> &child) override;
-
  private:
   void initialize();
-  void prepareChildren();
 };
 
 } // namespace facebook::react
