@@ -36,7 +36,8 @@
     "type:check:app": "",
     "type:check:plugin": "",
     "type:check:tests": "",
-    "use-strict-check": ""
+    "use-strict-check": "",
+    "validate-peers": ""
   },
   "repository": {
     "type": "git",
