@@ -1,7 +1,7 @@
 import { Button, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
 
 import { scheduleOnUI } from 'react-native-worklets';
-import { useState } from 'react';
 
 declare global {
   var _startProfiling: (meanHzFreq?: number) => void;
@@ -44,6 +44,28 @@ export default function HermesSamplingProfilerExample() {
       console.log(path);
     });
   };
+
+  useEffect(() => {
+    const id = setInterval(function sleepOnJSThread() {
+      const start = performance.now();
+      while (performance.now() - start < 100) {
+        // do nothing
+      }
+    }, 300);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      scheduleOnUI(function sleepOnUIThread() {
+        const start = performance.now();
+        while (performance.now() - start < 100) {
+          // do nothing
+        }
+      });
+    }, 300);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <View style={styles.container}>
