@@ -22101,7 +22101,7 @@ __metadata:
     prettier: "npm:3.6.2"
     react: "npm:19.1.4"
     react-native: "npm:0.81.2"
-    react-native-macos: "patch:react-native-macos@npm%3A0.81.2#~/.yarn/patches/react-native-macos-npm-0.81.2-cacurrentmediatime.patch"
+    react-native-macos: "patch:react-native-macos@npm%3A0.81.2#~/.yarn/patches/react-native-macos-npm-0.81.2.patch"
     react-native-reanimated: "workspace:*"
     react-native-worklets: "workspace:*"
     typescript: "npm:5.8.3"
@@ -27945,9 +27945,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-macos@patch:react-native-macos@npm%3A0.81.2#~/.yarn/patches/react-native-macos-npm-0.81.2-cacurrentmediatime.patch":
+"react-native-macos@patch:react-native-macos@npm%3A0.81.2#~/.yarn/patches/react-native-macos-npm-0.81.2.patch":
   version: 0.81.2
-  resolution: "react-native-macos@patch:react-native-macos@npm%3A0.81.2#~/.yarn/patches/react-native-macos-npm-0.81.2-cacurrentmediatime.patch::version=0.81.2&hash=60637b"
+  resolution: "react-native-macos@patch:react-native-macos@npm%3A0.81.2#~/.yarn/patches/react-native-macos-npm-0.81.2.patch::version=0.81.2&hash=60637b"
   dependencies:
     "@jest/create-cache-key-function": "npm:^29.7.0"
     "@react-native-macos/virtualized-lists": "npm:0.81.2"
