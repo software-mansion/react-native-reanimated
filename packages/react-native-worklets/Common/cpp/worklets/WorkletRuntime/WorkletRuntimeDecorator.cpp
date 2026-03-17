@@ -1,8 +1,10 @@
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
+#include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/PlatformLogger.h>
 #include <worklets/Tools/WorkletsJSIUtils.h>
+#include <worklets/WorkletRuntime/HermesProfiling.h>
 #include <worklets/WorkletRuntime/RuntimeKind.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
@@ -19,6 +21,7 @@
 #endif
 #endif
 
+#include <chrono>
 #include <memory>
 #include <string>
 #include <utility>
@@ -261,6 +264,25 @@ void WorkletRuntimeDecorator::decorate(
             return jsi::Value(performanceNow());
           }));
   rt.global().setProperty(rt, "performance", performance);
+
+#if JS_RUNTIME_HERMES
+  rt.global().setProperty(
+      rt,
+      "_startProfiling",
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, "_startProfiling"),
+          1,
+          [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) {
+            const double meanHzFreq = (count > 0 && !args[0].isUndefined()) ? args[0].asNumber() : 100.0;
+            startProfiling(rt, meanHzFreq);
+            return jsi::Value::undefined();
+          }));
+  jsi_utils::installJsiFunction(rt, "_stopProfiling", [](jsi::Runtime &rt) {
+    std::string path = stopProfiling(rt);
+    return jsi::String::createFromUtf8(rt, path);
+  });
+#endif // JS_RUNTIME_HERMES
 
   jsi_utils::installJsiFunction(
       rt,
