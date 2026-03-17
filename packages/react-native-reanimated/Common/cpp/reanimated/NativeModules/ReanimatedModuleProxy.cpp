@@ -67,7 +67,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
         const auto keyStr = key.asString();
         const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
         const bool isSynchronous =
-            synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isInt());
+            synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isNumber());
         if (isSynchronous) {
           synchronousProps[keyStr] = value;
         } else {
@@ -89,7 +89,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
         const auto keyStr = key.asString();
         const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
         const bool isSynchronous =
-            synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isInt());
+            synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isNumber());
         if (!isSynchronous) {
           hasOnlySynchronousProps = false;
           break;
