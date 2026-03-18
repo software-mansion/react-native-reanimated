@@ -18,7 +18,7 @@
 
 
 <script src="/react-native-reanimated/js/snack-helpers.js" async></script><link rel="stylesheet" href="/react-native-reanimated/assets/css/styles.fca9b672.css">
-<script src="/react-native-reanimated/assets/js/runtime~main.d7553332.js" defer="defer"></script>
+<script src="/react-native-reanimated/assets/js/runtime~main.c622ba0b.js" defer="defer"></script>
 <script src="/react-native-reanimated/assets/js/main.2a61003c.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -36,7 +36,7 @@
 <p>Please note that downgrading your Expo SDK version or using an older release of Reanimated is not a good solution in the long term. Reanimated 3 is no longer maintained and will not receive updates to support upcoming releases of React Native. Please upgrade to the latest version of Reanimated 4 in order to get bug fixes and other improvements.</p>
 <h3 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="️-flickeringjittering-while-scrolling">⚠️ Flickering/jittering while scrolling<a href="#️-flickeringjittering-while-scrolling" class="hash-link" aria-label="Direct link to ⚠️ Flickering/jittering while scrolling" title="Direct link to ⚠️ Flickering/jittering while scrolling" translate="no">​</a></h3>
 <p><strong>Problem:</strong> When scrolling a <code>FlatList</code> or <code>ScrollView</code>, you might notice flickering or jittering of animated components (e.g. sticky header) implemented using <code>useAnimatedScrollHandler</code> hook.</p>
-<p><strong>Solution:</strong> You need to upgrade to React Native 0.81 (or newer), set experimental release level in order to enable <code>preventShadowTreeCommitExhaustion</code> feature flag and enable <a class="" href="/react-native-reanimated/docs/guides/feature-flags#disable_commit_pausing_mechanism"><code>DISABLE_COMMIT_PAUSING_MECHANISM</code></a> static feature flag as described <a class="" href="/react-native-reanimated/docs/guides/feature-flags#disable_commit_pausing_mechanism">here</a>.</p>
+<p><strong>Solution:</strong> You need to upgrade to React Native 0.81 (or newer), enable <code>preventShadowTreeCommitExhaustion</code> React Native feature flag and enable <a class="" href="/react-native-reanimated/docs/guides/feature-flags#disable_commit_pausing_mechanism"><code>DISABLE_COMMIT_PAUSING_MECHANISM</code></a> static feature flag. For more details, click <a class="" href="/react-native-reanimated/docs/guides/feature-flags#disable_commit_pausing_mechanism">here</a>.</p>
 <h3 class="anchor anchorTargetHideOnScrollNavbar_vjPI" id="️-lower-fps-while-scrolling">⚠️ Lower FPS while scrolling<a href="#️-lower-fps-while-scrolling" class="hash-link" aria-label="Direct link to ⚠️ Lower FPS while scrolling" title="Direct link to ⚠️ Lower FPS while scrolling" translate="no">​</a></h3>
 <p><strong>Problem:</strong> FPS drops when there are many animated components on the screen during scrolling.</p>
 <p><strong>Solution:</strong> You need to upgrade to React Native 0.80 (or newer), upgrade to Reanimated 4.2.0 (or newer) and enable <a class="" href="/react-native-reanimated/docs/guides/feature-flags#use_commit_hook_only_for_react_commits"><code>USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS</code></a> static feature flag as described <a class="" href="/react-native-reanimated/docs/guides/feature-flags#use_commit_hook_only_for_react_commits">here</a>.</p>
