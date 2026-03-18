@@ -7,8 +7,6 @@ COMPILATION_DATABASE_PATH="**/CompilationDatabase"
 
 out="$COMPILE_COMMANDS_REANIMATED_PATH"
 
-echo $out > "dis.zwis"
-
 printf "[\n" > "$out"
 cat $COMPILATION_DATABASE_PATH/*.json >> "$out"
 
