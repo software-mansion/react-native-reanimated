@@ -14,6 +14,6 @@ export type CSSTransitionConfig = Record<
 >;
 
 export type NormalizedCSSTransitionConfig = {
-  properties: string[] | undefined;
+  specificProperties: Set<string> | undefined;
   settings: Record<string, NormalizedSingleCSSTransitionSettings>;
 };
