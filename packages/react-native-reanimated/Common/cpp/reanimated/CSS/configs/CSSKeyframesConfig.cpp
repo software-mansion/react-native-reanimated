@@ -1,5 +1,7 @@
 #include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 
+#include <reanimated/CSS/configs/common.h>
+
 #include <memory>
 #include <string>
 
@@ -33,9 +35,10 @@ std::shared_ptr<KeyframeEasingFunctions> getKeyframeTimingFunctions(jsi::Runtime
 CSSKeyframesConfig parseCSSAnimationKeyframesConfig(
     jsi::Runtime &rt,
     const jsi::Value &config,
-    const std::string &nativeComponentName,
+    const std::string &compoundComponentName,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
   const auto &configObj = config.asObject(rt);
+  const auto nativeComponentName = splitCompoundComponentName(compoundComponentName).first;
 
   return {
       createStyleInterpolator(rt, configObj, nativeComponentName, viewStylesRepository),

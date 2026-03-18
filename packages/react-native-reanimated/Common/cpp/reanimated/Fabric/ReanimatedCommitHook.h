@@ -29,12 +29,8 @@ class ReanimatedCommitHook : public UIManagerCommitHook, public std::enable_shar
   RootShadowNode::Unshared shadowTreeWillCommit(
       ShadowTree const &shadowTree,
       RootShadowNode::Shared const &oldRootShadowNode,
-      RootShadowNode::Unshared const &newRootShadowNode
-#if REACT_NATIVE_MINOR_VERSION >= 80
-      ,
-      const ShadowTreeCommitOptions &commitOptions
-#endif
-      ) noexcept override;
+      RootShadowNode::Unshared const &newRootShadowNode,
+      const ShadowTreeCommitOptions &commitOptions) noexcept override;
 
  private:
   std::shared_ptr<UIManager> uiManager_;

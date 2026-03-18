@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "build": "yarn workspace babel-plugin-worklets build && bob build && yarn build:unpackers",
-    "build:unpackers": "node ./scripts/export-unpackers.js",
+    "build:unpackers": "NODE_ENV='production' node ./scripts/export-unpackers.js",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
     "find-unused-code:js": "knip",
     "format": "yarn format:js && yarn format:plugin && yarn format:common && yarn format:android && yarn format:apple",
@@ -37,7 +37,8 @@
     "type:check:app": "yarn workspace common-app type:check",
     "type:check:plugin": "yarn workspace babel-plugin-worklets type:check",
     "type:check:tests": "../../scripts/test-ts.sh __typetests__",
-    "tree-shake:check:web": "yarn is-tree-shakable --resolution web"
+    "tree-shake:check:web": "yarn is-tree-shakable --resolution web",
+    "validate-peers": "node ../../scripts/validate-compatibility-peer-dependencies.js"
   },
   "repository": {
     "type": "git",
@@ -52,8 +53,9 @@
   "homepage": "https://docs.swmansion.com/react-native-worklets",
   "peerDependencies": {
     "@babel/core": "*",
+    "@react-native/metro-config": "*",
     "react": "*",
-    "react-native": "*"
+    "react-native": "0.81 - 0.85"
   },
   "dependencies": {
     "@babel/plugin-transform-arrow-functions": "7.27.1",
@@ -66,7 +68,7 @@
     "@babel/plugin-transform-unicode-regex": "7.27.1",
     "@babel/preset-typescript": "7.27.1",
     "convert-source-map": "2.0.0",
-    "is-tree-shakable": "0.4.1",
+    "is-tree-shakable": "0.5.0",
     "semver": "7.7.3"
   },
   "devDependencies": {
@@ -74,6 +76,7 @@
     "@babel/core": "7.28.4",
     "@react-native-community/cli": "20.1.0",
     "@react-native/eslint-config": "0.83.0",
+    "@react-native/jest-preset": "patch:@react-native/jest-preset@npm%3A0.85.0-rc.1#~/.yarn/patches/@react-native-jest-preset-npm-0.85.0-rc.1-b8e9692393.patch",
     "@types/jest": "30.0.0",
     "@types/node": "24.7.0",
     "@types/react": "19.2.2",
@@ -85,7 +88,7 @@
     "madge": "8.0.0",
     "prettier": "3.6.2",
     "react": "19.2.3",
-    "react-native": "0.84.0",
+    "react-native": "0.85.0-rc.1",
     "react-native-builder-bob": "0.40.13",
     "typescript": "5.8.3"
   },
@@ -116,6 +119,8 @@
     "!android/gradlew",
     "!android/gradlew.bat",
     "!android/local.properties",
+    "!.worklets",
+    ".worklets/dummy.md",
     "!**/__tests__",
     "!**/__fixtures__",
     "!**/__mocks__",
@@ -150,13 +155,6 @@
     "jsSrcsDir": "src/specs",
     "android": {
       "javaPackageName": "com.swmansion.worklets"
-    },
-    "ios": {
-      "modulesConformingToProtocol": {
-        "RCTBundleConsumer": [
-          "WorkletsModule"
-        ]
-      }
     }
   }
 }

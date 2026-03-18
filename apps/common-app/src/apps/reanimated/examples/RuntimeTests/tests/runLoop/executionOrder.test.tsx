@@ -18,6 +18,8 @@ import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SCHEDULING } from './ex
 import { getMethodMap } from './executionOrderConfigs/utils';
 
 describe('Test mixed order of execution', () => {
+  const rt = createWorkletRuntime({ name: 'test' });
+
   test.each(EXPECTED_ORDER_OF_EXECUTION_2_METHODS)(
     'two methods, **${0}**[**${1}**], **${2}**[**${3}**], runtime: **${4}**',
     async config => {
@@ -51,7 +53,6 @@ describe('Test mixed order of execution', () => {
       const [confirmedOrder, order] = createOrderConstraint();
 
       // Act
-      const rt = createWorkletRuntime({ name: 'test' });
       scheduleOnRuntime(rt, () => {
         'worklet';
         getMethodMap()[firstMethodName](() => order(firstMethodOrder, notification1));

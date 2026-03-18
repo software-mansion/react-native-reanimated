@@ -1,6 +1,6 @@
-#include <jsi/jsi.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
@@ -9,7 +9,6 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
-#include <worklets/SharedItems/Serializable.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
@@ -27,13 +26,88 @@ namespace reanimated {
 
 using namespace worklets;
 
-#if REACT_NATIVE_MINOR_VERSION >= 81
 static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper) {
   return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
 }
+
+namespace {
+
+#ifdef ANDROID
+constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
+  return StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
+      !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS");
+}
+#elif __APPLE__
+constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
+  return StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
+      !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS");
+}
+#else
+constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
+  return false;
+}
 #endif
+
+std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
+    const UpdatesBatch &updatesBatch,
+    const std::unordered_set<std::string> &synchronousPropNames,
+    const bool shouldRequireIntegerColors = false,
+    const bool allowPartialViews = false) {
+  UpdatesBatch synchronousUpdatesBatch;
+  UpdatesBatch shadowTreeUpdatesBatch;
+
+  for (const auto &[shadowNode, props] : updatesBatch) {
+    if (allowPartialViews) {
+      folly::dynamic synchronousProps = folly::dynamic::object();
+      folly::dynamic shadowTreeProps = folly::dynamic::object();
+
+      for (const auto &[key, value] : props.items()) {
+        const auto keyStr = key.asString();
+        const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
+        const bool isSynchronous =
+            synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isNumber());
+        if (isSynchronous) {
+          synchronousProps[keyStr] = value;
+        } else {
+          shadowTreeProps[keyStr] = value;
+        }
+      }
+
+      if (!synchronousProps.empty()) {
+        synchronousUpdatesBatch.emplace_back(shadowNode, std::move(synchronousProps));
+      }
+
+      if (!shadowTreeProps.empty()) {
+        shadowTreeUpdatesBatch.emplace_back(shadowNode, std::move(shadowTreeProps));
+      }
+    } else {
+      bool hasOnlySynchronousProps = true;
+
+      for (const auto &[key, value] : props.items()) {
+        const auto keyStr = key.asString();
+        const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
+        const bool isSynchronous =
+            synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isNumber());
+        if (!isSynchronous) {
+          hasOnlySynchronousProps = false;
+          break;
+        }
+      }
+
+      if (hasOnlySynchronousProps) {
+        synchronousUpdatesBatch.emplace_back(shadowNode, props);
+      } else {
+        shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
+      }
+    }
+  }
+
+  return {std::move(synchronousUpdatesBatch), std::move(shadowTreeUpdatesBatch)};
+}
+
+} // namespace
 
 ReanimatedModuleProxy::ReanimatedModuleProxy(
     const std::shared_ptr<WorkletRuntime> &uiRuntime,
@@ -173,7 +247,7 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
     return strongThis->obtainProp(rt, shadowNodeWrapper, propName);
   };
 
-  jsi::Runtime &uiRuntime = uiRuntime_->getJSIRuntime();
+  jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   UIRuntimeDecorator::decorate(
       uiRuntime,
       obtainProp,
@@ -202,11 +276,11 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
 
   uint64_t newRegistrationId = NEXT_EVENT_HANDLER_ID++;
   auto eventNameStr = eventName.asString(rt).utf8(rt);
-  auto handlerSerializable = extractSerializableOrThrow<SerializableWorklet>(
-      rt, worklet, "[Reanimated] Event handler must be a serializable worklet.");
+  auto handlerSerializable = extractSerializable(
+      rt, worklet, "[Reanimated] Event handler must be a serializable worklet.", Serializable::ValueType::WorkletType);
   int emitterReactTagInt = emitterReactTag.asNumber();
 
-  uiScheduler_->scheduleOnUI([=, weakThis = weak_from_this()]() {
+  scheduleOnUI(uiScheduler_, [=, weakThis = weak_from_this()]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -221,7 +295,7 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
 
 void ReanimatedModuleProxy::unregisterEventHandler(jsi::Runtime &, const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
-  uiScheduler_->scheduleOnUI([=, weakThis = weak_from_this()]() {
+  scheduleOnUI(uiScheduler_, [=, weakThis = weak_from_this()]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -247,12 +321,12 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
   const auto propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
   const auto funPtr = std::make_shared<jsi::Function>(callback.getObject(rnRuntime).asFunction(rnRuntime));
   const auto shadowNode = shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
-  uiScheduler_->scheduleOnUI([=, weakThis = weak_from_this()]() {
+  scheduleOnUI(uiScheduler_, [=, weakThis = weak_from_this()]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
     }
-    jsi::Runtime &uiRuntime = strongThis->uiRuntime_->getJSIRuntime();
+    jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(strongThis->uiRuntime_);
     const auto resultStr = strongThis->obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
 
     strongThis->jsInvoker_->invokeAsync([=](jsi::Runtime &rnRuntime) {
@@ -288,8 +362,8 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     if (config.isUndefined()) {
       batchItem.config = nullptr;
     } else {
-      batchItem.config = extractSerializableOrThrow<SerializableObject>(
-          rt, config, "[Reanimated] Layout animation config must be an object.");
+      batchItem.config = extractSerializable(
+          rt, config, "[Reanimated] Layout animation config must be an object.", Serializable::ValueType::ObjectType);
     }
     auto sharedTag = item.getProperty(rt, "sharedTransitionTag");
     if (!sharedTag.isUndefined()) {
@@ -363,26 +437,27 @@ void ReanimatedModuleProxy::unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::V
 void ReanimatedModuleProxy::registerCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
-    const jsi::Value &reactViewName,
+    const jsi::Value &compoundComponentName,
     const jsi::Value &keyframesConfig) {
-  const auto nativeComponentName = componentNameByReactViewName(reactViewName.asString(rt).utf8(rt));
+  const auto compoundComponentNameStr = compoundComponentName.asString(rt).utf8(rt);
   cssAnimationKeyframesRegistry_->set(
       animationName.asString(rt).utf8(rt),
-      nativeComponentName,
-      parseCSSAnimationKeyframesConfig(rt, keyframesConfig, nativeComponentName, viewStylesRepository_));
+      compoundComponentNameStr,
+      parseCSSAnimationKeyframesConfig(rt, keyframesConfig, compoundComponentNameStr, viewStylesRepository_));
 }
 
 void ReanimatedModuleProxy::unregisterCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
-    const jsi::Value &reactViewName) {
+    const jsi::Value &compoundComponentName) {
   cssAnimationKeyframesRegistry_->remove(
-      animationName.asString(rt).utf8(rt), componentNameByReactViewName(reactViewName.asString(rt).utf8(rt)));
+      animationName.asString(rt).utf8(rt), compoundComponentName.asString(rt).utf8(rt));
 }
 
 void ReanimatedModuleProxy::applyCSSAnimations(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &compoundComponentName,
     const jsi::Value &animationUpdates) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto timestamp = getCssTimestamp();
@@ -401,10 +476,20 @@ void ReanimatedModuleProxy::applyCSSAnimations(
       }
 
       const auto &animationName = animationNames[index];
-      const auto &keyframesConfig = cssAnimationKeyframesRegistry_->get(animationName, shadowNode->getComponentName());
+      const auto nativeComponentName = shadowNode->getComponentName();
+      const auto compoundComponentNameStr = compoundComponentName.asString(rt).utf8(rt);
+      const auto keyframesConfigOpt = cssAnimationKeyframesRegistry_->get(animationName, compoundComponentNameStr);
+
+      if (!keyframesConfigOpt) {
+        throw std::runtime_error(
+            "[Reanimated] No keyframes with name `" + animationName + "` were registered for component `" +
+            splitCompoundComponentName(compoundComponentNameStr).second + "` (" + nativeComponentName + ")");
+      }
 
       newAnimations.emplace(
-          index, std::make_shared<CSSAnimation>(rt, shadowNode, animationName, keyframesConfig, settings, timestamp));
+          index,
+          std::make_shared<CSSAnimation>(
+              rt, shadowNode, animationName, keyframesConfigOpt->get(), settings, timestamp));
     }
   }
 
@@ -496,7 +581,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     if (eventType == "onTransitionProgress") {
-      jsi::Runtime &uiRuntime = uiRuntime_->getJSIRuntime();
+      jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
       const auto &eventPayload = rawEvent.eventPayload;
       jsi::Object payload = eventPayload->asJSIValue(uiRuntime).asObject(uiRuntime);
       auto progress = payload.getProperty(uiRuntime, "progress").asNumber();
@@ -533,7 +618,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
     return false;
   }
 
-  jsi::Runtime &uiRuntime = uiRuntime_->getJSIRuntime();
+  jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   const auto &eventPayload = rawEvent.eventPayload;
   jsi::Value payload = eventPayload->asJSIValue(uiRuntime);
 
@@ -542,7 +627,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   // (res == true), but for now handleEvent always returns false. Thankfully,
   // performOperations does not trigger a lot of code if there is nothing to
   // be done so this is fine for now.
-  performOperations(true);
+  performOperations();
   return res;
 }
 
@@ -570,7 +655,7 @@ void ReanimatedModuleProxy::maybeRunCSSLoop() {
 
   cssLoopRunning_ = true;
 
-  uiScheduler_->scheduleOnUI([=, weakThis = weak_from_this()]() {
+  scheduleOnUI(uiScheduler_, [=, weakThis = weak_from_this()]() {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -591,18 +676,16 @@ double ReanimatedModuleProxy::getCssTimestamp() {
   return currentCssTimestamp_;
 }
 
-void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
+void ReanimatedModuleProxy::performOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
-  if (!isTriggeredByEvent) {
-    auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
-    for (const auto surfaceId : flushRequestsCopy) {
-      uiManager_->getShadowTreeRegistry().visit(
-          surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
-    }
+  auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
+  for (const auto surfaceId : flushRequestsCopy) {
+    uiManager_->getShadowTreeRegistry().visit(
+        surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
   }
 
-  jsi::Runtime &uiRuntime = uiRuntime_->getJSIRuntime();
+  jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
 
   UpdatesBatch updatesBatch;
   {
@@ -633,458 +716,9 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
 
     shouldUpdateCssAnimations_ = false;
 
-#ifdef ANDROID
-    if constexpr (
-        StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
-        !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-      static const std::unordered_set<std::string> synchronousProps = {
-          "opacity",
-          "elevation",
-          "zIndex",
-          // "shadowOpacity", // not supported on Android
-          // "shadowRadius", // not supported on Android
-          "backgroundColor",
-          // "color", // TODO: fix animating color of Animated.Text
-          "tintColor",
-          "borderRadius",
-          "borderTopLeftRadius",
-          "borderTopRightRadius",
-          "borderTopStartRadius",
-          "borderTopEndRadius",
-          "borderBottomLeftRadius",
-          "borderBottomRightRadius",
-          "borderBottomStartRadius",
-          "borderBottomEndRadius",
-          "borderStartStartRadius",
-          "borderStartEndRadius",
-          "borderEndStartRadius",
-          "borderEndEndRadius",
-          "borderColor",
-          "borderTopColor",
-          "borderBottomColor",
-          "borderLeftColor",
-          "borderRightColor",
-          "borderStartColor",
-          "borderEndColor",
-          "transform",
-      };
-
-      // NOTE: Keep in sync with NativeProxy.java
-      static constexpr auto CMD_START_OF_VIEW = 1;
-      static constexpr auto CMD_START_OF_TRANSFORM = 2;
-      static constexpr auto CMD_END_OF_TRANSFORM = 3;
-      static constexpr auto CMD_END_OF_VIEW = 4;
-
-      static constexpr auto CMD_OPACITY = 10;
-      static constexpr auto CMD_ELEVATION = 11;
-      static constexpr auto CMD_Z_INDEX = 12;
-      static constexpr auto CMD_SHADOW_OPACITY = 13;
-      static constexpr auto CMD_SHADOW_RADIUS = 14;
-      static constexpr auto CMD_BACKGROUND_COLOR = 15;
-      static constexpr auto CMD_COLOR = 16;
-      static constexpr auto CMD_TINT_COLOR = 17;
-
-      static constexpr auto CMD_BORDER_RADIUS = 20;
-      static constexpr auto CMD_BORDER_TOP_LEFT_RADIUS = 21;
-      static constexpr auto CMD_BORDER_TOP_RIGHT_RADIUS = 22;
-      static constexpr auto CMD_BORDER_TOP_START_RADIUS = 23;
-      static constexpr auto CMD_BORDER_TOP_END_RADIUS = 24;
-      static constexpr auto CMD_BORDER_BOTTOM_LEFT_RADIUS = 25;
-      static constexpr auto CMD_BORDER_BOTTOM_RIGHT_RADIUS = 26;
-      static constexpr auto CMD_BORDER_BOTTOM_START_RADIUS = 27;
-      static constexpr auto CMD_BORDER_BOTTOM_END_RADIUS = 28;
-      static constexpr auto CMD_BORDER_START_START_RADIUS = 29;
-      static constexpr auto CMD_BORDER_START_END_RADIUS = 30;
-      static constexpr auto CMD_BORDER_END_START_RADIUS = 31;
-      static constexpr auto CMD_BORDER_END_END_RADIUS = 32;
-
-      static constexpr auto CMD_BORDER_COLOR = 40;
-      static constexpr auto CMD_BORDER_TOP_COLOR = 41;
-      static constexpr auto CMD_BORDER_BOTTOM_COLOR = 42;
-      static constexpr auto CMD_BORDER_LEFT_COLOR = 43;
-      static constexpr auto CMD_BORDER_RIGHT_COLOR = 44;
-      static constexpr auto CMD_BORDER_START_COLOR = 45;
-      static constexpr auto CMD_BORDER_END_COLOR = 46;
-
-      static constexpr auto CMD_TRANSFORM_TRANSLATE_X = 100;
-      static constexpr auto CMD_TRANSFORM_TRANSLATE_Y = 101;
-      static constexpr auto CMD_TRANSFORM_SCALE = 102;
-      static constexpr auto CMD_TRANSFORM_SCALE_X = 103;
-      static constexpr auto CMD_TRANSFORM_SCALE_Y = 104;
-      static constexpr auto CMD_TRANSFORM_ROTATE = 105;
-      static constexpr auto CMD_TRANSFORM_ROTATE_X = 106;
-      static constexpr auto CMD_TRANSFORM_ROTATE_Y = 107;
-      static constexpr auto CMD_TRANSFORM_ROTATE_Z = 108;
-      static constexpr auto CMD_TRANSFORM_SKEW_X = 109;
-      static constexpr auto CMD_TRANSFORM_SKEW_Y = 110;
-      static constexpr auto CMD_TRANSFORM_MATRIX = 111;
-      static constexpr auto CMD_TRANSFORM_PERSPECTIVE = 112;
-
-      static constexpr auto CMD_UNIT_DEG = 200;
-      static constexpr auto CMD_UNIT_RAD = 201;
-      static constexpr auto CMD_UNIT_PX = 202;
-      static constexpr auto CMD_UNIT_PERCENT = 203;
-
-      const auto propNameToCommand = [](const std::string &name) {
-        if (name == "opacity")
-          return CMD_OPACITY;
-
-        if (name == "elevation")
-          return CMD_ELEVATION;
-
-        if (name == "zIndex")
-          return CMD_Z_INDEX;
-
-        if (name == "shadowOpacity")
-          return CMD_SHADOW_OPACITY;
-
-        if (name == "shadowRadius")
-          return CMD_SHADOW_RADIUS;
-
-        if (name == "backgroundColor")
-          return CMD_BACKGROUND_COLOR;
-
-        if (name == "color")
-          return CMD_COLOR;
-
-        if (name == "tintColor")
-          return CMD_TINT_COLOR;
-
-        if (name == "borderRadius")
-          return CMD_BORDER_RADIUS;
-
-        if (name == "borderTopLeftRadius")
-          return CMD_BORDER_TOP_LEFT_RADIUS;
-
-        if (name == "borderTopRightRadius")
-          return CMD_BORDER_TOP_RIGHT_RADIUS;
-
-        if (name == "borderTopStartRadius")
-          return CMD_BORDER_TOP_START_RADIUS;
-
-        if (name == "borderTopEndRadius")
-          return CMD_BORDER_TOP_END_RADIUS;
-
-        if (name == "borderBottomLeftRadius")
-          return CMD_BORDER_BOTTOM_LEFT_RADIUS;
-
-        if (name == "borderBottomRightRadius")
-          return CMD_BORDER_BOTTOM_RIGHT_RADIUS;
-
-        if (name == "borderBottomStartRadius")
-          return CMD_BORDER_BOTTOM_START_RADIUS;
-
-        if (name == "borderBottomEndRadius")
-          return CMD_BORDER_BOTTOM_END_RADIUS;
-
-        if (name == "borderStartStartRadius")
-          return CMD_BORDER_START_START_RADIUS;
-
-        if (name == "borderStartEndRadius")
-          return CMD_BORDER_START_END_RADIUS;
-
-        if (name == "borderEndStartRadius")
-          return CMD_BORDER_END_START_RADIUS;
-
-        if (name == "borderEndEndRadius")
-          return CMD_BORDER_END_END_RADIUS;
-
-        if (name == "borderColor")
-          return CMD_BORDER_COLOR;
-
-        if (name == "borderTopColor")
-          return CMD_BORDER_TOP_COLOR;
-
-        if (name == "borderBottomColor")
-          return CMD_BORDER_BOTTOM_COLOR;
-
-        if (name == "borderLeftColor")
-          return CMD_BORDER_LEFT_COLOR;
-
-        if (name == "borderRightColor")
-          return CMD_BORDER_RIGHT_COLOR;
-
-        if (name == "borderStartColor")
-          return CMD_BORDER_START_COLOR;
-
-        if (name == "borderEndColor")
-          return CMD_BORDER_END_COLOR;
-
-        if (name == "transform")
-          return CMD_START_OF_TRANSFORM; // TODO: use CMD_TRANSFORM?
-
-        throw std::runtime_error("[Reanimated] Unsupported style: " + name);
-      };
-
-      const auto transformNameToCommand = [](const std::string &name) {
-        if (name == "translateX")
-          return CMD_TRANSFORM_TRANSLATE_X;
-
-        if (name == "translateY")
-          return CMD_TRANSFORM_TRANSLATE_Y;
-
-        if (name == "scale")
-          return CMD_TRANSFORM_SCALE;
-
-        if (name == "scaleX")
-          return CMD_TRANSFORM_SCALE_X;
-
-        if (name == "scaleY")
-          return CMD_TRANSFORM_SCALE_Y;
-
-        if (name == "rotate")
-          return CMD_TRANSFORM_ROTATE;
-
-        if (name == "rotateX")
-          return CMD_TRANSFORM_ROTATE_X;
-
-        if (name == "rotateY")
-          return CMD_TRANSFORM_ROTATE_Y;
-
-        if (name == "rotateZ")
-          return CMD_TRANSFORM_ROTATE_Z;
-
-        if (name == "skewX")
-          return CMD_TRANSFORM_SKEW_X;
-
-        if (name == "skewY")
-          return CMD_TRANSFORM_SKEW_Y;
-
-        if (name == "matrix")
-          return CMD_TRANSFORM_MATRIX;
-
-        if (name == "perspective")
-          return CMD_TRANSFORM_PERSPECTIVE;
-
-        throw std::runtime_error("[Reanimated] Unsupported transform: " + name);
-      };
-
-      UpdatesBatch synchronousUpdatesBatch, shadowTreeUpdatesBatch;
-
-      for (const auto &[shadowNode, props] : updatesBatch) {
-        bool hasOnlySynchronousProps = true;
-        for (const auto &[key, value] : props.items()) {
-          const auto keyStr = key.asString();
-          if (!synchronousProps.contains(keyStr) ||
-              ((keyStr == "color" || keyStr.find("Color") != std::string::npos) && !value.isInt())) {
-            hasOnlySynchronousProps = false;
-            break;
-          }
-        }
-        if (hasOnlySynchronousProps) {
-          synchronousUpdatesBatch.emplace_back(shadowNode, props);
-        } else {
-          shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
-        }
-      }
-
-      if (!synchronousUpdatesBatch.empty()) {
-        std::vector<int> intBuffer;
-        std::vector<double> doubleBuffer;
-        intBuffer.reserve(1024);
-        doubleBuffer.reserve(1024);
-
-        for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
-          intBuffer.push_back(CMD_START_OF_VIEW);
-          intBuffer.push_back(shadowNode->getTag());
-          for (const auto &[key, value] : props.items()) {
-            const auto command = propNameToCommand(key.getString());
-            switch (command) {
-              case CMD_OPACITY:
-              case CMD_ELEVATION:
-              case CMD_Z_INDEX:
-              case CMD_SHADOW_OPACITY:
-              case CMD_SHADOW_RADIUS:
-                intBuffer.push_back(command);
-                doubleBuffer.push_back(value.asDouble());
-                break;
-
-              case CMD_BACKGROUND_COLOR:
-              case CMD_COLOR:
-              case CMD_TINT_COLOR:
-              case CMD_BORDER_COLOR:
-              case CMD_BORDER_TOP_COLOR:
-              case CMD_BORDER_BOTTOM_COLOR:
-              case CMD_BORDER_LEFT_COLOR:
-              case CMD_BORDER_RIGHT_COLOR:
-              case CMD_BORDER_START_COLOR:
-              case CMD_BORDER_END_COLOR:
-                intBuffer.push_back(command);
-                intBuffer.push_back(value.asInt());
-                break;
-
-              case CMD_BORDER_RADIUS:
-              case CMD_BORDER_TOP_LEFT_RADIUS:
-              case CMD_BORDER_TOP_RIGHT_RADIUS:
-              case CMD_BORDER_TOP_START_RADIUS:
-              case CMD_BORDER_TOP_END_RADIUS:
-              case CMD_BORDER_BOTTOM_LEFT_RADIUS:
-              case CMD_BORDER_BOTTOM_RIGHT_RADIUS:
-              case CMD_BORDER_BOTTOM_START_RADIUS:
-              case CMD_BORDER_BOTTOM_END_RADIUS:
-              case CMD_BORDER_START_START_RADIUS:
-              case CMD_BORDER_START_END_RADIUS:
-              case CMD_BORDER_END_START_RADIUS:
-              case CMD_BORDER_END_END_RADIUS:
-                intBuffer.push_back(command);
-                if (value.isDouble()) {
-                  intBuffer.push_back(CMD_UNIT_PX);
-                  doubleBuffer.push_back(value.getDouble());
-                } else if (value.isString()) {
-                  const auto &valueStr = value.getString();
-                  if (!valueStr.ends_with("%")) {
-                    throw std::runtime_error("[Reanimated] Border radius string must be a percentage");
-                  }
-                  intBuffer.push_back(CMD_UNIT_PERCENT);
-                  doubleBuffer.push_back(std::stof(valueStr.substr(0, -1)));
-                } else {
-                  throw std::runtime_error("[Reanimated] Border radius value must be either a number or a string");
-                }
-                break;
-
-              case CMD_START_OF_TRANSFORM:
-                intBuffer.push_back(command);
-                react_native_assert(value.isArray() && "[Reanimated] Transform value must be an array");
-                for (const auto &item : value) {
-                  react_native_assert(item.isObject() && "[Reanimated] Transform array item must be an object");
-                  react_native_assert(
-                      item.size() == 1 && "[Reanimated] Transform array item must have exactly one key-value pair");
-                  const auto transformCommand = transformNameToCommand(item.keys().begin()->getString());
-                  const auto &transformValue = *item.values().begin();
-                  switch (transformCommand) {
-                    case CMD_TRANSFORM_SCALE:
-                    case CMD_TRANSFORM_SCALE_X:
-                    case CMD_TRANSFORM_SCALE_Y:
-                    case CMD_TRANSFORM_PERSPECTIVE: {
-                      intBuffer.push_back(transformCommand);
-                      doubleBuffer.push_back(transformValue.asDouble());
-                      break;
-                    }
-
-                    case CMD_TRANSFORM_TRANSLATE_X:
-                    case CMD_TRANSFORM_TRANSLATE_Y: {
-                      intBuffer.push_back(transformCommand);
-                      if (transformValue.isDouble()) {
-                        intBuffer.push_back(CMD_UNIT_PX);
-                        doubleBuffer.push_back(transformValue.getDouble());
-                      } else if (transformValue.isString()) {
-                        const auto &transformValueStr = transformValue.getString();
-                        if (!transformValueStr.ends_with("%")) {
-                          throw std::runtime_error("[Reanimated] String translate must be a percentage");
-                        }
-                        intBuffer.push_back(CMD_UNIT_PERCENT);
-                        doubleBuffer.push_back(std::stof(transformValueStr.substr(0, -1)));
-                      } else {
-                        throw std::runtime_error("[Reanimated] Translate value must be either a number or a string");
-                      }
-                      break;
-                    }
-
-                    case CMD_TRANSFORM_ROTATE:
-                    case CMD_TRANSFORM_ROTATE_X:
-                    case CMD_TRANSFORM_ROTATE_Y:
-                    case CMD_TRANSFORM_ROTATE_Z:
-                    case CMD_TRANSFORM_SKEW_X:
-                    case CMD_TRANSFORM_SKEW_Y: {
-                      const auto &transformValueStr = transformValue.getString();
-                      intBuffer.push_back(transformCommand);
-                      if (transformValueStr.ends_with("deg")) {
-                        intBuffer.push_back(CMD_UNIT_DEG);
-                      } else if (transformValueStr.ends_with("rad")) {
-                        intBuffer.push_back(CMD_UNIT_RAD);
-                      } else {
-                        throw std::runtime_error("[Reanimated] Unsupported rotation unit: " + transformValueStr);
-                      }
-                      doubleBuffer.push_back(std::stof(transformValueStr.substr(0, -3)));
-                      break;
-                    }
-
-                    case CMD_TRANSFORM_MATRIX: {
-                      intBuffer.push_back(transformCommand);
-                      react_native_assert(transformValue.isArray() && "[Reanimated] Matrix must be an array");
-                      int size = transformValue.size();
-                      intBuffer.push_back(size);
-                      for (int i = 0; i < size; i++) {
-                        doubleBuffer.push_back(transformValue[i].asDouble());
-                      }
-                      break;
-                    }
-                  }
-                }
-                intBuffer.push_back(CMD_END_OF_TRANSFORM);
-                break;
-            }
-          }
-          intBuffer.push_back(CMD_END_OF_VIEW);
-        }
-        synchronouslyUpdateUIPropsFunction_(intBuffer, doubleBuffer);
-      }
-
-      updatesBatch = std::move(shadowTreeUpdatesBatch);
+    if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
+      applySynchronousUpdates(updatesBatch);
     }
-#endif // ANDROID
-
-#if __APPLE__
-    if constexpr (
-        StaticFeatureFlags::getFlag("IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
-        !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-      static const std::unordered_set<std::string> synchronousProps = {
-          "opacity",
-          "elevation",
-          "zIndex",
-          "shadowOpacity",
-          "shadowRadius",
-          "backgroundColor",
-          // "color", // TODO: fix animating color of Animated.Text
-          "tintColor",
-          "borderRadius",
-          "borderTopLeftRadius",
-          "borderTopRightRadius",
-          "borderTopStartRadius",
-          "borderTopEndRadius",
-          "borderBottomLeftRadius",
-          "borderBottomRightRadius",
-          "borderBottomStartRadius",
-          "borderBottomEndRadius",
-          "borderStartStartRadius",
-          "borderStartEndRadius",
-          "borderEndStartRadius",
-          "borderEndEndRadius",
-          "borderColor",
-          "borderTopColor",
-          "borderBottomColor",
-          "borderLeftColor",
-          "borderRightColor",
-          "borderStartColor",
-          "borderEndColor",
-          "transform",
-      };
-
-      UpdatesBatch synchronousUpdatesBatch, shadowTreeUpdatesBatch;
-
-      for (const auto &[shadowNode, props] : updatesBatch) {
-        bool hasOnlySynchronousProps = true;
-        for (const auto &key : props.keys()) {
-          const auto keyStr = key.asString();
-          if (!synchronousProps.contains(keyStr)) {
-            hasOnlySynchronousProps = false;
-            break;
-          }
-        }
-        if (hasOnlySynchronousProps) {
-          synchronousUpdatesBatch.emplace_back(shadowNode, props);
-        } else {
-          shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
-        }
-      }
-
-      for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
-        synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
-      }
-
-      updatesBatch = std::move(shadowTreeUpdatesBatch);
-    }
-#endif // __APPLE__
 
     if ((updatesBatch.size() > 0) && updatesRegistryManager_->shouldReanimatedSkipCommit()) {
       updatesRegistryManager_->pleaseCommitAfterPause();
@@ -1106,6 +740,427 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
   // (we don't know if the view is updated from outside of Reanimated
   // so we have to clear the entire cache)
   viewStylesRepository_->clearNodesCache();
+}
+
+void ReanimatedModuleProxy::performNonLayoutOperations() {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::performNonLayoutOperations");
+
+  UpdatesBatch updatesBatch = animatedPropsRegistry_->getPendingUpdates();
+
+  applySynchronousUpdates(updatesBatch, true);
+}
+
+void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, const bool allowPartialUpdates) {
+#ifdef ANDROID
+  static const std::unordered_set<std::string> synchronousProps = {
+      "opacity",
+      "elevation",
+      "zIndex",
+      // "shadowOpacity", // not supported on Android
+      // "shadowRadius", // not supported on Android
+      "backgroundColor",
+      // "color", // TODO: fix animating color of Animated.Text,
+      "tintColor",
+      "borderRadius",
+      "borderTopLeftRadius",
+      "borderTopRightRadius",
+      "borderTopStartRadius",
+      "borderTopEndRadius",
+      "borderBottomLeftRadius",
+      "borderBottomRightRadius",
+      "borderBottomStartRadius",
+      "borderBottomEndRadius",
+      "borderStartStartRadius",
+      "borderStartEndRadius",
+      "borderEndStartRadius",
+      "borderEndEndRadius",
+      "borderColor",
+      "borderTopColor",
+      "borderBottomColor",
+      "borderLeftColor",
+      "borderRightColor",
+      "borderStartColor",
+      "borderEndColor",
+      "transform",
+  };
+
+  // NOTE: Keep in sync with NativeProxy.java
+  static constexpr auto CMD_START_OF_VIEW = 1;
+  static constexpr auto CMD_START_OF_TRANSFORM = 2;
+  static constexpr auto CMD_END_OF_TRANSFORM = 3;
+  static constexpr auto CMD_END_OF_VIEW = 4;
+
+  static constexpr auto CMD_OPACITY = 10;
+  static constexpr auto CMD_ELEVATION = 11;
+  static constexpr auto CMD_Z_INDEX = 12;
+  static constexpr auto CMD_SHADOW_OPACITY = 13;
+  static constexpr auto CMD_SHADOW_RADIUS = 14;
+  static constexpr auto CMD_BACKGROUND_COLOR = 15;
+  static constexpr auto CMD_COLOR = 16;
+  static constexpr auto CMD_TINT_COLOR = 17;
+
+  static constexpr auto CMD_BORDER_RADIUS = 20;
+  static constexpr auto CMD_BORDER_TOP_LEFT_RADIUS = 21;
+  static constexpr auto CMD_BORDER_TOP_RIGHT_RADIUS = 22;
+  static constexpr auto CMD_BORDER_TOP_START_RADIUS = 23;
+  static constexpr auto CMD_BORDER_TOP_END_RADIUS = 24;
+  static constexpr auto CMD_BORDER_BOTTOM_LEFT_RADIUS = 25;
+  static constexpr auto CMD_BORDER_BOTTOM_RIGHT_RADIUS = 26;
+  static constexpr auto CMD_BORDER_BOTTOM_START_RADIUS = 27;
+  static constexpr auto CMD_BORDER_BOTTOM_END_RADIUS = 28;
+  static constexpr auto CMD_BORDER_START_START_RADIUS = 29;
+  static constexpr auto CMD_BORDER_START_END_RADIUS = 30;
+  static constexpr auto CMD_BORDER_END_START_RADIUS = 31;
+  static constexpr auto CMD_BORDER_END_END_RADIUS = 32;
+
+  static constexpr auto CMD_BORDER_COLOR = 40;
+  static constexpr auto CMD_BORDER_TOP_COLOR = 41;
+  static constexpr auto CMD_BORDER_BOTTOM_COLOR = 42;
+  static constexpr auto CMD_BORDER_LEFT_COLOR = 43;
+  static constexpr auto CMD_BORDER_RIGHT_COLOR = 44;
+  static constexpr auto CMD_BORDER_START_COLOR = 45;
+  static constexpr auto CMD_BORDER_END_COLOR = 46;
+
+  static constexpr auto CMD_TRANSFORM_TRANSLATE_X = 100;
+  static constexpr auto CMD_TRANSFORM_TRANSLATE_Y = 101;
+  static constexpr auto CMD_TRANSFORM_SCALE = 102;
+  static constexpr auto CMD_TRANSFORM_SCALE_X = 103;
+  static constexpr auto CMD_TRANSFORM_SCALE_Y = 104;
+  static constexpr auto CMD_TRANSFORM_ROTATE = 105;
+  static constexpr auto CMD_TRANSFORM_ROTATE_X = 106;
+  static constexpr auto CMD_TRANSFORM_ROTATE_Y = 107;
+  static constexpr auto CMD_TRANSFORM_ROTATE_Z = 108;
+  static constexpr auto CMD_TRANSFORM_SKEW_X = 109;
+  static constexpr auto CMD_TRANSFORM_SKEW_Y = 110;
+  static constexpr auto CMD_TRANSFORM_MATRIX = 111;
+  static constexpr auto CMD_TRANSFORM_PERSPECTIVE = 112;
+
+  static constexpr auto CMD_UNIT_DEG = 200;
+  static constexpr auto CMD_UNIT_RAD = 201;
+  static constexpr auto CMD_UNIT_PX = 202;
+  static constexpr auto CMD_UNIT_PERCENT = 203;
+
+  const auto propNameToCommand = [](const std::string &name) {
+    if (name == "opacity")
+      return CMD_OPACITY;
+
+    if (name == "elevation")
+      return CMD_ELEVATION;
+
+    if (name == "zIndex")
+      return CMD_Z_INDEX;
+
+    if (name == "shadowOpacity")
+      return CMD_SHADOW_OPACITY;
+
+    if (name == "shadowRadius")
+      return CMD_SHADOW_RADIUS;
+
+    if (name == "backgroundColor")
+      return CMD_BACKGROUND_COLOR;
+
+    if (name == "color")
+      return CMD_COLOR;
+
+    if (name == "tintColor")
+      return CMD_TINT_COLOR;
+
+    if (name == "borderRadius")
+      return CMD_BORDER_RADIUS;
+
+    if (name == "borderTopLeftRadius")
+      return CMD_BORDER_TOP_LEFT_RADIUS;
+
+    if (name == "borderTopRightRadius")
+      return CMD_BORDER_TOP_RIGHT_RADIUS;
+
+    if (name == "borderTopStartRadius")
+      return CMD_BORDER_TOP_START_RADIUS;
+
+    if (name == "borderTopEndRadius")
+      return CMD_BORDER_TOP_END_RADIUS;
+
+    if (name == "borderBottomLeftRadius")
+      return CMD_BORDER_BOTTOM_LEFT_RADIUS;
+
+    if (name == "borderBottomRightRadius")
+      return CMD_BORDER_BOTTOM_RIGHT_RADIUS;
+
+    if (name == "borderBottomStartRadius")
+      return CMD_BORDER_BOTTOM_START_RADIUS;
+
+    if (name == "borderBottomEndRadius")
+      return CMD_BORDER_BOTTOM_END_RADIUS;
+
+    if (name == "borderStartStartRadius")
+      return CMD_BORDER_START_START_RADIUS;
+
+    if (name == "borderStartEndRadius")
+      return CMD_BORDER_START_END_RADIUS;
+
+    if (name == "borderEndStartRadius")
+      return CMD_BORDER_END_START_RADIUS;
+
+    if (name == "borderEndEndRadius")
+      return CMD_BORDER_END_END_RADIUS;
+
+    if (name == "borderColor")
+      return CMD_BORDER_COLOR;
+
+    if (name == "borderTopColor")
+      return CMD_BORDER_TOP_COLOR;
+
+    if (name == "borderBottomColor")
+      return CMD_BORDER_BOTTOM_COLOR;
+
+    if (name == "borderLeftColor")
+      return CMD_BORDER_LEFT_COLOR;
+
+    if (name == "borderRightColor")
+      return CMD_BORDER_RIGHT_COLOR;
+
+    if (name == "borderStartColor")
+      return CMD_BORDER_START_COLOR;
+
+    if (name == "borderEndColor")
+      return CMD_BORDER_END_COLOR;
+
+    if (name == "transform")
+      return CMD_START_OF_TRANSFORM; // TODO: use CMD_TRANSFORM?
+
+    throw std::runtime_error("[Reanimated] Unsupported style: " + name);
+  };
+
+  const auto transformNameToCommand = [](const std::string &name) {
+    if (name == "translateX")
+      return CMD_TRANSFORM_TRANSLATE_X;
+
+    if (name == "translateY")
+      return CMD_TRANSFORM_TRANSLATE_Y;
+
+    if (name == "scale")
+      return CMD_TRANSFORM_SCALE;
+
+    if (name == "scaleX")
+      return CMD_TRANSFORM_SCALE_X;
+
+    if (name == "scaleY")
+      return CMD_TRANSFORM_SCALE_Y;
+
+    if (name == "rotate")
+      return CMD_TRANSFORM_ROTATE;
+
+    if (name == "rotateX")
+      return CMD_TRANSFORM_ROTATE_X;
+
+    if (name == "rotateY")
+      return CMD_TRANSFORM_ROTATE_Y;
+
+    if (name == "rotateZ")
+      return CMD_TRANSFORM_ROTATE_Z;
+
+    if (name == "skewX")
+      return CMD_TRANSFORM_SKEW_X;
+
+    if (name == "skewY")
+      return CMD_TRANSFORM_SKEW_Y;
+
+    if (name == "matrix")
+      return CMD_TRANSFORM_MATRIX;
+
+    if (name == "perspective")
+      return CMD_TRANSFORM_PERSPECTIVE;
+
+    throw std::runtime_error("[Reanimated] Unsupported transform: " + name);
+  };
+
+  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
+      partitionUpdates(updatesBatch, synchronousProps, true, allowPartialUpdates);
+
+  if (!synchronousUpdatesBatch.empty()) {
+    std::vector<int> intBuffer;
+    std::vector<double> doubleBuffer;
+    intBuffer.reserve(1024);
+    doubleBuffer.reserve(1024);
+
+    for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
+      intBuffer.push_back(CMD_START_OF_VIEW);
+      intBuffer.push_back(shadowNode->getTag());
+      for (const auto &[key, value] : props.items()) {
+        const auto command = propNameToCommand(key.getString());
+        switch (command) {
+          case CMD_OPACITY:
+          case CMD_ELEVATION:
+          case CMD_Z_INDEX:
+          case CMD_SHADOW_OPACITY:
+          case CMD_SHADOW_RADIUS:
+            intBuffer.push_back(command);
+            doubleBuffer.push_back(value.asDouble());
+            break;
+
+          case CMD_BACKGROUND_COLOR:
+          case CMD_COLOR:
+          case CMD_TINT_COLOR:
+          case CMD_BORDER_COLOR:
+          case CMD_BORDER_TOP_COLOR:
+          case CMD_BORDER_BOTTOM_COLOR:
+          case CMD_BORDER_LEFT_COLOR:
+          case CMD_BORDER_RIGHT_COLOR:
+          case CMD_BORDER_START_COLOR:
+          case CMD_BORDER_END_COLOR:
+            intBuffer.push_back(command);
+            intBuffer.push_back(value.asInt());
+            break;
+
+          case CMD_BORDER_RADIUS:
+          case CMD_BORDER_TOP_LEFT_RADIUS:
+          case CMD_BORDER_TOP_RIGHT_RADIUS:
+          case CMD_BORDER_TOP_START_RADIUS:
+          case CMD_BORDER_TOP_END_RADIUS:
+          case CMD_BORDER_BOTTOM_LEFT_RADIUS:
+          case CMD_BORDER_BOTTOM_RIGHT_RADIUS:
+          case CMD_BORDER_BOTTOM_START_RADIUS:
+          case CMD_BORDER_BOTTOM_END_RADIUS:
+          case CMD_BORDER_START_START_RADIUS:
+          case CMD_BORDER_START_END_RADIUS:
+          case CMD_BORDER_END_START_RADIUS:
+          case CMD_BORDER_END_END_RADIUS:
+            intBuffer.push_back(command);
+            if (value.isDouble()) {
+              intBuffer.push_back(CMD_UNIT_PX);
+              doubleBuffer.push_back(value.getDouble());
+            } else if (value.isString()) {
+              const auto &valueStr = value.getString();
+              if (!valueStr.ends_with("%")) {
+                throw std::runtime_error("[Reanimated] Border radius string must be a percentage");
+              }
+              intBuffer.push_back(CMD_UNIT_PERCENT);
+              doubleBuffer.push_back(std::stof(valueStr.substr(0, -1)));
+            } else {
+              throw std::runtime_error("[Reanimated] Border radius value must be either a number or a string");
+            }
+            break;
+
+          case CMD_START_OF_TRANSFORM:
+            intBuffer.push_back(command);
+            react_native_assert(value.isArray() && "[Reanimated] Transform value must be an array");
+            for (const auto &item : value) {
+              react_native_assert(item.isObject() && "[Reanimated] Transform array item must be an object");
+              react_native_assert(
+                  item.size() == 1 && "[Reanimated] Transform array item must have exactly one key-value pair");
+              const auto transformCommand = transformNameToCommand(item.keys().begin()->getString());
+              const auto &transformValue = *item.values().begin();
+              switch (transformCommand) {
+                case CMD_TRANSFORM_SCALE:
+                case CMD_TRANSFORM_SCALE_X:
+                case CMD_TRANSFORM_SCALE_Y:
+                case CMD_TRANSFORM_PERSPECTIVE: {
+                  intBuffer.push_back(transformCommand);
+                  doubleBuffer.push_back(transformValue.asDouble());
+                  break;
+                }
+                case CMD_TRANSFORM_TRANSLATE_X:
+                case CMD_TRANSFORM_TRANSLATE_Y: {
+                  intBuffer.push_back(transformCommand);
+                  if (transformValue.isDouble()) {
+                    intBuffer.push_back(CMD_UNIT_PX);
+                    doubleBuffer.push_back(transformValue.getDouble());
+                  } else if (transformValue.isString()) {
+                    const auto &transformValueStr = transformValue.getString();
+                    if (!transformValueStr.ends_with("%")) {
+                      throw std::runtime_error("[Reanimated] String translate must be a percentage");
+                    }
+                    intBuffer.push_back(CMD_UNIT_PERCENT);
+                    doubleBuffer.push_back(std::stof(transformValueStr.substr(0, -1)));
+                  } else {
+                    throw std::runtime_error("[Reanimated] Translate value must be either a number or a string");
+                  }
+                  break;
+                }
+                case CMD_TRANSFORM_ROTATE:
+                case CMD_TRANSFORM_ROTATE_X:
+                case CMD_TRANSFORM_ROTATE_Y:
+                case CMD_TRANSFORM_ROTATE_Z:
+                case CMD_TRANSFORM_SKEW_X:
+                case CMD_TRANSFORM_SKEW_Y: {
+                  const auto &transformValueStr = transformValue.getString();
+                  intBuffer.push_back(transformCommand);
+                  if (transformValueStr.ends_with("deg")) {
+                    intBuffer.push_back(CMD_UNIT_DEG);
+                  } else if (transformValueStr.ends_with("rad")) {
+                    intBuffer.push_back(CMD_UNIT_RAD);
+                  } else {
+                    throw std::runtime_error("[Reanimated] Unsupported rotation unit: " + transformValueStr);
+                  }
+                  doubleBuffer.push_back(std::stof(transformValueStr.substr(0, -3)));
+                  break;
+                }
+                case CMD_TRANSFORM_MATRIX: {
+                  intBuffer.push_back(transformCommand);
+                  react_native_assert(transformValue.isArray() && "[Reanimated] Matrix must be an array");
+                  int size = transformValue.size();
+                  intBuffer.push_back(size);
+                  for (int i = 0; i < size; i++) {
+                    doubleBuffer.push_back(transformValue[i].asDouble());
+                  }
+                  break;
+                }
+              }
+            }
+            intBuffer.push_back(CMD_END_OF_TRANSFORM);
+            break;
+        }
+      }
+      intBuffer.push_back(CMD_END_OF_VIEW);
+    }
+    synchronouslyUpdateUIPropsFunction_(intBuffer, doubleBuffer);
+  }
+
+  updatesBatch = std::move(shadowTreeUpdatesBatch);
+#endif // ANDROID
+
+#if __APPLE__
+  static const std::unordered_set<std::string> synchronousProps = {
+      "opacity",
+      "elevation",
+      "zIndex",
+      "shadowOpacity",
+      "shadowRadius",
+      "backgroundColor",
+      // "color", // TODO: fix animating color of Animated.Text
+      "tintColor",
+      "borderRadius",
+      "borderTopLeftRadius",
+      "borderTopRightRadius",
+      "borderTopStartRadius",
+      "borderTopEndRadius",
+      "borderBottomLeftRadius",
+      "borderBottomRightRadius",
+      "borderBottomStartRadius",
+      "borderBottomEndRadius",
+      "borderStartStartRadius",
+      "borderStartEndRadius",
+      "borderEndStartRadius",
+      "borderEndEndRadius",
+      "borderColor",
+      "borderTopColor",
+      "borderBottomColor",
+      "borderLeftColor",
+      "borderRightColor",
+      "borderStartColor",
+      "borderEndColor",
+      "transform",
+  };
+
+  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
+      partitionUpdates(updatesBatch, synchronousProps, false, allowPartialUpdates);
+
+  for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
+    synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
+  }
+
+  updatesBatch = std::move(shadowTreeUpdatesBatch);
+#endif // __APPLE__
 }
 
 void ReanimatedModuleProxy::requestFlushRegistry() {
@@ -1203,7 +1258,7 @@ void ReanimatedModuleProxy::dispatchCommand(
 
 jsi::String
 ReanimatedModuleProxy::obtainProp(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &propName) {
-  jsi::Runtime &uiRuntime = uiRuntime_->getJSIRuntime();
+  jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   const auto propNameStr = propName.asString(rt).utf8(rt);
   const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto resultStr = obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
@@ -1273,7 +1328,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
           layoutAnimationsManager_,
           componentDescriptorRegistry,
           scheduler->getContextContainer(),
-          uiRuntime_->getJSIRuntime(),
+          getJSIRuntimeFromWorkletRuntime(uiRuntime_),
           uiScheduler_
 #ifdef ANDROID
           ,
@@ -1291,7 +1346,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
           layoutAnimationsManager_,
           componentDescriptorRegistry,
           scheduler->getContextContainer(),
-          uiRuntime_->getJSIRuntime(),
+          getJSIRuntimeFromWorkletRuntime(uiRuntime_),
           uiScheduler_
 #ifdef ANDROID
           ,
@@ -1338,15 +1393,18 @@ jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
     const jsi::Value &handlerWorklet,
     const jsi::Value &isStatusBarTranslucent,
     const jsi::Value &isNavigationBarTranslucent) {
-  auto serializableHandler = extractSerializableOrThrow<SerializableWorklet>(
-      rt, handlerWorklet, "[Reanimated] Keyboard event handler must be a worklet.");
+  auto serializableHandler = extractSerializable(
+      rt,
+      handlerWorklet,
+      "[Reanimated] Keyboard event handler must be a worklet.",
+      Serializable::ValueType::WorkletType);
   return subscribeForKeyboardEventsFunction_(
       [=, weakThis = weak_from_this()](int keyboardState, int height) {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
         }
-        strongThis->uiRuntime_->runSync(serializableHandler, jsi::Value(keyboardState), jsi::Value(height));
+        runSyncOnRuntime(strongThis->uiRuntime_, serializableHandler, jsi::Value(keyboardState), jsi::Value(height));
       },
       isStatusBarTranslucent.getBool(),
       isNavigationBarTranslucent.getBool());

@@ -90,7 +90,7 @@ describe('animation of BoxShadow', () => {
         offsetX: -10,
         offsetY: 6,
         spreadDistance: 10,
-        inset: true,
+        inset: false,
       },
     },
   ])('Animate', async ({ finalBoxShadow, startBoxShadow }) => {

@@ -20,7 +20,7 @@ Please note that downgrading your Expo SDK version or using an older release of 
 
 **Problem:** When scrolling a `FlatList` or `ScrollView`, you might notice flickering or jittering of animated components (e.g. sticky header) implemented using `useAnimatedScrollHandler` hook.
 
-**Solution:** You need to upgrade to React Native 0.81 (or newer), set experimental release level in order to enable `preventShadowTreeCommitExhaustion` feature flag and enable [`DISABLE_COMMIT_PAUSING_MECHANISM`](/docs/guides/feature-flags#disable_commit_pausing_mechanism) static feature flag as described [here](/docs/guides/feature-flags#disable_commit_pausing_mechanism).
+**Solution:** You need to upgrade to React Native 0.81 (or newer), enable `preventShadowTreeCommitExhaustion` React Native feature flag and enable [`DISABLE_COMMIT_PAUSING_MECHANISM`](/docs/guides/feature-flags#disable_commit_pausing_mechanism) static feature flag. For more details, click [here](/docs/guides/feature-flags#disable_commit_pausing_mechanism).
 
 ### ⚠️ Lower FPS while scrolling
 

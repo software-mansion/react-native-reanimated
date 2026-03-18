@@ -217,7 +217,9 @@ export default class AnimatedComponent
 
   _syncStylePropsBackToReact(props: StyleProps) {
     if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
-      this.setState({ settledProps: props });
+      this.setState((state) => ({
+        settledProps: { ...state.settledProps, ...props },
+      }));
       // TODO(future): revert changes when animated styles are detached
     }
   }

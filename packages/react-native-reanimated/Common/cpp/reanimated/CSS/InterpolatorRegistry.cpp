@@ -13,8 +13,8 @@
 #include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
 
+#include <reanimated/CSS/svg/values/CSSLengthArray.h>
 #include <reanimated/CSS/svg/values/SVGBrush.h>
-#include <reanimated/CSS/svg/values/SVGLength.h>
 #include <reanimated/CSS/svg/values/SVGPath.h>
 #include <reanimated/CSS/svg/values/SVGStops.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
@@ -241,76 +241,73 @@ const InterpolatorFactoriesRecord STYLE_INTERPOLATORS = {
 // SVG INTERPOLATORS
 // =================
 
-const InterpolatorFactoriesRecord SVG_COLOR_INTERPOLATORS = {
+const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS = {
+    // Color
     {"color", value<SVGBrush>(BLACK)},
-};
 
-const InterpolatorFactoriesRecord SVG_FILL_INTERPOLATORS = {
+    // Fill
     {"fill", value<SVGBrush>(BLACK)},
     {"fillOpacity", value<CSSDouble>(1)},
     {"fillRule", value<CSSIndex>(0)},
-};
 
-const InterpolatorFactoriesRecord SVG_STROKE_INTERPOLATORS = {
+    // Stroke
     {"stroke", value<SVGBrush>(BLACK)},
-    {"strokeWidth", value<SVGLength>(1)},
+    {"strokeWidth", value<CSSLength>(1, {RelativeTo::Parent, "width"})},
     {"strokeOpacity", value<CSSDouble>(1)},
-    {"strokeDasharray", value<SVGStrokeDashArray, CSSKeyword>(SVGStrokeDashArray())},
-    {"strokeDashoffset", value<SVGLength>(0)},
+    {"strokeDasharray", value<SVGStrokeDashArray, CSSKeyword>(SVGStrokeDashArray(), {RelativeTo::Parent, "width"})},
+    {"strokeDashoffset", value<CSSLength>(0, {RelativeTo::Parent, "width"})},
     {"strokeLinecap", value<CSSIndex>(0)},
     {"strokeLinejoin", value<CSSIndex>(0)},
     {"strokeMiterlimit", value<CSSDouble>(4)},
     {"vectorEffect", value<CSSIndex>(0)},
-};
 
-const InterpolatorFactoriesRecord SVG_CLIP_INTERPOLATORS = {
+    // Clip
     {"clipRule", value<CSSKeyword>("nonzero")},
     {"clipPath", value<CSSKeyword>("none")},
-};
 
-const InterpolatorFactoriesRecord SVG_TRANSFORM_INTERPOLATORS = {
-    {"translateX", value<SVGLength>(0)},
-    {"translateY", value<SVGLength>(0)},
-    {"originX", value<SVGLength>(0)},
-    {"originY", value<SVGLength>(0)},
+    // Transform
+    {"translateX", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+    {"translateY", value<CSSLength>(0, {RelativeTo::Self, "height"})},
+    {"originX", value<CSSLength>(0, {RelativeTo::Self, "width"})},
+    {"originY", value<CSSLength>(0, {RelativeTo::Self, "height"})},
     {"scaleX", value<CSSDouble>(1)},
     {"scaleY", value<CSSDouble>(1)},
     {"skewX", value<CSSAngle>(0)},
     {"skewY", value<CSSAngle>(0)},
     {"rotation", value<CSSAngle>(0)},
+
+    // General
+    {"opacity", value<CSSDouble>(1)},
 };
 
-const InterpolatorFactoriesRecord SVG_COMMON_INTERPOLATORS = mergeInterpolators({
-    SVG_COLOR_INTERPOLATORS,
-    SVG_FILL_INTERPOLATORS,
-    SVG_STROKE_INTERPOLATORS,
-    InterpolatorFactoriesRecord{{"opacity", value<CSSDouble>(1)}},
-});
+// ================================
+// SVG Component-Specific Interpolators
+// ================================
 
 const InterpolatorFactoriesRecord SVG_CIRCLE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"cx", value<SVGLength, CSSKeyword>(0)},
-         {"cy", value<SVGLength, CSSKeyword>(0)},
-         {"r", value<SVGLength, CSSKeyword>(0)},
+         {"cx", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"cy", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
+         {"r", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
      }});
 
 const InterpolatorFactoriesRecord SVG_ELLIPSE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"cx", value<SVGLength, CSSKeyword>(0)},
-         {"cy", value<SVGLength, CSSKeyword>(0)},
-         {"rx", value<SVGLength, CSSKeyword>(0)},
-         {"ry", value<SVGLength, CSSKeyword>(0)},
+         {"cx", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"cy", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
+         {"rx", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"ry", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
      }});
 
 const InterpolatorFactoriesRecord SVG_IMAGE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"x", value<SVGLength, CSSKeyword>(0)},
-         {"y", value<SVGLength, CSSKeyword>(0)},
-         {"width", value<SVGLength, CSSKeyword>(0)},
-         {"height", value<SVGLength, CSSKeyword>(0)},
+         {"x", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"y", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
+         {"width", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"height", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
          // TODO: Check why this is not supported in RN-SVG and add support
          // {"align", value<CSSKeyword>("xMidYMid")},
          // {"meetOrSlice", value<CSSIndex>(0)},
@@ -319,19 +316,19 @@ const InterpolatorFactoriesRecord SVG_IMAGE_INTERPOLATORS = mergeInterpolators(
 const InterpolatorFactoriesRecord SVG_LINE_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"x1", value<SVGLength, CSSKeyword>(0)},
-         {"y1", value<SVGLength, CSSKeyword>(0)},
-         {"x2", value<SVGLength, CSSKeyword>(0)},
-         {"y2", value<SVGLength, CSSKeyword>(0)},
+         {"x1", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"y1", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
+         {"x2", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"y2", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
      }});
 
 const InterpolatorFactoriesRecord SVG_LINEAR_GRADIENT_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"x1", value<SVGLength, CSSKeyword>("0%")},
-         {"x2", value<SVGLength, CSSKeyword>("100%")},
-         {"y1", value<SVGLength, CSSKeyword>("0%")},
-         {"y2", value<SVGLength, CSSKeyword>("0%")},
+         {"x1", value<CSSLength, CSSKeyword>("0%", {RelativeTo::Self, "width"})},
+         {"x2", value<CSSLength, CSSKeyword>("100%", {RelativeTo::Self, "width"})},
+         {"y1", value<CSSLength, CSSKeyword>("0%", {RelativeTo::Self, "height"})},
+         {"y2", value<CSSLength, CSSKeyword>("0%", {RelativeTo::Self, "height"})},
          {"gradient", value<SVGStops>(SVGStops())},
          {"gradientUnits", value<CSSIndex>(0)},
          // TODO: Implement 'gradientTransform'
@@ -341,12 +338,12 @@ const InterpolatorFactoriesRecord SVG_LINEAR_GRADIENT_INTERPOLATORS = mergeInter
 const InterpolatorFactoriesRecord SVG_RECT_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"x", value<SVGLength, CSSKeyword>(0)},
-         {"y", value<SVGLength, CSSKeyword>(0)},
-         {"width", value<SVGLength, CSSKeyword>(0)},
-         {"height", value<SVGLength, CSSKeyword>(0)},
-         {"rx", value<SVGLength, CSSKeyword>(0)},
-         {"ry", value<SVGLength, CSSKeyword>(0)},
+         {"x", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"y", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
+         {"width", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         {"height", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "height"})},
+         {"rx", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "width"})},
+         {"ry", value<CSSLength, CSSKeyword>(0, {RelativeTo::Self, "height"})},
      }});
 
 const InterpolatorFactoriesRecord SVG_PATH_INTERPOLATORS = mergeInterpolators(
@@ -355,30 +352,56 @@ const InterpolatorFactoriesRecord SVG_PATH_INTERPOLATORS = mergeInterpolators(
          {"d", value<SVGPath>("")},
      }});
 
+const InterpolatorFactoriesRecord SVG_PATTERN_INTERPOLATORS = mergeInterpolators(
+    {SVG_COMMON_INTERPOLATORS,
+     InterpolatorFactoriesRecord{
+         {"x", value<CSSLength>(0, {RelativeTo::Parent, "width"})},
+         {"y", value<CSSLength>(0, {RelativeTo::Parent, "height"})},
+         {"width", value<CSSLength>(0, {RelativeTo::Parent, "width"})},
+         {"height", value<CSSLength>(0, {RelativeTo::Parent, "height"})},
+         {"patternUnits", value<CSSIndex>(0)},
+         {"patternContentUnits", value<CSSIndex>(0)},
+     }});
+
 const InterpolatorFactoriesRecord SVG_RADIAL_GRADIENT_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
-         {"r", value<SVGLength, CSSKeyword>("50%")},
-         {"fx", value<SVGLength, CSSKeyword>("50%")},
-         {"fy", value<SVGLength, CSSKeyword>("50%")},
-         {"rx", value<SVGLength, CSSKeyword>("50%")},
-         {"ry", value<SVGLength, CSSKeyword>("50%")},
-         {"cx", value<SVGLength, CSSKeyword>("50%")},
-         {"cy", value<SVGLength, CSSKeyword>("50%")},
+         {"r", value<CSSLength, CSSKeyword>("50%", {RelativeTo::Self, "width"})},
+         {"fx", value<CSSLength, CSSKeyword>("50%", {RelativeTo::Self, "width"})},
+         {"fy", value<CSSLength, CSSKeyword>("50%", {RelativeTo::Self, "height"})},
+         {"rx", value<CSSLength, CSSKeyword>("50%", {RelativeTo::Self, "width"})},
+         {"ry", value<CSSLength, CSSKeyword>("50%", {RelativeTo::Self, "height"})},
+         {"cx", value<CSSLength, CSSKeyword>("50%", {RelativeTo::Self, "width"})},
+         {"cy", value<CSSLength, CSSKeyword>("50%", {RelativeTo::Self, "height"})},
          {"gradient", value<SVGStops>(SVGStops())},
          {"gradientUnits", value<CSSIndex>(0)},
          // TODO: Implement 'gradientTransform'
          // {"gradientTransform", value<CSSKeyword>("")},
      }});
 
+const InterpolatorFactoriesRecord SVG_TEXT_INTERPOLATORS = mergeInterpolators(
+    {SVG_COMMON_INTERPOLATORS,
+     InterpolatorFactoriesRecord{
+         {"x", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "width"})},
+         {"y", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "height"})},
+         {"dx", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "width"})},
+         {"dy", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "height"})},
+         {"rotate", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "width"})},
+         // TODO: Implement when supported by RNSVG
+         //  {"textLength", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         //  {"lengthAdjust", value<CSSKeyword>("spacing")},
+     }});
+
 // ==================
 // COMPONENT REGISTRY
 // ==================
 
+constexpr bool SVG_FEATURE_ENABLED = StaticFeatureFlags::getFlag("EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS");
+
 ComponentInterpolatorsMap initializeRegistry() {
   ComponentInterpolatorsMap registry = {};
 
-  if (StaticFeatureFlags::getFlag("EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS")) {
+  if (SVG_FEATURE_ENABLED) {
     // SVG Components
     registry["RNSVGCircle"] = SVG_CIRCLE_INTERPOLATORS;
     registry["RNSVGEllipse"] = SVG_ELLIPSE_INTERPOLATORS;
@@ -386,8 +409,10 @@ ComponentInterpolatorsMap initializeRegistry() {
     registry["RNSVGLine"] = SVG_LINE_INTERPOLATORS;
     registry["RNSVGLinearGradient"] = SVG_LINEAR_GRADIENT_INTERPOLATORS;
     registry["RNSVGPath"] = SVG_PATH_INTERPOLATORS;
+    registry["RNSVGPattern"] = SVG_PATTERN_INTERPOLATORS;
     registry["RNSVGRect"] = SVG_RECT_INTERPOLATORS;
     registry["RNSVGRadialGradient"] = SVG_RADIAL_GRADIENT_INTERPOLATORS;
+    registry["RNSVGText"] = SVG_TEXT_INTERPOLATORS;
   }
 
   return registry;
@@ -400,6 +425,11 @@ ComponentInterpolatorsMap registry = initializeRegistry();
 const InterpolatorFactoriesRecord &getComponentInterpolators(const std::string &nativeComponentName) {
   if (auto it = registry.find(nativeComponentName); it != registry.end()) {
     return it->second;
+  }
+
+  // Use SVG common interpolators as a fallback for unregistered SVG components
+  if (SVG_FEATURE_ENABLED && nativeComponentName.starts_with("RNSVG")) {
+    return SVG_COMMON_INTERPOLATORS;
   }
 
   // Use default style interpolators as a fallback for unknown components

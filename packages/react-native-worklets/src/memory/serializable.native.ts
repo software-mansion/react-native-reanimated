@@ -815,6 +815,9 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
           value
         ) as FlatSerializableRef<TValue>;
       }
+      if ((value as Record<string, unknown>).__serializableRef) {
+        return value as FlatSerializableRef<TValue>;
+      }
       if (Object.getPrototypeOf(value) !== Object.prototype) {
         const length = globalThis.__customSerializationRegistry.length;
         for (let i = 0; i < length; i++) {

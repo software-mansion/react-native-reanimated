@@ -1,7 +1,10 @@
 import AboutExample from './AboutExample';
 import AmountExample from './AmountExample';
+import AndroidDrawPassExample from './AndroidDrawPassExample';
 import AnimatableRefExample from './AnimatableRefExample';
 import AnimatedKeyboardExample from './AnimatedKeyboardExample';
+import AnimatedListExample from './LayoutAnimations/AnimatedList';
+import AnimatedPropsExample from './AnimatedPropsExample';
 import AnimatedSensorAccelerometerExample from './AnimatedSensorAccelerometerExample';
 import AnimatedSensorGravityExample from './AnimatedSensorGravityExample';
 import AnimatedSensorGyroscopeExample from './AnimatedSensorGyroscopeExample';
@@ -13,157 +16,153 @@ import AnimatedTextExample from './AnimatedTextExample';
 import AnimatedTextInputExample from './AnimatedTextInputExample';
 import AnimatedTextWidthExample from './AnimatedTextWidthExample';
 import ArticleProgressExample from './ArticleProgressExample';
+import BBExample from './LayoutAnimations/BBExample';
 import BabelVersionCheckExample from './BabelVersionCheckExample';
+import BasicLayoutAnimation from './LayoutAnimations/BasicLayoutAnimation';
+import BasicNestedAnimation from './LayoutAnimations/BasicNestedAnimation';
+import BasicNestedLayoutAnimation from './LayoutAnimations/BasicNestedLayoutAnimation';
 import BokehExample from './BokehExample';
+import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
 import BottomSheetExample from './BottomSheetExample';
+import BottomTabsExample from './LayoutAnimations/BottomTabs';
 import BouncingBoxExample from './BouncingBoxExample';
 import BubblesExample from './BubblesExample';
+import CardExample from './SharedElementTransitions/Card';
+import Carousel from './LayoutAnimations/Carousel';
+import ChangeThemeExample from './LayoutAnimations/ChangeTheme';
+import ChangeThemeSharedExample from './SharedElementTransitions/ChangeTheme';
 import ChatHeadsExample from './ChatHeadsExample';
-import ChessboardExample from './ChessboardExample';
 import ChessExample from './ChessExample';
+import ChessboardExample from './ChessboardExample';
 import CircularSliderExample from './CircularSliderExample';
 import ColorExample from './ColorExample';
 import ColorInterpolationExample from './ColorInterpolationExample';
+import CombinedTest from './LayoutAnimations/Combined';
 import ComposedHandlerConditionalExample from './ComposedHandlerConditionalExample';
 import ComposedHandlerDifferentEventsExample from './ComposedHandlerDifferentEventsExample';
 import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMergingExample';
 import CopySerializablePerformanceTest from './CopySerializablePerformanceTest';
 import CounterExample from './CounterExample';
-import CubesExample from './CubesExample';
+import CustomLayoutAnimationScreen from './LayoutAnimations/CustomLayout';
+import CustomTransitionExample from './SharedElementTransitions/CustomTransition';
+import DefaultAnimations from './LayoutAnimations/DefaultAnimations';
+import DeleteAncestorOfExiting from './LayoutAnimations/DeleteAncestorOfExiting';
+import DetachAnimatedStylesExample from './DetachAnimatedStylesExample';
 import DispatchCommandExample from './DispatchCommandExample';
 import DragAndSnapExample from './DragAndSnapExample';
+import DuplicateTagsExample from './SharedElementTransitions/DuplicateTags';
+import DurationZeroExample from './LayoutAnimations/DurationZero';
 import DynamicColorIOSExample from './DynamicColorIOSExample';
-import PlatformColorExample from './PlatformColorExample';
 import EmojiWaterfallExample from './EmojiWaterfallExample';
-import StrictModeComparison from './LayoutAnimations/StrictModeComparisonExample';
+import EmptyExample from './EmptyExample';
 import ExtrapolationExample from './ExtrapolationExample';
+import FetchExample from './FetchExample';
 import FilterExample from './FilterExample';
+import FlatListExample from './SharedElementTransitions/FlatList';
+import FlatListSkipEnteringExiting from './LayoutAnimations/FlatListSkipEnteringExiting';
 import FlatListWithLayoutAnimations from './FlatListWithLayoutAnimationsExample';
 import FpsExample from './FpsExample';
 import FrameCallbackExample from './FrameCallbackExample';
 import FreezeExample from './FreezeExample';
+import GalleryExample from './SharedElementTransitions/Gallery';
 import Game2048Example from './Game2048Example';
 import GestureHandlerExample from './GestureHandlerExample';
 import GetViewPropExample from './GetViewPropExample';
+import HabitsExample from './LayoutAnimations/HabitsExample';
+import HermesSamplingProfilerExample from './HermesSamplingProfilerExample';
+import IPodExample from './IPodExample';
+import ImageStackExample from './SharedElementTransitions/ImageStack';
+import InstanceDiscoveryExample from './InstanceDiscoveryExample';
 import InvalidValueAccessExample from './InvalidValueAccessExample';
 import InvertedFlatListExample from './InvertedFlatListExample';
-import IPodExample from './IPodExample';
-import AnimatedListExample from './LayoutAnimations/AnimatedList';
-import BasicLayoutAnimation from './LayoutAnimations/BasicLayoutAnimation';
-import BasicNestedAnimation from './LayoutAnimations/BasicNestedAnimation';
-import BasicNestedLayoutAnimation from './LayoutAnimations/BasicNestedLayoutAnimation';
-import BBExample from './LayoutAnimations/BBExample';
-import BottomTabsExample from './LayoutAnimations/BottomTabs';
-import Carousel from './LayoutAnimations/Carousel';
-import ChangeThemeExample from './LayoutAnimations/ChangeTheme';
-import CombinedTest from './LayoutAnimations/Combined';
-import CustomLayoutAnimationScreen from './LayoutAnimations/CustomLayout';
-import DefaultAnimations from './LayoutAnimations/DefaultAnimations';
-import DeleteAncestorOfExiting from './LayoutAnimations/DeleteAncestorOfExiting';
-import DetachAnimatedStylesExample from './DetachAnimatedStylesExample';
-import DurationZeroExample from './LayoutAnimations/DurationZero';
-import FlatListSkipEnteringExiting from './LayoutAnimations/FlatListSkipEnteringExiting';
-import HabitsExample from './LayoutAnimations/HabitsExample';
 import KeyframeAnimation from './LayoutAnimations/KeyframeAnimation';
+import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
 import LayoutTransitionExample from './LayoutAnimations/LayoutTransitionExample';
-import ListItemLayoutAnimation from './LayoutAnimations/ListItemLayoutAnimation';
-import Modal from './LayoutAnimations/Modal';
-import ModalNewAPI from './LayoutAnimations/ModalNewAPI';
-import MountingUnmounting from './LayoutAnimations/MountingUnmounting';
-import MoveWithExiting from './LayoutAnimations/MoveWithExiting';
-import NativeModals from './LayoutAnimations/NativeModals';
-import NestedTest from './LayoutAnimations/Nested';
-import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
-import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksWithLayout';
-import OlympicAnimation from './LayoutAnimations/OlympicAnimation';
-import ReactionsCounterExample from './LayoutAnimations/ReactionsCounterExample';
-import ReducedMotionLayoutExample from './LayoutAnimations/ReducedMotionLayoutExample';
-import ReparentingExample from './LayoutAnimations/ReparentingExample';
-import SpringLayoutAnimation from './LayoutAnimations/SpringLayoutAnimation';
-import SwipeableList from './LayoutAnimations/SwipeableList';
-import SyncBackToReactExample from './SyncBackToReactExample';
-import ViewFlatteningExample from './LayoutAnimations/ViewFlattening';
-import ViewRecyclingExample from './LayoutAnimations/ViewRecyclingExample';
 import LettersExample from './LettersExample';
 import LightBoxExample from './LightBoxExample';
 import LiquidSwipe from './LiquidSwipe/LiquidSwipe';
+import ListItemLayoutAnimation from './LayoutAnimations/ListItemLayoutAnimation';
 import LogExample from './LogExample';
+import ManyScreensExample from './SharedElementTransitions/ManyScreens';
+import ManyTagsExample from './SharedElementTransitions/ManyTags';
 import MatrixTransform from './MatrixTransform';
 import MeasureExample from './MeasureExample';
 import MemoExample from './MemoExample';
+import Modal from './LayoutAnimations/Modal';
 import ModalExitingExample from './ModalExitingExample';
+import ModalNewAPI from './LayoutAnimations/ModalNewAPI';
+import ModalsExample from './SharedElementTransitions/Modals';
 import ModifyExample from './ModifyExample';
+import MountingUnmounting from './LayoutAnimations/MountingUnmounting';
+import MoveWithExiting from './LayoutAnimations/MoveWithExiting';
+import NativeModals from './LayoutAnimations/NativeModals';
+import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
+import NestedNativeStacksWithLayout from './LayoutAnimations/NestedNativeStacksWithLayout';
+import NestedRotationExample from './SharedElementTransitions/NestedRotation';
+import NestedStacksExample from './SharedElementTransitions/NestedStacks';
+import NestedTest from './LayoutAnimations/Nested';
 import NewestShadowNodesRegistryRemoveExample from './NewestShadowNodesRegistryRemoveExample';
 import NonLayoutPropAndRenderExample from './NonLayoutPropAndRenderExample';
-import OldAnimatedSensorExample from './OldAnimatedSensorExample';
 import OldMeasureExample from './OldMeasureExample';
+import OlympicAnimation from './LayoutAnimations/OlympicAnimation';
 import OpacityTransformExample from './OpacityTransformExample';
 import OverlappingBoxesExample from './OverlappingBoxesExample';
 import PendulumExample from './PendulumExample';
 import PerformanceMonitorExample from './PerfomanceMonitorExample';
 import PinExample from './PinExample';
 import PlanetsExample from './PlanetsExample';
+import PlatformColorExample from './PlatformColorExample';
+import ProfilesExample from './SharedElementTransitions/Profiles';
+import ProgressTransitionExample from './SharedElementTransitions/ProgressTransition';
 import RainbowExample from './RainbowExample';
+import ReactionsCounterExample from './LayoutAnimations/ReactionsCounterExample';
 import ReducedMotionExample from './ReducedMotionExample';
+import ReducedMotionLayoutExample from './LayoutAnimations/ReducedMotionLayoutExample';
+import ReducedMotionSharedExample from './SharedElementTransitions/ReducedMotionSharedExample';
 import RefExample from './RefExample';
+import ReparentingExample from './LayoutAnimations/ReparentingExample';
+import RestoreStateExample from './SharedElementTransitions/RestoreState';
 import RunOnAsyncExample from './RunOnAsyncExample';
 import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
 import ScreenStackExample from './ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderConfigBackgroundColorExample';
 import ScreenTransitionExample from './ScreenTransitionExample';
-import ScrollableViewExample from './ScrollableViewExample';
 import ScrollEventExample from './ScrollEventExample';
 import ScrollPerformanceExample from './ScrollPerformanceExample';
 import ScrollToExample from './ScrollToExample';
 import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
-import SetNativePropsExample from './SetNativePropsExample';
-import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
-import CardExample from './SharedElementTransitions/Card';
-import ChangeThemeSharedExample from './SharedElementTransitions/ChangeTheme';
-import CustomTransitionExample from './SharedElementTransitions/CustomTransition';
-import DuplicateTagsExample from './SharedElementTransitions/DuplicateTags';
-import FlatListExample from './SharedElementTransitions/FlatList';
-import GalleryExample from './SharedElementTransitions/Gallery';
-import ImageStackExample from './SharedElementTransitions/ImageStack';
-import LayoutAnimationExample from './SharedElementTransitions/LayoutAnimation';
-import ManyScreensExample from './SharedElementTransitions/ManyScreens';
-import ManyTagsExample from './SharedElementTransitions/ManyTags';
-import ModalsExample from './SharedElementTransitions/Modals';
-import NestedRotationExample from './SharedElementTransitions/NestedRotation';
-import NestedStacksExample from './SharedElementTransitions/NestedStacks';
-import ProfilesExample from './SharedElementTransitions/Profiles';
-import ProgressTransitionExample from './SharedElementTransitions/ProgressTransition';
-import ReducedMotionSharedExample from './SharedElementTransitions/ReducedMotionSharedExample';
-import RestoreStateExample from './SharedElementTransitions/RestoreState';
-import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample';
-import TransitionRestartExample from './SharedElementTransitions/TransitionRestart';
+import ScrollableViewExample from './ScrollableViewExample';
 import SerializableFreezingExample from './SerializableFreezingExample';
+import SetNativePropsExample from './SetNativePropsExample';
+import ShadowNodesCloningExample from './ShadowNodesCloningExample';
 import SharedStyleExample from './SharedStyleExample';
 import SpringComparisonExample from './SpringComparisonExample';
+import SpringLayoutAnimation from './LayoutAnimations/SpringLayoutAnimation';
 import SpringPresetsExample from './SpringPresetsExample';
 import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
+import StrictModeComparison from './LayoutAnimations/StrictModeComparisonExample';
 import SvgExample from './SvgExample';
+import SwipeableList from './LayoutAnimations/SwipeableList';
 import SwipeableListExample from './SwipeableListExample';
+import SyncBackToReactExample from './SyncBackToReactExample';
 import SynchronizablePerformanceExample from './SynchronizableExample';
 import SynchronousPropsExample from './SynchronousPropsExample';
+import SystraceSectionExample from './SystraceSectionExample';
+import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample';
 import ThirdPartyComponentsExample from './ThirdPartyComponentsExample';
 import TransformExample from './TransformExample';
 import TransformOriginExample from './TransformOriginExample';
+import TransitionRestartExample from './SharedElementTransitions/TransitionRestart';
 import UpdatePropsPerfExample from './UpdatePropsPerfExample';
+import ViewFlatteningExample from './LayoutAnimations/ViewFlattening';
+import ViewRecyclingExample from './LayoutAnimations/ViewRecyclingExample';
 import WidthExample from './WidthExample';
 import WithClampExample from './WithClampExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
-import WorkletExample from './WorkletExample';
-import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
-import InstanceDiscoveryExample from './InstanceDiscoveryExample';
-import FetchExample from './FetchExample';
-import ShadowNodesCloningExample from './ShadowNodesCloningExample';
-import EmptyExample from './EmptyExample';
-import AnimatedPropsExample from './AnimatedPropsExample';
 
 export const REAPlatform = {
   IOS: 'ios',
@@ -213,10 +212,25 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Animated text input',
     screen: AnimatedTextInputExample,
   },
+  HermesSamplingProfilerExample: {
+    icon: '📊',
+    title: 'Hermes sampling profiler',
+    screen: HermesSamplingProfilerExample,
+  },
+  SystraceSectionExample: {
+    icon: '📊',
+    title: 'Systrace section',
+    screen: SystraceSectionExample,
+  },
   SyncBackToReactExample: {
     icon: '🔄',
     title: 'Sync back to React',
     screen: SyncBackToReactExample,
+  },
+  AndroidDrawPassExample: {
+    icon: '✍️',
+    title: 'Android Draw Pass',
+    screen: AndroidDrawPassExample,
   },
   DetachAnimatedStylesExample: {
     icon: '⛓️‍💥',
@@ -281,6 +295,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🧠',
     title: 'Memo',
     screen: MemoExample,
+    shouldWork: {
+      // TODO: fix, broken in https://github.com/software-mansion/react-native-reanimated/pull/7604
+      ios: false,
+      android: false,
+    },
   },
   AnimatedPropsExample: {
     icon: '🎨',
@@ -520,11 +539,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'measure',
     screen: MeasureExample,
   },
-  WorkletExample: {
-    icon: '🧵',
-    title: 'scheduleOnRN / scheduleOnUI',
-    screen: WorkletExample,
-  },
   BabelVersionCheckExample: {
     icon: '📦',
     title: 'Babel version check',
@@ -636,11 +650,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Log test',
     screen: LogExample,
   },
-  WorkletFactoryCrash: {
-    icon: '🏭',
-    title: 'Worklet factory crash',
-    screen: WorkletFactoryCrash,
-  },
   HabitsExample: {
     icon: '🧑‍💻',
     title: 'Habits',
@@ -737,10 +746,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Chat heads',
     screen: ChatHeadsExample,
   },
-  CubesExample: {
-    title: 'Cubes',
-    screen: CubesExample,
-  },
   DragAndSnapExample: {
     title: 'Drag and snap',
     screen: DragAndSnapExample,
@@ -756,10 +761,6 @@ export const EXAMPLES: Record<string, Example> = {
   InvertedFlatListExample: {
     title: 'Inverted FlatList example',
     screen: InvertedFlatListExample,
-  },
-  OldAnimatedSensorExample: {
-    title: 'Old animated sensor example',
-    screen: OldAnimatedSensorExample,
   },
   OldMeasureExample: {
     title: 'Accordion',

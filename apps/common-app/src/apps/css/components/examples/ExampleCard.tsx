@@ -163,7 +163,7 @@ export default function ExampleCard({
 const styles = StyleSheet.create({
   collapsedCodeOverlay: {
     ...Platform.select<ViewStyle>({
-      default: StyleSheet.absoluteFillObject,
+      default: StyleSheet.absoluteFill as object,
       web: { height: '100%', position: 'absolute', width: '100%' },
     }),
     backgroundColor: colors.background2,

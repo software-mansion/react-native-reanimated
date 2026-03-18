@@ -61,7 +61,7 @@ export default function LineExample() {
                 },
                 {
                   description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the start X position is changed **abruptly**',
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
                       x1: 20,
@@ -100,7 +100,7 @@ export default function LineExample() {
                 },
                 {
                   description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the start Y position is changed **abruptly**',
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
                       y1: 15,
@@ -144,7 +144,7 @@ export default function LineExample() {
                 },
                 {
                   description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the end X position is changed **abruptly**',
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
                       x2: 80,
@@ -183,7 +183,7 @@ export default function LineExample() {
                 },
                 {
                   description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the end Y position is changed **abruptly**',
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
                       y2: 85,

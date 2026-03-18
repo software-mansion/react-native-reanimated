@@ -1,11 +1,14 @@
 'use strict';
 
 import { WorkletsError } from './debug/WorkletsError';
+import { RuntimeKind } from './runtimeKind';
 import type {
   WorkletFunction,
   WorkletRuntime,
   WorkletRuntimeConfig,
 } from './types';
+
+export const UIRuntimeId = RuntimeKind.UI;
 
 export function createWorkletRuntime(
   config?: WorkletRuntimeConfig
@@ -39,6 +42,16 @@ export function scheduleOnRuntime(): never {
   throw new WorkletsError('`scheduleOnRuntime` is not supported on web.');
 }
 
+export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): void;
+
+export function scheduleOnRuntimeWithId(): never {
+  throw new WorkletsError('`scheduleOnRuntimeWithId` is not supported on web.');
+}
+
 export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
   workletRuntime: WorkletRuntime,
   worklet: (...args: Args) => ReturnValue,
@@ -47,6 +60,16 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
 
 export function runOnRuntimeSync(): never {
   throw new WorkletsError('`runOnRuntimeSync` is not supported on web.');
+}
+
+export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
+  runtimeId: number,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): ReturnValue;
+
+export function runOnRuntimeSyncWithId(): never {
+  throw new WorkletsError('`runOnRuntimeSyncWithId` is not supported on web.');
 }
 
 export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(

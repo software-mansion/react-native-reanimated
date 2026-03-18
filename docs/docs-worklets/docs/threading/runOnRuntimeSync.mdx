@@ -66,13 +66,13 @@ runOnUI(() => {
 ```
 
 ```javascript
-import { createWorkletRuntime, scheduleOnRuntime } from 'react-native-worklets';
+import { createWorkletRuntime, runOnRuntimeSync } from 'react-native-worklets';
 
 const workletRuntime = createWorkletRuntime({ name: 'background' });
 const anotherWorkletRuntime = createWorkletRuntime({ name: 'anotherBackground' });
 
-runOnRuntimeSync(anotherWorkletRuntime, () => {
-  runOnRuntimeSync(workletRuntime, (greeting: string) => {
+runOnRuntimeSync(workletRuntime, () => {
+  runOnRuntimeSync(anotherWorkletRuntime, (greeting: string) => {
     console.log(`${greeting} from the background Worklet Runtime`);
   }, 'Hello'); // This will throw an error outside of Bundle Mode 🚨
 });

@@ -1,9 +1,16 @@
 'use strict';
-import { renderHook } from '@testing-library/react-native';
+import { Platform } from 'react-native';
 
 import { ReanimatedError } from '../../common';
 import { worklet } from '../../jestUtils';
 import { useHandler } from '../useHandler';
+
+const renderHook =
+  Platform.OS === 'web'
+    ? // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+      require('@testing-library/react').renderHook
+    : // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+      require('@testing-library/react-native').renderHook;
 
 export function createUseHandlerError(
   handlerNames: string | string[],
