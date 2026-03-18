@@ -128,27 +128,33 @@ describe('CSSTransitionsManager', () => {
         });
       });
 
-      test('cancellation (null) when property is removed from config AND changes value', () => {
-        manager.update({ transitionProperty: 'opacity' }, { opacity: 0 });
-        // Transition property 'opacity' removed from config, value changed 0 -> 1
-        manager.update({ transitionProperty: 'width' }, { opacity: 1 });
+      test.each([
+        {
+          scenario: 'and value changes',
+          nextProps: { opacity: 1 },
+        },
+        {
+          scenario: 'even if value remains same',
+          nextProps: { opacity: 0 },
+        },
+      ])(
+        'cancellation (null) when property is removed from config $scenario',
+        ({ nextProps }) => {
+          manager.update(
+            { transitionProperty: 'opacity', transitionDuration: '300ms' },
+            { opacity: 0 }
+          );
+          // Transition property 'opacity' removed from config
+          manager.update(
+            { transitionProperty: 'width', transitionDuration: '300ms' },
+            nextProps
+          );
 
-        expect(runCSSTransition).toHaveBeenCalledWith(shadowNodeWrapper, {
-          opacity: null,
-        });
-      });
-
-      test('cancellation (null) when property is removed from config even if value remains same', () => {
-        // It is important to signal cancellation even if value is same, so the native side
-        // knows this property is no longer transitioned.
-        manager.update({ transitionProperty: 'opacity' }, { opacity: 0 });
-        // Transition property 'opacity' removed from config, value same
-        manager.update({ transitionProperty: 'width' }, { opacity: 0 });
-
-        expect(runCSSTransition).toHaveBeenCalledWith(shadowNodeWrapper, {
-          opacity: null,
-        });
-      });
+          expect(runCSSTransition).toHaveBeenCalledWith(shadowNodeWrapper, {
+            opacity: null,
+          });
+        }
+      );
 
       test('updates transition settings when config changes', () => {
         manager.update(
