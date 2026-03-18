@@ -71,8 +71,7 @@ react-native-reanimated-tests.js
 
 # clangd
 .cache
-CompilationDatabaseReanimated
-CompilationDatabaseWorklets
+CompilationDatabase
 compile_commands.json
 
 build/
