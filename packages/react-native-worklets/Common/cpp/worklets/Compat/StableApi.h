@@ -1,5 +1,12 @@
 #pragma once
 
+/** 
+* Version of `react-native-worklets` which introduced current stable API.
+* It can be used by libraries to verify they use a compatible version
+* of `react-native-worklets` installed when integrating in C++. 
+*/
+#define WORKLETS_STABLE_API_VERSION "0.8.0"
+
 #include <cstdint>
 #include <functional>
 #include <memory>

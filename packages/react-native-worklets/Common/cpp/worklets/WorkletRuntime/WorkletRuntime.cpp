@@ -91,11 +91,9 @@ WorkletRuntime::WorkletRuntime(
 void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy) {
   jsi::Runtime &rt = *runtime_;
 
-#if REACT_NATIVE_MINOR_VERSION >= 81
   rt.setRuntimeData(
       RuntimeData::weakRuntimeUUID,
       std::make_shared<WeakRuntimeHolder>(WeakRuntimeHolder{.weakRuntime = weak_from_this()}));
-#endif // REACT_NATIVE_MINOR_VERSION >= 81
 
   const auto jsScheduler = jsiWorkletsModuleProxy->getJSScheduler();
   const auto isDevBundle = jsiWorkletsModuleProxy->isDevBundle();
@@ -280,7 +278,6 @@ void scheduleOnRuntime(
 }
 
 std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt) {
-#if REACT_NATIVE_MINOR_VERSION >= 81
   auto runtimeData = rt.getRuntimeData(RuntimeData::weakRuntimeUUID);
   if (!runtimeData) [[unlikely]] {
     throw std::runtime_error(
@@ -289,10 +286,6 @@ std::weak_ptr<WorkletRuntime> WorkletRuntime::getWeakRuntimeFromJSIRuntime(jsi::
   }
   auto weakHolder = std::static_pointer_cast<WeakRuntimeHolder>(runtimeData);
   return weakHolder->weakRuntime;
-#else
-  throw std::runtime_error(
-      "[Worklets] Retrieving WorkletRuntime from JSI Runtime is not supported in React Native versions below 0.81.");
-#endif // REACT_NATIVE_MINOR_VERSION >= 81
 }
 
 /* #region deprecated */

@@ -8,7 +8,7 @@ import {
 import { beforeEach, describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
 
 type localGlobal = typeof globalThis & {
-  __notifyPass(num: number): void;
+  scheduleOnRN: typeof scheduleOnRN;
 };
 
 describe('scheduleOnRuntime', () => {
@@ -30,13 +30,10 @@ describe('scheduleOnRuntime', () => {
       value = 0;
 
       [workletRuntime1, workletRuntime2].forEach(runtime => {
-        // TODO: fix RemoteFunction re-serialization.
         runOnRuntimeSync(runtime, () => {
           'worklet';
-          (globalThis as localGlobal).__notifyPass = (num: number) => {
-            'worklet';
-            scheduleOnRN(callbackPass, num);
-          };
+          // TODO: fix worklet re-serialization outside of Bundle Mode
+          (globalThis as localGlobal).scheduleOnRN = scheduleOnRN;
         });
       });
     });
@@ -58,7 +55,7 @@ describe('scheduleOnRuntime', () => {
 
       scheduleOnRuntime(workletRuntime1, () => {
         'worklet';
-        (globalThis as localGlobal).__notifyPass(42);
+        (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
       });
     });
 
@@ -72,7 +69,7 @@ describe('scheduleOnRuntime', () => {
 
       scheduleOnRuntime(workletRuntime2, () => {
         'worklet';
-        (globalThis as localGlobal).__notifyPass(42);
+        (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
       });
     });
 

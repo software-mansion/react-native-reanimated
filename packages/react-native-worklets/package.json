@@ -55,7 +55,7 @@
     "@babel/core": "*",
     "@react-native/metro-config": "*",
     "react": "*",
-    "react-native": "0.79 - 0.84"
+    "react-native": "0.81 - 0.85"
   },
   "dependencies": {
     "@babel/plugin-transform-arrow-functions": "7.27.1",
@@ -68,7 +68,7 @@
     "@babel/plugin-transform-unicode-regex": "7.27.1",
     "@babel/preset-typescript": "7.27.1",
     "convert-source-map": "2.0.0",
-    "is-tree-shakable": "0.4.1",
+    "is-tree-shakable": "0.5.0",
     "semver": "7.7.3"
   },
   "devDependencies": {

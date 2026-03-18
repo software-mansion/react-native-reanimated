@@ -1,5 +1,6 @@
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
@@ -8,7 +9,6 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
-#include <worklets/Compat/StableApi.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
@@ -26,13 +26,11 @@ namespace reanimated {
 
 using namespace worklets;
 
-#if REACT_NATIVE_MINOR_VERSION >= 81
 static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper) {
   return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
 }
-#endif
 
 namespace {
 
@@ -69,7 +67,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
         const auto keyStr = key.asString();
         const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
         const bool isSynchronous =
-            synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isInt());
+            synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isNumber());
         if (isSynchronous) {
           synchronousProps[keyStr] = value;
         } else {
@@ -91,7 +89,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
         const auto keyStr = key.asString();
         const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
         const bool isSynchronous =
-            synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isInt());
+            synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isNumber());
         if (!isSynchronous) {
           hasOnlySynchronousProps = false;
           break;
