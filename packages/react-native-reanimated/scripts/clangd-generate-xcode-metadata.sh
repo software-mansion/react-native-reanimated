@@ -7,9 +7,6 @@ process_folder() {
     local folder=$1
     local output=$2
 
-    echo $folder >> dis.zwis
-    echo $output >> dis2.zwis
-
     printf "[\n" > "$output"
 
     cat $folder/*.json >> "$output"
