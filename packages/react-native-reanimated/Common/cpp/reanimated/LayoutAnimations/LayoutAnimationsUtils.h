@@ -13,7 +13,7 @@
 
 namespace reanimated {
 
-enum class BeforeOrAfter : std::uint8_t { BEFORE = 0, AFTER = 1 };
+enum BeforeOrAfter : std::uint8_t { BEFORE = 0, AFTER = 1 }; // NOLINT
 
 struct Rect {
   double width, height;

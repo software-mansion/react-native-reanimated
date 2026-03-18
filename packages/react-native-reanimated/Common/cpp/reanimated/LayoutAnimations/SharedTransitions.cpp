@@ -69,11 +69,11 @@ void LayoutAnimationsProxy_Experimental::findSharedElementsOnScreen(
     snapshot[indexNum] = copy;
     parentTag[indexNum] = parent->current.tag;
 
-    if (parentTag[static_cast<int>(BeforeOrAfter::BEFORE)] && parentTag[static_cast<int>(BeforeOrAfter::AFTER)]) {
+    if (parentTag[BEFORE] && parentTag[AFTER]) {
       transitions_.emplace_back(sharedTag, transition);
-    } else if (parentTag[static_cast<int>(BeforeOrAfter::AFTER)]) {
+    } else if (parentTag[AFTER]) {
       // TODO (future): this is adding unnecessary views to the list
-      tagsToRestore_.push_back(snapshot[static_cast<int>(BeforeOrAfter::AFTER)].tag);
+      tagsToRestore_.push_back(snapshot[AFTER].tag);
     }
   }
   for (auto &child : node->children) {
@@ -100,21 +100,21 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
     auto beforeTopScreen = topScreen[surfaceId];
     auto afterTopScreen = lightNodes_[transitionTag_];
     if (beforeTopScreen && afterTopScreen && beforeTopScreen != afterTopScreen) {
-      findSharedElementsOnScreen(beforeTopScreen, BeforeOrAfter::BEFORE, propsParserContext);
-      findSharedElementsOnScreen(afterTopScreen, BeforeOrAfter::AFTER, propsParserContext);
-      hideTransitioningViews(BeforeOrAfter::BEFORE, filteredMutations, propsParserContext);
-      hideTransitioningViews(BeforeOrAfter::AFTER, filteredMutations, propsParserContext);
+      findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext);
+      findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext);
+      hideTransitioningViews(BEFORE, filteredMutations, propsParserContext);
+      hideTransitioningViews(AFTER, filteredMutations, propsParserContext);
 
       for (auto &[sharedTag, transition] : transitions_) {
         auto &[before, after] = transition.snapshot;
         const auto &transform = transition.transform;
-        overrideTransform(before, transform[static_cast<int>(BeforeOrAfter::BEFORE)], propsParserContext);
-        overrideTransform(after, transform[static_cast<int>(BeforeOrAfter::AFTER)], propsParserContext);
+        overrideTransform(before, transform[BEFORE], propsParserContext);
+        overrideTransform(after, transform[AFTER], propsParserContext);
         auto containerTag = getOrCreateContainer(before, sharedTag, filteredMutations, surfaceId);
         transferConfigToContainer(containerTag, before.tag);
 
-        restoreMap_[containerTag][static_cast<int>(BeforeOrAfter::BEFORE)] = before.tag;
-        restoreMap_[containerTag][static_cast<int>(BeforeOrAfter::AFTER)] = after.tag;
+        restoreMap_[containerTag][BEFORE] = before.tag;
+        restoreMap_[containerTag][AFTER] = after.tag;
         before.tag = containerTag;
         after.tag = containerTag;
         activeTransitions_.insert(containerTag);
@@ -161,9 +161,9 @@ void LayoutAnimationsProxy_Experimental::handleProgressTransition(
   } else if (transitionState_ == TransitionState::END || transitionState_ == TransitionState::CANCELLED) {
     for (auto tag : activeTransitions_) {
       sharedContainersToRemove_.push_back(tag);
-      tagsToRestore_.push_back(restoreMap_[tag][static_cast<int>(BeforeOrAfter::AFTER)]);
+      tagsToRestore_.push_back(restoreMap_[tag][AFTER]);
       if (transitionState_ == TransitionState::CANCELLED) {
-        tagsToRestore_.push_back(restoreMap_[tag][static_cast<int>(BeforeOrAfter::BEFORE)]);
+        tagsToRestore_.push_back(restoreMap_[tag][BEFORE]);
       }
     }
     if (transitionState_ == TransitionState::END) {
@@ -247,8 +247,8 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
     for (auto &[sharedTag, transition] : transitions_) {
       auto &[before, after] = transition.snapshot;
       const auto &transform = transition.transform;
-      overrideTransform(before, transform[static_cast<int>(BeforeOrAfter::BEFORE)], propsParserContext);
-      overrideTransform(after, transform[static_cast<int>(BeforeOrAfter::AFTER)], propsParserContext);
+      overrideTransform(before, transform[BEFORE], propsParserContext);
+      overrideTransform(after, transform[AFTER], propsParserContext);
       auto containerTag = getOrCreateContainer(before, sharedTag, filteredMutations, surfaceId);
 
       transferConfigToContainer(containerTag, before.tag);
@@ -269,7 +269,7 @@ void LayoutAnimationsProxy_Experimental::handleSharedTransitionsStart(
       after.tag = containerTag;
       const auto &la = layoutAnimations_[containerTag];
       if (la.finalView.layoutMetrics != after.layoutMetrics) {
-        overrideTransform(after, transition.transform[static_cast<int>(BeforeOrAfter::AFTER)], propsParserContext);
+        overrideTransform(after, transition.transform[AFTER], propsParserContext);
         startSharedTransition(containerTag, la.currentView, after, surfaceId);
       }
     }

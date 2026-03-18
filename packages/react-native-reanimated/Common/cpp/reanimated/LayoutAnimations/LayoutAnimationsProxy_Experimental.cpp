@@ -50,7 +50,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     auto beforeTopScreen = topScreen[surfaceId];
     if (beforeTopScreen) {
       ReanimatedSystraceSection s("find before elements");
-      findSharedElementsOnScreen(beforeTopScreen, BeforeOrAfter::BEFORE, propsParserContext);
+      findSharedElementsOnScreen(beforeTopScreen, BEFORE, propsParserContext);
     }
 
     updateLightTree(propsParserContext, mutations, filteredMutations);
@@ -59,7 +59,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     topScreen[surfaceId] = afterTopScreen;
     if (afterTopScreen) {
       ReanimatedSystraceSection s("find after elements");
-      findSharedElementsOnScreen(afterTopScreen, BeforeOrAfter::AFTER, propsParserContext);
+      findSharedElementsOnScreen(afterTopScreen, AFTER, propsParserContext);
 #ifdef __APPLE__
       forceScreenSnapshot_(afterTopScreen->current.tag);
 #endif
@@ -71,9 +71,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
       // To keep things simple, we put mutations related to source views before all muatations
       // and mutations to hide target views after all mutations.
       std::vector<ShadowViewMutation> mergedMutations;
-      hideTransitioningViews(BeforeOrAfter::BEFORE, mergedMutations, propsParserContext);
+      hideTransitioningViews(BEFORE, mergedMutations, propsParserContext);
       mergedMutations.insert(mergedMutations.end(), filteredMutations.begin(), filteredMutations.end());
-      hideTransitioningViews(BeforeOrAfter::AFTER, mergedMutations, propsParserContext);
+      hideTransitioningViews(AFTER, mergedMutations, propsParserContext);
       std::swap(filteredMutations, mergedMutations);
     }
 
