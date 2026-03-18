@@ -123,10 +123,8 @@ const pan = useMemo(
 );
 ```
 
-### 💡 Animate `TextInput` instead of re-rendering `Text` component
+### 💡 Use `Animated.Text` instead of re-rendering `Text` component
 
-When implementing an animated number counter, don't use React state to periodically update the counter. Instead, store the number in a shared value and use an animated `TextInput` component to display the current value. For more details, see [this example](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/src/apps/reanimated/examples/CounterExample.tsx).
-
-We are also working on adding support for animating text inside `Animated.Text` component using a shared value – see [PR #8595](https://github.com/software-mansion/react-native-reanimated/pull/8595).
+When implementing text animations (e.g. animated counters), don't use React state to periodically update the counter. Instead, store the number in a shared value and use an `Animated.Text` component with animated `text` prop using [`useAnimatedProps`](/docs/core/useAnimatedProps) or inline props in order to display the current value. For more details, see [Text animations](/docs/guides/text-animations) guide.
 
 You can also consider implementing your own native component with rolling ticket using `contentTransition(.numericText())` modifier in SwiftUI (requires iOS 16+).

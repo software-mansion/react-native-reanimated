@@ -12,6 +12,8 @@ import AnimatedSensorMagneticFieldExample from './AnimatedSensorMagneticFieldExa
 import AnimatedSensorRotationExample from './AnimatedSensorRotationExample';
 import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
+import AnimatedTextExample from './AnimatedTextExample';
+import AnimatedTextInputExample from './AnimatedTextInputExample';
 import AnimatedTextWidthExample from './AnimatedTextWidthExample';
 import ArticleProgressExample from './ArticleProgressExample';
 import BBExample from './LayoutAnimations/BBExample';
@@ -199,6 +201,16 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🎞️',
     title: 'FPS',
     screen: FpsExample,
+  },
+  AnimatedTextExample: {
+    icon: '📝',
+    title: 'Animated text',
+    screen: AnimatedTextExample,
+  },
+  AnimatedTextInputExample: {
+    icon: '⌨️',
+    title: 'Animated text input',
+    screen: AnimatedTextInputExample,
   },
   HermesSamplingProfilerExample: {
     icon: '📊',
