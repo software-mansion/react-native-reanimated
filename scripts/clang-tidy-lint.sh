@@ -6,7 +6,7 @@ if ! which run-clang-tidy >/dev/null; then
   exit 1
 fi
 
-if [ ! -f "../../compile_commands.json" ]; then
+if [ ! -f "compile_commands.json" ]; then
   echo "info: missing compile_commands.json, generating one"
   (
     cd ../../apps/fabric-example || exit 1
