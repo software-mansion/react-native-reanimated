@@ -20,6 +20,8 @@ A JavaScript Runtime spawned by Worklets library. It's pre-configured to be able
 
 We differentiate between two kinds of Worklet Runtimes, **UI Runtime** and **Worker Runtimes**.
 
+Each Worklet Runtime has a unique `runtimeId` that can be used to refer to it when communicating between runtimes or creating [Shareables](/docs/memory/shareable) on a specific Worklet Runtime.
+
 ### UI Runtime
 
 Special kind of a Worklet Runtime. Its primary function is to execute worklets which represent high-priority JavaScript tasks. The UI Runtime is mostly executed by the UI (main) thread. Examples of such tasks are:
