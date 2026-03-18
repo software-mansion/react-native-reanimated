@@ -1,9 +1,25 @@
 #!/bin/bash
 
-COMPILE_COMMANDS_PATH="../../../compile_commands.json"
+COMPILE_COMMANDS_REANIMATED_PATH="../../../packages/react-native-reanimated/compile_commands.json"
+COMPILE_COMMANDS_WORKLETS_PATH="../../../packages/react-native-worklets/compile_commands.json"
 
-echo "[" >$COMPILE_COMMANDS_PATH
-for f in **/CompilationDatabase/*.json; do cat "$f" >>$COMPILE_COMMANDS_PATH; done
-echo "]" >>$COMPILE_COMMANDS_PATH
+process_folder() {
+    local folder=$1
+    local output=$2
+
+    echo $folder >> dis.zwis
+    echo $output >> dis2.zwis
+
+    printf "[\n" > "$output"
+
+    cat $folder/*.json >> "$output"
+
+    sed '$ s/,$//' "$output" > "$output.tmp" && mv "$output.tmp" "$output"
+
+    printf "]" >> "$output"
+}
+
+process_folder "**/CompilationDatabaseReanimated" "$COMPILE_COMMANDS_REANIMATED_PATH"
+process_folder "**/CompilationDatabaseWorklets" "$COMPILE_COMMANDS_WORKLETS_PATH"
 
 echo "Generated clangd metadata."

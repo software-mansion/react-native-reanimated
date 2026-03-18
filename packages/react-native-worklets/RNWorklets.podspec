@@ -10,6 +10,12 @@ worklets_assert_new_architecture_enabled($new_arch_enabled)
 
 ios_min_version = '13.4'
 
+# Directory in which data for further processing for clangd will be stored.
+compilation_metadata_dir = "CompilationDatabaseWorklets"
+# We want generate the metadata only within the monorepo of Reanimated.
+compilation_metadata_generation_flag = $config[:is_reanimated_example_app] ? "-gen-cdb-fragment-path #{compilation_metadata_dir}" : ''
+
+
 feature_flags = $worklets_config[:feature_flags_flag]
 version_flags = "-DWORKLETS_VERSION=#{package['version']} -DREACT_NATIVE_MINOR_VERSION=#{$worklets_config[:react_native_minor_version]}"
 worklets_profiling_flag = ENV['IS_WORKLETS_PROFILING'] ? '-DWORKLETS_PROFILING' : ''
@@ -75,7 +81,7 @@ Pod::Spec.new do |s|
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
     "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => "$(inherited) #{hermes_debug_hidden_flags}",
     "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => "$(inherited)",
-    "OTHER_CFLAGS" => "$(inherited) #{feature_flags} #{version_flags} #{worklets_profiling_flag} #{fetch_preview_flag} #{hermes_v1_flag}",
+    "OTHER_CFLAGS" => "$(inherited) #{feature_flags} #{version_flags} #{compilation_metadata_generation_flag} #{worklets_profiling_flag} #{fetch_preview_flag} #{hermes_v1_flag}",
   }
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => [

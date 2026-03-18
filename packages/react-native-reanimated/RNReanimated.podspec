@@ -15,7 +15,7 @@ version_flags = "-DREACT_NATIVE_MINOR_VERSION=#{$config[:react_native_minor_vers
 ios_min_version = '13.4'
 
 # Directory in which data for further processing for clangd will be stored.
-compilation_metadata_dir = "CompilationDatabase"
+compilation_metadata_dir = "CompilationDatabaseReanimated"
 # We want generate the metadata only within the monorepo of Reanimated.
 compilation_metadata_generation_flag = $config[:is_reanimated_example_app] ? "-gen-cdb-fragment-path #{compilation_metadata_dir}" : ''
 
