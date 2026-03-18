@@ -59,26 +59,54 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
     const UpdatesBatch &updatesBatch,
     const std::unordered_set<std::string> &synchronousPropNames,
-    const bool shouldRequireIntegerColors = false) {
+    const bool shouldRequireIntegerColors = false,
+    const bool allowPartialViews = false) {
   UpdatesBatch synchronousUpdatesBatch;
   UpdatesBatch shadowTreeUpdatesBatch;
 
   for (const auto &[shadowNode, props] : updatesBatch) {
-    bool hasOnlySynchronousProps = true;
+    if (allowPartialViews) {
+      folly::dynamic synchronousProps = folly::dynamic::object();
+      folly::dynamic shadowTreeProps = folly::dynamic::object();
 
-    for (const auto &[key, value] : props.items()) {
-      const auto keyStr = key.asString();
-      const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
-      if (!synchronousPropNames.contains(keyStr) || (shouldRequireIntegerColors && isColorProp && !value.isInt())) {
-        hasOnlySynchronousProps = false;
-        break;
+      for (const auto &[key, value] : props.items()) {
+        const auto keyStr = key.asString();
+        const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
+        const bool isSynchronous =
+            synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isInt());
+        if (isSynchronous) {
+          synchronousProps[keyStr] = value;
+        } else {
+          shadowTreeProps[keyStr] = value;
+        }
       }
-    }
 
-    if (hasOnlySynchronousProps) {
-      synchronousUpdatesBatch.emplace_back(shadowNode, props);
+      if (!synchronousProps.empty()) {
+        synchronousUpdatesBatch.emplace_back(shadowNode, std::move(synchronousProps));
+      }
+
+      if (!shadowTreeProps.empty()) {
+        shadowTreeUpdatesBatch.emplace_back(shadowNode, std::move(shadowTreeProps));
+      }
     } else {
-      shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
+      bool hasOnlySynchronousProps = true;
+
+      for (const auto &[key, value] : props.items()) {
+        const auto keyStr = key.asString();
+        const bool isColorProp = keyStr == "color" || keyStr.find("Color") != std::string::npos;
+        const bool isSynchronous =
+            synchronousPropNames.contains(keyStr) && (!shouldRequireIntegerColors || !isColorProp || value.isInt());
+        if (!isSynchronous) {
+          hasOnlySynchronousProps = false;
+          break;
+        }
+      }
+
+      if (hasOnlySynchronousProps) {
+        synchronousUpdatesBatch.emplace_back(shadowNode, props);
+      } else {
+        shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
+      }
     }
   }
 
@@ -605,7 +633,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   // (res == true), but for now handleEvent always returns false. Thankfully,
   // performOperations does not trigger a lot of code if there is nothing to
   // be done so this is fine for now.
-  performOperations(true);
+  performOperations();
   return res;
 }
 
@@ -654,15 +682,13 @@ double ReanimatedModuleProxy::getCssTimestamp() {
   return currentCssTimestamp_;
 }
 
-void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
+void ReanimatedModuleProxy::performOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
-  if (!isTriggeredByEvent) {
-    auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
-    for (const auto surfaceId : flushRequestsCopy) {
-      uiManager_->getShadowTreeRegistry().visit(
-          surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
-    }
+  auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
+  for (const auto surfaceId : flushRequestsCopy) {
+    uiManager_->getShadowTreeRegistry().visit(
+        surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
   }
 
   jsi::Runtime &rt = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
@@ -722,7 +748,15 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
   viewStylesRepository_->clearNodesCache();
 }
 
-void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch) {
+void ReanimatedModuleProxy::performNonLayoutOperations() {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::performNonLayoutOperations");
+
+  UpdatesBatch updatesBatch = animatedPropsRegistry_->getPendingUpdates();
+
+  applySynchronousUpdates(updatesBatch, true);
+}
+
+void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, const bool allowPartialUpdates) {
 #ifdef ANDROID
   static const std::unordered_set<std::string> synchronousProps = {
       "opacity",
@@ -946,7 +980,8 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch) 
     throw std::runtime_error("[Reanimated] Unsupported transform: " + name);
   };
 
-  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] = partitionUpdates(updatesBatch, synchronousProps, true);
+  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
+      partitionUpdates(updatesBatch, synchronousProps, true, allowPartialUpdates);
 
   if (!synchronousUpdatesBatch.empty()) {
     std::vector<int> intBuffer;
@@ -1123,7 +1158,8 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch) 
       "transform",
   };
 
-  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] = partitionUpdates(updatesBatch, synchronousProps);
+  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
+      partitionUpdates(updatesBatch, synchronousProps, false, allowPartialUpdates);
 
   for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
     synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);

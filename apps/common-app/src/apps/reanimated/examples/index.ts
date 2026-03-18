@@ -160,6 +160,7 @@ import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import InstanceDiscoveryExample from './InstanceDiscoveryExample';
 import ShadowNodesCloningExample from './ShadowNodesCloningExample';
+import AndroidDrawPassExample from './AndroidDrawPassExample';
 
 export const REAPlatform = {
   IOS: 'ios',
@@ -203,6 +204,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔄',
     title: 'Sync back to React',
     screen: SyncBackToReactExample,
+  },
+  AndroidDrawPassExample: {
+    icon: '✍️',
+    title: 'Android Draw Pass',
+    screen: AndroidDrawPassExample,
   },
   DetachAnimatedStylesExample: {
     icon: '⛓️‍💥',

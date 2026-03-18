@@ -110,7 +110,9 @@ public class NativeProxy {
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 
-  public native void performOperations(boolean isTriggeredByEvent);
+  public native void performOperations();
+
+  public native void performNonLayoutOperations();
 
   protected native void installJSIBindings();
 
@@ -503,7 +505,7 @@ public class NativeProxy {
   void maybeFlushUIUpdatesQueue() {
     UiThreadUtil.assertOnUiThread();
     if (!mNodesManager.isAnimationRunning()) {
-      mNodesManager.performOperations(false);
+      mNodesManager.performOperationsRespectingDrawPass();
     }
   }
 }
