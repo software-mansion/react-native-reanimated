@@ -1,12 +1,12 @@
 #!/bin/bash
 
-if ! which run-clang-tidy >/dev/null; then
-  echo "error: run-clang-tidy not installed, download \
+if ! which clang-tidy >/dev/null; then
+  echo "error: clang-tidy not installed, download \
   from https://clang.llvm.org/extra/clang-tidy/" 1>&2
   exit 1
 fi
 
-if [ ! -f "compile_commands.json" ]; then
+if [ ! -f "../../compile_commands.json" ]; then
   echo "info: missing compile_commands.json, generating one"
   (
     cd ../../apps/fabric-example || exit 1
@@ -15,4 +15,4 @@ if [ ! -f "compile_commands.json" ]; then
   )
 fi
 
-run-clang-tidy -quiet -p . -header-filter="^.*/$1/.*\.h$" "$1"
+clang-tidy --quiet "$@"
