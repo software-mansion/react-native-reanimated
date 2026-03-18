@@ -52,6 +52,8 @@ First, please apply the following change in `ReactNativeFeatureFlagsDefaults.h`:
    }
 ```
 
+It is recommended to make a patch after applying this change to make it persistent using tools like [patch-package](https://www.npmjs.com/package/patch-package), [yarn patch](https://yarnpkg.com/cli/patch) or [pnpm patch](https://pnpm.io/cli/patch).
+
 You also need to build React Native from source in order for this change to take effect.
 
 For Android, please add the following lines in `android/settings.gradle` according to the instructions [here](https://reactnative.dev/contributing/how-to-build-from-source#update-your-project-to-build-from-source):
