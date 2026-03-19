@@ -19,7 +19,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: undefined,
+        specificProperties: undefined,
         settings: {
           all: {
             duration: 1500,
@@ -64,7 +64,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: undefined,
+        specificProperties: undefined,
         settings: {
           all: {
             duration: 1500,
@@ -88,7 +88,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: ['opacity', 'transform'],
+        specificProperties: new Set(['opacity', 'transform']),
         settings: {
           opacity: {
             duration: 1500,
@@ -116,7 +116,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: ['opacity', 'width'],
+        specificProperties: new Set(['opacity', 'width']),
         settings: {
           opacity: {
             duration: 1500,
@@ -142,7 +142,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: ['width', 'height'],
+        specificProperties: new Set(['width', 'height']),
         settings: {
           width: {
             duration: 300,
@@ -170,7 +170,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: ['width', 'opacity', 'transform'],
+        specificProperties: new Set(['width', 'opacity', 'transform']),
         settings: {
           width: {
             duration: 1500,
@@ -204,7 +204,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: ['opacity'],
+        specificProperties: new Set(['opacity']),
         settings: {
           opacity: {
             duration: 2000,
@@ -224,7 +224,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: ['width'],
+        specificProperties: new Set(['width']),
         settings: {
           width: {
             duration: 300,
@@ -246,7 +246,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: undefined,
+        specificProperties: undefined,
         settings: {
           all: {
             duration: 1500,
@@ -272,7 +272,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: ['opacity'],
+        specificProperties: new Set(['opacity']),
         settings: {
           opacity: {
             duration: 2000,
@@ -305,7 +305,7 @@ describe(normalizeCSSTransitionProperties, () => {
       const config: CSSTransitionProperties = { transitionDuration: '2s' };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: undefined,
+        specificProperties: undefined,
         settings: {
           all: {
             duration: 2000,
@@ -335,7 +335,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: undefined,
+        specificProperties: undefined,
         settings: {
           all: {
             duration: 4000,
@@ -368,7 +368,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: ['opacity', 'transform'],
+        specificProperties: new Set(['opacity', 'transform']),
         settings: {
           opacity: {
             duration: 3000,
