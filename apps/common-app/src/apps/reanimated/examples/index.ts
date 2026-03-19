@@ -161,6 +161,7 @@ import WithClampExample from './WithClampExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
+import ScreenlessBasic from './SharedElementTransitions/ScreenlessBasic';
 
 export const REAPlatform = {
   IOS: 'ios',
@@ -1042,6 +1043,14 @@ export const EXAMPLES: Record<string, Example> = {
       // not implemented
       ios: false,
       android: false,
+    },
+  },
+  ScreenlessBasic: {
+    title: '[SET] Screenless Basic',
+    screen: ScreenlessBasic,
+    shouldWork: {
+      ios: true,
+      android: true,
     },
   },
 } as const;

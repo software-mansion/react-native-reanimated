@@ -1,9 +1,9 @@
 #pragma once
 
-#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-
+#include <Common/NativeView/react/renderer/components/rnreanimated/RNReanimatedSharedTransitionBoundaryShadowNode.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
 #include <memory>
 #include <unordered_map>
@@ -133,6 +133,10 @@ static inline bool isRNSScreen(const std::shared_ptr<LightNode> &node) {
   const auto componentName = node->current.componentName;
   react_native_assert(componentName && "Component name is nullptr");
   return !std::strcmp(componentName, "RNSScreen") || !std::strcmp(componentName, "RNSModalScreen");
+}
+
+static inline bool isSETBoundary(const std::shared_ptr<LightNode> &node) {
+  return !std::strcmp(node->current.componentName, RNReanimatedSharedTransitionBoundaryComponentName);
 }
 
 static inline bool isRoot(const std::shared_ptr<LightNode> &node) {
