@@ -11,7 +11,7 @@ void UIEventHandler::process(
     const std::shared_ptr<WorkletRuntime> &uiRuntime,
     const double eventTimestamp,
     const jsi::Value &eventValue) const {
-  uiRuntime->runSync(handlerFunction_, jsi::Value(eventTimestamp), eventValue);
+  runSyncOnRuntime(uiRuntime, handlerFunction_, jsi::Value(eventTimestamp), eventValue);
 }
 
 uint64_t UIEventHandler::getHandlerId() const {

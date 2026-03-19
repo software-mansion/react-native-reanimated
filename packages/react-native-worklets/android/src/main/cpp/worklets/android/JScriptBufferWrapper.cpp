@@ -3,8 +3,8 @@
  * https://github.com/facebook/react-native/blob/main/packages/react-native/ReactAndroid/src/main/jni/react/jni/JSLoader.cpp
  */
 
-#include <cxxreact/JSBigString.h>
 #include <cxxreact/RecoverableError.h>
+#include <worklets/Tools/Defs.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/android/JScriptBufferWrapper.h>
 
