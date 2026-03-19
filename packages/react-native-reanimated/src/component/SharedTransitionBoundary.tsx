@@ -1,7 +1,7 @@
 'use strict';
 import { StyleSheet } from 'react-native';
 
-import { RNReanimatedSharedTransitionBoundary } from '../specs';
+import RNReanimatedSharedTransitionBoundary from '../specs/SharedTransitionBoundaryProvider';
 
 export type SharedTransitionBoundaryProps = React.PropsWithChildren<{
   isActive: boolean;
