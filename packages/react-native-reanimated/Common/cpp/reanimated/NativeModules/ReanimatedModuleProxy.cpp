@@ -39,8 +39,7 @@ namespace {
 
 #ifdef ANDROID
 constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
-  return StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS") &&
-      !StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS");
+  return StaticFeatureFlags::getFlag("ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS");
 }
 #else
 constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
