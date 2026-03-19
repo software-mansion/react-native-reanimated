@@ -16,7 +16,6 @@ import {
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn,
-  runOnJS,
   SharedTransition,
   useAnimatedStyle,
   useReducedMotion,
@@ -25,6 +24,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import leavesBackground from './assets/nature/leaves.jpg';
+import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
+import { runOnJS, scheduleOnRN } from 'react-native-worklets';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -88,7 +89,7 @@ const profiles = {
 
 type Tag = keyof typeof profiles;
 
-function ProfilesScreen({
+function ProfilesScreenContent({
   navigation,
 }: NativeStackScreenProps<StackParamList, 'Profiles'>) {
   const goToDetails = (tag: Tag) => {
@@ -220,7 +221,7 @@ const forests = [
   },
 ] as const;
 
-function HomeScreen({
+function HomeScreenContent({
   route,
   navigation,
 }: NativeStackScreenProps<StackParamList, 'Home'>) {
@@ -358,7 +359,7 @@ const homeStyles = StyleSheet.create({
 
 const FLING_LIMIT = 160;
 
-function DetailsScreen({
+function DetailsScreenContent({
   route,
   navigation,
 }: NativeStackScreenProps<StackParamList, 'Details'>) {
@@ -387,7 +388,8 @@ function DetailsScreen({
       ) {
         if (!runOnlyOnce.value) {
           runOnlyOnce.value = true;
-          runOnJS(goBack)();
+          // Note: runOnJS removed here as it's not imported
+          scheduleOnRN(goBack);
         }
       }
     })
@@ -497,6 +499,10 @@ const detailStyles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
+const ProfilesScreen = withSharedTransitionBoundary(ProfilesScreenContent);
+const HomeScreen = withSharedTransitionBoundary(HomeScreenContent);
+const DetailsScreen = withSharedTransitionBoundary(DetailsScreenContent);
 
 export default function ProfilesExample() {
   // hide header of parent stack

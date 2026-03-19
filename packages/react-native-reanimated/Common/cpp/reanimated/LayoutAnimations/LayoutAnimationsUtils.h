@@ -135,8 +135,29 @@ static inline bool isRNSScreen(const std::shared_ptr<LightNode> &node) {
   return !std::strcmp(componentName, "RNSScreen") || !std::strcmp(componentName, "RNSModalScreen");
 }
 
+static inline std::shared_ptr<LightNode> findParentRNSScreen(const std::shared_ptr<LightNode> &node) {
+  auto current = node->parent.lock();
+  while (current && !isRNSScreen(current)) {
+    current = current->parent.lock();
+  }
+  return current;
+}
+
 static inline bool isSETBoundary(const std::shared_ptr<LightNode> &node) {
   return !std::strcmp(node->current.componentName, RNReanimatedSharedTransitionBoundaryComponentName);
+}
+
+static inline bool isInsideInactiveSETBoundary(const std::shared_ptr<LightNode> &node) {
+  auto current = node->parent.lock();
+  while (current) {
+    if (isSETBoundary(current)) {
+      auto boundaryProps =
+          std::static_pointer_cast<const RNReanimatedSharedTransitionBoundaryProps>(current->current.props);
+      return !boundaryProps->isActive;
+    }
+    current = current->parent.lock();
+  }
+  return false;
 }
 
 static inline bool isRoot(const std::shared_ptr<LightNode> &node) {
