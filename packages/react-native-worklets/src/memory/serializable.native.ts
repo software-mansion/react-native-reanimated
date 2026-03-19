@@ -173,15 +173,21 @@ export function createSerializable<TValue>(
   if (Array.isArray(value)) {
     return cloneArray(value, shouldPersistRemote, depth);
   }
-  if (
-    globalThis._WORKLETS_BUNDLE_MODE_ENABLED &&
-    isFunction &&
-    (value as WorkletImport).__bundleData
-  ) {
-    return cloneImport(value as WorkletImport) as SerializableRef<TValue>;
-  }
-  if (isFunction && !isWorkletFunction(value)) {
-    return cloneRemoteFunction(value);
+  if (isFunction) {
+    if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+      if ((value as RemoteFunction).__remoteFunction) {
+        // Remote functions are already serialized.
+        return (value as RemoteFunction)
+          .__remoteFunction as SerializableRef<TValue>;
+      }
+      if ((value as WorkletImport).__bundleData) {
+        return cloneImport(value as WorkletImport) as SerializableRef<TValue>;
+      }
+    } else {
+      if (!isWorkletFunction(value)) {
+        return cloneRemoteFunction(value);
+      }
+    }
   }
   // RN has introduced a new representation of TurboModules as a JS object whose prototype is the host object
   // More details: https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp#L182
@@ -732,7 +738,7 @@ function getWorkletCode(value: WorkletFunction) {
   return code;
 }
 
-type RemoteFunction<TValue> = {
+type RemoteFunction<TValue = unknown> = {
   __remoteFunction: FlatSerializableRef<TValue>;
 };
 

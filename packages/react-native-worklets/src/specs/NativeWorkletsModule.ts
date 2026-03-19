@@ -3,7 +3,7 @@
 import { type TurboModule, TurboModuleRegistry } from 'react-native';
 
 export interface Spec extends TurboModule {
-  installTurboModule: () => boolean;
+  installTurboModule: (bundleModeEnabled: boolean) => boolean;
 }
 
 export default TurboModuleRegistry.get<Spec>('WorkletsModule');
