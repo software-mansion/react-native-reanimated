@@ -104,8 +104,7 @@ export type ShareableGuestMeta = {
 export type ShareableGuestProps<TValue = unknown> = {
   getAsync(): Promise<TValue>;
   getSync(): TValue;
-  /* not yet implemented */
-  /*   setAsync(value: TValue | ((prev: TValue) => TValue)): void; */
+  setAsync(value: TValue | ((prev: TValue) => TValue)): void;
   setSync(value: TValue | ((prev: TValue) => TValue)): void;
 };
 

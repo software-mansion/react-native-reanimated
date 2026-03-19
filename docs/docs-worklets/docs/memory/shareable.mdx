@@ -45,6 +45,7 @@ type ShareableGuestMeta = {
 type ShareableGuestProps<TValue = unknown> = {
   getAsync(): Promise<TValue>;
   getSync(): TValue;
+  setAsync(value: TValue | ((prev: TValue) => TValue)): void;
   setSync(value: TValue | ((prev: TValue) => TValue)): void;
 };
 
@@ -114,6 +115,10 @@ A boolean property indicating whether the Shareable is being accessed from the H
 ### isHost
 
 A boolean property indicating whether the Shareable is being accessed from the Host Runtime. Equal to `false`.
+
+### getAsync
+
+An asynchronous method that returns a Promise that resolves to the current value of the Shareable Host. The value is obtained by scheduling a callback on the Host Runtime, which reads the `value` of the Shareable Host and serializes it as the result of the callback.
 
 ### getSync
 
