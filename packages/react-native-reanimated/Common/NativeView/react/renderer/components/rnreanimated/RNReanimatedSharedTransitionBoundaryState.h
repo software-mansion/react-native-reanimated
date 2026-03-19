@@ -22,10 +22,10 @@ class RNReanimatedSharedTransitionBoundaryState {
 #ifdef ANDROID
   RNReanimatedSharedTransitionBoundaryState(
       RNReanimatedSharedTransitionBoundaryState const &previousState,
-      folly::dynamic data) {};
+      folly::dynamic data) {}
   folly::dynamic getDynamic() const {
     return {};
-  };
+  }
 #endif
 };
 
