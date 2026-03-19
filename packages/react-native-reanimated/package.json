@@ -93,13 +93,13 @@
   },
   "homepage": "https://docs.swmansion.com/react-native-reanimated",
   "dependencies": {
-    "react-native-is-edge-to-edge": "1.2.1",
-    "semver": "7.7.3"
+    "react-native-is-edge-to-edge": "^1.2.1",
+    "semver": "^7.7.3"
   },
   "peerDependencies": {
     "react": "*",
     "react-native": "0.80 - 0.84",
-    "react-native-worklets": "0.7.x"
+    "react-native-worklets": "0.7 - 0.8"
   },
   "devDependencies": {
     "@babel/core": "7.28.4",
@@ -133,7 +133,7 @@
     "react-native-builder-bob": "0.40.13",
     "react-native-svg": "15.14.0",
     "react-native-web": "0.21.1",
-    "react-native-worklets": "0.8.0-nightly-20260211-96ab3f00d",
+    "react-native-worklets": "0.8.0",
     "react-test-renderer": "19.2.3",
     "typescript": "5.8.3"
   },
