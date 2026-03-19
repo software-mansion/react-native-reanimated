@@ -1,0 +1,166 @@
+---
+id: shareable # lower-case to fix alphabetical order
+title: Shareable
+sidebar_position: 42 # Use alphabetical order
+---
+
+# Shareable <AvailableFrom version="0.8.0" />
+
+A Shareable is a type of shared memory tied to a specific JavaScript Runtime, called the **Host Runtime**, where it can be freely accessed and modified. Other Runtimes, called **Guest Runtimes**, only have access to a reference to the Shareable. They can read and modify the Shareable, but doing so means crossing the boundary between the JavaScript Runtimes.
+
+A Shareable can hold any value that is convertible to a [Serializable](/docs/memory/serializable).
+
+A Shareable on the **Host Runtime** is called a **Shareable Host**, while on the **Guest Runtimes** it's called a **Shareable Guest**.
+
+A Shareable is useful in scenarios where it's mostly read and updated on the Host Runtime and only occasionally accessed from the Guest Runtimes.
+
+<SVGDiagram>![Shareable](/img/shareable.svg)</SVGDiagram>
+
+<figcaption style={{ textAlign: 'center' }}>
+  Shareable memory model, illustrated with a guest RN Runtime, host UI Runtime, and guest Background Runtime.
+</figcaption>
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type ShareableHostProps<TValue = unknown> = {
+  value: TValue;
+};
+
+type ShareableHostMeta = {
+  isHost: true;
+  __shareableRef: true;
+};
+
+type ShareableHostDecorator<TValue = unknown, TDecorated = unknown> = (
+  shareable: ShareableHost<TValue> & TDecorated
+) => ShareableHost<TValue> & TDecorated;
+
+type ShareableGuestMeta = {
+  isHost: false;
+  __shareableRef: true;
+};
+
+type ShareableGuestProps<TValue = unknown> = {
+  getAsync(): Promise<TValue>;
+  getSync(): TValue;
+  setAsync(value: TValue | ((prev: TValue) => TValue)): void;
+  setSync(value: TValue | ((prev: TValue) => TValue)): void;
+};
+
+type ShareableGuestDecorator<TValue = unknown, TDecorated = unknown> = (
+  shareable: ShareableGuest<TValue> & TDecorated
+) => ShareableGuest<TValue> & TDecorated;
+
+type ShareableHost<
+  TValue = unknown,
+  THostDecorated = unknown,
+> = ShareableHostMeta &
+  ShareableHostProps<TValue> &
+  (THostDecorated extends object ? THostDecorated : object);
+
+type ShareableGuest<
+  TValue = unknown,
+  TGuestDecorated = unknown,
+> = ShareableGuestMeta &
+  ShareableGuestProps<TValue> &
+  (TGuestDecorated extends object ? TGuestDecorated : object);
+
+type Shareable<
+  TValue = unknown,
+  THostDecorated = unknown,
+  TGuestDecorated = unknown,
+> =
+  | (ShareableHost<TValue, THostDecorated> &
+      Partial<
+        ShareableGuestProps<TValue> &
+          (TGuestDecorated extends object ? Partial<TGuestDecorated> : object)
+      >)
+  | (ShareableGuest<TValue, TGuestDecorated> &
+      Partial<
+        ShareableHostProps<TValue> &
+          (THostDecorated extends object ? Partial<THostDecorated> : object)
+      >);
+```
+
+</details>
+
+## Reference
+
+```tsx
+import { createShareable, UIRuntimeId } from 'react-native-worklets';
+
+const shareable = createShareable(UIRuntimeId, 42);
+
+console.log(shareable.getSync()); // 42
+```
+
+## Shareable Host
+
+**Shareable Host** is the interface of the Shareable on the **Host Runtime** where the Shareable lives. Besides properties and methods obtained from the [host decorator](/docs/memory/createShareable#hostdecorator), it has the following interface:
+
+### value
+
+A property holding the current value of the Shareable.
+
+### isHost
+
+A boolean property indicating whether the Shareable is being accessed from the Host Runtime. Equal to `true`.
+
+## Shareable Guest
+
+**Shareable Guest** is the interface of the Shareable on the **Guest Runtimes**. Besides properties and methods obtained from the [guest decorator](/docs/memory/createShareable#guestdecorator), it has the following interface:
+
+### isHost
+
+A boolean property indicating whether the Shareable is being accessed from the Host Runtime. Equal to `false`.
+
+### getAsync
+
+An asynchronous method that returns a Promise that resolves to the current value of the Shareable Host. The value is obtained by scheduling a callback on the Host Runtime, which reads the `value` of the Shareable Host and serializes it as the result of the callback.
+
+### getSync
+
+A synchronous method that preempts the Host Runtime on the current thread, reads the `value` of the Shareable Host, serializes the result, and returns it synchronously.
+
+### setAsync
+
+An asynchronous method that schedules a callback on the Host Runtime. The callback modifies the `value` of the Shareable Host. You can either pass a value to `setAsync` or a setter worklet.
+
+### setSync
+
+A synchronous method that preempts the Host Runtime on the current thread and modifies the `value` of the Shareable Host. You can either pass a value to `setSync` or a setter worklet.
+
+## Type safety
+
+Due to the inherent complexity of the Shareable API, you can run into situations where you're not certain whether you're operating on a Shareable Host or a Shareable Guest. For these situations, we employed a strongly typed TypeScript interface, where every property is optional until narrowed by the `isHost` property:
+
+```tsx
+import { createShareable, UIRuntimeId } from 'react-native-worklets';
+
+const shareable = createShareable(UIRuntimeId, 42);
+
+// Type error - setSync is optional and only available on Shareable Guest.
+shareable.setSync(42);
+
+if (shareable.isHost === false) {
+  // No type error - we're sure this is a Shareable Guest.
+  shareable.setSync(42);
+}
+```
+
+If you're certain about the runtime context of your Shareable, you can also use non-null assertions to avoid redundant runtime type checks:
+
+```tsx
+import { createShareable, UIRuntimeId } from 'react-native-worklets';
+
+const shareable = createShareable(UIRuntimeId, 42);
+
+// No type error - we're certain of the context.
+shareable.setSync!(42);
+```
+
+## Remarks
+
+- A Shareable doesn't extend the lifetime of the Host Runtime. If the Host Runtime is destroyed, the Shareable becomes unusable and accessing it from the Guest Runtimes will throw an error.
