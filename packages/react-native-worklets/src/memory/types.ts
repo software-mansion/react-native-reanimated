@@ -104,7 +104,8 @@ export type ShareableGuestMeta = {
 export type ShareableGuestProps<TValue = unknown> = {
   getAsync(): Promise<TValue>;
   getSync(): TValue;
-  setAsync(value: TValue | ((prev: TValue) => TValue)): void;
+  /* not yet implemented */
+  /*   setAsync(value: TValue | ((prev: TValue) => TValue)): void; */
   setSync(value: TValue | ((prev: TValue) => TValue)): void;
 };
 
@@ -119,7 +120,7 @@ export type ShareableGuestDecorator<TValue = unknown, TDecorated = unknown> = (
 
 /**
  * The host-side representation of a {@link Shareable}, living on the
- * {@link https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtime-kinds#worklet-runtime | Worklet Runtime}
+ * {@link https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime | Worklet Runtime}
  * that hosts the Shareable.
  */
 export type ShareableHost<

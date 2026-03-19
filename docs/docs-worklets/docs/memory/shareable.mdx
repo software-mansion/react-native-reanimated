@@ -6,18 +6,18 @@ sidebar_position: 42 # Use alphabetical order
 
 # Shareable <AvailableFrom version="0.8.0" />
 
-Shareable is a type of shared memory tied to a specific JavaScript Runtime, called the **Host Runtime**, where it can be freely accessed and modified. Other Runtimes, called **Guest Runtimes**, only have access to a reference to the Shareable. They can read and modify the Shareable, but it means crossing the boundary between the JavaScript Runtimes to do it.
+A Shareable is a type of shared memory tied to a specific JavaScript Runtime, called the **Host Runtime**, where it can be freely accessed and modified. Other Runtimes, called **Guest Runtimes**, only have access to a reference to the Shareable. They can read and modify the Shareable, but doing so means crossing the boundary between the JavaScript Runtimes.
 
-Shareable can hold any value that is convertible to a [Serializable](/docs/memory/serializable).
+A Shareable can hold any value that is convertible to a [Serializable](/docs/memory/serializable).
 
-Shareable on the **Host Runtime** is called a **Shareable Host**, while on the **Guest Runtimes** it's called a **Shareable Guest**.
+A Shareable on the **Host Runtime** is called a **Shareable Host**, while on the **Guest Runtimes** it's called a **Shareable Guest**.
 
-Shareable is useful in scenarios where it's mostly read and updated on the Host Runtime and only occasionally accessed from the Guest Runtimes.
+A Shareable is useful in scenarios where it's mostly read and updated on the Host Runtime and only occasionally accessed from the Guest Runtimes.
 
 <SVGDiagram>![Shareable](/img/shareable.svg)</SVGDiagram>
 
 <figcaption style={{ textAlign: 'center' }}>
-  Shareable memory model, exemplified by a guest RN Runtime, host UI Runtime, and guest Background Runtime.
+  Shareable memory model, illustrated with a guest RN Runtime, host UI Runtime, and guest Background Runtime.
 </figcaption>
 
 <details>
@@ -45,7 +45,6 @@ type ShareableGuestMeta = {
 type ShareableGuestProps<TValue = unknown> = {
   getAsync(): Promise<TValue>;
   getSync(): TValue;
-  setAsync(value: TValue | ((prev: TValue) => TValue)): void;
   setSync(value: TValue | ((prev: TValue) => TValue)): void;
 };
 
@@ -106,7 +105,7 @@ A property holding the current value of the Shareable.
 
 ### isHost
 
-A boolean property indicating if the Shareable is being accessed from the Host Runtime. Equal to `true`.
+A boolean property indicating whether the Shareable is being accessed from the Host Runtime. Equal to `true`.
 
 ## Shareable Guest
 
@@ -114,23 +113,23 @@ A boolean property indicating if the Shareable is being accessed from the Host R
 
 ### isHost
 
-A boolean property indicating if the Shareable is being accessed from the Host Runtime. Equal to `false`.
+A boolean property indicating whether the Shareable is being accessed from the Host Runtime. Equal to `false`.
 
 ### getSync
 
-A synchronous method that preempts the Host Runtime on the current thread and reads the `value` of the Host Shareable, serializes the result and returns it synchronously.
+A synchronous method that preempts the Host Runtime on the current thread, reads the `value` of the Shareable Host, serializes the result, and returns it synchronously.
 
 ### setAsync
 
-An asynchronous method that schedules a callback to the Host Runtime. The callback modifies the `value` of the Host Shareable. You can either pass a value to `setAsync` or a setter worklet.
+An asynchronous method that schedules a callback on the Host Runtime. The callback modifies the `value` of the Shareable Host. You can either pass a value to `setAsync` or a setter worklet.
 
 ### setSync
 
-A synchronous method that preempts the Host Runtime on the current thread and modifies the `value` of the Host Shareable. You can either pass a value to `setSync` or a setter worklet.
+A synchronous method that preempts the Host Runtime on the current thread and modifies the `value` of the Shareable Host. You can either pass a value to `setSync` or a setter worklet.
 
 ## Type safety
 
-Due to ingrained complexity of the Shareable API, you can run into situations where you're not certain if you're operating on a Shareable Host or a Shareable Guest. For these situations, we employed a strongly types TypeScript interface, where every property is optional unless narrowed by the `isHost` property:
+Due to the inherent complexity of the Shareable API, you can run into situations where you're not certain whether you're operating on a Shareable Host or a Shareable Guest. For these situations, we employed a strongly typed TypeScript interface, where every property is optional until narrowed by the `isHost` property:
 
 ```tsx
 import { createShareable, UIRuntimeId } from 'react-native-worklets';
@@ -146,7 +145,7 @@ if (shareable.isHost === false) {
 }
 ```
 
-If you're certain about the runtime context of your Shareable, you can also use type assertions to get rid of redundant runtime type checks:
+If you're certain about the runtime context of your Shareable, you can also use non-null assertions to avoid redundant runtime type checks:
 
 ```tsx
 import { createShareable, UIRuntimeId } from 'react-native-worklets';
@@ -159,4 +158,4 @@ shareable.setSync!(42);
 
 ## Remarks
 
-- A Shareable doesn't extend the lifetime of the Host Runtime. If the Host Runtime gets destroyed, the Shareable becomes unusable and accessing it from the Guest Runtimes will throw an error.
+- A Shareable doesn't extend the lifetime of the Host Runtime. If the Host Runtime is destroyed, the Shareable becomes unusable and accessing it from the Guest Runtimes will throw an error.

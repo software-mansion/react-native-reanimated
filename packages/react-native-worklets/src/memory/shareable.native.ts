@@ -6,7 +6,7 @@ import { UIRuntimeId } from '../runtimes';
 import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
 import { createSerializable } from './serializable';
-import type { SerializableRef, Shareable, ShareableConfig } from './types';
+import type { Shareable, ShareableConfig } from './types';
 
 /**
  * Creates a new {@link Shareable} holding the provided initial value. You must
@@ -42,7 +42,7 @@ export function createShareable<
   TGuestDecorated = unknown,
 >(
   hostRuntimeId: number,
-  initial: SerializableRef<TValue>,
+  initial: TValue,
   config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
 ): Shareable<TValue, THostDecorated, TGuestDecorated>;
 

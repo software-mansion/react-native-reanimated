@@ -6,12 +6,12 @@ sidebar_position: 42 # Use alphabetical order
 # createShareable <AvailableFrom version="0.8.0" />
 
 :::note
-This page describes the API to create the new [Shareable](/docs/memory/shareable) type, which is a different concept than the old deprecated one coming from `react-native-reanimated`, available with [makeShareable](/docs/memory/makeShareable) function.
+This page describes the API to create the new [Shareable](/docs/memory/shareable) type, which is a different concept from the old deprecated one coming from `react-native-reanimated`, available with the [makeShareable](/docs/memory/makeShareable) function.
 :::
 
 Creates a new [Shareable](/docs/memory/shareable) holding the provided initial value. Returns the created Shareable.
 
-You have explicitly declare which [Worklet Runtime](/docs/fundamentals/runtime-kinds#worklet-runtime) will host the Shareable, by passing its **runtimeId**.
+You have to explicitly declare which [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) will host the Shareable by passing its **runtimeId**.
 
 ## Reference
 
@@ -32,7 +32,7 @@ function createShareable<
   TGuestDecorated = unknown,
 >(
   hostRuntimeId: number,
-  initial: SerializableRef<TValue>,
+  initial: TValue,
   config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
 ): Shareable<TValue, THostDecorated, TGuestDecorated>;
 
@@ -58,11 +58,11 @@ type ShareableGuestDecorator<TValue = unknown, TDecorated = unknown> = (
 
 ### hostRuntimeId
 
-The **runtimeId** of the [Worklet Runtime](/docs/fundamentals/runtime-kinds#worklet-runtime) that will host the Shareable. **Currently only hosting Shareable on the UI Runtime is supported.** You can obtain the UI Runtime's id from the exported constant [UIRuntimeId](/docs/threading/uiRuntimeId).
+The **runtimeId** of the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) that will host the Shareable. **Currently, only hosting a Shareable on the UI Runtime is supported.** You can obtain the UI Runtime's id from the exported constant [UIRuntimeId](/docs/threading/uiRuntimeId).
 
 ### initial
 
-The initial value of the Shareable. It must be a value that is convertible to a [Serializable](/docs/worklets/memory/serializable).
+The initial value of the Shareable. It must be a value that is convertible to a [Serializable](/docs/memory/serializable).
 
 ### config
 
@@ -70,15 +70,15 @@ Optional advanced configuration for the Shareable.
 
 #### hostDecorator
 
-A [worklet](/docs/fundamentals/glossary#worklet) that takes the created [Shareable Host](/docs/memory/shareable#shareable-host) and decorates it with additional properties or methods. You can use it to add custom logic to the Shareable, like more adding APIs, override existing ones or add side effects to them. It must return the same reference it received.
+A [worklet](/docs/fundamentals/glossary#worklet) that takes the created [Shareable Host](/docs/memory/shareable#shareable-host) and decorates it with additional properties or methods. You can use it to add custom logic to the Shareable, like adding more APIs, overriding existing ones, or adding side effects to them. It must return the same reference it received.
 
 #### guestDecorator
 
-A [worklet](/docs/fundamentals/glossary#worklet) that decorates each [Shareable Guest](/docs/memory/shareable#shareable-guest) created for the Shareable with additional properties or methods. You can use it to add custom logic to the Shareable, like more adding APIs, override existing ones or add side effects to them. It must return the same reference it received.
+A [worklet](/docs/fundamentals/glossary#worklet) that decorates each [Shareable Guest](/docs/memory/shareable#shareable-guest) created for the Shareable with additional properties or methods. You can use it to add custom logic to the Shareable, like adding more APIs, overriding existing ones, or adding side effects to them. It must return the same reference it received.
 
 #### initSynchronously
 
-By default, the Shareable is initialized asynchronously, which means that the [Shareable Host](/docs/memory/shareable#shareable-host) is created upon the time of its first access on the Host Runtime. Setting this flag to `true` forces the Shareable to be initialized synchronously during the call to `createShareable`. It's an escape hatch for situations where your Shareable Host would trigger some side effects during its initialization.
+By default, the Shareable is initialized asynchronously, which means that the [Shareable Host](/docs/memory/shareable#shareable-host) is created at the time of its first access on the Host Runtime. Setting this flag to `true` forces the Shareable to be initialized synchronously during the call to `createShareable`. It's an escape hatch for situations where your Shareable Host triggers side effects during its initialization.
 
 ## Decorator examples
 
