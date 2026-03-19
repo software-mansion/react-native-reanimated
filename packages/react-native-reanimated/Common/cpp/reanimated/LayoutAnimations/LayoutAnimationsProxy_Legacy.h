@@ -24,7 +24,7 @@ class ReanimatedModuleProxy;
 
 using namespace facebook;
 
-typedef enum ExitingState_Legacy : std::uint8_t {
+typedef enum class ExitingState_Legacy : std::uint8_t {
   UNDEFINED = 1,
   WAITING = 2,
   ANIMATING = 4,
@@ -60,7 +60,7 @@ struct Node {
  */
 struct MutationNode : public Node {
   ShadowViewMutation mutation;
-  ExitingState_Legacy state = UNDEFINED;
+  ExitingState_Legacy state = ExitingState_Legacy::UNDEFINED;
   explicit MutationNode(ShadowViewMutation &mutation) : Node(mutation.oldChildShadowView.tag), mutation(mutation) {}
   MutationNode(ShadowViewMutation &mutation, Node &&node) : Node(std::move(node)), mutation(mutation) {}
   bool isMutationNode() override;
