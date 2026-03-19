@@ -31,22 +31,12 @@ describe(normalizeCSSTransitionProperties, () => {
       });
     });
 
-    test('uses default values for unspecified properties', () => {
+    test('returns null if effective duration is 0 for a single property', () => {
       const config: CSSTransitionProperties = {
         transitionProperty: 'opacity',
       };
 
-      expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: ['opacity'],
-        settings: {
-          opacity: {
-            duration: 0,
-            timingFunction: 'ease',
-            delay: 0,
-            allowDiscrete: false,
-          },
-        },
-      });
+      expect(normalizeCSSTransitionProperties(config)).toEqual(null);
     });
 
     test('returns null if transition property is "none"', () => {
@@ -144,6 +134,32 @@ describe(normalizeCSSTransitionProperties, () => {
       });
     });
 
+    test('prunes properties whose effective duration is 0 (duration + delay)', () => {
+      const config: CSSTransitionProperties = {
+        transitionProperty: ['opacity', 'width', 'height'],
+        transitionDuration: ['0ms', '300ms', '0ms'],
+        transitionDelay: ['0ms', '0ms', '100ms'],
+      };
+
+      expect(normalizeCSSTransitionProperties(config)).toEqual({
+        properties: ['width', 'height'],
+        settings: {
+          width: {
+            duration: 300,
+            timingFunction: 'ease',
+            delay: 0,
+            allowDiscrete: false,
+          },
+          height: {
+            duration: 0,
+            timingFunction: 'ease',
+            delay: 100,
+            allowDiscrete: false,
+          },
+        },
+      });
+    });
+
     test('cycles through values if their number is different than the number of transition properties', () => {
       const config: CSSTransitionProperties = {
         transitionProperty: ['width', 'opacity', 'transform'],
@@ -200,6 +216,26 @@ describe(normalizeCSSTransitionProperties, () => {
       });
     });
 
+    test('does not revive a property if its last occurrence is inactive', () => {
+      const config: CSSTransitionProperties = {
+        transitionProperty: ['opacity', 'width', 'opacity'],
+        transitionDuration: ['2s', '300ms', '0ms'],
+        transitionDelay: ['0ms', '0ms', '0ms'],
+      };
+
+      expect(normalizeCSSTransitionProperties(config)).toEqual({
+        properties: ['width'],
+        settings: {
+          width: {
+            duration: 300,
+            timingFunction: 'ease',
+            delay: 0,
+            allowDiscrete: false,
+          },
+        },
+      });
+    });
+
     test('returns only "all" string if "all" appears in the list of properties and keeps other property settings in the settings object', () => {
       const config: CSSTransitionProperties = {
         transitionProperty: ['all', 'opacity'],
@@ -223,6 +259,26 @@ describe(normalizeCSSTransitionProperties, () => {
             timingFunction: cubicBezier(0.4, 0, 0.2, 1).normalize(),
             delay: 500,
             allowDiscrete: true,
+          },
+        },
+      });
+    });
+
+    test('when "all" is inactive but a specific property is active, returns only that property', () => {
+      const config: CSSTransitionProperties = {
+        transitionProperty: ['all', 'opacity'],
+        transitionDuration: ['0ms', '2s'],
+        transitionDelay: ['0ms', '0ms'],
+      };
+
+      expect(normalizeCSSTransitionProperties(config)).toEqual({
+        properties: ['opacity'],
+        settings: {
+          opacity: {
+            duration: 2000,
+            timingFunction: 'ease',
+            delay: 0,
+            allowDiscrete: false,
           },
         },
       });
@@ -259,6 +315,15 @@ describe(normalizeCSSTransitionProperties, () => {
           },
         },
       });
+    });
+
+    test('returns null if default "all" has effective duration 0', () => {
+      const config: CSSTransitionProperties = {
+        transitionDuration: '0ms',
+        transitionDelay: '0ms',
+      };
+
+      expect(normalizeCSSTransitionProperties(config)).toEqual(null);
     });
   });
 
