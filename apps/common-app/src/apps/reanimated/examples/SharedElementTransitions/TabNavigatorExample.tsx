@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { memo } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, { SharedTransitionBoundary } from 'react-native-reanimated';
 import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
