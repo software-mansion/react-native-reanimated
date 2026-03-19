@@ -24,13 +24,12 @@ NativeProxy::NativeProxy(
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       workletsModuleProxy_(workletsModuleProxy),
-      reanimatedModuleProxy_(
-          std::make_shared<ReanimatedModuleProxy>(
-              workletsModuleProxy,
-              *rnRuntime,
-              jsCallInvoker,
-              getPlatformDependentMethods(),
-              getIsReducedMotion())) {
+      reanimatedModuleProxy_(std::make_shared<ReanimatedModuleProxy>(
+          workletsModuleProxy,
+          *rnRuntime,
+          jsCallInvoker,
+          getPlatformDependentMethods(),
+          getIsReducedMotion())) {
 #ifndef NDEBUG
   checkJavaVersion();
   injectCppVersion();
