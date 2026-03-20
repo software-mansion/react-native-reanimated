@@ -20,7 +20,6 @@ import type {
 import {
   advanceAnimationByFrame,
   advanceAnimationByTime,
-  ColorSpace,
   Extrapolation,
   getAnimatedStyle,
   InterfaceOrientation,
@@ -161,9 +160,7 @@ const interpolation = {
 const interpolateColor = {
   Extrapolate: Extrapolation,
   Extrapolation,
-  ColorSpace,
   interpolateColor: NOOP,
-  // useInterpolateConfig: ADD ME IF NEEDED
 };
 
 const Easing = {
