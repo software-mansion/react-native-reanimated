@@ -70,13 +70,11 @@ describe('runOnRuntimeSyncWithId', () => {
       value = 0;
       scheduleOnUI(() => {
         'worklet';
-        // @ts-expect-error TODO: fix RemoteFunction re-serialization.
-        const remoteFunction = callbackPass.__remoteFunction as typeof callbackPass;
         const result = runOnRuntimeSyncWithId(UIRuntimeId, () => {
           'worklet';
           return 42;
         });
-        scheduleOnRN(remoteFunction, result);
+        scheduleOnRN(callbackPass, result);
       });
       await waitForNotification(PASS_NOTIFICATION);
       expect(value).toBe(42);
@@ -85,14 +83,11 @@ describe('runOnRuntimeSyncWithId', () => {
     test('from UI Runtime to Worker Runtime', async () => {
       scheduleOnUI(() => {
         'worklet';
-        // @ts-expect-error TODO: fix RemoteFunction re-serialization.
-        const remoteFunction = callbackPass.__remoteFunction as typeof callbackPass;
-
         const result = runOnRuntimeSyncWithId(workletRuntime1.runtimeId, () => {
           'worklet';
           return 42;
         });
-        scheduleOnRN(remoteFunction, result);
+        scheduleOnRN(callbackPass, result);
       });
       await waitForNotification(PASS_NOTIFICATION);
       expect(value).toBe(42);
@@ -101,14 +96,12 @@ describe('runOnRuntimeSyncWithId', () => {
     test('from UI Runtime to non-existing Runtime', async () => {
       scheduleOnUI(() => {
         'worklet';
-        // @ts-expect-error TODO: fix RemoteFunction re-serialization.
-        const remoteFunction = callbackPass.__remoteFunction as typeof callbackPass;
         try {
           const result = runOnRuntimeSyncWithId(9999, () => {
             'worklet';
             return 42;
           });
-          scheduleOnRN(remoteFunction, result);
+          scheduleOnRN(callbackPass, result);
         } catch (error) {
           scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
         }
