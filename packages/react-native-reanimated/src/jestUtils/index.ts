@@ -2,7 +2,6 @@
 'use strict';
 
 import type React from 'react';
-import type { ReactTestInstance } from 'react-test-renderer';
 
 import { IS_JEST, logger, ReanimatedError } from '../common';
 import type {
@@ -347,12 +346,10 @@ type TestComponent = React.Component<
   }
 >;
 
-export const getAnimatedStyle = (component: ReactTestInstance) => {
-  return getCurrentStyle(
-    // This type assertion is needed to get type checking in the following
-    // functions since `ReactTestInstance` has its `props` defined as `any`.
-    component as unknown as TestComponent
-  );
+export const getAnimatedStyle = (component: {
+  props: Record<string, unknown>;
+}) => {
+  return getCurrentStyle(component as unknown as TestComponent);
 };
 
 export { worklet } from './common';

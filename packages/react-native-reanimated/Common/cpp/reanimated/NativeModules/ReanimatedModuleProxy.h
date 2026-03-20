@@ -11,6 +11,7 @@
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registries/StaticPropsRegistry.h>
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandlerRegistry.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
@@ -24,8 +25,6 @@
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
-#include <worklets/Tools/UIScheduler.h>
-#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
 #include <set>
@@ -91,7 +90,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   void maybeRunCSSLoop();
   double getCssTimestamp();
 
-  void performOperations(const bool isTriggeredByEvent);
+  void performOperations();
+  void performNonLayoutOperations();
 
   void setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) override;
 
@@ -172,7 +172,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
  private:
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
-  void applySynchronousUpdates(UpdatesBatch &updatesBatch);
+  void applySynchronousUpdates(UpdatesBatch &updatesBatch, bool allowPartialUpdates = false);
 
   const bool isReducedMotion_;
   bool shouldFlushRegistry_ = false;

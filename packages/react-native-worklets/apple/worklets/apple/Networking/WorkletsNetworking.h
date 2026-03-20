@@ -1,4 +1,6 @@
-#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#pragma once
+
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
 /*
  * This file is based on RCTNetworking.h from React Native.
  */
@@ -19,4 +21,5 @@ using namespace facebook;
 - (void)jsiClearCookies:(jsi::Runtime &)rt responseSender:(jsi::Function &&)responseSender;
 
 @end
-#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED

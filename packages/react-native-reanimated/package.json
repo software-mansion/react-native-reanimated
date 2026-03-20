@@ -14,7 +14,7 @@
     "lint:js": "eslint src __tests__ __typetests__ && yarn prettier --check src __tests__ __typetests__",
     "lint:android": "../../scripts/validate-android.sh && ./android/gradlew -p android spotlessCheck -q && ../../scripts/cpplint.sh android/src && yarn format:android:cpp --dry-run -Werror && yarn lint:cmake",
     "lint:common": "../../scripts/validate-common.sh && ../../scripts/cpplint.sh Common && yarn format:common --dry-run -Werror",
-    "lint:clang-tidy": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs ../../scripts/clang-tidy-lint.sh",
+    "lint:clang-tidy": "../../scripts/clang-tidy-lint.sh \"Common\"",
     "lint:apple": "../../scripts/validate-apple.sh && yarn format:apple --dry-run -Werror",
     "lint:cmake": "find ./android -type d \\( -name build -o -name .cxx \\) -prune -o -type f -name 'CMakeLists.txt' -print | xargs ../../scripts/lint-cmake.sh",
     "format": "yarn format:js && yarn format:apple && yarn format:android && yarn format:common",
@@ -36,7 +36,8 @@
     "type:check:strict:app": "yarn workspace common-app type:check:strict",
     "build": "yarn workspace react-native-worklets build && bob build",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
-    "tree-shake:check:web": "yarn is-tree-shakable --resolution web"
+    "tree-shake:check:web": "yarn is-tree-shakable --resolution web",
+    "validate-peers": "node ../../scripts/validate-compatibility-peer-dependencies.js"
   },
   "main": "lib/module/index",
   "module": "lib/module/index",
@@ -91,13 +92,13 @@
   },
   "homepage": "https://docs.swmansion.com/react-native-reanimated",
   "dependencies": {
-    "react-native-is-edge-to-edge": "1.2.1",
-    "semver": "7.7.3"
+    "react-native-is-edge-to-edge": "^1.3.1",
+    "semver": "^7.7.3"
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "*",
-    "react-native-worklets": ">=0.7.0"
+    "react-native": "0.81 - 0.84",
+    "react-native-worklets": "*"
   },
   "devDependencies": {
     "@babel/core": "7.28.4",
@@ -121,7 +122,7 @@
     "@types/semver": "7.7.1",
     "clang-format-node": "1.3.5",
     "eslint": "9.37.0",
-    "is-tree-shakable": "0.4.1",
+    "is-tree-shakable": "0.5.0",
     "jest": "30.2.0",
     "jest-expo": "52.0.5",
     "knip": "5.61.3",

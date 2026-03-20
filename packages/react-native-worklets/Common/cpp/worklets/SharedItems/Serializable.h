@@ -1,5 +1,6 @@
 #pragma once
 
+#include <worklets/Compat/StableApi.h>
 #include <worklets/Registries/WorkletRuntimeRegistry.h>
 
 #include <jsi/jsi.h>
@@ -39,49 +40,6 @@ inline void cleanupIfRuntimeExists(jsi::Runtime *rt, std::unique_ptr<jsi::Value>
   }
 }
 
-class Serializable {
- public:
-  virtual jsi::Value toJSValue(jsi::Runtime &rt) = 0;
-
-  virtual ~Serializable();
-
-  enum class ValueType : std::uint8_t {
-    UndefinedType,
-    NullType,
-    BooleanType,
-    NumberType,
-    BigIntType,
-    StringType,
-    ObjectType,
-    ArrayType,
-    MapType,
-    SetType,
-    WorkletType,
-    RemoteFunctionType,
-    HandleType,
-    HostObjectType,
-    HostFunctionType,
-    ArrayBufferType,
-    TurboModuleLikeType,
-    ImportType,
-    SynchronizableType,
-    CustomType,
-    SymbolType, /* unused */
-    ShareableType,
-  };
-
-  explicit Serializable(ValueType valueType) : valueType_(valueType) {}
-
-  inline ValueType valueType() const {
-    return valueType_;
-  }
-
-  static std::shared_ptr<Serializable> undefined();
-
- protected:
-  ValueType valueType_;
-};
-
 template <typename BaseClass>
 class RetainingSerializable : virtual public BaseClass {
  private:
@@ -94,7 +52,7 @@ class RetainingSerializable : virtual public BaseClass {
   explicit RetainingSerializable(jsi::Runtime &rt, Args &&...args)
       : BaseClass(rt, std::forward<Args>(args)...), primaryRuntime_(&rt) {}
 
-  jsi::Value toJSValue(jsi::Runtime &rt) {
+  jsi::Value toJSValue(jsi::Runtime &rt) override {
     if (&rt == primaryRuntime_) {
       // TODO: it is suboptimal to generate new object every time getJS is
       // called on host runtime – the objects we are generating already exists
@@ -116,7 +74,7 @@ class RetainingSerializable : virtual public BaseClass {
     return BaseClass::toJSValue(rt);
   }
 
-  ~RetainingSerializable() {
+  ~RetainingSerializable() override {
     cleanupIfRuntimeExists(secondaryRuntime_, secondaryValue_);
   }
 };

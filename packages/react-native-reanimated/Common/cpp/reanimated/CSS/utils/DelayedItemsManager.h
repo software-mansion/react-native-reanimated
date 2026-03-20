@@ -34,9 +34,9 @@ class DelayedItemsManager {
   ItemMap itemsMap_;
 
  public:
-  void add(double timestamp, TValue value);
+  void add(double timestamp, const TValue &value);
   Item pop();
-  bool remove(TValue value);
+  bool remove(const TValue &value);
   const Item &top() const;
   bool empty() const;
   size_t size() const;

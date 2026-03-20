@@ -1,9 +1,8 @@
 #if __cplusplus
 
+#import <reanimated/Compat/WorkletsApi.h>
 #import <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #import <reanimated/apple/REANodesManager.h>
-#import <worklets/Tools/UIScheduler.h>
-#import <worklets/WorkletRuntime/WorkletRuntime.h>
 
 namespace reanimated {
 

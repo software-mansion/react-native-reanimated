@@ -5,11 +5,11 @@
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerAnimationDelegate.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
-#include <worklets/Tools/UIScheduler.h>
 
 #include <memory>
 #include <string>
@@ -24,7 +24,7 @@ class ReanimatedModuleProxy;
 
 using namespace facebook;
 
-typedef enum ExitingState_Legacy : std::uint8_t {
+typedef enum class ExitingState_Legacy : std::uint8_t {
   UNDEFINED = 1,
   WAITING = 2,
   ANIMATING = 4,
@@ -60,7 +60,7 @@ struct Node {
  */
 struct MutationNode : public Node {
   ShadowViewMutation mutation;
-  ExitingState_Legacy state = UNDEFINED;
+  ExitingState_Legacy state = ExitingState_Legacy::UNDEFINED;
   explicit MutationNode(ShadowViewMutation &mutation) : Node(mutation.oldChildShadowView.tag), mutation(mutation) {}
   MutationNode(ShadowViewMutation &mutation, Node &&node) : Node(std::move(node)), mutation(mutation) {}
   bool isMutationNode() override;
