@@ -112,8 +112,12 @@ bool NativeProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, cons
   return reanimatedModuleProxy_->isAnyHandlerWaitingForEvent(eventName, emitterReactTag);
 }
 
-void NativeProxy::performOperations(const bool isTriggeredByEvent) {
-  reanimatedModuleProxy_->performOperations(isTriggeredByEvent);
+void NativeProxy::performOperations() {
+  reanimatedModuleProxy_->performOperations();
+}
+
+void NativeProxy::performNonLayoutOperations() {
+  reanimatedModuleProxy_->performNonLayoutOperations();
 }
 
 bool NativeProxy::getIsReducedMotion() {
@@ -127,6 +131,7 @@ void NativeProxy::registerNatives() {
        makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
        makeNativeMethod("isAnyHandlerWaitingForEvent", NativeProxy::isAnyHandlerWaitingForEvent),
        makeNativeMethod("performOperations", NativeProxy::performOperations),
+       makeNativeMethod("performNonLayoutOperations", NativeProxy::performNonLayoutOperations),
        makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp)});
 }
 

@@ -46,7 +46,7 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
   std::weak_ptr<ReanimatedModuleProxy> weakReanimatedModuleProxy = reanimatedModuleProxy; // to avoid retain cycle
   [nodesManager registerPerformOperations:^() {
     if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
-      reanimatedModuleProxy->performOperations(false);
+      reanimatedModuleProxy->performOperations();
     }
   }];
 
