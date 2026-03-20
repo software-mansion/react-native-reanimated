@@ -27,7 +27,7 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
         }
     }
 
-    @DoNotStrip
+    @field:DoNotStrip
     @Suppress("unused")
     private var mHybridData: HybridData? = null
 

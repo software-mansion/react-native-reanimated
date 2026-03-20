@@ -15,7 +15,6 @@ class WorkletsPackage : BaseReactPackage(), ReactPackage {
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? =
         if (name == WorkletsModule.NAME) WorkletsModule(reactContext) else null
 
-    @Suppress("rawtypes", "unchecked")
     override fun getReactModuleInfoProvider(): ReactModuleInfoProvider {
         val moduleList: Array<Class<*>> = arrayOf(WorkletsModule::class.java)
 

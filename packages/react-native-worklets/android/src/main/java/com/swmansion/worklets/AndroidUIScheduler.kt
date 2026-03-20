@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 @Suppress("KotlinJniMissingFunction")
 class AndroidUIScheduler(context: ReactApplicationContext) {
 
-    @DoNotStrip
+    @field:DoNotStrip
     private val mHybridData: HybridData = initHybrid()
 
     private val mContext: ReactApplicationContext = context

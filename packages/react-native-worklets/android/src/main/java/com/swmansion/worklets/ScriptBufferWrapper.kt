@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets
 @DoNotStripAny
 class ScriptBufferWrapper(uri: String, assetManager: AssetManager) {
 
-    @DoNotStrip
+    @field:DoNotStrip
     private val mHybridData: HybridData
 
     init {
