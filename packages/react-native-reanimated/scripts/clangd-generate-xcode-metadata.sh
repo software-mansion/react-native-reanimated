@@ -10,9 +10,7 @@ out="$COMPILE_COMMANDS_REANIMATED_PATH"
 printf "[\n" > "$out"
 cat $COMPILATION_DATABASE_PATH/*.json >> "$out"
 
-sed '$ s/,$//' "$out" > "$out.tmp"
-mv "$out.tmp" "$out"
-
+sed -i '' '$ s/,$//' "$out"
 printf "]" >> "$out"
 
 cp "$COMPILE_COMMANDS_REANIMATED_PATH" "$COMPILE_COMMANDS_WORKLETS_PATH"
