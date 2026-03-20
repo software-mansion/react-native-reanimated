@@ -134,6 +134,7 @@ import WorkletExample from './WorkletExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import InstanceDiscoveryExample from './InstanceDiscoveryExample';
+import AndroidDrawPassExample from './AndroidDrawPassExample';
 
 interface Example {
   icon?: string;
@@ -153,6 +154,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🎞️',
     title: 'FPS',
     screen: FpsExample,
+  },
+  AndroidDrawPassExample: {
+    icon: '✍️',
+    title: 'Android Draw Pass',
+    screen: AndroidDrawPassExample,
   },
   ThirdPartyComponentsExample: {
     icon: '3️⃣',

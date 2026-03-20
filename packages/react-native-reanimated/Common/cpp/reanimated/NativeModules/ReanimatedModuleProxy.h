@@ -118,6 +118,7 @@ class ReanimatedModuleProxy
   double getCssTimestamp();
 
   void performOperations();
+  void performNonLayoutOperations();
 
   void setViewStyle(
       jsi::Runtime &rt,
@@ -218,6 +219,9 @@ class ReanimatedModuleProxy
 
  private:
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
+  void applySynchronousUpdates(
+      UpdatesBatch &updatesBatch,
+      bool allowPartialUpdates = false);
 
   const bool isReducedMotion_;
   bool shouldFlushRegistry_ = false;

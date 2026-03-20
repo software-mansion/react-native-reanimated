@@ -112,6 +112,8 @@ public class NativeProxy {
 
   public native void performOperations();
 
+  public native void performNonLayoutOperations();
+
   protected native void installJSIBindings();
 
   private native void invalidateCpp();
@@ -488,7 +490,7 @@ public class NativeProxy {
   void maybeFlushUIUpdatesQueue() {
     UiThreadUtil.assertOnUiThread();
     if (!mNodesManager.isAnimationRunning()) {
-      mNodesManager.performOperations();
+      mNodesManager.performOperationsRespectingDrawPass();
     }
   }
 }
