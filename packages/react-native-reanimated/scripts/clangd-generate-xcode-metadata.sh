@@ -10,6 +10,7 @@ out="$COMPILE_COMMANDS_REANIMATED_PATH"
 printf "[\n" > "$out"
 cat $COMPILATION_DATABASE_PATH/*.json >> "$out"
 
+# This sed deletes last symbol from $out if it's a comma.
 sed -i '' '$ s/,$//' "$out"
 printf "]" >> "$out"
 
