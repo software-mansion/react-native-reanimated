@@ -88,7 +88,7 @@ class AnimationFrameQueue(reactApplicationContext: ReactApplicationContext) {
 
     private fun pullCallbacks(): List<AnimationFrameCallback> {
         synchronized(mFrameCallbacks) {
-            val frameCallbacks = ArrayList(mFrameCallbacks)
+            val frameCallbacks = mFrameCallbacks.toList()
             mFrameCallbacks.clear()
             return frameCallbacks
         }
