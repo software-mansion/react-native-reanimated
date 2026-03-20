@@ -51,7 +51,7 @@ abstract class WorkletsMessageQueueThreadBase : MessageQueueThread {
         }
     }
 
-    override fun getPerfStats(): MessageQueueThreadPerfStats = messageQueueThread.getPerfStats()!!
+    override fun getPerfStats(): MessageQueueThreadPerfStats? = messageQueueThread.getPerfStats()
 
     override fun resetPerfStats() {
         messageQueueThread.resetPerfStats()
