@@ -60,7 +60,7 @@ void CSSTransitionsRegistry::update(const double timestamp) {
 
     const folly::dynamic &updates = transition->update(timestamp);
     if (!updates.empty()) {
-      addUpdatesToBatch(transition->getShadowNode(), updates);
+      addUpdatesToBatch(transition->getShadowNode()->getFamilyShared(), updates);
     }
 
     // We remove transition from running and schedule it when animation of one
@@ -127,7 +127,7 @@ void CSSTransitionsRegistry::updateInUpdatesRegistry(
   // updated object contains only allowed properties so we don't need
   // to do additional filtering here
   filteredUpdates.update(updates);
-  setInUpdatesRegistry(shadowNode, filteredUpdates);
+  setInUpdatesRegistry(shadowNode->getFamilyShared(), filteredUpdates);
 }
 
 } // namespace reanimated::css

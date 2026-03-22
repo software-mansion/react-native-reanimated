@@ -33,8 +33,8 @@ void UpdatesRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
   // Store all updates in the registry for later use in the commit hook
   flushUpdatesToRegistry(copiedUpdatesBatch);
   // Flush the updates to the updatesBatch used to apply current changes
-  for (auto &[shadowNode, props] : copiedUpdatesBatch) {
-    updatesBatch.emplace_back(shadowNode, std::move(props));
+  for (auto &[shadowNodeFamily, props] : copiedUpdatesBatch) {
+    updatesBatch.emplace_back(shadowNodeFamily, std::move(props));
   }
 }
 
@@ -44,8 +44,8 @@ UpdatesBatch UpdatesRegistry::getPendingUpdates() {
 
   UpdatesBatch updatesBatch;
   for (const auto &[tag, pair] : updatesRegistry_) {
-    const auto &[shadowNode, props] = pair;
-    updatesBatch.emplace_back(shadowNode, props);
+    const auto &[shadowNodeFamily, props] = pair;
+    updatesBatch.emplace_back(shadowNodeFamily, props);
   }
   return updatesBatch;
 }
@@ -55,14 +55,13 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
 
   auto copiedRegistry = updatesRegistry_;
   for (const auto &[tag, pair] : copiedRegistry) {
-    const auto &[shadowNode, props] = pair;
-    auto &family = shadowNode->getFamily();
-    auto it = propsMap.find(&family);
+    const auto &[shadowNodeFamily, props] = pair;
+    auto it = propsMap.find(shadowNodeFamily.get());
 
     if (it == propsMap.cend()) {
       auto propsVector = std::vector<RawProps>{};
       propsVector.emplace_back(RawProps(props));
-      propsMap.emplace(&family, propsVector);
+      propsMap.emplace(shadowNodeFamily.get(), propsVector);
     } else {
       it->second.push_back(RawProps(props));
     }
@@ -70,19 +69,19 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
 }
 
 void UpdatesRegistry::addUpdatesToBatch(
-    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const std::shared_ptr<ShadowNodeFamily> &shadowNodeFamily,
     const folly::dynamic &props) {
-  updatesBatch_.emplace_back(shadowNode, props);
+  updatesBatch_.emplace_back(shadowNodeFamily, props);
 }
 
 void UpdatesRegistry::setInUpdatesRegistry(
-    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const std::shared_ptr<ShadowNodeFamily> &shadowNodeFamily,
     const folly::dynamic &props) {
-  const auto tag = shadowNode->getTag();
+  const auto tag = shadowNodeFamily->getTag();
 #ifdef ANDROID
   updatePropsToRevert(tag, &props);
 #endif
-  updatesRegistry_[tag] = std::make_pair(shadowNode, props);
+  updatesRegistry_[tag] = std::make_pair(shadowNodeFamily, props);
 }
 
 folly::dynamic UpdatesRegistry::getUpdatesFromRegistry(const Tag tag) const {
@@ -101,12 +100,12 @@ void UpdatesRegistry::removeFromUpdatesRegistry(const Tag tag) {
 }
 
 void UpdatesRegistry::flushUpdatesToRegistry(const UpdatesBatch &updatesBatch) {
-  for (auto &[shadowNode, props] : updatesBatch) {
-    const auto tag = shadowNode->getTag();
+  for (auto &[shadowNodeFamily, props] : updatesBatch) {
+    const auto tag = shadowNodeFamily->getTag();
     auto it = updatesRegistry_.find(tag);
 
     if (it == updatesRegistry_.cend()) {
-      updatesRegistry_[tag] = std::make_pair(shadowNode, props);
+      updatesRegistry_[tag] = std::make_pair(shadowNodeFamily, props);
     } else {
       it->second.second.update(props);
     }
@@ -123,10 +122,10 @@ void UpdatesRegistry::collectPropsToRevert(PropsToRevertMap &propsToRevertMap) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   for (const auto &[tag, pair] : propsToRevertMap_) {
-    const auto &[shadowNode, props] = pair;
+    const auto &[shadowNodeFamily, props] = pair;
     const auto it = propsToRevertMap.find(tag);
     if (it == propsToRevertMap.end()) {
-      propsToRevertMap[tag] = {shadowNode, props};
+      propsToRevertMap[tag] = {shadowNodeFamily, props};
     } else {
       it->second.props.insert(props.begin(), props.end());
     }
@@ -141,10 +140,10 @@ void UpdatesRegistry::updatePropsToRevert(const Tag tag, const folly::dynamic *n
     return;
   }
 
-  const auto &shadowNode = it->second.first;
+  const auto &shadowNodeFamily = it->second.first;
   const auto &registryProps = it->second.second;
   if (propsToRevertMap_.find(tag) == propsToRevertMap_.end()) {
-    propsToRevertMap_[tag] = {shadowNode, std::unordered_set<std::string>()};
+    propsToRevertMap_[tag] = {shadowNodeFamily, std::unordered_set<std::string>()};
   }
 
   if (newProps == nullptr) {
