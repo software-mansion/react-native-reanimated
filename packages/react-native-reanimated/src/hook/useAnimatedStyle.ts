@@ -30,12 +30,7 @@ import type {
   JestAnimatedStyleHandle,
 } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
-import {
-  buildWorkletsHash,
-  isAnimated,
-  shallowEqual,
-  validateAnimatedStyles,
-} from './utils';
+import { isAnimated, shallowEqual, validateAnimatedStyles } from './utils';
 
 interface AnimatedState {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -448,6 +443,20 @@ function checkSharedValueUsage(
       `Invalid value passed to \`${currentKey}\`, maybe you forgot to use \`.value\`?`
     );
   }
+}
+
+// Builds one big hash from multiple worklets' hashes.
+function buildWorkletsHash<Args extends unknown[], ReturnValue>(
+  worklets:
+    | Record<string, WorkletFunction<Args, ReturnValue>>
+    | WorkletFunction<Args, ReturnValue>[]
+) {
+  // For arrays `Object.values` returns the array itself.
+  return Object.values(worklets).reduce(
+    (acc, worklet: WorkletFunction<Args, ReturnValue>) =>
+      acc + worklet.__workletHash.toString(),
+    ''
+  );
 }
 
 /**
