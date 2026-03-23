@@ -13,6 +13,8 @@ import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
 import { __installUnpacker as installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
 import { makeShareableCloneOnUIRecursive } from '../memory/serializable';
+import { __installUnpacker as installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
+import { __installUnpacker as installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
 import { __installUnpacker as installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
 import { setupSetImmediate } from '../runLoop/common/setImmediatePolyfill';
 import { setupSetInterval } from '../runLoop/common/setIntervalPolyfill';
@@ -120,6 +122,8 @@ function initializeRuntime() {
   }
   installSynchronizableUnpacker();
   installCustomSerializableUnpacker();
+  installShareableHostUnpacker();
+  installShareableGuestUnpacker();
 }
 
 /** A function that should be run only on React Native runtime. */
@@ -172,9 +176,6 @@ function installRNBindingsOnUIRuntime() {
 
     /** In Bundle Mode the error is taken from the bundle. */
     runOnUISync(registerWorkletsError);
-
-    /** In Bundle Mode the serializer is taken from the bundle. */
-    runOnUISync(setupSerializer);
   }
 
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
@@ -193,5 +194,6 @@ function installRNBindingsOnUIRuntime() {
     setupSetTimeout();
     setupSetImmediate();
     setupSetInterval();
+    setupSerializer();
   });
 }

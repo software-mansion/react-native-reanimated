@@ -17,7 +17,13 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private readonly viewTag: number;
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
 
-  private lastAppliedProps: UnknownRecord | null = null;
+  // All props from the previous update
+  private prevProps: UnknownRecord | null = null;
+  // Stores all properties for which transition was triggered before
+  // and which haven't been cleaned up yet (null if no transition was attached before)
+  private propsWithTransitions = new Set<string>();
+  // Indicates whether a CSS transition is currently attached to the view
+  private hasTransition = false;
 
   constructor(shadowNodeWrapper: ShadowNodeWrapper, viewTag: number) {
     this.viewTag = viewTag;
@@ -26,38 +32,27 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
 
   update(
     transitionProperties: CSSTransitionProperties | null,
-    props: UnknownRecord = {}
+    nextProps: UnknownRecord = {}
   ): void {
     const transitionConfig =
       transitionProperties &&
       normalizeCSSTransitionProperties(transitionProperties);
 
-    if (!transitionConfig) {
-      this.detach();
-      return;
-    }
+    const prevProps = this.prevProps;
+    this.prevProps = nextProps;
 
-    const prevProps = this.lastAppliedProps; // Active props from last update
-    const nextProps: UnknownRecord = {}; // Active props from this update
-
-    // Filter new props based on the new transition config
-    if (!transitionConfig.properties) {
-      Object.assign(nextProps, props);
-    } else {
-      for (const property of transitionConfig.properties) {
-        if (property in props) {
-          nextProps[property] = props[property];
-        }
+    // If there were no previous props, the view is just mounted so we
+    // don't trigger any transitions yet. Also, when there is no transition
+    // config, we don't trigger any transitions.
+    if (!prevProps || !transitionConfig) {
+      if (this.hasTransition) {
+        this.detach();
       }
-    }
-
-    this.lastAppliedProps = nextProps;
-
-    if (!prevProps) {
       return;
     }
 
-    const config = this.buildTransitionConfig(
+    // Trigger transition for changed properties only
+    const config = this.processTransitionConfig(
       prevProps,
       nextProps,
       transitionConfig
@@ -65,6 +60,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
 
     if (Object.keys(config).length) {
       runCSSTransition(this.shadowNodeWrapper, config);
+      this.hasTransition = true;
     }
   }
 
@@ -73,57 +69,59 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   }
 
   private detach() {
-    if (this.lastAppliedProps) {
-      unregisterCSSTransition(this.viewTag);
-      this.lastAppliedProps = null;
-    }
+    unregisterCSSTransition(this.viewTag);
+    this.propsWithTransitions.clear();
+    this.hasTransition = false;
   }
 
-  private buildTransitionConfig(
+  private processTransitionConfig(
     oldProps: UnknownRecord,
     newProps: UnknownRecord,
     newTransitionConfig: NormalizedCSSTransitionConfig
   ): CSSTransitionConfig {
     const result: CSSTransitionConfig = {};
 
-    const newTransitionProperties = newTransitionConfig.properties;
-    const allowedProperties = !newTransitionProperties
-      ? null
-      : new Set(newTransitionProperties);
+    const specificProperties = newTransitionConfig.specificProperties;
+
+    const isAllowedProperty = (property: string) =>
+      !specificProperties || specificProperties.has(property);
+
+    const getPropertySettings = (property: string) =>
+      newTransitionConfig.settings[property] ??
+      newTransitionConfig.settings.all;
+
+    const triggerTransition = (property: string) => {
+      result[property] = {
+        ...getPropertySettings(property),
+        value: [oldProps[property], newProps[property]],
+      };
+      this.propsWithTransitions.add(property);
+    };
 
     // Get property changes which we want to trigger transitions for
     for (const key in newProps) {
-      const newValue = newProps[key];
-      const oldValue = oldProps[key];
-
-      if (!deepEqual(oldValue, newValue)) {
-        result[key] = {
-          ...this.getPropertySettings(key, newTransitionConfig),
-          value: [oldValue, newValue],
-        };
+      if (isAllowedProperty(key) && !deepEqual(newProps[key], oldProps[key])) {
+        triggerTransition(key);
       }
     }
 
-    // Clear up old properties that are no longer allowed
+    // Handle old props; for no longer allowed ones, cancel the transition
+    // immediately; for ones that are allowed but were removed, trigger a transition
+    // to undefined (to the default value for the property).
     for (const key in oldProps) {
-      if (allowedProperties && !allowedProperties.has(key)) {
-        result[key] = null;
+      if (!isAllowedProperty(key)) {
+        if (this.propsWithTransitions.has(key)) {
+          // If a property was transitioned before but is no longer allowed,
+          // we need to clear it up immediately
+          result[key] = null;
+          this.propsWithTransitions.delete(key);
+        }
       } else if (!(key in newProps)) {
         // Property was removed from props but is still allowed
-        result[key] = {
-          ...this.getPropertySettings(key, newTransitionConfig),
-          value: [oldProps[key], undefined],
-        };
+        triggerTransition(key);
       }
     }
 
     return result;
-  }
-
-  private getPropertySettings(
-    property: string,
-    config: NormalizedCSSTransitionConfig
-  ) {
-    return config.settings[property] ?? config.settings.all;
   }
 }

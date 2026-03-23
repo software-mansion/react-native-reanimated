@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
 
 import type { ComponentType } from 'react';
@@ -12,15 +11,18 @@ export type Maybe<T> = T | null | undefined;
  */
 export type NonMutable<T> = T extends object ? Readonly<T> : T;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyRecord = Record<string, any>;
 export type UnknownRecord = Record<string, unknown>;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyComponent = ComponentType<any>;
 
 type Simplify<T> = {
   [K in keyof T]: T[K];
 } & {};
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ConvertValueToArray<T> = Simplify<(T extends any[] ? T[number] : T)[]>;
 
 export type ConvertValuesToArrays<T> = {

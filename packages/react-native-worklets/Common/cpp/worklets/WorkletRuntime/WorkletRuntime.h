@@ -4,12 +4,13 @@
 #include <jsi/jsi.h>
 #include <jsireact/JSIExecutor.h>
 #include <react/debug/react_native_assert.h>
-
 #include <worklets/RunLoop/AsyncQueue.h>
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 #include <worklets/RunLoop/EventLoop.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/JSScheduler.h>
+#include <worklets/Tools/ScriptBuffer.h>
+#include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
 #include <memory>
@@ -120,7 +121,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     return *runtime_;
   }
 
-  [[nodiscard]] uint64_t getRuntimeId() const noexcept {
+  [[nodiscard]] RuntimeData::RuntimeId getRuntimeId() const noexcept {
     return runtimeId_;
   }
 
@@ -129,7 +130,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   }
 
   explicit WorkletRuntime(
-      uint64_t runtimeId,
+      RuntimeData::RuntimeId runtimeId,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::string &name,
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
@@ -158,22 +159,30 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
 
   /* #endregion */
 
-#if REACT_NATIVE_MINOR_VERSION >= 81
   /**
    * Retrieves a weak reference to the WorkletRuntime associated with the
    * provided jsi::Runtime.
    *
    * Throws when invoked with a non-worklet runtime.
+   *
+   * Available only on React Native 0.81 and higher.
    */
   static std::weak_ptr<WorkletRuntime> getWeakRuntimeFromJSIRuntime(jsi::Runtime &rt);
-#endif // REACT_NATIVE_MINOR_VERSION >= 81
 
 #ifndef NDEBUG
   static jsi::Function getCallGuard(jsi::Runtime &rt);
 #endif // NDEBUG
 
  private:
-  const uint64_t runtimeId_;
+  void bundleModeInit(
+      const std::shared_ptr<JSScheduler> &jsScheduler,
+      const std::shared_ptr<const ScriptBuffer> &script,
+      const std::string &sourceUrl,
+      const std::shared_ptr<RuntimeBindings> &runtimeBindings);
+
+  void legacyModeInit();
+
+  const RuntimeData::RuntimeId runtimeId_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const std::shared_ptr<jsi::Runtime> runtime_;
   const std::string name_;

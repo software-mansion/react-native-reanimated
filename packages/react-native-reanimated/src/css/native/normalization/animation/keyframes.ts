@@ -9,7 +9,6 @@ import {
   getSeparatelyInterpolatedNestedProperties,
   isDefined,
   isNumber,
-  isRecord,
   ReanimatedError,
 } from '../../../../common';
 import { PERCENTAGE_REGEX } from '../../../constants';
@@ -110,7 +109,7 @@ export function processKeyframes(
 
 function processProps(
   offset: number,
-  props: UnknownRecord,
+  props: object,
   keyframeProps: AnyRecord,
   separatelyInterpolatedNestedProperties: ReadonlySet<string>
 ) {
@@ -120,7 +119,8 @@ function processProps(
     }
 
     if (
-      isRecord(value) &&
+      /* this object type check is correct as it accepts records and arrays */
+      typeof value === 'object' &&
       separatelyInterpolatedNestedProperties.has(property)
     ) {
       if (!keyframeProps[property]) {
@@ -144,11 +144,11 @@ function processProps(
 
 export function normalizeAnimationKeyframes(
   keyframes: CSSAnimationKeyframes,
-  viewName: string
+  compoundComponentName: string
 ): NormalizedCSSAnimationKeyframesConfig {
-  const propsBuilder = getPropsBuilder(viewName);
+  const propsBuilder = getPropsBuilder(compoundComponentName);
   const separatelyInterpolatedNestedProperties =
-    getSeparatelyInterpolatedNestedProperties(viewName);
+    getSeparatelyInterpolatedNestedProperties(compoundComponentName);
   const propKeyframes: PropsWithKeyframes = {};
   const timingFunctions: NormalizedCSSKeyframeTimingFunctions = {};
 

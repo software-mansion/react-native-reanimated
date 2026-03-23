@@ -136,6 +136,21 @@ auto value(
 }
 
 template <typename... AllowedTypes>
+auto value(const auto &defaultValue) -> std::enable_if_t<
+    (std::is_constructible_v<AllowedTypes, decltype(defaultValue)> || ...),
+    std::shared_ptr<PropertyInterpolatorFactory>> {
+  static_assert(
+      !(Resolvable<AllowedTypes> || ...),
+      "Resolvable value types (e.g. CSSLength) require a "
+      "ResolvableValueInterpolatorConfig — use the value(defaultValue, "
+      "{RelativeTo::..., \"...\"}) overload instead");
+  auto cssValue = createCSSValue<AllowedTypes...>(defaultValue);
+  return std::make_shared<SimpleValueInterpolatorFactory<AllowedTypes...>>(
+      std::move(cssValue),
+      [](const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &) {});
+}
+
+template <typename... AllowedTypes>
 auto value(
     const auto &defaultValue,
     ResolvableValueInterpolatorConfig config,
@@ -148,6 +163,20 @@ auto value(
   auto cssValue = createCSSValue<AllowedTypes...>(defaultValue);
   return std::make_shared<ResolvableValueInterpolatorFactory<AllowedTypes...>>(
       std::move(cssValue), std::move(config), addToPropsBuilder);
+}
+
+template <typename... AllowedTypes>
+auto value(const auto &defaultValue, ResolvableValueInterpolatorConfig config) -> std::enable_if_t<
+    (std::is_constructible_v<AllowedTypes, decltype(defaultValue)> || ...),
+    std::shared_ptr<PropertyInterpolatorFactory>> {
+  static_assert(
+      (Resolvable<AllowedTypes> || ...),
+      "None of the value types are resolvable — use the value(defaultValue) "
+      "overload without ResolvableValueInterpolatorConfig instead");
+  auto cssValue = createCSSValue<AllowedTypes...>(defaultValue);
+  return std::make_shared<ResolvableValueInterpolatorFactory<AllowedTypes...>>(
+      std::move(cssValue), std::move(config),
+      [](const std::shared_ptr<AnimatedPropsBuilder> &, const CSSValueVariant<AllowedTypes...> &) {});
 }
 
 /**

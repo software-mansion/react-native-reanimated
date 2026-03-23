@@ -107,7 +107,10 @@ std::optional<double> CSSLength::resolve(const ResolvableValueInterpolationConte
 }
 
 bool CSSLength::operator==(const CSSLength &other) const {
-  return value == other.value && isRelative == other.isRelative;
+  if (isRelative == other.isRelative) {
+    return value == other.value;
+  }
+  return value == 0 && other.value == 0;
 }
 
 #ifndef NDEBUG

@@ -37,7 +37,7 @@ void addSvgStrokeToPropsBuilder(
 
 void addSvgStrokeWidthToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength> &value) {
+    const CSSValueVariant<CSSLength> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "strokeWidth", value);
 }
 
@@ -55,7 +55,7 @@ void addSvgStrokeDasharrayToPropsBuilder(
 
 void addSvgStrokeDashoffsetToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength> &value) {
+    const CSSValueVariant<CSSLength> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "strokeDashoffset", value);
 }
 
@@ -97,25 +97,25 @@ void addSvgClipPathToPropsBuilder(
 
 void addSvgTranslateXToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength> &value) {
+    const CSSValueVariant<CSSLength> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "translateX", value);
 }
 
 void addSvgTranslateYToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength> &value) {
+    const CSSValueVariant<CSSLength> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "translateY", value);
 }
 
 void addSvgOriginXToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength> &value) {
+    const CSSValueVariant<CSSLength> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "originX", value);
 }
 
 void addSvgOriginYToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength> &value) {
+    const CSSValueVariant<CSSLength> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "originY", value);
 }
 
@@ -157,79 +157,79 @@ void addSvgOpacityToPropsBuilder(
 
 void addSvgCxToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength, CSSKeyword> &value) {
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "cx", value);
 }
 
 void addSvgCyToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength, CSSKeyword> &value) {
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "cy", value);
 }
 
 void addSvgRToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength, CSSKeyword> &value) {
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "r", value);
 }
 
 void addSvgRxToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength, CSSKeyword> &value) {
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "rx", value);
 }
 
 void addSvgRyToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength, CSSKeyword> &value) {
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "ry", value);
 }
 
 void addSvgXToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength, CSSKeyword> &value) {
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "x", value);
 }
 
 void addSvgYToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength, CSSKeyword> &value) {
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "y", value);
 }
 
 void addSvgWidthToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength, CSSKeyword> &value) {
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "width", value);
 }
 
 void addSvgHeightToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength, CSSKeyword> &value) {
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "height", value);
 }
 
 void addSvgX1ToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength, CSSKeyword> &value) {
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "x1", value);
 }
 
 void addSvgY1ToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength, CSSKeyword> &value) {
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "y1", value);
 }
 
 void addSvgX2ToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength, CSSKeyword> &value) {
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "x2", value);
 }
 
 void addSvgY2ToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength, CSSKeyword> &value) {
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "y2", value);
 }
 
@@ -241,25 +241,25 @@ void addSvgPathDToPropsBuilder(
 
 void addSvgRectRxToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength, CSSKeyword> &value) {
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "rx", value);
 }
 
 void addSvgRectRyToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength, CSSKeyword> &value) {
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "ry", value);
 }
 
 void addSvgFxToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength, CSSKeyword> &value) {
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "fx", value);
 }
 
 void addSvgFyToPropsBuilder(
     const std::shared_ptr<facebook::react::AnimatedPropsBuilder> &propsBuilder,
-    const CSSValueVariant<SVGLength, CSSKeyword> &value) {
+    const CSSValueVariant<CSSLength, CSSKeyword> &value) {
   storeCssValueVariantAsRawProp(propsBuilder, "fy", value);
 }
 

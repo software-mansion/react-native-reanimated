@@ -170,11 +170,11 @@ export default function Margins() {
           ],
         },
         {
-          CardComponent: VerticalExampleCard,
           buildAnimation: ({ keyframes }) => ({
             ...SHARED_SETTINGS,
             animationName: keyframes!,
           }),
+          CardComponent: VerticalExampleCard,
           name: 'Mixed',
           sections: [
             {

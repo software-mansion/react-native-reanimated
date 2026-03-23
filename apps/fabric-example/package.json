@@ -14,7 +14,7 @@
   "dependencies": {
     "common-app": "workspace:*",
     "react": "19.2.3",
-    "react-native": "0.84.0"
+    "react-native": "0.85.0-rc.1"
   },
   "devDependencies": {
     "@types/react": "19.2.2",
@@ -46,7 +46,6 @@
     "staticFeatureFlags": {
       "RUNTIME_TEST_FLAG": true,
       "IOS_DYNAMIC_FRAMERATE_ENABLED": true,
-      "BUNDLE_MODE_ENABLED": false,
       "FETCH_PREVIEW_ENABLED": false
     }
   }

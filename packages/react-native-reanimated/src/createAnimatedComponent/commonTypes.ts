@@ -24,12 +24,10 @@ export interface AnimatedProps extends Record<string, unknown> {
 export interface ViewInfo {
   viewTag: number | AnimatedComponentRef | HTMLElement | null;
   shadowNodeWrapper: ShadowNodeWrapper | null;
-  // This is a React host instance view name which might differ from the
-  // Fabric component name. For clarity, we use the viewName property
-  // here and componentName in C++ after converting react viewName to
-  // Fabric component name.
-  // (see react/renderer/componentregistry/componentNameByReactViewName.cpp)
-  viewName?: string;
+  // The React Native view class name for the host component
+  // (e.g. "RCTText" for Text). See getViewInfo.ts for the full naming
+  // convention used in CSS.
+  reactViewName?: string;
   DOMElement?: HTMLElement | null;
 }
 
@@ -44,7 +42,7 @@ export interface IInlinePropManager {
 export type AnimatedComponentTypeInternal = Component &
   IAnimatedComponentInternal;
 
-// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents, @typescript-eslint/no-explicit-any
 export type PropUpdates = StyleProps | AnimatedStyle<any>;
 
 export interface IPropsFilter {

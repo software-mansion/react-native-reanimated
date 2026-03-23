@@ -53,12 +53,8 @@ void ReanimatedCommitHook::maybeInitializeLayoutAnimations(SurfaceId surfaceId) 
 RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ShadowTree const &,
     RootShadowNode::Shared const &,
-    RootShadowNode::Unshared const &newRootShadowNode
-#if REACT_NATIVE_MINOR_VERSION >= 80
-    ,
-    const ShadowTreeCommitOptions &commitOptions
-#endif
-    ) noexcept {
+    RootShadowNode::Unshared const &newRootShadowNode,
+    const ShadowTreeCommitOptions &commitOptions) noexcept {
   ReanimatedSystraceSection s("ReanimatedCommitHook::shadowTreeWillCommit");
 
   maybeInitializeLayoutAnimations(newRootShadowNode->getSurfaceId());

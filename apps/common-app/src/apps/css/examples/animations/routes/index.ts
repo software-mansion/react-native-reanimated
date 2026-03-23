@@ -12,111 +12,111 @@ import { animatedPropertiesRoutes } from './properties';
 
 const routes = {
   AnimatedProperties: {
-    name: 'Animated Properties',
     CardComponent: routeCards.AnimatedPropertiesCard,
+    name: 'Animated Properties',
     routes: animatedPropertiesRoutes,
   },
   AnimationSettings: {
-    name: 'Animation Settings',
     CardComponent: routeCards.AnimationSettingsCard,
+    name: 'Animation Settings',
     routes: {
-      Duration: {
-        name: 'Duration',
-        Component: animationSettings.AnimationDuration,
-      },
-      TimingFunction: {
-        name: 'Timing Function',
-        Component: animationSettings.AnimationTimingFunction,
-      },
       Delay: {
-        name: 'Delay',
         Component: animationSettings.AnimationDelay,
-      },
-      IterationCount: {
-        name: 'Iteration Count',
-        Component: animationSettings.AnimationIterationCount,
+        name: 'Delay',
       },
       Direction: {
-        name: 'Direction',
         Component: animationSettings.AnimationDirection,
+        name: 'Direction',
+      },
+      Duration: {
+        Component: animationSettings.AnimationDuration,
+        name: 'Duration',
       },
       FillMode: {
-        name: 'Fill Mode',
         Component: animationSettings.AnimationFillMode,
+        name: 'Fill Mode',
+      },
+      IterationCount: {
+        Component: animationSettings.AnimationIterationCount,
+        name: 'Iteration Count',
       },
       PlayState: {
-        name: 'Play State',
         Component: animationSettings.AnimationPlayState,
+        name: 'Play State',
+      },
+      TimingFunction: {
+        Component: animationSettings.AnimationTimingFunction,
+        name: 'Timing Function',
       },
     },
   },
   Miscellaneous: {
-    name: 'Miscellaneous',
     CardComponent: routeCards.MiscellaneousCard,
+    name: 'Miscellaneous',
     routes: {
       ChangingAnimation: {
-        name: 'Changing Animation',
         Component: miscellaneous.ChangingAnimation,
-      },
-      UpdatingAnimationSettings: {
-        name: 'Updating Animation Settings',
-        Component: miscellaneous.UpdatingAnimationSettings,
+        name: 'Changing Animation',
       },
       KeyframeTimingFunctions: {
-        name: 'Keyframe Timing Functions',
         Component: miscellaneous.KeyframeTimingFunctions,
+        name: 'Keyframe Timing Functions',
       },
       MultipleAnimations: {
-        name: 'Multiple Animations',
         Component: miscellaneous.MultipleAnimations,
+        name: 'Multiple Animations',
+      },
+      UpdatingAnimationSettings: {
+        Component: miscellaneous.UpdatingAnimationSettings,
+        name: 'Updating Animation Settings',
       },
     },
   },
   RealWorldExamples: {
-    name: 'Real World Examples',
     CardComponent: routeCards.RealWorldExamplesCard,
+    name: 'Real World Examples',
     routes: {
-      SpinnersAndLoaders: {
-        name: 'Spinners and Loaders',
-        Component: realWorldExamples.SpinnersAndLoaders,
+      Campfire: {
+        Component: realWorldExamples.Campfire,
+        name: 'Campfire',
       },
       Emojis: {
-        name: 'Emojis',
         Component: realWorldExamples.Emojis,
-      },
-      Campfire: {
-        name: 'Campfire',
-        Component: realWorldExamples.Campfire,
+        name: 'Emojis',
       },
       RocketInSpace: {
-        name: 'Rocket In Space',
         Component: realWorldExamples.RocketInSpace,
+        name: 'Rocket In Space',
+      },
+      SpinnersAndLoaders: {
+        Component: realWorldExamples.SpinnersAndLoaders,
+        name: 'Spinners and Loaders',
       },
       SquishySquashy: {
-        name: 'Squishy Squashy',
         Component: realWorldExamples.SquishySquashy,
+        name: 'Squishy Squashy',
       },
     },
   },
   TestExamples: {
-    name: 'Test Examples',
     CardComponent: routeCards.TestExamplesCard,
+    name: 'Test Examples',
     routes: {
-      Playground: {
-        name: 'Playground',
-        Component: testExamples.Playground,
-      },
       IterationCountAndFillMode: {
-        name: 'Iteration Count and Fill Mode',
+        Component: testExamples.IterationCountAndFillMode,
         displayed: !IS_WEB,
         labelTypes: ['needsFix'],
-        Component: testExamples.IterationCountAndFillMode,
+        name: 'Iteration Count and Fill Mode',
+      },
+      Playground: {
+        Component: testExamples.Playground,
+        name: 'Playground',
       },
       RelativeMargins: {
-        name: 'Relative Margins',
+        Component: testExamples.RelativeMargins,
         displayed: !IS_WEB,
         labelTypes: ['needsFix'],
-        Component: testExamples.RelativeMargins,
+        name: 'Relative Margins',
       },
     },
   },

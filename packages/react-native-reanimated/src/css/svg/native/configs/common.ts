@@ -131,7 +131,7 @@ export type SvgStyleBuilderConfig<T> = PropsBuilderConfig<
   Omit<T, NonAnimatablePropNames>
 >;
 
-export const commonSvgProps = {
+export const SVG_COMMON_PROPERTIES_CONFIG = {
   ...colorProps,
   ...fillProps,
   ...strokeProps,

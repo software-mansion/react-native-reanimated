@@ -1,5 +1,8 @@
 #pragma once
 
+#include <react/renderer/componentregistry/componentNameByReactViewName.h>
+#include <react/renderer/core/ShadowNode.h>
+#include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/core/CSSTransition.h>
@@ -8,6 +11,7 @@
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registries/StaticPropsRegistry.h>
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandlerRegistry.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
@@ -49,7 +53,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
                               public std::enable_shared_from_this<ReanimatedModuleProxy> {
  public:
   ReanimatedModuleProxy(
-      const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
+      const std::shared_ptr<worklets::WorkletRuntime> &uiRuntime,
+      const std::shared_ptr<worklets::UIScheduler> &uiScheduler,
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,
@@ -97,6 +102,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   void performOperations(const bool isTriggeredByEvent);
   AnimationMutations performOperationsForBackend();
+  void performOperations();
+  void performNonLayoutOperations();
 
   void setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) override;
 
@@ -106,12 +113,18 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   void registerCSSKeyframes(
       jsi::Runtime &rt,
       const jsi::Value &animationName,
-      const jsi::Value &viewName,
+      const jsi::Value &compoundComponentName,
       const jsi::Value &keyframesConfig) override;
-  void unregisterCSSKeyframes(jsi::Runtime &rt, const jsi::Value &animationName, const jsi::Value &viewName) override;
+  void unregisterCSSKeyframes(
+      jsi::Runtime &rt,
+      const jsi::Value &animationName,
+      const jsi::Value &compoundComponentName) override;
 
-  void applyCSSAnimations(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &animationUpdates)
-      override;
+  void applyCSSAnimations(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper,
+      const jsi::Value &compoundComponentName,
+      const jsi::Value &animationUpdates) override;
   void unregisterCSSAnimations(const jsi::Value &viewTag) override;
 
   void runCSSTransition(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &transitionConfig)
@@ -166,19 +179,17 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
     return isReducedMotion_;
   }
 
-  [[nodiscard]] inline std::shared_ptr<WorkletsModuleProxy> getWorkletsModuleProxy() const {
-    return workletsModuleProxy_;
-  }
-
   void requestFlushRegistry();
   std::function<std::string()> createRegistriesLeakCheck();
 
  private:
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
+  void applySynchronousUpdates(UpdatesBatch &updatesBatch, bool allowPartialUpdates = false);
 
   const bool isReducedMotion_;
   bool shouldFlushRegistry_ = false;
-  std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+  std::shared_ptr<worklets::WorkletRuntime> uiRuntime_;
+  std::shared_ptr<worklets::UIScheduler> uiScheduler_;
 
   std::unique_ptr<UIEventHandlerRegistry> eventHandlerRegistry_;
   RequestRenderFunction requestRender_;

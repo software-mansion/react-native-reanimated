@@ -37,7 +37,9 @@ export class SharedTransition
       const animationFactory = (value: number | string) => {
         return delayFunction(delay, animation(value, config));
       };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const initialValues: any = {};
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const animations: any = {};
       for (let key in values.source) {
         initialValues[key] = values.source[key];

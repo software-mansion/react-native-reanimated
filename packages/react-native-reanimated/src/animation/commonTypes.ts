@@ -47,10 +47,12 @@ export interface SequenceAnimation
 
 export interface StyleLayoutAnimation extends HigherOrderAnimation {
   current: StyleProps;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   styleAnimations: AnimatedStyle<any>;
   onFrame: (animation: StyleLayoutAnimation, timestamp: Timestamp) => boolean;
   onStart: (
     nextAnimation: StyleLayoutAnimation,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     current: AnimatedStyle<any>,
     timestamp: Timestamp,
     previousAnimation: StyleLayoutAnimation

@@ -1,23 +1,17 @@
-
 #pragma once
 
 #include <cxxreact/MessageQueueThread.h>
+#include <jsi/jsi.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
-
 #include <worklets/SharedItems/MemoryManager.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/ScriptBuffer.h>
+#include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/RuntimeManager.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
-
-#ifdef __ANDROID__
-#include <fbjni/fbjni.h>
-#endif // __ANDROID__
-
-#include <jsi/jsi.h>
 
 #include <memory>
 #include <string>
@@ -33,15 +27,14 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
  public:
   explicit JSIWorkletsModuleProxy(
       const bool isDevBundle,
-      const std::shared_ptr<const ScriptBuffer> &script,
-      const std::string &sourceUrl,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const std::shared_ptr<MemoryManager> &memoryManager,
       const std::shared_ptr<RuntimeManager> &runtimeManager,
       const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
-      const std::shared_ptr<RuntimeBindings> &runtimeBindings);
+      const std::shared_ptr<RuntimeBindings> &runtimeBindings,
+      const BundleModeConfig &bundleModeConfig);
 
   JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other) = default;
 
@@ -63,16 +56,20 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
     return uiScheduler_;
   }
 
+  [[nodiscard]] bool isBundleModeEnabled() const {
+    return bundleModeConfig_.enabled;
+  }
+
   [[nodiscard]] bool isDevBundle() const {
     return isDevBundle_;
   }
 
   [[nodiscard]] std::shared_ptr<const ScriptBuffer> getScript() const {
-    return script_;
+    return bundleModeConfig_.script;
   }
 
   [[nodiscard]] std::string getSourceUrl() const {
-    return sourceUrl_;
+    return bundleModeConfig_.sourceURL;
   }
 
   [[nodiscard]] std::shared_ptr<MemoryManager> getMemoryManager() const {
@@ -89,8 +86,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
 
  private:
   const bool isDevBundle_;
-  const std::shared_ptr<const ScriptBuffer> script_;
-  const std::string sourceUrl_;
+  const BundleModeConfig bundleModeConfig_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;

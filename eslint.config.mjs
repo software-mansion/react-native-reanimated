@@ -92,7 +92,13 @@ const nodeRules = {
   'n/no-unpublished-require': 'warn',
   'n/no-extraneous-import': 'off',
   'n/no-extraneous-require': 'off',
-  'n/no-unsupported-features/node-builtins': 'warn',
+  'n/no-unsupported-features/node-builtins': [
+    'error',
+    {
+      version: '>=21.1.0',
+      allowExperimental: true,
+    },
+  ],
 };
 
 /** @type {import('typescript-eslint').ConfigWithExtends['rules']} */

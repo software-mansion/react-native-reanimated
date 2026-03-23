@@ -23,10 +23,10 @@ export default function RadialGradientExample() {
       CSSRadialGradientProps
     >
       buildAnimation={({ keyframes }) => ({
-        animationName: keyframes,
         animationDirection: 'alternate',
         animationDuration: '2s',
         animationIterationCount: 'infinite',
+        animationName: keyframes,
         animationTimingFunction: 'ease-in-out',
       })}
       renderExample={({ animation }) => (
@@ -52,51 +52,51 @@ export default function RadialGradientExample() {
             {
               examples: [
                 {
-                  title: 'Pulsating orb',
                   description: `Smoothly animates radius and shifts the center slightly.\n\n${FOCAL_POINT_DISCLAIMER}`,
                   keyframes: {
                     from: {
-                      fx: '30%',
-                      fy: '30%',
                       cx: '50%',
                       cy: '50%',
-                      r: '30%',
-                      gradient: [
-                        { offset: '0%', color: '#ff0080', opacity: 1 },
-                        { offset: '100%', color: '#4b0082', opacity: 0.2 },
-                      ],
-                    },
-                    to: {
                       fx: '30%',
                       fy: '30%',
+                      gradient: [
+                        { color: '#ff0080', offset: '0%', opacity: 1 },
+                        { color: '#4b0082', offset: '100%', opacity: 0.2 },
+                      ],
+                      r: '30%',
+                    },
+                    to: {
                       cx: '45%',
                       cy: '45%',
-                      r: '60%',
+                      fx: '30%',
+                      fy: '30%',
                       gradient: [
-                        { offset: '0%', color: '#00ffff', opacity: 1 },
-                        { offset: '100%', color: '#0000ff', opacity: 0.8 },
+                        { color: '#00ffff', offset: '0%', opacity: 1 },
+                        { color: '#0000ff', offset: '100%', opacity: 0.8 },
                       ],
+                      r: '60%',
                     },
                   },
+                  title: 'Pulsating orb',
                 },
                 {
-                  title: 'The Stop Shuffle',
                   description:
                     'Stops are in different orders and wildly different offsets.',
                   keyframes: {
                     from: {
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '90%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'blue', offset: '90%', opacity: 1 },
                       ],
                     },
                     to: {
                       gradient: [
-                        { offset: '10%', color: 'blue', opacity: 1 },
-                        { offset: '100%', color: 'red', opacity: 1 },
+                        { color: 'blue', offset: '10%', opacity: 1 },
+                        { color: 'red', offset: '100%', opacity: 1 },
                       ],
                     },
                   },
+                  title: 'The Stop Shuffle',
                 },
               ],
               title: 'Changing colors',
@@ -104,7 +104,6 @@ export default function RadialGradientExample() {
             {
               examples: [
                 {
-                  title: 'Night and day',
                   description:
                     'Transitioning from a simple 2-stop sun to a complex sunset (with more stops).',
                   keyframes: {
@@ -112,21 +111,22 @@ export default function RadialGradientExample() {
                       cx: '25%',
                       cy: '25%',
                       gradient: [
-                        { offset: '0%', color: '#fdbb2d', opacity: 1 },
-                        { offset: '100%', color: '#22c1c3', opacity: 1 },
+                        { color: '#fdbb2d', offset: '0%', opacity: 1 },
+                        { color: '#22c1c3', offset: '100%', opacity: 1 },
                       ],
                     },
                     to: {
                       cx: '25%',
                       cy: '25%',
                       gradient: [
-                        { offset: '0%', color: '#fdbb2d', opacity: 1 },
-                        { offset: '30%', color: '#b21f1f', opacity: 1 },
-                        { offset: '60%', color: '#1a2a6c', opacity: 1 },
-                        { offset: '100%', color: '#000000', opacity: 1 },
+                        { color: '#fdbb2d', offset: '0%', opacity: 1 },
+                        { color: '#b21f1f', offset: '30%', opacity: 1 },
+                        { color: '#1a2a6c', offset: '60%', opacity: 1 },
+                        { color: '#000000', offset: '100%', opacity: 1 },
                       ],
                     },
                   },
+                  title: 'Night and day',
                 },
               ],
               title: 'Changing number of stops',
@@ -134,43 +134,43 @@ export default function RadialGradientExample() {
             {
               examples: [
                 {
-                  title: 'Disappearing center',
                   description: 'Center of the gradient becomes transparent.',
-
                   keyframes: {
                     from: {
                       gradient: [
-                        { offset: '0%', color: '#9b0808', opacity: 1 },
-                        { offset: '100%', color: '#35e20a', opacity: 1 },
+                        { color: '#9b0808', offset: '0%', opacity: 1 },
+                        { color: '#35e20a', offset: '100%', opacity: 1 },
                       ],
                     },
                     to: {
                       gradient: [
-                        { offset: '0%', color: '#9b0808', opacity: 0 },
-                        { offset: '100%', color: '#35e20a', opacity: 1 },
+                        { color: '#9b0808', offset: '0%', opacity: 0 },
+                        { color: '#35e20a', offset: '100%', opacity: 1 },
                       ],
                     },
                   },
+
+                  title: 'Disappearing center',
                 },
                 {
-                  title: 'Opacity calculation',
                   description:
                     "Stop's opacity is multiplied by color's opacity.",
-
                   keyframes: {
                     from: {
                       gradient: [
-                        { offset: '0%', color: '#9b0808', opacity: 1 },
-                        { offset: '100%', color: '#35e20a', opacity: 1 },
+                        { color: '#9b0808', offset: '0%', opacity: 1 },
+                        { color: '#35e20a', offset: '100%', opacity: 1 },
                       ],
                     },
                     to: {
                       gradient: [
-                        { offset: '0%', color: '#9b080800', opacity: 1 },
-                        { offset: '100%', color: '#35e20a', opacity: 1 },
+                        { color: '#9b080800', offset: '0%', opacity: 1 },
+                        { color: '#35e20a', offset: '100%', opacity: 1 },
                       ],
                     },
                   },
+
+                  title: 'Opacity calculation',
                 },
               ],
               title: 'Opacity',
@@ -183,102 +183,102 @@ export default function RadialGradientExample() {
             {
               examples: [
                 {
-                  title: 'Focal point bug',
                   description: `Focal point has to remain in the gradient to avoid bugs like this.\n\n${FOCAL_POINT_DISCLAIMER}`,
                   keyframes: {
                     from: {
                       cx: '50%',
                       cy: '50%',
-                      r: '20%',
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
+                      r: '20%',
                     },
                     to: {
                       cx: '20%',
                       cy: '50%',
                       fx: '50%',
                       fy: '50%',
-                      r: '20%',
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
+                      r: '20%',
                     },
                   },
+                  title: 'Focal point bug',
                 },
                 {
-                  title: 'Focal point pos - decimal fraction',
                   description: `You can interpolate between decimal fraction coords.\n\n${FOCAL_POINT_DISCLAIMER}`,
                   keyframes: {
                     from: {
                       fx: 0.5,
                       fy: 0.5,
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
                     },
                     to: {
                       fx: 0.3,
                       fy: 0.3,
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
                     },
                   },
+                  title: 'Focal point pos - decimal fraction',
                 },
                 {
-                  title: 'Focal point pos - percentage',
                   description: `You can interpolate between percentage coords.\n\n${FOCAL_POINT_DISCLAIMER}`,
                   keyframes: {
                     from: {
                       fx: '50%',
                       fy: '50%',
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
                     },
                     to: {
                       fx: '30%',
                       fy: '30%',
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
                     },
                   },
+                  title: 'Focal point pos - percentage',
                 },
                 {
-                  title: 'Focal point pos - mix',
                   description: `You can't mix percentages and decimal fractions.\n\n${FOCAL_POINT_DISCLAIMER}`,
                   keyframes: {
                     from: {
                       fx: '50%',
                       fy: '50%',
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
                     },
                     to: {
                       fx: 0.3,
                       fy: 0.3,
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
                     },
                   },
+                  title: 'Focal point pos - mix',
                 },
               ],
               title: 'Focal point',
@@ -286,7 +286,6 @@ export default function RadialGradientExample() {
             {
               examples: [
                 {
-                  title: 'Gradient center pos - decimal fraction',
                   description:
                     'You can interpolate between decimal fraction coords.',
                   keyframes: {
@@ -294,48 +293,48 @@ export default function RadialGradientExample() {
                       cx: 0.5,
                       cy: 0.5,
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
                     },
                     to: {
                       cx: 0.3,
                       cy: 0.3,
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
                     },
                   },
+                  title: 'Gradient center pos - decimal fraction',
                 },
                 {
-                  title: 'Gradient center pos - percentage',
                   description: 'You can interpolate between percentage coords.',
                   keyframes: {
                     from: {
                       cx: '50%',
                       cy: '50%',
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
                     },
                     to: {
                       cx: '30%',
                       cy: '30%',
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
                     },
                   },
+                  title: 'Gradient center pos - percentage',
                 },
                 {
-                  title: 'Gradient center pos - mix',
                   description:
                     "You can't mix percentages and decimal fractions.",
                   keyframes: {
@@ -343,21 +342,22 @@ export default function RadialGradientExample() {
                       cx: '50%',
                       cy: '50%',
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
                     },
                     to: {
                       cx: 0.3,
                       cy: 0.3,
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
                     },
                   },
+                  title: 'Gradient center pos - mix',
                 },
               ],
               title: 'Gradient position',
@@ -365,16 +365,15 @@ export default function RadialGradientExample() {
             {
               examples: [
                 {
-                  title: 'Movement combination',
                   description: `You can move gradient center and focal point independently.\n\n${FOCAL_POINT_DISCLAIMER}`,
                   keyframes: {
                     from: {
                       cx: '50%',
                       cy: '50%',
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
                     },
                     to: {
@@ -383,12 +382,13 @@ export default function RadialGradientExample() {
                       fx: '45%',
                       fy: '45%',
                       gradient: [
-                        { offset: '0%', color: 'red', opacity: 1 },
-                        { offset: '50%', color: 'green', opacity: 1 },
-                        { offset: '100%', color: 'blue', opacity: 1 },
+                        { color: 'red', offset: '0%', opacity: 1 },
+                        { color: 'green', offset: '50%', opacity: 1 },
+                        { color: 'blue', offset: '100%', opacity: 1 },
                       ],
                     },
                   },
+                  title: 'Movement combination',
                 },
               ],
               title: 'Gradient and focal point position',
@@ -399,67 +399,67 @@ export default function RadialGradientExample() {
           name: 'Units',
           sections: [
             {
-              title: 'Coordinate Systems',
               examples: [
                 {
-                  title: 'Absolute user space',
                   description:
                     'Uses gradientUnits: "userSpaceOnUse". Coordinates are absolute pixels relative to the Svg canvas.',
                   keyframes: {
                     from: {
-                      gradientUnits: 'userSpaceOnUse',
                       cx: 150,
                       cy: 150,
-                      r: 20,
                       gradient: [
-                        { offset: '0%', color: '#ff0080', opacity: 1 },
+                        { color: '#ff0080', offset: '0%', opacity: 1 },
                         {
-                          offset: '100%',
                           color: '#4b0082',
+                          offset: '100%',
                           opacity: 1,
                         },
                       ],
+                      gradientUnits: 'userSpaceOnUse',
+                      r: 20,
                     },
                     to: {
-                      gradientUnits: 'userSpaceOnUse',
                       cx: 150,
                       cy: 150,
-                      r: 40,
                       gradient: [
-                        { offset: '0%', color: '#00ffff', opacity: 1 },
-                        { offset: '100%', color: '#0000ff', opacity: 1 },
+                        { color: '#00ffff', offset: '0%', opacity: 1 },
+                        { color: '#0000ff', offset: '100%', opacity: 1 },
                       ],
+                      gradientUnits: 'userSpaceOnUse',
+                      r: 40,
                     },
                   },
+                  title: 'Absolute user space',
                 },
                 {
-                  title: 'Interpolating unit systems',
                   description:
                     'Interpolating between "objectBoundingBox" and "userSpaceOnUse" causes a "jump" as 0.5 of rect size suddenly becomes 0.5px.',
                   keyframes: {
                     from: {
-                      gradientUnits: 'objectBoundingBox',
                       cx: 0.5,
                       cy: 0.5,
-                      r: 0.5,
                       gradient: [
-                        { offset: '0%', color: 'yellow', opacity: 1 },
-                        { offset: '100%', color: 'red', opacity: 1 },
+                        { color: 'yellow', offset: '0%', opacity: 1 },
+                        { color: 'red', offset: '100%', opacity: 1 },
                       ],
+                      gradientUnits: 'objectBoundingBox',
+                      r: 0.5,
                     },
                     to: {
-                      gradientUnits: 'userSpaceOnUse',
                       cx: 150,
                       cy: 150,
-                      r: 50,
                       gradient: [
-                        { offset: '0%', color: 'yellow', opacity: 1 },
-                        { offset: '100%', color: 'red', opacity: 1 },
+                        { color: 'yellow', offset: '0%', opacity: 1 },
+                        { color: 'red', offset: '100%', opacity: 1 },
                       ],
+                      gradientUnits: 'userSpaceOnUse',
+                      r: 50,
                     },
                   },
+                  title: 'Interpolating unit systems',
                 },
               ],
+              title: 'Coordinate Systems',
             },
           ],
         },
@@ -487,54 +487,54 @@ export default function RadialGradientExample() {
             {
               examples: [
                 {
-                  title: 'Children stops',
                   description: `If no animation between stops is needed, the stops can be provided as children of the animated RadialGradient. \n\n${FOCAL_POINT_DISCLAIMER}`,
                   keyframes: {
                     from: {
-                      fx: '30%',
-                      fy: '30%',
                       cx: '50%',
                       cy: '50%',
+                      fx: '30%',
+                      fy: '30%',
                       r: '30%',
                     },
                     to: {
-                      fx: '30%',
-                      fy: '30%',
                       cx: '45%',
                       cy: '45%',
+                      fx: '30%',
+                      fy: '30%',
                       r: '60%',
                     },
                   },
+                  title: 'Children stops',
                 },
                 {
-                  title: 'Prop stops',
                   description: `If there is an animation between stops needed, the stops have to be provided as the gradient prop.`,
                   keyframes: {
                     from: {
                       gradient: [
-                        { offset: '0%', color: 'red' },
-                        { offset: '50%', color: 'yellow' },
+                        { color: 'red', offset: '0%' },
+                        { color: 'yellow', offset: '50%' },
                       ],
                     },
                     to: {
                       gradient: [
-                        { offset: '0%', color: '#00ffff', opacity: 1 },
-                        { offset: '100%', color: '#0000ff', opacity: 0.8 },
+                        { color: '#00ffff', offset: '0%', opacity: 1 },
+                        { color: '#0000ff', offset: '100%', opacity: 0.8 },
                       ],
                     },
                   },
+                  title: 'Prop stops',
                 },
                 {
-                  title: 'Mixed stops',
                   description: `You cannot mix children stops and prop stops. It will result in prop stops being prioritized.`,
                   keyframes: {
                     to: {
                       gradient: [
-                        { offset: '0%', color: '#00ffff', opacity: 1 },
-                        { offset: '100%', color: '#0000ff', opacity: 0.8 },
+                        { color: '#00ffff', offset: '0%', opacity: 1 },
+                        { color: '#0000ff', offset: '100%', opacity: 0.8 },
                       ],
                     },
                   },
+                  title: 'Mixed stops',
                 },
               ],
               title: 'Stops as props or as children',

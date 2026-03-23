@@ -173,15 +173,20 @@ export function createSerializable<TValue>(
   if (Array.isArray(value)) {
     return cloneArray(value, shouldPersistRemote, depth);
   }
-  if (
-    globalThis._WORKLETS_BUNDLE_MODE_ENABLED &&
-    isFunction &&
-    (value as WorkletImport).__bundleData
-  ) {
-    return cloneImport(value as WorkletImport) as SerializableRef<TValue>;
-  }
-  if (isFunction && !isWorkletFunction(value)) {
-    return cloneRemoteFunction(value);
+  if (isFunction) {
+    if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+      if ((value as RemoteFunction).__remoteFunction) {
+        // Remote functions are already serialized.
+        return (value as RemoteFunction)
+          .__remoteFunction as SerializableRef<TValue>;
+      }
+      if ((value as WorkletImport).__bundleData) {
+        return cloneImport(value as WorkletImport) as SerializableRef<TValue>;
+      }
+    }
+    if (!isWorkletFunction(value)) {
+      return cloneRemoteFunction(value);
+    }
   }
   // RN has introduced a new representation of TurboModules as a JS object whose prototype is the host object
   // More details: https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/react/nativemodule/core/ReactCommon/TurboModuleBinding.cpp#L182
@@ -478,7 +483,7 @@ function cloneWorklet<TValue extends WorkletFunction>(
   }
   const clonedProps: Record<string, unknown> = cloneObjectProperties(
     value,
-    true,
+    shouldPersistRemote,
     depth
   );
   // to save on transferring static __initData field of worklet structure
@@ -732,7 +737,7 @@ function getWorkletCode(value: WorkletFunction) {
   return code;
 }
 
-type RemoteFunction<TValue> = {
+type RemoteFunction<TValue = unknown> = {
   __remoteFunction: FlatSerializableRef<TValue>;
 };
 
@@ -814,6 +819,9 @@ function makeShareableCloneOnUIRecursiveLEGACY<TValue>(
         return global._createSerializableSynchronizable(
           value
         ) as FlatSerializableRef<TValue>;
+      }
+      if ((value as Record<string, unknown>).__serializableRef) {
+        return value as FlatSerializableRef<TValue>;
       }
       if (Object.getPrototypeOf(value) !== Object.prototype) {
         const length = globalThis.__customSerializationRegistry.length;

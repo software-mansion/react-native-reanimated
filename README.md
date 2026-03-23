@@ -15,6 +15,7 @@ This repository contains two main packages:
 
 [![NPM Reanimated publish nightly](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish-nightly.yml)
 [![NPM Worklets publish [Nightly]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish-nightly.yml)
+[![Reanimated + Worklets compatibility check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-worklets-compatibility-check.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-worklets-compatibility-check.yml)
 [![Lint clang-tidy [Nightly]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml)
 [![Reanimated compatibility check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-compatibility-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-compatibility-check-nightly.yml)
 [![Use frameworks Reanimated build check [Nightly]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/use-frameworks-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/use-frameworks-reanimated-build-check-nightly.yml)
@@ -27,7 +28,7 @@ This repository contains two main packages:
 
 ## Installation
 
-Check out the detailed installation [instructions for Reanimated](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#installation) and [instructions for Worklets](https://docs.swmansion.com/react-native-worklets/docs/getting-started/#installation) their dedicated documentation pages.
+Check out the detailed installation [instructions for Reanimated](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#installation) and [instructions for Worklets](https://docs.swmansion.com/react-native-worklets/docs/) their dedicated documentation pages.
 
 ## Compatibility
 
