@@ -19,9 +19,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 @Suppress("KotlinJniMissingFunction")
 @ReactModule(name = WorkletsModule.NAME)
-class WorkletsModule(reactContext: ReactApplicationContext) :
-    NativeWorkletsModuleSpec(reactContext), LifecycleEventListener {
-
+class WorkletsModule(
+    reactContext: ReactApplicationContext,
+) : NativeWorkletsModuleSpec(reactContext),
+    LifecycleEventListener {
     companion object {
         const val NAME = "WorkletsModule"
 
@@ -60,7 +61,7 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
         messageQueueThread: MessageQueueThread,
         jsCallInvokerHolder: CallInvokerHolderImpl,
         androidUIScheduler: AndroidUIScheduler,
-        scriptBufferWrapper: ScriptBufferWrapper?
+        scriptBufferWrapper: ScriptBufferWrapper?,
     ): HybridData
 
     @OptIn(FrameworkAPI::class)
@@ -75,9 +76,12 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
 
         val sourceURL = context.sourceURL
 
-        val scriptBufferWrapper: ScriptBufferWrapper? = if (bundleModeEnabled) {
-            ScriptBufferWrapper(sourceURL!!, context.assets)
-        } else null
+        val scriptBufferWrapper: ScriptBufferWrapper? =
+            if (bundleModeEnabled) {
+                ScriptBufferWrapper(sourceURL!!, context.assets)
+            } else {
+                null
+            }
 
         mHybridData =
             initHybrid(
@@ -86,11 +90,15 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
                 mMessageQueueThread,
                 jsCallInvokerHolder,
                 mAndroidUIScheduler,
-                scriptBufferWrapper)
+                scriptBufferWrapper,
+            )
         return true
     }
 
-    fun abortRequest(runtimeId: Int, requestIdAsDouble: Double) {
+    fun abortRequest(
+        runtimeId: Int,
+        requestIdAsDouble: Double,
+    ) {
         mWorkletsNetworking.jsiAbortRequest(runtimeId, requestIdAsDouble)
     }
 
@@ -108,7 +116,7 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
         responseType: String,
         useIncrementalUpdates: Boolean,
         timeoutAsDouble: Double,
-        withCredentials: Boolean
+        withCredentials: Boolean,
     ) {
         mWorkletsNetworking.jsiSendRequest(
             runtimeWrapper,
@@ -120,7 +128,8 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
             responseType,
             useIncrementalUpdates,
             timeoutAsDouble,
-            withCredentials)
+            withCredentials,
+        )
     }
 
     fun requestAnimationFrame(animationFrameCallback: AnimationFrameCallback) {

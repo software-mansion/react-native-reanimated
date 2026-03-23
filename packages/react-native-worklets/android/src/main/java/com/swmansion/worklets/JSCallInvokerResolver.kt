@@ -5,7 +5,6 @@ import com.facebook.react.common.annotations.FrameworkAPI
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl
 
 object JSCallInvokerResolver {
-
     @OptIn(FrameworkAPI::class)
     @JvmStatic
     fun getJSCallInvokerHolder(context: ReactApplicationContext): CallInvokerHolderImpl {
