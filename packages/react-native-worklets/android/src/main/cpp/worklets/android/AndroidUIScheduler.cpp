@@ -1,5 +1,7 @@
 #include <worklets/android/AndroidUIScheduler.h>
 
+#include <utility>
+
 namespace worklets {
 
 using namespace facebook;
@@ -26,7 +28,7 @@ AndroidUIScheduler::AndroidUIScheduler(const jni::alias_ref<AndroidUIScheduler::
     : javaPart_(jni::make_global(jThis)), uiScheduler_(std::make_shared<UISchedulerWrapper>(jni::make_global(jThis))) {}
 
 jni::local_ref<AndroidUIScheduler::jhybriddata> AndroidUIScheduler::initHybrid(
-    jni::alias_ref<jhybridobject> jThis) { // NOLINT(performance-unnecessary-value-param)
+    jni::alias_ref<jhybridobject> jThis) { // NOLINT //(performance-unnecessary-value-param)
   return makeCxxInstance(jThis);
 }
 

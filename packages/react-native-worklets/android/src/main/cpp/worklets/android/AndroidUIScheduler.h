@@ -16,7 +16,7 @@ class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
  public:
   static auto constexpr kJavaDescriptor = "Lcom/swmansion/worklets/AndroidUIScheduler;";
   static jni::local_ref<jhybriddata> initHybrid(
-      jni::alias_ref<jhybridobject> jThis); // NOLINT(performance-unnecessary-value-param)
+      jni::alias_ref<jhybridobject> jThis); // NOLINT //(performance-unnecessary-value-param)
   static void registerNatives();
 
   std::shared_ptr<UIScheduler> getUIScheduler() {
