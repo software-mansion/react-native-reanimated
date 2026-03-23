@@ -17,12 +17,12 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-using UpdatesBatch = std::vector<std::pair<std::shared_ptr<ShadowNodeFamily>, folly::dynamic>>;
-using RegistryMap = std::unordered_map<Tag, std::pair<std::shared_ptr<ShadowNodeFamily>, folly::dynamic>>;
+using UpdatesBatch = std::vector<std::pair<ShadowNodeFamily::Shared, folly::dynamic>>;
+using RegistryMap = std::unordered_map<Tag, std::pair<ShadowNodeFamily::Shared, folly::dynamic>>;
 
 #ifdef ANDROID
 struct PropsToRevert {
-  std::shared_ptr<ShadowNodeFamily> shadowNodeFamily;
+  ShadowNodeFamily::Shared shadowNodeFamily;
   std::unordered_set<std::string> props;
 };
 
@@ -52,9 +52,9 @@ class UpdatesRegistry {
   mutable std::mutex mutex_;
   RegistryMap updatesRegistry_;
 
-  void addUpdatesToBatch(const std::shared_ptr<ShadowNodeFamily> &shadowNodeFamily, const folly::dynamic &props);
+  void addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
   folly::dynamic getUpdatesFromRegistry(const Tag tag) const;
-  void setInUpdatesRegistry(const std::shared_ptr<ShadowNodeFamily> &shadowNodeFamily, const folly::dynamic &props);
+  void setInUpdatesRegistry(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
   void removeFromUpdatesRegistry(Tag tag);
 
  private:

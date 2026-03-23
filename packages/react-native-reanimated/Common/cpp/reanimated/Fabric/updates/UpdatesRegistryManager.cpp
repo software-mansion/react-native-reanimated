@@ -97,7 +97,7 @@ bool UpdatesRegistryManager::hasPropsToRevert() {
 
 void UpdatesRegistryManager::addToPropsMap(
     PropsMap &propsMap,
-    const std::shared_ptr<ShadowNodeFamily> &shadowNodeFamily,
+    const ShadowNodeFamily::Shared &shadowNodeFamily,
     const folly::dynamic &props) {
   auto it = propsMap.find(shadowNodeFamily.get());
 
