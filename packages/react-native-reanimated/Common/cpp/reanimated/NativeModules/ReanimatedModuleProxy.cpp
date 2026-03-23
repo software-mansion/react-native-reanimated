@@ -58,7 +58,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
   UpdatesBatch synchronousUpdatesBatch;
   UpdatesBatch shadowTreeUpdatesBatch;
 
-  for (const auto &[shadowNode, props] : updatesBatch) {
+  for (const auto &[shadowNodeFamily, props] : updatesBatch) {
     if (allowPartialViews) {
       folly::dynamic synchronousProps = folly::dynamic::object();
       folly::dynamic shadowTreeProps = folly::dynamic::object();
@@ -76,11 +76,11 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       }
 
       if (!synchronousProps.empty()) {
-        synchronousUpdatesBatch.emplace_back(shadowNode, std::move(synchronousProps));
+        synchronousUpdatesBatch.emplace_back(shadowNodeFamily, std::move(synchronousProps));
       }
 
       if (!shadowTreeProps.empty()) {
-        shadowTreeUpdatesBatch.emplace_back(shadowNode, std::move(shadowTreeProps));
+        shadowTreeUpdatesBatch.emplace_back(shadowNodeFamily, std::move(shadowTreeProps));
       }
     } else {
       bool hasOnlySynchronousProps = true;
@@ -97,9 +97,9 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       }
 
       if (hasOnlySynchronousProps) {
-        synchronousUpdatesBatch.emplace_back(shadowNode, props);
+        synchronousUpdatesBatch.emplace_back(shadowNodeFamily, props);
       } else {
-        shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
+        shadowTreeUpdatesBatch.emplace_back(shadowNodeFamily, props);
       }
     }
   }
@@ -983,9 +983,9 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
     intBuffer.reserve(1024);
     doubleBuffer.reserve(1024);
 
-    for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
+    for (const auto &[shadowNodeFamily, props] : synchronousUpdatesBatch) {
       intBuffer.push_back(CMD_START_OF_VIEW);
-      intBuffer.push_back(shadowNode->getTag());
+      intBuffer.push_back(shadowNodeFamily->getTag());
       for (const auto &[key, value] : props.items()) {
         const auto command = propNameToCommand(key.getString());
         switch (command) {
@@ -1155,8 +1155,8 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
   auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
       partitionUpdates(updatesBatch, synchronousProps, false, allowPartialUpdates);
 
-  for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
-    synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
+  for (const auto &[shadowNodeFamily, props] : synchronousUpdatesBatch) {
+    synchronouslyUpdateUIPropsFunction_(shadowNodeFamily->getTag(), props);
   }
 
   updatesBatch = std::move(shadowTreeUpdatesBatch);
@@ -1193,11 +1193,9 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
       }
     }
   } else {
-    for (auto const &[shadowNode, props] : updatesBatch) {
-      SurfaceId surfaceId = shadowNode->getSurfaceId();
-      auto family = &shadowNode->getFamily();
-      react_native_assert(family->getSurfaceId() == surfaceId);
-      propsMapBySurface[surfaceId][family].emplace_back(props);
+    for (auto const &[shadowNodeFamily, props] : updatesBatch) {
+      SurfaceId surfaceId = shadowNodeFamily->getSurfaceId();
+      propsMapBySurface[surfaceId][shadowNodeFamily.get()].emplace_back(props);
     }
   }
 

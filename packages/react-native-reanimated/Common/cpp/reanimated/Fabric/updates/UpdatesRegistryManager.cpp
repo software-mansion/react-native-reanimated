@@ -48,7 +48,7 @@ bool UpdatesRegistryManager::shouldCommitAfterPause() {
 }
 
 void UpdatesRegistryManager::markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode) {
-  removableShadowNodes_[shadowNode->getTag()] = shadowNode;
+  removableShadowNodes_[shadowNode->getTag()] = shadowNode->getFamilyShared();
 }
 
 void UpdatesRegistryManager::unmarkNodeAsRemovable(Tag viewTag) {
@@ -58,18 +58,18 @@ void UpdatesRegistryManager::unmarkNodeAsRemovable(Tag viewTag) {
 void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadowNode) {
   RemovableShadowNodes remainingShadowNodes;
 
-  for (const auto &[tag, shadowNode] : removableShadowNodes_) {
-    if (!shadowNode) {
+  for (const auto &[tag, shadowNodeFamily] : removableShadowNodes_) {
+    if (!shadowNodeFamily) {
       continue;
     }
 
-    if (shadowNode->getFamily().getAncestors(rootShadowNode).empty()) {
+    if (shadowNodeFamily->getAncestors(rootShadowNode).empty()) {
       for (auto &registry : registries_) {
         registry->remove(tag);
       }
       staticPropsRegistry_->remove(tag);
     } else {
-      remainingShadowNodes.emplace(tag, shadowNode);
+      remainingShadowNodes.emplace(tag, shadowNodeFamily);
     }
   }
 
@@ -97,15 +97,14 @@ bool UpdatesRegistryManager::hasPropsToRevert() {
 
 void UpdatesRegistryManager::addToPropsMap(
     PropsMap &propsMap,
-    const std::shared_ptr<const ShadowNode> &shadowNode,
+    const ShadowNodeFamily::Shared &shadowNodeFamily,
     const folly::dynamic &props) {
-  auto &family = shadowNode->getFamily();
-  auto it = propsMap.find(&family);
+  auto it = propsMap.find(shadowNodeFamily.get());
 
   if (it == propsMap.cend()) {
     auto propsVector = std::vector<RawProps>{};
     propsVector.emplace_back(props);
-    propsMap.emplace(&family, propsVector);
+    propsMap.emplace(shadowNodeFamily.get(), propsVector);
   } else {
     it->second.emplace_back(props);
   }
@@ -117,7 +116,7 @@ void UpdatesRegistryManager::collectPropsToRevertBySurface(std::unordered_map<Su
   }
 
   for (const auto &[tag, pair] : propsToRevertMap_) {
-    const auto &[shadowNode, props] = pair;
+    const auto &[shadowNodeFamily, props] = pair;
     const auto &staticStyle = staticPropsRegistry_->get(tag);
     folly::dynamic filteredStyle = folly::dynamic::object;
 
@@ -127,7 +126,7 @@ void UpdatesRegistryManager::collectPropsToRevertBySurface(std::unordered_map<Su
         continue;
       }
 
-      const auto &nativeComponentName = shadowNode->getComponentName();
+      const auto &nativeComponentName = shadowNodeFamily->getComponentName();
       const auto &interpolators = getComponentInterpolators(nativeComponentName);
       const auto &it = interpolators.find(propName);
 
@@ -139,16 +138,16 @@ void UpdatesRegistryManager::collectPropsToRevertBySurface(std::unordered_map<Su
       filteredStyle[propName] = nullptr;
     }
 
-    const auto &surfaceId = shadowNode->getSurfaceId();
+    const auto &surfaceId = shadowNodeFamily->getSurfaceId();
     auto &propsMap = propsMapBySurface[surfaceId];
 
-    addToPropsMap(propsMap, shadowNode, filteredStyle);
+    addToPropsMap(propsMap, shadowNodeFamily, filteredStyle);
   }
 }
 
 void UpdatesRegistryManager::clearPropsToRevert(const SurfaceId surfaceId) {
   for (auto it = propsToRevertMap_.begin(); it != propsToRevertMap_.end();) {
-    if (it->second.shadowNode->getSurfaceId() == surfaceId) {
+    if (it->second.shadowNodeFamily->getSurfaceId() == surfaceId) {
       it = propsToRevertMap_.erase(it);
     } else {
       ++it;
