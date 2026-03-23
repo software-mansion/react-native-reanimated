@@ -199,6 +199,24 @@ describe(processFilter, () => {
     });
   });
 
+  describe('returns empty array for invalid filter values', () => {
+    test('negative blur returns empty array', () => {
+      expect(processFilter('blur(-5px)')).toEqual([]);
+    });
+
+    test('negative blur in array input returns empty array', () => {
+      expect(processFilter([{ blur: -5 }])).toEqual([]);
+    });
+
+    test('negative percentage filter returns empty array', () => {
+      expect(processFilter('brightness(-0.5)')).toEqual([]);
+    });
+
+    test('invalidates all filters if any is invalid', () => {
+      expect(processFilter('brightness(0.5) blur(-5)')).toEqual([]);
+    });
+  });
+
   describe('error handling', () => {
     const cases: { input: string; errorMessage: string }[] = [
       {

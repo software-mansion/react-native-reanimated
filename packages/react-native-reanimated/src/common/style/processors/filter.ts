@@ -88,7 +88,7 @@ const parseDropShadowString = (value: string) => {
 const parseDropShadow = (
   value: string | DropShadowValue,
   context: ValueProcessorContext | undefined
-): ParsedDropShadow => {
+): ParsedDropShadow | null => {
   const dropShadow =
     typeof value === 'string' ? parseDropShadowString(value) : value;
   const {
@@ -98,14 +98,22 @@ const parseDropShadow = (
     standardDeviation = 0,
   } = dropShadow;
 
+  const parsedStdDev = parseFloat(standardDeviation as string);
+  if (parsedStdDev < 0) {
+    return null;
+  }
+
   const processedColor = processColor(color, context);
+  if (processedColor == null) {
+    return null;
+  }
 
   return {
     // TODO - add support for IOS dynamic colors in CSS (for now we just assume that it's a number)
     color: processedColor as number,
     offsetX: parseFloat(offsetX as string),
     offsetY: parseFloat(offsetY as string),
-    standardDeviation: parseFloat(standardDeviation as string),
+    standardDeviation: parsedStdDev,
   };
 };
 
@@ -113,37 +121,44 @@ const parseFilterProperty = (
   filterName: string,
   filterValue: string | number | DropShadowValue,
   context: ValueProcessorContext | undefined
-): ParsedFilterFunction => {
+): ParsedFilterFunction | null => {
   // We need to handle dropShadow separately because of its complex structure
   if (filterName == 'dropShadow') {
-    return {
-      dropShadow: parseDropShadow(
-        filterValue as string | DropShadowValue,
-        context
-      ),
-    };
+    const dropShadow = parseDropShadow(
+      filterValue as string | DropShadowValue,
+      context
+    );
+    if (dropShadow == null) {
+      return null;
+    }
+    return { dropShadow };
   }
+
+  let numberValue: number;
+  let unit: string;
 
   if (isNumber(filterValue)) {
-    return { [filterName]: filterValue };
+    numberValue = filterValue;
+    unit = '';
+  } else {
+    const stringValue = filterValue as string;
+    const match = stringValue.match(FILTER_VALUE_REGEX);
+    if (!match) {
+      throw new ReanimatedError(
+        ERROR_MESSAGES.invalidFilter(`${filterName}(${stringValue})`)
+      );
+    }
+    numberValue = parseFloat(match[1]);
+    unit = match[2];
   }
 
-  const stringValue = filterValue as string;
-  const match = stringValue.match(FILTER_VALUE_REGEX);
-  if (!match) {
-    throw new ReanimatedError(
-      ERROR_MESSAGES.invalidFilter(`${filterName}(${stringValue})`)
-    );
-  }
-
-  const numberValue = parseFloat(match[1]);
-  const unit = match[2];
-
+  let amount: number | undefined;
   switch (filterName) {
     case 'hueRotate':
       return { hueRotate: parseHueRotate({ numberValue, unit }) };
     case 'blur':
-      return { blur: parseBlur({ numberValue, unit }) };
+      amount = parseBlur({ numberValue, unit });
+      break;
     case 'brightness':
     case 'contrast':
     case 'grayscale':
@@ -151,12 +166,19 @@ const parseFilterProperty = (
     case 'opacity':
     case 'saturate':
     case 'sepia':
-      return { [filterName]: parsePercentageFilter({ numberValue, unit }) };
+      amount = parsePercentageFilter({ numberValue, unit });
+      break;
     default:
       throw new ReanimatedError(
-        ERROR_MESSAGES.invalidFilter(`${filterName}(${stringValue})`)
+        ERROR_MESSAGES.invalidFilter(`${filterName}(${numberValue}${unit})`)
       );
   }
+
+  if (amount == null) {
+    return null;
+  }
+
+  return { [filterName]: amount };
 };
 
 const parseFilterString = (
@@ -169,14 +191,19 @@ const parseFilterString = (
     throw new ReanimatedError(ERROR_MESSAGES.invalidFilter(value));
   }
 
-  const filterArray = matches.map((match) => {
+  const filterArray: FilterArray = [];
+  for (const match of matches) {
     const [filter, name, content] = match;
     if (!name || !content) {
       throw new ReanimatedError(ERROR_MESSAGES.invalidFilter(filter));
     }
 
-    return parseFilterProperty(name, content, context);
-  });
+    const parsed = parseFilterProperty(name, content, context);
+    if (parsed == null) {
+      return [];
+    }
+    filterArray.push(parsed);
+  }
   return filterArray;
 };
 
@@ -189,10 +216,16 @@ export const processFilter: ValueProcessor<
   }
 
   if (Array.isArray(value)) {
-    return value.map((filter) => {
+    const filterArray: FilterArray = [];
+    for (const filter of value) {
       const filterKey = Object.keys(filter)[0];
-      return parseFilterProperty(filterKey, filter[filterKey], context);
-    });
+      const parsed = parseFilterProperty(filterKey, filter[filterKey], context);
+      if (parsed == null) {
+        return [];
+      }
+      filterArray.push(parsed);
+    }
+    return filterArray;
   }
 
   throw new ReanimatedError(ERROR_MESSAGES.invalidFilterType(value));
