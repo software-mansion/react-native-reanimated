@@ -1,6 +1,6 @@
 {
   "name": "react-native-worklets",
-  "version": "0.8.0-main",
+  "version": "0.9.0-main",
   "description": "The React Native multithreading library",
   "keywords": [
     "react-native",
@@ -58,18 +58,17 @@
     "react-native": "0.81 - 0.85"
   },
   "dependencies": {
-    "@babel/plugin-transform-arrow-functions": "7.27.1",
-    "@babel/plugin-transform-class-properties": "7.27.1",
-    "@babel/plugin-transform-classes": "7.28.4",
-    "@babel/plugin-transform-nullish-coalescing-operator": "7.27.1",
-    "@babel/plugin-transform-optional-chaining": "7.27.1",
-    "@babel/plugin-transform-shorthand-properties": "7.27.1",
-    "@babel/plugin-transform-template-literals": "7.27.1",
-    "@babel/plugin-transform-unicode-regex": "7.27.1",
-    "@babel/preset-typescript": "7.27.1",
-    "convert-source-map": "2.0.0",
-    "is-tree-shakable": "0.5.0",
-    "semver": "7.7.3"
+    "@babel/plugin-transform-arrow-functions": "^7.27.1",
+    "@babel/plugin-transform-class-properties": "^7.28.6",
+    "@babel/plugin-transform-classes": "^7.28.6",
+    "@babel/plugin-transform-nullish-coalescing-operator": "^7.28.6",
+    "@babel/plugin-transform-optional-chaining": "^7.28.6",
+    "@babel/plugin-transform-shorthand-properties": "^7.27.1",
+    "@babel/plugin-transform-template-literals": "^7.27.1",
+    "@babel/plugin-transform-unicode-regex": "^7.27.1",
+    "@babel/preset-typescript": "^7.28.5",
+    "convert-source-map": "^2.0.0",
+    "semver": "^7.7.4"
   },
   "devDependencies": {
     "@babel/cli": "7.28.3",
@@ -83,6 +82,7 @@
     "clang-format-node": "1.3.5",
     "code-tag": "1.2.0",
     "eslint": "9.37.0",
+    "is-tree-shakable": "0.5.0",
     "jest": "30.2.0",
     "knip": "5.61.3",
     "madge": "8.0.0",
