@@ -39,7 +39,7 @@ interface WindowDimensions {
 }
 
 export interface KeyframeProps extends StyleProps {
-  easing?: EasingFunction | EasingFunctionFactory;
+  easing?: (EasingFunction | EasingFunctionFactory) | undefined;
 }
 
 type FirstFrame =
@@ -68,7 +68,7 @@ export type MaybeInvalidKeyframeProps = Record<number, KeyframeProps> & {
 export type LayoutAnimation = {
   initialValues: StyleProps;
   animations: StyleProps;
-  callback?: (finished: boolean) => void;
+  callback?: ((finished: boolean) => void) | undefined;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -167,7 +167,7 @@ export interface LayoutAnimationBatchItem {
   viewTag: number;
   type: LayoutAnimationType;
   config: SerializableRef<Keyframe | LayoutAnimationFunction> | undefined;
-  sharedTransitionTag?: string;
+  sharedTransitionTag?: string | undefined;
 }
 
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
@@ -268,17 +268,17 @@ export type AnimatableValue = Animatable | AnimatableValueObject;
 export interface AnimationObject<T = AnimatableValue> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
-  callback?: AnimationCallback;
-  current?: T;
+  callback?: AnimationCallback | undefined;
+  current?: T | undefined;
   toValue?: AnimationObject<T>['current'];
   startValue?: AnimationObject<T>['current'];
-  finished?: boolean;
-  strippedCurrent?: number;
-  cancelled?: boolean;
-  reduceMotion?: boolean;
+  finished?: boolean | undefined;
+  strippedCurrent?: number | undefined;
+  cancelled?: boolean | undefined;
+  reduceMotion?: boolean | undefined;
 
-  __prefix?: string;
-  __suffix?: string;
+  __prefix?: string | undefined;
+  __suffix?: string | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onFrame: (animation: any, timestamp: Timestamp) => boolean;
   onStart: (
@@ -411,8 +411,8 @@ export interface MeasuredDimensions {
 }
 
 export interface AnimatedKeyboardOptions {
-  isStatusBarTranslucentAndroid?: boolean;
-  isNavigationBarTranslucentAndroid?: boolean;
+  isStatusBarTranslucentAndroid?: boolean | undefined;
+  isNavigationBarTranslucentAndroid?: boolean | undefined;
 }
 
 /**
