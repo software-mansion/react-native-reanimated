@@ -34,21 +34,6 @@ const PROMOS: readonly Promo[] = [
       </>
     ),
   },
-  {
-    key: 'paradise',
-    href: 'https://paradise.swmansion.com?origin=swmansion_bar',
-    bg: '#FFF4C0',
-    buttonLabel: 'Learn more',
-    label: (
-      <>
-        <strong>React Native Paradise</strong>
-        <span className={styles.hiddenOnMobile}>
-          {' '}
-          - a week of advanced RN workshops in Croatia!
-        </span>
-      </>
-    ),
-  },
 ];
 
 // bump when adding promos so users who dismissed banner see the new one
