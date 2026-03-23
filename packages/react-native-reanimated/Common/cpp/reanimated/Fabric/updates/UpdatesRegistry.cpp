@@ -68,9 +68,7 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
   }
 }
 
-void UpdatesRegistry::addUpdatesToBatch(
-    const ShadowNodeFamily::Shared &shadowNodeFamily,
-    const folly::dynamic &props) {
+void UpdatesRegistry::addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props) {
   updatesBatch_.emplace_back(shadowNodeFamily, props);
 }
 
