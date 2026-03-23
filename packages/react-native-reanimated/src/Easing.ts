@@ -158,10 +158,6 @@ function elastic(bounciness = 1): EasingFunction {
 /**
  * Use with `Animated.parallel()` to create a simple effect where the object
  * animates back slightly as the animation starts.
- *
- * Wolfram Plot:
- *
- * - http://tiny.cc/back_default (s = 1.70158, default)
  */
 function back(s = 1.70158): (t: number) => number {
   'worklet';

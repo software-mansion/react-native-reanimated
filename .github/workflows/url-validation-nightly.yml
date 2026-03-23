@@ -5,7 +5,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/url-validation-nightly.yml
-      - packages/react-native-reanimated/scripts/validate-urls.js
+      - ./scripts/validate-urls.js
   schedule:
     - cron: '37 19 * * *'
   workflow_dispatch:

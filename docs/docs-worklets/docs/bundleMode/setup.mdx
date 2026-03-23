@@ -32,7 +32,7 @@ Install `react-native-worklets` package with the `bundle-mode-preview` tag:
 
 To use `react-native-worklets`'s Bundle Mode feature, you need to make the following changes in your repository:
 
-1. **Modify your Babel configuration**. [Worklets Babel Plugin](/docs/worklets-babel-plugin/about) needs to know that it has to prepare your code for the Bundle Mode. In your `babel.config.js` file, add the following:
+1. **Modify your Babel configuration**. [Worklets Babel Plugin](/docs/worklets-babel-plugin/about) needs to know that it has to prepare your code for the Bundle Mode. This is also the source of truth for your app to know if the Bundle Mode is enabled. In your `babel.config.js` file, add the following:
 
    ```javascript {2-5,13}
    /** @type {import('react-native-worklets/plugin').PluginOptions} */
@@ -56,30 +56,46 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
 
 2. **Modify your Metro configuration**. Metro needs to be configured pre-load Bundle Mode entry points into your JavaScript bundle. In your `metro.config.js` file, apply the config required for the bundle mode. For example:
 
-   ```javascript {6-8,16}
-   const {
-     getDefaultConfig,
-     mergeConfig,
-   } = require('@react-native/metro-config');
+<Tabs groupId="framework">
+  <TabItem value="expo" label="Expo">
+    ```javascript {3,10}
+    // Learn more https://docs.expo.io/guides/customizing-metro
+    const { getDefaultConfig, mergeConfig } = require("expo/metro-config");
+    const { getBundleModeMetroConfig } = require("react-native-worklets/bundleMode");
 
-   const {
-     bundleModeMetroConfig,
-   } = require('react-native-worklets/bundleMode');
+    @type {import('expo/metro-config').MetroConfig} */
+    let config = getDefaultConfig(__dirname);
 
-   const config = {
-     // Your Metro config
-   };
+    // Your modifications to the config
 
-   module.exports = mergeConfig(
-     getDefaultConfig(__dirname),
-     bundleModeMetroConfig,
-     config
-   );
-   ```
+    config = getBundleModeMetroConfig(config);
 
-## Configure your app
+    module.exports = config;
+    ```
 
-For Worklets to know that it should run in Bundle Mode, you need to toggle on `WORKLETS_BUNDLE_MODE_ENABLED` static feature flag in your app's `package.json`. You can find instructions on how to enable it [here](/docs/guides/feature-flags).
+  </TabItem>
+  <TabItem value="react-native-community" label="React Native Community">
+    ```javascript {6,12-16}
+    const {
+      getDefaultConfig,
+      mergeConfig,
+    } = require('@react-native/metro-config');
+
+    const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
+
+    const config = {
+      // Your Metro config
+    };
+
+    module.exports = mergeConfig(
+      getDefaultConfig(__dirname),
+      bundleModeMetroConfig,
+      config
+    );
+    ```
+
+  </TabItem>
+</Tabs>
 
 ## Enable seamless Metro bundling
 

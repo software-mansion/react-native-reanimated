@@ -32,7 +32,7 @@ type TestCase = {
   finalParentMargin: number;
 };
 
-describe('Test measuring component before nad after animation of the component and its parent', () => {
+describe('Test measuring component before and after animation of the component and its parent', () => {
   const INITIAL_MEASURE = 'INITIAL_MEASURE';
   const FINAL_MEASURE = 'FINAL_MEASURE';
   const MeasuredComponent = ({ initialStyle, finalStyle, initialParentMargin, finalParentMargin }: TestCase) => {

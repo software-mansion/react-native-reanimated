@@ -1,0 +1,27 @@
+diff --git a/apple/Elements/RNSVGImage.mm b/apple/Elements/RNSVGImage.mm
+index e6532c9c028440cbccda2238f53c8f9b56557028..dcbd1559bdba606c6fb7b47f9b87f3b272ebc90a 100644
+--- a/apple/Elements/RNSVGImage.mm
++++ b/apple/Elements/RNSVGImage.mm
+@@ -122,14 +122,22 @@ - (void)_setStateAndResubscribeImageResponseObserver:(RNSVGImageShadowNode::Conc
+ {
+   if (_state) {
+     auto &observerCoordinator = _state->getData().getImageRequest().getObserverCoordinator();
++#if REACT_NATIVE_MINOR_VERSION >= 85
++    observerCoordinator.removeObserver(_imageResponseObserverProxy);
++#else
+     observerCoordinator.removeObserver(*_imageResponseObserverProxy);
++#endif 
+   }
+ 
+   _state = state;
+ 
+   if (_state) {
+     auto &observerCoordinator = _state->getData().getImageRequest().getObserverCoordinator();
++#if REACT_NATIVE_MINOR_VERSION >= 85
++    observerCoordinator.addObserver(_imageResponseObserverProxy);
++#else
+     observerCoordinator.addObserver(*_imageResponseObserverProxy);
++#endif
+   }
+ }
+ 

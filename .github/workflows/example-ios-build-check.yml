@@ -65,7 +65,7 @@ jobs:
         run: yarn install --immutable
       - name: Toggle Bundle Mode
         if: ${{ inputs.bundleMode }}
-        run: ./scripts/toggle-bundle-mode.sh
+        run: yarn toggle-bundle-mode
       - name: Build Reanimated package
         working-directory: ${{ env.REANIMATED_DIR }}
         run: yarn build

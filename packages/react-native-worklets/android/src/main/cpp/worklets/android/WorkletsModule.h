@@ -7,6 +7,7 @@
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/ScriptBuffer.h>
+#include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/android/AndroidUIScheduler.h>
 #include <worklets/android/JScriptBufferWrapper.h>
@@ -25,6 +26,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
 
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> jThis,
+      jboolean bundleModeEnabled,
       jlong jsContext,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
@@ -40,12 +42,11 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
  private:
   explicit WorkletsModule(
       jni::alias_ref<jhybridobject> jThis,
+      const BundleModeConfig &bundleModeConfig,
       jsi::Runtime *rnRuntime,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-      const std::shared_ptr<UIScheduler> &uiScheduler,
-      const std::shared_ptr<const ScriptBuffer> &script,
-      const std::string &sourceURL);
+      const std::shared_ptr<UIScheduler> &uiScheduler);
 
   void invalidateCpp();
 
@@ -55,11 +56,11 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
   }
 
   RuntimeBindings::RequestAnimationFrame getRequestAnimationFrame();
-#if defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
   RuntimeBindings::AbortRequest getAbortRequest();
   RuntimeBindings::ClearCookies getClearCookies();
   RuntimeBindings::SendRequest getSendRequest();
-#endif // defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 
   std::function<bool()> getIsOnJSQueueThread();
 

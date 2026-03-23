@@ -1,0 +1,26 @@
+name: README badges Slack report [Daily]
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # 08:00 CEST (UTC+2)
+  workflow_dispatch:
+
+jobs:
+  readme-badges-slack-daily:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run README badge status reporter
+        run: node --experimental-strip-types .github/workflows/helper/nightly-fail-notification.ts

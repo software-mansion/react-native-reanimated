@@ -1,6 +1,7 @@
 import type { NodePath } from '@babel/core';
 import generate from '@babel/generator';
 import type {
+  BlockStatement,
   ExpressionStatement,
   FunctionExpression,
   ObjectExpression,
@@ -192,11 +193,16 @@ export function makeWorkletFactory(
   const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
 
   if (shouldIncludeInitData && !state.opts.bundleMode) {
-    pathForStringDefinitions.insertBefore(
-      variableDeclaration('const', [
-        variableDeclarator(initDataId, initDataObjectExpression),
-      ])
-    );
+    const initDataDeclaration = variableDeclaration('const', [
+      variableDeclarator(initDataId, initDataObjectExpression),
+    ]);
+    if (state.opts.limitInitDataHoisting) {
+      (fun.getFunctionParent()!.node.body as BlockStatement).body.unshift(
+        initDataDeclaration
+      );
+    } else {
+      pathForStringDefinitions.insertBefore(initDataDeclaration);
+    }
   }
 
   assert(

@@ -13,6 +13,7 @@
 #include <reanimated/CSS/common/transforms/TransformMatrix2D.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
 
+#include <reanimated/CSS/svg/values/CSSLengthArray.h>
 #include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGPath.h>
 #include <reanimated/CSS/svg/values/SVGStops.h>
@@ -351,6 +352,17 @@ const InterpolatorFactoriesRecord SVG_PATH_INTERPOLATORS = mergeInterpolators(
          {"d", value<SVGPath>("")},
      }});
 
+const InterpolatorFactoriesRecord SVG_PATTERN_INTERPOLATORS = mergeInterpolators(
+    {SVG_COMMON_INTERPOLATORS,
+     InterpolatorFactoriesRecord{
+         {"x", value<CSSLength>(0, {RelativeTo::Parent, "width"})},
+         {"y", value<CSSLength>(0, {RelativeTo::Parent, "height"})},
+         {"width", value<CSSLength>(0, {RelativeTo::Parent, "width"})},
+         {"height", value<CSSLength>(0, {RelativeTo::Parent, "height"})},
+         {"patternUnits", value<CSSIndex>(0)},
+         {"patternContentUnits", value<CSSIndex>(0)},
+     }});
+
 const InterpolatorFactoriesRecord SVG_RADIAL_GRADIENT_INTERPOLATORS = mergeInterpolators(
     {SVG_COMMON_INTERPOLATORS,
      InterpolatorFactoriesRecord{
@@ -365,6 +377,19 @@ const InterpolatorFactoriesRecord SVG_RADIAL_GRADIENT_INTERPOLATORS = mergeInter
          {"gradientUnits", value<CSSIndex>(0)},
          // TODO: Implement 'gradientTransform'
          // {"gradientTransform", value<CSSKeyword>("")},
+     }});
+
+const InterpolatorFactoriesRecord SVG_TEXT_INTERPOLATORS = mergeInterpolators(
+    {SVG_COMMON_INTERPOLATORS,
+     InterpolatorFactoriesRecord{
+         {"x", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "width"})},
+         {"y", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "height"})},
+         {"dx", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "width"})},
+         {"dy", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "height"})},
+         {"rotate", value<CSSLengthArray>(CSSLengthArray(), {RelativeTo::Parent, "width"})},
+         // TODO: Implement when supported by RNSVG
+         //  {"textLength", value<CSSLength, CSSKeyword>(0, {RelativeTo::Parent, "width"})},
+         //  {"lengthAdjust", value<CSSKeyword>("spacing")},
      }});
 
 // ==================
@@ -384,8 +409,10 @@ ComponentInterpolatorsMap initializeRegistry() {
     registry["RNSVGLine"] = SVG_LINE_INTERPOLATORS;
     registry["RNSVGLinearGradient"] = SVG_LINEAR_GRADIENT_INTERPOLATORS;
     registry["RNSVGPath"] = SVG_PATH_INTERPOLATORS;
+    registry["RNSVGPattern"] = SVG_PATTERN_INTERPOLATORS;
     registry["RNSVGRect"] = SVG_RECT_INTERPOLATORS;
     registry["RNSVGRadialGradient"] = SVG_RADIAL_GRADIENT_INTERPOLATORS;
+    registry["RNSVGText"] = SVG_TEXT_INTERPOLATORS;
   }
 
   return registry;

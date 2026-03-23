@@ -84,7 +84,7 @@ getArgsForFunction(std::function<Ret(Args...)>, jsi::Runtime &rt, const jsi::Val
 // passing `rt` as the first argument
 template <typename Ret, typename... Args>
 std::tuple<jsi::Runtime &, Args...> getArgsForFunction(
-    std::function<Ret(jsi::Runtime &, Args...)>,
+    const std::function<Ret(jsi::Runtime &, Args...)> &,
     jsi::Runtime &rt,
     const jsi::Value *args,
     const size_t count) {
@@ -116,7 +116,7 @@ inline jsi::Value apply(std::function<void(Args...)> function, std::tuple<Args..
 // returns a function with JSI calling convention
 // from a native function `function`
 template <typename Fun>
-jsi::HostFunctionType createHostFunction(Fun function) {
+jsi::HostFunctionType createHostFunction(const Fun &function) {
   return [function](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, const size_t count) {
     auto argz = getArgsForFunction(function, rt, args, count);
     return apply(function, std::move(argz));
@@ -150,7 +150,7 @@ struct takes_runtime<jsi::Runtime &, Rest...> {
 // and installs it as a global function named `name`
 // in the `rt` JS runtime
 template <typename Ret, typename... Args>
-void installJsiFunction(jsi::Runtime &rt, std::string_view name, std::function<Ret(Args...)> function) {
+void installJsiFunction(jsi::Runtime &rt, std::string_view name, const std::function<Ret(Args...)> &function) {
   auto clb = createHostFunction(function);
   auto argsCount = sizeof...(Args) - takes_runtime<Args...>::value;
   jsi::Value jsiFunction =

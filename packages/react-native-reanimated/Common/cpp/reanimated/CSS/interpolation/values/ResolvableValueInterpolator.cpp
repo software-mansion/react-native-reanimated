@@ -7,6 +7,7 @@
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 #include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
+#include <reanimated/CSS/svg/values/CSSLengthArray.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
 #include <memory>
@@ -44,6 +45,7 @@ folly::dynamic ResolvableValueInterpolator<AllowedTypes...>::interpolateValue(
 
 template class ResolvableValueInterpolator<CSSLength>;
 template class ResolvableValueInterpolator<CSSLength, CSSKeyword>;
+template class ResolvableValueInterpolator<CSSLengthArray>;
 template class ResolvableValueInterpolator<SVGStrokeDashArray, CSSKeyword>;
 
 } // namespace reanimated::css

@@ -115,6 +115,7 @@ DEPENDENCIES
   concurrent-ruby (< 1.3.4)
   logger
   mutex_m
+  nkf
   xcodeproj (< 1.26.0)
 
 RUBY VERSION

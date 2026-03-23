@@ -50,21 +50,28 @@ export function setupRequestAnimationFrame() {
     }
   }
 
+  function nativeFlushQueue(timestamp: number) {
+    flushQueue(timestamp);
+
+    /* Schedule next frame */
+    nativeRequestAnimationFrame(nativeFlushQueue);
+  }
+
   function flushQueue(timestamp: number) {
     globalThis.__frameTimestamp = timestamp;
     executeQueue(timestamp);
     globalThis.__frameTimestamp = undefined;
-
-    /* Schedule next frame */
-    nativeRequestAnimationFrame(flushQueue);
   }
 
   globalThis.requestAnimationFrame = requestAnimationFrame;
-  globalThis.cancelAnimationFrame = cancelAnimationFrame;
-  globalThis.__flushAnimationFrame = () => {
-    // NOOP for backwards compatibility
+  globalThis.cancelAnimationFrame =
+    cancelAnimationFrame as typeof globalThis.cancelAnimationFrame;
+  globalThis.__flushAnimationFrame = (eventTimestamp: number) => {
+    // TODO: Remove this in the future.
+    // Reanimated uses this method to trigger event synchronously.
+    flushQueue(eventTimestamp);
   };
 
   /* Start the loop */
-  nativeRequestAnimationFrame(flushQueue);
+  nativeRequestAnimationFrame(nativeFlushQueue);
 }
