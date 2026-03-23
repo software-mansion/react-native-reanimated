@@ -147,3 +147,11 @@ button[class*='DocSearch-Button'] {
 .navbar__brand img {
   vertical-align: middle;
 }
+
+[class*='hireUsContainer'] {
+  display: none;
+}
+
+[class*='headerWithBadges'] {
+  align-items: baseline;
+}
