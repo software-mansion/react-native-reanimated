@@ -8,6 +8,7 @@
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
+#include <reanimated/Tools/ReanimatedDevToolsPerformanceSection.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #ifdef __ANDROID__
@@ -678,6 +679,7 @@ double ReanimatedModuleProxy::getCssTimestamp() {
 
 void ReanimatedModuleProxy::performOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
+  ReanimatedDevToolsPerformanceSection devtoolsTrace("ReanimatedModuleProxy::performOperations");
 
   auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
   for (const auto surfaceId : flushRequestsCopy) {
