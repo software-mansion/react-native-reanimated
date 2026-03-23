@@ -1,5 +1,11 @@
 'use strict';
 import type {
+  AnimatableNumericValue,
+  RotateTransform,
+  ScaleTransform,
+} from 'react-native';
+
+import type {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
 } from '../../commonTypes';
@@ -37,18 +43,28 @@ export class PinwheelIn
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
           transform: [
             {
-              scale: delayFunction(delay, animation(1, config)),
+              scale: delayFunction(
+                delay,
+                animation(targetValues?.scale ?? 1, config)
+              ),
             },
             {
-              rotate: delayFunction(delay, animation('0rad', config)),
+              rotate: delayFunction(
+                delay,
+                animation(targetValues?.rotate ?? '0rad', config)
+              ),
             },
           ],
         },
@@ -94,18 +110,28 @@ export class PinwheelOut
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
           transform: [
             {
-              scale: delayFunction(delay, animation(0, config)),
+              scale: delayFunction(
+                delay,
+                animation(targetValues?.scale ?? 0, config)
+              ),
             },
             {
-              rotate: delayFunction(delay, animation('5rad', config)),
+              rotate: delayFunction(
+                delay,
+                animation(targetValues?.rotate ?? '5rad', config)
+              ),
             },
           ],
         },

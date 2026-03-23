@@ -1,4 +1,10 @@
 'use strict';
+import type {
+  AnimatableNumericValue,
+  SkewXTransform,
+  TranslateXTransform,
+} from 'react-native';
+
 import { withSequence, withTiming } from '../../animation';
 import type {
   EntryExitAnimationFunction,
@@ -39,17 +45,24 @@ export class LightSpeedInRight
     const duration = this.getDuration();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, withTiming(1, { duration })),
+          opacity: delayFunction(
+            delay,
+            withTiming(targetValues?.opacity ?? 1, { duration })
+          ),
           transform: [
             {
               translateX: delayFunction(
                 delay,
-                animation(0, { ...config, duration: duration * 0.7 })
+                animation(targetValues?.translateX ?? 0, {
+                  ...config,
+                  duration: duration * 0.7,
+                })
               ),
             },
             {
@@ -58,7 +71,9 @@ export class LightSpeedInRight
                 withSequence(
                   withTiming('10deg', { duration: duration * 0.7 }),
                   withTiming('-5deg', { duration: duration * 0.15 }),
-                  withTiming('0deg', { duration: duration * 0.15 })
+                  withTiming(targetValues?.skewX ?? '0deg', {
+                    duration: duration * 0.15,
+                  })
                 )
               ),
             },
@@ -107,17 +122,24 @@ export class LightSpeedInLeft
     const duration = this.getDuration();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, withTiming(1, { duration })),
+          opacity: delayFunction(
+            delay,
+            withTiming(targetValues?.opacity ?? 1, { duration })
+          ),
           transform: [
             {
               translateX: delayFunction(
                 delay,
-                animation(0, { ...config, duration: duration * 0.7 })
+                animation(targetValues?.translateX ?? 0, {
+                  ...config,
+                  duration: duration * 0.7,
+                })
               ),
             },
             {
@@ -126,7 +148,9 @@ export class LightSpeedInLeft
                 withSequence(
                   withTiming('-10deg', { duration: duration * 0.7 }),
                   withTiming('5deg', { duration: duration * 0.15 }),
-                  withTiming('0deg', { duration: duration * 0.15 })
+                  withTiming(targetValues?.skewX ?? '0deg', {
+                    duration: duration * 0.15,
+                  })
                 )
               ),
             },
@@ -174,21 +198,31 @@ export class LightSpeedOutRight
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
           transform: [
             {
               translateX: delayFunction(
                 delay,
-                animation(values.windowWidth, config)
+                animation(
+                  targetValues?.translateX ?? values.windowWidth,
+                  config
+                )
               ),
             },
             {
-              skewX: delayFunction(delay, animation('-45deg', config)),
+              skewX: delayFunction(
+                delay,
+                animation(targetValues?.skewX ?? '-45deg', config)
+              ),
             },
           ],
         },
@@ -234,21 +268,31 @@ export class LightSpeedOutLeft
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
           transform: [
             {
               translateX: delayFunction(
                 delay,
-                animation(-values.windowWidth, config)
+                animation(
+                  targetValues?.translateX ?? -values.windowWidth,
+                  config
+                )
               ),
             },
             {
-              skewX: delayFunction(delay, animation('45deg', config)),
+              skewX: delayFunction(
+                delay,
+                animation(targetValues?.skewX ?? '45deg', config)
+              ),
             },
           ],
         },

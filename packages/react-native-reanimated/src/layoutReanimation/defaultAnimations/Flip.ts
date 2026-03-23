@@ -1,5 +1,13 @@
 'use strict';
 import type {
+  PerspectiveTransform,
+  RotateXTransform,
+  RotateYTransform,
+  TranslateXTransform,
+  TranslateYTransform,
+} from 'react-native';
+
+import type {
   AnimationConfigFunction,
   EntryAnimationsValues,
   EntryExitAnimationFunction,
@@ -371,8 +379,9 @@ export class FlipOutXUp
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
-    return (targetValues) => {
+    return (values) => {
       'worklet';
       return {
         initialValues: {
@@ -388,7 +397,10 @@ export class FlipOutXUp
             {
               translateY: delayFunction(
                 delay,
-                animation(-targetValues.currentHeight, config)
+                animation(
+                  targetValues?.translateY ?? -values.currentHeight,
+                  config
+                )
               ),
             },
           ],
@@ -428,8 +440,9 @@ export class FlipOutYLeft
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
-    return (targetValues) => {
+    return (values) => {
       'worklet';
       return {
         initialValues: {
@@ -440,12 +453,25 @@ export class FlipOutYLeft
         },
         animations: {
           transform: [
-            { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateY: delayFunction(delay, animation('-90deg', config)) },
+            {
+              perspective: delayFunction(
+                delay,
+                animation(targetValues?.perspective ?? 500, config)
+              ),
+            },
+            {
+              rotateY: delayFunction(
+                delay,
+                animation(targetValues?.rotateY ?? '-90deg', config)
+              ),
+            },
             {
               translateX: delayFunction(
                 delay,
-                animation(-targetValues.currentWidth, config)
+                animation(
+                  targetValues?.translateX ?? -values.currentWidth,
+                  config
+                )
               ),
             },
           ],
@@ -485,8 +511,9 @@ export class FlipOutXDown
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
-    return (targetValues) => {
+    return (values) => {
       'worklet';
       return {
         initialValues: {
@@ -497,12 +524,25 @@ export class FlipOutXDown
         },
         animations: {
           transform: [
-            { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateX: delayFunction(delay, animation('-90deg', config)) },
+            {
+              perspective: delayFunction(
+                delay,
+                animation(targetValues?.perspective ?? 500, config)
+              ),
+            },
+            {
+              rotateX: delayFunction(
+                delay,
+                animation(targetValues?.rotateX ?? '-90deg', config)
+              ),
+            },
             {
               translateY: delayFunction(
                 delay,
-                animation(targetValues.currentHeight, config)
+                animation(
+                  targetValues?.translateY ?? values.currentHeight,
+                  config
+                )
               ),
             },
           ],
@@ -542,6 +582,9 @@ export class FlipOutYRight
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const perspectiveOverride = this.targetValues?.perspective;
+    const rotateYOverride = this.targetValues?.rotateY;
+    const translateXOverride = this.targetValues?.translateX;
 
     return (targetValues) => {
       'worklet';
@@ -554,12 +597,25 @@ export class FlipOutYRight
         },
         animations: {
           transform: [
-            { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateY: delayFunction(delay, animation('90deg', config)) },
+            {
+              perspective: delayFunction(
+                delay,
+                animation(perspectiveOverride ?? 500, config)
+              ),
+            },
+            {
+              rotateY: delayFunction(
+                delay,
+                animation(rotateYOverride ?? '90deg', config)
+              ),
+            },
             {
               translateX: delayFunction(
                 delay,
-                animation(targetValues.currentWidth, config)
+                animation(
+                  translateXOverride ?? targetValues.currentWidth,
+                  config
+                )
               ),
             },
           ],
@@ -597,6 +653,7 @@ export class FlipOutEasyX
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return () => {
       'worklet';
@@ -609,8 +666,18 @@ export class FlipOutEasyX
         },
         animations: {
           transform: [
-            { perspective: delayFunction(delay, animation(500, config)) },
-            { rotateX: delayFunction(delay, animation('90deg', config)) },
+            {
+              perspective: delayFunction(
+                delay,
+                animation(targetValues?.perspective ?? 500, config)
+              ),
+            },
+            {
+              rotateX: delayFunction(
+                delay,
+                animation(targetValues?.rotateX ?? '90deg', config)
+              ),
+            },
           ],
         },
         callback,
@@ -646,6 +713,7 @@ export class FlipOutEasyY
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return () => {
       'worklet';

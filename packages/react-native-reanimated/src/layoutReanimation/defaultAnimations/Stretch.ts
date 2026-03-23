@@ -1,4 +1,6 @@
 'use strict';
+import type { ScaleXTransform, ScaleYTransform } from 'react-native';
+
 import type {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
@@ -121,12 +123,20 @@ export class StretchOutX
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scaleX: delayFunction(delay, animation(0, config)) }],
+          transform: [
+            {
+              scaleX: delayFunction(
+                delay,
+                animation(targetValues?.scaleX ?? 0, config)
+              ),
+            },
+          ],
         },
         initialValues: {
           transform: pickTransformValues([{ scaleX: 1 }], initialValues),
@@ -164,12 +174,20 @@ export class StretchOutY
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scaleY: delayFunction(delay, animation(0, config)) }],
+          transform: [
+            {
+              scaleY: delayFunction(
+                delay,
+                animation(targetValues?.scaleY ?? 0, config)
+              ),
+            },
+          ],
         },
         initialValues: {
           transform: pickTransformValues([{ scaleY: 1 }], initialValues),

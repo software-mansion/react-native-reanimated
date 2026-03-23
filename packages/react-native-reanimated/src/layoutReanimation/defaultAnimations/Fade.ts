@@ -1,6 +1,8 @@
 'use strict';
 import type {
+  AnimationConfigFunction,
   EntryExitAnimationFunction,
+  ExitAnimationsValues,
   IEntryExitAnimationBuilder,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
@@ -34,12 +36,17 @@ export class FadeIn
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
@@ -78,14 +85,24 @@ export class FadeInRight
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
           transform: [
-            { translateX: delayFunction(delay, animation(0, config)) },
+            {
+              translateX: delayFunction(
+                delay,
+                animation(targetValues?.translateX ?? 0, config)
+              ),
+            },
           ],
         },
         initialValues: {
@@ -126,14 +143,24 @@ export class FadeInLeft
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
           transform: [
-            { translateX: delayFunction(delay, animation(0, config)) },
+            {
+              translateX: delayFunction(
+                delay,
+                animation(targetValues?.translateX ?? 0, config)
+              ),
+            },
           ],
         },
         initialValues: {
@@ -174,14 +201,24 @@ export class FadeInUp
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
           transform: [
-            { translateY: delayFunction(delay, animation(0, config)) },
+            {
+              translateY: delayFunction(
+                delay,
+                animation(targetValues?.translateY ?? 0, config)
+              ),
+            },
           ],
         },
         initialValues: {
@@ -222,14 +259,24 @@ export class FadeInDown
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(1, config)),
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 1, config)
+          ),
           transform: [
-            { translateY: delayFunction(delay, animation(0, config)) },
+            {
+              translateY: delayFunction(
+                delay,
+                animation(targetValues?.translateY ?? 0, config)
+              ),
+            },
           ],
         },
         initialValues: {
@@ -268,12 +315,17 @@ export class FadeOut
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
@@ -312,14 +364,24 @@ export class FadeOutRight
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
           transform: [
-            { translateX: delayFunction(delay, animation(25, config)) },
+            {
+              translateX: delayFunction(
+                delay,
+                animation(targetValues?.translateX ?? 25, config)
+              ),
+            },
           ],
         },
         initialValues: {
@@ -360,14 +422,24 @@ export class FadeOutLeft
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
           transform: [
-            { translateX: delayFunction(delay, animation(-25, config)) },
+            {
+              translateX: delayFunction(
+                delay,
+                animation(targetValues?.translateX ?? -25, config)
+              ),
+            },
           ],
         },
         initialValues: {
@@ -407,14 +479,24 @@ export class FadeOutUp
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
           transform: [
-            { translateY: delayFunction(delay, animation(-25, config)) },
+            {
+              translateY: delayFunction(
+                delay,
+                animation(targetValues?.translateY ?? -25, config)
+              ),
+            },
           ],
         },
         initialValues: {
@@ -450,19 +532,29 @@ export class FadeOutDown
     return new FadeOutDown() as InstanceType<T>;
   }
 
-  build = (): EntryExitAnimationFunction => {
+  build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
     const delay = this.getDelay();
+
     return () => {
       'worklet';
       return {
         animations: {
-          opacity: delayFunction(delay, animation(0, config)),
+          opacity: delayFunction(
+            delay,
+            animation(targetValues?.opacity ?? 0, config)
+          ),
           transform: [
-            { translateY: delayFunction(delay, animation(25, config)) },
+            {
+              translateY: delayFunction(
+                delay,
+                animation(targetValues?.translateY ?? 25, config)
+              ),
+            },
           ],
         },
         initialValues: {

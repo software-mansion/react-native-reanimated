@@ -1,4 +1,6 @@
 'use strict';
+import type { RotateTransform, TranslateXTransform } from 'react-native';
+
 import type {
   EntryExitAnimationFunction,
   EntryExitAnimationsValues,
@@ -36,14 +38,25 @@ export class RollInLeft
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
           transform: [
-            { translateX: delayFunction(delay, animation(0, config)) },
-            { rotate: delayFunction(delay, animation('0deg', config)) },
+            {
+              translateX: delayFunction(
+                delay,
+                animation(targetValues?.translateX ?? 0, config)
+              ),
+            },
+            {
+              rotate: delayFunction(
+                delay,
+                animation(targetValues?.rotate ?? '0deg', config)
+              ),
+            },
           ],
         },
         initialValues: {
@@ -85,14 +98,25 @@ export class RollInRight
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
       return {
         animations: {
           transform: [
-            { translateX: delayFunction(delay, animation(0, config)) },
-            { rotate: delayFunction(delay, animation('0deg', config)) },
+            {
+              translateX: delayFunction(
+                delay,
+                animation(targetValues?.translateX ?? 0, config)
+              ),
+            },
+            {
+              rotate: delayFunction(
+                delay,
+                animation(targetValues?.rotate ?? '0deg', config)
+              ),
+            },
           ],
         },
         initialValues: {
@@ -134,6 +158,7 @@ export class RollOutLeft
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -143,10 +168,18 @@ export class RollOutLeft
             {
               translateX: delayFunction(
                 delay,
-                animation(-values.windowWidth, config)
+                animation(
+                  targetValues?.translateX ?? -values.windowWidth,
+                  config
+                )
               ),
             },
-            { rotate: delayFunction(delay, animation('-180deg', config)) },
+            {
+              rotate: delayFunction(
+                delay,
+                animation(targetValues?.rotate ?? '-180deg', config)
+              ),
+            },
           ],
         },
         initialValues: {
@@ -188,6 +221,7 @@ export class RollOutRight
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -197,10 +231,18 @@ export class RollOutRight
             {
               translateX: delayFunction(
                 delay,
-                animation(values.windowWidth, config)
+                animation(
+                  targetValues?.translateX ?? values.windowWidth,
+                  config
+                )
               ),
             },
-            { rotate: delayFunction(delay, animation('180deg', config)) },
+            {
+              rotate: delayFunction(
+                delay,
+                animation(targetValues?.rotate ?? '180deg', config)
+              ),
+            },
           ],
         },
         initialValues: {
