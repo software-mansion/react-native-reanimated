@@ -32,7 +32,7 @@ Install `react-native-worklets` package with the `bundle-mode-preview` tag:
 
 To use `react-native-worklets`'s Bundle Mode feature, you need to make the following changes in your repository:
 
-1. **Modify your Babel configuration**. [Worklets Babel Plugin](/docs/worklets-babel-plugin/about) needs to know that it has to prepare your code for the Bundle Mode. In your `babel.config.js` file, add the following:
+1. **Modify your Babel configuration**. [Worklets Babel Plugin](/docs/worklets-babel-plugin/about) needs to know that it has to prepare your code for the Bundle Mode. This is also the source of truth for your app to know if the Bundle Mode is enabled. In your `babel.config.js` file, add the following:
 
    ```javascript {2-5,13}
    /** @type {import('react-native-worklets/plugin').PluginOptions} */
@@ -96,10 +96,6 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
 
   </TabItem>
 </Tabs>
-
-## Configure your app
-
-For Worklets to know that it should run in Bundle Mode, you need to toggle on `WORKLETS_BUNDLE_MODE_ENABLED` static feature flag in your app's `package.json`. You can find instructions on how to enable it [here](/docs/guides/feature-flags).
 
 ## Enable seamless Metro bundling
 

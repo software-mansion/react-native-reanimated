@@ -19,7 +19,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: undefined,
+        specificProperties: undefined,
         settings: {
           all: {
             duration: 1500,
@@ -31,22 +31,12 @@ describe(normalizeCSSTransitionProperties, () => {
       });
     });
 
-    test('uses default values for unspecified properties', () => {
+    test('returns null if effective duration is 0 for a single property', () => {
       const config: CSSTransitionProperties = {
         transitionProperty: 'opacity',
       };
 
-      expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: ['opacity'],
-        settings: {
-          opacity: {
-            duration: 0,
-            timingFunction: 'ease',
-            delay: 0,
-            allowDiscrete: false,
-          },
-        },
-      });
+      expect(normalizeCSSTransitionProperties(config)).toEqual(null);
     });
 
     test('returns null if transition property is "none"', () => {
@@ -74,7 +64,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: undefined,
+        specificProperties: undefined,
         settings: {
           all: {
             duration: 1500,
@@ -98,7 +88,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: ['opacity', 'transform'],
+        specificProperties: new Set(['opacity', 'transform']),
         settings: {
           opacity: {
             duration: 1500,
@@ -126,7 +116,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: ['opacity', 'width'],
+        specificProperties: new Set(['opacity', 'width']),
         settings: {
           opacity: {
             duration: 1500,
@@ -144,6 +134,32 @@ describe(normalizeCSSTransitionProperties, () => {
       });
     });
 
+    test('prunes properties whose effective duration is 0 (duration + delay)', () => {
+      const config: CSSTransitionProperties = {
+        transitionProperty: ['opacity', 'width', 'height'],
+        transitionDuration: ['0ms', '300ms', '0ms'],
+        transitionDelay: ['0ms', '0ms', '100ms'],
+      };
+
+      expect(normalizeCSSTransitionProperties(config)).toEqual({
+        specificProperties: new Set(['width', 'height']),
+        settings: {
+          width: {
+            duration: 300,
+            timingFunction: 'ease',
+            delay: 0,
+            allowDiscrete: false,
+          },
+          height: {
+            duration: 0,
+            timingFunction: 'ease',
+            delay: 100,
+            allowDiscrete: false,
+          },
+        },
+      });
+    });
+
     test('cycles through values if their number is different than the number of transition properties', () => {
       const config: CSSTransitionProperties = {
         transitionProperty: ['width', 'opacity', 'transform'],
@@ -154,7 +170,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: ['width', 'opacity', 'transform'],
+        specificProperties: new Set(['width', 'opacity', 'transform']),
         settings: {
           width: {
             duration: 1500,
@@ -188,13 +204,33 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: ['opacity'],
+        specificProperties: new Set(['opacity']),
         settings: {
           opacity: {
             duration: 2000,
             timingFunction: cubicBezier(0.4, 0, 0.2, 1).normalize(),
             delay: 300,
             allowDiscrete: true,
+          },
+        },
+      });
+    });
+
+    test('does not revive a property if its last occurrence is inactive', () => {
+      const config: CSSTransitionProperties = {
+        transitionProperty: ['opacity', 'width', 'opacity'],
+        transitionDuration: ['2s', '300ms', '0ms'],
+        transitionDelay: ['0ms', '0ms', '0ms'],
+      };
+
+      expect(normalizeCSSTransitionProperties(config)).toEqual({
+        specificProperties: new Set(['width']),
+        settings: {
+          width: {
+            duration: 300,
+            timingFunction: 'ease',
+            delay: 0,
+            allowDiscrete: false,
           },
         },
       });
@@ -210,7 +246,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: undefined,
+        specificProperties: undefined,
         settings: {
           all: {
             duration: 1500,
@@ -223,6 +259,26 @@ describe(normalizeCSSTransitionProperties, () => {
             timingFunction: cubicBezier(0.4, 0, 0.2, 1).normalize(),
             delay: 500,
             allowDiscrete: true,
+          },
+        },
+      });
+    });
+
+    test('when "all" is inactive but a specific property is active, returns only that property', () => {
+      const config: CSSTransitionProperties = {
+        transitionProperty: ['all', 'opacity'],
+        transitionDuration: ['0ms', '2s'],
+        transitionDelay: ['0ms', '0ms'],
+      };
+
+      expect(normalizeCSSTransitionProperties(config)).toEqual({
+        specificProperties: new Set(['opacity']),
+        settings: {
+          opacity: {
+            duration: 2000,
+            timingFunction: 'ease',
+            delay: 0,
+            allowDiscrete: false,
           },
         },
       });
@@ -249,7 +305,7 @@ describe(normalizeCSSTransitionProperties, () => {
       const config: CSSTransitionProperties = { transitionDuration: '2s' };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: undefined,
+        specificProperties: undefined,
         settings: {
           all: {
             duration: 2000,
@@ -259,6 +315,15 @@ describe(normalizeCSSTransitionProperties, () => {
           },
         },
       });
+    });
+
+    test('returns null if default "all" has effective duration 0', () => {
+      const config: CSSTransitionProperties = {
+        transitionDuration: '0ms',
+        transitionDelay: '0ms',
+      };
+
+      expect(normalizeCSSTransitionProperties(config)).toEqual(null);
     });
   });
 
@@ -270,7 +335,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: undefined,
+        specificProperties: undefined,
         settings: {
           all: {
             duration: 4000,
@@ -303,7 +368,7 @@ describe(normalizeCSSTransitionProperties, () => {
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
-        properties: ['opacity', 'transform'],
+        specificProperties: new Set(['opacity', 'transform']),
         settings: {
           opacity: {
             duration: 3000,

@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - '.github/workflows/lint-clang-tidy.yml'
+      - 'scripts/clang-tidy-lint.sh'
 
   merge_group:
     branches:
@@ -15,6 +16,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/lint-clang-tidy.yml'
+      - 'scripts/clang-tidy-lint.sh'
   workflow_call:
   workflow_dispatch:
 
@@ -30,10 +32,6 @@ jobs:
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable
-      - name: Build Worklets package
-        run: yarn workspace react-native-worklets build
-      - name: Build Reanimated package
-        run: yarn workspace react-native-reanimated build
 
       - name: Clang-tidy lint Worklets
         run: yarn workspace react-native-worklets lint:android:clang-tidy
