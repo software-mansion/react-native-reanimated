@@ -1,0 +1,51 @@
+name: NPM Worklets publish
+on:
+  # temporary
+  push:
+  merge_group:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Whether to publish the package or just do a dry run.'
+        required: false
+        default: 'false'
+      version:
+        description: 'Specific version to publish if it cannot be inferred automatically.'
+        required: false
+        default: ''
+
+      release-type:
+        description: 'Release type to be published (stable, nightly, beta, rc)'
+        required: true
+
+      npm-tag:
+        description: 'NPM tag to publish under (usually inferred from release type and version)'
+        required: false
+        default: ''
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: 'yarn'
+          node-version: 22
+
+      - name: Publish to npm
+        uses: tjzel/npm-package-publish@b29c75960ea14d3ce41b10b98f826d2cc1ca5196
+        with:
+          release-type: ${{ github.event.inputs.release-type || 'nightly' }}
+          version: ${{ github.event.inputs.version }}
+          npm-tag: ${{ github.event.inputs.npm-tag }}
+          dry-run: ${{ github.event.inputs.publish != 'true' }}
+          package-name: 'react-native-worklets'
+          package-json-path: 'packages/react-native-worklets/package.json'
+          version-getter-script: 'scripts/resolve-release-version.js'
+          perform-git-operations: 'false'

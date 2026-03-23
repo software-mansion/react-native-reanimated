@@ -13,7 +13,7 @@ yarn build
 npm pack
 
 if [ $# -ge 1 ]; then
-  node scripts/set-worklets-version.js "$CURRENT_VERSION" >/dev/null
+  node scripts/set-worklets-version.js --version "$CURRENT_VERSION" >/dev/null
 fi
 
 echo "Done!"

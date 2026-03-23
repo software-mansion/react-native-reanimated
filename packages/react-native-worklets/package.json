@@ -9,7 +9,7 @@
     "worklets"
   ],
   "scripts": {
-    "build": "yarn workspace babel-plugin-worklets build && bob build && yarn build:unpackers",
+    "build": "yarn workspace babel-plugin-worklets build && yarn set-version && bob build && yarn build:unpackers",
     "build:unpackers": "NODE_ENV='production' node ./scripts/export-unpackers.js",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
     "find-unused-code:js": "knip",
@@ -30,6 +30,7 @@
     "lint:clang-tidy": "../../scripts/clang-tidy-lint.sh \"Common\"",
     "lint:js": "eslint src && yarn prettier --check src",
     "lint:plugin": "yarn workspace babel-plugin-worklets lint",
+    "set-version": "node scripts/set-worklets-version.js",
     "test": "jest",
     "type:check": "yarn type:check:src:native && yarn type:check:src:web && yarn type:check:plugin && yarn type:check:app && yarn type:check:tests",
     "type:check:src:native": "yarn tsc --noEmit",
