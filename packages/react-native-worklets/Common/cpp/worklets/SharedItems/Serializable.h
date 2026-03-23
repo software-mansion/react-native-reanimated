@@ -52,7 +52,7 @@ class RetainingSerializable : virtual public BaseClass {
   explicit RetainingSerializable(jsi::Runtime &rt, Args &&...args)
       : BaseClass(rt, std::forward<Args>(args)...), primaryRuntime_(&rt) {}
 
-  jsi::Value toJSValue(jsi::Runtime &rt) {
+  jsi::Value toJSValue(jsi::Runtime &rt) override {
     if (&rt == primaryRuntime_) {
       // TODO: it is suboptimal to generate new object every time getJS is
       // called on host runtime – the objects we are generating already exists
@@ -74,7 +74,7 @@ class RetainingSerializable : virtual public BaseClass {
     return BaseClass::toJSValue(rt);
   }
 
-  ~RetainingSerializable() {
+  ~RetainingSerializable() override {
     cleanupIfRuntimeExists(secondaryRuntime_, secondaryValue_);
   }
 };

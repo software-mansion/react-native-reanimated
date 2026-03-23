@@ -32,7 +32,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
   ShadowViewMutationList filteredMutations;
   auto rootChildCount = static_cast<int>(lightNodes_[surfaceId]->children.size());
   const std::vector<std::shared_ptr<MutationNode>> roots;
-  const bool isInTransition = transitionState_;
+  const bool isInTransition = static_cast<bool>(transitionState_);
 
   if (isInTransition) {
     updateLightTree(propsParserContext, mutations, filteredMutations);
