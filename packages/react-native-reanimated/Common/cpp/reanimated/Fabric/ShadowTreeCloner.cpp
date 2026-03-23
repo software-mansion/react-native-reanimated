@@ -1,4 +1,5 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
+#include <reanimated/Tools/ReanimatedDevToolsPerformanceSection.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <memory>
@@ -60,6 +61,7 @@ std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
 
 RootShadowNode::Unshared cloneShadowTreeWithNewProps(const RootShadowNode &oldRootNode, const PropsMap &propsMap) {
   ReanimatedSystraceSection s("ShadowTreeCloner::cloneShadowTreeWithNewProps");
+  ReanimatedDevToolsPerformanceSection ps("ShadowTreeCloner");
 
   ChildrenMap childrenMap;
 
