@@ -145,6 +145,7 @@ export {
   /** @deprecated Please use {@link useScrollOffset} instead. */
   useScrollOffset as useScrollViewOffset,
   useSharedValue,
+  useTimestamp,
 } from './hook';
 export type {
   InterpolateConfig,
