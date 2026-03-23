@@ -255,9 +255,6 @@ android {
                     }
                 }
             }
-            packagingOptions {
-                doNotStrip "**/**/*.so"
-            }
         }
     }
     lintOptions {
@@ -314,6 +311,12 @@ android {
                 println("Generated clangd metadata.")
             }
         }
+    }
+}
+
+androidComponents {
+    onVariants(selector().withBuildType("debug")) {
+        packaging.jniLibs.keepDebugSymbols.add("**/**/*.so")
     }
 }
 
