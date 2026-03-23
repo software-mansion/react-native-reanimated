@@ -553,6 +553,7 @@ bool ReanimatedModuleProxy::handleEvent(
     const jsi::Value &payload,
     double currentTime) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::handleEvent");
+  ReanimatedDevToolsPerformanceSection ps("handleEvent");
 
   eventHandlerRegistry_->processEvent(uiRuntime_, currentTime, eventName, emitterReactTag, payload);
 
@@ -563,6 +564,7 @@ bool ReanimatedModuleProxy::handleEvent(
 
 bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double currentTime) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::handleRawEvent");
+  ReanimatedDevToolsPerformanceSection ps("handleRawEvent");
 
   const EventTarget *eventTarget = rawEvent.eventTarget.get();
   if (eventTarget == nullptr) {
@@ -679,7 +681,7 @@ double ReanimatedModuleProxy::getCssTimestamp() {
 
 void ReanimatedModuleProxy::performOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
-  ReanimatedDevToolsPerformanceSection devtoolsTrace("ReanimatedModuleProxy::performOperations");
+  ReanimatedDevToolsPerformanceSection devtoolsTrace("performOperations");
 
   auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
   for (const auto surfaceId : flushRequestsCopy) {
