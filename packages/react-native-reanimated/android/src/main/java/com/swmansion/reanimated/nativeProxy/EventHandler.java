@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
-import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTModernEventEmitter;
@@ -25,31 +24,6 @@ public class EventHandler implements RCTModernEventEmitter {
 
   @Override
   public void receiveEvent(
-      int emitterReactTag, @NonNull String eventName, @Nullable WritableMap event) {
-    String resolvedEventName = mCustomEventNamesResolver.resolveCustomEventName(eventName);
-    receiveEvent(resolvedEventName, emitterReactTag, event);
-  }
-
-  @SuppressWarnings("JavaJniMissingFunction")
-  public native void receiveEvent(
-      String eventName, int emitterReactTag, @Nullable WritableMap event);
-
-  @Override
-  public void receiveTouches(
-      @NonNull String eventName,
-      @NonNull WritableArray touches,
-      @NonNull WritableArray changedIndices) {
-    // not interested in processing touch events this way, we process raw events only
-  }
-
-  @Override
-  public void receiveEvent(
-      int surfaceId, int targetTag, @NonNull String eventName, @Nullable WritableMap params) {
-    // NOT IMPLEMENTED
-  }
-
-  @Override
-  public void receiveEvent(
       int surfaceId,
       int targetTag,
       @NonNull String eventName,
@@ -57,6 +31,11 @@ public class EventHandler implements RCTModernEventEmitter {
       int customCoalesceKey,
       @Nullable WritableMap params,
       int category) {
-    // NOT IMPLEMENTED
+    String resolvedEventName = mCustomEventNamesResolver.resolveCustomEventName(eventName);
+    receiveEvent(resolvedEventName, targetTag, params);
   }
+
+  @SuppressWarnings("JavaJniMissingFunction")
+  public native void receiveEvent(
+      String eventName, int emitterReactTag, @Nullable WritableMap event);
 }

@@ -11,7 +11,6 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.modules.core.ReactChoreographer;
 import com.facebook.react.uimanager.GuardedFrameCallback;
 import com.facebook.react.uimanager.UIManagerHelper;
-import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.common.UIManagerType;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
@@ -21,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.annotation.Nullable;
 
 public class NodesManager implements EventDispatcherListener {
 
@@ -170,8 +168,7 @@ public class NodesManager implements EventDispatcherListener {
 
         while (!mEventQueue.isEmpty()) {
           CopiedEvent copiedEvent = mEventQueue.poll();
-          handleEvent(
-              copiedEvent.getTargetTag(), copiedEvent.getEventName(), copiedEvent.getPayload());
+          handleEvent(copiedEvent);
         }
 
         if (!mFrameCallbacks.isEmpty()) {
@@ -203,7 +200,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   @Override
-  public void onEventDispatch(Event event) {
+  public void onEventDispatch(Event<?> event) {
     try {
       if (BuildConfig.REANIMATED_PROFILING) {
         Trace.beginSection("onEventDispatch");
@@ -233,12 +230,19 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
-  private void handleEvent(Event event) {
-    event.dispatch(mCustomEventHandler);
+  private void handleEvent(Event<?> event) {
+    event.dispatchModern(mCustomEventHandler);
   }
 
-  private void handleEvent(int targetTag, String eventName, @Nullable WritableMap event) {
-    mCustomEventHandler.receiveEvent(targetTag, eventName, event);
+  private void handleEvent(CopiedEvent copiedEvent) {
+    mCustomEventHandler.receiveEvent(
+        copiedEvent.getSurfaceId(),
+        copiedEvent.getTargetTag(),
+        copiedEvent.getEventName(),
+        copiedEvent.getCanCoalesceEvent(),
+        copiedEvent.getCustomCoalesceKey(),
+        copiedEvent.getPayload(),
+        copiedEvent.getCategory());
   }
 
   public UIManagerModule.CustomEventNamesResolver getEventNameResolver() {
