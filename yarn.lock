@@ -4714,9 +4714,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gorhom/bottom-sheet@npm:5.2.6":
-  version: 5.2.6
-  resolution: "@gorhom/bottom-sheet@npm:5.2.6"
+"@gorhom/bottom-sheet@npm:5.2.8":
+  version: 5.2.8
+  resolution: "@gorhom/bottom-sheet@npm:5.2.8"
   dependencies:
     "@gorhom/portal": "npm:1.0.14"
     invariant: "npm:^2.2.4"
@@ -4732,13 +4732,13 @@ __metadata:
       optional: true
     "@types/react-native":
       optional: true
-  checksum: 10/bca8cf14a7627d2fb2b5e6ed75e5fa79be373ee1d227941e0a3c1b33b3385b04a24353b0c48c00b8aeea72a17a4612eefd31ac1b38ab66f5b3103d3d4eb9fef2
+  checksum: 10/b237f04dfd2b7ea2a24b12d2186f38b8debf95a5ef660802f7c2a19998ec8a7f7d599cd9079b9ba5bba2c6958cee2040d3d1adc3d3ace8c4964a469c751f4a5a
   languageName: node
   linkType: hard
 
-"@gorhom/bottom-sheet@patch:@gorhom/bottom-sheet@npm%3A5.2.6#~/.yarn/patches/@gorhom-bottom-sheet-npm-5.2.6-c24dba2629.patch":
-  version: 5.2.6
-  resolution: "@gorhom/bottom-sheet@patch:@gorhom/bottom-sheet@npm%3A5.2.6#~/.yarn/patches/@gorhom-bottom-sheet-npm-5.2.6-c24dba2629.patch::version=5.2.6&hash=5dd64e"
+"@gorhom/bottom-sheet@patch:@gorhom/bottom-sheet@npm%3A5.2.8#~/.yarn/patches/@gorhom-bottom-sheet-npm-5.2.8-1ad4b8f529.patch":
+  version: 5.2.8
+  resolution: "@gorhom/bottom-sheet@patch:@gorhom/bottom-sheet@npm%3A5.2.8#~/.yarn/patches/@gorhom-bottom-sheet-npm-5.2.8-1ad4b8f529.patch::version=5.2.8&hash=54fec8"
   dependencies:
     "@gorhom/portal": "npm:1.0.14"
     invariant: "npm:^2.2.4"
@@ -4754,7 +4754,7 @@ __metadata:
       optional: true
     "@types/react-native":
       optional: true
-  checksum: 10/6b08b8c621a629759316198a73eb48cb0cb0bcb9a36f12adb0afe204f8bec9d414a5a7ba9daf1cfaaf06c3027bb391c630bc1444d8a5597d4356ded668e1642f
+  checksum: 10/68d940040188b5b9569aab74aa0359963c6dd1bff3a241fc04295863b90b95d1bb0bc337022c1b8bce512460da9ea754ce53e4da055c8bf33d0ef5ba8e6b2105
   languageName: node
   linkType: hard
 
@@ -13701,7 +13701,7 @@ __metadata:
     "@fortawesome/fontawesome-svg-core": "npm:6.5.2"
     "@fortawesome/free-solid-svg-icons": "npm:6.5.2"
     "@fortawesome/react-native-fontawesome": "npm:0.3.2"
-    "@gorhom/bottom-sheet": "patch:@gorhom/bottom-sheet@npm%3A5.2.6#~/.yarn/patches/@gorhom-bottom-sheet-npm-5.2.6-c24dba2629.patch"
+    "@gorhom/bottom-sheet": "patch:@gorhom/bottom-sheet@npm%3A5.2.8#~/.yarn/patches/@gorhom-bottom-sheet-npm-5.2.8-1ad4b8f529.patch"
     "@gorhom/portal": "npm:1.0.14"
     "@react-native-async-storage/async-storage": "npm:2.2.0"
     "@react-native-clipboard/clipboard": "npm:1.16.3"
