@@ -34,7 +34,6 @@ jobs:
         run: yarn install --immutable
 
       - name: Clang-tidy lint Worklets
-        run: yarn workspace react-native-worklets lint:clang-tidy
-
+        run: yarn workspace react-native-worklets lint:android:clang-tidy
       - name: Clang-tidy lint Reanimated
-        run: yarn workspace react-native-reanimated lint:clang-tidy
+        run: yarn workspace react-native-reanimated lint:android:clang-tidy
