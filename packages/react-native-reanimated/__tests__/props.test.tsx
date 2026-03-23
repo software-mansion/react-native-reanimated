@@ -9,7 +9,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from '../src';
-import { processBoxShadowNative, processColor } from '../src/common';
+import { processBoxShadow, processColor } from '../src/common';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -186,7 +186,7 @@ describe('Test of boxShadow prop', () => {
 
     const unprocessedStyle = getAnimatedStyle(pressable);
 
-    const parsedStyle = processBoxShadowNative(
+    const parsedStyle = processBoxShadow(
       (unprocessedStyle as ViewStyle).boxShadow!
     );
 
@@ -212,9 +212,7 @@ describe('Test of boxShadow prop', () => {
   test('two boxShadows string parsing', () => {
     const multipleBoxShadowStyle = getMultipleBoxShadowStyle();
 
-    const parsedStyle = processBoxShadowNative(
-      multipleBoxShadowStyle.boxShadow
-    );
+    const parsedStyle = processBoxShadow(multipleBoxShadowStyle.boxShadow);
 
     expect(parsedStyle).toEqual([
       {

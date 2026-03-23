@@ -1,6 +1,7 @@
 'use strict';
 import { ReanimatedError } from '../../../errors';
 import type { FilterArray } from '../../../types';
+import { ValueProcessorTarget } from '../../../types';
 import { ERROR_MESSAGES, processFilter } from '../filter';
 
 describe(processFilter, () => {
@@ -121,6 +122,40 @@ describe(processFilter, () => {
       test.each(testCases)('parses $input', ({ input, output }) => {
         expect(processFilter(input)).toEqual(output);
       });
+    });
+  });
+
+  describe('context-aware color processing', () => {
+    test('keeps transparent color numeric by default', () => {
+      const result = processFilter('dropShadow(0 0 0 transparent)');
+
+      expect(result).toEqual([
+        {
+          dropShadow: {
+            color: 0, // transparent color for non-CSS target
+            offsetX: 0,
+            offsetY: 0,
+            standardDeviation: 0,
+          },
+        },
+      ]);
+    });
+
+    test('converts transparent color to false with CSS target', () => {
+      const result = processFilter('dropShadow(0 0 0 transparent)', {
+        target: ValueProcessorTarget.CSS,
+      });
+
+      expect(result).toEqual([
+        {
+          dropShadow: {
+            color: false, // transparent color for CSS target
+            offsetX: 0,
+            offsetY: 0,
+            standardDeviation: 0,
+          },
+        },
+      ]);
     });
   });
 

@@ -24,6 +24,10 @@ declare global {
   var _REANIMATED_VERSION_JS: string | undefined;
   var __reanimatedModuleProxy: ReanimatedModuleProxy | undefined;
   var _log: (value: unknown) => void;
+  var _startProfiling: (meanHzFreq?: number) => void;
+  var _stopProfiling: () => string;
+  var _beginSection: (name: string) => void;
+  var _endSection: () => void;
   var _notifyAboutProgress: (
     tag: number,
     value: Record<string, unknown>
@@ -79,4 +83,6 @@ declare global {
    *   future.
    */
   var __frameTimestamp: number | undefined;
+  var __UI_WORKLET_RUNTIME_HOLDER: object | undefined;
+  var __UI_SCHEDULER_HOLDER: object | undefined;
 }

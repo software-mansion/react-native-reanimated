@@ -77,8 +77,17 @@ uint64_t RuntimeManager::getNextRuntimeId() {
 }
 
 void RuntimeManager::registerRuntime(const uint64_t runtimeId, const std::shared_ptr<WorkletRuntime> &workletRuntime) {
+  std::unique_lock registrationLock(registrationMutex_);
   std::unique_lock lock(weakRuntimesMutex_);
   weakRuntimes_[runtimeId] = workletRuntime;
+}
+
+void RuntimeManager::pause() {
+  registrationMutex_.lock();
+}
+
+void RuntimeManager::resume() {
+  registrationMutex_.unlock();
 }
 
 } // namespace worklets

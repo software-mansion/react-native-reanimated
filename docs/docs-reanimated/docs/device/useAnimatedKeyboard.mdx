@@ -4,6 +4,10 @@ sidebar_position: 1
 
 `useAnimatedKeyboard` lets you create animations based on state and height of the virtual keyboard.
 
+:::info ⚠️ Deprecation notice
+The `useAnimatedKeyboard` is now deprecated. Please migrate to the [`react-native-keyboard-controller`](https://kirillzyusko.github.io/react-native-keyboard-controller/) library. See the [migration guide](#migration-guide) below.
+:::
+
 :::caution
 
 Android implementation of `useAnimatedKeyboard` has drawbacks on Android SDK < 30, for more details see [remarks](/docs/device/useAnimatedKeyboard#remarks) section.
@@ -120,3 +124,26 @@ import AnimatedKeyboardSrc from '!!raw-loader!@site/src/examples/AnimatedKeyboar
 ## Platform compatibility
 
 <PlatformCompatibility android ios />
+
+## Migration guide
+
+As of `react-native-reanimated` **4.x** the `useAnimatedKeyboard` hook has been deprecated due to persistent bugs on iOS 26. To address this, we recommend migrating to the [react-native-keyboard-controller](https://kirillzyusko.github.io/react-native-keyboard-controller/) library, which offers a more robust and feature-complete solution for handling keyboard interactions. This guide walks you through the migration process.
+
+### Step 1: Install `react-native-keyboard-controller`
+
+Follow the official installation instructions in the [installation guide](https://kirillzyusko.github.io/react-native-keyboard-controller/docs/installation).
+
+### Step 2: Use a compatibility wrapper
+
+To make migration easier, you can use a compatibility layer. For that just replace your existing imports with the compat layer:
+
+```diff
+- import { useAnimatedKeyboard, KeyboardState } from 'react-native-reanimated';
++ import { useAnimatedKeyboard, KeyboardState } from 'react-native-keyboard-controller';
+```
+
+And that’s it 🎉
+
+If you run into any issues or edge cases, please open a ticket in the [`react-native-keyboard-controller`](https://github.com/kirillzyusko/react-native-keyboard-controller) repository.
+
+Also consider exploring the built-in [components](https://kirillzyusko.github.io/react-native-keyboard-controller/docs/guides/components-overview) - they can help reduce boilerplate and simplify your integration.

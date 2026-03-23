@@ -10,9 +10,27 @@ namespace reanimated {
 void LayoutAnimationsManager::configureAnimationBatch(const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
   for (const auto &layoutAnimationConfig : layoutAnimationsBatch) {
-    const auto &[tag, type, config] = layoutAnimationConfig;
+    const auto &[tag, type, config, sharedTag] = layoutAnimationConfig;
+
     if (type == LayoutAnimationType::ENTERING) {
       enteringAnimationsForNativeID_[tag] = config;
+      continue;
+    }
+    if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID) {
+      sharedTransitionsForNativeID_[tag] = config;
+      sharedTransitionManager_->nativeIDToName_[tag] = sharedTag;
+      continue;
+    }
+    if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
+      if (config == nullptr) {
+        // TODO (future): if the view was transitioned (e.g. so we are on the second screen)
+        // and we remove the config, we should also bring back the view (probably using tagsToRestore_)
+        sharedTransitions_.erase(tag);
+        sharedTransitionManager_->tagToName_.erase(tag);
+      } else {
+        sharedTransitions_[tag] = config;
+        sharedTransitionManager_->tagToName_[tag] = sharedTag;
+      }
       continue;
     }
     if (config == nullptr) {
@@ -77,11 +95,27 @@ void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int 
 
 void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, const int tag) {
   auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-  auto config = enteringAnimationsForNativeID_[nativeId];
+  const auto config = enteringAnimationsForNativeID_[nativeId];
   if (config) {
     enteringAnimations_.insert_or_assign(tag, config);
   }
   enteringAnimationsForNativeID_.erase(nativeId);
+
+  const auto sharedTransitionConfig = sharedTransitionsForNativeID_[nativeId];
+  if (sharedTransitionConfig) {
+    sharedTransitions_.insert_or_assign(tag, sharedTransitionConfig);
+    sharedTransitionManager_->tagToName_[tag] = sharedTransitionManager_->nativeIDToName_[nativeId];
+  }
+  sharedTransitionsForNativeID_.erase(nativeId);
+  sharedTransitionManager_->nativeIDToName_.erase(nativeId);
+}
+
+void LayoutAnimationsManager::transferSharedConfig(const Tag from, const Tag to) {
+  sharedTransitions_[to] = sharedTransitions_[from];
+}
+
+std::shared_ptr<SharedTransitionManager> LayoutAnimationsManager::getSharedTransitionManager() {
+  return sharedTransitionManager_;
 }
 
 std::unordered_map<int, std::shared_ptr<Serializable>> &LayoutAnimationsManager::getConfigsForType(
@@ -93,6 +127,8 @@ std::unordered_map<int, std::shared_ptr<Serializable>> &LayoutAnimationsManager:
       return exitingAnimations_;
     case LayoutAnimationType::LAYOUT:
       return layoutAnimations_;
+    case LayoutAnimationType::SHARED_ELEMENT_TRANSITION:
+      return sharedTransitions_;
     default:
       throw std::invalid_argument("[Reanimated] Unknown layout animation type");
   }

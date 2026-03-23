@@ -24,7 +24,6 @@ exports[`Tests of inline styles useAnimatedStyle 1`] = `
       }
     }
     jestInlineStyle={{}}
-    nativeID="1"
     style={
       [
         {
@@ -120,7 +119,6 @@ exports[`Tests of inline styles useAnimatedStyle with withTiming 1`] = `
       }
     }
     jestInlineStyle={{}}
-    nativeID="3"
     style={
       [
         {

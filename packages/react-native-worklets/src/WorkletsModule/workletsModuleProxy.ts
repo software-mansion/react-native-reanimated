@@ -69,11 +69,29 @@ export interface WorkletsModuleProxy {
     shouldPersistRemote: boolean
   ): SerializableRef<object>;
 
+  createCustomSerializable(
+    data: SerializableRef<unknown>,
+    typeId: number
+  ): SerializableRef<unknown>;
+
+  registerCustomSerializable(
+    determine: SerializableRef<object>,
+    pack: SerializableRef<object>,
+    unpack: SerializableRef<object>,
+    typeId: number
+  ): void;
+
+  createShareable<TValue = unknown>(
+    hostRuntimeId: number,
+    initial: SerializableRef<TValue>,
+    initSynchronously: boolean,
+    decorateHost: SerializableRef,
+    decorateGuest: SerializableRef
+  ): SerializableRef<TValue>;
+
   scheduleOnUI<TValue>(serializable: SerializableRef<TValue>): void;
 
-  executeOnUIRuntimeSync<TValue, TReturn>(
-    serializable: SerializableRef<TValue>
-  ): TReturn;
+  runOnUISync<TValue, TReturn>(serializable: SerializableRef<TValue>): TReturn;
 
   createWorkletRuntime(
     name: string,
@@ -87,6 +105,21 @@ export interface WorkletsModuleProxy {
     workletRuntime: WorkletRuntime,
     worklet: SerializableRef<TValue>
   ): void;
+
+  scheduleOnRuntimeWithId<TValue>(
+    runtimeId: number,
+    worklet: SerializableRef<TValue>
+  ): void;
+
+  runOnRuntimeSync<TValue, TReturn>(
+    workletRuntime: WorkletRuntime,
+    worklet: SerializableRef<TValue>
+  ): TReturn;
+
+  runOnRuntimeSyncWithId<TValue, TReturn>(
+    runtimeId: number,
+    worklet: SerializableRef<TValue>
+  ): TReturn;
 
   reportFatalErrorOnJS(
     message: string,
@@ -121,6 +154,10 @@ export interface WorkletsModuleProxy {
   getStaticFeatureFlag(name: string): boolean;
 
   setDynamicFeatureFlag(name: string, value: boolean): void;
+
+  getUIRuntimeHolder(): object;
+
+  getUISchedulerHolder(): object;
 }
 
 export type IWorkletsModule = WorkletsModuleProxy;

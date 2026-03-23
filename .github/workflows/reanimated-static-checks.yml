@@ -40,6 +40,9 @@ jobs:
         run: yarn build
 
       # Checks
+      - name: Validate peer dependency versions
+        working-directory: ${{ env.PACKAGE_PATH }}
+        run: yarn validate-peers
       - name: Check TypeScript types
         working-directory: ${{ env.PACKAGE_PATH }}
         run: yarn type:check
@@ -58,3 +61,6 @@ jobs:
       - name: Run Jest unit tests
         working-directory: ${{ env.PACKAGE_PATH }}
         run: yarn test
+      - name: Check web tree-shakability
+        working-directory: ${{ env.PACKAGE_PATH }}
+        run: yarn tree-shake:check:web

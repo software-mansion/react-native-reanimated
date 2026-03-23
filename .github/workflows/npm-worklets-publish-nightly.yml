@@ -6,6 +6,10 @@ on:
     - cron: '27 23 * * *' # at 23:27 every day
   workflow_dispatch:
 
+permissions:
+  contents: read
+  id-token: write # For publishing on NPM using OIDC
+
 jobs:
   npm-worklets-publish-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
@@ -13,4 +17,3 @@ jobs:
     with:
       option: --nightly
       publish_on_npm: true
-    secrets: inherit

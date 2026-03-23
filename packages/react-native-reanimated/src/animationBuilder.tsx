@@ -54,10 +54,35 @@ function getCommonProperties(
   return commonKeys;
 }
 
+export function checkStyleOverwriting(
+  layoutAnimationOrBuilder:
+    | ILayoutAnimationBuilder
+    | LayoutAnimationFunction
+    | Keyframe,
+  style: NestedArray<StyleProps>,
+  displayName: string,
+  onWarn: () => void
+): void {
+  if (!isAnimationBuilder(layoutAnimationOrBuilder)) {
+    return;
+  }
+
+  const animationFactory = layoutAnimationOrBuilder.build();
+
+  const layoutAnimation = animationFactory(mockTargetValues);
+  maybeReportOverwrittenProperties(
+    layoutAnimation.animations,
+    style,
+    displayName,
+    onWarn
+  );
+}
+
 function maybeReportOverwrittenProperties(
   layoutAnimationStyle: StyleProps,
   style: NestedArray<StyleProps>,
-  displayName: string
+  displayName: string,
+  onWarn: () => void
 ) {
   const commonProperties = getCommonProperties(layoutAnimationStyle, style);
 
@@ -69,6 +94,7 @@ function maybeReportOverwrittenProperties(
         ', '
       )}" of ${displayName} may be overwritten by a layout animation. Please wrap your component with an animated view and apply the layout animation on the wrapper.`
     );
+    onWarn();
   }
 }
 
@@ -76,30 +102,18 @@ export function maybeBuild(
   layoutAnimationOrBuilder:
     | ILayoutAnimationBuilder
     | LayoutAnimationFunction
-    | Keyframe,
-  style: NestedArray<StyleProps> | undefined,
-  displayName: string
+    | Keyframe
 ): LayoutAnimationFunction | Keyframe {
-  const isAnimationBuilder = (
-    value: ILayoutAnimationBuilder | LayoutAnimationFunction | Keyframe
-  ): value is ILayoutAnimationBuilder =>
-    'build' in layoutAnimationOrBuilder &&
-    typeof layoutAnimationOrBuilder.build === 'function';
-
   if (isAnimationBuilder(layoutAnimationOrBuilder)) {
     const animationFactory = layoutAnimationOrBuilder.build();
-
-    if (__DEV__ && style) {
-      const layoutAnimation = animationFactory(mockTargetValues);
-      maybeReportOverwrittenProperties(
-        layoutAnimation.animations,
-        style,
-        displayName
-      );
-    }
-
     return animationFactory;
   } else {
     return layoutAnimationOrBuilder;
   }
+}
+
+function isAnimationBuilder(
+  value: ILayoutAnimationBuilder | LayoutAnimationFunction | Keyframe
+): value is ILayoutAnimationBuilder {
+  return 'build' in value && typeof value.build === 'function';
 }

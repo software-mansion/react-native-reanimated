@@ -6,7 +6,7 @@ index bd42485a8a6647757c0f5b2f2c4a5e659125fcdd..417de6c997067b4b1c686c35fe5007ba
      return (0, _nullthrows.default)(this._fileSystem).getAllFiles();
    }
    async getOrComputeSha1(mixedPath) {
-+    if (mixedPath.includes("react-native-worklets/__generatedWorklets/")) {
++    if (mixedPath.includes("react-native-worklets/.worklets/")) {
 +      const createHash = require("crypto").createHash;
 +      return {
 +        sha1: createHash("sha1")

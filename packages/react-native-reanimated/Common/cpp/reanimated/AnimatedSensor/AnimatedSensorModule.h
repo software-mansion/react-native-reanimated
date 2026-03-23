@@ -1,9 +1,7 @@
 #pragma once
 
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
-
-#include <worklets/SharedItems/Serializable.h>
-#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <jsi/jsi.h>
 
@@ -30,11 +28,10 @@ class AnimatedSensorModule {
 
  public:
   explicit AnimatedSensorModule(const PlatformDepMethodsHolder &platformDepMethodsHolder);
-  ~AnimatedSensorModule();
 
   jsi::Value registerSensor(
-      jsi::Runtime &rt,
-      const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime,
+      jsi::Runtime &rnRuntime,
+      const std::shared_ptr<WorkletRuntime> &uiRuntime,
       const jsi::Value &sensorType,
       const jsi::Value &interval,
       const jsi::Value &iosReferenceFrame,

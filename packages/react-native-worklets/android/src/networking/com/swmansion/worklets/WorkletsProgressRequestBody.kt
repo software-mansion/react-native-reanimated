@@ -1,0 +1,98 @@
+/**
+* Based on ProgressRequestBody.kt from React Native 
+*/
+
+@file:Suppress("DEPRECATION_ERROR") // Conflicting okio versions
+
+package com.swmansion.worklets
+
+import java.io.FilterOutputStream
+import java.io.IOException
+import okhttp3.MediaType
+import okhttp3.RequestBody
+import okio.BufferedSink
+import okio.Okio
+import okio.Sink
+
+internal class WorkletsProgressRequestBody(
+    private val requestBody: RequestBody,
+    private val progressListener: WorkletsProgressListener,
+) : RequestBody() {
+  private var contentLength = 0L
+
+  companion object {
+    private const val MAX_BODY_PREVIEW_SIZE = 1024 * 1024 // 1MB
+  }
+
+  override fun contentType(): MediaType? {
+    return requestBody.contentType()
+  }
+
+  @Throws(IOException::class)
+  override fun contentLength(): Long {
+    if (contentLength == 0L) {
+      contentLength = requestBody.contentLength()
+    }
+    return contentLength
+  }
+
+  @Throws(IOException::class)
+  override fun writeTo(sink: BufferedSink) {
+    // In 99% of cases, this method is called strictly once.
+    // The only case when it is called more than once is internal okhttp upload re-try.
+    // We need to re-create CountingOutputStream in this case as progress should be re-evaluated.
+    val sinkWrapper = Okio.buffer(outputStreamSink(sink))
+
+    // contentLength changes for input streams, since we're using inputStream.available(),
+    // so get the length before writing to the sink
+    contentLength()
+
+    requestBody.writeTo(sinkWrapper)
+    sinkWrapper.flush()
+  }
+
+  private fun outputStreamSink(sink: BufferedSink): Sink {
+    return Okio.sink(
+        object : FilterOutputStream(sink.outputStream()) {
+          private var count: Long = 0
+
+          @Throws(IOException::class)
+          override fun write(data: ByteArray, offset: Int, byteCount: Int) {
+            super.write(data, offset, byteCount)
+            count += byteCount.toLong()
+            sendProgressUpdate()
+          }
+
+          @Throws(IOException::class)
+          override fun write(data: Int) {
+            super.write(data)
+            count++
+            sendProgressUpdate()
+          }
+
+          @Throws(IOException::class)
+          fun sendProgressUpdate() {
+            val bytesWritten = count
+            val contentLength = contentLength()
+            progressListener.onProgress(bytesWritten, contentLength, bytesWritten == contentLength)
+          }
+        }
+    )
+  }
+
+  fun getBodyPreview(): String {
+    return try {
+      val buffer = okio.Buffer()
+      requestBody.writeTo(buffer)
+      val size = buffer.size()
+      if (size <= MAX_BODY_PREVIEW_SIZE) {
+        buffer.readUtf8()
+      } else {
+        buffer.readUtf8(MAX_BODY_PREVIEW_SIZE.toLong()) +
+            "\n... [truncated, showing $MAX_BODY_PREVIEW_SIZE of $size bytes]"
+      }
+    } catch (e: Exception) {
+      ""
+    }
+  }
+}

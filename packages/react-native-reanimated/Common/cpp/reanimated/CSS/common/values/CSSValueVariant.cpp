@@ -7,11 +7,12 @@
 #include <reanimated/CSS/common/values/CSSNumber.h>
 #include <reanimated/CSS/common/values/CSSValueVariant.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
+#include <reanimated/CSS/svg/values/CSSLengthArray.h>
 #include <reanimated/CSS/svg/values/SVGBrush.h>
-#include <reanimated/CSS/svg/values/SVGLength.h>
+#include <reanimated/CSS/svg/values/SVGPath.h>
+#include <reanimated/CSS/svg/values/SVGStops.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
-
-#include <worklets/Tools/JSISerializer.h>
+#include <reanimated/Compat/WorkletsApi.h>
 
 #include <string>
 #include <utility>
@@ -39,7 +40,7 @@ CSSValueVariant<AllowedTypes...>::CSSValueVariant(jsi::Runtime &rt, const jsi::V
   // Try constructing with each allowed type until one succeeds
   if (!(tryOne.template operator()<AllowedTypes>() || ...)) {
     throw std::runtime_error(
-        "[Reanimated] No compatible type found for construction from: " + worklets::stringifyJSIValue(rt, jsiValue));
+        "[Reanimated] No compatible type found for construction from: " + worklets::JSIValueToStdString(rt, jsiValue));
   }
 }
 
@@ -81,10 +82,7 @@ bool CSSValueVariant<AllowedTypes...>::operator==(const CSSValueVariant &other) 
 
 template <CSSValueDerived... AllowedTypes>
 bool CSSValueVariant<AllowedTypes...>::operator==(const CSSValue &other) const {
-  if (auto *o = dynamic_cast<const CSSValueVariant *>(&other)) {
-    return *this == *o;
-  }
-  return false;
+  return typeid(*this) == typeid(other) && *this == static_cast<const CSSValueVariant &>(other);
 }
 
 template <CSSValueDerived... AllowedTypes>
@@ -158,6 +156,7 @@ template class CSSValueVariant<CSSLength, CSSKeyword>;
 template class CSSValueVariant<CSSDouble>;
 template class CSSValueVariant<CSSDouble, CSSKeyword>;
 template class CSSValueVariant<CSSInteger>;
+template class CSSValueVariant<CSSIndex>;
 template class CSSValueVariant<CSSKeyword>;
 template class CSSValueVariant<CSSAngle>;
 template class CSSValueVariant<CSSBoolean>;
@@ -166,8 +165,9 @@ template class CSSValueVariant<CSSDisplay>;
 template class CSSValueVariant<CSSBoxShadow>;
 template class CSSValueVariant<CSSDiscreteArray<CSSKeyword>>;
 
-template class CSSValueVariant<SVGLength>;
-template class CSSValueVariant<SVGLength, CSSKeyword>;
+template class CSSValueVariant<SVGPath>;
+template class CSSValueVariant<CSSLengthArray>;
+template class CSSValueVariant<SVGStops>;
 template class CSSValueVariant<SVGStrokeDashArray, CSSKeyword>;
 template class CSSValueVariant<SVGBrush>;
 

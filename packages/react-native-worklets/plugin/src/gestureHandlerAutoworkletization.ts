@@ -38,6 +38,18 @@ export const gestureHandlerBuilderMethods = new Set([
   'onTouchesCancelled',
 ]);
 
+export const gestureHandlerObjectHooks = new Set([
+  'useTapGesture',
+  'usePanGesture',
+  'usePinchGesture',
+  'useRotationGesture',
+  'useFlingGesture',
+  'useLongPressGesture',
+  'useNativeGesture',
+  'useManualGesture',
+  'useHoverGesture',
+]);
+
 // Auto-workletizes React Native Gesture Handler callback functions.
 // Detects `Gesture.Tap().onEnd(<fun>)` or similar, but skips `something.onEnd(<fun>)`.
 // Supports method chaining as well, e.g. `Gesture.Tap().onStart(<fun1>).onUpdate(<fun2>).onEnd(<fun3>)`.

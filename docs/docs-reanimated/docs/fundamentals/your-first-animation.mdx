@@ -106,8 +106,6 @@ export default function App() {
 }
 ```
 
-Please hold on a second before you shorten `width.value = width.value + 50` to `width.value += 50`. We're preparing this code for the final step which will finally bring our animation to life!
-
 :::caution
 
 It's a common mistake to modify a shared value directly like this: ~~`sv = sv + 100;`~~. Always remember to access the shared value by using the `.value` property instead. Here, the correct usage would be `sv.value = sv.value + 100;`.

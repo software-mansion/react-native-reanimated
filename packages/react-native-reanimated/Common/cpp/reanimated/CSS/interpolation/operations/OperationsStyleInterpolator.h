@@ -37,7 +37,6 @@ class OperationsStyleInterpolator : public PropertyInterpolator {
   folly::dynamic getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const override;
   folly::dynamic getFirstKeyframeValue() const override;
   folly::dynamic getLastKeyframeValue() const override;
-  bool equalsReversingAdjustedStartValue(const folly::dynamic &propertyValue) const override;
 
   folly::dynamic interpolate(
       const std::shared_ptr<const ShadowNode> &shadowNode,
@@ -45,10 +44,7 @@ class OperationsStyleInterpolator : public PropertyInterpolator {
       const double fallbackInterpolateThreshold) const override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
-  void updateKeyframesFromStyleChange(
-      const folly::dynamic &oldStyleValue,
-      const folly::dynamic &newStyleValue,
-      const folly::dynamic &lastUpdateValue) override;
+  bool updateKeyframes(jsi::Runtime &rt, const jsi::Value &fromValue, const jsi::Value &toValue) override;
 
  protected:
   const std::shared_ptr<StyleOperationInterpolators> interpolators_;
@@ -62,8 +58,8 @@ class OperationsStyleInterpolator : public PropertyInterpolator {
  private:
   const folly::dynamic defaultStyleValueDynamic_;
 
-  std::vector<std::shared_ptr<StyleOperationsKeyframe>> keyframes_;
   std::optional<StyleOperations> reversingAdjustedStartValue_;
+  std::vector<std::shared_ptr<StyleOperationsKeyframe>> keyframes_;
 
   std::optional<StyleOperations> parseStyleOperations(jsi::Runtime &rt, const jsi::Value &values) const;
   std::optional<StyleOperations> parseStyleOperations(const folly::dynamic &values) const;
@@ -80,10 +76,13 @@ class OperationsStyleInterpolator : public PropertyInterpolator {
       const StyleOperations &fromOperations,
       const StyleOperations &toOperations,
       double fallbackInterpolateThreshold) const;
-  static folly::dynamic convertOperationsToDynamic(const StyleOperations &operations);
   StyleOperationsInterpolationContext createUpdateContext(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       double fallbackInterpolateThreshold) const;
+  static folly::dynamic convertOperationsToDynamic(const StyleOperations &operations);
+  static bool areStyleOperationsEqual(
+      const std::optional<StyleOperations> &ops1,
+      const std::optional<StyleOperations> &ops2);
 };
 
 template <typename TOperation>

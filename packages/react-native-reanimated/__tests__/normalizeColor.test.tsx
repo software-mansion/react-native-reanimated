@@ -304,7 +304,7 @@ describe('Test `normalizeColor` function', () => {
   describe('Test colors a colorName string', () => {
     test.each([
       ['red', 0xff0000ff],
-      ['transparent', false], // We represent transparent color as false
+      ['transparent', 0x00000000],
       ['peachpuff', 0xffdab9ff],
       ['peachPuff', null],
       ['PeachPuff', null],

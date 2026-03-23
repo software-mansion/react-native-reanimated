@@ -55,8 +55,13 @@ CSSInteger CSSInteger::interpolate(double progress, const CSSInteger &other) con
   return CSSInteger(static_cast<int>(std::round(value + progress * (other.value - value))));
 }
 
+CSSIndex CSSIndex::interpolate(double progress, const CSSIndex &other) const {
+  return CSSIndex(progress < 0.5 ? value : other.value);
+}
+
 template struct CSSNumberBase<CSSDouble, double>;
 template struct CSSNumberBase<CSSInteger, int>;
+template struct CSSNumberBase<CSSIndex, int>;
 
 #ifdef ANDROID
 

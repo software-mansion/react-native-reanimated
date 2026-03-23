@@ -1,0 +1,5 @@
+.svg {
+  background-color: var(--swm-svg-diagram-background);
+  border-radius: 16px;
+  padding: 8px;
+}

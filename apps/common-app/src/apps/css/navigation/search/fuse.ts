@@ -32,12 +32,12 @@ function flattenRoutes(
       ? flattenRoutes(r.routes, pathSegments, nameSegments)
       : [
           {
-            key: pathSegments.join('/'),
-            name: r.name,
             breadcrumb: nameSegments.join('/'),
-            path: pathSegments,
-            node: r,
+            key: pathSegments.join('/'),
             labelTypes: r.labelTypes,
+            name: r.name,
+            node: r,
+            path: pathSegments,
           },
         ];
   });
@@ -57,17 +57,17 @@ export const ROUTES = {
 const SEARCH_DOCS = flattenRoutes(ROUTES);
 
 const options = {
+  ignoreDiacritics: true,
+  ignoreLocation: true,
+  includeMatches: true,
+  includeScore: true,
+  isCaseSensitive: false,
   keys: [
     { name: 'name', weight: 0.7 },
     { name: 'breadcrumb', weight: 0.3 },
   ],
-  threshold: 0.3,
-  ignoreLocation: true,
-  includeScore: true,
-  isCaseSensitive: false,
-  includeMatches: true,
-  ignoreDiacritics: true,
   minMatchCharLength: 1,
+  threshold: 0.3,
 } satisfies IFuseOptions<SearchDoc>;
 
 export const fuse = new Fuse(

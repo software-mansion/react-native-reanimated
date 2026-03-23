@@ -1,5 +1,6 @@
 #import <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #import <worklets/Tools/Defs.h>
+#import <worklets/Tools/ScriptBuffer.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/Tools/WorkletsJSIUtils.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
@@ -13,10 +14,12 @@
 #import <React/RCTBridge+Private.h>
 #import <React/RCTCallInvoker.h>
 
-#if __has_include(<React/RCTBundleProvider.h>)
-// Bundle mode
-#import <React/RCTBundleProvider.h>
-#endif // __has_include(<React/RCTBundleProvider.h>)
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
+#import <FBReactNativeSpec/FBReactNativeSpec.h>
+#import <React/RCTNetworking.h>
+#import <ReactCommon/RCTTurboModule.h>
+#import <worklets/apple/Networking/WorkletsNetworking.h>
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 
 using namespace worklets;
 
@@ -27,6 +30,9 @@ using namespace worklets;
 @implementation WorkletsModule {
   AnimationFrameQueue *animationFrameQueue_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
+  WorkletsNetworking *workletsNetworking_;
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
 #endif // NDEBUG
@@ -38,22 +44,21 @@ using namespace worklets;
   return workletsModuleProxy_;
 }
 
-#if __has_include(<React/RCTBundleProvider.h>)
-// Bundle mode
-@synthesize bundleProvider = bundleProvider_;
-#endif // __has_include(<React/RCTBundleProvider.h>)
-
 - (void)checkBridgeless
 {
   auto isBridgeless = ![self.bridge isKindOfClass:[RCTCxxBridge class]];
   react_native_assert(isBridgeless && "[Worklets] react-native-worklets only supports bridgeless mode");
 }
 
+@synthesize bundleManager = bundleManager_;
 @synthesize callInvoker = callInvoker_;
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
+@synthesize moduleRegistry = moduleRegistry_;
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 
 RCT_EXPORT_MODULE(WorkletsModule);
 
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnabled)
 {
   react_native_assert(self.bridge != nullptr);
   [self checkBridgeless];
@@ -67,11 +72,18 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
       std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) { throw error; });
 
   std::string sourceURL = "";
-  std::shared_ptr<const JSBigStringBuffer> script = nullptr;
-#ifdef WORKLETS_BUNDLE_MODE
-  script = [bundleProvider_ getBundle];
-  sourceURL = [[bundleProvider_ getSourceURL] UTF8String];
-#endif // WORKLETS_BUNDLE_MODE
+  std::shared_ptr<const ScriptBuffer> script = nullptr;
+
+  if (bundleModeEnabled) {
+    NSURL *url = bundleManager_.bundleURL;
+    script = [self getScript:url];
+    sourceURL = [[url absoluteString] UTF8String];
+  }
+
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
+  id networkingModule = [moduleRegistry_ moduleForClass:RCTNetworking.class];
+  workletsNetworking_ = [[WorkletsNetworking alloc] init:networkingModule];
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 
   auto jsCallInvoker = callInvoker_.callInvoker;
   auto uiScheduler = std::make_shared<IOSUIScheduler>();
@@ -82,7 +94,13 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   auto runtimeBindings = [self getRuntimeBindings];
 
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
-      rnRuntime, jsQueue, jsCallInvoker, uiScheduler, std::move(isJavaScriptQueue), runtimeBindings, script, sourceURL);
+      rnRuntime,
+      jsQueue,
+      jsCallInvoker,
+      uiScheduler,
+      std::move(isJavaScriptQueue),
+      runtimeBindings,
+      BundleModeConfig{.enabled = static_cast<bool>(bundleModeEnabled), .script = script, .sourceURL = sourceURL});
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
       rnRuntime, std::static_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));
@@ -114,13 +132,48 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   return std::make_shared<facebook::react::NativeWorkletsModuleSpecJSI>(params);
 }
 
-- (RuntimeBindings)getRuntimeBindings
+- (std::shared_ptr<const ScriptBuffer>)getScript:(NSURL *)url
 {
-  return {
+  NSData *data = [NSData dataWithContentsOfURL:url];
+
+  if (!data) [[unlikely]] {
+    NSString *errorMsg = [NSString stringWithFormat:@"[Worklets] Failed to load worklets bundle from URL: %@", url];
+    NSLog(@"%@", errorMsg);
+    throw std::runtime_error([errorMsg UTF8String]);
+  }
+
+  auto str = std::string(reinterpret_cast<const char *>([data bytes]), [data length]);
+  auto bigString = std::make_shared<const JSBigStdString>(str);
+  return std::make_shared<const ScriptBuffer>(bigString);
+}
+
+- (std::shared_ptr<RuntimeBindings>)getRuntimeBindings
+{
+  return std::make_shared<RuntimeBindings>(RuntimeBindings{
       .requestAnimationFrame = [animationFrameQueue =
                                     animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
         [animationFrameQueue requestAnimationFrame:callback];
-      }};
+      }
+#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
+      ,
+      .abortRequest =
+          [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, const jsi::Value &requestID) {
+            [workletsNetworking jsiAbortRequest:requestID.asNumber()];
+            return jsi::Value::undefined();
+          },
+      .clearCookies =
+          [workletsNetworking = workletsNetworking_](jsi::Runtime &rt, jsi::Function &&responseSender) {
+            [workletsNetworking jsiClearCookies:rt responseSender:(std::move(responseSender))];
+            return jsi::Value::undefined();
+          },
+      .sendRequest =
+          [workletsNetworking = workletsNetworking_](
+              jsi::Runtime &rt, const jsi::Value &query, jsi::Function &&responseSender) {
+            [workletsNetworking jsiSendRequest:rt jquery:query responseSender:(std::move(responseSender))];
+            return jsi::Value::undefined();
+          }
+#endif // WORKLETS_FETCH_PREVIEW_ENABLED
+  });
 }
 
 @end

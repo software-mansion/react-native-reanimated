@@ -33,8 +33,9 @@ export type AnimatedComponentProps = Record<string, unknown> & {
 // to the main one)
 export default class AnimatedComponent<
     P extends AnyRecord = AnimatedComponentProps,
+    S extends AnyRecord = Record<string, unknown>,
   >
-  extends Component<P>
+  extends Component<P, S>
   implements IAnimatedComponentInternalBase
 {
   ChildComponent: AnyComponent;
@@ -70,7 +71,7 @@ export default class AnimatedComponent<
     let viewTag: number | typeof this._componentRef;
     let shadowNodeWrapper: ShadowNodeWrapper | null = null;
     let DOMElement: HTMLElement | null = null;
-    let viewName: string | undefined;
+    let reactViewName: string | undefined;
 
     if (SHOULD_BE_USE_WEB) {
       // At this point we assume that `_setComponentRef` was already called and `_component` is set.
@@ -93,13 +94,13 @@ export default class AnimatedComponent<
 
       const viewInfo = getViewInfo(hostInstance);
       viewTag = viewInfo.viewTag ?? -1;
-      viewName = viewInfo.viewName;
+      reactViewName = viewInfo.reactViewName;
       shadowNodeWrapper = getShadowNodeWrapperFromRef(
         this as InternalHostInstance,
         hostInstance
       );
     }
-    this._viewInfo = { viewTag, shadowNodeWrapper, viewName };
+    this._viewInfo = { viewTag, shadowNodeWrapper, reactViewName };
     if (DOMElement) {
       this._viewInfo.DOMElement = DOMElement;
     }
@@ -166,7 +167,10 @@ export default class AnimatedComponent<
     }
 
     if (!IS_JEST) {
-      this._CSSManager ??= new CSSManager(this._getViewInfo());
+      this._CSSManager ??= new CSSManager(
+        this._getViewInfo(),
+        this.ChildComponent.displayName
+      );
       this._CSSManager?.update(this._cssStyle);
     }
 

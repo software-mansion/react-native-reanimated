@@ -39,11 +39,19 @@ struct CSSDouble : public CSSNumberBase<CSSDouble, double> {
   // Inherit all constructors from the base class
   using CSSNumberBase::CSSNumberBase;
 };
+
 struct CSSInteger : public CSSNumberBase<CSSInteger, int> {
   // Inherit all constructors from the base class
   using CSSNumberBase::CSSNumberBase;
 
   CSSInteger interpolate(double progress, const CSSInteger &other) const override;
+};
+
+struct CSSIndex : public CSSNumberBase<CSSIndex, int> {
+  // Inherit all constructors from the base class
+  using CSSNumberBase::CSSNumberBase;
+
+  CSSIndex interpolate(double progress, const CSSIndex &other) const override;
 };
 
 #ifdef ANDROID

@@ -17,7 +17,6 @@ import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
-import com.swmansion.worklets.WorkletsModule;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -44,6 +43,7 @@ public class NodesManager implements EventDispatcherListener {
   private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
   private double lastFrameTimeMs;
   private FabricUIManager mFabricUIManager;
+  private final DrawPassDetector mDrawPassDetector;
 
   public NativeProxy getNativeProxy() {
     return mNativeProxy;
@@ -57,18 +57,21 @@ public class NodesManager implements EventDispatcherListener {
       mNativeProxy = null;
     }
 
+    mDrawPassDetector.invalidate();
+
     if (mFabricUIManager != null) {
       mFabricUIManager.getEventDispatcher().removeListener(this);
     }
   }
 
-  public NodesManager(ReactApplicationContext context, WorkletsModule workletsModule) {
+  public NodesManager(ReactApplicationContext context) {
     context.assertOnJSQueueThread();
 
     UIManager uiManager = UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
     assert uiManager != null;
     mCustomEventNamesResolver = uiManager::resolveCustomDirectEventName;
     mEventEmitter = context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class);
+    mDrawPassDetector = new DrawPassDetector(context);
 
     mReactChoreographer = ReactChoreographer.getInstance();
     mChoreographerCallback =
@@ -79,7 +82,7 @@ public class NodesManager implements EventDispatcherListener {
           }
         };
 
-    mNativeProxy = new NativeProxy(context, workletsModule, this);
+    mNativeProxy = new NativeProxy(context, this);
     mFabricUIManager = (FabricUIManager) uiManager;
     mFabricUIManager.getEventDispatcher().addListener(this);
   }
@@ -115,11 +118,33 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
-  public void performOperations(boolean isTriggeredByEvent) {
+  public void performOperations() {
     UiThreadUtil.assertOnUiThread();
     if (mNativeProxy != null) {
-      mNativeProxy.performOperations(isTriggeredByEvent);
+      mNativeProxy.performOperations();
     }
+  }
+
+  void performNonLayoutOperations() {
+    UiThreadUtil.assertOnUiThread();
+    if (mNativeProxy != null) {
+      mNativeProxy.performNonLayoutOperations();
+    }
+  }
+
+  void performOperationsRespectingDrawPass() {
+    mDrawPassDetector.initialize();
+    if (isInDrawPass()) {
+      performNonLayoutOperations();
+      startUpdatingOnAnimationFrame();
+      return;
+    }
+
+    performOperations();
+  }
+
+  boolean isInDrawPass() {
+    return mDrawPassDetector.isInDrawPass();
   }
 
   private void onAnimationFrame(long frameTimeNanos) {
@@ -129,6 +154,8 @@ public class NodesManager implements EventDispatcherListener {
       if (BuildConfig.REANIMATED_PROFILING) {
         Trace.beginSection("onAnimationFrame");
       }
+
+      mDrawPassDetector.initialize();
 
       double currentFrameTimeMs = frameTimeNanos / 1000000.;
       if (mSlowAnimationsEnabled) {
@@ -155,7 +182,7 @@ public class NodesManager implements EventDispatcherListener {
           }
         }
 
-        performOperations(false);
+        performOperations();
       }
 
       mCallbackPosted.set(false);
@@ -189,7 +216,7 @@ public class NodesManager implements EventDispatcherListener {
       // the UI thread.
       if (UiThreadUtil.isOnUiThread()) {
         handleEvent(event);
-        performOperations(true);
+        performOperationsRespectingDrawPass();
       } else {
         String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
         int viewTag = event.getViewTag();

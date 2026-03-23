@@ -5,10 +5,8 @@ import type {
   CSSTransitionProperties,
   CSSTransitionProperty,
 } from '../../../types';
-import { areArraysEqual, deepEqual } from '../../../utils';
 import type {
   NormalizedCSSTransitionConfig,
-  NormalizedCSSTransitionConfigUpdates,
   NormalizedSingleCSSTransitionSettings,
 } from '../../types';
 import {
@@ -81,9 +79,10 @@ export function normalizeCSSTransitionProperties(
     transitionDelay,
     transitionBehavior,
   } = expandedProperties;
-  const specificProperties: string[] = [];
   let allPropertiesTransition = false;
   const settings: Record<string, NormalizedSingleCSSTransitionSettings> = {};
+  const specificProperties = new Set<string>();
+  const processedProperties = new Set<string>();
 
   if (!transitionProperty.length) {
     // For cases when transition property hasn't been explicitly specified
@@ -97,78 +96,49 @@ export function normalizeCSSTransitionProperties(
   // occurrence and ignore remaining ones)
   for (let i = transitionProperty.length - 1; i >= 0; i--) {
     const property = transitionProperty[i];
-    // Continue if there was a prop with the same name specified later
-    // (we don't want to override the last occurrence of the property)
-    if (settings?.[property]) {
+    // We always respect the last occurrence of a property, even if it gets
+    // pruned as inactive. That means earlier occurrences must be ignored.
+    if (processedProperties.has(property)) {
+      continue;
+    }
+    processedProperties.add(property);
+
+    const duration = normalizeDuration(
+      transitionDuration[i % transitionDuration.length]
+    );
+    const delay = normalizeDelay(transitionDelay[i % transitionDelay.length]);
+
+    // Skip if effective duration is 0 (the transition would be immediate so there is no need
+    // to apply it and we can just treat it as a plain render without a transition)
+    if (duration + delay <= 0) {
       continue;
     }
 
-    if (property === 'all') {
-      allPropertiesTransition = true;
-    } else {
-      specificProperties.push(property);
-    }
+    const timingFunction = normalizeTimingFunction(
+      transitionTimingFunction[i % transitionTimingFunction.length]
+    );
+    const allowDiscrete = normalizeTransitionBehavior(
+      transitionBehavior[i % transitionBehavior.length]
+    );
 
-    settings[property] = {
-      duration: normalizeDuration(
-        transitionDuration[i % transitionDuration.length]
-      ),
-      timingFunction: normalizeTimingFunction(
-        transitionTimingFunction[i % transitionTimingFunction.length]
-      ),
-      delay: normalizeDelay(transitionDelay[i % transitionDelay.length]),
-      allowDiscrete: normalizeTransitionBehavior(
-        transitionBehavior[i % transitionBehavior.length]
-      ),
-    };
+    settings[property] = { duration, timingFunction, delay, allowDiscrete };
 
     // 'all' transition property overrides all properties before it,
     // so we don't need to process them
-    if (allPropertiesTransition) {
+    if (property === 'all') {
+      allPropertiesTransition = true;
       break;
     }
+
+    specificProperties.add(property);
   }
 
-  return {
-    properties: allPropertiesTransition ? 'all' : specificProperties.reverse(),
-    settings,
-  };
-}
-
-export function getNormalizedCSSTransitionConfigUpdates(
-  oldConfig: NormalizedCSSTransitionConfig,
-  newConfig: NormalizedCSSTransitionConfig
-): NormalizedCSSTransitionConfigUpdates {
-  const configUpdates: NormalizedCSSTransitionConfigUpdates = {};
-
-  if (
-    oldConfig.properties !== newConfig.properties &&
-    (!Array.isArray(oldConfig.properties) ||
-      !Array.isArray(newConfig.properties) ||
-      !areArraysEqual(oldConfig.properties, newConfig.properties))
-  ) {
-    configUpdates.properties = newConfig.properties;
+  if (allPropertiesTransition) {
+    return { specificProperties: undefined, settings };
+  }
+  if (specificProperties.size) {
+    return { specificProperties, settings };
   }
 
-  const newSettingsKeys = Object.keys(newConfig.settings);
-  const oldSettingsKeys = Object.keys(oldConfig.settings);
-
-  if (newSettingsKeys.length !== oldSettingsKeys.length) {
-    configUpdates.settings = newConfig.settings;
-  } else {
-    for (const key of newSettingsKeys) {
-      if (
-        !oldConfig.settings[key] ||
-        // TODO - think of a better way to compare settings (necessary for
-        // timing functions comparison). Maybe add some custom way instead
-        // of deepEqual
-        !deepEqual(oldConfig.settings[key], newConfig.settings[key])
-      ) {
-        configUpdates.settings = newConfig.settings;
-        break;
-      }
-    }
-  }
-
-  return configUpdates;
+  return null;
 }

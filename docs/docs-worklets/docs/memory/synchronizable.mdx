@@ -1,0 +1,104 @@
+---
+id: synchronizable # lower-case to fix alphabetical order
+title: Synchronizable
+sidebar_position: 42 # Use alphabetical order
+---
+
+# Synchronizable <AvailableFrom version="0.6.0" />
+
+Synchronizable is a type of shared memory not tied to any JavaScript Runtime. It can be accessed from any JavaScript Runtime and C++. The value held by Synchronizable behaves like a standard JavaScript value.
+
+You can use Synchronizable on multiple Runtimes to poll some shared state information without expensive synchronous messaging between Runtimes.
+
+Synchronizable can be accessed both non-exclusively or exclusively - meaning that a thread (Runtime) could obtain it and all other threads (Runtimes) trying to access it will have to wait until it's released.
+
+<SVGDiagram>![Synchronizable](/img/synchronizable.svg)</SVGDiagram>
+
+<figcaption style={{ textAlign: 'center' }}>
+  Synchronizable memory model
+</figcaption>
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type Synchronizable<TValue = unknown> = {
+  getDirty(): TValue;
+  getBlocking(): TValue;
+  setBlocking(value: TValue | ((prev: TValue) => TValue)): void;
+  lock(): void;
+  unlock(): void;
+};
+```
+
+</details>
+
+## Reference
+
+```tsx
+import { createSynchronizable, scheduleOnUI } from 'react-native-worklets';
+
+// RN Runtime, JS thread
+
+const synchronizable = createSynchronizable({ a: 42 });
+
+scheduleOnUI(() => {
+  // UI Runtime, UI thread
+  const value = synchronizable.getBlocking();
+  console.log(value); // {a: 24}
+});
+
+// Could execute either before or after the UI Runtime reads the value.
+synchronizable.setBlocking({ a: 24 });
+```
+
+<SVGDiagram>![Synchronizable flow](/img/synchronizable-flow.svg)</SVGDiagram>
+
+<figcaption style={{ textAlign: 'center' }}>
+  Possible flow of operations for the above example, assuming that `getBlocking`
+  function executes first. Time axis is not to scale.
+</figcaption>
+
+## Methods
+
+Synchronizable has the following methods to access and modify its value:
+
+### getBlocking
+
+Exclusively obtains the Synchronizable and returns its value, potentially blocking if `getBlocking` or `setBlocking` are being executed on another thread or if the Synchronizable is explicitly locked.
+
+### getDirty
+
+Non-exclusively obtains the Synchronizable and returns its value. It never blocks, even if the Synchronizable is explicitly locked, therefore could result in a [dirty read](https://en.wikipedia.org/wiki/Write%E2%80%93read_conflict). Useful for scenarios where eventual consistency is acceptable.
+
+### setBlocking
+
+Exclusively obtains the Synchronizable and sets it to the provided value, potentially blocking if either `getBlocking` or `setBlocking` are being executed or if the Synchronizable is explicitly locked. You can also pass a setter function that receives the previous value and returns the new value. Synchronizable is **locked for the duration of the setter function execution**.
+
+```tsx
+// Set the value to 42
+synchronizable.setBlocking(42);
+// Increment the value by 1
+synchronizable.setBlocking((prev) => prev + 1);
+```
+
+The value provided to `setBlocking` is serialized automatically.
+
+### lock
+
+Exclusively locks the Synchronizable - other threads are blocked when calling `getBlocking`, `setBlocking` or `lock` until the Synchronizable is unlocked. Multiple calls on the same thread do nothing.
+
+### unlock
+
+Unlocks the Synchronizable. Does nothing on already unlocked Synchronizable. Works only when called from the same thread which locked the Synchronizable. Forgetting to unlock a Synchronizable could lead to deadlocks.
+
+## C++ integration
+
+Synchronizable can be created and accessed from C++ code. The C++ API doesn't support setter functions.
+
+## Remarks
+
+- While Synchronizable can hold any [Serializable](/docs/memory/serializable) JavaScript value, we recommend to use primitives like `number`, `string` or `boolean` for best performance, to minimize the amount of data being copied for each access.
+- We recommend to avoid changing the type of the value held by Synchronizable, instead opt to create a new Synchronizable for different types.
+- Synchronizable is not reactive, meaning that there are no built-in mechanisms to notify Runtimes when its value changes. Runtimes need to poll the value to detect changes.
+- Synchronizable on a JavaScript Runtime is a wrapper to a reference to the actual Synchronizable living in C++. The value held by Synchronizable is copied to/from C++ on each access.

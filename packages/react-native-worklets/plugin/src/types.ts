@@ -15,23 +15,12 @@ import {
   isObjectMethod,
 } from '@babel/types';
 
-export interface WorkletsPluginOptions {
-  relativeSourceLocation?: boolean;
-  disableInlineStylesWarning?: boolean;
-  omitNativeOnlyData?: boolean;
-  globals?: string[];
-  substituteWebPlatformChecks?: boolean;
-  disableSourceMaps?: boolean;
-  extraPlugins?: string[];
-  extraPresets?: string[];
-  bundleMode?: boolean;
-  workletizableModules?: string[];
-}
+import type { PluginOptions } from './options';
 
 export interface WorkletsPluginPass {
   file: BabelFile;
   key: string;
-  opts: WorkletsPluginOptions;
+  opts: PluginOptions;
   cwd: string;
   filename: string | undefined;
   workletNumber: number;
@@ -87,4 +76,4 @@ export function isWorkletizableObjectNode(
 
 export const workletClassFactorySuffix = '__classFactory';
 
-export const generatedWorkletsDir = '__generatedWorklets';
+export const generatedWorkletsDir = '.worklets';

@@ -20,12 +20,18 @@ class NativeWorklets implements IWorkletsModule {
   #serializableFalse: SerializableRef<boolean>;
 
   constructor() {
+    const bundleModeEnabled = globalThis._WORKLETS_BUNDLE_MODE_ENABLED ?? false;
     globalThis._WORKLETS_VERSION_JS = jsVersion;
     if (
       global.__workletsModuleProxy === undefined &&
       globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative
     ) {
-      WorkletsTurboModule?.installTurboModule();
+      WorkletsTurboModule?.installTurboModule(bundleModeEnabled);
+      if (__DEV__ && bundleModeEnabled) {
+        console.log(
+          '[Worklets] Bundle mode initialization: Downloaded the bundle for Worklet Runtimes.'
+        );
+      }
     }
     if (global.__workletsModuleProxy === undefined) {
       throw new WorkletsError(
@@ -152,14 +158,49 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
+  createCustomSerializable(
+    data: SerializableRef<unknown>,
+    typeId: number
+  ): SerializableRef<unknown> {
+    return this.#workletsModuleProxy.createCustomSerializable(data, typeId);
+  }
+
+  registerCustomSerializable(
+    determine: SerializableRef<object>,
+    pack: SerializableRef<object>,
+    unpack: SerializableRef<object>,
+    typeId: number
+  ): void {
+    this.#workletsModuleProxy.registerCustomSerializable(
+      determine,
+      pack,
+      unpack,
+      typeId
+    );
+  }
+
+  createShareable<TValue = unknown>(
+    hostRuntimeId: number,
+    initial: SerializableRef<TValue>,
+    initSynchronously: boolean,
+    decorateHost: SerializableRef,
+    decorateRef: SerializableRef
+  ): SerializableRef<TValue> {
+    return this.#workletsModuleProxy.createShareable(
+      hostRuntimeId,
+      initial,
+      initSynchronously,
+      decorateHost,
+      decorateRef
+    );
+  }
+
   scheduleOnUI<TValue>(serializable: SerializableRef<TValue>) {
     return this.#workletsModuleProxy.scheduleOnUI(serializable);
   }
 
-  executeOnUIRuntimeSync<TValue, TReturn>(
-    serializable: SerializableRef<TValue>
-  ): TReturn {
-    return this.#workletsModuleProxy.executeOnUIRuntimeSync(serializable);
+  runOnUISync<TValue, TReturn>(worklet: SerializableRef<TValue>): TReturn {
+    return this.#workletsModuleProxy.runOnUISync(worklet);
   }
 
   createWorkletRuntime(
@@ -178,14 +219,38 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
-  scheduleOnRuntime<T>(
+  scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
-    serializableWorklet: SerializableRef<T>
+    serializableWorklet: SerializableRef<TValue>
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntime(
       workletRuntime,
       serializableWorklet
     );
+  }
+
+  scheduleOnRuntimeWithId<TValue>(
+    runtimeId: number,
+    worklet: SerializableRef<TValue>
+  ) {
+    return this.#workletsModuleProxy.scheduleOnRuntimeWithId(
+      runtimeId,
+      worklet
+    );
+  }
+
+  runOnRuntimeSync<TValue, TReturn>(
+    workletRuntime: WorkletRuntime,
+    worklet: SerializableRef<TValue>
+  ): TReturn {
+    return this.#workletsModuleProxy.runOnRuntimeSync(workletRuntime, worklet);
+  }
+
+  runOnRuntimeSyncWithId<TValue, TReturn>(
+    runtimeId: number,
+    worklet: SerializableRef<TValue>
+  ): TReturn {
+    return this.#workletsModuleProxy.runOnRuntimeSyncWithId(runtimeId, worklet);
   }
 
   createSynchronizable<TValue>(value: TValue): SynchronizableRef<TValue> {
@@ -248,6 +313,14 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   setDynamicFeatureFlag(name: string, value: boolean) {
     this.#workletsModuleProxy.setDynamicFeatureFlag(name, value);
+  }
+
+  getUIRuntimeHolder(): object {
+    return this.#workletsModuleProxy.getUIRuntimeHolder();
+  }
+
+  getUISchedulerHolder(): object {
+    return this.#workletsModuleProxy.getUISchedulerHolder();
   }
 }
 

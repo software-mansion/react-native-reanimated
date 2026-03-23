@@ -33,6 +33,10 @@ class RecordInterpolatorFactory : public PropertyInterpolatorFactory {
     std::string toString() const override {
       return "{}";
     }
+
+    bool operator==(const CSSValue &) const override {
+      return false;
+    }
   };
 
   const InterpolatorFactoriesRecord factories_;
@@ -54,6 +58,10 @@ class ArrayLikeInterpolatorFactory : public PropertyInterpolatorFactory {
 
     std::string toString() const override {
       return "[]";
+    }
+
+    bool operator==(const CSSValue &) const override {
+      return false;
     }
   };
 };
@@ -118,6 +126,10 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
 
     std::string toString() const override {
       return getIdentityMatrix().toString();
+    }
+
+    bool operator==(const CSSValue &) const override {
+      return false;
     }
   };
 

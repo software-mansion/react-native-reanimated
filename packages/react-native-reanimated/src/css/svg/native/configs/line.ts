@@ -5,13 +5,12 @@
 import type { LineProps } from 'react-native-svg';
 
 import type { SvgStyleBuilderConfig } from './common';
-import { commonSvgProps } from './common';
+import { SVG_COMMON_PROPERTIES_CONFIG } from './common';
 
 export const SVG_LINE_PROPERTIES_CONFIG: SvgStyleBuilderConfig<LineProps> = {
-  ...commonSvgProps,
+  ...SVG_COMMON_PROPERTIES_CONFIG,
   x1: true,
   y1: true,
   x2: true,
   y2: true,
-  opacity: true,
 };

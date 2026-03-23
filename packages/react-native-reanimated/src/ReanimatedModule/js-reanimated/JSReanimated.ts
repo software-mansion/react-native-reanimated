@@ -15,6 +15,7 @@ import {
 } from '../../common';
 import type {
   InternalHostInstance,
+  SettledUpdate,
   ShadowNodeWrapper,
   StyleProps,
   Value3D,
@@ -23,8 +24,8 @@ import type {
 import { SensorType } from '../../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
-  NormalizedCSSTransitionConfig,
 } from '../../css/native';
 import { assertWorkletsVersion } from '../../platform-specific/workletsVersion';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
@@ -135,14 +136,14 @@ class JSReanimated implements IReanimatedModule {
           if (this.platform === Platform.WEB_ANDROID) {
             [x, y, z] = [-x, -y, -z];
           }
-          // TODO TYPESCRIPT on web SerializableRef is the value itself so we call it directly
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (eventHandler as any)({ x, y, z, interfaceOrientation: 0 });
         };
       case SensorType.GYROSCOPE:
       case SensorType.MAGNETIC_FIELD:
         return () => {
           const { x, y, z } = sensor;
-          // TODO TYPESCRIPT on web SerializableRef is the value itself so we call it directly
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (eventHandler as any)({ x, y, z, interfaceOrientation: 0 });
         };
       case SensorType.ROTATION:
@@ -165,7 +166,7 @@ class JSReanimated implements IReanimatedModule {
             2.0 * (qx * qy + qw * qz),
             qw * qw + qx * qx - qy * qy - qz * qz
           );
-          // TODO TYPESCRIPT on web SerializableRef is the value itself so we call it directly
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (eventHandler as any)({
             qw,
             qx,
@@ -288,7 +289,7 @@ class JSReanimated implements IReanimatedModule {
 
   registerCSSKeyframes(
     _animationName: string,
-    _viewName: string,
+    _compoundComponentName: string,
     _keyframesConfig: NormalizedCSSAnimationKeyframesConfig
   ): void {
     throw new ReanimatedError(
@@ -296,7 +297,10 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
-  unregisterCSSKeyframes(_animationName: string, _viewName: string): void {
+  unregisterCSSKeyframes(
+    _animationName: string,
+    _compoundComponentName: string
+  ): void {
     throw new ReanimatedError(
       '`unregisterCSSKeyframes` is not available in JSReanimated.'
     );
@@ -304,6 +308,7 @@ class JSReanimated implements IReanimatedModule {
 
   applyCSSAnimations(
     _shadowNodeWrapper: ShadowNodeWrapper,
+    _compoundComponentName: string,
     _animationUpdates: CSSAnimationUpdates
   ) {
     throw new ReanimatedError(
@@ -317,27 +322,24 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
-  registerCSSTransition(
+  runCSSTransition(
     _shadowNodeWrapper: ShadowNodeWrapper,
-    _transitionConfig: NormalizedCSSTransitionConfig
+    _transitionConfig: CSSTransitionConfig
   ): void {
     throw new ReanimatedError(
-      '`registerCSSTransition` is not available in JSReanimated.'
-    );
-  }
-
-  updateCSSTransition(
-    _viewTag: number,
-    _settingsUpdates: Partial<NormalizedCSSTransitionConfig>
-  ): void {
-    throw new ReanimatedError(
-      '`updateCSSTransition` is not available in JSReanimated.'
+      '`runCSSTransition` is not available in JSReanimated.'
     );
   }
 
   unregisterCSSTransition(_viewTag: number): void {
     throw new ReanimatedError(
       '`unregisterCSSTransition` is not available in JSReanimated.'
+    );
+  }
+
+  getSettledUpdates(): SettledUpdate[] {
+    throw new ReanimatedError(
+      '`getSettledUpdates` is not available in JSReanimated.'
     );
   }
 }

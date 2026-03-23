@@ -1,9 +1,8 @@
 #if __cplusplus
 
+#import <reanimated/Compat/WorkletsApi.h>
 #import <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #import <reanimated/apple/REANodesManager.h>
-
-#import <worklets/apple/WorkletsModule.h>
 
 namespace reanimated {
 
@@ -12,7 +11,8 @@ std::shared_ptr<reanimated::ReanimatedModuleProxy> createReanimatedModuleProxy(
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsInvoker,
-    WorkletsModule *workletsModule);
+    const std::shared_ptr<worklets::WorkletRuntime> &uiWorkletRuntime,
+    const std::shared_ptr<worklets::UIScheduler> &uiScheduler);
 
 } // namespace reanimated
 

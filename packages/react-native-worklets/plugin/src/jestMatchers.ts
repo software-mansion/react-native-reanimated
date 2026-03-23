@@ -13,7 +13,7 @@ declare global {
   }
 }
 
-const WORKLET_REGEX = /^var _worklet_[0-9]+_init_data/gm;
+const WORKLET_REGEX = /^(const|var) _worklet_[0-9]+_init_data/gm;
 const INLINE_STYLE_WARNING_REGEX =
   /console\.warn\(require\("react-native-reanimated"\)\.getUseOfValueInStyleWarning\(\)\)/g;
 

@@ -1,0 +1,91 @@
+---
+title: runOnRuntimeAsync
+sidebar_position: 42 # Use alphabetical order
+---
+
+# runOnRuntimeAsync <AvailableFrom version="0.8.0"/>
+
+`runOnRuntimeAsync` lets you asynchronously run [worklets](/docs/fundamentals/glossary#worklet) on a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
+It returns a Promise of the worklet's return value. The Promise is resolved asynchronously, not immediately after the callback execution.
+
+## Reference
+
+```javascript
+import { runOnRuntimeAsync, createWorkletRuntime } from 'react-native-worklets';
+
+const workletRuntime = createWorkletRuntime({ name: 'background' });
+
+// RN Runtime, JS thread
+
+const result: Promise<number> = runOnRuntimeAsync(workletRuntime, (): number => {
+  'worklet';
+  return 2 + 2;
+});
+
+await result; // 4
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
+  workletRuntime: WorkletRuntime,
+  worklet: (...args: Args) => ReturnValue,
+  ...args: Args
+): Promise<ReturnValue>;
+```
+
+</details>
+
+## Arguments
+
+### workletRuntime
+
+The worklet runtime to run the worklet on. Created with [`createWorkletRuntime`](/docs/threading/createWorkletRuntime).
+
+### worklet
+
+A reference to a function you want to execute on the [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime). Arguments to your function have to be passed after the worklet i.e. `runOnRuntimeAsync(workletRuntime, setValue, 10);`.
+
+### args
+
+Arguments to the function you want to execute on the [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
+
+## Remarks
+
+- It's a common mistake to execute function inside of `runOnRuntimeAsync` like this: ~~`runOnRuntimeAsync(workletRuntime, myWorklet(10))`~~. Here, the correct usage would be `runOnRuntimeAsync(workletRuntime, myWorklet, 10)`.
+
+- The callback passed as the argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ready to be run on the [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
+
+- `runOnRuntimeAsync` can only be called from the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime). Calling it from other runtimes will result in an error.
+
+- Errors thrown in the worklet will cause the Promise to reject with that error.
+
+## Example
+
+```javascript
+import { runOnRuntimeAsync, createWorkletRuntime } from 'react-native-worklets';
+
+const backgroundRuntime = createWorkletRuntime({ name: 'background' });
+
+async function performHeavyComputation(data: number[]) {
+  try {
+    const result = await runOnRuntimeAsync(backgroundRuntime, (numbers: number[]) => {
+      'worklet';
+      // Heavy computation on background thread
+      return numbers.reduce((sum, n) => sum + n, 0);
+    }, data);
+
+    console.log('Computation result:', result);
+  } catch (error) {
+    console.error('Computation failed:', error);
+  }
+}
+```
+
+## Platform compatibility
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ❌  |

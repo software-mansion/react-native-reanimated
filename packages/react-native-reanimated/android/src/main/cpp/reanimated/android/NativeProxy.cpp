@@ -1,3 +1,5 @@
+#include <react/fabric/Binding.h>
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/ReanimatedVersion.h>
@@ -7,8 +9,6 @@
 #include <reanimated/android/NativeProxy.h>
 #include <reanimated/android/SensorSetter.h>
 
-#include <react/fabric/Binding.h>
-
 #include <memory>
 #include <string>
 #include <utility>
@@ -16,20 +16,23 @@
 
 namespace reanimated {
 
+using namespace worklets;
 using namespace facebook;
 using namespace react;
 
 NativeProxy::NativeProxy(
-    jni::alias_ref<NativeProxy::javaobject> jThis,
-    const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
+    jni::alias_ref<NativeProxy::javaobject> jThis, // NOLINT //(performance-unnecessary-value-param)
     jsi::Runtime *rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-    jni::alias_ref<facebook::react::JFabricUIManager::javaobject> fabricUIManager)
+    jni::alias_ref<facebook::react::JFabricUIManager::javaobject> fabricUIManager,
+    const std::shared_ptr<WorkletRuntime> &uiRuntime,
+    const std::shared_ptr<UIScheduler> &uiScheduler)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
-      workletsModuleProxy_(workletsModuleProxy),
+      uiRuntime_(uiRuntime),
       reanimatedModuleProxy_(std::make_shared<ReanimatedModuleProxy>(
-          workletsModuleProxy,
+          uiRuntime,
+          uiScheduler,
           *rnRuntime,
           jsCallInvoker,
           getPlatformDependentMethods(),
@@ -59,14 +62,22 @@ NativeProxy::~NativeProxy() {
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
-    jni::alias_ref<jhybridobject> jThis,
-    jni::alias_ref<WorkletsModule::javaobject> jWorkletsModule,
+    jni::alias_ref<jhybridobject> jThis, // NOLINT //(performance-unnecessary-value-param)
     jlong jsContext,
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
-    jni::alias_ref<facebook::react::JFabricUIManager::javaobject> fabricUIManager) {
+    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+        fabricUIManager) // NOLINT //(performance-unnecessary-value-param)
+{
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
-  auto workletsModuleProxy = jWorkletsModule->cthis()->getWorkletsModuleProxy();
-  return makeCxxInstance(jThis, workletsModuleProxy, (jsi::Runtime *)jsContext, jsCallInvoker, fabricUIManager);
+  auto &rnRuntime = *reinterpret_cast<jsi::Runtime *>(jsContext); // NOLINT //(performance-no-int-to-ptr)
+  const auto global = rnRuntime.global();
+  const auto uiRuntime =
+      getWorkletRuntimeFromHolder(rnRuntime, global.getPropertyAsObject(rnRuntime, "__UI_WORKLET_RUNTIME_HOLDER"));
+
+  const auto uiScheduler =
+      getUISchedulerFromHolder(rnRuntime, global.getPropertyAsObject(rnRuntime, "__UI_SCHEDULER_HOLDER"));
+
+  return makeCxxInstance(jThis, &rnRuntime, jsCallInvoker, fabricUIManager, uiRuntime, uiScheduler);
 }
 
 #ifndef NDEBUG
@@ -104,16 +115,20 @@ void NativeProxy::injectCppVersion() {
 
 void NativeProxy::installJSIBindings() {
   jsi::Runtime &rnRuntime = *rnRuntime_;
-  RNRuntimeDecorator::decorate(
-      rnRuntime, workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(), reanimatedModuleProxy_);
+  auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
+  RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy_);
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag) {
   return reanimatedModuleProxy_->isAnyHandlerWaitingForEvent(eventName, emitterReactTag);
 }
 
-void NativeProxy::performOperations(const bool isTriggeredByEvent) {
-  reanimatedModuleProxy_->performOperations(isTriggeredByEvent);
+void NativeProxy::performOperations() {
+  reanimatedModuleProxy_->performOperations();
+}
+
+void NativeProxy::performNonLayoutOperations() {
+  reanimatedModuleProxy_->performNonLayoutOperations();
 }
 
 bool NativeProxy::getIsReducedMotion() {
@@ -127,6 +142,7 @@ void NativeProxy::registerNatives() {
        makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
        makeNativeMethod("isAnyHandlerWaitingForEvent", NativeProxy::isAnyHandlerWaitingForEvent),
        makeNativeMethod("performOperations", NativeProxy::performOperations),
+       makeNativeMethod("performNonLayoutOperations", NativeProxy::performNonLayoutOperations),
        makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp)});
 }
 
@@ -243,10 +259,10 @@ void NativeProxy::handleEvent(
     return;
   }
 
-  jsi::Runtime &rt = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+  auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   jsi::Value payload;
   try {
-    payload = jsi::Value::createFromJsonUtf8(rt, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
+    payload = jsi::Value::createFromJsonUtf8(uiRuntime, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
   } catch (std::exception &) {
     // Ignore events with malformed JSON payload.
     return;
@@ -291,7 +307,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 }
 
 void NativeProxy::invalidateCpp() {
-  workletsModuleProxy_.reset();
+  uiRuntime_.reset();
   // cleanup all animated sensors here, since the next line resets
   // the pointer and it will be too late after it
   reanimatedModuleProxy_->cleanupSensors();

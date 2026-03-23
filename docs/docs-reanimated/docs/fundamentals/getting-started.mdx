@@ -18,7 +18,7 @@ With Reanimated, you can easily create smooth animations and interactions that r
 ## Prerequisites
 
 Reanimated 4.x works only with [the React Native New Architecture (Fabric)](https://reactnative.dev/architecture/landing-page).
-If your app still uses the old architecture, you can use Reanimated in version 3 which is still actively maintained.
+If your app still uses the old architecture, you can use Reanimated in version 3 (which is no longer actively maintained).
 
 Alternatively, you can dive into [our examples](https://github.com/software-mansion/react-native-reanimated/tree/main/apps/common-app/src/apps) on GitHub.
 
@@ -35,24 +35,23 @@ Install `react-native-reanimated` and `react-native-worklets` packages from npm:
     ```bash
     npm install react-native-reanimated
     ```
-
   </TabItem>
   <TabItem value="yarn" label="YARN">
     ```bash
     yarn add react-native-reanimated
     ```
-
   </TabItem>
 </Tabs>
 
 #### Dependencies
 
 This library requires an installation of the `react-native-worklets` dependency. It was separated from `react-native-reanimated` for better modularity and must be installed separately.
+You can read more about Worklets in the [Worklets documentation](https://docs.swmansion.com/react-native-worklets/).
 
 <Tabs groupId="package-managers">
   <TabItem value="npm" label="NPM">
     {/* TODO - add information about the necessity to specify a proper version of the library compatible with reanimated */}
-    ```bash
+    ```bash 
     npm install react-native-worklets
     ```
   </TabItem>
@@ -104,14 +103,16 @@ When using [React Native Community CLI](https://github.com/react-native-communit
 
 :::
 
+Worklets Babel plugin comes with several customization options, you can explore what they are and how to use them in the [Worklets docs](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/plugin-options) section.
+
 <details>
 <summary>Why do I need this?</summary>
 
-In short, the Reanimated babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the UI thread.
+In short, the Worklets Babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the UI thread.
 
-Since [Expo SDK 50](https://expo.dev/changelog/2024/01-18-sdk-50), the Expo starter template includes the Reanimated babel plugin by default.
+Since [Expo SDK 50](https://expo.dev/changelog/2024/01-18-sdk-50), the Expo starter template includes the Worklets Babel plugin by default.
 
-To learn more about the plugin head onto to [Reanimated babel plugin](/docs/fundamentals/glossary#reanimated-babel-plugin) section.
+To learn more about the plugin head onto to [Worklets Babel plugin docs page](https://docs.swmansion.com/react-native-worklets/docs/worklets-babel-plugin/about).
 
 </details>
 

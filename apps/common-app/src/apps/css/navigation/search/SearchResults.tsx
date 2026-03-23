@@ -106,7 +106,7 @@ const ResultCard = memo(function ResultCard({
 
   const formatted = useMemo(() => {
     const formattedValues: Record<string, string> = {};
-    matches?.forEach(({ key, indices, value }) => {
+    matches?.forEach(({ indices, key, value }) => {
       if (!key || !value) return;
 
       let result = '';

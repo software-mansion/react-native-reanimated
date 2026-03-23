@@ -1,6 +1,3 @@
-/* eslint-disable no-unused-expressions */
-/* eslint-disable @typescript-eslint/no-empty-function */
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useRef } from 'react';
 import { Button } from 'react-native';
@@ -130,4 +127,13 @@ function UseSharedValueTestUseAnimatedStyle() {
   }));
 
   return <Animated.View style={[animatedStyle1, animatedStyle2]} />;
+}
+
+function UseSharedValueTestModify() {
+  const sv = useSharedValue<number[]>([1, 2, 3]);
+
+  sv.modify((value) => {
+    'worklet';
+    return value;
+  });
 }

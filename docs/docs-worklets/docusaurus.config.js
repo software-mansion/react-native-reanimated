@@ -29,7 +29,10 @@ const config = {
     hooks: {
       onBrokenMarkdownLinks: 'throw',
     },
+    mermaid: true,
   },
+
+  themes: ['@docusaurus/theme-mermaid'],
 
   onBrokenLinks: 'throw',
   onBrokenAnchors: 'throw',
@@ -53,11 +56,6 @@ const config = {
           versions: { current: { label: '0.x' } },
         },
         theme: { customCss: require.resolve('./src/css/index.css') },
-        // TODO: Add google analytics
-        // gtag: {
-        //   trackingID: 'G-RNYQG9GVFJ',
-        //   anonymizeIP: true,
-        // },
       }),
     ],
   ],
@@ -106,18 +104,27 @@ const config = {
           'All trademarks and copyrights belong to their respective owners.',
       },
       prism: {
-        additionalLanguages: ['bash', 'diff', 'json'],
+        additionalLanguages: ['bash', 'diff', 'json', 'mermaid'],
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
       },
       algolia: {
-        appId: 'HTRBY5HZ15',
-        apiKey: '93f840a25edfcf77d2af4a5f2b386214',
+        appId: 'EXKV34DSZ0',
+        apiKey: 'b0df4e45a4bec8a2f79aa77da07b56bd',
         indexName: 'react-native-worklets',
         contextualSearch: false,
       },
     }),
   plugins: [
+    ...[
+      process.env.NODE_ENV === 'production' && '@docusaurus/plugin-debug',
+      process.env.NODE_ENV === 'production' && [
+        '@docusaurus/plugin-google-tag-manager',
+        {
+          containerId: 'GTM-KHX5NRM8',
+        },
+      ],
+    ].filter(Boolean),
     function svgModulePlugin() {
       return {
         name: 'svg-module-plugin',
@@ -148,9 +155,6 @@ const config = {
         },
       };
     },
-    ...[
-      process.env.NODE_ENV === 'production' && '@docusaurus/plugin-debug',
-    ].filter(Boolean),
     async function reanimatedDocusaurusPlugin(context, options) {
       return {
         name: 'react-native-worklets/docusaurus-plugin',

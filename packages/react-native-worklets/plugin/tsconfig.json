@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES6",
-    "removeComments": true,
+    "removeComments": false,
     "module": "commonjs",
     "skipLibCheck": true,
     "sourceMap": true,
@@ -10,7 +10,8 @@
     "esModuleInterop": true,
     "outDir": "lib",
     "rootDir": "src",
-    "declaration": false,
+    "declarationDir": "types",
+    "declaration": true,
     "noEmit": false
   },
   "include": ["src"]

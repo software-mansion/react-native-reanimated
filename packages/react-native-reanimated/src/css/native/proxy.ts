@@ -3,8 +3,8 @@ import type { ShadowNodeWrapper, StyleProps } from '../../commonTypes';
 import { ReanimatedModule } from '../../ReanimatedModule';
 import type {
   CSSAnimationUpdates,
+  CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
-  NormalizedCSSTransitionConfig,
 } from './types';
 
 // COMMON
@@ -27,30 +27,35 @@ export function unmarkNodeAsRemovable(viewTag: number) {
 
 export function registerCSSKeyframes(
   animationName: string,
-  viewName: string,
+  compoundComponentName: string,
   keyframesConfig: NormalizedCSSAnimationKeyframesConfig
 ) {
   ReanimatedModule.registerCSSKeyframes(
     animationName,
-    viewName,
+    compoundComponentName,
     keyframesConfig
   );
 }
 
 export function unregisterCSSKeyframes(
   animationName: string,
-  viewName: string
+  compoundComponentName: string
 ) {
-  ReanimatedModule.unregisterCSSKeyframes(animationName, viewName);
+  ReanimatedModule.unregisterCSSKeyframes(animationName, compoundComponentName);
 }
 
 // View animations
 
 export function applyCSSAnimations(
   shadowNodeWrapper: ShadowNodeWrapper,
+  compoundComponentName: string,
   animationUpdates: CSSAnimationUpdates
 ) {
-  ReanimatedModule.applyCSSAnimations(shadowNodeWrapper, animationUpdates);
+  ReanimatedModule.applyCSSAnimations(
+    shadowNodeWrapper,
+    compoundComponentName,
+    animationUpdates
+  );
 }
 
 export function unregisterCSSAnimations(viewTag: number) {
@@ -59,18 +64,11 @@ export function unregisterCSSAnimations(viewTag: number) {
 
 // TRANSITIONS
 
-export function registerCSSTransition(
+export function runCSSTransition(
   shadowNodeWrapper: ShadowNodeWrapper,
-  transitionConfig: NormalizedCSSTransitionConfig
+  transitionConfig: CSSTransitionConfig
 ) {
-  ReanimatedModule.registerCSSTransition(shadowNodeWrapper, transitionConfig);
-}
-
-export function updateCSSTransition(
-  viewTag: number,
-  configUpdates: Partial<NormalizedCSSTransitionConfig>
-) {
-  ReanimatedModule.updateCSSTransition(viewTag, configUpdates);
+  ReanimatedModule.runCSSTransition(shadowNodeWrapper, transitionConfig);
 }
 
 export function unregisterCSSTransition(viewTag: number) {

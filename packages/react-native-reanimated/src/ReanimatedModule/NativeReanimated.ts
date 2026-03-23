@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 'use strict';
 
-import type {
-  IWorkletsModule,
-  SerializableRef,
-  WorkletFunction,
+import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
+import {
+  getUIRuntimeHolder,
+  getUISchedulerHolder,
+  runOnUISync,
 } from 'react-native-worklets';
-import { runOnUISync, WorkletsModule } from 'react-native-worklets';
 
 import {
   ReanimatedError,
@@ -16,6 +16,7 @@ import {
 import type {
   InternalHostInstance,
   LayoutAnimationBatchItem,
+  SettledUpdate,
   ShadowNodeWrapper,
   StyleProps,
   Value3D,
@@ -23,8 +24,8 @@ import type {
 } from '../commonTypes';
 import type {
   CSSAnimationUpdates,
+  CSSTransitionConfig,
   NormalizedCSSAnimationKeyframesConfig,
-  NormalizedCSSTransitionConfig,
 } from '../css/native';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
@@ -57,19 +58,18 @@ class NativeReanimatedModule implements IReanimatedModule {
    * We keep the instance of `WorkletsModule` here to keep correct coupling of
    * the modules and initialization order.
    */
-  // eslint-disable-next-line no-unused-private-class-members
-  #workletsModule: IWorkletsModule;
   #reanimatedModuleProxy: ReanimatedModuleProxy;
   constructor() {
-    this.#workletsModule = WorkletsModule;
     // These checks have to split since version checking depend on the execution order
     if (__DEV__) {
       assertSingleReanimatedInstance();
       assertWorkletsVersion();
     }
     global._REANIMATED_VERSION_JS = jsVersion;
-    if (global.__reanimatedModuleProxy === undefined && ReanimatedTurboModule) {
-      if (!ReanimatedTurboModule.installTurboModule()) {
+
+    if (ReanimatedTurboModule) {
+      const status = installTurboModule();
+      if (!status) {
         // This path means that React Native has failed on reload.
         // We don't want to throw any errors to not mislead the users
         // that the problem is related to Reanimated.
@@ -78,6 +78,7 @@ class NativeReanimatedModule implements IReanimatedModule {
         return;
       }
     }
+
     if (global.__reanimatedModuleProxy === undefined) {
       throw new ReanimatedError(
         `Native part of Reanimated doesn't seem to be initialized.
@@ -200,26 +201,31 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   registerCSSKeyframes(
     animationName: string,
-    viewName: string,
+    compoundComponentName: string,
     keyframesConfig: NormalizedCSSAnimationKeyframesConfig
   ) {
     this.#reanimatedModuleProxy.registerCSSKeyframes(
       animationName,
-      viewName,
+      compoundComponentName,
       keyframesConfig
     );
   }
 
-  unregisterCSSKeyframes(animationName: string, viewName: string) {
-    this.#reanimatedModuleProxy.unregisterCSSKeyframes(animationName, viewName);
+  unregisterCSSKeyframes(animationName: string, compoundComponentName: string) {
+    this.#reanimatedModuleProxy.unregisterCSSKeyframes(
+      animationName,
+      compoundComponentName
+    );
   }
 
   applyCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,
+    compoundComponentName: string,
     animationUpdates: CSSAnimationUpdates
   ) {
     this.#reanimatedModuleProxy.applyCSSAnimations(
       shadowNodeWrapper,
+      compoundComponentName,
       animationUpdates
     );
   }
@@ -228,25 +234,22 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.unregisterCSSAnimations(viewTag);
   }
 
-  registerCSSTransition(
+  runCSSTransition(
     shadowNodeWrapper: ShadowNodeWrapper,
-    transitionConfig: NormalizedCSSTransitionConfig
-  ) {
-    this.#reanimatedModuleProxy.registerCSSTransition(
+    transitionConfig: CSSTransitionConfig
+  ): void {
+    this.#reanimatedModuleProxy.runCSSTransition(
       shadowNodeWrapper,
       transitionConfig
     );
   }
 
-  updateCSSTransition(
-    viewTag: number,
-    configUpdates: Partial<NormalizedCSSTransitionConfig>
-  ) {
-    this.#reanimatedModuleProxy.updateCSSTransition(viewTag, configUpdates);
-  }
-
   unregisterCSSTransition(viewTag: number) {
     this.#reanimatedModuleProxy.unregisterCSSTransition(viewTag);
+  }
+
+  getSettledUpdates(): SettledUpdate[] {
+    return this.#reanimatedModuleProxy.getSettledUpdates();
   }
 }
 
@@ -271,8 +274,7 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   registerCSSAnimations(): void {}
   updateCSSAnimations(): void {}
   unregisterCSSAnimations(): void {}
-  registerCSSTransition(): void {}
-  updateCSSTransition(): void {}
+  runCSSTransition(): void {}
   unregisterCSSTransition(): void {}
   registerSensor(): number {
     return -1;
@@ -287,4 +289,21 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   getViewProp() {
     return null!;
   }
+
+  getSettledUpdates(): SettledUpdate[] {
+    return [];
+  }
+}
+
+function installTurboModule() {
+  if (globalThis.__reanimatedModuleProxy) {
+    return true;
+  }
+
+  globalThis.__UI_WORKLET_RUNTIME_HOLDER = getUIRuntimeHolder();
+  globalThis.__UI_SCHEDULER_HOLDER = getUISchedulerHolder();
+  const status = ReanimatedTurboModule!.installTurboModule();
+  delete globalThis.__UI_WORKLET_RUNTIME_HOLDER;
+  delete globalThis.__UI_SCHEDULER_HOLDER;
+  return status;
 }

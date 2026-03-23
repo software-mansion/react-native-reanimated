@@ -3,7 +3,6 @@ import type { Component, ElementType, JSX, RefObject } from 'react';
 import type {
   FlatList,
   HostInstance,
-  ImageStyle,
   ScrollView,
   SectionList,
   TextStyle,
@@ -15,6 +14,7 @@ import type { SerializableRef, WorkletFunction } from 'react-native-worklets';
 import type { AnyRecord, Maybe } from './common';
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
 import type { EasingFunctionFactory } from './Easing';
+import type { AnimatedStyleHandle, DefaultStyle } from './hook/commonTypes';
 
 type LayoutAnimationOptions =
   | 'originX'
@@ -71,6 +71,7 @@ export type LayoutAnimation = {
   callback?: (finished: boolean) => void;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnimationFunction = (a?: any, b?: any, c?: any) => any; // this is just a temporary mock
 
 export type EntryAnimationsValues = TargetLayoutAnimationValues &
@@ -94,6 +95,10 @@ export enum LayoutAnimationType {
   ENTERING = 1,
   EXITING = 2,
   LAYOUT = 3,
+  SHARED_ELEMENT_TRANSITION = 4,
+  SHARED_ELEMENT_TRANSITION_NATIVE_ID = 5,
+  SHARED_ELEMENT_TRANSITION_PROGRESS = 6,
+  SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID = 7,
 }
 
 export type LayoutAnimationFunction = (
@@ -162,12 +167,15 @@ export interface LayoutAnimationBatchItem {
   viewTag: number;
   type: LayoutAnimationType;
   config: SerializableRef<Keyframe | LayoutAnimationFunction> | undefined;
+  sharedTransitionTag?: string;
 }
 
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
+
 export interface StyleProps extends ViewStyle, TextStyle {
   originX?: number;
   originY?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 
@@ -187,10 +195,7 @@ export interface SharedValue<Value = unknown> {
   set(value: Value | ((value: Value) => Value)): void;
   addListener: (listenerID: number, listener: (value: Value) => void) => void;
   removeListener: (listenerID: number) => void;
-  modify: (
-    modifier?: <T extends Value>(value: T) => T,
-    forceUpdate?: boolean
-  ) => void;
+  modify: (modifier?: (value: Value) => Value, forceUpdate?: boolean) => void;
 }
 
 /**
@@ -201,7 +206,7 @@ export interface SharedValue<Value = unknown> {
  */
 type SharedValueDisableContravariance<Value = unknown> = Omit<
   SharedValue<Value>,
-  'set'
+  'set' | 'modify'
 >;
 
 export interface Mutable<Value = unknown> extends SharedValue<Value> {
@@ -261,6 +266,7 @@ export type AnimatableValueObject = { [key: string]: Animatable };
 export type AnimatableValue = Animatable | AnimatableValueObject;
 
 export interface AnimationObject<T = AnimatableValue> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
   callback?: AnimationCallback;
   current?: T;
@@ -273,11 +279,15 @@ export interface AnimationObject<T = AnimatableValue> {
 
   __prefix?: string;
   __suffix?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onFrame: (animation: any, timestamp: Timestamp) => boolean;
   onStart: (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     nextAnimation: any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     current: any,
     timestamp: Timestamp,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     previousAnimation: any
   ) => void;
 }
@@ -288,6 +298,7 @@ export interface Animation<T extends AnimationObject> extends AnimationObject {
     nextAnimation: T,
     current: AnimatableValue,
     timestamp: Timestamp,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     previousAnimation: Animation<any> | null | T
   ) => void;
 }
@@ -359,6 +370,11 @@ export enum InterfaceOrientation {
 
 export type ShadowNodeWrapper = {
   __nativeStateShadowNodeWrapper: never;
+};
+
+export type SettledUpdate = {
+  viewTag: number;
+  styleProps: StyleProps;
 };
 
 export enum KeyboardState {
@@ -439,13 +455,12 @@ type MaybeSharedValueRecursive<Value> = Value extends readonly (infer Item)[]
           }
     : MaybeSharedValue<Value>;
 
-type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
-
 // Ideally we want AnimatedStyle to not be generic, but there are
 // so many dependencies on it being generic that it's not feasible at the moment.
 export type AnimatedStyle<Style = DefaultStyle> =
   | (Style & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) // TODO - maybe add css animation config somewhere else
-  | MaybeSharedValueRecursive<Style>;
+  | MaybeSharedValueRecursive<Style>
+  | AnimatedStyleHandle<Style>;
 
 export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']

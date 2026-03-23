@@ -1,0 +1,53 @@
+---
+id: testing
+sidebar_label: 'Testing with Jest'
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Testing with Jest
+
+React Native Worklets is primarily a native library, for that reason it requires a proper setup to be tested with Jest. This guide will show you how to set it up when testing in a React Native project.
+
+You have two options for this:
+
+1. **Enforce the use of mock implementation for React Native Worklets.**
+
+   React Native Worklets provides a complete mock implementation for Jest. This is the recommended approach for testing.
+
+2. **Enforce the use of Web implementation for React Native Worklets.**
+
+   React Native Worklets has a separate Web implementation to use in the browser. Use this approach when you want to avoid using artifical mocks.
+
+## Using the mock implementation
+
+Depending on whether you are using TypeScript or JavaScript, apply the following mock:
+
+<Tabs groupId="language">
+  <TabItem value="TypeScript" label="TypeScript">
+    ```js
+    jest.mock('react-native-worklets', () =>
+      require('react-native-worklets/src/mock')
+    );
+    ```
+  </TabItem>
+  <TabItem value="JavaScript" label="JavaScript">
+    ```js
+    jest.mock('react-native-worklets', () =>
+      require('react-native-worklets/lib/module/mock')
+    );
+    ```
+  </TabItem>
+</Tabs>
+
+## Using the Web implementation <AvailableFrom version={'0.8.x'}/>
+
+Override Jest resolver to enforce resolving web implementation of React Native Worklets instead of pulling the native one. Modify your `jest.config.js` file to include the following code:
+
+```js
+module.exports = {
+  // ... other configurations
+  resolver: 'react-native-worklets/jest/resolver',
+};
+```

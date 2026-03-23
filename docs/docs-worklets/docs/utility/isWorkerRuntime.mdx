@@ -1,0 +1,48 @@
+---
+sidebar_position: 42 # Use alphabetical order
+title: isWorkerRuntime
+---
+
+# isWorkerRuntime <AvailableFrom version="0.8.0" />
+
+Checks if the current runtime is a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime).
+
+## Reference
+
+```typescript
+import {
+  isWorkerRuntime,
+  scheduleOnUI,
+  scheduleOnRuntime,
+  createWorkletRuntime,
+} from 'react-native-worklets';
+
+console.log(isWorkerRuntime()); // false
+
+scheduleOnUI(() => {
+  console.log(isWorkerRuntime()); // false
+})();
+
+const workerRuntime = createWorkletRuntime();
+scheduleOnRuntime(workerRuntime, () => {
+  // highlight-next-line
+  console.log(isWorkerRuntime()); // true
+})();
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function isWorkerRuntime(): boolean;
+```
+
+</details>
+
+### Returns
+
+`true` if the current runtime is the [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime), `false` otherwise.
+
+## Remarks
+
+- The function checks the value of `globalThis.__RUNTIME_KIND` to determine the kind of the current runtime. See [getRuntimeKind](/docs/utility/getRuntimeKind) for more details.

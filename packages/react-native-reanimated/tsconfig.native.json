@@ -6,5 +6,10 @@
     }
   },
   "include": ["src"],
-  "exclude": ["**/*.web.ts", "**/*.web.tsx"]
+  "exclude": [
+    "**/*.web.ts",
+    "**/*.web.tsx",
+    "**/*.web.test.ts",
+    "**/*.web.test.tsx"
+  ]
 }

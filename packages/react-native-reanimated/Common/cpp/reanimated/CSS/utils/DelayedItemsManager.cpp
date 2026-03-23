@@ -18,7 +18,7 @@ bool DelayedItemComparator<TValue>::operator()(const DelayedItem<TValue> &lhs, c
 }
 
 template <typename TValue>
-void DelayedItemsManager<TValue>::add(const double timestamp, const TValue value) {
+void DelayedItemsManager<TValue>::add(const double timestamp, const TValue &value) {
   auto result = itemsSet_.emplace(timestamp, value);
   if (result.second) {
     itemsMap_[result.first->value] = result.first;
@@ -38,7 +38,7 @@ typename DelayedItemsManager<TValue>::Item DelayedItemsManager<TValue>::pop() {
 }
 
 template <typename TValue>
-bool DelayedItemsManager<TValue>::remove(const TValue value) {
+bool DelayedItemsManager<TValue>::remove(const TValue &value) {
   auto it = itemsMap_.find(value);
 
   if (it == itemsMap_.end()) {
