@@ -6,7 +6,7 @@ export default function App() {
   const width = useSharedValue<number>(100);
 
   const handlePress = () => {
-    width.value = withSpring(width.value + 50);
+    width.value = withSpring(Math.random() * 100 + 50);
   };
 
   return (
