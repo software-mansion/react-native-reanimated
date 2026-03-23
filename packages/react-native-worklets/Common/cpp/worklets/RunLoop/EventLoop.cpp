@@ -1,5 +1,6 @@
 #include <worklets/RunLoop/EventLoop.h>
 
+#include <chrono>
 #include <memory>
 #include <string>
 #include <thread>

@@ -117,14 +117,14 @@ std::string JSISerializer::stringifyFunction(const jsi::Function &func) {
 
 std::string JSISerializer::stringifyHostObject(jsi::HostObject &hostObject) {
   int status = -1;
-  char *hostObjClassName = abi::__cxa_demangle(typeid(hostObject).name(), NULL, NULL, &status);
+  auto hostObjClassName = std::unique_ptr<char, decltype(&std::free)>(
+      abi::__cxa_demangle(typeid(hostObject).name(), nullptr, nullptr, &status), std::free);
   if (status != 0) {
     return "[jsi::HostObject]";
   }
 
   std::stringstream ss;
-  ss << "[jsi::HostObject(" << hostObjClassName << ")";
-  std::free(hostObjClassName);
+  ss << "[jsi::HostObject(" << hostObjClassName.get() << ")";
 
   auto props = hostObject.getPropertyNames(rt_);
   auto propsCount = props.size();
