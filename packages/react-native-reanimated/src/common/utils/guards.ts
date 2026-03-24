@@ -41,26 +41,17 @@ export const isRecord = <T extends UnknownRecord = UnknownRecord>(
 export const hasProp = <P extends AnyRecord, K extends string>(
   obj: P,
   key: K
-): obj is P & Record<K, string> => {
-  'worklet';
-  return key in obj;
-};
+): obj is P & Record<K, string> => key in obj;
 
 export const isConfigPropertyAlias = <P extends AnyRecord>(
   value: unknown
-): value is ConfigPropertyAlias<P> => {
-  'worklet';
-  return (
-    !!value &&
-    typeof value === 'object' &&
-    'as' in value &&
-    typeof value.as === 'string'
-  );
-};
+): value is ConfigPropertyAlias<P> =>
+  !!value &&
+  typeof value === 'object' &&
+  'as' in value &&
+  typeof value.as === 'string';
 
 export const hasValueProcessor = <T extends (params: unknown) => unknown>(
   configValue: unknown
-): configValue is { process: T } => {
-  'worklet';
-  return isRecord(configValue) && 'process' in configValue;
-};
+): configValue is { process: T } =>
+  isRecord(configValue) && 'process' in configValue;
