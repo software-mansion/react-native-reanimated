@@ -12,20 +12,20 @@ class UIRuntimeDecorator {
  public:
   static void decorate(
       jsi::Runtime &uiRuntime,
-      const ObtainPropFunction obtainPropFunction,
-      const UpdatePropsFunction updateProps,
-      const MeasureFunction measure,
-      const DispatchCommandFunction dispatchCommand,
-      const GetAnimationTimestampFunction getAnimationTimestamp,
-      const SetGestureStateFunction setGestureState,
-      const ProgressLayoutAnimationFunction progressLayoutAnimation,
-      const EndLayoutAnimationFunction endLayoutAnimation,
-      const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue);
+      const ObtainPropFunction &obtainPropFunction,
+      const UpdatePropsFunction &updateProps,
+      const MeasureFunction &measure,
+      const DispatchCommandFunction &dispatchCommand,
+      const GetAnimationTimestampFunction &getAnimationTimestamp,
+      const SetGestureStateFunction &setGestureState,
+      const ProgressLayoutAnimationFunction &progressLayoutAnimation,
+      const EndLayoutAnimationFunction &endLayoutAnimation,
+      const MaybeFlushUIUpdatesQueueFunction &maybeFlushUIUpdatesQueue);
 
  private:
   static void subscribeForMicrotasksFinalization(
       jsi::Runtime &uiRuntime,
-      MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue);
+      const MaybeFlushUIUpdatesQueueFunction &maybeFlushUIUpdatesQueue);
 };
 
 } // namespace reanimated

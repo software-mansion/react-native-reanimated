@@ -150,6 +150,11 @@ if (project == rootProject) {
 apply plugin: "com.android.library"
 apply plugin: "maven-publish"
 apply plugin: "de.undercouch.download"
+apply plugin: 'org.jetbrains.kotlin.android'
+
+if (project != rootProject) {
+    apply plugin: "org.jetbrains.kotlin.android"
+}
 
 android {
     compileSdkVersion safeExtGet("compileSdkVersion", 36)
@@ -241,6 +246,14 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+    if (project != rootProject) {
+        kotlinOptions {
+            jvmTarget = '17'
+        }
     }
     tasks.withType(ExternalNativeBuildJsonTask).tap {
         configureEach { compileTask ->
@@ -334,6 +347,8 @@ dependencies {
     implementation "androidx.core:core:1.15.0"
 
     implementation "com.facebook.react:react-android" // version substituted by RNGP
+    implementation "androidx.core:core-ktx:1.17.0"
+    implementation 'androidx.core:core-ktx:1.18.0'
 
     if (project == rootProject) {
         // This is needed for linting in Reanimated's repo.

@@ -183,10 +183,9 @@ export function createSerializable<TValue>(
       if ((value as WorkletImport).__bundleData) {
         return cloneImport(value as WorkletImport) as SerializableRef<TValue>;
       }
-    } else {
-      if (!isWorkletFunction(value)) {
-        return cloneRemoteFunction(value);
-      }
+    }
+    if (!isWorkletFunction(value)) {
+      return cloneRemoteFunction(value);
     }
   }
   // RN has introduced a new representation of TurboModules as a JS object whose prototype is the host object
