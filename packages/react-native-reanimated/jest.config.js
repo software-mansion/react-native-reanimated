@@ -7,7 +7,7 @@ module.exports = {
   testEnvironment: 'node',
   maxWorkers: 3,
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|@testing-library|react-clone-referenced-element|@react-navigation)/)',
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)/)',
   ],
   transform: {
     '^.+\\.(js|ts|tsx)$': [
