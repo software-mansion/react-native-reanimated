@@ -9,4 +9,7 @@ module.exports = {
   transformIgnorePatterns: [
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?|@testing-library|react-clone-referenced-element|@react-navigation)/)',
   ],
+  transform: {
+    '^.+\\.(js|ts|tsx)$': ['babel-jest', { sourceMaps: false }],
+  },
 };
