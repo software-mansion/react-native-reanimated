@@ -29,16 +29,12 @@ inline std::string reanimatedDevToolsPerfTraceCurrentThreadLabel() {
 
 inline void reanimatedDevToolsPerfTraceMarkCurrentThreadAsJs() {
   static std::once_flag once;
-  std::call_once(once, [] {
-    detail::devToolsPerfTraceThreadLabelSlot() = "JS thread";
-  });
+  std::call_once(once, [] { detail::devToolsPerfTraceThreadLabelSlot() = "JS thread"; });
 }
 
 inline void reanimatedDevToolsPerfTraceMarkCurrentThreadAsUi() {
   static std::once_flag once;
-  std::call_once(once, [] {
-    detail::devToolsPerfTraceThreadLabelSlot() = "UI thread";
-  });
+  std::call_once(once, [] { detail::devToolsPerfTraceThreadLabelSlot() = "UI thread"; });
 }
 
 class ReanimatedDevToolsPerformanceSection {
