@@ -1196,7 +1196,6 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
     for (auto const &[shadowNode, props] : updatesBatch) {
       SurfaceId surfaceId = shadowNode->getSurfaceId();
       auto family = &shadowNode->getFamily();
-      react_native_assert(family->getSurfaceId() == surfaceId);
       propsMapBySurface[surfaceId][family].emplace_back(props);
     }
   }

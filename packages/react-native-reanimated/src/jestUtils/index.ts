@@ -352,4 +352,4 @@ export const getAnimatedStyle = (component: {
   return getCurrentStyle(component as unknown as TestComponent);
 };
 
-export { worklet } from './common';
+export { cloneWorklet, worklet } from './common';
