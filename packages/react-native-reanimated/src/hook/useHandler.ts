@@ -88,12 +88,9 @@ function areWorkletsEqual(
   );
 }
 
-function areWorkletHandlersEqual<
-  TEvent extends object,
-  TContext extends UnknownRecord,
->(
-  next: GeneralHandlers<TEvent, TContext> | undefined,
-  prev: GeneralHandlers<TEvent, TContext> | undefined
+function areWorkletHandlersEqual(
+  next: Partial<Record<string, WorkletFunction>> | undefined,
+  prev: Partial<Record<string, WorkletFunction>> | undefined
 ) {
   if (!next || !prev) {
     return false;
@@ -107,14 +104,14 @@ function areWorkletHandlersEqual<
   }
 
   return nextKeys.every((key) => {
-    const prevHandler = prev[key];
-    const nextHandler = next[key];
+    const nextValue = next[key];
+    const prevValue = prev[key];
 
-    return (
-      isWorkletFunction(nextHandler) &&
-      isWorkletFunction(prevHandler) &&
-      areWorkletsEqual(nextHandler, prevHandler)
-    );
+    if (!nextValue || !prevValue) {
+      return false;
+    }
+
+    return areWorkletsEqual(nextValue, prevValue);
   });
 }
 
@@ -166,8 +163,8 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
       ensureWorkletHandlers(handlers);
     }
     doDependenciesDiffer = !areWorkletHandlersEqual(
-      handlers,
-      state.prevHandlers
+      handlers as Record<string, WorkletFunction>,
+      state.prevHandlers as Record<string, WorkletFunction>
     );
   } else if (dependencies) {
     doDependenciesDiffer = !areDependenciesEqual(
