@@ -99,6 +99,7 @@ export function processColorNumber(value: unknown): number | null {
 }
 
 function unprocessColorNumber(value: number): string {
+  'worklet';
   const a = (value >>> 24) / 255;
   const r = (value << 8) >>> 24;
   const g = (value << 16) >>> 24;
@@ -149,6 +150,7 @@ function processDynamicColorObjectIOS(
 function unprocessDynamicColorObjectIOS(
   value: ProcessedDynamicColorObjectIOS
 ): DynamicColorObjectIOS {
+  'worklet';
   const result = {} as DynamicColorIOSTuple;
 
   for (const property of DynamicColorIOSProperties) {
@@ -225,6 +227,7 @@ export function processColor(
 export function unprocessColor(
   value: ProcessedColor
 ): string | PlatformColorObject | DynamicColorObjectIOS {
+  'worklet';
   if (typeof value === 'number') {
     return unprocessColorNumber(value);
   }
@@ -252,6 +255,7 @@ export function processColorsInProps(props: StyleProps) {
 }
 
 export function unprocessColorsInProps(props: StyleProps) {
+  'worklet';
   for (const key in props) {
     if (!ColorProperties.includes(key)) continue;
     const value = props[key];
