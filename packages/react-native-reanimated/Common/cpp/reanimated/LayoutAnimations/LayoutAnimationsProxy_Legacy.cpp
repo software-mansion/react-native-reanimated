@@ -841,7 +841,7 @@ void Node::applyMutationToIndices(const ShadowViewMutation &mutation) {
 
 // Should only be called on unflattened parents
 void Node::removeChildFromUnflattenedTree(const std::shared_ptr<MutationNode> &child) {
-  for (int i = unflattenedChildren.size() - 1; i >= 0; i--) {
+  for (size_t i = unflattenedChildren.size() - 1; i >= 0; i--) {
     if (unflattenedChildren[i]->tag == child->tag) {
       unflattenedChildren.erase(unflattenedChildren.begin() + i);
       break;
@@ -849,7 +849,7 @@ void Node::removeChildFromUnflattenedTree(const std::shared_ptr<MutationNode> &c
   }
 
   auto &flattenedChildren = child->parent->children;
-  for (int i = flattenedChildren.size() - 1; i >= 0; i--) {
+  for (size_t i = flattenedChildren.size() - 1; i >= 0; i--) {
     if (flattenedChildren[i]->tag == child->tag) {
       flattenedChildren.erase(flattenedChildren.begin() + i);
       return;

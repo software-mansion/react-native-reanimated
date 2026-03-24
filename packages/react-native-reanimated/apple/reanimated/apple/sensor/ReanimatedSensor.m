@@ -196,9 +196,9 @@
 {
   UIInterfaceOrientation orientation = UIInterfaceOrientationPortrait;
   if (@available(iOS 13.0, *)) {
-    orientation = UIApplication.sharedApplication.windows.firstObject.windowScene.interfaceOrientation;
+    orientation = UIApplication.sharedApplication.windows.firstObject.windowScene.interfaceOrientation; // NOLINT(clang-diagnostic-deprecated-declarations)
   } else {
-    orientation = UIApplication.sharedApplication.statusBarOrientation;
+    orientation = UIApplication.sharedApplication.statusBarOrientation; // NOLINT(clang-diagnostic-deprecated-declarations)
   }
   switch (orientation) {
     case UIInterfaceOrientationLandscapeLeft:

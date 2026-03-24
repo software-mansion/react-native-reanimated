@@ -4,6 +4,10 @@
 
 #include <memory>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 namespace reanimated {
 
 void RNRuntimeDecorator::decorate(
@@ -39,13 +43,13 @@ void RNRuntimeDecorator::decorate(
 void RNRuntimeDecorator::installDebugBindings(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<ReanimatedModuleProxy> &reanimatedModuleProxy) {
-#if TARGET_OS_X
+#if TARGET_OS_OSX
   jsi_utils::installJsiFunction(
       rnRuntime, "__getTagFromShadowNodeWrapper", [](jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) {
         auto node = Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
         return jsi::Value(rt, static_cast<double>(node->getTag()));
       });
-#endif // TARGET_OS_X
+#endif // TARGET_OS_OSX
 
   jsi_utils::installJsiFunction(rnRuntime, "_registriesLeakCheck", reanimatedModuleProxy->createRegistriesLeakCheck());
 }
