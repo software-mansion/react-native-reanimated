@@ -1,5 +1,4 @@
 'use strict';
-'worklet';
 import { ReanimatedError } from '../../errors';
 import type { TransformOrigin, ValueProcessor } from '../../types';
 
@@ -21,6 +20,7 @@ const VERTICAL_CONVERSIONS = {
 } satisfies KeywordConversions;
 
 function getAllowedValues(axis: Axis, isArray: boolean): string {
+  'worklet';
   const allowed: string[] = [];
 
   if (isArray) {
@@ -65,6 +65,7 @@ export const ERROR_MESSAGES = {
 };
 
 function maybeSwapComponents(components: ReadonlyArray<string | number>) {
+  'worklet';
   if (
     components[0] in VERTICAL_CONVERSIONS &&
     (components[1] === undefined || components[1] in HORIZONTAL_CONVERSIONS)
@@ -84,6 +85,7 @@ function parseValue(
   getError: () => string,
   keywordConversions?: KeywordConversions
 ) {
+  'worklet';
   if (typeof value === 'number') {
     return value;
   }
@@ -109,6 +111,7 @@ function parseValue(
 }
 
 function parsePx(component: string) {
+  'worklet';
   if (component.endsWith('px') || component === '0') {
     const num = parseFloat(component);
     if (!isNaN(num)) {
@@ -121,6 +124,7 @@ function parsePx(component: string) {
 export const processTransformOrigin: ValueProcessor<TransformOrigin> = (
   value
 ) => {
+  'worklet';
   const isArray = Array.isArray(value);
   let components = typeof value === 'string' ? value.split(/\s+/) : value;
   const customParse = isArray ? () => null : parsePx;

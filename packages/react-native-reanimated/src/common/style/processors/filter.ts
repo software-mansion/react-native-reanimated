@@ -1,5 +1,4 @@
 'use strict';
-'worklet';
 import type { DropShadowValue, FilterFunction } from 'react-native';
 
 import { ReanimatedError } from '../../errors';
@@ -21,9 +20,14 @@ const FILTER_VALUE_REGEX = /^([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)([a-z%]*)$/;
 const DROP_SHADOW_REGEX = /[^,\s()]+(?:\([^()]*\))?/g;
 
 export const ERROR_MESSAGES = {
-  invalidFilter: (filter: string) => `Invalid filter property: ${filter}`,
-  invalidFilterType: (filter: readonly FilterFunction[]) =>
-    `Invalid filter input type: ${typeof filter}. Expected string or array.`,
+  invalidFilter(filter: string) {
+    'worklet';
+    return `Invalid filter property: ${filter}`;
+  },
+  invalidFilterType(filter: readonly FilterFunction[]) {
+    'worklet';
+    return `Invalid filter input type: ${typeof filter}. Expected string or array.`;
+  },
 };
 
 type SingleFilterValue = {
@@ -32,6 +36,7 @@ type SingleFilterValue = {
 };
 
 const parseHueRotate = (value: SingleFilterValue): number | undefined => {
+  'worklet';
   const { numberValue, unit } = value;
   if (numberValue === 0) {
     return 0;
@@ -45,6 +50,7 @@ const parseHueRotate = (value: SingleFilterValue): number | undefined => {
 };
 
 const parseBlur = (value: SingleFilterValue): number | undefined => {
+  'worklet';
   const { numberValue, unit } = value;
   if ((unit && unit !== 'px') || numberValue < 0) {
     return undefined;
@@ -55,6 +61,7 @@ const parseBlur = (value: SingleFilterValue): number | undefined => {
 const parsePercentageFilter = (
   value: SingleFilterValue
 ): number | undefined => {
+  'worklet';
   const { numberValue, unit } = value;
   if ((unit && unit !== '%') || numberValue < 0) {
     return undefined;
@@ -65,6 +72,7 @@ const parsePercentageFilter = (
 const LENGTH_MAPPINGS = ['offsetX', 'offsetY', 'standardDeviation'] as const;
 
 const parseDropShadowString = (value: string) => {
+  'worklet';
   const match = value.match(DROP_SHADOW_REGEX) ?? [];
   const result: DropShadowValue = { offsetX: 0, offsetY: 0 };
   let foundLengthsCount = 0;
@@ -89,6 +97,7 @@ const parseDropShadow = (
   value: string | DropShadowValue,
   context: ValueProcessorContext | undefined
 ): ParsedDropShadow => {
+  'worklet';
   const dropShadow =
     typeof value === 'string' ? parseDropShadowString(value) : value;
   const {
@@ -114,6 +123,7 @@ const parseFilterProperty = (
   filterValue: string | number | DropShadowValue,
   context: ValueProcessorContext | undefined
 ): ParsedFilterFunction => {
+  'worklet';
   // We need to handle dropShadow separately because of its complex structure
   if (filterName == 'dropShadow') {
     return {
@@ -163,6 +173,7 @@ const parseFilterString = (
   value: string,
   context: ValueProcessorContext | undefined
 ): FilterArray => {
+  'worklet';
   const matches = Array.from(value.matchAll(FILTER_REGEX));
 
   if (matches.length === 0) {
@@ -184,6 +195,7 @@ export const processFilter: ValueProcessor<
   ReadonlyArray<FilterFunction> | string,
   FilterArray
 > = (value, context) => {
+  'worklet';
   if (typeof value === 'string') {
     return parseFilterString(value, context);
   }
