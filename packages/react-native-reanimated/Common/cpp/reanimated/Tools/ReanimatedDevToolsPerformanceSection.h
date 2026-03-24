@@ -4,20 +4,41 @@
 #include <jsinspector-modern/tracing/PerformanceTracer.h>
 
 #include <functional>
+#include <mutex>
 #include <optional>
-#include <sstream>
 #include <string>
-#include <thread>
 #include <utility>
 
 namespace reanimated {
 
+namespace detail {
+
+inline const char *&devToolsPerfTraceThreadLabelSlot() {
+  thread_local const char *label = nullptr;
+  return label;
+}
+
+} // namespace detail
+
 inline constexpr char kReanimatedDevToolsPerfTraceTrackGroup[] = "Reanimated";
 
-inline std::string reanimatedDevToolsPerfTraceCurrentTrackName() {
-  std::ostringstream oss;
-  oss << "Thread " << std::this_thread::get_id();
-  return oss.str();
+inline std::string reanimatedDevToolsPerfTraceCurrentThreadLabel() {
+  const char *label = detail::devToolsPerfTraceThreadLabelSlot();
+  return std::string(label != nullptr ? label : "Unknown thread");
+}
+
+inline void reanimatedDevToolsPerfTraceMarkCurrentThreadAsJs() {
+  static std::once_flag once;
+  std::call_once(once, [] {
+    detail::devToolsPerfTraceThreadLabelSlot() = "JS thread";
+  });
+}
+
+inline void reanimatedDevToolsPerfTraceMarkCurrentThreadAsUi() {
+  static std::once_flag once;
+  std::call_once(once, [] {
+    detail::devToolsPerfTraceThreadLabelSlot() = "UI thread";
+  });
 }
 
 class ReanimatedDevToolsPerformanceSection {
@@ -47,7 +68,7 @@ class ReanimatedDevToolsPerformanceSection {
     using facebook::react::jsinspector_modern::tracing::PerformanceTracer;
 
     const HighResTimeStamp end = HighResTimeStamp::now();
-    folly::dynamic devtools = folly::dynamic::object("track", reanimatedDevToolsPerfTraceCurrentTrackName())(
+    folly::dynamic devtools = folly::dynamic::object("track", reanimatedDevToolsPerfTraceCurrentThreadLabel())(
         "trackGroup", std::string(kReanimatedDevToolsPerfTraceTrackGroup));
     if (propsFunc_.has_value()) {
       folly::dynamic props = folly::dynamic::array();

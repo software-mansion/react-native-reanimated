@@ -155,6 +155,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 }
 
 void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMethodsHolder) {
+  reanimatedDevToolsPerfTraceMarkCurrentThreadAsJs();
+
   auto onRenderCallback = [weakThis = weak_from_this()](const double timestampMs) {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
@@ -697,6 +699,8 @@ double ReanimatedModuleProxy::getCssTimestamp() {
 }
 
 void ReanimatedModuleProxy::performOperations() {
+  reanimatedDevToolsPerfTraceMarkCurrentThreadAsUi();
+
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
   ReanimatedDevToolsPerformanceSection devtoolsTrace("performOperations");
 
@@ -764,6 +768,8 @@ void ReanimatedModuleProxy::performOperations() {
 }
 
 void ReanimatedModuleProxy::performNonLayoutOperations() {
+  reanimatedDevToolsPerfTraceMarkCurrentThreadAsUi();
+
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performNonLayoutOperations");
 
   UpdatesBatch updatesBatch = animatedPropsRegistry_->getPendingUpdates();
