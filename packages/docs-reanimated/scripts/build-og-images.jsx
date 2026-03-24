@@ -67,6 +67,17 @@ async function buildOGImages() {
 
     const ogImageStream = OGImageStream(header, base64Image);
 
+    if (header === 'Building for Android on Windows') {
+      console.log('GENERATING:', header);
+      console.log(
+        'SAVING TO:',
+        path.resolve(
+          ogImageTargets,
+          `${header.replace(/ /g, '-').replace('/', '-').toLowerCase()}.png`
+        )
+      );
+    }
+
     await saveStreamToFile(
       await ogImageStream,
       path.resolve(
