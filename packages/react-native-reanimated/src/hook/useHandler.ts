@@ -1,27 +1,44 @@
 'use strict';
 import { useEffect, useRef } from 'react';
+import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction, makeShareable } from 'react-native-worklets';
+import type { WorkletClosure } from 'react-native-worklets/lib/typescript/types';
 
 import type { UnknownRecord } from '../common';
 import { IS_WEB, ReanimatedError } from '../common';
 import type { DependencyList, ReanimatedEvent } from './commonTypes';
-import { areDependenciesEqual, areRecordValuesEqual } from './utils';
 
-interface GeneralHandler<Event extends object, Context extends UnknownRecord> {
-  (event: ReanimatedEvent<Event>, context: Context): void;
+interface GeneralHandler<
+  TEvent extends object,
+  TContext extends UnknownRecord,
+> {
+  (event: ReanimatedEvent<TEvent>, context: TContext): void;
 }
 
 type GeneralHandlers<
-  Event extends object,
-  Context extends UnknownRecord,
-> = Record<string, GeneralHandler<Event, Context> | undefined>;
+  TEvent extends object,
+  TContext extends UnknownRecord,
+> = Record<string, GeneralHandler<TEvent, TContext> | undefined>;
 
-export interface UseHandlerContext<Context extends UnknownRecord> {
-  context: Context;
+export interface UseHandlerContext<TContext extends UnknownRecord> {
+  context: TContext;
   doDependenciesDiffer: boolean;
 }
 
-function validateHandlers(handlers: UnknownRecord) {
+function isBabelPluginEnabled(handlers: UnknownRecord): boolean {
+  if (!IS_WEB) {
+    // Babel plugin must be enabled in all non-web environments.
+    return true;
+  }
+
+  const handlerFunctions = Object.values(handlers);
+  // If there is no function provided, we assume that the Babel plugin is enabled.
+  return (
+    handlerFunctions.length === 0 || handlerFunctions.some(isWorkletFunction)
+  );
+}
+
+function ensureWorkletHandlers(handlers: UnknownRecord) {
   const nonWorkletNames = Object.entries(handlers).reduce<string[]>(
     (acc, [name, handler]) => {
       if (!isWorkletFunction(handler)) acc.push(name);
@@ -35,6 +52,81 @@ function validateHandlers(handlers: UnknownRecord) {
       `Passed handlers that are not worklets. Only worklet functions are allowed. Handlers "${nonWorkletNames.join(', ')}" are not worklets.`
     );
   }
+}
+
+const objectIs: (a: unknown, b: unknown) => boolean =
+  typeof Object.is === 'function'
+    ? Object.is
+    : (x, y) =>
+        (x === y && (x !== 0 || 1 / (x as number) === 1 / (y as number))) ||
+        (Number.isNaN(x as number) && Number.isNaN(y as number));
+
+function areWorkletClosuresEqual(
+  next: WorkletClosure,
+  prev: WorkletClosure
+): boolean {
+  const nextKeys = Object.keys(next);
+  const prevKeys = Object.keys(prev);
+
+  return (
+    prevKeys.length === nextKeys.length &&
+    prevKeys.every((key) => key in next && objectIs(next[key], prev[key]))
+  );
+}
+
+function areWorkletsEqual(
+  next: WorkletFunction,
+  prev: WorkletFunction
+): boolean {
+  if (objectIs(next, prev)) {
+    return true;
+  }
+
+  return (
+    next.__workletHash === prev.__workletHash &&
+    areWorkletClosuresEqual(next.__closure, prev.__closure)
+  );
+}
+
+function areWorkletHandlersEqual<
+  TEvent extends object,
+  TContext extends UnknownRecord,
+>(
+  next: GeneralHandlers<TEvent, TContext> | undefined,
+  prev: GeneralHandlers<TEvent, TContext> | undefined
+) {
+  if (!next || !prev) {
+    return false;
+  }
+
+  const nextKeys = Object.keys(next);
+  const prevKeys = Object.keys(prev);
+
+  if (nextKeys.length !== prevKeys.length) {
+    return false;
+  }
+
+  return nextKeys.every((key) => {
+    const prevHandler = prev[key];
+    const nextHandler = next[key];
+
+    return (
+      isWorkletFunction(nextHandler) &&
+      isWorkletFunction(prevHandler) &&
+      areWorkletsEqual(nextHandler, prevHandler)
+    );
+  });
+}
+
+function areDependenciesEqual(
+  next: Array<unknown> | undefined,
+  prev: Array<unknown> | undefined
+): boolean {
+  if (!next || !prev || next.length !== prev.length) {
+    return false;
+  }
+
+  return next.every((value, index) => objectIs(value, prev[index]));
 }
 
 /**
@@ -69,13 +161,14 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
   const state = stateRef.current;
   let doDependenciesDiffer = true;
 
-  if (!IS_WEB) {
+  if (isBabelPluginEnabled(handlers)) {
     if (__DEV__) {
-      validateHandlers(handlers);
+      ensureWorkletHandlers(handlers);
     }
-    doDependenciesDiffer = !areRecordValuesEqual(handlers, state.prevHandlers);
-  } else if (Object.values(handlers).every(isWorkletFunction)) {
-    doDependenciesDiffer = !areRecordValuesEqual(handlers, state.prevHandlers);
+    doDependenciesDiffer = !areWorkletHandlersEqual(
+      handlers,
+      state.prevHandlers
+    );
   } else if (dependencies) {
     doDependenciesDiffer = !areDependenciesEqual(
       dependencies,
