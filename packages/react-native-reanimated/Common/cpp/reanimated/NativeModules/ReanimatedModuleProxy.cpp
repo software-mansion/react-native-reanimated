@@ -771,6 +771,7 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
   reanimatedDevToolsPerfTraceMarkCurrentThreadAsUi();
 
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performNonLayoutOperations");
+  ReanimatedDevToolsPerformanceSection devtoolsTrace("performNonLayoutOperations");
 
   UpdatesBatch updatesBatch = animatedPropsRegistry_->getPendingUpdates();
 
@@ -1210,6 +1211,8 @@ void ReanimatedModuleProxy::requestFlushRegistry() {
 
 void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::commitUpdates");
+  ReanimatedDevToolsPerformanceSection devtoolsTrace("commitUpdates");
+
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 
