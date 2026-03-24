@@ -2,8 +2,11 @@
 #include <reanimated/Tools/ReanimatedDevToolsPerformanceSection.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
+#include <folly/dynamic.h>
+
 #include <memory>
 #include <ranges>
+#include <string>
 #include <utility>
 
 namespace reanimated {
@@ -61,7 +64,11 @@ std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
 
 RootShadowNode::Unshared cloneShadowTreeWithNewProps(const RootShadowNode &oldRootNode, const PropsMap &propsMap) {
   ReanimatedSystraceSection s("ShadowTreeCloner::cloneShadowTreeWithNewProps");
-  ReanimatedDevToolsPerformanceSection ps("ShadowTreeCloner");
+
+  ReanimatedDevToolsPerformanceSection ps(
+      "ShadowTreeCloner::cloneShadowTreeWithNewProps", [&propsMap](folly::dynamic &props) {
+        props.push_back(folly::dynamic::array("propsMap.size()", std::to_string(propsMap.size())));
+      });
 
   ChildrenMap childrenMap;
 
