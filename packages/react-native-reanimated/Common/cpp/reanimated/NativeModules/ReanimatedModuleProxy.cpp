@@ -1,3 +1,4 @@
+#include <folly/dynamic.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <reanimated/Compat/WorkletsApi.h>
@@ -17,6 +18,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -553,7 +555,13 @@ bool ReanimatedModuleProxy::handleEvent(
     const jsi::Value &payload,
     double currentTime) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::handleEvent");
-  ReanimatedDevToolsPerformanceSection ps("handleEvent");
+  ReanimatedDevToolsPerformanceSection ps("handleEvent", [&](folly::dynamic &props) {
+    jsi::Runtime &rt = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
+    props.push_back(folly::dynamic::array("eventName", eventName));
+    const auto json = rt.global().getPropertyAsObject(rt, "JSON");
+    const auto stringify = json.getPropertyAsFunction(rt, "stringify");
+    props.push_back(folly::dynamic::array("payload", stringify.call(rt, payload).asString(rt).utf8(rt)));
+  });
 
   eventHandlerRegistry_->processEvent(uiRuntime_, currentTime, eventName, emitterReactTag, payload);
 
@@ -564,7 +572,16 @@ bool ReanimatedModuleProxy::handleEvent(
 
 bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double currentTime) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::handleRawEvent");
-  ReanimatedDevToolsPerformanceSection ps("handleRawEvent");
+  ReanimatedDevToolsPerformanceSection ps("handleRawEvent", [&](folly::dynamic &props) {
+    jsi::Runtime &rt = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
+    props.push_back(folly::dynamic::array("type", rawEvent.type));
+    if (rawEvent.eventPayload != nullptr) {
+      const jsi::Value v = rawEvent.eventPayload->asJSIValue(rt);
+      const auto json = rt.global().getPropertyAsObject(rt, "JSON");
+      const auto stringify = json.getPropertyAsFunction(rt, "stringify");
+      props.push_back(folly::dynamic::array("payload", stringify.call(rt, v).asString(rt).utf8(rt)));
+    }
+  });
 
   const EventTarget *eventTarget = rawEvent.eventTarget.get();
   if (eventTarget == nullptr) {
@@ -982,6 +999,10 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
       partitionUpdates(updatesBatch, synchronousProps, true, allowPartialUpdates);
 
   if (!synchronousUpdatesBatch.empty()) {
+    ReanimatedDevToolsPerformanceSection ps("synchronous prop updates", [&](folly::dynamic &props) {
+      props.push_back(folly::dynamic::array("view count", std::to_string(synchronousUpdatesBatch.size())));
+    });
+
     std::vector<int> intBuffer;
     std::vector<double> doubleBuffer;
     intBuffer.reserve(1024);
@@ -1159,8 +1180,14 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
   auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
       partitionUpdates(updatesBatch, synchronousProps, false, allowPartialUpdates);
 
-  for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
-    synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
+  if (!synchronousUpdatesBatch.empty()) {
+    ReanimatedDevToolsPerformanceSection ps("synchronous prop updates", [&](folly::dynamic &props) {
+      props.push_back(folly::dynamic::array("view count", std::to_string(synchronousUpdatesBatch.size())));
+    });
+
+    for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
+      synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
+    }
   }
 
   updatesBatch = std::move(shadowTreeUpdatesBatch);
