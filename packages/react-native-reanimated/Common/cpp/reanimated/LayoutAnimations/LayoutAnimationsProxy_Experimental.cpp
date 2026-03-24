@@ -27,8 +27,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     MountingTransaction::Number transactionNumber,
     const TransactionTelemetry &telemetry,
     ShadowViewMutationList mutations) const {
-  ReanimatedSystraceSection d("pullTransaction");
-  ReanimatedDevToolsPerformanceSection ps("pullTransaction");
+  ReanimatedSystraceSection d("LayoutAnimationsProxy_Experimental::pullTransaction");
+  ReanimatedDevToolsPerformanceSection ps("LayoutAnimationsProxy_Experimental::pullTransaction");
 
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const PropsParserContext propsParserContext{surfaceId, *contextContainer_};

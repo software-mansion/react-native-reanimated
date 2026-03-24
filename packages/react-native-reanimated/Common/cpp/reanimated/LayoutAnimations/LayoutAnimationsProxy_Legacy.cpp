@@ -1,5 +1,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
+#include <reanimated/Tools/ReanimatedDevToolsPerformanceSection.h>
+#include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <react/renderer/animations/utils.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
@@ -27,6 +29,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
     MountingTransaction::Number transactionNumber,
     const TransactionTelemetry &telemetry,
     ShadowViewMutationList mutations) const {
+  ReanimatedSystraceSection d("LayoutAnimationsProxy_Legacy::pullTransaction");
+  ReanimatedDevToolsPerformanceSection ps("LayoutAnimationsProxy_Legacy::pullTransaction");
+
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << std::endl;
   LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " " << surfaceId << std::endl;
