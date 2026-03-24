@@ -1,19 +1,18 @@
 package com.swmansion.reanimated.nativeProxy
 
-import com.facebook.react.bridge.WritableArray
 import com.facebook.react.bridge.WritableMap
-import com.facebook.react.uimanager.events.RCTEventEmitter
+import com.facebook.react.uimanager.events.RCTModernEventEmitter
 
-class NoopEventHandler : RCTEventEmitter {
-  override fun receiveEvent(targetTag: Int, eventName: String, event: WritableMap?) {
-    // NOOP
-  }
-
-  override fun receiveTouches(
-      eventName: String,
-      touches: WritableArray,
-      changedIndices: WritableArray
-  ) {
-    // NOOP
-  }
+class NoopEventHandler : RCTModernEventEmitter {
+    override fun receiveEvent(
+        surfaceId: Int,
+        targetTag: Int,
+        eventName: String,
+        canCoalesceEvent: Boolean,
+        customCoalesceKey: Int,
+        params: WritableMap?,
+        category: Int,
+    ) {
+        // NOOP
+    }
 }

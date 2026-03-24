@@ -3,8 +3,8 @@ package com.swmansion.reanimated
 import android.os.SystemClock
 import androidx.tracing.Trace
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.WritableMap
 import com.facebook.react.bridge.UiThreadUtil
+import com.facebook.react.bridge.WritableMap
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.facebook.react.modules.core.ReactChoreographer
@@ -14,7 +14,7 @@ import com.facebook.react.uimanager.UIManagerModule
 import com.facebook.react.uimanager.common.UIManagerType
 import com.facebook.react.uimanager.events.Event
 import com.facebook.react.uimanager.events.EventDispatcherListener
-import com.facebook.react.uimanager.events.RCTEventEmitter
+import com.facebook.react.uimanager.events.RCTModernEventEmitter
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler
 import java.util.ArrayList
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -36,7 +36,7 @@ class NodesManager(context: ReactApplicationContext) : EventDispatcherListener {
     private val mChoreographerCallback: GuardedFrameCallback
     val mCustomEventNamesResolver: UIManagerModule.CustomEventNamesResolver
     private val mCallbackPosted = AtomicBoolean()
-    private var mCustomEventHandler: RCTEventEmitter = NoopEventHandler()
+    private var mCustomEventHandler: RCTModernEventEmitter = NoopEventHandler()
     private var mFrameCallbacks: MutableList<OnAnimationFrame> = ArrayList()
     private val mEventQueue = ConcurrentLinkedQueue<CopiedEvent>()
     private var lastFrameTimeMs = 0.0
@@ -158,7 +158,7 @@ class NodesManager(context: ReactApplicationContext) : EventDispatcherListener {
 
                 while (!mEventQueue.isEmpty()) {
                     val copiedEvent = mEventQueue.poll()
-                    handleEvent(copiedEvent!!.targetTag, copiedEvent.eventName, copiedEvent.payload)
+                    handleEvent(copiedEvent!!)
                 }
 
                 if (mFrameCallbacks.isNotEmpty()) {
@@ -220,16 +220,24 @@ class NodesManager(context: ReactApplicationContext) : EventDispatcherListener {
     }
 
     private fun handleEvent(event: Event<*>) {
-        event.dispatch(mCustomEventHandler)
+        event.dispatchModern(mCustomEventHandler)
     }
 
-    private fun handleEvent(targetTag: Int, eventName: String, event: WritableMap?) {
-        mCustomEventHandler.receiveEvent(targetTag, eventName, event)
+    private fun handleEvent(copiedEvent: CopiedEvent) {
+        mCustomEventHandler.receiveEvent(
+            copiedEvent.surfaceId,
+            copiedEvent.targetTag,
+            copiedEvent.eventName,
+            copiedEvent.canCoalesceEvent,
+            copiedEvent.customCoalesceKey,
+            copiedEvent.payload,
+            copiedEvent.category,
+        )
     }
 
     fun getEventNameResolver(): UIManagerModule.CustomEventNamesResolver = mCustomEventNamesResolver
 
-    fun registerEventHandler(handler: RCTEventEmitter) {
+    fun registerEventHandler(handler: RCTModernEventEmitter) {
         mCustomEventHandler = handler
     }
 
