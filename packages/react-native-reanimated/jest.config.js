@@ -5,5 +5,7 @@ module.exports = {
   setupFiles: ['./jest-setup.js'],
   setupFilesAfterEnv: ['@testing-library/jest-native/extend-expect'],
   testEnvironment: 'node',
-  transformIgnorePatterns: [],
+  transformIgnorePatterns: [
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|@testing-library|react-clone-referenced-element|@react-navigation)/)',
+  ],
 };
