@@ -1,6 +1,6 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
-#include <reanimated/Tools/ReanimatedDevToolsPerformanceSection.h>
+#include <reanimated/Tools/ReanimatedPerformanceTracerSection.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <react/renderer/animations/utils.h>
@@ -30,7 +30,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
     const TransactionTelemetry &telemetry,
     ShadowViewMutationList mutations) const {
   ReanimatedSystraceSection d("LayoutAnimationsProxy_Legacy::pullTransaction");
-  ReanimatedDevToolsPerformanceSection ps("LayoutAnimationsProxy_Legacy::pullTransaction");
+  ReanimatedPerformanceTracerSection pts("LayoutAnimationsProxy_Legacy::pullTransaction");
 
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << std::endl;

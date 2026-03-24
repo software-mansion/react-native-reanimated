@@ -13,33 +13,33 @@ namespace reanimated {
 
 namespace detail {
 
-inline const char *&devToolsPerfTraceThreadLabelSlot() {
+inline const char *&performanceTracerThreadLabelSlot() {
   thread_local const char *label = nullptr;
   return label;
 }
 
 } // namespace detail
 
-inline constexpr char kReanimatedDevToolsPerfTraceTrackGroup[] = "Reanimated";
+inline constexpr char kReanimatedPerformanceTracerTrackGroup[] = "Reanimated";
 
-inline std::string reanimatedDevToolsPerfTraceCurrentThreadLabel() {
-  const char *label = detail::devToolsPerfTraceThreadLabelSlot();
+inline std::string reanimatedPerformanceTracerCurrentThreadLabel() {
+  const char *label = detail::performanceTracerThreadLabelSlot();
   return std::string(label != nullptr ? label : "Unknown thread");
 }
 
-inline void reanimatedDevToolsPerfTraceMarkCurrentThreadAsJs() {
+inline void reanimatedPerformanceTracerMarkCurrentThreadAsJs() {
   static std::once_flag once;
-  std::call_once(once, [] { detail::devToolsPerfTraceThreadLabelSlot() = "JS thread"; });
+  std::call_once(once, [] { detail::performanceTracerThreadLabelSlot() = "JS thread"; });
 }
 
-inline void reanimatedDevToolsPerfTraceMarkCurrentThreadAsUi() {
+inline void reanimatedPerformanceTracerMarkCurrentThreadAsUi() {
   static std::once_flag once;
-  std::call_once(once, [] { detail::devToolsPerfTraceThreadLabelSlot() = "UI thread"; });
+  std::call_once(once, [] { detail::performanceTracerThreadLabelSlot() = "UI thread"; });
 }
 
-class ReanimatedDevToolsPerformanceSection {
+class ReanimatedPerformanceTracerSection {
  public:
-  explicit ReanimatedDevToolsPerformanceSection(const char *name)
+  explicit ReanimatedPerformanceTracerSection(const char *name)
       : name_(name),
         active_(facebook::react::jsinspector_modern::tracing::PerformanceTracer::getInstance().isTracing()) {
     if (active_) {
@@ -47,7 +47,7 @@ class ReanimatedDevToolsPerformanceSection {
     }
   }
 
-  ReanimatedDevToolsPerformanceSection(const char *name, std::function<void(folly::dynamic &)> propsFunc)
+  ReanimatedPerformanceTracerSection(const char *name, std::function<void(folly::dynamic &)> propsFunc)
       : name_(name),
         active_(facebook::react::jsinspector_modern::tracing::PerformanceTracer::getInstance().isTracing()) {
     if (active_) {
@@ -56,7 +56,7 @@ class ReanimatedDevToolsPerformanceSection {
     }
   }
 
-  ~ReanimatedDevToolsPerformanceSection() {
+  ~ReanimatedPerformanceTracerSection() {
     if (!active_ || !start_) {
       return;
     }
@@ -64,8 +64,8 @@ class ReanimatedDevToolsPerformanceSection {
     using facebook::react::jsinspector_modern::tracing::PerformanceTracer;
 
     const HighResTimeStamp end = HighResTimeStamp::now();
-    folly::dynamic devtools = folly::dynamic::object("track", reanimatedDevToolsPerfTraceCurrentThreadLabel())(
-        "trackGroup", std::string(kReanimatedDevToolsPerfTraceTrackGroup));
+    folly::dynamic devtools = folly::dynamic::object("track", reanimatedPerformanceTracerCurrentThreadLabel())(
+        "trackGroup", std::string(kReanimatedPerformanceTracerTrackGroup));
     if (propsFunc_.has_value()) {
       folly::dynamic props = folly::dynamic::array();
       (*propsFunc_)(props);
@@ -79,8 +79,8 @@ class ReanimatedDevToolsPerformanceSection {
         std::string(name_), *start_, end - *start_, std::move(detail), std::nullopt);
   }
 
-  ReanimatedDevToolsPerformanceSection(const ReanimatedDevToolsPerformanceSection &) = delete;
-  ReanimatedDevToolsPerformanceSection &operator=(const ReanimatedDevToolsPerformanceSection &) = delete;
+  ReanimatedPerformanceTracerSection(const ReanimatedPerformanceTracerSection &) = delete;
+  ReanimatedPerformanceTracerSection &operator=(const ReanimatedPerformanceTracerSection &) = delete;
 
  private:
   const char *name_;

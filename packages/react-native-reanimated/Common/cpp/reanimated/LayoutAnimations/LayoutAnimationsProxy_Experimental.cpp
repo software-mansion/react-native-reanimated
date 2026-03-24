@@ -5,7 +5,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/PropsDiffer.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
-#include <reanimated/Tools/ReanimatedDevToolsPerformanceSection.h>
+#include <reanimated/Tools/ReanimatedPerformanceTracerSection.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <algorithm>
@@ -28,7 +28,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Experimental::pullTrans
     const TransactionTelemetry &telemetry,
     ShadowViewMutationList mutations) const {
   ReanimatedSystraceSection d("LayoutAnimationsProxy_Experimental::pullTransaction");
-  ReanimatedDevToolsPerformanceSection ps("LayoutAnimationsProxy_Experimental::pullTransaction");
+  ReanimatedPerformanceTracerSection pts("LayoutAnimationsProxy_Experimental::pullTransaction");
 
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const PropsParserContext propsParserContext{surfaceId, *contextContainer_};

@@ -1,6 +1,6 @@
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
-#include <reanimated/Tools/ReanimatedDevToolsPerformanceSection.h>
+#include <reanimated/Tools/ReanimatedPerformanceTracerSection.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <memory>
@@ -23,7 +23,7 @@ void ReanimatedMountHook::shadowTreeDidMount(
     const RootShadowNode::Shared &rootShadowNode,
     HighResTimeStamp mountTime) noexcept {
   ReanimatedSystraceSection s("ReanimatedMountHook::shadowTreeDidMount");
-  ReanimatedDevToolsPerformanceSection ps("shadowTreeDidMount");
+  ReanimatedPerformanceTracerSection pts("shadowTreeDidMount");
 
   auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
       std::const_pointer_cast<RootShadowNode>(rootShadowNode));
