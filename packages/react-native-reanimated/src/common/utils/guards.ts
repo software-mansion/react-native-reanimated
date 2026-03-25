@@ -38,11 +38,6 @@ export const isRecord = <T extends UnknownRecord = UnknownRecord>(
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 };
 
-export const hasProp = <P extends AnyRecord, K extends string>(
-  obj: P,
-  key: K
-): obj is P & Record<K, string> => key in obj;
-
 export const isConfigPropertyAlias = <P extends AnyRecord>(
   value: unknown
 ): value is ConfigPropertyAlias<P> =>

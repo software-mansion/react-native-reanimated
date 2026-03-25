@@ -1,6 +1,10 @@
 'use strict';
 import { ReanimatedError } from '../../errors';
-import type { TransformOrigin, ValueProcessor } from '../../types';
+import type {
+  NormalizedTransformOrigin,
+  TransformOrigin,
+  ValueProcessor,
+} from '../../types';
 
 type Axis = 'x' | 'y' | 'z';
 type ConvertedValue = `${number}%` | number;
@@ -80,11 +84,27 @@ function maybeSwapComponents(components: ReadonlyArray<string | number>) {
 
 function parseValue(
   value: string | number,
+  allowPercentages: true,
+  customParse: CustomParse,
+  getError: () => string,
+  keywordConversions?: KeywordConversions
+): `${number}%` | number;
+
+function parseValue(
+  value: string | number,
+  allowPercentages: false,
+  customParse: CustomParse,
+  getError: () => string,
+  keywordConversions?: KeywordConversions
+): number;
+
+function parseValue(
+  value: string | number,
   allowPercentages: boolean,
   customParse: CustomParse,
   getError: () => string,
   keywordConversions?: KeywordConversions
-) {
+): `${number}%` | number {
   'worklet';
   if (typeof value === 'number') {
     return value;
@@ -121,9 +141,10 @@ function parsePx(component: string) {
   return null;
 }
 
-export const processTransformOrigin: ValueProcessor<TransformOrigin> = (
-  value
-) => {
+export const processTransformOrigin: ValueProcessor<
+  TransformOrigin,
+  NormalizedTransformOrigin
+> = (value) => {
   'worklet';
   const isArray = Array.isArray(value);
   let components = typeof value === 'string' ? value.split(/\s+/) : value;
