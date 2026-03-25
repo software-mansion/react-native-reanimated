@@ -1,11 +1,10 @@
 #pragma once
 
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
-
-#include <worklets/Tools/UIScheduler.h>
 
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/graphics/Transform.h>
@@ -44,7 +43,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable Tag transitionTag_;
   mutable double transitionProgress_;
   mutable bool transitionUpdated_;
-  mutable TransitionState transitionState_ = NONE;
+  mutable TransitionState transitionState_ = TransitionState::NONE;
   mutable SurfaceId transitioningSurfaceId_ = -1;
   mutable std::unordered_map<SurfaceId, std::shared_ptr<LightNode>> topScreen;
   mutable int containerTag_ = 10000002;

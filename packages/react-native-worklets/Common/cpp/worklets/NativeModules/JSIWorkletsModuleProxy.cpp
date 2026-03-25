@@ -2,6 +2,7 @@
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 #include <worklets/Compat/Holders.h>
+#include <worklets/Compat/StableApi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Serializable.h>
@@ -11,6 +12,7 @@
 #include <worklets/Tools/Defs.h>
 #include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
+#include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #include <memory>
@@ -86,14 +88,13 @@ inline jsi::Value createWorkletRuntime(
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
-#ifdef WORKLETS_BUNDLE_MODE_ENABLED
 inline jsi::Value propagateModuleUpdate(
     const std::shared_ptr<RuntimeManager> &runtimeManager,
     const std::string &code,
     const std::string &sourceUrl) {
   const auto runtimes = runtimeManager->getAllRuntimes();
 
-  for (auto runtime : runtimes) {
+  for (const auto &runtime : runtimes) {
     runtime->runSync([code, sourceUrl](jsi::Runtime &rt) -> void {
       const auto buffer = std::make_shared<jsi::StringBuffer>(code);
       rt.evaluateJavaScript(buffer, sourceUrl);
@@ -101,7 +102,6 @@ inline jsi::Value propagateModuleUpdate(
   }
   return jsi::Value::undefined();
 }
-#endif // WORKLETS_BUNDLE_MODE_ENABLED
 
 inline jsi::Value reportFatalErrorOnJS(
     const std::shared_ptr<JSScheduler> &jsScheduler,
@@ -151,19 +151,17 @@ inline void registerCustomSerializable(
 
 JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const bool isDevBundle,
-    const std::shared_ptr<const ScriptBuffer> &script,
-    const std::string &sourceUrl,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const std::shared_ptr<MemoryManager> &memoryManager,
     const std::shared_ptr<RuntimeManager> &runtimeManager,
     const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
-    const std::shared_ptr<RuntimeBindings> &runtimeBindings)
+    const std::shared_ptr<RuntimeBindings> &runtimeBindings,
+    const BundleModeConfig &bundleModeConfig)
     : jsi::HostObject(),
       isDevBundle_(isDevBundle),
-      script_(script),
-      sourceUrl_(sourceUrl),
+      bundleModeConfig_(bundleModeConfig),
       jsQueue_(jsQueue),
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
@@ -218,9 +216,7 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createShareable"));
 
-#ifdef WORKLETS_BUNDLE_MODE_ENABLED
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "propagateModuleUpdate"));
-#endif // WORKLETS_BUNDLE_MODE_ENABLED
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getUIRuntimeHolder"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getUISchedulerHolder"));
@@ -578,7 +574,6 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         });
   }
 
-#ifdef WORKLETS_BUNDLE_MODE_ENABLED
   if (name == "propagateModuleUpdate") {
     return jsi::Function::createFromHostFunction(
         rt,
@@ -592,7 +587,6 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
               /* sourceURL */ args[1].asString(rt).utf8(rt));
         });
   }
-#endif // WORKLETS_BUNDLE_MODE_ENABLED
 
   if (name == "getStaticFeatureFlag") {
     return jsi::Function::createFromHostFunction(
@@ -619,8 +613,13 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         0,
         [uiWorkletRuntime = uiWorkletRuntime_](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          const auto strongUIWorkletRuntime = uiWorkletRuntime.lock();
+          if (!strongUIWorkletRuntime) {
+            throw jsi::JSError(rt, "[Worklets] UI Worklet Runtime is not available.");
+          }
+          auto nativeState = std::make_shared<WorkletRuntimeHolder>(strongUIWorkletRuntime);
           auto obj = jsi::Object(rt);
-          obj.setNativeState(rt, std::make_shared<WorkletRuntimeHolder>(uiWorkletRuntime.lock()));
+          obj.setNativeState(rt, std::move(nativeState));
           return obj;
         });
   }
@@ -632,8 +631,9 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
         0,
         [uiScheduler = uiScheduler_](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          auto nativeState = std::make_shared<UISchedulerHolder>(uiScheduler);
           auto obj = jsi::Object(rt);
-          obj.setNativeState(rt, std::make_shared<UISchedulerHolder>(uiScheduler));
+          obj.setNativeState(rt, std::move(nativeState));
           return obj;
         });
   }

@@ -6,13 +6,11 @@
 
 namespace reanimated {
 
-#if REACT_NATIVE_MINOR_VERSION >= 81
 static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper) {
   return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
 }
-#endif
 
 void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations, const double timestamp) {
   auto operationsArray = operations.asObject(rt).asArray(rt);

@@ -42,12 +42,9 @@ describe('scheduleOnUI', () => {
     test('schedules on UI Runtime to UI Runtime', async () => {
       scheduleOnUI(() => {
         'worklet';
-        // @ts-expect-error TODO: fix RemoteFunction re-serialization.
-        const remoteFunction = callbackPass.__remoteFunction as typeof callbackPass;
-
         scheduleOnUI(() => {
           'worklet';
-          scheduleOnRN(remoteFunction, 42);
+          scheduleOnRN(callbackPass, 42);
         });
       });
 
@@ -58,12 +55,9 @@ describe('scheduleOnUI', () => {
     test('schedules on Worker Runtime to UI Runtime', async () => {
       scheduleOnRuntime(workletRuntime, () => {
         'worklet';
-        // @ts-expect-error TODO: fix RemoteFunction re-serialization.
-        const remoteFunction = callbackPass.__remoteFunction as typeof callbackPass;
-
         scheduleOnUI(() => {
           'worklet';
-          scheduleOnRN(remoteFunction, 42);
+          scheduleOnRN(callbackPass, 42);
         });
       });
 

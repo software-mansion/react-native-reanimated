@@ -20,13 +20,14 @@ class NativeWorklets implements IWorkletsModule {
   #serializableFalse: SerializableRef<boolean>;
 
   constructor() {
+    const bundleModeEnabled = globalThis._WORKLETS_BUNDLE_MODE_ENABLED ?? false;
     globalThis._WORKLETS_VERSION_JS = jsVersion;
     if (
       global.__workletsModuleProxy === undefined &&
       globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative
     ) {
-      WorkletsTurboModule?.installTurboModule();
-      if (__DEV__ && globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+      WorkletsTurboModule?.installTurboModule(bundleModeEnabled);
+      if (__DEV__ && bundleModeEnabled) {
         console.log(
           '[Worklets] Bundle mode initialization: Downloaded the bundle for Worklet Runtimes.'
         );

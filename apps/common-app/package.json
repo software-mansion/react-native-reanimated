@@ -19,7 +19,7 @@
     "@fortawesome/fontawesome-svg-core": "6.5.2",
     "@fortawesome/free-solid-svg-icons": "6.5.2",
     "@fortawesome/react-native-fontawesome": "0.3.2",
-    "@gorhom/bottom-sheet": "patch:@gorhom/bottom-sheet@npm%3A5.2.6#~/.yarn/patches/@gorhom-bottom-sheet-npm-5.2.6-c24dba2629.patch",
+    "@gorhom/bottom-sheet": "patch:@gorhom/bottom-sheet@npm%3A5.2.8#~/.yarn/patches/@gorhom-bottom-sheet-npm-5.2.8-1ad4b8f529.patch",
     "@gorhom/portal": "1.0.14",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-clipboard/clipboard": "1.16.3",
@@ -42,7 +42,7 @@
     "react-native-safe-area-context": "5.6.1",
     "react-native-screens": "4.19.0-nightly-20251125-46052f31e",
     "react-native-svg": "patch:react-native-svg@npm%3A15.15.3#~/.yarn/patches/react-native-svg-npm-15.15.3-0699a4dc13.patch",
-    "react-native-worklets": "0.8.0-rc.0",
+    "react-native-worklets": "0.8.1",
     "react-strict-dom": "0.0.54"
   },
   "devDependencies": {

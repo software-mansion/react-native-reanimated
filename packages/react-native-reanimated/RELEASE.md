@@ -32,6 +32,8 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
 5. Update the **Compatibility** in `packages/react-native-reanimated/compatibility.json`
 
+6. Update `peerDependencies` in `packages/react-native-reanimated/package.json` to align with the versions declared in the **Compatibility** file.
+
 6. Install Pods:
 * <details><summary>Reanimated v4</summary>
 
