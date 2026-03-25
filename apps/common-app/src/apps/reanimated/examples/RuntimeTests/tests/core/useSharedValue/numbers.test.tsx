@@ -15,6 +15,7 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 import { MutableAPI, ProgressBar } from './components';
+import { scheduleOnRN } from 'react-native-worklets';
 
 type MultiplyComponentProps<T> = {
   initialValue: T;
@@ -36,7 +37,7 @@ describe('Test _mathematical operations_ on sharedValue', () => {
     useEffect(() => {
       const currentValue = sharedValue.value;
       sharedValue.value = (currentValue * factor) as T;
-      notify(MULTIPLICATION_NOTIFICATION_NAME);
+      scheduleOnRN(notify, MULTIPLICATION_NOTIFICATION_NAME);
     });
     return <ProgressBar progress={progress} />;
   };
@@ -51,7 +52,7 @@ describe('Test _mathematical operations_ on sharedValue', () => {
     useEffect(() => {
       const currentValue = sharedValue.get();
       sharedValue.set((currentValue * factor) as T);
-      notify(MULTIPLICATION_NOTIFICATION_NAME);
+      scheduleOnRN(notify, MULTIPLICATION_NOTIFICATION_NAME);
     });
     return <ProgressBar progress={progress} />;
   };
@@ -65,7 +66,7 @@ describe('Test _mathematical operations_ on sharedValue', () => {
     registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
     useEffect(() => {
       sharedValue.set(value => (value * factor) as T);
-      notify(MULTIPLICATION_NOTIFICATION_NAME);
+      scheduleOnRN(notify, MULTIPLICATION_NOTIFICATION_NAME);
     });
     return <ProgressBar progress={progress} />;
   };
@@ -89,9 +90,9 @@ describe('Test _mathematical operations_ on sharedValue', () => {
         break;
     }
     await render(<ComponentToRender initialValue={initialValue} factor={factor} progress={progress} />);
+    await waitForNotification(MULTIPLICATION_NOTIFICATION_NAME);
     const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
     const expected = initialValue * factor;
-    await waitForNotification(MULTIPLICATION_NOTIFICATION_NAME);
     expect(sharedValue.onJS).toBe(expected, ComparisonMode.NUMBER);
     expect(sharedValue.onUI).toBe(expected, ComparisonMode.NUMBER);
     await render(<ProgressBar progress={progress} />);
