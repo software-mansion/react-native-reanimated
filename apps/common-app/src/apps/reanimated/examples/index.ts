@@ -119,7 +119,6 @@ import ReducedMotionSharedExample from './SharedElementTransitions/ReducedMotion
 import RefExample from './RefExample';
 import ReparentingExample from './LayoutAnimations/ReparentingExample';
 import RestoreStateExample from './SharedElementTransitions/RestoreState';
-import RunOnAsyncExample from './RunOnAsyncExample';
 import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
 import ScreenStackExample from './ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderConfigBackgroundColorExample';
@@ -246,11 +245,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '❄️',
     title: 'React freeze',
     screen: FreezeExample,
-  },
-  RunOnAsyncExample: {
-    icon: '👷‍♂️',
-    title: 'runOnAsync',
-    screen: RunOnAsyncExample,
   },
   FetchExample: {
     icon: '📡',

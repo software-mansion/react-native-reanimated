@@ -6,7 +6,7 @@ import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
 } from './memory/serializable';
-import { RuntimeKind } from './runtimeKind';
+import { isRNRuntime, RuntimeKind } from './runtimeKind';
 import type { WorkletFunction, WorkletImport } from './types';
 import { isWorkletFunction } from './workletFunction';
 import { WorkletsModule } from './WorkletsModule/NativeWorklets';
@@ -309,10 +309,13 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
  * functions on the [UI
  * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
  *
- * This method does not schedule the work immediately but instead waits for
- * other worklets to be scheduled within the same JS loop. It uses
- * queueMicrotask to schedule all the worklets at once making sure they will run
- * within the same frame boundaries on the UI thread.
+ * - This method does not schedule the work immediately but instead waits for
+ *   other worklets to be scheduled within the same JS loop. It uses
+ *   queueMicrotask to schedule all the worklets at once making sure they will
+ *   run within the same frame boundaries on the UI thread.
+ * - This function can only be called from the [RN
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
+ *   Calling it from other runtimes will result in an error.
  *
  * @param fun - A reference to a function you want to execute on the [UI
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
@@ -326,8 +329,15 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue,
   ...args: Args
 ): Promise<ReturnValue> {
-  if (__DEV__ && !isWorkletFunction(worklet)) {
-    throw new WorkletsError('`runOnUIAsync` can only be used with worklets.');
+  if (__DEV__) {
+    if (!isWorkletFunction(worklet)) {
+      throw new WorkletsError('`runOnUIAsync` can only be used with worklets.');
+    }
+    if (!isRNRuntime()) {
+      throw new WorkletsError(
+        '`runOnUIAsync` can only be called on the RN Runtime.'
+      );
+    }
   }
   return new Promise<ReturnValue>((resolve) => {
     if (__DEV__) {
@@ -380,7 +390,10 @@ if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
    * QoL guards to give a meaningful error message when the user tries to call
    * these functions on Worklet Runtimes outside of the Bundle Mode.
    */
-  addGuardImplementation(runOnUIAsync);
+  addGuardImplementation(
+    runOnUIAsync,
+    '`runOnUIAsync` can only be called on the RN Runtime.'
+  );
   addGuardImplementation(runOnUISync);
   addGuardImplementation(scheduleOnUI);
 }

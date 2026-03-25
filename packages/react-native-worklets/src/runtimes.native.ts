@@ -395,6 +395,7 @@ export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
  * - Returns a Promise that resolves with the worklet's return value
  * - This function can only be called from the [RN
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
+ *   Calling it from other runtimes will result in an error.
  *
  * @param workletRuntime - The runtime to run the worklet on.
  * @param worklet - The worklet to run.
@@ -460,7 +461,10 @@ if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
    * QoL guards to give a meaningful error message when the user tries to call
    * these functions on Worklet Runtimes outside of the Bundle Mode.
    */
-  addGuardImplementation(runOnRuntimeAsync);
+  addGuardImplementation(
+    runOnRuntimeAsync,
+    '`runOnRuntimeAsync` can only be called on the RN Runtime.'
+  );
   addGuardImplementation(runOnRuntimeSync);
   addGuardImplementation(runOnRuntimeSyncWithId);
 }
