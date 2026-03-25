@@ -24,7 +24,6 @@ public class CopiedEvent {
               @NonNull String eventName,
               @NonNull WritableArray touches,
               @NonNull WritableArray changedIndices) {
-            CopiedEvent.this.eventName = eventName;
             // noop
           }
 
@@ -43,6 +42,7 @@ public class CopiedEvent {
               int targetTag,
               @NonNull String eventName,
               @Nullable WritableMap params) {
+            CopiedEvent.this.surfaceId = surfaceId;
             CopiedEvent.this.targetTag = targetTag;
             CopiedEvent.this.eventName = eventName;
             assert params != null;
