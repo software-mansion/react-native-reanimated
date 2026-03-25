@@ -10,6 +10,7 @@ import AnimatedSensorGravityExample from './AnimatedSensorGravityExample';
 import AnimatedSensorGyroscopeExample from './AnimatedSensorGyroscopeExample';
 import AnimatedSensorMagneticFieldExample from './AnimatedSensorMagneticFieldExample';
 import AnimatedSensorRotationExample from './AnimatedSensorRotationExample';
+import AnimatedStyleUpdateExample from './AnimatedStyleUpdateExample';
 import AnimatedTabBarExample from './AnimatedTabBarExample';
 import AnimatedTextWidthExample from './AnimatedTextWidthExample';
 import ArticleProgressExample from './ArticleProgressExample';
@@ -66,6 +67,7 @@ import GestureHandlerExample from './GestureHandlerExample';
 import GetViewPropExample from './GetViewPropExample';
 import HabitsExample from './LayoutAnimations/HabitsExample';
 import HermesSamplingProfilerExample from './HermesSamplingProfilerExample';
+import IPodExample from './IPodExample';
 import ImageStackExample from './SharedElementTransitions/ImageStack';
 import InstanceDiscoveryExample from './InstanceDiscoveryExample';
 import InvalidValueAccessExample from './InvalidValueAccessExample';
@@ -314,6 +316,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🌀',
     title: 'opacity & transform',
     screen: OpacityTransformExample,
+  },
+  IPodExample: {
+    icon: '🎧',
+    title: 'iPod',
+    screen: IPodExample,
   },
   EmojiWaterfallExample: {
     icon: '💸',
@@ -680,6 +687,10 @@ export const EXAMPLES: Record<string, Example> = {
   },
 
   // Old examples
+  AnimatedStyleUpdateExample: {
+    title: 'Animated style update',
+    screen: AnimatedStyleUpdateExample,
+  },
   SharedStyleExample: {
     title: 'Shared style',
     screen: SharedStyleExample,

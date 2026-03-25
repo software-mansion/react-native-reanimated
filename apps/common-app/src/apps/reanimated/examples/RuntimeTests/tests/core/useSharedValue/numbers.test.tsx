@@ -15,7 +15,7 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 import { MutableAPI, ProgressBar } from './components';
-import { scheduleOnRN } from 'react-native-worklets';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 type MultiplyComponentProps<T> = {
   initialValue: T;
@@ -25,6 +25,10 @@ type MultiplyComponentProps<T> = {
 
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
 const MULTIPLICATION_NOTIFICATION_NAME = 'MULTIPLICATION_NOTIFICATION_NAME';
+
+function notifyMultiplicationDone() {
+  notify(MULTIPLICATION_NOTIFICATION_NAME);
+}
 
 describe('Test _mathematical operations_ on sharedValue', () => {
   const MultiplySVOriginalAPI = <T extends number | bigint>({
@@ -37,7 +41,10 @@ describe('Test _mathematical operations_ on sharedValue', () => {
     useEffect(() => {
       const currentValue = sharedValue.value;
       sharedValue.value = (currentValue * factor) as T;
-      scheduleOnRN(notify, MULTIPLICATION_NOTIFICATION_NAME);
+      scheduleOnUI(() => {
+        'worklet';
+        scheduleOnRN(notifyMultiplicationDone);
+      });
     });
     return <ProgressBar progress={progress} />;
   };
@@ -52,7 +59,10 @@ describe('Test _mathematical operations_ on sharedValue', () => {
     useEffect(() => {
       const currentValue = sharedValue.get();
       sharedValue.set((currentValue * factor) as T);
-      scheduleOnRN(notify, MULTIPLICATION_NOTIFICATION_NAME);
+      scheduleOnUI(() => {
+        'worklet';
+        scheduleOnRN(notifyMultiplicationDone);
+      });
     });
     return <ProgressBar progress={progress} />;
   };
@@ -66,7 +76,10 @@ describe('Test _mathematical operations_ on sharedValue', () => {
     registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
     useEffect(() => {
       sharedValue.set(value => (value * factor) as T);
-      scheduleOnRN(notify, MULTIPLICATION_NOTIFICATION_NAME);
+      scheduleOnUI(() => {
+        'worklet';
+        scheduleOnRN(notifyMultiplicationDone);
+      });
     });
     return <ProgressBar progress={progress} />;
   };
