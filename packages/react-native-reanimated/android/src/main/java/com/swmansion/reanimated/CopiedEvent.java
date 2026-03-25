@@ -2,6 +2,7 @@ package com.swmansion.reanimated;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.RCTModernEventEmitter;
@@ -16,9 +17,38 @@ public class CopiedEvent {
   private int category;
 
   CopiedEvent(Event<?> event) {
-    //noinspection Convert2Lambda
     event.dispatchModern(
         new RCTModernEventEmitter() {
+          @Override
+          public void receiveTouches(
+              @NonNull String eventName,
+              @NonNull WritableArray touches,
+              @NonNull WritableArray changedIndices) {
+            // noop
+          }
+
+          @Override
+          public void receiveEvent(
+              int targetTag, @NonNull String eventName, @Nullable WritableMap params) {
+            CopiedEvent.this.targetTag = targetTag;
+            CopiedEvent.this.eventName = eventName;
+            assert params != null;
+            CopiedEvent.this.payload = params.copy();
+          }
+
+          @Override
+          public void receiveEvent(
+              int surfaceId,
+              int targetTag,
+              @NonNull String eventName,
+              @Nullable WritableMap params) {
+            CopiedEvent.this.surfaceId = surfaceId;
+            CopiedEvent.this.targetTag = targetTag;
+            CopiedEvent.this.eventName = eventName;
+            assert params != null;
+            CopiedEvent.this.payload = params.copy();
+          }
+
           @Override
           public void receiveEvent(
               int surfaceId,

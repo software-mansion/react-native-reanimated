@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.events.RCTModernEventEmitter;
@@ -33,6 +34,27 @@ public class EventHandler implements RCTModernEventEmitter {
       int category) {
     String resolvedEventName = mCustomEventNamesResolver.resolveCustomEventName(eventName);
     receiveEvent(resolvedEventName, targetTag, params);
+  }
+
+  @Override
+  public void receiveEvent(
+      int surfaceId, int targetTag, @NonNull String eventName, @Nullable WritableMap params) {
+    String resolvedEventName = mCustomEventNamesResolver.resolveCustomEventName(eventName);
+    receiveEvent(resolvedEventName, targetTag, params);
+  }
+
+  @Override
+  public void receiveEvent(int targetTag, @NonNull String eventName, @Nullable WritableMap params) {
+    String resolvedEventName = mCustomEventNamesResolver.resolveCustomEventName(eventName);
+    receiveEvent(resolvedEventName, targetTag, params);
+  }
+
+  @Override
+  public void receiveTouches(
+      @NonNull String eventName,
+      @NonNull WritableArray touches,
+      @NonNull WritableArray changedIndices) {
+    // not interested in processing touch events this way, we process raw events only
   }
 
   @SuppressWarnings("JavaJniMissingFunction")
