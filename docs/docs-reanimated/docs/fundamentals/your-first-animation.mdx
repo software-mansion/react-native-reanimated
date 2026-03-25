@@ -72,7 +72,7 @@ export default function App() {
 
 ## Using a shared value
 
-Let's create a very simple animation that will animate a `width` of an element. We'll make it expand by `50px` on each button press. We can do this by modifying a shared value connected to the `width` property of an `Animated.View` component. I know it might sound complicated, but it's actually quite simple.
+Let's create a very simple animation that will animate a `width` of an element. We'll set it to a random value between 50 and 150 on each button press. We can do this by modifying a shared value connected to the `width` property of an `Animated.View` component. I know it might sound complicated, but it's actually quite simple.
 
 Values stored in shared values are accessed and modified by their `.value` property.
 
@@ -88,7 +88,7 @@ export default function App() {
   const width = useSharedValue(100);
 
   const handlePress = () => {
-    width.value = width.value + 50;
+    width.value = Math.random() * 100 + 50;
   };
 
   return (
@@ -108,13 +108,13 @@ export default function App() {
 
 :::caution
 
-It's a common mistake to modify a shared value directly like this: ~~`sv = sv + 100;`~~. Always remember to access the shared value by using the `.value` property instead. Here, the correct usage would be `sv.value = sv.value + 100;`.
+It's a common mistake to modify a shared value directly like this: ~~`sv = 100;`~~. Always remember to access the shared value by using the `.value` property instead. Here, the correct usage would be `sv.value = 100;`.
 
 :::
 
 ## Using an animation function
 
-Finally, import `withSpring` function and wrap around `width.value + 50` in the `handlePress` function so that the value which `withSpring` returns modifies the shared value. This will create a bouncy spring animation that transitions the width of the element from its current value (here `width.value`) to the new one (here `width.value + 50`).
+Finally, import `withSpring` function and wrap around `Math.random() * 100 + 50` in the `handlePress` function so that the value which `withSpring` returns modifies the shared value. This will create a bouncy spring animation that transitions the width of the element from its current value (here `width.value`) to the new one (here `Math.random() * 100 + 50`).
 
 ```jsx {2,8}
 import { Button, View } from 'react-native';
@@ -124,7 +124,7 @@ export default function App() {
   const width = useSharedValue(100);
 
   const handlePress = () => {
-    width.value = withSpring(width.value + 50);
+    width.value = withSpring(Math.random() * 100 + 50);
   };
 
   return (
@@ -156,7 +156,7 @@ In this section, we gained a firm grasp on the Reanimated fundamentals. We learn
 - `Animated` components are used to define animatable elements.
 - Shared values are a driving factor of all animations and we define them using a `useSharedValue` hook.
 - Shared values are always accessed and modified by their `.value` property (eg. `sv.value = 100;`).
-- To create smooth animations modify shared values using animation functions like `withTiming`
+- To create smooth animations modify shared values using animation functions like `withSpring`
 
 ## What's next?
 
