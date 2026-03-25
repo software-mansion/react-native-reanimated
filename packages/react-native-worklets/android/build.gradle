@@ -160,14 +160,12 @@ buildscript {
     }
     dependencies {
         classpath "com.android.tools.build:gradle:8.13.1"
-        classpath "de.undercouch:gradle-download-task:5.6.0"
         classpath "com.diffplug.spotless:spotless-plugin-gradle:8.1.0"
     }
 }
 
 apply plugin: "com.android.library"
 apply plugin: "maven-publish"
-apply plugin: "de.undercouch.download"
 
 if (project == rootProject) {
     apply from: "spotless.gradle"

@@ -55,17 +55,21 @@ function getAllowedValues(axis: Axis, isArray: boolean): string {
 }
 
 export const ERROR_MESSAGES = {
-  invalidTransformOrigin: (value: Readonly<TransformOrigin>) =>
-    `Invalid transformOrigin: ${JSON.stringify(value)}. Expected 1-3 values.`,
+  invalidTransformOrigin: (value: Readonly<TransformOrigin>) => {
+    'worklet';
+    return `Invalid transformOrigin: ${JSON.stringify(value)}. Expected 1-3 values.`;
+  },
   invalidValue: (
     value: string | number,
     axis: Axis,
     origin: Readonly<TransformOrigin>,
     isArray: boolean
-  ) =>
-    `Invalid value "${value}" for the ${axis}-axis in transformOrigin ${JSON.stringify(
+  ) => {
+    'worklet';
+    return `Invalid value "${value}" for the ${axis}-axis in transformOrigin ${JSON.stringify(
       origin
-    )}. Allowed values: ${getAllowedValues(axis, isArray)}.`,
+    )}. Allowed values: ${getAllowedValues(axis, isArray)}.`;
+  },
 };
 
 function maybeSwapComponents(components: ReadonlyArray<string | number>) {
