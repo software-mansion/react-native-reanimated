@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "4.3.0-rc.0",
+  "version": "4.3.0",
   "description": "More powerful alternative to Animated library for React Native.",
   "keywords": [
     "react-native",
@@ -98,7 +98,7 @@
   "peerDependencies": {
     "react": "*",
     "react-native": "0.81 - 0.85",
-    "react-native-worklets": "*"
+    "react-native-worklets": "0.8.x"
   },
   "devDependencies": {
     "@babel/core": "7.28.4",
