@@ -13,8 +13,7 @@ const PASS_NOTIFICATION = 'PASS';
 const FAIL_NOTIFICATION = 'FAIL';
 
 type localGlobal = typeof globalThis & {
-  __notifyPass(num: number): void;
-  __notifyFail(rea: string): void;
+  scheduleOnRN: typeof scheduleOnRN;
 };
 
 describe('scheduleOnRuntimeWithId', () => {
@@ -42,17 +41,10 @@ describe('scheduleOnRuntimeWithId', () => {
       reason = '';
 
       [UIRuntimeId, workletRuntime1.runtimeId, workletRuntime2.runtimeId].forEach(runtimeId => {
-        // TODO: fix RemoteFunction re-serialization.
         runOnRuntimeSyncWithId(runtimeId, () => {
           'worklet';
-          (globalThis as localGlobal).__notifyPass = (num: number) => {
-            'worklet';
-            scheduleOnRN(callbackPass, num);
-          };
-          (globalThis as localGlobal).__notifyFail = (rea: string) => {
-            'worklet';
-            scheduleOnRN(callbackFail, rea);
-          };
+          // TODO: fix worklet re-serialization outside of Bundle Mode
+          (globalThis as localGlobal).scheduleOnRN = scheduleOnRN;
         });
       });
     });
@@ -95,7 +87,7 @@ describe('scheduleOnRuntimeWithId', () => {
       'worklet';
       scheduleOnRuntimeWithId(UIRuntimeId, () => {
         'worklet';
-        (globalThis as localGlobal).__notifyPass(42);
+        (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
       });
     });
     await waitForNotification(PASS_NOTIFICATION);
@@ -107,7 +99,7 @@ describe('scheduleOnRuntimeWithId', () => {
       'worklet';
       scheduleOnRuntimeWithId(workletRuntime1.runtimeId, () => {
         'worklet';
-        (globalThis as localGlobal).__notifyPass(42);
+        (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
       });
     });
     await waitForNotification(PASS_NOTIFICATION);
@@ -120,10 +112,10 @@ describe('scheduleOnRuntimeWithId', () => {
       try {
         scheduleOnRuntimeWithId(9999, () => {
           'worklet';
-          (globalThis as localGlobal).__notifyPass(42);
+          scheduleOnRN(callbackPass, 42);
         });
       } catch (error) {
-        (globalThis as localGlobal).__notifyFail(error instanceof Error ? error.message : String(error));
+        scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
       }
     });
 
@@ -136,7 +128,7 @@ describe('scheduleOnRuntimeWithId', () => {
       'worklet';
       scheduleOnRuntimeWithId(UIRuntimeId, () => {
         'worklet';
-        (globalThis as localGlobal).__notifyPass(42);
+        (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
       });
     });
     await waitForNotification(PASS_NOTIFICATION);
@@ -147,7 +139,7 @@ describe('scheduleOnRuntimeWithId', () => {
       'worklet';
       scheduleOnRuntimeWithId(workletRuntime1.runtimeId, () => {
         'worklet';
-        (globalThis as localGlobal).__notifyPass(42);
+        (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
       });
     });
     await waitForNotification(PASS_NOTIFICATION);
@@ -158,7 +150,7 @@ describe('scheduleOnRuntimeWithId', () => {
       'worklet';
       scheduleOnRuntimeWithId(workletRuntime2.runtimeId, () => {
         'worklet';
-        (globalThis as localGlobal).__notifyPass(42);
+        (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
       });
     });
     await waitForNotification(PASS_NOTIFICATION);
@@ -170,10 +162,10 @@ describe('scheduleOnRuntimeWithId', () => {
       try {
         scheduleOnRuntimeWithId(9999, () => {
           'worklet';
-          (globalThis as localGlobal).__notifyPass(42);
+          (globalThis as localGlobal).scheduleOnRN(callbackPass, 42);
         });
       } catch (error) {
-        (globalThis as localGlobal).__notifyFail(error instanceof Error ? error.message : String(error));
+        scheduleOnRN(callbackFail, error instanceof Error ? error.message : String(error));
       }
     });
 

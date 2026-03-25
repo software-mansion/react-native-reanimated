@@ -15,13 +15,12 @@ import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.common.UIManagerType;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
-import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.facebook.react.uimanager.events.RCTModernEventEmitter;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.annotation.Nullable;
 
 public class NodesManager implements EventDispatcherListener {
 
@@ -38,7 +37,7 @@ public class NodesManager implements EventDispatcherListener {
   private final GuardedFrameCallback mChoreographerCallback;
   protected final UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
   private final AtomicBoolean mCallbackPosted = new AtomicBoolean();
-  private RCTEventEmitter mCustomEventHandler = new NoopEventHandler();
+  private RCTModernEventEmitter mCustomEventHandler = new NoopEventHandler();
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
   private double lastFrameTimeMs;
@@ -170,8 +169,7 @@ public class NodesManager implements EventDispatcherListener {
 
         while (!mEventQueue.isEmpty()) {
           CopiedEvent copiedEvent = mEventQueue.poll();
-          handleEvent(
-              copiedEvent.getTargetTag(), copiedEvent.getEventName(), copiedEvent.getPayload());
+          handleEvent(copiedEvent);
         }
 
         if (!mFrameCallbacks.isEmpty()) {
@@ -203,7 +201,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   @Override
-  public void onEventDispatch(Event event) {
+  public void onEventDispatch(Event<?> event) {
     try {
       if (BuildConfig.REANIMATED_PROFILING) {
         Trace.beginSection("onEventDispatch");
@@ -233,19 +231,26 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
-  private void handleEvent(Event event) {
-    event.dispatch(mCustomEventHandler);
+  private void handleEvent(Event<?> event) {
+    event.dispatchModern(mCustomEventHandler);
   }
 
-  private void handleEvent(int targetTag, String eventName, @Nullable WritableMap event) {
-    mCustomEventHandler.receiveEvent(targetTag, eventName, event);
+  private void handleEvent(CopiedEvent copiedEvent) {
+    mCustomEventHandler.receiveEvent(
+        copiedEvent.getSurfaceId(),
+        copiedEvent.getTargetTag(),
+        copiedEvent.getEventName(),
+        copiedEvent.getCanCoalesceEvent(),
+        copiedEvent.getCustomCoalesceKey(),
+        copiedEvent.getPayload(),
+        copiedEvent.getCategory());
   }
 
   public UIManagerModule.CustomEventNamesResolver getEventNameResolver() {
     return mCustomEventNamesResolver;
   }
 
-  public void registerEventHandler(RCTEventEmitter handler) {
+  public void registerEventHandler(RCTModernEventEmitter handler) {
     mCustomEventHandler = handler;
   }
 

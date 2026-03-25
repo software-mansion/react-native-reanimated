@@ -1,0 +1,68 @@
+name: Create rnc-cli app
+description: Scaffold a React Native app with Reanimated and Worklets installed
+inputs:
+  react-native-version:
+    description: React Native version to use
+    required: true
+  reanimated-version:
+    description: Reanimated version to install
+    required: true
+  worklets-version:
+    description: Worklets version to install
+    required: true
+  app-name:
+    description: Name of the test app
+    default: 'app'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Resolve rnc-cli version
+      id: cli-version
+      shell: bash
+      run: echo "version=$(npm view @react-native-community/cli version)" >> "$GITHUB_OUTPUT"
+
+    - name: Restore app cache
+      id: app-cache
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ inputs.app-name }}
+        key: rnc-cli-app-${{ runner.os }}-${{ steps.cli-version.outputs.version }}-${{ inputs.react-native-version }}
+
+    - name: Create app
+      if: steps.app-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        npx @react-native-community/cli init ${{ inputs.app-name }} \
+          --version "${{ inputs.react-native-version }}" \
+          --skip-install \
+          --install-pods 0 \
+          --skip-git-init
+
+    - name: Save app cache
+      if: steps.app-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ inputs.app-name }}
+        key: rnc-cli-app-${{ runner.os }}-${{ steps.cli-version.outputs.version }}-${{ inputs.react-native-version }}
+
+    - name: Install Reanimated and Worklets
+      working-directory: ${{ inputs.app-name }}
+      shell: bash
+      run: |
+        npm install "react-native-reanimated@${{ inputs.reanimated-version }}"
+        npm install "react-native-worklets@${{ inputs.worklets-version }}"
+
+    - name: Setup Ruby (iOS)
+      if: ${{ runner.os == 'macOS' }}
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
+        bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+
+    - name: Install Pods (iOS)
+      if: ${{ runner.os == 'macOS' }}
+      working-directory: ${{ inputs.app-name }}/ios
+      shell: bash
+      run: bundle install && bundle exec pod install

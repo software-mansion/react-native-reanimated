@@ -1,181 +1,92 @@
 'use strict';
-import { renderHook } from '@testing-library/react-native';
 
+import { ReanimatedError } from '../../common';
 import { worklet } from '../../jestUtils';
-import { useHandler } from '../useHandler';
-import {
-  createHandlers,
-  createUseHandlerError,
-  renderHookWithHandlers,
-} from './useHandlerHelpers';
+import { renderUseHandler, runCommonTests } from './useHandler.shared';
+
+function nonWorkletError(...names: string[]) {
+  return new ReanimatedError(
+    `Passed handlers that are not worklets. Only worklet functions are allowed. Handlers "${names.join(', ')}" are not worklets.`
+  );
+}
 
 describe('useHandler (native)', () => {
-  describe('valid cases', () => {
-    describe('worklets without dependencies', () => {
-      test('should indicate dependencies differ on initial render', () => {
-        const { handlers } = createHandlers();
+  runCommonTests();
 
-        const { result } = renderHook(() => useHandler(handlers));
-
-        expect(result.current.doDependenciesDiffer).toBe(true);
-        expect(result.current.useWeb).toBeDefined();
-      });
-
-      test('should indicate no change when re-rendering with same handlers object or worklet references', () => {
-        const { worklets, handlers } = createHandlers();
-
-        const { result, rerender } = renderHookWithHandlers(handlers);
-
-        // Initial render
-        expect(result.current.doDependenciesDiffer).toBe(true);
-
-        // Re-render with same handlers object
-        rerender({ handlers });
-        expect(result.current.doDependenciesDiffer).toBe(false);
-
-        // Re-render with new handlers object but same worklet references
-        rerender({
-          handlers: { onScroll: worklets.worklet1, onPress: worklets.worklet2 },
+  describe('non-worklet handlers', () => {
+    test('throws when all handlers are non-worklets', () => {
+      expect(() => {
+        renderUseHandler({
+          onScroll: jest.fn(),
+          onPress: jest.fn(),
         });
-        expect(result.current.doDependenciesDiffer).toBe(false);
-      });
+      }).toThrow(nonWorkletError('onScroll', 'onPress'));
     });
 
-    describe('worklets with dependencies', () => {
-      test('should indicate dependencies differ on initial render', () => {
-        const { handlers } = createHandlers();
-        const dependencies = ['someValue'];
-
-        const { result } = renderHook(() => useHandler(handlers, dependencies));
-
-        expect(result.current.doDependenciesDiffer).toBe(true);
-      });
-
-      test('should indicate change when handler is replaced', () => {
-        const { worklets, handlers } = createHandlers();
-
-        const { result, rerender } = renderHookWithHandlers(handlers);
-
-        expect(result.current.doDependenciesDiffer).toBe(true);
-
-        // Replace one handler with a new worklet
-        const newWorklet1 = worklet();
-
-        rerender({
-          handlers: { onScroll: newWorklet1, onPress: worklets.worklet2 },
+    test('throws when a single non-worklet is mixed with worklets', () => {
+      expect(() => {
+        renderUseHandler({
+          onScroll: worklet(),
+          onPress: jest.fn(),
         });
-        expect(result.current.doDependenciesDiffer).toBe(true);
-      });
+      }).toThrow(nonWorkletError('onPress'));
+    });
 
-      test('should indicate change when handler is added', () => {
-        const { worklets } = createHandlers();
-        const handlers = {
-          onScroll: worklets.worklet1,
-        };
+    test('throws on re-render when worklet is replaced with non-worklet', () => {
+      const w = worklet();
+      const { rerender } = renderUseHandler({ onScroll: w });
 
-        const { result, rerender } = renderHookWithHandlers(handlers);
-
-        // Add a new handler
-        rerender({
-          handlers: { onScroll: worklets.worklet1, onPress: worklets.worklet2 },
-        });
-        expect(result.current.doDependenciesDiffer).toBe(true);
-      });
-
-      test('should indicate change when handler is removed', () => {
-        const { worklets, handlers } = createHandlers();
-
-        const { result, rerender } = renderHookWithHandlers(handlers);
-
-        // Remove a handler
-        rerender({
-          handlers: { onScroll: worklets.worklet1 },
-        });
-        expect(result.current.doDependenciesDiffer).toBe(true);
-      });
-
-      test('should track dependency changes', () => {
-        const { handlers } = createHandlers();
-        const dependencies = ['value1'];
-
-        const { result, rerender } = renderHookWithHandlers(
-          handlers,
-          dependencies
-        );
-
-        expect(result.current.doDependenciesDiffer).toBe(true);
-        rerender({ handlers, deps: dependencies });
-        expect(result.current.doDependenciesDiffer).toBe(false);
-        rerender({ handlers, deps: ['value2'] });
-        expect(result.current.doDependenciesDiffer).toBe(true);
-      });
+      expect(() => {
+        rerender({ handlers: { onScroll: jest.fn() } });
+      }).toThrow(nonWorkletError('onScroll'));
     });
   });
 
-  describe('invalid cases (native only allows worklets)', () => {
-    test('should throw error when non-worklet function is passed without dependencies', () => {
-      const regularHandler = jest.fn();
-      const handlers = {
-        onPress: regularHandler,
-      };
+  describe('dependencies parameter is ignored', () => {
+    test('doDependenciesDiffer is unaffected by changing deps', () => {
+      const w = worklet();
+      const { result, rerender } = renderUseHandler({ onScroll: w }, [1]);
 
-      expect(() => {
-        renderHook(() => useHandler(handlers));
-      }).toThrow(createUseHandlerError('onPress', false));
+      expect(result.current.doDependenciesDiffer).toBe(true);
+
+      rerender({ handlers: { onScroll: w }, deps: [1] });
+      expect(result.current.doDependenciesDiffer).toBe(false);
+
+      // deps change but handler stays the same
+      rerender({ handlers: { onScroll: w }, deps: [2] });
+      expect(result.current.doDependenciesDiffer).toBe(false);
+
+      // deps change to completely different values
+      rerender({ handlers: { onScroll: w }, deps: ['a', 'b', 'c'] });
+      expect(result.current.doDependenciesDiffer).toBe(false);
     });
 
-    test('should throw error when non-worklet function is passed with dependencies', () => {
-      const regularHandler = jest.fn();
-      const handlers = {
-        onPress: regularHandler,
-      };
-      const dependencies = [regularHandler];
+    test('doDependenciesDiffer is unaffected by undefined deps', () => {
+      const w = worklet();
+      const { result, rerender } = renderUseHandler({ onScroll: w }, undefined);
 
-      // On native, even with dependencies, non-worklets are not allowed
-      expect(() => {
-        renderHook(() => useHandler(handlers, dependencies));
-      }).toThrow(createUseHandlerError('onPress', false));
+      expect(result.current.doDependenciesDiffer).toBe(true);
+
+      rerender({ handlers: { onScroll: w }, deps: undefined });
+      expect(result.current.doDependenciesDiffer).toBe(false);
+
+      // handler changes - true despite deps staying undefined
+      rerender({ handlers: { onScroll: worklet() }, deps: undefined });
+      expect(result.current.doDependenciesDiffer).toBe(true);
     });
 
-    test('should throw error when mixed worklet and non-worklet functions are passed', () => {
-      const workletHandler = worklet();
-      const regularHandler = jest.fn();
-      const handlers = {
-        onScroll: workletHandler,
-        onPress: regularHandler,
-      };
+    test('doDependenciesDiffer is unaffected by empty deps', () => {
+      const w = worklet();
+      const { result, rerender } = renderUseHandler({ onScroll: w }, []);
 
-      expect(() => {
-        renderHook(() => useHandler(handlers));
-      }).toThrow(createUseHandlerError('onPress', false));
-    });
+      expect(result.current.doDependenciesDiffer).toBe(true);
 
-    test('should throw error when mixed worklet and non-worklet functions are passed with dependencies', () => {
-      const workletHandler = worklet();
-      const regularHandler = jest.fn();
-      const handlers = {
-        onScroll: workletHandler,
-        onPress: regularHandler,
-      };
-      const dependencies = [regularHandler];
+      rerender({ handlers: { onScroll: w }, deps: [] });
+      expect(result.current.doDependenciesDiffer).toBe(false);
 
-      // On native, even with dependencies, non-worklets are not allowed
-      expect(() => {
-        renderHook(() => useHandler(handlers, dependencies));
-      }).toThrow(createUseHandlerError('onPress', false));
-    });
-
-    test('should throw error with handler names in error message (multiple handlers)', () => {
-      const regularHandler1 = jest.fn();
-      const regularHandler2 = jest.fn();
-      const handlers = {
-        onScroll: regularHandler1,
-        onPress: regularHandler2,
-      };
-
-      expect(() => {
-        renderHook(() => useHandler(handlers));
-      }).toThrow(createUseHandlerError(['onScroll', 'onPress'], false));
+      // handler changes - true despite empty deps array
+      rerender({ handlers: { onScroll: worklet() }, deps: [] });
+      expect(result.current.doDependenciesDiffer).toBe(true);
     });
   });
 });
