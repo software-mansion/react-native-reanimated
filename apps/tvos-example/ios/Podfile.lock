@@ -1784,7 +1784,7 @@ PODS:
     - React-utils (= 0.84.1-0)
     - ReactNativeDependencies
   - ReactNativeDependencies (0.84.1)
-  - RNReanimated (4.3.0-main):
+  - RNReanimated (4.4.0-main):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1805,11 +1805,11 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNReanimated/apple (= 4.3.0-main)
-    - RNReanimated/common (= 4.3.0-main)
+    - RNReanimated/apple (= 4.4.0-main)
+    - RNReanimated/common (= 4.4.0-main)
     - RNWorklets
     - Yoga
-  - RNReanimated/apple (4.3.0-main):
+  - RNReanimated/apple (4.4.0-main):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1832,7 +1832,7 @@ PODS:
     - ReactNativeDependencies
     - RNWorklets
     - Yoga
-  - RNReanimated/common (4.3.0-main):
+  - RNReanimated/common (4.4.0-main):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2229,7 +2229,7 @@ SPEC CHECKSUMS:
   ReactCodegen: 3862d3679a3064814550db04f7a5366833d65eea
   ReactCommon: c315584be8ff201e245f9d8cc4b380154235ef2d
   ReactNativeDependencies: 635ed2b5e70bb9d5a61864db27fda842e6d94ff6
-  RNReanimated: 0982f8bb04a5dde110fd7f57f0c97bc80e48983a
+  RNReanimated: 0b9638ce585d4dd6a1d4fd6215ab373ce8ca0f71
   RNWorklets: aabc37be2f0398ce6355ee99957cd12e21db0dd7
   Yoga: e2029bb72b7cb951e09aa1ee1316c9f5f28409da
 
