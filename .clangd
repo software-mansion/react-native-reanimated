@@ -24,18 +24,14 @@ CompileFlags:
     - -clang-vendor-feature=*
     - -fno-odr-hash-protocols
     - -code-extended-block-signature
-
 ---
-
 If:
   PathMatch: packages/react-native-reanimated/.*
 CompileFlags:
   CompilationDatabase: packages/react-native-reanimated
 
 ---
- 
 If:
   PathMatch: packages/react-native-worklets/.*
 CompileFlags:
   CompilationDatabase: packages/react-native-worklets
-
