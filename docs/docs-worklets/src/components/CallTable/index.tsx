@@ -1,3 +1,4 @@
+import Link from '@docusaurus/Link';
 import type { ReactElement } from 'react';
 
 import styles from './styles.module.css';
@@ -21,7 +22,6 @@ interface CallTableRow {
 interface CallTableProps {
   bundleMode: CallTableRow;
   noBundleMode: CallTableRow;
-  fnName: string;
 }
 
 function renderCellValue(value: CellValue) {
@@ -32,11 +32,7 @@ function renderCellValue(value: CellValue) {
   return value;
 }
 
-export function CallTable({
-  bundleMode,
-  noBundleMode,
-  fnName: title,
-}: CallTableProps) {
+export function CallTable({ bundleMode, noBundleMode }: CallTableProps) {
   const rows = [
     {
       label: 'Bundle mode enabled',
@@ -73,9 +69,7 @@ export function CallTable({
         </tbody>
       </table>
       <p className={styles.hint}>
-        <a href="/react-native-worklets/docs/guides/call-tables">
-          What does it mean?
-        </a>{' '}
+        <Link to="/docs/guides/call-tables">What does it mean?</Link>{' '}
       </p>
     </div>
   );
