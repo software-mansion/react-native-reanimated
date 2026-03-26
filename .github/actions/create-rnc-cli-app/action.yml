@@ -47,12 +47,12 @@ runs:
         path: ${{ inputs.app-name }}
         key: rnc-cli-app-${{ runner.os }}-${{ steps.cli-version.outputs.version }}-${{ inputs.react-native-version }}
 
-    - name: Install Reanimated and Worklets
+    - name: Install Worklets and Reanimated
       working-directory: ${{ inputs.app-name }}
       shell: bash
       run: |
-        npm install "react-native-reanimated@${{ inputs.reanimated-version }}"
         npm install "react-native-worklets@${{ inputs.worklets-version }}"
+        npm install "react-native-reanimated@${{ inputs.reanimated-version }}"
 
     - name: Setup Ruby (iOS)
       if: ${{ runner.os == 'macOS' }}
