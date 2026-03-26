@@ -45,7 +45,7 @@ class UpdatesRegistryManager {
 #endif
 
  private:
-  using RemovableShadowNodes = std::unordered_map<Tag, std::shared_ptr<const ShadowNode>>;
+  using RemovableShadowNodes = std::unordered_map<Tag, ShadowNodeFamily::Shared>;
 
   mutable std::mutex mutex_;
   std::atomic<bool> isPaused_;
@@ -58,7 +58,7 @@ class UpdatesRegistryManager {
   PropsToRevertMap propsToRevertMap_;
 
   static void
-  addToPropsMap(PropsMap &propsMap, const std::shared_ptr<const ShadowNode> &shadowNode, const folly::dynamic &props);
+  addToPropsMap(PropsMap &propsMap, const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
 #endif
 };
 
