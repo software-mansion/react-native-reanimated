@@ -1,22 +1,11 @@
 import Link from '@docusaurus/Link';
-import type { ReactElement } from 'react';
 
 import styles from './styles.module.css';
 
-export function Yes() {
-  return <div className={styles.supported}>yes</div>;
-}
-
-export function No() {
-  return <div className={styles.notSupported}>no</div>;
-}
-
-type CellValue = boolean | string | number | ReactElement | null;
-
 interface CallTableRow {
-  rnRuntime: CellValue;
-  uiRuntime: CellValue;
-  workerRuntime: CellValue;
+  rnRuntime: boolean;
+  uiRuntime: boolean;
+  workerRuntime: boolean;
 }
 
 interface CallTableProps {
@@ -24,12 +13,8 @@ interface CallTableProps {
   noBundleMode: CallTableRow;
 }
 
-function renderCellValue(value: CellValue) {
-  if (typeof value === 'boolean') {
-    return value ? <Yes /> : <No />;
-  }
-
-  return value;
+function renderCellValue(value: boolean) {
+  return value ? '✅' : '❌';
 }
 
 export function CallTable({ bundleMode, noBundleMode }: CallTableProps) {
@@ -69,7 +54,7 @@ export function CallTable({ bundleMode, noBundleMode }: CallTableProps) {
         </tbody>
       </table>
       <p className={styles.hint}>
-        <Link to="/docs/guides/call-tables">What does it mean?</Link>{' '}
+        <Link to="/docs/guides/call-tables">What does it mean?</Link>
       </p>
     </div>
   );
