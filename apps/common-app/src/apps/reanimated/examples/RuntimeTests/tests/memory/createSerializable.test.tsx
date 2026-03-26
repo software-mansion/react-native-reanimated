@@ -17,7 +17,8 @@ import {
   wait,
   waitForNotification,
 } from '../../ReJest/RuntimeTestsApi';
-import { scheduleOnUI } from 'react-native-worklets';
+import { createSerializable, scheduleOnUI } from 'react-native-worklets';
+import { TurboModuleRegistry } from 'react-native';
 
 const RESULT_SHARED_VALUE_REF = 'RESULT_SHARED_VALUE_REF';
 
@@ -773,6 +774,92 @@ describe('Test createSerializable', () => {
     const sharedValue = await getRegisteredValue(RESULT_SHARED_VALUE_REF);
     expect(sharedValue.onUI).toBe('error');
     expect(sharedValue.onJS).toBe('error');
+  });
+});
+
+const FREEZE_WARNING = 'Tried to modify key';
+
+describe('Test serializable freezing', () => {
+  test('warns when modifying converted array', async () => {
+    const obj = [1, 2, 3];
+    createSerializable(obj);
+    await expect(() => {
+      obj[0] = 2;
+    }).toThrow(FREEZE_WARNING);
+  });
+
+  test('warns when modifying converted remote function', async () => {
+    const obj = () => {};
+    obj.prop = 1;
+    createSerializable(obj);
+    await expect(() => {
+      obj.prop = 2;
+    }).toThrow(FREEZE_WARNING);
+  });
+
+  test('does not warn when modifying converted host object', async () => {
+    const obj = TurboModuleRegistry.get('Clipboard');
+    if (!obj) {
+      return;
+    }
+    createSerializable(obj);
+    await expect(() => {
+      (obj as any).prop = 2;
+    }).not.toThrow();
+  });
+
+  test('warns when modifying converted plain object', async () => {
+    const obj = { prop: 1 };
+    createSerializable(obj);
+    await expect(() => {
+      obj.prop = 2;
+    }).toThrow(FREEZE_WARNING);
+  });
+
+  test('does not warn when modifying converted RegExp literal', async () => {
+    const obj = /a/;
+    createSerializable(obj);
+    await expect(() => {
+      (obj as any).prop = 2;
+    }).not.toThrow();
+  });
+
+  test('does not warn when modifying converted RegExp instance', async () => {
+    // eslint-disable-next-line prefer-regex-literals
+    const obj = new RegExp('a');
+    createSerializable(obj);
+    await expect(() => {
+      (obj as any).prop = 2;
+    }).not.toThrow();
+  });
+
+  test('does not warn when modifying converted ArrayBuffer', async () => {
+    const obj = new ArrayBuffer(8);
+    createSerializable(obj);
+    await expect(() => {
+      (obj as any).prop = 2;
+    }).not.toThrow();
+  });
+
+  test('does not warn when modifying converted Int32Array', async () => {
+    const obj = new Int32Array(2);
+    createSerializable(obj);
+    await expect(() => {
+      obj[1] = 2;
+    }).not.toThrow();
+  });
+
+  test('handles unconfigurable object without throwing', async () => {
+    const obj = {};
+    Object.defineProperty(obj, 'prop', {
+      value: 1,
+      writable: false,
+      enumerable: true,
+      configurable: false,
+    });
+    await expect(() => {
+      createSerializable(obj);
+    }).not.toThrow();
   });
 });
 
