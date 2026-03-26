@@ -1,5 +1,6 @@
 package com.swmansion.reanimated
 
+import com.facebook.react.bridge.WritableArray
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.events.Event
 import com.facebook.react.uimanager.events.RCTModernEventEmitter
@@ -29,6 +30,38 @@ class CopiedEvent(event: Event<*>) {
     init {
         event.dispatchModern(
             object : RCTModernEventEmitter {
+                override fun receiveTouches(
+                    eventName: String,
+                    touches: WritableArray,
+                    changedIndices: WritableArray,
+                ) {
+                    // noop
+                }
+
+                override fun receiveEvent(
+                    targetTag: Int,
+                    eventName: String,
+                    params: WritableMap?,
+                ) {
+                    this@CopiedEvent.targetTag = targetTag
+                    this@CopiedEvent.eventName = eventName
+                    assert(params != null)
+                    this@CopiedEvent.payload = params!!.copy()
+                }
+
+                override fun receiveEvent(
+                    surfaceId: Int,
+                    targetTag: Int,
+                    eventName: String,
+                    params: WritableMap?,
+                ) {
+                    this@CopiedEvent.surfaceId = surfaceId
+                    this@CopiedEvent.targetTag = targetTag
+                    this@CopiedEvent.eventName = eventName
+                    assert(params != null)
+                    this@CopiedEvent.payload = params!!.copy()
+                }
+
                 override fun receiveEvent(
                     surfaceId: Int,
                     targetTag: Int,
