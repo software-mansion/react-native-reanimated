@@ -2,505 +2,296 @@
 import 'react-native-reanimated';
 import React from 'react';
 
-const AboutExample: React.FC = (props) =>
-  React.createElement(require('./AboutExample').default, props);
-const AmountExample: React.FC = (props) =>
-  React.createElement(require('./AmountExample').default, props);
-const AndroidDrawPassExample: React.FC = (props) =>
-  React.createElement(require('./AndroidDrawPassExample').default, props);
-const AnimatableRefExample: React.FC = (props) =>
-  React.createElement(require('./AnimatableRefExample').default, props);
-const AnimatedKeyboardExample: React.FC = (props) =>
-  React.createElement(require('./AnimatedKeyboardExample').default, props);
-const AnimatedListExample: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/AnimatedList').default,
-    props
-  );
-const AnimatedPropsExample: React.FC = (props) =>
-  React.createElement(require('./AnimatedPropsExample').default, props);
-const AnimatedSensorAccelerometerExample: React.FC = (props) =>
-  React.createElement(
-    require('./AnimatedSensorAccelerometerExample').default,
-    props
-  );
-const AnimatedSensorGravityExample: React.FC = (props) =>
-  React.createElement(require('./AnimatedSensorGravityExample').default, props);
-const AnimatedSensorGyroscopeExample: React.FC = (props) =>
-  React.createElement(
-    require('./AnimatedSensorGyroscopeExample').default,
-    props
-  );
-const AnimatedSensorMagneticFieldExample: React.FC = (props) =>
-  React.createElement(
-    require('./AnimatedSensorMagneticFieldExample').default,
-    props
-  );
-const AnimatedSensorRotationExample: React.FC = (props) =>
-  React.createElement(
-    require('./AnimatedSensorRotationExample').default,
-    props
-  );
-const AnimatedStyleUpdateExample: React.FC = (props) =>
-  React.createElement(require('./AnimatedStyleUpdateExample').default, props);
-const AnimatedTabBarExample: React.FC = (props) =>
-  React.createElement(require('./AnimatedTabBarExample').default, props);
-const AnimatedTextWidthExample: React.FC = (props) =>
-  React.createElement(require('./AnimatedTextWidthExample').default, props);
-const ArticleProgressExample: React.FC = (props) =>
-  React.createElement(require('./ArticleProgressExample').default, props);
-const BBExample: React.FC = (props) =>
-  React.createElement(require('./LayoutAnimations/BBExample').default, props);
-const BasicLayoutAnimation: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/BasicLayoutAnimation').default,
-    props
-  );
-const BasicNestedAnimation: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/BasicNestedAnimation').default,
-    props
-  );
-const BasicNestedLayoutAnimation: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/BasicNestedLayoutAnimation').default,
-    props
-  );
-const BokehExample: React.FC = (props) =>
-  React.createElement(require('./BokehExample').default, props);
-const BorderRadiiExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/BorderRadii').default,
-    props
-  );
-const BottomSheetExample: React.FC = (props) =>
-  React.createElement(require('./BottomSheetExample').default, props);
-const BottomTabsExample: React.FC = (props) =>
-  React.createElement(require('./LayoutAnimations/BottomTabs').default, props);
-const BouncingBoxExample: React.FC = (props) =>
-  React.createElement(require('./BouncingBoxExample').default, props);
-const BubblesExample: React.FC = (props) =>
-  React.createElement(require('./BubblesExample').default, props);
-const CardExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/Card').default,
-    props
-  );
-const Carousel: React.FC = (props) =>
-  React.createElement(require('./LayoutAnimations/Carousel').default, props);
-const ChangeThemeExample: React.FC = (props) =>
-  React.createElement(require('./LayoutAnimations/ChangeTheme').default, props);
-const ChangeThemeSharedExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/ChangeTheme').default,
-    props
-  );
-const ChatHeadsExample: React.FC = (props) =>
-  React.createElement(require('./ChatHeadsExample').default, props);
-const ChessExample: React.FC = (props) =>
-  React.createElement(require('./ChessExample').default, props);
-const ChessboardExample: React.FC = (props) =>
-  React.createElement(require('./ChessboardExample').default, props);
-const CircularSliderExample: React.FC = (props) =>
-  React.createElement(require('./CircularSliderExample').default, props);
-const ColorExample: React.FC = (props) =>
-  React.createElement(require('./ColorExample').default, props);
-const ColorInterpolationExample: React.FC = (props) =>
-  React.createElement(require('./ColorInterpolationExample').default, props);
-const CombinedTest: React.FC = (props) =>
-  React.createElement(require('./LayoutAnimations/Combined').default, props);
-const ComposedHandlerConditionalExample: React.FC = (props) =>
-  React.createElement(
-    require('./ComposedHandlerConditionalExample').default,
-    props
-  );
-const ComposedHandlerDifferentEventsExample: React.FC = (props) =>
-  React.createElement(
-    require('./ComposedHandlerDifferentEventsExample').default,
-    props
-  );
-const ComposedHandlerInternalMergingExample: React.FC = (props) =>
-  React.createElement(
-    require('./ComposedHandlerInternalMergingExample').default,
-    props
-  );
-const CopySerializablePerformanceTest: React.FC = (props) =>
-  React.createElement(
-    require('./CopySerializablePerformanceTest').default,
-    props
-  );
-const CounterExample: React.FC = (props) =>
-  React.createElement(require('./CounterExample').default, props);
-const CustomLayoutAnimationScreen: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/CustomLayout').default,
-    props
-  );
-const CustomTransitionExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/CustomTransition').default,
-    props
-  );
-const DefaultAnimations: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/DefaultAnimations').default,
-    props
-  );
-const DeleteAncestorOfExiting: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/DeleteAncestorOfExiting').default,
-    props
-  );
-const DetachAnimatedStylesExample: React.FC = (props) =>
-  React.createElement(require('./DetachAnimatedStylesExample').default, props);
-const DispatchCommandExample: React.FC = (props) =>
-  React.createElement(require('./DispatchCommandExample').default, props);
-const DragAndSnapExample: React.FC = (props) =>
-  React.createElement(require('./DragAndSnapExample').default, props);
-const DuplicateTagsExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/DuplicateTags').default,
-    props
-  );
-const DurationZeroExample: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/DurationZero').default,
-    props
-  );
-const DynamicColorIOSExample: React.FC = (props) =>
-  React.createElement(require('./DynamicColorIOSExample').default, props);
-const EmojiWaterfallExample: React.FC = (props) =>
-  React.createElement(require('./EmojiWaterfallExample').default, props);
-const EmptyExample: React.FC = (props) =>
-  React.createElement(require('./EmptyExample').default, props);
-const ExtrapolationExample: React.FC = (props) =>
-  React.createElement(require('./ExtrapolationExample').default, props);
-const FetchExample: React.FC = (props) =>
-  React.createElement(require('./FetchExample').default, props);
-const FilterExample: React.FC = (props) =>
-  React.createElement(require('./FilterExample').default, props);
-const FlatListExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/FlatList').default,
-    props
-  );
-const FlatListSkipEnteringExiting: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/FlatListSkipEnteringExiting').default,
-    props
-  );
-const FlatListWithLayoutAnimations: React.FC = (props) =>
-  React.createElement(
-    require('./FlatListWithLayoutAnimationsExample').default,
-    props
-  );
-const FpsExample: React.FC = (props) =>
-  React.createElement(require('./FpsExample').default, props);
-const FrameCallbackExample: React.FC = (props) =>
-  React.createElement(require('./FrameCallbackExample').default, props);
-const FreezeExample: React.FC = (props) =>
-  React.createElement(require('./FreezeExample').default, props);
-const GalleryExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/Gallery').default,
-    props
-  );
-const Game2048Example: React.FC = (props) =>
-  React.createElement(require('./Game2048Example').default, props);
-const GestureHandlerExample: React.FC = (props) =>
-  React.createElement(require('./GestureHandlerExample').default, props);
-const GetViewPropExample: React.FC = (props) =>
-  React.createElement(require('./GetViewPropExample').default, props);
-const HabitsExample: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/HabitsExample').default,
-    props
-  );
-const HermesSamplingProfilerExample: React.FC = (props) =>
-  React.createElement(
-    require('./HermesSamplingProfilerExample').default,
-    props
-  );
-const IPodExample: React.FC = (props) =>
-  React.createElement(require('./IPodExample').default, props);
-const ImageStackExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/ImageStack').default,
-    props
-  );
-const InstanceDiscoveryExample: React.FC = (props) =>
-  React.createElement(require('./InstanceDiscoveryExample').default, props);
-const InvalidValueAccessExample: React.FC = (props) =>
-  React.createElement(require('./InvalidValueAccessExample').default, props);
-const InvertedFlatListExample: React.FC = (props) =>
-  React.createElement(require('./InvertedFlatListExample').default, props);
-const KeyframeAnimation: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/KeyframeAnimation').default,
-    props
-  );
-const LayoutAnimationExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/LayoutAnimation').default,
-    props
-  );
-const LayoutTransitionExample: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/LayoutTransitionExample').default,
-    props
-  );
-const LettersExample: React.FC = (props) =>
-  React.createElement(require('./LettersExample').default, props);
-const LightBoxExample: React.FC = (props) =>
-  React.createElement(require('./LightBoxExample').default, props);
-const LiquidSwipe: React.FC = (props) =>
-  React.createElement(require('./LiquidSwipe/LiquidSwipe').default, props);
-const ListItemLayoutAnimation: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/ListItemLayoutAnimation').default,
-    props
-  );
-const LogExample: React.FC = (props) =>
-  React.createElement(require('./LogExample').default, props);
-const ManyScreensExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/ManyScreens').default,
-    props
-  );
-const ManyTagsExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/ManyTags').default,
-    props
-  );
-const MatrixTransform: React.FC = (props) =>
-  React.createElement(require('./MatrixTransform').default, props);
-const MeasureExample: React.FC = (props) =>
-  React.createElement(require('./MeasureExample').default, props);
-const MemoExample: React.FC = (props) =>
-  React.createElement(require('./MemoExample').default, props);
-const Modal: React.FC = (props) =>
-  React.createElement(require('./LayoutAnimations/Modal').default, props);
-const ModalExitingExample: React.FC = (props) =>
-  React.createElement(require('./ModalExitingExample').default, props);
-const ModalNewAPI: React.FC = (props) =>
-  React.createElement(require('./LayoutAnimations/ModalNewAPI').default, props);
-const ModalsExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/Modals').default,
-    props
-  );
-const ModifyExample: React.FC = (props) =>
-  React.createElement(require('./ModifyExample').default, props);
-const MountingUnmounting: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/MountingUnmounting').default,
-    props
-  );
-const MoveWithExiting: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/MoveWithExiting').default,
-    props
-  );
-const NativeModals: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/NativeModals').default,
-    props
-  );
-const NestedLayoutAnimationConfig: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/NestedLayoutAnimationConfig').default,
-    props
-  );
-const NestedNativeStacksWithLayout: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/NestedNativeStacksWithLayout').default,
-    props
-  );
-const NestedRotationExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/NestedRotation').default,
-    props
-  );
-const NestedStacksExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/NestedStacks').default,
-    props
-  );
-const NestedTest: React.FC = (props) =>
-  React.createElement(require('./LayoutAnimations/Nested').default, props);
-const NewestShadowNodesRegistryRemoveExample: React.FC = (props) =>
-  React.createElement(
-    require('./NewestShadowNodesRegistryRemoveExample').default,
-    props
-  );
-const NonLayoutPropAndRenderExample: React.FC = (props) =>
-  React.createElement(
-    require('./NonLayoutPropAndRenderExample').default,
-    props
-  );
-const OldMeasureExample: React.FC = (props) =>
-  React.createElement(require('./OldMeasureExample').default, props);
-const OlympicAnimation: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/OlympicAnimation').default,
-    props
-  );
-const OpacityTransformExample: React.FC = (props) =>
-  React.createElement(require('./OpacityTransformExample').default, props);
-const OverlappingBoxesExample: React.FC = (props) =>
-  React.createElement(require('./OverlappingBoxesExample').default, props);
-const PendulumExample: React.FC = (props) =>
-  React.createElement(require('./PendulumExample').default, props);
-const PerformanceMonitorExample: React.FC = (props) =>
-  React.createElement(require('./PerfomanceMonitorExample').default, props);
-const PinExample: React.FC = (props) =>
-  React.createElement(require('./PinExample').default, props);
-const PlanetsExample: React.FC = (props) =>
-  React.createElement(require('./PlanetsExample').default, props);
-const PlatformColorExample: React.FC = (props) =>
-  React.createElement(require('./PlatformColorExample').default, props);
-const ProfilesExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/Profiles').default,
-    props
-  );
-const ProgressTransitionExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/ProgressTransition').default,
-    props
-  );
-const RainbowExample: React.FC = (props) =>
-  React.createElement(require('./RainbowExample').default, props);
-const ReactionsCounterExample: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/ReactionsCounterExample').default,
-    props
-  );
-const ReducedMotionExample: React.FC = (props) =>
-  React.createElement(require('./ReducedMotionExample').default, props);
-const ReducedMotionLayoutExample: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/ReducedMotionLayoutExample').default,
-    props
-  );
-const ReducedMotionSharedExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/ReducedMotionSharedExample').default,
-    props
-  );
-const RefExample: React.FC = (props) =>
-  React.createElement(require('./RefExample').default, props);
-const ReparentingExample: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/ReparentingExample').default,
-    props
-  );
-const RestoreStateExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/RestoreState').default,
-    props
-  );
-const RunOnAsyncExample: React.FC = (props) =>
-  React.createElement(require('./RunOnAsyncExample').default, props);
-const RuntimeTestsExample: React.FC = (props) =>
-  React.createElement(
-    require('./RuntimeTests/RuntimeTestsExample').default,
-    props
-  );
-const ScreenStackExample: React.FC = (props) =>
-  React.createElement(require('./ScreenStackExample').default, props);
-const ScreenStackHeaderConfigBackgroundColorExample: React.FC = (props) =>
-  React.createElement(
-    require('./ScreenStackHeaderConfigBackgroundColorExample').default,
-    props
-  );
-const ScrollEventExample: React.FC = (props) =>
-  React.createElement(require('./ScrollEventExample').default, props);
-const ScrollPerformanceExample: React.FC = (props) =>
-  React.createElement(require('./ScrollPerformanceExample').default, props);
-const ScrollToExample: React.FC = (props) =>
-  React.createElement(require('./ScrollToExample').default, props);
-const ScrollViewExample: React.FC = (props) =>
-  React.createElement(require('./ScrollViewExample').default, props);
-const ScrollViewOffsetExample: React.FC = (props) =>
-  React.createElement(require('./ScrollViewOffsetExample').default, props);
-const ScrollableViewExample: React.FC = (props) =>
-  React.createElement(require('./ScrollableViewExample').default, props);
-const SetNativePropsExample: React.FC = (props) =>
-  React.createElement(require('./SetNativePropsExample').default, props);
-const ShadowNodesCloningExample: React.FC = (props) =>
-  React.createElement(require('./ShadowNodesCloningExample').default, props);
-const SharedStyleExample: React.FC = (props) =>
-  React.createElement(require('./SharedStyleExample').default, props);
-const SpringLayoutAnimation: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/SpringLayoutAnimation').default,
-    props
-  );
-const SpringPresetsExample: React.FC = (props) =>
-  React.createElement(require('./SpringPresetsExample').default, props);
-const StickyHeaderExample: React.FC = (props) =>
-  React.createElement(require('./StickyHeaderExample').default, props);
-const StrictDOMExample: React.FC = (props) =>
-  React.createElement(require('./StrictDOMExample').default, props);
-const StrictModeComparison: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/StrictModeComparisonExample').default,
-    props
-  );
-const SvgExample: React.FC = (props) =>
-  React.createElement(require('./SvgExample').default, props);
-const SwipeableList: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/SwipeableList').default,
-    props
-  );
-const SwipeableListExample: React.FC = (props) =>
-  React.createElement(require('./SwipeableListExample').default, props);
-const SyncBackToReactExample: React.FC = (props) =>
-  React.createElement(require('./SyncBackToReactExample').default, props);
-const SynchronizablePerformanceExample: React.FC = (props) =>
-  React.createElement(require('./SynchronizableExample').default, props);
-const SynchronousPropsExample: React.FC = (props) =>
-  React.createElement(require('./SynchronousPropsExample').default, props);
-const SystraceSectionExample: React.FC = (props) =>
-  React.createElement(require('./SystraceSectionExample').default, props);
-const TabNavigatorExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/TabNavigatorExample').default,
-    props
-  );
-const ThirdPartyComponentsExample: React.FC = (props) =>
-  React.createElement(require('./ThirdPartyComponentsExample').default, props);
-const TransformExample: React.FC = (props) =>
-  React.createElement(require('./TransformExample').default, props);
-const TransformOriginExample: React.FC = (props) =>
-  React.createElement(require('./TransformOriginExample').default, props);
-const TransitionRestartExample: React.FC = (props) =>
-  React.createElement(
-    require('./SharedElementTransitions/TransitionRestart').default,
-    props
-  );
-const UpdatePropsPerfExample: React.FC = (props) =>
-  React.createElement(require('./UpdatePropsPerfExample').default, props);
-const ViewFlatteningExample: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/ViewFlattening').default,
-    props
-  );
-const ViewRecyclingExample: React.FC = (props) =>
-  React.createElement(
-    require('./LayoutAnimations/ViewRecyclingExample').default,
-    props
-  );
-const WidthExample: React.FC = (props) =>
-  React.createElement(require('./WidthExample').default, props);
-const WithClampExample: React.FC = (props) =>
-  React.createElement(require('./WithClampExample').default, props);
-const WithoutBabelPluginExample: React.FC = (props) =>
-  React.createElement(require('./WithoutBabelPluginExample').default, props);
-const WobbleExample: React.FC = (props) =>
-  React.createElement(require('./WobbleExample').default, props);
+const AboutExample = () => require('./AboutExample').default() as React.FC;
+const AmountExample = () => require('./AmountExample').default() as React.FC;
+const AndroidDrawPassExample = () =>
+  require('./AndroidDrawPassExample').default() as React.FC;
+const AnimatableRefExample = () =>
+  require('./AnimatableRefExample').default() as React.FC;
+const AnimatedKeyboardExample = () =>
+  require('./AnimatedKeyboardExample').default() as React.FC;
+const AnimatedListExample = () =>
+  require('./LayoutAnimations/AnimatedList').default() as React.FC;
+const AnimatedPropsExample = () =>
+  require('./AnimatedPropsExample').default() as React.FC;
+const AnimatedSensorAccelerometerExample = () =>
+  require('./AnimatedSensorAccelerometerExample').default() as React.FC;
+const AnimatedSensorGravityExample = () =>
+  require('./AnimatedSensorGravityExample').default() as React.FC;
+const AnimatedSensorGyroscopeExample = () =>
+  require('./AnimatedSensorGyroscopeExample').default() as React.FC;
+const AnimatedSensorMagneticFieldExample = () =>
+  require('./AnimatedSensorMagneticFieldExample').default() as React.FC;
+const AnimatedSensorRotationExample = () =>
+  require('./AnimatedSensorRotationExample').default() as React.FC;
+const AnimatedStyleUpdateExample = () =>
+  require('./AnimatedStyleUpdateExample').default() as React.FC;
+const AnimatedTabBarExample = () =>
+  require('./AnimatedTabBarExample').default() as React.FC;
+const AnimatedTextWidthExample = () =>
+  require('./AnimatedTextWidthExample').default() as React.FC;
+const ArticleProgressExample = () =>
+  require('./ArticleProgressExample').default() as React.FC;
+const BBExample = () =>
+  require('./LayoutAnimations/BBExample').default() as React.FC;
+const BasicLayoutAnimation = () =>
+  require('./LayoutAnimations/BasicLayoutAnimation').default() as React.FC;
+const BasicNestedAnimation = () =>
+  require('./LayoutAnimations/BasicNestedAnimation').default() as React.FC;
+const BasicNestedLayoutAnimation = () =>
+  require('./LayoutAnimations/BasicNestedLayoutAnimation').default() as React.FC;
+const BokehExample = () => require('./BokehExample').default() as React.FC;
+const BorderRadiiExample = () =>
+  require('./SharedElementTransitions/BorderRadii').default() as React.FC;
+const BottomSheetExample = () =>
+  require('./BottomSheetExample').default() as React.FC;
+const BottomTabsExample = () =>
+  require('./LayoutAnimations/BottomTabs').default() as React.FC;
+const BouncingBoxExample = () =>
+  require('./BouncingBoxExample').default() as React.FC;
+const BubblesExample = () => require('./BubblesExample').default() as React.FC;
+const CardExample = () =>
+  require('./SharedElementTransitions/Card').default() as React.FC;
+const Carousel = () =>
+  require('./LayoutAnimations/Carousel').default() as React.FC;
+const ChangeThemeExample = () =>
+  require('./LayoutAnimations/ChangeTheme').default() as React.FC;
+const ChangeThemeSharedExample = () =>
+  require('./SharedElementTransitions/ChangeTheme').default() as React.FC;
+const ChatHeadsExample = () =>
+  require('./ChatHeadsExample').default() as React.FC;
+const ChessExample = () => require('./ChessExample').default() as React.FC;
+const ChessboardExample = () =>
+  require('./ChessboardExample').default() as React.FC;
+const CircularSliderExample = () =>
+  require('./CircularSliderExample').default() as React.FC;
+const ColorExample = () => require('./ColorExample').default() as React.FC;
+const ColorInterpolationExample = () =>
+  require('./ColorInterpolationExample').default() as React.FC;
+const CombinedTest = () =>
+  require('./LayoutAnimations/Combined').default() as React.FC;
+const ComposedHandlerConditionalExample = () =>
+  require('./ComposedHandlerConditionalExample').default() as React.FC;
+const ComposedHandlerDifferentEventsExample = () =>
+  require('./ComposedHandlerDifferentEventsExample').default() as React.FC;
+const ComposedHandlerInternalMergingExample = () =>
+  require('./ComposedHandlerInternalMergingExample').default() as React.FC;
+const CopySerializablePerformanceTest = () =>
+  require('./CopySerializablePerformanceTest').default() as React.FC;
+const CounterExample = () => require('./CounterExample').default() as React.FC;
+const CustomLayoutAnimationScreen = () =>
+  require('./LayoutAnimations/CustomLayout').default() as React.FC;
+const CustomTransitionExample = () =>
+  require('./SharedElementTransitions/CustomTransition').default() as React.FC;
+const DefaultAnimations = () =>
+  require('./LayoutAnimations/DefaultAnimations').default() as React.FC;
+const DeleteAncestorOfExiting = () =>
+  require('./LayoutAnimations/DeleteAncestorOfExiting').default() as React.FC;
+const DetachAnimatedStylesExample = () =>
+  require('./DetachAnimatedStylesExample').default() as React.FC;
+const DispatchCommandExample = () =>
+  require('./DispatchCommandExample').default() as React.FC;
+const DragAndSnapExample = () =>
+  require('./DragAndSnapExample').default() as React.FC;
+const DuplicateTagsExample = () =>
+  require('./SharedElementTransitions/DuplicateTags').default() as React.FC;
+const DurationZeroExample = () =>
+  require('./LayoutAnimations/DurationZero').default() as React.FC;
+const DynamicColorIOSExample = () =>
+  require('./DynamicColorIOSExample').default() as React.FC;
+const EmojiWaterfallExample = () =>
+  require('./EmojiWaterfallExample').default() as React.FC;
+const EmptyExample = () => require('./EmptyExample').default() as React.FC;
+const ExtrapolationExample = () =>
+  require('./ExtrapolationExample').default() as React.FC;
+const FetchExample = () => require('./FetchExample').default() as React.FC;
+const FilterExample = () => require('./FilterExample').default() as React.FC;
+const FlatListExample = () =>
+  require('./SharedElementTransitions/FlatList').default() as React.FC;
+const FlatListSkipEnteringExiting = () =>
+  require('./LayoutAnimations/FlatListSkipEnteringExiting').default() as React.FC;
+const FlatListWithLayoutAnimations = () =>
+  require('./FlatListWithLayoutAnimationsExample').default() as React.FC;
+const FpsExample = () => require('./FpsExample').default() as React.FC;
+const FrameCallbackExample = () =>
+  require('./FrameCallbackExample').default() as React.FC;
+const FreezeExample = () => require('./FreezeExample').default() as React.FC;
+const GalleryExample = () =>
+  require('./SharedElementTransitions/Gallery').default() as React.FC;
+const Game2048Example = () =>
+  require('./Game2048Example').default() as React.FC;
+const GestureHandlerExample = () =>
+  require('./GestureHandlerExample').default() as React.FC;
+const GetViewPropExample = () =>
+  require('./GetViewPropExample').default() as React.FC;
+const HabitsExample = () =>
+  require('./LayoutAnimations/HabitsExample').default() as React.FC;
+const HermesSamplingProfilerExample = () =>
+  require('./HermesSamplingProfilerExample').default() as React.FC;
+const IPodExample = () => require('./IPodExample').default() as React.FC;
+const ImageStackExample = () =>
+  require('./SharedElementTransitions/ImageStack').default() as React.FC;
+const InstanceDiscoveryExample = () =>
+  require('./InstanceDiscoveryExample').default() as React.FC;
+const InvalidValueAccessExample = () =>
+  require('./InvalidValueAccessExample').default() as React.FC;
+const InvertedFlatListExample = () =>
+  require('./InvertedFlatListExample').default() as React.FC;
+const KeyframeAnimation = () =>
+  require('./LayoutAnimations/KeyframeAnimation').default() as React.FC;
+const LayoutAnimationExample = () =>
+  require('./SharedElementTransitions/LayoutAnimation').default() as React.FC;
+const LayoutTransitionExample = () =>
+  require('./LayoutAnimations/LayoutTransitionExample').default() as React.FC;
+const LettersExample = () => require('./LettersExample').default() as React.FC;
+const LightBoxExample = () =>
+  require('./LightBoxExample').default() as React.FC;
+const LiquidSwipe = () =>
+  require('./LiquidSwipe/LiquidSwipe').default() as React.FC;
+const ListItemLayoutAnimation = () =>
+  require('./LayoutAnimations/ListItemLayoutAnimation').default() as React.FC;
+const LogExample = () => require('./LogExample').default() as React.FC;
+const ManyScreensExample = () =>
+  require('./SharedElementTransitions/ManyScreens').default() as React.FC;
+const ManyTagsExample = () =>
+  require('./SharedElementTransitions/ManyTags').default() as React.FC;
+const MatrixTransform = () =>
+  require('./MatrixTransform').default() as React.FC;
+const MeasureExample = () => require('./MeasureExample').default() as React.FC;
+const MemoExample = () => require('./MemoExample').default() as React.FC;
+const Modal = () => require('./LayoutAnimations/Modal').default() as React.FC;
+const ModalExitingExample = () =>
+  require('./ModalExitingExample').default() as React.FC;
+const ModalNewAPI = () =>
+  require('./LayoutAnimations/ModalNewAPI').default() as React.FC;
+const ModalsExample = () =>
+  require('./SharedElementTransitions/Modals').default() as React.FC;
+const ModifyExample = () => require('./ModifyExample').default() as React.FC;
+const MountingUnmounting = () =>
+  require('./LayoutAnimations/MountingUnmounting').default() as React.FC;
+const MoveWithExiting = () =>
+  require('./LayoutAnimations/MoveWithExiting').default() as React.FC;
+const NativeModals = () =>
+  require('./LayoutAnimations/NativeModals').default() as React.FC;
+const NestedLayoutAnimationConfig = () =>
+  require('./LayoutAnimations/NestedLayoutAnimationConfig').default() as React.FC;
+const NestedNativeStacksWithLayout = () =>
+  require('./LayoutAnimations/NestedNativeStacksWithLayout').default() as React.FC;
+const NestedRotationExample = () =>
+  require('./SharedElementTransitions/NestedRotation').default() as React.FC;
+const NestedStacksExample = () =>
+  require('./SharedElementTransitions/NestedStacks').default() as React.FC;
+const NestedTest = () =>
+  require('./LayoutAnimations/Nested').default() as React.FC;
+const NewestShadowNodesRegistryRemoveExample = () =>
+  require('./NewestShadowNodesRegistryRemoveExample').default() as React.FC;
+const NonLayoutPropAndRenderExample = () =>
+  require('./NonLayoutPropAndRenderExample').default() as React.FC;
+const OldMeasureExample = () =>
+  require('./OldMeasureExample').default() as React.FC;
+const OlympicAnimation = () =>
+  require('./LayoutAnimations/OlympicAnimation').default() as React.FC;
+const OpacityTransformExample = () =>
+  require('./OpacityTransformExample').default() as React.FC;
+const OverlappingBoxesExample = () =>
+  require('./OverlappingBoxesExample').default() as React.FC;
+const PendulumExample = () =>
+  require('./PendulumExample').default() as React.FC;
+const PerformanceMonitorExample = () =>
+  require('./PerfomanceMonitorExample').default() as React.FC;
+const PinExample = () => require('./PinExample').default() as React.FC;
+const PlanetsExample = () => require('./PlanetsExample').default() as React.FC;
+const PlatformColorExample = () =>
+  require('./PlatformColorExample').default() as React.FC;
+const ProfilesExample = () =>
+  require('./SharedElementTransitions/Profiles').default() as React.FC;
+const ProgressTransitionExample = () =>
+  require('./SharedElementTransitions/ProgressTransition').default() as React.FC;
+const RainbowExample = () => require('./RainbowExample').default() as React.FC;
+const ReactionsCounterExample = () =>
+  require('./LayoutAnimations/ReactionsCounterExample').default() as React.FC;
+const ReducedMotionExample = () =>
+  require('./ReducedMotionExample').default() as React.FC;
+const ReducedMotionLayoutExample = () =>
+  require('./LayoutAnimations/ReducedMotionLayoutExample').default() as React.FC;
+const ReducedMotionSharedExample = () =>
+  require('./SharedElementTransitions/ReducedMotionSharedExample').default() as React.FC;
+const RefExample = () => require('./RefExample').default() as React.FC;
+const ReparentingExample = () =>
+  require('./LayoutAnimations/ReparentingExample').default() as React.FC;
+const RestoreStateExample = () =>
+  require('./SharedElementTransitions/RestoreState').default() as React.FC;
+const RunOnAsyncExample = () =>
+  require('./RunOnAsyncExample').default() as React.FC;
+const RuntimeTestsExample = () =>
+  require('./RuntimeTests/RuntimeTestsExample').default() as React.FC;
+const ScreenStackExample = () =>
+  require('./ScreenStackExample').default() as React.FC;
+const ScreenStackHeaderConfigBackgroundColorExample = () =>
+  require('./ScreenStackHeaderConfigBackgroundColorExample').default() as React.FC;
+const ScrollEventExample = () =>
+  require('./ScrollEventExample').default() as React.FC;
+const ScrollPerformanceExample = () =>
+  require('./ScrollPerformanceExample').default() as React.FC;
+const ScrollToExample = () =>
+  require('./ScrollToExample').default() as React.FC;
+const ScrollViewExample = () =>
+  require('./ScrollViewExample').default() as React.FC;
+const ScrollViewOffsetExample = () =>
+  require('./ScrollViewOffsetExample').default() as React.FC;
+const ScrollableViewExample = () =>
+  require('./ScrollableViewExample').default() as React.FC;
+const SetNativePropsExample = () =>
+  require('./SetNativePropsExample').default() as React.FC;
+const ShadowNodesCloningExample = () =>
+  require('./ShadowNodesCloningExample').default() as React.FC;
+const SharedStyleExample = () =>
+  require('./SharedStyleExample').default() as React.FC;
+const SpringLayoutAnimation = () =>
+  require('./LayoutAnimations/SpringLayoutAnimation').default() as React.FC;
+const SpringPresetsExample = () =>
+  require('./SpringPresetsExample').default() as React.FC;
+const StickyHeaderExample = () =>
+  require('./StickyHeaderExample').default() as React.FC;
+const StrictDOMExample = () =>
+  require('./StrictDOMExample').default() as React.FC;
+const StrictModeComparison = () =>
+  require('./LayoutAnimations/StrictModeComparisonExample').default() as React.FC;
+const SvgExample = () => require('./SvgExample').default() as React.FC;
+const SwipeableList = () =>
+  require('./LayoutAnimations/SwipeableList').default() as React.FC;
+const SwipeableListExample = () =>
+  require('./SwipeableListExample').default() as React.FC;
+const SyncBackToReactExample = () =>
+  require('./SyncBackToReactExample').default() as React.FC;
+const SynchronizablePerformanceExample = () =>
+  require('./SynchronizableExample').default() as React.FC;
+const SynchronousPropsExample = () =>
+  require('./SynchronousPropsExample').default() as React.FC;
+const SystraceSectionExample = () =>
+  require('./SystraceSectionExample').default() as React.FC;
+const TabNavigatorExample = () =>
+  require('./SharedElementTransitions/TabNavigatorExample').default() as React.FC;
+const ThirdPartyComponentsExample = () =>
+  require('./ThirdPartyComponentsExample').default() as React.FC;
+const TransformExample = () =>
+  require('./TransformExample').default() as React.FC;
+const TransformOriginExample = () =>
+  require('./TransformOriginExample').default() as React.FC;
+const TransitionRestartExample = () =>
+  require('./SharedElementTransitions/TransitionRestart').default() as React.FC;
+const UpdatePropsPerfExample = () =>
+  require('./UpdatePropsPerfExample').default() as React.FC;
+const ViewFlatteningExample = () =>
+  require('./LayoutAnimations/ViewFlattening').default() as React.FC;
+const ViewRecyclingExample = () =>
+  require('./LayoutAnimations/ViewRecyclingExample').default() as React.FC;
+const WidthExample = () => require('./WidthExample').default() as React.FC;
+const WithClampExample = () =>
+  require('./WithClampExample').default() as React.FC;
+const WithoutBabelPluginExample = () =>
+  require('./WithoutBabelPluginExample').default() as React.FC;
+const WobbleExample = () => require('./WobbleExample').default() as React.FC;
 
 export const REAPlatform = {
   IOS: 'ios',
