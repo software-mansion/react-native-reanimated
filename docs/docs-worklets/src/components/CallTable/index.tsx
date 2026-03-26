@@ -14,18 +14,25 @@ interface CallTableProps {
 }
 
 function renderCellValue(value: boolean) {
-  return value ? '✅' : '❌';
+  const label = value ? 'Supported' : 'Not supported';
+  const symbol = value ? '✅' : '❌';
+
+  return (
+    <span role="img" aria-label={label}>
+      {symbol}
+    </span>
+  );
 }
 
 export function CallTable({ bundleMode, noBundleMode }: CallTableProps) {
   const rows = [
     {
-      label: 'Bundle mode enabled',
+      label: 'Enabled',
       data: bundleMode,
       className: styles.bundleEnabled,
     },
     {
-      label: 'Bundle mode disabled',
+      label: 'Disabled',
       data: noBundleMode,
       className: styles.bundleDisabled,
     },
@@ -36,16 +43,18 @@ export function CallTable({ bundleMode, noBundleMode }: CallTableProps) {
       <table className={styles.table}>
         <thead>
           <tr>
-            <th></th>
-            <th>RN Runtime</th>
-            <th>UI Runtime</th>
-            <th>Worker Runtime</th>
+            <th scope="col">Bundle Mode</th>
+            <th scope="col">RN Runtime</th>
+            <th scope="col">UI Runtime</th>
+            <th scope="col">Worker Runtime</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => (
             <tr key={row.label}>
-              <td className={row.className}>{row.label}</td>
+              <th scope="row" className={row.className}>
+                {row.label}
+              </th>
               <td>{renderCellValue(row.data.rnRuntime)}</td>
               <td>{renderCellValue(row.data.uiRuntime)}</td>
               <td>{renderCellValue(row.data.workerRuntime)}</td>

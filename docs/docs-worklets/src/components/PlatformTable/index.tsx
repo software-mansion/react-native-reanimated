@@ -17,8 +17,12 @@ export function PlatformTable({ native, web }: PlatformTableProps) {
         </thead>
         <tbody>
           <tr>
-            <td>{native ? '✅' : '❌'}</td>
-            <td>{web ? '✅' : '❌'}</td>
+            <td aria-label={native ? 'Supported' : 'Not supported'}>
+              {native ? '✅' : '❌'}
+            </td>
+            <td aria-label={web ? 'Supported' : 'Not supported'}>
+              {web ? '✅' : '❌'}
+            </td>
           </tr>
         </tbody>
       </table>

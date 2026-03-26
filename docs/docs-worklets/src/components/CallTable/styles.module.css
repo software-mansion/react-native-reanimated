@@ -35,22 +35,6 @@
   font-weight: 600;
 }
 
-.supported {
-  color: var(--swm-compatibility-text-color);
-  background-color: var(--swm-compatibility-supported-background);
-  text-align: center;
-  text-transform: capitalize;
-  padding: 12px;
-}
-
-.notSupported {
-  color: var(--swm-compatibility-text-color);
-  background-color: var(--swm-compatibility-not-supported-background);
-  text-align: center;
-  text-transform: capitalize;
-  padding: 12px;
-}
-
 .bundleEnabled {
   background-color: rgba(0, 180, 0, 0.08);
 }
