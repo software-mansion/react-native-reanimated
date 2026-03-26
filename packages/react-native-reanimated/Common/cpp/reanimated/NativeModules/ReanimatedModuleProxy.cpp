@@ -1195,7 +1195,7 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
   } else {
     for (auto const &[shadowNodeFamily, props] : updatesBatch) {
       SurfaceId surfaceId = shadowNodeFamily->getSurfaceId();
-      propsMapBySurface[surfaceId][shadowNodeFamily.get()].emplace_back(props);
+      propsMapBySurface[surfaceId][shadowNodeFamily].emplace_back(props);
     }
   }
 

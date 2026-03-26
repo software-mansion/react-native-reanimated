@@ -56,12 +56,12 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
   auto copiedRegistry = updatesRegistry_;
   for (const auto &[tag, pair] : copiedRegistry) {
     const auto &[shadowNodeFamily, props] = pair;
-    auto it = propsMap.find(shadowNodeFamily.get());
+    const auto it = propsMap.find(shadowNodeFamily);
 
     if (it == propsMap.cend()) {
       auto propsVector = std::vector<RawProps>{};
       propsVector.emplace_back(RawProps(props));
-      propsMap.emplace(shadowNodeFamily.get(), propsVector);
+      propsMap.emplace(shadowNodeFamily, propsVector);
     } else {
       it->second.push_back(RawProps(props));
     }
