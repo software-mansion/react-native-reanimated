@@ -141,10 +141,9 @@ function useNavigationState() {
   >();
 
   const updateNavigationState = useCallback((state?: NavigationState) => {
-    if (state === undefined) {
-      return;
+    if (state !== undefined) {
+      storage.set(PERSISTENCE_KEY, JSON.stringify(state));
     }
-    storage.set(PERSISTENCE_KEY, JSON.stringify(state));
   }, []);
 
   useEffect(() => {
