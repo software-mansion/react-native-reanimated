@@ -4,6 +4,7 @@
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/Defs.h>
+#include <worklets/Tools/PlatformLogger.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
@@ -60,7 +61,8 @@ std::shared_ptr<JSIWorkletsModuleProxy> WorkletsModuleProxy::createJSIWorkletsMo
       runtimeManager_,
       uiWorkletRuntime_,
       runtimeBindings_,
-      bundleModeConfig_);
+      bundleModeConfig_,
+      [](const std::string &message, unsigned int /*logLevel*/) { PlatformLogger::log(message); });
 }
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {

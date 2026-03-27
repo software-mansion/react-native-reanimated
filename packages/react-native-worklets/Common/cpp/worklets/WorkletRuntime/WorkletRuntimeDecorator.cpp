@@ -73,7 +73,8 @@ void WorkletRuntimeDecorator::decorate(
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const bool isDevBundle,
     jsi::Object &&jsiWorkletsModuleProxy,
-    const std::shared_ptr<EventLoop> &eventLoop) {
+    const std::shared_ptr<EventLoop> &eventLoop,
+    const NativeLogger &nativeLogger) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
@@ -118,12 +119,11 @@ void WorkletRuntimeDecorator::decorate(
           rt,
           jsi::PropNameID::forAscii(rt, "nativeLoggingHook"),
           2,
-          [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) {
+          [nativeLogger](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) {
             if (count != 2) {
               throw std::invalid_argument("nativeLoggingHook takes 2 arguments");
             }
-            PlatformLogger::log("nativeLoggingHook");
-            PlatformLogger::log(args[0].asString(rt).utf8(rt));
+            nativeLogger(args[0].asString(rt).utf8(rt), static_cast<unsigned int>(args[1].asNumber()));
             return jsi::Value::undefined();
           }));
 
