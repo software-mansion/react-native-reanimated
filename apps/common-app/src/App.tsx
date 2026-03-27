@@ -1,5 +1,4 @@
 import { PortalProvider } from '@gorhom/portal';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import type { NavigationState } from '@react-navigation/native';
 import {
@@ -9,6 +8,7 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Linking, LogBox, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { createMMKV } from 'react-native-mmkv';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { colors, flex, radius, text } from '@/theme';
@@ -131,6 +131,8 @@ function Navigator() {
 // copied from https://reactnavigation.org/docs/state-persistence/
 const PERSISTENCE_KEY = 'NAVIGATION_STATE_V1';
 
+const storage = createMMKV();
+
 function useNavigationState() {
   const [isReady, setIsReady] = useState(!__DEV__);
 
@@ -139,7 +141,10 @@ function useNavigationState() {
   >();
 
   const updateNavigationState = useCallback((state?: NavigationState) => {
-    AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state)).catch(noop);
+    if (state === undefined) {
+      return;
+    }
+    storage.set(PERSISTENCE_KEY, JSON.stringify(state));
   }, []);
 
   useEffect(() => {
@@ -149,10 +154,10 @@ function useNavigationState() {
 
         if (!IS_MACOS && !IS_WEB && initialUrl === null) {
           // Only restore state if there's no deep link and we're not on web
-          const savedStateString = await AsyncStorage.getItem(PERSISTENCE_KEY);
+          const savedStateString = storage.getString(PERSISTENCE_KEY);
           // Erase the state immediately after fetching it.
           // This prevents the app to boot on the screen that previously crashed.
-          updateNavigationState();
+          storage.remove(PERSISTENCE_KEY);
           const state = savedStateString
             ? (JSON.parse(savedStateString) as NavigationState)
             : undefined;
