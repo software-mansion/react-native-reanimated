@@ -24,6 +24,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
+#include <reanimated/PseudoStyles/PseudoStylesRegistry.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
 
@@ -115,6 +116,9 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void runCSSTransition(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &transitionConfig);
   void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag);
 
+  void registerPseudoStyle(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &config);
+  void unregisterPseudoStyle(jsi::Runtime &rt, const jsi::Value &viewTag);
+
   jsi::Value getSettledUpdates(jsi::Runtime &rt);
 
   void dispatchCommand(
@@ -185,8 +189,6 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
 #endif
-  std::shared_ptr<OperationsLoop> operationsLoop_;
-
   const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
@@ -194,6 +196,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   const std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
+  const std::shared_ptr<OperationsLoop> operationsLoop_;
+  const std::shared_ptr<PseudoStylesRegistry> pseudoStylesRegistry_;
 
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
   const PreserveMountedTagsFunction filterUnmountedTagsFunction_;

@@ -2,7 +2,7 @@
 import type { PlainStyle } from '../../common';
 import type { CSSTimingFunction } from '../easing';
 import type { TimeUnit } from './common';
-import type { AddArrayPropertyTypes } from './helpers';
+import type { AddPseudoKeyedTypes } from './helpers';
 
 export type CSSTransitionProperty<S extends object = PlainStyle> =
   | 'all'
@@ -28,7 +28,7 @@ export type SingleCSSTransitionConfig<S extends object = PlainStyle> =
   };
 
 export type CSSTransitionSettings =
-  AddArrayPropertyTypes<SingleCSSTransitionSettings>;
+  AddPseudoKeyedTypes<SingleCSSTransitionSettings>;
 
 export type CSSTransitionProperties<S extends object = PlainStyle> =
   CSSTransitionSettings & {

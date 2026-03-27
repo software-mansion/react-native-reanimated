@@ -92,6 +92,18 @@ export interface ReanimatedModuleProxy {
   unregisterCSSTransition(viewTag: number): void;
 
   getSettledUpdates(): SettledUpdate[];
+
+  registerPseudoStyle(
+    shadowNodeWrapper: ShadowNodeWrapper,
+    config: {
+      selector: string;
+      selectorStyle: StyleProps;
+      defaultStyle: StyleProps;
+      transition: CSSTransitionConfig;
+    }
+  ): void;
+
+  unregisterPseudoStyle(viewTag: number): void;
 }
 
 export interface IReanimatedModule extends Omit<

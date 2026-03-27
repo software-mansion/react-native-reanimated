@@ -10,7 +10,7 @@ function compareSnapshot(
   capturedSnapshot: OperationUpdate,
   expectNegativeValueMismatch: boolean
 ) {
-  const keys = Object.keys(capturedSnapshot) as Array<keyof OperationUpdate>;
+  const keys = Object.keys(capturedSnapshot);
   for (const key of keys) {
     const jsValue = capturedSnapshot[key];
     const nativeValue = expectedSnapshot[key];

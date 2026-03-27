@@ -12,8 +12,14 @@ import {
   isAnimationProp,
   isCSSKeyframesObject,
   isCSSKeyframesRule,
+  isPseudoSelectorValue,
   isTransitionProp,
 } from './guards';
+
+export type PseudoStylesBySelector = Record<
+  string,
+  { selectorStyle: PlainStyle; defaultStyle: PlainStyle }
+>;
 
 export function filterCSSAndStyleProperties<S extends AnyRecord>(
   style: CSSStyle<S>
@@ -21,10 +27,12 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
   ExistingCSSAnimationProperties | null,
   CSSTransitionProperties | null,
   PlainStyle,
+  PseudoStylesBySelector | null,
 ] {
   const animationProperties: Partial<CSSAnimationProperties> = {};
   let transitionProperties: Partial<CSSTransitionProperties> = {};
   const filteredStyle: AnyRecord = {};
+  const pseudoStylesBySelector: PseudoStylesBySelector = {};
 
   for (const [prop, value] of Object.entries(style)) {
     if (value === undefined) {
@@ -47,7 +55,30 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
         transitionProperties[prop] = value;
       }
     } else if (!isSharedValue(value)) {
-      filteredStyle[prop] = value;
+      if (isPseudoSelectorValue(value)) {
+        const defaultValue = value.default;
+        if (defaultValue !== undefined) {
+          filteredStyle[prop] = defaultValue;
+        }
+        for (const [selector, selectorValue] of Object.entries(value)) {
+          if (selector !== 'default' && selectorValue !== undefined) {
+            pseudoStylesBySelector[selector] ??= {
+              selectorStyle: {},
+              defaultStyle: {},
+            };
+            (pseudoStylesBySelector[selector].selectorStyle as AnyRecord)[
+              prop
+            ] = selectorValue;
+            if (defaultValue !== undefined) {
+              (pseudoStylesBySelector[selector].defaultStyle as AnyRecord)[
+                prop
+              ] = defaultValue;
+            }
+          }
+        }
+      } else {
+        filteredStyle[prop] = value;
+      }
     }
   }
 
@@ -80,7 +111,14 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
     validateCSSTransitionProps(transitionProperties);
   }
 
-  return [finalAnimationConfig, finalTransitionConfig, filteredStyle];
+  const hasPseudoStyles = Object.keys(pseudoStylesBySelector).length > 0;
+
+  return [
+    finalAnimationConfig,
+    finalTransitionConfig,
+    filteredStyle,
+    hasPseudoStyles ? pseudoStylesBySelector : null,
+  ];
 }
 
 function validateCSSAnimationProps(props: Partial<CSSAnimationProperties>) {

@@ -6,6 +6,7 @@ import { Platform, StyleSheet } from 'react-native';
 
 import type { AnyComponent, AnyRecord, PlainStyle } from '../../common';
 import { IS_JEST, SHOULD_BE_USE_WEB } from '../../common';
+import { stylePropsBuilder } from '../../common/style';
 import type {
   InternalHostInstance,
   ShadowNodeWrapper,
@@ -18,15 +19,59 @@ import type {
 import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
+import { ReanimatedModule } from '../../ReanimatedModule';
 import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
+import { normalizeCSSTransitionProperties } from '../native/normalization/transition';
+import type { CSSTransitionConfig } from '../native/types';
 import { CSSManager } from '../platform';
-import type { CSSStyle } from '../types';
+import type { CSSStyle, CSSTransitionProperties } from '../types';
+import {
+  filterCSSAndStyleProperties,
+  type PseudoStylesBySelector,
+} from '../utils/props';
 import { filterNonCSSStyleProps } from './utils';
 
 export type AnimatedComponentProps = Record<string, unknown> & {
   ref?: Ref<Component>;
   style?: StyleProp<PlainStyle>;
 };
+
+const PSEUDO_STATE_KEYS = new Set([
+  'default',
+  ':hover',
+  ':active',
+  ':active-deepest',
+  ':focus',
+  ':focus-within',
+]);
+
+// A transition* field at the component level may be a scalar/array (the
+// same for all pseudo states) or a pseudo-keyed object such as
+// { default: '500ms', ':hover': '200ms' } that overrides per state. This
+// resolves to the value that should apply when the given selector is the
+// "owner" of the transition being preconfigured. Falls back to `default` if
+// the selector key is missing, then leaves the value untouched if it isn't
+// a pseudo-keyed object.
+function resolveForSelector<T>(
+  value: T | undefined,
+  selector: string
+): T | undefined {
+  if (
+    value === null ||
+    value === undefined ||
+    typeof value !== 'object' ||
+    Array.isArray(value)
+  ) {
+    return value;
+  }
+  const obj = value as Record<string, unknown>;
+  const keys = Object.keys(obj);
+  const looksPseudoKeyed = keys.some((k) => PSEUDO_STATE_KEYS.has(k));
+  if (!looksPseudoKeyed) {
+    return value;
+  }
+  return (obj[selector] as T | undefined) ?? (obj.default as T | undefined);
+}
 
 // TODO - change these ugly underscore prefixed methods and properties to real
 // private/protected ones when possible (when changes from this repo are merged
@@ -49,6 +94,7 @@ export default class AnimatedComponent<
   // Used only on web
   _componentDOMRef: HTMLElement | null = null;
   _willUnmount: boolean = false;
+  _pseudoStylesRegistered: boolean = false;
 
   constructor(ChildComponent: AnyComponent, props: P) {
     super(props);
@@ -154,6 +200,84 @@ export default class AnimatedComponent<
     this._cssStyle = StyleSheet.flatten(props.style) ?? {};
   }
 
+  _registerPseudoStyles(
+    pseudoStylesBySelector: PseudoStylesBySelector,
+    transitionProperties: CSSTransitionProperties | null
+  ) {
+    const { shadowNodeWrapper, viewTag } = this._getViewInfo();
+    if (!shadowNodeWrapper || typeof viewTag !== 'number') {
+      return;
+    }
+
+    for (const [selector, { selectorStyle, defaultStyle }] of Object.entries(
+      pseudoStylesBySelector
+    )) {
+      const builtSelectorStyle = stylePropsBuilder.build(selectorStyle);
+      const builtDefaultStyle = stylePropsBuilder.build(defaultStyle);
+
+      // Resolve each transition* field for this selector first (collapses
+      // pseudo-keyed objects like { default, ':hover' } down to a scalar/array
+      // for THIS selector), then run the result through the existing
+      // normalizeCSSTransitionProperties to honor per-property alignment with
+      // transitionProperty.
+      const resolvedTransitionProperties: CSSTransitionProperties = {};
+      if (transitionProperties) {
+        for (const [key, value] of Object.entries(transitionProperties)) {
+          (resolvedTransitionProperties as AnyRecord)[key] = resolveForSelector(
+            value,
+            selector
+          );
+        }
+      }
+      const normalized = normalizeCSSTransitionProperties(
+        resolvedTransitionProperties
+      );
+
+      const transition: CSSTransitionConfig = {};
+      const props = new Set([
+        ...Object.keys(builtSelectorStyle),
+        ...Object.keys(builtDefaultStyle),
+      ]);
+      for (const prop of props) {
+        const settings =
+          normalized &&
+          (!normalized.specificProperties ||
+            normalized.specificProperties.has(prop))
+            ? (normalized.settings[prop] ?? normalized.settings.all)
+            : null;
+
+        const fromValue = builtDefaultStyle[prop] ?? builtSelectorStyle[prop];
+        const toValue = builtSelectorStyle[prop] ?? builtDefaultStyle[prop];
+        transition[prop] = {
+          value: [fromValue, toValue],
+          duration: settings?.duration ?? 0,
+          delay: settings?.delay ?? 0,
+          timingFunction: settings?.timingFunction ?? 'ease',
+          allowDiscrete: settings?.allowDiscrete ?? false,
+        };
+      }
+
+      ReanimatedModule.registerPseudoStyle(shadowNodeWrapper, {
+        selector,
+        selectorStyle: builtSelectorStyle,
+        defaultStyle: builtDefaultStyle,
+        transition,
+      });
+    }
+    this._pseudoStylesRegistered = true;
+  }
+
+  _unregisterPseudoStyles() {
+    if (!this._pseudoStylesRegistered) {
+      return;
+    }
+    const viewTag = this._viewInfo?.viewTag;
+    if (typeof viewTag === 'number') {
+      ReanimatedModule.unregisterPseudoStyle(viewTag);
+    }
+    this._pseudoStylesRegistered = false;
+  }
+
   componentDidMount() {
     this._updateStyles(this.props);
 
@@ -171,7 +295,16 @@ export default class AnimatedComponent<
         this._getViewInfo(),
         this.ChildComponent.displayName
       );
+      const [, transitionProperties, , pseudoStylesBySelector] =
+        filterCSSAndStyleProperties(this._cssStyle);
       this._CSSManager?.update(this._cssStyle);
+
+      if (!SHOULD_BE_USE_WEB && pseudoStylesBySelector) {
+        this._registerPseudoStyles(
+          pseudoStylesBySelector,
+          transitionProperties
+        );
+      }
     }
 
     this._willUnmount = false;
@@ -180,6 +313,10 @@ export default class AnimatedComponent<
   componentWillUnmount() {
     if (!IS_JEST && this._CSSManager) {
       this._CSSManager.unmountCleanup();
+    }
+
+    if (!IS_JEST && !SHOULD_BE_USE_WEB) {
+      this._unregisterPseudoStyles();
     }
 
     const wrapper = this._viewInfo?.shadowNodeWrapper;

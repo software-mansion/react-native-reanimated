@@ -19,6 +19,7 @@ describe(filterCSSAndStyleProperties, () => {
         null,
         expect.any(Object),
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -31,6 +32,7 @@ describe(filterCSSAndStyleProperties, () => {
         null,
         expect.any(Object),
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -43,6 +45,7 @@ describe(filterCSSAndStyleProperties, () => {
         style,
         expect.any(Object),
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -58,6 +61,7 @@ describe(filterCSSAndStyleProperties, () => {
         style,
         expect.any(Object),
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -82,6 +86,7 @@ describe(filterCSSAndStyleProperties, () => {
           expect.objectContaining({ [key]: value }),
           null,
           {},
+          null,
         ]);
       });
     });
@@ -94,6 +99,7 @@ describe(filterCSSAndStyleProperties, () => {
         expect.any(Object),
         null,
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -109,11 +115,13 @@ describe(filterCSSAndStyleProperties, () => {
         expect.any(Object),
         style1,
         expect.any(Object),
+        null,
       ]);
       expect(filterCSSAndStyleProperties(style2)).toEqual([
         expect.any(Object),
         style2,
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -129,6 +137,7 @@ describe(filterCSSAndStyleProperties, () => {
         expect.any(Object),
         { transition: 'opacity 2s ease-in' },
         expect.any(Object),
+        null,
       ]);
     });
 
@@ -147,7 +156,238 @@ describe(filterCSSAndStyleProperties, () => {
           null,
           expect.objectContaining({ [key]: value }),
           {},
+          null,
         ]);
+      });
+    });
+  });
+
+  describe('pseudo-selector values', () => {
+    test('extracts pseudo-selector styles grouped by selector', () => {
+      const style: CSSStyle = {
+        opacity: { default: 1, ':active': 0.5 },
+        backgroundColor: {
+          default: 'blue',
+          ':active': 'red',
+          ':focus': 'green',
+        },
+      };
+
+      expect(filterCSSAndStyleProperties(style)).toEqual([
+        null,
+        null,
+        { opacity: 1, backgroundColor: 'blue' },
+        {
+          ':active': {
+            selectorStyle: { opacity: 0.5, backgroundColor: 'red' },
+            defaultStyle: { opacity: 1, backgroundColor: 'blue' },
+          },
+          ':focus': {
+            selectorStyle: { backgroundColor: 'green' },
+            defaultStyle: { backgroundColor: 'blue' },
+          },
+        },
+      ]);
+    });
+
+    test('uses default value in filteredStyle when default is present', () => {
+      const style: CSSStyle = {
+        opacity: { default: 0.8, ':active': 0.3 },
+        width: 100,
+      };
+
+      const [, , filteredStyle] = filterCSSAndStyleProperties(style);
+
+      expect(filteredStyle).toEqual({ opacity: 0.8, width: 100 });
+    });
+
+    test('omits property from filteredStyle when there is no default value', () => {
+      const style: CSSStyle = {
+        opacity: { ':active': 0.3 } as never,
+        width: 100,
+      };
+
+      const [, , filteredStyle, pseudoStylesBySelector] =
+        filterCSSAndStyleProperties(style);
+
+      expect(filteredStyle).toEqual({ width: 100 });
+      expect(pseudoStylesBySelector).toEqual({
+        ':active': {
+          selectorStyle: { opacity: 0.3 },
+          defaultStyle: {},
+        },
+      });
+    });
+
+    test('treats value with only default as a regular prop (no pseudo-selector registered)', () => {
+      const style: CSSStyle = {
+        opacity: { default: 0.8 } as never,
+        width: 100,
+      };
+
+      const [, , filteredStyle, pseudoStylesBySelector] =
+        filterCSSAndStyleProperties(style);
+
+      expect(filteredStyle).toEqual({ opacity: 0.8, width: 100 });
+      expect(pseudoStylesBySelector).toBeNull();
+    });
+
+    test('mixes pseudoselector and regular props with transition config', () => {
+      const style: CSSStyle = {
+        transitionDuration: '150ms',
+        opacity: { default: 1, ':active': 0.6 },
+        borderRadius: 8,
+      };
+
+      expect(filterCSSAndStyleProperties(style)).toEqual([
+        null,
+        { transitionDuration: '150ms' },
+        { opacity: 1, borderRadius: 8 },
+        {
+          ':active': {
+            selectorStyle: { opacity: 0.6 },
+            defaultStyle: { opacity: 1 },
+          },
+        },
+      ]);
+    });
+  });
+
+  describe('multi-selector combinations', () => {
+    describe('different selectors affecting different props', () => {
+      test('each of the three selectors affects an exclusive prop', () => {
+        const style: CSSStyle = {
+          opacity: { default: 1, ':active': 0.5 },
+          backgroundColor: { default: 'white', ':hover': 'lightblue' },
+          borderWidth: { default: 0, ':focus': 2 },
+        };
+
+        const [, , filteredStyle, pseudoStylesBySelector] =
+          filterCSSAndStyleProperties(style);
+
+        expect(filteredStyle).toEqual({
+          opacity: 1,
+          backgroundColor: 'white',
+          borderWidth: 0,
+        });
+        expect(pseudoStylesBySelector).toEqual({
+          ':active': {
+            selectorStyle: { opacity: 0.5 },
+            defaultStyle: { opacity: 1 },
+          },
+          ':hover': {
+            selectorStyle: { backgroundColor: 'lightblue' },
+            defaultStyle: { backgroundColor: 'white' },
+          },
+          ':focus': {
+            selectorStyle: { borderWidth: 2 },
+            defaultStyle: { borderWidth: 0 },
+          },
+        });
+      });
+
+      test('two selectors with exclusive props, remaining props are plain', () => {
+        const style: CSSStyle = {
+          opacity: { default: 1, ':active': 0.6 },
+          borderColor: { default: 'gray', ':focus': 'blue' },
+          width: 200,
+          height: 100,
+        };
+
+        const [, , filteredStyle, pseudoStylesBySelector] =
+          filterCSSAndStyleProperties(style);
+
+        expect(filteredStyle).toEqual({
+          opacity: 1,
+          borderColor: 'gray',
+          width: 200,
+          height: 100,
+        });
+        expect(pseudoStylesBySelector).toEqual({
+          ':active': {
+            selectorStyle: { opacity: 0.6 },
+            defaultStyle: { opacity: 1 },
+          },
+          ':focus': {
+            selectorStyle: { borderColor: 'blue' },
+            defaultStyle: { borderColor: 'gray' },
+          },
+        });
+      });
+    });
+
+    describe('different selectors affecting the same prop', () => {
+      test('all three selectors change the same prop to different values', () => {
+        const style: CSSStyle = {
+          opacity: {
+            default: 1,
+            ':active': 0.5,
+            ':hover': 0.8,
+            ':focus': 0.9,
+          },
+        };
+
+        const [, , filteredStyle, pseudoStylesBySelector] =
+          filterCSSAndStyleProperties(style);
+
+        expect(filteredStyle).toEqual({ opacity: 1 });
+        expect(pseudoStylesBySelector).toEqual({
+          ':active': {
+            selectorStyle: { opacity: 0.5 },
+            defaultStyle: { opacity: 1 },
+          },
+          ':hover': {
+            selectorStyle: { opacity: 0.8 },
+            defaultStyle: { opacity: 1 },
+          },
+          ':focus': {
+            selectorStyle: { opacity: 0.9 },
+            defaultStyle: { opacity: 1 },
+          },
+        });
+      });
+
+      test('two selectors change the same prop, one changes a different prop', () => {
+        const style: CSSStyle = {
+          opacity: { default: 1, ':active': 0.5, ':hover': 0.8 },
+          backgroundColor: { default: 'white', ':active': 'red' },
+        };
+
+        const [, , filteredStyle, pseudoStylesBySelector] =
+          filterCSSAndStyleProperties(style);
+
+        expect(filteredStyle).toEqual({ opacity: 1, backgroundColor: 'white' });
+        expect(pseudoStylesBySelector).toEqual({
+          ':active': {
+            selectorStyle: { opacity: 0.5, backgroundColor: 'red' },
+            defaultStyle: { opacity: 1, backgroundColor: 'white' },
+          },
+          ':hover': {
+            selectorStyle: { opacity: 0.8 },
+            defaultStyle: { opacity: 1 },
+          },
+        });
+      });
+
+      test('pseudoselectors on the same prop with no default', () => {
+        const style: CSSStyle = {
+          opacity: { ':active': 0.5, ':hover': 0.8 } as never,
+        };
+
+        const [, , filteredStyle, pseudoStylesBySelector] =
+          filterCSSAndStyleProperties(style);
+
+        expect(filteredStyle).toEqual({});
+        expect(pseudoStylesBySelector).toEqual({
+          ':active': {
+            selectorStyle: { opacity: 0.5 },
+            defaultStyle: {},
+          },
+          ':hover': {
+            selectorStyle: { opacity: 0.8 },
+            defaultStyle: {},
+          },
+        });
       });
     });
   });
@@ -178,6 +418,7 @@ describe(filterCSSAndStyleProperties, () => {
           width: 100,
           height: 100,
         },
+        null,
       ]);
     });
   });
