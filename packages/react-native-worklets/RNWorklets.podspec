@@ -59,6 +59,9 @@ Pod::Spec.new do |s|
   install_modules_dependencies(s)
 
   s.dependency 'React-jsi'
+  s.dependency 'React-jsinspector'
+  s.dependency 'React-jsinspectorcdp'
+  s.dependency 'React-jsinspectortracing'
   using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
   if using_hermes && !$worklets_config[:is_tvos_target]
     s.dependency 'React-hermes'
@@ -76,6 +79,10 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/DoubleConversion"',
       '"$(PODS_ROOT)/Headers/Private/React-Core"',
       '"$(PODS_ROOT)/Headers/Private/Yoga"',
+      # Allow relative includes from HostTargetTracing.h ("cdp/..." and "tracing/...")
+      # to resolve against the installed public headers of the sub-pods.
+      '"$(PODS_ROOT)/Headers/Public/React-jsinspectorcdp/jsinspector-modern"',
+      '"$(PODS_ROOT)/Headers/Public/React-jsinspectortracing/jsinspector-modern"',
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",

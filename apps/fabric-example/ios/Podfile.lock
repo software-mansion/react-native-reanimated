@@ -2110,6 +2110,9 @@ PODS:
     - React-hermes
     - React-ImageManager
     - React-jsi
+    - React-jsinspector
+    - React-jsinspectorcdp
+    - React-jsinspectortracing
     - React-NativeModulesApple
     - React-RCTFabric
     - React-renderercss
@@ -2135,6 +2138,9 @@ PODS:
     - React-hermes
     - React-ImageManager
     - React-jsi
+    - React-jsinspector
+    - React-jsinspectorcdp
+    - React-jsinspectortracing
     - React-NativeModulesApple
     - React-RCTFabric
     - React-renderercss
@@ -2158,6 +2164,9 @@ PODS:
     - React-hermes
     - React-ImageManager
     - React-jsi
+    - React-jsinspector
+    - React-jsinspectorcdp
+    - React-jsinspectortracing
     - React-NativeModulesApple
     - React-RCTFabric
     - React-renderercss
@@ -2512,7 +2521,7 @@ SPEC CHECKSUMS:
   RNReanimated: 747c7a381a5acb28971d1e674d199c2c9432c3e2
   RNScreens: 01b065ded2dfe7987bcce770ff3a196be417ff41
   RNSVG: 04044c3abcf177fd674a1a3d13097efa1adebcbe
-  RNWorklets: 103e5b06e9c1380aa7a38f87727f90d68affe075
+  RNWorklets: 50e6f28de899069bf922cc5ac124220f9eb23ebd
   Yoga: 2a0b574a512950ff0f7506cc776db772b698c4dc
 
 PODFILE CHECKSUM: 5a5e231e2fd86b91c7e0a93852f5aa6de886161f

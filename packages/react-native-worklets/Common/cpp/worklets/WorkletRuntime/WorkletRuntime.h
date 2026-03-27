@@ -8,6 +8,7 @@
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 #include <worklets/RunLoop/EventLoop.h>
 #include <worklets/SharedItems/Serializable.h>
+#include <worklets/Tools/Defs.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
@@ -18,6 +19,13 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+#if JS_RUNTIME_HERMES
+// Forward declaration — full definition in WorkletRuntimeInspectorTarget.h
+namespace worklets {
+class WorkletRuntimeInspectorTarget;
+} // namespace worklets
+#endif
 
 using namespace facebook;
 using namespace react;
@@ -136,6 +144,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       const std::shared_ptr<AsyncQueue> &queue = nullptr,
       bool enableEventLoop = true);
 
+  ~WorkletRuntime();
+
   void init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy);
 
   /* #region deprecated */
@@ -188,6 +198,9 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   const std::string name_;
   std::shared_ptr<AsyncQueue> queue_;
   std::shared_ptr<EventLoop> eventLoop_;
+#if JS_RUNTIME_HERMES
+  std::unique_ptr<WorkletRuntimeInspectorTarget> inspectorTarget_;
+#endif
 };
 
 // This function needs to be non-inline to avoid problems with dynamic_cast on

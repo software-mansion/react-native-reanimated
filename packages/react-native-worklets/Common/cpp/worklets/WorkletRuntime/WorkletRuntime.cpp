@@ -8,11 +8,13 @@
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
+#include <worklets/WorkletRuntime/WorkletRuntimeInspectorTarget.h>
 
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
 
+#include <future>
 #include <memory>
 #include <string>
 #include <utility>
@@ -60,13 +62,42 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
     const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
   std::shared_ptr<jsi::Runtime> jsiRuntime;
 #if JS_RUNTIME_HERMES
-  auto hermesRuntime = facebook::hermes::makeHermesRuntime();
+  auto hermesRuntime = facebook::hermes::makeHermesRuntime(
+      ::hermes::vm::RuntimeConfig::Builder()
+          .withEnableSampleProfiling(true)
+          .build());
   jsiRuntime = std::make_shared<WorkletHermesRuntime>(std::move(hermesRuntime), jsQueue, name);
 #else
   jsiRuntime = facebook::jsc::makeJSCRuntime();
 #endif
 
   return std::make_shared<LockableRuntime>(jsiRuntime, runtimeMutex);
+}
+
+// Creates the runtime on the queue's execution thread. The Hermes sampling
+// profiler registers the creating thread as the runtime thread, so the runtime
+// must be created on the same thread that will later execute JS on it.
+// If no queue is provided the runtime is created on the calling thread.
+static std::shared_ptr<jsi::Runtime> makeRuntimeOnQueue(
+    const std::shared_ptr<AsyncQueue> &queue,
+    const std::shared_ptr<MessageQueueThread> &jsQueue,
+    const std::string &name,
+    const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
+  if (!queue) {
+    return makeRuntime(jsQueue, name, runtimeMutex);
+  }
+
+  std::shared_ptr<jsi::Runtime> runtime;
+  auto promise = std::make_shared<std::promise<void>>();
+  auto future = promise->get_future();
+
+  queue->push([&runtime, &jsQueue, &name, &runtimeMutex, promise]() {
+    runtime = makeRuntime(jsQueue, name, runtimeMutex);
+    promise->set_value();
+  });
+
+  future.get();
+  return runtime;
 }
 
 WorkletRuntime::WorkletRuntime(
@@ -77,7 +108,7 @@ WorkletRuntime::WorkletRuntime(
     bool enableEventLoop)
     : runtimeId_(runtimeId),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
-      runtime_(makeRuntime(jsQueue, name, runtimeMutex_)),
+      runtime_(makeRuntimeOnQueue(queue, jsQueue, name, runtimeMutex_)),
       name_(name),
       queue_(queue) {
   jsi::Runtime &rt = *runtime_;
@@ -86,7 +117,47 @@ WorkletRuntime::WorkletRuntime(
     eventLoop_ = std::make_shared<EventLoop>(name_, runtime_, queue_);
     eventLoop_->run();
   }
+
+#if JS_RUNTIME_HERMES
+  if (queue_ != nullptr) {
+    // Cast through LockableRuntime (defined above in this file) to reach the
+    // underlying WorkletHermesRuntime and its bare HermesRuntime reference.
+    // Both casts are safe: we constructed the runtimes ourselves in makeRuntime().
+    auto &workletHermes =
+        static_cast<WorkletHermesRuntime &>(static_cast<LockableRuntime &>(*runtime_).plain());
+
+    // Build a RuntimeExecutor that schedules work on the worklet serial queue.
+    // We capture the queue and runtime shared_ptrs directly rather than using
+    // weak_from_this(), because enable_shared_from_this::weak_this_ is not
+    // yet wired up during the constructor body.
+    // HermesRuntimeAgentDelegate ignores the jsi::Runtime& parameter it
+    // receives — it captures its own HermesRuntime& reference — so passing
+    // the LockableRuntime back is safe.
+    auto runtimeExecutor = [queue = queue_,
+                             weakRuntime = std::weak_ptr<jsi::Runtime>(runtime_),
+                             runtimeMutex = runtimeMutex_](std::function<void(jsi::Runtime &)> &&callback) {
+      queue->push([callback = std::move(callback), weakRuntime, runtimeMutex]() {
+        auto runtime = weakRuntime.lock();
+        if (!runtime) {
+          return;
+        }
+        auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex);
+        callback(*runtime);
+      });
+    };
+
+    // runtime_ (LockableRuntime shared_ptr) transitively keeps HermesRuntime
+    // alive, satisfying the lifetime requirement of HermesRuntimeTargetDelegate.
+    inspectorTarget_ = std::make_unique<WorkletRuntimeInspectorTarget>(
+        name_,
+        runtime_,
+        workletHermes.getHermesRuntime(),
+        std::move(runtimeExecutor));
+  }
+#endif // JS_RUNTIME_HERMES
 }
+
+WorkletRuntime::~WorkletRuntime() = default;
 
 void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsModuleProxy) {
   jsi::Runtime &rt = *runtime_;
