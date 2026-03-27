@@ -7,10 +7,12 @@ on:
     paths:
       - '.github/workflows/reanimated-worklets-compatibility-check.yml'
       - '.github/workflows/helper/read-reanimated-worklets-compatibility.js'
+      - '.github/actions/create-rnc-cli-app/**'
   pull_request:
     paths:
       - '.github/workflows/reanimated-worklets-compatibility-check.yml'
       - '.github/workflows/helper/read-reanimated-worklets-compatibility.js'
+      - '.github/actions/create-rnc-cli-app/**'
   workflow_dispatch:
   schedule:
     - cron: '30 2 * * *'

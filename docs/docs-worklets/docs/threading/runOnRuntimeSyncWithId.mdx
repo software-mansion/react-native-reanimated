@@ -53,29 +53,21 @@ Arguments to the function you want to execute on the [Worklet Runtime](/docs/fun
 
 - `runOnRuntimeSyncWithId` can target the UI Runtime by passing [UIRuntimeId](/docs/threading/uiRuntimeId) as the runtime id.
 
-- `runOnRuntimeSyncWithId` can only be called on the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime) unless the [Bundle Mode](/docs/bundleMode/) is enabled.
+## Call table
 
-```javascript
-import { createWorkletRuntime, runOnRuntimeSyncWithId, runOnUISync } from 'react-native-worklets';
+<CallTable
+  bundleMode={{
+    rnRuntime: true,
+    uiRuntime: true,
+    workerRuntime: true,
+  }}
+  noBundleMode={{
+    rnRuntime: true,
+    uiRuntime: false,
+    workerRuntime: false,
+  }}
+/>
 
-const workletRuntime = createWorkletRuntime({ name: 'background' });
+## Platform compatibility
 
-runOnUISync(() => {
-  runOnRuntimeSyncWithId(workletRuntime.runtimeId, (greeting: string) => {
-    console.log(`${greeting} from the background Worklet Runtime`);
-  }, 'Hello'); // This will throw an error outside of Bundle Mode 🚨
-});
-```
-
-```javascript
-import { createWorkletRuntime, runOnRuntimeSyncWithId } from 'react-native-worklets';
-
-const workletRuntime = createWorkletRuntime({ name: 'background' });
-const anotherWorkletRuntime = createWorkletRuntime({ name: 'anotherBackground' });
-
-runOnRuntimeSyncWithId(workletRuntime.runtimeId, () => {
-  runOnRuntimeSyncWithId(anotherWorkletRuntime.runtimeId, (greeting: string) => {
-    console.log(`${greeting} from the background Worklet Runtime`);
-  }, 'Hello'); // This will throw an error outside of Bundle Mode 🚨
-});
-```
+<PlatformTable native={true} web={false} />

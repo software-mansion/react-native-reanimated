@@ -16,7 +16,7 @@ function UseHandlerTest() {
       },
     };
 
-    const { context, doDependenciesDiffer, useWeb } = useHandler(
+    const { context, doDependenciesDiffer } = useHandler(
       handlers,
       dependencies
     );
@@ -26,7 +26,7 @@ function UseHandlerTest() {
         'worklet';
         const { onScroll } = handlers;
         if (onScroll && event.eventName.endsWith('onScroll')) {
-          context.eventName = event.eventName + useWeb;
+          context.eventName = event.eventName;
           onScroll(event);
         }
       },
@@ -47,7 +47,7 @@ function UseHandlerTest() {
       },
     };
 
-    const { context, doDependenciesDiffer, useWeb } = useHandler(
+    const { context, doDependenciesDiffer } = useHandler(
       // @ts-expect-error Works with `ReanimatedEvent` only.
       handlers,
       dependencies
@@ -58,7 +58,7 @@ function UseHandlerTest() {
         'worklet';
         const { onScroll } = handlers;
         if (onScroll && event.eventName.endsWith('onScroll')) {
-          context.eventName = event.eventName + useWeb;
+          context.eventName = event.eventName;
           // @ts-expect-error Works with `ReanimatedEvent` only.
           onScroll(event);
         }
@@ -80,7 +80,7 @@ function UseHandlerTest() {
       },
     };
 
-    const { context, doDependenciesDiffer, useWeb } = useHandler(
+    const { context, doDependenciesDiffer } = useHandler(
       handlers,
       dependencies
     );
@@ -90,7 +90,7 @@ function UseHandlerTest() {
         'worklet';
         const { onScroll } = handlers;
         if (onScroll && event.eventName.endsWith('onScroll')) {
-          context.eventName = event.eventName + useWeb;
+          context.eventName = event.eventName;
           onScroll(event);
         }
       },

@@ -45,4 +45,21 @@ A reference to a function you want to execute on the UI thread. Arguments to you
 
 - The callback passed as the argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ready to be run on the [UI thread](/docs/fundamentals/glossary#ui-thread).
 
-- Make sure not to execute `runOnUIAsync` on the UI thread as this will result in an error.
+## Call table
+
+<CallTable
+  bundleMode={{
+    rnRuntime: true,
+    uiRuntime: true,
+    workerRuntime: true,
+  }}
+  noBundleMode={{
+    rnRuntime: true,
+    uiRuntime: false,
+    workerRuntime: false,
+  }}
+/>
+
+## Platform compatibility
+
+<PlatformTable native={true} web={true} />

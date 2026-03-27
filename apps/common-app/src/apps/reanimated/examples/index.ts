@@ -15,7 +15,6 @@ import AnimatedTabBarExample from './AnimatedTabBarExample';
 import AnimatedTextWidthExample from './AnimatedTextWidthExample';
 import ArticleProgressExample from './ArticleProgressExample';
 import BBExample from './LayoutAnimations/BBExample';
-import BabelVersionCheckExample from './BabelVersionCheckExample';
 import BasicLayoutAnimation from './LayoutAnimations/BasicLayoutAnimation';
 import BasicNestedAnimation from './LayoutAnimations/BasicNestedAnimation';
 import BasicNestedLayoutAnimation from './LayoutAnimations/BasicNestedLayoutAnimation';
@@ -124,18 +123,15 @@ import RunOnAsyncExample from './RunOnAsyncExample';
 import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
 import ScreenStackExample from './ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderConfigBackgroundColorExample';
-import ScreenTransitionExample from './ScreenTransitionExample';
 import ScrollEventExample from './ScrollEventExample';
 import ScrollPerformanceExample from './ScrollPerformanceExample';
 import ScrollToExample from './ScrollToExample';
 import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import ScrollableViewExample from './ScrollableViewExample';
-import SerializableFreezingExample from './SerializableFreezingExample';
 import SetNativePropsExample from './SetNativePropsExample';
 import ShadowNodesCloningExample from './ShadowNodesCloningExample';
 import SharedStyleExample from './SharedStyleExample';
-import SpringComparisonExample from './SpringComparisonExample';
 import SpringLayoutAnimation from './LayoutAnimations/SpringLayoutAnimation';
 import SpringPresetsExample from './SpringPresetsExample';
 import StickyHeaderExample from './StickyHeaderExample';
@@ -160,7 +156,6 @@ import WidthExample from './WidthExample';
 import WithClampExample from './WithClampExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
-import WorkletRuntimeExample from './WorkletRuntimeExample';
 
 export const REAPlatform = {
   IOS: 'ios',
@@ -257,12 +252,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'runOnAsync',
     screen: RunOnAsyncExample,
   },
-  WorkletRuntimeExample: {
-    icon: '🏃‍♂️',
-    title: 'Worklet runtime',
-    screen: WorkletRuntimeExample,
-    disabledPlatforms: [REAPlatform.WEB],
-  },
   FetchExample: {
     icon: '📡',
     title: 'Fetch & XHR (Bundle Mode)',
@@ -283,22 +272,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🧠',
     title: 'Memo',
     screen: MemoExample,
-    shouldWork: {
-      // TODO: fix, broken in https://github.com/software-mansion/react-native-reanimated/pull/7604
-      ios: false,
-      android: false,
-    },
   },
   AnimatedPropsExample: {
     icon: '🎨',
     title: 'Animated props',
     screen: AnimatedPropsExample,
-  },
-  SerializableFreezingExample: {
-    icon: '🥶',
-    title: 'Serializable freezing',
-    screen: SerializableFreezingExample,
-    disabledPlatforms: [REAPlatform.WEB],
   },
   InvalidReadWriteExample: {
     icon: '🔒',
@@ -384,12 +362,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Update props performance',
     screen: UpdatePropsPerfExample,
   },
-  ScreenTransitionExample: {
-    icon: '📺',
-    title: 'Screen transition',
-    screen: ScreenTransitionExample,
-    disabledPlatforms: [REAPlatform.WEB],
-  },
 
   // Basic examples
   AnimatableRefExample: {
@@ -431,6 +403,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🎨',
     title: 'Screen header background color',
     screen: ScreenStackHeaderConfigBackgroundColorExample,
+    shouldWork: {
+      ios: true,
+      // TODO: fix - on Android AnimatedScreenStackHeaderConfig makes the button presses trigger no React effects
+      android: false,
+    },
   },
   ScreenStackExample: {
     icon: '🥞',
@@ -527,11 +504,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'measure',
     screen: MeasureExample,
   },
-  BabelVersionCheckExample: {
-    icon: '📦',
-    title: 'Babel version check',
-    screen: BabelVersionCheckExample,
-  },
   TransformExample: {
     icon: '🔄',
     title: 'Transform',
@@ -596,6 +568,7 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🧮',
     title: 'useAnimatedStyle with matrix',
     screen: MatrixTransform,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   SpringExample: {
     icon: '🕰',
@@ -606,11 +579,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🛠',
     title: 'Spring presets',
     screen: SpringPresetsExample,
-  },
-  SpringComparisonExample: {
-    icon: '⚖️',
-    title: 'Spring comparison',
-    screen: SpringComparisonExample,
   },
   SpringClampExample: {
     icon: '🗜',
@@ -710,6 +678,7 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'PlatformColor',
     screen: PlatformColorExample,
     icon: '🎨',
+    disabledPlatforms: [REAPlatform.WEB],
   },
   ShadowNodesCloningExample: {
     icon: '🌑',
