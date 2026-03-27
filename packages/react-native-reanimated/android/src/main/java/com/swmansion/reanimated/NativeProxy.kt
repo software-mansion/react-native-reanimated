@@ -20,8 +20,11 @@ import com.facebook.soloader.SoLoader
 import com.swmansion.common.GestureHandlerStateManager
 import com.swmansion.reanimated.keyboard.KeyboardAnimationManager
 import com.swmansion.reanimated.keyboard.KeyboardWorkletWrapper
+import android.view.MotionEvent
+import android.view.View
 import com.swmansion.reanimated.nativeProxy.AnimationFrameCallback
 import com.swmansion.reanimated.nativeProxy.EventHandler
+import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
 import com.swmansion.reanimated.nativeProxy.SensorSetter
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer
 import com.swmansion.reanimated.sensor.ReanimatedSensorType
@@ -166,6 +169,8 @@ open class NativeProxy {
    */
   private val mInvalidated = AtomicBoolean(false)
 
+  private val mPseudoSelectorDetachActions = HashMap<Int, Runnable>()
+
   @field:DoNotStrip
   @Suppress("unused")
   private val mHybridData: HybridData
@@ -225,6 +230,55 @@ open class NativeProxy {
   private external fun invalidateCpp()
 
   protected fun getHybridData(): HybridData = mHybridData
+
+  @DoNotStrip
+  fun attachPseudoSelector(tag: Int, selector: String, callback: PseudoSelectorCallback) {
+    UiThreadUtil.runOnUiThread {
+      val view = mFabricUIManager.resolveView(tag) ?: return@runOnUiThread
+      when (selector) {
+        ":focus" -> {
+          val focusListener = View.OnFocusChangeListener { _, hasFocus ->
+            callback.onSelectorStateChanged(hasFocus)
+          }
+          view.onFocusChangeListener = focusListener
+          mPseudoSelectorDetachActions[tag] = Runnable { view.onFocusChangeListener = null }
+        }
+        ":hover" -> {
+          val hoverListener = View.OnHoverListener { _, event ->
+            val action = event.actionMasked
+            if (action == MotionEvent.ACTION_HOVER_ENTER) {
+              callback.onSelectorStateChanged(true)
+            } else if (action == MotionEvent.ACTION_HOVER_EXIT) {
+              callback.onSelectorStateChanged(false)
+            }
+            false
+          }
+          view.setOnHoverListener(hoverListener)
+          mPseudoSelectorDetachActions[tag] = Runnable { view.setOnHoverListener(null) }
+        }
+        else -> {
+          val touchListener = View.OnTouchListener { _, event ->
+            val action = event.actionMasked
+            if (action == MotionEvent.ACTION_DOWN) {
+              callback.onSelectorStateChanged(true)
+            } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+              callback.onSelectorStateChanged(false)
+            }
+            false
+          }
+          view.setOnTouchListener(touchListener)
+          mPseudoSelectorDetachActions[tag] = Runnable { view.setOnTouchListener(null) }
+        }
+      }
+    }
+  }
+
+  @DoNotStrip
+  fun detachPseudoSelector(tag: Int) {
+    UiThreadUtil.runOnUiThread {
+      mPseudoSelectorDetachActions.remove(tag)?.run()
+    }
+  }
 
   fun invalidate() {
     if (mInvalidated.getAndSet(true)) {

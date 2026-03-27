@@ -92,9 +92,7 @@ type Writable<T> = {
   -readonly [P in keyof T]: T[P];
 };
 
-export type OperationUpdate = Writable<
-  StyleProps | AnimatedStyle<Writable<Record<string, unknown>>> | Writable<Record<string, unknown>>
->;
+export type OperationUpdate = Writable<StyleProps | Writable<Record<string, unknown>>>;
 
 export interface Operation {
   tag?: number;

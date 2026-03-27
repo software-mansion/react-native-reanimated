@@ -7,6 +7,7 @@
 #include <reanimated/android/EventHandler.h>
 #include <reanimated/android/KeyboardWorkletWrapper.h>
 #include <reanimated/android/NativeProxy.h>
+#include <reanimated/android/PseudoSelectorCallback.h>
 #include <reanimated/android/SensorSetter.h>
 
 #include <memory>
@@ -292,6 +293,22 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto maybeFlushUiUpdatesQueueFunction = bindThis(&NativeProxy::maybeFlushUIUpdatesQueue);
 
+  auto attachPseudoSelectorFunction = [this](Tag tag, const std::string &selector, std::function<void(bool)> callback) {
+    static const auto method =
+        getJniMethod<void(int, jni::local_ref<jni::JString>, PseudoSelectorCallback::javaobject)>(
+            "attachPseudoSelector");
+    method(
+        javaPart_.get(),
+        static_cast<int>(tag),
+        jni::make_jstring(selector),
+        PseudoSelectorCallback::newObjectCxxArgs(std::move(callback)).get());
+  };
+
+  auto detachPseudoSelectorFunction = [this](Tag tag) {
+    static const auto method = getJniMethod<void(int)>("detachPseudoSelector");
+    method(javaPart_.get(), static_cast<int>(tag));
+  };
+
   return {
       requestRender,
       preserveMountedTags,
@@ -303,6 +320,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUiUpdatesQueueFunction,
+      attachPseudoSelectorFunction,
+      detachPseudoSelectorFunction,
   };
 }
 

@@ -342,6 +342,14 @@ class JSReanimated implements IReanimatedModule {
       '`getSettledUpdates` is not available in JSReanimated.'
     );
   }
+
+  registerPseudoStyle(): void {
+    // Web uses native CSS pseudo-selectors - no native registration needed.
+  }
+
+  unregisterPseudoStyle(): void {
+    // Web uses native CSS pseudo-selectors - no native registration needed.
+  }
 }
 
 // Lack of this export breaks TypeScript generation since

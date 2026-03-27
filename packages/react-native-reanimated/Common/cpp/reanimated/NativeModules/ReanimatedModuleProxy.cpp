@@ -1,5 +1,9 @@
+#include <jsi/JSIDynamic.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
+#include <react/renderer/uimanager/primitives.h>
+#include <reanimated/CSS/configs/CSSTransitionConfig.h>
+#include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
@@ -9,6 +13,7 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
+#include <worklets/Tools/UIScheduler.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
@@ -135,6 +140,9 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>(viewStylesRepository_)),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(getAnimationTimestamp_, viewStylesRepository_)),
+      pseudoStylesRegistry_(std::make_shared<PseudoStylesRegistry>(
+          platformDepMethodsHolder.attachPseudoSelector,
+          platformDepMethodsHolder.detachPseudoSelector)),
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
@@ -145,7 +153,9 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
   // Add registries in order of their priority (from the lowest to the
   // highest)
   // CSS transitions should be overriden by animated style animations;
-  // animated style animations should be overriden by CSS animations
+  // animated style animations should be overriden by CSS animations.
+  // Pseudo-selectors override CSS transitions but are overridden by
+  // useAnimatedStyle and CSS animations.
   updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
   updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
   updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
@@ -246,6 +256,50 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
 
     return strongThis->obtainProp(rt, shadowNodeWrapper, propName);
   };
+
+  pseudoStylesRegistry_->setOnSelectorStateChangedFn([weakThis = weak_from_this()](
+                                                         const std::shared_ptr<const ShadowNode> &shadowNode,
+                                                         const folly::dynamic &fromStyle,
+                                                         const folly::dynamic &toStyle,
+                                                         double duration,
+                                                         double delay) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+    // Schedule on the UI worklet thread where jsi::Runtime is available.
+    strongThis->uiScheduler_->scheduleOnUI([weakThis, shadowNode, fromStyle, toStyle, duration, delay]() {
+      auto strongThis = weakThis.lock();
+      if (!strongThis) {
+        return;
+      }
+      auto &rt = getJSIRuntimeFromWorkletRuntime(strongThis->uiRuntime_);
+
+      CSSTransitionConfig config;
+      const auto easingFn = getPredefinedEasingFunction("ease");
+
+      for (const auto &[propKey, toVal] : toStyle.items()) {
+        const auto propName = propKey.asString();
+        const folly::dynamic &fromVal = fromStyle.count(propName) ? fromStyle[propName] : toVal;
+
+        config.changedProperties.emplace(
+            propName,
+            CSSTransitionPropertySettings{
+                std::make_pair(jsi::valueFromDynamic(rt, fromVal), jsi::valueFromDynamic(rt, toVal)),
+                duration,
+                easingFn,
+                delay,
+                false,
+            });
+      }
+
+      {
+        auto lock = strongThis->cssTransitionsRegistry_->lock();
+        strongThis->cssTransitionsRegistry_->run(rt, shadowNode, config);
+      }
+      strongThis->maybeRunCSSLoop();
+    });
+  });
 
   jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
   UIRuntimeDecorator::decorate(
@@ -544,6 +598,41 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt) {
   // TODO(future): find a better way to obtain timestamp for removing updates
   // TODO(future): move removing old updates to separate method
   return animatedPropsRegistry_->getUpdatesOlderThanTimestamp(rt, currentTimestamp - 1000); // 1 second
+}
+
+void ReanimatedModuleProxy::registerPseudoStyle(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &selector,
+    const jsi::Value &selectorStyle,
+    const jsi::Value &defaultStyle,
+    const jsi::Value &transitionConfig) {
+  const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  const auto tag = shadowNode->getTag();
+  const auto selectorStr = stringFromValue(rt, selector);
+  const auto selectorStyleDyn = jsi::dynamicFromValue(rt, selectorStyle);
+  const auto defaultStyleDyn = jsi::dynamicFromValue(rt, defaultStyle);
+
+  double duration = 0;
+  double delay = 0;
+  if (transitionConfig.isObject()) {
+    auto configObj = transitionConfig.asObject(rt);
+    auto durationProp = configObj.getProperty(rt, "duration");
+    if (durationProp.isNumber()) {
+      duration = durationProp.asNumber();
+    }
+    auto delayProp = configObj.getProperty(rt, "delay");
+    if (delayProp.isNumber()) {
+      delay = delayProp.asNumber();
+    }
+  }
+
+  pseudoStylesRegistry_->registerPseudoStyle(
+      tag, shadowNode, selectorStr, selectorStyleDyn, defaultStyleDyn, duration, delay);
+}
+
+void ReanimatedModuleProxy::unregisterPseudoStyle(jsi::Runtime &, const jsi::Value &viewTag) {
+  pseudoStylesRegistry_->remove(static_cast<Tag>(viewTag.asNumber()));
 }
 
 bool ReanimatedModuleProxy::handleEvent(

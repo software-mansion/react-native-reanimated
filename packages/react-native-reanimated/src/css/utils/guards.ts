@@ -71,3 +71,14 @@ export const isCSSKeyframesObject = (
 
 export const isCSSKeyframesRule = (value: object): value is CSSKeyframesRule =>
   typeof value === 'object' && 'cssRules' in value && 'cssText' in value;
+
+export const isPseudoSelectorValue = (
+  value: unknown
+): value is Record<string, unknown> => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+  return Object.keys(value).some(
+    (key) => key === 'default' || key.startsWith(':')
+  );
+};

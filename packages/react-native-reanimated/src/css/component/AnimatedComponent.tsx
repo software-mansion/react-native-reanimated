@@ -6,6 +6,7 @@ import { Platform, StyleSheet } from 'react-native';
 
 import type { AnyComponent, AnyRecord, PlainStyle } from '../../common';
 import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../../common';
+import { stylePropsBuilder } from '../../common/style';
 import type {
   InternalHostInstance,
   ShadowNodeWrapper,
@@ -18,9 +19,19 @@ import type {
 import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
+import { ReanimatedModule } from '../../ReanimatedModule';
 import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
+import {
+  normalizeDelay,
+  normalizeDuration,
+} from '../native/normalization/common';
 import { CSSManager } from '../platform';
-import type { CSSStyle } from '../types';
+import type { CSSStyle, CSSTransitionProperties } from '../types';
+import { isPseudoSelectorValue } from '../utils/guards';
+import {
+  filterCSSAndStyleProperties,
+  type PseudoStylesBySelector,
+} from '../utils/props';
 import { filterNonCSSStyleProps } from './utils';
 
 export type AnimatedComponentProps = Record<string, unknown> & {
@@ -154,6 +165,53 @@ export default class AnimatedComponent<
     this._cssStyle = StyleSheet.flatten(props.style) ?? {};
   }
 
+  _registerPseudoStyles(
+    pseudoStylesBySelector: PseudoStylesBySelector,
+    transitionProperties: CSSTransitionProperties | null
+  ) {
+    const { shadowNodeWrapper, viewTag } = this._getViewInfo();
+    if (!shadowNodeWrapper || typeof viewTag !== 'number') {
+      return;
+    }
+
+    const duration = normalizeDuration(
+      Array.isArray(transitionProperties?.transitionDuration)
+        ? transitionProperties.transitionDuration[0]
+        : transitionProperties?.transitionDuration
+    );
+    const delay = normalizeDelay(
+      Array.isArray(transitionProperties?.transitionDelay)
+        ? transitionProperties.transitionDelay[0]
+        : transitionProperties?.transitionDelay
+    );
+    const transitionConfig = { duration, delay };
+
+    for (const [selector, { selectorStyle, defaultStyle }] of Object.entries(
+      pseudoStylesBySelector
+    )) {
+      ReanimatedModule.registerPseudoStyle(
+        shadowNodeWrapper,
+        selector,
+        stylePropsBuilder.build(selectorStyle),
+        stylePropsBuilder.build(defaultStyle),
+        transitionConfig
+      );
+    }
+  }
+
+  _unregisterPseudoStyles() {
+    const hasPseudoStyles = Object.values(this._cssStyle).some(
+      isPseudoSelectorValue
+    );
+    if (!hasPseudoStyles) {
+      return;
+    }
+    const viewTag = this._viewInfo?.viewTag;
+    if (typeof viewTag === 'number') {
+      ReanimatedModule.unregisterPseudoStyle(viewTag);
+    }
+  }
+
   componentDidMount() {
     this._updateStyles(this.props);
 
@@ -171,7 +229,16 @@ export default class AnimatedComponent<
         this._getViewInfo(),
         this.ChildComponent.displayName
       );
+      const [, transitionProperties, , pseudoStylesBySelector] =
+        filterCSSAndStyleProperties(this._cssStyle);
       this._CSSManager?.update(this._cssStyle);
+
+      if (!SHOULD_BE_USE_WEB && pseudoStylesBySelector) {
+        this._registerPseudoStyles(
+          pseudoStylesBySelector,
+          transitionProperties
+        );
+      }
     }
 
     this._willUnmount = false;
@@ -180,6 +247,10 @@ export default class AnimatedComponent<
   componentWillUnmount() {
     if (!IS_JEST && this._CSSManager) {
       this._CSSManager.unmountCleanup();
+    }
+
+    if (!IS_JEST && !SHOULD_BE_USE_WEB) {
+      this._unregisterPseudoStyles();
     }
 
     const wrapper = this._viewInfo?.shadowNodeWrapper;

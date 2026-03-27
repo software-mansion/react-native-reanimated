@@ -18,9 +18,23 @@ type PickStyleProps<P> = Pick<
   }[keyof P]
 >;
 
-export type CSSStyle<S extends AnyRecord = PlainStyle> = S &
-  Partial<CSSAnimationProperties<S>> &
+export type PseudoSelectorKey = ':hover' | ':active' | ':focus';
+
+export type PseudoValue<T> = {
+  default?: T;
+} & { [K in PseudoSelectorKey]?: T };
+
+export type CSSStyle<S extends AnyRecord = PlainStyle> = {
+  [K in keyof S]: S[K] | PseudoValue<NonNullable<S[K]>>;
+} & Partial<CSSAnimationProperties<S>> &
   Partial<CSSTransitionProperties<S>>;
+
+export type CSSPseudoSelectorStyle = {
+  [K in keyof PlainStyle]?:
+    | PlainStyle[K]
+    | PseudoValue<NonNullable<PlainStyle[K]>>;
+} & Partial<CSSAnimationProperties<PlainStyle>> &
+  Partial<CSSTransitionProperties<PlainStyle>>;
 
 type CSSStyleProps<P extends object> = {
   [K in keyof PickStyleProps<P>]: P[K] extends StyleProp<infer U>

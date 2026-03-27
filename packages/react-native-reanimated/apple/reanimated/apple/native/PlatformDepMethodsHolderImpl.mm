@@ -1,3 +1,4 @@
+#import <objc/runtime.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
@@ -6,6 +7,7 @@
 #import <reanimated/apple/RNGestureHandlerStateManager.h>
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 #import <reanimated/apple/native/SetGestureState.h>
+#import <reanimated/apple/pseudoSelectors/REAPseudoSelectorObserver.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
 #import <React/RCTComponentViewProtocol.h>
@@ -133,6 +135,63 @@ ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nod
   return forceScreenSnapshot;
 }
 
+static char kREAPseudoSelectorObserverKey;
+
+PlatformAttachPseudoSelectorFunction makeAttachPseudoSelectorFunction(REANodesManager *nodesManager)
+{
+  return [nodesManager](Tag tag, const std::string &selector, std::function<void(bool)> callback) {
+    NSString *selectorNS = [NSString stringWithUTF8String:selector.c_str()];
+    auto sharedCallback = std::make_shared<std::function<void(bool)>>(std::move(callback));
+    NSLog(@"[PseudoSelector] attachFn called tag=%d selector=%@", tag, selectorNS);
+    // We poll on the main queue until the view appears <is there a better way to do ts?>.
+    __block int attempts = 0;
+    __block __weak REANodesManager *weakNodesManager = nodesManager;
+    dispatch_block_t __block tryAttach = nil;
+    tryAttach = ^{
+      REANodesManager *nm = weakNodesManager;
+      if (!nm) {
+        return;
+      }
+      RCTSurfacePresenter *surfacePresenter = nm.surfacePresenter;
+      RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
+      REAUIView *view = [componentViewRegistry findComponentViewWithTag:tag];
+      NSLog(@"[PseudoSelector] attempt %d findComponentViewWithTag:%d → %@", attempts, tag, view);
+      if (!view) {
+        attempts++;
+        if (attempts < 10) {
+          dispatch_after(
+              dispatch_time(DISPATCH_TIME_NOW, (int64_t)(50 * NSEC_PER_MSEC)), dispatch_get_main_queue(), tryAttach);
+        } else {
+          NSLog(@"[PseudoSelector] ⚠️ giving up after %d attempts for tag=%d", attempts, tag);
+        }
+        return;
+      }
+      REAPseudoSelectorObserver *observer = [[REAPseudoSelectorObserver alloc] initWithView:view
+                                                                                   selector:selectorNS
+                                                                                   callback:*sharedCallback];
+      objc_setAssociatedObject(view, &kREAPseudoSelectorObserverKey, observer, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    };
+    dispatch_async(dispatch_get_main_queue(), tryAttach);
+  };
+}
+
+PlatformDetachPseudoSelectorFunction makeDetachPseudoSelectorFunction(REANodesManager *nodesManager)
+{
+  return [nodesManager](Tag tag) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      RCTSurfacePresenter *surfacePresenter = nodesManager.surfacePresenter;
+      RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
+      REAUIView *view = [componentViewRegistry findComponentViewWithTag:tag];
+      if (!view) {
+        return;
+      }
+      REAPseudoSelectorObserver *observer = objc_getAssociatedObject(view, &kREAPseudoSelectorObserverKey);
+      [observer detach];
+      objc_setAssociatedObject(view, &kREAPseudoSelectorObserverKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    });
+  };
+}
+
 PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleRegistry, REANodesManager *nodesManager)
 {
   auto requestRender = makeRequestRender(nodesManager);
@@ -159,6 +218,9 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   auto maybeFlushUIUpdatesQueueFunction = makeMaybeFlushUIUpdatesQueueFunction(nodesManager);
 
+  auto attachPseudoSelectorFunction = makeAttachPseudoSelectorFunction(nodesManager);
+  auto detachPseudoSelectorFunction = makeDetachPseudoSelectorFunction(nodesManager);
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       forceScreenSnapshotFunction,
@@ -170,6 +232,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUIUpdatesQueueFunction,
+      attachPseudoSelectorFunction,
+      detachPseudoSelectorFunction,
   };
   return platformDepMethodsHolder;
 }

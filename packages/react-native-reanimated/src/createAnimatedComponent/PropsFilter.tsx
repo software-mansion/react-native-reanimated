@@ -57,6 +57,8 @@ export class PropsFilter implements IPropsFilter {
         // keep styles as they were passed by the user
         // it will help other libs to interpret styles correctly
         props[key] = processedStyle;
+      } else if (key === 'pseudo') {
+        // pseudo-selector styles are consumed by AnimatedComponent, not passed to native
       } else if (key === 'animatedProps') {
         const animatedPropsProp = inputProps.animatedProps;
         const animatedPropsArray = flattenArray<

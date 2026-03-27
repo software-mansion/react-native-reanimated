@@ -23,6 +23,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
+#include <reanimated/PseudoStyles/PseudoStylesRegistry.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
 
@@ -119,6 +120,15 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
 
   jsi::Value getSettledUpdates(jsi::Runtime &rt) override;
 
+  void registerPseudoStyle(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper,
+      const jsi::Value &selector,
+      const jsi::Value &selectorStyle,
+      const jsi::Value &defaultStyle,
+      const jsi::Value &transitionConfig) override;
+  void unregisterPseudoStyle(jsi::Runtime &rt, const jsi::Value &viewTag) override;
+
   void cssLoopCallback(const double /*timestampMs*/);
 
   void dispatchCommand(
@@ -198,6 +208,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   const std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
+  const std::shared_ptr<PseudoStylesRegistry> pseudoStylesRegistry_;
 
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
   const PreserveMountedTagsFunction filterUnmountedTagsFunction_;

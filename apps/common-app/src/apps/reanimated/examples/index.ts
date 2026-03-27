@@ -351,6 +351,18 @@ const ProgressTransitionExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/ProgressTransition').default
   );
+const PseudoActiveExample: React.FC = () =>
+  React.createElement(
+    require('./PseudoActiveExample').default
+  );
+const PseudoFocusExample: React.FC = () =>
+  React.createElement(
+    require('./PseudoFocusExample').default
+  );
+const PseudoHoverExample: React.FC = () =>
+  React.createElement(
+    require('./PseudoHoverExample').default
+  );
 const RainbowExample: React.FC = () =>
   React.createElement(require('./RainbowExample').default as React.FC);
 const ReactionsCounterExample: React.FC = () =>
@@ -998,6 +1010,21 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🌑',
     title: 'Shadow Nodes Cloning',
     screen: ShadowNodesCloningExample,
+  },
+  PseudoActiveExample: {
+    icon: '👆',
+    title: 'Pseudo-selectors (:active)',
+    screen: PseudoActiveExample,
+  },
+  PseudoFocusExample: {
+    icon: '🔤',
+    title: 'Pseudo-selectors (:focus)',
+    screen: PseudoFocusExample,
+  },
+  PseudoHoverExample: {
+    icon: '🖱️',
+    title: 'Pseudo-selectors (:hover)',
+    screen: PseudoHoverExample,
   },
 
   // Old examples

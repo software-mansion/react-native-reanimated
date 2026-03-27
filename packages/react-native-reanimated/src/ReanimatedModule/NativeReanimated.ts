@@ -251,6 +251,26 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   getSettledUpdates(): SettledUpdate[] {
     return this.#reanimatedModuleProxy.getSettledUpdates();
   }
+
+  registerPseudoStyle(
+    shadowNodeWrapper: ShadowNodeWrapper,
+    selector: string,
+    selectorStyle: StyleProps,
+    defaultStyle: StyleProps,
+    transitionConfig: { duration?: number; delay?: number }
+  ) {
+    this.#reanimatedModuleProxy.registerPseudoStyle(
+      shadowNodeWrapper,
+      selector,
+      selectorStyle,
+      defaultStyle,
+      transitionConfig
+    );
+  }
+
+  unregisterPseudoStyle(viewTag: number) {
+    this.#reanimatedModuleProxy.unregisterPseudoStyle(viewTag);
+  }
 }
 
 class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
@@ -293,6 +313,9 @@ class DummyReanimatedModuleProxy implements ReanimatedModuleProxy {
   getSettledUpdates(): SettledUpdate[] {
     return [];
   }
+
+  registerPseudoStyle(): void {}
+  unregisterPseudoStyle(): void {}
 }
 
 function installTurboModule() {
