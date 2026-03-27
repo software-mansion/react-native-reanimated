@@ -1749,7 +1749,7 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - SocketRocket
-  - react-native-safe-area-context (5.6.1):
+  - react-native-safe-area-context (5.7.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -1767,8 +1767,8 @@ PODS:
     - React-graphics
     - React-ImageManager
     - React-jsi
-    - react-native-safe-area-context/common (= 5.6.1)
-    - react-native-safe-area-context/fabric (= 5.6.1)
+    - react-native-safe-area-context/common (= 5.7.0)
+    - react-native-safe-area-context/fabric (= 5.7.0)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-renderercss
@@ -1779,7 +1779,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-safe-area-context/common (5.6.1):
+  - react-native-safe-area-context/common (5.7.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -1807,7 +1807,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-safe-area-context/fabric (5.6.1):
+  - react-native-safe-area-context/fabric (5.7.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2397,7 +2397,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNGestureHandler (2.28.0):
+  - RNGestureHandler (2.30.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2517,7 +2517,7 @@ PODS:
     - RNWorklets
     - SocketRocket
     - Yoga
-  - RNSVG (15.15.3):
+  - RNSVG (15.15.4):
     - boost
     - DoubleConversion
     - fast_float
@@ -2543,10 +2543,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNSVG/common (= 15.15.3)
+    - RNSVG/common (= 15.15.4)
     - SocketRocket
     - Yoga
-  - RNSVG/common (15.15.3):
+  - RNSVG/common (15.15.4):
     - boost
     - DoubleConversion
     - fast_float
@@ -2952,7 +2952,7 @@ SPEC CHECKSUMS:
   React-logger: da2c4bfeac2bb1dc7103842003d1e19496bcbf28
   React-Mapbuffer: 40e1202a7e2e6e26dc3411fcac91bdf3d662b30c
   React-microtasksnativemodule: 3cbd54d5944242e67dca0e6ea28ea8b9e155a02c
-  react-native-safe-area-context: c6e2edd1c1da07bdce287fa9d9e60c5f7b514616
+  react-native-safe-area-context: befb5404eb8a16fdc07fa2bebab3568ecabcbb8a
   React-NativeModulesApple: 4d21d64a38ddf0c16465440119bfc0dc271b5de2
   React-oscompat: f1bc0c22f3ae3245131c25f9fa4186df1104fe84
   React-perflogger: e0891de842193f9393a1d88f97c954595d4c44c0
@@ -2985,9 +2985,9 @@ SPEC CHECKSUMS:
   ReactCommon: 4702457a560d38a9b96a98a728100cae76820edc
   RNCAsyncStorage: 29f0230e1a25f36c20b05f65e2eb8958d6526e82
   RNCClipboard: 4b58c780f63676367640f23c8e114e9bd0cf86ac
-  RNGestureHandler: 3a73f098d74712952870e948b3d9cf7b6cae9961
+  RNGestureHandler: e37bdb684df1ac17c7e1d8f71a3311b2793c186b
   RNReanimated: 35b06c248e48afe0f4b928676a4b80ad59b139eb
-  RNSVG: c4d5a438a1c96f7ed7dc66349a5b7e97616fd701
+  RNSVG: 681be694d501c0af971615811d4f2ea9baf58966
   RNWorklets: 27a602ca675abff8f7c793db065f30597b1dffc0
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 4e7825418aa0a50bdaa8dff6d3e5fa8a2994d308
