@@ -111,6 +111,22 @@ void WorkletRuntimeDecorator::decorate(
   jsi_utils::installJsiFunction(
       rt, "_log", [](jsi::Runtime &rt, const jsi::Value &value) { PlatformLogger::log(stringifyJSIValue(rt, value)); });
 
+  rt.global().setProperty(
+      rt,
+      "nativeLoggingHook",
+      jsi::Function::createFromHostFunction(
+          rt,
+          jsi::PropNameID::forAscii(rt, "nativeLoggingHook"),
+          2,
+          [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) {
+            if (count != 2) {
+              throw std::invalid_argument("nativeLoggingHook takes 2 arguments");
+            }
+            PlatformLogger::log("nativeLoggingHook");
+            PlatformLogger::log(args[0].asString(rt).utf8(rt));
+            return jsi::Value::undefined();
+          }));
+
   jsi_utils::installJsiFunction(rt, "_toString", [](jsi::Runtime &rt, const jsi::Value &value) {
     return jsi::String::createFromUtf8(rt, stringifyJSIValue(rt, value));
   });

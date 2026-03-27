@@ -103,7 +103,9 @@ export function createWorkletRuntime(
       setupCallGuard();
       setupSerializer();
       registerWorkletsError();
-      setupConsole(runtimeBoundCapturableConsole);
+      if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+        setupConsole(runtimeBoundCapturableConsole);
+      }
       if (enableEventLoop) {
         setupRunLoop(animationQueuePollingRate);
       }

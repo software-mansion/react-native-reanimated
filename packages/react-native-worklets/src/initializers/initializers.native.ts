@@ -178,12 +178,16 @@ function installRNBindingsOnUIRuntime() {
     runOnUISync(registerWorkletsError);
   }
 
-  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
+  if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+    const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
+    runOnUISync(() => {
+      'worklet';
+      setupConsole(runtimeBoundCapturableConsole);
+    });
+  }
 
   runOnUISync(() => {
     'worklet';
-
-    setupConsole(runtimeBoundCapturableConsole);
     /**
      * TODO: Move `setupMicrotasks` and `setupRequestAnimationFrame` to a
      * separate function once we have a better way to distinguish between
