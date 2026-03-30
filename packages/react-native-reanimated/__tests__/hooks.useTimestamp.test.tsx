@@ -1,7 +1,6 @@
-import { render } from '@testing-library/react-native';
-import React from 'react';
+import { renderHook } from '@testing-library/react-hooks';
 
-import Animated, { useTimestamp } from '../src';
+import { useTimestamp } from '../src';
 
 const mockSetActive = jest.fn();
 const mockFrameCallback = {
@@ -24,52 +23,28 @@ describe('useTimestamp', () => {
   });
 
   test('initializes to 0', () => {
-    function TestComponent() {
-      const timestamp = useTimestamp(false);
-      return (
-        <Animated.View
-          style={{ opacity: timestamp.value }}
-          testID={'AnimatedView'}
-        />
-      );
-    }
-
-    const component = render(<TestComponent />);
-    const view = component.getByTestId('AnimatedView');
-    expect(view.props.style[0].opacity).toBe(0);
+    const { result } = renderHook(() => useTimestamp(false));
+    expect(result.current.value).toBe(0);
   });
 
   test('defaults isActive to true', () => {
-    function TestComponent() {
-      useTimestamp();
-      return <Animated.View testID={'AnimatedView'} />;
-    }
-
-    render(<TestComponent />);
+    renderHook(() => useTimestamp());
     expect(mockSetActive).toHaveBeenCalledWith(true);
   });
 
   test('respects isActive=false', () => {
-    function TestComponent() {
-      useTimestamp(false);
-      return <Animated.View testID={'AnimatedView'} />;
-    }
-
-    render(<TestComponent />);
+    renderHook(() => useTimestamp(false));
     expect(mockSetActive).toHaveBeenCalledWith(false);
   });
 
   test('calls setActive when isActive toggles', () => {
-    function TestComponent({ active }: { active: boolean }) {
-      useTimestamp(active);
-      return <Animated.View testID={'AnimatedView'} />;
-    }
-
-    const component = render(<TestComponent active={false} />);
+    const { rerender } = renderHook(({ active }) => useTimestamp(active), {
+      initialProps: { active: false },
+    });
     expect(mockSetActive).toHaveBeenLastCalledWith(false);
 
     mockSetActive.mockClear();
-    component.update(<TestComponent active={true} />);
+    rerender({ active: true });
     expect(mockSetActive).toHaveBeenCalledWith(true);
   });
 });
