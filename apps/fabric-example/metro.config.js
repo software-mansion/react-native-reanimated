@@ -15,6 +15,7 @@ const { blockList, extraNodeModules } = getMonorepoMetroOptions(
 const monorepoRoot = path.resolve(__dirname, '../..');
 /** Do not remove 'apps' from watchFolders, as it's required to resolve assets. */
 const appsRoot = path.resolve(monorepoRoot, 'apps');
+const workletsDir = path.resolve(monorepoRoot, 'packages/react-native-worklets/.worklets');
 
 /**
  * Metro configuration https://reactnative.dev/docs/metro
@@ -23,7 +24,7 @@ const appsRoot = path.resolve(monorepoRoot, 'apps');
  */
 let config = {
   projectRoot: __dirname,
-  watchFolders: [monorepoRoot, appsRoot],
+  watchFolders: [monorepoRoot, appsRoot, workletsDir],
   resolver: {
     blockList,
     extraNodeModules,
@@ -32,9 +33,8 @@ let config = {
 
 config = mergeConfig(defaultConfig, config);
 
-// Uncomment the following to enable bundle mode.
-// const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
-// config = mergeConfig(config, bundleModeMetroConfig);
+const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
+config = mergeConfig(config, bundleModeMetroConfig);
 
 module.exports = wrapWithReanimatedMetroConfig(
   mergeConfig(defaultConfig, config)
