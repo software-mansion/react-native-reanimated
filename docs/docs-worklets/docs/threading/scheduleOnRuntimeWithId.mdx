@@ -52,27 +52,21 @@ Arguments to the function you want to execute on the [Worklet Runtime](/docs/fun
   Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
 - You can target the UI Runtime by passing [UIRuntimeId](/docs/threading/uiRuntimeId) as the runtime id.
 
-```javascript
-import { createWorkletRuntime, scheduleOnRuntimeWithId } from 'react-native-worklets';
+## Call table
 
-const workletRuntime = createWorkletRuntime({ name: 'background' });
+<CallTable
+  bundleMode={{
+    rnRuntime: true,
+    uiRuntime: true,
+    workerRuntime: true,
+  }}
+  noBundleMode={{
+    rnRuntime: true,
+    uiRuntime: true,
+    workerRuntime: true,
+  }}
+/>
 
-runOnUI(() => {
-  scheduleOnRuntimeWithId(workletRuntime.runtimeId, (greeting: string) => {
-    console.log(`${greeting} from the background Worklet Runtime`);
-  }, 'Hello'); // This will throw an error outside of Bundle Mode 🚨
-});
-```
+## Platform compatibility
 
-```javascript
-import { createWorkletRuntime, scheduleOnRuntimeWithId } from 'react-native-worklets';
-
-const workletRuntime = createWorkletRuntime({ name: 'background' });
-const anotherWorkletRuntime = createWorkletRuntime({ name: 'anotherBackground' });
-
-scheduleOnRuntimeWithId(workletRuntime.runtimeId, () => {
-  scheduleOnRuntimeWithId(anotherWorkletRuntime.runtimeId, (greeting: string) => {
-    console.log(`${greeting} from the background Worklet Runtime`);
-  }, 'Hello'); // This will throw an error outside of Bundle Mode 🚨
-});
-```
+<PlatformTable native={true} web={false} />

@@ -3,11 +3,14 @@ import { ReanimatedError } from '../../errors';
 import type { ValueProcessor } from '../../types';
 
 export const ERROR_MESSAGES = {
-  unsupportedAspectRatio: (ratio: string | number) =>
-    `Unsupported aspect ratio: ${ratio}. Expected a number or a string in "a/b" format.`,
+  unsupportedAspectRatio(ratio: string | number) {
+    'worklet';
+    return `Unsupported aspect ratio: ${ratio}. Expected a number or a string in "a/b" format.`;
+  },
 };
 
 export const processAspectRatio: ValueProcessor<number | string> = (value) => {
+  'worklet';
   if (typeof value === 'number' || !isNaN(+value)) {
     return +value;
   } else if (typeof value === 'string') {
@@ -24,7 +27,10 @@ export const processAspectRatio: ValueProcessor<number | string> = (value) => {
   throw new ReanimatedError(ERROR_MESSAGES.unsupportedAspectRatio(value));
 };
 
-export const processGap: ValueProcessor<number | string> = (value) => ({
-  rowGap: value,
-  columnGap: value,
-});
+export const processGap: ValueProcessor<number | string> = (value) => {
+  'worklet';
+  return {
+    rowGap: value,
+    columnGap: value,
+  };
+};

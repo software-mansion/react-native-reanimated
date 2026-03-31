@@ -67,7 +67,7 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
         context.assertOnJSQueueThread()
 
         val jsContext = checkNotNull(context.javaScriptContextHolder).get()
-        val jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context)
+        val jsCallInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
 
         val sourceURL = context.sourceURL
 
