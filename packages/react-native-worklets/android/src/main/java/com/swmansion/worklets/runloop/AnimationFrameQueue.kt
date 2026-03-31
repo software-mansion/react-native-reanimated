@@ -14,8 +14,8 @@ class AnimationFrameQueue(
     private var lastFrameTimeMs = 0.0
     private var mAnimationsDragFactor = 1
 
-    // / ReactChoreographer is
-    // / [thread safe](https://github.com/facebook/react-native/blob/main/packages/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/core/ReactChoreographer.kt#L21).
+    // ReactChoreographer is
+    // [thread safe](https://github.com/facebook/react-native/blob/main/packages/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/core/ReactChoreographer.kt#L21).
     private val mReactChoreographer: ReactChoreographer = ReactChoreographer.getInstance()
     private val mChoreographerCallback: GuardedFrameCallback =
         object : GuardedFrameCallback(reactApplicationContext) {
