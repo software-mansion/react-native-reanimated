@@ -414,7 +414,7 @@ open class NativeProxy {
           }
         }
         CMD_END_OF_VIEW -> mFabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, props)
-        else -> throw RuntimeException("Unexcepted command: $command")
+        else -> throw RuntimeException("Unexpected command: $command")
       }
     }
   }

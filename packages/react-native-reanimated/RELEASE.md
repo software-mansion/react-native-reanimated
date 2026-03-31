@@ -54,11 +54,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
     When releasing v3, make sure to update the branch used for nightly releases of Reanimated 3 in [the workflow](../../.github/workflows/npm-reanimated-publish-nightly.yml).
     </details>
 ---
-8. When releasing a minor version, update the minimal supported React Native version:
-
-   - Android: `build.gradle`
-   - iOS: `reanimated_utils.rb`
-   - By default we support the last three minor versions
+8. Make sure the compatibility table in `compatibility.json` is up-to-date with supported versions of React Native and Worklets, including the RC releases. By default we support the last three minor versions
 
 9. Testing:
 

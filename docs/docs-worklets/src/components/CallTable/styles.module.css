@@ -1,0 +1,49 @@
+.container {
+  max-width: 600px;
+  overflow-x: auto;
+}
+
+.title {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.description {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin-bottom: 0;
+}
+
+.table th,
+.table td {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  padding: 12px;
+  text-align: center;
+}
+
+.table td:first-child,
+.table th:first-child {
+  text-align: left;
+  font-weight: 600;
+}
+
+.bundleEnabled {
+  background-color: rgba(0, 180, 0, 0.08);
+}
+
+.bundleDisabled {
+  background-color: rgba(220, 0, 0, 0.08);
+}
+
+.hint {
+  font-size: 0.85rem;
+  text-align: center;
+}
