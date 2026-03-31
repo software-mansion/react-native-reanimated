@@ -36,6 +36,7 @@ describe('runOnRuntimeAsync', () => {
 
     expect(result).toBe(42);
   });
+
   test('throws when scheduling on UI Runtime to a Worker Runtime', async () => {
     scheduleOnUI(() => {
       'worklet';
