@@ -158,8 +158,7 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const std::shared_ptr<RuntimeManager> &runtimeManager,
     const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
     const std::shared_ptr<RuntimeBindings> &runtimeBindings,
-    const BundleModeConfig &bundleModeConfig,
-    NativeLogger nativeLogger)
+    const BundleModeConfig &bundleModeConfig)
     : jsi::HostObject(),
       isDevBundle_(isDevBundle),
       bundleModeConfig_(bundleModeConfig),
@@ -169,8 +168,7 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       memoryManager_(memoryManager),
       runtimeManager_(runtimeManager),
       uiWorkletRuntime_(uiWorkletRuntime),
-      runtimeBindings_(runtimeBindings),
-      nativeLogger_(std::move(nativeLogger)) {}
+      runtimeBindings_(runtimeBindings) {}
 
 JSIWorkletsModuleProxy::~JSIWorkletsModuleProxy() = default;
 

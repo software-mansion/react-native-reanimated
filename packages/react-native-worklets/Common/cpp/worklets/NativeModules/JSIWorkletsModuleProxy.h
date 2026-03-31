@@ -7,7 +7,6 @@
 #include <worklets/SharedItems/MemoryManager.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/Defs.h>
-#include <worklets/Tools/NativeLogger.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
@@ -35,8 +34,7 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
       const std::shared_ptr<RuntimeManager> &runtimeManager,
       const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
       const std::shared_ptr<RuntimeBindings> &runtimeBindings,
-      const BundleModeConfig &bundleModeConfig,
-      NativeLogger nativeLogger);
+      const BundleModeConfig &bundleModeConfig);
 
   JSIWorkletsModuleProxy(const JSIWorkletsModuleProxy &other) = default;
 
@@ -86,10 +84,6 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
     return runtimeBindings_;
   }
 
-  [[nodiscard]] const NativeLogger &getNativeLogger() const {
-    return nativeLogger_;
-  }
-
  private:
   const bool isDevBundle_;
   const BundleModeConfig bundleModeConfig_;
@@ -100,7 +94,6 @@ class JSIWorkletsModuleProxy : public jsi::HostObject {
   const std::shared_ptr<RuntimeManager> runtimeManager_;
   const std::weak_ptr<WorkletRuntime> uiWorkletRuntime_;
   const std::shared_ptr<RuntimeBindings> runtimeBindings_;
-  const NativeLogger nativeLogger_;
 };
 
 } // namespace worklets

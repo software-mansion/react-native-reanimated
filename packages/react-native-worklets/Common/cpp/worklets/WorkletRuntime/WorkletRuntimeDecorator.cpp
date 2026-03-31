@@ -74,7 +74,7 @@ void WorkletRuntimeDecorator::decorate(
     const bool isDevBundle,
     jsi::Object &&jsiWorkletsModuleProxy,
     const std::shared_ptr<EventLoop> &eventLoop,
-    const NativeLogger &nativeLogger) {
+    const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
@@ -112,20 +112,13 @@ void WorkletRuntimeDecorator::decorate(
   jsi_utils::installJsiFunction(
       rt, "_log", [](jsi::Runtime &rt, const jsi::Value &value) { PlatformLogger::log(stringifyJSIValue(rt, value)); });
 
-  rt.global().setProperty(
-      rt,
-      "nativeLoggingHook",
-      jsi::Function::createFromHostFunction(
-          rt,
-          jsi::PropNameID::forAscii(rt, "nativeLoggingHook"),
-          2,
-          [nativeLogger](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) {
-            if (count != 2) {
-              throw std::invalid_argument("nativeLoggingHook takes 2 arguments");
-            }
-            nativeLogger(args[0].asString(rt).utf8(rt), static_cast<unsigned int>(args[1].asNumber()));
-            return jsi::Value::undefined();
-          }));
+  if (runtimeBindings->nativeLoggingHook) {
+    rt.global().setProperty(
+        rt,
+        "nativeLoggingHook",
+        jsi::Function::createFromHostFunction(
+            rt, jsi::PropNameID::forAscii(rt, "nativeLoggingHook"), 2, runtimeBindings->nativeLoggingHook));
+  }
 
   jsi_utils::installJsiFunction(rt, "_toString", [](jsi::Runtime &rt, const jsi::Value &value) {
     return jsi::String::createFromUtf8(rt, stringifyJSIValue(rt, value));

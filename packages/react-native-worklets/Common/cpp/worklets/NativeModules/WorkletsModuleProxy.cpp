@@ -4,7 +4,6 @@
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/Tools/Defs.h>
-#include <worklets/Tools/PlatformLogger.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
@@ -37,6 +36,12 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       runtimeManager_(std::make_shared<RuntimeManager>()),
       uiWorkletRuntime_(
           runtimeManager_->createUninitializedUIRuntime(jsQueue_, std::make_shared<AsyncQueueUI>(uiScheduler_))) {
+  auto nativeLoggingHookValue = rnRuntime.global().getProperty(rnRuntime, "nativeLoggingHook");
+  if (nativeLoggingHookValue.isObject() && nativeLoggingHookValue.asObject(rnRuntime).isFunction(rnRuntime)) {
+    runtimeBindings_->nativeLoggingHook =
+        nativeLoggingHookValue.asObject(rnRuntime).asFunction(rnRuntime).getHostFunction(rnRuntime);
+  }
+
   /**
    * We call additional `init` method here because
    * JSIWorkletsModuleProxy needs a weak_ptr to the UI Runtime.
@@ -61,8 +66,7 @@ std::shared_ptr<JSIWorkletsModuleProxy> WorkletsModuleProxy::createJSIWorkletsMo
       runtimeManager_,
       uiWorkletRuntime_,
       runtimeBindings_,
-      bundleModeConfig_,
-      [](const std::string &message, unsigned int /*logLevel*/) { PlatformLogger::log(message); });
+      bundleModeConfig_);
 }
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {
