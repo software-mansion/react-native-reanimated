@@ -236,6 +236,8 @@ export default function EmptyExample() {
           preserveAspectRatio="xMidYMid slice"
           viewBox="0 0 100 100"
           width="100%">
+          {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+          {/* @ts-ignore react-native-svg web typings for Defs are missing children */}
           <Defs>
             <AnimatedLinearGradient
               animatedProps={svgGlowGradientAnim}
