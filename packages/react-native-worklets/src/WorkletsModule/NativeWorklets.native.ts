@@ -3,10 +3,15 @@
 import { checkCppVersion } from '../debug/checkCppVersion';
 import { jsVersion } from '../debug/jsVersion';
 import { WorkletsError } from '../debug/WorkletsError';
+import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
+import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
+import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
+import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
 import type { SerializableRef, SynchronizableRef } from '../memory/types';
+import { installValueUnpacker } from '../memory/valueUnpacker';
 import { isRNRuntime, RuntimeKind } from '../runtimeKind';
 import { WorkletsTurboModule } from '../specs';
-import type { WorkletRuntime } from '../types';
+import type { WorkletFunction, WorkletRuntime } from '../types';
 import type {
   IWorkletsModule,
   WorkletsModuleProxy,
@@ -29,6 +34,7 @@ class NativeWorklets implements IWorkletsModule {
           '[Worklets] Bundle mode initialization: Downloaded the bundle for Worklet Runtimes.'
         );
       }
+      installUnpackers(globalThis.__workletsModuleProxy);
       WorkletsTurboModule!.start();
     }
     if (globalThis.__workletsModuleProxy === undefined) {
@@ -323,3 +329,31 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 }
 
 export const WorkletsModule: IWorkletsModule = new NativeWorklets();
+
+function installUnpackers(workletsModuleProxy: WorkletsModuleProxy) {
+  workletsModuleProxy.loadUnpackers(
+    (installValueUnpacker as WorkletFunction).__initData!.code,
+    (installValueUnpacker as WorkletFunction).__initData!.location ?? '',
+    (installValueUnpacker as WorkletFunction).__initData!.sourceMap ?? '',
+    (installSynchronizableUnpacker as WorkletFunction).__initData!.code,
+    (installSynchronizableUnpacker as WorkletFunction).__initData!.location ??
+      '',
+    (installSynchronizableUnpacker as WorkletFunction).__initData!.sourceMap ??
+      '',
+    (installCustomSerializableUnpacker as WorkletFunction).__initData!.code,
+    (installCustomSerializableUnpacker as WorkletFunction).__initData!
+      .location ?? '',
+    (installCustomSerializableUnpacker as WorkletFunction).__initData!
+      .sourceMap ?? '',
+    (installShareableHostUnpacker as WorkletFunction).__initData!.code,
+    (installShareableHostUnpacker as WorkletFunction).__initData!.location ??
+      '',
+    (installShareableHostUnpacker as WorkletFunction).__initData!.sourceMap ??
+      '',
+    (installShareableGuestUnpacker as WorkletFunction).__initData!.code,
+    (installShareableGuestUnpacker as WorkletFunction).__initData!.location ??
+      '',
+    (installShareableGuestUnpacker as WorkletFunction).__initData!.sourceMap ??
+      ''
+  );
+}

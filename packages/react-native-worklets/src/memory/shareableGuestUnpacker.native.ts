@@ -17,7 +17,9 @@ import type {
   ShareableHost,
 } from './types';
 
-export function __installUnpacker() {
+export function installShareableGuestUnpacker() {
+  'worklet';
+  'no-worklet-closure';
   let runOnRuntimeSyncFromId: typeof BundleRunOnRuntimeSyncFromId;
   let memoize: (
     unpacked: Shareable<unknown>,
@@ -54,6 +56,7 @@ export function __installUnpacker() {
     ) => {
       const serializedWorklet = serializer(() => {
         'worklet';
+        'limit-init-data-hoisting';
         return globalThis.__serializer(worklet(...args));
       });
       return proxy.runOnRuntimeSyncWithId(hostId, serializedWorklet);
@@ -68,6 +71,7 @@ export function __installUnpacker() {
         hostId,
         serializer(() => {
           'worklet';
+          'limit-init-data-hoisting';
           return globalThis.__serializer(worklet(...args));
         })
       );
@@ -95,16 +99,19 @@ export function __installUnpacker() {
 
     const get = () => {
       'worklet';
+      'limit-init-data-hoisting';
       return (shareableGuest as Host).value;
     };
 
     const setWithValue = (value: TValue) => {
       'worklet';
+      'limit-init-data-hoisting';
       (shareableGuest as Host).value = value;
     };
 
     const setWithSetter = (setter: (prev: TValue) => TValue) => {
       'worklet';
+      'limit-init-data-hoisting';
       const currentValue = (shareableGuest as Host).value;
       const newValue = setter(currentValue);
       (shareableGuest as Host).value = newValue;
