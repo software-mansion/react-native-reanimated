@@ -4,18 +4,24 @@ import { WorkletsError } from './debug/WorkletsError';
 import { createSerializable } from './memory/serializable';
 import { serializableMappingCache } from './memory/serializableMappingCache';
 
-export function addGuardImplementation(
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-  fn: Function,
-  customMessage?: string
+export function addGuardImplementation<Args extends unknown[]>(
+  fn: (...args: Args) => unknown,
+  errorMessage: string
 ): void {
-  const name = fn.name;
   const serializableGuard = createSerializable(function guardImplementation() {
     'worklet';
-    throw new WorkletsError(
-      customMessage ??
-        `${name} cannot be called on Worklet Runtimes outside of the Bundle Mode.`
-    );
+    throw new WorkletsError(errorMessage);
   });
   serializableMappingCache.set(fn, serializableGuard);
+}
+
+export function addNoBundleModeGuardImplementation<Args extends unknown[]>(
+  fn: (...args: Args) => unknown
+): void {
+  const name = fn.name;
+
+  addGuardImplementation(
+    fn,
+    `${name} cannot be called on Worklet Runtimes outside of the Bundle Mode.`
+  );
 }

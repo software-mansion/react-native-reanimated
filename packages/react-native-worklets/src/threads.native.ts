@@ -1,7 +1,10 @@
 'use strict';
 
 import { WorkletsError } from './debug/WorkletsError';
-import { addGuardImplementation } from './guardImplementation';
+import {
+  addGuardImplementation,
+  addNoBundleModeGuardImplementation,
+} from './guardImplementation';
 import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
@@ -313,9 +316,6 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
  *   other worklets to be scheduled within the same JS loop. It uses
  *   queueMicrotask to schedule all the worklets at once making sure they will
  *   run within the same frame boundaries on the UI thread.
- * - This function can only be called from the [RN
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
- *   Calling it from other runtimes will result in an error.
  *
  * @param fun - A reference to a function you want to execute on the [UI
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
@@ -323,6 +323,8 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
  *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#javascript-runtime).
  * @returns A promise that resolves to the return value of the function passed
  *   as the first argument.
+ * @throws If called from a runtime other than the [RN
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
  * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUIAsync
  */
 export function runOnUIAsync<Args extends unknown[], ReturnValue>(
@@ -394,6 +396,6 @@ if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     runOnUIAsync,
     '`runOnUIAsync` can only be called on the RN Runtime.'
   );
-  addGuardImplementation(runOnUISync);
-  addGuardImplementation(scheduleOnUI);
+  addNoBundleModeGuardImplementation(runOnUISync);
+  addNoBundleModeGuardImplementation(scheduleOnUI);
 }

@@ -1,7 +1,7 @@
 'use strict';
 
 import { WorkletsError } from '../debug/WorkletsError';
-import { addGuardImplementation } from '../guardImplementation';
+import { addNoBundleModeGuardImplementation } from '../guardImplementation';
 import { UIRuntimeId } from '../runtimes';
 import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
@@ -84,5 +84,5 @@ export function createShareable<
 }
 
 if (__DEV__ && globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-  addGuardImplementation(createShareable);
+  addNoBundleModeGuardImplementation(createShareable);
 }
