@@ -89,9 +89,7 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
     @OptIn(FrameworkAPI::class)
     @ReactMethod(isBlockingSynchronousMethod = true)
     override fun start(): Boolean {
-        if(!reactApplicationContext.isOnJSQueueThread) {
-            return false
-        }
+        reactApplicationContext.assertOnJSQueueThread()
         startCpp()
         return true
     }
