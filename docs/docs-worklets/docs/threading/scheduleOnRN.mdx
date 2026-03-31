@@ -78,3 +78,22 @@ runOnUI(() => {
 - Scheduling function from the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime) (we are already on RN Runtime) simply
   uses `queueMicrotask`.
 - When functions need to be scheduled from a [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime), they rely on React Native's scheduling model to forward the function call to the [RN Runtime](/docs/fundamentals/runtimeKinds#rn-runtime).
+
+## Call table
+
+<CallTable
+  bundleMode={{
+    rnRuntime: true,
+    uiRuntime: true,
+    workerRuntime: true,
+  }}
+  noBundleMode={{
+    rnRuntime: true,
+    uiRuntime: true,
+    workerRuntime: true,
+  }}
+/>
+
+## Platform compatibility
+
+<PlatformTable native={true} web={true} />
