@@ -1,10 +1,11 @@
 #pragma once
 
-#include <functional>
-#include <string>
+#include <jsi/jsi.h>
+
+using namespace facebook;
 
 namespace worklets {
 
-using NativeLogger = std::function<void(const std::string &message, unsigned int logLevel)>;
+using NativeLogger = jsi::HostFunctionType;
 
 } // namespace worklets

@@ -67,7 +67,9 @@ export function createWorkletRuntime(
   nameOrConfig?: string | WorkletRuntimeConfigInternal,
   initializer?: WorkletFunction<[], void>
 ): WorkletRuntime {
-  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
+  const runtimeBoundCapturableConsole = globalThis._WORKLETS_BUNDLE_MODE_ENABLED
+    ? getMemorySafeCapturableConsole()
+    : null;
 
   let name: string;
   let initializerFn: (() => void) | undefined;
@@ -103,7 +105,7 @@ export function createWorkletRuntime(
       setupCallGuard();
       setupSerializer();
       registerWorkletsError();
-      if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+      if (runtimeBoundCapturableConsole) {
         setupConsole(runtimeBoundCapturableConsole);
       }
       if (enableEventLoop) {

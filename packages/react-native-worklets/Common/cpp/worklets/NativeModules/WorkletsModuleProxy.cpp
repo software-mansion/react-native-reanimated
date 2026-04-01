@@ -36,10 +36,14 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       runtimeManager_(std::make_shared<RuntimeManager>()),
       uiWorkletRuntime_(
           runtimeManager_->createUninitializedUIRuntime(jsQueue_, std::make_shared<AsyncQueueUI>(uiScheduler_))) {
-  auto nativeLoggingHookValue = rnRuntime.global().getProperty(rnRuntime, "nativeLoggingHook");
-  if (nativeLoggingHookValue.isObject() && nativeLoggingHookValue.asObject(rnRuntime).isFunction(rnRuntime)) {
-    runtimeBindings_->nativeLoggingHook =
-        nativeLoggingHookValue.asObject(rnRuntime).asFunction(rnRuntime).getHostFunction(rnRuntime);
+  if (bundleModeConfig_.enabled) {
+    auto nativeLoggingHookValue = rnRuntime.global().getProperty(rnRuntime, "nativeLoggingHook");
+    if (nativeLoggingHookValue.isObject() && nativeLoggingHookValue.asObject(rnRuntime).isFunction(rnRuntime)) {
+      runtimeBindings_->nativeLoggingHook =
+          nativeLoggingHookValue.asObject(rnRuntime).asFunction(rnRuntime).getHostFunction(rnRuntime);
+    } else {
+      throw std::runtime_error("[Worklets] nativeLoggingHook missing with bundle mode enabled.");
+    }
   }
 
   /**

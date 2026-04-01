@@ -105,7 +105,13 @@ void WorkletRuntime::init(std::shared_ptr<JSIWorkletsModuleProxy> jsiWorkletsMod
   auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(rt, std::move(jsiWorkletsModuleProxy));
 
   WorkletRuntimeDecorator::decorate(
-      rt, name_, jsScheduler, isDevBundle, std::move(optimizedJsiWorkletsModuleProxy), eventLoop_, runtimeBindings);
+      rt,
+      name_,
+      jsScheduler,
+      isDevBundle,
+      std::move(optimizedJsiWorkletsModuleProxy),
+      eventLoop_,
+      runtimeBindings->nativeLoggingHook);
 
   if (bundleModeEnabled) {
     bundleModeInit(jsScheduler, script, sourceUrl, runtimeBindings);

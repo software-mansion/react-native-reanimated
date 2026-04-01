@@ -178,13 +178,9 @@ function installRNBindingsOnUIRuntime() {
     runOnUISync(registerWorkletsError);
   }
 
-  if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-    const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
-    runOnUISync(() => {
-      'worklet';
-      setupConsole(runtimeBoundCapturableConsole);
-    });
-  }
+  const runtimeBoundCapturableConsole = globalThis._WORKLETS_BUNDLE_MODE_ENABLED
+    ? getMemorySafeCapturableConsole()
+    : null;
 
   runOnUISync(() => {
     'worklet';
@@ -193,6 +189,11 @@ function installRNBindingsOnUIRuntime() {
      * separate function once we have a better way to distinguish between
      * Worklet Runtimes.
      */
+
+    if (runtimeBoundCapturableConsole) {
+      setupConsole(runtimeBoundCapturableConsole);
+    }
+
     setupMicrotasks();
     setupRequestAnimationFrame();
     setupSetTimeout();

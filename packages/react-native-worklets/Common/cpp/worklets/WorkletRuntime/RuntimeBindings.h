@@ -1,10 +1,8 @@
 #pragma once
 
-#include <jsi/jsi.h>
+#include <worklets/Tools/NativeLogger.h>
 
 #include <functional>
-
-using namespace facebook;
 
 namespace worklets {
 
@@ -12,7 +10,7 @@ struct RuntimeBindings {
   using RequestAnimationFrame = std::function<void(std::function<void(const double)>)>;
 
   const RequestAnimationFrame requestAnimationFrame;
-  jsi::HostFunctionType nativeLoggingHook;
+  NativeLogger nativeLoggingHook;
 
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
   using AbortRequest = std::function<void(jsi::Runtime &rt, double requestId)>;
