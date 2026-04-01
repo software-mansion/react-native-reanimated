@@ -2,7 +2,7 @@
 const workletsPluginOptions = {
   strictGlobal: true,
   // Uncomment the following to enable bundle mode.
-  bundleMode: true,
+  // bundleMode: true,
   // workletizableModules: ['axios'],
 };
 
