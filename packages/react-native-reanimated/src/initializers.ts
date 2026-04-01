@@ -1,5 +1,8 @@
 'use strict';
-import { runOnUISync } from 'react-native-worklets';
+import {
+  runOnUISync,
+  toggleSlowAnimationsOnUIRuntime as toggleSlowAnimationsOnUIRuntime_,
+} from 'react-native-worklets';
 
 import { IS_WEB, ReanimatedError, SHOULD_BE_USE_WEB } from './common';
 import { initSvgCssSupport } from './css/svg';
@@ -18,6 +21,12 @@ export function initializeReanimatedModule(
     initSvgCssSupport();
   }
 }
+
+function toggleSlowAnimationsOnUIRuntime() {
+  toggleSlowAnimationsOnUIRuntime_();
+}
+
+global.toggleSlowAnimationsOnUIRuntime = toggleSlowAnimationsOnUIRuntime;
 
 // is-tree-shakable-suppress
 if (!SHOULD_BE_USE_WEB) {

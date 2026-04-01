@@ -71,7 +71,7 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
         context.assertOnJSQueueThread()
 
         val jsContext = checkNotNull(context.javaScriptContextHolder).get()
-        val jsCallInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
+        val jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context)
 
         val sourceURL = context.sourceURL
 
@@ -86,7 +86,8 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
                 mMessageQueueThread,
                 jsCallInvokerHolder,
                 mAndroidUIScheduler,
-                scriptBufferWrapper)
+                scriptBufferWrapper
+            )
         return true
     }
 
@@ -120,7 +121,8 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
             responseType,
             useIncrementalUpdates,
             timeoutAsDouble,
-            withCredentials)
+            withCredentials
+        )
     }
 
     fun requestAnimationFrame(animationFrameCallback: AnimationFrameCallback) {

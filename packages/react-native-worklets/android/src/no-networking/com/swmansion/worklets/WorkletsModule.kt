@@ -67,7 +67,7 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
         context.assertOnJSQueueThread()
 
         val jsContext = checkNotNull(context.javaScriptContextHolder).get()
-        val jsCallInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
+        val jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context)
 
         val sourceURL = context.sourceURL
 
@@ -82,7 +82,8 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
                 mMessageQueueThread,
                 jsCallInvokerHolder,
                 mAndroidUIScheduler,
-                scriptBufferWrapper)
+                scriptBufferWrapper
+            )
         return true
     }
 
@@ -99,6 +100,13 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
         mSlowAnimationsEnabled = !mSlowAnimationsEnabled
         mAnimationFrameQueue.enableSlowAnimations(mSlowAnimationsEnabled, animationsDragFactor)
     }
+
+    @OptIn(FrameworkAPI::class)
+    @ReactMethod
+    override fun toggleSlowAnimationsOnUIRuntime(): Boolean {
+        toggleSlowAnimations()
+        return mSlowAnimationsEnabled
+    };
 
     override fun invalidate() {
         if (mInvalidated.getAndSet(true)) {

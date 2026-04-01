@@ -26,6 +26,8 @@
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
 
+#include <android/log.h>
+
 #include <memory>
 #include <set>
 #include <string>
@@ -156,6 +158,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
       const jsi::Value &isStatusBarTranslucent,
       const jsi::Value &isNavigationBarTranslucent) override;
   void unsubscribeFromKeyboardEvents(jsi::Runtime &rt, const jsi::Value &listenerId) override;
+
+  void toggleSlowAnimationsOnUIRuntime() const;
 
   inline LayoutAnimationsManager &layoutAnimationsManager() {
     return *layoutAnimationsManager_;

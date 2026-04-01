@@ -158,6 +158,8 @@ export interface WorkletsModuleProxy {
   getUIRuntimeHolder(): object;
 
   getUISchedulerHolder(): object;
+
+  toggleSlowAnimationsOnUIRuntime(): boolean;
 }
 
 export type IWorkletsModule = WorkletsModuleProxy;

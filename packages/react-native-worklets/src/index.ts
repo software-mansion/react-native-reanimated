@@ -13,6 +13,7 @@ if (globalThis._ALWAYS_FALSE) {
   bundleModeInit();
 }
 
+export { toggleSlowAnimationsOnUIRuntime } from './debug/slowAnimations';
 export {
   callMicrotasks,
   isShareableRef,

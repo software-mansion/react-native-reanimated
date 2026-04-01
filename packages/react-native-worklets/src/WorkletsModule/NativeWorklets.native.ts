@@ -322,6 +322,10 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   getUISchedulerHolder(): object {
     return this.#workletsModuleProxy.getUISchedulerHolder();
   }
+
+  toggleSlowAnimationsOnUIRuntime(): boolean {
+    return WorkletsTurboModule!.toggleSlowAnimationsOnUIRuntime();
+  }
 }
 
 export const WorkletsModule: IWorkletsModule = new NativeWorklets();
