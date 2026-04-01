@@ -1,5 +1,6 @@
 import type { NodePath } from '@babel/core';
 import generate from '@babel/generator';
+import type { Binding } from '@babel/traverse';
 import type {
   BlockStatement,
   ExpressionStatement,
@@ -60,7 +61,9 @@ export function makeWorkletFactory(
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
-  removeWorkletDirective(fun);
+  const includeClosure = !hasDirective(fun, 'no-worklet-closure');
+  const limitInitDataHoisting = hasDirective(fun, 'limit-init-data-hoisting');
+  stripWorkletDirectives(fun);
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
@@ -98,7 +101,13 @@ export function makeWorkletFactory(
     closureVariables,
     libraryBindingsToImport,
     relativeBindingsToImport,
-  } = getClosure(fun, state);
+  } = includeClosure
+    ? getClosure(fun, state)
+    : {
+        closureVariables: [],
+        libraryBindingsToImport: new Set<Binding>(),
+        relativeBindingsToImport: new Set<Binding>(),
+      };
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -196,7 +205,7 @@ export function makeWorkletFactory(
     const initDataDeclaration = variableDeclaration('const', [
       variableDeclarator(initDataId, initDataObjectExpression),
     ]);
-    if (state.opts.limitInitDataHoisting) {
+    if (limitInitDataHoisting) {
       (fun.getFunctionParent()!.node.body as BlockStatement).body.unshift(
         initDataDeclaration
       );
@@ -393,11 +402,36 @@ export function makeWorkletFactory(
   return { factory, factoryCallParamPack, workletHash };
 }
 
-function removeWorkletDirective(fun: NodePath<WorkletizableFunction>): void {
+function hasDirective(
+  path: NodePath<WorkletizableFunction>,
+  directiveText: string
+): boolean {
+  if (!path.node.body) {
+    return false;
+  }
+
+  const bodyPath = path.get('body');
+  let has = false;
+  if (bodyPath.isBlockStatement()) {
+    has = bodyPath.get('directives').some((directivePath) => {
+      if (
+        directivePath.isDirective() &&
+        directivePath.node.value.value === directiveText
+      ) {
+        return true;
+      }
+    });
+  }
+  return has;
+}
+
+function stripWorkletDirectives(fun: NodePath<WorkletizableFunction>): void {
   fun.traverse({
     DirectiveLiteral(nodePath) {
       if (
-        nodePath.node.value === 'worklet' &&
+        (nodePath.node.value === 'worklet' ||
+          nodePath.node.value === 'no-worklet-closure' ||
+          nodePath.node.value === 'limit-init-data-hoisting') &&
         nodePath.getFunctionParent() === fun
       ) {
         nodePath.parentPath.remove();

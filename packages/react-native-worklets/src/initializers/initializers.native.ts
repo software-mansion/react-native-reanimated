@@ -11,11 +11,12 @@ import { registerReportFatalRemoteError } from '../debug/errors';
 import { registerWorkletsError, WorkletsError } from '../debug/WorkletsError';
 import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
-import { __installUnpacker as installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
+import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
 import { makeShareableCloneOnUIRecursive } from '../memory/serializable';
-import { __installUnpacker as installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
-import { __installUnpacker as installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
-import { __installUnpacker as installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
+import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
+import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
+import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
+import { installValueUnpacker } from '../memory/valueUnpacker';
 import { setupSetImmediate } from '../runLoop/common/setImmediatePolyfill';
 import { setupSetInterval } from '../runLoop/common/setIntervalPolyfill';
 import { setupRequestAnimationFrame } from '../runLoop/uiRuntime/requestAnimationFrame';
@@ -119,6 +120,8 @@ export function init() {
 function initializeRuntime() {
   if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
+  } else {
+    installValueUnpacker();
   }
   installSynchronizableUnpacker();
   installCustomSerializableUnpacker();
