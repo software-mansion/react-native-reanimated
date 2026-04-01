@@ -39,7 +39,7 @@ jobs:
           node-version: 22
 
       - name: Publish to npm
-        uses: tjzel/npm-package-publish@b29c75960ea14d3ce41b10b98f826d2cc1ca5196
+        uses: software-mansion/npm-package-publish@5a4fbd99427adb6ab4fe3557a9a6044c22e8f319
         with:
           release-type: ${{ github.event.inputs.release-type || 'nightly' }}
           version: ${{ github.event.inputs.version }}
