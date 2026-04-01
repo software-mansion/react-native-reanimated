@@ -9,7 +9,7 @@ import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
 import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
 import type { SerializableRef, SynchronizableRef } from '../memory/types';
 import { installValueUnpacker } from '../memory/valueUnpacker';
-import { isRNRuntime, RuntimeKind } from '../runtimeKind';
+import { isRNRuntime } from '../runtimeKind';
 import { WorkletsTurboModule } from '../specs';
 import type { WorkletFunction, WorkletRuntime } from '../types';
 import type {
@@ -27,15 +27,11 @@ class NativeWorklets implements IWorkletsModule {
   constructor() {
     const bundleModeEnabled = globalThis._WORKLETS_BUNDLE_MODE_ENABLED ?? false;
     globalThis._WORKLETS_VERSION_JS = jsVersion;
-    if (globalThis.__workletsModuleProxy === undefined && isRNRuntime()) {
+    const onRNRuntime = isRNRuntime();
+    if (globalThis.__workletsModuleProxy === undefined && onRNRuntime) {
       WorkletsTurboModule?.installTurboModule(bundleModeEnabled);
-      if (__DEV__ && bundleModeEnabled) {
-        console.log(
-          '[Worklets] Bundle mode initialization: Downloaded the bundle for Worklet Runtimes.'
-        );
-      }
       installUnpackers(globalThis.__workletsModuleProxy);
-      WorkletsTurboModule!.start();
+      WorkletsTurboModule?.start();
     }
     if (globalThis.__workletsModuleProxy === undefined) {
       throw new WorkletsError(
@@ -43,8 +39,15 @@ class NativeWorklets implements IWorkletsModule {
 See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#native-part-of-worklets-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    if (__DEV__ && globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
-      checkCppVersion();
+    if (__DEV__) {
+      if (bundleModeEnabled) {
+        console.log(
+          '[Worklets] Bundle mode initialization: Downloaded the bundle for Worklet Runtimes.'
+        );
+      }
+      if (onRNRuntime) {
+        checkCppVersion();
+      }
     }
     this.#workletsModuleProxy = globalThis.__workletsModuleProxy;
     this.#serializableNull = this.#workletsModuleProxy.createSerializableNull();
