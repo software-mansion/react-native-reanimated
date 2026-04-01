@@ -1,5 +1,4 @@
 'use strict';
-'worklet';
 import type {
   DynamicColorIOS as RNDynamicColorIOS,
   OpaqueColorValue,
@@ -17,6 +16,7 @@ import { isRecord } from '../../utils';
  * https://github.com/facebook/react-native/blob/v0.81.0/packages/react-native/Libraries/StyleSheet/PlatformColorValueTypes.d.ts
  */
 export function PlatformColor(...names: string[]): OpaqueColorValue {
+  'worklet';
   return (IS_IOS
     ? { semantic: names }
     : // eslint-disable-next-line camelcase
@@ -28,6 +28,7 @@ type PlatformColorObject =
   | { semantic?: never; resource_paths?: Array<string> };
 
 function isPlatformColorObject(value: unknown): value is PlatformColorObject {
+  'worklet';
   return (
     isRecord(value) &&
     (Array.isArray(value.semantic) || Array.isArray(value.resource_paths))
@@ -40,6 +41,7 @@ function isPlatformColorObject(value: unknown): value is PlatformColorObject {
 type DynamicColorIOSTuple = Parameters<typeof RNDynamicColorIOS>[0];
 
 export function DynamicColorIOS(tuple: DynamicColorIOSTuple): OpaqueColorValue {
+  'worklet';
   return {
     dynamic: {
       light: tuple.light,
@@ -57,6 +59,7 @@ type DynamicColorObjectIOS = {
 function isDynamicColorObjectIOS(
   value: unknown
 ): value is DynamicColorObjectIOS {
+  'worklet';
   return (
     isRecord(value) &&
     isRecord(value.dynamic) &&
@@ -66,15 +69,22 @@ function isDynamicColorObjectIOS(
 }
 
 export const ERROR_MESSAGES = {
-  invalidColor: (color: unknown) =>
-    `Invalid color value: ${JSON.stringify(color)}`,
-  invalidProcessedColor: (color: unknown) =>
-    `Invalid processed color value: ${JSON.stringify(color)}`,
-  dynamicNotAvailableOnPlatform: () =>
-    'DynamicColorIOS is not available on this platform.',
+  invalidColor(color: unknown) {
+    'worklet';
+    return `Invalid color value: ${JSON.stringify(color)}`;
+  },
+  invalidProcessedColor(color: unknown) {
+    'worklet';
+    return `Invalid processed color value: ${JSON.stringify(color)}`;
+  },
+  dynamicNotAvailableOnPlatform() {
+    'worklet';
+    return 'DynamicColorIOS is not available on this platform.';
+  },
 };
 
 export function processColorNumber(value: unknown): number | null {
+  'worklet';
   let normalizedColor = processColorInitially(value);
 
   if (IS_ANDROID && typeof normalizedColor == 'number') {
@@ -115,6 +125,7 @@ const DynamicColorIOSProperties = [
 function processDynamicColorObjectIOS(
   value: DynamicColorObjectIOS
 ): ProcessedDynamicColorObjectIOS | null {
+  'worklet';
   const result = {} as ProcessedDynamicColorObjectIOS['dynamic'];
 
   for (const property of DynamicColorIOSProperties) {
@@ -176,6 +187,7 @@ export function processColor(
   value: unknown,
   context?: ValueProcessorContext
 ): ProcessedColor {
+  'worklet';
   let result: ProcessedColor | null = processColorNumber(value); // try to convert to a number first (most common case)
 
   if (result) {
@@ -229,6 +241,7 @@ export function unprocessColor(
 }
 
 export function processColorsInProps(props: StyleProps) {
+  'worklet';
   for (const key in props) {
     if (!ColorProperties.includes(key)) continue;
     const value = props[key];

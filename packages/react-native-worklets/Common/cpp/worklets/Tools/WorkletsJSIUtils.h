@@ -166,6 +166,6 @@ void installJsiFunction(jsi::Runtime &rt, std::string_view name, Fun function) {
 
 jsi::Array convertStringToArray(jsi::Runtime &rt, const std::string &value, const unsigned int expectedSize);
 
-jsi::Object optimizedFromHostObject(jsi::Runtime &rt, std::shared_ptr<jsi::HostObject> &&hostObject);
+jsi::Object optimizedFromHostObject(jsi::Runtime &rt, const std::shared_ptr<jsi::HostObject> &hostObject);
 
 } // namespace worklets::jsi_utils

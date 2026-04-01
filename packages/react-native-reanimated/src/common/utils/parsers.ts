@@ -1,5 +1,4 @@
 'use strict';
-'worklet';
 import type { BoxShadowValue } from 'react-native';
 
 import { isLength } from '../utils/guards';
@@ -15,6 +14,7 @@ const SHADOW_PARTS_REGEX = /(?:[^\s()]+|\([^()]*\))+/g;
 const SHADOW_SPLIT_REGEX = /(?:[^,()]+|\([^)]*\))+(?=\s*,|$)/g;
 
 export function parseBoxShadowString(value: string) {
+  'worklet';
   if (value === 'none') {
     return [];
   }
