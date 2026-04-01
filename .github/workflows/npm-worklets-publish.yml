@@ -10,19 +10,28 @@ on:
       publish:
         description: 'Whether to publish the package or just do a dry run.'
         required: false
-        default: 'false'
+        type: boolean
+        default: false
       version:
         description: 'Version to be published if cannot be inferred automatically, use for stable releases.'
         required: false
+        type: string
         default: ''
 
       release-type:
         description: 'Release type to be published (stable, nightly, beta, rc)'
+        type: choice
+        options:
+          - stable
+          - nightly
+          - beta
+          - rc
         required: true
 
       npm-tag:
         description: 'NPM tag to publish under (usually inferred from release type and version)'
         required: false
+        type: string
         default: ''
 
 jobs:
@@ -38,13 +47,13 @@ jobs:
           cache: 'yarn'
           node-version: 22
 
-      - name: Publish to npm
+      - name: Build and publish
         uses: software-mansion/npm-package-publish@5a4fbd99427adb6ab4fe3557a9a6044c22e8f319
         with:
           release-type: ${{ github.event.inputs.release-type || 'nightly' }}
           version: ${{ github.event.inputs.version }}
           npm-tag: ${{ github.event.inputs.npm-tag }}
-          dry-run: ${{ github.event.inputs.publish != 'true' }}
+          dry-run: ${{ !github.event.inputs.publish }}
           package-name: 'react-native-worklets'
           package-json-path: 'packages/react-native-worklets/package.json'
           version-getter-script: 'scripts/resolve-release-version.js'
