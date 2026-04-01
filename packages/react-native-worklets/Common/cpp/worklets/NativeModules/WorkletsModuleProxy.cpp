@@ -42,7 +42,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       runtimeBindings_->nativeLoggingHook =
           nativeLoggingHookValue.asObject(rnRuntime).asFunction(rnRuntime).getHostFunction(rnRuntime);
     } else {
-      throw std::runtime_error("[Worklets] nativeLoggingHook missing with bundle mode enabled.");
+      throw std::runtime_error("[Worklets] nativeLoggingHook is missing.");
     }
   }
 

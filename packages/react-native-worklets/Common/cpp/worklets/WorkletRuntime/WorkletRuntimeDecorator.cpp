@@ -1,3 +1,4 @@
+#include <jsi/jsi.h>
 #include <worklets/SharedItems/Serializable.h>
 #include <worklets/SharedItems/SerializableFactory.h>
 #include <worklets/Tools/Defs.h>
@@ -74,7 +75,7 @@ void WorkletRuntimeDecorator::decorate(
     const bool isDevBundle,
     jsi::Object &&jsiWorkletsModuleProxy,
     const std::shared_ptr<EventLoop> &eventLoop,
-    const NativeLogger &nativeLoggingHook) {
+    const jsi::HostFunctionType &nativeLoggingHook) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
@@ -114,7 +115,7 @@ void WorkletRuntimeDecorator::decorate(
 
   if (nativeLoggingHook) {
     // 2 arguments: message (string) and logLevel (number). See:
-    // https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/jsitooling/react/runtime/JSRuntimeBindings.cpp
+    // https://github.com/facebook/react-native/blob/654d64655ab3e3319fdfd4bfbe1c19c0b1233ff8/packages/react-native/ReactCommon/jsitooling/react/runtime/JSRuntimeBindings.cpp
     rt.global().setProperty(
         rt,
         "nativeLoggingHook",
