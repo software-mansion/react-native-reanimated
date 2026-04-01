@@ -139,6 +139,13 @@ class WorkletsModule(reactContext: ReactApplicationContext) :
         mAnimationFrameQueue.enableSlowAnimations(mSlowAnimationsEnabled, animationsDragFactor)
     }
 
+    @OptIn(FrameworkAPI::class)
+    @ReactMethod
+    override fun toggleSlowAnimationsOnUIRuntime(): Boolean {
+        toggleSlowAnimations()
+        return mSlowAnimationsEnabled
+    };
+
     override fun invalidate() {
         if (mInvalidated.getAndSet(true)) {
             return
