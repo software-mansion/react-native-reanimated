@@ -238,7 +238,7 @@ jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &
     return jsi::Function::createFromHostFunction(
         rt,
         propName,
-        9,
+        15,
         [unpackerLoader = unpackerLoader_](
             jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
           const auto valueUnpackerCode = args[0].asString(rt).utf8(rt);
