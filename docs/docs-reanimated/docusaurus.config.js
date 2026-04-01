@@ -216,6 +216,7 @@ const config = {
                 },
                 {
                   test: /\.js$/,
+                  exclude: /\.yarn[\\/]unprocessed/,
                   use: 'babel-loader',
                 },
               ],
