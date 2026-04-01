@@ -2384,9 +2384,11 @@ const animatedStyle = useAnimatedStyle(function null1Factory({
   _worklet_1392490775014_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
-  const null1 = () => ({
-    width: 50
-  });
+  const null1 = function () {
+    return {
+      width: 50
+    };
+  };
   null1.__closure = {};
   null1.__workletHash = 1392490775014;
   null1.__pluginVersion = "x.y.z";
@@ -2863,6 +2865,42 @@ useAnimatedScrollHandler({
 });"
 `;
 
+exports[`babel plugin for react-compiler adds worklet directives to functions before react-compiler outlines them 1`] = `
+"import { c as _c } from "react/compiler-runtime";
+const TestComponent = t0 => {
+  const $ = _c(1);
+  if ($[0] !== "334946d229dc920aaf28bb8fd0705f10807290a3162fa05fe7deecf7dce3a2a2") {
+    for (let $i = 0; $i < 1; $i += 1) {
+      $[$i] = Symbol.for("react.memo_cache_sentinel");
+    }
+    $[0] = "334946d229dc920aaf28bb8fd0705f10807290a3162fa05fe7deecf7dce3a2a2";
+  }
+  useDerivedValue(_temp);
+  return null;
+};
+const _worklet_16591647617375_init_data = {
+  code: "function _temp_null1(){return[1,2,3].map(function(){return null;});}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+const _temp = function _temp_null1Factory({
+  _worklet_16591647617375_init_data
+}) {
+  const _e = [new global.Error(), 1, -27];
+  const _temp = function () {
+    return [1, 2, 3].map(() => null);
+  };
+  _temp.__closure = {};
+  _temp.__workletHash = 16591647617375;
+  _temp.__pluginVersion = "x.y.z";
+  _temp.__initData = _worklet_16591647617375_init_data;
+  _temp.__stackDetails = _e;
+  return _temp;
+}({
+  _worklet_16591647617375_init_data
+});"
+`;
+
 exports[`babel plugin for react-native-gesture-handler doesn't transform chained methods of objects containing Gesture property 1`] = `
 "const foo = Something.Gesture.Tap().onEnd(() => {
   console.log('onEnd');
@@ -3067,8 +3105,8 @@ const foo = useTapGesture({
 `;
 
 exports[`babel plugin for react-native-gesture-handler workletizes possibly chained gesture object callback functions automatically 1`] = `
-"const _worklet_2359797567586_init_data = {
-  code: "function null1(_event,_success){console.log('onEnd');}",
+"const _worklet_13539781966089_init_data = {
+  code: "function null1(){console.log('onBegin');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
@@ -3077,26 +3115,26 @@ const _worklet_16446448315454_init_data = {
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-const _worklet_13974752356811_init_data = {
-  code: "function null3(){console.log('onBegin');}",
+const _worklet_16462958026656_init_data = {
+  code: "function null3(_event,_success){console.log('onEnd');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-const foo = Gesture.Tap().numberOfTaps(2).onBegin(function null3Factory({
-  _worklet_13974752356811_init_data
+const foo = Gesture.Tap().numberOfTaps(2).onBegin(function null1Factory({
+  _worklet_13539781966089_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
-  const null3 = function () {
+  const null1 = function () {
     console.log('onBegin');
   };
-  null3.__closure = {};
-  null3.__workletHash = 13974752356811;
-  null3.__pluginVersion = "x.y.z";
-  null3.__initData = _worklet_13974752356811_init_data;
-  null3.__stackDetails = _e;
-  return null3;
+  null1.__closure = {};
+  null1.__workletHash = 13539781966089;
+  null1.__pluginVersion = "x.y.z";
+  null1.__initData = _worklet_13539781966089_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }({
-  _worklet_13974752356811_init_data
+  _worklet_13539781966089_init_data
 })).onStart(function null2Factory({
   _worklet_16446448315454_init_data
 }) {
@@ -3112,21 +3150,21 @@ const foo = Gesture.Tap().numberOfTaps(2).onBegin(function null3Factory({
   return null2;
 }({
   _worklet_16446448315454_init_data
-})).onEnd(function null1Factory({
-  _worklet_2359797567586_init_data
+})).onEnd(function null3Factory({
+  _worklet_16462958026656_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
-  const null1 = function (_event, _success) {
+  const null3 = function (_event, _success) {
     console.log('onEnd');
   };
-  null1.__closure = {};
-  null1.__workletHash = 2359797567586;
-  null1.__pluginVersion = "x.y.z";
-  null1.__initData = _worklet_2359797567586_init_data;
-  null1.__stackDetails = _e;
-  return null1;
+  null3.__closure = {};
+  null3.__workletHash = 16462958026656;
+  null3.__pluginVersion = "x.y.z";
+  null3.__initData = _worklet_16462958026656_init_data;
+  null3.__stackDetails = _e;
+  return null3;
 }({
-  _worklet_2359797567586_init_data
+  _worklet_16462958026656_init_data
 }));"
 `;
 
@@ -3220,7 +3258,9 @@ styleFactory = function null1Factory({
   _worklet_11678593259064_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
-  const null1 = () => 'AssignmentExpression';
+  const null1 = function () {
+    return 'AssignmentExpression';
+  };
   null1.__closure = {};
   null1.__workletHash = 11678593259064;
   null1.__pluginVersion = "x.y.z";
@@ -3270,7 +3310,9 @@ styleFactory = function null1Factory({
   _worklet_11855919716831_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
-  const null1 = () => ({});
+  const null1 = function () {
+    return {};
+  };
   null1.__closure = {};
   null1.__workletHash = 11855919716831;
   null1.__pluginVersion = "x.y.z";
@@ -3293,7 +3335,9 @@ let styleFactory = function null1Factory({
   _worklet_11855919716831_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
-  const null1 = () => ({});
+  const null1 = function () {
+    return {};
+  };
   null1.__closure = {};
   null1.__workletHash = 11855919716831;
   null1.__pluginVersion = "x.y.z";
@@ -3318,7 +3362,9 @@ styleFactory = function null1Factory({
   _worklet_11678593259064_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
-  const null1 = () => 'AssignmentExpression';
+  const null1 = function () {
+    return 'AssignmentExpression';
+  };
   null1.__closure = {};
   null1.__workletHash = 11678593259064;
   null1.__pluginVersion = "x.y.z";
@@ -3502,7 +3548,9 @@ handler = {
     _worklet_11678593259064_init_data
   }) {
     const _e = [new global.Error(), 1, -27];
-    const null1 = () => 'AssignmentExpression';
+    const null1 = function () {
+      return 'AssignmentExpression';
+    };
     null1.__closure = {};
     null1.__workletHash = 11678593259064;
     null1.__pluginVersion = "x.y.z";
@@ -3552,7 +3600,9 @@ let styleFactory = function null1Factory({
   _worklet_11855919716831_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
-  const null1 = () => ({});
+  const null1 = function () {
+    return {};
+  };
   null1.__closure = {};
   null1.__workletHash = 11855919716831;
   null1.__pluginVersion = "x.y.z";
@@ -3576,7 +3626,9 @@ function outerScope() {
     _worklet_11855919716831_init_data
   }) {
     const _e = [new global.Error(), 1, -27];
-    const null1 = () => ({});
+    const null1 = function () {
+      return {};
+    };
     null1.__closure = {};
     null1.__workletHash = 11855919716831;
     null1.__pluginVersion = "x.y.z";
@@ -3602,7 +3654,9 @@ const secondReference = function null1Factory({
   _worklet_11855919716831_init_data
 }) {
   const _e = [new global.Error(), 1, -27];
-  const null1 = () => ({});
+  const null1 = function () {
+    return {};
+  };
   null1.__closure = {};
   null1.__workletHash = 11855919716831;
   null1.__pluginVersion = "x.y.z";
@@ -5279,82 +5333,88 @@ runOnUI(function null2Factory({
 `;
 
 exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnUI in runOnJS in runOnUI 1`] = `
-"const _worklet_7185083753711_init_data = {
-  code: "function null1(){const{runOnUI}=this.__closure;console.log('Hello from JS thread');runOnUI(function(){console.log('Hello from UI thread again');})();}",
+"const _worklet_16631003901641_init_data = {
+  code: "function null1(){console.log('Hello from UI thread again');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-const _worklet_9142654516624_init_data = {
-  code: "function null2(){const{runOnJS,_worklet_7185083753711_init_data,runOnUI}=this.__closure;console.log('Hello from UI thread');runOnJS(function null1Factory({_worklet_7185083753711_init_data:_worklet_7185083753711_init_data,runOnUI:runOnUI}){const _e=[new global.Error(),-2,-27];const null1=function(){console.log('Hello from JS thread');runOnUI(function(){console.log('Hello from UI thread again');})();};null1.__closure={runOnUI:runOnUI};null1.__workletHash=7185083753711;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_7185083753711_init_data;null1.__stackDetails=_e;return null1;}({_worklet_7185083753711_init_data:_worklet_7185083753711_init_data,runOnUI:runOnUI}))();}",
+const _worklet_1470601962314_init_data = {
+  code: "function null2(){const{runOnUI,_worklet_16631003901641_init_data}=this.__closure;console.log('Hello from JS thread');runOnUI(function null1Factory({_worklet_16631003901641_init_data:_worklet_16631003901641_init_data}){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Hello from UI thread again');};null1.__closure={};null1.__workletHash=16631003901641;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_16631003901641_init_data;null1.__stackDetails=_e;return null1;}({_worklet_16631003901641_init_data:_worklet_16631003901641_init_data}))();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-const _worklet_2520605269387_init_data = {
-  code: "function null3(){console.log('Hello from UI thread again');}",
+const _worklet_1411469776712_init_data = {
+  code: "function null3(){const{runOnJS,_worklet_1470601962314_init_data,runOnUI,_worklet_16631003901641_init_data}=this.__closure;console.log('Hello from UI thread');runOnJS(function null2Factory({_worklet_1470601962314_init_data:_worklet_1470601962314_init_data,runOnUI:runOnUI,_worklet_16631003901641_init_data:_worklet_16631003901641_init_data}){const _e=[new global.Error(),-3,-27];const null2=function(){console.log('Hello from JS thread');runOnUI(function null1Factory({_worklet_16631003901641_init_data:_worklet_16631003901641_init_data}){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Hello from UI thread again');};null1.__closure={};null1.__workletHash=16631003901641;null1.__pluginVersion=\\"x.y.z\\";null1.__initData=_worklet_16631003901641_init_data;null1.__stackDetails=_e;return null1;}({_worklet_16631003901641_init_data:_worklet_16631003901641_init_data}))();};null2.__closure={runOnUI:runOnUI,_worklet_16631003901641_init_data:_worklet_16631003901641_init_data};null2.__workletHash=1470601962314;null2.__pluginVersion=\\"x.y.z\\";null2.__initData=_worklet_1470601962314_init_data;null2.__stackDetails=_e;return null2;}({_worklet_1470601962314_init_data:_worklet_1470601962314_init_data,runOnUI:runOnUI,_worklet_16631003901641_init_data:_worklet_16631003901641_init_data}))();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-runOnUI(function null2Factory({
-  _worklet_9142654516624_init_data,
+runOnUI(function null3Factory({
+  _worklet_1411469776712_init_data,
   runOnJS,
-  _worklet_7185083753711_init_data,
-  runOnUI
+  _worklet_1470601962314_init_data,
+  runOnUI,
+  _worklet_16631003901641_init_data
 }) {
-  const _e = [new global.Error(), -4, -27];
-  const null2 = function () {
+  const _e = [new global.Error(), -5, -27];
+  const null3 = function () {
     console.log('Hello from UI thread');
-    runOnJS(function null1Factory({
-      _worklet_7185083753711_init_data,
-      runOnUI
+    runOnJS(function null2Factory({
+      _worklet_1470601962314_init_data,
+      runOnUI,
+      _worklet_16631003901641_init_data
     }) {
-      const _e = [new global.Error(), -2, -27];
-      const null1 = function () {
+      const _e = [new global.Error(), -3, -27];
+      const null2 = function () {
         console.log('Hello from JS thread');
-        runOnUI(function null3Factory({
-          _worklet_2520605269387_init_data
+        runOnUI(function null1Factory({
+          _worklet_16631003901641_init_data
         }) {
           const _e = [new global.Error(), 1, -27];
-          const null3 = function () {
+          const null1 = function () {
             console.log('Hello from UI thread again');
           };
-          null3.__closure = {};
-          null3.__workletHash = 2520605269387;
-          null3.__pluginVersion = "x.y.z";
-          null3.__initData = _worklet_2520605269387_init_data;
-          null3.__stackDetails = _e;
-          return null3;
+          null1.__closure = {};
+          null1.__workletHash = 16631003901641;
+          null1.__pluginVersion = "x.y.z";
+          null1.__initData = _worklet_16631003901641_init_data;
+          null1.__stackDetails = _e;
+          return null1;
         }({
-          _worklet_2520605269387_init_data
+          _worklet_16631003901641_init_data
         }))();
       };
-      null1.__closure = {
-        runOnUI
+      null2.__closure = {
+        runOnUI,
+        _worklet_16631003901641_init_data
       };
-      null1.__workletHash = 7185083753711;
-      null1.__pluginVersion = "x.y.z";
-      null1.__initData = _worklet_7185083753711_init_data;
-      null1.__stackDetails = _e;
-      return null1;
+      null2.__workletHash = 1470601962314;
+      null2.__pluginVersion = "x.y.z";
+      null2.__initData = _worklet_1470601962314_init_data;
+      null2.__stackDetails = _e;
+      return null2;
     }({
-      _worklet_7185083753711_init_data,
-      runOnUI
+      _worklet_1470601962314_init_data,
+      runOnUI,
+      _worklet_16631003901641_init_data
     }))();
   };
-  null2.__closure = {
+  null3.__closure = {
     runOnJS,
-    _worklet_7185083753711_init_data,
-    runOnUI
+    _worklet_1470601962314_init_data,
+    runOnUI,
+    _worklet_16631003901641_init_data
   };
-  null2.__workletHash = 9142654516624;
-  null2.__pluginVersion = "x.y.z";
-  null2.__initData = _worklet_9142654516624_init_data;
-  null2.__stackDetails = _e;
-  return null2;
+  null3.__workletHash = 1411469776712;
+  null3.__pluginVersion = "x.y.z";
+  null3.__initData = _worklet_1411469776712_init_data;
+  null3.__stackDetails = _e;
+  return null3;
 }({
-  _worklet_9142654516624_init_data,
+  _worklet_1411469776712_init_data,
   runOnJS,
-  _worklet_7185083753711_init_data,
-  runOnUI
+  _worklet_1470601962314_init_data,
+  runOnUI,
+  _worklet_16631003901641_init_data
 }))();"
 `;
 
