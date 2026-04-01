@@ -1,4 +1,4 @@
-name: NPM Worklets publish
+name: NPM Reanimated publish
 on:
   # temporary
   push:
@@ -45,7 +45,7 @@ jobs:
           version: ${{ github.event.inputs.version }}
           npm-tag: ${{ github.event.inputs.npm-tag }}
           dry-run: ${{ github.event.inputs.publish != 'true' }}
-          package-name: 'react-native-worklets'
-          package-json-path: 'packages/react-native-worklets/package.json'
+          package-name: 'react-native-reanimated'
+          package-json-path: 'packages/react-native-reanimated/package.json'
           version-getter-script: 'scripts/resolve-release-version.js'
           perform-git-operations: 'false'
