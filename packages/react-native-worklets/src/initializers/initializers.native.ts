@@ -82,7 +82,7 @@ export function getMemorySafeCapturableConsole(): typeof console {
 export function setupConsole(boundCapturableConsole: typeof console) {
   'worklet';
   // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
-  globalThis.console = {
+  globalThis.legacyConsole = {
     assert: (...args) => scheduleOnRN(boundCapturableConsole.assert, ...args),
     debug: (...args) => scheduleOnRN(boundCapturableConsole.debug, ...args),
     log: (...args) => scheduleOnRN(boundCapturableConsole.log, ...args),
@@ -180,7 +180,7 @@ function installRNBindingsOnUIRuntime() {
 
   const runtimeBoundCapturableConsole = globalThis._WORKLETS_BUNDLE_MODE_ENABLED
     ? getMemorySafeCapturableConsole()
-    : null;
+    : getMemorySafeCapturableConsole();
 
   runOnUISync(() => {
     'worklet';

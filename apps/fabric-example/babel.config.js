@@ -2,8 +2,8 @@
 const workletsPluginOptions = {
   strictGlobal: true,
   // Uncomment the following to enable bundle mode.
-  // bundleMode: true,
-  // workletizableModules: ['axios'],
+  bundleMode: true,
+  workletizableModules: ['axios'],
 };
 
 /** @type {import('@babel/core').TransformOptions} */
