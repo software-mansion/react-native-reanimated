@@ -2,7 +2,10 @@
 
 import { setupCallGuard } from './callGuard';
 import { registerWorkletsError, WorkletsError } from './debug/WorkletsError';
-import { addGuardImplementation } from './guardImplementation';
+import {
+  addGuardImplementation,
+  addNoBundleModeGuardImplementation,
+} from './guardImplementation';
 import {
   getMemorySafeCapturableConsole,
   setupConsole,
@@ -393,13 +396,13 @@ export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
  *
  * - The worklet is scheduled on the Worker Runtime's Async Queue
  * - Returns a Promise that resolves with the worklet's return value
- * - This function can only be called from the [RN
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
  *
  * @param workletRuntime - The runtime to run the worklet on.
  * @param worklet - The worklet to run.
  * @param args - The arguments to pass to the worklet.
  * @returns A Promise that resolves to the return value of the worklet.
+ * @throws If called from a runtime other than the [RN
+ *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
  * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRuntimeAsync
  */
 // @ts-expect-error This overload is correct since it's what user sees in their code
@@ -460,9 +463,12 @@ if (__DEV__ && !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
    * QoL guards to give a meaningful error message when the user tries to call
    * these functions on Worklet Runtimes outside of the Bundle Mode.
    */
-  addGuardImplementation(runOnRuntimeAsync);
-  addGuardImplementation(runOnRuntimeSync);
-  addGuardImplementation(runOnRuntimeSyncWithId);
+  addGuardImplementation(
+    runOnRuntimeAsync,
+    '`runOnRuntimeAsync` can only be called on the RN Runtime.'
+  );
+  addNoBundleModeGuardImplementation(runOnRuntimeSync);
+  addNoBundleModeGuardImplementation(runOnRuntimeSyncWithId);
 }
 
 export function getUIRuntimeHolder(): object {

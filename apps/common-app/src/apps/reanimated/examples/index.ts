@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
 import 'react-native-reanimated';
 import React from 'react';
@@ -376,8 +377,6 @@ const RestoreStateExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/RestoreState').default
   );
-const RunOnAsyncExample: React.FC = () =>
-  React.createElement(require('./RunOnAsyncExample').default as React.FC);
 const RuntimeTestsExample: React.FC = () =>
   React.createElement(
     require('./RuntimeTests/RuntimeTestsExample').default as React.FC
@@ -566,11 +565,6 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '❄️',
     title: 'React freeze',
     screen: FreezeExample,
-  },
-  RunOnAsyncExample: {
-    icon: '👷‍♂️',
-    title: 'runOnAsync',
-    screen: RunOnAsyncExample,
   },
   FetchExample: {
     icon: '📡',

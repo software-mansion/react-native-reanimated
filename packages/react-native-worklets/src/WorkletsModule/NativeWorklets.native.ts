@@ -4,7 +4,7 @@ import { checkCppVersion } from '../debug/checkCppVersion';
 import { jsVersion } from '../debug/jsVersion';
 import { WorkletsError } from '../debug/WorkletsError';
 import type { SerializableRef, SynchronizableRef } from '../memory/types';
-import { RuntimeKind } from '../runtimeKind';
+import { isRNRuntime } from '../runtimeKind';
 import { WorkletsTurboModule } from '../specs';
 import type { WorkletRuntime } from '../types';
 import type {
@@ -22,27 +22,28 @@ class NativeWorklets implements IWorkletsModule {
   constructor() {
     const bundleModeEnabled = globalThis._WORKLETS_BUNDLE_MODE_ENABLED ?? false;
     globalThis._WORKLETS_VERSION_JS = jsVersion;
-    if (
-      global.__workletsModuleProxy === undefined &&
-      globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative
-    ) {
+    const onRNRuntime = isRNRuntime();
+    if (globalThis.__workletsModuleProxy === undefined && onRNRuntime) {
       WorkletsTurboModule?.installTurboModule(bundleModeEnabled);
-      if (__DEV__ && bundleModeEnabled) {
-        console.log(
-          '[Worklets] Bundle mode initialization: Downloaded the bundle for Worklet Runtimes.'
-        );
-      }
+      WorkletsTurboModule?.start();
     }
-    if (global.__workletsModuleProxy === undefined) {
+    if (globalThis.__workletsModuleProxy === undefined) {
       throw new WorkletsError(
         `Native part of Worklets doesn't seem to be initialized.
 See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#native-part-of-worklets-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    if (__DEV__ && globalThis.__RUNTIME_KIND === RuntimeKind.ReactNative) {
-      checkCppVersion();
+    if (__DEV__) {
+      if (bundleModeEnabled) {
+        console.log(
+          '[Worklets] Bundle mode initialization: Downloaded the bundle for Worklet Runtimes.'
+        );
+      }
+      if (onRNRuntime) {
+        checkCppVersion();
+      }
     }
-    this.#workletsModuleProxy = global.__workletsModuleProxy;
+    this.#workletsModuleProxy = globalThis.__workletsModuleProxy;
     this.#serializableNull = this.#workletsModuleProxy.createSerializableNull();
     this.#serializableUndefined =
       this.#workletsModuleProxy.createSerializableUndefined();
