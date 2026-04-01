@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
-    "start": "docusaurus start",
-    "build": "docusaurus build && node -r esbuild-register scripts/build-og-images.jsx",
+    "fetch-typescript": "../../scripts/fetch-unpatched-typescript.sh",
+    "start": "yarn fetch-typescript && docusaurus start",
+    "build": "yarn fetch-typescript && docusaurus build && node -r esbuild-register scripts/build-og-images.jsx",
     "prepublish": "rm -rf ../docs-reanimated/build/react-native-worklets && mkdir -p ../docs-reanimated/build/react-native-worklets && mv build/* ../docs-reanimated/build/react-native-worklets",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
@@ -63,7 +64,7 @@
     "react-native-worklets": "0.7.0-nightly-20251015-0297d2990",
     "source-map": "0.7.4",
     "source-map-loader": "4.0.1",
-    "typescript": "5.8.3",
+    "typescript": "5.9.3",
     "usehooks-ts": "2.9.1",
     "webpack": "5.102.1"
   },

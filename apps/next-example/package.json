@@ -34,7 +34,7 @@
     "next-compose-plugins": "2.2.1",
     "prettier": "3.6.2",
     "start-server-and-test": "2.1.2",
-    "typescript": "5.8.3"
+    "typescript": "5.9.3"
   },
   "installConfig": {
     "selfReferences": false

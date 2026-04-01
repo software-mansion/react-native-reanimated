@@ -177,7 +177,13 @@ const config = {
               ],
             },
             resolve: {
-              alias: { 'react-native$': 'react-native-web' },
+              alias: {
+                'react-native$': 'react-native-web',
+                typescript: path.resolve(
+                  __dirname,
+                  '../../.yarn/unprocessed/typescript'
+                ),
+              },
               extensions: ['.web.js', '...'],
             },
             ignoreWarnings: [

@@ -1,7 +1,7 @@
 {
   "name": "react-native-reanimated-monorepo",
   "version": "0.0.0",
-  "packageManager": "yarn@4.1.1",
+  "packageManager": "yarn@4.13.0",
   "workspaces": {
     "packages": [
       "packages/react-native-reanimated",
@@ -76,6 +76,6 @@
     "react-native": "0.85.0-rc.6",
     "react-native-builder-bob": "0.40.13",
     "shelljs": "0.10.0",
-    "typescript": "5.8.3"
+    "typescript": "5.9.3"
   }
 }

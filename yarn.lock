@@ -12247,7 +12247,7 @@ __metadata:
     eslint: "npm:9.37.0"
     prettier: "npm:3.6.2"
     tsc-watch: "npm:7.2.0"
-    typescript: "npm:5.8.3"
+    typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
 
@@ -13736,7 +13736,7 @@ __metadata:
     react-native-worklets: "workspace:*"
     react-strict-dom: "npm:0.0.55"
     react-test-renderer: "npm:19.2.3"
-    typescript: "npm:5.8.3"
+    typescript: "npm:5.9.3"
     typescript-eslint: "npm:8.46.0"
   peerDependencies:
     react-native: "*"
@@ -15484,7 +15484,7 @@ __metadata:
     react-native-worklets: "npm:0.7.0-nightly-20251015-0297d2990"
     source-map: "npm:0.7.4"
     source-map-loader: "npm:4.0.1"
-    typescript: "npm:5.8.3"
+    typescript: "npm:5.9.3"
     usehooks-ts: "npm:2.9.1"
     webpack: "npm:5.102.1"
     webpack-cli: "npm:5.0.1"
@@ -15548,7 +15548,7 @@ __metadata:
     react-native-worklets: "npm:0.7.0-nightly-20251015-0297d2990"
     source-map: "npm:0.7.4"
     source-map-loader: "npm:4.0.1"
-    typescript: "npm:5.8.3"
+    typescript: "npm:5.9.3"
     usehooks-ts: "npm:2.9.1"
     webpack: "npm:5.102.1"
     webpack-cli: "npm:5.0.1"
@@ -16780,7 +16780,7 @@ __metadata:
     jest: "npm:30.2.0"
     prettier: "npm:3.6.2"
     ts-jest: "npm:29.4.5"
-    typescript: "npm:5.8.3"
+    typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
 
@@ -17495,7 +17495,7 @@ __metadata:
     prettier: "npm:3.6.2"
     react: "npm:19.2.3"
     react-native: "npm:0.85.0-rc.6"
-    typescript: "npm:5.8.3"
+    typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
 
@@ -22088,7 +22088,7 @@ __metadata:
     react-native-macos: "patch:react-native-macos@npm%3A0.81.4#~/.yarn/patches/react-native-macos-npm-0.81.4.patch"
     react-native-reanimated: "workspace:*"
     react-native-worklets: "workspace:*"
-    typescript: "npm:5.8.3"
+    typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
 
@@ -24980,7 +24980,7 @@ __metadata:
     react-native-web: "npm:0.21.1"
     react-native-worklets: "workspace:*"
     start-server-and-test: "npm:2.1.2"
-    typescript: "npm:5.8.3"
+    typescript: "npm:5.9.3"
     webpack: "npm:5.102.1"
   languageName: unknown
   linkType: soft
@@ -28090,7 +28090,7 @@ __metadata:
     react-native: "npm:0.85.0-rc.6"
     react-native-builder-bob: "npm:0.40.13"
     shelljs: "npm:0.10.0"
-    typescript: "npm:5.8.3"
+    typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
 
@@ -28149,7 +28149,7 @@ __metadata:
     react-native-worklets: "workspace:*"
     react-test-renderer: "npm:19.2.3"
     semver: "npm:^7.7.3"
-    typescript: "npm:5.8.3"
+    typescript: "npm:5.9.3"
   peerDependencies:
     react: "*"
     react-native: 0.81 - 0.85
@@ -28289,7 +28289,7 @@ __metadata:
     react-native: "npm:0.85.0-rc.6"
     react-native-builder-bob: "npm:0.40.13"
     semver: "npm:^7.7.4"
-    typescript: "npm:5.8.3"
+    typescript: "npm:5.9.3"
   peerDependencies:
     "@babel/core": "*"
     "@react-native/metro-config": "*"
@@ -31861,7 +31861,7 @@ __metadata:
     react-native-reanimated: "workspace:*"
     react-native-worklets: "workspace:*"
     react-test-renderer: "npm:19.2.3"
-    typescript: "npm:5.8.3"
+    typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
 
@@ -32024,17 +32024,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:5.8.3":
-  version: 5.8.3
-  resolution: "typescript@npm:5.8.3"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 10/65c40944c51b513b0172c6710ee62e951b70af6f75d5a5da745cb7fab132c09ae27ffdf7838996e3ed603bb015dadd099006658046941bd0ba30340cc563ae92
-  languageName: node
-  linkType: hard
-
-"typescript@npm:^5.7.3, typescript@npm:^5.8.3":
+"typescript@npm:5.9.3, typescript@npm:^5.7.3, typescript@npm:^5.8.3":
   version: 5.9.3
   resolution: "typescript@npm:5.9.3"
   bin:
@@ -32044,23 +32034,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A5.8.3#optional!builtin<compat/typescript>":
-  version: 5.8.3
-  resolution: "typescript@patch:typescript@npm%3A5.8.3#optional!builtin<compat/typescript>::version=5.8.3&hash=5adc0c"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 10/98470634034ec37fd9ea61cc82dcf9a27950d0117a4646146b767d085a2ec14b137aae9642a83d1c62732d7fdcdac19bb6288b0bb468a72f7a06ae4e1d2c72c9
-  languageName: node
-  linkType: hard
-
-"typescript@patch:typescript@npm%3A^5.7.3#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.8.3#optional!builtin<compat/typescript>":
+"typescript@patch:typescript@npm%3A5.9.3#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.7.3#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A^5.8.3#optional!builtin<compat/typescript>":
   version: 5.9.3
-  resolution: "typescript@patch:typescript@npm%3A5.9.3#optional!builtin<compat/typescript>::version=5.9.3&hash=5adc0c"
+  resolution: "typescript@patch:typescript@npm%3A5.9.3#optional!builtin<compat/typescript>::version=5.9.3&hash=5786d5"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10/5d416ad4f2ea564f515a3f919e901edbfa4b497cc17dd325c5726046c3eef7ed22d1f59c787267d478311f6f0a265ff790f8a6c7e9df3ea3471458f5ec81e8b7
+  checksum: 10/696e1b017bc2635f4e0c94eb4435357701008e2f272f553d06e35b494b8ddc60aa221145e286c28ace0c89ee32827a28c2040e3a69bdc108b1a5dc8fb40b72e3
   languageName: node
   linkType: hard
 
@@ -32995,7 +32975,7 @@ __metadata:
     react-native-web: "npm:0.21.2"
     react-strict-dom: "npm:0.0.54"
     serve: "npm:14.2.5"
-    typescript: "npm:5.8.3"
+    typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
 
