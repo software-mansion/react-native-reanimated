@@ -2,11 +2,16 @@
 
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
+#include <reanimated/CSS/misc/ViewStylesRepository.h>
+#include <reanimated/CSS/platform/ICSSPlatformAnimationManager.h>
+#include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
+#include <reanimated/CSS/registries/StaticPropsRegistry.h>
 #include <reanimated/CSS/utils/DelayedItemsManager.h>
 #include <reanimated/CSS/utils/props.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <memory>
+#include <mutex>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -16,12 +21,16 @@
 
 namespace reanimated::css {
 
+using CSSAnimations = std::vector<std::shared_ptr<CSSAnimation>>;
 using CSSAnimationsMap = std::unordered_map<size_t, std::shared_ptr<CSSAnimation>>;
-using CSSAnimationsVector = std::vector<std::shared_ptr<CSSAnimation>>;
 
-class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_this<CSSAnimationsRegistry> {
+class CSSAnimationsRegistry : public UpdatesRegistry {
  public:
-  using SettingsUpdates = std::vector<std::pair<size_t, PartialCSSAnimationSettings>>;
+  CSSAnimationsRegistry(
+      std::shared_ptr<StaticPropsRegistry> staticPropsRegistry,
+      std::shared_ptr<ViewStylesRepository> viewStylesRepository,
+      std::shared_ptr<CSSKeyframesRegistry> keyframesRegistry,
+      std::shared_ptr<ICSSPlatformAnimationManager> platformManager = nullptr);
 
   bool isEmpty() const override;
   bool hasUpdates() const;
@@ -29,52 +38,74 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
   void apply(
       jsi::Runtime &rt,
       const std::shared_ptr<const ShadowNode> &shadowNode,
-      const std::optional<std::vector<std::string>> &animationNames,
-      const CSSAnimationsMap &newAnimations,
-      const CSSAnimationSettingsUpdatesMap &settingsUpdates,
+      const std::string &compoundComponentName,
+      const jsi::Value &animationUpdates,
       double timestamp);
   void remove(Tag viewTag) override;
-
   void update(double timestamp);
 
  private:
-  using AnimationToIndexMap = std::unordered_map<std::shared_ptr<CSSAnimation>, size_t>;
   using RunningAnimationIndicesMap = std::unordered_map<Tag, std::set<size_t>>;
   using AnimationsToRevertMap = std::unordered_map<Tag, std::unordered_set<size_t>>;
-  struct RegistryEntry {
-    const CSSAnimationsVector animationsVector;
-    const AnimationToIndexMap animationToIndexMap;
-  };
 
-  using Registry = std::unordered_map<Tag, RegistryEntry>;
-
-  Registry registry_;
+  std::unordered_map<Tag, CSSAnimations> registry_;
+  std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
+  std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+  std::shared_ptr<CSSKeyframesRegistry> keyframesRegistry_;
+  std::shared_ptr<ICSSPlatformAnimationManager> platformManager_;
 
   RunningAnimationIndicesMap runningAnimationIndicesMap_;
   AnimationsToRevertMap animationsToRevertMap_;
   DelayedItemsManager<std::shared_ptr<CSSAnimation>> delayedAnimationsManager_;
 
-  CSSAnimationsVector buildAnimationsVector(
+  // Animation creation and resolution
+  CSSAnimations resolveAnimations(
       jsi::Runtime &rt,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const std::string &compoundComponentName,
+      const CSSAnimationUpdates &updates,
+      double timestamp);
+  std::shared_ptr<CSSAnimation> createAnimation(
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const std::string &animationName,
+      const std::string &compoundComponentName,
+      const CSSAnimationSettings &settings,
+      double timestamp);
+  CSSAnimations buildAnimationsVector(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const std::optional<std::vector<std::string>> &animationNames,
       const std::optional<CSSAnimationsMap> &newAnimations) const;
-  AnimationToIndexMap buildAnimationToIndexMap(const CSSAnimationsVector &animationsVector) const;
-  void updateAnimationSettings(
-      const CSSAnimationsVector &animationsVector,
-      const CSSAnimationSettingsUpdatesMap &settingsUpdates,
-      double timestamp);
 
-  void
-  updateViewAnimations(Tag viewTag, const std::vector<size_t> &animationIndices, double timestamp, bool addToBatch);
-  void
-  scheduleOrActivateAnimation(size_t animationIndex, const std::shared_ptr<CSSAnimation> &animation, double timestamp);
+  // Loop animation management
+  void scheduleOrActivateAnimation(
+      size_t animationIndex,
+      const std::shared_ptr<CSSAnimation> &animation,
+      double timestamp);
   void removeViewAnimations(Tag viewTag);
+  void updateViewAnimations(
+      Tag viewTag,
+      const std::vector<size_t> &animationIndices,
+      double timestamp,
+      bool addToBatch);
   void applyViewAnimationsStyle(Tag viewTag, double timestamp);
   void activateDelayedAnimations(double timestamp);
   void handleAnimationsToRevert(double timestamp);
 
-  static bool addStyleUpdates(folly::dynamic &target, const folly::dynamic &updates, bool shouldOverride);
+  // Platform animation management
+  void applyPlatformAnimations(Tag viewTag, bool force = false);
+  void commitPlatformFillValues(
+      Tag viewTag,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const CSSAnimations &animations);
+  void revertPlatformValues(
+      Tag viewTag,
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      const CSSAnimation &animation);
+
+  static bool mergeStyleUpdates(
+      folly::dynamic &target,
+      const folly::dynamic &updates,
+      bool shouldOverride);
 };
 
 } // namespace reanimated::css

@@ -1,3 +1,4 @@
+#import <react/utils/FollyConvert.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
@@ -119,6 +120,21 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
   return unsubscribeFromKeyboardEventsFunction;
 }
 
+ApplyPlatformAnimationsFunction makeApplyPlatformAnimationsFunction(REANodesManager *nodesManager)
+{
+  return [nodesManager](const int viewTag, const folly::dynamic &animations) {
+    NSArray *animationsArray = convertFollyDynamicToId(animations);
+    [nodesManager applyCSSAnimations:viewTag animations:animationsArray];
+  };
+}
+
+RemoveAllPlatformAnimationsFunction makeRemoveAllPlatformAnimationsFunction(REANodesManager *nodesManager)
+{
+  return [nodesManager](const int viewTag) {
+    [nodesManager removeAllCSSAnimations:viewTag];
+  };
+}
+
 ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
 {
   auto forceScreenSnapshot = [=](Tag tag) {
@@ -159,6 +175,9 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   auto maybeFlushUIUpdatesQueueFunction = makeMaybeFlushUIUpdatesQueueFunction(nodesManager);
 
+  auto applyPlatformAnimationsFunction = makeApplyPlatformAnimationsFunction(nodesManager);
+  auto removeAllPlatformAnimationsFunction = makeRemoveAllPlatformAnimationsFunction(nodesManager);
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       forceScreenSnapshotFunction,
@@ -170,6 +189,8 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUIUpdatesQueueFunction,
+      applyPlatformAnimationsFunction,
+      removeAllPlatformAnimationsFunction,
   };
   return platformDepMethodsHolder;
 }

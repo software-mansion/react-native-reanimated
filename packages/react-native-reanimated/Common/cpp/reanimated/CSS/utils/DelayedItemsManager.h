@@ -1,7 +1,5 @@
 #pragma once
 
-#include <reanimated/CSS/core/CSSAnimation.h>
-
 #include <functional>
 #include <memory>
 #include <set>
@@ -37,6 +35,7 @@ class DelayedItemsManager {
   void add(double timestamp, const TValue &value);
   Item pop();
   bool remove(const TValue &value);
+  bool contains(const TValue &value) const;
   const Item &top() const;
   bool empty() const;
   size_t size() const;

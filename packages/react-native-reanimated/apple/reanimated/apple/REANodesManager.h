@@ -22,4 +22,7 @@ typedef void (^REAPerformOperations)();
 - (void)registerPerformOperations:(REAPerformOperations)performOperations;
 - (void)maybeFlushUIUpdatesQueue;
 
+- (void)applyCSSAnimations:(ReactTag)viewTag animations:(NSArray *)animations;
+- (void)removeAllCSSAnimations:(ReactTag)viewTag;
+
 @end

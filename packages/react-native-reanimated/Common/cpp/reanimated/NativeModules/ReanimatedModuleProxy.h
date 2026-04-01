@@ -4,9 +4,9 @@
 #include <react/renderer/core/ShadowNode.h>
 #include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
-#include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/core/CSSTransition.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
+#include <reanimated/CSS/platform/ICSSPlatformAnimationManager.h>
 #include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
@@ -196,6 +196,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
   const std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
+  const std::shared_ptr<ICSSPlatformAnimationManager> platformAnimationManager_;
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
 

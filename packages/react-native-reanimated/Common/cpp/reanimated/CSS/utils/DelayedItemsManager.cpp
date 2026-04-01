@@ -1,3 +1,4 @@
+#include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
 #include <reanimated/CSS/utils/DelayedItemsManager.h>
 
 #include <functional>
@@ -48,6 +49,11 @@ bool DelayedItemsManager<TValue>::remove(const TValue &value) {
   itemsSet_.erase(it->second);
   itemsMap_.erase(it);
   return true;
+}
+
+template <typename TValue>
+bool DelayedItemsManager<TValue>::contains(const TValue &value) const {
+  return itemsMap_.count(value) > 0;
 }
 
 template <typename TValue>

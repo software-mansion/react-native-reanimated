@@ -20,12 +20,12 @@ class TransitionPropertyProgressProvider final : public KeyframeProgressProvider
       double timestamp,
       double duration,
       double delay,
-      const EasingFunction &easingFunction);
+      const EasingConfig &easingConfig);
   TransitionPropertyProgressProvider(
       double timestamp,
       double duration,
       double delay,
-      const EasingFunction &easingFunction,
+      const EasingConfig &easingConfig,
       double reversingShorteningFactor);
 
   double getGlobalProgress() const override;

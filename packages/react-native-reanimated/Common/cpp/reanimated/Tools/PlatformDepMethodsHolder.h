@@ -44,14 +44,14 @@ using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
 using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
+using ApplyPlatformAnimationsFunction = std::function<void(const int, const folly::dynamic &)>;
+using RemoveAllPlatformAnimationsFunction = std::function<void(const int)>;
+
 struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
 #endif // ANDROID
-#ifdef __APPLE__
-  ForceScreenSnapshotFunction forceScreenSnapshotFunction;
-#endif
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   GetAnimationTimestampFunction getAnimationTimestamp;
   RegisterSensorFunction registerSensor;
@@ -60,6 +60,11 @@ struct PlatformDepMethodsHolder {
   KeyboardEventSubscribeFunction subscribeForKeyboardEvents;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEvents;
   MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction;
+#ifdef __APPLE__
+  ForceScreenSnapshotFunction forceScreenSnapshotFunction;
+  ApplyPlatformAnimationsFunction applyPlatformAnimations;
+  RemoveAllPlatformAnimationsFunction removeAllPlatformAnimations;
+#endif // __APPLE__
 };
 
 } // namespace reanimated

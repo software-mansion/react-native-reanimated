@@ -2,6 +2,8 @@
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
+#include <array>
+#include <functional>
 #include <string>
 #include <unordered_set>
 #include <vector>

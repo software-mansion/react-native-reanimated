@@ -32,7 +32,7 @@ CSSTransitionConfig parseCSSTransitionConfig(jsi::Runtime &rt, const jsi::Value 
           CSSTransitionPropertySettings{
               std::make_pair(std::move(oldValue), std::move(newValue)),
               getDuration(rt, propertySettingsObj),
-              getTimingFunction(rt, propertySettingsObj),
+              getTimingConfig(rt, propertySettingsObj),
               getDelay(rt, propertySettingsObj),
               getAllowDiscrete(rt, propertySettingsObj),
           });
