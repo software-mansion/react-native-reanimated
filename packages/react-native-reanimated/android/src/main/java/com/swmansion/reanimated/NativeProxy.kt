@@ -240,8 +240,8 @@ open class NativeProxy {
           val focusListener = View.OnFocusChangeListener { _, hasFocus ->
             callback.onSelectorStateChanged(hasFocus)
           }
-          view.onFocusChangeListener = focusListener
-          mPseudoSelectorDetachActions[tag] = Runnable { view.onFocusChangeListener = null }
+          view.setOnFocusChangeListener(focusListener)
+          mPseudoSelectorDetachActions[tag] = Runnable { view.setOnFocusChangeListener(null) }
         }
         ":hover" -> {
           val hoverListener = View.OnHoverListener { _, event ->
@@ -256,7 +256,7 @@ open class NativeProxy {
           view.setOnHoverListener(hoverListener)
           mPseudoSelectorDetachActions[tag] = Runnable { view.setOnHoverListener(null) }
         }
-        else -> {
+        ":active" -> {
           val touchListener = View.OnTouchListener { _, event ->
             val action = event.actionMasked
             if (action == MotionEvent.ACTION_DOWN) {
