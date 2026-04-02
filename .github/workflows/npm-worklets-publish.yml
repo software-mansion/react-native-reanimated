@@ -1,4 +1,4 @@
-name: NPM package publish
+name: npm worklets publish
 on:
   push:
     branches:
@@ -35,7 +35,7 @@ on:
         required: true
 
       npm-tag:
-        description: 'NPM tag to publish under (usually inferred from release type and version)'
+        description: 'npm tag to publish under (usually inferred from release type and version)'
         required: false
         type: string
         default: ''

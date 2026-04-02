@@ -1,4 +1,4 @@
-name: NPM package publish
+name: npm package publish
 on:
   workflow_call:
     inputs:
@@ -30,7 +30,7 @@ on:
         required: true
 
       npm-tag:
-        description: 'NPM tag to publish under (usually inferred from release type and version)'
+        description: 'npm tag to publish under (usually inferred from release type and version)'
         required: false
         type: string
         default: ''
@@ -49,7 +49,7 @@ jobs:
           node-version: 22
 
       - name: Build and publish ${{ github.event.inputs.package-name }}
-        uses: software-mansion/npm-package-publish@5a4fbd99427adb6ab4fe3557a9a6044c22e8f319
+        uses: software-mansion/npm-package-publish@5de7db74821779fc4c38fcbba9ca9aabad13ac03
         with:
           package-name: ${{ github.event.inputs.package-name }}
           package-json-path: ${{ github.event.inputs.package-json-path }}
