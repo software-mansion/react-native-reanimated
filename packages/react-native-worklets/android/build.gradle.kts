@@ -283,6 +283,10 @@ android {
     }
 
     packaging {
+        // For some reason gradle only complains about the duplicated version of librrc_root and libreact_render libraries
+        // while there are more libraries copied in intermediates folder of the lib build directory, we exclude
+        // only the ones that make the build fail (ideally we should only include libworklets but we
+        // are only allowed to specify exclude patterns)
         resources {
             excludes += setOf(
                 "META-INF",
