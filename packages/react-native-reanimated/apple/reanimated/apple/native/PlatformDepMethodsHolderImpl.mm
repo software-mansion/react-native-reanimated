@@ -219,6 +219,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto maybeFlushUIUpdatesQueueFunction = makeMaybeFlushUIUpdatesQueueFunction(nodesManager);
 
   auto attachPseudoSelectorFunction = makeAttachPseudoSelectorFunction(nodesManager);
+  
   auto detachPseudoSelectorFunction = makeDetachPseudoSelectorFunction(nodesManager);
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
