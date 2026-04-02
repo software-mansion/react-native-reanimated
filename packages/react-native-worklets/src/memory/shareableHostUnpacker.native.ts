@@ -2,7 +2,8 @@
 
 import type { Shareable, ShareableHost, ShareableHostDecorator } from './types';
 
-export function __installUnpacker() {
+export function installShareableHostUnpacker() {
+  'worklet';
   function shareableHostUnpacker<TValue = unknown>(
     initial: TValue,
     hostDecorator?: ShareableHostDecorator<TValue>

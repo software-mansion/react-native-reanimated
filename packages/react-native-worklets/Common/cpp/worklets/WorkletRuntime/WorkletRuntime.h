@@ -8,6 +8,7 @@
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 #include <worklets/RunLoop/EventLoop.h>
 #include <worklets/SharedItems/Serializable.h>
+#include <worklets/SharedItems/UnpackerLoader.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/ScriptBuffer.h>
 #include <worklets/WorkletRuntime/RuntimeBindings.h>
@@ -180,7 +181,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       const std::string &sourceUrl,
       const std::shared_ptr<RuntimeBindings> &runtimeBindings);
 
-  void legacyModeInit();
+  void legacyModeInit(const std::shared_ptr<UnpackerLoader> &unpackerLoader);
 
   const RuntimeData::RuntimeId runtimeId_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
