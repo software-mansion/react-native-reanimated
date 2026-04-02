@@ -1,6 +1,7 @@
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 import groovy.json.JsonSlurper
 import org.apache.tools.ant.taskdefs.condition.Os
+import java.util.Properties
 import javax.inject.Inject
 
 buildscript {
@@ -10,10 +11,14 @@ buildscript {
     }
     dependencies {
         classpath("com.android.tools.build:gradle:8.13.1")
-        classpath("de.undercouch:gradle-download-task:5.6.0")
         classpath("com.diffplug.spotless:spotless-plugin-gradle:8.1.0")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.20")
     }
+}
+
+plugins {
+    id("com.android.library")
+    id("maven-publish")
 }
 
 fun safeExtGet(prop: String, fallback: Any?): Any? =
@@ -31,6 +36,7 @@ fun resolveReactNativeDirectory(): File {
     val reactNativeLocation = safeAppExtGet("REACT_NATIVE_NODE_MODULES_DIR", null) as String?
     if (reactNativeLocation != null) return file(reactNativeLocation)
 
+    // Fallback to node resolver for custom directory structures like monorepos.
     val reactNativePackage = file(
         providers.exec {
             workingDir(rootDir)
@@ -39,12 +45,14 @@ fun resolveReactNativeDirectory(): File {
     )
     if (reactNativePackage.exists()) return reactNativePackage.parentFile
 
-    throw GradleException("[Worklets] Unable to resolve react-native location in node_modules. You should set project extension property (in `app/build.gradle`) named `REACT_NATIVE_NODE_MODULES_DIR` with the path to react-native in node_modules.")
+    throw GradleException(
+        "[Worklets] Unable to resolve react-native location in node_modules. You should set project extension property (in `app/build.gradle`) named `REACT_NATIVE_NODE_MODULES_DIR` with the path to react-native in node_modules."
+    )
 }
 
 fun getReactNativeVersion(): String {
     val reactNativeRootDir = resolveReactNativeDirectory()
-    val reactProperties = java.util.Properties()
+    val reactProperties = Properties()
     file("$reactNativeRootDir/ReactAndroid/gradle.properties").inputStream().use { reactProperties.load(it) }
     return reactProperties.getProperty("VERSION_NAME")
 }
@@ -55,7 +63,13 @@ fun getReactNativeMinorVersion(): Int {
 }
 
 fun isNewArchitectureEnabled(): Boolean {
+    // In React Native 0.82+, users can no longer opt-out of the New Architecture.
     if (getReactNativeMinorVersion() >= 82) return true
+
+    // In older versions, to opt-in for the New Architecture, you can either:
+    // - Set `newArchEnabled` to true inside the `gradle.properties` file
+    // - Invoke gradle with `-newArchEnabled=true`
+    // - Set an environment variable `ORG_GRADLE_PROJECT_newArchEnabled=true`
     return project.hasProperty("newArchEnabled") && project.property("newArchEnabled") == "true"
 }
 
@@ -72,11 +86,10 @@ fun getHermesV1Enabled(): Boolean {
     }
 }
 
-@Suppress("UNCHECKED_CAST")
 fun getWorkletsVersion(): String {
     val inputFile = file("${projectDir.path}/../package.json")
-    val json = JsonSlurper().parseText(inputFile.readText()) as Map<String, Any?>
-    return json["version"] as String
+    val json = JsonSlurper().parseText(inputFile.readText()) as Map<*, *>
+    return json["version"]?.toString() ?: throw GradleException("[Worklets] Cannot find version in package.json")
 }
 
 fun toPlatformFileString(path: String): String {
@@ -87,7 +100,6 @@ fun toPlatformFileString(path: String): String {
     return result
 }
 
-@Suppress("UNCHECKED_CAST")
 fun getStaticFeatureFlags(): Map<String, String> {
     val featureFlags = HashMap<String, String>()
 
@@ -95,17 +107,17 @@ fun getStaticFeatureFlags(): Map<String, String> {
     if (!staticFeatureFlagsFile.exists()) {
         throw GradleException("[Worklets] Feature flags file not found at ${staticFeatureFlagsFile.absolutePath}.")
     }
-    (JsonSlurper().parseText(staticFeatureFlagsFile.readText()) as Map<String, Any>).forEach { (key, value) ->
-        featureFlags[key] = value.toString()
+    (JsonSlurper().parseText(staticFeatureFlagsFile.readText()) as Map<*, *>).forEach { (key, value) ->
+        featureFlags[key.toString()] = value.toString()
     }
 
     val packageJsonFile = file("${rootDir.path}/../package.json")
     if (packageJsonFile.exists()) {
-        val packageJson = JsonSlurper().parseText(packageJsonFile.readText()) as Map<String, Any?>
-        (packageJson["worklets"] as? Map<String, Any?>)
+        val packageJson = JsonSlurper().parseText(packageJsonFile.readText()) as Map<*, *>
+        (packageJson["worklets"] as? Map<*, *>)
             ?.get("staticFeatureFlags")
-            ?.let { it as Map<String, Any?> }
-            ?.forEach { (key, value) -> featureFlags[key] = value.toString() }
+            ?.let { it as? Map<*, *> }
+            ?.forEach { (key, value) -> featureFlags[key.toString()] = value.toString() }
     }
 
     return featureFlags
@@ -146,8 +158,10 @@ version = WORKLETS_VERSION
 val workletsPrefabHeadersDir: File = project.file("${layout.buildDirectory.get().asFile.absolutePath}/prefab-headers/worklets")
 
 val JS_RUNTIME: String = run {
+    // Override JS runtime with environment variable
     System.getenv("JS_RUNTIME")?.let { return@run it }
 
+    // Check if Hermes is enabled in app setup
     val appProject = rootProject.allprojects.find { it.plugins.hasPlugin("com.android.application") }
     val appExt = appProject?.extensions?.extraProperties
     val hermesEnabled = (appExt?.properties?.get("hermesEnabled") as? String)?.toBoolean()
@@ -155,12 +169,9 @@ val JS_RUNTIME: String = run {
         ?: false
     if (hermesEnabled) return@run "hermes"
 
+    // Use JavaScriptCore (JSC) by default
     "jsc"
 }
-
-apply(plugin = "com.android.library")
-apply(plugin = "maven-publish")
-apply(plugin = "de.undercouch.download")
 
 if (project == rootProject) {
     apply(plugin = "com.diffplug.spotless")
@@ -185,7 +196,7 @@ tasks.configureEach {
     }
 }
 
-configure<com.android.build.gradle.LibraryExtension> {
+android {
     compileSdk = safeExtGet("compileSdkVersion", 36) as Int
 
     namespace = "com.swmansion.worklets"
@@ -211,6 +222,7 @@ configure<com.android.build.gradle.LibraryExtension> {
 
     defaultConfig {
         minSdk = safeExtGet("minSdkVersion", 24) as Int
+        targetSdk = safeExtGet("targetSdkVersion", 36) as Int
 
         buildConfigField("boolean", "WORKLETS_PROFILING", WORKLETS_PROFILING.toString())
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
@@ -263,11 +275,6 @@ configure<com.android.build.gradle.LibraryExtension> {
                     }
                 }
             }
-            packaging {
-                jniLibs {
-                    keepDebugSymbols += "**/**/*.so"
-                }
-            }
         }
     }
 
@@ -312,33 +319,32 @@ configure<com.android.build.gradle.LibraryExtension> {
             }
         }
     }
+
+    project.tasks.withType<ExternalNativeBuildJsonTask>().configureEach {
+        val compileTask = this
+        val isExampleApp = IS_REANIMATED_EXAMPLE_APP
+        val pkgDir = packageDir
+        doLast {
+            if (!isExampleApp) return@doLast
+            try {
+                val abiField = compileTask.javaClass.getDeclaredField("abi").also { it.isAccessible = true }
+                val abi = abiField.get(compileTask) ?: return@doLast
+                val cxxBuildFolder = abi.javaClass.getMethod("getCxxBuildFolder").invoke(abi) as? File ?: return@doLast
+                val generated = File("$cxxBuildFolder/compile_commands.json")
+                val output = File("$pkgDir/compile_commands.json")
+                output.writeText(generated.readText())
+                println("Generated clangd metadata.")
+            } catch (e: Exception) {
+                logger.warn("Failed to generate clangd metadata: ${e.message}")
+            }
+        }
+    }
 }
 
 if (project != rootProject) {
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-        }
-    }
-}
-
-tasks.withType<ExternalNativeBuildJsonTask>().configureEach {
-    val compileTask = this
-    val isExampleApp = IS_REANIMATED_EXAMPLE_APP
-    val pkgDir = packageDir
-    doLast {
-        if (!isExampleApp) return@doLast
-        // abi is internal in AGP so we access it via reflection
-        try {
-            val abiField = compileTask.javaClass.getDeclaredField("abi").also { it.isAccessible = true }
-            val abi = abiField.get(compileTask) ?: return@doLast
-            val cxxBuildFolder = abi.javaClass.getMethod("getCxxBuildFolder").invoke(abi) as? File ?: return@doLast
-            val generated = File("$cxxBuildFolder/compile_commands.json")
-            val output = File("$pkgDir/compile_commands.json")
-            output.writeText(generated.readText())
-            println("Generated clangd metadata.")
-        } catch (e: Exception) {
-            logger.warn("Failed to generate clangd metadata: ${e.message}")
         }
     }
 }

@@ -1,6 +1,7 @@
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 import groovy.json.JsonSlurper
 import org.apache.tools.ant.taskdefs.condition.Os
+import java.util.Properties
 import javax.inject.Inject
 
 buildscript {
@@ -10,10 +11,14 @@ buildscript {
     }
     dependencies {
         classpath("com.android.tools.build:gradle:8.13.1")
-        classpath("de.undercouch:gradle-download-task:5.6.0")
         classpath("com.diffplug.spotless:spotless-plugin-gradle:8.1.0")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.20")
     }
+}
+
+plugins {
+    id("com.android.library")
+    id("maven-publish")
 }
 
 fun safeExtGet(prop: String, fallback: Any?): Any? =
@@ -28,7 +33,13 @@ fun safeAppExtGet(prop: String, fallback: Any?): Any? {
 }
 
 fun isNewArchitectureEnabled(): Boolean {
+    // In React Native 0.82+, users can no longer opt-out of the New Architecture.
     if (getReactNativeMinorVersion() >= 82) return true
+
+    // In older versions, to opt-in for the New Architecture, you can either:
+    // - Set `newArchEnabled` to true inside the `gradle.properties` file
+    // - Invoke gradle with `-newArchEnabled=true`
+    // - Set an environment variable `ORG_GRADLE_PROJECT_newArchEnabled=true`
     return project.hasProperty("newArchEnabled") && project.property("newArchEnabled") == "true"
 }
 
@@ -36,6 +47,7 @@ fun resolveReactNativeDirectory(): File {
     val reactNativeLocation = safeAppExtGet("REACT_NATIVE_NODE_MODULES_DIR", null) as String?
     if (reactNativeLocation != null) return file(reactNativeLocation)
 
+    // Fallback to node resolver for custom directory structures like monorepos.
     val reactNativePackage = file(
         providers.exec {
             workingDir(rootDir)
@@ -44,27 +56,14 @@ fun resolveReactNativeDirectory(): File {
     )
     if (reactNativePackage.exists()) return reactNativePackage.parentFile
 
-    throw GradleException("[Reanimated] Unable to resolve react-native location in node_modules. You should set project extension property (in `app/build.gradle`) named `REACT_NATIVE_NODE_MODULES_DIR` with the path to react-native in node_modules.")
-}
-
-fun resolveReactNativeWorkletsDirectory(): File {
-    val reactNativeWorkletsLocation = safeAppExtGet("REACT_NATIVE_WORKLETS_NODE_MODULES_DIR", null) as String?
-    if (reactNativeWorkletsLocation != null) return file(reactNativeWorkletsLocation)
-
-    val reactNativeWorkletsPackage = file(
-        providers.exec {
-            workingDir(rootDir)
-            commandLine("node", "--print", "require.resolve('react-native-worklets/package.json')")
-        }.standardOutput.asText.get().trim()
+    throw GradleException(
+        "[Reanimated] Unable to resolve react-native location in node_modules. You should set project extension property (in `app/build.gradle`) named `REACT_NATIVE_NODE_MODULES_DIR` with the path to react-native in node_modules."
     )
-    if (reactNativeWorkletsPackage.exists()) return reactNativeWorkletsPackage.parentFile
-
-    throw GradleException("[Reanimated] Unable to resolve react-native-worklets location in node_modules. You should set project extension property (in `app/build.gradle`) named `REACT_NATIVE_WORKLETS_NODE_MODULES_DIR` with the path to react-native-worklets in node_modules.")
 }
 
 fun getReactNativeVersion(): String {
     val reactNativeRootDir = resolveReactNativeDirectory()
-    val reactProperties = java.util.Properties()
+    val reactProperties = Properties()
     file("$reactNativeRootDir/ReactAndroid/gradle.properties").inputStream().use { reactProperties.load(it) }
     return reactProperties.getProperty("VERSION_NAME")
 }
@@ -74,11 +73,10 @@ fun getReactNativeMinorVersion(): Int {
     return if (reactNativeVersion.startsWith("0.0.0-")) 1000 else reactNativeVersion.split(".")[1].toInt()
 }
 
-@Suppress("UNCHECKED_CAST")
 fun getReanimatedVersion(): String {
     val inputFile = file("${projectDir.path}/../package.json")
-    val json = JsonSlurper().parseText(inputFile.readText()) as Map<String, Any?>
-    return json["version"] as String
+    val json = JsonSlurper().parseText(inputFile.readText()) as Map<*, *>
+    return json["version"]?.toString() ?: throw GradleException("[Reanimated] Cannot find version in package.json")
 }
 
 fun toPlatformFileString(path: String): String {
@@ -89,7 +87,6 @@ fun toPlatformFileString(path: String): String {
     return result
 }
 
-@Suppress("UNCHECKED_CAST")
 fun getReanimatedStaticFeatureFlags(): String {
     val featureFlags = HashMap<String, String>()
 
@@ -97,20 +94,33 @@ fun getReanimatedStaticFeatureFlags(): String {
     if (!staticFeatureFlagsFile.exists()) {
         throw GradleException("[Reanimated] Feature flags file not found at ${staticFeatureFlagsFile.absolutePath}.")
     }
-    (JsonSlurper().parseText(staticFeatureFlagsFile.readText()) as Map<String, Any>).forEach { (key, value) ->
-        featureFlags[key] = value.toString()
+    (JsonSlurper().parseText(staticFeatureFlagsFile.readText()) as Map<*, *>).forEach { (key, value) ->
+        featureFlags[key.toString()] = value.toString()
     }
 
     val packageJsonFile = file("${rootDir.path}/../package.json")
     if (packageJsonFile.exists()) {
-        val packageJson = JsonSlurper().parseText(packageJsonFile.readText()) as Map<String, Any?>
-        (packageJson["reanimated"] as? Map<String, Any?>)
+        val packageJson = JsonSlurper().parseText(packageJsonFile.readText()) as Map<*, *>
+        (packageJson["reanimated"] as? Map<*, *>)
             ?.get("staticFeatureFlags")
-            ?.let { it as Map<String, Any?> }
-            ?.forEach { (key, value) -> featureFlags[key] = value.toString() }
+            ?.let { it as? Map<*, *> }
+            ?.forEach { (key, value) -> featureFlags[key.toString()] = value.toString() }
     }
 
+    validateConflictingFeatureFlags(featureFlags)
+
     return featureFlags.entries.joinToString("") { (key, value) -> "[$key:$value]" }
+}
+
+fun validateConflictingFeatureFlags(featureFlags: HashMap<String, String>) {
+    val androidSyncUiProps = featureFlags["ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS"] == "true"
+    val sharedElementTransitions = featureFlags["ENABLE_SHARED_ELEMENT_TRANSITIONS"] == "true"
+
+    if (androidSyncUiProps && sharedElementTransitions) {
+        throw GradleException(
+            "[Reanimated] The feature flags `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. Please disable one of them in your package.json."
+        )
+    }
 }
 
 fun reactNativeArchitectures(): List<String> {
@@ -124,7 +134,6 @@ if (isNewArchitectureEnabled() && project != rootProject) {
 
 val packageDir: File = project.projectDir.parentFile
 val reactNativeRootDir: File = resolveReactNativeDirectory()
-val reactNativeWorkletsRootDir: File = resolveReactNativeWorkletsDirectory()
 val REACT_NATIVE_MINOR_VERSION: Int = getReactNativeMinorVersion()
 val REACT_NATIVE_VERSION: String = getReactNativeVersion()
 val REANIMATED_VERSION: String = getReanimatedVersion()
@@ -146,17 +155,11 @@ if (project == rootProject) {
             ktlint()
         }
     }
-}
-
-apply(plugin = "com.android.library")
-apply(plugin = "maven-publish")
-apply(plugin = "de.undercouch.download")
-
-if (project != rootProject) {
+} else {
     apply(plugin = "org.jetbrains.kotlin.android")
 }
 
-configure<com.android.build.gradle.LibraryExtension> {
+android {
     compileSdk = safeExtGet("compileSdkVersion", 36) as Int
 
     namespace = "com.swmansion.reanimated"
@@ -182,6 +185,7 @@ configure<com.android.build.gradle.LibraryExtension> {
 
     defaultConfig {
         minSdk = safeExtGet("minSdkVersion", 24) as Int
+        targetSdk = safeExtGet("targetSdkVersion", 36) as Int
 
         buildConfigField("boolean", "REANIMATED_PROFILING", REANIMATED_PROFILING.toString())
         buildConfigField("String", "REANIMATED_VERSION_JAVA", "\"$REANIMATED_VERSION\"")
@@ -217,16 +221,6 @@ configure<com.android.build.gradle.LibraryExtension> {
         }
     }
 
-    buildTypes {
-        debug {
-            packaging {
-                jniLibs {
-                    keepDebugSymbols += "**/**/*.so"
-                }
-            }
-        }
-    }
-
     lint {
         abortOnError = false
     }
@@ -257,6 +251,26 @@ configure<com.android.build.gradle.LibraryExtension> {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
+    project.tasks.withType<ExternalNativeBuildJsonTask>().configureEach {
+        val compileTask = this
+        val isExampleApp = IS_REANIMATED_EXAMPLE_APP
+        val pkgDir = packageDir
+        doLast {
+            if (!isExampleApp) return@doLast
+            try {
+                val abiField = compileTask.javaClass.getDeclaredField("abi").also { it.isAccessible = true }
+                val abi = abiField.get(compileTask) ?: return@doLast
+                val cxxBuildFolder = abi.javaClass.getMethod("getCxxBuildFolder").invoke(abi) as? File ?: return@doLast
+                val generated = File("$cxxBuildFolder/compile_commands.json")
+                val output = File("$pkgDir/compile_commands.json")
+                output.writeText(generated.readText())
+                println("Generated clangd metadata.")
+            } catch (e: Exception) {
+                logger.warn("Failed to generate clangd metadata: ${e.message}")
+            }
+        }
+    }
 }
 
 if (project != rootProject) {
@@ -267,24 +281,9 @@ if (project != rootProject) {
     }
 }
 
-tasks.withType<ExternalNativeBuildJsonTask>().configureEach {
-    val compileTask = this
-    val isExampleApp = IS_REANIMATED_EXAMPLE_APP
-    val pkgDir = packageDir
-    doLast {
-        if (!isExampleApp) return@doLast
-        // abi is internal in AGP so we access it via reflection
-        try {
-            val abiField = compileTask.javaClass.getDeclaredField("abi").also { it.isAccessible = true }
-            val abi = abiField.get(compileTask) ?: return@doLast
-            val cxxBuildFolder = abi.javaClass.getMethod("getCxxBuildFolder").invoke(abi) as? File ?: return@doLast
-            val generated = File("$cxxBuildFolder/compile_commands.json")
-            val output = File("$pkgDir/compile_commands.json")
-            output.writeText(generated.readText())
-            println("Generated clangd metadata.")
-        } catch (e: Exception) {
-            logger.warn("Failed to generate clangd metadata: ${e.message}")
-        }
+androidComponents {
+    onVariants(selector().withBuildType("debug")) {
+        it.packaging.jniLibs.keepDebugSymbols.add("**/**/*.so")
     }
 }
 
@@ -372,7 +371,9 @@ dependencies {
         if (rootProject.subprojects.find { it.name == "react-native-worklets" } != null) {
             "implementation"(project(":react-native-worklets"))
         } else {
-            throw GradleException("[Reanimated] `react-native-worklets` library not found. Please install it as a dependency in your project. Install `react-native-worklets` with your package manager, i.e. `yarn add react-native-worklets` or `npm i react-native-worklets`. Read the documentation for more details: https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#unable-to-find-a-specification-for-rnworklets-depended-upon-by-rnreanimated")
+            throw GradleException(
+                "[Reanimated] `react-native-worklets` library not found. Please install it as a dependency in your project. Install `react-native-worklets` with your package manager, i.e. `yarn add react-native-worklets` or `npm i react-native-worklets`. Read the documentation for more details: https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#unable-to-find-a-specification-for-rnworklets-depended-upon-by-rnreanimated"
+            )
         }
     }
 }
