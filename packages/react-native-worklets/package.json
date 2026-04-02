@@ -9,7 +9,7 @@
     "worklets"
   ],
   "scripts": {
-    "build": "yarn workspace babel-plugin-worklets && yarn set-version && build && bob build",
+    "build": "yarn workspace babel-plugin-worklets && yarn set-version && bob build",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
     "find-unused-code:js": "knip",
     "format": "yarn format:js && yarn format:plugin && yarn format:common && yarn format:android && yarn format:apple",

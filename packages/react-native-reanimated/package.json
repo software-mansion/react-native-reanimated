@@ -34,10 +34,11 @@
     "type:check:strict": "yarn type:check:strict:src && yarn type:check:strict:app",
     "type:check:strict:src": "yarn tsc --noEmit --customConditions react-native-strict-api",
     "type:check:strict:app": "yarn workspace common-app type:check:strict",
-    "build": "yarn workspace react-native-worklets build && bob build",
+    "build": "yarn workspace react-native-worklets build && yarn set-version && bob build",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
     "tree-shake:check:web": "yarn is-tree-shakable --resolution web",
-    "validate-peers": "node ../../scripts/validate-compatibility-peer-dependencies.js"
+    "validate-peers": "node ../../scripts/validate-compatibility-peer-dependencies.js",
+    "set-version": "node scripts/set-version.js"
   },
   "main": "lib/module/index",
   "module": "lib/module/index",
