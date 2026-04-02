@@ -8,10 +8,11 @@ on:
       - '.github/workflows/npm-package-publish.yml'
       - '.github/actions/npm-package-publish/**'
   pull_request:
-    paths:
-      - '.github/workflows/npm-reanimated-publish.yml'
-      - '.github/workflows/npm-package-publish.yml'
-      - '.github/actions/npm-package-publish/**'
+    # TODO: disabled for testing
+    # paths:
+    #   - '.github/workflows/npm-reanimated-publish.yml'
+    #   - '.github/workflows/npm-package-publish.yml'
+    #   - '.github/actions/npm-package-publish/**'
   merge_group:
     branches:
       - main
