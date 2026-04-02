@@ -1,6 +1,7 @@
 #include <react/fabric/Binding.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
+#include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/ReanimatedVersion.h>
 #include <reanimated/android/AnimationFrameCallback.h>
@@ -143,6 +144,7 @@ void NativeProxy::registerNatives() {
        makeNativeMethod("isAnyHandlerWaitingForEvent", NativeProxy::isAnyHandlerWaitingForEvent),
        makeNativeMethod("performOperations", NativeProxy::performOperations),
        makeNativeMethod("performNonLayoutOperations", NativeProxy::performNonLayoutOperations),
+       makeNativeMethod("handleEventOperations", NativeProxy::handleEventOperations),
        makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp)});
 }
 
@@ -269,6 +271,20 @@ void NativeProxy::handleEvent(
   }
 
   reanimatedModuleProxy_->handleEvent(eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
+}
+
+void NativeProxy::handleEventOperations(jboolean isInDrawPass) {
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    auto context = isInDrawPass ? CallbackContext::EventInAndroidDraw : CallbackContext::Event;
+    reanimatedModuleProxy_->triggerBackendCallback(context);
+  } else {
+    if (isInDrawPass) {
+      reanimatedModuleProxy_->performNonLayoutOperations();
+      requestRender([](double) {});
+    } else {
+      reanimatedModuleProxy_->performOperations();
+    }
+  }
 }
 
 PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {

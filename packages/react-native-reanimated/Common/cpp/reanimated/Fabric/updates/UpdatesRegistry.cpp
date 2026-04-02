@@ -47,6 +47,16 @@ void UpdatesRegistry::flushAnimatedPropsUpdates(UpdatesBatchAnimatedProps &updat
   }
 }
 
+void UpdatesRegistry::returnAnimatedPropsToBatch(
+    const std::shared_ptr<const ShadowNode> &shadowNode,
+    AnimatedProps animatedProps) {
+  updatesBatchAnimatedProps_.emplace_back(shadowNode, std::move(animatedProps));
+}
+
+bool UpdatesRegistry::hasPendingAnimatedPropsUpdates() const {
+  return !updatesBatchAnimatedProps_.empty();
+}
+
 UpdatesBatch UpdatesRegistry::getPendingUpdates() {
   auto lock = std::lock_guard<std::mutex>{mutex_};
   flushUpdatesToRegistry(updatesBatch_);

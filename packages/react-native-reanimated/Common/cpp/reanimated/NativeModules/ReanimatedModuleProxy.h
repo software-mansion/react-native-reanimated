@@ -36,6 +36,7 @@
 #include <react/renderer/uimanager/UIManager.h>
 #include <react/renderer/uimanager/UIManagerAnimationBackend.h>
 
+#include <cstdint>
 #include <memory>
 #include <set>
 #include <string>
@@ -48,6 +49,12 @@ using namespace facebook;
 using namespace css;
 
 using UpdatesBatch = std::vector<std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
+
+enum class CallbackContext : std::uint8_t {
+  AnimationLoop,
+  Event,
+  EventInAndroidDraw,
+};
 
 class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
                               public std::enable_shared_from_this<ReanimatedModuleProxy> {
@@ -104,6 +111,12 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   AnimationMutations performOperationsForBackend();
   void performOperations();
   void performNonLayoutOperations();
+  AnimationMutations performNonLayoutOperationsForBackend();
+
+  AnimationMutations grandCallback(AnimationTimestamp timestamp);
+  void triggerBackendCallback(CallbackContext context);
+  void ensureBackendRunning();
+  void maybeStopBackend(const AnimationMutations &mutations);
 
   void setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) override;
 
@@ -201,6 +214,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
   std::vector<std::function<void(AnimationTimestamp)>> backendCallbacks_;
+  CallbackContext callbackContext_{CallbackContext::AnimationLoop};
+  std::function<void(double)> pendingAnimationFrameCallback_;
 
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;

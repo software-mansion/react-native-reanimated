@@ -48,6 +48,8 @@ class UpdatesRegistry {
 
   void flushUpdates(UpdatesBatch &updatesBatch);
   void flushAnimatedPropsUpdates(UpdatesBatchAnimatedProps &updatesBatch);
+  void returnAnimatedPropsToBatch(const std::shared_ptr<const ShadowNode> &shadowNode, AnimatedProps animatedProps);
+  bool hasPendingAnimatedPropsUpdates() const;
   void collectProps(PropsMap &propsMap);
   UpdatesBatch getPendingUpdates();
 

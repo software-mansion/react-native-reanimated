@@ -1,3 +1,4 @@
+#import <reanimated/Tools/FeatureFlags.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAReducedMotion.h>
@@ -47,6 +48,16 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
   [nodesManager registerPerformOperations:^() {
     if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
       reanimatedModuleProxy->performOperations();
+    }
+  }];
+
+  [nodesManager registerPerformOperationsForEvent:^() {
+    if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
+      if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+        reanimatedModuleProxy->triggerBackendCallback(CallbackContext::Event);
+      } else {
+        reanimatedModuleProxy->performOperations();
+      }
     }
   }];
 

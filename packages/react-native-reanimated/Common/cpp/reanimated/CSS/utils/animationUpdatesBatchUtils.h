@@ -127,8 +127,7 @@ inline void mergeDynamicIntoMutations(
 
 inline void mergeAnimationUpdatesBatch(facebook::react::AnimationMutations &mutations, UpdatesBatch &updatesBatch) {
   for (auto &[node, dynamic] : updatesBatch) {
-      // TODO: check if batch contains only non-layout animations.
-      mergeDynamicIntoMutations(mutations, node, dynamic, true);
+    mergeDynamicIntoMutations(mutations, node, dynamic, hasLayoutProps(dynamic));
   }
 }
 

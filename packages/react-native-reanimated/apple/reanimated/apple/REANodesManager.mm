@@ -15,6 +15,7 @@ using namespace facebook::react;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   REAEventHandler _eventHandler;
   REAPerformOperations _performOperations;
+  REAPerformOperations _performOperationsForEvent;
 }
 
 - (READisplayLink *)getDisplayLink
@@ -88,6 +89,12 @@ using namespace facebook::react;
   _performOperations = performOperations;
 }
 
+- (void)registerPerformOperationsForEvent:(REAPerformOperations)performOperationsForEvent
+{
+  REAAssertJavaScriptQueue();
+  _performOperationsForEvent = performOperationsForEvent;
+}
+
 - (void)startUpdatingOnAnimationFrame
 {
   RCTAssertMainQueue();
@@ -141,8 +148,14 @@ using namespace facebook::react;
       return;
     }
     eventHandler(event);
-    [strongSelf performOperations];
+    [strongSelf performOperationsForEvent];
   });
+}
+
+- (void)performOperationsForEvent
+{
+  RCTAssertMainQueue();
+  _performOperationsForEvent();
 }
 
 - (void)maybeFlushUIUpdatesQueue

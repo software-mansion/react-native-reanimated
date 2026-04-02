@@ -1,4 +1,5 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
+#include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReaJSIUtils.h>
 
 #include <utility>
@@ -26,7 +27,9 @@ void UIRuntimeDecorator::decorate(
   jsi_utils::installJsiFunction(uiRuntime, "_setGestureState", setGestureState);
   jsi_utils::installJsiFunction(uiRuntime, "_obtainProp", obtainPropFunction);
 
-  subscribeForMicrotasksFinalization(uiRuntime, maybeFlushUIUpdatesQueue);
+  if constexpr (!StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    subscribeForMicrotasksFinalization(uiRuntime, maybeFlushUIUpdatesQueue);
+  }
 }
 
 void UIRuntimeDecorator::subscribeForMicrotasksFinalization(

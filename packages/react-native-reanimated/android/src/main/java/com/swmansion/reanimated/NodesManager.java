@@ -143,6 +143,13 @@ public class NodesManager implements EventDispatcherListener {
     performOperations();
   }
 
+  void handleEventOperations() {
+    mDrawPassDetector.initialize();
+    if (mNativeProxy != null) {
+      mNativeProxy.handleEventOperations(isInDrawPass());
+    }
+  }
+
   boolean isInDrawPass() {
     return mDrawPassDetector.isInDrawPass();
   }
@@ -216,7 +223,7 @@ public class NodesManager implements EventDispatcherListener {
       // the UI thread.
       if (UiThreadUtil.isOnUiThread()) {
         handleEvent(event);
-        performOperationsRespectingDrawPass();
+        handleEventOperations();
       } else {
         String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
         int viewTag = event.getViewTag();
