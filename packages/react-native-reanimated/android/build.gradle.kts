@@ -123,11 +123,6 @@ fun validateConflictingFeatureFlags(featureFlags: HashMap<String, String>) {
     }
 }
 
-fun reactNativeArchitectures(): List<String> {
-    val value = project.findProperty("reactNativeArchitectures") as String?
-    return value?.split(",") ?: listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
-}
-
 if (isNewArchitectureEnabled() && project != rootProject) {
     apply(plugin = "com.facebook.react")
 }
@@ -146,6 +141,11 @@ val REANIMATED_FEATURE_FLAGS: String = getReanimatedStaticFeatureFlags()
 version = REANIMATED_VERSION
 
 val reanimatedPrefabHeadersDir: File = project.file("${layout.buildDirectory.get().asFile.absolutePath}/prefab-headers/reanimated")
+
+fun reactNativeArchitectures(): List<String> {
+    val value = project.findProperty("reactNativeArchitectures") as String?
+    return value?.split(",") ?: listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
+}
 
 if (project == rootProject) {
     apply(plugin = "com.diffplug.spotless")

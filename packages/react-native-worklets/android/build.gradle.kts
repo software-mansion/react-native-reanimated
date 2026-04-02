@@ -129,11 +129,6 @@ fun getStaticFeatureFlagsString(featureFlags: Map<String, String>): String =
 fun isFlagEnabled(featureFlags: Map<String, String>, flagName: String): Boolean =
     featureFlags.containsKey(flagName) && featureFlags[flagName] == "true"
 
-fun reactNativeArchitectures(): List<String> {
-    val value = project.findProperty("reactNativeArchitectures") as String?
-    return value?.split(",") ?: listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
-}
-
 if (isNewArchitectureEnabled() && project != rootProject) {
     apply(plugin = "com.facebook.react")
 }
@@ -151,6 +146,11 @@ val FETCH_PREVIEW_ENABLED: Boolean = isFlagEnabled(featureFlags, "FETCH_PREVIEW_
 val WORKLETS_FEATURE_FLAGS: String = getStaticFeatureFlagsString(featureFlags)
 val HERMES_V1_ENABLED: Boolean = getHermesV1Enabled()
 val WORKLETS_PROFILING: Boolean = safeAppExtGet("enableWorkletsProfiling", false)?.toString()?.toBoolean() ?: false
+
+fun reactNativeArchitectures(): List<String> {
+    val value = project.findProperty("reactNativeArchitectures") as String?
+    return value?.split(",") ?: listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
+}
 
 // Set version for prefab
 version = WORKLETS_VERSION
