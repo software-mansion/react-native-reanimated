@@ -6,15 +6,59 @@
 #import <React/RCTComponentViewProtocol.h>
 #import <React/RCTComponentViewRegistry.h>
 #import <React/RCTMountingManager.h>
+#import <React/RCTMountingManagerDelegate.h>
 #import <React/RCTUtils.h>
 
 using namespace facebook::react;
+
+// ---------------------------------------------------------------------------
+// REAMountingDelegateProxy
+//
+// Wraps the existing RCTMountingManagerDelegate (set by RCTSurfacePresenter)
+// and adds a hook after each mounting transaction completes. This lets us
+// flush pseudo-selector attach requests that were deferred because the native
+// view was not yet in RCTComponentViewRegistry when the JS-side
+// componentDidMount called registerPseudoStyle.
+// ---------------------------------------------------------------------------
+@interface REAMountingDelegateProxy : NSObject <RCTMountingManagerDelegate>
+@property (nonatomic, weak) id<RCTMountingManagerDelegate> originalDelegate;
+@property (nonatomic, copy) void (^onDidMountComponents)(void);
+@end
+
+@implementation REAMountingDelegateProxy
+
+- (void)mountingManager:(RCTMountingManager *)mountingManager
+    willMountComponentsWithRootTag:(ReactTag)rootTag
+{
+  [self.originalDelegate mountingManager:mountingManager willMountComponentsWithRootTag:rootTag];
+}
+
+- (void)mountingManager:(RCTMountingManager *)mountingManager
+    didMountComponentsWithRootTag:(ReactTag)rootTag
+{
+  [self.originalDelegate mountingManager:mountingManager didMountComponentsWithRootTag:rootTag];
+  if (self.onDidMountComponents) {
+    self.onDidMountComponents();
+  }
+}
+
+@end
+
+// ---------------------------------------------------------------------------
 
 @implementation REANodesManager {
   READisplayLink *_displayLink;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   REAEventHandler _eventHandler;
   REAPerformOperations _performOperations;
+
+  // Pseudo-selector pending attach map: tag → block to run once the view appears.
+  // Populated when attachPseudoSelector is called but findComponentViewWithTag
+  // returns nil (view not yet mounted). Flushed after each mounting transaction.
+  NSMutableDictionary<NSNumber *, void (^)(REAUIView *)> *_pendingPseudoSelectorAttaches;
+
+  // Retained proxy that wraps the original mounting manager delegate.
+  REAMountingDelegateProxy *_mountingDelegateProxy;
 }
 
 - (READisplayLink *)getDisplayLink
@@ -46,12 +90,37 @@ using namespace facebook::react;
   });
 }
 
+@synthesize surfacePresenter = _surfacePresenter;
+
+- (void)setSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter
+{
+  if (!surfacePresenter && _surfacePresenter && _mountingDelegateProxy) {
+    // Restore the original delegate on teardown so we don't leave a dangling proxy.
+    _surfacePresenter.mountingManager.delegate = _mountingDelegateProxy.originalDelegate;
+    _mountingDelegateProxy = nil;
+  }
+  _surfacePresenter = surfacePresenter;
+  if (surfacePresenter) {
+    // Install a proxy delegate on the mounting manager so we can flush
+    // deferred pseudo-selector attaches after each mounting transaction.
+    RCTMountingManager *mountingManager = surfacePresenter.mountingManager;
+    _mountingDelegateProxy = [[REAMountingDelegateProxy alloc] init];
+    _mountingDelegateProxy.originalDelegate = mountingManager.delegate;
+    __weak __typeof__(self) weakSelf = self;
+    _mountingDelegateProxy.onDidMountComponents = ^{
+      [weakSelf flushPendingPseudoSelectorAttaches];
+    };
+    mountingManager.delegate = _mountingDelegateProxy;
+  }
+}
+
 - (nonnull instancetype)init
 {
   REAAssertJavaScriptQueue();
 
   if ((self = [super init])) {
     _onAnimationCallbacks = [NSMutableArray new];
+    _pendingPseudoSelectorAttaches = [NSMutableDictionary new];
     _eventHandler = ^(id<RCTEvent> event) {
       // no-op
     };
@@ -66,6 +135,7 @@ using namespace facebook::react;
   REAAssertTurboModuleManagerQueue();
 
   _eventHandler = nil;
+  [_pendingPseudoSelectorAttaches removeAllObjects];
   [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) { [displayLink invalidate]; }];
 }
 
@@ -167,6 +237,37 @@ using namespace facebook::react;
   // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
   // so that's why we need to call `finalizeUpdates` here.
   [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
+}
+
+- (void)addPendingPseudoSelectorAttach:(void (^)(REAUIView *))attachBlock forTag:(int)tag
+{
+  RCTAssertMainQueue();
+  _pendingPseudoSelectorAttaches[@(tag)] = [attachBlock copy];
+}
+
+- (void)removePendingPseudoSelectorAttach:(int)tag
+{
+  RCTAssertMainQueue();
+  [_pendingPseudoSelectorAttaches removeObjectForKey:@(tag)];
+}
+
+- (void)flushPendingPseudoSelectorAttaches
+{
+  RCTAssertMainQueue();
+  if (_pendingPseudoSelectorAttaches.count == 0) {
+    return;
+  }
+  RCTComponentViewRegistry *registry = self.surfacePresenter.mountingManager.componentViewRegistry;
+  // Snapshot keys so we can mutate the dict while iterating.
+  NSArray<NSNumber *> *tags = [_pendingPseudoSelectorAttaches.allKeys copy];
+  for (NSNumber *tagNum in tags) {
+    REAUIView *view = [registry findComponentViewWithTag:(Tag)[tagNum intValue]];
+    if (view) {
+      void (^block)(REAUIView *) = _pendingPseudoSelectorAttaches[tagNum];
+      [_pendingPseudoSelectorAttaches removeObjectForKey:tagNum];
+      block(view);
+    }
+  }
 }
 
 @end

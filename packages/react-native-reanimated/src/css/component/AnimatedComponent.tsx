@@ -27,7 +27,6 @@ import {
 } from '../native/normalization/common';
 import { CSSManager } from '../platform';
 import type { CSSStyle, CSSTransitionProperties } from '../types';
-import { isPseudoSelectorValue } from '../utils/guards';
 import {
   filterCSSAndStyleProperties,
   type PseudoStylesBySelector,
@@ -60,6 +59,7 @@ export default class AnimatedComponent<
   // Used only on web
   _componentDOMRef: HTMLElement | null = null;
   _willUnmount: boolean = false;
+  _pseudoStylesRegistered: boolean = false;
 
   constructor(ChildComponent: AnyComponent, props: P) {
     super(props);
@@ -197,19 +197,18 @@ export default class AnimatedComponent<
         transitionConfig
       );
     }
+    this._pseudoStylesRegistered = true;
   }
 
   _unregisterPseudoStyles() {
-    const hasPseudoStyles = Object.values(this._cssStyle).some(
-      isPseudoSelectorValue
-    );
-    if (!hasPseudoStyles) {
+    if (!this._pseudoStylesRegistered) {
       return;
     }
     const viewTag = this._viewInfo?.viewTag;
     if (typeof viewTag === 'number') {
       ReanimatedModule.unregisterPseudoStyle(viewTag);
     }
+    this._pseudoStylesRegistered = false;
   }
 
   componentDidMount() {

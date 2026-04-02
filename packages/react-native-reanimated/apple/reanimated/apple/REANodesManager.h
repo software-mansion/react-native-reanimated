@@ -2,6 +2,7 @@
 #import <React/RCTSurfacePresenter.h>
 
 #import <reanimated/apple/READisplayLink.h>
+#import <reanimated/apple/REAUIView.h>
 
 typedef void (^REAOnAnimationCallback)(READisplayLink *displayLink);
 typedef void (^REAEventHandler)(id<RCTEvent> event);
@@ -21,5 +22,11 @@ typedef void (^REAPerformOperations)();
 - (void)synchronouslyUpdateUIProps:(ReactTag)viewTag props:(const folly::dynamic &)props;
 - (void)registerPerformOperations:(REAPerformOperations)performOperations;
 - (void)maybeFlushUIUpdatesQueue;
+
+// Pseudo-selector deferred attach — used when the native view is not yet in
+// RCTComponentViewRegistry at the time attachPseudoSelector is called.
+// The block is called with the view once it appears after a mounting transaction.
+- (void)addPendingPseudoSelectorAttach:(void (^)(REAUIView *view))attachBlock forTag:(int)tag;
+- (void)removePendingPseudoSelectorAttach:(int)tag;
 
 @end

@@ -48,6 +48,7 @@ using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
 using PlatformAttachPseudoSelectorFunction =
     std::function<void(Tag, const std::string &selector, std::function<void(bool)>)>;
 using PlatformDetachPseudoSelectorFunction = std::function<void(Tag)>;
+
 struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef ANDROID
