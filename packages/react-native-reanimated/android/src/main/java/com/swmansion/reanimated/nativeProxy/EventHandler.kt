@@ -9,7 +9,6 @@ import com.facebook.react.uimanager.events.RCTModernEventEmitter
 
 @DoNotStrip
 class EventHandler : RCTModernEventEmitter {
-
     @field:DoNotStrip
     private val mHybridData: HybridData
 
@@ -43,7 +42,11 @@ class EventHandler : RCTModernEventEmitter {
         receiveEvent(resolvedEventName, targetTag, params)
     }
 
-    override fun receiveEvent(targetTag: Int, eventName: String, params: WritableMap?) {
+    override fun receiveEvent(
+        targetTag: Int,
+        eventName: String,
+        params: WritableMap?,
+    ) {
         val resolvedEventName = mCustomEventNamesResolver!!.resolveCustomEventName(eventName) ?: eventName
         receiveEvent(resolvedEventName, targetTag, params)
     }
@@ -56,5 +59,9 @@ class EventHandler : RCTModernEventEmitter {
         // not interested in processing touch events this way, we process raw events only
     }
 
-    external fun receiveEvent(eventName: String, emitterReactTag: Int, event: WritableMap?)
+    external fun receiveEvent(
+        eventName: String,
+        emitterReactTag: Int,
+        event: WritableMap?,
+    )
 }
