@@ -1,9 +1,9 @@
 #include <jsi/jsi.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
-#include <reanimated/CSS/utils/animationUpdatesBatchUtils.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
+#include <reanimated/Fabric/updates/propsLayoutFilter.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Experimental.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
@@ -704,7 +704,6 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
       if (shouldUpdateCssAnimations_) {
         currentCssTimestamp_ = getAnimationTimestamp_();
         auto lock = cssTransitionsRegistry_->lock();
-        // Update CSS transitions and flush updates
         cssTransitionsRegistry_->update(currentCssTimestamp_);
         cssTransitionsRegistry_->flushAnimatedPropsUpdates(animatedPropsUpdatesBatch);
         cssTransitionsRegistry_->flushUpdates(cssUpdatesBatch);
@@ -712,13 +711,11 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
 
       {
         auto lock = animatedPropsRegistry_->lock();
-        // Flush all animated props updates
         animatedPropsRegistry_->flushUpdates(animatedUpdatesBatch);
       }
 
       if (shouldUpdateCssAnimations_) {
         auto lock = cssAnimationsRegistry_->lock();
-        // Update CSS animations and flush updates
         cssAnimationsRegistry_->update(currentCssTimestamp_);
         cssAnimationsRegistry_->flushAnimatedPropsUpdates(animatedPropsUpdatesBatch);
         cssAnimationsRegistry_->flushUpdates(cssUpdatesBatch);
@@ -729,7 +726,6 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
 
     AnimationMutations mutations;
 
-    // collecting css mutations in AnimatedProps format
     for (auto &[node, animatedProp] : animatedPropsUpdatesBatch) {
       bool hasLayoutUpdates = mutationHasLayoutUpdates(animatedProp);
       mutations.batch.push_back(
@@ -834,28 +830,11 @@ AnimationMutations ReanimatedModuleProxy::performNonLayoutOperationsForBackend()
     ReanimatedSystraceSection s("ReanimatedModuleProxy::performNonLayoutOperationsForBackend");
 
     AnimationMutations mutations;
-    UpdatesBatch animatedUpdatesBatch;
-    UpdatesBatchAnimatedProps animatedPropsUpdatesBatch;
     {
       auto lock = updatesRegistryManager_->lock();
-      {
-        auto propsLock = animatedPropsRegistry_->lock();
-        animatedPropsRegistry_->flushUpdates(animatedUpdatesBatch);
-        animatedPropsRegistry_->flushAnimatedPropsUpdates(animatedPropsUpdatesBatch);
-
-        for (auto &[node, animatedProp] : animatedPropsUpdatesBatch) {
-          if (!mutationHasLayoutUpdates(animatedProp)) {
-            mutations.batch.push_back(
-                AnimationMutation{node->getTag(), node->getFamilyShared(), std::move(animatedProp), false});
-          } else {
-            animatedPropsRegistry_->returnAnimatedPropsToBatch(node, std::move(animatedProp));
-          }
-        }
-      }
+      auto propsLock = animatedPropsRegistry_->lock();
+      animatedPropsRegistry_->flushNonLayoutUpdates(mutations);
     }
-
-    css::addNonLayoutPropsFromDynamic(mutations, animatedUpdatesBatch);
-
     return mutations;
   }
   return AnimationMutations{};
@@ -866,12 +845,10 @@ void ReanimatedModuleProxy::ensureBackendRunning() {
     if (isAnimationRunning_) {
       return;
     }
-    std::weak_ptr<UIManagerAnimationBackend> unstableAnimationBackend = uiManager_->unstable_getAnimationBackend();
-    if (auto locked = unstableAnimationBackend.lock()) {
-      auto animationBackend = std::static_pointer_cast<AnimationBackend>(locked);
-      callbackId_ = animationBackend->start([this](AnimationTimestamp ts) { return grandCallback(ts); });
+    withAnimationBackend([this](const std::shared_ptr<AnimationBackend> &backend) {
+      callbackId_ = backend->start([this](AnimationTimestamp ts) { return grandCallback(ts); });
       isAnimationRunning_ = true;
-    }
+    });
   }
 }
 
@@ -881,10 +858,7 @@ void ReanimatedModuleProxy::maybeStopBackend(const AnimationMutations &mutations
         cssTransitionsRegistry_->hasUpdates() || cssAnimationsRegistry_->hasUpdates() ||
         animatedPropsRegistry_->hasPendingAnimatedPropsUpdates();
     if (!hasWork) {
-      std::weak_ptr<UIManagerAnimationBackend> unstableAnimationBackend = uiManager_->unstable_getAnimationBackend();
-      if (auto locked = unstableAnimationBackend.lock()) {
-        std::static_pointer_cast<AnimationBackend>(locked)->stop(callbackId_);
-      }
+      withAnimationBackend([this](const std::shared_ptr<AnimationBackend> &backend) { backend->stop(callbackId_); });
       isAnimationRunning_ = false;
     }
   }
@@ -925,10 +899,7 @@ void ReanimatedModuleProxy::triggerBackendCallback(CallbackContext context) {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     callbackContext_ = context;
     ensureBackendRunning();
-    std::weak_ptr<UIManagerAnimationBackend> unstableAnimationBackend = uiManager_->unstable_getAnimationBackend();
-    if (auto locked = unstableAnimationBackend.lock()) {
-      locked->trigger();
-    }
+    withAnimationBackend([](const std::shared_ptr<AnimationBackend> &backend) { backend->trigger(); });
   }
 }
 

@@ -196,6 +196,14 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   std::function<std::string()> createRegistriesLeakCheck();
 
  private:
+  template <typename Func>
+  void withAnimationBackend(Func &&fn) {
+    auto weak = uiManager_->unstable_getAnimationBackend();
+    if (auto locked = weak.lock()) {
+      fn(std::static_pointer_cast<AnimationBackend>(locked));
+    }
+  }
+
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
   void applySynchronousUpdates(UpdatesBatch &updatesBatch, bool allowPartialUpdates = false);
 
@@ -213,7 +221,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   AnimatedSensorModule animatedSensorModule_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
-  std::vector<std::function<void(AnimationTimestamp)>> backendCallbacks_;
   CallbackContext callbackContext_{CallbackContext::AnimationLoop};
   std::function<void(double)> pendingAnimationFrameCallback_;
 

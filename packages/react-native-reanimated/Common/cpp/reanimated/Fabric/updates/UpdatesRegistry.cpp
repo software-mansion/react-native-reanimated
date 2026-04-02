@@ -1,5 +1,7 @@
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
+#include <reanimated/Fabric/updates/propsLayoutFilter.h>
+
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -47,10 +49,28 @@ void UpdatesRegistry::flushAnimatedPropsUpdates(UpdatesBatchAnimatedProps &updat
   }
 }
 
-void UpdatesRegistry::returnAnimatedPropsToBatch(
-    const std::shared_ptr<const ShadowNode> &shadowNode,
-    AnimatedProps animatedProps) {
-  updatesBatchAnimatedProps_.emplace_back(shadowNode, std::move(animatedProps));
+void UpdatesRegistry::flushNonLayoutUpdates(AnimationMutations &mutations) {
+  UpdatesBatch dynamicBatch;
+  UpdatesBatchAnimatedProps propsBatch;
+  flushUpdates(dynamicBatch);
+  flushAnimatedPropsUpdates(propsBatch);
+
+  for (auto &[node, animatedProp] : propsBatch) {
+    if (mutationHasLayoutUpdates(animatedProp)) {
+      addAnimatedPropsToBatch(node, std::move(animatedProp));
+    } else {
+      mutations.batch.push_back(
+          AnimationMutation{node->getTag(), node->getFamilyShared(), std::move(animatedProp), false});
+    }
+  }
+
+  for (auto &[node, props] : dynamicBatch) {
+    if (hasLayoutProps(props)) {
+      addUpdatesToBatch(node, props);
+    }
+  }
+
+  addNonLayoutPropsFromDynamic(mutations, dynamicBatch);
 }
 
 bool UpdatesRegistry::hasPendingAnimatedPropsUpdates() const {

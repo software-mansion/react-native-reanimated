@@ -3,6 +3,7 @@
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 
 #include <react/renderer/animationbackend/AnimatedProps.h>
+#include <react/renderer/animationbackend/AnimationBackend.h>
 #include <react/renderer/core/ShadowNode.h>
 
 #include <jsi/jsi.h>
@@ -48,7 +49,7 @@ class UpdatesRegistry {
 
   void flushUpdates(UpdatesBatch &updatesBatch);
   void flushAnimatedPropsUpdates(UpdatesBatchAnimatedProps &updatesBatch);
-  void returnAnimatedPropsToBatch(const std::shared_ptr<const ShadowNode> &shadowNode, AnimatedProps animatedProps);
+  void flushNonLayoutUpdates(facebook::react::AnimationMutations &mutations);
   bool hasPendingAnimatedPropsUpdates() const;
   void collectProps(PropsMap &propsMap);
   UpdatesBatch getPendingUpdates();

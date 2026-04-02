@@ -1,7 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/utils/interpolatorPropsBuilderCallbacks.h>
-#include <reanimated/CSS/utils/propsLayoutFilter.h>
+#include <reanimated/Fabric/updates/propsLayoutFilter.h>
 
 #include <react/renderer/graphics/Transform.h>
 

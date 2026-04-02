@@ -6,7 +6,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace reanimated::css {
+namespace reanimated {
 
 inline std::optional<facebook::react::PropName> propNameFromString(const std::string &propName) {
   static const std::unordered_map<std::string, facebook::react::PropName> propNameMap = {
@@ -122,4 +122,4 @@ inline std::optional<facebook::react::PropName> propNameFromString(const std::st
   return it->second;
 }
 
-} // namespace reanimated::css
+} // namespace reanimated
