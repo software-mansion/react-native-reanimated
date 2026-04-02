@@ -4,12 +4,12 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/npm-worklets-publish.yml'
+      - '.github/workflows/npm-reanimated-publish.yml'
       - '.github/workflows/npm-package-publish.yml'
       - '.github/actions/npm-package-publish/**'
   pull_request:
     paths:
-      - '.github/workflows/npm-worklets-publish.yml'
+      - '.github/workflows/npm-reanimated-publish.yml'
       - '.github/workflows/npm-package-publish.yml'
       - '.github/actions/npm-package-publish/**'
   merge_group:
