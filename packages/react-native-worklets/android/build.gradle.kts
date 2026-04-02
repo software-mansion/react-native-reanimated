@@ -260,6 +260,10 @@ android {
         }
     }
 
+    lint {
+        abortOnError = false
+    }
+
     buildTypes {
         debug {
             externalNativeBuild {
@@ -276,10 +280,6 @@ android {
                 }
             }
         }
-    }
-
-    lint {
-        abortOnError = false
     }
 
     packaging {
