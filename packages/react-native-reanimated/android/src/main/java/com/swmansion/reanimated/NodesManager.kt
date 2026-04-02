@@ -20,8 +20,9 @@ import java.util.ArrayList
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
-class NodesManager(context: ReactApplicationContext) : EventDispatcherListener {
-
+class NodesManager(
+    context: ReactApplicationContext,
+) : EventDispatcherListener {
     interface OnAnimationFrame {
         fun onAnimationFrame(timestampMs: Double)
     }
@@ -52,9 +53,10 @@ class NodesManager(context: ReactApplicationContext) : EventDispatcherListener {
 
         val uiManager = UIManagerHelper.getUIManager(context, UIManagerType.FABRIC)
         assert(uiManager != null)
-        mCustomEventNamesResolver = UIManagerModule.CustomEventNamesResolver { eventName ->
-            uiManager!!.resolveCustomDirectEventName(eventName)
-        }
+        mCustomEventNamesResolver =
+            UIManagerModule.CustomEventNamesResolver { eventName ->
+                uiManager!!.resolveCustomDirectEventName(eventName)
+            }
         mDrawPassDetector = DrawPassDetector(context)
 
         mReactChoreographer = ReactChoreographer.getInstance()
@@ -99,7 +101,8 @@ class NodesManager(context: ReactApplicationContext) : EventDispatcherListener {
     fun startUpdatingOnAnimationFrame() {
         if (!mCallbackPosted.getAndSet(true)) {
             mReactChoreographer.postFrameCallback(
-                ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE, mChoreographerCallback
+                ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE,
+                mChoreographerCallback,
             )
         }
     }
@@ -107,7 +110,8 @@ class NodesManager(context: ReactApplicationContext) : EventDispatcherListener {
     private fun stopUpdatingOnAnimationFrame() {
         if (mCallbackPosted.getAndSet(false)) {
             mReactChoreographer.removeFrameCallback(
-                ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE, mChoreographerCallback
+                ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE,
+                mChoreographerCallback,
             )
         }
     }
@@ -241,11 +245,17 @@ class NodesManager(context: ReactApplicationContext) : EventDispatcherListener {
         mCustomEventHandler = handler
     }
 
-    fun sendEvent(name: String, body: WritableMap) {
+    fun sendEvent(
+        name: String,
+        body: WritableMap,
+    ) {
         mEventEmitter.emit(name, body)
     }
 
-    fun enableSlowAnimations(slowAnimationsEnabled: Boolean, animationsDragFactor: Int) {
+    fun enableSlowAnimations(
+        slowAnimationsEnabled: Boolean,
+        animationsDragFactor: Int,
+    ) {
         mSlowAnimationsEnabled = slowAnimationsEnabled
         mAnimationsDragFactor = animationsDragFactor
         if (slowAnimationsEnabled) {

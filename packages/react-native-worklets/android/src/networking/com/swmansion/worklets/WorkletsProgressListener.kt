@@ -1,9 +1,13 @@
 /**
-* Based on ProgressListener.kt from React Native 
+* Based on ProgressListener.kt from React Native
 */
 
 package com.swmansion.worklets
 
 public fun interface WorkletsProgressListener {
-  public fun onProgress(bytesWritten: Long, contentLength: Long, done: Boolean)
+    public fun onProgress(
+        bytesWritten: Long,
+        contentLength: Long,
+        done: Boolean,
+    )
 }
