@@ -36,7 +36,7 @@
     "react-dom": "19.2.3",
     "react-native-gesture-handler": "2.30.0",
     "react-native-mmkv": "4.3.0",
-    "react-native-nitro-modules": "0.35.2",
+    "react-native-nitro-modules": "patch:react-native-nitro-modules@npm%3A0.35.2#~/.yarn/patches/react-native-nitro-modules-npm-0.35.2-717188fdb0.patch",
     "react-native-reanimated": "workspace:*",
     "react-native-safe-area-context": "5.7.0",
     "react-native-screens": "4.24.0",

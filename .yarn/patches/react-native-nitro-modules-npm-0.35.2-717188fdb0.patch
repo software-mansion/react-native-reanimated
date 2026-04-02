@@ -1,0 +1,12 @@
+diff --git a/NitroModules.podspec b/NitroModules.podspec
+index 2111b3763d6f3fbe12854f2313ba98cb076d1d47..09506df548f065ab34bfae3d0214272f1c7053a0 100644
+--- a/NitroModules.podspec
++++ b/NitroModules.podspec
+@@ -17,6 +17,7 @@ Pod::Spec.new do |s|
+     :ios => min_ios_version_supported,
+     :visionos => 1.0,
+     :macos => 10.13,
++    :osx => 10.13,
+     :tvos => 13.4,
+   }
+ 

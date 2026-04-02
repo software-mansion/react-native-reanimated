@@ -13728,7 +13728,7 @@ __metadata:
     react-native: "npm:0.85.0-rc.6"
     react-native-gesture-handler: "npm:2.30.0"
     react-native-mmkv: "npm:4.3.0"
-    react-native-nitro-modules: "npm:0.35.2"
+    react-native-nitro-modules: "patch:react-native-nitro-modules@npm%3A0.35.2#~/.yarn/patches/react-native-nitro-modules-npm-0.35.2-717188fdb0.patch"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.7.0"
     react-native-screens: "npm:4.24.0"
@@ -28039,6 +28039,16 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10/22977e5e22c63fb91526c90fa59fcfe5c7f97978c583400f433a1d3ef8ee32fbceb0ad1b009b5bf0d1794e94a11716ad752fd7702c2d67fc808a0256c6e35488
+  languageName: node
+  linkType: hard
+
+"react-native-nitro-modules@patch:react-native-nitro-modules@npm%3A0.35.2#~/.yarn/patches/react-native-nitro-modules-npm-0.35.2-717188fdb0.patch":
+  version: 0.35.2
+  resolution: "react-native-nitro-modules@patch:react-native-nitro-modules@npm%3A0.35.2#~/.yarn/patches/react-native-nitro-modules-npm-0.35.2-717188fdb0.patch::version=0.35.2&hash=867e3c"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10/7fad86611db13acd6ac76dcfd14f49b5e9bce1bb3b9816903f4a74ee7b795b01a6f7272d7876df97262e7f9d8ce355dfc3ac9795333acab1f3eff61d53093734
   languageName: node
   linkType: hard
 
