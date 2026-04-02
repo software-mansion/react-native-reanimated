@@ -229,6 +229,21 @@ void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
   method(javaPart_.get(), listenerId);
 }
 
+void NativeProxy::attachPseudoSelector(Tag tag, const std::string &selector, std::function<void(bool)> callback) {
+  static const auto method =
+      getJniMethod<void(int, jni::local_ref<jni::JString>, PseudoSelectorCallback::javaobject)>("attachPseudoSelector");
+  method(
+      javaPart_.get(),
+      static_cast<int>(tag),
+      jni::make_jstring(selector),
+      PseudoSelectorCallback::newObjectCxxArgs(std::move(callback)).get());
+}
+
+void NativeProxy::detachPseudoSelector(Tag tag) {
+  static const auto method = getJniMethod<void(int)>("detachPseudoSelector");
+  method(javaPart_.get(), static_cast<int>(tag));
+}
+
 double NativeProxy::getAnimationTimestamp() {
   static const auto method = getJniMethod<jlong()>("getAnimationTimestamp");
   jlong output = method(javaPart_.get());
@@ -293,21 +308,9 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto maybeFlushUiUpdatesQueueFunction = bindThis(&NativeProxy::maybeFlushUIUpdatesQueue);
 
-  auto attachPseudoSelectorFunction = [this](Tag tag, const std::string &selector, std::function<void(bool)> callback) {
-    static const auto method =
-        getJniMethod<void(int, jni::local_ref<jni::JString>, PseudoSelectorCallback::javaobject)>(
-            "attachPseudoSelector");
-    method(
-        javaPart_.get(),
-        static_cast<int>(tag),
-        jni::make_jstring(selector),
-        PseudoSelectorCallback::newObjectCxxArgs(std::move(callback)).get());
-  };
+  auto attachPseudoSelectorFunction = bindThis(&NativeProxy::attachPseudoSelector);
 
-  auto detachPseudoSelectorFunction = [this](Tag tag) {
-    static const auto method = getJniMethod<void(int)>("detachPseudoSelector");
-    method(javaPart_.get(), static_cast<int>(tag));
-  };
+  auto detachPseudoSelectorFunction = bindThis(&NativeProxy::detachPseudoSelector);
 
   return {
       requestRender,

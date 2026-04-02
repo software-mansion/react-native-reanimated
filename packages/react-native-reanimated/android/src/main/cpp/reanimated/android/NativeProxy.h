@@ -67,6 +67,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, std::enable_shared_fro
       bool isNavigationBarTranslucent);
   void unsubscribeFromKeyboardEvents(int listenerId);
   void handleEvent(jni::alias_ref<JString> eventName, jint emitterReactTag, jni::alias_ref<react::WritableMap> event);
+  void attachPseudoSelector(Tag tag, const std::string &selector, std::function<void(bool)> callback);
+  void detachPseudoSelector(Tag tag);
 
   /***
    * Wraps a method of `NativeProxy` in a function object capturing `this`

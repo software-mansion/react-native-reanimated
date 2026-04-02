@@ -244,7 +244,9 @@ open class NativeProxy {
           mPseudoSelectorDetachActions[tag] = Runnable { view.setOnFocusChangeListener(null) }
         }
         ":hover" -> {
+          Log.d("PseudoSelector", "Setting hover listener on view tag=$tag")
           val hoverListener = View.OnHoverListener { _, event ->
+            Log.d("PseudoSelector", "hover event: action=${event.actionMasked}")
             val action = event.actionMasked
             if (action == MotionEvent.ACTION_HOVER_ENTER) {
               callback.onSelectorStateChanged(true)
