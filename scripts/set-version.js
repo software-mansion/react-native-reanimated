@@ -12,7 +12,9 @@ function setVersion(packageJsonPath, jsVersionPath) {
   const { currentVersion, newVersion } = getVersion(process.argv);
   updateVersion(packageJsonPath, jsVersionPath, newVersion);
   // Log the current version so it can be restored if needed.
-  process.stdout.write(currentVersion);
+  console.log(currentVersion);
 }
 
-export { setVersion };
+module.exports = {
+  setVersion,
+};
