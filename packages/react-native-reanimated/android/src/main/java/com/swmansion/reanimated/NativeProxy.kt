@@ -251,12 +251,30 @@ open class NativeProxy {
           view.setOnTouchListener(touchListener)
           mPseudoSelectorDetachActions[key] = Runnable { view.setOnTouchListener(null) }
         }
-        1 -> { // :focus
-          val focusListener = View.OnFocusChangeListener { _, hasFocus ->
-            callback.onSelectorStateChanged(hasFocus)
+        1 -> { // :focus-within: active when view or any descendant has focus
+          fun View.isDescendantOf(ancestor: View): Boolean {
+            var current: android.view.ViewParent? = parent
+            while (current != null) {
+              if (current === ancestor) return true
+              current = current.parent
+            }
+            return false
           }
-          view.setOnFocusChangeListener(focusListener)
-          mPseudoSelectorDetachActions[key] = Runnable { view.setOnFocusChangeListener(null) }
+
+          val focusListener = android.view.ViewTreeObserver.OnGlobalFocusChangeListener { oldFocus, newFocus ->
+            val hadFocus = oldFocus != null && (oldFocus === view || oldFocus.isDescendantOf(view))
+            val hasFocus = newFocus != null && (newFocus === view || newFocus.isDescendantOf(view))
+            if (hasFocus && !hadFocus) {
+              callback.onSelectorStateChanged(true)
+            } else if (hadFocus && !hasFocus) {
+              callback.onSelectorStateChanged(false)
+            }
+          }
+
+          view.viewTreeObserver.addOnGlobalFocusChangeListener(focusListener)
+          mPseudoSelectorDetachActions[key] = Runnable {
+            view.viewTreeObserver.removeOnGlobalFocusChangeListener(focusListener)
+          }
         }
         2 -> { // :hover
           Log.d("PseudoSelector", "Setting hover listener on view tag=$tag")
