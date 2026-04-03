@@ -52,10 +52,10 @@ using namespace facebook::react;
   REAEventHandler _eventHandler;
   REAPerformOperations _performOperations;
 
-  // Pseudo-selector pending attach map: tag → block to run once the view appears.
-  // Populated when attachPseudoSelector is called but findComponentViewWithTag
-  // returns nil (view not yet mounted). Flushed after each mounting transaction.
-  NSMutableDictionary<NSNumber *, void (^)(REAUIView *)> *_pendingPseudoSelectorAttaches;
+  // Pseudo-selector pending attach map: "@tag:selectorInt" → block to run once the view appears.
+  // Allows multiple selectors per view. Populated when attachPseudoSelector is called but
+  // findComponentViewWithTag returns nil (view not yet mounted). Flushed after each mounting transaction.
+  NSMutableDictionary<NSString *, void (^)(REAUIView *)> *_pendingPseudoSelectorAttaches;
 
   // Retained proxy that wraps the original mounting manager delegate.
   REAMountingDelegateProxy *_mountingDelegateProxy;
@@ -239,16 +239,20 @@ using namespace facebook::react;
   [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
 }
 
-- (void)addPendingPseudoSelectorAttach:(void (^)(REAUIView *))attachBlock forTag:(int)tag
+- (void)addPendingPseudoSelectorAttach:(void (^)(REAUIView *))attachBlock
+                                forTag:(int)tag
+                           selectorInt:(int)selectorInt
 {
   RCTAssertMainQueue();
-  _pendingPseudoSelectorAttaches[@(tag)] = [attachBlock copy];
+  NSString *key = [NSString stringWithFormat:@"%d:%d", tag, selectorInt];
+  _pendingPseudoSelectorAttaches[key] = [attachBlock copy];
 }
 
-- (void)removePendingPseudoSelectorAttach:(int)tag
+- (void)removePendingPseudoSelectorAttach:(int)tag selectorInt:(int)selectorInt
 {
   RCTAssertMainQueue();
-  [_pendingPseudoSelectorAttaches removeObjectForKey:@(tag)];
+  NSString *key = [NSString stringWithFormat:@"%d:%d", tag, selectorInt];
+  [_pendingPseudoSelectorAttaches removeObjectForKey:key];
 }
 
 - (void)flushPendingPseudoSelectorAttaches
@@ -259,12 +263,14 @@ using namespace facebook::react;
   }
   RCTComponentViewRegistry *registry = self.surfacePresenter.mountingManager.componentViewRegistry;
   // Snapshot keys so we can mutate the dict while iterating.
-  NSArray<NSNumber *> *tags = [_pendingPseudoSelectorAttaches.allKeys copy];
-  for (NSNumber *tagNum in tags) {
-    REAUIView *view = [registry findComponentViewWithTag:(Tag)[tagNum intValue]];
+  NSArray<NSString *> *keys = [_pendingPseudoSelectorAttaches.allKeys copy];
+  for (NSString *key in keys) {
+    // Key format: "tag:selectorInt" — parse tag to look up the view.
+    int tag = [[key componentsSeparatedByString:@":"][0] intValue];
+    REAUIView *view = [registry findComponentViewWithTag:(Tag)tag];
     if (view) {
-      void (^block)(REAUIView *) = _pendingPseudoSelectorAttaches[tagNum];
-      [_pendingPseudoSelectorAttaches removeObjectForKey:tagNum];
+      void (^block)(REAUIView *) = _pendingPseudoSelectorAttaches[key];
+      [_pendingPseudoSelectorAttaches removeObjectForKey:key];
       block(view);
     }
   }

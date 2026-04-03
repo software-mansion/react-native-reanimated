@@ -229,19 +229,18 @@ void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
   method(javaPart_.get(), listenerId);
 }
 
-void NativeProxy::attachPseudoSelector(Tag tag, const std::string &selector, std::function<void(bool)> callback) {
-  static const auto method =
-      getJniMethod<void(int, jni::local_ref<jni::JString>, PseudoSelectorCallback::javaobject)>("attachPseudoSelector");
+void NativeProxy::attachPseudoSelector(Tag tag, PseudoSelector selector, std::function<void(bool)> callback) {
+  static const auto method = getJniMethod<void(int, int, PseudoSelectorCallback::javaobject)>("attachPseudoSelector");
   method(
       javaPart_.get(),
       static_cast<int>(tag),
-      jni::make_jstring(selector),
+      static_cast<int>(selector),
       PseudoSelectorCallback::newObjectCxxArgs(std::move(callback)).get());
 }
 
-void NativeProxy::detachPseudoSelector(Tag tag) {
-  static const auto method = getJniMethod<void(int)>("detachPseudoSelector");
-  method(javaPart_.get(), static_cast<int>(tag));
+void NativeProxy::detachPseudoSelector(Tag tag, PseudoSelector selector) {
+  static const auto method = getJniMethod<void(int, int)>("detachPseudoSelector");
+  method(javaPart_.get(), static_cast<int>(tag), static_cast<int>(selector));
 }
 
 double NativeProxy::getAnimationTimestamp() {

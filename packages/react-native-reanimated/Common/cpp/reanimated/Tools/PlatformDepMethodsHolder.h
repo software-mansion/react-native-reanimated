@@ -1,5 +1,7 @@
 #pragma once
 
+#include <reanimated/PseudoStyles/PseudoSelector.h>
+
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <react/renderer/core/ReactPrimitives.h>
@@ -45,9 +47,8 @@ using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
 using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
 
-using PlatformAttachPseudoSelectorFunction =
-    std::function<void(Tag, const std::string &selector, std::function<void(bool)>)>;
-using PlatformDetachPseudoSelectorFunction = std::function<void(Tag)>;
+using PlatformAttachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector, std::function<void(bool)>)>;
+using PlatformDetachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector)>;
 
 struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;

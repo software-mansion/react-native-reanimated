@@ -610,6 +610,10 @@ void ReanimatedModuleProxy::registerPseudoStyle(
   const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto tag = shadowNode->getTag();
   const auto selectorStr = stringFromValue(rt, selector);
+  const auto selectorEnum = pseudoSelectorFromString(selectorStr);
+  if (!selectorEnum) {
+    return;
+  }
   const auto selectorStyleDyn = jsi::dynamicFromValue(rt, selectorStyle);
   const auto defaultStyleDyn = jsi::dynamicFromValue(rt, defaultStyle);
 
@@ -628,7 +632,7 @@ void ReanimatedModuleProxy::registerPseudoStyle(
   }
 
   pseudoStylesRegistry_->registerPseudoStyle(
-      tag, shadowNode, selectorStr, selectorStyleDyn, defaultStyleDyn, duration, delay);
+      tag, shadowNode, *selectorEnum, selectorStyleDyn, defaultStyleDyn, duration, delay);
 }
 
 void ReanimatedModuleProxy::unregisterPseudoStyle(jsi::Runtime &, const jsi::Value &viewTag) {

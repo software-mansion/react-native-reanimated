@@ -169,7 +169,8 @@ open class NativeProxy {
    */
   private val mInvalidated = AtomicBoolean(false)
 
-  private val mPseudoSelectorDetachActions = HashMap<Int, Runnable>()
+  // Key = "$tag:$selectorInt" — allows multiple selectors per view.
+  private val mPseudoSelectorDetachActions = HashMap<String, Runnable>()
 
   @field:DoNotStrip
   @Suppress("unused")
@@ -232,18 +233,32 @@ open class NativeProxy {
   protected fun getHybridData(): HybridData = mHybridData
 
   @DoNotStrip
-  fun attachPseudoSelector(tag: Int, selector: String, callback: PseudoSelectorCallback) {
+  fun attachPseudoSelector(tag: Int, selector: Int, callback: PseudoSelectorCallback) {
     UiThreadUtil.runOnUiThread {
       val view = mFabricUIManager.resolveView(tag) ?: return@runOnUiThread
+      val key = "$tag:$selector"
       when (selector) {
-        ":focus" -> {
+        0 -> { // :active
+          val touchListener = View.OnTouchListener { _, event ->
+            val action = event.actionMasked
+            if (action == MotionEvent.ACTION_DOWN) {
+              callback.onSelectorStateChanged(true)
+            } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+              callback.onSelectorStateChanged(false)
+            }
+            false
+          }
+          view.setOnTouchListener(touchListener)
+          mPseudoSelectorDetachActions[key] = Runnable { view.setOnTouchListener(null) }
+        }
+        1 -> { // :focus
           val focusListener = View.OnFocusChangeListener { _, hasFocus ->
             callback.onSelectorStateChanged(hasFocus)
           }
           view.setOnFocusChangeListener(focusListener)
-          mPseudoSelectorDetachActions[tag] = Runnable { view.setOnFocusChangeListener(null) }
+          mPseudoSelectorDetachActions[key] = Runnable { view.setOnFocusChangeListener(null) }
         }
-        ":hover" -> {
+        2 -> { // :hover
           Log.d("PseudoSelector", "Setting hover listener on view tag=$tag")
           val hoverListener = View.OnHoverListener { _, event ->
             Log.d("PseudoSelector", "hover event: action=${event.actionMasked}")
@@ -256,29 +271,16 @@ open class NativeProxy {
             false
           }
           view.setOnHoverListener(hoverListener)
-          mPseudoSelectorDetachActions[tag] = Runnable { view.setOnHoverListener(null) }
-        }
-        ":active" -> {
-          val touchListener = View.OnTouchListener { _, event ->
-            val action = event.actionMasked
-            if (action == MotionEvent.ACTION_DOWN) {
-              callback.onSelectorStateChanged(true)
-            } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-              callback.onSelectorStateChanged(false)
-            }
-            false
-          }
-          view.setOnTouchListener(touchListener)
-          mPseudoSelectorDetachActions[tag] = Runnable { view.setOnTouchListener(null) }
+          mPseudoSelectorDetachActions[key] = Runnable { view.setOnHoverListener(null) }
         }
       }
     }
   }
 
   @DoNotStrip
-  fun detachPseudoSelector(tag: Int) {
+  fun detachPseudoSelector(tag: Int, selector: Int) {
     UiThreadUtil.runOnUiThread {
-      mPseudoSelectorDetachActions.remove(tag)?.run()
+      mPseudoSelectorDetachActions.remove("$tag:$selector")?.run()
     }
   }
 
