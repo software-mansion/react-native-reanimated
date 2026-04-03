@@ -232,8 +232,9 @@ void CSSAnimationsRegistry::updateViewAnimations(
       for (auto &delayedPropsBuilder : resetPropsUpdates) {
         addAnimatedPropsToBatch(shadowNode, delayedPropsBuilder->get());
       }
+    } else {
+      addUpdatesToBatch(shadowNode, result);
     }
-    addUpdatesToBatch(shadowNode, result);
   }
 }
 

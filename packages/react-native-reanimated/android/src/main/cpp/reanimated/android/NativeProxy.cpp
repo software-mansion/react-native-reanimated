@@ -275,8 +275,8 @@ void NativeProxy::handleEvent(
 
 void NativeProxy::handleEventOperations(jboolean isInDrawPass) {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    auto context = isInDrawPass ? CallbackContext::EventInAndroidDraw : CallbackContext::Event;
-    reanimatedModuleProxy_->triggerBackendCallback(context);
+    auto state = isInDrawPass ? GrandCallbackState::EventInAndroidDraw : GrandCallbackState::Event;
+    reanimatedModuleProxy_->triggerBackendCallback(state);
   } else {
     if (isInDrawPass) {
       reanimatedModuleProxy_->performNonLayoutOperations();

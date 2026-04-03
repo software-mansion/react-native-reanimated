@@ -2,6 +2,7 @@
 
 #include <reanimated/Fabric/updates/propsLayoutFilter.h>
 
+#include <folly/json.h>
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -50,27 +51,59 @@ void UpdatesRegistry::flushAnimatedPropsUpdates(UpdatesBatchAnimatedProps &updat
 }
 
 void UpdatesRegistry::flushNonLayoutUpdates(AnimationMutations &mutations) {
-  UpdatesBatch dynamicBatch;
-  UpdatesBatchAnimatedProps propsBatch;
-  flushUpdates(dynamicBatch);
-  flushAnimatedPropsUpdates(propsBatch);
+  UpdatesBatchAnimatedProps remaining;
 
-  for (auto &[node, animatedProp] : propsBatch) {
-    if (mutationHasLayoutUpdates(animatedProp)) {
-      addAnimatedPropsToBatch(node, std::move(animatedProp));
-    } else {
+  for (auto &[node, animatedProp] : updatesBatchAnimatedProps_) {
+    // Split typed props by layout vs non-layout.
+    std::vector<std::unique_ptr<AnimatedPropBase>> nonLayoutTyped;
+    std::vector<std::unique_ptr<AnimatedPropBase>> layoutTyped;
+    for (auto &prop : animatedProp.props) {
+      if (isLayoutProp(prop->propName)) {
+        layoutTyped.push_back(std::move(prop));
+      } else {
+        nonLayoutTyped.push_back(std::move(prop));
+      }
+    }
+
+    // Split rawProps by layout vs non-layout.
+    std::unique_ptr<RawProps> nonLayoutRaw;
+    std::unique_ptr<RawProps> layoutRaw;
+    if (animatedProp.rawProps) {
+      auto raw = animatedProp.rawProps->toDynamic();
+      folly::dynamic nonLayoutDyn = folly::dynamic::object();
+      folly::dynamic layoutDyn = folly::dynamic::object();
+      for (const auto &key : raw.keys()) {
+        const auto keyStr = key.asString();
+        const auto propName = propNameFromString(keyStr);
+        if (propName.has_value() && isLayoutProp(propName.value())) {
+          layoutDyn[keyStr] = raw[key];
+        } else {
+          nonLayoutDyn[keyStr] = raw[key];
+        }
+      }
+      if (!nonLayoutDyn.empty()) {
+        nonLayoutRaw = std::make_unique<RawProps>(std::move(nonLayoutDyn));
+      }
+      if (!layoutDyn.empty()) {
+        layoutRaw = std::make_unique<RawProps>(std::move(layoutDyn));
+      }
+    }
+
+    // Non-layout part → apply now.
+    if (!nonLayoutTyped.empty() || nonLayoutRaw) {
+      AnimatedProps nonLayoutProps{std::move(nonLayoutTyped), std::move(nonLayoutRaw)};
       mutations.batch.push_back(
-          AnimationMutation{node->getTag(), node->getFamilyShared(), std::move(animatedProp), false});
+          AnimationMutation{node->getTag(), node->getFamilyShared(), std::move(nonLayoutProps), false});
+    }
+
+    // Layout part → defer to next full flush.
+    if (!layoutTyped.empty() || layoutRaw) {
+      AnimatedProps layoutProps{std::move(layoutTyped), std::move(layoutRaw)};
+      remaining.emplace_back(node, std::move(layoutProps));
     }
   }
 
-  for (auto &[node, props] : dynamicBatch) {
-    if (hasLayoutProps(props)) {
-      addUpdatesToBatch(node, props);
-    }
-  }
-
-  addNonLayoutPropsFromDynamic(mutations, dynamicBatch);
+  updatesBatchAnimatedProps_ = std::move(remaining);
 }
 
 bool UpdatesRegistry::hasPendingAnimatedPropsUpdates() const {

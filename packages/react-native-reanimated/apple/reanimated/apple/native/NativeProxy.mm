@@ -54,7 +54,7 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
   [nodesManager registerPerformOperationsForEvent:^() {
     if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
       if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-        reanimatedModuleProxy->triggerBackendCallback(CallbackContext::Event);
+        reanimatedModuleProxy->triggerBackendCallback(GrandCallbackState::Event);
       } else {
         reanimatedModuleProxy->performOperations();
       }

@@ -50,7 +50,7 @@ using namespace css;
 
 using UpdatesBatch = std::vector<std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
 
-enum class CallbackContext : std::uint8_t {
+enum class GrandCallbackState : std::uint8_t {
   AnimationLoop,
   Event,
   EventInAndroidDraw,
@@ -108,15 +108,16 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   double getCssTimestamp();
 
   void performOperations(const bool isTriggeredByEvent);
-  AnimationMutations performOperationsForBackend();
+  AnimationMutations collectMutationsForBackend();
   void performOperations();
   void performNonLayoutOperations();
-  AnimationMutations performNonLayoutOperationsForBackend();
+  AnimationMutations collectNonLayoutMutationsForBackend();
+  void flushLayoutAnimationRequests();
 
   AnimationMutations grandCallback(AnimationTimestamp timestamp);
-  void triggerBackendCallback(CallbackContext context);
-  void ensureBackendRunning();
-  void maybeStopBackend(const AnimationMutations &mutations);
+  void triggerBackendCallback(GrandCallbackState context);
+  void startBackendIfNeeded();
+  void stopBackendIfIdle(const AnimationMutations &mutations);
 
   void setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) override;
 
@@ -221,7 +222,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   AnimatedSensorModule animatedSensorModule_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
-  CallbackContext callbackContext_{CallbackContext::AnimationLoop};
+  GrandCallbackState grandCallbackState_{GrandCallbackState::AnimationLoop};
   std::function<void(double)> pendingAnimationFrameCallback_;
 
 #ifdef __APPLE__

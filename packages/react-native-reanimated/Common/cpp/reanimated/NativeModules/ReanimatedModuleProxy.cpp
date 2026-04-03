@@ -628,7 +628,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
 
   auto res = handleEvent(eventType, tag, payload, currentTime);
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    triggerBackendCallback(CallbackContext::Event);
+    triggerBackendCallback(GrandCallbackState::Event);
   } else {
     performOperations();
   }
@@ -680,22 +680,21 @@ double ReanimatedModuleProxy::getCssTimestamp() {
   return currentCssTimestamp_;
 }
 
-AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
+void ReanimatedModuleProxy::flushLayoutAnimationRequests() {
+  auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
+  for (const auto surfaceId : flushRequestsCopy) {
+    uiManager_->getShadowTreeRegistry().visit(
+        surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
+  }
+}
+
+AnimationMutations ReanimatedModuleProxy::collectMutationsForBackend() {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperationsForBackend");
+    ReanimatedSystraceSection s("ReanimatedModuleProxy::collectMutationsForBackend");
 
-    auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
-    for (const auto surfaceId : flushRequestsCopy) {
-      uiManager_->getShadowTreeRegistry().visit(
-          surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
-    }
+    flushLayoutAnimationRequests();
 
-    // folly::dynamic updates (CSS transitions/animations); Android only when props reconciliation is OFF.
-    UpdatesBatch cssUpdatesBatch;
-    // raw prop updates coming from AnimatedProps registry (folly::dynamic).
-    UpdatesBatch animatedUpdatesBatch;
-    // AnimatedProps used by the backend; iOS always, Android for layout props when props reconciliation is OFF, and for all props when it is ON.
-    UpdatesBatchAnimatedProps animatedPropsUpdatesBatch;
+    UpdatesBatchAnimatedProps animatedPropsBatch;
     {
       ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
 
@@ -705,20 +704,18 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
         currentCssTimestamp_ = getAnimationTimestamp_();
         auto lock = cssTransitionsRegistry_->lock();
         cssTransitionsRegistry_->update(currentCssTimestamp_);
-        cssTransitionsRegistry_->flushAnimatedPropsUpdates(animatedPropsUpdatesBatch);
-        cssTransitionsRegistry_->flushUpdates(cssUpdatesBatch);
+        cssTransitionsRegistry_->flushAnimatedPropsUpdates(animatedPropsBatch);
       }
 
       {
         auto lock = animatedPropsRegistry_->lock();
-        animatedPropsRegistry_->flushUpdates(animatedUpdatesBatch);
+        animatedPropsRegistry_->flushAnimatedPropsUpdates(animatedPropsBatch);
       }
 
       if (shouldUpdateCssAnimations_) {
         auto lock = cssAnimationsRegistry_->lock();
         cssAnimationsRegistry_->update(currentCssTimestamp_);
-        cssAnimationsRegistry_->flushAnimatedPropsUpdates(animatedPropsUpdatesBatch);
-        cssAnimationsRegistry_->flushUpdates(cssUpdatesBatch);
+        cssAnimationsRegistry_->flushAnimatedPropsUpdates(animatedPropsBatch);
       }
 
       shouldUpdateCssAnimations_ = false;
@@ -726,15 +723,11 @@ AnimationMutations ReanimatedModuleProxy::performOperationsForBackend() {
 
     AnimationMutations mutations;
 
-    for (auto &[node, animatedProp] : animatedPropsUpdatesBatch) {
-      bool hasLayoutUpdates = mutationHasLayoutUpdates(animatedProp);
+    for (auto &[node, animatedProp] : animatedPropsBatch) {
+      bool hasLayoutUpdates = animatedPropsContainLayoutProps(animatedProp);
       mutations.batch.push_back(
           AnimationMutation{node->getTag(), node->getFamilyShared(), std::move(animatedProp), hasLayoutUpdates});
     }
-
-    // only on Android if props reconciliation is OFF
-    addNonLayoutPropsFromDynamic(mutations, cssUpdatesBatch);
-    mergeAnimationUpdatesBatch(mutations, animatedUpdatesBatch);
 
     return mutations;
   }
@@ -754,11 +747,7 @@ void ReanimatedModuleProxy::performOperations(const bool isTriggeredByEvent) {
 
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
-  auto flushRequestsCopy = std::move(layoutAnimationFlushRequests_);
-  for (const auto surfaceId : flushRequestsCopy) {
-    uiManager_->getShadowTreeRegistry().visit(
-        surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
-  }
+  flushLayoutAnimationRequests();
 
   jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
 
@@ -825,9 +814,9 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
   applySynchronousUpdates(updatesBatch, true);
 }
 
-AnimationMutations ReanimatedModuleProxy::performNonLayoutOperationsForBackend() {
+AnimationMutations ReanimatedModuleProxy::collectNonLayoutMutationsForBackend() {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    ReanimatedSystraceSection s("ReanimatedModuleProxy::performNonLayoutOperationsForBackend");
+    ReanimatedSystraceSection s("ReanimatedModuleProxy::collectNonLayoutMutationsForBackend");
 
     AnimationMutations mutations;
     {
@@ -840,7 +829,7 @@ AnimationMutations ReanimatedModuleProxy::performNonLayoutOperationsForBackend()
   return AnimationMutations{};
 }
 
-void ReanimatedModuleProxy::ensureBackendRunning() {
+void ReanimatedModuleProxy::startBackendIfNeeded() {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     if (isAnimationRunning_) {
       return;
@@ -852,7 +841,7 @@ void ReanimatedModuleProxy::ensureBackendRunning() {
   }
 }
 
-void ReanimatedModuleProxy::maybeStopBackend(const AnimationMutations &mutations) {
+void ReanimatedModuleProxy::stopBackendIfIdle(const AnimationMutations &mutations) {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     bool hasWork = !mutations.batch.empty() || pendingAnimationFrameCallback_ != nullptr ||
         cssTransitionsRegistry_->hasUpdates() || cssAnimationsRegistry_->hasUpdates() ||
@@ -869,36 +858,36 @@ AnimationMutations ReanimatedModuleProxy::grandCallback(AnimationTimestamp times
     ReanimatedSystraceSection s("ReanimatedModuleProxy::grandCallback");
 
     AnimationMutations mutations;
-    switch (callbackContext_) {
-      case CallbackContext::AnimationLoop: {
+    switch (grandCallbackState_) {
+      case GrandCallbackState::AnimationLoop: {
         if (pendingAnimationFrameCallback_) {
           auto cb = std::move(pendingAnimationFrameCallback_);
           pendingAnimationFrameCallback_ = nullptr;
           cb(timestamp.count());
         }
-        mutations = performOperationsForBackend();
+        mutations = collectMutationsForBackend();
         break;
       }
-      case CallbackContext::Event: {
-        mutations = performOperationsForBackend();
+      case GrandCallbackState::Event: {
+        mutations = collectMutationsForBackend();
         break;
       }
-      case CallbackContext::EventInAndroidDraw: {
-        mutations = performNonLayoutOperationsForBackend();
+      case GrandCallbackState::EventInAndroidDraw: {
+        mutations = collectNonLayoutMutationsForBackend();
         break;
       }
     }
-    callbackContext_ = CallbackContext::AnimationLoop;
-    maybeStopBackend(mutations);
+    grandCallbackState_ = GrandCallbackState::AnimationLoop;
+    stopBackendIfIdle(mutations);
     return mutations;
   }
   return AnimationMutations{};
 }
 
-void ReanimatedModuleProxy::triggerBackendCallback(CallbackContext context) {
+void ReanimatedModuleProxy::triggerBackendCallback(GrandCallbackState state) {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    callbackContext_ = context;
-    ensureBackendRunning();
+    grandCallbackState_ = state;
+    startBackendIfNeeded();
     withAnimationBackend([](const std::shared_ptr<AnimationBackend> &backend) { backend->trigger(); });
   }
 }
@@ -1467,7 +1456,7 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
         return;
       }
       strongThis->pendingAnimationFrameCallback_ = std::move(callback);
-      strongThis->ensureBackendRunning();
+      strongThis->startBackendIfNeeded();
     });
 
     requestRender_ = [weakThis = weak_from_this()](std::function<void(const double)> /*callback*/) {
@@ -1475,7 +1464,7 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
       if (!strongThis) {
         return;
       }
-      strongThis->ensureBackendRunning();
+      strongThis->startBackendIfNeeded();
     };
   }
 

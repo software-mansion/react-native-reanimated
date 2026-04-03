@@ -1,6 +1,8 @@
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
+#include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
+
 #include <memory>
 #include <utility>
 
@@ -21,7 +23,15 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
     const jsi::Value &updates = item.getProperty(rt, "updates");
-    addUpdatesToBatch(shadowNode, jsi::dynamicFromValue(rt, updates));
+    auto dynamic = jsi::dynamicFromValue(rt, updates);
+
+    if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+      AnimatedPropsBuilder builder;
+      builder.storeDynamic(dynamic);
+      addAnimatedPropsToBatch(shadowNode, builder.get());
+    } else {
+      addUpdatesToBatch(shadowNode, dynamic);
+    }
 
     if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
       timestampMap_[shadowNode->getTag()] = timestamp;
