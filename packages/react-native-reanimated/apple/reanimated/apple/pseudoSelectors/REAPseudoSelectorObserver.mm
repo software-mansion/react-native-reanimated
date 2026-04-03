@@ -16,26 +16,29 @@
 }
 
 - (instancetype)initWithView:(REAUIView *)view
-                    selector:(NSString *)selectorName
+                    selector:(reanimated::PseudoSelector)selector
                     callback:(std::function<void(bool)>)callback
 {
   if (self = [super init]) {
     _view = view;
     _callback = std::move(callback);
-    [self attachSelector:selectorName toView:view];
+    [self attachSelector:selector toView:view];
   }
   return self;
 }
 
-- (void)attachSelector:(NSString *)selectorName toView:(REAUIView *)view
+- (void)attachSelector:(reanimated::PseudoSelector)selector toView:(REAUIView *)view
 {
-  NSLog(@"[PseudoSelector] attachSelector: %@ to view: %@", selectorName, view);
-  if ([selectorName isEqualToString:@":active"]) {
-    [self attachActiveToView:view];
-  } else if ([selectorName isEqualToString:@":hover"]) {
-    [self attachHoverToView:view];
-  } else if ([selectorName isEqualToString:@":focus"]) {
-    [self attachFocusToView:view];
+  switch (selector) {
+    case reanimated::PseudoSelector::Active:
+      [self attachActiveToView:view];
+      break;
+    case reanimated::PseudoSelector::Hover:
+      [self attachHoverToView:view];
+      break;
+    case reanimated::PseudoSelector::Focus:
+      [self attachFocusToView:view];
+      break;
   }
 }
 

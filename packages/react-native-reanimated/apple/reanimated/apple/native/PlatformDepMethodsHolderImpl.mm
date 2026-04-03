@@ -137,18 +137,6 @@ ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nod
 
 static char kREAPseudoSelectorObserversKey;
 
-static NSString *selectorNSFromEnum(PseudoSelector selector)
-{
-  switch (selector) {
-    case PseudoSelector::Active:
-      return @":active";
-    case PseudoSelector::Focus:
-      return @":focus";
-    case PseudoSelector::Hover:
-      return @":hover";
-  }
-}
-
 static void attachObserverToView(
     REAUIView *view,
     PseudoSelector selector,
@@ -161,11 +149,10 @@ static void attachObserverToView(
     objc_setAssociatedObject(view, &kREAPseudoSelectorObserversKey, observers, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
   }
   NSNumber *key = @(static_cast<int>(selector));
-  // Detach any existing observer for this selector before replacing it (clear the queue)
+  // Detach any existing observer for this selector before replacing it.
   [observers[key] detach];
-  NSString *selectorNS = selectorNSFromEnum(selector);
   REAPseudoSelectorObserver *observer = [[REAPseudoSelectorObserver alloc] initWithView:view
-                                                                               selector:selectorNS
+                                                                               selector:selector
                                                                                callback:*sharedCallback];
   observers[key] = observer;
 }

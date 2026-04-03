@@ -1,9 +1,9 @@
 #pragma once
 
+#import <reanimated/PseudoStyles/PseudoSelector.h>
 #import <reanimated/apple/REAUIView.h>
 
 #import <functional>
-#import <string>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -13,9 +13,9 @@ NS_ASSUME_NONNULL_BEGIN
  * `false` when it becomes inactive.
  *
  * Supported selectors:
- *   ":active"  — UILongPressGestureRecognizer with minimumPressDuration = 0
- *   ":focus"   — NSNotificationCenter UITextFieldTextDidBeginEditing/DidEndEditing
- *   ":hover"   — UIHoverGestureRecognizer (iOS 13+, pointer/trackpad/mouse devices)
+ *   Active - UILongPressGestureRecognizer with minimumPressDuration = 0
+ *   Focus  - NSNotificationCenter UITextFieldTextDidBeginEditing/DidEndEditing
+ *   Hover  - UIHoverGestureRecognizer (iOS 13+, pointer/trackpad/mouse devices)
  *
  * Lifetime: store as an associated object on the UIView so it is
  * automatically released when the view is deallocated.
@@ -23,7 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface REAPseudoSelectorObserver : NSObject
 
 - (instancetype)initWithView:(REAUIView *)view
-                    selector:(NSString *)selectorName
+                    selector:(reanimated::PseudoSelector)selector
                     callback:(std::function<void(bool)>)callback;
 
 - (void)detach;
