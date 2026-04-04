@@ -251,14 +251,16 @@ open class NativeProxy {
           view.setOnTouchListener(touchListener)
           mPseudoSelectorDetachActions[key] = Runnable { view.setOnTouchListener(null) }
         }
-        1 -> { // :focus-within: active when view or any descendant has focus
-          val focusListener = android.view.ViewTreeObserver.OnGlobalFocusChangeListener { oldFocus, newFocus ->
-            val hadFocus = oldFocus != null && (oldFocus === view || oldFocus.isDescendantOf(view))
-            val hasFocus = newFocus != null && (newFocus === view || newFocus.isDescendantOf(view))
-            if (hasFocus && !hadFocus) {
-              callback.onSelectorStateChanged(true)
-            } else if (hadFocus && !hasFocus) {
-              callback.onSelectorStateChanged(false)
+        1 -> { // :focus
+          var isFocused = false
+          val focusListener = android.view.ViewTreeObserver.OnGlobalFocusChangeListener { _, _ ->
+            val hasFocus = view.hasFocus()
+            if (hasFocus && !isFocused) {
+              isFocused = true
+              callback.onSelectorStateChanged(isFocused)
+            } else if (!hasFocus && isFocused) {
+              isFocused = false
+              callback.onSelectorStateChanged(isFocused)
             }
           }
 
@@ -284,15 +286,6 @@ open class NativeProxy {
         }
       }
     }
-  }
-
-  private fun View.isDescendantOf(ancestor: View): Boolean {
-    var current: android.view.ViewParent? = parent
-    while (current != null) {
-      if (current === ancestor) return true
-      current = current.parent
-    }
-    return false
   }
 
   @DoNotStrip
