@@ -9,13 +9,6 @@ namespace reanimated {
 
 using namespace facebook::react;
 
-// Priority order for merging: lower index = lower priority (gets overwritten)
-static constexpr PseudoSelector kPriorityOrder[] = {
-    PseudoSelector::Focus,
-    PseudoSelector::Hover,
-    PseudoSelector::Active,
-};
-
 PseudoStylesRegistry::PseudoStylesRegistry(
     PlatformAttachPseudoSelectorFunction attachFn,
     PlatformDetachPseudoSelectorFunction detachFn)
@@ -37,7 +30,7 @@ void PseudoStylesRegistry::recomputeAllStyles(TagEntry &entry) {
     }
   }
 
-  for (uint8_t mask = 0; mask < (1 << (sizeof(kPriorityOrder))); ++mask) {
+  for (uint8_t mask = 0; mask < (1u << std::size(kPriorityOrder)); ++mask) {
     folly::dynamic style = mergedDefault;
     for (PseudoSelector sel : kPriorityOrder) {
       if (mask & (1u << static_cast<int>(sel))) {
