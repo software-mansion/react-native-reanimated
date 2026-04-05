@@ -1,7 +1,11 @@
 import type { NodePath } from '@babel/core';
 import type { Binding } from '@babel/traverse';
-import type { Identifier, ImportDeclaration } from '@babel/types';
-import { cloneNode } from '@babel/types';
+import type {
+  Identifier,
+  ImportDeclaration,
+  JSXIdentifier,
+} from '@babel/types';
+import { cloneNode, react } from '@babel/types';
 
 import { globals } from './globals';
 import {
@@ -32,7 +36,7 @@ export function getClosure(
         typePath.skip();
       },
       ReferencedIdentifier(idPath) {
-        if (idPath.isJSXIdentifier()) {
+        if (shouldSkipJSXIdentifier(idPath, state)) {
           return;
         }
 
@@ -126,4 +130,23 @@ export function getClosure(
     moduleBindingsToImport,
     relativeBindingsToImport,
   };
+}
+
+function shouldSkipJSXIdentifier(
+  idPath: NodePath<Identifier | JSXIdentifier>,
+  state: WorkletsPluginPass
+): boolean {
+  if (!idPath.isJSXIdentifier()) {
+    return false;
+  }
+
+  if (!state.opts.bundleMode || !state.opts.bundleModeCaptureJsxComponents) {
+    return true;
+  }
+
+  const isJsxMemberProperty =
+    idPath.parentPath.isJSXMemberExpression() &&
+    idPath.parentKey === 'property';
+
+  return isJsxMemberProperty || react.isCompatTag(idPath.node.name);
 }

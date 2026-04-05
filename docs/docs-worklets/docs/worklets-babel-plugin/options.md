@@ -14,6 +14,7 @@ Our plugin offers several optional functionalities that you may need to employ a
 ```typescript
 interface PluginOptions {
   bundleMode?: boolean;
+  bundleModeCaptureJsxComponents?: boolean;
   disableInlineStylesWarning?: boolean;
   disableSourceMaps?: boolean;
   disableWorkletClasses?: boolean;
@@ -64,6 +65,29 @@ module.exports = {
 Defaults to `false`.
 
 Enables the [Bundle Mode](/docs/bundleMode/).
+
+### bundleModeCaptureJsxComponents
+
+Defaults to `false`.
+
+This option makes [Bundle Mode](/docs/bundleMode/) treat JSX component
+identifiers such as `<View />` as captured bindings when generating worklet
+modules.
+
+This is useful when a worklet only references an imported value from JSX,
+without also using that identifier in a regular JavaScript expression:
+
+```tsx
+import { View } from 'react-native';
+
+function renderView() {
+  'worklet';
+  return <View />;
+}
+```
+
+When this option is enabled, `View` can be re-imported into the generated
+bundle-mode worklet module even though it only appears inside JSX.
 
 ### disableInlineStylesWarning
 

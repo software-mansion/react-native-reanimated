@@ -10,6 +10,19 @@ export interface PluginOptions {
   bundleMode?: boolean;
 
   /**
+   * This option makes [Bundle
+   * Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode)
+   * treat JSX component identifiers such as `<View />` as captured bindings
+   * when generating worklet modules.
+   *
+   * This is useful when a worklet only references an imported value from JSX,
+   * without also using that identifier in a regular JavaScript expression.
+   *
+   * - Defaults to `false`.
+   */
+  bundleModeCaptureJsxComponents?: boolean;
+
+  /**
    * Turning on this option suppresses a helpful warning when you use [inline
    * shared
    * values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animations-in-inline-styling).
