@@ -1,6 +1,6 @@
 import '../plugin/src/jestMatchers';
 
-import type { TransformOptions } from '@babel/core';
+import type { NodePath, TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
 import traverse from '@babel/traverse';
 import { strict as assert } from 'assert';
@@ -9,6 +9,12 @@ import { html } from 'code-tag';
 import { version as packageVersion } from '../package.json';
 import type { PluginOptions } from '../plugin';
 import plugin from '../plugin';
+import { getClosure } from '../plugin/src/closure';
+import { initializeState } from '../plugin/src/globals';
+import type {
+  WorkletizableFunction,
+  WorkletsPluginPass,
+} from '../plugin/src/types';
 
 const MOCK_LOCATION = '/dev/null';
 
@@ -30,6 +36,49 @@ function runPlugin(
   const transformed = transformSync(strippedInput, config);
   assert(transformed);
   return transformed;
+}
+
+function getClosureData(
+  input: string,
+  pluginOpts: PluginOptions = {}
+): ReturnType<typeof getClosure> {
+  const strippedInput = input.replace(/<\/?script[^>]*>/g, '');
+  const { ast } = transformSync(strippedInput, {
+    ast: true,
+    code: false,
+    babelrc: false,
+    configFile: false,
+    filename: __filename,
+    plugins: ['@babel/plugin-syntax-jsx'],
+  }) ?? {};
+
+  assert(ast, 'Failed to parse test input.');
+
+  let workletPath: NodePath<WorkletizableFunction> | null = null;
+
+  traverse(ast, {
+    FunctionDeclaration(path) {
+      if (path.node.id?.name === 'renderView') {
+        workletPath = path as NodePath<WorkletizableFunction>;
+      }
+    },
+  });
+
+  assert(workletPath, 'Could not find renderView worklet.');
+
+  const state = {
+    file: { opts: { filename: __filename } },
+    key: 'worklets',
+    opts: pluginOpts,
+    cwd: process.cwd(),
+    filename: __filename,
+    workletNumber: 0,
+    classesToWorkletize: [],
+  } as WorkletsPluginPass;
+
+  initializeState(state);
+
+  return getClosure(workletPath, state);
 }
 
 describe('babel plugin', () => {
@@ -346,6 +395,61 @@ describe('babel plugin', () => {
   });
 
   describe('for closure capturing', () => {
+    test("doesn't capture JSX component imports in bundle mode by default", () => {
+      const input = html`<script>
+        import { Text, View } from 'react-native';
+
+        function renderView() {
+          'worklet';
+          return (
+            <View>
+              <Text>Test</Text>
+            </View>
+          );
+        }
+      </script>`;
+
+      const { libraryBindingsToImport } = getClosureData(
+        input,
+        {
+          bundleMode: true,
+          workletizableModules: ['react-native'],
+        }
+      );
+
+      expect(Array.from(libraryBindingsToImport)).toEqual([]);
+    });
+
+    test('captures JSX component imports in bundle mode when enabled', () => {
+      const input = html`<script>
+        import { Text, View } from 'react-native';
+
+        function renderView() {
+          'worklet';
+          return (
+            <View>
+              <Text>Test</Text>
+            </View>
+          );
+        }
+      </script>`;
+
+      const { libraryBindingsToImport } = getClosureData(
+        input,
+        {
+          bundleMode: true,
+          bundleModeCaptureJsxComponents: true,
+          workletizableModules: ['react-native'],
+        }
+      );
+
+      expect(
+        Array.from(libraryBindingsToImport)
+          .map((binding) => binding.identifier.name)
+          .sort()
+      ).toEqual(['Text', 'View']);
+    });
+
     test('captures worklets environment', () => {
       const input = html`<script>
         const x = 5;
