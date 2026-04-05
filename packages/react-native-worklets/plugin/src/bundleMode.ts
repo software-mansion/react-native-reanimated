@@ -44,10 +44,28 @@ export function toggleBundleMode(
     return;
   }
 
+  const propertyName = getGlobalPropertyName(expressionPath);
+
+  if (propertyName === '_WORKLETS_BUNDLE_MODE_ENABLED') {
+    expressionPath.get('right').replaceWith(booleanLiteral(true));
+    return;
+  }
+
+  if (
+    propertyName === '_WORKLETS_REACT_NATIVE_IMPORTS_ALLOWED' &&
+    areReactNativeImportsAllowed(state)
+  ) {
+    expressionPath.get('right').replaceWith(booleanLiteral(true));
+  }
+}
+
+function getGlobalPropertyName(
+  expressionPath: NodePath<ExpressionStatement['expression']>
+) {
   const left = expressionPath.get('left');
 
   if (!left.isMemberExpression()) {
-    return;
+    return null;
   }
 
   const object = left.get('object');
@@ -56,13 +74,14 @@ export function toggleBundleMode(
   if (
     !object.isIdentifier() ||
     object.node.name !== 'globalThis' ||
-    !property.isIdentifier() ||
-    property.node.name !== '_WORKLETS_BUNDLE_MODE_ENABLED'
+    !property.isIdentifier()
   ) {
-    return;
+    return null;
   }
 
-  const right = expressionPath.get('right');
+  return property.node.name;
+}
 
-  right.replaceWith(booleanLiteral(true));
+function areReactNativeImportsAllowed(state: WorkletsPluginPass) {
+  return state.opts.workletizableModules?.includes('react-native') ?? false;
 }

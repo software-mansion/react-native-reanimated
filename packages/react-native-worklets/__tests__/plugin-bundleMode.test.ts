@@ -302,6 +302,31 @@ describe('babel plugin in bundleMode', () => {
       assert(transformed?.code);
       expect(transformed.code).toMatchSnapshot();
     });
+
+    test('allows react-native imports when explicitly configured', () => {
+      const input = html`<script>
+        globalThis._WORKLETS_REACT_NATIVE_IMPORTS_ALLOWED = false;
+      </script>`;
+
+      const pluginOpts = { workletizableModules: ['react-native'] };
+      const result = runPlugin(input, {}, pluginOpts, MOCK_WORKLET_RUNTIME_ENTRY);
+
+      expect(result.code).toContain(
+        'globalThis._WORKLETS_REACT_NATIVE_IMPORTS_ALLOWED = true;'
+      );
+    });
+
+    test("doesn't allow react-native imports by default", () => {
+      const input = html`<script>
+        globalThis._WORKLETS_REACT_NATIVE_IMPORTS_ALLOWED = false;
+      </script>`;
+
+      const result = runPlugin(input, {}, {}, MOCK_WORKLET_RUNTIME_ENTRY);
+
+      expect(result.code).toContain(
+        'globalThis._WORKLETS_REACT_NATIVE_IMPORTS_ALLOWED = false;'
+      );
+    });
   });
 
   describe('nested worklets', () => {

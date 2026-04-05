@@ -174,7 +174,9 @@ function initializeWorkletRuntime() {
   if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     if (__DEV__) {
       silenceHMRWarnings();
-      disallowRNImports();
+      if (!globalThis._WORKLETS_REACT_NATIVE_IMPORTS_ALLOWED) {
+        disallowRNImports();
+      }
     }
 
     if (getStaticFeatureFlag('FETCH_PREVIEW_ENABLED')) {
