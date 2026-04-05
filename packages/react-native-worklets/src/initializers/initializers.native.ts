@@ -152,7 +152,9 @@ function initializeWorkletRuntime() {
 
     if (__DEV__) {
       silenceHMRWarnings();
-      disallowRNImports();
+      if (!globalThis._WORKLETS_REACT_NATIVE_IMPORTS_ALLOWED) {
+        disallowRNImports();
+      }
     }
 
     if (getStaticFeatureFlag('FETCH_PREVIEW_ENABLED')) {
