@@ -38,8 +38,9 @@ afterEvaluate {
         val cxxDir = File(proj.projectDir, ".cxx")
         if (!cxxDir.exists()) return@forEach
         cxxDir.listFiles { f -> f.isDirectory }?.forEach { variantDir ->
+            val randomDirs = variantDir.listFiles { f -> f.isDirectory }
             abis.forEach { abi ->
-                variantDir.listFiles { f -> f.isDirectory }?.forEach { randomDir ->
+                randomDirs?.forEach { randomDir ->
                     val prefabFile = File(randomDir, "$abi/prefab_config.json")
                     if (prefabFile.exists()) prefabFile.setLastModified(System.currentTimeMillis())
                 }

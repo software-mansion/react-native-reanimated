@@ -160,7 +160,7 @@ val JS_RUNTIME: String = run {
     // Check if Hermes is enabled in app setup
     val appProject = rootProject.allprojects.find { it.plugins.hasPlugin("com.android.application") }
     val appExt = appProject?.extensions?.extraProperties
-    val hermesEnabled = (appExt?.properties?.get("hermesEnabled") as? String)?.toBoolean()
+    val hermesEnabled = appExt?.properties?.get("hermesEnabled")?.toString()?.toBoolean()
         ?: (appExt?.properties?.get("react") as? Map<*, *>)?.get("enableHermes")?.let { it.toString().toBoolean() }
         ?: false
     if (hermesEnabled) return@run "hermes"
