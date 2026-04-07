@@ -9,7 +9,8 @@ export default function PseudoActiveExample() {
       <Animated.View
         style={{
           ...styles.box,
-          transitionDuration: '150ms',
+          transitionDuration: '1000ms',
+          transitionTimingFunction: 'ease-in-out',
           opacity: { default: 1, ':active': 0.6 },
           transform: {
             default: [{ scale: 1 }, { rotate: '0deg' }],

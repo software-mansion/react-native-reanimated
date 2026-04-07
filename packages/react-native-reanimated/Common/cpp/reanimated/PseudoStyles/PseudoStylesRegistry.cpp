@@ -14,7 +14,7 @@ PseudoStylesRegistry::PseudoStylesRegistry(
     PlatformDetachPseudoSelectorFunction detachFn)
     : attachFn_(std::move(attachFn)),
       detachFn_(std::move(detachFn)),
-      onSelectorStateChangedFn_([](const auto &, const auto &, const auto &, double, double) {}) {}
+      onSelectorStateChangedFn_([](const auto &, const auto &, const auto &, double, double, const auto &) {}) {}
 
 void PseudoStylesRegistry::setOnSelectorStateChangedFn(OnSelectorStateChangedFn fn) {
   onSelectorStateChangedFn_ = std::move(fn);
@@ -52,7 +52,8 @@ void PseudoStylesRegistry::registerPseudoStyle(
     const folly::dynamic &selectorStyle,
     const folly::dynamic &defaultStyle,
     double duration,
-    double delay) {
+    double delay,
+    css::EasingFunction easingFn) {
   // fprintf(
   //     stderr,
   //     "[PseudoStylesRegistry] registerPseudoStyle tag=%d selector=%d duration=%.0fms\n",
@@ -65,6 +66,7 @@ void PseudoStylesRegistry::registerPseudoStyle(
     entry.shadowNode = shadowNode;
     entry.duration = duration;
     entry.delay = delay;
+    entry.easingFn = std::move(easingFn);
     entry.selectors[selector] = {selectorStyle, defaultStyle};
     recomputeAllStyles(entry);
   }
@@ -106,6 +108,7 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
   std::shared_ptr<const ShadowNode> shadowNode;
   folly::dynamic fromStyle, toStyle;
   double duration, delay;
+  css::EasingFunction easingFn;
   {
     std::lock_guard<std::mutex> lock{mutex_};
     auto it = registry_.find(tag);
@@ -125,10 +128,10 @@ void PseudoStylesRegistry::onSelectorStateChanged(Tag tag, PseudoSelector select
     shadowNode = entry.shadowNode;
     duration = entry.duration;
     delay = entry.delay;
+    easingFn = entry.easingFn;
   }
 
-  // fprintf(stderr, "[PseudoStylesRegistry] applying style: %s\n", folly::toJson(toStyle).c_str());
-  onSelectorStateChangedFn_(shadowNode, fromStyle, toStyle, duration, delay);
+  onSelectorStateChangedFn_(shadowNode, fromStyle, toStyle, duration, delay, easingFn);
 }
 
 } // namespace reanimated

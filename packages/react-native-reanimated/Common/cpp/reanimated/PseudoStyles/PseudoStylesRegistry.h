@@ -1,5 +1,6 @@
 #pragma once
 
+#include <reanimated/CSS/common/definitions.h>
 #include <reanimated/PseudoStyles/PseudoSelector.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
@@ -24,7 +25,8 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
       const folly::dynamic &fromStyle,
       const folly::dynamic &toStyle,
       double duration,
-      double delay)>;
+      double delay,
+      const css::EasingFunction &easingFn)>;
 
   PseudoStylesRegistry(PlatformAttachPseudoSelectorFunction attachFn, PlatformDetachPseudoSelectorFunction detachFn);
 
@@ -37,7 +39,8 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
       const folly::dynamic &selectorStyle,
       const folly::dynamic &defaultStyle,
       double duration,
-      double delay);
+      double delay,
+      css::EasingFunction easingFn);
 
   void remove(Tag tag);
 
@@ -58,6 +61,7 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
     std::shared_ptr<const ShadowNode> shadowNode;
     double duration;
     double delay;
+    css::EasingFunction easingFn;
 
     std::map<PseudoSelector, SelectorData> selectors;
 

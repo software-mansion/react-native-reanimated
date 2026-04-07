@@ -262,13 +262,14 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
                                                          const folly::dynamic &fromStyle,
                                                          const folly::dynamic &toStyle,
                                                          double duration,
-                                                         double delay) {
+                                                         double delay,
+                                                         const css::EasingFunction &easingFn) {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
     }
     // Schedule on the UI worklet thread where jsi::Runtime is available.
-    strongThis->uiScheduler_->scheduleOnUI([weakThis, shadowNode, fromStyle, toStyle, duration, delay]() {
+    strongThis->uiScheduler_->scheduleOnUI([weakThis, shadowNode, fromStyle, toStyle, duration, delay, easingFn]() {
       auto strongThis = weakThis.lock();
       if (!strongThis) {
         return;
@@ -276,7 +277,6 @@ void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMeth
       auto &rt = getJSIRuntimeFromWorkletRuntime(strongThis->uiRuntime_);
 
       CSSTransitionConfig config;
-      const auto easingFn = getPredefinedEasingFunction("ease");
 
       for (const auto &[propKey, toVal] : toStyle.items()) {
         const auto propName = propKey.asString();
@@ -619,6 +619,7 @@ void ReanimatedModuleProxy::registerPseudoStyle(
 
   double duration = 0;
   double delay = 0;
+  css::EasingFunction easingFn = css::getPredefinedEasingFunction("ease");
   if (transitionConfig.isObject()) {
     auto configObj = transitionConfig.asObject(rt);
     auto durationProp = configObj.getProperty(rt, "duration");
@@ -629,10 +630,14 @@ void ReanimatedModuleProxy::registerPseudoStyle(
     if (delayProp.isNumber()) {
       delay = delayProp.asNumber();
     }
+    auto timingFunctionProp = configObj.getProperty(rt, "timingFunction");
+    if (!timingFunctionProp.isUndefined() && !timingFunctionProp.isNull()) {
+      easingFn = css::createEasingFunction(rt, timingFunctionProp);
+    }
   }
 
   pseudoStylesRegistry_->registerPseudoStyle(
-      tag, shadowNode, *selectorEnum, selectorStyleDyn, defaultStyleDyn, duration, delay);
+      tag, shadowNode, *selectorEnum, selectorStyleDyn, defaultStyleDyn, duration, delay, std::move(easingFn));
 }
 
 void ReanimatedModuleProxy::unregisterPseudoStyle(jsi::Runtime &, const jsi::Value &viewTag) {

@@ -24,6 +24,7 @@ import { markNodeAsRemovable, unmarkNodeAsRemovable } from '../native';
 import {
   normalizeDelay,
   normalizeDuration,
+  normalizeTimingFunction,
 } from '../native/normalization/common';
 import { CSSManager } from '../platform';
 import type { CSSStyle, CSSTransitionProperties } from '../types';
@@ -184,7 +185,12 @@ export default class AnimatedComponent<
         ? transitionProperties.transitionDelay[0]
         : transitionProperties?.transitionDelay
     );
-    const transitionConfig = { duration, delay };
+    const timingFunction = normalizeTimingFunction(
+      Array.isArray(transitionProperties?.transitionTimingFunction)
+        ? transitionProperties.transitionTimingFunction[0]
+        : transitionProperties?.transitionTimingFunction
+    );
+    const transitionConfig = { duration, delay, timingFunction };
 
     for (const [selector, { selectorStyle, defaultStyle }] of Object.entries(
       pseudoStylesBySelector

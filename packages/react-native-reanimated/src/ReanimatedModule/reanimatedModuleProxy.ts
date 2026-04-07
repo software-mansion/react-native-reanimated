@@ -11,6 +11,7 @@ import type {
   Value3D,
   ValueRotation,
 } from '../commonTypes';
+import type { NormalizedCSSTimingFunction } from '../css/easing';
 import type {
   CSSAnimationUpdates,
   CSSTransitionConfig,
@@ -98,7 +99,11 @@ export interface ReanimatedModuleProxy {
     selector: string,
     selectorStyle: StyleProps,
     defaultStyle: StyleProps,
-    transitionConfig: { duration?: number; delay?: number }
+    transitionConfig: {
+      duration?: number;
+      delay?: number;
+      timingFunction?: NormalizedCSSTimingFunction;
+    }
   ): void;
 
   unregisterPseudoStyle(viewTag: number): void;
