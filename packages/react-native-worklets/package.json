@@ -89,7 +89,7 @@
     "react": "19.2.3",
     "react-native": "0.85.0-rc.6",
     "react-native-builder-bob": "0.40.13",
-    "typescript": "5.8.3"
+    "typescript": "5.9.3"
   },
   "main": "./lib/module/index",
   "module": "./lib/module/index",
