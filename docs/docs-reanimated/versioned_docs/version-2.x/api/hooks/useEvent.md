@@ -8,18 +8,18 @@ This is a low-level hook returning an event handler that will be invoked with na
 
 ### Arguments
 
-#### `handler` \[function]
+#### `handler` [function]
 
 Handler that will receive an event object with a native payload, which can be passed to the custom handler hook's worklets.
 
-- `event` \[object] - event object.
+- `event` [object] - event object.
   The payload can differ depending on the type of the event.
 
-#### `eventNames` \[Array]
+#### `eventNames` [Array]
 
 Array of event names that will be handled by handler.
 
-#### `rebuilt` \[boolean]
+#### `rebuilt` [boolean]
 
 Value indicating whether the handler should be rebuilt.
 

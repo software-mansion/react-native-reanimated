@@ -53,7 +53,7 @@ ob.foo(5); // [this] is not correct
 
 ### Arguments
 
-#### `fn` \[function]
+#### `fn` [function]
 
 The first and only argument is the function that is supposed to be run.
 

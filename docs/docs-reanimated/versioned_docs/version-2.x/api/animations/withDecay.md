@@ -8,7 +8,7 @@ Starts a velocity based "scroll" animation.
 
 ### Arguments
 
-#### `options` \[object]
+#### `options` [object]
 
 Object containing animation configuration.
 Allowed parameters are listed below:
@@ -17,7 +17,7 @@ Allowed parameters are listed below:
 | ---------------- | ------- | ----------------------------------------------------- |
 | velocity         | 0       | Initial velocity                                      |
 | deceleration     | 0.998   | Rate of decay                                         |
-| clamp            | \[]      | Array of two animation boundaries (optional)          |
+| clamp            | []      | Array of two animation boundaries (optional)          |
 | velocityFactor   | 1       | Factor to modify velocity unit (optional)             |
 | rubberBandEffect | false   | Rubber band effect after reach clamp limit (optional) |
 | rubberBandFactor | 0.6     | Factor to modify rubberBandEffect force (optional)    |
@@ -26,7 +26,7 @@ Allowed parameters are listed below:
 
 The default unit of velocity in decay is pixels per second but it can be problematic when you want to animate a value not related to pixels for example opacity `[0, 1]` or progress bar `[0, 1]`. In this case, you can use `velocityFactor` property with value `< 1` to modify the velocity of change to fit the required domain.
 
-#### `callback` \[function]\(optional)
+#### `callback` [function]\(optional\)
 
 The provided function will be called when the animation is complete.
 In case the animation is cancelled, the callback will receive `false` as the argument, otherwise it will receive `true`.

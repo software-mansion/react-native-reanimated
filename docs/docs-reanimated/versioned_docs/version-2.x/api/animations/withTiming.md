@@ -8,7 +8,7 @@ Starts a time based animation.
 
 ### Arguments
 
-#### `toValue` \[number | string]
+#### `toValue` [number | string]
 
 The target value at which the animation should conclude.
 It can be specified as a color value by providing string like: `rgba(255, 105, 180, 0)`.
@@ -25,7 +25,7 @@ Currently supported formats are:
 - `"#rrggbbaa"`
 - CSS colors like `"red"` or `"blanchedalmond"` (full list here: https://www.w3.org/TR/css-color-3/#svg-color)
 
-#### `options` \[object]
+#### `options` [object]
 
 Object containing animation configuration.
 Allowed parameters are listed below:
@@ -37,7 +37,7 @@ Allowed parameters are listed below:
 
 For the `easing` parameter we recommend using one of the pre-configured worklets defined in the `Easing` module.
 
-#### `callback` \[function]\(optional)
+#### `callback` [function]\(optional\)
 
 The provided function will be called when the animation is complete.
 In case the animation is cancelled, the callback will receive `false` as the argument, otherwise it will receive `true`.

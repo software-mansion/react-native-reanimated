@@ -11,11 +11,11 @@ If you want the animation to cancel immediately, use the [`cancelAnimation`](/do
 
 ### Arguments
 
-#### `delayMS` \[number]
+#### `delayMS` [number]
 
 Delay in milliseconds after which we want the provided animation to start.
 
-#### `delayedAnimation` \[animation]
+#### `delayedAnimation` [animation]
 
 The animation that will be started after the delay.
 

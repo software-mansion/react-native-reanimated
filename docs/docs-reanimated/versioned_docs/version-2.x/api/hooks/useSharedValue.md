@@ -17,7 +17,7 @@ Shared Values are just javascript objects, so you can pass them to children comp
 
 ### Arguments
 
-#### `initialValue` \[number|string|bool|Object|Array|Function]
+#### `initialValue` [number|string|bool|Object|Array|Function]
 
 The first argument takes the initial value, which could be any of the primitive JavaScript types, and assigns it as the initial value of the created Shared Value.
 The value then can be read from the Shared Value reference using `.value` attribute.

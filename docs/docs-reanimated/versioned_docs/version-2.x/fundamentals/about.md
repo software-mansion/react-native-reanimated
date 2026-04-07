@@ -36,14 +36,14 @@ We recommend that you check the full articles to learn the details about each of
 1. interactions and animations are no longer written using an unintuitive declarative API, instead they can be written in pure JS, in the form of so-called "worklets".
    Worklets are pieces of JS code that we extract from the main React Native code and run in a separate JS context on the main thread.
    Because of that, worklets have some limitations as to what part of the JS context they can access (we don't want to load the entire JS bundle into the context which runs on the UI thread).
-1. It is still possible to define and pass around "Animated Values", however thanks to the new API, we expect that you'll create much fewer of those for a single animation.
+2. It is still possible to define and pass around "Animated Values", however thanks to the new API, we expect that you'll create much fewer of those for a single animation.
    Also, now, they are actually called "Shared Values" and can carry not only primitive types but also arrays, objects and functions.
-1. Shared Values are no longer directly connected to view props.
+3. Shared Values are no longer directly connected to view props.
    Instead, we expose a `useAnimatedStyle` hook that returns a style object which can be passed as a View's style param.
    The `useAnimatedStyle` hook takes a worklet that, when executed, should return styles that will be applied to the connected View.
    The style worklet will update whenever shared values used by that worklet change (we detect dependencies on shared values automatically).
-1. Animations can be started in two ways: by triggering animated change on a shared value, or by returning animated value from `useAnimatedStyle` hook.
-1. With reanimated, we can hook worklets to serve as event handlers.
+4. Animations can be started in two ways: by triggering animated change on a shared value, or by returning animated value from `useAnimatedStyle` hook.
+5. With reanimated, we can hook worklets to serve as event handlers.
    Most common case for an event worklet is to modify some shared values.
    As a result, changes made to those values will be reflected in the animated style worklet being triggered, which in turn will result in some view properties being updated.
    For convenience, Reanimated provides an event hook that is tailored to work together with Gesture Handler library and allows you to define a separate worklet for handling different handler states (e.g., onStart, onActive, etc.)

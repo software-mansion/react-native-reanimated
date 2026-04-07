@@ -8,7 +8,7 @@ Starts a spring-based animation.
 
 ### Arguments
 
-#### `toValue` \[number | string]
+#### `toValue` [number | string]
 
 The target value at which the spring should settle.
 It can be specified as a color value by providing string like: `rgba(255, 105, 180, 0)`.
@@ -24,7 +24,7 @@ Currently supported formats are:
 - `"#rrggbb"`
 - `"#rrggbbaa"`
 
-#### `options` \[object]
+#### `options` [object]
 
 Object carrying spring configuration.
 Allowed parameters are listed below:
@@ -38,7 +38,7 @@ Allowed parameters are listed below:
 | restDisplacementThreshold | 0.01    | The displacement below which the spring is considered to be at rest.              |
 | restSpeedThreshold        | 2       | The speed in pixels per second from which the spring is considered to be at rest. |
 
-#### `callback` \[function]\(optional)
+#### `callback` [function]\(optional\)
 
 The provided function will be called when the animation is complete.
 In case the animation is cancelled, the callback will receive `false` as the argument, otherwise it will receive `true`.

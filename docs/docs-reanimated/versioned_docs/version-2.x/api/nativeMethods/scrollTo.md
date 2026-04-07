@@ -12,15 +12,15 @@ Provides synchronous scroll on the UI thread to a given offset using an animated
 
 The product of [`useAnimatedRef`](/docs/2.x/api/hooks/useAnimatedRef) which is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread).
 
-#### `x` \[Float]
+#### `x` [Float]
 
 Corresponds to the pixel along the horizontal axis of the element that you want displayed in the upper left.
 
-#### `y` \[Float]
+#### `y` [Float]
 
 Corresponds to the pixel along the vertical axis of the element that you want displayed in the upper left.
 
-#### `animated` \[Boolean]
+#### `animated` [Boolean]
 
 Indicates whether the scroll should be smooth (`true`) or instant (`false`).
 

@@ -8,7 +8,7 @@ This is low-level hook returning context object and value indicating whether wor
 
 ### Arguments
 
-#### `handlerOrHandlersObject` \[object with worklets]
+#### `handlerOrHandlersObject` [object with worklets]
 
 Object containing custom keys matching native event names.
 The values in the object should be individual worklets.
@@ -16,14 +16,14 @@ Each of the worklet will be triggered when the corresponding event is dispatched
 
 Each of the event worklets will receive the following parameters when called:
 
-- `event` \[object] - event object.
+- `event` [object] - event object.
   The payload can differ depending on the type of the event.
 
-- `context` \[object] - plain JS object that can be used to store some state.
+- `context` [object] - plain JS object that can be used to store some state.
   This object will persist in between event occurrences and you can read and write any data to it.
   When there are several event handlers provided in a form of an object of worklets, the `context` object will be shared in between the worklets allowing them to communicate with each other.
 
-#### `dependencies` \[Array]
+#### `dependencies` [Array]
 
 Optional array of values which changes cause this hook to receive updated values during rerender of the wrapping component. This matters when, for instance, worklet uses values dependent on the component's state.
 

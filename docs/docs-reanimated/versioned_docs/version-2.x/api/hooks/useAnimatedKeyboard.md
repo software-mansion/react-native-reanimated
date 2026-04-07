@@ -23,7 +23,7 @@ the default Android behavior (resizing the view to accommodate keyboard) in the 
 
 ### Arguments
 
-#### `options` \[AnimatedKeyboardOptions]
+#### `options` [AnimatedKeyboardOptions]
 
 Optional object containing additional configuration.
 
@@ -37,18 +37,18 @@ Hook `useAnimatedKeyboard` returns an instance of [AnimatedKeyboardInfo](#animat
 
 Properties:
 
-- `height`: \[[SharedValue](/docs/2.x/api/hooks/useSharedValue)] contains `[number]`
+- `height`: [[SharedValue](/docs/2.x/api/hooks/useSharedValue)] contains `[number]`
   contains current height of the keyboard
-- `state`: \[[SharedValue](/docs/2.x/api/hooks/useSharedValue)] contains `[enum]`
+- `state`: [[SharedValue](/docs/2.x/api/hooks/useSharedValue)] contains `[enum]`
   contains current state of the keyboard. Possible states: `{ CLOSED, OPEN, CLOSING, OPENING }`
 
 #### `AnimatedKeyboardOptions: [object]`
 
 Properties:
 
-- `isStatusBarTranslucentAndroid`\[bool] - if you want to use translucent status bar on Android, set this option to `true`. Defaults to `false`. Ignored on iOS.
+- `isStatusBarTranslucentAndroid`[bool] - if you want to use translucent status bar on Android, set this option to `true`. Defaults to `false`. Ignored on iOS.
 
-- `isNavigationBarTranslucentAndroid`\[bool] - if you want to use translucent navigation bar on Android, set this option to `true`. Defaults to `false`. Ignored on iOS.
+- `isNavigationBarTranslucentAndroid`[bool] - if you want to use translucent navigation bar on Android, set this option to `true`. Defaults to `false`. Ignored on iOS.
 
 ### Example
 

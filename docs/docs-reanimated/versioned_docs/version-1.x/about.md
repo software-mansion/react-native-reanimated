@@ -58,11 +58,11 @@ When node is evaluated (e.g. in case of an [`add`](nodes/add.md) node we want to
 This notion also helps with performance as we can try to evaluate as few nodes as expected.
 The current algorithm for making decisions of which nodes to evaluate works as follows:
 
-1. For each frame we first analyze the generated events (e.g. touch stream). It is possible that events may update some animated values.
-1. Then we update values that correspond to [clock](clock.md) nodes that are "running".
-1. We traverse the node's tree starting from the nodes that have been updated in the current cycle and we look for final nodes that are connected to views.
-1. If we found nodes connected to view properties we evaluate them. This can recursively trigger an evaluation for their input nodes etc.
-1. After everything is done we check if some "running" clocks exists. If so we enqueue a callback to be evaluated with the next frame and start over from pt 1. Otherwise we do nothing.
+1.  For each frame we first analyze the generated events (e.g. touch stream). It is possible that events may update some animated values.
+2.  Then we update values that correspond to [clock](clock.md) nodes that are "running".
+3.  We traverse the node's tree starting from the nodes that have been updated in the current cycle and we look for final nodes that are connected to views.
+4.  If we found nodes connected to view properties we evaluate them. This can recursively trigger an evaluation for their input nodes etc.
+5.  After everything is done we check if some "running" clocks exists. If so we enqueue a callback to be evaluated with the next frame and start over from pt 1. Otherwise we do nothing.
 
 ### 100% declarative gesture interactions
 

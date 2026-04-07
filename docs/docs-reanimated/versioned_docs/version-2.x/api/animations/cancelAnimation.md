@@ -8,7 +8,7 @@ Cancels animation linked to given shared value.
 
 ### Arguments
 
-#### `sharedValue` \[SharedValueRef]
+#### `sharedValue` [SharedValueRef]
 
 The value for which we want the previously started animation to be cancelled.
 If there was no animation started on that value, or the animation completed, no error will be thrown.

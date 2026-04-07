@@ -15,7 +15,7 @@ You can use the following functions to animate properties that Reanimated don't 
 
 1. `addWhitelistedNativeProps()` is used to animate properties that trigger layout recalculation, you can find them [here](https://github.com/software-mansion/react-native-reanimated/blob/2.3.0/src/ConfigHelper.ts#L31).
 
-1. `addWhitelistedUIProps()` is used for properties that are updated directly on the UI thread, currently allowed props are listed [here](https://github.com/software-mansion/react-native-reanimated/blob/2.3.0/src/ConfigHelper.ts#L6).
+2. `addWhitelistedUIProps()` is used for properties that are updated directly on the UI thread, currently allowed props are listed [here](https://github.com/software-mansion/react-native-reanimated/blob/2.3.0/src/ConfigHelper.ts#L6).
 
 In order to connect the `useAnimatedProps` hook result to a view, you need to pass it as `animatedProps` property to the `Animated` version of the component (e.g., `Animated.View`).
 The `animatedProps` property is added when a native component is wrapped with `Animated.createAnimatedComponent`.
@@ -70,11 +70,11 @@ Note: It is recommended to create adapters outside of components. `createAnimate
 
 ### Arguments
 
-#### `adapter` \[Function]
+#### `adapter` [Function]
 
 Required parameter, this is a function that would receive an object of props that are supposed to be updated on the UI thread. The function itself doesn't have to return anything - modifying the received object is enough.
 
-#### `nativeProps` \[Array]
+#### `nativeProps` [Array]
 
 A list of props that should be added to `NATIVE_THREAD_PROPS_WHITELIST`.
 
