@@ -1,6 +1,3 @@
-import com.android.build.gradle.AppExtension
-import com.android.build.gradle.LibraryExtension
-
 fun reactNativeArchitectures(): List<String> {
     val value = project.findProperty("reactNativeArchitectures") as String?
     return value?.split(",") ?: listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
@@ -35,28 +32,16 @@ afterEvaluate {
             return@forEach
         }
 
-        @Suppress("UNCHECKED_CAST")
-        val variants = try {
-            (proj.extensions.getByType(AppExtension::class.java)).applicationVariants
-        } catch (e: Exception) {
-            (proj.extensions.getByType(LibraryExtension::class.java)).libraryVariants
-        }
-
         // Touch the prefab_config.json files to ensure that in ExternalNativeJsonGenerator.kt we will re-trigger the prefab CLI to
         // generate a libnameConfig.cmake file that will contain our native library (.so).
         // See this condition: https://cs.android.com/android-studio/platform/tools/base/+/mirror-goog-studio-main:build-system/gradle-core/src/main/java/com/android/build/gradle/tasks/ExternalNativeJsonGenerator.kt;l=207-219?q=createPrefabBuildSystemGlue
-        variants.all { variant ->
-            val variantName = variant.name
+        val cxxDir = File(proj.projectDir, ".cxx")
+        if (!cxxDir.exists()) return@forEach
+        cxxDir.listFiles { f -> f.isDirectory }?.forEach { variantDir ->
             abis.forEach { abi ->
-                val searchDir = File(proj.projectDir, ".cxx/$variantName")
-                if (!searchDir.exists()) return@forEach
-                val matches = mutableListOf<File>()
-                searchDir.listFiles { f -> f.isDirectory }?.forEach { randomDir ->
+                variantDir.listFiles { f -> f.isDirectory }?.forEach { randomDir ->
                     val prefabFile = File(randomDir, "$abi/prefab_config.json")
-                    if (prefabFile.exists()) matches += prefabFile
-                }
-                matches.forEach { prefabConfig ->
-                    prefabConfig.setLastModified(System.currentTimeMillis())
+                    if (prefabFile.exists()) prefabFile.setLastModified(System.currentTimeMillis())
                 }
             }
         }

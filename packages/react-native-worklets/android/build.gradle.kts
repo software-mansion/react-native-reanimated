@@ -345,7 +345,7 @@ if (project != rootProject) {
     }
 }
 
-androidComponents {
+extensions.configure<com.android.build.api.variant.LibraryAndroidComponentsExtension> {
     onVariants(selector().withBuildType("debug")) {
         it.packaging.jniLibs.keepDebugSymbols.add("**/**/*.so")
     }
