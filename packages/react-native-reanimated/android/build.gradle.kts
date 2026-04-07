@@ -17,9 +17,10 @@ buildscript {
 }
 
 plugins {
-    id("com.android.library")
     id("maven-publish")
 }
+
+apply(plugin = "com.android.library")
 
 fun safeExtGet(prop: String, fallback: Any?): Any? =
     if (rootProject.extensions.extraProperties.has(prop)) rootProject.extensions.extraProperties.get(prop) else fallback
@@ -159,7 +160,7 @@ if (project == rootProject) {
     apply(plugin = "org.jetbrains.kotlin.android")
 }
 
-android {
+configure<com.android.build.gradle.LibraryExtension> {
     compileSdk = safeExtGet("compileSdkVersion", 36) as Int
 
     namespace = "com.swmansion.reanimated"

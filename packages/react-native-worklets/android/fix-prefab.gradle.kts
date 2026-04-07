@@ -7,6 +7,9 @@ fun reactNativeArchitectures(): List<String> {
 }
 
 tasks.configureEach {
+    // Make sure that we generate our prefab publication file only after having built the native library
+    // so that not a header publication file, but a full configuration publication will be generated, which
+    // will include the .so file
     val prefabConfigurePattern = Regex("^prefab(.+)ConfigurePackage$")
     val matchResult = prefabConfigurePattern.matchEntire(name)
     if (matchResult != null) {
@@ -39,6 +42,9 @@ afterEvaluate {
             (proj.extensions.getByType(LibraryExtension::class.java)).libraryVariants
         }
 
+        // Touch the prefab_config.json files to ensure that in ExternalNativeJsonGenerator.kt we will re-trigger the prefab CLI to
+        // generate a libnameConfig.cmake file that will contain our native library (.so).
+        // See this condition: https://cs.android.com/android-studio/platform/tools/base/+/mirror-goog-studio-main:build-system/gradle-core/src/main/java/com/android/build/gradle/tasks/ExternalNativeJsonGenerator.kt;l=207-219?q=createPrefabBuildSystemGlue
         variants.all { variant ->
             val variantName = variant.name
             abis.forEach { abi ->
@@ -53,7 +59,6 @@ afterEvaluate {
                     prefabConfig.setLastModified(System.currentTimeMillis())
                 }
             }
-            true
         }
     }
 }

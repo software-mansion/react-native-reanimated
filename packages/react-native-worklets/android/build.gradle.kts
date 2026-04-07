@@ -17,9 +17,10 @@ buildscript {
 }
 
 plugins {
-    id("com.android.library")
     id("maven-publish")
 }
+
+apply(plugin = "com.android.library")
 
 fun safeExtGet(prop: String, fallback: Any?): Any? =
     if (rootProject.extensions.extraProperties.has(prop)) rootProject.extensions.extraProperties.get(prop) else fallback
@@ -30,6 +31,17 @@ fun safeAppExtGet(prop: String, fallback: Any?): Any? {
         appProject.extensions.extraProperties.get(prop)
     else
         fallback
+}
+
+fun isNewArchitectureEnabled(): Boolean {
+    // In React Native 0.82+, users can no longer opt-out of the New Architecture.
+    if (getReactNativeMinorVersion() >= 82) return true
+
+    // In older versions, to opt-in for the New Architecture, you can either:
+    // - Set `newArchEnabled` to true inside the `gradle.properties` file
+    // - Invoke gradle with `-newArchEnabled=true`
+    // - Set an environment variable `ORG_GRADLE_PROJECT_newArchEnabled=true`
+    return project.hasProperty("newArchEnabled") && project.property("newArchEnabled") == "true"
 }
 
 fun resolveReactNativeDirectory(): File {
@@ -60,17 +72,6 @@ fun getReactNativeVersion(): String {
 fun getReactNativeMinorVersion(): Int {
     val reactNativeVersion = getReactNativeVersion()
     return if (reactNativeVersion.startsWith("0.0.0-")) 1000 else reactNativeVersion.split(".")[1].toInt()
-}
-
-fun isNewArchitectureEnabled(): Boolean {
-    // In React Native 0.82+, users can no longer opt-out of the New Architecture.
-    if (getReactNativeMinorVersion() >= 82) return true
-
-    // In older versions, to opt-in for the New Architecture, you can either:
-    // - Set `newArchEnabled` to true inside the `gradle.properties` file
-    // - Invoke gradle with `-newArchEnabled=true`
-    // - Set an environment variable `ORG_GRADLE_PROJECT_newArchEnabled=true`
-    return project.hasProperty("newArchEnabled") && project.property("newArchEnabled") == "true"
 }
 
 fun getHermesV1Enabled(): Boolean {
@@ -147,11 +148,6 @@ val WORKLETS_FEATURE_FLAGS: String = getStaticFeatureFlagsString(featureFlags)
 val HERMES_V1_ENABLED: Boolean = getHermesV1Enabled()
 val WORKLETS_PROFILING: Boolean = safeAppExtGet("enableWorkletsProfiling", false)?.toString()?.toBoolean() ?: false
 
-fun reactNativeArchitectures(): List<String> {
-    val value = project.findProperty("reactNativeArchitectures") as String?
-    return value?.split(",") ?: listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
-}
-
 // Set version for prefab
 version = WORKLETS_VERSION
 
@@ -173,6 +169,11 @@ val JS_RUNTIME: String = run {
     "jsc"
 }
 
+fun reactNativeArchitectures(): List<String> {
+    val value = project.findProperty("reactNativeArchitectures") as String?
+    return value?.split(",") ?: listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
+}
+
 if (project == rootProject) {
     apply(plugin = "com.diffplug.spotless")
     configure<com.diffplug.gradle.spotless.SpotlessExtension> {
@@ -185,18 +186,9 @@ if (project == rootProject) {
     apply(plugin = "org.jetbrains.kotlin.android")
 }
 
-// fix-prefab: ensure prefab config tasks depend on native build
-tasks.configureEach {
-    val prefabConfigurePattern = Regex("^prefab(.+)ConfigurePackage$")
-    val matchResult = prefabConfigurePattern.matchEntire(name)
-    if (matchResult != null) {
-        val variantName = matchResult.groupValues[1]
-        outputs.upToDateWhen { false }
-        dependsOn("externalNativeBuild$variantName")
-    }
-}
+apply(from = "./fix-prefab.gradle.kts")
 
-android {
+configure<com.android.build.gradle.LibraryExtension> {
     compileSdk = safeExtGet("compileSdkVersion", 36) as Int
 
     namespace = "com.swmansion.worklets"
@@ -260,10 +252,6 @@ android {
         }
     }
 
-    lint {
-        abortOnError = false
-    }
-
     buildTypes {
         debug {
             externalNativeBuild {
@@ -280,6 +268,10 @@ android {
                 }
             }
         }
+    }
+
+    lint {
+        abortOnError = false
     }
 
     packaging {
@@ -353,6 +345,12 @@ if (project != rootProject) {
     }
 }
 
+androidComponents {
+    onVariants(selector().withBuildType("debug")) {
+        it.packaging.jniLibs.keepDebugSymbols.add("**/**/*.so")
+    }
+}
+
 val validateReactNativeVersionResult = providers.exec {
     workingDir(projectDir.path)
     commandLine("node", "./../scripts/validate-react-native-version.js", REACT_NATIVE_VERSION)
@@ -423,46 +421,5 @@ tasks.named("preBuild") { dependsOn("prepareWorkletsHeadersForPrefabs") }
 afterEvaluate {
     tasks.named("clean") {
         finalizedBy("cleanCMakeCache")
-    }
-
-    // fix-prefab: touch prefab_config.json to invalidate stale prefab caches
-    val abis = reactNativeArchitectures()
-    rootProject.allprojects.forEach { proj ->
-        if (proj === rootProject) return@forEach
-
-        val dependsOnThisLib = proj.configurations.any { config ->
-            config.dependencies.any { dep ->
-                dep.group == project.group && dep.name == project.name
-            }
-        }
-        if (!dependsOnThisLib && proj != project) return@forEach
-
-        if (!proj.plugins.hasPlugin("com.android.application") && !proj.plugins.hasPlugin("com.android.library")) {
-            return@forEach
-        }
-
-        @Suppress("UNCHECKED_CAST")
-        val variants = try {
-            (proj.extensions.getByType(com.android.build.gradle.AppExtension::class.java)).applicationVariants
-        } catch (e: Exception) {
-            (proj.extensions.getByType(com.android.build.gradle.LibraryExtension::class.java)).libraryVariants
-        }
-
-        variants.all { variant ->
-            val variantName = variant.name
-            abis.forEach { abi ->
-                val searchDir = File(proj.projectDir, ".cxx/$variantName")
-                if (!searchDir.exists()) return@forEach
-                val matches = mutableListOf<File>()
-                searchDir.listFiles { f -> f.isDirectory }?.forEach { randomDir ->
-                    val prefabFile = File(randomDir, "$abi/prefab_config.json")
-                    if (prefabFile.exists()) matches += prefabFile
-                }
-                matches.forEach { prefabConfig ->
-                    prefabConfig.setLastModified(System.currentTimeMillis())
-                }
-            }
-            true
-        }
     }
 }
