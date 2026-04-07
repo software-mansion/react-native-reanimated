@@ -19,18 +19,17 @@ Synchronizable can be accessed both non-exclusively or exclusively - meaning tha
 </figcaption>
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type Synchronizable<TValue = unknown> = {
-  getDirty(): TValue;
-  getBlocking(): TValue;
-  setBlocking(value: TValue | ((prev: TValue) => TValue)): void;
-  lock(): void;
-  unlock(): void;
-};
-```
-
+  ```typescript
+  type Synchronizable<TValue = unknown> = {
+    getDirty(): TValue;
+    getBlocking(): TValue;
+    setBlocking(value: TValue | ((prev: TValue) => TValue)): void;
+    lock(): void;
+    unlock(): void;
+  };
+  ```
 </details>
 
 ## Reference

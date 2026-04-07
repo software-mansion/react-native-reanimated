@@ -21,11 +21,11 @@ The **MeasureElement** component measures the width of its children and passes t
 
 <CollapsibleCode src={MarqueeSrc} showLines={[8,18]}/>
 
-<ExampleVideo
+\<ExampleVideo
 sources={{
-    android: "/react-native-reanimated/recordings/examples/marquee_android.mov",
-    ios: "/react-native-reanimated/recordings/examples/marquee_ios.mov"
-  }}
+android: "/react-native-reanimated/recordings/examples/marquee\_android.mov",
+ios: "/react-native-reanimated/recordings/examples/marquee\_ios.mov"
+}}
 />
 
 We use the `useFrameCallback` hook to execute the animation logic on each frame.
@@ -34,8 +34,7 @@ We use the `useFrameCallback` hook to execute the animation logic on each frame.
 
 It is located inside **ChildrenScroller** component that manages the scrolling animation by updating the offset value. It determines the horizontal translation of the child components, creates clones of the children and animates them horizontally based on the specified duration.
 
-<samp id="Marquee">Marquee</samp>
-<CollapsibleCode src={MarqueeSrc} showLines={[43,76]}/>
+<samp id="Marquee">Marquee</samp> <CollapsibleCode src={MarqueeSrc} showLines={[43,76]}/>
 
 The **Marquee** component serves as the main orchestrator of the marquee effect. It calculates necessary dimensions, renders child components within a container, and coordinates the animation by utilizing the ChildrenScroller component.
 

@@ -31,20 +31,19 @@ runtime->runGuarded(worklet, ...args);
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type WorkletRuntime = {
-  __hostObjectWorkletRuntime: never;
-  readonly name: string;
-};
+  ```typescript
+  type WorkletRuntime = {
+    __hostObjectWorkletRuntime: never;
+    readonly name: string;
+  };
 
-function createWorkletRuntime(
-  name: string,
-  initializer?: __ComplexWorkletFunction<[], void>
-): WorkletRuntime;
-```
-
+  function createWorkletRuntime(
+    name: string,
+    initializer?: __ComplexWorkletFunction<[], void>
+  ): WorkletRuntime;
+  ```
 </details>
 
 ### Arguments

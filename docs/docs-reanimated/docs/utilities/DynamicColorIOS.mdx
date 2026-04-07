@@ -30,28 +30,27 @@ function Example() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function DynamicColorIOS(
-  {
-    light: ColorValue,
-    dark: ColorValue,
-    highContrastLight?: ColorValue,
-    highContrastDark?: ColorValue
+  ```typescript
+  function DynamicColorIOS(
+    {
+      light: ColorValue,
+      dark: ColorValue,
+      highContrastLight?: ColorValue,
+      highContrastDark?: ColorValue
+    }
+  ): DynamicColorValue;
+
+  type DynamicColorValue = {
+    dynamic: {
+      light: ColorValue,
+      dark: ColorValue,
+      highContrastLight?: ColorValue,
+      highContrastDark?: ColorValue
+    },
   }
-): DynamicColorValue;
-
-type DynamicColorValue = {
-  dynamic: {
-    light: ColorValue,
-    dark: ColorValue,
-    highContrastLight?: ColorValue,
-    highContrastDark?: ColorValue
-  },
-}
-```
-
+  ```
 </details>
 
 ### Arguments

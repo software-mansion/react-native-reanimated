@@ -20,14 +20,13 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function runOnJS<A extends any[], R>(
-  fn: (...args: A) => R
-): (...args: Parameters<typeof fn>) => void;
-```
-
+  ```typescript
+  function runOnJS<A extends any[], R>(
+    fn: (...args: A) => R
+  ): (...args: Parameters<typeof fn>) => void;
+  ```
 </details>
 
 ### Arguments
@@ -56,17 +55,15 @@ import RunOnJSSrc from '!!raw-loader!@site/src/examples/RunOnJS';
 - Functions passed to `runOnJS` must be defined in the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) scope, i.e. in the component body or the global scope. This code won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI thread](/docs/fundamentals/glossary#ui-thread):
 
 <Indent>
-
-```jsx
-withTiming(0, {}, () => {
-  // myFunction is defined on the UI thread 🚨
-  const myFunction = () => {
-    // ...
-  };
-  runOnJS(myFunction)(); // 💥
-});
-```
-
+  ```jsx
+  withTiming(0, {}, () => {
+    // myFunction is defined on the UI thread 🚨
+    const myFunction = () => {
+      // ...
+    };
+    runOnJS(myFunction)(); // 💥
+  });
+  ```
 </Indent>
 
 - It's a common mistake to execute function inside of runOnJS like this: ~~`runOnJS(setValue(10))()`~~. Here, the correct usage would be `runOnJS(setValue)(10)`.

@@ -9,11 +9,11 @@ It allows for creating an association between shared values and View properties.
 
 ### Arguments
 
-#### `updater` [Function]
+#### `updater` \[Function]
 
 Single worklet which is responsible for returning an object with view style properties.
 
-#### `dependencies` [Array]
+#### `dependencies` \[Array]
 
 Optional array of values which changes cause this hook to receive updated values during rerender of the wrapping component. This matters when, for instance, worklet uses values dependent on the component's state.
 

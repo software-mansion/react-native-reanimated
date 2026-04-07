@@ -49,11 +49,7 @@ You need to pass your defined gesture to the `gesture` prop of the [`GestureDete
 
 And that's it! Pretty straightforward, isn't it? Let's see it in its full glory in an interactive example:
 
-<InteractiveExample
-  src={TapGestureSrc}
-  component={TapGesture}
-  label="Tap the circle"
-/>
+<InteractiveExample src={TapGestureSrc} component={TapGesture} label="Tap the circle" />
 
 You can make use of [composing gestures](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/gesture-composition/) to more complex behaviors. But what if we'd like to create something a bit more interesting?
 
@@ -76,11 +72,7 @@ All that's left to do is to adjust the logic in `useAnimatedStyle` to handle the
 
 You can play around with the example below and see how the circle changes and reacts to the gesture:
 
-<InteractiveExample
-  src={PanGestureSrc}
-  component={PanGesture}
-  label="Grab and drag the circle"
-/>
+<InteractiveExample src={PanGestureSrc} component={PanGesture} label="Grab and drag the circle" />
 
 ## Using `withDecay`
 
@@ -99,11 +91,7 @@ The rest of the code is just to make sure the square stays inside the screen.
 
 Play around and see how the square decelerates when let go with some speed!
 
-<InteractiveExample
-  src={DecayBasicSrc}
-  component={DecayBasic}
-  label="Grab and release the square"
-/>
+<InteractiveExample src={DecayBasicSrc} component={DecayBasic} label="Grab and release the square" />
 
 Make sure to check the full [`withDecay` API reference](/docs/animations/withDecay) to get to know the rest of the configuration options.
 

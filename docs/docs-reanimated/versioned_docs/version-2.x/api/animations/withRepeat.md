@@ -8,23 +8,23 @@ Repeats the provided animation several times.
 
 ### Arguments
 
-#### `animation` [animation]
+#### `animation` \[animation]
 
 The animation that will be repeated.
 
-#### `numberOfReps` [number] (default: `2`)
+#### `numberOfReps` \[number] (default: `2`)
 
 Number of repetitions that the animation is going to be run for.
 When negative, the animation will be repeated forever (until the shared value is torn down or the animation is cancelled).
 
-#### `reverse` [bool] (default: `false`)
+#### `reverse` \[bool] (default: `false`)
 
 Specify whether we should attempt to reverse the animation every other repetition.
 When `true`, this will cause the animation to run from the current value to the destination, after that the same animation will run in the reverse direction.
 Note that this option will only work when the provided animation is a plain, non-modified animation like [`withTiming`](/docs/2.x/api/animations/withTiming) or [`withSpring`](/docs/2.x/api/animations/withSpring).
 The option is not supported for animation wrapped using other animation modifiers like `withDelay` or `withSequence`.
 
-#### `callback` [function]\(optional\)
+#### `callback` \[function]\(optional)
 
 This function will be called when all repetitions of the provided animation are complete or when `withRepeat` is cancelled.
 In case the animation is cancelled, the callback will receive `false` as the argument, otherwise it will receive `true`.

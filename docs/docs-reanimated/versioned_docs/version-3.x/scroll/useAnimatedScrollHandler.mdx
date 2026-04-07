@@ -27,29 +27,28 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function useAnimatedScrollHandler<Context extends Record<string, unknown>>(
-  handlers: ScrollHandler<Context> | ScrollHandlers<Context>,
-  dependencies?: DependencyList
-): ScrollHandlerProcessed<Context>;
+  ```typescript
+  function useAnimatedScrollHandler<Context extends Record<string, unknown>>(
+    handlers: ScrollHandler<Context> | ScrollHandlers<Context>,
+    dependencies?: DependencyList
+  ): ScrollHandlerProcessed<Context>;
 
-type ScrollHandler<
-  Context extends Record<string, unknown> = Record<string, unknown>
-> = (event: ReanimatedScrollEvent, context: Context) => void;
+  type ScrollHandler<
+    Context extends Record<string, unknown> = Record<string, unknown>
+  > = (event: ReanimatedScrollEvent, context: Context) => void;
 
-interface ScrollHandlers<Context extends Record<string, unknown>> {
-  onScroll?: ScrollHandler<Context>;
-  onBeginDrag?: ScrollHandler<Context>;
-  onEndDrag?: ScrollHandler<Context>;
-  onMomentumBegin?: ScrollHandler<Context>;
-  onMomentumEnd?: ScrollHandler<Context>;
-}
+  interface ScrollHandlers<Context extends Record<string, unknown>> {
+    onScroll?: ScrollHandler<Context>;
+    onBeginDrag?: ScrollHandler<Context>;
+    onEndDrag?: ScrollHandler<Context>;
+    onMomentumBegin?: ScrollHandler<Context>;
+    onMomentumEnd?: ScrollHandler<Context>;
+  }
 
-type DependencyList = Array<unknown> | undefined;
-```
-
+  type DependencyList = Array<unknown> | undefined;
+  ```
 </details>
 
 ### Arguments
@@ -92,10 +91,7 @@ The hook returns a handler object that can be hooked into a scrollable container
 import AnimatedScrollHandler from '@site/src/examples/AnimatedScrollHandler';
 import AnimatedScrollHandlerSrc from '!!raw-loader!@site/src/examples/AnimatedScrollHandler';
 
-<InteractiveExample
-  src={AnimatedScrollHandlerSrc}
-  component={AnimatedScrollHandler}
-/>
+<InteractiveExample src={AnimatedScrollHandlerSrc} component={AnimatedScrollHandler} />
 
 ## Remarks
 

@@ -3,7 +3,7 @@ title: runOnRuntimeSync
 sidebar_position: 42 # Use alphabetical order
 ---
 
-# runOnRuntimeSync <AvailableFrom version="0.8.0"/>
+# runOnRuntimeSync <AvailableFrom version="0.8.0" />
 
 `runOnRuntimeSync` lets you run a [workletized](/docs/fundamentals/glossary#to-workletize) function synchronously on a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime). It's blocking - meaning that it can preempt the runtime from a thread that's currently executing it.
 
@@ -23,16 +23,15 @@ console.log(result); // 4
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
-  workletRuntime: WorkletRuntime,
-  worklet: (...args: Args) => ReturnValue,
-  ...args: Args
-): ReturnValue;
-```
-
+  ```typescript
+  function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
+    workletRuntime: WorkletRuntime,
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): ReturnValue;
+  ```
 </details>
 
 ## Arguments
@@ -53,15 +52,15 @@ Arguments to the function you want to execute on the [Worker Runtime](/docs/fund
 
 <CallTable
   bundleMode={{
-    rnRuntime: true,
-    uiRuntime: true,
-    workerRuntime: true,
-  }}
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
   noBundleMode={{
-    rnRuntime: true,
-    uiRuntime: false,
-    workerRuntime: false,
-  }}
+rnRuntime: true,
+uiRuntime: false,
+workerRuntime: false,
+}}
 />
 
 ## Platform compatibility

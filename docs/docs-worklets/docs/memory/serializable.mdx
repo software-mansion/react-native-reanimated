@@ -16,15 +16,14 @@ Serializable is a type of shared memory that holds an immutable value that can b
 </figcaption>
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type SerializableRef<TValue = unknown> = {
-  __serializableRef: true;
-  __nativeStateSerializableJSRef: TValue;
-};
-```
-
+  ```typescript
+  type SerializableRef<TValue = unknown> = {
+    __serializableRef: true;
+    __nativeStateSerializableJSRef: TValue;
+  };
+  ```
 </details>
 
 ## Supported types

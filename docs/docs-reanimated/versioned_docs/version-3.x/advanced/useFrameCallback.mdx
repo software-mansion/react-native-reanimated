@@ -9,10 +9,7 @@ sidebar_position: 3
 import FrameCallbackSimple from '@site/src/examples/FrameCallbackSimple';
 import FrameCallbackSimpleSrc from '!!raw-loader!@site/src/examples/FrameCallbackSimple';
 
-<InteractiveExample
-  src={FrameCallbackSimpleSrc}
-  component={FrameCallbackSimple}
-/>
+<InteractiveExample src={FrameCallbackSimpleSrc} component={FrameCallbackSimple} />
 
 ## Reference
 
@@ -35,27 +32,26 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type FrameInfo = {
-  timestamp: number;
-  timeSincePreviousFrame: number | null;
-  timeSinceFirstFrame: number;
-};
+  ```typescript
+  type FrameInfo = {
+    timestamp: number;
+    timeSincePreviousFrame: number | null;
+    timeSinceFirstFrame: number;
+  };
 
-type FrameCallback = {
-  setActive: (isActive: boolean) => void;
-  isActive: boolean;
-  callbackId: number;
-};
+  type FrameCallback = {
+    setActive: (isActive: boolean) => void;
+    isActive: boolean;
+    callbackId: number;
+  };
 
-function useFrameCallback(
-  callback: (frameInfo: FrameInfo) => void,
-  autostart = true
-): FrameCallback;
-```
-
+  function useFrameCallback(
+    callback: (frameInfo: FrameInfo) => void,
+    autostart = true
+  ): FrameCallback;
+  ```
 </details>
 
 ### Arguments
@@ -85,11 +81,7 @@ Whether the callback should start automatically. Defaults to `true`.
 import FrameCallbackDino from '@site/src/examples/FrameCallbackDino';
 import FrameCallbackDinoSrc from '!!raw-loader!@site/src/examples/FrameCallbackDino';
 
-<InteractiveExample
-  src={FrameCallbackDinoSrc}
-  component={FrameCallbackDino}
-  label="Tap to jump"
-/>
+<InteractiveExample src={FrameCallbackDinoSrc} component={FrameCallbackDino} label="Tap to jump" />
 
 ## Remarks
 

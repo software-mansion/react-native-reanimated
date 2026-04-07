@@ -3,7 +3,7 @@ title: runOnRuntimeSyncWithId
 sidebar_position: 42 # Use alphabetical order
 ---
 
-# runOnRuntimeSyncWithId <AvailableFrom version="0.8.0"/>
+# runOnRuntimeSyncWithId <AvailableFrom version="0.8.0" />
 
 `runOnRuntimeSyncWithId` is a variant of [runOnRuntimeSync](/docs/threading/runOnRuntimeSync) where you use the runtime's id instead of the runtime object. It's useful when you don't have access to the runtime object, but you know its id.
 
@@ -23,16 +23,15 @@ console.log(result); // 4
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
-  runtimeId: number,
-  worklet: (...args: Args) => ReturnValue,
-  ...args: Args
-): ReturnValue;
-```
-
+  ```typescript
+  function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
+    runtimeId: number,
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): ReturnValue;
+  ```
 </details>
 
 ## Arguments
@@ -57,15 +56,15 @@ Arguments to the function you want to execute on the [Worklet Runtime](/docs/fun
 
 <CallTable
   bundleMode={{
-    rnRuntime: true,
-    uiRuntime: true,
-    workerRuntime: true,
-  }}
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
   noBundleMode={{
-    rnRuntime: true,
-    uiRuntime: false,
-    workerRuntime: false,
-  }}
+rnRuntime: true,
+uiRuntime: false,
+workerRuntime: false,
+}}
 />
 
 ## Platform compatibility

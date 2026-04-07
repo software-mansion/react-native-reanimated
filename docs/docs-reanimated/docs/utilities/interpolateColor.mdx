@@ -33,23 +33,22 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type InterpolationOptions = {
-  gamma?: number;
-  useCorrectedHSVInterpolation?: boolean;
-};
+  ```typescript
+  type InterpolationOptions = {
+    gamma?: number;
+    useCorrectedHSVInterpolation?: boolean;
+  };
 
-function interpolateColor(
-  value: number,
-  input: number[],
-  output: string[],
-  colorSpace?: 'RGB' | 'HSV' | 'LAB',
-  options?: InterpolationOptions
-): string;
-```
-
+  function interpolateColor(
+    value: number,
+    input: number[],
+    output: string[],
+    colorSpace?: 'RGB' | 'HSV' | 'LAB',
+    options?: InterpolationOptions
+  ): string;
+  ```
 </details>
 
 ### Arguments

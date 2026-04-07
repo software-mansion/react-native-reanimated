@@ -27,16 +27,15 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-interface LayoutAnimationConfigProps {
-  skipEntering?: boolean;
-  skipExiting?: boolean;
-  children: ReactNode;
-}
-```
-
+  ```typescript
+  interface LayoutAnimationConfigProps {
+    skipEntering?: boolean;
+    skipExiting?: boolean;
+    children: ReactNode;
+  }
+  ```
 </details>
 
 ### Arguments
@@ -52,22 +51,18 @@ A boolean indicating whether children's exiting animations should be skipped whe
 ## Example
 
 <Row>
+  <ThemedVideo
+    sources={{
+light: '/recordings/layout-animations/layoutconfig_light.mov',
+dark: '/recordings/layout-animations/layoutconfig_dark.mov',
+}}
+  />
 
-<ThemedVideo
-  sources={{
-    light: '/recordings/layout-animations/layoutconfig_light.mov',
-    dark: '/recordings/layout-animations/layoutconfig_dark.mov',
-  }}
-/>
+  <div style={{flexGrow: 1}}>
+    import LayoutAnimationConfigSrc from '!!raw-loader!@site/src/examples/LayoutAnimationConfig';
 
-<div style={{flexGrow: 1}}>
-
-import LayoutAnimationConfigSrc from '!!raw-loader!@site/src/examples/LayoutAnimationConfig';
-
-<CollapsibleCode src={LayoutAnimationConfigSrc} showLines={[29, 46]} />
-
-</div>
-
+    <CollapsibleCode src={LayoutAnimationConfigSrc} showLines={[29, 46]} />
+  </div>
 </Row>
 
 ## Remarks

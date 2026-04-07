@@ -10,7 +10,7 @@ Before you can use the hook, make sure that you have `react-native-gesture-handl
 
 ### Arguments
 
-#### `gestureHandlers` [object with worklets]
+#### `gestureHandlers` \[object with worklets]
 
 The first argument to this hook is an object that can carry one or more worklet handlers.
 The handlers can be set under the following keys: `onStart`, `onActive`, `onEnd`, `onFail`, `onCancel`, `onFinish`.
@@ -19,14 +19,14 @@ Read more about gesture handling states in the [Gesture Handler library document
 Each of the specified handlers will be triggered depending on the current state of the attached Gesture Handler.
 The handler worklet will receive the following arguments:
 
-- `event` [object] - event object carrying the event payload.
+- `event` \[object] - event object carrying the event payload.
   The payload will be different depending on the type of the Gesture Handler to which the worklet is attached (`PanGestureHandler`, `RotationGestureHandler`, etc.).
   Please check the documentation section on the [selected handler type](https://docs.swmansion.com/react-native-gesture-handler/docs/) to learn about the event structure.
 
-- `context` [object] - plain JS object that can be used to store some state.
+- `context` \[object] - plain JS object that can be used to store some state.
   This object will persist in between events and across worklet handlers for all the selected states and you can read and write any data to it.
 
-#### `dependencies` [Array]
+#### `dependencies` \[Array]
 
 Optional array of values which changes cause this hook to receive updated values during rerender of the wrapping component. This matters when, for instance, worklet uses values dependent on the component's state.
 

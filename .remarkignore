@@ -1,0 +1,8 @@
+node_modules
+.yarn
+build
+dist
+android
+ios
+.cache
+.claude

@@ -21,11 +21,11 @@ This example is done using [Pan gesture](https://docs.swmansion.com/react-native
 
 <CollapsibleCode src={SliderSrc} showLines={[28,41]}/>
 
-<ExampleVideo
+\<ExampleVideo
 sources={{
-    android: "/react-native-reanimated/recordings/examples/slider_android.mov",
-    ios: "/react-native-reanimated/recordings/examples/slider_ios.mov"
-  }}
+android: "/react-native-reanimated/recordings/examples/slider\_android.mov",
+ios: "/react-native-reanimated/recordings/examples/slider\_ios.mov"
+}}
 />
 
 The `useAnimatedStyle` hook is used to create animated styles for both the box and the slider handle. This ensures that changes to the offset value result in smooth animations for both components.

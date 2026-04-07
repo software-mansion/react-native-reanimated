@@ -19,7 +19,7 @@ useScrollViewOffset(aref: RefObject<Animated.ScrollView>) => [SharedValue<number
 
 ### Arguments
 
-#### `aref` [RefObject&lt;Animated.ScrollView&gt;]
+#### `aref` \[RefObject\<Animated.ScrollView>]
 
 An Animated reference to a `ScrollView`. The reference should be passed to the
 appropriate `ScrollView` in the `ref` prop.

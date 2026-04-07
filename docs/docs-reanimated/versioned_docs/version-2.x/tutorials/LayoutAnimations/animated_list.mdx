@@ -44,22 +44,28 @@ Here you can see the effect of the changes we will make going through this tutor
 <TutorialStep title="Screen Introduction">
   <div>
     Here we have an already existing Participant list component (you can find
-    the full code to edit yourself&nbsp;
+    the full code to edit yourself 
+
     <a href="https://gist.github.com/jmysliv/87b15453aab173a63a4d22fcc5b1d603">
       here
     </a>
+
     ). Let's focus on the parts that we will animate, in this case - the
     Participant component.
   </div>
+
   <FullCode />
 </TutorialStep>
+
 <TutorialStep title="Participant component">
   <div>
     The Participant component is responsible for displaying a list item, which
     we will be animating.
   </div>
+
   <ParticipantComponent />
 </TutorialStep>
+
 <TutorialStep title="Participant component internals">
   <div>
     As you can see the Participant component is wrapped in one View component,
@@ -67,56 +73,67 @@ Here you can see the effect of the changes we will make going through this tutor
     animate components that are provided by Reanimated (e.g. Animated.View), or
     components we changed using createAnimatedComponent.
   </div>
+
   <ParticipantInternals />
 </TutorialStep>
+
 <TutorialStep title="Step 1">
   <div>
     Let's import Animated from Reanimated and replace View with Animated.View,
     so we can add animations to our component.
   </div>
+
   <Step1 />
 </TutorialStep>
+
 <TutorialStep title="Step 2">
   <div>
-    Now let's add an entering animation. There is plenty of available&nbsp;
+    Now let's add an entering animation. There is plenty of available 
+
     <a href="https://docs.swmansion.com/react-native-reanimated/docs/2.x/api/LayoutAnimations/entryAnimations">
       predefined animations
     </a>
-    &nbsp;that we can choose from. We will go with the LightSpeedInLeft effect.
+
+     that we can choose from. We will go with the LightSpeedInLeft effect.
   </div>
+
   <Step2 />
 </TutorialStep>
+
 <TutorialStep title="Current result">
   <div>
     Here you can see the effect we have achieved by adding the entering
     animation.
   </div>
-  <img
-    src={Entering}
-    style={{ height: '500px', width: 'auto', borderRadius: '5%' }}
-  />
+
+  <img src={Entering} style={{ height: '500px', width: 'auto', borderRadius: '5%' }} />
 </TutorialStep>
+
 <TutorialStep title="Step 3">
   <div>Now let's add a layout transition.</div>
+
   <Step3 />
 </TutorialStep>
+
 <TutorialStep title="Current result">
   <div>
     Here you can see the effect we have achieved by adding a layout transition.
   </div>
-  <img
-    src={Layout}
-    style={{ height: '500px', width: 'auto', borderRadius: '5%' }}
-  />
+
+  <img src={Layout} style={{ height: '500px', width: 'auto', borderRadius: '5%' }} />
 </TutorialStep>
+
 <TutorialStep title="Step 4">
   <div>
-    Now let's add an exiting animation. Again there are many&nbsp;
+    Now let's add an exiting animation. Again there are many 
+
     <a href="https://docs.swmansion.com/react-native-reanimated/docs/2.x/api/LayoutAnimations/exitAnimations">
       predefined animations
     </a>
-    &nbsp; we can choose from. We will go with the LightSpeedOutRight effect.
+
+      we can choose from. We will go with the LightSpeedOutRight effect.
   </div>
+
   <Step4 />
 </TutorialStep>
 

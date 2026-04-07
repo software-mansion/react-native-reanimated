@@ -12,19 +12,19 @@ Be aware that `interpolate` was renamed to `interpolateNode` in Reanimated v2 an
 
 ### Arguments
 
-#### `value` [Float]
+#### `value` \[Float]
 
 Value from within the input range that should be mapped to a value from the output range.
 
-#### `input range` [Float[]]
+#### `input range` \[Float\[]]
 
 An array of Floats that contains points that indicate the range of the input value. Values in the input range should be increasing.
 
-#### `output range` [Float[]]
+#### `output range` \[Float\[]]
 
 An array of Floats that contains points that indicate the range of the output value. It should have at least the same number of points as the input range.
 
-#### `extrapolation type` [Object | String]
+#### `extrapolation type` \[Object | String]
 
 Can be either an object or a string. If an object is passed it should specify extrapolation explicitly for the right and left sides. If extrapolation for a side is not provided, it defaults to `Extrapolation.EXTEND`. Example extrapolation type object:
 

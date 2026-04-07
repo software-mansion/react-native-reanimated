@@ -33,75 +33,74 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-// --- Function declaration ---
+  ```typescript
+  // --- Function declaration ---
 
-function useAnimatedSensor(
-  sensorType: SensorType,
-  config?: Partial<SensorConfig>
-): AnimatedSensor<ValueRotation | Value3D>;
+  function useAnimatedSensor(
+    sensorType: SensorType,
+    config?: Partial<SensorConfig>
+  ): AnimatedSensor<ValueRotation | Value3D>;
 
-// --- Configuration types ---
+  // --- Configuration types ---
 
-enum SensorType {
-  ACCELEROMETER = 1,
-  GYROSCOPE = 2,
-  GRAVITY = 3,
-  MAGNETIC_FIELD = 4,
-  ROTATION = 5,
-}
+  enum SensorType {
+    ACCELEROMETER = 1,
+    GYROSCOPE = 2,
+    GRAVITY = 3,
+    MAGNETIC_FIELD = 4,
+    ROTATION = 5,
+  }
 
-type SensorConfig = {
-  interval: number | 'auto';
-  adjustToInterfaceOrientation: boolean;
-  iosReferenceFrame: IOSReferenceFrame;
-};
+  type SensorConfig = {
+    interval: number | 'auto';
+    adjustToInterfaceOrientation: boolean;
+    iosReferenceFrame: IOSReferenceFrame;
+  };
 
-enum IOSReferenceFrame {
-  XArbitraryZVertical,
-  XArbitraryCorrectedZVertical,
-  XMagneticNorthZVertical,
-  XTrueNorthZVertical,
-  Auto,
-}
+  enum IOSReferenceFrame {
+    XArbitraryZVertical,
+    XArbitraryCorrectedZVertical,
+    XMagneticNorthZVertical,
+    XTrueNorthZVertical,
+    Auto,
+  }
 
-// --- Return types ---
+  // --- Return types ---
 
-type AnimatedSensor<T extends Value3D | ValueRotation> = {
-  sensor: SharedValue<T>;
-  unregister: () => void;
-  isAvailable: boolean;
-  config: SensorConfig;
-};
+  type AnimatedSensor<T extends Value3D | ValueRotation> = {
+    sensor: SharedValue<T>;
+    unregister: () => void;
+    isAvailable: boolean;
+    config: SensorConfig;
+  };
 
-type Value3D = {
-  x: number;
-  y: number;
-  z: number;
-  interfaceOrientation: InterfaceOrientation;
-};
+  type Value3D = {
+    x: number;
+    y: number;
+    z: number;
+    interfaceOrientation: InterfaceOrientation;
+  };
 
-type ValueRotation = {
-  qw: number;
-  qx: number;
-  qy: number;
-  qz: number;
-  yaw: number;
-  pitch: number;
-  roll: number;
-  interfaceOrientation: InterfaceOrientation;
-};
+  type ValueRotation = {
+    qw: number;
+    qx: number;
+    qy: number;
+    qz: number;
+    yaw: number;
+    pitch: number;
+    roll: number;
+    interfaceOrientation: InterfaceOrientation;
+  };
 
-enum InterfaceOrientation {
-  ROTATION_0 = 0,
-  ROTATION_90 = 90,
-  ROTATION_180 = 180,
-  ROTATION_270 = 270,
-}
-```
-
+  enum InterfaceOrientation {
+    ROTATION_0 = 0,
+    ROTATION_90 = 90,
+    ROTATION_180 = 180,
+    ROTATION_270 = 270,
+  }
+  ```
 </details>
 
 ### Arguments
@@ -156,20 +155,23 @@ Euler angles are:
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
 <div style={{display: "flex", justifyContent: "center", textAlign: "center"}}>
+  <div style={{ maxWidth: 200 }}>
+    <img src={useBaseUrl('/img/rotation/roll.gif')} />
 
-<div style={{ maxWidth: 200 }}>
-  <img src={useBaseUrl('/img/rotation/roll.gif')} />
-  <p>Roll</p>
-</div>
-<div style={{ maxWidth: 200 }}>
-  <img src={useBaseUrl('/img/rotation/pitch.gif')} />
-  <p>Pitch</p>
-</div>
-<div style={{ maxWidth: 200 }}>
-  <img src={useBaseUrl('/img/rotation/yaw.gif')} />
-  <p>Yaw</p>
-</div>
+    <p>Roll</p>
+  </div>
 
+  <div style={{ maxWidth: 200 }}>
+    <img src={useBaseUrl('/img/rotation/pitch.gif')} />
+
+    <p>Pitch</p>
+  </div>
+
+  <div style={{ maxWidth: 200 }}>
+    <img src={useBaseUrl('/img/rotation/yaw.gif')} />
+
+    <p>Yaw</p>
+  </div>
 </div>
 
 Quaternion is a convenient way to represent rotations. Quaternion is based on complex numbers and isn't easy to understand intuitively. They simplify interpolation between two rotations.

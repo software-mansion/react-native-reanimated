@@ -18,24 +18,23 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type AnimatableValue = number | string | number[];
+  ```typescript
+  type AnimatableValue = number | string | number[];
 
-function withDelay<T extends AnimatableValue>(
-  delayMs: number,
-  delayedAnimation: T,
-  reduceMotion?: ReduceMotion
-): T;
+  function withDelay<T extends AnimatableValue>(
+    delayMs: number,
+    delayedAnimation: T,
+    reduceMotion?: ReduceMotion
+  ): T;
 
-enum ReduceMotion {
-  System = 'system',
-  Always = 'always',
-  Never = 'never',
-}
-```
-
+  enum ReduceMotion {
+    System = 'system',
+    Always = 'always',
+    Never = 'never',
+  }
+  ```
 </details>
 
 ### Arguments

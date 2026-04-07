@@ -18,13 +18,12 @@ Install `react-native-worklets` package with the `bundle-mode-preview` tag:
     ```bash
     npm i react-native-worklets@bundle-mode-preview
     ```
-
   </TabItem>
+
   <TabItem value="yarn" label="YARN">
     ```bash
     yarn add react-native-worklets@bundle-mode-preview
     ```
-
   </TabItem>
 </Tabs>
 
@@ -72,8 +71,8 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
 
     module.exports = config;
     ```
-
   </TabItem>
+
   <TabItem value="react-native-community" label="React Native Community">
     ```javascript {6,12-16}
     const {
@@ -93,7 +92,6 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
       config
     );
     ```
-
   </TabItem>
 </Tabs>
 
@@ -105,9 +103,9 @@ If you run the app after just executing the above steps, you will see an error "
 
 <ThemedImage
   sources={{
-    light: useBaseUrl('/img/sha-light.png'),
-    dark: useBaseUrl('/img/sha-dark.png'),
-  }}
+light: useBaseUrl('/img/sha-light.png'),
+dark: useBaseUrl('/img/sha-dark.png'),
+}}
   alt="Bundle Mode Metro error logs"
 />
 
@@ -116,7 +114,7 @@ This is due to fact that Bundle Mode isolates each worklet in a separate module 
 To fix this issue you can do one of the following:
 
 1. Reload the app and Metro a couple of times until Metro picks up all the new modules. You will have to do it each time. Not recommended.
-2. Patch `metro` package for it to synchronously index new modules created by Bundle Mode. This is the recommended approach. **This patch does not require building React Native from source**. You can find patching instructions in the [Worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches).
+1. Patch `metro` package for it to synchronously index new modules created by Bundle Mode. This is the recommended approach. **This patch does not require building React Native from source**. You can find patching instructions in the [Worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches).
 
 This patch is a temporary workaround until necessary changes are merged into Metro.
 
@@ -124,13 +122,13 @@ This patch is a temporary workaround until necessary changes are merged into Met
 
 _This step is optional but highly recommended._
 
-React Native's Fast Refresh (hot reload) feature doesn't apply to Worklet Runtimes out of the box. Therefore, when you change worklet's code you will see an error "\[Worklets\] Unable to resolve worklet with hash ...".
+React Native's Fast Refresh (hot reload) feature doesn't apply to Worklet Runtimes out of the box. Therefore, when you change worklet's code you will see an error "\[Worklets] Unable to resolve worklet with hash ...".
 
 <ThemedImage
   sources={{
-    light: useBaseUrl('/img/hot-light.png'),
-    dark: useBaseUrl('/img/hot-dark.png'),
-  }}
+light: useBaseUrl('/img/hot-light.png'),
+dark: useBaseUrl('/img/hot-dark.png'),
+}}
   alt="Bundle Mode Fast Refresh error logs"
 />
 
@@ -139,7 +137,7 @@ This is due to fact that the Fast Refresh update wasn't sent to the Worklet Runt
 To fix this issue you can do one of two thing:
 
 1. Reload the app on each worklet code change. This virtually defeats the purpose of Fast Refresh. Not recommended.
-2. Patch `metro-runtime` package for it to send Fast Refresh updates to Worklet Runtimes. This is the recommended approach. **This patch does not require building React Native from source** You can find patching instructions in the [Worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches).
+1. Patch `metro-runtime` package for it to send Fast Refresh updates to Worklet Runtimes. This is the recommended approach. **This patch does not require building React Native from source** You can find patching instructions in the [Worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches).
 
 This patch is a temporary workaround until necessary changes are merged into Metro.
 
@@ -153,6 +151,7 @@ Make sure to clear your Metro bundler's cache to ensure that all the changes are
     npm start -- --reset-cache
     ```
   </TabItem>
+
   <TabItem value="yarn" label="YARN">
     ```bash
     yarn start --reset-cache

@@ -3,7 +3,7 @@ title: scheduleOnRuntimeWithId
 sidebar_position: 42 # Use alphabetical order
 ---
 
-# scheduleOnRuntimeWithId <AvailableFrom version="0.8.0"/>
+# scheduleOnRuntimeWithId <AvailableFrom version="0.8.0" />
 
 `scheduleOnRuntimeWithId` is a variant of [scheduleOnRuntime](/docs/threading/scheduleOnRuntime) where you use the runtime's id instead of the runtime object. It's useful when you don't have access to the runtime object, but you know its id.
 
@@ -20,16 +20,15 @@ scheduleOnRuntimeWithId(workletRuntime.runtimeId, (greeting: string) => {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
-  runtimeId: number,
-  worklet: (...args: Args) => ReturnValue,
-  ...args: Args
-): void;
-```
-
+  ```typescript
+  function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
+    runtimeId: number,
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): void;
+  ```
 </details>
 
 ## Arguments
@@ -56,15 +55,15 @@ Arguments to the function you want to execute on the [Worklet Runtime](/docs/fun
 
 <CallTable
   bundleMode={{
-    rnRuntime: true,
-    uiRuntime: true,
-    workerRuntime: true,
-  }}
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
   noBundleMode={{
-    rnRuntime: true,
-    uiRuntime: true,
-    workerRuntime: true,
-  }}
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
 />
 
 ## Platform compatibility

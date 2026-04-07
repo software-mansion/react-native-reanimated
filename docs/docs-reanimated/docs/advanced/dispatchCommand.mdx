@@ -33,16 +33,15 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function dispatchCommand<T extends Component>(
-  animatedRef: AnimatedRef<T>,
-  commandName: string,
-  args?: unknown[]
-) => void;
-```
-
+  ```typescript
+  function dispatchCommand<T extends Component>(
+    animatedRef: AnimatedRef<T>,
+    commandName: string,
+    args?: unknown[]
+  ) => void;
+  ```
 </details>
 
 ### Arguments
@@ -63,9 +62,9 @@ The array of command arguments. Defaults to an empty array.
 
 <ExampleVideo
   sources={{
-    android: '/react-native-reanimated/recordings/dispatchCommand_android.mov',
-    ios: '/react-native-reanimated/recordings/dispatchCommand_ios.mov',
-  }}
+android: '/react-native-reanimated/recordings/dispatchCommand_android.mov',
+ios: '/react-native-reanimated/recordings/dispatchCommand_ios.mov',
+}}
 />
 
 <CollapsibleCode src={DispatchCommandSrc} showLines={[29, 32]} />

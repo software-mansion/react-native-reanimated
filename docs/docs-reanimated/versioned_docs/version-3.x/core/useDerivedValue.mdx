@@ -19,37 +19,36 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-interface SharedValue<Value = unknown> {
-  value: Value;
-  get(): Value;
-  set(value: Value | ((value: Value) => Value)): void;
-  addListener: (listenerID: number, listener: (value: Value) => void) => void;
-  removeListener: (listenerID: number) => void;
-  modify: (
-    modifier?: <T extends Value>(value: T) => T,
-    forceUpdate?: boolean
-  ) => void;
-}
+  ```typescript
+  interface SharedValue<Value = unknown> {
+    value: Value;
+    get(): Value;
+    set(value: Value | ((value: Value) => Value)): void;
+    addListener: (listenerID: number, listener: (value: Value) => void) => void;
+    removeListener: (listenerID: number) => void;
+    modify: (
+      modifier?: <T extends Value>(value: T) => T,
+      forceUpdate?: boolean
+    ) => void;
+  }
 
-interface DerivedValue<Value = unknown>
-  extends Readonly<Omit<SharedValue<Value>, 'set'>> {
-  /**
-   * @deprecated Derived values are readonly, don't use this method. It's here
-   *   only to prevent breaking changes in TypeScript types. It will be removed
-   *   in the future.
-   */
-  set: SharedValue<Value>['set'];
-}
+  interface DerivedValue<Value = unknown>
+    extends Readonly<Omit<SharedValue<Value>, 'set'>> {
+    /**
+     * @deprecated Derived values are readonly, don't use this method. It's here
+     *   only to prevent breaking changes in TypeScript types. It will be removed
+     *   in the future.
+     */
+    set: SharedValue<Value>['set'];
+  }
 
-function useDerivedValue<T>(
-  updater: () => T,
-  dependencies?: DependencyList
-): DerivedValue<T>;
-```
-
+  function useDerivedValue<T>(
+    updater: () => T,
+    dependencies?: DependencyList
+  ): DerivedValue<T>;
+  ```
 </details>
 
 ### Arguments
@@ -58,7 +57,7 @@ function useDerivedValue<T>(
 
 A function that should return a value constructed of shared values, React state or any other JavaScript value. This function is called whenever at least one of the shared values or state used in the function body changes.
 
-#### `dependencies` <Optional/>
+#### `dependencies` <Optional />
 
 An optional array of dependencies.
 

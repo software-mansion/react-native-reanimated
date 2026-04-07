@@ -31,11 +31,11 @@ Within **SectionList**, there are two key components: **TableOfContents** and **
 
 <CollapsibleCode src={SectionListSrc} showLines={[198,256]}/>
 
-<ExampleVideo
+\<ExampleVideo
 sources={{
-    android: "/react-native-reanimated/recordings/examples/section_list_android.mov",
-    ios: "/react-native-reanimated/recordings/examples/section_list_ios.mov"
-  }}
+android: "/react-native-reanimated/recordings/examples/section\_list\_android.mov",
+ios: "/react-native-reanimated/recordings/examples/section\_list\_ios.mov"
+}}
 />
 
 The `onScroll` in **SectionCards** calculates the offset as the user scrolls through the content and determines which section is currently most visible on the screen. It is done by comparing the distance of each section from the top of the screen - it identifies the section closest to the viewport's top edge.

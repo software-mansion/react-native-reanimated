@@ -23,26 +23,25 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type AnimatableValue = number | string | number[];
+  ```typescript
+  type AnimatableValue = number | string | number[];
 
-function withRepeat<T extends AnimatableValue>(
-  animation: T,
-  numberOfReps?: number,
-  reverse?: boolean,
-  callback?: (finished?: boolean, current?: AnimatableValue) => void,
-  reduceMotion?: ReduceMotion
-): T;
+  function withRepeat<T extends AnimatableValue>(
+    animation: T,
+    numberOfReps?: number,
+    reverse?: boolean,
+    callback?: (finished?: boolean, current?: AnimatableValue) => void,
+    reduceMotion?: ReduceMotion
+  ): T;
 
-enum ReduceMotion {
-  System = 'system',
-  Always = 'always',
-  Never = 'never',
-}
-```
-
+  enum ReduceMotion {
+    System = 'system',
+    Always = 'always',
+    Never = 'never',
+  }
+  ```
 </details>
 
 ### Arguments

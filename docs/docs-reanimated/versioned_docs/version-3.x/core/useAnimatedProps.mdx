@@ -28,16 +28,15 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function useAnimatedProps<T extends {}>(
-  updater: () => Partial<T>,
-  dependencies?: DependencyList | null,
-  adapters?: PropsAdapterFunction | PropsAdapterFunction[] | null
-): Partial<T>;
-```
-
+  ```typescript
+  function useAnimatedProps<T extends {}>(
+    updater: () => Partial<T>,
+    dependencies?: DependencyList | null,
+    adapters?: PropsAdapterFunction | PropsAdapterFunction[] | null
+  ): Partial<T>;
+  ```
 </details>
 
 ### Arguments
@@ -46,13 +45,13 @@ function useAnimatedProps<T extends {}>(
 
 A function returning an object with properties you want to animate.
 
-#### `dependencies` <Optional/>
+#### `dependencies` <Optional />
 
 An optional array of dependencies.
 
 Only relevant when using Reanimated [without the Babel plugin on the Web](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin).
 
-#### `adapters` <Optional/>
+#### `adapters` <Optional />
 
 An optional function or an array of functions.
 

@@ -9,10 +9,7 @@ sidebar_position: 1
 import AnimationNameBasic from '@site/src/examples/css-animations/AnimationNameBasic';
 import AnimationNameBasicSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationNameBasic';
 
-<InteractiveExample
-  src={AnimationNameBasicSrc}
-  component={AnimationNameBasic}
-/>
+<InteractiveExample src={AnimationNameBasicSrc} component={AnimationNameBasic} />
 
 ## Reference
 
@@ -36,19 +33,18 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
+  ```typescript
+  import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
 
-type PlainStyle = ViewStyle & TextStyle & ImageStyle;
+  type PlainStyle = ViewStyle & TextStyle & ImageStyle;
 
-type CSSAnimationKeyframes<S extends object = PlainStyle> = Record<
-  CSSAnimationKeyframeSelector,
-  CSSAnimationKeyframeBlock<S>
->;
-```
-
+  type CSSAnimationKeyframes<S extends object = PlainStyle> = Record<
+    CSSAnimationKeyframeSelector,
+    CSSAnimationKeyframeBlock<S>
+  >;
+  ```
 </details>
 
 ### Values

@@ -29,16 +29,15 @@ global.customWorkletScheduler(shareable);
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type ShareableRef<T = unknown> = {
-  __hostObjectShareableJSRef: T;
-};
+  ```typescript
+  type ShareableRef<T = unknown> = {
+    __hostObjectShareableJSRef: T;
+  };
 
-function makeShareableCloneRecursive<T>(value: T): ShareableRef<T> {
-  return value as ShareableRef<T>;
-}
-```
-
+  function makeShareableCloneRecursive<T>(value: T): ShareableRef<T> {
+    return value as ShareableRef<T>;
+  }
+  ```
 </details>

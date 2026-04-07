@@ -15,7 +15,7 @@ You can use `measure()` only on rendered components. For example, calling `measu
 :::tip
 If you call `measure` inside [`useAnimatedStyle`](/docs/2.x/api/hooks/useAnimatedStyle), you may get the following warning:
 
-> [Reanimated] measure() was called from the main JS context. Measure is only available
+> \[Reanimated] measure() was called from the main JS context. Measure is only available
 > in the UI runtime. (...)
 
 That's because in React Native apps, `useAnimatedStyle` worklet is first evaluated on the JS context during the first render, thus before rendering has been completed in native. This is safe to ignore, but if you don't want this warning to appear then wrap the call like this:

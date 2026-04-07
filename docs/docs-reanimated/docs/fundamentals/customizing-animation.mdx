@@ -32,20 +32,16 @@ It all will start to make sense when you compare side by side a `linear` easing 
 import TimingEasingCompare from '@site/src/examples/TimingEasingCompare';
 import TimingEasingCompareSrc from '!!raw-loader!@site/src/examples/TimingEasingCompare';
 
-<InteractiveExample
-  src={TimingEasingCompareSrc}
-  component={TimingEasingCompare}
-/>
+<InteractiveExample src={TimingEasingCompareSrc} component={TimingEasingCompare} />
 
 Reanimated comes with a handful of predefined easing functions. You can play around with them in the interactive playground below or check the full [`withTiming` API reference](/docs/animations/withTiming).
 
 <details open>
-<summary><code>withTiming</code> interactive playground</summary>
+  <summary><code>withTiming</code> interactive playground</summary>
 
-import { useTimingPlayground } from '@site/src/components/InteractivePlayground';
+  import { useTimingPlayground } from '@site/src/components/InteractivePlayground';
 
-<InteractivePlayground usePlayground={useTimingPlayground} />
-
+  <InteractivePlayground usePlayground={useTimingPlayground} />
 </details>
 
 ## Configuring `withSpring`
@@ -78,12 +74,11 @@ Damping describes how quickly the spring animation finishes. Higher damping mean
 Reanimated comes with a handful of other properties used to customize your spring animation. You can play around with them in our interactive playground or check the full [`withSpring` API reference](/docs/animations/withSpring).
 
 <details open>
-<summary><code>withSpring</code> interactive playground</summary>
+  <summary><code>withSpring</code> interactive playground</summary>
 
-import { useSpringPlayground } from '@site/src/components/InteractivePlayground';
+  import { useSpringPlayground } from '@site/src/components/InteractivePlayground';
 
-<InteractivePlayground usePlayground={useSpringPlayground} />
-
+  <InteractivePlayground usePlayground={useSpringPlayground} />
 </details>
 
 ## Summary

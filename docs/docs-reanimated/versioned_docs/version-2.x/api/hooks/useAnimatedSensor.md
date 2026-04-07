@@ -18,17 +18,17 @@ useAnimatedSensor(sensorType: [SensorType], config?: [UserConfig]) -> [AnimatedS
 
 ### Arguments
 
-#### `sensorType` - [[SensorType](#sensortype-enum)]
+#### `sensorType` - \[[SensorType](#sensortype-enum)]
 
-You can select the sensor available in [[SensorType](#sensortype-enum)] enum.
+You can select the sensor available in \[[SensorType](#sensortype-enum)] enum.
 
-#### `config` - [[UserConfig](#userconfig-object)]
+#### `config` - \[[UserConfig](#userconfig-object)]
 
 Optionally, you can pass configuration to customize the sensor behavior.
 
 ### Returns
 
-Hook `useAnimatedSensor` returns an instance of [[AnimatedSensor](#animatedsensor-object)];
+Hook `useAnimatedSensor` returns an instance of \[[AnimatedSensor](#animatedsensor-object)];
 
 ### Types
 
@@ -36,13 +36,13 @@ Hook `useAnimatedSensor` returns an instance of [[AnimatedSensor](#animatedsenso
 
 Properties:
 
-- `sensor`: [[SharedValue](/docs/2.x/api/hooks/useSharedValue)] contains [[3DVector](#3dvector-object)] or [[RotationVector](#rotationvector-object)] or `null`  
+- `sensor`: \[[SharedValue](/docs/2.x/api/hooks/useSharedValue)] contains \[[3DVector](#3dvector-object)] or \[[RotationVector](#rotationvector-object)] or `null`\
   contains actual sensor measurements as a shared value
-- `unregister: [function]`  
+- `unregister: [function]`\
   allows you to stop listening to sensor updates
-- `isAvailable: [boolean]`  
+- `isAvailable: [boolean]`\
   the flag contains information on the availability of sensors in a device
-- `config`: [[UserConfig](#userconfig-object)]  
+- `config`: \[[UserConfig](#userconfig-object)]\
   the configuration provided by a user
 
 #### `SensorType: [enum]`
@@ -50,16 +50,16 @@ Properties:
 `SensorType` is an enum that contains possibly supported sensors.
 Values:
 
-- `ACCELEROMETER`  
-  measurements output as [[3DVector](#3dvector-object)]. Measured in m/s², excluding gravity.
-- `GYROSCOPE`  
-  measurements output as [[3DVector](#3dvector-object)]. Measured in rad/s.
-- `GRAVITY`  
-  measurements output as [[3DVector](#3dvector-object)]. Measured in m/s².
-- `MAGNETIC_FIELD`  
-  measurements output as [[3DVector](#3dvector-object)]. Measured in μT.
-- `ROTATION`  
-  measurements output as [[RotationVector](#rotationvector-object)]. [qx, qy, qz, qw] is a normalized quaternion. [yaw, pitch, roll] are rotations measured in radians along respective axes. We follow the iOS [convention](https://developer.apple.com/documentation/coremotion/getting_processed_device-motion_data#2870658).
+- `ACCELEROMETER`\
+  measurements output as \[[3DVector](#3dvector-object)]. Measured in m/s², excluding gravity.
+- `GYROSCOPE`\
+  measurements output as \[[3DVector](#3dvector-object)]. Measured in rad/s.
+- `GRAVITY`\
+  measurements output as \[[3DVector](#3dvector-object)]. Measured in m/s².
+- `MAGNETIC_FIELD`\
+  measurements output as \[[3DVector](#3dvector-object)]. Measured in μT.
+- `ROTATION`\
+  measurements output as \[[RotationVector](#rotationvector-object)]. \[qx, qy, qz, qw] is a normalized quaternion. \[yaw, pitch, roll] are rotations measured in radians along respective axes. We follow the iOS [convention](https://developer.apple.com/documentation/coremotion/getting_processed_device-motion_data#2870658).
 
 #### `UserConfig: [object]`
 

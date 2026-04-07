@@ -8,7 +8,7 @@ Enables executing worklet functions on the UI thread. Note that UI execution is 
 
 ### Arguments
 
-#### `fn` [function]
+#### `fn` \[function]
 
 The first and only argument is a worklet function that is supposed to be run.
 

@@ -21,11 +21,11 @@ The **BottomSheet** component accepts props such as `isOpen` - a [shared value](
 
 The `height` shared value is used to track the height of the bottom sheet, while the `progress` derived value interpolates between 0 and 1 based on the state of `isOpen`, controlling the animation of the bottom sheet.
 
-<ExampleVideo
+\<ExampleVideo
 sources={{
-    android: "/react-native-reanimated/recordings/examples/bottom_sheet_android.mov",
-    ios: "/react-native-reanimated/recordings/examples/bottom_sheet_ios.mov"
-  }}
+android: "/react-native-reanimated/recordings/examples/bottom\_sheet\_android.mov",
+ios: "/react-native-reanimated/recordings/examples/bottom\_sheet\_ios.mov"
+}}
 />
 
 <CollapsibleCode src={BottomSheetSrc} showLines={[18,21]}/>

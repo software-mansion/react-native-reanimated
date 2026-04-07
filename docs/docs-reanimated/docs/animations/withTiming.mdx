@@ -23,30 +23,29 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type AnimatableValue = number | string | number[];
+  ```typescript
+  type AnimatableValue = number | string | number[];
 
-interface WithTimingConfig {
-  duration?: number;
-  easing?: EasingFunction;
-  reduceMotion?: ReduceMotion;
-}
+  interface WithTimingConfig {
+    duration?: number;
+    easing?: EasingFunction;
+    reduceMotion?: ReduceMotion;
+  }
 
-function withTiming<T extends AnimatableValue>(
-  toValue: T,
-  config?: WithTimingConfig,
-  callback?: (finished?: boolean, current?: AnimatableValue) => void
-): T;
+  function withTiming<T extends AnimatableValue>(
+    toValue: T,
+    config?: WithTimingConfig,
+    callback?: (finished?: boolean, current?: AnimatableValue) => void
+  ): T;
 
-enum ReduceMotion {
-  System = 'system',
-  Always = 'always',
-  Never = 'never',
-}
-```
-
+  enum ReduceMotion {
+    System = 'system',
+    Always = 'always',
+    Never = 'never',
+  }
+  ```
 </details>
 
 ### Arguments
@@ -82,10 +81,7 @@ It will all start to make sense when you compare a `linear` easing side by side 
 import TimingEasingCompare from '@site/src/examples/TimingEasingCompare';
 import TimingEasingCompareSrc from '!!raw-loader!@site/src/examples/TimingEasingCompare';
 
-<InteractiveExample
-  src={TimingEasingCompareSrc}
-  component={TimingEasingCompare}
-/>
+<InteractiveExample src={TimingEasingCompareSrc} component={TimingEasingCompare} />
 
 Reanimated provides a selection of ready-to-use easing functions in the `Easing` module. You can find a visualization of some common easing functions at [http://easings.net/](http://easings.net/).
 

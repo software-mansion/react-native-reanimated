@@ -10,7 +10,7 @@ Then the execution starts by running the first animation, and the next one is st
 
 ### Arguments
 
-#### `...animations` [Variable number of animation objects]
+#### `...animations` \[Variable number of animation objects]
 
 The animations to be run in sequence.
 

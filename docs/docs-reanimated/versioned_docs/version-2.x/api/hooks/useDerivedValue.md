@@ -10,13 +10,13 @@ The hook returns the same type of a shared value reference instance as [`useShar
 
 ### Arguments
 
-#### `updaterWorklet` [worklet]
+#### `updaterWorklet` \[worklet]
 
 The first argument is a worklet that gets triggered whenever at least one of the shared values used in that worklet changes.
 It is expected that the worklet return a new JS value (number, string, bool, Object, Array) that will be assigned to the shared value reference the hook returns.
 The `updaterWorklet` will be triggered immediately upon use of this hook in order to calculate the initial payload for the returned shared value.
 
-#### `dependencies` [Array]
+#### `dependencies` \[Array]
 
 Optional array of values which changes cause this hook to receive updated values during rerender of the wrapping component. This matters when, for instance, worklet uses values dependent on the component's state.
 

@@ -8,15 +8,15 @@ sidebar_label: useAnimatedReaction
 
 ### Arguments
 
-#### `prepare` [Function]
+#### `prepare` \[Function]
 
 worklet used for data preparation for the second parameter. It also defines the inputs, in other words on which shared values change will it be called.
 
-#### `react` [Function]
+#### `react` \[Function]
 
 worklet which takes data prepared by the `prepare` callback (being the first parameter of the hook) and performs some actions. As a second parameter it receives a result of the previous `prepare` call(starting with `null`). It can modify any shared values but those which are mentioned in the first worklet. Beware of that, because this may result in endless loop and high cpu usage.
 
-#### `dependencies` [Array]
+#### `dependencies` \[Array]
 
 Optional array of values which changes cause this hook to receive updated values during rerender of the wrapping component. This matters when, for instance, worklet uses values dependent on the component's state.
 

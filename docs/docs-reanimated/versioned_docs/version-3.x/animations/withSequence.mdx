@@ -23,23 +23,22 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type AnimatableValue = number | string | number[];
+  ```typescript
+  type AnimatableValue = number | string | number[];
 
-function withSequence<T extends AnimatableValue>(
-  reduceMotion?: ReduceMotion,
-  ...animations: [T, ...T[]]
-): T;
+  function withSequence<T extends AnimatableValue>(
+    reduceMotion?: ReduceMotion,
+    ...animations: [T, ...T[]]
+  ): T;
 
-enum ReduceMotion {
-  System = 'system',
-  Always = 'always',
-  Never = 'never',
-}
-```
-
+  enum ReduceMotion {
+    System = 'system',
+    Always = 'always',
+    Never = 'never',
+  }
+  ```
 </details>
 
 ### Arguments

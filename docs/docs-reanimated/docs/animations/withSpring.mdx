@@ -23,47 +23,46 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type AnimatableValue = number | string | number[];
+  ```typescript
+  type AnimatableValue = number | string | number[];
 
-export type SpringConfig = {
-  mass?: number;
-  overshootClamping?: boolean;
-  energyThreshold?: number;
-  velocity?: number;
-  reduceMotion?: ReduceMotion;
-} & (
-  | {
-      stiffness?: number;
-      damping?: number;
-      duration?: never;
-      dampingRatio?: never;
-      clamp?: never;
-    }
-  | {
-      stiffness?: never;
-      damping?: never;
-      duration?: number;
-      dampingRatio?: number;
-      clamp?: { min?: number; max?: number };
-    }
-);
+  export type SpringConfig = {
+    mass?: number;
+    overshootClamping?: boolean;
+    energyThreshold?: number;
+    velocity?: number;
+    reduceMotion?: ReduceMotion;
+  } & (
+    | {
+        stiffness?: number;
+        damping?: number;
+        duration?: never;
+        dampingRatio?: never;
+        clamp?: never;
+      }
+    | {
+        stiffness?: never;
+        damping?: never;
+        duration?: number;
+        dampingRatio?: number;
+        clamp?: { min?: number; max?: number };
+      }
+  );
 
-function withSpring<T extends AnimatableValue>(
-  toValue: T,
-  config?: WithSpringConfig,
-  callback?: (finished?: boolean, current?: AnimatableValue) => void
-): T;
+  function withSpring<T extends AnimatableValue>(
+    toValue: T,
+    config?: WithSpringConfig,
+    callback?: (finished?: boolean, current?: AnimatableValue) => void
+  ): T;
 
-enum ReduceMotion {
-  System = 'system',
-  Always = 'always',
-  Never = 'never',
-}
-```
-
+  enum ReduceMotion {
+    System = 'system',
+    Always = 'always',
+    Never = 'never',
+  }
+  ```
 </details>
 
 ### Arguments

@@ -17,11 +17,11 @@ The following implementation of a switch relies on [animatable values](/docs/fun
 
 <CollapsibleCode src={SwitchSrc} showLines={[26,52]}/>
 
-<ExampleVideo
+\<ExampleVideo
 sources={{
-    android: "/react-native-reanimated/recordings/examples/switch_android.mp4",
-    ios: "/react-native-reanimated/recordings/examples/switch_ios.mov"
-  }}
+android: "/react-native-reanimated/recordings/examples/switch\_android.mp4",
+ios: "/react-native-reanimated/recordings/examples/switch\_ios.mov"
+}}
 />
 
 We use the `useSharedValue` hook to store the dimensions of the element, which allows for precise calculation of position changes during the animation. The hook is there to prevent unnecessary re-renders.
