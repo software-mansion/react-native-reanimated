@@ -922,7 +922,9 @@ var require_workletFactory = __commonJS({
     var MOCK_VERSION = "x.y.z";
     function makeWorkletFactory(fun, state) {
       var _a;
-      removeWorkletDirective(fun);
+      const includeClosure = !hasDirective(fun, "no-worklet-closure");
+      const limitInitDataHoisting = hasDirective(fun, "limit-init-data-hoisting");
+      stripWorkletDirectives(fun);
       (0, assert_1.strict)(state.file.opts.filename, "[Reanimated] `state.file.opts.filename` is undefined.");
       const codeObject = (0, generator_1.default)(fun.node, {
         sourceMaps: true,
@@ -940,7 +942,11 @@ var require_workletFactory = __commonJS({
       });
       (0, assert_1.strict)(transformed, "[Reanimated] `transformed` is undefined.");
       (0, assert_1.strict)(transformed.ast, "[Reanimated] `transformed.ast` is undefined.");
-      const { closureVariables, libraryBindingsToImport, relativeBindingsToImport } = (0, closure_1.getClosure)(fun, state);
+      const { closureVariables, libraryBindingsToImport, relativeBindingsToImport } = includeClosure ? (0, closure_1.getClosure)(fun, state) : {
+        closureVariables: [],
+        libraryBindingsToImport: /* @__PURE__ */ new Set(),
+        relativeBindingsToImport: /* @__PURE__ */ new Set()
+      };
       const clone = (0, types_12.cloneNode)(fun.node);
       const funExpression = (0, types_12.isBlockStatement)(clone.body) ? (0, types_12.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
       const { workletName, reactName } = makeWorkletName(fun, state);
@@ -984,7 +990,7 @@ var require_workletFactory = __commonJS({
         const initDataDeclaration = (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
         ]);
-        if (state.opts.limitInitDataHoisting) {
+        if (limitInitDataHoisting) {
           fun.getFunctionParent().node.body.body.unshift(initDataDeclaration);
         } else {
           pathForStringDefinitions.insertBefore(initDataDeclaration);
@@ -1038,10 +1044,25 @@ var require_workletFactory = __commonJS({
       factory.workletized = true;
       return { factory, factoryCallParamPack, workletHash };
     }
-    function removeWorkletDirective(fun) {
+    function hasDirective(path, directiveText) {
+      if (!path.node.body) {
+        return false;
+      }
+      const bodyPath = path.get("body");
+      let has = false;
+      if (bodyPath.isBlockStatement()) {
+        has = bodyPath.get("directives").some((directivePath) => {
+          if (directivePath.isDirective() && directivePath.node.value.value === directiveText) {
+            return true;
+          }
+        });
+      }
+      return has;
+    }
+    function stripWorkletDirectives(fun) {
       fun.traverse({
         DirectiveLiteral(nodePath) {
-          if (nodePath.node.value === "worklet" && nodePath.getFunctionParent() === fun) {
+          if ((nodePath.node.value === "worklet" || nodePath.node.value === "no-worklet-closure" || nodePath.node.value === "limit-init-data-hoisting") && nodePath.getFunctionParent() === fun) {
             nodePath.parentPath.remove();
           }
         }

@@ -158,7 +158,8 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
     const std::shared_ptr<RuntimeManager> &runtimeManager,
     const std::weak_ptr<WorkletRuntime> &uiWorkletRuntime,
     const std::shared_ptr<RuntimeBindings> &runtimeBindings,
-    const BundleModeConfig &bundleModeConfig)
+    const BundleModeConfig &bundleModeConfig,
+    const std::shared_ptr<UnpackerLoader> &unpackerLoader)
     : jsi::HostObject(),
       isDevBundle_(isDevBundle),
       bundleModeConfig_(bundleModeConfig),
@@ -168,12 +169,15 @@ JSIWorkletsModuleProxy::JSIWorkletsModuleProxy(
       memoryManager_(memoryManager),
       runtimeManager_(runtimeManager),
       uiWorkletRuntime_(uiWorkletRuntime),
-      runtimeBindings_(runtimeBindings) {}
+      runtimeBindings_(runtimeBindings),
+      unpackerLoader_(unpackerLoader) {}
 
 JSIWorkletsModuleProxy::~JSIWorkletsModuleProxy() = default;
 
 std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runtime &rt) {
   std::vector<jsi::PropNameID> propertyNames;
+
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "loadUnpackers"));
 
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializable"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "createSerializableBigInt"));
@@ -221,11 +225,65 @@ std::vector<jsi::PropNameID> JSIWorkletsModuleProxy::getPropertyNames(jsi::Runti
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getUIRuntimeHolder"));
   propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getUISchedulerHolder"));
 
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getUIRuntimeHolder"));
+  propertyNames.emplace_back(jsi::PropNameID::forAscii(rt, "getUISchedulerHolder"));
+
   return propertyNames;
 }
 
 jsi::Value JSIWorkletsModuleProxy::get(jsi::Runtime &rt, const jsi::PropNameID &propName) {
   const auto name = propName.utf8(rt);
+
+  if (name == "loadUnpackers") {
+    return jsi::Function::createFromHostFunction(
+        rt,
+        propName,
+        15,
+        [unpackerLoader = unpackerLoader_](
+            jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
+          const auto valueUnpackerCode = args[0].asString(rt).utf8(rt);
+          const auto valueUnpackerLocation = args[1].asString(rt).utf8(rt);
+          const auto valueUnpackerSourceMap = args[2].asString(rt).utf8(rt);
+
+          const auto synchronizableUnpackerCode = args[3].asString(rt).utf8(rt);
+          const auto synchronizableUnpackerLocation = args[4].asString(rt).utf8(rt);
+          const auto synchronizableUnpackerSourceMap = args[5].asString(rt).utf8(rt);
+
+          const auto customSerializableUnpackerCode = args[6].asString(rt).utf8(rt);
+          const auto customSerializableUnpackerLocation = args[7].asString(rt).utf8(rt);
+          const auto customSerializableUnpackerSourceMap = args[8].asString(rt).utf8(rt);
+
+          const auto shareableHostUnpackerCode = args[9].asString(rt).utf8(rt);
+          const auto shareableHostUnpackerLocation = args[10].asString(rt).utf8(rt);
+          const auto shareableHostUnpackerSourceMap = args[11].asString(rt).utf8(rt);
+
+          const auto shareableGuestUnpackerCode = args[12].asString(rt).utf8(rt);
+          const auto shareableGuestUnpackerLocation = args[13].asString(rt).utf8(rt);
+          const auto shareableGuestUnpackerSourceMap = args[14].asString(rt).utf8(rt);
+
+          unpackerLoader->loadUnpackers(ShareableUnpackers{
+              .valueUnpacker =
+                  {.code = valueUnpackerCode, .location = valueUnpackerLocation, .sourceMap = valueUnpackerSourceMap},
+              .synchronizableUnpacker =
+                  {.code = synchronizableUnpackerCode,
+                   .location = synchronizableUnpackerLocation,
+                   .sourceMap = synchronizableUnpackerSourceMap},
+              .customSerializableUnpacker =
+                  {.code = customSerializableUnpackerCode,
+                   .location = customSerializableUnpackerLocation,
+                   .sourceMap = customSerializableUnpackerSourceMap},
+              .shareableHostUnpacker =
+                  {.code = shareableHostUnpackerCode,
+                   .location = shareableHostUnpackerLocation,
+                   .sourceMap = shareableHostUnpackerSourceMap},
+              .shareableGuestUnpacker =
+                  {.code = shareableGuestUnpackerCode,
+                   .location = shareableGuestUnpackerLocation,
+                   .sourceMap = shareableGuestUnpackerSourceMap},
+          });
+          return jsi::Value::undefined();
+        });
+  }
 
   if (name == "createSerializable") {
     return jsi::Function::createFromHostFunction(

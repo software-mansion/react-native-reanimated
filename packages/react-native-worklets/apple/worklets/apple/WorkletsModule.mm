@@ -110,6 +110,13 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
   return @YES;
 }
 
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(start)
+{
+  AssertJavaScriptQueue();
+  workletsModuleProxy_->start();
+  return @YES;
+}
+
 - (void)invalidate
 {
   AssertTurboModuleManagerQueue();

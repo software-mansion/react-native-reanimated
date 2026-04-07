@@ -1,5 +1,5 @@
 /**
-* Based on OkHttpCallUtil.kt from React Native 
+* Based on OkHttpCallUtil.kt from React Native
 */
 
 @file:Suppress("DEPRECATION_ERROR") // Conflicting okhttp versions
@@ -19,7 +19,10 @@ import okhttp3.OkHttpClient
  */
 internal object WorkletsOkHttpCallUtil {
     @JvmStatic
-    fun cancelTag(client: OkHttpClient, tag: Any) {
+    fun cancelTag(
+        client: OkHttpClient,
+        tag: Any,
+    ) {
         val dispatcher = client.dispatcher()
         for (call in dispatcher.queuedCalls()) {
             if (tag == call.request().tag()) {

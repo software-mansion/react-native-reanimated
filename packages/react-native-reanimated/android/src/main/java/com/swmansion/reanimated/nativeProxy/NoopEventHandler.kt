@@ -26,7 +26,11 @@ class NoopEventHandler : RCTModernEventEmitter {
         // noop
     }
 
-    override fun receiveEvent(targetTag: Int, eventName: String, params: WritableMap?) {
+    override fun receiveEvent(
+        targetTag: Int,
+        eventName: String,
+        params: WritableMap?,
+    ) {
         // noop
     }
 

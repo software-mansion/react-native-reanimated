@@ -6,14 +6,13 @@ import com.swmansion.reanimated.NodesManager
 
 @DoNotStrip
 class AnimationFrameCallback : NodesManager.OnAnimationFrame {
+    @field:DoNotStrip private val mHybridData: HybridData
 
-  @field:DoNotStrip private val mHybridData: HybridData
+    @DoNotStrip
+    private constructor(hybridData: HybridData) {
+        mHybridData = hybridData
+    }
 
-  @DoNotStrip
-  private constructor(hybridData: HybridData) {
-    mHybridData = hybridData
-  }
-
-  @DoNotStrip
-  external override fun onAnimationFrame(timestampMs: Double)
+    @DoNotStrip
+    external override fun onAnimationFrame(timestampMs: Double)
 }

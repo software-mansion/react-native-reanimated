@@ -153,7 +153,7 @@ open class NativeProxy {
     private val keyboardAnimationManager: KeyboardAnimationManager
     private var firstUptime: Long = SystemClock.uptimeMillis()
     private var slowAnimationsEnabled = false
-    private val ANIMATIONS_DRAG_FACTOR = 10
+    private val animationsDragFactor = 10
 
     // It turns out it's pretty difficult to set a member of a class
     // instance through JNI so we decided to use a setter instead.
@@ -184,7 +184,7 @@ open class NativeProxy {
             @Suppress("UNCHECKED_CAST")
             val gestureHandlerModuleClass =
                 Class.forName("com.swmansion.gesturehandler.react.RNGestureHandlerModule")
-                        as Class<NativeModule>
+                    as Class<NativeModule>
             tempHandlerStateManager =
                 context.getNativeModule(gestureHandlerModuleClass) as GestureHandlerStateManager?
         } catch (e: ClassCastException) {
@@ -203,7 +203,7 @@ open class NativeProxy {
             initHybrid(
                 context.javaScriptContextHolder!!.get(),
                 callInvokerHolder,
-                mFabricUIManager
+                mFabricUIManager,
             )
         if (BuildConfig.DEBUG) {
             checkCppVersion() // injectCppVersion should be called during initHybrid above
@@ -213,10 +213,13 @@ open class NativeProxy {
     private external fun initHybrid(
         jsContext: Long,
         jsCallInvokerHolder: CallInvokerHolderImpl,
-        fabricUIManager: FabricUIManager
+        fabricUIManager: FabricUIManager,
     ): HybridData
 
-    external fun isAnyHandlerWaitingForEvent(eventName: String, emitterReactTag: Int): Boolean
+    external fun isAnyHandlerWaitingForEvent(
+        eventName: String,
+        emitterReactTag: Int,
+    ): Boolean
 
     external fun performOperations()
 
@@ -241,26 +244,6 @@ open class NativeProxy {
 
     private fun toggleSlowAnimations() {
         toggleSlowAnimationsOnUIRuntime()
-        // slowAnimationsEnabled = !slowAnimationsEnabled
-        // if (slowAnimationsEnabled) {
-        //   firstUptime = SystemClock.uptimeMillis()
-        // }
-        // mNodesManager!!.enableSlowAnimations(slowAnimationsEnabled, ANIMATIONS_DRAG_FACTOR)
-        // try {
-        //   @Suppress("UNCHECKED_CAST")
-        //   val workletsModuleClass =
-        //       Class.forName("com.swmansion.worklets.WorkletsModule") as Class<NativeModule>
-        //   val workletsModule = mContext.get()!!.getNativeModule(workletsModuleClass)
-        //   if (workletsModule != null) {
-        //     try {
-        //       workletsModule.javaClass.getMethod("toggleSlowAnimations").invoke(workletsModule)
-        //     } catch (e: Exception) {
-        //       Log.e("Reanimated", "Failed to toggle slow animations in WorkletsModule", e)
-        //     }
-        //   }
-        // } catch (e: ClassNotFoundException) {
-        //   Log.e("Reanimated", "WorkletsModule not found when toggling slow animations", e)
-        // }
     }
 
     private fun addDevMenuOption() {
@@ -281,18 +264,20 @@ open class NativeProxy {
         if (cppVersion == null) {
             throw RuntimeException(
                 "[Reanimated] Java side failed to resolve C++ code version. " +
-                        "See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#java-side-failed-to-resolve-c-code-version for more information."
+                    "See https://docs.swmansion.com/react-native-reanimated/docs" +
+                    "/guides/troubleshooting#java-side-failed-to-resolve-c-code-version for more information.",
             )
         }
         val javaVersion = getReanimatedJavaVersion()
         if (cppVersion != javaVersion) {
             throw RuntimeException(
                 "[Reanimated] Mismatch between Java code version and C++ code version (" +
-                        javaVersion +
-                        " vs. " +
-                        cppVersion +
-                        " respectively). See " +
-                        "https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-java-code-version-and-c-code-version for more information."
+                    javaVersion +
+                    " vs. " +
+                    cppVersion +
+                    " respectively). See " +
+                    "https://docs.swmansion.com/react-native-reanimated/docs" +
+                    "/guides/troubleshooting#mismatch-between-java-code-version-and-c-code-version for more information.",
             )
         }
     }
@@ -313,7 +298,10 @@ open class NativeProxy {
     }
 
     @DoNotStrip
-    fun synchronouslyUpdateUIProps(intBuffer: IntArray, doubleBuffer: DoubleArray) {
+    fun synchronouslyUpdateUIProps(
+        intBuffer: IntArray,
+        doubleBuffer: DoubleArray,
+    ) {
         val intIterator = Arrays.stream(intBuffer).iterator()
         val doubleIterator = Arrays.stream(doubleBuffer).iterator()
         var viewTag = -1
@@ -330,7 +318,8 @@ open class NativeProxy {
                 CMD_ELEVATION,
                 CMD_Z_INDEX,
                 CMD_SHADOW_OPACITY,
-                CMD_SHADOW_RADIUS -> {
+                CMD_SHADOW_RADIUS,
+                -> {
                     val name = commandToString(command)
                     props.putDouble(name, doubleIterator.nextDouble())
                 }
@@ -344,7 +333,8 @@ open class NativeProxy {
                 CMD_BORDER_LEFT_COLOR,
                 CMD_BORDER_RIGHT_COLOR,
                 CMD_BORDER_START_COLOR,
-                CMD_BORDER_END_COLOR -> {
+                CMD_BORDER_END_COLOR,
+                -> {
                     val name = commandToString(command)
                     props.putInt(name, intIterator.nextInt())
                 }
@@ -361,7 +351,8 @@ open class NativeProxy {
                 CMD_BORDER_START_START_RADIUS,
                 CMD_BORDER_START_END_RADIUS,
                 CMD_BORDER_END_START_RADIUS,
-                CMD_BORDER_END_END_RADIUS -> {
+                CMD_BORDER_END_END_RADIUS,
+                -> {
                     val name = commandToString(command)
                     val value = doubleIterator.nextDouble()
                     when (intIterator.nextInt()) {
@@ -382,7 +373,8 @@ open class NativeProxy {
                         val name = transformCommandToString(transformCommand)
                         when (transformCommand) {
                             CMD_TRANSFORM_TRANSLATE_X,
-                            CMD_TRANSFORM_TRANSLATE_Y -> {
+                            CMD_TRANSFORM_TRANSLATE_Y,
+                            -> {
                                 val value = doubleIterator.nextDouble()
                                 when (intIterator.nextInt()) {
                                     CMD_UNIT_PX -> transform.pushMap(JavaOnlyMap.of(name, value))
@@ -394,7 +386,8 @@ open class NativeProxy {
                             CMD_TRANSFORM_SCALE,
                             CMD_TRANSFORM_SCALE_X,
                             CMD_TRANSFORM_SCALE_Y,
-                            CMD_TRANSFORM_PERSPECTIVE -> {
+                            CMD_TRANSFORM_PERSPECTIVE,
+                            -> {
                                 val value = doubleIterator.nextDouble()
                                 transform.pushMap(JavaOnlyMap.of(name, value))
                             }
@@ -404,7 +397,8 @@ open class NativeProxy {
                             CMD_TRANSFORM_ROTATE_Y,
                             CMD_TRANSFORM_ROTATE_Z,
                             CMD_TRANSFORM_SKEW_X,
-                            CMD_TRANSFORM_SKEW_Y -> {
+                            CMD_TRANSFORM_SKEW_Y,
+                            -> {
                                 val angle = doubleIterator.nextDouble()
                                 val unit =
                                     when (intIterator.nextInt()) {
@@ -436,18 +430,20 @@ open class NativeProxy {
     }
 
     @DoNotStrip
-    fun setGestureState(handlerTag: Int, newState: Int) {
+    fun setGestureState(
+        handlerTag: Int,
+        newState: Int,
+    ) {
         gestureHandlerStateManager?.setGestureHandlerState(handlerTag, newState)
     }
 
     @DoNotStrip
-    fun getAnimationTimestamp(): Long {
-        return if (slowAnimationsEnabled) {
-            firstUptime + (SystemClock.uptimeMillis() - firstUptime) / ANIMATIONS_DRAG_FACTOR
+    fun getAnimationTimestamp(): Long =
+        if (slowAnimationsEnabled) {
+            firstUptime + (SystemClock.uptimeMillis() - firstUptime) / animationsDragFactor
         } else {
             SystemClock.uptimeMillis()
         }
-    }
 
     @DoNotStrip
     fun registerEventHandler(handler: EventHandler) {
@@ -456,11 +452,16 @@ open class NativeProxy {
     }
 
     @DoNotStrip
-    fun registerSensor(sensorType: Int, interval: Int, setter: SensorSetter): Int {
-        return reanimatedSensorContainer.registerSensor(
-            ReanimatedSensorType.getInstanceById(sensorType), interval, setter
+    fun registerSensor(
+        sensorType: Int,
+        interval: Int,
+        setter: SensorSetter,
+    ): Int =
+        reanimatedSensorContainer.registerSensor(
+            ReanimatedSensorType.getInstanceById(sensorType),
+            interval,
+            setter,
         )
-    }
 
     @DoNotStrip
     fun unregisterSensor(sensorId: Int) {
@@ -471,12 +472,13 @@ open class NativeProxy {
     fun subscribeForKeyboardEvents(
         keyboardWorkletWrapper: KeyboardWorkletWrapper,
         isStatusBarTranslucent: Boolean,
-        isNavigationBarTranslucent: Boolean
-    ): Int {
-        return keyboardAnimationManager.subscribeForKeyboardUpdates(
-            keyboardWorkletWrapper, isStatusBarTranslucent, isNavigationBarTranslucent
+        isNavigationBarTranslucent: Boolean,
+    ): Int =
+        keyboardAnimationManager.subscribeForKeyboardUpdates(
+            keyboardWorkletWrapper,
+            isStatusBarTranslucent,
+            isNavigationBarTranslucent,
         )
-    }
 
     @DoNotStrip
     fun unsubscribeFromKeyboardEvents(listenerId: Int) {
