@@ -18,11 +18,11 @@ This allows us to [interpolate](/docs/utilities/interpolate) values between 0-18
 
 <CollapsibleCode src={FlipCardSrc} showLines={[61,63]} />
 
-\<ExampleVideo
+<ExampleVideo
 sources={{
-android: "/react-native-reanimated/recordings/examples/flip\_card\_android.mov",
-ios: "/react-native-reanimated/recordings/examples/flip\_card\_ios.mov"
-}}
+        android: "/react-native-reanimated/recordings/examples/flip_card_android.mov",
+        ios: "/react-native-reanimated/recordings/examples/flip_card_ios.mov"
+    }}
 />
 
 The **FlipCard** component accepts several props: `duration` allows you to change the duration of the animation, setting `direction` to the value `x` allows you to change the direction of our animation, **RegularContent** and **FlippedContent** give ability to display different content for flipped and non flipped variants.

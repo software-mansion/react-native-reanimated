@@ -2,6 +2,8 @@
 sidebar_position: 4
 ---
 
+import { useTimingPlayground } from '@site/src/components/InteractivePlayground';
+
 # Customizing animations
 
 [Previous section](/docs/fundamentals/animating-styles-and-props) not only taught you how to use shared values in practice but also you used `withSpring` and `withTiming` functions to create animations. We think now you're more than ready to dive deeper into customizing animations!
@@ -38,8 +40,6 @@ Reanimated comes with a handful of predefined easing functions. You can play aro
 
 <details open>
   <summary><code>withTiming</code> interactive playground</summary>
-
-  import { useTimingPlayground } from '@site/src/components/InteractivePlayground';
 
   <InteractivePlayground usePlayground={useTimingPlayground} />
 </details>

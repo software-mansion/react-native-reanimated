@@ -17,11 +17,11 @@ We use [shared values](/docs/fundamentals/glossary#shared-value) to monitor if t
 
 The state is toggled when the main _Actions_ button is pressed, which triggers animations for other secondary buttons.
 
-\<ExampleVideo
+<ExampleVideo
 sources={{
-android: "/react-native-reanimated/recordings/examples/fab\_android.mov",
-ios: "/react-native-reanimated/recordings/examples/fab\_ios.mov"
-}}
+    android: "/react-native-reanimated/recordings/examples/fab_android.mov",
+    ios: "/react-native-reanimated/recordings/examples/fab_ios.mov"
+  }}
 />
 
 It also relies on [animatable values](/docs/fundamentals/glossary#animatable-value). Leveraging animatable values of rotation and position enables smooth transition between the two states.

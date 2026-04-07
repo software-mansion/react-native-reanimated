@@ -14,11 +14,11 @@ The following implementation of an accordion relies on [shared values](/docs/fun
 
 <CollapsibleCode src={AccordionSrc} showLines={[16,16]}/>
 
-\<ExampleVideo
+<ExampleVideo
 sources={{
-android: "/react-native-reanimated/recordings/examples/accordion\_android.mov",
-ios: "/react-native-reanimated/recordings/examples/accordion\_ios.mov"
-}}
+    android: "/react-native-reanimated/recordings/examples/accordion_android.mov",
+    ios: "/react-native-reanimated/recordings/examples/accordion_ios.mov"
+  }}
 />
 
 The **AccordionItem** component encapsulates each item in the accordion. A `height` shared value manages the height of the item. The height dynamically adjusts based on the `isExpanded` prop, resulting in smooth expansion and collapse animations. The `duration` prop controls the duration of the animation.
