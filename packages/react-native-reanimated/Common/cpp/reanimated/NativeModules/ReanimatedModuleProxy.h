@@ -26,8 +26,6 @@
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
 
-#include <android/log.h>
-
 #include <memory>
 #include <set>
 #include <string>
