@@ -416,11 +416,7 @@ void ReanimatedModuleProxy::cleanupSensors() {
 }
 
 void ReanimatedModuleProxy::setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) {
-  const auto tag = viewTag.asNumber();
-  staticPropsRegistry_->set(rt, tag, viewStyle);
-  if (staticPropsRegistry_->hasObservers(tag)) {
-    maybeRunCSSLoop();
-  }
+  staticPropsRegistry_->set(rt, viewTag.asNumber(), viewStyle);
 }
 
 void ReanimatedModuleProxy::markNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) {
