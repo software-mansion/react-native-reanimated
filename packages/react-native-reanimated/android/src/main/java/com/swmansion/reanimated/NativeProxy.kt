@@ -243,6 +243,11 @@ open class NativeProxy {
     }
 
     private fun toggleSlowAnimations() {
+        slowAnimationsEnabled = !slowAnimationsEnabled
+        if (slowAnimationsEnabled) {
+            firstUptime = SystemClock.uptimeMillis()
+        }
+        mNodesManager!!.enableSlowAnimations(slowAnimationsEnabled, animationsDragFactor)
         toggleSlowAnimationsOnUIRuntime()
     }
 

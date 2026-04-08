@@ -30,6 +30,7 @@ using namespace worklets;
 @implementation WorkletsModule {
   AnimationFrameQueue *animationFrameQueue_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+  BOOL slowAnimationsEnabled_;
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
   WorkletsNetworking *workletsNetworking_;
 #endif // WORKLETS_FETCH_PREVIEW_ENABLED
@@ -115,6 +116,12 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(start)
   AssertJavaScriptQueue();
   workletsModuleProxy_->start();
   return @YES;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
+{
+  slowAnimationsEnabled_ = !slowAnimationsEnabled_;
+  return slowAnimationsEnabled_ ? @YES : @NO;
 }
 
 - (void)invalidate

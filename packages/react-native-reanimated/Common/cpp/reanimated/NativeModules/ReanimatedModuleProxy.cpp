@@ -1416,7 +1416,7 @@ void ReanimatedModuleProxy::toggleSlowAnimationsOnUIRuntime() const {
   this->jsInvoker_->invokeAsync([](jsi::Runtime &rt) {
     const auto toggleFn = rt.global().getProperty(rt, "__toggleSlowAnimationsOnUIRuntime");
     if (!(toggleFn.isObject() && toggleFn.asObject(rt).isFunction(rt))) [[unlikely]] {
-      throw new std::runtime_error("[Reanimated] __toggleSlowAnimationsOnUIRuntime function missing on global.");
+      throw std::runtime_error("[Reanimated] __toggleSlowAnimationsOnUIRuntime function missing on global.");
     }
 
     toggleFn.asObject(rt).asFunction(rt).call(rt);

@@ -331,7 +331,7 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   }
 
   toggleSlowAnimationsOnUIRuntime(): boolean {
-    return WorkletsTurboModule!.toggleSlowAnimationsOnUIRuntime();
+    return WorkletsTurboModule?.toggleSlowAnimationsOnUIRuntime() ?? false;
   }
 }
 

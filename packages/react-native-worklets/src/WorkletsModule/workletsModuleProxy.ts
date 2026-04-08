@@ -176,8 +176,6 @@ export interface WorkletsModuleProxy {
   getUIRuntimeHolder(): object;
 
   getUISchedulerHolder(): object;
-
-  toggleSlowAnimationsOnUIRuntime(): boolean;
 }
 
 type InternalMethods = 'loadUnpackers';

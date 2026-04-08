@@ -22,8 +22,10 @@ export function initializeReanimatedModule(
   }
 }
 
-global.__toggleSlowAnimationsOnUIRuntime = () =>
-  toggleSlowAnimationsOnUIRuntime();
+if (!SHOULD_BE_USE_WEB) {
+  globalThis.__toggleSlowAnimationsOnUIRuntime = () =>
+    toggleSlowAnimationsOnUIRuntime();
+}
 
 // is-tree-shakable-suppress
 if (!SHOULD_BE_USE_WEB) {

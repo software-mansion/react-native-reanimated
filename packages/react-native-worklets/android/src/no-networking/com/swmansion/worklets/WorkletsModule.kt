@@ -68,7 +68,7 @@ class WorkletsModule(
         context.assertOnJSQueueThread()
 
         val jsContext = checkNotNull(context.javaScriptContextHolder).get()
-        val jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context)
+        val jsCallInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
 
         val sourceURL = context.sourceURL
 
@@ -114,7 +114,7 @@ class WorkletsModule(
     }
 
     @OptIn(FrameworkAPI::class)
-    @ReactMethod
+    @ReactMethod(isBlockingSynchronousMethod = true)
     override fun toggleSlowAnimationsOnUIRuntime(): Boolean {
         toggleSlowAnimations()
         return mSlowAnimationsEnabled
