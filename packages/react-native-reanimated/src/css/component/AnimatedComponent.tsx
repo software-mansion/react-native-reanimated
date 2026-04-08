@@ -214,11 +214,20 @@ export default class AnimatedComponent<
       default: { collapsable: false },
     });
 
+    const filteredStyle = filterNonCSSStyleProps(
+      props?.style ?? this.props.style
+    );
+    // Props held stable by the CSS manager (typically in-flight transitions)
+    // that must win over whatever the user passed in.
+    const overrides = this._CSSManager?.getStyleOverrides();
+
+    console.log('overrides', overrides);
+
     return (
       <ChildComponent
         {...(props ?? this.props)}
         {...platformProps}
-        style={filterNonCSSStyleProps(props?.style ?? this.props.style)}
+        style={[filteredStyle, overrides]}
         // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
         // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
         ref={this._setComponentRef as (ref: Component) => void}

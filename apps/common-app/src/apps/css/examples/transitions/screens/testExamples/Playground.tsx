@@ -5,10 +5,10 @@
 
 import { useState } from 'react';
 import type { ViewStyle } from 'react-native';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { Button, Screen } from '@/apps/css/components';
+import { Text } from '@/apps/css/components';
 
 const transitionStyles: Array<ViewStyle> = [
   {
@@ -64,30 +64,28 @@ export default function Playground() {
   };
 
   return (
-    <Screen>
-      <View style={styles.container}>
-        <Button
-          title="Change state"
-          onPress={() => {
-            setState(state + 1);
-          }}
-        />
-        <Animated.View
-          style={[
-            {
-              backgroundColor: 'red',
-              height: 65,
-              marginTop: 60,
-              transitionDuration: '0.5s',
-              transitionProperty: 'all',
-              transitionTimingFunction: 'ease-in-out',
-              width: 65,
-            },
-            stateToStyle(state),
-          ]}
-        />
-      </View>
-    </Screen>
+    <View style={styles.container}>
+      <TouchableOpacity
+        onPress={() => {
+          setState(state + 1);
+        }}>
+        <Text>Change state</Text>
+      </TouchableOpacity>
+      <Animated.View
+        style={[
+          {
+            backgroundColor: 'red',
+            height: 65,
+            marginTop: 60,
+            transitionDuration: '0.5s',
+            transitionProperty: 'all',
+            transitionTimingFunction: 'ease-in-out',
+            width: 65,
+          },
+          stateToStyle(state),
+        ]}
+      />
+    </View>
   );
 }
 

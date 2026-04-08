@@ -32,4 +32,9 @@ export default class CSSManager implements ICSSManager {
     this.animationsManager.unmountCleanup();
     this.transitionsManager.unmountCleanup();
   }
+
+  getStyleOverrides(): Readonly<Record<string, unknown>> {
+    // Browser owns native CSS on web — nothing to override JS-side.
+    return {};
+  }
 }

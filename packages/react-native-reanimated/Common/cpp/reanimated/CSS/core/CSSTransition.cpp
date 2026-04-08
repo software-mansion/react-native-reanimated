@@ -36,13 +36,9 @@ TransitionProperties CSSTransition::getProperties() const {
   return transitionProperties_;
 }
 
-folly::dynamic CSSTransition::run(
-    jsi::Runtime &rt,
-    const CSSTransitionConfig &config,
-    const folly::dynamic &lastUpdateValue,
-    const double timestamp) {
+folly::dynamic CSSTransition::run(jsi::Runtime &rt, const CSSTransitionConfig &config, const double timestamp) {
   // Update interpolators and progress providers for changed properties
-  handleChangedProperties(rt, config, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
+  handleChangedProperties(rt, config, timestamp);
   // Remove interpolators and progress providers for no longer transitioned props
   handleRemovedProperties(config);
   // Return the first transition frame
@@ -64,9 +60,10 @@ folly::dynamic CSSTransition::update(const double timestamp) {
 void CSSTransition::handleChangedProperties(
     jsi::Runtime &rt,
     const CSSTransitionConfig &config,
-    const folly::dynamic &lastUpdateValue,
     const double timestamp) {
-  const auto null = folly::dynamic();
+  // Snapshot current values before mutating interpolators, so re-triggered
+  // properties can continue from where they are instead of jumping back.
+  const auto currentStyle = styleInterpolator_.interpolate(shadowNode_, progressProvider_);
 
   for (const auto &[propertyName, propertySettings] : config.changedProperties) {
     const auto allowDiscrete = propertySettings.allowDiscrete;
@@ -82,10 +79,10 @@ void CSSTransition::handleChangedProperties(
     const auto &valueChange = propertySettings.value;
 
     bool isReversed;
-    if (lastUpdateValue.count(propertyName)) {
-      // TODO - get rid of lastValue dynamic in the future
+    if (currentStyle.isObject() && currentStyle.count(propertyName)) {
+      // Mid-flight re-trigger: continue from the current interpolated value.
       isReversed = styleInterpolator_.createOrUpdateInterpolator(
-          rt, propertyName, jsi::valueFromDynamic(rt, lastUpdateValue.at(propertyName)), valueChange.second);
+          rt, propertyName, jsi::valueFromDynamic(rt, currentStyle.at(propertyName)), valueChange.second);
     } else {
       isReversed =
           styleInterpolator_.createOrUpdateInterpolator(rt, propertyName, valueChange.first, valueChange.second);

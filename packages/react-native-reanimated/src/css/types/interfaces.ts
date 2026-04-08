@@ -1,4 +1,5 @@
 'use strict';
+import type { UnknownRecord } from '../../common';
 import type { ExistingCSSAnimationProperties } from './animation';
 import type { CSSStyle } from './props';
 import type { CSSTransitionProperties } from './transition';
@@ -16,4 +17,5 @@ export interface ICSSTransitionsManager {
 export interface ICSSManager {
   update(style: CSSStyle | null): void;
   unmountCleanup(): void;
+  getStyleOverrides(): Readonly<UnknownRecord>;
 }

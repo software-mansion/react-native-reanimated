@@ -260,4 +260,17 @@ describe('CSSTransitionsManager', () => {
       });
     });
   });
+
+  describe('getStyleOverrides', () => {
+    test('captures pre-transition props on attach and clears on detach', () => {
+      expect(manager.getStyleOverrides()).toEqual({});
+
+      manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 0 });
+      manager.update(DEFAULT_TRANSITION_CONFIG, { opacity: 1 });
+      expect(manager.getStyleOverrides()).toEqual({ opacity: 0 });
+
+      manager.update(null);
+      expect(manager.getStyleOverrides()).toEqual({});
+    });
+  });
 });

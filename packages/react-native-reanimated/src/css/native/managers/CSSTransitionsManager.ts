@@ -22,6 +22,11 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   // Stores all properties for which transition was triggered before
   // and which haven't been cleaned up yet (null if no transition was attached before)
   private propsWithTransitions = new Set<string>();
+  // Snapshot of the view's prop values taken at the moment the transition
+  // attached. Held stable in the React-committed style so React's mount diff
+  // can't override Reanimated's in-flight interpolation. Captured once on
+  // attach, cleared on detach.
+  private overrides: UnknownRecord = {};
   // Indicates whether a CSS transition is currently attached to the view
   private hasTransition = false;
 
@@ -59,6 +64,9 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     );
 
     if (Object.keys(config).length) {
+      if (!this.hasTransition) {
+        this.overrides = pickOverrides(prevProps, transitionConfig);
+      }
       runCSSTransition(this.shadowNodeWrapper, config);
       this.hasTransition = true;
     }
@@ -68,9 +76,14 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
     // noop
   }
 
+  getStyleOverrides(): Readonly<UnknownRecord> {
+    return this.overrides;
+  }
+
   private detach() {
     unregisterCSSTransition(this.viewTag);
     this.propsWithTransitions.clear();
+    this.overrides = {};
     this.hasTransition = false;
   }
 
@@ -115,6 +128,7 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
           // we need to clear it up immediately
           result[key] = null;
           this.propsWithTransitions.delete(key);
+          delete this.overrides[key];
         }
       } else if (!(key in newProps)) {
         // Property was removed from props but is still allowed
@@ -124,4 +138,22 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
 
     return result;
   }
+}
+
+function pickOverrides(
+  prevProps: UnknownRecord,
+  config: NormalizedCSSTransitionConfig
+): UnknownRecord {
+  // transitionProperty: 'all'
+  if (!config.specificProperties) {
+    return { ...prevProps };
+  }
+  // Specific list
+  const result: UnknownRecord = {};
+  for (const key of config.specificProperties) {
+    if (key in prevProps) {
+      result[key] = prevProps[key];
+    }
+  }
+  return result;
 }
