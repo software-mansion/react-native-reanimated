@@ -10,10 +10,12 @@ CSSTransitionsRegistry::CSSTransitionsRegistry(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : getCurrentTimestamp_(getCurrentTimestamp), viewStylesRepository_(viewStylesRepository) {}
 
+std::lock_guard<std::mutex> CSSTransitionsRegistry::lock() const {
+  return std::lock_guard<std::mutex>{mutex_};
+}
+
 bool CSSTransitionsRegistry::isEmpty() const {
-  // The registry is empty if has no registered animations and no updates
-  // stored in the updates registry
-  return UpdatesRegistry::isEmpty() && registry_.empty();
+  return registry_.empty();
 }
 
 bool CSSTransitionsRegistry::hasUpdates() const {
@@ -33,17 +35,14 @@ void CSSTransitionsRegistry::run(
   }
 
   const auto &transition = registry_.at(viewTag);
-  const auto &lastUpdates = getUpdatesFromRegistry(shadowNode->getTag());
   const auto timestamp = getCurrentTimestamp_();
 
-  auto initialUpdate = transition->run(rt, config, lastUpdates, timestamp);
+  transition->run(rt, config, timestamp);
 
   scheduleOrActivateTransition(transition);
-  updateInUpdatesRegistry(transition, initialUpdate);
 }
 
 void CSSTransitionsRegistry::remove(const Tag viewTag) {
-  removeFromUpdatesRegistry(viewTag);
   delayedTransitionsManager_.remove(viewTag);
   runningTransitionTags_.erase(viewTag);
   registry_.erase(viewTag);
@@ -60,7 +59,7 @@ void CSSTransitionsRegistry::update(const double timestamp) {
 
     const folly::dynamic &updates = transition->update(timestamp);
     if (!updates.empty()) {
-      addUpdatesToBatch(transition->getShadowNode()->getFamilyShared(), updates);
+      updatesBatch_.emplace_back(transition->getShadowNode()->getFamilyShared(), updates);
     }
 
     // We remove transition from running and schedule it when animation of one
@@ -76,6 +75,12 @@ void CSSTransitionsRegistry::update(const double timestamp) {
       ++it;
     }
   }
+}
+
+void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
+  updatesBatch.insert(
+      updatesBatch.end(), std::make_move_iterator(updatesBatch_.begin()), std::make_move_iterator(updatesBatch_.end()));
+  updatesBatch_.clear();
 }
 
 void CSSTransitionsRegistry::activateDelayedTransitions(const double timestamp) {
@@ -103,31 +108,6 @@ void CSSTransitionsRegistry::scheduleOrActivateTransition(const std::shared_ptr<
   } else {
     runningTransitionTags_.insert(viewTag);
   }
-}
-
-void CSSTransitionsRegistry::updateInUpdatesRegistry(
-    const std::shared_ptr<CSSTransition> &transition,
-    const folly::dynamic &updates) {
-  const auto &shadowNode = transition->getShadowNode();
-  const auto &lastUpdates = getUpdatesFromRegistry(shadowNode->getTag());
-  const auto &transitionProperties = transition->getProperties();
-
-  folly::dynamic filteredUpdates = folly::dynamic::object;
-
-  if (!lastUpdates.empty()) {
-    // Otherwise, we keep only allowed properties from the last updates
-    // and update the object with the new transition starting values
-    for (const auto &prop : transitionProperties) {
-      if (lastUpdates.count(prop)) {
-        filteredUpdates[prop] = lastUpdates[prop];
-      }
-    }
-  }
-
-  // updated object contains only allowed properties so we don't need
-  // to do additional filtering here
-  filteredUpdates.update(updates);
-  setInUpdatesRegistry(shadowNode->getFamilyShared(), filteredUpdates);
 }
 
 } // namespace reanimated::css

@@ -63,4 +63,8 @@ export default class CSSManager implements ICSSManager {
     this.cssAnimationsManager.unmountCleanup();
     this.cssTransitionsManager.unmountCleanup();
   }
+
+  getStyleOverrides(): Readonly<Record<string, unknown>> {
+    return this.cssTransitionsManager.getStyleOverrides();
+  }
 }

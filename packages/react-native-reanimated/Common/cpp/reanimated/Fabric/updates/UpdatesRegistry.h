@@ -53,7 +53,6 @@ class UpdatesRegistry {
   RegistryMap updatesRegistry_;
 
   void addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
-  folly::dynamic getUpdatesFromRegistry(const Tag tag) const;
   void setInUpdatesRegistry(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
   void removeFromUpdatesRegistry(Tag tag);
 

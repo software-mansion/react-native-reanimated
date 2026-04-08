@@ -142,11 +142,9 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
   auto lock = updatesRegistryManager_->lock();
-  // Add registries in order of their priority (from the lowest to the
-  // highest)
-  // CSS transitions should be overriden by animated style animations;
-  // animated style animations should be overriden by CSS animations
-  updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
+  // Add registries in order of their priority (lowest to highest). Only
+  // registries whose values the commit hook needs to re-overlay on React
+  // commits belong here).
   updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
   updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
 }
