@@ -39,11 +39,9 @@ static CAMediaTimingFunction *getCATimingFunction(id easing)
   if ([easing isKindOfClass:[NSArray class]]) {
     NSArray *points = (NSArray *)easing;
     if (points.count == 4) {
-      return [CAMediaTimingFunction functionWithControlPoints:
-                                       [points[0] floatValue] :
-                                       [points[1] floatValue] :
-                                       [points[2] floatValue] :
-                                       [points[3] floatValue]];
+      return [CAMediaTimingFunction functionWithControlPoints:[points[0] floatValue]:[points[1] floatValue
+      ]:[points[2] floatValue
+      ]:[points[3] floatValue]];
     }
   }
   return [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
@@ -120,11 +118,8 @@ static CAKeyframeData extractKeyframeValues(NSString *keyPath, NSArray *keyframe
   return (CAKeyframeData){values, keyTimes};
 }
 
-static CAAnimation *createAnimationFromKeyframes(
-    NSString *keyPath,
-    CAKeyframeData keyframeData,
-    NSArray *easings,
-    BOOL isReversed)
+static CAAnimation *
+createAnimationFromKeyframes(NSString *keyPath, CAKeyframeData keyframeData, NSArray *easings, BOOL isReversed)
 {
   if (keyframeData.values.count == 2) {
     CABasicAnimation *basic = [CABasicAnimation animationWithKeyPath:keyPath];
@@ -149,7 +144,6 @@ static CAAnimation *createAnimationFromKeyframes(
   }
   return kfAnim;
 }
-
 
 // Delay and fill mode are handled by C++ for cross-platform consistency.
 // CA animations start immediately and are always removed on completion.
@@ -182,11 +176,9 @@ static CAAnimation *buildCAAnimation(NSDictionary *descriptor, NSDictionary *set
   NSString *keyPath = getCAKeyPath(descriptor[@"keyPath"]);
   BOOL isReversed = isDirectionReversed([settings[@"direction"] intValue]);
 
-  CAKeyframeData keyframeData =
-      extractKeyframeValues(keyPath, descriptor[@"keyframes"], isReversed);
+  CAKeyframeData keyframeData = extractKeyframeValues(keyPath, descriptor[@"keyframes"], isReversed);
 
-  CAAnimation *animation =
-      createAnimationFromKeyframes(keyPath, keyframeData, descriptor[@"easings"], isReversed);
+  CAAnimation *animation = createAnimationFromKeyframes(keyPath, keyframeData, descriptor[@"easings"], isReversed);
 
   configureAnimationTiming(animation, settings);
 
@@ -214,8 +206,7 @@ static CAAnimation *buildCAAnimation(NSDictionary *descriptor, NSDictionary *set
 @implementation REACSSAnimations {
   // Tracks animated property keyPaths per view, grouped by CSS animation name.
   // viewTag -> { animationName -> [keyPath, ...] }
-  NSMutableDictionary<NSNumber *, NSMutableDictionary<NSString *, NSMutableArray<NSString *> *> *>
-      *_animationKeyPaths;
+  NSMutableDictionary<NSNumber *, NSMutableDictionary<NSString *, NSMutableArray<NSString *> *> *> *_animationKeyPaths;
 }
 
 - (instancetype)init
@@ -236,8 +227,7 @@ static CAAnimation *buildCAAnimation(NSDictionary *descriptor, NSDictionary *set
 
   if (existing) {
     // Update existing: preserve progress by offsetting beginTime.
-    CFTimeInterval elapsed =
-        [layer convertTime:CACurrentMediaTime() fromLayer:nil] - existing.beginTime;
+    CFTimeInterval elapsed = [layer convertTime:CACurrentMediaTime() fromLayer:nil] - existing.beginTime;
     [layer removeAnimationForKey:animationKey];
     animation.beginTime = CACurrentMediaTime() - elapsed;
   }

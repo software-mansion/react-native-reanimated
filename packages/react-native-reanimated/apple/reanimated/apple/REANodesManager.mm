@@ -170,8 +170,7 @@ using namespace facebook::react;
 {
   RCTAssertMainQueue();
 
-  REAUIView<RCTComponentViewProtocol> *componentView =
-      (REAUIView<RCTComponentViewProtocol> *)[self viewForTag:viewTag];
+  REAUIView<RCTComponentViewProtocol> *componentView = (REAUIView<RCTComponentViewProtocol> *)[self viewForTag:viewTag];
   NSSet<NSString *> *propKeysManagedByAnimated = [componentView propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN];
   [self.surfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:viewTag props:props];
   [componentView setPropKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN:propKeysManagedByAnimated];
