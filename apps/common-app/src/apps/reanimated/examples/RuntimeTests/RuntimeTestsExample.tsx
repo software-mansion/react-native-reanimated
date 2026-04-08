@@ -111,7 +111,7 @@ export default function RuntimeTestsExample() {
         {
           testSuiteName: 'props',
           importTest: () => {
-            require('./tests/props/boxShadow.test');
+            require('./tests/props/styleProperties.test');
           },
         },
         {

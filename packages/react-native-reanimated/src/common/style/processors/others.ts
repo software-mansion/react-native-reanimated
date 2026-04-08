@@ -1,4 +1,5 @@
 'use strict';
+'worklet';
 import { ReanimatedError } from '../../errors';
 import type { ValueProcessor } from '../../types';
 
