@@ -1,22 +1,20 @@
 name: npm worklets publish
 on:
   push:
-    # TODO: disabled for testing
-    # branches:
-    #   - main
-    # paths:
-    #   - '.github/workflows/npm-worklets-publish.yml'
-    #   - '.github/workflows/npm-package-publish.yml'
-    #   - '.github/actions/npm-package-publish/**'
+    branches:
+      - main
+    paths:
+      - '.github/workflows/npm-worklets-publish.yml'
+      - '.github/workflows/npm-package-publish.yml'
+      - '.github/actions/npm-package-publish/**'
   pull_request:
-    # TODO: disabled for testing
-    # paths:
-    #   - '.github/workflows/npm-worklets-publish.yml'
-    #   - '.github/workflows/npm-package-publish.yml'
-    #   - '.github/actions/npm-package-publish/**'
-  # merge_group:
-  #   branches:
-  #     - main
+    paths:
+      - '.github/workflows/npm-worklets-publish.yml'
+      - '.github/workflows/npm-package-publish.yml'
+      - '.github/actions/npm-package-publish/**'
+  merge_group:
+    branches:
+      - main
   workflow_call:
     inputs:
       publish:

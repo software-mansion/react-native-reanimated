@@ -49,7 +49,7 @@ jobs:
           node-version: 22
 
       - name: Build and publish ${{ github.event.inputs.package-name }}
-        uses: software-mansion/npm-package-publish@5de7db74821779fc4c38fcbba9ca9aabad13ac03
+        uses: software-mansion/npm-package-publish@d7436e4df48e49984ad21c752956aff2d609bab4
         with:
           package-name: ${{ github.event.inputs.package-name }}
           package-json-path: ${{ github.event.inputs.package-json-path }}
