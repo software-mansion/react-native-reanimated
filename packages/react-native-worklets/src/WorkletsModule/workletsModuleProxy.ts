@@ -180,4 +180,6 @@ export interface WorkletsModuleProxy {
 
 type InternalMethods = 'loadUnpackers';
 
-export type IWorkletsModule = Omit<WorkletsModuleProxy, InternalMethods>;
+export type IWorkletsModule = Omit<WorkletsModuleProxy, InternalMethods> & {
+  toggleSlowAnimationsOnUIRuntime(): boolean;
+};
