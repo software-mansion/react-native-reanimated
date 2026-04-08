@@ -11,7 +11,9 @@ import type {
 import type { EasingFunctionFactory } from '../../Easing';
 import { BaseAnimationBuilder } from './BaseAnimationBuilder';
 
-export class ComplexAnimationBuilder extends BaseAnimationBuilder {
+export class ComplexAnimationBuilder<
+  TInitialValues = StyleProps,
+> extends BaseAnimationBuilder {
   easingV?: EasingFunction | EasingFunctionFactory;
   rotateV?: string;
   type?: AnimationFunction;
@@ -21,7 +23,7 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
   stiffnessV?: number;
   overshootClampingV?: number;
   energyThresholdV?: number;
-  initialValues?: StyleProps;
+  initialValues?: Partial<TInitialValues>;
 
   static createInstance: <T extends typeof BaseAnimationBuilder>(
     this: T
@@ -257,15 +259,15 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
    *
    * @param values - An object containing the styles to override.
    */
-  static withInitialValues<T extends typeof ComplexAnimationBuilder>(
-    this: T,
-    values: StyleProps
-  ) {
+  static withInitialValues<
+    T extends typeof ComplexAnimationBuilder,
+    TInitialValues,
+  >(this: T, values: Partial<TInitialValues>) {
     const instance = this.createInstance();
     return instance.withInitialValues(values);
   }
 
-  withInitialValues(values: StyleProps): this {
+  withInitialValues(values: Partial<TInitialValues>): this {
     this.initialValues = values;
     return this;
   }
