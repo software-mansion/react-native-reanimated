@@ -259,10 +259,14 @@ export class ComplexAnimationBuilder<
    *
    * @param values - An object containing the styles to override.
    */
-  static withInitialValues<
-    T extends typeof ComplexAnimationBuilder,
-    TInitialValues,
-  >(this: T, values: Partial<TInitialValues>) {
+  static withInitialValues<T extends typeof ComplexAnimationBuilder>(
+    this: T,
+    values: InstanceType<T> extends ComplexAnimationBuilder<
+      infer TInferredInitialValues
+    >
+      ? Partial<TInferredInitialValues>
+      : never
+  ) {
     const instance = this.createInstance();
     return instance.withInitialValues(values);
   }
