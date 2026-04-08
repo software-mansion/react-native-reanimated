@@ -30,7 +30,6 @@ using namespace worklets;
 @implementation WorkletsModule {
   AnimationFrameQueue *animationFrameQueue_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
-  BOOL slowAnimationsEnabled_;
 #ifdef WORKLETS_FETCH_PREVIEW_ENABLED
   WorkletsNetworking *workletsNetworking_;
 #endif // WORKLETS_FETCH_PREVIEW_ENABLED
@@ -120,8 +119,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(start)
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
 {
-  slowAnimationsEnabled_ = !slowAnimationsEnabled_;
-  return slowAnimationsEnabled_ ? @YES : @NO;
+  throw std::runtime_error("[Worklets] toggleSlowAnimationsOnUIRuntime is not supported on iOS.");
 }
 
 - (void)invalidate
