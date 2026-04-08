@@ -1,7 +1,5 @@
 # Reanimated release guide
 
-<!-- TODO: update -->
-
 Reanimated follows [semver](https://semver.org/) whenever applicable.
 
 1. Decide on the importance of this release and then choose a version number:
