@@ -127,6 +127,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
 #ifdef __APPLE__
       forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
+      applyCSSAnimationsNativeFunction_(platformDepMethodsHolder.applyCSSAnimationsNativeFunction),
+      removeCSSAnimationsNativeFunction_(platformDepMethodsHolder.removeCSSAnimationsNativeFunction),
 #endif
       operationsLoop_(std::make_shared<OperationsLoop>(
           uiScheduler,
@@ -472,6 +474,23 @@ void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
   auto lock = cssAnimationsRegistry_->lock();
   cssAnimationsRegistry_->remove(viewTag.asNumber());
 }
+
+#ifdef __APPLE__
+void ReanimatedModuleProxy::applyCSSAnimationsNative(
+    facebook::react::Tag viewTag,
+    jsi::Runtime &rt,
+    const jsi::Value &animations) {
+  if (applyCSSAnimationsNativeFunction_) {
+    applyCSSAnimationsNativeFunction_(viewTag, rt, animations);
+  }
+}
+
+void ReanimatedModuleProxy::removeCSSAnimationsNative(facebook::react::Tag viewTag) {
+  if (removeCSSAnimationsNativeFunction_) {
+    removeCSSAnimationsNativeFunction_(viewTag);
+  }
+}
+#endif // __APPLE__
 
 void ReanimatedModuleProxy::runCSSTransition(
     jsi::Runtime &rt,

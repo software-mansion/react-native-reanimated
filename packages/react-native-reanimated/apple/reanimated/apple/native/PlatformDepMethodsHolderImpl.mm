@@ -7,6 +7,7 @@
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 #import <reanimated/apple/native/SetGestureState.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
+#import <reanimated/apple/native/REAJSIUtils.h>
 
 #import <React/RCTComponentViewProtocol.h>
 #import <React/RCTComponentViewRegistry.h>
@@ -133,6 +134,25 @@ ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nod
   return forceScreenSnapshot;
 }
 
+ApplyCSSAnimationsNativeFunction makeApplyCSSAnimationsNativeFunction(REANodesManager *nodesManager)
+{
+  return [nodesManager](Tag viewTag, jsi::Runtime &rt, const jsi::Value &animations) {
+    id animationsObj = convertJSIValueToObjCObject(rt, animations);
+    if (![animationsObj isKindOfClass:[NSArray class]]) {
+      return;
+    }
+    NSArray *animationsArray = (NSArray *)animationsObj;
+    [nodesManager scheduleApplyCSSAnimationsForViewTag:viewTag animations:animationsArray];
+  };
+}
+
+RemoveCSSAnimationsNativeFunction makeRemoveAllCSSAnimationsNativeFunction(REANodesManager *nodesManager)
+{
+  return [nodesManager](Tag viewTag) {
+    [nodesManager scheduleRemoveAllCSSAnimationsForViewTag:viewTag];
+  };
+}
+
 PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleRegistry, REANodesManager *nodesManager)
 {
   auto requestRender = makeRequestRender(nodesManager);
@@ -159,9 +179,14 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   auto maybeFlushUIUpdatesQueueFunction = makeMaybeFlushUIUpdatesQueueFunction(nodesManager);
 
+  auto applyCSSAnimationsNativeFunction = makeApplyCSSAnimationsNativeFunction(nodesManager);
+  auto removeCSSAnimationsNativeFunction = makeRemoveAllCSSAnimationsNativeFunction(nodesManager);
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       forceScreenSnapshotFunction,
+      applyCSSAnimationsNativeFunction,
+      removeCSSAnimationsNativeFunction,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,
