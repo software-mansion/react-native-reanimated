@@ -13,9 +13,8 @@ This repository contains two main packages:
 
 ## Nightly CI state
 
-[![NPM Reanimated publish nightly](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish.yml)
-[![NPM Worklets publish nightly](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish.yml)
-
+[![NPM Reanimated publish [Nightly]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish.yml)
+[![NPM Worklets publish [Nightly]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish.yml)
 [![Reanimated + Worklets compatibility check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-worklets-compatibility-check.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-worklets-compatibility-check.yml)
 [![Lint clang-tidy [Nightly]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml)
 [![Reanimated compatibility check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-compatibility-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-compatibility-check-nightly.yml)
@@ -41,8 +40,8 @@ If your app still runs on the old architecture, please consider adopting the New
 
 You can find more information about Reanimated and Worklets, their API references and more in their dedicated documentation pages:
 
-- Reanimated — <https://docs.swmansion.com/react-native-reanimated/>
-- Worklets — <https://docs.swmansion.com/react-native-worklets/>
+- Reanimated — [https://docs.swmansion.com/react-native-reanimated/](https://docs.swmansion.com/react-native-reanimated/)
+- Worklets — [https://docs.swmansion.com/react-native-worklets/](https://docs.swmansion.com/react-native-worklets/)
 
 ## Examples
 
