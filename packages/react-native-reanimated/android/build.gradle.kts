@@ -17,10 +17,9 @@ buildscript {
 }
 
 plugins {
+    id("com.android.library")
     id("maven-publish")
 }
-
-apply(plugin = "com.android.library")
 
 fun safeExtGet(prop: String, fallback: Any?): Any? =
     if (rootProject.extensions.extraProperties.has(prop)) rootProject.extensions.extraProperties.get(prop) else fallback
@@ -35,7 +34,9 @@ fun safeAppExtGet(prop: String, fallback: Any?): Any? {
 
 fun isNewArchitectureEnabled(): Boolean {
     // In React Native 0.82+, users can no longer opt-out of the New Architecture.
-    if (getReactNativeMinorVersion() >= 82) return true
+    if (getReactNativeMinorVersion() >= 82) {
+        return true
+    }
 
     // In older versions, to opt-in for the New Architecture, you can either:
     // - Set `newArchEnabled` to true inside the `gradle.properties` file
@@ -46,7 +47,9 @@ fun isNewArchitectureEnabled(): Boolean {
 
 fun resolveReactNativeDirectory(): File {
     val reactNativeLocation = safeAppExtGet("REACT_NATIVE_NODE_MODULES_DIR", null) as String?
-    if (reactNativeLocation != null) return file(reactNativeLocation)
+    if (reactNativeLocation != null) {
+        return file(reactNativeLocation)
+    }
 
     // Fallback to node resolver for custom directory structures like monorepos.
     val reactNativePackage = file(
@@ -55,7 +58,9 @@ fun resolveReactNativeDirectory(): File {
             commandLine("node", "--print", "require.resolve('react-native/package.json')")
         }.standardOutput.asText.get().trim()
     )
-    if (reactNativePackage.exists()) return reactNativePackage.parentFile
+    if (reactNativePackage.exists()) {
+        return reactNativePackage.parentFile
+    }
 
     throw GradleException(
         "[Reanimated] Unable to resolve react-native location in node_modules. You should set project extension property (in `app/build.gradle`) named `REACT_NATIVE_NODE_MODULES_DIR` with the path to react-native in node_modules."
@@ -160,7 +165,7 @@ if (project == rootProject) {
     apply(plugin = "org.jetbrains.kotlin.android")
 }
 
-configure<com.android.build.gradle.LibraryExtension> {
+android {
     compileSdk = safeExtGet("compileSdkVersion", 36) as Int
 
     namespace = "com.swmansion.reanimated"
@@ -262,7 +267,9 @@ configure<com.android.build.gradle.LibraryExtension> {
         val isExampleApp = IS_REANIMATED_EXAMPLE_APP
         val pkgDir = packageDir
         doLast {
-            if (!isExampleApp) return@doLast
+            if (!isExampleApp) {
+                return@doLast
+            }
             try {
                 val abiField = compileTask.javaClass.getDeclaredField("abi").also { it.isAccessible = true }
                 val abi = abiField.get(compileTask) ?: return@doLast
@@ -286,7 +293,7 @@ if (project != rootProject) {
     }
 }
 
-extensions.configure<com.android.build.api.variant.LibraryAndroidComponentsExtension> {
+androidComponents {
     onVariants(selector().withBuildType("debug")) {
         it.packaging.jniLibs.keepDebugSymbols.add("**/**/*.so")
     }

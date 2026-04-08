@@ -19,7 +19,9 @@ tasks.configureEach {
 afterEvaluate {
     val abis = reactNativeArchitectures()
     rootProject.allprojects.forEach { proj ->
-        if (proj === rootProject) return@forEach
+        if (proj === rootProject) {
+            return@forEach
+        }
 
         val dependsOnThisLib = proj.configurations.any { config ->
             config.dependencies.any { dep ->
@@ -37,8 +39,8 @@ afterEvaluate {
         // See this condition: https://cs.android.com/android-studio/platform/tools/base/+/mirror-goog-studio-main:build-system/gradle-core/src/main/java/com/android/build/gradle/tasks/ExternalNativeJsonGenerator.kt;l=207-219?q=createPrefabBuildSystemGlue
         val cxxDir = File(proj.projectDir, ".cxx")
         if (!cxxDir.exists()) return@forEach
-        cxxDir.listFiles { f -> f.isDirectory }?.forEach { variantDir ->
-            val randomDirs = variantDir.listFiles { f -> f.isDirectory }
+        cxxDir.listFiles { dir -> dir.isDirectory }?.forEach { variantDir ->
+            val randomDirs = variantDir.listFiles { dir -> dir.isDirectory }
             abis.forEach { abi ->
                 randomDirs?.forEach { randomDir ->
                     val prefabFile = File(randomDir, "$abi/prefab_config.json")
