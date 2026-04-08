@@ -6,7 +6,10 @@ import type {
   IEntryExitAnimationBuilder,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
-import { ComplexAnimationBuilder } from '../animationBuilder';
+import {
+  ComplexAnimationBuilder,
+  pickTransformInitialValue,
+} from '../animationBuilder';
 
 /**
  * Roll from left animation. You can modify the behavior by chaining methods
@@ -18,7 +21,12 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#roll
  */
 export class RollInLeft
-  extends ComplexAnimationBuilder<{ transform: [TranslateX, Rotate] }>
+  extends ComplexAnimationBuilder<{
+    translateX: TranslateX['translateX'];
+    rotate: Rotate['rotate'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [TranslateX, Rotate];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'RollInLeft';
@@ -47,10 +55,23 @@ export class RollInLeft
         },
         initialValues: {
           transform: [
-            { translateX: -values.windowWidth },
-            { rotate: '-180deg' },
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                0,
+                -values.windowWidth
+              ),
+            },
+            {
+              rotate: pickTransformInitialValue(
+                initialValues,
+                'rotate',
+                1,
+                '-180deg'
+              ),
+            },
           ],
-          ...initialValues,
         },
         callback,
       };
@@ -68,7 +89,12 @@ export class RollInLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#roll
  */
 export class RollInRight
-  extends ComplexAnimationBuilder<{ transform: [TranslateX, Rotate] }>
+  extends ComplexAnimationBuilder<{
+    translateX: TranslateX['translateX'];
+    rotate: Rotate['rotate'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [TranslateX, Rotate];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'RollInRight';
@@ -96,8 +122,24 @@ export class RollInRight
           ],
         },
         initialValues: {
-          transform: [{ translateX: values.windowWidth }, { rotate: '180deg' }],
-          ...initialValues,
+          transform: [
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                0,
+                values.windowWidth
+              ),
+            },
+            {
+              rotate: pickTransformInitialValue(
+                initialValues,
+                'rotate',
+                1,
+                '180deg'
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -115,7 +157,12 @@ export class RollInRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#roll
  */
 export class RollOutLeft
-  extends ComplexAnimationBuilder<{ transform: [TranslateX, Rotate] }>
+  extends ComplexAnimationBuilder<{
+    translateX: TranslateX['translateX'];
+    rotate: Rotate['rotate'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [TranslateX, Rotate];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'RollOutLeft';
@@ -148,8 +195,24 @@ export class RollOutLeft
           ],
         },
         initialValues: {
-          transform: [{ translateX: 0 }, { rotate: '0deg' }],
-          ...initialValues,
+          transform: [
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                0,
+                0
+              ),
+            },
+            {
+              rotate: pickTransformInitialValue(
+                initialValues,
+                'rotate',
+                1,
+                '0deg'
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -167,7 +230,12 @@ export class RollOutLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#roll
  */
 export class RollOutRight
-  extends ComplexAnimationBuilder<{ transform: [TranslateX, Rotate] }>
+  extends ComplexAnimationBuilder<{
+    translateX: TranslateX['translateX'];
+    rotate: Rotate['rotate'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [TranslateX, Rotate];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'RollOutRight';
@@ -200,8 +268,24 @@ export class RollOutRight
           ],
         },
         initialValues: {
-          transform: [{ translateX: 0 }, { rotate: '0deg' }],
-          ...initialValues,
+          transform: [
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                0,
+                0
+              ),
+            },
+            {
+              rotate: pickTransformInitialValue(
+                initialValues,
+                'rotate',
+                1,
+                '0deg'
+              ),
+            },
+          ],
         },
         callback,
       };

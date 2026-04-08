@@ -8,7 +8,10 @@ import type {
   IExitAnimationBuilder,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
-import { ComplexAnimationBuilder } from '../animationBuilder';
+import {
+  ComplexAnimationBuilder,
+  pickTransformInitialValue,
+} from '../animationBuilder';
 
 /**
  * Rotate to bottom from left edge. You can modify the behavior by chaining
@@ -22,7 +25,11 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
 export class RotateInDownLeft
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [Rotate, TranslateX, TranslateY];
+    rotate: Rotate['rotate'];
+    translateX: TranslateX['translateX'];
+    translateY: TranslateY['translateY'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Rotate, TranslateX, TranslateY];
   }>
   implements IEntryAnimationBuilder
 {
@@ -53,13 +60,33 @@ export class RotateInDownLeft
           ],
         },
         initialValues: {
-          opacity: 0,
+          opacity: initialValues?.opacity ?? 0,
           transform: [
-            { rotate: '-90deg' },
-            { translateX: values.targetWidth / 2 - values.targetHeight / 2 },
-            { translateY: -(values.targetWidth / 2 - values.targetHeight / 2) },
+            {
+              rotate: pickTransformInitialValue(
+                initialValues,
+                'rotate',
+                0,
+                '-90deg'
+              ),
+            },
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                1,
+                values.targetWidth / 2 - values.targetHeight / 2
+              ),
+            },
+            {
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                2,
+                -(values.targetWidth / 2 - values.targetHeight / 2)
+              ),
+            },
           ],
-          ...initialValues,
         },
         callback,
       };
@@ -79,7 +106,11 @@ export class RotateInDownLeft
 export class RotateInDownRight
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [Rotate, TranslateX, TranslateY];
+    rotate: Rotate['rotate'];
+    translateX: TranslateX['translateX'];
+    translateY: TranslateY['translateY'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Rotate, TranslateX, TranslateY];
   }>
   implements IEntryAnimationBuilder
 {
@@ -110,13 +141,33 @@ export class RotateInDownRight
           ],
         },
         initialValues: {
-          opacity: 0,
+          opacity: initialValues?.opacity ?? 0,
           transform: [
-            { rotate: '90deg' },
-            { translateX: -(values.targetWidth / 2 - values.targetHeight / 2) },
-            { translateY: -(values.targetWidth / 2 - values.targetHeight / 2) },
+            {
+              rotate: pickTransformInitialValue(
+                initialValues,
+                'rotate',
+                0,
+                '90deg'
+              ),
+            },
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                1,
+                -(values.targetWidth / 2 - values.targetHeight / 2)
+              ),
+            },
+            {
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                2,
+                -(values.targetWidth / 2 - values.targetHeight / 2)
+              ),
+            },
           ],
-          ...initialValues,
         },
         callback,
       };
@@ -136,7 +187,11 @@ export class RotateInDownRight
 export class RotateInUpLeft
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [Rotate, TranslateX, TranslateY];
+    rotate: Rotate['rotate'];
+    translateX: TranslateX['translateX'];
+    translateY: TranslateY['translateY'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Rotate, TranslateX, TranslateY];
   }>
   implements IEntryAnimationBuilder
 {
@@ -167,13 +222,33 @@ export class RotateInUpLeft
           ],
         },
         initialValues: {
-          opacity: 0,
+          opacity: initialValues?.opacity ?? 0,
           transform: [
-            { rotate: '90deg' },
-            { translateX: values.targetWidth / 2 - values.targetHeight / 2 },
-            { translateY: values.targetWidth / 2 - values.targetHeight / 2 },
+            {
+              rotate: pickTransformInitialValue(
+                initialValues,
+                'rotate',
+                0,
+                '90deg'
+              ),
+            },
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                1,
+                values.targetWidth / 2 - values.targetHeight / 2
+              ),
+            },
+            {
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                2,
+                values.targetWidth / 2 - values.targetHeight / 2
+              ),
+            },
           ],
-          ...initialValues,
         },
         callback,
       };
@@ -193,7 +268,11 @@ export class RotateInUpLeft
 export class RotateInUpRight
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [Rotate, TranslateX, TranslateY];
+    rotate: Rotate['rotate'];
+    translateX: TranslateX['translateX'];
+    translateY: TranslateY['translateY'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Rotate, TranslateX, TranslateY];
   }>
   implements IEntryAnimationBuilder
 {
@@ -224,13 +303,33 @@ export class RotateInUpRight
           ],
         },
         initialValues: {
-          opacity: 0,
+          opacity: initialValues?.opacity ?? 0,
           transform: [
-            { rotate: '-90deg' },
-            { translateX: -(values.targetWidth / 2 - values.targetHeight / 2) },
-            { translateY: values.targetWidth / 2 - values.targetHeight / 2 },
+            {
+              rotate: pickTransformInitialValue(
+                initialValues,
+                'rotate',
+                0,
+                '-90deg'
+              ),
+            },
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                1,
+                -(values.targetWidth / 2 - values.targetHeight / 2)
+              ),
+            },
+            {
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                2,
+                values.targetWidth / 2 - values.targetHeight / 2
+              ),
+            },
           ],
-          ...initialValues,
         },
         callback,
       };
@@ -250,7 +349,11 @@ export class RotateInUpRight
 export class RotateOutDownLeft
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [Rotate, TranslateX, TranslateY];
+    rotate: Rotate['rotate'];
+    translateX: TranslateX['translateX'];
+    translateY: TranslateY['translateY'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Rotate, TranslateX, TranslateY];
   }>
   implements IExitAnimationBuilder
 {
@@ -297,9 +400,33 @@ export class RotateOutDownLeft
           ],
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: [
+            {
+              rotate: pickTransformInitialValue(
+                initialValues,
+                'rotate',
+                0,
+                '0deg'
+              ),
+            },
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                1,
+                0
+              ),
+            },
+            {
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                2,
+                0
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -319,7 +446,11 @@ export class RotateOutDownLeft
 export class RotateOutDownRight
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [Rotate, TranslateX, TranslateY];
+    rotate: Rotate['rotate'];
+    translateX: TranslateX['translateX'];
+    translateY: TranslateY['translateY'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Rotate, TranslateX, TranslateY];
   }>
   implements IExitAnimationBuilder
 {
@@ -366,9 +497,33 @@ export class RotateOutDownRight
           ],
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: [
+            {
+              rotate: pickTransformInitialValue(
+                initialValues,
+                'rotate',
+                0,
+                '0deg'
+              ),
+            },
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                1,
+                0
+              ),
+            },
+            {
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                2,
+                0
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -388,7 +543,11 @@ export class RotateOutDownRight
 export class RotateOutUpLeft
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [Rotate, TranslateX, TranslateY];
+    rotate: Rotate['rotate'];
+    translateX: TranslateX['translateX'];
+    translateY: TranslateY['translateY'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Rotate, TranslateX, TranslateY];
   }>
   implements IExitAnimationBuilder
 {
@@ -435,9 +594,33 @@ export class RotateOutUpLeft
           ],
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: [
+            {
+              rotate: pickTransformInitialValue(
+                initialValues,
+                'rotate',
+                0,
+                '0deg'
+              ),
+            },
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                1,
+                0
+              ),
+            },
+            {
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                2,
+                0
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -457,7 +640,11 @@ export class RotateOutUpLeft
 export class RotateOutUpRight
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [Rotate, TranslateX, TranslateY];
+    rotate: Rotate['rotate'];
+    translateX: TranslateX['translateX'];
+    translateY: TranslateY['translateY'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Rotate, TranslateX, TranslateY];
   }>
   implements IExitAnimationBuilder
 {
@@ -504,9 +691,33 @@ export class RotateOutUpRight
           ],
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: [
+            {
+              rotate: pickTransformInitialValue(
+                initialValues,
+                'rotate',
+                0,
+                '0deg'
+              ),
+            },
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                1,
+                0
+              ),
+            },
+            {
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                2,
+                0
+              ),
+            },
+          ],
         },
         callback,
       };

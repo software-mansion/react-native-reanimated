@@ -7,7 +7,10 @@ import type {
   IEntryExitAnimationBuilder,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
-import { ComplexAnimationBuilder } from '../animationBuilder';
+import {
+  ComplexAnimationBuilder,
+  pickTransformInitialValue,
+} from '../animationBuilder';
 
 /**
  * Bounce entering animation. You can modify the behavior by chaining methods
@@ -19,7 +22,11 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceIn
-  extends ComplexAnimationBuilder<{ transform: [Scale] }>
+  extends ComplexAnimationBuilder<{
+    scale: Scale['scale'];
+    /** @deprecated Pass `scale` as a top-level property instead. */
+    transform?: [Scale];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceIn';
@@ -64,8 +71,11 @@ export class BounceIn
           ],
         },
         initialValues: {
-          transform: [{ scale: 0 }],
-          ...initialValues,
+          transform: [
+            {
+              scale: pickTransformInitialValue(initialValues, 'scale', 0, 0),
+            },
+          ],
         },
         callback,
       };
@@ -83,7 +93,11 @@ export class BounceIn
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceInDown
-  extends ComplexAnimationBuilder<{ transform: [TranslateY] }>
+  extends ComplexAnimationBuilder<{
+    translateY: TranslateY['translateY'];
+    /** @deprecated Pass `translateY` as a top-level property instead. */
+    transform?: [TranslateY];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceInDown';
@@ -130,10 +144,14 @@ export class BounceInDown
         initialValues: {
           transform: [
             {
-              translateY: values.windowHeight,
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                0,
+                values.windowHeight
+              ),
             },
           ],
-          ...initialValues,
         },
         callback,
       };
@@ -151,7 +169,11 @@ export class BounceInDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceInUp
-  extends ComplexAnimationBuilder<{ transform: [TranslateY] }>
+  extends ComplexAnimationBuilder<{
+    translateY: TranslateY['translateY'];
+    /** @deprecated Pass `translateY` as a top-level property instead. */
+    transform?: [TranslateY];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceInUp';
@@ -196,8 +218,16 @@ export class BounceInUp
           ],
         },
         initialValues: {
-          transform: [{ translateY: -values.windowHeight }],
-          ...initialValues,
+          transform: [
+            {
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                0,
+                -values.windowHeight
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -215,7 +245,11 @@ export class BounceInUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceInLeft
-  extends ComplexAnimationBuilder<{ transform: [TranslateX] }>
+  extends ComplexAnimationBuilder<{
+    translateX: TranslateX['translateX'];
+    /** @deprecated Pass `translateX` as a top-level property instead. */
+    transform?: [TranslateX];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceInLeft';
@@ -260,8 +294,16 @@ export class BounceInLeft
           ],
         },
         initialValues: {
-          transform: [{ translateX: -values.windowWidth }],
-          ...initialValues,
+          transform: [
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                0,
+                -values.windowWidth
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -279,7 +321,11 @@ export class BounceInLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceInRight
-  extends ComplexAnimationBuilder<{ transform: [TranslateX] }>
+  extends ComplexAnimationBuilder<{
+    translateX: TranslateX['translateX'];
+    /** @deprecated Pass `translateX` as a top-level property instead. */
+    transform?: [TranslateX];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceInRight';
@@ -324,8 +370,16 @@ export class BounceInRight
           ],
         },
         initialValues: {
-          transform: [{ translateX: values.windowWidth }],
-          ...initialValues,
+          transform: [
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                0,
+                values.windowWidth
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -343,7 +397,11 @@ export class BounceInRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceOut
-  extends ComplexAnimationBuilder<{ transform: [Scale] }>
+  extends ComplexAnimationBuilder<{
+    scale: Scale['scale'];
+    /** @deprecated Pass `scale` as a top-level property instead. */
+    transform?: [Scale];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceOut';
@@ -388,8 +446,11 @@ export class BounceOut
           ],
         },
         initialValues: {
-          transform: [{ scale: 1 }],
-          ...initialValues,
+          transform: [
+            {
+              scale: pickTransformInitialValue(initialValues, 'scale', 0, 1),
+            },
+          ],
         },
         callback,
       };
@@ -407,7 +468,11 @@ export class BounceOut
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceOutDown
-  extends ComplexAnimationBuilder<{ transform: [TranslateY] }>
+  extends ComplexAnimationBuilder<{
+    translateY: TranslateY['translateY'];
+    /** @deprecated Pass `translateY` as a top-level property instead. */
+    transform?: [TranslateY];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceOutDown';
@@ -454,8 +519,16 @@ export class BounceOutDown
           ],
         },
         initialValues: {
-          transform: [{ translateY: 0 }],
-          ...initialValues,
+          transform: [
+            {
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                0,
+                0
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -473,7 +546,11 @@ export class BounceOutDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceOutUp
-  extends ComplexAnimationBuilder<{ transform: [TranslateY] }>
+  extends ComplexAnimationBuilder<{
+    translateY: TranslateY['translateY'];
+    /** @deprecated Pass `translateY` as a top-level property instead. */
+    transform?: [TranslateY];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceOutUp';
@@ -520,8 +597,16 @@ export class BounceOutUp
           ],
         },
         initialValues: {
-          transform: [{ translateY: 0 }],
-          ...initialValues,
+          transform: [
+            {
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                0,
+                0
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -539,7 +624,11 @@ export class BounceOutUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceOutLeft
-  extends ComplexAnimationBuilder<{ transform: [TranslateX] }>
+  extends ComplexAnimationBuilder<{
+    translateX: TranslateX['translateX'];
+    /** @deprecated Pass `translateX` as a top-level property instead. */
+    transform?: [TranslateX];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceOutLeft';
@@ -586,8 +675,16 @@ export class BounceOutLeft
           ],
         },
         initialValues: {
-          transform: [{ translateX: 0 }],
-          ...initialValues,
+          transform: [
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                0,
+                0
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -605,7 +702,11 @@ export class BounceOutLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceOutRight
-  extends ComplexAnimationBuilder<{ transform: [TranslateX] }>
+  extends ComplexAnimationBuilder<{
+    translateX: TranslateX['translateX'];
+    /** @deprecated Pass `translateX` as a top-level property instead. */
+    transform?: [TranslateX];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceOutRight';
@@ -652,8 +753,16 @@ export class BounceOutRight
           ],
         },
         initialValues: {
-          transform: [{ translateX: 0 }],
-          ...initialValues,
+          transform: [
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                0,
+                0
+              ),
+            },
+          ],
         },
         callback,
       };

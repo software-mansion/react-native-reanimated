@@ -5,7 +5,10 @@ import type {
   IEntryExitAnimationBuilder,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
-import { ComplexAnimationBuilder } from '../animationBuilder';
+import {
+  ComplexAnimationBuilder,
+  pickTransformInitialValue,
+} from '../animationBuilder';
 
 /**
  * Fade in animation. You can modify the behavior by chaining methods like
@@ -21,6 +24,7 @@ export class FadeIn
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeIn';
+
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
@@ -33,7 +37,6 @@ export class FadeIn
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const delay = this.getDelay();
-
     return () => {
       'worklet';
       return {
@@ -41,8 +44,7 @@ export class FadeIn
           opacity: delayFunction(delay, animation(1, config)),
         },
         initialValues: {
-          opacity: 0,
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 0,
         },
         callback,
       };
@@ -62,7 +64,9 @@ export class FadeIn
 export class FadeInRight
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [TranslateX];
+    translateX: TranslateX['translateX'];
+    /** @deprecated Pass `translateX` as a top-level property instead. */
+    transform?: [TranslateX];
   }>
   implements IEntryExitAnimationBuilder
 {
@@ -80,7 +84,6 @@ export class FadeInRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const delay = this.getDelay();
-
     return () => {
       'worklet';
       return {
@@ -91,9 +94,17 @@ export class FadeInRight
           ],
         },
         initialValues: {
-          opacity: 0,
-          transform: [{ translateX: 25 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 0,
+          transform: [
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                0,
+                25
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -113,7 +124,9 @@ export class FadeInRight
 export class FadeInLeft
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [TranslateX];
+    translateX: TranslateX['translateX'];
+    /** @deprecated Pass `translateX` as a top-level property instead. */
+    transform?: [TranslateX];
   }>
   implements IEntryExitAnimationBuilder
 {
@@ -131,7 +144,6 @@ export class FadeInLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const delay = this.getDelay();
-
     return () => {
       'worklet';
       return {
@@ -142,9 +154,17 @@ export class FadeInLeft
           ],
         },
         initialValues: {
-          opacity: 0,
-          transform: [{ translateX: -25 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 0,
+          transform: [
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                0,
+                -25
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -164,7 +184,9 @@ export class FadeInLeft
 export class FadeInUp
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [TranslateY];
+    translateY: TranslateY['translateY'];
+    /** @deprecated Pass `translateY` as a top-level property instead. */
+    transform?: [TranslateY];
   }>
   implements IEntryExitAnimationBuilder
 {
@@ -182,7 +204,6 @@ export class FadeInUp
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const delay = this.getDelay();
-
     return () => {
       'worklet';
       return {
@@ -193,9 +214,17 @@ export class FadeInUp
           ],
         },
         initialValues: {
-          opacity: 0,
-          transform: [{ translateY: -25 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 0,
+          transform: [
+            {
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                0,
+                -25
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -215,7 +244,9 @@ export class FadeInUp
 export class FadeInDown
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [TranslateY];
+    translateY: TranslateY['translateY'];
+    /** @deprecated Pass `translateY` as a top-level property instead. */
+    transform?: [TranslateY];
   }>
   implements IEntryExitAnimationBuilder
 {
@@ -233,7 +264,6 @@ export class FadeInDown
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const delay = this.getDelay();
-
     return () => {
       'worklet';
       return {
@@ -244,9 +274,17 @@ export class FadeInDown
           ],
         },
         initialValues: {
-          opacity: 0,
-          transform: [{ translateY: 25 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 0,
+          transform: [
+            {
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                0,
+                25
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -281,7 +319,6 @@ export class FadeOut
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const delay = this.getDelay();
-
     return () => {
       'worklet';
       return {
@@ -289,8 +326,7 @@ export class FadeOut
           opacity: delayFunction(delay, animation(0, config)),
         },
         initialValues: {
-          opacity: 1,
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
         },
         callback,
       };
@@ -310,7 +346,9 @@ export class FadeOut
 export class FadeOutRight
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [TranslateX];
+    translateX: TranslateX['translateX'];
+    /** @deprecated Pass `translateX` as a top-level property instead. */
+    transform?: [TranslateX];
   }>
   implements IEntryExitAnimationBuilder
 {
@@ -328,7 +366,6 @@ export class FadeOutRight
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const delay = this.getDelay();
-
     return () => {
       'worklet';
       return {
@@ -339,9 +376,17 @@ export class FadeOutRight
           ],
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ translateX: 0 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: [
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                0,
+                0
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -361,7 +406,9 @@ export class FadeOutRight
 export class FadeOutLeft
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [TranslateX];
+    translateX: TranslateX['translateX'];
+    /** @deprecated Pass `translateX` as a top-level property instead. */
+    transform?: [TranslateX];
   }>
   implements IEntryExitAnimationBuilder
 {
@@ -379,7 +426,6 @@ export class FadeOutLeft
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const delay = this.getDelay();
-
     return () => {
       'worklet';
       return {
@@ -390,9 +436,17 @@ export class FadeOutLeft
           ],
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ translateX: 0 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: [
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                0,
+                0
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -411,7 +465,9 @@ export class FadeOutLeft
 export class FadeOutUp
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [TranslateY];
+    translateY: TranslateY['translateY'];
+    /** @deprecated Pass `translateY` as a top-level property instead. */
+    transform?: [TranslateY];
   }>
   implements IEntryExitAnimationBuilder
 {
@@ -429,7 +485,6 @@ export class FadeOutUp
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const delay = this.getDelay();
-
     return () => {
       'worklet';
       return {
@@ -440,9 +495,17 @@ export class FadeOutUp
           ],
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ translateY: 0 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: [
+            {
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                0,
+                0
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -462,7 +525,9 @@ export class FadeOutUp
 export class FadeOutDown
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [TranslateY];
+    translateY: TranslateY['translateY'];
+    /** @deprecated Pass `translateY` as a top-level property instead. */
+    transform?: [TranslateY];
   }>
   implements IEntryExitAnimationBuilder
 {
@@ -480,7 +545,6 @@ export class FadeOutDown
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const delay = this.getDelay();
-
     return () => {
       'worklet';
       return {
@@ -491,9 +555,17 @@ export class FadeOutDown
           ],
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ translateY: 0 }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: [
+            {
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                0,
+                0
+              ),
+            },
+          ],
         },
         callback,
       };

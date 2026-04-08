@@ -5,7 +5,10 @@ import type {
   IEntryExitAnimationBuilder,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
-import { ComplexAnimationBuilder } from '../animationBuilder';
+import {
+  ComplexAnimationBuilder,
+  pickTransformInitialValue,
+} from '../animationBuilder';
 
 /**
  * Entry with change in rotation, scale, and opacity. You can modify the
@@ -19,7 +22,10 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
 export class PinwheelIn
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [Scale, Rotate];
+    scale: Scale['scale'];
+    rotate: Rotate['rotate'];
+    /** @deprecated Pass `scale` and `rotate` as top-level properties instead. */
+    transform?: [Scale, Rotate];
   }>
   implements IEntryExitAnimationBuilder
 {
@@ -53,16 +59,20 @@ export class PinwheelIn
           ],
         },
         initialValues: {
-          opacity: 0,
+          opacity: initialValues?.opacity ?? 0,
           transform: [
             {
-              scale: 0,
+              scale: pickTransformInitialValue(initialValues, 'scale', 0, 0),
             },
             {
-              rotate: '5rad',
+              rotate: pickTransformInitialValue(
+                initialValues,
+                'rotate',
+                1,
+                '5rad'
+              ),
             },
           ],
-          ...initialValues,
         },
         callback,
       };
@@ -82,7 +92,10 @@ export class PinwheelIn
 export class PinwheelOut
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [Scale, Rotate];
+    scale: Scale['scale'];
+    rotate: Rotate['rotate'];
+    /** @deprecated Pass `scale` and `rotate` as top-level properties instead. */
+    transform?: [Scale, Rotate];
   }>
   implements IEntryExitAnimationBuilder
 {
@@ -116,16 +129,20 @@ export class PinwheelOut
           ],
         },
         initialValues: {
-          opacity: 1,
+          opacity: initialValues?.opacity ?? 1,
           transform: [
             {
-              scale: 1,
+              scale: pickTransformInitialValue(initialValues, 'scale', 0, 1),
             },
             {
-              rotate: '0rad',
+              rotate: pickTransformInitialValue(
+                initialValues,
+                'rotate',
+                1,
+                '0rad'
+              ),
             },
           ],
-          ...initialValues,
         },
         callback,
       };

@@ -16,7 +16,10 @@ import type {
   IExitAnimationBuilder,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
-import { ComplexAnimationBuilder } from '../animationBuilder';
+import {
+  ComplexAnimationBuilder,
+  pickTransformInitialValue,
+} from '../animationBuilder';
 
 /**
  * Rotate from top on the X axis. You can modify the behavior by chaining
@@ -29,7 +32,11 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
  */
 export class FlipInXUp
   extends ComplexAnimationBuilder<{
-    transform: [Perspective, RotateX, TranslateY];
+    perspective: Perspective['perspective'];
+    rotateX: RotateX['rotateX'];
+    translateY: TranslateY['translateY'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Perspective, RotateX, TranslateY];
   }>
   implements IEntryAnimationBuilder
 {
@@ -53,11 +60,31 @@ export class FlipInXUp
       return {
         initialValues: {
           transform: [
-            { perspective: 500 },
-            { rotateX: '90deg' },
-            { translateY: -targetValues.targetHeight },
+            {
+              perspective: pickTransformInitialValue(
+                initialValues,
+                'perspective',
+                0,
+                500
+              ),
+            },
+            {
+              rotateX: pickTransformInitialValue(
+                initialValues,
+                'rotateX',
+                1,
+                '90deg'
+              ),
+            },
+            {
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                2,
+                -targetValues.targetHeight
+              ),
+            },
           ],
-          ...initialValues,
         },
         animations: {
           transform: [
@@ -83,7 +110,11 @@ export class FlipInXUp
  */
 export class FlipInYLeft
   extends ComplexAnimationBuilder<{
-    transform: [Perspective, RotateY, TranslateX];
+    perspective: Perspective['perspective'];
+    rotateY: RotateY['rotateY'];
+    translateX: TranslateX['translateX'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Perspective, RotateY, TranslateX];
   }>
   implements IEntryAnimationBuilder
 {
@@ -107,11 +138,31 @@ export class FlipInYLeft
       return {
         initialValues: {
           transform: [
-            { perspective: 500 },
-            { rotateY: '-90deg' },
-            { translateX: -targetValues.targetWidth },
+            {
+              perspective: pickTransformInitialValue(
+                initialValues,
+                'perspective',
+                0,
+                500
+              ),
+            },
+            {
+              rotateY: pickTransformInitialValue(
+                initialValues,
+                'rotateY',
+                1,
+                '-90deg'
+              ),
+            },
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                2,
+                -targetValues.targetWidth
+              ),
+            },
           ],
-          ...initialValues,
         },
         animations: {
           transform: [
@@ -137,7 +188,11 @@ export class FlipInYLeft
  */
 export class FlipInXDown
   extends ComplexAnimationBuilder<{
-    transform: [Perspective, RotateX, TranslateY];
+    perspective: Perspective['perspective'];
+    rotateX: RotateX['rotateX'];
+    translateY: TranslateY['translateY'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Perspective, RotateX, TranslateY];
   }>
   implements IEntryAnimationBuilder
 {
@@ -161,11 +216,31 @@ export class FlipInXDown
       return {
         initialValues: {
           transform: [
-            { perspective: 500 },
-            { rotateX: '-90deg' },
-            { translateY: targetValues.targetHeight },
+            {
+              perspective: pickTransformInitialValue(
+                initialValues,
+                'perspective',
+                0,
+                500
+              ),
+            },
+            {
+              rotateX: pickTransformInitialValue(
+                initialValues,
+                'rotateX',
+                1,
+                '-90deg'
+              ),
+            },
+            {
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                2,
+                targetValues.targetHeight
+              ),
+            },
           ],
-          ...initialValues,
         },
         animations: {
           transform: [
@@ -191,7 +266,11 @@ export class FlipInXDown
  */
 export class FlipInYRight
   extends ComplexAnimationBuilder<{
-    transform: [Perspective, RotateY, TranslateX];
+    perspective: Perspective['perspective'];
+    rotateY: RotateY['rotateY'];
+    translateX: TranslateX['translateX'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Perspective, RotateY, TranslateX];
   }>
   implements IEntryAnimationBuilder
 {
@@ -215,11 +294,31 @@ export class FlipInYRight
       return {
         initialValues: {
           transform: [
-            { perspective: 500 },
-            { rotateY: '90deg' },
-            { translateX: targetValues.targetWidth },
+            {
+              perspective: pickTransformInitialValue(
+                initialValues,
+                'perspective',
+                0,
+                500
+              ),
+            },
+            {
+              rotateY: pickTransformInitialValue(
+                initialValues,
+                'rotateY',
+                1,
+                '90deg'
+              ),
+            },
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                2,
+                targetValues.targetWidth
+              ),
+            },
           ],
-          ...initialValues,
         },
         animations: {
           transform: [
@@ -244,7 +343,12 @@ export class FlipInYRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipInEasyX
-  extends ComplexAnimationBuilder<{ transform: [Perspective, RotateX] }>
+  extends ComplexAnimationBuilder<{
+    perspective: Perspective['perspective'];
+    rotateX: RotateX['rotateX'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Perspective, RotateX];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FlipInEasyX';
@@ -266,8 +370,24 @@ export class FlipInEasyX
       'worklet';
       return {
         initialValues: {
-          transform: [{ perspective: 500 }, { rotateX: '90deg' }],
-          ...initialValues,
+          transform: [
+            {
+              perspective: pickTransformInitialValue(
+                initialValues,
+                'perspective',
+                0,
+                500
+              ),
+            },
+            {
+              rotateX: pickTransformInitialValue(
+                initialValues,
+                'rotateX',
+                1,
+                '90deg'
+              ),
+            },
+          ],
         },
         animations: {
           transform: [
@@ -291,7 +411,12 @@ export class FlipInEasyX
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipInEasyY
-  extends ComplexAnimationBuilder<{ transform: [Perspective, RotateY] }>
+  extends ComplexAnimationBuilder<{
+    perspective: Perspective['perspective'];
+    rotateY: RotateY['rotateY'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Perspective, RotateY];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FlipInEasyY';
@@ -313,8 +438,24 @@ export class FlipInEasyY
       'worklet';
       return {
         initialValues: {
-          transform: [{ perspective: 500 }, { rotateY: '90deg' }],
-          ...initialValues,
+          transform: [
+            {
+              perspective: pickTransformInitialValue(
+                initialValues,
+                'perspective',
+                0,
+                500
+              ),
+            },
+            {
+              rotateY: pickTransformInitialValue(
+                initialValues,
+                'rotateY',
+                1,
+                '90deg'
+              ),
+            },
+          ],
         },
         animations: {
           transform: [
@@ -339,7 +480,11 @@ export class FlipInEasyY
  */
 export class FlipOutXUp
   extends ComplexAnimationBuilder<{
-    transform: [Perspective, RotateX, TranslateY];
+    perspective: Perspective['perspective'];
+    rotateX: RotateX['rotateX'];
+    translateY: TranslateY['translateY'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Perspective, RotateX, TranslateY];
   }>
   implements IExitAnimationBuilder
 {
@@ -363,11 +508,31 @@ export class FlipOutXUp
       return {
         initialValues: {
           transform: [
-            { perspective: 500 },
-            { rotateX: '0deg' },
-            { translateY: 0 },
+            {
+              perspective: pickTransformInitialValue(
+                initialValues,
+                'perspective',
+                0,
+                500
+              ),
+            },
+            {
+              rotateX: pickTransformInitialValue(
+                initialValues,
+                'rotateX',
+                1,
+                '0deg'
+              ),
+            },
+            {
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                2,
+                0
+              ),
+            },
           ],
-          ...initialValues,
         },
         animations: {
           transform: [
@@ -398,7 +563,11 @@ export class FlipOutXUp
  */
 export class FlipOutYLeft
   extends ComplexAnimationBuilder<{
-    transform: [Perspective, RotateY, TranslateX];
+    perspective: Perspective['perspective'];
+    rotateY: RotateY['rotateY'];
+    translateX: TranslateX['translateX'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Perspective, RotateY, TranslateX];
   }>
   implements IExitAnimationBuilder
 {
@@ -422,11 +591,31 @@ export class FlipOutYLeft
       return {
         initialValues: {
           transform: [
-            { perspective: 500 },
-            { rotateY: '0deg' },
-            { translateX: 0 },
+            {
+              perspective: pickTransformInitialValue(
+                initialValues,
+                'perspective',
+                0,
+                500
+              ),
+            },
+            {
+              rotateY: pickTransformInitialValue(
+                initialValues,
+                'rotateY',
+                1,
+                '0deg'
+              ),
+            },
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                2,
+                0
+              ),
+            },
           ],
-          ...initialValues,
         },
         animations: {
           transform: [
@@ -457,7 +646,11 @@ export class FlipOutYLeft
  */
 export class FlipOutXDown
   extends ComplexAnimationBuilder<{
-    transform: [Perspective, RotateX, TranslateY];
+    perspective: Perspective['perspective'];
+    rotateX: RotateX['rotateX'];
+    translateY: TranslateY['translateY'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Perspective, RotateX, TranslateY];
   }>
   implements IExitAnimationBuilder
 {
@@ -481,11 +674,31 @@ export class FlipOutXDown
       return {
         initialValues: {
           transform: [
-            { perspective: 500 },
-            { rotateX: '0deg' },
-            { translateY: 0 },
+            {
+              perspective: pickTransformInitialValue(
+                initialValues,
+                'perspective',
+                0,
+                500
+              ),
+            },
+            {
+              rotateX: pickTransformInitialValue(
+                initialValues,
+                'rotateX',
+                1,
+                '0deg'
+              ),
+            },
+            {
+              translateY: pickTransformInitialValue(
+                initialValues,
+                'translateY',
+                2,
+                0
+              ),
+            },
           ],
-          ...initialValues,
         },
         animations: {
           transform: [
@@ -516,7 +729,11 @@ export class FlipOutXDown
  */
 export class FlipOutYRight
   extends ComplexAnimationBuilder<{
-    transform: [Perspective, RotateY, TranslateX];
+    perspective: Perspective['perspective'];
+    rotateY: RotateY['rotateY'];
+    translateX: TranslateX['translateX'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Perspective, RotateY, TranslateX];
   }>
   implements IExitAnimationBuilder
 {
@@ -540,11 +757,31 @@ export class FlipOutYRight
       return {
         initialValues: {
           transform: [
-            { perspective: 500 },
-            { rotateY: '0deg' },
-            { translateX: 0 },
+            {
+              perspective: pickTransformInitialValue(
+                initialValues,
+                'perspective',
+                0,
+                500
+              ),
+            },
+            {
+              rotateY: pickTransformInitialValue(
+                initialValues,
+                'rotateY',
+                1,
+                '0deg'
+              ),
+            },
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                2,
+                0
+              ),
+            },
           ],
-          ...initialValues,
         },
         animations: {
           transform: [
@@ -574,7 +811,12 @@ export class FlipOutYRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipOutEasyX
-  extends ComplexAnimationBuilder<{ transform: [Perspective, RotateX] }>
+  extends ComplexAnimationBuilder<{
+    perspective: Perspective['perspective'];
+    rotateX: RotateX['rotateX'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Perspective, RotateX];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FlipOutEasyX';
@@ -596,8 +838,24 @@ export class FlipOutEasyX
       'worklet';
       return {
         initialValues: {
-          transform: [{ perspective: 500 }, { rotateX: '0deg' }],
-          ...initialValues,
+          transform: [
+            {
+              perspective: pickTransformInitialValue(
+                initialValues,
+                'perspective',
+                0,
+                500
+              ),
+            },
+            {
+              rotateX: pickTransformInitialValue(
+                initialValues,
+                'rotateX',
+                1,
+                '0deg'
+              ),
+            },
+          ],
         },
         animations: {
           transform: [
@@ -621,7 +879,12 @@ export class FlipOutEasyX
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipOutEasyY
-  extends ComplexAnimationBuilder<{ transform: [Perspective, RotateY] }>
+  extends ComplexAnimationBuilder<{
+    perspective: Perspective['perspective'];
+    rotateY: RotateY['rotateY'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [Perspective, RotateY];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FlipOutEasyY';
@@ -643,8 +906,24 @@ export class FlipOutEasyY
       'worklet';
       return {
         initialValues: {
-          transform: [{ perspective: 500 }, { rotateY: '0deg' }],
-          ...initialValues,
+          transform: [
+            {
+              perspective: pickTransformInitialValue(
+                initialValues,
+                'perspective',
+                0,
+                500
+              ),
+            },
+            {
+              rotateY: pickTransformInitialValue(
+                initialValues,
+                'rotateY',
+                1,
+                '0deg'
+              ),
+            },
+          ],
         },
         animations: {
           transform: [

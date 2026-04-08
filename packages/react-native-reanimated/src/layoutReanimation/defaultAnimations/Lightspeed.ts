@@ -7,7 +7,10 @@ import type {
   IEntryExitAnimationBuilder,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
-import { ComplexAnimationBuilder } from '../animationBuilder';
+import {
+  ComplexAnimationBuilder,
+  pickTransformInitialValue,
+} from '../animationBuilder';
 /**
  * Entry from right animation with change in skew and opacity. You can modify
  * the behavior by chaining methods like `.springify()` or `.duration(500)`.
@@ -20,7 +23,10 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
 export class LightSpeedInRight
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [TranslateX, SkewX];
+    translateX: TranslateX['translateX'];
+    skewX: SkewX['skewX'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [TranslateX, SkewX];
   }>
   implements IEntryExitAnimationBuilder
 {
@@ -65,9 +71,25 @@ export class LightSpeedInRight
           ],
         },
         initialValues: {
-          opacity: 0,
-          transform: [{ translateX: values.windowWidth }, { skewX: '-45deg' }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 0,
+          transform: [
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                0,
+                values.windowWidth
+              ),
+            },
+            {
+              skewX: pickTransformInitialValue(
+                initialValues,
+                'skewX',
+                1,
+                '-45deg'
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -87,7 +109,10 @@ export class LightSpeedInRight
 export class LightSpeedInLeft
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [TranslateX, SkewX];
+    translateX: TranslateX['translateX'];
+    skewX: SkewX['skewX'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [TranslateX, SkewX];
   }>
   implements IEntryExitAnimationBuilder
 {
@@ -132,9 +157,25 @@ export class LightSpeedInLeft
           ],
         },
         initialValues: {
-          opacity: 0,
-          transform: [{ translateX: -values.windowWidth }, { skewX: '45deg' }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 0,
+          transform: [
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                0,
+                -values.windowWidth
+              ),
+            },
+            {
+              skewX: pickTransformInitialValue(
+                initialValues,
+                'skewX',
+                1,
+                '45deg'
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -154,7 +195,10 @@ export class LightSpeedInLeft
 export class LightSpeedOutRight
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [TranslateX, SkewX];
+    translateX: TranslateX['translateX'];
+    skewX: SkewX['skewX'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [TranslateX, SkewX];
   }>
   implements IEntryExitAnimationBuilder
 {
@@ -191,9 +235,25 @@ export class LightSpeedOutRight
           ],
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ translateX: 0 }, { skewX: '0deg' }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: [
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                0,
+                0
+              ),
+            },
+            {
+              skewX: pickTransformInitialValue(
+                initialValues,
+                'skewX',
+                1,
+                '0deg'
+              ),
+            },
+          ],
         },
         callback,
       };
@@ -213,7 +273,10 @@ export class LightSpeedOutRight
 export class LightSpeedOutLeft
   extends ComplexAnimationBuilder<{
     opacity: number;
-    transform: [TranslateX, SkewX];
+    translateX: TranslateX['translateX'];
+    skewX: SkewX['skewX'];
+    /** @deprecated Use flat top-level props instead. */
+    transform?: [TranslateX, SkewX];
   }>
   implements IEntryExitAnimationBuilder
 {
@@ -250,9 +313,25 @@ export class LightSpeedOutLeft
           ],
         },
         initialValues: {
-          opacity: 1,
-          transform: [{ translateX: 0 }, { skewX: '0deg' }],
-          ...initialValues,
+          opacity: initialValues?.opacity ?? 1,
+          transform: [
+            {
+              translateX: pickTransformInitialValue(
+                initialValues,
+                'translateX',
+                0,
+                0
+              ),
+            },
+            {
+              skewX: pickTransformInitialValue(
+                initialValues,
+                'skewX',
+                1,
+                '0deg'
+              ),
+            },
+          ],
         },
         callback,
       };
