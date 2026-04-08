@@ -48,14 +48,14 @@ jobs:
           cache: 'yarn'
           node-version: 22
 
-      - name: Build and publish ${{ github.event.inputs.package-name }}
+      - name: Build and publish ${{ inputs.package-name }}
         uses: software-mansion/npm-package-publish@d7436e4df48e49984ad21c752956aff2d609bab4
         with:
-          package-name: ${{ github.event.inputs.package-name }}
-          package-json-path: ${{ github.event.inputs.package-json-path }}
-          release-type: ${{ github.event.inputs.release-type || 'nightly' }}
-          version: ${{ github.event.inputs.version }}
-          npm-tag: ${{ github.event.inputs.npm-tag }}
-          dry-run: ${{ !github.event.inputs.publish }}
+          package-name: ${{ inputs.package-name }}
+          package-json-path: ${{ inputs.package-json-path }}
+          release-type: ${{ inputs.release-type || 'nightly' }}
+          version: ${{ inputs.version }}
+          npm-tag: ${{ inputs.npm-tag }}
+          dry-run: ${{ !inputs.publish }}
           version-getter-script: 'scripts/resolve-release-version.js'
           perform-git-operations: 'false'
