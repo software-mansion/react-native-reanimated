@@ -27,6 +27,10 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
   const filteredStyle: AnyRecord = {};
 
   for (const [prop, value] of Object.entries(style)) {
+    if (value === undefined) {
+      continue;
+    }
+
     if (isAnimationProp(prop)) {
       // TODO - add support for animation shorthand
       animationProperties[prop] = value;
