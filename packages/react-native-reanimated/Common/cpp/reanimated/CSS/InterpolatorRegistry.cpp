@@ -47,6 +47,8 @@ namespace reanimated::css {
 
 namespace {
 
+using ComponentInterpolatorsMap = std::unordered_map<std::string, InterpolatorFactoriesRecord>;
+
 // Private implementation details
 const std::array<uint8_t, 4> BLACK = {0, 0, 0, 255};
 const std::array<uint8_t, 4> TRANSPARENT = {0, 0, 0, 0};
@@ -435,12 +437,6 @@ const InterpolatorFactoriesRecord &getComponentInterpolators(const std::string &
   // Use default style interpolators as a fallback for unknown components
   // (e.g. ExpoImage, which is not a RN component but should support RN Image styles)
   return STYLE_INTERPOLATORS;
-}
-
-void registerComponentInterpolators(
-    const std::string &nativeComponentName,
-    const InterpolatorFactoriesRecord &interpolators) {
-  registry[nativeComponentName] = interpolators;
 }
 
 } // namespace reanimated::css

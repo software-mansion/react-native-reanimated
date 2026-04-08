@@ -15,12 +15,9 @@ void RawProgressProvider::setDelay(double delay) {
 
 void RawProgressProvider::resetProgress() {
   rawProgress_.reset();
-  previousRawProgress_.reset();
 }
 
 void RawProgressProvider::update(const double timestamp) {
-  previousRawProgress_ = rawProgress_;
-
   if (timestamp - creationTimestamp_ < delay_) {
     rawProgress_.reset();
     return;
