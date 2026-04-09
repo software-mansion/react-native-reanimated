@@ -10,7 +10,6 @@
   ],
   "scripts": {
     "build": ":",
-    "build:unpackers": ":",
     "circular-dependency-check": ":",
     "find-unused-code:js": ":",
     "format": ":",
@@ -30,6 +29,7 @@
     "lint:clang-tidy": ":",
     "lint:js": ":",
     "lint:plugin": ":",
+    "set-version": "node scripts/set-version.js",
     "test": ":",
     "type:check": ":",
     "type:check:src:native": ":",
