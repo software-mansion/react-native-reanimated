@@ -1,13 +1,5 @@
 'use strict';
 import type {
-  PerspectiveTransform,
-  RotateXTransform,
-  RotateYTransform,
-  TranslateXTransform,
-  TranslateYTransform,
-} from 'react-native';
-
-import type {
   AnimationConfigFunction,
   EntryAnimationsValues,
   EntryExitAnimationFunction,
@@ -57,9 +49,9 @@ export class FlipInXUp
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
-    const builderTargetValues = this.targetValues;
+    const targetValues = this.targetValues;
 
-    return (layoutValues) => {
+    return (values) => {
       'worklet';
       return {
         initialValues: {
@@ -67,7 +59,7 @@ export class FlipInXUp
             [
               { perspective: 500 },
               { rotateX: '90deg' },
-              { translateY: -layoutValues.targetHeight },
+              { translateY: -values.targetHeight },
             ],
             initialValues
           ),
@@ -75,7 +67,7 @@ export class FlipInXUp
         animations: {
           transform: animateTransformToValues(
             [{ perspective: 500 }, { rotateX: '0deg' }, { translateY: 0 }],
-            builderTargetValues,
+            targetValues,
             animationAndConfig,
             delayFunction,
             delay
@@ -116,9 +108,9 @@ export class FlipInYLeft
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
-    const builderTargetValues = this.targetValues;
+    const targetValues = this.targetValues;
 
-    return (layoutValues) => {
+    return (values) => {
       'worklet';
       return {
         initialValues: {
@@ -126,7 +118,7 @@ export class FlipInYLeft
             [
               { perspective: 500 },
               { rotateY: '-90deg' },
-              { translateX: -layoutValues.targetWidth },
+              { translateX: -values.targetWidth },
             ],
             initialValues
           ),
@@ -134,7 +126,7 @@ export class FlipInYLeft
         animations: {
           transform: animateTransformToValues(
             [{ perspective: 500 }, { rotateY: '0deg' }, { translateX: 0 }],
-            builderTargetValues,
+            targetValues,
             animationAndConfig,
             delayFunction,
             delay
@@ -175,9 +167,9 @@ export class FlipInXDown
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
-    const builderTargetValues = this.targetValues;
+    const targetValues = this.targetValues;
 
-    return (layoutValues) => {
+    return (values) => {
       'worklet';
       return {
         initialValues: {
@@ -185,7 +177,7 @@ export class FlipInXDown
             [
               { perspective: 500 },
               { rotateX: '-90deg' },
-              { translateY: layoutValues.targetHeight },
+              { translateY: values.targetHeight },
             ],
             initialValues
           ),
@@ -193,7 +185,7 @@ export class FlipInXDown
         animations: {
           transform: animateTransformToValues(
             [{ perspective: 500 }, { rotateX: '0deg' }, { translateY: 0 }],
-            builderTargetValues,
+            targetValues,
             animationAndConfig,
             delayFunction,
             delay
@@ -234,9 +226,9 @@ export class FlipInYRight
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
-    const builderTargetValues = this.targetValues;
+    const targetValues = this.targetValues;
 
-    return (layoutValues) => {
+    return (values) => {
       'worklet';
       return {
         initialValues: {
@@ -244,7 +236,7 @@ export class FlipInYRight
             [
               { perspective: 500 },
               { rotateY: '90deg' },
-              { translateX: layoutValues.targetWidth },
+              { translateX: values.targetWidth },
             ],
             initialValues
           ),
@@ -252,7 +244,7 @@ export class FlipInYRight
         animations: {
           transform: animateTransformToValues(
             [{ perspective: 500 }, { rotateY: '0deg' }, { translateX: 0 }],
-            builderTargetValues,
+            targetValues,
             animationAndConfig,
             delayFunction,
             delay
@@ -576,9 +568,9 @@ export class FlipOutYRight
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
-    const builderTargetValues = this.targetValues;
+    const targetValues = this.targetValues;
 
-    return (layoutValues) => {
+    return (values) => {
       'worklet';
       return {
         initialValues: {
@@ -592,9 +584,9 @@ export class FlipOutYRight
             [
               { perspective: 500 },
               { rotateY: '90deg' },
-              { translateX: layoutValues.currentWidth },
+              { translateX: values.currentWidth },
             ],
-            builderTargetValues,
+            targetValues,
             animationAndConfig,
             delayFunction,
             delay
