@@ -11,7 +11,6 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
-
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
@@ -700,6 +699,16 @@ AnimationMutations ReanimatedModuleProxy::collectMutationsForBackend() {
 
       auto lock = updatesRegistryManager_->lock();
 
+      // With USE_ANIMATION_BACKEND, `requestRender_` only calls
+      // `startBackendIfNeeded()` and does not run frame callbacks such as
+      // `cssLoopCallback`, so `shouldUpdateCssAnimations_` is often left false.
+      // CSS registries can still report pending work (e.g. `animationsToRevertMap_`
+      // cleared inside `update()`). If we skip `update()`, `hasUpdates()` stays
+      // true and `stopBackendIfIdle` never stops the backend.
+      if (cssTransitionsRegistry_->hasUpdates() || cssAnimationsRegistry_->hasUpdates()) {
+        shouldUpdateCssAnimations_ = true;
+      }
+
       if (shouldUpdateCssAnimations_) {
         currentCssTimestamp_ = getAnimationTimestamp_();
         auto lock = cssTransitionsRegistry_->lock();
@@ -723,8 +732,7 @@ AnimationMutations ReanimatedModuleProxy::collectMutationsForBackend() {
 
     AnimationMutations mutations;
 
-    for (auto &[node, animatedProp] : animatedPropsBatch) {
-      bool hasLayoutUpdates = animatedPropsContainLayoutProps(animatedProp);
+    for (auto &[node, animatedProp, hasLayoutUpdates] : animatedPropsBatch) {
       mutations.batch.push_back(
           AnimationMutation{node->getTag(), node->getFamilyShared(), std::move(animatedProp), hasLayoutUpdates});
     }
@@ -822,7 +830,8 @@ AnimationMutations ReanimatedModuleProxy::collectNonLayoutMutationsForBackend() 
     {
       auto lock = updatesRegistryManager_->lock();
       auto propsLock = animatedPropsRegistry_->lock();
-      animatedPropsRegistry_->flushNonLayoutUpdates(mutations);
+      jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
+      animatedPropsRegistry_->flushNonLayoutUpdates(uiRuntime, mutations);
     }
     return mutations;
   }
@@ -835,6 +844,11 @@ void ReanimatedModuleProxy::startBackendIfNeeded() {
       return;
     }
     withAnimationBackend([this](const std::shared_ptr<AnimationBackend> &backend) {
+      // Defensively remove any stale registration before adding a new one.
+      // If stopBackendIfIdle's withAnimationBackend ever silently skips (expired
+      // weak_ptr), the old callback stays in backend->callbacks while
+      // isAnimationRunning_ is false, leading to duplicate firings.
+      backend->stop(callbackId_);
       callbackId_ = backend->start([this](AnimationTimestamp ts) { return grandCallback(ts); });
       isAnimationRunning_ = true;
     });
@@ -858,12 +872,20 @@ AnimationMutations ReanimatedModuleProxy::grandCallback(AnimationTimestamp times
     ReanimatedSystraceSection s("ReanimatedModuleProxy::grandCallback");
 
     AnimationMutations mutations;
+
     switch (grandCallbackState_) {
       case GrandCallbackState::AnimationLoop: {
         if (pendingAnimationFrameCallback_) {
           auto cb = std::move(pendingAnimationFrameCallback_);
           pendingAnimationFrameCallback_ = nullptr;
-          cb(timestamp.count());
+          // Use the platform clock rather than the backend-supplied timestamp.
+          // NativeAnimatedNodesManager::trigger() (NativeAnimatedNodesManager.cpp:518)
+          // fires on every touch event with a steady_clock timestamp that has a
+          // ~495 M ms offset from CACurrentMediaTime on some iOS simulators, which
+          // makes withTiming's `runtime = now - startTime` explode.
+          // Phase 2 will replace trigger() with pushAnimationMutations() which
+          // receives the platform clock directly — see animation-backend-timestamp-phase2.md.
+          cb(getAnimationTimestamp_());
         }
         mutations = collectMutationsForBackend();
         break;
