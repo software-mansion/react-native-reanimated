@@ -7,18 +7,21 @@ import type {
 } from '../../commonTypes';
 import type { TransformArray, TransformsConfig } from './types';
 
-function resolveTransformSlot<const TTransforms extends TransformArray>(
-  entry: TTransforms[number],
+export function resolveTransformSlot<
+  const TTransforms extends TransformArray,
+  TEntry extends TTransforms[number],
+>(
+  entry: TEntry,
   index: number,
   values: Partial<TransformsConfig<TTransforms>> | undefined
-): [string, unknown] {
+): { key: keyof TEntry; value: TEntry[keyof TEntry] } {
   'worklet';
   const [key, defaultValue] = Object.entries(entry)[0];
   const value =
     values?.[key as keyof typeof values] ??
     (values?.transform?.[index] as UnknownRecord | undefined)?.[key] ??
     defaultValue;
-  return [key, value];
+  return { key: key as keyof TEntry, value };
 }
 
 export function pickTransformValues<const TTransforms extends TransformArray>(
@@ -27,7 +30,7 @@ export function pickTransformValues<const TTransforms extends TransformArray>(
 ): TTransforms {
   'worklet';
   return defaults.map((entry, index) => {
-    const [key, value] = resolveTransformSlot(entry, index, values);
+    const { key, value } = resolveTransformSlot(entry, index, values);
     return { [key]: value };
   }) as unknown as TTransforms;
 }
@@ -43,7 +46,7 @@ export function animateTransformToValues<
 ): TTransforms {
   'worklet';
   return defaults.map((entry, index) => {
-    const [key, value] = resolveTransformSlot(entry, index, values);
+    const { key, value } = resolveTransformSlot(entry, index, values);
     return {
       [key]: delayFunction(delay, animation(value, config)),
     };

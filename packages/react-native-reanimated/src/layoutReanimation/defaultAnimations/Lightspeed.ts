@@ -8,7 +8,11 @@ import type {
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 import type { SkewX, TransformsConfig, TranslateX } from './types';
-import { animateTransformToValues, pickTransformValues } from './utils';
+import {
+  animateTransformToValues,
+  pickTransformValues,
+  resolveTransformSlot,
+} from './utils';
 /**
  * Entry from right animation with change in skew and opacity. You can modify
  * the behavior by chaining methods like `.springify()` or `.duration(500)`.
@@ -34,12 +38,24 @@ export class LightSpeedInRight
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const duration = this.getDuration();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const targetValues = this.targetValues;
+
+    const { value: targetTranslateX } = resolveTransformSlot(
+      { translateX: 0 },
+      0,
+      targetValues
+    );
+    const { value: targetSkewX } = resolveTransformSlot(
+      { skewX: '0deg' },
+      1,
+      targetValues
+    );
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -53,7 +69,7 @@ export class LightSpeedInRight
             {
               translateX: delayFunction(
                 delay,
-                animation(targetValues?.translateX ?? 0, {
+                animation(targetTranslateX, {
                   ...config,
                   duration: duration * 0.7,
                 })
@@ -65,7 +81,7 @@ export class LightSpeedInRight
                 withSequence(
                   withTiming('10deg', { duration: duration * 0.7 }),
                   withTiming('-5deg', { duration: duration * 0.15 }),
-                  withTiming(targetValues?.skewX ?? '0deg', {
+                  withTiming(targetSkewX, {
                     duration: duration * 0.15,
                   })
                 )
@@ -111,12 +127,24 @@ export class LightSpeedInLeft
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const duration = this.getDuration();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const targetValues = this.targetValues;
+
+    const { value: targetTranslateX } = resolveTransformSlot(
+      { translateX: 0 },
+      0,
+      targetValues
+    );
+    const { value: targetSkewX } = resolveTransformSlot(
+      { skewX: '0deg' },
+      1,
+      targetValues
+    );
 
     return (values: EntryExitAnimationsValues) => {
       'worklet';
@@ -130,7 +158,7 @@ export class LightSpeedInLeft
             {
               translateX: delayFunction(
                 delay,
-                animation(targetValues?.translateX ?? 0, {
+                animation(targetTranslateX, {
                   ...config,
                   duration: duration * 0.7,
                 })
@@ -142,7 +170,7 @@ export class LightSpeedInLeft
                 withSequence(
                   withTiming('-10deg', { duration: duration * 0.7 }),
                   withTiming('5deg', { duration: duration * 0.15 }),
-                  withTiming(targetValues?.skewX ?? '0deg', {
+                  withTiming(targetSkewX, {
                     duration: duration * 0.15,
                   })
                 )
