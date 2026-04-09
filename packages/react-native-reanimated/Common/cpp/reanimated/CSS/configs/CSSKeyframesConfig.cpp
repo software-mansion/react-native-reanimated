@@ -7,12 +7,12 @@
 
 namespace reanimated::css {
 
-std::shared_ptr<AnimationStyleInterpolator> createStyleInterpolator(
+std::shared_ptr<AnimationStyleInterpolatorFactory> createStyleInterpolatorFactory(
     jsi::Runtime &rt,
     const jsi::Object &config,
     const std::string &nativeComponentName,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
-  return std::make_shared<AnimationStyleInterpolator>(
+  return std::make_shared<AnimationStyleInterpolatorFactory>(
       rt, config.getProperty(rt, "propKeyframes"), nativeComponentName, viewStylesRepository);
 }
 
@@ -41,7 +41,7 @@ CSSKeyframesConfig parseCSSAnimationKeyframesConfig(
   const auto nativeComponentName = splitCompoundComponentName(compoundComponentName).first;
 
   return {
-      createStyleInterpolator(rt, configObj, nativeComponentName, viewStylesRepository),
+      createStyleInterpolatorFactory(rt, configObj, nativeComponentName, viewStylesRepository),
       getKeyframeTimingFunctions(rt, configObj)};
 }
 

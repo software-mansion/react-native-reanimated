@@ -21,8 +21,8 @@ class CSSKeyframesRegistry {
  private:
   // Maps compound component name to CSSKeyframesConfig. The same keyframes object may be
   // interpolated differently per component (different interpolators) even when the
-  // keyframes look identical. CSSKeyframesConfig holds a component-specific
-  // styleInterpolator, so configs must be stored separately per component.
+  // keyframes look identical. CSSKeyframesConfig holds component-specific
+  // style interpolator factory data, so configs must be stored separately per component.
   // Compound component name combines native and JS component names (caller must build it).
   using KeyframesByCompoundComponentName = std::unordered_map<std::string, CSSKeyframesConfig>;
 

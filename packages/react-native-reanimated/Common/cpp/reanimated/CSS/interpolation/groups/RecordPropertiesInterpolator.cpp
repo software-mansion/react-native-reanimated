@@ -65,6 +65,16 @@ bool RecordPropertiesInterpolator::updateKeyframes(
   return areAllPropsReversed;
 }
 
+void RecordPropertiesInterpolator::removeInterpolator(const std::string &propertyName) {
+  interpolators_.erase(propertyName);
+}
+
+void RecordPropertiesInterpolator::setInterpolator(
+    const std::string &propertyName,
+    const std::shared_ptr<PropertyInterpolator> &interpolator) {
+  interpolators_[propertyName] = interpolator;
+}
+
 folly::dynamic RecordPropertiesInterpolator::mapInterpolators(
     const std::function<folly::dynamic(PropertyInterpolator &)> &callback) const {
   folly::dynamic result = folly::dynamic::object;

@@ -13,7 +13,7 @@ CSSAnimation::CSSAnimation(
     const double timestamp)
     : name_(std::move(animationName)),
       fillMode_(settings.fillMode),
-      styleInterpolator_(cssKeyframesConfig.styleInterpolator),
+      styleInterpolator_(cssKeyframesConfig.styleInterpolatorFactory->create()),
       progressProvider_(std::make_shared<AnimationProgressProvider>(
           timestamp,
           settings.duration,
