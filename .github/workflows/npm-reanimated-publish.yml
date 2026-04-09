@@ -1,4 +1,7 @@
 name: npm reanimated publish
+permissions:
+  contents: read
+  id-token: write
 on:
   push:
     branches:

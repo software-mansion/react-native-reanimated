@@ -1,4 +1,7 @@
 name: npm worklets publish
+permissions:
+  contents: read
+  id-token: write
 on:
   push:
     branches:
