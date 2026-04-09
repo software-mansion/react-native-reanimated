@@ -1,16 +1,14 @@
 'use strict';
 import { withSequence, withTiming } from '../../animation';
-import type { SkewX, TranslateX } from '../../common';
 import type {
   EntryExitAnimationFunction,
   EntryExitAnimationsValues,
   IEntryExitAnimationBuilder,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
-import {
-  ComplexAnimationBuilder,
-  pickTransformInitialValue,
-} from '../animationBuilder';
+import { ComplexAnimationBuilder } from '../animationBuilder';
+import type { SkewX, TransformsConfig, TranslateX } from './types';
+import { pickTransformValues } from './utils';
 /**
  * Entry from right animation with change in skew and opacity. You can modify
  * the behavior by chaining methods like `.springify()` or `.duration(500)`.
@@ -21,13 +19,9 @@ import {
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#lightspeed
  */
 export class LightSpeedInRight
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    translateX: TranslateX['translateX'];
-    skewX: SkewX['skewX'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [TranslateX, SkewX];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[TranslateX, SkewX]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'LightSpeedInRight';
@@ -72,24 +66,10 @@ export class LightSpeedInRight
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
-          transform: [
-            {
-              translateX: pickTransformInitialValue(
-                initialValues,
-                'translateX',
-                0,
-                values.windowWidth
-              ),
-            },
-            {
-              skewX: pickTransformInitialValue(
-                initialValues,
-                'skewX',
-                1,
-                '-45deg'
-              ),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ translateX: values.windowWidth }, { skewX: '-45deg' }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -107,13 +87,9 @@ export class LightSpeedInRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#lightspeed
  */
 export class LightSpeedInLeft
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    translateX: TranslateX['translateX'];
-    skewX: SkewX['skewX'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [TranslateX, SkewX];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[TranslateX, SkewX]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'LightSpeedInLeft';
@@ -158,24 +134,10 @@ export class LightSpeedInLeft
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
-          transform: [
-            {
-              translateX: pickTransformInitialValue(
-                initialValues,
-                'translateX',
-                0,
-                -values.windowWidth
-              ),
-            },
-            {
-              skewX: pickTransformInitialValue(
-                initialValues,
-                'skewX',
-                1,
-                '45deg'
-              ),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ translateX: -values.windowWidth }, { skewX: '45deg' }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -193,13 +155,9 @@ export class LightSpeedInLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#lightspeed
  */
 export class LightSpeedOutRight
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    translateX: TranslateX['translateX'];
-    skewX: SkewX['skewX'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [TranslateX, SkewX];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[TranslateX, SkewX]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'LightSpeedOutRight';
@@ -236,24 +194,10 @@ export class LightSpeedOutRight
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
-          transform: [
-            {
-              translateX: pickTransformInitialValue(
-                initialValues,
-                'translateX',
-                0,
-                0
-              ),
-            },
-            {
-              skewX: pickTransformInitialValue(
-                initialValues,
-                'skewX',
-                1,
-                '0deg'
-              ),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ translateX: 0 }, { skewX: '0deg' }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -271,13 +215,9 @@ export class LightSpeedOutRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#lightspeed
  */
 export class LightSpeedOutLeft
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    translateX: TranslateX['translateX'];
-    skewX: SkewX['skewX'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [TranslateX, SkewX];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[TranslateX, SkewX]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'LightSpeedOutLeft';
@@ -314,24 +254,10 @@ export class LightSpeedOutLeft
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
-          transform: [
-            {
-              translateX: pickTransformInitialValue(
-                initialValues,
-                'translateX',
-                0,
-                0
-              ),
-            },
-            {
-              skewX: pickTransformInitialValue(
-                initialValues,
-                'skewX',
-                1,
-                '0deg'
-              ),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ translateX: 0 }, { skewX: '0deg' }],
+            initialValues
+          ),
         },
         callback,
       };

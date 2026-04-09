@@ -1,5 +1,4 @@
 'use strict';
-import type { Rotate, TranslateX, TranslateY } from '../../common';
 import type {
   AnimationConfigFunction,
   EntryAnimationsValues,
@@ -8,10 +7,9 @@ import type {
   IExitAnimationBuilder,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
-import {
-  ComplexAnimationBuilder,
-  pickTransformInitialValue,
-} from '../animationBuilder';
+import { ComplexAnimationBuilder } from '../animationBuilder';
+import type { Rotate, TransformsConfig, TranslateX, TranslateY } from './types';
+import { pickTransformValues } from './utils';
 
 /**
  * Rotate to bottom from left edge. You can modify the behavior by chaining
@@ -23,14 +21,9 @@ import {
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateInDownLeft
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    rotate: Rotate['rotate'];
-    translateX: TranslateX['translateX'];
-    translateY: TranslateY['translateY'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [Rotate, TranslateX, TranslateY];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Rotate, TranslateX, TranslateY]>
+  >
   implements IEntryAnimationBuilder
 {
   static presetName = 'RotateInDownLeft';
@@ -61,32 +54,16 @@ export class RotateInDownLeft
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
-          transform: [
-            {
-              rotate: pickTransformInitialValue(
-                initialValues,
-                'rotate',
-                0,
-                '-90deg'
-              ),
-            },
-            {
-              translateX: pickTransformInitialValue(
-                initialValues,
-                'translateX',
-                1,
-                values.targetWidth / 2 - values.targetHeight / 2
-              ),
-            },
-            {
-              translateY: pickTransformInitialValue(
-                initialValues,
-                'translateY',
-                2,
-                -(values.targetWidth / 2 - values.targetHeight / 2)
-              ),
-            },
-          ],
+          transform: pickTransformValues(
+            [
+              { rotate: '-90deg' },
+              { translateX: values.targetWidth / 2 - values.targetHeight / 2 },
+              {
+                translateY: -(values.targetWidth / 2 - values.targetHeight / 2),
+              },
+            ],
+            initialValues
+          ),
         },
         callback,
       };
@@ -104,14 +81,9 @@ export class RotateInDownLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateInDownRight
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    rotate: Rotate['rotate'];
-    translateX: TranslateX['translateX'];
-    translateY: TranslateY['translateY'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [Rotate, TranslateX, TranslateY];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Rotate, TranslateX, TranslateY]>
+  >
   implements IEntryAnimationBuilder
 {
   static presetName = 'RotateInDownRight';
@@ -142,32 +114,18 @@ export class RotateInDownRight
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
-          transform: [
-            {
-              rotate: pickTransformInitialValue(
-                initialValues,
-                'rotate',
-                0,
-                '90deg'
-              ),
-            },
-            {
-              translateX: pickTransformInitialValue(
-                initialValues,
-                'translateX',
-                1,
-                -(values.targetWidth / 2 - values.targetHeight / 2)
-              ),
-            },
-            {
-              translateY: pickTransformInitialValue(
-                initialValues,
-                'translateY',
-                2,
-                -(values.targetWidth / 2 - values.targetHeight / 2)
-              ),
-            },
-          ],
+          transform: pickTransformValues(
+            [
+              { rotate: '90deg' },
+              {
+                translateX: -(values.targetWidth / 2 - values.targetHeight / 2),
+              },
+              {
+                translateY: -(values.targetWidth / 2 - values.targetHeight / 2),
+              },
+            ],
+            initialValues
+          ),
         },
         callback,
       };
@@ -185,14 +143,9 @@ export class RotateInDownRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateInUpLeft
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    rotate: Rotate['rotate'];
-    translateX: TranslateX['translateX'];
-    translateY: TranslateY['translateY'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [Rotate, TranslateX, TranslateY];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Rotate, TranslateX, TranslateY]>
+  >
   implements IEntryAnimationBuilder
 {
   static presetName = 'RotateInUpLeft';
@@ -223,32 +176,14 @@ export class RotateInUpLeft
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
-          transform: [
-            {
-              rotate: pickTransformInitialValue(
-                initialValues,
-                'rotate',
-                0,
-                '90deg'
-              ),
-            },
-            {
-              translateX: pickTransformInitialValue(
-                initialValues,
-                'translateX',
-                1,
-                values.targetWidth / 2 - values.targetHeight / 2
-              ),
-            },
-            {
-              translateY: pickTransformInitialValue(
-                initialValues,
-                'translateY',
-                2,
-                values.targetWidth / 2 - values.targetHeight / 2
-              ),
-            },
-          ],
+          transform: pickTransformValues(
+            [
+              { rotate: '90deg' },
+              { translateX: values.targetWidth / 2 - values.targetHeight / 2 },
+              { translateY: values.targetWidth / 2 - values.targetHeight / 2 },
+            ],
+            initialValues
+          ),
         },
         callback,
       };
@@ -266,14 +201,9 @@ export class RotateInUpLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateInUpRight
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    rotate: Rotate['rotate'];
-    translateX: TranslateX['translateX'];
-    translateY: TranslateY['translateY'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [Rotate, TranslateX, TranslateY];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Rotate, TranslateX, TranslateY]>
+  >
   implements IEntryAnimationBuilder
 {
   static presetName = 'RotateInUpRight';
@@ -304,32 +234,16 @@ export class RotateInUpRight
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
-          transform: [
-            {
-              rotate: pickTransformInitialValue(
-                initialValues,
-                'rotate',
-                0,
-                '-90deg'
-              ),
-            },
-            {
-              translateX: pickTransformInitialValue(
-                initialValues,
-                'translateX',
-                1,
-                -(values.targetWidth / 2 - values.targetHeight / 2)
-              ),
-            },
-            {
-              translateY: pickTransformInitialValue(
-                initialValues,
-                'translateY',
-                2,
-                values.targetWidth / 2 - values.targetHeight / 2
-              ),
-            },
-          ],
+          transform: pickTransformValues(
+            [
+              { rotate: '-90deg' },
+              {
+                translateX: -(values.targetWidth / 2 - values.targetHeight / 2),
+              },
+              { translateY: values.targetWidth / 2 - values.targetHeight / 2 },
+            ],
+            initialValues
+          ),
         },
         callback,
       };
@@ -347,14 +261,9 @@ export class RotateInUpRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateOutDownLeft
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    rotate: Rotate['rotate'];
-    translateX: TranslateX['translateX'];
-    translateY: TranslateY['translateY'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [Rotate, TranslateX, TranslateY];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Rotate, TranslateX, TranslateY]>
+  >
   implements IExitAnimationBuilder
 {
   static presetName = 'RotateOutDownLeft';
@@ -401,32 +310,10 @@ export class RotateOutDownLeft
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
-          transform: [
-            {
-              rotate: pickTransformInitialValue(
-                initialValues,
-                'rotate',
-                0,
-                '0deg'
-              ),
-            },
-            {
-              translateX: pickTransformInitialValue(
-                initialValues,
-                'translateX',
-                1,
-                0
-              ),
-            },
-            {
-              translateY: pickTransformInitialValue(
-                initialValues,
-                'translateY',
-                2,
-                0
-              ),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -444,14 +331,9 @@ export class RotateOutDownLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateOutDownRight
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    rotate: Rotate['rotate'];
-    translateX: TranslateX['translateX'];
-    translateY: TranslateY['translateY'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [Rotate, TranslateX, TranslateY];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Rotate, TranslateX, TranslateY]>
+  >
   implements IExitAnimationBuilder
 {
   static presetName = 'RotateOutDownRight';
@@ -498,32 +380,10 @@ export class RotateOutDownRight
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
-          transform: [
-            {
-              rotate: pickTransformInitialValue(
-                initialValues,
-                'rotate',
-                0,
-                '0deg'
-              ),
-            },
-            {
-              translateX: pickTransformInitialValue(
-                initialValues,
-                'translateX',
-                1,
-                0
-              ),
-            },
-            {
-              translateY: pickTransformInitialValue(
-                initialValues,
-                'translateY',
-                2,
-                0
-              ),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -541,14 +401,9 @@ export class RotateOutDownRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateOutUpLeft
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    rotate: Rotate['rotate'];
-    translateX: TranslateX['translateX'];
-    translateY: TranslateY['translateY'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [Rotate, TranslateX, TranslateY];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Rotate, TranslateX, TranslateY]>
+  >
   implements IExitAnimationBuilder
 {
   static presetName = 'RotateOutUpLeft';
@@ -595,32 +450,10 @@ export class RotateOutUpLeft
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
-          transform: [
-            {
-              rotate: pickTransformInitialValue(
-                initialValues,
-                'rotate',
-                0,
-                '0deg'
-              ),
-            },
-            {
-              translateX: pickTransformInitialValue(
-                initialValues,
-                'translateX',
-                1,
-                0
-              ),
-            },
-            {
-              translateY: pickTransformInitialValue(
-                initialValues,
-                'translateY',
-                2,
-                0
-              ),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -638,14 +471,9 @@ export class RotateOutUpLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateOutUpRight
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    rotate: Rotate['rotate'];
-    translateX: TranslateX['translateX'];
-    translateY: TranslateY['translateY'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [Rotate, TranslateX, TranslateY];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Rotate, TranslateX, TranslateY]>
+  >
   implements IExitAnimationBuilder
 {
   static presetName = 'RotateOutUpRight';
@@ -692,32 +520,10 @@ export class RotateOutUpRight
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
-          transform: [
-            {
-              rotate: pickTransformInitialValue(
-                initialValues,
-                'rotate',
-                0,
-                '0deg'
-              ),
-            },
-            {
-              translateX: pickTransformInitialValue(
-                initialValues,
-                'translateX',
-                1,
-                0
-              ),
-            },
-            {
-              translateY: pickTransformInitialValue(
-                initialValues,
-                'translateY',
-                2,
-                0
-              ),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }],
+            initialValues
+          ),
         },
         callback,
       };

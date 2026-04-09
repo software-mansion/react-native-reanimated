@@ -1,5 +1,4 @@
 'use strict';
-import type { Rotate, Scale, TranslateX, TranslateY } from '../../common';
 import type {
   AnimationConfigFunction,
   EntryAnimationsValues,
@@ -11,10 +10,15 @@ import type {
   IExitAnimationBuilder,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
-import {
-  ComplexAnimationBuilder,
-  pickTransformInitialValue,
-} from '../animationBuilder';
+import { ComplexAnimationBuilder } from '../animationBuilder';
+import type {
+  Rotate,
+  Scale,
+  TransformsConfig,
+  TranslateX,
+  TranslateY,
+} from './types';
+import { pickTransformValues } from './utils';
 
 /**
  * Scale from center animation. You can modify the behavior by chaining methods
@@ -26,11 +30,7 @@ import {
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomIn
-  extends ComplexAnimationBuilder<{
-    scale: Scale['scale'];
-    /** @deprecated Pass `scale` as a top-level property instead. */
-    transform?: [Scale];
-  }>
+  extends ComplexAnimationBuilder<TransformsConfig<[Scale]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomIn';
@@ -55,11 +55,7 @@ export class ZoomIn
           transform: [{ scale: delayFunction(delay, animation(1, config)) }],
         },
         initialValues: {
-          transform: [
-            {
-              scale: pickTransformInitialValue(initialValues, 'scale', 0, 0),
-            },
-          ],
+          transform: pickTransformValues([{ scale: 0 }], initialValues),
         },
         callback,
       };
@@ -77,12 +73,7 @@ export class ZoomIn
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomInRotate
-  extends ComplexAnimationBuilder<{
-    scale: Scale['scale'];
-    rotate: Rotate['rotate'];
-    /** @deprecated Pass `scale` and `rotate` as top-level properties instead. */
-    transform?: [Scale, Rotate];
-  }>
+  extends ComplexAnimationBuilder<TransformsConfig<[Scale, Rotate]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomInRotate';
@@ -111,19 +102,10 @@ export class ZoomInRotate
           ],
         },
         initialValues: {
-          transform: [
-            {
-              scale: pickTransformInitialValue(initialValues, 'scale', 0, 0),
-            },
-            {
-              rotate: pickTransformInitialValue(
-                initialValues,
-                'rotate',
-                1,
-                `${rotate}rad`
-              ),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ scale: 0 }, { rotate: `${rotate}rad` }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -141,12 +123,7 @@ export class ZoomInRotate
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomInLeft
-  extends ComplexAnimationBuilder<{
-    translateX: TranslateX['translateX'];
-    scale: Scale['scale'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [TranslateX, Scale];
-  }>
+  extends ComplexAnimationBuilder<TransformsConfig<[TranslateX, Scale]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomInLeft';
@@ -174,19 +151,10 @@ export class ZoomInLeft
           ],
         },
         initialValues: {
-          transform: [
-            {
-              translateX: pickTransformInitialValue(
-                initialValues,
-                'translateX',
-                0,
-                -values.windowWidth
-              ),
-            },
-            {
-              scale: pickTransformInitialValue(initialValues, 'scale', 1, 0),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ translateX: -values.windowWidth }, { scale: 0 }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -204,12 +172,7 @@ export class ZoomInLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomInRight
-  extends ComplexAnimationBuilder<{
-    translateX: TranslateX['translateX'];
-    scale: Scale['scale'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [TranslateX, Scale];
-  }>
+  extends ComplexAnimationBuilder<TransformsConfig<[TranslateX, Scale]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomInRight';
@@ -237,19 +200,10 @@ export class ZoomInRight
           ],
         },
         initialValues: {
-          transform: [
-            {
-              translateX: pickTransformInitialValue(
-                initialValues,
-                'translateX',
-                0,
-                values.windowWidth
-              ),
-            },
-            {
-              scale: pickTransformInitialValue(initialValues, 'scale', 1, 0),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ translateX: values.windowWidth }, { scale: 0 }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -267,12 +221,7 @@ export class ZoomInRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomInUp
-  extends ComplexAnimationBuilder<{
-    translateY: TranslateY['translateY'];
-    scale: Scale['scale'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [TranslateY, Scale];
-  }>
+  extends ComplexAnimationBuilder<TransformsConfig<[TranslateY, Scale]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomInUp';
@@ -300,19 +249,10 @@ export class ZoomInUp
           ],
         },
         initialValues: {
-          transform: [
-            {
-              translateY: pickTransformInitialValue(
-                initialValues,
-                'translateY',
-                0,
-                -values.windowHeight
-              ),
-            },
-            {
-              scale: pickTransformInitialValue(initialValues, 'scale', 1, 0),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ translateY: -values.windowHeight }, { scale: 0 }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -330,12 +270,7 @@ export class ZoomInUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomInDown
-  extends ComplexAnimationBuilder<{
-    translateY: TranslateY['translateY'];
-    scale: Scale['scale'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [TranslateY, Scale];
-  }>
+  extends ComplexAnimationBuilder<TransformsConfig<[TranslateY, Scale]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomInDown';
@@ -363,19 +298,10 @@ export class ZoomInDown
           ],
         },
         initialValues: {
-          transform: [
-            {
-              translateY: pickTransformInitialValue(
-                initialValues,
-                'translateY',
-                0,
-                values.windowHeight
-              ),
-            },
-            {
-              scale: pickTransformInitialValue(initialValues, 'scale', 1, 0),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ translateY: values.windowHeight }, { scale: 0 }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -393,12 +319,7 @@ export class ZoomInDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomInEasyUp
-  extends ComplexAnimationBuilder<{
-    translateY: TranslateY['translateY'];
-    scale: Scale['scale'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [TranslateY, Scale];
-  }>
+  extends ComplexAnimationBuilder<TransformsConfig<[TranslateY, Scale]>>
   implements IEntryAnimationBuilder
 {
   static presetName = 'ZoomInEasyUp';
@@ -426,19 +347,10 @@ export class ZoomInEasyUp
           ],
         },
         initialValues: {
-          transform: [
-            {
-              translateY: pickTransformInitialValue(
-                initialValues,
-                'translateY',
-                0,
-                -values.targetHeight
-              ),
-            },
-            {
-              scale: pickTransformInitialValue(initialValues, 'scale', 1, 0),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ translateY: -values.targetHeight }, { scale: 0 }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -456,12 +368,7 @@ export class ZoomInEasyUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomInEasyDown
-  extends ComplexAnimationBuilder<{
-    translateY: TranslateY['translateY'];
-    scale: Scale['scale'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [TranslateY, Scale];
-  }>
+  extends ComplexAnimationBuilder<TransformsConfig<[TranslateY, Scale]>>
   implements IEntryAnimationBuilder
 {
   static presetName = 'ZoomInEasyDown';
@@ -489,19 +396,10 @@ export class ZoomInEasyDown
           ],
         },
         initialValues: {
-          transform: [
-            {
-              translateY: pickTransformInitialValue(
-                initialValues,
-                'translateY',
-                0,
-                values.targetHeight
-              ),
-            },
-            {
-              scale: pickTransformInitialValue(initialValues, 'scale', 1, 0),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ translateY: values.targetHeight }, { scale: 0 }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -519,11 +417,7 @@ export class ZoomInEasyDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOut
-  extends ComplexAnimationBuilder<{
-    scale: Scale['scale'];
-    /** @deprecated Pass `scale` as a top-level property instead. */
-    transform?: [Scale];
-  }>
+  extends ComplexAnimationBuilder<TransformsConfig<[Scale]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomOut';
@@ -548,11 +442,7 @@ export class ZoomOut
           transform: [{ scale: delayFunction(delay, animation(0, config)) }],
         },
         initialValues: {
-          transform: [
-            {
-              scale: pickTransformInitialValue(initialValues, 'scale', 0, 1),
-            },
-          ],
+          transform: pickTransformValues([{ scale: 1 }], initialValues),
         },
         callback,
       };
@@ -570,12 +460,7 @@ export class ZoomOut
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutRotate
-  extends ComplexAnimationBuilder<{
-    scale: Scale['scale'];
-    rotate: Rotate['rotate'];
-    /** @deprecated Pass `scale` and `rotate` as top-level properties instead. */
-    transform?: [Scale, Rotate];
-  }>
+  extends ComplexAnimationBuilder<TransformsConfig<[Scale, Rotate]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomOutRotate';
@@ -604,19 +489,10 @@ export class ZoomOutRotate
           ],
         },
         initialValues: {
-          transform: [
-            {
-              scale: pickTransformInitialValue(initialValues, 'scale', 0, 1),
-            },
-            {
-              rotate: pickTransformInitialValue(
-                initialValues,
-                'rotate',
-                1,
-                '0rad'
-              ),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ scale: 1 }, { rotate: '0rad' }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -634,12 +510,7 @@ export class ZoomOutRotate
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutLeft
-  extends ComplexAnimationBuilder<{
-    translateX: TranslateX['translateX'];
-    scale: Scale['scale'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [TranslateX, Scale];
-  }>
+  extends ComplexAnimationBuilder<TransformsConfig<[TranslateX, Scale]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomOutLeft';
@@ -672,19 +543,10 @@ export class ZoomOutLeft
           ],
         },
         initialValues: {
-          transform: [
-            {
-              translateX: pickTransformInitialValue(
-                initialValues,
-                'translateX',
-                0,
-                0
-              ),
-            },
-            {
-              scale: pickTransformInitialValue(initialValues, 'scale', 1, 1),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ translateX: 0 }, { scale: 1 }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -702,12 +564,7 @@ export class ZoomOutLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutRight
-  extends ComplexAnimationBuilder<{
-    translateX: TranslateX['translateX'];
-    scale: Scale['scale'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [TranslateX, Scale];
-  }>
+  extends ComplexAnimationBuilder<TransformsConfig<[TranslateX, Scale]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomOutRight';
@@ -740,19 +597,10 @@ export class ZoomOutRight
           ],
         },
         initialValues: {
-          transform: [
-            {
-              translateX: pickTransformInitialValue(
-                initialValues,
-                'translateX',
-                0,
-                0
-              ),
-            },
-            {
-              scale: pickTransformInitialValue(initialValues, 'scale', 1, 1),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ translateX: 0 }, { scale: 1 }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -770,12 +618,7 @@ export class ZoomOutRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutUp
-  extends ComplexAnimationBuilder<{
-    translateY: TranslateY['translateY'];
-    scale: Scale['scale'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [TranslateY, Scale];
-  }>
+  extends ComplexAnimationBuilder<TransformsConfig<[TranslateY, Scale]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomOutUp';
@@ -808,19 +651,10 @@ export class ZoomOutUp
           ],
         },
         initialValues: {
-          transform: [
-            {
-              translateY: pickTransformInitialValue(
-                initialValues,
-                'translateY',
-                0,
-                0
-              ),
-            },
-            {
-              scale: pickTransformInitialValue(initialValues, 'scale', 1, 1),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ translateY: 0 }, { scale: 1 }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -838,12 +672,7 @@ export class ZoomOutUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutDown
-  extends ComplexAnimationBuilder<{
-    translateY: TranslateY['translateY'];
-    scale: Scale['scale'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [TranslateY, Scale];
-  }>
+  extends ComplexAnimationBuilder<TransformsConfig<[TranslateY, Scale]>>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomOutDown';
@@ -876,19 +705,10 @@ export class ZoomOutDown
           ],
         },
         initialValues: {
-          transform: [
-            {
-              translateY: pickTransformInitialValue(
-                initialValues,
-                'translateY',
-                0,
-                0
-              ),
-            },
-            {
-              scale: pickTransformInitialValue(initialValues, 'scale', 1, 1),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ translateY: 0 }, { scale: 1 }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -906,12 +726,7 @@ export class ZoomOutDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutEasyUp
-  extends ComplexAnimationBuilder<{
-    translateY: TranslateY['translateY'];
-    scale: Scale['scale'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [TranslateY, Scale];
-  }>
+  extends ComplexAnimationBuilder<TransformsConfig<[TranslateY, Scale]>>
   implements IExitAnimationBuilder
 {
   static presetName = 'ZoomOutEasyUp';
@@ -944,19 +759,10 @@ export class ZoomOutEasyUp
           ],
         },
         initialValues: {
-          transform: [
-            {
-              translateY: pickTransformInitialValue(
-                initialValues,
-                'translateY',
-                0,
-                0
-              ),
-            },
-            {
-              scale: pickTransformInitialValue(initialValues, 'scale', 1, 1),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ translateY: 0 }, { scale: 1 }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -974,12 +780,7 @@ export class ZoomOutEasyUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutEasyDown
-  extends ComplexAnimationBuilder<{
-    translateY: TranslateY['translateY'];
-    scale: Scale['scale'];
-    /** @deprecated Use flat top-level props instead. */
-    transform?: [TranslateY, Scale];
-  }>
+  extends ComplexAnimationBuilder<TransformsConfig<[TranslateY, Scale]>>
   implements IExitAnimationBuilder
 {
   static presetName = 'ZoomOutEasyDown';
@@ -1012,19 +813,10 @@ export class ZoomOutEasyDown
           ],
         },
         initialValues: {
-          transform: [
-            {
-              translateY: pickTransformInitialValue(
-                initialValues,
-                'translateY',
-                0,
-                0
-              ),
-            },
-            {
-              scale: pickTransformInitialValue(initialValues, 'scale', 1, 1),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ translateY: 0 }, { scale: 1 }],
+            initialValues
+          ),
         },
         callback,
       };

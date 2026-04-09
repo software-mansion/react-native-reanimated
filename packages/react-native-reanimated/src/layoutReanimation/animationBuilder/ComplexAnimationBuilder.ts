@@ -21,26 +21,6 @@ type ComplexAnimationBuilderClass<TInitialValues> =
   typeof BaseAnimationBuilder &
     (new () => ComplexAnimationBuilder<TInitialValues>);
 
-/**
- * Resolves a transform-slot initial value. Tries the flat prop first, then the
- * deprecated `transform[tupleIndex][key]`, then `defaultValue`.
- */
-export function pickTransformInitialValue<
-  IV extends { transform?: readonly unknown[] },
-  K extends Exclude<keyof IV, 'transform'>,
->(
-  initialValues: IV | undefined,
-  key: K,
-  tupleIndex: number,
-  defaultValue: NonNullable<IV[K]>
-): NonNullable<IV[K]> {
-  'worklet';
-  const flat = initialValues?.[key];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const fromTuple = (initialValues?.transform as any)?.[tupleIndex]?.[key];
-  return (flat ?? fromTuple ?? defaultValue) as NonNullable<IV[K]>;
-}
-
 export class ComplexAnimationBuilder<
   TInitialValues = StyleProps,
 > extends BaseAnimationBuilder {

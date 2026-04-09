@@ -1,14 +1,12 @@
 'use strict';
-import type { Rotate, Scale } from '../../common';
 import type {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
-import {
-  ComplexAnimationBuilder,
-  pickTransformInitialValue,
-} from '../animationBuilder';
+import { ComplexAnimationBuilder } from '../animationBuilder';
+import type { Rotate, Scale, TransformsConfig } from './types';
+import { pickTransformValues } from './utils';
 
 /**
  * Entry with change in rotation, scale, and opacity. You can modify the
@@ -20,13 +18,9 @@ import {
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#pinwheel
  */
 export class PinwheelIn
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    scale: Scale['scale'];
-    rotate: Rotate['rotate'];
-    /** @deprecated Pass `scale` and `rotate` as top-level properties instead. */
-    transform?: [Scale, Rotate];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Scale, Rotate]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'PinwheelIn';
@@ -60,19 +54,10 @@ export class PinwheelIn
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
-          transform: [
-            {
-              scale: pickTransformInitialValue(initialValues, 'scale', 0, 0),
-            },
-            {
-              rotate: pickTransformInitialValue(
-                initialValues,
-                'rotate',
-                1,
-                '5rad'
-              ),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ scale: 0 }, { rotate: '5rad' }],
+            initialValues
+          ),
         },
         callback,
       };
@@ -90,13 +75,9 @@ export class PinwheelIn
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#pinwheel
  */
 export class PinwheelOut
-  extends ComplexAnimationBuilder<{
-    opacity: number;
-    scale: Scale['scale'];
-    rotate: Rotate['rotate'];
-    /** @deprecated Pass `scale` and `rotate` as top-level properties instead. */
-    transform?: [Scale, Rotate];
-  }>
+  extends ComplexAnimationBuilder<
+    { opacity: number } & TransformsConfig<[Scale, Rotate]>
+  >
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'PinwheelOut';
@@ -130,19 +111,10 @@ export class PinwheelOut
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
-          transform: [
-            {
-              scale: pickTransformInitialValue(initialValues, 'scale', 0, 1),
-            },
-            {
-              rotate: pickTransformInitialValue(
-                initialValues,
-                'rotate',
-                1,
-                '0rad'
-              ),
-            },
-          ],
+          transform: pickTransformValues(
+            [{ scale: 1 }, { rotate: '0rad' }],
+            initialValues
+          ),
         },
         callback,
       };
