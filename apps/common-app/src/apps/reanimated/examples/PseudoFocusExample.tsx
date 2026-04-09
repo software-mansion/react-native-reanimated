@@ -212,6 +212,7 @@ const styles = StyleSheet.create({
     height: 44,
     paddingHorizontal: 10,
     fontSize: 16,
+    outlineWidth: 0,
   },
   bottomPadding: {
     height: 40,

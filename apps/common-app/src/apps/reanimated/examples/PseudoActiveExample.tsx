@@ -29,10 +29,14 @@ function TargetingExample() {
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Bottommost element wins</Text>
       <Text style={styles.hint}>
-        Unlike on the web where <Text style={styles.code}>:active</Text>{' '}
-        propagates to all ancestors, here only the deepest element with{' '}
-        <Text style={styles.code}>:active</Text> gets activated.{'\n\n'}
-        Press a button → only the button activates.{'\n'}
+        On native, only the deepest element with{' '}
+        <Text style={styles.code}>:active</Text> gets activated - ancestors are
+        skipped.{'\n'}
+        On web it follows the browser model: pressing a button activates the
+        button and all its <Text style={styles.code}>:active</Text> ancestors up
+        the tree.{'\n\n'}
+        Press a button → only the button activates (native) / button + card
+        activate (web).{'\n'}
         Press the card background → only the card activates.
       </Text>
 
