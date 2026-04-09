@@ -2,21 +2,75 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 // eslint-disable-next-line import/no-unresolved
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
+const PREFIX = '[Worklets]';
+
 const rule: TSESLint.RuleModule<'useWorkletsError', []> = {
   create(context) {
     return {
       NewExpression(node: TSESTree.NewExpression) {
-        // Check if the expression is `new Error`
         if (
-          node.callee.type === AST_NODE_TYPES.Identifier &&
-          node.callee.name === 'Error'
+          node.callee.type !== AST_NODE_TYPES.Identifier ||
+          node.callee.name !== 'Error'
         ) {
+          return;
+        }
+
+        const args = node.arguments;
+
+        if (args.length === 0) {
           context.report({
             node,
             messageId: 'useWorkletsError',
             fix(fixer) {
-              // Replace `Error` with `WorkletsError`
-              return fixer.replaceText(node.callee, 'WorkletsError');
+              const closeParen = context.sourceCode.getLastToken(node)!;
+              return fixer.insertTextBefore(closeParen, `'${PREFIX}'`);
+            },
+          });
+          return;
+        }
+
+        const first = args[0];
+
+        if (
+          first.type === AST_NODE_TYPES.Literal &&
+          typeof first.value === 'string'
+        ) {
+          if (first.value.startsWith(PREFIX)) {
+            return;
+          }
+          context.report({
+            node,
+            messageId: 'useWorkletsError',
+            fix(fixer) {
+              return fixer.replaceText(
+                first,
+                JSON.stringify(`${PREFIX} ${first.value}`)
+              );
+            },
+          });
+        } else if (first.type === AST_NODE_TYPES.TemplateLiteral) {
+          const firstQuasi = first.quasis[0];
+          const cooked = firstQuasi.value.cooked ?? '';
+          if (cooked.startsWith(PREFIX)) {
+            return;
+          }
+          context.report({
+            node,
+            messageId: 'useWorkletsError',
+            fix(fixer) {
+              return fixer.replaceTextRange(
+                [firstQuasi.range[0] + 1, firstQuasi.range[0] + 1],
+                `${PREFIX} `
+              );
+            },
+          });
+        } else {
+          context.report({
+            node,
+            messageId: 'useWorkletsError',
+            fix(fixer) {
+              const exprText = context.sourceCode.getText(first);
+              return fixer.replaceText(first, `\`${PREFIX} \${${exprText}}\``);
             },
           });
         }
@@ -25,11 +79,10 @@ const rule: TSESLint.RuleModule<'useWorkletsError', []> = {
   },
   meta: {
     docs: {
-      description:
-        'Warns when `new Error` is used instead of `new WorkletsError`.',
+      description: `Enforce that \`new Error\` messages start with "${PREFIX}".`,
     },
     messages: {
-      useWorkletsError: 'Use `new WorkletsError` instead of `new Error`.',
+      useWorkletsError: `Error messages must start with \`${PREFIX}\`.`,
     },
     type: 'suggestion',
     schema: [],
