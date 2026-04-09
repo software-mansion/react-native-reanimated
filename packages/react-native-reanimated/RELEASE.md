@@ -74,7 +74,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
     - patch version release [PR](https://github.com/software-mansion/react-native-reanimated/pull/6879).
     - minor version release [PR](https://github.com/software-mansion/react-native-reanimated/pull/7071).
 
-13. Run the Github Action workflow to build the package:
+13. Run the GitHub Action workflow to build the package:
 
     - [npm reanimated publish](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish.yml)
     - Select your branch as the destination for the workflow, make sure to leave the publish option unchecked to only build the package.
