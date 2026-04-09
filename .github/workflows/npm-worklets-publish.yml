@@ -18,24 +18,29 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: 'Whether to publish the package or just do a dry run.'
+        description: 'Do you want to publish the package? Leave it unchecked to do a dry run without publishing.'
         required: false
         type: boolean
         default: false
 
+      release-type:
+        description: 'Release type'
+        type: choice
+        options:
+          - stable
+          - nightly
+          - beta
+          - rc
+        required: true
+
       version:
-        description: 'Version to be published if cannot be inferred automatically, use for stable releases.'
+        description: 'Version to be published (only for stable releases)'
         required: false
         type: string
         default: ''
 
-      release-type:
-        description: 'Release type to be published (stable, nightly, beta, rc)'
-        type: string
-        required: true
-
       npm-tag:
-        description: 'npm tag to publish under (usually inferred from release type and version)'
+        description: 'npm tag to publish under (only if different than release type)'
         required: false
         type: string
         default: ''
