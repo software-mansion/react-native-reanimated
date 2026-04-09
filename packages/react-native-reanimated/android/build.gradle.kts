@@ -4,21 +4,10 @@ import org.apache.tools.ant.taskdefs.condition.Os
 import java.util.Properties
 import javax.inject.Inject
 
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath("com.android.tools.build:gradle:8.13.1")
-        classpath("com.diffplug.spotless:spotless-plugin-gradle:8.1.0")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.20")
-    }
-}
-
 plugins {
     id("com.android.library")
     id("maven-publish")
+    id("com.diffplug.spotless") version "8.1.0"
 }
 
 fun safeExtGet(prop: String, fallback: Any?): Any? =
@@ -155,7 +144,7 @@ fun reactNativeArchitectures(): List<String> {
 
 if (project == rootProject) {
     apply(plugin = "com.diffplug.spotless")
-    configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+    spotless {
         kotlin {
             target("src/**/*.kt")
             ktlint()
