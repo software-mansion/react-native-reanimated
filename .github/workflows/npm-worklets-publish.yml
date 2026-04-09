@@ -1,0 +1,54 @@
+name: npm worklets publish
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/npm-worklets-publish.yml'
+      - '.github/workflows/npm-package-publish.yml'
+      - '.github/actions/npm-package-publish/**'
+  pull_request:
+    paths:
+      - '.github/workflows/npm-worklets-publish.yml'
+      - '.github/workflows/npm-package-publish.yml'
+      - '.github/actions/npm-package-publish/**'
+  merge_group:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Whether to publish the package or just do a dry run.'
+        required: false
+        type: boolean
+        default: false
+
+      version:
+        description: 'Version to be published if cannot be inferred automatically, use for stable releases.'
+        required: false
+        type: string
+        default: ''
+
+      release-type:
+        description: 'Release type to be published (stable, nightly, beta, rc)'
+        type: string
+        required: true
+
+      npm-tag:
+        description: 'npm tag to publish under (usually inferred from release type and version)'
+        required: false
+        type: string
+        default: ''
+  schedule:
+    - cron: '27 23 * * *' # at 23:27 every day
+
+jobs:
+  npm-worklets-publish:
+    uses: ./.github/workflows/npm-package-publish.yml
+    with:
+      package-name: 'react-native-worklets'
+      package-json-path: 'packages/react-native-worklets/package.json'
+      release-type: ${{ github.event_name == 'schedule' && 'nightly' || inputs.release-type || 'nightly' }}
+      version: ${{ inputs.version }}
+      npm-tag: ${{ inputs.npm-tag }}
+      publish: ${{ inputs.publish || false }}
