@@ -78,7 +78,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
     - [npm reanimated publish](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish.yml)
     - Select your branch as the destination for the workflow, make sure to leave the publish option unchecked to only build the package.
-      <img width="500" alt="dispatching the workflow" src="https://github.com/user-attachments/assets/5376cdaa-27e9-436b-9359-30cbdc172e11" />
+    - <img width="500" alt="dispatching the workflow" src="https://github.com/user-attachments/assets/5376cdaa-27e9-436b-9359-30cbdc172e11" />
     - **Caution**: Older branches might not have this workflow configured. Before releasing make sure to backport the workflow file to the branch you're releasing from.
 
 14. Wait for the workflow to finish - it should take about 2 minutes.
