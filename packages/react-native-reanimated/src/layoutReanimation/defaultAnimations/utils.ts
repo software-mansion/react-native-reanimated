@@ -24,6 +24,18 @@ export function resolveTransformSlot<
   return { key: key as keyof TEntry, value };
 }
 
+export function resolveTransformValue<
+  const TTransforms extends TransformArray,
+  TEntry extends TTransforms[number],
+>(
+  entry: TEntry,
+  index: number,
+  values: Partial<TransformsConfig<TTransforms>> | undefined
+): TEntry[keyof TEntry] {
+  'worklet';
+  return resolveTransformSlot(entry, index, values).value;
+}
+
 export function pickTransformValues<const TTransforms extends TransformArray>(
   defaults: TTransforms,
   values: Partial<TransformsConfig<TTransforms>> | undefined
