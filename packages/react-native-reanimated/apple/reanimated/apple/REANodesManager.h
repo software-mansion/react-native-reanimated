@@ -2,8 +2,7 @@
 #import <React/RCTSurfacePresenter.h>
 
 #import <reanimated/apple/READisplayLink.h>
-
-@class REAUIView;
+#import <reanimated/apple/REAUIView.h>
 
 typedef void (^REAOnAnimationCallback)(READisplayLink *displayLink);
 typedef void (^REAEventHandler)(id<RCTEvent> event);

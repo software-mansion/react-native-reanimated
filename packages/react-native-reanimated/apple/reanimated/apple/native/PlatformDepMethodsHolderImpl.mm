@@ -125,7 +125,7 @@ ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nod
   auto forceScreenSnapshot = [=](Tag tag) {
     RCTSurfacePresenter *surfacePresenter = nodesManager.surfacePresenter;
     RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
-    REAUIView<RCTComponentViewProtocol> *maybeRNSScreenView = [componentViewRegistry findComponentViewWithTag:tag];
+    UIView<RCTComponentViewProtocol> *maybeRNSScreenView = [componentViewRegistry findComponentViewWithTag:tag];
     SEL setSnapshotAfterUpdatesSelector = @selector(setSnapshotAfterUpdates:);
     if ([maybeRNSScreenView respondsToSelector:setSnapshotAfterUpdatesSelector]) {
       [(id<RNScreenViewOptionalProtocol>)maybeRNSScreenView setSnapshotAfterUpdates:YES];
