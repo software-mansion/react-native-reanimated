@@ -28,7 +28,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
 4. Set the new version by running the following script in the repository root:
 
-   - `cd packages/react-native-reanimated && node ./scripts/set-reanimated-version.js x.y.z`
+   - `cd packages/react-native-reanimated && yarn set-version x.y.z`
 
 5. Update the **Compatibility** in `packages/react-native-reanimated/compatibility.json`
 
@@ -43,7 +43,6 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 * <details><summary>Reanimated v3</summary>
 
     run `bundle install && bundle exec pod install` in all example apps to update following files:
-   - `paper-example/ios/Podfile.lock`
    - `fabric-example/ios/Podfile.lock`
    - `tvos-example/ios/Podfile.lock`
    - `macos-example/macos/Podfile.lock`
@@ -75,15 +74,16 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
     - patch version release [PR](https://github.com/software-mansion/react-native-reanimated/pull/6879).
     - minor version release [PR](https://github.com/software-mansion/react-native-reanimated/pull/7071).
 
-13. Run the GitHub Actions responsible for building your package:
+13. Run the GitHub Action workflow to build the package:
 
-    - [NPM Reanimated package build](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-package-build.yml),
-    - Select your branch as the destination for the workflow:
-      <img width="500" alt="upload_d3527584fe60bbd66cdd99dfbc34b118" src="https://github.com/user-attachments/assets/d25946c1-0279-430a-92b4-57a1307c1179" />
+    - [npm reanimated publish](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish.yml)
+    - Select your branch as the destination for the workflow, make sure to leave the publish option unchecked to only build the package.
+    - <img width="500" alt="dispatching the workflow" src="https://github.com/user-attachments/assets/5376cdaa-27e9-436b-9359-30cbdc172e11" />
+    - **Caution**: Older branches might not have this workflow configured. Before releasing make sure to backport the workflow file to the branch you're releasing from.
 
 14. Wait for the workflow to finish - it should take about 2 minutes.
-15. Select your workflow from the list and download artifacts.
-    <img width="925" alt="upload_b4eaebea327e62c1c99d44b1984066b3" src="https://github.com/user-attachments/assets/cfd54b99-2cff-4f60-b818-f92a53e62c07" />
+15. Select your workflow from the list and download the artifact:
+    <img width="500" alt="downloading the artifact" src="https://github.com/user-attachments/assets/f20b5c05-0403-4923-881e-697d3f268265" />
 
 16. Unzip your artifacts:
 
@@ -117,8 +117,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 20. If everything works fine you can merge the PR.
 21. Upload the package to npm:
 
-    - Check package size and file list with `npm publish --dry-run react-native-reanimated-x.y.z.tgz` - see if there is anything suspicious,
-    - Publish package with `npm publish react-native-reanimated-x.y.z.tgz`,
+    - Run the workflow again, this time with the publish option checked to upload the package to npm. Make sure to select the right branch and properly configure the release type, version and npm tag if needed.
 
 22. Check that the npm tags are set correctly:
 
