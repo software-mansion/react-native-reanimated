@@ -8,6 +8,7 @@ plugins {
     id("com.android.library")
     id("maven-publish")
     id("com.diffplug.spotless") version "8.1.0"
+    id("org.jetbrains.kotlin.android")
 }
 
 fun safeExtGet(prop: String, fallback: Any?): Any? =
@@ -171,15 +172,12 @@ fun reactNativeArchitectures(): List<String> {
 }
 
 if (project == rootProject) {
-    apply(plugin = "com.diffplug.spotless")
     spotless {
         kotlin {
             target("src/**/*.kt")
             ktlint()
         }
     }
-} else {
-    apply(plugin = "org.jetbrains.kotlin.android")
 }
 
 apply(from = "./fix-prefab.gradle.kts")
