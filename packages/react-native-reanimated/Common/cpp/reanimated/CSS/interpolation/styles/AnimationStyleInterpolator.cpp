@@ -9,19 +9,28 @@ AnimationStyleInterpolator::AnimationStyleInterpolator(
     : RecordPropertiesInterpolator(getComponentInterpolators(nativeComponentName), {}, viewStylesRepository),
       allInterpolators_(allInterpolators) {}
 
-void AnimationStyleInterpolator::activateProperty(const std::string &propertyName) {
+void AnimationStyleInterpolator::setActiveProperties(const std::unordered_set<std::string> &propertyNames) {
+  const auto previousActiveProperties = activeProperties_;
+
+  for (const auto &propertyName : previousActiveProperties) {
+    if (propertyNames.find(propertyName) == propertyNames.end()) {
+      removeInterpolator(propertyName);
+      activeProperties_.erase(propertyName);
+    }
+  }
+
   if (!allInterpolators_) {
     return;
   }
-  const auto it = allInterpolators_->find(propertyName);
-  if (it != allInterpolators_->end()) {
-    setInterpolator(propertyName, it->second);
-  }
-}
 
-void AnimationStyleInterpolator::activateProperties(const std::unordered_set<std::string> &propertyNames) {
   for (const auto &propertyName : propertyNames) {
-    activateProperty(propertyName);
+    if (previousActiveProperties.find(propertyName) == previousActiveProperties.end()) {
+      const auto it = allInterpolators_->find(propertyName);
+      if (it != allInterpolators_->end()) {
+        setInterpolator(propertyName, it->second);
+        activeProperties_.insert(propertyName);
+      }
+    }
   }
 }
 

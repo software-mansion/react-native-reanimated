@@ -2,19 +2,20 @@
 
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/configs/CSSKeyframesConfig.h>
-#include <reanimated/CSS/progress/AnimationProgressProvider.h>
+#include <reanimated/CSS/core/CSSLoopAnimation.h>
+#include <reanimated/CSS/core/CSSPlatformAnimation.h>
 #include <reanimated/Fabric/updates/LoopOperation.h>
 
 #include <memory>
 #include <string>
+#include <unordered_set>
 
 namespace reanimated::css {
 
 class CSSAnimation : public LoopOperation {
  public:
-  static constexpr double FALLBACK_INTERPOLATION_THRESHOLD = 0.5;
-
   CSSAnimation(
+      std::shared_ptr<const ShadowNode> shadowNode,
       std::string animationName,
       const CSSKeyframesConfig &cssKeyframesConfig,
       const CSSAnimationSettings &settings,
@@ -29,9 +30,10 @@ class CSSAnimation : public LoopOperation {
   double getRemainingDelay(double timestamp) const;
   AnimationProgressState getState() const;
 
-  bool isReversed() const;
   bool hasForwardsFillMode() const;
   bool hasBackwardsFillMode() const;
+  bool hasLoopAnimation() const;
+  std::shared_ptr<CSSLoopAnimation> getLoopAnimation() const;
 
   folly::dynamic getBackwardsFillStyle() const;
   folly::dynamic getCurrentInterpolationStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const;
@@ -41,10 +43,14 @@ class CSSAnimation : public LoopOperation {
 
  private:
   const std::string name_;
-  AnimationFillMode fillMode_;
+  const std::shared_ptr<const ShadowNode> shadowNode_;
+  const CSSKeyframesConfig keyframesConfig_;
+  const std::shared_ptr<CSSAnimationSettings> settings_;
 
-  const std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
-  const std::shared_ptr<AnimationProgressProvider> progressProvider_;
+  std::shared_ptr<CSSLoopAnimation> loopAnimation_;
+  CSSPlatformAnimation platformAnimation_;
+
+  void updatePropertyRouting(double timestamp);
 };
 
 } // namespace reanimated::css

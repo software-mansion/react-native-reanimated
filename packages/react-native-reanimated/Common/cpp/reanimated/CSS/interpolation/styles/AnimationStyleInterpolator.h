@@ -18,11 +18,11 @@ class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
       const std::string &nativeComponentName,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const std::shared_ptr<const PropertyInterpolatorsRecord> &allInterpolators);
-  void activateProperty(const std::string &propertyName);
-  void activateProperties(const std::unordered_set<std::string> &propertyNames);
+  void setActiveProperties(const std::unordered_set<std::string> &propertyNames);
 
  private:
   const std::shared_ptr<const PropertyInterpolatorsRecord> allInterpolators_;
+  std::unordered_set<std::string> activeProperties_;
 };
 
 } // namespace reanimated::css

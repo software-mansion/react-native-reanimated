@@ -23,7 +23,7 @@ std::shared_ptr<AnimationStyleInterpolator> AnimationStyleInterpolatorFactory::c
     const std::unordered_set<std::string> &propertyNames) const {
   auto interpolator = std::make_shared<AnimationStyleInterpolator>(
       nativeComponentName_, viewStylesRepository_, interpolatorsByProperty_);
-  interpolator->activateProperties(propertyNames);
+  interpolator->setActiveProperties(propertyNames);
   return interpolator;
 }
 

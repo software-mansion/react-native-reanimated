@@ -16,20 +16,20 @@ std::shared_ptr<AnimationStyleInterpolatorFactory> createStyleInterpolatorFactor
       rt, config.getProperty(rt, "propKeyframes"), nativeComponentName, viewStylesRepository);
 }
 
-std::shared_ptr<KeyframeEasingFunctions> getKeyframeTimingFunctions(jsi::Runtime &rt, const jsi::Object &config) {
-  KeyframeEasingFunctions result;
-  const auto &keyframeTimingFunctions = config.getProperty(rt, "keyframeTimingFunctions").asObject(rt);
-  const auto timingFunctionOffsets = keyframeTimingFunctions.getPropertyNames(rt);
-  const auto timingFunctionsCount = timingFunctionOffsets.size(rt);
+std::shared_ptr<KeyframeEasingConfigs> getKeyframeTimingConfigs(jsi::Runtime &rt, const jsi::Object &config) {
+  KeyframeEasingConfigs result;
+  const auto &keyframeTimingConfigs = config.getProperty(rt, "keyframeTimingFunctions").asObject(rt);
+  const auto timingConfigOffsets = keyframeTimingConfigs.getPropertyNames(rt);
+  const auto timingConfigsCount = timingConfigOffsets.size(rt);
 
-  for (size_t i = 0; i < timingFunctionsCount; ++i) {
-    const auto offset = timingFunctionOffsets.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    const auto easingFunction = createEasingFunction(rt, keyframeTimingFunctions.getProperty(rt, offset.c_str()));
+  for (size_t i = 0; i < timingConfigsCount; ++i) {
+    const auto offset = timingConfigOffsets.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    const auto easingConfig = getEasingConfig(rt, keyframeTimingConfigs.getProperty(rt, offset.c_str()));
 
-    result[std::stod(offset)] = easingFunction;
+    result[std::stod(offset)] = easingConfig;
   }
 
-  return std::make_shared<KeyframeEasingFunctions>(result);
+  return std::make_shared<KeyframeEasingConfigs>(result);
 }
 
 CSSKeyframesConfig parseCSSAnimationKeyframesConfig(
@@ -42,7 +42,7 @@ CSSKeyframesConfig parseCSSAnimationKeyframesConfig(
 
   return {
       createStyleInterpolatorFactory(rt, configObj, nativeComponentName, viewStylesRepository),
-      getKeyframeTimingFunctions(rt, configObj)};
+      getKeyframeTimingConfigs(rt, configObj)};
 }
 
 } // namespace reanimated::css

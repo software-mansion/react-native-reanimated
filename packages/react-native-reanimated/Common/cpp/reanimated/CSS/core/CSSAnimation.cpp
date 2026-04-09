@@ -7,36 +7,29 @@
 namespace reanimated::css {
 
 CSSAnimation::CSSAnimation(
+    std::shared_ptr<const ShadowNode> shadowNode,
     std::string animationName,
     const CSSKeyframesConfig &cssKeyframesConfig,
     const CSSAnimationSettings &settings,
     const double timestamp)
     : name_(std::move(animationName)),
-      fillMode_(settings.fillMode),
-      styleInterpolator_(cssKeyframesConfig.styleInterpolatorFactory->create()),
-      progressProvider_(std::make_shared<AnimationProgressProvider>(
-          timestamp,
-          settings.duration,
-          settings.delay,
-          settings.iterationCount,
-          settings.direction,
-          getEasingFunctionFromConfig(settings.easingConfig),
-          cssKeyframesConfig.keyframeEasingFunctions)) {
-  if (settings.playState == AnimationPlayState::Paused) {
-    progressProvider_->pause(timestamp);
-  }
+      shadowNode_(std::move(shadowNode)),
+      keyframesConfig_(cssKeyframesConfig),
+      settings_(std::make_shared<CSSAnimationSettings>(settings)) {
+  updatePropertyRouting(timestamp);
 }
 
 void CSSAnimation::onUpdate(const double timestamp) {
-  progressProvider_->update(timestamp);
-  LOG(INFO) << "animationName: " << name_ << " on update: " << timestamp
-            << " progress: " << progressProvider_->getGlobalProgress();
+  if (loopAnimation_) {
+    loopAnimation_->update(timestamp);
+  }
 }
 
 bool CSSAnimation::isRunning() const {
-  LOG(INFO) << "animationName: " << name_
-            << " is running: " << (progressProvider_->getState() == AnimationProgressState::Running);
-  return progressProvider_->getState() == AnimationProgressState::Running;
+  if (!loopAnimation_) {
+    return false;
+  }
+  return loopAnimation_->getState() == AnimationProgressState::Running;
 }
 
 const std::string &CSSAnimation::getName() const {
@@ -44,72 +37,113 @@ const std::string &CSSAnimation::getName() const {
 }
 
 double CSSAnimation::getStartTimestamp(const double timestamp) const {
-  return progressProvider_->getStartTimestamp(timestamp);
+  if (!loopAnimation_) {
+    return timestamp;
+  }
+  return loopAnimation_->getStartTimestamp(timestamp);
 }
 
 double CSSAnimation::getRemainingDelay(const double timestamp) const {
-  return progressProvider_->getStartTimestamp(timestamp) - timestamp;
+  return getStartTimestamp(timestamp) - timestamp;
 }
 
 AnimationProgressState CSSAnimation::getState() const {
-  return progressProvider_->getState();
-}
-
-bool CSSAnimation::isReversed() const {
-  const auto direction = progressProvider_->getDirection();
-  return direction == AnimationDirection::Reverse || direction == AnimationDirection::AlternateReverse;
+  if (!loopAnimation_) {
+    return AnimationProgressState::Finished;
+  }
+  return loopAnimation_->getState();
 }
 
 bool CSSAnimation::hasForwardsFillMode() const {
-  return fillMode_ == AnimationFillMode::Forwards || fillMode_ == AnimationFillMode::Both;
+  return settings_->hasForwardsFillMode();
 }
 
 bool CSSAnimation::hasBackwardsFillMode() const {
-  return fillMode_ == AnimationFillMode::Backwards || fillMode_ == AnimationFillMode::Both;
+  return settings_->hasBackwardsFillMode();
+}
+
+bool CSSAnimation::hasLoopAnimation() const {
+  return loopAnimation_ != nullptr;
+}
+
+std::shared_ptr<CSSLoopAnimation> CSSAnimation::getLoopAnimation() const {
+  return loopAnimation_;
 }
 
 folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
-  return isReversed() ? styleInterpolator_->getLastKeyframeValue() : styleInterpolator_->getFirstKeyframeValue();
+  if (!loopAnimation_) {
+    return folly::dynamic::object();
+  }
+  return loopAnimation_->getBackwardsFillStyle();
 }
 
-folly::dynamic CSSAnimation::getCurrentInterpolationStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const {
-  return styleInterpolator_->interpolate(shadowNode, progressProvider_, FALLBACK_INTERPOLATION_THRESHOLD);
+folly::dynamic CSSAnimation::getCurrentInterpolationStyle(
+    const std::shared_ptr<const ShadowNode> & /*shadowNode*/) const {
+  if (!loopAnimation_) {
+    return folly::dynamic::object();
+  }
+  return loopAnimation_->getCurrentInterpolationStyle();
 }
 
-folly::dynamic CSSAnimation::getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const {
-  return styleInterpolator_->getResetStyle(shadowNode);
+folly::dynamic CSSAnimation::getResetStyle(
+    const std::shared_ptr<const ShadowNode> & /*shadowNode*/) const {
+  if (!loopAnimation_) {
+    return folly::dynamic::object();
+  }
+  return loopAnimation_->getResetStyle();
 }
 
 void CSSAnimation::updateSettings(const PartialCSSAnimationSettings &updatedSettings, const double timestamp) {
-  progressProvider_->resetProgress();
-
   if (updatedSettings.duration.has_value()) {
-    progressProvider_->setDuration(updatedSettings.duration.value());
+    settings_->duration = updatedSettings.duration.value();
   }
   if (updatedSettings.easingConfig.has_value()) {
-    progressProvider_->setEasingFunction(getEasingFunctionFromConfig(updatedSettings.easingConfig.value()));
+    settings_->easingConfig = updatedSettings.easingConfig.value();
+    updatePropertyRouting(timestamp);
   }
   if (updatedSettings.delay.has_value()) {
-    progressProvider_->setDelay(updatedSettings.delay.value());
+    settings_->delay = updatedSettings.delay.value();
   }
   if (updatedSettings.iterationCount.has_value()) {
-    progressProvider_->setIterationCount(updatedSettings.iterationCount.value());
+    settings_->iterationCount = updatedSettings.iterationCount.value();
   }
   if (updatedSettings.direction.has_value()) {
-    progressProvider_->setDirection(updatedSettings.direction.value());
+    settings_->direction = updatedSettings.direction.value();
   }
   if (updatedSettings.fillMode.has_value()) {
-    fillMode_ = updatedSettings.fillMode.value();
+    settings_->fillMode = updatedSettings.fillMode.value();
   }
   if (updatedSettings.playState.has_value()) {
-    if (updatedSettings.playState.value() == AnimationPlayState::Paused) {
-      progressProvider_->pause(timestamp);
-    } else {
-      progressProvider_->play(timestamp);
-    }
+    settings_->playState = updatedSettings.playState.value();
   }
 
-  progressProvider_->update(timestamp);
+  if (loopAnimation_) {
+    loopAnimation_->updateSettings(updatedSettings, timestamp);
+  }
+}
+
+void CSSAnimation::updatePropertyRouting(const double timestamp) {
+  const auto &allProperties = keyframesConfig_.styleInterpolatorFactory->getAllPropertyNames();
+  const auto &loopDrivenProperties = platformAnimation_.setAnimatedProperties(
+      settings_->easingConfig, keyframesConfig_.keyframeEasingConfigs, allProperties);
+
+  if (loopDrivenProperties.empty()) {
+    loopAnimation_.reset();
+    return;
+  }
+
+  if (!loopAnimation_) {
+    loopAnimation_ = std::make_shared<CSSLoopAnimation>(
+        keyframesConfig_.styleInterpolatorFactory->create(loopDrivenProperties),
+        allProperties,
+        shadowNode_,
+        settings_,
+        keyframesConfig_.keyframeEasingConfigs,
+        timestamp);
+    return;
+  }
+
+  loopAnimation_->setAnimatedProperties(loopDrivenProperties);
 }
 
 } // namespace reanimated::css

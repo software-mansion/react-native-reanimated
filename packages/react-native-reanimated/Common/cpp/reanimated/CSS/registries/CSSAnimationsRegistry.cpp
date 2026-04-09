@@ -49,10 +49,7 @@ void CSSAnimationsRegistry::apply(
   group.schedule(loop_);
 
   const auto style = group.computeStyle();
-  // Set current style to updates registry to ensure that all old
-  // styles are removed (replaced by the new style)
   setInUpdatesRegistry(group.getShadowNodeFamily(), style);
-  // Mark always as updated to ensure that updates are committed
   updatedTags_.insert(viewTag);
 }
 
@@ -89,7 +86,6 @@ std::optional<CSSAnimationGroup> CSSAnimationsRegistry::maybeBuildNewGroup(
     const std::string &compoundComponentName,
     const std::optional<std::vector<std::string>> &updatedAnimationNames,
     const CSSAnimationSettingsMap &newAnimationSettings) {
-  // No animations added/removed/reordered — nothing to build
   if (!updatedAnimationNames.has_value()) {
     return std::nullopt;
   }
@@ -100,7 +96,6 @@ std::optional<CSSAnimationGroup> CSSAnimationsRegistry::maybeBuildNewGroup(
   const auto &names = updatedAnimationNames.value();
   const auto timestamp = loop_->getTimestamp();
 
-  // Index old animations by name (reversed for quick pop)
   std::unordered_map<std::string, CSSAnimationsVector> oldByName;
   if (groupIt != groups_.end()) {
     for (auto it = groupIt->second.getAnimations().rbegin(); it != groupIt->second.getAnimations().rend(); ++it) {
@@ -108,7 +103,6 @@ std::optional<CSSAnimationGroup> CSSAnimationsRegistry::maybeBuildNewGroup(
     }
   }
 
-  // Build new vector — create new or reuse old
   CSSAnimationsVector animations;
   animations.reserve(names.size());
 
@@ -150,7 +144,7 @@ std::shared_ptr<CSSAnimation> CSSAnimationsRegistry::createAnimation(
 
   const auto viewTag = shadowNode->getTag();
 
-  auto animation = std::make_shared<CSSAnimation>(name, keyframesConfig->get(), settings, timestamp);
+  auto animation = std::make_shared<CSSAnimation>(shadowNode, name, keyframesConfig->get(), settings, timestamp);
   animation->setOnUpdateCallback([this, viewTag, weakAnimation = std::weak_ptr<CSSAnimation>(animation)]() {
     if (auto animation = weakAnimation.lock()) {
       onAnimationUpdate(viewTag, animation);

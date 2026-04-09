@@ -31,6 +31,7 @@ using EasingConfig = std::variant<LinearEasing, CubicBezierEasing, StepsEasing, 
 double getDuration(jsi::Runtime &rt, const jsi::Object &config);
 
 EasingFunction getTimingFunction(jsi::Runtime &rt, const jsi::Object &config);
+EasingConfig getEasingConfig(jsi::Runtime &rt, const jsi::Value &easingConfig);
 EasingConfig getEasingConfig(jsi::Runtime &rt, const jsi::Object &config);
 EasingFunction getEasingFunctionFromConfig(const EasingConfig &easingConfig);
 
