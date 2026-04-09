@@ -1,4 +1,3 @@
-#import <objc/runtime.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
@@ -7,7 +6,7 @@
 #import <reanimated/apple/RNGestureHandlerStateManager.h>
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 #import <reanimated/apple/native/SetGestureState.h>
-#import <reanimated/apple/pseudoSelectors/REAPseudoSelectorObserver.h>
+#import <reanimated/apple/pseudoSelectors/REAPseudoSelectorAttachQueue.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
 #import <React/RCTComponentViewProtocol.h>
@@ -135,73 +134,21 @@ ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nod
   return forceScreenSnapshot;
 }
 
-static char kREAPseudoSelectorObserversKey;
-
-static void attachObserverToView(
-    REAUIView *view,
-    PseudoSelector selector,
-    const std::shared_ptr<std::function<void(bool)>> &sharedCallback)
+PlatformAttachPseudoSelectorFunction makeAttachPseudoSelectorFunction(REAPseudoSelectorAttachQueue *attachQueue)
 {
-  NSMutableDictionary<NSNumber *, REAPseudoSelectorObserver *> *observers =
-      objc_getAssociatedObject(view, &kREAPseudoSelectorObserversKey);
-  if (!observers) {
-    observers = [NSMutableDictionary new];
-    objc_setAssociatedObject(view, &kREAPseudoSelectorObserversKey, observers, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-  }
-  NSNumber *key = @(static_cast<int>(selector));
-  // Detach any existing observer for this selector before replacing it.
-  [observers[key] detach];
-  REAPseudoSelectorObserver *observer = [[REAPseudoSelectorObserver alloc] initWithView:view
-                                                                               selector:selector
-                                                                               callback:*sharedCallback];
-  observers[key] = observer;
-}
-
-PlatformAttachPseudoSelectorFunction makeAttachPseudoSelectorFunction(REANodesManager *nodesManager)
-{
-  return [nodesManager](Tag tag, PseudoSelector selector, std::function<void(bool)> callback) {
+  return [attachQueue](Tag tag, PseudoSelector selector, std::function<void(bool)> callback) {
     auto sharedCallback = std::make_shared<std::function<void(bool)>>(std::move(callback));
-    NSLog(@"[PseudoSelector] attachFn called tag=%d selector=%d", tag, static_cast<int>(selector));
-
     dispatch_async(dispatch_get_main_queue(), ^{
-      RCTComponentViewRegistry *registry = nodesManager.surfacePresenter.mountingManager.componentViewRegistry;
-      REAUIView *view = [registry findComponentViewWithTag:tag];
-      NSLog(@"[PseudoSelector] findComponentViewWithTag:%d → %@", tag, view);
-
-      if (view) {
-        // View already in registry - attach immediately
-        attachObserverToView(view, selector, sharedCallback);
-      } else {
-        // View not yet mounted. Store a pending block that will be executed by
-        // REANodesManager after the next mounting transaction completes.
-        [nodesManager addPendingPseudoSelectorAttach:^(REAUIView *mountedView) {
-          NSLog(@"[PseudoSelector] deferred attach tag=%d selector=%d", tag, static_cast<int>(selector));
-          attachObserverToView(mountedView, selector, sharedCallback);
-        }
-                                              forTag:tag
-                                         selectorInt:static_cast<int>(selector)];
-      }
+      [attachQueue attachTag:tag selector:selector sharedCallback:sharedCallback];
     });
   };
 }
 
-PlatformDetachPseudoSelectorFunction makeDetachPseudoSelectorFunction(REANodesManager *nodesManager)
+PlatformDetachPseudoSelectorFunction makeDetachPseudoSelectorFunction(REAPseudoSelectorAttachQueue *attachQueue)
 {
-  return [nodesManager](Tag tag, PseudoSelector selector) {
+  return [attachQueue](Tag tag, PseudoSelector selector) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      // Cancel any pending attach that hasn't fired yet.
-      [nodesManager removePendingPseudoSelectorAttach:tag selectorInt:static_cast<int>(selector)];
-
-      RCTComponentViewRegistry *registry = nodesManager.surfacePresenter.mountingManager.componentViewRegistry;
-      REAUIView *view = [registry findComponentViewWithTag:tag];
-      if (!view) {
-        return;
-      }
-      NSMutableDictionary<NSNumber *, REAPseudoSelectorObserver *> *observers =
-          objc_getAssociatedObject(view, &kREAPseudoSelectorObserversKey);
-      NSNumber *key = @(static_cast<int>(selector));
-      [observers[key] detach];
-      [observers removeObjectForKey:key];
+      [attachQueue detachTag:tag selector:selector];
     });
   };
 }
@@ -232,8 +179,10 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   auto maybeFlushUIUpdatesQueueFunction = makeMaybeFlushUIUpdatesQueueFunction(nodesManager);
 
-  auto attachPseudoSelectorFunction = makeAttachPseudoSelectorFunction(nodesManager);
-  auto detachPseudoSelectorFunction = makeDetachPseudoSelectorFunction(nodesManager);
+  REAPseudoSelectorAttachQueue *attachQueue =
+      [[REAPseudoSelectorAttachQueue alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
+  auto attachPseudoSelectorFunction = makeAttachPseudoSelectorFunction(attachQueue);
+  auto detachPseudoSelectorFunction = makeDetachPseudoSelectorFunction(attachQueue);
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
