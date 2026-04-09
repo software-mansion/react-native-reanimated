@@ -2,7 +2,6 @@
 
 import { checkCppVersion } from '../debug/checkCppVersion';
 import { jsVersion } from '../debug/jsVersion';
-import { WorkletsError } from '../debug/WorkletsError';
 import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
 import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
 import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
@@ -34,8 +33,8 @@ class NativeWorklets implements IWorkletsModule {
       WorkletsTurboModule?.start();
     }
     if (globalThis.__workletsModuleProxy === undefined) {
-      throw new WorkletsError(
-        `Native part of Worklets doesn't seem to be initialized.
+      throw new Error(
+        `[Worklets] Native part of Worklets doesn't seem to be initialized.
 See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#native-part-of-worklets-doesnt-seem-to-be-initialized for more details.`
       );
     }

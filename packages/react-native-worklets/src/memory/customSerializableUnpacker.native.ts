@@ -1,4 +1,3 @@
-/* eslint-disable reanimated/use-worklets-error */
 'use strict';
 
 export function installCustomSerializableUnpacker() {

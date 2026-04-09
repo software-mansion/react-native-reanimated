@@ -1,10 +1,6 @@
 'use strict';
 import type { ConvertValuesToArrays } from '../../common';
-import {
-  kebabizeCamelCase,
-  maybeAddSuffix,
-  ReanimatedError,
-} from '../../common';
+import { kebabizeCamelCase, maybeAddSuffix } from '../../common';
 import type { ParametrizedTimingFunction } from '../easing';
 import { CubicBezierEasing, LinearEasing, StepsEasing } from '../easing';
 import type { AddArrayPropertyType } from '../types';
@@ -42,7 +38,7 @@ function easingMapper(easing: ParametrizedTimingFunction | string) {
     return `linear(${values})`;
   }
 
-  throw new ReanimatedError(`Invalid timing function ${easing.toString()}`);
+  throw new Error(`[Reanimated] Invalid timing function ${easing.toString()}`);
 }
 
 export function parseTimingFunction(

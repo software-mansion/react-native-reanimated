@@ -2,7 +2,6 @@
 import type { BoxShadowValue } from 'react-native';
 
 import { IS_ANDROID } from '../../constants';
-import { ReanimatedError } from '../../errors';
 import type { ValueProcessor } from '../../types';
 import { parseBoxShadowString } from '../../utils';
 import { processColor } from './colors';
@@ -49,7 +48,9 @@ export const processBoxShadow: ValueProcessor<
     typeof value === 'string' ? parseBoxShadowString(value) : value;
 
   if (!Array.isArray(parsedShadow)) {
-    throw new ReanimatedError(ERROR_MESSAGES.notArrayObject(parsedShadow));
+    throw new Error(
+      `[Reanimated] ${ERROR_MESSAGES.notArrayObject(parsedShadow)}`
+    );
   }
 
   return parsedShadow.map<ProcessedBoxShadowValue>((shadow) => {
@@ -64,8 +65,8 @@ export const processBoxShadow: ValueProcessor<
     const processedColor = processColor(color, context);
 
     if (processedColor === undefined) {
-      throw new ReanimatedError(
-        ERROR_MESSAGES.invalidColor(color, JSON.stringify(shadow))
+      throw new Error(
+        `[Reanimated] ${ERROR_MESSAGES.invalidColor(color, JSON.stringify(shadow))}`
       );
     }
 
