@@ -1,25 +1,39 @@
-import React, { useState } from 'react';
+import React, { ComponentProps, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import Animated, { FadeIn, FadeOutDown } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  FadeInRight,
+  FadeOutDown,
+  FlipInYRight,
+  RollOutRight,
+  ZoomInRotate,
+  ZoomOutLeft,
+} from 'react-native-reanimated';
+
+type EnteringAnimationProp = ComponentProps<typeof Animated.View>['entering'];
+type ExitingAnimationProp = ComponentProps<typeof Animated.View>['exiting'];
 
 interface AnimatedBlockProps {
   name: string;
-  animatedStyle: Record<string, unknown>;
+  entering?: EnteringAnimationProp;
+  exiting?: ExitingAnimationProp;
   defaultShow?: boolean;
+  compact?: boolean;
 }
 
 const AnimatedBlock = ({
-  name,
-  animatedStyle,
+  compact,
   defaultShow,
+  entering,
+  exiting,
+  name,
 }: AnimatedBlockProps) => {
   const [show, setShow] = useState(defaultShow);
   return (
@@ -28,19 +42,25 @@ const AnimatedBlock = ({
         <TouchableWithoutFeedback onPress={() => setShow(!show)}>
           {/* Workaround for TouchableWithoutFeedback overwriting the nativeID */}
           <View>
-            <Animated.View style={styles.animatedBlock} {...animatedStyle}>
+            <Animated.View
+              style={[
+                styles.animatedBlock,
+                compact ? styles.animatedBlockCompact : null,
+              ]}
+              entering={entering}
+              exiting={exiting}>
               <Text style={styles.animatedText}>{name}</Text>
             </Animated.View>
           </View>
         </TouchableWithoutFeedback>
       ) : null}
       {!show ? (
-        <Animated.View
-          entering={
-            'entering' in animatedStyle ? undefined : FadeIn.delay(350)
-          }>
+        <Animated.View entering={entering ? undefined : FadeIn.delay(350)}>
           <TouchableOpacity
-            style={styles.animatedBlockPlaceholder}
+            style={[
+              styles.animatedBlockPlaceholder,
+              compact ? styles.animatedBlockCompact : null,
+            ]}
             onPress={() => setShow(!show)}>
             <Text style={styles.animatedTextPlaceholder}>{name}</Text>
           </TouchableOpacity>
@@ -50,100 +70,196 @@ const AnimatedBlock = ({
   );
 };
 
-export default function DefaultAnimationsOverrides() {
-  const [opacity, setOpacity] = useState('0');
-  const [translateY, setTranslateY] = useState('25');
+interface ComparisonRowProps {
+  title: string;
+  description: string;
+  defaultEntering?: EnteringAnimationProp;
+  defaultExiting?: ExitingAnimationProp;
+  entering?: EnteringAnimationProp;
+  exiting?: ExitingAnimationProp;
+  isExitCase?: boolean;
+}
 
+const ComparisonRow = ({
+  defaultEntering,
+  defaultExiting,
+  description,
+  entering,
+  exiting,
+  isExitCase,
+  title,
+}: ComparisonRowProps) => {
+  const defaultShow = !!isExitCase;
+  return (
+    <View style={styles.comparisonSection}>
+      <Text style={styles.overrideText}>{title}</Text>
+      <Text style={styles.overrideDescription}>{description}</Text>
+      <View style={styles.comparisonRow}>
+        <View style={styles.comparisonColumn}>
+          <Text style={styles.comparisonLabel}>Default</Text>
+          <AnimatedBlock
+            defaultShow={defaultShow}
+            entering={defaultEntering}
+            exiting={defaultExiting}
+            name="Default"
+          />
+        </View>
+        <View style={styles.comparisonColumn}>
+          <Text style={styles.comparisonLabel}>Modified</Text>
+          <AnimatedBlock
+            defaultShow={defaultShow}
+            entering={entering}
+            exiting={exiting}
+            name="Modified"
+          />
+        </View>
+      </View>
+    </View>
+  );
+};
+
+export default function DefaultAnimationsOverrides() {
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.groupText}>{`FadeOutDown.withTargetValues({`}</Text>
+      <Text style={styles.groupText}>Entering overrides</Text>
+      <ComparisonRow
+        defaultEntering={FadeInRight}
+        description="withInitialValues({ opacity: 0, translateX: 360 })"
+        entering={FadeInRight.withInitialValues({
+          opacity: 0,
+          translateX: 360,
+        })}
+        title="FadeInRight"
+      />
+      <ComparisonRow
+        defaultEntering={ZoomInRotate}
+        description="withInitialValues({ rotate: 3rad, transform: [scale: 0.05, rotate: 2.4rad] })"
+        entering={ZoomInRotate.withInitialValues({
+          rotate: '3rad',
+          transform: [{ scale: 0.05 }, { rotate: '2.4rad' }],
+        })}
+        title="ZoomInRotate"
+      />
+      <ComparisonRow
+        defaultEntering={FlipInYRight}
+        description="withInitialValues({ transform: [perspective: 1200, rotateY: 45deg, translateX: 50] })"
+        entering={FlipInYRight.withInitialValues({
+          transform: [
+            { perspective: 1200 },
+            { rotateY: '45deg' },
+            { translateX: 50 },
+          ],
+        })}
+        title="FlipInYRight"
+      />
 
-      <View style={styles.textInputContainer}>
-        <Text>opacity: </Text>
-        <TextInput
-          placeholder="0"
-          keyboardType="numeric"
-          value={opacity}
-          onChangeText={setOpacity}
-          style={styles.textInput}
-        />
-      </View>
-
-      <View style={styles.textInputContainer}>
-        <Text>translateY: </Text>
-        <TextInput
-          placeholder="25"
-          keyboardType="numeric"
-          value={translateY.toString()}
-          onChangeText={setTranslateY}
-          style={styles.textInput}
-        />
-      </View>
-
-      <Text style={styles.groupText}>{`})`}</Text>
-
-      <AnimatedBlock
-        name="FadeOutDown"
-        animatedStyle={{
-          // todo: fix typescript error
-          // @ts-ignore
-          exiting: FadeOutDown.withTargetValues({
-            opacity,
-            translateY,
-          }),
-        }}
-        defaultShow={true}
+      <Text style={styles.groupText}>Exiting overrides</Text>
+      <ComparisonRow
+        defaultExiting={FadeOutDown}
+        description="withTargetValues({ opacity: 0, translateY: 320 })"
+        exiting={FadeOutDown.withTargetValues({
+          opacity: 0,
+          translateY: 320,
+        })}
+        title="FadeOutDown"
+        isExitCase
+      />
+      <ComparisonRow
+        defaultExiting={RollOutRight}
+        description="withTargetValues({ transform: [translateX: 900, rotate: 1080deg] })"
+        exiting={RollOutRight.withTargetValues({
+          transform: [{ translateX: 900 }, { rotate: '1080deg' }],
+        })}
+        title="RollOutRight"
+        isExitCase
+      />
+      <ComparisonRow
+        defaultExiting={ZoomOutLeft}
+        description="withTargetValues({ transform: [translateX: -50, scale: 0.08] })"
+        exiting={ZoomOutLeft.withTargetValues({
+          transform: [{ translateX: -50 }, { scale: 0.08 }],
+        })}
+        title="ZoomOutLeft"
+        isExitCase
       />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'column',
-  },
-  groupText: {
-    fontSize: 20,
-    paddingTop: 5,
-    paddingLeft: 5,
-    paddingBottom: 5,
-  },
   animatedBlock: {
-    height: 60,
-    width: 300,
-    borderWidth: 3,
-    borderColor: '#001a72',
-    backgroundColor: '#001a72',
     alignItems: 'center',
+    backgroundColor: '#001a72',
+    borderColor: '#001a72',
+    borderWidth: 3,
+    height: 60,
     justifyContent: 'center',
+    width: 300,
   },
-  animatedTextPlaceholder: {
-    color: '#001a72',
-    fontSize: 20,
+  animatedBlockCompact: {
+    width: 160,
   },
   animatedBlockPlaceholder: {
-    height: 60,
-    width: 300,
-    borderWidth: 3,
-    borderColor: '#001a72',
     alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: '#001a72',
     borderStyle: 'dashed',
+    borderWidth: 3,
+    height: 60,
+    justifyContent: 'center',
+    width: 300,
+  },
+  animatedBox: {
+    alignItems: 'center',
+    padding: 5,
   },
   animatedText: {
     color: '#ffffff',
     fontSize: 20,
     userSelect: 'none',
   },
-  animatedBox: {
-    padding: 5,
-    alignItems: 'center',
+  animatedTextPlaceholder: {
+    color: '#001a72',
+    fontSize: 20,
   },
-  textInputContainer: {
-    marginLeft: 30,
-    display: 'flex',
-    flexDirection: 'row',
+  comparisonColumn: {
     alignItems: 'center',
+    flex: 1,
   },
-  textInput: { backgroundColor: '#ddd' },
+  comparisonLabel: {
+    color: '#444',
+    fontSize: 13,
+    fontWeight: '600',
+    paddingBottom: 2,
+  },
+  comparisonRow: {
+    flexDirection: 'column',
+    gap: 2,
+    paddingHorizontal: 8,
+  },
+  comparisonSection: {
+    paddingBottom: 6,
+  },
+  container: {
+    flexDirection: 'column',
+  },
+  groupText: {
+    fontSize: 20,
+    paddingBottom: 5,
+    paddingLeft: 5,
+    paddingTop: 5,
+  },
+  overrideDescription: {
+    color: '#555',
+    fontSize: 12,
+    paddingBottom: 2,
+    paddingHorizontal: 10,
+  },
+  overrideText: {
+    color: '#333',
+    fontSize: 16,
+    fontWeight: '600',
+    paddingBottom: 2,
+    paddingLeft: 10,
+    paddingRight: 10,
+  },
 });

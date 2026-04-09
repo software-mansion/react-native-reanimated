@@ -1,6 +1,4 @@
 'use strict';
-import type { ScaleXTransform, ScaleYTransform } from 'react-native';
-
 import type {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
@@ -8,7 +6,7 @@ import type {
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 import type { ScaleX, ScaleY, TransformsConfig } from './types';
-import { pickTransformValues } from './utils';
+import { animateTransformToValues, pickTransformValues } from './utils';
 
 /**
  * Stretch animation on the X axis. You can modify the behavior by chaining
@@ -33,16 +31,23 @@ export class StretchInX
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scaleX: delayFunction(delay, animation(1, config)) }],
+          transform: animateTransformToValues(
+            [{ scaleX: 1 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues([{ scaleX: 0 }], initialValues),
@@ -76,16 +81,23 @@ export class StretchInY
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
+    const targetValues = this.targetValues;
 
     return () => {
       'worklet';
       return {
         animations: {
-          transform: [{ scaleY: delayFunction(delay, animation(1, config)) }],
+          transform: animateTransformToValues(
+            [{ scaleY: 1 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues([{ scaleY: 0 }], initialValues),
@@ -119,7 +131,7 @@ export class StretchOutX
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
@@ -129,14 +141,13 @@ export class StretchOutX
       'worklet';
       return {
         animations: {
-          transform: [
-            {
-              scaleX: delayFunction(
-                delay,
-                animation(targetValues?.scaleX ?? 0, config)
-              ),
-            },
-          ],
+          transform: animateTransformToValues(
+            [{ scaleX: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues([{ scaleX: 1 }], initialValues),
@@ -170,7 +181,7 @@ export class StretchOutY
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
@@ -180,14 +191,13 @@ export class StretchOutY
       'worklet';
       return {
         animations: {
-          transform: [
-            {
-              scaleY: delayFunction(
-                delay,
-                animation(targetValues?.scaleY ?? 0, config)
-              ),
-            },
-          ],
+          transform: animateTransformToValues(
+            [{ scaleY: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           transform: pickTransformValues([{ scaleY: 1 }], initialValues),

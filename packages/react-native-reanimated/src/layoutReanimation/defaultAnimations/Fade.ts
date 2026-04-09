@@ -8,7 +8,7 @@ import type {
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 import type { TransformsConfig, TranslateX, TranslateY } from './types';
-import { pickTransformValues } from './utils';
+import { animateTransformToValues, pickTransformValues } from './utils';
 
 /**
  * Fade in animation. You can modify the behavior by chaining methods like
@@ -82,7 +82,8 @@ export class FadeInRight
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const targetValues = this.targetValues;
@@ -96,14 +97,13 @@ export class FadeInRight
             delay,
             animation(targetValues?.opacity ?? 1, config)
           ),
-          transform: [
-            {
-              translateX: delayFunction(
-                delay,
-                animation(targetValues?.translateX ?? 0, config)
-              ),
-            },
-          ],
+          transform: animateTransformToValues(
+            [{ translateX: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
@@ -140,7 +140,8 @@ export class FadeInLeft
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const targetValues = this.targetValues;
@@ -154,14 +155,13 @@ export class FadeInLeft
             delay,
             animation(targetValues?.opacity ?? 1, config)
           ),
-          transform: [
-            {
-              translateX: delayFunction(
-                delay,
-                animation(targetValues?.translateX ?? 0, config)
-              ),
-            },
-          ],
+          transform: animateTransformToValues(
+            [{ translateX: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
@@ -198,7 +198,8 @@ export class FadeInUp
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const targetValues = this.targetValues;
@@ -212,14 +213,13 @@ export class FadeInUp
             delay,
             animation(targetValues?.opacity ?? 1, config)
           ),
-          transform: [
-            {
-              translateY: delayFunction(
-                delay,
-                animation(targetValues?.translateY ?? 0, config)
-              ),
-            },
-          ],
+          transform: animateTransformToValues(
+            [{ translateY: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
@@ -256,7 +256,8 @@ export class FadeInDown
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const targetValues = this.targetValues;
@@ -270,14 +271,13 @@ export class FadeInDown
             delay,
             animation(targetValues?.opacity ?? 1, config)
           ),
-          transform: [
-            {
-              translateY: delayFunction(
-                delay,
-                animation(targetValues?.translateY ?? 0, config)
-              ),
-            },
-          ],
+          transform: animateTransformToValues(
+            [{ translateY: 0 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 0,
@@ -361,7 +361,8 @@ export class FadeOutRight
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const targetValues = this.targetValues;
@@ -375,14 +376,13 @@ export class FadeOutRight
             delay,
             animation(targetValues?.opacity ?? 0, config)
           ),
-          transform: [
-            {
-              translateX: delayFunction(
-                delay,
-                animation(targetValues?.translateX ?? 25, config)
-              ),
-            },
-          ],
+          transform: animateTransformToValues(
+            [{ translateX: 25 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
@@ -419,7 +419,8 @@ export class FadeOutLeft
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const targetValues = this.targetValues;
@@ -433,14 +434,13 @@ export class FadeOutLeft
             delay,
             animation(targetValues?.opacity ?? 0, config)
           ),
-          transform: [
-            {
-              translateX: delayFunction(
-                delay,
-                animation(targetValues?.translateX ?? -25, config)
-              ),
-            },
-          ],
+          transform: animateTransformToValues(
+            [{ translateX: -25 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
@@ -476,7 +476,8 @@ export class FadeOutUp
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const targetValues = this.targetValues;
@@ -490,14 +491,13 @@ export class FadeOutUp
             delay,
             animation(targetValues?.opacity ?? 0, config)
           ),
-          transform: [
-            {
-              translateY: delayFunction(
-                delay,
-                animation(targetValues?.translateY ?? -25, config)
-              ),
-            },
-          ],
+          transform: animateTransformToValues(
+            [{ translateY: -25 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
@@ -534,7 +534,8 @@ export class FadeOutDown
 
   build = (): AnimationConfigFunction<ExitAnimationsValues> => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const callback = this.callbackV;
     const initialValues = this.initialValues;
     const targetValues = this.targetValues;
@@ -548,14 +549,13 @@ export class FadeOutDown
             delay,
             animation(targetValues?.opacity ?? 0, config)
           ),
-          transform: [
-            {
-              translateY: delayFunction(
-                delay,
-                animation(targetValues?.translateY ?? 25, config)
-              ),
-            },
-          ],
+          transform: animateTransformToValues(
+            [{ translateY: 25 }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,

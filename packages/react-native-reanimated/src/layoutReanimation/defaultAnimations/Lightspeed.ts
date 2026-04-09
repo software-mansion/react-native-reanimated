@@ -1,10 +1,4 @@
 'use strict';
-import type {
-  AnimatableNumericValue,
-  SkewXTransform,
-  TranslateXTransform,
-} from 'react-native';
-
 import { withSequence, withTiming } from '../../animation';
 import type {
   EntryExitAnimationFunction,
@@ -14,7 +8,7 @@ import type {
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 import type { SkewX, TransformsConfig, TranslateX } from './types';
-import { pickTransformValues } from './utils';
+import { animateTransformToValues, pickTransformValues } from './utils';
 /**
  * Entry from right animation with change in skew and opacity. You can modify
  * the behavior by chaining methods like `.springify()` or `.duration(500)`.
@@ -194,7 +188,8 @@ export class LightSpeedOutRight
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
@@ -208,23 +203,13 @@ export class LightSpeedOutRight
             delay,
             animation(targetValues?.opacity ?? 0, config)
           ),
-          transform: [
-            {
-              translateX: delayFunction(
-                delay,
-                animation(
-                  targetValues?.translateX ?? values.windowWidth,
-                  config
-                )
-              ),
-            },
-            {
-              skewX: delayFunction(
-                delay,
-                animation(targetValues?.skewX ?? '-45deg', config)
-              ),
-            },
-          ],
+          transform: animateTransformToValues(
+            [{ translateX: values.windowWidth }, { skewX: '-45deg' }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
@@ -264,7 +249,8 @@ export class LightSpeedOutLeft
 
   build = (): EntryExitAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    const [animation, config] = this.getAnimationAndConfig();
+    const animationAndConfig = this.getAnimationAndConfig();
+    const [animation, config] = animationAndConfig;
     const delay = this.getDelay();
     const callback = this.callbackV;
     const initialValues = this.initialValues;
@@ -278,23 +264,13 @@ export class LightSpeedOutLeft
             delay,
             animation(targetValues?.opacity ?? 0, config)
           ),
-          transform: [
-            {
-              translateX: delayFunction(
-                delay,
-                animation(
-                  targetValues?.translateX ?? -values.windowWidth,
-                  config
-                )
-              ),
-            },
-            {
-              skewX: delayFunction(
-                delay,
-                animation(targetValues?.skewX ?? '45deg', config)
-              ),
-            },
-          ],
+          transform: animateTransformToValues(
+            [{ translateX: -values.windowWidth }, { skewX: '45deg' }],
+            targetValues,
+            animationAndConfig,
+            delayFunction,
+            delay
+          ),
         },
         initialValues: {
           opacity: initialValues?.opacity ?? 1,
