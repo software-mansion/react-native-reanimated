@@ -29,7 +29,7 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
 1. Set the new version by running the following script in the repository root:
 
-   - `cd packages/react-native-reanimated && node ./scripts/set-reanimated-version.js x.y.z`
+   - `cd packages/react-native-reanimated && yarn set-version x.y.z`
 
 1. Update the **Compatibility** in `packages/react-native-reanimated/compatibility.json`
 
@@ -52,7 +52,17 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
   - `tvos-example/ios/Podfile.lock`
   - `macos-example/macos/Podfile.lock`
 
-    </details>
+# <<<<<<< HEAD
+
+```
+run `bundle install && bundle exec pod install` in all example apps to update following files:
+```
+
+- `fabric-example/ios/Podfile.lock`
+- `tvos-example/ios/Podfile.lock`
+- `macos-example/macos/Podfile.lock`
+
+> > > > > > > main </details>
 
 ---
 
@@ -83,13 +93,29 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
 8. Create a PR, named "Release x.y.z" for the stable branch e.g. `3.17-stable`. Examples:
 
-   - patch version release [PR](https://github.com/software-mansion/react-native-reanimated/pull/6879).
-   - minor version release [PR](https://github.com/software-mansion/react-native-reanimated/pull/7071).
+<<<<<<< HEAD
+
+- patch version release [PR](https://github.com/software-mansion/react-native-reanimated/pull/6879).
+- minor version release [PR](https://github.com/software-mansion/react-native-reanimated/pull/7071).
 
 8. Run the GitHub Actions responsible for building your package:
 
    - [NPM Reanimated package build](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-package-build.yml),
    - Select your branch as the destination for the workflow: <img width="500" alt="upload_d3527584fe60bbd66cdd99dfbc34b118" src="https://github.com/user-attachments/assets/d25946c1-0279-430a-92b4-57a1307c1179" />
+     \=======
+
+8. Run the GitHub Action workflow to build the package:
+
+   - [npm reanimated publish](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish.yml)
+   - Select your branch as the destination for the workflow, make sure to leave the publish option unchecked to only build the package.
+   - <img width="500" alt="dispatching the workflow" src="https://github.com/user-attachments/assets/5376cdaa-27e9-436b-9359-30cbdc172e11" />
+   - **Caution**: Older branches might not have this workflow configured. Before releasing make sure to backport the workflow file to the branch you're releasing from.
+
+8. Wait for the workflow to finish - it should take about 2 minutes.
+
+8. Select your workflow from the list and download the artifact: <img width="500" alt="downloading the artifact" src="https://github.com/user-attachments/assets/f20b5c05-0403-4923-881e-697d3f268265" />
+
+> > > > > > > main
 
 8. Wait for the workflow to finish - it should take about 2 minutes.
 
@@ -113,15 +139,21 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
 8. Test the package in a clean React Native Web app:
 
-   - `npx create-expo-app my-app`
-   - Set up using **Getting Started** tutorial from [Expo Docs](https://docs.expo.dev/workflow/web/),
-   - `yarn add ~/Downloads/react-native-reanimated-x.y.z.tgz`
-   - If you don't have `babel.config.js`, create it using [this instruction](https://docs.expo.dev/versions/latest/config/babel/),
-   - Add `plugins: ['react-native-worklets/plugin']` in `babel.config.js` - as in our [Getting started](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/) guide,
-   - Copy [Bokeh Example](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/src/apps/reanimated/examples/BokehExample.tsx) to `App.tsx` - when using **expo-router** find and copy to `index.tsx`,
-   - Run dev: `npx expo start --web`,
-   - Run release: `npx expo export -p web && npx serve dist --single`.
-   - Run prebuild: `npx expo prebuild` to generate native code and ensure the app works correctly.
+<<<<<<< HEAD
+
+- `npx create-expo-app my-app`
+- Set up using **Getting Started** tutorial from [Expo Docs](https://docs.expo.dev/workflow/web/),
+- `yarn add ~/Downloads/react-native-reanimated-x.y.z.tgz`
+- If you don't have `babel.config.js`, create it using [this instruction](https://docs.expo.dev/versions/latest/config/babel/),
+- Add `plugins: ['react-native-worklets/plugin']` in `babel.config.js` - as in our [Getting started](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/) guide,
+- Copy [Bokeh Example](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/src/apps/reanimated/examples/BokehExample.tsx) to `App.tsx` - when using **expo-router** find and copy to `index.tsx`,
+- Run dev: `npx expo start --web`,
+- Run release: `npx expo export -p web && npx serve dist --single`.
+- Run prebuild: `npx expo prebuild` to generate native code and ensure the app works correctly.
+  \=======
+  \- Run the workflow again, this time with the publish option checked to upload the package to npm. Make sure to select the right branch and properly configure the release type, version and npm tag if needed.
+
+> > > > > > > main
 
 8. If something doesn't work you can fix it in this or in a separate PR (depending on the case), and repeat the steps.
 
