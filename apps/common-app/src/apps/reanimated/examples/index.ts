@@ -359,6 +359,8 @@ const PseudoHoverExample: React.FC = () =>
   React.createElement(require('./PseudoHoverExample').default);
 const PseudoCombinedExample: React.FC = () =>
   React.createElement(require('./PseudoCombinedExample').default);
+const PseudoShowcaseExample: React.FC = () =>
+  React.createElement(require('./PseudoShowcaseExample').default);
 const RainbowExample: React.FC = () =>
   React.createElement(require('./RainbowExample').default as React.FC);
 const ReactionsCounterExample: React.FC = () =>
@@ -1026,6 +1028,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔀',
     title: 'Pseudo-selectors (combined)',
     screen: PseudoCombinedExample,
+  },
+  PseudoShowcaseExample: {
+    icon: '🎬',
+    title: 'Pseudo-selectors (showcase)',
+    screen: PseudoShowcaseExample,
   },
 
   // Old examples

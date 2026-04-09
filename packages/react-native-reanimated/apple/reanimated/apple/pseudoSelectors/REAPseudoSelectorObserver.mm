@@ -150,6 +150,30 @@
   }
 }
 
+- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
+{
+  REAUIView *view = _view;
+  if (!view) {
+    return NO;
+  }
+  // Walk up from the hit view toward _view. If any intermediate view has its
+  // own :active gesture recognizer (identified by its delegate being a
+  // REAPseudoSelectorObserver), that descendant owns the touch - don't activate
+  // here. This mirrors Android behavior: the deepest :active view wins.
+  CGPoint location = [gestureRecognizer locationInView:view];
+  UIView *current = [view hitTest:location withEvent:nil];
+  while (current && current != view) {
+    for (UIGestureRecognizer *gr in current.gestureRecognizers) {
+      if ([gr.delegate isKindOfClass:[REAPseudoSelectorObserver class]] &&
+          [gr isKindOfClass:[UILongPressGestureRecognizer class]]) {
+        return NO;
+      }
+    }
+    current = current.superview;
+  }
+  return YES;
+}
+
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer
     shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
 {
