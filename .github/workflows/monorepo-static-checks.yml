@@ -41,3 +41,9 @@ jobs:
       # Checks
       - name: Lint
         run: yarn lint:root
+      - name: Check markdown formatting
+        id: md-format
+        run: yarn format:md && git update-index --refresh && git diff-index --quiet HEAD --
+      - name: Show markdown diff
+        if: failure() && steps.md-format.outcome == 'failure'
+        run: git diff
