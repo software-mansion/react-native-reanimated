@@ -1,24 +1,18 @@
 #pragma once
 
-#include <reanimated/CSS/configs/CSSKeyframesConfig.h>
-#include <reanimated/CSS/configs/common.h>
+#include <reanimated/apple/CSS/keyframes.h>
 
-#include <unordered_set>
+#include <memory>
 
 namespace reanimated::css {
 
 class CSSPlatformAnimation {
  public:
-  const std::unordered_set<std::string> &setAnimatedProperties(
-      const EasingConfig &easingConfig,
-      const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs,
-      const std::unordered_set<std::string> &allProperties);
-  const std::unordered_set<std::string> &getAnimatedProperties() const;
-  const std::unordered_set<std::string> &getNonAnimatedProperties() const;
+  virtual ~CSSPlatformAnimation() = default;
 
- private:
-  std::unordered_set<std::string> animatedProperties_;
-  std::unordered_set<std::string> nonAnimatedProperties_;
+  virtual void update(std::shared_ptr<const apple::CAKeyframesMap> data) = 0;
+
+  static std::shared_ptr<CSSPlatformAnimation> create(std::shared_ptr<const apple::CAKeyframesMap> data);
 };
 
 } // namespace reanimated::css

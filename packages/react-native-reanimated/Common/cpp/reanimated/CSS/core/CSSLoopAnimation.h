@@ -1,7 +1,6 @@
 #pragma once
 
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
-#include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 #include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 

@@ -1,22 +1,24 @@
 #pragma once
 
 #include <reanimated/CSS/configs/common.h>
-#include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolatorFactory.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 
+#ifdef __APPLE__
+#include <reanimated/apple/CSS/keyframes.h>
+#endif
+
 #include <memory>
 #include <string>
-#include <unordered_map>
 
 namespace reanimated::css {
-
-using KeyframeEasingFunctions = std::unordered_map<double, EasingFunction>;
-using KeyframeEasingConfigs = std::unordered_map<double, EasingConfig>;
 
 struct CSSKeyframesConfig {
   std::shared_ptr<AnimationStyleInterpolatorFactory> styleInterpolatorFactory;
   std::shared_ptr<KeyframeEasingConfigs> keyframeEasingConfigs;
+#ifdef __APPLE__
+  std::shared_ptr<apple::CAKeyframesMap> platformSupportedProperties;
+#endif
 };
 
 CSSKeyframesConfig parseCSSAnimationKeyframesConfig(

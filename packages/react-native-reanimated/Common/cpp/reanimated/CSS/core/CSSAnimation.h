@@ -3,8 +3,11 @@
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 #include <reanimated/CSS/core/CSSLoopAnimation.h>
-#include <reanimated/CSS/core/CSSPlatformAnimation.h>
 #include <reanimated/Fabric/updates/LoopOperation.h>
+
+#ifdef __APPLE__
+#include <reanimated/CSS/core/CSSPlatformAnimation.h>
+#endif
 
 #include <memory>
 #include <string>
@@ -35,6 +38,11 @@ class CSSAnimation : public LoopOperation {
   bool hasLoopAnimation() const;
   std::shared_ptr<CSSLoopAnimation> getLoopAnimation() const;
 
+#ifdef __APPLE__
+  bool hasPlatformAnimation() const;
+  std::shared_ptr<CSSPlatformAnimation> getPlatformAnimation() const;
+#endif
+
   folly::dynamic getBackwardsFillStyle() const;
   folly::dynamic getCurrentInterpolationStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const;
   folly::dynamic getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const;
@@ -48,7 +56,9 @@ class CSSAnimation : public LoopOperation {
   const std::shared_ptr<CSSAnimationSettings> settings_;
 
   std::shared_ptr<CSSLoopAnimation> loopAnimation_;
-  CSSPlatformAnimation platformAnimation_;
+#ifdef __APPLE__
+  std::shared_ptr<CSSPlatformAnimation> platformAnimation_;
+#endif
 
   void updatePropertyRouting(double timestamp);
 };

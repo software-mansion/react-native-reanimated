@@ -4,6 +4,7 @@
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -27,6 +28,9 @@ struct LinearStopsEasing {
 };
 
 using EasingConfig = std::variant<LinearEasing, CubicBezierEasing, StepsEasing, LinearStopsEasing>;
+
+using KeyframeEasingFunctions = std::unordered_map<double, EasingFunction>;
+using KeyframeEasingConfigs = std::unordered_map<double, EasingConfig>;
 
 double getDuration(jsi::Runtime &rt, const jsi::Object &config);
 

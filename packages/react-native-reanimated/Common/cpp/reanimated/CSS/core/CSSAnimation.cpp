@@ -70,6 +70,16 @@ std::shared_ptr<CSSLoopAnimation> CSSAnimation::getLoopAnimation() const {
   return loopAnimation_;
 }
 
+#ifdef __APPLE__
+std::shared_ptr<CSSPlatformAnimation> CSSAnimation::getPlatformAnimation() const {
+  return platformAnimation_;
+}
+
+bool CSSAnimation::hasPlatformAnimation() const {
+  return platformAnimation_ != nullptr;
+}
+#endif
+
 folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
   if (!loopAnimation_) {
     return folly::dynamic::object();
@@ -124,17 +134,35 @@ void CSSAnimation::updateSettings(const PartialCSSAnimationSettings &updatedSett
 
 void CSSAnimation::updatePropertyRouting(const double timestamp) {
   const auto &allProperties = keyframesConfig_.styleInterpolatorFactory->getAllPropertyNames();
-  const auto &loopDrivenProperties = platformAnimation_.setAnimatedProperties(
-      settings_->easingConfig, keyframesConfig_.keyframeEasingConfigs, allProperties);
 
-  if (loopDrivenProperties.empty()) {
+#ifdef __APPLE__
+  const auto routing = apple::routeProperties(
+      allProperties,
+      keyframesConfig_.platformSupportedProperties,
+      settings_->easingConfig,
+      keyframesConfig_.keyframeEasingConfigs);
+
+  if (!routing.platformProperties) {
+    platformAnimation_.reset();
+  } else if (!platformAnimation_) {
+    platformAnimation_ = CSSPlatformAnimation::create(std::move(routing.platformProperties));
+  } else {
+    platformAnimation_->update(std::move(routing.platformProperties));
+  }
+
+  const auto &loopProperties = routing.loopProperties;
+#else
+  const auto &loopProperties = allProperties;
+#endif
+
+  if (loopProperties.empty()) {
     loopAnimation_.reset();
     return;
   }
 
   if (!loopAnimation_) {
     loopAnimation_ = std::make_shared<CSSLoopAnimation>(
-        keyframesConfig_.styleInterpolatorFactory->create(loopDrivenProperties),
+        keyframesConfig_.styleInterpolatorFactory->create(loopProperties),
         allProperties,
         shadowNode_,
         settings_,
@@ -143,7 +171,7 @@ void CSSAnimation::updatePropertyRouting(const double timestamp) {
     return;
   }
 
-  loopAnimation_->setAnimatedProperties(loopDrivenProperties);
+  loopAnimation_->setAnimatedProperties(loopProperties);
 }
 
 } // namespace reanimated::css

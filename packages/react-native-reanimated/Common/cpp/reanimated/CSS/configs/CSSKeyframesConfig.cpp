@@ -1,7 +1,5 @@
 #include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 
-#include <reanimated/CSS/configs/common.h>
-
 #include <memory>
 #include <string>
 
@@ -42,7 +40,11 @@ CSSKeyframesConfig parseCSSAnimationKeyframesConfig(
 
   return {
       createStyleInterpolatorFactory(rt, configObj, nativeComponentName, viewStylesRepository),
-      getKeyframeTimingConfigs(rt, configObj)};
+      getKeyframeTimingConfigs(rt, configObj),
+#ifdef __APPLE__
+      apple::parseSupportedProperties(rt, configObj),
+#endif
+  };
 }
 
 } // namespace reanimated::css
