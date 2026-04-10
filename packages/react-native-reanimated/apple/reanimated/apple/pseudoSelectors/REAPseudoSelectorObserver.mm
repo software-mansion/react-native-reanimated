@@ -76,9 +76,8 @@
 
   auto isOurs = ^BOOL(NSNotification *note) {
     REAUIView *strongView = weakView;
-    return strongView != nil &&
-           [note.object isKindOfClass:[UIView class]] &&
-           [(UIView *)note.object isDescendantOfView:strongView];
+    return strongView != nil && [note.object isKindOfClass:[UIView class]] &&
+        [(UIView *)note.object isDescendantOfView:strongView];
   };
 
   NSMutableArray *observers = [NSMutableArray array];

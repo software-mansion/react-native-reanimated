@@ -54,8 +54,8 @@ static void attachObserverToView(
 }
 
 - (void)attachTag:(int)tag
-         selector:(reanimated::PseudoSelector)selector
-   sharedCallback:(std::shared_ptr<std::function<void(bool)>>)sharedCallback
+          selector:(reanimated::PseudoSelector)selector
+    sharedCallback:(std::shared_ptr<std::function<void(bool)>>)sharedCallback
 {
   RCTAssertMainQueue();
   REAUIView *view = [_surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
@@ -63,9 +63,8 @@ static void attachObserverToView(
     attachObserverToView(view, selector, sharedCallback);
   } else {
     NSString *key = [NSString stringWithFormat:@"%d:%d", tag, static_cast<int>(selector)];
-    _pendingAttaches[key] = [^(REAUIView *mountedView) {
-      attachObserverToView(mountedView, selector, sharedCallback);
-    } copy];
+    _pendingAttaches[key] =
+        [^(REAUIView *mountedView) { attachObserverToView(mountedView, selector, sharedCallback); } copy];
   }
 }
 

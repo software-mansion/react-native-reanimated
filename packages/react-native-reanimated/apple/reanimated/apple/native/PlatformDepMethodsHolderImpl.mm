@@ -138,18 +138,15 @@ PlatformAttachPseudoSelectorFunction makeAttachPseudoSelectorFunction(REAPseudoS
 {
   return [attachQueue](Tag tag, PseudoSelector selector, std::function<void(bool)> callback) {
     auto sharedCallback = std::make_shared<std::function<void(bool)>>(std::move(callback));
-    dispatch_async(dispatch_get_main_queue(), ^{
-      [attachQueue attachTag:tag selector:selector sharedCallback:sharedCallback];
-    });
+    dispatch_async(
+        dispatch_get_main_queue(), ^{ [attachQueue attachTag:tag selector:selector sharedCallback:sharedCallback]; });
   };
 }
 
 PlatformDetachPseudoSelectorFunction makeDetachPseudoSelectorFunction(REAPseudoSelectorAttachQueue *attachQueue)
 {
   return [attachQueue](Tag tag, PseudoSelector selector) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-      [attachQueue detachTag:tag selector:selector];
-    });
+    dispatch_async(dispatch_get_main_queue(), ^{ [attachQueue detachTag:tag selector:selector]; });
   };
 }
 
