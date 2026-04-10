@@ -6,11 +6,6 @@
 
 ### Nightly CI state
 
-<<<<<<< HEAD
-[![NPM Reanimated publish nightly](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish-nightly.yml)
-[![Lint clang-tidy \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml)
-================================================================================================================================================================================================================================================================
-
 [![NPM Reanimated publish nightly](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish.yml)
 [![Lint clang-tidy \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml)
 

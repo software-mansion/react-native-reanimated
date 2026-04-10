@@ -6,11 +6,6 @@ React Native Worklets is a library that allows you to run JavaScript code in par
 
 ## Nightly CI state
 
-<<<<<<< HEAD
-[![NPM Worklets publish \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish-nightly.yml)
-[![Lint clang-tidy \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml)
-================================================================================================================================================================================================================================================================
-
 [![NPM Worklets publish \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish.yml)
 [![Lint clang-tidy \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/lint-clang-tidy-nightly.yml)
 

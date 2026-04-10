@@ -9,7 +9,7 @@ Use it with [withSpring](/docs/animations/withSpring) animation.
 
 import { useClampPlayground } from '@site/src/components/InteractivePlayground';
 
-<InteractivePlayground usePlayground={useClampPlayground} />
+<InteractivePlayground usePlayground={useClampPlayground}/>
 
 ## Reference
 
@@ -52,8 +52,8 @@ An object with following properties:
 
 | Name             | Type Description |
 | ---------------- | ---------------- | ------------------------------------------------ |
-| min <Optional /> | `number`         | The lowest value your animation can ever reach   |
-| max <Optional /> | `number`         | The greatest value your animation can ever reach |
+| min <Optional/> | `number`         | The lowest value your animation can ever reach   |
+| max <Optional/> | `number`         | The greatest value your animation can ever reach |
 
 #### `animation`
 
@@ -71,4 +71,4 @@ const clampedStyleWithDelay = useAnimatedStyle(() => {
 
 `withClamp` returns an [animation object](/docs/fundamentals/glossary#animation-object). It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](/docs/core/useAnimatedStyle).
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

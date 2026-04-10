@@ -10,7 +10,7 @@ Entering/Exiting animations let you animate elements when they are added to or r
 
 Reanimated comes with a bunch of predefined animations you can customize. For more advanced use-cases, you can use [Keyframes](/docs/layout-animations/keyframe-animations) or create your own [custom entering/exiting animations](/docs/layout-animations/custom-animations).
 
-<InteractivePlayground usePlayground={useEnteringExitingPlayground} />
+<InteractivePlayground usePlayground={useEnteringExitingPlayground}/>
 
 :::info
 Spring-based animations are yet to be introduced to the web. Due to that, playground doesn't cover `springify()` options but they can be applied to your animations on iOS and Android platforms.
@@ -52,7 +52,7 @@ Available fade animations:
   <div>
     ### Entering
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `FadeIn`
 
@@ -68,7 +68,7 @@ Available fade animations:
   <div>
     ### Exiting
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `FadeOut`
 
@@ -103,7 +103,7 @@ Available fade animations:
 
 ### Modifiers
 
-#### Time-based <Optional />
+#### Time-based <Optional/>
 
 Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
 
@@ -117,7 +117,7 @@ FadeOutLeft.duration(500).easing(Easing.ease);
 Time-based modifiers have no effect when `.springify()` is used.
 :::
 
-#### Spring-based <Optional />
+#### Spring-based <Optional/>
 
 Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
 
@@ -139,7 +139,7 @@ FadeInUp.springify()
 - `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
 - `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
 
-#### Common <Optional />
+#### Common <Optional/>
 
 ```javascript
 FadeInDown.delay(500)
@@ -187,7 +187,7 @@ Available bounce animations:
   <div>
     ### Entering
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `BounceIn`
 
@@ -203,7 +203,7 @@ Available bounce animations:
   <div>
     ### Exiting
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `BounceOut`
 
@@ -236,7 +236,7 @@ Available bounce animations:
   | `BounceOutDown`  | `{transform: [{ translateY: 0 }]}`                    |
 </details>
 
-### Modifiers <Optional />
+### Modifiers <Optional/>
 
 ```javascript
 BounceInDown.duration(500)
@@ -285,7 +285,7 @@ Available flip animations:
   <div>
     ### Entering
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `FlipInEasyX`
 
@@ -303,7 +303,7 @@ Available flip animations:
   <div>
     ### Exiting
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `FlipOutEasyX`
 
@@ -342,7 +342,7 @@ Available flip animations:
 
 ### Modifiers
 
-#### Time-based <Optional />
+#### Time-based <Optional/>
 
 Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
 
@@ -356,7 +356,7 @@ FlipOutYLeft.duration(500).easing(Easing.ease);
 Time-based modifiers have no effect when `.springify()` is used.
 :::
 
-#### Spring-based <Optional />
+#### Spring-based <Optional/>
 
 Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
 
@@ -378,7 +378,7 @@ FlipInXUp.springify()
 - `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
 - `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
 
-#### Common <Optional />
+#### Common <Optional/>
 
 ```javascript
 FlipInEasyY.delay(500)
@@ -430,7 +430,7 @@ Available lightspeed animations:
   <div>
     ### Entering
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `LightSpeedInRight`
 
@@ -440,7 +440,7 @@ Available lightspeed animations:
   <div>
     ### Exiting
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `LightSpeedOutRight`
 
@@ -463,7 +463,7 @@ Available lightspeed animations:
 
 ### Modifiers
 
-#### Time-based <Optional />
+#### Time-based <Optional/>
 
 Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
 
@@ -477,7 +477,7 @@ LightSpeedOutLeft.duration(500).easing(Easing.ease);
 Time-based modifiers have no effect when `.springify()` is used.
 :::
 
-#### Spring-based <Optional />
+#### Spring-based <Optional/>
 
 Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
 
@@ -499,7 +499,7 @@ LightSpeedInLeft.springify()
 - `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
 - `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
 
-#### Common <Optional />
+#### Common <Optional/>
 
 ```javascript
 LightSpeedInRight.delay(500)
@@ -549,7 +549,7 @@ Available pinwheel animations:
   <div>
     ### Entering
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `PinwheelIn`
   </div>
@@ -557,7 +557,7 @@ Available pinwheel animations:
   <div>
     ### Exiting
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `PinwheelOut`
   </div>
@@ -576,7 +576,7 @@ Available pinwheel animations:
 
 ### Modifiers
 
-#### Time-based <Optional />
+#### Time-based <Optional/>
 
 Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
 
@@ -590,7 +590,7 @@ PinwheelOut.duration(500).easing(Easing.ease);
 Time-based modifiers have no effect when `.springify()` is used.
 :::
 
-#### Spring-based <Optional />
+#### Spring-based <Optional/>
 
 Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
 
@@ -612,7 +612,7 @@ PinwheelIn.springify()
 - `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
 - `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
 
-#### Common <Optional />
+#### Common <Optional/>
 
 ```javascript
 PinwheelIn.delay(500)
@@ -662,7 +662,7 @@ Available roll animations:
   <div>
     ### Entering
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `RollInRight`
 
@@ -672,7 +672,7 @@ Available roll animations:
   <div>
     ### Exiting
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `RollOutRight`
 
@@ -695,7 +695,7 @@ Available roll animations:
 
 ### Modifiers
 
-#### Time-based <Optional />
+#### Time-based <Optional/>
 
 Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
 
@@ -709,7 +709,7 @@ RollOutLeft.duration(500).easing(Easing.ease);
 Time-based modifiers have no effect when `.springify()` is used.
 :::
 
-#### Spring-based <Optional />
+#### Spring-based <Optional/>
 
 Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
 
@@ -731,7 +731,7 @@ RollInLeft.springify()
 - `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
 - `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
 
-#### Common <Optional />
+#### Common <Optional/>
 
 ```javascript
 RollInRight.delay(500)
@@ -781,7 +781,7 @@ Available rotate animations:
   <div>
     ### Entering
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `RotateInDownLeft`
 
@@ -795,7 +795,7 @@ Available rotate animations:
   <div>
     ### Exiting
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `RotateOutDownLeft`
 
@@ -826,7 +826,7 @@ Available rotate animations:
 
 ### Modifiers
 
-#### Time-based <Optional />
+#### Time-based <Optional/>
 
 Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
 
@@ -840,7 +840,7 @@ RotateOutDownRight.duration(500).easing(Easing.ease);
 Time-based modifiers have no effect when `.springify()` is used.
 :::
 
-#### Spring-based <Optional />
+#### Spring-based <Optional/>
 
 Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
 
@@ -862,7 +862,7 @@ RotateInUpLeft.springify()
 - `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
 - `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
 
-#### Common <Optional />
+#### Common <Optional/>
 
 ```javascript
 RotateInDownLeft.delay(500)
@@ -912,7 +912,7 @@ Available slide animations:
   <div>
     ### Entering
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `SlideInRight`
 
@@ -926,7 +926,7 @@ Available slide animations:
   <div>
     ### Exiting
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `SlideOutRight`
 
@@ -957,7 +957,7 @@ Available slide animations:
 
 ### Modifiers
 
-#### Time-based <Optional />
+#### Time-based <Optional/>
 
 Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
 
@@ -971,7 +971,7 @@ SlideOutLeft.duration(500).easing(Easing.ease);
 Time-based modifiers have no effect when `.springify()` is used.
 :::
 
-#### Spring-based <Optional />
+#### Spring-based <Optional/>
 
 Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
 
@@ -993,7 +993,7 @@ SlideInUp.springify()
 - `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
 - `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
 
-#### Common <Optional />
+#### Common <Optional/>
 
 ```javascript
 SlideInDown.delay(500)
@@ -1041,7 +1041,7 @@ Available stretch animations:
   <div>
     ### Entering
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `StretchInX`
 
@@ -1051,7 +1051,7 @@ Available stretch animations:
   <div>
     ### Exiting
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `StretchOutX`
 
@@ -1074,7 +1074,7 @@ Available stretch animations:
 
 ### Modifiers
 
-#### Time-based <Optional />
+#### Time-based <Optional/>
 
 Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
 
@@ -1088,7 +1088,7 @@ StretchOutX.duration(500).easing(Easing.ease);
 Time-based modifiers have no effect when `.springify()` is used.
 :::
 
-#### Spring-based <Optional />
+#### Spring-based <Optional/>
 
 Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
 
@@ -1110,7 +1110,7 @@ StretchInX.springify()
 - `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
 - `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
 
-#### Common <Optional />
+#### Common <Optional/>
 
 ```javascript
 StretchInY.delay(500)
@@ -1158,7 +1158,7 @@ Available zoom animations:
   <div>
     ### Entering
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `ZoomIn`
 
@@ -1180,7 +1180,7 @@ Available zoom animations:
   <div>
     ### Exiting
 
-    <div style={{ margin: 16 }} />
+    <div style={{ margin: 16 }}/>
 
     - `ZoomOut`
 
@@ -1227,7 +1227,7 @@ Available zoom animations:
 
 ### Modifiers
 
-#### Time-based <Optional />
+#### Time-based <Optional/>
 
 Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
 
@@ -1241,7 +1241,7 @@ ZoomOutLeft.duration(500).easing(Easing.ease);
 Time-based modifiers have no effect when `.springify()` is used.
 :::
 
-#### Spring-based <Optional />
+#### Spring-based <Optional/>
 
 Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
 
@@ -1263,7 +1263,7 @@ ZoomInRotate.springify()
 - `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
 - `.restSpeedThreshold(value: number)` is the speed in pixels per second from which the spring will snap to the designated position without further oscillations. Defaults to `2`.
 
-#### Common <Optional />
+#### Common <Optional/>
 
 ```javascript
 ZoomIn.delay(500)
@@ -1284,4 +1284,4 @@ ZoomIn.delay(500)
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

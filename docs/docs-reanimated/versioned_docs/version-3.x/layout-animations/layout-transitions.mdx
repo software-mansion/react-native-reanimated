@@ -9,7 +9,7 @@ Layout transitions allows you to replace layout changes with smooth transitions.
 import LayoutTransitions from '@site/src/examples/LayoutTransitions';
 import LayoutTransitionsSrc from '!!raw-loader!@site/src/examples/LayoutTransitions';
 
-<InteractiveExample src={LayoutTransitionsSrc} component={LayoutTransitions} />
+<InteractiveExample src={LayoutTransitionsSrc} component={LayoutTransitions}/>
 
 ## Predefined Transitions
 
@@ -31,7 +31,7 @@ function App() {
 
 ### Modifiers
 
-#### Easing <Optional />
+#### Easing <Optional/>
 
 Easing modifiers are time-based modifiers that rely on [`withTiming`](/docs/animations/withTiming) function.
 
@@ -45,7 +45,7 @@ LinearTransition.easing(Easing.ease);
 The `.easing(...)` modifiers have no effect when `.springify()` is used.
 :::
 
-#### Spring-based <Optional />
+#### Spring-based <Optional/>
 
 Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
 Just as in `withSpring` config, spring-based modifiers can be physics-based (have `mass` and `damping` modifiers) or duration-based (have `duration` and `dampingRatio` modifiers).
@@ -77,7 +77,7 @@ LinearTransition.springify()
 - `.restDisplacementThreshold(value: number)` is the displacement below which the spring will snap to the designated position without further oscillations. Defaults to `0.001`.
 - `.restSpeedThreshold(value: number)` is the speed in pixels per second below which the spring will snap to the designated position without further oscillations. Defaults to `2`.
 
-#### Common <Optional />
+#### Common <Optional/>
 
 ```javascript
 LinearTransition.delay(500)
@@ -332,4 +332,4 @@ ios: '/react-native-reanimated/recordings/layout_transitions/ios_entryexit_trans
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>
