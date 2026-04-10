@@ -3,7 +3,7 @@ title: createShareable
 sidebar_position: 42 # Use alphabetical order
 ---
 
-# createShareable <AvailableFrom version="0.8.0" />
+# createShareable <AvailableFrom version="0.8.0"/>
 
 :::note
 This page describes the API to create the new [Shareable](/docs/memory/shareable) type, which is a different concept from the old deprecated one coming from `react-native-reanimated`, available with the [makeShareable](/docs/memory/makeShareable) function.
@@ -23,35 +23,34 @@ const shareable = createShareable(UIRuntimeId, 42);
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function createShareable<
-  TValue = unknown,
-  THostDecorated = unknown,
-  TGuestDecorated = unknown,
->(
-  hostRuntimeId: number,
-  initial: TValue,
-  config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
-): Shareable<TValue, THostDecorated, TGuestDecorated>;
+  ```typescript
+  function createShareable<
+    TValue = unknown,
+    THostDecorated = unknown,
+    TGuestDecorated = unknown,
+  >(
+    hostRuntimeId: number,
+    initial: TValue,
+    config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
+  ): Shareable<TValue, THostDecorated, TGuestDecorated>;
 
-type ShareableConfig<TValue, THostDecorated, TGuestDecorated> = {
-  hostDecorator?: ShareableHostDecorator<TValue, THostDecorated>;
-  guestDecorator?: ShareableGuestDecorator<TValue, TGuestDecorated>;
-  initSynchronously?: boolean;
-};
+  type ShareableConfig<TValue, THostDecorated, TGuestDecorated> = {
+    hostDecorator?: ShareableHostDecorator<TValue, THostDecorated>;
+    guestDecorator?: ShareableGuestDecorator<TValue, TGuestDecorated>;
+    initSynchronously?: boolean;
+  };
 
-type ShareableHostDecorator<TValue = unknown, TDecorated = unknown> = (
-  shareable: ShareableHost<TValue> & TDecorated
-) => ShareableHost<TValue> & TDecorated;
+  type ShareableHostDecorator<TValue = unknown, TDecorated = unknown> = (
+    shareable: ShareableHost<TValue> & TDecorated
+  ) => ShareableHost<TValue> & TDecorated;
 
-type ShareableGuestDecorator<TValue = unknown, TDecorated = unknown> = (
-  shareable: ShareableGuest<TValue> & TDecorated
-) => ShareableGuest<TValue> & TDecorated;
+  type ShareableGuestDecorator<TValue = unknown, TDecorated = unknown> = (
+    shareable: ShareableGuest<TValue> & TDecorated
+  ) => ShareableGuest<TValue> & TDecorated;
 
-```
-
+  ```
 </details>
 
 ## Arguments

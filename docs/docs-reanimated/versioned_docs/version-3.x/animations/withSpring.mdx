@@ -9,7 +9,7 @@ sidebar_position: 2
 import SpringBasic from '@site/src/examples/SpringBasic';
 import SpringBasicSrc from '!!raw-loader!@site/src/examples/SpringBasic';
 
-<InteractiveExample src={SpringBasicSrc} component={SpringBasic} />
+<InteractiveExample src={SpringBasicSrc} component={SpringBasic}/>
 
 ## Reference
 
@@ -23,36 +23,35 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type AnimatableValue = number | string | number[];
+  ```typescript
+  type AnimatableValue = number | string | number[];
 
-interface WithSpringConfig {
-  damping?: number;
-  mass?: number;
-  stiffness?: number;
-  overshootClamping?: boolean;
-  restSpeedThreshold?: number;
-  restDisplacementThreshold?: number;
-  velocity?: number;
-  reduceMotion?: ReduceMotion;
-  clamp?: [number, number];
-}
+  interface WithSpringConfig {
+    damping?: number;
+    mass?: number;
+    stiffness?: number;
+    overshootClamping?: boolean;
+    restSpeedThreshold?: number;
+    restDisplacementThreshold?: number;
+    velocity?: number;
+    reduceMotion?: ReduceMotion;
+    clamp?: [number, number];
+  }
 
-function withSpring<T extends AnimatableValue>(
-  toValue: T,
-  config?: WithSpringConfig,
-  callback?: (finished?: boolean, current?: AnimatableValue) => void
-): T;
+  function withSpring<T extends AnimatableValue>(
+    toValue: T,
+    config?: WithSpringConfig,
+    callback?: (finished?: boolean, current?: AnimatableValue) => void
+  ): T;
 
-enum ReduceMotion {
-  System = 'system',
-  Always = 'always',
-  Never = 'never',
-}
-```
-
+  enum ReduceMotion {
+    System = 'system',
+    Always = 'always',
+    Never = 'never',
+  }
+  ```
 </details>
 
 ### Arguments
@@ -61,9 +60,9 @@ enum ReduceMotion {
 
 import AnimationToValue from './_shared/animationToValue.mdx';
 
-<AnimationToValue />
+<AnimationToValue/>
 
-#### `config` <Optional />
+#### `config` <Optional/>
 
 The spring animation configuration.
 
@@ -71,15 +70,15 @@ Available for physics-based spring:
 
 | Name                 | Type     | Default | Description                                                                                |
 | -------------------- | -------- | ------- | ------------------------------------------------------------------------------------------ |
-| mass <Optional />    | `number` | 1       | The weight of the spring. Reducing this value makes the animation faster.                  |
-| damping <Optional /> | `number` | 10      | How quickly a spring slows down. Higher damping means the spring will come to rest faster. |
+| mass <Optional/>    | `number` | 1       | The weight of the spring. Reducing this value makes the animation faster.                  |
+| damping <Optional/> | `number` | 10      | How quickly a spring slows down. Higher damping means the spring will come to rest faster. |
 
 Available for duration-based spring:
 
 | Name                      | Type     | Default | Description                                                                                                                                                     |
 | ------------------------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| duration <Optional />     | `number` | 2000    | Length of the animation (in milliseconds). <br/> Available in Reanimated ≥ 3.2.x                                                                                |
-| dampingRatio <Optional /> | `number` | 0.5     | How damped the spring is. Value `1` means the spring is critically damped, and value `>1` means the spring is overdamped. <br/> Available in Reanimated ≥ 3.2.x |
+| duration <Optional/>     | `number` | 2000    | Length of the animation (in milliseconds). <br/> Available in Reanimated ≥ 3.2.x                                                                                |
+| dampingRatio <Optional/> | `number` | 0.5     | How damped the spring is. Value `1` means the spring is critically damped, and value `>1` means the spring is overdamped. <br/> Available in Reanimated ≥ 3.2.x |
 
 :::info
 The `mass` and `damping` (physics-based) properties can't be used at the same time as `duration` and `dampingRatio` (duration-based).
@@ -91,15 +90,15 @@ Available for every spring animation:
 
 | Name                                   | Type               | Default               | Description                                                                                                                                                                        |
 | -------------------------------------- | ------------------ | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| stiffness <Optional />                 | `number`           | 100                   | How bouncy the spring is.                                                                                                                                                          |
-| velocity <Optional />                  | `number`           | 0                     | Initial velocity applied to the spring equation.                                                                                                                                   |
-| overshootClamping <Optional />         | `boolean`          | false                 | Whether a spring can bounce over the `toValue`.                                                                                                                                    |
-| restDisplacementThreshold <Optional /> | `number`           | 0.01                  | The displacement below which the spring will snap to `toValue` without further oscillations.                                                                                       |
-| restSpeedThreshold <Optional />        | `number`           | 2                     | The speed in pixels per second from which the spring will snap to `toValue` without further oscillations.                                                                          |
-| reduceMotion <Optional />              | `ReduceMotion`     | `ReduceMotion.System` | A parameter that determines how the animation responds to the device's reduced motion accessibility setting. <br/> Available in Reanimated ≥ 3.5.x                                 |
-| clamp <Optional />                     | `[number, number]` | `undefined`           | Limit of the scope of movement. If your spring would exceed this limit, then `dampingRatio` will be reduced (to make the spring less bouncy) <br/> Available in Reanimated ≥ 3.6.x |
+| stiffness <Optional/>                 | `number`           | 100                   | How bouncy the spring is.                                                                                                                                                          |
+| velocity <Optional/>                  | `number`           | 0                     | Initial velocity applied to the spring equation.                                                                                                                                   |
+| overshootClamping <Optional/>         | `boolean`          | false                 | Whether a spring can bounce over the `toValue`.                                                                                                                                    |
+| restDisplacementThreshold <Optional/> | `number`           | 0.01                  | The displacement below which the spring will snap to `toValue` without further oscillations.                                                                                       |
+| restSpeedThreshold <Optional/>        | `number`           | 2                     | The speed in pixels per second from which the spring will snap to `toValue` without further oscillations.                                                                          |
+| reduceMotion <Optional/>              | `ReduceMotion`     | `ReduceMotion.System` | A parameter that determines how the animation responds to the device's reduced motion accessibility setting. <br/> Available in Reanimated ≥ 3.5.x                                 |
+| clamp <Optional/>                     | `[number, number]` | `undefined`           | Limit of the scope of movement. If your spring would exceed this limit, then `dampingRatio` will be reduced (to make the spring less bouncy) <br/> Available in Reanimated ≥ 3.6.x |
 
-#### `callback` <Optional />
+#### `callback` <Optional/>
 
 A function called upon animation completion. If the animation is cancelled, the callback will receive `false` as the argument; otherwise, it will receive `true`.
 
@@ -112,7 +111,7 @@ A function called upon animation completion. If the animation is cancelled, the 
 import SpringCarousel from '@site/src/examples/SpringCarousel';
 import SpringCarouselSrc from '!!raw-loader!@site/src/examples/SpringCarousel';
 
-<InteractiveExample src={SpringCarouselSrc} component={SpringCarousel} />
+<InteractiveExample src={SpringCarouselSrc} component={SpringCarousel}/>
 
 ## Remarks
 
@@ -120,4 +119,4 @@ import SpringCarouselSrc from '!!raw-loader!@site/src/examples/SpringCarousel';
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

@@ -9,10 +9,7 @@ sidebar_position: 4
 import AnimationTimingFunctionBasic from '@site/src/examples/css-animations/AnimationTimingFunctionBasic';
 import AnimationTimingFunctionBasicSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationTimingFunctionBasic';
 
-<InteractiveExample
-  src={AnimationTimingFunctionBasicSrc}
-  component={AnimationTimingFunctionBasic}
-/>
+<InteractiveExample src={AnimationTimingFunctionBasicSrc} component={AnimationTimingFunctionBasic}/>
 
 ## Reference
 
@@ -36,59 +33,58 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-type NormalizedCubicBezierEasing = {
-  name: string;
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-};
-type NormalizedLinearEasing = {
-  name: string;
-  points: Point[];
-};
-type NormalizedStepsEasing = {
-  name: string;
-  points: Point[];
-};
+  ```typescript
+  type NormalizedCubicBezierEasing = {
+    name: string;
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+  };
+  type NormalizedLinearEasing = {
+    name: string;
+    points: Point[];
+  };
+  type NormalizedStepsEasing = {
+    name: string;
+    points: Point[];
+  };
 
-type ControlPoint = number | [number, ...Percentage[]];
+  type ControlPoint = number | [number, ...Percentage[]];
 
-type StepsModifier =
-  | 'jump-start'
-  | 'start'
-  | 'jump-end'
-  | 'end'
-  | 'jump-none'
-  | 'jump-both';
+  type StepsModifier =
+    | 'jump-start'
+    | 'start'
+    | 'jump-end'
+    | 'end'
+    | 'jump-none'
+    | 'jump-both';
 
-type NormalizedCSSTimingFunction =
-  | PredefinedTimingFunction
-  | NormalizedCubicBezierEasing
-  | NormalizedLinearEasing
-  | NormalizedStepsEasing;
+  type NormalizedCSSTimingFunction =
+    | PredefinedTimingFunction
+    | NormalizedCubicBezierEasing
+    | NormalizedLinearEasing
+    | NormalizedStepsEasing;
 
-type PredefinedTimingFunction =
-  | 'linear'
-  | 'ease'
-  | 'ease-in'
-  | 'ease-out'
-  | 'ease-in-out'
-  | 'step-start'
-  | 'step-end';
+  type PredefinedTimingFunction =
+    | 'linear'
+    | 'ease'
+    | 'ease-in'
+    | 'ease-out'
+    | 'ease-in-out'
+    | 'step-start'
+    | 'step-end';
 
-interface ParametrizedTimingFunction {
-  toString(): string;
-  normalize(): NormalizedCSSTimingFunction;
-}
+  interface ParametrizedTimingFunction {
+    toString(): string;
+    normalize(): NormalizedCSSTimingFunction;
+  }
 
-type CSSTimingFunction = PredefinedTimingFunction | ParametrizedTimingFunction;
-type CSSAnimationTimingFunction = CSSTimingFunction | CSSTimingFunction[];
-```
-
+  type CSSTimingFunction = PredefinedTimingFunction | ParametrizedTimingFunction;
+  type CSSAnimationTimingFunction = CSSTimingFunction | CSSTimingFunction[];
+  ```
 </details>
 
 ### Values
@@ -118,25 +114,21 @@ A returned object from parametrized timing functions. Available functions:
 - `cubicBezier(x1: number, y1: number, x2: number, y2: number)` - a Bézier curve to shape the progress of an animation. It is defined by two control points (x1, y1, x2, y2) that mathematically describe the curve.
 
 <Indent>
+  ```typescript
+  import { cubicBezier } from 'react-native-reanimated';
 
-```typescript
-import { cubicBezier } from 'react-native-reanimated';
-
-animationTimingFunction: cubicBezier(0.25, 0.1, 0.5, 2),
-```
-
+  animationTimingFunction: cubicBezier(0.25, 0.1, 0.5, 2),
+  ```
 </Indent>
 
 - `linear(...points: ControlPoint[])` - a simple polygonal chain that always starts at an x-value of 0 and ends at an x-value of 1. You can either specify the points' y and x coordinates or leave the x coordinates to be inferred.
 
 <Indent>
+  ```typescript
+  import { linear } from 'react-native-reanimated';
 
-```typescript
-import { linear } from 'react-native-reanimated';
-
-animationTimingFunction: linear(0, [0.25, '75%'], 1),
-```
-
+  animationTimingFunction: linear(0, [0.25, '75%'], 1),
+  ```
 </Indent>
 
 - `steps(stepsNumber: number, modifier?: StepsModifier)` - creates an easing function that makes given number of even steps over increasing y-values. The second argument is a modifier that adds jumps before or after the steps. Modifier defaults to `jump-end`.
@@ -148,13 +140,11 @@ animationTimingFunction: linear(0, [0.25, '75%'], 1),
   - `end` - an alias for `jump-end`,
 
 <Indent>
+  ```typescript
+  import { steps } from 'react-native-reanimated';
 
-```typescript
-import { steps } from 'react-native-reanimated';
-
-animationTimingFunction: steps(4, 'jump-end'),
-```
-
+  animationTimingFunction: steps(4, 'jump-end'),
+  ```
 </Indent>
 
 #### `<timing function[]>`
@@ -176,23 +166,21 @@ In the following example, the `bounceIn` keyframe will be animated using `linear
 - A timing function specified in the last keyframe (`100%`, `to`, or `1`) is ignored since there is no subsequent keyframe.
 
 <Indent>
-
-```typescript
-const square: CSSAnimationKeyframes = {
-  '0%': {
-    transform: [{ translateX: 0 }],
-    animationTimingFunction: cubicBezier(0.25, 0.1, 0.26, 1.53),
-  },
-  '100%': {
-    transform: [{ translateX: -80 }],
-    // highlight-next-line
-    animationTimingFunction: 'linear', // 🚨 this will be ignored
-  },
-};
-```
-
+  ```typescript
+  const square: CSSAnimationKeyframes = {
+    '0%': {
+      transform: [{ translateX: 0 }],
+      animationTimingFunction: cubicBezier(0.25, 0.1, 0.26, 1.53),
+    },
+    '100%': {
+      transform: [{ translateX: -80 }],
+      // highlight-next-line
+      animationTimingFunction: 'linear', // 🚨 this will be ignored
+    },
+  };
+  ```
 </Indent>
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

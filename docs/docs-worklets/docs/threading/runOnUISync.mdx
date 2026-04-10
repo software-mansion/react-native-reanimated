@@ -22,15 +22,14 @@ console.log(result); // 1
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function runOnUISync<Args extends unknown[], ReturnValue>(
-  worklet: (...args: Args) => ReturnValue,
-  ...args: Args
-): ReturnValue;
-```
-
+  ```typescript
+  function runOnUISync<Args extends unknown[], ReturnValue>(
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): ReturnValue;
+  ```
 </details>
 
 ### Arguments
@@ -55,17 +54,17 @@ Arguments to pass to the function.
 
 <CallTable
   bundleMode={{
-    rnRuntime: true,
-    uiRuntime: true,
-    workerRuntime: true,
-  }}
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
   noBundleMode={{
-    rnRuntime: true,
-    uiRuntime: false,
-    workerRuntime: false,
-  }}
+rnRuntime: true,
+uiRuntime: false,
+workerRuntime: false,
+}}
 />
 
 ## Platform compatibility
 
-<PlatformTable native={true} web={false} />
+<PlatformTable native={true} web={false}/>

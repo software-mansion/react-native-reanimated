@@ -4,11 +4,11 @@ sidebar_position: 2137 # Last in the section - deprecated
 
 <DeprecatedBanner
   text={
-    <>
-      This API is deprecated and will be removed in the next major release. Use{' '}
-      <a href="/docs/threading/runOnUISync">runOnUISync</a> instead.
-    </>
-  }
+<>
+This API is deprecated and will be removed in the next major release. Use{' '}
+<a href="/docs/threading/runOnUISync">runOnUISync</a> instead.
+</>
+}
 />
 
 # executeOnUIRuntimeSync
@@ -30,14 +30,13 @@ console.log(result); // 1
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
-  worklet: (...args: Args) => ReturnValue
-): (...args: Args) => ReturnValue;
-```
-
+  ```typescript
+  function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
+    worklet: (...args: Args) => ReturnValue
+  ): (...args: Args) => ReturnValue;
+  ```
 </details>
 
 ### Arguments

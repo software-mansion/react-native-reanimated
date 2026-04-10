@@ -16,7 +16,7 @@ You have two options for this:
 
    React Native Worklets provides a complete mock implementation for Jest. This is the recommended approach for testing.
 
-2. **Enforce the use of Web implementation for React Native Worklets.**
+1. **Enforce the use of Web implementation for React Native Worklets.**
 
    React Native Worklets has a separate Web implementation to use in the browser. Use this approach when you want to avoid using artifical mocks.
 
@@ -32,6 +32,7 @@ Depending on whether you are using TypeScript or JavaScript, apply the following
     );
     ```
   </TabItem>
+
   <TabItem value="JavaScript" label="JavaScript">
     ```js
     jest.mock('react-native-worklets', () =>
