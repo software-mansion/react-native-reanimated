@@ -27,7 +27,7 @@ export function setupRequestAnimationFrame(animationQueuePollingRate: number) {
 
     for (const callback of flushedCallbacks) {
       callback(timestamp);
-      globalThis.__flushMicrotasks();
+      globalThis.__callMicrotasks();
     }
 
     flushedCallbacksBegin = flushedCallbacksEnd;

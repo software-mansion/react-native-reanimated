@@ -1,5 +1,12 @@
 'use strict';
 import type {
+  Perspective,
+  RotateX,
+  RotateY,
+  TranslateX,
+  TranslateY,
+} from '../../common';
+import type {
   AnimationConfigFunction,
   EntryAnimationsValues,
   EntryExitAnimationFunction,
@@ -21,7 +28,9 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipInXUp
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    transform: [Perspective, RotateX, TranslateY];
+  }>
   implements IEntryAnimationBuilder
 {
   static presetName = 'FlipInXUp';
@@ -73,7 +82,9 @@ export class FlipInXUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipInYLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    transform: [Perspective, RotateY, TranslateX];
+  }>
   implements IEntryAnimationBuilder
 {
   static presetName = 'FlipInYLeft';
@@ -125,7 +136,9 @@ export class FlipInYLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipInXDown
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    transform: [Perspective, RotateX, TranslateY];
+  }>
   implements IEntryAnimationBuilder
 {
   static presetName = 'FlipInXDown';
@@ -177,7 +190,9 @@ export class FlipInXDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipInYRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    transform: [Perspective, RotateY, TranslateX];
+  }>
   implements IEntryAnimationBuilder
 {
   static presetName = 'FlipInYRight';
@@ -229,7 +244,7 @@ export class FlipInYRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipInEasyX
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [Perspective, RotateX] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FlipInEasyX';
@@ -276,7 +291,7 @@ export class FlipInEasyX
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipInEasyY
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [Perspective, RotateY] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FlipInEasyY';
@@ -323,7 +338,9 @@ export class FlipInEasyY
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipOutXUp
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    transform: [Perspective, RotateX, TranslateY];
+  }>
   implements IExitAnimationBuilder
 {
   static presetName = 'FlipOutXUp';
@@ -380,7 +397,9 @@ export class FlipOutXUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipOutYLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    transform: [Perspective, RotateY, TranslateX];
+  }>
   implements IExitAnimationBuilder
 {
   static presetName = 'FlipOutYLeft';
@@ -437,7 +456,9 @@ export class FlipOutYLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipOutXDown
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    transform: [Perspective, RotateX, TranslateY];
+  }>
   implements IExitAnimationBuilder
 {
   static presetName = 'FlipOutXDown';
@@ -494,7 +515,9 @@ export class FlipOutXDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipOutYRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    transform: [Perspective, RotateY, TranslateX];
+  }>
   implements IExitAnimationBuilder
 {
   static presetName = 'FlipOutYRight';
@@ -551,7 +574,7 @@ export class FlipOutYRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipOutEasyX
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [Perspective, RotateX] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FlipOutEasyX';
@@ -598,7 +621,7 @@ export class FlipOutEasyX
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
 export class FlipOutEasyY
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [Perspective, RotateY] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FlipOutEasyY';

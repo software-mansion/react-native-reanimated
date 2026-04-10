@@ -1,5 +1,6 @@
 'use strict';
 import { withSequence, withTiming } from '../../animation';
+import type { SkewX, TranslateX } from '../../common';
 import type {
   EntryExitAnimationFunction,
   EntryExitAnimationsValues,
@@ -17,7 +18,10 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#lightspeed
  */
 export class LightSpeedInRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [TranslateX, SkewX];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'LightSpeedInRight';
@@ -81,7 +85,10 @@ export class LightSpeedInRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#lightspeed
  */
 export class LightSpeedInLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [TranslateX, SkewX];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'LightSpeedInLeft';
@@ -145,7 +152,10 @@ export class LightSpeedInLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#lightspeed
  */
 export class LightSpeedOutRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [TranslateX, SkewX];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'LightSpeedOutRight';
@@ -201,7 +211,10 @@ export class LightSpeedOutRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#lightspeed
  */
 export class LightSpeedOutLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [TranslateX, SkewX];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'LightSpeedOutLeft';
