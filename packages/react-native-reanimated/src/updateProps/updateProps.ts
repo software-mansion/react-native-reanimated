@@ -151,7 +151,7 @@ function createUpdatePropsManager() {
         }
 
         if (!flushPending && (nativePropUpdates || jsPropUpdates)) {
-          queueMicrotask(this.flush);
+          global.__requestMapperRunFinalizer(this.flush);
           flushPending = true;
         }
       });
@@ -166,6 +166,7 @@ function createUpdatePropsManager() {
         jsOperations.length = 0;
       }
       flushPending = false;
+      global._maybeFlushUIUpdatesQueue();
     },
   };
 }

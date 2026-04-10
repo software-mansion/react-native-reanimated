@@ -87,13 +87,10 @@ export function registerEventHandler<T>(
   eventName: string,
   emitterReactTag = -1
 ): number {
-  function handleAndFlushAnimationFrame(eventTimestamp: number, event: T) {
+  function handleAndFlushAnimationFrame(_eventTimestamp: number, event: T) {
     'worklet';
-    // TODO: Fix this and don't call `__flushAnimationFrame` here.
-    global.__frameTimestamp = eventTimestamp;
     eventHandler(event);
-    global.__flushAnimationFrame(eventTimestamp);
-    global.__frameTimestamp = undefined;
+    global.__mapperRun();
   }
   return ReanimatedModule.registerEventHandler(
     createSerializable(handleAndFlushAnimationFrame as WorkletFunction),
@@ -114,12 +111,8 @@ export function subscribeForKeyboardEvents(
   // via registerEventHandler. For now we are copying the code from there.
   function handleAndFlushAnimationFrame(state: number, height: number) {
     'worklet';
-    // TODO: Fix this and don't call `__flushAnimationFrame` here.
-    const now = global._getAnimationTimestamp();
-    global.__frameTimestamp = now;
     eventHandler(state, height);
-    global.__flushAnimationFrame(now);
-    global.__frameTimestamp = undefined;
+    global.__mapperRun();
   }
 
   if (__DEV__) {
