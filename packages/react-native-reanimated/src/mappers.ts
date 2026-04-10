@@ -108,10 +108,10 @@ function createMapperRegistry() {
       }
     } finally {
       processingMappers = false;
+      mapperRunFinalizers = [];
       for (const finalizer of mapperRunFinalizers) {
         finalizer();
       }
-      mapperRunFinalizers = [];
     }
   }
 
