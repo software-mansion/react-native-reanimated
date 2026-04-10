@@ -157,6 +157,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
       const jsi::Value &isNavigationBarTranslucent) override;
   void unsubscribeFromKeyboardEvents(jsi::Runtime &rt, const jsi::Value &listenerId) override;
 
+  void toggleSlowAnimationsOnUIRuntime() const;
+
   inline LayoutAnimationsManager &layoutAnimationsManager() {
     return *layoutAnimationsManager_;
   }

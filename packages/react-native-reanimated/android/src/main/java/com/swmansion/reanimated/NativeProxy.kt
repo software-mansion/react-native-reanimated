@@ -229,6 +229,8 @@ open class NativeProxy {
 
     private external fun invalidateCpp()
 
+    external fun toggleSlowAnimationsOnUIRuntime()
+
     protected fun getHybridData(): HybridData = mHybridData
 
     fun invalidate() {
@@ -246,21 +248,7 @@ open class NativeProxy {
             firstUptime = SystemClock.uptimeMillis()
         }
         mNodesManager!!.enableSlowAnimations(slowAnimationsEnabled, animationsDragFactor)
-        try {
-            @Suppress("UNCHECKED_CAST")
-            val workletsModuleClass =
-                Class.forName("com.swmansion.worklets.WorkletsModule") as Class<NativeModule>
-            val workletsModule = mContext.get()!!.getNativeModule(workletsModuleClass)
-            if (workletsModule != null) {
-                try {
-                    workletsModule.javaClass.getMethod("toggleSlowAnimations").invoke(workletsModule)
-                } catch (e: Exception) {
-                    Log.e("Reanimated", "Failed to toggle slow animations in WorkletsModule", e)
-                }
-            }
-        } catch (e: ClassNotFoundException) {
-            Log.e("Reanimated", "WorkletsModule not found when toggling slow animations", e)
-        }
+        toggleSlowAnimationsOnUIRuntime()
     }
 
     private fun addDevMenuOption() {
