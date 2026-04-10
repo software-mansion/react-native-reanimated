@@ -18,10 +18,11 @@ export default class CSSManager implements ICSSManager {
   private readonly cssTransitionsManager: CSSTransitionsManager;
   private readonly viewTag: number;
   private readonly propsBuilder: ReturnType<typeof getPropsBuilder>;
-  // True iff the previous update had CSS transition props attached. On the
-  // next update we still need to build `normalizedStyle` only on Android
-  // to revert props applied during the transition to correct current values.
-  // (fixes https://github.com/software-mansion/react-native-reanimated/issues/9218).
+  /** True if the previous update had CSS transition props attached. On the
+  * next update we still need to build `normalizedStyle` only on Android
+  * to revert props applied during the transition to correct current values.
+  * (fixes https://github.com/software-mansion/react-native-reanimated/issues/9218).
+  */
   private hadTransitionLastUpdate = false;
 
   constructor(
