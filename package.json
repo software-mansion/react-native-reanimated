@@ -78,6 +78,7 @@
     "react-native-builder-bob": "0.40.13",
     "remark-cli": "12.0.1",
     "remark-frontmatter": "5.0.0",
+    "remark-gfm": "4.0.1",
     "remark-mdx": "3.1.0",
     "shelljs": "0.10.0",
     "typescript": "5.9.3"

@@ -1,4 +1,16 @@
+import {
+  gfmTaskListItemFromMarkdown,
+  gfmTaskListItemToMarkdown,
+} from 'mdast-util-gfm-task-list-item';
 import remarkFrontmatter from 'remark-frontmatter';
+import { gfmTaskListItem } from 'micromark-extension-gfm-task-list-item';
+
+export function remarkGfmTaskListItem() {
+  const data = this.data();
+  (data.micromarkExtensions ??= []).push(gfmTaskListItem());
+  (data.fromMarkdownExtensions ??= []).push(gfmTaskListItemFromMarkdown());
+  (data.toMarkdownExtensions ??= []).push(gfmTaskListItemToMarkdown());
+}
 
 export const settings = {
   bullet: '-',
@@ -18,5 +30,5 @@ export const settings = {
 
 export default {
   settings,
-  plugins: [remarkFrontmatter],
+  plugins: [remarkFrontmatter, remarkGfmTaskListItem],
 };
