@@ -3,9 +3,6 @@ package com.swmansion.reanimated
 import android.content.ContentResolver
 import android.os.SystemClock
 import android.provider.Settings
-import android.util.Log
-import android.view.MotionEvent
-import android.view.View
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
 import com.facebook.react.bridge.JavaOnlyArray
@@ -26,6 +23,7 @@ import com.swmansion.reanimated.nativeProxy.AnimationFrameCallback
 import com.swmansion.reanimated.nativeProxy.EventHandler
 import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
 import com.swmansion.reanimated.nativeProxy.SensorSetter
+import com.swmansion.reanimated.pseudoSelectors.PseudoSelectorManager
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer
 import com.swmansion.reanimated.sensor.ReanimatedSensorType
 import java.lang.ref.WeakReference
@@ -154,6 +152,7 @@ open class NativeProxy {
     private val reanimatedSensorContainer: ReanimatedSensorContainer
     private val gestureHandlerStateManager: GestureHandlerStateManager?
     private val keyboardAnimationManager: KeyboardAnimationManager
+    private val pseudoSelectorManager: PseudoSelectorManager
     private var firstUptime: Long = SystemClock.uptimeMillis()
     private var slowAnimationsEnabled = false
     private val animationsDragFactor = 10
@@ -170,8 +169,6 @@ open class NativeProxy {
      */
     private val mInvalidated = AtomicBoolean(false)
 
-    // Key = "$tag:$selectorInt" — allows multiple selectors per view.
-    private val mPseudoSelectorDetachActions = HashMap<String, Runnable>()
 
     @field:DoNotStrip
     @Suppress("unused")
@@ -203,6 +200,7 @@ open class NativeProxy {
 
         mFabricUIManager =
             UIManagerHelper.getUIManager(context, UIManagerType.FABRIC) as FabricUIManager
+        pseudoSelectorManager = PseudoSelectorManager(mFabricUIManager)
 
         val callInvokerHolder = context.jsCallInvokerHolder as CallInvokerHolderImpl
         mHybridData =
@@ -244,74 +242,13 @@ open class NativeProxy {
         tag: Int,
         selector: Int,
         callback: PseudoSelectorCallback,
-    ) {
-        UiThreadUtil.runOnUiThread {
-            val view = mFabricUIManager.resolveView(tag) ?: return@runOnUiThread
-            val key = "$tag:$selector"
-            when (selector) {
-                0 -> { // :active
-                    val touchListener =
-                        View.OnTouchListener { _, event ->
-                            val action = event.actionMasked
-                            if (action == MotionEvent.ACTION_DOWN) {
-                                callback.onSelectorStateChanged(true)
-                            } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-                                callback.onSelectorStateChanged(false)
-                            }
-                            false
-                        }
-                    view.setOnTouchListener(touchListener)
-                    mPseudoSelectorDetachActions[key] = Runnable { view.setOnTouchListener(null) }
-                }
-                1 -> { // :focus
-                    var isFocused = false
-                    val focusListener =
-                        android.view.ViewTreeObserver.OnGlobalFocusChangeListener { _, _ ->
-                            val hasFocus = view.hasFocus()
-                            if (hasFocus && !isFocused) {
-                                isFocused = true
-                                callback.onSelectorStateChanged(isFocused)
-                            } else if (!hasFocus && isFocused) {
-                                isFocused = false
-                                callback.onSelectorStateChanged(isFocused)
-                            }
-                        }
-
-                    view.viewTreeObserver.addOnGlobalFocusChangeListener(focusListener)
-                    mPseudoSelectorDetachActions[key] =
-                        Runnable {
-                            view.viewTreeObserver.removeOnGlobalFocusChangeListener(focusListener)
-                        }
-                }
-                2 -> { // :hover
-                    Log.d("PseudoSelector", "Setting hover listener on view tag=$tag")
-                    val hoverListener =
-                        View.OnHoverListener { _, event ->
-                            Log.d("PseudoSelector", "hover event: action=${event.actionMasked}")
-                            val action = event.actionMasked
-                            if (action == MotionEvent.ACTION_HOVER_ENTER) {
-                                callback.onSelectorStateChanged(true)
-                            } else if (action == MotionEvent.ACTION_HOVER_EXIT) {
-                                callback.onSelectorStateChanged(false)
-                            }
-                            false
-                        }
-                    view.setOnHoverListener(hoverListener)
-                    mPseudoSelectorDetachActions[key] = Runnable { view.setOnHoverListener(null) }
-                }
-            }
-        }
-    }
+    ) = pseudoSelectorManager.attach(tag, selector, callback)
 
     @DoNotStrip
     fun detachPseudoSelector(
         tag: Int,
         selector: Int,
-    ) {
-        UiThreadUtil.runOnUiThread {
-            mPseudoSelectorDetachActions.remove("$tag:$selector")?.run()
-        }
-    }
+    ) = pseudoSelectorManager.detach(tag, selector)
 
     fun invalidate() {
         if (mInvalidated.getAndSet(true)) {
