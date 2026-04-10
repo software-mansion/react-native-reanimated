@@ -8,6 +8,7 @@ export function createErrorPrefixRule<MessageId extends string>(
 ): TSESLint.RuleModule<MessageId, []> {
   return {
     create(context) {
+      const sourceCode = context.getSourceCode();
       return {
         NewExpression(node: TSESTree.NewExpression) {
           if (
@@ -24,7 +25,7 @@ export function createErrorPrefixRule<MessageId extends string>(
               node,
               messageId,
               fix(fixer) {
-                const closeParen = context.sourceCode.getLastToken(node)!;
+                const closeParen = sourceCode.getLastToken(node)!;
                 return fixer.insertTextBefore(closeParen, `'${prefix}'`);
               },
             });
@@ -71,7 +72,7 @@ export function createErrorPrefixRule<MessageId extends string>(
               node,
               messageId,
               fix(fixer) {
-                const exprText = context.sourceCode.getText(first);
+                const exprText = sourceCode.getText(first);
                 return fixer.replaceText(
                   first,
                   `\`${prefix} \${${exprText}}\``

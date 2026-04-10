@@ -20,7 +20,7 @@ export function getShadowNodeWrapperFromRef(
     } else if ((ref as any)._reactInternals) {
       resolvedInstance = findHostInstance(ref).__internalInstanceHandle;
     } else {
-      throw new Error(`[Reanimated] Failed to find host instance for a ref.}`);
+      throw new Error(`[Reanimated] Failed to find host instance for a ref.`);
     }
   }
 

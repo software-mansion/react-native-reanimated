@@ -41,7 +41,7 @@ function validateConfig(config: DefaultDecayConfig): void {
   }
   if (config.velocityFactor <= 0) {
     throw new Error(
-      `[Reanimated] \`config.velocityFactor\` must be greater then 0 but is ${config.velocityFactor}.`
+      `[Reanimated] \`config.velocityFactor\` must be greater than 0 but is ${config.velocityFactor}.`
     );
   }
   if (config.rubberBandEffect && !config.clamp) {

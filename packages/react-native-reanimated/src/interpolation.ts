@@ -94,7 +94,7 @@ function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
   if (typeof type === 'string') {
     if (!isExtrapolate(type)) {
       throw new Error(
-        `[Reanimated] Unsupported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]\n Valid example:
+        `[Reanimated] Unsupported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolation.CLAMP, Extrapolation.EXTEND, Extrapolation.IDENTITY]\n Valid example:
         interpolate(value, [inputRange], [outputRange], "clamp")`
       );
     }
@@ -109,7 +109,7 @@ function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
     (type.extrapolateRight && !isExtrapolate(type.extrapolateRight))
   ) {
     throw new Error(
-      `[Reanimated] Unsupported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]\n Valid example:
+      `[Reanimated] Unsupported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolation.CLAMP, Extrapolation.EXTEND, Extrapolation.IDENTITY]\n Valid example:
       interpolate(value, [inputRange], [outputRange], {
         extrapolateLeft: Extrapolation.CLAMP,
         extrapolateRight: Extrapolation.IDENTITY
