@@ -2,7 +2,7 @@
 
 import { scheduleOnUI } from 'react-native-worklets';
 
-import { IS_JEST } from './common';
+import { IS_JEST, IS_WEB } from './common';
 import type {
   MapperOutputs,
   MapperRawInputs,
@@ -115,6 +115,11 @@ function createMapperRegistry() {
     }
   }
 
+  function scheduledMapperRun() {
+    runRequested = false;
+    mapperRun();
+  }
+
   global.__mapperRun = mapperRun;
 
   function maybeRequestUpdates() {
@@ -127,10 +132,26 @@ function createMapperRegistry() {
       // if they want to make any assertions on the effects of animations being run.
       mapperRun();
     } else if (!runRequested) {
-      requestAnimationFrameFinalizer(() => {
-        runRequested = false;
-        mapperRun();
-      });
+      if (IS_WEB) {
+        if (processingMappers) {
+          // In general, we should avoid having mappers trigger updates as this may
+          // result in unpredictable behavior. Specifically, the updated value can
+          // be read by mappers that run later in the same frame but previous mappers
+          // would access the old value. Updating mappers during the mapper-run phase
+          // breaks the order in which we should execute the mappers. However, doing
+          // that is still a possibility and there are some instances where people use
+          // the API in that way, hence we need to prevent mapper-run phase falling into
+          // an infinite loop. We do that by detecting when mapper-run is requested while
+          // we are already in mapper-run phase, and in that case we use `requestAnimationFrame`
+          // instead of `queueMicrotask` which will schedule mapper run for the next
+          // frame instead of queuing another set of updates in the same frame.
+          requestAnimationFrame(scheduledMapperRun);
+        } else {
+          queueMicrotask(scheduledMapperRun);
+        }
+      } else {
+        globalThis.requestAnimationFrameFinalizer(scheduledMapperRun);
+      }
       runRequested = true;
     }
   }

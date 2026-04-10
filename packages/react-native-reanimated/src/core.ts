@@ -82,18 +82,19 @@ function getSensorContainer(): SensorContainer {
   return global.__sensorContainer;
 }
 
-export function registerEventHandler<T>(
-  eventHandler: (event: T) => void,
+export function registerEventHandler<TEvent>(
+  eventHandler: (event: TEvent) => void,
   eventName: string,
   emitterReactTag = -1
 ): number {
-  function handleAndFlushAnimationFrame(_eventTimestamp: number, event: T) {
+  function handleEvent(_eventTimestamp: number, event: TEvent) {
     'worklet';
     eventHandler(event);
+    // We call mappers here to make sure view updates can be applied in the same frame after an event.
     global.__mapperRun();
   }
   return ReanimatedModule.registerEventHandler(
-    createSerializable(handleAndFlushAnimationFrame as WorkletFunction),
+    createSerializable(handleEvent as WorkletFunction),
     eventName,
     emitterReactTag
   );
@@ -109,9 +110,10 @@ export function subscribeForKeyboardEvents(
 ): number {
   // TODO: this should really go with the same code path as other events, that is
   // via registerEventHandler. For now we are copying the code from there.
-  function handleAndFlushAnimationFrame(state: number, height: number) {
+  function handleEvent(state: number, height: number) {
     'worklet';
     eventHandler(state, height);
+    // We call mappers here to make sure view updates can be applied in the same frame after an event.
     global.__mapperRun();
   }
 
@@ -124,7 +126,7 @@ export function subscribeForKeyboardEvents(
   }
 
   return ReanimatedModule.subscribeForKeyboardEvents(
-    createSerializable(handleAndFlushAnimationFrame as WorkletFunction),
+    createSerializable(handleEvent as WorkletFunction),
     EDGE_TO_EDGE || (options.isStatusBarTranslucentAndroid ?? false),
     EDGE_TO_EDGE || (options.isNavigationBarTranslucentAndroid ?? false)
   );

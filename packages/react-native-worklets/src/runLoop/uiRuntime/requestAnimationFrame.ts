@@ -81,8 +81,7 @@ export function setupRequestAnimationFrame() {
   /* Start the loop */
   nativeRequestAnimationFrame(nativeFlushQueue);
 
-  // TODO: Remove this after support for Reanimated 4.3 is dropped.
-  // Reanimated uses this method to trigger event synchronously.
+  // TODO: Remove it after support for Reanimated 4.3 is dropped.
   globalThis.__flushAnimationFrame = (eventTimestamp: number) => {
     flushQueue(eventTimestamp);
   };
