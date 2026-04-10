@@ -39,7 +39,6 @@ class DelayedItemsManager {
   bool remove(const TValue &value);
   const Item &top() const;
   bool empty() const;
-  size_t size() const;
 };
 
 } // namespace reanimated::css

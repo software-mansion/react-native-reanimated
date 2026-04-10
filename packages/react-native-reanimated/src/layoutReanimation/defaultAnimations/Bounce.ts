@@ -1,5 +1,6 @@
 'use strict';
 import { withSequence, withTiming } from '../../animation';
+import type { Scale, TranslateX, TranslateY } from '../../common';
 import type {
   EntryExitAnimationFunction,
   EntryExitAnimationsValues,
@@ -18,7 +19,7 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceIn
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [Scale] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceIn';
@@ -82,7 +83,7 @@ export class BounceIn
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceInDown
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateY] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceInDown';
@@ -150,7 +151,7 @@ export class BounceInDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceInUp
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateY] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceInUp';
@@ -214,7 +215,7 @@ export class BounceInUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceInLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateX] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceInLeft';
@@ -278,7 +279,7 @@ export class BounceInLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceInRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateX] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceInRight';
@@ -342,7 +343,7 @@ export class BounceInRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceOut
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [Scale] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceOut';
@@ -406,7 +407,7 @@ export class BounceOut
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceOutDown
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateY] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceOutDown';
@@ -472,7 +473,7 @@ export class BounceOutDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceOutUp
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateY] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceOutUp';
@@ -538,7 +539,7 @@ export class BounceOutUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceOutLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateX] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceOutLeft';
@@ -604,7 +605,7 @@ export class BounceOutLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#bounce
  */
 export class BounceOutRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateX] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'BounceOutRight';
