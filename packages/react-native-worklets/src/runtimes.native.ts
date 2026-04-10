@@ -160,7 +160,7 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
     createSerializable(() => {
       'worklet';
       worklet(...args);
-      globalThis.__flushMicrotasks?.();
+      globalThis.__callMicrotasks?.();
     })
   );
 }
@@ -183,7 +183,7 @@ if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
       globalThis.__serializer(() => {
         'worklet';
         worklet(...args);
-        globalThis.__flushMicrotasks?.();
+        globalThis.__callMicrotasks?.();
       })
     );
   }
@@ -237,7 +237,7 @@ export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
     createSerializable(() => {
       'worklet';
       worklet(...args);
-      globalThis.__flushMicrotasks?.();
+      globalThis.__callMicrotasks?.();
     })
   );
 }
@@ -260,7 +260,7 @@ if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
       globalThis.__serializer(() => {
         'worklet';
         worklet(...args);
-        globalThis.__flushMicrotasks?.();
+        globalThis.__callMicrotasks?.();
       })
     );
   }
@@ -452,7 +452,7 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
         } catch (error) {
           scheduleOnRN(reject, error);
         }
-        globalThis.__flushMicrotasks?.();
+        globalThis.__callMicrotasks?.();
       })
     );
   });
