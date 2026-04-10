@@ -169,7 +169,6 @@ open class NativeProxy {
      */
     private val mInvalidated = AtomicBoolean(false)
 
-
     @field:DoNotStrip
     @Suppress("unused")
     private val mHybridData: HybridData
