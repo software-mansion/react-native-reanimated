@@ -93,9 +93,13 @@ function SocialCard() {
         transform: {
           default: [{ scale: 1 }, { translateY: 0 }],
           ':hover': [{ scale: 1.01 }, { translateY: -3 }],
-          ':active': [{ scale: 0.985 }, { translateY: 1 }],
+          ':active-deepest': [{ scale: 0.985 }, { translateY: 1 }],
         },
-        shadowOpacity: { default: 0.08, ':hover': 0.18, ':active': 0.04 },
+        shadowOpacity: {
+          default: 0.08,
+          ':hover': 0.18,
+          ':active-deepest': 0.04,
+        },
         transitionDuration: '150ms',
         transitionTimingFunction: 'ease-out',
       }}>
@@ -167,7 +171,7 @@ export default function PseudoShowcaseExample() {
       <Text style={styles.sectionTitle}>Card</Text>
       <Snippet
         label="<Card />"
-        code={`transform: {\n  default: [{ scale: 1 }, { translateY: 0 }],\n  ':hover': [{ scale: 1.01 }, { translateY: -3 }],\n  ':active': [{ scale: 0.985 }, { translateY: 1 }],\n},\nshadowOpacity: { default: 0.08, ':hover': 0.18, ':active': 0.04 },`}
+        code={`transform: {\n  default: [{ scale: 1 }, { translateY: 0 }],\n  ':hover': [{ scale: 1.01 }, { translateY: -3 }],\n  ':active-deepest': [{ scale: 0.985 }, { translateY: 1 }],\n},\nshadowOpacity: { default: 0.08, ':hover': 0.18, ':active-deepest': 0.04 },`}
       />
       <Snippet
         label="<ActionButton />"

@@ -18,7 +18,12 @@ type PickStyleProps<P> = Pick<
   }[keyof P]
 >;
 
-export type PseudoSelectorKey = ':hover' | ':active' | ':focus';
+export type PseudoSelectorKey =
+  | ':hover'
+  | ':active'
+  | ':active-deepest'
+  | ':focus'
+  | ':focus-within';
 
 export type PseudoValue<T> = {
   default?: T;

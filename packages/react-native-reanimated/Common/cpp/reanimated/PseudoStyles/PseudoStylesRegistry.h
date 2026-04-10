@@ -47,9 +47,11 @@ class PseudoStylesRegistry : public std::enable_shared_from_this<PseudoStylesReg
  private:
   // Defines all supported selectors and their merge priority (last = highest priority).
   static constexpr PseudoSelector kPriorityOrder[] = {
+      PseudoSelector::FocusWithin,
       PseudoSelector::Focus,
       PseudoSelector::Hover,
       PseudoSelector::Active,
+      PseudoSelector::ActiveDeepest,
   };
 
   struct SelectorData {

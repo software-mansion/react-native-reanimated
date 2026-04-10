@@ -4,12 +4,15 @@
 
 @interface REAPseudoSelectorObserver () <UIGestureRecognizerDelegate>
 - (void)attachActiveToView:(REAUIView *)view;
+- (void)attachActiveDeepestToView:(REAUIView *)view;
 - (void)attachHoverToView:(REAUIView *)view;
 - (void)attachFocusToView:(REAUIView *)view;
+- (void)attachFocusWithinToView:(REAUIView *)view;
 @end
 
 @implementation REAPseudoSelectorObserver {
   __weak REAUIView *_view;
+  reanimated::PseudoSelector _selector;
   UIGestureRecognizer *_gestureRecognizer;
   NSArray *_notificationObservers;
   std::function<void(bool)> _callback;
@@ -21,6 +24,7 @@
 {
   if (self = [super init]) {
     _view = view;
+    _selector = selector;
     _callback = std::move(callback);
     [self attachSelector:selector toView:view];
   }
@@ -33,16 +37,32 @@
     case reanimated::PseudoSelector::Active:
       [self attachActiveToView:view];
       break;
+    case reanimated::PseudoSelector::ActiveDeepest:
+      [self attachActiveDeepestToView:view];
+      break;
     case reanimated::PseudoSelector::Hover:
       [self attachHoverToView:view];
       break;
     case reanimated::PseudoSelector::Focus:
       [self attachFocusToView:view];
       break;
+    case reanimated::PseudoSelector::FocusWithin:
+      [self attachFocusWithinToView:view];
+      break;
   }
 }
 
 - (void)attachActiveToView:(REAUIView *)view
+{
+  [self attachActiveGestureRecognizerToView:view];
+}
+
+- (void)attachActiveDeepestToView:(REAUIView *)view
+{
+  [self attachActiveGestureRecognizerToView:view];
+}
+
+- (void)attachActiveGestureRecognizerToView:(REAUIView *)view
 {
   UILongPressGestureRecognizer *recognizer =
       [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleActiveGesture:)];
@@ -51,7 +71,6 @@
   recognizer.cancelsTouchesInView = NO;
   [view addGestureRecognizer:recognizer];
   _gestureRecognizer = recognizer;
-  NSLog(@"[PseudoSelector] attached UILongPressGestureRecognizer (minimumPressDuration=0) to view: %@", view);
 }
 
 - (void)attachHoverToView:(REAUIView *)view
@@ -62,23 +81,43 @@
     recognizer.delegate = self;
     [view addGestureRecognizer:recognizer];
     _gestureRecognizer = recognizer;
-    NSLog(@"[PseudoSelector] attached UIHoverGestureRecognizer to view: %@", view);
   }
 }
 
+// Fires only when this view's own text input gains focus.
+// On iOS, resolveView returns the Fabric wrapper (RCTTextInputComponentView), not the inner
+// UITextField/UITextView. The notification object is always the inner UITextField/UITextView,
+// which is always a direct child of the wrapper - so superview == strongView is sufficient.
 - (void)attachFocusToView:(REAUIView *)view
 {
-  NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
   __weak REAUIView *weakView = view;
-  // Capture callback by value to avoid retain cycle: self -> _notificationObservers -> blocks -> self.
-  // note.object is the UITextField/UITextView, which is a descendant of the RN wrapper view (view with the tag).
-  auto callback = _callback;
+
+  auto isOurs = ^BOOL(NSNotification *note) {
+    REAUIView *strongView = weakView;
+    return strongView != nil && ((UIView *)note.object).superview == strongView;
+  };
+
+  [self attachFocusObserversWithPredicate:isOurs];
+}
+
+- (void)attachFocusWithinToView:(REAUIView *)view
+{
+  __weak REAUIView *weakView = view;
 
   auto isOurs = ^BOOL(NSNotification *note) {
     REAUIView *strongView = weakView;
     return strongView != nil && [note.object isKindOfClass:[UIView class]] &&
         [(UIView *)note.object isDescendantOfView:strongView];
   };
+
+  [self attachFocusObserversWithPredicate:isOurs];
+}
+
+- (void)attachFocusObserversWithPredicate:(BOOL (^)(NSNotification *))isOurs
+{
+  NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+  // Capture callback by value to avoid retain cycle: self -> _notificationObservers -> blocks -> self
+  auto callback = _callback;
 
   NSMutableArray *observers = [NSMutableArray array];
   for (NSNotificationName beginName in @[
@@ -116,13 +155,11 @@
 {
   switch (recognizer.state) {
     case UIGestureRecognizerStateBegan:
-      NSLog(@"[PseudoSelector] :hover → true");
       _callback(true);
       break;
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled:
     case UIGestureRecognizerStateFailed:
-      NSLog(@"[PseudoSelector] :hover → false");
       _callback(false);
       break;
     default:
@@ -132,16 +169,13 @@
 
 - (void)handleActiveGesture:(UILongPressGestureRecognizer *)recognizer
 {
-  NSLog(@"[PseudoSelector] handleActiveGesture state: %ld", (long)recognizer.state);
   switch (recognizer.state) {
     case UIGestureRecognizerStateBegan:
-      NSLog(@"[PseudoSelector] :active → true");
       _callback(true);
       break;
     case UIGestureRecognizerStateEnded:
     case UIGestureRecognizerStateCancelled:
     case UIGestureRecognizerStateFailed:
-      NSLog(@"[PseudoSelector] :active → false");
       _callback(false);
       break;
     default:
@@ -155,10 +189,13 @@
   if (!view) {
     return NO;
   }
-  // Walk up from the hit view toward _view. If any intermediate view has its
-  // own :active gesture recognizer (identified by its delegate being a
-  // REAPseudoSelectorObserver), that descendant owns the touch - don't activate
-  // here. This mirrors Android behavior: the deepest :active view wins.
+  // always allow for :active
+  if (_selector == reanimated::PseudoSelector::Active) {
+    return YES;
+  }
+  // for :active-deepest walk up from the hit view: if any descendant
+  // already has an :active-deepest gesture recognizer, that descendant
+  // owns the touch.
   CGPoint location = [gestureRecognizer locationInView:view];
   UIView *current = [view hitTest:location withEvent:nil];
   while (current && current != view) {

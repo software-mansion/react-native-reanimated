@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 import {
   Pressable,
   ScrollView,
@@ -16,8 +16,116 @@ function SectionHeader({ title }: { title: string }) {
   return <Text style={styles.sectionTitle}>{title}</Text>;
 }
 
-function Hint({ text }: { text: string }) {
+function Hint({ text }: { text: string | React.ReactNode }) {
   return <Text style={styles.hint}>{text}</Text>;
+}
+
+function FormFields({
+  accentColor,
+  accentBg,
+}: {
+  accentColor: string;
+  accentBg: string;
+}) {
+  return (
+    <>
+      <AnimatedTextInput
+        style={{
+          ...styles.formInput,
+          transitionDuration: '150ms',
+          borderColor: { default: '#ddd', ':focus': accentColor },
+          borderWidth: { default: 1, ':focus': 2 },
+          backgroundColor: { default: '#fff', ':focus': accentBg },
+        }}
+        placeholder="Username - :focus"
+        autoCapitalize="none"
+      />
+
+      <AnimatedTextInput
+        style={{
+          ...styles.formInput,
+          transitionDuration: '150ms',
+          borderColor: { default: '#ddd', ':focus': accentColor },
+          borderWidth: { default: 1, ':focus': 2 },
+          backgroundColor: { default: '#fff', ':focus': accentBg },
+        }}
+        placeholder="Password - :focus"
+        secureTextEntry
+      />
+
+      <Animated.View
+        style={{
+          ...styles.nestedInputWrapper,
+          transitionDuration: '150ms',
+          borderColor: { default: '#ddd', ':focus-within': accentColor },
+          borderWidth: { default: 1, ':focus-within': 2 },
+          backgroundColor: { default: '#fff', ':focus-within': accentBg },
+        }}>
+        <Text style={styles.nestedInputLabel}>wrapper - :focus-within</Text>
+        <AnimatedTextInput
+          style={{
+            ...styles.nestedInput,
+            transitionDuration: '150ms',
+            borderWidth: { default: 1, ':focus': 2 },
+            borderColor: { default: '#ddd', ':focus': accentColor },
+            backgroundColor: { default: '#fff', ':focus': accentBg },
+          }}
+          placeholder="Email (inside wrapper) - :focus"
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+      </Animated.View>
+
+      <Animated.View
+        style={{
+          ...styles.nestedInputWrapper,
+          transitionDuration: '150ms',
+          borderColor: { default: '#ddd', ':focus-within': accentColor },
+          borderWidth: { default: 1, ':focus-within': 2 },
+          backgroundColor: { default: '#fff', ':focus-within': accentBg },
+        }}>
+        <Text style={styles.nestedInputLabel}>wrapper - :focus-within</Text>
+        <View style={styles.nestedRow}>
+          <AnimatedTextInput
+            style={{
+              ...styles.nestedInput,
+              flex: 1,
+              transitionDuration: '150ms',
+              borderWidth: { default: 1, ':focus': 2 },
+              borderColor: { default: '#ddd', ':focus': accentColor },
+              backgroundColor: { default: '#fff', ':focus': accentBg },
+            }}
+            placeholder="City - :focus"
+          />
+          <AnimatedTextInput
+            style={{
+              ...styles.nestedInput,
+              flex: 1,
+              transitionDuration: '150ms',
+              borderWidth: { default: 1, ':focus': 2 },
+              borderColor: { default: '#ddd', ':focus': accentColor },
+              backgroundColor: { default: '#fff', ':focus': accentBg },
+            }}
+            placeholder="ZIP - :focus"
+            keyboardType="number-pad"
+          />
+        </View>
+      </Animated.View>
+
+      <AnimatedTextInput
+        style={{
+          ...styles.formTextArea,
+          transitionDuration: '150ms',
+          borderColor: { default: '#ddd', ':focus': accentColor },
+          borderWidth: { default: 1, ':focus': 2 },
+          backgroundColor: { default: '#fff', ':focus': accentBg },
+        }}
+        placeholder="Notes - :focus"
+        multiline
+        numberOfLines={3}
+      />
+    </>
+  );
 }
 
 export default function PseudoFocusExample() {
@@ -79,7 +187,6 @@ export default function PseudoFocusExample() {
         numberOfLines={4}
       />
 
-      {/* ── Switching quickly ── */}
       <SectionHeader title="Rapid switching" />
       <Hint text="Tap quickly between fields - only one should be focused at a time" />
 
@@ -117,7 +224,6 @@ export default function PseudoFocusExample() {
         editable={false}
       />
 
-      {/* ── Pressable edge case ── */}
       <SectionHeader title="Pressable (edge case)" />
       <Hint text=":focus won't fire - Pressable is not a text input, no UITextField/UITextView underneath" />
 
@@ -132,22 +238,49 @@ export default function PseudoFocusExample() {
         <Text style={styles.buttonText}>I won&apos;t respond to :focus</Text>
       </AnimatedPressable>
 
-      {/* ── Nested input inside wrapper ── */}
-      <SectionHeader title="Nested input (edge case)" />
-      <Hint text=":focus on the wrapper Animated.View - tests isDescendantOfView logic" />
+      <SectionHeader title=":focus vs :focus-within" />
+      <Hint
+        text={
+          ':focus - fires only on the focused element itself.\n' +
+          ':focus-within - fires when any descendant gains focus.\n\n' +
+          'Both forms have the same fields inside. ' +
+          'The outer card differs: :focus never activates (a View is not an input), ' +
+          ':focus-within activates whenever any inner field is focused.'
+        }
+      />
 
       <Animated.View
         style={{
-          ...styles.wrapper,
+          ...styles.formCard,
           transitionDuration: '200ms',
-          borderColor: { default: '#ccc', ':focus': '#1abc9c' },
-          borderWidth: { default: 1.5, ':focus': 3 },
-          backgroundColor: { default: '#f9f9f9', ':focus': '#eafaf1' },
+          borderColor: { default: '#ddd', ':focus': '#e74c3c' },
+          borderWidth: { default: 1.5, ':focus': 2.5 },
+          backgroundColor: { default: '#fafafa', ':focus': '#fff5f5' },
         }}>
-        <TextInput style={styles.inputInner} placeholder="Inside a wrapper" />
+        <Text style={styles.formCardLabel}>
+          outer card - :focus (never activates)
+        </Text>
+        <FormFields accentColor="#e74c3c" accentBg="#fff5f5" />
+      </Animated.View>
+
+      <Animated.View
+        style={{
+          ...styles.formCard,
+          transitionDuration: '200ms',
+          borderColor: { default: '#ddd', ':focus-within': '#6c63ff' },
+          borderWidth: { default: 1.5, ':focus-within': 2.5 },
+          backgroundColor: { default: '#fafafa', ':focus-within': '#f5f4ff' },
+        }}>
+        <Text style={styles.formCardLabel}>
+          outer card - :focus-within (activates on any inner focus)
+        </Text>
+        <FormFields accentColor="#6c63ff" accentBg="#f0eeff" />
       </Animated.View>
 
       <View style={styles.bottomPadding} />
+      <Text style={styles.footer}>
+        All transitions run on the UI thread - no JS frames.
+      </Text>
     </ScrollView>
   );
 }
@@ -204,17 +337,58 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#444',
   },
-  wrapper: {
-    borderRadius: 10,
-    padding: 10,
+  formCard: {
+    borderRadius: 14,
+    padding: 14,
+    gap: 10,
   },
-  inputInner: {
-    height: 44,
-    paddingHorizontal: 10,
-    fontSize: 16,
-    outlineWidth: 0,
+  formCardLabel: {
+    fontSize: 11,
+    fontFamily: 'monospace',
+    color: '#888',
+    marginBottom: 2,
+  },
+  formInput: {
+    height: 42,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    fontSize: 15,
+  },
+  formTextArea: {
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    fontSize: 15,
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  nestedInputWrapper: {
+    borderRadius: 8,
+    padding: 10,
+    gap: 6,
+  },
+  nestedInputLabel: {
+    fontSize: 10,
+    fontFamily: 'monospace',
+    color: '#aaa',
+  },
+  nestedInput: {
+    height: 38,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    fontSize: 15,
+  },
+  nestedRow: {
+    flexDirection: 'row',
+    gap: 10,
   },
   bottomPadding: {
-    height: 40,
+    height: 10,
+  },
+  footer: {
+    textAlign: 'center',
+    fontSize: 12,
+    color: '#aaa',
+    fontFamily: 'monospace',
   },
 });

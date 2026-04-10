@@ -8,8 +8,15 @@ import { insertPseudoSelectorCSS, removePseudoSelectorCSS } from '../domUtils';
 let pseudoSelectorCounter = 0;
 
 // CSS rules are injected in this order so that later selectors override earlier ones
-// when multiple are active simultaneously. Mirrors web convention (LVHA).
-const SELECTOR_ORDER = [':focus', ':hover', ':active'] as const;
+// when multiple are active simultaneously. Mirrors web convention (LVHA):
+// :focus-within < :focus < :hover < :active-deepest < :active
+const SELECTOR_ORDER = [
+  ':focus-within',
+  ':focus',
+  ':hover',
+  ':active-deepest',
+  ':active',
+] as const;
 type KnownSelector = (typeof SELECTOR_ORDER)[number];
 
 export default class CSSPseudoSelectorsManager
@@ -103,9 +110,33 @@ export default class CSSPseudoSelectorsManager
         this.on(document, 'mouseup', remove);
         break;
 
+      case ':active-deepest': {
+        const onMouseDown = (e: Event) => {
+          const target = (e as MouseEvent).target as Element;
+          if (!this.element.contains(target)) {
+            return;
+          }
+          if (!this.element.querySelector('[class*="-active-deepest"]')) {
+            this.element.classList.add(cls);
+          }
+        };
+        const onMouseUp = () => remove();
+        this.on(this.element, 'mousedown', onMouseDown);
+        this.on(document, 'mouseup', onMouseUp);
+        break;
+      }
+
       case ':focus': {
-        // Mirrors native behavior: :focus only fires for text inputs
-        const target = this.getFocusTarget();
+        const target = this.getDirectFocusTarget();
+        if (target) {
+          this.on(target, 'focus', add);
+          this.on(target, 'blur', remove);
+        }
+        break;
+      }
+
+      case ':focus-within': {
+        const target = this.getFocusWithinTarget();
         if (target) {
           this.on(target, 'focus', add);
           this.on(target, 'blur', remove);
@@ -115,19 +146,40 @@ export default class CSSPseudoSelectorsManager
     }
   }
 
-  private getFocusTarget(): Element | null {
-    const isFocusable = (el: Element): boolean => {
-      const input = el as HTMLInputElement;
-      return !input.disabled && !input.readOnly;
-    };
-
+  private getDirectFocusTarget(): Element | null {
     const tag = this.element.tagName?.toLowerCase();
     if (tag === 'input' || tag === 'textarea') {
-      return isFocusable(this.element) ? this.element : null;
+      return this.isFocusable(this.element) ? this.element : null;
     }
-    return this.element.querySelector(
-      'input:not([disabled]):not([readonly]), textarea:not([disabled]):not([readonly])'
-    );
+    return null;
+  }
+
+  private getFocusWithinTarget(): Element | null {
+    const tag = this.element.tagName?.toLowerCase();
+    if (tag === 'input' || tag === 'textarea') {
+      return this.isFocusable(this.element) ? this.element : null;
+    }
+    const candidates = this.element.querySelectorAll('input, textarea');
+    for (const candidate of Array.from(candidates)) {
+      if (this.isFocusable(candidate)) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+
+  private isFocusable(el: Element): boolean {
+    const input = el as HTMLInputElement;
+    if (input.disabled || input.readOnly) {
+      return false;
+    }
+    if (
+      typeof window !== 'undefined' &&
+      window.getComputedStyle(el).pointerEvents === 'none'
+    ) {
+      return false;
+    }
+    return true;
   }
 
   private on(target: EventTarget, type: string, listener: EventListener): void {
