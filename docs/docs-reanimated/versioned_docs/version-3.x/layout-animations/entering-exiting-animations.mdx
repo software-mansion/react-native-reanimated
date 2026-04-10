@@ -10,7 +10,7 @@ Entering/Exiting animations let you animate elements when they are added to or r
 
 Reanimated comes with a bunch of predefined animations you can customize. For more advanced use-cases, you can use [Keyframes](/docs/layout-animations/keyframe-animations) or create your own [custom entering/exiting animations](/docs/layout-animations/custom-animations).
 
-<InteractivePlayground usePlayground={useEnteringExitingPlayground}/>
+<InteractivePlayground usePlayground={useEnteringExitingPlayground} />
 
 :::info
 Spring-based animations are yet to be introduced to the web. Due to that, playground doesn't cover `springify()` options but they can be applied to your animations on iOS and Android platforms.
@@ -26,79 +26,87 @@ Spring-based animations are yet to be introduced to the web. Due to that, playgr
 ## Fade
 
 <Row>
-  <ThemedVideo
-    sources={{
-light: '/recordings/layout-animations/fade_light.mov',
-dark: '/recordings/layout-animations/fade_dark.mov',
-}}
-  />
 
-  <div style={{flexGrow: 1}}>
-    `FadeX` lets you create a fading animation.
+<ThemedVideo
+  sources={{
+    light: '/recordings/layout-animations/fade_light.mov',
+    dark: '/recordings/layout-animations/fade_dark.mov',
+  }}
+/>
 
-    ```jsx
-    import { FadeIn, FadeOut } from 'react-native-reanimated';
+<div style={{flexGrow: 1}}>
 
-    function App() {
-      return <Animated.View entering={FadeIn} exiting={FadeOut} />;
-    }
-    ```
-  </div>
+`FadeX` lets you create a fading animation.
+
+```jsx
+import { FadeIn, FadeOut } from 'react-native-reanimated';
+
+function App() {
+  return <Animated.View entering={FadeIn} exiting={FadeOut} />;
+}
+```
+
+</div>
+
 </Row>
 
 Available fade animations:
 
 <Grid>
-  <div>
-    ### Entering
+<div>
 
-    <div style={{ margin: 16 }}/>
+### Entering
 
-    - `FadeIn`
+<div style={{ margin: 16 }} />
 
-    - `FadeInRight`
+- `FadeIn`
 
-    - `FadeInLeft`
+- `FadeInRight`
 
-    - `FadeInUp`
+- `FadeInLeft`
 
-    - `FadeInDown`
-  </div>
+- `FadeInUp`
 
-  <div>
-    ### Exiting
+- `FadeInDown`
 
-    <div style={{ margin: 16 }}/>
+</div>
+<div>
 
-    - `FadeOut`
+### Exiting
 
-    - `FadeOutRight`
+<div style={{ margin: 16 }} />
 
-    - `FadeOutLeft`
+- `FadeOut`
 
-    - `FadeOutUp`
+- `FadeOutRight`
 
-    - `FadeOutDown`
-  </div>
+- `FadeOutLeft`
+
+- `FadeOutUp`
+
+- `FadeOutDown`
+
+</div>
 </Grid>
 
 <details>
-  <summary>Initial values</summary>
+<summary>Initial values</summary>
 
-  These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name           | Config                                           |
-  | -------------- | ------------------------------------------------ |
-  | `FadeIn`       | `{opacity: 0}`                                   |
-  | `FadeInDown`   | `{opacity: 0, transform: [{ translateY: 25 }]}`  |
-  | `FadeInLeft`   | `{opacity: 0, transform: [{ translateX: -25 }]}` |
-  | `FadeInRight`  | `{opacity: 0, transform: [{ translateX: 25 }]}`  |
-  | `FadeInUp`     | `{opacity: 0, transform: [{ translateY: -25 }]}` |
-  | `FadeOut`      | `{opacity: 1}`                                   |
-  | `FadeOutDown`  | `{opacity: 1, transform: [{ translateY: 0 }]}`   |
-  | `FadeOutLeft`  | `{opacity: 1, transform: [{ translateX: 0 }]}`   |
-  | `FadeOutRight` | `{opacity: 1, transform: [{ translateX: 0 }]}`   |
-  | `FadeOutUp`    | `{opacity: 1, transform: [{ translateY: 0 }]}`   |
+| Name           | Config                                           |
+| -------------- | ------------------------------------------------ |
+| `FadeIn`       | `{opacity: 0}`                                   |
+| `FadeInDown`   | `{opacity: 0, transform: [{ translateY: 25 }]}`  |
+| `FadeInLeft`   | `{opacity: 0, transform: [{ translateX: -25 }]}` |
+| `FadeInRight`  | `{opacity: 0, transform: [{ translateX: 25 }]}`  |
+| `FadeInUp`     | `{opacity: 0, transform: [{ translateY: -25 }]}` |
+| `FadeOut`      | `{opacity: 1}`                                   |
+| `FadeOutDown`  | `{opacity: 1, transform: [{ translateY: 0 }]}`   |
+| `FadeOutLeft`  | `{opacity: 1, transform: [{ translateX: 0 }]}`   |
+| `FadeOutRight` | `{opacity: 1, transform: [{ translateX: 0 }]}`   |
+| `FadeOutUp`    | `{opacity: 1, transform: [{ translateY: 0 }]}`   |
+
 </details>
 
 ### Modifiers
@@ -161,79 +169,87 @@ FadeInDown.delay(500)
 ## Bounce
 
 <Row>
-  <ThemedVideo
-    sources={{
-light: '/recordings/layout-animations/bounce_light.mov',
-dark: '/recordings/layout-animations/bounce_dark.mov',
-}}
-  />
 
-  <div style={{flexGrow: 1}}>
-    `BounceX` lets you create a bouncing animation.
+<ThemedVideo
+  sources={{
+    light: '/recordings/layout-animations/bounce_light.mov',
+    dark: '/recordings/layout-animations/bounce_dark.mov',
+  }}
+/>
 
-    ```jsx
-    import { BounceIn, BounceOut } from 'react-native-reanimated';
+<div style={{flexGrow: 1}}>
 
-    function App() {
-      return <Animated.View entering={BounceIn} exiting={BounceOut} />;
-    }
-    ```
-  </div>
+`BounceX` lets you create a bouncing animation.
+
+```jsx
+import { BounceIn, BounceOut } from 'react-native-reanimated';
+
+function App() {
+  return <Animated.View entering={BounceIn} exiting={BounceOut} />;
+}
+```
+
+</div>
+
 </Row>
 
 Available bounce animations:
 
 <Grid>
-  <div>
-    ### Entering
+<div>
 
-    <div style={{ margin: 16 }}/>
+### Entering
 
-    - `BounceIn`
+<div style={{ margin: 16 }} />
 
-    - `BounceInRight`
+- `BounceIn`
 
-    - `BounceInLeft`
+- `BounceInRight`
 
-    - `BounceInUp`
+- `BounceInLeft`
 
-    - `BounceInDown`
-  </div>
+- `BounceInUp`
 
-  <div>
-    ### Exiting
+- `BounceInDown`
 
-    <div style={{ margin: 16 }}/>
+</div>
+<div>
 
-    - `BounceOut`
+### Exiting
 
-    - `BounceOutRight`
+<div style={{ margin: 16 }} />
 
-    - `BounceOutLeft`
+- `BounceOut`
 
-    - `BounceOutUp`
+- `BounceOutRight`
 
-    - `BounceOutDown`
-  </div>
+- `BounceOutLeft`
+
+- `BounceOutUp`
+
+- `BounceOutDown`
+
+</div>
 </Grid>
 
 <details>
-  <summary>Initial values</summary>
+<summary>Initial values</summary>
 
-  These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name             | Config                                                |
-  | ---------------- | ----------------------------------------------------- |
-  | `BounceIn`       | `{transform: [{ scale: 0 }]}`                         |
-  | `BounceInRight`  | `{transform: [{ translateX: values.windowWidth }]}`   |
-  | `BounceInLeft`   | `{transform: [{ translateX: -values.windowWidth }]}`  |
-  | `BounceInUp`     | `{transform: [{ translateY: -values.windowHeight }]}` |
-  | `BounceInDown`   | `{transform: [{ translateY: values.windowHeight}]}`   |
-  | `BounceOut`      | `{transform: [{ scale: 1 }]}`                         |
-  | `BounceOutRight` | `{transform: [{ translateX: 0 }]}`                    |
-  | `BounceOutLeft`  | `{transform: [{ translateX: 0 }]}`                    |
-  | `BounceOutUp`    | `{transform: [{ translateY: 0 }]}`                    |
-  | `BounceOutDown`  | `{transform: [{ translateY: 0 }]}`                    |
+| Name             | Config                                                |
+| ---------------- | ----------------------------------------------------- |
+| `BounceIn`       | `{transform: [{ scale: 0 }]}`                         |
+| `BounceInRight`  | `{transform: [{ translateX: values.windowWidth }]}`   |
+| `BounceInLeft`   | `{transform: [{ translateX: -values.windowWidth }]}`  |
+| `BounceInUp`     | `{transform: [{ translateY: -values.windowHeight }]}` |
+| `BounceInDown`   | `{transform: [{ translateY: values.windowHeight}]}`   |
+| `BounceOut`      | `{transform: [{ scale: 1 }]}`                         |
+| `BounceOutRight` | `{transform: [{ translateX: 0 }]}`                    |
+| `BounceOutLeft`  | `{transform: [{ translateX: 0 }]}`                    |
+| `BounceOutUp`    | `{transform: [{ translateY: 0 }]}`                    |
+| `BounceOutDown`  | `{transform: [{ translateY: 0 }]}`                    |
+
 </details>
 
 ### Modifiers <Optional/>
@@ -259,85 +275,93 @@ BounceInDown.duration(500)
 ## Flip
 
 <Row>
-  <ThemedVideo
-    sources={{
-light: '/recordings/layout-animations/flip_light.mov',
-dark: '/recordings/layout-animations/flip_dark.mov',
-}}
-  />
 
-  <div style={{flexGrow: 1}}>
-    `FlipX` lets you create animation based on rotation over specific axis.
+<ThemedVideo
+  sources={{
+    light: '/recordings/layout-animations/flip_light.mov',
+    dark: '/recordings/layout-animations/flip_dark.mov',
+  }}
+/>
 
-    ```jsx
-    import { FlipInEasyX, FlipOutEasyX } from 'react-native-reanimated';
+<div style={{flexGrow: 1}}>
 
-    function App() {
-      return <Animated.View entering={FlipInEasyX} exiting={FlipOutEasyX} />;
-    }
-    ```
-  </div>
+`FlipX` lets you create animation based on rotation over specific axis.
+
+```jsx
+import { FlipInEasyX, FlipOutEasyX } from 'react-native-reanimated';
+
+function App() {
+  return <Animated.View entering={FlipInEasyX} exiting={FlipOutEasyX} />;
+}
+```
+
+</div>
+
 </Row>
 
 Available flip animations:
 
 <Grid>
-  <div>
-    ### Entering
+<div>
 
-    <div style={{ margin: 16 }}/>
+### Entering
 
-    - `FlipInEasyX`
+<div style={{ margin: 16 }} />
 
-    - `FlipInEasyY`
+- `FlipInEasyX`
 
-    - `FlipInXDown`
+- `FlipInEasyY`
 
-    - `FlipInXUp`
+- `FlipInXDown`
 
-    - `FlipInYLeft`
+- `FlipInXUp`
 
-    - `FlipInYRight`
-  </div>
+- `FlipInYLeft`
 
-  <div>
-    ### Exiting
+- `FlipInYRight`
 
-    <div style={{ margin: 16 }}/>
+</div>
+<div>
 
-    - `FlipOutEasyX`
+### Exiting
 
-    - `FlipOutEasyY`
+<div style={{ margin: 16 }} />
 
-    - `FlipOutXDown`
+- `FlipOutEasyX`
 
-    - `FlipOutXUp`
+- `FlipOutEasyY`
 
-    - `FlipOutYLeft`
+- `FlipOutXDown`
 
-    - `FlipOutYRight`
-  </div>
+- `FlipOutXUp`
+
+- `FlipOutYLeft`
+
+- `FlipOutYRight`
+
+</div>
 </Grid>
 
 <details>
-  <summary>Initial values</summary>
+<summary>Initial values</summary>
 
-  These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name            | Config                                                                                                   |
-  | --------------- | -------------------------------------------------------------------------------------------------------- |
-  | `FlipInEasyX`   | `{transform: [{ perspective: 500 }, { rotateX: '90deg' }]}`                                              |
-  | `FlipInEasyY`   | `{transform: [{ perspective: 500 }, { rotateY: '90deg' }]}`                                              |
-  | `FlipInXDown`   | `{transform: [{ perspective: 500 }, { rotateX: '-90deg' }, { translateY: targetValues.targetHeight }]}`  |
-  | `FlipInXUp`     | `{transform: [{ perspective: 500 }, { rotateX: '90deg' }, { translateY: -targetValues.targetHeight }]}`  |
-  | `FlipInYLeft`   | `{transform: [{ perspective: 500 }, { rotateY: '-90deg' }, { translateX: -targetValues.targetWidth } ]}` |
-  | `FlipInYRight`  | `{transform: [{ perspective: 500 }, { rotateY: '90deg' }, { translateX: targetValues.targetWidth } ]}`   |
-  | `FlipOutEasyX`  | `{transform: [{ perspective: 500 }, { rotateX: '0deg' }]}`                                               |
-  | `FlipOutEasyY`  | `{transform: [{ perspective: 500 }, { rotateY: '0deg' }]}`                                               |
-  | `FlipOutXDown`  | `{transform: [{ perspective: 500 }, { rotateX: '0deg' }, { translateY: 0 }]}`                            |
-  | `FlipOutXUp`    | `{transform: [{ perspective: 500 }, { rotateX: '0deg' }, { translateY: 0 }]}`                            |
-  | `FlipOutYLeft`  | `{transform: [{ perspective: 500 }, { rotateY: '0deg' }, { translateX: 0 }]}`                            |
-  | `FlipOutYRight` | `{transform: [{ perspective: 500 }, { rotateY: '0deg' }, { translateX: 0 }]}`                            |
+| Name            | Config                                                                                                   |
+| --------------- | -------------------------------------------------------------------------------------------------------- |
+| `FlipInEasyX`   | `{transform: [{ perspective: 500 }, { rotateX: '90deg' }]}`                                              |
+| `FlipInEasyY`   | `{transform: [{ perspective: 500 }, { rotateY: '90deg' }]}`                                              |
+| `FlipInXDown`   | `{transform: [{ perspective: 500 }, { rotateX: '-90deg' }, { translateY: targetValues.targetHeight }]}`  |
+| `FlipInXUp`     | `{transform: [{ perspective: 500 }, { rotateX: '90deg' }, { translateY: -targetValues.targetHeight }]}`  |
+| `FlipInYLeft`   | `{transform: [{ perspective: 500 }, { rotateY: '-90deg' }, { translateX: -targetValues.targetWidth } ]}` |
+| `FlipInYRight`  | `{transform: [{ perspective: 500 }, { rotateY: '90deg' }, { translateX: targetValues.targetWidth } ]}`   |
+| `FlipOutEasyX`  | `{transform: [{ perspective: 500 }, { rotateX: '0deg' }]}`                                               |
+| `FlipOutEasyY`  | `{transform: [{ perspective: 500 }, { rotateY: '0deg' }]}`                                               |
+| `FlipOutXDown`  | `{transform: [{ perspective: 500 }, { rotateX: '0deg' }, { translateY: 0 }]}`                            |
+| `FlipOutXUp`    | `{transform: [{ perspective: 500 }, { rotateX: '0deg' }, { translateY: 0 }]}`                            |
+| `FlipOutYLeft`  | `{transform: [{ perspective: 500 }, { rotateY: '0deg' }, { translateX: 0 }]}`                            |
+| `FlipOutYRight` | `{transform: [{ perspective: 500 }, { rotateY: '0deg' }, { translateX: 0 }]}`                            |
+
 </details>
 
 ### Modifiers
@@ -402,63 +426,71 @@ FlipInEasyY.delay(500)
 ## LightSpeed
 
 <Row>
-  <ThemedVideo
-    sources={{
-light: '/recordings/layout-animations/lightspeed_light.mov',
-dark: '/recordings/layout-animations/lightspeed_dark.mov',
-}}
-  />
 
-  <div style={{flexGrow: 1}}>
-    `LightSpeedX` lets you create an animation of a horizontally moving object with a change of opacity and skew.
+<ThemedVideo
+  sources={{
+    light: '/recordings/layout-animations/lightspeed_light.mov',
+    dark: '/recordings/layout-animations/lightspeed_dark.mov',
+  }}
+/>
 
-    ```jsx
-    import { LightSpeedInRight, LightSpeedOutLeft } from 'react-native-reanimated';
+<div style={{flexGrow: 1}}>
 
-    function App() {
-      return (
-        <Animated.View entering={LightSpeedInRight} exiting={LightSpeedOutLeft} />
-      );
-    }
-    ```
-  </div>
+`LightSpeedX` lets you create an animation of a horizontally moving object with a change of opacity and skew.
+
+```jsx
+import { LightSpeedInRight, LightSpeedOutLeft } from 'react-native-reanimated';
+
+function App() {
+  return (
+    <Animated.View entering={LightSpeedInRight} exiting={LightSpeedOutLeft} />
+  );
+}
+```
+
+</div>
+
 </Row>
 
 Available lightspeed animations:
 
 <Grid>
-  <div>
-    ### Entering
+<div>
 
-    <div style={{ margin: 16 }}/>
+### Entering
 
-    - `LightSpeedInRight`
+<div style={{ margin: 16 }} />
 
-    - `LightSpeedInLeft`
-  </div>
+- `LightSpeedInRight`
 
-  <div>
-    ### Exiting
+- `LightSpeedInLeft`
 
-    <div style={{ margin: 16 }}/>
+</div>
+<div>
 
-    - `LightSpeedOutRight`
+### Exiting
 
-    - `LightSpeedOutLeft`
-  </div>
+<div style={{ margin: 16 }} />
+
+- `LightSpeedOutRight`
+
+- `LightSpeedOutLeft`
+
+</div>
 </Grid>
 
 <details>
-  <summary>Initial values</summary>
+<summary>Initial values</summary>
 
-  These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name                 | Config                                                                               |
-  | -------------------- | ------------------------------------------------------------------------------------ |
-  | `LightSpeedInLeft`   | `{opacity: 0, transform: [{ translateX: -values.windowWidth }, { skewX: '45deg' }]}` |
-  | `LightSpeedInRight`  | `{opacity: 0, transform: [{ translateX: values.windowWidth }, { skewX: '-45deg' }]}` |
-  | `LightSpeedOutLeft`  | `{opacity: 1, transform: [{ translateX: 0 }, { skewX: '0deg' }]}`                    |
-  | `LightSpeedOutRight` | `{opacity: 1, transform: [{ translateX: 0 }, { skewX: '0deg' }]}`                    |
+| Name                 | Config                                                                               |
+| -------------------- | ------------------------------------------------------------------------------------ |
+| `LightSpeedInLeft`   | `{opacity: 0, transform: [{ translateX: -values.windowWidth }, { skewX: '45deg' }]}` |
+| `LightSpeedInRight`  | `{opacity: 0, transform: [{ translateX: values.windowWidth }, { skewX: '-45deg' }]}` |
+| `LightSpeedOutLeft`  | `{opacity: 1, transform: [{ translateX: 0 }, { skewX: '0deg' }]}`                    |
+| `LightSpeedOutRight` | `{opacity: 1, transform: [{ translateX: 0 }, { skewX: '0deg' }]}`                    |
+
 </details>
 
 ### Modifiers
@@ -523,55 +555,63 @@ LightSpeedInRight.delay(500)
 ## Pinwheel
 
 <Row>
-  <ThemedVideo
-    sources={{
-light: '/recordings/layout-animations/pinwheel_light.mov',
-dark: '/recordings/layout-animations/pinwheel_dark.mov',
-}}
-  />
 
-  <div style={{flexGrow: 1}}>
-    `PinwheelX` lets you create an animation based on rotation, scale, and opacity.
+<ThemedVideo
+  sources={{
+    light: '/recordings/layout-animations/pinwheel_light.mov',
+    dark: '/recordings/layout-animations/pinwheel_dark.mov',
+  }}
+/>
 
-    ```jsx
-    import { PinwheelIn, PinwheelOut } from 'react-native-reanimated';
+<div style={{flexGrow: 1}}>
 
-    function App() {
-      return <Animated.View entering={PinwheelIn} exiting={PinwheelOut} />;
-    }
-    ```
-  </div>
+`PinwheelX` lets you create an animation based on rotation, scale, and opacity.
+
+```jsx
+import { PinwheelIn, PinwheelOut } from 'react-native-reanimated';
+
+function App() {
+  return <Animated.View entering={PinwheelIn} exiting={PinwheelOut} />;
+}
+```
+
+</div>
+
 </Row>
 
 Available pinwheel animations:
 
 <Grid>
-  <div>
-    ### Entering
+<div>
 
-    <div style={{ margin: 16 }}/>
+### Entering
 
-    - `PinwheelIn`
-  </div>
+<div style={{ margin: 16 }} />
 
-  <div>
-    ### Exiting
+- `PinwheelIn`
 
-    <div style={{ margin: 16 }}/>
+</div>
+<div>
 
-    - `PinwheelOut`
-  </div>
+### Exiting
+
+<div style={{ margin: 16 }} />
+
+- `PinwheelOut`
+
+</div>
 </Grid>
 
 <details>
-  <summary>Initial values</summary>
+<summary>Initial values</summary>
 
-  These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name          | Config                                                   |
-  | ------------- | -------------------------------------------------------- |
-  | `PinwheelIn`  | `{opacity: 0, transform: [{ scale: 0 }, {rotate: '5'}]}` |
-  | `PinwheelOut` | `{opacity: 1, transform: [{ scale: 1 }, {rotate: '0'}]}` |
+| Name          | Config                                                   |
+| ------------- | -------------------------------------------------------- |
+| `PinwheelIn`  | `{opacity: 0, transform: [{ scale: 0 }, {rotate: '5'}]}` |
+| `PinwheelOut` | `{opacity: 1, transform: [{ scale: 1 }, {rotate: '0'}]}` |
+
 </details>
 
 ### Modifiers
@@ -636,61 +676,69 @@ PinwheelIn.delay(500)
 ## Roll
 
 <Row>
-  <ThemedVideo
-    sources={{
-light: '/recordings/layout-animations/roll_light.mov',
-dark: '/recordings/layout-animations/roll_dark.mov',
-}}
-  />
 
-  <div style={{flexGrow: 1}}>
-    `RollX` lets you create an animation of a horizontally moving object with a rotation.
+<ThemedVideo
+  sources={{
+    light: '/recordings/layout-animations/roll_light.mov',
+    dark: '/recordings/layout-animations/roll_dark.mov',
+  }}
+/>
 
-    ```jsx
-    import { RollInRight, RollOutLeft } from 'react-native-reanimated';
+<div style={{flexGrow: 1}}>
 
-    function App() {
-      return <Animated.View entering={RollInRight} exiting={RollOutLeft} />;
-    }
-    ```
-  </div>
+`RollX` lets you create an animation of a horizontally moving object with a rotation.
+
+```jsx
+import { RollInRight, RollOutLeft } from 'react-native-reanimated';
+
+function App() {
+  return <Animated.View entering={RollInRight} exiting={RollOutLeft} />;
+}
+```
+
+</div>
+
 </Row>
 
 Available roll animations:
 
 <Grid>
-  <div>
-    ### Entering
+<div>
 
-    <div style={{ margin: 16 }}/>
+### Entering
 
-    - `RollInRight`
+<div style={{ margin: 16 }} />
 
-    - `RollInLeft`
-  </div>
+- `RollInRight`
 
-  <div>
-    ### Exiting
+- `RollInLeft`
 
-    <div style={{ margin: 16 }}/>
+</div>
+<div>
 
-    - `RollOutRight`
+### Exiting
 
-    - `RollOutLeft`
-  </div>
+<div style={{ margin: 16 }} />
+
+- `RollOutRight`
+
+- `RollOutLeft`
+
+</div>
 </Grid>
 
 <details>
-  <summary>Initial values</summary>
+<summary>Initial values</summary>
 
-  These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name           | Config                                                                      |
-  | -------------- | --------------------------------------------------------------------------- |
-  | `RollInLeft`   | `{transform: [{ translateX: -values.windowWidth }, { rotate: '-180deg' }]}` |
-  | `RollInRight`  | `{transform: [{ translateX: values.windowWidth }, { rotate: '180deg' }]}`   |
-  | `RollOutLeft`  | `{transform: [{ translateX: 0 }, { rotate: '0deg' }]}`                      |
-  | `RollOutRight` | `{transform: [{ translateX: 0 }, { rotate: '0deg' }]}`                      |
+| Name           | Config                                                                      |
+| -------------- | --------------------------------------------------------------------------- |
+| `RollInLeft`   | `{transform: [{ translateX: -values.windowWidth }, { rotate: '-180deg' }]}` |
+| `RollInRight`  | `{transform: [{ translateX: values.windowWidth }, { rotate: '180deg' }]}`   |
+| `RollOutLeft`  | `{transform: [{ translateX: 0 }, { rotate: '0deg' }]}`                      |
+| `RollOutRight` | `{transform: [{ translateX: 0 }, { rotate: '0deg' }]}`                      |
+
 </details>
 
 ### Modifiers
@@ -753,75 +801,83 @@ RollInRight.delay(500)
 ## Rotate
 
 <Row>
-  <ThemedVideo
-    sources={{
-light: '/recordings/layout-animations/rotate_light.mov',
-dark: '/recordings/layout-animations/rotate_dark.mov',
-}}
-  />
 
-  <div style={{flexGrow: 1}}>
-    `RotateX` lets you create a rotation animation.
+<ThemedVideo
+  sources={{
+    light: '/recordings/layout-animations/rotate_light.mov',
+    dark: '/recordings/layout-animations/rotate_dark.mov',
+  }}
+/>
 
-    ```jsx
-    import { RotateInDownLeft, RotateOutDownLeft } from 'react-native-reanimated';
+<div style={{flexGrow: 1}}>
 
-    function App() {
-      return (
-        <Animated.View entering={RotateInDownLeft} exiting={RotateOutDownLeft} />
-      );
-    }
-    ```
-  </div>
+`RotateX` lets you create a rotation animation.
+
+```jsx
+import { RotateInDownLeft, RotateOutDownLeft } from 'react-native-reanimated';
+
+function App() {
+  return (
+    <Animated.View entering={RotateInDownLeft} exiting={RotateOutDownLeft} />
+  );
+}
+```
+
+</div>
+
 </Row>
 
 Available rotate animations:
 
 <Grid>
-  <div>
-    ### Entering
+<div>
 
-    <div style={{ margin: 16 }}/>
+### Entering
 
-    - `RotateInDownLeft`
+<div style={{ margin: 16 }} />
 
-    - `RotateInDownRight`
+- `RotateInDownLeft`
 
-    - `RotateInUpLeft`
+- `RotateInDownRight`
 
-    - `RotateInUpRight`
-  </div>
+- `RotateInUpLeft`
 
-  <div>
-    ### Exiting
+- `RotateInUpRight`
 
-    <div style={{ margin: 16 }}/>
+</div>
+<div>
 
-    - `RotateOutDownLeft`
+### Exiting
 
-    - `RotateOutDownRight`
+<div style={{ margin: 16 }} />
 
-    - `RotateOutUpLeft`
+- `RotateOutDownLeft`
 
-    - `RotateOutUpRight`
-  </div>
+- `RotateOutDownRight`
+
+- `RotateOutUpLeft`
+
+- `RotateOutUpRight`
+
+</div>
 </Grid>
 
 <details>
-  <summary>Initial values</summary>
+<summary>Initial values</summary>
 
-  These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name                 | Config                                                                                                                                                                                     |
-  | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-  | `RotateInDownLeft`   | `{opacity: 0, transform: [{ rotate: '-90deg' }, { translateX: values.targetWidth / 2 - values.targetHeight / 2 }, { translateY: -(values.targetWidth / 2 - values.targetHeight / 2) }]}`   |
-  | `RotateInDownRight`  | `{opacity: 0, transform: [{ rotate: '90deg' }, { translateX: -(values.targetWidth / 2 - values.targetHeight / 2) }, { translateY: -(values.targetWidth / 2 - values.targetHeight / 2) }]}` |
-  | `RotateInUpLeft`     | `{opacity: 0, transform: [{ rotate: '90deg' }, { translateX: values.targetWidth / 2 - values.targetHeight / 2 }, { translateY: values.targetWidth / 2 - values.targetHeight / 2 }]}`       |
-  | `RotateInUpRight`    | `{opacity: 0, transform: [{ rotate: '-90deg' }, { translateX: -(values.targetWidth / 2 - values.targetHeight / 2) }, { translateY: values.targetWidth / 2 - values.targetHeight / 2 }]}`   |
-  | `RotateOutDownLeft`  | `{opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
-  | `RotateOutDownRight` | `{opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
-  | `RotateOutUpLeft`    | `{opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
-  | `RotateOutUpRight`   | `{opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
+| Name                 | Config                                                                                                                                                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `RotateInDownLeft`   | `{opacity: 0, transform: [{ rotate: '-90deg' }, { translateX: values.targetWidth / 2 - values.targetHeight / 2 }, { translateY: -(values.targetWidth / 2 - values.targetHeight / 2) }]}`   |
+| `RotateInDownRight`  | `{opacity: 0, transform: [{ rotate: '90deg' }, { translateX: -(values.targetWidth / 2 - values.targetHeight / 2) }, { translateY: -(values.targetWidth / 2 - values.targetHeight / 2) }]}` |
+| `RotateInUpLeft`     | `{opacity: 0, transform: [{ rotate: '90deg' }, { translateX: values.targetWidth / 2 - values.targetHeight / 2 }, { translateY: values.targetWidth / 2 - values.targetHeight / 2 }]}`       |
+| `RotateInUpRight`    | `{opacity: 0, transform: [{ rotate: '-90deg' }, { translateX: -(values.targetWidth / 2 - values.targetHeight / 2) }, { translateY: values.targetWidth / 2 - values.targetHeight / 2 }]}`   |
+| `RotateOutDownLeft`  | `{opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
+| `RotateOutDownRight` | `{opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
+| `RotateOutUpLeft`    | `{opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
+| `RotateOutUpRight`   | `{opacity: 1, transform: [{ rotate: '0deg' }, { translateX: 0 }, { translateY: 0 }]}`                                                                                                      |
+
 </details>
 
 ### Modifiers
@@ -886,73 +942,81 @@ RotateInDownLeft.delay(500)
 ## Slide
 
 <Row>
-  <ThemedVideo
-    sources={{
-light: '/recordings/layout-animations/slide_light.mov',
-dark: '/recordings/layout-animations/slide_dark.mov',
-}}
-  />
 
-  <div style={{flexGrow: 1}}>
-    `SlideX` lets you create an animation of horizontal or vertical moving object.
+<ThemedVideo
+  sources={{
+    light: '/recordings/layout-animations/slide_light.mov',
+    dark: '/recordings/layout-animations/slide_dark.mov',
+  }}
+/>
 
-    ```jsx
-    import { SlideInRight, SlideOutLeft } from 'react-native-reanimated';
+<div style={{flexGrow: 1}}>
 
-    function App() {
-      return <Animated.View entering={SlideInRight} exiting={SlideOutLeft} />;
-    }
-    ```
-  </div>
+`SlideX` lets you create an animation of horizontal or vertical moving object.
+
+```jsx
+import { SlideInRight, SlideOutLeft } from 'react-native-reanimated';
+
+function App() {
+  return <Animated.View entering={SlideInRight} exiting={SlideOutLeft} />;
+}
+```
+
+</div>
+
 </Row>
 
 Available slide animations:
 
 <Grid>
-  <div>
-    ### Entering
+<div>
 
-    <div style={{ margin: 16 }}/>
+### Entering
 
-    - `SlideInRight`
+<div style={{ margin: 16 }} />
 
-    - `SlideInLeft`
+- `SlideInRight`
 
-    - `SlideInUp`
+- `SlideInLeft`
 
-    - `SlideInDown`
-  </div>
+- `SlideInUp`
 
-  <div>
-    ### Exiting
+- `SlideInDown`
 
-    <div style={{ margin: 16 }}/>
+</div>
+<div>
 
-    - `SlideOutRight`
+### Exiting
 
-    - `SlideOutLeft`
+<div style={{ margin: 16 }} />
 
-    - `SlideOutUp`
+- `SlideOutRight`
 
-    - `SlideOutDown`
-  </div>
+- `SlideOutLeft`
+
+- `SlideOutUp`
+
+- `SlideOutDown`
+
+</div>
 </Grid>
 
 <details>
-  <summary>Initial values</summary>
+<summary>Initial values</summary>
 
-  These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name            | Config                                                  |
-  | --------------- | ------------------------------------------------------- |
-  | `SlideInDown`   | `{originY: values.targetOriginY + values.windowHeight}` |
-  | `SlideInLeft`   | `{originX: values.targetOriginX - values.windowWidth}`  |
-  | `SlideInRight`  | `{originX: values.targetOriginX + values.windowWidth}`  |
-  | `SlideInUp`     | `{originY: -values.windowHeight}`                       |
-  | `SlideOutDown`  | `{originY: values.currentOriginY}`                      |
-  | `SlideOutLeft`  | `{originX: values.currentOriginX}`                      |
-  | `SlideOutRight` | `{originX: values.currentOriginX}`                      |
-  | `SlideOutUp`    | `{originY: values.currentOriginY}`                      |
+| Name            | Config                                                  |
+| --------------- | ------------------------------------------------------- |
+| `SlideInDown`   | `{originY: values.targetOriginY + values.windowHeight}` |
+| `SlideInLeft`   | `{originX: values.targetOriginX - values.windowWidth}`  |
+| `SlideInRight`  | `{originX: values.targetOriginX + values.windowWidth}`  |
+| `SlideInUp`     | `{originY: -values.windowHeight}`                       |
+| `SlideOutDown`  | `{originY: values.currentOriginY}`                      |
+| `SlideOutLeft`  | `{originX: values.currentOriginX}`                      |
+| `SlideOutRight` | `{originX: values.currentOriginX}`                      |
+| `SlideOutUp`    | `{originY: values.currentOriginY}`                      |
+
 </details>
 
 ### Modifiers
@@ -1015,61 +1079,70 @@ SlideInDown.delay(500)
 ## Stretch
 
 <Row>
-  <ThemedVideo
-    sources={{
-light: '/recordings/layout-animations/stretch_light.mov',
-dark: '/recordings/layout-animations/stretch_dark.mov',
-}}
-  />
 
-  <div style={{flexGrow: 1}}>
-    `StretchX` lets you create an animation based on scaling in X or Y axis.
+<ThemedVideo
+  sources={{
+    light: '/recordings/layout-animations/stretch_light.mov',
+    dark: '/recordings/layout-animations/stretch_dark.mov',
+  }}
+/>
 
-    ```jsx
-    import { StretchInX, StretchOutY } from 'react-native-reanimated';
+<div style={{flexGrow: 1}}>
 
-    function App() {
-      return <Animated.View entering={StretchInX} exiting={StretchOutY} />;
-    }
-    ```
-  </div>
+`StretchX` lets you create an animation based on scaling in X or Y axis.
+
+```jsx
+import { StretchInX, StretchOutY } from 'react-native-reanimated';
+
+function App() {
+  return <Animated.View entering={StretchInX} exiting={StretchOutY} />;
+}
+```
+
+</div>
+
 </Row>
 
 Available stretch animations:
 
 <Grid>
-  <div>
-    ### Entering
 
-    <div style={{ margin: 16 }}/>
+<div>
 
-    - `StretchInX`
+### Entering
 
-    - `StretchInY`
-  </div>
+<div style={{ margin: 16 }} />
 
-  <div>
-    ### Exiting
+- `StretchInX`
 
-    <div style={{ margin: 16 }}/>
+- `StretchInY`
 
-    - `StretchOutX`
+</div>
+<div>
 
-    - `StretchOutY`
-  </div>
+### Exiting
+
+<div style={{ margin: 16 }} />
+
+- `StretchOutX`
+
+- `StretchOutY`
+
+</div>
 </Grid>
 
 <details>
-  <summary>Initial values</summary>
+<summary>Initial values</summary>
 
-  These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name          | Config                         |
-  | ------------- | ------------------------------ |
-  | `StretchInX`  | `{transform: [{ scaleX: 0 }]}` |
-  | `StretchInY`  | `{transform: [{ scaleY: 0 }]}` |
-  | `StretchOutX` | `{transform: [{ scaleX: 1 }]}` |
-  | `StretchOutY` | `{transform: [{ scaleY: 1 }]}` |
+| Name          | Config                         |
+| ------------- | ------------------------------ |
+| `StretchInX`  | `{transform: [{ scaleX: 0 }]}` |
+| `StretchInY`  | `{transform: [{ scaleY: 0 }]}` |
+| `StretchOutX` | `{transform: [{ scaleX: 1 }]}` |
+| `StretchOutY` | `{transform: [{ scaleY: 1 }]}` |
+
 </details>
 
 ### Modifiers
@@ -1132,97 +1205,105 @@ StretchInY.delay(500)
 ## Zoom
 
 <Row>
-  <ThemedVideo
-    sources={{
-light: '/recordings/layout-animations/zoom_light.mov',
-dark: '/recordings/layout-animations/zoom_dark.mov',
-}}
-  />
 
-  <div style={{flexGrow: 1}}>
-    `ZoomX` lets you create an animation based on scale.
+<ThemedVideo
+  sources={{
+    light: '/recordings/layout-animations/zoom_light.mov',
+    dark: '/recordings/layout-animations/zoom_dark.mov',
+  }}
+/>
 
-    ```jsx
-    import { ZoomIn, ZoomOut } from 'react-native-reanimated';
+<div style={{flexGrow: 1}}>
 
-    function App() {
-      return <Animated.View entering={ZoomIn} exiting={ZoomOut} />;
-    }
-    ```
-  </div>
+`ZoomX` lets you create an animation based on scale.
+
+```jsx
+import { ZoomIn, ZoomOut } from 'react-native-reanimated';
+
+function App() {
+  return <Animated.View entering={ZoomIn} exiting={ZoomOut} />;
+}
+```
+
+</div>
+
 </Row>
 
 Available zoom animations:
 
 <Grid>
-  <div>
-    ### Entering
+<div>
 
-    <div style={{ margin: 16 }}/>
+### Entering
 
-    - `ZoomIn`
+<div style={{ margin: 16 }} />
 
-    - `ZoomInDown`
+- `ZoomIn`
 
-    - `ZoomInEasyDown`
+- `ZoomInDown`
 
-    - `ZoomInEasyUp`
+- `ZoomInEasyDown`
 
-    - `ZoomInLeft`
+- `ZoomInEasyUp`
 
-    - `ZoomInRight`
+- `ZoomInLeft`
 
-    - `ZoomInRotate`
+- `ZoomInRight`
 
-    - `ZoomInUp`
-  </div>
+- `ZoomInRotate`
 
-  <div>
-    ### Exiting
+- `ZoomInUp`
 
-    <div style={{ margin: 16 }}/>
+</div>
+<div>
 
-    - `ZoomOut`
+### Exiting
 
-    - `ZoomOutDown`
+<div style={{ margin: 16 }} />
 
-    - `ZoomOutEasyDown`
+- `ZoomOut`
 
-    - `ZoomOutEasyUp`
+- `ZoomOutDown`
 
-    - `ZoomOutLeft`
+- `ZoomOutEasyDown`
 
-    - `ZoomOutRight`
+- `ZoomOutEasyUp`
 
-    - `ZoomOutRotate`
+- `ZoomOutLeft`
 
-    - `ZoomOutUp`
-  </div>
+- `ZoomOutRight`
+
+- `ZoomOutRotate`
+
+- `ZoomOutUp`
+
+</div>
 </Grid>
 
 <details>
-  <summary>Initial values</summary>
+<summary>Initial values</summary>
 
-  These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
+These are the initial values for each animation that can be customized with the `withInitialValues` modifier.
 
-  | Name              | Config                                                              |
-  | ----------------- | ------------------------------------------------------------------- |
-  | `ZoomIn`          | `{transform: [{ scale: 0 }]}`                                       |
-  | `ZoomInDown`      | `{transform: [{ translateY: values.windowHeight }, { scale: 0 }]}`  |
-  | `ZoomInEasyDown`  | `{transform: [{ translateY: values.targetHeight }, { scale: 0 }]}`  |
-  | `ZoomInEasyUp`    | `{transform: [{ translateY: -values.targetHeight }, { scale: 0 }]}` |
-  | `ZoomInLeft`      | `{transform: [{ translateX: -values.windowWidth }, { scale: 0 }]}`  |
-  | `ZoomInRight`     | `{transform: [{ translateX: values.windowWidth }, { scale: 0 }]}`   |
-  | `ZoomInRotate`    | `{transform: [{ scale: 0 }, { rotate: rotate }]}`                   |
-  | `ZoomInUp`        | `{transform: [{ translateY: -values.windowHeight }, { scale: 0 }]}` |
-  | `ZoomOut`         | `{transform: [{ scale: 1 }]}`                                       |
-  | `ZoomOutDown`     | `{transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
-  | `ZoomOutEasyDown` | `{transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
-  | `ZoomOutEasyUp`   | `{transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
-  | `ZoomOutLeft`     | `{transform: [{ translateX: 0 }, { scale: 1 }]}`                    |
-  | `ZoomOutRight`    | `{transform: [{ translateX: 0 }, { scale: 1 }]}`                    |
-  | `ZoomOutRotate`   | `{transform: [{ scale: 1 }, { rotate: '0' }]}`                      |
-  | `ZoomOutUp`       | `{transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
+| Name              | Config                                                              |
+| ----------------- | ------------------------------------------------------------------- |
+| `ZoomIn`          | `{transform: [{ scale: 0 }]}`                                       |
+| `ZoomInDown`      | `{transform: [{ translateY: values.windowHeight }, { scale: 0 }]}`  |
+| `ZoomInEasyDown`  | `{transform: [{ translateY: values.targetHeight }, { scale: 0 }]}`  |
+| `ZoomInEasyUp`    | `{transform: [{ translateY: -values.targetHeight }, { scale: 0 }]}` |
+| `ZoomInLeft`      | `{transform: [{ translateX: -values.windowWidth }, { scale: 0 }]}`  |
+| `ZoomInRight`     | `{transform: [{ translateX: values.windowWidth }, { scale: 0 }]}`   |
+| `ZoomInRotate`    | `{transform: [{ scale: 0 }, { rotate: rotate }]}`                   |
+| `ZoomInUp`        | `{transform: [{ translateY: -values.windowHeight }, { scale: 0 }]}` |
+| `ZoomOut`         | `{transform: [{ scale: 1 }]}`                                       |
+| `ZoomOutDown`     | `{transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
+| `ZoomOutEasyDown` | `{transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
+| `ZoomOutEasyUp`   | `{transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
+| `ZoomOutLeft`     | `{transform: [{ translateX: 0 }, { scale: 1 }]}`                    |
+| `ZoomOutRight`    | `{transform: [{ translateX: 0 }, { scale: 1 }]}`                    |
+| `ZoomOutRotate`   | `{transform: [{ scale: 1 }, { rotate: '0' }]}`                      |
+| `ZoomOutUp`       | `{transform: [{ translateY: 0 }, { scale: 1 }]}`                    |
+
 </details>
 
 ### Modifiers
@@ -1284,4 +1365,4 @@ ZoomIn.delay(500)
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web/>
+<PlatformCompatibility android ios web />
