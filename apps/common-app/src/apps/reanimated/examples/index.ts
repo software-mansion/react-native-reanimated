@@ -361,6 +361,8 @@ const PseudoCombinedExample: React.FC = () =>
   React.createElement(require('./PseudoCombinedExample').default);
 const PseudoShowcaseExample: React.FC = () =>
   React.createElement(require('./PseudoShowcaseExample').default);
+const PseudoWebSelectorsExample: React.FC = () =>
+  React.createElement(require('./PseudoWebSelectorsExample').default);
 const RainbowExample: React.FC = () =>
   React.createElement(require('./RainbowExample').default as React.FC);
 const ReactionsCounterExample: React.FC = () =>
@@ -1033,6 +1035,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🎬',
     title: 'Pseudo-selectors (showcase)',
     screen: PseudoShowcaseExample,
+  },
+  PseudoWebSelectorsExample: {
+    icon: '🌐',
+    title: 'Pseudo-selectors (web-only)',
+    screen: PseudoWebSelectorsExample,
   },
 
   // Old examples
