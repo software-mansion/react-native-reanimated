@@ -34,10 +34,11 @@
     "type:check:strict": "yarn type:check:strict:src && yarn type:check:strict:app",
     "type:check:strict:src": "yarn tsc --noEmit --customConditions react-native-strict-api",
     "type:check:strict:app": "yarn workspace common-app type:check:strict",
-    "build": "yarn workspace react-native-worklets build && bob build",
+    "build": "yarn workspace react-native-worklets build && yarn set-version && bob build",
     "circular-dependency-check": "yarn madge --extensions js,jsx --circular lib",
     "tree-shake:check:web": "yarn is-tree-shakable --resolution web",
-    "validate-peers": "node ../../scripts/validate-compatibility-peer-dependencies.js"
+    "validate-peers": "node ../../scripts/validate-compatibility-peer-dependencies.js",
+    "set-version": "node scripts/set-version.js"
   },
   "main": "lib/module/index",
   "module": "lib/module/index",
@@ -103,11 +104,11 @@
   "devDependencies": {
     "@babel/core": "7.28.4",
     "@babel/preset-env": "7.28.3",
-    "@react-native/babel-preset": "0.85.0-rc.6",
-    "@react-native/eslint-config": "0.85.0-rc.6",
-    "@react-native/jest-preset": "patch:@react-native/jest-preset@npm%3A0.85.0-rc.6#~/.yarn/patches/@react-native-jest-preset-npm-0.85.0-rc.6-7ccb42a0b9.patch",
-    "@react-native/metro-config": "0.85.0-rc.6",
-    "@react-native/typescript-config": "0.85.0-rc.6",
+    "@react-native/babel-preset": "0.85.0",
+    "@react-native/eslint-config": "0.85.0",
+    "@react-native/jest-preset": "patch:@react-native/jest-preset@npm%3A0.85.0#~/.yarn/patches/@react-native-jest-preset-npm-0.85.0-7ccb42a0b9.patch",
+    "@react-native/metro-config": "0.85.0",
+    "@react-native/typescript-config": "0.85.0",
     "@shopify/flash-list": "2.1.0",
     "@testing-library/dom": "10.4.0",
     "@testing-library/jest-native": "5.4.3",
@@ -130,13 +131,13 @@
     "prettier": "3.6.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-native": "0.85.0-rc.6",
+    "react-native": "0.85.0",
     "react-native-builder-bob": "0.40.13",
     "react-native-svg": "15.15.4",
     "react-native-web": "0.21.1",
     "react-native-worklets": "workspace:*",
     "react-test-renderer": "19.2.3",
-    "typescript": "5.8.3"
+    "typescript": "5.9.3"
   },
   "react-native-builder-bob": {
     "source": "src",

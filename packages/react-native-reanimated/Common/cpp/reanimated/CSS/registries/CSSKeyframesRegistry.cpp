@@ -1,13 +1,9 @@
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 
-#include <memory>
 #include <string>
 #include <utility>
 
 namespace reanimated::css {
-
-CSSKeyframesRegistry::CSSKeyframesRegistry(const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : viewStylesRepository_(viewStylesRepository) {}
 
 std::optional<std::reference_wrapper<const CSSKeyframesConfig>> CSSKeyframesRegistry::get(
     const std::string &animationName,

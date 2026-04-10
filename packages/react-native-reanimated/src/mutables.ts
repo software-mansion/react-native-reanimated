@@ -217,8 +217,12 @@ function mutableGuestDecorator<TValue>(
       set(newValue) {
         if (globalThis.__RUNTIME_KIND === 1) {
           checkInvalidWriteDuringRender();
+          scheduleOnUI(() => {
+            mutable.value = newValue;
+          });
+        } else {
+          mutable.setAsync(newValue);
         }
-        mutable.setAsync(newValue);
       },
       enumerable: true,
       configurable: true,
