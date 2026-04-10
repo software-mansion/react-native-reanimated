@@ -32,10 +32,6 @@ TransitionProgressState CSSTransition::getState() const {
   return progressProvider_.getState();
 }
 
-folly::dynamic CSSTransition::getCurrentInterpolationStyle() const {
-  return styleInterpolator_.interpolate(shadowNode_, progressProvider_);
-}
-
 TransitionProperties CSSTransition::getProperties() const {
   return transitionProperties_;
 }
