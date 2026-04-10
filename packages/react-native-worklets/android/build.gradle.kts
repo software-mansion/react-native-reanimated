@@ -1,6 +1,8 @@
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 import groovy.json.JsonSlurper
 import org.apache.tools.ant.taskdefs.condition.Os
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import java.util.Properties
 import javax.inject.Inject
 
@@ -215,6 +217,7 @@ android {
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
         buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
 
+        @Suppress("UnstableApiUsage")
         externalNativeBuild {
             cmake {
                 arguments(
@@ -248,6 +251,7 @@ android {
 
     buildTypes {
         debug {
+            @Suppress("UnstableApiUsage")
             externalNativeBuild {
                 cmake {
                     if (JS_RUNTIME == "hermes") {
@@ -334,9 +338,9 @@ android {
 }
 
 if (project != rootProject) {
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlin {
         compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+            jvmTarget = JvmTarget.fromTarget("17")
         }
     }
 }

@@ -1,13 +1,15 @@
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 import groovy.json.JsonSlurper
 import org.apache.tools.ant.taskdefs.condition.Os
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import java.util.Properties
 import javax.inject.Inject
 
 plugins {
     id("com.android.library")
     id("maven-publish")
-    id("com.diffplug.spotless") version "8.1.0"
+    id("com.diffplug.spotless") version "8.4.0"
     id("org.jetbrains.kotlin.android")
 }
 
@@ -178,7 +180,8 @@ android {
 
     defaultConfig {
         minSdk = safeExtGet("minSdkVersion", 24) as Int
-        targetSdk = safeExtGet("targetSdkVersion", 36) as Int
+        testOptions.targetSdk = safeExtGet("targetSdkVersion", 36) as Int
+        lint.targetSdk = safeExtGet("targetSdkVersion", 36) as Int
 
         buildConfigField("boolean", "REANIMATED_PROFILING", REANIMATED_PROFILING.toString())
         buildConfigField("String", "REANIMATED_VERSION_JAVA", "\"$REANIMATED_VERSION\"")
@@ -186,6 +189,7 @@ android {
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
         buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
 
+        @Suppress("UnstableApiUsage")
         externalNativeBuild {
             cmake {
                 arguments(
@@ -273,9 +277,9 @@ android {
 }
 
 if (project != rootProject) {
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlin {
         compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+            jvmTarget = JvmTarget.fromTarget("17")
         }
     }
 }
