@@ -36,7 +36,6 @@ void CSSAnimationsRegistry::apply(
       return;
     }
 
-    newGroup->schedule(loop_);
     groups_.insert_or_assign(viewTag, std::move(*newGroup));
   }
 
@@ -45,8 +44,16 @@ void CSSAnimationsRegistry::apply(
     return;
   }
 
-  it->second.updateSettings(updates.settingsUpdates, loop_->getTimestamp());
-  setInUpdatesRegistry(shadowNode->getFamilyShared(), it->second.computeStyle());
+  auto &group = it->second;
+  group.updateSettings(updates.settingsUpdates, loop_->getTimestamp());
+  group.schedule(loop_);
+
+  const auto style = group.computeStyle();
+  // Set current style to updates registry to ensure that all old
+  // styles are removed (replaced by the new style)
+  setInUpdatesRegistry(group.getShadowNodeFamily(), style);
+  // Mark always as updated to ensure that updates are committed
+  updatedTags_.insert(viewTag);
 }
 
 void CSSAnimationsRegistry::remove(const Tag viewTag) {

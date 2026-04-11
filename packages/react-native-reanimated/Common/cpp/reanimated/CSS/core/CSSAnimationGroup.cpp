@@ -45,12 +45,11 @@ folly::dynamic CSSAnimationGroup::computeStyle(bool includeResetStyles) const {
   for (const auto &animation : animations_) {
     const auto state = animation->getState();
 
-    if (state == AnimationProgressState::Pending && animation->hasBackwardsFillMode()) {
-      style.update(animation->getBackwardsFillStyle());
-    } else if (
-        state == AnimationProgressState::Running || state == AnimationProgressState::Paused ||
+    if (state == AnimationProgressState::Running || state == AnimationProgressState::Paused ||
         (state == AnimationProgressState::Finished && animation->hasForwardsFillMode())) {
       style.update(animation->getCurrentInterpolationStyle(shadowNode_));
+    } else if (state == AnimationProgressState::Pending && animation->hasBackwardsFillMode()) {
+      style.update(animation->getBackwardsFillStyle());
     } else if (state == AnimationProgressState::Finished && includeResetStyles) {
       const auto resetStyle = animation->getResetStyle(shadowNode_);
       for (const auto &[key, value] : resetStyle.items()) {
@@ -60,6 +59,8 @@ folly::dynamic CSSAnimationGroup::computeStyle(bool includeResetStyles) const {
       }
     }
   }
+
+  LOG(INFO) << "tag: " << shadowNode_->getTag() << " style: " << style;
 
   return style;
 }

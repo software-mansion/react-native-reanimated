@@ -12,9 +12,10 @@ OperationsLoop::OperationsLoop(
 
 double OperationsLoop::getTimestamp() {
   if (currentTimestamp_ <= 0) {
-    currentTimestamp_ = getTimestamp_();
     // Cache the timestamp so all callers within the same frame window
-    // get a consistent value. Schedule a frame to reset the cache,
+    // get a consistent value.
+    currentTimestamp_ = getTimestamp_();
+    // Schedule a frame to reset the cache,
     // preventing it from going stale if no operations are scheduled.
     deferTimestampReset();
   }

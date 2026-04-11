@@ -29,9 +29,13 @@ CSSAnimation::CSSAnimation(
 
 void CSSAnimation::onUpdate(const double timestamp) {
   progressProvider_->update(timestamp);
+  LOG(INFO) << "animationName: " << name_ << " on update: " << timestamp
+            << " progress: " << progressProvider_->getGlobalProgress();
 }
 
 bool CSSAnimation::isRunning() const {
+  LOG(INFO) << "animationName: " << name_
+            << " is running: " << (progressProvider_->getState() == AnimationProgressState::Running);
   return progressProvider_->getState() == AnimationProgressState::Running;
 }
 
