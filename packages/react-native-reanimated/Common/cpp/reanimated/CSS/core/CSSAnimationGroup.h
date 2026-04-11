@@ -1,0 +1,38 @@
+#pragma once
+
+#include <reanimated/CSS/configs/CSSAnimationConfig.h>
+#include <reanimated/CSS/core/CSSAnimation.h>
+#include <reanimated/Fabric/updates/OperationsLoop.h>
+
+#include <folly/dynamic.h>
+#include <react/renderer/core/ShadowNode.h>
+
+#include <memory>
+#include <vector>
+
+namespace reanimated::css {
+
+using CSSAnimationsVector = std::vector<std::shared_ptr<CSSAnimation>>;
+
+class CSSAnimationGroup {
+ public:
+  CSSAnimationGroup(std::shared_ptr<const ShadowNode> shadowNode, CSSAnimationsVector animations);
+
+  const CSSAnimationsVector &getAnimations() const;
+  ShadowNodeFamily::Shared getShadowNodeFamily() const;
+
+  void updateSettings(const CSSAnimationSettingsUpdatesMap &settingsUpdates, double timestamp);
+  void schedule(const std::shared_ptr<OperationsLoop> &loop);
+  void unschedule(const std::shared_ptr<OperationsLoop> &loop) const;
+  // Computes the combined style from all animations.
+  // When includeResetStyles is true, finished animations without forwards fill
+  // contribute their original (pre-animation) property values — these should be
+  // committed once to revert the visual changes applied by the animation.
+  folly::dynamic computeStyle(bool includeResetStyles = false) const;
+
+ private:
+  std::shared_ptr<const ShadowNode> shadowNode_;
+  CSSAnimationsVector animations_;
+};
+
+} // namespace reanimated::css
