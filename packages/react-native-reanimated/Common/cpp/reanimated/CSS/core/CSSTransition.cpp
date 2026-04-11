@@ -16,8 +16,20 @@ CSSTransition::CSSTransition(
       styleInterpolator_(TransitionStyleInterpolator(shadowNode_->getComponentName(), viewStylesRepository)),
       progressProvider_(TransitionProgressProvider()) {}
 
+void CSSTransition::onUpdate(const double timestamp) {
+  progressProvider_.update(timestamp);
+}
+
+bool CSSTransition::isRunning() const {
+  return getState() == TransitionProgressState::Running;
+}
+
 Tag CSSTransition::getViewTag() const {
   return shadowNode_->getTag();
+}
+
+ShadowNodeFamily::Shared CSSTransition::getShadowNodeFamily() const {
+  return shadowNode_->getFamilyShared();
 }
 
 std::shared_ptr<const ShadowNode> CSSTransition::getShadowNode() const {
@@ -45,12 +57,12 @@ folly::dynamic CSSTransition::run(
   handleChangedProperties(rt, config, lastUpdateValue.empty() ? folly::dynamic::object() : lastUpdateValue, timestamp);
   // Remove interpolators and progress providers for no longer transitioned props
   handleRemovedProperties(config);
-  // Return the first transition frame
-  return update(timestamp);
+  // Advance progress and return the first transition frame
+  progressProvider_.update(timestamp);
+  return computeCurrentStyle();
 }
 
-folly::dynamic CSSTransition::update(const double timestamp) {
-  progressProvider_.update(timestamp);
+folly::dynamic CSSTransition::computeCurrentStyle() {
   auto result = styleInterpolator_.interpolate(shadowNode_, progressProvider_);
   // Remove interpolators for which interpolation has finished
   // (we won't need them anymore in the current transition)
