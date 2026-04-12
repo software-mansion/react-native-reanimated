@@ -36,7 +36,7 @@ AnimationDirection AnimationProgressProvider::getDirection() const {
 }
 
 double AnimationProgressProvider::getGlobalProgress() const {
-  return applyAnimationDirection(rawProgress_.value_or(0));
+  return applyDirection(rawProgress_.value_or(0), direction_, currentIteration_);
 }
 
 double AnimationProgressProvider::getKeyframeProgress(const double fromOffset, const double toOffset) const {
@@ -83,6 +83,19 @@ void AnimationProgressProvider::resetProgress() {
   currentIteration_ = 1;
   previousIterationsDuration_ = 0;
   state_ = AnimationProgressState::Pending;
+}
+
+double AnimationProgressProvider::applyDirection(double progress, AnimationDirection direction, unsigned iteration) {
+  switch (direction) {
+    case AnimationDirection::Normal:
+      return progress;
+    case AnimationDirection::Reverse:
+      return 1.0 - progress;
+    case AnimationDirection::Alternate:
+      return iteration % 2 == 0 ? 1.0 - progress : progress;
+    case AnimationDirection::AlternateReverse:
+      return iteration % 2 == 0 ? progress : 1.0 - progress;
+  }
 }
 
 std::optional<double> AnimationProgressProvider::calculateRawProgress(const double timestamp) {
@@ -156,19 +169,6 @@ double AnimationProgressProvider::updateIterationProgress(const double currentIt
   // If the current iteration changes, the progress must be updated
   // respectively not to contain the progress of the previous iteration
   return progress - deltaIterations;
-}
-
-double AnimationProgressProvider::applyAnimationDirection(const double progress) const {
-  switch (direction_) {
-    case AnimationDirection::Normal:
-      return progress;
-    case AnimationDirection::Reverse:
-      return 1.0 - progress;
-    case AnimationDirection::Alternate:
-      return currentIteration_ % 2 == 0 ? 1.0 - progress : progress;
-    case AnimationDirection::AlternateReverse:
-      return currentIteration_ % 2 == 0 ? progress : 1.0 - progress;
-  }
 }
 
 } // namespace reanimated::css

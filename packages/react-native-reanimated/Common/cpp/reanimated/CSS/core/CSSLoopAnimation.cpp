@@ -25,6 +25,8 @@ CSSLoopAnimation::CSSLoopAnimation(
     const std::shared_ptr<const ShadowNode> &shadowNode,
     const std::shared_ptr<CSSAnimationSettings> &settings,
     const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs,
+    const std::shared_ptr<std::unordered_set<Tag>> &updatedViewTags,
+    const std::shared_ptr<std::unordered_set<Tag>> &revertedTags,
     const double timestamp)
     : settings_(settings),
       shadowNode_(shadowNode),
@@ -37,7 +39,9 @@ CSSLoopAnimation::CSSLoopAnimation(
           getEasingFunctionFromConfig(settings->easingConfig),
           createKeyframeEasingFunctions(keyframeEasingConfigs))),
       allProperties_(allProperties),
-      interpolator_(interpolator) {
+      interpolator_(interpolator),
+      updatedViewTags_(updatedViewTags),
+      revertedTags_(revertedTags) {
   if (settings->playState == AnimationPlayState::Paused) {
     progressProvider_->pause(timestamp);
   }
@@ -47,25 +51,12 @@ double CSSLoopAnimation::getStartTimestamp(const double timestamp) const {
   return progressProvider_->getStartTimestamp(timestamp);
 }
 
-AnimationProgressState CSSLoopAnimation::getState(const double timestamp) const {
-  return progressProvider_->getState(timestamp);
-}
-
-bool CSSLoopAnimation::isReversed() const {
-  const auto direction = progressProvider_->getDirection();
-  return direction == AnimationDirection::Reverse || direction == AnimationDirection::AlternateReverse;
+AnimationProgressState CSSLoopAnimation::getState() const {
+  return progressProvider_->getState();
 }
 
 folly::dynamic CSSLoopAnimation::getCurrentInterpolationStyle() const {
-  return interpolator_->interpolate(shadowNode_, progressProvider_, FALLBACK_INTERPOLATION_THRESHOLD);
-}
-
-folly::dynamic CSSLoopAnimation::getBackwardsFillStyle() const {
-  return isReversed() ? interpolator_->getLastKeyframeValue() : interpolator_->getFirstKeyframeValue();
-}
-
-folly::dynamic CSSLoopAnimation::getResetStyle() const {
-  return interpolator_->getResetStyle(shadowNode_);
+  return interpolator_->interpolate(shadowNode_, progressProvider_, 0.5);
 }
 
 void CSSLoopAnimation::setAnimatedProperties(const std::unordered_set<std::string> &loopDrivenProperties) {
@@ -101,18 +92,23 @@ void CSSLoopAnimation::updateSettings(const PartialCSSAnimationSettings &updated
   progressProvider_->update(timestamp);
 }
 
-folly::dynamic CSSLoopAnimation::update(const double timestamp) {
-  if (getState(timestamp) == AnimationProgressState::Pending) {
-    progressProvider_->play(timestamp);
-  }
-
+void CSSLoopAnimation::onUpdate(const double timestamp) {
   progressProvider_->update(timestamp);
 
-  if (getState(timestamp) == AnimationProgressState::Pending) {
-    return settings_->hasBackwardsFillMode() ? getBackwardsFillStyle() : folly::dynamic();
-  }
+  const auto viewTag = shadowNode_->getTag();
+  updatedViewTags_->insert(viewTag);
 
-  return getCurrentInterpolationStyle();
+  if (getState() == AnimationProgressState::Finished && !settings_->hasForwardsFillMode()) {
+    revertedTags_->insert(viewTag);
+  }
+}
+
+bool CSSLoopAnimation::isRunning() const {
+  return getState() == AnimationProgressState::Running;
+}
+
+double CSSLoopAnimation::getRemainingDelay(const double timestamp) const {
+  return getStartTimestamp(timestamp) - timestamp;
 }
 
 } // namespace reanimated::css

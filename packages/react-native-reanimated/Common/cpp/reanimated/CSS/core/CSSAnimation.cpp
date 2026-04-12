@@ -1,4 +1,5 @@
 #include <reanimated/CSS/core/CSSAnimation.h>
+#include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 
 #include <memory>
 #include <string>
@@ -6,52 +7,50 @@
 
 namespace reanimated::css {
 
+namespace {
+
+class StaticProgressProvider : public KeyframeProgressProvider {
+ public:
+  explicit StaticProgressProvider(double progress) : progress_(progress) {}
+
+  double getGlobalProgress() const override {
+    return progress_;
+  }
+
+  double getKeyframeProgress(double fromOffset, double toOffset) const override {
+    if (fromOffset == toOffset) {
+      return 1;
+    }
+    return (progress_ - fromOffset) / (toOffset - fromOffset);
+  }
+
+ private:
+  double progress_;
+};
+
+} // namespace
+
 CSSAnimation::CSSAnimation(
     std::shared_ptr<const ShadowNode> shadowNode,
     std::string animationName,
     const CSSKeyframesConfig &cssKeyframesConfig,
     const CSSAnimationSettings &settings,
+    const std::shared_ptr<std::unordered_set<Tag>> &updatedViewTags,
+    const std::shared_ptr<std::unordered_set<Tag>> &revertedTags,
+    const std::shared_ptr<OperationsLoop> &loop,
     const double timestamp)
     : name_(std::move(animationName)),
       shadowNode_(std::move(shadowNode)),
       keyframesConfig_(cssKeyframesConfig),
-      settings_(std::make_shared<CSSAnimationSettings>(settings)) {
+      settings_(std::make_shared<CSSAnimationSettings>(settings)),
+      updatedViewTags_(updatedViewTags),
+      revertedTags_(revertedTags),
+      loop_(loop) {
   updatePropertyRouting(timestamp);
-}
-
-void CSSAnimation::onUpdate(const double timestamp) {
-  if (loopAnimation_) {
-    loopAnimation_->update(timestamp);
-  }
-}
-
-bool CSSAnimation::isRunning() const {
-  if (!loopAnimation_) {
-    return false;
-  }
-  return loopAnimation_->getState() == AnimationProgressState::Running;
 }
 
 const std::string &CSSAnimation::getName() const {
   return name_;
-}
-
-double CSSAnimation::getStartTimestamp(const double timestamp) const {
-  if (!loopAnimation_) {
-    return timestamp;
-  }
-  return loopAnimation_->getStartTimestamp(timestamp);
-}
-
-double CSSAnimation::getRemainingDelay(const double timestamp) const {
-  return getStartTimestamp(timestamp) - timestamp;
-}
-
-AnimationProgressState CSSAnimation::getState() const {
-  if (!loopAnimation_) {
-    return AnimationProgressState::Finished;
-  }
-  return loopAnimation_->getState();
 }
 
 bool CSSAnimation::hasForwardsFillMode() const {
@@ -70,37 +69,39 @@ std::shared_ptr<CSSLoopAnimation> CSSAnimation::getLoopAnimation() const {
   return loopAnimation_;
 }
 
-#ifdef __APPLE__
-std::shared_ptr<CSSPlatformAnimation> CSSAnimation::getPlatformAnimation() const {
-  return platformAnimation_;
-}
-
-bool CSSAnimation::hasPlatformAnimation() const {
-  return platformAnimation_ != nullptr;
-}
-#endif
-
 folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
-  if (!loopAnimation_) {
-    return folly::dynamic::object();
-  }
-  return loopAnimation_->getBackwardsFillStyle();
+  auto progressProvider = std::make_shared<StaticProgressProvider>(isReversed() ? 1.0 : 0.0);
+  auto interpolator = keyframesConfig_.styleInterpolatorFactory->create();
+  return interpolator->interpolate(shadowNode_, progressProvider, 0.5);
 }
 
-folly::dynamic CSSAnimation::getCurrentInterpolationStyle(
-    const std::shared_ptr<const ShadowNode> & /*shadowNode*/) const {
-  if (!loopAnimation_) {
-    return folly::dynamic::object();
-  }
-  return loopAnimation_->getCurrentInterpolationStyle();
+folly::dynamic CSSAnimation::getForwardsFillStyle() const {
+  const auto iterationCount = settings_->iterationCount;
+  const bool isInteger = iterationCount == std::floor(iterationCount);
+  const auto finalIterationProgress = isInteger ? 1.0 : iterationCount - std::floor(iterationCount);
+  const auto finalIteration = static_cast<unsigned>(std::ceil(iterationCount));
+  const auto fillProgress =
+      AnimationProgressProvider::applyDirection(finalIterationProgress, settings_->direction, finalIteration);
+
+  auto progressProvider = std::make_shared<StaticProgressProvider>(fillProgress);
+  auto interpolator = keyframesConfig_.styleInterpolatorFactory->create();
+  return interpolator->interpolate(shadowNode_, progressProvider, 0.5);
 }
 
-folly::dynamic CSSAnimation::getResetStyle(
-    const std::shared_ptr<const ShadowNode> & /*shadowNode*/) const {
-  if (!loopAnimation_) {
-    return folly::dynamic::object();
+folly::dynamic CSSAnimation::getResetStyle() const {
+  return keyframesConfig_.styleInterpolatorFactory->getResetStyle(shadowNode_);
+}
+
+void CSSAnimation::schedule() {
+  if (loopAnimation_ && loopAnimation_->getState() != AnimationProgressState::Paused) {
+    loop_->schedule(loopAnimation_, loopAnimation_->getRemainingDelay(loop_->getTimestamp()));
   }
-  return loopAnimation_->getResetStyle();
+}
+
+void CSSAnimation::unschedule() {
+  if (loopAnimation_) {
+    loop_->remove(loopAnimation_);
+  }
 }
 
 void CSSAnimation::updateSettings(const PartialCSSAnimationSettings &updatedSettings, const double timestamp) {
@@ -132,6 +133,21 @@ void CSSAnimation::updateSettings(const PartialCSSAnimationSettings &updatedSett
   }
 }
 
+#ifdef __APPLE__
+std::shared_ptr<CSSPlatformAnimation> CSSAnimation::getPlatformAnimation() const {
+  return platformAnimation_;
+}
+
+bool CSSAnimation::hasPlatformAnimation() const {
+  return platformAnimation_ != nullptr;
+}
+#endif
+
+bool CSSAnimation::isReversed() const {
+  return settings_->direction == AnimationDirection::Reverse ||
+      settings_->direction == AnimationDirection::AlternateReverse;
+}
+
 void CSSAnimation::updatePropertyRouting(const double timestamp) {
   const auto &allProperties = keyframesConfig_.styleInterpolatorFactory->getAllPropertyNames();
 
@@ -156,6 +172,7 @@ void CSSAnimation::updatePropertyRouting(const double timestamp) {
 #endif
 
   if (loopProperties.empty()) {
+    loop_->remove(loopAnimation_);
     loopAnimation_.reset();
     return;
   }
@@ -167,6 +184,8 @@ void CSSAnimation::updatePropertyRouting(const double timestamp) {
         shadowNode_,
         settings_,
         keyframesConfig_.keyframeEasingConfigs,
+        updatedViewTags_,
+        revertedTags_,
         timestamp);
     return;
   }

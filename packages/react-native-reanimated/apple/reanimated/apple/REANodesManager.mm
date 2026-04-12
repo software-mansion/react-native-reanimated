@@ -179,22 +179,22 @@ using namespace facebook::react;
   [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
 }
 
-- (void)scheduleApplyCSSAnimationsForViewTag:(ReactTag)viewTag animations:(NSArray *)animations
+- (void)applyCSSPlatformAnimations:(ReactTag)viewTag animations:(NSArray *)animations
 {
   RCTExecuteOnMainQueue(^{
     REAUIView *view = [self viewForTag:viewTag];
     if (view != nil) {
-      [_cssAnimations applyCSSAnimationsForView:view animations:animations];
+      [_cssAnimations applyCSSPlatformAnimations:view animations:animations];
     }
   });
 }
 
-- (void)scheduleRemoveAllCSSAnimationsForViewTag:(ReactTag)viewTag
+- (void)removeCSSPlatformAnimations:(ReactTag)viewTag
 {
   RCTExecuteOnMainQueue(^{
     REAUIView *view = [self viewForTag:viewTag];
     if (view != nil) {
-      [_cssAnimations removeAllAnimationsForView:view];
+      [_cssAnimations removeCSSPlatformAnimations:view];
     }
   });
 }

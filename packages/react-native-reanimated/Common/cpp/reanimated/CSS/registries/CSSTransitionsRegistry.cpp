@@ -8,10 +8,12 @@ namespace reanimated::css {
 CSSTransitionsRegistry::CSSTransitionsRegistry(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const std::shared_ptr<OperationsLoop> &loop)
-    : viewStylesRepository_(viewStylesRepository), loop_(loop) {}
+    : viewStylesRepository_(viewStylesRepository),
+      loop_(loop),
+      updatedViewTags_(std::make_shared<std::unordered_set<Tag>>()) {}
 
 bool CSSTransitionsRegistry::needsFlush() const {
-  return !updatedTags_.empty();
+  return !updatedViewTags_->empty();
 }
 
 void CSSTransitionsRegistry::run(
@@ -21,8 +23,7 @@ void CSSTransitionsRegistry::run(
   const auto viewTag = shadowNode->getTag();
 
   if (!registry_.contains(viewTag)) {
-    auto transition = std::make_shared<CSSTransition>(shadowNode, viewStylesRepository_);
-    transition->setOnUpdateCallback([this, viewTag]() { onTransitionUpdate(viewTag); });
+    auto transition = std::make_shared<CSSTransition>(shadowNode, viewStylesRepository_, updatedViewTags_, loop_);
     registry_.insert({viewTag, transition});
   }
 
@@ -44,20 +45,11 @@ void CSSTransitionsRegistry::remove(const Tag viewTag) {
   }
   removeFromUpdatesRegistry(viewTag);
   registry_.erase(viewTag);
-  updatedTags_.erase(viewTag);
-}
-
-void CSSTransitionsRegistry::onTransitionUpdate(const Tag viewTag) {
-  updatedTags_.insert(viewTag);
-
-  auto it = registry_.find(viewTag);
-  if (it != registry_.end() && it->second->getState() == TransitionProgressState::Pending) {
-    loop_->schedule(it->second, it->second->getMinDelay(loop_->getTimestamp()));
-  }
+  updatedViewTags_->erase(viewTag);
 }
 
 void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
-  for (const auto viewTag : updatedTags_) {
+  for (const auto viewTag : *updatedViewTags_) {
     const auto it = registry_.find(viewTag);
     if (it == registry_.end()) {
       continue;
@@ -71,7 +63,7 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
     }
   }
 
-  updatedTags_.clear();
+  updatedViewTags_->clear();
   UpdatesRegistry::flushUpdates(updatesBatch);
 }
 

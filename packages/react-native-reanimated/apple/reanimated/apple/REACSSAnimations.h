@@ -4,8 +4,8 @@
 
 @interface REACSSAnimations : NSObject
 
-- (void)applyCSSAnimationsForView:(REAUIView *)view animations:(NSArray *)animations;
+- (void)applyCSSPlatformAnimations:(REAUIView *)view animations:(NSArray *)animations;
 
-- (void)removeAllAnimationsForView:(REAUIView *)view;
+- (void)removeCSSPlatformAnimations:(REAUIView *)view;
 
 @end

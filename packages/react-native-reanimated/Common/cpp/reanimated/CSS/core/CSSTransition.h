@@ -5,6 +5,7 @@
 #include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 #include <reanimated/Fabric/updates/LoopOperation.h>
+#include <reanimated/Fabric/updates/OperationsLoop.h>
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
@@ -17,7 +18,9 @@ class CSSTransition : public LoopOperation {
  public:
   CSSTransition(
       std::shared_ptr<const ShadowNode> shadowNode,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+      const std::shared_ptr<std::unordered_set<Tag>> &updatedViewTags,
+      const std::shared_ptr<OperationsLoop> &loop);
 
   void onUpdate(double timestamp) override;
   bool isRunning() const override;
@@ -37,6 +40,8 @@ class CSSTransition : public LoopOperation {
  private:
   const std::shared_ptr<const ShadowNode> shadowNode_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+  const std::shared_ptr<std::unordered_set<Tag>> updatedViewTags_;
+  const std::shared_ptr<OperationsLoop> loop_;
   TransitionProperties transitionProperties_;
   TransitionStyleInterpolator styleInterpolator_;
   TransitionProgressProvider progressProvider_;

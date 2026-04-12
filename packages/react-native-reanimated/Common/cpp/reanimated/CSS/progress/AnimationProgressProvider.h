@@ -42,6 +42,8 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   void update(double timestamp) override;
   void resetProgress() override;
 
+  static double applyDirection(double progress, AnimationDirection direction, unsigned iteration);
+
  protected:
   std::optional<double> calculateRawProgress(double timestamp) override;
 
@@ -62,7 +64,6 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   AnimationProgressState computeState(double timestamp) const;
 
   double updateIterationProgress(double currentIterationElapsedTime);
-  double applyAnimationDirection(double iterationProgress) const;
 };
 
 } // namespace reanimated::css

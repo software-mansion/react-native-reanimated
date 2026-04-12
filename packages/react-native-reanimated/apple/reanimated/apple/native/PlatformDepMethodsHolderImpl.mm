@@ -142,14 +142,14 @@ ApplyCSSAnimationsNativeFunction makeApplyCSSAnimationsNativeFunction(REANodesMa
       return;
     }
     NSArray *animationsArray = (NSArray *)animationsObj;
-    [nodesManager scheduleApplyCSSAnimationsForViewTag:viewTag animations:animationsArray];
+    [nodesManager applyCSSPlatformAnimations:viewTag animations:animationsArray];
   };
 }
 
 RemoveCSSAnimationsNativeFunction makeRemoveAllCSSAnimationsNativeFunction(REANodesManager *nodesManager)
 {
   return [nodesManager](Tag viewTag) {
-    [nodesManager scheduleRemoveAllCSSAnimationsForViewTag:viewTag];
+    [nodesManager removeCSSPlatformAnimations:viewTag];
   };
 }
 

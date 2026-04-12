@@ -2,7 +2,7 @@
 
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
-#include <reanimated/CSS/core/CSSAnimationGroup.h>
+#include <reanimated/CSS/core/CSSAnimationsGroup.h>
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/utils/props.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
@@ -19,7 +19,7 @@ namespace reanimated::css {
 
 using CSSAnimationsMap = std::unordered_map<size_t, std::shared_ptr<CSSAnimation>>;
 
-class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_this<CSSAnimationsRegistry> {
+class CSSAnimationsRegistry : public UpdatesRegistry {
  public:
   CSSAnimationsRegistry(
       const std::shared_ptr<OperationsLoop> &loop,
@@ -39,11 +39,11 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
   const std::shared_ptr<OperationsLoop> loop_;
   const std::shared_ptr<CSSKeyframesRegistry> keyframesRegistry_;
 
-  std::unordered_map<Tag, CSSAnimationGroup> groups_;
-  std::unordered_set<Tag> updatedTags_;
-  std::unordered_set<Tag> revertedTags_;
+  std::unordered_map<Tag, CSSAnimationsGroup> groups_;
+  std::shared_ptr<std::unordered_set<Tag>> updatedViewTags_;
+  std::shared_ptr<std::unordered_set<Tag>> revertedTags_;
 
-  std::optional<CSSAnimationGroup> maybeBuildNewGroup(
+  std::optional<CSSAnimationsGroup> maybeBuildNewGroup(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const std::string &compoundComponentName,
       const std::optional<std::vector<std::string>> &updatedAnimationNames,
@@ -54,7 +54,6 @@ class CSSAnimationsRegistry : public UpdatesRegistry, std::enable_shared_from_th
       const std::string &compoundComponentName,
       const CSSAnimationSettings &settings,
       double timestamp);
-  void onAnimationUpdate(Tag viewTag, const std::shared_ptr<CSSAnimation> &animation);
   void updateRegistryForRevertedAnimations();
 };
 

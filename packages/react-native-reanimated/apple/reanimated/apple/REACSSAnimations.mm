@@ -254,7 +254,7 @@ static CAAnimation *buildCAAnimation(NSDictionary *descriptor, NSDictionary *set
   }
 }
 
-- (void)applyCSSAnimationsForView:(REAUIView *)view animations:(NSArray *)animations
+- (void)applyCSSPlatformAnimations:(REAUIView *)view animations:(NSArray *)animations
 {
   CALayer *layer = view.layer;
   NSNumber *viewKey = @(view.tag);
@@ -294,7 +294,7 @@ static CAAnimation *buildCAAnimation(NSDictionary *descriptor, NSDictionary *set
   }
 }
 
-- (void)removeAllAnimationsForView:(REAUIView *)view
+- (void)removeCSSPlatformAnimations:(REAUIView *)view
 {
   [self removeStaleAnimationsFromLayer:view.layer viewKey:@(view.tag) orderedNames:[NSSet set]];
 }
