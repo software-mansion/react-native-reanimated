@@ -1,11 +1,7 @@
-node_modules/
-.yarn/
-build/
+# Remark already respects .gitignore, only put other files here
 dist/
 android/
 ios/
-.cache/
-.claude/
 **/versioned_docs/version-1.x/
 **/versioned_docs/version-2.x/
 docs/docs-reanimated/blog/
