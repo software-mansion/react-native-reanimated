@@ -1,9 +1,8 @@
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 
-#if defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
-#include <fbjni/detail/Environment.h>
-#include <jni.h>
-#endif // defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
+#ifdef ANDROID
+#include <fbjni/fbjni.h>
+#endif // ANDROID
 
 #include <memory>
 #include <string>
@@ -32,28 +31,16 @@ void AsyncQueueImpl::runLoop(const std::shared_ptr<AsyncQueueState> &state) {
 }
 
 AsyncQueueImpl::AsyncQueueImpl(const std::string &name) : state_(std::make_shared<AsyncQueueState>()) {
-#if defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
-  auto *env = jni::Environment::current();
-  JavaVM *jvm = nullptr;
-  env->GetJavaVM(&jvm);
-  auto thread = std::thread([name, state = state_, jvm] {
-    jvm->AttachCurrentThread(nullptr, nullptr);
-    jni::ThreadScope::WithClassLoader([state]() { AsyncQueueImpl::runLoop(state); });
-    jvm->DetachCurrentThread();
-  });
-  pthread_setname_np(thread.native_handle(), name.c_str());
-  thread.detach();
-#elif defined(ANDROID)
-  auto thread = std::thread([name, state = state_] { AsyncQueueImpl::runLoop(state); });
-  pthread_setname_np(thread.native_handle(), name.c_str());
-  thread.detach();
-#else
   auto thread = std::thread([name, state = state_] {
+#ifdef ANDROID
+    pthread_setname_np(pthread_self(), name.c_str());
+    jni::ThreadScope::WithClassLoader([state]() { AsyncQueueImpl::runLoop(state); });
+#else
     pthread_setname_np(name.c_str());
     AsyncQueueImpl::runLoop(state);
+#endif // ANDROID
   });
   thread.detach();
-#endif // defined(ANDROID) && defined(WORKLETS_BUNDLE_MODE_ENABLED) && defined(WORKLETS_FETCH_PREVIEW_ENABLED)
 }
 
 AsyncQueueImpl::~AsyncQueueImpl() {

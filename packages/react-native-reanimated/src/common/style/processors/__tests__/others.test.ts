@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../../errors';
 import { ERROR_MESSAGES, processAspectRatio } from '../others';
 
 describe(processAspectRatio, () => {
@@ -13,7 +12,9 @@ describe(processAspectRatio, () => {
 
   test('throws an error for invalid aspect ratio', () => {
     expect(() => processAspectRatio('invalid')).toThrow(
-      new ReanimatedError(ERROR_MESSAGES.unsupportedAspectRatio('invalid'))
+      new Error(
+        `[Reanimated] ${ERROR_MESSAGES.unsupportedAspectRatio('invalid')}`
+      )
     );
   });
 });

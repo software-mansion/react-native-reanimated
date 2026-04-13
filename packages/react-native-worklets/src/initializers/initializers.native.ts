@@ -8,11 +8,14 @@ import {
 import { initializeNetworking } from '../bundleMode/network';
 import { setupCallGuard } from '../callGuard';
 import { registerReportFatalRemoteError } from '../debug/errors';
-import { registerWorkletsError, WorkletsError } from '../debug/WorkletsError';
 import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
-import { __installUnpacker as installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
-import { __installUnpacker as installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
+import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
+import { makeShareableCloneOnUIRecursive } from '../memory/serializable';
+import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
+import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
+import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
+import { installValueUnpacker } from '../memory/valueUnpacker';
 import { setupSetImmediate } from '../runLoop/common/setImmediatePolyfill';
 import { setupSetInterval } from '../runLoop/common/setIntervalPolyfill';
 import { setupRequestAnimationFrame } from '../runLoop/uiRuntime/requestAnimationFrame';
@@ -89,6 +92,11 @@ export function setupConsole(boundCapturableConsole: typeof console) {
   };
 }
 
+export function setupSerializer() {
+  'worklet';
+  globalThis.__serializer = makeShareableCloneOnUIRecursive;
+}
+
 let initialized = false;
 
 export function init() {
@@ -111,9 +119,13 @@ export function init() {
 function initializeRuntime() {
   if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
+  } else {
+    installValueUnpacker();
   }
   installSynchronizableUnpacker();
   installCustomSerializableUnpacker();
+  installShareableHostUnpacker();
+  installShareableGuestUnpacker();
 }
 
 /** A function that should be run only on React Native runtime. */
@@ -123,8 +135,8 @@ function initializeRNRuntime() {
       'worklet';
     };
     if (!isWorkletFunction(testWorklet)) {
-      throw new WorkletsError(
-        `Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
+      throw new Error(
+        `[Worklets] Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
       );
     }
   }
@@ -155,23 +167,14 @@ function initializeWorkletRuntime() {
  */
 function installRNBindingsOnUIRuntime() {
   if (!WorkletsModule) {
-    throw new WorkletsError(
-      'Worklets are trying to initialize the UI runtime without a valid WorkletsModule'
+    throw new Error(
+      '[Worklets] Worklets are trying to initialize the UI runtime without a valid WorkletsModule'
     );
   }
 
   if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-    /** In bundle mode Runtimes setup their callGuard themselves. */
+    /** In Bundle Mode Runtimes setup their callGuard themselves. */
     runOnUISync(setupCallGuard);
-
-    /**
-     * Register WorkletsError in the UI runtime global scope. (we are using
-     * `executeOnUIRuntimeSync` here to make sure that the changes are applied
-     * before any async operations are executed on the UI runtime).
-     *
-     * There's no need to register the error in bundle mode.
-     */
-    runOnUISync(registerWorkletsError);
   }
 
   const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
@@ -190,5 +193,6 @@ function installRNBindingsOnUIRuntime() {
     setupSetTimeout();
     setupSetImmediate();
     setupSetInterval();
+    setupSerializer();
   });
 }

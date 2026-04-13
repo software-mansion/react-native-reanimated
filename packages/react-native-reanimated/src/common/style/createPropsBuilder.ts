@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../errors';
 import type {
   UnknownRecord,
   ValueProcessor,
@@ -44,8 +43,8 @@ export default function createPropsBuilder<
     let depth = 0;
     while (processedValue) {
       if (++depth > MAX_PROCESS_DEPTH) {
-        throw new ReanimatedError(
-          `Max process depth for props builder reached for property ${key}`
+        throw new Error(
+          `[Reanimated] Max process depth for props builder reached for property ${key}`
         );
       }
 
@@ -99,11 +98,11 @@ export default function createPropsBuilder<
         if (isRecord(processedValue) && !isRecord(value)) {
           // The value processor may return multiple values for a single property
           // as a record of new property names and processed values. In such a case,
-          // we want to store properties from this record in the result object only if
-          // they are not already present in the original props object (we don't want
-          // override properties specified by the user).
+          // we want to store properties from this record in the result object only
+          // if they are not already present (we don't want to override properties
+          // explicitly specified by the user).
           for (const processedKey in processedValue) {
-            if (!(processedKey in props)) {
+            if (!(processedKey in result)) {
               result[processedKey] = processedValue[processedKey];
             }
           }

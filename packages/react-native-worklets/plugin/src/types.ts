@@ -76,4 +76,4 @@ export function isWorkletizableObjectNode(
 
 export const workletClassFactorySuffix = '__classFactory';
 
-export const generatedWorkletsDir = '__generatedWorklets';
+export const generatedWorkletsDir = '.worklets';

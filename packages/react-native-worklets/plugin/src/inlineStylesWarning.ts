@@ -57,7 +57,7 @@ function processPropertyValueForInlineStylesWarning(
 ) {
   // if it's something like object.value then raise a warning
   if (path.isMemberExpression() && isIdentifier(path.node.property)) {
-    if (path.node.property.name === 'value') {
+    if (!path.node.computed && path.node.property.name === 'value') {
       path.replaceWith(generateInlineStylesWarning(path));
     }
   }

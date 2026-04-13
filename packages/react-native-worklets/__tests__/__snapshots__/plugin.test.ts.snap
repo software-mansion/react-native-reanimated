@@ -874,6 +874,58 @@ const f = function f_null1Factory({
 });"
 `;
 
+exports[`babel plugin for closure capturing doesn't implicitly captures globals in strict mode 1`] = `
+"const _worklet_6265214055858_init_data = {
+  code: "function f_null1(){globalStuff();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+const f = function f_null1Factory({
+  _worklet_6265214055858_init_data
+}) {
+  const _e = [new global.Error(), 1, -27];
+  const f = function () {
+    globalStuff();
+  };
+  f.__closure = {};
+  f.__workletHash = 6265214055858;
+  f.__pluginVersion = "x.y.z";
+  f.__initData = _worklet_6265214055858_init_data;
+  f.__stackDetails = _e;
+  return f;
+}({
+  _worklet_6265214055858_init_data
+});"
+`;
+
+exports[`babel plugin for closure capturing implicitly captures globals with strictGlobal disabled 1`] = `
+"const _worklet_8293213327607_init_data = {
+  code: "function f_null1(){const{globalStuff}=this.__closure;globalStuff();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\""
+};
+const f = function f_null1Factory({
+  _worklet_8293213327607_init_data,
+  globalStuff
+}) {
+  const _e = [new global.Error(), -2, -27];
+  const f = function () {
+    globalStuff();
+  };
+  f.__closure = {
+    globalStuff
+  };
+  f.__workletHash = 8293213327607;
+  f.__pluginVersion = "x.y.z";
+  f.__initData = _worklet_8293213327607_init_data;
+  f.__stackDetails = _e;
+  return f;
+}({
+  _worklet_8293213327607_init_data,
+  globalStuff
+});"
+`;
+
 exports[`babel plugin for context objects creates factories 1`] = `
 "const _worklet_8827018554289_init_data = {
   code: "function null1(){return{bar:function(){return'bar';}};}",
@@ -2474,6 +2526,22 @@ const foo = function foo_null1Factory({
 }({
   _worklet_4135278281851_init_data
 });"
+`;
+
+exports[`babel plugin for inline styles doesn't show a warning if the user uses ['value'] inside inline style 1`] = `
+"function App() {
+  return <Animated.View style={{
+    width: object['value']
+  }} />;
+}"
+`;
+
+exports[`babel plugin for inline styles doesn't show a warning if the user uses [value] inside inline style 1`] = `
+"function App() {
+  return <Animated.View style={{
+    width: object[value]
+  }} />;
+}"
 `;
 
 exports[`babel plugin for inline styles doesn't show a warning if user writes something like style={styles.value} 1`] = `

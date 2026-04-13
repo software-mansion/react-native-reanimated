@@ -1,6 +1,5 @@
 'use strict';
 
-import { ReanimatedError } from '../../errors';
 import type { ValueProcessor } from '../../types';
 import { ValueProcessorTarget } from '../../types';
 import createPropsBuilder from '../createPropsBuilder';
@@ -14,6 +13,7 @@ type TestStyle = {
   shadowOpacity?: number;
   shadowRadius?: number;
   height?: number;
+  size?: number;
 };
 
 type ConfigEntry = boolean | { process: ValueProcessor } | 'loop';
@@ -29,6 +29,7 @@ const BASE_CONFIG: TestConfig = {
   shadowOpacity: false,
   shadowRadius: false,
   height: false,
+  size: false,
 };
 
 const createBuilder = (configOverrides: Partial<TestConfig>) => {
@@ -126,14 +127,52 @@ describe(createPropsBuilder, () => {
     });
   });
 
+  describe('when processor returns record from non-record input', () => {
+    const processSize: ValueProcessor<number> = (size) => ({
+      width: size,
+      height: size,
+    });
+
+    const builder = createBuilder({
+      size: {
+        process: processSize as ValueProcessor,
+      },
+      width: true,
+      height: true,
+    });
+
+    test('uses size as both width and height value if width and height are not provided separately', () => {
+      const style: TestStyle = {
+        size: 100,
+      };
+
+      expect(builder.build(style)).toEqual({
+        width: 100,
+        height: 100,
+      });
+    });
+
+    test('preserves explicitly provided width and uses size as default for height', () => {
+      const style: TestStyle = {
+        size: 100,
+        width: 200,
+      };
+
+      expect(builder.build(style)).toEqual({
+        width: 200,
+        height: 100,
+      });
+    });
+  });
+
   test('throws when processor resolution exceeds maximum depth', () => {
     expect(() =>
       createBuilder({
         width: 'loop',
       })
     ).toThrow(
-      new ReanimatedError(
-        'Max process depth for props builder reached for property width'
+      new Error(
+        '[Reanimated] Max process depth for props builder reached for property width'
       )
     );
   });

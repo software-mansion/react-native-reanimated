@@ -1,0 +1,24 @@
+---
+sidebar_position: 1
+sidebar_label: Overview
+slug: /bundleMode
+---
+
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import ThemedImage from '@theme/ThemedImage';
+
+<ThemedImage
+  sources={{
+    light: useBaseUrl('/img/bundleMode-light.png'),
+    dark: useBaseUrl('/img/bundleMode-dark.png'),
+  }}
+  alt="Bundle Mode conceptual illustration"
+/>
+
+# Overview
+
+Bundle Mode is an experimental feature that gives worklets access to your whole JavaScript bundle - meaning that any code that's present in the bundle can be executed in any worklet and on any runtime. This means that third party libraries can be used in worklets without the need to patch them. It's also a performance improvement as worklets' code can benefit from all the optimizations that pre-compiled bytecode offers.
+
+**We envision the Bundle Mode to be the default way of using worklets in the future.**
+
+Instructions on how to enable it can be found [here](/docs/bundleMode/setup).

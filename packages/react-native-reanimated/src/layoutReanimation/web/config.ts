@@ -79,7 +79,9 @@ export interface CustomConfig {
   callbackV?: AnimationCallback;
   reversed?: boolean;
   definitions?: KeyframeDefinitions;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   enteringV?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   exitingV?: any;
   initialValues?: StyleProps;
 }

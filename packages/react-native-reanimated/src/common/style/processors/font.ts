@@ -1,11 +1,12 @@
 'use strict';
 import { FONT_WEIGHT_MAPPINGS } from '../../constants';
-import { ReanimatedError } from '../../errors';
 import type { ValueProcessor } from '../../types';
 
 export const ERROR_MESSAGES = {
-  invalidFontWeight: (weight: string | number) =>
-    `Invalid font weight value: ${weight}`,
+  invalidFontWeight(weight: string | number) {
+    'worklet';
+    return `Invalid font weight value: ${weight}`;
+  },
 };
 
 const VALID_FONT_WEIGHTS = new Set<string>(Object.values(FONT_WEIGHT_MAPPINGS));
@@ -13,6 +14,7 @@ const VALID_FONT_WEIGHTS = new Set<string>(Object.values(FONT_WEIGHT_MAPPINGS));
 export const processFontWeight: ValueProcessor<string | number, string> = (
   value
 ) => {
+  'worklet';
   const stringValue = value.toString();
 
   if (VALID_FONT_WEIGHTS.has(stringValue)) {
@@ -25,5 +27,5 @@ export const processFontWeight: ValueProcessor<string | number, string> = (
     ];
   }
 
-  throw new ReanimatedError(ERROR_MESSAGES.invalidFontWeight(value));
+  throw new Error(`[Reanimated] ${ERROR_MESSAGES.invalidFontWeight(value)}`);
 };

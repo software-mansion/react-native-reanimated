@@ -390,6 +390,67 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
+    test('implicitly captures globals with strictGlobal disabled', () => {
+      const input = html`<script>
+        function f() {
+          'worklet';
+          globalStuff();
+        }
+      </script>`;
+      const { code, ast } = runPlugin(
+        input,
+        { ast: true },
+        { strictGlobal: false }
+      );
+      let closureBindings;
+      traverse(ast!, {
+        enter(path) {
+          if (
+            path.isAssignmentExpression() &&
+            'property' in path.node.left &&
+            'name' in path.node.left.property &&
+            'properties' in path.node.right &&
+            path.node.left.property.name === '__closure'
+          ) {
+            closureBindings = path.node.right.properties;
+          }
+        },
+      });
+      expect(closureBindings).not.toEqual([]);
+      expect(code).toMatch(/f\.__closure = {\s*globalStuff/gm);
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't implicitly captures globals in strict mode", () => {
+      const input = html`<script>
+        function f() {
+          'worklet';
+          globalStuff();
+        }
+      </script>`;
+      const { code, ast } = runPlugin(
+        input,
+        { ast: true },
+        { strictGlobal: true }
+      );
+      let closureBindings;
+      traverse(ast!, {
+        enter(path) {
+          if (
+            path.isAssignmentExpression() &&
+            'property' in path.node.left &&
+            'name' in path.node.left.property &&
+            'properties' in path.node.right &&
+            path.node.left.property.name === '__closure'
+          ) {
+            closureBindings = path.node.right.properties;
+          }
+        },
+      });
+      expect(closureBindings).toEqual([]);
+      expect(code).toMatchSnapshot();
+    });
+
     test('captures locally bound variables named like globals', () => {
       const input = html`<script>
         const console = {
@@ -1164,6 +1225,34 @@ describe('babel plugin', () => {
         plugins: ['@babel/plugin-syntax-jsx'],
       });
       expect(code).toHaveInlineStyleWarning();
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't show a warning if the user uses ['value'] inside inline style", () => {
+      const input = html`<script>
+        function App() {
+          return <Animated.View style={{ width: object['value'] }} />;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, {
+        plugins: ['@babel/plugin-syntax-jsx'],
+      });
+      expect(code).not.toHaveInlineStyleWarning();
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't show a warning if the user uses [value] inside inline style", () => {
+      const input = html`<script>
+        function App() {
+          return <Animated.View style={{ width: object[value] }} />;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, {
+        plugins: ['@babel/plugin-syntax-jsx'],
+      });
+      expect(code).not.toHaveInlineStyleWarning();
       expect(code).toMatchSnapshot();
     });
 

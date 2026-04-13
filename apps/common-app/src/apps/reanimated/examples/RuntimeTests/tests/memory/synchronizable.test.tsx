@@ -7,10 +7,13 @@ import {
   createWorkletRuntime,
   scheduleOnRuntime,
   type Synchronizable,
+  runOnRuntimeSync,
+  type WorkletRuntime,
 } from 'react-native-worklets';
 import { describe, expect, notify, test, waitForNotification } from '../../ReJest/RuntimeTestsApi';
 
 const NOTIFICATION = 'NOTIFICATION';
+const workletRuntime = createWorkletRuntime({ name: 'test' });
 
 describe('Test Synchronizable creation and serialization', () => {
   test('createSynchronizable returns Synchronizable', () => {
@@ -38,10 +41,7 @@ describe('Test Synchronizable creation and serialization', () => {
     };
 
     // Act
-    const runtime = createWorkletRuntime({
-      name: 'test',
-    });
-    scheduleOnRuntime(runtime, () => {
+    scheduleOnRuntime(workletRuntime, () => {
       'worklet';
       const value = synchronizable.getBlocking();
       scheduleOnRN(onJSCallback, value);
@@ -72,10 +72,7 @@ describe('Test Synchronizable creation and serialization', () => {
     };
 
     // Act
-    const runtime = createWorkletRuntime({
-      name: 'test',
-    });
-    scheduleOnRuntime(runtime, () => {
+    scheduleOnRuntime(workletRuntime, () => {
       'worklet';
       scheduleOnRN(onJSCallback, synchronizable);
     });
@@ -157,14 +154,14 @@ function imperativeLockGetSet(synchronizable: Synchronizable<number>) {
 }
 
 function dispatch(
+  workletRuntime: WorkletRuntime,
   method: (synchronizable: Synchronizable<number>) => number,
   callbackRN: (value: number) => void,
   callbackUI: (value: number) => void,
   callbackBG: (value: number) => void,
 ) {
   const synchronizable = createSynchronizable(initialValue);
-  const runtime = createWorkletRuntime({ name: 'test' });
-  scheduleOnRuntime(runtime, () => {
+  scheduleOnRuntime(workletRuntime, () => {
     'worklet';
     const value = method(synchronizable);
     scheduleOnRN(callbackBG, value);
@@ -209,7 +206,7 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    dispatch(getDirtySetBlocking, setValueRN, setValueUI, setValueBG);
+    dispatch(workletRuntime, getDirtySetBlocking, setValueRN, setValueUI, setValueBG);
 
     await waitForNotification(NOTIFICATION);
 
@@ -244,7 +241,7 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    dispatch(getBlockingSetBlocking, setValueRN, setValueUI, setValueBG);
+    dispatch(workletRuntime, getBlockingSetBlocking, setValueRN, setValueUI, setValueBG);
 
     await waitForNotification(NOTIFICATION);
 
@@ -279,7 +276,7 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    dispatch(transactionGetSet, setValueRN, setValueUI, setValueBG);
+    dispatch(workletRuntime, transactionGetSet, setValueRN, setValueUI, setValueBG);
 
     await waitForNotification(NOTIFICATION);
 
@@ -312,10 +309,56 @@ describe('Test Synchronizable access', () => {
       }
     }
 
-    dispatch(imperativeLockGetSet, setValueRN, setValueUI, setValueBG);
+    dispatch(workletRuntime, imperativeLockGetSet, setValueRN, setValueUI, setValueBG);
 
     await waitForNotification(NOTIFICATION);
 
     expect(Math.max(valueRN, valueUI, valueBG)).toBe(targetValue * 3);
+  });
+});
+
+describe('Test Synchronizable serialization', () => {
+  test('Synchronizable accepts primitives', () => {
+    const synchronizable = createSynchronizable(0);
+
+    // RN Runtime
+    synchronizable.setBlocking(1);
+    expect(synchronizable.getBlocking()).toBe(1);
+
+    // UI Runtime
+    runOnUISync(() => {
+      'worklet';
+      synchronizable.setBlocking(2);
+    });
+    expect(synchronizable.getBlocking()).toBe(2);
+
+    // Worker Runtime
+    runOnRuntimeSync(workletRuntime, () => {
+      'worklet';
+      synchronizable.setBlocking(3);
+    });
+    expect(synchronizable.getBlocking()).toBe(3);
+  });
+
+  test('Synchronizable accepts objects', () => {
+    const synchronizable = createSynchronizable({ a: 0 });
+
+    // RN Runtime
+    synchronizable.setBlocking({ a: 1 });
+    expect(synchronizable.getBlocking().a).toBe(1);
+
+    // UI Runtime
+    runOnUISync(() => {
+      'worklet';
+      synchronizable.setBlocking({ a: 2 });
+    });
+    expect(synchronizable.getBlocking().a).toBe(2);
+
+    // Worker Runtime
+    runOnRuntimeSync(workletRuntime, () => {
+      'worklet';
+      synchronizable.setBlocking({ a: 3 });
+    });
+    expect(synchronizable.getBlocking().a).toBe(3);
   });
 });

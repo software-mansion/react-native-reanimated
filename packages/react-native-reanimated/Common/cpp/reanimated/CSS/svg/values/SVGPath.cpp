@@ -148,6 +148,15 @@ std::vector<SubPath> SVGPath::parseSVGPath(const std::string &value) const {
   Point currPos{}, startPos{};
 
   // Format of input: (M num num |C num num num num num num |Z)*
+  std::optional<SubPath> buffer;
+
+  auto pushBufferToResult = [&]() {
+    if (buffer && !buffer->C.empty()) {
+      result.push_back(std::move(buffer.value()));
+    }
+    buffer = std::nullopt;
+  };
+
   while (ss >> std::ws && !ss.eof()) {
     char cmd;
     ss >> cmd;
@@ -158,25 +167,29 @@ std::vector<SubPath> SVGPath::parseSVGPath(const std::string &value) const {
         if (!(ss >> x >> y)) {
           throw std::invalid_argument("[Reanimated] Invalid coordinates for 'M' command in path: \"" + value + "\"");
         }
-        result.emplace_back(Point(x, y));
-        currPos = Point(x, y);
-        startPos = currPos;
+        pushBufferToResult();
+        startPos = currPos = Point(x, y);
+        buffer = SubPath(startPos);
         break;
       case 'C': {
-        if (result.empty() || result.back().Z) {
-          result.emplace_back(currPos);
+        if (buffer && buffer->Z) {
+          pushBufferToResult();
         }
+        if (!buffer) {
+          buffer = SubPath(currPos);
+        }
+
         Point p0(currPos), p1, p2, p3;
         if (!(ss >> p1[0] >> p1[1] >> p2[0] >> p2[1] >> p3[0] >> p3[1])) {
           throw std::invalid_argument("[Reanimated] Invalid coordinates for 'C' command in path: \"" + value + "\"");
         }
-        result.back().C.push_back({p0, p1, p2, p3});
+        buffer->C.push_back({p0, p1, p2, p3});
         currPos = p3;
         break;
       }
       case 'Z':
-        if (!result.empty()) {
-          result.back().Z = true;
+        if (buffer) {
+          buffer->Z = true;
           currPos = startPos;
           break;
         }
@@ -185,6 +198,8 @@ std::vector<SubPath> SVGPath::parseSVGPath(const std::string &value) const {
         std::invalid_argument("[Reanimated] Invalid SVGPath string format (provided path: \"" + value + "\")");
     }
   }
+
+  pushBufferToResult();
 
   return result;
 }

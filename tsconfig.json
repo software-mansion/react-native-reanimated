@@ -28,6 +28,6 @@
       ""
     ]
   },
-  "include": [".", "**/.*"],
-  "exclude": ["**/__generatedWorklets"]
+  "include": [".", "**/.*", ".github/**/*"],
+  "exclude": ["**/.worklets"]
 }

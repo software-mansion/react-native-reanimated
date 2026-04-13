@@ -1,4 +1,5 @@
 'use strict';
+import type { TranslateX, TranslateY } from '../../common';
 import type {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
@@ -16,7 +17,7 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
  */
 export class FadeIn
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ opacity: number }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeIn';
@@ -59,7 +60,10 @@ export class FadeIn
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
  */
 export class FadeInRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [TranslateX];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeInRight';
@@ -107,7 +111,10 @@ export class FadeInRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
  */
 export class FadeInLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [TranslateX];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeInLeft';
@@ -155,7 +162,10 @@ export class FadeInLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
  */
 export class FadeInUp
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [TranslateY];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeInUp';
@@ -203,7 +213,10 @@ export class FadeInUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
  */
 export class FadeInDown
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [TranslateY];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeInDown';
@@ -251,7 +264,7 @@ export class FadeInDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
  */
 export class FadeOut
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ opacity: number }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeOut';
@@ -295,7 +308,10 @@ export class FadeOut
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
  */
 export class FadeOutRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [TranslateX];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeOutRight';
@@ -343,7 +359,10 @@ export class FadeOutRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
  */
 export class FadeOutLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [TranslateX];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeOutLeft';
@@ -390,7 +409,10 @@ export class FadeOutLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
  */
 export class FadeOutUp
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [TranslateY];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeOutUp';
@@ -438,7 +460,10 @@ export class FadeOutUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#fade
  */
 export class FadeOutDown
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [TranslateY];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'FadeOutDown';
