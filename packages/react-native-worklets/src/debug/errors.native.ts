@@ -1,7 +1,6 @@
 'use strict';
 
 import type { WorkletStackDetails } from '../types';
-import { WorkletsError } from './WorkletsError';
 
 const _workletStackDetails = new Map<number, WorkletStackDetails>();
 
@@ -58,7 +57,7 @@ export function reportFatalRemoteError(
   { message, stack, name, jsEngine }: RNError,
   force: boolean
 ): void {
-  const error = new WorkletsError() as RNError;
+  const error = new Error('[Worklets]') as RNError;
   error.message = message;
   error.stack = processStack(stack);
   error.name = name;

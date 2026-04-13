@@ -8,7 +8,6 @@ import {
   processColorsInProps,
   processTransform,
   processTransformOrigin,
-  ReanimatedError,
   SHOULD_BE_USE_WEB,
   stylePropsBuilder,
 } from '../common';
@@ -175,8 +174,8 @@ if (SHOULD_BE_USE_WEB) {
     // Jest attempts to access a property of this object to check if it is a Jest mock
     // so we can't throw an error in the getter.
     if (!IS_JEST) {
-      throw new ReanimatedError(
-        '`UpdatePropsManager` is not available on non-native platform.'
+      throw new Error(
+        '[Reanimated] `UpdatePropsManager` is not available on non-native platform.'
       );
     }
   };

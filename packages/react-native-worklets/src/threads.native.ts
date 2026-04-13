@@ -1,6 +1,5 @@
 'use strict';
 
-import { WorkletsError } from './debug/WorkletsError';
 import {
   addGuardImplementation,
   addNoBundleModeGuardImplementation,
@@ -85,7 +84,9 @@ export function scheduleOnUI<Args extends unknown[], ReturnValue>(
     !isWorkletFunction(worklet) &&
     !(worklet as unknown as WorkletImport).__bundleData
   ) {
-    throw new WorkletsError('`scheduleOnUI` can only be used with worklets.');
+    throw new Error(
+      '[Worklets] `scheduleOnUI` can only be used with worklets.'
+    );
   }
   if (__DEV__) {
     // in DEV mode we call serializable conversion here because in case the object
@@ -133,7 +134,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
     !isWorkletFunction(worklet) &&
     !(worklet as unknown as WorkletImport).__bundleData
   ) {
-    throw new WorkletsError('`runOnUI` can only be used with worklets.');
+    throw new Error('[Worklets] `runOnUI` can only be used with worklets.');
   }
   return (...args: Args) => {
     scheduleOnUI(worklet, ...args);
@@ -333,11 +334,13 @@ export function runOnUIAsync<Args extends unknown[], ReturnValue>(
 ): Promise<ReturnValue> {
   if (__DEV__) {
     if (!isWorkletFunction(worklet)) {
-      throw new WorkletsError('`runOnUIAsync` can only be used with worklets.');
+      throw new Error(
+        '[Worklets] `runOnUIAsync` can only be used with worklets.'
+      );
     }
     if (!isRNRuntime()) {
-      throw new WorkletsError(
-        '`runOnUIAsync` can only be called on the RN Runtime.'
+      throw new Error(
+        '[Worklets] `runOnUIAsync` can only be called on the RN Runtime.'
       );
     }
   }

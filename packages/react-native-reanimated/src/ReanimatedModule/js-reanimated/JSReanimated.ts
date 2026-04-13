@@ -6,13 +6,7 @@ import type {
 } from 'react-native-worklets';
 import { WorkletsModule } from 'react-native-worklets';
 
-import {
-  IS_JEST,
-  IS_WEB,
-  IS_WINDOW_AVAILABLE,
-  logger,
-  ReanimatedError,
-} from '../../common';
+import { IS_JEST, IS_WEB, IS_WINDOW_AVAILABLE, logger } from '../../common';
 import type {
   InternalHostInstance,
   SettledUpdate,
@@ -57,14 +51,14 @@ class JSReanimated implements IReanimatedModule {
     _eventName: string,
     _emitterReactTag: number
   ): number {
-    throw new ReanimatedError(
-      'registerEventHandler is not available in JSReanimated.'
+    throw new Error(
+      '[Reanimated] registerEventHandler is not available in JSReanimated.'
     );
   }
 
   unregisterEventHandler(_: number): void {
-    throw new ReanimatedError(
-      'unregisterEventHandler is not available in JSReanimated.'
+    throw new Error(
+      '[Reanimated] unregisterEventHandler is not available in JSReanimated.'
     );
   }
 
@@ -259,7 +253,9 @@ class JSReanimated implements IReanimatedModule {
     _component?: InternalHostInstance | null,
     _callback?: (result: T) => void
   ): Promise<T> {
-    throw new ReanimatedError('getViewProp is not available in JSReanimated.');
+    throw new Error(
+      '[Reanimated] getViewProp is not available in JSReanimated.'
+    );
   }
 
   getStaticFeatureFlag(): boolean {
@@ -272,18 +268,20 @@ class JSReanimated implements IReanimatedModule {
   }
 
   setViewStyle(_viewTag: number, _style: StyleProps): void {
-    throw new ReanimatedError('setViewStyle is not available in JSReanimated.');
+    throw new Error(
+      '[Reanimated] setViewStyle is not available in JSReanimated.'
+    );
   }
 
   markNodeAsRemovable(_shadowNodeWrapper: ShadowNodeWrapper): void {
-    throw new ReanimatedError(
-      'markNodeAsRemovable is not available in JSReanimated.'
+    throw new Error(
+      '[Reanimated] markNodeAsRemovable is not available in JSReanimated.'
     );
   }
 
   unmarkNodeAsRemovable(_viewTag: number): void {
-    throw new ReanimatedError(
-      'unmarkNodeAsRemovable is not available in JSReanimated.'
+    throw new Error(
+      '[Reanimated] unmarkNodeAsRemovable is not available in JSReanimated.'
     );
   }
 
@@ -292,8 +290,8 @@ class JSReanimated implements IReanimatedModule {
     _compoundComponentName: string,
     _keyframesConfig: NormalizedCSSAnimationKeyframesConfig
   ): void {
-    throw new ReanimatedError(
-      '`registerCSSKeyframes` is not available in JSReanimated.'
+    throw new Error(
+      '[Reanimated] `registerCSSKeyframes` is not available in JSReanimated.'
     );
   }
 
@@ -301,8 +299,8 @@ class JSReanimated implements IReanimatedModule {
     _animationName: string,
     _compoundComponentName: string
   ): void {
-    throw new ReanimatedError(
-      '`unregisterCSSKeyframes` is not available in JSReanimated.'
+    throw new Error(
+      '[Reanimated] `unregisterCSSKeyframes` is not available in JSReanimated.'
     );
   }
 
@@ -311,14 +309,14 @@ class JSReanimated implements IReanimatedModule {
     _compoundComponentName: string,
     _animationUpdates: CSSAnimationUpdates
   ) {
-    throw new ReanimatedError(
-      '`applyCSSAnimations` is not available in JSReanimated.'
+    throw new Error(
+      '[Reanimated] `applyCSSAnimations` is not available in JSReanimated.'
     );
   }
 
   unregisterCSSAnimations(_viewTag: number): void {
-    throw new ReanimatedError(
-      '`unregisterCSSAnimations` is not available in JSReanimated.'
+    throw new Error(
+      '[Reanimated] `unregisterCSSAnimations` is not available in JSReanimated.'
     );
   }
 
@@ -326,20 +324,20 @@ class JSReanimated implements IReanimatedModule {
     _shadowNodeWrapper: ShadowNodeWrapper,
     _transitionConfig: CSSTransitionConfig
   ): void {
-    throw new ReanimatedError(
-      '`runCSSTransition` is not available in JSReanimated.'
+    throw new Error(
+      '[Reanimated] `runCSSTransition` is not available in JSReanimated.'
     );
   }
 
   unregisterCSSTransition(_viewTag: number): void {
-    throw new ReanimatedError(
-      '`unregisterCSSTransition` is not available in JSReanimated.'
+    throw new Error(
+      '[Reanimated] `unregisterCSSTransition` is not available in JSReanimated.'
     );
   }
 
   getSettledUpdates(): SettledUpdate[] {
-    throw new ReanimatedError(
-      '`getSettledUpdates` is not available in JSReanimated.'
+    throw new Error(
+      '[Reanimated] `getSettledUpdates` is not available in JSReanimated.'
     );
   }
 }

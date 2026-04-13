@@ -1,6 +1,5 @@
 'use strict';
 
-import { WorkletsError } from './debug/WorkletsError';
 import { createSerializable } from './memory/serializable';
 import { serializableMappingCache } from './memory/serializableMappingCache';
 
@@ -10,7 +9,7 @@ export function addGuardImplementation<Args extends unknown[]>(
 ): void {
   const serializableGuard = createSerializable(function guardImplementation() {
     'worklet';
-    throw new WorkletsError(errorMessage);
+    throw new Error(`[Worklets] ${errorMessage}`);
   });
   serializableMappingCache.set(fn, serializableGuard);
 }

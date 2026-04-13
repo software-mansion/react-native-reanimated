@@ -8,7 +8,7 @@ import {
   rgbaColor,
   RGBtoHSV,
 } from './Colors';
-import { processColor, ReanimatedError } from './common';
+import { processColor } from './common';
 import culori from './culori';
 import { Extrapolation, interpolate } from './interpolation';
 
@@ -407,8 +407,8 @@ export function interpolateColor(
     );
   }
 
-  throw new ReanimatedError(
-    `Invalid color space provided: ${
+  throw new Error(
+    `[Reanimated] Invalid color space provided: ${
       colorSpace as string
     }. Supported values are: ['RGB', 'HSV', 'LAB'].`
   );

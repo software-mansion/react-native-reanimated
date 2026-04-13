@@ -1,5 +1,5 @@
 'use strict';
-import { logger, ReanimatedError } from '../../common';
+import { logger } from '../../common';
 import { PERCENTAGE_REGEX } from '../constants';
 import type { Point } from '../types';
 import type {
@@ -29,8 +29,8 @@ const parsePercentage = (percentage: string | number): number => {
   }
 
   if (result === undefined || result < 0 || result > 1) {
-    throw new ReanimatedError(
-      ERROR_MESSAGES.invalidInputProgressValue(percentage)
+    throw new Error(
+      `[Reanimated] ${ERROR_MESSAGES.invalidInputProgressValue(percentage)}`
     );
   }
 
@@ -48,7 +48,7 @@ export class LinearEasing implements ParametrizedTimingFunction {
 
   constructor(points: ControlPoint[]) {
     if (points.length < 2) {
-      throw new ReanimatedError(ERROR_MESSAGES.invalidPointsCount());
+      throw new Error(`[Reanimated] ${ERROR_MESSAGES.invalidPointsCount()}`);
     }
     this.points = points.map((p) =>
       Array.isArray(p) && p.length === 1 ? p[0] : p
