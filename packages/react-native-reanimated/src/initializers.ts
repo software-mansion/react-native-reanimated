@@ -1,5 +1,8 @@
 'use strict';
-import { runOnUISync } from 'react-native-worklets';
+import {
+  runOnUISync,
+  toggleSlowAnimationsOnUIRuntime,
+} from 'react-native-worklets';
 
 import { IS_WEB, ReanimatedError, SHOULD_BE_USE_WEB } from './common';
 import { initSvgCssSupport } from './css/svg';
@@ -21,6 +24,8 @@ export function initializeReanimatedModule(
 
 // is-tree-shakable-suppress
 if (!SHOULD_BE_USE_WEB) {
+  globalThis.__toggleSlowAnimationsOnUIRuntime = () =>
+    toggleSlowAnimationsOnUIRuntime();
   runOnUISync(() => {
     'worklet';
     global._tagToJSPropNamesMapping = {};
