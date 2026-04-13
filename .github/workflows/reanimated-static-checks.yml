@@ -40,6 +40,9 @@ jobs:
         run: yarn build
 
       # Checks
+      - name: Validate peer dependency versions
+        working-directory: ${{ env.PACKAGE_PATH }}
+        run: yarn validate-peers
       - name: Check TypeScript types
         working-directory: ${{ env.PACKAGE_PATH }}
         run: yarn type:check

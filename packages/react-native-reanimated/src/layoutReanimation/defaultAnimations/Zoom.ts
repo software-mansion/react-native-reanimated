@@ -1,4 +1,5 @@
 'use strict';
+import type { Rotate, Scale, TranslateX, TranslateY } from '../../common';
 import type {
   AnimationConfigFunction,
   EntryAnimationsValues,
@@ -22,7 +23,7 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomIn
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [Scale] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomIn';
@@ -66,7 +67,7 @@ export class ZoomIn
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomInRotate
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [Scale, Rotate] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomInRotate';
@@ -114,7 +115,7 @@ export class ZoomInRotate
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomInLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateX, Scale] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomInLeft';
@@ -161,7 +162,7 @@ export class ZoomInLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomInRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateX, Scale] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomInRight';
@@ -208,7 +209,7 @@ export class ZoomInRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomInUp
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateY, Scale] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomInUp';
@@ -255,7 +256,7 @@ export class ZoomInUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomInDown
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateY, Scale] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomInDown';
@@ -302,7 +303,7 @@ export class ZoomInDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomInEasyUp
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateY, Scale] }>
   implements IEntryAnimationBuilder
 {
   static presetName = 'ZoomInEasyUp';
@@ -349,7 +350,7 @@ export class ZoomInEasyUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomInEasyDown
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateY, Scale] }>
   implements IEntryAnimationBuilder
 {
   static presetName = 'ZoomInEasyDown';
@@ -396,7 +397,7 @@ export class ZoomInEasyDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOut
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [Scale] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomOut';
@@ -440,7 +441,7 @@ export class ZoomOut
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutRotate
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [Scale, Rotate] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomOutRotate';
@@ -488,7 +489,7 @@ export class ZoomOutRotate
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateX, Scale] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomOutLeft';
@@ -540,7 +541,7 @@ export class ZoomOutLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateX, Scale] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomOutRight';
@@ -592,7 +593,7 @@ export class ZoomOutRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutUp
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateY, Scale] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomOutUp';
@@ -644,7 +645,7 @@ export class ZoomOutUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutDown
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateY, Scale] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'ZoomOutDown';
@@ -696,7 +697,7 @@ export class ZoomOutDown
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutEasyUp
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateY, Scale] }>
   implements IExitAnimationBuilder
 {
   static presetName = 'ZoomOutEasyUp';
@@ -748,7 +749,7 @@ export class ZoomOutEasyUp
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
 export class ZoomOutEasyDown
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [TranslateY, Scale] }>
   implements IExitAnimationBuilder
 {
   static presetName = 'ZoomOutEasyDown';

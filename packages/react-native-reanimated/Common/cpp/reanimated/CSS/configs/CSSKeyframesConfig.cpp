@@ -1,5 +1,7 @@
 #include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 
+#include <reanimated/CSS/configs/common.h>
+
 #include <memory>
 #include <string>
 
@@ -8,10 +10,10 @@ namespace reanimated::css {
 std::shared_ptr<AnimationStyleInterpolator> createStyleInterpolator(
     jsi::Runtime &rt,
     const jsi::Object &config,
-    const std::string &componentName,
+    const std::string &nativeComponentName,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
   return std::make_shared<AnimationStyleInterpolator>(
-      rt, config.getProperty(rt, "propKeyframes"), componentName, viewStylesRepository);
+      rt, config.getProperty(rt, "propKeyframes"), nativeComponentName, viewStylesRepository);
 }
 
 std::shared_ptr<KeyframeEasingFunctions> getKeyframeTimingFunctions(jsi::Runtime &rt, const jsi::Object &config) {
@@ -33,12 +35,13 @@ std::shared_ptr<KeyframeEasingFunctions> getKeyframeTimingFunctions(jsi::Runtime
 CSSKeyframesConfig parseCSSAnimationKeyframesConfig(
     jsi::Runtime &rt,
     const jsi::Value &config,
-    const std::string &componentName,
+    const std::string &compoundComponentName,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
   const auto &configObj = config.asObject(rt);
+  const auto nativeComponentName = splitCompoundComponentName(compoundComponentName).first;
 
   return {
-      createStyleInterpolator(rt, configObj, componentName, viewStylesRepository),
+      createStyleInterpolator(rt, configObj, nativeComponentName, viewStylesRepository),
       getKeyframeTimingFunctions(rt, configObj)};
 }
 

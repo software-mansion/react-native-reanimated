@@ -14,8 +14,6 @@ def find_config()
     :is_tvos_target => nil,
     :react_native_node_modules_dir => nil,
     :react_native_common_dir => nil,
-    :dynamic_frameworks_reanimated_dir => nil,
-    :dynamic_frameworks_worklets_dir => nil,
   }
 
   react_native_node_modules_dir = File.join(File.dirname(`cd "#{Pod::Config.instance.installation_root.to_s}" && node --print "require.resolve('react-native/package.json')"`), '..')
@@ -51,15 +49,6 @@ def find_config()
   react_native_common_dir_relative = Pathname.new(react_native_common_dir_absolute).relative_path_from(pods_root).to_s
   result[:react_native_common_dir] = react_native_common_dir_relative
 
-  react_native_reanimated_dir_absolute = File.join(__dir__, '..')
-  react_native_reanimated_dir_relative = Pathname.new(react_native_reanimated_dir_absolute).relative_path_from(pods_root).to_s
-  result[:dynamic_frameworks_reanimated_dir] = react_native_reanimated_dir_relative
-
-  react_native_worklets_node_modules_dir = File.join(File.dirname(`cd "#{Pod::Config.instance.installation_root.to_s}" && node --print "require.resolve('react-native-worklets/package.json')"`), '..')
-  react_native_worklets_dir_absolute = File.join(react_native_worklets_node_modules_dir, 'react-native-worklets')
-  react_native_worklets_dir_relative = Pathname.new(react_native_worklets_dir_absolute).relative_path_from(pods_root).to_s
-  result[:dynamic_frameworks_worklets_dir] = react_native_worklets_dir_relative
-
   return result
 end
 
@@ -73,6 +62,15 @@ end
 def assert_new_architecture_enabled(new_arch_enabled)
   if !new_arch_enabled
     raise "[Reanimated] Reanimated requires the New Architecture to be enabled. If you have `RCT_NEW_ARCH_ENABLED=0` set in your environment you should remove it."
+  end
+end
+
+def assert_conflicting_feature_flags(feature_flags)
+  ios_sync_ui_props = feature_flags['IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS'] == 'true'
+  shared_element_transitions = feature_flags['ENABLE_SHARED_ELEMENT_TRANSITIONS'] == 'true'
+
+  if ios_sync_ui_props && shared_element_transitions
+    raise "[Reanimated] The feature flags `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. Please disable one of them in your package.json"
   end
 end
 
@@ -98,6 +96,8 @@ def get_static_feature_flags()
       end
     end
   end
+
+  assert_conflicting_feature_flags(feature_flags)
 
   return feature_flags.map { |key, value| "[#{key}:#{value}]" }.join('')
 end

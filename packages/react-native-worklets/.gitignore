@@ -62,4 +62,5 @@ apple/generated
 android/generated
 
 # worklets
-.worklets/
+.worklets/*
+!.worklets/dummy.md

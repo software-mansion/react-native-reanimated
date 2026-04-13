@@ -406,7 +406,7 @@ var require_globals = __commonJS({
   "lib/globals.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.globals = exports2.defaultGlobals = exports2.internalBindingsToCaptureFromGlobalScope = exports2.outsideBindingsToCaptureFromGlobalScope = void 0;
+    exports2.globals = exports2.defaultGlobals = void 0;
     exports2.initializeState = initializeState;
     exports2.initializeGlobals = initializeGlobals;
     exports2.addCustomGlobals = addCustomGlobals;
@@ -525,12 +525,6 @@ var require_globals = __commonJS({
       // Worklets
       "_WORKLET"
     ];
-    exports2.outsideBindingsToCaptureFromGlobalScope = /* @__PURE__ */ new Set([
-      "ReanimatedError"
-    ]);
-    exports2.internalBindingsToCaptureFromGlobalScope = /* @__PURE__ */ new Set([
-      "WorkletsError"
-    ]);
     var notCapturedIdentifiers_DEPRECATED = ["_IS_FABRIC"];
     function initializeState(state) {
       state.workletNumber = 1;
@@ -592,9 +586,6 @@ var require_closure = __commonJS({
             }
             capturedNames.add(name);
             closureVariables.push((0, types_12.cloneNode)(idPath.node, true));
-            return;
-          }
-          if (globals_12.outsideBindingsToCaptureFromGlobalScope.has(name) || !state.opts.bundleMode && globals_12.internalBindingsToCaptureFromGlobalScope.has(name)) {
             return;
           }
           if ("id" in funPath.node) {
@@ -689,9 +680,6 @@ var require_generate = __commonJS({
         comments: false
       })) === null || _a === void 0 ? void 0 : _a.code;
       (0, assert_1.default)(transformedProg, "[Worklets] `transformedProg` is undefined.");
-      if (!(0, fs_1.existsSync)(filesDirPath)) {
-        (0, fs_1.mkdirSync)(filesDirPath, {});
-      }
       const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
       (0, fs_1.writeFileSync)(dedicatedFilePath, transformedProg);
     }
@@ -925,7 +913,9 @@ var require_workletFactory = __commonJS({
     var MOCK_VERSION = "x.y.z";
     function makeWorkletFactory(fun, state) {
       var _a;
-      removeWorkletDirective(fun);
+      const includeClosure = !hasDirective(fun, "no-worklet-closure");
+      const limitInitDataHoisting = hasDirective(fun, "limit-init-data-hoisting");
+      stripWorkletDirectives(fun);
       (0, assert_1.strict)(state.file.opts.filename, "[Reanimated] `state.file.opts.filename` is undefined.");
       const codeObject = (0, generator_1.default)(fun.node, {
         sourceMaps: true,
@@ -943,7 +933,11 @@ var require_workletFactory = __commonJS({
       });
       (0, assert_1.strict)(transformed, "[Reanimated] `transformed` is undefined.");
       (0, assert_1.strict)(transformed.ast, "[Reanimated] `transformed.ast` is undefined.");
-      const { closureVariables, libraryBindingsToImport, relativeBindingsToImport } = (0, closure_1.getClosure)(fun, state);
+      const { closureVariables, libraryBindingsToImport, relativeBindingsToImport } = includeClosure ? (0, closure_1.getClosure)(fun, state) : {
+        closureVariables: [],
+        libraryBindingsToImport: /* @__PURE__ */ new Set(),
+        relativeBindingsToImport: /* @__PURE__ */ new Set()
+      };
       const clone = (0, types_12.cloneNode)(fun.node);
       const funExpression = (0, types_12.isBlockStatement)(clone.body) ? (0, types_12.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
       const { workletName, reactName } = makeWorkletName(fun, state);
@@ -984,9 +978,14 @@ var require_workletFactory = __commonJS({
       }
       const shouldIncludeInitData = !state.opts.omitNativeOnlyData;
       if (shouldIncludeInitData && !state.opts.bundleMode) {
-        pathForStringDefinitions.insertBefore((0, types_12.variableDeclaration)("const", [
+        const initDataDeclaration = (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)(initDataId, initDataObjectExpression)
-        ]));
+        ]);
+        if (limitInitDataHoisting) {
+          fun.getFunctionParent().node.body.body.unshift(initDataDeclaration);
+        } else {
+          pathForStringDefinitions.insertBefore(initDataDeclaration);
+        }
       }
       (0, assert_1.strict)(!(0, types_12.isFunctionDeclaration)(funExpression), "[Reanimated] `funExpression` is a `FunctionDeclaration`.");
       (0, assert_1.strict)(!(0, types_12.isObjectMethod)(funExpression), "[Reanimated] `funExpression` is an `ObjectMethod`.");
@@ -1036,10 +1035,25 @@ var require_workletFactory = __commonJS({
       factory.workletized = true;
       return { factory, factoryCallParamPack, workletHash };
     }
-    function removeWorkletDirective(fun) {
+    function hasDirective(path, directiveText) {
+      if (!path.node.body) {
+        return false;
+      }
+      const bodyPath = path.get("body");
+      let has = false;
+      if (bodyPath.isBlockStatement()) {
+        has = bodyPath.get("directives").some((directivePath) => {
+          if (directivePath.isDirective() && directivePath.node.value.value === directiveText) {
+            return true;
+          }
+        });
+      }
+      return has;
+    }
+    function stripWorkletDirectives(fun) {
       fun.traverse({
         DirectiveLiteral(nodePath) {
-          if (nodePath.node.value === "worklet" && nodePath.getFunctionParent() === fun) {
+          if ((nodePath.node.value === "worklet" || nodePath.node.value === "no-worklet-closure" || nodePath.node.value === "limit-init-data-hoisting") && nodePath.getFunctionParent() === fun) {
             nodePath.parentPath.remove();
           }
         }
@@ -1265,7 +1279,11 @@ var require_autoworkletization = __commonJS({
       "runOnUISync",
       "runOnUIAsync",
       "runOnRuntime",
-      "scheduleOnRuntime"
+      "runOnRuntimeSync",
+      "runOnRuntimeAsync",
+      "scheduleOnRuntime",
+      "runOnRuntimeSyncWithId",
+      "scheduleOnRuntimeWithId"
     ]);
     var reanimatedFunctionArgsToWorkletize = new Map([
       ["useFrameCallback", [0]],
@@ -1285,7 +1303,11 @@ var require_autoworkletization = __commonJS({
       ["runOnUISync", [0]],
       ["runOnUIAsync", [0]],
       ["runOnRuntime", [1]],
+      ["runOnRuntimeSync", [1]],
+      ["runOnRuntimeAsync", [1]],
       ["scheduleOnRuntime", [1]],
+      ["runOnRuntimeSyncWithId", [1]],
+      ["scheduleOnRuntimeWithId", [1]],
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerObjectHooks).map((name) => [name, [0]]),
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerBuilderMethods).map((name) => [name, [0]])
     ]);

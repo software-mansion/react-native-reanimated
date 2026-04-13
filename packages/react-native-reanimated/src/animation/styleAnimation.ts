@@ -72,6 +72,7 @@ interface NestedObjectEntry<T> {
 }
 
 export function withStyleAnimation(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   styleAnimations: AnimatedStyle<any>
 ): StyleLayoutAnimation {
   'worklet';
@@ -148,6 +149,7 @@ export function withStyleAnimation(
 
     const onStart = (
       animation: StyleLayoutAnimation,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       value: AnimatedStyle<any>,
       now: Timestamp,
       previousAnimation: StyleLayoutAnimation
@@ -185,6 +187,7 @@ export function withStyleAnimation(
           );
           let prevVal = resolvePath(value, currentEntry.path);
           if (prevAnimation && !prevVal) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             prevVal = (prevAnimation as any).current;
           }
           if (__DEV__) {

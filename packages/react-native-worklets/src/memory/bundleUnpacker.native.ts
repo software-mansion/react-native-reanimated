@@ -1,7 +1,6 @@
 'use strict';
 
 import { logger } from '../debug/logger';
-import { WorkletsError } from '../debug/WorkletsError';
 import type { WorkletFactory, WorkletFunction } from '../types';
 
 const handleCache = new WeakMap<WorkletFunction, unknown>();
@@ -26,14 +25,14 @@ export function bundleValueUnpacker(
       const label = remoteFunctionName
         ? `function \`${remoteFunctionName}\``
         : 'anonymous function';
-      throw new WorkletsError(`Tried to synchronously call a non-worklet ${label} on the UI thread.
+      throw new Error(`[Worklets] Tried to synchronously call a non-worklet ${label} on the UI thread.
 See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
     };
     remoteFunctionHolder.__remoteFunction = objectToUnpack;
     return remoteFunctionHolder;
   } else {
-    throw new WorkletsError(
-      `Data type in category "${category}" not recognized by value unpacker: "${globalThis._toString(
+    throw new Error(
+      `[Worklets] Data type in category "${category}" not recognized by value unpacker: "${globalThis._toString(
         objectToUnpack
       )}".`
     );

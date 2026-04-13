@@ -19,10 +19,7 @@ import type {
   ShadowNodeWrapper,
   StyleUpdaterContainer,
 } from '../commonTypes';
-import type {
-  AnimatedComponentType,
-  AnimatedProps,
-} from '../createAnimatedComponent';
+import type { AnimatedComponentType } from '../createAnimatedComponent';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 
@@ -109,9 +106,7 @@ export interface IWorkletEventHandler<Event extends object> {
   unregisterFromEvents: (viewTag: number) => void;
 }
 
-export interface AnimatedStyleHandle<
-  Style extends DefaultStyle | AnimatedProps = DefaultStyle,
-> {
+export interface AnimatedStyleHandle<Style = DefaultStyle> {
   viewDescriptors: ViewDescriptorsSet;
   initial: {
     value: AnimatedStyle<Style>;
@@ -120,12 +115,9 @@ export interface AnimatedStyleHandle<
   styleUpdaterContainer: StyleUpdaterContainer;
 }
 
-export interface JestAnimatedStyleHandle<
-  Style extends DefaultStyle | AnimatedProps = DefaultStyle,
-> extends AnimatedStyleHandle<Style> {
-  jestAnimatedValues:
-    | RefObject<AnimatedStyle<Style>>
-    | RefObject<AnimatedProps>;
+export interface JestAnimatedStyleHandle<Style = DefaultStyle>
+  extends AnimatedStyleHandle<Style> {
+  jestAnimatedValues: RefObject<AnimatedStyle<Style>>;
   toJSON: () => string;
 }
 

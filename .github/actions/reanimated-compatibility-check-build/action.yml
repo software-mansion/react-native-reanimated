@@ -26,7 +26,8 @@ runs:
       run: corepack enable && yarn init
     - name: Install React Native CLI
       shell: bash
-      run: yarn add @react-native-community/cli
+      # temporary version lock due to bug in version 20.1.2
+      run: yarn add @react-native-community/cli@20.1.1
     - name: Create app
       shell: bash
       run: yarn rnc-cli init ${{inputs.app-name}} --version ${{ inputs.react-native-versions }} --skip-install --install-pods 0 --skip-git-init

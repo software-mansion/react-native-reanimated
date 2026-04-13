@@ -1,7 +1,5 @@
 'use strict';
 
-import { ReanimatedError } from './common';
-
 /**
  * Extrapolation type.
  *
@@ -95,8 +93,8 @@ function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
 
   if (typeof type === 'string') {
     if (!isExtrapolate(type)) {
-      throw new ReanimatedError(
-        `Unsupported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]\n Valid example:
+      throw new Error(
+        `[Reanimated] Unsupported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolation.CLAMP, Extrapolation.EXTEND, Extrapolation.IDENTITY]\n Valid example:
         interpolate(value, [inputRange], [outputRange], "clamp")`
       );
     }
@@ -110,8 +108,8 @@ function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
     (type.extrapolateLeft && !isExtrapolate(type.extrapolateLeft)) ||
     (type.extrapolateRight && !isExtrapolate(type.extrapolateRight))
   ) {
-    throw new ReanimatedError(
-      `Unsupported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]\n Valid example:
+    throw new Error(
+      `[Reanimated] Unsupported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolation.CLAMP, Extrapolation.EXTEND, Extrapolation.IDENTITY]\n Valid example:
       interpolate(value, [inputRange], [outputRange], {
         extrapolateLeft: Extrapolation.CLAMP,
         extrapolateRight: Extrapolation.IDENTITY
@@ -170,22 +168,23 @@ function internalInterpolate(
  *   interpolation.
  * @param outputRange - An array of numbers specifying the output range of the
  *   interpolation.
- * @param extrapolate - Determines what happens when the `value` goes beyond the
- *   `input` range. Defaults to `Extrapolation.EXTEND` -
+ * @param type - Determines what happens when the `value` goes beyond the
+ *   `input` range. Defaults to `ExtrapolationConfig` with both
+ *   `extrapolateLeft` and `extrapolateRight` set to `Extrapolation.EXTEND`.
  *   {@link ExtrapolationType}.
  * @returns A mapped value within the output range.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/utilities/interpolate
  */
 export function interpolate(
-  x: number,
+  value: number,
   inputRange: readonly number[],
   outputRange: readonly number[],
   type?: ExtrapolationType
 ): number {
   'worklet';
   if (inputRange.length < 2 || outputRange.length < 2) {
-    throw new ReanimatedError(
-      'Interpolation input and output ranges should contain at least two values.'
+    throw new Error(
+      '[Reanimated] Interpolation input and output ranges should contain at least two values.'
     );
   }
 
@@ -193,7 +192,7 @@ export function interpolate(
   const length = inputRange.length;
   let narrowedInput: InterpolationNarrowedInput;
 
-  if (x > inputRange[length - 1]) {
+  if (value > inputRange[length - 1]) {
     narrowedInput = {
       leftEdgeInput: inputRange[length - 2],
       rightEdgeInput: inputRange[length - 1],
@@ -206,7 +205,7 @@ export function interpolate(
 
     while (left < right) {
       const mid = Math.floor((left + right) / 2);
-      if (x <= inputRange[mid]) {
+      if (value <= inputRange[mid]) {
         right = mid;
       } else {
         left = mid + 1;
@@ -222,7 +221,7 @@ export function interpolate(
     };
   }
 
-  return internalInterpolate(x, narrowedInput, extrapolationConfig);
+  return internalInterpolate(value, narrowedInput, extrapolationConfig);
 }
 
 /**
