@@ -15,10 +15,10 @@ export default function ImageExample() {
       ImageProps
     >
       buildAnimation={({ keyframes }) => ({
-        animationName: keyframes,
         animationDirection: 'alternate',
         animationDuration: '1s',
         animationIterationCount: 'infinite',
+        animationName: keyframes,
         animationTimingFunction: 'ease-in-out',
       })}
       renderExample={({ animation, viewBox }) => (
@@ -44,15 +44,17 @@ export default function ImageExample() {
             {
               examples: [
                 {
+                  description: 'Animates from default `x=20` to `x=50`',
                   keyframes: {
                     to: {
                       x: 50,
                     },
                   },
                   title: 'Absolute',
-                  description: 'Animates from default `x=20` to `x=50`',
                 },
                 {
+                  description:
+                    'Animation using only percentage values for smooth relative positioning',
                   keyframes: {
                     from: {
                       x: '10%',
@@ -62,10 +64,10 @@ export default function ImageExample() {
                     },
                   },
                   title: 'Percentage',
-                  description:
-                    'Animation using only percentage values for smooth relative positioning',
                 },
                 {
+                  description:
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
                       x: 20,
@@ -75,8 +77,6 @@ export default function ImageExample() {
                     },
                   },
                   title: 'Mixed',
-                  description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the X position is changed **abruptly**',
                 },
               ],
               title: 'X Position',
@@ -84,15 +84,17 @@ export default function ImageExample() {
             {
               examples: [
                 {
+                  description: 'Animates from default `y=20` to `y=50`',
                   keyframes: {
                     to: {
                       y: 50,
                     },
                   },
                   title: 'Absolute',
-                  description: 'Animates from default `y=20` to `y=50`',
                 },
                 {
+                  description:
+                    'Animation using only percentage values for smooth relative positioning',
                   keyframes: {
                     from: {
                       y: '10%',
@@ -102,10 +104,10 @@ export default function ImageExample() {
                     },
                   },
                   title: 'Percentage',
-                  description:
-                    'Animation using only percentage values for smooth relative positioning',
                 },
                 {
+                  description:
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
                       y: 20,
@@ -115,8 +117,6 @@ export default function ImageExample() {
                     },
                   },
                   title: 'Mixed',
-                  description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the Y position is changed **abruptly**',
                 },
               ],
               title: 'Y Position',
@@ -129,24 +129,26 @@ export default function ImageExample() {
             {
               examples: [
                 {
+                  description: 'Animates width and height from `10` to `80`',
                   keyframes: {
                     from: {
-                      width: 0,
-                      height: 0,
+                      height: 10,
+                      width: 10,
                     },
                     to: {
-                      width: 80,
                       height: 80,
+                      width: 80,
                     },
                   },
                   title: 'Absolute',
-                  description: 'Animates from default `width=60` to `width=80`',
                 },
                 {
+                  description:
+                    'Animation using only percentage values for smooth relative scaling',
                   keyframes: {
                     from: {
-                      height: '0%',
-                      width: '0%',
+                      height: '10%',
+                      width: '10%',
                     },
                     to: {
                       height: '70%',
@@ -154,21 +156,19 @@ export default function ImageExample() {
                     },
                   },
                   title: 'Percentage',
-                  description:
-                    'Animation using only percentage values for smooth relative scaling',
                 },
                 {
+                  description:
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
-                      width: 60,
+                      width: 30,
                     },
                     to: {
                       width: '70%',
                     },
                   },
                   title: 'Mixed',
-                  description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the width is changed **abruptly**',
                 },
               ],
               title: 'Width',
@@ -176,16 +176,18 @@ export default function ImageExample() {
             {
               examples: [
                 {
+                  description:
+                    'Animates from default `height=60` to `height=80`',
                   keyframes: {
                     to: {
                       height: 80,
                     },
                   },
                   title: 'Absolute',
-                  description:
-                    'Animates from default `height=60` to `height=80`',
                 },
                 {
+                  description:
+                    'Animation using only percentage values for smooth relative scaling',
                   keyframes: {
                     from: {
                       height: '30%',
@@ -195,21 +197,19 @@ export default function ImageExample() {
                     },
                   },
                   title: 'Percentage',
-                  description:
-                    'Animation using only percentage values for smooth relative scaling',
                 },
                 {
+                  description:
+                    'Smoothly interpolates between an absolute and a percentage value by resolving them to the same unit',
                   keyframes: {
                     from: {
-                      height: 60,
+                      height: 30,
                     },
                     to: {
                       height: '70%',
                     },
                   },
                   title: 'Mixed',
-                  description:
-                    'Interpolation between absolute and relative values is **not supported** in SVG, thus the height is changed **abruptly**',
                 },
               ],
               title: 'Height',

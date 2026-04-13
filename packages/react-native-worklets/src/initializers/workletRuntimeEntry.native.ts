@@ -1,6 +1,5 @@
 'use strict';
 
-import { WorkletsError } from '../debug/WorkletsError';
 import { RuntimeKind } from '../runtimeKind';
 import { init } from './initializers';
 
@@ -32,7 +31,7 @@ export function bundleModeInit() {
      * module before React Native has configured the RN Runtime.
      */
     init();
-    throw new WorkletsError('Worklets initialized successfully');
+    throw new Error('[Worklets] Worklets initialized successfully');
   }
 }
 

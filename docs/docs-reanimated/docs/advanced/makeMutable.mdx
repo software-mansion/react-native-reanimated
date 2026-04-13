@@ -25,21 +25,20 @@ const mv = makeMutable(100);
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-interface SharedValue<Value = unknown> {
-  value: Value;
-  get(): Value;
-  set(value: Value | ((value: Value) => Value)): void;
-  addListener: (listenerID: number, listener: (value: Value) => void) => void;
-  removeListener: (listenerID: number) => void;
-  modify: (modifier?: (value: Value) => Value, forceUpdate?: boolean) => void;
-}
+  ```typescript
+  interface SharedValue<Value = unknown> {
+    value: Value;
+    get(): Value;
+    set(value: Value | ((value: Value) => Value)): void;
+    addListener: (listenerID: number, listener: (value: Value) => void) => void;
+    removeListener: (listenerID: number) => void;
+    modify: (modifier?: (value: Value) => Value, forceUpdate?: boolean) => void;
+  }
 
-function makeMutable<Value>(initial: Value): SharedValue<Value>;
-```
-
+  function makeMutable<Value>(initial: Value): SharedValue<Value>;
+  ```
 </details>
 
 ### Arguments
@@ -59,7 +58,7 @@ You can access data stored in the mutable with either its `value` property or `g
 import MakeMutable from '@site/src/examples/MakeMutable';
 import MakeMutableSrc from '!!raw-loader!@site/src/examples/MakeMutable';
 
-<InteractiveExample src={MakeMutableSrc} component={MakeMutable} showCode />
+<InteractiveExample src={MakeMutableSrc} component={MakeMutable} showCode/>
 
 ## Remarks
 
@@ -72,65 +71,59 @@ We use _mutable value_ name for an object created by `makeMutable` to distinguis
 - Don't call `makeMutable` directly in the component scope. When component re-renders, it will create the completely new object (with the new `initial` value if it was changed) and the state of the previous mutable value will be lost.
 
 <Indent>
+  ```javascript
+  function App() {
+    const [counter, setCounter] = useState(0);
+    const mv = makeMutable(counter); // 🚨 creates a new mutable value on each render
 
-```javascript
-function App() {
-  const [counter, setCounter] = useState(0);
-  const mv = makeMutable(counter); // 🚨 creates a new mutable value on each render
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setCounter((prev) => prev + 1); // updates the counter stored in the component state
+      }, 1000);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCounter((prev) => prev + 1); // updates the counter stored in the component state
-    }, 1000);
+      return () => {
+        clearInterval(interval);
+      };
+    }, [mv]);
 
-    return () => {
-      clearInterval(interval);
-    };
-  }, [mv]);
-
-  useAnimatedReaction(
-    () => mv.value,
-    (value) => {
-      console.log(value); // prints 0, 1, 2, ...
-    }
-  );
-}
-```
-
+    useAnimatedReaction(
+      () => mv.value,
+      (value) => {
+        console.log(value); // prints 0, 1, 2, ...
+      }
+    );
+  }
+  ```
 </Indent>
 
 - Use `cancelAnimation` to stop all animations running on the mutable value if it's no longer needed and there are still some animations running. Be super careful with infinite animations, as they will never stop unless you cancel them manually.
 
 <Indent>
+  ```javascript
+  function App() {
+    const mv = useMemo(() => makeMutable(0), []);
 
-```javascript
-function App() {
-  const mv = useMemo(() => makeMutable(0), []);
+    useEffect(() => {
+      mv.value = withRepeat(withSpring(100), -1, true); // creates an infinite animation
 
-  useEffect(() => {
-    mv.value = withRepeat(withSpring(100), -1, true); // creates an infinite animation
-
-    return () => {
-      cancelAnimation(mv); // ✅ stops the infinite animation on component unmount
-    };
-  }, []);
-}
-```
-
+      return () => {
+        cancelAnimation(mv); // ✅ stops the infinite animation on component unmount
+      };
+    }, []);
+  }
+  ```
 </Indent>
 
 - You don't have to use `cancelAnimation` when the value is not animated. It will be garbage collected automatically when no more references to it exist.
 
 <Indent>
+  ```javascript
+  const someFlag = makeMutable(false);
 
-```javascript
-const someFlag = makeMutable(false);
-
-function App() {
-  someFlag.value = true; // ✅ no need to cancel the animation later on
-}
-```
-
+  function App() {
+    someFlag.value = true; // ✅ no need to cancel the animation later on
+  }
+  ```
 </Indent>
 
 - When you decide to use `makeMutable`, ensure that you follow [Rules of React](https://react.dev/reference/rules) and avoid common `useRef` pitfalls, such as modifying the reference during rendering (see the **Pitfall** section in the [useRef](https://react.dev/reference/react/useRef) documentation for more details).
@@ -147,4 +140,4 @@ function App() {
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

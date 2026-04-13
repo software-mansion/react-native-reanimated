@@ -1,4 +1,5 @@
 'use strict';
+import type { ScaleX, ScaleY } from '../../common';
 import type {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
@@ -16,7 +17,7 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#stretch
  */
 export class StretchInX
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [ScaleX] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'StretchInX';
@@ -60,7 +61,7 @@ export class StretchInX
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#stretch
  */
 export class StretchInY
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [ScaleY] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'StretchInY';
@@ -104,7 +105,7 @@ export class StretchInY
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#stretch
  */
 export class StretchOutX
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [ScaleX] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'StretchOutX';
@@ -148,7 +149,7 @@ export class StretchOutX
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#stretch
  */
 export class StretchOutY
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{ transform: [ScaleY] }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'StretchOutY';

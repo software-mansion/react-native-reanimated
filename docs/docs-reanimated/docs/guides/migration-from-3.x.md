@@ -101,7 +101,7 @@ You can explore the changes in the default parameters in [withSpring reference](
 To migrate from `useWorkletCallback`:
 
 1. Add `'worklet';` directive inside the function
-2. Add dependency array according to the rules of hooks
+1. Add dependency array according to the rules of hooks
 
 ```jsx
 // highlight-next-line

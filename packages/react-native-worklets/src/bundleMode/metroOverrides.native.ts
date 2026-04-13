@@ -1,6 +1,5 @@
 'use strict';
 
-import { WorkletsError } from '../debug/WorkletsError';
 import { isWorkletRuntime } from '../runtimeKind';
 
 /**
@@ -127,8 +126,8 @@ export function mockTurboModuleRegistry() {
 
 function assertWorkletRuntime(functionName: string) {
   if (!isWorkletRuntime()) {
-    throw new WorkletsError(
-      `${functionName} can be used only on Worklet Runtimes.`
+    throw new Error(
+      `[Worklets] ${functionName} can be used only on Worklet Runtimes.`
     );
   }
 }

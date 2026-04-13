@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   gradient: {
-    ...StyleSheet.absoluteFillObject,
+    ...(StyleSheet.absoluteFill as object),
     pointerEvents: 'none',
   },
   overlay: {

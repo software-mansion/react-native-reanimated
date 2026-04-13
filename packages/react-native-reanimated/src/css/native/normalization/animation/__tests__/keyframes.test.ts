@@ -1,5 +1,8 @@
 'use strict';
-import { getPropsBuilder, ReanimatedError } from '../../../../../common';
+import {
+  getCompoundComponentName,
+  getPropsBuilder,
+} from '../../../../../common';
 import type { Repeat } from '../../../../types';
 import {
   ERROR_MESSAGES,
@@ -12,6 +15,8 @@ type PropsBuilderInstance = ReturnType<typeof getPropsBuilder>;
 type BuildFn = PropsBuilderInstance['build'];
 type BuildReturn = ReturnType<BuildFn>;
 type BuildArgs = Parameters<BuildFn>;
+
+const COMPOUND_COMPONENT_NAME = getCompoundComponentName('RCTView', 'View');
 
 describe(normalizeKeyframeSelector, () => {
   describe('single selector', () => {
@@ -26,7 +31,9 @@ describe(normalizeKeyframeSelector, () => {
 
       it('throws an error for invalid keyword', () => {
         expect(() => normalizeKeyframeSelector('invalid')).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidOffsetType('invalid'))
+          new Error(
+            `[Reanimated] ${ERROR_MESSAGES.invalidOffsetType('invalid')}`
+          )
         );
       });
     });
@@ -42,19 +49,19 @@ describe(normalizeKeyframeSelector, () => {
 
       it('throws an error for numbers outside of 0 and 1', () => {
         expect(() => normalizeKeyframeSelector(-0.1)).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(-0.1))
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidOffsetRange(-0.1)}`)
         );
         expect(() => normalizeKeyframeSelector(1.1)).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(1.1))
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidOffsetRange(1.1)}`)
         );
       });
 
       it('throws an error for invalid numbers', () => {
         expect(() => normalizeKeyframeSelector('1+')).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidOffsetType('1+'))
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidOffsetType('1+')}`)
         );
         expect(() => normalizeKeyframeSelector(NaN)).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidOffsetType(NaN))
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidOffsetType(NaN)}`)
         );
       });
     });
@@ -66,7 +73,7 @@ describe(normalizeKeyframeSelector, () => {
 
       it('throws an error for invalid percentages', () => {
         expect(() => normalizeKeyframeSelector('101%')).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange('101%'))
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidOffsetRange('101%')}`)
         );
       });
     });
@@ -132,13 +139,15 @@ describe(processKeyframes, () => {
   });
 
   describe('complex properties', () => {
+    const propsBuilder = getPropsBuilder(COMPOUND_COMPONENT_NAME);
+
     test('transform preserves array of operations', () => {
       const keyframes = {
         '0%': { transform: [{ translateX: 0 }] },
         '100%': { transform: [{ translateX: 100 }] },
       };
 
-      expect(processKeyframes(keyframes, getPropsBuilder('RCTView'))).toEqual([
+      expect(processKeyframes(keyframes, propsBuilder)).toEqual([
         { offset: 0, props: { transform: [{ translateX: 0 }] } },
         { offset: 1, props: { transform: [{ translateX: 100 }] } },
       ]);
@@ -152,7 +161,7 @@ describe(processKeyframes, () => {
         to: { transformOrigin: toTransformOrigin },
       };
 
-      const result = processKeyframes(keyframes, getPropsBuilder('RCTView'));
+      const result = processKeyframes(keyframes, propsBuilder);
 
       expect(result).toEqual([
         {
@@ -175,7 +184,7 @@ describe(processKeyframes, () => {
           to: { [property]: { width: 10, height: 5 } },
         };
 
-        const result = processKeyframes(keyframes, getPropsBuilder('RCTView'));
+        const result = processKeyframes(keyframes, propsBuilder);
 
         expect(result).toEqual([
           {
@@ -220,7 +229,7 @@ describe(processKeyframes, () => {
         },
       };
 
-      const result = processKeyframes(keyframes, getPropsBuilder('RCTView'));
+      const result = processKeyframes(keyframes, propsBuilder);
 
       expect(result).toEqual([
         {
@@ -323,7 +332,7 @@ describe(normalizeAnimationKeyframes, () => {
         },
         to: { opacity: 1 },
       },
-      'RCTView'
+      COMPOUND_COMPONENT_NAME
     );
 
     expect(result).toEqual({
@@ -350,7 +359,7 @@ describe(normalizeAnimationKeyframes, () => {
         from: { opacity: 0, animationTimingFunction: 'ease-in' },
         to: { opacity: 1, animationTimingFunction: 'ease-out' },
       },
-      'RCTView'
+      COMPOUND_COMPONENT_NAME
     );
 
     expect(result).toEqual({

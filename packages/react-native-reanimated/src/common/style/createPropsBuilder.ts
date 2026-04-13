@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../errors';
 import type {
   UnknownRecord,
   ValueProcessor,
@@ -44,8 +43,8 @@ export default function createPropsBuilder<
     let depth = 0;
     while (processedValue) {
       if (++depth > MAX_PROCESS_DEPTH) {
-        throw new ReanimatedError(
-          `Max process depth for props builder reached for property ${key}`
+        throw new Error(
+          `[Reanimated] Max process depth for props builder reached for property ${key}`
         );
       }
 

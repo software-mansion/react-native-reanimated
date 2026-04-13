@@ -133,14 +133,6 @@ const notCapturedIdentifiers = [
   '_WORKLET',
 ];
 
-export const outsideBindingsToCaptureFromGlobalScope = new Set([
-  'ReanimatedError',
-]);
-
-export const internalBindingsToCaptureFromGlobalScope = new Set([
-  'WorkletsError',
-]);
-
 /**
  * @deprecated Since we moved on to using `global.` prefix in Reanimated, we
  *   don't need to capture these identifiers anymore. However, for safety

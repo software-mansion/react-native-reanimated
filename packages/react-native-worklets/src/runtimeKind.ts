@@ -76,6 +76,7 @@ export function isWorkerRuntime(): boolean {
   return globalThis.__RUNTIME_KIND === 3;
 }
 
+// is-tree-shakable-suppress
 if (globalThis.__RUNTIME_KIND === undefined) {
   // In Jest environments eager imports make this file to evaluate before
   // `initializers.ts` file, therefore we have to set the RuntimeKind here,

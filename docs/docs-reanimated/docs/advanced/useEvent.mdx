@@ -34,29 +34,28 @@ return <Animated.View onScroll={useAnimatedPagerScrollHandler} />;
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function useEvent<
-  Event extends object,
-  Context extends Record<string, unknown> = never,
->(
-  handler: EventHandler<Event, Context>,
-  eventNames?: string[],
-  rebuild?: boolean
-): EventHandlerProcessed<Event, Context>;
+  ```typescript
+  function useEvent<
+    Event extends object,
+    Context extends Record<string, unknown> = never,
+  >(
+    handler: EventHandler<Event, Context>,
+    eventNames?: string[],
+    rebuild?: boolean
+  ): EventHandlerProcessed<Event, Context>;
 
-type EventHandler<
-  Event extends object,
-  Context extends Record<string, unknown> = never,
-> = (event: ReanimatedEvent<Event>, context?: Context) => void;
+  type EventHandler<
+    Event extends object,
+    Context extends Record<string, unknown> = never,
+  > = (event: ReanimatedEvent<Event>, context?: Context) => void;
 
-type EventHandlerProcessed<
-  Event extends object,
-  Context extends Record<string, unknown> = never,
-> = (event: Event, context?: Context) => void;
-```
-
+  type EventHandlerProcessed<
+    Event extends object,
+    Context extends Record<string, unknown> = never,
+  > = (event: Event, context?: Context) => void;
+  ```
 </details>
 
 ### Arguments
@@ -85,7 +84,7 @@ The hook returns an event handler that will be invoked when a native event is di
 import useEvent from '@site/src/examples/UseHandlerEventExample';
 import useEventSrc from '!!raw-loader!@site/src/examples/UseHandlerEventExample';
 
-<InteractiveExample src={useEventSrc} component={useEvent} />
+<InteractiveExample src={useEventSrc} component={useEvent}/>
 
 This example can be more easily implemented using [`useScrollOffset`](/docs/scroll/useScrollOffset/).
 
@@ -95,4 +94,4 @@ This example can be more easily implemented using [`useScrollOffset`](/docs/scro
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

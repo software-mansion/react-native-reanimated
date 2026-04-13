@@ -6,6 +6,7 @@ import Animated, {
   useSharedValue,
   withClamp,
   withSpring,
+  type AnimatedStyle,
 } from 'react-native-reanimated';
 
 const VIOLET = '#b58df1';
@@ -24,7 +25,7 @@ function Example({
   testedStyle,
   description,
 }: {
-  testedStyle: ViewStyle;
+  testedStyle: AnimatedStyle;
   description: string;
 }) {
   return (

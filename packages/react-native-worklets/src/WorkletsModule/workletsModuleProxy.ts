@@ -5,6 +5,24 @@ import type { WorkletRuntime } from '../types';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */
 export interface WorkletsModuleProxy {
+  loadUnpackers(
+    valueUnpackerCode: string,
+    valueUnpackerLocation: string,
+    valueUnpackerSourceMap: string,
+    synchronizableUnpackerCode: string,
+    synchronizableUnpackerLocation: string,
+    synchronizableUnpackerSourceMap: string,
+    customSerializableUnpackerCode: string,
+    customSerializableUnpackerLocation: string,
+    customSerializableUnpackerSourceMap: string,
+    shareableHostUnpackerCode: string,
+    shareableHostUnpackerLocation: string,
+    shareableHostUnpackerSourceMap: string,
+    shareableGuestUnpackerCode: string,
+    shareableGuestUnpackerLocation: string,
+    shareableGuestUnpackerSourceMap: string
+  ): void;
+
   createSerializable<TValue>(
     value: TValue,
     shouldPersistRemote: boolean,
@@ -81,6 +99,14 @@ export interface WorkletsModuleProxy {
     typeId: number
   ): void;
 
+  createShareable<TValue = unknown>(
+    hostRuntimeId: number,
+    initial: SerializableRef<TValue>,
+    initSynchronously: boolean,
+    decorateHost: SerializableRef,
+    decorateGuest: SerializableRef
+  ): SerializableRef<TValue>;
+
   scheduleOnUI<TValue>(serializable: SerializableRef<TValue>): void;
 
   runOnUISync<TValue, TReturn>(serializable: SerializableRef<TValue>): TReturn;
@@ -98,8 +124,18 @@ export interface WorkletsModuleProxy {
     worklet: SerializableRef<TValue>
   ): void;
 
+  scheduleOnRuntimeWithId<TValue>(
+    runtimeId: number,
+    worklet: SerializableRef<TValue>
+  ): void;
+
   runOnRuntimeSync<TValue, TReturn>(
     workletRuntime: WorkletRuntime,
+    worklet: SerializableRef<TValue>
+  ): TReturn;
+
+  runOnRuntimeSyncWithId<TValue, TReturn>(
+    runtimeId: number,
     worklet: SerializableRef<TValue>
   ): TReturn;
 
@@ -136,6 +172,17 @@ export interface WorkletsModuleProxy {
   getStaticFeatureFlag(name: string): boolean;
 
   setDynamicFeatureFlag(name: string, value: boolean): void;
+
+  getUIRuntimeHolder(): object;
+
+  getUISchedulerHolder(): object;
 }
 
-export type IWorkletsModule = WorkletsModuleProxy;
+type InternalMethods = 'loadUnpackers';
+
+type TurboModulePublic = {
+  toggleSlowAnimationsOnUIRuntime(): boolean;
+};
+
+export type IWorkletsModule = Omit<WorkletsModuleProxy, InternalMethods> &
+  TurboModulePublic;

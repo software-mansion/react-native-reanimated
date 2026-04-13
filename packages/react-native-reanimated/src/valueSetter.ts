@@ -45,16 +45,7 @@ export function valueSetter<Value>(
       global.__frameTimestamp || global._getAnimationTimestamp();
     initializeAnimation(currentTimestamp);
 
-    const step = (newTimestamp: number) => {
-      // Function `requestAnimationFrame` adds callback to an array, all the callbacks are flushed with function `__flushAnimationFrame`
-      // Usually we flush them inside function `nativeRequestAnimationFrame` and then the given timestamp is the timestamp of end of the current frame.
-      // However function `__flushAnimationFrame` may also be called inside `registerEventHandler` - then we get actual timestamp which is earlier than the end of the frame.
-
-      const timestamp =
-        newTimestamp < (animation.timestamp || 0)
-          ? animation.timestamp
-          : newTimestamp;
-
+    const step = (timestamp: number) => {
       if (animation.cancelled) {
         animation.callback?.(false /* finished */);
         return;
