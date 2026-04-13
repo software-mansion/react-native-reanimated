@@ -2,7 +2,6 @@
 #import <worklets/Tools/Defs.h>
 #import <worklets/Tools/ScriptBuffer.h>
 #import <worklets/Tools/SingleInstanceChecker.h>
-#import <worklets/Tools/WorkletsJSIUtils.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #import <worklets/apple/AnimationFrameQueue.h>
 #import <worklets/apple/AssertJavaScriptQueue.h>
@@ -102,8 +101,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
       runtimeBindings,
       BundleModeConfig{.enabled = static_cast<bool>(bundleModeEnabled), .script = script, .sourceURL = sourceURL});
   auto jsiWorkletsModuleProxy = workletsModuleProxy_->createJSIWorkletsModuleProxy();
-  auto optimizedJsiWorkletsModuleProxy = jsi_utils::optimizedFromHostObject(
-      rnRuntime, std::static_pointer_cast<jsi::HostObject>(std::move(jsiWorkletsModuleProxy)));
+  auto optimizedJsiWorkletsModuleProxy = jsiWorkletsModuleProxy->toOptimizedObject(rnRuntime);
   RNRuntimeWorkletDecorator::decorate(
       rnRuntime, std::move(optimizedJsiWorkletsModuleProxy), workletsModuleProxy_->getJSLogger());
 
