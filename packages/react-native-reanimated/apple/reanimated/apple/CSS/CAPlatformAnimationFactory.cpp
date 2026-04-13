@@ -1,11 +1,17 @@
-#include <reanimated/apple/CSS/keyframes.h>
+#include <reanimated/apple/CSS/CAPlatformAnimation.h>
+#include <reanimated/apple/CSS/CAPlatformAnimationFactory.h>
 
 #include <type_traits>
-#include <vector>
+#include <utility>
 
-namespace reanimated::css::apple {
+namespace reanimated::css {
 
 namespace {
+
+struct PropertyRouting {
+  std::shared_ptr<CAKeyframesMap> platformProperties;
+  std::unordered_set<std::string> loopProperties;
+};
 
 bool isPlatformSupportedEasing(const EasingConfig &easingConfig) {
   return std::visit(
@@ -42,8 +48,6 @@ bool canAnimatePropertyOnPlatform(
   return true;
 }
 
-} // namespace
-
 PropertyRouting routeProperties(
     const std::unordered_set<std::string> &allProperties,
     const std::shared_ptr<const CAKeyframesMap> &platformSupportedProperties,
@@ -74,4 +78,40 @@ PropertyRouting routeProperties(
   return out;
 }
 
-} // namespace reanimated::css::apple
+} // namespace
+
+CAPlatformAnimationFactory::CAPlatformAnimationFactory(
+    ApplyPlatformAnimationFunction applyFn,
+    RemovePlatformAnimationFunction removeFn)
+    : applyFn_(std::move(applyFn)), removeFn_(std::move(removeFn)) {}
+
+PlatformRoutingResult CAPlatformAnimationFactory::resolve(
+    Tag viewTag,
+    const std::string &animationName,
+    const std::unordered_set<std::string> &allProperties,
+    const CSSKeyframesConfig &keyframesConfig,
+    const std::shared_ptr<CSSAnimationSettings> &settings) {
+  PlatformRoutingResult result;
+
+  const auto routing = routeProperties(
+      allProperties,
+      keyframesConfig.platformSupportedProperties,
+      settings->easingConfig,
+      keyframesConfig.keyframeEasingConfigs);
+
+  if (routing.platformProperties) {
+    result.animation = std::make_shared<CAPlatformAnimation>(
+        viewTag,
+        animationName,
+        std::move(routing.platformProperties),
+        settings,
+        keyframesConfig.keyframeEasingConfigs,
+        applyFn_,
+        removeFn_);
+  }
+
+  result.remainingProperties = routing.loopProperties;
+  return result;
+}
+
+} // namespace reanimated::css

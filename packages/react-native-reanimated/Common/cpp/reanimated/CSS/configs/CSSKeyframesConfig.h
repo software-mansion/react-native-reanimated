@@ -17,7 +17,7 @@ struct CSSKeyframesConfig {
   std::shared_ptr<AnimationStyleInterpolatorFactory> styleInterpolatorFactory;
   std::shared_ptr<KeyframeEasingConfigs> keyframeEasingConfigs;
 #ifdef __APPLE__
-  std::shared_ptr<apple::CAKeyframesMap> platformSupportedProperties;
+  std::shared_ptr<CAKeyframesMap> platformSupportedProperties;
 #endif
 };
 

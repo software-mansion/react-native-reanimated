@@ -1,4 +1,5 @@
-#import <reanimated/apple/REACSSAnimations.h>
+#import <reanimated/apple/CSS/REACSSAnimations.h>
+#import <reanimated/apple/CSS/config.h>
 
 #import <QuartzCore/QuartzCore.h>
 #import <UIKit/UIKit.h>
@@ -185,6 +186,66 @@ static CAAnimation *buildCAAnimation(NSDictionary *descriptor, NSDictionary *set
   return animation;
 }
 
+#pragma mark - C++ Config Conversion
+
+static id convertCAKeyframeValue(const reanimated::css::CAKeyframeValue &value)
+{
+  return std::visit(
+      [](auto &&v) -> id {
+        using T = std::decay_t<decltype(v)>;
+        if constexpr (std::is_same_v<T, double>) {
+          return @(v);
+        } else if constexpr (std::is_same_v<T, reanimated::css::CAColorRGBA>) {
+          return @[ @(v[0]), @(v[1]), @(v[2]), @(v[3]) ];
+        } else if constexpr (std::is_same_v<T, reanimated::css::CAShadowOffset>) {
+          return @[ @(v[0]), @(v[1]) ];
+        }
+      },
+      value);
+}
+
+NSDictionary *convertPlatformAnimationConfigToObjC(const reanimated::css::PlatformAnimationConfig &config)
+{
+  NSMutableArray *descriptors = [NSMutableArray arrayWithCapacity:config.properties.size()];
+
+  for (const auto &prop : config.properties) {
+    NSMutableArray *kfArray = [NSMutableArray arrayWithCapacity:prop.keyframes.size()];
+    for (const auto &kf : prop.keyframes) {
+      NSMutableDictionary *kfDict = [@{@"offset" : @(kf.offset)} mutableCopy];
+      if (kf.value.has_value()) {
+        kfDict[@"value"] = convertCAKeyframeValue(kf.value.value());
+      }
+      [kfArray addObject:kfDict];
+    }
+
+    NSMutableArray *easings = [NSMutableArray arrayWithCapacity:prop.easings.size()];
+    for (const auto &easing : prop.easings) {
+      if (easing.has_value()) {
+        const auto &bezier = easing.value();
+        [easings addObject:@[ @(bezier[0]), @(bezier[1]), @(bezier[2]), @(bezier[3]) ]];
+      } else {
+        [easings addObject:[NSNull null]];
+      }
+    }
+
+    [descriptors addObject:@{
+      @"keyPath" : [NSString stringWithUTF8String:prop.keyPath.c_str()],
+      @"keyframes" : kfArray,
+      @"easings" : easings,
+    }];
+  }
+
+  return @{
+    @"name" : [NSString stringWithUTF8String:config.name.c_str()],
+    @"descriptors" : descriptors,
+    @"settings" : @{
+      @"duration" : @(config.duration),
+      @"iterationCount" : @(config.iterationCount),
+      @"direction" : @(config.direction),
+    },
+  };
+}
+
 #pragma mark - REACSSAnimations
 
 // Declarative platform animation API.
@@ -235,68 +296,66 @@ static CAAnimation *buildCAAnimation(NSDictionary *descriptor, NSDictionary *set
   [layer addAnimation:animation forKey:animationKey];
 }
 
-- (void)removeStaleAnimationsFromLayer:(CALayer *)layer
-                               viewKey:(NSNumber *)viewKey
-                          orderedNames:(NSSet<NSString *> *)orderedNamesSet
-{
-  NSMutableDictionary *viewAnimKeyPaths = _animationKeyPaths[viewKey];
-  if (!viewAnimKeyPaths) {
-    return;
-  }
-
-  for (NSString *animName in [viewAnimKeyPaths allKeys]) {
-    if (![orderedNamesSet containsObject:animName]) {
-      for (NSString *keyPath in viewAnimKeyPaths[animName]) {
-        [layer removeAnimationForKey:[NSString stringWithFormat:@"%@-%@", animName, keyPath]];
-      }
-      [viewAnimKeyPaths removeObjectForKey:animName];
-    }
-  }
-}
-
-- (void)applyCSSPlatformAnimations:(REAUIView *)view animations:(NSArray *)animations
+- (void)applyPlatformAnimation:(REAUIView *)view animation:(NSDictionary *)anim
 {
   CALayer *layer = view.layer;
   NSNumber *viewKey = @(view.tag);
-
-  NSMutableSet *currentNames = [NSMutableSet setWithCapacity:animations.count];
-  for (NSDictionary *anim in animations) {
-    [currentNames addObject:anim[@"name"]];
-  }
+  NSString *animName = anim[@"name"];
+  NSArray *descriptors = anim[@"descriptors"];
+  NSDictionary *settings = anim[@"settings"];
 
   if (!_animationKeyPaths[viewKey]) {
     _animationKeyPaths[viewKey] = [NSMutableDictionary new];
   }
 
-  [self removeStaleAnimationsFromLayer:layer viewKey:viewKey orderedNames:currentNames];
+  NSMutableArray *keyPaths = [NSMutableArray arrayWithCapacity:descriptors.count];
+  for (NSDictionary *descriptor in descriptors) {
+    NSString *keyPath = descriptor[@"keyPath"];
+    [keyPaths addObject:keyPath];
 
-  for (NSDictionary *anim in animations) {
-    NSString *animName = anim[@"name"];
-    NSArray *descriptors = anim[@"descriptors"];
-    NSDictionary *settings = anim[@"settings"];
-
-    NSMutableArray *keyPaths = [NSMutableArray arrayWithCapacity:descriptors.count];
-    for (NSDictionary *descriptor in descriptors) {
-      NSString *keyPath = descriptor[@"keyPath"];
-      [keyPaths addObject:keyPath];
-
-      [self applyDescriptor:descriptor
-               animationKey:[NSString stringWithFormat:@"%@-%@", animName, keyPath]
-                   settings:settings
-                    toLayer:layer];
-    }
-
-    _animationKeyPaths[viewKey][animName] = keyPaths;
+    [self applyDescriptor:descriptor
+             animationKey:[NSString stringWithFormat:@"%@-%@", animName, keyPath]
+                 settings:settings
+                  toLayer:layer];
   }
 
-  if (_animationKeyPaths[viewKey].count == 0) {
+  _animationKeyPaths[viewKey][animName] = keyPaths;
+}
+
+- (void)removePlatformAnimation:(REAUIView *)view name:(NSString *)name
+{
+  NSNumber *viewKey = @(view.tag);
+  NSMutableDictionary *viewAnimKeyPaths = _animationKeyPaths[viewKey];
+  if (!viewAnimKeyPaths || !viewAnimKeyPaths[name]) {
+    return;
+  }
+
+  CALayer *layer = view.layer;
+  for (NSString *keyPath in viewAnimKeyPaths[name]) {
+    [layer removeAnimationForKey:[NSString stringWithFormat:@"%@-%@", name, keyPath]];
+  }
+  [viewAnimKeyPaths removeObjectForKey:name];
+
+  if (viewAnimKeyPaths.count == 0) {
     [_animationKeyPaths removeObjectForKey:viewKey];
   }
 }
 
-- (void)removeCSSPlatformAnimations:(REAUIView *)view
+- (void)removeAllPlatformAnimations:(REAUIView *)view
 {
-  [self removeStaleAnimationsFromLayer:view.layer viewKey:@(view.tag) orderedNames:[NSSet set]];
+  NSNumber *viewKey = @(view.tag);
+  NSMutableDictionary *viewAnimKeyPaths = _animationKeyPaths[viewKey];
+  if (!viewAnimKeyPaths) {
+    return;
+  }
+
+  CALayer *layer = view.layer;
+  for (NSString *animName in [viewAnimKeyPaths allKeys]) {
+    for (NSString *keyPath in viewAnimKeyPaths[animName]) {
+      [layer removeAnimationForKey:[NSString stringWithFormat:@"%@-%@", animName, keyPath]];
+    }
+  }
+  [_animationKeyPaths removeObjectForKey:viewKey];
 }
 
 @end

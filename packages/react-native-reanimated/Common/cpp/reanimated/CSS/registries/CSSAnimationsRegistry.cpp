@@ -10,9 +10,11 @@ namespace reanimated::css {
 
 CSSAnimationsRegistry::CSSAnimationsRegistry(
     const std::shared_ptr<OperationsLoop> &loop,
-    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry)
+    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
+    const std::shared_ptr<CSSPlatformAnimationFactory> &platformAnimationFactory)
     : loop_(loop),
       keyframesRegistry_(keyframesRegistry),
+      platformAnimationFactory_(platformAnimationFactory),
       updatedViewTags_(std::make_shared<std::unordered_set<Tag>>()),
       revertedTags_(std::make_shared<std::unordered_set<Tag>>()) {}
 
@@ -146,7 +148,15 @@ std::shared_ptr<CSSAnimation> CSSAnimationsRegistry::createAnimation(
   }
 
   return std::make_shared<CSSAnimation>(
-      shadowNode, name, keyframesConfig->get(), settings, updatedViewTags_, revertedTags_, loop_, timestamp);
+      shadowNode,
+      name,
+      keyframesConfig->get(),
+      settings,
+      updatedViewTags_,
+      revertedTags_,
+      loop_,
+      platformAnimationFactory_,
+      timestamp);
 }
 
 void CSSAnimationsRegistry::updateRegistryForRevertedAnimations() {

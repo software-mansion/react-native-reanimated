@@ -1,6 +1,6 @@
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
-#import <reanimated/apple/REACSSAnimations.h>
+#import <reanimated/apple/CSS/REACSSAnimations.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/REAUIView.h>
 
@@ -179,22 +179,22 @@ using namespace facebook::react;
   [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
 }
 
-- (void)applyCSSPlatformAnimations:(ReactTag)viewTag animations:(NSArray *)animations
+- (void)applyPlatformAnimation:(ReactTag)viewTag animation:(NSDictionary *)animation
 {
   RCTExecuteOnMainQueue(^{
     REAUIView *view = [self viewForTag:viewTag];
     if (view != nil) {
-      [_cssAnimations applyCSSPlatformAnimations:view animations:animations];
+      [_cssAnimations applyPlatformAnimation:view animation:animation];
     }
   });
 }
 
-- (void)removeCSSPlatformAnimations:(ReactTag)viewTag
+- (void)removePlatformAnimation:(ReactTag)viewTag name:(NSString *)name
 {
   RCTExecuteOnMainQueue(^{
     REAUIView *view = [self viewForTag:viewTag];
     if (view != nil) {
-      [_cssAnimations removeCSSPlatformAnimations:view];
+      [_cssAnimations removePlatformAnimation:view name:name];
     }
   });
 }

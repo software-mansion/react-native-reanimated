@@ -23,7 +23,7 @@ typedef void (^REAPerformOperations)();
 - (nullable REAUIView *)viewForTag:(ReactTag)viewTag;
 - (void)registerPerformOperations:(REAPerformOperations)performOperations;
 - (void)maybeFlushUIUpdatesQueue;
-- (void)applyCSSPlatformAnimations:(ReactTag)viewTag animations:(NSArray *)animations;
-- (void)removeCSSPlatformAnimations:(ReactTag)viewTag;
+- (void)applyPlatformAnimation:(ReactTag)viewTag animation:(NSDictionary *)animation;
+- (void)removePlatformAnimation:(ReactTag)viewTag name:(NSString *)name;
 
 @end

@@ -27,6 +27,7 @@ CSSLoopAnimation::CSSLoopAnimation(
     const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs,
     const std::shared_ptr<std::unordered_set<Tag>> &updatedViewTags,
     const std::shared_ptr<std::unordered_set<Tag>> &revertedTags,
+    const std::shared_ptr<OperationsLoop> &loop,
     const double timestamp)
     : settings_(settings),
       shadowNode_(shadowNode),
@@ -40,6 +41,7 @@ CSSLoopAnimation::CSSLoopAnimation(
           createKeyframeEasingFunctions(keyframeEasingConfigs))),
       allProperties_(allProperties),
       interpolator_(interpolator),
+      loop_(loop),
       updatedViewTags_(updatedViewTags),
       revertedTags_(revertedTags) {
   if (settings->playState == AnimationPlayState::Paused) {
@@ -47,8 +49,16 @@ CSSLoopAnimation::CSSLoopAnimation(
   }
 }
 
-double CSSLoopAnimation::getStartTimestamp(const double timestamp) const {
-  return progressProvider_->getStartTimestamp(timestamp);
+void CSSLoopAnimation::schedule() {
+  if (getState() != AnimationProgressState::Paused) {
+    const auto timestamp = loop_->getTimestamp();
+    const auto remainingDelay = progressProvider_->getStartTimestamp(timestamp) - timestamp;
+    loop_->schedule(shared_from_this(), remainingDelay);
+  }
+}
+
+void CSSLoopAnimation::unschedule() {
+  loop_->remove(shared_from_this());
 }
 
 AnimationProgressState CSSLoopAnimation::getState() const {
@@ -105,10 +115,6 @@ void CSSLoopAnimation::onUpdate(const double timestamp) {
 
 bool CSSLoopAnimation::isRunning() const {
   return getState() == AnimationProgressState::Running;
-}
-
-double CSSLoopAnimation::getRemainingDelay(const double timestamp) const {
-  return getStartTimestamp(timestamp) - timestamp;
 }
 
 } // namespace reanimated::css

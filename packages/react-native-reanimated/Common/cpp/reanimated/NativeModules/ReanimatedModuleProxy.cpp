@@ -137,7 +137,10 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(staticPropsRegistry_, animatedPropsRegistry_)),
       cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
-      cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>(operationsLoop_, cssAnimationKeyframesRegistry_)),
+      cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>(
+          operationsLoop_,
+          cssAnimationKeyframesRegistry_,
+          platformDepMethodsHolder.platformAnimationFactory)),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(viewStylesRepository_, operationsLoop_)),
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID

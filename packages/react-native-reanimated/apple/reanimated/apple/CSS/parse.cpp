@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace reanimated::css::apple {
+namespace reanimated::css {
 
 namespace {
 
@@ -116,7 +116,7 @@ std::vector<CAKeyframe> buildKeyframesForProperty(jsi::Runtime &rt, const jsi::V
 
 } // namespace
 
-std::shared_ptr<CAKeyframesMap> parseSupportedProperties(jsi::Runtime &rt, const jsi::Object &config) {
+std::shared_ptr<CAKeyframesMap> parsePlatformSupportedProperties(jsi::Runtime &rt, const jsi::Object &config) {
   auto result = std::make_shared<CAKeyframesMap>();
   const auto propKeyframes = config.getProperty(rt, "propKeyframes").asObject(rt);
   const auto propertyNames = propKeyframes.getPropertyNames(rt);
@@ -139,4 +139,4 @@ std::shared_ptr<CAKeyframesMap> parseSupportedProperties(jsi::Runtime &rt, const
   return result;
 }
 
-} // namespace reanimated::css::apple
+} // namespace reanimated::css

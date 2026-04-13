@@ -4,6 +4,7 @@
 #include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 #include <reanimated/Fabric/updates/LoopOperation.h>
+#include <reanimated/Fabric/updates/OperationsLoop.h>
 
 #include <memory>
 #include <unordered_set>
@@ -20,14 +21,16 @@ class CSSLoopAnimation : public LoopOperation {
       const std::shared_ptr<KeyframeEasingConfigs> &keyframeEasingConfigs,
       const std::shared_ptr<std::unordered_set<Tag>> &updatedViewTags,
       const std::shared_ptr<std::unordered_set<Tag>> &revertedTags,
+      const std::shared_ptr<OperationsLoop> &loop,
       double timestamp);
 
   // LoopOperation interface
   void onUpdate(double timestamp) override;
   bool isRunning() const override;
 
-  double getStartTimestamp(double timestamp) const;
-  double getRemainingDelay(double timestamp) const;
+  void schedule();
+  void unschedule();
+
   AnimationProgressState getState() const;
 
   folly::dynamic getCurrentInterpolationStyle() const;
@@ -40,6 +43,7 @@ class CSSLoopAnimation : public LoopOperation {
   const std::shared_ptr<const ShadowNode> shadowNode_;
   const std::shared_ptr<AnimationProgressProvider> progressProvider_;
   const std::shared_ptr<AnimationStyleInterpolator> interpolator_;
+  const std::shared_ptr<OperationsLoop> loop_;
 
   const std::unordered_set<std::string> allProperties_;
   const std::shared_ptr<std::unordered_set<Tag>> updatedViewTags_;

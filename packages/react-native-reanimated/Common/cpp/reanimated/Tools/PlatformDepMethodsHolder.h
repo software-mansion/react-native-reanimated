@@ -3,6 +3,7 @@
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <react/renderer/core/ReactPrimitives.h>
+#include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
 
 #include <memory>
 #include <string>
@@ -44,10 +45,7 @@ using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
 using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
-#ifdef __APPLE__
-using ApplyCSSAnimationsNativeFunction = std::function<void(Tag, jsi::Runtime &runtime, const jsi::Value &animations)>;
-using RemoveCSSAnimationsNativeFunction = std::function<void(Tag)>;
-#endif // __APPLE__
+
 struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef ANDROID
@@ -55,8 +53,6 @@ struct PlatformDepMethodsHolder {
 #endif // ANDROID
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshotFunction;
-  ApplyCSSAnimationsNativeFunction applyCSSAnimationsNativeFunction;
-  RemoveCSSAnimationsNativeFunction removeCSSAnimationsNativeFunction;
 #endif
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   GetAnimationTimestampFunction getAnimationTimestamp;
@@ -66,6 +62,7 @@ struct PlatformDepMethodsHolder {
   KeyboardEventSubscribeFunction subscribeForKeyboardEvents;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEvents;
   MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction;
+  std::shared_ptr<css::CSSPlatformAnimationFactory> platformAnimationFactory;
 };
 
 } // namespace reanimated

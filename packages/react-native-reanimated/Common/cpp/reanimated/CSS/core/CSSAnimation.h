@@ -3,11 +3,9 @@
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 #include <reanimated/CSS/core/CSSLoopAnimation.h>
-#include <reanimated/Fabric/updates/OperationsLoop.h>
-
-#ifdef __APPLE__
 #include <reanimated/CSS/core/CSSPlatformAnimation.h>
-#endif
+#include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
+#include <reanimated/Fabric/updates/OperationsLoop.h>
 
 #include <memory>
 #include <string>
@@ -25,6 +23,7 @@ class CSSAnimation {
       const std::shared_ptr<std::unordered_set<Tag>> &updatedViewTags,
       const std::shared_ptr<std::unordered_set<Tag>> &revertedTags,
       const std::shared_ptr<OperationsLoop> &loop,
+      const std::shared_ptr<CSSPlatformAnimationFactory> &platformAnimationFactory,
       double timestamp);
 
   const std::string &getName() const;
@@ -44,11 +43,6 @@ class CSSAnimation {
 
   void updateSettings(const PartialCSSAnimationSettings &updatedSettings, double timestamp);
 
-#ifdef __APPLE__
-  bool hasPlatformAnimation() const;
-  std::shared_ptr<CSSPlatformAnimation> getPlatformAnimation() const;
-#endif
-
  private:
   const std::string name_;
   const CSSKeyframesConfig keyframesConfig_;
@@ -58,11 +52,10 @@ class CSSAnimation {
   const std::shared_ptr<std::unordered_set<Tag>> updatedViewTags_;
   const std::shared_ptr<std::unordered_set<Tag>> revertedTags_;
   const std::shared_ptr<OperationsLoop> loop_;
+  const std::shared_ptr<CSSPlatformAnimationFactory> platformAnimationFactory_;
 
   std::shared_ptr<CSSLoopAnimation> loopAnimation_;
-#ifdef __APPLE__
   std::shared_ptr<CSSPlatformAnimation> platformAnimation_;
-#endif
 
   bool isReversed() const;
   void updatePropertyRouting(double timestamp);

@@ -1,4 +1,6 @@
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
+#import <reanimated/apple/CSS/CAPlatformAnimationFactory.h>
+#import <reanimated/apple/CSS/REACSSAnimations.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/REASlowAnimations.h>
@@ -134,22 +136,19 @@ ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nod
   return forceScreenSnapshot;
 }
 
-ApplyCSSAnimationsNativeFunction makeApplyCSSAnimationsNativeFunction(REANodesManager *nodesManager)
+css::ApplyPlatformAnimationFunction makeApplyPlatformAnimationFunction(REANodesManager *nodesManager)
 {
-  return [nodesManager](Tag viewTag, jsi::Runtime &rt, const jsi::Value &animations) {
-    id animationsObj = convertJSIValueToObjCObject(rt, animations);
-    if (![animationsObj isKindOfClass:[NSArray class]]) {
-      return;
-    }
-    NSArray *animationsArray = (NSArray *)animationsObj;
-    [nodesManager applyCSSPlatformAnimations:viewTag animations:animationsArray];
+  return [nodesManager](Tag viewTag, const css::PlatformAnimationConfig &config) {
+    NSDictionary *animDict = convertPlatformAnimationConfigToObjC(config);
+    [nodesManager applyPlatformAnimation:viewTag animation:animDict];
   };
 }
 
-RemoveCSSAnimationsNativeFunction makeRemoveAllCSSAnimationsNativeFunction(REANodesManager *nodesManager)
+css::RemovePlatformAnimationFunction makeRemovePlatformAnimationFunction(REANodesManager *nodesManager)
 {
-  return [nodesManager](Tag viewTag) {
-    [nodesManager removeCSSPlatformAnimations:viewTag];
+  return [nodesManager](Tag viewTag, const std::string &name) {
+    [nodesManager removePlatformAnimation:viewTag
+                                     name:[NSString stringWithUTF8String:name.c_str()]];
   };
 }
 
@@ -179,14 +178,13 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   auto maybeFlushUIUpdatesQueueFunction = makeMaybeFlushUIUpdatesQueueFunction(nodesManager);
 
-  auto applyCSSAnimationsNativeFunction = makeApplyCSSAnimationsNativeFunction(nodesManager);
-  auto removeCSSAnimationsNativeFunction = makeRemoveAllCSSAnimationsNativeFunction(nodesManager);
+  auto platformAnimationFactory = std::make_shared<css::CAPlatformAnimationFactory>(
+      makeApplyPlatformAnimationFunction(nodesManager),
+      makeRemovePlatformAnimationFunction(nodesManager));
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       forceScreenSnapshotFunction,
-      applyCSSAnimationsNativeFunction,
-      removeCSSAnimationsNativeFunction,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,
@@ -195,6 +193,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUIUpdatesQueueFunction,
+      platformAnimationFactory,
   };
   return platformDepMethodsHolder;
 }

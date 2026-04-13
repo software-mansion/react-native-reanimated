@@ -38,6 +38,7 @@ CSSAnimation::CSSAnimation(
     const std::shared_ptr<std::unordered_set<Tag>> &updatedViewTags,
     const std::shared_ptr<std::unordered_set<Tag>> &revertedTags,
     const std::shared_ptr<OperationsLoop> &loop,
+    const std::shared_ptr<CSSPlatformAnimationFactory> &platformAnimationFactory,
     const double timestamp)
     : name_(std::move(animationName)),
       shadowNode_(std::move(shadowNode)),
@@ -45,7 +46,8 @@ CSSAnimation::CSSAnimation(
       settings_(std::make_shared<CSSAnimationSettings>(settings)),
       updatedViewTags_(updatedViewTags),
       revertedTags_(revertedTags),
-      loop_(loop) {
+      loop_(loop),
+      platformAnimationFactory_(platformAnimationFactory) {
   updatePropertyRouting(timestamp);
 }
 
@@ -93,14 +95,20 @@ folly::dynamic CSSAnimation::getResetStyle() const {
 }
 
 void CSSAnimation::schedule() {
-  if (loopAnimation_ && loopAnimation_->getState() != AnimationProgressState::Paused) {
-    loop_->schedule(loopAnimation_, loopAnimation_->getRemainingDelay(loop_->getTimestamp()));
+  if (loopAnimation_) {
+    loopAnimation_->schedule();
+  }
+  if (platformAnimation_) {
+    platformAnimation_->schedule();
   }
 }
 
 void CSSAnimation::unschedule() {
   if (loopAnimation_) {
-    loop_->remove(loopAnimation_);
+    loopAnimation_->unschedule();
+  }
+  if (platformAnimation_) {
+    platformAnimation_->unschedule();
   }
 }
 
@@ -133,16 +141,6 @@ void CSSAnimation::updateSettings(const PartialCSSAnimationSettings &updatedSett
   }
 }
 
-#ifdef __APPLE__
-std::shared_ptr<CSSPlatformAnimation> CSSAnimation::getPlatformAnimation() const {
-  return platformAnimation_;
-}
-
-bool CSSAnimation::hasPlatformAnimation() const {
-  return platformAnimation_ != nullptr;
-}
-#endif
-
 bool CSSAnimation::isReversed() const {
   return settings_->direction == AnimationDirection::Reverse ||
       settings_->direction == AnimationDirection::AlternateReverse;
@@ -151,28 +149,20 @@ bool CSSAnimation::isReversed() const {
 void CSSAnimation::updatePropertyRouting(const double timestamp) {
   const auto &allProperties = keyframesConfig_.styleInterpolatorFactory->getAllPropertyNames();
 
-#ifdef __APPLE__
-  const auto routing = apple::routeProperties(
-      allProperties,
-      keyframesConfig_.platformSupportedProperties,
-      settings_->easingConfig,
-      keyframesConfig_.keyframeEasingConfigs);
+  std::unordered_set<std::string> loopProperties;
 
-  if (!routing.platformProperties) {
-    platformAnimation_.reset();
-  } else if (!platformAnimation_) {
-    platformAnimation_ = CSSPlatformAnimation::create(std::move(routing.platformProperties));
+  if (platformAnimationFactory_) {
+    auto result =
+        platformAnimationFactory_->resolve(shadowNode_->getTag(), name_, allProperties, keyframesConfig_, settings_);
+    platformAnimation_ = std::move(result.animation);
+    loopProperties = std::move(result.remainingProperties);
   } else {
-    platformAnimation_->update(std::move(routing.platformProperties));
+    platformAnimation_.reset();
+    loopProperties = allProperties;
   }
 
-  const auto &loopProperties = routing.loopProperties;
-#else
-  const auto &loopProperties = allProperties;
-#endif
-
   if (loopProperties.empty()) {
-    loop_->remove(loopAnimation_);
+    unschedule();
     loopAnimation_.reset();
     return;
   }
@@ -186,6 +176,7 @@ void CSSAnimation::updatePropertyRouting(const double timestamp) {
         keyframesConfig_.keyframeEasingConfigs,
         updatedViewTags_,
         revertedTags_,
+        loop_,
         timestamp);
     return;
   }

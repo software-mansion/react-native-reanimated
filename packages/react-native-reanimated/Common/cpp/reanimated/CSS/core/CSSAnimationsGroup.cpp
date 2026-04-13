@@ -39,8 +39,8 @@ void CSSAnimationsGroup::updateSettings(const CSSAnimationSettingsUpdatesMap &se
 folly::dynamic CSSAnimationsGroup::computeLoopStyle(bool includeResetStyles) const {
   folly::dynamic style = folly::dynamic::object;
 
-  for (const auto &animation : animations_) {
-    const auto loopAnim = animation->getLoopAnimation();
+  for (const auto &anim : animations_) {
+    const auto loopAnim = anim->getLoopAnimation();
     if (!loopAnim) {
       continue;
     }
@@ -49,12 +49,12 @@ folly::dynamic CSSAnimationsGroup::computeLoopStyle(bool includeResetStyles) con
 
     if (state == AnimationProgressState::Running || state == AnimationProgressState::Paused) {
       style.update(loopAnim->getCurrentInterpolationStyle());
-    } else if (state == AnimationProgressState::Finished && animation->hasForwardsFillMode()) {
-      style.update(animation->getForwardsFillStyle());
-    } else if (state == AnimationProgressState::Pending && animation->hasBackwardsFillMode()) {
-      style.update(animation->getBackwardsFillStyle());
+    } else if (state == AnimationProgressState::Finished && anim->hasForwardsFillMode()) {
+      style.update(anim->getForwardsFillStyle());
+    } else if (state == AnimationProgressState::Pending && anim->hasBackwardsFillMode()) {
+      style.update(anim->getBackwardsFillStyle());
     } else if (state == AnimationProgressState::Finished && includeResetStyles) {
-      const auto resetStyle = animation->getResetStyle();
+      const auto resetStyle = anim->getResetStyle();
       for (const auto &[key, value] : resetStyle.items()) {
         if (!style.count(key)) {
           style[key] = value;

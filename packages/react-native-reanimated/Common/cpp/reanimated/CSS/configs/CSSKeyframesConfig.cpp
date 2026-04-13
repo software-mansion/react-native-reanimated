@@ -42,7 +42,7 @@ CSSKeyframesConfig parseCSSAnimationKeyframesConfig(
       createStyleInterpolatorFactory(rt, configObj, nativeComponentName, viewStylesRepository),
       getKeyframeTimingConfigs(rt, configObj),
 #ifdef __APPLE__
-      apple::parseSupportedProperties(rt, configObj),
+      parsePlatformSupportedProperties(rt, configObj),
 #endif
   };
 }
