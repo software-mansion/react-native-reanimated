@@ -5,6 +5,8 @@ on:
   pull_request:
     paths:
       - .github/workflows/example-tvos-build-check.yml
+      - .github/actions/install-pods/**
+      - .github/actions/cache-derived-data/**
       - packages/react-native-reanimated/RNReanimated.podspec
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
@@ -22,6 +24,8 @@ on:
       - main
     paths:
       - .github/workflows/example-tvos-build-check.yml
+      - .github/actions/install-pods/**
+      - .github/actions/cache-derived-data/**
       - packages/react-native-reanimated/RNReanimated.podspec
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
@@ -58,11 +62,18 @@ jobs:
         working-directory: ${{ env.REANIMATED_DIR }}
         run: yarn build
 
-      - name: Install Pods
-        working-directory: ${{ env.WORKING_DIRECTORY }}/ios
-        run: |
-          bundle install
-          bundle exec pod update
+      - name: Install Pods (with caching)
+        uses: ./.github/actions/install-pods
+        with:
+          working-directory: ${{ env.WORKING_DIRECTORY }}
+          pod-directory: ios
+
+      - name: Cache DerivedData
+        uses: ./.github/actions/cache-derived-data
+        with:
+          platform: tvos
+          working-directory: ${{ env.WORKING_DIRECTORY }}
+          pod-directory: ios
 
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios

@@ -1,5 +1,2 @@
 'use strict';
-export {
-  getNormalizedCSSTransitionConfigUpdates,
-  normalizeCSSTransitionProperties,
-} from './config';
+export { normalizeCSSTransitionProperties } from './config';

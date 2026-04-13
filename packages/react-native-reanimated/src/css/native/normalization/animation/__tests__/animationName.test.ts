@@ -1,12 +1,10 @@
 'use strict';
-import { ReanimatedError } from '../../../../../common';
 import type { CSSAnimationKeyframeSelector } from '../../../../types';
-import { getPropsBuilder } from '../../../registry';
 import { ERROR_MESSAGES, normalizeAnimationKeyframes } from '../keyframes';
 
-describe(normalizeAnimationKeyframes, () => {
-  const propsBuilder = getPropsBuilder('RCTView'); // Must be a valid view name
+const COMPONENT_DISPLAY_NAME = 'View';
 
+describe(normalizeAnimationKeyframes, () => {
   describe('offset normalization', () => {
     describe('when offset is valid', () => {
       test.each([
@@ -22,7 +20,7 @@ describe(normalizeAnimationKeyframes, () => {
         expect(
           normalizeAnimationKeyframes(
             { [offset]: { opacity: 1 } },
-            propsBuilder
+            COMPONENT_DISPLAY_NAME
           )
         ).toEqual({
           propKeyframes: { opacity: [{ offset: expected, value: 1 }] },
@@ -39,10 +37,10 @@ describe(normalizeAnimationKeyframes, () => {
           expect(() =>
             normalizeAnimationKeyframes(
               { [value]: { opacity: 1 } },
-              propsBuilder
+              COMPONENT_DISPLAY_NAME
             )
           ).toThrow(
-            new ReanimatedError(ERROR_MESSAGES.invalidOffsetType(value))
+            new Error(`[Reanimated] ${ERROR_MESSAGES.invalidOffsetType(value)}`)
           );
         }
       );
@@ -56,10 +54,12 @@ describe(normalizeAnimationKeyframes, () => {
           expect(() =>
             normalizeAnimationKeyframes(
               { [value]: { opacity: 1 } },
-              propsBuilder
+              COMPONENT_DISPLAY_NAME
             )
           ).toThrow(
-            new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(value))
+            new Error(
+              `[Reanimated] ${ERROR_MESSAGES.invalidOffsetRange(value)}`
+            )
           );
         }
       );
@@ -78,7 +78,7 @@ describe(normalizeAnimationKeyframes, () => {
         expect(
           normalizeAnimationKeyframes(
             { [offset]: { opacity: 1 } },
-            propsBuilder
+            COMPONENT_DISPLAY_NAME
           )
         ).toEqual({
           keyframeTimingFunctions: {},
@@ -100,14 +100,17 @@ describe(normalizeAnimationKeyframes, () => {
       ])('throws an error for %p', (offset, errorMsg) => {
         const value = offset as CSSAnimationKeyframeSelector;
         expect(() =>
-          normalizeAnimationKeyframes({ [value]: { opacity: 1 } }, propsBuilder)
-        ).toThrow(new ReanimatedError(errorMsg));
+          normalizeAnimationKeyframes(
+            { [value]: { opacity: 1 } },
+            COMPONENT_DISPLAY_NAME
+          )
+        ).toThrow(new Error(`[Reanimated] ${errorMsg}`));
       });
     });
   });
 
   describe('propKeyframes', () => {
-    test('converts keyframes to props with arrays of keyframes', () => {
+    test('converts keyframes to a record with property names as keys and arrays of keyframes as values', () => {
       expect(
         normalizeAnimationKeyframes(
           {
@@ -115,7 +118,7 @@ describe(normalizeAnimationKeyframes, () => {
             '50%': { opacity: 0.5 },
             to: { opacity: 1 },
           },
-          propsBuilder
+          COMPONENT_DISPLAY_NAME
         )
       ).toEqual({
         propKeyframes: {
@@ -136,7 +139,7 @@ describe(normalizeAnimationKeyframes, () => {
             from: { shadowOffset: { width: 0, height: 0 } },
             to: { shadowOffset: { width: 10, height: 10 } },
           },
-          propsBuilder
+          COMPONENT_DISPLAY_NAME
         )
       ).toEqual({
         propKeyframes: {
@@ -165,7 +168,7 @@ describe(normalizeAnimationKeyframes, () => {
             '25%': { opacity: 0.25 },
             from: { opacity: 0 },
           },
-          propsBuilder
+          COMPONENT_DISPLAY_NAME
         )
       ).toEqual({
         propKeyframes: {
@@ -188,7 +191,7 @@ describe(normalizeAnimationKeyframes, () => {
             from: { transform: [{ scale: 0 }, { rotate: '0deg' }] },
             to: { transform: [{ scale: 1 }, { rotate: '360deg' }] },
           },
-          propsBuilder
+          COMPONENT_DISPLAY_NAME
         )
       ).toEqual({
         propKeyframes: {
@@ -208,7 +211,7 @@ describe(normalizeAnimationKeyframes, () => {
             from: { opacity: 0, transform: undefined },
             to: { opacity: 1 },
           },
-          propsBuilder
+          COMPONENT_DISPLAY_NAME
         )
       ).toEqual({
         propKeyframes: {
@@ -229,7 +232,7 @@ describe(normalizeAnimationKeyframes, () => {
             '50%': { opacity: 0.5 },
             to: {},
           },
-          propsBuilder
+          COMPONENT_DISPLAY_NAME
         )
       ).toEqual({
         propKeyframes: {
@@ -250,7 +253,7 @@ describe(normalizeAnimationKeyframes, () => {
             '50%': { opacity: 0.75 },
             '75%': { opacity: 1, animationTimingFunction: 'ease-out' },
           },
-          propsBuilder
+          COMPONENT_DISPLAY_NAME
         )
       ).toEqual({
         propKeyframes: {
@@ -281,7 +284,7 @@ describe(normalizeAnimationKeyframes, () => {
           {
             '0%, 100%': { opacity: 0, animationTimingFunction: 'ease-in' },
           },
-          propsBuilder
+          COMPONENT_DISPLAY_NAME
         )
       ).toEqual({
         propKeyframes: {

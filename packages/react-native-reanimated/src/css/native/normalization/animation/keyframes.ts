@@ -1,14 +1,14 @@
 'use strict';
 import type {
   AnyRecord,
-  PropsBuilder,
+  NativePropsBuilder,
   UnknownRecord,
 } from '../../../../common';
 import {
+  getPropsBuilder,
+  getSeparatelyInterpolatedNestedProperties,
   isDefined,
   isNumber,
-  isRecord,
-  ReanimatedError,
 } from '../../../../common';
 import { PERCENTAGE_REGEX } from '../../../constants';
 import type {
@@ -55,10 +55,14 @@ export function normalizeKeyframeSelector(
     }
 
     if (!isNumber(offset)) {
-      throw new ReanimatedError(ERROR_MESSAGES.invalidOffsetType(selector));
+      throw new Error(
+        `[Reanimated] ${ERROR_MESSAGES.invalidOffsetType(selector)}`
+      );
     }
     if (offset < 0 || offset > 1) {
-      throw new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(selector));
+      throw new Error(
+        `[Reanimated] ${ERROR_MESSAGES.invalidOffsetRange(selector)}`
+      );
     }
 
     return offset;
@@ -75,12 +79,12 @@ type ProcessedKeyframes = Array<{
 
 export function processKeyframes(
   keyframes: CSSAnimationKeyframes,
-  propsBuilder: PropsBuilder<AnyRecord>
+  propsBuilder: NativePropsBuilder
 ): ProcessedKeyframes {
   return Object.entries(keyframes)
     .flatMap(
       ([selector, { animationTimingFunction = undefined, ...props } = {}]) => {
-        const normalizedProps = propsBuilder.buildFrom(props);
+        const normalizedProps = propsBuilder.build(props);
         if (!normalizedProps) {
           return [];
         }
@@ -108,9 +112,9 @@ export function processKeyframes(
 
 function processProps(
   offset: number,
-  props: UnknownRecord,
+  props: object,
   keyframeProps: AnyRecord,
-  propsBuilder: PropsBuilder<AnyRecord>
+  separatelyInterpolatedNestedProperties: ReadonlySet<string>
 ) {
   Object.entries(props).forEach(([property, value]) => {
     if (!isDefined(value)) {
@@ -118,13 +122,19 @@ function processProps(
     }
 
     if (
-      isRecord(value) &&
-      propsBuilder.isSeparatelyInterpolatedNestedProperty(property)
+      /* this object type check is correct as it accepts records and arrays */
+      typeof value === 'object' &&
+      separatelyInterpolatedNestedProperties.has(property)
     ) {
       if (!keyframeProps[property]) {
         keyframeProps[property] = Array.isArray(value) ? [] : {};
       }
-      processProps(offset, value, keyframeProps[property], propsBuilder);
+      processProps(
+        offset,
+        value,
+        keyframeProps[property],
+        separatelyInterpolatedNestedProperties
+      );
       return;
     }
 
@@ -137,14 +147,22 @@ function processProps(
 
 export function normalizeAnimationKeyframes(
   keyframes: CSSAnimationKeyframes,
-  propsBuilder: PropsBuilder<AnyRecord>
+  compoundComponentName: string
 ): NormalizedCSSAnimationKeyframesConfig {
+  const propsBuilder = getPropsBuilder(compoundComponentName);
+  const separatelyInterpolatedNestedProperties =
+    getSeparatelyInterpolatedNestedProperties(compoundComponentName);
   const propKeyframes: PropsWithKeyframes = {};
   const timingFunctions: NormalizedCSSKeyframeTimingFunctions = {};
 
   processKeyframes(keyframes, propsBuilder).forEach(
     ({ offset, props, timingFunction }) => {
-      processProps(offset, props, propKeyframes, propsBuilder);
+      processProps(
+        offset,
+        props,
+        propKeyframes,
+        separatelyInterpolatedNestedProperties
+      );
       if (timingFunction && offset < 1) {
         timingFunctions[offset] = normalizeTimingFunction(timingFunction);
       }

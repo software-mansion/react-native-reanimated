@@ -158,10 +158,6 @@ function elastic(bounciness = 1): EasingFunction {
 /**
  * Use with `Animated.parallel()` to create a simple effect where the object
  * animates back slightly as the animation starts.
- *
- * Wolfram Plot:
- *
- * - http://tiny.cc/back_default (s = 1.70158, default)
  */
 function back(s = 1.70158): (t: number) => number {
   'worklet';
@@ -260,10 +256,11 @@ function inOut(easing: EasingFunction): EasingFunction {
 
 /**
  * The `steps` easing function jumps between discrete values at regular
- * intervals, creating a stepped animation effect. The `n` parameter determines
- * the number of steps in the animation, and the `roundToNextStep` parameter
- * determines whether the animation should start at the beginning or end of each
- * step.
+ * intervals, creating a stepped animation effect.
+ *
+ * @param n - Determines the number of steps in the animation. Defaults to `10`.
+ * @param roundToNextStep - Determines whether the animation should start at the
+ *   beginning or end of each step. Defaults to `true`.
  */
 function steps(n = 10, roundToNextStep = true): EasingFunction {
   'worklet';

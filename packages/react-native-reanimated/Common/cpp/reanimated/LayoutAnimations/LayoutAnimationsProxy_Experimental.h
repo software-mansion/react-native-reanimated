@@ -1,11 +1,10 @@
 #pragma once
 
+#include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
-
-#include <worklets/Tools/UIScheduler.h>
 
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/graphics/Transform.h>
@@ -44,7 +43,7 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable Tag transitionTag_;
   mutable double transitionProgress_;
   mutable bool transitionUpdated_;
-  mutable TransitionState transitionState_ = NONE;
+  mutable TransitionState transitionState_ = TransitionState::NONE;
   mutable SurfaceId transitioningSurfaceId_ = -1;
   mutable std::unordered_map<SurfaceId, std::shared_ptr<LightNode>> topScreen;
   mutable int containerTag_ = 10000002;
@@ -63,16 +62,16 @@ struct LayoutAnimationsProxy_Experimental : public LayoutAnimationsProxyCommon,
   mutable ForceScreenSnapshotFunction forceScreenSnapshot_;
 
   LayoutAnimationsProxy_Experimental(
-      std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager,
-      SharedComponentDescriptorRegistry componentDescriptorRegistry,
-      std::shared_ptr<const ContextContainer> contextContainer,
+      const std::shared_ptr<LayoutAnimationsManager> &layoutAnimationsManager,
+      const SharedComponentDescriptorRegistry &componentDescriptorRegistry,
+      const std::shared_ptr<const ContextContainer> &contextContainer,
       jsi::Runtime &uiRuntime,
-      const std::shared_ptr<UIScheduler> uiScheduler
+      const std::shared_ptr<UIScheduler> &uiScheduler
 #ifdef ANDROID
       ,
-      PreserveMountedTagsFunction filterUnmountedTagsFunction,
-      std::shared_ptr<UIManager> uiManager,
-      std::shared_ptr<CallInvoker> jsInvoker
+      const PreserveMountedTagsFunction &filterUnmountedTagsFunction,
+      const std::shared_ptr<UIManager> &uiManager,
+      const std::shared_ptr<CallInvoker> &jsInvoker
 #endif
       )
       : LayoutAnimationsProxyCommon(

@@ -17,7 +17,6 @@ exports[`colors interpolation interpolates with withTiming animation 1`] = `
       }
     }
     jestInlineStyle={{}}
-    nativeID="1"
     style={
       [
         {

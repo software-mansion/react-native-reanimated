@@ -1,11 +1,21 @@
 'use strict';
 
+import {
+  disallowRNImports,
+  mockTurboModuleRegistry,
+  silenceHMRWarnings,
+} from '../bundleMode/metroOverrides';
+import { initializeNetworking } from '../bundleMode/network';
 import { setupCallGuard } from '../callGuard';
 import { registerReportFatalRemoteError } from '../debug/errors';
-import { registerWorkletsError, WorkletsError } from '../debug/WorkletsError';
+import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
-import { __installUnpacker as installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
-import { __installUnpacker as installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
+import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
+import { makeShareableCloneOnUIRecursive } from '../memory/serializable';
+import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
+import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
+import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
+import { installValueUnpacker } from '../memory/valueUnpacker';
 import { setupSetImmediate } from '../runLoop/common/setImmediatePolyfill';
 import { setupSetInterval } from '../runLoop/common/setIntervalPolyfill';
 import { setupRequestAnimationFrame } from '../runLoop/uiRuntime/requestAnimationFrame';
@@ -82,6 +92,11 @@ export function setupConsole(boundCapturableConsole: typeof console) {
   };
 }
 
+export function setupSerializer() {
+  'worklet';
+  globalThis.__serializer = makeShareableCloneOnUIRecursive;
+}
+
 let initialized = false;
 
 export function init() {
@@ -102,11 +117,15 @@ export function init() {
 
 /** A function that should be run on any kind of runtime. */
 function initializeRuntime() {
-  if (globalThis._WORKLETS_BUNDLE_MODE) {
+  if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
+  } else {
+    installValueUnpacker();
   }
   installSynchronizableUnpacker();
   installCustomSerializableUnpacker();
+  installShareableHostUnpacker();
+  installShareableGuestUnpacker();
 }
 
 /** A function that should be run only on React Native runtime. */
@@ -116,8 +135,8 @@ function initializeRNRuntime() {
       'worklet';
     };
     if (!isWorkletFunction(testWorklet)) {
-      throw new WorkletsError(
-        `Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
+      throw new Error(
+        `[Worklets] Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
       );
     }
   }
@@ -127,68 +146,17 @@ function initializeRNRuntime() {
 
 /** A function that should be run only on Worklet runtimes. */
 function initializeWorkletRuntime() {
-  if (globalThis._WORKLETS_BUNDLE_MODE) {
+  if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     setupCallGuard();
 
     if (__DEV__) {
-      /*
-       * Temporary workaround for Metro bundler. We must implement a dummy
-       * Refresh module to prevent Metro from throwing irrelevant errors.
-       */
-      const Refresh = new Proxy(
-        {},
-        {
-          get() {
-            return () => {};
-          },
-        }
-      );
+      silenceHMRWarnings();
+      disallowRNImports();
+    }
 
-      globalThis.__r.Refresh = Refresh;
-
-      /* Gracefully handle unwanted imports from React Native. */
-      const modules = require.getModules();
-      const ReactNativeModuleId = require.resolveWeak('react-native');
-
-      const factory = function (
-        _global: unknown,
-        _require: unknown,
-        _importDefault: unknown,
-        _importAll: unknown,
-        module: Record<string, unknown>,
-        _exports: unknown,
-        _dependencyMap: unknown
-      ) {
-        module.exports = new Proxy(
-          {},
-          {
-            get: function get(_target, prop) {
-              globalThis.console.warn(
-                `You tried to import '${String(prop)}' from 'react-native' module on a Worklet Runtime. Using 'react-native' module on a Worklet Runtime is not allowed.`
-              );
-              return {
-                get() {
-                  return undefined;
-                },
-              };
-            },
-          }
-        );
-      };
-
-      const mod = {
-        dependencyMap: [],
-        factory,
-        hasError: false,
-        importedAll: {},
-        importedDefault: {},
-        isInitialized: false,
-        publicModule: {
-          exports: {},
-        },
-      };
-
-      modules.set(ReactNativeModuleId, mod);
+    if (getStaticFeatureFlag('FETCH_PREVIEW_ENABLED')) {
+      mockTurboModuleRegistry();
+      initializeNetworking();
     }
   }
 }
@@ -199,26 +167,17 @@ function initializeWorkletRuntime() {
  */
 function installRNBindingsOnUIRuntime() {
   if (!WorkletsModule) {
-    throw new WorkletsError(
-      'Worklets are trying to initialize the UI runtime without a valid WorkletsModule'
+    throw new Error(
+      '[Worklets] Worklets are trying to initialize the UI runtime without a valid WorkletsModule'
     );
   }
 
-  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
-
-  if (!globalThis._WORKLETS_BUNDLE_MODE) {
-    /** In bundle mode Runtimes setup their callGuard themselves. */
+  if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+    /** In Bundle Mode Runtimes setup their callGuard themselves. */
     runOnUISync(setupCallGuard);
-
-    /**
-     * Register WorkletsError in the UI runtime global scope. (we are using
-     * `executeOnUIRuntimeSync` here to make sure that the changes are applied
-     * before any async operations are executed on the UI runtime).
-     *
-     * There's no need to register the error in bundle mode.
-     */
-    runOnUISync(registerWorkletsError);
   }
+
+  const runtimeBoundCapturableConsole = getMemorySafeCapturableConsole();
 
   runOnUISync(() => {
     'worklet';
@@ -234,5 +193,6 @@ function installRNBindingsOnUIRuntime() {
     setupSetTimeout();
     setupSetImmediate();
     setupSetInterval();
+    setupSerializer();
   });
 }

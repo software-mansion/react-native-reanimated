@@ -3,11 +3,7 @@ import type { Binding } from '@babel/traverse';
 import type { Identifier, ImportDeclaration } from '@babel/types';
 import { cloneNode } from '@babel/types';
 
-import {
-  globals,
-  internalBindingsToCaptureFromGlobalScope,
-  outsideBindingsToCaptureFromGlobalScope,
-} from './globals';
+import { globals } from './globals';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 
 export function getClosure(
@@ -59,24 +55,11 @@ export function getClosure(
            * from the global scope. In this case we have to avoid capturing
            * certain identifiers.
            */
-          if (globals.has(name)) {
+          if (state.opts.strictGlobal || globals.has(name)) {
             return;
           }
           capturedNames.add(name);
           closureVariables.push(cloneNode(idPath.node as Identifier, true));
-          return;
-        }
-
-        if (
-          outsideBindingsToCaptureFromGlobalScope.has(name) ||
-          (!state.opts.bundleMode &&
-            internalBindingsToCaptureFromGlobalScope.has(name))
-        ) {
-          /**
-           * In legacy bundling we have to purposefully ignore some bound
-           * identifiers since they are supposed to be captured from the global
-           * scope.
-           */
           return;
         }
 
@@ -156,7 +139,7 @@ function isAllowedForRelativeImports(
 ): boolean {
   return (
     !!filename &&
-    (filename.includes('react-native-worklets') ||
+    (alwaysAllowed.some((module) => filename.includes(module)) ||
       !!workletizableModules?.some((module) => filename.includes(module)))
   );
 }
@@ -166,7 +149,12 @@ function isWorkletizableModule(
   workletizableModules?: string[]
 ): boolean {
   return (
-    source.startsWith('react-native-worklets') ||
+    alwaysAllowed.some((module) => source.startsWith(module)) ||
     !!workletizableModules?.some((module) => source.startsWith(module))
   );
 }
+
+const alwaysAllowed = [
+  'react-native-worklets',
+  'react-native/Libraries/Core/setUpXHR', // for networking
+];

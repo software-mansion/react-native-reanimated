@@ -38,11 +38,7 @@ export default function Content({
 }: ContentProps) {
   return (
     <View
-      style={[
-        StyleSheet.absoluteFillObject,
-        { backgroundColor },
-        styles.container,
-      ]}>
+      style={[StyleSheet.absoluteFill, { backgroundColor }, styles.container]}>
       <Image {...{ source }} />
       <View>
         <Text style={[styles.title1, { color }]}>{title1}</Text>

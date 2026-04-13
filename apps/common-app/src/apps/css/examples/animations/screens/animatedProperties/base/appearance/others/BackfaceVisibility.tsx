@@ -18,6 +18,7 @@ export default function BackfaceVisibility() {
           '75%': {
             backfaceVisibility: 'hidden',
           },
+          // eslint-disable-next-line perfectionist/sort-objects
           '100%': {
             backfaceVisibility: 'visible',
             transform: [{ perspective: 100 }, { rotateY: '180deg' }],

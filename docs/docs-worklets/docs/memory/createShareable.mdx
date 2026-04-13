@@ -1,0 +1,185 @@
+---
+title: createShareable
+sidebar_position: 42 # Use alphabetical order
+---
+
+# createShareable <AvailableFrom version="0.8.0" />
+
+:::note
+This page describes the API to create the new [Shareable](/docs/memory/shareable) type, which is a different concept from the old deprecated one coming from `react-native-reanimated`, available with the [makeShareable](/docs/memory/makeShareable) function.
+:::
+
+Creates a new [Shareable](/docs/memory/shareable) holding the provided initial value. Returns the created Shareable.
+
+You have to explicitly declare which [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) will host the Shareable by passing its **runtimeId**.
+
+## Reference
+
+```tsx
+import { createShareable, UIRuntimeId } from 'react-native-worklets';
+
+// Shareable hosted on the UI Runtime
+const shareable = createShareable(UIRuntimeId, 42);
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function createShareable<
+  TValue = unknown,
+  THostDecorated = unknown,
+  TGuestDecorated = unknown,
+>(
+  hostRuntimeId: number,
+  initial: TValue,
+  config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
+): Shareable<TValue, THostDecorated, TGuestDecorated>;
+
+type ShareableConfig<TValue, THostDecorated, TGuestDecorated> = {
+  hostDecorator?: ShareableHostDecorator<TValue, THostDecorated>;
+  guestDecorator?: ShareableGuestDecorator<TValue, TGuestDecorated>;
+  initSynchronously?: boolean;
+};
+
+type ShareableHostDecorator<TValue = unknown, TDecorated = unknown> = (
+  shareable: ShareableHost<TValue> & TDecorated
+) => ShareableHost<TValue> & TDecorated;
+
+type ShareableGuestDecorator<TValue = unknown, TDecorated = unknown> = (
+  shareable: ShareableGuest<TValue> & TDecorated
+) => ShareableGuest<TValue> & TDecorated;
+
+```
+
+</details>
+
+## Arguments
+
+### hostRuntimeId
+
+The **runtimeId** of the [Worklet Runtime](/docs/fundamentals/runtimeKinds#worklet-runtime) that will host the Shareable. **Currently, only hosting a Shareable on the UI Runtime is supported.** You can obtain the UI Runtime's id from the exported constant [UIRuntimeId](/docs/threading/uiRuntimeId).
+
+### initial
+
+The initial value of the Shareable. It must be a value that is convertible to a [Serializable](/docs/memory/serializable).
+
+### config
+
+Optional advanced configuration for the Shareable.
+
+#### hostDecorator
+
+A [worklet](/docs/fundamentals/glossary#worklet) that takes the created [Shareable Host](/docs/memory/shareable#shareable-host) and decorates it with additional properties or methods. You can use it to add custom logic to the Shareable, like adding more APIs, overriding existing ones, or adding side effects to them. It must return the same reference it received.
+
+#### guestDecorator
+
+A [worklet](/docs/fundamentals/glossary#worklet) that decorates each [Shareable Guest](/docs/memory/shareable#shareable-guest) created for the Shareable with additional properties or methods. You can use it to add custom logic to the Shareable, like adding more APIs, overriding existing ones, or adding side effects to them. It must return the same reference it received.
+
+#### initSynchronously
+
+By default, the Shareable is initialized asynchronously, which means that the [Shareable Host](/docs/memory/shareable#shareable-host) is created at the time of its first access on the Host Runtime. Setting this flag to `true` forces the Shareable to be initialized synchronously during the call to `createShareable`. It's an escape hatch for situations where your Shareable Host triggers side effects during its initialization.
+
+## Decorator examples
+
+You can add additional properties on the Shareable Host and Shareable Guests:
+
+```tsx
+import {
+  createShareable,
+  scheduleOnUI,
+  UIRuntimeId,
+} from 'react-native-worklets';
+
+type MyShareableHost = {
+  myHostValue: number;
+};
+
+const shareable = createShareable<number, MyShareableHost>(UIRuntimeId, 42, {
+  hostDecorator: (shareable) => {
+    'worklet';
+    shareable.myHostValue = shareable.value + 1;
+    return shareable; // make sure to return the same reference after decorating
+  },
+});
+
+console.log(shareable.myHostValue); // undefined - this is a Shareable Guest
+
+scheduleOnUI(() => {
+  'worklet';
+  console.log(shareable.myHostValue); // 43 - this is a Shareable Host
+});
+```
+
+You can add additional methods:
+
+```tsx
+import {
+  createShareable,
+  scheduleOnUI,
+  UIRuntimeId,
+} from 'react-native-worklets';
+
+type MyShareableGuest = {
+  getAndIncrement(): number;
+};
+
+const shareable = createShareable<number, object, MyShareableGuest>(
+  UIRuntimeId,
+  42,
+  {
+    guestDecorator: (shareable) => {
+      'worklet';
+      shareable.getAndIncrement = () => {
+        const currentValue = shareable.getSync();
+        shareable.setSync(currentValue + 1);
+        return currentValue;
+      };
+      return shareable; // make sure to return the same reference after decorating
+    },
+  }
+);
+
+console.log(shareable.getAndIncrement()); // 42 - this is a Shareable Guest
+
+scheduleOnUI(() => {
+  'worklet';
+  console.log(shareable.value); // 43 - value got incremented
+
+  // error - this is a Shareable Host, it doesn't have getAndIncrement method
+  console.log(shareable.getAndIncrement());
+});
+```
+
+You can also override existing methods and properties:
+
+```tsx
+import { createShareable, UIRuntimeId } from 'react-native-worklets';
+
+type MyShareableGuest = {
+  value: number;
+};
+
+const shareable = createShareable<number, object, MyShareableGuest>(
+  UIRuntimeId,
+  42,
+  {
+    guestDecorator: (shareable) => {
+      'worklet';
+      Object.defineProperty(shareable, 'value', {
+        get: () => shareable.getSync(),
+        set: (newValue) => shareable.setSync(newValue),
+        enumerable: true,
+        configurable: true,
+      });
+      return shareable; // make sure to return the same reference after decorating
+    },
+  }
+);
+
+// Now you can use `shareable.value` on both Host and Guest Runtimes to
+// provide an opaque API layer over the Shareable.
+console.log(shareable.value); // 42
+```
+
+_Fun fact: this technique is used to implement Reanimated's [Shared Values](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue) API on top of Shareables._

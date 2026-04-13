@@ -1,13 +1,22 @@
 'use strict';
-import { ReanimatedError } from '../../../../../common';
+import {
+  getCompoundComponentName,
+  getPropsBuilder,
+} from '../../../../../common';
 import type { Repeat } from '../../../../types';
-import { getPropsBuilder } from '../../../registry';
 import {
   ERROR_MESSAGES,
   normalizeAnimationKeyframes,
   normalizeKeyframeSelector,
   processKeyframes,
 } from '../keyframes';
+
+type PropsBuilderInstance = ReturnType<typeof getPropsBuilder>;
+type BuildFn = PropsBuilderInstance['build'];
+type BuildReturn = ReturnType<BuildFn>;
+type BuildArgs = Parameters<BuildFn>;
+
+const COMPOUND_COMPONENT_NAME = getCompoundComponentName('RCTView', 'View');
 
 describe(normalizeKeyframeSelector, () => {
   describe('single selector', () => {
@@ -22,7 +31,9 @@ describe(normalizeKeyframeSelector, () => {
 
       it('throws an error for invalid keyword', () => {
         expect(() => normalizeKeyframeSelector('invalid')).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidOffsetType('invalid'))
+          new Error(
+            `[Reanimated] ${ERROR_MESSAGES.invalidOffsetType('invalid')}`
+          )
         );
       });
     });
@@ -38,19 +49,19 @@ describe(normalizeKeyframeSelector, () => {
 
       it('throws an error for numbers outside of 0 and 1', () => {
         expect(() => normalizeKeyframeSelector(-0.1)).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(-0.1))
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidOffsetRange(-0.1)}`)
         );
         expect(() => normalizeKeyframeSelector(1.1)).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(1.1))
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidOffsetRange(1.1)}`)
         );
       });
 
       it('throws an error for invalid numbers', () => {
         expect(() => normalizeKeyframeSelector('1+')).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidOffsetType('1+'))
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidOffsetType('1+')}`)
         );
         expect(() => normalizeKeyframeSelector(NaN)).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidOffsetType(NaN))
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidOffsetType(NaN)}`)
         );
       });
     });
@@ -62,7 +73,7 @@ describe(normalizeKeyframeSelector, () => {
 
       it('throws an error for invalid percentages', () => {
         expect(() => normalizeKeyframeSelector('101%')).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange('101%'))
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidOffsetRange('101%')}`)
         );
       });
     });
@@ -82,28 +93,21 @@ describe(normalizeKeyframeSelector, () => {
   });
 });
 
-function mockPropsBuilder(
-  separatelyInterpolatedNestedProperties: string[] = []
-) {
-  const separatelyInterpolatedNestedPropertiesSet = new Set(
-    separatelyInterpolatedNestedProperties
+const createMockPropsBuilder = () => {
+  const buildMock = jest.fn<BuildReturn | undefined, BuildArgs>(
+    (props) => props
   );
 
   return {
-    buildFrom: jest.fn().mockImplementation((props) => props),
-    isSeparatelyInterpolatedNestedProperty: jest
-      .fn()
-      .mockImplementation((property) =>
-        separatelyInterpolatedNestedPropertiesSet.has(property)
-      ),
-    add: jest.fn(),
+    builder: { build: buildMock } as PropsBuilderInstance,
+    buildMock,
   };
-}
+};
 
 describe(processKeyframes, () => {
   describe('offset handling', () => {
     test('sorts keyframes and accepts percentages', () => {
-      const propsBuilder = mockPropsBuilder();
+      const { builder } = createMockPropsBuilder();
       const keyframes = {
         '75%': { opacity: 0.75 },
         from: { opacity: 0 },
@@ -111,7 +115,7 @@ describe(processKeyframes, () => {
         to: { opacity: 1 },
       };
 
-      expect(processKeyframes(keyframes, propsBuilder)).toEqual([
+      expect(processKeyframes(keyframes, builder)).toEqual([
         { offset: 0, props: { opacity: 0 } },
         { offset: 0.25, props: { opacity: 0.25 } },
         { offset: 0.75, props: { opacity: 0.75 } },
@@ -120,13 +124,13 @@ describe(processKeyframes, () => {
     });
 
     test('splits multi-selector entries into separate keyframes', () => {
-      const propsBuilder = mockPropsBuilder();
+      const { builder } = createMockPropsBuilder();
       const keyframes = {
         'from, 50%': { opacity: 0.5 },
         to: { opacity: 1 },
       };
 
-      expect(processKeyframes(keyframes, propsBuilder)).toEqual([
+      expect(processKeyframes(keyframes, builder)).toEqual([
         { offset: 0, props: { opacity: 0.5 } },
         { offset: 0.5, props: { opacity: 0.5 } },
         { offset: 1, props: { opacity: 1 } },
@@ -135,13 +139,15 @@ describe(processKeyframes, () => {
   });
 
   describe('complex properties', () => {
+    const propsBuilder = getPropsBuilder(COMPOUND_COMPONENT_NAME);
+
     test('transform preserves array of operations', () => {
       const keyframes = {
         '0%': { transform: [{ translateX: 0 }] },
         '100%': { transform: [{ translateX: 100 }] },
       };
 
-      expect(processKeyframes(keyframes, getPropsBuilder('RCTView'))).toEqual([
+      expect(processKeyframes(keyframes, propsBuilder)).toEqual([
         { offset: 0, props: { transform: [{ translateX: 0 }] } },
         { offset: 1, props: { transform: [{ translateX: 100 }] } },
       ]);
@@ -155,7 +161,7 @@ describe(processKeyframes, () => {
         to: { transformOrigin: toTransformOrigin },
       };
 
-      const result = processKeyframes(keyframes, getPropsBuilder('RCTView'));
+      const result = processKeyframes(keyframes, propsBuilder);
 
       expect(result).toEqual([
         {
@@ -178,7 +184,7 @@ describe(processKeyframes, () => {
           to: { [property]: { width: 10, height: 5 } },
         };
 
-        const result = processKeyframes(keyframes, getPropsBuilder('RCTView'));
+        const result = processKeyframes(keyframes, propsBuilder);
 
         expect(result).toEqual([
           {
@@ -223,7 +229,7 @@ describe(processKeyframes, () => {
         },
       };
 
-      const result = processKeyframes(keyframes, getPropsBuilder('RCTView'));
+      const result = processKeyframes(keyframes, propsBuilder);
 
       expect(result).toEqual([
         {
@@ -280,8 +286,8 @@ describe(processKeyframes, () => {
   });
 
   test('drops keyframes when processed props are undefined', () => {
-    const propsBuilder = mockPropsBuilder(['shadowOffset']);
-    propsBuilder.buildFrom
+    const { builder, buildMock } = createMockPropsBuilder();
+    buildMock
       .mockImplementationOnce(() => undefined)
       .mockImplementation((props) => props);
 
@@ -290,20 +296,22 @@ describe(processKeyframes, () => {
       to: { shadowOffset: { width: 10, height: 5 } },
     };
 
-    expect(processKeyframes(keyframes, propsBuilder)).toEqual([
+    expect(processKeyframes(keyframes, builder)).toEqual([
       { offset: 1, props: { shadowOffset: { width: 10, height: 5 } } },
     ]);
+
+    buildMock.mockRestore();
   });
 
   test('merges props for duplicate offsets', () => {
-    const propsBuilder = mockPropsBuilder();
+    const { builder } = createMockPropsBuilder();
     const keyframes = {
       '0%': { opacity: 0.5 },
       '0': { transform: [{ scale: 1 }] },
       '100%': { opacity: 1 },
     };
 
-    expect(processKeyframes(keyframes, propsBuilder)).toEqual([
+    expect(processKeyframes(keyframes, builder)).toEqual([
       {
         offset: 0,
         props: { opacity: 0.5, transform: [{ scale: 1 }] },
@@ -314,8 +322,6 @@ describe(processKeyframes, () => {
 });
 
 describe(normalizeAnimationKeyframes, () => {
-  const propsBuilder = getPropsBuilder('RCTView');
-
   test('aggregates props and timing functions across keyframes', () => {
     const result = normalizeAnimationKeyframes(
       {
@@ -326,7 +332,7 @@ describe(normalizeAnimationKeyframes, () => {
         },
         to: { opacity: 1 },
       },
-      propsBuilder
+      COMPOUND_COMPONENT_NAME
     );
 
     expect(result).toEqual({
@@ -353,7 +359,7 @@ describe(normalizeAnimationKeyframes, () => {
         from: { opacity: 0, animationTimingFunction: 'ease-in' },
         to: { opacity: 1, animationTimingFunction: 'ease-out' },
       },
-      propsBuilder
+      COMPOUND_COMPONENT_NAME
     );
 
     expect(result).toEqual({
