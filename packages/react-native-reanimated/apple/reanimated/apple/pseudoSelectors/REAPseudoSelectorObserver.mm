@@ -75,6 +75,7 @@
 
 - (void)attachHoverToView:(REAUIView *)view
 {
+#if !TARGET_OS_TV
   if (@available(iOS 13.0, *)) {
     UIHoverGestureRecognizer *recognizer =
         [[UIHoverGestureRecognizer alloc] initWithTarget:self action:@selector(handleHoverGesture:)];
@@ -82,6 +83,7 @@
     [view addGestureRecognizer:recognizer];
     _gestureRecognizer = recognizer;
   }
+#endif
 }
 
 // Fires only when this view's own text input gains focus.
@@ -151,6 +153,7 @@
   _notificationObservers = [observers copy];
 }
 
+#if !TARGET_OS_TV
 - (void)handleHoverGesture:(UIHoverGestureRecognizer *)recognizer API_AVAILABLE(ios(13.0))
 {
   switch (recognizer.state) {
@@ -166,6 +169,7 @@
       break;
   }
 }
+#endif
 
 - (void)handleActiveGesture:(UILongPressGestureRecognizer *)recognizer
 {
