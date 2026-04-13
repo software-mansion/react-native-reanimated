@@ -1,4 +1,5 @@
 'use strict';
+import type { Rotate, Scale } from '../../common';
 import type {
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
@@ -16,7 +17,10 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#pinwheel
  */
 export class PinwheelIn
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [Scale, Rotate];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'PinwheelIn';
@@ -76,7 +80,10 @@ export class PinwheelIn
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#pinwheel
  */
 export class PinwheelOut
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [Scale, Rotate];
+  }>
   implements IEntryExitAnimationBuilder
 {
   static presetName = 'PinwheelOut';

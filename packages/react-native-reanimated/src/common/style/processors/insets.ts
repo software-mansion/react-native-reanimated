@@ -8,19 +8,28 @@ type InsetProcessor = ValueProcessor<
   Record<string, DimensionValue>
 >;
 
-export const processInset: InsetProcessor = (value) => ({
-  top: value,
-  bottom: value,
-  left: value,
-  right: value,
-});
+export const processInset: InsetProcessor = (value) => {
+  'worklet';
+  return {
+    top: value,
+    bottom: value,
+    left: value,
+    right: value,
+  };
+};
 
-export const processInsetBlock: InsetProcessor = (value) => ({
-  top: value,
-  bottom: value,
-});
+export const processInsetBlock: InsetProcessor = (value) => {
+  'worklet';
+  return {
+    top: value,
+    bottom: value,
+  };
+};
 
-export const processInsetInline: InsetProcessor = (value) => ({
-  left: value,
-  right: value,
-});
+export const processInsetInline: InsetProcessor = (value) => {
+  'worklet';
+  return {
+    left: value,
+    right: value,
+  };
+};

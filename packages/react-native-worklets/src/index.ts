@@ -3,6 +3,7 @@
 import { init } from './initializers/initializers';
 import { bundleModeInit } from './initializers/workletRuntimeEntry';
 
+// is-tree-shakable-suppress
 init();
 
 // @ts-expect-error We must trick the bundler to include
@@ -12,7 +13,9 @@ if (globalThis._ALWAYS_FALSE) {
   bundleModeInit();
 }
 
+export { toggleSlowAnimationsOnUIRuntime } from './debug/slowAnimations';
 export {
+  callMicrotasks,
   isShareableRef,
   makeShareable,
   type MakeShareableClone,
@@ -26,6 +29,7 @@ export {
   getStaticFeatureFlag,
   setDynamicFeatureFlag,
 } from './featureFlags/featureFlags';
+export { isShareable } from './memory/isShareable';
 export { isSynchronizable } from './memory/isSynchronizable';
 export {
   createSerializable,
@@ -33,21 +37,45 @@ export {
   registerCustomSerializable,
 } from './memory/serializable';
 export { serializableMappingCache } from './memory/serializableMappingCache';
+export { createShareable } from './memory/shareable';
 export { createSynchronizable } from './memory/synchronizable';
 export type {
   RegistrationData,
   SerializableRef,
+  Shareable,
+  ShareableConfig,
+  ShareableGuest,
+  ShareableGuestDecorator,
+  ShareableGuestMeta,
+  ShareableGuestProps,
+  ShareableHost,
+  ShareableHostDecorator,
+  ShareableHostMeta,
+  ShareableHostProps,
   Synchronizable,
   SynchronizableRef,
 } from './memory/types';
-export { getRuntimeKind, RuntimeKind } from './runtimeKind';
+export {
+  getRuntimeKind,
+  isRNRuntime,
+  isUIRuntime,
+  isWorkerRuntime,
+  isWorkletRuntime,
+  RuntimeKind,
+} from './runtimeKind';
 export {
   createWorkletRuntime,
+  getUIRuntimeHolder,
+  getUISchedulerHolder,
   runOnRuntime,
+  runOnRuntimeAsync,
+  runOnRuntimeSync,
+  runOnRuntimeSyncWithId,
   scheduleOnRuntime,
+  scheduleOnRuntimeWithId,
+  UIRuntimeId,
 } from './runtimes';
 export {
-  callMicrotasks,
   executeOnUIRuntimeSync,
   runOnJS,
   runOnUI,
@@ -55,8 +83,6 @@ export {
   runOnUISync,
   scheduleOnRN,
   scheduleOnUI,
-  // eslint-disable-next-line camelcase
-  unstable_eventLoopTask,
 } from './threads';
 export type {
   WorkletFunction,

@@ -16,7 +16,12 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions#linear-transition
  */
 export class LinearTransition
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    originX: number;
+    originY: number;
+    width: number;
+    height: number;
+  }>
   implements ILayoutAnimationBuilder
 {
   static presetName = 'LinearTransition';

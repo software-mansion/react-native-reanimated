@@ -2,7 +2,6 @@
 import type { NumberProp } from 'react-native-svg';
 
 import type { ValueProcessor } from '../../../../common';
-import { ReanimatedError } from '../../../../common';
 import { isLength } from '../../../utils';
 
 export const ERROR_MESSAGES = {
@@ -28,7 +27,7 @@ export const processStrokeDashArray: ValueProcessor<
   } else if (value === 'none') {
     return 'none';
   } else {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidDashArray(value));
+    throw new Error(`[Reanimated] ${ERROR_MESSAGES.invalidDashArray(value)}`);
   }
 
   if (__DEV__) {
@@ -40,6 +39,6 @@ export const processStrokeDashArray: ValueProcessor<
 
 const isValidDashArray = (value: NumberProp[]) => {
   if (!value.every(isLength)) {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidDashArray(value));
+    throw new Error(`[Reanimated] ${ERROR_MESSAGES.invalidDashArray(value)}`);
   }
 };

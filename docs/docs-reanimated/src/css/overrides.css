@@ -140,3 +140,10 @@ button[class*='DocSearch-Button'] {
 [class*='yearGroupHeading'] {
   display: none;
 }
+
+/* Center logo vertically in navbar items */
+.navbar__items a[href='/react-native-reanimated/'] img,
+.navbar__brand a[href='/react-native-reanimated/'] img,
+.navbar__brand img {
+  vertical-align: middle;
+}

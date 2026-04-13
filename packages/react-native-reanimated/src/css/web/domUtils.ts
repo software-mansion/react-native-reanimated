@@ -1,5 +1,5 @@
 'use strict';
-import { IS_WINDOW_AVAILABLE, logger, ReanimatedError } from '../../common';
+import { IS_WINDOW_AVAILABLE, logger } from '../../common';
 
 const CSS_ANIMATIONS_STYLE_TAG_ID = 'ReanimatedCSSStyleTag';
 
@@ -62,7 +62,7 @@ export function insertCSSAnimation(animationName: string, keyframes: string) {
     const nextCSSIndex = cssNameToIndex.get(nextCSSName);
 
     if (nextCSSIndex === undefined) {
-      throw new ReanimatedError('Failed to obtain CSS animation index.');
+      throw new Error('[Reanimated] Failed to obtain CSS animation index.');
     }
 
     cssNameToIndex.set(cssNameList[i], nextCSSIndex + 1);
@@ -79,7 +79,7 @@ export function removeCSSAnimation(animationName: string) {
   const currentCSSIndex = cssNameToIndex.get(animationName);
 
   if (currentCSSIndex === undefined) {
-    throw new ReanimatedError('Failed to obtain CSS animation index.');
+    throw new Error('[Reanimated] Failed to obtain CSS animation index.');
   }
 
   sheet?.deleteRule(currentCSSIndex);
@@ -91,7 +91,7 @@ export function removeCSSAnimation(animationName: string) {
     const nextCSSIndex = cssNameToIndex.get(nextCSSName);
 
     if (nextCSSIndex === undefined) {
-      throw new ReanimatedError('Failed to obtain CSS animation index.');
+      throw new Error('[Reanimated] Failed to obtain CSS animation index.');
     }
 
     cssNameToIndex.set(cssNameList[i], nextCSSIndex - 1);

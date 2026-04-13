@@ -1,6 +1,5 @@
 'use strict';
 
-import { WorkletsError } from '../debug/WorkletsError';
 import { RuntimeKind } from '../runtimeKind';
 import { init } from './initializers';
 
@@ -14,14 +13,14 @@ import { init } from './initializers';
  * error is caught in C++ code.
  *
  * This function has no effect on the RN Runtime beside setting the
- * `_WORKLETS_BUNDLE_MODE` flag.
+ * `_WORKLETS_BUNDLE_MODE_ENABLED` flag.
  */
 export function bundleModeInit() {
   // Worklets Babel Plugin replaces `false` with `true` here
   // when Bundle Mode is enabled.
-  globalThis._WORKLETS_BUNDLE_MODE = false;
+  globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;
 
-  if (!globalThis._WORKLETS_BUNDLE_MODE) {
+  if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
     return;
   }
 
@@ -32,7 +31,7 @@ export function bundleModeInit() {
      * module before React Native has configured the RN Runtime.
      */
     init();
-    throw new WorkletsError('Worklets initialized successfully');
+    throw new Error('[Worklets] Worklets initialized successfully');
   }
 }
 

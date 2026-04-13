@@ -1,3 +1,4 @@
+/* eslint-disable perfectionist/sort-objects */
 /**
  * The original CSS implementation of this example can be found here:
  * https://codepen.io/JustGoscha/pen/reVLrp

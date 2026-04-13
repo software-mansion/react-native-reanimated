@@ -2,10 +2,20 @@
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/REASlowAnimations.h>
+#import <reanimated/apple/REAUIView.h>
 #import <reanimated/apple/RNGestureHandlerStateManager.h>
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 #import <reanimated/apple/native/SetGestureState.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
+
+#import <React/RCTComponentViewProtocol.h>
+#import <React/RCTComponentViewRegistry.h>
+#import <React/RCTMountingManager.h>
+
+@protocol RNScreenViewOptionalProtocol <NSObject>
+@required
+- (void)setSnapshotAfterUpdates:(BOOL)snapshot;
+@end
 
 namespace reanimated {
 
@@ -109,9 +119,25 @@ KeyboardEventUnsubscribeFunction makeUnsubscribeFromKeyboardEventsFunction(REAKe
   return unsubscribeFromKeyboardEventsFunction;
 }
 
+ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nodesManager)
+{
+  auto forceScreenSnapshot = [=](Tag tag) {
+    RCTSurfacePresenter *surfacePresenter = nodesManager.surfacePresenter;
+    RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
+    REAUIView<RCTComponentViewProtocol> *maybeRNSScreenView = [componentViewRegistry findComponentViewWithTag:tag];
+    SEL setSnapshotAfterUpdatesSelector = @selector(setSnapshotAfterUpdates:);
+    if ([maybeRNSScreenView respondsToSelector:setSnapshotAfterUpdatesSelector]) {
+      [(id<RNScreenViewOptionalProtocol>)maybeRNSScreenView setSnapshotAfterUpdates:YES];
+    }
+  };
+  return forceScreenSnapshot;
+}
+
 PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleRegistry, REANodesManager *nodesManager)
 {
   auto requestRender = makeRequestRender(nodesManager);
+
+  auto forceScreenSnapshotFunction = makeForceScreenSnapshotFunction(nodesManager);
 
   auto synchronouslyUpdateUIPropsFunction = makeSynchronouslyUpdateUIPropsFunction(nodesManager);
 
@@ -135,6 +161,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
+      forceScreenSnapshotFunction,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       registerSensorFunction,

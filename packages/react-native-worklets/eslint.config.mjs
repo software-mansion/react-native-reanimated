@@ -49,6 +49,7 @@ const config = tsEslint.config(
   {
     rules: {
       strict: ['error', 'global'],
+      '@typescript-eslint/no-explicit-any': 'error',
     },
     files: ['src/**/*.tsx', 'src/**/*.ts'],
     ignores: ['__tests__', '__mocks__'],
