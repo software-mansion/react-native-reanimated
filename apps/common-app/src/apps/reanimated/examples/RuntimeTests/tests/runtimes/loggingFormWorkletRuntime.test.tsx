@@ -57,7 +57,7 @@ const testCases: Record<string, TestCase> = {
       return undefined;
     },
   },
-  //BigInt is not serialized, loses type on transfer and arrives as {}
+  // BigInt is not serialized, loses type on transfer and arrives as {}
   bigInt: {
     expected: '{}',
     factory: () => {
@@ -65,7 +65,7 @@ const testCases: Record<string, TestCase> = {
       return BigInt(42);
     },
   },
-  //Symbol is not serialized, loses type on transfer and arrives as {}
+  // Symbol is not serialized, loses type on transfer and arrives as {}
   symbol: {
     expected: '{}',
     factory: () => {
@@ -118,6 +118,7 @@ const testCases: Record<string, TestCase> = {
     noBundleMode: '{}',
     factory: () => {
       'worklet';
+      // eslint-disable-next-line no-empty-function
       async function asyncFn() {}
       return asyncFn;
     },
@@ -127,11 +128,8 @@ const testCases: Record<string, TestCase> = {
     noBundleMode: '{}',
     factory: () => {
       'worklet';
+      // eslint-disable-next-line @typescript-eslint/require-await
       async function* asyncGenFn() {
-        // Without await in an async function, linter complains
-        await new Promise(r => {
-          r(true);
-        });
         yield 1;
       }
       return asyncGenFn;
@@ -197,7 +195,7 @@ const testCases: Record<string, TestCase> = {
       return new WeakMap();
     },
   },
-  //WeakSet loses its type on transfer, arrives as {} in both modes
+  // WeakSet loses its type on transfer, arrives as {} in both modes
   weakSet: {
     expected: '{}',
     factory: () => {
@@ -254,16 +252,20 @@ const testCases: Record<string, TestCase> = {
   },
 };
 
+// eslint-disable-next-line no-underscore-dangle
 const isBundleMode = globalThis._WORKLETS_BUNDLE_MODE_ENABLED;
 const modeKey = isBundleMode ? 'bundleMode' : 'noBundleMode';
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const originalHook = globalThis.nativeLoggingHook;
 
+// eslint-disable-next-line @typescript-eslint/require-await
 describe('loggingFromWorkletRuntime', async () => {
   const captureSerializedLog = async (factory: () => unknown): Promise<string> => {
     let message = 'INITIAL_VALUE_YOU_SHOULD_NOT_SEE_THIS';
 
     globalThis.nativeLoggingHook = (serializedMessage: string, _level: number) => {
       message = serializedMessage;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       originalHook(`Captured: ${serializedMessage}`, _level);
     };
 
@@ -275,6 +277,7 @@ describe('loggingFromWorkletRuntime', async () => {
       const notifyWrapper = () => notify('LOG_CAPTURED');
       runOnUISync(() => {
         'worklet';
+
         try {
           console.log(factory());
         } catch (e) {
@@ -285,19 +288,23 @@ describe('loggingFromWorkletRuntime', async () => {
       await waitForNotification('LOG_CAPTURED');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     globalThis.nativeLoggingHook = originalHook;
     return message;
   };
 
   test('nativeLoggingHook is defined on worklets runtime in bundle mode', () => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const workletsNativeLoggingHook = runOnUISync(() => {
       'worklet';
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return globalThis.nativeLoggingHook;
     }) as undefined | ((serializedMessage: string, level: number) => void);
     expect(workletsNativeLoggingHook !== undefined).toBe(!!isBundleMode);
   });
 
-  test.each(Object.entries(testCases))('%s serializes as expected', async ([_key, entry]) => {
+  test.each(Object.keys(testCases))('%s serializes as expected', async key => {
+    const entry = testCases[key];
     const expected = entry.expected ?? entry[modeKey]!;
     const result = await captureSerializedLog(entry.factory);
     const checkIncludes = typeof entry.checkIncludes === 'object' ? entry.checkIncludes[modeKey] : entry.checkIncludes;
