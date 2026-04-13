@@ -4,7 +4,7 @@ import { IS_ANDROID } from '../constants';
 import type { PlainStyle } from '../types';
 import {
   processAspectRatio,
-  processBoxShadowNative,
+  processBoxShadow,
   processColor,
   processFilter,
   processFontWeight,
@@ -15,11 +15,11 @@ import {
   processTransform,
   processTransformOrigin,
 } from './processors';
-import type { StyleBuilderConfig } from './types';
+import type { PropsBuilderConfig } from './types';
 
 const colorAttributes = { process: processColor };
 
-export const BASE_PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
+export const STYLE_PROPERTIES_CONFIG: PropsBuilderConfig<PlainStyle> = {
   /** Layout and Positioning */
   // FLEXBOX
   flex: true,
@@ -139,7 +139,7 @@ export const BASE_PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   elevation: IS_ANDROID,
   textShadowOffset: true,
   textShadowRadius: true,
-  boxShadow: { process: processBoxShadowNative },
+  boxShadow: { process: processBoxShadow },
 
   // BORDERS
   // Radius

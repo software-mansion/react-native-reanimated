@@ -10,12 +10,8 @@ AnimatedSensorModule::AnimatedSensorModule(const PlatformDepMethodsHolder &platf
     : platformRegisterSensorFunction_(platformDepMethodsHolder.registerSensor),
       platformUnregisterSensorFunction_(platformDepMethodsHolder.unregisterSensor) {}
 
-AnimatedSensorModule::~AnimatedSensorModule() {
-  react_native_assert(sensorsIds_.empty() && "Tried to deallocate AnimatedSensorModule with registered sensors");
-}
-
 jsi::Value AnimatedSensorModule::registerSensor(
-    jsi::Runtime &rt,
+    jsi::Runtime &rnRuntime,
     const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime,
     const jsi::Value &sensorTypeValue,
     const jsi::Value &interval,
@@ -23,8 +19,11 @@ jsi::Value AnimatedSensorModule::registerSensor(
     const jsi::Value &sensorDataHandler) {
   SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
 
-  auto serializableHandler = extractSerializableOrThrow<SerializableWorklet>(
-      rt, sensorDataHandler, "[Reanimated] Sensor event handler must be a worklet.");
+  auto serializableHandler = extractSerializable(
+      rnRuntime,
+      sensorDataHandler,
+      "[Reanimated] Sensor event handler must be a worklet.",
+      Serializable::ValueType::WorkletType);
 
   int sensorId = platformRegisterSensorFunction_(
       static_cast<int>(sensorType),
@@ -37,7 +36,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
           return;
         }
 
-        jsi::Runtime &uiRuntime = uiWorkletRuntime->getJSIRuntime();
+        jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
         jsi::Object value(uiRuntime);
         if (sensorType == SensorType::ROTATION_VECTOR) {
           // TODO: timestamp should be provided by the platform implementation
@@ -57,7 +56,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
         }
         value.setProperty(uiRuntime, "interfaceOrientation", orientationDegrees);
 
-        uiWorkletRuntime->runSync(serializableHandler, value);
+        runSyncOnRuntime(uiWorkletRuntime, serializableHandler, jsi::Value(uiRuntime, value));
       });
   if (sensorId != -1) {
     sensorsIds_.insert(sensorId);

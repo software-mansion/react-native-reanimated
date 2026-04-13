@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../../../../common';
 import { ERROR_MESSAGES, processStrokeDashArray } from '../stroke';
 
 describe(processStrokeDashArray, () => {
@@ -15,7 +14,7 @@ describe(processStrokeDashArray, () => {
 
     test('throws an error for invalid values', () => {
       expect(() => processStrokeDashArray('invalid')).toThrow(
-        new ReanimatedError(ERROR_MESSAGES.invalidDashArray('invalid'))
+        new Error(`[Reanimated] ${ERROR_MESSAGES.invalidDashArray('invalid')}`)
       );
     });
   });
@@ -23,7 +22,9 @@ describe(processStrokeDashArray, () => {
   describe('array value', () => {
     test('throws an error for invalid values', () => {
       expect(() => processStrokeDashArray([10, '10px'])).toThrow(
-        new ReanimatedError(ERROR_MESSAGES.invalidDashArray([10, '10px']))
+        new Error(
+          `[Reanimated] ${ERROR_MESSAGES.invalidDashArray([10, '10px'])}`
+        )
       );
     });
 

@@ -6,14 +6,15 @@ const { getMonorepoMetroOptions } = require('../../scripts/metro');
 const path = require('path');
 
 const defaultConfig = getDefaultConfig(__dirname);
-const modulesToFilter = ['react', 'react-native'];
 const { blockList, extraNodeModules } = getMonorepoMetroOptions(
-  modulesToFilter,
+  [],
   __dirname,
   defaultConfig
 );
 
 const monorepoRoot = path.resolve(__dirname, '../..');
+/** Do not remove 'apps' from watchFolders, as it's required to resolve assets. */
+const appsRoot = path.resolve(monorepoRoot, 'apps');
 
 /**
  * Metro configuration https://reactnative.dev/docs/metro
@@ -22,7 +23,7 @@ const monorepoRoot = path.resolve(__dirname, '../..');
  */
 let config = {
   projectRoot: __dirname,
-  watchFolders: [monorepoRoot],
+  watchFolders: [monorepoRoot, appsRoot],
   resolver: {
     blockList,
     extraNodeModules,

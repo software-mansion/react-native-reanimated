@@ -5,7 +5,7 @@ import type { WorkletFunction } from 'react-native-worklets';
 import { isWorkletFunction, makeShareable } from 'react-native-worklets';
 
 import { initialUpdaterRun } from '../animation';
-import { IS_JEST, ReanimatedError, SHOULD_BE_USE_WEB } from '../common';
+import { IS_JEST, SHOULD_BE_USE_WEB } from '../common';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,
@@ -30,15 +30,12 @@ import type {
   JestAnimatedStyleHandle,
 } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
-import {
-  buildWorkletsHash,
-  isAnimated,
-  shallowEqual,
-  validateAnimatedStyles,
-} from './utils';
+import { isAnimated, shallowEqual, validateAnimatedStyles } from './utils';
 
 interface AnimatedState {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   last: AnimatedStyle<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animations: AnimatedStyle<any>;
   isAnimationRunning: boolean;
   isAnimationCancelled: boolean;
@@ -46,7 +43,9 @@ interface AnimatedState {
 
 interface AnimatedUpdaterData {
   initial: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: AnimatedStyle<any>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     updater: () => AnimatedStyle<any>;
   };
   remoteState: AnimatedState;
@@ -56,8 +55,11 @@ interface AnimatedUpdaterData {
 
 function prepareAnimation(
   frameTimestamp: number,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animatedProp: AnimatedStyle<any>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lastAnimation: AnimatedStyle<any>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lastValue: AnimatedStyle<any>
 ): void {
   'worklet';
@@ -115,9 +117,11 @@ function prepareAnimation(
 }
 
 function runAnimations(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animation: AnimatedStyle<any>,
   timestamp: Timestamp,
   key: number | string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   result: AnimatedStyle<any>,
   animationsActive: SharedValue<boolean>,
   forceCopyAnimation?: boolean
@@ -196,6 +200,7 @@ function runAnimations(
 
 function styleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
   animationsActive: SharedValue<boolean>,
@@ -235,6 +240,7 @@ function styleUpdater(
         return;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const updates: AnimatedStyle<any> = {};
       let allFinished = true;
       for (const propName in animations) {
@@ -271,7 +277,7 @@ function styleUpdater(
       }
 
       if (updates) {
-        updateProps(viewDescriptors, updates);
+        updateProps(viewDescriptors, updates, isAnimatedProps);
       }
 
       if (!allFinished) {
@@ -289,7 +295,7 @@ function styleUpdater(
     }
 
     if (hasNonAnimatedValues) {
-      updateProps(viewDescriptors, nonAnimatedNewValues);
+      updateProps(viewDescriptors, nonAnimatedNewValues, isAnimatedProps);
     }
   } else {
     state.isAnimationCancelled = true;
@@ -304,14 +310,17 @@ function styleUpdater(
 
 function jestStyleUpdater(
   viewDescriptors: SharedValue<Descriptor[]>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updater: WorkletFunction<[], AnimatedStyle<any>> | (() => AnimatedStyle<any>),
   state: AnimatedState,
   animationsActive: SharedValue<boolean>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   animatedValues: RefObject<AnimatedStyle<any>>,
   adapters: AnimatedPropsAdapterFunction[],
   forceUpdate?: boolean
 ): void {
   'worklet';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const animations: AnimatedStyle<any> = state.animations ?? {};
   const newValues = updater() ?? {};
   const oldValues = state.last;
@@ -344,6 +353,7 @@ function jestStyleUpdater(
       return;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updates: AnimatedStyle<any> = {};
     let allFinished = true;
     Object.keys(animations).forEach((propName) => {
@@ -429,10 +439,24 @@ function checkSharedValueUsage(
     prop.value !== undefined
   ) {
     // if shared value is passed instead of its value, throw an error
-    throw new ReanimatedError(
-      `Invalid value passed to \`${currentKey}\`, maybe you forgot to use \`.value\`?`
+    throw new Error(
+      `[Reanimated] Invalid value passed to \`${currentKey}\`, maybe you forgot to use \`.value\`?`
     );
   }
+}
+
+// Builds one big hash from multiple worklets' hashes.
+function buildWorkletsHash<Args extends unknown[], ReturnValue>(
+  worklets:
+    | Record<string, WorkletFunction<Args, ReturnValue>>
+    | WorkletFunction<Args, ReturnValue>[]
+) {
+  // For arrays `Object.values` returns the array itself.
+  return Object.values(worklets).reduce(
+    (acc, worklet: WorkletFunction<Args, ReturnValue>) =>
+      acc + worklet.__workletHash.toString(),
+    ''
+  );
 }
 
 /**
@@ -447,12 +471,11 @@ function checkSharedValueUsage(
  *   property of an Animated component you want to animate.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle
  */
-// You cannot pass Shared Values to `useAnimatedStyle` directly.
-// @ts-expect-error This overload is required by our API.
+// @ts-expect-error Public type definition which strips internals.
 export function useAnimatedStyle<Style extends DefaultStyle>(
   updater: () => Style,
   dependencies?: DependencyList | null
-): Style;
+): AnimatedStyleHandle<Style>;
 
 export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
   updater:
@@ -477,8 +500,8 @@ export function useAnimatedStyle<Style extends DefaultStyle | AnimatedProps>(
       !dependencies &&
       !isWorkletFunction(updater)
     ) {
-      throw new ReanimatedError(
-        `\`useAnimatedStyle\` was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel plugin.
+      throw new Error(
+        `[Reanimated] \`useAnimatedStyle\` was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel plugin.
 For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin\`.`
       );
     }
@@ -608,22 +631,11 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
           toJSON: animatedStyleHandleToJSON,
           styleUpdaterContainer,
         }
-      : __DEV__
-        ? ({
-            get _requiresAnimatedComponent() {
-              throw new ReanimatedError(
-                'Perhaps you are trying to pass an animated style to a non-animated component. Try creating an animated component using `createAnimatedComponent` function or use `Animated.*` components.'
-              );
-            },
-            viewDescriptors,
-            initial,
-            styleUpdaterContainer,
-          } as AnimatedStyleHandle<Style | AnimatedProps>)
-        : {
-            viewDescriptors,
-            initial,
-            styleUpdaterContainer,
-          };
+      : {
+          viewDescriptors,
+          initial,
+          styleUpdaterContainer,
+        };
   }
 
   return animatedStyleHandle.current;

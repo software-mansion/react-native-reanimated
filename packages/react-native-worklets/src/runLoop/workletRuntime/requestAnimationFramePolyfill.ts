@@ -27,7 +27,7 @@ export function setupRequestAnimationFrame(animationQueuePollingRate: number) {
 
     for (const callback of flushedCallbacks) {
       callback(timestamp);
-      globalThis.__flushMicrotasks();
+      globalThis.__callMicrotasks();
     }
 
     flushedCallbacksBegin = flushedCallbacksEnd;
@@ -47,7 +47,7 @@ export function setupRequestAnimationFrame(animationQueuePollingRate: number) {
     return handle;
   };
 
-  globalThis.cancelAnimationFrame = (handle: number) => {
+  globalThis.cancelAnimationFrame = ((handle: number) => {
     if (handle < flushedCallbacksBegin || handle >= queuedCallbacksEnd) {
       return;
     }
@@ -57,5 +57,5 @@ export function setupRequestAnimationFrame(animationQueuePollingRate: number) {
     } else {
       queuedCallbacks[handle - queuedCallbacksBegin] = () => {};
     }
-  };
+  }) as typeof globalThis.cancelAnimationFrame;
 }

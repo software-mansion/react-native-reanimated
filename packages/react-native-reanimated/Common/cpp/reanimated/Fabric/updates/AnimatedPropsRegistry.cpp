@@ -6,13 +6,11 @@
 
 namespace reanimated {
 
-#if REACT_NATIVE_MINOR_VERSION >= 81
 static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper) {
   return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
 }
-#endif
 
 void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations, const double timestamp) {
   auto operationsArray = operations.asObject(rt).asArray(rt);
@@ -23,7 +21,7 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
     auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
     const jsi::Value &updates = item.getProperty(rt, "updates");
-    addUpdatesToBatch(shadowNode, jsi::dynamicFromValue(rt, updates));
+    addUpdatesToBatch(shadowNode->getFamilyShared(), jsi::dynamicFromValue(rt, updates));
 
     if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
       timestampMap_[shadowNode->getTag()] = timestamp;
@@ -33,13 +31,15 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
 
 void AnimatedPropsRegistry::remove(const Tag tag) {
   updatesRegistry_.erase(tag);
+  timestampMap_.erase(tag);
 }
 
 jsi::Value AnimatedPropsRegistry::getUpdatesOlderThanTimestamp(jsi::Runtime &rt, const double timestamp) {
   std::vector<std::pair<Tag, std::reference_wrapper<const folly::dynamic>>> updates;
 
   for (const auto &[viewTag, pair] : updatesRegistry_) {
-    if (timestampMap_.at(viewTag) < timestamp) {
+    auto it = timestampMap_.find(viewTag);
+    if (it != timestampMap_.end() && it->second < timestamp) {
       updates.emplace_back(viewTag, std::cref(pair.second));
     }
   }

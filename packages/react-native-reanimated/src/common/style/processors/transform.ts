@@ -1,6 +1,4 @@
 'use strict';
-'worklet';
-import { ReanimatedError } from '../../errors';
 import type { TransformsArray, ValueProcessor } from '../../types';
 import { isAngle, isNumber, isNumberArray, isPercentage } from '../../utils';
 
@@ -10,6 +8,7 @@ export const ERROR_MESSAGES = {
 };
 
 function parseValues(valueString: string): (string | number)[] {
+  'worklet';
   return valueString.split(',').map((value) => {
     const trimmedValue = value.trim();
     if (['deg', 'rad', '%'].some((unit) => trimmedValue.endsWith(unit))) {
@@ -21,18 +20,21 @@ function parseValues(valueString: string): (string | number)[] {
 }
 
 function parseTranslateX(values: (number | string)[]): TransformsArray {
+  'worklet';
   return values.length === 1 && (isNumber(values[0]) || isPercentage(values[0]))
     ? [{ translateX: values[0] }]
     : [];
 }
 
 function parseTranslateY(values: (number | string)[]): TransformsArray {
+  'worklet';
   return values.length === 1 && (isNumber(values[0]) || isPercentage(values[0]))
     ? [{ translateY: values[0] }]
     : [];
 }
 
 function parseTranslate(values: (number | string)[]): TransformsArray {
+  'worklet';
   if (values.length > 2) {
     return [];
   }
@@ -43,18 +45,21 @@ function parseTranslate(values: (number | string)[]): TransformsArray {
 }
 
 function parseScaleX(values: (number | string)[]): TransformsArray {
+  'worklet';
   return values.length === 1 && isNumber(values[0])
     ? [{ scaleX: values[0] }]
     : [];
 }
 
 function parseScaleY(values: (number | string)[]): TransformsArray {
+  'worklet';
   return values.length === 1 && isNumber(values[0])
     ? [{ scaleY: values[0] }]
     : [];
 }
 
 function parseScale(values: (number | string)[]): TransformsArray {
+  'worklet';
   if (values.length > 2) {
     return [];
   }
@@ -71,6 +76,7 @@ function parseRotate(
   key: string,
   values: (string | number)[]
 ): TransformsArray {
+  'worklet';
   return values.length === 1 && (isAngle(values[0]) || values[0] === 0)
     ? ([
         { [key]: values[0] === 0 ? '0deg' : values[0] },
@@ -79,18 +85,21 @@ function parseRotate(
 }
 
 function parseSkewX(values: (number | string)[]): TransformsArray {
+  'worklet';
   return values.length === 1 && (isAngle(values[0]) || values[0] === 0)
     ? [{ skewX: values[0] === 0 ? '0deg' : values[0] }]
     : [];
 }
 
 function parseSkewY(values: (number | string)[]): TransformsArray {
+  'worklet';
   return values.length === 1 && (isAngle(values[0]) || values[0] === 0)
     ? [{ skewY: values[0] === 0 ? '0deg' : values[0] }]
     : [];
 }
 
 function parseSkew(values: (number | string)[]): TransformsArray {
+  'worklet';
   if (values.length > 2) {
     return [];
   }
@@ -101,6 +110,7 @@ function parseSkew(values: (number | string)[]): TransformsArray {
 }
 
 function parseMatrix(values: (number | string)[]): TransformsArray {
+  'worklet';
   let matrixValues: number[] = [];
 
   if (isNumberArray(values)) {
@@ -121,12 +131,14 @@ function parseMatrix(values: (number | string)[]): TransformsArray {
 }
 
 function parsePerspective(values: (number | string)[]): TransformsArray {
+  'worklet';
   return values.length === 1 && isNumber(values[0])
     ? [{ perspective: values[0] }]
     : [];
 }
 
 const parseTransformProperty = (transform: string): TransformsArray => {
+  'worklet';
   const [key, valueString] = transform.split(/\(\s*/);
   const values = parseValues(valueString.replace(/\)$/g, ''));
 
@@ -166,6 +178,7 @@ const parseTransformProperty = (transform: string): TransformsArray => {
 export const processTransform: ValueProcessor<TransformsArray | string> = (
   value
 ) => {
+  'worklet';
   if (typeof value !== 'string') {
     return value;
   }
@@ -177,7 +190,9 @@ export const processTransform: ValueProcessor<TransformsArray | string> = (
       const parsed = parseTransformProperty(part);
 
       if (parsed.length === 0) {
-        throw new ReanimatedError(ERROR_MESSAGES.invalidTransform(`${part})`));
+        throw new Error(
+          `[Reanimated] ${ERROR_MESSAGES.invalidTransform(`${part})`)}`
+        );
       }
 
       return parsed;

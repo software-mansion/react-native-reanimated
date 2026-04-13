@@ -1,4 +1,5 @@
 'use strict';
+import type { Rotate, TranslateX, TranslateY } from '../../common';
 import type {
   AnimationConfigFunction,
   EntryAnimationsValues,
@@ -19,7 +20,10 @@ import { ComplexAnimationBuilder } from '../animationBuilder';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateInDownLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [Rotate, TranslateX, TranslateY];
+  }>
   implements IEntryAnimationBuilder
 {
   static presetName = 'RotateInDownLeft';
@@ -73,7 +77,10 @@ export class RotateInDownLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateInDownRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [Rotate, TranslateX, TranslateY];
+  }>
   implements IEntryAnimationBuilder
 {
   static presetName = 'RotateInDownRight';
@@ -127,7 +134,10 @@ export class RotateInDownRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateInUpLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [Rotate, TranslateX, TranslateY];
+  }>
   implements IEntryAnimationBuilder
 {
   static presetName = 'RotateInUpLeft';
@@ -181,7 +191,10 @@ export class RotateInUpLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateInUpRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [Rotate, TranslateX, TranslateY];
+  }>
   implements IEntryAnimationBuilder
 {
   static presetName = 'RotateInUpRight';
@@ -235,7 +248,10 @@ export class RotateInUpRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateOutDownLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [Rotate, TranslateX, TranslateY];
+  }>
   implements IExitAnimationBuilder
 {
   static presetName = 'RotateOutDownLeft';
@@ -301,7 +317,10 @@ export class RotateOutDownLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateOutDownRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [Rotate, TranslateX, TranslateY];
+  }>
   implements IExitAnimationBuilder
 {
   static presetName = 'RotateOutDownRight';
@@ -367,7 +386,10 @@ export class RotateOutDownRight
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateOutUpLeft
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [Rotate, TranslateX, TranslateY];
+  }>
   implements IExitAnimationBuilder
 {
   static presetName = 'RotateOutUpLeft';
@@ -433,7 +455,10 @@ export class RotateOutUpLeft
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
 export class RotateOutUpRight
-  extends ComplexAnimationBuilder
+  extends ComplexAnimationBuilder<{
+    opacity: number;
+    transform: [Rotate, TranslateX, TranslateY];
+  }>
   implements IExitAnimationBuilder
 {
   static presetName = 'RotateOutUpRight';
