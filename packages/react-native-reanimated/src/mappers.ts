@@ -108,8 +108,9 @@ function createMapperRegistry() {
       }
     } finally {
       processingMappers = false;
+      const finalizers = mapperRunFinalizers;
       mapperRunFinalizers = [];
-      for (const finalizer of mapperRunFinalizers) {
+      for (const finalizer of finalizers) {
         finalizer();
       }
     }
