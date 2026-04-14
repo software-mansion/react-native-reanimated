@@ -24,18 +24,15 @@ void CSSAnimationGroup::updateSettings(const CSSAnimationSettingsUpdatesMap &set
   }
 }
 
-void CSSAnimationGroup::schedule(const std::shared_ptr<OperationsLoop> &loop) {
-  const auto timestamp = loop->getTimestamp();
-  for (const auto &anim : animations_) {
-    if (anim->getState() != AnimationProgressState::Paused) {
-      loop->schedule(anim, anim->getRemainingDelay(timestamp));
-    }
+void CSSAnimationGroup::schedule() {
+  for (const auto &animation : animations_) {
+    animation->schedule();
   }
 }
 
-void CSSAnimationGroup::unschedule(const std::shared_ptr<OperationsLoop> &loop) const {
-  for (const auto &anim : animations_) {
-    loop->remove(anim);
+void CSSAnimationGroup::unschedule() const {
+  for (const auto &animation : animations_) {
+    animation->unschedule();
   }
 }
 
@@ -59,8 +56,6 @@ folly::dynamic CSSAnimationGroup::computeStyle(bool includeResetStyles) const {
       }
     }
   }
-
-  LOG(INFO) << "tag: " << shadowNode_->getTag() << " style: " << style;
 
   return style;
 }
