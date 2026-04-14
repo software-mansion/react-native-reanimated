@@ -22,6 +22,7 @@ struct PlatformAnimationPropertyConfig {
 struct PlatformAnimationConfig {
   std::string name;
   double duration;
+  double startTimestamp;
   double iterationCount;
   int direction;
   std::vector<PlatformAnimationPropertyConfig> properties;

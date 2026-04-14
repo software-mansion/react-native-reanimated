@@ -58,10 +58,6 @@ AnimationProgressState AnimationProgressProvider::getState() const {
   return state_;
 }
 
-double AnimationProgressProvider::getStartTimestamp(const double timestamp) const {
-  return creationTimestamp_ + delay_ + getTotalPausedTime(timestamp);
-}
-
 void AnimationProgressProvider::pause(const double timestamp) {
   pauseTimestamp_ = timestamp;
 }
@@ -116,6 +112,10 @@ std::optional<double> AnimationProgressProvider::calculateRawProgress(const doub
   }
 
   return iterationProgress;
+}
+
+double AnimationProgressProvider::getStartTimestamp(const double timestamp) const {
+  return creationTimestamp_ + delay_ + getTotalPausedTime(timestamp);
 }
 
 double AnimationProgressProvider::getTotalPausedTime(const double timestamp) const {

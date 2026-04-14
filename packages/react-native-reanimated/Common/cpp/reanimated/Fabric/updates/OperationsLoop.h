@@ -25,7 +25,7 @@ class OperationsLoop : public std::enable_shared_from_this<OperationsLoop> {
 
   double getTimestamp();
 
-  void schedule(OperationPtr operation, double delay = 0);
+  void schedule(OperationPtr operation, double startTimestamp);
   void remove(const OperationPtr &operation);
   bool isEmpty() const;
 

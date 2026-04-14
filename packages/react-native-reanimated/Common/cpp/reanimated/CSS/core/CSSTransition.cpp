@@ -26,7 +26,7 @@ void CSSTransition::onUpdate(const double timestamp) {
 
   // Reschedule if transition became delayed (per-property delays)
   if (getState() == TransitionProgressState::Pending) {
-    loop_->schedule(shared_from_this(), getMinDelay(timestamp));
+    loop_->schedule(shared_from_this(), timestamp + getMinDelay(timestamp));
   }
 }
 

@@ -32,9 +32,9 @@ CAPlatformAnimation::CAPlatformAnimation(
       applyFn_(std::move(applyFn)),
       removeFn_(std::move(removeFn)) {}
 
-void CAPlatformAnimation::schedule() {
+void CAPlatformAnimation::schedule(const double startTimestamp) {
   if (applyFn_) {
-    applyFn_(viewTag_, buildConfig());
+    applyFn_(viewTag_, buildConfig(startTimestamp));
   }
 }
 
@@ -44,10 +44,11 @@ void CAPlatformAnimation::unschedule() {
   }
 }
 
-PlatformAnimationConfig CAPlatformAnimation::buildConfig() const {
+PlatformAnimationConfig CAPlatformAnimation::buildConfig(const double startTimestamp) const {
   PlatformAnimationConfig config;
   config.name = name_;
   config.duration = settings_->duration;
+  config.startTimestamp = startTimestamp;
   config.iterationCount = settings_->iterationCount;
   config.direction = static_cast<int>(settings_->direction);
 

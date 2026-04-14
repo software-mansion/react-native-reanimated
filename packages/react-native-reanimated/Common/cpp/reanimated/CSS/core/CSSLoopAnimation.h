@@ -28,7 +28,7 @@ class CSSLoopAnimation : public LoopOperation {
   void onUpdate(double timestamp) override;
   bool isRunning() const override;
 
-  void schedule();
+  void schedule(double startTimestamp);
   void unschedule();
 
   AnimationProgressState getState() const;

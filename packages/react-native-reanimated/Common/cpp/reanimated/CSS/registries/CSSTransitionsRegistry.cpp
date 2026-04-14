@@ -33,7 +33,7 @@ void CSSTransitionsRegistry::run(
 
   auto initialUpdate = transition->run(rt, config, lastUpdates, timestamp);
 
-  loop_->schedule(transition, transition->getMinDelay(timestamp));
+  loop_->schedule(transition, timestamp + transition->getMinDelay(timestamp));
 
   updateInUpdatesRegistry(transition, initialUpdate);
 }

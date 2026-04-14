@@ -146,15 +146,16 @@ createAnimationFromKeyframes(NSString *keyPath, CAKeyframeData keyframeData, NSA
   return kfAnim;
 }
 
-// Delay and fill mode are handled by C++ for cross-platform consistency.
-// CA animations start immediately and are always removed on completion.
+// Fill mode is handled by C++ for cross-platform consistency.
 static void configureAnimationTiming(CAAnimation *animation, NSDictionary *settings)
 {
   double duration = [settings[@"duration"] doubleValue] / 1000.0;
+  double startTimestamp = [settings[@"startTimestamp"] doubleValue] / 1000.0;
   double iterationCount = [settings[@"iterationCount"] doubleValue];
   BOOL isAlternating = isDirectionAlternating([settings[@"direction"] intValue]);
 
   animation.duration = duration;
+  animation.beginTime = startTimestamp;
 
   if (iterationCount == -1) {
     animation.repeatCount = HUGE_VALF;
@@ -240,6 +241,7 @@ NSDictionary *convertPlatformAnimationConfigToObjC(const reanimated::css::Platfo
     @"descriptors" : descriptors,
     @"settings" : @{
       @"duration" : @(config.duration),
+      @"startTimestamp" : @(config.startTimestamp),
       @"iterationCount" : @(config.iterationCount),
       @"direction" : @(config.direction),
     },

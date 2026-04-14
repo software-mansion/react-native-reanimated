@@ -21,7 +21,7 @@ class CAPlatformAnimation final : public CSSPlatformAnimation {
       ApplyPlatformAnimationFunction applyFn,
       RemovePlatformAnimationFunction removeFn);
 
-  void schedule() override;
+  void schedule(double startTimestamp) override;
   void unschedule() override;
 
  private:
@@ -33,7 +33,7 @@ class CAPlatformAnimation final : public CSSPlatformAnimation {
   const ApplyPlatformAnimationFunction applyFn_;
   const RemovePlatformAnimationFunction removeFn_;
 
-  PlatformAnimationConfig buildConfig() const;
+  PlatformAnimationConfig buildConfig(double startTimestamp) const;
 };
 
 } // namespace reanimated::css

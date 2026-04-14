@@ -87,28 +87,27 @@ std::vector<CAKeyframe> buildKeyframesForProperty(jsi::Runtime &rt, const jsi::V
   const auto hasOffset0 = offsetAt(0) == 0.0;
   const auto hasOffset1 = offsetAt(keyframesCount - 1) == 1.0;
 
-  std::vector<CAKeyframe> result;
-  result.reserve(keyframesCount + (hasOffset0 ? 0 : 1) + (hasOffset1 ? 0 : 1));
-
-  if (!hasOffset0) {
-    result.emplace_back(0.0, std::nullopt);
+  // TODO: Resolve missing boundary keyframes from the layer's current value
+  // at apply time so these properties can use the platform animation path.
+  // For now, fall back to loop animation which resolves style values per frame.
+  if (!hasOffset0 || !hasOffset1) {
+    return {};
   }
+
+  std::vector<CAKeyframe> result;
+  result.reserve(keyframesCount);
 
   for (size_t i = 0; i < keyframesCount; ++i) {
     const jsi::Object keyframeObject = keyframeArray.getValueAtIndex(rt, i).asObject(rt);
     const double offset = keyframeObject.getProperty(rt, "offset").asNumber();
     const jsi::Value value = keyframeObject.getProperty(rt, "value");
     auto parsed = parseKeyframeValue(rt, type, value);
-    if (!parsed.has_value() && !value.isUndefined()) {
-      // Value exists but doesn't match the expected CA type
-      // (e.g. color as packed int) — can't animate on platform.
+    if (!parsed.has_value()) {
+      // Value is missing or doesn't match the expected CA type —
+      // can't animate on platform.
       return {};
     }
     result.emplace_back(offset, std::move(parsed));
-  }
-
-  if (!hasOffset1) {
-    result.emplace_back(1.0, std::nullopt);
   }
 
   return result;

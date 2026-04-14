@@ -95,11 +95,13 @@ folly::dynamic CSSAnimation::getResetStyle() const {
 }
 
 void CSSAnimation::schedule() {
+  const auto startTimestamp = loop_->getTimestamp() + settings_->delay;
+
   if (loopAnimation_) {
-    loopAnimation_->schedule();
+    loopAnimation_->schedule(startTimestamp);
   }
   if (platformAnimation_) {
-    platformAnimation_->schedule();
+    platformAnimation_->schedule(startTimestamp);
   }
 }
 

@@ -35,7 +35,6 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   double getKeyframeProgress(double fromOffset, double toOffset) const override;
 
   AnimationProgressState getState() const;
-  double getStartTimestamp(double timestamp) const;
 
   void pause(double timestamp);
   void play(double timestamp);
@@ -59,6 +58,7 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   double pauseTimestamp_ = 0;
   double totalPausedTime_ = 0;
 
+  double getStartTimestamp(double timestamp) const;
   double getTotalPausedTime(double timestamp) const;
   bool shouldFinish(double timestamp) const;
   AnimationProgressState computeState(double timestamp) const;

@@ -49,11 +49,9 @@ CSSLoopAnimation::CSSLoopAnimation(
   }
 }
 
-void CSSLoopAnimation::schedule() {
+void CSSLoopAnimation::schedule(const double startTimestamp) {
   if (getState() != AnimationProgressState::Paused) {
-    const auto timestamp = loop_->getTimestamp();
-    const auto remainingDelay = progressProvider_->getStartTimestamp(timestamp) - timestamp;
-    loop_->schedule(shared_from_this(), remainingDelay);
+    loop_->schedule(shared_from_this(), startTimestamp);
   }
 }
 
