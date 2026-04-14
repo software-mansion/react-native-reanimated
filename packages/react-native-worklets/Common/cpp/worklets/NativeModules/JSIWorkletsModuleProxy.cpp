@@ -286,18 +286,16 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
         return makeSerializableTurboModuleLike(rt, args[0].asObject(rt), args[1].asObject(rt).asHostObject(rt));
       });
 
-  addMethod("createSerializableObject", 3, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) {
-    if (count < 2) {
-      throw jsi::JSError(
-          rt,
-          "[Worklets] createSerializableObject expects at least 2 arguments.");
-    }
+  addMethod(
+      "createSerializableObject", 3, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) {
+        if (count < 2) {
+          throw jsi::JSError(rt, "[Worklets] createSerializableObject expects at least 2 arguments.");
+        }
 
-    const auto shouldPersistRemote = args[1].getBool();
-    const auto remoteValue = count > 2 ? args[2] : jsi::Value::undefined();
-    return makeSerializableObject(
-        rt, args[0].getObject(rt), shouldPersistRemote, remoteValue);
-  });
+        const auto shouldPersistRemote = args[1].getBool();
+        const auto remoteValue = count > 2 ? jsi::Value(rt, args[2]) : jsi::Value::undefined();
+        return makeSerializableObject(rt, args[0].getObject(rt), shouldPersistRemote, remoteValue);
+      });
 
   addMethod("createSerializableMap", 2, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
     return makeSerializableMap(rt, args[0].asObject(rt).asArray(rt), args[1].asObject(rt).asArray(rt));
