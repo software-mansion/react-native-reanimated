@@ -10,14 +10,23 @@ namespace reanimated::css {
 
 CSSTransition::CSSTransition(
     std::shared_ptr<const ShadowNode> shadowNode,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+    const std::shared_ptr<std::unordered_set<Tag>> &updatedViewTags,
+    const std::shared_ptr<OperationsLoop> &loop)
     : shadowNode_(std::move(shadowNode)),
       viewStylesRepository_(viewStylesRepository),
+      updatedViewTags_(updatedViewTags),
+      loop_(loop),
       styleInterpolator_(TransitionStyleInterpolator(shadowNode_->getComponentName(), viewStylesRepository)),
       progressProvider_(TransitionProgressProvider()) {}
 
 void CSSTransition::onUpdate(const double timestamp) {
   progressProvider_.update(timestamp);
+  updatedViewTags_->insert(shadowNode_->getTag());
+
+  if (getState() == TransitionProgressState::Pending) {
+    loop_->schedule(shared_from_this(), timestamp + getMinDelay(timestamp));
+  }
 }
 
 bool CSSTransition::isRunning() const {
