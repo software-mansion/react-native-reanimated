@@ -3,7 +3,9 @@
 import { createSerializable } from './serializable';
 import { type Synchronizable, type SynchronizableRef } from './types';
 
-export function __installUnpacker() {
+export function installSynchronizableUnpacker() {
+  'worklet';
+  'no-worklet-closure';
   // TODO: Add cache for synchronizables.
   const serializer =
     globalThis.__RUNTIME_KIND === 1 || globalThis._WORKLETS_BUNDLE_MODE_ENABLED

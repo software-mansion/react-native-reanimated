@@ -190,10 +190,15 @@ void WorkletsModule::invalidateCpp() {
   workletsModuleProxy_.reset();
 }
 
+void WorkletsModule::startCpp() {
+  workletsModuleProxy_->start();
+}
+
 void WorkletsModule::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", WorkletsModule::initHybrid),
       makeNativeMethod("invalidateCpp", WorkletsModule::invalidateCpp),
+      makeNativeMethod("startCpp", WorkletsModule::startCpp),
   });
 }
 

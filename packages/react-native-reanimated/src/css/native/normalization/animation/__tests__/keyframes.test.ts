@@ -2,7 +2,6 @@
 import {
   getCompoundComponentName,
   getPropsBuilder,
-  ReanimatedError,
 } from '../../../../../common';
 import type { Repeat } from '../../../../types';
 import {
@@ -32,7 +31,9 @@ describe(normalizeKeyframeSelector, () => {
 
       it('throws an error for invalid keyword', () => {
         expect(() => normalizeKeyframeSelector('invalid')).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidOffsetType('invalid'))
+          new Error(
+            `[Reanimated] ${ERROR_MESSAGES.invalidOffsetType('invalid')}`
+          )
         );
       });
     });
@@ -48,19 +49,19 @@ describe(normalizeKeyframeSelector, () => {
 
       it('throws an error for numbers outside of 0 and 1', () => {
         expect(() => normalizeKeyframeSelector(-0.1)).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(-0.1))
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidOffsetRange(-0.1)}`)
         );
         expect(() => normalizeKeyframeSelector(1.1)).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(1.1))
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidOffsetRange(1.1)}`)
         );
       });
 
       it('throws an error for invalid numbers', () => {
         expect(() => normalizeKeyframeSelector('1+')).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidOffsetType('1+'))
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidOffsetType('1+')}`)
         );
         expect(() => normalizeKeyframeSelector(NaN)).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidOffsetType(NaN))
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidOffsetType(NaN)}`)
         );
       });
     });
@@ -72,7 +73,7 @@ describe(normalizeKeyframeSelector, () => {
 
       it('throws an error for invalid percentages', () => {
         expect(() => normalizeKeyframeSelector('101%')).toThrow(
-          new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange('101%'))
+          new Error(`[Reanimated] ${ERROR_MESSAGES.invalidOffsetRange('101%')}`)
         );
       });
     });

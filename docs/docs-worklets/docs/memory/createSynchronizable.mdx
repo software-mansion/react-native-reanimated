@@ -3,7 +3,7 @@ title: createSynchronizable
 sidebar_position: 42 # Use alphabetical order
 ---
 
-# createSynchronizable <AvailableFrom version="0.6.0" />
+# createSynchronizable <AvailableFrom version="0.6.0"/>
 
 Creates a new [Synchronizable](/docs/memory/synchronizable) holding the provided initial value. Returns the created Synchronizable.
 
@@ -16,14 +16,13 @@ const synchronizable = createSynchronizable({ a: 42 });
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function createSynchronizable<TValue>(
-  initialValue: TValue
-): Synchronizable<TValue>;
-```
-
+  ```typescript
+  function createSynchronizable<TValue>(
+    initialValue: TValue
+  ): Synchronizable<TValue>;
+  ```
 </details>
 
 ## Arguments

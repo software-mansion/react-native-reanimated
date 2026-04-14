@@ -110,6 +110,18 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
   return @YES;
 }
 
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(start)
+{
+  AssertJavaScriptQueue();
+  workletsModuleProxy_->start();
+  return @YES;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
+{
+  throw std::runtime_error("[Worklets] toggleSlowAnimationsOnUIRuntime is not supported on iOS.");
+}
+
 - (void)invalidate
 {
   AssertTurboModuleManagerQueue();

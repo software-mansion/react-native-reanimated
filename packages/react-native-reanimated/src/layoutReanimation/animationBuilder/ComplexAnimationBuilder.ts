@@ -11,7 +11,19 @@ import type {
 import type { EasingFunctionFactory } from '../../Easing';
 import { BaseAnimationBuilder } from './BaseAnimationBuilder';
 
-export class ComplexAnimationBuilder extends BaseAnimationBuilder {
+/**
+ * `this` type for every static method on {@link ComplexAnimationBuilder}.
+ * Represents a subclass constructor that preserves the concrete
+ * `TInitialValues` type argument while still exposing the static API inherited
+ * from {@link BaseAnimationBuilder}.
+ */
+type ComplexAnimationBuilderClass<TInitialValues> =
+  typeof BaseAnimationBuilder &
+    (new () => ComplexAnimationBuilder<TInitialValues>);
+
+export class ComplexAnimationBuilder<
+  TInitialValues = StyleProps,
+> extends BaseAnimationBuilder {
   easingV?: EasingFunction | EasingFunctionFactory;
   rotateV?: string;
   type?: AnimationFunction;
@@ -21,7 +33,7 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
   stiffnessV?: number;
   overshootClampingV?: number;
   energyThresholdV?: number;
-  initialValues?: StyleProps;
+  initialValues?: Partial<TInitialValues>;
 
   static createInstance: <T extends typeof BaseAnimationBuilder>(
     this: T
@@ -35,10 +47,10 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
    * @param easingFunction - An easing function which defines the animation
    *   curve.
    */
-  static easing<T extends typeof ComplexAnimationBuilder>(
-    this: T,
+  static easing<TInitialValues>(
+    this: ComplexAnimationBuilderClass<TInitialValues>,
     easingFunction: EasingFunction | EasingFunctionFactory
-  ) {
+  ): ComplexAnimationBuilder<TInitialValues> {
     const instance = this.createInstance();
     return instance.easing(easingFunction);
   }
@@ -58,10 +70,10 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
    *
    * @param degree - The rotation degree.
    */
-  static rotate<T extends typeof ComplexAnimationBuilder>(
-    this: T,
+  static rotate<TInitialValues>(
+    this: ComplexAnimationBuilderClass<TInitialValues>,
     degree: string
-  ) {
+  ): ComplexAnimationBuilder<TInitialValues> {
     const instance = this.createInstance();
     return instance.rotate(degree);
   }
@@ -79,10 +91,10 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
    * @param duration - An optional duration of the spring animation (in
    *   milliseconds).
    */
-  static springify<T extends typeof ComplexAnimationBuilder>(
-    this: T,
+  static springify<TInitialValues>(
+    this: ComplexAnimationBuilderClass<TInitialValues>,
     duration?: number
-  ): ComplexAnimationBuilder {
+  ): ComplexAnimationBuilder<TInitialValues> {
     const instance = this.createInstance();
     return instance.springify(duration);
   }
@@ -100,10 +112,10 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
    *
    * @param dampingRatio - How damped the spring is.
    */
-  static dampingRatio<T extends typeof ComplexAnimationBuilder>(
-    this: T,
+  static dampingRatio<TInitialValues>(
+    this: ComplexAnimationBuilderClass<TInitialValues>,
     dampingRatio: number
-  ) {
+  ): ComplexAnimationBuilder<TInitialValues> {
     const instance = this.createInstance();
     return instance.dampingRatio(dampingRatio);
   }
@@ -121,10 +133,10 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
    * @param value - Decides how quickly a spring stops moving. Higher damping
    *   means the spring will come to rest faster.
    */
-  static damping<T extends typeof ComplexAnimationBuilder>(
-    this: T,
+  static damping<TInitialValues>(
+    this: ComplexAnimationBuilderClass<TInitialValues>,
     value: number
-  ) {
+  ): ComplexAnimationBuilder<TInitialValues> {
     const instance = this.createInstance();
     return instance.damping(value);
   }
@@ -142,7 +154,10 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
    * @param mass - The weight of the spring. Reducing this value makes the
    *   animation faster.
    */
-  static mass<T extends typeof ComplexAnimationBuilder>(this: T, mass: number) {
+  static mass<TInitialValues>(
+    this: ComplexAnimationBuilderClass<TInitialValues>,
+    mass: number
+  ): ComplexAnimationBuilder<TInitialValues> {
     const instance = this.createInstance();
     return instance.mass(mass);
   }
@@ -159,10 +174,10 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
    *
    * @param stiffness - How bouncy the spring is.
    */
-  static stiffness<T extends typeof ComplexAnimationBuilder>(
-    this: T,
+  static stiffness<TInitialValues>(
+    this: ComplexAnimationBuilderClass<TInitialValues>,
     stiffness: number
-  ) {
+  ): ComplexAnimationBuilder<TInitialValues> {
     const instance = this.createInstance();
     return instance.stiffness(stiffness);
   }
@@ -180,10 +195,10 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
    * @param overshootClamping - Whether a spring can bounce over the final
    *   position.
    */
-  static overshootClamping<T extends typeof ComplexAnimationBuilder>(
-    this: T,
+  static overshootClamping<TInitialValues>(
+    this: ComplexAnimationBuilderClass<TInitialValues>,
     overshootClamping: number
-  ) {
+  ): ComplexAnimationBuilder<TInitialValues> {
     const instance = this.createInstance();
     return instance.overshootClamping(overshootClamping);
   }
@@ -197,10 +212,10 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
    * @deprecated Use {@link energyThreshold} instead. This method currently does
    *   nothing and will be removed in the upcoming major version.
    */
-  static restDisplacementThreshold<T extends typeof ComplexAnimationBuilder>(
-    this: T,
+  static restDisplacementThreshold<TInitialValues>(
+    this: ComplexAnimationBuilderClass<TInitialValues>,
     _restDisplacementThreshold: number
-  ) {
+  ): ComplexAnimationBuilder<TInitialValues> {
     return this.createInstance();
   }
 
@@ -216,10 +231,10 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
    * @deprecated Use {@link energyThreshold} instead. This method currently does
    *   nothing and will be removed in a future version.
    */
-  static restSpeedThreshold<T extends typeof ComplexAnimationBuilder>(
-    this: T,
+  static restSpeedThreshold<TInitialValues>(
+    this: ComplexAnimationBuilderClass<TInitialValues>,
     _restSpeedThreshold: number
-  ) {
+  ): ComplexAnimationBuilder<TInitialValues> {
     return this.createInstance();
   }
 
@@ -239,10 +254,10 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
    * @param energyThreshold - Relative energy threshold below which the spring
    *   will snap to `toValue` without further oscillations. Defaults to 6e-9.
    */
-  static energyThreshold<T extends typeof ComplexAnimationBuilder>(
-    this: T,
+  static energyThreshold<TInitialValues>(
+    this: ComplexAnimationBuilderClass<TInitialValues>,
     energyThreshold: number
-  ) {
+  ): ComplexAnimationBuilder<TInitialValues> {
     const instance = this.createInstance();
     return instance.energyThreshold(energyThreshold);
   }
@@ -257,15 +272,15 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
    *
    * @param values - An object containing the styles to override.
    */
-  static withInitialValues<T extends typeof ComplexAnimationBuilder>(
-    this: T,
-    values: StyleProps
-  ) {
+  static withInitialValues<TInitialValues>(
+    this: ComplexAnimationBuilderClass<TInitialValues>,
+    values: Partial<TInitialValues>
+  ): ComplexAnimationBuilder<TInitialValues> {
     const instance = this.createInstance();
     return instance.withInitialValues(values);
   }
 
-  withInitialValues(values: StyleProps): this {
+  withInitialValues(values: Partial<TInitialValues>): this {
     this.initialValues = values;
     return this;
   }

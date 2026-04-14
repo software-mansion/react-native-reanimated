@@ -1,5 +1,9 @@
 'use strict';
-import { getCompoundComponentName, getPropsBuilder } from '../../../common';
+import {
+  getCompoundComponentName,
+  getPropsBuilder,
+  IS_ANDROID,
+} from '../../../common';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import type { ViewInfo } from '../../../createAnimatedComponent/commonTypes';
 import type { CSSStyle } from '../../types';
@@ -14,6 +18,13 @@ export default class CSSManager implements ICSSManager {
   private readonly cssTransitionsManager: CSSTransitionsManager;
   private readonly viewTag: number;
   private readonly propsBuilder: ReturnType<typeof getPropsBuilder>;
+  /**
+   * True if the previous update had CSS transition props attached. On the next
+   * update we still need to build `normalizedStyle` only on Android to revert
+   * props applied during the transition to correct current values. (fixes
+   * https://github.com/software-mansion/react-native-reanimated/issues/9218).
+   */
+  private hadTransitionLastUpdate = false;
 
   constructor(
     { shadowNodeWrapper, viewTag, reactViewName = 'RCTView' }: ViewInfo,
@@ -40,15 +51,23 @@ export default class CSSManager implements ICSSManager {
     const [animationProperties, transitionProperties, filteredStyle] =
       filterCSSAndStyleProperties(style);
 
-    const hasAnimationOrTransition =
-      animationProperties !== null || transitionProperties !== null;
-    const normalizedStyle = hasAnimationOrTransition
-      ? this.propsBuilder.build(filteredStyle)
-      : undefined;
+    const hasAnimation = animationProperties !== null;
+    const hasTransition = transitionProperties !== null;
 
-    // We need to update view style only for animations (e.g. when a property is
-    // specified only in a subset of keyframes and start/end value comes from style).
-    if (normalizedStyle && animationProperties) {
+    const normalizedStyle =
+      hasAnimation ||
+      hasTransition ||
+      (IS_ANDROID && this.hadTransitionLastUpdate)
+        ? this.propsBuilder.build(filteredStyle)
+        : undefined;
+
+    if (
+      normalizedStyle &&
+      (hasAnimation ||
+        // We also need to update the current style on Android when the
+        // transition is detached.
+        (IS_ANDROID && !hasTransition && this.hadTransitionLastUpdate))
+    ) {
       setViewStyle(this.viewTag, normalizedStyle);
     }
 
@@ -57,6 +76,8 @@ export default class CSSManager implements ICSSManager {
       normalizedStyle ?? {}
     );
     this.cssAnimationsManager.update(animationProperties);
+
+    this.hadTransitionLastUpdate = hasTransition;
   }
 
   unmountCleanup(): void {

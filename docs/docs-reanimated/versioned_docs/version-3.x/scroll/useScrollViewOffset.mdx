@@ -23,15 +23,14 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function useScrollViewOffset(
-  animatedRef: AnimatedRef<AnimatedScrollView>,
-  providedOffset?: SharedValue<number>
-): SharedValue<number>;
-```
-
+  ```typescript
+  function useScrollViewOffset(
+    animatedRef: AnimatedRef<AnimatedScrollView>,
+    providedOffset?: SharedValue<number>
+  ): SharedValue<number>;
+  ```
 </details>
 
 ### Arguments
@@ -53,11 +52,7 @@ An optional shared value to be updated with the scroll offset. If not provided a
 import ScrollViewOffset from '@site/src/examples/ScrollViewOffset';
 import ScrollViewOffsetSrc from '!!raw-loader!@site/src/examples/ScrollViewOffset';
 
-<InteractiveExample
-  src={ScrollViewOffsetSrc}
-  component={ScrollViewOffset}
-  showCode
-/>
+<InteractiveExample src={ScrollViewOffsetSrc} component={ScrollViewOffset} showCode/>
 
 ## Remarks
 
@@ -67,4 +62,4 @@ import ScrollViewOffsetSrc from '!!raw-loader!@site/src/examples/ScrollViewOffse
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios web />
+<PlatformCompatibility android ios web/>

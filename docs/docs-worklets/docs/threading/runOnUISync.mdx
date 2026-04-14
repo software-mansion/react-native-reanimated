@@ -22,15 +22,14 @@ console.log(result); // 1
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-function runOnUISync<Args extends unknown[], ReturnValue>(
-  worklet: (...args: Args) => ReturnValue,
-  ...args: Args
-): ReturnValue;
-```
-
+  ```typescript
+  function runOnUISync<Args extends unknown[], ReturnValue>(
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): ReturnValue;
+  ```
 </details>
 
 ### Arguments
@@ -51,4 +50,21 @@ Arguments to pass to the function.
 
 - The callback passed as the argument is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ready to be run on the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime).
 
-- Make sure not to execute `runOnUISync` on the [UI Runtime](/docs/fundamentals/runtimeKinds#ui-runtime) or a [Worker Runtime](/docs/fundamentals/runtimeKinds#worker-runtime) as this will result in an error.
+## Call table
+
+<CallTable
+  bundleMode={{
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
+  noBundleMode={{
+rnRuntime: true,
+uiRuntime: false,
+workerRuntime: false,
+}}
+/>
+
+## Platform compatibility
+
+<PlatformTable native={true} web={false}/>

@@ -37,7 +37,6 @@ class CSSTransition {
  private:
   const std::shared_ptr<const ShadowNode> shadowNode_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
-  // TODO - maybe remove transitionProperties_ in the future after removing transition updates registry for last frame updates
   TransitionProperties transitionProperties_;
   TransitionStyleInterpolator styleInterpolator_;
   TransitionProgressProvider progressProvider_;

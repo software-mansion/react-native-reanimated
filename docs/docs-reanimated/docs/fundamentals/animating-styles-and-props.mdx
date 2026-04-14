@@ -59,13 +59,13 @@ Let's see it in action:
 import AnimatingStyles from '@site/src/examples/AnimatingStyles';
 import AnimatingStylesSrc from '!!raw-loader!@site/src/examples/AnimatingStyles';
 
-<CollapsibleCode showLines={[8, 29]} src={AnimatingStylesSrc} />
+<CollapsibleCode showLines={[8, 29]} src={AnimatingStylesSrc}/>
 
 `useAnimatedStyle` lets you access the value stored in a shared value. Thanks to that we could multiply the value by `2` before assigning it to `style`. This hook has one more advantage over passing animations to inline styles. It allows you to keep all the animation-related logic in one place.
 
 You can see it in action in the example below:
 
-<InteractiveExample src={AnimatingStylesSrc} component={AnimatingStyles} />
+<InteractiveExample src={AnimatingStylesSrc} component={AnimatingStyles}/>
 
 ## Animating props
 
@@ -113,13 +113,13 @@ So if we'd like to smoothly increase the radius of a circle by `10px` on each bu
 import AnimatingProps from '@site/src/examples/AnimatingProps';
 import AnimatingPropsSrc from '!!raw-loader!@site/src/examples/AnimatingProps';
 
-<CollapsibleCode showLines={[9, 39]} src={AnimatingPropsSrc} />
+<CollapsibleCode showLines={[9, 39]} src={AnimatingPropsSrc}/>
 
 In a function which `useAnimatedProps` takes as an argument, we return an object with all the props we'd like to animate. Then we can pass the value which `useAnimatedProps` returns to the `animatedProps` prop of an Animated component.
 
 Check out the full example below:
 
-<InteractiveExample src={AnimatingPropsSrc} component={AnimatingProps} />
+<InteractiveExample src={AnimatingPropsSrc} component={AnimatingProps}/>
 
 ## Summary
 

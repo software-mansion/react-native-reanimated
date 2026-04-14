@@ -4,6 +4,8 @@ title: LayoutAnimationConfig
 sidebar_label: Skipping Layout Animations
 ---
 
+import LayoutAnimationConfigSrc from '!!raw-loader!@site/src/examples/LayoutAnimationConfig';
+
 `LayoutAnimationConfig` is a component that lets you skip entering and exiting animations.
 
 ## Reference
@@ -27,47 +29,40 @@ function App() {
 ```
 
 <details>
-<summary>Type definitions</summary>
+  <summary>Type definitions</summary>
 
-```typescript
-interface LayoutAnimationConfigProps {
-  skipEntering?: boolean;
-  skipExiting?: boolean;
-  children: ReactNode;
-}
-```
-
+  ```typescript
+  interface LayoutAnimationConfigProps {
+    skipEntering?: boolean;
+    skipExiting?: boolean;
+    children: ReactNode;
+  }
+  ```
 </details>
 
 ### Arguments
 
-#### `skipEntering` <Optional />
+#### `skipEntering` <Optional/>
 
 A boolean indicating whether children's entering animations should be skipped when `LayoutAnimationConfig` is mounted.
 
-#### `skipExiting` <Optional />
+#### `skipExiting` <Optional/>
 
 A boolean indicating whether children's exiting animations should be skipped when `LayoutAnimationConfig` is unmounted.
 
 ## Example
 
 <Row>
+  <ThemedVideo
+    sources={{
+light: '/recordings/layout-animations/layoutconfig_light.mov',
+dark: '/recordings/layout-animations/layoutconfig_dark.mov',
+}}
+  />
 
-<ThemedVideo
-  sources={{
-    light: '/recordings/layout-animations/layoutconfig_light.mov',
-    dark: '/recordings/layout-animations/layoutconfig_dark.mov',
-  }}
-/>
-
-<div style={{flexGrow: 1}}>
-
-import LayoutAnimationConfigSrc from '!!raw-loader!@site/src/examples/LayoutAnimationConfig';
-
-<CollapsibleCode src={LayoutAnimationConfigSrc} showLines={[29, 46]} />
-
-</div>
-
+  <div style={{flexGrow: 1}}>
+    <CollapsibleCode src={LayoutAnimationConfigSrc} showLines={[29, 46]}/>
+  </div>
 </Row>
 
 ## Remarks
@@ -78,4 +73,4 @@ import LayoutAnimationConfigSrc from '!!raw-loader!@site/src/examples/LayoutAnim
 
 ## Platform compatibility
 
-<PlatformCompatibility android ios />
+<PlatformCompatibility android ios/>

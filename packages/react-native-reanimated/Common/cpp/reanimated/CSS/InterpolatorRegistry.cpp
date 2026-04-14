@@ -43,9 +43,17 @@
 #include <reanimated/CSS/utils/interpolatorPropsBuilderImageCallbacks.h>
 #include <reanimated/CSS/utils/interpolatorPropsBuilderTextCallbacks.h>
 
+#include <functional>
+#include <limits>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 namespace reanimated::css {
 
 namespace {
+
+using ComponentInterpolatorsMap = std::unordered_map<std::string, InterpolatorFactoriesRecord>;
 
 template <typename... AllowedTypes>
 using CSSCallback = std::function<
@@ -320,9 +328,6 @@ const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
          {"backfaceVisibility",
           value<CSSKeyword>("visible", CSSCallback<CSSKeyword>(addBackfaceVisibilityToPropsBuilder))},
          {"backgroundColor", value<CSSColor>(TRANSPARENT, CSSCallback<CSSColor>(addBackgroundColorToPropsBuilder))},
-         // `color` is a text prop but transitions/animations may target it on any
-         // host that falls back to VIEW_INTERPOLATORS (e.g. layout wrappers).
-         {"color", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addTextColorToPropsBuilder))},
          {"borderBlockColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderBlockColorToPropsBuilder))},
          {"borderBlockEndColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderBlockEndColorToPropsBuilder))},
          {"borderBlockStartColor",
@@ -457,6 +462,7 @@ const InterpolatorFactoriesRecord TEXT_INTERPOLATORS = mergeInterpolators(
          {"textShadowRadius", value<CSSDouble>(0, CSSCallback<CSSDouble>(addTextShadowRadiusToPropsBuilder))},
          {"textTransform", value<CSSKeyword>("none", CSSCallback<CSSKeyword>(addTextTransformToPropsBuilder))},
          {"userSelect", value<CSSKeyword>("auto", CSSCallback<CSSKeyword>(addUserSelectToPropsBuilder))},
+         {"color", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addTextColorToPropsBuilder))},
      }});
 
 const InterpolatorFactoriesRecord IMAGE_INTERPOLATORS = mergeInterpolators(
@@ -632,6 +638,10 @@ constexpr bool SVG_FEATURE_ENABLED = StaticFeatureFlags::getFlag("EXPERIMENTAL_C
 ComponentInterpolatorsMap initializeRegistry() {
   ComponentInterpolatorsMap registry = {};
 
+  registry["View"] = VIEW_INTERPOLATORS;
+  registry["Paragraph"] = TEXT_INTERPOLATORS;
+  registry["Image"] = IMAGE_INTERPOLATORS;
+
   if (SVG_FEATURE_ENABLED) {
     // SVG Components
     registry["RNSVGCircle"] = SVG_CIRCLE_INTERPOLATORS;
@@ -666,12 +676,6 @@ const InterpolatorFactoriesRecord &getComponentInterpolators(const std::string &
   // Use default style interpolators as a fallback for unknown components
   // (e.g. ExpoImage, which is not a RN component but should support RN Image styles)
   return VIEW_INTERPOLATORS;
-}
-
-void registerComponentInterpolators(
-    const std::string &nativeComponentName,
-    const InterpolatorFactoriesRecord &interpolators) {
-  registry[nativeComponentName] = interpolators;
 }
 
 } // namespace reanimated::css

@@ -52,10 +52,6 @@ AnimationProgressState AnimationProgressProvider::getState(const double timestam
   return AnimationProgressState::Running;
 }
 
-double AnimationProgressProvider::getPauseTimestamp() const {
-  return pauseTimestamp_;
-}
-
 double AnimationProgressProvider::getTotalPausedTime(const double timestamp) const {
   return pauseTimestamp_ > 0 ? (totalPausedTime_ + (timestamp - pauseTimestamp_)) : totalPausedTime_;
 }

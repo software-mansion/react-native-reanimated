@@ -61,7 +61,7 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
   UpdatesBatch synchronousUpdatesBatch;
   UpdatesBatch shadowTreeUpdatesBatch;
 
-  for (const auto &[shadowNode, props] : updatesBatch) {
+  for (const auto &[shadowNodeFamily, props] : updatesBatch) {
     if (allowPartialViews) {
       folly::dynamic synchronousProps = folly::dynamic::object();
       folly::dynamic shadowTreeProps = folly::dynamic::object();
@@ -79,11 +79,11 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       }
 
       if (!synchronousProps.empty()) {
-        synchronousUpdatesBatch.emplace_back(shadowNode, std::move(synchronousProps));
+        synchronousUpdatesBatch.emplace_back(shadowNodeFamily, std::move(synchronousProps));
       }
 
       if (!shadowTreeProps.empty()) {
-        shadowTreeUpdatesBatch.emplace_back(shadowNode, std::move(shadowTreeProps));
+        shadowTreeUpdatesBatch.emplace_back(shadowNodeFamily, std::move(shadowTreeProps));
       }
     } else {
       bool hasOnlySynchronousProps = true;
@@ -100,9 +100,9 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(
       }
 
       if (hasOnlySynchronousProps) {
-        synchronousUpdatesBatch.emplace_back(shadowNode, props);
+        synchronousUpdatesBatch.emplace_back(shadowNodeFamily, props);
       } else {
-        shadowTreeUpdatesBatch.emplace_back(shadowNode, props);
+        shadowTreeUpdatesBatch.emplace_back(shadowNodeFamily, props);
       }
     }
   }
@@ -135,7 +135,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(staticPropsRegistry_, animatedPropsRegistry_)),
-      cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>(viewStylesRepository_)),
+      cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(getAnimationTimestamp_, viewStylesRepository_)),
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
@@ -419,11 +419,7 @@ void ReanimatedModuleProxy::cleanupSensors() {
 }
 
 void ReanimatedModuleProxy::setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle) {
-  const auto tag = viewTag.asNumber();
-  staticPropsRegistry_->set(rt, tag, viewStyle);
-  if (staticPropsRegistry_->hasObservers(tag)) {
-    maybeRunCSSLoop();
-  }
+  staticPropsRegistry_->set(rt, viewTag.asNumber(), viewStyle);
 }
 
 void ReanimatedModuleProxy::markNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) {
@@ -1133,9 +1129,9 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
     intBuffer.reserve(1024);
     doubleBuffer.reserve(1024);
 
-    for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
+    for (const auto &[shadowNodeFamily, props] : synchronousUpdatesBatch) {
       intBuffer.push_back(CMD_START_OF_VIEW);
-      intBuffer.push_back(shadowNode->getTag());
+      intBuffer.push_back(shadowNodeFamily->getTag());
       for (const auto &[key, value] : props.items()) {
         const auto command = propNameToCommand(key.getString());
         switch (command) {
@@ -1305,8 +1301,8 @@ void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, 
   auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] =
       partitionUpdates(updatesBatch, synchronousProps, false, allowPartialUpdates);
 
-  for (const auto &[shadowNode, props] : synchronousUpdatesBatch) {
-    synchronouslyUpdateUIPropsFunction_(shadowNode->getTag(), props);
+  for (const auto &[shadowNodeFamily, props] : synchronousUpdatesBatch) {
+    synchronouslyUpdateUIPropsFunction_(shadowNodeFamily->getTag(), props);
   }
 
   updatesBatch = std::move(shadowTreeUpdatesBatch);
@@ -1343,10 +1339,9 @@ void ReanimatedModuleProxy::commitUpdates(jsi::Runtime &rt, const UpdatesBatch &
       }
     }
   } else {
-    for (auto const &[shadowNode, props] : updatesBatch) {
-      SurfaceId surfaceId = shadowNode->getSurfaceId();
-      auto family = &shadowNode->getFamily();
-      propsMapBySurface[surfaceId][family].emplace_back(props);
+    for (auto const &[shadowNodeFamily, props] : updatesBatch) {
+      SurfaceId surfaceId = shadowNodeFamily->getSurfaceId();
+      propsMapBySurface[surfaceId][shadowNodeFamily].emplace_back(props);
     }
   }
 
@@ -1591,6 +1586,17 @@ jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
 
 void ReanimatedModuleProxy::unsubscribeFromKeyboardEvents(jsi::Runtime &, const jsi::Value &listenerId) {
   unsubscribeFromKeyboardEventsFunction_(listenerId.asNumber());
+}
+
+void ReanimatedModuleProxy::toggleSlowAnimationsOnUIRuntime() const {
+  this->jsInvoker_->invokeAsync([](jsi::Runtime &rt) {
+    const auto toggleFn = rt.global().getProperty(rt, "__toggleSlowAnimationsOnUIRuntime");
+    if (!(toggleFn.isObject() && toggleFn.asObject(rt).isFunction(rt))) [[unlikely]] {
+      throw std::runtime_error("[Reanimated] __toggleSlowAnimationsOnUIRuntime function missing on global.");
+    }
+
+    toggleFn.asObject(rt).asFunction(rt).call(rt);
+  });
 }
 
 } // namespace reanimated

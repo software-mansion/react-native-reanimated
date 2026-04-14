@@ -66,6 +66,8 @@ export default function RuntimeTestsExample() {
             require('./tests/runtimes/scheduleOnRuntime.test');
             require('./tests/runtimes/scheduleOnUI.test');
             require('./tests/runtimes/runOnRuntimeSync.test');
+            require('./tests/runtimes/runOnUIAsync.test');
+            require('./tests/runtimes/runOnRuntimeAsync.test');
             require('./tests/runtimes/runOnRuntimeSyncWithId.test');
             require('./tests/runtimes/scheduleOnRuntimeWithId.test');
           },
@@ -102,7 +104,7 @@ export default function RuntimeTestsExample() {
             // require('./tests/core/useDerivedValue/basic.test');
             require('./tests/core/useDerivedValue/chain.test');
             require('./tests/core/useSharedValue/animationsCompilerApi.test');
-            // TODO: onLayout event is no longer coming to us and I don't know why
+            // TODO: onLayout event isn't working on Android
             // require('./tests/core/onLayout.test');
           },
         },

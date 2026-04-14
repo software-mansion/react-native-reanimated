@@ -58,7 +58,7 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
       addAnimatedPropsToBatch(shadowNode, builder.get(), hasLayoutUpdates);
     } else {
       auto dynamic = jsi::dynamicFromValue(rt, updates);
-      addUpdatesToBatch(shadowNode, dynamic);
+      addUpdatesToBatch(shadowNode->getFamilyShared(), dynamic);
     }
 
     if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {

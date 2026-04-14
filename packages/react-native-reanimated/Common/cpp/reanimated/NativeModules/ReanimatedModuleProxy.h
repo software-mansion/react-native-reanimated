@@ -31,9 +31,6 @@
 #include <worklets/Tools/UIScheduler.h>
 
 #include <react/renderer/animationbackend/AnimationBackend.h>
-#include <react/renderer/componentregistry/componentNameByReactViewName.h>
-#include <react/renderer/core/ShadowNode.h>
-#include <react/renderer/uimanager/UIManager.h>
 #include <react/renderer/uimanager/UIManagerAnimationBackend.h>
 
 #include <cstdint>
@@ -47,8 +44,6 @@ namespace reanimated {
 
 using namespace facebook;
 using namespace css;
-
-using UpdatesBatch = std::vector<std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
 
 enum class GrandCallbackState : std::uint8_t {
   AnimationLoop,
@@ -211,6 +206,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
       const jsi::Value &isStatusBarTranslucent,
       const jsi::Value &isNavigationBarTranslucent) override;
   void unsubscribeFromKeyboardEvents(jsi::Runtime &rt, const jsi::Value &listenerId) override;
+
+  void toggleSlowAnimationsOnUIRuntime() const;
 
   inline LayoutAnimationsManager &layoutAnimationsManager() {
     return *layoutAnimationsManager_;

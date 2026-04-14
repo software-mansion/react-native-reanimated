@@ -55,6 +55,26 @@ export const toBeMatcher: Matcher<ToBeArgs> = (currentValue, negation, expectedV
   };
 };
 
+export const toBeDefined: Matcher<ToBeNullArgs> = (currentValue, negation) => {
+  const coloredExpected = green('defined');
+  const coloredReceived = red(currentValue);
+
+  return {
+    pass: currentValue !== undefined,
+    message: `Expected${negation ? ' NOT' : ''} ${coloredExpected} received ${coloredReceived}`,
+  };
+};
+
+export const toBeUndefined: Matcher<ToBeNullArgs> = (currentValue, negation) => {
+  const coloredExpected = green('undefined');
+  const coloredReceived = red(currentValue);
+
+  return {
+    pass: currentValue === undefined,
+    message: `Expected${negation ? ' NOT' : ''} ${coloredExpected} received ${coloredReceived}`,
+  };
+};
+
 export const toBeNullableMatcher: Matcher<ToBeNullArgs> = (currentValue, negation) => {
   const coloredExpected = green('nullable');
   const coloredReceived = red(currentValue);

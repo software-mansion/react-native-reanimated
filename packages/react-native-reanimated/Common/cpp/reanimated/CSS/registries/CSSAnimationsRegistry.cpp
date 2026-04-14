@@ -246,7 +246,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
         addAnimatedPropsToBatch(shadowNode, delayedPropsBuilder->get());
       }
     } else {
-      addUpdatesToBatch(shadowNode, result);
+      addUpdatesToBatch(shadowNode->getFamilyShared(), result);
     }
   }
 }
@@ -321,7 +321,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(const Tag viewTag, const do
     }
   }
 
-  setInUpdatesRegistry(shadowNode, updatedStyle);
+  setInUpdatesRegistry(shadowNode->getFamilyShared(), updatedStyle);
 }
 
 void CSSAnimationsRegistry::activateDelayedAnimations(const double timestamp) {

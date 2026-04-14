@@ -1,6 +1,5 @@
 'use strict';
 
-import { WorkletsError } from '../debug/WorkletsError';
 import type { UIRuntimeId } from '../runtimes';
 import type { Shareable, ShareableConfig } from './types';
 
@@ -51,5 +50,5 @@ export function createShareable<
   _initial: TValue,
   _config?: ShareableConfig<TValue, THostDecorated, TGuestDecorated>
 ): Shareable<TValue, THostDecorated, TGuestDecorated> {
-  throw new WorkletsError('`createShareable` is not supported on web.');
+  throw new Error('[Worklets] `createShareable` is not supported on web.');
 }
