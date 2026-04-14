@@ -24,13 +24,13 @@ void CSSTransition::onUpdate(const double timestamp) {
   progressProvider_.update(timestamp);
   updatedViewTags_->insert(shadowNode_->getTag());
 
-  if (getState() == TransitionProgressState::Pending) {
-    loop_->schedule(shared_from_this(), timestamp + getMinDelay(timestamp));
+  if (progressProvider_.getState() == TransitionProgressState::Pending) {
+    loop_->schedule(shared_from_this(), timestamp + progressProvider_.getMinDelay(timestamp));
   }
 }
 
 bool CSSTransition::isRunning() const {
-  return getState() == TransitionProgressState::Running;
+  return progressProvider_.getState() == TransitionProgressState::Running;
 }
 
 Tag CSSTransition::getViewTag() const {
