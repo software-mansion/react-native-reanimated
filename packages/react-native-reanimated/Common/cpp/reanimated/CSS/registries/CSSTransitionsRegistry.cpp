@@ -1,4 +1,5 @@
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
+#include <reanimated/CSS/utils/animationUpdatesBatchUtils.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
 #include <folly/json.h>
@@ -41,6 +42,14 @@ void CSSTransitionsRegistry::run(
   std::shared_ptr<AnimatedPropsBuilder> propsBuilder = std::make_shared<AnimatedPropsBuilder>();
   auto initialUpdate = transition->run(rt, config, lastUpdates, timestamp, propsBuilder);
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    if (!initialUpdate.empty()) {
+      folly::dynamic packed = initialUpdate;
+      if (propsBuilder->rawProps) {
+        const auto existing = propsBuilder->rawProps->toDynamic();
+        packed = mergeDynamicObjects(existing, packed);
+      }
+      propsBuilder->storeDynamic(packed);
+    }
     addAnimatedPropsToBatch(transition->getShadowNode(), propsBuilder->get());
   }
 
@@ -68,6 +77,12 @@ void CSSTransitionsRegistry::update(const double timestamp) {
     const folly::dynamic &updates = transition->update(timestamp, propsBuilder);
     if (!updates.empty()) {
       if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+        folly::dynamic packed = updates;
+        if (propsBuilder->rawProps) {
+          const auto existing = propsBuilder->rawProps->toDynamic();
+          packed = mergeDynamicObjects(existing, packed);
+        }
+        propsBuilder->storeDynamic(packed);
         addAnimatedPropsToBatch(transition->getShadowNode(), propsBuilder->get());
       }
       addUpdatesToBatch(transition->getShadowNode(), updates);

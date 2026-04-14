@@ -72,4 +72,14 @@ inline bool animatedPropsContainLayoutProps(const facebook::react::AnimatedProps
   return false;
 }
 
+inline bool hasLayoutProps(const folly::dynamic &props) {
+  for (const auto &key : props.keys()) {
+    const auto propName = propNameFromString(key.asString());
+    if (propName.has_value() && isLayoutProp(propName.value())) {
+      return true;
+    }
+  }
+  return false;
+}
+
 } // namespace reanimated

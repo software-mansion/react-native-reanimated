@@ -14,6 +14,7 @@ public class EventHandler implements RCTEventEmitter {
   @DoNotStrip private final HybridData mHybridData;
 
   public UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
+  public boolean mIsInDrawPass;
 
   @DoNotStrip
   private EventHandler(HybridData hybridData) {
@@ -23,11 +24,11 @@ public class EventHandler implements RCTEventEmitter {
   @Override
   public void receiveEvent(int emitterReactTag, String eventName, @Nullable WritableMap event) {
     String resolvedEventName = mCustomEventNamesResolver.resolveCustomEventName(eventName);
-    receiveEvent(resolvedEventName, emitterReactTag, event);
+    receiveEvent(resolvedEventName, emitterReactTag, event, mIsInDrawPass);
   }
 
   public native void receiveEvent(
-      String eventName, int emitterReactTag, @Nullable WritableMap event);
+      String eventName, int emitterReactTag, @Nullable WritableMap event, boolean isInDrawPass);
 
   @Override
   public void receiveTouches(

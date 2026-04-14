@@ -16,6 +16,7 @@ import com.facebook.react.uimanager.common.UIManagerType;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.swmansion.reanimated.nativeProxy.EventHandler;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +40,7 @@ public class NodesManager implements EventDispatcherListener {
   protected final UIManagerModule.CustomEventNamesResolver mCustomEventNamesResolver;
   private final AtomicBoolean mCallbackPosted = new AtomicBoolean();
   private RCTEventEmitter mCustomEventHandler = new NoopEventHandler();
+  private EventHandler mEventHandler;
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
   private double lastFrameTimeMs;
@@ -143,13 +145,6 @@ public class NodesManager implements EventDispatcherListener {
     performOperations();
   }
 
-  void handleEventOperations() {
-    mDrawPassDetector.initialize();
-    if (mNativeProxy != null) {
-      mNativeProxy.handleEventOperations(isInDrawPass());
-    }
-  }
-
   boolean isInDrawPass() {
     return mDrawPassDetector.isInDrawPass();
   }
@@ -222,8 +217,9 @@ public class NodesManager implements EventDispatcherListener {
       // Events can be dispatched from any thread so we have to make sure handleEvent is run from
       // the UI thread.
       if (UiThreadUtil.isOnUiThread()) {
+        mDrawPassDetector.initialize();
+        mEventHandler.mIsInDrawPass = isInDrawPass();
         handleEvent(event);
-        handleEventOperations();
       } else {
         String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
         int viewTag = event.getViewTag();
@@ -252,8 +248,9 @@ public class NodesManager implements EventDispatcherListener {
     return mCustomEventNamesResolver;
   }
 
-  public void registerEventHandler(RCTEventEmitter handler) {
+  public void registerEventHandler(EventHandler handler) {
     mCustomEventHandler = handler;
+    mEventHandler = handler;
   }
 
   public void sendEvent(String name, WritableMap body) {

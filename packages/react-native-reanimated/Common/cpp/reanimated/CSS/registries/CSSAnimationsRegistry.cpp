@@ -1,4 +1,5 @@
 #include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
+#include <reanimated/CSS/utils/animationUpdatesBatchUtils.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
 #include <memory>
@@ -227,6 +228,18 @@ void CSSAnimationsRegistry::updateViewAnimations(
 
   if (hasUpdates) {
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+      // Interpolators populate `result` with style keys (e.g. transform) even when
+      // `shouldSkipNonLayoutProp` skips typed AnimatedProp entries on Android
+      // (props reconciliation off). Pack that dynamic style into rawProps so the
+      // Animation Backend receives non-layout updates.
+      if (!result.empty()) {
+        folly::dynamic packed = result;
+        if (propsBuilder->rawProps) {
+          const auto existing = propsBuilder->rawProps->toDynamic();
+          packed = mergeDynamicObjects(existing, packed);
+        }
+        propsBuilder->storeDynamic(packed);
+      }
       addAnimatedPropsToBatch(shadowNode, propsBuilder->get());
       // overrides previous styles if not empty
       for (auto &delayedPropsBuilder : resetPropsUpdates) {

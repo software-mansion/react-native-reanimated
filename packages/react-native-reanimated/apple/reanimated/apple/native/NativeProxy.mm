@@ -34,15 +34,29 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
 
   auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
 
-  [nodesManager registerEventHandler:^(id<RCTEvent> event) {
-    // handles RCTEvents from RNGestureHandler
-    std::string eventName = [event.eventName UTF8String];
-    int emitterReactTag = [event.viewTag intValue];
-    id eventData = [event arguments][2];
-    jsi::Value payload = convertObjCObjectToJSIValue(uiRuntime, eventData);
-    double currentTime = CACurrentMediaTime() * 1000;
-    reanimatedModuleProxy->handleEvent(eventName, emitterReactTag, payload, currentTime);
-  }];
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    // Backend path: single dispatch handler that calls handleEventAndFlush.
+    // Both event handling and mutation flushing happen inside one
+    // pushAnimationMutations call, so there's a single timestamp source.
+    [nodesManager registerDispatchEventHandler:^(id<RCTEvent> event) {
+      std::string eventName = [event.eventName UTF8String];
+      int emitterReactTag = [event.viewTag intValue];
+      id eventData = [event arguments][2];
+      jsi::Value payload = convertObjCObjectToJSIValue(uiRuntime, eventData);
+      reanimatedModuleProxy->handleEventAndFlush<GrandCallbackState::Event>(
+          eventName, emitterReactTag, payload);
+    }];
+  } else {
+    // Non-backend path: separate event handler + performOperations blocks.
+    [nodesManager registerEventHandler:^(id<RCTEvent> event) {
+      std::string eventName = [event.eventName UTF8String];
+      int emitterReactTag = [event.viewTag intValue];
+      id eventData = [event arguments][2];
+      jsi::Value payload = convertObjCObjectToJSIValue(uiRuntime, eventData);
+      double currentTime = CACurrentMediaTime() * 1000;
+      reanimatedModuleProxy->handleEvent(eventName, emitterReactTag, payload, currentTime);
+    }];
+  }
 
   std::weak_ptr<ReanimatedModuleProxy> weakReanimatedModuleProxy = reanimatedModuleProxy; // to avoid retain cycle
   [nodesManager registerPerformOperations:^() {
@@ -51,15 +65,13 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
     }
   }];
 
-  [nodesManager registerPerformOperationsForEvent:^() {
-    if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
-      if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-        reanimatedModuleProxy->triggerBackendCallback(GrandCallbackState::Event);
-      } else {
+  if constexpr (!StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    [nodesManager registerPerformOperationsForEvent:^() {
+      if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
         reanimatedModuleProxy->performOperations();
       }
-    }
-  }];
+    }];
+  }
 
   return reanimatedModuleProxy;
 }

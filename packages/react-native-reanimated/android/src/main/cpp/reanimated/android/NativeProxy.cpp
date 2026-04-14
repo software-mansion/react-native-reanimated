@@ -144,7 +144,6 @@ void NativeProxy::registerNatives() {
        makeNativeMethod("isAnyHandlerWaitingForEvent", NativeProxy::isAnyHandlerWaitingForEvent),
        makeNativeMethod("performOperations", NativeProxy::performOperations),
        makeNativeMethod("performNonLayoutOperations", NativeProxy::performNonLayoutOperations),
-       makeNativeMethod("handleEventOperations", NativeProxy::handleEventOperations),
        makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp)});
 }
 
@@ -239,7 +238,8 @@ double NativeProxy::getAnimationTimestamp() {
 void NativeProxy::handleEvent(
     jni::alias_ref<JString> eventName,
     jint emitterReactTag,
-    jni::alias_ref<react::WritableMap> event) {
+    jni::alias_ref<react::WritableMap> event,
+    jboolean isInDrawPass) {
   // handles RCTEvents from RNGestureHandler
   if (event.get() == nullptr) {
     // Ignore events with null payload.
@@ -270,14 +270,16 @@ void NativeProxy::handleEvent(
     return;
   }
 
-  reanimatedModuleProxy_->handleEvent(eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
-}
-
-void NativeProxy::handleEventOperations(jboolean isInDrawPass) {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    auto state = isInDrawPass ? GrandCallbackState::EventInAndroidDraw : GrandCallbackState::Event;
-    reanimatedModuleProxy_->triggerBackendCallback(state);
+    if (isInDrawPass) {
+      reanimatedModuleProxy_->handleEventAndFlush<GrandCallbackState::EventInAndroidDraw>(
+          eventName->toString(), emitterReactTag, payload);
+    } else {
+      reanimatedModuleProxy_->handleEventAndFlush<GrandCallbackState::Event>(
+          eventName->toString(), emitterReactTag, payload);
+    }
   } else {
+    reanimatedModuleProxy_->handleEvent(eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
     if (isInDrawPass) {
       reanimatedModuleProxy_->performNonLayoutOperations();
       requestRender([](double) {});

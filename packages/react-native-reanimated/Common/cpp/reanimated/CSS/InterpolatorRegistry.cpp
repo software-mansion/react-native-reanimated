@@ -320,6 +320,9 @@ const InterpolatorFactoriesRecord VIEW_INTERPOLATORS = mergeInterpolators(
          {"backfaceVisibility",
           value<CSSKeyword>("visible", CSSCallback<CSSKeyword>(addBackfaceVisibilityToPropsBuilder))},
          {"backgroundColor", value<CSSColor>(TRANSPARENT, CSSCallback<CSSColor>(addBackgroundColorToPropsBuilder))},
+         // `color` is a text prop but transitions/animations may target it on any
+         // host that falls back to VIEW_INTERPOLATORS (e.g. layout wrappers).
+         {"color", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addTextColorToPropsBuilder))},
          {"borderBlockColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderBlockColorToPropsBuilder))},
          {"borderBlockEndColor", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addBorderBlockEndColorToPropsBuilder))},
          {"borderBlockStartColor",
@@ -431,7 +434,6 @@ const InterpolatorFactoriesRecord TEXT_INTERPOLATORS = mergeInterpolators(
      TEXT_INTERPOLATORS_IOS,
      TEXT_INTERPOLATORS_ANDROID,
      InterpolatorFactoriesRecord{
-         {"color", value<CSSColor>(BLACK, CSSCallback<CSSColor>(addTextColorToPropsBuilder))},
          {"fontFamily", value<CSSKeyword>("inherit", CSSCallback<CSSKeyword>(addFontFamilyToPropsBuilder))},
          {"fontSize", value<CSSDouble>(14, CSSCallback<CSSDouble>(addFontSizeToPropsBuilder))},
          {"fontStyle", value<CSSKeyword>("normal", CSSCallback<CSSKeyword>(addFontStyleToPropsBuilder))},

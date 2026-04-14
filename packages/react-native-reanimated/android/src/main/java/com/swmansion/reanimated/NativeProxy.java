@@ -108,8 +108,6 @@ public class NativeProxy {
 
   public native void performNonLayoutOperations();
 
-  public native void handleEventOperations(boolean isInDrawPass);
-
   protected native void installJSIBindings();
 
   private native void invalidateCpp();

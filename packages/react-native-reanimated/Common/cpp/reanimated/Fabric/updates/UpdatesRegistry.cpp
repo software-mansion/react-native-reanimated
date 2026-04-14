@@ -2,7 +2,7 @@
 
 #include <reanimated/Fabric/updates/propsLayoutFilter.h>
 
-#include <folly/json.h>
+#include <jsi/jsi.h>
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -45,15 +45,15 @@ void UpdatesRegistry::flushAnimatedPropsUpdates(UpdatesBatchAnimatedProps &updat
   auto copiedUpdatesBatch = std::move(updatesBatchAnimatedProps_);
   updatesBatchAnimatedProps_.clear();
 
-  for (auto &[shadowNode, props] : copiedUpdatesBatch) {
-    updatesBatch.emplace_back(shadowNode, std::move(props));
+  for (auto &entry : copiedUpdatesBatch) {
+    updatesBatch.push_back(std::move(entry));
   }
 }
 
-void UpdatesRegistry::flushNonLayoutUpdates(AnimationMutations &mutations) {
+void UpdatesRegistry::flushNonLayoutUpdates(jsi::Runtime &rt, AnimationMutations &mutations) {
   UpdatesBatchAnimatedProps remaining;
 
-  for (auto &[node, animatedProp] : updatesBatchAnimatedProps_) {
+  for (auto &[node, animatedProp, _hasLayout] : updatesBatchAnimatedProps_) {
     // Split typed props by layout vs non-layout.
     std::vector<std::unique_ptr<AnimatedPropBase>> nonLayoutTyped;
     std::vector<std::unique_ptr<AnimatedPropBase>> layoutTyped;
@@ -82,10 +82,10 @@ void UpdatesRegistry::flushNonLayoutUpdates(AnimationMutations &mutations) {
         }
       }
       if (!nonLayoutDyn.empty()) {
-        nonLayoutRaw = std::make_unique<RawProps>(std::move(nonLayoutDyn));
+        nonLayoutRaw = std::make_unique<RawProps>(rt, jsi::valueFromDynamic(rt, nonLayoutDyn));
       }
       if (!layoutDyn.empty()) {
-        layoutRaw = std::make_unique<RawProps>(std::move(layoutDyn));
+        layoutRaw = std::make_unique<RawProps>(rt, jsi::valueFromDynamic(rt, layoutDyn));
       }
     }
 
@@ -99,7 +99,7 @@ void UpdatesRegistry::flushNonLayoutUpdates(AnimationMutations &mutations) {
     // Layout part → defer to next full flush.
     if (!layoutTyped.empty() || layoutRaw) {
       AnimatedProps layoutProps{std::move(layoutTyped), std::move(layoutRaw)};
-      remaining.emplace_back(node, std::move(layoutProps));
+      remaining.push_back(AnimatedPropsEntry{node, std::move(layoutProps), true});
     }
   }
 
@@ -149,8 +149,18 @@ void UpdatesRegistry::addUpdatesToBatch(
 
 void UpdatesRegistry::addAnimatedPropsToBatch(
     const std::shared_ptr<const ShadowNode> &shadowNode,
-    AnimatedProps animatedProps) {
-  updatesBatchAnimatedProps_.emplace_back(shadowNode, std::move(animatedProps));
+    AnimatedProps animatedProps,
+    bool hasLayoutUpdates) {
+  // Check typed props for layout — safe and doesn't touch rawProps.
+  if (!hasLayoutUpdates) {
+    for (const auto &prop : animatedProps.props) {
+      if (isLayoutProp(prop->propName)) {
+        hasLayoutUpdates = true;
+        break;
+      }
+    }
+  }
+  updatesBatchAnimatedProps_.push_back(AnimatedPropsEntry{shadowNode, std::move(animatedProps), hasLayoutUpdates});
 }
 
 void UpdatesRegistry::setInUpdatesRegistry(

@@ -20,7 +20,12 @@ using namespace facebook;
 using namespace react;
 
 using UpdatesBatch = std::vector<std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
-using UpdatesBatchAnimatedProps = std::vector<std::pair<std::shared_ptr<const ShadowNode>, AnimatedProps>>;
+struct AnimatedPropsEntry {
+  std::shared_ptr<const ShadowNode> shadowNode;
+  AnimatedProps animatedProps;
+  bool hasLayoutUpdates;
+};
+using UpdatesBatchAnimatedProps = std::vector<AnimatedPropsEntry>;
 using RegistryMap = std::unordered_map<Tag, std::pair<std::shared_ptr<const ShadowNode>, folly::dynamic>>;
 
 #ifdef ANDROID
@@ -49,7 +54,7 @@ class UpdatesRegistry {
 
   void flushUpdates(UpdatesBatch &updatesBatch);
   void flushAnimatedPropsUpdates(UpdatesBatchAnimatedProps &updatesBatch);
-  void flushNonLayoutUpdates(facebook::react::AnimationMutations &mutations);
+  void flushNonLayoutUpdates(jsi::Runtime &rt, facebook::react::AnimationMutations &mutations);
   bool hasPendingAnimatedPropsUpdates() const;
   void collectProps(PropsMap &propsMap);
   UpdatesBatch getPendingUpdates();
@@ -59,7 +64,10 @@ class UpdatesRegistry {
   RegistryMap updatesRegistry_;
 
   void addUpdatesToBatch(const std::shared_ptr<const ShadowNode> &shadowNode, const folly::dynamic &props);
-  void addAnimatedPropsToBatch(const std::shared_ptr<const ShadowNode> &shadowNode, AnimatedProps animatedProps);
+  void addAnimatedPropsToBatch(
+      const std::shared_ptr<const ShadowNode> &shadowNode,
+      AnimatedProps animatedProps,
+      bool hasLayoutUpdates = false);
   folly::dynamic getUpdatesFromRegistry(const Tag tag) const;
   void setInUpdatesRegistry(const std::shared_ptr<const ShadowNode> &shadowNode, const folly::dynamic &props);
   void removeFromUpdatesRegistry(Tag tag);

@@ -14,6 +14,7 @@ using namespace facebook::react;
   READisplayLink *_displayLink;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   REAEventHandler _eventHandler;
+  READispatchEventHandler _dispatchEventHandler;
   REAPerformOperations _performOperations;
   REAPerformOperations _performOperationsForEvent;
 }
@@ -67,6 +68,7 @@ using namespace facebook::react;
   REAAssertTurboModuleManagerQueue();
 
   _eventHandler = nil;
+  _dispatchEventHandler = nil;
   [self useDisplayLinkOnMainQueue:^(READisplayLink *displayLink) { [displayLink invalidate]; }];
 }
 
@@ -81,6 +83,12 @@ using namespace facebook::react;
 {
   REAAssertJavaScriptQueue();
   _eventHandler = eventHandler;
+}
+
+- (void)registerDispatchEventHandler:(READispatchEventHandler)dispatchEventHandler
+{
+  REAAssertJavaScriptQueue();
+  _dispatchEventHandler = dispatchEventHandler;
 }
 
 - (void)registerPerformOperations:(REAPerformOperations)performOperations
@@ -137,6 +145,7 @@ using namespace facebook::react;
 - (void)dispatchEvent:(id<RCTEvent>)event
 {
   RCTAssertMainQueue();
+  __weak READispatchEventHandler dispatchEventHandler = _dispatchEventHandler;
   __weak REAEventHandler eventHandler = _eventHandler;
   __weak __typeof__(self) weakSelf = self;
   RCTExecuteOnMainQueue(^void() {
@@ -144,11 +153,14 @@ using namespace facebook::react;
     if (strongSelf == nil) {
       return;
     }
-    if (eventHandler == nil) {
-      return;
+    if (dispatchEventHandler != nil) {
+      dispatchEventHandler(event);
+    } else {
+      if (eventHandler != nil) {
+        eventHandler(event);
+      }
+      [strongSelf performOperationsForEvent];
     }
-    eventHandler(event);
-    [strongSelf performOperationsForEvent];
   });
 }
 

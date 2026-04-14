@@ -563,7 +563,7 @@ bool ReanimatedModuleProxy::handleEvent(
   return false;
 }
 
-bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double currentTime) {
+bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::handleRawEvent");
 
   const EventTarget *eventTarget = rawEvent.eventTarget.get();
@@ -625,13 +625,13 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   const auto &eventPayload = rawEvent.eventPayload;
   jsi::Value payload = eventPayload->asJSIValue(uiRuntime);
 
-  auto res = handleEvent(eventType, tag, payload, currentTime);
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    triggerBackendCallback(GrandCallbackState::Event);
+    handleEventAndFlush<GrandCallbackState::Event>(eventType, tag, payload);
   } else {
+    handleEvent(eventType, tag, payload, getAnimationTimestamp_());
     performOperations();
   }
-  return res;
+  return true;
 }
 
 void ReanimatedModuleProxy::cssLoopCallback(const double /*timestampMs*/) {
@@ -849,7 +849,8 @@ void ReanimatedModuleProxy::startBackendIfNeeded() {
       // weak_ptr), the old callback stays in backend->callbacks while
       // isAnimationRunning_ is false, leading to duplicate firings.
       backend->stop(callbackId_);
-      callbackId_ = backend->start([this](AnimationTimestamp ts) { return grandCallback(ts); });
+      callbackId_ = backend->start(
+          [this](AnimationTimestamp ts) { return grandCallback<GrandCallbackState::AnimationLoop>(ts); });
       isAnimationRunning_ = true;
     });
   }
@@ -867,52 +868,37 @@ void ReanimatedModuleProxy::stopBackendIfIdle(const AnimationMutations &mutation
   }
 }
 
+template <GrandCallbackState State>
 AnimationMutations ReanimatedModuleProxy::grandCallback(AnimationTimestamp timestamp) {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     ReanimatedSystraceSection s("ReanimatedModuleProxy::grandCallback");
 
     AnimationMutations mutations;
 
-    switch (grandCallbackState_) {
-      case GrandCallbackState::AnimationLoop: {
-        if (pendingAnimationFrameCallback_) {
-          auto cb = std::move(pendingAnimationFrameCallback_);
-          pendingAnimationFrameCallback_ = nullptr;
-          // Use the platform clock rather than the backend-supplied timestamp.
-          // NativeAnimatedNodesManager::trigger() (NativeAnimatedNodesManager.cpp:518)
-          // fires on every touch event with a steady_clock timestamp that has a
-          // ~495 M ms offset from CACurrentMediaTime on some iOS simulators, which
-          // makes withTiming's `runtime = now - startTime` explode.
-          // Phase 2 will replace trigger() with pushAnimationMutations() which
-          // receives the platform clock directly — see animation-backend-timestamp-phase2.md.
-          cb(getAnimationTimestamp_());
-        }
-        mutations = collectMutationsForBackend();
-        break;
+    if constexpr (State == GrandCallbackState::AnimationLoop) {
+      if (pendingAnimationFrameCallback_) {
+        auto cb = std::move(pendingAnimationFrameCallback_);
+        pendingAnimationFrameCallback_ = nullptr;
+        cb(timestamp.count());
       }
-      case GrandCallbackState::Event: {
-        mutations = collectMutationsForBackend();
-        break;
-      }
-      case GrandCallbackState::EventInAndroidDraw: {
-        mutations = collectNonLayoutMutationsForBackend();
-        break;
-      }
+      mutations = collectMutationsForBackend();
+      stopBackendIfIdle(mutations);
+    } else if constexpr (State == GrandCallbackState::Event) {
+      mutations = collectMutationsForBackend();
+    } else {
+      static_assert(State == GrandCallbackState::EventInAndroidDraw);
+      mutations = collectNonLayoutMutationsForBackend();
     }
-    grandCallbackState_ = GrandCallbackState::AnimationLoop;
-    stopBackendIfIdle(mutations);
+
     return mutations;
   }
   return AnimationMutations{};
 }
 
-void ReanimatedModuleProxy::triggerBackendCallback(GrandCallbackState state) {
-  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    grandCallbackState_ = state;
-    startBackendIfNeeded();
-    withAnimationBackend([](const std::shared_ptr<AnimationBackend> &backend) { backend->trigger(); });
-  }
-}
+// Explicit instantiations needed by NativeProxy.cpp (different TU) via triggerBackendCallback<State>.
+template AnimationMutations ReanimatedModuleProxy::grandCallback<GrandCallbackState::Event>(AnimationTimestamp);
+template AnimationMutations ReanimatedModuleProxy::grandCallback<GrandCallbackState::EventInAndroidDraw>(
+    AnimationTimestamp);
 
 void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch &updatesBatch, const bool allowPartialUpdates) {
 #ifdef ANDROID

@@ -102,7 +102,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   bool
   handleEvent(const std::string &eventName, const int emitterReactTag, const jsi::Value &payload, double currentTime);
 
-  bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
+  bool handleRawEvent(const RawEvent &rawEvent);
 
   void maybeRunCSSLoop();
   double getCssTimestamp();
@@ -114,8 +114,35 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   AnimationMutations collectNonLayoutMutationsForBackend();
   void flushLayoutAnimationRequests();
 
+  template <GrandCallbackState State>
   AnimationMutations grandCallback(AnimationTimestamp timestamp);
-  void triggerBackendCallback(GrandCallbackState context);
+
+  template <GrandCallbackState State>
+  void triggerBackendCallback() {
+#ifdef RN_HAS_PUSH_ANIMATION_MUTATIONS
+    withAnimationBackend([this](const std::shared_ptr<AnimationBackend> &backend) {
+      backend->pushAnimationMutations([this](AnimationTimestamp ts) { return grandCallback<State>(ts); });
+    });
+#else
+    withAnimationBackend([this](const std::shared_ptr<AnimationBackend> &backend) { backend->trigger(); });
+#endif
+  }
+
+  template <GrandCallbackState State>
+  void handleEventAndFlush(const std::string &eventName, int emitterReactTag, const jsi::Value &payload) {
+#ifdef RN_HAS_PUSH_ANIMATION_MUTATIONS
+    withAnimationBackend([&](const std::shared_ptr<AnimationBackend> &backend) {
+      backend->pushAnimationMutations([&](AnimationTimestamp ts) {
+        handleEvent(eventName, emitterReactTag, payload, ts.count());
+        return grandCallback<State>(ts);
+      });
+    });
+#else
+    handleEvent(eventName, emitterReactTag, payload, getAnimationTimestamp_());
+    triggerBackendCallback<State>();
+#endif
+  }
+
   void startBackendIfNeeded();
   void stopBackendIfIdle(const AnimationMutations &mutations);
 
@@ -222,7 +249,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec,
   AnimatedSensorModule animatedSensorModule_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
-  GrandCallbackState grandCallbackState_{GrandCallbackState::AnimationLoop};
   std::function<void(double)> pendingAnimationFrameCallback_;
 
 #ifdef __APPLE__
