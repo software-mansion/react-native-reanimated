@@ -210,7 +210,8 @@ android {
 
     defaultConfig {
         minSdk = safeExtGet("minSdkVersion", 24) as Int
-        targetSdk = safeExtGet("targetSdkVersion", 36) as Int
+        testOptions.targetSdk = safeExtGet("targetSdkVersion", 36) as Int
+        lint.targetSdk = safeExtGet("targetSdkVersion", 36) as Int
 
         buildConfigField("boolean", "WORKLETS_PROFILING", WORKLETS_PROFILING.toString())
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
