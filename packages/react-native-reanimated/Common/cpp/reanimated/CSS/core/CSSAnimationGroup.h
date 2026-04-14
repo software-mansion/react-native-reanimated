@@ -2,7 +2,6 @@
 
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
-#include <reanimated/Fabric/updates/OperationsLoop.h>
 
 #include <folly/dynamic.h>
 #include <react/renderer/core/ShadowNode.h>
@@ -21,9 +20,9 @@ class CSSAnimationGroup {
   const CSSAnimationsVector &getAnimations() const;
   ShadowNodeFamily::Shared getShadowNodeFamily() const;
 
+  void schedule();
+  void unschedule() const;
   void updateSettings(const CSSAnimationSettingsUpdatesMap &settingsUpdates, double timestamp);
-  void schedule(const std::shared_ptr<OperationsLoop> &loop);
-  void unschedule(const std::shared_ptr<OperationsLoop> &loop) const;
   // Computes the combined style from all animations.
   // When includeResetStyles is true, finished animations without forwards fill
   // contribute their original (pre-animation) property values — these should be

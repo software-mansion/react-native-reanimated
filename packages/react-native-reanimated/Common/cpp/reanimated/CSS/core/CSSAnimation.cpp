@@ -7,12 +7,20 @@
 namespace reanimated::css {
 
 CSSAnimation::CSSAnimation(
+    const Tag viewTag,
     std::string animationName,
     const CSSKeyframesConfig &cssKeyframesConfig,
     const CSSAnimationSettings &settings,
+    const std::shared_ptr<std::unordered_set<Tag>> &updatedViewTags,
+    const std::shared_ptr<std::unordered_set<Tag>> &revertedTags,
+    const std::shared_ptr<OperationsLoop> &loop,
     const double timestamp)
-    : name_(std::move(animationName)),
+    : viewTag_(viewTag),
+      name_(std::move(animationName)),
       fillMode_(settings.fillMode),
+      updatedViewTags_(updatedViewTags),
+      revertedTags_(revertedTags),
+      loop_(loop),
       styleInterpolator_(cssKeyframesConfig.styleInterpolator),
       progressProvider_(std::make_shared<AnimationProgressProvider>(
           timestamp,
@@ -29,13 +37,15 @@ CSSAnimation::CSSAnimation(
 
 void CSSAnimation::onUpdate(const double timestamp) {
   progressProvider_->update(timestamp);
-  LOG(INFO) << "animationName: " << name_ << " on update: " << timestamp
-            << " progress: " << progressProvider_->getGlobalProgress();
+  updatedViewTags_->insert(viewTag_);
+
+  const auto state = getState();
+  if (state == AnimationProgressState::Finished && !hasForwardsFillMode()) {
+    revertedTags_->insert(viewTag_);
+  }
 }
 
 bool CSSAnimation::isRunning() const {
-  LOG(INFO) << "animationName: " << name_
-            << " is running: " << (progressProvider_->getState() == AnimationProgressState::Running);
   return progressProvider_->getState() == AnimationProgressState::Running;
 }
 
@@ -45,10 +55,6 @@ const std::string &CSSAnimation::getName() const {
 
 double CSSAnimation::getStartTimestamp(const double timestamp) const {
   return progressProvider_->getStartTimestamp(timestamp);
-}
-
-double CSSAnimation::getRemainingDelay(const double timestamp) const {
-  return progressProvider_->getStartTimestamp(timestamp) - timestamp;
 }
 
 AnimationProgressState CSSAnimation::getState() const {
@@ -78,6 +84,17 @@ folly::dynamic CSSAnimation::getCurrentInterpolationStyle(const std::shared_ptr<
 
 folly::dynamic CSSAnimation::getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const {
   return styleInterpolator_->getResetStyle(shadowNode);
+}
+
+void CSSAnimation::schedule() {
+  if (getState() != AnimationProgressState::Paused) {
+    const auto timestamp = loop_->getTimestamp();
+    loop_->schedule(shared_from_this(), getStartTimestamp(timestamp));
+  }
+}
+
+void CSSAnimation::unschedule() {
+  loop_->remove(shared_from_this());
 }
 
 void CSSAnimation::updateSettings(const PartialCSSAnimationSettings &updatedSettings, const double timestamp) {

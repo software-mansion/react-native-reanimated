@@ -12,7 +12,7 @@
 
 namespace reanimated::css {
 
-class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared_from_this<CSSTransitionsRegistry> {
+class CSSTransitionsRegistry : public UpdatesRegistry {
  public:
   CSSTransitionsRegistry(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
@@ -32,9 +32,8 @@ class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared
   const std::shared_ptr<OperationsLoop> loop_;
 
   Registry registry_;
-  std::unordered_set<Tag> updatedTags_;
+  std::shared_ptr<std::unordered_set<Tag>> updatedViewTags_;
 
-  void onTransitionUpdate(Tag viewTag);
   void updateInUpdatesRegistry(const std::shared_ptr<CSSTransition> &transition, const folly::dynamic &updates);
 };
 
