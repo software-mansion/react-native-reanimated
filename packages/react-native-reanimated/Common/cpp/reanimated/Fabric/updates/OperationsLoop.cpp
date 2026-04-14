@@ -22,7 +22,7 @@ double OperationsLoop::getTimestamp() {
   return currentTimestamp_;
 }
 
-void OperationsLoop::schedule(OperationPtr operation, double delay) {
+void OperationsLoop::schedule(OperationPtr operation, double startTimestamp) {
   std::lock_guard<std::mutex> lock(mutex_);
 
   // Remove existing entry first to avoid duplicates
@@ -33,11 +33,10 @@ void OperationsLoop::schedule(OperationPtr operation, double delay) {
     delayedLookup_.erase(lookupIt);
   }
 
-  if (delay <= 0) {
+  if (startTimestamp <= getTimestamp()) {
     activeOps_.insert(std::move(operation));
   } else {
-    const auto activateAt = getTimestamp() + delay;
-    auto it = delayedOps_.insert({activateAt, operation}).first;
+    auto it = delayedOps_.insert({startTimestamp, operation}).first;
     delayedLookup_[operation] = it;
   }
 

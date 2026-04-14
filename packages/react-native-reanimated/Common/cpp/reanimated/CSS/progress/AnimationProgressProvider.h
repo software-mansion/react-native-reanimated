@@ -1,8 +1,6 @@
 #pragma once
 
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
-#include <reanimated/CSS/configs/CSSKeyframesConfig.h>
-#include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 #include <reanimated/CSS/progress/RawProgressProvider.h>
 
@@ -37,12 +35,13 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   double getKeyframeProgress(double fromOffset, double toOffset) const override;
 
   AnimationProgressState getState() const;
-  double getStartTimestamp(double timestamp) const;
 
   void pause(double timestamp);
   void play(double timestamp);
   void update(double timestamp) override;
   void resetProgress() override;
+
+  static double applyDirection(double progress, AnimationDirection direction, unsigned iteration);
 
  protected:
   std::optional<double> calculateRawProgress(double timestamp) override;
@@ -59,12 +58,12 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   double pauseTimestamp_ = 0;
   double totalPausedTime_ = 0;
 
+  double getStartTimestamp(double timestamp) const;
   double getTotalPausedTime(double timestamp) const;
   bool shouldFinish(double timestamp) const;
   AnimationProgressState computeState(double timestamp) const;
 
   double updateIterationProgress(double currentIterationElapsedTime);
-  double applyAnimationDirection(double iterationProgress) const;
 };
 
 } // namespace reanimated::css

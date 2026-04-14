@@ -1,0 +1,69 @@
+#include <reanimated/CSS/core/CSSAnimationsGroup.h>
+
+#include <utility>
+
+namespace reanimated::css {
+
+CSSAnimationsGroup::CSSAnimationsGroup(std::shared_ptr<const ShadowNode> shadowNode, CSSAnimationsVector animations)
+    : shadowNode_(std::move(shadowNode)), animations_(std::move(animations)) {}
+
+const CSSAnimationsVector &CSSAnimationsGroup::getAnimations() const {
+  return animations_;
+}
+
+ShadowNodeFamily::Shared CSSAnimationsGroup::getShadowNodeFamily() const {
+  return shadowNode_->getFamilyShared();
+}
+
+void CSSAnimationsGroup::schedule() {
+  for (const auto &animation : animations_) {
+    animation->schedule();
+  }
+}
+
+void CSSAnimationsGroup::unschedule() const {
+  for (const auto &animation : animations_) {
+    animation->unschedule();
+  }
+}
+
+void CSSAnimationsGroup::updateSettings(const CSSAnimationSettingsUpdatesMap &settingsUpdates, const double timestamp) {
+  for (size_t i = 0; i < animations_.size(); ++i) {
+    const auto it = settingsUpdates.find(i);
+    if (it != settingsUpdates.end()) {
+      animations_[i]->updateSettings(it->second, timestamp);
+    }
+  }
+}
+
+folly::dynamic CSSAnimationsGroup::computeLoopStyle(bool includeResetStyles) const {
+  folly::dynamic style = folly::dynamic::object;
+
+  for (const auto &anim : animations_) {
+    const auto loopAnim = anim->getLoopAnimation();
+    if (!loopAnim) {
+      continue;
+    }
+
+    const auto state = loopAnim->getState();
+
+    if (state == AnimationProgressState::Running || state == AnimationProgressState::Paused) {
+      style.update(loopAnim->getCurrentInterpolationStyle());
+    } else if (state == AnimationProgressState::Finished && anim->hasForwardsFillMode()) {
+      style.update(anim->getForwardsFillStyle());
+    } else if (state == AnimationProgressState::Pending && anim->hasBackwardsFillMode()) {
+      style.update(anim->getBackwardsFillStyle());
+    } else if (state == AnimationProgressState::Finished && includeResetStyles) {
+      const auto resetStyle = anim->getResetStyle();
+      for (const auto &[key, value] : resetStyle.items()) {
+        if (!style.count(key)) {
+          style[key] = value;
+        }
+      }
+    }
+  }
+
+  return style;
+}
+
+} // namespace reanimated::css

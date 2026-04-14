@@ -1,5 +1,6 @@
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
+#import <reanimated/apple/CSS/REACSSAnimations.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/REAUIView.h>
 
@@ -15,6 +16,7 @@ using namespace facebook::react;
   NSMutableArray<REAOnAnimationCallback> *_onAnimationCallbacks;
   REAEventHandler _eventHandler;
   REAPerformOperations _performOperations;
+  REACSSAnimations *_cssAnimations;
 }
 
 - (READisplayLink *)getDisplayLink
@@ -52,6 +54,7 @@ using namespace facebook::react;
 
   if ((self = [super init])) {
     _onAnimationCallbacks = [NSMutableArray new];
+    _cssAnimations = [[REACSSAnimations alloc] init];
     _eventHandler = ^(id<RCTEvent> event) {
       // no-op
     };
@@ -153,20 +156,47 @@ using namespace facebook::react;
   }
 }
 
+- (REAUIView *)viewForTag:(ReactTag)viewTag
+{
+  RCTSurfacePresenter *surfacePresenter = self.surfacePresenter;
+  if (surfacePresenter == nil) {
+    return nil;
+  }
+  RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
+  return [componentViewRegistry findComponentViewWithTag:static_cast<Tag>(viewTag)];
+}
+
 - (void)synchronouslyUpdateUIProps:(ReactTag)viewTag props:(const folly::dynamic &)props
 {
   RCTAssertMainQueue();
 
-  RCTSurfacePresenter *surfacePresenter = self.surfacePresenter;
-  RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
-  REAUIView<RCTComponentViewProtocol> *componentView =
-      [componentViewRegistry findComponentViewWithTag:static_cast<Tag>(viewTag)];
+  REAUIView<RCTComponentViewProtocol> *componentView = (REAUIView<RCTComponentViewProtocol> *)[self viewForTag:viewTag];
   NSSet<NSString *> *propKeysManagedByAnimated = [componentView propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN];
-  [surfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:viewTag props:props];
+  [self.surfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:viewTag props:props];
   [componentView setPropKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN:propKeysManagedByAnimated];
   // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
   // so that's why we need to call `finalizeUpdates` here.
   [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
+}
+
+- (void)applyPlatformAnimation:(ReactTag)viewTag animation:(NSDictionary *)animation
+{
+  RCTExecuteOnMainQueue(^{
+    REAUIView *view = [self viewForTag:viewTag];
+    if (view != nil) {
+      [_cssAnimations applyPlatformAnimation:view animation:animation];
+    }
+  });
+}
+
+- (void)removePlatformAnimation:(ReactTag)viewTag name:(NSString *)name
+{
+  RCTExecuteOnMainQueue(^{
+    REAUIView *view = [self viewForTag:viewTag];
+    if (view != nil) {
+      [_cssAnimations removePlatformAnimation:view name:name];
+    }
+  });
 }
 
 @end

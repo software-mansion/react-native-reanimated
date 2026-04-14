@@ -2,7 +2,6 @@
 
 #include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 #include <reanimated/CSS/configs/common.h>
-#include <reanimated/CSS/easing/EasingFunctions.h>
 
 #include <optional>
 #include <string>
@@ -17,17 +16,20 @@ enum class AnimationPlayState : std::uint8_t { Running, Paused };
 
 struct CSSAnimationSettings {
   double duration;
-  EasingFunction easingFunction;
+  EasingConfig easingConfig;
   double delay;
   double iterationCount;
   AnimationDirection direction;
   AnimationFillMode fillMode;
   AnimationPlayState playState;
+
+  bool hasForwardsFillMode() const;
+  bool hasBackwardsFillMode() const;
 };
 
 struct PartialCSSAnimationSettings {
   std::optional<double> duration;
-  std::optional<EasingFunction> easingFunction;
+  std::optional<EasingConfig> easingConfig;
   std::optional<double> delay;
   std::optional<double> iterationCount;
   std::optional<AnimationDirection> direction;

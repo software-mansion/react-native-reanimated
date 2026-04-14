@@ -1,0 +1,37 @@
+#include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h>
+
+namespace reanimated::css {
+
+AnimationStyleInterpolator::AnimationStyleInterpolator(
+    const std::string &nativeComponentName,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+    const std::shared_ptr<const PropertyInterpolatorsRecord> &allInterpolators)
+    : RecordPropertiesInterpolator(getComponentInterpolators(nativeComponentName), {}, viewStylesRepository),
+      allInterpolators_(allInterpolators) {}
+
+void AnimationStyleInterpolator::setActiveProperties(const std::unordered_set<std::string> &propertyNames) {
+  const auto previousActiveProperties = activeProperties_;
+
+  for (const auto &propertyName : previousActiveProperties) {
+    if (propertyNames.find(propertyName) == propertyNames.end()) {
+      removeInterpolator(propertyName);
+      activeProperties_.erase(propertyName);
+    }
+  }
+
+  if (!allInterpolators_) {
+    return;
+  }
+
+  for (const auto &propertyName : propertyNames) {
+    if (previousActiveProperties.find(propertyName) == previousActiveProperties.end()) {
+      const auto it = allInterpolators_->find(propertyName);
+      if (it != allInterpolators_->end()) {
+        setInterpolator(propertyName, it->second);
+        activeProperties_.insert(propertyName);
+      }
+    }
+  }
+}
+
+} // namespace reanimated::css

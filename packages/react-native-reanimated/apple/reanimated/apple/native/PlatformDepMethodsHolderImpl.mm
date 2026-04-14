@@ -1,10 +1,13 @@
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
+#import <reanimated/apple/CSS/CAPlatformAnimationFactory.h>
+#import <reanimated/apple/CSS/REACSSAnimations.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/REASlowAnimations.h>
 #import <reanimated/apple/REAUIView.h>
 #import <reanimated/apple/RNGestureHandlerStateManager.h>
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
+#import <reanimated/apple/native/REAJSIUtils.h>
 #import <reanimated/apple/native/SetGestureState.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
@@ -124,13 +127,29 @@ ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nod
   auto forceScreenSnapshot = [=](Tag tag) {
     RCTSurfacePresenter *surfacePresenter = nodesManager.surfacePresenter;
     RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
-    REAUIView<RCTComponentViewProtocol> *maybeRNSScreenView = [componentViewRegistry findComponentViewWithTag:tag];
+    UIView<RCTComponentViewProtocol> *maybeRNSScreenView = [componentViewRegistry findComponentViewWithTag:tag];
     SEL setSnapshotAfterUpdatesSelector = @selector(setSnapshotAfterUpdates:);
     if ([maybeRNSScreenView respondsToSelector:setSnapshotAfterUpdatesSelector]) {
       [(id<RNScreenViewOptionalProtocol>)maybeRNSScreenView setSnapshotAfterUpdates:YES];
     }
   };
   return forceScreenSnapshot;
+}
+
+css::ApplyPlatformAnimationFunction makeApplyPlatformAnimationFunction(REANodesManager *nodesManager)
+{
+  return [nodesManager](Tag viewTag, const css::PlatformAnimationConfig &config) {
+    NSDictionary *animDict = convertPlatformAnimationConfigToObjC(config);
+    [nodesManager applyPlatformAnimation:viewTag animation:animDict];
+  };
+}
+
+css::RemovePlatformAnimationFunction makeRemovePlatformAnimationFunction(REANodesManager *nodesManager)
+{
+  return [nodesManager](Tag viewTag, const std::string &name) {
+    [nodesManager removePlatformAnimation:viewTag
+                                     name:[NSString stringWithUTF8String:name.c_str()]];
+  };
 }
 
 PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleRegistry, REANodesManager *nodesManager)
@@ -159,6 +178,10 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   auto maybeFlushUIUpdatesQueueFunction = makeMaybeFlushUIUpdatesQueueFunction(nodesManager);
 
+  auto platformAnimationFactory = std::make_shared<css::CAPlatformAnimationFactory>(
+      makeApplyPlatformAnimationFunction(nodesManager),
+      makeRemovePlatformAnimationFunction(nodesManager));
+
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       forceScreenSnapshotFunction,
@@ -170,6 +193,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       subscribeForKeyboardEventsFunction,
       unsubscribeFromKeyboardEventsFunction,
       maybeFlushUIUpdatesQueueFunction,
+      platformAnimationFactory,
   };
   return platformDepMethodsHolder;
 }

@@ -36,7 +36,7 @@ AnimationDirection AnimationProgressProvider::getDirection() const {
 }
 
 double AnimationProgressProvider::getGlobalProgress() const {
-  return applyAnimationDirection(rawProgress_.value_or(0));
+  return applyDirection(rawProgress_.value_or(0), direction_, currentIteration_);
 }
 
 double AnimationProgressProvider::getKeyframeProgress(const double fromOffset, const double toOffset) const {
@@ -56,10 +56,6 @@ double AnimationProgressProvider::getKeyframeProgress(const double fromOffset, c
 
 AnimationProgressState AnimationProgressProvider::getState() const {
   return state_;
-}
-
-double AnimationProgressProvider::getStartTimestamp(const double timestamp) const {
-  return creationTimestamp_ + delay_ + getTotalPausedTime(timestamp);
 }
 
 void AnimationProgressProvider::pause(const double timestamp) {
@@ -85,6 +81,19 @@ void AnimationProgressProvider::resetProgress() {
   state_ = AnimationProgressState::Pending;
 }
 
+double AnimationProgressProvider::applyDirection(double progress, AnimationDirection direction, unsigned iteration) {
+  switch (direction) {
+    case AnimationDirection::Normal:
+      return progress;
+    case AnimationDirection::Reverse:
+      return 1.0 - progress;
+    case AnimationDirection::Alternate:
+      return iteration % 2 == 0 ? 1.0 - progress : progress;
+    case AnimationDirection::AlternateReverse:
+      return iteration % 2 == 0 ? progress : 1.0 - progress;
+  }
+}
+
 std::optional<double> AnimationProgressProvider::calculateRawProgress(const double timestamp) {
   const double startTimestamp = getStartTimestamp(timestamp);
   const double currentIterationElapsedTime = timestamp - (startTimestamp + previousIterationsDuration_);
@@ -103,6 +112,10 @@ std::optional<double> AnimationProgressProvider::calculateRawProgress(const doub
   }
 
   return iterationProgress;
+}
+
+double AnimationProgressProvider::getStartTimestamp(const double timestamp) const {
+  return creationTimestamp_ + delay_ + getTotalPausedTime(timestamp);
 }
 
 double AnimationProgressProvider::getTotalPausedTime(const double timestamp) const {
@@ -156,19 +169,6 @@ double AnimationProgressProvider::updateIterationProgress(const double currentIt
   // If the current iteration changes, the progress must be updated
   // respectively not to contain the progress of the previous iteration
   return progress - deltaIterations;
-}
-
-double AnimationProgressProvider::applyAnimationDirection(const double progress) const {
-  switch (direction_) {
-    case AnimationDirection::Normal:
-      return progress;
-    case AnimationDirection::Reverse:
-      return 1.0 - progress;
-    case AnimationDirection::Alternate:
-      return currentIteration_ % 2 == 0 ? 1.0 - progress : progress;
-    case AnimationDirection::AlternateReverse:
-      return currentIteration_ % 2 == 0 ? progress : 1.0 - progress;
-  }
 }
 
 } // namespace reanimated::css

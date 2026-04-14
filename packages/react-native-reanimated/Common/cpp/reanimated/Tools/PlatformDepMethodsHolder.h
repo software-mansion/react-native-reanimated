@@ -3,6 +3,7 @@
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <react/renderer/core/ReactPrimitives.h>
+#include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
 
 #include <memory>
 #include <string>
@@ -44,6 +45,7 @@ using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
 using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
+
 struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef ANDROID
@@ -60,6 +62,7 @@ struct PlatformDepMethodsHolder {
   KeyboardEventSubscribeFunction subscribeForKeyboardEvents;
   KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEvents;
   MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction;
+  std::shared_ptr<css::CSSPlatformAnimationFactory> platformAnimationFactory;
 };
 
 } // namespace reanimated

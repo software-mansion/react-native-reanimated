@@ -18,6 +18,8 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   bool updateKeyframes(jsi::Runtime &rt, const jsi::Value &fromValue, const jsi::Value &toValue) override;
+  void removeInterpolator(const std::string &propertyName);
+  void setInterpolator(const std::string &propertyName, const std::shared_ptr<PropertyInterpolator> &interpolator);
 
  protected:
   folly::dynamic mapInterpolators(const std::function<folly::dynamic(PropertyInterpolator &)> &callback) const override;
