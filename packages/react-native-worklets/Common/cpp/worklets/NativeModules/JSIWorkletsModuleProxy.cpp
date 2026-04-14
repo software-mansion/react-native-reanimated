@@ -429,7 +429,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
             /* jsEngine */ args[3].asString(rt).utf8(rt));
       });
 
-  addMethod("getStaticFeatureFlag", 2, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
+  addMethod("getStaticFeatureFlag", 1, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t) {
     return worklets::StaticFeatureFlags::getFlag(/* name */ args[0].asString(rt).utf8(rt));
   });
 
